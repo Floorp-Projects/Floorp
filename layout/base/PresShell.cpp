@@ -1913,8 +1913,19 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
     return NS_OK;
   }
 
-  nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
-  if (!rootFrame) {
+  MOZ_ASSERT(!mPresContext->SuppressingResizeReflow(),
+             "Can't suppress resize reflow and shrink-wrap at the same time");
+
+  // Make sure that style is flushed before setting the pres context
+  // VisibleArea.
+  //
+  // Otherwise we may end up with bogus viewport units resolved against the
+  // unconstrained bsize, or restyling the whole document resolving viewport
+  // units against targetWidth, which may end up doing wasteful work.
+  mDocument->FlushPendingNotifications(FlushType::Frames);
+
+  nsIFrame* rootFrame = GetRootFrame();
+  if (mIsDestroying || !rootFrame) {
     // If we don't have a root frame yet, that means we haven't had our initial
     // reflow... If that's the case, and aWidth or aHeight is unconstrained,
     // ignore them altogether.
@@ -1931,123 +1942,57 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
   }
 
   WritingMode wm = rootFrame->GetWritingMode();
-  const bool shrinkToFit = !!(aOptions & ResizeReflowOptions::BSizeLimit);
-  MOZ_ASSERT(shrinkToFit ||
-                 (wm.IsVertical() ? aWidth : aHeight) != NS_UNCONSTRAINEDSIZE,
-             "unconstrained bsize only usable with eBSizeLimit");
   MOZ_ASSERT((wm.IsVertical() ? aHeight : aWidth) != NS_UNCONSTRAINEDSIZE,
              "unconstrained isize not allowed");
-  bool isBSizeChanging =
-      wm.IsVertical() ? aOldWidth != aWidth : aOldHeight != aHeight;
+
   nscoord targetWidth = aWidth;
   nscoord targetHeight = aHeight;
-
-  if (shrinkToFit) {
-    if (wm.IsVertical()) {
-      targetWidth = NS_UNCONSTRAINEDSIZE;
-    } else {
-      targetHeight = NS_UNCONSTRAINEDSIZE;
-    }
-    isBSizeChanging = true;
+  if (wm.IsVertical()) {
+    targetWidth = NS_UNCONSTRAINEDSIZE;
+  } else {
+    targetHeight = NS_UNCONSTRAINEDSIZE;
   }
 
-  const bool suppressingResizeReflow =
-      GetPresContext()->SuppressingResizeReflow();
+  mPresContext->SetVisibleArea(nsRect(0, 0, targetWidth, targetHeight));
+  // XXX Do a full invalidate at the beginning so that invalidates along
+  // the way don't have region accumulation issues?
 
-  RefPtr<nsViewManager> viewManager = mViewManager;
-  if (!suppressingResizeReflow && shrinkToFit) {
-    // Make sure that style is flushed before setting the pres context
-    // VisibleArea if we're shrinking to fit.
-    //
-    // Otherwise we may end up with bogus viewport units resolved against the
-    // unconstrained bsize, or restyling the whole document resolving viewport
-    // units against targetWidth, which may end up doing wasteful work.
-    mDocument->FlushPendingNotifications(FlushType::Frames);
-  }
+  // For height:auto BSizes (i.e. layout-controlled), descendant
+  // intrinsic sizes can't depend on them. So the only other case is
+  // viewport-controlled BSizes which we handle here.
+  nsLayoutUtils::MarkIntrinsicISizesDirtyIfDependentOnBSize(rootFrame);
 
-  if (!mIsDestroying) {
-    mPresContext->SetVisibleArea(nsRect(0, 0, targetWidth, targetHeight));
-  }
+  {
+    nsAutoCauseReflowNotifier crNotifier(this);
+    WillDoReflow();
 
-  if (!mIsDestroying && !suppressingResizeReflow) {
-    if (!shrinkToFit) {
-      // Flush styles _now_ (with the correct visible area) if not computing the
-      // shrink-to-fit size.
-      //
-      // We've asserted above that sizes are not unconstrained, so this is going
-      // to be the final size, which means that we'll get the (correct) final
-      // styles now, and avoid a further potentially-wasteful full recascade on
-      // the next flush.
-      mDocument->FlushPendingNotifications(FlushType::Frames);
-    }
+    // Kick off a top-down reflow
+    AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
+    nsViewManager::AutoDisableRefresh refreshBlocker(mViewManager);
 
-    rootFrame = mFrameConstructor->GetRootFrame();
-    if (!mIsDestroying && rootFrame) {
-      // XXX Do a full invalidate at the beginning so that invalidates along
-      // the way don't have region accumulation issues?
+    mDirtyRoots.Remove(rootFrame);
+    DoReflow(rootFrame, true, nullptr);
 
-      if (isBSizeChanging) {
-        // For BSize changes driven by style, RestyleManager handles this.
-        // For height:auto BSizes (i.e. layout-controlled), descendant
-        // intrinsic sizes can't depend on them. So the only other case is
-        // viewport-controlled BSizes which we handle here.
-        nsLayoutUtils::MarkIntrinsicISizesDirtyIfDependentOnBSize(rootFrame);
-      }
+    const bool reflowAgain =
+        wm.IsVertical() ? mPresContext->GetVisibleArea().width > aWidth
+                        : mPresContext->GetVisibleArea().height > aHeight;
 
-      {
-        nsAutoCauseReflowNotifier crNotifier(this);
-        WillDoReflow();
-
-        // Kick off a top-down reflow
-        AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
-        nsViewManager::AutoDisableRefresh refreshBlocker(viewManager);
-
-        mDirtyRoots.Remove(rootFrame);
-        DoReflow(rootFrame, true, nullptr);
-
-        if (shrinkToFit) {
-          const bool reflowAgain =
-              wm.IsVertical() ? mPresContext->GetVisibleArea().width > aWidth
-                              : mPresContext->GetVisibleArea().height > aHeight;
-
-          if (reflowAgain) {
-            mPresContext->SetVisibleArea(nsRect(0, 0, aWidth, aHeight));
-            DoReflow(rootFrame, true, nullptr);
-          }
-        }
-      }
-
-      // the first DoReflow above should've set our bsize if it was
-      // NS_UNCONSTRAINEDSIZE, and the isize shouldn't be NS_UNCONSTRAINEDSIZE
-      // anyway
-      NS_ASSERTION(mPresContext->GetVisibleArea().width != NS_UNCONSTRAINEDSIZE,
-                   "width should not be NS_UNCONSTRAINEDSIZE after reflow");
-      NS_ASSERTION(
-          mPresContext->GetVisibleArea().height != NS_UNCONSTRAINEDSIZE,
-          "height should not be NS_UNCONSTRAINEDSIZE after reflow");
-
-      DidDoReflow(true);
+    if (reflowAgain) {
+      mPresContext->SetVisibleArea(nsRect(0, 0, aWidth, aHeight));
+      DoReflow(rootFrame, true, nullptr);
     }
   }
 
-  rootFrame = mFrameConstructor->GetRootFrame();
-  if (rootFrame) {
-    wm = rootFrame->GetWritingMode();
-    // reflow did not happen; if the reflow happened, our bsize should not be
-    // NS_UNCONSTRAINEDSIZE because DoReflow will fix it up to the same values
-    // as below
-    if (wm.IsVertical()) {
-      if (mPresContext->GetVisibleArea().width == NS_UNCONSTRAINEDSIZE) {
-        mPresContext->SetVisibleArea(
-            nsRect(0, 0, rootFrame->GetRect().width, aHeight));
-      }
-    } else {
-      if (mPresContext->GetVisibleArea().height == NS_UNCONSTRAINEDSIZE) {
-        mPresContext->SetVisibleArea(
-            nsRect(0, 0, aWidth, rootFrame->GetRect().height));
-      }
-    }
-  }
+  DidDoReflow(true);
+
+  // the reflow above should've set our bsize if it was NS_UNCONSTRAINEDSIZE,
+  // and the isize shouldn't be NS_UNCONSTRAINEDSIZE anyway.
+  MOZ_DIAGNOSTIC_ASSERT(
+      mPresContext->GetVisibleArea().width != NS_UNCONSTRAINEDSIZE,
+      "width should not be NS_UNCONSTRAINEDSIZE after reflow");
+  MOZ_DIAGNOSTIC_ASSERT(
+      mPresContext->GetVisibleArea().height != NS_UNCONSTRAINEDSIZE,
+      "height should not be NS_UNCONSTRAINEDSIZE after reflow");
 
   postResizeEventIfNeeded();
   return NS_OK;  // XXX this needs to be real. MMP
