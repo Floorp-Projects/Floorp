@@ -255,8 +255,7 @@ static Result<mozilla::Ok, nsresult> ParseNALUnits(ByteWriter<BigEndian>& aBw,
   return Ok();
 }
 
-bool AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample,
-                                 const RefPtr<MediaByteBuffer>& aAVCCHeader) {
+bool AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample) {
   if (IsAVCC(aSample)) {
     return ConvertSampleTo4BytesAVCC(aSample).isOk();
   }
@@ -276,14 +275,8 @@ bool AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample,
   if (!samplewriter->Replace(nalu.Elements(), nalu.Length())) {
     return false;
   }
-
-  if (aAVCCHeader) {
-    aSample->mExtraData = aAVCCHeader;
-    return true;
-  }
-
   // Create the AVCC header.
-  auto extradata = MakeRefPtr<mozilla::MediaByteBuffer>();
+  RefPtr<mozilla::MediaByteBuffer> extradata = new mozilla::MediaByteBuffer;
   static const uint8_t kFakeExtraData[] = {
       1 /* version */,
       0x64 /* profile (High) */,
@@ -296,7 +289,7 @@ bool AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample,
   if (!extradata->AppendElements(kFakeExtraData, ArrayLength(kFakeExtraData))) {
     return false;
   }
-  aSample->mExtraData = std::move(extradata);
+  aSample->mExtraData = extradata;
   return true;
 }
 

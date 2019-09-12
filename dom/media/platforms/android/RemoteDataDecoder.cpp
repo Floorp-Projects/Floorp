@@ -2,16 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "RemoteDataDecoder.h"
-
 #include "AndroidBridge.h"
 #include "AndroidDecoderModule.h"
-#include "EMEDecoderModule.h"
-#include "GLImages.h"
 #include "JavaCallbacksSupport.h"
+#include "SimpleMap.h"
+#include "GLImages.h"
 #include "MediaData.h"
 #include "MediaInfo.h"
-#include "SimpleMap.h"
 #include "VideoUtils.h"
 #include "VPXDecoder.h"
 
@@ -288,7 +285,7 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
     }
 
     if (ok && (size > 0 || presentationTimeUs >= 0)) {
-      RefPtr<layers::Image> img = new layers::SurfaceTextureImage(
+      RefPtr<layers::Image> img = new SurfaceTextureImage(
           mSurfaceHandle, inputInfo.mImageSize, false /* NOT continuous */,
           gl::OriginPos::BottomLeft, mConfig.HasAlpha());
 
@@ -859,4 +856,3 @@ void RemoteDataDecoder::Error(const MediaResult& aError) {
 }
 
 }  // namespace mozilla
-#undef LOG
