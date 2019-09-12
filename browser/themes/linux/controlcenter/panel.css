@@ -20,9 +20,7 @@
 }
 
 /* This overrides color: -moz-buttonhovertext from toolbarbutton.css */
-.protections-popup-category:hover,
-.protections-popup-category:hover:active,
-.protections-popup-footer-button:hover,
-.protections-popup-footer-button:hover:active {
+#protections-popup toolbarbutton:not([disabled="true"]):hover,
+#protections-popup toolbarbutton:not([disabled="true"]):hover:active {
   color: inherit;
 }
