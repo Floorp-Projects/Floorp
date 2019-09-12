@@ -76,7 +76,7 @@ class TabbedBrowsingTest {
 
         }.openTabsListThreeDotMenu {
             verifyCloseAllTabsButton()
-            verifyShareButton()
+            verifyShareTabButton()
             verifySaveCollection()
         }
     }
@@ -130,7 +130,7 @@ class TabbedBrowsingTest {
             verifyExistingTabList()
         }.openTabsListThreeDotMenu {
             verifyCloseAllTabsButton()
-            verifyShareButton()
+            verifyShareTabButton()
             verifySaveCollection()
         }.closeAllTabs {
             verifyNoCollectionsHeader()

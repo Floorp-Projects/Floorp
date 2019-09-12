@@ -39,6 +39,7 @@ class ThreeDotMenuRobot {
         shareButton().click()
         mDevice.wait(Until.findObject(By.text("SHARE A LINK")), waitingTime)
     }
+    fun verifyShareTabButton() = assertShareTabButton()
     fun verifySaveCollection() = assertSaveCollectionButton()
     fun verifyFindInPageButton() = assertFindInPageButton()
     fun verifyShareDialogTitle() = assertShareDialogTitle()
@@ -155,6 +156,9 @@ private fun closeAllTabsButton() = onView(allOf(withText("Close all tabs")))
 private fun assertCloseAllTabsButton() = closeAllTabsButton()
     .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
+private fun shareTabButton() = onView(allOf(withText("Share tabs")))
+private fun assertShareTabButton() = shareTabButton()
+    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 private fun shareButton() = onView(allOf(withText("Share")))
 private fun assertShareButton() = shareButton()
     .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
