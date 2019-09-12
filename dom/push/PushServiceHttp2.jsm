@@ -425,6 +425,13 @@ var PushServiceHttp2 = {
     return this._mainPushService !== null;
   },
 
+  validServerURI(serverURI) {
+    if (serverURI.scheme == "http") {
+      return !!prefs.getBoolPref("testing.allowInsecureServerURL", false);
+    }
+    return serverURI.scheme == "https";
+  },
+
   async connect(broadcastListeners) {
     let subscriptions = await this._mainPushService.getAllUnexpired();
     this.startConnections(subscriptions);

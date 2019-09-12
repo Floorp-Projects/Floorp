@@ -20,12 +20,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/ActorManagerParent.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "PushService",
-  "resource://gre/modules/PushService.jsm"
-);
-
 const PREF_PDFJS_ENABLED_CACHE_STATE = "pdfjs.enabledCache.state";
 
 let ACTORS = {
@@ -2005,11 +1999,6 @@ BrowserGlue.prototype = {
     Services.tm.idleDispatchToMainThread(async () => {
       await ContextualIdentityService.load();
       Discovery.update();
-    });
-
-    // Begin listening for incoming push messages.
-    Services.tm.idleDispatchToMainThread(() => {
-      PushService.ensureReady();
     });
 
     Services.tm.idleDispatchToMainThread(() => {
