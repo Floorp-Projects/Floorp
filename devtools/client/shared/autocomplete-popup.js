@@ -338,7 +338,10 @@ AutocompletePopup.prototype = {
   },
 
   _scrollElementIntoViewIfNeeded: function(element) {
-    const quads = element.getBoxQuads({ relativeTo: this.tooltip.panel });
+    const quads = element.getBoxQuads({
+      relativeTo: this.tooltip.panel,
+      createFramesForSuppressedWhitespace: false,
+    });
     if (!quads || !quads[0]) {
       return;
     }

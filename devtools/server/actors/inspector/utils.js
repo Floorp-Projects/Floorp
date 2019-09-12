@@ -222,7 +222,9 @@ function nodeHasSize(node) {
     return false;
   }
 
-  const quads = node.getBoxQuads();
+  const quads = node.getBoxQuads({
+    createFramesForSuppressedWhitespace: false,
+  });
   return quads.some(quad => {
     const bounds = quad.getBounds();
     return bounds.width && bounds.height;
