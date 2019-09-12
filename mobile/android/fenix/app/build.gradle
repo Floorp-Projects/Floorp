@@ -452,9 +452,6 @@ dependencies {
 
     androidTestImplementation Deps.androidx_test_core
     androidTestImplementation Deps.espresso_idling_resources
-    debugImplementation (Deps.androidx_fragment_testing) {
-        exclude group: 'androidx.test', module: 'core'
-    }
 
     androidTestImplementation Deps.tools_test_runner
     androidTestImplementation Deps.tools_test_rules
