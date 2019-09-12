@@ -15,19 +15,21 @@ enum MyTestEnum {
   "b"
 };
 
-// We don't support multiple constructors (bug 869268) or named constructors
-// for JS-implemented WebIDL.
-[Constructor(DOMString str, unsigned long num, boolean? boolArg,
-             TestInterface? iface, long arg1,
-             DictForConstructor dict, any any1,
-             object obj1,
-             object? obj2, sequence<Dict> seq, optional any any2,
-             optional object obj3,
-             optional object? obj4,
-             Uint8Array typedArr,
-             ArrayBuffer arrayBuf),
- JSImplementation="@mozilla.org/test-js-impl-interface;1"]
+[JSImplementation="@mozilla.org/test-js-impl-interface;1"]
 interface TestJSImplInterface {
+  // We don't support multiple constructors (bug 869268) or named constructors
+  // for JS-implemented WebIDL.
+  [Throws]
+  constructor(DOMString str, unsigned long num, boolean? boolArg,
+              TestInterface? iface, long arg1,
+              DictForConstructor dict, any any1,
+              object obj1,
+              object? obj2, sequence<Dict> seq, optional any any2,
+              optional object obj3,
+              optional object? obj4,
+              Uint8Array typedArr,
+              ArrayBuffer arrayBuf);
+
   // Integer types
   // XXXbz add tests for throwing versions of all the integer stuff
   readonly attribute byte readonlyByte;
