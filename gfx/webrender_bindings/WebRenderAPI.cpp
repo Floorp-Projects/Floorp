@@ -1091,15 +1091,14 @@ void DisplayListBuilder::PushImage(
     const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
     bool aIsBackfaceVisible, wr::ImageRendering aFilter, wr::ImageKey aImage,
     bool aPremultipliedAlpha, const wr::ColorF& aColor) {
-  wr::LayoutRect clip = MergeClipLeaf(aClip);
-  WRDL_LOG("PushImage b=%s cl=%s\n", mWrState, Stringify(aBounds).c_str(),
-           Stringify(clip).c_str());
-  wr_dp_push_image(mWrState, aBounds, clip, aIsBackfaceVisible,
-                   &mCurrentSpaceAndClipChain, aFilter, aImage,
-                   aPremultipliedAlpha, aColor);
+  wr::LayoutSize size;
+  size.width = aBounds.size.width;
+  size.height = aBounds.size.height;
+  PushImage(aBounds, aClip, aIsBackfaceVisible, size, size, aFilter, aImage,
+            aPremultipliedAlpha, aColor);
 }
 
-void DisplayListBuilder::PushRepeatingImage(
+void DisplayListBuilder::PushImage(
     const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
     bool aIsBackfaceVisible, const wr::LayoutSize& aStretchSize,
     const wr::LayoutSize& aTileSpacing, wr::ImageRendering aFilter,
@@ -1108,9 +1107,9 @@ void DisplayListBuilder::PushRepeatingImage(
   WRDL_LOG("PushImage b=%s cl=%s s=%s t=%s\n", mWrState,
            Stringify(aBounds).c_str(), Stringify(clip).c_str(),
            Stringify(aStretchSize).c_str(), Stringify(aTileSpacing).c_str());
-  wr_dp_push_repeating_image(
-      mWrState, aBounds, clip, aIsBackfaceVisible, &mCurrentSpaceAndClipChain,
-      aStretchSize, aTileSpacing, aFilter, aImage, aPremultipliedAlpha, aColor);
+  wr_dp_push_image(mWrState, aBounds, clip, aIsBackfaceVisible,
+                   &mCurrentSpaceAndClipChain, aStretchSize, aTileSpacing,
+                   aFilter, aImage, aPremultipliedAlpha, aColor);
 }
 
 void DisplayListBuilder::PushYCbCrPlanarImage(

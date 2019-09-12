@@ -12,4 +12,4 @@ skip_on(android,emulator) == segmentation-across-rotation.yaml segmentation-acro
 == color_targets(3) alpha_targets(1) stacking-context-clip.yaml stacking-context-clip-ref.yaml
 == snapping.yaml snapping-ref.yaml
 skip_on(android,emulator) fuzzy(70,2400) == clip-and-filter-with-rotation.yaml clip-and-filter-with-rotation-ref.yaml
-color_targets(2) alpha_targets(0) == clip-out-rotation.yaml blank.yaml # Unexpected color targets, see bug 1580795
+color_targets(1) alpha_targets(0) == clip-out-rotation.yaml blank.yaml

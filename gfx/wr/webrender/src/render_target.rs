@@ -663,6 +663,7 @@ impl RenderTarget for AlphaRenderTarget {
                     task_info.actual_rect,
                     &ctx.screen_world_rect,
                     task_info.device_pixel_scale,
+                    task_info.snap_offsets,
                     target_rect.origin.to_f32(),
                     task_info.actual_rect.origin.to_f32(),
                 );
