@@ -1569,7 +1569,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
   // Clip to this rect so we don't render outside the inner rect
   LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
       inner, PresContext()->AppUnitsPerDevPixel());
-  auto wrBounds = wr::ToRoundedLayoutRect(bounds);
+  auto wrBounds = wr::ToLayoutRect(bounds);
 
   // Draw image
   ImgDrawResult result = ImgDrawResult::NOT_READY;
@@ -1609,7 +1609,6 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
 
       const int32_t factor = PresContext()->AppUnitsPerDevPixel();
       LayoutDeviceRect destRect(LayoutDeviceRect::FromAppUnits(dest, factor));
-      destRect.Round();
 
       Maybe<SVGImageContext> svgContext;
       IntSize decodeSize =
@@ -1641,7 +1640,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
       nsRect rect(iconXPos, inner.y, size, size);
       auto devPxRect = LayoutDeviceRect::FromAppUnits(
           rect, PresContext()->AppUnitsPerDevPixel());
-      auto dest = wr::ToRoundedLayoutRect(devPxRect);
+      auto dest = wr::ToLayoutRect(devPxRect);
 
       auto borderWidths = wr::ToBorderWidths(1.0, 1.0, 1.0, 1.0);
       wr::BorderSide side = {color, wr::BorderStyle::Solid};
@@ -1656,7 +1655,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
                     size / 2 - twoPX);
       devPxRect = LayoutDeviceRect::FromAppUnits(
           rect, PresContext()->AppUnitsPerDevPixel());
-      dest = wr::ToRoundedLayoutRect(devPxRect);
+      dest = wr::ToLayoutRect(devPxRect);
 
       aBuilder.PushRoundedRect(dest, wrBounds, isBackfaceVisible, color);
     }
@@ -1891,7 +1890,6 @@ bool nsDisplayImage::CreateWebRenderCommands(
   const int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
   LayoutDeviceRect destRect(
       LayoutDeviceRect::FromAppUnits(GetDestRect(), factor));
-  destRect.Round();
 
   Maybe<SVGImageContext> svgContext;
   IntSize decodeSize = nsLayoutUtils::ComputeImageContainerDrawingParameters(
