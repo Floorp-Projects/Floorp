@@ -29,8 +29,26 @@ use crate::capture::PlainExternalImage;
 pub type FastHashMap<K, V> = HashMap<K, V, BuildHasherDefault<FxHasher>>;
 pub type FastHashSet<K> = HashSet<K, BuildHasherDefault<FxHasher>>;
 
+/// Custom field embedded inside the Polygon struct of the plane-split crate.
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+pub struct PlaneSplitAnchor {
+    // TODO(gw): For now, this is a simple index into the owning picture's
+    //           prim_instances array. In future, it will identify both
+    //           a cluster and primitive index within that cluster.
+    pub prim_instance_index: usize,
+}
+
+impl Default for PlaneSplitAnchor {
+    fn default() -> Self {
+        PlaneSplitAnchor {
+            prim_instance_index: 0,
+        }
+    }
+}
+
 /// A concrete plane splitter type used in WebRender.
-pub type PlaneSplitter = BspSplitter<f64, WorldPixel>;
+pub type PlaneSplitter = BspSplitter<f64, WorldPixel, PlaneSplitAnchor>;
 
 /// An arbitrary number which we assume opacity is invisible below.
 const OPACITY_EPSILON: f32 = 0.001;

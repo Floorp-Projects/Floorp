@@ -8,7 +8,7 @@ use euclid::{Angle, Transform3D, Rect, rect, vec3};
 use plane_split::{BspSplitter, Polygon, Splitter, make_grid};
 
 
-fn grid_impl(count: usize, splitter: &mut Splitter<f32, ()>) {
+fn grid_impl(count: usize, splitter: &mut Splitter<f32, (), usize>) {
     let polys = make_grid(count);
     let result = splitter.solve(&polys, vec3(0.0, 0.0, 1.0));
     assert_eq!(result.len(), count + count*count + count*count*count);
@@ -20,7 +20,7 @@ fn grid_bsp() {
 }
 
 
-fn sort_rotation(splitter: &mut Splitter<f32, ()>) {
+fn sort_rotation(splitter: &mut Splitter<f32, (), usize>) {
     let transform0: Transform3D<f32, (), ()> =
         Transform3D::create_rotation(0.0, 1.0, 0.0, Angle::radians(-FRAC_PI_4));
     let transform1: Transform3D<f32, (), ()> =
@@ -46,7 +46,7 @@ fn rotation_bsp() {
 }
 
 
-fn sort_trivial(splitter: &mut Splitter<f32, ()>) {
+fn sort_trivial(splitter: &mut Splitter<f32, (), usize>) {
     let anchors: Vec<_> = (0usize .. 10).collect();
     let rect: Rect<f32, ()> = rect(-10.0, -10.0, 20.0, 20.0);
     let polys: Vec<_> = anchors.iter().map(|&anchor| {
@@ -64,7 +64,7 @@ fn sort_trivial(splitter: &mut Splitter<f32, ()>) {
     assert_eq!(anchors1, anchors2);
 }
 
-fn sort_external(splitter: &mut Splitter<f32, ()>) {
+fn sort_external(splitter: &mut Splitter<f32, (), usize>) {
     let rect0: Rect<f32, ()> = rect(-10.0, -10.0, 20.0, 20.0);
     let poly0 = Polygon::from_rect(rect0, 0);
     let poly1 = {
