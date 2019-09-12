@@ -2,7 +2,7 @@
 
 # ContentAction
 
-`sealed class ContentAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L125)
+`sealed class ContentAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L126)
 
 [BrowserAction](../-browser-action.md) implementations related to updating the [ContentState](../../mozilla.components.browser.state.state/-content-state/index.md) of a single [SessionState](../../mozilla.components.browser.state.state/-session-state/index.md) inside
 [BrowserState](../../mozilla.components.browser.state.state/-browser-state/index.md).
@@ -11,6 +11,8 @@
 
 | Name | Summary |
 |---|---|
+| [AddFindResultAction](-add-find-result-action/index.md) | `data class AddFindResultAction : `[`ContentAction`](./index.md)<br>Adds a [FindResultState](../../mozilla.components.browser.state.state.content/-find-result-state/index.md) to the [ContentState](../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](-add-find-result-action/session-id.md). |
+| [ClearFindResultsAction](-clear-find-results-action/index.md) | `data class ClearFindResultsAction : `[`ContentAction`](./index.md)<br>Removes all [FindResultState](../../mozilla.components.browser.state.state.content/-find-result-state/index.md)s of the [ContentState](../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](-clear-find-results-action/session-id.md). |
 | [ConsumeDownloadAction](-consume-download-action/index.md) | `data class ConsumeDownloadAction : `[`ContentAction`](./index.md)<br>Removes the [DownloadState](../../mozilla.components.browser.state.state.content/-download-state/index.md) of the [ContentState](../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](-consume-download-action/session-id.md). |
 | [ConsumeHitResultAction](-consume-hit-result-action/index.md) | `data class ConsumeHitResultAction : `[`ContentAction`](./index.md)<br>Removes the [HitResult](../../mozilla.components.concept.engine/-hit-result/index.md) of the [ContentState](../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](-consume-hit-result-action/session-id.md). |
 | [ConsumePromptRequestAction](-consume-prompt-request-action/index.md) | `data class ConsumePromptRequestAction : `[`ContentAction`](./index.md)<br>Removes the [PromptRequest](../../mozilla.components.concept.engine.prompt/-prompt-request/index.md) of the [ContentState](../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](-consume-prompt-request-action/session-id.md). |
@@ -32,6 +34,8 @@
 
 | Name | Summary |
 |---|---|
+| [AddFindResultAction](-add-find-result-action/index.md) | `data class AddFindResultAction : `[`ContentAction`](./index.md)<br>Adds a [FindResultState](../../mozilla.components.browser.state.state.content/-find-result-state/index.md) to the [ContentState](../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](-add-find-result-action/session-id.md). |
+| [ClearFindResultsAction](-clear-find-results-action/index.md) | `data class ClearFindResultsAction : `[`ContentAction`](./index.md)<br>Removes all [FindResultState](../../mozilla.components.browser.state.state.content/-find-result-state/index.md)s of the [ContentState](../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](-clear-find-results-action/session-id.md). |
 | [ConsumeDownloadAction](-consume-download-action/index.md) | `data class ConsumeDownloadAction : `[`ContentAction`](./index.md)<br>Removes the [DownloadState](../../mozilla.components.browser.state.state.content/-download-state/index.md) of the [ContentState](../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](-consume-download-action/session-id.md). |
 | [ConsumeHitResultAction](-consume-hit-result-action/index.md) | `data class ConsumeHitResultAction : `[`ContentAction`](./index.md)<br>Removes the [HitResult](../../mozilla.components.concept.engine/-hit-result/index.md) of the [ContentState](../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](-consume-hit-result-action/session-id.md). |
 | [ConsumePromptRequestAction](-consume-prompt-request-action/index.md) | `data class ConsumePromptRequestAction : `[`ContentAction`](./index.md)<br>Removes the [PromptRequest](../../mozilla.components.concept.engine.prompt/-prompt-request/index.md) of the [ContentState](../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](-consume-prompt-request-action/session-id.md). |

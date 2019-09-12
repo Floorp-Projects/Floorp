@@ -2,7 +2,7 @@
 
 # DEFAULT
 
-`DEFAULT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/Breadcrumb.kt#L77)
+`DEFAULT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/Breadcrumb.kt#L83)
 
 DEFAULT type.
 

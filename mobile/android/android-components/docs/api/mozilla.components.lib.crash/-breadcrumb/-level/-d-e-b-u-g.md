@@ -2,7 +2,7 @@
 
 # DEBUG
 
-`DEBUG` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/Breadcrumb.kt#L47)
+`DEBUG` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/Breadcrumb.kt#L53)
 
 DEBUG level.
 
