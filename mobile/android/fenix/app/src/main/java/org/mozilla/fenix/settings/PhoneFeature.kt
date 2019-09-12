@@ -21,30 +21,51 @@ const val ID_CAMERA_PERMISSION = 0
 const val ID_LOCATION_PERMISSION = 1
 const val ID_MICROPHONE_PERMISSION = 2
 const val ID_NOTIFICATION_PERMISSION = 3
+const val ID_AUTOPLAY_PERMISSION = 4
 
 enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) {
     CAMERA(ID_CAMERA_PERMISSION, arrayOf(CAMERA_PERMISSION)),
     LOCATION(ID_LOCATION_PERMISSION, arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION)),
     MICROPHONE(ID_MICROPHONE_PERMISSION, arrayOf(RECORD_AUDIO)),
-    NOTIFICATION(ID_NOTIFICATION_PERMISSION, emptyArray());
+    NOTIFICATION(ID_NOTIFICATION_PERMISSION, emptyArray()),
+    AUTOPLAY(ID_AUTOPLAY_PERMISSION, emptyArray());
 
     fun isAndroidPermissionGranted(context: Context): Boolean {
         return when (this) {
             CAMERA, LOCATION, MICROPHONE -> context.isPermissionGranted(androidPermissionsList.asIterable())
-            NOTIFICATION -> true
+            NOTIFICATION, AUTOPLAY -> true
         }
     }
 
-    fun getActionLabel(context: Context, sitePermissions: SitePermissions? = null, settings: Settings? = null): String {
-        @StringRes val stringRes = when (getStatus(sitePermissions, settings)) {
-            SitePermissions.Status.BLOCKED -> R.string.preference_option_phone_feature_blocked
-            SitePermissions.Status.NO_DECISION -> R.string.preference_option_phone_feature_ask_to_allow
-            SitePermissions.Status.ALLOWED -> R.string.preference_option_phone_feature_allowed
-        }
+    fun getActionLabel(
+        context: Context,
+        sitePermissions: SitePermissions? = null,
+        settings: Settings? = null
+    ): String {
+        @StringRes val stringRes =
+            when (this) {
+                AUTOPLAY -> {
+                    when (getStatus(sitePermissions, settings)) {
+                        SitePermissions.Status.BLOCKED -> R.string.preference_option_autoplay_blocked
+                        SitePermissions.Status.ALLOWED -> R.string.preference_option_autoplay_allowed
+                        else -> R.string.preference_option_autoplay_allowed
+                    }
+                }
+                else -> {
+                    when (getStatus(sitePermissions, settings)) {
+                        SitePermissions.Status.BLOCKED -> R.string.preference_option_phone_feature_blocked
+                        SitePermissions.Status.NO_DECISION -> R.string.preference_option_phone_feature_ask_to_allow
+                        SitePermissions.Status.ALLOWED -> R.string.preference_option_phone_feature_allowed
+                    }
+                }
+            }
         return context.getString(stringRes)
     }
 
-    fun getStatus(sitePermissions: SitePermissions? = null, settings: Settings? = null): SitePermissions.Status {
+    fun getStatus(
+        sitePermissions: SitePermissions? = null,
+        settings: Settings? = null
+    ): SitePermissions.Status {
         val status = getStatus(sitePermissions) ?: settings?.let(::getAction)?.toStatus()
         return requireNotNull(status)
     }
@@ -55,6 +76,7 @@ enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) 
             LOCATION -> context.getString(R.string.preference_phone_feature_location)
             MICROPHONE -> context.getString(R.string.preference_phone_feature_microphone)
             NOTIFICATION -> context.getString(R.string.preference_phone_feature_notification)
+            AUTOPLAY -> context.getString(R.string.preference_browser_feature_autoplay)
         }
     }
 
@@ -64,11 +86,19 @@ enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) 
             LOCATION -> context.getPreferenceKey(R.string.pref_key_phone_feature_location)
             MICROPHONE -> context.getPreferenceKey(R.string.pref_key_phone_feature_microphone)
             NOTIFICATION -> context.getPreferenceKey(R.string.pref_key_phone_feature_notification)
+            AUTOPLAY -> context.getPreferenceKey(R.string.pref_key_browser_feature_autoplay)
         }
     }
 
     fun getAction(settings: Settings): SitePermissionsRules.Action =
-        settings.getSitePermissionsPhoneFeatureAction(this)
+        settings.getSitePermissionsPhoneFeatureAction(this, getDefault())
+
+    fun getDefault(): SitePermissionsRules.Action {
+        return when (this) {
+            AUTOPLAY -> SitePermissionsRules.Action.BLOCKED
+            else -> SitePermissionsRules.Action.ASK_TO_ALLOW
+        }
+    }
 
     private fun getStatus(sitePermissions: SitePermissions?): SitePermissions.Status? {
         sitePermissions ?: return null
@@ -77,12 +107,13 @@ enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) 
             LOCATION -> sitePermissions.location
             MICROPHONE -> sitePermissions.microphone
             NOTIFICATION -> sitePermissions.notification
+            AUTOPLAY -> SitePermissions.Status.NO_DECISION // No support from GV or A-C yet
         }
     }
 
     companion object {
         fun findFeatureBy(permissions: Array<out String>): PhoneFeature? {
-            return PhoneFeature.values().find { feature ->
+            return values().find { feature ->
                 feature.androidPermissionsList.any { permission ->
                     permission == permissions.first()
                 }

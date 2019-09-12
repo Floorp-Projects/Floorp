@@ -159,6 +159,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {
             PhoneFeature.LOCATION -> sitePermissions.copy(location = status)
             PhoneFeature.MICROPHONE -> sitePermissions.copy(microphone = status)
             PhoneFeature.NOTIFICATION -> sitePermissions.copy(notification = status)
+            PhoneFeature.AUTOPLAY -> sitePermissions.copy() // not supported by GV or A-C yet
         }
         lifecycleScope.launch(IO) {
             requireComponents.core.permissionStorage.updateSitePermissions(updatedSitePermissions)
