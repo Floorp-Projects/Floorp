@@ -110,6 +110,8 @@ class TrackingProtectionPanelView(
     private fun setUIForNormalMode(state: TrackingProtectionState) {
         details_mode.visibility = View.GONE
         normal_mode.visibility = View.VISIBLE
+        protection_settings.visibility =
+            if (state.session?.customTabConfig != null) View.GONE else View.VISIBLE
 
         not_blocking_header.visibility =
             if (bucketedLoadedTrackers.size == 0) View.GONE else View.VISIBLE

@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.trackingprotection
 
+import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
@@ -56,6 +57,7 @@ sealed class TrackingProtectionAction : Action {
  * @property mode Current Mode of TrackingProtection
  */
 data class TrackingProtectionState(
+    val session: Session?,
     val url: String,
     val isTrackingProtectionEnabled: Boolean,
     val listTrackers: List<Tracker>,

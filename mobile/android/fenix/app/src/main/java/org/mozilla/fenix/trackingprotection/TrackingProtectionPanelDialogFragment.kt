@@ -88,6 +88,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), BackHan
         trackingProtectionStore = StoreProvider.get(this) {
             TrackingProtectionStore(
                 TrackingProtectionState(
+                    session,
                     url,
                     trackingProtectionEnabled,
                     session?.trackersBlocked ?: listOf(),
