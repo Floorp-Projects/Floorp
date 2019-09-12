@@ -66,7 +66,8 @@ h2 {
 }
 
 .card-header > button,
-#sign-up-for-monitor-link {
+#sign-up-for-monitor-link,
+#get-proxy-extension-link {
   font-size: 0.95em;
   cursor: pointer;
   margin-inline-end: 15px;
@@ -77,7 +78,8 @@ h2 {
 }
 
 .card.lockwise-card .card-header,
-.card.monitor-card.no-logins .card-header {
+.card.monitor-card.no-logins .card-header,
+.card.proxy-card .card-header {
   grid-template-columns: 2fr 6fr 7fr;
 }
 
@@ -98,7 +100,8 @@ a.hidden,
 #monitor-body-content .monitor-breached-passwords.hidden,
 .loading a,
 .loading button,
-.loading .wrapper {
+.loading .wrapper,
+.proxy-card.hidden {
   display: none;
 }
 
@@ -630,7 +633,8 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   padding: 15px;
 }
 
-#sign-up-for-monitor-link {
+#sign-up-for-monitor-link,
+#get-proxy-extension-link {
   -moz-appearance: button;
   background-color: var(--blue-60);
   border-radius: 2px;
@@ -638,15 +642,18 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   color: #fff;
 }
 
-#sign-up-for-monitor-link:active {
+#sign-up-for-monitor-link:active,
+#get-proxy-extension-link:active {
   background-color: var(--blue-80) !important;
 }
 
-#sign-up-for-monitor-link:hover {
+#sign-up-for-monitor-link:hover,
+#get-proxy-extension-link:hover {
   background-color: var(--blue-70);
 }
 
-#sign-up-for-monitor-link:focus {
+#sign-up-for-monitor-link:focus,
+#get-proxy-extension-link:focus {
   box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
   outline: none;
 }
