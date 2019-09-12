@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyGetter(this, "gDOMBundle", () =>
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["crypto"]);
 
-const EXPORTED_SYMBOLS = ["PushCrypto", "concatArray"];
+const EXPORTED_SYMBOLS = ["PushCrypto"];
 
 const UTF8 = new TextEncoder("utf-8");
 
@@ -603,6 +603,8 @@ class aesgcm128Decoder extends OldSchemeDecoder {
 }
 
 var PushCrypto = {
+  concatArray,
+
   generateAuthenticationSecret() {
     return crypto.getRandomValues(new Uint8Array(16));
   },

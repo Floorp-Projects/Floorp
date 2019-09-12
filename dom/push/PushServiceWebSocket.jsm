@@ -254,13 +254,6 @@ var PushServiceWebSocket = {
     }
   },
 
-  validServerURI(serverURI) {
-    if (serverURI.scheme == "ws") {
-      return !!prefs.get("testing.allowInsecureServerURL");
-    }
-    return serverURI.scheme == "wss";
-  },
-
   get _UAID() {
     return prefs.get("userAgentID");
   },
