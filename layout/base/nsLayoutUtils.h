@@ -2990,6 +2990,14 @@ class nsLayoutUtils {
    **/
   static bool FrameIsScrolledOutOfViewInCrossProcess(const nsIFrame* aFrame);
 
+  /**
+   * Similar to above FrameIsScrolledOutViewInCrossProcess but returns true even
+   * if |aFrame| is not fully scrolled out of view and its visible area width or
+   * height is smaller than |aMargin|.
+   **/
+  static bool FrameIsMostlyScrolledOutOfViewInCrossProcess(
+      const nsIFrame* aFrame, nscoord aMargin);
+
  private:
   /**
    * Helper function for LogTestDataForPaint().
