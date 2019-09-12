@@ -4109,12 +4109,7 @@ nsresult HTMLEditRules::DidDeleteSelection() {
       }
     }
   }
-
-  // call through to base class
-  nsresult rv = TextEditRules::DidDeleteSelection();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "TextEditRules::DidDeleteSelection() failed");
-  return rv;
+  return NS_OK;
 }
 
 EditActionResult HTMLEditor::MakeOrChangeListAndListItemAsSubAction(
