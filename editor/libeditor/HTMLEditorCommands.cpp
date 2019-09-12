@@ -972,7 +972,7 @@ nsresult DecreaseZIndexCommand::DoCommand(Command aCommand,
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv = htmlEditor->AddZIndexAsAction(-1, aPrincipal);
+  nsresult rv = MOZ_KnownLive(htmlEditor)->AddZIndexAsAction(-1, aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AddZIndexAsAction() failed");
   return rv;
 }
@@ -1012,7 +1012,7 @@ nsresult IncreaseZIndexCommand::DoCommand(Command aCommand,
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv = htmlEditor->AddZIndexAsAction(1, aPrincipal);
+  nsresult rv = MOZ_KnownLive(htmlEditor)->AddZIndexAsAction(1, aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AddZIndexAsAction() failed");
   return rv;
 }

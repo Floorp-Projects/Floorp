@@ -492,3 +492,39 @@ async function waitForAnimationReadyToRestyle(aAnimation) {
     await waitForNextFrame(aAnimation.ownerGlobal);
   }
 }
+
+function getDocShellForObservingRestylesForWindow(aWindow) {
+  const docShell = SpecialPowers.wrap(aWindow).docShell;
+
+  docShell.recordProfileTimelineMarkers = true;
+  docShell.popProfileTimelineMarkers();
+
+  return docShell;
+}
+
+// Returns the animation restyle markers observed during |frameCount| refresh
+// driver ticks in this `window`.  This function is typically used to count the
+// number of restyles that take place as part of the style update that happens
+// on each refresh driver tick, as opposed to synchronous restyles triggered by
+// script.
+//
+// For the latter observeAnimSyncStyling (below) should be used.
+function observeStyling(frameCount, onFrame) {
+  return observeStylingInTargetWindow(window, frameCount, onFrame);
+}
+
+// As with observeStyling but applied to target window |aWindow|.
+function observeStylingInTargetWindow(aWindow, aFrameCount, aOnFrame) {
+  const docShell = getDocShellForObservingRestylesForWindow(aWindow);
+
+  return new Promise(resolve => {
+    return waitForAnimationFrames(aFrameCount, aOnFrame, aWindow).then(() => {
+      const markers = docShell.popProfileTimelineMarkers();
+      docShell.recordProfileTimelineMarkers = false;
+      const stylingMarkers = markers.filter((marker, index) => {
+        return marker.name == "Styles" && marker.isAnimationOnly;
+      });
+      resolve(stylingMarkers);
+    });
+  });
+}

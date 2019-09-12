@@ -408,7 +408,7 @@ class HTMLEditor final : public TextEditor,
    *                            JS.  If set to nullptr, will be treated as
    *                            called by system.
    */
-  nsresult SetSelectionToAbsoluteOrStaticAsAction(
+  MOZ_CAN_RUN_SCRIPT nsresult SetSelectionToAbsoluteOrStaticAsAction(
       bool aEnabled, nsIPrincipal* aPrincipal = nullptr);
 
   /**
@@ -426,8 +426,8 @@ class HTMLEditor final : public TextEditor,
    *                            JS.  If set to nullptr, will be treated as
    *                            called by system.
    */
-  nsresult AddZIndexAsAction(int32_t aChange,
-                             nsIPrincipal* aPrincipal = nullptr);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  AddZIndexAsAction(int32_t aChange, nsIPrincipal* aPrincipal = nullptr);
 
   MOZ_CAN_RUN_SCRIPT nsresult SetBackgroundColorAsAction(
       const nsAString& aColor, nsIPrincipal* aPrincipal = nullptr);
@@ -2669,6 +2669,32 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
       RefPtr<Element>* aTargetElement);
+
+  /**
+   * SetSelectionToAbsoluteAsSubAction() move selected contents to first
+   * selected `<div>` element or newly created `<div>` element and make
+   * the `<div>` element positioned absolutely.
+   * mNewBlockElement of TopLevelEditSubActionData will be set to the `<div>`
+   * element.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  SetSelectionToAbsoluteAsSubAction();
+
+  /**
+   * SetSelectionToStaticAsSubAction() sets the `position` property of a
+   * selection parent's block whose `position` is `absolute` to `static`.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  SetSelectionToStaticAsSubAction();
+
+  /**
+   * AddZIndexAsSubAction() adds aChange to `z-index` of nearest parent
+   * absolute-positioned element from current selection.
+   *
+   * @param aChange     Amount to change `z-index`.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  AddZIndexAsSubAction(int32_t aChange);
 
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(

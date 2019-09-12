@@ -16,12 +16,11 @@ type EntryIndex = u64;
 /// # use cranelift_codegen::ir::types::*;
 /// # use cranelift_codegen::ir::{ExternalName, Function, Signature, InstBuilder};
 /// # use cranelift_codegen::isa::CallConv;
-/// # use cranelift_frontend::{FunctionBuilder, FunctionBuilderContext, Switch};
+/// # use cranelift_frontend::{FunctionBuilder, Switch};
 /// #
 /// # let mut sig = Signature::new(CallConv::SystemV);
-/// # let mut fn_builder_ctx = FunctionBuilderContext::new();
 /// # let mut func = Function::with_name_signature(ExternalName::user(0, 0), sig);
-/// # let mut builder = FunctionBuilder::new(&mut func, &mut fn_builder_ctx);
+/// # let mut builder = FunctionBuilder::new(func);
 /// #
 /// # let entry = builder.create_ebb();
 /// # builder.switch_to_block(entry);
@@ -167,12 +166,22 @@ impl Switch {
         contiguous_case_ranges: Vec<ContiguousCaseRange>,
         cases_and_jt_ebbs: &mut Vec<(EntryIndex, Ebb, Vec<Ebb>)>,
     ) {
+        let mut was_branch = false;
+        let ins_fallthrough_jump = |was_branch: bool, bx: &mut FunctionBuilder| {
+            if was_branch {
+                let ebb = bx.create_ebb();
+                bx.ins().jump(ebb, &[]);
+                bx.switch_to_block(ebb);
+            }
+        };
         for ContiguousCaseRange { first_index, ebbs } in contiguous_case_ranges.into_iter().rev() {
             match (ebbs.len(), first_index) {
                 (1, 0) => {
+                    ins_fallthrough_jump(was_branch, bx);
                     bx.ins().brz(val, ebbs[0], &[]);
                 }
                 (1, _) => {
+                    ins_fallthrough_jump(was_branch, bx);
                     let is_good_val = bx.ins().icmp_imm(IntCC::Equal, val, first_index as i64);
                     bx.ins().brnz(is_good_val, ebbs[0], &[]);
                 }
@@ -187,6 +196,7 @@ impl Switch {
                     return;
                 }
                 (_, _) => {
+                    ins_fallthrough_jump(was_branch, bx);
                     let jt_ebb = bx.create_ebb();
                     let is_good_val = bx.ins().icmp_imm(
                         IntCC::UnsignedGreaterThanOrEqual,
@@ -197,6 +207,7 @@ impl Switch {
                     cases_and_jt_ebbs.push((first_index, jt_ebb, ebbs));
                 }
             }
+            was_branch = true;
         }
 
         bx.ins().jump(otherwise, &[]);
@@ -277,16 +288,13 @@ impl ContiguousCaseRange {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::frontend::FunctionBuilderContext;
     use cranelift_codegen::ir::Function;
     use std::string::ToString;
 
     macro_rules! setup {
         ($default:expr, [$($index:expr,)*]) => {{
-            let mut func = Function::new();
-            let mut func_ctx = FunctionBuilderContext::new();
-            {
-                let mut bx = FunctionBuilder::new(&mut func, &mut func_ctx);
+            let func = {
+                let mut bx = FunctionBuilder::new(Function::new());
                 let ebb = bx.create_ebb();
                 bx.switch_to_block(ebb);
                 let val = bx.ins().iconst(types::I8, 0);
@@ -296,7 +304,9 @@ mod tests {
                     switch.set_entry($index, ebb);
                 )*
                 switch.emit(&mut bx, val, Ebb::with_number($default).unwrap());
-            }
+                bx.seal_all_blocks();
+                bx.finalize()
+            };
             func
                 .to_string()
                 .trim_start_matches("function u0:0() fast {\n")
@@ -359,7 +369,10 @@ ebb3:
     v1 = uextend.i32 v0
     v2 = icmp_imm eq v1, 2
     brnz v2, ebb2
-    brz v1, ebb1
+    jump ebb3
+
+ebb3:
+    brz.i32 v1, ebb1
     jump ebb0"
         );
     }
@@ -382,6 +395,9 @@ ebb0:
 ebb9:
     v3 = icmp_imm.i32 uge v1, 10
     brnz v3, ebb10
+    jump ebb11
+
+ebb11:
     v4 = icmp_imm.i32 eq v1, 7
     brnz v4, ebb4
     jump ebb0
@@ -389,9 +405,9 @@ ebb9:
 ebb8:
     v5 = icmp_imm.i32 eq v1, 5
     brnz v5, ebb3
-    jump ebb11
+    jump ebb12
 
-ebb11:
+ebb12:
     br_table.i32 v1, ebb0, jt0
 
 ebb10:
@@ -410,7 +426,10 @@ ebb10:
     v1 = uextend.i32 v0
     v2 = icmp_imm eq v1, 0x8000_0000_0000_0000
     brnz v2, ebb1
-    v3 = icmp_imm eq v1, 1
+    jump ebb3
+
+ebb3:
+    v3 = icmp_imm.i32 eq v1, 1
     brnz v3, ebb2
     jump ebb0"
         );
@@ -426,7 +445,10 @@ ebb10:
     v1 = uextend.i32 v0
     v2 = icmp_imm eq v1, 0x7fff_ffff_ffff_ffff
     brnz v2, ebb1
-    v3 = icmp_imm eq v1, 1
+    jump ebb3
+
+ebb3:
+    v3 = icmp_imm.i32 eq v1, 1
     brnz v3, ebb2
     jump ebb0"
         )

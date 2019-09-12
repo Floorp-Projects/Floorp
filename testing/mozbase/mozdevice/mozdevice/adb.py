@@ -2824,6 +2824,26 @@ class ADBDevice(ADBCommand):
         self._initialize_boot_state(timeout=timeout)
         return self.is_device_ready(timeout=timeout)
 
+    def get_sysinfo(self, timeout=None):
+        """
+        Returns a detailed dictionary of information strings about the device.
+
+        :param timeout: optional integer specifying the maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.
+            This timeout is per adb call. The total time spent
+            may exceed this value. If it is not specified, the value
+            set in the ADB constructor is used.
+
+        :raises: * ADBTimeoutError
+        """
+        results = {"info": self.get_info(timeout=timeout)}
+        for service in ("meminfo", "cpuinfo", "dbinfo", "procstats", "usagestats",
+                        "battery", "batterystats", "diskstats"):
+            results[service] = self.shell_output("dumpsys %s" % service,
+                                                 timeout=timeout)
+        return results
+
     def get_info(self, directive=None, timeout=None):
         """
         Returns a dictionary of information strings about the device.

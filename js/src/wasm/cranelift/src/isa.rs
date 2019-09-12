@@ -152,14 +152,17 @@ fn make_shared_flags(
         if jump_tables_enabled { "true" } else { "false" },
     )?;
 
+    if cfg!(feature = "cranelift_x86") && cfg!(target_pointer_width = "64") {
+        sb.enable("enable_pinned_reg")?;
+        sb.enable("use_pinned_reg_as_heap_base")?;
+    }
+
     Ok(settings::Flags::new(sb))
 }
 
 #[cfg(feature = "cranelift_x86")]
 fn make_isa_specific(env: &StaticEnvironment) -> DashResult<isa::Builder> {
-    use std::str::FromStr; // for the triple! macro below.
-
-    let mut ib = isa::lookup(triple!("x86_64-unknown-unknown")).map_err(BasicError::from)?;
+    let mut ib = isa::lookup_by_name("x86_64-unknown-unknown").map_err(BasicError::from)?;
 
     if !env.hasSse2 {
         return Err("SSE2 is mandatory for Baldrdash!".into());
@@ -193,7 +196,6 @@ fn make_isa_specific(env: &StaticEnvironment) -> DashResult<isa::Builder> {
     Ok(ib)
 }
 
-/// TODO: SM runs on more than x86 chips. Support them.
 #[cfg(not(feature = "cranelift_x86"))]
 fn make_isa_specific(_env: &StaticEnvironment) -> DashResult<isa::Builder> {
     Err("Platform not supported yet!".into())
