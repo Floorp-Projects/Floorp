@@ -1104,6 +1104,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
   }
 
   function WebVTT() {
+    this.isProcessingCues = false;
     // Nothing
   }
 
@@ -1152,7 +1153,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
   //                and regions will be placed into.
   // @param controls : A Control bar element. Cues' position will be
   //                 affected and repositioned according to it.
-  WebVTT.processCues = function(window, cues, overlay, controls) {
+  function processCuesInternal(window, cues, overlay, controls) {
     LOG(`=== processCues ===`);
     if (!cues) {
       LOG(`clear display and abort processing because of no cue.`);
@@ -1305,6 +1306,18 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
     } else {
       LOG(`[ERROR] unknown div computing state`);
     }
+  };
+
+  WebVTT.processCues = function(window, cues, overlay, controls) {
+    // When accessing `offsetXXX` attributes of element, it would trigger reflow
+    // and might result in a re-entry of this function. In order to avoid doing
+    // redundant computation, we would only do one processing at a time.
+    if (this.isProcessingCues) {
+      return;
+    }
+    this.isProcessingCues = true;
+    processCuesInternal(window, cues, overlay, controls);
+    this.isProcessingCues = false;
   };
 
   WebVTT.Parser = function(window, decoder) {
