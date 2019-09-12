@@ -62,7 +62,7 @@ class BrowserToolbarView(
                 true
             )
 
-            popupWindow.showAsDropDown(view, view.context.dimen(R.dimen.context_menu_x_offset), 0, Gravity.START)
+            popupWindow.elevation = view.context.dimen(R.dimen.mozac_browser_menu_elevation).toFloat()
 
             customView.paste.isVisible = clipboard.containsText() && !isCustomTabSession
             customView.paste_and_go.isVisible = clipboard.containsText() && !isCustomTabSession
@@ -81,6 +81,8 @@ class BrowserToolbarView(
                 popupWindow.dismiss()
                 interactor.onBrowserToolbarPasteAndGo(clipboard.primaryClip?.getItemAt(0)?.text.toString())
             }
+
+            popupWindow.showAsDropDown(view, view.context.dimen(R.dimen.context_menu_x_offset), 0, Gravity.START)
 
             true
         }
