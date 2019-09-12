@@ -667,10 +667,22 @@ nsresult TextEditor::DeleteSelectionAsSubAction(EDirection aDirection,
   if (!handled) {
     rv = DeleteSelectionWithTransaction(aDirection, aStripWrappers);
   }
-  // post-process
-  rv = rules->DidDoAction(subActionInfo, rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+
+  if (AsHTMLEditor()) {
+    EditorDOMPoint atNewStartOfSelection(
+        EditorBase::GetStartPoint(*SelectionRefPtr()));
+    if (NS_WARN_IF(!atNewStartOfSelection.IsSet())) {
+      return NS_ERROR_FAILURE;
+    }
+    if (atNewStartOfSelection.GetContainerAsContent()) {
+      nsresult rv =
+          MOZ_KnownLive(AsHTMLEditor())
+              ->DeleteMostAncestorMailCiteElementIfEmpty(MOZ_KnownLive(
+                  *atNewStartOfSelection.GetContainerAsContent()));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
   }
 
   // XXX This is odd.  We just tries to remove empty text node here but we
