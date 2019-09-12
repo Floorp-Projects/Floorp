@@ -67,7 +67,7 @@ class ImageMemoryReporter final {
   /**
    * Report all remaining entries in the shared surface's memory report.
    *
-   * aIsForCompositor controls how to intepret what remains in the report. If
+   * aIsForCompositor controls how to interpret what remains in the report. If
    * true, this should mirror exactly what is currently in
    * SharedSurfacesParent's cache. This will report entries that are currently
    * mapped into the compositor process. If false, then we are in a content or

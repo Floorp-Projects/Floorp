@@ -110,7 +110,7 @@ static nsresult moz_icon_to_channel(nsIURI* aURI, const nsACString& aFileExt,
 
   // nsIconProtocolHandler::NewChannel will provide the correct loadInfo for
   // this iconChannel. Use the most restrictive security settings for the
-  // temporary loadInfo to make sure the channel can not be openend.
+  // temporary loadInfo to make sure the channel can not be opened.
   nsCOMPtr<nsIPrincipal> nullPrincipal =
       NullPrincipal::CreateWithoutOriginAttributes();
   return NS_NewInputStreamChannel(

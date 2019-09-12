@@ -153,7 +153,7 @@ class imgRequestProxy : public imgIRequest,
   /* Remove from and forget the load group. */
   void RemoveFromLoadGroup();
 
-  /* Remove from the load group and readd as a background request. */
+  /* Remove from the load group and re-add as a background request. */
   void MoveToBackgroundInLoadGroup();
 
   /* Finish up canceling ourselves */

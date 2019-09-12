@@ -40,7 +40,7 @@ struct FilterPipeline<Config> {
 }  // namespace detail
 
 /**
- * Flags for SurfacePipeFactory, used in conjuction with the factory functions
+ * Flags for SurfacePipeFactory, used in conjunction with the factory functions
  * in SurfacePipeFactory to enable or disable various SurfacePipe
  * functionality.
  */

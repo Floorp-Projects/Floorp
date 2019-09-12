@@ -32,7 +32,7 @@ class Image;
  * Image progress bitflags.
  *
  * See CheckProgressConsistency() for the invariants we enforce about the
- * ordering dependencies betweeen these flags.
+ * ordering dependencies between these flags.
  */
 enum {
   FLAG_SIZE_AVAILABLE = 1u << 0,    // STATUS_SIZE_AVAILABLE

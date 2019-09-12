@@ -1342,7 +1342,7 @@ class ADAM7InterpolatingFilter final : public SurfaceFilter {
                                      /// now.
   uint8_t mPass;                     /// Which ADAM7 pass we're on. Valid passes
                                      /// are 1..7 during processing and 0 prior
-                                     /// to configuraiton.
+                                     /// to configuration.
   int32_t mRow;                      /// The row we're currently reading.
 };
 

@@ -108,7 +108,7 @@ add_task(async function() {
           image.onload = function() {
             ok(
               false,
-              "APP_TYPE_UNKNOWN is *not* allowed to acces privileged image"
+              "APP_TYPE_UNKNOWN is *not* allowed to access privileged image"
             );
             // restore appType of rootDocShell before moving on to the next test
             rootDocShell.appType = defaultAppType;
@@ -117,7 +117,7 @@ add_task(async function() {
           image.onerror = function() {
             ok(
               true,
-              "APP_TYPE_UNKNOWN is *not* allowed to acces privileged image"
+              "APP_TYPE_UNKNOWN is *not* allowed to access privileged image"
             );
             // restore appType of rootDocShell before moving on to the next test
             rootDocShell.appType = defaultAppType;
