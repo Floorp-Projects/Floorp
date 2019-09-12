@@ -20,7 +20,7 @@
         android:dependency="@string/pref_key_tracking_protection"
         android:key="@string/pref_key_tracking_protection_standard"
         android:summary="@string/preference_enhanced_tracking_protection_standard_description"
-        android:title="@string/preference_enhanced_tracking_protection_standard"
+        android:title="@string/preference_enhanced_tracking_protection_standard_option"
         app:isPreferenceVisible="false" />
     <org.mozilla.fenix.settings.RadioButtonInfoPreference
         android:defaultValue="true"
