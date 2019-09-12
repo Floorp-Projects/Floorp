@@ -5,6 +5,8 @@
 package org.mozilla.fenix.library.bookmarks.edit
 
 import android.content.DialogInterface
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -16,9 +18,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
-import androidx.lifecycle.ViewModelProvider
 import com.jakewharton.rxbinding3.widget.textChanges
 import com.uber.autodispose.AutoDispose
 import com.uber.autodispose.android.lifecycle.AndroidLifecycleScopeProvider
@@ -38,12 +40,13 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.getColorFromAttr
+import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.setRootTitles
-import org.mozilla.fenix.ext.withRootTitle
-import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.urlToTrimmedHost
+import org.mozilla.fenix.ext.withRootTitle
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 import java.util.concurrent.TimeUnit
 
@@ -149,6 +152,9 @@ class EditBookmarkFragment : Fragment() {
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.bookmarks_edit, menu)
+        val textColor = requireContext().getColorFromAttr(R.attr.primaryText)
+        menu.findItem(R.id.delete_bookmark_button).icon.colorFilter =
+            PorterDuffColorFilter(textColor, PorterDuff.Mode.SRC_IN)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
