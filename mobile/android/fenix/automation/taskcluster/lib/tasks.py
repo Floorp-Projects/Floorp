@@ -9,7 +9,7 @@ import datetime
 import json
 import taskcluster
 
-from lib.util import upper_case_first_letter, convert_camel_case_into_kebab_case, lower_case_first_letter
+from ..lib.util import upper_case_first_letter, convert_camel_case_into_kebab_case, lower_case_first_letter
 
 DEFAULT_EXPIRES_IN = '1 year'
 DEFAULT_APK_ARTIFACT_LOCATION = 'public/target.apk'
@@ -43,7 +43,7 @@ class TaskBuilder(object):
         self.scheduler_id = scheduler_id
         self.trust_level = trust_level
         self.tasks_priority = tasks_priority
-        self.date = arrow.get(date_string)
+        self.date = arrow.get(date_string, 'YYYYMMDDHHmmss')
         self.trust_level = trust_level
 
     def craft_assemble_release_task(self, variant, channel, is_staging, version_name):
@@ -317,10 +317,8 @@ class TaskBuilder(object):
         self, name, description, command, dependencies=None, artifacts=None,
         routes=None, treeherder=None, env_vars=None, scopes=None
     ):
-        dependencies = [] if dependencies is None else dependencies
         artifacts = {} if artifacts is None else artifacts
         scopes = [] if scopes is None else scopes
-        routes = [] if routes is None else routes
         env_vars = {} if env_vars is None else env_vars
 
         checkout_command = ' && '.join([
@@ -402,7 +400,7 @@ class TaskBuilder(object):
         treeherder=None,
         notify=None,
     ):
-        dependencies = [] if dependencies is None else dependencies
+        dependencies = {} if dependencies is None else dependencies
         scopes = [] if scopes is None else scopes
         routes = [] if routes is None else routes
         treeherder = {} if treeherder is None else treeherder
@@ -421,27 +419,31 @@ class TaskBuilder(object):
             extra['notify'] = notify
 
         return {
-            "provisionerId": provisioner_id,
-            "workerType": worker_type,
-            "taskGroupId": self.task_id,
-            "schedulerId": self.scheduler_id,
-            "created": taskcluster.stringDate(created),
-            "deadline": taskcluster.stringDate(deadline),
-            "expires": taskcluster.stringDate(expires),
-            "retries": 5,
-            "tags": {},
-            "priority": self.tasks_priority,
-            "dependencies": [self.task_id] + dependencies,
-            "requires": "all-completed",
-            "routes": routes,
-            "scopes": scopes,
-            "payload": payload,
-            "extra": extra,
-            "metadata": {
-                "name": "Fenix - {}".format(name),
-                "description": description,
-                "owner": self.owner,
-                "source": self.source,
+            "attributes": {},
+            "dependencies": dependencies,
+            "label": name,
+            "task": {
+                "provisionerId": provisioner_id,
+                "workerType": worker_type,
+                "taskGroupId": self.task_id,
+                "schedulerId": self.scheduler_id,
+                "created": taskcluster.stringDate(created),
+                "deadline": taskcluster.stringDate(deadline),
+                "expires": taskcluster.stringDate(expires),
+                "retries": 5,
+                "tags": {},
+                "priority": self.tasks_priority,
+                "requires": "all-completed",
+                "routes": routes,
+                "scopes": scopes,
+                "payload": payload,
+                "extra": extra,
+                "metadata": {
+                    "name": "Fenix - {}".format(name),
+                    "description": description,
+                    "owner": self.owner,
+                    "source": self.source,
+                },
             },
         }
 

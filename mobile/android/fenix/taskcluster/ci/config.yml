@@ -6,7 +6,7 @@ treeherder:
         'Rap': 'Raptor tests'
         'Rap-P': 'Raptor power tests'
 
-task-priority: lowest
+task-priority: highest
 
 taskgraph:
     register: fenix_taskgraph:register

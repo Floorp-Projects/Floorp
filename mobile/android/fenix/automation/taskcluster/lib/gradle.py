@@ -6,7 +6,7 @@ from __future__ import print_function
 import json
 import subprocess
 
-from lib.variant import Variant, VariantApk
+from ..lib.variant import Variant, VariantApk
 
 
 def get_variant(build_type, engine):
