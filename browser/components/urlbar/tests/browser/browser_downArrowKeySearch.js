@@ -21,7 +21,7 @@ add_task(async function url() {
     gURLBar.selectionStart = gURLBar.untrimmedValue.length;
     EventUtils.synthesizeKey("KEY_ArrowDown");
     await UrlbarTestUtils.promiseSearchComplete(window);
-    Assert.equal(UrlbarTestUtils.getSelectedIndex(window), 0);
+    Assert.equal(UrlbarTestUtils.getSelectedRowIndex(window), 0);
     let details = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
     Assert.ok(details.autofill);
     Assert.equal(details.url, "http://example.com/");
@@ -35,7 +35,7 @@ add_task(async function userTyping() {
   await UrlbarTestUtils.promisePopupClose(window);
   EventUtils.synthesizeKey("KEY_ArrowDown");
   await UrlbarTestUtils.promiseSearchComplete(window);
-  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), 0);
+  Assert.equal(UrlbarTestUtils.getSelectedRowIndex(window), 0);
   let details = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   Assert.equal(details.type, UrlbarUtils.RESULT_TYPE.SEARCH);
   Assert.ok(details.searchParams);
@@ -49,7 +49,7 @@ add_task(async function empty() {
   await UrlbarTestUtils.promisePopupClose(window);
   EventUtils.synthesizeKey("KEY_ArrowDown");
   await UrlbarTestUtils.promiseSearchComplete(window);
-  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), -1);
+  Assert.equal(UrlbarTestUtils.getSelectedRowIndex(window), -1);
   let details = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   Assert.equal(details.url, "http://example.com/");
   Assert.equal(gURLBar.value, "");

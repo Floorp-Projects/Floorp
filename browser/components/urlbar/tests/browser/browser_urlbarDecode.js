@@ -63,7 +63,7 @@ add_task(async function actionURILosslessDecode() {
   // moz-action.
   do {
     EventUtils.synthesizeKey("KEY_ArrowDown");
-  } while (UrlbarTestUtils.getSelectedIndex(window) != 0);
+  } while (UrlbarTestUtils.getSelectedRowIndex(window) != 0);
 
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
 

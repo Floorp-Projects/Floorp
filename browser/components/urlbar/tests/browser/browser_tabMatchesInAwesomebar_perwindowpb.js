@@ -89,7 +89,7 @@ async function runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
   info(`awesomebar popup appeared. aExpectSwitch: ${aExpectSwitch}`);
   // Make sure the last match is selected.
   while (
-    UrlbarTestUtils.getSelectedIndex(aDestWindow) <
+    UrlbarTestUtils.getSelectedRowIndex(aDestWindow) <
     UrlbarTestUtils.getResultCount(aDestWindow) - 1
   ) {
     info("handling key navigation for DOM_VK_DOWN key");

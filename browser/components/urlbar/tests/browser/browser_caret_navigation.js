@@ -76,7 +76,7 @@ async function checkPopupOpens(key) {
     checkIfKeyStartsQuery(key, true);
   });
   Assert.equal(
-    UrlbarTestUtils.getSelectedIndex(window),
+    UrlbarTestUtils.getSelectedRowIndex(window),
     0,
     `${key}: Heuristic result should be selected`
   );

@@ -47,7 +47,7 @@ add_task(async function() {
 
   // First item should already be selected
   Assert.equal(
-    UrlbarTestUtils.getSelectedIndex(window),
+    UrlbarTestUtils.getSelectedRowIndex(window),
     0,
     "Should have the first item selected"
   );
@@ -55,7 +55,7 @@ add_task(async function() {
   // Select next one (important!)
   EventUtils.synthesizeKey("KEY_ArrowDown");
   Assert.equal(
-    UrlbarTestUtils.getSelectedIndex(window),
+    UrlbarTestUtils.getSelectedRowIndex(window),
     1,
     "Should have the second item selected"
   );
@@ -63,7 +63,7 @@ add_task(async function() {
   // Re-select keyword item
   EventUtils.synthesizeKey("KEY_ArrowUp");
   Assert.equal(
-    UrlbarTestUtils.getSelectedIndex(window),
+    UrlbarTestUtils.getSelectedRowIndex(window),
     0,
     "Should have the first item selected"
   );
