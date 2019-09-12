@@ -248,6 +248,37 @@ add_task(async function test_modify() {
   });
 });
 
+add_task(async function test_escape_cancels_edit() {
+  await AboutConfigTest.withNewTab(async function() {
+    let row = this.getRow(PREF_MODIFY_STRING);
+    Preferences.set(PREF_MODIFY_STRING, "Edit me, maybe");
+
+    for (let blurInput of [false, true]) {
+      Assert.ok(!row.valueInput);
+      row.editColumnButton.click();
+
+      Assert.ok(row.valueInput);
+
+      Assert.equal(row.valueInput.value, "Edit me, maybe");
+      row.valueInput.value = "Edited";
+
+      // Test both cases of the input being focused and not being focused.
+      if (blurInput) {
+        row.valueInput.blur();
+        Assert.notEqual(this.document.activeElement, row.valueInput);
+      } else {
+        Assert.equal(this.document.activeElement, row.valueInput);
+      }
+
+      EventUtils.synthesizeKey("KEY_Escape", {}, this.window);
+
+      Assert.ok(!row.valueInput);
+      Assert.equal(row.value, "Edit me, maybe");
+      Assert.equal(row.value, Preferences.get(PREF_MODIFY_STRING));
+    }
+  });
+});
+
 add_task(async function test_edit_field_selected() {
   let prefsToCheck = [
     [PREF_MODIFY_STRING, "A string", "A new string"],
