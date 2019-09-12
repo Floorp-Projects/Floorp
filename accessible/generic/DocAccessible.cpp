@@ -2319,7 +2319,7 @@ bool DocAccessible::MoveChild(Accessible* aChild, Accessible* aNewParent,
 
   if (curParent == aNewParent) {
     MOZ_ASSERT(aChild->IndexInParent() != aIdxInParent, "No move case");
-    curParent->MoveChild(aIdxInParent, aChild);
+    curParent->RelocateChild(aIdxInParent, aChild);
 
 #ifdef A11Y_LOG
     logging::TreeInfo("move child: parent tree after", logging::eVerbose,

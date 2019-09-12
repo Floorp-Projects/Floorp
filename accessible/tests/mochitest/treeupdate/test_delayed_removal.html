@@ -195,6 +195,24 @@
       await event;
     }
 
+    function listItemReframe() {
+      testAccessibleTree("li",{ LISTITEM: [
+        { STATICTEXT: [] },
+        { TEXT_LEAF: [] },
+      ] });
+
+      getNode("li").style.listStylePosition = "inside";
+      document.body.offsetTop; // Flush layout.
+      window.windowUtils.advanceTimeAndRefresh(100);
+
+      testAccessibleTree("li",{ LISTITEM: [
+        { STATICTEXT: [] },
+        { TEXT_LEAF: [] },
+      ] });
+
+      window.windowUtils.restoreNormalRefresh();
+    }
+
     async function doTest() {
       await hideDivFromInsideSpan();
 
@@ -213,6 +231,8 @@
       await removeRelocatedWhenDomAncestorHidden();
 
       await removeShadowRootHost();
+
+      listItemReframe();
 
       SimpleTest.finish();
     }
@@ -265,6 +285,12 @@
 
   <div id="c9">
     <div><dir>a</dir></div>
+  </div>
+
+  <div id="c11">
+    <ul>
+        <li id="li">Test</li>
+    </ul>
   </div>
 
   <div id="eventdump"></div>
