@@ -7,6 +7,7 @@ const {
   setNamedTimeout,
 } = require("devtools/client/shared/widgets/view-helpers");
 const { getCurrentZoom } = require("devtools/shared/layout/utils");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const {
   DOMHelpers,
 } = require("resource://devtools/client/shared/DOMHelpers.jsm");
@@ -106,7 +107,7 @@ this.AbstractCanvasGraph = function(parent, name, sharpness) {
     AbstractCanvasGraph.createIframe(GRAPH_SRC, parent, iframe => {
       this._iframe = iframe;
       this._window = iframe.contentWindow;
-      this._topWindow = this._window.top;
+      this._topWindow = DevToolsUtils.getTopWindow(this._window);
       this._document = iframe.contentDocument;
       this._pixelRatio = sharpness || this._window.devicePixelRatio;
 
