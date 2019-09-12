@@ -258,7 +258,4 @@ if __name__ == "__main__":
     else:
         raise Exception('Unsupported command "{}"'.format(command))
 
-    full_task_graph = schedule_task_graph(ordered_groups_of_tasks)
-
     populate_chain_of_trust_task_graph(full_task_graph)
-    populate_chain_of_trust_required_but_unused_files()

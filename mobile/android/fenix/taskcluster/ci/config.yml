@@ -1,0 +1,58 @@
+---
+trust-domain: mobile
+treeherder:
+    group-names:
+        'I': 'Docker Image Builds'
+        'Rap': 'Raptor tests'
+        'Rap-P': 'Raptor power tests'
+
+task-priority: lowest
+
+taskgraph:
+    register: fenix_taskgraph:register
+    repositories:
+        mobile:
+            name: "Fenix"
+    cached-task-prefix: project.mobile.fenix
+
+workers:
+    aliases:
+        b-android:
+            provisioner: aws-provisioner-v1
+            implementation: docker-worker
+            os: linux
+            worker-type: 'mobile-{level}-b-ref-browser'
+        images:
+            provisioner: aws-provisioner-v1
+            implementation: docker-worker
+            os: linux
+            worker-type: 'mobile-{level}-images'
+        dep-signing:
+            provisioner: scriptworker-prov-v1
+            implementation: scriptworker-signing
+            os: scriptworker
+            worker-type: mobile-signing-dep-v1
+        signing:
+            provisioner: scriptworker-prov-v1
+            implementation: scriptworker-signing
+            os: scriptworker
+            worker-type:
+                by-level:
+                    "3": mobile-signing-v1
+                    default: mobile-signing-dep-v1
+        push-apk:
+            provisioner: scriptworker-prov-v1
+            implementation: scriptworker-pushapk
+            os: scriptworker
+            worker-type:
+                by-level:
+                    "3": mobile-pushapk-v1
+                    default: mobile-pushapk-dep-v1
+        t-bitbar.*:
+            provisioner: proj-autophone
+            implementation: generic-worker
+            os: linux-bitbar
+            worker-type: 'gecko-{alias}'
+
+scriptworker:
+    scope-prefix: project:mobile:fenix:releng
