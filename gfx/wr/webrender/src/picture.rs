@@ -2947,11 +2947,17 @@ impl PicturePrimitive {
                         for key in &tile_cache.tiles_to_draw {
                             let tile = tile_cache.tiles.get_mut(key).expect("bug: no tile found!");
 
+                            // Register active image keys of valid tile.
+                            // TODO(gw): For now, we will register images on any visible
+                            //           tiles as active. This is a hotfix because video
+                            //           images on Mac/Linux are not being correctly detected
+                            //           as non-cacheable. We should investigate / fix the
+                            //           root cause of this.
+                            for image_key in &tile.current_descriptor.image_keys {
+                                frame_state.resource_cache.set_image_active(*image_key);
+                            }
+
                             if tile.is_valid {
-                                // Register active image keys of valid tile.
-                                for image_key in &tile.current_descriptor.image_keys {
-                                    frame_state.resource_cache.set_image_active(*image_key);
-                                }
                                 continue;
                             }
 
