@@ -1018,28 +1018,17 @@ nsresult TextEditor::InsertLineBreakAsSubAction() {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
-
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertLineBreak, nsIEditor::eNext);
 
-  EditSubActionInfo subActionInfo(EditSubAction::eInsertLineBreak);
-  subActionInfo.maxLength = mMaxTextLength;
-  bool cancel, handled;
-  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
-  if (cancel) {
-    return rv;  // We don't need to call DidDoAction() if canceled.
+  EditActionResult result = InsertLineFeedCharacterAtSelection();
+  if (result.EditorDestroyed()) {
+    return NS_ERROR_EDITOR_DESTROYED;
   }
-  // XXX DidDoAction() does nothing for eInsertParagraphSeparator.  However,
-  //     we should call it until we keep using this style.  Perhaps, each
-  //     editor method should call necessary method of
-  //     TextEditRules/HTMLEditRules directly.
-  rv = rules->DidDoAction(subActionInfo, rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(
+      result.Succeeded(),
+      "InsertLineFeedCharacterAtSelection() failed, but ignored");
+  return result.Rv();
 }
 
 nsresult TextEditor::SetTextAsAction(const nsAString& aString,

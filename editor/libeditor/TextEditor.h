@@ -588,6 +588,13 @@ class TextEditor : public EditorBase,
   EditActionResult TruncateInsertionStringForMaxLength(
       nsAString& aInsertionString, uint32_t aMaxLength);
 
+  /**
+   * InsertLineFeedCharacterAtSelection() inserts a linefeed character at
+   * selection.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  InsertLineFeedCharacterAtSelection();
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
@@ -642,7 +649,7 @@ class TextEditor : public EditorBase,
    * InsertLineBreakAsSubAction() inserts a line break, i.e., \n if it's
    * TextEditor or <br> if it's HTMLEditor.
    */
-  nsresult InsertLineBreakAsSubAction();
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult InsertLineBreakAsSubAction();
 
   /**
    * PrepareInsertContent() is a helper method of InsertTextAt(),

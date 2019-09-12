@@ -833,7 +833,6 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
 
   switch (aInfo.mEditSubAction) {
     case EditSubAction::eInsertText:
-    case EditSubAction::eInsertLineBreak:
     case EditSubAction::eInsertTextComingFromIME:
       return NS_OK;
     case EditSubAction::eInsertElement:
@@ -847,6 +846,7 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
     case EditSubAction::eIncreaseZIndex:
     case EditSubAction::eIndent:
     case EditSubAction::eInsertHTMLSource:
+    case EditSubAction::eInsertLineBreak:
     case EditSubAction::eInsertParagraphSeparator:
     case EditSubAction::eOutdent:
     case EditSubAction::eUndo:
