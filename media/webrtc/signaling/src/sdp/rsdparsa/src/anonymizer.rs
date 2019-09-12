@@ -45,6 +45,7 @@ pub struct StatefulSdpAnonymizer {
     ice_users: AnonymizationStrMap,
     cert_finger_prints: HashMap<Vec<u8>, Vec<u8>>,
     cert_finger_print_inc: Wrapping<u64>,
+    cnames: AnonymizationStrMap,
 }
 
 impl Default for StatefulSdpAnonymizer {
@@ -67,6 +68,7 @@ impl StatefulSdpAnonymizer {
             ice_users: AnonymizationStrMap::new("ice-user-", 8),
             cert_finger_prints: HashMap::new(),
             cert_finger_print_inc: Wrapping(0),
+            cnames: AnonymizationStrMap::new("cname-", 8),
         }
     }
 
@@ -146,6 +148,10 @@ impl StatefulSdpAnonymizer {
             self.cert_finger_print_inc.0.to_byte_vec(),
         );
         self.cert_finger_print_inc.0.to_byte_vec()
+    }
+
+    pub fn mask_cname(&mut self, cname: &str) -> String {
+        self.cnames.mask(cname)
     }
 }
 
@@ -288,6 +294,18 @@ mod tests {
             assert_eq!(anon.mask_cert_finger_print(&prints[0]), masked_prints[0]);
             assert_eq!(anon.mask_cert_finger_print(&prints[1]), masked_prints[1]);
             assert_eq!(anon.mask_cert_finger_print(&prints[2]), masked_prints[2]);
+        }
+    }
+
+    #[test]
+    fn test_mask_cname() {
+        let mut anon = StatefulSdpAnonymizer::default();
+        let cnames = ["mailto:foo@bar", "JohnDoe", "Jane Doe"];
+        let masked_cnames = ["cname-00000001", "cname-00000002", "cname-00000003"];
+        for _ in 0..2 {
+            assert_eq!(anon.mask_cname(cnames[0]), masked_cnames[0]);
+            assert_eq!(anon.mask_cname(cnames[1]), masked_cnames[1]);
+            assert_eq!(anon.mask_cname(cnames[2]), masked_cnames[2]);
         }
     }
 }

@@ -3,8 +3,14 @@ use attribute_type::{
     maybe_print_param, SdpAttribute, SdpAttributeRtpmap, SdpAttributeSctpmap, SdpAttributeType,
 };
 use error::{SdpParserError, SdpParserInternalError};
+use std::fmt;
 use {SdpBandwidth, SdpConnection, SdpLine, SdpType};
 
+/*
+ * RFC4566
+ * media-field =         %x6d "=" media SP port ["/" integer]
+ *                       SP proto 1*(SP fmt) CRLF
+ */
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 pub struct SdpMediaLine {
@@ -15,15 +21,16 @@ pub struct SdpMediaLine {
     pub formats: SdpFormatList,
 }
 
-impl ToString for SdpMediaLine {
-    fn to_string(&self) -> String {
-        format!(
-            "{media_line} {port}{port_count} {protocol} {formats}",
-            media_line = self.media.to_string(),
-            port_count = maybe_print_param("/", self.port_count, 0),
-            port = self.port.to_string(),
-            protocol = self.proto.to_string(),
-            formats = self.formats.to_string()
+impl fmt::Display for SdpMediaLine {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{media} {port}{pcount} {proto} {formats}",
+            media = self.media,
+            port = self.port,
+            pcount = maybe_print_param("/", self.port_count, 0),
+            proto = self.proto,
+            formats = self.formats
         )
     }
 }
@@ -36,35 +43,35 @@ pub enum SdpMediaValue {
     Application,
 }
 
-impl ToString for SdpMediaValue {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpMediaValue {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             SdpMediaValue::Audio => "audio",
             SdpMediaValue::Video => "video",
             SdpMediaValue::Application => "application",
         }
-        .to_string()
+        .fmt(f)
     }
 }
 
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 pub enum SdpProtocolValue {
-    RtpAvp,
-    RtpAvpf,
-    RtpSavp,
-    RtpSavpf,
-    TcpDtlsRtpSavp,
-    TcpDtlsRtpSavpf,
-    UdpTlsRtpSavp,
-    UdpTlsRtpSavpf,
-    DtlsSctp,
-    UdpDtlsSctp,
-    TcpDtlsSctp,
+    RtpAvp,          /* RTP/AVP [RFC4566] */
+    RtpAvpf,         /* RTP/AVPF [RFC4585] */
+    RtpSavp,         /* RTP/SAVP [RFC3711] */
+    RtpSavpf,        /* RTP/SAVPF [RFC5124] */
+    TcpDtlsRtpSavp,  /* TCP/DTLS/RTP/SAVP [RFC7850] */
+    TcpDtlsRtpSavpf, /* TCP/DTLS/RTP/SAVPF [RFC7850] */
+    UdpTlsRtpSavp,   /* UDP/TLS/RTP/SAVP [RFC5764] */
+    UdpTlsRtpSavpf,  /* UDP/TLS/RTP/SAVPF [RFC5764] */
+    DtlsSctp,        /* DTLS/SCTP [draft-ietf-mmusic-sctp-sdp-07] */
+    UdpDtlsSctp,     /* UDP/DTLS/SCTP [draft-ietf-mmusic-sctp-sdp-26] */
+    TcpDtlsSctp,     /* TCP/DTLS/SCTP [draft-ietf-mmusic-sctp-sdp-26] */
 }
 
-impl ToString for SdpProtocolValue {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpProtocolValue {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             SdpProtocolValue::RtpAvp => "RTP/AVP",
             SdpProtocolValue::RtpAvpf => "RTP/AVPF",
@@ -78,7 +85,7 @@ impl ToString for SdpProtocolValue {
             SdpProtocolValue::UdpDtlsSctp => "UDP/DTLS/SCTP",
             SdpProtocolValue::TcpDtlsSctp => "TCP/DTLS/SCTP",
         }
-        .to_string()
+        .fmt(f)
     }
 }
 
@@ -89,15 +96,25 @@ pub enum SdpFormatList {
     Strings(Vec<String>),
 }
 
-impl ToString for SdpFormatList {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpFormatList {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             SdpFormatList::Integers(ref x) => maybe_vector_to_string!("{}", x, " "),
             SdpFormatList::Strings(ref x) => x.join(" "),
         }
+        .fmt(f)
     }
 }
 
+/*
+ * RFC4566
+ * media-descriptions =  *( media-field
+ *                       information-field
+ *                       *connection-field
+ *                       bandwidth-fields
+ *                       key-field
+ *                       attribute-fields )
+ */
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 pub struct SdpMedia {
@@ -108,6 +125,19 @@ pub struct SdpMedia {
     // unsupported values:
     // information: Option<String>,
     // key: Option<String>,
+}
+
+impl fmt::Display for SdpMedia {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "m={mline}\r\n{bw}{connection}{attributes}",
+            mline = self.media,
+            bw = maybe_vector_to_string!("b={}\r\n", self.bandwidth, "\r\nb="),
+            connection = option_to_string!("c={}\r\n", self.connection),
+            attributes = maybe_vector_to_string!("a={}\r\n", self.attribute, "\r\na=")
+        )
+    }
 }
 
 impl SdpMedia {
@@ -160,7 +190,7 @@ impl SdpMedia {
         if !attr.allowed_at_media_level() {
             return Err(SdpParserInternalError::Generic(format!(
                 "{} not allowed at media level",
-                attr.to_string()
+                attr
             )));
         }
         self.attribute.push(attr);
@@ -260,21 +290,6 @@ impl SdpMedia {
         self.media.media = SdpMediaValue::Application;
 
         Ok(())
-    }
-}
-
-impl ToString for SdpMedia {
-    fn to_string(&self) -> String {
-        format!(
-            "m={media_line}\r\n\
-             {bandwidth}\
-             {connection}\
-             {attributes}",
-            media_line = self.media.to_string(),
-            connection = option_to_string!("c={}\r\n", self.connection),
-            bandwidth = maybe_vector_to_string!("b={}\r\n", self.bandwidth, "\r\nb="),
-            attributes = maybe_vector_to_string!("a={}\r\n", self.attribute, "\r\na=")
-        )
     }
 }
 
@@ -391,13 +406,7 @@ pub fn parse_media(value: &str) -> Result<SdpType, SdpParserInternalError> {
         proto,
         formats,
     };
-    trace!(
-        "media: {}, {}, {}, {}",
-        m.media.to_string(),
-        m.port.to_string(),
-        m.proto.to_string(),
-        m.formats.to_string()
-    );
+    trace!("media: {}, {}, {}, {}", m.media, m.port, m.proto, m.formats);
     Ok(SdpType::Media(m))
 }
 
@@ -694,24 +703,26 @@ mod tests {
 
     #[test]
     fn test_parse_protocol_rtp_token() -> Result<(), SdpParserInternalError> {
-        let rtps = parse_protocol_token("rtp/avp")?;
-        assert_eq!(rtps, SdpProtocolValue::RtpAvp);
-        let rtps = parse_protocol_token("rtp/avpf")?;
-        assert_eq!(rtps, SdpProtocolValue::RtpAvpf);
-        let rtps = parse_protocol_token("rtp/savp")?;
-        assert_eq!(rtps, SdpProtocolValue::RtpSavp);
-        let rtps = parse_protocol_token("rtp/savpf")?;
-        assert_eq!(rtps, SdpProtocolValue::RtpSavpf);
-        let udps = parse_protocol_token("udp/tls/rtp/savp")?;
-        assert_eq!(udps, SdpProtocolValue::UdpTlsRtpSavp);
-        let udps = parse_protocol_token("udp/tls/rtp/savpf")?;
-        assert_eq!(udps, SdpProtocolValue::UdpTlsRtpSavpf);
-        let tcps = parse_protocol_token("TCP/dtls/rtp/savp")?;
-        assert_eq!(tcps, SdpProtocolValue::TcpDtlsRtpSavp);
-        let tcps = parse_protocol_token("TCP/dtls/rtp/savpf")?;
-        assert_eq!(tcps, SdpProtocolValue::TcpDtlsRtpSavpf);
-        let tcps = parse_protocol_token("TCP/tls/rtp/savpf")?;
-        assert_eq!(tcps, SdpProtocolValue::TcpTlsRtpSavpf);
+        fn parse_and_serialize_protocol_token(
+            token: &str,
+            result: SdpProtocolValue,
+        ) -> Result<(), SdpParserInternalError> {
+            let rtps = parse_protocol_token(token)?;
+            assert_eq!(rtps, result);
+            assert_eq!(rtps.to_string(), token.to_uppercase());
+            Ok(())
+        }
+        parse_and_serialize_protocol_token("rtp/avp", SdpProtocolValue::RtpAvp)?;
+        parse_and_serialize_protocol_token("rtp/avpf", SdpProtocolValue::RtpAvpf)?;
+        parse_and_serialize_protocol_token("rtp/savp", SdpProtocolValue::RtpSavp)?;
+        parse_and_serialize_protocol_token("rtp/savpf", SdpProtocolValue::RtpSavpf)?;
+        parse_and_serialize_protocol_token("udp/tls/rtp/savp", SdpProtocolValue::UdpTlsRtpSavp)?;
+        parse_and_serialize_protocol_token("udp/tls/rtp/savpf", SdpProtocolValue::UdpTlsRtpSavpf)?;
+        parse_and_serialize_protocol_token("TCP/dtls/rtp/savp", SdpProtocolValue::TcpDtlsRtpSavp)?;
+        parse_and_serialize_protocol_token(
+            "tcp/DTLS/rtp/savpf",
+            SdpProtocolValue::TcpDtlsRtpSavpf,
+        )?;
 
         assert!(parse_protocol_token("").is_err());
         assert!(parse_protocol_token("foobar").is_err());
@@ -720,12 +731,18 @@ mod tests {
 
     #[test]
     fn test_parse_protocol_sctp_token() -> Result<(), SdpParserInternalError> {
-        let dtls = parse_protocol_token("dtLs/ScTP")?;
-        assert_eq!(dtls, SdpProtocolValue::DtlsSctp);
-        let usctp = parse_protocol_token("udp/DTLS/sctp")?;
-        assert_eq!(usctp, SdpProtocolValue::UdpDtlsSctp);
-        let tsctp = parse_protocol_token("tcp/dtls/SCTP")?;
-        assert_eq!(tsctp, SdpProtocolValue::TcpDtlsSctp);
+        fn parse_and_serialize_protocol_token(
+            token: &str,
+            result: SdpProtocolValue,
+        ) -> Result<(), SdpParserInternalError> {
+            let rtps = parse_protocol_token(token)?;
+            assert_eq!(rtps, result);
+            assert_eq!(rtps.to_string(), token.to_uppercase());
+            Ok(())
+        }
+        parse_and_serialize_protocol_token("dtLs/ScTP", SdpProtocolValue::DtlsSctp)?;
+        parse_and_serialize_protocol_token("udp/DTLS/sctp", SdpProtocolValue::UdpDtlsSctp)?;
+        parse_and_serialize_protocol_token("tcp/dtls/SCTP", SdpProtocolValue::TcpDtlsSctp)?;
         Ok(())
     }
 

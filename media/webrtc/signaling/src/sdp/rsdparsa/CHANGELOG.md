@@ -1,7 +1,18 @@
 # Changelog
 
 ## [Unreleased]
+
+## [0.3.0] - 2019-08-08
+### Changed
+- Unsafe code is forbidden now
+
+### Fixed
+- Fixed panic from slicing unicode character in image attr braces
+
+### Added
 - Added support for FQDN addresses
+- Added support for parsing ice-pacing
+- Added fuzzing target
 
 ## [0.2.2] - 2019-06-21
 ### Changed
