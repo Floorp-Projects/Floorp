@@ -5,7 +5,7 @@
 package mozilla.components.feature.downloads.ext
 
 import androidx.core.net.toUri
-import mozilla.components.browser.session.Download
+import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.concept.fetch.Headers
 import mozilla.components.concept.fetch.Headers.Names.CONTENT_DISPOSITION
 import mozilla.components.concept.fetch.Headers.Names.CONTENT_LENGTH
@@ -14,7 +14,7 @@ import mozilla.components.support.utils.DownloadUtils
 import java.io.InputStream
 import java.net.URLConnection
 
-fun Download.isScheme(protocols: Iterable<String>): Boolean {
+internal fun DownloadState.isScheme(protocols: Iterable<String>): Boolean {
     val scheme = url.trim().toUri().scheme ?: return false
     return protocols.contains(scheme)
 }
@@ -25,7 +25,7 @@ fun Download.isScheme(protocols: Iterable<String>): Boolean {
  * @param headers Headers from the response.
  * @param stream Stream of the response body.
  */
-fun Download.withResponse(headers: Headers, stream: InputStream?): Download {
+internal fun DownloadState.withResponse(headers: Headers, stream: InputStream?): DownloadState {
     val contentDisposition = headers[CONTENT_DISPOSITION]
     var contentType = this.contentType
     if (contentType == null && stream != null) {

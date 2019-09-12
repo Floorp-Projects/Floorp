@@ -19,7 +19,7 @@ import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import androidx.core.util.isEmpty
 import androidx.core.util.set
-import mozilla.components.browser.session.Download
+import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.concept.fetch.Headers.Names.COOKIE
 import mozilla.components.concept.fetch.Headers.Names.REFERRER
 import mozilla.components.concept.fetch.Headers.Names.USER_AGENT
@@ -39,7 +39,7 @@ class AndroidDownloadManager(
     override var onDownloadCompleted: OnDownloadCompleted = noop
 ) : BroadcastReceiver(), DownloadManager {
 
-    private val queuedDownloads = LongSparseArray<Download>()
+    private val queuedDownloads = LongSparseArray<DownloadState>()
     private var isSubscribedReceiver = false
 
     override val permissions = arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE)
@@ -51,7 +51,7 @@ class AndroidDownloadManager(
      * @return the id reference of the scheduled download.
      */
     @RequiresPermission(allOf = [INTERNET, WRITE_EXTERNAL_STORAGE])
-    override fun download(download: Download, cookie: String): Long? {
+    override fun download(download: DownloadState, cookie: String): Long? {
 
         val androidDownloadManager: SystemDownloadManager = applicationContext.getSystemService()!!
 
@@ -112,7 +112,7 @@ class AndroidDownloadManager(
     }
 }
 
-private fun Download.toAndroidRequest(cookie: String): SystemRequest {
+private fun DownloadState.toAndroidRequest(cookie: String): SystemRequest {
     val request = SystemRequest(url.toUri())
         .setNotificationVisibility(VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
 

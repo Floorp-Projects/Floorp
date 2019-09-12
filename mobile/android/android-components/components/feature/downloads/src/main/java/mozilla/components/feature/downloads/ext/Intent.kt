@@ -6,7 +6,7 @@ package mozilla.components.feature.downloads.ext
 
 import android.content.Intent
 import androidx.core.os.bundleOf
-import mozilla.components.browser.session.Download
+import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.concept.fetch.Headers.Names.CONTENT_LENGTH
 import mozilla.components.concept.fetch.Headers.Names.CONTENT_TYPE
 import mozilla.components.concept.fetch.Headers.Names.REFERRER
@@ -17,7 +17,7 @@ private const val INTENT_URL = "mozilla.components.feature.downloads.URL"
 private const val INTENT_FILE_NAME = "mozilla.components.feature.downloads.FILE_NAME"
 private const val INTENT_DESTINATION = "mozilla.components.feature.downloads.DESTINATION"
 
-fun Intent.putDownloadExtra(download: Download) {
+fun Intent.putDownloadExtra(download: DownloadState) {
     download.apply {
         putExtra(INTENT_DOWNLOAD, bundleOf(
             INTENT_URL to url,
@@ -31,14 +31,14 @@ fun Intent.putDownloadExtra(download: Download) {
     }
 }
 
-fun Intent.getDownloadExtra(): Download? =
+fun Intent.getDownloadExtra(): DownloadState? =
     getBundleExtra(INTENT_DOWNLOAD)?.run {
         val url = getString(INTENT_URL)
         val fileName = getString(INTENT_FILE_NAME)
         val destination = getString(INTENT_DESTINATION)
         if (url == null || destination == null) return null
 
-        Download(
+        DownloadState(
             url = url,
             fileName = fileName,
             contentType = getString(CONTENT_TYPE),

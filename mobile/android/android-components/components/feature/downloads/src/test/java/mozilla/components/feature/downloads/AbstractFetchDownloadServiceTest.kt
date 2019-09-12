@@ -9,7 +9,7 @@ import android.content.Intent
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
-import mozilla.components.browser.session.Download
+import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
@@ -49,7 +49,7 @@ class AbstractFetchDownloadServiceTest {
 
     @Test
     fun `begins download when started`() = runBlocking {
-        val download = Download("https://example.com/file.txt", "file.txt")
+        val download = DownloadState("https://example.com/file.txt", "file.txt")
         val response = Response(
             "https://example.com/file.txt",
             200,
@@ -66,7 +66,7 @@ class AbstractFetchDownloadServiceTest {
 
         service.onStartCommand(downloadIntent, 0)
 
-        val providedDownload = argumentCaptor<Download>()
+        val providedDownload = argumentCaptor<DownloadState>()
         verify(service).useFileStream(providedDownload.capture(), any())
         assertEquals(download.url, providedDownload.value.url)
         assertEquals(download.fileName, providedDownload.value.fileName)

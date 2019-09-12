@@ -18,6 +18,9 @@ permalink: /changelog/
 * **feature-pwa**
   * Adds `WebAppUseCases.isInstallable` to check if the current session can be installed as a Progressive Web App.
 
+* **feature-downloads**
+  *  ⚠️ **This is a breaking change**: The `feature-downloads` component has been migrated to `browser-state` from `browser-session`. Therefore creating a `DownloadsFeature` requires a `BrowserStore` instance (instead of a `SessionManager` instance) and a `DownloadsUseCases` instance now.
+
 # 12.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v11.0.0...v12.0.0)

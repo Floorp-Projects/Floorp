@@ -106,7 +106,8 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
         downloadsFeature.set(
             feature = DownloadsFeature(
                 requireContext().applicationContext,
-                sessionManager = components.sessionManager,
+                store = components.store,
+                useCases = components.downloadsUseCases,
                 fragmentManager = childFragmentManager,
                 onDownloadCompleted = { download, id ->
                     Logger.debug("Download done. ID#$id $download")
