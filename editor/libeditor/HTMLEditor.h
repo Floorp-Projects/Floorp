@@ -2275,6 +2275,16 @@ class HTMLEditor final : public TextEditor,
                         nsIEditor::EStripWrappers aStripWrappers);
 
   /**
+   * DeleteMostAncestorMailCiteElementIfEmpty() deletes most ancestor
+   * mail cite element (`<blockquote type="cite">` or
+   * `<span _moz_quote="true">`, the former can be created with middle click
+   * paste with `Control` or `Command` even in the web) of aContent if it
+   * becomes empty.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  DeleteMostAncestorMailCiteElementIfEmpty(nsIContent& aContent);
+
+  /**
    * LiftUpListItemElement() moves aListItemElement outside its parent.
    * If it's in a middle of a list element, the parent list element is split
    * before aListItemElement.  Then, moves aListItemElement to before its

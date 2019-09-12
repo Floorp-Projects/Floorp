@@ -261,8 +261,6 @@ nsresult TextEditRules::DidDoAction(EditSubActionInfo& aInfo,
 
   switch (aInfo.mEditSubAction) {
     case EditSubAction::eDeleteSelectedContent:
-      MOZ_ASSERT(!mIsHTMLEditRules);
-      return NS_OK;
     case EditSubAction::eInsertElement:
     case EditSubAction::eUndo:
     case EditSubAction::eRedo:
