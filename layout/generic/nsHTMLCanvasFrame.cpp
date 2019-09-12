@@ -163,7 +163,7 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
         // parent side, where it will be done when we build the display list for
         // the iframe. That happens in WebRenderCompositableHolder.
 
-        wr::LayoutRect r = wr::ToRoundedLayoutRect(bounds);
+        wr::LayoutRect r = wr::ToLayoutRect(bounds);
         aBuilder.PushIFrame(r, !BackfaceIsHidden(), data->GetPipelineId().ref(),
                             /*ignoreMissingPipelines*/ false);
 
