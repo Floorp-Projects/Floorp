@@ -52,14 +52,8 @@ class InlinePreviewRow extends PureComponent<Props> {
       line,
       ch: editor.getLine(line).length,
     });
-    return lineEndPos.left - lineStartPos.left;
-  }
-
-  setPreviewPosition(node, left) {
-    if (this.lastLeft !== left) {
-      this.lastLeft = left;
-      node.style.left = `${left}px`;
-    }
+    const previewSpacing = 8;
+    return lineEndPos.left - lineStartPos.left + previewSpacing;
   }
 
   updatePreviewWidget(props: Props | null, prevProps: Props | null) {
@@ -90,15 +84,16 @@ class InlinePreviewRow extends PureComponent<Props> {
       unHighlightDomElement,
     } = props;
 
-    const left = this.getPreviewPosition(editor, line);
     if (!this.IPWidget) {
       const widget = document.createElement("div");
       widget.classList.add("inline-preview");
-      this.setPreviewPosition(widget, left);
       this.IPWidget = editor.codeMirror.addLineWidget(line, widget);
     }
-    else if (!prevProps || this.lastLeft !== left) {
-      this.setPreviewPosition(this.IPWidget.node, left);
+
+    const left = this.getPreviewPosition(editor, line);
+    if (!prevProps || this.lastLeft !== left) {
+      this.lastLeft = left;
+      this.IPWidget.node.style.left = `${left}px`;
     }
 
     ReactDOM.render(
