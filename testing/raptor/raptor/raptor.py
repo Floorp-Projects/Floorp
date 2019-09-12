@@ -62,7 +62,7 @@ from performance_tuning import tune_performance
 from power import init_android_power_test, finish_android_power_test
 from results import RaptorResultsHandler
 from utils import view_gecko_profile, write_yml_file
-from cpu import generate_android_cpu_profile
+from cpu import start_android_cpu_profiler
 
 LOG = RaptorLogger(component='raptor-main')
 
@@ -114,7 +114,7 @@ either Raptor or browsertime."""
             'memory_test': memory_test,
             'cpu_test': cpu_test,
             'is_release_build': is_release_build,
-            'enable_control_server_wait': memory_test,
+            'enable_control_server_wait': memory_test or cpu_test,
             'e10s': e10s,
             'enable_webrender': enable_webrender,
         }
@@ -439,6 +439,7 @@ class Raptor(Perftest):
     def __init__(self, *args, **kwargs):
         self.raptor_webext = None
         self.control_server = None
+        self.cpu_profiler = None
 
         super(Raptor, self).__init__(*args, **kwargs)
 
@@ -505,6 +506,9 @@ class Raptor(Perftest):
                 if response == 'webext_shutdownBrowser':
                     if self.config['memory_test']:
                         generate_android_memory_profile(self, test['name'])
+                    if self.cpu_profiler:
+                        self.cpu_profiler.generate_android_cpu_profile(test['name'])
+
                     self.control_server_wait_continue()
             time.sleep(1)
             # we only want to force browser-shutdown on timeout if not in debug mode;
@@ -1199,12 +1203,12 @@ class RaptorAndroid(Raptor):
             # now start the browser/app under test
             self.launch_firefox_android_app(test['name'])
 
-            # If we are measuring CPU, let's grab a snapshot
-            if self.config['cpu_test']:
-                generate_android_cpu_profile(self, test['name'])
-
             # set our control server flag to indicate we are running the browser/app
             self.control_server._finished = False
+
+            if self.config['cpu_test']:
+                # start measuring CPU usage
+                self.cpu_profiler = start_android_cpu_profiler(self)
 
             self.wait_for_test_finish(test, timeout)
 
@@ -1243,12 +1247,12 @@ class RaptorAndroid(Raptor):
         # now start the browser/app under test
         self.launch_firefox_android_app(test['name'])
 
-        # If we are collecting CPU info, let's grab the details
-        if self.config['cpu_test']:
-            generate_android_cpu_profile(self, test['name'])
-
         # set our control server flag to indicate we are running the browser/app
         self.control_server._finished = False
+
+        if self.config['cpu_test']:
+            # start measuring CPU usage
+            self.cpu_profiler = start_android_cpu_profiler(self)
 
         self.wait_for_test_finish(test, timeout)
 

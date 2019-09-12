@@ -20,8 +20,7 @@ registerCleanupFunction(() => {
 loader.lazyRequireGetter(
   this,
   "ResponsiveUIManager",
-  "devtools/client/responsive/manager",
-  true
+  "devtools/client/responsive/manager"
 );
 
 const TESTCASE_URI = TEST_BASE_HTTPS + "media-rules.html";
