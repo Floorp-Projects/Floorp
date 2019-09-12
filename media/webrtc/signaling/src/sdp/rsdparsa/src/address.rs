@@ -195,13 +195,20 @@ mod tests {
     use self::url::ParseError;
     use super::*;
     use std::error::Error;
-    use std::fmt::Display;
     use std::net::{AddrParseError, Ipv4Addr, Ipv6Addr};
 
-    #[derive(Debug, enum_display_derive::Display)]
+    #[derive(Debug)]
     enum ParseTestError {
         Host(ParseError),
         Ip(AddrParseError),
+    }
+    impl fmt::Display for ParseTestError {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            match self {
+                ParseTestError::Host(inner) => inner.fmt(f),
+                ParseTestError::Ip(inner) => inner.fmt(f),
+            }
+        }
     }
     impl From<ParseError> for ParseTestError {
         fn from(err: ParseError) -> Self {

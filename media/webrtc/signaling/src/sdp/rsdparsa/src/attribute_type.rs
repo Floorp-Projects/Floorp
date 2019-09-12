@@ -16,8 +16,18 @@ use anonymizer::{AnonymizingClone, StatefulSdpAnonymizer};
 macro_rules! option_to_string {
     ($fmt_str:expr, $opt:expr) => {
         match $opt {
-            Some(ref x) => format!($fmt_str, x.to_string()),
+            Some(ref x) => format!($fmt_str, x),
             None => "".to_string(),
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! write_option_string {
+    ($f:expr, $fmt_str:expr, $opt:expr) => {
+        match $opt {
+            Some(ref x) => write!($f, $fmt_str, x),
+            None => Ok(()),
         }
     };
 }
@@ -80,13 +90,13 @@ pub enum SdpSingleDirection {
     Recv = 2,
 }
 
-impl ToString for SdpSingleDirection {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpSingleDirection {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             SdpSingleDirection::Send => "send",
             SdpSingleDirection::Recv => "recv",
         }
-        .to_string()
+        .fmt(f)
     }
 }
 
@@ -97,11 +107,11 @@ pub enum SdpAttributePayloadType {
     Wildcard, // Wildcard means "*",
 }
 
-impl ToString for SdpAttributePayloadType {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpAttributePayloadType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            SdpAttributePayloadType::PayloadType(pt) => pt.to_string(),
-            SdpAttributePayloadType::Wildcard => "*".to_string(),
+            SdpAttributePayloadType::PayloadType(pt) => pt.fmt(f),
+            SdpAttributePayloadType::Wildcard => "*".fmt(f),
         }
     }
 }
@@ -113,12 +123,13 @@ pub enum SdpAttributeCandidateTransport {
     Tcp,
 }
 
-impl ToString for SdpAttributeCandidateTransport {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpAttributeCandidateTransport {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            SdpAttributeCandidateTransport::Udp => "UDP".to_string(),
-            SdpAttributeCandidateTransport::Tcp => "TCP".to_string(),
+            SdpAttributeCandidateTransport::Udp => "UDP",
+            SdpAttributeCandidateTransport::Tcp => "TCP",
         }
+        .fmt(f)
     }
 }
 
@@ -131,14 +142,15 @@ pub enum SdpAttributeCandidateType {
     Relay,
 }
 
-impl ToString for SdpAttributeCandidateType {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpAttributeCandidateType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            SdpAttributeCandidateType::Host => "host".to_string(),
-            SdpAttributeCandidateType::Srflx => "srflx".to_string(),
-            SdpAttributeCandidateType::Prflx => "prflx".to_string(),
-            SdpAttributeCandidateType::Relay => "relay".to_string(),
+            SdpAttributeCandidateType::Host => "host",
+            SdpAttributeCandidateType::Srflx => "srflx",
+            SdpAttributeCandidateType::Prflx => "prflx",
+            SdpAttributeCandidateType::Relay => "relay",
         }
+        .fmt(f)
     }
 }
 
@@ -150,13 +162,14 @@ pub enum SdpAttributeCandidateTcpType {
     Simultaneous,
 }
 
-impl ToString for SdpAttributeCandidateTcpType {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpAttributeCandidateTcpType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            SdpAttributeCandidateTcpType::Active => "active".to_string(),
-            SdpAttributeCandidateTcpType::Passive => "passive".to_string(),
-            SdpAttributeCandidateTcpType::Simultaneous => "so".to_string(),
+            SdpAttributeCandidateTcpType::Active => "active",
+            SdpAttributeCandidateTcpType::Passive => "passive",
+            SdpAttributeCandidateTcpType::Simultaneous => "so",
         }
+        .fmt(f)
     }
 }
 
@@ -177,6 +190,36 @@ pub struct SdpAttributeCandidate {
     pub ufrag: Option<String>,
     pub networkcost: Option<u32>,
     pub unknown_extensions: Vec<(String, String)>,
+}
+
+impl fmt::Display for SdpAttributeCandidate {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{foundation} {component} {transport} {priority} \
+             {address} {port} typ {ctype}\
+             {raddr}{rport}{tcp_type}{generation}{ufrag}{cost}\
+             {unknown}",
+            foundation = self.foundation,
+            component = self.component,
+            transport = self.transport,
+            priority = self.priority,
+            address = self.address,
+            port = self.port,
+            ctype = self.c_type,
+            raddr = option_to_string!(" raddr {}", self.raddr),
+            rport = option_to_string!(" rport {}", self.rport),
+            tcp_type = option_to_string!(" tcptype {}", self.tcp_type),
+            generation = option_to_string!(" generation {}", self.generation),
+            ufrag = option_to_string!(" ufrag {}", self.ufrag),
+            cost = option_to_string!(" network-cost {}", self.networkcost),
+            unknown = self
+                .unknown_extensions
+                .iter()
+                .map(|&(ref name, ref value)| format!(" {} {}", name, value))
+                .collect::<String>()
+        )
+    }
 }
 
 impl SdpAttributeCandidate {
@@ -236,35 +279,6 @@ impl SdpAttributeCandidate {
     }
 }
 
-impl ToString for SdpAttributeCandidate {
-    fn to_string(&self) -> String {
-        format!(
-            "{foundation} {component_id} {transport} {priority} \
-             {connection_address} {port} typ {cand_type}\
-             {rel_addr}{rel_port}{tcp_type}{generation}{ufrag}{network_cost}\
-             {unknown_extensions}",
-            foundation = self.foundation,
-            component_id = self.component.to_string(),
-            transport = self.transport.to_string(),
-            priority = self.priority.to_string(),
-            connection_address = self.address.to_string(),
-            port = self.port.to_string(),
-            cand_type = self.c_type.to_string(),
-            rel_addr = option_to_string!(" raddr {}", self.raddr),
-            rel_port = option_to_string!(" rport {}", self.rport),
-            tcp_type = option_to_string!(" tcptype {}", self.tcp_type),
-            generation = option_to_string!(" generation {}", self.generation),
-            ufrag = option_to_string!(" ufrag {}", self.ufrag),
-            network_cost = option_to_string!(" network-cost {}", self.networkcost),
-            unknown_extensions = self
-                .unknown_extensions
-                .iter()
-                .map(|&(ref name, ref value)| format!(" {} {}", name, value))
-                .collect::<String>()
-        )
-    }
-}
-
 impl AnonymizingClone for SdpAttributeCandidate {
     fn masked_clone(&self, anonymizer: &mut StatefulSdpAnonymizer) -> Self {
         let mut masked = self.clone();
@@ -286,12 +300,13 @@ pub enum SdpAttributeDtlsMessage {
     Server(String),
 }
 
-impl ToString for SdpAttributeDtlsMessage {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpAttributeDtlsMessage {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             SdpAttributeDtlsMessage::Client(ref msg) => format!("client {}", msg),
             SdpAttributeDtlsMessage::Server(ref msg) => format!("server {}", msg),
         }
+        .fmt(f)
     }
 }
 
@@ -303,13 +318,14 @@ pub struct SdpAttributeRemoteCandidate {
     pub port: u32,
 }
 
-impl ToString for SdpAttributeRemoteCandidate {
-    fn to_string(&self) -> String {
-        format!(
+impl fmt::Display for SdpAttributeRemoteCandidate {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
             "{component} {addr} {port}",
-            component = self.component.to_string(),
+            component = self.component,
             addr = self.address,
-            port = self.port.to_string()
+            port = self.port
         )
     }
 }
@@ -347,13 +363,12 @@ impl SdpAttributeSimulcastId {
     }
 }
 
-impl ToString for SdpAttributeSimulcastId {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpAttributeSimulcastId {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.paused {
-            format!("~{}", self.id)
-        } else {
-            self.id.clone()
+            write!(f, "~")?;
         }
+        self.id.fmt(f)
     }
 }
 
@@ -375,13 +390,14 @@ impl SdpAttributeSimulcastVersion {
     }
 }
 
-impl ToString for SdpAttributeSimulcastVersion {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpAttributeSimulcastVersion {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.ids
             .iter()
             .map(ToString::to_string)
             .collect::<Vec<String>>()
             .join(",")
+            .fmt(f)
     }
 }
 
@@ -392,14 +408,14 @@ pub struct SdpAttributeSimulcast {
     pub receive: Vec<SdpAttributeSimulcastVersion>,
 }
 
-impl ToString for SdpAttributeSimulcast {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpAttributeSimulcast {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         non_empty_string_vec![
             maybe_vector_to_string!("send {}", self.send, ";"),
             maybe_vector_to_string!("recv {}", self.receive, ";")
         ]
         .join(" ")
-        .to_string()
+        .fmt(f)
     }
 }
 
@@ -445,8 +461,8 @@ pub enum SdpAttributeRtcpFbType {
     TransCC,
 }
 
-impl ToString for SdpAttributeRtcpFbType {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpAttributeRtcpFbType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             SdpAttributeRtcpFbType::Ack => "ack",
             SdpAttributeRtcpFbType::Ccm => "ccm",
@@ -455,7 +471,7 @@ impl ToString for SdpAttributeRtcpFbType {
             SdpAttributeRtcpFbType::Remb => "goog-remb",
             SdpAttributeRtcpFbType::TransCC => "transport-cc",
         }
-        .to_string()
+        .fmt(f)
     }
 }
 
@@ -468,22 +484,18 @@ pub struct SdpAttributeRtcpFb {
     pub extra: String,
 }
 
-impl ToString for SdpAttributeRtcpFb {
-    fn to_string(&self) -> String {
-        format!(
-            "{pt} {feeback}{parameter_and_extra}",
-            pt = self.payload_type.to_string(),
-            feeback = self.feedback_type.to_string(),
-            parameter_and_extra = if self.parameter.is_empty() {
-                "".to_string()
-            } else {
-                format!(
-                    " {parameter}{extra}",
-                    parameter = self.parameter,
-                    extra = maybe_print_param(" ", self.extra.clone(), "".to_string()),
-                )
-            }
-        )
+impl fmt::Display for SdpAttributeRtcpFb {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} {}", self.payload_type, self.feedback_type,)?;
+        if !self.parameter.is_empty() {
+            write!(
+                f,
+                " {}{}",
+                self.parameter,
+                maybe_print_param(" ", self.extra.clone(), "".to_string()),
+            )?;
+        }
+        Ok(())
     }
 }
 
@@ -495,14 +507,14 @@ pub enum SdpAttributeDirection {
     Sendrecv,
 }
 
-impl ToString for SdpAttributeDirection {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpAttributeDirection {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             SdpAttributeDirection::Recvonly => "recvonly",
             SdpAttributeDirection::Sendonly => "sendonly",
             SdpAttributeDirection::Sendrecv => "sendrecv",
         }
-        .to_string()
+        .fmt(f)
     }
 }
 
@@ -515,11 +527,12 @@ pub struct SdpAttributeExtmap {
     pub extension_attributes: Option<String>,
 }
 
-impl ToString for SdpAttributeExtmap {
-    fn to_string(&self) -> String {
-        format!(
+impl fmt::Display for SdpAttributeExtmap {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
             "{id}{direction} {url}{ext}",
-            id = self.id.to_string(),
+            id = self.id,
             direction = option_to_string!("/{}", self.direction),
             url = self.url,
             ext = option_to_string!(" {}", self.extension_attributes)
@@ -564,10 +577,11 @@ pub struct SdpAttributeFmtpParameters {
     pub unknown_tokens: Vec<String>,
 }
 
-impl ToString for SdpAttributeFmtpParameters {
-    fn to_string(&self) -> String {
-        format!(
-            "{parameters}{red}{dtmf_tones}{unknown}",
+impl fmt::Display for SdpAttributeFmtpParameters {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{parameters}{red}{dtmf}{unknown}",
             parameters = non_empty_string_vec![
                 maybe_print_param("packetization-mode=", self.packetization_mode, 0),
                 maybe_print_bool_param(
@@ -590,7 +604,7 @@ impl ToString for SdpAttributeFmtpParameters {
             ]
             .join(";"),
             red = maybe_vector_to_string!("{}", self.encodings, "/"),
-            dtmf_tones = maybe_print_param("", self.dtmf_tones.clone(), "".to_string()),
+            dtmf = maybe_print_param("", self.dtmf_tones.clone(), "".to_string()),
             unknown = maybe_vector_to_string!("{}", self.unknown_tokens, ",")
         )
     }
@@ -603,12 +617,13 @@ pub struct SdpAttributeFmtp {
     pub parameters: SdpAttributeFmtpParameters,
 }
 
-impl ToString for SdpAttributeFmtp {
-    fn to_string(&self) -> String {
-        format!(
-            "{pt} {params}",
-            pt = self.payload_type.to_string(),
-            params = self.parameters.to_string()
+impl fmt::Display for SdpAttributeFmtp {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{pt} {parameter}",
+            pt = self.payload_type,
+            parameter = self.parameters
         )
     }
 }
@@ -623,8 +638,8 @@ pub enum SdpAttributeFingerprintHashType {
     Sha512,
 }
 
-impl ToString for SdpAttributeFingerprintHashType {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpAttributeFingerprintHashType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             SdpAttributeFingerprintHashType::Sha1 => "sha-1",
             SdpAttributeFingerprintHashType::Sha224 => "sha-224",
@@ -632,7 +647,7 @@ impl ToString for SdpAttributeFingerprintHashType {
             SdpAttributeFingerprintHashType::Sha384 => "sha-384",
             SdpAttributeFingerprintHashType::Sha512 => "sha-512",
         }
-        .to_string()
+        .fmt(f)
     }
 }
 
@@ -643,12 +658,13 @@ pub struct SdpAttributeFingerprint {
     pub fingerprint: Vec<u8>,
 }
 
-impl ToString for SdpAttributeFingerprint {
-    fn to_string(&self) -> String {
-        format!(
-            "{hash_algo} {fingerprint}",
-            hash_algo = self.hash_algorithm.to_string(),
-            fingerprint = self
+impl fmt::Display for SdpAttributeFingerprint {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{hash} {fp}",
+            hash = self.hash_algorithm,
+            fp = self
                 .fingerprint
                 .iter()
                 .map(|byte| format!("{:02X}", byte))
@@ -691,17 +707,18 @@ pub enum SdpAttributeImageAttrXYRange {
     DiscreteValues(Vec<u32>),
 }
 
-impl ToString for SdpAttributeImageAttrXYRange {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpAttributeImageAttrXYRange {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             SdpAttributeImageAttrXYRange::Range(ref min, ref max, ref step_opt) => {
-                match *step_opt {
-                    Some(step) => format!("[{}:{}:{}]", min, step, max),
-                    None => format!("[{}:{}]", min, max),
+                write!(f, "[{}:", min)?;
+                if step_opt.is_some() {
+                    write!(f, "{}:", step_opt.unwrap())?;
                 }
+                write!(f, "{}]", max)
             }
             SdpAttributeImageAttrXYRange::DiscreteValues(ref values) => {
-                imageattr_discrete_value_list_to_string(values)
+                write!(f, "{}", imageattr_discrete_value_list_to_string(values))
             }
         }
     }
@@ -714,12 +731,12 @@ pub enum SdpAttributeImageAttrSRange {
     DiscreteValues(Vec<f32>),
 }
 
-impl ToString for SdpAttributeImageAttrSRange {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpAttributeImageAttrSRange {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            SdpAttributeImageAttrSRange::Range(ref min, ref max) => format!("[{}-{}]", min, max),
+            SdpAttributeImageAttrSRange::Range(ref min, ref max) => write!(f, "[{}-{}]", min, max),
             SdpAttributeImageAttrSRange::DiscreteValues(ref values) => {
-                imageattr_discrete_value_list_to_string(values)
+                write!(f, "{}", imageattr_discrete_value_list_to_string(values))
             }
         }
     }
@@ -732,9 +749,9 @@ pub struct SdpAttributeImageAttrPRange {
     pub max: f32,
 }
 
-impl ToString for SdpAttributeImageAttrPRange {
-    fn to_string(&self) -> String {
-        format!("[{}-{}]", self.min, self.max)
+impl fmt::Display for SdpAttributeImageAttrPRange {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "[{}-{}]", self.min, self.max)
     }
 }
 
@@ -748,16 +765,13 @@ pub struct SdpAttributeImageAttrSet {
     pub q: Option<f32>,
 }
 
-impl ToString for SdpAttributeImageAttrSet {
-    fn to_string(&self) -> String {
-        format!(
-            "[x={x},y={y}{sar}{par}{q}]",
-            x = self.x.to_string(),
-            y = self.y.to_string(),
-            sar = option_to_string!(",sar={}", self.sar),
-            par = option_to_string!(",par={}", self.par),
-            q = option_to_string!(",q={}", self.q)
-        )
+impl fmt::Display for SdpAttributeImageAttrSet {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "[x={x},y={y}", x = self.x, y = self.y)?;
+        write_option_string!(f, ",sar={}", self.sar)?;
+        write_option_string!(f, ",par={}", self.par)?;
+        write_option_string!(f, ",q={}", self.q)?;
+        write!(f, "]")
     }
 }
 
@@ -768,15 +782,16 @@ pub enum SdpAttributeImageAttrSetList {
     Wildcard,
 }
 
-impl ToString for SdpAttributeImageAttrSetList {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpAttributeImageAttrSetList {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             SdpAttributeImageAttrSetList::Sets(ref sets) => sets
                 .iter()
                 .map(ToString::to_string)
                 .collect::<Vec<String>>()
-                .join(" "),
-            SdpAttributeImageAttrSetList::Wildcard => "*".to_string(),
+                .join(" ")
+                .fmt(f),
+            SdpAttributeImageAttrSetList::Wildcard => "*".fmt(f),
         }
     }
 }
@@ -789,8 +804,8 @@ pub struct SdpAttributeImageAttr {
     pub recv: SdpAttributeImageAttrSetList,
 }
 
-impl ToString for SdpAttributeImageAttr {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpAttributeImageAttr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let maybe_sets_to_string = |set_list| match set_list {
             SdpAttributeImageAttrSetList::Sets(sets) => match sets.len() {
                 0 => None,
@@ -798,12 +813,9 @@ impl ToString for SdpAttributeImageAttr {
             },
             x => Some(x),
         };
-        format!(
-            "{pt}{send_sets}{recv_sets}",
-            pt = self.pt.to_string(),
-            send_sets = option_to_string!(" send {}", maybe_sets_to_string(self.send.clone())),
-            recv_sets = option_to_string!(" recv {}", maybe_sets_to_string(self.recv.clone()))
-        )
+        self.pt.fmt(f)?;
+        write_option_string!(f, " send {}", maybe_sets_to_string(self.send.clone()))?;
+        write_option_string!(f, " recv {}", maybe_sets_to_string(self.recv.clone()))
     }
 }
 
@@ -814,12 +826,13 @@ pub struct SdpAttributeSctpmap {
     pub channels: u32,
 }
 
-impl ToString for SdpAttributeSctpmap {
-    fn to_string(&self) -> String {
-        format!(
+impl fmt::Display for SdpAttributeSctpmap {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
             "{port} webrtc-datachannel {channels}",
-            port = self.port.to_string(),
-            channels = self.channels.to_string()
+            port = self.port,
+            channels = self.channels
         )
     }
 }
@@ -827,17 +840,17 @@ impl ToString for SdpAttributeSctpmap {
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 pub enum SdpAttributeGroupSemantic {
-    LipSynchronization,          // rfc5888
-    FlowIdentification,          // rfc5888
-    SingleReservationFlow,       // rfc3524
-    AlternateNetworkAddressType, // rfc4091
-    ForwardErrorCorrection,      // rfc4756
-    DecodingDependency,          // rfc5583
-    Bundle,                      //
+    LipSynchronization,          // RFC5888
+    FlowIdentification,          // RFC5888
+    SingleReservationFlow,       // RFC3524
+    AlternateNetworkAddressType, // RFC4091
+    ForwardErrorCorrection,      // RFC5956
+    DecodingDependency,          // RFC5583
+    Bundle,                      // draft-ietc-mmusic-bundle
 }
 
-impl ToString for SdpAttributeGroupSemantic {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpAttributeGroupSemantic {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             SdpAttributeGroupSemantic::LipSynchronization => "LS",
             SdpAttributeGroupSemantic::FlowIdentification => "FID",
@@ -847,7 +860,7 @@ impl ToString for SdpAttributeGroupSemantic {
             SdpAttributeGroupSemantic::DecodingDependency => "DDP",
             SdpAttributeGroupSemantic::Bundle => "BUNDLE",
         }
-        .to_string()
+        .fmt(f)
     }
 }
 
@@ -858,12 +871,13 @@ pub struct SdpAttributeGroup {
     pub tags: Vec<String>,
 }
 
-impl ToString for SdpAttributeGroup {
-    fn to_string(&self) -> String {
-        format!(
-            "{semantics}{tags}",
-            semantics = self.semantics.to_string(),
-            tags = maybe_vector_to_string!(" {}", self.tags, " ")
+impl fmt::Display for SdpAttributeGroup {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}{}",
+            self.semantics,
+            maybe_vector_to_string!(" {}", self.tags, " ")
         )
     }
 }
@@ -875,13 +889,10 @@ pub struct SdpAttributeMsid {
     pub appdata: Option<String>,
 }
 
-impl ToString for SdpAttributeMsid {
-    fn to_string(&self) -> String {
-        format!(
-            "{id}{appdata}",
-            id = self.id,
-            appdata = option_to_string!(" {}", self.appdata)
-        )
+impl fmt::Display for SdpAttributeMsid {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.id.fmt(f)?;
+        write_option_string!(f, " {}", self.appdata)
     }
 }
 
@@ -892,16 +903,13 @@ pub struct SdpAttributeMsidSemantic {
     pub msids: Vec<String>,
 }
 
-impl ToString for SdpAttributeMsidSemantic {
-    fn to_string(&self) -> String {
-        format!(
-            "{semantic} {msids}",
-            semantic = self.semantic,
-            msids = match self.msids.len() {
-                0 => "*".to_string(),
-                _ => self.msids.join(" "),
-            }
-        )
+impl fmt::Display for SdpAttributeMsidSemantic {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} ", self.semantic)?;
+        match self.msids.len() {
+            0 => "*".fmt(f),
+            _ => self.msids.join(" ").fmt(f),
+        }
     }
 }
 
@@ -918,8 +926,8 @@ pub struct SdpAttributeRidParameters {
     pub unknown: Vec<String>,
 }
 
-impl ToString for SdpAttributeRidParameters {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpAttributeRidParameters {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         non_empty_string_vec![
             maybe_print_param("max-width=", self.max_width, 0),
             maybe_print_param("max-height=", self.max_height, 0),
@@ -930,6 +938,7 @@ impl ToString for SdpAttributeRidParameters {
             maybe_vector_to_string!("{}", self.unknown, ";")
         ]
         .join(";")
+        .fmt(f)
     }
 }
 
@@ -943,13 +952,14 @@ pub struct SdpAttributeRid {
     pub depends: Vec<String>,
 }
 
-impl ToString for SdpAttributeRid {
-    fn to_string(&self) -> String {
-        format!(
-            "{id} {direction}{formats_and_prameters_and_depends}",
+impl fmt::Display for SdpAttributeRid {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{id} {direction}{format}",
             id = self.id,
-            direction = self.direction.to_string(),
-            formats_and_prameters_and_depends = match non_empty_string_vec![
+            direction = self.direction,
+            format = match non_empty_string_vec![
                 maybe_vector_to_string!("pt={}", self.formats, ","),
                 self.params.to_string(),
                 maybe_vector_to_string!("depends={}", self.depends, ",")
@@ -988,15 +998,16 @@ impl SdpAttributeRtpmap {
     }
 }
 
-impl ToString for SdpAttributeRtpmap {
-    fn to_string(&self) -> String {
-        format!(
-            "{pt} {codec_name}/{freq}{channels}",
-            pt = self.payload_type.to_string(),
-            codec_name = self.codec_name.clone(),
-            freq = self.frequency.to_string(),
-            channels = option_to_string!("/{}", self.channels)
-        )
+impl fmt::Display for SdpAttributeRtpmap {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{pt} {name}/{freq}",
+            pt = self.payload_type,
+            name = self.codec_name,
+            freq = self.frequency
+        )?;
+        write_option_string!(f, "/{}", self.channels)
     }
 }
 
@@ -1009,15 +1020,15 @@ pub enum SdpAttributeSetup {
     Passive,
 }
 
-impl ToString for SdpAttributeSetup {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpAttributeSetup {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             SdpAttributeSetup::Active => "active",
             SdpAttributeSetup::Actpass => "actpass",
             SdpAttributeSetup::Holdconn => "holdconn",
             SdpAttributeSetup::Passive => "passive",
         }
-        .to_string()
+        .fmt(f)
     }
 }
 
@@ -1049,14 +1060,27 @@ impl SdpAttributeSsrc {
     }
 }
 
-impl ToString for SdpAttributeSsrc {
-    fn to_string(&self) -> String {
-        format!(
-            "{id}{attribute}{value}",
-            id = self.id.to_string(),
-            attribute = option_to_string!(" {}", self.attribute.clone()),
-            value = option_to_string!(":{}", self.value.clone())
-        )
+impl fmt::Display for SdpAttributeSsrc {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.id.fmt(f)?;
+        write_option_string!(f, " {}", self.attribute)?;
+        write_option_string!(f, ":{}", self.value)
+    }
+}
+
+impl AnonymizingClone for SdpAttributeSsrc {
+    fn masked_clone(&self, anon: &mut StatefulSdpAnonymizer) -> Self {
+        Self {
+            id: self.id,
+            attribute: self.attribute.clone(),
+            value: self.attribute.as_ref().and_then(|attribute| {
+                match (attribute.to_lowercase().as_str(), &self.value) {
+                    ("cname", Some(ref cname)) => Some(anon.mask_cname(cname.as_str())),
+                    (_, Some(_)) => self.value.clone(),
+                    (_, None) => None,
+                }
+            }),
+        }
     }
 }
 
@@ -1074,6 +1098,7 @@ pub enum SdpAttribute {
     IceLite,
     IceMismatch,
     IceOptions(Vec<String>),
+    IcePacing(u64),
     IcePwd(String),
     IceUfrag(String),
     Identity(String),
@@ -1138,6 +1163,7 @@ impl SdpAttribute {
             | SdpAttribute::Group(..)
             | SdpAttribute::IceLite
             | SdpAttribute::IceOptions(..)
+            | SdpAttribute::IcePacing(..)
             | SdpAttribute::IcePwd(..)
             | SdpAttribute::IceUfrag(..)
             | SdpAttribute::Identity(..)
@@ -1155,6 +1181,7 @@ impl SdpAttribute {
             SdpAttribute::DtlsMessage { .. }
             | SdpAttribute::Group(..)
             | SdpAttribute::IceLite
+            | SdpAttribute::IcePacing(..)
             | SdpAttribute::Identity(..)
             | SdpAttribute::MsidSemantic(..) => false,
 
@@ -1235,6 +1262,7 @@ impl FromStr for SdpAttribute {
             "mid" => Ok(SdpAttribute::Mid(string_or_empty(val)?)),
             "msid-semantic" => parse_msid_semantic(val),
             "ptime" => Ok(SdpAttribute::Ptime(val.parse()?)),
+            "ice-pacing" => parse_ice_pacing(val),
             "rid" => parse_rid(val),
             "recvonly" => Ok(SdpAttribute::Recvonly),
             "rtcp-mux" => Ok(SdpAttribute::RtcpMux),
@@ -1266,8 +1294,8 @@ impl FromStr for SdpAttribute {
     }
 }
 
-impl ToString for SdpAttribute {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpAttribute {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let attr_type_name = SdpAttributeType::from(self).to_string();
         let attr_to_string = |attr_str: String| attr_type_name + ":" + &attr_str;
         match *self {
@@ -1282,6 +1310,7 @@ impl ToString for SdpAttribute {
             SdpAttribute::IceLite => SdpAttributeType::IceLite.to_string(),
             SdpAttribute::IceMismatch => SdpAttributeType::IceMismatch.to_string(),
             SdpAttribute::IceOptions(ref a) => attr_to_string(a.join(" ")),
+            SdpAttribute::IcePacing(ref a) => attr_to_string(a.to_string()),
             SdpAttribute::IcePwd(ref a) => attr_to_string(a.to_string()),
             SdpAttribute::IceUfrag(ref a) => attr_to_string(a.to_string()),
             SdpAttribute::Identity(ref a) => attr_to_string(a.to_string()),
@@ -1311,6 +1340,7 @@ impl ToString for SdpAttribute {
             SdpAttribute::Ssrc(ref a) => attr_to_string(a.to_string()),
             SdpAttribute::SsrcGroup(ref a) => attr_to_string(a.to_string()),
         }
+        .fmt(f)
     }
 }
 
@@ -1322,6 +1352,7 @@ impl AnonymizingClone for SdpAttribute {
             SdpAttribute::IcePwd(i) => SdpAttribute::IcePwd(anon.mask_ice_password(i)),
             SdpAttribute::IceUfrag(i) => SdpAttribute::IceUfrag(anon.mask_ice_user(i)),
             SdpAttribute::RemoteCandidate(i) => SdpAttribute::RemoteCandidate(i.masked_clone(anon)),
+            SdpAttribute::Ssrc(i) => SdpAttribute::Ssrc(i.masked_clone(anon)),
             _ => self.clone(),
         }
     }
@@ -1340,6 +1371,7 @@ pub enum SdpAttributeType {
     IceLite,
     IceMismatch,
     IceOptions,
+    IcePacing,
     IcePwd,
     IceUfrag,
     Identity,
@@ -1384,6 +1416,7 @@ impl<'a> From<&'a SdpAttribute> for SdpAttributeType {
             SdpAttribute::IceLite { .. } => SdpAttributeType::IceLite,
             SdpAttribute::IceMismatch { .. } => SdpAttributeType::IceMismatch,
             SdpAttribute::IceOptions { .. } => SdpAttributeType::IceOptions,
+            SdpAttribute::IcePacing { .. } => SdpAttributeType::IcePacing,
             SdpAttribute::IcePwd { .. } => SdpAttributeType::IcePwd,
             SdpAttribute::IceUfrag { .. } => SdpAttributeType::IceUfrag,
             SdpAttribute::Identity { .. } => SdpAttributeType::Identity,
@@ -1416,8 +1449,8 @@ impl<'a> From<&'a SdpAttribute> for SdpAttributeType {
     }
 }
 
-impl ToString for SdpAttributeType {
-    fn to_string(&self) -> String {
+impl fmt::Display for SdpAttributeType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             SdpAttributeType::BundleOnly => "bundle-only",
             SdpAttributeType::Candidate => "candidate",
@@ -1430,6 +1463,7 @@ impl ToString for SdpAttributeType {
             SdpAttributeType::IceLite => "ice-lite",
             SdpAttributeType::IceMismatch => "ice-mismatch",
             SdpAttributeType::IceOptions => "ice-options",
+            SdpAttributeType::IcePacing => "ice-pacing",
             SdpAttributeType::IcePwd => "ice-pwd",
             SdpAttributeType::IceUfrag => "ice-ufrag",
             SdpAttributeType::Identity => "identity",
@@ -1459,7 +1493,7 @@ impl ToString for SdpAttributeType {
             SdpAttributeType::Ssrc => "ssrc",
             SdpAttributeType::SsrcGroup => "ssrc-group",
         }
-        .to_string()
+        .fmt(f)
     }
 }
 
@@ -1484,12 +1518,17 @@ fn parse_single_direction(to_parse: &str) -> Result<SdpSingleDirection, SdpParse
     match to_parse {
         "send" => Ok(SdpSingleDirection::Send),
         "recv" => Ok(SdpSingleDirection::Recv),
-        x => Err(SdpParserInternalError::Generic(
-            format!("Unknown direction description found: '{:}'", x).to_string(),
-        )),
+        x => Err(SdpParserInternalError::Generic(format!(
+            "Unknown direction description found: '{:}'",
+            x
+        ))),
     }
 }
 
+///////////////////////////////////////////////////////////////////////////
+// a=sctp-port, draft-ietf-mmusic-sctp-sdp-26#section-15.2.1
+//-------------------------------------------------------------------------
+// no ABNF given
 fn parse_sctp_port(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let port = to_parse.parse()?;
     if port > 65535 {
@@ -1501,6 +1540,32 @@ fn parse_sctp_port(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalErro
     Ok(SdpAttribute::SctpPort(port))
 }
 
+///////////////////////////////////////////////////////////////////////////
+// a=candidate, RFC5245
+//-------------------------------------------------------------------------
+//
+// candidate-attribute   = "candidate" ":" foundation SP component-id SP
+//                          transport SP
+//                          priority SP
+//                          connection-address SP     ;from RFC 4566
+//                          port         ;port from RFC 4566
+//                          SP cand-type
+//                          [SP rel-addr]
+//                          [SP rel-port]
+//                          *(SP extension-att-name SP
+//                               extension-att-value)
+// foundation            = 1*32ice-char
+// component-id          = 1*5DIGIT
+// transport             = "UDP" / transport-extension
+// transport-extension   = token              ; from RFC 3261
+// priority              = 1*10DIGIT
+// cand-type             = "typ" SP candidate-types
+// candidate-types       = "host" / "srflx" / "prflx" / "relay" / token
+// rel-addr              = "raddr" SP connection-address
+// rel-port              = "rport" SP port
+// extension-att-name    = byte-string    ;from RFC 4566
+// extension-att-value   = byte-string
+// ice-char              = ALPHA / DIGIT / "+" / "/"
 fn parse_candidate(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let tokens: Vec<&str> = to_parse.split_whitespace().collect();
     if tokens.len() < 8 {
@@ -1618,6 +1683,17 @@ fn parse_candidate(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalErro
     Ok(SdpAttribute::Candidate(cand))
 }
 
+///////////////////////////////////////////////////////////////////////////
+// a=dtls-message, draft-rescorla-dtls-in-sdp
+//-------------------------------------------------------------------------
+//   attribute               =/   dtls-message-attribute
+//
+//   dtls-message-attribute  =    "dtls-message" ":" role SP value
+//
+//   role                    =    "client" / "server"
+//
+//   value                   =    1*(ALPHA / DIGIT / "+" / "/" / "=" )
+//                                ; base64 encoded message
 fn parse_dtls_message(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let tokens: Vec<&str> = to_parse.split(' ').collect();
 
@@ -1631,9 +1707,10 @@ fn parse_dtls_message(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalE
         "client" => SdpAttributeDtlsMessage::Client(tokens[1].to_string()),
         "server" => SdpAttributeDtlsMessage::Server(tokens[1].to_string()),
         e => {
-            return Err(SdpParserInternalError::Generic(
-                format!("dtls-message has unknown role token '{}'", e).to_string(),
-            ));
+            return Err(SdpParserInternalError::Generic(format!(
+                "dtls-message has unknown role token '{}'",
+                e
+            )));
         }
     }))
 }
@@ -1644,8 +1721,27 @@ fn valid_byte_string(input: &str) -> bool {
     !(input.contains(0x00 as char) || input.contains(0x0A as char) || input.contains(0x0D as char))
 }
 
-// ABNF for extmap is defined in RFC 5285
-// https://tools.ietf.org/html/rfc5285#section-7
+///////////////////////////////////////////////////////////////////////////
+// a=extmap, RFC5285
+//-------------------------------------------------------------------------
+// RFC5285
+//        extmap = mapentry SP extensionname [SP extensionattributes]
+//
+//        extensionname = URI
+//
+//        direction = "sendonly" / "recvonly" / "sendrecv" / "inactive"
+//
+//        mapentry = "extmap:" 1*5DIGIT ["/" direction]
+//
+//        extensionattributes = byte-string
+//
+//        URI = <Defined in RFC 3986>
+//
+//        byte-string = <Defined in RFC 4566>
+//
+//        SP = <Defined in RFC 5234>
+//
+//        DIGIT = <Defined in RFC 5234>
 fn parse_extmap(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let tokens: Vec<&str> = to_parse.split_whitespace().collect();
     if tokens.len() < 2 {
@@ -1691,6 +1787,22 @@ fn parse_extmap(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> 
     }))
 }
 
+///////////////////////////////////////////////////////////////////////////
+// a=fingerprint, RFC4572
+//-------------------------------------------------------------------------
+//   fingerprint-attribute  =  "fingerprint" ":" hash-func SP fingerprint
+//
+//   hash-func              =  "sha-1" / "sha-224" / "sha-256" /
+//                             "sha-384" / "sha-512" /
+//                             "md5" / "md2" / token
+//                             ; Additional hash functions can only come
+//                             ; from updates to RFC 3279
+//
+//   fingerprint            =  2UHEX *(":" 2UHEX)
+//                             ; Each byte in upper-case hex, separated
+//                             ; by colons.
+//
+//   UHEX                   =  DIGIT / %x41-46 ; A-F uppercase
 fn parse_fingerprint(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let tokens: Vec<&str> = to_parse.split_whitespace().collect();
     if tokens.len() != 2 {
@@ -1752,6 +1864,10 @@ fn parse_fingerprint(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalEr
     }))
 }
 
+///////////////////////////////////////////////////////////////////////////
+// a=fmtp, RFC4566, RFC5576
+//-------------------------------------------------------------------------
+//       a=fmtp:<format> <format specific parameters>
 fn parse_fmtp(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let tokens: Vec<&str> = to_parse.splitn(2, ' ').collect();
 
@@ -1799,17 +1915,17 @@ fn parse_fmtp(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
                 ));
             }
 
-            let parse_bool = |val: &str,
-                              param_name: &str|
-             -> Result<bool, SdpParserInternalError> {
-                match val.parse::<u8>()? {
-                    0 => Ok(false),
-                    1 => Ok(true),
-                    _ => Err(SdpParserInternalError::Generic(
-                        format!("The fmtp parameter '{:}' must be 0 or 1", param_name).to_string(),
-                    )),
-                }
-            };
+            let parse_bool =
+                |val: &str, param_name: &str| -> Result<bool, SdpParserInternalError> {
+                    match val.parse::<u8>()? {
+                        0 => Ok(false),
+                        1 => Ok(true),
+                        _ => Err(SdpParserInternalError::Generic(format!(
+                            "The fmtp parameter '{:}' must be 0 or 1",
+                            param_name
+                        ))),
+                    }
+                };
 
             let parameter_name = name_value_pair[0];
             let parameter_val = name_value_pair[1];
@@ -1931,6 +2047,14 @@ fn parse_fmtp(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     }))
 }
 
+///////////////////////////////////////////////////////////////////////////
+// a=group, RFC5888
+//-------------------------------------------------------------------------
+//         group-attribute     = "a=group:" semantics
+//                               *(SP identification-tag)
+//         semantics           = "LS" / "FID" / semantics-extension
+//         semantics-extension = token
+//         identification-tag  = token
 fn parse_group(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let mut tokens = to_parse.split_whitespace();
     let semantics = match tokens.next() {
@@ -1961,6 +2085,12 @@ fn parse_group(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     }))
 }
 
+///////////////////////////////////////////////////////////////////////////
+// a=ice-options, draft-ietf-mmusic-ice-sip-sdp
+//-------------------------------------------------------------------------
+//  ice-options           = "ice-options:" ice-option-tag
+//                           0*(SP ice-option-tag)
+//  ice-option-tag        = 1*ice-char
 fn parse_ice_options(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     if to_parse.is_empty() {
         return Err(SdpParserInternalError::Generic(
@@ -1973,6 +2103,21 @@ fn parse_ice_options(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalEr
             .map(ToString::to_string)
             .collect(),
     ))
+}
+
+///////////////////////////////////////////////////////////////////////////
+// a=ice-pacing, draft-ietf-mmusic-ice-sip-sdp
+//-------------------------------------------------------------------------
+//  ice-pacing-att            = "ice-pacing:" pacing-value
+//  pacing-value              = 1*10DIGIT
+fn parse_ice_pacing(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
+    let parsed = to_parse.parse::<u64>()?;
+    if parsed >= 1_00_00_00_00_00 {
+        return Err(SdpParserInternalError::Generic(
+            "ice-pacing value is not a 10 digit integer".to_string(),
+        ));
+    }
+    Ok(SdpAttribute::IcePacing(parsed))
 }
 
 fn parse_imageattr_tokens(to_parse: &str, separator: char) -> Vec<String> {
@@ -2227,6 +2372,74 @@ where
     }
 }
 
+///////////////////////////////////////////////////////////////////////////
+// a=imageattr, RFC6236
+//-------------------------------------------------------------------------
+//     image-attr = "imageattr:" PT 1*2( 1*WSP ( "send" / "recv" )
+//                                       1*WSP attr-list )
+//     PT = 1*DIGIT / "*"
+//     attr-list = ( set *(1*WSP set) ) / "*"
+//       ;  WSP and DIGIT defined in [RFC5234]
+//
+//     set= "[" "x=" xyrange "," "y=" xyrange *( "," key-value ) "]"
+//                ; x is the horizontal image size range (pixel count)
+//                ; y is the vertical image size range (pixel count)
+//
+//     key-value = ( "sar=" srange )
+//               / ( "par=" prange )
+//               / ( "q=" qvalue )
+//                ; Key-value MAY be extended with other keyword
+//                ;  parameters.
+//                ; At most, one instance each of sar, par, or q
+//                ;  is allowed in a set.
+//                ;
+//                ; sar (sample aspect ratio) is the sample aspect ratio
+//                ;  associated with the set (optional, MAY be ignored)
+//                ; par (picture aspect ratio) is the allowed
+//                ;  ratio between the display's x and y physical
+//                ;  size (optional)
+//                ; q (optional, range [0.0..1.0], default value 0.5)
+//                ;  is the preference for the given set,
+//                ;  a higher value means a higher preference
+//
+//     onetonine = "1" / "2" / "3" / "4" / "5" / "6" / "7" / "8" / "9"
+//                ; Digit between 1 and 9
+//     xyvalue = onetonine *5DIGIT
+//                ; Digit between 1 and 9 that is
+//                ; followed by 0 to 5 other digits
+//     step = xyvalue
+//     xyrange = ( "[" xyvalue ":" [ step ":" ] xyvalue "]" )
+//                ; Range between a lower and an upper value
+//                ; with an optional step, default step = 1
+//                ; The rightmost occurrence of xyvalue MUST have a
+//                ; higher value than the leftmost occurrence.
+//             / ( "[" xyvalue 1*( "," xyvalue ) "]" )
+//                ; Discrete values separated by ','
+//             / ( xyvalue )
+//                ; A single value
+//     spvalue = ( "0" "." onetonine *3DIGIT )
+//                ; Values between 0.1000 and 0.9999
+//             / ( onetonine "." 1*4DIGIT )
+//                ; Values between 1.0000 and 9.9999
+//     srange =  ( "[" spvalue 1*( "," spvalue ) "]" )
+//                ; Discrete values separated by ','.
+//                ; Each occurrence of spvalue MUST be
+//                ; greater than the previous occurrence.
+//             / ( "[" spvalue "-" spvalue "]" )
+//                ; Range between a lower and an upper level (inclusive)
+//                ; The second occurrence of spvalue MUST have a higher
+//                ; value than the first
+//             / ( spvalue )
+//                ; A single value
+//
+//     prange =  ( "[" spvalue "-" spvalue "]" )
+//                ; Range between a lower and an upper level (inclusive)
+//                ; The second occurrence of spvalue MUST have a higher
+//                ; value than the first
+//
+//     qvalue  = ( "0" "." 1*2DIGIT )
+//             / ( "1" "." 1*2("0") )
+//                ; Values between 0.00 and 1.00
 fn parse_image_attr(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let mut tokens = parse_imageattr_tokens(to_parse, ' ').into_iter().peekable();
 
@@ -2285,6 +2498,12 @@ fn parse_image_attr(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalErr
     }))
 }
 
+///////////////////////////////////////////////////////////////////////////
+// a=msid, draft-ietf-mmusic-msid
+//-------------------------------------------------------------------------
+//   msid-attr = "msid:" identifier [ SP appdata ]
+//   identifier = 1*64token-char ; see RFC 4566
+//   appdata = 1*64token-char  ; see RFC 4566
 fn parse_msid(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let mut tokens = to_parse.split_whitespace();
     let id = match tokens.next() {
@@ -2302,6 +2521,12 @@ fn parse_msid(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     Ok(SdpAttribute::Msid(SdpAttributeMsid { id, appdata }))
 }
 
+///////////////////////////////////////////////////////////////////////////
+// a=msid-semantic, draft-ietf-mmusic-msid
+//-------------------------------------------------------------------------
+//   msid-semantic-attr = "msid-semantic:" msid-semantic msid-list
+//   msid-semantic = token ; see RFC 4566
+//   msid-list = *(" " msid-id) / " *"
 fn parse_msid_semantic(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let tokens: Vec<_> = to_parse.split_whitespace().collect();
     if tokens.is_empty() {
@@ -2317,6 +2542,41 @@ fn parse_msid_semantic(to_parse: &str) -> Result<SdpAttribute, SdpParserInternal
     Ok(SdpAttribute::MsidSemantic(semantic))
 }
 
+///////////////////////////////////////////////////////////////////////////
+// a=rid, draft-ietf-mmusic-rid
+//-------------------------------------------------------------------------
+// rid-syntax        = %s"a=rid:" rid-id SP rid-dir
+//                     [ rid-pt-param-list / rid-param-list ]
+// rid-id            = 1*(alpha-numeric / "-" / "_")
+// alpha-numeric     = < as defined in {{RFC4566}} >
+// rid-dir           = %s"send" / %s"recv"
+// rid-pt-param-list = SP rid-fmt-list *(";" rid-param)
+// rid-param-list    = SP rid-param *(";" rid-param)
+// rid-fmt-list      = %s"pt=" fmt *( "," fmt )
+// fmt               = < as defined in {{RFC4566}} >
+// rid-param         = rid-width-param
+//                     / rid-height-param
+//                     / rid-fps-param
+//                     / rid-fs-param
+//                     / rid-br-param
+//                     / rid-pps-param
+//                     / rid-bpp-param
+//                     / rid-depend-param
+//                     / rid-param-other
+// rid-width-param   = %s"max-width" [ "=" int-param-val ]
+// rid-height-param  = %s"max-height" [ "=" int-param-val ]
+// rid-fps-param     = %s"max-fps" [ "=" int-param-val ]
+// rid-fs-param      = %s"max-fs" [ "=" int-param-val ]
+// rid-br-param      = %s"max-br" [ "=" int-param-val ]
+// rid-pps-param     = %s"max-pps" [ "=" int-param-val ]
+// rid-bpp-param     = %s"max-bpp" [ "=" float-param-val ]
+// rid-depend-param  = %s"depend=" rid-list
+// rid-param-other   = 1*(alpha-numeric / "-") [ "=" param-val ]
+// rid-list          = rid-id *( "," rid-id )
+// int-param-val     = 1*DIGIT
+// float-param-val   = 1*DIGIT "." 1*DIGIT
+// param-val         = *( %x20-58 / %x60-7E )
+//                     ; Any printable character except semicolon
 fn parse_rid(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let tokens: Vec<&str> = to_parse.splitn(3, ' ').collect();
 
@@ -2388,6 +2648,12 @@ fn parse_rid(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     }))
 }
 
+///////////////////////////////////////////////////////////////////////////
+// a=remote-candiate, RFC5245
+//-------------------------------------------------------------------------
+//   remote-candidate-att = "remote-candidates" ":" remote-candidate
+//                           0*(SP remote-candidate)
+//   remote-candidate = component-ID SP connection-address SP port
 fn parse_remote_candidates(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let mut tokens = to_parse.split_whitespace();
     let component = match tokens.next() {
@@ -2426,6 +2692,10 @@ fn parse_remote_candidates(to_parse: &str) -> Result<SdpAttribute, SdpParserInte
     }))
 }
 
+///////////////////////////////////////////////////////////////////////////
+// a=rtpmap, RFC4566
+//-------------------------------------------------------------------------
+// a=rtpmap:<payload type> <encoding name>/<clock rate> [/<encoding parameters>]
 fn parse_rtpmap(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let mut tokens = to_parse.split_whitespace();
     let payload_type: u8 = match tokens.next() {
@@ -2475,6 +2745,11 @@ fn parse_rtpmap(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> 
     Ok(SdpAttribute::Rtpmap(rtpmap))
 }
 
+///////////////////////////////////////////////////////////////////////////
+// a=rtcp, RFC3605
+//-------------------------------------------------------------------------
+//   rtcp-attribute =  "a=rtcp:" port  [nettype space addrtype space
+//                         connection-address] CRLF
 fn parse_rtcp(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let mut tokens = to_parse.split_whitespace();
     let port = match tokens.next() {
@@ -2517,6 +2792,36 @@ fn parse_rtcp(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     Ok(SdpAttribute::Rtcp(rtcp))
 }
 
+///////////////////////////////////////////////////////////////////////////
+// a=rtcp-fb, RFC4585
+//-------------------------------------------------------------------------
+//    rtcp-fb-syntax = "a=rtcp-fb:" rtcp-fb-pt SP rtcp-fb-val CRLF
+//
+//    rtcp-fb-pt         = "*"   ; wildcard: applies to all formats
+//                       / fmt   ; as defined in SDP spec
+//
+//    rtcp-fb-val        = "ack" rtcp-fb-ack-param
+//                       / "nack" rtcp-fb-nack-param
+//                       / "trr-int" SP 1*DIGIT
+//                       / rtcp-fb-id rtcp-fb-param
+//
+//    rtcp-fb-id         = 1*(alpha-numeric / "-" / "_")
+//
+//    rtcp-fb-param      = SP "app" [SP byte-string]
+//                       / SP token [SP byte-string]
+//                       / ; empty
+//
+//    rtcp-fb-ack-param  = SP "rpsi"
+//                       / SP "app" [SP byte-string]
+//                       / SP token [SP byte-string]
+//                       / ; empty
+//
+//    rtcp-fb-nack-param = SP "pli"
+//                       / SP "sli"
+//                       / SP "rpsi"
+//                       / SP "app" [SP byte-string]
+//                       / SP token [SP byte-string]
+//                       / ; empty
 fn parse_rtcp_fb(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let tokens: Vec<&str> = to_parse.splitn(4, ' ').collect();
 
@@ -2629,6 +2934,18 @@ fn parse_rtcp_fb(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError>
     }))
 }
 
+///////////////////////////////////////////////////////////////////////////
+// a=sctpmap, draft-ietf-mmusic-sctp-sdp-05
+//-------------------------------------------------------------------------
+//      sctpmap-attr        =  "a=sctpmap:" sctpmap-number media-subtypes
+// [streams]
+//      sctpmap-number      =  1*DIGIT
+//      protocol            =  labelstring
+//        labelstring         =  text
+//        text                =  byte-string
+//      streams      =  1*DIGIT
+//
+//  Note: this was replace in later versions of the draft by sctp-port
 fn parse_sctpmap(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let tokens: Vec<&str> = to_parse.split_whitespace().collect();
     if tokens.len() != 3 {
@@ -2648,6 +2965,11 @@ fn parse_sctpmap(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError>
     }))
 }
 
+///////////////////////////////////////////////////////////////////////////
+// a=setup, RFC4145
+//-------------------------------------------------------------------------
+//       setup-attr           =  "a=setup:" role
+//       role                 =  "active" / "passive" / "actpass" / "holdconn"
 fn parse_setup(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     Ok(SdpAttribute::Setup(
         match to_parse.to_lowercase().as_ref() {
@@ -2680,19 +3002,41 @@ fn parse_simulcast_version_list(
             "rid" => Ok(make_version_list(
                 descriptor_versionlist_pair.next().unwrap(),
             )),
-            descriptor => Err(SdpParserInternalError::Generic(
-                format!(
-                    "Simulcast attribute has unknown list descriptor '{:?}'",
-                    descriptor
-                )
-                .to_string(),
-            )),
+            descriptor => Err(SdpParserInternalError::Generic(format!(
+                "Simulcast attribute has unknown list descriptor '{:?}'",
+                descriptor
+            ))),
         }
     } else {
         Ok(make_version_list(to_parse))
     }
 }
 
+///////////////////////////////////////////////////////////////////////////
+// a=simulcast, draft-ietf-mmusic-sdp-simulcast
+//-------------------------------------------------------------------------
+// Old draft-04
+// sc-attr     = "a=simulcast:" 1*2( WSP sc-str-list ) [WSP sc-pause-list]
+// sc-str-list = sc-dir WSP sc-id-type "=" sc-alt-list *( ";" sc-alt-list )
+// sc-pause-list = "paused=" sc-alt-list
+// sc-dir      = "send" / "recv"
+// sc-id-type  = "pt" / "rid" / token
+// sc-alt-list = sc-id *( "," sc-id )
+// sc-id       = fmt / rid-identifier / token
+// ; WSP defined in [RFC5234]
+// ; fmt, token defined in [RFC4566]
+// ; rid-identifier defined in [I-D.pthatcher-mmusic-rid]
+//
+// New draft 14, need to parse this for now, will eventually emit it
+// sc-value     = ( sc-send [SP sc-recv] ) / ( sc-recv [SP sc-send] )
+// sc-send      = %s"send" SP sc-str-list
+// sc-recv      = %s"recv" SP sc-str-list
+// sc-str-list  = sc-alt-list *( ";" sc-alt-list )
+// sc-alt-list  = sc-id *( "," sc-id )
+// sc-id-paused = "~"
+// sc-id        = [sc-id-paused] rid-id
+// ; SP defined in [RFC5234]
+// ; rid-id defined in [I-D.ietf-mmusic-rid]
 fn parse_simulcast(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     // TODO: Bug 1225877: Stop accepting all kinds of whitespace here, and only accept SP
     let mut tokens = to_parse.trim().split_whitespace();
@@ -2726,14 +3070,11 @@ fn parse_simulcast(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalErro
         second_version_list = match tokens.next() {
             Some(x) => parse_simulcast_version_list(x)?,
             None => {
-                return Err(SdpParserInternalError::Generic(
-                    format!(
-                        "{:?}{:?}",
-                        "Simulcast has defined a second direction but",
-                        "no second list of simulcast stream versions"
-                    )
-                    .to_string(),
-                ));
+                return Err(SdpParserInternalError::Generic(format!(
+                    "{:?}{:?}",
+                    "Simulcast has defined a second direction but",
+                    "no second list of simulcast stream versions"
+                )));
             }
         }
     }
@@ -2750,6 +3091,14 @@ fn parse_simulcast(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalErro
     }))
 }
 
+///////////////////////////////////////////////////////////////////////////
+// a=ssrc, RFC5576
+//-------------------------------------------------------------------------
+// ssrc-attr = "ssrc:" ssrc-id SP attribute
+// ; The base definition of "attribute" is in RFC 4566.
+// ; (It is the content of "a=" lines.)
+//
+// ssrc-id = integer ; 0 .. 2**32 - 1
 fn parse_ssrc(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let mut tokens = to_parse.splitn(2, ' ');
     let ssrc_id = match tokens.next() {
@@ -3223,6 +3572,20 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_attribute_ice_pacing() {
+        let check_parse = make_check_parse!(u64, SdpAttribute::IcePacing);
+        let check_parse_and_serialize =
+            make_check_parse_and_serialize!(check_parse, SdpAttribute::IcePacing);
+
+        check_parse_and_serialize("ice-pacing:50");
+
+        assert!(parse_attribute("ice-pacing:").is_err());
+        assert!(parse_attribute("ice-pacing:10000000000").is_err());
+        assert!(parse_attribute("ice-pacing:50 100").is_err());
+        assert!(parse_attribute("ice-pacing:foobar").is_err());
+    }
+
+    #[test]
     fn test_parse_attribute_ice_pwd() {
         let check_parse = make_check_parse!(String, SdpAttribute::IcePwd);
         let check_parse_and_serialize =
@@ -3430,6 +3793,8 @@ mod tests {
         check_parse_and_serialize("maxptime:60");
 
         assert!(parse_attribute("maxptime:").is_err());
+        assert!(parse_attribute("maxptime:60 100").is_err());
+        assert!(parse_attribute("maxptime:foobar").is_err());
     }
 
     #[test]
@@ -3780,6 +4145,36 @@ mod tests {
 
         assert!(parse_attribute("ssrc:").is_err());
         assert!(parse_attribute("ssrc:foo").is_err());
+    }
+
+    #[test]
+    fn test_anonymize_attribute_ssrc() -> Result<(), SdpParserInternalError> {
+        let mut anon = StatefulSdpAnonymizer::new();
+        let parsed =
+            parse_attribute("ssrc:2655508255 cname:{735484ea-4f6c-f74a-bd66-7425f8476c2e}")?;
+        let (ssrc1, masked) = if let SdpType::Attribute(a) = parsed {
+            let masked = a.masked_clone(&mut anon);
+            match (a, masked) {
+                (SdpAttribute::Ssrc(ssrc), SdpAttribute::Ssrc(masked)) => (ssrc, masked),
+                (_, _) => unreachable!(),
+            }
+        } else {
+            unreachable!()
+        };
+        assert_eq!(ssrc1.id, masked.id);
+        assert_eq!(ssrc1.attribute, masked.attribute);
+        assert_eq!("cname-00000001", masked.value.unwrap());
+
+        let ssrc2 = parse_attribute("ssrc:2082260239 msid:1d0cdb4e-5934-4f0f-9f88-40392cb60d31 315b086a-5cb6-4221-89de-caf0b038c79d")?;
+        if let SdpType::Attribute(SdpAttribute::Ssrc(ssrc2)) = ssrc2 {
+            let masked = ssrc2.masked_clone(&mut anon);
+            assert_eq!(ssrc2.id, masked.id);
+            assert_eq!(ssrc2.attribute, masked.attribute);
+            assert_eq!(ssrc2.value, masked.value);
+        } else {
+            unreachable!()
+        }
+        Ok(())
     }
 
     #[test]

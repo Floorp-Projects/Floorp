@@ -647,6 +647,7 @@ fn parse_and_serialize_sdp_with_unusual_attributes() {
                    o=- 0 0 IN IP6 2001:db8::4444\r\n\
                    s=-\r\n\
                    t=0 0\r\n\
+                   a=ice-pacing:500\r\n\
                    m=video 0 UDP/TLS/RTP/SAVPF 0\r\n\
                    b=UNSUPPORTED:12345\r\n\
                    c=IN IP6 ::1\r\n\
