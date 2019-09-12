@@ -570,12 +570,16 @@ impl ClipScrollTree {
         self.add_spatial_node(node)
     }
 
-    pub fn add_spatial_node(&mut self, node: SpatialNode) -> SpatialNodeIndex {
+    pub fn add_spatial_node(&mut self, mut node: SpatialNode) -> SpatialNodeIndex {
         let index = SpatialNodeIndex::new(self.spatial_nodes.len());
 
         // When the parent node is None this means we are adding the root.
         if let Some(parent_index) = node.parent {
-            self.spatial_nodes[parent_index.0 as usize].add_child(index);
+            let parent_node = &mut self.spatial_nodes[parent_index.0 as usize];
+            parent_node.add_child(index);
+            node.update_snapping(Some(parent_node));
+        } else {
+            node.update_snapping(None);
         }
 
         self.spatial_nodes.push(node);
@@ -640,12 +644,15 @@ impl ClipScrollTree {
                 pt.new_level(format!("ReferenceFrame"));
                 pt.add_item(format!("kind: {:?}", info.kind));
                 pt.add_item(format!("transform_style: {:?}", info.transform_style));
+                pt.add_item(format!("source_transform: {:?}", info.source_transform));
+                pt.add_item(format!("origin_in_parent_reference_frame: {:?}", info.origin_in_parent_reference_frame));
             }
         }
 
         pt.add_item(format!("index: {:?}", index));
         pt.add_item(format!("content_transform: {:?}", node.content_transform));
         pt.add_item(format!("viewport_transform: {:?}", node.viewport_transform));
+        pt.add_item(format!("snapping_transform: {:?}", node.snapping_transform));
         pt.add_item(format!("coordinate_system_id: {:?}", node.coordinate_system_id));
 
         for child_index in &node.children {
