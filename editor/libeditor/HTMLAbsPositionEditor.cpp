@@ -72,15 +72,9 @@ nsresult HTMLEditor::SetSelectionToAbsoluteOrStaticAsAction(
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
   nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
-  if (NS_FAILED(rv) || cancel) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-
-  rv = rules->DidDoAction(subActionInfo, rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "HTMLEditRules::WillDoAction() failed");
+  return rv;
 }
 
 already_AddRefed<Element>
