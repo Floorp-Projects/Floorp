@@ -10894,7 +10894,11 @@ static bool IsFrameScrolledOutOfView(const nsIFrame* aTarget,
           nsLayoutUtils::SCROLLABLE_FIXEDPOS_FINDS_ROOT |
               nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
   if (!scrollableFrame) {
-    return false;
+    // Even if we couldn't find the nearest scrollable frame, it might mean we
+    // are in an out-of-process iframe, try to see if |aTarget| frame is
+    // scrolled out of view in an scrollable frame in a cross-process ancestor
+    // document.
+    return nsLayoutUtils::FrameIsScrolledOutOfViewInCrossProcess(aTarget);
   }
 
   nsIFrame* scrollableParent = do_QueryFrame(scrollableFrame);
