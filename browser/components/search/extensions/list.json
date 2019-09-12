@@ -204,6 +204,13 @@
         ]
       }
     },
+    "ca-valencia": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google-b-d", "bing", "diec2", "ddg", "ebay-es", "twitter", "wikipedia-ca"
+        ]
+      }
+    },
     "cak": {
       "default": {
         "visibleDefaultEngines": [
