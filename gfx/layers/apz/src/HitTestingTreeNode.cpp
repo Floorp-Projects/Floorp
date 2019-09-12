@@ -344,6 +344,37 @@ const LayerIntRegion& HitTestingTreeNode::GetVisibleRegion() const {
   return mVisibleRegion;
 }
 
+ScreenRect HitTestingTreeNode::GetRemoteDocumentScreenRect() const {
+  ScreenRect result =
+      TransformBy(GetTransformToGecko(), IntRectToRect(mRemoteDocumentRect));
+
+  for (const HitTestingTreeNode* node = this; node; node = node->GetParent()) {
+    if (!node->GetApzc()) {
+      continue;
+    }
+
+    ParentLayerRect compositionBounds = node->GetApzc()->GetCompositionBounds();
+    if (compositionBounds.IsEmpty()) {
+      return ScreenRect();
+    }
+
+    ScreenRect scrollPortOnScreenCoordinate = TransformBy(
+        node->GetParent() ? node->GetParent()->GetTransformToGecko()
+                          : LayerToScreenMatrix4x4(),
+        ViewAs<LayerPixel>(compositionBounds,
+                           PixelCastJustification::MovingDownToChildren));
+    if (scrollPortOnScreenCoordinate.IsEmpty()) {
+      return ScreenRect();
+    }
+
+    result = result.Intersect(scrollPortOnScreenCoordinate);
+    if (result.IsEmpty()) {
+      return ScreenRect();
+    }
+  }
+  return result;
+}
+
 bool HitTestingTreeNode::IsAsyncZoomContainer() const {
   return mIsAsyncZoomContainer;
 }

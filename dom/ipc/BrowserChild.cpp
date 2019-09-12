@@ -1276,9 +1276,11 @@ mozilla::ipc::IPCResult BrowserChild::RecvSizeModeChanged(
 }
 
 mozilla::ipc::IPCResult BrowserChild::RecvChildToParentMatrix(
-    const mozilla::Maybe<mozilla::gfx::Matrix4x4>& aMatrix) {
+    const mozilla::Maybe<mozilla::gfx::Matrix4x4>& aMatrix,
+    const mozilla::ScreenRect& aRemoteDocumentRect) {
   mChildToParentConversionMatrix =
       LayoutDeviceToLayoutDeviceMatrix4x4::FromUnknownMatrix(aMatrix);
+  mRemoteDocumentRect = aRemoteDocumentRect;
   return IPC_OK();
 }
 
@@ -1534,6 +1536,10 @@ BrowserChild::GetChildToParentConversionMatrix() const {
   }
   LayoutDevicePoint offset(GetChromeOffset());
   return LayoutDeviceToLayoutDeviceMatrix4x4::Translation(offset);
+}
+
+ScreenRect BrowserChild::GetRemoteDocumentRect() const {
+  return mRemoteDocumentRect;
 }
 
 void BrowserChild::FlushAllCoalescedMouseData() {
