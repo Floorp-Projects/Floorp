@@ -1,17 +1,61 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Sidebar renders the expected snapshot 1`] = `
+exports[`Sidebar renders the expected snapshot when no page is selected 1`] = `
 <aside
-  className="sidebar"
+  className="sidebar js-sidebar"
 >
   <ul
     className="sidebar__list"
   >
-    <SidebarItem
+    <Connect(SidebarItem)
+      isSelected={false}
       key="sidebar-item-manifest"
       page="manifest"
     />
-    <SidebarItem
+    <Connect(SidebarItem)
+      isSelected={false}
+      key="sidebar-item-service-workers"
+      page="service-workers"
+    />
+  </ul>
+</aside>
+`;
+
+exports[`Sidebar renders the expected snapshot when the manifest page is selected 1`] = `
+<aside
+  className="sidebar js-sidebar"
+>
+  <ul
+    className="sidebar__list"
+  >
+    <Connect(SidebarItem)
+      isSelected={true}
+      key="sidebar-item-manifest"
+      page="manifest"
+    />
+    <Connect(SidebarItem)
+      isSelected={false}
+      key="sidebar-item-service-workers"
+      page="service-workers"
+    />
+  </ul>
+</aside>
+`;
+
+exports[`Sidebar renders the expected snapshot when the service workers page is selected 1`] = `
+<aside
+  className="sidebar js-sidebar"
+>
+  <ul
+    className="sidebar__list"
+  >
+    <Connect(SidebarItem)
+      isSelected={false}
+      key="sidebar-item-manifest"
+      page="manifest"
+    />
+    <Connect(SidebarItem)
+      isSelected={true}
       key="sidebar-item-service-workers"
       page="service-workers"
     />

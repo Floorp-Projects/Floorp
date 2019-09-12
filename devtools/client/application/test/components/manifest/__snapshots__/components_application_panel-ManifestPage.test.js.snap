@@ -2,7 +2,7 @@
 
 exports[`ManifestPage renders the expected snapshot when the manifest is loading 1`] = `
 <section
-  className="app-page app-page--empty"
+  className="app-page js-manifest-page app-page--empty"
 >
   <Connect(ManifestLoader) />
 </section>
@@ -10,7 +10,7 @@ exports[`ManifestPage renders the expected snapshot when the manifest is loading
 
 exports[`ManifestPage renders the expected snapshot when the manifest needs to load 1`] = `
 <section
-  className="app-page app-page--empty"
+  className="app-page js-manifest-page app-page--empty"
 >
   <Connect(ManifestLoader) />
 </section>
@@ -18,7 +18,7 @@ exports[`ManifestPage renders the expected snapshot when the manifest needs to l
 
 exports[`ManifestPage renders the expected snapshot when there is a manifest 1`] = `
 <section
-  className="app-page "
+  className="app-page js-manifest-page "
 >
   <Manifest
     icons={
@@ -63,7 +63,7 @@ exports[`ManifestPage renders the expected snapshot when there is a manifest 1`]
 
 exports[`ManifestPage renders the expected snapshot when there is no manifest 1`] = `
 <section
-  className="app-page app-page--empty"
+  className="app-page js-manifest-page app-page--empty"
 >
   <ManifestEmpty />
 </section>

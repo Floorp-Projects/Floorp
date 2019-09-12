@@ -1,8 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`SidebarItem renders the expected snapshot with manifest page 1`] = `
+exports[`SidebarItem renders the expected snapshot when the manifest page is not selected 1`] = `
 <li
-  className="sidebar-item"
+  className="sidebar-item js-sidebar-manifest "
+  onClick={[Function]}
+  role="link"
 >
   <Localized
     attrs={
@@ -33,9 +35,81 @@ exports[`SidebarItem renders the expected snapshot with manifest page 1`] = `
 </li>
 `;
 
-exports[`SidebarItem renders the expected snapshot with service-workers page 1`] = `
+exports[`SidebarItem renders the expected snapshot when the manifest page is selected 1`] = `
 <li
-  className="sidebar-item"
+  className="sidebar-item js-sidebar-manifest sidebar-item--selected"
+  onClick={[Function]}
+  role="link"
+>
+  <Localized
+    attrs={
+      Object {
+        "alt": true,
+        "title": true,
+      }
+    }
+    id="sidebar-item-manifest"
+  >
+    <img
+      className="sidebar-item__icon"
+      src="chrome://devtools/skin/images/application-manifest.svg"
+    />
+  </Localized>
+  <Localized
+    attrs={
+      Object {
+        "title": true,
+      }
+    }
+    id="sidebar-item-manifest"
+  >
+    <span
+      className="devtools-ellipsis-text"
+    />
+  </Localized>
+</li>
+`;
+
+exports[`SidebarItem renders the expected snapshot when the service-workers page is not selected 1`] = `
+<li
+  className="sidebar-item js-sidebar-service-workers "
+  onClick={[Function]}
+  role="link"
+>
+  <Localized
+    attrs={
+      Object {
+        "alt": true,
+        "title": true,
+      }
+    }
+    id="sidebar-item-service-workers"
+  >
+    <img
+      className="sidebar-item__icon"
+      src="chrome://devtools/skin/images/debugging-workers.svg"
+    />
+  </Localized>
+  <Localized
+    attrs={
+      Object {
+        "title": true,
+      }
+    }
+    id="sidebar-item-service-workers"
+  >
+    <span
+      className="devtools-ellipsis-text"
+    />
+  </Localized>
+</li>
+`;
+
+exports[`SidebarItem renders the expected snapshot when the service-workers page is selected 1`] = `
+<li
+  className="sidebar-item js-sidebar-service-workers sidebar-item--selected"
+  onClick={[Function]}
+  role="link"
 >
   <Localized
     attrs={

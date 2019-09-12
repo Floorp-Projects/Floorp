@@ -8,8 +8,8 @@
 
 .manifest-item__label {
   color: var(--theme-text-color-alt);
-  font-weight: var(--title-30-font-weight);
   width: calc(var(--base-unit) * 28);
+  font-weight: var(--title-10-font-weight);
   text-align: right;
 }
 

@@ -12,9 +12,16 @@
   grid-template-columns: auto 1fr;
   grid-gap: var(--base-unit);
   padding: calc(var(--base-unit)) calc(var(--base-unit) * 6);
+  user-select: none;
+  cursor: pointer;
 }
 
-.sidebar-item:hover {
+.sidebar-item--selected {
+	background-color: var(--theme-selection-background);
+	color: var(--theme-selection-color);
+}
+
+.sidebar-item:not(.sidebar-item--selected):hover {
 	background-color: var(--highlight-color);
 }
 
@@ -23,5 +30,4 @@
 	width: calc(var(--base-unit) * 4);
 	-moz-context-properties: fill;
 	fill: currentColor;
-
 }

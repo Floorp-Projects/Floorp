@@ -19,6 +19,7 @@ const actionTypes = {
   UPDATE_WORKERS: "UPDATE_WORKERS",
 };
 
+// NOTE: these const values are used as part of CSS selectors - be mindful of the characters used
 const PAGE_TYPES = {
   MANIFEST: "manifest",
   SERVICE_WORKERS: "service-workers",
