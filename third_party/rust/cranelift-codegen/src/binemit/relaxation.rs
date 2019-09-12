@@ -74,7 +74,7 @@ pub fn relax_branches(
     {
         let mut cur = FuncCursor::new(func);
         while let Some(ebb) = cur.next_ebb() {
-            divert.clear();
+            divert.at_ebb(&cur.func.entry_diversions, ebb);
             cur.func.offsets[ebb] = offset;
             while let Some(inst) = cur.next_inst() {
                 divert.apply(&cur.func.dfg[inst]);
@@ -93,7 +93,8 @@ pub fn relax_branches(
         // Visit all instructions in layout order.
         let mut cur = FuncCursor::new(func);
         while let Some(ebb) = cur.next_ebb() {
-            divert.clear();
+            divert.at_ebb(&cur.func.entry_diversions, ebb);
+
             // Record the offset for `ebb` and make sure we iterate until offsets are stable.
             if cur.func.offsets[ebb] != offset {
                 cur.func.offsets[ebb] = offset;
@@ -128,8 +129,7 @@ pub fn relax_branches(
 
     for (jt, jt_data) in func.jump_tables.iter() {
         func.jt_offsets[jt] = offset;
-        // TODO: this should be computed based on the min size needed to hold
-        //        the furthest branch.
+        // TODO: this should be computed based on the min size needed to hold the furthest branch.
         offset += jt_data.len() as u32 * 4;
     }
 
@@ -167,6 +167,14 @@ fn try_fold_redundant_jump(
             return false; // The instruction was either multi-target or not a branch.
         }
     };
+
+    // For the moment, only attempt to fold a branch to an ebb that is parameterless.
+    // These blocks are mainly produced by critical edge splitting.
+    //
+    // TODO: Allow folding blocks that define SSA values and function as phi nodes.
+    if func.dfg.num_ebb_params(first_dest) != 0 {
+        return false;
+    }
 
     // Look at the first instruction of the first branch's destination.
     // If it is an unconditional branch, maybe the second jump can be bypassed.
