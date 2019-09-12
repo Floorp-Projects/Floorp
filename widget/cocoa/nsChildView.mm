@@ -3078,9 +3078,10 @@ NSPasteboard* globalDragPboard = nil;
 
 // gLastDragView and gLastDragMouseDownEvent are used to communicate information
 // to the drag service during drag invocation (starting a drag in from the view).
-// gLastDragView is only non-null while mouseDragged is on the call stack.
-NSView* gLastDragView = nil;
-NSEvent* gLastDragMouseDownEvent = nil;
+// gLastDragView is only non-null while a mouse button is pressed, so between
+// mouseDown and mouseUp.
+NSView* gLastDragView = nil;             // [weak]
+NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
 
 + (void)initialize {
   static BOOL initialized = NO;
@@ -3320,6 +3321,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
   [mNonDraggableViewsContainer release];
   [mPixelHostingView removeFromSuperview];
   [mPixelHostingView release];
+
+  if (gLastDragView == self) {
+    gLastDragView = nil;
+  }
 
   [super dealloc];
 
@@ -4235,6 +4240,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   [gLastDragMouseDownEvent release];
   gLastDragMouseDownEvent = [theEvent retain];
+  gLastDragView = self;
 
   // We need isClickThrough because at this point the window we're in might
   // already have become main, so the check for isMainWindow in
@@ -4286,6 +4292,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (void)mouseUp:(NSEvent*)theEvent {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  gLastDragView = nil;
 
   if (!mGeckoChild || mBlockedLastMouseDown) return;
   if (mTextInputHandler->OnHandleEvent(theEvent)) {
@@ -4369,8 +4377,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return;
   }
 
-  gLastDragView = self;
-
   WidgetMouseEvent geckoEvent(true, eMouseMove, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
 
@@ -4378,7 +4384,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   // Note, sending the above event might have destroyed our widget since we didn't retain.
   // Fine so long as we don't access any local variables from here on.
-  gLastDragView = nil;
 
   // XXX maybe call markedTextSelectionChanged:client: here?
 
