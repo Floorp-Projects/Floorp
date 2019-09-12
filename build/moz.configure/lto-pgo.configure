@@ -46,8 +46,12 @@ set_config('MOZ_PROFILE_USE',
 @depends('--with-pgo-profile-path', '--enable-profile-use', llvm_profdata, check_build_environment)
 @imports('os')
 def pgo_profile_path(path, pgo_use, profdata, build_env):
+    topobjdir = build_env.topobjdir
+    if topobjdir.endswith('/js/src'):
+        topobjdir = topobjdir[:-7]
+
     if not path:
-        return os.path.join(build_env.topobjdir, 'merged.profdata')
+        return os.path.join(topobjdir, 'merged.profdata')
     if path and not pgo_use:
         die('Pass --enable-profile-use to use --with-pgo-profile-path.')
     if path and not profdata:
@@ -61,14 +65,10 @@ def pgo_profile_path(path, pgo_use, profdata, build_env):
 
 set_config('PGO_PROFILE_PATH', pgo_profile_path)
 
-@depends(c_compiler, check_build_environment, target, pgo_profile_path)
+@depends(c_compiler, target, pgo_profile_path)
 @imports('multiprocessing')
 @imports(_from='__builtin__', _import='min')
-def pgo_flags(compiler, build_env, target, profdata):
-    topobjdir = build_env.topobjdir
-    if topobjdir.endswith('/js/src'):
-        topobjdir = topobjdir[:-7]
-
+def pgo_flags(compiler, target, profdata):
     if compiler.type == 'gcc':
         return namespace(
             gen_cflags=['-fprofile-generate'],
