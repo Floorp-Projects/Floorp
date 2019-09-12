@@ -20,7 +20,6 @@
 #include "nsIPersistentProperties2.h"
 #include "mozilla/a11y/PDocAccessibleChild.h"
 #include "mozilla/dom/Element.h"
-#include "nsAccessibilityService.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -139,11 +138,7 @@ void nsAccUtils::SetLiveContainerAttributes(
                                        live);
       } else if (role) {
         GetLiveAttrValue(role->liveAttRule, live);
-      } else if (nsStaticAtom* value = GetAccService()->MarkupAttribute(
-                     ancestor, nsGkAtoms::live)) {
-        value->ToString(live);
       }
-
       if (!live.IsEmpty()) {
         SetAccAttr(aAttributes, nsGkAtoms::containerLive, live);
         if (role) {
@@ -493,9 +488,6 @@ bool nsAccUtils::IsARIALive(const Accessible* aAccessible) {
                                        docLive);
       } else if (role) {
         GetLiveAttrValue(role->liveAttRule, docLive);
-      } else if (nsStaticAtom* value = GetAccService()->MarkupAttribute(
-                     ancestor, nsGkAtoms::live)) {
-        value->ToString(docLive);
       }
       if (!docLive.IsEmpty()) {
         live = docLive;
