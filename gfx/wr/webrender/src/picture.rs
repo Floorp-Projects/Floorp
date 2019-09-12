@@ -7,7 +7,7 @@ use api::{PropertyBinding, PropertyBindingId, FilterPrimitive, FontRenderMode};
 use api::{DebugFlags, RasterSpace, ImageKey, ColorF};
 use api::units::*;
 use crate::box_shadow::{BLUR_SAMPLE_SCALE};
-use crate::clip::{ClipStore, ClipDataStore, ClipChainInstance, ClipDataHandle, ClipChainId};
+use crate::clip::{ClipStore, ClipChainInstance, ClipDataHandle, ClipChainId};
 use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX,
     ClipScrollTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace, CoordinateSystemId
 };
@@ -1781,7 +1781,7 @@ impl<'a> PictureUpdateState<'a> {
         frame_context: &FrameBuildingContext,
         gpu_cache: &mut GpuCache,
         clip_store: &ClipStore,
-        clip_data_store: &ClipDataStore,
+        data_stores: &mut DataStores,
     ) {
         profile_marker!("UpdatePictures");
 
@@ -1798,7 +1798,7 @@ impl<'a> PictureUpdateState<'a> {
             frame_context,
             gpu_cache,
             clip_store,
-            clip_data_store,
+            data_stores,
         );
 
         if !state.are_raster_roots_assigned {
@@ -1861,7 +1861,7 @@ impl<'a> PictureUpdateState<'a> {
         frame_context: &FrameBuildingContext,
         gpu_cache: &mut GpuCache,
         clip_store: &ClipStore,
-        clip_data_store: &ClipDataStore,
+        data_stores: &mut DataStores,
     ) {
         if let Some(prim_list) = picture_primitives[pic_index.0].pre_update(
             self,
@@ -1874,7 +1874,7 @@ impl<'a> PictureUpdateState<'a> {
                     frame_context,
                     gpu_cache,
                     clip_store,
-                    clip_data_store,
+                    data_stores,
                 );
             }
 
@@ -1882,6 +1882,7 @@ impl<'a> PictureUpdateState<'a> {
                 prim_list,
                 self,
                 frame_context,
+                data_stores,
             );
         }
     }
@@ -2196,6 +2197,10 @@ pub struct PrimitiveClusterIndex(pub u32);
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct ClusterIndex(pub u16);
 
+#[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+pub struct PrimitiveIndex(pub u32);
+
 impl ClusterIndex {
     pub const INVALID: ClusterIndex = ClusterIndex(u16::MAX);
 }
@@ -2217,6 +2222,10 @@ pub struct PrimitiveList {
     pub pictures: PictureList,
     /// List of primitives grouped into clusters.
     pub clusters: SmallVec<[PrimitiveCluster; 4]>,
+    /// List of primitive indicies that can only update
+    /// the cluster during frame building. This maps to
+    /// primitives in the prim_instances array.
+    pub deferred_prims: Vec<PrimitiveIndex>,
 }
 
 impl PrimitiveList {
@@ -2229,6 +2238,7 @@ impl PrimitiveList {
             prim_instances: Vec::new(),
             pictures: SmallVec::new(),
             clusters: SmallVec::new(),
+            deferred_prims: Vec::new(),
         }
     }
 
@@ -2243,10 +2253,11 @@ impl PrimitiveList {
         let mut pictures = SmallVec::new();
         let mut clusters_map = FastHashMap::default();
         let mut clusters: SmallVec<[PrimitiveCluster; 4]> = SmallVec::new();
+        let mut deferred_prims = Vec::new();
 
         // Walk the list of primitive instances and extract any that
         // are pictures.
-        for prim_instance in &mut prim_instances {
+        for (prim_index, prim_instance) in &mut prim_instances.iter_mut().enumerate() {
             // Check if this primitive is a picture. In future we should
             // remove this match and embed this info directly in the primitive instance.
             let is_pic = match prim_instance.kind {
@@ -2302,8 +2313,12 @@ impl PrimitiveList {
                     (data.is_backface_visible, data.prim_size)
                 }
                 PrimitiveInstanceKind::Backdrop { data_handle, .. } => {
+                    // We don't know the actual size of the backdrop until frame
+                    // building, so use an empty rect for now and add it to the
+                    // deferred primitive list.
                     let data = &interners.backdrop[data_handle];
-                    (data.is_backface_visible, data.prim_size)
+                    deferred_prims.push(PrimitiveIndex(prim_index as u32));
+                    (data.is_backface_visible, LayoutSize::zero())
                 }
                 PrimitiveInstanceKind::PushClipChain |
                 PrimitiveInstanceKind::PopClipChain => {
@@ -2358,6 +2373,7 @@ impl PrimitiveList {
             prim_instances,
             pictures,
             clusters,
+            deferred_prims,
         }
     }
 }
@@ -2424,16 +2440,9 @@ pub struct PicturePrimitive {
     pub spatial_node_index: SpatialNodeIndex,
 
     /// The local rect of this picture. It is built
-    /// dynamically when updating visibility. It takes
-    /// into account snapping in device space for its
-    /// children.
-    pub snapped_local_rect: LayoutRect,
-
-    /// The local rect of this picture. It is built
     /// dynamically during the first picture traversal. It
-    /// does not take into account snapping in device for
-    /// its children.
-    pub unsnapped_local_rect: LayoutRect,
+    /// is composed of already snapped primitives.
+    pub local_rect: LayoutRect,
 
     /// If false, this picture needs to (re)build segments
     /// if it supports segment rendering. This can occur
@@ -2458,8 +2467,7 @@ impl PicturePrimitive {
     ) {
         pt.new_level(format!("{:?}", self_index));
         pt.add_item(format!("prim_count: {:?}", self.prim_list.prim_instances.len()));
-        pt.add_item(format!("snapped_local_rect: {:?}", self.snapped_local_rect));
-        pt.add_item(format!("unsnapped_local_rect: {:?}", self.unsnapped_local_rect));
+        pt.add_item(format!("local_rect: {:?}", self.local_rect));
         pt.add_item(format!("spatial_node_index: {:?}", self.spatial_node_index));
         pt.add_item(format!("raster_config: {:?}", self.raster_config));
         pt.add_item(format!("requested_composite_mode: {:?}", self.requested_composite_mode));
@@ -2568,8 +2576,7 @@ impl PicturePrimitive {
             is_backface_visible,
             requested_raster_space,
             spatial_node_index,
-            snapped_local_rect: LayoutRect::zero(),
-            unsnapped_local_rect: LayoutRect::zero(),
+            local_rect: LayoutRect::zero(),
             tile_cache,
             options,
             segments_are_valid: false,
@@ -2673,7 +2680,7 @@ impl PicturePrimitive {
 
         match self.raster_config {
             Some(ref raster_config) => {
-                let pic_rect = PictureRect::from_untyped(&self.snapped_local_rect.to_untyped());
+                let pic_rect = PictureRect::from_untyped(&self.local_rect.to_untyped());
 
                 let device_pixel_scale = frame_state
                     .surfaces[raster_config.surface_index.0]
@@ -3437,12 +3444,66 @@ impl PicturePrimitive {
         prim_list: PrimitiveList,
         state: &mut PictureUpdateState,
         frame_context: &FrameBuildingContext,
+        data_stores: &mut DataStores,
     ) {
         // Restore the pictures list used during recursion.
         self.prim_list = prim_list;
 
         // Pop the state information about this picture.
         state.pop_picture();
+
+        // Update any primitives/cluster bounding rects that can only be done
+        // with information available during frame building.
+        for prim_index in &self.prim_list.deferred_prims {
+            let prim_instance = &mut self.prim_list.prim_instances[prim_index.0 as usize];
+            match prim_instance.kind {
+                PrimitiveInstanceKind::Backdrop { data_handle, .. } => {
+                    // The actual size and clip rect of this primitive are determined by computing the bounding
+                    // box of the projected rect of the backdrop-filter element onto the backdrop.
+                    let prim_data = &mut data_stores.backdrop[data_handle];
+                    let spatial_node_index = prim_data.kind.spatial_node_index;
+
+                    // We cannot use the relative transform between the backdrop and the element because
+                    // that doesn't take into account any projection transforms that both spatial nodes are children of.
+                    // Instead, we first project from the element to the world space and get a flattened 2D bounding rect
+                    // in the screen space, we then map this rect from the world space to the backdrop space to get the
+                    // proper bounding box where the backdrop-filter needs to be processed.
+
+                    let prim_to_world_mapper = SpaceMapper::new_with_target(
+                        ROOT_SPATIAL_NODE_INDEX,
+                        spatial_node_index,
+                        LayoutRect::max_rect(),
+                        frame_context.clip_scroll_tree,
+                    );
+
+                    let backdrop_to_world_mapper = SpaceMapper::new_with_target(
+                        ROOT_SPATIAL_NODE_INDEX,
+                        prim_instance.spatial_node_index,
+                        LayoutRect::max_rect(),
+                        frame_context.clip_scroll_tree,
+                    );
+
+                    // First map to the screen and get a flattened rect
+                    let prim_rect = prim_to_world_mapper.map(&prim_data.kind.border_rect).unwrap_or_else(LayoutRect::zero);
+                    // Backwards project the flattened rect onto the backdrop
+                    let prim_rect = backdrop_to_world_mapper.unmap(&prim_rect).unwrap_or_else(LayoutRect::zero);
+
+                    // TODO(aosmond): Is this safe? Updating the primitive size during
+                    // frame building is usually problematic since scene building will cache
+                    // the primitive information in the GPU already.
+                    prim_instance.prim_origin = prim_rect.origin;
+                    prim_data.common.prim_size = prim_rect.size;
+                    prim_instance.local_clip_rect = prim_rect;
+
+                    // Update the cluster bounding rect now that we have the backdrop rect.
+                    let cluster = &mut self.prim_list.clusters[prim_instance.cluster_index.0 as usize];
+                    cluster.bounding_rect = cluster.bounding_rect.union(&prim_rect);
+                }
+                _ => {
+                    panic!("BUG: unexpected deferred primitive kind for cluster updates");
+                }
+            }
+        }
 
         for cluster in &mut self.prim_list.clusters {
             // Skip the cluster if backface culled.
@@ -3503,11 +3564,6 @@ impl PicturePrimitive {
             let surface_index = state.pop_surface();
             debug_assert_eq!(surface_index, raster_config.surface_index);
 
-            // Snapping may change the local rect slightly, and as such should just be
-            // considered an estimated size for determining if we need raster roots and
-            // preparing the tile cache.
-            self.unsnapped_local_rect = surface_rect;
-
             // Check if any of the surfaces can't be rasterized in local space but want to.
             if raster_config.establishes_raster_root {
                 if surface_rect.size.width > MAX_SURFACE_SIZE ||
@@ -3517,6 +3573,8 @@ impl PicturePrimitive {
                     state.are_raster_roots_assigned = false;
                 }
             }
+
+            self.local_rect = surface_rect;
 
             // Drop shadows draw both a content and shadow rect, so need to expand the local
             // rect of any surfaces to be composited in parent surfaces correctly.
@@ -3586,14 +3644,14 @@ impl PicturePrimitive {
                         // Basic brush primitive header is (see end of prepare_prim_for_render_inner in prim_store.rs)
                         //  [brush specific data]
                         //  [segment_rect, segment data]
-                        let shadow_rect = self.snapped_local_rect.translate(shadow.offset);
+                        let shadow_rect = self.local_rect.translate(shadow.offset);
 
                         // ImageBrush colors
                         request.push(shadow.color.premultiplied());
                         request.push(PremultipliedColorF::WHITE);
                         request.push([
-                            self.snapped_local_rect.size.width,
-                            self.snapped_local_rect.size.height,
+                            self.local_rect.size.width,
+                            self.local_rect.size.height,
                             0.0,
                             0.0,
                         ]);
