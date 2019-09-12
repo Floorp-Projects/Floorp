@@ -7,9 +7,19 @@
 import { workerUtils } from "devtools-utils";
 const { WorkerDispatcher } = workerUtils;
 
-const dispatcher = new WorkerDispatcher();
-export const start = dispatcher.start.bind(dispatcher);
-export const stop = dispatcher.stop.bind(dispatcher);
+let dispatcher;
+let workerPath;
+
+export const start = (path: string) => {
+  workerPath = path;
+};
+export const stop = () => {
+  if (dispatcher) {
+    dispatcher.stop();
+    dispatcher = null;
+    workerPath = null;
+  }
+};
 
 type PrettyPrintOpts = {
   text: string,
@@ -17,6 +27,11 @@ type PrettyPrintOpts = {
 };
 
 export async function prettyPrint({ text, url }: PrettyPrintOpts) {
+  if (!dispatcher) {
+    dispatcher = new WorkerDispatcher();
+    dispatcher.start(workerPath);
+  }
+
   return dispatcher.invoke("prettyPrint", {
     url,
     indent: 2,
