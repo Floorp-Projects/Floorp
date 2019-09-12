@@ -147,6 +147,10 @@ using namespace mozilla::dom::HTMLMediaElement_Binding;
 namespace mozilla {
 namespace dom {
 
+extern void NotifyMediaStarted(uint64_t aWindowID);
+extern void NotifyMediaStopped(uint64_t aWindowID);
+extern void NotifyMediaAudibleChanged(uint64_t aWindowID, bool aAudible);
+
 // Number of milliseconds between progress events as defined by spec
 static const uint32_t PROGRESS_MS = 350;
 
@@ -1130,6 +1134,9 @@ class HTMLMediaElement::AudioChannelAgentCallback final
 
     mIsOwnerAudible = newAudibleState;
     mAudioChannelAgent->NotifyStartedAudible(mIsOwnerAudible, aReason);
+    NotifyMediaAudibleChanged(
+        mAudioChannelAgent->WindowID(),
+        mIsOwnerAudible == AudioChannelService::AudibleState::eAudible);
   }
 
   bool IsPlaybackBlocked() {
@@ -1199,6 +1206,7 @@ class HTMLMediaElement::AudioChannelAgentCallback final
       return;
     }
 
+    NotifyMediaStarted(mAudioChannelAgent->WindowID());
     WindowVolumeChanged(config.mVolume, config.mMuted);
     WindowSuspendChanged(config.mSuspend);
   }
@@ -1207,6 +1215,7 @@ class HTMLMediaElement::AudioChannelAgentCallback final
     MOZ_ASSERT(mAudioChannelAgent);
     MOZ_ASSERT(mAudioChannelAgent->IsPlayingStarted());
     mAudioChannelAgent->NotifyStoppedPlaying();
+    NotifyMediaStopped(mAudioChannelAgent->WindowID());
   }
 
   void SetSuspended(SuspendTypes aSuspend) {
@@ -2540,7 +2549,8 @@ void HTMLMediaElement::LoadFromSourceChildren() {
 
         while (nextChild) {
           if (nextChild && nextChild->IsHTMLElement(nsGkAtoms::source)) {
-            ReportLoadError("MediaLoadUnsupportedTypeAttributeLoadingNextChild", params);
+            ReportLoadError("MediaLoadUnsupportedTypeAttributeLoadingNextChild",
+                            params);
             break;
           }
 
