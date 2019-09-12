@@ -401,7 +401,9 @@ add_task(async function test_cached_userScript_on_document_start() {
     },
   });
 
+  ExtensionTestUtils.failOnSchemaWarnings(false);
   await extension.startup();
+  ExtensionTestUtils.failOnSchemaWarnings(true);
   await extension.awaitMessage("user-script-registered");
 
   let url = `${BASE_URL}/file_sample.html`;
