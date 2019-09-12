@@ -25,10 +25,6 @@ UNIFIED_SOURCES += [
     'gmp-clearkey.cpp',
 ]
 
-SOURCES += [
-    'openaes/oaes_lib.c',
-]
-
 if CONFIG['OS_ARCH'] == 'WINNT':
     UNIFIED_SOURCES += [
         'VideoDecoder.cpp',
