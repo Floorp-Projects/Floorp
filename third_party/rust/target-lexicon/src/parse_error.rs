@@ -1,4 +1,4 @@
-use std::string::String;
+use alloc::string::String;
 
 /// An error returned from parsing a triple.
 #[derive(Fail, Clone, Debug, PartialEq, Eq)]

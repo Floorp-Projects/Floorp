@@ -183,7 +183,14 @@ fn rewrite_expr(
     assert_eq!(
         apply_target.inst().operands_in.len(),
         dummy_args.len(),
-        "number of arguments in instruction is incorrect"
+        "number of arguments in instruction {} is incorrect\nexpected: {:?}",
+        apply_target.inst().name,
+        apply_target
+            .inst()
+            .operands_in
+            .iter()
+            .map(|operand| format!("{}: {}", operand.name, operand.kind.name))
+            .collect::<Vec<_>>(),
     );
 
     let mut args = Vec::new();
@@ -383,9 +390,6 @@ impl TransformGroups {
     }
     pub fn get(&self, id: TransformGroupIndex) -> &TransformGroup {
         &self.groups[id]
-    }
-    pub fn get_mut(&mut self, id: TransformGroupIndex) -> &mut TransformGroup {
-        self.groups.get_mut(id).unwrap()
     }
     fn next_key(&self) -> TransformGroupIndex {
         self.groups.next_key()
