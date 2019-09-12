@@ -15,9 +15,11 @@ add_task(async function test_manifest_csp() {
     "Should have the expected poilcy string"
   );
 
+  ExtensionTestUtils.failOnSchemaWarnings(false);
   normalized = await ExtensionTestUtils.normalizeManifest({
     content_security_policy: "object-src 'none'",
   });
+  ExtensionTestUtils.failOnSchemaWarnings(true);
 
   equal(normalized.error, undefined, "Should not have an error");
 
