@@ -75,7 +75,7 @@ add_task(async function initialize() {
 add_task(async function registerPushEndpointSuccess() {
   let pushService = new FxAccountsPushService({
     pushService: mockPushService,
-    fxAccounts: mockFxAccounts,
+    fxai: mockFxAccounts,
   });
 
   let subscription = await pushService.registerPushEndpoint();
@@ -91,7 +91,7 @@ add_task(async function registerPushEndpointFailure() {
 
   let pushService = new FxAccountsPushService({
     pushService: failPushService,
-    fxAccounts: mockFxAccounts,
+    fxai: mockFxAccounts,
   });
 
   let subscription = await pushService.registerPushEndpoint();
@@ -101,7 +101,7 @@ add_task(async function registerPushEndpointFailure() {
 add_task(async function unsubscribeSuccess() {
   let pushService = new FxAccountsPushService({
     pushService: mockPushService,
-    fxAccounts: mockFxAccounts,
+    fxai: mockFxAccounts,
   });
 
   let result = await pushService.unsubscribe();
@@ -117,7 +117,7 @@ add_task(async function unsubscribeFailure() {
 
   let pushService = new FxAccountsPushService({
     pushService: failPushService,
-    fxAccounts: mockFxAccounts,
+    fxai: mockFxAccounts,
   });
 
   let result = await pushService.unsubscribe();
@@ -157,7 +157,7 @@ add_test(function observePushTopicVerify() {
 
   let pushService = new FxAccountsPushService({
     pushService: mockPushService,
-    fxAccounts: customAccounts,
+    fxai: customAccounts,
   });
 
   pushService.observe(
@@ -189,7 +189,7 @@ add_test(function observePushTopicDeviceConnected() {
 
   let pushService = new FxAccountsPushService({
     pushService: mockPushService,
-    fxAccounts: mockFxAccounts,
+    fxai: mockFxAccounts,
   });
 
   pushService.observe(
@@ -230,7 +230,7 @@ add_task(async function observePushTopicDeviceDisconnected_current_device() {
     signOut() {
       signoutCalled = true;
     },
-  });
+  })._internal;
 
   const deviceDisconnectedNotificationObserved = new Promise(resolve => {
     Services.obs.addObserver(function obs(subject, topic, data) {
@@ -242,7 +242,7 @@ add_task(async function observePushTopicDeviceDisconnected_current_device() {
 
   let pushService = new FxAccountsPushService({
     pushService: mockPushService,
-    fxAccounts: fxAccountsMock,
+    fxai: fxAccountsMock,
   });
 
   pushService.observe(
@@ -286,7 +286,7 @@ add_task(async function observePushTopicDeviceDisconnected_another_device() {
     signOut() {
       signoutCalled = true;
     },
-  });
+  })._internal;
 
   const deviceDisconnectedNotificationObserved = new Promise(resolve => {
     Services.obs.addObserver(function obs(subject, topic, data) {
@@ -298,7 +298,7 @@ add_task(async function observePushTopicDeviceDisconnected_another_device() {
 
   let pushService = new FxAccountsPushService({
     pushService: mockPushService,
-    fxAccounts: fxAccountsMock,
+    fxai: fxAccountsMock,
   });
 
   pushService.observe(
@@ -327,7 +327,7 @@ add_test(function observePushTopicAccountDestroyed() {
     },
   };
   let customAccounts = Object.assign(mockFxAccounts, {
-    handleAccountDestroyed() {
+    _handleAccountDestroyed() {
       // checking verification status on push messages without data
       run_next_test();
     },
@@ -335,7 +335,7 @@ add_test(function observePushTopicAccountDestroyed() {
 
   let pushService = new FxAccountsPushService({
     pushService: mockPushService,
-    fxAccounts: customAccounts,
+    fxai: customAccounts,
   });
 
   pushService.observe(
@@ -373,7 +373,7 @@ add_test(function observePushTopicVerifyLogin() {
 
   let pushService = new FxAccountsPushService({
     pushService: mockPushService,
-    fxAccounts: mockFxAccounts,
+    fxai: mockFxAccounts,
   });
 
   pushService.observe(
@@ -402,7 +402,7 @@ add_test(function observePushTopicProfileUpdated() {
 
   let pushService = new FxAccountsPushService({
     pushService: mockPushService,
-    fxAccounts: mockFxAccounts,
+    fxai: mockFxAccounts,
   });
 
   pushService.observe(
@@ -493,7 +493,7 @@ add_task(async function commandReceived() {
 
   let pushService = new FxAccountsPushService({
     pushService: mockPushService,
-    fxAccounts: fxAccountsMock,
+    fxai: fxAccountsMock,
   });
 
   pushService.observe(
@@ -514,7 +514,7 @@ add_test(function observeSubscriptionChangeTopic() {
 
   let pushService = new FxAccountsPushService({
     pushService: mockPushService,
-    fxAccounts: customAccounts,
+    fxai: customAccounts,
   });
 
   pushService.observe(

@@ -143,12 +143,16 @@ async function MockFxAccounts(credentials, device = {}) {
     },
     DEVICE_REGISTRATION_VERSION,
   });
-  await fxa.internal.setSignedInUser(credentials);
+  await fxa._internal.setSignedInUser(credentials);
   Services.prefs.setStringPref(
     "identity.fxaccounts.account.device.name",
     device.name || "mock device name"
   );
   return fxa;
+}
+
+function updateUserAccountData(fxa, data) {
+  return fxa._internal.updateUserAccountData(data);
 }
 
 add_task(async function test_updateDeviceRegistration_with_new_device() {
@@ -158,14 +162,14 @@ add_task(async function test_updateDeviceRegistration_with_new_device() {
   const credentials = getTestUser("baz");
   const fxa = await MockFxAccounts(credentials, { name: deviceName });
   // Remove the current device registration (setSignedInUser does one!).
-  await fxa.updateUserAccountData({ uid: credentials.uid, device: null });
+  await updateUserAccountData(fxa, { uid: credentials.uid, device: null });
 
   const spy = {
     registerDevice: { count: 0, args: [] },
     updateDevice: { count: 0, args: [] },
     getDeviceList: { count: 0, args: [] },
   };
-  const client = fxa.internal.fxAccountsClient;
+  const client = fxa._internal.fxAccountsClient;
   client.registerDevice = function() {
     spy.registerDevice.count += 1;
     spy.registerDevice.args.push(arguments);
@@ -203,7 +207,7 @@ add_task(async function test_updateDeviceRegistration_with_new_device() {
   Assert.equal(spy.registerDevice.args[0][3].pushPublicKey, BOGUS_PUBLICKEY);
   Assert.equal(spy.registerDevice.args[0][3].pushAuthKey, BOGUS_AUTHKEY);
 
-  const state = fxa.internal.currentAccountState;
+  const state = fxa._internal.currentAccountState;
   const data = await state.getUserAccountData();
 
   Assert.equal(data.device.id, "newly-generated device id");
@@ -216,7 +220,7 @@ add_task(async function test_updateDeviceRegistration_with_existing_device() {
 
   const credentials = getTestUser("pb");
   const fxa = await MockFxAccounts(credentials, { name: deviceName });
-  await fxa.updateUserAccountData({
+  await updateUserAccountData(fxa, {
     uid: credentials.uid,
     device: {
       id: deviceId,
@@ -230,7 +234,7 @@ add_task(async function test_updateDeviceRegistration_with_existing_device() {
     updateDevice: { count: 0, args: [] },
     getDeviceList: { count: 0, args: [] },
   };
-  const client = fxa.internal.fxAccountsClient;
+  const client = fxa._internal.fxAccountsClient;
   client.registerDevice = function() {
     spy.registerDevice.count += 1;
     spy.registerDevice.args.push(arguments);
@@ -265,7 +269,7 @@ add_task(async function test_updateDeviceRegistration_with_existing_device() {
   Assert.equal(spy.updateDevice.args[0][3].pushPublicKey, BOGUS_PUBLICKEY);
   Assert.equal(spy.updateDevice.args[0][3].pushAuthKey, BOGUS_AUTHKEY);
 
-  const state = fxa.internal.currentAccountState;
+  const state = fxa._internal.currentAccountState;
   const data = await state.getUserAccountData();
 
   Assert.equal(data.device.id, deviceId);
@@ -280,7 +284,7 @@ add_task(
 
     const credentials = getTestUser("baz");
     const fxa = await MockFxAccounts(credentials, { name: deviceName });
-    await fxa.updateUserAccountData({
+    await updateUserAccountData(fxa, {
       uid: credentials.uid,
       device: {
         id: currentDeviceId,
@@ -294,7 +298,7 @@ add_task(
       updateDevice: { count: 0, args: [] },
       getDeviceList: { count: 0, args: [] },
     };
-    const client = fxa.internal.fxAccountsClient;
+    const client = fxa._internal.fxAccountsClient;
     client.registerDevice = function() {
       spy.registerDevice.count += 1;
       spy.registerDevice.args.push(arguments);
@@ -335,7 +339,7 @@ add_task(
     Assert.equal(spy.updateDevice.args[0][3].pushPublicKey, BOGUS_PUBLICKEY);
     Assert.equal(spy.updateDevice.args[0][3].pushAuthKey, BOGUS_AUTHKEY);
 
-    const state = fxa.internal.currentAccountState;
+    const state = fxa._internal.currentAccountState;
     const data = await state.getUserAccountData();
 
     Assert.equal(null, data.device);
@@ -351,7 +355,7 @@ add_task(
 
     const credentials = getTestUser("baz");
     const fxa = await MockFxAccounts(credentials, { name: deviceName });
-    await fxa.updateUserAccountData({
+    await updateUserAccountData(fxa, {
       uid: credentials.uid,
       device: {
         id: currentDeviceId,
@@ -365,7 +369,7 @@ add_task(
       updateDevice: { count: 0, args: [], times: [] },
       getDeviceList: { count: 0, args: [] },
     };
-    const client = fxa.internal.fxAccountsClient;
+    const client = fxa._internal.fxAccountsClient;
     client.registerDevice = function() {
       spy.registerDevice.count += 1;
       spy.registerDevice.args.push(arguments);
@@ -425,7 +429,7 @@ add_task(
     Assert.equal(spy.getDeviceList.args[0][0], credentials.sessionToken);
     Assert.ok(spy.getDeviceList.time >= spy.updateDevice.time);
 
-    const state = fxa.internal.currentAccountState;
+    const state = fxa._internal.currentAccountState;
     const data = await state.getUserAccountData();
 
     Assert.equal(data.device.id, conflictingDeviceId);
@@ -439,14 +443,14 @@ add_task(
 
     const credentials = getTestUser("baz");
     const fxa = await MockFxAccounts(credentials, { name: deviceName });
-    await fxa.updateUserAccountData({ uid: credentials.uid, device: null });
+    await updateUserAccountData(fxa, { uid: credentials.uid, device: null });
 
     const spy = {
       registerDevice: { count: 0, args: [] },
       updateDevice: { count: 0, args: [] },
       getDeviceList: { count: 0, args: [] },
     };
-    const client = fxa.internal.fxAccountsClient;
+    const client = fxa._internal.fxAccountsClient;
     client.registerDevice = function() {
       spy.registerDevice.count += 1;
       spy.registerDevice.args.push(arguments);
@@ -473,7 +477,7 @@ add_task(
     Assert.equal(spy.registerDevice.count, 1);
     Assert.equal(spy.registerDevice.args[0].length, 4);
 
-    const state = fxa.internal.currentAccountState;
+    const state = fxa._internal.currentAccountState;
     const data = await state.getUserAccountData();
 
     Assert.equal(null, data.device);
@@ -485,21 +489,21 @@ add_task(
     const credentials = getTestUser("foo");
     credentials.verified = true;
     const fxa = await MockFxAccounts(credentials);
-    await fxa.updateUserAccountData({ uid: credentials.uid, device: null });
+    await updateUserAccountData(fxa, { uid: credentials.uid, device: null });
 
     const spy = { count: 0, args: [] };
-    fxa.internal.currentAccountState.getUserAccountData = () =>
+    fxa._internal.currentAccountState.getUserAccountData = () =>
       Promise.resolve({
         email: credentials.email,
         registrationVersion: DEVICE_REGISTRATION_VERSION,
       });
-    fxa.internal._registerOrUpdateDevice = function() {
+    fxa._internal._registerOrUpdateDevice = function() {
       spy.count += 1;
       spy.args.push(arguments);
       return Promise.resolve("bar");
     };
 
-    const result = await fxa.internal.device.getLocalId();
+    const result = await fxa.device.getLocalId();
 
     Assert.equal(spy.count, 1);
     Assert.equal(spy.args[0].length, 1);
@@ -516,7 +520,7 @@ add_task(
     const fxa = await MockFxAccounts(credentials);
 
     const spy = { count: 0, args: [] };
-    fxa.internal.currentAccountState.getUserAccountData = () =>
+    fxa._internal.currentAccountState.getUserAccountData = () =>
       Promise.resolve({
         device: {
           id: "my id",
@@ -524,13 +528,13 @@ add_task(
           registeredCommandsKeys: [],
         },
       });
-    fxa.internal._registerOrUpdateDevice = function() {
+    fxa._internal._registerOrUpdateDevice = function() {
       spy.count += 1;
       spy.args.push(arguments);
       return Promise.resolve("wibble");
     };
 
-    const result = await fxa.internal.device.getLocalId();
+    const result = await fxa.device.getLocalId();
 
     Assert.equal(spy.count, 1);
     Assert.equal(spy.args[0].length, 1);
@@ -546,19 +550,19 @@ add_task(
     const fxa = await MockFxAccounts(credentials);
 
     const spy = { count: 0 };
-    fxa.internal.currentAccountState.getUserAccountData = async () => ({
+    fxa._internal.currentAccountState.getUserAccountData = async () => ({
       device: {
         id: "foo's device id",
         registrationVersion: DEVICE_REGISTRATION_VERSION,
         registeredCommandsKeys: [],
       },
     });
-    fxa.internal._registerOrUpdateDevice = function() {
+    fxa._internal._registerOrUpdateDevice = function() {
       spy.count += 1;
       return Promise.resolve("bar");
     };
 
-    const result = await fxa.internal.device.getLocalId();
+    const result = await fxa.device.getLocalId();
 
     Assert.equal(spy.count, 0);
     Assert.equal(result, "foo's device id");
@@ -572,15 +576,15 @@ add_task(
     const fxa = await MockFxAccounts(credentials);
 
     const spy = { count: 0, args: [] };
-    fxa.internal.currentAccountState.getUserAccountData = () =>
+    fxa._internal.currentAccountState.getUserAccountData = () =>
       Promise.resolve({ device: { id: "wibble" } });
-    fxa.internal._registerOrUpdateDevice = function() {
+    fxa._internal._registerOrUpdateDevice = function() {
       spy.count += 1;
       spy.args.push(arguments);
       return Promise.resolve("wibble");
     };
 
-    const result = await fxa.internal.device.getLocalId();
+    const result = await fxa.device.getLocalId();
 
     Assert.equal(spy.count, 1);
     Assert.equal(spy.args[0].length, 1);
@@ -594,7 +598,7 @@ add_task(async function test_devicelist_pushendpointexpired() {
   const credentials = getTestUser("baz");
   credentials.verified = true;
   const fxa = await MockFxAccounts(credentials);
-  await fxa.updateUserAccountData({
+  await updateUserAccountData(fxa, {
     uid: credentials.uid,
     device: {
       id: deviceId,
@@ -607,7 +611,7 @@ add_task(async function test_devicelist_pushendpointexpired() {
     updateDevice: { count: 0, args: [] },
     getDeviceList: { count: 0, args: [] },
   };
-  const client = fxa.internal.fxAccountsClient;
+  const client = fxa._internal.fxAccountsClient;
   client.updateDevice = function() {
     spy.updateDevice.count += 1;
     spy.updateDevice.args.push(arguments);

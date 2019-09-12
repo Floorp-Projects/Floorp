@@ -135,7 +135,7 @@ async function createMockFxA(mockGrantClient) {
     verified: true,
   };
 
-  await fxa.setSignedInUser(credentials);
+  await fxa._internal.setSignedInUser(credentials);
   return fxa;
 }
 
@@ -252,30 +252,4 @@ add_task(async function testTokenRaces() {
   await fxa.removeCachedOAuthToken({ token: results[2] });
   equal(client.activeTokens.size, 0);
   await notifications;
-});
-
-add_task(async function testSignOutDuringFetch() {
-  let client = new MockFxAccountsOAuthGrantClient();
-  let fxa = await createMockFxA(client);
-
-  // We need a couple of promises to ensure things happen at the right time...
-  let resolveSignedOut;
-  let promiseSignedOut = new Promise(resolve => {
-    resolveSignedOut = resolve;
-  });
-  let resolveInGetTokenFromAssertion;
-  let promiseInGetTokenFromAssertion = new Promise(resolve => {
-    resolveInGetTokenFromAssertion = resolve;
-  });
-  client.getTokenFromAssertion = async function(assertion, scope) {
-    resolveInGetTokenFromAssertion();
-    await promiseSignedOut;
-    return { access_token: "token" };
-  };
-
-  let getTokenPromise = fxa.getOAuthToken({ scope: "test-scope", client });
-  await promiseInGetTokenFromAssertion;
-  await fxa.signOut();
-  resolveSignedOut();
-  await Assert.rejects(getTokenPromise, /Another user has signed in/);
 });

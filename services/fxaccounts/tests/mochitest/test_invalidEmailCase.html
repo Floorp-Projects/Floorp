@@ -75,7 +75,7 @@ function runTest() {
      "Pref for auth.uri should be set to test server");
 
   let fxa = new MockFxAccounts();
-  let client = fxa.internal.fxAccountsClient;
+  let client = fxa._internal.fxAccountsClient;
 
   is(true, !!fxa, "Couldn't mock fxa");
   is(true, !!client, "Couldn't mock fxa client");
@@ -88,7 +88,7 @@ function runTest() {
     user => {
       // Now store the signed-in user state.  This will include the correct
       // email capitalization.
-      fxa.setSignedInUser(user).then(
+      fxa._internal.setSignedInUser(user).then(
         () => {
           // Confirm that the correct email got stored.
           fxa.getSignedInUser().then(
