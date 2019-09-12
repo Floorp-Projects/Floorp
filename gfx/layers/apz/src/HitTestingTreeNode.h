@@ -103,6 +103,7 @@ class HitTestingTreeNode {
 
   void SetHitTestData(const EventRegions& aRegions,
                       const LayerIntRegion& aVisibleRegion,
+                      const LayerIntRect& aRemoteDocumentRect,
                       const CSSTransformMatrix& aTransform,
                       const Maybe<ParentLayerIntRegion>& aClipRegion,
                       const EventRegionsOverride& aOverride,
@@ -144,6 +145,11 @@ class HitTestingTreeNode {
    * across a BrowserParent/BrowserChild interface.*/
   LayerToScreenMatrix4x4 GetTransformToGecko() const;
   const LayerIntRegion& GetVisibleRegion() const;
+
+  /* Returns the screen coordinate rectangle of remote iframe corresponding to
+   * this node. The rectangle is the result of clipped by ancestor async
+   * scrolling. */
+  ScreenRect GetRemoteDocumentScreenRect() const;
 
   bool IsAsyncZoomContainer() const;
 
@@ -188,6 +194,10 @@ class HitTestingTreeNode {
   EventRegions mEventRegions;
 
   LayerIntRegion mVisibleRegion;
+
+  /* The rectangle of remote iframe on the corresponding layer coordinate.
+   * It's empty if this node is not for remote iframe. */
+  LayerIntRect mRemoteDocumentRect;
 
   /* This is the transform from layer L. This does NOT include any async
    * transforms. */

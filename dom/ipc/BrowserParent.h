@@ -657,7 +657,8 @@ class BrowserParent final : public PBrowserParent,
   LayoutDeviceToLayoutDeviceMatrix4x4 GetChildToParentConversionMatrix();
 
   void SetChildToParentConversionMatrix(
-      const Maybe<LayoutDeviceToLayoutDeviceMatrix4x4>& aMatrix);
+      const Maybe<LayoutDeviceToLayoutDeviceMatrix4x4>& aMatrix,
+      const ScreenRect& aRemoteDocumentRect);
 
   // Returns the offset from the origin of our frameloader's nearest widget to
   // the origin of its layout frame. This offset is used to translate event

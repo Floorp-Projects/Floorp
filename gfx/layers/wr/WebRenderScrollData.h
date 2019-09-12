@@ -88,6 +88,12 @@ class WebRenderLayerScrollData final {
     mVisibleRegion = aRegion;
   }
   const LayerIntRegion& GetVisibleRegion() const { return mVisibleRegion; }
+  void SetRemoteDocumentRect(const LayerIntRect& aRemoteDocumentRect) {
+    mRemoteDocumentRect = aRemoteDocumentRect;
+  }
+  const LayerIntRect& GetRemoteDocumentRect() const {
+    return mRemoteDocumentRect;
+  }
   void SetReferentId(LayersId aReferentId) { mReferentId = Some(aReferentId); }
   Maybe<LayersId> GetReferentId() const { return mReferentId; }
 
@@ -155,6 +161,7 @@ class WebRenderLayerScrollData final {
   gfx::Matrix4x4 mTransform;
   bool mTransformIsPerspective;
   LayerIntRegion mVisibleRegion;
+  LayerIntRect mRemoteDocumentRect;
   Maybe<LayersId> mReferentId;
   Maybe<RenderRootBoundary> mReferentRenderRoot;
   Maybe<RenderRootBoundary> mBoundaryRoot;
@@ -271,6 +278,7 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData> {
     WriteParam(aMsg, aParam.mTransform);
     WriteParam(aMsg, aParam.mTransformIsPerspective);
     WriteParam(aMsg, aParam.mVisibleRegion);
+    WriteParam(aMsg, aParam.mRemoteDocumentRect);
     WriteParam(aMsg, aParam.mReferentId);
     WriteParam(aMsg, aParam.mReferentRenderRoot);
     WriteParam(aMsg, aParam.mBoundaryRoot);
@@ -291,6 +299,7 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData> {
            ReadParam(aMsg, aIter, &aResult->mTransform) &&
            ReadParam(aMsg, aIter, &aResult->mTransformIsPerspective) &&
            ReadParam(aMsg, aIter, &aResult->mVisibleRegion) &&
+           ReadParam(aMsg, aIter, &aResult->mRemoteDocumentRect) &&
            ReadParam(aMsg, aIter, &aResult->mReferentId) &&
            ReadParam(aMsg, aIter, &aResult->mReferentRenderRoot) &&
            ReadParam(aMsg, aIter, &aResult->mBoundaryRoot) &&

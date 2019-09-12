@@ -13,13 +13,14 @@ mod recipes;
 mod registers;
 mod settings;
 
-pub fn define(shared_defs: &mut SharedDefinitions) -> TargetIsa {
+pub(crate) fn define(shared_defs: &mut SharedDefinitions) -> TargetIsa {
     let settings = settings::define(&shared_defs.settings);
     let regs = registers::define();
 
     let inst_group = instructions::define(
         &mut shared_defs.all_instructions,
         &shared_defs.format_registry,
+        &shared_defs.imm,
     );
     legalize::define(shared_defs, &inst_group);
 

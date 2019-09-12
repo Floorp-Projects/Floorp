@@ -632,7 +632,9 @@ bool LayerTransactionParent::SetLayerAttributes(
       refLayer->SetReferentId(specific.get_RefLayerAttributes().id());
       refLayer->SetEventRegionsOverride(
           specific.get_RefLayerAttributes().eventRegionsOverride());
-      UpdateHitTestingTree(layer, "event regions override changed");
+      refLayer->SetRemoteDocumentRect(
+          specific.get_RefLayerAttributes().remoteDocumentRect());
+      UpdateHitTestingTree(layer, "ref layer attributes changed");
       break;
     }
     case Specific::TImageLayerAttributes: {

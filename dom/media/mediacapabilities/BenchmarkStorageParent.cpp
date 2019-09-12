@@ -81,7 +81,11 @@ IPCResult BenchmarkStorageParent::RecvPut(const nsCString& aDbName,
             }
             MovingAverage(average, window, aValue);
             int32_t newValue = PrepareStoredValue(average, window);
-            storage->Put(aDbName, aKey, newValue);
+            // Avoid storing if the values are the same. This is an optimization
+            // to minimize the disk usage.
+            if (aResult != newValue) {
+              storage->Put(aDbName, aKey, newValue);
+            }
           },
           [](nsresult rv) { /*do nothing*/ });
 

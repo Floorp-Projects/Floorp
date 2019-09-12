@@ -12,9 +12,6 @@ use cranelift_entity::{entity_impl, PrimaryMap};
 /// data type.
 #[derive(Debug)]
 pub struct FormatField {
-    /// Immediate operand number in parent.
-    immnum: usize,
-
     /// Immediate operand kind.
     pub kind: OperandKind,
 
@@ -53,7 +50,7 @@ pub struct InstructionFormat {
 
 impl fmt::Display for InstructionFormat {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        let args = self
+        let imm_args = self
             .imm_fields
             .iter()
             .map(|field| format!("{}: {}", field.member, field.kind.name))
@@ -61,7 +58,7 @@ impl fmt::Display for InstructionFormat {
             .join(", ");
         fmt.write_fmt(format_args!(
             "{}(imms=({}), vals={})",
-            self.name, args, self.num_value_operands
+            self.name, imm_args, self.num_value_operands
         ))?;
         Ok(())
     }
@@ -89,27 +86,6 @@ pub struct InstructionFormatBuilder {
     typevar_operand: Option<usize>,
 }
 
-pub struct ImmParameter {
-    kind: OperandKind,
-    member: &'static str,
-}
-impl Into<ImmParameter> for (&'static str, &OperandKind) {
-    fn into(self) -> ImmParameter {
-        ImmParameter {
-            kind: self.1.clone(),
-            member: self.0,
-        }
-    }
-}
-impl Into<ImmParameter> for &OperandKind {
-    fn into(self) -> ImmParameter {
-        ImmParameter {
-            kind: self.clone(),
-            member: self.default_member.unwrap(),
-        }
-    }
-}
-
 impl InstructionFormatBuilder {
     pub fn new(name: &'static str) -> Self {
         Self {
@@ -131,12 +107,19 @@ impl InstructionFormatBuilder {
         self
     }
 
-    pub fn imm(mut self, param: impl Into<ImmParameter>) -> Self {
-        let imm_param = param.into();
+    pub fn imm(mut self, operand_kind: &OperandKind) -> Self {
         let field = FormatField {
-            immnum: self.imm_fields.len(),
-            kind: imm_param.kind,
-            member: imm_param.member,
+            kind: operand_kind.clone(),
+            member: operand_kind.default_member.unwrap(),
+        };
+        self.imm_fields.push(field);
+        self
+    }
+
+    pub fn imm_with_name(mut self, member: &'static str, operand_kind: &OperandKind) -> Self {
+        let field = FormatField {
+            kind: operand_kind.clone(),
+            member,
         };
         self.imm_fields.push(field);
         self
@@ -201,7 +184,9 @@ impl FormatRegistry {
             if operand.is_value() {
                 num_values += 1;
             }
-            has_varargs = has_varargs || operand.is_varargs();
+            if !has_varargs {
+                has_varargs = operand.is_varargs();
+            }
             if let Some(imm_key) = operand.kind.imm_key() {
                 imm_keys.push(imm_key);
             }

@@ -33,6 +33,7 @@ use crate::timing;
 use crate::unreachable_code::eliminate_unreachable_code;
 use crate::value_label::{build_value_labels_ranges, ComparableSourceLoc, ValueLabelsRanges};
 use crate::verifier::{verify_context, verify_locations, VerifierErrors, VerifierResult};
+use log::debug;
 use std::vec::Vec;
 
 /// Persistent data structures and compilation pipeline.
@@ -129,6 +130,7 @@ impl Context {
     pub fn compile(&mut self, isa: &dyn TargetIsa) -> CodegenResult<CodeInfo> {
         let _tt = timing::compile();
         self.verify_if(isa)?;
+        debug!("Compiling:\n{}", self.func.display(isa));
 
         self.compute_cfg();
         if isa.flags().opt_level() != OptLevel::Fastest {
@@ -158,7 +160,10 @@ impl Context {
             self.redundant_reload_remover(isa)?;
             self.shrink_instructions(isa)?;
         }
-        self.relax_branches(isa)
+        let result = self.relax_branches(isa);
+
+        debug!("Compiled:\n{}", self.func.display(isa));
+        result
     }
 
     /// Emit machine code directly into raw memory.
@@ -212,7 +217,7 @@ impl Context {
     /// Run the locations verifier on the function.
     pub fn verify_locations(&self, isa: &dyn TargetIsa) -> VerifierResult<()> {
         let mut errors = VerifierErrors::default();
-        let _ = verify_locations(isa, &self.func, None, &mut errors);
+        let _ = verify_locations(isa, &self.func, &self.cfg, None, &mut errors);
 
         if errors.is_empty() {
             Ok(())
@@ -238,7 +243,7 @@ impl Context {
 
     /// Perform pre-legalization rewrites on the function.
     pub fn preopt(&mut self, isa: &dyn TargetIsa) -> CodegenResult<()> {
-        do_preopt(&mut self.func, &mut self.cfg);
+        do_preopt(&mut self.func, &mut self.cfg, isa);
         self.verify_if(isa)?;
         Ok(())
     }
@@ -256,6 +261,7 @@ impl Context {
         self.domtree.clear();
         self.loop_analysis.clear();
         legalize_function(&mut self.func, &mut self.cfg, isa);
+        debug!("Legalized:\n{}", self.func.display(isa));
         self.verify_if(isa)
     }
 
@@ -318,7 +324,7 @@ impl Context {
     /// Run the register allocator.
     pub fn regalloc(&mut self, isa: &dyn TargetIsa) -> CodegenResult<()> {
         self.regalloc
-            .run(isa, &mut self.func, &self.cfg, &mut self.domtree)
+            .run(isa, &mut self.func, &mut self.cfg, &mut self.domtree)
     }
 
     /// Insert prologue and epilogues after computing the stack frame layout.
