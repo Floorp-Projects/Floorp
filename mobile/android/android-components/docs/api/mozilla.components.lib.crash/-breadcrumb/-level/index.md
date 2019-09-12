@@ -2,7 +2,7 @@
 
 # Level
 
-`enum class Level` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/Breadcrumb.kt#L43)
+`enum class Level` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/Breadcrumb.kt#L49)
 
 Crash breadcrumb priority level.
 

@@ -2,7 +2,7 @@
 
 # NAVIGATION
 
-`NAVIGATION` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/Breadcrumb.kt#L87)
+`NAVIGATION` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/Breadcrumb.kt#L93)
 
 NAVIGATION type.
 
