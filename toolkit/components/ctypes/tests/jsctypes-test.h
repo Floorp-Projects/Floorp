@@ -11,6 +11,8 @@
 #include "jspubtd.h"
 #include "typedefs.h"
 
+#include <sys/types.h>
+
 #define EXPORT_CDECL(type) MOZ_EXPORT type
 #if defined(_WIN32)
 #  if defined(_WIN64)
