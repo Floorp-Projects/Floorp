@@ -1,0 +1,13 @@
+include protocol PDocAccessible;
+
+namespace mozilla {
+namespace a11y {
+
+protocol PDocAccessiblePlatformExt {
+  manager PDocAccessible;
+
+child:
+  async __delete__();
+};
+
+}}
