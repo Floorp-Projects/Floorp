@@ -129,19 +129,26 @@ class ScopedCertStore final {
 //   CERT_SYSTEM_STORE_LOCAL_MACHINE
 //     (for HKLM\SOFTWARE\Microsoft\SystemCertificates)
 //   CERT_SYSTEM_STORE_LOCAL_MACHINE_GROUP_POLICY
-//     (for
-//     HKLM\SOFTWARE\Policies\Microsoft\SystemCertificates\Root\Certificates)
+//     (for HKLM\SOFTWARE\Policy\Microsoft\SystemCertificates)
 //   CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE
-//     (for HKLM\SOFTWARE\Microsoft\EnterpriseCertificates\Root\Certificates)
+//     (for HKLM\SOFTWARE\Microsoft\EnterpriseCertificates)
+//   CERT_SYSTEM_STORE_CURRENT_USER
+//     (for HKCU\SOFTWARE\Microsoft\SystemCertificates)
+//   CERT_SYSTEM_STORE_CURRENT_USER_GROUP_POLICY
+//     (for HKCU\SOFTWARE\Policy\Microsoft\SystemCertificates)
 static void GatherEnterpriseCertsForLocation(DWORD locationFlag,
                                              Vector<EnterpriseCert>& certs) {
   MOZ_ASSERT(locationFlag == CERT_SYSTEM_STORE_LOCAL_MACHINE ||
                  locationFlag == CERT_SYSTEM_STORE_LOCAL_MACHINE_GROUP_POLICY ||
-                 locationFlag == CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE,
+                 locationFlag == CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE ||
+                 locationFlag == CERT_SYSTEM_STORE_CURRENT_USER ||
+                 locationFlag == CERT_SYSTEM_STORE_CURRENT_USER_GROUP_POLICY,
              "unexpected locationFlag for GatherEnterpriseRootsForLocation");
   if (!(locationFlag == CERT_SYSTEM_STORE_LOCAL_MACHINE ||
         locationFlag == CERT_SYSTEM_STORE_LOCAL_MACHINE_GROUP_POLICY ||
-        locationFlag == CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE)) {
+        locationFlag == CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE ||
+        locationFlag == CERT_SYSTEM_STORE_CURRENT_USER ||
+        locationFlag == CERT_SYSTEM_STORE_CURRENT_USER_GROUP_POLICY)) {
     return;
   }
 
@@ -195,6 +202,9 @@ static void GatherEnterpriseCertsWindows(Vector<EnterpriseCert>& certs) {
   GatherEnterpriseCertsForLocation(CERT_SYSTEM_STORE_LOCAL_MACHINE_GROUP_POLICY,
                                    certs);
   GatherEnterpriseCertsForLocation(CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE,
+                                   certs);
+  GatherEnterpriseCertsForLocation(CERT_SYSTEM_STORE_CURRENT_USER, certs);
+  GatherEnterpriseCertsForLocation(CERT_SYSTEM_STORE_CURRENT_USER_GROUP_POLICY,
                                    certs);
 }
 #endif  // XP_WIN
