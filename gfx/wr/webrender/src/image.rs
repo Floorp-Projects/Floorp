@@ -491,6 +491,37 @@ fn last_tile_size_1d(
     )
 }
 
+pub fn compute_tile_rect(
+    image_rect: &DeviceIntRect,
+    regular_tile_size: TileSize,
+    tile: TileOffset,
+) -> DeviceIntRect {
+    let regular_tile_size = regular_tile_size as i32;
+    DeviceIntRect {
+        origin: point2(
+            compute_tile_origin_1d(image_rect.x_range(), regular_tile_size, tile.x as i32),
+            compute_tile_origin_1d(image_rect.y_range(), regular_tile_size, tile.y as i32),
+        ),
+        size: size2(
+            compute_tile_size_1d(image_rect.x_range(), regular_tile_size, tile.x as i32),
+            compute_tile_size_1d(image_rect.y_range(), regular_tile_size, tile.y as i32),
+        ),
+    }
+}
+
+fn compute_tile_origin_1d(
+    img_range: Range<i32>,
+    regular_tile_size: i32,
+    tile_offset: i32,
+) -> i32 {
+    let tile_range = tile_range_1d(&img_range, regular_tile_size);
+    if tile_offset == tile_range.start {
+        img_range.start
+    } else {
+        tile_offset * regular_tile_size
+    }
+}
+
 // Compute the width and height in pixels of a tile depending on its position in the image.
 pub fn compute_tile_size(
     image_rect: &DeviceIntRect,
@@ -549,6 +580,47 @@ pub fn for_each_tile_in_range(
             callback(point2(x, y));
         }
     }
+}
+
+pub fn compute_valid_tiles_if_bounds_change(
+    prev_rect: &DeviceIntRect,
+    new_rect: &DeviceIntRect,
+    tile_size: u16,
+) -> Option<TileRange> {
+    let intersection = prev_rect.intersection(new_rect);
+
+    if intersection.is_none() {
+        return Some(TileRange::zero());
+    }
+
+    let intersection = intersection.unwrap_or(DeviceIntRect::zero());
+
+    let left = prev_rect.min_x() != new_rect.min_x();
+    let right = prev_rect.max_x() != new_rect.max_x();
+    let top = prev_rect.min_y() != new_rect.min_y();
+    let bottom = prev_rect.max_y() != new_rect.max_y();
+
+    if !left && !right && !top && !bottom {
+        // Bounds have not changed.
+        return None;
+    }
+
+    let tw = 1.0 / (tile_size as f32);
+    let th = 1.0 / (tile_size as f32);
+
+    let tiles = intersection
+        .cast::<f32>()
+        .scale(tw, th);
+
+    let min_x = if left { f32::ceil(tiles.min_x()) } else { f32::floor(tiles.min_x()) };
+    let min_y = if top { f32::ceil(tiles.min_y()) } else { f32::floor(tiles.min_y()) };
+    let max_x = if right { f32::floor(tiles.max_x()) } else { f32::ceil(tiles.max_x()) };
+    let max_y = if bottom { f32::floor(tiles.max_y()) } else { f32::ceil(tiles.max_y()) };
+
+    Some(TileRange {
+        origin: point2(min_x as i32, min_y as i32),
+        size: size2((max_x - min_x) as i32, (max_y - min_y) as i32),
+    })
 }
 
 #[cfg(test)]
@@ -713,5 +785,27 @@ mod tests {
         assert_eq!(result.tile_range.end, 5);
         assert_eq!(result.first_tile_layout_size, 10.0);
         assert_eq!(result.last_tile_layout_size, 10.0);
+    }
+
+    #[test]
+    fn smaller_than_tile_size_at_origin() {
+        let r = compute_tile_rect(
+            &rect(0, 0, 80, 80),
+            256,
+            point2(0, 0),
+        );
+
+        assert_eq!(r, rect(0, 0, 80, 80));
+    }
+
+    #[test]
+    fn smaller_than_tile_size_with_offset() {
+        let r = compute_tile_rect(
+            &rect(20, 20, 80, 80),
+            256,
+            point2(0, 0),
+        );
+
+        assert_eq!(r, rect(20, 20, 80, 80));
     }
 }
