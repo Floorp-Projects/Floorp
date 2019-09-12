@@ -39,6 +39,7 @@ PREPROCESSED_TEST_WEBIDL_FILES += [
 WEBIDL_EXAMPLE_INTERFACES += [
     'TestExampleInterface',
     'TestExampleProxyInterface',
+    'TestExampleThrowingConstructorInterface',
     'TestExampleWorkerInterface',
 ]
 

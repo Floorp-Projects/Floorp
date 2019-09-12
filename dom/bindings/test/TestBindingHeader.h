@@ -126,34 +126,27 @@ class TestInterface : public nsISupports, public nsWrapperCache {
 
   // And now our actual WebIDL API
   // Constructors
+  static already_AddRefed<TestInterface> Constructor(const GlobalObject&);
   static already_AddRefed<TestInterface> Constructor(const GlobalObject&,
-                                                     ErrorResult&);
-  static already_AddRefed<TestInterface> Constructor(const GlobalObject&,
-                                                     const nsAString&,
-                                                     ErrorResult&);
+                                                     const nsAString&);
   static already_AddRefed<TestInterface> Constructor(const GlobalObject&,
                                                      uint32_t,
-                                                     const Nullable<bool>&,
-                                                     ErrorResult&);
+                                                     const Nullable<bool>&);
   static already_AddRefed<TestInterface> Constructor(const GlobalObject&,
-                                                     TestInterface*,
-                                                     ErrorResult&);
+                                                     TestInterface*);
   static already_AddRefed<TestInterface> Constructor(
-      const GlobalObject&, uint32_t, IndirectlyImplementedInterface&,
-      ErrorResult&);
+      const GlobalObject&, uint32_t, IndirectlyImplementedInterface&);
 
-  static already_AddRefed<TestInterface> Constructor(const GlobalObject&, Date&,
-                                                     ErrorResult&);
   static already_AddRefed<TestInterface> Constructor(const GlobalObject&,
-                                                     const ArrayBuffer&,
-                                                     ErrorResult&);
+                                                     Date&);
   static already_AddRefed<TestInterface> Constructor(const GlobalObject&,
-                                                     const Uint8Array&,
-                                                     ErrorResult&);
+                                                     const ArrayBuffer&);
+  static already_AddRefed<TestInterface> Constructor(const GlobalObject&,
+                                                     const Uint8Array&);
   /*  static
   already_AddRefed<TestInterface>
     Constructor(const GlobalObject&, uint32_t, uint32_t,
-                const TestInterfaceOrOnlyForUseInConstructor&, ErrorResult&);
+                const TestInterfaceOrOnlyForUseInConstructor&);
   */
 
   static already_AddRefed<TestInterface> Test(const GlobalObject&,
@@ -1511,7 +1504,7 @@ class TestDeprecatedInterface : public nsISupports, public nsWrapperCache {
   NS_DECL_ISUPPORTS
 
   static already_AddRefed<TestDeprecatedInterface> Constructor(
-      const GlobalObject&, ErrorResult&);
+      const GlobalObject&);
 
   static void AlsoDeprecated(const GlobalObject&);
 
@@ -1524,7 +1517,7 @@ class TestInterfaceWithPromiseConstructorArg : public nsISupports,
   NS_DECL_ISUPPORTS
 
   static already_AddRefed<TestInterfaceWithPromiseConstructorArg> Constructor(
-      const GlobalObject&, Promise&, ErrorResult&);
+      const GlobalObject&, Promise&);
 
   virtual nsISupports* GetParentObject();
 };
@@ -1572,6 +1565,36 @@ class TestWorkerExposedInterface : public nsISupports, public nsWrapperCache {
 
 class TestHTMLConstructorInterface : public nsGenericHTMLElement {
  public:
+  virtual nsISupports* GetParentObject();
+};
+
+class TestThrowingConstructorInterface : public nsISupports,
+                                         public nsWrapperCache {
+ public:
+  static already_AddRefed<TestThrowingConstructorInterface> Constructor(
+      const GlobalObject&, ErrorResult&);
+  static already_AddRefed<TestThrowingConstructorInterface> Constructor(
+      const GlobalObject&, const nsAString&, ErrorResult&);
+  static already_AddRefed<TestThrowingConstructorInterface> Constructor(
+      const GlobalObject&, uint32_t, const Nullable<bool>&, ErrorResult&);
+  static already_AddRefed<TestThrowingConstructorInterface> Constructor(
+      const GlobalObject&, TestInterface*, ErrorResult&);
+  static already_AddRefed<TestThrowingConstructorInterface> Constructor(
+      const GlobalObject&, uint32_t, IndirectlyImplementedInterface&,
+      ErrorResult&);
+
+  static already_AddRefed<TestThrowingConstructorInterface> Constructor(
+      const GlobalObject&, Date&, ErrorResult&);
+  static already_AddRefed<TestThrowingConstructorInterface> Constructor(
+      const GlobalObject&, const ArrayBuffer&, ErrorResult&);
+  static already_AddRefed<TestThrowingConstructorInterface> Constructor(
+      const GlobalObject&, const Uint8Array&, ErrorResult&);
+  /*  static
+  already_AddRefed<TestThrowingConstructorInterface>
+    Constructor(const GlobalObject&, uint32_t, uint32_t,
+                const TestInterfaceOrOnlyForUseInConstructor&, ErrorResult&);
+  */
+
   virtual nsISupports* GetParentObject();
 };
 
