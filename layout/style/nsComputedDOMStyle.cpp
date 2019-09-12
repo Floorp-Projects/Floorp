@@ -2333,8 +2333,6 @@ nscoord nsComputedDOMStyle::StyleCoordToNSCoord(
                            "percentage base value overflowed to become "
                            "negative for a property "
                            "that disallows negative values");
-      MOZ_ASSERT(aCoord.was_calc || (aCoord.HasPercent() && percentageBase < 0),
-                 "parser should have rejected value");
       result = 0;
     }
     return result;
