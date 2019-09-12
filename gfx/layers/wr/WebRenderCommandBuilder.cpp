@@ -715,8 +715,7 @@ struct DIGroup {
 
       // Convert mInvalidRect to image space by subtracting the corner of the
       // image bounds
-      auto dirtyRect = ViewAs<ImagePixel>(
-          mInvalidRect - mVisibleRect.ToUnknownRect().TopLeft());
+      auto dirtyRect = ViewAs<ImagePixel>(mInvalidRect);
 
       auto bottomRight = dirtyRect.BottomRight();
       GP("check invalid %d %d - %d %d\n", bottomRight.x, bottomRight.y,
