@@ -1543,9 +1543,6 @@ void DocAccessible::DoInitialUpdate() {
 #endif
           browserChild->SendPDocAccessibleConstructor(ipcDoc, nullptr, 0,
                                                       childID, holder);
-#if !defined(XP_WIN)
-          ipcDoc->SendPDocAccessiblePlatformExtConstructor();
-#endif
         }
 
         if (IsRoot()) {
