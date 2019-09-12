@@ -8,7 +8,6 @@ import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.settings.DefaultDeleteBrowsingDataController
 
@@ -17,7 +16,7 @@ import org.mozilla.fenix.settings.DefaultDeleteBrowsingDataController
  */
 fun Context.deleteAndQuit(coroutineScope: CoroutineScope) {
     coroutineScope.launch {
-        runBlocking {
+        launch {
             val controller =
                 DefaultDeleteBrowsingDataController(this@deleteAndQuit, coroutineContext)
             if (Settings.getInstance(this@deleteAndQuit).deleteCacheOnQuit) {
@@ -37,7 +36,6 @@ fun Context.deleteAndQuit(coroutineScope: CoroutineScope) {
             if (Settings.getInstance(this@deleteAndQuit).deleteHistoryOnQuit) {
                 controller.deleteHistoryAndDOMStorages()
             }
-        }
-        this@deleteAndQuit.asActivity()?.finish()
+        }.invokeOnCompletion { this@deleteAndQuit.asActivity()?.finish() }
     }
 }
