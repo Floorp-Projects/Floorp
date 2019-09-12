@@ -395,7 +395,7 @@ MARKUPMAP(
     [](Element* aElement, Accessible* aContext) -> Accessible* {
       return new HTMLOutputAccessible(aElement, aContext->Document());
     },
-    roles::STATUSBAR, Attr(live, polite))
+    roles::SECTION, Attr(live, polite))
 
 MARKUPMAP(p, nullptr, roles::PARAGRAPH)
 
