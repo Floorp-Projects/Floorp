@@ -22,6 +22,7 @@ browser.jar:
         content/browser/logos/lockwise.svg             (content/logos/lockwise.svg)
         content/browser/logos/lockwise-mobile-app.svg             (content/logos/lockwise-mobile-app.svg)
         content/browser/logos/monitor.svg             (content/logos/monitor.svg)
+        content/browser/logos/proxy.svg               (content/logos/proxy.svg)
         content/browser/logos/send.svg                (content/logos/send.svg)
         content/browser/logos/tracking-protection.svg (content/logos/tracking-protection.svg)
         content/browser/logos/tracking-protection-dark-theme.svg (content/logos/tracking-protection-dark-theme.svg)

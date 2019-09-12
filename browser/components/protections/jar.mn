@@ -8,3 +8,4 @@ browser.jar:
     content/browser/protections.css                       (content/protections.css)
     content/browser/protections.html                      (content/protections.html)
     content/browser/protections.js                        (content/protections.js)
+    content/browser/proxy-card.js                         (content/proxy-card.js)
