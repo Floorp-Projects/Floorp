@@ -8,7 +8,7 @@ Background
 ----------
 
 The key idea of Teddy is to do *packed* substring matching. In the literature,
-packed substring matching is the idea of examing multiple bytes in a haystack
+packed substring matching is the idea of examining multiple bytes in a haystack
 at a time to detect matches. Implementations of, for example, memchr (which
 detects matches of a single byte) have been doing this for years. Only
 recently, with the introduction of various SIMD instructions, has this been
@@ -320,7 +320,7 @@ References
 
 use std::cmp;
 
-use aho_corasick::{Automaton, AcAutomaton, FullAcAutomaton};
+use aho_corasick::{self, AhoCorasick, AhoCorasickBuilder};
 use syntax::hir::literal::Literals;
 
 use vector::ssse3::{SSSE3VectorBuilder, u8x16};
@@ -349,7 +349,7 @@ pub struct Teddy {
     pats: Vec<Vec<u8>>,
     /// An Aho-Corasick automaton of the patterns. We use this when we need to
     /// search pieces smaller than the Teddy block size.
-    ac: FullAcAutomaton<Vec<u8>>,
+    ac: AhoCorasick,
     /// A set of 8 buckets. Each bucket corresponds to a single member of a
     /// bitset. A bucket contains zero or more substrings. This is useful
     /// when the number of substrings exceeds 8, since our bitsets cannot have
@@ -399,10 +399,15 @@ impl Teddy {
             buckets[bucket].push(pati);
             masks.add(bucket as u8, pat);
         }
+        let ac = AhoCorasickBuilder::new()
+            .match_kind(aho_corasick::MatchKind::LeftmostFirst)
+            .dfa(true)
+            .prefilter(false)
+            .build(&pats);
         Some(Teddy {
             vb: vb,
             pats: pats.to_vec(),
-            ac: AcAutomaton::new(pats.to_vec()).into_full(),
+            ac: ac,
             buckets: buckets,
             masks: masks,
         })
@@ -591,6 +596,7 @@ impl Teddy {
         res: u8x16,
         mut bitfield: u32,
     ) -> Option<Match> {
+        let patterns = res.bytes();
         while bitfield != 0 {
             // The next offset, relative to pos, where some fingerprint
             // matched.
@@ -602,7 +608,7 @@ impl Teddy {
 
             // The bitfield telling us which patterns had fingerprints that
             // match at this starting position.
-            let mut patterns = res.extract(byte_pos);
+            let mut patterns = patterns[byte_pos];
             while patterns != 0 {
                 let bucket = patterns.trailing_zeros() as usize;
                 patterns &= !(1 << bucket);
@@ -651,11 +657,11 @@ impl Teddy {
     /// block based approach.
     #[inline(never)]
     fn slow(&self, haystack: &[u8], pos: usize) -> Option<Match> {
-        self.ac.find(&haystack[pos..]).next().map(|m| {
+        self.ac.find(&haystack[pos..]).map(|m| {
             Match {
-                pat: m.pati,
-                start: pos + m.start,
-                end: pos + m.end,
+                pat: m.pattern(),
+                start: pos + m.start(),
+                end: pos + m.end(),
             }
         })
     }
@@ -767,10 +773,17 @@ impl Mask {
         let byte_lo = (byte & 0xF) as usize;
         let byte_hi = (byte >> 4) as usize;
 
-        let lo = self.lo.extract(byte_lo);
-        self.lo.replace(byte_lo, ((1 << bucket) as u8) | lo);
-
-        let hi = self.hi.extract(byte_hi);
-        self.hi.replace(byte_hi, ((1 << bucket) as u8) | hi);
+        {
+            let mut lo_bytes = self.lo.bytes();
+            let lo = lo_bytes[byte_lo];
+            lo_bytes[byte_lo] = ((1 << bucket) as u8) | lo;
+            self.lo.replace_bytes(lo_bytes);
+        }
+        {
+            let mut hi_bytes = self.hi.bytes();
+            let hi = hi_bytes[byte_hi];
+            hi_bytes[byte_hi] = ((1 << bucket) as u8) | hi;
+            self.hi.replace_bytes(hi_bytes);
+        }
     }
 }

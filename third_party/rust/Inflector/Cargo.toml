@@ -12,9 +12,9 @@
 
 [package]
 name = "Inflector"
-version = "0.11.2"
+version = "0.11.4"
 authors = ["Josh Teeter<joshteeter@gmail.com>"]
-exclude = [".travis.yml", ".gitignore"]
+include = ["**/*.rs", "Cargo.toml", "README.md"]
 description = "Adds String based inflections for Rust. Snake, kebab, camel, sentence, class, title and table cases as well as ordinalize, deordinalize, demodulize, foreign key, and pluralize/singularize are supported as both traits and pure functions acting on String types.\n"
 homepage = "https://github.com/whatisinternet/inflector"
 documentation = "https://docs.rs/Inflector"
@@ -27,11 +27,11 @@ repository = "https://github.com/whatisinternet/inflector"
 [lib]
 name = "inflector"
 [dependencies.lazy_static]
-version = "1.0.0"
+version = "1.2.0"
 optional = true
 
 [dependencies.regex]
-version = "0.2"
+version = "1.1"
 optional = true
 
 [features]

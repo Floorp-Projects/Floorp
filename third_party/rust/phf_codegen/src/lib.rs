@@ -78,7 +78,7 @@
 //! builder.entry("world", "2");
 //! // ...
 //! ```
-#![doc(html_root_url="https://docs.rs/phf_codegen/0.7.20")]
+#![doc(html_root_url="https://docs.rs/phf_codegen/0.7")]
 extern crate phf_shared;
 extern crate phf_generator;
 

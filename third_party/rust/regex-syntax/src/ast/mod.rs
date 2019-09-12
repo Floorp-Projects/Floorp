@@ -1,13 +1,3 @@
-// Copyright 2017 The Rust Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution and at
-// http://rust-lang.org/COPYRIGHT.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 /*!
 Defines an abstract syntax for regular expressions.
 */
@@ -16,7 +6,7 @@ use std::cmp::Ordering;
 use std::error;
 use std::fmt;
 
-pub use ast::visitor::{Visitor, visit};
+pub use ast::visitor::{visit, Visitor};
 
 pub mod parse;
 pub mod print;
@@ -95,7 +85,10 @@ pub enum ErrorKind {
     ClassRangeLiteral,
     /// An opening `[` was found with no corresponding closing `]`.
     ClassUnclosed,
-    /// An empty decimal number was given where one was expected.
+    /// Note that this error variant is no longer used. Namely, a decimal
+    /// number can only appear as a repetition quantifier. When the number
+    /// in a repetition quantifier is empty, then it gets its own specialized
+    /// error, `RepetitionCountDecimalEmpty`.
     DecimalEmpty,
     /// An invalid decimal number was given where one was expected.
     DecimalInvalid,
@@ -153,6 +146,9 @@ pub enum ErrorKind {
     /// The range provided in a counted repetition operator is invalid. The
     /// range is invalid if the start is greater than the end.
     RepetitionCountInvalid,
+    /// An opening `{` was not followed by a valid decimal value.
+    /// For example, `x{}` or `x{]}` would fail.
+    RepetitionCountDecimalEmpty,
     /// An opening `{` was found with no corresponding closing `}`.
     RepetitionCountUnclosed,
     /// A repetition operator was applied to a missing sub-expression. This
@@ -196,11 +192,11 @@ impl error::Error for Error {
             EscapeUnexpectedEof => "unexpected eof (escape sequence)",
             EscapeUnrecognized => "unrecognized escape sequence",
             FlagDanglingNegation => "dangling flag negation operator",
-            FlagDuplicate{..} => "duplicate flag",
-            FlagRepeatedNegation{..} => "repeated negation",
+            FlagDuplicate { .. } => "duplicate flag",
+            FlagRepeatedNegation { .. } => "repeated negation",
             FlagUnexpectedEof => "unexpected eof (flag)",
             FlagUnrecognized => "unrecognized flag",
-            GroupNameDuplicate{..} => "duplicate capture group name",
+            GroupNameDuplicate { .. } => "duplicate capture group name",
             GroupNameEmpty => "empty capture group name",
             GroupNameInvalid => "invalid capture group name",
             GroupNameUnexpectedEof => "unclosed capture group name",
@@ -227,85 +223,69 @@ impl fmt::Display for ErrorKind {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use self::ErrorKind::*;
         match *self {
-            CaptureLimitExceeded => {
-                write!(f, "exceeded the maximum number of \
-                           capturing groups ({})", ::std::u32::MAX)
-            }
+            CaptureLimitExceeded => write!(
+                f,
+                "exceeded the maximum number of \
+                 capturing groups ({})",
+                ::std::u32::MAX
+            ),
             ClassEscapeInvalid => {
                 write!(f, "invalid escape sequence found in character class")
             }
-            ClassRangeInvalid => {
-                write!(f, "invalid character class range, \
-                           the start must be <= the end")
-            }
+            ClassRangeInvalid => write!(
+                f,
+                "invalid character class range, \
+                 the start must be <= the end"
+            ),
             ClassRangeLiteral => {
                 write!(f, "invalid range boundary, must be a literal")
             }
-            ClassUnclosed => {
-                write!(f, "unclosed character class")
-            }
-            DecimalEmpty => {
-                write!(f, "decimal literal empty")
-            }
-            DecimalInvalid => {
-                write!(f, "decimal literal invalid")
-            }
-            EscapeHexEmpty => {
-                write!(f, "hexadecimal literal empty")
-            }
+            ClassUnclosed => write!(f, "unclosed character class"),
+            DecimalEmpty => write!(f, "decimal literal empty"),
+            DecimalInvalid => write!(f, "decimal literal invalid"),
+            EscapeHexEmpty => write!(f, "hexadecimal literal empty"),
             EscapeHexInvalid => {
                 write!(f, "hexadecimal literal is not a Unicode scalar value")
             }
-            EscapeHexInvalidDigit => {
-                write!(f, "invalid hexadecimal digit")
-            }
-            EscapeUnexpectedEof => {
-                write!(f, "incomplete escape sequence, \
-                           reached end of pattern prematurely")
-            }
-            EscapeUnrecognized => {
-                write!(f, "unrecognized escape sequence")
-            }
+            EscapeHexInvalidDigit => write!(f, "invalid hexadecimal digit"),
+            EscapeUnexpectedEof => write!(
+                f,
+                "incomplete escape sequence, \
+                 reached end of pattern prematurely"
+            ),
+            EscapeUnrecognized => write!(f, "unrecognized escape sequence"),
             FlagDanglingNegation => {
                 write!(f, "dangling flag negation operator")
             }
-            FlagDuplicate{..} => {
-                write!(f, "duplicate flag")
-            }
-            FlagRepeatedNegation{..} => {
+            FlagDuplicate { .. } => write!(f, "duplicate flag"),
+            FlagRepeatedNegation { .. } => {
                 write!(f, "flag negation operator repeated")
             }
             FlagUnexpectedEof => {
                 write!(f, "expected flag but got end of regex")
             }
-            FlagUnrecognized => {
-                write!(f, "unrecognized flag")
-            }
-            GroupNameDuplicate{..} => {
+            FlagUnrecognized => write!(f, "unrecognized flag"),
+            GroupNameDuplicate { .. } => {
                 write!(f, "duplicate capture group name")
             }
-            GroupNameEmpty => {
-                write!(f, "empty capture group name")
-            }
-            GroupNameInvalid => {
-                write!(f, "invalid capture group character")
-            }
-            GroupNameUnexpectedEof => {
-                write!(f, "unclosed capture group name")
-            }
-            GroupUnclosed => {
-                write!(f, "unclosed group")
-            }
-            GroupUnopened => {
-                write!(f, "unopened group")
-            }
-            NestLimitExceeded(limit) => {
-                write!(f, "exceed the maximum number of \
-                           nested parentheses/brackets ({})", limit)
-            }
-            RepetitionCountInvalid => {
-                write!(f, "invalid repetition count range, \
-                           the start must be <= the end")
+            GroupNameEmpty => write!(f, "empty capture group name"),
+            GroupNameInvalid => write!(f, "invalid capture group character"),
+            GroupNameUnexpectedEof => write!(f, "unclosed capture group name"),
+            GroupUnclosed => write!(f, "unclosed group"),
+            GroupUnopened => write!(f, "unopened group"),
+            NestLimitExceeded(limit) => write!(
+                f,
+                "exceed the maximum number of \
+                 nested parentheses/brackets ({})",
+                limit
+            ),
+            RepetitionCountInvalid => write!(
+                f,
+                "invalid repetition count range, \
+                 the start must be <= the end"
+            ),
+            RepetitionCountDecimalEmpty => {
+                write!(f, "repetition quantifier expects a valid decimal")
             }
             RepetitionCountUnclosed => {
                 write!(f, "unclosed counted repetition")
@@ -316,10 +296,11 @@ impl fmt::Display for ErrorKind {
             UnsupportedBackreference => {
                 write!(f, "backreferences are not supported")
             }
-            UnsupportedLookAround => {
-                write!(f, "look-around, including look-ahead and look-behind, \
-                           is not supported")
-            }
+            UnsupportedLookAround => write!(
+                f,
+                "look-around, including look-ahead and look-behind, \
+                 is not supported"
+            ),
             _ => unreachable!(),
         }
     }
@@ -375,7 +356,8 @@ impl fmt::Debug for Position {
         write!(
             f,
             "Position(o: {:?}, l: {:?}, c: {:?})",
-            self.offset, self.line, self.column)
+            self.offset, self.line, self.column
+        )
     }
 }
 
@@ -859,7 +841,8 @@ impl ClassUnicode {
     pub fn is_negated(&self) -> bool {
         match self.kind {
             ClassUnicodeKind::NamedValue {
-                op: ClassUnicodeOpKind::NotEqual, ..
+                op: ClassUnicodeOpKind::NotEqual,
+                ..
             } => !self.negated,
             _ => self.negated,
         }
@@ -901,7 +884,7 @@ impl ClassUnicodeOpKind {
     /// Whether the op is an equality op or not.
     pub fn is_equal(&self) -> bool {
         match *self {
-            ClassUnicodeOpKind::Equal|ClassUnicodeOpKind::Colon => true,
+            ClassUnicodeOpKind::Equal | ClassUnicodeOpKind::Colon => true,
             _ => false,
         }
     }
@@ -1419,26 +1402,24 @@ impl Drop for ClassSet {
         use std::mem;
 
         match *self {
-            ClassSet::Item(ref item) => {
-                match *item {
-                    ClassSetItem::Empty(_)
-                    | ClassSetItem::Literal(_)
-                    | ClassSetItem::Range(_)
-                    | ClassSetItem::Ascii(_)
-                    | ClassSetItem::Unicode(_)
-                    | ClassSetItem::Perl(_) => return,
-                    ClassSetItem::Bracketed(ref x) => {
-                        if x.kind.is_empty() {
-                            return;
-                        }
-                    }
-                    ClassSetItem::Union(ref x) => {
-                        if x.items.is_empty() {
-                            return;
-                        }
+            ClassSet::Item(ref item) => match *item {
+                ClassSetItem::Empty(_)
+                | ClassSetItem::Literal(_)
+                | ClassSetItem::Range(_)
+                | ClassSetItem::Ascii(_)
+                | ClassSetItem::Unicode(_)
+                | ClassSetItem::Perl(_) => return,
+                ClassSetItem::Bracketed(ref x) => {
+                    if x.kind.is_empty() {
+                        return;
                     }
                 }
-            }
+                ClassSetItem::Union(ref x) => {
+                    if x.items.is_empty() {
+                        return;
+                    }
+                }
+            },
             ClassSet::BinaryOp(ref op) => {
                 if op.lhs.is_empty() && op.rhs.is_empty() {
                     return;
@@ -1451,23 +1432,20 @@ impl Drop for ClassSet {
         let mut stack = vec![mem::replace(self, empty_set())];
         while let Some(mut set) = stack.pop() {
             match set {
-                ClassSet::Item(ref mut item) => {
-                    match *item {
-                        ClassSetItem::Empty(_)
-                        | ClassSetItem::Literal(_)
-                        | ClassSetItem::Range(_)
-                        | ClassSetItem::Ascii(_)
-                        | ClassSetItem::Unicode(_)
-                        | ClassSetItem::Perl(_) => {}
-                        ClassSetItem::Bracketed(ref mut x) => {
-                            stack.push(mem::replace(&mut x.kind, empty_set()));
-                        }
-                        ClassSetItem::Union(ref mut x) => {
-                            stack.extend(
-                                x.items.drain(..).map(ClassSet::Item));
-                        }
+                ClassSet::Item(ref mut item) => match *item {
+                    ClassSetItem::Empty(_)
+                    | ClassSetItem::Literal(_)
+                    | ClassSetItem::Range(_)
+                    | ClassSetItem::Ascii(_)
+                    | ClassSetItem::Unicode(_)
+                    | ClassSetItem::Perl(_) => {}
+                    ClassSetItem::Bracketed(ref mut x) => {
+                        stack.push(mem::replace(&mut x.kind, empty_set()));
                     }
-                }
+                    ClassSetItem::Union(ref mut x) => {
+                        stack.extend(x.items.drain(..).map(ClassSet::Item));
+                    }
+                },
                 ClassSet::BinaryOp(ref mut op) => {
                     stack.push(mem::replace(&mut op.lhs, empty_set()));
                     stack.push(mem::replace(&mut op.rhs, empty_set()));
@@ -1506,7 +1484,7 @@ mod tests {
         // We run our test on a thread with a small stack size so we can
         // force the issue more easily.
         thread::Builder::new()
-            .stack_size(1<<10)
+            .stack_size(1 << 10)
             .spawn(run)
             .unwrap()
             .join()

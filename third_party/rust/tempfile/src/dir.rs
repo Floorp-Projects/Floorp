@@ -12,6 +12,7 @@ use remove_dir_all::remove_dir_all;
 use std::path::{self, Path, PathBuf};
 use std::{fmt, fs, io};
 
+use error::IoResultExt;
 use Builder;
 
 /// Create a new temporary directory.
@@ -119,8 +120,7 @@ pub fn tempdir_in<P: AsRef<Path>>(dir: P) -> io::Result<TempDir> {
 ///
 /// The [`TempDir`] type creates a directory on the file system that
 /// is deleted once it goes out of scope. At construction, the
-/// `TempDir` creates a new directory with a randomly generated name,
-/// and with a prefix of your choosing.
+/// `TempDir` creates a new directory with a randomly generated name.
 ///
 /// The default constructor, [`TempDir::new()`], creates directories in
 /// the location returned by [`std::env::temp_dir()`], but `TempDir`
@@ -236,10 +236,9 @@ impl TempDir {
         Builder::new().tempdir()
     }
 
-    /// Attempts to make a temporary directory inside of `tmpdir`
-    /// whose name will have the prefix `prefix`. The directory and
-    /// everything inside it will be automatically deleted once the
-    /// returned `TempDir` is destroyed.
+    /// Attempts to make a temporary directory inside of `dir`.
+    /// The directory and everything inside it will be automatically 
+    /// deleted once the returned `TempDir` is destroyed.
     ///
     /// # Errors
     ///
@@ -353,8 +352,7 @@ impl TempDir {
     ///
     /// # use std::io;
     /// # fn run() -> Result<(), io::Error> {
-    /// // Create a directory inside of `std::env::temp_dir()`, named with
-    /// // the prefix, "example".
+    /// // Create a directory inside of `std::env::temp_dir()`.
     /// let tmp_dir = TempDir::new()?;
     /// let file_path = tmp_dir.path().join("my-temporary-note.txt");
     /// let mut tmp_file = File::create(file_path)?;
@@ -371,7 +369,7 @@ impl TempDir {
     /// # }
     /// ```
     pub fn close(mut self) -> io::Result<()> {
-        let result = remove_dir_all(self.path());
+        let result = remove_dir_all(self.path()).with_err_path(|| self.path());
 
         // Prevent the Drop impl from removing the dir a second time.
         self.path = None;
@@ -403,7 +401,8 @@ impl Drop for TempDir {
     }
 }
 
-// pub(crate)
-pub fn create(path: PathBuf) -> io::Result<TempDir> {
-    fs::create_dir(&path).map(|_| TempDir { path: Some(path) })
+pub(crate) fn create(path: PathBuf) -> io::Result<TempDir> {
+    fs::create_dir(&path)
+        .with_err_path(|| &path)
+        .map(|_| TempDir { path: Some(path) })
 }

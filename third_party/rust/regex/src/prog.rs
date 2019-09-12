@@ -161,6 +161,7 @@ impl Program {
 impl Deref for Program {
     type Target = [Inst];
 
+    #[inline(always)]
     fn deref(&self) -> &Self::Target {
         &*self.insts
     }

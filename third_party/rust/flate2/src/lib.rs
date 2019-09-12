@@ -14,9 +14,12 @@
 //!
 //! This crate consists mainly of three modules, [`read`], [`write`], and
 //! [`bufread`]. Each module contains a number of types used to encode and
-//! decode various streams of data. All types in the [`write`] module work on
-//! instances of [`Write`][write], whereas all types in the [`read`] module work on
-//! instances of [`Read`][read] and [`bufread`] works with [`BufRead`][bufread].
+//! decode various streams of data.
+//!
+//! All types in the [`write`] module work on instances of [`Write`][write],
+//! whereas all types in the [`read`] module work on instances of
+//! [`Read`][read] and [`bufread`] works with [`BufRead`][bufread]. If you
+//! are decoding directly from a `&[u8]`, use the [`bufread`] types.
 //!
 //! ```
 //! use flate2::write::GzEncoder;
@@ -27,7 +30,7 @@
 //! # fn main() { let _ = run(); }
 //! # fn run() -> io::Result<()> {
 //! let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
-//! encoder.write(b"Example")?;
+//! encoder.write_all(b"Example")?;
 //! # Ok(())
 //! # }
 //! ```
@@ -76,30 +79,34 @@
 #![allow(trivial_numeric_casts)]
 #![cfg_attr(test, deny(warnings))]
 
+extern crate crc32fast;
 #[cfg(feature = "tokio")]
 extern crate futures;
+#[cfg(not(any(
+    all(not(feature = "zlib"), feature = "rust_backend"),
+    all(target_arch = "wasm32", not(target_os = "emscripten"))
+)))]
 extern crate libc;
 #[cfg(test)]
 extern crate quickcheck;
 #[cfg(test)]
 extern crate rand;
 #[cfg(feature = "tokio")]
-#[macro_use]
 extern crate tokio_io;
 
+pub use crc::{Crc, CrcReader, CrcWriter};
 pub use gz::GzBuilder;
 pub use gz::GzHeader;
-pub use mem::{Compress, CompressError, DecompressError, Decompress, Status};
+pub use mem::{Compress, CompressError, Decompress, DecompressError, Status};
 pub use mem::{FlushCompress, FlushDecompress};
-pub use crc::{Crc, CrcReader};
 
 mod bufreader;
 mod crc;
 mod deflate;
 mod ffi;
 mod gz;
-mod zio;
 mod mem;
+mod zio;
 mod zlib;
 
 /// Types which operate over [`Read`] streams, both encoders and decoders for
@@ -107,13 +114,13 @@ mod zlib;
 ///
 /// [`Read`]: https://doc.rust-lang.org/std/io/trait.Read.html
 pub mod read {
-    pub use deflate::read::DeflateEncoder;
     pub use deflate::read::DeflateDecoder;
-    pub use zlib::read::ZlibEncoder;
-    pub use zlib::read::ZlibDecoder;
-    pub use gz::read::GzEncoder;
+    pub use deflate::read::DeflateEncoder;
     pub use gz::read::GzDecoder;
+    pub use gz::read::GzEncoder;
     pub use gz::read::MultiGzDecoder;
+    pub use zlib::read::ZlibDecoder;
+    pub use zlib::read::ZlibEncoder;
 }
 
 /// Types which operate over [`Write`] streams, both encoders and decoders for
@@ -121,11 +128,12 @@ pub mod read {
 ///
 /// [`Write`]: https://doc.rust-lang.org/std/io/trait.Write.html
 pub mod write {
-    pub use deflate::write::DeflateEncoder;
     pub use deflate::write::DeflateDecoder;
-    pub use zlib::write::ZlibEncoder;
-    pub use zlib::write::ZlibDecoder;
+    pub use deflate::write::DeflateEncoder;
+    pub use gz::write::GzDecoder;
     pub use gz::write::GzEncoder;
+    pub use zlib::write::ZlibDecoder;
+    pub use zlib::write::ZlibEncoder;
 }
 
 /// Types which operate over [`BufRead`] streams, both encoders and decoders for
@@ -133,13 +141,13 @@ pub mod write {
 ///
 /// [`BufRead`]: https://doc.rust-lang.org/std/io/trait.BufRead.html
 pub mod bufread {
-    pub use deflate::bufread::DeflateEncoder;
     pub use deflate::bufread::DeflateDecoder;
-    pub use zlib::bufread::ZlibEncoder;
-    pub use zlib::bufread::ZlibDecoder;
-    pub use gz::bufread::GzEncoder;
+    pub use deflate::bufread::DeflateEncoder;
     pub use gz::bufread::GzDecoder;
+    pub use gz::bufread::GzEncoder;
     pub use gz::bufread::MultiGzDecoder;
+    pub use zlib::bufread::ZlibDecoder;
+    pub use zlib::bufread::ZlibEncoder;
 }
 
 fn _assert_send_sync() {
@@ -157,6 +165,7 @@ fn _assert_send_sync() {
     _assert_send_sync::<write::ZlibEncoder<Vec<u8>>>();
     _assert_send_sync::<write::ZlibDecoder<Vec<u8>>>();
     _assert_send_sync::<write::GzEncoder<Vec<u8>>>();
+    _assert_send_sync::<write::GzDecoder<Vec<u8>>>();
 }
 
 /// When compressing data, the compression level can be specified by a value in
@@ -201,4 +210,12 @@ impl Default for Compression {
     fn default() -> Compression {
         Compression(6)
     }
+}
+
+#[cfg(test)]
+fn random_bytes() -> impl Iterator<Item = u8> {
+    use rand::Rng;
+    use std::iter;
+
+    iter::repeat(()).map(|_| rand::thread_rng().gen())
 }

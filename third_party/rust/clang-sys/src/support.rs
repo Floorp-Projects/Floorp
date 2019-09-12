@@ -14,29 +14,27 @@
 
 //! Provides helper functionality.
 
-use std::{io, env};
-use std::process::{Command};
 use std::path::{Path, PathBuf};
+use std::process::Command;
+use std::{env, io};
 
 use glob;
 
-use libc::{c_int};
+use libc::c_int;
 
-use super::{CXVersion};
+use super::CXVersion;
 
 //================================================
 // Macros
 //================================================
 
-// try_opt! ______________________________________
-
 macro_rules! try_opt {
-    ($option:expr) => ({
+    ($option:expr) => {{
         match $option {
             Some(some) => some,
             None => return None,
         }
-    });
+    }};
 }
 
 //================================================
@@ -50,32 +48,35 @@ pub struct Clang {
     pub path: PathBuf,
     /// The version of this `clang` executable if it could be parsed.
     pub version: Option<CXVersion>,
-    /// The directories searched by this `clang` executable for C headers if they could be parsed.
+    /// The directories searched by this `clang` executable for C headers if
+    /// they could be parsed.
     pub c_search_paths: Option<Vec<PathBuf>>,
-    /// The directories searched by this `clang` executable for C++ headers if they could be parsed.
+    /// The directories searched by this `clang` executable for C++ headers if
+    /// they could be parsed.
     pub cpp_search_paths: Option<Vec<PathBuf>>,
 }
 
 impl Clang {
-    //- Constructors -----------------------------
-
-    fn new(path: PathBuf, args: &[String]) -> Clang {
-        let version = parse_version(&path);
-        let c_search_paths = parse_search_paths(&path, "c", args);
-        let cpp_search_paths = parse_search_paths(&path, "c++", args);
-        Clang { path, version, c_search_paths, cpp_search_paths }
+    fn new(path: impl AsRef<Path>, args: &[String]) -> Self {
+        Self {
+            path: path.as_ref().into(),
+            version: parse_version(path.as_ref()),
+            c_search_paths: parse_search_paths(path.as_ref(), "c", args),
+            cpp_search_paths: parse_search_paths(path.as_ref(), "c++", args),
+        }
     }
 
     /// Returns a `clang` executable if one can be found.
     ///
-    /// If the `CLANG_PATH` environment variable is set, that is the instance of `clang` used.
-    /// Otherwise, a series of directories are searched. First, If a path is supplied, that is the
-    /// first directory searched. Then, the directory returned by `llvm-config --bindir` is
-    /// searched. On OS X systems, `xcodebuild -find clang` will next be queried. Last, the
+    /// If the `CLANG_PATH` environment variable is set, that is the instance of
+    /// `clang` used. Otherwise, a series of directories are searched. First, if
+    /// a path is supplied, that is the first directory searched. Then, the
+    /// directory returned by `llvm-config --bindir` is searched. On macOS
+    /// systems, `xcodebuild -find clang` will next be queried. Last, the
     /// directories in the system's `PATH` are searched.
     pub fn find(path: Option<&Path>, args: &[String]) -> Option<Clang> {
         if let Ok(path) = env::var("CLANG_PATH") {
-            return Some(Clang::new(path.into(), args));
+            return Some(Clang::new(path, args));
         }
 
         let mut paths = vec![];
@@ -85,7 +86,7 @@ impl Clang {
         if let Ok(path) = run_llvm_config(&["--bindir"]) {
             paths.push(path.into());
         }
-        if cfg!(target_os="macos") {
+        if cfg!(target_os = "macos") {
             if let Ok((path, _)) = run("xcodebuild", &["-find", "clang"]) {
                 paths.push(path.into());
             }
@@ -100,6 +101,7 @@ impl Clang {
                 return Some(Clang::new(path, args));
             }
         }
+
         None
     }
 }
@@ -108,23 +110,26 @@ impl Clang {
 // Functions
 //================================================
 
-/// Returns the first match to the supplied glob patterns in the supplied directory if there are any
-/// matches.
+/// Returns the first match to the supplied glob patterns in the supplied
+/// directory if there are any matches.
 fn find(directory: &Path, patterns: &[&str]) -> Option<PathBuf> {
     for pattern in patterns {
         let pattern = directory.join(pattern).to_string_lossy().into_owned();
-        if let Some(path) = try_opt!(glob::glob(&pattern).ok()).filter_map(|p| p.ok()).next() {
+        if let Some(path) = try_opt!(glob::glob(&pattern).ok())
+            .filter_map(|p| p.ok())
+            .next()
+        {
             if path.is_file() && is_executable(&path).unwrap_or(false) {
                 return Some(path);
             }
         }
     }
+
     None
 }
 
 #[cfg(unix)]
 fn is_executable(path: &Path) -> io::Result<bool> {
-    use libc;
     use std::ffi::CString;
     use std::os::unix::ffi::OsStrExt;
 
@@ -137,13 +142,18 @@ fn is_executable(_: &Path) -> io::Result<bool> {
     Ok(true)
 }
 
-/// Attempts to run an executable, returning the `stdout` and `stderr` output if successful.
+/// Attempts to run an executable, returning the `stdout` and `stderr` output if
+/// successful.
 fn run(executable: &str, arguments: &[&str]) -> Result<(String, String), String> {
-    Command::new(executable).args(arguments).output().map(|o| {
-        let stdout = String::from_utf8_lossy(&o.stdout).into_owned();
-        let stderr = String::from_utf8_lossy(&o.stderr).into_owned();
-        (stdout, stderr)
-    }).map_err(|e| format!("could not run executable `{}`: {}", executable, e))
+    Command::new(executable)
+        .args(arguments)
+        .output()
+        .map(|o| {
+            let stdout = String::from_utf8_lossy(&o.stdout).into_owned();
+            let stderr = String::from_utf8_lossy(&o.stderr).into_owned();
+            (stdout, stderr)
+        })
+        .map_err(|e| format!("could not run executable `{}`: {}", executable, e))
 }
 
 /// Runs `clang`, returning the `stdout` and `stderr` output.
@@ -159,7 +169,12 @@ fn run_llvm_config(arguments: &[&str]) -> Result<String, String> {
 
 /// Parses a version number if possible, ignoring trailing non-digit characters.
 fn parse_version_number(number: &str) -> Option<c_int> {
-    number.chars().take_while(|c| c.is_digit(10)).collect::<String>().parse().ok()
+    number
+        .chars()
+        .take_while(|c| c.is_digit(10))
+        .collect::<String>()
+        .parse()
+        .ok()
 }
 
 /// Parses the version from the output of a `clang` executable if possible.
@@ -170,7 +185,11 @@ fn parse_version(path: &Path) -> Option<CXVersion> {
     let major = try_opt!(numbers.next().and_then(parse_version_number));
     let minor = try_opt!(numbers.next().and_then(parse_version_number));
     let subminor = numbers.next().and_then(parse_version_number).unwrap_or(0);
-    Some(CXVersion { Major: major, Minor: minor, Subminor: subminor })
+    Some(CXVersion {
+        Major: major,
+        Minor: minor,
+        Subminor: subminor,
+    })
 }
 
 /// Parses the search paths from the output of a `clang` executable if possible.
@@ -181,5 +200,11 @@ fn parse_search_paths(path: &Path, language: &str, args: &[String]) -> Option<Ve
     let start = try_opt!(output.find("#include <...> search starts here:")) + 34;
     let end = try_opt!(output.find("End of search list."));
     let paths = output[start..end].replace("(framework directory)", "");
-    Some(paths.lines().filter(|l| !l.is_empty()).map(|l| Path::new(l.trim()).into()).collect())
+    Some(
+        paths
+            .lines()
+            .filter(|l| !l.is_empty())
+            .map(|l| Path::new(l.trim()).into())
+            .collect(),
+    )
 }

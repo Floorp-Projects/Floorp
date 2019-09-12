@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "crossbeam-epoch"
-version = "0.7.1"
+version = "0.7.2"
 authors = ["The Crossbeam Project Developers"]
 description = "Epoch-based garbage collection"
 homepage = "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-epoch"
@@ -27,7 +27,7 @@ version = "0.4"
 default-features = false
 
 [dependencies.cfg-if]
-version = "0.1"
+version = "0.1.2"
 
 [dependencies.crossbeam-utils]
 version = "0.6"
@@ -38,15 +38,16 @@ version = "1"
 optional = true
 
 [dependencies.memoffset]
-version = "0.2"
+version = "0.5"
 
 [dependencies.scopeguard]
-version = "0.3"
+version = "1"
 default-features = false
 [dev-dependencies.rand]
 version = "0.6"
 
 [features]
+alloc = ["crossbeam-utils/alloc"]
 default = ["std"]
 nightly = ["crossbeam-utils/nightly", "arrayvec/use_union"]
 sanitize = []

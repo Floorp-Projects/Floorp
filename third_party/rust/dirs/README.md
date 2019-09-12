@@ -26,6 +26,8 @@ The library provides the location of these directories by leveraging the mechani
 This library is written in Rust, and supports Linux, Redox, macOS and Windows.
 Other platforms are also supported; they use the Linux conventions.
 
+The minimal required version of Rust is 1.13 on Linux and Windows, and 1.20 on macOS.
+
 It's mid-level sister library, _directories_, is available for Rust ([directories-rs](https://github.com/soc/directories-rs))
 and on the JVM ([directories-jvm](https://github.com/soc/directories-jvm)).
 

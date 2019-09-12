@@ -53,7 +53,7 @@ pub fn create_named(path: &Path) -> io::Result<File> {
 }
 
 #[cfg(target_os = "redox")]
-pub fn create_named(path: PathBuf) -> io::Result<File> {
+pub fn create_named(path: &Path) -> io::Result<File> {
     unsafe {
         let fd = cvt_err(open(
             path.as_os_str().as_bytes(),

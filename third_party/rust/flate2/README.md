@@ -1,7 +1,6 @@
 # flate2
 
-[![Build Status](https://travis-ci.org/alexcrichton/flate2-rs.svg?branch=master)](https://travis-ci.org/alexcrichton/flate2-rs)
-[![Build status](https://ci.appveyor.com/api/projects/status/9tatexq47i3ee13k?svg=true)](https://ci.appveyor.com/project/alexcrichton/flate2-rs)
+[![Build Status](https://dev.azure.com/alexcrichton/flate2-rs/_apis/build/status/alexcrichton.flate2-rs?branchName=master)](https://dev.azure.com/alexcrichton/flate2-rs/_build/latest?definitionId=1&branchName=master)
 [![Crates.io](https://img.shields.io/crates/v/flate2.svg?maxAge=2592000)](https://crates.io/crates/flate2)
 [![Documentation](https://docs.rs/flate2/badge.svg)](https://docs.rs/flate2)
 
@@ -22,21 +21,21 @@ Supported formats:
 ```toml
 # Cargo.toml
 [dependencies]
-flate2 = "0.2"
+flate2 = "1.0"
 ```
 
 Using zlib instead of miniz:
 
 ```toml
 [dependencies]
-flate2 = { version = "0.2", features = ["zlib"], default-features = false }
+flate2 = { version = "1.0", features = ["zlib"], default-features = false }
 ```
 
 Using the rust back-end:
 
 ```toml
 [dependencies]
-flate2 = { version = "0.2", features = ["rust_backend"], default-features = false }
+flate2 = { version = "1.0", features = ["rust_backend"], default-features = false }
 ```
 
 ## Compression
@@ -50,8 +49,8 @@ use flate2::write::ZlibEncoder;
 
 fn main() {
     let mut e = ZlibEncoder::new(Vec::new(), Compression::default());
-    e.write(b"foo");
-    e.write(b"bar");
+    e.write_all(b"foo");
+    e.write_all(b"bar");
     let compressed_bytes = e.finish();
 }
 ```

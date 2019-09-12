@@ -10,7 +10,6 @@
 //! - the [XDG base directory](https://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html) and the [XDG user directory](https://www.freedesktop.org/wiki/Software/xdg-user-dirs/) specifications on Linux,
 //! - the [Known Folder](https://msdn.microsoft.com/en-us/library/windows/desktop/bb776911(v=vs.85).aspx) system on Windows, and
 //! - the [Standard Directories](https://developer.apple.com/library/content/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html#//apple_ref/doc/uid/TP40010672-CH2-SW6) on macOS.
-//!
 
 #![deny(missing_docs)]
 
@@ -50,7 +49,7 @@ use std::path::PathBuf;
 /// This function retrieves the user profile folder using `SHGetKnownFolderPath`.
 ///
 /// All the examples on this page mentioning `$HOME` use this behavior.
-/// 
+///
 /// _Note:_ This function's behavior differs from [`std::env::home_dir`],
 /// which works incorrectly on Linux, macOS and Windows.
 ///
@@ -59,8 +58,8 @@ pub fn home_dir() -> Option<PathBuf> {
     sys::home_dir()
 }
 /// Returns the path to the user's cache directory.
-/// 
-/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None.
+///
+/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None`.
 ///
 /// |Platform | Value                               | Example                      |
 /// | ------- | ----------------------------------- | ---------------------------- |
@@ -72,7 +71,7 @@ pub fn cache_dir() -> Option<PathBuf> {
 }
 /// Returns the path to the user's config directory.
 ///
-/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None.
+/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None`.
 ///
 /// |Platform | Value                                 | Example                          |
 /// | ------- | ------------------------------------- | -------------------------------- |
@@ -84,7 +83,7 @@ pub fn config_dir() -> Option<PathBuf> {
 }
 /// Returns the path to the user's data directory.
 ///
-/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None.
+/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None`.
 ///
 /// |Platform | Value                                    | Example                                  |
 /// | ------- | ---------------------------------------- | ---------------------------------------- |
@@ -96,7 +95,7 @@ pub fn data_dir() -> Option<PathBuf> {
 }
 /// Returns the path to the user's local data directory.
 ///
-/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None.
+/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None`.
 ///
 /// |Platform | Value                                    | Example                                  |
 /// | ------- | ---------------------------------------- | ---------------------------------------- |
@@ -108,7 +107,7 @@ pub fn data_local_dir() -> Option<PathBuf> {
 }
 /// Returns the path to the user's executable directory.
 ///
-/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None.
+/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None`.
 ///
 /// |Platform | Value                                                            | Example                |
 /// | ------- | ---------------------------------------------------------------- | ---------------------- |
@@ -120,7 +119,7 @@ pub fn executable_dir() -> Option<PathBuf> {
 }
 /// Returns the path to the user's runtime directory.
 ///
-/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None.
+/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None`.
 ///
 /// |Platform | Value              | Example         |
 /// | ------- | ------------------ | --------------- |
@@ -133,7 +132,7 @@ pub fn runtime_dir() -> Option<PathBuf> {
 
 /// Returns the path to the user's audio directory.
 ///
-/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None.
+/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None`.
 ///
 /// |Platform | Value              | Example              |
 /// | ------- | ------------------ | -------------------- |
@@ -145,7 +144,7 @@ pub fn audio_dir() -> Option<PathBuf> {
 }
 /// Returns the path to the user's desktop directory.
 ///
-/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None.
+/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None`.
 ///
 /// |Platform | Value                | Example                |
 /// | ------- | -------------------- | ---------------------- |
@@ -157,7 +156,7 @@ pub fn desktop_dir() -> Option<PathBuf> {
 }
 /// Returns the path to the user's document directory.
 ///
-/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None.
+/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None`.
 ///
 /// |Platform | Value                  | Example                  |
 /// | ------- | ---------------------- | ------------------------ |
@@ -169,7 +168,7 @@ pub fn document_dir() -> Option<PathBuf> {
 }
 /// Returns the path to the user's download directory.
 ///
-/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None.
+/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None`.
 ///
 /// |Platform | Value                  | Example                  |
 /// | ------- | ---------------------- | ------------------------ |
@@ -181,7 +180,7 @@ pub fn download_dir() -> Option<PathBuf> {
 }
 /// Returns the path to the user's font directory.
 ///
-/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None.
+/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None`.
 ///
 /// |Platform | Value                                                | Example                        |
 /// | ------- | ---------------------------------------------------- | ------------------------------ |
@@ -193,7 +192,7 @@ pub fn font_dir() -> Option<PathBuf> {
 }
 /// Returns the path to the user's picture directory.
 ///
-/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None.
+/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None`.
 ///
 /// |Platform | Value                 | Example                 |
 /// | ------- | --------------------- | ----------------------- |
@@ -205,7 +204,7 @@ pub fn picture_dir() -> Option<PathBuf> {
 }
 /// Returns the path to the user's public directory.
 ///
-/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None.
+/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None`.
 ///
 /// |Platform | Value                 | Example             |
 /// | ------- | --------------------- | ------------------- |
@@ -217,7 +216,7 @@ pub fn public_dir() -> Option<PathBuf> {
 }
 /// Returns the path to the user's template directory.
 ///
-/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None.
+/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None`.
 ///
 /// |Platform | Value                  | Example                                                    |
 /// | ------- | ---------------------- | ---------------------------------------------------------- |
@@ -230,7 +229,7 @@ pub fn template_dir() -> Option<PathBuf> {
 
 /// Returns the path to the user's video directory.
 ///
-/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None.
+/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None`.
 ///
 /// |Platform | Value               | Example               |
 /// | ------- | ------------------- | --------------------- |

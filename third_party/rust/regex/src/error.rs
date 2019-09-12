@@ -36,10 +36,6 @@ impl ::std::error::Error for Error {
             Error::__Nonexhaustive => unreachable!(),
         }
     }
-
-    fn cause(&self) -> Option<&::std::error::Error> {
-        None
-    }
 }
 
 impl fmt::Display for Error {

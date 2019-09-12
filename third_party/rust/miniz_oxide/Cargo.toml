@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -11,9 +11,10 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "miniz_oxide"
-version = "0.1.2"
-authors = ["Frommi <daniil.liferenko@gmail.com>"]
+version = "0.3.2"
+authors = ["Frommi <daniil.liferenko@gmail.com>", "oyvindln <oyvindln@users.noreply.github.com>"]
 description = "DEFLATE compression and decompression library rewritten in Rust based on miniz"
 homepage = "https://github.com/Frommi/miniz_oxide/tree/master/miniz_oxide"
 documentation = "https://docs.rs/miniz_oxide"
@@ -26,7 +27,4 @@ repository = "https://github.com/Frommi/miniz_oxide/tree/master/miniz_oxide"
 [lib]
 name = "miniz_oxide"
 [dependencies.adler32]
-version = "1.0.2"
-
-[dependencies.libc]
-version = "0.2.22"
+version = "1.0.3"

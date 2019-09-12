@@ -1,15 +1,15 @@
 extern crate flate2;
 
-use std::io::prelude::*;
-use std::io;
-use flate2::Compression;
-use flate2::write::GzEncoder;
 use flate2::bufread::MultiGzDecoder;
+use flate2::write::GzEncoder;
+use flate2::Compression;
+use std::io;
+use std::io::prelude::*;
 
 // Compress a sample string and print it after transformation.
 fn main() {
     let mut e = GzEncoder::new(Vec::new(), Compression::default());
-    e.write(b"Hello World").unwrap();
+    e.write_all(b"Hello World").unwrap();
     let bytes = e.finish().unwrap();
     println!("{}", decode_reader(bytes).unwrap());
 }

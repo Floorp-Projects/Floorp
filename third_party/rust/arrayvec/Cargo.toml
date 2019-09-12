@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "arrayvec"
-version = "0.4.6"
+version = "0.4.11"
 authors = ["bluss"]
 description = "A vector with fixed capacity, backed by an array (it can be stored on the stack too). Implements fixed capacity ArrayVec and ArrayString."
 documentation = "https://docs.rs/arrayvec/"
@@ -50,7 +50,11 @@ version = "0.1"
 [dev-dependencies.serde_test]
 version = "1.0"
 
+[build-dependencies]
+
 [features]
+array-sizes-129-255 = []
+array-sizes-33-128 = []
 default = ["std"]
 serde-1 = ["serde"]
 std = []

@@ -18,12 +18,49 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+/// Macro to create a local `base_ptr` raw pointer of the given type, avoiding UB as
+/// much as is possible currently.
+#[cfg(memoffset_maybe_uninit)]
+#[macro_export]
+#[doc(hidden)]
+macro_rules! _memoffset__let_base_ptr {
+    ($name:ident, $type:tt) => {
+        // No UB here, and the pointer does not dangle, either.
+        // But we have to make sure that `uninit` lives long enough,
+        // so it has to be in the same scope as `$name`. That's why
+        // `let_base_ptr` declares a variable (several, actually)
+        // instad of returning one.
+        let uninit = $crate::mem::MaybeUninit::<$type>::uninit();
+        let $name = uninit.as_ptr();
+    };
+}
+#[cfg(not(memoffset_maybe_uninit))]
+#[macro_export]
+#[doc(hidden)]
+macro_rules! _memoffset__let_base_ptr {
+    ($name:ident, $type:tt) => {
+        // No UB right here, but we will later offset into a field
+        // of this pointer, and that is UB when the pointer is dangling.
+        let non_null = $crate::ptr::NonNull::<$type>::dangling();
+        let $name = non_null.as_ptr() as *const $type;
+    };
+}
+
+/// Deref-coercion protection macro.
+#[macro_export]
+#[doc(hidden)]
+macro_rules! _memoffset__field_check {
+    ($type:tt, $field:tt) => {
+        // Make sure the field actually exists. This line ensures that a
+        // compile-time error is generated if $field is accessed through a
+        // Deref impl.
+        let $type { $field: _, .. };
+    };
+}
+
 /// Calculates the offset of the specified field from the start of the struct.
-/// This macro supports arbitrary amount of subscripts and recursive member-accesses.
 ///
-/// *Note*: This macro may not make much sense when used on structs that are not `#[repr(C, packed)]`
-///
-/// ## Examples - Simple
+/// ## Examples
 /// ```
 /// #[macro_use]
 /// extern crate memoffset;
@@ -38,82 +75,61 @@
 /// fn main() {
 ///     assert_eq!(offset_of!(Foo, a), 0);
 ///     assert_eq!(offset_of!(Foo, b), 4);
-///     assert_eq!(offset_of!(Foo, c[2]), 14);
 /// }
 /// ```
-///
-/// ## Examples - Advanced
-/// ```
-/// #[macro_use]
-/// extern crate memoffset;
-///
-/// #[repr(C, packed)]
-/// struct UnnecessarilyComplicatedStruct {
-///     member: [UnnecessarilyComplexStruct; 12]
-/// }
-///
-/// #[repr(C, packed)]
-/// struct UnnecessarilyComplexStruct {
-///     a: u32,
-///     b: u64,
-///     c: [u8; 5]
-/// }
-///
-///
-/// fn main() {
-///     assert_eq!(offset_of!(UnnecessarilyComplicatedStruct, member[3].c[3]), 66);
-/// }
-/// ```
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! offset_of {
-    ($father:ty, $($field:tt)+) => ({
-        #[allow(unused_unsafe)]
-        let root: $father = unsafe { $crate::mem::uninitialized() };
+    ($parent:tt, $field:tt) => {{
+        _memoffset__field_check!($parent, $field);
 
-        let base = &root as *const _ as usize;
-
-        // Future error: borrow of packed field requires unsafe function or block (error E0133)
-        #[allow(unused_unsafe)]
-        let member =  unsafe { &root.$($field)* as *const _ as usize };
-
-        $crate::mem::forget(root);
-
-        member - base
-    });
+        // Get a base pointer.
+        _memoffset__let_base_ptr!(base_ptr, $parent);
+        // Get the field address. This is UB because we are creating a reference to
+        // the uninitialized field.
+        #[allow(unused_unsafe)] // for when the macro is used in an unsafe block
+        let field_ptr = unsafe { &(*base_ptr).$field as *const _ };
+        let offset = (field_ptr as usize) - (base_ptr as usize);
+        offset
+    }};
 }
 
 #[cfg(test)]
 mod tests {
-    #[repr(C, packed)]
-    struct Foo {
-        a: u32,
-        b: [u8; 4],
-        c: i64,
-    }
-
     #[test]
     fn offset_simple() {
+        #[repr(C)]
+        struct Foo {
+            a: u32,
+            b: [u8; 2],
+            c: i64,
+        }
+
         assert_eq!(offset_of!(Foo, a), 0);
         assert_eq!(offset_of!(Foo, b), 4);
         assert_eq!(offset_of!(Foo, c), 8);
     }
 
     #[test]
-    fn offset_index() {
-        assert_eq!(offset_of!(Foo, b[2]), 6);
-    }
+    #[cfg(not(miri))] // this creates unaligned references
+    fn offset_simple_packed() {
+        #[repr(C, packed)]
+        struct Foo {
+            a: u32,
+            b: [u8; 2],
+            c: i64,
+        }
 
-    #[test]
-    #[should_panic]
-    fn offset_index_out_of_bounds() {
-        offset_of!(Foo, b[4]);
+        assert_eq!(offset_of!(Foo, a), 0);
+        assert_eq!(offset_of!(Foo, b), 4);
+        assert_eq!(offset_of!(Foo, c), 6);
     }
 
     #[test]
     fn tuple_struct() {
-        #[repr(C, packed)]
+        #[repr(C)]
         struct Tup(i32, i32);
 
         assert_eq!(offset_of!(Tup, 0), 0);
+        assert_eq!(offset_of!(Tup, 1), 4);
     }
 }

@@ -33,6 +33,14 @@ replace!(no_expand1, replace,
          r"(\S+)\s+(\S+)", "w1 w2", no_expand!("$2 $1"), "$2 $1");
 replace!(no_expand2, replace,
          r"(\S+)\s+(\S+)", "w1 w2", no_expand!("$$1"), "$$1");
+use_!(Captures);
+replace!(closure_returning_reference, replace, r"(\d+)", "age: 26",
+         |captures: &Captures| {
+             match_text!(captures.get(1).unwrap())[0..1].to_owned()
+         }, "age: 2");
+replace!(closure_returning_value, replace, r"\d+", "age: 26",
+         |_captures: &Captures| t!("Z").to_owned(), "age: Z");
+
 
 // See https://github.com/rust-lang/regex/issues/314
 replace!(match_at_start_replace_with_empty, replace_all, r"foo", "foobar", t!(""), "bar");

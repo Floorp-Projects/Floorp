@@ -32,7 +32,7 @@ fn init_logger() {
 
     builder
         .default_format_level(false)
-        .default_format_timestamp(false);
+        .default_format_timestamp_nanos(true);
 
     builder.init();
 }

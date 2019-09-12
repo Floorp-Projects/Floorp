@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "clang-sys"
-version = "0.28.0"
+version = "0.28.1"
 authors = ["Kyle Mayes <kyle@mayeses.com>"]
 build = "build.rs"
 links = "clang"
@@ -22,7 +22,7 @@ readme = "README.md"
 license = "Apache-2.0"
 repository = "https://github.com/KyleMayes/clang-sys"
 [dependencies.glob]
-version = "0.2.11"
+version = "0.3"
 
 [dependencies.libc]
 version = "0.2.39"
@@ -32,7 +32,7 @@ default-features = false
 version = "0.5.0"
 optional = true
 [build-dependencies.glob]
-version = "0.2.11"
+version = "0.3"
 
 [features]
 clang_3_5 = []

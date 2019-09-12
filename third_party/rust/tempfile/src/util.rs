@@ -1,8 +1,10 @@
 use rand;
-use rand::Rng;
+use rand::RngCore;
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::{io, iter};
+
+use error::IoResultExt;
 
 fn tmpname(prefix: &str, suffix: &str, rand_len: usize) -> OsString {
     let mut buf = String::with_capacity(prefix.len() + suffix.len() + rand_len);
@@ -37,7 +39,9 @@ pub fn create_helper<F, R>(
 where
     F: Fn(PathBuf) -> io::Result<R>,
 {
-    for _ in 0..::NUM_RETRIES {
+    let num_retries = if random_len != 0 { ::NUM_RETRIES } else { 1 };
+
+    for _ in 0..num_retries {
         let path = base.join(tmpname(prefix, suffix, random_len));
         return match f(path) {
             Err(ref e) if e.kind() == io::ErrorKind::AlreadyExists => continue,
@@ -46,7 +50,7 @@ where
     }
 
     Err(io::Error::new(
-        io::ErrorKind::AlreadyExists,
-        "too many temporary files exist",
-    ))
+        io::ErrorKind::AlreadyExists, 
+        "too many temporary files exist"))
+        .with_err_path(|| base)
 }

@@ -25,6 +25,8 @@ println!("This text will be normal.");
 
 #[cfg(windows)]
 extern crate winapi;
+#[cfg(windows)]
+extern crate winapi_util;
 
 #[cfg(windows)]
 pub use win::*;

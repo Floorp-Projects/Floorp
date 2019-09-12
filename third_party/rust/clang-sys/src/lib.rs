@@ -27,12 +27,11 @@
 //! * 7.0 - [Documentation](https://kylemayes.github.io/clang-sys/7_0/clang_sys)
 
 #![allow(non_camel_case_types, non_snake_case, non_upper_case_globals)]
-
-#![cfg_attr(feature="cargo-clippy", allow(unreadable_literal))]
+#![cfg_attr(feature = "cargo-clippy", allow(unreadable_literal))]
 
 extern crate glob;
 extern crate libc;
-#[cfg(feature="runtime")]
+#[cfg(feature = "runtime")]
 extern crate libloading;
 
 pub mod support;
@@ -42,21 +41,17 @@ mod link;
 
 use std::mem;
 
-use libc::{c_char, c_int, c_longlong, c_uint, c_ulong, c_ulonglong, c_void, time_t};
-#[cfg(feature="gte_clang_6_0")]
-use libc::{size_t};
+use libc::*;
 
 pub type CXClientData = *mut c_void;
-pub type CXCursorVisitor = extern fn(CXCursor, CXCursor, CXClientData) -> CXChildVisitResult;
-#[cfg(feature="gte_clang_3_7")]
-pub type CXFieldVisitor = extern fn(CXCursor, CXClientData) -> CXVisitorResult;
-pub type CXInclusionVisitor = extern fn(CXFile, *mut CXSourceLocation, c_uint, CXClientData);
+pub type CXCursorVisitor = extern "C" fn(CXCursor, CXCursor, CXClientData) -> CXChildVisitResult;
+#[cfg(feature = "gte_clang_3_7")]
+pub type CXFieldVisitor = extern "C" fn(CXCursor, CXClientData) -> CXVisitorResult;
+pub type CXInclusionVisitor = extern "C" fn(CXFile, *mut CXSourceLocation, c_uint, CXClientData);
 
 //================================================
 // Macros
 //================================================
-
-// cenum! ________________________________________
 
 /// Defines a C enum as a series of constants.
 macro_rules! cenum {
@@ -75,8 +70,6 @@ macro_rules! cenum {
         $($(#[$vmeta])* pub const $variant: $name = $value;)+
     );
 }
-
-// default! ______________________________________
 
 /// Implements a zeroing implementation of `Default` for the supplied type.
 macro_rules! default {
@@ -1206,7 +1199,11 @@ cenum! {
 
 // Opaque ________________________________________
 
-macro_rules! opaque { ($name:ident) => (pub type $name = *mut c_void;); }
+macro_rules! opaque {
+    ($name:ident) => {
+        pub type $name = *mut c_void;
+    };
+}
 
 opaque!(CXCompilationDatabase);
 opaque!(CXCompileCommand);
@@ -1215,7 +1212,7 @@ opaque!(CXCompletionString);
 opaque!(CXCursorSet);
 opaque!(CXDiagnostic);
 opaque!(CXDiagnosticSet);
-#[cfg(feature="gte_clang_3_9")]
+#[cfg(feature = "gte_clang_3_9")]
 opaque!(CXEvalResult);
 opaque!(CXFile);
 opaque!(CXIdxClientASTFile);
@@ -1225,10 +1222,10 @@ opaque!(CXIdxClientFile);
 opaque!(CXIndex);
 opaque!(CXIndexAction);
 opaque!(CXModule);
-#[cfg(feature="gte_clang_7_0")]
+#[cfg(feature = "gte_clang_7_0")]
 opaque!(CXPrintingPolicy);
 opaque!(CXRemapping);
-#[cfg(feature="gte_clang_5_0")]
+#[cfg(feature = "gte_clang_5_0")]
 opaque!(CXTargetInfo);
 opaque!(CXTranslationUnit);
 
@@ -1275,7 +1272,7 @@ default!(CXCursor);
 #[repr(C)]
 pub struct CXCursorAndRangeVisitor {
     pub context: *mut c_void,
-    pub visit: extern fn(*mut c_void, CXCursor, CXSourceRange) -> CXVisitorResult,
+    pub visit: extern "C" fn(*mut c_void, CXCursor, CXSourceRange) -> CXVisitorResult,
 }
 
 default!(CXCursorAndRangeVisitor);
@@ -1370,7 +1367,7 @@ pub struct CXIdxEntityRefInfo {
     pub referencedEntity: *const CXIdxEntityInfo,
     pub parentEntity: *const CXIdxEntityInfo,
     pub container: *const CXIdxContainerInfo,
-    #[cfg(feature="gte_clang_7_0")]
+    #[cfg(feature = "gte_clang_7_0")]
     pub role: CXSymbolRole,
 }
 
@@ -1530,7 +1527,7 @@ pub struct CXString {
 
 default!(CXString);
 
-#[cfg(feature="gte_clang_3_8")]
+#[cfg(feature = "gte_clang_3_8")]
 #[derive(Copy, Clone, Debug)]
 #[repr(C)]
 pub struct CXStringSet {
@@ -1538,7 +1535,8 @@ pub struct CXStringSet {
     pub Count: c_uint,
 }
 
-default!(#[cfg(feature="gte_clang_3_8")] CXStringSet);
+#[cfg(feature = "gte_clang_3_8")]
+default!(CXStringSet);
 
 #[derive(Copy, Clone, Debug)]
 #[repr(C)]
@@ -1599,15 +1597,16 @@ default!(CXVersion);
 
 #[derive(Copy, Clone, Debug)]
 #[repr(C)]
+#[rustfmt::skip]
 pub struct IndexerCallbacks {
-    pub abortQuery: extern fn(CXClientData, *mut c_void) -> c_int,
-    pub diagnostic: extern fn(CXClientData, CXDiagnosticSet, *mut c_void),
-    pub enteredMainFile: extern fn(CXClientData, CXFile, *mut c_void) -> CXIdxClientFile,
-    pub ppIncludedFile: extern fn(CXClientData, *const CXIdxIncludedFileInfo) -> CXIdxClientFile,
-    pub importedASTFile: extern fn(CXClientData, *const CXIdxImportedASTFileInfo) -> CXIdxClientASTFile,
-    pub startedTranslationUnit: extern fn(CXClientData, *mut c_void) -> CXIdxClientContainer,
-    pub indexDeclaration: extern fn(CXClientData, *const CXIdxDeclInfo),
-    pub indexEntityReference: extern fn(CXClientData, *const CXIdxEntityRefInfo),
+    pub abortQuery: extern "C" fn(CXClientData, *mut c_void) -> c_int,
+    pub diagnostic: extern "C" fn(CXClientData, CXDiagnosticSet, *mut c_void),
+    pub enteredMainFile: extern "C" fn(CXClientData, CXFile, *mut c_void) -> CXIdxClientFile,
+    pub ppIncludedFile: extern "C" fn(CXClientData, *const CXIdxIncludedFileInfo) -> CXIdxClientFile,
+    pub importedASTFile: extern "C" fn(CXClientData, *const CXIdxImportedASTFileInfo) -> CXIdxClientASTFile,
+    pub startedTranslationUnit: extern "C" fn(CXClientData, *mut c_void) -> CXIdxClientContainer,
+    pub indexDeclaration: extern "C" fn(CXClientData, *const CXIdxDeclInfo),
+    pub indexEntityReference: extern "C" fn(CXClientData, *const CXIdxEntityRefInfo),
 }
 
 default!(IndexerCallbacks);

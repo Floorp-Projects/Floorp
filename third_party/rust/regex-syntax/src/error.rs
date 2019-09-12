@@ -117,8 +117,11 @@ impl<'e, E: fmt::Display> fmt::Display for Formatter<'e, E> {
                 for span in &spans.multi_line {
                     notes.push(format!(
                         "on line {} (column {}) through line {} (column {})",
-                        span.start.line, span.start.column,
-                        span.end.line, span.end.column - 1));
+                        span.start.line,
+                        span.start.column,
+                        span.end.line,
+                        span.end.column - 1
+                    ));
                 }
                 writeln!(f, "{}", notes.join("\n"))?;
             }
@@ -174,11 +177,7 @@ impl<'p> Spans<'p> {
             line_count += 1;
         }
         let line_number_width =
-            if line_count <= 1 {
-                0
-            } else {
-                line_count.to_string().len()
-            };
+            if line_count <= 1 { 0 } else { line_count.to_string().len() };
         let mut spans = Spans {
             pattern: &fmter.pattern,
             line_number_width: line_number_width,
@@ -287,11 +286,37 @@ fn repeat_char(c: char, count: usize) -> String {
 mod tests {
     use ast::parse::Parser;
 
+    fn assert_panic_message(pattern: &str, expected_msg: &str) -> () {
+        let result = Parser::new().parse(pattern);
+        match result {
+            Ok(_) => {
+                panic!("regex should not have parsed");
+            }
+            Err(err) => {
+                assert_eq!(err.to_string(), expected_msg.trim());
+            }
+        }
+    }
+
     // See: https://github.com/rust-lang/regex/issues/464
     #[test]
     fn regression_464() {
         let err = Parser::new().parse("a{\n").unwrap_err();
         // This test checks that the error formatter doesn't panic.
         assert!(!err.to_string().is_empty());
+    }
+
+    // See: https://github.com/rust-lang/regex/issues/545
+    #[test]
+    fn repetition_quantifier_expects_a_valid_decimal() {
+        assert_panic_message(
+            r"\\u{[^}]*}",
+            r#"
+regex parse error:
+    \\u{[^}]*}
+        ^
+error: repetition quantifier expects a valid decimal
+"#,
+        );
     }
 }

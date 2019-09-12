@@ -2,6 +2,7 @@
 
 use std::arch::x86_64::*;
 use std::fmt;
+use std::mem;
 
 #[derive(Clone, Copy, Debug)]
 pub struct AVX2VectorBuilder(());
@@ -56,9 +57,9 @@ impl AVX2VectorBuilder {
 
 #[derive(Clone, Copy)]
 #[allow(non_camel_case_types)]
-pub union u8x32 {
-    vector: __m256i,
-    bytes: [u8; 32],
+#[repr(transparent)]
+pub struct u8x32 {
+    vector: __m256i
 }
 
 impl u8x32 {
@@ -90,18 +91,6 @@ impl u8x32 {
     unsafe fn load_unchecked(slice: &[u8]) -> u8x32 {
         let p = slice.as_ptr() as *const u8 as *const __m256i;
         u8x32 { vector: _mm256_load_si256(p) }
-    }
-
-    #[inline]
-    pub fn extract(self, i: usize) -> u8 {
-        // Safe because `bytes` is always accessible.
-        unsafe { self.bytes[i] }
-    }
-
-    #[inline]
-    pub fn replace(&mut self, i: usize, byte: u8) {
-        // Safe because `bytes` is always accessible.
-        unsafe { self.bytes[i] = byte; }
     }
 
     #[inline]
@@ -177,11 +166,22 @@ impl u8x32 {
             u8x32 { vector: _mm256_srli_epi16(self.vector, 4) }
         }
     }
+
+    #[inline]
+    pub fn bytes(self) -> [u8; 32] {
+        // Safe because __m256i and [u8; 32] are layout compatible
+        unsafe { mem::transmute(self) }
+    }
+
+    #[inline]
+    pub fn replace_bytes(&mut self, value: [u8; 32]) {
+        // Safe because __m256i and [u8; 32] are layout compatible
+        self.vector = unsafe { mem::transmute(value) };
+    }
 }
 
 impl fmt::Debug for u8x32 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // Safe because `bytes` is always accessible.
-        unsafe { self.bytes.fmt(f) }
+        self.bytes().fmt(f)
     }
 }

@@ -1,3 +1,8 @@
+# Version 0.7.2
+
+- Add `Atomic::into_owned()`.
+- Update `memoffset` dependency.
+
 # Version 0.7.1
 
 - Add `Shared::deref_mut()`.

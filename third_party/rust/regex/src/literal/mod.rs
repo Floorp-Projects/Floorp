@@ -11,7 +11,7 @@
 use std::cmp;
 use std::mem;
 
-use aho_corasick::{Automaton, AcAutomaton, FullAcAutomaton};
+use aho_corasick::{self, AhoCorasick, AhoCorasickBuilder};
 use memchr::{memchr, memchr2, memchr3};
 use syntax::hir::literal::{Literal, Literals};
 
@@ -46,7 +46,7 @@ enum Matcher {
     /// A single substring, find using Boyer-Moore.
     BoyerMoore(BoyerMooreSearch),
     /// An Aho-Corasick automaton.
-    AC(FullAcAutomaton<Literal>),
+    AC { ac: AhoCorasick<u32>, lits: Vec<Literal> },
     /// A simd accelerated multiple string matcher. Used only for a small
     /// number of small literals.
     TeddySSSE3(TeddySSSE3),
@@ -102,7 +102,9 @@ impl LiteralSearcher {
             Bytes(ref sset) => sset.find(haystack).map(|i| (i, i + 1)),
             FreqyPacked(ref s) => s.find(haystack).map(|i| (i, i + s.len())),
             BoyerMoore(ref s) => s.find(haystack).map(|i| (i, i + s.len())),
-            AC(ref aut) => aut.find(haystack).next().map(|m| (m.start, m.end)),
+            AC { ref ac, .. } => {
+                ac.find(haystack).map(|m| (m.start(), m.end()))
+            }
             TeddySSSE3(ref t) => t.find(haystack).map(|m| (m.start, m.end)),
             TeddyAVX2(ref t) => t.find(haystack).map(|m| (m.start, m.end)),
         }
@@ -141,7 +143,7 @@ impl LiteralSearcher {
             Matcher::Bytes(ref sset) => LiteralIter::Bytes(&sset.dense),
             Matcher::FreqyPacked(ref s) => LiteralIter::Single(&s.pat),
             Matcher::BoyerMoore(ref s) => LiteralIter::Single(&s.pattern),
-            Matcher::AC(ref ac) => LiteralIter::AC(ac.patterns()),
+            Matcher::AC { ref lits, .. } => LiteralIter::AC(lits),
             Matcher::TeddySSSE3(ref ted) => {
                 LiteralIter::TeddySSSE3(ted.patterns())
             }
@@ -174,7 +176,7 @@ impl LiteralSearcher {
             Bytes(ref sset) => sset.dense.len(),
             FreqyPacked(_) => 1,
             BoyerMoore(_) => 1,
-            AC(ref aut) => aut.len(),
+            AC { ref ac, .. } => ac.pattern_count(),
             TeddySSSE3(ref ted) => ted.len(),
             TeddyAVX2(ref ted) => ted.len(),
         }
@@ -188,7 +190,7 @@ impl LiteralSearcher {
             Bytes(ref sset) => sset.approximate_size(),
             FreqyPacked(ref single) => single.approximate_size(),
             BoyerMoore(ref single) => single.approximate_size(),
-            AC(ref aut) => aut.heap_bytes(),
+            AC { ref ac, .. } => ac.heap_bytes(),
             TeddySSSE3(ref ted) => ted.approximate_size(),
             TeddyAVX2(ref ted) => ted.approximate_size(),
         }
@@ -258,7 +260,12 @@ impl Matcher {
             // Fallthrough to ol' reliable Aho-Corasick...
         }
         let pats = lits.literals().to_owned();
-        Matcher::AC(AcAutomaton::new(pats).into_full())
+        let ac = AhoCorasickBuilder::new()
+            .match_kind(aho_corasick::MatchKind::LeftmostFirst)
+            .dfa(true)
+            .build_with_size::<u32, _, _>(&pats)
+            .unwrap();
+        Matcher::AC { ac, lits: pats }
     }
 }
 
@@ -772,8 +779,6 @@ impl BoyerMooreSearch {
         mut window_end: usize,
         backstop: usize,
     ) -> Option<usize> {
-        use std::mem;
-
         let window_end_snapshot = window_end;
         let skip_of = |we: usize| -> usize {
             // Unsafe might make this faster, but the benchmarks

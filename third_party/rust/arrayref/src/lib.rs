@@ -63,6 +63,7 @@ macro_rules! array_ref {
             }
             let offset = $offset;
             let slice = & $arr[offset..offset + $len];
+            #[allow(unused_unsafe)]
             unsafe {
                 as_array(slice)
             }
@@ -102,6 +103,37 @@ macro_rules! array_ref {
 /// ```
 #[macro_export]
 macro_rules! array_refs {
+    ( $arr:expr, $( $pre:expr ),* ; .. ;  $( $post:expr ),* ) => {{
+        {
+            use std::slice;
+            #[inline]
+            #[allow(unused_assignments)]
+            unsafe fn as_arrays<T>(a: &[T]) -> ( $( &[T; $pre], )* &[T],  $( &[T; $post], )*) {
+                let min_len = $( $pre + )* $( $post + )* 0;
+                let var_len = a.len() - min_len;
+                assert!(a.len() >= min_len);
+                let mut p = a.as_ptr();
+                ( $( {
+                    let aref = & *(p as *const [T; $pre]);
+                    p = p.offset($pre as isize);
+                    aref
+                } ),* , {
+                    let sl = slice::from_raw_parts(p as *const T, var_len);
+                    p = p.offset(var_len as isize);
+                    sl
+                }, $( {
+                    let aref = & *(p as *const [T; $post]);
+                    p = p.offset($post as isize);
+                    aref
+                } ),*)
+            }
+            let input = $arr;
+            #[allow(unused_unsafe)]
+            unsafe {
+                as_arrays(input)
+            }
+        }
+    }};
     ( $arr:expr, $( $len:expr ),* ) => {{
         {
             #[inline]
@@ -115,6 +147,7 @@ macro_rules! array_refs {
                 } ),* )
             }
             let input = $arr;
+            #[allow(unused_unsafe)]
             unsafe {
                 as_arrays(input)
             }
@@ -165,6 +198,37 @@ macro_rules! array_refs {
 /// ```
 #[macro_export]
 macro_rules! mut_array_refs {
+    ( $arr:expr, $( $pre:expr ),* ; .. ;  $( $post:expr ),* ) => {{
+        {
+            use std::slice;
+            #[inline]
+            #[allow(unused_assignments)]
+            unsafe fn as_arrays<T>(a: &mut [T]) -> ( $( &mut [T; $pre], )* &mut [T],  $( &mut [T; $post], )*) {
+                let min_len = $( $pre + )* $( $post + )* 0;
+                let var_len = a.len() - min_len;
+                assert!(a.len() >= min_len);
+                let mut p = a.as_mut_ptr();
+                ( $( {
+                    let aref = &mut *(p as *mut [T; $pre]);
+                    p = p.offset($pre as isize);
+                    aref
+                } ),* , {
+                    let sl = slice::from_raw_parts_mut(p as *mut T, var_len);
+                    p = p.offset(var_len as isize);
+                    sl
+                }, $( {
+                    let aref = &mut *(p as *mut [T; $post]);
+                    p = p.offset($post as isize);
+                    aref
+                } ),*)
+            }
+            let input = $arr;
+            #[allow(unused_unsafe)]
+            unsafe {
+                as_arrays(input)
+            }
+        }
+    }};
     ( $arr:expr, $( $len:expr ),* ) => {{
         {
             #[inline]
@@ -178,11 +242,12 @@ macro_rules! mut_array_refs {
                 } ),* )
             }
             let input = $arr;
+            #[allow(unused_unsafe)]
             unsafe {
                 as_arrays(input)
             }
         }
-    }}
+    }};
 }
 
 /// You can use `array_mut_ref` to generate a mutable array reference
@@ -219,6 +284,7 @@ macro_rules! array_mut_ref {
             }
             let offset = $offset;
             let slice = &mut $arr[offset..offset + $len];
+            #[allow(unused_unsafe)]
             unsafe {
                 as_array(slice)
             }
@@ -338,6 +404,25 @@ fn test_5_array_refs() {
     assert_eq!(e, array_ref![data, 118, 10]);
 }
 
+#[test]
+fn test_5_array_refs_dotdot() {
+    let mut data: [usize; 128] = [0; 128];
+    for i in 0..128 {
+        data[i] = i;
+    }
+    let data = data;
+    let (a,b,c,d,e) = array_refs!(&data, 1, 14, 3; ..; 10);
+    assert_eq!(a.len(), 1 as usize);
+    assert_eq!(b.len(), 14 as usize);
+    assert_eq!(c.len(), 3 as usize);
+    assert_eq!(d.len(), 100 as usize);
+    assert_eq!(e.len(), 10 as usize);
+    assert_eq!(a, array_ref![data, 0, 1]);
+    assert_eq!(b, array_ref![data, 1, 14]);
+    assert_eq!(c, array_ref![data, 15, 3]);
+    assert_eq!(e, array_ref![data, 118, 10]);
+}
+
 
 #[test]
 fn test_5_mut_xarray_refs() {
@@ -354,6 +439,28 @@ fn test_5_mut_xarray_refs() {
         *b = [14; 14];
         *c = [3; 3];
         *d = [100; 100];
+        *e = [10; 10];
+    }
+    assert_eq!(&[1;1], array_ref![data, 0, 1]);
+    assert_eq!(&[14;14], array_ref![data, 1, 14]);
+    assert_eq!(&[3;3], array_ref![data, 15, 3]);
+    assert_eq!(&[10;10], array_ref![data, 118, 10]);
+}
+
+#[test]
+fn test_5_mut_xarray_refs_with_dotdot() {
+    let mut data: [usize; 128] = [0; 128];
+    {
+        // temporarily borrow the data to modify it.
+        let (a,b,c,d,e) = mut_array_refs!(&mut data, 1, 14, 3; ..; 10);
+        assert_eq!(a.len(), 1 as usize);
+        assert_eq!(b.len(), 14 as usize);
+        assert_eq!(c.len(), 3 as usize);
+        assert_eq!(d.len(), 100 as usize);
+        assert_eq!(e.len(), 10 as usize);
+        *a = [1; 1];
+        *b = [14; 14];
+        *c = [3; 3];
         *e = [10; 10];
     }
     assert_eq!(&[1;1], array_ref![data, 0, 1]);
