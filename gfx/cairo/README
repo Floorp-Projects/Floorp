@@ -248,6 +248,8 @@ win32-avoid-extend-pad-fallback: Avoid falling back to pixman when using EXTEND_
 
 support-new-style-atomic-primitives.patch: Support the __atomic_* primitives for atomic operations
 
+clang-cl-popcount.patch: Use __builtin_popcount for Clang (including clang-cl)
+
 ==== disable printing patch ====
 
 disable-printing.patch:  allows us to use NS_PRINTING to disable printing.
