@@ -829,7 +829,7 @@ pub fn project_rect<F, T>(
         let mut clipper = Clipper::new();
         let polygon = Polygon::from_rect(*rect, 1);
 
-        let planes = match Clipper::frustum_planes(
+        let planes = match Clipper::<_, _, usize>::frustum_planes(
             transform,
             Some(*bounds),
         ) {

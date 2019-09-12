@@ -14,7 +14,7 @@ fn line_proj_bounds() {
 
 #[test]
 fn valid() {
-    let poly_a: Polygon<f32, ()> = Polygon {
+    let poly_a: Polygon<f32, (), usize> = Polygon {
         points: [
             point3(0.0, 0.0, 0.0),
             point3(1.0, 1.0, 1.0),
@@ -28,7 +28,7 @@ fn valid() {
         anchor: 0,
     };
     assert!(!poly_a.is_valid()); // points[0] is outside
-    let poly_b: Polygon<f32, ()> = Polygon {
+    let poly_b: Polygon<f32, (), usize> = Polygon {
         points: [
             point3(0.0, 1.0, 0.0),
             point3(1.0, 1.0, 1.0),
@@ -42,7 +42,7 @@ fn valid() {
         anchor: 0,
     };
     assert!(!poly_b.is_valid()); // winding is incorrect
-    let poly_c: Polygon<f32, ()> = Polygon {
+    let poly_c: Polygon<f32, (), usize> = Polygon {
         points: [
             point3(0.0, 0.0, 1.0),
             point3(1.0, 0.0, 1.0),
@@ -60,7 +60,7 @@ fn valid() {
 
 #[test]
 fn empty() {
-    let poly = Polygon::<f32, ()>::from_points(
+    let poly = Polygon::<f32, (), usize>::from_points(
         [
             point3(0.0, 0.0, 1.0),
             point3(0.0, 0.0, 1.0),
@@ -104,7 +104,7 @@ fn from_transformed_rect_perspective() {
 
 #[test]
 fn untransform_point() {
-    let poly: Polygon<f32, ()> = Polygon {
+    let poly: Polygon<f32, (), usize> = Polygon {
         points: [
             point3(0.0, 0.0, 0.0),
             point3(0.5, 1.0, 0.0),
@@ -144,7 +144,7 @@ fn are_outside() {
 
 #[test]
 fn intersect() {
-    let poly_a: Polygon<f32, ()> = Polygon {
+    let poly_a: Polygon<f32, (), usize> = Polygon {
         points: [
             point3(0.0, 0.0, 1.0),
             point3(1.0, 0.0, 1.0),
@@ -158,7 +158,7 @@ fn intersect() {
         anchor: 0,
     };
     assert!(poly_a.is_valid());
-    let poly_b: Polygon<f32, ()> = Polygon {
+    let poly_b: Polygon<f32, (), usize> = Polygon {
         points: [
             point3(0.5, 0.0, 2.0),
             point3(0.5, 1.0, 2.0),
@@ -185,7 +185,7 @@ fn intersect() {
     assert!(poly_a.plane.normal.dot(intersection.dir).approx_eq(&0.0));
     assert!(poly_b.plane.normal.dot(intersection.dir).approx_eq(&0.0));
 
-    let poly_c: Polygon<f32, ()> = Polygon {
+    let poly_c: Polygon<f32, (), usize> = Polygon {
         points: [
             point3(0.0, -1.0, 2.0),
             point3(0.0, -1.0, 0.0),
@@ -199,7 +199,7 @@ fn intersect() {
         anchor: 0,
     };
     assert!(poly_c.is_valid());
-    let poly_d: Polygon<f32, ()> = Polygon {
+    let poly_d: Polygon<f32, (), usize> = Polygon {
         points: [
             point3(0.0, 0.0, 0.5),
             point3(1.0, 0.0, 0.5),
@@ -219,7 +219,7 @@ fn intersect() {
 }
 
 fn test_cut(
-    poly_base: &Polygon<f32, ()>,
+    poly_base: &Polygon<f32, (), usize>,
     extra_count: u8,
     line: Line<f32, ()>,
 ) {
@@ -241,7 +241,7 @@ fn test_cut(
 
 #[test]
 fn split() {
-    let poly: Polygon<f32, ()> = Polygon {
+    let poly: Polygon<f32, (), usize> = Polygon {
         points: [
             point3(0.0, 1.0, 0.0),
             point3(1.0, 1.0, 0.0),

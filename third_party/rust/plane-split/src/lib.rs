@@ -170,7 +170,7 @@ impl<
     /// Compute the sum of signed distances to each of the points
     /// of another plane. Useful to know the relation of a plane that
     /// is a product of a split, and we know it doesn't intersect `self`.
-    pub fn signed_distance_sum_to(&self, poly: &Polygon<T, U>) -> T {
+    pub fn signed_distance_sum_to<A>(&self, poly: &Polygon<T, U, A>) -> T {
         poly.points
             .iter()
             .fold(T::zero(), |u, p| u + self.signed_distance_to(p))
@@ -217,27 +217,28 @@ impl<
 
 
 /// Generic plane splitter interface
-pub trait Splitter<T, U> {
+pub trait Splitter<T, U, A> {
     /// Reset the splitter results.
     fn reset(&mut self);
 
     /// Add a new polygon and return a slice of the subdivisions
     /// that avoid collision with any of the previously added polygons.
-    fn add(&mut self, polygon: Polygon<T, U>);
+    fn add(&mut self, polygon: Polygon<T, U, A>);
 
     /// Sort the produced polygon set by the ascending distance across
     /// the specified view vector. Return the sorted slice.
-    fn sort(&mut self, view: Vector3D<T, U>) -> &[Polygon<T, U>];
+    fn sort(&mut self, view: Vector3D<T, U>) -> &[Polygon<T, U, A>];
 
     /// Process a set of polygons at once.
     fn solve(
         &mut self,
-        input: &[Polygon<T, U>],
+        input: &[Polygon<T, U, A>],
         view: Vector3D<T, U>,
-    ) -> &[Polygon<T, U>]
+    ) -> &[Polygon<T, U, A>]
     where
         T: Clone,
         U: Clone,
+        A: Copy,
     {
         self.reset();
         for p in input {
@@ -251,8 +252,8 @@ pub trait Splitter<T, U> {
 /// Helper method used for benchmarks and tests.
 /// Constructs a 3D grid of polygons.
 #[doc(hidden)]
-pub fn make_grid(count: usize) -> Vec<Polygon<f32, ()>> {
-    let mut polys: Vec<Polygon<f32, ()>> = Vec::with_capacity(count*3);
+pub fn make_grid(count: usize) -> Vec<Polygon<f32, (), usize>> {
+    let mut polys: Vec<Polygon<f32, (), usize>> = Vec::with_capacity(count*3);
     let len = count as f32;
     polys.extend((0 .. count).map(|i| Polygon {
         points: [

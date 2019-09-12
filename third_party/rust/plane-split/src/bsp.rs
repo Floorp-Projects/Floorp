@@ -9,15 +9,16 @@ use num_traits::{Float, One, Zero};
 use std::{fmt, iter, ops};
 
 
-impl<T, U> BspPlane for Polygon<T, U> where
+impl<T, U, A> BspPlane for Polygon<T, U, A> where
     T: Copy + fmt::Debug + ApproxEq<T> +
         ops::Sub<T, Output=T> + ops::Add<T, Output=T> +
         ops::Mul<T, Output=T> + ops::Div<T, Output=T> +
         Zero + Float,
     U: fmt::Debug,
+    A: Copy + fmt::Debug,
 {
     fn cut(&self, mut poly: Self) -> PlaneCut<Self> {
-        debug!("\tCutting anchor {} by {}", poly.anchor, self.anchor);
+        debug!("\tCutting anchor {:?} by {:?}", poly.anchor, self.anchor);
         trace!("\t\tbase {:?}", self.plane);
 
         //Note: we treat `self` as a plane, and `poly` as a concrete polygon here
@@ -97,12 +98,12 @@ impl<T, U> BspPlane for Polygon<T, U> where
 
 
 /// Binary Space Partitioning splitter, uses a BSP tree.
-pub struct BspSplitter<T, U> {
-    tree: BspNode<Polygon<T, U>>,
-    result: Vec<Polygon<T, U>>,
+pub struct BspSplitter<T, U, A> {
+    tree: BspNode<Polygon<T, U, A>>,
+    result: Vec<Polygon<T, U, A>>,
 }
 
-impl<T, U> BspSplitter<T, U> {
+impl<T, U, A> BspSplitter<T, U, A> {
     /// Create a new BSP splitter.
     pub fn new() -> Self {
         BspSplitter {
@@ -112,22 +113,23 @@ impl<T, U> BspSplitter<T, U> {
     }
 }
 
-impl<T, U> Splitter<T, U> for BspSplitter<T, U> where
+impl<T, U, A> Splitter<T, U, A> for BspSplitter<T, U, A> where
     T: Copy + fmt::Debug + ApproxEq<T> +
         ops::Sub<T, Output=T> + ops::Add<T, Output=T> +
         ops::Mul<T, Output=T> + ops::Div<T, Output=T> +
         Zero + One + Float,
     U: fmt::Debug,
+    A: Copy + fmt::Debug + Default,
 {
     fn reset(&mut self) {
         self.tree = BspNode::new();
     }
 
-    fn add(&mut self, poly: Polygon<T, U>) {
+    fn add(&mut self, poly: Polygon<T, U, A>) {
         self.tree.insert(poly);
     }
 
-    fn sort(&mut self, view: Vector3D<T, U>) -> &[Polygon<T, U>] {
+    fn sort(&mut self, view: Vector3D<T, U>) -> &[Polygon<T, U, A>] {
         //debug!("\t\ttree before sorting {:?}", self.tree);
         let poly = Polygon {
             points: [Point3D::origin(); 4],
@@ -135,7 +137,7 @@ impl<T, U> Splitter<T, U> for BspSplitter<T, U> where
                 normal: -view, //Note: BSP `order()` is back to front
                 offset: T::zero(),
             },
-            anchor: 0,
+            anchor: A::default(),
         };
         self.result.clear();
         self.tree.order(&poly, &mut self.result);

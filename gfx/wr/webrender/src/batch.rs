@@ -1088,7 +1088,7 @@ impl BatchBuilder {
                     // Convert all children of the 3D hierarchy root into batches.
                     Picture3DContext::In { root_data: Some(ref list), .. } => {
                         for child in list {
-                            let child_prim_instance = &picture.prim_list.prim_instances[child.anchor];
+                            let child_prim_instance = &picture.prim_list.prim_instances[child.anchor.prim_instance_index];
                             let child_prim_info = &ctx.scratch.prim_info[child_prim_instance.visibility_info.0 as usize];
 
                             let child_pic_index = match child_prim_instance.kind {
