@@ -1607,7 +1607,7 @@ fuzzy-if(Android,0-8,0-20) == 602200-3.html 602200-3-ref.html
 == 602200-4.html 602200-4-ref.html
 == 603423-1.html 603423-1-ref.html
 == 604737.html 604737-ref.html
-fuzzy-if(geckoview&&webrender,11-11,637-637) == 605138-1.html 605138-1-ref.html
+fuzzy-if(geckoview&&webrender,11-11,630-637) == 605138-1.html 605138-1-ref.html
 == 605157-1.xhtml 605157-1-ref.xhtml
 == 607267-1.html 607267-1-ref.html
 == 608636-1.html 608636-1-ref.html
