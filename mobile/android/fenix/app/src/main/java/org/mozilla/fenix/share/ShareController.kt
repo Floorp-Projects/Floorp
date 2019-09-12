@@ -13,11 +13,14 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
+import com.google.android.material.snackbar.Snackbar
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.TabData
 import mozilla.components.feature.sendtab.SendTabUseCases
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.share.listadapters.AppShareOption
@@ -71,7 +74,16 @@ class DefaultShareController(
             flags = FLAG_ACTIVITY_NEW_TASK
             setClassName(app.packageName, app.activityName)
         }
-        fragment.startActivity(intent)
+
+        try {
+            fragment.startActivity(intent)
+        } catch (e: SecurityException) {
+            context.getRootView()?.let {
+                FenixSnackbar.make(it, Snackbar.LENGTH_LONG)
+                    .setText(context.getString(R.string.share_error_snackbar))
+                    .show()
+            }
+        }
         dismiss()
     }
 

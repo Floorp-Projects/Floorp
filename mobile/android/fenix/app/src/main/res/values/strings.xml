@@ -593,6 +593,8 @@
     <string name="sync_connect_device_dialog">To send a tab, sign in to Firefox on at least one other device.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Got it</string>
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Cannot share to this app</string>
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
