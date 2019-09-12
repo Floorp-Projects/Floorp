@@ -9,6 +9,7 @@
 
 #include <utility>
 #include "mozilla/Mutex.h"
+#include "mozilla/StaticMutex.h"
 
 namespace mozilla {
 
@@ -34,8 +35,8 @@ namespace mozilla {
 //    x.AppendElement(1u);
 //    assert(x[0], 1u);
 //
-template <typename T>
-class DataMutex {
+template <typename T, typename MutexType>
+class DataMutexBase {
  private:
   class MOZ_STACK_CLASS AutoLock {
    public:
@@ -70,30 +71,52 @@ class DataMutex {
     }
 
    private:
-    friend class DataMutex;
+    friend class DataMutexBase;
 
     AutoLock(const AutoLock& aOther) = delete;
 
-    explicit AutoLock(DataMutex<T>* aDataMutex) : mOwner(aDataMutex) {
+    explicit AutoLock(DataMutexBase<T, MutexType>* aDataMutex)
+        : mOwner(aDataMutex) {
       MOZ_ASSERT(!!mOwner);
       mOwner->mMutex.Lock();
     }
 
-    DataMutex<T>* mOwner;
+    DataMutexBase<T, MutexType>* mOwner;
   };
 
  public:
-  explicit DataMutex(const char* aName) : mMutex(aName) {}
+  explicit DataMutexBase(const char* aName) : mMutex(aName) {}
 
-  DataMutex(T&& aValue, const char* aName)
+  DataMutexBase(T&& aValue, const char* aName)
       : mMutex(aName), mValue(std::move(aValue)) {}
 
   AutoLock Lock() { return AutoLock(this); }
 
  private:
-  Mutex mMutex;
+  MutexType mMutex;
   T mValue;
 };
+
+// Craft a version of StaticMutex that takes a const char* in its ctor.
+// We need this so it works interchangeably with Mutex which requires a const
+// char* aName in its ctor.
+class StaticMutexNameless : public StaticMutexNotRecorded {
+ public:
+  explicit StaticMutexNameless(const char* aName) : StaticMutexNotRecorded() {}
+ private:
+  // Disallow copy construction, `=`, `new`, and `delete` like BaseStaticMutex.
+#ifdef DEBUG
+  StaticMutexNameless(StaticMutexNameless& aOther);
+#endif  // DEBUG
+  StaticMutexNameless& operator=(StaticMutexNameless* aRhs);
+  static void* operator new(size_t) noexcept(true);
+  static void operator delete(void*);
+};
+
+template <typename T>
+using DataMutex = DataMutexBase<T, Mutex>;
+template <typename T>
+using StaticDataMutex = DataMutexBase<T, StaticMutexNameless>;
 
 }  // namespace mozilla
 
