@@ -54,6 +54,7 @@ class Core(private val context: Context) {
             historyTrackingDelegate = HistoryDelegate(historyStorage),
             preferredColorScheme = getPreferredColorScheme(),
             automaticFontSizeAdjustment = context.settings.shouldUseAutoSize,
+            fontInflationEnabled = context.settings.shouldUseAutoSize,
             suspendMediaWhenInactive = !FeatureFlags.mediaIntegration
         )
 
