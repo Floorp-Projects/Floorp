@@ -951,7 +951,9 @@ add_task(async function() {
   ]);
   checkErrors([]);
 
+  ExtensionTestUtils.failOnSchemaWarnings(false);
   root.testing.errors({ default: "0123", ignore: "0123", warn: "x123" });
+  ExtensionTestUtils.failOnSchemaWarnings(true);
   verify("call", "testing", "errors", [
     { default: "0123", ignore: "0123", warn: null },
   ]);
@@ -1252,6 +1254,9 @@ let deprecatedJson = [
 ];
 
 add_task(async function testDeprecation() {
+  // This whole test expects deprecation warnings.
+  ExtensionTestUtils.failOnSchemaWarnings(false);
+
   let url = "data:," + JSON.stringify(deprecatedJson);
   Schemas._rootSchema = null;
   await Schemas.load(url);
@@ -1306,6 +1311,14 @@ add_task(async function testDeprecation() {
 
   root.deprecated.onDeprecated.hasListener(() => {});
   checkErrors(["This event does not work"]);
+
+  ExtensionTestUtils.failOnSchemaWarnings(true);
+
+  Assert.throws(
+    () => root.deprecated.onDeprecated.hasListener(() => {}),
+    /This event does not work/,
+    "Deprecation warning with extensions.webextensions.warnings-as-errors=true"
+  );
 });
 
 let choicesJson = [

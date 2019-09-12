@@ -4,6 +4,9 @@ const DEFAULT_THEME_BG_COLOR = "rgb(255, 255, 255)";
 const DEFAULT_THEME_TEXT_COLOR = "rgb(0, 0, 0)";
 
 add_task(async function test_deprecated_LWT_properties_ignored() {
+  // This test uses deprecated theme properties, so warnings are expected.
+  ExtensionTestUtils.failOnSchemaWarnings(false);
+
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       theme: {

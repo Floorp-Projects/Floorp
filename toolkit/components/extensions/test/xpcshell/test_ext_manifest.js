@@ -75,7 +75,9 @@ add_task(async function test_manifest_warnings_on_unexpected_props() {
     },
   });
 
+  ExtensionTestUtils.failOnSchemaWarnings(false);
   await extension.startup();
+  ExtensionTestUtils.failOnSchemaWarnings(true);
 
   // Retrieve the warning message collected by the Extension class
   // packagingWarning method.

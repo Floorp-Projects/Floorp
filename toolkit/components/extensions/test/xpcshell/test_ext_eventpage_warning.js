@@ -1,6 +1,8 @@
 "use strict";
 
 AddonTestUtils.init(this);
+// This test expects and checks deprecation warnings.
+ExtensionTestUtils.failOnSchemaWarnings(false);
 
 function createEventPageExtension(eventPage) {
   return ExtensionTestUtils.loadExtension({
