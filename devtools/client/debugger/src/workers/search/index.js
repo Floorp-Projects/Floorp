@@ -7,9 +7,34 @@
 import { workerUtils } from "devtools-utils";
 const { WorkerDispatcher } = workerUtils;
 
-const dispatcher = new WorkerDispatcher();
-export const start = dispatcher.start.bind(dispatcher);
-export const stop = dispatcher.stop.bind(dispatcher);
+let startArgs;
+let dispatcher;
 
-export const getMatches = dispatcher.task("getMatches");
-export const findSourceMatches = dispatcher.task("findSourceMatches");
+function getDispatcher() {
+  if (!dispatcher) {
+    dispatcher = new WorkerDispatcher();
+    dispatcher.start(...startArgs);
+  }
+
+  return dispatcher;
+}
+
+export const start = (...args: any[]) => {
+  startArgs = args;
+};
+
+export const stop = () => {
+  if (dispatcher) {
+    dispatcher.stop();
+    dispatcher = null;
+    startArgs = null;
+  }
+};
+
+export const getMatches = (...args: any[]) => {
+  return getDispatcher().invoke("getMatches", ...args);
+};
+
+export const findSourceMatches = (...args: any[]) => {
+  return getDispatcher().invoke("findSourceMatches", ...args);
+};
