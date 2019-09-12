@@ -445,19 +445,7 @@ var gMenuBuilder = {
         }
 
         let info = item.getClickInfo(contextData, wasChecked);
-
-        const map = {
-          shiftKey: "Shift",
-          altKey: "Alt",
-          metaKey: "Command",
-          ctrlKey: "Ctrl",
-        };
-        info.modifiers = Object.keys(map)
-          .filter(key => event[key])
-          .map(key => map[key]);
-        if (event.ctrlKey && AppConstants.platform === "macosx") {
-          info.modifiers.push("MacCtrl");
-        }
+        info.modifiers = clickModifiersFromEvent(event);
 
         info.button = button;
 
