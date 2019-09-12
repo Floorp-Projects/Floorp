@@ -20,6 +20,22 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 var PushServiceWebSocket, PushServiceHttp2;
 
+const CONNECTION_PROTOCOLS = (function() {
+  if ("android" != AppConstants.MOZ_WIDGET_TOOLKIT) {
+    ({ PushServiceWebSocket } = ChromeUtils.import(
+      "resource://gre/modules/PushServiceWebSocket.jsm"
+    ));
+    ({ PushServiceHttp2 } = ChromeUtils.import(
+      "resource://gre/modules/PushServiceHttp2.jsm"
+    ));
+    return [PushServiceWebSocket, PushServiceHttp2];
+  }
+  const { PushServiceAndroidGCM } = ChromeUtils.import(
+    "resource://gre/modules/PushServiceAndroidGCM.jsm"
+  );
+  return [PushServiceAndroidGCM];
+})();
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "gPushNotifier",
@@ -42,24 +58,6 @@ ChromeUtils.defineModuleGetter(
   "PushCrypto",
   "resource://gre/modules/PushCrypto.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "PushServiceAndroidGCM",
-  "resource://gre/modules/PushServiceAndroidGCM.jsm"
-);
-
-const CONNECTION_PROTOCOLS = (function() {
-  if ("android" != AppConstants.MOZ_WIDGET_TOOLKIT) {
-    ({ PushServiceWebSocket } = ChromeUtils.import(
-      "resource://gre/modules/PushServiceWebSocket.jsm"
-    ));
-    ({ PushServiceHttp2 } = ChromeUtils.import(
-      "resource://gre/modules/PushServiceHttp2.jsm"
-    ));
-    return [PushServiceWebSocket, PushServiceHttp2];
-  }
-  return [PushServiceAndroidGCM];
-})();
 
 const EXPORTED_SYMBOLS = ["PushService"];
 
@@ -101,25 +99,6 @@ const STARTING_SERVICE_EVENT = 0;
 const CHANGING_SERVICE_EVENT = 1;
 const STOPPING_SERVICE_EVENT = 2;
 const UNINIT_EVENT = 3;
-
-// Returns the backend for the given server URI.
-function getServiceForServerURI(uri) {
-  // Insecure server URLs are allowed for development and testing.
-  let allowInsecure = prefs.get("testing.allowInsecureServerURL");
-  if (AppConstants.MOZ_WIDGET_TOOLKIT == "android") {
-    if (uri.scheme == "https" || (allowInsecure && uri.scheme == "http")) {
-      return CONNECTION_PROTOCOLS;
-    }
-    return null;
-  }
-  if (uri.scheme == "wss" || (allowInsecure && uri.scheme == "ws")) {
-    return PushServiceWebSocket;
-  }
-  if (uri.scheme == "https" || (allowInsecure && uri.scheme == "http")) {
-    return PushServiceHttp2;
-  }
-  return null;
-}
 
 /**
  * Annotates an error with an XPCOM result code. We use this helper
@@ -429,12 +408,14 @@ var PushService = {
   _findService(serverURL) {
     console.debug("findService()");
 
+    let uri;
+    let service;
+
     if (!serverURL) {
       console.warn("findService: No dom.push.serverURL found");
       return [];
     }
 
-    let uri;
     try {
       uri = Services.io.newURI(serverURL);
     } catch (e) {
@@ -446,7 +427,12 @@ var PushService = {
       return [];
     }
 
-    let service = getServiceForServerURI(uri);
+    for (let connProtocol of CONNECTION_PROTOCOLS) {
+      if (connProtocol.validServerURI(uri)) {
+        service = connProtocol;
+        break;
+      }
+    }
     return [service, uri];
   },
 
