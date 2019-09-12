@@ -372,7 +372,7 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
             env = self.query_env(self.config['partial_env'])
         kwargs = dict(cwd=repo_dir, env=env)
         dump_syms = os.path.join(dirs['abs_work_dir'], 'src', c['dump_syms_binary'])
-        self.chmod(dump_syms, 0755)
+        self.chmod(dump_syms, 0o755)
         python = self.query_exe('python2.7')
         cmd = [python, os.path.join(external_tools_path, 'packagesymbols.py'),
                '--symbol-zip', symbol_zip_path,

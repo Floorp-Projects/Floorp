@@ -339,7 +339,7 @@ class AndroidMixin(object):
         import mozdevice
         try:
             self.device.install_app(apk, replace=replace)
-        except (mozdevice.ADBError, mozdevice.ADBTimeoutError), e:
+        except (mozdevice.ADBError, mozdevice.ADBTimeoutError) as e:
             self.info('Failed to install %s on %s: %s %s' %
                       (apk, self.device_name,
                        type(e).__name__, e))

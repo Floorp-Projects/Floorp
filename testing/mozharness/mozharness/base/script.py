@@ -9,6 +9,8 @@ script.py, along with config.py and log.py, represents the core of
 mozharness.
 """
 
+from __future__ import print_function
+
 import codecs
 from contextlib import contextmanager
 import datetime
@@ -521,10 +523,10 @@ class ScriptMixin(PlatformMixin):
                         f_in.close()
                 os.remove(file_name + '.gz')
             return file_name
-        except urllib2.HTTPError, e:
+        except urllib2.HTTPError as e:
             self.warning("Server returned status %s %s for %s" % (str(e.code), str(e), url))
             raise
-        except urllib2.URLError, e:
+        except urllib2.URLError as e:
             self.warning("URL Error: %s" % url)
 
             # Failures due to missing local files won't benefit from retry.
@@ -533,10 +535,10 @@ class ScriptMixin(PlatformMixin):
                 raise e.args[0]
 
             raise
-        except socket.timeout, e:
+        except socket.timeout as e:
             self.warning("Timed out accessing %s: %s" % (url, str(e)))
             raise
-        except socket.error, e:
+        except socket.error as e:
             self.warning("Socket error when accessing %s: %s" % (url, str(e)))
             raise
 
@@ -815,11 +817,11 @@ class ScriptMixin(PlatformMixin):
         try:
             shutil.move(src, dest)
         # http://docs.python.org/tutorial/errors.html
-        except IOError, e:
+        except IOError as e:
             self.log("IO error: %s" % str(e),
                      level=error_level, exit_code=exit_code)
             return -1
-        except shutil.Error, e:
+        except shutil.Error as e:
             # ERROR level ends up reporting the failure to treeherder &
             # pollutes the failure summary list.
             self.log("shutil error: %s" % str(e),
@@ -870,7 +872,7 @@ class ScriptMixin(PlatformMixin):
                 outfile.writelines(infile)
                 outfile.close()
                 infile.close()
-            except IOError, e:
+            except IOError as e:
                 self.log("Can't compress %s to %s: %s!" % (src, dest, str(e)),
                          level=error_level)
                 return -1
@@ -878,7 +880,7 @@ class ScriptMixin(PlatformMixin):
             self.log("Copying %s to %s" % (src, dest), level=log_level)
             try:
                 shutil.copyfile(src, dest)
-            except (IOError, shutil.Error), e:
+            except (IOError, shutil.Error) as e:
                 self.log("Can't copy %s to %s: %s!" % (src, dest, str(e)),
                          level=error_level)
                 return -1
@@ -886,7 +888,7 @@ class ScriptMixin(PlatformMixin):
         if copystat:
             try:
                 shutil.copystat(src, dest)
-            except (IOError, shutil.Error), e:
+            except (IOError, shutil.Error) as e:
                 self.log("Can't copy attributes of %s to %s: %s!" % (src, dest, str(e)),
                          level=error_level)
                 return -1
@@ -1019,7 +1021,7 @@ class ScriptMixin(PlatformMixin):
         self.info("Reading from file %s" % file_path)
         try:
             fh = open(file_path, open_mode)
-        except IOError, err:
+        except IOError as err:
             self.log("unable to open %s: %s" % (file_path, err.strerror),
                      level=error_level)
             yield None, err
@@ -1162,7 +1164,7 @@ class ScriptMixin(PlatformMixin):
                 status = action(*args, **kwargs)
                 if good_statuses and status not in good_statuses:
                     retry = True
-            except retry_exceptions, e:
+            except retry_exceptions as e:
                 retry = True
                 error_message = "%s\nCaught exception: %s" % (error_message, str(e))
                 self.log('retry: attempt #%d caught %s exception: %s' %
@@ -1466,7 +1468,7 @@ class ScriptMixin(PlatformMixin):
                      level=level)
             p.kill()
             return -1
-        except OSError, e:
+        except OSError as e:
             level = error_level
             if halt_on_failure:
                 level = FATAL
@@ -2213,7 +2215,7 @@ class BaseScript(ScriptMixin, LogMixin, object):
                 except ValueError:
                     """log is closed; print as a default. Ran into this
                     when calling from __del__()"""
-                    print "### Log is closed! (%s)" % item['message']
+                    print("### Log is closed! (%s)" % item['message'])
 
     def add_summary(self, message, level=INFO):
         self.summary_list.append({'message': message, 'level': level})

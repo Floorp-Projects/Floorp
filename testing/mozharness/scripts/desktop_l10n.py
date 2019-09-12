@@ -321,7 +321,7 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
                             "checksums", "zip",
                             "installer.exe", "installer-stub.exe"]
             targets = [(".%s" % (ext,), "target.%s" % (ext,)) for ext in targets_exts]
-            targets.extend([(f, f) for f in 'setup.exe', 'setup-stub.exe'])
+            targets.extend([(f, f) for f in ('setup.exe', 'setup-stub.exe')])
             for f in matches:
                 possible_targets = [
                     (tail, target_file)
