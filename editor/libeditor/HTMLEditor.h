@@ -426,8 +426,8 @@ class HTMLEditor final : public TextEditor,
    *                            JS.  If set to nullptr, will be treated as
    *                            called by system.
    */
-  nsresult AddZIndexAsAction(int32_t aChange,
-                             nsIPrincipal* aPrincipal = nullptr);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  AddZIndexAsAction(int32_t aChange, nsIPrincipal* aPrincipal = nullptr);
 
   MOZ_CAN_RUN_SCRIPT nsresult SetBackgroundColorAsAction(
       const nsAString& aColor, nsIPrincipal* aPrincipal = nullptr);
@@ -2686,6 +2686,15 @@ class HTMLEditor final : public TextEditor,
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
   SetSelectionToStaticAsSubAction();
+
+  /**
+   * AddZIndexAsSubAction() adds aChange to `z-index` of nearest parent
+   * absolute-positioned element from current selection.
+   *
+   * @param aChange     Amount to change `z-index`.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  AddZIndexAsSubAction(int32_t aChange);
 
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(

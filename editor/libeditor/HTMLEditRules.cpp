@@ -798,13 +798,11 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
       return NS_OK;
     }
-    case EditSubAction::eDecreaseZIndex:
-      return WillRelativeChangeZIndex(-1, aCancel, aHandled);
-    case EditSubAction::eIncreaseZIndex:
-      return WillRelativeChangeZIndex(1, aCancel, aHandled);
     case EditSubAction::eCreateOrChangeDefinitionListItem:
     case EditSubAction::eCreateOrChangeList:
     case EditSubAction::eCreateOrRemoveBlock:
+    case EditSubAction::eDecreaseZIndex:
+    case EditSubAction::eIncreaseZIndex:
     case EditSubAction::eIndent:
     case EditSubAction::eInsertHTMLSource:
     case EditSubAction::eInsertParagraphSeparator:
@@ -843,6 +841,8 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
     case EditSubAction::eCreateOrChangeDefinitionListItem:
     case EditSubAction::eCreateOrChangeList:
     case EditSubAction::eCreateOrRemoveBlock:
+    case EditSubAction::eDecreaseZIndex:
+    case EditSubAction::eIncreaseZIndex:
     case EditSubAction::eIndent:
     case EditSubAction::eInsertHTMLSource:
     case EditSubAction::eInsertParagraphSeparator:
@@ -11242,49 +11242,51 @@ EditActionResult HTMLEditor::SetSelectionToStaticAsSubAction() {
                                  : EditActionHandled(NS_OK);
 }
 
-nsresult HTMLEditRules::WillRelativeChangeZIndex(int32_t aChange, bool* aCancel,
-                                                 bool* aHandled) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+EditActionResult HTMLEditor::AddZIndexAsSubAction(int32_t aChange) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
-    return NS_ERROR_INVALID_ARG;
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  AutoEditSubActionNotifier startToHandleEditSubAction(
+      *this,
+      aChange < 0 ? EditSubAction::eDecreaseZIndex
+                  : EditSubAction::eIncreaseZIndex,
+      nsIEditor::eNext);
+
+  EditActionResult result = CanHandleHTMLEditSubAction();
+  if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
+    return result;
   }
 
   // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert();
+  nsresult rv = WillInsert();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    return NS_ERROR_EDITOR_DESTROYED;
+    return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
   }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed, but ignored");
 
-  *aCancel = false;
-  *aHandled = true;
-
-  RefPtr<Element> element =
-      HTMLEditorRef().GetAbsolutelyPositionedSelectionContainer();
-  if (NS_WARN_IF(!element)) {
-    return NS_ERROR_FAILURE;
+  RefPtr<Element> absolutelyPositionedElement =
+      GetAbsolutelyPositionedSelectionContainer();
+  if (NS_WARN_IF(!absolutelyPositionedElement)) {
+    return EditActionHandled(NS_ERROR_FAILURE);
   }
 
   {
-    AutoSelectionRestorer restoreSelectionLater(HTMLEditorRef());
+    AutoSelectionRestorer restoreSelectionLater(*this);
 
     int32_t zIndex;
-    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .RelativeChangeElementZIndex(*element, aChange, &zIndex);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+    nsresult rv = RelativeChangeElementZIndex(*absolutelyPositionedElement,
+                                              aChange, &zIndex);
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditActionHandled(rv);
     }
   }
 
   // Restoring Selection might cause destroying the HTML editor.
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  return NS_OK;
+  return NS_WARN_IF(Destroyed()) ? EditActionHandled(NS_ERROR_EDITOR_DESTROYED)
+                                 : EditActionHandled(NS_OK);
 }
 
 nsresult HTMLEditRules::DocumentModified() {

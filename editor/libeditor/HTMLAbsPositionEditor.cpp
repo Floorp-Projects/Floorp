@@ -138,30 +138,9 @@ nsresult HTMLEditor::AddZIndexAsAction(int32_t aChange,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
-  AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this,
-      aChange < 0 ? EditSubAction::eDecreaseZIndex
-                  : EditSubAction::eIncreaseZIndex,
-      nsIEditor::eNext);
-
-  // brade: can we get rid of this comment?
-  // Find out if the selection is collapsed:
-  EditSubActionInfo subActionInfo(aChange < 0 ? EditSubAction::eDecreaseZIndex
-                                              : EditSubAction::eIncreaseZIndex);
-  bool cancel, handled;
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
-  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
-  if (cancel || NS_FAILED(rv)) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-
-  rv = rules->DidDoAction(subActionInfo, rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-  return NS_OK;
+  EditActionResult result = AddZIndexAsSubAction(aChange);
+  NS_WARNING_ASSERTION(result.Succeeded(), "AddZIndexAsSubAction() failed");
+  return EditorBase::ToGenericNSResult(result.Rv());
 }
 
 int32_t HTMLEditor::GetZIndex(Element& aElement) {
