@@ -6,6 +6,7 @@
 
 include protocol PFileDescriptorSet;
 include protocol PBrowser;
+include protocol PDocAccessiblePlatformExt;
 
 include "mozilla/GfxMessageUtils.h";
 
@@ -71,8 +72,10 @@ struct RelationTargets
 nested(upto inside_sync) sync protocol PDocAccessible
 {
   manager PBrowser;
+  manages PDocAccessiblePlatformExt;
 
 parent:
+  async PDocAccessiblePlatformExt();
   async Shutdown();
 
   /*
