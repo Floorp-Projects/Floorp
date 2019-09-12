@@ -34,7 +34,7 @@ let tests = [
     page_action: {
       show_matches: ["<all_urls>"],
     },
-    shown: [true, true, false, false],
+    shown: [true, true, false],
   },
   {
     name: "Test hide_matches overrides all_urls.",
@@ -42,25 +42,21 @@ let tests = [
       show_matches: ["<all_urls>"],
       hide_matches: ["*://mochi.test/*"],
     },
-    shown: [true, false, false, false],
+    shown: [true, false, false],
   },
   {
     name: "Test shown only for show_matches.",
     page_action: {
       show_matches: ["*://mochi.test/*"],
     },
-    shown: [false, true, false, false],
+    shown: [false, true, false],
   },
 ];
 
 // For some reason about:rights and about:about used to behave differently (maybe
-// because only the latter is privileged?) so both should be tested.
-let urls = [
-  "http://example.com/",
-  "http://mochi.test:8888/",
-  "about:rights",
-  "about:about",
-];
+// because only the latter is privileged?) so both should be tested.  about:about
+// is used in the test as the base tab.
+let urls = ["http://example.com/", "http://mochi.test:8888/", "about:rights"];
 
 function getId(tab) {
   let {
@@ -103,7 +99,7 @@ add_task(async function test_pageAction_default_show_tabs() {
   );
   let switchTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    "about:blank",
+    "about:about",
     true,
     true
   );
@@ -128,6 +124,7 @@ add_task(async function test_pageAction_default_show_tabs() {
 
       info("Check switched tab.");
       await BrowserTestUtils.switchTab(gBrowser, switchTab);
+      await check(extension, switchTab, false, msg + " (about:about)");
       await BrowserTestUtils.switchTab(gBrowser, tab);
       await check(extension, tab, expected, msg + " (switched)");
 
