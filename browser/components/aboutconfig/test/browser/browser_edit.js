@@ -90,6 +90,49 @@ add_task(async function test_delete_user_pref() {
   }
 });
 
+add_task(async function test_click_type_label_multiple_forms() {
+  // This test displays the row to add a preference while other preferences are
+  // also displayed, and tries to select the type of the new preference by
+  // clicking the label next to the radio button. This should work even if the
+  // user has deleted a different preference, and multiple forms are displayed.
+  const PREF_TO_DELETE = "test.aboutconfig.modify.boolean";
+  const PREF_NEW_WHILE_DELETED = "test.aboutconfig.modify.";
+
+  await AboutConfigTest.withNewTab(async function() {
+    this.search(PREF_NEW_WHILE_DELETED);
+
+    // This preference will remain deleted during the test.
+    let existingRow = this.getRow(PREF_TO_DELETE);
+    existingRow.resetColumnButton.click();
+
+    let newRow = this.getRow(PREF_NEW_WHILE_DELETED);
+
+    for (let [radioIndex, expectedValue] of [[0, true], [1, 0], [2, ""]]) {
+      let radioLabels = newRow.element.querySelectorAll("label > span");
+      await this.document.l10n.translateElements(radioLabels);
+
+      // Even if this is the second form on the page, the click should select
+      // the radio button next to the label, not the one on the first form.
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        radioLabels[radioIndex],
+        {},
+        this.browser
+      );
+
+      // Adding the preference should set the default for the data type.
+      newRow.editColumnButton.click();
+      Assert.ok(Preferences.get(PREF_NEW_WHILE_DELETED) === expectedValue);
+
+      // Reset the preference, then continue by adding a different type.
+      newRow.resetColumnButton.click();
+    }
+
+    // Re-adding the deleted preference should restore the value.
+    existingRow.editColumnButton.click();
+    Assert.ok(Preferences.get(PREF_TO_DELETE) === true);
+  });
+});
+
 add_task(async function test_reset_user_pref() {
   await SpecialPowers.pushPrefEnv({
     set: [
