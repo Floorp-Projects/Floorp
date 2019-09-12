@@ -43,12 +43,12 @@ class BrowserTabParent extends JSWindowActorParent {
         break;
       }
 
-      case "PointerLock:Entered": {
+      case "MozDOMPointerLock:Entered": {
         browser.ownerGlobal.PointerLock.entered(message.data.originNoSuffix);
         break;
       }
 
-      case "PointerLock:Exited":
+      case "MozDOMPointerLock:Exited":
         browser.ownerGlobal.PointerLock.exited();
         break;
     }
