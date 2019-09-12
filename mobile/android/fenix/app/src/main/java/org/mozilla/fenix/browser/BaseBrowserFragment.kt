@@ -150,6 +150,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
     protected open fun initializeUI(view: View): Session? {
         val context = requireContext()
         val sessionManager = context.components.core.sessionManager
+        val store = context.components.core.store
 
         return getSessionById()?.also { session ->
 
@@ -240,9 +241,10 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
             downloadsFeature.set(
                 feature = DownloadsFeature(
                     context.applicationContext,
-                    sessionManager = sessionManager,
+                    store = store,
+                    useCases = context.components.useCases.downloadUseCases,
                     fragmentManager = childFragmentManager,
-                    sessionId = customTabSessionId,
+                    customTabId = customTabSessionId,
                     downloadManager = FetchDownloadManager(
                         context.applicationContext,
                         DownloadService::class

@@ -10,6 +10,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.app.links.AppLinksUseCases
+import mozilla.components.feature.downloads.DownloadsUseCases
 import mozilla.components.feature.pwa.WebAppUseCases
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
@@ -52,4 +53,6 @@ class UseCases(
     val appLinksUseCases by lazy { AppLinksUseCases(context.applicationContext) }
 
     val webAppUseCases by lazy { WebAppUseCases(context, sessionManager, httpClient, supportWebApps = false) }
+
+    val downloadUseCases by lazy { DownloadsUseCases(sessionManager) }
 }
