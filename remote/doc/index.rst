@@ -26,8 +26,8 @@ Users
   Prefs.md
 
 
-Developers
-==========
+Internals
+=========
 
 .. toctree::
   :maxdepth: 1
@@ -39,6 +39,7 @@ Developers
   Prefs.md
   CodeStyle.md
   PuppeteerVendor.md
+  Security.md
 
 
 Bugs
