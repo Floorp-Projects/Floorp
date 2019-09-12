@@ -10,9 +10,11 @@
  * liability, trademark and document use rules apply.
  */
 
-[Pref="dom.webaudio.enabled",
- Constructor(AudioContext context, optional AudioNodeOptions options = {})]
+[Pref="dom.webaudio.enabled"]
 interface MediaStreamAudioDestinationNode : AudioNode {
+    [Throws]
+    constructor(AudioContext context, optional AudioNodeOptions options = {});
+
     [BinaryName="DOMStream"]
     readonly attribute MediaStream stream;
 };

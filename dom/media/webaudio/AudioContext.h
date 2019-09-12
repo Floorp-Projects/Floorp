@@ -231,9 +231,9 @@ class AudioContext final : public DOMEventTargetHelper,
   void SuspendFromChrome();
   void ResumeFromChrome();
 
-  already_AddRefed<AudioBufferSourceNode> CreateBufferSource(ErrorResult& aRv);
+  already_AddRefed<AudioBufferSourceNode> CreateBufferSource();
 
-  already_AddRefed<ConstantSourceNode> CreateConstantSource(ErrorResult& aRv);
+  already_AddRefed<ConstantSourceNode> CreateConstantSource();
 
   already_AddRefed<AudioBuffer> CreateBuffer(uint32_t aNumberOfChannels,
                                              uint32_t aLength,

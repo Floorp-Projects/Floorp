@@ -25,9 +25,10 @@ dictionary TouchInit {
   float force = 0;
 };
 
-[Constructor(TouchInit touchInitDict), 
- Func="mozilla::dom::Touch::PrefEnabled"]
+[Func="mozilla::dom::Touch::PrefEnabled"]
 interface Touch {
+  constructor(TouchInit touchInitDict);
+ 
   readonly    attribute long         identifier;
   readonly    attribute EventTarget? target;
   [NeedsCallerType]

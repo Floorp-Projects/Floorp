@@ -19,8 +19,8 @@ class nsDOMSerializer final : public mozilla::dom::NonRefcountedDOMObject {
   nsDOMSerializer();
 
   // WebIDL API
-  static nsDOMSerializer* Constructor(const mozilla::dom::GlobalObject& aOwner,
-                                      mozilla::ErrorResult& rv) {
+  static nsDOMSerializer* Constructor(
+      const mozilla::dom::GlobalObject& aOwner) {
     return new nsDOMSerializer();
   }
 

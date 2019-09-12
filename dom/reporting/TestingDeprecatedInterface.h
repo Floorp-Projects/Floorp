@@ -22,7 +22,7 @@ class TestingDeprecatedInterface final : public nsISupports,
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TestingDeprecatedInterface)
 
   static already_AddRefed<TestingDeprecatedInterface> Constructor(
-      const GlobalObject& aGlobal, ErrorResult& aRv);
+      const GlobalObject& aGlobal);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;

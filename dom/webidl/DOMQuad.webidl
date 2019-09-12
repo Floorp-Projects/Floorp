@@ -11,12 +11,13 @@
  */
 
 [Pref="layout.css.DOMQuad.enabled",
- Constructor(optional DOMPointInit p1 = {}, optional DOMPointInit p2 = {},
-             optional DOMPointInit p3 = {}, optional DOMPointInit p4 = {}),
- Constructor(DOMRectReadOnly rect),
  Exposed=(Window,Worker),
  Serializable]
 interface DOMQuad {
+    constructor(optional DOMPointInit p1 = {}, optional DOMPointInit p2 = {},
+                optional DOMPointInit p3 = {}, optional DOMPointInit p4 = {});
+    constructor(DOMRectReadOnly rect);
+
     [NewObject] static DOMQuad fromRect(optional DOMRectInit other = {});
     [NewObject] static DOMQuad fromQuad(optional DOMQuadInit other = {});
 

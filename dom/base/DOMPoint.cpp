@@ -25,8 +25,7 @@ already_AddRefed<DOMPointReadOnly> DOMPointReadOnly::FromPoint(
 }
 
 already_AddRefed<DOMPointReadOnly> DOMPointReadOnly::Constructor(
-    const GlobalObject& aGlobal, double aX, double aY, double aZ, double aW,
-    ErrorResult& aRV) {
+    const GlobalObject& aGlobal, double aX, double aY, double aZ, double aW) {
   RefPtr<DOMPointReadOnly> obj =
       new DOMPointReadOnly(aGlobal.GetAsSupports(), aX, aY, aZ, aW);
   return obj.forget();
@@ -106,8 +105,7 @@ already_AddRefed<DOMPoint> DOMPoint::FromPoint(const GlobalObject& aGlobal,
 
 already_AddRefed<DOMPoint> DOMPoint::Constructor(const GlobalObject& aGlobal,
                                                  double aX, double aY,
-                                                 double aZ, double aW,
-                                                 ErrorResult& aRV) {
+                                                 double aZ, double aW) {
   RefPtr<DOMPoint> obj = new DOMPoint(aGlobal.GetAsSupports(), aX, aY, aZ, aW);
   return obj.forget();
 }

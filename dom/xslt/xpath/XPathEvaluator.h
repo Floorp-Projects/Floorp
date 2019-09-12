@@ -41,8 +41,7 @@ class XPathEvaluator final : public NonRefcountedDOMObject {
     nsCOMPtr<Document> doc = do_QueryReferent(mDocument);
     return doc;
   }
-  static XPathEvaluator* Constructor(const GlobalObject& aGlobal,
-                                     ErrorResult& rv);
+  static XPathEvaluator* Constructor(const GlobalObject& aGlobal);
   XPathExpression* CreateExpression(const nsAString& aExpression,
                                     XPathNSResolver* aResolver,
                                     ErrorResult& rv);

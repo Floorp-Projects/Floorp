@@ -23,12 +23,15 @@ dictionary KeyframeEffectOptions : EffectTiming {
 // KeyframeEffect should run in the caller's compartment to do custom
 // processing on the `keyframes` object.
 [Func="Document::IsWebAnimationsEnabled",
- RunConstructorInCallerCompartment,
- Constructor((Element or CSSPseudoElement)? target,
-             object? keyframes,
-             optional (unrestricted double or KeyframeEffectOptions) options = {}),
- Constructor(KeyframeEffect source)]
+ RunConstructorInCallerCompartment]
 interface KeyframeEffect : AnimationEffect {
+  [Throws]
+  constructor((Element or CSSPseudoElement)? target,
+              object? keyframes,
+              optional (unrestricted double or KeyframeEffectOptions) options = {});
+  [Throws]
+  constructor(KeyframeEffect source);
+
   attribute (Element or CSSPseudoElement)?  target;
   [Pref="dom.animations-api.compositing.enabled"]
   attribute IterationCompositeOperation     iterationComposite;

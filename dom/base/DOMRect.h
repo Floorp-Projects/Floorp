@@ -50,7 +50,7 @@ class DOMRectReadOnly : public nsISupports, public nsWrapperCache {
 
   static already_AddRefed<DOMRectReadOnly> Constructor(
       const GlobalObject& aGlobal, double aX, double aY, double aWidth,
-      double aHeight, ErrorResult& aRv);
+      double aHeight);
 
   double X() const { return mX; }
   double Y() const { return mY; }
@@ -103,8 +103,7 @@ class DOMRect final : public DOMRectReadOnly {
 
   static already_AddRefed<DOMRect> Constructor(const GlobalObject& aGlobal,
                                                double aX, double aY,
-                                               double aWidth, double aHeight,
-                                               ErrorResult& aRv);
+                                               double aWidth, double aHeight);
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;

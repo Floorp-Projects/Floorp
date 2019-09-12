@@ -232,7 +232,7 @@ RTCStatsQuery::~RTCStatsQuery() {}
 NS_IMPL_ISUPPORTS0(PeerConnectionImpl)
 
 already_AddRefed<PeerConnectionImpl> PeerConnectionImpl::Constructor(
-    const dom::GlobalObject& aGlobal, ErrorResult& rv) {
+    const dom::GlobalObject& aGlobal) {
   RefPtr<PeerConnectionImpl> pc = new PeerConnectionImpl(&aGlobal);
 
   CSFLogDebug(LOGTAG, "Created PeerConnection: %p", pc.get());

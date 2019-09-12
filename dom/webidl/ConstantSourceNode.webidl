@@ -14,8 +14,10 @@ dictionary ConstantSourceOptions {
     float offset = 1;
 };
 
-[Pref="dom.webaudio.enabled",
- Constructor(BaseAudioContext context, optional ConstantSourceOptions options = {})]
+[Pref="dom.webaudio.enabled"]
 interface ConstantSourceNode :  AudioScheduledSourceNode {
+    constructor(BaseAudioContext context,
+                optional ConstantSourceOptions options = {});
+
     readonly        attribute AudioParam   offset;
 };

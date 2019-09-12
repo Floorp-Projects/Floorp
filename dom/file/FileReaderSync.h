@@ -39,7 +39,7 @@ class FileReaderSync final {
 
  public:
   static already_AddRefed<FileReaderSync> Constructor(
-      const GlobalObject& aGlobal, ErrorResult& aRv);
+      const GlobalObject& aGlobal);
 
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                   JS::MutableHandle<JSObject*> aReflector);
