@@ -18,14 +18,14 @@
 
 #include "AppleUtils.h"
 
-namespace mozilla {
-extern LazyLogModule sPEMLog;
 #define VTENC_LOGE(fmt, ...)                 \
   MOZ_LOG(sPEMLog, mozilla::LogLevel::Error, \
           ("[AppleVTEncoder] %s: " fmt, __func__, ##__VA_ARGS__))
 #define VTENC_LOGD(fmt, ...)                 \
   MOZ_LOG(sPEMLog, mozilla::LogLevel::Debug, \
           ("[AppleVTEncoder] %s: " fmt, __func__, ##__VA_ARGS__))
+
+namespace mozilla {
 
 static CFDictionaryRef BuildEncoderSpec() {
   const void* keys[] = {
