@@ -202,7 +202,7 @@ jobs:
             - deb10-python-zstandard
     static-analysis-build:
         symbol: I(static-analysis-build)
-        parent: android-build
+        parent: debian9-base
     mingw32-build:
         symbol: I(mingw)
         parent: debian9-base
