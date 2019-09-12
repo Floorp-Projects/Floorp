@@ -87,17 +87,17 @@ impl<T> Intersection<T> {
 
 /// A convex polygon with 4 points lying on a plane.
 #[derive(Debug, PartialEq)]
-pub struct Polygon<T, U> {
+pub struct Polygon<T, U, A> {
     /// Points making the polygon.
     pub points: [Point3D<T, U>; 4],
     /// A plane describing polygon orientation.
     pub plane: Plane<T, U>,
     /// A simple anchoring index to allow association of the
     /// produced split polygons with the original one.
-    pub anchor: usize,
+    pub anchor: A,
 }
 
-impl<T: Clone, U> Clone for Polygon<T, U> {
+impl<T: Clone, U, A: Copy> Clone for Polygon<T, U, A> {
     fn clone(&self) -> Self {
         Polygon {
             points: [
@@ -112,18 +112,19 @@ impl<T: Clone, U> Clone for Polygon<T, U> {
     }
 }
 
-impl<T, U> Polygon<T, U> where
+impl<T, U, A> Polygon<T, U, A> where
     T: Copy + fmt::Debug + ApproxEq<T> +
         ops::Sub<T, Output=T> + ops::Add<T, Output=T> +
         ops::Mul<T, Output=T> + ops::Div<T, Output=T> +
         Zero + One + Float,
     U: fmt::Debug,
+    A: Copy,
 {
     /// Construct a polygon from points that are already transformed.
     /// Return None if the polygon doesn't contain any space.
     pub fn from_points(
         points: [Point3D<T, U>; 4],
-        anchor: usize,
+        anchor: A,
     ) -> Option<Self> {
         let edge1 = points[1] - points[0];
         let edge2 = points[2] - points[0];
@@ -161,7 +162,7 @@ impl<T, U> Polygon<T, U> where
     }
 
     /// Construct a polygon from a non-transformed rectangle.
-    pub fn from_rect(rect: Rect<T, U>, anchor: usize) -> Self {
+    pub fn from_rect(rect: Rect<T, U>, anchor: A) -> Self {
         let min = rect.min();
         let max = rect.max();
         let _0 = T::zero();
@@ -184,7 +185,7 @@ impl<T, U> Polygon<T, U> where
     pub fn from_transformed_rect<V>(
         rect: Rect<T, V>,
         transform: Transform3D<T, V, U>,
-        anchor: usize,
+        anchor: A,
     ) -> Option<Self>
     where
         T: Trig + ops::Neg<Output=T>,
@@ -206,7 +207,7 @@ impl<T, U> Polygon<T, U> where
         rect: Rect<T, V>,
         transform: &Transform3D<T, V, U>,
         inv_transform: &Transform3D<T, U, V>,
-        anchor: usize,
+        anchor: A,
     ) -> Option<Self>
     where
         T: Trig + ops::Neg<Output=T>,
@@ -267,7 +268,7 @@ impl<T, U> Polygon<T, U> where
     /// Transform a polygon by an affine transform (preserving straight lines).
     pub fn transform<V>(
         &self, transform: &Transform3D<T, U, V>
-    ) -> Option<Polygon<T, V>>
+    ) -> Option<Polygon<T, V, A>>
     where
         T: Trig,
         V: fmt::Debug,

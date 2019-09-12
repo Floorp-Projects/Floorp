@@ -17,7 +17,7 @@ use euclid::approxeq::ApproxEq;
 use crate::filterdata::SFilterData;
 use crate::frame_builder::{FrameVisibilityContext, FrameVisibilityState};
 use crate::intern::ItemUid;
-use crate::internal_types::{FastHashMap, FastHashSet, PlaneSplitter, Filter};
+use crate::internal_types::{FastHashMap, FastHashSet, PlaneSplitter, Filter, PlaneSplitAnchor};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState, PictureContext};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::UvRectKind;
@@ -2137,7 +2137,7 @@ pub enum Picture3DContext<C> {
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct OrderedPictureChild {
-    pub anchor: usize,
+    pub anchor: PlaneSplitAnchor,
     pub spatial_node_index: SpatialNodeIndex,
     pub gpu_address: GpuCacheAddress,
 }
@@ -3202,7 +3202,7 @@ impl PicturePrimitive {
         original_local_rect: LayoutRect,
         combined_local_clip_rect: &LayoutRect,
         world_rect: WorldRect,
-        plane_split_anchor: usize,
+        plane_split_anchor: PlaneSplitAnchor,
     ) -> bool {
         let transform = clip_scroll_tree
             .get_world_transform(prim_spatial_node_index);
@@ -3277,7 +3277,8 @@ impl PicturePrimitive {
         // Process the accumulated split planes and order them for rendering.
         // Z axis is directed at the screen, `sort` is ascending, and we need back-to-front order.
         for poly in splitter.sort(vec3(0.0, 0.0, 1.0)) {
-            let spatial_node_index = self.prim_list.prim_instances[poly.anchor].spatial_node_index;
+            let prim_instance = &self.prim_list.prim_instances[poly.anchor.prim_instance_index];
+            let spatial_node_index = prim_instance.spatial_node_index;
             let transform = match clip_scroll_tree
                 .get_world_transform(spatial_node_index)
                 .inverse()

@@ -25,6 +25,7 @@ use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest
 use crate::gpu_types::{BrushFlags, SnapOffsets};
 use crate::image::{Repetition};
 use crate::intern;
+use crate::internal_types::PlaneSplitAnchor;
 use malloc_size_of::MallocSizeOf;
 use crate::picture::{PictureCompositeMode, PicturePrimitive};
 use crate::picture::{ClusterIndex, PrimitiveList, RecordedDirtyRegion, SurfaceIndex, RetainedTiles, RasterConfig};
@@ -2615,7 +2616,7 @@ impl PrimitiveStore {
         pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
-        plane_split_anchor: usize,
+        plane_split_anchor: PlaneSplitAnchor,
         data_stores: &mut DataStores,
         scratch: &mut PrimitiveScratchBuffer,
     ) -> bool {
@@ -2749,7 +2750,7 @@ impl PrimitiveStore {
         data_stores: &mut DataStores,
         scratch: &mut PrimitiveScratchBuffer,
     ) {
-        for (plane_split_anchor, prim_instance) in prim_list.prim_instances.iter_mut().enumerate() {
+        for (prim_instance_index, prim_instance) in prim_list.prim_instances.iter_mut().enumerate() {
             if prim_instance.visibility_info == PrimitiveVisibilityIndex::INVALID {
                 continue;
             }
@@ -2780,6 +2781,10 @@ impl PrimitiveStore {
                 frame_context.clip_scroll_tree,
             );
 
+            let plane_split_anchor = PlaneSplitAnchor {
+                prim_instance_index,
+            };
+
             if self.prepare_prim_for_render(
                 prim_instance,
                 pic_context,
@@ -2801,7 +2806,7 @@ impl PrimitiveStore {
     fn prepare_interned_prim_for_render(
         &mut self,
         prim_instance: &mut PrimitiveInstance,
-        plane_split_anchor: usize,
+        plane_split_anchor: PlaneSplitAnchor,
         pic_context: &PictureContext,
         pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
