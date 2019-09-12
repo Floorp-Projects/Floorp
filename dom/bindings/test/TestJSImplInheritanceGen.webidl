@@ -4,26 +4,36 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor, JSImplementation="@mozilla.org/test-js-impl-interface2;1"]
+[JSImplementation="@mozilla.org/test-js-impl-interface2;1"]
 interface TestJSImplInterface2 :  TestCImplementedInterface {
+  [Throws]
+  constructor();
 };
 
-[Constructor, JSImplementation="@mozilla.org/test-js-impl-interface3;1"]
+[JSImplementation="@mozilla.org/test-js-impl-interface3;1"]
 interface TestJSImplInterface3 : TestCImplementedInterface2 {
+  [Throws]
+  constructor();
 };
 
 // Important: TestJSImplInterface5 needs to come before TestJSImplInterface6 in
 // this file to test what it's trying to test.
-[Constructor, JSImplementation="@mozilla.org/test-js-impl-interface5;1"]
+[JSImplementation="@mozilla.org/test-js-impl-interface5;1"]
 interface TestJSImplInterface5 : TestJSImplInterface6 {
+  [Throws]
+  constructor();
 };
 
 // Important: TestJSImplInterface6 needs to come after TestJSImplInterface3 in
 // this file to test what it's trying to test.
-[Constructor, JSImplementation="@mozilla.org/test-js-impl-interface6;1"]
+[JSImplementation="@mozilla.org/test-js-impl-interface6;1"]
 interface TestJSImplInterface6 : TestJSImplInterface3 {
+  [Throws]
+  constructor();
 };
 
-[Constructor, JSImplementation="@mozilla.org/test-js-impl-interface4;1"]
+[JSImplementation="@mozilla.org/test-js-impl-interface4;1"]
 interface TestJSImplInterface4 : EventTarget {
+  [Throws]
+  constructor();
 };
