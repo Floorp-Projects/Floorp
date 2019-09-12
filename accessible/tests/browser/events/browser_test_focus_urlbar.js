@@ -24,6 +24,10 @@ function isEventForAutocompleteItem(event) {
   return event.accessible.role == ROLE_COMBOBOX_OPTION;
 }
 
+function isEventForOneOffButton(event) {
+  return event.accessible.role == ROLE_PUSHBUTTON;
+}
+
 /**
  * Wait for an autocomplete search to finish.
  * This is necessary to ensure predictable results, as these searches are
@@ -134,6 +138,12 @@ async function runTests() {
   event = await focused;
   testStates(event.accessible, STATE_FOCUSED);
 
+  info("Ensuring autocomplete focus on arrow up for search settings button");
+  focused = waitForEvent(EVENT_FOCUS, isEventForOneOffButton);
+  EventUtils.synthesizeKey("KEY_ArrowUp");
+  event = await focused;
+  testStates(event.accessible, STATE_FOCUSED);
+
   info("Ensuring text box focus when text is typed");
   focused = waitForEvent(EVENT_FOCUS, textBox);
   EventUtils.sendString("z");
@@ -154,12 +164,20 @@ async function runTests() {
   await focused;
   testStates(textBox, STATE_FOCUSED);
 
-  info("Ensuring autocomplete focus on arrow down & up");
+  info("Ensuring autocomplete focus on arrow down (4)");
   focused = waitForEvent(EVENT_FOCUS, isEventForAutocompleteItem);
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  // With the quantumbar enabled, we only get one result here, and arrow down
-  // selects a one-off search button. We arrow back up to re-select the
-  // autocomplete result.
+  event = await focused;
+  testStates(event.accessible, STATE_FOCUSED);
+
+  info("Ensuring one-off search button focus on arrow down");
+  focused = waitForEvent(EVENT_FOCUS, isEventForOneOffButton);
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  event = await focused;
+  testStates(event.accessible, STATE_FOCUSED);
+
+  info("Ensuring autocomplete focus on arrow up");
+  focused = waitForEvent(EVENT_FOCUS, isEventForAutocompleteItem);
   EventUtils.synthesizeKey("KEY_ArrowUp");
   event = await focused;
   testStates(event.accessible, STATE_FOCUSED);
