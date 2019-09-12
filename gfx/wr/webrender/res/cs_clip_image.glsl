@@ -35,7 +35,6 @@ void main(void) {
         prim_transform,
         clip_transform,
         cmi.sub_rect,
-        cmi.snap_offsets,
         cmi.task_origin,
         cmi.screen_origin,
         cmi.device_pixel_scale
