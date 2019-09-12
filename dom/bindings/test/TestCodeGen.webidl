@@ -513,6 +513,24 @@ interface TestInterface {
   void passVariadicUSVS(USVString... arg);
   USVString receiveUSVS();
 
+  // JSString types
+  void passJSString(JSString arg);
+  // void passNullableJSString(JSString? arg); // NOT SUPPORTED YET
+  // void passOptionalJSString(optional JSString arg); // NOT SUPPORTED YET
+  void passOptionalJSStringWithDefaultValue(optional JSString arg = "abc");
+  // void passOptionalNullableJSString(optional JSString? arg); // NOT SUPPORTED YET
+  // void passOptionalNullableJSStringWithDefaultValue(optional JSString? arg = null); // NOT SUPPORTED YET
+  // void passVariadicJSString(JSString... arg); // NOT SUPPORTED YET
+  // void passRecordOfJSString(record<DOMString, JSString> arg); // NOT SUPPORTED YET
+  // void passSequenceOfJSString(sequence<JSString> arg); // NOT SUPPORTED YET
+  // void passUnionJSString((JSString or long) arg); // NOT SUPPORTED YET
+  JSString receiveJSString();
+  // sequence<JSString> receiveJSStringSequence(); // NOT SUPPORTED YET
+  // (JSString or long) receiveJSStringUnion(); // NOT SUPPORTED YET
+  // record<DOMString, JSString> receiveJSStringRecord(); // NOT SUPPORTED YET
+  readonly attribute JSString readonlyJSStringAttr;
+  attribute JSString jsStringAttr;
+
   // Enumerated types
   void passEnum(TestEnum arg);
   void passNullableEnum(TestEnum? arg);
@@ -1093,6 +1111,7 @@ dictionary Dict : ParentDict {
   ByteString byteStr;
   ByteString emptyByteStr = "";
   ByteString otherByteStr = "def";
+  // JSString jsStr; // NOT SUPPORTED YET
   object someObj;
   boolean prototype;
   object? anotherObj = null;
@@ -1356,6 +1375,7 @@ interface TestCEReactionsInterface {
 typedef [EnforceRange] octet OctetRange;
 typedef [Clamp] octet OctetClamp;
 typedef [TreatNullAs=EmptyString] DOMString NullEmptyString;
+// typedef [TreatNullAs=EmptyString] JSString NullEmptyJSString;
 
 dictionary TestAttributesOnDictionaryMembers {
   [Clamp] octet a;
@@ -1370,6 +1390,7 @@ interface TestAttributesOnTypes {
   void foo(OctetClamp thingy);
   void bar(OctetRange thingy);
   void baz(NullEmptyString thingy);
+  // void qux(NullEmptyJSString thingy);
   attribute [Clamp] octet someAttr;
   void argWithAttr([Clamp] octet arg0, optional [Clamp] octet arg1);
   // There aren't any argument-only attributes that we can test here,
