@@ -60,11 +60,8 @@ browser/extensions/formautofill/phonenumberutils/PhoneNumberMetaData.jsm
 
 # devtools/ exclusions
 devtools/client/inspector/markup/test/doc_markup_events_*.html
-devtools/client/inspector/rules/test/doc_media_queries.html
 devtools/client/performance/components/test/test_jit_optimizations_01.html
-devtools/client/responsive.html/test/browser/touch.html
 devtools/client/shared/test/*.html
-devtools/client/shared/test/code_*.js
 devtools/client/shared/components/test/mochitest/*.html
 !devtools/client/shared/components/test/mochitest/test_stack-trace.html
 devtools/client/storage/test/*.html
@@ -81,7 +78,6 @@ devtools/shared/qrcode/tests/mochitest/test_decode.html
 devtools/shared/tests/mochitest/*.html
 devtools/shared/webconsole/test/test_*.html
 devtools/client/webreplay/mochitest/examples/*.html
-devtools/server/tests/mochitest/test_inspector-inactive-property-helper.html
 
 # Ignore devtools debugger files
 # Keep in sync with devtools/client/debugger/.eslintignore
