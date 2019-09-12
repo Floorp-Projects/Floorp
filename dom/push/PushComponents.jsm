@@ -69,7 +69,7 @@ PushServiceBase.prototype = {
   subscriptionChangeTopic: OBSERVER_TOPIC_SUBSCRIPTION_CHANGE,
   subscriptionModifiedTopic: OBSERVER_TOPIC_SUBSCRIPTION_MODIFIED,
 
-  ensureReady() {},
+  _handleReady() {},
 
   _addListeners() {
     for (let message of this._messages) {
@@ -82,9 +82,18 @@ PushServiceBase.prototype = {
   },
 
   observe(subject, topic, data) {
+    if (topic === "app-startup") {
+      Services.obs.addObserver(this, "sessionstore-windows-restored", true);
+      return;
+    }
+    if (topic === "sessionstore-windows-restored") {
+      Services.obs.removeObserver(this, "sessionstore-windows-restored");
+      this._handleReady();
+      return;
+    }
     if (topic === "android-push-service") {
       // Load PushService immediately.
-      this.ensureReady();
+      this._handleReady();
     }
   },
 
@@ -256,7 +265,7 @@ Object.assign(PushServiceParent.prototype, {
       .catch(Cu.reportError);
   },
 
-  ensureReady() {
+  _handleReady() {
     this.service.init();
   },
 

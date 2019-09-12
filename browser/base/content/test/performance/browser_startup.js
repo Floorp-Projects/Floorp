@@ -36,6 +36,8 @@ const startupPhases = {
         "resource://gre/modules/MainProcessSingleton.jsm",
         "resource://gre/modules/XPCOMUtils.jsm",
         "resource://gre/modules/Services.jsm",
+        // Bugs to fix: The following components shouldn't be initialized that early.
+        "resource://gre/modules/PushComponents.jsm", // bug 1369436
       ]),
     },
   },
@@ -80,7 +82,6 @@ const startupPhases = {
       components: new Set([
         "PageIconProtocolHandler.js",
         "PlacesCategoriesStarter.js",
-        "PushComponents.jsm",
         "nsPlacesExpiration.js",
       ]),
       modules: new Set([
