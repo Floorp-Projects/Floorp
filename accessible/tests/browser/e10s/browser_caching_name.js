@@ -21,12 +21,14 @@ loadScripts({ name: "name.js", dir: MOCHITESTS_DIR });
  *
  *
  * Options include:
- *   * recreated   - subrtee is recreated and the test should only continue
- *                   after a reorder event
- *   * textchanged - text is inserted into a subtree and the test should only
- *                   continue after a text inserted event
+ *   * waitFor - changes in the subtree will result in an accessible event
+ *                     being fired, the test must only continue after the event
+ *                     is receieved.
  */
-const ARIARule = [{ attr: "aria-labelledby" }, { attr: "aria-label" }];
+const ARIARule = [
+  { attr: "aria-labelledby" },
+  { attr: "aria-label", waitFor: EVENT_NAME_CHANGE },
+];
 const HTMLControlHeadRule = [...ARIARule, { elm: "label", isSibling: true }];
 const rules = {
   CSSContent: [{ elm: "style", isSibling: true }, { fromsubtree: true }],
@@ -37,7 +39,11 @@ const rules = {
     { attr: "title" },
   ],
   HTMLElm: [...ARIARule, { attr: "title" }],
-  HTMLImg: [...ARIARule, { attr: "alt", recreated: true }, { attr: "title" }],
+  HTMLImg: [
+    ...ARIARule,
+    { attr: "alt", waitFor: EVENT_REORDER },
+    { attr: "title" },
+  ],
   HTMLImgEmptyAlt: [...ARIARule, { attr: "title" }, { attr: "alt" }],
   HTMLInputButton: [
     ...HTMLControlHeadRule,
@@ -57,11 +63,11 @@ const rules = {
   ],
   HTMLInputReset: [
     ...HTMLControlHeadRule,
-    { attr: "value", textchanged: true },
+    { attr: "value", waitFor: EVENT_TEXT_INSERTED },
   ],
   HTMLInputSubmit: [
     ...HTMLControlHeadRule,
-    { attr: "value", textchanged: true },
+    { attr: "value", waitFor: EVENT_TEXT_INSERTED },
   ],
   HTMLLink: [...ARIARule, { fromsubtree: true }, { attr: "title" }],
   HTMLLinkImage: [...ARIARule, { elm: "img" }, { attr: "title" }],
@@ -396,17 +402,15 @@ const markupTests = [
  */
 async function testAttrRule(browser, target, rule, expected) {
   let { id, parent, acc } = target;
-  let { recreated, textchanged, attr } = rule;
+  let { waitFor, attr } = rule;
 
   testName(acc, expected);
 
-  if (recreated || textchanged) {
+  if (waitFor) {
     let [event] = await contentSpawnMutation(
       browser,
       {
-        expected: [
-          recreated ? [EVENT_REORDER, parent] : [EVENT_TEXT_INSERTED, id],
-        ],
+        expected: [[waitFor, waitFor === EVENT_REORDER ? parent : id]],
       },
       ([contentId, contentAttr]) =>
         content.document.getElementById(contentId).removeAttribute(contentAttr),
