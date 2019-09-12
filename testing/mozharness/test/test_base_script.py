@@ -56,7 +56,7 @@ def get_debug_script_obj():
 
 def _post_fatal(self, **kwargs):
     fh = open('tmpfile_stdout', 'w')
-    print >>fh, test_string
+    print(test_string, file=fh)
     fh.close()
 
 
