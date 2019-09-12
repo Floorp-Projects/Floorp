@@ -1154,6 +1154,11 @@ class AsyncPanZoomController {
   LayoutDeviceToParentLayerScale GetCurrentPinchZoomScale(
       AsyncTransformConsumer aMode) const;
 
+  ParentLayerRect GetCompositionBounds() const {
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
+    return mScrollMetadata.GetMetrics().GetCompositionBounds();
+  }
+
  private:
   /**
    * Samples the composited async transform, making the result of

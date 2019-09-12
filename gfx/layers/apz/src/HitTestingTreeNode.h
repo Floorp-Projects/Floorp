@@ -146,6 +146,11 @@ class HitTestingTreeNode {
   LayerToScreenMatrix4x4 GetTransformToGecko() const;
   const LayerIntRegion& GetVisibleRegion() const;
 
+  /* Returns the screen coordinate rectangle of remote iframe corresponding to
+   * this node. The rectangle is the result of clipped by ancestor async
+   * scrolling. */
+  ScreenRect GetRemoteDocumentScreenRect() const;
+
   bool IsAsyncZoomContainer() const;
 
   /* Debug helpers */

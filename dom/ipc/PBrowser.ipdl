@@ -39,6 +39,7 @@ using mozilla::LayoutDeviceIntPoint from "Units.h";
 using mozilla::LayoutDevicePoint from "Units.h";
 using mozilla::ScreenIntPoint from "Units.h";
 using ScreenIntSize from "Units.h";
+using ScreenRect from "Units.h";
 using struct mozilla::layers::ScrollableLayerGuid from "mozilla/layers/ScrollableLayerGuid.h";
 using struct mozilla::layers::ZoomConstraints from "mozilla/layers/ZoomConstraints.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
@@ -740,7 +741,8 @@ child:
 
     async SizeModeChanged(nsSizeMode sizeMode);
 
-    async ChildToParentMatrix(MaybeMatrix4x4 aMatrix);
+    async ChildToParentMatrix(MaybeMatrix4x4 aMatrix,
+                              ScreenRect aRemoteDocumentRect);
 
     async SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
 

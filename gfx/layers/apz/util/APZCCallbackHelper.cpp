@@ -288,7 +288,8 @@ void APZCCallbackHelper::NotifyLayerTransforms(
       parent->SetChildToParentConversionMatrix(
           ViewAs<LayoutDeviceToLayoutDeviceMatrix4x4>(
               msg.GetMatrix(),
-              PixelCastJustification::ContentProcessIsLayerInUiProcess));
+              PixelCastJustification::ContentProcessIsLayerInUiProcess),
+          msg.GetRemoteDocumentRect());
     }
   }
 }
