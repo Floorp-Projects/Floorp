@@ -20,8 +20,6 @@
 #  include "mozilla/mscom/Ptr.h"
 #  include "nsWinUtils.h"
 #  include "RootAccessible.h"
-#else
-#  include "mozilla/a11y/DocAccessiblePlatformExtParent.h"
 #endif
 
 namespace mozilla {
@@ -918,23 +916,6 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvBatch(
 #  endif  // defined(XP_WIN)
   return IPC_OK();
 }
-
-bool DocAccessibleParent::DeallocPDocAccessiblePlatformExtParent(
-    PDocAccessiblePlatformExtParent* aActor) {
-  delete aActor;
-  return true;
-}
-
-PDocAccessiblePlatformExtParent*
-DocAccessibleParent::AllocPDocAccessiblePlatformExtParent() {
-  return new DocAccessiblePlatformExtParent();
-}
-
-DocAccessiblePlatformExtParent* DocAccessibleParent::GetPlatformExtension() {
-  return static_cast<DocAccessiblePlatformExtParent*>(
-      SingleManagedOrNull(ManagedPDocAccessiblePlatformExtParent()));
-}
-
 #endif  // !defined(XP_WIN)
 
 Tuple<DocAccessibleParent*, uint64_t> DocAccessibleParent::GetRemoteEmbedder() {

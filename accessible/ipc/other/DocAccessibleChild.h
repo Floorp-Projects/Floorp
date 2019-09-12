@@ -13,7 +13,6 @@ namespace mozilla {
 namespace a11y {
 
 class Accessible;
-class DocAccessiblePlatformExtChild;
 class HyperTextAccessible;
 class TextLeafAccessible;
 class ImageAccessible;
@@ -25,8 +24,6 @@ class TableCellAccessible;
  * and their lifetime is the same as the document they represent.
  */
 class DocAccessibleChild : public DocAccessibleChildBase {
-  friend DocAccessiblePlatformExtChild;
-
  public:
   DocAccessibleChild(DocAccessible* aDoc, IProtocol* aManager)
       : DocAccessibleChildBase(aDoc) {
@@ -473,12 +470,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
       int32_t* aHeight) override;
   virtual mozilla::ipc::IPCResult RecvDOMNodeID(const uint64_t& aID,
                                                 nsString* aDOMNodeID) override;
-
-  virtual bool DeallocPDocAccessiblePlatformExtChild(
-      PDocAccessiblePlatformExtChild* aActor) override;
-
-  virtual PDocAccessiblePlatformExtChild* AllocPDocAccessiblePlatformExtChild()
-      override;
 
  private:
   Accessible* IdToAccessible(const uint64_t& aID) const;
