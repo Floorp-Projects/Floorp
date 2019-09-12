@@ -117,13 +117,12 @@ add_task(async function test_url_check() {
 add_task(async function test_nested() {
   const URL =
     "data:text/html;charset=utf-8," +
-    "<iframe src='data:text/html;charset=utf-8," +
-    "<input autofocus=true>'/>";
+    "<iframe src='data:text/html;charset=utf-8,<input/>'/>";
 
   const FORM_DATA = {
     children: [
       {
-        url: "data:text/html;charset=utf-8,<input autofocus=true>",
+        url: "data:text/html;charset=utf-8,<input/>",
         xpath: { "/xhtml:html/xhtml:body/xhtml:input": "m" },
       },
     ],
@@ -132,7 +131,19 @@ add_task(async function test_nested() {
   // Create a tab with an iframe containing an input field.
   let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, URL));
   let browser = tab.linkedBrowser;
-  await promiseBrowserLoaded(browser);
+  await promiseBrowserLoaded(browser, false /* don't ignore subframes */);
+
+  const iframe = await SpecialPowers.spawn(browser, [], () => {
+    return content.document.querySelector("iframe").browsingContext;
+  });
+  await SpecialPowers.spawn(iframe, [], async () => {
+    const input = content.document.querySelector("input");
+    const focusPromise = new Promise(resolve => {
+      input.addEventListener("focus", resolve, { once: true });
+    });
+    input.focus();
+    await focusPromise;
+  });
 
   // Modify the input field's value.
   await BrowserTestUtils.synthesizeKey("m", {}, browser);
