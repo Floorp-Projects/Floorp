@@ -29,7 +29,7 @@ class SocketProcessHost;
 // by SocketProcessHost.
 class SocketProcessParent final
     : public PSocketProcessParent,
-      public ipc::CrashReporterHelper<GeckoProcessType_Content> {
+      public ipc::CrashReporterHelper<GeckoProcessType_Socket> {
  public:
   friend class SocketProcessHost;
 
