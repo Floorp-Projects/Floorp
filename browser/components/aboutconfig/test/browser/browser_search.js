@@ -6,7 +6,7 @@ add_task(async function setup() {
     set: [
       ["test.aboutconfig.a", "test value 1"],
       ["test.aboutconfig.ab", "test value 2"],
-      ["test.aboutconfig.b", "test value 3"],
+      ["test.aboutconfig.bc", "test value 3"],
     ],
   });
 });
@@ -141,5 +141,19 @@ add_task(async function test_search_delayed() {
     // The table will eventually be updated after a delay.
     await prefsTableChanged;
     Assert.equal(this.rows.length, 1);
+  });
+});
+
+add_task(async function test_search_add_row_color() {
+  await AboutConfigTest.withNewTab(async function() {
+    // When the row is the only one displayed, it doesn't have the "odd" class.
+    this.search("test.aboutconfig.add");
+    Assert.equal(this.rows.length, 1);
+    Assert.ok(!this.getRow("test.aboutconfig.add").hasClass("odd"));
+
+    // When displayed with one other preference, the "odd" class is present.
+    this.search("test.aboutconfig.b");
+    Assert.equal(this.rows.length, 2);
+    Assert.ok(this.getRow("test.aboutconfig.b").hasClass("odd"));
   });
 });
