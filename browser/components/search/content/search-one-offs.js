@@ -299,6 +299,12 @@ class SearchOneOffs {
     }
     if (val) {
       val.setAttribute("selected", "true");
+      if (!val.engine) {
+        // If the button doesn't have an engine, then clear the popup's
+        // selection to indicate that pressing Return while the button is
+        // selected will do the button's command, not search.
+        this.selectedAutocompleteIndex = -1;
+      }
     }
     this._selectedButton = val;
 
@@ -313,12 +319,6 @@ class SearchOneOffs {
       }
     }
 
-    if (val && !val.engine) {
-      // If the button doesn't have an engine, then clear the popup's
-      // selection to indicate that pressing Return while the button is
-      // selected will do the button's command, not search.
-      this.selectedAutocompleteIndex = -1;
-    }
     let event = new CustomEvent("SelectedOneOffButtonChanged", {
       previousSelectedButton: previousButton,
     });
@@ -924,16 +924,18 @@ class SearchOneOffs {
       }
       if (this.selectedAutocompleteIndex == numListItems - 1) {
         // Moving down from the last item in the list to the buttons.
+        if (!allowEmptySelection) {
+          this.selectedAutocompleteIndex = -1;
+          if (this.textbox && typeof textboxUserValue == "string") {
+            this.textbox.value = textboxUserValue;
+          }
+        }
         this.selectedButtonIndex = 0;
         if (allowEmptySelection) {
           // Let the autocomplete controller remove selection in the list
           // and revert the typed text in the textbox.
           return false;
         }
-        if (this.textbox && typeof textboxUserValue == "string") {
-          this.textbox.value = textboxUserValue;
-        }
-        this.selectedAutocompleteIndex = -1;
         return true;
       }
       if (this.selectedButton) {
