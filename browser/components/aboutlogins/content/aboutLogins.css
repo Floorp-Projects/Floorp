@@ -22,10 +22,10 @@ header {
 }
 
 login-filter {
-  min-width: 320px;
+  min-width: 200px;
   max-width: 400px;
   margin-inline: 40px auto;
-  flex-grow: 1;
+  flex-grow: 0.5;
   align-self: center;
 }
 
