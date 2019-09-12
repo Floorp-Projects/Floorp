@@ -2,14 +2,14 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<merge xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="0dp"
-    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
+    android:layout_height="match_parent">
 
     <TextView
+        android:layout_marginTop="4dp"
         android:id="@+id/switchItemTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -32,6 +32,7 @@
         android:layout_height="wrap_content"
         android:clickable="false"
         android:textColor="?attr/secondaryText"
+        android:layout_marginBottom="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@id/switchItemTitle"
         app:layout_constraintHorizontal_bias="0.5"
@@ -50,4 +51,4 @@
         app:layout_constraintBottom_toBottomOf="@id/switchItemDescription"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/switchItemTitle" />
-</merge>
+</androidx.constraintlayout.widget.ConstraintLayout>

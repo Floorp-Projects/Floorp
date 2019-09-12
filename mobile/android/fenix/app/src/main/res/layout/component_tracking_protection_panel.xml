@@ -29,9 +29,11 @@
         <org.mozilla.fenix.trackingprotection.SwitchWithDescription
             android:id="@+id/tracking_protection"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/tracking_protection_item_height"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/tracking_protection_item_height"
             android:text="@string/preference_enhanced_tracking_protection"
             app:layout_constraintTop_toBottomOf="@id/url"
+            app:layout_constraintBottom_toTopOf="@id/blocking_header"
             app:switchDescription="@string/etp_panel_on"
             app:switchIcon="@drawable/ic_tracking_protection"
             app:switchTitle="@string/preference_enhanced_tracking_protection" />

@@ -212,5 +212,10 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), BackHan
         return this
     }
 
-    override fun onBackPressed(): Boolean = trackingProtectionView.onBackPressed()
+    override fun onBackPressed(): Boolean {
+        if (!trackingProtectionView.onBackPressed()) {
+            dismiss()
+        }
+        return true
+    }
 }
