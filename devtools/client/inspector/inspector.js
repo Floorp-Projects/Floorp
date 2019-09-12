@@ -1679,12 +1679,14 @@ Inspector.prototype = {
   },
 
   startEyeDropperListeners: function() {
+    this.toolbox.tellRDMAboutPickerState(true);
     this.inspectorFront.once("color-pick-canceled", this.onEyeDropperDone);
     this.inspectorFront.once("color-picked", this.onEyeDropperDone);
     this.walker.once("new-root", this.onEyeDropperDone);
   },
 
   stopEyeDropperListeners: function() {
+    this.toolbox.tellRDMAboutPickerState(false);
     this.inspectorFront.off("color-pick-canceled", this.onEyeDropperDone);
     this.inspectorFront.off("color-picked", this.onEyeDropperDone);
     this.walker.off("new-root", this.onEyeDropperDone);

@@ -241,6 +241,9 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
     // cancelling picker(if it is already selected) on opening eye-dropper
     toolbox.nodePicker.cancel();
 
+    // disable simulating touch events if RDM is active
+    toolbox.tellRDMAboutPickerState(true);
+
     // pickColorFromPage will focus the content document. If the devtools are in a
     // separate window, the colorpicker tooltip will be closed before pickColorFromPage
     // resolves. Flip the flag early to avoid issues with onTooltipHidden().
@@ -270,6 +273,9 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
   }
 
   _onEyeDropperDone() {
+    // enable simulating touch events if RDM is active
+    this.inspector.toolbox.tellRDMAboutPickerState(false);
+
     this.eyedropperOpen = false;
     this.activeSwatch = null;
   }

@@ -66,6 +66,11 @@ loader.lazyImporter(
   "ProfilerMenuButton",
   "resource://devtools/client/performance-new/popup/menu-button.jsm"
 );
+loader.lazyRequireGetter(
+  this,
+  "ResponsiveUIManager",
+  "devtools/client/responsive/manager"
+);
 
 exports.menuitems = [
   {
@@ -154,6 +159,25 @@ exports.menuitems = [
       const target = await TargetFactory.forTab(window.gBrowser.selectedTab);
       await target.attach();
       const inspectorFront = await target.getFront("inspector");
+
+      // If RDM is active, disable touch simulation events if they're enabled.
+      // Similarly, enable them when the color picker is done picking.
+      if (
+        ResponsiveUIManager.isActiveForTab(target.tab) &&
+        target.actorHasMethod("emulation", "setElementPickerState")
+      ) {
+        const ui = ResponsiveUIManager.getResponsiveUIForTab(target.tab);
+        await ui.emulationFront.setElementPickerState(true);
+
+        inspectorFront.once("color-picked", async () => {
+          await ui.emulationFront.setElementPickerState(false);
+        });
+
+        inspectorFront.once("color-pick-canceled", async () => {
+          await ui.emulationFront.setElementPickerState(false);
+        });
+      }
+
       inspectorFront.pickColorFromPage({ copyOnSelect: true, fromMenu: true });
     },
     checkbox: true,
