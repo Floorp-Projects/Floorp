@@ -608,7 +608,7 @@ class IDLPartialInterfaceOrNamespace(IDLObject):
         for attr in attrs:
             identifier = attr.identifier()
 
-            if identifier in ["Constructor", "NamedConstructor"]:
+            if identifier == "NamedConstructor":
                 self.propagatedExtendedAttrs.append(attr)
             elif identifier == "SecureContext":
                 self._haveSecureContextExtendedAttribute = True
@@ -1082,6 +1082,11 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
                     "Can't have both a constructor and [NoInterfaceObject]",
                     [self.location, ctor.location])
 
+            if self.globalNames:
+                raise WebIDLError(
+                    "Can't have both a constructor and [Global]",
+                    [self.location, ctor.location])
+
             assert(len(ctor._exposureGlobalNames) == 0 or
                    ctor._exposureGlobalNames == self._exposureGlobalNames)
             ctor._exposureGlobalNames.update(self._exposureGlobalNames)
@@ -1089,10 +1094,17 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
                 # constructor operation.
                 self.members.remove(ctor)
             else:
-                # extended attribute.
+                # extended attribute.  This can only happen with
+                # [HTMLConstructor] and this is the only way we can get into this
+                # code with len(ctor._exposureGlobalNames) !=
+                # self._exposureGlobalNames.
                 ctor.finish(scope)
 
         for ctor in self.namedConstructors:
+            if self.globalNames:
+                raise WebIDLError(
+                    "Can't have both a named constructor and [Global]",
+                    [self.location, self.namedConstructors.location])
             assert len(ctor._exposureGlobalNames) == 0
             ctor._exposureGlobalNames.update(self._exposureGlobalNames)
             ctor.finish(scope)
@@ -1709,39 +1721,22 @@ class IDLInterface(IDLInterfaceOrNamespace):
                     raise WebIDLError("[NoInterfaceObject] must take no arguments",
                                       [attr.location])
 
-                if self.ctor():
-                    raise WebIDLError("Constructor and NoInterfaceObject are incompatible",
-                                      [self.location])
-
                 self._noInterfaceObject = True
-            elif identifier == "Constructor" or identifier == "NamedConstructor" or identifier == "HTMLConstructor":
-                if identifier == "Constructor" and not self.hasInterfaceObject():
-                    raise WebIDLError(str(identifier) + " and NoInterfaceObject are incompatible",
-                                      [self.location])
-
+            elif identifier == "NamedConstructor" or identifier == "HTMLConstructor":
                 if identifier == "NamedConstructor" and not attr.hasValue():
                     raise WebIDLError("NamedConstructor must either take an identifier or take a named argument list",
                                       [attr.location])
 
                 if identifier == "HTMLConstructor":
-                    if not self.hasInterfaceObject():
-                        raise WebIDLError(str(identifier) + " and NoInterfaceObject are incompatible",
-                                          [self.location])
-
                     if not attr.noArguments():
                         raise WebIDLError(str(identifier) + " must take no arguments",
                                           [attr.location])
-
-                if self.globalNames:
-                    raise WebIDLError("[%s] must not be specified together with "
-                                      "[Global]" % identifier,
-                                      [self.location, attr.location])
 
                 args = attr.args() if attr.hasArgs() else []
 
                 retType = IDLWrapperType(self.location, self)
 
-                if identifier == "Constructor" or identifier == "HTMLConstructor":
+                if identifier == "HTMLConstructor":
                     name = "constructor"
                     allowForbidden = True
                 else:
@@ -1758,7 +1753,7 @@ class IDLInterface(IDLInterfaceOrNamespace):
                 method.addExtendedAttributes(
                     [IDLExtendedAttribute(self.location, ("Throws",))])
 
-                if identifier == "Constructor" or identifier == "HTMLConstructor":
+                if identifier == "HTMLConstructor":
                     method.resolve(self)
                 else:
                     # We need to detect conflicts for NamedConstructors across
@@ -1790,10 +1785,6 @@ class IDLInterface(IDLInterfaceOrNamespace):
                                       "an interface with inherited interfaces",
                                       [attr.location, self.location])
             elif identifier == "Global":
-                if self.ctor() or self.namedConstructors:
-                    raise WebIDLError("[Global] cannot be specified on an "
-                                      "interface with a constructor",
-                                      [attr.location, self.location]);
                 if attr.hasValue():
                     self.globalNames = [attr.value()]
                 elif attr.hasArgs():

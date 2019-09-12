@@ -43,21 +43,6 @@ def WebIDLTest(parser, harness):
                 (QName, name, type, optional, variadic) = expectedArgs[i]
                 checkArgument(gotArgs[i], QName, name, type, optional, variadic)
 
-    parser.parse("""
-        [Constructor]
-        interface TestConstructorNoArgs {
-        };
-
-        [Constructor(DOMString name)]
-        interface TestConstructorWithArgs {
-        };
-
-        [Constructor(object foo), Constructor(boolean bar)]
-        interface TestConstructorOverloads {
-        };
-    """)
-    results = parser.finish()
-
     def checkResults(results):
         harness.check(len(results), 3, "Should be three productions")
         harness.ok(isinstance(results[0], WebIDL.IDLInterface),
@@ -86,9 +71,6 @@ def WebIDLTest(parser, harness):
         harness.check(len(results[2].members), 0,
                       "TestConstructorOverloads should not have members")
 
-    checkResults(results)
-
-    parser = parser.reset()
     parser.parse("""
         interface TestConstructorNoArgs {
           constructor();
@@ -180,67 +162,6 @@ def WebIDLTest(parser, harness):
         threw = True
 
     harness.ok(threw, "HTMLConstructor can't be used on a callback interface")
-
-    # Test HTMLConstructor and Constructor
-    parser = parser.reset()
-    threw = False
-    try:
-        parser.parse("""
-            [Constructor,
-             HTMLConstructor]
-            interface TestHTMLConstructorAndConstructor {
-            };
-        """)
-        results = parser.finish()
-    except:
-        threw = True
-
-    harness.ok(threw, "Can't have both a Constructor and a HTMLConstructor")
-
-    parser = parser.reset()
-    threw = False
-    try:
-        parser.parse("""
-            [HTMLConstructor,
-             Constructor]
-            interface TestHTMLConstructorAndConstructor {
-            };
-        """)
-        results = parser.finish()
-    except:
-        threw = True
-
-    harness.ok(threw, "Can't have both a HTMLConstructor and a Constructor")
-
-    parser = parser.reset()
-    threw = False
-    try:
-        parser.parse("""
-            [HTMLConstructor,
-             Constructor(DOMString a)]
-            interface TestHTMLConstructorAndConstructor {
-            };
-        """)
-        results = parser.finish()
-    except:
-        threw = True
-
-    harness.ok(threw, "Can't have both a HTMLConstructor and a Constructor")
-
-    parser = parser.reset()
-    threw = False
-    try:
-        parser.parse("""
-            [Constructor(DOMString a),
-             HTMLConstructor]
-            interface TestHTMLConstructorAndConstructor {
-            };
-        """)
-        results = parser.finish()
-    except:
-        threw = True
-
-    harness.ok(threw, "Can't have both a HTMLConstructor and a Constructor")
 
     # Test HTMLConstructor and constructor operation
     parser = parser.reset()
