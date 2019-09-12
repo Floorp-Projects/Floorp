@@ -31,9 +31,10 @@ enum GeometryNodeType {
   GEOMETRY_NODE_DOCUMENT
 };
 
-static nsIFrame* GetFrameForNode(nsINode* aNode, GeometryNodeType aType) {
+static nsIFrame* GetFrameForNode(nsINode* aNode, GeometryNodeType aType,
+                                 bool aCreateFramesForSuppressedWhitespace) {
   Document* doc = aNode->OwnerDoc();
-  if (aType == GEOMETRY_NODE_TEXT) {
+  if (aType == GEOMETRY_NODE_TEXT && aCreateFramesForSuppressedWhitespace) {
     if (PresShell* presShell = doc->GetPresShell()) {
       presShell->FrameConstructor()->EnsureFrameForTextNodeIsCreatedAfterFlush(
           static_cast<CharacterData*>(aNode));
@@ -56,47 +57,59 @@ static nsIFrame* GetFrameForNode(nsINode* aNode, GeometryNodeType aType) {
 }
 
 static nsIFrame* GetFrameForGeometryNode(
-    const Optional<OwningGeometryNode>& aGeometryNode, nsINode* aDefaultNode) {
+    const Optional<OwningGeometryNode>& aGeometryNode, nsINode* aDefaultNode,
+    bool aCreateFramesForSuppressedWhitespace) {
   if (!aGeometryNode.WasPassed()) {
-    return GetFrameForNode(aDefaultNode->OwnerDoc(), GEOMETRY_NODE_DOCUMENT);
+    return GetFrameForNode(aDefaultNode->OwnerDoc(), GEOMETRY_NODE_DOCUMENT,
+                           aCreateFramesForSuppressedWhitespace);
   }
 
   const OwningGeometryNode& value = aGeometryNode.Value();
   if (value.IsElement()) {
-    return GetFrameForNode(value.GetAsElement(), GEOMETRY_NODE_ELEMENT);
+    return GetFrameForNode(value.GetAsElement(), GEOMETRY_NODE_ELEMENT,
+                           aCreateFramesForSuppressedWhitespace);
   }
   if (value.IsDocument()) {
-    return GetFrameForNode(value.GetAsDocument(), GEOMETRY_NODE_DOCUMENT);
+    return GetFrameForNode(value.GetAsDocument(), GEOMETRY_NODE_DOCUMENT,
+                           aCreateFramesForSuppressedWhitespace);
   }
-  return GetFrameForNode(value.GetAsText(), GEOMETRY_NODE_TEXT);
+  return GetFrameForNode(value.GetAsText(), GEOMETRY_NODE_TEXT,
+                         aCreateFramesForSuppressedWhitespace);
 }
 
 static nsIFrame* GetFrameForGeometryNode(const GeometryNode& aGeometryNode) {
+  // This will create frames for suppressed whitespace nodes.
   if (aGeometryNode.IsElement()) {
-    return GetFrameForNode(&aGeometryNode.GetAsElement(),
-                           GEOMETRY_NODE_ELEMENT);
+    return GetFrameForNode(&aGeometryNode.GetAsElement(), GEOMETRY_NODE_ELEMENT,
+                           true);
   }
   if (aGeometryNode.IsDocument()) {
     return GetFrameForNode(&aGeometryNode.GetAsDocument(),
-                           GEOMETRY_NODE_DOCUMENT);
+                           GEOMETRY_NODE_DOCUMENT, true);
   }
-  return GetFrameForNode(&aGeometryNode.GetAsText(), GEOMETRY_NODE_TEXT);
+  return GetFrameForNode(&aGeometryNode.GetAsText(), GEOMETRY_NODE_TEXT, true);
 }
 
-static nsIFrame* GetFrameForNode(nsINode* aNode) {
+static nsIFrame* GetFrameForNode(nsINode* aNode,
+                                 bool aCreateFramesForSuppressedWhitespace) {
   if (aNode->IsElement()) {
-    return GetFrameForNode(aNode, GEOMETRY_NODE_ELEMENT);
+    return GetFrameForNode(aNode, GEOMETRY_NODE_ELEMENT,
+                           aCreateFramesForSuppressedWhitespace);
   }
   if (aNode == aNode->OwnerDoc()) {
-    return GetFrameForNode(aNode, GEOMETRY_NODE_DOCUMENT);
+    return GetFrameForNode(aNode, GEOMETRY_NODE_DOCUMENT,
+                           aCreateFramesForSuppressedWhitespace);
   }
   NS_ASSERTION(aNode->IsText(), "Unknown node type");
-  return GetFrameForNode(aNode, GEOMETRY_NODE_TEXT);
+  return GetFrameForNode(aNode, GEOMETRY_NODE_TEXT,
+                         aCreateFramesForSuppressedWhitespace);
 }
 
 static nsIFrame* GetFirstNonAnonymousFrameForGeometryNode(
-    const Optional<OwningGeometryNode>& aNode, nsINode* aDefaultNode) {
-  nsIFrame* f = GetFrameForGeometryNode(aNode, aDefaultNode);
+    const Optional<OwningGeometryNode>& aNode, nsINode* aDefaultNode,
+    bool aCreateFramesForSuppressedWhitespace) {
+  nsIFrame* f = GetFrameForGeometryNode(aNode, aDefaultNode,
+                                        aCreateFramesForSuppressedWhitespace);
   if (f) {
     f = nsLayoutUtils::GetFirstNonAnonymousFrame(f);
   }
@@ -105,6 +118,7 @@ static nsIFrame* GetFirstNonAnonymousFrameForGeometryNode(
 
 static nsIFrame* GetFirstNonAnonymousFrameForGeometryNode(
     const GeometryNode& aNode) {
+  // This will create frames for suppressed whitespace nodes.
   nsIFrame* f = GetFrameForGeometryNode(aNode);
   if (f) {
     f = nsLayoutUtils::GetFirstNonAnonymousFrame(f);
@@ -113,7 +127,8 @@ static nsIFrame* GetFirstNonAnonymousFrameForGeometryNode(
 }
 
 static nsIFrame* GetFirstNonAnonymousFrameForNode(nsINode* aNode) {
-  nsIFrame* f = GetFrameForNode(aNode);
+  // This will create frames for suppressed whitespace nodes.
+  nsIFrame* f = GetFrameForNode(aNode, true);
   if (f) {
     f = nsLayoutUtils::GetFirstNonAnonymousFrame(f);
   }
@@ -245,20 +260,23 @@ static bool CheckFramesInSameTopLevelBrowsingContext(nsIFrame* aFrame1,
 void GetBoxQuads(nsINode* aNode, const dom::BoxQuadOptions& aOptions,
                  nsTArray<RefPtr<DOMQuad> >& aResult, CallerType aCallerType,
                  ErrorResult& aRv) {
-  nsIFrame* frame = GetFrameForNode(aNode);
+  nsIFrame* frame =
+      GetFrameForNode(aNode, aOptions.mCreateFramesForSuppressedWhitespace);
   if (!frame) {
     // No boxes to return
     return;
   }
   AutoWeakFrame weakFrame(frame);
   Document* ownerDoc = aNode->OwnerDoc();
-  nsIFrame* relativeToFrame =
-      GetFirstNonAnonymousFrameForGeometryNode(aOptions.mRelativeTo, ownerDoc);
+  nsIFrame* relativeToFrame = GetFirstNonAnonymousFrameForGeometryNode(
+      aOptions.mRelativeTo, ownerDoc,
+      aOptions.mCreateFramesForSuppressedWhitespace);
   // The first frame might be destroyed now if the above call lead to an
   // EnsureFrameForTextNode call.  We need to get the first frame again
   // when that happens and re-check it.
   if (!weakFrame.IsAlive()) {
-    frame = GetFrameForNode(aNode);
+    frame =
+        GetFrameForNode(aNode, aOptions.mCreateFramesForSuppressedWhitespace);
     if (!frame) {
       // No boxes to return
       return;
