@@ -587,6 +587,10 @@ struct DIGroup {
     GP("\n\n");
     GP("Begin EndGroup\n");
 
+    if (mVisibleRect.IsEmpty()) {
+      return;
+    }
+
     // Invalidate any unused items
     GP("mDisplayItems\n");
     for (auto iter = mDisplayItems.Iter(); !iter.Done(); iter.Next()) {
@@ -688,9 +692,12 @@ struct DIGroup {
     Range<uint8_t> bytes((uint8_t*)recorder->mOutputStream.mData,
                          recorder->mOutputStream.mLength);
     if (!mKey) {
-      if (!hasItems)  // we don't want to send a new image that doesn't have any
-                      // items in it
+      // we don't want to send a new image that doesn't have any
+      // items in it
+      if (!hasItems || mVisibleRect.IsEmpty()) {
         return;
+      }
+
       wr::BlobImageKey key =
           wr::BlobImageKey{aWrManager->WrBridge()->GetNextImageKey()};
       GP("No previous key making new one %d\n", key._0.mHandle);
