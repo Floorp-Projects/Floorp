@@ -1005,7 +1005,11 @@ class HTMLMediaElement::AudioChannelAgentCallback final
       }
 
       mPlayingThroughTheAudioChannel = playingThroughTheAudioChannel;
-      NotifyAudioChannelAgent(mPlayingThroughTheAudioChannel);
+      if (mPlayingThroughTheAudioChannel) {
+        StartAudioChannelAgent();
+      } else {
+        StopAudioChanelAgent();
+      }
     }
   }
 
@@ -1145,10 +1149,10 @@ class HTMLMediaElement::AudioChannelAgentCallback final
 
   void Shutdown() {
     MOZ_ASSERT(!mIsShutDown);
-    if (mAudioChannelAgent) {
-      mAudioChannelAgent->NotifyStoppedPlaying();
-      mAudioChannelAgent = nullptr;
+    if (mAudioChannelAgent && mAudioChannelAgent->IsPlayingStarted()) {
+      StopAudioChanelAgent();
     }
+    mAudioChannelAgent = nullptr;
     mIsShutDown = true;
   }
 
@@ -1186,22 +1190,23 @@ class HTMLMediaElement::AudioChannelAgentCallback final
     return true;
   }
 
-  void NotifyAudioChannelAgent(bool aPlaying) {
+  void StartAudioChannelAgent() {
     MOZ_ASSERT(mAudioChannelAgent);
-
-    if (aPlaying) {
-      AudioPlaybackConfig config;
-      nsresult rv =
-          mAudioChannelAgent->NotifyStartedPlaying(&config, IsOwnerAudible());
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return;
-      }
-
-      WindowVolumeChanged(config.mVolume, config.mMuted);
-      WindowSuspendChanged(config.mSuspend);
-    } else {
-      mAudioChannelAgent->NotifyStoppedPlaying();
+    MOZ_ASSERT(!mAudioChannelAgent->IsPlayingStarted());
+    AudioPlaybackConfig config;
+    if (NS_WARN_IF(NS_FAILED(mAudioChannelAgent->NotifyStartedPlaying(
+            &config, IsOwnerAudible())))) {
+      return;
     }
+
+    WindowVolumeChanged(config.mVolume, config.mMuted);
+    WindowSuspendChanged(config.mSuspend);
+  }
+
+  void StopAudioChanelAgent() {
+    MOZ_ASSERT(mAudioChannelAgent);
+    MOZ_ASSERT(mAudioChannelAgent->IsPlayingStarted());
+    mAudioChannelAgent->NotifyStoppedPlaying();
   }
 
   void SetSuspended(SuspendTypes aSuspend) {
