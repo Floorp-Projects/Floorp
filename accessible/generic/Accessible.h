@@ -394,9 +394,9 @@ class Accessible : public nsISupports {
   virtual bool RemoveChild(Accessible* aChild);
 
   /**
-   * Reallocates the child withing its parent.
+   * Reallocates the child within its parent.
    */
-  void MoveChild(uint32_t aNewIndex, Accessible* aChild);
+  virtual void RelocateChild(uint32_t aNewIndex, Accessible* aChild);
 
   //////////////////////////////////////////////////////////////////////////////
   // Accessible tree traverse methods

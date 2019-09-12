@@ -2203,7 +2203,7 @@ bool Accessible::RemoveChild(Accessible* aChild) {
   return true;
 }
 
-void Accessible::MoveChild(uint32_t aNewIndex, Accessible* aChild) {
+void Accessible::RelocateChild(uint32_t aNewIndex, Accessible* aChild) {
   MOZ_DIAGNOSTIC_ASSERT(aChild, "No child was given");
   MOZ_DIAGNOSTIC_ASSERT(aChild->mParent == this,
                         "A child from different subtree was given");

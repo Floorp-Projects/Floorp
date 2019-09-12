@@ -81,6 +81,13 @@ bool HTMLLIAccessible::InsertChildAt(uint32_t aIndex, Accessible* aChild) {
   return HyperTextAccessible::InsertChildAt(aIndex, aChild);
 }
 
+void HTMLLIAccessible::RelocateChild(uint32_t aNewIndex, Accessible* aChild) {
+  // Don't allow moving a child in front of the bullet.
+  if (mBullet && aChild != mBullet && aNewIndex != 0) {
+    HyperTextAccessible::RelocateChild(aNewIndex, aChild);
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLLIAccessible: public
 
