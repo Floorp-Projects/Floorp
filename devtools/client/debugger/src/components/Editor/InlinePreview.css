@@ -5,6 +5,7 @@
 .inline-preview {
   position: relative;
   margin-top: calc(var(--theme-code-line-height) * -11px);
+  margin-inline-start: 8px;
 }
 
 .inline-preview-outer {
