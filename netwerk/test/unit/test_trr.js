@@ -84,6 +84,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("network.trr.skip-AAAA-when-not-supported");
   Services.prefs.clearUserPref("network.trr.wait-for-A-and-AAAA");
   Services.prefs.clearUserPref("network.trr.excluded-domains");
+  Services.prefs.clearUserPref("network.trr.builtin-excluded-domains");
   Services.prefs.clearUserPref("captivedetect.canonicalURL");
 
   Services.prefs.clearUserPref("network.http.spdy.enabled");
@@ -676,6 +677,7 @@ add_task(async function test24() {
   dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 2); // TRR-first
   Services.prefs.setCharPref("network.trr.excluded-domains", "");
+  Services.prefs.setCharPref("network.trr.builtin-excluded-domains", "");
   Services.prefs.setCharPref(
     "network.trr.uri",
     `https://foo.example.com:${h2Port}/doh?responseIP=192.192.192.192`
@@ -736,12 +738,54 @@ add_task(async function test24g() {
   await SetParentalControlEnabled(false);
 });
 
+// TRR-first check that DNS result is used if domain is part of the builtin-excluded-domains pref
+add_task(async function test24h() {
+  dns.clearCache(true);
+  Services.prefs.setCharPref("network.trr.excluded-domains", "");
+  Services.prefs.setCharPref(
+    "network.trr.builtin-excluded-domains",
+    "bar.example.com"
+  );
+  await new DNSListener("bar.example.com", "127.0.0.1");
+});
+
+// TRR-first check that DNS result is used if domain is part of the builtin-excluded-domains pref
+add_task(async function test24i() {
+  dns.clearCache(true);
+  Services.prefs.setCharPref(
+    "network.trr.builtin-excluded-domains",
+    "example.com"
+  );
+  await new DNSListener("bar.example.com", "127.0.0.1");
+});
+
+// TRR-first check that DNS result is used if domain is part of the builtin-excluded-domains pref that contains things before it.
+add_task(async function test24j() {
+  dns.clearCache(true);
+  Services.prefs.setCharPref(
+    "network.trr.builtin-excluded-domains",
+    "foo.test.com, bar.example.com"
+  );
+  await new DNSListener("bar.example.com", "127.0.0.1");
+});
+
+// TRR-first check that DNS result is used if domain is part of the builtin-excluded-domains pref that contains things after it.
+add_task(async function test24k() {
+  dns.clearCache(true);
+  Services.prefs.setCharPref(
+    "network.trr.builtin-excluded-domains",
+    "bar.example.com, foo.test.com"
+  );
+  await new DNSListener("bar.example.com", "127.0.0.1");
+});
+
 // TRR-only that resolving localhost with TRR-only mode will use the remote
 // resolver if it's not in the excluded domains
 add_task(async function test25() {
   dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
   Services.prefs.setCharPref("network.trr.excluded-domains", "");
+  Services.prefs.setCharPref("network.trr.builtin-excluded-domains", "");
   Services.prefs.setCharPref(
     "network.trr.uri",
     `https://foo.example.com:${h2Port}/doh?responseIP=192.192.192.192`
@@ -815,6 +859,55 @@ add_task(async function test25f() {
   await SetParentalControlEnabled(true);
   await new DNSListener("www.example.com", "127.0.0.1");
   await SetParentalControlEnabled(false);
+});
+
+// TRR-only check that localhost goes directly to native lookup when in the builtin-excluded-domains
+add_task(async function test25g() {
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.excluded-domains", "");
+  Services.prefs.setCharPref(
+    "network.trr.builtin-excluded-domains",
+    "localhost"
+  );
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${h2Port}/doh?responseIP=192.192.192.192`
+  );
+
+  await new DNSListener("localhost", "127.0.0.1");
+});
+
+// TRR-only check that test.local is resolved via native DNS
+add_task(async function test25h() {
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref(
+    "network.trr.builtin-excluded-domains",
+    "localhost,local"
+  );
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${h2Port}/doh?responseIP=192.192.192.192`
+  );
+
+  await new DNSListener("test.local", "127.0.0.1");
+});
+
+// TRR-only check that .other is resolved via native DNS when the pref is set
+add_task(async function test25i() {
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref(
+    "network.trr.builtin-excluded-domains",
+    "localhost,local,other"
+  );
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${h2Port}/doh?responseIP=192.192.192.192`
+  );
+
+  await new DNSListener("domain.other", "127.0.0.1");
 });
 
 // Check that none of the requests have set any cookies.
@@ -898,6 +991,7 @@ add_task(async function test_connection_closed_no_bootstrap_no_excluded() {
   dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
   Services.prefs.setCharPref("network.trr.excluded-domains", "");
+  Services.prefs.setCharPref("network.trr.builtin-excluded-domains", "");
   Services.prefs.setCharPref(
     "network.trr.uri",
     `https://localhost:${h2Port}/doh?responseIP=3.3.3.3`
