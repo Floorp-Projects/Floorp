@@ -215,11 +215,9 @@ nsStandardURL::nsStandardURL(bool aSupportsFileURL, bool aTrackURL)
   mParser = net_GetStdURLParser();
 
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-  if (NS_IsMainThread()) {
-    if (aTrackURL) {
-      StaticMutexAutoLock lock(gAllURLsMutex);
-      gAllURLs.insertBack(this);
-    }
+  if (aTrackURL) {
+    StaticMutexAutoLock lock(gAllURLsMutex);
+    gAllURLs.insertBack(this);
   }
 #endif
 }
