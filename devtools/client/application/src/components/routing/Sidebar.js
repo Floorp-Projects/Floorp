@@ -12,18 +12,32 @@ const {
   aside,
   ul,
 } = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const SidebarItem = createFactory(require("./SidebarItem"));
 
 const { PAGE_TYPES } = require("../../constants");
 
 class Sidebar extends PureComponent {
+  static get propTypes() {
+    return {
+      // this prop is automatically injected via connect
+      selectedPage: PropTypes.oneOf(Object.values(PAGE_TYPES)),
+    };
+  }
+
   render() {
     const navItems = Object.values(PAGE_TYPES);
 
+    const isSelected = page => {
+      return page === this.props.selectedPage;
+    };
+
     return aside(
       {
-        className: "sidebar",
+        className: "sidebar js-sidebar",
       },
       ul(
         {
@@ -33,6 +47,7 @@ class Sidebar extends PureComponent {
           return SidebarItem({
             page: page,
             key: `sidebar-item-${page}`,
+            isSelected: isSelected(page),
           });
         })
       )
@@ -40,5 +55,10 @@ class Sidebar extends PureComponent {
   }
 }
 
-// Exports
-module.exports = Sidebar;
+function mapStateToProps(state) {
+  return {
+    selectedPage: state.ui.selectedPage,
+  };
+}
+
+module.exports = connect(mapStateToProps)(Sidebar);

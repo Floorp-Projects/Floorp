@@ -82,11 +82,13 @@ async function waitForWorkerRegistration(swTab) {
   );
 }
 
-// TODO: update this function once the sidebar links are implemented (See bug
-// https: //bugzilla.mozilla.org/show_bug.cgi?id=1565213), and switch to to
-// click those links instead, since it's more representative of what users do
 function selectPage(panel, page) {
+  /**
+   * Select a page by simulating a user click in the sidebar.
+   * @param {string} page The page we want to select (see `PAGE_TYPES`)
+   **/
   info(`Selecting application page: ${page}`);
-  const actions = panel.panelWin.Application.actions;
-  actions.updateSelectedPage(page);
+  const doc = panel.panelWin.document;
+  const navItem = doc.querySelector(`.js-sidebar-${page}`);
+  navItem.click();
 }
