@@ -385,7 +385,7 @@ class CommandAction(argparse.Action):
             ' subcommand [subcommand arguments]'
         group = parser.add_argument_group('Sub Commands')
 
-        for subcommand, subhandler in sorted(handler.subcommand_handlers.iteritems()):
+        for subcommand, subhandler in sorted(handler.subcommand_handlers.items()):
             group.add_argument(subcommand, help=subhandler.description,
                                action='store_true')
 
@@ -397,7 +397,7 @@ class CommandAction(argparse.Action):
         parser.print_help()
 
     def _handle_subcommand_help(self, parser, handler, args):
-        subcommand = set(args).intersection(handler.subcommand_handlers.keys())
+        subcommand = set(args).intersection(list(handler.subcommand_handlers.keys()))
         if not subcommand:
             return self._handle_subcommand_main_help(parser, handler)
 
@@ -452,13 +452,13 @@ def format_docstring(docstring):
     if not docstring:
         return ''
     lines = docstring.expandtabs().splitlines()
-    indent = sys.maxint
+    indent = sys.maxsize
     for line in lines[1:]:
         stripped = line.lstrip()
         if stripped:
             indent = min(indent, len(line) - len(stripped))
     trimmed = [lines[0].strip()]
-    if indent < sys.maxint:
+    if indent < sys.maxsize:
         for line in lines[1:]:
             trimmed.append(line[indent:].rstrip())
     while trimmed and not trimmed[-1]:
