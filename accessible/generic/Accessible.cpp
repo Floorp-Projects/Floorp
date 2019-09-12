@@ -362,12 +362,12 @@ uint64_t Accessible::VisibilityState() const {
     // If contained by scrollable frame then check that at least 12 pixels
     // around the object is visible, otherwise the object is offscreen.
     nsIScrollableFrame* scrollableFrame = do_QueryFrame(parentFrame);
+    const nscoord kMinPixels = nsPresContext::CSSPixelsToAppUnits(12);
     if (scrollableFrame) {
       nsRect scrollPortRect = scrollableFrame->GetScrollPortRect();
       nsRect frameRect = nsLayoutUtils::TransformFrameRectToAncestor(
           frame, frame->GetRectRelativeToSelf(), parentFrame);
       if (!scrollPortRect.Contains(frameRect)) {
-        const nscoord kMinPixels = nsPresContext::CSSPixelsToAppUnits(12);
         scrollPortRect.Deflate(kMinPixels, kMinPixels);
         if (!scrollPortRect.Intersects(frameRect)) return states::OFFSCREEN;
       }
@@ -375,6 +375,14 @@ uint64_t Accessible::VisibilityState() const {
 
     if (!parentFrame) {
       parentFrame = nsLayoutUtils::GetCrossDocParentFrame(curFrame);
+      // Even if we couldn't find the parent frame, it might mean we are in an
+      // out-of-process iframe, try to see if |frame| is scrolled out in an
+      // scrollable frame in a cross-process ancestor document.
+      if (!parentFrame &&
+          nsLayoutUtils::FrameIsMostlyScrolledOutOfViewInCrossProcess(
+              frame, kMinPixels)) {
+        return states::OFFSCREEN;
+      }
     }
 
     curFrame = parentFrame;

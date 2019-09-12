@@ -61,10 +61,10 @@ fn unwrap_inst(
             fmtln!(fmt, "{},", field.member);
         }
 
-        if iform.num_value_operands == 1 {
-            fmt.line("arg,");
-        } else if iform.has_value_list || iform.num_value_operands > 1 {
+        if iform.has_value_list || iform.num_value_operands > 1 {
             fmt.line("ref args,");
+        } else if iform.num_value_operands == 1 {
+            fmt.line("arg,");
         }
 
         fmt.line("..");
@@ -87,6 +87,13 @@ fn unwrap_inst(
                 } else if op.is_value() {
                     let n = inst.value_opnums.iter().position(|&i| i == op_num).unwrap();
                     fmtln!(fmt, "func.dfg.resolve_aliases(args[{}]),", n);
+                } else if op.is_varargs() {
+                    let n = inst.imm_opnums.iter().chain(inst.value_opnums.iter()).max().map(|n| n + 1).unwrap_or(0);
+                    // We need to create a `Vec` here, as using a slice would result in a borrowck
+                    // error later on.
+                    fmtln!(fmt, "\
+                        args.iter().skip({}).map(|&arg| func.dfg.resolve_aliases(arg)).collect::<Vec<_>>(),\
+                    ", n);
                 }
             }
 
@@ -103,6 +110,19 @@ fn unwrap_inst(
         fmt.line(r#"unreachable!("bad instruction format")"#);
     });
     fmtln!(fmt, "};");
+
+    assert_eq!(inst.operands_in.len(), apply.args.len());
+    for (i, op) in inst.operands_in.iter().enumerate() {
+        if op.is_varargs() {
+            let name = var_pool
+                .get(apply.args[i].maybe_var().expect("vararg without name"))
+                .name;
+
+            // Above name is set to an `Vec` representing the varargs. However it is expected to be
+            // `&[Value]` below, so we borrow it.
+            fmtln!(fmt, "let {} = &{};", name, name);
+        }
+    }
 
     for &op_num in &inst.value_opnums {
         let arg = &apply.args[op_num];
@@ -402,6 +422,13 @@ fn gen_transform<'a>(
             fmt.line("let removed = pos.remove_inst();");
             fmt.line("debug_assert_eq!(removed, inst);");
         }
+
+        if transform.def_pool.get(transform.src).apply.inst.is_branch {
+            // A branch might have been legalized into multiple branches, so we need to recompute
+            // the cfg.
+            fmt.line("cfg.recompute_ebb(pos.func, pos.current_ebb().unwrap());");
+        }
+
         fmt.line("return true;");
     });
     fmt.line("}");

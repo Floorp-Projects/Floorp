@@ -661,19 +661,53 @@ nsresult TextEditor::DeleteSelectionAsSubAction(EDirection aDirection,
   subActionInfo.stripWrappers = aStripWrappers;
   bool cancel, handled;
   nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
+  if (NS_WARN_IF(NS_FAILED(rv)) || cancel) {
+    return rv;
+  }
+  if (!handled) {
+    rv = DeleteSelectionWithTransaction(aDirection, aStripWrappers);
+  }
+  // post-process
+  rv = rules->DidDoAction(subActionInfo, rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  if (!cancel && !handled) {
-    rv = DeleteSelectionWithTransaction(aDirection, aStripWrappers);
+
+  // XXX This is odd.  We just tries to remove empty text node here but we
+  //     refer `Selection`.  It may be modified by mutation event listeners
+  //     so that we should remove the empty text node when we make it empty.
+  EditorDOMPoint atNewStartOfSelection(
+      EditorBase::GetStartPoint(*SelectionRefPtr()));
+  if (NS_WARN_IF(!atNewStartOfSelection.IsSet())) {
+    // XXX And also it seems that we don't need to return error here.
+    //     Why don't we just ignore?  `Selection::RemoveAllRanges()` may
+    //     have been called by mutation event listeners.
+    return NS_ERROR_FAILURE;
   }
-  if (!cancel) {
-    // post-process
-    rv = rules->DidDoAction(subActionInfo, rv);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "TextEditRules::DidDoAction() failed");
+  if (atNewStartOfSelection.IsInTextNode() &&
+      !atNewStartOfSelection.GetContainer()->Length()) {
+    nsresult rv = DeleteNodeWithTransaction(
+        MOZ_KnownLive(*atNewStartOfSelection.GetContainer()));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
-  return rv;
+
+  // XXX I don't think that this is necessary in anonymous `<div>` element of
+  //     TextEditor since there should be at most one text node and at most
+  //     one padding `<br>` element so that `<br>` element won't be before
+  //     caret.
+  if (!TopLevelEditSubActionDataRef().mDidExplicitlySetInterLine) {
+    // We prevent the caret from sticking on the left of previous `<br>`
+    // element (i.e. the end of previous line) after this deletion. Bug 92124.
+    ErrorResult error;
+    SelectionRefPtr()->SetInterlinePosition(true, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+  }
+
+  return NS_OK;
 }
 
 nsresult TextEditor::DeleteSelectionWithTransaction(

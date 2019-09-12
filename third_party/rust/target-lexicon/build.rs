@@ -12,6 +12,7 @@ use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
+extern crate alloc;
 extern crate serde_json;
 
 // Include triple.rs and targets.rs so we can parse the TARGET environment variable.
@@ -120,8 +121,17 @@ fn main() {
 }
 
 fn write_host_rs(mut out: File, triple: Triple) -> io::Result<()> {
+    // The generated Debug implementation for the inner architecture variants
+    // doesn't print the enum name qualifier, so import them here. There
+    // shouldn't be any conflicts because these enums all share a namespace
+    // in the triple string format.
+    writeln!(out, "#[allow(unused_imports)]")?;
+    writeln!(out, "use crate::Aarch64Architecture::*;")?;
+    writeln!(out, "#[allow(unused_imports)]")?;
+    writeln!(out, "use crate::ArmArchitecture::*;")?;
+    writeln!(out)?;
     writeln!(out, "/// The `Triple` of the current host.")?;
-    writeln!(out, "pub static HOST: Triple = Triple {{")?;
+    writeln!(out, "pub const HOST: Triple = Triple {{")?;
     writeln!(
         out,
         "    architecture: Architecture::{:?},",
@@ -148,7 +158,7 @@ fn write_host_rs(mut out: File, triple: Triple) -> io::Result<()> {
 
     writeln!(out, "impl Architecture {{")?;
     writeln!(out, "    /// Return the architecture for the current host.")?;
-    writeln!(out, "    pub fn host() -> Self {{")?;
+    writeln!(out, "    pub const fn host() -> Self {{")?;
     writeln!(out, "        Architecture::{:?}", triple.architecture)?;
     writeln!(out, "    }}")?;
     writeln!(out, "}}")?;
@@ -156,7 +166,7 @@ fn write_host_rs(mut out: File, triple: Triple) -> io::Result<()> {
 
     writeln!(out, "impl Vendor {{")?;
     writeln!(out, "    /// Return the vendor for the current host.")?;
-    writeln!(out, "    pub fn host() -> Self {{")?;
+    writeln!(out, "    pub const fn host() -> Self {{")?;
     writeln!(out, "        Vendor::{:?}", triple.vendor)?;
     writeln!(out, "    }}")?;
     writeln!(out, "}}")?;
@@ -167,7 +177,7 @@ fn write_host_rs(mut out: File, triple: Triple) -> io::Result<()> {
         out,
         "    /// Return the operating system for the current host."
     )?;
-    writeln!(out, "    pub fn host() -> Self {{")?;
+    writeln!(out, "    pub const fn host() -> Self {{")?;
     writeln!(
         out,
         "        OperatingSystem::{:?}",
@@ -179,7 +189,7 @@ fn write_host_rs(mut out: File, triple: Triple) -> io::Result<()> {
 
     writeln!(out, "impl Environment {{")?;
     writeln!(out, "    /// Return the environment for the current host.")?;
-    writeln!(out, "    pub fn host() -> Self {{")?;
+    writeln!(out, "    pub const fn host() -> Self {{")?;
     writeln!(out, "        Environment::{:?}", triple.environment)?;
     writeln!(out, "    }}")?;
     writeln!(out, "}}")?;
@@ -190,7 +200,7 @@ fn write_host_rs(mut out: File, triple: Triple) -> io::Result<()> {
         out,
         "    /// Return the binary format for the current host."
     )?;
-    writeln!(out, "    pub fn host() -> Self {{")?;
+    writeln!(out, "    pub const fn host() -> Self {{")?;
     writeln!(out, "        BinaryFormat::{:?}", triple.binary_format)?;
     writeln!(out, "    }}")?;
     writeln!(out, "}}")?;
@@ -198,7 +208,7 @@ fn write_host_rs(mut out: File, triple: Triple) -> io::Result<()> {
 
     writeln!(out, "impl Triple {{")?;
     writeln!(out, "    /// Return the triple for the current host.")?;
-    writeln!(out, "    pub fn host() -> Self {{")?;
+    writeln!(out, "    pub const fn host() -> Self {{")?;
     writeln!(out, "        Self {{")?;
     writeln!(
         out,

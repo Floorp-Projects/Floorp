@@ -457,11 +457,11 @@ nscoord StyleCSSPixelLength::ToAppUnits() const {
 }
 
 constexpr LengthPercentage LengthPercentage::Zero() {
-  return {{0.}, {0.}, StyleAllowedNumericType::All, false, false};
+  return {{0.}, {0.}, StyleAllowedNumericType::All, false};
 }
 
 LengthPercentage LengthPercentage::FromPixels(CSSCoord aCoord) {
-  return {{aCoord}, {0.}, StyleAllowedNumericType::All, false, false};
+  return {{aCoord}, {0.}, StyleAllowedNumericType::All, false};
 }
 
 LengthPercentage LengthPercentage::FromAppUnits(nscoord aCoord) {
@@ -469,7 +469,7 @@ LengthPercentage LengthPercentage::FromAppUnits(nscoord aCoord) {
 }
 
 LengthPercentage LengthPercentage::FromPercentage(float aPercentage) {
-  return {{0.}, {aPercentage}, StyleAllowedNumericType::All, true, false};
+  return {{0.}, {aPercentage}, StyleAllowedNumericType::All, true};
 }
 
 CSSCoord LengthPercentage::LengthInCSSPixels() const { return length._0; }

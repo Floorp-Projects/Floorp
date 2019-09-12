@@ -889,6 +889,9 @@ var snapshotFormatters = {
                 }
                 $("enumerate-database-result").textContent +=
                   logs.join("\n") + "\n";
+              })
+              .catch(err => {
+                $("enumerate-database-result").textContent += `${name}:\n`;
               });
           }
 

@@ -1800,6 +1800,14 @@ bool AppendNamedPropertyIds(JSContext* cx, JS::Handle<JSObject*> proxy,
 
 enum StringificationBehavior { eStringify, eEmpty, eNull };
 
+static inline JSString* ConvertJSValueToJSString(JSContext* cx,
+                                                 JS::Handle<JS::Value> v) {
+  if (MOZ_LIKELY(v.isString())) {
+    return v.toString();
+  }
+  return JS::ToString(cx, v);
+}
+
 template <typename T>
 static inline bool ConvertJSValueToString(
     JSContext* cx, JS::Handle<JS::Value> v,

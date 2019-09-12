@@ -55,26 +55,16 @@ nsresult HTMLEditor::SetSelectionToAbsoluteOrStaticAsAction(
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
-  AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this,
-      aEnabled ? EditSubAction::eSetPositionToAbsolute
-               : EditSubAction::eSetPositionToStatic,
-      nsIEditor::eNext);
-
-  // the line below does not match the code; should it be removed?
-  // Find out if the selection is collapsed:
-
-  EditSubActionInfo subActionInfo(aEnabled
-                                      ? EditSubAction::eSetPositionToAbsolute
-                                      : EditSubAction::eSetPositionToStatic);
-  bool cancel, handled;
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
-  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditRules::WillDoAction() failed");
-  return rv;
+  if (aEnabled) {
+    EditActionResult result = SetSelectionToAbsoluteAsSubAction();
+    NS_WARNING_ASSERTION(result.Succeeded(),
+                         "SetSelectionToAbsoluteAsSubAction() failed");
+    return result.Rv();
+  }
+  EditActionResult result = SetSelectionToStaticAsSubAction();
+  NS_WARNING_ASSERTION(result.Succeeded(),
+                       "SetSelectionToStaticAsSubAction() failed");
+  return result.Rv();
 }
 
 already_AddRefed<Element>
@@ -148,30 +138,9 @@ nsresult HTMLEditor::AddZIndexAsAction(int32_t aChange,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
-  AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this,
-      aChange < 0 ? EditSubAction::eDecreaseZIndex
-                  : EditSubAction::eIncreaseZIndex,
-      nsIEditor::eNext);
-
-  // brade: can we get rid of this comment?
-  // Find out if the selection is collapsed:
-  EditSubActionInfo subActionInfo(aChange < 0 ? EditSubAction::eDecreaseZIndex
-                                              : EditSubAction::eIncreaseZIndex);
-  bool cancel, handled;
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
-  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
-  if (cancel || NS_FAILED(rv)) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-
-  rv = rules->DidDoAction(subActionInfo, rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-  return NS_OK;
+  EditActionResult result = AddZIndexAsSubAction(aChange);
+  NS_WARNING_ASSERTION(result.Succeeded(), "AddZIndexAsSubAction() failed");
+  return EditorBase::ToGenericNSResult(result.Rv());
 }
 
 int32_t HTMLEditor::GetZIndex(Element& aElement) {

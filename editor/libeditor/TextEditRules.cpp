@@ -259,16 +259,10 @@ nsresult TextEditRules::DidDoAction(EditSubActionInfo& aInfo,
     return NS_ERROR_EDITOR_DESTROYED;
   }
 
-  AutoSafeEditorData setData(*this, *mTextEditor);
-
-  // don't let any txns in here move the selection around behind our back.
-  // Note that this won't prevent explicit selection setting from working.
-  AutoTransactionsConserveSelection dontChangeMySelection(TextEditorRef());
-
   switch (aInfo.mEditSubAction) {
     case EditSubAction::eDeleteSelectedContent:
       MOZ_ASSERT(!mIsHTMLEditRules);
-      return DidDeleteSelection();
+      return NS_OK;
     case EditSubAction::eInsertElement:
     case EditSubAction::eUndo:
     case EditSubAction::eRedo:
@@ -869,11 +863,21 @@ nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
 
   // If we replaced non-empty value with empty string, we need to delete the
   // text node.
-  if (tString.IsEmpty()) {
-    DebugOnly<nsresult> rvIgnored = DidDeleteSelection();
-    MOZ_ASSERT(rvIgnored != NS_ERROR_EDITOR_DESTROYED);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                         "DidDeleteSelection() failed");
+  if (tString.IsEmpty() && !textNode->Length()) {
+    nsresult rv =
+        MOZ_KnownLive(TextEditorRef()).DeleteNodeWithTransaction(*textNode);
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "DeleteNodeWithTransaction() failed, but ignored");
+    // XXX I don't think this is necessary because the anonymous `<div>`
+    //     element has now only padding `<br>` element even if there are
+    //     something.
+    IgnoredErrorResult ignoredError;
+    SelectionRefPtr()->SetInterlinePosition(true, ignoredError);
+    NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                         "Selection::SetInterlinePoisition() failed");
   }
 
   *aHandled = true;
@@ -996,43 +1000,6 @@ nsresult TextEditRules::DeleteSelectionWithTransaction(
 
   *aHandled = true;
   return NS_OK;
-}
-
-nsresult TextEditRules::DidDeleteSelection() {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  EditorDOMPoint selectionStartPoint(
-      EditorBase::GetStartPoint(*SelectionRefPtr()));
-  if (NS_WARN_IF(!selectionStartPoint.IsSet())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Delete empty text nodes at selection.
-  if (selectionStartPoint.IsInTextNode() &&
-      !selectionStartPoint.GetContainer()->Length()) {
-    nsresult rv = MOZ_KnownLive(TextEditorRef())
-                      .DeleteNodeWithTransaction(
-                          MOZ_KnownLive(*selectionStartPoint.GetContainer()));
-    if (NS_WARN_IF(!CanHandleEditAction())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  // Note that this may be true only when this is HTMLEditRules.
-  if (TextEditorRef()
-          .TopLevelEditSubActionDataRef()
-          .mDidExplicitlySetInterLine) {
-    return NS_OK;
-  }
-  // We prevent the caret from sticking on the left of prior BR
-  // (i.e. the end of previous line) after this deletion.  Bug 92124
-  ErrorResult err;
-  SelectionRefPtr()->SetInterlinePosition(true, err);
-  NS_WARNING_ASSERTION(!err.Failed(), "Failed to set interline position");
-  return err.StealNSResult();
 }
 
 nsresult TextEditRules::WillOutputText(const nsAString* aOutputFormat,

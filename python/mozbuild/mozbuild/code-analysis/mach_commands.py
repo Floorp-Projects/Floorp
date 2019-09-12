@@ -237,7 +237,10 @@ class StaticAnalysis(MachCommandBase):
                 if name_re.search(f['file']):
                     total = total + 1
 
-        if not total:
+        # Filter source to remove excluded files
+        source = self._generate_path_list(source, verbose=verbose)
+
+        if not total or not source:
             self.log(logging.INFO, 'static-analysis', {},
                      "There are no files eligible for analysis. Please note that 'header' files "
                      "cannot be used for analysis since they do not consist compilation units.")
@@ -1909,7 +1912,7 @@ class StaticAnalysis(MachCommandBase):
             if self._is_ignored_path(ignored_dir_re, f):
                 # Early exit if we have provided an ignored directory
                 if verbose:
-                    print("clang-format: Ignored third party code '{0}'".format(f))
+                    print("static-analysis: Ignored third party code '{0}'".format(f))
                 continue
 
             if os.path.isdir(f):

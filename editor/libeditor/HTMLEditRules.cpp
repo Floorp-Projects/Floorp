@@ -789,10 +789,6 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
       NS_WARNING_ASSERTION(result.Succeeded(),
                            "HandleDeleteSelection() failed");
       return result.Rv();
-    case EditSubAction::eSetPositionToAbsolute:
-      return WillAbsolutePosition(aCancel, aHandled);
-    case EditSubAction::eSetPositionToStatic:
-      return WillRemoveAbsolutePosition(aCancel, aHandled);
     case EditSubAction::eInsertElement:
     case EditSubAction::eInsertQuotedText: {
       nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert(aCancel);
@@ -802,13 +798,11 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
       return NS_OK;
     }
-    case EditSubAction::eDecreaseZIndex:
-      return WillRelativeChangeZIndex(-1, aCancel, aHandled);
-    case EditSubAction::eIncreaseZIndex:
-      return WillRelativeChangeZIndex(1, aCancel, aHandled);
     case EditSubAction::eCreateOrChangeDefinitionListItem:
     case EditSubAction::eCreateOrChangeList:
     case EditSubAction::eCreateOrRemoveBlock:
+    case EditSubAction::eDecreaseZIndex:
+    case EditSubAction::eIncreaseZIndex:
     case EditSubAction::eIndent:
     case EditSubAction::eInsertHTMLSource:
     case EditSubAction::eInsertParagraphSeparator:
@@ -817,6 +811,8 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
     case EditSubAction::eRedo:
     case EditSubAction::eRemoveList:
     case EditSubAction::eSetOrClearAlignment:
+    case EditSubAction::eSetPositionToAbsolute:
+    case EditSubAction::eSetPositionToStatic:
       MOZ_ASSERT_UNREACHABLE("This path should've been dead code");
       return NS_ERROR_UNEXPECTED;
     default:
@@ -845,6 +841,8 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
     case EditSubAction::eCreateOrChangeDefinitionListItem:
     case EditSubAction::eCreateOrChangeList:
     case EditSubAction::eCreateOrRemoveBlock:
+    case EditSubAction::eDecreaseZIndex:
+    case EditSubAction::eIncreaseZIndex:
     case EditSubAction::eIndent:
     case EditSubAction::eInsertHTMLSource:
     case EditSubAction::eInsertParagraphSeparator:
@@ -4111,12 +4109,7 @@ nsresult HTMLEditRules::DidDeleteSelection() {
       }
     }
   }
-
-  // call through to base class
-  nsresult rv = TextEditRules::DidDeleteSelection();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "TextEditRules::DidDeleteSelection() failed");
-  return rv;
+  return NS_OK;
 }
 
 EditActionResult HTMLEditor::MakeOrChangeListAndListItemAsSubAction(
@@ -10873,69 +10866,72 @@ nsresult HTMLEditor::ChangeMarginStart(Element& aElement,
   return rv;
 }
 
-nsresult HTMLEditRules::WillAbsolutePosition(bool* aCancel, bool* aHandled) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-  MOZ_ASSERT(aCancel && aHandled);
+EditActionResult HTMLEditor::SetSelectionToAbsoluteAsSubAction() {
+  MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
+
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  AutoEditSubActionNotifier startToHandleEditSubAction(
+      *this, EditSubAction::eSetPositionToAbsolute, nsIEditor::eNext);
+
+  EditActionResult result = CanHandleHTMLEditSubAction();
+  if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
+    return result;
+  }
 
   // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert();
+  nsresult rv = WillInsert();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    return NS_ERROR_EDITOR_DESTROYED;
+    return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
 
-  *aCancel = false;
-  *aHandled = true;
-
-  RefPtr<Element> focusElement = HTMLEditorRef().GetSelectionContainerElement();
+  RefPtr<Element> focusElement = GetSelectionContainerElement();
   if (focusElement && HTMLEditUtils::IsImage(focusElement)) {
-    HTMLEditorRef().TopLevelEditSubActionDataRef().mNewBlockElement =
-        std::move(focusElement);
-    return NS_OK;
+    TopLevelEditSubActionDataRef().mNewBlockElement = std::move(focusElement);
+    return EditActionHandled();
   }
 
   if (!SelectionRefPtr()->IsCollapsed()) {
-    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
+    nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditActionHandled(rv);
     }
   }
 
-  rv =
-      MOZ_KnownLive(HTMLEditorRef())
-          .MoveSelectedContentsToDivElementToMakeItAbsolutePosition(address_of(
-              HTMLEditorRef().TopLevelEditSubActionDataRef().mNewBlockElement));
+  // XXX Is this right thing?
+  TopLevelEditSubActionDataRef().mNewBlockElement = nullptr;
+
+  RefPtr<Element> divElement;
+  rv = MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
+      address_of(divElement));
   // MoveSelectedContentsToDivElementToMakeItAbsolutePosition() may restore
   // selection with AutoSelectionRestorer.  Therefore, the editor might have
   // already been destroyed now.
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  if (NS_WARN_IF(Destroyed())) {
+    return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditActionHandled(rv);
   }
 
-  rv = MOZ_KnownLive(HTMLEditorRef())
-           .MaybeInsertPaddingBRElementForEmptyLastLineAtSelection();
+  rv = MaybeInsertPaddingBRElementForEmptyLastLineAtSelection();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditActionHandled(rv);
   }
 
-  if (!HTMLEditorRef().TopLevelEditSubActionDataRef().mNewBlockElement) {
-    return NS_OK;
+  if (!divElement) {
+    return EditActionHandled();
   }
 
-  OwningNonNull<Element> newBlock(
-      *HTMLEditorRef().TopLevelEditSubActionDataRef().mNewBlockElement);
-  rv = MOZ_KnownLive(HTMLEditorRef())
-           .SetPositionToAbsoluteOrStatic(*newBlock, true);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  rv = SetPositionToAbsoluteOrStatic(*divElement, true);
+  if (NS_WARN_IF(Destroyed())) {
+    return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
   }
+
+  TopLevelEditSubActionDataRef().mNewBlockElement = std::move(divElement);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "SetPositionToAbsoluteOrStatic() failed");
-  return rv;
+  return EditActionHandled(rv);
 }
 
 nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
@@ -11200,93 +11196,92 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
   return NS_OK;
 }
 
-nsresult HTMLEditRules::WillRemoveAbsolutePosition(bool* aCancel,
-                                                   bool* aHandled) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+EditActionResult HTMLEditor::SetSelectionToStaticAsSubAction() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
-    return NS_ERROR_INVALID_ARG;
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  AutoEditSubActionNotifier startToHandleEditSubAction(
+      *this, EditSubAction::eSetPositionToStatic, nsIEditor::eNext);
+
+  EditActionResult result = CanHandleHTMLEditSubAction();
+  if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
+    return result;
   }
 
   // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert();
+  nsresult rv = WillInsert();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    return NS_ERROR_EDITOR_DESTROYED;
+    return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed, but ignored");
 
-  *aCancel = false;
-  *aHandled = true;
-
-  RefPtr<Element> element =
-      HTMLEditorRef().GetAbsolutelyPositionedSelectionContainer();
+  RefPtr<Element> element = GetAbsolutelyPositionedSelectionContainer();
   if (NS_WARN_IF(!element)) {
-    return NS_ERROR_FAILURE;
+    return EditActionHandled(NS_ERROR_FAILURE);
   }
 
   {
-    AutoSelectionRestorer restoreSelectionLater(HTMLEditorRef());
+    AutoSelectionRestorer restoreSelectionLater(*this);
 
-    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .SetPositionToAbsoluteOrStatic(*element, false);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+    nsresult rv = SetPositionToAbsoluteOrStatic(*element, false);
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditActionHandled(rv);
     }
   }
 
   // Restoring Selection might cause destroying the HTML editor.
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  return NS_OK;
+  return NS_WARN_IF(Destroyed()) ? EditActionHandled(NS_ERROR_EDITOR_DESTROYED)
+                                 : EditActionHandled(NS_OK);
 }
 
-nsresult HTMLEditRules::WillRelativeChangeZIndex(int32_t aChange, bool* aCancel,
-                                                 bool* aHandled) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+EditActionResult HTMLEditor::AddZIndexAsSubAction(int32_t aChange) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
-    return NS_ERROR_INVALID_ARG;
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  AutoEditSubActionNotifier startToHandleEditSubAction(
+      *this,
+      aChange < 0 ? EditSubAction::eDecreaseZIndex
+                  : EditSubAction::eIncreaseZIndex,
+      nsIEditor::eNext);
+
+  EditActionResult result = CanHandleHTMLEditSubAction();
+  if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
+    return result;
   }
 
   // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert();
+  nsresult rv = WillInsert();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    return NS_ERROR_EDITOR_DESTROYED;
+    return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
   }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed, but ignored");
 
-  *aCancel = false;
-  *aHandled = true;
-
-  RefPtr<Element> element =
-      HTMLEditorRef().GetAbsolutelyPositionedSelectionContainer();
-  if (NS_WARN_IF(!element)) {
-    return NS_ERROR_FAILURE;
+  RefPtr<Element> absolutelyPositionedElement =
+      GetAbsolutelyPositionedSelectionContainer();
+  if (NS_WARN_IF(!absolutelyPositionedElement)) {
+    return EditActionHandled(NS_ERROR_FAILURE);
   }
 
   {
-    AutoSelectionRestorer restoreSelectionLater(HTMLEditorRef());
+    AutoSelectionRestorer restoreSelectionLater(*this);
 
     int32_t zIndex;
-    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .RelativeChangeElementZIndex(*element, aChange, &zIndex);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+    nsresult rv = RelativeChangeElementZIndex(*absolutelyPositionedElement,
+                                              aChange, &zIndex);
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditActionHandled(rv);
     }
   }
 
   // Restoring Selection might cause destroying the HTML editor.
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  return NS_OK;
+  return NS_WARN_IF(Destroyed()) ? EditActionHandled(NS_ERROR_EDITOR_DESTROYED)
+                                 : EditActionHandled(NS_OK);
 }
 
 nsresult HTMLEditRules::DocumentModified() {

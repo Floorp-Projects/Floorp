@@ -60,7 +60,7 @@ class CodespellProcess(ProcessHandlerMixin):
         if m:
             return
         res = {'path': abspath,
-               'message': typo + " ==> " + correct,
+               'message': typo.strip() + " ==> " + correct,
                'level': 'error',
                'lineno': line,
                }

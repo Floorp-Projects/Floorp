@@ -969,14 +969,14 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
     // when those properties change.
     node = RecycleOrCreateNode(aProofOfTreeLock, aState, nullptr, aLayersId);
     AttachNodeToTree(node, aParent, aNextSibling);
-    node->SetHitTestData(GetEventRegions(aLayer), aLayer.GetVisibleRegion(),
-                         aLayer.GetTransformTyped(),
-                         (!parentHasPerspective && aLayer.GetClipRect())
-                             ? Some(ParentLayerIntRegion(*aLayer.GetClipRect()))
-                             : Nothing(),
-                         GetEventRegionsOverride(aParent, aLayer),
-                         aLayer.IsBackfaceHidden(),
-                         !!aLayer.IsAsyncZoomContainer());
+    node->SetHitTestData(
+        GetEventRegions(aLayer), aLayer.GetVisibleRegion(),
+        aLayer.GetRemoteDocumentRect(), aLayer.GetTransformTyped(),
+        (!parentHasPerspective && aLayer.GetClipRect())
+            ? Some(ParentLayerIntRegion(*aLayer.GetClipRect()))
+            : Nothing(),
+        GetEventRegionsOverride(aParent, aLayer), aLayer.IsBackfaceHidden(),
+        !!aLayer.IsAsyncZoomContainer());
     node->SetScrollbarData(aLayer.GetScrollbarAnimationId(),
                            aLayer.GetScrollbarData());
     node->SetFixedPosData(aLayer.GetFixedPositionScrollContainerId());
@@ -1095,11 +1095,11 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
 
     Maybe<ParentLayerIntRegion> clipRegion =
         parentHasPerspective ? Nothing() : ComputeClipRegion(aLayer);
-    node->SetHitTestData(GetEventRegions(aLayer), aLayer.GetVisibleRegion(),
-                         aLayer.GetTransformTyped(), clipRegion,
-                         GetEventRegionsOverride(aParent, aLayer),
-                         aLayer.IsBackfaceHidden(),
-                         !!aLayer.IsAsyncZoomContainer());
+    node->SetHitTestData(
+        GetEventRegions(aLayer), aLayer.GetVisibleRegion(),
+        aLayer.GetRemoteDocumentRect(), aLayer.GetTransformTyped(), clipRegion,
+        GetEventRegionsOverride(aParent, aLayer), aLayer.IsBackfaceHidden(),
+        !!aLayer.IsAsyncZoomContainer());
     apzc->SetAncestorTransform(aAncestorTransform);
 
     PrintAPZCInfo(aLayer, apzc);
@@ -1199,11 +1199,11 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
 
     Maybe<ParentLayerIntRegion> clipRegion =
         parentHasPerspective ? Nothing() : ComputeClipRegion(aLayer);
-    node->SetHitTestData(GetEventRegions(aLayer), aLayer.GetVisibleRegion(),
-                         aLayer.GetTransformTyped(), clipRegion,
-                         GetEventRegionsOverride(aParent, aLayer),
-                         aLayer.IsBackfaceHidden(),
-                         !!aLayer.IsAsyncZoomContainer());
+    node->SetHitTestData(
+        GetEventRegions(aLayer), aLayer.GetVisibleRegion(),
+        aLayer.GetRemoteDocumentRect(), aLayer.GetTransformTyped(), clipRegion,
+        GetEventRegionsOverride(aParent, aLayer), aLayer.IsBackfaceHidden(),
+        !!aLayer.IsAsyncZoomContainer());
   }
 
   // Note: if layer properties must be propagated to nodes, RecvUpdate in
@@ -3321,14 +3321,16 @@ void APZCTreeManager::SendSubtreeTransformsToChromeMainThread(
           LayersId layersId = aNode->GetLayersId();
           HitTestingTreeNode* parent = aNode->GetParent();
           if (!parent) {
-            messages.AppendElement(
-                MatrixMessage(Some(LayerToScreenMatrix4x4()), layersId));
+            messages.AppendElement(MatrixMessage(Some(LayerToScreenMatrix4x4()),
+                                                 ScreenRect(), layersId));
           } else if (layersId != parent->GetLayersId()) {
             if (mDetachedLayersIds.find(layersId) != mDetachedLayersIds.end()) {
-              messages.AppendElement(MatrixMessage(Nothing(), layersId));
-            } else {
               messages.AppendElement(
-                  MatrixMessage(Some(parent->GetTransformToGecko()), layersId));
+                  MatrixMessage(Nothing(), ScreenRect(), layersId));
+            } else {
+              messages.AppendElement(MatrixMessage(
+                  Some(parent->GetTransformToGecko()),
+                  parent->GetRemoteDocumentScreenRect(), layersId));
             }
           }
         },
