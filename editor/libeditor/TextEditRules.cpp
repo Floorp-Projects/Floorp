@@ -202,17 +202,6 @@ nsresult TextEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
 
   // my kingdom for dynamic cast
   switch (aInfo.mEditSubAction) {
-    case EditSubAction::eInsertLineBreak: {
-      TextEditorRef().UndefineCaretBidiLevel();
-      EditActionResult result = WillInsertLineBreak(aInfo.maxLength);
-      if (NS_WARN_IF(result.Failed())) {
-        return result.Rv();
-      }
-      *aCancel = result.Canceled();
-      *aHandled = result.Handled();
-      MOZ_ASSERT(!result.Ignored());
-      return NS_OK;
-    }
     case EditSubAction::eInsertText:
     case EditSubAction::eInsertTextComingFromIME:
       TextEditorRef().UndefineCaretBidiLevel();
@@ -244,6 +233,7 @@ nsresult TextEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
       return rv;
     }
     case EditSubAction::eInsertElement:
+    case EditSubAction::eInsertLineBreak:
     case EditSubAction::eUndo:
     case EditSubAction::eRedo:
       MOZ_ASSERT_UNREACHABLE("This path should've been dead code");
@@ -262,6 +252,7 @@ nsresult TextEditRules::DidDoAction(EditSubActionInfo& aInfo,
   switch (aInfo.mEditSubAction) {
     case EditSubAction::eDeleteSelectedContent:
     case EditSubAction::eInsertElement:
+    case EditSubAction::eInsertLineBreak:
     case EditSubAction::eUndo:
     case EditSubAction::eRedo:
       MOZ_ASSERT_UNREACHABLE("This path should've been dead code");
@@ -281,17 +272,19 @@ bool TextEditRules::DocumentIsEmpty() const {
   return retVal;
 }
 
-EditActionResult TextEditRules::WillInsertLineBreak(int32_t aMaxLength) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!AsHTMLEditor());
   MOZ_ASSERT(!IsSingleLineEditor());
+
+  UndefineCaretBidiLevel();
 
   CANCEL_OPERATION_AND_RETURN_EDIT_ACTION_RESULT_IF_READONLY_OF_DISABLED
 
-  if (aMaxLength >= 0) {
+  if (mMaxTextLength >= 0) {
     nsAutoString insertionString(NS_LITERAL_STRING("\n"));
     EditActionResult result =
-        TextEditorRef().TruncateInsertionStringForMaxLength(insertionString,
-                                                            aMaxLength);
+        TruncateInsertionStringForMaxLength(insertionString, mMaxTextLength);
     if (NS_WARN_IF(result.Failed())) {
       return result;
     }
@@ -304,9 +297,8 @@ EditActionResult TextEditRules::WillInsertLineBreak(int32_t aMaxLength) {
   // if the selection isn't collapsed, delete it.
   if (!SelectionRefPtr()->IsCollapsed()) {
     nsresult rv =
-        MOZ_KnownLive(TextEditorRef())
-            .DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eStrip);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+        DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eStrip);
+    if (NS_WARN_IF(Destroyed())) {
       return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -314,8 +306,7 @@ EditActionResult TextEditRules::WillInsertLineBreak(int32_t aMaxLength) {
     }
   }
 
-  nsresult rv =
-      MOZ_KnownLive(TextEditorRef()).EnsureNoPaddingBRElementForEmptyEditor();
+  nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditActionIgnored(rv);
   }
@@ -334,26 +325,23 @@ EditActionResult TextEditRules::WillInsertLineBreak(int32_t aMaxLength) {
 
   // Don't put text in places that can't have it.
   if (!pointToInsert.IsInTextNode() &&
-      !TextEditorRef().CanContainTag(*pointToInsert.GetContainer(),
-                                     *nsGkAtoms::textTagName)) {
+      !CanContainTag(*pointToInsert.GetContainer(), *nsGkAtoms::textTagName)) {
     return EditActionIgnored(NS_ERROR_FAILURE);
   }
 
-  RefPtr<Document> doc = TextEditorRef().GetDocument();
-  if (NS_WARN_IF(!doc)) {
+  RefPtr<Document> document = GetDocument();
+  if (NS_WARN_IF(!document)) {
     return EditActionIgnored(NS_ERROR_NOT_INITIALIZED);
   }
 
   // Don't change my selection in sub-transactions.
-  AutoTransactionsConserveSelection dontChangeMySelection(TextEditorRef());
+  AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
   // Insert a linefeed character.
-  EditorRawDOMPoint pointAfterInsertedLineBreak;
-  rv = MOZ_KnownLive(TextEditorRef())
-           .InsertTextWithTransaction(*doc, NS_LITERAL_STRING("\n"),
-                                      pointToInsert,
-                                      &pointAfterInsertedLineBreak);
-  if (NS_WARN_IF(!pointAfterInsertedLineBreak.IsSet())) {
+  EditorRawDOMPoint pointAfterInsertedLineFeed;
+  rv = InsertTextWithTransaction(*document, NS_LITERAL_STRING("\n"),
+                                 pointToInsert, &pointAfterInsertedLineFeed);
+  if (NS_WARN_IF(!pointAfterInsertedLineFeed.IsSet())) {
     return EditActionIgnored(NS_ERROR_FAILURE);
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -362,17 +350,19 @@ EditActionResult TextEditRules::WillInsertLineBreak(int32_t aMaxLength) {
 
   // set the selection to the correct location
   MOZ_ASSERT(
-      !pointAfterInsertedLineBreak.GetChild(),
-      "After inserting text into a text node, pointAfterInsertedLineBreak."
+      !pointAfterInsertedLineFeed.GetChild(),
+      "After inserting text into a text node, pointAfterInsertedLineFeed."
       "GetChild() should be nullptr");
-  rv = SelectionRefPtr()->Collapse(pointAfterInsertedLineBreak);
+  rv = SelectionRefPtr()->Collapse(pointAfterInsertedLineFeed);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditActionIgnored(rv);
   }
 
+  // XXX I don't think we still need this.  This must have been required when
+  //     `<textarea>` was implemented with text nodes and `<br>` elements.
   // see if we're at the end of the editor range
   EditorRawDOMPoint endPoint(EditorBase::GetEndPoint(*SelectionRefPtr()));
-  if (endPoint == pointAfterInsertedLineBreak) {
+  if (endPoint == pointAfterInsertedLineFeed) {
     // SetInterlinePosition(true) means we want the caret to stick to the
     // content on the "right".  We want the caret to stick to whatever is
     // past the break.  This is because the break is on the same line we
