@@ -236,15 +236,12 @@ static OffsetResult GetUnretargetedOffsetsFor(const Element& aElement) {
     }
   }
 
-  // Subtract the parent border unless it uses border-box sizing.
-  if (parent && parent->StylePosition()->mBoxSizing != StyleBoxSizing::Border) {
+  // Make the position relative to the padding edge.
+  if (parent) {
     const nsStyleBorder* border = parent->StyleBorder();
     origin.x -= border->GetComputedBorderWidth(eSideLeft);
     origin.y -= border->GetComputedBorderWidth(eSideTop);
   }
-
-  // XXX We should really consider subtracting out padding for
-  // content-box sizing, but we should see what IE does....
 
   // Get the union of all rectangles in this and continuation frames.
   // It doesn't really matter what we use as aRelativeTo here, since
