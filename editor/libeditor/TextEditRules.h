@@ -235,14 +235,6 @@ class TextEditRules {
   CreatePaddingBRElementForEmptyEditorIfNeeded();
 
   /**
-   * Returns a truncated insertion string if insertion would place us over
-   * aMaxLength
-   */
-  nsresult TruncateInsertionIfNeeded(const nsAString* aInString,
-                                     nsAString* aOutString, int32_t aMaxLength,
-                                     bool* aTruncated);
-
-  /**
    * CollapseSelectionToTrailingBRIfNeeded() collapses selection after the
    * text node if:
    * - the editor is text editor
