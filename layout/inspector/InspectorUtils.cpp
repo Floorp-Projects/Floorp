@@ -325,10 +325,11 @@ uint64_t InspectorUtils::GetSpecificity(GlobalObject& aGlobal,
 /* static */
 bool InspectorUtils::SelectorMatchesElement(
     GlobalObject& aGlobalObject, Element& aElement, BindingStyleRule& aRule,
-    uint32_t aSelectorIndex, const nsAString& aPseudo, ErrorResult& aRv) {
+    uint32_t aSelectorIndex, const nsAString& aPseudo,
+    bool aRelevantLinkVisited, ErrorResult& aRv) {
   bool result = false;
-  aRv =
-      aRule.SelectorMatchesElement(&aElement, aSelectorIndex, aPseudo, &result);
+  aRv = aRule.SelectorMatchesElement(&aElement, aSelectorIndex, aPseudo,
+                                     aRelevantLinkVisited, &result);
   return result;
 }
 

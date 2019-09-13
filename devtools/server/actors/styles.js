@@ -722,14 +722,10 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
    * @returns Array
    */
   _getElementRules: function(node, pseudo, inherited, options) {
-    const includeVisitedStyle = !!(
-      InspectorUtils.getContentState(node) & NS_EVENT_STATE_VISITED
-    );
-
     const domRules = InspectorUtils.getCSSStyleRules(
       node,
       pseudo,
-      includeVisitedStyle
+      _hasVisitedState(node)
     );
 
     if (!domRules) {
@@ -763,6 +759,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
       }
 
       const ruleActor = this._styleRef(domRule);
+
       rules.push({
         rule: ruleActor,
         inherited: inherited,
@@ -846,14 +843,17 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
         const { bindingElement, pseudo } = CssLogic.getBindingElementAndPseudo(
           element
         );
+        const relevantLinkVisited = _hasVisitedState(bindingElement);
         entry.matchedSelectors = [];
+
         for (let i = 0; i < selectors.length; i++) {
           if (
             InspectorUtils.selectorMatchesElement(
               bindingElement,
               domRule,
               i,
-              pseudo
+              pseudo,
+              relevantLinkVisited
             )
           ) {
             entry.matchedSelectors.push(selectors[i]);
@@ -2249,3 +2249,7 @@ function getTextAtLineColumn(text, line, column) {
 }
 
 exports.getTextAtLineColumn = getTextAtLineColumn;
+
+function _hasVisitedState(node) {
+  return !!(InspectorUtils.getContentState(node) & NS_EVENT_STATE_VISITED);
+}

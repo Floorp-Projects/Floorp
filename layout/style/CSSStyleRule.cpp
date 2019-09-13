@@ -201,6 +201,7 @@ nsresult CSSStyleRule::GetSpecificity(uint32_t aSelectorIndex,
 nsresult CSSStyleRule::SelectorMatchesElement(Element* aElement,
                                               uint32_t aSelectorIndex,
                                               const nsAString& aPseudo,
+                                              bool aRelevantLinkVisited,
                                               bool* aMatches) {
   PseudoStyleType pseudoType = PseudoStyleType::NotPseudo;
   if (!aPseudo.IsEmpty()) {
@@ -215,7 +216,7 @@ nsresult CSSStyleRule::SelectorMatchesElement(Element* aElement,
   }
 
   *aMatches = Servo_StyleRule_SelectorMatchesElement(
-      mRawRule, aElement, aSelectorIndex, pseudoType);
+      mRawRule, aElement, aSelectorIndex, pseudoType, aRelevantLinkVisited);
 
   return NS_OK;
 }
