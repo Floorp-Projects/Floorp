@@ -612,9 +612,9 @@ import org.mozilla.gecko.gfx.GeckoSurface;
     }
 
     @Override
-    public synchronized void setRates(final int newBitRate) {
+    public synchronized void setBitrate(final int bps) {
         try {
-            mCodec.setRates(newBitRate);
+            mCodec.setBitrate(bps);
         } catch (Exception e) {
             reportError(Error.FATAL, e);
         }

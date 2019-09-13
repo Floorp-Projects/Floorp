@@ -36,7 +36,7 @@ public interface AsyncCodec {
     public abstract ByteBuffer getInputBuffer(int index);
     public abstract ByteBuffer getOutputBuffer(int index);
     public abstract void queueInputBuffer(int index, int offset, int size, long presentationTimeUs, int flags);
-    public abstract void setRates(int newBitRate);
+    public abstract void setBitrate(int bps);
     public abstract void queueSecureInputBuffer(int index, int offset, CryptoInfo info, long presentationTimeUs, int flags);
     public abstract void releaseOutputBuffer(int index, boolean render);
 }
