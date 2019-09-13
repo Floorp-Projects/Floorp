@@ -44,7 +44,7 @@ add_task(async () => {
     equal(os.darwinVersion, null, "Darwin version should not be set");
   }
 
-  // if on Mac, Mac versions should be set, and Windows versions should not b e
+  // if on Mac, Mac versions should be set, and Windows versions should not be
   if (os.isMac) {
     equal(typeof os.macVersion, "number", "Mac version should be a number");
     equal(
@@ -69,6 +69,18 @@ add_task(async () => {
       os.windowsBuildNumber,
       null,
       "Windows build number version should not be set"
+    );
+  }
+});
+
+add_task(async () => {
+  try {
+    await ClientEnvironmentBase.attribution;
+  } catch (ex) {
+    equal(
+      ex.name,
+      "NS_ERROR_FILE_NOT_FOUND",
+      "Test environment does not have attribution data"
     );
   }
 });

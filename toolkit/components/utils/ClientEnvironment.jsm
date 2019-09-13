@@ -42,6 +42,12 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/FirstStartup.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "AttributionCode",
+  "resource:///modules/AttributionCode.jsm"
+);
+
 var EXPORTED_SYMBOLS = ["ClientEnvironmentBase"];
 
 /**
@@ -216,5 +222,9 @@ class ClientEnvironmentBase {
 
       return rv;
     })();
+  }
+
+  static get attribution() {
+    return AttributionCode.getAttrDataAsync();
   }
 }
