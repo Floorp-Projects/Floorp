@@ -1,17 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const PREF_MODIFY_BOOLEAN = "test.aboutconfig.modify.boolean";
-const PREF_MODIFY_NUMBER = "test.aboutconfig.modify.number";
-const PREF_MODIFY_STRING = "test.aboutconfig.modify.string";
-
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      [PREF_MODIFY_BOOLEAN, true],
-      [PREF_MODIFY_NUMBER, 1337],
+      ["test.aboutconfig.modify.boolean", true],
+      ["test.aboutconfig.modify.number", 1337],
       [
-        PREF_MODIFY_STRING,
+        "test.aboutconfig.modify.string",
         "the answer to the life the universe and everything",
       ],
     ],
@@ -178,7 +174,7 @@ add_task(async function test_modify() {
   await AboutConfigTest.withNewTab(async function() {
     // Test toggle for boolean prefs.
     for (let nameOfBoolPref of [
-      PREF_MODIFY_BOOLEAN,
+      "test.aboutconfig.modify.boolean",
       PREF_BOOLEAN_DEFAULT_TRUE,
     ]) {
       let row = this.getRow(nameOfBoolPref);
@@ -197,14 +193,17 @@ add_task(async function test_modify() {
     }
 
     // Test abort of edit by starting with string and continuing with editing Int pref.
-    let row = this.getRow(PREF_MODIFY_STRING);
+    let row = this.getRow("test.aboutconfig.modify.string");
     row.editColumnButton.click();
     row.valueInput.value = "test";
-    let intRow = this.getRow(PREF_MODIFY_NUMBER);
+    let intRow = this.getRow("test.aboutconfig.modify.number");
     intRow.editColumnButton.click();
-    Assert.equal(intRow.valueInput.value, Preferences.get(PREF_MODIFY_NUMBER));
+    Assert.equal(
+      intRow.valueInput.value,
+      Preferences.get("test.aboutconfig.modify.number")
+    );
     Assert.ok(!row.valueInput);
-    Assert.equal(row.value, Preferences.get(PREF_MODIFY_STRING));
+    Assert.equal(row.value, Preferences.get("test.aboutconfig.modify.string"));
 
     // Test validation of integer values.
     for (let invalidValue of [
@@ -223,8 +222,8 @@ add_task(async function test_modify() {
 
     // Test correct saving and DOM-update.
     for (let [prefName, willDelete] of [
-      [PREF_MODIFY_STRING, true],
-      [PREF_MODIFY_NUMBER, true],
+      ["test.aboutconfig.modify.string", true],
+      ["test.aboutconfig.modify.number", true],
       [PREF_NUMBER_DEFAULT_ZERO, false],
       [PREF_STRING_DEFAULT_EMPTY, false],
     ]) {
@@ -244,60 +243,6 @@ add_task(async function test_modify() {
       row.resetColumnButton.click();
       Assert.ok(!row.hasClass("has-user-value"));
       Assert.equal(row.hasClass("deleted"), willDelete);
-    }
-  });
-});
-
-add_task(async function test_escape_cancels_edit() {
-  await AboutConfigTest.withNewTab(async function() {
-    let row = this.getRow(PREF_MODIFY_STRING);
-    Preferences.set(PREF_MODIFY_STRING, "Edit me, maybe");
-
-    for (let blurInput of [false, true]) {
-      Assert.ok(!row.valueInput);
-      row.editColumnButton.click();
-
-      Assert.ok(row.valueInput);
-
-      Assert.equal(row.valueInput.value, "Edit me, maybe");
-      row.valueInput.value = "Edited";
-
-      // Test both cases of the input being focused and not being focused.
-      if (blurInput) {
-        row.valueInput.blur();
-        Assert.notEqual(this.document.activeElement, row.valueInput);
-      } else {
-        Assert.equal(this.document.activeElement, row.valueInput);
-      }
-
-      EventUtils.synthesizeKey("KEY_Escape", {}, this.window);
-
-      Assert.ok(!row.valueInput);
-      Assert.equal(row.value, "Edit me, maybe");
-      Assert.equal(row.value, Preferences.get(PREF_MODIFY_STRING));
-    }
-  });
-});
-
-add_task(async function test_edit_field_selected() {
-  let prefsToCheck = [
-    [PREF_MODIFY_STRING, "A string", "A new string"],
-    [PREF_MODIFY_NUMBER, "100", "500"],
-  ];
-  await AboutConfigTest.withNewTab(async function() {
-    for (let [prefName, startValue, endValue] of prefsToCheck) {
-      Preferences.set(prefName, startValue);
-      let row = this.getRow(prefName);
-
-      Assert.equal(row.value, startValue);
-      row.editColumnButton.click();
-      Assert.equal(row.valueInput.value, startValue);
-
-      EventUtils.sendString(endValue, this.window);
-
-      row.editColumnButton.click();
-      Assert.equal(row.value, endValue);
-      Assert.equal(Preferences.get(prefName), endValue);
     }
   });
 });
