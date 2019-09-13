@@ -34,6 +34,8 @@
 
     <dimen name="context_menu_height">48dp</dimen>
     <dimen name="context_menu_x_offset">8dp</dimen>
+    <dimen name="tp_onboarding_width">256dp</dimen>
+    <dimen name="tp_onboarding_x_offset">4dp</dimen>
 
     <!--Quick Settings-->
     <dimen name="quicksettings_item_height">46dp</dimen>

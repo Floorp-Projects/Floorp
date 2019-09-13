@@ -4,16 +4,29 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
     android:orientation="vertical">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/message"
-        android:layout_width="match_parent"
+        android:layout_width="@dimen/etp_onboarding_popup_width"
         android:layout_height="wrap_content"
         android:background="@drawable/onboarding_popup_background"
         app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/close_onboarding"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:src="@drawable/ic_close"
+            android:tint="@color/primary_text_dark_theme"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/onboarding_message"
@@ -30,19 +43,6 @@
             app:layout_constraintEnd_toStartOf="@id/close_onboarding"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-
-        <ImageView
-            android:id="@+id/close_onboarding"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:layout_marginEnd="8dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:src="@drawable/ic_close"
-            android:tint="@color/primary_text_dark_theme"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ImageView
@@ -52,6 +52,5 @@
         android:importantForAccessibility="no"
         android:rotation="180"
         android:src="@drawable/ic_triangle"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/message" />
+        android:layout_gravity="start" />
 </LinearLayout>

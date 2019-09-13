@@ -11,11 +11,12 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.RadioButton
+import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
@@ -37,7 +38,7 @@ import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import mozilla.components.support.ktx.android.util.dpToPx
+import org.jetbrains.anko.dimen
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -155,8 +156,7 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
     private val toolbarSessionObserver = object : Session.Observer {
         override fun onLoadingStateChanged(session: Session, loading: Boolean) {
             if (!loading &&
-                context!!.settings.shouldShowTrackingProtectionOnboarding &&
-                session.trackerBlockingEnabled
+                shouldShowTrackingProtectionOnboarding(session)
             ) {
                 showTrackingProtectionOnboarding()
             }
@@ -356,39 +356,58 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
             return
         }
         context?.let {
-            it.settings.incrementTrackingProtectionOnboardingCount()
             val layout = LayoutInflater.from(it)
                 .inflate(R.layout.tracking_protection_onboarding_popup, null)
             layout.onboarding_message.text =
                 it.getString(R.string.etp_onboarding_message, getString(R.string.app_name))
-            val trackingOnboarding =
-                PopupWindow(
-                    layout,
-                    TP_ONBOARDING_WIDTH.dpToPx(resources.displayMetrics),
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    true
-                )
+
+            val trackingOnboarding = PopupWindow(
+                layout,
+                it.dimen(R.dimen.tp_onboarding_width),
+                WindowManager.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                isOutsideTouchable = true
+                isFocusable = true
+                elevation = view!!.resources.getDimension(R.dimen.mozac_browser_menu_elevation)
+                animationStyle = R.style.Mozac_Browser_Menu_Animation_OverflowMenuBottom
+            }
+
             val closeButton = layout.findViewById<ImageView>(R.id.close_onboarding)
             closeButton.increaseTapArea(BUTTON_INCREASE_DPS)
             closeButton.setOnClickListener {
                 trackingOnboarding.dismiss()
             }
-            trackingOnboarding.isOutsideTouchable = true
-            trackingOnboarding.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            trackingOnboarding.showAtLocation(
-                browserToolbarView.view,
-                Gravity.BOTTOM or Gravity.START,
-                TP_ONBOARDING_X_OFFSET.dpToPx(resources.displayMetrics),
-                browserToolbarView.view.height
-            )
+
+            val tpIcon =
+                browserToolbarView
+                    .view
+                    .findViewById<AppCompatImageView>(R.id.mozac_browser_toolbar_tracking_protection_icon_view)
+
+            // Measure layout view
+            val spec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            layout.measure(spec, spec)
+
+            val containerHeight = layout.measuredHeight
+
+            val xOffset = it.dimen(R.dimen.tp_onboarding_x_offset)
+
+            // Positioning the popup above the tp anchor.
+            val yOffset = -containerHeight - (browserToolbarView.view.height / THREE * 2)
+
+            trackingOnboarding.showAsDropDown(tpIcon, xOffset, yOffset)
+            it.settings.incrementTrackingProtectionOnboardingCount()
         }
     }
 
+    private fun shouldShowTrackingProtectionOnboarding(session: Session) =
+        context?.settings?.shouldShowTrackingProtectionOnboarding ?: false &&
+                session.trackerBlockingEnabled && session.trackersBlocked.isNotEmpty()
+
     companion object {
+        private const val THREE = 3
         private const val BUTTON_INCREASE_DPS = 12
-        private const val TP_ONBOARDING_X_OFFSET = 4
         private const val SHARED_TRANSITION_MS = 200L
-        private const val TP_ONBOARDING_WIDTH = 256
         private const val TAB_ITEM_TRANSITION_NAME = "tab_item"
         const val REPORT_SITE_ISSUE_URL =
             "https://webcompat.com/issues/new?url=%s&label=browser-fenix"
