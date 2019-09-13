@@ -6,13 +6,13 @@
 
 #include "nsContentCreatorFunctions.h"
 #include "nsGkAtoms.h"
-#include "nsMathMLElement.h"
+#include "mozilla/dom/MathMLElement.h"
 
 using namespace mozilla::dom;
 
 // MathML Element Factory (declared in nsContentCreatorFunctions.h)
 nsresult NS_NewMathMLElement(
     Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo) {
-  NS_ADDREF(*aResult = new nsMathMLElement(aNodeInfo));
+  NS_ADDREF(*aResult = new MathMLElement(aNodeInfo));
   return NS_OK;
 }

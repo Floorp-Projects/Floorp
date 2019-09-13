@@ -7,9 +7,13 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "MathML")
 
+EXPORTS.mozilla.dom += [
+    'MathMLElement.h',
+]
+
 UNIFIED_SOURCES += [
-    'nsMathMLElement.cpp',
-    'nsMathMLElementFactory.cpp',
+    'MathMLElement.cpp',
+    'MathMLElementFactory.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
