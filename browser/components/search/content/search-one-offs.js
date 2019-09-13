@@ -354,11 +354,17 @@ class SearchOneOffs {
   }
 
   get selectedAutocompleteIndex() {
-    return (this._view || this.popup).selectedIndex;
+    if (!this.compact) {
+      return this.popup.selectedIndex;
+    }
+    return this._view.selectedRowIndex;
   }
 
   set selectedAutocompleteIndex(val) {
-    return ((this._view || this.popup).selectedIndex = val);
+    if (!this.compact) {
+      return (this.popup.selectedIndex = val);
+    }
+    return (this._view.selectedRowIndex = val);
   }
 
   get compact() {

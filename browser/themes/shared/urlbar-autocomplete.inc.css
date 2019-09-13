@@ -204,17 +204,13 @@
   -moz-context-properties: fill, fill-opacity;
 }
 
+.urlbarView-tip-help[selected],
 .urlbarView-tip-help:hover {
   background-color: var(--in-content-button-background-hover);
 }
 
 .urlbarView-tip-help:hover:active {
   background-color: var(--in-content-button-background-active);
-}
-
-.urlbarView-tip-help:-moz-focusring,
-.urlbarView-tip-button:-moz-focusring {
-  box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
 }
 
 #urlbar-contextual-tip-icon {
@@ -275,6 +271,11 @@
   flex-shrink: 0;
 }
 
+.urlbarView-tip-button[selected] {
+  color: white;
+  background-color: var(--in-content-primary-button-background);
+  box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
+}
 .urlbarView-tip-button:hover {
   color: white;
   background-color: var(--in-content-primary-button-background-hover);
@@ -283,11 +284,6 @@
 .urlbarView-tip-button:hover:active {
   color: white;
   background-color: var(--in-content-primary-button-background-active);
-}
-
-.urlbarView-tip-button:-moz-focusring {
- color: white:
- background-color: var(--in-content-primary-button-background);
 }
 
 .urlbarView-tip-button-spacer {

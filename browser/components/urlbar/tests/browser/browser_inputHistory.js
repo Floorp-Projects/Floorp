@@ -25,7 +25,7 @@ async function bumpScore(uri, searchString, counts, useMouseClick = false) {
         EventUtils.synthesizeKey("KEY_ArrowDown");
       }
       if (useMouseClick) {
-        let element = UrlbarTestUtils.getSelectedElement(window);
+        let element = UrlbarTestUtils.getSelectedRow(window);
         EventUtils.synthesizeMouseAtCenter(element, {});
       } else {
         EventUtils.synthesizeKey("KEY_Enter");

@@ -449,7 +449,7 @@ class UrlbarInput {
 
     this.controller.engagementEvent.record(event, {
       numChars,
-      selIndex: this.view.selectedIndex,
+      selIndex: this.view.selectedRowIndex,
       selType,
     });
 
@@ -496,7 +496,7 @@ class UrlbarInput {
       allowInheritPrincipal: false,
     };
 
-    let selIndex = this.view.selectedIndex;
+    let selIndex = this.view.selectedRowIndex;
     if (!result.payload.keywordOffer) {
       this.view.close();
     }

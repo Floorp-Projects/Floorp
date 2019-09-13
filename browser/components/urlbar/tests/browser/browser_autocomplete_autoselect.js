@@ -24,7 +24,7 @@ function assertSelected(index) {
   );
   // Also check the "selected" attribute, to ensure it is not a "fake" selection
   // due to binding misbehaviors.
-  let element = UrlbarTestUtils.getSelectedElement(window);
+  let element = UrlbarTestUtils.getSelectedRow(window);
   Assert.ok(
     element.hasAttribute("selected"),
     "Should have the selected attribute on the row element"
