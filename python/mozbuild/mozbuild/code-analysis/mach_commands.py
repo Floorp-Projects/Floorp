@@ -120,23 +120,22 @@ class StaticAnalysisMonitor(object):
             self._processed = self._processed + 1
             return (warning, False)
         if warning is not None:
-            def get_reliability(checker_name):
+            def get_check_config(checker_name):
                 # get the matcher from self._clang_tidy_config that is the 'name' field
-                reliability = None
                 for item in self._clang_tidy_config:
                     if item['name'] == checker_name:
-                        reliability = item.get('reliability', 'low')
-                        break
-                    else:
-                        # We are using a regex in order to also match 'mozilla-.* like checkers'
-                        matcher = re.match(item['name'], checker_name)
-                        if matcher is not None and matcher.group(0) == checker_name:
-                            reliability = item.get('reliability', 'low')
-                            break
-                return reliability
-            reliability = get_reliability(warning['flag'])
-            if reliability is not None:
-                warning['reliability'] = reliability
+                        return item
+
+                    # We are using a regex in order to also match 'mozilla-.* like checkers'
+                    matcher = re.match(item['name'], checker_name)
+                    if matcher is not None and matcher.group(0) == checker_name:
+                        return item
+
+            check_config = get_check_config(warning['flag'])
+            if check_config is not None:
+                warning['reliability'] = check_config.get('reliability', 'low')
+                warning['reason'] = check_config.get('reason')
+                warning['publish'] = check_config.get('publish', True)
         return (warning, True)
 
 
