@@ -51,6 +51,8 @@ const WS_HTTP_URL =
 const WS_BASE_URL =
   "http://mochi.test:8888/browser/devtools/client/netmonitor/test/";
 const WS_PAGE_URL = WS_BASE_URL + "html_ws-test-page.html";
+const WS_PAGE_EARLY_CONNECTION_URL =
+  WS_BASE_URL + "html_ws-early-connection-page.html";
 const API_CALLS_URL = EXAMPLE_URL + "html_api-calls-test-page.html";
 const SIMPLE_URL = EXAMPLE_URL + "html_simple-test-page.html";
 const NAVIGATE_URL = EXAMPLE_URL + "html_navigate-test-page.html";
@@ -1107,4 +1109,21 @@ function validateRequests(requests, monitor) {
 function getContextMenuItem(monitor, id) {
   const Menu = require("devtools/client/framework/menu");
   return Menu.getMenuElementById(id, monitor.panelWin.document);
+}
+
+/**
+ * Wait for DOM being in specific state. But, do not wait
+ * for change if it's in the expected state already.
+ */
+async function waitForDOMIfNeeded(target, selector, expectedLength = 1) {
+  return new Promise(resolve => {
+    const elements = target.querySelectorAll(selector);
+    if (elements.length == expectedLength) {
+      resolve(elements);
+    } else {
+      waitForDOM(target, selector, expectedLength).then(elems => {
+        resolve(elems);
+      });
+    }
+  });
 }
