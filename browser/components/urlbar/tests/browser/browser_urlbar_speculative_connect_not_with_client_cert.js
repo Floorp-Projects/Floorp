@@ -194,7 +194,7 @@ add_task(
     expectingChooseCertificate = false;
     EventUtils.synthesizeMouseAtCenter(listitem, { type: "mousedown" }, window);
     is(
-      UrlbarTestUtils.getSelectedElement(window),
+      UrlbarTestUtils.getSelectedRow(window),
       listitem,
       "The second item is selected"
     );

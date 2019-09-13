@@ -49,7 +49,7 @@ add_task(async function setup() {
       await promiseAutocompleteResultPopup("bm");
       let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
       Assert.equal(result.title, "javascript:'' ", "Check title");
-      let element = UrlbarTestUtils.getSelectedElement(window);
+      let element = UrlbarTestUtils.getSelectedRow(window);
       EventUtils.synthesizeMouseAtCenter(element, {});
       return "javascript:''%20";
     },
@@ -58,7 +58,7 @@ add_task(async function setup() {
       await promiseAutocompleteResultPopup("bm a");
       let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
       Assert.equal(result.title, "javascript:'a' ", "Check title");
-      let element = UrlbarTestUtils.getSelectedElement(window);
+      let element = UrlbarTestUtils.getSelectedRow(window);
       EventUtils.synthesizeMouseAtCenter(element, {});
       return "javascript:'a'%20";
     },
