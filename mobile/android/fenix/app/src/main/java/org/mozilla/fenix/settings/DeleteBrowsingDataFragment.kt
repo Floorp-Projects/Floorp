@@ -94,7 +94,7 @@ class DeleteBrowsingDataFragment : Fragment() {
     private fun askToDelete() {
         context?.let {
             AlertDialog.Builder(it).apply {
-                setMessage(R.string.delete_browsing_data_prompt_message)
+                setMessage(R.string.delete_browsing_data_prompt_message_3)
 
                 setNegativeButton(R.string.delete_browsing_data_prompt_cancel) { it: DialogInterface, _ ->
                     it.cancel()
