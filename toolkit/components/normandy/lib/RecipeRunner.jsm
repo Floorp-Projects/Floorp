@@ -238,7 +238,7 @@ var RecipeRunner = {
         if (!this.enabled) {
           return;
         }
-        this.run({ trigger: "sync" });
+        await this.run({ trigger: "sync" });
       };
 
       gRemoteSettingsClient.on("sync", this._onSync);
