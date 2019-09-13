@@ -123,11 +123,13 @@ def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
                 value = value.strip()
                 key_indent = line_indent
 
+                # make sure this key isn't already in the section
+                if key and current_section is not variables:
+                    assert key not in current_section
+
                 if strict:
-                    # make sure this key isn't already in the section or empty
+                    # make sure this key isn't empty
                     assert key
-                    if current_section is not variables:
-                        assert key not in current_section
 
                 current_section[key] = value
                 break

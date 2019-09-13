@@ -21,11 +21,11 @@ import mozunit
 
 class IniParserTest(unittest.TestCase):
 
-    def parse_manifest(self, string):
+    def parse_manifest(self, string, **kwargs):
         buf = StringIO()
         buf.write(string)
         buf.seek(0)
-        return read_ini(buf)
+        return read_ini(buf, **kwargs)
 
     def test_inline_comments(self):
         result = self.parse_manifest("""
@@ -58,6 +58,18 @@ birds=nope
         self.assertEqual(result[1][1]['cats'], 'yep')
         self.assertEqual(result[1][1]['dogs'].split(), ['yep', 'yep'])
         self.assertEqual(result[1][1]['birds'].split(), ['nope', 'fish=nope'])
+
+    def test_dupes_error(self):
+        dupes = """
+[test_dupes.py]
+foo = bar
+foo = baz
+"""
+        with self.assertRaises(AssertionError):
+            self.parse_manifest(dupes, strict=True)
+
+        with self.assertRaises(AssertionError):
+            self.parse_manifest(dupes, strict=False)
 
 
 if __name__ == '__main__':
