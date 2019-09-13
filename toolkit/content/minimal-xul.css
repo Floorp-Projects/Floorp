@@ -66,6 +66,13 @@ scrollcorner, resizer, scrollbar, scrollbarbutton, slider {
    */
   font: 16px sans-serif;
 
+  /* The initial value of justify-items is `legacy`, which makes it depend on
+   * the parent style.
+   *
+   * Reset it to something else.
+   */
+  justify-items: start;
+
   /* Duplicate the rules from the '*' rule above, which were clobbered by the
    * 'all: initial' declaration.
    *

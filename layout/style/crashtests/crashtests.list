@@ -308,3 +308,4 @@ skip-if(geckoview&&webrender) skip-if(Android) load 1546255.html # Bug 1563020 f
 pref(layout.css.resizeobserver.enabled,true) load 1552911.html
 load 1562361.html
 load 1566684.html
+load 1580307.html
