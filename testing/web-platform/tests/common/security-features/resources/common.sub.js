@@ -857,11 +857,11 @@ const subresourceMap = {
     path: "/common/security-features/subresource/audio.py",
     invoker: requestViaAudio,
   },
-  "beacon-request": {
+  "beacon": {
     path: "/common/security-features/subresource/empty.py",
     invoker: requestViaSendBeacon,
   },
-  "fetch-request": {
+  "fetch": {
     path: "/common/security-features/subresource/xhr.py",
     invoker: requestViaFetch,
   },
@@ -901,45 +901,40 @@ const subresourceMap = {
     path: "/common/security-features/subresource/video.py",
     invoker: requestViaVideo,
   },
-  "xhr-request": {
+  "xhr": {
     path: "/common/security-features/subresource/xhr.py",
     invoker: requestViaXhr,
   },
 
-  "worker-request": {
+  "worker-classic": {
     path: "/common/security-features/subresource/worker.py",
     invoker: url => requestViaDedicatedWorker(url),
   },
-  // TODO: Merge "module-worker" and "module-worker-top-level".
-  "module-worker": {
+  "worker-module": {
     path: "/common/security-features/subresource/worker.py",
     invoker: url => requestViaDedicatedWorker(url, {type: "module"}),
   },
-  "module-worker-top-level": {
-    path: "/common/security-features/subresource/worker.py",
-    invoker: url => requestViaDedicatedWorker(url, {type: "module"}),
-  },
-  "module-data-worker-import": {
+  "worker-import-data": {
     path: "/common/security-features/subresource/worker.py",
     invoker: url =>
         requestViaDedicatedWorker(workerUrlThatImports(url), {type: "module"}),
   },
-  "shared-worker": {
+  "sharedworker-classic": {
     path: "/common/security-features/subresource/shared-worker.py",
     invoker: requestViaSharedWorker,
   },
 
-  "websocket-request": {
+  "websocket": {
     path: "/stash_responder",
     invoker: requestViaWebSocket,
   },
 };
 for (const workletType of ['animation', 'audio', 'layout', 'paint']) {
-  subresourceMap[`worklet-${workletType}-top-level`] = {
+  subresourceMap[`worklet-${workletType}`] = {
       path: "/common/security-features/subresource/worker.py",
       invoker: url => requestViaWorklet(workletType, url)
     };
-  subresourceMap[`worklet-${workletType}-data-import`] = {
+  subresourceMap[`worklet-${workletType}-import-data`] = {
       path: "/common/security-features/subresource/worker.py",
       invoker: url =>
           requestViaWorklet(workletType, workerUrlThatImports(url))

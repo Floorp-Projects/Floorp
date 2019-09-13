@@ -52,40 +52,13 @@ function stripUrlForUseAsReferrer(url) {
 }
 
 function invokeScenario(scenario) {
-  const redirectionTypeConversion = {
-    "no-redirect": "no-redirect",
-    "keep-scheme": "keep-scheme-redirect",
-    "swap-scheme": "swap-scheme-redirect",
-    "keep-origin": "keep-origin-redirect",
-    "swap-origin": "swap-origin-redirect"
-  };
-  const subresourceTypeConversion = {
-    "beacon": "beacon-request",
-    "fetch": "fetch-request",
-    "xhr": "xhr-request",
-    "websocket": "websocket-request",
-    "worker-classic": "worker-request",
-    "worker-module": "module-worker",
-    "worker-import-data": "module-data-worker-import",
-    "sharedworker-classic": "shared-worker",
-    "worklet-animation": "worklet-animation-top-level",
-    "worklet-audio": "worklet-audio-top-level",
-    "worklet-layout": "worklet-layout-top-level",
-    "worklet-paint": "worklet-paint-top-level",
-    "worklet-animation-import-data": "worklet-animation-data-import",
-    "worklet-audio-import-data": "worklet-audio-data-import",
-    "worklet-layout-import-data": "worklet-layout-data-import",
-    "worklet-paint-import-data": "worklet-paint-data-import"
-  };
-  const subresourceType =
-      subresourceTypeConversion[scenario.subresource] || scenario.subresource;
   const urls = getRequestURLs(
-    subresourceType,
+    scenario.subresource,
     scenario.origin,
-    redirectionTypeConversion[scenario.redirection]);
+    scenario.redirection);
   /** @type {Subresource} */
   const subresource = {
-    subresourceType: subresourceType,
+    subresourceType: scenario.subresource,
     url: urls.testUrl,
     policyDeliveries: scenario.subresource_policy_deliveries,
   };
