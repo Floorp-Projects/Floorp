@@ -16,7 +16,7 @@ import mozilla.components.browser.state.state.content.FindResultState
  * Create a matching [TabSessionState] from a [Session].
  */
 fun Session.toTabSessionState(): TabSessionState {
-    return TabSessionState(id, toContentState(), toTrackingProtectionState())
+    return TabSessionState(id, toContentState(), toTrackingProtectionState(), parentId = parentId)
 }
 
 /**
