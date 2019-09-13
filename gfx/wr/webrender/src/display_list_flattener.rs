@@ -27,7 +27,6 @@ use crate::prim_store::{PrimitiveInstanceKind, NinePatchDescriptor, PrimitiveSto
 use crate::prim_store::{ScrollNodeAndClipChain, PictureIndex};
 use crate::prim_store::{InternablePrimitive, SegmentInstanceIndex};
 use crate::prim_store::{register_prim_chase_id, get_line_decoration_sizes};
-use crate::prim_store::{SpaceSnapper};
 use crate::prim_store::backdrop::Backdrop;
 use crate::prim_store::borders::{ImageBorder, NormalBorderPrim};
 use crate::prim_store::gradient::{GradientStopKey, LinearGradient, RadialGradient, RadialGradientParams};
@@ -339,13 +338,10 @@ impl<'a> DisplayListFlattener<'a> {
             found_explicit_tile_cache: false,
         };
 
-        let device_pixel_scale = view.accumulated_scale_factor_for_snapping();
-
         flattener.push_root(
             root_pipeline_id,
             &root_pipeline.viewport_size,
             &root_pipeline.content_size,
-            device_pixel_scale,
         );
 
         // In order to ensure we have a single root stacking context for the
@@ -369,7 +365,6 @@ impl<'a> DisplayListFlattener<'a> {
             ClipChainId::NONE,
             RasterSpace::Screen,
             /* is_backdrop_root = */ true,
-            device_pixel_scale,
         );
 
         flattener.flatten_items(
@@ -940,7 +935,6 @@ impl<'a> DisplayListFlattener<'a> {
             clip_chain_id,
             stacking_context.raster_space,
             stacking_context.is_backdrop_root,
-            self.sc_stack.last().unwrap().snap_to_device.device_pixel_scale,
         );
 
         if cfg!(debug_assertions) && apply_pipeline_clip && clip_chain_id != ClipChainId::NONE {
@@ -998,18 +992,8 @@ impl<'a> DisplayListFlattener<'a> {
         );
         self.pipeline_clip_chain_stack.push(clip_chain_index);
 
-        let snap_to_device = &mut self.sc_stack.last_mut().unwrap().snap_to_device;
-        snap_to_device.set_target_spatial_node(
-            spatial_node_index,
-            self.clip_scroll_tree,
-        );
-
-        let bounds = snap_to_device.snap_rect(
-            &info.bounds.translate(current_offset),
-        );
-
-        let content_size = snap_to_device.snap_size(&pipeline.content_size);
-
+        let bounds = info.bounds;
+        let origin = current_offset + bounds.origin.to_vector();
         let spatial_node_index = self.push_reference_frame(
             SpatialId::root_reference_frame(iframe_pipeline_id),
             Some(spatial_node_index),
@@ -1017,7 +1001,7 @@ impl<'a> DisplayListFlattener<'a> {
             TransformStyle::Flat,
             PropertyBinding::Value(LayoutTransform::identity()),
             ReferenceFrameKind::Transform,
-            bounds.origin.to_vector(),
+            origin,
         );
 
         let iframe_rect = LayoutRect::new(LayoutPoint::zero(), bounds.size);
@@ -1027,7 +1011,7 @@ impl<'a> DisplayListFlattener<'a> {
             Some(ExternalScrollId(0, iframe_pipeline_id)),
             iframe_pipeline_id,
             &iframe_rect,
-            &content_size,
+            &pipeline.content_size,
             ScrollSensitivity::ScriptAndInputEvents,
             ScrollFrameKind::PipelineRoot,
             LayoutVector2D::zero(),
@@ -1071,12 +1055,7 @@ impl<'a> DisplayListFlattener<'a> {
         common: &CommonItemProperties,
         apply_pipeline_clip: bool
     ) -> (LayoutPrimitiveInfo, ScrollNodeAndClipChain) {
-        let (layout, _, clip_and_scroll) = self.process_common_properties_with_bounds(
-            common,
-            &common.clip_rect,
-            apply_pipeline_clip,
-        );
-        (layout, clip_and_scroll)
+        self.process_common_properties_with_bounds(common, &common.clip_rect, apply_pipeline_clip)
     }
 
     fn process_common_properties_with_bounds(
@@ -1084,7 +1063,7 @@ impl<'a> DisplayListFlattener<'a> {
         common: &CommonItemProperties,
         bounds: &LayoutRect,
         apply_pipeline_clip: bool
-    ) -> (LayoutPrimitiveInfo, LayoutRect, ScrollNodeAndClipChain) {
+    ) -> (LayoutPrimitiveInfo, ScrollNodeAndClipChain) {
         let clip_and_scroll = self.get_clip_and_scroll(
             &common.clip_id,
             &common.spatial_id,
@@ -1093,36 +1072,16 @@ impl<'a> DisplayListFlattener<'a> {
 
         let current_offset = self.current_offset(clip_and_scroll.spatial_node_index);
 
-        let snap_to_device = &mut self.sc_stack.last_mut().unwrap().snap_to_device;
-        snap_to_device.set_target_spatial_node(
-            clip_and_scroll.spatial_node_index,
-            self.clip_scroll_tree
-        );
-
         let clip_rect = common.clip_rect.translate(current_offset);
         let rect = bounds.translate(current_offset);
-
         let layout = LayoutPrimitiveInfo {
-            rect: snap_to_device.snap_rect(&rect),
-            clip_rect: snap_to_device.snap_rect(&clip_rect),
+            rect,
+            clip_rect,
             is_backface_visible: common.is_backface_visible,
             hit_info: common.hit_info,
         };
 
-        (layout, rect, clip_and_scroll)
-    }
-
-    pub fn snap_rect(
-        &mut self,
-        rect: &LayoutRect,
-        target_spatial_node: SpatialNodeIndex,
-    ) -> LayoutRect {
-        let snap_to_device = &mut self.sc_stack.last_mut().unwrap().snap_to_device;
-        snap_to_device.set_target_spatial_node(
-            target_spatial_node,
-            self.clip_scroll_tree
-        );
-        snap_to_device.snap_rect(rect)
+        (layout, clip_and_scroll)
     }
 
     fn flatten_item<'b>(
@@ -1133,7 +1092,7 @@ impl<'a> DisplayListFlattener<'a> {
     ) -> Option<BuiltDisplayListIter<'a>> {
         match *item.item() {
             DisplayItem::Image(ref info) => {
-                let (layout, _, clip_and_scroll) = self.process_common_properties_with_bounds(
+                let (layout, clip_and_scroll) = self.process_common_properties_with_bounds(
                     &info.common,
                     &info.bounds,
                     apply_pipeline_clip,
@@ -1142,32 +1101,7 @@ impl<'a> DisplayListFlattener<'a> {
                 self.add_image(
                     clip_and_scroll,
                     &layout,
-                    layout.rect.size,
-                    LayoutSize::zero(),
-                    None,
-                    info.image_key,
-                    info.image_rendering,
-                    info.alpha_type,
-                    info.color,
-                );
-            }
-            DisplayItem::RepeatingImage(ref info) => {
-                let (layout, unsnapped_rect, clip_and_scroll) = self.process_common_properties_with_bounds(
-                    &info.common,
-                    &info.bounds,
-                    apply_pipeline_clip,
-                );
-
-                let stretch_size = process_repeat_size(
-                    &layout.rect,
-                    &unsnapped_rect,
                     info.stretch_size,
-                );
-
-                self.add_image(
-                    clip_and_scroll,
-                    &layout,
-                    stretch_size,
                     info.tile_spacing,
                     None,
                     info.image_key,
@@ -1177,7 +1111,7 @@ impl<'a> DisplayListFlattener<'a> {
                 );
             }
             DisplayItem::YuvImage(ref info) => {
-                let (layout, _, clip_and_scroll) = self.process_common_properties_with_bounds(
+                let (layout, clip_and_scroll) = self.process_common_properties_with_bounds(
                     &info.common,
                     &info.bounds,
                     apply_pipeline_clip,
@@ -1194,7 +1128,7 @@ impl<'a> DisplayListFlattener<'a> {
                 );
             }
             DisplayItem::Text(ref info) => {
-                let (layout, _, clip_and_scroll) = self.process_common_properties_with_bounds(
+                let (layout, clip_and_scroll) = self.process_common_properties_with_bounds(
                     &info.common,
                     &info.bounds,
                     apply_pipeline_clip,
@@ -1245,7 +1179,7 @@ impl<'a> DisplayListFlattener<'a> {
                 );
             }
             DisplayItem::Line(ref info) => {
-                let (layout, _, clip_and_scroll) = self.process_common_properties_with_bounds(
+                let (layout, clip_and_scroll) = self.process_common_properties_with_bounds(
                     &info.common,
                     &info.area,
                     apply_pipeline_clip,
@@ -1261,16 +1195,10 @@ impl<'a> DisplayListFlattener<'a> {
                 );
             }
             DisplayItem::Gradient(ref info) => {
-                let (layout, unsnapped_rect, clip_and_scroll) = self.process_common_properties_with_bounds(
+                let (layout, clip_and_scroll) = self.process_common_properties_with_bounds(
                     &info.common,
                     &info.bounds,
                     apply_pipeline_clip,
-                );
-
-                let tile_size = process_repeat_size(
-                    &layout.rect,
-                    &unsnapped_rect,
-                    info.tile_size,
                 );
 
                 if let Some(prim_key_kind) = self.create_linear_gradient_prim(
@@ -1279,7 +1207,7 @@ impl<'a> DisplayListFlattener<'a> {
                     info.gradient.end_point,
                     item.gradient_stops(),
                     info.gradient.extend_mode,
-                    tile_size,
+                    info.tile_size,
                     info.tile_spacing,
                     None,
                 ) {
@@ -1292,16 +1220,10 @@ impl<'a> DisplayListFlattener<'a> {
                 }
             }
             DisplayItem::RadialGradient(ref info) => {
-                let (layout, unsnapped_rect, clip_and_scroll) = self.process_common_properties_with_bounds(
+                let (layout, clip_and_scroll) = self.process_common_properties_with_bounds(
                     &info.common,
                     &info.bounds,
                     apply_pipeline_clip,
-                );
-
-                let tile_size = process_repeat_size(
-                    &layout.rect,
-                    &unsnapped_rect,
-                    info.tile_size,
                 );
 
                 let prim_key_kind = self.create_radial_gradient_prim(
@@ -1312,7 +1234,7 @@ impl<'a> DisplayListFlattener<'a> {
                     info.gradient.radius.width / info.gradient.radius.height,
                     item.gradient_stops(),
                     info.gradient.extend_mode,
-                    tile_size,
+                    info.tile_size,
                     info.tile_spacing,
                     None,
                 );
@@ -1325,7 +1247,7 @@ impl<'a> DisplayListFlattener<'a> {
                 );
             }
             DisplayItem::BoxShadow(ref info) => {
-                let (layout, _, clip_and_scroll) = self.process_common_properties_with_bounds(
+                let (layout, clip_and_scroll) = self.process_common_properties_with_bounds(
                     &info.common,
                     &info.box_bounds,
                     apply_pipeline_clip,
@@ -1343,7 +1265,7 @@ impl<'a> DisplayListFlattener<'a> {
                 );
             }
             DisplayItem::Border(ref info) => {
-                let (layout, _, clip_and_scroll) = self.process_common_properties_with_bounds(
+                let (layout, clip_and_scroll) = self.process_common_properties_with_bounds(
                     &info.common,
                     &info.bounds,
                     apply_pipeline_clip,
@@ -1760,7 +1682,6 @@ impl<'a> DisplayListFlattener<'a> {
         clip_chain_id: ClipChainId,
         requested_raster_space: RasterSpace,
         is_backdrop_root: bool,
-        device_pixel_scale: DevicePixelScale,
     ) {
         // Check if this stacking context is the root of a pipeline, and the caller
         // has requested it as an output frame.
@@ -1863,14 +1784,6 @@ impl<'a> DisplayListFlattener<'a> {
             current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
         }
 
-        let snap_to_device = self.sc_stack.last().map_or(
-            SpaceSnapper::new(
-                ROOT_SPATIAL_NODE_INDEX,
-                device_pixel_scale,
-            ),
-            |sc| sc.snap_to_device.clone(),
-        );
-
         // Push the SC onto the stack, so we know how to handle things in
         // pop_stacking_context.
         self.sc_stack.push(FlattenedStackingContext {
@@ -1887,7 +1800,6 @@ impl<'a> DisplayListFlattener<'a> {
             context_3d,
             create_tile_cache,
             is_backdrop_root,
-            snap_to_device,
         });
     }
 
@@ -2263,7 +2175,6 @@ impl<'a> DisplayListFlattener<'a> {
         pipeline_id: PipelineId,
         viewport_size: &LayoutSize,
         content_size: &LayoutSize,
-        device_pixel_scale: DevicePixelScale,
     ) {
         if let ChasePrimitive::Id(id) = self.config.chase_primitive {
             println!("Chasing {:?} by index", id);
@@ -2282,27 +2193,13 @@ impl<'a> DisplayListFlattener<'a> {
             LayoutVector2D::zero(),
         );
 
-        // We can't use this with the stacking context because it does not exist
-        // yet. Just create a dedicated snapper for the root.
-        let snap_to_device = SpaceSnapper::new_with_target(
-            spatial_node_index,
-            ROOT_SPATIAL_NODE_INDEX,
-            device_pixel_scale,
-            self.clip_scroll_tree,
-        );
-
-        let content_size = snap_to_device.snap_size(content_size);
-        let viewport_rect = snap_to_device.snap_rect(
-            &LayoutRect::new(LayoutPoint::zero(), *viewport_size),
-        );
-
         self.add_scroll_frame(
             SpatialId::root_scroll_node(pipeline_id),
             spatial_node_index,
             Some(ExternalScrollId(0, pipeline_id)),
             pipeline_id,
-            &viewport_rect,
-            &content_size,
+            &LayoutRect::new(LayoutPoint::zero(), *viewport_size),
+            content_size,
             ScrollSensitivity::ScriptAndInputEvents,
             ScrollFrameKind::PipelineRoot,
             LayoutVector2D::zero(),
@@ -2326,14 +2223,6 @@ impl<'a> DisplayListFlattener<'a> {
         // Map the ClipId for the positioning node to a spatial node index.
         let spatial_node_index = self.id_to_index_mapper.get_spatial_node_index(space_and_clip.spatial_id);
 
-        let snap_to_device = &mut self.sc_stack.last_mut().unwrap().snap_to_device;
-        snap_to_device.set_target_spatial_node(
-            spatial_node_index,
-            self.clip_scroll_tree,
-        );
-
-        let snapped_clip_rect = snap_to_device.snap_rect(&clip_region.main);
-
         let mut clip_count = 0;
 
         // Intern each clip item in this clip node, and add the interned
@@ -2343,7 +2232,7 @@ impl<'a> DisplayListFlattener<'a> {
 
         // Build the clip sources from the supplied region.
         let item = ClipItemKey {
-            kind: ClipItemKeyKind::rectangle(snapped_clip_rect, ClipMode::Clip),
+            kind: ClipItemKeyKind::rectangle(clip_region.main, ClipMode::Clip),
             spatial_node_index,
         };
         let handle = self
@@ -2360,9 +2249,8 @@ impl<'a> DisplayListFlattener<'a> {
         clip_count += 1;
 
         if let Some(ref image_mask) = clip_region.image_mask {
-            let snapped_mask_rect = snap_to_device.snap_rect(&image_mask.rect);
             let item = ClipItemKey {
-                kind: ClipItemKeyKind::image_mask(image_mask, snapped_mask_rect),
+                kind: ClipItemKeyKind::image_mask(image_mask),
                 spatial_node_index,
             };
 
@@ -2381,10 +2269,9 @@ impl<'a> DisplayListFlattener<'a> {
         }
 
         for region in clip_region.complex_clips {
-            let snapped_region_rect = snap_to_device.snap_rect(&region.rect);
             let item = ClipItemKey {
                 kind: ClipItemKeyKind::rounded_rect(
-                    snapped_region_rect,
+                    region.rect,
                     region.radii,
                     region.mode,
                 ),
@@ -2657,23 +2544,11 @@ impl<'a> DisplayListFlattener<'a> {
         P: InternablePrimitive + CreateShadow,
         Interners: AsMut<Interner<P>>,
     {
-        let snap_to_device = &mut self.sc_stack.last_mut().unwrap().snap_to_device;
-        snap_to_device.set_target_spatial_node(
-            pending_primitive.clip_and_scroll.spatial_node_index,
-            self.clip_scroll_tree
-        );
-
-        // Offset the local rect and clip rect by the shadow offset. The pending
-        // primitive has already been snapped, but we will need to snap the
-        // shadow after translation. We don't need to worry about the size
-        // changing because the shadow has the same raster space as the
-        // primitive, and thus we know the size is already rounded.
+        // Offset the local rect and clip rect by the shadow offset.
         let mut info = pending_primitive.info.clone();
-        info.rect = snap_to_device.snap_rect(
-            &info.rect.translate(pending_shadow.shadow.offset),
-        );
-        info.clip_rect = snap_to_device.snap_rect(
-            &info.clip_rect.translate(pending_shadow.shadow.offset),
+        info.rect = info.rect.translate(pending_shadow.shadow.offset);
+        info.clip_rect = info.clip_rect.translate(
+            pending_shadow.shadow.offset
         );
 
         // Construct and add a primitive for the given shadow.
@@ -3562,13 +3437,6 @@ struct FlattenedStackingContext {
 
     /// True if this stacking context is a backdrop root.
     is_backdrop_root: bool,
-
-    /// A helper struct to snap local rects in device space. During frame
-    /// building we may establish new raster roots, however typically that is in
-    /// cases where we won't be applying snapping (e.g. has perspective), or in
-    /// edge cases (e.g. SVG filter) where we can accept slightly incorrect
-    /// behaviour in favour of getting the common case right.
-    snap_to_device: SpaceSnapper,
 }
 
 impl FlattenedStackingContext {
@@ -3821,23 +3689,4 @@ fn filter_primitives_for_compositing(
     //           we could probably make it a bit
     //           more efficient than cloning these here.
     input_filter_primitives.iter().map(|primitive| primitive.into()).collect()
-}
-
-fn process_repeat_size(
-    snapped_rect: &LayoutRect,
-    unsnapped_rect: &LayoutRect,
-    repeat_size: LayoutSize,
-) -> LayoutSize {
-    LayoutSize::new(
-        if repeat_size.width == unsnapped_rect.size.width {
-            snapped_rect.size.width
-        } else {
-            repeat_size.width
-        },
-        if repeat_size.height == unsnapped_rect.size.height {
-            snapped_rect.size.height
-        } else {
-            repeat_size.height
-        },
-    )
 }

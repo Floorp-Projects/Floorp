@@ -170,6 +170,8 @@ impl Example for App {
         builder.push_image(
             &CommonItemProperties::new(bounds, space_and_clip),
             bounds,
+            bounds.size,
+            LayoutSize::zero(),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             self.external_image_key.unwrap(),
