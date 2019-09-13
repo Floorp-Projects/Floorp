@@ -6,8 +6,9 @@
 
 #include "frontend/BinASTTokenReaderContext.h"
 
-#include "mozilla/Result.h"     // MOZ_TRY*
-#include "mozilla/ScopeExit.h"  // mozilla::MakeScopeExit
+#include "mozilla/IntegerTypeTraits.h"  // mozilla::MaxValue
+#include "mozilla/Result.h"             // MOZ_TRY*
+#include "mozilla/ScopeExit.h"          // mozilla::MakeScopeExit
 
 #include <string.h>  // memchr, memcmp, memmove
 
@@ -1785,8 +1786,15 @@ JS::Result<Ok> HuffmanTableImplementationGeneric<T>::init(
     JSContext* cx, size_t numberOfSymbols, uint8_t maxBitLength) {
   MOZ_ASSERT(this->implementation.template is<
              HuffmanTableUnreachable>());  // Make sure that we're initializing.
-  if (maxBitLength > MAX_BIT_LENGTH_IN_SATURATED_TABLE ||
-      numberOfSymbols > 256) {
+  if (
+      // If the bit length is too large, don't put it in a saturated table
+      // as this would need too much space.
+      maxBitLength > MAX_BIT_LENGTH_IN_SATURATED_TABLE ||
+      // If there are too many symbols, don't put it in a saturated table
+      // as indices  wouldn't fit into `InternalIndex` .
+      numberOfSymbols >
+          mozilla::MaxValue<typename HuffmanTableImplementationSaturated<
+              T>::InternalIndex>::value) {
     this->implementation = {
         mozilla::VariantType<HuffmanTableImplementationMap<T>>{}, cx};
     MOZ_TRY(this->implementation.template as<HuffmanTableImplementationMap<T>>()
