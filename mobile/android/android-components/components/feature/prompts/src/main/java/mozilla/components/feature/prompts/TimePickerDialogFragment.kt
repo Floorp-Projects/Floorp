@@ -58,6 +58,7 @@ internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnD
             safeArguments.putSerializable(KEY_SELECTED_DATE, value)
         }
 
+    @Suppress("ComplexMethod")
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val context = requireContext()
         val dialog = when (selectionType) {

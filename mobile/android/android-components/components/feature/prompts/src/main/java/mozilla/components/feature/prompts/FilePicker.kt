@@ -59,6 +59,7 @@ internal class FilePicker private constructor(
      */
     private var captureUri: Uri? = null
 
+    @Suppress("ComplexMethod")
     fun handleFileRequest(promptRequest: File, requestPermissions: Boolean = true) {
         // Track which permissions are needed.
         val neededPermissions = mutableListOf<String>()
