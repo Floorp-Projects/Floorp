@@ -381,7 +381,12 @@ class SearchOneOffs {
     }
     let currentEngineNameToIgnore;
     if (!this.getAttribute("includecurrentengine")) {
-      currentEngineNameToIgnore = (await Services.search.getDefault()).name;
+      if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+        currentEngineNameToIgnore = (await Services.search.getDefaultPrivate())
+          .name;
+      } else {
+        currentEngineNameToIgnore = (await Services.search.getDefault()).name;
+      }
     }
 
     let pref = Services.prefs.getStringPref("browser.search.hiddenOneOffs");
@@ -461,7 +466,9 @@ class SearchOneOffs {
     this.buttons.setAttribute("aria-label", headerText.value);
 
     let engines = await this.getEngines();
-    let defaultEngine = await Services.search.getDefault();
+    let defaultEngine = PrivateBrowsingUtils.isWindowPrivate(window)
+      ? await Services.search.getDefaultPrivate()
+      : await Services.search.getDefault();
     let oneOffCount = engines.length;
     let hideOneOffs =
       !oneOffCount ||
@@ -1165,7 +1172,10 @@ class SearchOneOffs {
     }
 
     if (target.classList.contains("search-one-offs-context-set-default")) {
-      let currentEngine = Services.search.defaultEngine;
+      const engineType = PrivateBrowsingUtils.isWindowPrivate(window)
+        ? "defaultPrivateEngine"
+        : "defaultEngine";
+      let currentEngine = Services.search[engineType];
 
       if (!this.getAttribute("includecurrentengine")) {
         // Make the target button of the context menu reflect the current
@@ -1182,7 +1192,7 @@ class SearchOneOffs {
         button.engine = currentEngine;
       }
 
-      Services.search.defaultEngine = this._contextEngine;
+      Services.search[engineType] = this._contextEngine;
     }
   }
 

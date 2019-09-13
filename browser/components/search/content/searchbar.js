@@ -145,12 +145,21 @@
     }
 
     set currentEngine(val) {
-      Services.search.defaultEngine = val;
+      if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+        Services.search.defaultPrivateEngine = val;
+      } else {
+        Services.search.defaultEngine = val;
+      }
       return val;
     }
 
     get currentEngine() {
-      let currentEngine = Services.search.defaultEngine;
+      let currentEngine;
+      if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+        currentEngine = Services.search.defaultPrivateEngine;
+      } else {
+        currentEngine = Services.search.defaultEngine;
+      }
       // Return a dummy engine if there is no currentEngine
       return currentEngine || { name: "", uri: null };
     }
