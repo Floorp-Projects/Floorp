@@ -1,0 +1,24 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype HTML>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>WebSocket Inspection Test Page</title>
+  </head>
+  <body>
+    <h1>WebSocket Inspection Test Page</h1>
+    <script type="text/javascript">
+      "use strict";
+      const ws = new WebSocket(
+        "ws://mochi.test:8888/browser/devtools/client/netmonitor/test/file_ws_backend");
+
+      ws.onopen = () => {
+        ws.send("readyState:" + document.readyState);
+        ws.close();
+      }
+    </script>
+    <script type="text/javascript"
+      src="http://example.com/browser/devtools/client/netmonitor/test/sjs_slow-script-server.sjs"></script>
+  </body>
+</html>
