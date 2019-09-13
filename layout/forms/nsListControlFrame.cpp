@@ -556,7 +556,11 @@ void nsListControlFrame::ReflowAsDropdown(nsPresContext* aPresContext,
     // Looks like we have no options.  Just size us to a single row
     // block size.
     state.SetComputedBSize(blockSizeOfARow);
-    mNumDisplayRows = 1;
+    // mNumDisplayRows is used as the number of options to move for the page
+    // up/down keys. If we're in a content process, we can't calculate
+    // mNumDisplayRows properly, but the maximum number of rows is a lot more
+    // uesful for page up/down than 1.
+    mNumDisplayRows = XRE_IsContentProcess() ? kMaxDropDownRows : 1;
   } else {
     nsComboboxControlFrame* combobox =
         static_cast<nsComboboxControlFrame*>(mComboboxFrame);
