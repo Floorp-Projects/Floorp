@@ -396,9 +396,8 @@ class MitmproxyDesktop(Mitmproxy):
 
 
 class MitmproxyAndroid(Mitmproxy):
-    def __init__(self, config, android_device):
+    def __init__(self, config):
         Mitmproxy.__init__(self, config)
-        self.android_device = android_device
 
     @property
     def certutil_sleep_seconds(self):
