@@ -628,6 +628,27 @@ class TextEditor : public EditorBase,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE virtual EditActionResult HandleInsertText(
       EditSubAction aEditSubAction, const nsAString& aInsertionString);
 
+  /**
+   * HandleDeleteSelectionInternal() is a helper method of
+   * HandleDeleteSelection().  Must be called only when the instance is
+   * TextEditor.
+   * NOTE: This method creates SelectionBatcher.  Therefore, each caller
+   *       needs to check if the editor is still available even if this returns
+   *       NS_OK.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  HandleDeleteSelectionInternal(nsIEditor::EDirection aDirectionAndAmount);
+
+  /**
+   * This method handles "delete selection" commands.
+   *
+   * @param aDirectionAndAmount Direction of the deletion.
+   * @param aStripWrappers      Always ignored in TextEditor.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE virtual EditActionResult
+  HandleDeleteSelection(nsIEditor::EDirection aDirectionAndAmount,
+                        nsIEditor::EStripWrappers aStripWrappers);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;

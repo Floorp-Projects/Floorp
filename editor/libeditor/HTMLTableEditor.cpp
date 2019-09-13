@@ -824,10 +824,8 @@ nsresult HTMLEditor::DeleteTableElementAndChildrenWithTransaction(
   }
 
   nsresult rv = DeleteSelectionAsSubAction(eNext, eStrip);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "DeleteSelectionAsSubAction() failed");
+  return rv;
 }
 
 NS_IMETHODIMP

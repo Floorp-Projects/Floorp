@@ -73,9 +73,6 @@ nsresult TextEditor::PrepareToInsertContent(
   if (aDoDeleteSelection) {
     AutoTrackDOMPoint tracker(RangeUpdaterRef(), &pointToInsert);
     nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
