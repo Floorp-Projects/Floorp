@@ -58,10 +58,7 @@
       fileData.file = null;
     }
 
-    scheduleGC();
-    yield undefined;
-
-    ok(!hasFileInfo(name, 1), "Correct ref count");
+    yield* assertEventuallyHasNoFileInfo(name, 1);
 
     finishTest();
   }
