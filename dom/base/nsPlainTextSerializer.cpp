@@ -696,7 +696,7 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
     // Indent here to support nested lists, which aren't included in li :-(
     EnsureVerticalSpace(mULCount + mOLStackIndex == 0 ? 1 : 0);
     // Must end the current line before we change indention
-    mCurrentLine.mIndentation.mWidth += kIndentSizeList;
+    mCurrentLine.mIndentation.mLength += kIndentSizeList;
     mULCount++;
   } else if (aTag == nsGkAtoms::ol) {
     EnsureVerticalSpace(mULCount + mOLStackIndex == 0 ? 1 : 0);
@@ -715,7 +715,7 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
     } else {
       mOLStackIndex++;
     }
-    mCurrentLine.mIndentation.mWidth += kIndentSizeList;  // see ul
+    mCurrentLine.mIndentation.mLength += kIndentSizeList;  // see ul
   } else if (aTag == nsGkAtoms::li &&
              mSettings.HasFlag(nsIDocumentEncoder::OutputFormatted)) {
     if (mTagStackIndex > 1 && IsInOL()) {
@@ -748,7 +748,7 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
     EnsureVerticalSpace(0);
   } else if (aTag == nsGkAtoms::dd) {
     EnsureVerticalSpace(0);
-    mCurrentLine.mIndentation.mWidth += kIndentSizeDD;
+    mCurrentLine.mIndentation.mLength += kIndentSizeDD;
   } else if (aTag == nsGkAtoms::span) {
     ++mSpanLevel;
   } else if (aTag == nsGkAtoms::blockquote) {
@@ -759,7 +759,7 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
       mCurrentLine.mCiteQuoteLevel++;
     } else {
       EnsureVerticalSpace(1);
-      mCurrentLine.mIndentation.mWidth +=
+      mCurrentLine.mIndentation.mLength +=
           kTabSize;  // Check for some maximum value?
     }
   } else if (aTag == nsGkAtoms::q) {
@@ -789,7 +789,7 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
     EnsureVerticalSpace(2);
     if (mSettings.GetHeaderStrategy() ==
         Settings::HeaderStrategy::kNumberHeadingsAndIndentSlightly) {
-      mCurrentLine.mIndentation.mWidth += kIndentSizeHeaders;
+      mCurrentLine.mIndentation.mLength += kIndentSizeHeaders;
       // Caching
       int32_t level = HeaderLevel(aTag);
       // Increase counter for current level
@@ -811,10 +811,10 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
       Write(leadup);
     } else if (mSettings.GetHeaderStrategy() ==
                Settings::HeaderStrategy::kIndentIncreasedWithHeaderLevel) {
-      mCurrentLine.mIndentation.mWidth += kIndentSizeHeaders;
+      mCurrentLine.mIndentation.mLength += kIndentSizeHeaders;
       for (int32_t i = HeaderLevel(aTag); i > 1; i--) {
         // for h(x), run x-1 times
-        mCurrentLine.mIndentation.mWidth += kIndentIncrementHeaders;
+        mCurrentLine.mIndentation.mLength += kIndentIncrementHeaders;
       }
     }
   } else if (aTag == nsGkAtoms::sup && mSettings.GetStructs() &&
@@ -927,7 +927,7 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
     mLineBreakDue = true;
   } else if (aTag == nsGkAtoms::ul) {
     mOutputManager->Flush(mCurrentLine);
-    mCurrentLine.mIndentation.mWidth -= kIndentSizeList;
+    mCurrentLine.mIndentation.mLength -= kIndentSizeList;
     if (--mULCount + mOLStackIndex == 0) {
       mFloatingLines = 1;
       mLineBreakDue = true;
@@ -935,7 +935,7 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
   } else if (aTag == nsGkAtoms::ol) {
     mOutputManager->Flush(mCurrentLine);  // Doing this after decreasing
                                           // OLStackIndex would be wrong.
-    mCurrentLine.mIndentation.mWidth -= kIndentSizeList;
+    mCurrentLine.mIndentation.mLength -= kIndentSizeList;
     NS_ASSERTION(mOLStackIndex, "Wrong OLStack level!");
     mOLStackIndex--;
     if (mULCount + mOLStackIndex == 0) {
@@ -947,7 +947,7 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
     mLineBreakDue = true;
   } else if (aTag == nsGkAtoms::dd) {
     mOutputManager->Flush(mCurrentLine);
-    mCurrentLine.mIndentation.mWidth -= kIndentSizeDD;
+    mCurrentLine.mIndentation.mLength -= kIndentSizeDD;
   } else if (aTag == nsGkAtoms::span) {
     NS_ASSERTION(mSpanLevel, "Span level will be negative!");
     --mSpanLevel;
@@ -966,7 +966,7 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
       mFloatingLines = 0;
       mHasWrittenCiteBlockquote = true;
     } else {
-      mCurrentLine.mIndentation.mWidth -= kTabSize;
+      mCurrentLine.mIndentation.mLength -= kTabSize;
       mFloatingLines = 1;
     }
     mLineBreakDue = true;
@@ -1004,13 +1004,13 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
          HeaderStrategy::kIndentIncreasedWithHeaderLevel) ||
         (mSettings.GetHeaderStrategy() ==
          HeaderStrategy::kNumberHeadingsAndIndentSlightly)) {
-      mCurrentLine.mIndentation.mWidth -= kIndentSizeHeaders;
+      mCurrentLine.mIndentation.mLength -= kIndentSizeHeaders;
     }
     if (mSettings.GetHeaderStrategy() ==
         HeaderStrategy::kIndentIncreasedWithHeaderLevel) {
       for (int32_t i = HeaderLevel(aTag); i > 1; i--) {
         // for h(x), run x-1 times
-        mCurrentLine.mIndentation.mWidth -= kIndentIncrementHeaders;
+        mCurrentLine.mIndentation.mLength -= kIndentIncrementHeaders;
       }
     }
     EnsureVerticalSpace(1);
@@ -1394,7 +1394,7 @@ void nsPlainTextSerializer::EndLine(bool aSoftLineBreak, bool aBreakBySpace) {
 
   if (aSoftLineBreak &&
       mSettings.HasFlag(nsIDocumentEncoder::OutputFormatFlowed) &&
-      (mCurrentLine.mIndentation.mWidth == 0)) {
+      (mCurrentLine.mIndentation.mLength == 0)) {
     // Add the soft part of the soft linebreak (RFC 2646 4.1)
     // We only do this when there is no indentation since format=flowed
     // lines and indentation doesn't work well together.
@@ -1459,7 +1459,7 @@ void nsPlainTextSerializer::CurrentLine::CreateQuotesAndIndent(
   }
 
   // Indent if necessary
-  int32_t indentwidth = mIndentation.mWidth - mIndentation.mHeader.Length();
+  int32_t indentwidth = mIndentation.mLength - mIndentation.mHeader.Length();
   if (indentwidth > 0 && HasContentOrIndentationHeader()
       // Don't make empty lines look flowed
   ) {
