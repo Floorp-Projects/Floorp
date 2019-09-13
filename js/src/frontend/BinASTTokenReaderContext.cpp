@@ -1734,11 +1734,11 @@ HuffmanTableImplementationGeneric<T>::begin() const {
   return this->implementation.match(
       [](const HuffmanTableImplementationSaturated<T>& implementation)
           -> HuffmanTableImplementationGeneric<T>::Iterator {
-        return implementation.begin();
+        return Iterator(implementation.begin());
       },
       [](const HuffmanTableImplementationMap<T>& implementation)
           -> HuffmanTableImplementationGeneric<T>::Iterator {
-        return implementation.begin();
+        return Iterator(implementation.begin());
       },
       [](const HuffmanTableUnreachable&)
           -> HuffmanTableImplementationGeneric<T>::Iterator {
@@ -1752,11 +1752,11 @@ HuffmanTableImplementationGeneric<T>::end() const {
   return this->implementation.match(
       [](const HuffmanTableImplementationSaturated<T>& implementation)
           -> HuffmanTableImplementationGeneric<T>::Iterator {
-        return implementation.end();
+        return Iterator(implementation.end());
       },
       [](const HuffmanTableImplementationMap<T>& implementation)
           -> HuffmanTableImplementationGeneric<T>::Iterator {
-        return implementation.end();
+        return Iterator(implementation.end());
       },
       [](const HuffmanTableUnreachable&)
           -> HuffmanTableImplementationGeneric<T>::Iterator {
@@ -1964,7 +1964,7 @@ HuffmanEntry<const T*> HuffmanTableImplementationMap<T>::lookup(
     const uint32_t bits = lookup.leadingBits(bitLength);
     const HuffmanKey key(bits, bitLength);
     const FlatHuffmanKey flat(key);
-    if (auto ptr = values.lookup(key)) {
+    if (auto ptr = values.lookup(flat)) {
       // Entry found.
       return HuffmanEntry<const T*>(bits, bitLength, &ptr->value());
     }
