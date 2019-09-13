@@ -55,23 +55,6 @@ add_task(async function testDisabled() {
   extension.sendMessage("check-clicked", false);
   await extension.awaitMessage("next-test");
 
-  await clickBrowserAction(extension, window, { button: 1 });
-  await new Promise(resolve => setTimeout(resolve, 0));
-
-  extension.sendMessage("check-clicked", false);
-  await extension.awaitMessage("next-test");
-
-  let widget = getBrowserActionWidget(extension);
-  CustomizableUI.addWidgetToArea(widget.id, getCustomizableUIPanelID());
-
-  await clickBrowserAction(extension, window, { button: 1 });
-  await new Promise(resolve => setTimeout(resolve, 0));
-
-  extension.sendMessage("check-clicked", false);
-  await extension.awaitMessage("next-test");
-
-  CustomizableUI.addWidgetToArea(widget.id, CustomizableUI.AREA_NAVBAR);
-
   extension.sendMessage("enable");
   await extension.awaitMessage("next-test");
 
