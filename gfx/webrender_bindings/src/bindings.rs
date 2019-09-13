@@ -2570,8 +2570,6 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
                                    clip: LayoutRect,
                                    is_backface_visible: bool,
                                    parent: &WrSpaceAndClipChain,
-                                   stretch_size: LayoutSize,
-                                   tile_spacing: LayoutSize,
                                    image_rendering: ImageRendering,
                                    key: WrImageKey,
                                    premultiplied_alpha: bool,
@@ -2598,12 +2596,52 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
          .dl_builder
          .push_image(&prim_info,
                      bounds,
-                     stretch_size,
-                     tile_spacing,
                      image_rendering,
                      alpha_type,
                      key,
                      color);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_push_repeating_image(state: &mut WrState,
+                                             bounds: LayoutRect,
+                                             clip: LayoutRect,
+                                             is_backface_visible: bool,
+                                             parent: &WrSpaceAndClipChain,
+                                             stretch_size: LayoutSize,
+                                             tile_spacing: LayoutSize,
+                                             image_rendering: ImageRendering,
+                                             key: WrImageKey,
+                                             premultiplied_alpha: bool,
+                                             color: ColorF) {
+    debug_assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
+
+    let space_and_clip = parent.to_webrender(state.pipeline_id);
+
+    let prim_info = CommonItemProperties {
+        clip_rect: clip,
+        clip_id: space_and_clip.clip_id,
+        spatial_id: space_and_clip.spatial_id,
+        is_backface_visible,
+        hit_info: state.current_tag,
+    };
+
+    let alpha_type = if premultiplied_alpha {
+        AlphaType::PremultipliedAlpha
+    } else {
+        AlphaType::Alpha
+    };
+
+    state.frame_builder
+         .dl_builder
+         .push_repeating_image(&prim_info,
+                               bounds,
+                               stretch_size,
+                               tile_spacing,
+                               image_rendering,
+                               alpha_type,
+                               key,
+                               color);
 }
 
 /// Push a 3 planar yuv image.
