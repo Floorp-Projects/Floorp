@@ -26,6 +26,8 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["InspectorUtils"]);
 const kStateActive = 0x00000001; // NS_EVENT_STATE_ACTIVE
 const kStateHover = 0x00000004; // NS_EVENT_STATE_HOVER
 
+// Duplicated in SelectParent.jsm
+// Please keep these lists in sync.
 const SUPPORTED_PROPERTIES = [
   "direction",
   "color",
