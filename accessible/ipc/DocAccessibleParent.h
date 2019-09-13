@@ -20,10 +20,6 @@ namespace a11y {
 
 class xpcAccessibleGeneric;
 
-#if !defined(XP_WIN)
-class DocAccessiblePlatformExtParent;
-#endif
-
 /*
  * These objects live in the main process and comunicate with and represent
  * an accessible document in a content process.
@@ -245,14 +241,6 @@ class DocAccessibleParent : public ProxyAccessible,
 #if !defined(XP_WIN)
   virtual mozilla::ipc::IPCResult RecvBatch(
       const uint64_t& aBatchType, nsTArray<BatchData>&& aData) override;
-
-  virtual bool DeallocPDocAccessiblePlatformExtParent(
-      PDocAccessiblePlatformExtParent* aActor) override;
-
-  virtual PDocAccessiblePlatformExtParent* AllocPDocAccessiblePlatformExtParent()
-      override;
-
-  DocAccessiblePlatformExtParent* GetPlatformExtension();
 #endif
 
   /**
