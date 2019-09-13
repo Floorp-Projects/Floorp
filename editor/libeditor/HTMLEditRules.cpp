@@ -754,12 +754,6 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
   *aCancel = false;
   *aHandled = false;
 
-  // Deal with actions for which we don't need to check whether the selection is
-  // editable.
-  if (aInfo.mEditSubAction == EditSubAction::eComputeTextToOutput) {
-    return TextEditRules::WillDoAction(aInfo, aCancel, aHandled);
-  }
-
   AutoSafeEditorData setData(*this, *mHTMLEditor);
 
   EditActionResult result = HTMLEditorRef().CanHandleHTMLEditSubAction();
@@ -786,6 +780,7 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
       return NS_OK;
     }
+    case EditSubAction::eComputeTextToOutput:
     case EditSubAction::eCreateOrChangeDefinitionListItem:
     case EditSubAction::eCreateOrChangeList:
     case EditSubAction::eCreateOrRemoveBlock:
@@ -825,6 +820,7 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
     case EditSubAction::eInsertElement:
     case EditSubAction::eInsertQuotedText:
       return NS_OK;
+    case EditSubAction::eComputeTextToOutput:
     case EditSubAction::eCreateOrChangeDefinitionListItem:
     case EditSubAction::eCreateOrChangeList:
     case EditSubAction::eCreateOrRemoveBlock:

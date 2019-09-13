@@ -123,17 +123,6 @@ class TextEditRules {
                                     int32_t aMaxLength);
 
   /**
-   * Called prior to nsIEditor::OutputToString.
-   *
-   * @param aInFormat  The format requested for the output, a MIME type.
-   * @param aOutText   The string to use for output, if aCancel is set to true.
-   * @param aOutCancel If set to true, the caller should cancel the operation
-   *                   and use aOutText as the result.
-   */
-  nsresult WillOutputText(const nsAString* aInFormat, nsAString* aOutText,
-                          uint32_t aFlags, bool* aOutCancel, bool* aHandled);
-
-  /**
    * Creates a trailing break in the text doc if there is not one already.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult CreateTrailingBRIfNeeded();
