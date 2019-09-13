@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Test for page up/down in collapsed select (bug 1488828)</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  function test() {
+    let select = document.getElementById("select");
+    select.focus();
+    is(select.selectedIndex, 0, "Option 0 initially selected");
+    synthesizeKey("KEY_PageDown", {});
+    ok(select.selectedIndex >= 2, "PageDown skips more than 1 option");
+    ok(select.selectedIndex < 49, "PageDown does not move to the last option");
+    synthesizeKey("KEY_PageUp", {});
+    is(select.selectedIndex, 0, "PageUp skips more than 1 option");
+    SimpleTest.finish();
+  }
+</script>
+</head>
+<body onload="test()">
+<div>
+  <select id="select" size="1">
+    <option selected>0</option>
+  </select>
+  <script>
+    // Add more options so we have 50 in total.
+    let select = document.getElementById("select");
+    for (let i = 1; i <= 49; ++i) {
+      let option = document.createElement("option");
+      option.textContent = i;
+      select.appendChild(option);
+    }
+  </script>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
