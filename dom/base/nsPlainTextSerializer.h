@@ -159,6 +159,12 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
 
   class Settings {
    public:
+    enum class HeaderStrategy {
+      kNoIndentation,
+      kIndentIncreasedWithHeaderLevel,
+      kNumberHeadingsAndIndentSlightly
+    };
+
     // May adapt the flags.
     //
     // @param aFlags As defined in nsIDocumentEncoder.idl.
@@ -168,7 +174,7 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
     bool GetStructs() const { return mStructs; }
 
     // Pref: converter.html2txt.header_strategy.
-    int32_t GetHeaderStrategy() const { return mHeaderStrategy; }
+    HeaderStrategy GetHeaderStrategy() const { return mHeaderStrategy; }
 
     // @return As defined in nsIDocumentEncoder.idl.
     int32_t GetFlags() const { return mFlags; }
@@ -181,15 +187,15 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
     bool GetWithRubyAnnotation() const { return mWithRubyAnnotation; }
 
    private:
+    // @param aPrefHeaderStrategy Pref: converter.html2txt.header_strategy.
+    static HeaderStrategy Convert(int32_t aPrefHeaderStrategy);
+
     // Pref: converter.html2txt.structs.
     bool mStructs = true;
 
     // Pref: converter.html2txt.header_strategy.
-    int32_t mHeaderStrategy = 1; /* Header strategy (pref)
-                                  0 = no indention
-                                  1 = indention, increased with
-                                      header level (default)
-                                  2 = numbering and slight indention */
+    HeaderStrategy mHeaderStrategy =
+        HeaderStrategy::kIndentIncreasedWithHeaderLevel;
 
     // Flags defined in nsIDocumentEncoder.idl.
     int32_t mFlags = 0;

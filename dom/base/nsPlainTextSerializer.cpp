@@ -11,7 +11,10 @@
  */
 
 #include "nsPlainTextSerializer.h"
+
+#include "nsPrintfCString.h"
 #include "nsIServiceManager.h"
+#include "nsDebug.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
 #include "nsTextFragment.h"
@@ -40,14 +43,15 @@ using namespace mozilla::dom;
 #define PREF_ALWAYS_INCLUDE_RUBY "converter.html2txt.always_include_ruby"
 
 static const int32_t kTabSize = 4;
-static const int32_t kIndentSizeHeaders = 2;      /* Indention of h1, if
-                                                   mHeaderStrategy = 1 or = 2.
-                                                   Indention of other headers
-                                                   is derived from that.
-                                                   XXX center h1? */
-static const int32_t kIndentIncrementHeaders = 2; /* If mHeaderStrategy = 1,
-                                              indent h(x+1) this many
-                                              columns more than h(x) */
+static const int32_t kIndentSizeHeaders =
+    2; /* Indention of h1, if
+        mHeaderStrategy = kIndentIncreasedWithHeaderLevel
+        or = kNumberHeadingsAndIndentSlightly. Indention of
+        other headers is derived from that. */
+static const int32_t kIndentIncrementHeaders =
+    2; /* If mHeaderStrategy = kIndentIncreasedWithHeaderLevel,
+   indent h(x+1) this many
+   columns more than h(x) */
 static const int32_t kIndentSizeList = kTabSize;
 // Indention of non-first lines of ul and ol
 static const int32_t kIndentSizeDD = kTabSize;  // Indention of <dd>
@@ -210,6 +214,36 @@ nsPlainTextSerializer::~nsPlainTextSerializer() {
   NS_WARNING_ASSERTION(mHeadLevel == 0, "Wrong head level!");
 }
 
+nsPlainTextSerializer::Settings::HeaderStrategy
+nsPlainTextSerializer::Settings::Convert(const int32_t aPrefHeaderStrategy) {
+  HeaderStrategy result{HeaderStrategy::kIndentIncreasedWithHeaderLevel};
+
+  switch (aPrefHeaderStrategy) {
+    case 0: {
+      result = HeaderStrategy::kNoIndentation;
+      break;
+    }
+    case 1: {
+      result = HeaderStrategy::kIndentIncreasedWithHeaderLevel;
+      break;
+    }
+    case 2: {
+      result = HeaderStrategy::kNumberHeadingsAndIndentSlightly;
+      break;
+    }
+    default: {
+      NS_WARNING(
+          nsPrintfCString("Header strategy pref contains undefined value: %i",
+                          aPrefHeaderStrategy)
+              .get());
+    }
+  }
+
+  return result;
+}
+
+const int32_t kDefaultHeaderStrategy = 1;
+
 void nsPlainTextSerializer::Settings::Init(const int32_t aFlags) {
   mFlags = aFlags;
 
@@ -217,8 +251,9 @@ void nsPlainTextSerializer::Settings::Init(const int32_t aFlags) {
     // Get some prefs that controls how we do formatted output
     mStructs = Preferences::GetBool(PREF_STRUCTS, mStructs);
 
-    mHeaderStrategy =
-        Preferences::GetInt(PREF_HEADER_STRATEGY, mHeaderStrategy);
+    int32_t headerStrategy =
+        Preferences::GetInt(PREF_HEADER_STRATEGY, kDefaultHeaderStrategy);
+    mHeaderStrategy = Convert(headerStrategy);
   }
 
   // The pref is default inited to false in libpref, but we use true
@@ -752,7 +787,8 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
   if (aTag == nsGkAtoms::h1 || aTag == nsGkAtoms::h2 || aTag == nsGkAtoms::h3 ||
       aTag == nsGkAtoms::h4 || aTag == nsGkAtoms::h5 || aTag == nsGkAtoms::h6) {
     EnsureVerticalSpace(2);
-    if (mSettings.GetHeaderStrategy() == 2) {  // numbered
+    if (mSettings.GetHeaderStrategy() ==
+        Settings::HeaderStrategy::kNumberHeadingsAndIndentSlightly) {
       mCurrentLine.mIndentation.mWidth += kIndentSizeHeaders;
       // Caching
       int32_t level = HeaderLevel(aTag);
@@ -773,7 +809,8 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
       }
       leadup.Append(char16_t(' '));
       Write(leadup);
-    } else if (mSettings.GetHeaderStrategy() == 1) {  // indent increasingly
+    } else if (mSettings.GetHeaderStrategy() ==
+               Settings::HeaderStrategy::kIndentIncreasedWithHeaderLevel) {
       mCurrentLine.mIndentation.mWidth += kIndentSizeHeaders;
       for (int32_t i = HeaderLevel(aTag); i > 1; i--) {
         // for h(x), run x-1 times
@@ -962,10 +999,15 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
 
   if (aTag == nsGkAtoms::h1 || aTag == nsGkAtoms::h2 || aTag == nsGkAtoms::h3 ||
       aTag == nsGkAtoms::h4 || aTag == nsGkAtoms::h5 || aTag == nsGkAtoms::h6) {
-    if (mSettings.GetHeaderStrategy()) { /*numbered or indent increasingly*/
+    using HeaderStrategy = Settings::HeaderStrategy;
+    if ((mSettings.GetHeaderStrategy() ==
+         HeaderStrategy::kIndentIncreasedWithHeaderLevel) ||
+        (mSettings.GetHeaderStrategy() ==
+         HeaderStrategy::kNumberHeadingsAndIndentSlightly)) {
       mCurrentLine.mIndentation.mWidth -= kIndentSizeHeaders;
     }
-    if (mSettings.GetHeaderStrategy() == 1 /*indent increasingly*/) {
+    if (mSettings.GetHeaderStrategy() ==
+        HeaderStrategy::kIndentIncreasedWithHeaderLevel) {
       for (int32_t i = HeaderLevel(aTag); i > 1; i--) {
         // for h(x), run x-1 times
         mCurrentLine.mIndentation.mWidth -= kIndentIncrementHeaders;
