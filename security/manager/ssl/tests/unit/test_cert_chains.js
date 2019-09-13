@@ -188,12 +188,10 @@ function build_cert_list_from_pem_list(pemList) {
   let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
     Ci.nsIX509CertDB
   );
-  let certList = Cc["@mozilla.org/security/x509certlist;1"].createInstance(
-    Ci.nsIX509CertList
-  );
+  let certList = [];
   for (let pem of pemList) {
     let cert = certdb.constructX509FromBase64(pemToBase64(pem));
-    certList.addCert(cert);
+    certList.push(cert);
   }
   return certList;
 }
@@ -242,7 +240,12 @@ function test_cert_pkcs7_export() {
     gDefaultEEPEM,
     gTestCAPEM,
   ]);
-  let pkcs7DefaultEE = certListDefaultEE.asPKCS7Blob();
+
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
+  let pkcs7DefaultEE = certdb.asPKCS7Blob(certListDefaultEE);
+
   equal(
     btoa(pkcs7DefaultEE),
     expectedPKCS7ForDefaultEE,
@@ -277,7 +280,7 @@ function test_cert_pkcs7_export() {
   let certListUnknownIssuer = build_cert_list_from_pem_list([
     gUnknownIssuerPEM,
   ]);
-  let pkcs7UnknownIssuer = certListUnknownIssuer.asPKCS7Blob();
+  let pkcs7UnknownIssuer = certdb.asPKCS7Blob(certListUnknownIssuer);
   equal(
     btoa(pkcs7UnknownIssuer),
     expectedPKCS7ForUnknownIssuer,
@@ -340,11 +343,23 @@ function test_cert_pkcs7_export() {
     gTestIntPEM,
     gTestCAPEM,
   ]);
-  let pkcs7WithIntermediate = certListWithIntermediate.asPKCS7Blob();
+  let pkcs7WithIntermediate = certdb.asPKCS7Blob(certListWithIntermediate);
   equal(
     btoa(pkcs7WithIntermediate),
     expectedPKCS7WithIntermediate,
     "PKCS7 export should work as expected for chain with intermediate"
+  );
+}
+
+function test_cert_pkcs7_empty_array() {
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
+
+  throws(
+    () => certdb.asPKCS7Blob([]),
+    /NS_ERROR_ILLEGAL_VALUE/,
+    "trying to convert an empty array to pkcs7 should throw"
   );
 }
 
@@ -403,6 +418,11 @@ function run_test() {
 
   add_test(function() {
     test_cert_pkcs7_export();
+    run_next_test();
+  });
+
+  add_test(function() {
+    test_cert_pkcs7_empty_array();
     run_next_test();
   });
 

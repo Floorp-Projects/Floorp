@@ -49,13 +49,10 @@ function viewCertHelper(parent, cert) {
 }
 
 function getPKCS7String(certArray) {
-  let certList = Cc["@mozilla.org/security/x509certlist;1"].createInstance(
-    Ci.nsIX509CertList
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
   );
-  for (let cert of certArray) {
-    certList.addCert(cert);
-  }
-  return certList.asPKCS7Blob();
+  return certdb.asPKCS7Blob(certArray);
 }
 
 function getPEMString(cert) {

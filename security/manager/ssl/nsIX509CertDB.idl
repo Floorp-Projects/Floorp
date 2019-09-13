@@ -328,4 +328,12 @@ interface nsIX509CertDB : nsISupports {
    */
   [must_use]
   Array<nsIX509Cert> getCerts();
+
+  /**
+   * Encode the list of certificates as a PKCS#7 SignedData structure. No data
+   * is actually signed - this is merely a way of exporting a collection of
+   * certificates.
+   */
+  [must_use]
+  ACString asPKCS7Blob(in Array<nsIX509Cert> certList);
 };
