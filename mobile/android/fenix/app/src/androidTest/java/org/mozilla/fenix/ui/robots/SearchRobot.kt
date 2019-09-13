@@ -42,6 +42,7 @@ class SearchRobot {
     fun verifyDuckDuckGoResults() = assertDuckDuckGoResults()
     fun verifyDuckDuckGoURL() = assertDuckDuckGoURL()
     fun verifySearchEngineSettings() = assertSearchEngineSettings()
+    fun verifySearchBarEmpty() = assertSearchBarEmpty()
 
     fun clickScanButton() {
         scanButton().perform(click())
@@ -59,8 +60,8 @@ class SearchRobot {
         shortcutsButton().perform(click())
     }
 
-    fun typeSearch() {
-        browserToolbarEditView().perform(typeText("Mozilla"))
+    fun typeSearch(searchTerm: String) {
+        browserToolbarEditView().perform(typeText(searchTerm))
     }
 
     fun clickDuckDuckGoEngineButton() {
@@ -80,6 +81,10 @@ class SearchRobot {
 
     fun clickSearchEngineSettings() {
         onView(withText("Search engine settings")).perform(click())
+    }
+
+    fun clickClearButton() {
+        clearButton().perform(click())
     }
 
     class Transition {
@@ -124,6 +129,8 @@ private fun shortcutsButton(): ViewInteraction {
     return onView(withId(R.id.searchShortcutsButton))
 }
 
+private fun clearButton() = onView(withId(R.id.mozac_browser_toolbar_clear_view))
+
 private fun assertDuckDuckGoURL() {
     onView(allOf(withText(startsWith("https://duckduckgo.com"))))
         .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
@@ -157,6 +164,8 @@ private fun assertSearchWithText() =
 private fun assertSearchEngineSettings() =
     onView(allOf(withText("Search engine")))
         .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+private fun assertSearchBarEmpty() = browserToolbarEditView().check(matches(withText("")))
 
 fun searchScreen(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
     SearchRobot().interact()

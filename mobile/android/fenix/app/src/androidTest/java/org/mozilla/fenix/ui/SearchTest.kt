@@ -27,8 +27,6 @@ class SearchTest {
 
     @Test
     fun searchScreenItemsTest() {
-        homeScreen { }.dismissOnboarding()
-
         homeScreen {
         }.openSearch {
             verifySearchView()
@@ -41,8 +39,6 @@ class SearchTest {
     @Ignore("This test cannot run on virtual devices due to camera permissions being required")
     @Test
     fun scanButtonTest() {
-        homeScreen { }.dismissOnboarding()
-
         homeScreen {
         }.openSearch {
             clickScanButton()
@@ -54,13 +50,11 @@ class SearchTest {
 
     @Test
     fun shortcutButtonTest() {
-        homeScreen { }.dismissOnboarding()
-
         homeScreen {
         }.openSearch {
             verifySearchWithText()
             clickDuckDuckGoEngineButton()
-            typeSearch()
+            typeSearch("mozilla")
             verifyDuckDuckGoResults()
             clickDuckDuckGoResult()
             verifyDuckDuckGoURL()
@@ -69,13 +63,21 @@ class SearchTest {
 
     @Test
     fun shortcutSearchEngineSettingsTest() {
-        homeScreen { }.dismissOnboarding()
-
         homeScreen {
         }.openSearch {
             scrollToSearchEngineSettings()
             clickSearchEngineSettings()
             verifySearchEngineSettings()
+        }
+    }
+
+    @Test
+    fun clearSearchTest() {
+        homeScreen {
+        }.openSearch {
+            typeSearch("test")
+            clickClearButton()
+            verifySearchBarEmpty()
         }
     }
 }
