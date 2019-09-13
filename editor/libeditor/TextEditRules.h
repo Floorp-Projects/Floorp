@@ -239,14 +239,6 @@ class TextEditRules {
   bool IsEditorDataAvailable() const { return !!mData; }
 #endif  // #ifdef DEBUG
 
-  /**
-   * GetTextNodeAroundSelectionStartContainer() may return a Text node around
-   * start container of Selection.  If current selection container is not
-   * a text node, this will look for descendants and next siblings of the
-   * container.
-   */
-  inline already_AddRefed<nsINode> GetTextNodeAroundSelectionStartContainer();
-
 #ifdef DEBUG
   bool mIsHandling;
 #endif  // #ifdef DEBUG
