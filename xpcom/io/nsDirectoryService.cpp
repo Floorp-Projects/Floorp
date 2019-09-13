@@ -183,6 +183,8 @@ nsDirectoryService::Get(const char* aProp, const nsIID& aUuid, void** aResult) {
     return NS_ERROR_INVALID_ARG;
   }
 
+  MOZ_ASSERT(NS_IsMainThread(), "Do not call dirsvc::get on non-main threads!");
+
   nsDependentCString key(aProp);
 
   nsCOMPtr<nsIFile> cachedFile = mHashtable.Get(key);
