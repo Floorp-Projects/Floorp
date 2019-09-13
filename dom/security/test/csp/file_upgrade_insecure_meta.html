@@ -50,19 +50,23 @@
 
   <!-- websockets: upgrade ws:// to wss://-->
   <script type="application/javascript">
-    var mySocket = new WebSocket("ws://example.com/tests/dom/security/test/csp/file_upgrade_insecure");
-    mySocket.onopen = function(e) {
-      if (mySocket.url.includes("wss://")) {
-        window.parent.postMessage({result: "websocket-ok"}, "*");
-      }
-      else {
-        window.parent.postMessage({result: "websocket-error"}, "*");
-      }
-      mySocket.close();
-    };
-    mySocket.onerror = function(e) {
-      window.parent.postMessage({result: "websocket-unexpected-error"}, "*");
-    };
+    // WebSocket tests are not supported on Android Yet. Bug 1566168.
+    const {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
+    if (AppConstants.platform !== "android") {
+      var mySocket = new WebSocket("ws://example.com/tests/dom/security/test/csp/file_upgrade_insecure");
+      mySocket.onopen = function(e) {
+        if (mySocket.url.includes("wss://")) {
+          window.parent.postMessage({result: "websocket-ok"}, "*");
+        }
+        else {
+          window.parent.postMessage({result: "websocket-error"}, "*");
+        }
+        mySocket.close();
+      };
+      mySocket.onerror = function(e) {
+        window.parent.postMessage({result: "websocket-unexpected-error"}, "*");
+      };
+    }
   </script>
 
   <!-- form action: (upgrade POST from http:// to https://) -->
