@@ -315,7 +315,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
                                renderRoot == wr::RenderRoot::Default
                                    ? LayoutDeviceSize(size)
                                    : LayoutDeviceSize());
-    wrRects[renderRoot] = wr::ToLayoutRect(rects[renderRoot]);
+    wrRects[renderRoot] = wr::ToRoundedLayoutRect(rects[renderRoot]);
   }
 
   wr::DisplayListBuilder builder(

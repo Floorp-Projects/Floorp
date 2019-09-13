@@ -392,7 +392,7 @@ impl FrameBuilder {
             &frame_context,
             gpu_cache,
             &self.clip_store,
-            data_stores,
+            &data_stores.clip,
         );
 
         {
@@ -544,7 +544,6 @@ impl FrameBuilder {
 
         clip_scroll_tree.update_tree(
             pan,
-            global_device_pixel_scale,
             scene_properties,
         );
         let mut transform_palette = clip_scroll_tree.build_transform_palette();
