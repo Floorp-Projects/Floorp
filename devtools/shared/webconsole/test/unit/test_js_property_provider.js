@@ -132,6 +132,33 @@ function runChecks(dbgObject, environment, sandbox) {
     test_has_no_results(results);
   }
 
+  info("Test that suggestions are given for 'globalThis'");
+  results = propertyProvider("g");
+  test_has_result(results, "globalThis");
+
+  info("Test that suggestions are given for 'globalThis.'");
+  results = propertyProvider("globalThis.");
+  test_has_result(results, "testObject");
+
+  info("Test that suggestions are given for '(globalThis).'");
+  results = propertyProvider("(globalThis).");
+  test_has_result(results, "testObject");
+
+  info(
+    "Test that suggestions are given for deep 'globalThis' properties access"
+  );
+  results = propertyProvider("(globalThis).testObject.propA.");
+  test_has_result(results, "shift");
+
+  results = propertyProvider("(globalThis).testObject.propA[");
+  test_has_result(results, `"shift"`);
+
+  results = propertyProvider("(globalThis)['testObject']['propA'][");
+  test_has_result(results, `"shift"`);
+
+  results = propertyProvider("(globalThis).testObject['propA'].");
+  test_has_result(results, "shift");
+
   info("Testing lexical scope issues (Bug 1207868)");
   results = propertyProvider("foobar");
   test_has_result(results, "foobar");
