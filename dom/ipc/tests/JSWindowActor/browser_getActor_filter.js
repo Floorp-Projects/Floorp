@@ -2,6 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+requestLongerTimeout(2);
+
 declTest("getActor with mismatch", {
   matches: ["*://*/*"],
 
@@ -103,6 +105,34 @@ declTest("getActor with remoteType match", {
       let child = content.getWindowGlobalChild();
       ok(child, "WindowGlobalChild should have value.");
       ok(child.getActor("Test"), "JSWindowActorChild should have value.");
+    });
+  },
+});
+
+declTest("getActor with iframe remoteType match", {
+  allFrames: true,
+  remoteTypes: ["web"],
+
+  async test(browser) {
+    await ContentTask.spawn(browser, TEST_URL, async function(url) {
+      let child = content.getWindowGlobalChild();
+      ok(child, "WindowGlobalChild should have value.");
+      ok(child.getActor("Test"), "JSWindowActorChild should have value.");
+
+      // Create and append an iframe into the window's document.
+      let frame = content.document.createElement("iframe");
+      frame.src = url;
+      content.document.body.appendChild(frame);
+      await ContentTaskUtils.waitForEvent(frame, "load");
+
+      is(content.frames.length, 1, "There should be an iframe.");
+      await content.SpecialPowers.spawn(frame, [], () => {
+        child = content.getWindowGlobalChild();
+        Assert.ok(
+          child.getActor("Test"),
+          "JSWindowActorChild should have value."
+        );
+      });
     });
   },
 });

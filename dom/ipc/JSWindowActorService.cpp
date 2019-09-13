@@ -306,21 +306,32 @@ extensions::MatchPatternSet* JSWindowActorProtocol::GetURIMatcher() {
   return mURIMatcher;
 }
 
+bool JSWindowActorProtocol::RemoteTypePrefixMatches(
+    const nsDependentSubstring& aRemoteType) {
+  for (auto& remoteType : mRemoteTypes) {
+    if (StringBeginsWith(aRemoteType, remoteType)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool JSWindowActorProtocol::Matches(BrowsingContext* aBrowsingContext,
                                     nsIURI* aURI,
                                     const nsAString& aRemoteType) {
   MOZ_ASSERT(aBrowsingContext, "DocShell without a BrowsingContext!");
   MOZ_ASSERT(aURI, "Must have URI!");
 
-  if (!mRemoteTypes.IsEmpty() && !mRemoteTypes.Contains(aRemoteType)) {
-    return false;
-  }
-
   if (!mAllFrames && aBrowsingContext->GetParent()) {
     return false;
   }
 
   if (!mIncludeChrome && !aBrowsingContext->IsContent()) {
+    return false;
+  }
+
+  if (!mRemoteTypes.IsEmpty() &&
+      !RemoteTypePrefixMatches(RemoteTypePrefix(aRemoteType))) {
     return false;
   }
 

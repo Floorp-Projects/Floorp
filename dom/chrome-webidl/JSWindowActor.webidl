@@ -130,9 +130,12 @@ dictionary WindowActorOptions {
   sequence<DOMString> matches;
 
   /**
-   * Optional list of regular expressions for remoteTypes which are
-   * allowed to instantiate this actor. If not passed, all content
-   * processes are allowed to instantiate the actor.
+   * An array of remote type which restricts the actor is allowed to instantiate
+   * in specific process type. If this is defined, the prefix of process type
+   * matches the remote type by prefix match is allowed to instantiate, ex: if
+   * Fission is enabled, the prefix of process type will be `webIsolated`, it
+   * can prefix match remote type either `web` or `webIsolated`. If not passed,
+   * all content processes are allowed to instantiate the actor.
    */
   sequence<DOMString> remoteTypes;
 
