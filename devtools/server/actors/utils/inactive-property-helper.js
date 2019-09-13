@@ -27,10 +27,8 @@ class InactivePropertyHelper {
    * This file contains "rules" in the form of objects with the following
    * properties:
    * {
-   *   invalidProperties (see note):
+   *   invalidProperties:
    *     Array of CSS property names that are inactive if the rule matches.
-   *   validProperties (see note):
-   *     Array of CSS property names that are active if the rule matches.
    *   when:
    *     The rule itself, a JS function used to identify the conditions
    *     indicating whether a property is valid or not.
@@ -43,8 +41,6 @@ class InactivePropertyHelper {
    *   numFixProps:
    *     The number of properties we suggest in the fixId string.
    * }
-   *
-   * NOTE: validProperties and invalidProperties are mutually exclusive.
    *
    * If you add a new rule, also add a test for it in:
    * server/tests/mochitest/test_inspector-inactive-property-helper.html
@@ -244,8 +240,6 @@ class InactivePropertyHelper {
         isRuleConcerned =
           validator.invalidProperties === "*" ||
           validator.invalidProperties.includes(property);
-      } else if (validator.validProperties) {
-        isRuleConcerned = !validator.validProperties.includes(property);
       }
 
       if (!isRuleConcerned) {
