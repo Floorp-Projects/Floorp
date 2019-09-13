@@ -212,23 +212,28 @@
       }
     }
 
-    updateHeader() {
-      Services.search.getDefault().then(currentEngine => {
-        let uri = currentEngine.iconURI;
-        if (uri) {
-          this.setAttribute("src", uri.spec);
-        } else {
-          // If the default has just been changed to a provider without icon,
-          // avoid showing the icon of the previous default provider.
-          this.removeAttribute("src");
-        }
+    async updateHeader() {
+      let currentEngine;
+      if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+        currentEngine = await Services.search.getDefaultPrivate();
+      } else {
+        currentEngine = await Services.search.getDefault();
+      }
 
-        let headerText = this.bundle.formatStringFromName("searchHeader", [
-          currentEngine.name,
-        ]);
-        this.searchbarEngineName.setAttribute("value", headerText);
-        this.searchbarEngine.engine = currentEngine;
-      });
+      let uri = currentEngine.iconURI;
+      if (uri) {
+        this.setAttribute("src", uri.spec);
+      } else {
+        // If the default has just been changed to a provider without icon,
+        // avoid showing the icon of the previous default provider.
+        this.removeAttribute("src");
+      }
+
+      let headerText = this.bundle.formatStringFromName("searchHeader", [
+        currentEngine.name,
+      ]);
+      this.searchbarEngineName.setAttribute("value", headerText);
+      this.searchbarEngine.engine = currentEngine;
     }
 
     /**
