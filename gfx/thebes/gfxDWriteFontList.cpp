@@ -633,12 +633,12 @@ gfxFont* gfxDWriteFontEntry::CreateFontInstance(
   RefPtr<UnscaledFontDWrite> unscaledFont(unscaledFontPtr);
   if (!unscaledFont) {
     RefPtr<IDWriteFontFace> fontFace;
-    nsresult rv = CreateFontFace(getter_AddRefs(fontFace), aFontStyle, sims);
+    nsresult rv = CreateFontFace(getter_AddRefs(fontFace), nullptr, sims);
     if (NS_FAILED(rv)) {
       return nullptr;
     }
     unscaledFont =
-        new UnscaledFontDWrite(fontFace, mIsSystemFont ? mFont : nullptr, sims);
+        new UnscaledFontDWrite(fontFace, mIsSystemFont ? mFont : nullptr);
     unscaledFontPtr = unscaledFont;
   }
   RefPtr<IDWriteFontFace> fontFace;

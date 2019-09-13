@@ -68,6 +68,10 @@ class ScaledFontDWrite final : public ScaledFontBase {
   }
   DWRITE_RENDERING_MODE GetRenderingMode() const { return mRenderingMode; }
 
+  bool HasSyntheticBold() const {
+    return (mFontFace->GetSimulations() & DWRITE_FONT_SIMULATIONS_BOLD) != 0;
+  }
+
 #ifdef USE_SKIA
   SkTypeface* CreateSkTypeface() override;
   SkFontStyle mStyle;
@@ -98,6 +102,7 @@ class ScaledFontDWrite final : public ScaledFontBase {
   struct InstanceData {
     explicit InstanceData(ScaledFontDWrite* aScaledFont)
         : mUseEmbeddedBitmap(aScaledFont->mUseEmbeddedBitmap),
+          mApplySyntheticBold(aScaledFont->HasSyntheticBold()),
           mRenderingMode(aScaledFont->mRenderingMode),
           mGamma(aScaledFont->mGamma),
           mContrast(aScaledFont->mContrast) {}
@@ -106,6 +111,7 @@ class ScaledFontDWrite final : public ScaledFontBase {
                  const wr::FontInstancePlatformOptions* aPlatformOptions);
 
     bool mUseEmbeddedBitmap;
+    bool mApplySyntheticBold;
     DWRITE_RENDERING_MODE mRenderingMode;
     Float mGamma;
     Float mContrast;

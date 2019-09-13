@@ -260,8 +260,8 @@ already_AddRefed<UnscaledFont> NativeFontResourceDWrite::CreateUnscaledFont(
     return nullptr;
   }
 
-  RefPtr<UnscaledFont> unscaledFont = new UnscaledFontDWrite(
-      fontFace, nullptr, DWRITE_FONT_SIMULATIONS_NONE, mNeedsCairo);
+  RefPtr<UnscaledFont> unscaledFont =
+      new UnscaledFontDWrite(fontFace, nullptr, mNeedsCairo);
 
   return unscaledFont.forget();
 }
