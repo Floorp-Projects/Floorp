@@ -229,13 +229,11 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
   onBlockRequest({ data }) {
     const { filter } = data;
     this.observer.blockRequest(filter);
-    this.messageManager.sendAsyncMessage("debug:block-request:response");
   },
 
   onUnblockRequest({ data }) {
     const { filter } = data;
     this.observer.unblockRequest(filter);
-    this.messageManager.sendAsyncMessage("debug:unblock-request:response");
   },
 
   onGetNetworkEventActor({ data }) {
