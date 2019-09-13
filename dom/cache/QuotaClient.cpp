@@ -49,6 +49,10 @@ static nsresult GetBodyUsage(nsIFile* aDir, const Atomic<bool>& aCanceled,
   nsCOMPtr<nsIFile> file;
   while (NS_SUCCEEDED(rv = entries->GetNextFile(getter_AddRefs(file))) &&
          file && !aCanceled) {
+    if (NS_WARN_IF(QuotaManager::IsShuttingDown())) {
+      return NS_ERROR_ABORT;
+    }
+
     bool isDir;
     rv = file->IsDirectory(&isDir);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -428,6 +432,10 @@ class CacheQuotaClient final : public Client {
     nsCOMPtr<nsIFile> file;
     while (NS_SUCCEEDED(rv = entries->GetNextFile(getter_AddRefs(file))) &&
            file && !aCanceled) {
+      if (NS_WARN_IF(QuotaManager::IsShuttingDown())) {
+        return NS_ERROR_ABORT;
+      }
+
       nsAutoString leafName;
       rv = file->GetLeafName(leafName);
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -448,8 +456,10 @@ class CacheQuotaClient final : public Client {
         if (leafName.EqualsLiteral("morgue")) {
           rv = GetBodyUsage(file, aCanceled, aUsageInfo);
           if (NS_WARN_IF(NS_FAILED(rv))) {
-            REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaExternalError,
-                                         Cache_GetBodyUsage);
+            if (rv != NS_ERROR_ABORT) {
+              REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaExternalError,
+                                           Cache_GetBodyUsage);
+            }
             return rv;
           }
         } else {
