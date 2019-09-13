@@ -151,6 +151,18 @@ test-coverage:
                     - unittests/win_unittest.py
         extra-options:
             - --per-test-coverage
+    fetches:
+        toolchain:
+            by-test-platform:
+                linux.*:
+                    - linux64-node
+                macosx.*:
+                    - macosx64-node
+                win.*64.*:
+                    - win64-node
+                win.*32.*:
+                    - win32-node
+                default: []
 
 test-coverage-gpu:
     description: "Per-test coverage for tests that require gpu instances"
