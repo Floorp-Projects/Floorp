@@ -325,6 +325,158 @@ class HuffmanTableImplementationMap {
   friend class HuffmanPreludeReader;
 };
 
+// An implementation of Huffman Tables as a vector designed to allow
+// constant-time lookups at the expense of high space complexity.
+//
+// # Time complexity
+//
+// Lookups take constant time, which essentially consists in two
+// simple vector lookups.
+//
+// # Space complexity
+//
+// After initialization, a `HuffmanTableImplementationSaturated`
+// requires O(2 ^ max bit length in the table) space:
+//
+// - A vector `values` containing one entry per symbol.
+// - A vector `saturated` containing exactly 2 ^ (max bit length in the
+//   table) entries, which we use to map any combination of `maxBitLength`
+//   bits onto the only `HuffmanEntry` that may be reached by a prefix
+//   of these `maxBitLength` bits. See below for more details.
+//
+// # Algorithm
+//
+// Consider the following Huffman table
+//
+// Symbol | Binary Code  | Int value of Code | Bit Length
+// ------ | ------------ | ----------------- | ----------
+// A      | 00111        | 7                 | 5
+// B      | 00110        | 6                 | 5
+// C      | 0010         | 2                 | 4
+// D      | 011          | 3                 | 3
+// E      | 010          | 2                 | 3
+// F      | 000          | 0                 | 3
+// G      | 11           | 3                 | 2
+// H      | 10           | 2                 | 2
+//
+// By definition of a Huffman Table, the Binary Codes represent
+// paths in a Huffman Tree. Consequently, padding these codes
+// to the end would not change the result.
+//
+// Symbol | Binary Code  | Int value of Code | Bit Length
+// ------ | ------------ | ----------------- | ----------
+// A      | 00111        | 7                 | 5
+// B      | 00110        | 6                 | 5
+// C      | 0010?        | [4...5]           | 4
+// D      | 011??        | [12...15]         | 3
+// E      | 010??        | [8..11]           | 3
+// F      | 000??        | [0..3]            | 3
+// G      | 11???        | [24...31]         | 2
+// H      | 10???        | [16...23]         | 2
+//
+// Row "Int value of Code" now contains all possible values
+// that may be expressed in 5 bits. By using these values
+// as array indices, we may therefore represent the
+// Huffman table as an array:
+//
+// Index    |   Symbol   |   Bit Length
+// -------- | ---------- | -------------
+// [0..3]   | F          | 3
+// [4..5]   | C          | 4
+// 6        | B          | 5
+// 7        | A          | 5
+// [8..11]  | E          | 3
+// [12..15] | D          | 3
+// [16..23] | H          | 2
+// [24..31] | G          | 2
+//
+// By using the next 5 bits in the bit buffer, we may, in
+// a single lookup, determine the symbol and the bit length.
+//
+// In the current implementation, to save some space, we have
+// two distinct arrays, one (`values`) with a single instance of each
+// symbols bit length, and one (`saturated`) with indices into that
+// array.
+template <typename T>
+class HuffmanTableImplementationSaturated {
+ public:
+  explicit HuffmanTableImplementationSaturated(JSContext* cx)
+      : values(cx), saturated(cx), maxBitLength(-1) {}
+  HuffmanTableImplementationSaturated(
+      HuffmanTableImplementationSaturated&& other) = default;
+
+  // Initialize a Huffman table containing a single value.
+  JS::Result<Ok> initWithSingleValue(JSContext* cx, T&& value);
+
+  // Initialize a Huffman table containing `numberOfSymbols`.
+  // Symbols must be added with `addSymbol`.
+  JS::Result<Ok> init(JSContext* cx, size_t numberOfSymbols,
+                      uint8_t largestBitLength);
+
+#ifdef DEBUG
+  void selfCheck();
+#endif  // DEBUG
+
+  // Add a `(bit, bits_length) => value` mapping.
+  JS::Result<Ok> addSymbol(uint32_t bits, uint8_t bits_length, T&& value);
+
+  HuffmanTableImplementationSaturated() = delete;
+  HuffmanTableImplementationSaturated(HuffmanTableImplementationSaturated&) =
+      delete;
+
+  // Lookup a value in the table.
+  //
+  // Return an entry with a value of `nullptr` if the value is not in the table.
+  //
+  // The lookup may advance `key` by `[0, key.bitLength]` bits. Typically, in a
+  // table with a single instance, or if the value is not in the table, it
+  // will advance by 0 bits. The caller is responsible for advancing its
+  // bitstream by `result.key.bitLength` bits.
+  HuffmanEntry<const T*> lookup(HuffmanLookup key) const;
+
+  // The number of values in the table.
+  size_t length() const { return values.length(); }
+
+  // Iterating in the order of insertion.
+  struct Iterator {
+    explicit Iterator(const HuffmanEntry<T>* position);
+    void operator++();
+    const T* operator*() const;
+    bool operator==(const Iterator& other) const;
+    bool operator!=(const Iterator& other) const;
+
+   private:
+    const HuffmanEntry<T>* position;
+  };
+  Iterator begin() const { return Iterator(values.begin()); }
+  Iterator end() const { return Iterator(values.end()); }
+
+ private:
+  // The entries in this Huffman Table, sorted in the order of insertion.
+  //
+  // Invariant (once `init*` has been called):
+  // - Length is the number of values inserted in the table.
+  // - for all i, `values[i].bitLength <= maxBitLength`.
+  Vector<HuffmanEntry<T>> values;
+
+  // The entries in this Huffman table, prepared for lookup.
+  // The `size_t` argument is an index into `values`.
+  // FIXME: We could make this a `uint8_t` to save space.
+  //
+  // Invariant (once `init*` has been called):
+  // - Length is `1 << maxBitLength`.
+  // - for all i, `saturated[i] < values.length()`
+  Vector<size_t> saturated;
+
+  // The maximal bitlength of a value in this table.
+  //
+  // Invariant (once `init*` has been called):
+  // - `maxBitLength <= MAX_CODE_BIT_LENGTH`
+  uint8_t maxBitLength;
+
+  friend class HuffmanPreludeReader;
+};
+
 // An empty Huffman table. Attempting to get a value from this table is a syntax
 // error. This is the default value for `HuffmanTableValue` and represents all
 // states that may not be reached.
@@ -360,6 +512,7 @@ struct HuffmanTableImplementationGeneric {
   size_t length() const;
 
   struct Iterator {
+    Iterator(typename HuffmanTableImplementationSaturated<T>::Iterator&&);
     Iterator(typename HuffmanTableImplementationMap<T>::Iterator&&);
     void operator++();
     const T* operator*() const;
@@ -367,7 +520,8 @@ struct HuffmanTableImplementationGeneric {
     bool operator!=(const Iterator& other) const;
 
    private:
-    mozilla::Variant<typename HuffmanTableImplementationMap<T>::Iterator>
+    mozilla::Variant<typename HuffmanTableImplementationSaturated<T>::Iterator,
+                     typename HuffmanTableImplementationMap<T>::Iterator>
         implementation;
   };
 
@@ -386,7 +540,8 @@ struct HuffmanTableImplementationGeneric {
   HuffmanEntry<const T*> lookup(HuffmanLookup key) const;
 
  private:
-  mozilla::Variant<HuffmanTableImplementationMap<T>, HuffmanTableUnreachable>
+  mozilla::Variant<HuffmanTableImplementationSaturated<T>,
+                   HuffmanTableImplementationMap<T>, HuffmanTableUnreachable>
       implementation;
 };
 
