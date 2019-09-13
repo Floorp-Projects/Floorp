@@ -96,28 +96,6 @@ this.pageAction = class extends ExtensionAPI {
     this.lastValues = new DefaultWeakMap(() => ({}));
 
     if (!this.browserPageAction) {
-      let onPlacedHandler = (buttonNode, isPanel) => {
-        // eslint-disable-next-line mozilla/balanced-listeners
-        buttonNode.addEventListener("auxclick", event => {
-          if (event.button !== 1 || event.target.disabled) {
-            return;
-          }
-
-          this.lastClickInfo = {
-            button: event.button,
-            modifiers: clickModifiersFromEvent(event),
-          };
-
-          // The panel is not automatically closed when middle-clicked.
-          if (isPanel) {
-            buttonNode.closest("#pageActionPanel").hidePopup();
-          }
-          let window = event.target.ownerGlobal;
-          let tab = window.gBrowser.selectedTab;
-          this.emit("click", tab);
-        });
-      };
-
       this.browserPageAction = PageActions.addAction(
         new PageActions.Action({
           id: widgetId,
@@ -127,10 +105,6 @@ this.pageAction = class extends ExtensionAPI {
           pinnedToUrlbar: this.defaults.pinned,
           disabled: !this.defaults.show,
           onCommand: (event, buttonNode) => {
-            this.lastClickInfo = {
-              button: event.button || 0,
-              modifiers: clickModifiersFromEvent(event),
-            };
             this.handleClick(event.target.ownerGlobal);
           },
           onBeforePlacedInWindow: browserWindow => {
@@ -141,8 +115,6 @@ this.pageAction = class extends ExtensionAPI {
               browserWindow.document.addEventListener("popupshowing", this);
             }
           },
-          onPlacedInPanel: buttonNode => onPlacedHandler(buttonNode, true),
-          onPlacedInUrlbar: buttonNode => onPlacedHandler(buttonNode, false),
           onRemovedFromWindow: browserWindow => {
             browserWindow.document.removeEventListener("popupshowing", this);
           },
@@ -278,7 +250,6 @@ this.pageAction = class extends ExtensionAPI {
    */
   triggerAction(window) {
     if (this.isShown(window.gBrowser.selectedTab)) {
-      this.lastClickInfo = { button: 0, modifiers: [] };
       this.handleClick(window);
     }
   }
@@ -409,7 +380,7 @@ this.pageAction = class extends ExtensionAPI {
           register: fire => {
             let listener = (evt, tab) => {
               context.withPendingBrowser(tab.linkedBrowser, () =>
-                fire.sync(tabManager.convert(tab), this.lastClickInfo)
+                fire.sync(tabManager.convert(tab))
               );
             };
 
