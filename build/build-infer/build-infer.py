@@ -107,11 +107,26 @@ if __name__ == '__main__':
         run_in(source_dir, ['git']+command)
     for p in config.get('patches', []):
         run_in(source_dir, ['git', 'apply', os.path.join(dir_path, p)])
+    # configure opam
+    run_in(source_dir, ['opam', 'init', '--no-setup', '--disable-sandboxing'])
     # build infer
     run_in(source_dir, ['./build-infer.sh', 'java'],
            extra_env={'NO_CMAKE_STRIP': '1'})
+
     package_name = 'infer'
+    infer_package = os.path.join(os.getcwd(), package_name)
+    # We need to create a package with all of the depended libraries injected in it
+    run_in(source_dir, ['make', 'install-with-libs', 'BUILD_MODE=opt',
+                        'PATCHELF=patchelf', 'DESTDIR={}'.format(infer_package),
+                        'libdir_relative_to_bindir=../lib'])
+
+
+    infer_package_with_pref = os.path.join(infer_package, 'usr')
     if not args.skip_tar:
+        os.rename(os.path.join(infer_package_with_pref, 'local'),
+                  os.path.join(infer_package_with_pref, 'infer'))
         build_tar_package('tar', '%s.tar.xz' % (package_name),
-                          source_dir, [os.path.join('infer', 'bin'),
-                                       os.path.join('infer', 'lib')])
+                          infer_package_with_pref,
+                          [os.path.join('infer', 'bin'),
+                           os.path.join('infer', 'lib'),
+                           os.path.join('infer', 'share')])

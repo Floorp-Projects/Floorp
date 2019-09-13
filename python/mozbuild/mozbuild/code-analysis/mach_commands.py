@@ -1261,7 +1261,7 @@ class StaticAnalysis(MachCommandBase):
             )
             return self.TOOLS_CHECKER_RETURNED_NO_ISSUES
         if self._dump_results:
-            self._build_autotest_result(test_file_path_json, issues)
+            self._build_autotest_result(test_file_path_json, json.dumps(issues))
         else:
             if not os.path.exists(test_file_path_json):
                 # Result file for test not found maybe regenerate it?
