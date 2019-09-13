@@ -10,6 +10,10 @@ const {
   createStore,
 } = require("devtools/client/shared/vendor/redux");
 
+const {
+  waitUntilService,
+} = require("devtools/client/shared/redux/middleware/wait-service.js");
+
 const { MIN_COLUMN_WIDTH, DEFAULT_COLUMN_WIDTH } = require("./constants");
 
 // Middleware
@@ -62,7 +66,8 @@ function configureStore(connector, telemetry) {
     batching,
     recording(connector),
     throttling(connector),
-    eventTelemetry(connector, telemetry)
+    eventTelemetry(connector, telemetry),
+    waitUntilService
   );
 
   return createStore(rootReducer, initialState, middleware);
