@@ -58,3 +58,14 @@ urlbar-addons-notification-anchor =
 """
         )
     )
+
+    ctx.add_transforms(
+        'browser/browser/browser.ftl',
+        'browser/browser/browser.ftl',
+        transforms_from(
+            """
+urlbar-identity-button =
+    .aria-label = {COPY_PATTERN(from_path, "browser-urlbar-identity-button.aria-label")}
+""",
+            from_path='browser/browser/browser.ftl'),
+    )
