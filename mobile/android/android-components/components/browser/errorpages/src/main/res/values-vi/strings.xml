@@ -21,7 +21,6 @@
         <li>Trang bạn đang cố xem không thể được hiển thị vì không thể xác minh tính xác thực của dữ liệu nhận được.</li>
         <li>Vui lòng liên hệ với các chủ sở hữu trang web để thông báo cho họ về vấn đề này.</li>
       </ul>
-    
       ]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
