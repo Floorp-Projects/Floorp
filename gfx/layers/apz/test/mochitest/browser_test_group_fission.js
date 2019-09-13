@@ -4,6 +4,7 @@ add_task(async function setup_pref() {
       // To avoid throttling requestAnimationFrame callbacks in invisible
       // iframes
       ["layout.throttled_frame_rate", 60],
+      ["dom.animations-api.getAnimations.enabled", true],
     ],
   });
 });
