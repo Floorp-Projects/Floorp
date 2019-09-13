@@ -1,0 +1,357 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=897221
+-->
+<head>
+  <title>Test for User Agent Updates</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=897221">Mozilla Bug 897221</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+const PREF_APP_UPDATE_TIMERMINIMUMDELAY = "app.update.timerMinimumDelay";
+const PREF_UPDATES = "general.useragent.updates.";
+const PREF_UPDATES_ENABLED = PREF_UPDATES + "enabled";
+const PREF_UPDATES_URL = PREF_UPDATES + "url";
+const PREF_UPDATES_INTERVAL = PREF_UPDATES + "interval";
+const PREF_UPDATES_TIMEOUT = PREF_UPDATES + "timeout";
+
+const DEFAULT_UA = navigator.userAgent;
+const UA_OVERRIDE = "DummyUserAgent";
+const UA_ALT_OVERRIDE = "AltUserAgent";
+
+const UA_PARTIAL_FROM = "\\wozilla"; // /\wozilla
+const UA_PARTIAL_SEP = "#";
+const UA_PARTIAL_TO = UA_OVERRIDE;
+const UA_PARTIAL_OVERRIDE = UA_PARTIAL_FROM + UA_PARTIAL_SEP + UA_PARTIAL_TO;
+const UA_PARTIAL_EXPECTED = DEFAULT_UA.replace(new RegExp(UA_PARTIAL_FROM, 'g'), UA_PARTIAL_TO);
+
+function getUA(host) {
+  var url = location.pathname;
+  url = host + url.slice(0, url.lastIndexOf('/')) + '/user_agent.sjs';
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', url, false); // sync request
+  xhr.send();
+  is(xhr.status, 200, 'request failed');
+  is(typeof xhr.response, 'string', 'invalid response');
+  return xhr.response;
+}
+
+function testUAIFrame(host, expected, sameQ, message, testNavQ, navSameQ, navMessage, callback) {
+  let url = location.pathname;
+  url = host + url.slice(0, url.lastIndexOf('/')) + '/user_agent.sjs';
+  let ifr = document.createElement('IFRAME');
+
+  ifr.src = url;
+
+  document.getElementById('content').appendChild(ifr);
+
+  window.addEventListener("message", function recv(e) {
+    ok(sameQ == (e.data.header.includes(expected)), message);
+    if (testNavQ) {
+      ok(navSameQ == (e.data.nav.includes(expected)), navMessage);
+    }
+    window.removeEventListener("message", recv);
+    callback();
+  });
+}
+
+function testUAIFrameNoNav(host, expected, sameQ, message, callback) {
+  testUAIFrame(host, expected, sameQ, message, false, true, '', callback);
+}
+
+const OVERRIDES = [
+  {
+    domain: 'example.org',
+    override: '%DATE%',
+    host: 'http://example.org'
+  },
+  {
+    domain: 'test1.example.org',
+    override: '%PRODUCT%',
+    expected: SpecialPowers.Services.appinfo.name,
+    host: 'http://test1.example.org'
+  },
+  {
+    domain: 'test2.example.org',
+    override: '%APP_ID%',
+    expected: SpecialPowers.Services.appinfo.ID,
+    host: 'http://test2.example.org'
+  },
+  {
+    domain: 'sub1.test1.example.org',
+    override: '%APP_VERSION%',
+    expected: SpecialPowers.Services.appinfo.version,
+    host: 'http://sub1.test1.example.org'
+  },
+  {
+    domain: 'sub2.test1.example.org',
+    override: '%BUILD_ID%',
+    expected: SpecialPowers.Services.appinfo.appBuildID,
+    host: 'http://sub2.test1.example.org'
+  },
+  {
+    domain: 'sub1.test2.example.org',
+    override: '%OS%',
+    expected: SpecialPowers.Services.appinfo.OS,
+    host: 'http://sub1.test2.example.org'
+  },
+  {
+    domain: 'sub2.test2.example.org',
+    override: UA_PARTIAL_OVERRIDE,
+    expected: UA_PARTIAL_EXPECTED,
+    host: 'http://sub2.test2.example.org'
+  },
+];
+
+function getServerURL() {
+  var url = location.pathname;
+  return location.origin + url.slice(0, url.lastIndexOf('/')) + '/user_agent_update.sjs?';
+}
+
+function getUpdateURL() {
+  var url = getServerURL();
+  var overrides = {};
+  overrides[location.hostname] = UA_OVERRIDE;
+  OVERRIDES.forEach(function (val) {
+    overrides[val.domain] = val.override;
+  });
+  url = url + encodeURIComponent(JSON.stringify(overrides)).replace(/%25/g, '%');
+  return url;
+}
+
+function testDownload(callback) {
+  var startTime = Date.now();
+  var url = getUpdateURL();
+  isnot(navigator.userAgent, UA_OVERRIDE, 'UA already overridden');
+  info('Waiting for UA update: ' + url);
+
+  chromeScript.sendAsyncMessage("notify-on-update");
+  SpecialPowers.pushPrefEnv({
+    set: [
+      [PREF_UPDATES_ENABLED, true],
+      [PREF_UPDATES_URL, url],
+      [PREF_UPDATES_TIMEOUT, 10000],
+      [PREF_UPDATES_INTERVAL, 1] // 1 second interval
+    ]
+  });
+
+  function waitForUpdate() {
+    info("Update Happened");
+    testUAIFrameNoNav(location.origin, UA_OVERRIDE, true, 'Header UA not overridden', function() {
+      var updateTime = parseInt(getUA('http://example.org'));
+      todo(startTime <= updateTime, 'Update was before start time');
+      todo(updateTime <= Date.now(), 'Update was after present time');
+
+      let overs = OVERRIDES;
+      (function nextOverride() {
+        val = overs.shift();
+        if (val.expected) {
+           testUAIFrameNoNav(val.host, val.expected, true, 'Incorrect URL parameter: ' + val.override, function() {
+            overs.length ? nextOverride() : callback();
+          });
+        } else {
+          nextOverride();
+        }
+      })();
+    });
+  }
+
+  chromeScript.addMessageListener("useragent-update-complete", waitForUpdate);
+}
+
+function testBadUpdate(callback) {
+  var url = getServerURL() + 'invalid-json';
+  var prevOverride = navigator.userAgent;
+  SpecialPowers.pushPrefEnv({
+    set: [
+      [PREF_UPDATES_URL, url],
+      [PREF_UPDATES_INTERVAL, 1] // 1 second interval
+    ]
+  }, function () { setTimeout(function () {
+    var ifr = document.createElement('IFRAME');
+    ifr.src = "about:blank";
+
+    ifr.addEventListener('load', function() {
+      // We want to make sure a bad update doesn't cancel out previous
+      // overrides. We do this by waiting for 5 seconds (assuming the update
+      // occurs within 5 seconds), and check that the previous override hasn't
+      // changed.
+      is(navigator.userAgent, prevOverride,
+        'Invalid update deleted previous override');
+      callback();
+    });
+    document.getElementById('content').appendChild(ifr);
+  }, 5000); });
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("Test sets timeouts to wait for updates to happen.");
+
+SpecialPowers.pushPrefEnv({
+  set: [
+    [PREF_APP_UPDATE_TIMERMINIMUMDELAY, 0]
+  ]
+}, function () {
+  // Sets the OVERRIDES var in the chrome script.
+  // We do this to avoid code duplication.
+  chromeScript.sendAsyncMessage("set-overrides", OVERRIDES);
+
+  // testProfileLoad, testDownload, and testProfileSave must run in this order
+  // because testDownload depends on testProfileLoad and testProfileSave depends
+  // on testDownload to save overrides to the profile
+  chromeScript.sendAsyncMessage("testProfileLoad", location.hostname);
+});
+
+
+const chromeScript = SpecialPowers.loadChromeScript(_ => {
+  // Enter update timer manager test mode
+  Cc["@mozilla.org/updates/timer-manager;1"].getService(
+    Ci.nsIObserver).observe(null, "utm-test-init", "");
+
+  var _notifyOnUpdate = false;
+
+  const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+  var FU = FileUtils;
+
+  const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+  var OSF = OS.File;
+
+  const KEY_PREFDIR = "PrefD";
+  const KEY_APPDIR = "XCurProcD";
+  const FILE_UPDATES = "ua-update.json";
+
+  const UA_OVERRIDE = "DummyUserAgent";
+  const UA_ALT_OVERRIDE = "AltUserAgent";
+
+  const PREF_UPDATES = "general.useragent.updates.";
+  const PREF_UPDATES_ENABLED = PREF_UPDATES + "enabled";
+  const PREF_UPDATES_LASTUPDATED = PREF_UPDATES + "lastupdated";
+
+  let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  Services.prefs.addObserver(PREF_UPDATES_LASTUPDATED, () => {
+    if (_notifyOnUpdate) {
+      _notifyOnUpdate = false; // Only notify once, for the first update.
+      sendAsyncMessage("useragent-update-complete");
+    }
+  });
+
+  var OVERRIDES = null;
+
+  function is(value, expected, message) {
+    sendAsyncMessage("is-message", {value, expected, message});
+  }
+
+  function info(message) {
+    sendAsyncMessage("info-message", message);
+  }
+
+  function testProfileSave(hostname) {
+    info('Waiting for saving to profile');
+    var file = FU.getFile(KEY_PREFDIR, [FILE_UPDATES]).path;
+    (function waitForSave() {
+      OSF.exists(file).then(
+        (exists) => {
+          if (!exists) {
+            setTimeout(waitForSave, 100);
+            return;
+          }
+          return OSF.read(file).then(
+            (bytes) => {
+              info('Saved new overrides');
+              var decoder = new TextDecoder();
+              var overrides = JSON.parse(decoder.decode(bytes));
+              is(overrides[hostname], UA_OVERRIDE, 'Incorrect saved override');
+              OVERRIDES.forEach(function (val) {
+                val.expected && is(overrides[val.domain], val.expected,
+                  'Incorrect saved override: ' + val.override);
+              });
+              sendAsyncMessage("testProfileSaveDone");
+            }
+          );
+        }
+      ).catch(
+        (reason) => {
+          throw reason
+        }
+      );
+    })();
+  }
+
+  function testProfileLoad(hostname) {
+    var file = FU.getFile(KEY_APPDIR, [FILE_UPDATES]).path;
+    var encoder = new TextEncoder();
+    var overrides = {};
+    overrides[hostname] = UA_ALT_OVERRIDE;
+    var bytes = encoder.encode(JSON.stringify(overrides));
+
+    var badfile = FU.getFile(KEY_PREFDIR, [FILE_UPDATES]).path;
+    var badbytes = encoder.encode("null");
+
+    OSF.writeAtomic(file, bytes, {tmpPath: file + ".tmp"}).then(
+      () => OSF.writeAtomic(badfile, badbytes, {tmpPath: badfile + ".tmp"})
+    ).then(
+      () => {
+        sendAsyncMessage("testProfileLoadDone");
+      },
+      (reason) => {
+        throw reason
+      }
+    );
+  }
+
+
+  addMessageListener("testProfileSave", testProfileSave);
+  addMessageListener("testProfileLoad", testProfileLoad);
+  addMessageListener("set-overrides", function(overrides) { OVERRIDES = overrides});
+  addMessageListener("notify-on-update", () => { _notifyOnUpdate = true });
+}, { wantGlobalProperties: ["ChromeUtils", "TextEncoder", "TextDecoder"]});
+
+chromeScript.addMessageListener("testProfileSaveDone", SimpleTest.finish);
+chromeScript.addMessageListener("testProfileLoadDone", function() {
+  SpecialPowers.pushPrefEnv({
+    set: [[PREF_UPDATES_ENABLED, true]]
+  }, function () {
+    (function waitForLoad() {
+      var ifr = document.createElement('IFRAME');
+      ifr.src = location.origin;
+
+      ifr.addEventListener('load', function() {
+        var nav = ifr.contentWindow.navigator;
+        if (nav.userAgent !== UA_ALT_OVERRIDE) {
+          setTimeout(waitForLoad, 100);
+          return;
+        }
+        testUAIFrameNoNav(location.origin, UA_ALT_OVERRIDE, true, 'Did not apply saved override', function () {
+          testDownload(function() {
+            testBadUpdate(function() {
+              chromeScript.sendAsyncMessage("testProfileSave", location.hostname);
+            })
+          })
+        });
+      }, true);
+
+      document.getElementById('content').appendChild(ifr);
+    })();
+  });
+});
+
+chromeScript.addMessageListener("is-message", function(params) {
+  let {value, expected, message} = params;
+  is(value, expected, message);
+});
+chromeScript.addMessageListener("info-message", function(message) {
+  info(message);
+});
+
+</script>
+</pre>
+</body>
+</html>
