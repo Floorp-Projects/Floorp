@@ -36,12 +36,16 @@
     <string name="browser_menu_stop">Durdur</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Yardım</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">Yeni neler var?</string>
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Ayarlar</string>
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_your_library">Arşiviniz</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Masaüstü sitesi</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">Ana ekrana ekle</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Sayfada bul</string>
     <!-- Browser menu button that creates a private tab -->
@@ -562,6 +566,14 @@
     <string name="sync_confirmation_button">Anladım</string>
 
     <!-- Notifications -->
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
+    <string name="notification_pbm_channel_name">Gizli gezinti oturumu</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text">Gizli sekmeleri sil</string>
+    <!-- Notification action to open Fenix and resume the current browsing session. -->
+    <string name="notification_pbm_action_open">Aç</string>
+    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
+    <string name="notification_pbm_action_delete_and_open">Sil ve aç</string>
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Koleksiyon silindi</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -771,6 +783,8 @@
     <string name="enhanced_tracking_protection_allowed">İzin verilenler</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Sosyal medya takipçileri</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Sosyal ağların web’deki gezinme etkinliğinizi izleyebilme özelliğini sınırlar.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Siteler arası takip çerezleri</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
@@ -797,6 +811,8 @@
     <string name="about_your_rights">Haklarınız</string>
     <!-- About page link text to open open source licenses screen -->
     <string name="about_open_source_licenses">Kullandığımız açık kaynaklı kitaplıklar</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">%s tarayıcısında yeni neler var?</string>
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS Kitaplıkları</string>

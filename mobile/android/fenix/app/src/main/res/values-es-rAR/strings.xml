@@ -42,12 +42,16 @@
     <string name="browser_menu_stop">Detener</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Ayuda</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">¿Qué hay de nuevo?</string>
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Ajustes</string>
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_your_library">Tu Biblioteca</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Sitio de escritorio</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">Agregar a pantalla de inicio</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Buscar en la página</string>
     <!-- Browser menu button that creates a private tab -->
@@ -585,6 +589,14 @@
     <string name="sync_confirmation_button">Entendido</string>
 
     <!-- Notifications -->
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
+    <string name="notification_pbm_channel_name">Sesión de navegación privada</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text">Eliminar pestañas privadas</string>
+    <!-- Notification action to open Fenix and resume the current browsing session. -->
+    <string name="notification_pbm_action_open">Abrir</string>
+    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
+    <string name="notification_pbm_action_delete_and_open">Eliminar y abrir</string>
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Se eliminó la colección</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -828,6 +840,8 @@
     <string name="about_your_rights">Tus derechos</string>
     <!-- About page link text to open open source licenses screen -->
     <string name="about_open_source_licenses">Bibliotecas de código abierto que utilizamos</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">¿Qué hay de nuevo en %s?</string>
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | Bibliotecas OSS</string>

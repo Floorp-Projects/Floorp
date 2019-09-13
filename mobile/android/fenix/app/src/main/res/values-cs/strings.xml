@@ -39,12 +39,16 @@
     <string name="browser_menu_stop">Zastaví načítání stránky</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Nápověda</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">Co je nového</string>
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Nastavení</string>
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_your_library">Knihovna</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Verze pro počítač</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">Přidat na domovskou obrazovku</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Najít na stránce</string>
     <!-- Browser menu button that creates a private tab -->
@@ -582,6 +586,14 @@
     <string name="sync_confirmation_button">Rozumím</string>
 
     <!-- Notifications -->
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
+    <string name="notification_pbm_channel_name">Relace anonymního prohlížení</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text">Odstranit anonymní panely</string>
+    <!-- Notification action to open Fenix and resume the current browsing session. -->
+    <string name="notification_pbm_action_open">Otevřít</string>
+    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
+    <string name="notification_pbm_action_delete_and_open">Odstranit a otevřít</string>
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Sbírka odstraněna</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -776,7 +788,7 @@
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Nenechte se sledovat při prohlížení</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">%s vás chrání před mnoha častými sledujícími prvky, které sbírají informace o tom, co děláte na internetu.</string>
+    <string name="preference_enhanced_tracking_protection_explanation">%s vás chrání před mnoha častými sledovacími prvky, které sbírají informace o tom, co děláte na internetu.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Zjistit více</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -812,7 +824,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Blokuje načítání reklam, videí a dalšího obsahu, který obsahuje sledující kód. To může ovlivnit fungování některých webových stránek.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message">Změna barvy ikony štítu indikuje, že %s na stránce blokuje nějaké sledující prvky. Pro zobrazení seznamu, co je blokováno, na ikonu štítu klepněte.</string>
+    <string name="etp_onboarding_message">Změna barvy ikony štítu indikuje, že %s na stránce blokuje nějaké sledovací prvky. Pro zobrazení seznamu zablokovaných prvků na ikonu štítu klepněte.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Ochrana je na tomto serveru zapnuta</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -823,6 +835,8 @@
     <string name="about_your_rights">Vaše práva</string>
     <!-- About page link text to open open source licenses screen -->
     <string name="about_open_source_licenses">Open source knihovny, které používáme</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">Co je nového v aplikaci %s</string>
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS knihovny</string>

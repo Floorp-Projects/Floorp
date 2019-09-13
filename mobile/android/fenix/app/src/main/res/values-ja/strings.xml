@@ -40,12 +40,16 @@
     <string name="browser_menu_stop">中止</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">ヘルプ</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">新着情報</string>
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">設定</string>
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_your_library">ライブラリー</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">デスクトップサイト</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">ホーム画面に追加</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">ページ内検索</string>
     <!-- Browser menu button that creates a private tab -->
@@ -222,6 +226,10 @@
     <string name="preference_usage_data">使用状況と技術データ</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">パフォーマンス情報、使用状況、ハードウェア情報、設定を Mozilla に送信して %1$s の改善に役立てます</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">実験的な機能</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">実験的な機能のインストールとデータ収集を Mozilla に許可します</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">クラッシュレポーター</string>
     <!-- Preference switch for Mozilla location service -->
@@ -576,6 +584,14 @@
     <string name="sync_confirmation_button">OK</string>
 
     <!-- Notifications -->
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
+    <string name="notification_pbm_channel_name">プライベートブラウジングセッション</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text">プライベートタブを削除します</string>
+    <!-- Notification action to open Fenix and resume the current browsing session. -->
+    <string name="notification_pbm_action_open">開く</string>
+    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
+    <string name="notification_pbm_action_delete_and_open">削除して開く</string>
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">コレクションを削除しました</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -584,6 +600,8 @@
     <string name="snackbar_tab_deleted">タブを削除しました</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
     <string name="snackbar_tabs_deleted">タブを削除しました</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">プライベートタブを削除しました</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
     <string name="snackbar_deleted_undo">元に戻す</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
@@ -629,16 +647,42 @@
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d 件のアドレス</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">履歴</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d ページ</string>
     <!-- Title for the collections item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_collections_title">コレクション</string>
     <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
         number of collections that will be deleted -->
     <string name="preferences_delete_browsing_data_collections_subtitle">%d 件のコレクション</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Cookie</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">ほとんどのサイトからログアウトされます</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">キャッシュされた画像とファイル</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">ストレージ領域を空けます</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">サイトの許可設定</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">ブラウジングデータを削除</string>
 
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">終了時にブラウジングデータを削除</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">メインメニューから [終了] を選択すると、ブラウジングデータが自動的に削除されます</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">終了</string>
+
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message">この操作はすべてのブラウジングデータを削除します。</string>
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message_2">本当に選択したブラウジングデータを削除してもよろしいですか？</string>
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">選択したブラウジングデータを %s から削除します。</string>
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">キャンセル</string>
     <!-- Text for the allow button for the data deletion dialog -->
@@ -737,6 +781,10 @@
     <string name="etp_settings">追跡防止の設定</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">強化されたトラッキング防止</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">ブラウジング中のプライバシーを保護します</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">個人データの収集を防止します。%s はオンラインでのあなたの行動を追跡するよく知られた数多くのトラッカーからあなたを守ります。</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">詳細情報</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -747,14 +795,26 @@
     <string name="preference_enhanced_tracking_protection_strict">厳格</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">強力な追跡防止。ただし、一部のサイトまたはコンテンツが破損する可能性があります。</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_blocked">ブロック済み</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">許可済み</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">SNS メディアトラッカー</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">ソーシャルネットワークによるウェブ上のブラウジング行動の追跡を制限します。</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">クロスサイトトラッキング Cookie</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">広告ネットワークやアクセス解析サービスが様々なサイトからブラウジングデータを収集するために使用する Cookie をブロックします。</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">暗号通貨マイニング</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">悪意のあるスクリプトによる暗号通貨マイニングを防止します。</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">フィンガープリント採取</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">端末を一意に識別できるデータがユーザーを追跡する目的で収集されるのを防止します。</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">トラッキングコンテンツ</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
@@ -771,7 +831,14 @@
     <string name="about_your_rights">あなたの権利</string>
     <!-- About page link text to open open source licenses screen -->
     <string name="about_open_source_licenses">使用しているオープンソースライブラリー</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">%s の新機能</string>
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS ライブラリー</string>
+
+    <!-- Content description of the tab counter toolbar button when one tab is open -->
+    <string name="tab_counter_content_description_one_tab">タブ 1 個</string>
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">タブ %d 個</string>
 </resources>

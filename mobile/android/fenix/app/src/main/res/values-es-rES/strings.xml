@@ -20,13 +20,6 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Estás en una sesión privada</string>
-    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_explanation">%1$s borra tus búsquedas e historial de navegación cuando cierras una sesión privada
-        Aunque no te hace anónimo para los sitios web o proveedor de servicios de Internet, 
-        te ayuda a mantener en privado lo que haces en línea frente a cualquier otra persona que use este dispositivo. \n\nMitos comunes sobre la navegación privada
-        
-    </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Eliminar sesión</string>
 
@@ -81,6 +74,10 @@
     <string name="search_shortcuts_search_with">Buscar con</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Completar enlace desde el portapapeles</string>
+
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Buscar</string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
@@ -174,6 +171,11 @@
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Última sincronización: nunca</string>
 
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name">%s en %s %s</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Pestañas recibidas</string>
@@ -204,6 +206,8 @@
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Activar para todos los sitios</string>
 
+    <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message">Las excepciones te permiten deshabilitar la protección contra el rastreo para los sitios seleccionados.\n\nSaber más</string>
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
     <string name="preferences_tracking_protection_turned_off_globally">Se desactivó en general, ve a Ajustes para activarlo.</string>
 
@@ -213,6 +217,10 @@
     <string name="preference_usage_data">Uso y datos técnicos</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">Comparte datos de rendimiento, uso, hardware y personalizaciones sobre tu navegador con Mozilla para ayudar a mejorar %1$s</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">Experimentos</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Permite a Mozilla instalar y recopilar datos para funciones experimentales</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Informe de error</string>
     <!-- Preference switch for Mozilla location service -->
@@ -264,6 +272,8 @@
     <string name="quick_action_read">Leer</string>
     <!-- Button in the browser chrome to exit reader mode -->
     <string name="quick_action_read_close">Cerrar</string>
+    <!-- Button in the browser chrome to open the current page in an external app -->
+    <string name="quick_action_open_app_link">Abrir en aplicación</string>
     <!-- Button in the browser chrome to configure reader mode appearance e.g. the used font type and size -->
     <string name="quick_action_read_appearance">Apariencia</string>
     <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle to provide users
@@ -339,12 +349,6 @@
     <string name="collection_rename">Cambiar nombre a colección</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Abrir pestañas</string>
-    <!-- Text for the button to delete a single session -->
-    <string name="session_item_delete">Eliminar</string>
-
-    <!-- Text to tell the user how many more tabs this session has.
-        The first parameter is a digit that shows the cardinal number of how many additional tabs the session has. -->
-    <string name="session_items_more">Sitios %1$d…</string>
 
 
     <!-- History -->
@@ -362,12 +366,12 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Eliminar %1$d elementos</string>
-    <!-- Text for the header that groups the history for Today -->
-    <string name="history_today">Hoy</string>
-    <!-- Text for the header that groups the history the past week -->
-    <string name="history_this_week">Esta semana</string>
-    <!-- Text for the header that groups the history the past month -->
-    <string name="history_this_month">Este mes</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">Últimas 24 horas</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Últimos 7 días</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Últimos 30 días</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Más antiguo</string>
 
@@ -499,7 +503,6 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Desactivada</string>
 
-    <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Colecciones</string>
     <!-- No Open Tabs Message Header -->
@@ -552,6 +555,9 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">Enviar y compartir</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Compartir</string>
     <!-- Sub-header in the dialog to share a link to another app -->
     <string name="share_link_subheader">Compartir un enlace</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
@@ -571,7 +577,6 @@
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Entendido</string>
 
-    <!-- Notifications -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Colección eliminada</string>
 
@@ -582,6 +587,8 @@
 
     <!-- Text shown in snackbar when user deletes all tabs -->
     <string name="snackbar_tabs_deleted">Pestañas eliminadas</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">Pestañas privadas eliminadas</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
     <string name="snackbar_deleted_undo">DESHACER</string>
 
@@ -636,13 +643,6 @@
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Eliminar datos de navegación</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. Parameter is the name of the app (e.g. Fenix) -->
-    <string name="preferences_delete_browsing_data_prompt_message">¿Permitir a %s borrar los datos de navegación?</string>
-    <!-- Text for the cancel button for the data deletion dialog -->
-    <string name="preferences_delete_browsing_data_prompt_cancel">No permitir</string>
-    <!-- Text for the allow button for the data deletion dialog -->
-    <string name="preferences_delete_browsing_data_prompt_allow">Permitir</string>
-
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">Se han eliminado los datos del navegador</string>
 
@@ -663,15 +663,8 @@
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Sácale el mejor provecho a %s.</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated -->
-    <string name="onboarding_firefox_account_auto_signin_header">Ya has iniciado sesión en otro navegador Firefox en este teléfono.</string>
-    <!-- text for the button to sign into your Firefox account. The word "Firefox" should not be translated -->
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Iniciar sesión en Firefox</string>
-    <!-- text for the button to stay signed into your Firefox account. -->
-    <string name="onboarding_firefox_account_stay_signed_in">Mantener el inicio de sesión</string>
-    <!-- text for the button to sign out of your Firefox account. -->
-    <string name="onboarding_firefox_account_sign_out">Cerrar sesión</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Protégete</string>
     <!-- text for the tracking protection card description
@@ -725,4 +718,5 @@
     <string name="sign_out_disconnect">Desconectar</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Cancelar</string>
-</resources>
+
+    </resources>
