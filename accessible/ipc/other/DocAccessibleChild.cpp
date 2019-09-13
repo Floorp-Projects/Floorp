@@ -22,6 +22,7 @@
 #  include "AccessibleWrap.h"
 #endif
 #include "mozilla/PresShell.h"
+#include "mozilla/a11y/DocAccessiblePlatformExtChild.h"
 
 namespace mozilla {
 namespace a11y {
@@ -1678,6 +1679,17 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvDOMNodeID(
 mozilla::ipc::IPCResult DocAccessibleChild::RecvRestoreFocus() {
   FocusMgr()->ForceFocusEvent();
   return IPC_OK();
+}
+
+bool DocAccessibleChild::DeallocPDocAccessiblePlatformExtChild(
+    PDocAccessiblePlatformExtChild* aActor) {
+  delete aActor;
+  return true;
+}
+
+PDocAccessiblePlatformExtChild*
+DocAccessibleChild::AllocPDocAccessiblePlatformExtChild() {
+  return new DocAccessiblePlatformExtChild();
 }
 
 }  // namespace a11y
