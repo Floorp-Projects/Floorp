@@ -603,6 +603,9 @@ Toolbox.prototype = {
       skipBreakpoints: Services.prefs.getBoolPref(
         "devtools.debugger.skip-pausing"
       ),
+      logEventBreakpoints: Services.prefs.getBoolPref(
+        "devtools.debugger.features.log-event-breakpoints"
+      ),
     });
 
     try {

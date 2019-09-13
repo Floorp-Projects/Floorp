@@ -19,6 +19,8 @@ const {
   makeEventBreakpointMessage,
 } = require("devtools/server/actors/utils/event-breakpoints");
 
+const { logEvent } = require("devtools/server/actors/utils/logEvent");
+
 loader.lazyRequireGetter(
   this,
   "EnvironmentActor",
@@ -713,6 +715,16 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   _pauseAndRespondEventBreakpoint(frame, eventBreakpoint) {
     if (this.skipBreakpoints) {
       return undefined;
+    }
+
+    if (this._options.logEventBreakpoints) {
+      return logEvent({
+        threadActor: this,
+        frame,
+        level: "logPoint",
+        expression: `[_event]`,
+        bindings: { _event: frame.arguments[0] },
+      });
     }
 
     return this._pauseAndRespond(frame, {
