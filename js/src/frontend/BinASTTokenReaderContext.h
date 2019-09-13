@@ -155,6 +155,9 @@ enum class Nullable {
   NonNull,
 };
 
+// An implementation of Huffman Tables as a vector, with `O(entries)`
+// lookup. Performance-wise, this implementation only makes sense for
+// very short tables.
 template <typename T, int N = HUFFMAN_TABLE_DEFAULT_INLINE_BUFFER_LENGTH>
 class HuffmanTableImpl {
  public:
@@ -219,36 +222,37 @@ struct HuffmanTableInitializing {};
 // --- Explicit instantiations of `HuffmanTableImpl`.
 // These classes are all parts of variant `HuffmanTable`.
 
-struct HuffmanTableExplicitSymbolsF64 {
+struct HuffmanTableExplicitSymbolsF64 : HuffmanTableImpl<double> {
   using Contents = double;
-  HuffmanTableImpl<double> impl;
-  explicit HuffmanTableExplicitSymbolsF64(JSContext* cx) : impl(cx) {}
+  explicit HuffmanTableExplicitSymbolsF64(JSContext* cx)
+      : HuffmanTableImpl(cx) {}
 };
 
-struct HuffmanTableExplicitSymbolsU32 {
+struct HuffmanTableExplicitSymbolsU32 : HuffmanTableImpl<uint32_t> {
   using Contents = uint32_t;
-  HuffmanTableImpl<uint32_t> impl;
-  explicit HuffmanTableExplicitSymbolsU32(JSContext* cx) : impl(cx) {}
+  explicit HuffmanTableExplicitSymbolsU32(JSContext* cx)
+      : HuffmanTableImpl(cx) {}
 };
 
-struct HuffmanTableIndexedSymbolsSum {
+struct HuffmanTableIndexedSymbolsSum : HuffmanTableImpl<BinASTKind> {
   using Contents = BinASTKind;
-  HuffmanTableImpl<BinASTKind> impl;
-  explicit HuffmanTableIndexedSymbolsSum(JSContext* cx) : impl(cx) {}
+  explicit HuffmanTableIndexedSymbolsSum(JSContext* cx)
+      : HuffmanTableImpl(cx) {}
 };
 
-struct HuffmanTableIndexedSymbolsBool {
+struct HuffmanTableIndexedSymbolsBool : HuffmanTableImpl<bool, 2> {
   using Contents = bool;
-  HuffmanTableImpl<bool, 2> impl;
-  explicit HuffmanTableIndexedSymbolsBool(JSContext* cx) : impl(cx) {}
+  explicit HuffmanTableIndexedSymbolsBool(JSContext* cx)
+      : HuffmanTableImpl(cx) {}
 };
 
 // A Huffman table that may only ever contain two values:
 // `BinASTKind::_Null` and another `BinASTKind`.
-struct HuffmanTableIndexedSymbolsMaybeInterface {
+struct HuffmanTableIndexedSymbolsMaybeInterface
+    : HuffmanTableImpl<BinASTKind, 2> {
   using Contents = BinASTKind;
-  HuffmanTableImpl<BinASTKind, 2> impl;
-  explicit HuffmanTableIndexedSymbolsMaybeInterface(JSContext* cx) : impl(cx) {}
+  explicit HuffmanTableIndexedSymbolsMaybeInterface(JSContext* cx)
+      : HuffmanTableImpl(cx) {}
 
   // `true` if this table only contains values for `null`.
   bool isAlwaysNull() const {
@@ -256,31 +260,31 @@ struct HuffmanTableIndexedSymbolsMaybeInterface {
 
     // By definition, we have either 1 or 2 values.
     // By definition, if we have 2 values, one of them is not null.
-    if (impl.length() != 1) {
+    if (length() != 1) {
       return false;
     }
     // Otherwise, check the single value.
-    return impl.begin()->value == BinASTKind::_Null;
+    return begin()->value == BinASTKind::_Null;
   }
 };
 
-struct HuffmanTableIndexedSymbolsStringEnum {
+struct HuffmanTableIndexedSymbolsStringEnum : HuffmanTableImpl<BinASTVariant> {
   using Contents = BinASTVariant;
-  HuffmanTableImpl<BinASTVariant> impl;
-  explicit HuffmanTableIndexedSymbolsStringEnum(JSContext* cx) : impl(cx) {}
+  explicit HuffmanTableIndexedSymbolsStringEnum(JSContext* cx)
+      : HuffmanTableImpl(cx) {}
 };
 
-struct HuffmanTableIndexedSymbolsLiteralString {
+struct HuffmanTableIndexedSymbolsLiteralString : HuffmanTableImpl<JSAtom*> {
   using Contents = JSAtom*;
-  HuffmanTableImpl<JSAtom*> impl;
-  explicit HuffmanTableIndexedSymbolsLiteralString(JSContext* cx) : impl(cx) {}
+  explicit HuffmanTableIndexedSymbolsLiteralString(JSContext* cx)
+      : HuffmanTableImpl(cx) {}
 };
 
-struct HuffmanTableIndexedSymbolsOptionalLiteralString {
+struct HuffmanTableIndexedSymbolsOptionalLiteralString
+    : HuffmanTableImpl<JSAtom*> {
   using Contents = JSAtom*;
-  HuffmanTableImpl<JSAtom*> impl;
   explicit HuffmanTableIndexedSymbolsOptionalLiteralString(JSContext* cx)
-      : impl(cx) {}
+      : HuffmanTableImpl(cx) {}
 };
 
 // A single Huffman table.
@@ -293,10 +297,10 @@ using HuffmanTable = mozilla::Variant<
     HuffmanTableIndexedSymbolsLiteralString,
     HuffmanTableIndexedSymbolsOptionalLiteralString>;
 
-struct HuffmanTableExplicitSymbolsListLength {
+struct HuffmanTableExplicitSymbolsListLength : HuffmanTableImpl<uint32_t> {
   using Contents = uint32_t;
-  HuffmanTableImpl<uint32_t> impl;
-  explicit HuffmanTableExplicitSymbolsListLength(JSContext* cx) : impl(cx) {}
+  explicit HuffmanTableExplicitSymbolsListLength(JSContext* cx)
+      : HuffmanTableImpl(cx) {}
 };
 
 // A single Huffman table, specialized for list lengths.
