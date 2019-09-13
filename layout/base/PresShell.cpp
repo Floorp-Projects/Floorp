@@ -1857,6 +1857,31 @@ nsresult PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight,
                                     aOptions);
 }
 
+void PresShell::SimpleResizeReflow(nscoord aWidth, nscoord aHeight,
+                                   nscoord aOldWidth, nscoord aOldHeight) {
+  MOZ_ASSERT(aWidth != NS_UNCONSTRAINEDSIZE);
+  MOZ_ASSERT(aHeight != NS_UNCONSTRAINEDSIZE);
+  mPresContext->SetVisibleArea(nsRect(0, 0, aWidth, aHeight));
+  nsIFrame* rootFrame = GetRootFrame();
+  if (!rootFrame) {
+    return;
+  }
+  WritingMode wm = rootFrame->GetWritingMode();
+  bool isBSizeChanging =
+      wm.IsVertical() ? aOldWidth != aWidth : aOldHeight != aHeight;
+  if (isBSizeChanging) {
+    nsLayoutUtils::MarkIntrinsicISizesDirtyIfDependentOnBSize(rootFrame);
+  }
+  FrameNeedsReflow(rootFrame, IntrinsicDirty::Resize,
+                   NS_FRAME_HAS_DIRTY_CHILDREN);
+
+  // For compat with the old code path which always reflowed as long as there
+  // was a root frame.
+  if (!mPresContext->SuppressingResizeReflow()) {
+    mDocument->FlushPendingNotifications(FlushType::InterruptibleLayout);
+  }
+}
+
 nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
                                                nscoord aOldWidth,
                                                nscoord aOldHeight,
@@ -1864,6 +1889,27 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
   MOZ_ASSERT(!mIsReflowing, "Shouldn't be in reflow here!");
 
   if (aWidth == aOldWidth && aHeight == aOldHeight) {
+    return NS_OK;
+  }
+
+  // Historically we never fired resize events if there was no root frame by the
+  // time this function got called.
+  const bool initialized = mDidInitialize;
+  RefPtr<PresShell> kungFuDeathGrip(this);
+
+  auto postResizeEventIfNeeded = [this, initialized, aOptions]() {
+    if (initialized && !mIsDestroying && !mResizeEventPending &&
+        !(aOptions & ResizeReflowOptions::SuppressResizeEvent)) {
+      mResizeEventPending = true;
+      if (MOZ_LIKELY(!mDocument->GetBFCacheEntry())) {
+        mPresContext->RefreshDriver()->AddResizeEventFlushObserver(this);
+      }
+    }
+  };
+
+  if (!(aOptions & ResizeReflowOptions::BSizeLimit)) {
+    SimpleResizeReflow(aWidth, aHeight, aOldWidth, aOldHeight);
+    postResizeEventIfNeeded();
     return NS_OK;
   }
 
@@ -1909,8 +1955,6 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
       GetPresContext()->SuppressingResizeReflow();
 
   RefPtr<nsViewManager> viewManager = mViewManager;
-  RefPtr<PresShell> kungFuDeathGrip(this);
-
   if (!suppressingResizeReflow && shrinkToFit) {
     // Make sure that style is flushed before setting the pres context
     // VisibleArea if we're shrinking to fit.
@@ -2005,14 +2049,7 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
     }
   }
 
-  if (!mIsDestroying && !mResizeEventPending &&
-      !(aOptions & ResizeReflowOptions::SuppressResizeEvent)) {
-    mResizeEventPending = true;
-    if (MOZ_LIKELY(!mDocument->GetBFCacheEntry())) {
-      mPresContext->RefreshDriver()->AddResizeEventFlushObserver(this);
-    }
-  }
-
+  postResizeEventIfNeeded();
   return NS_OK;  // XXX this needs to be real. MMP
 }
 
