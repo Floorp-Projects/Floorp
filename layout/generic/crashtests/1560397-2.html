@@ -1,0 +1,25 @@
+<html>
+<head>
+    <style>
+
+        .class_2, .class_3 {
+            display: inline-grid;
+            grid: repeat(3, 6%) repeat(1, minmax(1em, 3%))/repeat(1, auto);
+            grid-row: i;
+            grid-auto-columns: 1px;
+        }
+        .class_2 {
+           grid-column: span 999999;
+           grid-template-columns: subgrid repeat(99999, [a]) repeat(auto-fill,[b]);
+        }
+    </style>
+</head>
+<body>
+<big class="class_3">
+  <em class="class_2">
+    <x style="grid-column:b">A</x>
+    <x style="grid-column:a -1">A</x>
+  </em>
+</big>
+</body>
+</html>
