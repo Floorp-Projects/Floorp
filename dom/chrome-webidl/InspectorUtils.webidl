@@ -16,7 +16,7 @@ namespace InspectorUtils {
   sequence<CSSStyleRule> getCSSStyleRules(
     Element element,
     optional [TreatNullAs=EmptyString] DOMString pseudo = "",
-    optional boolean includeVisitedStyle = false);
+    optional boolean relevantLinkVisited = false);
   unsigned long getRuleLine(CSSRule rule);
   unsigned long getRuleColumn(CSSRule rule);
   unsigned long getRelativeRuleLine(CSSRule rule);
@@ -30,7 +30,8 @@ namespace InspectorUtils {
       Element element,
       CSSStyleRule rule,
       unsigned long selectorIndex,
-      optional [TreatNullAs=EmptyString] DOMString pseudo = "");
+      optional [TreatNullAs=EmptyString] DOMString pseudo = "",
+      optional boolean includeVisitedStyle = false);
   boolean isInheritedProperty(DOMString property);
   sequence<DOMString> getCSSPropertyNames(optional PropertyNamesOptions options = {});
   sequence<PropertyPref> getCSSPropertyPrefs();
