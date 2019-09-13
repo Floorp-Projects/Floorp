@@ -2819,120 +2819,140 @@ SearchService.prototype = {
     return (this.defaultPrivateEngine = engine);
   },
 
-  async getDefaultEngineInfo() {
-    let result = {};
-
-    let engine;
-    try {
-      engine = await this.getDefault();
-    } catch (e) {
+  async _getEngineInfo(engine) {
+    if (!engine) {
       // The defaultEngine getter will throw if there's no engine at all,
       // which shouldn't happen unless an add-on or a test deleted all of them.
       // Our preferences UI doesn't let users do that.
       Cu.reportError("getDefaultEngineInfo: No default engine");
+      return ["NONE", { name: "NONE" }];
     }
 
-    if (!engine) {
-      result.name = "NONE";
+    const engineData = {
+      loadPath: engine._loadPath,
+      name: engine.name ? engine.name : "",
+    };
+
+    let shortName;
+    if (engine.identifier) {
+      shortName = engine.identifier;
+    } else if (engine.name) {
+      shortName = "other-" + engine.name;
     } else {
-      if (engine.name) {
-        result.name = engine.name;
-      }
+      shortName = "UNDEFINED";
+    }
 
-      result.loadPath = engine._loadPath;
-
-      let origin;
-      if (engine._isDefault) {
-        origin = "default";
+    if (engine._isDefault) {
+      engineData.origin = "default";
+    } else {
+      let currentHash = engine.getAttr("loadPathHash");
+      if (!currentHash) {
+        engineData.origin = "unverified";
       } else {
-        let currentHash = engine.getAttr("loadPathHash");
-        if (!currentHash) {
-          origin = "unverified";
-        } else {
-          let loadPathHash = getVerificationHash(engine._loadPath);
-          origin = currentHash == loadPathHash ? "verified" : "invalid";
+        let loadPathHash = getVerificationHash(engine._loadPath);
+        engineData.origin =
+          currentHash == loadPathHash ? "verified" : "invalid";
+      }
+    }
+
+    // For privacy, we only collect the submission URL for default engines...
+    let sendSubmissionURL = engine._isDefault;
+
+    // ... or engines sorted by default near the top of the list.
+    if (!sendSubmissionURL) {
+      let extras = Services.prefs.getChildList(
+        SearchUtils.BROWSER_SEARCH_PREF + "order.extra."
+      );
+
+      for (let prefName of extras) {
+        try {
+          if (engineData.name == Services.prefs.getCharPref(prefName)) {
+            sendSubmissionURL = true;
+            break;
+          }
+        } catch (e) {}
+      }
+
+      let i = 0;
+      while (!sendSubmissionURL) {
+        let prefName = `${SearchUtils.BROWSER_SEARCH_PREF}order.${++i}`;
+        let engineName = getLocalizedPref(prefName);
+        if (!engineName) {
+          break;
+        }
+        if (engineData.name == engineName) {
+          sendSubmissionURL = true;
+          break;
         }
       }
-      result.origin = origin;
 
-      // For privacy, we only collect the submission URL for default engines...
-      let sendSubmissionURL = engine._isDefault;
+      for (let engineName of this._searchOrder) {
+        if (engineData.name == engineName) {
+          sendSubmissionURL = true;
+          break;
+        }
+      }
+    }
 
-      // ... or engines sorted by default near the top of the list.
-      if (!sendSubmissionURL) {
-        let extras = Services.prefs.getChildList(
-          SearchUtils.BROWSER_SEARCH_PREF + "order.extra."
+    if (!sendSubmissionURL) {
+      // ... or engines that are the same domain as a default engine.
+      let engineHost = engine._getURLOfType(SearchUtils.URL_TYPE.SEARCH)
+        .templateHost;
+      for (let innerEngine of this._engines.values()) {
+        if (!innerEngine._isDefault) {
+          continue;
+        }
+
+        let innerEngineURL = innerEngine._getURLOfType(
+          SearchUtils.URL_TYPE.SEARCH
         );
-
-        for (let prefName of extras) {
-          try {
-            if (result.name == Services.prefs.getCharPref(prefName)) {
-              sendSubmissionURL = true;
-              break;
-            }
-          } catch (e) {}
-        }
-
-        let i = 0;
-        while (!sendSubmissionURL) {
-          let prefName = `${SearchUtils.BROWSER_SEARCH_PREF}order.${++i}`;
-          let engineName = getLocalizedPref(prefName);
-          if (!engineName) {
-            break;
-          }
-          if (result.name == engineName) {
-            sendSubmissionURL = true;
-            break;
-          }
-        }
-
-        for (let engineName of this._searchOrder) {
-          if (result.name == engineName) {
-            sendSubmissionURL = true;
-            break;
-          }
+        if (innerEngineURL.templateHost == engineHost) {
+          sendSubmissionURL = true;
+          break;
         }
       }
 
       if (!sendSubmissionURL) {
-        // ... or engines that are the same domain as a default engine.
-        let engineHost = engine._getURLOfType(SearchUtils.URL_TYPE.SEARCH)
-          .templateHost;
-        for (let innerEngine of this._engines.values()) {
-          if (!innerEngine._isDefault) {
-            continue;
-          }
-
-          let innerEngineURL = innerEngine._getURLOfType(
-            SearchUtils.URL_TYPE.SEARCH
-          );
-          if (innerEngineURL.templateHost == engineHost) {
-            sendSubmissionURL = true;
-            break;
-          }
-        }
-
-        if (!sendSubmissionURL) {
-          // ... or well known search domains.
-          //
-          // Starts with: www.google., search.aol., yandex.
-          // or
-          // Ends with: search.yahoo.com, .ask.com, .bing.com, .startpage.com, baidu.com, duckduckgo.com
-          const urlTest = /^(?:www\.google\.|search\.aol\.|yandex\.)|(?:search\.yahoo|\.ask|\.bing|\.startpage|\.baidu|duckduckgo)\.com$/;
-          sendSubmissionURL = urlTest.test(engineHost);
-        }
+        // ... or well known search domains.
+        //
+        // Starts with: www.google., search.aol., yandex.
+        // or
+        // Ends with: search.yahoo.com, .ask.com, .bing.com, .startpage.com, baidu.com, duckduckgo.com
+        const urlTest = /^(?:www\.google\.|search\.aol\.|yandex\.)|(?:search\.yahoo|\.ask|\.bing|\.startpage|\.baidu|duckduckgo)\.com$/;
+        sendSubmissionURL = urlTest.test(engineHost);
       }
+    }
 
-      if (sendSubmissionURL) {
-        let uri = engine
-          ._getURLOfType("text/html")
-          .getSubmission("", engine, "searchbar").uri;
-        uri = uri
-          .mutate()
-          .setUserPass("") // Avoid reporting a username or password.
-          .finalize();
-        result.submissionURL = uri.spec;
-      }
+    if (sendSubmissionURL) {
+      let uri = engine
+        ._getURLOfType("text/html")
+        .getSubmission("", engine, "searchbar").uri;
+      uri = uri
+        .mutate()
+        .setUserPass("") // Avoid reporting a username or password.
+        .finalize();
+      engineData.submissionURL = uri.spec;
+    }
+
+    return [shortName, engineData];
+  },
+
+  async getDefaultEngineInfo() {
+    let [shortName, defaultSearchEngineData] = await this._getEngineInfo(
+      this.defaultEngine
+    );
+    const result = {
+      defaultSearchEngine: shortName,
+      defaultSearchEngineData,
+    };
+
+    if (gSeparatePrivateDefault) {
+      let [
+        privateShortName,
+        defaultPrivateSearchEngineData,
+      ] = await this._getEngineInfo(this.defaultPrivateEngine);
+      result.defaultPrivateSearchEngine = privateShortName;
+      result.defaultPrivateSearchEngineData = defaultPrivateSearchEngineData;
     }
 
     return result;

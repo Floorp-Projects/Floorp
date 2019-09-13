@@ -48,9 +48,9 @@ add_task(async function test() {
 
   for (let [name, searchURL] of SUBMISSION_YES) {
     engine = await addAndMakeDefault(name, searchURL);
-    engineInfo = await Services.search.getDefaultEngineInfo();
+    engineInfo = await Services.search.getDefaultEngineInfo(false);
     Assert.equal(
-      engineInfo.submissionURL,
+      engineInfo.defaultSearchEngineData.submissionURL,
       searchURL.replace("{searchTerms}", "")
     );
     await Services.search.removeEngine(engine);
@@ -58,8 +58,8 @@ add_task(async function test() {
 
   for (let [name, searchURL] of SUBMISSION_NO) {
     engine = await addAndMakeDefault(name, searchURL);
-    engineInfo = await Services.search.getDefaultEngineInfo();
-    Assert.equal(engineInfo.submissionURL, null);
+    engineInfo = await Services.search.getDefaultEngineInfo(false);
+    Assert.equal(engineInfo.defaultSearchEngineData.submissionURL, null);
     await Services.search.removeEngine(engine);
   }
 });
