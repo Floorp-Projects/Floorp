@@ -55,11 +55,15 @@ ChromeUtils.defineModuleGetter(
   "AppConstants",
   "resource://gre/modules/AppConstants.jsm"
 );
-
 ChromeUtils.defineModuleGetter(
   this,
   "PerTestCoverageUtils",
   "resource://testing-common/PerTestCoverageUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ContentTaskUtils",
+  "resource://testing-common/ContentTaskUtils.jsm"
 );
 
 // Allow stuff from this scope to be accessed from non-privileged scopes. This
@@ -1676,6 +1680,7 @@ class SpecialPowersChild extends JSWindowActorChild {
     });
 
     sb.sandbox.SpecialPowers = this;
+    sb.sandbox.ContentTaskUtils = ContentTaskUtils;
     Object.defineProperty(sb.sandbox, "content", {
       get: () => {
         return this.contentWindow;
