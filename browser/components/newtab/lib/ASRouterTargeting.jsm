@@ -2,54 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { FilterExpressions } = ChromeUtils.import(
-  "resource://gre/modules/components-utils/FilterExpressions.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "ASRouterPreferences",
-  "resource://activity-stream/lib/ASRouterPreferences.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "NewTabUtils",
-  "resource://gre/modules/NewTabUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "ProfileAge",
-  "resource://gre/modules/ProfileAge.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "ShellService",
-  "resource:///modules/ShellService.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "TelemetryEnvironment",
-  "resource://gre/modules/TelemetryEnvironment.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "AppConstants",
-  "resource://gre/modules/AppConstants.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "AttributionCode",
-  "resource:///modules/AttributionCode.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ASRouterPreferences: "resource://activity-stream/lib/ASRouterPreferences.jsm",
+  AddonManager: "resource://gre/modules/AddonManager.jsm",
+  NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
+  ProfileAge: "resource://gre/modules/ProfileAge.jsm",
+  ShellService: "resource:///modules/ShellService.jsm",
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  AttributionCode: "resource:///modules/AttributionCode.jsm",
+  FilterExpressions:
+    "resource://gre/modules/components-utils/FilterExpressions.jsm",
+});
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "UpdateManager",
@@ -168,6 +138,7 @@ const QueryCache = {
     }),
     TotalBookmarksCount: new CachedTargetingGetter("getTotalBookmarksCount"),
     CheckBrowserNeedsUpdate: new CheckBrowserNeedsUpdate(),
+    RecentBookmarks: new CachedTargetingGetter("getRecentBookmarks"),
   },
 };
 
@@ -358,6 +329,9 @@ const TargetingGetters = {
         lastVisitDate: site.lastVisitDate,
       }))
     );
+  },
+  get recentBookmarks() {
+    return QueryCache.queries.RecentBookmarks.get();
   },
   get pinnedSites() {
     return NewTabUtils.pinnedLinks.links.map(site =>

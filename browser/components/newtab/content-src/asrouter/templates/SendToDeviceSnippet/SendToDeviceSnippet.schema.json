@@ -150,6 +150,13 @@
       "type": "string",
       "description": "The background color of the button. Valid CSS color."
     },
+    "retry_button_label": {
+      "allOf": [
+        {"$ref": "#/definitions/plainText"},
+        {"description": "Text for the button in the event of a submission error/failure."}
+      ],
+      "default": "Try again"
+    },
     "do_not_autoblock": {
       "type": "boolean",
       "description": "Used to prevent blocking the snippet after the CTA (link or button) has been clicked",

@@ -4,40 +4,17 @@
 "use strict";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  EveryWindow: "resource:///modules/EveryWindow.jsm",
+});
 
 const FEW_MINUTES = 15 * 60 * 1000; // 15 mins
 const MATCH_PATTERN_OPTIONS = { ignorePath: true };
-
-/**
- * Wait for browser startup to finish to avoid accessing uninitialized
- * properties
- */
-async function checkStartupFinished(win) {
-  if (!win.gBrowserInit.delayedStartupFinished) {
-    await new Promise(resolve => {
-      let delayedStartupObserver = (subject, topic) => {
-        if (topic === "browser-delayed-startup-finished" && subject === win) {
-          Services.obs.removeObserver(
-            delayedStartupObserver,
-            "browser-delayed-startup-finished"
-          );
-          resolve();
-        }
-      };
-
-      Services.obs.addObserver(
-        delayedStartupObserver,
-        "browser-delayed-startup-finished"
-      );
-    });
-  }
-}
 
 function isPrivateWindow(win) {
   return (
@@ -101,30 +78,73 @@ function checkURLMatch(aLocationURI, { hosts, matchPatternSet }, aRequest) {
  */
 this.ASRouterTriggerListeners = new Map([
   [
+    "openBookmarkedURL",
+    {
+      id: "openBookmarkedURL",
+      _initialized: false,
+      _triggerHandler: null,
+      _hosts: new Set(),
+      bookmarkEvent: "bookmark-icon-updated",
+
+      init(triggerHandler) {
+        if (!this._initialized) {
+          Services.obs.addObserver(this, this.bookmarkEvent);
+          this._triggerHandler = triggerHandler;
+          this._initialized = true;
+        }
+      },
+
+      observe(subject, topic, data) {
+        if (topic === this.bookmarkEvent && data === "starred") {
+          const browser = Services.wm.getMostRecentBrowserWindow();
+          if (browser) {
+            this._triggerHandler(browser.gBrowser.selectedBrowser, {
+              id: this.id,
+            });
+          }
+        }
+      },
+
+      uninit() {
+        if (this._initialized) {
+          Services.obs.removeObserver(this, this.bookmarkEvent);
+          this._initialized = false;
+          this._triggerHandler = null;
+          this._hosts = new Set();
+        }
+      },
+    },
+  ],
+  [
     "frequentVisits",
     {
+      id: "frequentVisits",
       _initialized: false,
       _triggerHandler: null,
       _hosts: null,
       _matchPatternSet: null,
       _visits: null,
 
-      async init(triggerHandler, hosts = [], patterns) {
+      init(triggerHandler, hosts = [], patterns) {
         if (!this._initialized) {
           this.onTabSwitch = this.onTabSwitch.bind(this);
-
-          // Add listeners to all existing browser windows
-          for (let win of Services.wm.getEnumerator("navigator:browser")) {
-            if (isPrivateWindow(win)) {
-              continue;
+          EveryWindow.registerCallback(
+            this.id,
+            win => {
+              if (!isPrivateWindow(win)) {
+                win.addEventListener("TabSelect", this.onTabSwitch);
+                win.gBrowser.addTabsProgressListener(this);
+              }
+            },
+            win => {
+              if (!isPrivateWindow(win)) {
+                win.removeEventListener("TabSelect", this.onTabSwitch);
+                win.gBrowser.removeTabsProgressListener(this);
+              }
             }
-            await checkStartupFinished(win);
-            win.addEventListener("TabSelect", this.onTabSwitch);
-            win.gBrowser.addTabsProgressListener(this);
-          }
-
-          this._initialized = true;
+          );
           this._visits = new Map();
+          this._initialized = true;
         }
         this._triggerHandler = triggerHandler;
         if (patterns) {
@@ -192,7 +212,7 @@ this.ASRouterTriggerListeners = new Map([
         }
 
         this._triggerHandler(aBrowser, {
-          id: "frequentVisits",
+          id: this.id,
           param: match,
           context: {
             // Remapped to {host, timestamp} because JEXL operators can only
@@ -223,52 +243,9 @@ this.ASRouterTriggerListeners = new Map([
         }
       },
 
-      observe(win, topic, data) {
-        let onLoad;
-
-        switch (topic) {
-          case "domwindowopened":
-            if (isPrivateWindow(win)) {
-              break;
-            }
-            onLoad = () => {
-              // Ignore non-browser windows.
-              if (
-                win.document.documentElement.getAttribute("windowtype") ===
-                "navigator:browser"
-              ) {
-                win.addEventListener("TabSelect", this.onTabSwitch);
-                win.gBrowser.addTabsProgressListener(this);
-              }
-            };
-            win.addEventListener("load", onLoad, { once: true });
-            break;
-
-          case "domwindowclosed":
-            if (
-              win instanceof Ci.nsIDOMWindow &&
-              win.document.documentElement.getAttribute("windowtype") ===
-                "navigator:browser"
-            ) {
-              win.removeEventListener("TabSelect", this.onTabSwitch);
-              win.gBrowser.removeTabsProgressListener(this);
-            }
-            break;
-        }
-      },
-
       uninit() {
         if (this._initialized) {
-          Services.ww.unregisterNotification(this);
-
-          for (let win of Services.wm.getEnumerator("navigator:browser")) {
-            if (isPrivateWindow(win)) {
-              continue;
-            }
-
-            win.removeEventListener("TabSelect", this.onTabSwitch);
-            win.gBrowser.removeTabsProgressListener(this);
-          }
+          EveryWindow.unregisterCallback(this.id);
 
           this._initialized = false;
           this._triggerHandler = null;
@@ -288,6 +265,7 @@ this.ASRouterTriggerListeners = new Map([
   [
     "openURL",
     {
+      id: "openURL",
       _initialized: false,
       _triggerHandler: null,
       _hosts: null,
@@ -296,21 +274,24 @@ this.ASRouterTriggerListeners = new Map([
        * If the listener is already initialised, `init` will replace the trigger
        * handler and add any new hosts to `this._hosts`.
        */
-      async init(triggerHandler, hosts = [], patterns) {
+      init(triggerHandler, hosts = [], patterns) {
         if (!this._initialized) {
           this.onLocationChange = this.onLocationChange.bind(this);
-
-          // Listen for new windows being opened
-          Services.ww.registerNotification(this);
-
-          // Add listeners to all existing browser windows
-          for (let win of Services.wm.getEnumerator("navigator:browser")) {
-            if (isPrivateWindow(win)) {
-              continue;
+          EveryWindow.registerCallback(
+            this.id,
+            win => {
+              if (!isPrivateWindow(win)) {
+                win.addEventListener("TabSelect", this.onTabSwitch);
+                win.gBrowser.addTabsProgressListener(this);
+              }
+            },
+            win => {
+              if (!isPrivateWindow(win)) {
+                win.removeEventListener("TabSelect", this.onTabSwitch);
+                win.gBrowser.removeTabsProgressListener(this);
+              }
             }
-            await checkStartupFinished(win);
-            win.gBrowser.addTabsProgressListener(this);
-          }
+          );
 
           this._initialized = true;
         }
@@ -324,15 +305,7 @@ this.ASRouterTriggerListeners = new Map([
 
       uninit() {
         if (this._initialized) {
-          Services.ww.unregisterNotification(this);
-
-          for (let win of Services.wm.getEnumerator("navigator:browser")) {
-            if (isPrivateWindow(win)) {
-              continue;
-            }
-
-            win.gBrowser.removeTabsProgressListener(this);
-          }
+          EveryWindow.unregisterCallback(this.id);
 
           this._initialized = false;
           this._triggerHandler = null;
@@ -354,40 +327,8 @@ this.ASRouterTriggerListeners = new Map([
             aRequest
           );
           if (match) {
-            this._triggerHandler(aBrowser, { id: "openURL", param: match });
+            this._triggerHandler(aBrowser, { id: this.id, param: match });
           }
-        }
-      },
-
-      observe(win, topic, data) {
-        let onLoad;
-
-        switch (topic) {
-          case "domwindowopened":
-            if (isPrivateWindow(win)) {
-              break;
-            }
-            onLoad = () => {
-              // Ignore non-browser windows.
-              if (
-                win.document.documentElement.getAttribute("windowtype") ===
-                "navigator:browser"
-              ) {
-                win.gBrowser.addTabsProgressListener(this);
-              }
-            };
-            win.addEventListener("load", onLoad, { once: true });
-            break;
-
-          case "domwindowclosed":
-            if (
-              win instanceof Ci.nsIDOMWindow &&
-              win.document.documentElement.getAttribute("windowtype") ===
-                "navigator:browser"
-            ) {
-              win.gBrowser.removeTabsProgressListener(this);
-            }
-            break;
         }
       },
     },
@@ -443,22 +384,25 @@ this.ASRouterTriggerListeners = new Map([
       _sessionPageLoad: 0,
       onLocationChange: null,
 
-      async init(triggerHandler, params, patterns) {
+      init(triggerHandler, params, patterns) {
         params.forEach(p => this._events.push(p));
 
         if (!this._initialized) {
           Services.obs.addObserver(this, "SiteProtection:ContentBlockingEvent");
-
           this.onLocationChange = this._onLocationChange.bind(this);
-
-          // Add listeners to all existing browser windows
-          for (let win of Services.wm.getEnumerator("navigator:browser")) {
-            if (isPrivateWindow(win)) {
-              continue;
+          EveryWindow.registerCallback(
+            this.id,
+            win => {
+              if (!isPrivateWindow(win)) {
+                win.gBrowser.addTabsProgressListener(this);
+              }
+            },
+            win => {
+              if (!isPrivateWindow(win)) {
+                win.gBrowser.removeTabsProgressListener(this);
+              }
             }
-            await checkStartupFinished(win);
-            win.gBrowser.addTabsProgressListener(this);
-          }
+          );
 
           this._initialized = true;
         }

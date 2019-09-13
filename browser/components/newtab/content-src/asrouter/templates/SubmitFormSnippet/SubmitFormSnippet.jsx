@@ -177,7 +177,7 @@ export class SubmitFormSnippet extends React.PureComponent {
     const bodyText = isSuccess
       ? { success_text: content.success_text }
       : { error_text: content.error_text };
-    const retryButtonText = content.scene1_button_label;
+    const retryButtonText = content.retry_button_label;
     return (
       <SnippetBase {...this.props}>
         <div className="submissionStatus">

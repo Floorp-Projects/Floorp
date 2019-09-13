@@ -50,7 +50,7 @@ describe("NewsletterSnippet", () => {
         onAction: sandbox.stub(),
       };
       const wrapper = mount(<NewsletterSnippet {...defaults} />);
-      // SendToDeviceSnippet is a wrapper around SubmitFormSnippet
+      // NewsletterSnippet is a wrapper around SubmitFormSnippet
       const { props } = wrapper.children().get(0);
 
       // the `locale` properties gets used as part of hidden_fields so we
@@ -62,7 +62,7 @@ describe("NewsletterSnippet", () => {
       const defaultProperties = Object.keys(properties).filter(
         prop => properties[prop].default
       );
-      assert.lengthOf(defaultProperties, 5);
+      assert.lengthOf(defaultProperties, 6);
       defaultProperties.forEach(prop =>
         assert.propertyVal(props.content, prop, properties[prop].default)
       );
