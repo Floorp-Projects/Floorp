@@ -72,7 +72,7 @@ class Localization : public nsIObserver,
  protected:
   virtual ~Localization();
   void RegisterObservers();
-  void OnChange();
+  virtual void OnChange();
   already_AddRefed<Promise> MaybeWrapPromise(Promise* aInnerPromise);
   void ConvertL10nArgsToJSValue(JSContext* aCx, const L10nArgs& aArgs,
                                 JS::MutableHandle<JS::Value> aRetVal,
