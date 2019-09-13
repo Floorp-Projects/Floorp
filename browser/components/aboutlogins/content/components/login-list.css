@@ -76,11 +76,16 @@ ol {
   padding-inline-start: 0;
   overflow: hidden auto;
   flex-grow: 1;
-  box-shadow: inset 0 -1px var(--in-content-box-border-color);
 }
 
 .create-login-button {
   margin: 16px;
+}
+
+.create-login-button-container {
+  box-shadow: 0 -1px var(--in-content-box-border-color);
+  display: flex;
+  flex-direction: column;
 }
 
 .login-list-item {
