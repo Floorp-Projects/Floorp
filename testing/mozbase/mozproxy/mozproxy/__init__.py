@@ -25,7 +25,7 @@ else:
     mozharness_dir = path_join(mozbase_dir, "..", "mozharness")
 
 
-def get_playback(config):
+def get_playback(config, android_device=None):
     """ Returns an instance of the right Playback class
     """
     sys.path.insert(0, mozharness_dir)
@@ -40,7 +40,10 @@ def get_playback(config):
         LOG.critical("playback_tool name not found in config")
         return None
     try:
-        return get_backend(tool_name, config)
+        if android_device is None:
+            return get_backend(tool_name, config)
+        else:
+            return get_backend(tool_name, config, android_device)
     except KeyError:
         LOG.critical("specified playback tool is unsupported: %s" % tool_name)
         return None
