@@ -26,7 +26,6 @@ py2:
         - testing/tools
         - testing/web-platform
         - toolkit
-        - tools/profiler
         - tools/rb
         - tools/update-packaging
         - xpcom
