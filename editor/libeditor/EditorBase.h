@@ -507,10 +507,6 @@ class EditorBase : public nsIEditor,
     return (mFlags & nsIPlaintextEditor::eEditorAllowInteraction) != 0;
   }
 
-  bool DontEchoPassword() const {
-    return (mFlags & nsIPlaintextEditor::eEditorDontEchoPassword) != 0;
-  }
-
   bool ShouldSkipSpellCheck() const {
     return (mFlags & nsIPlaintextEditor::eEditorSkipSpellCheck) != 0;
   }

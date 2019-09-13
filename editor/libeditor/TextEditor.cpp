@@ -954,9 +954,6 @@ nsresult TextEditor::InsertTextAsSubAction(const nsAString& aStringToInsert) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  // Protect the edit rules object from dying.
-  RefPtr<TextEditRules> rules(mRules);
-
   EditSubAction editSubAction = ShouldHandleIMEComposition()
                                     ? EditSubAction::eInsertTextComingFromIME
                                     : EditSubAction::eInsertText;
@@ -964,32 +961,9 @@ nsresult TextEditor::InsertTextAsSubAction(const nsAString& aStringToInsert) {
   AutoEditSubActionNotifier startToHandleEditSubAction(*this, editSubAction,
                                                        nsIEditor::eNext);
 
-  nsAutoString resultString;
-  // XXX can we trust instring to outlive subActionInfo,
-  // XXX and subActionInfo not to refer to instring in its dtor?
-  // nsAutoString instring(aStringToInsert);
-  EditSubActionInfo subActionInfo(editSubAction);
-  subActionInfo.inString = &aStringToInsert;
-  subActionInfo.outString = &resultString;
-  subActionInfo.maxLength = mMaxTextLength;
-
-  bool cancel, handled;
-  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  if (!cancel && !handled) {
-    // we rely on rules code for now - no default implementation
-  }
-  if (cancel) {
-    return NS_OK;
-  }
-  // post-process
-  rv = rules->DidDoAction(subActionInfo, NS_OK);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  EditActionResult result = HandleInsertText(editSubAction, aStringToInsert);
+  NS_WARNING_ASSERTION(result.Succeeded(), "HandleInsertText() failed");
+  return result.Rv();
 }
 
 NS_IMETHODIMP
