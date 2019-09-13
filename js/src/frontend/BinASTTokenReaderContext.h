@@ -350,14 +350,14 @@ class HuffmanTableImplementationMap {
 //
 // Symbol | Binary Code  | Int value of Code | Bit Length
 // ------ | ------------ | ----------------- | ----------
-// A      | 00111        | 7                 | 5
-// B      | 00110        | 6                 | 5
-// C      | 0010         | 2                 | 4
-// D      | 011          | 3                 | 3
-// E      | 010          | 2                 | 3
-// F      | 000          | 0                 | 3
-// G      | 11           | 3                 | 2
-// H      | 10           | 2                 | 2
+// A      | 11000        | 24                | 5
+// B      | 11001        | 25                | 5
+// C      | 1101         | 13                | 4
+// D      | 100          | 4                 | 3
+// E      | 101          | 5                 | 3
+// F      | 111          | 7                 | 3
+// G      | 00           | 0                 | 2
+// H      | 01           | 1                 | 2
 //
 // By definition of a Huffman Table, the Binary Codes represent
 // paths in a Huffman Tree. Consequently, padding these codes
@@ -365,30 +365,30 @@ class HuffmanTableImplementationMap {
 //
 // Symbol | Binary Code  | Int value of Code | Bit Length
 // ------ | ------------ | ----------------- | ----------
-// A      | 00111        | 7                 | 5
-// B      | 00110        | 6                 | 5
-// C      | 0010?        | [4...5]           | 4
-// D      | 011??        | [12...15]         | 3
-// E      | 010??        | [8..11]           | 3
-// F      | 000??        | [0..3]            | 3
-// G      | 11???        | [24...31]         | 2
-// H      | 10???        | [16...23]         | 2
+// A      | 11000        | 24                | 5
+// B      | 11001        | 25                | 5
+// C      | 1101?        | [26...27]         | 4
+// D      | 100??        | [16...19]         | 3
+// E      | 101??        | [20..23]          | 3
+// F      | 111??        | [28..31]          | 3
+// G      | 00???        | [0...7]           | 2
+// H      | 01???        | [8...15]          | 2
 //
 // Row "Int value of Code" now contains all possible values
 // that may be expressed in 5 bits. By using these values
 // as array indices, we may therefore represent the
 // Huffman table as an array:
 //
-// Index    |   Symbol   |   Bit Length
-// -------- | ---------- | -------------
-// [0..3]   | F          | 3
-// [4..5]   | C          | 4
-// 6        | B          | 5
-// 7        | A          | 5
-// [8..11]  | E          | 3
-// [12..15] | D          | 3
-// [16..23] | H          | 2
-// [24..31] | G          | 2
+// Index     |   Symbol   |   Bit Length
+// --------- | ---------- | -------------
+// [0...7]   |  G         | 2
+// [8...15]  |  H         | 2
+// [16...19] |  D         | 3
+// [20...23] |  E         | 3
+// 24        |  A         | 5
+// 25        |  B         | 5
+// [26...27] |  C         | 4
+// [28...31] |  F         | 3
 //
 // By using the next 5 bits in the bit buffer, we may, in
 // a single lookup, determine the symbol and the bit length.
@@ -461,12 +461,11 @@ class HuffmanTableImplementationSaturated {
 
   // The entries in this Huffman table, prepared for lookup.
   // The `size_t` argument is an index into `values`.
-  // FIXME: We could make this a `uint8_t` to save space.
   //
   // Invariant (once `init*` has been called):
   // - Length is `1 << maxBitLength`.
   // - for all i, `saturated[i] < values.length()`
-  Vector<size_t> saturated;
+  Vector<uint8_t> saturated;
 
   // The maximal bitlength of a value in this table.
   //
