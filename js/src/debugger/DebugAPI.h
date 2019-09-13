@@ -68,10 +68,6 @@ enum class ResumeMode {
 class DebugScript;
 class DebuggerVector;
 
-using CompartmentSet =
-    HashSet<JS::Compartment*, DefaultHasher<JS::Compartment*>,
-            SystemAllocPolicy>;
-
 class DebugAPI {
  public:
   friend class Debugger;
@@ -106,11 +102,6 @@ class DebugAPI {
 
   // Add sweep group edges due to the presence of any debuggers.
   static MOZ_MUST_USE bool findSweepGroupEdges(JSRuntime* rt);
-
-  // Find the target compartments of cross compartment edges.
-  static bool findCrossCompartmentTargets(JSRuntime* rt,
-                                          JS::Compartment* source,
-                                          CompartmentSet& targets);
 
   // Sweep breakpoints in a script associated with any debugger.
   static inline void sweepBreakpoints(JSFreeOp* fop, JSScript* script);

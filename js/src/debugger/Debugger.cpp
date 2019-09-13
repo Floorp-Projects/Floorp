@@ -3567,59 +3567,6 @@ void DebugAPI::traceCrossCompartmentEdges(JSTracer* trc) {
   }
 }
 
-/*
- * Before performing a collection, the GC tries to find whether any collected
- * compartments are expected to die. To do this is needs to know about any cross
- * compartment pointers the debugger has that may keep compartments alive. This
- * is done by calling findCrossCompartmentTargets for compartments it suspects
- * are live.
- */
-
-bool DebugAPI::findCrossCompartmentTargets(JSRuntime* rt,
-                                           JS::Compartment* source,
-                                           CompartmentSet& targets) {
-  for (Debugger* dbg : rt->debuggerList()) {
-    if (dbg->compartment() == source) {
-      if (!dbg->findCrossCompartmentTargets(targets)) {
-        return false;
-      }
-    }
-  }
-
-  return true;
-}
-
-bool Debugger::findCrossCompartmentTargets(CompartmentSet& targets) {
-  for (WeakGlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
-    Compartment* comp = e.front().unbarrieredGet()->compartment();
-    if (!targets.put(comp)) {
-      return false;
-    }
-  }
-
-  bool ok = true;
-  forEachWeakMap([&](auto& weakMap) {
-    if (ok && !weakMap.findCrossCompartmentTargets(targets)) {
-      ok = false;
-    }
-  });
-  return ok;
-}
-
-template <class Referent, class Wrapper, bool InvisibleKeysOk>
-bool DebuggerWeakMap<Referent, Wrapper, InvisibleKeysOk>::
-    findCrossCompartmentTargets(CompartmentSet& targets) {
-  for (Enum e(*this); !e.empty(); e.popFront()) {
-    Key key = e.front().key();
-    JS::Compartment* comp = key->compartment();
-    if (!targets.put(comp)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 #ifdef DEBUG
 
 static bool RuntimeHasDebugger(JSRuntime* rt, Debugger* dbg) {
