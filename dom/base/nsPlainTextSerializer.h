@@ -207,9 +207,9 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   Settings mSettings;
 
   struct Indentation {
-    // The number of space characters to be inserted including the number of
-    // characters in mHeader.
-    int32_t mWidth = 0;
+    // The number of space characters to be inserted including the length of
+    // mHeader.
+    int32_t mLength = 0;
 
     // The header that has to be written in the indent.
     // That could be, for instance, the bullet in a bulleted list.
@@ -232,7 +232,8 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
     // @return Combined width of cite quote level and indentation.
     uint32_t DeterminePrefixWidth() const {
       // XXX: Should calculate prefixwidth with GetUnicharStringWidth
-      return (mCiteQuoteLevel > 0 ? mCiteQuoteLevel + 1 : 0) + mIndentation.mWidth;
+      return (mCiteQuoteLevel > 0 ? mCiteQuoteLevel + 1 : 0) +
+             mIndentation.mLength;
     }
 
     Indentation mIndentation;
