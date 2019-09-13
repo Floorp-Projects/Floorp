@@ -8,7 +8,13 @@ UNIFIED_SOURCES += [
     'TestAudioFocusManager.cpp',
     'TestMediaController.cpp',
     'TestMediaControlService.cpp',
+    'TestMediaKeysEvent.cpp',
 ]
+
+if CONFIG['MOZ_APPLEMEDIA']:
+  UNIFIED_SOURCES += [
+    'TestMediaKeysEventMac.mm',
+  ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
