@@ -395,6 +395,10 @@ void AppleVTEncoder::OutputFrame(CMSampleBufferRef aBuffer) {
   bool succeeded = WriteExtraData(output, aBuffer, asAnnexB) &&
                    WriteNALUs(output, aBuffer, asAnnexB);
 
+  output->mTime = media::TimeUnit::FromSeconds(
+      CMTimeGetSeconds(CMSampleBufferGetPresentationTimeStamp(aBuffer)));
+  output->mDuration = media::TimeUnit::FromSeconds(
+      CMTimeGetSeconds(CMSampleBufferGetOutputDuration(aBuffer)));
   ProcessOutput(succeeded ? std::move(output) : nullptr);
 }
 
