@@ -15,7 +15,7 @@ bool OpenTypeSTAT::ValidateNameId(uint16_t nameid, bool allowPredefined) {
   OpenTypeNAME* name = static_cast<OpenTypeNAME*>(
       GetFont()->GetTypedTable(OTS_TAG_NAME));
 
-  if (!name->IsValidNameId(nameid)) {
+  if (!name || !name->IsValidNameId(nameid)) {
     Drop("Invalid nameID: %d", nameid);
     return false;
   }

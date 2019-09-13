@@ -6,8 +6,6 @@
 
 #include "variations.h"
 
-#define TABLE_NAME "HVAR"
-
 namespace ots {
 
 // -----------------------------------------------------------------------------
@@ -85,5 +83,3 @@ bool OpenTypeHVAR::Serialize(OTSStream* out) {
 }
 
 }  // namespace ots
-
-#undef TABLE_NAME
