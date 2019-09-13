@@ -188,7 +188,13 @@ class SearchConfigTest {
       code: config.searchUrlGetExtraCodes,
     };
 
-    let locale = config.webExtensionLocale || "default";
+    // Currently wikipedia is the only engine that uses multiple
+    // locales and that isn't a tested engine so for now pick
+    // the first (only) locale.
+    let locale =
+      "webExtensionLocales" in config
+        ? config.webExtensionLocales[0]
+        : "default";
     // On startup the extension may have not finished parsing the
     // manifest, wait for that here.
     await policy.readyPromise;

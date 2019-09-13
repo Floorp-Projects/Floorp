@@ -84,8 +84,10 @@ class SearchEngineSelector {
           this._copyObject(baseConfig, section);
         }
 
-        if (baseConfig.webExtensionLocale == USER_LOCALE) {
-          baseConfig.webExtensionLocale = locale;
+        if ("webExtensionLocales" in baseConfig) {
+          baseConfig.webExtensionLocales = baseConfig.webExtensionLocales.map(
+            val => (val == USER_LOCALE ? locale : val)
+          );
         }
 
         engines.push(baseConfig);
