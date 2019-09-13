@@ -446,7 +446,6 @@ ImgDrawResult BulletRenderer::CreateWebRenderCommandsForImage(
       aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
   LayoutDeviceRect destRect =
       LayoutDeviceRect::FromAppUnits(mDest, appUnitsPerDevPixel);
-  destRect.Round();
 
   Maybe<SVGImageContext> svgContext;
   gfx::IntSize decodeSize =
@@ -485,7 +484,7 @@ bool BulletRenderer::CreateWebRenderCommandsForPath(
     mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   MOZ_ASSERT(IsPathType());
-  wr::LayoutRect dest = wr::ToRoundedLayoutRect(mPathRect);
+  wr::LayoutRect dest = wr::ToLayoutRect(mPathRect);
   auto color = wr::ToColorF(ToDeviceColor(mColor));
   bool isBackfaceVisible = !aItem->BackfaceIsHidden();
   switch (mListStyleType) {
