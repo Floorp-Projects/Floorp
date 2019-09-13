@@ -1396,6 +1396,11 @@ class AddonDetails extends HTMLElement {
           }
           break;
       }
+
+      // When a details view is rendered again, the default details view is
+      // unconditionally shown. So if any other tab is selected, do not save
+      // the current scroll offset, but start at the top of the page instead.
+      ScrollOffsets.canRestore = this.deck.selectedViewName === "details";
     }
   }
 
@@ -3168,6 +3173,40 @@ function getTelemetryViewName(el) {
 }
 
 /**
+ * Helper for saving and restoring the scroll offsets when a previously loaded
+ * view is accessed again.
+ */
+var ScrollOffsets = {
+  _key: null,
+  _offsets: new Map(),
+  canRestore: true,
+
+  setView(historyEntryId) {
+    this._key = historyEntryId;
+    this.canRestore = true;
+  },
+
+  getPosition() {
+    if (!this.canRestore) {
+      return { top: 0, left: 0 };
+    }
+    let { scrollTop: top, scrollLeft: left } = document.documentElement;
+    return { top, left };
+  },
+
+  save() {
+    if (this._key) {
+      this._offsets.set(this._key, this.getPosition());
+    }
+  },
+
+  restore() {
+    let { top = 0, left = 0 } = this._offsets.get(this._key) || {};
+    window.scrollTo({ top, left, behavior: "auto" });
+  },
+};
+
+/**
  * Called from extensions.js once, when about:addons is loading.
  */
 function initialize(opts) {
@@ -3193,7 +3232,7 @@ function initialize(opts) {
  * resolve once the view has been updated to conform with other about:addons
  * views.
  */
-async function show(type, param, { isKeyboardNavigation }) {
+async function show(type, param, { isKeyboardNavigation, historyEntryId }) {
   let container = document.createElement("div");
   container.setAttribute("current-view", type);
   if (type == "list") {
@@ -3214,10 +3253,26 @@ async function show(type, param, { isKeyboardNavigation }) {
   } else {
     throw new Error(`Unknown view type: ${type}`);
   }
+
+  ScrollOffsets.save();
+  ScrollOffsets.setView(historyEntryId);
   mainEl.textContent = "";
   mainEl.appendChild(container);
+
+  // Most content has been rendered at this point. The only exception are
+  // recommendations in the discovery pane and extension/theme list, because
+  // they rely on remote data. If loaded before, then these may be rendered
+  // within one tick, so wait a frame before restoring scroll offsets.
+  return new Promise(resolve => {
+    window.requestAnimationFrame(() => {
+      ScrollOffsets.restore();
+      resolve();
+    });
+  });
 }
 
 function hide() {
+  ScrollOffsets.save();
+  ScrollOffsets.setView(null);
   mainEl.textContent = "";
 }
