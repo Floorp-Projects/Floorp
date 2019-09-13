@@ -634,13 +634,11 @@ nsresult TextEditor::DeleteSelectionAsAction(EDirection aDirection,
   // delete placeholder txns merge.
   AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::DeleteTxnName);
   nsresult rv = DeleteSelectionAsSubAction(aDirection, aStripWrappers);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "DeleteSelectionAsSubAction() failed");
+  return EditorBase::ToGenericNSResult(rv);
 }
 
-nsresult TextEditor::DeleteSelectionAsSubAction(EDirection aDirection,
+nsresult TextEditor::DeleteSelectionAsSubAction(EDirection aDirectionAndAmount,
                                                 EStripWrappers aStripWrappers) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(mPlaceholderBatch);
@@ -651,21 +649,23 @@ nsresult TextEditor::DeleteSelectionAsSubAction(EDirection aDirection,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
-
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eDeleteSelectedContent, aDirection);
+      *this, EditSubAction::eDeleteSelectedContent, aDirectionAndAmount);
   EditSubActionInfo subActionInfo(EditSubAction::eDeleteSelectedContent);
-  subActionInfo.collapsedAction = aDirection;
-  subActionInfo.stripWrappers = aStripWrappers;
-  bool cancel, handled;
-  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
-  if (NS_WARN_IF(NS_FAILED(rv)) || cancel) {
-    return rv;
+
+  EditActionResult result =
+      HandleDeleteSelection(aDirectionAndAmount, aStripWrappers);
+  if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
+    return result.Rv();
   }
-  if (!handled) {
-    rv = DeleteSelectionWithTransaction(aDirection, aStripWrappers);
+  // TODO: We should insert this into everywhere of `HandleDeleteSelection()`
+  //       and its callees.  Then, we can move the following HTMLEditor
+  //       specific block into `HTMLEditor::HandleDeleteSelection()`.
+  if (!result.Handled()) {
+    DebugOnly<nsresult> rvIgnored =
+        DeleteSelectionWithTransaction(aDirectionAndAmount, aStripWrappers);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "DeleteSelectionWithTransaction() failed");
   }
 
   if (AsHTMLEditor()) {
@@ -1732,7 +1732,12 @@ nsresult TextEditor::CutAsAction(nsIPrincipal* aPrincipal) {
     //     so that we need to keep using it here.
     AutoPlaceholderBatch treatAsOneTransaction(*this,
                                                *nsGkAtoms::DeleteTxnName);
-    DeleteSelectionAsSubAction(eNone, eStrip);
+    nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "DeleteSelectionAsSubAction() failed, but ignored");
   }
   return EditorBase::ToGenericNSResult(
       actionTaken ? NS_OK : NS_ERROR_EDITOR_ACTION_CANCELED);

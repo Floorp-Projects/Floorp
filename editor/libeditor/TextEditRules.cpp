@@ -205,8 +205,6 @@ nsresult TextEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
     case EditSubAction::eSetText:
       TextEditorRef().UndefineCaretBidiLevel();
       return WillSetText(aCancel, aHandled, aInfo.inString, aInfo.maxLength);
-    case EditSubAction::eDeleteSelectedContent:
-      return WillDeleteSelection(aInfo.collapsedAction, aCancel, aHandled);
     case EditSubAction::eComputeTextToOutput:
       return WillOutputText(aInfo.outputFormat, aInfo.outString, aInfo.flags,
                             aCancel, aHandled);
@@ -223,6 +221,7 @@ nsresult TextEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
                            "Failed to remove padding <br> element");
       return rv;
     }
+    case EditSubAction::eDeleteSelectedContent:
     case EditSubAction::eInsertElement:
     case EditSubAction::eInsertLineBreak:
     case EditSubAction::eInsertText:
@@ -293,9 +292,6 @@ EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
   if (!SelectionRefPtr()->IsCollapsed()) {
     nsresult rv =
         DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eStrip);
-    if (NS_WARN_IF(Destroyed())) {
-      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
-    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditActionIgnored(rv);
     }
@@ -585,9 +581,6 @@ EditActionResult TextEditor::HandleInsertText(
   if (!SelectionRefPtr()->IsCollapsed()) {
     nsresult rv =
         DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eStrip);
-    if (NS_WARN_IF(Destroyed())) {
-      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditActionHandled(rv);
     }
@@ -854,44 +847,35 @@ nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
   return NS_OK;
 }
 
-nsresult TextEditRules::WillDeleteSelection(
-    nsIEditor::EDirection aCollapsedAction, bool* aCancel, bool* aHandled) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+EditActionResult TextEditor::HandleDeleteSelection(
+    nsIEditor::EDirection aDirectionAndAmount,
+    nsIEditor::EStripWrappers aStripWrappers) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  CANCEL_OPERATION_IF_READONLY_OR_DISABLED
+  UndefineCaretBidiLevel();
 
-  // initialize out param
-  *aCancel = false;
-  *aHandled = false;
+  CANCEL_OPERATION_AND_RETURN_EDIT_ACTION_RESULT_IF_READONLY_OF_DISABLED
 
   // if there is only padding <br> element for empty editor, cancel the
   // operation.
-  if (TextEditorRef().HasPaddingBRElementForEmptyEditor()) {
-    *aCancel = true;
-    return NS_OK;
+  if (HasPaddingBRElementForEmptyEditor()) {
+    return EditActionCanceled();
   }
-  nsresult rv =
-      DeleteSelectionWithTransaction(aCollapsedAction, aCancel, aHandled);
-  // DeleteSelectionWithTransaction() creates SelectionBatcher.  Therefore,
+  EditActionResult result = HandleDeleteSelectionInternal(aDirectionAndAmount);
+  // HandleDeleteSelectionInternal() creates SelectionBatcher.  Therefore,
   // quitting from it might cause having destroyed the editor.
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  if (NS_WARN_IF(Destroyed())) {
+    return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
   }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(result.Succeeded(),
+                       "HandleDeleteSelectionInternal() failed");
+  return result;
 }
 
-nsresult TextEditRules::DeleteSelectionWithTransaction(
-    nsIEditor::EDirection aCollapsedAction, bool* aCancel, bool* aHandled) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-  MOZ_ASSERT(aCancel);
-  MOZ_ASSERT(*aCancel == false);
-  MOZ_ASSERT(aHandled);
+EditActionResult TextEditor::HandleDeleteSelectionInternal(
+    nsIEditor::EDirection aDirectionAndAmount) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!AsHTMLEditor());
 
   // If the current selection is empty (e.g the user presses backspace with
   // a collapsed selection), then we want to avoid sending the selectstart
@@ -904,46 +888,38 @@ nsresult TextEditRules::DeleteSelectionWithTransaction(
   nsAutoScriptBlocker scriptBlocker;
 
   if (IsPasswordEditor() && IsMaskingPassword()) {
-    TextEditorRef().MaskAllCharacters();
+    MaskAllCharacters();
   } else {
     EditorRawDOMPoint selectionStartPoint(
         EditorBase::GetStartPoint(*SelectionRefPtr()));
     if (NS_WARN_IF(!selectionStartPoint.IsSet())) {
-      return NS_ERROR_FAILURE;
+      return EditActionResult(NS_ERROR_FAILURE);
     }
 
     if (!SelectionRefPtr()->IsCollapsed()) {
-      return NS_OK;
+      return EditActionIgnored();
     }
 
     // Test for distance between caret and text that will be deleted
-    EditActionResult result = TextEditorRef().SetCaretBidiLevelForDeletion(
-        selectionStartPoint, aCollapsedAction);
-    if (NS_WARN_IF(result.Failed())) {
-      return result.Rv();
-    }
-    if (result.Canceled()) {
-      *aCancel = true;
-      return NS_OK;
+    EditActionResult result =
+        SetCaretBidiLevelForDeletion(selectionStartPoint, aDirectionAndAmount);
+    if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
+      return result;
     }
   }
 
-  nsresult rv = TextEditorRef().ExtendSelectionForDelete(&aCollapsedAction);
+  nsresult rv = ExtendSelectionForDelete(&aDirectionAndAmount);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditActionResult(rv);
   }
 
-  rv = MOZ_KnownLive(TextEditorRef())
-           .DeleteSelectionWithTransaction(aCollapsedAction, nsIEditor::eStrip);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  rv = DeleteSelectionWithTransaction(aDirectionAndAmount, nsIEditor::eStrip);
+  if (NS_WARN_IF(Destroyed())) {
+    return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  *aHandled = true;
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "DeleteSelectionWithTransaction() failed");
+  return EditActionHandled(rv);
 }
 
 nsresult TextEditRules::WillOutputText(const nsAString* aOutputFormat,

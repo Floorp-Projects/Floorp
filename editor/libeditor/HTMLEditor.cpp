@@ -1521,7 +1521,7 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
         // calls DeleteSelection with aStripWrappers = eStrip.
         rv = DeleteSelectionAsSubAction(eNone, eNoStrip);
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+          return EditorBase::ToGenericNSResult(rv);
         }
       }
 
