@@ -250,7 +250,7 @@ struct SizeComputationInput {
 
     // If this flag is set, the BSize of this frame should be considered
     // indefinite for the purposes of percent resolution on child frames (we
-    // should behave as if ComputedBSize() were NS_INTRINSIC_ISIZE when doing
+    // should behave as if ComputedBSize() were NS_UNCONSTRAINEDSIZE when doing
     // percent resolution against this.ComputedBSize()).  For example: flex
     // items may have their ComputedBSize() resolved ahead-of-time by their
     // flex container, and yet their BSize might have to be considered
