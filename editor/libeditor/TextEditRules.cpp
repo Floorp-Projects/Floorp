@@ -205,9 +205,6 @@ nsresult TextEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
     case EditSubAction::eSetText:
       TextEditorRef().UndefineCaretBidiLevel();
       return WillSetText(aCancel, aHandled, aInfo.inString, aInfo.maxLength);
-    case EditSubAction::eComputeTextToOutput:
-      return WillOutputText(aInfo.outputFormat, aInfo.outString, aInfo.flags,
-                            aCancel, aHandled);
     case EditSubAction::eInsertQuotedText: {
       CANCEL_OPERATION_IF_READONLY_OR_DISABLED
 
@@ -221,6 +218,7 @@ nsresult TextEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
                            "Failed to remove padding <br> element");
       return rv;
     }
+    case EditSubAction::eComputeTextToOutput:
     case EditSubAction::eDeleteSelectedContent:
     case EditSubAction::eInsertElement:
     case EditSubAction::eInsertLineBreak:
@@ -242,6 +240,7 @@ nsresult TextEditRules::DidDoAction(EditSubActionInfo& aInfo,
   }
 
   switch (aInfo.mEditSubAction) {
+    case EditSubAction::eComputeTextToOutput:
     case EditSubAction::eDeleteSelectedContent:
     case EditSubAction::eInsertElement:
     case EditSubAction::eInsertLineBreak:
@@ -900,61 +899,35 @@ EditActionResult TextEditor::HandleDeleteSelectionInternal(
   return EditActionHandled(rv);
 }
 
-nsresult TextEditRules::WillOutputText(const nsAString* aOutputFormat,
-                                       nsAString* aOutString, uint32_t aFlags,
-                                       bool* aCancel, bool* aHandled) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  // null selection ok
-  if (NS_WARN_IF(!aOutString) || NS_WARN_IF(!aOutputFormat) ||
-      NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  // initialize out param
-  *aCancel = false;
-  *aHandled = false;
-
-  if (!aOutputFormat->LowerCaseEqualsLiteral("text/plain")) {
-    return NS_OK;
-  }
+EditActionResult TextEditor::ComputeValueFromTextNodeAndPaddingBRElement(
+    nsAString& aValue) const {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   // If there is a padding <br> element, there's no content.  So output empty
   // string.
-  if (TextEditorRef().HasPaddingBRElementForEmptyEditor()) {
-    aOutString->Truncate();
-    *aHandled = true;
-    return NS_OK;
-  }
-
-  // If it's necessary to check selection range or the editor wraps hard,
-  // we need some complicated handling.  In such case, we need to use the
-  // expensive path.
-  // XXX Anything else what we cannot return plain text simply?
-  if (aFlags & nsIDocumentEncoder::OutputSelectionOnly ||
-      aFlags & nsIDocumentEncoder::OutputWrap) {
-    return NS_OK;
+  if (HasPaddingBRElementForEmptyEditor()) {
+    aValue.Truncate();
+    return EditActionHandled();
   }
 
   // If it's neither <input type="text"> nor <textarea>, e.g., an HTML editor
   // which is in plaintext mode (e.g., plaintext email composer on Thunderbird),
   // it should be handled by the expensive path.
-  if (TextEditorRef().AsHTMLEditor()) {
-    return NS_OK;
+  if (AsHTMLEditor()) {
+    return EditActionIgnored();
   }
 
-  Element* root = TextEditorRef().GetRoot();
-  if (!root) {  // Don't warn it, this is possible, e.g., 997805.html
-    aOutString->Truncate();
-    *aHandled = true;
-    return NS_OK;
+  Element* anonymousDivElement = GetRoot();
+  if (!anonymousDivElement) {
+    // Don't warn this case, this is possible, e.g., 997805.html
+    aValue.Truncate();
+    return EditActionHandled();
   }
 
-  nsIContent* firstChild = root->GetFirstChild();
-  if (!firstChild) {
-    aOutString->Truncate();
-    *aHandled = true;
-    return NS_OK;
+  nsIContent* textNodeOrPaddingBRElement = anonymousDivElement->GetFirstChild();
+  if (!textNodeOrPaddingBRElement) {
+    aValue.Truncate();
+    return EditActionHandled();
   }
 
   // If it's an <input type="text"> element, the DOM tree should be:
@@ -970,9 +943,17 @@ nsresult TextEditRules::WillOutputText(const nsAString* aOutputFormat,
   //   ...
   // </div>
 
-  Text* text = firstChild->GetAsText();
+  Text* textNode = textNodeOrPaddingBRElement->GetAsText();
+  if (!textNode) {
+    // If there is no text node in the expected DOM tree, we can say that it's
+    // just empty.
+    aValue.Truncate();
+    return EditActionHandled();
+  }
+
   nsIContent* firstChildExceptText =
-      text ? firstChild->GetNextSibling() : firstChild;
+      textNode ? textNodeOrPaddingBRElement->GetNextSibling()
+               : textNodeOrPaddingBRElement;
   // If the DOM tree is unexpected, fall back to the expensive path.
   bool isInput = IsSingleLineEditor();
   bool isTextarea = !isInput;
@@ -982,22 +963,12 @@ nsresult TextEditRules::WillOutputText(const nsAString* aOutputFormat,
                  !EditorBase::IsPaddingBRElementForEmptyLastLine(
                      *firstChildExceptText) &&
                  !firstChildExceptText->IsXULElement(nsGkAtoms::scrollbar))) {
-    return NS_OK;
+    return EditActionIgnored();
   }
 
-  // If there is no text node in the expected DOM tree, we can say that it's
-  // just empty.
-  if (!text) {
-    aOutString->Truncate();
-    *aHandled = true;
-    return NS_OK;
-  }
-
-  // Otherwise, the text is the value.
-  text->GetData(*aOutString);
-
-  *aHandled = true;
-  return NS_OK;
+  // Otherwise, the text data is the value.
+  textNode->GetData(aValue);
+  return EditActionHandled();
 }
 
 nsresult TextEditRules::CreateTrailingBRIfNeeded() {

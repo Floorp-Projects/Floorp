@@ -650,6 +650,16 @@ class TextEditor : public EditorBase,
   HandleDeleteSelection(nsIEditor::EDirection aDirectionAndAmount,
                         nsIEditor::EStripWrappers aStripWrappers);
 
+  /**
+   * ComputeValueFromTextNodeAndPaddingBRElement() tries to compute "value" of
+   * this editor content only with text node and padding `<br>` element.
+   * If this succeeds to compute the value, it's returned with aValue and
+   * the result is marked as "handled".  Otherwise, the caller needs to
+   * compute it with another way.
+   */
+  EditActionResult ComputeValueFromTextNodeAndPaddingBRElement(
+      nsAString& aValue) const;
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
@@ -821,7 +831,7 @@ class TextEditor : public EditorBase,
    * string.
    */
   nsresult SharedOutputString(uint32_t aFlags, bool* aIsCollapsed,
-                              nsAString& aResult);
+                              nsAString& aResult) const;
 
   /**
    * See comment of IsCopyToClipboardAllowed() for the detail.

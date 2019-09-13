@@ -1851,12 +1851,10 @@ TextEditor::OutputToString(const nsAString& aFormatType,
 
   nsresult rv =
       ComputeValueInternal(aFormatType, aDocumentEncoderFlags, aOutputString);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    // This is low level API for XUL applcation.  So, we should return raw
-    // error code here.
-    return rv;
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "ComputeValueInternal() failed");
+  // This is low level API for XUL application.  So, we should return raw
+  // error code here.
+  return rv;
 }
 
 nsresult TextEditor::ComputeValueInternal(const nsAString& aFormatType,
@@ -1864,27 +1862,26 @@ nsresult TextEditor::ComputeValueInternal(const nsAString& aFormatType,
                                           nsAString& aOutputString) const {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
-
-  EditSubActionInfo subActionInfo(EditSubAction::eComputeTextToOutput);
-  subActionInfo.outString = &aOutputString;
-  subActionInfo.flags = aDocumentEncoderFlags;
-  subActionInfo.outputFormat = &aFormatType;
-
-  bool cancel{false};
-  bool handled{false};
-  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
-  if (NS_FAILED(rv) || cancel) {
-    return rv;
-  }
-  if (handled) {
-    // This case will get triggered by password fields or single text node only.
-    return rv;
+  // First, let's try to get the value simply only from text node if the
+  // caller wants plaintext value.
+  if (aFormatType.LowerCaseEqualsLiteral("text/plain")) {
+    // If it's necessary to check selection range or the editor wraps hard,
+    // we need some complicated handling.  In such case, we need to use the
+    // expensive path.
+    // XXX Anything else what we cannot return the text node data simply?
+    if (!(aDocumentEncoderFlags & (nsIDocumentEncoder::OutputSelectionOnly |
+                                   nsIDocumentEncoder::OutputWrap))) {
+      EditActionResult result =
+          ComputeValueFromTextNodeAndPaddingBRElement(aOutputString);
+      if (NS_WARN_IF(result.Failed()) || result.Canceled() ||
+          result.Handled()) {
+        return result.Rv();
+      }
+    }
   }
 
   nsAutoCString charset;
-  rv = GetDocumentCharsetInternal(charset);
+  nsresult rv = GetDocumentCharsetInternal(charset);
   if (NS_FAILED(rv) || charset.IsEmpty()) {
     charset.AssignLiteral("windows-1252");
   }
@@ -1895,12 +1892,10 @@ nsresult TextEditor::ComputeValueInternal(const nsAString& aFormatType,
     return NS_ERROR_FAILURE;
   }
 
-  // XXX Why don't we call TextEditRules::DidDoAction() here?
   rv = encoder->EncodeToString(aOutputString);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "nsIDocumentEncoder::EncodeToString() failed");
+  return rv;
 }
 
 nsresult TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
@@ -2010,7 +2005,7 @@ nsresult TextEditor::InsertWithQuotationsAsSubAction(
 }
 
 nsresult TextEditor::SharedOutputString(uint32_t aFlags, bool* aIsCollapsed,
-                                        nsAString& aResult) {
+                                        nsAString& aResult) const {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   *aIsCollapsed = SelectionRefPtr()->IsCollapsed();
@@ -2019,7 +2014,10 @@ nsresult TextEditor::SharedOutputString(uint32_t aFlags, bool* aIsCollapsed,
     aFlags |= nsIDocumentEncoder::OutputSelectionOnly;
   }
   // If the selection isn't collapsed, we'll use the whole document.
-  return ComputeValueInternal(NS_LITERAL_STRING("text/plain"), aFlags, aResult);
+  nsresult rv =
+      ComputeValueInternal(NS_LITERAL_STRING("text/plain"), aFlags, aResult);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "ComputeValueInternal() failed");
+  return rv;
 }
 
 void TextEditor::OnStartToHandleTopLevelEditSubAction(
