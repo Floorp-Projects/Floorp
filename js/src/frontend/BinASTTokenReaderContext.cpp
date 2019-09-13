@@ -43,6 +43,15 @@ const uint32_t MAGIC_FORMAT_VERSION = 2;
 // Hardcoded in the format.
 const uint8_t MAX_CODE_BIT_LENGTH = 20;
 
+// The maximal number of bits needed to represent bit lengths.
+const uint8_t MAX_BIT_LENGTH_BIT_LENGTH = 5;
+static_assert(1 << (MAX_BIT_LENGTH_BIT_LENGTH - 1) < MAX_CODE_BIT_LENGTH,
+              "MAX_BIT_LENGTH_BIT_LENGTH - 1 bits MUST be insufficient to "
+              "store MAX_CODE_BIT_LENGTH");
+static_assert(
+    1 << MAX_BIT_LENGTH_BIT_LENGTH >= MAX_CODE_BIT_LENGTH,
+    "MAX_BIT_LENGTH bits MUST be sufficient to store MAX_CODE_BIT_LENGTH");
+
 // The maximal length of a Huffman prefix.
 //
 // This is distinct from MAX_CODE_BIT_LENGTH as we commonly load
@@ -656,13 +665,13 @@ class HuffmanPreludeReader {
     // First read the length for all symbols, only store non-0 lengths.
     for (size_t i = 0; i < numberOfSymbols; ++i) {
       BINJS_MOZ_TRY_DECL(bitLength, reader.readByte<Compression::No>());
+      if (bitLength > MAX_CODE_BIT_LENGTH) {
+        MOZ_CRASH("FIXME: Implement error");
+      }
       if (bitLength > 0) {
         BINJS_TRY(auxStorageLength.append(BitLengthAndIndex(bitLength, i)));
       }
     }
-    // Append a terminator.
-    BINJS_TRY(auxStorageLength.append(
-        BitLengthAndIndex(MAX_CODE_BIT_LENGTH, numberOfSymbols)));
 
     // Sort by length then webidl order (which is also the index).
     std::sort(auxStorageLength.begin(), auxStorageLength.end(),
@@ -679,9 +688,10 @@ class HuffmanPreludeReader {
                 // In case of equal bit length, compare by symbol value.
                 return entry.lessThan(a.index, b.index);
               });
-    MOZ_ASSERT(
-        auxStorageLength[auxStorageLength.length() - 1].bitLength ==
-        MAX_CODE_BIT_LENGTH);  // Guaranteed to exist as we have a terminator.
+
+    // Append a terminator.
+    BINJS_TRY(
+        auxStorageLength.emplaceBack(MAX_CODE_BIT_LENGTH, numberOfSymbols));
 
     // Now read the symbols and assign bits.
     uint32_t code = 0;
@@ -818,12 +828,14 @@ class HuffmanPreludeReader {
       //   a. Determine if the array type is always empty
       //   b. If so, stop
       auto& lengthTable = table.as<HuffmanTableExplicitSymbolsListLength>();
-      uint32_t length = 0;
-      for (const auto& iter : lengthTable) {
-        length += iter.value;
+      bool empty = true;
+      for (auto length : lengthTable) {
+        if (length > 0) {
+          empty = false;
+          break;
+        }
       }
-
-      if (length == 0) {
+      if (empty) {
         return Ok();
       }
 
@@ -957,10 +969,10 @@ class HuffmanPreludeReader {
       }
       const auto& tableRef = table.as<HuffmanTableIndexedSymbolsSum>();
 
-      for (const auto& kind : tableRef) {
+      for (auto kind : tableRef) {
         MOZ_TRY(owner.pushValue(
             entry.identity,
-            {mozilla::VariantType<Interface>(), entry.identity, kind.value}));
+            {mozilla::VariantType<Interface>(), entry.identity, kind}));
       }
       return Ok();
     }
@@ -982,10 +994,10 @@ class HuffmanPreludeReader {
       }
       const auto& tableRef = table.as<HuffmanTableIndexedSymbolsSum>();
 
-      for (const auto& kind : tableRef) {
+      for (auto kind : tableRef) {
         MOZ_TRY(owner.pushValue(
             entry.identity,
-            {mozilla::VariantType<Interface>(), entry.identity, kind.value}));
+            {mozilla::VariantType<Interface>(), entry.identity, kind}));
       }
       return Ok();
     }
@@ -1571,9 +1583,33 @@ JS::Result<Ok> BinASTTokenReaderContext::AutoTaggedTuple::done() {
   return Ok();
 }
 
+HuffmanKey::HuffmanKey(const uint32_t bits, const uint8_t bitLength)
+    : bits(bits), bitLength(bitLength) {
+  MOZ_ASSERT(bitLength <= MAX_PREFIX_BIT_LENGTH);
+  MOZ_ASSERT_IF(bitLength != 32 /* >> 32 is UB */, bits >> bitLength == 0);
+}
+
+FlatHuffmanKey::FlatHuffmanKey(HuffmanKey key)
+    : representation((key.bitLength << MAX_CODE_BIT_LENGTH) | key.bits) {
+  static_assert(MAX_CODE_BIT_LENGTH + MAX_BIT_LENGTH_BIT_LENGTH <= 32,
+                "32 bits MUST be sufficient to store bits and bitLength");
+  MOZ_ASSERT(key.bits >> MAX_CODE_BIT_LENGTH == 0);
+  MOZ_ASSERT(key.bitLength >> MAX_BIT_LENGTH_BIT_LENGTH == 0);
+}
+
+FlatHuffmanKey::FlatHuffmanKey(const HuffmanKey* key)
+    : representation((key->bitLength << MAX_CODE_BIT_LENGTH) | key->bits) {
+  static_assert(MAX_CODE_BIT_LENGTH + MAX_BIT_LENGTH_BIT_LENGTH <= 32,
+                "32 bits MUST be sufficient to store bits and bitLength");
+  MOZ_ASSERT(key->bits >> MAX_CODE_BIT_LENGTH == 0);
+  MOZ_ASSERT(key->bitLength >> MAX_BIT_LENGTH_BIT_LENGTH == 0);
+}
+
+// ---- Implementation of Huffman Tables
+
 template <typename T, int N>
-JS::Result<Ok> HuffmanTableImpl<T, N>::initWithSingleValue(JSContext* cx,
-                                                           T&& value) {
+JS::Result<Ok> HuffmanTableSmall<T, N>::initWithSingleValue(JSContext* cx,
+                                                            T&& value) {
   MOZ_ASSERT(values.empty());  // Make sure that we're initializing.
   if (!values.append(HuffmanEntry<T>(0, 0, std::move(value)))) {
     return cx->alreadyReportedError();
@@ -1582,8 +1618,8 @@ JS::Result<Ok> HuffmanTableImpl<T, N>::initWithSingleValue(JSContext* cx,
 }
 
 template <typename T, int N>
-JS::Result<Ok> HuffmanTableImpl<T, N>::init(JSContext* cx,
-                                            size_t numberOfSymbols) {
+JS::Result<Ok> HuffmanTableSmall<T, N>::init(JSContext* cx,
+                                             size_t numberOfSymbols) {
   MOZ_ASSERT(values.empty());  // Make sure that we're initializing.
   if (!values.initCapacity(numberOfSymbols)) {
     return cx->alreadyReportedError();
@@ -1592,8 +1628,9 @@ JS::Result<Ok> HuffmanTableImpl<T, N>::init(JSContext* cx,
 }
 
 template <typename T, int N>
-JS::Result<Ok> HuffmanTableImpl<T, N>::addSymbol(uint32_t bits,
-                                                 uint8_t bitLength, T&& value) {
+JS::Result<Ok> HuffmanTableSmall<T, N>::addSymbol(uint32_t bits,
+                                                  uint8_t bitLength,
+                                                  T&& value) {
   MOZ_ASSERT(bitLength != 0,
              "Adding a symbol with a bitLength of 0 doesn't make sense.");
   MOZ_ASSERT(values.empty() || values.back().key.bitLength <= bitLength,
@@ -1607,7 +1644,8 @@ JS::Result<Ok> HuffmanTableImpl<T, N>::addSymbol(uint32_t bits,
 }
 
 template <typename T, int N>
-HuffmanEntry<const T*> HuffmanTableImpl<T, N>::lookup(HuffmanLookup key) const {
+HuffmanEntry<const T*> HuffmanTableSmall<T, N>::lookup(
+    HuffmanLookup key) const {
   // This current implementation is O(length) and designed mostly for testing.
   // Future versions will presumably adapt the underlying data structure to
   // provide bounded-time lookup.
@@ -1625,6 +1663,60 @@ HuffmanEntry<const T*> HuffmanTableImpl<T, N>::lookup(HuffmanLookup key) const {
     }
   }
 
+  // Error: no entry found.
+  return HuffmanEntry<const T*>(0, 0, nullptr);
+}
+
+template <typename T>
+JS::Result<Ok> HuffmanTableMap<T>::initWithSingleValue(JSContext* cx,
+                                                       T&& value) {
+  MOZ_ASSERT(values.empty());  // Make sure that we're initializing.
+  const HuffmanKey key(0, 0);
+  if (!values.put(FlatHuffmanKey(key), std::move(value)) || !keys.append(key)) {
+    ReportOutOfMemory(cx);
+    return cx->alreadyReportedError();
+  }
+  return Ok();
+}
+
+template <typename T>
+JS::Result<Ok> HuffmanTableMap<T>::init(JSContext* cx, size_t numberOfSymbols) {
+  MOZ_ASSERT(values.empty());  // Make sure that we're initializing.
+  if (!values.reserve(numberOfSymbols) || !keys.reserve(numberOfSymbols)) {
+    ReportOutOfMemory(cx);
+    return cx->alreadyReportedError();
+  }
+  return Ok();
+}
+
+template <typename T>
+JS::Result<Ok> HuffmanTableMap<T>::addSymbol(uint32_t bits, uint8_t bitLength,
+                                             T&& value) {
+  MOZ_ASSERT(bitLength != 0,
+             "Adding a symbol with a bitLength of 0 doesn't make sense.");
+  MOZ_ASSERT_IF(bitLength != 32 /* >> 32 is UB */, bits >> bitLength == 0);
+  const HuffmanKey key(bits, bitLength);
+  const FlatHuffmanKey flat(key);
+  values.putNewInfallible(
+      flat, std::move(value));  // Memory was reserved in `init()`.
+  keys.infallibleAppend(std::move(key));
+
+  return Ok();
+}
+
+template <typename T>
+HuffmanEntry<const T*> HuffmanTableMap<T>::lookup(HuffmanLookup lookup) const {
+  for (auto bitLength = 0; bitLength < MAX_CODE_BIT_LENGTH; ++bitLength) {
+    const uint32_t bits = lookup.leadingBits(bitLength);
+    const HuffmanKey key(bits, bitLength);
+    const FlatHuffmanKey flat(key);
+    if (auto ptr = values.lookup(key)) {
+      // Entry found.
+      return HuffmanEntry<const T*>(bits, bitLength, &ptr->value());
+    }
+  }
+
+  // Error: no entry found.
   return HuffmanEntry<const T*>(0, 0, nullptr);
 }
 
