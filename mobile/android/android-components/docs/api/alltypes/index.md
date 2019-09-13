@@ -53,6 +53,7 @@
 | [mozilla.components.support.base.feature.BackHandler](../mozilla.components.support.base.feature/-back-handler/index.md) | Generic interface for fragments, features and other components that want to handle 'back' button presses. |
 | [mozilla.components.support.ktx.android.util.Base64](../mozilla.components.support.ktx.android.util/-base64/index.md) |  |
 | [mozilla.components.browser.domains.autocomplete.BaseDomainAutocompleteProvider](../mozilla.components.browser.domains.autocomplete/-base-domain-autocomplete-provider/index.md) | Provides common autocomplete functionality powered by domain lists. |
+| [mozilla.components.service.glean.net.BaseUploader](../mozilla.components.service.glean.net/-base-uploader/index.md) | The logic for uploading pings: this leaves the actual upload implementation to the user-provided delegate. |
 | [mozilla.components.concept.storage.BookmarkInfo](../mozilla.components.concept.storage/-bookmark-info/index.md) | Class for making alterations to any bookmark node |
 | [mozilla.components.concept.storage.BookmarkNode](../mozilla.components.concept.storage/-bookmark-node/index.md) | Class for holding metadata about any bookmark node |
 | [mozilla.components.concept.storage.BookmarkNodeType](../mozilla.components.concept.storage/-bookmark-node-type/index.md) | The types of bookmark nodes |
@@ -96,6 +97,7 @@
 | [mozilla.components.browser.icons.processor.ColorProcessor](../mozilla.components.browser.icons.processor/-color-processor/index.md) | [IconProcessor](../mozilla.components.browser.icons.processor/-icon-processor/index.md) implementation to extract the dominant color from the icon. |
 | [mozilla.components.support.utils.ColorUtils](../mozilla.components.support.utils/-color-utils/index.md) |  |
 | [mozilla.components.service.glean.private.CommonMetricData](../mozilla.components.service.glean.private/-common-metric-data/index.md) | This defines the common set of data shared across all the different metric types. |
+| [mozilla.components.service.glean.net.ConceptFetchHttpUploader](../mozilla.components.service.glean.net/-concept-fetch-http-uploader/index.md) | A simple ping Uploader, which implements a "send once" policy, never storing or attempting to send the ping again. This uses Android Component's `concept-fetch`. |
 | [mozilla.components.service.experiments.Configuration](../mozilla.components.service.experiments/-configuration/index.md) | The Configuration class describes how to configure Experiments. |
 | [mozilla.components.service.glean.config.Configuration](../mozilla.components.service.glean.config/-configuration/index.md) | The Configuration class describes how to configure the Glean. |
 | [mozilla.components.concept.sync.ConstellationState](../mozilla.components.concept.sync/-constellation-state/index.md) | Describes current device and other devices in the constellation. |
@@ -173,6 +175,7 @@
 | [mozilla.components.browser.state.state.content.DownloadState](../mozilla.components.browser.state.state.content/-download-state/index.md) | Value type that represents a download request. |
 | [mozilla.components.support.utils.DownloadUtils](../mozilla.components.support.utils/-download-utils/index.md) |  |
 | [mozilla.components.feature.downloads.DownloadsFeature](../mozilla.components.feature.downloads/-downloads-feature/index.md) | Feature implementation to provide download functionality for the selected session. The feature will subscribe to the selected session and listen for downloads. |
+| [mozilla.components.feature.downloads.DownloadsUseCases](../mozilla.components.feature.downloads/-downloads-use-cases/index.md) | Contains use cases related to the downloads feature. |
 | [mozilla.components.support.utils.DrawableUtils](../mozilla.components.support.utils/-drawable-utils/index.md) |  |
 | [mozilla.components.concept.push.EncryptedPushMessage](../mozilla.components.concept.push/-encrypted-push-message/index.md) | A push message holds the information needed to pass the message on to the appropriate receiver. |
 | [mozilla.components.concept.engine.Engine](../mozilla.components.concept.engine/-engine/index.md) | Entry point for interacting with the engine implementation. |
@@ -263,6 +266,7 @@
 | [mozilla.components.lib.jexl.grammar.GrammarElement](../mozilla.components.lib.jexl.grammar/-grammar-element/index.md) |  |
 | [mozilla.components.concept.fetch.Header](../mozilla.components.concept.fetch/-header/index.md) | Represents a [Header](../mozilla.components.concept.fetch/-header/index.md) containing of a [name](../mozilla.components.concept.fetch/-header/name.md) and [value](../mozilla.components.concept.fetch/-header/value.md). |
 | [mozilla.components.concept.fetch.Headers](../mozilla.components.concept.fetch/-headers/index.md) | A collection of HTTP [Headers](../mozilla.components.concept.fetch/-headers/index.md) (immutable) of a [Request](../mozilla.components.concept.fetch/-request/index.md) or [Response](../mozilla.components.concept.fetch/-response/index.md). |
+| [mozilla.components.service.glean.net.HeadersList](../mozilla.components.service.glean.net/-headers-list.md) |  |
 | [mozilla.components.service.glean.private.HistogramMetricBase](../mozilla.components.service.glean.private/-histogram-metric-base/index.md) | A common interface to be implemented by all the histogram-like metric types supported by the Glean SDK. |
 | [mozilla.components.service.glean.private.HistogramType](../mozilla.components.service.glean.private/-histogram-type/index.md) | Enumeration of the different kinds of histograms supported by metrics based on histograms. |
 | [mozilla.components.concept.storage.HistoryAutocompleteResult](../mozilla.components.concept.storage/-history-autocomplete-result/index.md) | Describes an autocompletion result against history storage. |
@@ -399,6 +403,7 @@
 | [mozilla.components.service.fxa.PersistCallback](../mozilla.components.service.fxa/-persist-callback.md) |  |
 | [mozilla.components.feature.session.PictureInPictureFeature](../mozilla.components.feature.session/-picture-in-picture-feature/index.md) | A simple implementation of Picture-in-picture mode if on a supported platform. |
 | [mozilla.components.service.glean.private.PingType](../mozilla.components.service.glean.private/-ping-type/index.md) | This implements the developer facing API for custom pings. |
+| [mozilla.components.service.glean.net.PingUploader](../mozilla.components.service.glean.net/-ping-uploader/index.md) | The interface defining how to send pings. |
 | [mozilla.components.support.test.robolectric.shadow.PixelCopyShadow](../mozilla.components.support.test.robolectric.shadow/-pixel-copy-shadow/index.md) | Shadow for [PixelCopy](#) API. |
 | [mozilla.components.browser.storage.sync.PlacesBookmarksStorage](../mozilla.components.browser.storage.sync/-places-bookmarks-storage/index.md) | Implementation of the [BookmarksStorage](../mozilla.components.concept.storage/-bookmarks-storage/index.md) which is backed by a Rust Places lib via [PlacesApi](#). |
 | [mozilla.components.browser.storage.sync.PlacesHistoryStorage](../mozilla.components.browser.storage.sync/-places-history-storage/index.md) | Implementation of the [HistoryStorage](../mozilla.components.concept.storage/-history-storage/index.md) which is backed by a Rust Places lib via [PlacesApi](#). |

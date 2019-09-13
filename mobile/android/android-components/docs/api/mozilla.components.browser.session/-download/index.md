@@ -24,10 +24,3 @@ Value type that represents a Download.
 | [referrerUrl](referrer-url.md) | `val referrerUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>The site that linked to this download. |
 | [url](url.md) | `val url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The full url to the content that should be downloaded. |
 | [userAgent](user-agent.md) | `val userAgent: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>The user agent to be used for the download. |
-
-### Extension Functions
-
-| Name | Summary |
-|---|---|
-| [isScheme](../../mozilla.components.feature.downloads.ext/is-scheme.md) | `fun `[`Download`](./index.md)`.isScheme(protocols: `[`Iterable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-iterable/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
-| [withResponse](../../mozilla.components.feature.downloads.ext/with-response.md) | `fun `[`Download`](./index.md)`.withResponse(headers: `[`Headers`](../../mozilla.components.concept.fetch/-headers/index.md)`, stream: `[`InputStream`](https://developer.android.com/reference/java/io/InputStream.html)`?): `[`Download`](./index.md)<br>Returns a copy of the download with some fields filled in based on values from a response. |
