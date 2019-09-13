@@ -905,6 +905,7 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
       if (browserChild) {
         static_cast<BrowserChild*>(browserChild.get())
             ->SendPDocAccessibleConstructor(ipcDoc, parentIPCDoc, id, 0, 0);
+        ipcDoc->SendPDocAccessiblePlatformExtConstructor();
       }
 #endif
     }
