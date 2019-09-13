@@ -4489,8 +4489,6 @@ void nsGridContainerFrame::Tracks::Initialize(
     const TrackSizingFunctions& aFunctions,
     const NonNegativeLengthPercentageOrNormal& aGridGap, uint32_t aNumTracks,
     nscoord aContentBoxSize) {
-  MOZ_ASSERT(aNumTracks >=
-             aFunctions.mExplicitGridOffset + aFunctions.NumExplicitTracks());
   mSizes.SetLength(aNumTracks);
   PodZero(mSizes.Elements(), mSizes.Length());
   for (uint32_t i = 0, len = mSizes.Length(); i < len; ++i) {
