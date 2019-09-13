@@ -3,6 +3,7 @@ import { FAKE_LOCAL_PROVIDER, FakeRemotePageManager } from "./constants";
 import { ASRouterFeed } from "lib/ASRouterFeed.jsm";
 import { actionTypes as at } from "common/Actions.jsm";
 import { GlobalOverrider } from "test/unit/utils";
+import { ASRouterPreferences } from "lib/ASRouterPreferences.jsm";
 
 describe("ASRouterFeed", () => {
   let Router;
@@ -28,9 +29,12 @@ describe("ASRouterFeed", () => {
       init: sandbox.stub(),
       uninit: sandbox.stub(),
     };
-    globals.set("BookmarkPanelHub", FakeBookmarkPanelHub);
-    globals.set("ToolbarBadgeHub", FakeToolbarBadgeHub);
-    globals.set("ToolbarPanelHub", FakeToolbarPanelHub);
+    globals.set({
+      ASRouterPreferences,
+      BookmarkPanelHub: FakeBookmarkPanelHub,
+      ToolbarBadgeHub: FakeToolbarBadgeHub,
+      ToolbarPanelHub: FakeToolbarPanelHub,
+    });
 
     Router = new _ASRouter({ providers: [FAKE_LOCAL_PROVIDER] });
     FakeToolbarPanelHub = {

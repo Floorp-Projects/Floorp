@@ -9,7 +9,6 @@ import React from "react";
 export class DSLinkMenu extends React.PureComponent {
   constructor(props) {
     super(props);
-    this.windowObj = this.props.windowObj || window; // Added to support unit tests
     this.onMenuUpdate = this.onMenuUpdate.bind(this);
     this.onMenuShow = this.onMenuShow.bind(this);
     this.contextMenuButtonRef = React.createRef();
@@ -23,14 +22,16 @@ export class DSLinkMenu extends React.PureComponent {
   }
 
   nextAnimationFrame() {
-    return new Promise(resolve => requestAnimationFrame(resolve));
+    return new Promise(resolve =>
+      this.props.windowObj.requestAnimationFrame(resolve)
+    );
   }
 
   async onMenuShow() {
     const dsLinkMenuHostDiv = this.contextMenuButtonRef.current.parentElement;
     // Wait for next frame before computing scrollMaxX to allow fluent menu strings to be visible
     await this.nextAnimationFrame();
-    if (this.windowObj.scrollMaxX > 0) {
+    if (this.props.windowObj.scrollMaxX > 0) {
       dsLinkMenuHostDiv.parentElement.classList.add("last-item");
     }
     dsLinkMenuHostDiv.parentElement.classList.add("active");
@@ -81,3 +82,7 @@ export class DSLinkMenu extends React.PureComponent {
     );
   }
 }
+
+DSLinkMenu.defaultProps = {
+  windowObj: window, // Added to support unit tests
+};

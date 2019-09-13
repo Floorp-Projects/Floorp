@@ -80,7 +80,7 @@ describe("SendToDeviceSnippet", () => {
     const defaultProperties = Object.keys(schema.properties).filter(
       prop => schema.properties[prop].default
     );
-    assert.lengthOf(defaultProperties, 6);
+    assert.lengthOf(defaultProperties, 7);
     defaultProperties.forEach(prop =>
       assert.propertyVal(props.content, prop, schema.properties[prop].default)
     );

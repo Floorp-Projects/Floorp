@@ -47,13 +47,13 @@ describe("FXASignupSnippet", () => {
       onAction: sandbox.stub(),
     };
     const wrapper = mount(<FXASignupSnippet {...defaults} />);
-    // SendToDeviceSnippet is a wrapper around SubmitFormSnippet
+    // FXASignupSnippet is a wrapper around SubmitFormSnippet
     const { props } = wrapper.children().get(0);
 
     const defaultProperties = Object.keys(schema.properties).filter(
       prop => schema.properties[prop].default
     );
-    assert.lengthOf(defaultProperties, 4);
+    assert.lengthOf(defaultProperties, 5);
     defaultProperties.forEach(prop =>
       assert.propertyVal(props.content, prop, schema.properties[prop].default)
     );

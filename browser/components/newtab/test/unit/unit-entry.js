@@ -128,6 +128,10 @@ const TEST_GLOBAL = {
     reportError() {},
   },
   dump() {},
+  EveryWindow: {
+    registerCallback: (id, init, uninit) => {},
+    unregisterCallback: id => {},
+  },
   fetch() {},
   // eslint-disable-next-line object-shorthand
   Image: function() {}, // NB: This is a function/constructor

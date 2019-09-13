@@ -39,6 +39,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [earliestFirefoxVersion](#earliestfirefoxversion)
 * [isFxABadgeEnabled](#isfxabadgeenabled)
 * [totalBlockedCount](#totalblockedcount)
+* [recentBookmarks](#recentbookmarks)
 
 ## Detailed usage
 
@@ -528,4 +529,20 @@ Total number of events from the content blocking database
 
 ```ts
 declare const totalBlockedCount: number;
+```
+
+### `recentBookmarks`
+
+An array of GUIDs of recent bookmarks as provided by [`NewTabUtils.getRecentBookmarks`](https://searchfox.org/mozilla-central/rev/e0b0c38ee83f99d3cf868bad525ace4a395039f1/toolkit/modules/NewTabUtils.jsm#1087)
+
+#### Definition
+
+```ts
+interface Bookmark {
+  bookmarkGuid: string;
+  url: string;
+  title: string;
+  ...
+}
+declare const recentBookmarks: Array<Bookmark>
 ```
