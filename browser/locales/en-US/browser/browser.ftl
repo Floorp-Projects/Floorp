@@ -4,3 +4,46 @@
 
 browser-urlbar-identity-button =
     .aria-label = View site information
+
+## Tooltips for images appearing in the address bar
+
+urlbar-services-notification-anchor =
+    .tooltiptext = Open install message panel
+urlbar-web-notification-anchor =
+    .tooltiptext = Change whether you can receive notifications from the site
+urlbar-midi-notification-anchor =
+    .tooltiptext = Open MIDI panel
+urlbar-eme-notification-anchor =
+    .tooltiptext = Manage use of DRM software
+urlbar-web-authn-anchor =
+    .tooltiptext = Open Web Authentication panel
+urlbar-canvas-notification-anchor =
+    .tooltiptext = Manage canvas extraction permission
+urlbar-web-rtc-share-microphone-notification-anchor =
+    .tooltiptext = Manage sharing your microphone with the site
+urlbar-default-notification-anchor =
+    .tooltiptext = Open message panel
+urlbar-geolocation-notification-anchor =
+    .tooltiptext = Open location request panel
+urlbar-storage-access-anchor =
+    .tooltiptext = Open browsing activity permission panel
+urlbar-translate-notification-anchor =
+    .tooltiptext = Translate this page
+urlbar-web-rtc-share-screen-notification-anchor =
+    .tooltiptext = Manage sharing your windows or screen with the site
+urlbar-indexed-db-notification-anchor =
+    .tooltiptext = Open offline storage message panel
+urlbar-password-notification-anchor =
+    .tooltiptext = Open save password message panel
+urlbar-translated-notification-anchor =
+    .tooltiptext = Manage page translation
+urlbar-plugins-notification-anchor =
+    .tooltiptext = Manage plug-in use
+urlbar-web-rtc-share-devices-notification-anchor =
+    .tooltiptext = Manage sharing your camera and/or microphone with the site
+urlbar-autoplay-notification-anchor =
+    .tooltiptext = Open autoplay panel
+urlbar-persistent-storage-notification-anchor =
+    .tooltiptext = Store data in Persistent Storage
+urlbar-addons-notification-anchor =
+    .tooltiptext = Open add-on installation message panel
