@@ -42,6 +42,7 @@ function addDefaultValues(props) {
     ...props,
     content: {
       scene1_button_label: schema.properties.scene1_button_label.default,
+      retry_button_label: schema.properties.retry_button_label.default,
       scene2_dismiss_button_text:
         schema.properties.scene2_dismiss_button_text.default,
       scene2_button_label: schema.properties.scene2_button_label.default,

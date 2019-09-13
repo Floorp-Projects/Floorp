@@ -14,6 +14,17 @@ ChromeUtils.defineModuleGetter(
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "L10nRegistry",
+  "resource://gre/modules/L10nRegistry.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileSource",
+  "resource://gre/modules/L10nRegistry.jsm"
+);
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
 const POPUP_NOTIFICATION_ID = "contextual-feature-recommendation";
 const ANIMATION_BUTTON_ID = "cfr-notification-footer-animation-button";
@@ -30,6 +41,12 @@ const CATEGORY_ICONS = {
   cfrAddons: "webextensions-icon",
   cfrFeatures: "recommendations-icon",
 };
+
+/**
+ * The downloaded Fluent file is located in this sub-directory of the local
+ * profile directory.
+ */
+const RS_DOWNLOADED_FILE_SUBDIR = "settings/main/ms-language-packs";
 
 /**
  * A WeakMap from browsers to {host, recommendation} pairs. Recommendations are
@@ -68,12 +85,7 @@ class PageAction {
     this._showPopupOnClick = this._showPopupOnClick.bind(this);
     this.dispatchUserAction = this.dispatchUserAction.bind(this);
 
-    this._l10n = new DOMLocalization([
-      "browser/newtab/asrouter.ftl",
-      "browser/branding/brandings.ftl",
-      "browser/branding/sync-brand.ftl",
-      "branding/brand.ftl",
-    ]);
+    this._l10n = this._createDOML10n();
 
     // Saved timeout IDs for scheduled state changes, so they can be cancelled
     this.stateTransitionTimeoutIDs = [];
@@ -102,6 +114,52 @@ class PageAction {
         event: "IMPRESSION",
       });
     }
+  }
+
+  /**
+   * Creates a new DOMLocalization instance with the Fluent file from Remote Settings.
+   * Note that it still uses the packaged Fluent file as the fallback if the remote one
+   * is not available.
+   */
+  _createDOML10n() {
+    async function* generateBundles(resourceIds) {
+      const appLocale = Services.locale.appLocaleAsBCP47;
+      const appLocales = Services.locale.appLocalesAsBCP47;
+      const l10nFluentDir = OS.Path.join(
+        OS.Constants.Path.localProfileDir,
+        RS_DOWNLOADED_FILE_SUBDIR
+      );
+      const fs = new FileSource("cfr", [appLocale], `file://${l10nFluentDir}/`);
+      // In the case that the Fluent file has not been downloaded from Remote Settings,
+      // `fetchFile` will return `false` and fall back to the packaged Fluent file.
+      const resource = await fs.fetchFile(appLocale, "asrouter.ftl");
+      if (resource) {
+        // Skip the local `asrouter.ftl` (i.e. the first resource) to favor the remote one.
+        // Other resources such as `branding.ftl`, `sync-brand.ftl`, and `branding/brand.ftl`
+        // still need to be packed into this bundle because, otherwise, we can't reference
+        // them across different Fluent bundles.
+        for await (let bundle of L10nRegistry.generateBundles(
+          [appLocale],
+          resourceIds.slice(1)
+        )) {
+          // Override the old string ID if any as it's the last resource.
+          bundle.addResource(resource, true);
+          yield bundle;
+        }
+      } else {
+        yield* L10nRegistry.generateBundles(appLocales, resourceIds);
+      }
+    }
+
+    return new DOMLocalization(
+      [
+        "browser/newtab/asrouter.ftl",
+        "browser/branding/brandings.ftl",
+        "browser/branding/sync-brand.ftl",
+        "branding/brand.ftl",
+      ],
+      generateBundles
+    );
   }
 
   async showAddressBarNotifier(recommendation, shouldExpand = false) {

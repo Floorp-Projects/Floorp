@@ -133,6 +133,55 @@ const MESSAGES = () => [
     targeting: `firefoxVersion > 69 && totalBlockedCount > 0`,
     trigger: { id: "whatsNewPanelOpened" },
   },
+  {
+    id: "BOOKMARK_CFR",
+    template: "cfr_doorhanger",
+    content: {
+      layout: "icon_and_message",
+      category: "cfrFeatures",
+      notification_text: { string_id: "cfr-doorhanger-extension-notification" },
+      heading_text: { string_id: "cfr-doorhanger-sync-bookmarks-header" },
+      info_icon: {
+        label: { string_id: "cfr-doorhanger-extension-sumo-link" },
+        sumo_path: "https://example.com",
+      },
+      text: { string_id: "cfr-doorhanger-sync-bookmarks-body" },
+      icon: "chrome://branding/content/icon64.png",
+      buttons: {
+        primary: {
+          label: { string_id: "cfr-doorhanger-sync-bookmarks-ok-button" },
+          action: {
+            type: "OPEN_PREFERENCES_PAGE",
+            data: { category: "sync" },
+          },
+        },
+        secondary: [
+          {
+            label: { string_id: "cfr-doorhanger-extension-cancel-button" },
+            action: { type: "CANCEL" },
+          },
+          {
+            label: {
+              string_id: "cfr-doorhanger-extension-never-show-recommendation",
+            },
+          },
+          {
+            label: {
+              string_id: "cfr-doorhanger-extension-manage-settings-button",
+            },
+            action: {
+              type: "OPEN_PREFERENCES_PAGE",
+              data: { category: "general-cfrfeatures" },
+            },
+          },
+        ],
+      },
+    },
+    targeting: "true",
+    trigger: {
+      id: "openBookmarkedURL",
+    },
+  },
 ];
 
 const PanelTestProvider = {

@@ -9,6 +9,7 @@ import { SubmitFormSnippet } from "../SubmitFormSnippet/SubmitFormSnippet.jsx";
 export const NewsletterSnippet = props => {
   const extendedContent = {
     scene1_button_label: schema.properties.scene1_button_label.default,
+    retry_button_label: schema.properties.retry_button_label.default,
     scene2_email_placeholder_text:
       schema.properties.scene2_email_placeholder_text.default,
     scene2_button_label: schema.properties.scene2_button_label.default,

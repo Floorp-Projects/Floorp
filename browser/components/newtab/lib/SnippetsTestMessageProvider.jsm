@@ -141,6 +141,7 @@ const MESSAGES = () => [
       scene2_newsletter: "mozilla-foundation",
       success_text: "Check your inbox for the confirmation!",
       error_text: "Error!",
+      retry_button_label: "Try again?",
       links: {
         privacyLink: {
           url:

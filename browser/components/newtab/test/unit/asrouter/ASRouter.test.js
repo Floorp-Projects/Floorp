@@ -18,7 +18,10 @@ import {
   PARENT_TO_CHILD_MESSAGE_NAME,
 } from "./constants";
 import { actionCreators as ac } from "common/Actions.jsm";
-import { ASRouterPreferences } from "lib/ASRouterPreferences.jsm";
+import {
+  ASRouterPreferences,
+  TARGETING_PREFERENCES,
+} from "lib/ASRouterPreferences.jsm";
 import { ASRouterTriggerListeners } from "lib/ASRouterTriggerListeners.jsm";
 import { CFRPageActions } from "lib/CFRPageActions.jsm";
 import { GlobalOverrider } from "test/unit/utils";
@@ -141,6 +144,7 @@ describe("ASRouter", () => {
     FakeToolbarPanelHub = {
       init: sandbox.stub(),
       uninit: sandbox.stub(),
+      forceShowMessage: sandbox.stub(),
     };
     FakeToolbarBadgeHub = {
       init: sandbox.stub(),
@@ -148,6 +152,11 @@ describe("ASRouter", () => {
       registerBadgeNotificationListener: sandbox.stub(),
     };
     globals.set({
+      ASRouterPreferences,
+      TARGETING_PREFERENCES,
+      ASRouterTargeting,
+      ASRouterTriggerListeners,
+      QueryCache,
       AttributionCode: fakeAttributionCode,
       // Testing framework doesn't know how to `defineLazyModuleGetter` so we're
       // importing these modules into the global scope ourselves.
@@ -156,6 +165,22 @@ describe("ASRouter", () => {
       BookmarkPanelHub: FakeBookmarkPanelHub,
       ToolbarBadgeHub: FakeToolbarBadgeHub,
       ToolbarPanelHub: FakeToolbarPanelHub,
+      KintoHttpClient: class {
+        bucket() {
+          return this;
+        }
+        collection() {
+          return this;
+        }
+        getRecord() {
+          return Promise.resolve({ data: {} });
+        }
+      },
+      Downloader: class {
+        download() {
+          return Promise.resolve("/path/to/downlowned");
+        }
+      },
     });
     await createRouterAndInit();
   });
@@ -294,6 +319,16 @@ describe("ASRouter", () => {
           type: "AS_ROUTER_INITIALIZED",
           data: ASRouterPreferences.specialConditions,
         })
+      );
+    });
+    it("should add observer for `intl:app-locales-changed`", async () => {
+      sandbox.spy(global.Services.obs, "addObserver");
+      await createRouterAndInit();
+
+      assert.calledOnce(global.Services.obs.addObserver);
+      assert.equal(
+        global.Services.obs.addObserver.args[0][1],
+        "intl:app-locales-changed"
       );
     });
     describe("lazily loading local test providers", () => {
@@ -465,10 +500,26 @@ describe("ASRouter", () => {
       sandbox.stub(CFRPageActions, "addRecommendation");
       target = { sendAsyncMessage: sandbox.stub() };
     });
+    it("should route whatsnew_panel_message message to the right hub", () => {
+      Router.routeMessageToTarget(
+        { template: "whatsnew_panel_message" },
+        target,
+        "",
+        true
+      );
+
+      assert.calledOnce(FakeToolbarPanelHub.forceShowMessage);
+      assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
+      assert.notCalled(FakeBookmarkPanelHub._forceShowMessage);
+      assert.notCalled(CFRPageActions.addRecommendation);
+      assert.notCalled(CFRPageActions.forceRecommendation);
+      assert.notCalled(target.sendAsyncMessage);
+    });
     it("should route toolbar_badge message to the right hub", () => {
       Router.routeMessageToTarget({ template: "toolbar_badge" }, target);
 
       assert.calledOnce(FakeToolbarBadgeHub.registerBadgeNotificationListener);
+      assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
       assert.notCalled(FakeBookmarkPanelHub._forceShowMessage);
       assert.notCalled(CFRPageActions.addRecommendation);
       assert.notCalled(CFRPageActions.forceRecommendation);
@@ -483,6 +534,7 @@ describe("ASRouter", () => {
       );
 
       assert.calledOnce(FakeBookmarkPanelHub._forceShowMessage);
+      assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
       assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
       assert.notCalled(CFRPageActions.addRecommendation);
       assert.notCalled(CFRPageActions.forceRecommendation);
@@ -497,6 +549,7 @@ describe("ASRouter", () => {
       );
 
       assert.calledOnce(CFRPageActions.addRecommendation);
+      assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
       assert.notCalled(FakeBookmarkPanelHub._forceShowMessage);
       assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
       assert.notCalled(CFRPageActions.forceRecommendation);
@@ -511,6 +564,7 @@ describe("ASRouter", () => {
       );
 
       assert.calledOnce(CFRPageActions.forceRecommendation);
+      assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
       assert.notCalled(CFRPageActions.addRecommendation);
       assert.notCalled(FakeBookmarkPanelHub._forceShowMessage);
       assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
@@ -520,6 +574,7 @@ describe("ASRouter", () => {
       Router.routeMessageToTarget({ template: "snippets" }, target, {}, true);
 
       assert.calledOnce(target.sendAsyncMessage);
+      assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
       assert.notCalled(CFRPageActions.forceRecommendation);
       assert.notCalled(CFRPageActions.addRecommendation);
       assert.notCalled(FakeBookmarkPanelHub._forceShowMessage);
@@ -680,6 +735,54 @@ describe("ASRouter", () => {
           action: "asrouter_undesired_event",
           event: "ASR_RS_NO_MESSAGES",
           value: "remotey-settingsy",
+          message_id: "n/a",
+        },
+        meta: { from: "ActivityStream:Content", to: "ActivityStream:Main" },
+        type: "AS_ROUTER_TELEMETRY_USER_EVENT",
+      });
+    });
+    it("should download the attachment if RemoteSettings returns some messages", async () => {
+      sandbox
+        .stub(global.Services.locale, "appLocaleAsLangTag")
+        .get(() => "en-US");
+      sandbox
+        .stub(MessageLoaderUtils, "_getRemoteSettingsMessages")
+        .resolves([{ id: "message_1" }]);
+      const spy = sandbox.spy();
+      global.Downloader.prototype.download = spy;
+      const provider = {
+        id: "cfr",
+        enabled: true,
+        type: "remote-settings",
+        bucket: "cfr",
+      };
+      await createRouterAndInit([provider]);
+
+      assert.calledOnce(spy);
+    });
+    it("should dispatch undesired event if the ms-language-packs returns no messages", async () => {
+      sandbox
+        .stub(global.Services.locale, "appLocaleAsLangTag")
+        .get(() => "en-US");
+      sandbox
+        .stub(MessageLoaderUtils, "_getRemoteSettingsMessages")
+        .resolves([{ id: "message_1" }]);
+      sandbox
+        .stub(global.KintoHttpClient.prototype, "getRecord")
+        .resolves(null);
+      const provider = {
+        id: "cfr",
+        enabled: true,
+        type: "remote-settings",
+        bucket: "cfr",
+      };
+      await createRouterAndInit([provider]);
+
+      assert.calledWith(Router.dispatchToAS, {
+        data: {
+          action: "asrouter_undesired_event",
+          event: "ASR_RS_NO_MESSAGES",
+          value: "ms-language-packs",
           message_id: "n/a",
         },
         meta: { from: "ActivityStream:Content", to: "ActivityStream:Main" },
@@ -997,6 +1100,16 @@ describe("ASRouter", () => {
         Router._storage.set,
         "previousSessionEnd",
         sinon.match.number
+      );
+    });
+    it("should remove the observer for `intl:app-locales-changed`", () => {
+      sandbox.spy(global.Services.obs, "removeObserver");
+      Router.uninit();
+
+      assert.calledOnce(global.Services.obs.removeObserver);
+      assert.equal(
+        global.Services.obs.removeObserver.args[0][1],
+        "intl:app-locales-changed"
       );
     });
   });
@@ -3058,6 +3171,69 @@ describe("ASRouter", () => {
 
       assert.calledWith(global.Sampling.ratioSample, "bleep", [1, 1]);
       assert.equal(result, "bar");
+    });
+  });
+
+  describe("#_onLocaleChanged", () => {
+    it("should call _maybeUpdateL10nAttachment in the handler", async () => {
+      sandbox.spy(Router, "_maybeUpdateL10nAttachment");
+      await Router._onLocaleChanged();
+
+      assert.calledOnce(Router._maybeUpdateL10nAttachment);
+    });
+  });
+
+  describe("#_maybeUpdateL10nAttachment", () => {
+    it("should update the l10n attachment if the locale was changed", async () => {
+      const getter = sandbox.stub();
+      getter.onFirstCall().returns("en-US");
+      getter.onSecondCall().returns("fr");
+      sandbox.stub(global.Services.locale, "appLocaleAsLangTag").get(getter);
+      const provider = {
+        id: "cfr",
+        enabled: true,
+        type: "remote-settings",
+        bucket: "cfr",
+      };
+      await createRouterAndInit([provider]);
+      sandbox.spy(Router, "setState");
+      sandbox.spy(Router, "loadMessagesFromAllProviders");
+
+      await Router._maybeUpdateL10nAttachment();
+
+      assert.calledWith(Router.setState, {
+        localeInUse: "fr",
+        providers: [
+          {
+            id: "cfr",
+            enabled: true,
+            type: "remote-settings",
+            bucket: "cfr",
+            lastUpdated: undefined,
+            errors: [],
+          },
+        ],
+      });
+      assert.calledOnce(Router.loadMessagesFromAllProviders);
+    });
+    it("should not update the l10n attachment if the provider doesn't need l10n attachment", async () => {
+      const getter = sandbox.stub();
+      getter.onFirstCall().returns("en-US");
+      getter.onSecondCall().returns("fr");
+      sandbox.stub(global.Services.locale, "appLocaleAsLangTag").get(getter);
+      const provider = {
+        id: "localProvider",
+        enabled: true,
+        type: "local",
+      };
+      await createRouterAndInit([provider]);
+      sandbox.spy(Router, "setState");
+      sandbox.spy(Router, "loadMessagesFromAllProviders");
+
+      await Router._maybeUpdateL10nAttachment();
+
+      assert.notCalled(Router.setState);
+      assert.notCalled(Router.loadMessagesFromAllProviders);
     });
   });
 });

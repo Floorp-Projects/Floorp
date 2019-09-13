@@ -33,10 +33,12 @@ describe("ToolbarPanelHub", () => {
       setAttribute: sandbox.stub(),
       removeAttribute: sandbox.stub(),
       querySelector: sandbox.stub().returns(null),
+      querySelectorAll: sandbox.stub().returns([]),
       appendChild: sandbox.stub(),
       addEventListener: sandbox.stub(),
       hasAttribute: sandbox.stub(),
       toggleAttribute: sandbox.stub(),
+      remove: sandbox.stub(),
     };
     fakeDocument = {
       l10n: {
@@ -75,6 +77,7 @@ describe("ToolbarPanelHub", () => {
         gBrowser: "gBrowser",
       },
       PanelUI: {
+        panel: fakeElementById,
         whatsNewPanel: fakeElementById,
       },
     };
@@ -556,6 +559,65 @@ describe("ToolbarPanelHub", () => {
           "view",
           "application_menu"
         );
+      });
+    });
+    describe("#forceShowMessage", () => {
+      const panelSelector = "PanelUI-whatsNew-message-container";
+      let removeMessagesSpy;
+      let renderMessagesStub;
+      let addEventListenerStub;
+      let message;
+      let browser;
+      beforeEach(async () => {
+        message = (await PanelTestProvider.getMessages()).find(
+          m => m.id === "WHATS_NEW_70_1"
+        );
+        removeMessagesSpy = sandbox.spy(instance, "removeMessages");
+        renderMessagesStub = sandbox.spy(instance, "renderMessages");
+        addEventListenerStub = fakeElementById.addEventListener;
+        browser = {
+          browser: { ownerGlobal: fakeWindow, ownerDocument: fakeDocument },
+        };
+        fakeElementById.querySelectorAll.returns([fakeElementById]);
+      });
+      it("should call removeMessages when forcing a message to show", () => {
+        instance.forceShowMessage(browser, message);
+
+        assert.calledOnce(removeMessagesSpy);
+        assert.calledWithExactly(removeMessagesSpy, fakeWindow, panelSelector);
+      });
+      it("should call renderMessages when forcing a message to show", () => {
+        instance.forceShowMessage(browser, message);
+
+        assert.calledOnce(renderMessagesStub);
+        assert.calledWithExactly(
+          renderMessagesStub,
+          fakeWindow,
+          fakeDocument,
+          panelSelector,
+          {
+            force: true,
+            messages: [message],
+          }
+        );
+      });
+      it("should cleanup after the panel is hidden when forcing a message to show", () => {
+        instance.forceShowMessage(browser, message);
+
+        assert.calledOnce(addEventListenerStub);
+        assert.calledWithExactly(
+          addEventListenerStub,
+          "popuphidden",
+          sinon.match.func
+        );
+
+        const [, cb] = addEventListenerStub.firstCall.args;
+        // Reset the call count from the first `forceShowMessage` call
+        removeMessagesSpy.resetHistory();
+        cb({ target: { ownerGlobal: fakeWindow } });
+
+        assert.calledOnce(removeMessagesSpy);
+        assert.calledWithExactly(removeMessagesSpy, fakeWindow, panelSelector);
       });
     });
   });
