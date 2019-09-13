@@ -29,6 +29,14 @@ import java.lang.ClassCastException
 import java.util.WeakHashMap
 
 /**
+ * Configurable FxA capabilities.
+ */
+enum class FxaCapability {
+    // Enables "choose what to sync" selection during support auth flows (currently, sign-up).
+    CHOOSE_WHAT_TO_SYNC
+}
+
+/**
  * Feature implementation that provides Firefox Accounts WebChannel support.
  * For more information https://github.com/mozilla/fxa/blob/master/packages/fxa-content-server/docs/relier-communication-protocols/fx-webchannel.md
  * This feature uses a web extension to communicate with FxA Web Content.
@@ -40,6 +48,7 @@ import java.util.WeakHashMap
  * @property engine a reference to application's browser engine.
  * @property sessionManager a reference to application's [SessionManager].
  * @property accountManager a reference to application's [FxaAccountManager].
+ * @property fxaCapabilities a set of [FxaCapability] that client supports.
  */
 @Suppress("TooManyFunctions")
 class FxaWebChannelFeature(
@@ -47,7 +56,8 @@ class FxaWebChannelFeature(
     private val customTabSessionId: String?,
     private val engine: Engine,
     private val sessionManager: SessionManager,
-    private val accountManager: FxaAccountManager
+    private val accountManager: FxaAccountManager,
+    private val fxaCapabilities: Set<FxaCapability> = emptySet()
 ) : SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature {
 
     override fun start() {
@@ -90,7 +100,8 @@ class FxaWebChannelFeature(
      */
     private class WebChannelViewContentMessageHandler(
         private val engineSession: EngineSession,
-        private val accountManager: FxaAccountManager
+        private val accountManager: FxaAccountManager,
+        private val fxaCapabilities: Set<FxaCapability>
     ) : MessageHandler {
         override fun onPortConnected(port: Port) {
             ports[port.engineSession] = port
@@ -139,7 +150,7 @@ class FxaWebChannelFeature(
                     messageId, engineSession
                 )
                 WebChannelCommand.FXA_STATUS -> processFxaStatusCommand(
-                    accountManager, messageId, engineSession
+                    accountManager, messageId, engineSession, fxaCapabilities
                 )
                 WebChannelCommand.OAUTH_LOGIN -> processOauthLoginCommand(
                     accountManager, payload
@@ -150,7 +161,9 @@ class FxaWebChannelFeature(
 
     private fun registerContentMessageHandler(session: Session) {
         val engineSession = sessionManager.getOrCreateEngineSession(session)
-        val messageHandler = WebChannelViewContentMessageHandler(engineSession, accountManager)
+        val messageHandler = WebChannelViewContentMessageHandler(
+            engineSession, accountManager, fxaCapabilities
+        )
         registerMessageHandler(engineSession, messageHandler)
     }
 
@@ -259,7 +272,8 @@ class FxaWebChannelFeature(
         private fun processFxaStatusCommand(
             accountManager: FxaAccountManager,
             messageId: String,
-            engineSession: EngineSession
+            engineSession: EngineSession,
+            fxaCapabilities: Set<FxaCapability>
         ) {
             val status = JSONObject().also { status ->
                 status.put("id", CHANNEL_ID)
@@ -273,6 +287,10 @@ class FxaWebChannelFeature(
                                     engines.put(engine.nativeName)
                                 } ?: emptyArray<SyncEngine>()
                             })
+
+                            if (fxaCapabilities.contains(FxaCapability.CHOOSE_WHAT_TO_SYNC)) {
+                                capabilities.put("choose_what_to_sync", true)
+                            }
                         })
                         // Since accountManager currently can't provide us with a sessionToken, this is
                         // hard-coded to null.

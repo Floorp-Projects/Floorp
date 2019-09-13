@@ -30,6 +30,9 @@ permalink: /changelog/
 * **feature-tabs**
   * ⚠️ **This is a breaking change**: Methods that have been accepting a parent `Session` parameter now expect the parent id (`String`).
 
+* **feature-accounts**
+  * Added ability to configure FxaWebChannelFeature with a set of `FxaCapability`. Currently there's just one: `CHOOSE_WHAT_TO_SYNC`. It defaults to `false`, so if you want "choose what to sync" selection during auth flows, please specify it.
+
 # 12.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v11.0.0...v12.0.0)
