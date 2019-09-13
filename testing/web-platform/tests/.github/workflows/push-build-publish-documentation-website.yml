@@ -1,4 +1,7 @@
-on: push
+on:
+  push:
+    branches:
+      - master
 name: Build & Publish Documentation Website
 jobs:
   website-build-and-publish:

@@ -1,4 +1,7 @@
-on: push
+on:
+  push:
+    branches:
+      - master
 name: Build & Release Manifest
 jobs:
   manifest-build-and-tag:
