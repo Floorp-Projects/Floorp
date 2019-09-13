@@ -307,6 +307,22 @@ function scheduleGC() {
   SpecialPowers.exactGC(continueToNextStep);
 }
 
+// Assert that eventually a condition becomes true, running a garbage
+// collection between evaluations. Fails, after a high number of iterations
+// without a successful evaluation of the condition.
+function* assertEventuallyWithGC(conditionFunctor, message) {
+  const maxGC = 100;
+  for (let i = 0; i < maxGC; ++i) {
+    if (conditionFunctor()) {
+      ok(true, message + " (after " + i + " garbage collections)");
+      return;
+    }
+    SpecialPowers.exactGC(continueToNextStep);
+    yield undefined;
+  }
+  ok(false, message + " (even after " + maxGC + " garbage collections)");
+}
+
 function isWasmSupported() {
   let testingFunctions = SpecialPowers.Cu.getJSTestingFunctions();
   return testingFunctions.wasmIsSupported();

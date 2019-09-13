@@ -65,10 +65,7 @@
       fileData.file = null;
     }
 
-    scheduleGC();
-    yield undefined;
-
-    is(getFileRefCount(name, 1), 0, "Correct ref count");
+    yield* assertEventuallyFileRefCount(name, 1, 0);
 
     {
       let request = indexedDB.open(name, 1);
@@ -114,10 +111,7 @@
       result = null;
     }
 
-    scheduleGC();
-    yield undefined;
-
-    is(getFileRefCount(name, 1), 0, "Correct ref count");
+    yield* assertEventuallyFileRefCount(name, 1, 0);
 
     finishTest();
   }

@@ -219,14 +219,26 @@ function getFilePath(file) {
   return utils.getFilePath(file);
 }
 
-function hasFileInfo(name, id) {
-  return utils.getFileReferences(name, id);
+function* assertEventuallyHasFileInfo(name, id) {
+  yield* assertEventuallyWithGC(
+    () => utils.getFileReferences(name, id),
+    `Expect existing FileInfo for ${name}/${id}`
+  );
 }
 
-function getFileRefCount(name, id) {
-  let count = {};
-  utils.getFileReferences(name, id, null, count);
-  return count.value;
+function* assertEventuallyHasNoFileInfo(name, id) {
+  yield* assertEventuallyWithGC(
+    () => !utils.getFileReferences(name, id),
+    `Expect no existing FileInfo for ${name}/${id}`
+  );
+}
+
+function* assertEventuallyFileRefCount(name, id, expectedCount) {
+  yield* assertEventuallyWithGC(() => {
+    let count = {};
+    utils.getFileReferences(name, id, null, count);
+    return count.value == expectedCount;
+  }, `Expect ${expectedCount} existing references for ${name}/${id}`);
 }
 
 function getFileDBRefCount(name, id) {
