@@ -383,24 +383,6 @@ void nsHttpHandler::SetFastOpenOSSupport() {
        mFastOpenSupported ? "" : "not"));
 }
 
-void nsHttpHandler::EnsureUAOverridesInit() {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(NS_IsMainThread());
-
-  static bool initDone = false;
-
-  if (initDone) {
-    return;
-  }
-
-  nsresult rv;
-  nsCOMPtr<nsISupports> bootstrapper =
-      do_GetService("@mozilla.org/network/ua-overrides-bootstrapper;1", &rv);
-  MOZ_ASSERT(bootstrapper);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  initDone = true;
-}
-
 nsHttpHandler::~nsHttpHandler() {
   LOG(("Deleting nsHttpHandler [this=%p]\n", this));
 
@@ -2062,11 +2044,6 @@ nsHttpHandler::NewProxiedChannel(nsIURI* uri, nsIProxyInfo* givenProxyInfo,
   if (!IsNeckoChild()) {
     // HACK: make sure PSM gets initialized on the main thread.
     net_EnsurePSMInit();
-  }
-
-  if (XRE_IsParentProcess()) {
-    // Load UserAgentOverrides.jsm before any HTTP request is issued.
-    EnsureUAOverridesInit();
   }
 
   uint64_t channelId;
