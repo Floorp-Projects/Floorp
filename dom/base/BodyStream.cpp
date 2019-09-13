@@ -26,6 +26,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BodyStreamHolder)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BodyStreamHolder)
+  if (tmp->mBodyStream) {
+    tmp->mBodyStream->ReleaseObjects();
+    MOZ_ASSERT(!tmp->mBodyStream);
+  }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(BodyStreamHolder)
@@ -34,6 +38,19 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(BodyStreamHolder)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BodyStreamHolder)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
+
+BodyStreamHolder::BodyStreamHolder() : mBodyStream(nullptr) {}
+
+void BodyStreamHolder::StoreBodyStream(BodyStream* aBodyStream) {
+  MOZ_ASSERT(aBodyStream);
+  MOZ_ASSERT(!mBodyStream);
+  mBodyStream = aBodyStream;
+}
+
+void BodyStreamHolder::ForgetBodyStream() {
+  MOZ_ASSERT(mBodyStream);
+  mBodyStream = nullptr;
+}
 
 // BodyStream
 // ---------------------------------------------------------------------------
@@ -118,6 +135,7 @@ void BodyStream::Create(JSContext* aCx, BodyStreamHolder* aStreamHolder,
   // js object is finalized.
   NS_ADDREF(stream.get());
 
+  aStreamHolder->StoreBodyStream(stream);
   aStreamHolder->SetReadableStreamBody(body);
 }
 
@@ -503,6 +521,7 @@ void BodyStream::ReleaseObjects(const MutexAutoLock& aProofOfLock) {
   mWorkerRef = nullptr;
   mGlobal = nullptr;
 
+  mStreamHolder->ForgetBodyStream();
   mStreamHolder->NullifyStream();
   mStreamHolder = nullptr;
 }
