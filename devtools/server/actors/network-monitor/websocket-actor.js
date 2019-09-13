@@ -29,23 +29,18 @@ const WebSocketActor = ActorClassWithSpec(webSocketSpec, {
     this.connections = new Map();
 
     // Register for backend events.
-    this.onNavigate = this.onNavigate.bind(this);
-    this.onWillNavigate = this.onWillNavigate.bind(this);
-    this.targetActor.on("navigate", this.onNavigate);
-    this.targetActor.on("will-navigate", this.onWillNavigate);
+    this.onWindowReady = this.onWindowReady.bind(this);
+    this.targetActor.on("window-ready", this.onWindowReady);
   },
 
-  onWillNavigate: function() {
-    this.stopListening();
-  },
-
-  onNavigate: function() {
-    this.startListening();
+  onWindowReady({ isTopLevel }) {
+    if (isTopLevel) {
+      this.startListening();
+    }
   },
 
   destroy: function() {
-    this.targetActor.off("navigate", this.onNavigate);
-    this.targetActor.off("will-navigate", this.onWillNavigate);
+    this.targetActor.off("window-ready", this.onWindowReady);
 
     this.stopListening();
     Actor.prototype.destroy.call(this);

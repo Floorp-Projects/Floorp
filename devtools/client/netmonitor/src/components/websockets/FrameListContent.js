@@ -136,7 +136,9 @@ class FrameListContent extends Component {
     const scrollAnchor = this.refs.scrollAnchor;
 
     if (this.intersectionObserver) {
-      this.intersectionObserver.unobserve(scrollAnchor);
+      if (scrollAnchor) {
+        this.intersectionObserver.unobserve(scrollAnchor);
+      }
       this.initIntersectionObserver = false;
       this.pinnedToBottom = false;
     }
