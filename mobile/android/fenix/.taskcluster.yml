@@ -84,7 +84,7 @@ tasks:
                           else:
                               $if: 'tasks_for in ["cron", "action"]'
                               then: '${repository.level}'
-                              else: 1
+                              else: '1'
                   in:
                       taskId: '${ownTaskId}'
                       taskGroupId:
@@ -130,7 +130,7 @@ tasks:
                       routes:
                           $flatten:
                               - checks
-                              - $if: 'tasks_for != "github-pull-request"'
+                              - $if: 'level == "3"'
                                 then:
                                     - "tc-treeherder.v2.${project}.${head_sha}"
                                 else: []

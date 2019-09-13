@@ -45,10 +45,8 @@ def pr(builder):
 
 
 def push(builder):
-    all_tasks = pr()
-    other_tasks = all_tasks[-1]
-    other_tasks[_generate_slug_id()] = builder.craft_ui_tests_task()
-
+    all_tasks = pr(builder)
+    all_tasks.append(builder.craft_ui_tests_task())
     return all_tasks
 
 
