@@ -777,15 +777,6 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
   }
 
   switch (aInfo.mEditSubAction) {
-    case EditSubAction::eDeleteSelectedContent:
-      result = MOZ_KnownLive(HTMLEditorRef())
-                   .HandleDeleteSelection(aInfo.collapsedAction,
-                                          aInfo.stripWrappers);
-      *aHandled = result.Handled();
-      *aCancel = result.Canceled();
-      NS_WARNING_ASSERTION(result.Succeeded(),
-                           "HandleDeleteSelection() failed");
-      return result.Rv();
     case EditSubAction::eInsertElement:
     case EditSubAction::eInsertQuotedText: {
       nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert(aCancel);
@@ -799,6 +790,7 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
     case EditSubAction::eCreateOrChangeList:
     case EditSubAction::eCreateOrRemoveBlock:
     case EditSubAction::eDecreaseZIndex:
+    case EditSubAction::eDeleteSelectedContent:
     case EditSubAction::eIncreaseZIndex:
     case EditSubAction::eIndent:
     case EditSubAction::eInsertHTMLSource:
@@ -1396,9 +1388,6 @@ EditActionResult HTMLEditor::HandleInsertText(
   if (!SelectionRefPtr()->IsCollapsed()) {
     nsresult rv =
         DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eNoStrip);
-    if (NS_WARN_IF(Destroyed())) {
-      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditActionHandled(rv);
     }
@@ -1748,9 +1737,6 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
   if (!SelectionRefPtr()->IsCollapsed()) {
     nsresult rv =
         DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eStrip);
-    if (NS_WARN_IF(Destroyed())) {
-      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
-    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditActionIgnored(rv);
     }
