@@ -9,6 +9,7 @@
 
 #include "AudioFocusManager.h"
 #include "MediaController.h"
+#include "MediaHardwareKeysManager.h"
 #include "nsDataHashtable.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
@@ -55,6 +56,7 @@ class MediaControlService final : public nsIObserver {
 
   nsDataHashtable<nsUint64HashKey, RefPtr<MediaController>> mControllers;
   AudioFocusManager mAudioFocusManager;
+  MediaHardwareKeysManager mHardwareKeysManager;
 };
 
 }  // namespace dom
