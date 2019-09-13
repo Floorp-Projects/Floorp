@@ -89,11 +89,10 @@ void JSWindowActor::SetName(const nsAString& aName) {
 void JSWindowActor::SendAsyncMessage(JSContext* aCx,
                                      const nsAString& aMessageName,
                                      JS::Handle<JS::Value> aObj,
-                                     JS::Handle<JS::Value> aTransfers,
                                      ErrorResult& aRv) {
   ipc::StructuredCloneData data;
-  if (!nsFrameMessageManager::GetParamsForMessage(aCx, aObj, aTransfers,
-                                                  data)) {
+  if (!nsFrameMessageManager::GetParamsForMessage(
+          aCx, aObj, JS::UndefinedHandleValue, data)) {
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
     return;
   }
@@ -108,10 +107,10 @@ void JSWindowActor::SendAsyncMessage(JSContext* aCx,
 
 already_AddRefed<Promise> JSWindowActor::SendQuery(
     JSContext* aCx, const nsAString& aMessageName, JS::Handle<JS::Value> aObj,
-    JS::Handle<JS::Value> aTransfers, ErrorResult& aRv) {
+    ErrorResult& aRv) {
   ipc::StructuredCloneData data;
-  if (!nsFrameMessageManager::GetParamsForMessage(aCx, aObj, aTransfers,
-                                                  data)) {
+  if (!nsFrameMessageManager::GetParamsForMessage(
+          aCx, aObj, JS::UndefinedHandleValue, data)) {
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
     return nullptr;
   }

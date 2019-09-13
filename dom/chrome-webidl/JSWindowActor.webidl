@@ -10,13 +10,11 @@ interface nsISupports;
 interface JSWindowActor {
   [Throws]
   void sendAsyncMessage(DOMString messageName,
-                        optional any obj,
-                        optional any transfers);
+                        optional any obj);
 
   [Throws]
   Promise<any> sendQuery(DOMString messageName,
-                         optional any obj,
-                         optional any transfers);
+                         optional any obj);
 };
 
 [ChromeOnly]

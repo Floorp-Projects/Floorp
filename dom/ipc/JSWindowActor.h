@@ -44,13 +44,11 @@ class JSWindowActor : public nsISupports, public nsWrapperCache {
   const nsString& Name() const { return mName; }
 
   void SendAsyncMessage(JSContext* aCx, const nsAString& aMessageName,
-                        JS::Handle<JS::Value> aObj,
-                        JS::Handle<JS::Value> aTransfers, ErrorResult& aRv);
+                        JS::Handle<JS::Value> aObj, ErrorResult& aRv);
 
   already_AddRefed<Promise> SendQuery(JSContext* aCx,
                                       const nsAString& aMessageName,
                                       JS::Handle<JS::Value> aObj,
-                                      JS::Handle<JS::Value> aTransfers,
                                       ErrorResult& aRv);
 
   void ReceiveRawMessage(const JSWindowActorMessageMeta& aMetadata,
