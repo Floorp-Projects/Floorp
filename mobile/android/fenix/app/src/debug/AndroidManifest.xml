@@ -23,14 +23,6 @@
                   android:exported="true"/>
         <service android:name="com.facebook.flipper.plugins.leakcanary.RecordLeakService" />
 
-        <activity
-            android:name=".HomeActivity">
-            <meta-data
-                android:name="android.app.shortcuts"
-                android:resource="@xml/shortcuts_debug"
-                tools:node="replace" />
-        </activity>
-
     </application>
 
 </manifest>
