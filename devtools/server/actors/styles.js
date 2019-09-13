@@ -2251,5 +2251,8 @@ function getTextAtLineColumn(text, line, column) {
 exports.getTextAtLineColumn = getTextAtLineColumn;
 
 function _hasVisitedState(node) {
-  return !!(InspectorUtils.getContentState(node) & NS_EVENT_STATE_VISITED);
+  return (
+    !!(InspectorUtils.getContentState(node) & NS_EVENT_STATE_VISITED) ||
+    InspectorUtils.hasPseudoClassLock(node, ":visited")
+  );
 }
