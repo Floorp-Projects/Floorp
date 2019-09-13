@@ -21,12 +21,17 @@ class nsIInputStream;
 namespace mozilla {
 namespace dom {
 
+class BodyStream;
 class WeakWorkerRef;
 
 class BodyStreamHolder : public nsISupports {
+  friend class BodyStream;
+
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(BodyStreamHolder)
+
+  BodyStreamHolder();
 
   virtual void NullifyStream() = 0;
 
@@ -38,12 +43,22 @@ class BodyStreamHolder : public nsISupports {
 
  protected:
   virtual ~BodyStreamHolder() = default;
+
+ private:
+  void StoreBodyStream(BodyStream* aBodyStream);
+  void ForgetBodyStream();
+
+  // Raw pointer because BodyStream keeps BodyStreamHolder alive and it
+  // nullifies this stream before being released.
+  BodyStream* mBodyStream;
 };
 
 class BodyStream final : public nsIInputStreamCallback,
                          public nsIObserver,
                          public nsSupportsWeakReference,
                          private JS::ReadableStreamUnderlyingSource {
+  friend class BodyStreamHolder;
+
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAMCALLBACK
