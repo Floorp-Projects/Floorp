@@ -130,8 +130,8 @@ struct HuffmanKey {
 
 // A Huffman key represented as a single `uint32_t`.
 struct FlatHuffmanKey {
-  FlatHuffmanKey(HuffmanKey key);
-  FlatHuffmanKey(const HuffmanKey* key);
+  explicit FlatHuffmanKey(HuffmanKey key);
+  explicit FlatHuffmanKey(const HuffmanKey* key);
 
   // 0b0000000L_LLLLCCCC_CCCCCCCC_CCCCCCCC
   // Where:
@@ -489,8 +489,8 @@ struct HuffmanTableUnreachable {};
 //
 template <typename T>
 struct HuffmanTableImplementationGeneric {
-  HuffmanTableImplementationGeneric(JSContext* cx);
-  HuffmanTableImplementationGeneric() = delete;
+  explicit HuffmanTableImplementationGeneric(JSContext* cx);
+  explicit HuffmanTableImplementationGeneric() = delete;
 
   // Initialize a Huffman table containing a single value.
   JS::Result<Ok> initWithSingleValue(JSContext* cx, T&& value);
@@ -511,8 +511,11 @@ struct HuffmanTableImplementationGeneric {
   size_t length() const;
 
   struct Iterator {
-    Iterator(typename HuffmanTableImplementationSaturated<T>::Iterator&&);
-    Iterator(typename HuffmanTableImplementationMap<T>::Iterator&&);
+    explicit Iterator(
+        typename HuffmanTableImplementationSaturated<T>::Iterator&&);
+    explicit Iterator(typename HuffmanTableImplementationMap<T>::Iterator&&);
+    Iterator(Iterator&&) = default;
+    Iterator(const Iterator&) = default;
     void operator++();
     const T* operator*() const;
     bool operator==(const Iterator& other) const;
