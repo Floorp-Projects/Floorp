@@ -79,13 +79,6 @@ add_task(async function testPageActionPopup() {
             sendClick({ expectEvent: false, expectPopup: "b" });
           },
           () => {
-            sendClick({
-              expectEvent: true,
-              expectPopup: "b",
-              middleClick: true,
-            });
-          },
-          () => {
             browser.pageAction.setPopup({ tabId, popup: "" });
             sendClick({ expectEvent: true, expectPopup: null });
           },
@@ -116,15 +109,9 @@ add_task(async function testPageActionPopup() {
         ];
 
         let expect = {};
-        sendClick = ({
-          expectEvent,
-          expectPopup,
-          runNextTest,
-          middleClick,
-        }) => {
+        sendClick = ({ expectEvent, expectPopup, runNextTest }) => {
           expect = { event: expectEvent, popup: expectPopup, runNextTest };
-
-          browser.test.sendMessage("send-click", middleClick ? 1 : 0);
+          browser.test.sendMessage("send-click");
         };
 
         browser.runtime.onMessage.addListener(msg => {
@@ -149,19 +136,14 @@ add_task(async function testPageActionPopup() {
           }
         });
 
-        browser.pageAction.onClicked.addListener((tab, info) => {
+        browser.pageAction.onClicked.addListener(() => {
           if (expect.event) {
             browser.test.succeed("expected click event received");
           } else {
             browser.test.fail("unexpected click event");
           }
+
           expect.event = false;
-
-          if (info.button == 1) {
-            browser.pageAction.openPopup();
-            return;
-          }
-
           browser.test.sendMessage("next-test");
         });
 
@@ -173,18 +155,6 @@ add_task(async function testPageActionPopup() {
 
           if (msg != "next-test") {
             browser.test.fail("Expecting 'next-test' message");
-          }
-
-          if (expect.event) {
-            browser.test.fail(
-              "Expecting click event before next test but none occurred"
-            );
-          }
-
-          if (expect.popup) {
-            browser.test.fail(
-              "Expecting popup before next test but none were shown"
-            );
           }
 
           if (tests.length) {
@@ -207,8 +177,8 @@ add_task(async function testPageActionPopup() {
     },
   });
 
-  extension.onMessage("send-click", button => {
-    clickPageAction(extension, window, { button });
+  extension.onMessage("send-click", () => {
+    clickPageAction(extension);
   });
 
   let pageActionId, panelId;

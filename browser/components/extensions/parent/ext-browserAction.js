@@ -200,8 +200,6 @@ this.browserAction = class extends ExtensionAPI {
         node.onmousedown = event => this.handleEvent(event);
         node.onmouseover = event => this.handleEvent(event);
         node.onmouseout = event => this.handleEvent(event);
-        node.onkeypress = event => this.handleEvent(event);
-        node.onmouseup = event => this.handleMouseUp(event);
 
         this.updateButton(node, this.globals, true);
       },
@@ -282,7 +280,7 @@ this.browserAction = class extends ExtensionAPI {
    */
   async triggerAction(window) {
     let popup = ViewPopup.for(this.extension, window);
-    if (!this.pendingPopup && popup) {
+    if (popup) {
       popup.closePopup();
       return;
     }
@@ -309,24 +307,7 @@ this.browserAction = class extends ExtensionAPI {
       widget.node.dispatchEvent(event);
     } else {
       this.tabManager.addActiveTabPermission(tab);
-      this.lastClickInfo = { button: 0, modifiers: [] };
       this.emit("click");
-    }
-  }
-
-  handleMouseUp(event) {
-    let window = event.target.ownerGlobal;
-
-    this.lastClickInfo = {
-      button: event.button,
-      modifiers: clickModifiersFromEvent(event),
-    };
-
-    if (event.button === 1) {
-      let { gBrowser } = window;
-      if (this.getProperty(gBrowser.selectedTab, "enabled")) {
-        this.emit("click", gBrowser.selectedBrowser);
-      }
     }
   }
 
@@ -429,15 +410,6 @@ this.browserAction = class extends ExtensionAPI {
             onBrowserAction: true,
             menu: menu,
           });
-        }
-        break;
-
-      case "keypress":
-        if (event.key === " " || event.key === "Enter") {
-          this.lastClickInfo = {
-            button: 0,
-            modifiers: clickModifiersFromEvent(event),
-          };
         }
         break;
     }
@@ -788,10 +760,7 @@ this.browserAction = class extends ExtensionAPI {
           register: fire => {
             let listener = (event, browser) => {
               context.withPendingBrowser(browser, () =>
-                fire.sync(
-                  tabManager.convert(tabTracker.activeTab),
-                  browserAction.lastClickInfo
-                )
+                fire.sync(tabManager.convert(tabTracker.activeTab))
               );
             };
             browserAction.on("click", listener);
