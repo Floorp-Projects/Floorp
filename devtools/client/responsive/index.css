@@ -121,7 +121,7 @@ input:-moz-focusring {
     [separator]
     max-content
     [throttling]
-    auto
+    minmax(auto, max-content)
     [separator]
     max-content
     [touch-simulation]
@@ -145,7 +145,7 @@ input:-moz-focusring {
     [separator]
     max-content
     [throttling]
-    auto
+    minmax(auto, max-content)
     [separator]
     max-content
     [ua]
