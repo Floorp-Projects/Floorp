@@ -23,6 +23,7 @@ const { l10n } = require("../../modules/l10n");
 const ManifestItem = createFactory(require("./ManifestItem"));
 const ManifestIssueList = createFactory(require("./ManifestIssueList"));
 const ManifestSection = createFactory(require("./ManifestSection"));
+const ManifestJsonLink = createFactory(require("./ManifestJsonLink"));
 
 /**
  * A canonical manifest, splitted in different sections
@@ -36,6 +37,7 @@ class Manifest extends PureComponent {
       identity: PropTypes.array.isRequired,
       presentation: PropTypes.array.isRequired,
       validation: PropTypes.array.isRequired,
+      url: PropTypes.string.isRequired,
     };
   }
 
@@ -89,6 +91,8 @@ class Manifest extends PureComponent {
   }
 
   render() {
+    const { url } = this.props;
+
     return article(
       { className: "js-manifest" },
       Localized(
@@ -97,6 +101,7 @@ class Manifest extends PureComponent {
         },
         h1({ className: "app-page__title" })
       ),
+      ManifestJsonLink({ url }),
       this.renderIssueSection(),
       this.renderItemSections()
     );
