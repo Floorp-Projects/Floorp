@@ -587,10 +587,6 @@ struct DIGroup {
     GP("\n\n");
     GP("Begin EndGroup\n");
 
-    if (mVisibleRect.IsEmpty()) {
-      return;
-    }
-
     // Invalidate any unused items
     GP("mDisplayItems\n");
     for (auto iter = mDisplayItems.Iter(); !iter.Done(); iter.Next()) {
@@ -692,12 +688,9 @@ struct DIGroup {
     Range<uint8_t> bytes((uint8_t*)recorder->mOutputStream.mData,
                          recorder->mOutputStream.mLength);
     if (!mKey) {
-      // we don't want to send a new image that doesn't have any
-      // items in it
-      if (!hasItems || mVisibleRect.IsEmpty()) {
+      if (!hasItems)  // we don't want to send a new image that doesn't have any
+                      // items in it
         return;
-      }
-
       wr::BlobImageKey key =
           wr::BlobImageKey{aWrManager->WrBridge()->GetNextImageKey()};
       GP("No previous key making new one %d\n", key._0.mHandle);
@@ -715,7 +708,8 @@ struct DIGroup {
 
       // Convert mInvalidRect to image space by subtracting the corner of the
       // image bounds
-      auto dirtyRect = ViewAs<ImagePixel>(mInvalidRect);
+      auto dirtyRect = ViewAs<ImagePixel>(
+          mInvalidRect - mVisibleRect.ToUnknownRect().TopLeft());
 
       auto bottomRight = dirtyRect.BottomRight();
       GP("check invalid %d %d - %d %d\n", bottomRight.x, bottomRight.y,

@@ -340,8 +340,6 @@ bool IpcResourceUpdateQueue::UpdateBlobImage(BlobImageKey aKey,
                                              Range<uint8_t> aBytes,
                                              ImageIntRect aVisibleRect,
                                              ImageIntRect aDirtyRect) {
-  MOZ_ASSERT(aVisibleRect.width > 0 && aVisibleRect.height > 0);
-
   auto bytes = mWriter.Write(aBytes);
   if (!bytes.length()) {
     return false;
