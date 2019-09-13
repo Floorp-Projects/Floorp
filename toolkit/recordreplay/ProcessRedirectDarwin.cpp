@@ -2566,6 +2566,7 @@ static SystemRedirection gSystemRedirections[] = {
     {"SCDynamicStoreCreateRunLoopSource", RR_ScalarRval},
     {"SCDynamicStoreKeyCreateProxies", RR_ScalarRval},
     {"SCDynamicStoreSetNotificationKeys", RR_ScalarRval},
+    {"SecRandomCopyBytes", RR_SaveRvalHadErrorNegative<RR_WriteBuffer<2, 1>>},
     {"SendEventToEventTarget", RR_ScalarRval},
 
     // These are not public APIs, but other redirected functions may be aliases
