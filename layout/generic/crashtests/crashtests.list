@@ -729,6 +729,7 @@ pref(layout.css.column-span.enabled,true) load 1517033.html
 pref(layout.css.column-span.enabled,true) load 1517297.html
 load chrome://reftest/content/crashtests/layout/generic/crashtests/1520798-1.xul
 load 1520798-2.html
+load 1528771.html
 load 1539656.html
 load 1544060-1.html
 load 1544060-2.html
@@ -736,10 +737,14 @@ load 1542441.html
 pref(layout.css.grid-template-subgrid-value.enabled,true) load 1553824.html
 pref(layout.css.column-span.enabled,true) load 1554824.html
 load 1555142.html
+load 1560349.html
+load 1560397.html
+load 1560397-2.html
 load 1562105.html
 pref(layout.css.column-span.enabled,true) load 1563131.html
 pref(layout.css.column-span.enabled,true) load 1568001-1.html
 pref(layout.css.column-span.enabled,true) load 1568001-2.html
+load 1569639.html
 pref(layout.css.column-span.enabled,true) load 1571239.html
 load 1571460.html
 pref(layout.css.column-span.enabled,true) load 1571598.html

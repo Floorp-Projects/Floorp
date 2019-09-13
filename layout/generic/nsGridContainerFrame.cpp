@@ -1241,6 +1241,10 @@ struct nsGridContainerFrame::TrackSizingFunctions {
     }
     if (MOZ_UNLIKELY(mExpandedTracks.Length() > kMaxLine - 1)) {
       mExpandedTracks.TruncateLength(kMaxLine - 1);
+      if (mHasRepeatAuto && mRepeatAutoStart > kMaxLine - 1) {
+        // The `repeat(auto-fill/fit)` track is outside the clamped grid.
+        mHasRepeatAuto = false;
+      }
     }
   }
 
@@ -1272,7 +1276,7 @@ struct nsGridContainerFrame::TrackSizingFunctions {
   // The difference between mExplicitGridEnd and mSizingFunctions.Length().
   int32_t mRepeatEndDelta;
   // True if there is a specified repeat(auto-fill/fit) track.
-  const bool mHasRepeatAuto;
+  bool mHasRepeatAuto;
   // True if this track (relative to mRepeatAutoStart) is a removed auto-fit.
   // Indexed relative to mExplicitGridOffset + mRepeatAutoStart.
   nsTArray<bool> mRemovedRepeatTracks;
@@ -1322,8 +1326,9 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
         mIsSameDirection(aIsSameDirection),
         mHasRepeatAuto(aTracks.mHasRepeatAuto) {
     MOZ_ASSERT(mHasRepeatAuto || mRepeatEndDelta == 0);
-    MOZ_ASSERT(mRepeatAutoStart <= mTracks.mExpandedLineNames.Length());
-    MOZ_ASSERT(!mHasRepeatAuto || mTracks.mExpandedLineNames.Length() >= 2);
+    MOZ_ASSERT(!mHasRepeatAuto ||
+               (mTracks.mExpandedLineNames.Length() >= 2 &&
+                mRepeatAutoStart <= mTracks.mExpandedLineNames.Length()));
   }
 
   /**
