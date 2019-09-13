@@ -38,6 +38,9 @@ permalink: /changelog/
     * `browser-engine-gecko-beta`: GeckoView 71.0
     * `browser-engine-gecko-nightly`: GeckoView 72.0
 
+* **feature-push**
+  * The `AutoPushFeature` now checks (once every 24 hours) to verify and renew push subscriptions if expired after a cold boot.
+  
 # 18.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v17.0.0...v18.0.0)
