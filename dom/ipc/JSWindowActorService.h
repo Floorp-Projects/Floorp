@@ -80,6 +80,7 @@ class JSWindowActorProtocol final : public nsIObserver,
  private:
   explicit JSWindowActorProtocol(const nsAString& aName) : mName(aName) {}
   extensions::MatchPatternSet* GetURIMatcher();
+  bool RemoteTypePrefixMatches(const nsDependentSubstring& aRemoteType);
   ~JSWindowActorProtocol() = default;
 
   nsString mName;
