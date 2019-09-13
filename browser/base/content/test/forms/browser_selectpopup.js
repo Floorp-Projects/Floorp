@@ -88,7 +88,7 @@ const PAGECONTENT_TRANSLATED =
   "<html><body>" +
   "<div id='div'>" +
   "<iframe id='frame' width='320' height='295' style='border: none;'" +
-  "        src='data:text/html,<select id=select autofocus><option>he he he</option><option>boo boo</option><option>baz baz</option></select>'" +
+  "        src='data:text/html,<select id=select><option>he he he</option><option>boo boo</option><option>baz baz</option></select>'" +
   "</iframe>" +
   "</div></body></html>";
 
@@ -396,6 +396,20 @@ add_task(async function() {
 add_task(async function() {
   const pageUrl = "data:text/html," + escape(PAGECONTENT_TRANSLATED);
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
+
+  // We need to explicitly call Element.focus() since dataURL is treated as
+  // cross-origin, thus autofocus doesn't work there.
+  const iframe = await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+    return content.document.querySelector("iframe").browsingContext;
+  });
+  await SpecialPowers.spawn(iframe, [], async () => {
+    const input = content.document.getElementById("select");
+    const focusPromise = new Promise(resolve => {
+      input.addEventListener("focus", resolve, { once: true });
+    });
+    input.focus();
+    await focusPromise;
+  });
 
   let menulist = document.getElementById("ContentSelectDropdown");
   let selectPopup = menulist.menupopup;
