@@ -106,7 +106,7 @@ add_task(async function popup_mousedown_test() {
     info("Clicking on the second result");
     EventUtils.synthesizeMouseAtCenter(listitem, { type: "mousedown" }, window);
     Assert.equal(
-      UrlbarTestUtils.getSelectedElement(window),
+      UrlbarTestUtils.getSelectedRow(window),
       listitem,
       "The second item is selected"
     );
@@ -178,7 +178,7 @@ add_task(async function test_no_heuristic_result() {
     info(`Searching for the empty string`);
     await promiseAutocompleteResultPopup("", window, true);
     ok(UrlbarTestUtils.getResultCount(window) > 0, "Has results");
-    let result = await UrlbarTestUtils.getSelectedElement(window);
+    let result = await UrlbarTestUtils.getSelectedRow(window);
     Assert.strictEqual(result, null, `Should have no selection`);
     await UrlbarTestUtils.promiseSpeculativeConnections(
       server,

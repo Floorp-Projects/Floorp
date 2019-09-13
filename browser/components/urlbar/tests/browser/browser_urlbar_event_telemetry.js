@@ -187,7 +187,7 @@ const tests = [
     while (gURLBar.untrimmedValue != "http://example.com/?q=%s") {
       EventUtils.synthesizeKey("KEY_ArrowDown");
     }
-    let element = UrlbarTestUtils.getSelectedElement(window);
+    let element = UrlbarTestUtils.getSelectedRow(window);
     EventUtils.synthesizeMouseAtCenter(element, {});
     await promise;
     return {
@@ -368,7 +368,7 @@ const tests = [
     while (gURLBar.untrimmedValue != "http://mochi.test:8888/") {
       EventUtils.synthesizeKey("KEY_ArrowDown");
     }
-    let element = UrlbarTestUtils.getSelectedElement(window);
+    let element = UrlbarTestUtils.getSelectedRow(window);
     EventUtils.synthesizeMouseAtCenter(element, {});
     await promise;
     return {
@@ -459,7 +459,7 @@ const tests = [
     while (gURLBar.untrimmedValue != "http://mochi.test:8888/") {
       EventUtils.synthesizeKey("KEY_ArrowDown");
     }
-    let element = UrlbarTestUtils.getSelectedElement(window);
+    let element = UrlbarTestUtils.getSelectedRow(window);
     EventUtils.synthesizeMouseAtCenter(element, {});
     await promise;
     return {
@@ -518,7 +518,7 @@ const tests = [
     });
     Services.prefs.clearUserPref("browser.urlbar.openViewOnFocus");
     await UrlbarTestUtils.promiseSearchComplete(window);
-    let element = UrlbarTestUtils.getSelectedElement(window);
+    let element = UrlbarTestUtils.getSelectedRow(window);
     EventUtils.synthesizeMouseAtCenter(element, {});
     await promise;
     return {
