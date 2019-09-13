@@ -7,7 +7,7 @@ package org.mozilla.fenix.library.history
 import androidx.paging.ItemKeyedDataSource
 import mozilla.components.concept.storage.VisitInfo
 import org.mozilla.fenix.components.history.PagedHistoryProvider
-import org.mozilla.fenix.ext.getHostFromUrl
+import org.mozilla.fenix.ext.tryGetHostFromUrl
 
 class HistoryDataSource(
     private val historyProvider: PagedHistoryProvider
@@ -44,8 +44,7 @@ class HistoryDataSource(
             return { id, visit ->
                 val title = visit.title
                     ?.takeIf(String::isNotEmpty)
-                    ?: visit.url.getHostFromUrl()
-                    ?: visit.url
+                    ?: visit.url.tryGetHostFromUrl()
 
                 HistoryItem(offset + id, title, visit.url, visit.visitTime)
             }

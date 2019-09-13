@@ -33,8 +33,7 @@ import org.mozilla.fenix.exceptions.ExceptionDomains
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
-import java.net.MalformedURLException
-import java.net.URL
+import org.mozilla.fenix.ext.tryGetHostFromUrl
 
 class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), BackHandler {
 
@@ -154,20 +153,12 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), BackHan
     }
 
     private fun toggleTrackingProtection(isEnabled: Boolean) {
-        context?.let {
-            val host = try {
-                URL(url).host
-            } catch (e: MalformedURLException) {
-                url
-            }
+        context?.let { context ->
+            val host = url.tryGetHostFromUrl()
             lifecycleScope.launch {
-                if (!ExceptionDomains.load(it).contains(host)) {
-                    ExceptionDomains.add(it, host)
-                } else {
-                    ExceptionDomains.remove(it, listOf(host))
-                }
+                ExceptionDomains(context).toggle(host)
             }
-            it.components.useCases.sessionUseCases.reload.invoke()
+            context.components.useCases.sessionUseCases.reload.invoke()
         }
         trackingProtectionStore.dispatch(TrackingProtectionAction.TrackerBlockingChanged(isEnabled))
     }

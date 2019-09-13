@@ -10,7 +10,7 @@ import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory.FINGERPRINTING
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory.SOCIAL
 import mozilla.components.concept.engine.content.blocking.Tracker
-import org.mozilla.fenix.ext.getHostFromUrl
+import org.mozilla.fenix.ext.tryGetHostFromUrl
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.CRYPTOMINERS
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.FINGERPRINTERS
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.SOCIAL_MEDIA_TRACKERS
@@ -57,21 +57,21 @@ class TrackerBuckets {
                 when {
                     CRYPTOMINING in item.trackingCategories -> {
                         map[CRYPTOMINERS] = map[CRYPTOMINERS].orEmpty() +
-                                (item.url.getHostFromUrl() ?: item.url)
+                                item.url.tryGetHostFromUrl()
                     }
                     FINGERPRINTING in item.trackingCategories -> {
                         map[FINGERPRINTERS] = map[FINGERPRINTERS].orEmpty() +
-                                (item.url.getHostFromUrl() ?: item.url)
+                                item.url.tryGetHostFromUrl()
                     }
                     SOCIAL in item.trackingCategories -> {
                         map[SOCIAL_MEDIA_TRACKERS] = map[SOCIAL_MEDIA_TRACKERS].orEmpty() +
-                                (item.url.getHostFromUrl() ?: item.url)
+                                item.url.tryGetHostFromUrl()
                     }
                     AD in item.trackingCategories ||
                             SOCIAL in item.trackingCategories ||
                             ANALYTICS in item.trackingCategories -> {
                         map[TRACKING_CONTENT] = map[TRACKING_CONTENT].orEmpty() +
-                                (item.url.getHostFromUrl() ?: item.url)
+                                item.url.tryGetHostFromUrl()
                     }
                 }
             }

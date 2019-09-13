@@ -66,15 +66,17 @@ class ExceptionsFragment : Fragment() {
 
     private fun deleteAllItems() {
         viewLifecycleOwner.lifecycleScope.launch(IO) {
-            val domains = ExceptionDomains.load(context!!)
-            ExceptionDomains.remove(context!!, domains)
+            ExceptionDomains(requireContext()).run {
+                val domains = load()
+                remove(domains)
+            }
             reloadData()
         }
     }
 
     private fun deleteOneItem(item: ExceptionsItem) {
         viewLifecycleOwner.lifecycleScope.launch(IO) {
-            ExceptionDomains.remove(context!!, listOf(item.url))
+            ExceptionDomains(requireContext()).remove(listOf(item.url))
             reloadData()
         }
     }
@@ -89,12 +91,8 @@ class ExceptionsFragment : Fragment() {
     }
 
     private fun loadAndMapExceptions(): List<ExceptionsItem> {
-        return ExceptionDomains.load(context!!)
-            .map { item ->
-                ExceptionsItem(
-                    item
-                )
-            }
+        return ExceptionDomains(requireContext()).load()
+            .map { item -> ExceptionsItem(item) }
     }
 
     private suspend fun reloadData() {

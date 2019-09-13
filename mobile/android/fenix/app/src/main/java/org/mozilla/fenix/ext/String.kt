@@ -7,9 +7,9 @@ package org.mozilla.fenix.ext
 import android.content.Context
 import androidx.core.net.toUri
 import kotlinx.coroutines.runBlocking
+import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
 import java.net.MalformedURLException
 import java.net.URL
-import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
 
 /**
  * Replaces the keys with the values with the map provided.
@@ -21,13 +21,13 @@ fun String.replace(pairs: Map<String, String>): String {
 }
 
 /**
- * Try to parse and get host part if this [String] is valid URL.
- * Returns **null** otherwise.
+ * Tries to parse and get host part if this [String] is valid URL.
+ * Otherwise returns the string.
  */
-fun String?.getHostFromUrl(): String? = try {
+fun String.tryGetHostFromUrl(): String = try {
     URL(this).host
 } catch (e: MalformedURLException) {
-    null
+    this
 }
 
 /**

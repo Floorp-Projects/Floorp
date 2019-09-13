@@ -6,73 +6,79 @@ package org.mozilla.fenix.exceptions
 
 import android.content.Context
 import android.content.SharedPreferences
+import mozilla.components.support.ktx.android.content.PreferencesHolder
+import mozilla.components.support.ktx.android.content.stringPreference
 
 /**
  * Contains functionality to manage custom domains for allow-list.
  */
-object ExceptionDomains {
-    private const val PREFERENCE_NAME = "exceptions"
-    private const val KEY_DOMAINS = "exceptions_domains"
-    private const val SEPARATOR = "@<;>@"
+class ExceptionDomains(context: Context) : PreferencesHolder {
 
-    private var exceptions: List<String>? = null
+    override val preferences: SharedPreferences =
+        context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE)
+
+    private var domains by stringPreference(KEY_DOMAINS, default = "")
 
     /**
      * Loads the previously added/saved custom domains from preferences.
      *
-     * @param context the application context
      * @return list of custom domains
      */
-    fun load(context: Context): List<String> {
+    fun load(): List<String> {
         if (exceptions == null) {
-            exceptions = (preferences(context)
-                .getString(KEY_DOMAINS, "") ?: "")
-                .split(SEPARATOR)
-                .filter { !it.isEmpty() }
+            exceptions = domains.split(SEPARATOR).filter { it.isNotEmpty() }
         }
 
-        return exceptions ?: listOf()
+        return exceptions.orEmpty()
     }
 
     /**
      * Saves the provided domains to preferences.
      *
-     * @param context the application context
      * @param domains list of domains
      */
-    fun save(context: Context, domains: List<String>) {
+    fun save(domains: List<String>) {
         exceptions = domains
 
-        preferences(context)
-            .edit()
-            .putString(KEY_DOMAINS, domains.joinToString(separator = SEPARATOR))
-            .apply()
+        this.domains = domains.joinToString(separator = SEPARATOR)
     }
 
     /**
      * Adds the provided domain to preferences.
      *
-     * @param context the application context
      * @param domain the domain to add
      */
-    fun add(context: Context, domain: String) {
-        val domains = mutableListOf<String>()
-        domains.addAll(load(context))
-        domains.add(domain)
-
-        save(context, domains)
+    fun add(domain: String) {
+        save(domains = load() + domain)
     }
 
     /**
      * Removes the provided domain from preferences.
      *
-     * @param context the application context
      * @param domains the domain to remove
      */
-    fun remove(context: Context, domains: List<String>) {
-        save(context, load(context) - domains)
+    fun remove(domains: List<String>) {
+        save(domains = load() - domains)
     }
 
-    private fun preferences(context: Context): SharedPreferences =
-        context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE)
+    /**
+     * Adds or removes the provided domain from preferences.
+     *
+     * If present, the domain will be removed. Otherwise, it will be added.
+     */
+    fun toggle(domain: String) {
+        if (domain in load()) {
+            remove(listOf(domain))
+        } else {
+            add(domain)
+        }
+    }
+
+    companion object {
+        private const val PREFERENCE_NAME = "exceptions"
+        private const val KEY_DOMAINS = "exceptions_domains"
+        private const val SEPARATOR = "@<;>@"
+
+        private var exceptions: List<String>? = null
+    }
 }

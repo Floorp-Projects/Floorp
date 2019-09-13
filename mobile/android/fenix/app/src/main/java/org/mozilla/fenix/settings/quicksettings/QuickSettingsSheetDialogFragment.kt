@@ -39,12 +39,11 @@ import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.exceptions.ExceptionDomains
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.tryGetHostFromUrl
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.settings.PhoneFeature
-import java.net.MalformedURLException
-import java.net.URL
 import com.google.android.material.R as MaterialR
 
 private const val REQUEST_CODE_QUICK_SETTINGS_PERMISSIONS = 4
@@ -155,17 +154,9 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
         requestCode == REQUEST_CODE_QUICK_SETTINGS_PERMISSIONS && grantResults.all { it == PERMISSION_GRANTED }
 
     private fun toggleTrackingProtection(context: Context, url: String) {
-        val host = try {
-            URL(url).host
-        } catch (e: MalformedURLException) {
-            url
-        }
+        val host = url.tryGetHostFromUrl()
         lifecycleScope.launch {
-            if (!ExceptionDomains.load(context).contains(host)) {
-                ExceptionDomains.add(context, host)
-            } else {
-                ExceptionDomains.remove(context, listOf(host))
-            }
+            ExceptionDomains(context).toggle(host)
         }
     }
 
