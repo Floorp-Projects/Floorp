@@ -444,13 +444,6 @@ nsresult nsNotifyAddrListener::SendEvent(const char* aEventID) {
 
   LOG(("SendEvent: network is '%s'\n", aEventID));
 
-  // The event was caused by a call to GetIsLinkUp on the main thread.
-  // We only need to recalculate for events caused by NotifyAddrChange or
-  // OnInterfaceChange
-  if (!NS_IsMainThread()) {
-    calculateNetworkId();
-  }
-
   nsresult rv;
   nsCOMPtr<nsIRunnable> event = new ChangeEvent(this, aEventID);
   if (NS_FAILED(rv = NS_DispatchToMainThread(event)))
@@ -628,6 +621,8 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
   }
 
   CoUninitialize();
+
+  calculateNetworkId();
 
   return ret;
 }
