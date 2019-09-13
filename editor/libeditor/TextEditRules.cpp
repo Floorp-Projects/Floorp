@@ -430,34 +430,6 @@ nsresult TextEditRules::CollapseSelectionToTrailingBRIfNeeded() {
   return NS_OK;
 }
 
-already_AddRefed<nsINode>
-TextEditRules::GetTextNodeAroundSelectionStartContainer() {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  EditorRawDOMPoint selectionStartPoint(
-      EditorBase::GetStartPoint(*SelectionRefPtr()));
-  if (NS_WARN_IF(!selectionStartPoint.IsSet())) {
-    return nullptr;
-  }
-  if (selectionStartPoint.IsInTextNode()) {
-    nsCOMPtr<nsINode> node = selectionStartPoint.GetContainer();
-    return node.forget();
-  }
-  // This should be the root node, walk the tree looking for text nodes.
-  // XXX NodeIterator sets mutation observer even for this temporary use.
-  //     It's too expensive if this is called from a hot path.
-  nsCOMPtr<nsINode> node = selectionStartPoint.GetContainer();
-  RefPtr<NodeIterator> iter =
-      new NodeIterator(node, NodeFilter_Binding::SHOW_TEXT, nullptr);
-  while (!EditorBase::IsTextNode(node)) {
-    node = iter->NextNode(IgnoreErrors());
-    if (!node) {
-      return nullptr;
-    }
-  }
-  return node.forget();
-}
-
 void TextEditor::HandleNewLinesInStringForSingleLineEditor(
     nsString& aString) const {
   static const char16_t kLF = static_cast<char16_t>('\n');
