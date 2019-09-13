@@ -1166,22 +1166,14 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult WillInsert(bool* aCancel = nullptr);
 
   /**
-   * Called before inserting text.
-   * This method may actually inserts text into the editor.  Therefore, this
-   * might cause destroying the editor.
+   * HandleInsertText() handles inserting text at selection.
    *
-   * @param aEditSubAction      Must be EditSubAction::eInsertTextComingFromIME
-   *                            or EditSubAction::eInsertText.
-   * @param aCancel             Returns true if the operation is canceled.
-   * @param aHandled            Returns true if the edit action is handled.
-   * @param inString            String to be inserted.
-   * @param outString           String actually inserted.
-   * @param aMaxLength          The maximum string length which the editor
-   *                            allows to set.
+   * @param aEditSubAction      Must be EditSubAction::eInsertText or
+   *                            EditSubAction::eInsertTextComingFromIME.
+   * @param aInsertionString    String to be inserted at selection.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult WillInsertText(
-      EditSubAction aEditSubAction, bool* aCancel, bool* aHandled,
-      const nsAString* inString, nsAString* outString, int32_t aMaxLength);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE virtual EditActionResult HandleInsertText(
+      EditSubAction aEditSubAction, const nsAString& aInsertionString) final;
 
   /**
    * GetInlineStyles() retrieves the style of aNode and modifies each item of

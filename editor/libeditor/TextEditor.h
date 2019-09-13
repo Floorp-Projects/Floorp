@@ -214,8 +214,8 @@ class TextEditor : public EditorBase,
    *                            JS.  If set to nullptr, will be treated as
    *                            called by system.
    */
-  nsresult InsertTextAsAction(const nsAString& aStringToInsert,
-                              nsIPrincipal* aPrincipal = nullptr);
+  MOZ_CAN_RUN_SCRIPT nsresult InsertTextAsAction(
+      const nsAString& aStringToInsert, nsIPrincipal* aPrincipal = nullptr);
 
   /**
    * PasteAsQuotationAsAction() pastes content in clipboard as quotation.
@@ -423,7 +423,8 @@ class TextEditor : public EditorBase,
    *
    * @param aStringToInsert     The string to insert.
    */
-  nsresult InsertTextAsSubAction(const nsAString& aStringToInsert);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  InsertTextAsSubAction(const nsAString& aStringToInsert);
 
   /**
    * DeleteSelectionAsSubAction() removes selection content or content around
@@ -586,7 +587,7 @@ class TextEditor : public EditorBase,
    *                            more characters, returns "as handled".
    */
   EditActionResult TruncateInsertionStringForMaxLength(
-      nsAString& aInsertionString, uint32_t aMaxLength);
+      nsAString& aInsertionString);
 
   /**
    * InsertLineFeedCharacterAtSelection() inserts a linefeed character at
@@ -594,6 +595,38 @@ class TextEditor : public EditorBase,
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
   InsertLineFeedCharacterAtSelection();
+
+  /**
+   * Handles the newline characters according to the default system prefs
+   * (editor.singleLine.pasteNewlines).
+   * Each value means:
+   *   nsIPlaintextEditor::eNewlinesReplaceWithSpaces (2, Firefox default):
+   *     replace newlines with spaces.
+   *   nsIPlaintextEditor::eNewlinesStrip (3):
+   *     remove newlines from the string.
+   *   nsIPlaintextEditor::eNewlinesReplaceWithCommas (4, Thunderbird default):
+   *     replace newlines with commas.
+   *   nsIPlaintextEditor::eNewlinesStripSurroundingWhitespace (5):
+   *     collapse newlines and surrounding whitespace characters and
+   *     remove them from the string.
+   *   nsIPlaintextEditor::eNewlinesPasteIntact (0):
+   *     only remove the leading and trailing newlines.
+   *   nsIPlaintextEditor::eNewlinesPasteToFirst (1) or any other value:
+   *     remove the first newline and all characters following it.
+   *
+   * @param aString the string to be modified in place.
+   */
+  void HandleNewLinesInStringForSingleLineEditor(nsString& aString) const;
+
+  /**
+   * HandleInsertText() handles inserting text at selection.
+   *
+   * @param aEditSubAction      Must be EditSubAction::eInsertText or
+   *                            EditSubAction::eInsertTextComingFromIME.
+   * @param aInsertionString    String to be inserted at selection.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE virtual EditActionResult HandleInsertText(
+      EditSubAction aEditSubAction, const nsAString& aInsertionString);
 
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
@@ -633,6 +666,13 @@ class TextEditor : public EditorBase,
   int32_t WrapWidth() const { return mWrapColumn; }
 
   /**
+   * CanEchoPasswordNow() returns true if currently we can echo password.
+   * If it's direct user input such as pasting or dropping text, this
+   * returns false even if we may echo password.
+   */
+  bool CanEchoPasswordNow() const;
+
+  /**
    * Make the given selection span the entire document.
    */
   MOZ_CAN_RUN_SCRIPT
@@ -643,7 +683,8 @@ class TextEditor : public EditorBase,
    *
    * @param aStringToInsert     The string to insert.
    */
-  nsresult OnInputText(const nsAString& aStringToInsert);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  OnInputText(const nsAString& aStringToInsert);
 
   /**
    * InsertLineBreakAsSubAction() inserts a line break, i.e., \n if it's
@@ -687,7 +728,8 @@ class TextEditor : public EditorBase,
    * @param aQuotedText         String to insert.  This will be quoted by ">"
    *                            automatically.
    */
-  nsresult InsertWithQuotationsAsSubAction(const nsAString& aQuotedText);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  InsertWithQuotationsAsSubAction(const nsAString& aQuotedText);
 
   /**
    * Return true if the data is safe to insert as the source and destination
@@ -730,7 +772,8 @@ class TextEditor : public EditorBase,
    */
   virtual nsresult PrepareTransferable(nsITransferable** transferable);
 
-  nsresult InsertTextFromTransferable(nsITransferable* transferable);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  InsertTextFromTransferable(nsITransferable* transferable);
 
   /**
    * DeleteSelectionAndCreateElement() creates a element whose name is aTag.
