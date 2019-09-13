@@ -351,9 +351,7 @@ class PrefRow {
     gPrefInEdit = this;
     this.editing = true;
     this.refreshElement();
-    // The type=number input isn't selected unless it's focused first.
     this.inputField.focus();
-    this.inputField.select();
   }
 
   save() {
@@ -495,12 +493,6 @@ function loadPrefs() {
       pref.editing = false;
       Services.prefs.clearUserPref(pref.name);
       pref.editButton.focus();
-    }
-  });
-
-  window.addEventListener("keypress", event => {
-    if (event.target != search && event.key == "Escape" && gPrefInEdit) {
-      gPrefInEdit.endEdit();
     }
   });
 }
