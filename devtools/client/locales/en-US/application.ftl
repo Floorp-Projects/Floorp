@@ -111,6 +111,10 @@ manifest-loaded-error = There was an error while loading the manifest:
 # Text displayed when the page has no manifest available
 manifest-non-existing = No manifest found to inspect.
 
+# Text displayed when the page has a manifest embedded in a Data URL and
+# thus we cannot link to it.
+manifest-json-link-data-url = The manifest is embedded in a Data URL.
+
 # Sidebar navigation item for Manifest sidebar item section
 sidebar-item-manifest = Manifest
   .alt = Manifest Icon

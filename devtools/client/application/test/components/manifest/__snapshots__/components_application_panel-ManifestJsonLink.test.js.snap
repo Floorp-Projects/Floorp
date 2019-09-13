@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ManifestJsonLink renders the expected snapshot when given a data URL 1`] = `
+<p
+  className="manifest-json-link"
+>
+  <Localized
+    id="manifest-json-link-data-url"
+  />
+</p>
+`;
+
+exports[`ManifestJsonLink renders the expected snapshot when given a regular URL 1`] = `
+<p
+  className="manifest-json-link"
+>
+  <a
+    className="js-manifest-json-link devtools-ellipsis-text"
+    href="#"
+    onClick={[Function]}
+    title="https://example.com/manifest.json"
+  >
+    https://example.com/manifest.json
+  </a>
+</p>
+`;
