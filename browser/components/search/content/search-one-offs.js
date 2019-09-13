@@ -19,7 +19,7 @@ class SearchOneOffs {
       MozXULElement.parseXULToFragment(
         `
       <hbox class="search-panel-one-offs-header search-panel-header search-panel-current-input">
-        <label class="search-panel-one-offs-header-label" value="&searchWithDesc.label;"/>
+        <label class="searchbar-oneoffheader-search" value="&searchWithDesc.label;"/>
       </hbox>
       <hbox class="search-panel-one-offs" role="group"/>
       <vbox class="search-add-engines"/>
@@ -66,7 +66,6 @@ class SearchOneOffs {
     this.spacerCompact = this.querySelector(".search-one-offs-spacer");
 
     this.contextMenuPopup = this.querySelector(".search-one-offs-context-menu");
-    document.getElementById("mainPopupSet").appendChild(this.contextMenuPopup);
 
     this._bundle = null;
 
@@ -107,7 +106,6 @@ class SearchOneOffs {
     this.addEventListener("mouseout", this);
     this.addEventListener("click", this);
     this.addEventListener("command", this);
-    this.contextMenuPopup.addEventListener("command", this);
     this.addEventListener("contextmenu", this);
 
     // Prevent popup events from the context menu from reaching the autocomplete
@@ -461,7 +459,7 @@ class SearchOneOffs {
     }
 
     let headerText = this.header.querySelector(
-      ".search-panel-one-offs-header-label"
+      ".searchbar-oneoffheader-search"
     );
     this.buttons.setAttribute("aria-label", headerText.value);
 
@@ -1206,9 +1204,10 @@ class SearchOneOffs {
       event.preventDefault();
       return;
     }
-    this.contextMenuPopup
-      .querySelector(".search-one-offs-context-set-default")
-      .setAttribute("disabled", target.engine == Services.search.defaultEngine);
+    this.querySelector(".search-one-offs-context-set-default").setAttribute(
+      "disabled",
+      target.engine == Services.search.defaultEngine
+    );
 
     this.contextMenuPopup.openPopupAtScreen(event.screenX, event.screenY, true);
     event.preventDefault();
