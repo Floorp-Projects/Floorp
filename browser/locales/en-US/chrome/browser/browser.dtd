@@ -171,29 +171,7 @@ convenience of Safari and Chrome users on macOS. See bug 1398988. -->
 <!ENTITY printButton.label            "Print">
 <!ENTITY printButton.tooltip          "Print this page">
 
-<!ENTITY urlbar.defaultNotificationAnchor.tooltip         "Open message panel">
-<!ENTITY urlbar.geolocationNotificationAnchor.tooltip     "Open location request panel">
-<!ENTITY urlbar.autoplayNotificationAnchor.tooltip        "Open autoplay panel">
-<!ENTITY urlbar.addonsNotificationAnchor.tooltip          "Open add-on installation message panel">
-<!ENTITY urlbar.canvasNotificationAnchor.tooltip          "Manage canvas extraction permission">
-<!ENTITY urlbar.indexedDBNotificationAnchor.tooltip       "Open offline storage message panel">
-<!ENTITY urlbar.passwordNotificationAnchor.tooltip        "Open save password message panel">
-<!ENTITY urlbar.pluginsNotificationAnchor.tooltip         "Manage plug-in use">
-<!ENTITY urlbar.webNotificationAnchor.tooltip             "Change whether you can receive notifications from the site">
-<!ENTITY urlbar.persistentStorageNotificationAnchor.tooltip     "Store data in Persistent Storage">
 <!ENTITY urlbar.remoteControlNotificationAnchor.tooltip   "Browser is under remote control">
-<!ENTITY urlbar.webAuthnAnchor.tooltip                    "Open Web Authentication panel">
-<!ENTITY urlbar.storageAccessAnchor.tooltip               "Open browsing activity permission panel">
-
-<!ENTITY urlbar.webRTCShareDevicesNotificationAnchor.tooltip      "Manage sharing your camera and/or microphone with the site">
-<!ENTITY urlbar.webRTCShareMicrophoneNotificationAnchor.tooltip   "Manage sharing your microphone with the site">
-<!ENTITY urlbar.webRTCShareScreenNotificationAnchor.tooltip       "Manage sharing your windows or screen with the site">
-
-<!ENTITY urlbar.servicesNotificationAnchor.tooltip        "Open install message panel">
-<!ENTITY urlbar.translateNotificationAnchor.tooltip       "Translate this page">
-<!ENTITY urlbar.translatedNotificationAnchor.tooltip      "Manage page translation">
-<!ENTITY urlbar.emeNotificationAnchor.tooltip             "Manage use of DRM software">
-<!ENTITY urlbar.midiNotificationAnchor.tooltip            "Open MIDI panel">
 
 <!ENTITY urlbar.permissionsGranted.tooltip       "You have granted this website additional permissions.">
 
