@@ -56,6 +56,8 @@ exclude: true
   ([bug 1565782]({{bugzilla}}1565782))
 - Added onSlowScript to [`ContentDelegate`][70.23] which allows handling of slow and hung scripts.
   ([bug 1621094]({{bugzilla}}1621094))
+- Added [`ContentBlockingController`][70.24], accessible via [`GeckoRuntime.getContentBlockingController`][70.25]
+  to allow modification and inspection of a content blocking exception list.
 
 [70.1]: {{javadoc_uri}}/GeckoSessionSettings.Builder.html#contextId-java.lang.String-
 [70.2]: {{javadoc_uri}}/StorageController.html#clearDataForSessionContext-java.lang.String-
@@ -80,6 +82,8 @@ exclude: true
 [70.21]: {{javadoc_uri}}/WebExtensionController.TabDelegate.html#onCloseTab-org.mozilla.geckoview.WebExtension-org.mozilla.geckoview.GeckoSession-
 [70.22]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/remove
 [70.23]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html
+[70.24]: {{javadoc_uri}}/ContentBlockingController.html
+[70.25]: {{javadoc_uri}}/GeckoRuntime.html#getContentBlockingController--
 
 ## v69
 - Modified behavior of ['setAutomaticFontSizeAdjustment'][69.1] so that it no 
@@ -323,4 +327,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 4199a7a889674d4402926366a7f4fb2f93de5c46
+[api-version]: f2d89facd57470b760be9a867173d02bf9040c75
