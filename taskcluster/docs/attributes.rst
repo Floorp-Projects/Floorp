@@ -247,7 +247,7 @@ artifact_prefix
 Most taskcluster artifacts are public, so we've hardcoded ``public/build`` in a
 lot of places. To support private artifacts, we've moved this to the
 ``artifact_prefix`` attribute. It will default to ``public/build`` but will be
-overrideable per-task.
+overridable per-task.
 
 artifact_map
 ===============

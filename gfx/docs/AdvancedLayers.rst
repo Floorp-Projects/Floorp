@@ -186,7 +186,7 @@ Clipping is a bit tricky in Advanced Layers. We cannot use the hardware
 within a batch. And if using the depth buffer, we cannot write
 transparent pixels for the clipped area. As a result we always clip
 opaque draw rects in the vertex shader (and sometimes even on the CPU,
-as is needed for sane texture coordiantes). Only transparent items are
+as is needed for sane texture coordinates). Only transparent items are
 clipped in the pixel shader. As a result, masked layers and layers with
 non-rectangular transforms are always considered transparent, and use a
 more flexible clipping pipeline.
