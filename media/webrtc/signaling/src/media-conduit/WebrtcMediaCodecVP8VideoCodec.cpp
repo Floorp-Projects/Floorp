@@ -1028,7 +1028,7 @@ int32_t WebrtcMediaCodecVP8VideoRemoteEncoder::SetRates(uint32_t newBitRate,
   if (!mJavaEncoder) {
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
   }
-  mJavaEncoder->SetRates(newBitRate);
+  mJavaEncoder->SetBitrate(newBitRate * 1000);
   return WEBRTC_VIDEO_CODEC_OK;
 }
 

@@ -355,10 +355,10 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
     }
 
     @Override
-    public final void setRates(final int newBitRate) {
+    public final void setBitrate(final int bps) {
         if (android.os.Build.VERSION.SDK_INT >= 19) {
             Bundle params = new Bundle();
-            params.putInt(MediaCodec.PARAMETER_KEY_VIDEO_BITRATE, newBitRate * 1000);
+            params.putInt(MediaCodec.PARAMETER_KEY_VIDEO_BITRATE, bps);
             mCodec.setParameters(params);
         }
     }

@@ -417,7 +417,7 @@ RefPtr<GenericPromise> AndroidDataEncoder::SetBitrate(
     const MediaDataEncoder::Rate aBitsPerSec) {
   RefPtr<AndroidDataEncoder> self(this);
   return InvokeAsync(mTaskQueue, __func__, [self, aBitsPerSec]() {
-    self->mJavaEncoder->SetRates(aBitsPerSec);
+    self->mJavaEncoder->SetBitrate(aBitsPerSec);
     return GenericPromise::CreateAndResolve(true, __func__);
   });
 
