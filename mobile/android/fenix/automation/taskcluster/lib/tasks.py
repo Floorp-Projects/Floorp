@@ -361,13 +361,13 @@ class TaskBuilder(object):
             treeherder=treeherder,
         )
 
-    def _craft_signing_task(self, name, description, signing_type, assemble_task_id, apk_paths, routes, treeherder):
+    def _craft_signing_task(self, name, description, signing_type, assemble_task_label, apk_paths, routes, treeherder):
         signing_format = "autograph_apk"
         payload = {
             'upstreamArtifacts': [{
                 'paths': apk_paths,
                 'formats': [signing_format],
-                'taskId': assemble_task_id,
+                'taskId': {'task-reference': '<build>'},
                 'taskType': 'build'
             }]
         }
@@ -375,7 +375,7 @@ class TaskBuilder(object):
         return self._craft_default_task_definition(
             worker_type='mobile-signing-dep-v1' if signing_type == 'dep' else 'mobile-signing-v1',
             provisioner_id='scriptworker-prov-v1',
-            dependencies=[assemble_task_id],
+            dependencies={'build': assemble_task_label},
             routes=routes,
             scopes=[
                 "project:mobile:fenix:releng:signing:format:{}".format(signing_format),
@@ -448,7 +448,7 @@ class TaskBuilder(object):
         }
 
     def craft_raptor_signing_task(
-        self, assemble_task_id, variant, is_staging,
+        self, assemble_task_label, variant, is_staging,
     ):
         staging_prefix = '.staging' if is_staging else ''
         routes = [
@@ -465,7 +465,7 @@ class TaskBuilder(object):
             name='sign: {}'.format('forPerformanceTest'),
             description='Dep-signing variant {}'.format('forPerformanceTest'),
             signing_type="dep",
-            assemble_task_id=assemble_task_id,
+            assemble_task_label=assemble_task_label,
             apk_paths=variant.upstream_artifacts(),
             routes=routes,
             treeherder={
@@ -501,7 +501,7 @@ class TaskBuilder(object):
             name="Signing {} task".format(capitalized_channel),
             description="Sign {} builds of Fenix".format(capitalized_channel),
             signing_type="dep" if is_staging else channel,
-            assemble_task_id=build_task_id,
+            assemble_task_label=build_task_id,
             apk_paths=apk_paths,
             routes=routes,
             treeherder={
@@ -515,7 +515,7 @@ class TaskBuilder(object):
         )
 
     def craft_push_task(
-        self, signing_task_id, apk_paths, channel, is_staging=False, override_google_play_track=None
+        self, signing_task_label, apk_paths, channel, is_staging=False, override_google_play_track=None
     ):
         payload = {
             "commit": True,
@@ -524,7 +524,7 @@ class TaskBuilder(object):
             "upstreamArtifacts": [
                 {
                     "paths": apk_paths,
-                    "taskId": signing_task_id,
+                    "taskId": {'task-reference': '<signing>'},
                     "taskType": "signing"
                 }
             ]
@@ -536,7 +536,7 @@ class TaskBuilder(object):
         return self._craft_default_task_definition(
             worker_type='mobile-pushapk-dep-v1' if is_staging else 'mobile-pushapk-v1',
             provisioner_id='scriptworker-prov-v1',
-            dependencies=[signing_task_id],
+            dependencies={'signing': signing_task_label},
             routes=[],
             scopes=[
                 "project:mobile:fenix:releng:googleplay:product:fenix{}".format(

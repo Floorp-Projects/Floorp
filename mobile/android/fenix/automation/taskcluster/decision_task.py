@@ -51,18 +51,16 @@ def push(builder):
 
 
 def raptor(builder, is_staging):
-    build_tasks = {}
-    signing_tasks = {}
-    other_tasks = {}
+    tasks = []
 
     mozharness_task_id = fetch_mozharness_task_id()
     gecko_revision = taskcluster.Queue().task(mozharness_task_id)['payload']['env']['GECKO_HEAD_REV']
 
     variant = get_variant('forPerformanceTest', 'geckoNightly')
-    assemble_task_id = _generate_slug_id()
-    build_tasks[assemble_task_id] = builder.craft_assemble_raptor_task(variant)
-    signing_task_id = _generate_slug_id()
-    signing_tasks[signing_task_id] = builder.craft_raptor_signing_task(assemble_task_id, variant, is_staging)
+    build_task = builder.craft_assemble_raptor_task(variant)
+    tasks.append(build_task)
+    signing_task = builder.craft_raptor_signing_task(build_task['label'], variant, is_staging)
+    tasks.append(signing_task)
 
     for abi in ('armeabi-v7a', 'arm64-v8a'):
         variant_apk = variant.get_apk(abi)
@@ -73,34 +71,29 @@ def raptor(builder, is_staging):
                 builder.craft_raptor_youtube_playback_task,
             ]
         for craft_function in all_raptor_craft_functions:
-            args = (signing_task_id, mozharness_task_id, variant_apk, gecko_revision, is_staging)
-            other_tasks[_generate_slug_id()] = craft_function(*args)
+            raptor_task = craft_function(
+                signing_task_id, mozharness_task_id, variant_apk, gecko_revision, is_staging
+            )
+            tasks.append(raptor_task)
 
-    return (build_tasks, signing_tasks, other_tasks)
+    return tasks
 
 
 def release(builder, channel, engine, is_staging, version_name):
     variant = get_variant('fenix' + channel.capitalize(), engine)
     taskcluster_apk_paths = variant.upstream_artifacts()
 
-    build_tasks = {}
-    signing_tasks = {}
-    push_tasks = {}
+    build_task = builder.craft_assemble_release_task(variant, channel, is_staging, version_name)
 
-    build_task_id = _generate_slug_id()
-    build_tasks[build_task_id] = builder.craft_assemble_release_task(variant, channel, is_staging, version_name)
-
-    signing_task_id = _generate_slug_id()
-    signing_tasks[signing_task_id] = builder.craft_release_signing_task(
-        build_task_id,
+    signing_task = builder.craft_release_signing_task(
+        build_task['label'],
         taskcluster_apk_paths,
         channel=channel,
         is_staging=is_staging,
     )
 
-    push_task_id = _generate_slug_id()
-    push_tasks[push_task_id] = builder.craft_push_task(
-        signing_task_id,
+    push_task = builder.craft_push_task(
+        signing_task['label'],
         taskcluster_apk_paths,
         channel=channel,
         # TODO until org.mozilla.fenix.nightly is made public, put it on the internally-testable track
@@ -108,7 +101,7 @@ def release(builder, channel, engine, is_staging, version_name):
         is_staging=is_staging,
     )
 
-    return (build_tasks, signing_tasks, push_tasks)
+    return [build_task, signing_task, push_task]
 
 
 def release_as_fennec(builder, is_staging, version_name):

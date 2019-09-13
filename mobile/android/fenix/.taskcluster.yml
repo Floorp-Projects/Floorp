@@ -11,72 +11,81 @@ tasks:
               revision: 0c5a68749f9a7672a7e56604b69a7bd41b036614
           trustDomain: mobile
       in:
-          $if: 'tasks_for in ["github-pull-request", "github-push", "action", "cron"]'
-          then:
-              $let:
-                  # Github events have this stuff in different places...
-                  ownerEmail:
-                      $if: 'tasks_for == "github-push"'
-                      then: '${event.pusher.email}'
-                      # Assume Pull Request
+          $let:
+              # Github events have this stuff in different places...
+              ownerEmail:
+                  $if: 'tasks_for == "github-push"'
+                  then: '${event.pusher.email}'
+                  # Assume Pull Request
+                  else:
+                      $if: 'tasks_for == "github-pull-request"'
+                      then: '${event.pull_request.user.login}@users.noreply.github.com'
                       else:
-                          $if: 'tasks_for == "github-pull-request"'
-                          then: '${event.pull_request.user.login}@users.noreply.github.com'
+                          $if: 'tasks_for == "github-release"'
+                          then: '${event.sender.login}@users.noreply.github.com'
                           else:
                               $if: 'tasks_for in ["cron", "action"]'
                               then: '${tasks_for}@noreply.mozilla.org'
-                  baseRepoUrl:
-                      $if: 'tasks_for == "github-push"'
-                      then: '${event.repository.html_url}'
-                      else:
-                          $if: 'tasks_for == "github-pull-request"'
-                          then: '${event.pull_request.base.repo.html_url}'
-                          else:
-                              $if: 'tasks_for in ["cron", "action"]'
-                              then: '${repository.url}'
-                  repoUrl:
-                      $if: 'tasks_for == "github-push"'
-                      then: '${event.repository.html_url}'
-                      else:
-                          $if: 'tasks_for == "github-pull-request"'
-                          then: '${event.pull_request.head.repo.html_url}'
-                          else:
-                              $if: 'tasks_for in ["cron", "action"]'
-                              then: '${repository.url}'
-                  project:
-                      $if: 'tasks_for == "github-push"'
-                      then: '${event.repository.name}'
-                      else:
-                          $if: 'tasks_for == "github-pull-request"'
-                          then: '${event.pull_request.head.repo.name}'
-                          else:
-                              $if: 'tasks_for in ["cron", "action"]'
-                              then: '${repository.project}'
-                  head_branch:
+              baseRepoUrl:
+                  $if: 'tasks_for in ["github-push", "github-release"]'
+                  then: '${event.repository.html_url}'
+                  else:
                       $if: 'tasks_for == "github-pull-request"'
-                      then: ${event.pull_request.head.ref}
+                      then: '${event.pull_request.base.repo.html_url}'
                       else:
-                          $if: 'tasks_for == "github-push"'
-                          then: ${event.ref}
+                          $if: 'tasks_for in ["cron", "action"]'
+                          then: '${repository.url}'
+              repoUrl:
+                  $if: 'tasks_for in ["github-push", "github-release"]'
+                  then: '${event.repository.html_url}'
+                  else:
+                      $if: 'tasks_for == "github-pull-request"'
+                      then: '${event.pull_request.head.repo.html_url}'
+                      else:
+                          $if: 'tasks_for in ["cron", "action"]'
+                          then: '${repository.url}'
+              project:
+                  $if: 'tasks_for in ["github-push", "github-release"]'
+                  then: '${event.repository.name}'
+                  else:
+                      $if: 'tasks_for == "github-pull-request"'
+                      then: '${event.pull_request.head.repo.name}'
+                      else:
+                          $if: 'tasks_for in ["cron", "action"]'
+                          then: '${repository.project}'
+              head_branch:
+                  $if: 'tasks_for == "github-pull-request"'
+                  then: ${event.pull_request.head.ref}
+                  else:
+                      $if: 'tasks_for == "github-push"'
+                      then: ${event.ref}
+                      else:
+                          $if: 'tasks_for == "github-release"'
+                          then: '${event.release.target_commitish}'
                           else:
                               $if: 'tasks_for in ["cron", "action"]'
                               then: '${push.branch}'
-                  head_sha:
-                      $if: 'tasks_for == "github-push"'
-                      then: '${event.after}'
+              head_sha:
+                  $if: 'tasks_for == "github-push"'
+                  then: '${event.after}'
+                  else:
+                      $if: 'tasks_for == "github-pull-request"'
+                      then: '${event.pull_request.head.sha}'
                       else:
-                          $if: 'tasks_for == "github-pull-request"'
-                          then: '${event.pull_request.head.sha}'
+                          $if: 'tasks_for == "github-release"'
+                          then: '${event.release.tag_name}'
                           else:
                               $if: 'tasks_for in ["cron", "action"]'
                               then: '${push.revision}'
-                  ownTaskId:
-                      $if: '"github" in tasks_for'
-                      then: {$eval: as_slugid("decision_task")}
-                      else:
-                          $if: 'tasks_for == "cron"'
-                          then: '${ownTaskId}'
-              in:
+              ownTaskId:
+                  $if: '"github" in tasks_for'
+                  then: {$eval: as_slugid("decision_task")}
+                  else:
+                      $if: 'tasks_for == "cron"'
+                      then: '${ownTaskId}'
+          in:
+              $if: 'tasks_for in ["github-pull-request", "github-release", "action", "cron"] || tasks_for == "github-push" && head_branch[:10] != "refs/tags/"'
+              then:
                   $let:
                       level:
                           $if: 'tasks_for in ["github-push", "github-release", "action", "cron"] && repoUrl == "https://github.com/mozilla-mobile/fenix"'
@@ -101,7 +110,7 @@ tasks:
                           $merge:
                               - owner: "${ownerEmail}"
                                 source: '${repoUrl}/raw/${head_sha}/.taskcluster.yml'
-                              - $if: 'tasks_for in ["github-push", "github-pull-request"]'
+                              - $if: 'tasks_for in ["github-push", "github-pull-request", "github-release"]'
                                 then:
                                     name: "Decision Task"
                                     description: 'The task that creates all of the other tasks in the task graph'
@@ -140,12 +149,9 @@ tasks:
                           then:
                               $let:
                                   short_head_branch:
-                                      $if: 'head_branch[:10] == "refs/tags/"'
-                                      then: {$eval: 'head_branch[10:]'}
-                                      else:
-                                          $if: 'head_branch[:11] == "refs/heads/"'
-                                          then: {$eval: 'head_branch[11:]'}
-                                          else: ${head_branch}
+                                      $if: 'head_branch[:11] == "refs/heads/"'
+                                      then: {$eval: 'head_branch[11:]'}
+                                      else: ${head_branch}
                               in:
                                   - 'assume:repo:${repoUrl[8:]}:branch:${short_head_branch}'
                           else:
@@ -153,12 +159,16 @@ tasks:
                               then:
                                   - 'assume:repo:github.com/${event.pull_request.base.repo.full_name}:pull-request'
                               else:
-                                  $if: 'tasks_for == "action"'
+                                  $if: 'tasks_for == "github-release"'
                                   then:
-                                      # when all actions are hooks, we can calculate this directly rather than using a variable
-                                      - '${action.repo_scope}'
+                                      - 'assume:repo:${repoUrl[8:]}:release'
                                   else:
-                                      - 'assume:repo:${repoUrl[8:]}:cron:${cron.job_name}'
+                                      $if: 'tasks_for == "action"'
+                                      then:
+                                          # when all actions are hooks, we can calculate this directly rather than using a variable
+                                          - '${action.repo_scope}'
+                                      else:
+                                          - 'assume:repo:${repoUrl[8:]}:cron:${cron.job_name}'
 
                       requires: all-completed
                       priority: lowest
@@ -190,6 +200,9 @@ tasks:
                                         ACTION_TASK_ID: {$json: {$eval: 'taskId'}}  # taskId of the target task (JSON-encoded)
                                         ACTION_INPUT: {$json: {$eval: 'input'}}
                                         ACTION_CALLBACK: '${action.cb_name}'
+                                  - $if: 'tasks_for == "github-release"'
+                                    then:
+                                        GIT_TAG: '${event.release.tag_name}'
                           features:
                               taskclusterProxy: true
                               chainOfTrust: true
@@ -252,14 +265,18 @@ tasks:
                                           then:
                                               symbol: D
                                           else:
-                                              $if: 'tasks_for == "action"'
+                                              $if: 'tasks_for == "github-release"'
                                               then:
-                                                  groupName: 'action-callback'
-                                                  groupSymbol: AC
-                                                  symbol: "${action.symbol}"
+                                                  symbol: 'ship_fenix'
                                               else:
-                                                  groupSymbol: cron
-                                                  symbol: "${cron.job_symbol}"
+                                                  $if: 'tasks_for == "action"'
+                                                  then:
+                                                      groupName: 'action-callback'
+                                                      groupSymbol: AC
+                                                      symbol: "${action.symbol}"
+                                                  else:
+                                                      groupSymbol: cron
+                                                      symbol: "${cron.job_symbol}"
                               - $if: 'tasks_for == "action"'
                                 then:
                                     parent: '${action.taskGroupId}'

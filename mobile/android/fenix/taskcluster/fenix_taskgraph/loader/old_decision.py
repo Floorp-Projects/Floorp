@@ -5,13 +5,14 @@
 from __future__ import print_function, unicode_literals
 
 import os
+import re
 import sys
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 project_dir = os.path.realpath(os.path.join(current_dir, '..', '..', '..'))
 sys.path.append(project_dir)
 
-from automation.taskcluster.decision_task import pr, push
+from automation.taskcluster.decision_task import pr, push, release
 from automation.taskcluster.lib.tasks import TaskBuilder
 
 
@@ -34,11 +35,25 @@ def loader(kind, path, config, params, loaded_tasks):
         trust_level=trust_level,
     )
 
+    is_staging = trust_level != 3
+
     tasks_for = params['tasks_for']
     if tasks_for == 'github-pull-request':
         ordered_groups_of_tasks = pr(builder)
     elif tasks_for == 'github-push':
         ordered_groups_of_tasks = push(builder)
+    elif tasks_for == 'github-release':
+        git_tag = os.environ['GIT_TAG']
+        version = git_tag[1:]  # remove prefixed "v"
+        beta_semver = re.compile(r'^v\d+\.\d+\.\d+-beta\.\d+$')
+        production_semver = re.compile(r'^v\d+\.\d+\.\d+(-rc\.\d+)?$')
+        if beta_semver.match(git_tag):
+            ordered_groups_of_tasks = release(builder, 'beta', 'geckoBeta', is_staging, version)
+        elif production_semver.match(git_tag):
+            ordered_groups_of_tasks = release(builder, 'production', 'geckoBeta', is_staging, version)
+        else:
+            raise ValueError('Github tag must be in semver format and prefixed with a "v", '
+                             'e.g.: "v1.0.0-beta.0" (beta), "v1.0.0-rc.0" (production) or "v1.0.0" (production)')
     else:
         raise NotImplementedError('Unsupported tasks_for "{}"'.format(tasks_for))
 
