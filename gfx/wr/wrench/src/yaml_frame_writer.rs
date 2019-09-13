@@ -1065,6 +1065,29 @@ impl YamlFrameWriter {
                     {
                         u32_node(&mut v, "tile-size", tile_size as u32);
                     }
+                    match item.image_rendering {
+                        ImageRendering::Auto => (),
+                        ImageRendering::CrispEdges => str_node(&mut v, "rendering", "crisp-edges"),
+                        ImageRendering::Pixelated => str_node(&mut v, "rendering", "pixelated"),
+                    };
+                    match item.alpha_type {
+                        AlphaType::PremultipliedAlpha => str_node(&mut v, "alpha-type", "premultiplied-alpha"),
+                        AlphaType::Alpha => str_node(&mut v, "alpha-type", "alpha"),
+                    };
+                }
+                DisplayItem::RepeatingImage(item) => {
+                    common_node(&mut v, clip_id_mapper, &item.common);
+                    rect_node(&mut v, "bounds", &item.bounds);
+                    if let Some(path) = self.path_for_image(item.image_key) {
+                        path_node(&mut v, "image", &path);
+                    }
+                    if let Some(&CachedImage {
+                        tiling: Some(tile_size),
+                        ..
+                    }) = self.images.get(&item.image_key)
+                    {
+                        u32_node(&mut v, "tile-size", tile_size as u32);
+                    }
                     size_node(&mut v, "stretch-size", &item.stretch_size);
                     size_node(&mut v, "tile-spacing", &item.tile_spacing);
                     match item.image_rendering {
