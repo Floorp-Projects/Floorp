@@ -451,6 +451,12 @@ class HuffmanTableImplementationSaturated {
   Iterator begin() const { return Iterator(values.begin()); }
   Iterator end() const { return Iterator(values.end()); }
 
+ public:
+  // An index into table `values`.
+  // We use `uint8_t` instead of `size_t` to limit the space
+  // used by the table.
+  using InternalIndex = uint8_t;
+
  private:
   // The entries in this Huffman Table, sorted in the order of insertion.
   //
@@ -460,12 +466,11 @@ class HuffmanTableImplementationSaturated {
   Vector<HuffmanEntry<T>> values;
 
   // The entries in this Huffman table, prepared for lookup.
-  // The `size_t` argument is an index into `values`.
   //
   // Invariant (once `init*` has been called):
   // - Length is `1 << maxBitLength`.
   // - for all i, `saturated[i] < values.length()`
-  Vector<uint8_t> saturated;
+  Vector<InternalIndex> saturated;
 
   // The maximal bitlength of a value in this table.
   //
