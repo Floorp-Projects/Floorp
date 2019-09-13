@@ -820,6 +820,55 @@
           return;
         }
 
+        let toggleClose = () => {
+          if (this._editingColumn) {
+            return;
+          }
+
+          let row = this.currentIndex;
+          if (row < 0) {
+            return;
+          }
+
+          if (this.changeOpenState(this.currentIndex, false)) {
+            event.preventDefault();
+            return;
+          }
+
+          let parentIndex = this.view.getParentIndex(this.currentIndex);
+          if (parentIndex >= 0) {
+            this.view.selection.select(parentIndex);
+            this.ensureRowIsVisible(parentIndex);
+            event.preventDefault();
+          }
+        };
+
+        let toggleOpen = () => {
+          if (this._editingColumn) {
+            return;
+          }
+
+          let row = this.currentIndex;
+          if (row < 0) {
+            return;
+          }
+
+          if (this.changeOpenState(row, true)) {
+            event.preventDefault();
+            return;
+          }
+          let c = row + 1;
+          let view = this.view;
+          if (c < view.rowCount && view.getParentIndex(c) == row) {
+            // If already opened, select the first child.
+            // The getParentIndex test above ensures that the children
+            // are already populated and ready.
+            this.view.selection.timedSelect(c, this._selectDelay);
+            this.ensureRowIsVisible(c);
+            event.preventDefault();
+          }
+        };
+
         switch (event.keyCode) {
           case KeyEvent.DOM_VK_RETURN: {
             if (this._handleEnter(event)) {
@@ -838,50 +887,18 @@
             break;
           }
           case KeyEvent.DOM_VK_LEFT: {
-            if (this._editingColumn) {
-              return;
-            }
-
-            let row = this.currentIndex;
-            if (row < 0) {
-              return;
-            }
-
-            if (this.changeOpenState(this.currentIndex, false)) {
-              event.preventDefault();
-              return;
-            }
-            let parentIndex = this.view.getParentIndex(this.currentIndex);
-            if (parentIndex >= 0) {
-              this.view.selection.select(parentIndex);
-              this.ensureRowIsVisible(parentIndex);
-              event.preventDefault();
+            if (!this.isRTL) {
+              toggleClose();
+            } else {
+              toggleOpen();
             }
             break;
           }
           case KeyEvent.DOM_VK_RIGHT: {
-            if (this._editingColumn) {
-              return;
-            }
-
-            let row = this.currentIndex;
-            if (row < 0) {
-              return;
-            }
-
-            if (this.changeOpenState(row, true)) {
-              event.preventDefault();
-              return;
-            }
-            let c = row + 1;
-            let view = this.view;
-            if (c < view.rowCount && view.getParentIndex(c) == row) {
-              // If already opened, select the first child.
-              // The getParentIndex test above ensures that the children
-              // are already populated and ready.
-              this.view.selection.timedSelect(c, this._selectDelay);
-              this.ensureRowIsVisible(c);
-              event.preventDefault();
+            if (!this.isRTL) {
+              toggleOpen();
+            } else {
+              toggleClose();
             }
             break;
           }
@@ -993,6 +1010,10 @@
 
     get body() {
       return this.treeBody;
+    }
+
+    get isRTL() {
+      return document.defaultView.getComputedStyle(this).direction == "rtl";
     }
 
     set editable(val) {
@@ -1160,8 +1181,7 @@
     }
 
     _getColumnAtX(aX, aThresh, aPos) {
-      var isRTL =
-        document.defaultView.getComputedStyle(this).direction == "rtl";
+      let isRTL = this.isRTL;
 
       if (aPos) {
         aPos.value = isRTL ? "after" : "before";
