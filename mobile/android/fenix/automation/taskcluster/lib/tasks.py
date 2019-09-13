@@ -7,6 +7,7 @@ from __future__ import print_function
 import arrow
 import datetime
 import json
+import os
 import taskcluster
 
 from ..lib.util import upper_case_first_letter, convert_camel_case_into_kebab_case, lower_case_first_letter
@@ -558,9 +559,9 @@ class TaskBuilder(object):
 
     def craft_raptor_tp6m_cold_task(self, for_suite):
 
-        def craft_function(signing_task_id, mozharness_task_id, variant_apk, gecko_revision, is_staging, force_run_on_64_bit_device=False):
+        def craft_function(signing_task_label, mozharness_task_id, variant_apk, gecko_revision, is_staging, force_run_on_64_bit_device=False):
             return self._craft_raptor_task(
-                signing_task_id,
+                signing_task_label,
                 mozharness_task_id,
                 variant_apk,
                 gecko_revision,
@@ -573,10 +574,10 @@ class TaskBuilder(object):
             )
         return craft_function
 
-    def craft_raptor_youtube_playback_task(self, signing_task_id, mozharness_task_id, variant_apk, gecko_revision,
+    def craft_raptor_youtube_playback_task(self, signing_task_label, mozharness_task_id, variant_apk, gecko_revision,
                                            is_staging, force_run_on_64_bit_device=False):
         return self._craft_raptor_task(
-            signing_task_id,
+            signing_task_label,
             mozharness_task_id,
             variant_apk,
             gecko_revision,
@@ -591,7 +592,7 @@ class TaskBuilder(object):
 
     def _craft_raptor_task(
         self,
-        signing_task_id,
+        signing_task_label,
         mozharness_task_id,
         variant_apk,
         gecko_revision,
@@ -614,11 +615,11 @@ class TaskBuilder(object):
         else:
             raise ValueError('Unsupported architecture "{}"'.format(variant_apk.abi))
 
-        task_name = '{}: forPerformanceTest {}'.format(
-            name_prefix, '(on 64-bit-device)' if force_run_on_64_bit_device else ''
+        task_name = '{} {}: forPerformanceTest {}'.format(
+            name_prefix, variant_apk.abi, '(on 64-bit-device)' if force_run_on_64_bit_device else ''
         )
 
-        apk_url = '{}/{}/artifacts/{}'.format(_DEFAULT_TASK_URL, signing_task_id, variant_apk.taskcluster_path)
+        apk_url = '{}/<signing>/artifacts/{}'.format(_DEFAULT_TASK_URL, variant_apk.taskcluster_path)
         command = [[
             "/builds/taskcluster/script.py",
             "bash",
@@ -639,7 +640,7 @@ class TaskBuilder(object):
         return self._craft_default_task_definition(
             worker_type=worker_type,
             provisioner_id='proj-autophone',
-            dependencies=[signing_task_id],
+            dependencies={'signing': signing_task_label},
             name=task_name,
             description=description,
             routes=['notify.email.perftest-alerts@mozilla.com.on-failed'] if not is_staging else [],
@@ -657,10 +658,10 @@ class TaskBuilder(object):
                 )],
                 "command": command,
                 "env": {
-                    "EXTRA_MOZHARNESS_CONFIG": json.dumps({
+                    "EXTRA_MOZHARNESS_CONFIG": {'task-reference': json.dumps({
                         "test_packages_url": "{}/{}/artifacts/public/build/en-US/target.test_packages.json".format(_DEFAULT_TASK_URL, mozharness_task_id),
                         "installer_url": apk_url,
-                    }),
+                    })},
                     "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/mozilla-central",
                     "GECKO_HEAD_REV": gecko_revision,
                     "MOZ_AUTOMATION": "1",
@@ -670,7 +671,7 @@ class TaskBuilder(object):
                     "MOZHARNESS_CONFIG": "raptor/android_hw_config.py",
                     "MOZHARNESS_SCRIPT": "raptor_script.py",
                     "MOZHARNESS_URL": "{}/{}/artifacts/public/build/en-US/mozharness.zip".format(_DEFAULT_TASK_URL, mozharness_task_id),
-                    "MOZILLA_BUILD_URL": apk_url,
+                    "MOZILLA_BUILD_URL": {'task-reference': apk_url},
                     "NEED_XVFB": "false",
                     "NO_FAIL_ON_TEST_ERRORS": "1",
                     "SCCACHE_DISABLE": "1",
@@ -738,4 +739,6 @@ def schedule_task_graph(ordered_groups_of_tasks):
 def fetch_mozharness_task_id():
     # We now want to use the latest available raptor
     raptor_index = 'gecko.v2.mozilla-central.nightly.latest.mobile.android-x86_64-opt'
-    return taskcluster.Index().findTask(raptor_index)['taskId']
+    return taskcluster.Index({
+      'rootUrl': os.environ.get('TASKCLUSTER_PROXY_URL', 'https://taskcluster.net'),
+    }).findTask(raptor_index)['taskId']

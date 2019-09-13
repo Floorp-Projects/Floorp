@@ -51,16 +51,16 @@ def push(builder):
 
 
 def raptor(builder, is_staging):
-    tasks = []
-
     mozharness_task_id = fetch_mozharness_task_id()
-    gecko_revision = taskcluster.Queue().task(mozharness_task_id)['payload']['env']['GECKO_HEAD_REV']
+    gecko_revision = taskcluster.Queue({
+      'rootUrl': os.environ.get('TASKCLUSTER_PROXY_URL', 'https://taskcluster.net'),
+    }).task(mozharness_task_id)['payload']['env']['GECKO_HEAD_REV']
 
     variant = get_variant('forPerformanceTest', 'geckoNightly')
     build_task = builder.craft_assemble_raptor_task(variant)
-    tasks.append(build_task)
     signing_task = builder.craft_raptor_signing_task(build_task['label'], variant, is_staging)
-    tasks.append(signing_task)
+
+    tasks = [build_task, signing_task]
 
     for abi in ('armeabi-v7a', 'arm64-v8a'):
         variant_apk = variant.get_apk(abi)
@@ -72,7 +72,7 @@ def raptor(builder, is_staging):
             ]
         for craft_function in all_raptor_craft_functions:
             raptor_task = craft_function(
-                signing_task_id, mozharness_task_id, variant_apk, gecko_revision, is_staging
+                signing_task['label'], mozharness_task_id, variant_apk, gecko_revision, is_staging
             )
             tasks.append(raptor_task)
 

@@ -12,7 +12,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 project_dir = os.path.realpath(os.path.join(current_dir, '..', '..', '..'))
 sys.path.append(project_dir)
 
-from automation.taskcluster.decision_task import pr, push, release
+from automation.taskcluster.decision_task import pr, push, release, raptor
 from automation.taskcluster.lib.tasks import TaskBuilder
 
 
@@ -54,6 +54,11 @@ def loader(kind, path, config, params, loaded_tasks):
         else:
             raise ValueError('Github tag must be in semver format and prefixed with a "v", '
                              'e.g.: "v1.0.0-beta.0" (beta), "v1.0.0-rc.0" (production) or "v1.0.0" (production)')
+    elif tasks_for == 'cron':
+        if params['target_tasks_method'] == 'raptor':
+            ordered_groups_of_tasks = raptor(builder, is_staging)
+        else:
+            raise NotImplementedError('Unsupported task_name "{}"'.format(params))
     else:
         raise NotImplementedError('Unsupported tasks_for "{}"'.format(tasks_for))
 
