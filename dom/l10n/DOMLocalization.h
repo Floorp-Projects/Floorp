@@ -92,7 +92,7 @@ class DOMLocalization : public intl::Localization {
 
  protected:
   virtual ~DOMLocalization();
-  void OnChange();
+  void OnChange() override;
   void DisconnectMutations();
   void DisconnectRoots();
   void ReportL10nOverlaysErrors(nsTArray<L10nOverlaysError>& aErrors);
