@@ -1224,18 +1224,19 @@ void nsPlainTextSerializer::MaybeWrapAndOutputCompleteLines() {
   uint32_t bonuswidth = (mWrapColumn > 20) ? 4 : 0;
 
   while (currentLineContentWidth + prefixwidth > mWrapColumn + bonuswidth) {
-    // We go from the end removing one letter at a time until
-    // we have a reasonable width
     int32_t goodSpace = mCurrentLine.mContent.Length();
-    uint32_t width = currentLineContentWidth;
-    while (goodSpace > 0 && (width + prefixwidth > mWrapColumn)) {
-      goodSpace--;
-      width -= GetUnicharWidth(mCurrentLine.mContent[goodSpace]);
-    }
-
-    goodSpace++;
 
     if (mLineBreaker) {
+      // We go from the end removing one letter at a time until
+      // we have a reasonable width
+      uint32_t width = currentLineContentWidth;
+      while (goodSpace > 0 && (width + prefixwidth > mWrapColumn)) {
+        goodSpace--;
+        width -= GetUnicharWidth(mCurrentLine.mContent[goodSpace]);
+      }
+
+      goodSpace++;
+
       goodSpace = mLineBreaker->Prev(mCurrentLine.mContent.get(),
                                      mCurrentLine.mContent.Length(), goodSpace);
       if (goodSpace != NS_LINEBREAKER_NEED_MORE_TEXT &&
