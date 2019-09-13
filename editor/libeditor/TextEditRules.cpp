@@ -861,7 +861,8 @@ EditActionResult TextEditor::HandleDeleteSelection(
   if (HasPaddingBRElementForEmptyEditor()) {
     return EditActionCanceled();
   }
-  EditActionResult result = HandleDeleteSelectionInternal(aDirectionAndAmount);
+  EditActionResult result =
+      HandleDeleteSelectionInternal(aDirectionAndAmount, aStripWrappers);
   // HandleDeleteSelectionInternal() creates SelectionBatcher.  Therefore,
   // quitting from it might cause having destroyed the editor.
   if (NS_WARN_IF(Destroyed())) {
@@ -873,7 +874,8 @@ EditActionResult TextEditor::HandleDeleteSelection(
 }
 
 EditActionResult TextEditor::HandleDeleteSelectionInternal(
-    nsIEditor::EDirection aDirectionAndAmount) {
+    nsIEditor::EDirection aDirectionAndAmount,
+    nsIEditor::EStripWrappers aStripWrappers) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(!AsHTMLEditor());
 
@@ -897,7 +899,11 @@ EditActionResult TextEditor::HandleDeleteSelectionInternal(
     }
 
     if (!SelectionRefPtr()->IsCollapsed()) {
-      return EditActionIgnored();
+      nsresult rv =
+          DeleteSelectionWithTransaction(aDirectionAndAmount, aStripWrappers);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "DeleteSelectionWithTransaction() failed");
+      return EditActionHandled(rv);
     }
 
     // Test for distance between caret and text that will be deleted
@@ -913,7 +919,7 @@ EditActionResult TextEditor::HandleDeleteSelectionInternal(
     return EditActionResult(rv);
   }
 
-  rv = DeleteSelectionWithTransaction(aDirectionAndAmount, nsIEditor::eStrip);
+  rv = DeleteSelectionWithTransaction(aDirectionAndAmount, aStripWrappers);
   if (NS_WARN_IF(Destroyed())) {
     return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }

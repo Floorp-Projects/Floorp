@@ -2311,6 +2311,46 @@ EditActionResult HTMLEditor::HandleDeleteSelection(
   MOZ_ASSERT(aStripWrappers == nsIEditor::eStrip ||
              aStripWrappers == nsIEditor::eNoStrip);
 
+  EditActionResult result =
+      HandleDeleteSelectionInternal(aDirectionAndAmount, aStripWrappers);
+  if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
+    return result;
+  }
+  if (!result.Handled()) {
+    // If it's just ignored, we should fall this back to
+    // `DeleteSelectionWithTransaction()`.
+    DebugOnly<nsresult> rvIgnored =
+        DeleteSelectionWithTransaction(aDirectionAndAmount, aStripWrappers);
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rvIgnored),
+        "DeleteSelectionWithTransaction() failed, but ignored");
+  }
+
+  EditorDOMPoint atNewStartOfSelection(
+      EditorBase::GetStartPoint(*SelectionRefPtr()));
+  if (NS_WARN_IF(!atNewStartOfSelection.IsSet())) {
+    return EditActionHandled(NS_ERROR_FAILURE);
+  }
+  if (atNewStartOfSelection.GetContainerAsContent()) {
+    nsresult rv = DeleteMostAncestorMailCiteElementIfEmpty(
+        MOZ_KnownLive(*atNewStartOfSelection.GetContainerAsContent()));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditActionHandled(rv);
+    }
+  }
+  return EditActionHandled();
+}
+
+EditActionResult HTMLEditor::HandleDeleteSelectionInternal(
+    nsIEditor::EDirection aDirectionAndAmount,
+    nsIEditor::EStripWrappers aStripWrappers) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aStripWrappers == nsIEditor::eStrip ||
+             aStripWrappers == nsIEditor::eNoStrip);
+
   // Remember that we did a selection deletion.  Used by
   // CreateStyleForInsertText()
   TopLevelEditSubActionDataRef().mDidDeleteSelection = true;
@@ -2394,8 +2434,11 @@ EditActionResult HTMLEditor::HandleDeleteSelection(
       return EditActionResult(rv);
     }
 
-    // We should delete nothing.
     if (aDirectionAndAmount == nsIEditor::eNone) {
+      // If we're not called recursively, we should call
+      // `DeleteSelectionWithTransaction()` here, but we cannot detect it for
+      // now.  Therefore, we should just tell the caller of that we does
+      // nothing.
       return EditActionIgnored();
     }
 
@@ -2662,9 +2705,9 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtAtomicContent(
     // XXX This nesting call is not safe.  If mutation event listener
     //     creates same situation, this causes stack-overflow.
     EditActionResult result =
-        HandleDeleteSelection(aDirectionAndAmount, aStripWrappers);
+        HandleDeleteSelectionInternal(aDirectionAndAmount, aStripWrappers);
     NS_WARNING_ASSERTION(result.Succeeded(),
-                         "Nested HandleDeleteSelection() failed");
+                         "Nested HandleDeleteSelectionInternal() failed");
     return result;
   }
 
@@ -2884,6 +2927,10 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtOtherBlockBoundary(
   // Don't cross table boundaries
   if (leftNode && rightNode &&
       HTMLEditor::NodesInDifferentTableElements(*leftNode, *rightNode)) {
+    // If we have not deleted `<br>` element and are not called recursively,
+    // we should call `DeleteSelectionWithTransaction()` here, but we cannot
+    // detect it for now.  Therefore, we should just tell the caller of that
+    // we does nothing.
     return didBRElementDeleted ? EditActionHandled() : EditActionIgnored();
   }
 
@@ -2939,9 +2986,9 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtOtherBlockBoundary(
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Selection::Collapse() failed, but ignored");
     EditActionResult result =
-        HandleDeleteSelection(aDirectionAndAmount, aStripWrappers);
+        HandleDeleteSelectionInternal(aDirectionAndAmount, aStripWrappers);
     NS_WARNING_ASSERTION(result.Succeeded(),
-                         "Nested HandleDeleteSelection() failed");
+                         "Nested HandleDeleteSelectionInternal() failed");
     return result;
   }
 
