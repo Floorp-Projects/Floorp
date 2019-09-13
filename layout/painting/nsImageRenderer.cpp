@@ -603,7 +603,6 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
       LayoutDeviceRect destRect =
           LayoutDeviceRect::FromAppUnits(aDest, appUnitsPerDevPixel);
       auto stretchSize = wr::ToLayoutSize(destRect.Size());
-      destRect.Round();
 
       gfx::IntSize decodeSize =
           nsLayoutUtils::ComputeImageContainerDrawingParameters(
@@ -630,15 +629,15 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
         break;
       }
 
-      wr::LayoutRect roundedDest = wr::ToLayoutRect(destRect);
+      wr::LayoutRect dest = wr::ToLayoutRect(destRect);
 
-      wr::LayoutRect clip = wr::ToRoundedLayoutRect(
+      wr::LayoutRect clip = wr::ToLayoutRect(
           LayoutDeviceRect::FromAppUnits(aFill, appUnitsPerDevPixel));
 
       if (mExtendMode == ExtendMode::CLAMP) {
         // The image is not repeating. Just push as a regular image.
-        aBuilder.PushImage(roundedDest, clip, !aItem->BackfaceIsHidden(),
-                           rendering, key.value());
+        aBuilder.PushImage(dest, clip, !aItem->BackfaceIsHidden(), rendering,
+                           key.value());
       } else {
         nsPoint firstTilePos = nsLayoutUtils::GetBackgroundFirstTilePos(
             aDest.TopLeft(), aFill.TopLeft(), aRepeatSize);
@@ -647,18 +646,18 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
                    aFill.XMost() - firstTilePos.x,
                    aFill.YMost() - firstTilePos.y),
             appUnitsPerDevPixel);
-        wr::LayoutRect fill = wr::ToRoundedLayoutRect(fillRect);
+        wr::LayoutRect fill = wr::ToLayoutRect(fillRect);
 
         switch (mExtendMode) {
           case ExtendMode::REPEAT_Y:
-            fill.origin.x = roundedDest.origin.x;
-            fill.size.width = roundedDest.size.width;
-            stretchSize.width = roundedDest.size.width;
+            fill.origin.x = dest.origin.x;
+            fill.size.width = dest.size.width;
+            stretchSize.width = dest.size.width;
             break;
           case ExtendMode::REPEAT_X:
-            fill.origin.y = roundedDest.origin.y;
-            fill.size.height = roundedDest.size.height;
-            stretchSize.height = roundedDest.size.height;
+            fill.origin.y = dest.origin.y;
+            fill.size.height = dest.size.height;
+            stretchSize.height = dest.size.height;
             break;
           default:
             break;
