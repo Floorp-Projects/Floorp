@@ -567,7 +567,7 @@ class HuffmanPreludeReader {
       BINJS_MOZ_TRY_DECL(
           symbol, readSymbol<Entry>(entry, /* First and only value */ 0));
 
-      MOZ_TRY(table.impl.initWithSingleValue(cx_, std::move(symbol)));
+      MOZ_TRY(table.initWithSingleValue(cx_, std::move(symbol)));
       return Ok();
     }
 
@@ -610,7 +610,7 @@ class HuffmanPreludeReader {
 
     // Now read the symbols and assign bits.
     uint32_t code = 0;
-    MOZ_TRY(table.impl.init(cx_, numberOfSymbols));
+    MOZ_TRY(table.init(cx_, numberOfSymbols));
 
     for (size_t i = 0; i < numberOfSymbols; ++i) {
       const auto bitLength = auxStorageLength[i].bitLength;
@@ -627,7 +627,7 @@ class HuffmanPreludeReader {
       // Read and add symbol.
       BINJS_MOZ_TRY_DECL(
           symbol, readSymbol<Entry>(entry, i));  // Symbol is read from disk.
-      MOZ_TRY(table.impl.addSymbol(code, bitLength, std::move(symbol)));
+      MOZ_TRY(table.addSymbol(code, bitLength, std::move(symbol)));
 
       // Prepare next code.
       code = (code + 1) << (nextBitLength - bitLength);
@@ -685,7 +685,7 @@ class HuffmanPreludeReader {
 
     // Now read the symbols and assign bits.
     uint32_t code = 0;
-    MOZ_TRY(table.impl.init(cx_, auxStorageLength.length() - 1));
+    MOZ_TRY(table.init(cx_, auxStorageLength.length() - 1));
 
     for (size_t i = 0; i < auxStorageLength.length() - 1; ++i) {
       const auto bitLength = auxStorageLength[i].bitLength;
@@ -702,7 +702,7 @@ class HuffmanPreludeReader {
               entry,
               auxStorageLength[i].index));  // Symbol is read from memory.
 
-      MOZ_TRY(table.impl.addSymbol(code, bitLength, std::move(symbol)));
+      MOZ_TRY(table.addSymbol(code, bitLength, std::move(symbol)));
 
       // Prepare next code.
       code = (code + 1) << (nextBitLength - bitLength);
@@ -819,7 +819,7 @@ class HuffmanPreludeReader {
       //   b. If so, stop
       auto& lengthTable = table.as<HuffmanTableExplicitSymbolsListLength>();
       uint32_t length = 0;
-      for (const auto& iter : lengthTable.impl) {
+      for (const auto& iter : lengthTable) {
         length += iter.value;
       }
 
@@ -857,7 +857,7 @@ class HuffmanPreludeReader {
       if (table.is<HuffmanTableUnreachable>()) {
         // Effectively, an `Interface` is a sum with a single entry.
         HuffmanTableIndexedSymbolsSum sum(cx_);
-        MOZ_TRY(sum.impl.initWithSingleValue(cx_, BinASTKind(interface.kind)));
+        MOZ_TRY(sum.initWithSingleValue(cx_, BinASTKind(interface.kind)));
 
         table = {mozilla::VariantType<HuffmanTableIndexedSymbolsSum>{},
                  std::move(sum)};
@@ -957,7 +957,7 @@ class HuffmanPreludeReader {
       }
       const auto& tableRef = table.as<HuffmanTableIndexedSymbolsSum>();
 
-      for (const auto& kind : tableRef.impl) {
+      for (const auto& kind : tableRef) {
         MOZ_TRY(owner.pushValue(
             entry.identity,
             {mozilla::VariantType<Interface>(), entry.identity, kind.value}));
@@ -982,7 +982,7 @@ class HuffmanPreludeReader {
       }
       const auto& tableRef = table.as<HuffmanTableIndexedSymbolsSum>();
 
-      for (const auto& kind : tableRef.impl) {
+      for (const auto& kind : tableRef) {
         MOZ_TRY(owner.pushValue(
             entry.identity,
             {mozilla::VariantType<Interface>(), entry.identity, kind.value}));
@@ -1343,7 +1343,7 @@ struct TagReader {
   JS::Result<BinASTKind> operator()(
       const HuffmanTableIndexedSymbolsSum& specialized) {
     // We're entering either a single interface or a sum.
-    const auto lookup = specialized.impl.lookup(bits);
+    const auto lookup = specialized.lookup(bits);
     bitBuffer.advanceBitBuffer<Compression::No>(lookup.key.bitLength);
     if (!lookup.value) {
       return owner.raiseInvalidValue(context);
@@ -1353,7 +1353,7 @@ struct TagReader {
   JS::Result<BinASTKind> operator()(
       const HuffmanTableIndexedSymbolsMaybeInterface& specialized) {
     // We're entering an optional interface.
-    const auto lookup = specialized.impl.lookup(bits);
+    const auto lookup = specialized.lookup(bits);
     bitBuffer.advanceBitBuffer<Compression::No>(lookup.key.bitLength);
     if (!lookup.value) {
       return owner.raiseInvalidValue(context);
@@ -1390,7 +1390,7 @@ BinASTTokenReaderContext::readFieldFromTable(const Context& context) {
     return raiseNotInPrelude(context);
   }
   BINJS_MOZ_TRY_DECL(bits, bitBuffer.getHuffmanLookup<Compression::No>(*this));
-  const auto lookup = table.as<Table>().impl.lookup(bits);
+  const auto lookup = table.as<Table>().lookup(bits);
 
   bitBuffer.advanceBitBuffer<Compression::No>(lookup.key.bitLength);
   if (!lookup.value) {
@@ -1488,7 +1488,7 @@ JS::Result<Ok> BinASTTokenReaderContext::enterList(uint32_t& items,
   BINJS_MOZ_TRY_DECL(bits, bitBuffer.getHuffmanLookup<Compression::No>(*this));
   const auto& tableForLookup =
       table.as<HuffmanTableExplicitSymbolsListLength>();
-  const auto lookup = tableForLookup.impl.lookup(bits);
+  const auto lookup = tableForLookup.lookup(bits);
   bitBuffer.advanceBitBuffer<Compression::No>(lookup.key.bitLength);
   if (!lookup.value) {
     return raiseInvalidValue(context);
@@ -1736,7 +1736,7 @@ MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<Boolean>(
     return raiseInvalidTableData(entry.identity);
   }
 
-  MOZ_TRY(table.impl.initWithSingleValue(cx_, indexByte != 0));
+  MOZ_TRY(table.initWithSingleValue(cx_, indexByte != 0));
   return Ok();
 }
 
@@ -1771,7 +1771,7 @@ HuffmanPreludeReader::readSingleValueTable<MaybeInterface>(
     return raiseInvalidTableData(entry.identity);
   }
 
-  MOZ_TRY(table.impl.initWithSingleValue(
+  MOZ_TRY(table.initWithSingleValue(
       cx_, indexByte == 0 ? BinASTKind::_Null : entry.kind));
   return Ok();
 }
@@ -1804,7 +1804,7 @@ MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<Sum>(
     return raiseInvalidTableData(sum.identity);
   }
 
-  MOZ_TRY(table.impl.initWithSingleValue(cx_, sum.interfaceAt(index)));
+  MOZ_TRY(table.initWithSingleValue(cx_, sum.interfaceAt(index)));
   return Ok();
 }
 
@@ -1838,7 +1838,7 @@ HuffmanPreludeReader::readSingleValueTable<MaybeSum>(
     return raiseInvalidTableData(sum.identity);
   }
 
-  MOZ_TRY(table.impl.initWithSingleValue(cx_, sum.interfaceAt(index)));
+  MOZ_TRY(table.initWithSingleValue(cx_, sum.interfaceAt(index)));
   return Ok();
 }
 
@@ -1882,7 +1882,7 @@ MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<Number>(
   BINJS_MOZ_TRY_DECL(value, readSymbol(number, 0 /* ignored */));
   // Note: The `std::move` is useless for performance, but necessary to keep
   // a consistent API.
-  MOZ_TRY(table.impl.initWithSingleValue(
+  MOZ_TRY(table.initWithSingleValue(
       cx_,
       /* NOLINT(performance-move-const-arg) */ std::move(value)));
   return Ok();
@@ -1921,7 +1921,7 @@ MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<List>(
   if (length > MAX_LIST_LENGTH) {
     return raiseInvalidTableData(list.identity);
   }
-  MOZ_TRY(table.impl.initWithSingleValue(cx_, std::move(length)));
+  MOZ_TRY(table.initWithSingleValue(cx_, std::move(length)));
   return Ok();
 }
 
@@ -1962,7 +1962,7 @@ MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<String>(
   // Note: The `std::move` is useless for performance, but necessary to keep
   // a consistent API.
   JSAtom* value = reader.metadata_->getAtom(index);
-  MOZ_TRY(table.impl.initWithSingleValue(
+  MOZ_TRY(table.initWithSingleValue(
       cx_,
       /* NOLINT(performance-move-const-arg) */ std::move(value)));
   return Ok();
@@ -2011,7 +2011,7 @@ HuffmanPreludeReader::readSingleValueTable<MaybeString>(
   JSAtom* symbol = index == 0 ? nullptr : reader.metadata_->getAtom(index - 1);
   // Note: The `std::move` is useless for performance, but necessary to keep
   // a consistent API.
-  MOZ_TRY(table.impl.initWithSingleValue(
+  MOZ_TRY(table.initWithSingleValue(
       cx_,
       /* NOLINT(performance-move-const-arg) */ std::move(symbol)));
   return Ok();
@@ -2047,7 +2047,7 @@ HuffmanPreludeReader::readSingleValueTable<StringEnum>(
   BinASTVariant symbol = entry.variantAt(index);
   // Note: The `std::move` is useless for performance, but necessary to keep
   // a consistent API.
-  MOZ_TRY(table.impl.initWithSingleValue(
+  MOZ_TRY(table.initWithSingleValue(
       cx_,
       /* NOLINT(performance-move-const-arg) */ std::move(symbol)));
   return Ok();
@@ -2082,7 +2082,7 @@ HuffmanPreludeReader::readSingleValueTable<UnsignedLong>(
   BINJS_MOZ_TRY_DECL(index, reader.readUnpackedLong());
   // Note: The `std::move` is useless for performance, but necessary to keep
   // a consistent API.
-  MOZ_TRY(table.impl.initWithSingleValue(
+  MOZ_TRY(table.initWithSingleValue(
       cx_,
       /* NOLINT(performance-move-const-arg) */ std::move(index)));
   return Ok();
