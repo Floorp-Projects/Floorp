@@ -372,8 +372,8 @@ bool nsDisplayCanvasBackgroundColor::CreateWebRenderCommands(
   LayoutDeviceRect rect =
       LayoutDeviceRect::FromAppUnits(bgClipRect, appUnitsPerDevPixel);
 
-  wr::LayoutRect r = wr::ToLayoutRect(rect);
-  aBuilder.PushRect(r, r, !BackfaceIsHidden(),
+  wr::LayoutRect roundedRect = wr::ToRoundedLayoutRect(rect);
+  aBuilder.PushRect(roundedRect, roundedRect, !BackfaceIsHidden(),
                     wr::ToColorF(ToDeviceColor(mColor)));
   return true;
 }
