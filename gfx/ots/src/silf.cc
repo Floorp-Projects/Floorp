@@ -38,7 +38,19 @@ bool OpenTypeSILF::Parse(const uint8_t* data, size_t length,
         if (prevent_decompression) {
           return DropGraphite("Illegal nested compression");
         }
-        std::vector<uint8_t> decompressed(this->compHead & FULL_SIZE);
+        size_t decompressed_size = this->compHead & FULL_SIZE;
+        if (decompressed_size < length) {
+          return DropGraphite("Decompressed size is less than compressed size");
+        }
+        if (decompressed_size == 0) {
+          return DropGraphite("Decompressed size is set to 0");
+        }
+        // decompressed table must be <= 30MB
+        if (decompressed_size > 30 * 1024 * 1024) {
+          return DropGraphite("Decompressed size exceeds 30MB: %gMB",
+                              decompressed_size / (1024.0 * 1024.0));
+        }
+        std::vector<uint8_t> decompressed(decompressed_size);
         size_t outputSize = 0;
         bool ret = mozilla::Compression::LZ4::decompressPartial(
             reinterpret_cast<const char*>(data + table.offset()),
@@ -165,14 +177,8 @@ bool OpenTypeSILF::SILSub::ParsePart(Buffer& table) {
     if (!table.ReadU8(&this->attrMirroring)) {
       return parent->Error("SILSub: Failed to read attrMirroring");
     }
-    if (parent->version >> 16 < 4 && this->attrMirroring != 0) {
-      parent->Warning("SILSub: Nonzero attrMirroring (reserved before v4)");
-    }
     if (!table.ReadU8(&this->attrSkipPasses)) {
       return parent->Error("SILSub: Failed to read attrSkipPasses");
-    }
-    if (parent->version >> 16 < 4 && this->attrSkipPasses != 0) {
-      parent->Warning("SILSub: Nonzero attrSkipPasses (reserved2 before v4)");
     }
 
     if (!table.ReadU8(&this->numJLevels)) {
@@ -642,9 +648,6 @@ SILPass::ParsePart(Buffer& table, const size_t SILSub_init_offset,
     if (!table.ReadU16(&this->fsmOffset)) {
       return parent->Error("SILPass: Failed to read fsmOffset");
     }
-    if (parent->version >> 16 == 2 && this->fsmOffset != 0) {
-      parent->Warning("SILPass: Nonzero fsmOffset (reserved in SILSub v2)");
-    }
     if (!table.ReadU32(&this->pcCode) ||
         (parent->version >= 3 && this->pcCode < this->fsmOffset)) {
       return parent->Error("SILPass: Failed to read pcCode");
@@ -769,10 +772,6 @@ SILPass::ParsePart(Buffer& table, const size_t SILSub_init_offset,
   if (parent->version >> 16 >= 2) {
     if (!table.ReadU8(&this->collisionThreshold)) {
       return parent->Error("SILPass: Failed to read collisionThreshold");
-    }
-    if (parent->version >> 16 < 5 && this->collisionThreshold != 0) {
-      parent->Warning("SILPass: Nonzero collisionThreshold"
-                      " (reserved before v5)");
     }
     if (!table.ReadU16(&this->pConstraint)) {
       return parent->Error("SILPass: Failed to read pConstraint");

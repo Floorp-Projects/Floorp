@@ -2,7 +2,7 @@ This is the Sanitiser for OpenType project, from http://code.google.com/p/ots/.
 
 Our reference repository is https://github.com/khaledhosny/ots/.
 
-Current revision: 3f26ef1579e2f5bc9627bd852952f42986ccf1af (7.1.9)
+Current revision: 8bba749d9d5401726a7d7609ab914fdb5e92bfbe (8.0.0)
 
 Upstream files included: LICENSE, src/, include/, tests/*.cc
 

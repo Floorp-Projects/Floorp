@@ -9,15 +9,10 @@ EXPORTS += [
     '../include/ots-memory-stream.h',
 ]
 
-SOURCES += [
-    # needs to be separate because gpos.cc also defines kMaxClassDefValue
-    'gdef.cc',
-]
-
 UNIFIED_SOURCES += [
     'avar.cc',
     'cff.cc',
-    'cff_type2_charstring.cc',
+    'cff_charstring.cc',
     'cmap.cc',
     'cvar.cc',
     'cvt.cc',
@@ -25,6 +20,7 @@ UNIFIED_SOURCES += [
     'fpgm.cc',
     'fvar.cc',
     'gasp.cc',
+    'gdef.cc',
     'glat.cc',
     'gloc.cc',
     'glyf.cc',

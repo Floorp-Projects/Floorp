@@ -23,6 +23,10 @@ bool ParseVariationRegionList(const ots::Font* font, const uint8_t* data, const 
     return OTS_FAILURE_MSG("Failed to read variation region list header");
   }
 
+  if (*regionCount == 0) {
+    return true;
+  }
+
   const ots::OpenTypeFVAR* fvar =
     static_cast<ots::OpenTypeFVAR*>(font->GetTypedTable(OTS_TAG_FVAR));
   if (!fvar) {
@@ -58,27 +62,27 @@ bool ParseVariationRegionList(const ots::Font* font, const uint8_t* data, const 
 
 bool
 ParseVariationDataSubtable(const ots::Font* font, const uint8_t* data, const size_t length,
-                           const uint16_t regionCount) {
+                           const uint16_t regionCount,
+                           uint16_t* regionIndexCount) {
   ots::Buffer subtable(data, length);
 
   uint16_t itemCount;
   uint16_t shortDeltaCount;
-  uint16_t regionIndexCount;
 
   if (!subtable.ReadU16(&itemCount) ||
       !subtable.ReadU16(&shortDeltaCount) ||
-      !subtable.ReadU16(&regionIndexCount)) {
+      !subtable.ReadU16(regionIndexCount)) {
     return OTS_FAILURE_MSG("Failed to read variation data subtable header");
   }
 
-  for (unsigned i = 0; i < regionIndexCount; i++) {
+  for (unsigned i = 0; i < *regionIndexCount; i++) {
     uint16_t regionIndex;
     if (!subtable.ReadU16(&regionIndex) || regionIndex >= regionCount) {
       return OTS_FAILURE_MSG("Bad region index");
     }
   }
 
-  if (!subtable.Skip(size_t(itemCount) * (size_t(shortDeltaCount) + size_t(regionIndexCount)))) {
+  if (!subtable.Skip(size_t(itemCount) * (size_t(shortDeltaCount) + size_t(*regionIndexCount)))) {
     return OTS_FAILURE_MSG("Failed to read delta data");
   }
 
@@ -90,7 +94,9 @@ ParseVariationDataSubtable(const ots::Font* font, const uint8_t* data, const siz
 namespace ots {
 
 bool
-ParseItemVariationStore(const Font* font, const uint8_t* data, const size_t length) {
+ParseItemVariationStore(const Font* font,
+                        const uint8_t* data, const size_t length,
+                        std::vector<uint16_t>* regionIndexCounts) {
   Buffer subtable(data, length);
 
   uint16_t format;
@@ -128,8 +134,14 @@ ParseItemVariationStore(const Font* font, const uint8_t* data, const size_t leng
     if (offset >= length) {
       return OTS_FAILURE_MSG("Bad offset to variation data subtable");
     }
-    if (!ParseVariationDataSubtable(font, data + offset, length - offset, regionCount)) {
+    uint16_t regionIndexCount = 0;
+    if (!ParseVariationDataSubtable(font, data + offset, length - offset,
+                                    regionCount,
+                                    &regionIndexCount)) {
       return OTS_FAILURE_MSG("Failed to parse variation data subtable");
+    }
+    if (regionIndexCounts) {
+      regionIndexCounts->push_back(regionIndexCount);
     }
   }
 
@@ -147,7 +159,6 @@ bool ParseDeltaSetIndexMap(const Font* font, const uint8_t* data, const size_t l
     return OTS_FAILURE_MSG("Failed to read delta set index map header");
   }
 
-  const uint16_t INNER_INDEX_BIT_COUNT_MASK = 0x000F;
   const uint16_t MAP_ENTRY_SIZE_MASK = 0x0030;
 
   const uint16_t entrySize = (((entryFormat & MAP_ENTRY_SIZE_MASK) >> 4) + 1);

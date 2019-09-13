@@ -211,17 +211,16 @@ bool OpenTypeNAME::Parse(const uint8_t* data, size_t length) {
   // if not, we'll add our fixed versions here
   bool mac_name[kStdNameCount] = { 0 };
   bool win_name[kStdNameCount] = { 0 };
-  for (std::vector<NameRecord>::iterator name_iter = this->names.begin();
-       name_iter != this->names.end(); ++name_iter) {
-    const uint16_t id = name_iter->name_id;
+  for (const auto& name : this->names) {
+    const uint16_t id = name.name_id;
     if (id >= kStdNameCount || kStdNames[id] == NULL) {
       continue;
     }
-    if (name_iter->platform_id == 1) {
+    if (name.platform_id == 1) {
       mac_name[id] = true;
       continue;
     }
-    if (name_iter->platform_id == 3) {
+    if (name.platform_id == 3) {
       win_name[id] = true;
       continue;
     }
@@ -274,9 +273,7 @@ bool OpenTypeNAME::Serialize(OTSStream* out) {
   }
 
   std::string string_data;
-  for (std::vector<NameRecord>::const_iterator name_iter = this->names.begin();
-       name_iter != this->names.end(); ++name_iter) {
-    const NameRecord& rec = *name_iter;
+  for (const auto& rec : this->names) {
     if (string_data.size() + rec.text.size() >
             std::numeric_limits<uint16_t>::max() ||
         !out->WriteU16(rec.platform_id) ||
@@ -294,16 +291,14 @@ bool OpenTypeNAME::Serialize(OTSStream* out) {
     if (!out->WriteU16(lang_tag_count)) {
       return Error("Faile to write langTagCount");
     }
-    for (std::vector<std::string>::const_iterator tag_iter =
-             this->lang_tags.begin();
-         tag_iter != this->lang_tags.end(); ++tag_iter) {
-      if (string_data.size() + tag_iter->size() >
+    for (const auto& tag : this->lang_tags) {
+      if (string_data.size() + tag.size() >
               std::numeric_limits<uint16_t>::max() ||
-          !out->WriteU16(static_cast<uint16_t>(tag_iter->size())) ||
+          !out->WriteU16(static_cast<uint16_t>(tag.size())) ||
           !out->WriteU16(static_cast<uint16_t>(string_data.size()))) {
         return Error("Failed to write langTagRecord");
       }
-      string_data.append(*tag_iter);
+      string_data.append(tag);
     }
   }
 
