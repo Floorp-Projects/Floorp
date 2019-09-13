@@ -686,13 +686,13 @@ class ADBDevice(ADBCommand):
         boot_completed = False
         while not boot_completed and (time.time() - start_time) <= float(timeout):
             try:
-                self.shell_output("/system/bin/ls", timeout=timeout)
+                self.shell_output("/system/bin/ls /system/bin/ls", timeout=timeout)
                 boot_completed = True
                 self._ls = "/system/bin/ls"
             except ADBError as e1:
                 self._logger.info("detect /system/bin/ls {}".format(e1))
                 try:
-                    self.shell_output("/system/xbin/ls", timeout=timeout)
+                    self.shell_output("/system/xbin/ls /system/xbin/ls", timeout=timeout)
                     boot_completed = True
                     self._ls = "/system/xbin/ls"
                 except ADBError as e2:
