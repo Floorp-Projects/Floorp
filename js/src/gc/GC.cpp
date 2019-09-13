@@ -4095,25 +4095,8 @@ void GCRuntime::findDeadCompartments() {
 
   while (!workList.empty()) {
     Compartment* comp = workList.popCopy();
-
-    // Check the cross compartment map.
     for (Compartment::WrappedObjectCompartmentEnum e(comp); !e.empty();
          e.popFront()) {
-      Compartment* dest = e.front();
-      if (!dest->gcState.maybeAlive) {
-        dest->gcState.maybeAlive = true;
-        if (!workList.append(dest)) {
-          return;
-        }
-      }
-    }
-
-    // Check debugger cross compartment edges.
-    CompartmentSet debuggerTargets;
-    if (!DebugAPI::findCrossCompartmentTargets(rt, comp, debuggerTargets)) {
-      return;
-    }
-    for (auto e = debuggerTargets.all(); !e.empty(); e.popFront()) {
       Compartment* dest = e.front();
       if (!dest->gcState.maybeAlive) {
         dest->gcState.maybeAlive = true;
