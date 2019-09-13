@@ -19,7 +19,7 @@
 #include "nsDisplayList.h"
 #include "nsIScriptError.h"
 #include "nsContentUtils.h"
-#include "nsMathMLElement.h"
+#include "mozilla/dom/MathMLElement.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;

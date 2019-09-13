@@ -15,7 +15,7 @@
 #include "nsPresContext.h"
 #include "nsDisplayList.h"
 #include "gfxContext.h"
-#include "nsMathMLElement.h"
+#include "mozilla/dom/MathMLElement.h"
 #include <algorithm>
 #include "gfxMathTable.h"
 
@@ -108,7 +108,7 @@ nscoord nsMathMLmfracFrame::CalcLineThickness(nsPresContext* aPresContext,
       // length value
       lineThickness = defaultThickness;
       ParseNumericValue(aThicknessAttribute, &lineThickness,
-                        nsMathMLElement::PARSE_ALLOW_UNITLESS, aPresContext,
+                        dom::MathMLElement::PARSE_ALLOW_UNITLESS, aPresContext,
                         aComputedStyle, aFontSizeInflation);
     } else {
       bool isDeprecatedLineThicknessValue = true;
@@ -135,8 +135,8 @@ nscoord nsMathMLmfracFrame::CalcLineThickness(nsPresContext* aPresContext,
         isDeprecatedLineThicknessValue = false;
         lineThickness = defaultThickness;
         ParseNumericValue(aThicknessAttribute, &lineThickness,
-                          nsMathMLElement::PARSE_ALLOW_UNITLESS, aPresContext,
-                          aComputedStyle, aFontSizeInflation);
+                          dom::MathMLElement::PARSE_ALLOW_UNITLESS,
+                          aPresContext, aComputedStyle, aFontSizeInflation);
       }
       if (isDeprecatedLineThicknessValue) {
         mContent->OwnerDoc()->WarnOnceAbout(

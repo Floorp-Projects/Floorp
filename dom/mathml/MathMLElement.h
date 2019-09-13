@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsMathMLElement_h
-#define nsMathMLElement_h
+#ifndef mozilla_dom_MathMLElement_h_
+#define mozilla_dom_MathMLElement_h_
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Element.h"
@@ -15,24 +15,23 @@
 
 class nsCSSValue;
 
-typedef nsMappedAttributeElement nsMathMLElementBase;
-
 namespace mozilla {
 class EventChainPostVisitor;
 class EventChainPreVisitor;
-}  // namespace mozilla
+namespace dom {
+
+typedef nsMappedAttributeElement MathMLElementBase;
 
 /*
  * The base class for MathML elements.
  */
-class nsMathMLElement final : public nsMathMLElementBase,
-                              public mozilla::dom::Link {
+class MathMLElement final : public MathMLElementBase,
+                            public mozilla::dom::Link {
  public:
-  explicit nsMathMLElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  explicit nsMathMLElement(
-      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+  explicit MathMLElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit MathMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-  // Implementation of nsISupports is inherited from nsMathMLElementBase
+  // Implementation of nsISupports is inherited from MathMLElementBase
   NS_DECL_ISUPPORTS_INHERITED
 
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
@@ -83,11 +82,11 @@ class nsMathMLElement final : public nsMathMLElementBase,
 
   virtual void NodeInfoChanged(Document* aOldDoc) override {
     ClearHasPendingLinkUpdate();
-    nsMathMLElementBase::NodeInfoChanged(aOldDoc);
+    MathMLElementBase::NodeInfoChanged(aOldDoc);
   }
 
  protected:
-  virtual ~nsMathMLElement() {}
+  virtual ~MathMLElement() {}
 
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aGivenProto) override;
@@ -102,4 +101,7 @@ class nsMathMLElement final : public nsMathMLElementBase,
   bool mIncrementScriptLevel;
 };
 
-#endif  // nsMathMLElement_h
+}  // namespace dom
+}  // namespace mozilla
+
+#endif  // mozilla_dom_MathMLElement_h_
