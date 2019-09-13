@@ -5,6 +5,13 @@ function IsInFlow(element) {
         style.getPropertyValue("position") !== "fixed";
 }
 
+function firstInFlowChild(element) {
+    var child = element.firstElementChild;
+    if (!child || IsInFlow(child))
+        return child;
+    return nextInFlowSibling(child);
+}
+
 function nextInFlowSibling(element) {
     var child = element;
     do {
