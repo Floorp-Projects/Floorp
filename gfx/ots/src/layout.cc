@@ -7,9 +7,7 @@
 #include <limits>
 #include <vector>
 
-#ifdef OTS_VARIATIONS
 #include "fvar.h"
-#endif
 #include "gdef.h"
 
 // OpenType Layout Common Table Formats
@@ -1530,11 +1528,9 @@ bool ParseConditionTable(const Font *font,
     return OTS_FAILURE_MSG("Failed to read condition table (format 1)");
   }
 
-#ifdef OTS_VARIATIONS // we can't check this if we're not parsing variation tables
   if (axis_index >= axis_count) {
     return OTS_FAILURE_MSG("Axis index out of range in condition");
   }
-#endif
 
   // Check min/max values are within range -1.0 .. 1.0 and properly ordered
   if (filter_range_min_value < -0x4000 || // -1.0 in F2DOT14 format
@@ -1629,15 +1625,11 @@ bool ParseFeatureVariationsTable(const Font *font,
     return OTS_FAILURE_MSG("Failed to read feature variations table header");
   }
 
-#ifdef OTS_VARIATIONS
   OpenTypeFVAR* fvar = static_cast<OpenTypeFVAR*>(font->GetTypedTable(OTS_TAG_FVAR));
   if (!fvar) {
     return OTS_FAILURE_MSG("Not a variation font");
   }
   const uint16_t axis_count = fvar->AxisCount();
-#else
-  const uint16_t axis_count = 0;
-#endif
 
   const size_t kEndOfFeatureVariationRecords =
     2 * sizeof(uint16_t) + sizeof(uint32_t) +

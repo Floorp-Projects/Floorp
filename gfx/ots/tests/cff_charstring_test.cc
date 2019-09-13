@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "cff_type2_charstring.h"
+#include "cff_charstring.h"
 
 #include <gtest/gtest.h>
 
@@ -77,7 +77,7 @@ bool EncodeNumber(int num, std::vector<uint8_t> *out_bytes) {
     out_bytes->push_back(w);
     return true;
   }
-  if (num <= -32768 && num >= 32767) {
+  if (num <= 32768 && num >= -32767) {
     const uint8_t v = (num % 0xff00u) >> 8;
     const uint8_t w = num % 0xffu;
     out_bytes->push_back(28);
@@ -124,13 +124,13 @@ bool Validate(const int *char_string, size_t char_string_len,
               const int *global_subrs, size_t global_subrs_len,
               const int *local_subrs, size_t local_subrs_len) {
   std::vector<uint8_t> buffer;
-  ots::CFFIndex char_strings_index;
+  ots::CFFIndex* char_strings_index = new ots::CFFIndex;
   ots::CFFIndex global_subrs_index;
-  ots::CFFIndex local_subrs_index;
+  ots::CFFIndex* local_subrs_index = new ots::CFFIndex;
 
   if (char_string) {
     if (!AddSubr(char_string, char_string_len,
-                 &buffer, &char_strings_index)) {
+                 &buffer, char_strings_index)) {
       return false;
     }
   }
@@ -142,28 +142,26 @@ bool Validate(const int *char_string, size_t char_string_len,
   }
   if (local_subrs) {
     if (!AddSubr(local_subrs, local_subrs_len,
-                 &buffer, &local_subrs_index)) {
+                 &buffer, local_subrs_index)) {
       return false;
     }
   }
 
-  const std::map<uint16_t, uint8_t> fd_select;  // empty
-  const std::vector<ots::CFFIndex *> local_subrs_per_font;  // empty
   ots::Buffer ots_buffer(&buffer[0], buffer.size());
 
   ots::FontFile* file = new ots::FontFile();
-  ots::Font* font = new ots::Font(file);
   file->context = new ots::OTSContext();
-  bool ret = ots::ValidateType2CharStringIndex(font,
-                                           char_strings_index,
-                                           global_subrs_index,
-                                           fd_select,
-                                           local_subrs_per_font,
-                                           &local_subrs_index,
-                                           &ots_buffer);
+  ots::Font* font = new ots::Font(file);
+  ots::OpenTypeCFF* cff = new ots::OpenTypeCFF(font, OTS_TAG_CFF);
+  cff->charstrings_index = char_strings_index;
+  cff->local_subrs = local_subrs_index;
+  bool ret = ots::ValidateCFFCharStrings(*cff,
+                                         global_subrs_index,
+                                         &ots_buffer);
   delete file->context;
   delete file;
   delete font;
+  delete cff;
 
   return ret;
 }

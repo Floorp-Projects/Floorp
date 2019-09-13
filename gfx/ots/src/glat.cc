@@ -200,7 +200,19 @@ bool OpenTypeGLAT_v3::Parse(const uint8_t* data, size_t length,
       if (prevent_decompression) {
         return DropGraphite("Illegal nested compression");
       }
-      std::vector<uint8_t> decompressed(this->compHead & FULL_SIZE);
+      size_t decompressed_size = this->compHead & FULL_SIZE;
+      if (decompressed_size < length) {
+        return DropGraphite("Decompressed size is less than compressed size");
+      }
+      if (decompressed_size == 0) {
+        return DropGraphite("Decompressed size is set to 0");
+      }
+      // decompressed table must be <= 30MB
+      if (decompressed_size > 30 * 1024 * 1024) {
+        return DropGraphite("Decompressed size exceeds 30MB: %gMB",
+                            decompressed_size / (1024.0 * 1024.0));
+      }
+      std::vector<uint8_t> decompressed(decompressed_size);
       size_t outputSize = 0;
       bool ret = mozilla::Compression::LZ4::decompressPartial(
           reinterpret_cast<const char*>(data + table.offset()),

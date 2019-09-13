@@ -11,10 +11,7 @@
 #include "gsub.h"
 #include "layout.h"
 #include "maxp.h"
-
-#ifdef OTS_VARIATIONS
 #include "variations.h"
-#endif
 
 // GDEF - The Glyph Definition Table
 // http://www.microsoft.com/typography/otspec/gdef.htm
@@ -345,12 +342,10 @@ bool OpenTypeGDEF::Parse(const uint8_t *data, size_t length) {
         item_var_store_offset < gdef_header_end) {
       return Error("invalid offset to item variation store");
     }
-#ifdef OTS_VARIATIONS
     if (!ParseItemVariationStore(GetFont(), data + item_var_store_offset,
                                  length - item_var_store_offset)) {
       return Error("Invalid item variation store");
     }
-#endif
   }
 
   this->m_data = data;

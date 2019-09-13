@@ -6,8 +6,6 @@
 
 #include "variations.h"
 
-#define TABLE_NAME "VVAR"
-
 namespace ots {
 
 // -----------------------------------------------------------------------------
@@ -95,5 +93,3 @@ bool OpenTypeVVAR::Serialize(OTSStream* out) {
 }
 
 }  // namespace ots
-
-#undef TABLE_NAME
