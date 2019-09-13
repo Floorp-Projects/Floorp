@@ -59,6 +59,7 @@ import org.json.JSONObject;
 import org.mozilla.geckoview.AllowOrDeny;
 import org.mozilla.geckoview.CompositorController;
 import org.mozilla.geckoview.ContentBlocking;
+import org.mozilla.geckoview.ContentBlockingController;
 import org.mozilla.geckoview.DynamicToolbarAnimator;
 import org.mozilla.geckoview.GeckoDisplay;
 import org.mozilla.geckoview.GeckoResponse;
@@ -212,6 +213,23 @@ package org.mozilla.geckoview {
     method @NonNull protected ContentBlocking.Settings newSettings(@Nullable ContentBlocking.Settings);
   }
 
+  @AnyThread public class ContentBlockingController {
+    ctor public ContentBlockingController();
+    method @UiThread public void addException(@NonNull GeckoSession);
+    method @UiThread @NonNull public GeckoResult<Boolean> checkException(@NonNull GeckoSession);
+    method @UiThread public void clearExceptionList();
+    method @UiThread public void removeException(@NonNull GeckoSession);
+    method @UiThread public void restoreExceptionList(@NonNull ContentBlockingController.ExceptionList);
+    method @UiThread @NonNull public GeckoResult<ContentBlockingController.ExceptionList> saveExceptionList();
+  }
+
+  @AnyThread public class ContentBlockingController.ExceptionList {
+    ctor public ExceptionList(@NonNull String);
+    ctor public ExceptionList(@NonNull JSONObject);
+    method @NonNull public String[] getUris();
+    method @NonNull public JSONObject toJson();
+  }
+
   public class CrashReporter {
     ctor public CrashReporter();
     method @AnyThread @NonNull public static GeckoResult<String> sendCrashReport(@NonNull Context, @NonNull Intent, @NonNull String);
@@ -307,6 +325,7 @@ package org.mozilla.geckoview {
     method @UiThread public void configurationChanged(@NonNull Configuration);
     method @UiThread @NonNull public static GeckoRuntime create(@NonNull Context);
     method @UiThread @NonNull public static GeckoRuntime create(@NonNull Context, @NonNull GeckoRuntimeSettings);
+    method @UiThread @NonNull public ContentBlockingController getContentBlockingController();
     method @UiThread @NonNull public static synchronized GeckoRuntime getDefault(@NonNull Context);
     method @UiThread @Nullable public GeckoRuntime.Delegate getDelegate();
     method @UiThread @Nullable public File getProfileDir();

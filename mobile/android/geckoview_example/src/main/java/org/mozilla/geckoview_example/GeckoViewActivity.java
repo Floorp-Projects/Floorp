@@ -427,6 +427,18 @@ public class GeckoViewActivity extends AppCompatActivity {
                 updateTrackingProtection(session);
                 session.reload();
                 break;
+            case R.id.action_tpe:
+                sGeckoRuntime.getContentBlockingController().checkException(session).accept(value -> {
+                    if (value.booleanValue()) {
+                        sGeckoRuntime.getContentBlockingController().removeException(session);
+                        item.setTitle(R.string.tracking_protection_ex);
+                    } else {
+                        sGeckoRuntime.getContentBlockingController().addException(session);
+                        item.setTitle(R.string.tracking_protection_ex2);
+                    }
+                    session.reload();
+                });
+                break;
             case R.id.desktop_mode:
                 mDesktopMode = !mDesktopMode;
                 updateDesktopMode(session);
