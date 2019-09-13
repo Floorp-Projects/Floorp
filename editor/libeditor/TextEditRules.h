@@ -102,54 +102,9 @@ class TextEditRules {
  protected:
   virtual ~TextEditRules() = default;
 
- public:
-  /**
-   * Handles the newline characters according to the default system prefs
-   * (editor.singleLine.pasteNewlines).
-   * Each value means:
-   *   nsIPlaintextEditor::eNewlinesReplaceWithSpaces (2, Firefox default):
-   *     replace newlines with spaces.
-   *   nsIPlaintextEditor::eNewlinesStrip (3):
-   *     remove newlines from the string.
-   *   nsIPlaintextEditor::eNewlinesReplaceWithCommas (4, Thunderbird default):
-   *     replace newlines with commas.
-   *   nsIPlaintextEditor::eNewlinesStripSurroundingWhitespace (5):
-   *     collapse newlines and surrounding whitespace characters and
-   *     remove them from the string.
-   *   nsIPlaintextEditor::eNewlinesPasteIntact (0):
-   *     only remove the leading and trailing newlines.
-   *   nsIPlaintextEditor::eNewlinesPasteToFirst (1) or any other value:
-   *     remove the first newline and all characters following it.
-   *
-   * @param aString the string to be modified in place.
-   */
-  void HandleNewLines(nsString& aString);
-
- protected:
   void InitFields();
 
   // TextEditRules implementation methods
-
-  /**
-   * Called before inserting text.
-   * This method may actually inserts text into the editor.  Therefore, this
-   * might cause destroying the editor.
-   *
-   * @param aEditSubAction      Must be EditSubAction::eInsertTextComingFromIME
-   *                            or EditSubAction::eInsertText.
-   * @param aCancel             Returns true if the operation is canceled.
-   * @param aHandled            Returns true if the edit action is handled.
-   * @param inString            String to be inserted.
-   * @param outString           String actually inserted.
-   * @param aMaxLength          The maximum string length which the editor
-   *                            allows to set.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult WillInsertText(EditSubAction aEditSubAction,
-                                       bool* aCancel, bool* aHandled,
-                                       const nsAString* inString,
-                                       nsAString* outString,
-                                       int32_t aMaxLength);
 
   /**
    * Called before setting text to the text editor.

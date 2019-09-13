@@ -202,11 +202,6 @@ nsresult TextEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
 
   // my kingdom for dynamic cast
   switch (aInfo.mEditSubAction) {
-    case EditSubAction::eInsertText:
-    case EditSubAction::eInsertTextComingFromIME:
-      TextEditorRef().UndefineCaretBidiLevel();
-      return WillInsertText(aInfo.mEditSubAction, aCancel, aHandled,
-                            aInfo.inString, aInfo.outString, aInfo.maxLength);
     case EditSubAction::eSetText:
       TextEditorRef().UndefineCaretBidiLevel();
       return WillSetText(aCancel, aHandled, aInfo.inString, aInfo.maxLength);
@@ -234,6 +229,8 @@ nsresult TextEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
     }
     case EditSubAction::eInsertElement:
     case EditSubAction::eInsertLineBreak:
+    case EditSubAction::eInsertText:
+    case EditSubAction::eInsertTextComingFromIME:
     case EditSubAction::eUndo:
     case EditSubAction::eRedo:
       MOZ_ASSERT_UNREACHABLE("This path should've been dead code");
@@ -253,6 +250,8 @@ nsresult TextEditRules::DidDoAction(EditSubActionInfo& aInfo,
     case EditSubAction::eDeleteSelectedContent:
     case EditSubAction::eInsertElement:
     case EditSubAction::eInsertLineBreak:
+    case EditSubAction::eInsertText:
+    case EditSubAction::eInsertTextComingFromIME:
     case EditSubAction::eUndo:
     case EditSubAction::eRedo:
       MOZ_ASSERT_UNREACHABLE("This path should've been dead code");
@@ -284,7 +283,7 @@ EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
   if (mMaxTextLength >= 0) {
     nsAutoString insertionString(NS_LITERAL_STRING("\n"));
     EditActionResult result =
-        TruncateInsertionStringForMaxLength(insertionString, mMaxTextLength);
+        TruncateInsertionStringForMaxLength(insertionString);
     if (NS_WARN_IF(result.Failed())) {
       return result;
     }
@@ -467,9 +466,11 @@ TextEditRules::GetTextNodeAroundSelectionStartContainer() {
   return node.forget();
 }
 
-void TextEditRules::HandleNewLines(nsString& aString) {
+void TextEditor::HandleNewLinesInStringForSingleLineEditor(
+    nsString& aString) const {
   static const char16_t kLF = static_cast<char16_t>('\n');
-  MOZ_ASSERT(IsEditorDataAvailable());
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(IsPlaintextEditor());
   MOZ_ASSERT(aString.FindChar(static_cast<uint16_t>('\r')) == kNotFound);
 
   // First of all, check if aString contains '\n' since if the string
@@ -479,7 +480,7 @@ void TextEditRules::HandleNewLines(nsString& aString) {
     return;
   }
 
-  switch (TextEditorRef().mNewlineHandling) {
+  switch (mNewlineHandling) {
     case nsIPlaintextEditor::eNewlinesReplaceWithSpaces:
       // Default of Firefox:
       // Strip trailing newlines first so we don't wind up with trailing spaces
@@ -540,84 +541,70 @@ void TextEditRules::HandleNewLines(nsString& aString) {
   }
 }
 
-nsresult TextEditRules::WillInsertText(EditSubAction aEditSubAction,
-                                       bool* aCancel, bool* aHandled,
-                                       const nsAString* inString,
-                                       nsAString* outString,
-                                       int32_t aMaxLength) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+EditActionResult TextEditor::HandleInsertText(
+    EditSubAction aEditSubAction, const nsAString& aInsertionString) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aEditSubAction == EditSubAction::eInsertText ||
+             aEditSubAction == EditSubAction::eInsertTextComingFromIME);
 
-  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  UndefineCaretBidiLevel();
 
-  if (inString->IsEmpty() &&
+  if (aInsertionString.IsEmpty() &&
       aEditSubAction != EditSubAction::eInsertTextComingFromIME) {
     // HACK: this is a fix for bug 19395
     // I can't outlaw all empty insertions
     // because IME transaction depend on them
     // There is more work to do to make the
     // world safe for IME.
-    *aCancel = true;
-    *aHandled = false;
-    return NS_OK;
+    return EditActionCanceled();
   }
 
-  // initialize out param
-  *aCancel = false;
-  *aHandled = true;
-
-  outString->Assign(*inString);
-  if (aMaxLength >= 0) {
+  nsAutoString insertionString(aInsertionString);
+  if (mMaxTextLength >= 0) {
     EditActionResult result =
-        TextEditorRef().TruncateInsertionStringForMaxLength(*outString,
-                                                            aMaxLength);
+        TruncateInsertionStringForMaxLength(insertionString);
     if (NS_WARN_IF(result.Failed())) {
-      return result.Rv();
+      return result.MarkAsHandled();
     }
     // If we're exceeding the maxlength when composing IME, we need to clean up
     // the composing text, so we shouldn't return early.
-    if (result.Handled() && outString->IsEmpty() &&
+    if (result.Handled() && insertionString.IsEmpty() &&
         aEditSubAction != EditSubAction::eInsertTextComingFromIME) {
-      *aCancel = true;
-      return NS_OK;
+      return EditActionCanceled();
     }
   }
 
   uint32_t start = 0;
   if (IsPasswordEditor()) {
-    if (TextEditorRef().GetComposition() &&
-        !TextEditorRef().GetComposition()->String().IsEmpty()) {
-      start = TextEditorRef().GetComposition()->XPOffsetInTextNode();
+    if (GetComposition() && !GetComposition()->String().IsEmpty()) {
+      start = GetComposition()->XPOffsetInTextNode();
     } else {
       uint32_t end = 0;
-      nsContentUtils::GetSelectionInTextControl(
-          SelectionRefPtr(), TextEditorRef().GetRoot(), start, end);
+      nsContentUtils::GetSelectionInTextControl(SelectionRefPtr(), GetRoot(),
+                                                start, end);
     }
   }
 
   // if the selection isn't collapsed, delete it.
   if (!SelectionRefPtr()->IsCollapsed()) {
     nsresult rv =
-        MOZ_KnownLive(TextEditorRef())
-            .DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eStrip);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+        DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eStrip);
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditActionHandled(rv);
     }
   }
 
-  // XXX Why do we set `aCancel` here, but ignore it?
-  CANCEL_OPERATION_IF_READONLY_OR_DISABLED
+  // XXX Why don't we cancel here?  Shouldn't we do this first?
+  CANCEL_OPERATION_AND_RETURN_EDIT_ACTION_RESULT_IF_READONLY_OF_DISABLED
 
-  TextEditorRef().MaybeDoAutoPasswordMasking();
+  MaybeDoAutoPasswordMasking();
 
-  nsresult rv =
-      MOZ_KnownLive(TextEditorRef()).EnsureNoPaddingBRElementForEmptyEditor();
+  nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditActionHandled(rv);
   }
 
   // People have lots of different ideas about what text fields
@@ -631,7 +618,6 @@ nsresult TextEditRules::WillInsertText(EditSubAction aEditSubAction,
   // 5. strip newlines and surrounding whitespace
   // So find out what we're expected to do:
   if (IsSingleLineEditor()) {
-    nsAutoString tString(*outString);
     // XXX Some callers of TextEditor::InsertTextAsAction()  already make the
     //     string use only \n as a linebreaker.  However, they are not hot
     //     path and nsContentUtils::PlatformToDOMLineBreaks() does nothing
@@ -639,104 +625,98 @@ nsresult TextEditRules::WillInsertText(EditSubAction aEditSubAction,
     //     here.  Note that there are too many callers of
     //     TextEditor::InsertTextAsAction().  So, it's difficult to keep
     //     maintaining all of them won't reach here without \r nor \r\n.
-    nsContentUtils::PlatformToDOMLineBreaks(tString);
-    HandleNewLines(tString);
-    outString->Assign(tString);
+    // XXX Should we handle do this before truncating the string for
+    //     `maxlength`?
+    nsContentUtils::PlatformToDOMLineBreaks(insertionString);
+    HandleNewLinesInStringForSingleLineEditor(insertionString);
   }
 
   // get the (collapsed) selection location
   nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
-    return NS_ERROR_FAILURE;
+    return EditActionHandled(NS_ERROR_FAILURE);
   }
   EditorRawDOMPoint atStartOfSelection(firstRange->StartRef());
   if (NS_WARN_IF(!atStartOfSelection.IsSetAndValid())) {
-    return NS_ERROR_FAILURE;
+    return EditActionHandled(NS_ERROR_FAILURE);
   }
 
   // don't put text in places that can't have it
   if (!atStartOfSelection.IsInTextNode() &&
-      !TextEditorRef().CanContainTag(*atStartOfSelection.GetContainer(),
-                                     *nsGkAtoms::textTagName)) {
-    return NS_ERROR_FAILURE;
+      !CanContainTag(*atStartOfSelection.GetContainer(),
+                     *nsGkAtoms::textTagName)) {
+    return EditActionHandled(NS_ERROR_FAILURE);
   }
 
-  // we need to get the doc
-  RefPtr<Document> doc = TextEditorRef().GetDocument();
-  if (NS_WARN_IF(!doc)) {
-    return NS_ERROR_NOT_INITIALIZED;
+  RefPtr<Document> document = GetDocument();
+  if (NS_WARN_IF(!document)) {
+    return EditActionHandled(NS_ERROR_NOT_INITIALIZED);
   }
 
   if (aEditSubAction == EditSubAction::eInsertTextComingFromIME) {
-    EditorRawDOMPoint compositionStartPoint =
-        TextEditorRef().GetCompositionStartPoint();
+    EditorRawDOMPoint compositionStartPoint = GetCompositionStartPoint();
     if (!compositionStartPoint.IsSet()) {
-      compositionStartPoint =
-          TextEditorRef().FindBetterInsertionPoint(atStartOfSelection);
+      compositionStartPoint = FindBetterInsertionPoint(atStartOfSelection);
     }
-    nsresult rv =
-        MOZ_KnownLive(TextEditorRef())
-            .InsertTextWithTransaction(*doc, *outString, compositionStartPoint);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+    nsresult rv = InsertTextWithTransaction(*document, insertionString,
+                                            compositionStartPoint);
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditActionHandled(rv);
     }
   } else {
-    // aEditSubAction == EditSubAction::eInsertText
+    MOZ_ASSERT(aEditSubAction == EditSubAction::eInsertText);
 
     // don't change my selection in subtransactions
-    AutoTransactionsConserveSelection dontChangeMySelection(TextEditorRef());
+    AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
     EditorRawDOMPoint pointAfterStringInserted;
-    nsresult rv =
-        MOZ_KnownLive(TextEditorRef())
-            .InsertTextWithTransaction(*doc, *outString, atStartOfSelection,
-                                       &pointAfterStringInserted);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+    nsresult rv = InsertTextWithTransaction(*document, insertionString,
+                                            atStartOfSelection,
+                                            &pointAfterStringInserted);
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditActionHandled(rv);
     }
 
     if (pointAfterStringInserted.IsSet()) {
       // Make the caret attach to the inserted text, unless this text ends with
       // a LF, in which case make the caret attach to the next line.
-      bool endsWithLF = !outString->IsEmpty() && outString->Last() == nsCRT::LF;
-      IgnoredErrorResult error;
-      SelectionRefPtr()->SetInterlinePosition(endsWithLF, error);
-      NS_WARNING_ASSERTION(!error.Failed(),
-                           "Failed to set or unset interline position");
+      bool endsWithLF =
+          !insertionString.IsEmpty() && insertionString.Last() == nsCRT::LF;
+      IgnoredErrorResult ignoredError;
+      SelectionRefPtr()->SetInterlinePosition(endsWithLF, ignoredError);
+      NS_WARNING_ASSERTION(
+          !ignoredError.Failed(),
+          "Selection::SetInterlinePosition() failed, but ignored");
 
       MOZ_ASSERT(
           !pointAfterStringInserted.GetChild(),
           "After inserting text into a text node, pointAfterStringInserted."
           "GetChild() should be nullptr");
-      error = IgnoredErrorResult();
-      SelectionRefPtr()->Collapse(pointAfterStringInserted, error);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+      ignoredError = IgnoredErrorResult();
+      SelectionRefPtr()->Collapse(pointAfterStringInserted, ignoredError);
+      if (NS_WARN_IF(Destroyed())) {
+        return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
       }
-      NS_WARNING_ASSERTION(
-          !error.Failed(),
-          "Failed to collapse selection after inserting string");
+      NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                           "Selection::Collapse() failed, but ignored");
     }
   }
 
   // Unmask inputted character(s) if necessary.
-  if (IsPasswordEditor() && IsMaskingPassword() && !DontEchoPassword()) {
-    nsresult rv =
-        MOZ_KnownLive(TextEditorRef())
-            .SetUnmaskRangeAndNotify(start, outString->Length(),
-                                     LookAndFeel::GetPasswordMaskDelay());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  if (IsPasswordEditor() && IsMaskingPassword() && CanEchoPasswordNow()) {
+    nsresult rv = SetUnmaskRangeAndNotify(start, insertionString.Length(),
+                                          LookAndFeel::GetPasswordMaskDelay());
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetUnmaskRangeAndNotify() failed");
+    return EditActionHandled(rv);
   }
 
-  return NS_OK;
+  return EditActionHandled();
 }
 
 nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
@@ -812,7 +792,7 @@ nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
   //     Is this intentional?
   nsAutoString tString(*aString);
   if (IsSingleLineEditor() && !IsPasswordEditor()) {
-    HandleNewLines(tString);
+    TextEditorRef().HandleNewLinesInStringForSingleLineEditor(tString);
   }
 
   if (!firstChild || !EditorBase::IsTextNode(firstChild)) {
@@ -1148,8 +1128,9 @@ nsresult TextEditRules::CreateTrailingBRIfNeeded() {
 }
 
 EditActionResult TextEditor::TruncateInsertionStringForMaxLength(
-    nsAString& aInsertionString, uint32_t aMaxLength) {
+    nsAString& aInsertionString) {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(mMaxTextLength >= 0);
 
   if (!IsPlaintextEditor() || IsIMEComposing()) {
     return EditActionIgnored();
@@ -1175,16 +1156,17 @@ EditActionResult TextEditor::TruncateInsertionStringForMaxLength(
   //     is part of kOldCompositionStringLength.
   const uint32_t kNewLength =
       currentLength - kSelectionLength - kOldCompositionStringLength;
-  if (kNewLength >= aMaxLength) {
+  if (kNewLength >= static_cast<uint32_t>(mMaxTextLength)) {
     aInsertionString.Truncate();  // Too long, we cannot accept new character.
     return EditActionHandled();
   }
 
-  if (aInsertionString.Length() + kNewLength <= aMaxLength) {
+  if (aInsertionString.Length() + kNewLength <=
+      static_cast<uint32_t>(mMaxTextLength)) {
     return EditActionIgnored();  // Enough short string.
   }
 
-  int32_t newInsertionStringLength = aMaxLength - kNewLength;
+  int32_t newInsertionStringLength = mMaxTextLength - kNewLength;
   MOZ_ASSERT(newInsertionStringLength > 0);
   char16_t maybeHighSurrogate =
       aInsertionString.CharAt(newInsertionStringLength - 1);
@@ -1229,20 +1211,14 @@ bool TextEditRules::IsMailEditor() const {
   return mTextEditor ? mTextEditor->IsMailEditor() : false;
 }
 
-bool TextEditRules::DontEchoPassword() const {
-  if (!mTextEditor) {
-    // XXX Why do we use echo password if editor is null?
+bool TextEditor::CanEchoPasswordNow() const {
+  if (!LookAndFeel::GetEchoPassword() ||
+      (mFlags & nsIPlaintextEditor::eEditorDontEchoPassword)) {
     return false;
-  }
-  if (!LookAndFeel::GetEchoPassword() || mTextEditor->DontEchoPassword()) {
-    return true;
   }
 
-  if (mTextEditor->GetEditAction() != EditAction::eDrop &&
-      mTextEditor->GetEditAction() != EditAction::ePaste) {
-    return false;
-  }
-  return true;
+  return GetEditAction() != EditAction::eDrop &&
+         GetEditAction() != EditAction::ePaste;
 }
 
 }  // namespace mozilla

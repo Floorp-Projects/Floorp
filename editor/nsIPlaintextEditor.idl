@@ -86,6 +86,7 @@ interface nsIPlaintextEditor : nsISupports
    *
    * @param aString   the string to be inserted
    */
+   [can_run_script]
    void insertText(in AString aStringToInsert);
 
   /**

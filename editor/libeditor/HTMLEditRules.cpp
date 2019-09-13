@@ -777,12 +777,6 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
   }
 
   switch (aInfo.mEditSubAction) {
-    case EditSubAction::eInsertText:
-    case EditSubAction::eInsertTextComingFromIME:
-      TextEditorRef().UndefineCaretBidiLevel();
-      return MOZ_KnownLive(HTMLEditorRef())
-          .WillInsertText(aInfo.mEditSubAction, aCancel, aHandled,
-                          aInfo.inString, aInfo.outString, aInfo.maxLength);
     case EditSubAction::eDeleteSelectedContent:
       result = MOZ_KnownLive(HTMLEditorRef())
                    .HandleDeleteSelection(aInfo.collapsedAction,
@@ -809,6 +803,8 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
     case EditSubAction::eIndent:
     case EditSubAction::eInsertHTMLSource:
     case EditSubAction::eInsertParagraphSeparator:
+    case EditSubAction::eInsertText:
+    case EditSubAction::eInsertTextComingFromIME:
     case EditSubAction::eOutdent:
     case EditSubAction::eUndo:
     case EditSubAction::eRedo:
@@ -832,9 +828,6 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
   AutoSafeEditorData setData(*this, *mHTMLEditor);
 
   switch (aInfo.mEditSubAction) {
-    case EditSubAction::eInsertText:
-    case EditSubAction::eInsertTextComingFromIME:
-      return NS_OK;
     case EditSubAction::eInsertElement:
     case EditSubAction::eInsertQuotedText:
       return NS_OK;
@@ -848,6 +841,8 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
     case EditSubAction::eInsertHTMLSource:
     case EditSubAction::eInsertLineBreak:
     case EditSubAction::eInsertParagraphSeparator:
+    case EditSubAction::eInsertText:
+    case EditSubAction::eInsertTextComingFromIME:
     case EditSubAction::eOutdent:
     case EditSubAction::eUndo:
     case EditSubAction::eRedo:
@@ -1379,47 +1374,47 @@ nsresult HTMLEditor::WillInsert(bool* aCancel) {
   return NS_OK;
 }
 
-nsresult HTMLEditor::WillInsertText(EditSubAction aEditSubAction, bool* aCancel,
-                                    bool* aHandled, const nsAString* inString,
-                                    nsAString* outString, int32_t aMaxLength) {
+EditActionResult HTMLEditor::HandleInsertText(
+    EditSubAction aEditSubAction, const nsAString& aInsertionString) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
+  MOZ_ASSERT(aEditSubAction == EditSubAction::eInsertText ||
+             aEditSubAction == EditSubAction::eInsertTextComingFromIME);
 
-  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
-    return NS_ERROR_NULL_POINTER;
+  EditActionResult result = CanHandleHTMLEditSubAction();
+  if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
+    return result;
   }
 
-  // initialize out param
-  *aCancel = false;
-  *aHandled = true;
+  UndefineCaretBidiLevel();
+
   // If the selection isn't collapsed, delete it.  Don't delete existing inline
   // tags, because we're hopefully going to insert text (bug 787432).
   if (!SelectionRefPtr()->IsCollapsed()) {
     nsresult rv =
         DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eNoStrip);
     if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditActionHandled(rv);
     }
   }
 
   // FYI: Ignore cancel result of WillInsert().
   nsresult rv = WillInsert();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    return NS_ERROR_EDITOR_DESTROYED;
+    return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
 
-  // we need to get the doc
-  RefPtr<Document> doc = GetDocument();
-  if (NS_WARN_IF(!doc)) {
-    return NS_ERROR_FAILURE;
+  RefPtr<Document> document = GetDocument();
+  if (NS_WARN_IF(!document)) {
+    return EditActionHandled(NS_ERROR_FAILURE);
   }
 
   RefPtr<nsRange> firstRange = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
-    return NS_ERROR_FAILURE;
+    return EditActionHandled(NS_ERROR_FAILURE);
   }
 
   // for every property that is set, insert a new inline style node
@@ -1427,24 +1422,24 @@ nsresult HTMLEditor::WillInsertText(EditSubAction aEditSubAction, bool* aCancel,
   //     it should just return the insertion point instead.
   rv = CreateStyleForInsertText(*firstRange);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditActionHandled(rv);
   }
 
   firstRange = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
-    return NS_ERROR_FAILURE;
+    return EditActionHandled(NS_ERROR_FAILURE);
   }
 
   EditorDOMPoint pointToInsert(firstRange->StartRef());
   if (NS_WARN_IF(!pointToInsert.IsSet())) {
-    return NS_ERROR_FAILURE;
+    return EditActionHandled(NS_ERROR_FAILURE);
   }
   MOZ_ASSERT(pointToInsert.IsSetAndValid());
 
   // dont put text in places that can't have it
   if (!EditorBase::IsTextNode(pointToInsert.GetContainer()) &&
       !CanContainTag(*pointToInsert.GetContainer(), *nsGkAtoms::textTagName)) {
-    return NS_ERROR_FAILURE;
+    return EditActionHandled(NS_ERROR_FAILURE);
   }
 
   if (aEditSubAction == EditSubAction::eInsertTextComingFromIME) {
@@ -1453,17 +1448,18 @@ nsresult HTMLEditor::WillInsertText(EditSubAction aEditSubAction, bool* aCancel,
       compositionStartPoint = pointToInsert;
     }
 
-    if (inString->IsEmpty()) {
+    if (aInsertionString.IsEmpty()) {
       // Right now the WSRunObject code bails on empty strings, but IME needs
       // the InsertTextWithTransaction() call to still happen since empty
       // strings are meaningful there.
-      rv = InsertTextWithTransaction(*doc, *inString, compositionStartPoint);
+      nsresult rv = InsertTextWithTransaction(*document, aInsertionString,
+                                              compositionStartPoint);
       if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+        return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
       }
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                            "InsertTextWithTransaction() failed");
-      return rv;
+      return EditActionHandled(rv);
     }
 
     EditorRawDOMPoint compositionEndPoint = GetCompositionEndPoint();
@@ -1471,12 +1467,12 @@ nsresult HTMLEditor::WillInsertText(EditSubAction aEditSubAction, bool* aCancel,
       compositionEndPoint = compositionStartPoint;
     }
     WSRunObject wsObj(this, compositionStartPoint, compositionEndPoint);
-    rv = wsObj.InsertText(*doc, *inString);
+    nsresult rv = wsObj.InsertText(*document, aInsertionString);
     if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditActionHandled(rv);
     }
 
     compositionStartPoint = GetCompositionStartPoint();
@@ -1484,14 +1480,14 @@ nsresult HTMLEditor::WillInsertText(EditSubAction aEditSubAction, bool* aCancel,
     if (NS_WARN_IF(!compositionStartPoint.IsSet()) ||
         NS_WARN_IF(!compositionEndPoint.IsSet())) {
       // Mutation event listener has changed the DOM tree...
-      return NS_OK;
+      return EditActionHandled();
     }
     rv = TopLevelEditSubActionDataRef().mChangedRange->SetStartAndEnd(
         compositionStartPoint.ToRawRangeBoundary(),
         compositionEndPoint.ToRawRangeBoundary());
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Faliled to set mChangedRange to composing range");
-    return rv;
+    return EditActionHandled(rv);
   }
 
   MOZ_ASSERT(aEditSubAction == EditSubAction::eInsertText);
@@ -1513,8 +1509,6 @@ nsresult HTMLEditor::WillInsertText(EditSubAction aEditSubAction, bool* aCancel,
 
   // don't change my selection in subtransactions
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
-  nsAutoString tString(*inString);
-  const char16_t* unicodeBuf = tString.get();
   int32_t pos = 0;
   NS_NAMED_LITERAL_STRING(newlineStr, LFSTR);
 
@@ -1525,11 +1519,11 @@ nsresult HTMLEditor::WillInsertText(EditSubAction aEditSubAction, bool* aCancel,
     // its a lot cheaper to search the input string for only newlines than
     // it is to search for both tabs and newlines.
     if (isPRE || IsPlaintextEditor()) {
-      while (unicodeBuf && pos != -1 &&
-             pos < static_cast<int32_t>(inString->Length())) {
+      while (pos != -1 &&
+             pos < static_cast<int32_t>(aInsertionString.Length())) {
         int32_t oldPos = pos;
         int32_t subStrLen;
-        pos = tString.FindChar(nsCRT::LF, oldPos);
+        pos = aInsertionString.FindChar(nsCRT::LF, oldPos);
 
         if (pos != -1) {
           subStrLen = pos - oldPos;
@@ -1538,21 +1532,21 @@ nsresult HTMLEditor::WillInsertText(EditSubAction aEditSubAction, bool* aCancel,
             subStrLen = 1;
           }
         } else {
-          subStrLen = tString.Length() - oldPos;
-          pos = tString.Length();
+          subStrLen = aInsertionString.Length() - oldPos;
+          pos = aInsertionString.Length();
         }
 
-        nsDependentSubstring subStr(tString, oldPos, subStrLen);
+        nsDependentSubstring subStr(aInsertionString, oldPos, subStrLen);
 
         // is it a return?
         if (subStr.Equals(newlineStr)) {
           RefPtr<Element> brElement =
               InsertBRElementWithTransaction(currentPoint, nsIEditor::eNone);
           if (NS_WARN_IF(Destroyed())) {
-            return NS_ERROR_EDITOR_DESTROYED;
+            return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
           }
           if (NS_WARN_IF(!brElement)) {
-            return NS_ERROR_FAILURE;
+            return EditActionHandled(NS_ERROR_FAILURE);
           }
           pos++;
           if (brElement->GetNextSibling()) {
@@ -1573,14 +1567,14 @@ nsresult HTMLEditor::WillInsertText(EditSubAction aEditSubAction, bool* aCancel,
                                "by mutation observer");
         } else {
           EditorRawDOMPoint pointAfterInsertedString;
-          rv = InsertTextWithTransaction(*doc, subStr,
-                                         EditorRawDOMPoint(currentPoint),
-                                         &pointAfterInsertedString);
+          nsresult rv = InsertTextWithTransaction(
+              *document, subStr, EditorRawDOMPoint(currentPoint),
+              &pointAfterInsertedString);
           if (NS_WARN_IF(Destroyed())) {
-            return NS_ERROR_EDITOR_DESTROYED;
+            return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
           }
           if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
+            return EditActionHandled(rv);
           }
           currentPoint = pointAfterInsertedString;
           pointToInsert = pointAfterInsertedString;
@@ -1590,11 +1584,12 @@ nsresult HTMLEditor::WillInsertText(EditSubAction aEditSubAction, bool* aCancel,
       NS_NAMED_LITERAL_STRING(tabStr, "\t");
       NS_NAMED_LITERAL_STRING(spacesStr, "    ");
       char specialChars[] = {TAB, nsCRT::LF, 0};
-      while (unicodeBuf && pos != -1 &&
-             pos < static_cast<int32_t>(inString->Length())) {
+      nsAutoString insertionString(aInsertionString);  // For FindCharInSet().
+      while (pos != -1 &&
+             pos < static_cast<int32_t>(insertionString.Length())) {
         int32_t oldPos = pos;
         int32_t subStrLen;
-        pos = tString.FindCharInSet(specialChars, oldPos);
+        pos = insertionString.FindCharInSet(specialChars, oldPos);
 
         if (pos != -1) {
           subStrLen = pos - oldPos;
@@ -1603,22 +1598,23 @@ nsresult HTMLEditor::WillInsertText(EditSubAction aEditSubAction, bool* aCancel,
             subStrLen = 1;
           }
         } else {
-          subStrLen = tString.Length() - oldPos;
-          pos = tString.Length();
+          subStrLen = insertionString.Length() - oldPos;
+          pos = insertionString.Length();
         }
 
-        nsDependentSubstring subStr(tString, oldPos, subStrLen);
+        nsDependentSubstring subStr(insertionString, oldPos, subStrLen);
         WSRunObject wsObj(this, currentPoint);
 
         // is it a tab?
         if (subStr.Equals(tabStr)) {
           EditorRawDOMPoint pointAfterInsertedSpaces;
-          rv = wsObj.InsertText(*doc, spacesStr, &pointAfterInsertedSpaces);
+          nsresult rv =
+              wsObj.InsertText(*document, spacesStr, &pointAfterInsertedSpaces);
           if (NS_WARN_IF(Destroyed())) {
-            return NS_ERROR_EDITOR_DESTROYED;
+            return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
           }
           if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
+            return EditActionHandled(rv);
           }
           pos++;
           MOZ_ASSERT(pointAfterInsertedSpaces.IsSet());
@@ -1631,10 +1627,10 @@ nsresult HTMLEditor::WillInsertText(EditSubAction aEditSubAction, bool* aCancel,
               wsObj.InsertBreak(MOZ_KnownLive(*SelectionRefPtr()), currentPoint,
                                 nsIEditor::eNone);
           if (NS_WARN_IF(Destroyed())) {
-            return NS_ERROR_EDITOR_DESTROYED;
+            return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
           }
           if (NS_WARN_IF(!newBRElement)) {
-            return NS_ERROR_FAILURE;
+            return EditActionHandled(NS_ERROR_FAILURE);
           }
           pos++;
           if (newBRElement->GetNextSibling()) {
@@ -1655,12 +1651,13 @@ nsresult HTMLEditor::WillInsertText(EditSubAction aEditSubAction, bool* aCancel,
               "Perhaps, newBRElement has been moved or removed unexpectedly");
         } else {
           EditorRawDOMPoint pointAfterInsertedString;
-          rv = wsObj.InsertText(*doc, subStr, &pointAfterInsertedString);
+          nsresult rv =
+              wsObj.InsertText(*document, subStr, &pointAfterInsertedString);
           if (NS_WARN_IF(Destroyed())) {
-            return NS_ERROR_EDITOR_DESTROYED;
+            return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
           }
           if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
+            return EditActionHandled(rv);
           }
           MOZ_ASSERT(pointAfterInsertedString.IsSet());
           currentPoint = pointAfterInsertedString;
@@ -1681,7 +1678,7 @@ nsresult HTMLEditor::WillInsertText(EditSubAction aEditSubAction, bool* aCancel,
     IgnoredErrorResult ignoredError;
     SelectionRefPtr()->Collapse(currentPoint, ignoredError);
     if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(!ignoredError.Failed(),
                          "Failed to collapse at current point");
@@ -1690,15 +1687,15 @@ nsresult HTMLEditor::WillInsertText(EditSubAction aEditSubAction, bool* aCancel,
   // manually update the doc changed range so that AfterEdit will clean up
   // the correct portion of the document.
   if (currentPoint.IsSet()) {
-    rv = TopLevelEditSubActionDataRef().mChangedRange->SetStartAndEnd(
+    nsresult rv = TopLevelEditSubActionDataRef().mChangedRange->SetStartAndEnd(
         pointToInsert.ToRawRangeBoundary(), currentPoint.ToRawRangeBoundary());
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to set mChangedRange");
-    return rv;
+    return EditActionHandled(rv);
   }
 
   rv = TopLevelEditSubActionDataRef().mChangedRange->CollapseTo(pointToInsert);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to collapse mChangedRange");
-  return rv;
+  return EditActionHandled(rv);
 }
 
 bool HTMLEditor::CanContainParagraph(Element& aElement) const {
