@@ -6,6 +6,7 @@
 
 const {
   ADD_REQUEST,
+  BLOCK_SELECTED_REQUEST_DONE,
   CLEAR_REQUESTS,
   CLONE_REQUEST,
   CLONE_SELECTED_REQUEST,
@@ -13,6 +14,7 @@ const {
   RIGHT_CLICK_REQUEST,
   SEND_CUSTOM_REQUEST,
   TOGGLE_RECORDING,
+  UNBLOCK_SELECTED_REQUEST_DONE,
   UPDATE_REQUEST,
 } = require("../constants");
 const { getSelectedRequest, getRequestById } = require("../selectors/index");
@@ -109,13 +111,16 @@ function sendCustomRequest(connector, requestId = null) {
  * Tell the backend to block future requests that match the URL of the selected one.
  */
 function blockSelectedRequestURL(connector, clickedRequest) {
-  return () => {
+  return async dispatch => {
     if (!clickedRequest) {
       return;
     }
 
     const { url } = clickedRequest;
-    connector.blockRequest({ url });
+    await connector.blockRequest({ url });
+    dispatch({
+      type: BLOCK_SELECTED_REQUEST_DONE,
+    });
   };
 }
 
@@ -123,13 +128,16 @@ function blockSelectedRequestURL(connector, clickedRequest) {
  * Tell the backend to unblock future requests that match the URL of the selected one.
  */
 function unblockSelectedRequestURL(connector, clickedRequest) {
-  return () => {
+  return async dispatch => {
     if (!clickedRequest) {
       return;
     }
 
     const { url } = clickedRequest;
-    connector.unblockRequest({ url });
+    await connector.unblockRequest({ url });
+    dispatch({
+      type: UNBLOCK_SELECTED_REQUEST_DONE,
+    });
   };
 }
 
