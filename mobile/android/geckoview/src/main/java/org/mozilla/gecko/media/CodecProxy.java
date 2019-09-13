@@ -361,7 +361,7 @@ public final class CodecProxy {
     }
 
     @WrapForJNI
-    public synchronized boolean setRates(final int newBitRate) {
+    public synchronized boolean setBitrate(final int bps) {
         if (!mIsEncoder) {
             Log.w(LOGTAG, "this api is encoder-only");
             return false;
@@ -378,9 +378,9 @@ public final class CodecProxy {
         }
 
         try {
-            mRemote.setRates(newBitRate);
+            mRemote.setBitrate(bps);
         } catch (RemoteException e) {
-            Log.e(LOGTAG, "remote fail to set rates:" + newBitRate);
+            Log.e(LOGTAG, "remote fail to set rates:" + bps);
             e.printStackTrace();
         }
         return true;

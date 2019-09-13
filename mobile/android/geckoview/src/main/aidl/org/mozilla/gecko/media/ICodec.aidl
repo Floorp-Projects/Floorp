@@ -29,5 +29,5 @@ interface ICodec {
     SampleBuffer getOutputBuffer(int id);
 
     void releaseOutput(in Sample sample, in boolean render);
-    oneway void setRates(in int newBitRate);
+    oneway void setBitrate(in int bps);
 }

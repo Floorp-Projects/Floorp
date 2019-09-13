@@ -190,9 +190,9 @@ import java.nio.ByteBuffer;
     }
 
     @Override
-    public void setRates(final int newBitRate) {
+    public void setBitrate(final int bps) {
         final Bundle params = new Bundle();
-        params.putInt(MediaCodec.PARAMETER_KEY_VIDEO_BITRATE, newBitRate * 1000);
+        params.putInt(MediaCodec.PARAMETER_KEY_VIDEO_BITRATE, bps);
         mCodec.setParameters(params);
     }
 
