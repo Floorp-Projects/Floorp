@@ -1,5 +1,5 @@
 function IsInFlow(element) {
-    var style = window.getComputedStyle(child);
+    var style = window.getComputedStyle(element);
     return style.getPropertyValue("display") !== "none" &&
         style.getPropertyValue("position") !== "absolute" &&
         style.getPropertyValue("position") !== "fixed";
