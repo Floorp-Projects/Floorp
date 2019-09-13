@@ -476,8 +476,22 @@ interface nsISearchService : nsISupports
    * Gets a representation of the default engine in an anonymized JSON
    * string suitable for recording in the Telemetry environment.
    *
-   * @return an object containing anonymized info about the default engine:
-   *         name, loadPath, submissionURL (for default engines).
+   * @return {object} result
+   *   contains anonymized info about the default engine(s).
+   * @return {string} result.defaultSearchEngine
+   *   contains the telemetry id of the default engine.
+   * @return {object} result.defaultSearchEngineData
+   *   contains information about the default engine:
+   *     name, loadPath, original submissionURL
+   * @return {string} [result.defaultPrivateSearchEngine]
+   *   only returned if the preference for having a separate engine in private
+   *   mode is turned on.
+   *   contains the telemetry id of the default engine for private browsing mode.
+   * @return {object} [result.defaultPrivateSearchEngineData]
+   *   only returned if the preference for having a separate engine in private
+   *   mode is turned on.
+   *   contains information about the default engine for private browsing mode:
+   *     name, loadPath, original submissionURL
    */
   Promise getDefaultEngineInfo();
 
