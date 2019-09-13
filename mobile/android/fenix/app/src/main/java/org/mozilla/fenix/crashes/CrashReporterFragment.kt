@@ -10,19 +10,19 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_crash_reporter.*
-import mozilla.components.browser.session.Session
 import mozilla.components.lib.crash.Crash
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 
+/**
+ * Fragment shown when a tab crashes.
+ */
 class CrashReporterFragment : Fragment() {
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -31,53 +31,30 @@ class CrashReporterFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val crash = Crash.fromIntent(CrashReporterFragmentArgs.fromBundle(arguments!!).crashIntent)
 
-        title.text =
-            getString(R.string.tab_crash_title_2, context!!.getString(R.string.app_name))
+        val args: CrashReporterFragmentArgs by navArgs()
+        val crash = Crash.fromIntent(args.crashIntent)
 
-        requireContext().components.analytics.metrics.track(Event.CrashReporterOpened)
+        title.text = getString(R.string.tab_crash_title_2, getString(R.string.app_name))
 
-        val selectedSession = requireComponents.core.sessionManager.selectedSession
+        val controller = CrashReporterController(
+            crash,
+            session = requireComponents.core.sessionManager.selectedSession,
+            navController = findNavController(),
+            components = requireComponents,
+            settings = requireContext().settings
+        )
 
         restoreTabButton.setOnClickListener {
-            selectedSession?.let { session -> closeFragment(true, session, crash) }
+            controller.handleCloseAndRestore(sendCrashCheckbox.isChecked)
         }
-
         closeTabButton.setOnClickListener {
-            selectedSession?.let { session -> closeFragment(false, session, crash) }
+            controller.handleCloseAndRemove(sendCrashCheckbox.isChecked)
         }
     }
 
     override fun onResume() {
         super.onResume()
         (activity as AppCompatActivity).supportActionBar?.hide()
-    }
-
-    private fun closeFragment(shouldRestore: Boolean, session: Session, crash: Crash) {
-        submitReportIfNecessary(crash)
-
-        if (shouldRestore) {
-            requireComponents.useCases.sessionUseCases.crashRecovery.invoke()
-            Navigation.findNavController(view!!).popBackStack()
-        } else {
-            requireComponents.useCases.tabsUseCases.removeTab.invoke(session)
-            requireComponents.useCases.sessionUseCases.crashRecovery.invoke()
-            navigateHome()
-        }
-    }
-
-    private fun submitReportIfNecessary(crash: Crash) {
-        var didSubmitCrashReport = false
-        if (requireContext().settings.isCrashReportingEnabled && sendCrashCheckbox.isChecked) {
-            requireComponents.analytics.crashReporter.submitReport(crash)
-            didSubmitCrashReport = true
-        }
-        requireContext().components.analytics.metrics.track(Event.CrashReporterClosed(didSubmitCrashReport))
-    }
-
-    private fun navigateHome() {
-        val directions = CrashReporterFragmentDirections.actionCrashReporterFragmentToHomeFragment()
-        findNavController().nav(R.id.crashReporterFragment, directions)
     }
 }
