@@ -400,6 +400,13 @@ nsresult gfxPlatformFontList::InitFontList() {
 
   gfxPlatform::PurgeSkiaFontCache();
 
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    // Notify any current presContexts that fonts are being updated, so existing
+    // caches will no longer be valid.
+    obs->NotifyObservers(nullptr, "font-info-updated", nullptr);
+  }
+
   mAliasTable.Clear();
   mLocalNameTable.Clear();
 
