@@ -210,23 +210,17 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
     nsString mHeader;
   };
 
-  // Excludes indentation and quotes.
-  class CurrentLineContent {
-   public:
-    // @param aFlags As defined in nsIDocumentEncoder.idl.
-    void MaybeReplaceNbsps(int32_t aFlags);
-
-    nsString mValue;
-  };
-
   class CurrentLine {
    public:
     void ResetContentAndIndentationHeader();
 
+    // @param aFlags As defined in nsIDocumentEncoder.idl.
+    void MaybeReplaceNbspsInContent(int32_t aFlags);
+
     void CreateQuotesAndIndent(nsAString& aResult) const;
 
     bool HasContentOrIndentationHeader() const {
-      return !mContent.mValue.IsEmpty() || !mIndentation.mHeader.IsEmpty();
+      return !mContent.IsEmpty() || !mIndentation.mHeader.IsEmpty();
     }
 
     // @return Combined width of cite quote level and indentation.
@@ -240,7 +234,8 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
     // The number of '>' characters.
     int32_t mCiteQuoteLevel = 0;
 
-    CurrentLineContent mContent;
+    // Excludes indentation and quotes.
+    nsString mContent;
   };
 
   CurrentLine mCurrentLine;
