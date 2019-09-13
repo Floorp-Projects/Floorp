@@ -92,6 +92,7 @@ class InspectorUtils {
                                      BindingStyleRule& aRule,
                                      uint32_t aSelectorIndex,
                                      const nsAString& aPseudo,
+                                     bool aRelevantLinkVisited,
                                      ErrorResult& aRv);
 
   // Utilities for working with CSS properties

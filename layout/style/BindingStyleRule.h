@@ -52,6 +52,7 @@ class BindingStyleRule : public css::Rule {
   virtual nsresult SelectorMatchesElement(dom::Element* aElement,
                                           uint32_t aSelectorIndex,
                                           const nsAString& aPseudo,
+                                          bool aRelevantLinkVisited,
                                           bool* aMatches) = 0;
   virtual NotNull<DeclarationBlock*> GetDeclarationBlock() const = 0;
 
