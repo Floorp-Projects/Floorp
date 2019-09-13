@@ -952,6 +952,52 @@ for (const workletType of ['animation', 'audio', 'layout', 'paint']) {
 */
 
 /**
+  Construct subresource (and related) origin.
+
+  @param {string} originType
+  @returns {object} the origin of the subresource.
+*/
+function getSubresourceOrigin(originType) {
+  const httpProtocol = "http";
+  const httpsProtocol = "https";
+  const wsProtocol = "ws";
+  const wssProtocol = "wss";
+
+  const sameOriginHost = "{{host}}";
+  const crossOriginHost = "{{domains[www1]}}";
+
+  // These values can evaluate to either empty strings or a ":port" string.
+  const httpPort = getNormalizedPort(parseInt("{{ports[http][0]}}", 10));
+  const httpsPort = getNormalizedPort(parseInt("{{ports[https][0]}}", 10));
+  const wsPort = getNormalizedPort(parseInt("{{ports[ws][0]}}", 10));
+  const wssPort = getNormalizedPort(parseInt("{{ports[wss][0]}}", 10));
+
+  /**
+    @typedef OriginType
+    @type {string}
+
+    Represents the origin of the subresource request URL.
+    The keys of `originMap` below are the valid values.
+
+    Note that there can be redirects from the specified origin
+    (see RedirectionType), and thus the origin of the subresource
+    response URL might be different from what is specified by OriginType.
+  */
+  const originMap = {
+    "same-https": httpsProtocol + "://" + sameOriginHost + httpsPort,
+    "same-http": httpProtocol + "://" + sameOriginHost + httpPort,
+    "cross-https": httpsProtocol + "://" + crossOriginHost + httpsPort,
+    "cross-http": httpProtocol + "://" + crossOriginHost + httpPort,
+    "same-wss": wssProtocol + "://" + sameOriginHost + wssPort,
+    "same-ws": wsProtocol + "://" + sameOriginHost + wsPort,
+    "cross-wss": wssProtocol + "://" + crossOriginHost + wssPort,
+    "cross-ws": wsProtocol + "://" + crossOriginHost + wsPort,
+  };
+
+  return originMap[originType];
+}
+
+/**
   Construct subresource (and related) URLs.
 
   @param {SubresourceType} subresourceType
