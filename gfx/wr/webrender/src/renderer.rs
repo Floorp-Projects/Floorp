@@ -621,6 +621,11 @@ pub(crate) mod desc {
                 kind: VertexAttributeKind::F32,
             },
             VertexAttribute {
+                name: "aClipSnapOffsets",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
                 name: "aClipOrigins",
                 count: 4,
                 kind: VertexAttributeKind::F32,

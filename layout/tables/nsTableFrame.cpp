@@ -6925,19 +6925,20 @@ static void CreateWRCommandsForBeveledBorder(
   for (const auto& segment : segments) {
     auto rect = LayoutDeviceRect::FromUnknownRect(NSRectToRect(
         segment.mRect + aOffset, aBorderParams.mAppUnitsPerDevPixel));
-    auto r = wr::ToLayoutRect(rect);
+    auto roundedRect = wr::ToRoundedLayoutRect(rect);
     auto color = wr::ToColorF(ToDeviceColor(segment.mColor));
 
     // Adjust for the start bevel if needed.
-    AdjustAndPushBevel(aBuilder, r, segment.mColor, segment.mStartBevel,
-                       aBorderParams.mAppUnitsPerDevPixel,
+    AdjustAndPushBevel(aBuilder, roundedRect, segment.mColor,
+                       segment.mStartBevel, aBorderParams.mAppUnitsPerDevPixel,
                        aBorderParams.mBackfaceIsVisible, true);
 
-    AdjustAndPushBevel(aBuilder, r, segment.mColor, segment.mEndBevel,
+    AdjustAndPushBevel(aBuilder, roundedRect, segment.mColor, segment.mEndBevel,
                        aBorderParams.mAppUnitsPerDevPixel,
                        aBorderParams.mBackfaceIsVisible, false);
 
-    aBuilder.PushRect(r, r, aBorderParams.mBackfaceIsVisible, color);
+    aBuilder.PushRect(roundedRect, roundedRect,
+                      aBorderParams.mBackfaceIsVisible, color);
   }
 }
 
@@ -6952,7 +6953,7 @@ static void CreateWRCommandsForBorderSegment(
   auto borderRect = LayoutDeviceRect::FromUnknownRect(NSRectToRect(
       aBorderParams.mBorderRect + aOffset, aBorderParams.mAppUnitsPerDevPixel));
 
-  wr::LayoutRect r = wr::ToLayoutRect(borderRect);
+  wr::LayoutRect roundedRect = wr::ToRoundedLayoutRect(borderRect);
   wr::BorderSide wrSide[4];
   NS_FOR_CSS_SIDES(i) {
     wrSide[i] = wr::ToBorderSide(ToDeviceColor(aBorderParams.mBorderColor),
@@ -6960,7 +6961,8 @@ static void CreateWRCommandsForBorderSegment(
   }
   const bool horizontal = aBorderParams.mStartBevelSide == eSideTop ||
                           aBorderParams.mStartBevelSide == eSideBottom;
-  auto borderWidth = horizontal ? r.size.height : r.size.width;
+  auto borderWidth =
+      horizontal ? roundedRect.size.height : roundedRect.size.width;
 
   // All border style is set to none except left side. So setting the widths of
   // each side to width of rect is fine.
@@ -6976,8 +6978,9 @@ static void CreateWRCommandsForBorderSegment(
   }
 
   Range<const wr::BorderSide> wrsides(wrSide, 4);
-  aBuilder.PushBorder(r, r, aBorderParams.mBackfaceIsVisible, borderWidths,
-                      wrsides, wr::EmptyBorderRadius());
+  aBuilder.PushBorder(roundedRect, roundedRect,
+                      aBorderParams.mBackfaceIsVisible, borderWidths, wrsides,
+                      wr::EmptyBorderRadius());
 }
 
 void BCBlockDirSeg::CreateWebRenderCommands(
