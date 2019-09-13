@@ -177,7 +177,6 @@
 @BINPATH@/@PREF_DIR@/mobile.js
 #endif # MOZ_GECKOVIEW_JAR
 @BINPATH@/@PREF_DIR@/channel-prefs.js
-@BINPATH@/ua-update.json
 @BINPATH@/defaults/autoconfig/prefcalls.js
 
 ; [Layout Engine Resources]
