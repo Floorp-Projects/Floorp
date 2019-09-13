@@ -1098,6 +1098,21 @@ SearchService.prototype = {
         this._visibleDefaultEngines.length ||
       this._visibleDefaultEngines.some(notInCacheVisibleEngines);
 
+    let enginesCorrupted = false;
+    if (
+      !rebuildCache &&
+      cache.engines.filter(e => e.isBuiltin).length !=
+        cache.visibleDefaultEngines
+    ) {
+      rebuildCache = true;
+      enginesCorrupted = true;
+    }
+
+    Services.telemetry.scalarSet(
+      "browser.searchinit.engines_cache_corrupted",
+      enginesCorrupted
+    );
+
     if (!rebuildCache) {
       SearchUtils.log("_loadEngines: loading from cache directories");
       this._loadEnginesFromCache(cache);
