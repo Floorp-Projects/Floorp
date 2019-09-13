@@ -100,11 +100,9 @@ The ``JSWindowActorParent`` and ``JSWindowActorChild`` base classes expose two m
 
 This has a similar signature as the ``sendAsyncMessage`` method for Message Managers::
 
-    sendAsyncMessage("SomeMessage", { key: "value" }, { transferredObject });
+    sendAsyncMessage("SomeMessage", { key: "value" });
 
 Like messages sent via the Message Manager, anything that can be serialized using the structured clone algorithm can be sent down through the second argument. Additionally, ``nsIPrincipal``'s can be sent without manually serializing and deserializing them.
-
-The third argument sends `Transferables`_ to the receiver, for example an ``ArrayBuffer``.
 
 .. note::
     Cross Process Object Wrappers (CPOWs) cannot be sent over JSWindowActors.
@@ -117,7 +115,7 @@ The third argument sends `Transferables`_ to the receiver, for example an ``Arra
 
 ``sendQuery`` improves upon ``sendAsyncMessage`` by returning a ``Promise``. The receiver of the message must then return a ``Promise`` that can eventually resolve into a value - at which time the ``sendQuery`` ``Promise`` resolves with that value.
 
-The ``sendQuery`` method arguments follow the same conventions as ``sendAsyncMessage``, with the second argument being a structured clone, and the third being for `Transferables`_.
+The ``sendQuery`` method arguments follow the same conventions as ``sendAsyncMessage``, with the second argument being a structured clone.
 
 ``receiveMessage``
 ``````````````````
@@ -471,7 +469,6 @@ Minimal Example Actors
 
 .. _Electrolysis Project: https://wiki.mozilla.org/Electrolysis
 .. _IPC Actors: https://developer.mozilla.org/en-US/docs/Mozilla/IPDL/Tutorial
-.. _Transferables: https://developer.mozilla.org/en-US/docs/Web/API/Transferable
 .. _Context Menu Fission Port: https://hg.mozilla.org/mozilla-central/rev/adc60720b7b8
 .. _ContentDOMReference.jsm: https://searchfox.org/mozilla-central/source/toolkit/modules/ContentDOMReference.jsm
 .. _JSWindowActor.webidl: https://searchfox.org/mozilla-central/source/dom/chrome-webidl/JSWindowActor.webidl
