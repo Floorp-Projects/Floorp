@@ -14,14 +14,14 @@ const CONFIG_URL =
       {
         engineName: "aol",
         orderHint: 500,
-        webExtensionLocale: "default",
+        webExtensionLocales: ["default"],
         appliesTo: [
           {
             included: { everywhere: true },
           },
           {
             included: { regions: ["us"] },
-            webExtensionLocale: "$USER_LOCALE",
+            webExtensionLocales: ["$USER_LOCALE"],
           },
         ],
       },
@@ -82,9 +82,9 @@ add_task(async function() {
   );
   let names = engines.map(obj => obj.engineName);
   Assert.deepEqual(names, ["lycos", "altavista", "aol"], "Correct order");
-  Assert.equal(
-    engines[2].webExtensionLocale,
-    "en-US",
+  Assert.deepEqual(
+    engines[2].webExtensionLocales,
+    ["en-US"],
     "Subsequent matches in applies to can override default"
   );
 

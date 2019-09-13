@@ -112,7 +112,7 @@ with identifier ``webext-engine1``, version 1.1. GB region users would get
 Special Attributes
 ------------------
 
-If a ``webExtensionLocale`` attribute is specified with the value
+If a ``webExtensionLocales`` attribute contains an element with the value
 ``"$USER_LOCALE"`` then the special value will be replaced in the
 configuration object with the users locale. For example:
 
@@ -126,10 +126,10 @@ configuration object with the users locale. For example:
           "locales": {
             "matches": ["us", "gb"]
           },
-          "webExtensionLocale": "$USER_LOCALE",
+          "webExtensionLocales": ["$USER_LOCALE"],
         },
 
-Will report either ``us`` or ``gb`` as the ``webExtensionLocale``
+Will report either ``[us]`` or ``[gb]`` as the ``webExtensionLocales``
 depending on the user.
 
 Experiments
