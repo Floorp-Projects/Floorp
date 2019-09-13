@@ -213,6 +213,7 @@ menu-tools-sync-sign-in =
     .accesskey = y
 menu-tools-turn-on-sync =
     .label = Turn on { -sync-brand-short-name }…
+    .accesskey = n
 menu-tools-sync-now =
     .label = Sync Now
     .accesskey = S
