@@ -3236,8 +3236,9 @@ pub unsafe extern "C" fn wr_dec_ref_arc(arc: *const VecU8) {
 extern "C" {
      // TODO: figure out the API for tiled blob images.
      pub fn wr_moz2d_render_cb(blob: ByteSlice,
+                               width: i32,
+                               height: i32,
                                format: ImageFormat,
-                               render_rect: &LayoutIntRect,
                                visible_rect: &DeviceIntRect,
                                tile_size: Option<&u16>,
                                tile_offset: Option<&TileOffset>,

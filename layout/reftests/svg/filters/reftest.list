@@ -104,7 +104,7 @@ fuzzy-if(skiaContent,0-1,0-400) == feDisplacementMap-alpha-01.svg pass.svg
 fuzzy(0-2,0-500) == feDisplacementMap-colour-01.svg feDisplacementMap-colour-01-ref.svg
 == feDisplacementMap-scale-01.svg pass.svg
 
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-2,0-25) fuzzy-if(webrender,56-98,14033-15939) == feDropShadow-01.svg feDropShadow-01-ref.svg
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-2,0-25) fuzzy-if(webrender,56-57,14033-15586) == feDropShadow-01.svg feDropShadow-01-ref.svg
 
 == feFlood-color-01.svg pass.svg
 

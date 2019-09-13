@@ -2381,12 +2381,9 @@ impl PrimitiveStore {
                             frame_state.gpu_cache,
                         );
                     }
-                    Some(ImageProperties { tiling: Some(tile_size), visible_rect, .. }) => {
+                    Some(ImageProperties { descriptor, tiling: Some(tile_size), .. }) => {
                         image_instance.visible_tiles.clear();
-                        // TODO: rename the blob's visible_rect into something that doesn't conflict
-                        // with the terminology we use during culling since it's not really the same
-                        // thing.
-                        let active_rect = visible_rect;
+                        let device_image_rect = DeviceIntRect::from_size(descriptor.size);
 
                         // Tighten the clip rect because decomposing the repeated image can
                         // produce primitives that are partially covering the original image
@@ -2439,7 +2436,7 @@ impl PrimitiveStore {
                             let tiles = crate::image::tiles(
                                 &layout_image_rect,
                                 &visible_rect,
-                                &active_rect,
+                                &device_image_rect,
                                 tile_size as i32,
                             );
 
