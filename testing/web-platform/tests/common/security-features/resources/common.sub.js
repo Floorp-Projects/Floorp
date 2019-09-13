@@ -15,7 +15,7 @@
 // in a strict sense) to be passed between JavaScript/Python code.
 
 // Note: So far this document covers:
-// - resources/common.js : client-side test infra code
+// - resources/common.sub.js : client-side test infra code
 // - scope/ - server-side scripts that serves nested source contexts
 // but doesn't cover:
 // - tools/ - generator scripts that generates top-level HTML documents.
@@ -1081,7 +1081,7 @@ function invokeRequest(subresource, sourceContextList) {
       subresource, sourceContextList);
 }
 
-// Quick hack to expose invokeRequest when common.js is loaded either
+// Quick hack to expose invokeRequest when common.sub.js is loaded either
 // as a classic or module script.
 self.invokeRequest = invokeRequest;
 
