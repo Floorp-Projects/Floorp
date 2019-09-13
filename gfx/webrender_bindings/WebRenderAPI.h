@@ -479,12 +479,11 @@ class DisplayListBuilder final {
                  wr::ImageKey aImage, bool aPremultipliedAlpha = true,
                  const wr::ColorF& aColor = wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f});
 
-  void PushRepeatingImage(
-      const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
-      bool aIsBackfaceVisible, const wr::LayoutSize& aStretchSize,
-      const wr::LayoutSize& aTileSpacing, wr::ImageRendering aFilter,
-      wr::ImageKey aImage, bool aPremultipliedAlpha = true,
-      const wr::ColorF& aColor = wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f});
+  void PushImage(const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
+                 bool aIsBackfaceVisible, const wr::LayoutSize& aStretchSize,
+                 const wr::LayoutSize& aTileSpacing, wr::ImageRendering aFilter,
+                 wr::ImageKey aImage, bool aPremultipliedAlpha = true,
+                 const wr::ColorF& aColor = wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f});
 
   void PushYCbCrPlanarImage(
       const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
