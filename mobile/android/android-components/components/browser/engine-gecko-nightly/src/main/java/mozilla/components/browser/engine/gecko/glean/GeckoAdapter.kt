@@ -19,8 +19,8 @@ import org.mozilla.geckoview.RuntimeTelemetry
  * providing an instance to `GeckoRuntimeSettings.Builder().telemetryDelegate`.
  */
 class GeckoAdapter : RuntimeTelemetry.Delegate {
-    override fun onHistogram(metric: RuntimeTelemetry.Metric<LongArray>) {
-        // Note that the `GleanGeckoHistogramMapping` is automatically generated at
+    override fun onHistogram(metric: RuntimeTelemetry.Histogram) {
+        // Note that the `GleanGeckoMetricsMapping` is automatically generated at
         // build time by the Glean SDK parsers.
         GleanGeckoMetricsMapping.getHistogram(metric.name)?.accumulateSamples(metric.value)
     }
