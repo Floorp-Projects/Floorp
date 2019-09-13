@@ -11,7 +11,7 @@
     <application>
 
         <activity android:name=".WebAppLauncherActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:theme="@style/Theme.AppCompat.Translucent"
             android:exported="true">
             <intent-filter>
                 <action android:name="mozilla.components.feature.pwa.PWA_LAUNCHER" />
