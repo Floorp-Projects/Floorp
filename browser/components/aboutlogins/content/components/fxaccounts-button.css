@@ -52,3 +52,11 @@
 .fxaccounts-avatar-button:hover:active .fxaccount-avatar {
   border-color: var(--in-content-border-active);
 }
+
+.fxaccounts-avatar-button:hover {
+  background-color: transparent !important;
+}
+
+.fxaccounts-avatar-button:hover > .fxaccount-email {
+  text-decoration: underline;
+}
