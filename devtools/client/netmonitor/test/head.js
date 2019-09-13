@@ -3,7 +3,7 @@
 
 /* import-globals-from ../../shared/test/shared-head.js */
 /* exported Toolbox, restartNetMonitor, teardown, waitForExplicitFinish,
-   verifyRequestItemTarget, waitFor, waitForDispatch, testFilterButtons,
+   verifyRequestItemTarget, waitFor, testFilterButtons,
    performRequestsInContent, waitForNetworkEvents, selectIndexAndWaitForSourceEditor,
    testColumnsAlignment, hideColumn, showColumn, performRequests, waitForRequestData */
 
@@ -741,27 +741,6 @@ function verifyRequestItemTarget(
 function waitFor(subject, eventName) {
   return new Promise(resolve => {
     subject.once(eventName, resolve);
-  });
-}
-
-/**
- * Wait for an action of the provided type to be dispatched on the provided
- * store.
- *
- * @param {Object} store
- *        The redux store (wait-service middleware required).
- * @param {String} type
- *        Type of the action to wait for.
- */
-function waitForDispatch(store, type) {
-  return new Promise(resolve => {
-    store.dispatch({
-      type: "@@service/waitUntil",
-      predicate: action => action.type === type,
-      run: (dispatch, getState, action) => {
-        resolve(action);
-      },
-    });
   });
 }
 
