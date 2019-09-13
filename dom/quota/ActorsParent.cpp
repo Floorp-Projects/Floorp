@@ -4280,7 +4280,7 @@ nsresult QuotaManager::LoadQuota() {
 
     for (const PersistenceType type : kBestEffortPersistenceTypes) {
       if (NS_WARN_IF(IsShuttingDown())) {
-        RETURN_STATUS_OR_RESULT(statusKeeper, NS_ERROR_FAILURE);
+        RETURN_STATUS_OR_RESULT(statusKeeper, NS_ERROR_ABORT);
       }
 
       rv = InitializeRepository(type);
@@ -4831,7 +4831,7 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
              (rv = entries->GetNextFile(getter_AddRefs(childDirectory)))) &&
          childDirectory) {
     if (NS_WARN_IF(IsShuttingDown())) {
-      RETURN_STATUS_OR_RESULT(statusKeeper, NS_ERROR_FAILURE);
+      RETURN_STATUS_OR_RESULT(statusKeeper, NS_ERROR_ABORT);
     }
 
     bool isDirectory;
@@ -4937,7 +4937,7 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
   while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) &&
          file) {
     if (NS_WARN_IF(IsShuttingDown())) {
-      RETURN_STATUS_OR_RESULT(statusKeeper, NS_ERROR_FAILURE);
+      RETURN_STATUS_OR_RESULT(statusKeeper, NS_ERROR_ABORT);
     }
 
     bool isDirectory;
