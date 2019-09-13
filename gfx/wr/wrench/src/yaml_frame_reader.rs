@@ -1374,6 +1374,10 @@ impl YamlFrameReader {
                 item["bounds"]
             );
         };
+        let stretch_size = item["stretch-size"].as_size().unwrap_or(image_dims);
+        let tile_spacing = item["tile-spacing"]
+            .as_size()
+            .unwrap_or(LayoutSize::new(0.0, 0.0));
         let rendering = match item["rendering"].as_str() {
             Some("auto") | None => ImageRendering::Auto,
             Some("crisp-edges") => ImageRendering::CrispEdges,
@@ -1391,29 +1395,16 @@ impl YamlFrameReader {
                 item
             ),
         };
-        let stretch_size = item["stretch-size"].as_size();
-        let tile_spacing = item["tile-spacing"].as_size();
-        if stretch_size.is_none() && tile_spacing.is_none() {
-            dl.push_image(
-                &info,
-                bounds,
-                rendering,
-                alpha_type,
-                image_key,
-                ColorF::WHITE,
-           );
-        } else {
-            dl.push_repeating_image(
-                &info,
-                bounds,
-                stretch_size.unwrap_or(image_dims),
-                tile_spacing.unwrap_or(LayoutSize::zero()),
-                rendering,
-                alpha_type,
-                image_key,
-                ColorF::WHITE,
-           );
-        }
+        dl.push_image(
+            &info,
+            bounds,
+            stretch_size,
+            tile_spacing,
+            rendering,
+            alpha_type,
+            image_key,
+            ColorF::WHITE,
+        );
     }
 
     fn handle_text(
