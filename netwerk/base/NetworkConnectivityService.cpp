@@ -10,6 +10,10 @@
 #include "nsIURIMutator.h"
 #include "nsINetworkLinkService.h"
 
+static LazyLogModule gNCSLog("NetworkConnectivityService");
+#undef LOG
+#define LOG(args) MOZ_LOG(gNCSLog, mozilla::LogLevel::Debug, args)
+
 namespace mozilla {
 namespace net {
 
@@ -271,6 +275,19 @@ NetworkConnectivityService::OnStopRequest(nsIRequest* aRequest,
   if (aRequest == mIPv4Channel) {
     mIPv4 = status;
     mIPv4Channel = nullptr;
+
+    if (mIPv4 == nsINetworkConnectivityService::OK) {
+      nsCOMPtr<nsINetworkLinkService> nls =
+          do_GetService(NS_NETWORK_LINK_SERVICE_CONTRACTID);
+      nsAutoCString networkId;
+      if (nls) {
+        nls->GetNetworkID(networkId);
+      }
+      Telemetry::AccumulateCategorical(
+          networkId.IsEmpty() ? Telemetry::LABELS_NETWORK_ID_ONLINE::absent
+                              : Telemetry::LABELS_NETWORK_ID_ONLINE::present);
+      LOG(("networkId.IsEmpty() : %d\n", networkId.IsEmpty()));
+    }
   } else if (aRequest == mIPv6Channel) {
 #ifdef DEBUG
     // Verify that the check was performed over IPv6
