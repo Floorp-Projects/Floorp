@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsMathMLElement.h"
+#include "mozilla/dom/MathMLElement.h"
+
 #include "base/compiler_specific.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/ArrayUtils.h"
@@ -35,7 +36,7 @@ using namespace mozilla::dom;
 //----------------------------------------------------------------------
 // nsISupports methods:
 
-NS_IMPL_ISUPPORTS_INHERITED(nsMathMLElement, nsMathMLElementBase, Link)
+NS_IMPL_ISUPPORTS_INHERITED(MathMLElement, MathMLElementBase, Link)
 
 static nsresult WarnDeprecated(const char16_t* aDeprecatedAttribute,
                                const char16_t* aFavoredAttribute,
@@ -64,22 +65,22 @@ static nsresult ReportParseErrorNoTag(const nsString& aValue, nsAtom* aAtom,
       nsContentUtils::eMATHML_PROPERTIES, "AttributeParsingErrorNoTag", argv);
 }
 
-nsMathMLElement::nsMathMLElement(
+MathMLElement::MathMLElement(
     already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : nsMathMLElementBase(std::move(aNodeInfo)),
+    : MathMLElementBase(std::move(aNodeInfo)),
       ALLOW_THIS_IN_INITIALIZER_LIST(Link(this)),
       mIncrementScriptLevel(false) {}
 
-nsMathMLElement::nsMathMLElement(
+MathMLElement::MathMLElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : nsMathMLElementBase(std::move(aNodeInfo)),
+    : MathMLElementBase(std::move(aNodeInfo)),
       ALLOW_THIS_IN_INITIALIZER_LIST(Link(this)),
       mIncrementScriptLevel(false) {}
 
-nsresult nsMathMLElement::BindToTree(BindContext& aContext, nsINode& aParent) {
+nsresult MathMLElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   Link::ResetLinkState(false, Link::ElementHasHref());
 
-  nsresult rv = nsMathMLElementBase::BindToTree(aContext, aParent);
+  nsresult rv = MathMLElementBase::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // FIXME(emilio): Probably should be composed, this uses all the other link
@@ -96,18 +97,18 @@ nsresult nsMathMLElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   return rv;
 }
 
-void nsMathMLElement::UnbindFromTree(bool aNullParent) {
+void MathMLElement::UnbindFromTree(bool aNullParent) {
   // Without removing the link state we risk a dangling pointer
   // in the mStyledLinks hashtable
   Link::ResetLinkState(false, Link::ElementHasHref());
 
-  nsMathMLElementBase::UnbindFromTree(aNullParent);
+  MathMLElementBase::UnbindFromTree(aNullParent);
 }
 
-bool nsMathMLElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                                     const nsAString& aValue,
-                                     nsIPrincipal* aMaybeScriptedPrincipal,
-                                     nsAttrValue& aResult) {
+bool MathMLElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                                   const nsAString& aValue,
+                                   nsIPrincipal* aMaybeScriptedPrincipal,
+                                   nsAttrValue& aResult) {
   MOZ_ASSERT(IsMathMLElement());
 
   if (aNamespaceID == kNameSpaceID_None) {
@@ -128,8 +129,8 @@ bool nsMathMLElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     }
   }
 
-  return nsMathMLElementBase::ParseAttribute(aNamespaceID, aAttribute, aValue,
-                                             aMaybeScriptedPrincipal, aResult);
+  return MathMLElementBase::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                           aMaybeScriptedPrincipal, aResult);
 }
 
 // https://mathml-refresh.github.io/mathml-core/#global-attributes
@@ -156,7 +157,7 @@ static Element::MappedAttributeEntry sDeprecatedStyleAttributes[] = {
     {nsGkAtoms::fontweight_},
     {nullptr}};
 
-bool nsMathMLElement::IsAttributeMapped(const nsAtom* aAttribute) const {
+bool MathMLElement::IsAttributeMapped(const nsAtom* aAttribute) const {
   MOZ_ASSERT(IsMathMLElement());
 
   static const MappedAttributeEntry* const globalMap[] = {
@@ -171,7 +172,7 @@ bool nsMathMLElement::IsAttributeMapped(const nsAtom* aAttribute) const {
           aAttribute == nsGkAtoms::width);
 }
 
-nsMapRuleToAttributesFunc nsMathMLElement::GetAttributeMappingFunction() const {
+nsMapRuleToAttributesFunc MathMLElement::GetAttributeMappingFunction() const {
   // It doesn't really matter what our tag is here, because only attributes
   // that satisfy IsAttributeMapped will be stored in the mapped attributes
   // list and available to the mapping function
@@ -179,10 +180,9 @@ nsMapRuleToAttributesFunc nsMathMLElement::GetAttributeMappingFunction() const {
 }
 
 /* static */
-bool nsMathMLElement::ParseNamedSpaceValue(const nsString& aString,
-                                           nsCSSValue& aCSSValue,
-                                           uint32_t aFlags,
-                                           const Document& aDocument) {
+bool MathMLElement::ParseNamedSpaceValue(const nsString& aString,
+                                         nsCSSValue& aCSSValue, uint32_t aFlags,
+                                         const Document& aDocument) {
   if (StaticPrefs::mathml_mathspace_names_disabled()) {
     return false;
   }
@@ -267,9 +267,9 @@ bool nsMathMLElement::ParseNamedSpaceValue(const nsString& aString,
 /* static */
 // XXXfredw: Deprecate legacy MathML syntax and use the CSS parser instead.
 // See https://github.com/mathml-refresh/mathml/issues/63
-bool nsMathMLElement::ParseNumericValue(const nsString& aString,
-                                        nsCSSValue& aCSSValue, uint32_t aFlags,
-                                        Document* aDocument) {
+bool MathMLElement::ParseNumericValue(const nsString& aString,
+                                      nsCSSValue& aCSSValue, uint32_t aFlags,
+                                      Document* aDocument) {
   nsAutoString str(aString);
   str.CompressWhitespace();  // aString is const in this code...
 
@@ -398,7 +398,7 @@ bool nsMathMLElement::ParseNumericValue(const nsString& aString,
   return true;
 }
 
-void nsMathMLElement::MapMathMLAttributesInto(
+void MathMLElement::MapMathMLAttributesInto(
     const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
   // scriptsizemultiplier
   //
@@ -816,28 +816,28 @@ void nsMathMLElement::MapMathMLAttributesInto(
   }
 }
 
-void nsMathMLElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
+void MathMLElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   Element::GetEventTargetParent(aVisitor);
 
   GetEventTargetParentForLinks(aVisitor);
 }
 
-nsresult nsMathMLElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
+nsresult MathMLElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   return PostHandleEventForLinks(aVisitor);
 }
 
-NS_IMPL_ELEMENT_CLONE(nsMathMLElement)
+NS_IMPL_ELEMENT_CLONE(MathMLElement)
 
-EventStates nsMathMLElement::IntrinsicState() const {
-  return Link::LinkState() | nsMathMLElementBase::IntrinsicState() |
+EventStates MathMLElement::IntrinsicState() const {
+  return Link::LinkState() | MathMLElementBase::IntrinsicState() |
          (mIncrementScriptLevel ? NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL
                                 : EventStates());
 }
 
-bool nsMathMLElement::IsNodeOfType(uint32_t aFlags) const { return false; }
+bool MathMLElement::IsNodeOfType(uint32_t aFlags) const { return false; }
 
-void nsMathMLElement::SetIncrementScriptLevel(bool aIncrementScriptLevel,
-                                              bool aNotify) {
+void MathMLElement::SetIncrementScriptLevel(bool aIncrementScriptLevel,
+                                            bool aNotify) {
   if (aIncrementScriptLevel == mIncrementScriptLevel) return;
   mIncrementScriptLevel = aIncrementScriptLevel;
 
@@ -846,7 +846,7 @@ void nsMathMLElement::SetIncrementScriptLevel(bool aIncrementScriptLevel,
   UpdateState(true);
 }
 
-bool nsMathMLElement::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) {
+bool MathMLElement::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) {
   nsCOMPtr<nsIURI> uri;
   if (IsLink(getter_AddRefs(uri))) {
     if (aTabIndex) {
@@ -862,7 +862,7 @@ bool nsMathMLElement::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) {
   return false;
 }
 
-bool nsMathMLElement::IsLink(nsIURI** aURI) const {
+bool MathMLElement::IsLink(nsIURI** aURI) const {
   bool hasHref = false;
   const nsAttrValue* href = mAttrs.GetAttr(nsGkAtoms::href, kNameSpaceID_None);
   if (href) {
@@ -917,7 +917,7 @@ bool nsMathMLElement::IsLink(nsIURI** aURI) const {
   return false;
 }
 
-void nsMathMLElement::GetLinkTarget(nsAString& aTarget) {
+void MathMLElement::GetLinkTarget(nsAString& aTarget) {
   const nsAttrValue* target =
       mAttrs.GetAttr(nsGkAtoms::target, kNameSpaceID_XLink);
   if (target) {
@@ -940,16 +940,16 @@ void nsMathMLElement::GetLinkTarget(nsAString& aTarget) {
   }
 }
 
-already_AddRefed<nsIURI> nsMathMLElement::GetHrefURI() const {
+already_AddRefed<nsIURI> MathMLElement::GetHrefURI() const {
   nsCOMPtr<nsIURI> hrefURI;
   return IsLink(getter_AddRefs(hrefURI)) ? hrefURI.forget() : nullptr;
 }
 
-nsresult nsMathMLElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                       const nsAttrValue* aValue,
-                                       const nsAttrValue* aOldValue,
-                                       nsIPrincipal* aSubjectPrincipal,
-                                       bool aNotify) {
+nsresult MathMLElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                     const nsAttrValue* aValue,
+                                     const nsAttrValue* aOldValue,
+                                     nsIPrincipal* aSubjectPrincipal,
+                                     bool aNotify) {
   // It is important that this be done after the attribute is set/unset.
   // We will need the updated attribute value because notifying the document
   // that content states have changed will call IntrinsicState, which will try
@@ -964,11 +964,11 @@ nsresult nsMathMLElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     Link::ResetLinkState(aNotify, aValue || Link::ElementHasHref());
   }
 
-  return nsMathMLElementBase::AfterSetAttr(
-      aNameSpaceID, aName, aValue, aOldValue, aSubjectPrincipal, aNotify);
+  return MathMLElementBase::AfterSetAttr(aNameSpaceID, aName, aValue, aOldValue,
+                                         aSubjectPrincipal, aNotify);
 }
 
-JSObject* nsMathMLElement::WrapNode(JSContext* aCx,
-                                    JS::Handle<JSObject*> aGivenProto) {
+JSObject* MathMLElement::WrapNode(JSContext* aCx,
+                                  JS::Handle<JSObject*> aGivenProto) {
   return Element_Binding::Wrap(aCx, this, aGivenProto);
 }

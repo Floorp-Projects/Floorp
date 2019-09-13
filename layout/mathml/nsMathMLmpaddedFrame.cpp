@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsMathMLmpaddedFrame.h"
-#include "nsMathMLElement.h"
+#include "mozilla/dom/MathMLElement.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/TextUtils.h"
@@ -207,8 +207,8 @@ bool nsMathMLmpaddedFrame::ParseAttribute(nsString& aString, int32_t& aSign,
   else if (!gotPercent) {  // percentage can only apply to a pseudo-unit
 
     // see if the unit is a named-space
-    if (nsMathMLElement::ParseNamedSpaceValue(
-            unit, aCSSValue, nsMathMLElement::PARSE_ALLOW_NEGATIVE,
+    if (dom::MathMLElement::ParseNamedSpaceValue(
+            unit, aCSSValue, dom::MathMLElement::PARSE_ALLOW_NEGATIVE,
             *mContent->OwnerDoc())) {
       // re-scale properly, and we know that the unit of the named-space is 'em'
       floatValue *= aCSSValue.GetFloatValue();
@@ -221,8 +221,8 @@ bool nsMathMLmpaddedFrame::ParseAttribute(nsString& aString, int32_t& aSign,
     // We are not supposed to have a unitless, percent, negative or namedspace
     // value here.
     number.Append(unit);  // leave the sign out if it was there
-    if (nsMathMLElement::ParseNumericValue(
-            number, aCSSValue, nsMathMLElement::PARSE_SUPPRESS_WARNINGS,
+    if (dom::MathMLElement::ParseNumericValue(
+            number, aCSSValue, dom::MathMLElement::PARSE_SUPPRESS_WARNINGS,
             nullptr))
       return true;
   }

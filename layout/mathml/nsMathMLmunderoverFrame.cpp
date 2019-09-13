@@ -7,7 +7,7 @@
 #include "nsMathMLmunderoverFrame.h"
 #include "nsPresContext.h"
 #include "nsMathMLmmultiscriptsFrame.h"
-#include "nsMathMLElement.h"
+#include "mozilla/dom/MathMLElement.h"
 #include <algorithm>
 #include "gfxContext.h"
 #include "gfxMathTable.h"
@@ -107,7 +107,8 @@ void nsMathMLmunderoverFrame::SetIncrementScriptLevel(uint32_t aChildIndex,
     return;
   }
 
-  auto element = static_cast<nsMathMLElement*>(child->GetContent());
+  // XXXfredw: Use MathMLElement::fromNode.
+  auto element = static_cast<dom::MathMLElement*>(child->GetContent());
   if (element->GetIncrementScriptLevel() == aIncrement) {
     return;
   }
@@ -142,7 +143,8 @@ void nsMathMLmunderoverFrame::SetPendingPostReflowIncrementScriptLevel() {
       continue;
     }
 
-    auto element = static_cast<nsMathMLElement*>(child->GetContent());
+    // XXXfredw: Use MathMLElement::fromNode.
+    auto element = static_cast<dom::MathMLElement*>(child->GetContent());
     element->SetIncrementScriptLevel(command.mDoIncrement, true);
   }
 }

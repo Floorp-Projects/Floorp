@@ -72,7 +72,7 @@ ms[rquote]:after {
 /* attributes common to all tags                                          */
 /**************************************************************************/
 
-/* These attributes are mapped to style in nsMathMLElement.cpp:
+/* These attributes are mapped to style in MathMLElement.cpp:
 
    - background -> background                             (deprecated)
    - color -> color                                       (deprecated)
