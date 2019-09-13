@@ -7,6 +7,7 @@ package org.mozilla.fenix.browser
 import android.content.Context
 import android.view.View
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
+import mozilla.components.feature.contextmenu.ContextMenuUseCases
 import mozilla.components.feature.contextmenu.DefaultSnackbarDelegate
 import mozilla.components.feature.tabs.TabsUseCases
 
@@ -20,6 +21,7 @@ class FenixContextMenuCandidate {
         fun defaultCandidates(
             context: Context,
             tabsUseCases: TabsUseCases,
+            contextMenuUseCases: ContextMenuUseCases,
             snackBarParentView: View,
             snackbarDelegate: ContextMenuCandidate.SnackbarDelegate = DefaultSnackbarDelegate()
         ): List<ContextMenuCandidate> = listOf(
@@ -37,7 +39,7 @@ class FenixContextMenuCandidate {
             ),
             ContextMenuCandidate.createCopyLinkCandidate(context, snackBarParentView, snackbarDelegate),
             ContextMenuCandidate.createShareLinkCandidate(context),
-            ContextMenuCandidate.createSaveImageCandidate(context),
+            ContextMenuCandidate.createSaveImageCandidate(context, contextMenuUseCases),
             ContextMenuCandidate.createCopyImageLocationCandidate(context, snackBarParentView, snackbarDelegate)
         )
     }

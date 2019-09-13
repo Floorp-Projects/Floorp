@@ -215,18 +215,20 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
 
             contextMenuFeature.set(
                 feature = ContextMenuFeature(
-                    requireFragmentManager(),
-                    sessionManager,
-                    FenixContextMenuCandidate.defaultCandidates(
+                    fragmentManager = requireFragmentManager(),
+                    store = store,
+                    candidates = FenixContextMenuCandidate.defaultCandidates(
                         context,
                         context.components.useCases.tabsUseCases,
+                        context.components.useCases.contextMenuUseCases,
                         view,
                         FenixSnackbarDelegate(
                             view,
                             if (getSessionById()?.isCustomTabSession() == true) null else nestedScrollQuickAction
                         )
                     ),
-                    view.engineView
+                    engineView = view.engineView,
+                    useCases = context.components.useCases.contextMenuUseCases
                 ),
                 owner = this,
                 view = view
