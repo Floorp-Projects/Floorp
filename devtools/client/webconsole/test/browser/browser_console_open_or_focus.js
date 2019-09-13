@@ -5,32 +5,37 @@
 // the console window instead of toggling it open/close.
 
 "use strict";
+requestLongerTimeout(2);
 
 const TEST_MESSAGE = "testmessage";
 const { Tools } = require("devtools/client/definitions");
 
 add_task(async function() {
-  let currWindow, hud;
-
+  info("Get main browser window");
   const mainWindow = Services.wm.getMostRecentWindow(null);
 
+  info("Open the Browser Console");
   await BrowserConsoleManager.openBrowserConsoleOrFocus();
 
-  hud = BrowserConsoleManager.getBrowserConsole();
+  let hud = BrowserConsoleManager.getBrowserConsole();
+  await waitFor(() => hud.ui.document.hasFocus());
+  ok(true, "Focus is in the Browser Console");
 
-  ok(hud.ui.document.hasFocus(), "Focus in the document");
-
+  info("Emit a log message to display it in the Browser Console");
   console.log(TEST_MESSAGE);
-
   await waitFor(() => findMessage(hud, TEST_MESSAGE));
 
-  currWindow = Services.wm.getMostRecentWindow(null);
+  let currWindow = Services.wm.getMostRecentWindow(null);
   is(
     currWindow.document.documentURI,
     Tools.webConsole.url,
     "The Browser Console is open and has focus"
   );
+
+  info("Focus the main browser window");
   mainWindow.focus();
+
+  info("Focus the Browser Console window");
   await BrowserConsoleManager.openBrowserConsoleOrFocus();
   currWindow = Services.wm.getMostRecentWindow(null);
   is(
@@ -38,6 +43,8 @@ add_task(async function() {
     Tools.webConsole.url,
     "The Browser Console is open and has focus"
   );
+
+  info("Close the Browser Console");
   await BrowserConsoleManager.toggleBrowserConsole();
   hud = BrowserConsoleManager.getBrowserConsole();
   ok(!hud, "Browser Console has been closed");
