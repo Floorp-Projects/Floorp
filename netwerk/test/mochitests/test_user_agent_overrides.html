@@ -1,0 +1,247 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=782453
+-->
+<head>
+  <title>Test for User Agent Overrides</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=782453">Mozilla Bug 782453</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+const PREF_OVERRIDES_ENABLED = "general.useragent.site_specific_overrides";
+const PREF_OVERRIDES_BRANCH = "general.useragent.override.";
+
+const DEFAULT_UA = navigator.userAgent;
+
+const UA_WHOLE_OVERRIDE = "DummyUserAgent";
+const UA_WHOLE_EXPECTED = UA_WHOLE_OVERRIDE;
+
+const UA_PARTIAL_FROM = "\\wozilla"; // /\wozilla
+const UA_PARTIAL_SEP = "#";
+const UA_PARTIAL_TO = UA_WHOLE_OVERRIDE;
+const UA_PARTIAL_OVERRIDE = UA_PARTIAL_FROM + UA_PARTIAL_SEP + UA_PARTIAL_TO;
+const UA_PARTIAL_EXPECTED = DEFAULT_UA.replace(new RegExp(UA_PARTIAL_FROM, 'g'), UA_PARTIAL_TO);
+
+const UA_PARTIAL_FROM2 = "[0-9]+";
+const UA_PARTIAL_TO2 = "number";
+const UA_PARTIAL_OVERRIDE2 = UA_PARTIAL_FROM2 + UA_PARTIAL_SEP + UA_PARTIAL_TO2;
+const UA_PARTIAL_EXPECTED2 = DEFAULT_UA.replace(new RegExp(UA_PARTIAL_FROM2, 'g'), UA_PARTIAL_TO2);
+
+function testUAIFrame(host, expected, sameQ, message, testNavQ, navSameQ, navMessage, callback) {
+  let url = location.pathname;
+  url = host + url.slice(0, url.lastIndexOf('/')) + '/user_agent.sjs';
+  let ifr = document.createElement('IFRAME');
+
+  ifr.src = url;
+
+  document.getElementById('content').appendChild(ifr);
+
+  window.addEventListener("message", function recv(e) {
+    ok(sameQ == (e.data.header.includes(expected)), message);
+    if (testNavQ) {
+      ok(navSameQ == (e.data.nav.includes(expected)), navMessage);
+    }
+    window.removeEventListener("message", recv);
+    callback();
+  });
+
+}
+
+function testUAIFrameNoNav(host, expected, sameQ, message, callback) {
+  testUAIFrame(host, expected, sameQ, message, false, true, '', callback);
+}
+
+function testUA(options, callback) {
+  var [domain, override, test_hosts, expected] =
+    [options.domain, options.override, options.test_hosts, options.expected];
+
+  (function nextTest() {
+    let test_host = test_hosts.shift();
+
+    info("Overriding " + domain + " with " + override + " for " + test_host);
+
+    function is_subdomain(host) {
+      var [test_domain] = host.slice(host.lastIndexOf('/') + 1).split(':', 1);
+      return test_domain === domain || test_domain.endsWith('.' + domain);
+    }
+
+    var localhost = location.origin;
+    var overrideNavigator = is_subdomain(localhost);
+    var navigator_ua, test_ua;
+
+    if (overrideNavigator) {
+      navigator_ua = navigator.userAgent;
+    }
+
+    let url = location.pathname;
+    url = test_host + url.slice(0, url.lastIndexOf('/')) + '/user_agent.sjs';
+    let ifr = document.createElement('IFRAME');
+    ifr.src = url;
+
+    document.getElementById('content').appendChild(ifr);
+
+    window.addEventListener("message", function recv(e) {
+      test_ua = e.data.header;
+      SpecialPowers.pushPrefEnv({
+        set: [[PREF_OVERRIDES_BRANCH + domain, override]],
+      }, function () {
+        testUAIFrame(test_host, expected, true, 'Header UA not overridden at step ' + (++step), true,
+          true, 'Navigator UA not overridden at step ' + (++step), function () {
+          // clear the override pref to undo overriding the UA
+          SpecialPowers.pushPrefEnv({
+            clear: [[PREF_OVERRIDES_BRANCH + domain]],
+          }, function () {
+            testUAIFrameNoNav(test_host, test_ua, true, 'Header UA not restored at step ' + (++step), function() {
+              test_hosts.length ? nextTest() : callback();
+            });
+          });
+        });
+      });
+      window.removeEventListener("message", recv);
+    });
+  })();
+}
+
+var step = 0; // for logging
+var tests = [
+  // should override both header and navigator.userAgent
+  {
+    domain: location.hostname,
+    override: UA_WHOLE_OVERRIDE,
+    test_hosts: [location.origin],
+    expected: UA_WHOLE_EXPECTED
+  },
+
+  // should support partial overrides
+  {
+    domain: location.hostname,
+    override: UA_PARTIAL_OVERRIDE,
+    test_hosts: [location.origin],
+    expected: UA_PARTIAL_EXPECTED
+  },
+
+  {
+    domain: location.hostname,
+    override: UA_PARTIAL_OVERRIDE2,
+    test_hosts: [location.origin],
+    expected: UA_PARTIAL_EXPECTED2
+  },
+
+  // should match domain and subdomains
+  {
+    domain: 'example.org',
+    override: UA_WHOLE_OVERRIDE,
+    test_hosts: ['http://example.org',
+                 'http://test1.example.org',
+                 'http://sub1.test1.example.org'],
+    expected: UA_WHOLE_EXPECTED
+  },
+
+  // should not match superdomains
+  {
+    domain: 'sub1.test1.example.org',
+    override: UA_WHOLE_OVERRIDE,
+    test_hosts: ['http://example.org',
+                 'http://test1.example.org'],
+    expected: DEFAULT_UA
+  },
+
+  // should work with https
+  {
+    domain: 'example.com',
+    override: UA_WHOLE_OVERRIDE,
+    test_hosts: ['https://example.com',
+                 'https://test1.example.com',
+                 'https://sub1.test1.example.com'],
+    expected: UA_WHOLE_EXPECTED
+  },
+];
+
+// test that UA is not overridden when the 'site_specific_overrides' pref is off
+function testInactive(callback) {
+  SpecialPowers.pushPrefEnv({
+    set: [
+      [PREF_OVERRIDES_ENABLED, false],
+      [PREF_OVERRIDES_BRANCH + location.hostname, UA_WHOLE_OVERRIDE]
+    ]
+  }, function () {
+    testUAIFrame(location.origin, UA_WHOLE_OVERRIDE, false, 'Failed to disabled header UA override at step ' + (++step),
+      true, false, 'Failed to disable navigator UA override at step + ' + (++step), function () {
+      SpecialPowers.pushPrefEnv({
+        clear: [
+          [PREF_OVERRIDES_ENABLED],
+          [PREF_OVERRIDES_BRANCH + location.hostname]
+        ]
+      }, callback);
+    });
+  });
+}
+
+function testPriority(callback) {
+  // foo.bar.com override should have priority over bar.com override
+  var tests = [
+    ['example.org', 'test1.example.org', 'sub1.test1.example.org'],
+    ['example.org', 'test1.example.org', 'sub2.test1.example.org'],
+    ['example.org', 'test2.example.org', 'sub1.test2.example.org'],
+    ['example.org', 'test2.example.org', 'sub2.test2.example.org'],
+  ];
+  (function nextTest() {
+    var [level0, level1, level2] = tests.shift();
+    var host = 'http://' + level2;
+    SpecialPowers.pushPrefEnv({
+      set: [
+        [PREF_OVERRIDES_ENABLED, true],
+        [PREF_OVERRIDES_BRANCH + level1, UA_WHOLE_OVERRIDE]
+      ]
+    }, function () {
+      // should use first override at this point
+      testUAIFrameNoNav(host, UA_WHOLE_EXPECTED, true, 'UA not overridden at step ' + (++step), function() {
+        // add a second override that should be used
+        testUA({
+          domain: level2,
+          override: UA_PARTIAL_OVERRIDE,
+          test_hosts: [host],
+          expected: UA_PARTIAL_EXPECTED
+        }, function () {
+          // add a third override that should not be used
+          testUA({
+            domain: level0,
+            override: UA_PARTIAL_OVERRIDE,
+            test_hosts: [host],
+            expected: UA_WHOLE_EXPECTED
+          }, tests.length ? nextTest : callback);
+        });
+      });
+    });
+  })();
+}
+
+function testOverrides(callback) {
+  SpecialPowers.pushPrefEnv({
+    set: [[PREF_OVERRIDES_ENABLED, true]]
+  }, function nextTest() {
+    testUA(tests.shift(), function() { tests.length ? nextTest() : callback() });
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestCompleteLog();
+SimpleTest.requestLongerTimeout(5);
+
+testOverrides(function() {
+  testInactive(function() {
+    testPriority(SimpleTest.finish)
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>
