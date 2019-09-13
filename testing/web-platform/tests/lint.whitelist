@@ -827,3 +827,137 @@ MISSING DEPENDENCY: web-nfc/resources/nfc-helpers.js
 MISSING DEPENDENCY: shape-detection/resources/shapedetection-helpers.js
 MISSING DEPENDENCY: webxr/resources/webxr_util.js
 MISSING DEPENDENCY: contacts/resources/helpers.js
+
+# Tests that are false positives for using Ahem as a system font
+AHEM SYSTEM FONT: acid/acid3/test.html
+AHEM SYSTEM FONT: resource-timing/resources/all_resource_types.htm
+AHEM SYSTEM FONT: resource-timing/resources/iframe-reload-TAO.sub.html
+
+# The following are imported from mozilla-central and can't be modified in WPT.
+# They do load Ahem as a web font, but they use their own copy which trips the
+# lint rule. Basically false positives.
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-003.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-031.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-034-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-044-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-028.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-030.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-038.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-004.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-029-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-020.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-removable-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-016-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-017-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-043-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-015-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/text-word-spacing-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-038-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-017.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-013.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-removable-4.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-031-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-039.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-044.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-025-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-removable-1.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-024.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-033.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-005.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-unremovable-3.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-042.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-036.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-047.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-012.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-021.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-unremovable-4.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-unremovable-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-010-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-006.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-036-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-024-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-removable-2.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-018.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-041-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-045.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-042-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-045-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-037-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-027-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-011-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-029.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-034.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-047-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-023.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-022-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-unremovable-2.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-039-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-016.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-002-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-049-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-005-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-022.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/text-word-spacing-001.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-048.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-033-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-removable-3.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-021-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-unremovable-1.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-001.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-025.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-009-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-046.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-040-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-008-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-015.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-019.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-030-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-043.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-023-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-002.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-027.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-006-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-004-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-035.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-049.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-028-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-001-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-032.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-035-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-014.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-019-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-018-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-011.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-008.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-037.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-020-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-032-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-026.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-040.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-003-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-007.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-041.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-014-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-046-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-010.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-009.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-013-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-048-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-012-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-026-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/text3/segment-break-transformation-rules-007-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/variables/variable-font-face-01-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/variables/variable-font-face-02-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/variables/variable-external-font-face-01-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/ruby/ruby-text-combine-upright-001b.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/ruby/ruby-text-combine-upright-001-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/ruby/ruby-text-combine-upright-002b.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/ruby/ruby-text-combine-upright-002-ref.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/ruby/ruby-text-combine-upright-001a.html
+AHEM SYSTEM FONT: css/vendor-imports/mozilla/mozilla-central-reftests/ruby/ruby-text-combine-upright-002a.html
+
+# TODO: The following should be deleted along with the Ahem web font cleanup
+# PR (https://github.com/web-platform-tests/wpt/pull/18702)
+AHEM SYSTEM FONT: infrastructure/assumptions/ahem-ref.html
+AHEM SYSTEM FONT: infrastructure/assumptions/ahem.html
+
