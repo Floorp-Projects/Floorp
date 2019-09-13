@@ -17,6 +17,8 @@ import mozilla.appservices.push.SubscriptionResponse
 import mozilla.components.concept.push.Bus
 import mozilla.components.concept.push.EncryptedPushMessage
 import mozilla.components.concept.push.PushService
+import mozilla.components.feature.push.AutoPushFeature.Companion.LAST_VERIFIED
+import mozilla.components.feature.push.AutoPushFeature.Companion.PERIODIC_INTERVAL_MILLISECONDS
 import mozilla.components.feature.push.AutoPushFeature.Companion.PREFERENCE_NAME
 import mozilla.components.feature.push.AutoPushFeature.Companion.PREF_TOKEN
 import mozilla.components.support.test.any
@@ -31,32 +33,37 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoMoreInteractions
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class AutoPushFeatureTest {
 
+    var lastVerified: Long
+        get() = preference(testContext).getLong(LAST_VERIFIED, System.currentTimeMillis())
+        set(value) = preference(testContext).edit().putLong(LAST_VERIFIED, value).apply()
+
     @Before
     fun setup() {
-        preference(testContext)
-            .edit()
-            .clear()
-            .apply()
+        lastVerified = 0L
     }
 
     @Test
     fun `initialize starts push service`() {
         val service: PushService = mock()
         val config = PushConfig("push-test")
-        val feature = AutoPushFeature(testContext, service, config)
+        val feature = spy(AutoPushFeature(testContext, service, config))
 
         feature.initialize()
 
         verify(service).start(testContext)
+
+        verifyNoMoreInteractions(service)
     }
 
     @Test
@@ -74,8 +81,10 @@ class AutoPushFeatureTest {
 
         preference(testContext).edit().putString(PREF_TOKEN, "token").apply()
 
-        AutoPushFeature(testContext, mock(), mock(), connection = connection,
-            coroutineContext = coroutineContext)
+        AutoPushFeature(
+            testContext, mock(), mock(), connection = connection,
+            coroutineContext = coroutineContext
+        )
 
         verify(connection).updateToken("token")
     }
@@ -213,14 +222,107 @@ class AutoPushFeatureTest {
         assertNull(pref)
     }
 
-    private fun preference(context: Context): SharedPreferences {
-        return context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE)
+    @Test
+    fun `verifyActiveSubscriptions notifies subscribers`() = runBlockingTest {
+        val connection: PushConnection = spy(TestPushConnection(true))
+        val owner: LifecycleOwner = mock()
+        val lifecycle: Lifecycle = mock()
+        val observers: PushSubscriptionObserver = mock()
+        val feature = spy(AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection))
+        whenever(owner.lifecycle).thenReturn(lifecycle)
+        whenever(lifecycle.currentState).thenReturn(Lifecycle.State.STARTED)
+
+        feature.registerForSubscriptions(observers)
+
+        // When there are NO subscription updates, observers should not be notified.
+        feature.verifyActiveSubscriptions()
+
+        verify(observers, never()).onSubscriptionAvailable(any())
+
+        // When there are subscription updates, observers should not be notified.
+        whenever(connection.verifyConnection()).thenReturn(true)
+        feature.verifyActiveSubscriptions()
+
+        verify(observers, times(2)).onSubscriptionAvailable(any())
+    }
+
+    @Test
+    fun `initialize executes verifyActiveSubscriptions after interval`() = runBlockingTest {
+        val feature = spy(
+            AutoPushFeature(
+                context = testContext,
+                service = mock(),
+                config = mock(),
+                coroutineContext = coroutineContext,
+                connection = mock()
+            )
+        )
+
+        lastVerified = System.currentTimeMillis() - VERIFY_NOW
+
+        feature.initialize()
+
+        verify(feature).tryVerifySubscriptions()
+    }
+
+    @Test
+    fun `initialize does not execute verifyActiveSubscription before interval`() = runBlockingTest {
+        val feature = spy(
+            AutoPushFeature(
+                context = testContext,
+                service = mock(),
+                config = mock(),
+                coroutineContext = coroutineContext,
+                connection = mock()
+            )
+        )
+
+        lastVerified = System.currentTimeMillis() - SKIP_INTERVAL
+
+        feature.initialize()
+
+        verify(feature, never()).verifyActiveSubscriptions()
+    }
+
+    @Test
+    fun `verifySubscriptions notifies observers`() = runBlockingTest {
+        val owner: LifecycleOwner = mock()
+        val lifecycle: Lifecycle = mock()
+        val native: PushConnection = TestPushConnection(true)
+        val feature = spy(
+            AutoPushFeature(
+                context = testContext,
+                service = mock(),
+                config = mock(),
+                coroutineContext = coroutineContext,
+                connection = native
+            )
+        )
+        `when`(owner.lifecycle).thenReturn(lifecycle)
+        `when`(lifecycle.currentState).thenReturn(Lifecycle.State.STARTED)
+
+        feature.registerForSubscriptions(object : PushSubscriptionObserver {
+            override fun onSubscriptionAvailable(subscription: AutoPushSubscription) {
+                assertEquals("https://fool", subscription.endpoint)
+            }
+        }, owner, false)
+
+        feature.verifyActiveSubscriptions()
+    }
+
+    companion object {
+        private fun preference(context: Context): SharedPreferences {
+            return context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE)
+        }
+
+        private const val SKIP_INTERVAL = 23 * 60 * 60 * 1000L // 23 hours; less than interval
+        private const val VERIFY_NOW = PERIODIC_INTERVAL_MILLISECONDS + (10 * 60 * 1000) // interval + 10 mins
     }
 
     class TestPushConnection(private val init: Boolean = false) : PushConnection {
         override suspend fun subscribe(channelId: String, scope: String) =
             SubscriptionResponse(
-                "992a0f0542383f1ea5ef51b7cf4ae6c4",
+                channelId,
                 SubscriptionInfo("https://foo", KeyInfo("auth", "p256dh"))
             )
 
@@ -230,9 +332,7 @@ class AutoPushFeatureTest {
 
         override suspend fun updateToken(token: String) = true
 
-        override suspend fun verifyConnection(): Boolean {
-            TODO("not implemented")
-        }
+        override suspend fun verifyConnection(): Boolean = false
 
         override fun decrypt(
             channelId: String,

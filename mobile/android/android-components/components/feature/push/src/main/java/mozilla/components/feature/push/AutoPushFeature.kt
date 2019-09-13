@@ -6,6 +6,7 @@ package mozilla.components.feature.push
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.CoroutineScope
@@ -61,7 +62,7 @@ import mozilla.appservices.push.PushError as RustPushError
  * </code>
  *
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 class AutoPushFeature(
     private val context: Context,
     private val service: PushService,
@@ -82,6 +83,9 @@ class AutoPushFeature(
     // The preference that stores new registration tokens.
     private val prefToken: String?
         get() = preferences(context).getString(PREF_TOKEN, null)
+    private var prefLastVerified: Long
+        get() = preferences(context).getLong(LAST_VERIFIED, System.currentTimeMillis())
+        set(value) = preferences(context).edit().putLong(LAST_VERIFIED, value).apply()
 
     internal var job: Job = SupervisorJob()
     private val scope = CoroutineScope(coroutineContext) + job
@@ -98,12 +102,18 @@ class AutoPushFeature(
     }
 
     /**
-     * Starts the push service provided.
+     * Starts the push feature and initialization work needed.
      */
-    override fun initialize() { service.start(context) }
+    override fun initialize() {
+        // Starts the push feature.
+        service.start(context)
+
+        // Starts verification of push subscription endpoints.
+        tryVerifySubscriptions()
+    }
 
     /**
-     * Un-subscribes from all push message channels and stops the push service.
+     * Un-subscribes from all push message channels, stops the push service, and stops periodic verifications.
      * This should only be done on an account logout or app data deletion.
      */
     override fun shutdown() {
@@ -118,6 +128,9 @@ class AutoPushFeature(
                 job.cancel()
             }
         }
+
+        // Reset the push subscription check.
+        prefLastVerified = 0L
     }
 
     /**
@@ -239,11 +252,6 @@ class AutoPushFeature(
     /**
      * Deletes the registration token locally so that it forces the service to get a new one the
      * next time hits it's messaging server.
-     *
-     * Implementation notes: This shouldn't need to be used unless we're certain. When we introduce
-     * [a polling service][0] to check if endpoints are expired, we would invoke this.
-     *
-     * [0]: https://github.com/mozilla-mobile/android-components/issues/3173
      */
     override fun renewRegistration() {
         logger.warn("Forcing registration renewal by deleting our (cached) token.")
@@ -257,6 +265,38 @@ class AutoPushFeature(
 
         // Starts the service if needed to trigger a new registration.
         service.start(context)
+    }
+
+    /**
+     * Verifies status (active, expired) of the push subscriptions and then notifies observers.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun verifyActiveSubscriptions() {
+        DeliveryManager.with(connection) {
+            scope.launchAndTry {
+                val notifyObservers = connection.verifyConnection()
+
+                if (notifyObservers) {
+                    logger.info("Subscriptions have changed; notifying observers..")
+
+                    PushType.values().forEach { type ->
+                        val sub = subscribe(type.toChannelId()).toPushSubscription()
+                        subscriptionObservers.notifyObservers { onSubscriptionAvailable(sub) }
+                    }
+                }
+            }
+        }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun tryVerifySubscriptions() {
+        logger.info("Checking validity of push subscriptions.")
+
+        if (shouldVerifyNow()) {
+            verifyActiveSubscriptions()
+
+            prefLastVerified = System.currentTimeMillis()
+        }
     }
 
     private fun CoroutineScope.launchAndTry(block: suspend CoroutineScope.() -> Unit) {
@@ -280,10 +320,20 @@ class AutoPushFeature(
     private fun preferences(context: Context): SharedPreferences =
         context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE)
 
+    /**
+     * We should verify if it's been [PERIODIC_INTERVAL_MILLISECONDS] since our last attempt (successful or not).
+     */
+    private fun shouldVerifyNow(): Boolean {
+        return (System.currentTimeMillis() - prefLastVerified) >= PERIODIC_INTERVAL_MILLISECONDS
+    }
+
     companion object {
         internal const val PREFERENCE_NAME = "mozac_feature_push"
         internal const val PREF_TOKEN = "token"
         internal const val DB_NAME = "push.sqlite"
+
+        internal const val LAST_VERIFIED = "last_verified_push_connection"
+        internal const val PERIODIC_INTERVAL_MILLISECONDS = 24 * 60 * 60 * 1000L // 24 hours
     }
 }
 
