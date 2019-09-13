@@ -267,7 +267,10 @@ def fetch_event_data():
 def main():
     args = get_parser().parse_args()
 
-    event = fetch_event_data()
+    if "TASK_EVENT" in os.environ:
+        event = json.loads(os.environ["TASK_EVENT"])
+    else:
+        event = fetch_event_data()
 
     if event:
         set_variables(event)
