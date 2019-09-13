@@ -72,6 +72,23 @@ GeckoViewStartup.prototype = {
           ],
         });
 
+        GeckoViewUtils.addLazyGetter(
+          this,
+          "GeckoViewContentBlockingController",
+          {
+            module:
+              "resource://gre/modules/GeckoViewContentBlockingController.jsm",
+            ged: [
+              "ContentBlocking:AddException",
+              "ContentBlocking:RemoveException",
+              "ContentBlocking:CheckException",
+              "ContentBlocking:SaveList",
+              "ContentBlocking:RestoreList",
+              "ContentBlocking:ClearList",
+            ],
+          }
+        );
+
         GeckoViewUtils.addLazyPrefObserver(
           {
             name: "geckoview.console.enabled",
