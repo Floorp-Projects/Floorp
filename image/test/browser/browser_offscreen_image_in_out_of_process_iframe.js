@@ -43,7 +43,7 @@ add_task(async function() {
 
       // Make a space bigger than display port.
       const spacer = content.document.createElement("div");
-      spacer.style = "width: 100%; height: 5000px;";
+      spacer.style = "width: 100%; height: 10000px;";
       scroller.appendChild(spacer);
 
       const iframe = content.document.createElement("iframe");
@@ -65,7 +65,7 @@ add_task(async function() {
       content.document.body.appendChild(img);
 
       const spacer = content.document.createElement("div");
-      spacer.style = "width: 100%; height: 5000px;";
+      spacer.style = "width: 100%; height: 10000px;";
       content.document.body.appendChild(spacer);
       await new Promise(resolve => {
         img.addEventListener("load", resolve, { once: true });
@@ -129,7 +129,7 @@ add_task(async function() {
     // Scroll the iframe into view.
     await SpecialPowers.spawn(browser, [], async () => {
       const scroller = content.document.getElementById("scroller");
-      scroller.scrollTo({ left: 0, top: 4800, behavior: "smooth" });
+      scroller.scrollTo({ left: 0, top: 9800, behavior: "smooth" });
       await new Promise(resolve => content.window.setTimeout(resolve, 1000));
     });
 
@@ -144,7 +144,7 @@ add_task(async function() {
       const img = content.document.getElementById("img");
       // Move the image outside of the scroll port.  'position: absolute' causes
       // a relow on the image element.
-      img.style = "position: absolute; top: 4000px;";
+      img.style = "position: absolute; top: 9000px;";
       await new Promise(resolve =>
         content.window.requestAnimationFrame(resolve)
       );
