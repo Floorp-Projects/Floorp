@@ -23,6 +23,9 @@ const TEST_URI = `
     div:focus-within {
       color: papayawhip;
     }
+    div:visited {
+      color: orange;
+    }
   </style>
   <div>test div</div>
 `;
