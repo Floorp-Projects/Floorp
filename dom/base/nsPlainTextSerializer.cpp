@@ -1414,10 +1414,10 @@ void nsPlainTextSerializer::EndLine(bool aSoftLineBreak, bool aBreakBySpace) {
   } else {
     // Hard break
     if (mCurrentLine.HasContentOrIndentationHeader()) {
-      mEmptyLines = -1;
+      mEmptyLines = 0;
+    } else {
+      mEmptyLines++;
     }
-
-    mEmptyLines++;
   }
 
   MOZ_ASSERT(mOutputManager);
