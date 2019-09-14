@@ -193,6 +193,7 @@ const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
 PromiseTestUtils.whitelistRejectionsGlobally(/NS_ERROR_NOT_INITIALIZED/);
+PromiseTestUtils.whitelistRejectionsGlobally(/Error in asyncStorage/);
 
 // Many web replay tests can resume execution before the debugger has finished
 // all operations related to the pause.
