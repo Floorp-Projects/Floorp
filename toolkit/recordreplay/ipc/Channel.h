@@ -315,7 +315,7 @@ class Channel {
   // Descriptor used to communicate with the other side.
   int mFd;
 
-  // For synchronizing initialization of the channel.
+  // For synchronizing initialization of the channel and ensuring atomic sends.
   Monitor mMonitor;
 
   // Buffer for message data received from the other side of the channel.
