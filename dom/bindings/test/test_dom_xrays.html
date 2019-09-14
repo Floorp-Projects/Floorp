@@ -294,7 +294,7 @@ function test() {
         "Should see constant property on prototype objects");
 
   // Adopting nodes should not lose expandos.
-  elem = doc.createElement("span");
+  elem = document.createElement("span");
   elem.expando = 5;
   is(elem.expando, 5, "We just set this property");
   document.adoptNode(elem);

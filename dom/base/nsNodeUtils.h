@@ -10,6 +10,7 @@
 #include "mozilla/Maybe.h"
 #include "nsIContent.h"  // for use in inline function (ParentChainChanged)
 #include "nsIMutationObserver.h"  // for use in inline function (ParentChainChanged)
+#include "mozilla/dom/Document.h"
 #include "js/TypeDecls.h"
 #include "nsCOMArray.h"
 
@@ -204,6 +205,17 @@ class nsNodeUtils {
                     JS::Handle<JSObject*> aReparentScope,
                     nsCOMArray<nsINode>& aNodesWithProperties,
                     mozilla::ErrorResult& aError) {
+    if (aNode && aNewNodeInfoManager) {
+      mozilla::dom::Document* newDoc = aNewNodeInfoManager->GetDocument();
+      mozilla::dom::Document* oldDoc = aNode->OwnerDoc();
+      if (newDoc && oldDoc &&
+          (oldDoc->GetDocGroup() != newDoc->GetDocGroup())) {
+        MOZ_ASSERT(false, "Cross docGroup adoption is not allowed");
+        aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+        return;
+      }
+    }
+
     // Just need to store the return value of CloneAndAdopt in a
     // temporary nsCOMPtr to make sure we release it.
     nsCOMPtr<nsINode> node =
