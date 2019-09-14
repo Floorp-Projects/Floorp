@@ -619,7 +619,11 @@ class PictureInPictureToggleChild extends ActorChild {
     }
 
     state.weakOverVideo = null;
-    state.hideToggleDeferredTask.disarm();
+
+    if (!this.toggleTesting) {
+      state.hideToggleDeferredTask.disarm();
+    }
+
     state.hideToggleDeferredTask = null;
   }
 
