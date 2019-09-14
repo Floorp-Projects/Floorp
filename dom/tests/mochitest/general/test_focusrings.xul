@@ -121,7 +121,7 @@ var htmlElementsMacPrefSet = [
 ];
 
 function createElement(str) {
-  let doc = new DOMParser().parseFromString(`<html><body>${str}</body></html>`, "text/html");
+  let doc = new DOMParser().parseFromSafeString(`<html><body>${str}</body></html>`, "text/html");
   return doc.body.firstChild;
 }
 

@@ -9415,10 +9415,10 @@ TabModalPromptBox.prototype = {
   },
 
   appendPrompt(args, onCloseCallback) {
-    let newPrompt = new TabModalPrompt(window);
+    let browser = this.browser;
+    let newPrompt = new TabModalPrompt(browser.ownerGlobal);
     this.prompts.set(newPrompt.element, newPrompt);
 
-    let browser = this.browser;
     browser.parentNode.insertBefore(
       newPrompt.element,
       browser.nextElementSibling

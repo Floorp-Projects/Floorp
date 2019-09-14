@@ -596,7 +596,7 @@
       this.invoke = () => {
         // trigger a tree update.
         let doc = getNode("t9_container").contentDocument;
-        doc.body.appendChild(document.createElement("p"));
+        doc.body.appendChild(doc.createElement("p"));
       };
 
       this.finalCheck = () => {
