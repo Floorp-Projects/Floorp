@@ -3668,10 +3668,9 @@ class Document : public nsINode,
   // Checks that the caller is either chrome or some addon.
   static bool IsCallerChromeOrAddon(JSContext* aCx, JSObject* aObject);
 
-#ifdef MOZILLA_INTERNAL_API
   bool Hidden() const { return mVisibilityState != VisibilityState::Visible; }
   dom::VisibilityState VisibilityState() const { return mVisibilityState; }
-#endif
+
   void GetSelectedStyleSheetSet(nsAString& aSheetSet);
   void SetSelectedStyleSheetSet(const nsAString& aSheetSet);
   void GetLastStyleSheetSet(nsAString& aSheetSet) {
