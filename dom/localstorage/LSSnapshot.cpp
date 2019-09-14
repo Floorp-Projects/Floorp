@@ -24,7 +24,7 @@ const uint32_t kSnapshotTimeoutMs = 20000;
  * observers for other content processes.)
  */
 class SnapshotWriteOptimizer final
-    : public LSWriteOptimizer<nsAString, nsString> {
+    : public LSWriteOptimizer<LSValue> {
  public:
   void Enumerate(nsTArray<LSWriteInfo>& aWriteInfos);
 };
@@ -46,7 +46,7 @@ void SnapshotWriteOptimizer::Enumerate(nsTArray<LSWriteInfo>& aWriteInfos) {
 
         LSSetItemInfo setItemInfo;
         setItemInfo.key() = insertItemInfo->GetKey();
-        setItemInfo.value() = LSValue(insertItemInfo->GetValue());
+        setItemInfo.value() = insertItemInfo->GetValue();
 
         aWriteInfos.AppendElement(std::move(setItemInfo));
 
@@ -68,7 +68,7 @@ void SnapshotWriteOptimizer::Enumerate(nsTArray<LSWriteInfo>& aWriteInfos) {
 
         LSSetItemInfo setItemInfo;
         setItemInfo.key() = updateItemInfo->GetKey();
-        setItemInfo.value() = LSValue(updateItemInfo->GetValue());
+        setItemInfo.value() = updateItemInfo->GetValue();
 
         aWriteInfos.AppendElement(std::move(setItemInfo));
 
@@ -312,6 +312,30 @@ nsresult LSSnapshot::SetItem(const nsAString& aKey, const nsAString& aValue,
   } else {
     changed = true;
 
+    auto autoRevertValue = MakeScopeExit([&] {
+      if (oldValue.IsVoid()) {
+        mValues.Remove(aKey);
+      } else {
+        mValues.Put(aKey, oldValue);
+      }
+    });
+
+    // Anything that can fail must be done early before we start modifying the
+    // state.
+
+    Maybe<LSValue> oldValueFromString;
+    if (mHasOtherProcessObservers) {
+      oldValueFromString.emplace();
+      if (NS_WARN_IF(!oldValueFromString->InitFromString(oldValue))) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+
+    LSValue valueFromString;
+    if (NS_WARN_IF(!valueFromString.InitFromString(aValue))) {
+      return NS_ERROR_FAILURE;
+    }
+
     int64_t delta = static_cast<int64_t>(aValue.Length()) -
                     static_cast<int64_t>(oldValue.Length());
 
@@ -321,11 +345,6 @@ nsresult LSSnapshot::SetItem(const nsAString& aKey, const nsAString& aValue,
 
     rv = UpdateUsage(delta);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      if (oldValue.IsVoid()) {
-        mValues.Remove(aKey);
-      } else {
-        mValues.Put(aKey, oldValue);
-      }
       return rv;
     }
 
@@ -335,22 +354,25 @@ nsresult LSSnapshot::SetItem(const nsAString& aKey, const nsAString& aValue,
 
     if (mHasOtherProcessObservers) {
       MOZ_ASSERT(mWriteAndNotifyInfos);
+      MOZ_ASSERT(oldValueFromString.isSome());
 
       LSSetItemAndNotifyInfo setItemAndNotifyInfo;
       setItemAndNotifyInfo.key() = aKey;
-      setItemAndNotifyInfo.oldValue() = LSValue(oldValue);
-      setItemAndNotifyInfo.value() = LSValue(aValue);
+      setItemAndNotifyInfo.oldValue() = oldValueFromString.value();
+      setItemAndNotifyInfo.value() = valueFromString;
 
       mWriteAndNotifyInfos->AppendElement(std::move(setItemAndNotifyInfo));
     } else {
       MOZ_ASSERT(mWriteOptimizer);
 
       if (oldValue.IsVoid()) {
-        mWriteOptimizer->InsertItem(aKey, aValue);
+        mWriteOptimizer->InsertItem(aKey, valueFromString);
       } else {
-        mWriteOptimizer->UpdateItem(aKey, aValue);
+        mWriteOptimizer->UpdateItem(aKey, valueFromString);
       }
     }
+
+    autoRevertValue.release();
   }
 
   aNotifyInfo.changed() = changed;
@@ -381,6 +403,22 @@ nsresult LSSnapshot::RemoveItem(const nsAString& aKey,
   } else {
     changed = true;
 
+    auto autoRevertValue = MakeScopeExit([&] {
+      MOZ_ASSERT(!oldValue.IsVoid());
+      mValues.Put(aKey, oldValue);
+    });
+
+    // Anything that can fail must be done early before we start modifying the
+    // state.
+
+    Maybe<LSValue> oldValueFromString;
+    if (mHasOtherProcessObservers) {
+      oldValueFromString.emplace();
+      if (NS_WARN_IF(!oldValueFromString->InitFromString(oldValue))) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+
     int64_t delta = -(static_cast<int64_t>(aKey.Length()) +
                       static_cast<int64_t>(oldValue.Length()));
 
@@ -393,10 +431,11 @@ nsresult LSSnapshot::RemoveItem(const nsAString& aKey,
 
     if (mHasOtherProcessObservers) {
       MOZ_ASSERT(mWriteAndNotifyInfos);
+      MOZ_ASSERT(oldValueFromString.isSome());
 
       LSRemoveItemAndNotifyInfo removeItemAndNotifyInfo;
       removeItemAndNotifyInfo.key() = aKey;
-      removeItemAndNotifyInfo.oldValue() = LSValue(oldValue);
+      removeItemAndNotifyInfo.oldValue() = oldValueFromString.value();
 
       mWriteAndNotifyInfos->AppendElement(std::move(removeItemAndNotifyInfo));
     } else {
@@ -404,6 +443,8 @@ nsresult LSSnapshot::RemoveItem(const nsAString& aKey,
 
       mWriteOptimizer->DeleteItem(aKey);
     }
+
+    autoRevertValue.release();
   }
 
   aNotifyInfo.changed() = changed;
