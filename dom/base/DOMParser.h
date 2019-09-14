@@ -37,6 +37,10 @@ class DOMParser final : public nsISupports, public nsWrapperCache {
                                              SupportedType aType,
                                              ErrorResult& aRv);
 
+  // ChromeOnly API
+  already_AddRefed<Document> ParseFromSafeString(const nsAString& aStr,
+                                                 SupportedType aType,
+                                                 ErrorResult& aRv);
   // Sequence converts to Span, so we can use this overload for both
   // the Sequence case and our internal uses.
   already_AddRefed<Document> ParseFromBuffer(Span<const uint8_t> aBuf,

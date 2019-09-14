@@ -25,6 +25,9 @@ interface DOMParser {
   [NewObject, Throws]
   Document parseFromString(DOMString str, SupportedType type);
 
+  [NewObject, ChromeOnly, Throws]
+  Document parseFromSafeString(DOMString str, SupportedType type);
+
   // Mozilla-specific stuff
   [NewObject, Throws, ChromeOnly]
   Document parseFromBuffer(sequence<octet> buf, SupportedType type);

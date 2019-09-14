@@ -17,7 +17,7 @@
     gXULDOMParser.forceEnableXULXBL();
 
     function parseXULToFragment(str) {
-      let doc = gXULDOMParser.parseFromString(`
+      let doc = gXULDOMParser.parseFromSafeString(`
         <box xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">${str}</box>`,
         "application/xml");
       // We use a range here so that we don't access the inner DOM elements from
