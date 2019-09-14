@@ -28,7 +28,6 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.TestApplication
 import org.mozilla.fenix.components.PermissionStorage
-import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.clearAndCommit
 import org.mozilla.fenix.ext.components
 import org.robolectric.annotation.Config
@@ -41,7 +40,7 @@ class DeleteAndQuitTest {
 
     private val mainThreadSurrogate = newSingleThreadContext("UI thread")
 
-    private var context: HomeActivity = mockk(relaxed = true)
+    private var activity: HomeActivity = mockk(relaxed = true)
     lateinit var settings: Settings
     private val tabUseCases: TabsUseCases = mockk(relaxed = true)
     private val historyStorage: PlacesHistoryStorage = mockk(relaxed = true)
@@ -57,11 +56,11 @@ class DeleteAndQuitTest {
 
         Dispatchers.setMain(mainThreadSurrogate)
 
-        every { context.components.core.historyStorage } returns historyStorage
-        every { context.components.core.permissionStorage } returns permissionStorage
-        every { context.components.useCases.tabsUseCases } returns tabUseCases
+        every { activity.components.core.historyStorage } returns historyStorage
+        every { activity.components.core.permissionStorage } returns permissionStorage
+        every { activity.components.useCases.tabsUseCases } returns tabUseCases
         every { tabUseCases.removeAllTabs } returns removeAllTabsUseCases
-        every { context.components.core.engine } returns engine
+        every { activity.components.core.engine } returns engine
     }
 
     @After
@@ -79,11 +78,11 @@ class DeleteAndQuitTest {
         // When
         settings.deleteTabsOnQuit = true
 
-        context.deleteAndQuit(this)
+        deleteAndQuit(activity, this)
 
         verify {
             removeAllTabsUseCases.invoke()
-            context.asActivity()?.finish()
+            activity.finish()
         }
 
         verify(exactly = 0) {
@@ -110,7 +109,7 @@ class DeleteAndQuitTest {
         settings.deleteCookiesOnQuit = true
         settings.deleteCacheOnQuit = true
 
-        context.deleteAndQuit(this)
+        deleteAndQuit(activity, this)
 
         verify(exactly = 1) {
             engine.clearData(Engine.BrowsingData.allCaches())
@@ -134,7 +133,7 @@ class DeleteAndQuitTest {
 
             historyStorage
 
-            context.asActivity()?.finish()
+            activity.finish()
         }
     }
 }

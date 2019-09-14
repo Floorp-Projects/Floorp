@@ -155,7 +155,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
         return getSessionById()?.also { session ->
 
             val browserToolbarController = DefaultBrowserToolbarController(
-                context,
+                requireActivity(),
                 findNavController(),
                 (activity as HomeActivity).browsingModeManager,
                 findInPageLauncher = { findInPageIntegration.withFeature { it.launch() } },

@@ -4,38 +4,37 @@
 
 package org.mozilla.fenix.utils
 
-import android.content.Context
+import android.app.Activity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.settings.DefaultDeleteBrowsingDataController
 
 /**
- * Deletes selected browsing data and finishes the activity
+ * Deletes selected browsing data and finishes the activity.
  */
-fun Context.deleteAndQuit(coroutineScope: CoroutineScope) {
+fun deleteAndQuit(activity: Activity, coroutineScope: CoroutineScope) {
     coroutineScope.launch {
-        launch {
-            val controller =
-                DefaultDeleteBrowsingDataController(this@deleteAndQuit, coroutineContext)
-            if (Settings.getInstance(this@deleteAndQuit).deleteCacheOnQuit) {
-                controller.deleteCachedFiles()
+        val controller = DefaultDeleteBrowsingDataController(activity, coroutineContext)
+
+        if (Settings.getInstance(activity).deleteCacheOnQuit) {
+            controller.deleteCachedFiles()
+        }
+        if (Settings.getInstance(activity).deleteTabsOnQuit) {
+            controller.deleteTabs()
+        }
+        if (Settings.getInstance(activity).deletePermissionsOnQuit) {
+            launch(Dispatchers.IO) {
+                controller.deleteSitePermissions()
             }
-            if (Settings.getInstance(this@deleteAndQuit).deleteTabsOnQuit) {
-                controller.deleteTabs()
-            }
-            if (Settings.getInstance(this@deleteAndQuit).deletePermissionsOnQuit) {
-                launch(Dispatchers.IO) {
-                    controller.deleteSitePermissions()
-                }
-            }
-            if (Settings.getInstance(this@deleteAndQuit).deleteCookiesOnQuit) {
-                controller.deleteCookies()
-            }
-            if (Settings.getInstance(this@deleteAndQuit).deleteHistoryOnQuit) {
-                controller.deleteHistoryAndDOMStorages()
-            }
-        }.invokeOnCompletion { this@deleteAndQuit.asActivity()?.finish() }
+        }
+        if (Settings.getInstance(activity).deleteCookiesOnQuit) {
+            controller.deleteCookies()
+        }
+        if (Settings.getInstance(activity).deleteHistoryOnQuit) {
+            controller.deleteHistoryAndDOMStorages()
+        }
+
+        activity.finish()
     }
 }

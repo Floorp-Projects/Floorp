@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.components.toolbar
 
-import android.content.Context
 import android.content.Intent
 import androidx.core.widget.NestedScrollView
 import androidx.lifecycle.LifecycleCoroutineScope
@@ -55,7 +54,7 @@ class DefaultBrowserToolbarControllerTest {
 
     private val mainThreadSurrogate = newSingleThreadContext("UI thread")
 
-    private var context: HomeActivity = mockk(relaxed = true)
+    private var activity: HomeActivity = mockk(relaxed = true)
     private var analytics: Analytics = mockk(relaxed = true)
     private val browsingModeManager: BrowsingModeManager = mockk(relaxed = true)
     private var navController: NavController = mockk(relaxed = true)
@@ -79,7 +78,7 @@ class DefaultBrowserToolbarControllerTest {
         Dispatchers.setMain(mainThreadSurrogate)
 
         controller = DefaultBrowserToolbarController(
-            context = context,
+            activity = activity,
             navController = navController,
             browsingModeManager = browsingModeManager,
             findInPageLauncher = findInPageLauncher,
@@ -100,12 +99,12 @@ class DefaultBrowserToolbarControllerTest {
         mockkStatic(
             "org.mozilla.fenix.utils.DeleteAndQuitKt"
         )
-        every { any<Context>().deleteAndQuit(any()) } just Runs
+        every { deleteAndQuit(any(), any()) } just Runs
 
-        every { context.components.analytics } returns analytics
+        every { activity.components.analytics } returns analytics
         every { analytics.metrics } returns metrics
-        every { context.components.useCases.sessionUseCases } returns sessionUseCases
-        every { context.components.core.sessionManager.selectedSession } returns currentSession
+        every { activity.components.useCases.sessionUseCases } returns sessionUseCases
+        every { activity.components.core.sessionManager.selectedSession } returns currentSession
     }
 
     @Test
@@ -184,7 +183,7 @@ class DefaultBrowserToolbarControllerTest {
     fun handleToolbarReloadPress() {
         val item = ToolbarMenu.Item.Reload
 
-        every { context.components.useCases.sessionUseCases } returns sessionUseCases
+        every { activity.components.useCases.sessionUseCases } returns sessionUseCases
 
         controller.handleToolbarItemInteraction(item)
 
@@ -329,7 +328,7 @@ class DefaultBrowserToolbarControllerTest {
 
         every { currentSession.id } returns "1"
         every { currentSession.url } returns "https://mozilla.org"
-        every { context.components.useCases.tabsUseCases } returns tabsUseCases
+        every { activity.components.useCases.tabsUseCases } returns tabsUseCases
         every { tabsUseCases.addTab } returns addTabUseCase
 
         controller.handleToolbarItemInteraction(item)
@@ -353,7 +352,7 @@ class DefaultBrowserToolbarControllerTest {
 
         val item = ToolbarMenu.Item.Help
 
-        every { context.components.useCases.tabsUseCases } returns tabsUseCases
+        every { activity.components.useCases.tabsUseCases } returns tabsUseCases
         every { tabsUseCases.addTab } returns addTabUseCase
 
         controller.handleToolbarItemInteraction(item)
@@ -385,8 +384,8 @@ class DefaultBrowserToolbarControllerTest {
     fun handleToolbarSaveToCollectionPress() {
         val item = ToolbarMenu.Item.SaveToCollection
         val cachedTabCollections: List<TabCollection> = mockk(relaxed = true)
-        every { context.components.useCases.sessionUseCases } returns sessionUseCases
-        every { context.components.core.tabCollectionStorage.cachedTabCollections } returns cachedTabCollections
+        every { activity.components.useCases.sessionUseCases } returns sessionUseCases
+        every { activity.components.core.tabCollectionStorage.cachedTabCollections } returns cachedTabCollections
 
         controller.handleToolbarItemInteraction(item)
 
@@ -410,7 +409,7 @@ class DefaultBrowserToolbarControllerTest {
     @Test
     fun handleToolbarOpenInFenixPress() {
         controller = DefaultBrowserToolbarController(
-            context = context,
+            activity = activity,
             navController = navController,
             browsingModeManager = browsingModeManager,
             findInPageLauncher = findInPageLauncher,
@@ -426,17 +425,17 @@ class DefaultBrowserToolbarControllerTest {
         val sessionManager: SessionManager = mockk(relaxed = true)
         val item = ToolbarMenu.Item.OpenInFenix
 
-        every { context.components.core.sessionManager } returns sessionManager
+        every { activity.components.core.sessionManager } returns sessionManager
         every { currentSession.customTabConfig } returns mockk()
-        every { context.startActivity(any()) } just Runs
+        every { activity.startActivity(any()) } just Runs
 
         controller.handleToolbarItemInteraction(item)
 
         verify { engineView.release() }
         verify { currentSession.customTabConfig = null }
         verify { sessionManager.select(currentSession) }
-        verify { context.startActivity(openInFenixIntent) }
-        verify { context.finish() }
+        verify { activity.startActivity(openInFenixIntent) }
+        verify { activity.finish() }
     }
 
     @Test
@@ -445,6 +444,6 @@ class DefaultBrowserToolbarControllerTest {
 
         controller.handleToolbarItemInteraction(item)
 
-        verify { context.deleteAndQuit(scope) }
+        verify { deleteAndQuit(activity, scope) }
     }
 }
