@@ -2910,23 +2910,19 @@ nsresult EditorBase::NotifyDocumentListeners(
   return rv;
 }
 
-nsresult EditorBase::SetTextNodeWithoutTransaction(const nsAString& aString,
-                                                   Text& aTextNode) {
+nsresult EditorBase::SetTextImpl(const nsAString& aString, Text& aTextNode) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(!AsHTMLEditor());
-  MOZ_ASSERT(IsPlaintextEditor());
-  MOZ_ASSERT(!IsUndoRedoEnabled());
 
   const uint32_t length = aTextNode.Length();
+
+  AutoEditSubActionNotifier startToHandleEditSubAction(
+      *this, EditSubAction::eSetText, nsIEditor::eNext);
 
   // Let listeners know what's up
   if (!mActionListeners.IsEmpty() && length) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->WillDeleteText(&aTextNode, 0, length);
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
     }
   }
 
@@ -2940,13 +2936,13 @@ nsresult EditorBase::SetTextNodeWithoutTransaction(const nsAString& aString,
     return rv;
   }
 
-  DebugOnly<nsresult> rvIgnored =
-      SelectionRefPtr()->Collapse(&aTextNode, aString.Length());
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  {
+    // Create a nested scope to not overwrite rv from the outer scope.
+    DebugOnly<nsresult> rv =
+        SelectionRefPtr()->Collapse(&aTextNode, aString.Length());
+    NS_ASSERTION(NS_SUCCEEDED(rv),
+                 "Selection could not be collapsed after insert");
   }
-  NS_ASSERTION(NS_SUCCEEDED(rvIgnored),
-               "Selection::Collapse() failed, but ignored");
 
   RangeUpdaterRef().SelAdjDeleteText(&aTextNode, 0, length);
   RangeUpdaterRef().SelAdjInsertText(aTextNode, 0, aString);
@@ -2955,11 +2951,9 @@ nsresult EditorBase::SetTextNodeWithoutTransaction(const nsAString& aString,
     RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
     if (length) {
       htmlEditRules->DidDeleteText(aTextNode, 0, length);
-      MOZ_ASSERT(!Destroyed());
     }
     if (!aString.IsEmpty()) {
       htmlEditRules->DidInsertText(aTextNode, 0, aString);
-      MOZ_ASSERT(!Destroyed());
     }
   }
 
@@ -2969,20 +2963,14 @@ nsresult EditorBase::SetTextNodeWithoutTransaction(const nsAString& aString,
     for (auto& listener : listeners) {
       if (length) {
         listener->DidDeleteText(&aTextNode, 0, length, rv);
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
       }
       if (!aString.IsEmpty()) {
         listener->DidInsertText(&aTextNode, 0, aString, rv);
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
       }
     }
   }
 
-  return NS_OK;
+  return rv;
 }
 
 nsresult EditorBase::DeleteTextWithTransaction(Text& aTextNode,

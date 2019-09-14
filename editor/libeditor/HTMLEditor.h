@@ -1156,24 +1156,14 @@ class HTMLEditor final : public TextEditor,
   EditActionResult CanHandleHTMLEditSubAction() const;
 
   /**
-   * EnsureCaretNotAfterPaddingBRElement() makes sure that caret is NOT after
-   * padding `<br>` element for preventing insertion after padding `<br>`
-   * element at empty last line.
-   * NOTE: This method should be called only when `Selection` is collapsed
-   *       because `Selection` is a pain to work with when not collapsed.
-   *       (no good way to extend start or end of selection), so we need to
-   *       ignore those types of selections.
+   * Called before inserting something into the editor.
+   * This method may removes mPaddingBRElementForEmptyEditor if there is.
+   * Therefore, this method might cause destroying the editor.
+   *
+   * @param aCancel             Returns true if the operation is canceled.
+   *                            This can be nullptr.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
-  EnsureCaretNotAfterPaddingBRElement();
-
-  /**
-   * PrepareInlineStylesForCaret() consider inline styles from top level edit
-   * sub-action and setting it to `mTypeInState` and clear inline style cache
-   * if necessary.
-   * NOTE: This method should be called only when `Selection` is collapsed.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult PrepareInlineStylesForCaret();
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult WillInsert(bool* aCancel = nullptr);
 
   /**
    * HandleInsertText() handles inserting text at selection.
