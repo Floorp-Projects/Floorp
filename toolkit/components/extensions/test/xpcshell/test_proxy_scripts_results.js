@@ -51,11 +51,8 @@ add_task(async function setup() {
     },
   };
   extension = ExtensionTestUtils.loadExtension(extensionData);
-  // proxy.register and proxy.onProxyError are deprecated - bug 1443259.
-  ExtensionTestUtils.failOnSchemaWarnings(false);
   await extension.startup();
   await extension.awaitMessage("ready");
-  ExtensionTestUtils.failOnSchemaWarnings(true);
 });
 
 async function setupProxyScript(proxy) {

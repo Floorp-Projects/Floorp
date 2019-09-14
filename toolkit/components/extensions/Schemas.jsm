@@ -50,13 +50,6 @@ XPCOMUtils.defineLazyGetter(
   () => ExtensionParent.StartupCache
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "treatWarningsAsErrors",
-  "extensions.webextensions.warnings-as-errors",
-  false
-);
-
 var EXPORTED_SYMBOLS = ["SchemaRoot", "Schemas"];
 
 const KEY_CONTENT_SCHEMAS = "extensions-framework/schemas/content";
@@ -1200,31 +1193,7 @@ class Entry {
       }
     }
 
-    this.logWarning(context, message);
-  }
-
-  /**
-   * @param {Context} context
-   * @param {string} warningMessage
-   */
-  logWarning(context, warningMessage) {
-    let error = context.makeError(warningMessage, { warning: true });
-    context.logError(error);
-
-    if (treatWarningsAsErrors) {
-      // This pref is false by default, and true by default in tests to
-      // discourage the use of deprecated APIs in our unit tests.
-      // If a warning is an expected part of a test, temporarily set the pref
-      // to false, e.g. with the ExtensionTestUtils.failOnSchemaWarnings helper.
-      Services.console.logStringMessage(
-        "Treating warning as error because the preference " +
-          "extensions.webextensions.warnings-as-errors is set to true"
-      );
-      if (typeof error === "string") {
-        error = new Error(error);
-      }
-      throw error;
-    }
+    context.logError(context.makeError(message, { warning: true }));
   }
 
   /**
@@ -1905,7 +1874,7 @@ class ObjectType extends Type {
 
     if (error) {
       if (onError == "warn") {
-        this.logWarning(context, forceString(error.error));
+        context.logError(forceString(error.error));
       } else if (onError != "ignore") {
         throw error;
       }
@@ -2203,7 +2172,7 @@ class ArrayType extends Type {
       );
       if (element.error) {
         if (this.onError == "warn") {
-          this.logWarning(context, forceString(element.error));
+          context.logError(forceString(element.error));
         } else if (this.onError != "ignore") {
           return element;
         }

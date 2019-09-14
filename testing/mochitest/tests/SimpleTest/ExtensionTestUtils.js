@@ -138,18 +138,4 @@ ExtensionTestUtils.loadExtension = function(ext)
 
   SimpleTest.info(`Extension loaded`);
   return extension;
-};
-
-ExtensionTestUtils.failOnSchemaWarnings = (warningsAsErrors = true) => {
-  let prefName = "extensions.webextensions.warnings-as-errors";
-  SpecialPowers.setBoolPref(prefName, warningsAsErrors);
-  if (!warningsAsErrors) {
-    let registerCleanup;
-    if (typeof registerCleanupFunction != "undefined") {
-      registerCleanup = registerCleanupFunction;
-    } else {
-      registerCleanup = SimpleTest.registerCleanupFunction.bind(SimpleTest);
-    }
-    registerCleanup(() => SpecialPowers.setBoolPref(prefName, true));
-  }
-};
+}

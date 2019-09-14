@@ -133,11 +133,8 @@ add_task(async function test_incognito_proxy_register_access() {
       }),
     },
   });
-  // proxy.register is deprecated - bug 1443259.
-  ExtensionTestUtils.failOnSchemaWarnings(false);
   await extension.startup();
   await extension.awaitMessage("ready");
-  ExtensionTestUtils.failOnSchemaWarnings(true);
 
   // This extension will succeed if it gets a request
   let pb_extension = ExtensionTestUtils.loadExtension({
@@ -164,11 +161,8 @@ add_task(async function test_incognito_proxy_register_access() {
       }),
     },
   });
-  // proxy.register is deprecated - bug 1443259.
-  ExtensionTestUtils.failOnSchemaWarnings(false);
   await pb_extension.startup();
   await pb_extension.awaitMessage("ready");
-  ExtensionTestUtils.failOnSchemaWarnings(true);
 
   let finished = pb_extension.awaitFinish("success");
   let contentPage = await ExtensionTestUtils.loadContentPage(
