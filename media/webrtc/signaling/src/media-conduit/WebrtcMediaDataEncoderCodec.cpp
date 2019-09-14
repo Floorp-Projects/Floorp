@@ -13,6 +13,7 @@
 #include "mozilla/Span.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/media/MediaUtils.h"
+#include "webrtc/media/base/mediaconstants.h"
 #include "webrtc/system_wrappers/include/clock.h"
 
 namespace mozilla {
@@ -193,7 +194,7 @@ RefPtr<MediaData> WebrtcMediaDataEncoder::CreateVideoDataFromWebrtcVideoFrame(
   image->CopyData(yCbCrData);
 
   RefPtr<MediaData> data = VideoData::CreateFromImage(
-      image->GetSize(), 0, TimeUnit::FromMicroseconds(aFrame.timestamp()),
+      image->GetSize(), 0, TimeUnit::FromMicroseconds(aFrame.timestamp_us()),
       TimeUnit::FromSeconds(1.0 / mMaxFrameRate), image, aIsKeyFrame,
       TimeUnit::FromMicroseconds(aFrame.timestamp()));
   return data.forget();
@@ -235,11 +236,10 @@ int32_t WebrtcMediaDataEncoder::Encode(
 void WebrtcMediaDataEncoder::ProcessEncode(
     const RefPtr<MediaData>& aInputData) {
   const gfx::IntSize display = aInputData->As<VideoData>()->mDisplay;
-  const uint32_t timestamp = aInputData->mTime.ToMicroseconds();
   mEncoder->Encode(aInputData)
       ->Then(
           OwnerThread(), __func__,
-          [display, timestamp, self = RefPtr<WebrtcMediaDataEncoder>(this),
+          [display, self = RefPtr<WebrtcMediaDataEncoder>(this),
            // capture this for printing address in LOG.
            this](const MediaDataEncoder::EncodedData& aData) {
             // The encoder haven't finished encoding yet.
@@ -254,7 +254,14 @@ void WebrtcMediaDataEncoder::ProcessEncode(
                                          frame->Size(), frame->Size());
               image._encodedWidth = display.width;
               image._encodedHeight = display.height;
-              image._timeStamp = timestamp;
+              CheckedInt64 time =
+                  TimeUnitToFrames(frame->mTime, cricket::kVideoCodecClockrate);
+              if (!time.isValid()) {
+                mError = MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                     "invalid timestamp from encoder");
+                return;
+              }
+              image._timeStamp = time.value();
               image._frameType = frame->mKeyframe
                                      ? webrtc::FrameType::kVideoFrameKey
                                      : webrtc::FrameType::kVideoFrameDelta;
