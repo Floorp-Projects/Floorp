@@ -21,6 +21,7 @@ import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.settings.DeleteBrowsingDataOnQuitType
 import org.mozilla.fenix.settings.PhoneFeature
 import java.security.InvalidParameterException
 
@@ -174,38 +175,15 @@ class Settings private constructor(
         default = false
     )
 
-    var deleteTabsOnQuit by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_delete_open_tabs_on_quit),
-        default = false
-    )
+    fun getDeleteDataOnQuit(type: DeleteBrowsingDataOnQuitType): Boolean =
+        preferences.getBoolean(type.getPreferenceKey(appContext), false)
 
-    var deleteHistoryOnQuit by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_delete_browsing_history_on_quit),
-        default = false
-    )
-
-    var deleteCookiesOnQuit by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_delete_cookies_on_quit),
-        default = false
-    )
-
-    var deleteCacheOnQuit by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_delete_caches_on_quit),
-        default = false
-    )
-
-    var deletePermissionsOnQuit by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_delete_permissions_on_quit),
-        default = false
-    )
-
-    fun shouldDeleteAnyDataOnQuit(): Boolean {
-        return deleteCacheOnQuit ||
-                deleteCookiesOnQuit ||
-                deleteHistoryOnQuit ||
-                deletePermissionsOnQuit ||
-                deleteTabsOnQuit
+    fun setDeleteDataOnQuit(type: DeleteBrowsingDataOnQuitType, value: Boolean) {
+        preferences.edit().putBoolean(type.getPreferenceKey(appContext), value).apply()
     }
+
+    fun shouldDeleteAnyDataOnQuit() =
+        DeleteBrowsingDataOnQuitType.values().any { getDeleteDataOnQuit(it) }
 
     val themeSettingString: String
         get() = when {

@@ -17,6 +17,7 @@ import kotlin.coroutines.CoroutineContext
 interface DeleteBrowsingDataController {
     suspend fun deleteTabs()
     suspend fun deleteBrowsingData()
+    suspend fun deleteHistoryAndDOMStorages()
     suspend fun deleteCollections(collections: List<TabCollection>)
     suspend fun deleteCookies()
     suspend fun deleteCachedFiles()
@@ -27,6 +28,7 @@ class DefaultDeleteBrowsingDataController(
     val context: Context,
     val coroutineContext: CoroutineContext = Dispatchers.Main
 ) : DeleteBrowsingDataController {
+
     override suspend fun deleteTabs() {
         withContext(coroutineContext) {
             context.components.useCases.tabsUseCases.removeAllTabs.invoke()
@@ -44,7 +46,7 @@ class DefaultDeleteBrowsingDataController(
         }
     }
 
-    suspend fun deleteHistoryAndDOMStorages() {
+    override suspend fun deleteHistoryAndDOMStorages() {
         withContext(coroutineContext) {
             context.components.core.engine.clearData(Engine.BrowsingData.select(Engine.BrowsingData.DOM_STORAGES))
         }

@@ -6,35 +6,43 @@ package org.mozilla.fenix.utils
 
 import android.app.Activity
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.DefaultDeleteBrowsingDataController
+import org.mozilla.fenix.settings.DeleteBrowsingDataController
+import org.mozilla.fenix.settings.DeleteBrowsingDataOnQuitType
 
 /**
  * Deletes selected browsing data and finishes the activity.
  */
 fun deleteAndQuit(activity: Activity, coroutineScope: CoroutineScope) {
     coroutineScope.launch {
+        val settings = activity.settings()
         val controller = DefaultDeleteBrowsingDataController(activity, coroutineContext)
 
-        if (Settings.getInstance(activity).deleteCacheOnQuit) {
-            controller.deleteCachedFiles()
-        }
-        if (Settings.getInstance(activity).deleteTabsOnQuit) {
-            controller.deleteTabs()
-        }
-        if (Settings.getInstance(activity).deletePermissionsOnQuit) {
-            launch(Dispatchers.IO) {
-                controller.deleteSitePermissions()
+        DeleteBrowsingDataOnQuitType.values().map { type ->
+            launch {
+                if (settings.getDeleteDataOnQuit(type)) {
+                    controller.deleteType(type)
+                }
             }
-        }
-        if (Settings.getInstance(activity).deleteCookiesOnQuit) {
-            controller.deleteCookies()
-        }
-        if (Settings.getInstance(activity).deleteHistoryOnQuit) {
-            controller.deleteHistoryAndDOMStorages()
-        }
+        }.joinAll()
 
         activity.finish()
+    }
+}
+
+private suspend fun DeleteBrowsingDataController.deleteType(type: DeleteBrowsingDataOnQuitType) {
+    when (type) {
+        DeleteBrowsingDataOnQuitType.TABS -> deleteTabs()
+        DeleteBrowsingDataOnQuitType.HISTORY -> deleteHistoryAndDOMStorages()
+        DeleteBrowsingDataOnQuitType.COOKIES -> deleteCookies()
+        DeleteBrowsingDataOnQuitType.CACHE -> deleteCachedFiles()
+        DeleteBrowsingDataOnQuitType.PERMISSIONS -> withContext(IO) {
+            deleteSitePermissions()
+        }
     }
 }

@@ -19,6 +19,7 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.TestApplication
 import org.mozilla.fenix.ext.clearAndCommit
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.settings.DeleteBrowsingDataOnQuitType
 import org.mozilla.fenix.settings.PhoneFeature
 import org.robolectric.annotation.Config
 
@@ -80,20 +81,20 @@ class SettingsTest {
         assertFalse(settings.shouldDeleteAnyDataOnQuit())
 
         // When
-        settings.deleteTabsOnQuit = true
+        settings.setDeleteDataOnQuit(DeleteBrowsingDataOnQuitType.TABS, true)
 
         // Then
         assertTrue(settings.shouldDeleteAnyDataOnQuit())
 
         // When
-        settings.deletePermissionsOnQuit = true
+        settings.setDeleteDataOnQuit(DeleteBrowsingDataOnQuitType.PERMISSIONS, true)
 
         // Then
         assertTrue(settings.shouldDeleteAnyDataOnQuit())
 
         // When
-        settings.deletePermissionsOnQuit = false
-        settings.deleteTabsOnQuit = false
+        settings.setDeleteDataOnQuit(DeleteBrowsingDataOnQuitType.TABS, false)
+        settings.setDeleteDataOnQuit(DeleteBrowsingDataOnQuitType.PERMISSIONS, false)
 
         // Then
         assertFalse(settings.shouldDeleteAnyDataOnQuit())

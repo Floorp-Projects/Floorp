@@ -30,6 +30,7 @@ import org.mozilla.fenix.TestApplication
 import org.mozilla.fenix.components.PermissionStorage
 import org.mozilla.fenix.ext.clearAndCommit
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.settings.DeleteBrowsingDataOnQuitType
 import org.robolectric.annotation.Config
 
 @ObsoleteCoroutinesApi
@@ -76,7 +77,7 @@ class DeleteAndQuitTest {
     @Test
     fun `delete only tabs and quit`() = runBlockingTest {
         // When
-        settings.deleteTabsOnQuit = true
+        settings.setDeleteDataOnQuit(DeleteBrowsingDataOnQuitType.TABS, true)
 
         deleteAndQuit(activity, this)
 
@@ -103,11 +104,9 @@ class DeleteAndQuitTest {
     @Test
     fun `delete everything and quit`() = runBlockingTest {
         // When
-        settings.deleteTabsOnQuit = true
-        settings.deletePermissionsOnQuit = true
-        settings.deleteHistoryOnQuit = true
-        settings.deleteCookiesOnQuit = true
-        settings.deleteCacheOnQuit = true
+        DeleteBrowsingDataOnQuitType.values().forEach {
+            settings.setDeleteDataOnQuit(it, true)
+        }
 
         deleteAndQuit(activity, this)
 
