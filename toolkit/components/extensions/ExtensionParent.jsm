@@ -706,11 +706,7 @@ GlobalManager = {
 
   _onExtensionBrowser(type, browser, additionalData = {}) {
     browser.messageManager.loadFrameScript(
-      `data:,
-      Components.utils.import("resource://gre/modules/Services.jsm");
-
-      Services.obs.notifyObservers(this, "tab-content-frameloader-created", "");
-    `,
+      "resource://gre/modules/onExtensionBrowser.js",
       false,
       true
     );
