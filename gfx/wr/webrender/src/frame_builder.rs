@@ -392,7 +392,7 @@ impl FrameBuilder {
             &frame_context,
             gpu_cache,
             &self.clip_store,
-            &data_stores.clip,
+            data_stores,
         );
 
         {
