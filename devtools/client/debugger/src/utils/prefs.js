@@ -72,6 +72,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.log-actions", true);
   pref("devtools.debugger.features.overlay-step-buttons", true);
   pref("devtools.debugger.features.log-event-breakpoints", false);
+  pref("devtools.debugger.features.watchpoints", false);
 }
 
 export const prefs = new PrefsHelper("devtools", {
@@ -140,6 +141,7 @@ export const features = new PrefsHelper("devtools.debugger.features", {
   showOverlayStepButtons: ["Bool", "overlay-step-buttons"],
   inlinePreview: ["Bool", "inline-preview"],
   logEventBreakpoints: ["Bool", "log-event-breakpoints"],
+  watchpoints: ["Bool", "watchpoints"],
 });
 
 export const asyncStore = asyncStoreHelper("debugger", {

@@ -644,6 +644,16 @@ export function getInlinePreviews(
   ];
 }
 
+export function getSelectedInlinePreviews(state: State) {
+  const thread = getCurrentThread(state);
+  const frameId = getSelectedFrameId(state, thread);
+  if (!frameId) {
+    return null;
+  }
+
+  return getInlinePreviews(state, thread, frameId);
+}
+
 export function getInlinePreviewExpression(
   state: State,
   thread: ThreadId,

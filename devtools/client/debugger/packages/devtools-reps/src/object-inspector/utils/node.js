@@ -816,6 +816,15 @@ function getChildren(options: {
   return addToCache(makeNodesForProperties(loadedProps, item));
 }
 
+// Builds an expression that resolves to the value of the item in question
+// e.g. `b` in { a: { b: 2 } } resolves to `a.b`
+function getPathExpression(item) {
+  if (item && item.parent) {
+    return `${getPathExpression(item.parent)}.${item.name}`;
+  }
+  return item.name;
+}
+
 function getParent(item: Node): Node | null {
   return item.parent;
 }
@@ -922,6 +931,7 @@ module.exports = {
   getChildrenWithEvaluations,
   getClosestGripNode,
   getClosestNonBucketNode,
+  getPathExpression,
   getParent,
   getParentGripValue,
   getNonPrototypeParentGripValue,

@@ -51,7 +51,7 @@ async function testSetWatchpoint({ threadFront, debuggee }) {
   //Test that watchpoint triggers pause on set.
   const packet2 = await resumeAndWaitForPause(threadFront);
   Assert.equal(packet2.frame.where.line, 4);
-  Assert.equal(packet2.why.type, "watchpoint");
+  Assert.equal(packet2.why.type, "setWatchpoint");
   Assert.equal(obj.preview.ownProperties.a.value, 1);
   
   await resume(threadFront);
@@ -91,7 +91,7 @@ async function testGetWatchpoint({ threadFront, debuggee }) {
   //Test that watchpoint triggers pause on get.
   const packet2 = await resumeAndWaitForPause(threadFront);
   Assert.equal(packet2.frame.where.line, 4);
-  Assert.equal(packet2.why.type, "watchpoint");
+  Assert.equal(packet2.why.type, "getWatchpoint");
   Assert.equal(obj.preview.ownProperties.a.value, 1);
   
   await resume(threadFront);

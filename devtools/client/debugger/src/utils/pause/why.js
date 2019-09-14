@@ -17,6 +17,8 @@ const reasons = {
   resumeLimit: "whyPaused.resumeLimit",
   breakpointConditionThrown: "whyPaused.breakpointConditionThrown",
   eventBreakpoint: "whyPaused.eventBreakpoint",
+  getWatchpoint: "whyPaused.getWatchpoint",
+  setWatchpoint: "whyPaused.setWatchpoint",
   mutationBreakpoint: "whyPaused.mutationBreakpoint",
   interrupted: "whyPaused.interrupted",
   replayForcedPause: "whyPaused.replayForcedPause",
