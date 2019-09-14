@@ -15,3 +15,4 @@ root:
             -
               bounds: [350, 200, 260, 300]
               image: checkerboard(2, 16, 16)
+              stretch-size: 260 260
