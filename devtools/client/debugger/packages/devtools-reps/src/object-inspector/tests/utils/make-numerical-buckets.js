@@ -20,11 +20,7 @@ describe("makeNumericalBuckets", () => {
 
     expect(names).toEqual(["[0…99]", "[100…199]", "[200…233]"]);
 
-    expect(paths).toEqual([
-      "root◦[0…99]",
-      "root◦[100…199]",
-      "root◦[200…233]",
-    ]);
+    expect(paths).toEqual(["root◦[0…99]", "root◦[100…199]", "root◦[200…233]"]);
   });
 
   // TODO: Re-enable when we have support for lonely node.
@@ -60,10 +56,7 @@ describe("makeNumericalBuckets", () => {
 
     expect(names).toEqual(["[0…99]", "[100…101]"]);
 
-    expect(paths).toEqual([
-      "root◦bucket_0-99",
-      "root◦bucket_100-101",
-    ]);
+    expect(paths).toEqual(["root◦bucket_0-99", "root◦bucket_100-101"]);
   });
 
   it("creates sub-buckets when needed", () => {
@@ -134,9 +127,7 @@ describe("makeNumericalBuckets", () => {
       "[23300…23399]",
       "[23400…23455]",
     ]);
-    expect(lastBucketPaths[0]).toEqual(
-      "root◦[23000…23455]◦[23000…23099]"
-    );
+    expect(lastBucketPaths[0]).toEqual("root◦[23000…23455]◦[23000…23099]");
     expect(lastBucketPaths[lastBucketPaths.length - 1]).toEqual(
       "root◦[23000…23455]◦[23400…23455]"
     );

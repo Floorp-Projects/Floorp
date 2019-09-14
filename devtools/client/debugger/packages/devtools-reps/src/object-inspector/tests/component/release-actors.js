@@ -61,6 +61,7 @@ describe("release actors", () => {
       {
         initialState: {
           actors: new Set(["actor 1", "actor 2"]),
+          watchpoints: new Map(),
         },
       }
     );

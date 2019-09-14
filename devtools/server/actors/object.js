@@ -123,10 +123,10 @@ const proto = {
 
     this._originalDescriptors.set(property, { desc, watchpointType });
 
-    const pauseAndRespond = () => {
+    const pauseAndRespond = type => {
       const frame = this.thread.dbg.getNewestFrame();
       this.thread._pauseAndRespond(frame, {
-        type: "watchpoint",
+        type: type,
         message: label,
       });
     };
@@ -139,7 +139,7 @@ const proto = {
           desc.value = v;
         }),
         get: this.obj.makeDebuggeeValue(() => {
-          pauseAndRespond();
+          pauseAndRespond("getWatchpoint");
           return desc.value;
         }),
       });
@@ -150,7 +150,7 @@ const proto = {
         configurable: desc.configurable,
         enumerable: desc.enumerable,
         set: this.obj.makeDebuggeeValue(v => {
-          pauseAndRespond();
+          pauseAndRespond("setWatchpoint");
           desc.value = v;
         }),
         get: this.obj.makeDebuggeeValue(v => {

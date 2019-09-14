@@ -55,3 +55,31 @@
 .tree-node.focused button.invoke-getter {
   background-color: currentColor;
 }
+
+button.remove-set-watchpoint {
+  mask: url("resource://devtools/client/debugger/images/webconsole-logpoint.svg")
+  no-repeat;
+  display: inline-block;
+  vertical-align: top;
+  height: 15px;
+  width: 15px;
+  margin: 0 4px 0px 20px;
+  padding: 0;
+  border: none;
+  background-color: var(--breakpoint-fill);
+  cursor: pointer;
+}
+
+button.remove-get-watchpoint {
+  mask: url("resource://devtools/client/debugger/images/webconsole-logpoint.svg")
+  no-repeat;
+  display: inline-block;
+  vertical-align: top;
+  height: 15px;
+  width: 15px;
+  margin: 0 4px 0px 20px;
+  padding: 0;
+  border: none;
+  background-color: var(--purple-60);
+  cursor: pointer;
+}

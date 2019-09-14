@@ -110,6 +110,12 @@ class ObjectInspector extends Component<Props> {
       return;
     }
 
+    for (const [path, properties] of nextProps.loadedProperties) {
+      if (properties !== this.props.loadedProperties.get(path)) {
+        this.cachedNodes.delete(path);
+      }
+    }
+
     // If there are new evaluations, we want to remove the existing cached
     // nodes from the cache.
     if (nextProps.evaluations > this.props.evaluations) {
@@ -134,6 +140,7 @@ class ObjectInspector extends Component<Props> {
     // - OR the focused node changed.
     // - OR the active node changed.
     return (
+      loadedProperties !== nextProps.loadedProperties ||
       loadedProperties.size !== nextProps.loadedProperties.size ||
       evaluations.size !== nextProps.evaluations.size ||
       (expandedPaths.size !== nextProps.expandedPaths.size &&
@@ -271,7 +278,6 @@ class ObjectInspector extends Component<Props> {
       autoExpandAll,
       autoExpandDepth,
       initiallyExpanded,
-
       isExpanded: item => expandedPaths && expandedPaths.has(item.path),
       isExpandable: this.isNodeExpandable,
       focused: this.focusedItem,
