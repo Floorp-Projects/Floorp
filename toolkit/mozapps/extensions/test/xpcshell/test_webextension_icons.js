@@ -141,7 +141,7 @@ add_task(async function() {
       48: "icon48.png",
       64: "icon64.png",
     },
-    theme: { images: { headerURL: "example.png" } },
+    theme: { images: { theme_frame: "example.png" } },
   });
 });
 
@@ -181,7 +181,7 @@ add_task(async function() {
       128: "icon128.png",
       256: "icon256.png",
     },
-    theme: { images: { headerURL: "example.png" } },
+    theme: { images: { theme_frame: "example.png" } },
   });
 });
 
@@ -207,6 +207,6 @@ add_task(async function() {
         id: ID,
       },
     },
-    theme: { images: { headerURL: "example.png" } },
+    theme: { images: { theme_frame: "example.png" } },
   });
 });
