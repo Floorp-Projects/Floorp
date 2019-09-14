@@ -84,7 +84,7 @@ class TextDrawTarget : public DrawTarget {
     LayoutDeviceRect layoutBoundsRect =
         LayoutDeviceRect::FromAppUnits(aBounds, appUnitsPerDevPixel);
     LayoutDeviceRect layoutClipRect = layoutBoundsRect;
-    mBoundsRect = wr::ToRoundedLayoutRect(layoutBoundsRect);
+    mBoundsRect = wr::ToLayoutRect(layoutBoundsRect);
 
     // Add 1 pixel of dirty area around clip rect to allow us to paint
     // antialiased pixels beyond the measured text extents.
@@ -275,7 +275,7 @@ class TextDrawTarget : public DrawTarget {
     }
 
     wr::Line decoration;
-    decoration.bounds = wr::ToRoundedLayoutRect(LayoutDeviceRect(pos, size));
+    decoration.bounds = wr::ToLayoutRect(LayoutDeviceRect(pos, size));
     decoration.wavyLineThickness = 0;  // dummy value, unused
     decoration.color = wr::ToColorF(aColor);
     decoration.orientation = aVertical ? wr::LineOrientation::Vertical
@@ -310,7 +310,7 @@ class TextDrawTarget : public DrawTarget {
     wr::Line decoration;
 
     decoration.bounds =
-        wr::ToRoundedLayoutRect(LayoutDeviceRect::FromUnknownRect(aBounds));
+        wr::ToLayoutRect(LayoutDeviceRect::FromUnknownRect(aBounds));
     decoration.wavyLineThickness = aThickness;
     decoration.color = wr::ToColorF(aColor);
     decoration.orientation = aVertical ? wr::LineOrientation::Vertical
@@ -347,7 +347,7 @@ class TextDrawTarget : public DrawTarget {
 
  private:
   wr::LayoutRect ClipRect() {
-    return wr::ToRoundedLayoutRect(mClipStack.LastElement());
+    return wr::ToLayoutRect(mClipStack.LastElement());
   }
   LayoutDeviceRect GeckoClipRect() { return mClipStack.LastElement(); }
   // Whether anything unsupported was encountered. This will result in this
@@ -463,8 +463,7 @@ class TextDrawTarget : public DrawTarget {
     if (!aRect.Intersects(GeckoClipRect().ToUnknownRect())) {
       return;
     }
-    auto rect =
-        wr::ToRoundedLayoutRect(LayoutDeviceRect::FromUnknownRect(aRect));
+    auto rect = wr::ToLayoutRect(LayoutDeviceRect::FromUnknownRect(aRect));
     auto color =
         wr::ToColorF(static_cast<const ColorPattern&>(aPattern).mColor);
     mBuilder.PushRect(rect, ClipRect(), mBackfaceVisible, color);
@@ -491,7 +490,7 @@ class TextDrawTarget : public DrawTarget {
     if (!rect.Intersects(GeckoClipRect())) {
       return;
     }
-    wr::LayoutRect bounds = wr::ToRoundedLayoutRect(rect);
+    wr::LayoutRect bounds = wr::ToLayoutRect(rect);
     mBuilder.PushBorder(bounds, ClipRect(), true, widths,
                         Range<const wr::BorderSide>(sides, 4), radius);
   }
