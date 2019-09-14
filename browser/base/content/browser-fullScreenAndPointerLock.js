@@ -436,7 +436,7 @@ var FullScreen = {
       window.fullScreen &&
       PopupNotifications.getNotification(
         this._permissionNotificationIDs
-      ).filter(n => !n.dismissed).length > 0
+      ).filter(n => !n.dismissed).length
     ) {
       this.exitDomFullScreen();
       this._logWarningPermissionPromptFS("fullScreenCanceled");
@@ -513,7 +513,7 @@ var FullScreen = {
         this._permissionNotificationIDs
       ).filter(n => !n.dismissed);
       PopupNotifications.remove(notifications, true);
-      if (notifications.length > 0) {
+      if (notifications.length) {
         this._logWarningPermissionPromptFS("promptCanceled");
       }
     }

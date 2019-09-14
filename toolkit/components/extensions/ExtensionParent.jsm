@@ -135,14 +135,14 @@ let apiManager = new (class extends SchemaAPIManager {
     let disabledIds = AddonManager.getStartupChanges(
       AddonManager.STARTUP_CHANGE_DISABLED
     );
-    if (disabledIds.length > 0) {
+    if (disabledIds.length) {
       this._callHandlers(disabledIds, "disable", "onDisable");
     }
 
     let uninstalledIds = AddonManager.getStartupChanges(
       AddonManager.STARTUP_CHANGE_UNINSTALLED
     );
-    if (uninstalledIds.length > 0) {
+    if (uninstalledIds.length) {
       this._callHandlers(uninstalledIds, "uninstall", "onUninstall");
     }
   }

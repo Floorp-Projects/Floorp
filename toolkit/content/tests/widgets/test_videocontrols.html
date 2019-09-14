@@ -92,7 +92,7 @@ function verifyExpectedEvent(event) {
     expectingEventPromise.reject(new Error(`Got event: ${event.type}, expected: ${checkingEvent}`));
   }
 
-  if (expectingEvents.length == 0) {
+  if (!expectingEvents.length) {
     SimpleTest.executeSoon(expectingEventPromise.resolve);
   }
 }

@@ -669,7 +669,7 @@ Cookies.prototype = {
     // Note the last record is an empty string...
     let records = [];
     let lines = aTextBuffer.split("\n");
-    while (lines.length > 0) {
+    while (lines.length) {
       let record = lines.splice(0, 9);
       // ... which means this is going to be a 1-element array for that record
       if (record.length > 1) {
@@ -680,7 +680,7 @@ Cookies.prototype = {
       let [name, value, hostpath, flags, expireTimeLo, expireTimeHi] = record;
 
       // IE stores deleted cookies with a zero-length value, skip them.
-      if (value.length == 0) {
+      if (!value.length) {
         continue;
       }
 
@@ -696,7 +696,7 @@ Cookies.prototype = {
 
       // For a non-null domain, assume it's what Mozilla considers
       // a domain cookie.  See bug 222343.
-      if (host.length > 0) {
+      if (host.length) {
         // Fist delete any possible extant matching host cookie.
         Services.cookies.remove(host, name, path, false, {});
         // Now make it a domain cookie.
@@ -970,7 +970,7 @@ WindowsVaultFormPasswords.prototype = {
         }
       }
 
-      if (logins.length > 0) {
+      if (logins.length) {
         await MigrationUtils.insertLoginsWrapper(logins);
       }
     } catch (e) {

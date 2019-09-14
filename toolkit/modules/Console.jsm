@@ -233,7 +233,7 @@ function log(aThing) {
       reply += "  " + debugElement(aThing) + "\n";
     } else {
       let keys = Object.getOwnPropertyNames(aThing);
-      if (keys.length > 0) {
+      if (keys.length) {
         reply += type + "\n";
         keys.forEach(function(aProp) {
           reply += logProperty(aProp, aThing[aProp]);

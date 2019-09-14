@@ -10,7 +10,7 @@
     // Therefore, it should fail at this setting.
     let openerRestriction = true;
     let cookieValue;
-    if (window.location.search.length > 0) {
+    if (window.location.search.length) {
       cookieValue = window.location.search.substr(1);
       openerRestriction = false;
     }

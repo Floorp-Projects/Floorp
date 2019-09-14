@@ -247,20 +247,20 @@ var dataProviders = {
       .trim();
     data.keyLocationServiceGoogleFound =
       keyLocationServiceGoogle != "no-google-location-service-api-key" &&
-      keyLocationServiceGoogle.length > 0;
+      !!keyLocationServiceGoogle.length;
 
     const keySafebrowsingGoogle = Services.urlFormatter
       .formatURL("%GOOGLE_SAFEBROWSING_API_KEY%")
       .trim();
     data.keySafebrowsingGoogleFound =
       keySafebrowsingGoogle != "no-google-safebrowsing-api-key" &&
-      keySafebrowsingGoogle.length > 0;
+      !!keySafebrowsingGoogle.length;
 
     const keyMozilla = Services.urlFormatter
       .formatURL("%MOZILLA_API_KEY%")
       .trim();
     data.keyMozillaFound =
-      keyMozilla != "no-mozilla-api-key" && keyMozilla.length > 0;
+      keyMozilla != "no-mozilla-api-key" && !!keyMozilla.length;
 
     done(data);
   },

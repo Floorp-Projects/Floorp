@@ -247,7 +247,7 @@ var tests = [
       let anchor = win.document.getElementById("default-notification-icon");
       win.PopupNotifications._reshowNotifications(anchor);
       ok(
-        win.PopupNotifications.panel.children.length == 0,
+        !win.PopupNotifications.panel.children.length,
         "no notification displayed in new window"
       );
 

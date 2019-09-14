@@ -74,7 +74,7 @@ var TabsInTitlebar;
       let allowed =
         this.systemSupported &&
         !window.fullScreen &&
-        Object.keys(this._disallowed).length == 0;
+        !Object.keys(this._disallowed).length;
       if (allowed) {
         document.documentElement.setAttribute("tabsintitlebar", "true");
         if (AppConstants.platform == "macosx") {

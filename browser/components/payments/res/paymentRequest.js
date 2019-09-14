@@ -143,8 +143,8 @@ var paymentRequest = {
       },
     };
 
-    let hasSavedAddresses = Object.keys(this.getAddresses(state)).length != 0;
-    let hasSavedCards = Object.keys(this.getBasicCards(state)).length != 0;
+    let hasSavedAddresses = !!Object.keys(this.getAddresses(state)).length;
+    let hasSavedCards = !!Object.keys(this.getBasicCards(state)).length;
     let shippingRequested = state.request.paymentOptions.requestShipping;
 
     // Onboarding wizard flow.
@@ -282,7 +282,7 @@ var paymentRequest = {
       let supportedNetworks =
         (modifier.data && modifier.data.supportedNetworks) || [];
       return (
-        supportedNetworks.length == 0 ||
+        !supportedNetworks.length ||
         supportedNetworks.includes(selectedMethod["cc-type"])
       );
     });

@@ -314,7 +314,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
       );
       this.domainAffinitiesLastUpdated = affinities._timestamp;
     }
-    if (stories && stories.length > 0 && this.storiesLastUpdated === 0) {
+    if (stories && !!stories.length && this.storiesLastUpdated === 0) {
       this.updateSettings(data.stories.settings);
       this.stories = this.rotate(this.transform(stories));
       this.storiesLastUpdated = data.stories._timestamp;
@@ -328,7 +328,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
         this.cleanUpCampaignImpressionPref();
       }
     }
-    if (topics && topics.length > 0 && this.topicsLastUpdated === 0) {
+    if (topics && !!topics.length && this.topicsLastUpdated === 0) {
       this.topics = topics;
       this.topicsLastUpdated = data.topics._timestamp;
     }

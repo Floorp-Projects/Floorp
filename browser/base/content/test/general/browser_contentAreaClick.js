@@ -291,11 +291,11 @@ function runNextTest() {
     gCurrentTest.setup();
   }
 
-  if (gCurrentTest.targets.length == 0) {
+  if (!gCurrentTest.targets.length) {
     info(gCurrentTest.desc + ": cleaning up...");
     gCurrentTest.clean();
 
-    if (gTests.length > 0) {
+    if (gTests.length) {
       gCurrentTest = gTests.shift();
       gCurrentTest.setup();
     } else {

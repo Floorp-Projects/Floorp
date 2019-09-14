@@ -379,7 +379,7 @@ this.MarqueeBaseImplWidget = class {
   }
 
   _mutationActor(aMutations) {
-    while (aMutations.length > 0) {
+    while (aMutations.length) {
       var mutation = aMutations.shift();
       var attrName = mutation.attributeName.toLowerCase();
       var oldValue = mutation.oldValue;

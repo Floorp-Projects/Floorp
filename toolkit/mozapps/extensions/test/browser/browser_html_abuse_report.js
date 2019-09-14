@@ -599,7 +599,7 @@ add_task(async function test_abusereport_panel_refresh() {
   const allButtons = Array.from(reportPanel.querySelectorAll("button")).filter(
     el => el !== reportPanel._iconClose
   );
-  ok(allButtons.length > 0, "panel buttons should have been found");
+  ok(!!allButtons.length, "panel buttons should have been found");
   ok(
     allButtons.every(el => el.hasAttribute("data-l10n-id")),
     "All the panel buttons have a data-l10n-id"
@@ -917,7 +917,7 @@ async function test_abuse_report_suggestions(addonId) {
     );
     if (reasonInfo.hasSuggestions) {
       ok(
-        localizedSuggestionsContent.length > 0,
+        !!localizedSuggestionsContent.length,
         `Category suggestions should not be empty for "${reason}"`
       );
     } else {
@@ -943,7 +943,7 @@ async function test_abuse_report_suggestions(addonId) {
       learnMoreLinks.push(..._suggestions.querySelectorAll(linkClass));
     }
 
-    if (learnMoreLinks.length > 0) {
+    if (learnMoreLinks.length) {
       ok(
         learnMoreLinks.every(el => el.getAttribute("target") === "_blank"),
         "All the learn more links have target _blank"

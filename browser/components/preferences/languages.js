@@ -186,7 +186,7 @@ var gLanguagesDialog = {
     // result in overflow.
     await document.l10n.translateFragment(this._activeLanguages);
 
-    if (this._activeLanguages.childNodes.length > 0) {
+    if (this._activeLanguages.childNodes.length) {
       this._activeLanguages.ensureIndexIsVisible(selectedIndex);
       this._activeLanguages.selectedIndex = selectedIndex;
     }

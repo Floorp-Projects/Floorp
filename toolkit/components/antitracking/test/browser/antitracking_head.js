@@ -671,7 +671,7 @@ this.AntiTracking = {
       if (expectedCategory == "") {
         is(allMessages.length, 0, "No console messages should be generated");
       } else {
-        ok(allMessages.length != 0, "Some console message should be generated");
+        ok(!!allMessages.length, "Some console message should be generated");
       }
       for (let msg of allMessages) {
         is(

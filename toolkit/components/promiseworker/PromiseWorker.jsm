@@ -42,7 +42,7 @@ Queue.prototype = {
     return this._array.push(x);
   },
   isEmpty: function isEmpty() {
-    return this._array.length == 0;
+    return !this._array.length;
   },
 };
 

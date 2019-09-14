@@ -188,7 +188,7 @@ EnterprisePoliciesManager.prototype = {
 
   _runPoliciesCallbacks(timing) {
     let callbacks = this._callbacks[timing];
-    while (callbacks.length > 0) {
+    while (callbacks.length) {
       let callback = callbacks.shift();
       try {
         callback();

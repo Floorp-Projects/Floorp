@@ -337,7 +337,7 @@ DownloadsPlacesView.prototype = {
   },
 
   get hasSelection() {
-    return this.selectedNodes.length > 0;
+    return !!this.selectedNodes.length;
   },
 
   get controller() {

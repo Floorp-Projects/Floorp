@@ -416,7 +416,7 @@ var TrackingProtection = {
     // not detect trackers on the page using the basic list, we currently
     // still show the panel. To reduce the confusion, tell the user that we have
     // not detected any tracker.
-    if (fragment.childNodes.length == 0) {
+    if (!fragment.childNodes.length) {
       let emptyBox = document.createXULElement("vbox");
       let emptyImage = document.createXULElement("image");
       emptyImage.classList.add("protections-popup-trackersView-empty-image");

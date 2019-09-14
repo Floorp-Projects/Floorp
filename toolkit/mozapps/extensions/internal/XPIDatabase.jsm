@@ -458,7 +458,7 @@ class AddonInternal {
   }
 
   get isPlatformCompatible() {
-    if (this.targetPlatforms.length == 0) {
+    if (!this.targetPlatforms.length) {
       return true;
     }
 
@@ -901,7 +901,7 @@ AddonWrapper = class {
     let repositoryAddon = addon._repositoryAddon;
     if (repositoryAddon && "screenshots" in repositoryAddon) {
       let repositoryScreenshots = repositoryAddon.screenshots;
-      if (repositoryScreenshots && repositoryScreenshots.length > 0) {
+      if (repositoryScreenshots && repositoryScreenshots.length) {
         return repositoryScreenshots;
       }
     }

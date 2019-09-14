@@ -1312,7 +1312,7 @@ function testtag_tree_TreeView_rows(tree, testid, rowInfo, startRow) {
       return false;
     },
     isContainerEmpty(row) {
-      return row.children != null && row.children.rows.length == 0;
+      return row.children != null && !row.children.rows.length;
     },
     isSeparator(row) {
       return row.separator;

@@ -920,7 +920,7 @@ var PlacesUIUtils = {
           return Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER;
         }
 
-        if (this.uri.length == 0) {
+        if (!this.uri.length) {
           throw new Error("Unexpected item type");
         }
 

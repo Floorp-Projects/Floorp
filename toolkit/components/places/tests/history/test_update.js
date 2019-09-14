@@ -165,7 +165,7 @@ add_task(async function test_description_change_saved() {
   await PlacesUtils.history.update({ url: TEST_URL, description });
   descriptionInDB = await PlacesTestUtils.fieldInDB(TEST_URL, "description");
   Assert.ok(
-    0 < descriptionInDB.length < description.length,
+    !!descriptionInDB.length < description.length,
     "a long description should be truncated"
   );
 

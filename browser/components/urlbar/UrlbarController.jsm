@@ -392,7 +392,7 @@ class UrlbarController {
    */
   speculativeConnect(result, context, reason) {
     // Never speculative connect in private contexts.
-    if (!this.input || context.isPrivate || context.results.length == 0) {
+    if (!this.input || context.isPrivate || !context.results.length) {
       return;
     }
     let { url } = UrlbarUtils.getUrlFromResult(result);

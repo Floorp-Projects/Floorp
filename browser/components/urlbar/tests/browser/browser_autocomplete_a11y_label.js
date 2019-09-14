@@ -135,5 +135,5 @@ add_task(async function searchSuggestions() {
       }
     }
   }
-  Assert.ok(expectedSearches.length == 0);
+  Assert.ok(!expectedSearches.length);
 });

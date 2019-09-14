@@ -69,7 +69,7 @@ function goNext() {
 }
 
 async function runNextTest() {
-  if (tests.length == 0) {
+  if (!tests.length) {
     executeSoon(finish);
     return;
   }
@@ -246,7 +246,7 @@ function checkPopup(popup, notifyObj) {
       "main action highlight matches"
     );
   }
-  if (notifyObj.secondaryActions && notifyObj.secondaryActions.length > 0) {
+  if (notifyObj.secondaryActions && notifyObj.secondaryActions.length) {
     let secondaryAction = notifyObj.secondaryActions[0];
     is(
       notification.getAttribute("secondarybuttonlabel"),
@@ -330,7 +330,7 @@ function waitForNotificationPanelHidden() {
 
 function triggerMainCommand(popup) {
   let notifications = popup.childNodes;
-  ok(notifications.length > 0, "at least one notification displayed");
+  ok(!!notifications.length, "at least one notification displayed");
   let notification = notifications[0];
   info("Triggering main command for notification " + notification.id);
   EventUtils.synthesizeMouseAtCenter(notification.button, {});
@@ -338,7 +338,7 @@ function triggerMainCommand(popup) {
 
 function triggerSecondaryCommand(popup, index) {
   let notifications = popup.childNodes;
-  ok(notifications.length > 0, "at least one notification displayed");
+  ok(!!notifications.length, "at least one notification displayed");
   let notification = notifications[0];
   info("Triggering secondary command for notification " + notification.id);
 

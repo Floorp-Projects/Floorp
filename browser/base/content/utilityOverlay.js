@@ -888,7 +888,7 @@ function eventMatchesKey(aEvent, aKey) {
     aEvent.getModifierState(modifier)
   );
   // Check if aEvent has a modifier and aKey doesn't
-  if (eventModifiers.length > 0 && keyModifiers.length == 0) {
+  if (eventModifiers.length && !keyModifiers.length) {
     return false;
   }
   // Check whether aKey's modifiers match aEvent's modifiers

@@ -85,7 +85,7 @@ class ContentScriptParent {
       return blobURL;
     };
 
-    if (details.js && details.js.length > 0) {
+    if (details.js && details.js.length) {
       options.jsPaths = details.js.map(data => {
         if (data.file) {
           return data.file;
@@ -95,7 +95,7 @@ class ContentScriptParent {
       });
     }
 
-    if (details.css && details.css.length > 0) {
+    if (details.css && details.css.length) {
       options.cssPaths = details.css.map(data => {
         if (data.file) {
           return data.file;

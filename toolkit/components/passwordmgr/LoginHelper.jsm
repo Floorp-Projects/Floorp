@@ -475,7 +475,7 @@ this.LoginHelper = {
     }
 
     // Sanity check the login
-    if (newLogin.origin == null || newLogin.origin.length == 0) {
+    if (newLogin.origin == null || !newLogin.origin.length) {
       throw new Error("Can't add a login with a null or empty origin.");
     }
 
@@ -484,7 +484,7 @@ this.LoginHelper = {
       throw new Error("Can't add a login with a null username.");
     }
 
-    if (newLogin.password == null || newLogin.password.length == 0) {
+    if (newLogin.password == null || !newLogin.password.length) {
       throw new Error("Can't add a login with a null or empty password.");
     }
 
@@ -645,7 +645,7 @@ this.LoginHelper = {
      * over the existingLogin.
      */
     function isLoginPreferred(existingLogin, login) {
-      if (!resolveBy || resolveBy.length == 0) {
+      if (!resolveBy || !resolveBy.length) {
         // If there is no preference, prefer the existing login.
         return false;
       }

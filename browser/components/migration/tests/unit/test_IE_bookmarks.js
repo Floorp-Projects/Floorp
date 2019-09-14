@@ -23,7 +23,7 @@ add_task(async function() {
       if (event.title != label) {
         itemCount++;
       }
-      if (expectedParents.length > 0 && event.title == label) {
+      if (expectedParents.length && event.title == label) {
         let index = expectedParents.indexOf(event.parentId);
         Assert.notEqual(index, -1);
         expectedParents.splice(index, 1);

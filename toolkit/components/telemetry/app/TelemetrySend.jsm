@@ -511,7 +511,7 @@ var SendScheduler = {
       );
 
       // Bail out if there is nothing to send.
-      if (pending.length == 0 && current.length == 0) {
+      if (!pending.length && !current.length) {
         this._log.trace("_doSendTask - no pending pings, bailing out");
         this._sendTaskState = "bail out - no pings to send";
         return;
@@ -808,7 +808,7 @@ var TelemetrySendImpl = {
     // Scan the pending pings - that gives us a list sorted by last modified, descending.
     let infos = await TelemetryStorage.loadPendingPingList();
     this._log.info("_checkPendingPings - pending ping count: " + infos.length);
-    if (infos.length == 0) {
+    if (!infos.length) {
       this._log.trace("_checkPendingPings - no pending pings");
       return;
     }
@@ -1105,7 +1105,7 @@ var TelemetrySendImpl = {
       pingSends.push(p);
     }
 
-    if (persistedPingIds.length > 0) {
+    if (persistedPingIds.length) {
       pingSends.push(
         this._sendPersistedPings(persistedPingIds).catch(ex => {
           this._log.info("sendPings - persisted pings not sent", ex);

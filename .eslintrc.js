@@ -336,5 +336,13 @@ module.exports = {
     "rules": {
       "no-async-promise-executor": "off",
     }
+  },{
+    "files": [
+      "toolkit/**",
+      "browser/**",
+    ],
+    "rules": {
+      "mozilla/prefer-boolean-length-check": "error",
+    }
   }]
 };

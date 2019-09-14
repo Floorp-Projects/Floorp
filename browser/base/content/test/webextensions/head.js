@@ -255,7 +255,7 @@ function checkNotification(panel, checkIcon, permissions) {
     permissions.length,
     `Permissions list has ${permissions.length} entries`
   );
-  if (permissions.length == 0) {
+  if (!permissions.length) {
     is(header.getAttribute("hidden"), "true", "Permissions header is hidden");
     is(
       learnMoreLink.getAttribute("hidden"),

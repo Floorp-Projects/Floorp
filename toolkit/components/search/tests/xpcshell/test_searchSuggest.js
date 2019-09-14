@@ -482,7 +482,7 @@ add_task(async function empty_searchTerm() {
   let controller = new SearchSuggestionController();
   let result = await controller.fetch("", false, getEngine);
   Assert.equal(result.term, "");
-  Assert.ok(result.local.length > 0);
+  Assert.ok(!!result.local.length);
   Assert.equal(result.remote.length, 0);
 });
 

@@ -611,7 +611,7 @@ this.LoginManagerParent = {
     // If we didn't find a username field, but seem to be changing a
     // password, allow the user to select from a list of applicable
     // logins to update the password for.
-    if (!usernameField && oldPasswordField && logins.length > 0) {
+    if (!usernameField && oldPasswordField && logins.length) {
       let prompter = this._getPrompter(browser, openerTopWindowID);
 
       if (logins.length == 1) {

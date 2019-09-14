@@ -265,7 +265,7 @@ add_task(async function test_api() {
         JSON.stringify(details.data),
         "message matches"
       );
-      if (expecting.length == 0) {
+      if (!expecting.length) {
         await browser.tabs.remove(tab.id);
         browser.test.notifyPass("activity");
       }

@@ -338,7 +338,7 @@ InlineSpellChecker.prototype = {
   },
   // callback for removing the last added word to the dictionary LIFO fashion
   undoAddToDictionary() {
-    if (this.mAddedWordStack.length > 0) {
+    if (this.mAddedWordStack.length) {
       var word = this.mAddedWordStack.pop();
       if (this.mRemote) {
         this.mRemote.undoAddToDictionary(word);
@@ -349,7 +349,7 @@ InlineSpellChecker.prototype = {
   },
   canUndo() {
     // Return true if we have words on the stack
-    return this.mAddedWordStack.length > 0;
+    return !!this.mAddedWordStack.length;
   },
   ignoreWord() {
     if (this.mRemote) {

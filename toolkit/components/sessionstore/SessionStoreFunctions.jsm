@@ -370,7 +370,7 @@ var SessionStoreFuncInternal = {
         data[aOrigins[i]] = hostData;
       }
     }
-    if (aOrigins.length > 0) {
+    if (aOrigins.length) {
       return data;
     }
 

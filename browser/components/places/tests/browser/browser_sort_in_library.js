@@ -170,7 +170,7 @@ function testInvalid(aOrganizerWin, aPlaceContentTree) {
  */
 function testSortByColAndDir(aOrganizerWin, aPlaceContentTree, aUnsortFirst) {
   let cols = aPlaceContentTree.getElementsByTagName("treecol");
-  ok(cols.length > 0, "sanity check: placeContent should contain columns");
+  ok(!!cols.length, "sanity check: placeContent should contain columns");
 
   for (let i = 0; i < cols.length; i++) {
     let col = cols.item(i);

@@ -32,7 +32,7 @@ function runTest(win) {
   ok(rbox, "handlersView is present");
 
   var items = rbox && rbox.getElementsByTagName("richlistitem");
-  ok(items && items.length > 0, "App handler list populated");
+  ok(items && !!items.length, "App handler list populated");
 
   var handlerAdded = false;
   for (let i = 0; i < items.length; i++) {

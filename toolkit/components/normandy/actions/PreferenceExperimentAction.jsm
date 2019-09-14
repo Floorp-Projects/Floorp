@@ -71,7 +71,7 @@ class PreferenceExperimentAction extends BaseStudyAction {
             );
           }
         );
-        if (conflictingPrefs.length > 0) {
+        if (conflictingPrefs.length) {
           throw new Error(
             `Experiment ${slug} ignored; another active experiment is already using the
             ${conflictingPrefs[0]} preference.`

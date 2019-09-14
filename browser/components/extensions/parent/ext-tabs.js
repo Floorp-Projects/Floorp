@@ -1592,7 +1592,7 @@ this.tabs = class extends ExtensionAPI {
               }
             }
           }
-          if (hidden.length > 0) {
+          if (hidden.length) {
             let win = Services.wm.getMostRecentWindow("navigator:browser");
             tabHidePopup.open(win, extension.id);
           }
@@ -1616,7 +1616,7 @@ this.tabs = class extends ExtensionAPI {
 
           if (!Array.isArray(tabs)) {
             tabs = [tabs];
-          } else if (tabs.length == 0) {
+          } else if (!tabs.length) {
             throw new ExtensionError("No highlighted tab.");
           }
           window.gBrowser.selectedTabs = tabs.map(tabIndex => {

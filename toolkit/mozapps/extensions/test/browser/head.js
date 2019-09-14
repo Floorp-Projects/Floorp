@@ -230,7 +230,7 @@ function run_next_test() {
     info("Test " + gTestsRun + " took " + (Date.now() - gTestStart) + "ms");
   }
 
-  if (gPendingTests.length == 0) {
+  if (!gPendingTests.length) {
     executeSoon(end_test);
     return;
   }
@@ -503,7 +503,7 @@ function get_string(aName, ...aArgs) {
   var bundle = Services.strings.createBundle(
     "chrome://mozapps/locale/extensions/extensions.properties"
   );
-  if (aArgs.length == 0) {
+  if (!aArgs.length) {
     return bundle.GetStringFromName(aName);
   }
   return bundle.formatStringFromName(aName, aArgs);
@@ -799,7 +799,7 @@ MockProvider.prototype = {
    */
   addAddon: function MP_addAddon(aAddon) {
     var oldAddons = this.addons.filter(aOldAddon => aOldAddon.id == aAddon.id);
-    var oldAddon = oldAddons.length > 0 ? oldAddons[0] : null;
+    var oldAddon = oldAddons.length ? oldAddons[0] : null;
 
     this.addons = this.addons.filter(aOldAddon => aOldAddon.id != aAddon.id);
 
@@ -973,7 +973,7 @@ MockProvider.prototype = {
         "MockProvider: pending callbacks at shutdown(): calling immediately"
       );
     }
-    while (this.callbackTimers.length > 0) {
+    while (this.callbackTimers.length) {
       // When we notify the callback timer, it removes itself from our array
       let timer = this.callbackTimers[0];
       try {
@@ -1015,7 +1015,7 @@ MockProvider.prototype = {
    */
   async getAddonsByTypes(aTypes) {
     var addons = this.addons.filter(function(aAddon) {
-      if (aTypes && aTypes.length > 0 && !aTypes.includes(aAddon.type)) {
+      if (aTypes && !!aTypes.length && !aTypes.includes(aAddon.type)) {
         return false;
       }
       return true;
@@ -1036,7 +1036,7 @@ MockProvider.prototype = {
         return false;
       }
 
-      if (aTypes && aTypes.length > 0 && !aTypes.includes(aInstall.type)) {
+      if (aTypes && !!aTypes.length && !aTypes.includes(aInstall.type)) {
         return false;
       }
 

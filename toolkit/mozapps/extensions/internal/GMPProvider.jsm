@@ -447,7 +447,7 @@ GMPWrapper.prototype = {
   },
 
   get isInstalled() {
-    return this.version && this.version.length > 0;
+    return this.version && !!this.version.length;
   },
 
   _handleEnabledChanged() {

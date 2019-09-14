@@ -106,7 +106,7 @@ add_task(async function test_dns_resolve() {
         result.addresses.length >= test.expect.addresses.length,
         "expected number of addresses returned"
       );
-      if (test.expect.addresses.length > 0 && result.addresses.length > 0) {
+      if (test.expect.addresses.length && result.addresses.length) {
         ok(
           result.addresses.includes(test.expect.addresses[0]),
           "got expected ip address"

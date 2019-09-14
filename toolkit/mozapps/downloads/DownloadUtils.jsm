@@ -453,7 +453,7 @@ var DownloadUtils = {
       // Display special text for file protocol
       displayHost = gBundle.GetStringFromName(gStr.doneFileScheme);
       fullHost = displayHost;
-    } else if (displayHost.length == 0) {
+    } else if (!displayHost.length) {
       // Got nothing; show the scheme (data: about: moz-icon:)
       displayHost = gBundle.formatStringFromName(gStr.doneScheme, [uri.scheme]);
       fullHost = displayHost;

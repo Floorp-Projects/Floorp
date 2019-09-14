@@ -80,7 +80,7 @@ var TelemetryModules = Object.freeze({
     try {
       Telemetry.getLoadedModules().then(
         modules => {
-          modules = modules.filter(module => module.name.length > 0);
+          modules = modules.filter(module => !!module.name.length);
 
           // Cut the list of modules to MAX_MODULES_NUM entries.
           if (modules.length > MAX_MODULES_NUM) {

@@ -30,7 +30,7 @@ var gManagerEventsListener = {
   },
   checkExpected() {
     info("Checking expected events...");
-    while (this.expectedEvents.length > 0) {
+    while (this.expectedEvents.length) {
       let event = this.expectedEvents.pop();
       info("Looking for expected event " + event);
       let matchingEvents = this.seenEvents.filter(function(aSeenEvent) {

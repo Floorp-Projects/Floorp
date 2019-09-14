@@ -167,7 +167,7 @@ class FieldScanner {
     if (!this._sectionEnabled) {
       return this._getFinalDetails(this.fieldDetails);
     }
-    if (this._sections.length == 0) {
+    if (!this._sections.length) {
       return [];
     }
     if (
@@ -304,7 +304,7 @@ class FieldScanner {
         });
         return section;
       })
-      .filter(section => section.fieldDetails.length > 0);
+      .filter(section => !!section.fieldDetails.length);
   }
 
   elementExisting(index) {
@@ -352,7 +352,7 @@ var LabelUtils = {
         return;
       }
 
-      if (el.nodeType == el.TEXT_NODE || el.childNodes.length == 0) {
+      if (el.nodeType == el.TEXT_NODE || !el.childNodes.length) {
         let trimmedText = el.textContent.trim();
         if (trimmedText) {
           strings.push(trimmedText);
@@ -1000,7 +1000,7 @@ this.FormAutofillHeuristics = {
     }
 
     let regexps = this._getRegExpList(isAutoCompleteOff, element.tagName);
-    if (regexps.length == 0) {
+    if (!regexps.length) {
       return null;
     }
 

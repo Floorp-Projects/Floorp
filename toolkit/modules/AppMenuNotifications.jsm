@@ -42,7 +42,7 @@ var AppMenuNotifications = {
         this.uninit();
         break;
       case "appMenu-notifications-request":
-        if (this._notifications.length != 0) {
+        if (this._notifications.length) {
           Services.obs.notifyObservers(null, "appMenu-notifications", "init");
         }
         break;
@@ -50,7 +50,7 @@ var AppMenuNotifications = {
   },
 
   get activeNotification() {
-    if (this._notifications.length > 0) {
+    if (this._notifications.length) {
       const doorhanger = this._notifications.find(
         n => !n.dismissed && !n.options.badgeOnly
       );

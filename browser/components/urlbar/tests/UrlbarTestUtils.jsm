@@ -141,8 +141,8 @@ var UrlbarTestUtils = {
     let typeIconStyle = win.getComputedStyle(typeIcon);
     details.displayed = {
       title: element.getElementsByClassName("urlbarView-title")[0].textContent,
-      action: actions.length > 0 ? actions[0].textContent : null,
-      url: urls.length > 0 ? urls[0].textContent : null,
+      action: actions.length ? actions[0].textContent : null,
+      url: urls.length ? urls[0].textContent : null,
       typeIcon: typeIconStyle["background-image"],
     };
     details.element = {

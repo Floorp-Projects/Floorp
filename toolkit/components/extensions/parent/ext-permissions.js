@@ -61,7 +61,7 @@ this.permissions = class extends ExtensionAPI {
                 )
             );
 
-            if (permissions.length == 0 && origins.length == 0) {
+            if (!permissions.length && !origins.length) {
               return true;
             }
 

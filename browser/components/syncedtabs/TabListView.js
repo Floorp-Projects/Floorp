@@ -580,7 +580,7 @@ TabListView.prototype = {
         }
       } else if (el.getAttribute("id") == "syncedTabsOpenAllInTabs") {
         const tabs = item.querySelectorAll(".item-tabs-list > .item.tab");
-        show = tabs.length > 0;
+        show = !!tabs.length;
       } else if (el.getAttribute("id") == "syncedTabsRefresh") {
         show = true;
       } else if (el.getAttribute("id") == "syncedTabsManageDevices") {

@@ -94,7 +94,7 @@ add_task(async function test_BHRObserver() {
 
     // hang.stack
     ok(Array.isArray(hang.stack));
-    ok(hang.stack.length > 0);
+    ok(!!hang.stack.length);
     hang.stack.forEach(entry => {
       // Each stack frame entry is either a native or pseudostack entry. A
       // native stack entry is an array with module index (number), and offset
@@ -141,7 +141,7 @@ add_task(async function test_BHRObserver() {
 
     // hang.stack
     ok(Array.isArray(hang.stack));
-    ok(hang.stack.length > 0);
+    ok(!!hang.stack.length);
     hang.stack.forEach(entry => {
       // Each stack frame entry is either a native or pseudostack entry. A
       // native stack entry is an array with module index (number), and offset

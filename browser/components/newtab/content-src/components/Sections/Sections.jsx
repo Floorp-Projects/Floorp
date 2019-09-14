@@ -200,7 +200,7 @@ export class Section extends React.PureComponent {
     const isPocketLoggedInDefined =
       isUserLoggedIn === true || isUserLoggedIn === false;
 
-    const hasTopics = topics && topics.length > 0;
+    const hasTopics = topics && !!topics.length;
 
     const shouldShowPocketCta =
       id === "topstories" && useCta && isUserLoggedIn === false;

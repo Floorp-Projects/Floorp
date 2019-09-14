@@ -1747,7 +1747,7 @@ function appendWarningElements(
     );
   }
 
-  if (gUnsafePathsWithInvalidValuesForThisProcess.length > 0) {
+  if (gUnsafePathsWithInvalidValuesForThisProcess.length) {
     let div = appendElement(aP, "div");
     appendElementWithText(
       div,

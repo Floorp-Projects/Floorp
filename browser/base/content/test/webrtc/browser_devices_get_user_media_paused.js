@@ -45,7 +45,7 @@ function stopClonedTracks(audio, video) {
       clones.filter(t => t.kind == "video").forEach(t => t.stop());
     }
     let liveClones = clones.filter(t => t.readyState == "live");
-    if (liveClones.length == 0) {
+    if (!liveClones.length) {
       delete content.wrappedJSObject.gClones;
     } else {
       content.wrappedJSObject.gClones = liveClones;

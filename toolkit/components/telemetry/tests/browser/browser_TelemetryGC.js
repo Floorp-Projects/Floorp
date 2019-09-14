@@ -51,7 +51,7 @@ function check(entries) {
 
       ok("slices_list" in gc, "slices_list field present");
       ok(Array.isArray(gc.slices_list), "slices_list is an array");
-      ok(gc.slices_list.length > 0, "slices_list array non-empty");
+      ok(!!gc.slices_list.length, "slices_list array non-empty");
       ok(gc.slices_list.length <= 4, "slices_list array is not too long");
 
       ok("totals" in gc, "totals field present");

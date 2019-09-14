@@ -238,7 +238,7 @@ var PromiseTestUtils = {
     JSMPromise.Debugging.flushUncaughtErrors();
 
     // If there is any uncaught rejection left at this point, the test fails.
-    while (this._rejections.length > 0) {
+    while (this._rejections.length) {
       let rejection = this._rejections.shift();
 
       // If one of the ignore functions matches, ignore the rejection, then
@@ -277,7 +277,7 @@ var PromiseTestUtils = {
    */
   assertNoMoreExpectedRejections() {
     // Only log this condition is there is a failure.
-    if (this._rejectionIgnoreFns.length > 0) {
+    if (this._rejectionIgnoreFns.length) {
       Assert.equal(
         this._rejectionIgnoreFns.length,
         0,

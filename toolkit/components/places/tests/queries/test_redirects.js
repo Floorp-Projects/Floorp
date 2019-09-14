@@ -50,9 +50,9 @@ function check_results_callback(aSequence) {
     if (!includeHidden && isHidden(aVisit)) {
       // If the page has any non-hidden visit, then it's visible.
       if (
-        visits.filter(function(refVisit) {
+        !visits.filter(function(refVisit) {
           return refVisit.uri == aVisit.uri && !isHidden(refVisit);
-        }).length == 0
+        }).length
       ) {
         return false;
       }

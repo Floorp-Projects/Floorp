@@ -820,7 +820,7 @@ PlacesViewBase.prototype = {
 
     // Remove any delayed element, see _cleanPopup for details.
     if ("_delayedRemovals" in popup) {
-      while (popup._delayedRemovals.length > 0) {
+      while (popup._delayedRemovals.length) {
         popup.removeChild(popup._delayedRemovals.shift());
       }
     }

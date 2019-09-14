@@ -14,7 +14,7 @@ add_task(async function test_webrequest_url_classification_enum() {
   let ns = Schemas.getNamespace("webRequest");
   let schema_enum = ns.get("UrlClassificationFlags").enumeration;
   ok(
-    schema_enum.length > 0,
+    !!schema_enum.length,
     `UrlClassificationFlags: ${JSON.stringify(schema_enum)}`
   );
 

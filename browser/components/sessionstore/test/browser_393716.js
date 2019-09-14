@@ -37,7 +37,7 @@ add_task(async function test_set_tabstate() {
   ok(
     state instanceof Object &&
       state.entries instanceof Array &&
-      state.entries.length > 0,
+      !!state.entries.length,
     "state object seems valid"
   );
   ok(

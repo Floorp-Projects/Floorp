@@ -366,7 +366,7 @@ class PlacesFeed {
   _getSearchPrefix() {
     const searchAliases =
       Services.search.defaultEngine.wrappedJSObject.__internalAliases;
-    if (searchAliases && searchAliases.length > 0) {
+    if (searchAliases && searchAliases.length) {
       return `${searchAliases[0]} `;
     }
     return "";

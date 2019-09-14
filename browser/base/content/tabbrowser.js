@@ -3320,11 +3320,7 @@
         // Closing the tab and replacing it with a blank one is notably slower
         // than closing the window right away. If the caller opts in, take
         // the fast path.
-        if (
-          closeWindow &&
-          closeWindowFastpath &&
-          this._removingTabs.length == 0
-        ) {
+        if (closeWindow && closeWindowFastpath && !this._removingTabs.length) {
           // This call actually closes the window, unless the user
           // cancels the operation.  We are finished here in both cases.
           this._windowIsClosing = window.closeWindow(
@@ -6279,8 +6275,9 @@ var TabContextMenu = {
 
     // Disable "Close Tabs to the Right" if there are no tabs
     // following it.
-    document.getElementById("context_closeTabsToTheEnd").disabled =
-      gBrowser.getTabsToTheEndFrom(this.contextTab).length == 0;
+    document.getElementById(
+      "context_closeTabsToTheEnd"
+    ).disabled = !gBrowser.getTabsToTheEndFrom(this.contextTab).length;
 
     // Disable "Close other Tabs" if there are no unpinned tabs.
     let unpinnedTabsToClose = multiselectionContext

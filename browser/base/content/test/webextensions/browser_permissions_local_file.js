@@ -51,7 +51,7 @@ add_task(async function test_install_extension_from_local_file() {
 
   // Make sure we got some data.
   ok(
-    snapshot.parent && snapshot.parent.length > 0,
+    snapshot.parent && !!snapshot.parent.length,
     "Got parent telemetry events in the snapshot"
   );
 

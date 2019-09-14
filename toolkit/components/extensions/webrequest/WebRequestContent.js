@@ -200,7 +200,7 @@ var ContentPolicy = {
       windowId,
       parentWindowId,
     };
-    if (frameAncestors.length > 0) {
+    if (frameAncestors.length) {
       data.frameAncestors = frameAncestors;
     }
     if (requestOrigin) {

@@ -76,7 +76,7 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
         expectedChildrenNodes.push(childNode);
       }
 
-      if (expectedChildrenNodes.length > 0) {
+      if (expectedChildrenNodes.length) {
         Assert.ok(Array.isArray(aItem.children));
         Assert.equal(aItem.children.length, expectedChildrenNodes.length);
         for (let i = 0; i < aItem.children.length; i++) {
@@ -187,7 +187,7 @@ async function test_promiseBookmarksTreeForEachNode(
   aOptions,
   aExcludedGuids
 ) {
-  Assert.ok(aNode.bookmarkGuid && aNode.bookmarkGuid.length > 0);
+  Assert.ok(aNode.bookmarkGuid && !!aNode.bookmarkGuid.length);
   let item = await PlacesUtils.promiseBookmarksTree(
     aNode.bookmarkGuid,
     aOptions

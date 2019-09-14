@@ -335,7 +335,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
               components: [topSites],
             },
           ])}
-        {layoutRender.length > 0 && (
+        {!!layoutRender.length && (
           <CollapsibleSection
             className="ds-layout"
             collapsed={topStories.pref.collapsed}

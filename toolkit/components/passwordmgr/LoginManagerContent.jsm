@@ -835,10 +835,9 @@ this.LoginManagerContent = {
       let rootElsWeakSet = LoginFormFactory.getRootElementsWeakSetForDocument(
         doc
       );
-      let hasLoginForm =
-        ChromeUtils.nondeterministicGetWeakSetKeys(rootElsWeakSet).filter(
-          el => el.isConnected
-        ).length > 0;
+      let hasLoginForm = !!ChromeUtils.nondeterministicGetWeakSetKeys(
+        rootElsWeakSet
+      ).filter(el => el.isConnected).length;
       return (
         (hasLoginForm && !thisWindow.isSecureContext) ||
         Array.prototype.some.call(thisWindow.frames, frame =>
@@ -1117,7 +1116,7 @@ this.LoginManagerContent = {
     }
 
     // If too few or too many fields, bail out.
-    if (pwFields.length == 0) {
+    if (!pwFields.length) {
       log("(form ignored -- no password fields.)");
       return null;
     } else if (pwFields.length > 3) {
@@ -1728,7 +1727,7 @@ this.LoginManagerContent = {
       // checks) logins available, and there isn't a need to show
       // the insecure form warning.
       if (
-        foundLogins.length == 0 &&
+        !foundLogins.length &&
         (InsecurePasswordUtils.isFormSecure(form) ||
           !LoginHelper.showInsecureFieldWarning)
       ) {
@@ -1831,7 +1830,7 @@ this.LoginManagerContent = {
       // Nothing to do if we have no matching logins available.
       // Only insecure pages reach this block and logs the same
       // telemetry flag.
-      if (foundLogins.length == 0) {
+      if (!foundLogins.length) {
         // We don't log() here since this is a very common case.
         autofillResult = AUTOFILL_RESULT.NO_SAVED_LOGINS;
         return;
@@ -1874,7 +1873,7 @@ this.LoginManagerContent = {
         return fit;
       }, this);
 
-      if (logins.length == 0) {
+      if (!logins.length) {
         log("form not filled, none of the logins fit in the field");
         autofillResult = AUTOFILL_RESULT.NO_LOGINS_FIT;
         return;
@@ -1915,7 +1914,7 @@ this.LoginManagerContent = {
         let matchingLogins = logins.filter(
           l => l.username.toLowerCase() == username
         );
-        if (matchingLogins.length == 0) {
+        if (!matchingLogins.length) {
           log(
             "Password not filled. None of the stored logins match the username already present."
           );

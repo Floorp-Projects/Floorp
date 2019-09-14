@@ -820,7 +820,7 @@ const PanelUI = {
       if (!notifications[0].options.badgeOnly) {
         this._showBannerItem(notifications[0]);
       }
-    } else if (doorhangers.length > 0) {
+    } else if (doorhangers.length) {
       // Only show the doorhanger if the window is focused and not fullscreen
       if (
         (window.fullScreen && this.autoHideToolbarInFullScreen) ||

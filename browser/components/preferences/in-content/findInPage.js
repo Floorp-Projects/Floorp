@@ -194,7 +194,7 @@ var gSearchResultsPane = {
       this.getFindSelection(startNode.ownerGlobal).addRange(range);
     }
 
-    return indices.length > 0;
+    return !!indices.length;
   },
 
   /**
@@ -567,7 +567,7 @@ var gSearchResultsPane = {
         .getAttribute("search-l10n-ids")
         .split(",")
         .map(s => s.trim().split("."))
-        .filter(s => s[0].length > 0);
+        .filter(s => !!s[0].length);
 
       const messages = await document.l10n.formatMessages(
         refs.map(ref => ({ id: ref[0] }))

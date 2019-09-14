@@ -104,7 +104,7 @@ class PageStyleChild extends ActorChild {
       }
 
       // Skip any stylesheets that don't match the screen media type.
-      if (currentStyleSheet.media.length > 0) {
+      if (currentStyleSheet.media.length) {
         let mediaQueryList = currentStyleSheet.media.mediaText;
         if (!content.matchMedia(mediaQueryList).matches) {
           continue;

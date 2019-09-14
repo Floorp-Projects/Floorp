@@ -240,7 +240,7 @@ var ExtensionsUI = {
       let strings = this._buildStrings(info);
 
       // If this is an update with no promptable permissions, just apply it
-      if (info.type == "update" && strings.msgs.length == 0) {
+      if (info.type == "update" && !strings.msgs.length) {
         info.resolve();
         return;
       }
@@ -288,7 +288,7 @@ var ExtensionsUI = {
       let strings = this._buildStrings(info);
 
       // If we don't prompt for any new permissions, just apply it
-      if (strings.msgs.length == 0) {
+      if (!strings.msgs.length) {
         info.resolve();
         return;
       }
@@ -326,7 +326,7 @@ var ExtensionsUI = {
       });
 
       // If we don't have any promptable permissions, just proceed
-      if (strings.msgs.length == 0) {
+      if (!strings.msgs.length) {
         resolve(true);
         return;
       }
@@ -399,14 +399,14 @@ var ExtensionsUI = {
 
           let listIntroEl = doc.getElementById("addon-webext-perm-intro");
           listIntroEl.textContent = strings.listIntro;
-          listIntroEl.hidden = strings.msgs.length == 0;
+          listIntroEl.hidden = !strings.msgs.length;
 
           let listInfoEl = doc.getElementById("addon-webext-perm-info");
           listInfoEl.textContent = strings.learnMore;
           listInfoEl.href =
             Services.urlFormatter.formatURLPref("app.support.baseURL") +
             "extension-permissions";
-          listInfoEl.hidden = strings.msgs.length == 0;
+          listInfoEl.hidden = !strings.msgs.length;
 
           let list = doc.getElementById("addon-webext-perm-list");
           while (list.firstChild) {

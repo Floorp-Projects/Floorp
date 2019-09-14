@@ -67,7 +67,7 @@ function add_install_test(mainURL, redirectURL, expectedStatus) {
 
 function run_install_tests(callback) {
   async function run_next_install_test() {
-    if (gTests.length == 0) {
+    if (!gTests.length) {
       callback();
       return;
     }

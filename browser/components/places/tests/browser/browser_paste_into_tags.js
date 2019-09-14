@@ -66,7 +66,7 @@ add_task(async function() {
   await PlacesUtils.bookmarks.fetch({ url: MOZURISPEC }, bm => {
     bookmarks.push(bm);
   });
-  ok(bookmarks.length > 0, "bookmark exists for the tagged history item");
+  ok(!!bookmarks.length, "bookmark exists for the tagged history item");
 
   // is the bookmark visible in the UI?
   // get the Unsorted Bookmarks node

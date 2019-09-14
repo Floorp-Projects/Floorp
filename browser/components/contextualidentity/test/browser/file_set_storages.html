@@ -8,7 +8,7 @@
       "use strict";
 
       // if we have a query string, use it to set storages
-      if (window.location.search.length > 0) {
+      if (window.location.search.length) {
         let context_name = window.location.search.substr(1);
         localStorage.setItem("userContext", context_name);
         sessionStorage.setItem("userContext", context_name);

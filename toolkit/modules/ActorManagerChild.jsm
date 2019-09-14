@@ -110,7 +110,7 @@ class Dispatcher {
       this.messages.set(msg, actors);
     }
 
-    if (actors.length == 0) {
+    if (!actors.length) {
       this.mm.addMessageListener(msg, this);
     }
 
