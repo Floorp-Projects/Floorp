@@ -773,11 +773,34 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
   switch (aInfo.mEditSubAction) {
     case EditSubAction::eInsertElement:
     case EditSubAction::eInsertQuotedText: {
-      nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert(aCancel);
+      *aCancel = IsReadonly() || IsDisabled();
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                        .EnsureNoPaddingBRElementForEmptyEditor();
       if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
+      if (NS_FAILED(rv)) {
+        NS_WARNING(
+            "EnsureNoPaddingBRElementForEmptyEditor() failed, but ignored");
+        return NS_OK;
+      }
+      if (!SelectionRefPtr()->IsCollapsed()) {
+        return NS_OK;
+      }
+      rv = MOZ_KnownLive(HTMLEditorRef()).EnsureCaretNotAfterPaddingBRElement();
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      if (NS_FAILED(rv)) {
+        NS_WARNING("EnsureCaretNotAfterPaddingBRElement() failed, but ignored");
+        return NS_OK;
+      }
+      rv = MOZ_KnownLive(HTMLEditorRef()).PrepareInlineStylesForCaret();
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "PrepareInlineStylesForCaret() failed, but ignored");
       return NS_OK;
     }
     case EditSubAction::eComputeTextToOutput:
@@ -1283,65 +1306,63 @@ nsresult HTMLEditRules::GetFormatString(nsINode* aNode, nsAString& outFormat) {
   return NS_OK;
 }
 
-nsresult HTMLEditor::WillInsert(bool* aCancel) {
-  MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
+nsresult HTMLEditor::EnsureCaretNotAfterPaddingBRElement() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(SelectionRefPtr()->IsCollapsed());
 
-  // XXX Why don't we stop handling this call if we're readonly or disabled?
-  if (aCancel && (IsReadonly() || IsDisabled())) {
-    *aCancel = true;
-  }
-
-  nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Adjust selection to prevent insertion after a padding <br> element for
-  // empty last line.  This next only works for collapsed selections right
-  // now, because selection is a pain to work with when not collapsed.  (no
-  // good way to extend start or end of selection), so we ignore those types
-  // of selections.
-  if (!SelectionRefPtr()->IsCollapsed()) {
-    return NS_OK;
-  }
-
-  // If we are after a padding <br> element for empty last line in the same
+  // If we are after a padding `<br>` element for empty last line in the same
   // block, then move selection to be before it
   nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
     return NS_ERROR_FAILURE;
   }
 
-  EditorRawDOMPoint atStartOfSelection(firstRange->StartRef());
-  if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
+  EditorRawDOMPoint atSelectionStart(firstRange->StartRef());
+  if (NS_WARN_IF(!atSelectionStart.IsSet())) {
     return NS_ERROR_FAILURE;
   }
-  MOZ_ASSERT(atStartOfSelection.IsSetAndValid());
+  MOZ_ASSERT(atSelectionStart.IsSetAndValid());
 
-  // Get prior node
-  nsCOMPtr<nsIContent> priorNode =
-      GetPreviousEditableHTMLNode(atStartOfSelection);
-  if (priorNode && EditorBase::IsPaddingBRElementForEmptyLastLine(*priorNode)) {
-    RefPtr<Element> block1 = GetBlock(*atStartOfSelection.GetContainer());
-    RefPtr<Element> block2 = GetBlockNodeParent(priorNode);
-
-    if (block1 && block1 == block2) {
-      // If we are here then the selection is right after a padding <br>
-      // element for empty last line that is in the same block as the
-      // selection.  We need to move the selection start to be before the
-      // padding <br> element.
-      EditorRawDOMPoint point(priorNode);
-      ErrorResult error;
-      SelectionRefPtr()->Collapse(point, error);
-      if (NS_WARN_IF(Destroyed())) {
-        error.SuppressException();
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (NS_WARN_IF(error.Failed())) {
-        return error.StealNSResult();
-      }
-    }
+  nsCOMPtr<nsIContent> previousEditableContent =
+      GetPreviousEditableHTMLNode(atSelectionStart);
+  if (!previousEditableContent ||
+      !EditorBase::IsPaddingBRElementForEmptyLastLine(
+          *previousEditableContent)) {
+    return NS_OK;
   }
+
+  RefPtr<Element> blockElementAtSelectionStart =
+      GetBlock(*atSelectionStart.GetContainer());
+  RefPtr<Element> parentBlockElementOfPreviousEditableContent =
+      GetBlockNodeParent(previousEditableContent);
+
+  if (!blockElementAtSelectionStart ||
+      blockElementAtSelectionStart !=
+          parentBlockElementOfPreviousEditableContent) {
+    return NS_OK;
+  }
+
+  // If we are here then the selection is right after a padding <br>
+  // element for empty last line that is in the same block as the
+  // selection.  We need to move the selection start to be before the
+  // padding <br> element.
+  EditorRawDOMPoint atPreviousEditableContent(previousEditableContent);
+  ErrorResult error;
+  SelectionRefPtr()->Collapse(atPreviousEditableContent, error);
+  if (NS_WARN_IF(Destroyed())) {
+    error.SuppressException();
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(!error.Failed(), "Selection::Collapse() failed");
+  return error.StealNSResult();
+}
+
+nsresult HTMLEditor::PrepareInlineStylesForCaret() {
+  MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
+  MOZ_ASSERT(SelectionRefPtr()->IsCollapsed());
+
+  // XXX This method works with the top level edit sub-action, but this
+  //     must be wrong if we are handling nested edit action.
 
   if (TopLevelEditSubActionDataRef().mDidDeleteSelection) {
     switch (GetTopLevelEditSubAction()) {
@@ -1389,12 +1410,31 @@ EditActionResult HTMLEditor::HandleInsertText(
     }
   }
 
-  // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = WillInsert();
+  nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
   }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EnsureNoPaddingBRElementForEmptyEditor() failed, but ignored");
+
+  if (NS_SUCCEEDED(rv) && SelectionRefPtr()->IsCollapsed()) {
+    nsresult rv = EnsureCaretNotAfterPaddingBRElement();
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "EnsureCaretNotAfterPaddingBRElement() failed, but ignored");
+    if (NS_SUCCEEDED(rv)) {
+      nsresult rv = PrepareInlineStylesForCaret();
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "PrepareInlineStylesForCaret() failed, but ignored");
+    }
+  }
 
   RefPtr<Document> document = GetDocument();
   if (NS_WARN_IF(!document)) {
@@ -1738,12 +1778,31 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
     }
   }
 
-  // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = WillInsert();
+  nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
   }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EnsureNoPaddingBRElementForEmptyEditor() failed, but ignored");
+
+  if (NS_SUCCEEDED(rv) && SelectionRefPtr()->IsCollapsed()) {
+    nsresult rv = EnsureCaretNotAfterPaddingBRElement();
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "EnsureCaretNotAfterPaddingBRElement() failed, but ignored");
+    if (NS_SUCCEEDED(rv)) {
+      nsresult rv = PrepareInlineStylesForCaret();
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "PrepareInlineStylesForCaret() failed, but ignored");
+    }
+  }
 
   // Split any mailcites in the way.  Should we abort this if we encounter
   // table cell boundaries?
@@ -1961,7 +2020,8 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
     // Fall through, if HandleInsertParagraphInParagraph() didn't handle it.
     MOZ_ASSERT(!result.Canceled(),
                "HandleInsertParagraphInParagraph() canceled this edit action, "
-               "WillInsertBreak() needs to handle such case");
+               "InsertParagraphSeparatorAsSubAction() needs to handle this "
+               "action instead");
   }
 
   // If nobody handles this edit action, let's insert new <br> at the selection.
@@ -4172,12 +4232,31 @@ EditActionResult HTMLEditor::MakeOrChangeListAndListItemAsSubAction(
           : EditSubAction::eCreateOrChangeList,
       nsIEditor::eNext);
 
-  // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = WillInsert();
+  nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EnsureNoPaddingBRElementForEmptyEditor() failed, but ignored");
+
+  if (NS_SUCCEEDED(rv) && SelectionRefPtr()->IsCollapsed()) {
+    nsresult rv = EnsureCaretNotAfterPaddingBRElement();
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "EnsureCaretNotAfterPaddingBRElement() failed, but ignored");
+    if (NS_SUCCEEDED(rv)) {
+      nsresult rv = PrepareInlineStylesForCaret();
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "PrepareInlineStylesForCaret() failed, but ignored");
+    }
+  }
 
   nsAtom* listTagName = nullptr;
   nsAtom* listItemTagName = nullptr;
@@ -4958,12 +5037,31 @@ EditActionResult HTMLEditor::IndentAsSubAction() {
 EditActionResult HTMLEditor::HandleIndentAtSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = WillInsert();
+  nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed, but ignored");
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EnsureNoPaddingBRElementForEmptyEditor() failed, but ignored");
+
+  if (NS_SUCCEEDED(rv) && SelectionRefPtr()->IsCollapsed()) {
+    nsresult rv = EnsureCaretNotAfterPaddingBRElement();
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "EnsureCaretNotAfterPaddingBRElement() failed, but ignored");
+    if (NS_SUCCEEDED(rv)) {
+      nsresult rv = PrepareInlineStylesForCaret();
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "PrepareInlineStylesForCaret() failed, but ignored");
+    }
+  }
 
   if (IsCSSEnabled()) {
     nsresult rv = HandleCSSIndentAtSelection();
@@ -6291,12 +6389,31 @@ EditActionResult HTMLEditor::AlignAsSubAction(const nsAString& aAlignType) {
     return result;
   }
 
-  // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = WillInsert();
+  nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed, but ignored");
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EnsureNoPaddingBRElementForEmptyEditor() failed, but ignored");
+
+  if (NS_SUCCEEDED(rv) && SelectionRefPtr()->IsCollapsed()) {
+    nsresult rv = EnsureCaretNotAfterPaddingBRElement();
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "EnsureCaretNotAfterPaddingBRElement() failed, but ignored");
+    if (NS_SUCCEEDED(rv)) {
+      nsresult rv = PrepareInlineStylesForCaret();
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "PrepareInlineStylesForCaret() failed, but ignored");
+    }
+  }
 
   if (!SelectionRefPtr()->IsCollapsed()) {
     nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
@@ -10901,12 +11018,31 @@ EditActionResult HTMLEditor::SetSelectionToAbsoluteAsSubAction() {
     return result;
   }
 
-  // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = WillInsert();
+  nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EnsureNoPaddingBRElementForEmptyEditor() failed, but ignored");
+
+  if (NS_SUCCEEDED(rv) && SelectionRefPtr()->IsCollapsed()) {
+    nsresult rv = EnsureCaretNotAfterPaddingBRElement();
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "EnsureCaretNotAfterPaddingBRElement() failed, but ignored");
+    if (NS_SUCCEEDED(rv)) {
+      nsresult rv = PrepareInlineStylesForCaret();
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "PrepareInlineStylesForCaret() failed, but ignored");
+    }
+  }
 
   RefPtr<Element> focusElement = GetSelectionContainerElement();
   if (focusElement && HTMLEditUtils::IsImage(focusElement)) {
@@ -11231,12 +11367,31 @@ EditActionResult HTMLEditor::SetSelectionToStaticAsSubAction() {
     return result;
   }
 
-  // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = WillInsert();
+  nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed, but ignored");
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EnsureNoPaddingBRElementForEmptyEditor() failed, but ignored");
+
+  if (NS_SUCCEEDED(rv) && SelectionRefPtr()->IsCollapsed()) {
+    nsresult rv = EnsureCaretNotAfterPaddingBRElement();
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "EnsureCaretNotAfterPaddingBRElement() failed, but ignored");
+    if (NS_SUCCEEDED(rv)) {
+      nsresult rv = PrepareInlineStylesForCaret();
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "PrepareInlineStylesForCaret() failed, but ignored");
+    }
+  }
 
   RefPtr<Element> element = GetAbsolutelyPositionedSelectionContainer();
   if (NS_WARN_IF(!element)) {
@@ -11275,12 +11430,31 @@ EditActionResult HTMLEditor::AddZIndexAsSubAction(int32_t aChange) {
     return result;
   }
 
-  // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = WillInsert();
+  nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
   }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed, but ignored");
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EnsureNoPaddingBRElementForEmptyEditor() failed, but ignored");
+
+  if (NS_SUCCEEDED(rv) && SelectionRefPtr()->IsCollapsed()) {
+    nsresult rv = EnsureCaretNotAfterPaddingBRElement();
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "EnsureCaretNotAfterPaddingBRElement() failed, but ignored");
+    if (NS_SUCCEEDED(rv)) {
+      nsresult rv = PrepareInlineStylesForCaret();
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "PrepareInlineStylesForCaret() failed, but ignored");
+    }
+  }
 
   RefPtr<Element> absolutelyPositionedElement =
       GetAbsolutelyPositionedSelectionContainer();
