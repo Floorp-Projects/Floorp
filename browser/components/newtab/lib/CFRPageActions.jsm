@@ -257,7 +257,7 @@ class PageAction {
   }
 
   _clearScheduledStateChanges() {
-    while (this.stateTransitionTimeoutIDs.length > 0) {
+    while (this.stateTransitionTimeoutIDs.length) {
       // clearTimeout is safe even with invalid/expired IDs
       this.window.clearTimeout(this.stateTransitionTimeoutIDs.pop());
     }

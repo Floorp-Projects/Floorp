@@ -140,7 +140,7 @@ async function testListRecommendations({ type, manifestExtra = {} }) {
 
   // Check that the cards are all for the right type.
   let cards = doc.querySelectorAll("recommended-addon-card");
-  ok(cards.length > 0, "There were some cards found");
+  ok(!!cards.length, "There were some cards found");
   for (let card of cards) {
     is(card.discoAddon.type, type, `The card is for a ${type}`);
     is_element_visible(card, "The card is visible");
@@ -183,7 +183,7 @@ async function testListRecommendations({ type, manifestExtra = {} }) {
   is(hiddenCard.addonId, addonId, "The expected card was found");
   is_element_hidden(hiddenCard, "The card is still hidden");
 
-  ok(cards.length > 0, "There are still some visible cards");
+  ok(!!cards.length, "There are still some visible cards");
   for (let card of cards) {
     is(card.discoAddon.type, type, `The card is for a ${type}`);
     is_element_visible(card, "The card is visible");

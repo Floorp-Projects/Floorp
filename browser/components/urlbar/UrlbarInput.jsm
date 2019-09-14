@@ -1963,7 +1963,7 @@ function getDroppableData(event) {
   }
   // The URL bar automatically handles inputs with newline characters,
   // so we can get away with treating text/x-moz-url flavours as text/plain.
-  if (links.length > 0 && links[0].url) {
+  if (links.length && links[0].url) {
     event.preventDefault();
     let href = links[0].url;
     if (UrlbarUtils.stripUnsafeProtocolOnPaste(href) != href) {

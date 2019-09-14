@@ -169,7 +169,7 @@ function backgroundScript() {
         // expected events and we're not looking for an exact match,
         // then we just may not have seen the event yet, so return without
         // failing and check() will be called again when a new event arrives.
-        if (expected.length == 0) {
+        if (!expected.length) {
           events = remaining;
           eventWaiter = null;
           resolve();

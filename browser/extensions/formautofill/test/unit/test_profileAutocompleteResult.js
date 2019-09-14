@@ -422,7 +422,7 @@ add_task(async function test_all_patterns() {
         equal(actual.getImageAt(index), item.image);
       });
 
-      if (expectedValue.items.length != 0) {
+      if (expectedValue.items.length) {
         Assert.throws(
           () => actual.getValueAt(expectedItemLength),
           /Index out of range\./

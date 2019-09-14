@@ -1313,7 +1313,7 @@ function pingStateAndStatusCodes(aUpdate, aStartup, aStatus) {
   let suffix = patchType + "_" + (aStartup ? AUSTLMY.STARTUP : AUSTLMY.STAGE);
   let stateCode = 0;
   let parts = aStatus.split(":");
-  if (parts.length > 0) {
+  if (parts.length) {
     switch (parts[0]) {
       case STATE_NONE:
         stateCode = 2;
@@ -1732,7 +1732,7 @@ function Update(update) {
     this._patches.push(patch);
   }
 
-  if (this._patches.length == 0 && !update.hasAttribute("unsupported")) {
+  if (!this._patches.length && !update.hasAttribute("unsupported")) {
     throw Cr.NS_ERROR_ILLEGAL_VALUE;
   }
 
@@ -2838,7 +2838,7 @@ UpdateService.prototype = {
    * @return  The nsIUpdate to offer.
    */
   selectUpdate: function AUS_selectUpdate(updates) {
-    if (updates.length == 0) {
+    if (!updates.length) {
       AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_NO_UPDATE_FOUND);
       return null;
     }
@@ -3341,7 +3341,7 @@ UpdateService.prototype = {
 function UpdateManager() {
   // Load the active-update.xml file to see if there is an active update.
   let activeUpdates = this._loadXMLFileIntoArray(FILE_ACTIVE_UPDATE_XML);
-  if (activeUpdates.length > 0) {
+  if (activeUpdates.length) {
     // Set the active update directly on the var used to cache the value.
     this._activeUpdate = activeUpdates[0];
     // This check is performed here since UpdateService:_postUpdateProcessing
@@ -3396,7 +3396,7 @@ UpdateManager.prototype = {
       this._activeUpdate = null;
       if (data != "skip-files") {
         let activeUpdates = this._loadXMLFileIntoArray(FILE_ACTIVE_UPDATE_XML);
-        if (activeUpdates.length > 0) {
+        if (activeUpdates.length) {
           this._activeUpdate = activeUpdates[0];
         }
         updates = this._loadXMLFileIntoArray(FILE_UPDATES_XML);
@@ -3488,7 +3488,7 @@ UpdateManager.prototype = {
       );
     }
     fileStream.close();
-    if (updates.length == 0) {
+    if (!updates.length) {
       LOG(
         "UpdateManager:_loadXMLFileIntoArray - update xml file " +
           fileName +
@@ -3582,7 +3582,7 @@ UpdateManager.prototype = {
       );
       return false;
     }
-    if (updates.length == 0) {
+    if (!updates.length) {
       LOG(
         "UpdateManager:_writeUpdatesToXMLFile - no updates to write. " +
           "removing file: " +
@@ -4758,7 +4758,7 @@ Downloader.prototype = {
         this._listeners.splice(i, 1);
 
         // Decrease the status update frequency when no one is listening
-        if (this._listeners.length == 0) {
+        if (!this._listeners.length) {
           this._maybeStopActiveNotifications();
         }
         return;
@@ -4770,7 +4770,7 @@ Downloader.prototype = {
    * Returns a boolean indicating whether there are any download listeners
    */
   get hasDownloadListeners() {
-    return this._listeners.length > 0;
+    return !!this._listeners.length;
   },
 
   /**

@@ -4,7 +4,7 @@
     <title>title not set</title>
     <script>
       // if we have a query string, use it to set the cookie and localStorage
-      if (window.location.search.length > 0) {
+      if (window.location.search.length) {
         let context_name = window.location.search.substr(1);
         document.cookie = "userContextId=" + context_name;
         localStorage.setItem("userContext", context_name);

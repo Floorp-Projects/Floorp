@@ -188,7 +188,7 @@ var gEditItemOverlay = {
       await PlacesUtils.keywords.fetch({ url: this._paneInfo.uri.spec }, e =>
         entries.push(e)
       );
-      if (entries.length > 0) {
+      if (entries.length) {
         // We show an existing keyword if either POST data was not provided, or
         // if the POST data is the same.
         let existingKeyword = entries[0].keyword;
@@ -580,13 +580,13 @@ var gEditItemOverlay = {
     let inputTags = this._getTagsArrayFromTagsInputField();
 
     // Optimize the trivial cases (which are actually the most common).
-    if (inputTags.length == 0 && aCurrentTags.length == 0) {
+    if (!inputTags.length && !aCurrentTags.length) {
       return { newTags: [], removedTags: [] };
     }
-    if (inputTags.length == 0) {
+    if (!inputTags.length) {
       return { newTags: [], removedTags: aCurrentTags };
     }
-    if (aCurrentTags.length == 0) {
+    if (!aCurrentTags.length) {
       return { newTags: inputTags, removedTags: [] };
     }
 
@@ -609,7 +609,7 @@ var gEditItemOverlay = {
 
     let setTags = async () => {
       let promises = [];
-      if (removedTags.length > 0) {
+      if (removedTags.length) {
         let promise = PlacesTransactions.Untag({
           urls: aURIs,
           tags: removedTags,
@@ -619,7 +619,7 @@ var gEditItemOverlay = {
         this.transactionPromises.push(promise);
         promises.push(promise);
       }
-      if (newTags.length > 0) {
+      if (newTags.length) {
         let promise = PlacesTransactions.Tag({ urls: aURIs, tags: newTags })
           .transact()
           .catch(Cu.reportError);
@@ -995,7 +995,7 @@ var gEditItemOverlay = {
     return tags
       .trim()
       .split(/\s*,\s*/) // Split on commas and remove spaces.
-      .filter(tag => tag.length > 0); // Kill empty tags.
+      .filter(tag => !!tag.length); // Kill empty tags.
   },
 
   async newFolder() {

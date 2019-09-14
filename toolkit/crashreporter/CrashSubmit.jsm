@@ -272,7 +272,7 @@ Submitter.prototype = {
       );
     }
 
-    if (this.additionalDumps.length > 0) {
+    if (this.additionalDumps.length) {
       let names = [];
       for (let i of this.additionalDumps) {
         names.push(i.name);

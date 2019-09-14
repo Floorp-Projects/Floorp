@@ -244,7 +244,7 @@ var MigratorPrototype = {
    */
   migrate: async function MP_migrate(aItems, aStartup, aProfile) {
     let resources = await this._getMaybeCachedResources(aProfile);
-    if (resources.length == 0) {
+    if (!resources.length) {
       throw new Error("migrate called for a non-existent source");
     }
 
@@ -481,11 +481,11 @@ var MigratorPrototype = {
       let profiles = await this.getSourceProfiles();
       if (!profiles) {
         let resources = await this._getMaybeCachedResources("");
-        if (resources && resources.length > 0) {
+        if (resources && resources.length) {
           exists = true;
         }
       } else {
-        exists = profiles.length > 0;
+        exists = !!profiles.length;
       }
     } catch (ex) {
       Cu.reportError(ex);

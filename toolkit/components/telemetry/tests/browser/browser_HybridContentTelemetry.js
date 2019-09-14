@@ -44,7 +44,7 @@ async function waitForProcessesEvents(
 async function waitForEvent(aProcess, aEventData) {
   await waitForProcessesEvents([aProcess], events => {
     let processEvents = events[aProcess].map(e => e.slice(1));
-    if (processEvents.length == 0) {
+    if (!processEvents.length) {
       return false;
     }
 

@@ -312,7 +312,7 @@ var gMenuBuilder = {
   buildSingleElement(item, contextData) {
     let doc = contextData.menu.ownerDocument;
     let element;
-    if (item.children.length > 0) {
+    if (item.children.length) {
       element = this.createMenuElement(doc, item);
     } else if (item.type == "separator") {
       element = doc.createXULElement("menuseparator");

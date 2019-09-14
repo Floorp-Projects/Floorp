@@ -47,7 +47,7 @@ var AboutPrivateBrowsingHandler = {
         let searchAlias = "";
         let searchAliases =
           Services.search.defaultEngine.wrappedJSObject.__internalAliases;
-        if (searchAliases && searchAliases.length > 0) {
+        if (searchAliases && searchAliases.length) {
           searchAlias = `${searchAliases[0]} `;
         }
         let urlBar = aMessage.target.browser.ownerGlobal.gURLBar;

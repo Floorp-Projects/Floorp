@@ -58,7 +58,7 @@
       mm.sendAsyncMessage("prepareForNextTest");
       mm.addMessageListener("prepareForNextTestDone", function prepared(msg) {
         mm.removeMessageListener("prepareForNextTestDone", prepared);
-        if (pendingTests.length > 0) {
+        if (pendingTests.length) {
           ({expectedDialogs: gExpectedDialogs,
             test: gCurrentTest} = pendingTests.shift());
           gCurrentTest.call(this);

@@ -62,7 +62,7 @@ function AutoCompleteResult(aValues, aComments, aStyles) {
   this._comments = aComments;
   this._styles = aStyles;
 
-  if (this._values.length > 0) {
+  if (this._values.length) {
     this.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
   } else {
     this.searchResult = Ci.nsIAutoCompleteResult.RESULT_NOMATCH;

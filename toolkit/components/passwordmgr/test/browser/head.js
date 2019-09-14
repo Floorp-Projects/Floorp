@@ -301,7 +301,7 @@ async function getCaptureDoorhangerThatMayOpen(
 
 function getDoorhangerButton(aPopup, aButtonIndex) {
   let notifications = aPopup.owner.panel.children;
-  ok(notifications.length > 0, "at least one notification displayed");
+  ok(!!notifications.length, "at least one notification displayed");
   ok(true, notifications.length + " notification(s)");
   let notification = notifications[0];
 

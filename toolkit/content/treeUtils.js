@@ -62,7 +62,7 @@ var gTreeUtils = {
     aLastSortAscending
   ) {
     var ascending = aColumn == aLastSortColumn ? !aLastSortAscending : true;
-    if (aDataSet.length == 0) {
+    if (!aDataSet.length) {
       return ascending;
     }
 

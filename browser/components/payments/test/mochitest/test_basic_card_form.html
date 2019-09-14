@@ -445,7 +445,7 @@ add_task(async function test_edit() {
     },
   });
   await asyncElementRendered();
-  ok(form.querySelectorAll(":-moz-ui-invalid").length > 0,
+  ok(!!form.querySelectorAll(":-moz-ui-invalid").length,
      "Check fields are visibly invalid on an 'edit' form with missing fields");
   checkCCForm(form, minimalCard);
 

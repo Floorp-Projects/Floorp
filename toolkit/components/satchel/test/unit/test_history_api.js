@@ -248,7 +248,7 @@ add_task(async function() {
 
     let processFirstResult = function processResults(results) {
       // Only handle the first result
-      if (results.length > 0) {
+      if (results.length) {
         let result = results[0];
         return [
           result.timesUsed,

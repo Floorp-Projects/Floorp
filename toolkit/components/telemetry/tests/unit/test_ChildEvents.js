@@ -128,17 +128,17 @@ add_task(async function() {
 
   Assert.ok("parent" in snapshot, "Should have main process section");
   Assert.ok(
-    snapshot.parent.length > 0,
+    !!snapshot.parent.length,
     "Main process section should have events."
   );
   Assert.ok("content" in snapshot, "Should have child process section");
   Assert.ok(
-    snapshot.content.length > 0,
+    !!snapshot.content.length,
     "Child process section should have events."
   );
   Assert.ok("dynamic" in snapshot, "Should have dynamic process section");
   Assert.ok(
-    snapshot.dynamic.length > 0,
+    !!snapshot.dynamic.length,
     "Dynamic process section should have events."
   );
 

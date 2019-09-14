@@ -176,8 +176,7 @@ class DateTimePickerChild extends JSWindowActorChild {
           detail: {
             // Pass partial value if it's available, otherwise pass input
             // element's value.
-            value:
-              Object.keys(value).length > 0 ? value : this._inputElement.value,
+            value: Object.keys(value).length ? value : this._inputElement.value,
             min: this._inputElement.getMinimum(),
             max: this._inputElement.getMaximum(),
             step: this._inputElement.getStep(),

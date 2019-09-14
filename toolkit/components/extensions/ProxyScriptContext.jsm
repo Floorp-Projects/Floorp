@@ -343,7 +343,7 @@ const ProxyInfoData = {
         proxyData = proxyRules;
       // fall through
       case "object":
-        if (Array.isArray(proxyData) && proxyData.length > 0) {
+        if (Array.isArray(proxyData) && proxyData.length) {
           return ProxyInfoData.createProxyInfoFromData(
             proxyData,
             defaultProxyInfo

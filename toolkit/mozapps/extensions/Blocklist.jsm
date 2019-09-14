@@ -466,12 +466,12 @@ async function targetAppFilter(entry, environment) {
 
   // Iterate the targeted applications, at least one of them must match.
   // If no target application, keep the entry.
-  if (versionRange.length == 0) {
+  if (!versionRange.length) {
     return entry;
   }
   for (const vr of versionRange) {
     const { targetApplication = [] } = vr;
-    if (targetApplication.length == 0) {
+    if (!targetApplication.length) {
       return entry;
     }
     for (const ta of targetApplication) {
@@ -1525,7 +1525,7 @@ function matchesOSABI(blocklistElement) {
   let os = blocklistElement.getAttribute("os");
   if (os) {
     let choices = os.split(",");
-    if (choices.length > 0 && !choices.includes(gApp.OS)) {
+    if (choices.length && !choices.includes(gApp.OS)) {
       return false;
     }
   }
@@ -1533,7 +1533,7 @@ function matchesOSABI(blocklistElement) {
   let xpcomabi = blocklistElement.getAttribute("xpcomabi");
   if (xpcomabi) {
     let choices = xpcomabi.split(",");
-    if (choices.length > 0 && !choices.includes(gApp.XPCOMABI)) {
+    if (choices.length && !choices.includes(gApp.XPCOMABI)) {
       return false;
     }
   }
@@ -2257,7 +2257,7 @@ var BlocklistXML = {
             );
         }
       }
-      if (this._gfxEntries.length > 0) {
+      if (this._gfxEntries.length) {
         this._notifyObserversBlocklistGFX();
       }
     } catch (e) {
@@ -2337,7 +2337,7 @@ var BlocklistXML = {
     }
     // if only the extension ID is specified block all versions of the
     // extension for the current application.
-    if (blockEntry.versions.length == 0) {
+    if (!blockEntry.versions.length) {
       blockEntry.versions.push(new BlocklistItemData(null));
     }
 
@@ -2384,7 +2384,7 @@ var BlocklistXML = {
       return;
     }
     // Add a default versionRange if there wasn't one specified
-    if (blockEntry.versions.length == 0) {
+    if (!blockEntry.versions.length) {
       blockEntry.versions.push(new BlocklistItemData(null));
     }
 
@@ -2796,7 +2796,7 @@ var BlocklistXML = {
       }
     }
 
-    if (addonList.length == 0) {
+    if (!addonList.length) {
       this._notifyObserversBlocklistUpdated();
       return;
     }
@@ -3026,7 +3026,7 @@ BlocklistItemData.prototype = {
     }
     // return minVersion = null and maxVersion = null if no specific versionRange
     // elements were found
-    if (appVersions.length == 0) {
+    if (!appVersions.length) {
       appVersions.push({ minVersion: null, maxVersion: null });
     }
     return appVersions;

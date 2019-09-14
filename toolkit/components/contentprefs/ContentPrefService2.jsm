@@ -940,7 +940,7 @@ ContentPrefService2.prototype = {
           ? Ci.nsIContentPrefCallback2.COMPLETE_OK
           : Ci.nsIContentPrefCallback2.COMPLETE_ERROR,
         ok,
-        rows && rows.length > 0
+        rows && !!rows.length
       );
     } catch (e) {
       Cu.reportError(e);

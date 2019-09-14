@@ -131,7 +131,7 @@ TaggingService.prototype = {
           tag.__defineGetter__("name", () => this._tagFolders[tag.id]);
         } else if (
           typeof idOrName == "string" &&
-          idOrName.length > 0 &&
+          !!idOrName.length &&
           idOrName.length <= PlacesUtils.bookmarks.MAX_TAG_LENGTH
         ) {
           // This is a tag name.
@@ -151,7 +151,7 @@ TaggingService.prototype = {
 
   // nsITaggingService
   tagURI: function TS_tagURI(aURI, aTags, aSource) {
-    if (!aURI || !aTags || !Array.isArray(aTags) || aTags.length == 0) {
+    if (!aURI || !aTags || !Array.isArray(aTags) || !aTags.length) {
       throw Components.Exception(
         "Invalid value for tags",
         Cr.NS_ERROR_INVALID_ARG
@@ -230,7 +230,7 @@ TaggingService.prototype = {
 
   // nsITaggingService
   untagURI: function TS_untagURI(aURI, aTags, aSource) {
-    if (!aURI || (aTags && (!Array.isArray(aTags) || aTags.length == 0))) {
+    if (!aURI || (aTags && (!Array.isArray(aTags) || !aTags.length))) {
       throw Components.Exception(
         "Invalid value for tags",
         Cr.NS_ERROR_INVALID_ARG

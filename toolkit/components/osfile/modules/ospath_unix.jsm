@@ -88,7 +88,7 @@ var join = function(...path) {
     if (subpath == null) {
       throw new TypeError("invalid path component");
     }
-    if (subpath.length == 0) {
+    if (!subpath.length) {
       continue;
     } else if (subpath[0] == "/") {
       paths = [subpath];
@@ -117,7 +117,7 @@ var normalize = function(path) {
       case ".": // fallthrough
         break;
       case "..":
-        if (stack.length == 0) {
+        if (!stack.length) {
           if (absolute) {
             throw new Error("Path is ill-formed: attempting to go past root");
           } else {

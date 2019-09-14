@@ -863,7 +863,7 @@ function setTechnicalDetailsOnCertError() {
 
   if (failedCertInfo.isDomainMismatch) {
     let subjectAltNames = failedCertInfo.subjectAltNames.split(",");
-    subjectAltNames = subjectAltNames.filter(name => name.length > 0);
+    subjectAltNames = subjectAltNames.filter(name => !!name.length);
     let numSubjectAltNames = subjectAltNames.length;
 
     if (numSubjectAltNames != 0) {

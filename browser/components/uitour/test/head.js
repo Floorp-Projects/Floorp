@@ -534,7 +534,7 @@ function done(usingAddTask = false) {
 }
 
 function nextTest() {
-  if (tests.length == 0) {
+  if (!tests.length) {
     info("finished tests in this file");
     finish();
     return;

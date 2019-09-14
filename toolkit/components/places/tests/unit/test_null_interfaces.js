@@ -50,7 +50,7 @@ function run_test() {
       let mesg = "";
       if (typeof func != "function") {
         mesg = "Not a function!";
-      } else if (func.length == 0) {
+      } else if (!func.length) {
         mesg = "No args needed!";
       } else if (name == "QueryInterface") {
         mesg = "Ignore QI!";

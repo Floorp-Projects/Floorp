@@ -426,7 +426,7 @@ var PreferenceExperiments = {
       }
     );
 
-    if (preferencesWithConflicts.length > 0) {
+    if (preferencesWithConflicts.length) {
       TelemetryEvents.sendEvent("enrollFailed", "preference_study", slug, {
         reason: "pref-conflict",
       });

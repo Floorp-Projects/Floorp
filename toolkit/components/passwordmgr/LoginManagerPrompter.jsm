@@ -450,7 +450,7 @@ LoginManagerPrompter.prototype = {
 
       // XXX Like the original code, we can't deal with multiple
       // account selection. (bug 227632)
-      if (foundLogins.length > 0) {
+      if (foundLogins.length) {
         selectedLogin = foundLogins[0];
 
         // If the caller provided a username, try to use it. If they
@@ -687,7 +687,7 @@ LoginManagerPrompter.prototype = {
       this.log(foundLogins.length, "matching logins remain after deduping");
 
       // XXX Can't select from multiple accounts yet. (bug 227632)
-      if (foundLogins.length > 0) {
+      if (foundLogins.length) {
         selectedLogin = foundLogins[0];
         this._SetAuthInfo(
           aAuthInfo,
@@ -1035,7 +1035,7 @@ LoginManagerPrompter.prototype = {
     let updateButtonStatus = element => {
       let mainActionButton = element.button;
       // Disable the main button inside the menu-button if the password field is empty.
-      if (login.password.length == 0) {
+      if (!login.password.length) {
         mainActionButton.setAttribute("disabled", true);
         chromeDoc
           .getElementById("password-notification-password")
@@ -1064,7 +1064,7 @@ LoginManagerPrompter.prototype = {
         foundLogins,
         autoSavedLoginGuid
       );
-      let msgNames = logins.length == 0 ? saveMsgNames : changeMsgNames;
+      let msgNames = !logins.length ? saveMsgNames : changeMsgNames;
 
       // Update the label based on whether this will be a new login or not.
       let label = this._getLocalizedString(msgNames.buttonLabel);

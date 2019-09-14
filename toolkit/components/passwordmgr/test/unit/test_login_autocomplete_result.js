@@ -1172,7 +1172,7 @@ add_task(async function test_all_patterns() {
       }
     });
 
-    if (pattern.items.length != 0) {
+    if (pattern.items.length) {
       Assert.throws(
         () => actual.getValueAt(pattern.items.length),
         /Index out of range\./

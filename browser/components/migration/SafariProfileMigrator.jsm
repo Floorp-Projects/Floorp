@@ -113,7 +113,7 @@ Bookmarks.prototype = {
       entriesFiltered = aEntries;
     }
 
-    if (entriesFiltered.length == 0) {
+    if (!entriesFiltered.length) {
       return;
     }
 
@@ -271,7 +271,7 @@ History.prototype = {
             }
           }
         }
-        if (pageInfos.length == 0) {
+        if (!pageInfos.length) {
           // If we failed at least once, then we didn't succeed in importing,
           // otherwise we didn't actually have anything to import, so we'll
           // report it as a success.
@@ -313,7 +313,7 @@ MainPreferencesPropertyList.prototype = {
       return;
     }
 
-    let alreadyReading = this._callbacks.length > 0;
+    let alreadyReading = !!this._callbacks.length;
     this._callbacks.push(aCallback);
     if (!alreadyReading) {
       PropertyListUtils.read(this._file, aDict => {
@@ -346,7 +346,7 @@ SearchStrings.prototype = {
 
         if (aDict.has("RecentSearchStrings")) {
           let recentSearchStrings = aDict.get("RecentSearchStrings");
-          if (recentSearchStrings && recentSearchStrings.length > 0) {
+          if (recentSearchStrings && recentSearchStrings.length) {
             let changes = recentSearchStrings.map(searchString => ({
               op: "add",
               fieldname: "searchbar-history",

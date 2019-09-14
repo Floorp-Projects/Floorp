@@ -343,7 +343,7 @@ const HistorySyncUtils = (PlacesSyncUtils.history = Object.freeze({
         WHERE url_hash = hash(:page_url) AND url = :page_url`,
       { page_url: canonicalURL.href }
     );
-    if (rows.length == 0) {
+    if (!rows.length) {
       return null;
     }
     return rows[0].getResultByName("guid");
@@ -1483,7 +1483,7 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
       db,
       PlacesUtils.bookmarks.mobileGuid
     );
-    let hasMobileBookmarks = mobileChildGuids.length > 0;
+    let hasMobileBookmarks = !!mobileChildGuids.length;
 
     Services.prefs.setBoolPref(MOBILE_BOOKMARKS_PREF, hasMobileBookmarks);
   },
@@ -2022,11 +2022,11 @@ function tagItem(item, tags) {
   // tag IDs, we temporarily tag a dummy URI, ensuring the tags exist.
   let dummyURI = PlacesUtils.toURI("about:weave#BStore_tagURI");
   let bookmarkURI = PlacesUtils.toURI(item.url.href);
-  if (newTags && newTags.length > 0) {
+  if (newTags && newTags.length) {
     PlacesUtils.tagging.tagURI(dummyURI, newTags, SOURCE_SYNC);
   }
   PlacesUtils.tagging.untagURI(bookmarkURI, null, SOURCE_SYNC);
-  if (newTags && newTags.length > 0) {
+  if (newTags && newTags.length) {
     PlacesUtils.tagging.tagURI(bookmarkURI, newTags, SOURCE_SYNC);
   }
   PlacesUtils.tagging.untagURI(dummyURI, null, SOURCE_SYNC);

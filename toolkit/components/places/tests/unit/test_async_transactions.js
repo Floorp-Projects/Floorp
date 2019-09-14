@@ -1733,10 +1733,9 @@ add_task(async function test_untag_uri() {
     }
     function ensureTagsUnset() {
       for (let url of urls) {
-        let expectedTags =
-          tagsRemoved.length == 0
-            ? []
-            : preRemovalTags.get(url).filter(tag => !tagsRemoved.includes(tag));
+        let expectedTags = !tagsRemoved.length
+          ? []
+          : preRemovalTags.get(url).filter(tag => !tagsRemoved.includes(tag));
         ensureTagsForURI(url, expectedTags);
       }
     }

@@ -1584,7 +1584,7 @@ OpenedConnection.prototype = Object.freeze({
         "WHERE type = 'table' AND name=?",
       [name]
     ).then(function onResult(rows) {
-      return Promise.resolve(rows.length > 0);
+      return Promise.resolve(!!rows.length);
     });
   },
 
@@ -1603,7 +1603,7 @@ OpenedConnection.prototype = Object.freeze({
         "WHERE type = 'index' AND name=?",
       [name]
     ).then(function onResult(rows) {
-      return Promise.resolve(rows.length > 0);
+      return Promise.resolve(!!rows.length);
     });
   },
 

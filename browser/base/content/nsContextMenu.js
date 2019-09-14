@@ -325,7 +325,7 @@ nsContextMenu.prototype = {
     const { gBrowser } = this.browser.ownerGlobal;
 
     this.textSelected = this.selectionInfo.text;
-    this.isTextSelected = this.textSelected.length != 0;
+    this.isTextSelected = !!this.textSelected.length;
     this.webExtBrowserType = this.browser.getAttribute(
       "webextension-view-type"
     );

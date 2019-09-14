@@ -370,7 +370,7 @@ function checkItem(aExpected, aNode) {
           let folder = aNode.QueryInterface(
             Ci.nsINavHistoryContainerResultNode
           );
-          Assert.equal(folder.hasChildren, aExpected.children.length > 0);
+          Assert.equal(folder.hasChildren, !!aExpected.children.length);
           folder.containerOpen = true;
           Assert.equal(folder.childCount, aExpected.children.length);
 

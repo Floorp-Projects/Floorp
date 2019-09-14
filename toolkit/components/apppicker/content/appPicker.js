@@ -78,7 +78,7 @@ AppPicker.prototype = {
 
     var primaryCount = 0;
 
-    if (!fileList || fileList.length == 0) {
+    if (!fileList || !fileList.length) {
       // display a message saying nothing is configured
       document.getElementById("app-picker-notfound").removeAttribute("hidden");
       return;

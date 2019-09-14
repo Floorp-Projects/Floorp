@@ -463,7 +463,7 @@ describe("<TopSiteLink>", () => {
   it("should have rtl direction automatically set for text", () => {
     const wrapper = shallow(<TopSiteLink link={link} />);
 
-    assert.isTrue(wrapper.find("[dir='auto']").length > 0);
+    assert.isTrue(!!wrapper.find("[dir='auto']").length);
   });
   it("should render a title", () => {
     const wrapper = shallow(<TopSiteLink link={link} title="foobar" />);

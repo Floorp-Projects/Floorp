@@ -722,7 +722,7 @@ tests.push(
     }
 
     let p1 = Promise.all([]).then(function onResolve(val) {
-      Assert.ok(Array.isArray(val) && val.length == 0);
+      Assert.ok(Array.isArray(val) && !val.length);
     });
 
     let p2 = Promise.all([1, 2, 3]).then(function onResolve([

@@ -158,7 +158,7 @@ var UrlbarTokenizer = {
    * @returns {boolean} whether the token looks like an origin.
    */
   looksLikeOrigin(token) {
-    if (token.length == 0) {
+    if (!token.length) {
       return false;
     }
     let atIndex = token.indexOf("@");
@@ -312,7 +312,7 @@ function filterTokens(tokens) {
   }
 
   // Handle restriction characters.
-  if (restrictions.length > 0) {
+  if (restrictions.length) {
     // We can apply two kind of restrictions: type (bookmark, search, ...) and
     // matching (url, title). These kind of restrictions can be combined, but we
     // can only have one restriction per kind.

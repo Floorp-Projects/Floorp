@@ -819,7 +819,7 @@ class ExtensionStorageSync {
     const extensions = await this.getExtensions();
     const extIds = Array.from(extensions, extension => extension.id);
     log.debug(`Syncing extension settings for ${JSON.stringify(extIds)}`);
-    if (extIds.length == 0) {
+    if (!extIds.length) {
       // No extensions to sync. Get out.
       return;
     }
@@ -908,7 +908,7 @@ class ExtensionStorageSync {
         newValue: accepted.data,
       };
     }
-    if (Object.keys(changes).length > 0) {
+    if (Object.keys(changes).length) {
       this.notifyListeners(extension, changes);
     }
     log.info(`Successfully synced '${collection.name}'`);
@@ -1059,7 +1059,7 @@ class ExtensionStorageSync {
     };
     await this.cryptoCollection.upsert(newRecord);
     const result = await this._syncKeyRing(newRecord);
-    if (result.resolved.length != 0) {
+    if (result.resolved.length) {
       // We had a conflict which was automatically resolved. We now
       // have a new keyring which might have keys for the
       // collections. Recurse.
@@ -1142,7 +1142,7 @@ class ExtensionStorageSync {
       // UUID. If so, reset our sync status, so that we'll reupload
       // everything.
       const result = await this.cryptoCollection.sync(this);
-      if (result.resolved.length > 0) {
+      if (result.resolved.length) {
         // Automatically-resolved conflict. It should
         // be for the keys record.
         const resolutionIds = result.resolved.map(resolution => resolution.id);
@@ -1319,7 +1319,7 @@ class ExtensionStorageSync {
       },
       { preloadIds: ids }
     );
-    if (Object.keys(changes).length > 0) {
+    if (Object.keys(changes).length) {
       this.notifyListeners(extension, changes);
     }
     const histogram = this._telemetry.getKeyedHistogramById(

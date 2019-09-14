@@ -163,7 +163,7 @@ EdgeTypedURLMigrator.prototype = {
       });
     }
 
-    if (pageInfos.length == 0) {
+    if (!pageInfos.length) {
       aCallback(typedURLs.size == 0);
       return;
     }

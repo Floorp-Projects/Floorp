@@ -627,13 +627,13 @@ FormAutoCompleteResult.prototype = {
   searchString: "",
   errorDescription: "",
   get defaultIndex() {
-    if (this.entries.length == 0) {
+    if (!this.entries.length) {
       return -1;
     }
     return 0;
   },
   get searchResult() {
-    if (this.entries.length == 0) {
+    if (!this.entries.length) {
       return Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
     }
     return Ci.nsIAutoCompleteResult.RESULT_SUCCESS;

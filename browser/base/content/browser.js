@@ -3882,7 +3882,7 @@ function BrowserReloadWithFlags(reloadFlags) {
     }
   }
 
-  if (unchangedRemoteness.length == 0) {
+  if (!unchangedRemoteness.length) {
     return;
   }
 
@@ -4687,7 +4687,7 @@ const BrowserSearch = {
     }
 
     var engines = gBrowser.selectedBrowser.engines;
-    if (engines && engines.length > 0) {
+    if (engines && engines.length) {
       searchBar.setAttribute("addengines", "true");
     } else {
       searchBar.removeAttribute("addengines");

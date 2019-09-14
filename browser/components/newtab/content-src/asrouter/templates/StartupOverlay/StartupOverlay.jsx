@@ -82,7 +82,7 @@ export class StartupOverlay extends React.PureComponent {
    */
   _getFormInfo() {
     const value = {
-      has_flow_params: this.props.flowParams.flowId.length > 0,
+      has_flow_params: !!this.props.flowParams.flowId.length,
     };
     return { value };
   }

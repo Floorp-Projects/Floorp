@@ -335,7 +335,7 @@ class PluginChild extends JSWindowActorChild {
           return;
         }
         evt.preventDefault();
-        if (callbackArgs.length == 0) {
+        if (!callbackArgs.length) {
           callbackArgs = [evt];
         }
         self[callbackName].apply(self, callbackArgs);
@@ -351,7 +351,7 @@ class PluginChild extends JSWindowActorChild {
         }
         if (evt.keyCode == evt.DOM_VK_RETURN) {
           evt.preventDefault();
-          if (callbackArgs.length == 0) {
+          if (!callbackArgs.length) {
             callbackArgs = [evt];
           }
           evt.preventDefault();
@@ -803,7 +803,7 @@ class PluginChild extends JSWindowActorChild {
           Ci.nsIObjectLoadingContent.TYPE_PLUGIN
       );
 
-      if (plugins.length == 0) {
+      if (!plugins.length) {
         this.removeNotification();
         return;
       }

@@ -49,7 +49,7 @@ const _addWebsiteAddressToPermissionBox = (
   buttonDialog.click();
   let permissionsBox = dialog.document.getElementById("permissionsBox");
   let children = permissionsBox.getElementsByAttribute("origin", "*");
-  is(children.length == 0, false, "Website added in url should be in the list");
+  is(!children.length, false, "Website added in url should be in the list");
 };
 
 const _checkIfPermissionsWereAdded = (dialog, expectedResult) => {

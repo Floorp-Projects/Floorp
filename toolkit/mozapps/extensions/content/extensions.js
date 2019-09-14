@@ -189,7 +189,7 @@ function initialize(event) {
   // Allow passing in a view through the window arguments
   if (
     "arguments" in window &&
-    window.arguments.length > 0 &&
+    !!window.arguments.length &&
     window.arguments[0] !== null &&
     "view" in window.arguments[0]
   ) {
@@ -1466,7 +1466,7 @@ var gCategories = {
 
       gPendingInitializations++;
       getAddonsAndInstalls(aType.id, (aAddonsList, aInstallsList) => {
-        var hidden = aAddonsList.length == 0 && aInstallsList.length == 0;
+        var hidden = !aAddonsList.length && !aInstallsList.length;
         var item = this.get(aViewId);
 
         // Don't load view that is becoming hidden
@@ -1477,7 +1477,7 @@ var gCategories = {
         item.hidden = hidden;
         Services.prefs.setBoolPref(prefName, hidden);
 
-        if (aAddonsList.length > 0 || aInstallsList.length > 0) {
+        if (aAddonsList.length || aInstallsList.length) {
           notifyInitialized();
           return;
         }
@@ -1586,7 +1586,7 @@ var gHeader = {
 
     this._search.addEventListener("command", function(aEvent) {
       var query = aEvent.target.value;
-      if (query.length == 0) {
+      if (!query.length) {
         return;
       }
 

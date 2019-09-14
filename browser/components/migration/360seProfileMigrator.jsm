@@ -317,7 +317,7 @@ Qihoo360seProfileMigrator.prototype.getSourceProfiles = function() {
 
   this.__sourceProfiles = profiles.filter(profile => {
     let resources = this.getResources(profile);
-    return resources && resources.length > 0;
+    return resources && !!resources.length;
   });
   return this.__sourceProfiles;
 };

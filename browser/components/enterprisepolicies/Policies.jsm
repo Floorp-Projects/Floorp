@@ -869,7 +869,7 @@ var Policies = {
       // (and therefore what the pref |browser.startup.homepage|) accepts.
       if (param.URL) {
         let homepages = param.URL.href;
-        if (param.Additional && param.Additional.length > 0) {
+        if (param.Additional && param.Additional.length) {
           homepages += "|" + param.Additional.map(url => url.href).join("|");
         }
         setDefaultPref("browser.startup.homepage", homepages, param.Locked);

@@ -99,7 +99,7 @@ function testService() {
         is(errorCode, test.result,
            `Successful asynchronous classification of ${test.url}`);
         SpecialPowers.doUrlClassifyLocal(uri, tables, function(results) {
-          if (results.length == 0) {
+          if (!results.length) {
             is(test.table, "",
                `Successful asynchronous local classification of ${test.url}`);
           } else {

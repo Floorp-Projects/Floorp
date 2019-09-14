@@ -795,7 +795,7 @@ var gSync = {
 
     const state = UIState.get();
     if (state.status == UIState.STATUS_SIGNED_IN) {
-      if (this.sendTabTargets.length > 0) {
+      if (this.sendTabTargets.length) {
         this._appendSendTabDeviceList(
           fragment,
           createDeviceNodeFn,

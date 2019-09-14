@@ -44,7 +44,7 @@ function getExtension() {
       browser.test.assertTrue(now < cert.validity.end, "cert end validity is correct");
       if (options.rawDER) {
         for (let cert of securityInfo.certificates) {
-          browser.test.assertTrue(cert.rawDER.length > 0, "have rawDER");
+          browser.test.assertTrue(!!cert.rawDER.length, "have rawDER");
         }
       }
     }

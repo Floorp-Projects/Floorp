@@ -184,7 +184,7 @@ function assertTelemetryRecorded(events) {
 
   // Make sure we got some data.
   ok(
-    snapshot.parent && snapshot.parent.length > 0,
+    snapshot.parent && !!snapshot.parent.length,
     "Got parent telemetry events in the snapshot"
   );
 
@@ -603,7 +603,7 @@ add_task(async function testInstallFromAMO() {
 
   await BrowserTestUtils.waitForCondition(async () => {
     let newDicts = await AddonManager.getAddonsByTypes(["dictionary"]);
-    let done = newDicts.length != 0;
+    let done = !!newDicts.length;
 
     if (done) {
       is(

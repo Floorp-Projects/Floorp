@@ -255,12 +255,12 @@ var PlacesOrganizer = {
     aEvent.stopPropagation();
     switch (aEvent.command) {
       case "Back":
-        if (this._backHistory.length > 0) {
+        if (this._backHistory.length) {
           this.back();
         }
         break;
       case "Forward":
-        if (this._forwardHistory.length > 0) {
+        if (this._forwardHistory.length) {
           this.forward();
         }
         break;
@@ -297,7 +297,7 @@ var PlacesOrganizer = {
     this.updateDetailsPane();
 
     // update navigation commands
-    if (this._backHistory.length == 0) {
+    if (!this._backHistory.length) {
       document
         .getElementById("OrganizerCommand:Back")
         .setAttribute("disabled", true);
@@ -306,7 +306,7 @@ var PlacesOrganizer = {
         .getElementById("OrganizerCommand:Back")
         .removeAttribute("disabled");
     }
-    if (this._forwardHistory.length == 0) {
+    if (!this._forwardHistory.length) {
       document
         .getElementById("OrganizerCommand:Forward")
         .setAttribute("disabled", true);
@@ -543,7 +543,7 @@ var PlacesOrganizer = {
 
     (async function() {
       let backupFiles = await PlacesBackups.getBackupFiles();
-      if (backupFiles.length == 0) {
+      if (!backupFiles.length) {
         return;
       }
 
@@ -829,7 +829,7 @@ var PlacesSearchBox = {
    */
   _folders: [],
   get folders() {
-    if (this._folders.length == 0) {
+    if (!this._folders.length) {
       this._folders = PlacesUtils.bookmarks.userContentRoots;
     }
     return this._folders;

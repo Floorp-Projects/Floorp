@@ -148,8 +148,8 @@ let gSiteDataSettings = {
     let items = this._list.getElementsByTagName("richlistitem");
     let removeSelectedBtn = document.getElementById("removeSelected");
     let removeAllBtn = document.getElementById("removeAll");
-    removeSelectedBtn.disabled = this._list.selectedItems.length == 0;
-    removeAllBtn.disabled = items.length == 0;
+    removeSelectedBtn.disabled = !this._list.selectedItems.length;
+    removeAllBtn.disabled = !items.length;
 
     let l10nId = this._searchBox.value
       ? "site-data-remove-shown"
@@ -259,7 +259,7 @@ let gSiteDataSettings = {
       .filter(site => site.userAction == "remove")
       .map(site => site.host);
 
-    if (removals.length > 0) {
+    if (removals.length) {
       if (this._sites.length == removals.length) {
         allowed = SiteDataManager.promptSiteDataRemoval(window);
         if (allowed) {
@@ -323,7 +323,7 @@ let gSiteDataSettings = {
 
   onClickRemoveAll() {
     let siteItems = this._list.getElementsByTagName("richlistitem");
-    if (siteItems.length > 0) {
+    if (siteItems.length) {
       this._removeSiteItems(siteItems);
     }
   },

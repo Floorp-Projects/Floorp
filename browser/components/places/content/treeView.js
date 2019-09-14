@@ -175,7 +175,7 @@ PlacesTreeView.prototype = {
     // for which nodeRemoved was called).
     let ancestors = Array.from(PlacesUtils.nodeAncestors(aNode));
     if (
-      ancestors.length == 0 ||
+      !ancestors.length ||
       ancestors[ancestors.length - 1] != this._rootNode
     ) {
       throw new Error("Removed node passed to _getRowForNode");
@@ -522,7 +522,7 @@ PlacesTreeView.prototype = {
     aNodesInfo,
     aUpdatedContainer
   ) {
-    if (aNodesInfo.length == 0) {
+    if (!aNodesInfo.length) {
       return;
     }
 
@@ -855,7 +855,7 @@ PlacesTreeView.prototype = {
 
     // Persist selection state.
     let nodesToReselect = this._getSelectedNodesInRange(oldRow, oldRow + count);
-    if (nodesToReselect.length > 0) {
+    if (nodesToReselect.length) {
       this.selection.selectEventsSuppressed = true;
     }
 
@@ -875,7 +875,7 @@ PlacesTreeView.prototype = {
     this.nodeInserted(aNewParent, aNode, aNewIndex);
 
     // Restore selection.
-    if (nodesToReselect.length > 0) {
+    if (nodesToReselect.length) {
       this._restoreSelection(nodesToReselect, aNewParent);
       this.selection.selectEventsSuppressed = false;
     }
@@ -1061,7 +1061,7 @@ PlacesTreeView.prototype = {
       // Select the row next to the closed container if any of its
       // children were selected, and nothing else is selected.
       if (
-        nodesToReselect.length > 0 &&
+        nodesToReselect.length &&
         nodesToReselect.length == oldSelectionCount
       ) {
         this.selection.rangedSelect(startReplacement, startReplacement, true);

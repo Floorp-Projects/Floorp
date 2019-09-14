@@ -59,7 +59,7 @@ function attachUpdateHandler(install) {
     let difference = Extension.comparePermissions(oldPerms, newPerms);
 
     // If there are no new permissions, just proceed
-    if (difference.origins.length == 0 && difference.permissions.length == 0) {
+    if (!difference.origins.length && !difference.permissions.length) {
       return Promise.resolve();
     }
 
@@ -128,7 +128,7 @@ function shouldShowPermissionsPrompt(addon) {
   }
 
   const { origins, permissions } = addon.userPermissions;
-  return origins.length > 0 || permissions.length > 0;
+  return !!origins.length || !!permissions.length;
 }
 
 function showPermissionsPrompt(addon) {

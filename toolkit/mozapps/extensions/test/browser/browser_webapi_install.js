@@ -140,7 +140,7 @@ async function testInstall(browser, args, steps, description) {
         });
       }
 
-      while (steps.length > 0) {
+      while (steps.length) {
         let nextStep = steps.shift();
         if (nextStep.action) {
           if (nextStep.action == "install") {

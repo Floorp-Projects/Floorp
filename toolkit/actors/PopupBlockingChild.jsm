@@ -140,7 +140,7 @@ class PopupBlockingChild extends ActorChild {
           this.popupDataInternal.splice(i, 1);
         }
       }
-      if (this.popupData.length == 0) {
+      if (!this.popupData.length) {
         this.popupData = null;
         this.popupDataInternal = null;
       }

@@ -572,8 +572,7 @@ BookmarkImporter.prototype = {
         .split(",")
         .filter(
           aTag =>
-            aTag.length > 0 &&
-            aTag.length <= PlacesUtils.bookmarks.MAX_TAG_LENGTH
+            !!aTag.length && aTag.length <= PlacesUtils.bookmarks.MAX_TAG_LENGTH
         );
 
       // If we end up with none, then delete the property completely.
@@ -864,7 +863,7 @@ function BookmarkExporter(aBookmarksTree) {
 
   for (let key of ["toolbarFolder", "unfiledBookmarksFolder"]) {
     let root = rootsMap.get(key);
-    if (root.children && root.children.length > 0) {
+    if (root.children && root.children.length) {
       if (!this._root.children) {
         this._root.children = [];
       }

@@ -29,7 +29,7 @@ function assertActionAMTelemetryEvent(
   );
 
   ok(
-    snapshot.parent && snapshot.parent.length > 0,
+    snapshot.parent && !!snapshot.parent.length,
     "Got parent telemetry events in the snapshot"
   );
 

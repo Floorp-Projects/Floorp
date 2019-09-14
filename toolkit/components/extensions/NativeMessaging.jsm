@@ -198,7 +198,7 @@ var NativeApp = class extends EventEmitter {
   }
 
   _startWrite() {
-    if (this.sendQueue.length == 0) {
+    if (!this.sendQueue.length) {
       return;
     }
 
@@ -230,7 +230,7 @@ var NativeApp = class extends EventEmitter {
       let partial = "";
       while (true) {
         let data = await proc.stderr.readString();
-        if (data.length == 0) {
+        if (!data.length) {
           // We have hit EOF, just stop reading
           if (partial) {
             Services.console.logStringMessage(

@@ -739,7 +739,7 @@ function checkSystemSection(data) {
 
   Assert.ok("adapters" in gfxData);
   Assert.ok(
-    gfxData.adapters.length > 0,
+    !!gfxData.adapters.length,
     "There must be at least one GFX adapter."
   );
   for (let adapter of gfxData.adapters) {
@@ -982,7 +982,7 @@ function checkAddonsSection(data, expectBrokenAddons, partialAddonsRecords) {
 function checkExperimentsSection(data) {
   // We don't expect the experiments section to be always available.
   let experiments = data.experiments || {};
-  if (Object.keys(experiments).length == 0) {
+  if (!Object.keys(experiments).length) {
     return;
   }
 

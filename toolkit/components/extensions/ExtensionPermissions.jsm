@@ -121,7 +121,7 @@ var ExtensionPermissions = {
       }
     }
 
-    if (added.permissions.length > 0 || added.origins.length > 0) {
+    if (added.permissions.length || added.origins.length) {
       await this._update(extensionId, { permissions, origins });
       if (emitter) {
         emitter.emit("add-permissions", added);
@@ -160,7 +160,7 @@ var ExtensionPermissions = {
       }
     }
 
-    if (removed.permissions.length > 0 || removed.origins.length > 0) {
+    if (removed.permissions.length || removed.origins.length) {
       await this._update(extensionId, { permissions, origins });
       if (emitter) {
         emitter.emit("remove-permissions", removed);

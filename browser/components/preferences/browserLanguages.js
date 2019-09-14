@@ -66,7 +66,7 @@ async function dictionaryIdsForLocale(locale) {
   let entries = await RemoteSettings("language-dictionaries").get({
     filters: { id: locale },
   });
-  if (entries.length > 0) {
+  if (entries.length) {
     return entries[0].dictionaries;
   }
   return [];
@@ -512,7 +512,7 @@ var gBrowserLanguagesDialog = {
 
   async loadLocalesFromInstalled(available) {
     let items;
-    if (available.length > 0) {
+    if (available.length) {
       items = await getLocaleDisplayInfo(available);
       items.push(await this.createInstalledLabel());
     } else {

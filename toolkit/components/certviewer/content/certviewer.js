@@ -47,7 +47,7 @@ const createEntryItem = (label, info) => {
 
 const addToResultUsing = (callback, certItems, sectionTitle, Critical) => {
   let items = callback();
-  if (items.length > 0) {
+  if (items.length) {
     certItems.push({
       sectionTitle,
       sectionItems: items,

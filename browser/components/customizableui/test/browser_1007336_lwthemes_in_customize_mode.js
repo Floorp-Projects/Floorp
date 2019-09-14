@@ -123,7 +123,7 @@ add_task(async function() {
     "toolbarbutton.customization-lwtheme-menu-theme[active]"
   );
   is(activeThemes.length, 1, "Exactly 1 theme should be selected");
-  if (activeThemes.length > 0) {
+  if (activeThemes.length) {
     is(
       activeThemes[0].theme.id,
       LIGHT_THEME_ID,
@@ -155,7 +155,7 @@ add_task(async function() {
     "toolbarbutton.customization-lwtheme-menu-theme[active]"
   );
   is(activeThemes.length, 1, "Exactly 1 theme should be selected");
-  if (activeThemes.length > 0) {
+  if (activeThemes.length) {
     is(
       activeThemes[0].theme.id,
       "my-theme-5@example.com",
@@ -183,7 +183,7 @@ add_task(async function() {
     "toolbarbutton.customization-lwtheme-menu-theme[active]"
   );
   is(activeThemes.length, 1, "Exactly 1 theme should be selected");
-  if (activeThemes.length > 0) {
+  if (activeThemes.length) {
     is(
       activeThemes[0].theme.id,
       firstLWThemeId,

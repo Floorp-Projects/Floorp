@@ -96,7 +96,7 @@ function CheckBrowserNeedsUpdate(
         const now = Date.now();
         const updateServiceListener = {
           onCheckComplete(request, updates) {
-            checker._value = updates.length > 0;
+            checker._value = !!updates.length;
             resolve(checker._value);
           },
           onError(request, update) {

@@ -25,7 +25,7 @@ function getCardByAddonId(root, id) {
 }
 
 function isEmpty(el) {
-  return el.children.length == 0;
+  return !el.children.length;
 }
 
 function waitForThemeChange(list) {
@@ -775,7 +775,7 @@ add_task(async function testPluginIcons() {
 
   // Check that the icons are set to the plugin icon.
   let icons = doc.querySelectorAll(".card-heading-icon");
-  ok(icons.length > 0, "There are some plugins listed");
+  ok(!!icons.length, "There are some plugins listed");
 
   for (let icon of icons) {
     is(icon.src, pluginIconUrl, "Plugins use the plugin icon");

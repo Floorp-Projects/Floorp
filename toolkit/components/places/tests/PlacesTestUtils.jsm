@@ -198,7 +198,7 @@ var PlacesTestUtils = Object.freeze({
       "SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url",
       { url }
     );
-    return rows.length > 0;
+    return !!rows.length;
   },
 
   /**

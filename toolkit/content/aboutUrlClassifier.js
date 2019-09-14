@@ -656,7 +656,7 @@ var Debug = {
       env.get("MOZ_LOG_MODULES") ||
       env.get("NSPR_LOG_MODULES");
 
-    if (logModules.length > 0) {
+    if (logModules.length) {
       document.getElementById("set-log-modules").disabled = true;
       for (let module of this.modules) {
         document.getElementById("chk-" + module).disabled = true;
@@ -669,7 +669,7 @@ var Debug = {
     // Disable set log file if log file is already set
     // by environment variable.
     let logFile = env.get("MOZ_LOG_FILE") || env.get("NSPR_LOG_FILE");
-    if (logFile.length > 0) {
+    if (logFile.length) {
       document.getElementById("set-log-file").disabled = true;
       document.getElementById("log-file").value = logFile;
     }

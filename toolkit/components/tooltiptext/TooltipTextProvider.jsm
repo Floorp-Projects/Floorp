@@ -65,7 +65,7 @@ TooltipTextProvider.prototype = {
         var bundle = Services.strings.createBundle(
           "chrome://global/locale/layout/HtmlForm.properties"
         );
-        if (files.length == 0) {
+        if (!files.length) {
           if (tipElement.multiple) {
             titleText = bundle.GetStringFromName("NoFilesSelected");
           } else {

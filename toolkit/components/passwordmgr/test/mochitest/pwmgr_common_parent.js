@@ -197,7 +197,7 @@ addMessageListener("proxyLoginManager", msg => {
     rv = LoginHelper.loginToVanillaObject(rv);
   } else if (
     Array.isArray(rv) &&
-    rv.length > 0 &&
+    !!rv.length &&
     rv[0] instanceof Ci.nsILoginInfo
   ) {
     rv = rv.map(login => LoginHelper.loginToVanillaObject(login));

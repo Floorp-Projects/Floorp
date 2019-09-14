@@ -255,7 +255,7 @@ LoginManager.prototype = {
    */
   _checkLogin(login) {
     // Sanity check the login
-    if (login.origin == null || login.origin.length == 0) {
+    if (login.origin == null || !login.origin.length) {
       throw new Error("Can't add a login with a null or empty origin.");
     }
 
@@ -264,7 +264,7 @@ LoginManager.prototype = {
       throw new Error("Can't add a login with a null username.");
     }
 
-    if (login.password == null || login.password.length == 0) {
+    if (login.password == null || !login.password.length) {
       throw new Error("Can't add a login with a null or empty password.");
     }
 
