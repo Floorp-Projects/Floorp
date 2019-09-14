@@ -57,8 +57,8 @@
 }
 
 .search-panel-header > label {
-  margin-top: 2px !important;
-  margin-bottom: 1px !important;
+  margin-top: 2px;
+  margin-bottom: 1px;
 }
 
 .search-panel-input-value {
