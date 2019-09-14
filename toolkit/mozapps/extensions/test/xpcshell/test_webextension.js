@@ -413,7 +413,7 @@ add_task(async function testThemeExtension() {
       manifest_version: 2,
       name: "Web Extension Name",
       version: "1.0",
-      theme: { images: { headerURL: "example.png" } },
+      theme: { images: { theme_frame: "example.png" } },
     },
   });
 
@@ -487,7 +487,7 @@ add_task(async function test_theme_upgrade() {
           id: ID,
         },
       },
-      theme: { images: { headerURL: "example.png" } },
+      theme: { images: { theme_frame: "example.png" } },
     },
   });
 

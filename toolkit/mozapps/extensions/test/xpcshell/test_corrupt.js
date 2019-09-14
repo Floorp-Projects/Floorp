@@ -92,7 +92,7 @@ const ADDONS = {
       manifest_version: 2,
       name: "Theme 1",
       version: "1.0",
-      theme: { images: { headerURL: "example.png" } },
+      theme: { images: { theme_frame: "example.png" } },
       applications: {
         gecko: {
           id: "theme1@tests.mozilla.org",
@@ -112,7 +112,7 @@ const ADDONS = {
       manifest_version: 2,
       name: "Theme 2",
       version: "1.0",
-      theme: { images: { headerURL: "example.png" } },
+      theme: { images: { theme_frame: "example.png" } },
       applications: {
         gecko: {
           id: "theme2@tests.mozilla.org",
