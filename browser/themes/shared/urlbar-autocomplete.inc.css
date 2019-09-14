@@ -273,7 +273,8 @@
 
 /* Search one-offs. */
 #urlbar .search-one-offs {
-  -moz-box-orient: horizontal;
+  display: flex;
+  align-items: start;
   padding-block: 16px;
 }
 
@@ -292,15 +293,24 @@
 
 #urlbar .search-panel-header {
   padding: 0;
+  min-height: 32px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+}
+
+#urlbar .search-panel-one-offs-header-label {
+  margin: 0;
 }
 
 #urlbar .searchbar-engine-one-off-item {
   min-width: 32px;
   height: 32px;
   margin: 0 4px;
+}
+
+#urlbar .search-one-offs-spacer {
+  flex-grow: 1;
 }
 
 /* search bar popup */

@@ -19,17 +19,19 @@ class SearchOneOffs {
       MozXULElement.parseXULToFragment(
         `
       <hbox class="search-panel-one-offs-header search-panel-header search-panel-current-input">
-        <label class="searchbar-oneoffheader-search" value="&searchWithDesc.label;"/>
+        <label class="search-panel-one-offs-header-label" value="&searchWithDesc.label;"/>
       </hbox>
       <hbox class="search-panel-one-offs" role="group"/>
       <vbox class="search-add-engines"/>
       <hbox class="search-one-offs-spacer"/>
       <button class="searchbar-engine-one-off-item search-setting-button-compact" tooltiptext="&changeSearchSettings.tooltip;"/>
       <button class="search-setting-button" label="&changeSearchSettings.button;"/>
-      <menupopup class="search-one-offs-context-menu">
-        <menuitem class="search-one-offs-context-open-in-new-tab" label="&searchInNewTab.label;" accesskey="&searchInNewTab.accesskey;"/>
-        <menuitem class="search-one-offs-context-set-default" label="&searchSetAsDefault.label;" accesskey="&searchSetAsDefault.accesskey;"/>
-      </menupopup>
+      <box style="visibiltiy:collapse">
+        <menupopup class="search-one-offs-context-menu">
+          <menuitem class="search-one-offs-context-open-in-new-tab" label="&searchInNewTab.label;" accesskey="&searchInNewTab.accesskey;"/>
+          <menuitem class="search-one-offs-context-set-default" label="&searchSetAsDefault.label;" accesskey="&searchSetAsDefault.accesskey;"/>
+        </menupopup>
+      </box>
       `,
         ["chrome://browser/locale/browser.dtd"]
       )
@@ -454,7 +456,7 @@ class SearchOneOffs {
     }
 
     let headerText = this.header.querySelector(
-      ".searchbar-oneoffheader-search"
+      ".search-panel-one-offs-header-label"
     );
     this.buttons.setAttribute("aria-label", headerText.value);
 
@@ -1194,10 +1196,9 @@ class SearchOneOffs {
       event.preventDefault();
       return;
     }
-    this.querySelector(".search-one-offs-context-set-default").setAttribute(
-      "disabled",
-      target.engine == Services.search.defaultEngine
-    );
+    this.contextMenuPopup
+      .querySelector(".search-one-offs-context-set-default")
+      .setAttribute("disabled", target.engine == Services.search.defaultEngine);
 
     this.contextMenuPopup.openPopupAtScreen(event.screenX, event.screenY, true);
     event.preventDefault();
