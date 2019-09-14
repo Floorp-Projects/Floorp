@@ -7,6 +7,10 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Logging.h"
 
+#ifdef MOZ_APPLEMEDIA
+#  include "MediaHardwareKeysEventSourceMac.h"
+#endif
+
 extern mozilla::LazyLogModule gMediaControlLog;
 
 #undef LOG
@@ -34,7 +38,9 @@ void MediaHardwareKeysManager::StartMonitoringHardwareKeys() {
 }
 
 void MediaHardwareKeysManager::CreateEventSource() {
-  // TODO : create source per platform.
+#ifdef MOZ_APPLEMEDIA
+  mEventSource = new MediaHardwareKeysEventSourceMac();
+#endif
 }
 
 void MediaHardwareKeysManager::StopMonitoringHardwareKeys() {
