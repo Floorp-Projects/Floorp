@@ -442,12 +442,9 @@ ImgDrawResult nsImageBoxFrame::CreateWebRenderCommands(
   if (key.isNothing()) {
     return result;
   }
-  wr::LayoutRect fill = wr::ToLayoutRect(fillRect);
 
-  LayoutDeviceSize gapSize(0, 0);
-  aBuilder.PushImage(fill, fill, !BackfaceIsHidden(),
-                     wr::ToLayoutSize(fillRect.Size()),
-                     wr::ToLayoutSize(gapSize), rendering, key.value());
+  wr::LayoutRect fill = wr::ToLayoutRect(fillRect);
+  aBuilder.PushImage(fill, fill, !BackfaceIsHidden(), rendering, key.value());
 
   return result;
 }
