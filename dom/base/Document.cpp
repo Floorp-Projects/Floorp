@@ -1312,11 +1312,7 @@ Document::Document(const char* aContentType)
       mCompatMode(eCompatibility_FullStandards),
       mReadyState(ReadyState::READYSTATE_UNINITIALIZED),
       mAncestorIsLoading(false),
-#ifdef MOZILLA_INTERNAL_API
       mVisibilityState(dom::VisibilityState::Hidden),
-#else
-      mDummy(0),
-#endif
       mType(eUnknown),
       mDefaultElementType(0),
       mAllowXULXBL(eTriUnset),
