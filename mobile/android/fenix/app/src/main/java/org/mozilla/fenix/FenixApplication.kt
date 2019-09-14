@@ -114,9 +114,7 @@ open class FenixApplication : Application() {
 
     private fun registerRxExceptionHandling() {
         RxJavaPlugins.setErrorHandler {
-            it.cause?.run {
-                throw this
-            } ?: throw it
+            throw it.cause ?: it
         }
     }
 

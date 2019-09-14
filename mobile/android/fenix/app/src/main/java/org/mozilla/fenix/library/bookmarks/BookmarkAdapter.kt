@@ -33,13 +33,13 @@ class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteracto
         val diffUtil = DiffUtil.calculateDiff(
             BookmarkDiffUtil(
                 this.tree,
-                tree?.children ?: listOf(),
+                tree?.children.orEmpty(),
                 this.mode,
                 mode
             )
         )
 
-        this.tree = tree?.children ?: listOf()
+        this.tree = tree?.children.orEmpty()
         isFirstRun = if (isFirstRun) false else {
             emptyView.isVisible = this.tree.isEmpty()
             false

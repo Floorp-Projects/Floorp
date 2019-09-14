@@ -119,7 +119,7 @@ class ShareFragment : AppCompatDialogFragment() {
             throw IllegalStateException("URL and tabs cannot both be null.")
         }
 
-        val tabs = args.tabs?.toList() ?: listOf(ShareTab(args.url!!, args.title ?: ""))
+        val tabs = args.tabs?.toList() ?: listOf(ShareTab(args.url!!, args.title.orEmpty()))
         val accountManager = requireComponents.backgroundServices.accountManager
 
         shareInteractor = ShareInteractor(
@@ -167,7 +167,7 @@ class ShareFragment : AppCompatDialogFragment() {
                 resolveInfo.activityInfo.packageName,
                 resolveInfo.activityInfo.name
             )
-        } ?: emptyList()
+        }.orEmpty()
     }
 
     @Suppress("ReturnCount")

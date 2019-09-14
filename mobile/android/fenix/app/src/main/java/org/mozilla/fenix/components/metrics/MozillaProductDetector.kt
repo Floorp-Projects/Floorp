@@ -53,20 +53,17 @@ object MozillaProductDetector {
         return true
     }
 
-    // Returns the default browser if and only if it is a Mozilla product
+    /**
+     * Returns the default browser if and only if it is a Mozilla product.
+     */
     fun getMozillaBrowserDefault(context: Context): String? {
         val browserPackageName = Browsers.all(context).defaultBrowser?.packageName
-        return if (isMozillaProduct(browserPackageName ?: "")) { browserPackageName } else { null }
+        return if (isMozillaProduct(browserPackageName)) { browserPackageName } else { null }
     }
 
     // Note: we intentionally do not use a-c `firefoxBrandedBrowser` as this only gives us the first from that list
-    private fun isMozillaProduct(packageName: String): Boolean {
-        for (product in MozillaProducts.values()) {
-            if (product.productName == packageName) {
-                return true
-            }
-        }
-
-        return false
+    private fun isMozillaProduct(packageName: String?): Boolean {
+        packageName ?: return false
+        return MozillaProducts.values().any { product -> product.productName == packageName }
     }
 }

@@ -83,7 +83,7 @@ class SearchFragment : Fragment(), BackHandler {
             ?.let { it.showShortcutEnginePicker } ?: false
 
         val view = inflater.inflate(R.layout.fragment_search, container, false)
-        val url = session?.url ?: ""
+        val url = session?.url.orEmpty()
         val currentSearchEngine = SearchEngineSource.Default(
             requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext())
         )

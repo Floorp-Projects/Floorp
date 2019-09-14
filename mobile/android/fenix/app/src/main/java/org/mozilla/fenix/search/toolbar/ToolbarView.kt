@@ -116,7 +116,7 @@ class ToolbarView(
             /* Only set the search terms if pasted text is null so that the search term doesn't
             overwrite pastedText when view enters `editMode` */
             if (searchState.pastedText.isNullOrEmpty()) {
-                view.setSearchTerms(searchState.session?.searchTerms ?: "")
+                view.setSearchTerms(searchState.session?.searchTerms.orEmpty())
             }
 
             view.editMode()

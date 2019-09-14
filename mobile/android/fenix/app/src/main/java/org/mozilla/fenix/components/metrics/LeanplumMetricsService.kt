@@ -116,12 +116,10 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
         private const val LOGTAG = "LeanplumMetricsService"
 
         private val LeanplumId: String
-            @Suppress("USELESS_ELVIS")
             // Debug builds have a null (nullable) LEANPLUM_ID
-            get() = BuildConfig.LEANPLUM_ID ?: ""
+            get() = BuildConfig.LEANPLUM_ID.orEmpty()
         private val LeanplumToken: String
-            @Suppress("USELESS_ELVIS")
             // Debug builds have a null (nullable) LEANPLUM_TOKEN
-            get() = BuildConfig.LEANPLUM_TOKEN ?: ""
+            get() = BuildConfig.LEANPLUM_TOKEN.orEmpty()
     }
 }
