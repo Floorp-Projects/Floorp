@@ -991,8 +991,10 @@ nsresult TextEditor::SetTextAsAction(const nsAString& aString,
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
   nsresult rv = SetTextAsSubAction(aString);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetTextAsSubAction() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult TextEditor::ReplaceTextAsAction(const nsAString& aString,
@@ -1017,8 +1019,10 @@ nsresult TextEditor::ReplaceTextAsAction(const nsAString& aString,
 
   if (!aReplaceRange) {
     nsresult rv = SetTextAsSubAction(aString);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetTextAsSubAction() failed");
-    return EditorBase::ToGenericNSResult(rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditorBase::ToGenericNSResult(rv);
+    }
+    return NS_OK;
   }
 
   if (NS_WARN_IF(aString.IsEmpty() && aReplaceRange->Collapsed())) {
@@ -1058,18 +1062,26 @@ nsresult TextEditor::SetTextAsSubAction(const nsAString& aString) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  // Protect the edit rules object from dying
+  RefPtr<TextEditRules> rules(mRules);
+
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eSetText, nsIEditor::eNext);
 
-  if (IsPlaintextEditor() && !IsIMEComposing() && !IsUndoRedoEnabled() &&
-      GetEditAction() != EditAction::eReplaceText && mMaxTextLength < 0) {
-    EditActionResult result = SetTextWithoutTransaction(aString);
-    if (NS_WARN_IF(result.Failed()) || result.Canceled() || result.Handled()) {
-      return result.Rv();
-    }
-  }
+  EditSubActionInfo subActionInfo(EditSubAction::eSetText);
+  subActionInfo.inString = &aString;
+  subActionInfo.maxLength = mMaxTextLength;
 
-  {
+  bool cancel;
+  bool handled;
+  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (cancel) {
+    return NS_OK;
+  }
+  if (!handled) {
     // Note that do not notify selectionchange caused by selecting all text
     // because it's preparation of our delete implementation so web apps
     // shouldn't receive such selectionchange before the first mutation.
@@ -1080,34 +1092,31 @@ nsresult TextEditor::SetTextAsSubAction(const nsAString& aString) {
       return NS_ERROR_FAILURE;
     }
 
-    // We want to select trailing `<br>` element to remove all nodes to replace
-    // all, but TextEditor::SelectEntireDocument() doesn't select such `<br>`
-    // elements.
-    // XXX We should make ReplaceSelectionAsSubAction() take range.  Then,
-    //     we can saving the expensive cost of modifying `Selection` here.
-    nsresult rv;
-    if (mRules && mRules->DocumentIsEmpty()) {
+    // We want to select trailing BR node to remove all nodes to replace all,
+    // but TextEditor::SelectEntireDocument doesn't select that BR node.
+    if (rules->DocumentIsEmpty()) {
       rv = SelectionRefPtr()->Collapse(rootElement, 0);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "Selection::Collapse() failed, but ignored");
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "Failed to move caret to start of the editor root element");
     } else {
       ErrorResult error;
       SelectionRefPtr()->SelectAllChildren(*rootElement, error);
       NS_WARNING_ASSERTION(
           !error.Failed(),
-          "Selection::SelectAllChildren() failed, but ignored");
+          "Failed to select all children of the editor root element");
       rv = error.StealNSResult();
     }
     if (NS_SUCCEEDED(rv)) {
-      DebugOnly<nsresult> rvIgnored = ReplaceSelectionAsSubAction(aString);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                           "ReplaceSelectionAsSubAction() failed, but ignored");
+      rv = ReplaceSelectionAsSubAction(aString);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "Failed to replace selection with new string");
     }
   }
-
-  // Destroying AutoUpdateViewBatch may cause destroying us.
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  // post-process
+  rv = rules->DidDoAction(subActionInfo, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
   return NS_OK;
 }
