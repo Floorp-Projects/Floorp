@@ -647,7 +647,7 @@ function Search(
 
   // This allows to handle leading or trailing restriction characters specially.
   this._leadingRestrictionToken = null;
-  if (tokens.length > 0) {
+  if (tokens.length) {
     if (
       UrlbarTokenizer.isRestrictionToken(tokens[0]) &&
       (tokens.length > 1 ||
@@ -672,7 +672,7 @@ function Search(
   // keyword, a search engine alias, an extension keyword, or simply a URL or
   // part of the search string the user has typed.  We won't know until we
   // create the heuristic result.
-  let firstToken = this._searchTokens.length > 0 && this._searchTokens[0].value;
+  let firstToken = !!this._searchTokens.length && this._searchTokens[0].value;
   this._heuristicToken =
     firstToken && this._trimmedOriginalSearchString.startsWith(firstToken)
       ? firstToken
@@ -1339,7 +1339,7 @@ Search.prototype = {
     // We always try to make the first result a special "heuristic" result.  The
     // heuristics below determine what type of result it will be, if any.
 
-    let hasSearchTerms = this._searchTokens.length > 0;
+    let hasSearchTerms = !!this._searchTokens.length;
 
     if (hasSearchTerms) {
       // It may be a keyword registered by an extension.
@@ -2042,7 +2042,7 @@ Search.prototype = {
     // when searching for "Firefox".
     let terms = parseResult.terms.toLowerCase();
     if (
-      this._searchTokens.length > 0 &&
+      this._searchTokens.length &&
       this._searchTokens.every(token => !terms.includes(token.value))
     ) {
       return;
@@ -2209,7 +2209,7 @@ Search.prototype = {
       // This requires walking the previous matches and marking their existence
       // into the current buckets, so that, when we'll add the new matches to
       // the buckets, we can either append or replace a match.
-      if (this._previousSearchMatchTypes.length > 0) {
+      if (this._previousSearchMatchTypes.length) {
         for (let type of this._previousSearchMatchTypes) {
           for (let bucket of this._buckets) {
             if (type == bucket.type && bucket.count < bucket.available) {
@@ -2254,7 +2254,7 @@ Search.prototype = {
    *        Whether to notify a result change.
    */
   _cleanUpNonCurrentMatches(type, notify = true) {
-    if (this._previousSearchMatchTypes.length == 0 || !this.pending) {
+    if (!this._previousSearchMatchTypes.length || !this.pending) {
       return;
     }
 
@@ -2295,10 +2295,7 @@ Search.prototype = {
    * If in restrict mode, cleanups non current matches for all the empty types.
    */
   cleanUpRestrictNonCurrentMatches() {
-    if (
-      this.hasBehavior("restrict") &&
-      this._previousSearchMatchTypes.length > 0
-    ) {
+    if (this.hasBehavior("restrict") && this._previousSearchMatchTypes.length) {
       for (let type of new Set(this._previousSearchMatchTypes)) {
         if (this._counts[type] == 0) {
           // Don't notify, since we are about to notify completion.
@@ -2613,7 +2610,7 @@ Search.prototype = {
       return false;
     }
 
-    if (this._searchString.length == 0) {
+    if (!this._searchString.length) {
       return false;
     }
 
@@ -2903,8 +2900,8 @@ UnifiedComplete.prototype = {
       // that may leave exposed unrelated matches for a longer time.
       let previousSearchString = result.searchString;
       let stringsRelated =
-        previousSearchString.length > 0 &&
-        searchString.length > 0 &&
+        !!previousSearchString.length &&
+        !!searchString.length &&
         (previousSearchString.includes(searchString) ||
           searchString.includes(previousSearchString));
       if (insertMethod == UrlbarUtils.INSERTMETHOD.MERGE || stringsRelated) {

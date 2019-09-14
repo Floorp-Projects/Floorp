@@ -27,7 +27,7 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
  *         expected certificate's attribute names / values.
  */
 function readCertPrefs(aPrefBranch) {
-  if (Services.prefs.getBranch(aPrefBranch).getChildList("").length == 0) {
+  if (!Services.prefs.getBranch(aPrefBranch).getChildList("").length) {
     return null;
   }
 
@@ -36,7 +36,7 @@ function readCertPrefs(aPrefBranch) {
   while (true) {
     let prefBranchCert = Services.prefs.getBranch(aPrefBranch + counter + ".");
     let prefCertAttrs = prefBranchCert.getChildList("");
-    if (prefCertAttrs.length == 0) {
+    if (!prefCertAttrs.length) {
       break;
     }
 
@@ -70,7 +70,7 @@ function readCertPrefs(aPrefBranch) {
  */
 function validateCert(aCertificate, aCerts) {
   // If there are no certificate requirements then just exit
-  if (!aCerts || aCerts.length == 0) {
+  if (!aCerts || !aCerts.length) {
     return;
   }
 

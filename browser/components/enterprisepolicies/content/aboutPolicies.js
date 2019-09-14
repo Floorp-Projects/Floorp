@@ -169,7 +169,7 @@ function generatePolicy(data, row, depth, new_cont, islast, arr_sep = false) {
         generatePolicy(data[count], new_row, depth + 1, new_cont, false, false);
       }
     }
-  } else if (typeof data == "object" && Object.keys(data).length > 0) {
+  } else if (typeof data == "object" && Object.keys(data).length) {
     let count = 0;
     for (let obj in data) {
       if (count == 0) {

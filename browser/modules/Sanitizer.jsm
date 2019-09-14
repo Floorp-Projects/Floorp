@@ -552,7 +552,7 @@ var Sanitizer = {
           }
         }
 
-        if (windowList.length == 0) {
+        if (!windowList.length) {
           return;
         }
 

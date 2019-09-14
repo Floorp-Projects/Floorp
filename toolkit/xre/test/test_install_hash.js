@@ -50,7 +50,7 @@ function mutatePath(path, mutator) {
     path = path.parent;
   }
 
-  while (parts.length > 0) {
+  while (parts.length) {
     path.append(parts.pop());
   }
 

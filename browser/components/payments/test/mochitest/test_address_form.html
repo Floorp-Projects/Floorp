@@ -582,7 +582,7 @@ add_task(async function test_customMerchantValidity_reset() {
   display.appendChild(form);
   await asyncElementRendered();
 
-  ok(form.querySelectorAll(":-moz-ui-invalid").length > 0, "Check fields are visibly invalid");
+  ok(!!form.querySelectorAll(":-moz-ui-invalid").length, "Check fields are visibly invalid");
   info("merchant cleared the errors");
   await form.requestStore.setState({
     request: {

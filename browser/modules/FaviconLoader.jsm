@@ -426,7 +426,7 @@ function guessType(icon) {
  * @param {integer} preferredWidth The preferred width for tab icons.
  */
 function selectIcons(iconInfos, preferredWidth) {
-  if (iconInfos.length == 0) {
+  if (!iconInfos.length) {
     return {
       richIcon: null,
       tabIcon: null,
@@ -598,7 +598,7 @@ class FaviconLoader {
     // we can still attempt to load icons, which will fail since the content
     // window is no longer available. Checking if iconInfos has been cleared
     // allows us to bail out early in this case.
-    if (this.iconInfos.length == 0) {
+    if (!this.iconInfos.length) {
       return;
     }
 

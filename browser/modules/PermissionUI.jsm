@@ -1062,7 +1062,7 @@ function MIDIPermissionPrompt(request) {
   let types = request.types.QueryInterface(Ci.nsIArray);
   let perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
   this.isSysexPerm =
-    perm.options.length > 0 &&
+    !!perm.options.length &&
     perm.options.queryElementAt(0, Ci.nsISupportsString) == "sysex";
   this.permName = "midi";
   if (this.isSysexPerm) {

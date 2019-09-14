@@ -201,7 +201,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     let modifiers = shortcut.split("+");
     let key = modifiers.pop();
 
-    if (modifiers.length > 0) {
+    if (modifiers.length) {
       let modifiersAttribute = ShortcutUtils.getModifiersAttribute(modifiers);
       let displayString =
         ShortcutUtils.getModifierString(modifiersAttribute) + key;
@@ -404,7 +404,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     let shortcutString = getShortcutForEvent(e);
     input.value = getShortcutValue(shortcutString);
 
-    if (e.type == "keyup" || shortcutString.length == 0) {
+    if (e.type == "keyup" || !shortcutString.length) {
       return;
     }
 
@@ -608,7 +608,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
       }
     }
 
-    if (noShortcutAddons.length > 0) {
+    if (noShortcutAddons.length) {
       frag.appendChild(renderNoShortcutAddons(noShortcutAddons));
     }
 
@@ -632,7 +632,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
         .sort((a, b) => a.name.localeCompare(b.name));
       let frag;
 
-      if (addons.length > 0) {
+      if (addons.length) {
         frag = await renderAddons(addons);
       } else {
         frag = document.importNode(templates.noAddons.content, true);

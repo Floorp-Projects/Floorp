@@ -245,7 +245,7 @@ PaymentUIService.prototype = {
 
       if (
         !browser.tabModalPromptBox ||
-        browser.tabModalPromptBox.listPrompts().length == 0
+        !browser.tabModalPromptBox.listPrompts().length
       ) {
         browser.removeAttribute("tabmodalPromptShowing");
       }

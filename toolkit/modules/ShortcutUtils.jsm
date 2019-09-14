@@ -292,7 +292,7 @@ var ShortcutUtils = {
     let keycode = this.getKeycodeAttribute(chromeKey);
 
     let baseSelector = "key";
-    if (modifiers.length > 0) {
+    if (modifiers.length) {
       baseSelector += `[modifiers="${modifiersString}"]`;
     }
 

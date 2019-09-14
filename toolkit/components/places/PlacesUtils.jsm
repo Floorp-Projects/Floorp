@@ -856,7 +856,7 @@ var PlacesUtils = {
   _shutdownFunctions: [],
   registerShutdownFunction: function PU_registerShutdownFunction(aFunc) {
     // If this is the first registered function, add the shutdown observer.
-    if (this._shutdownFunctions.length == 0) {
+    if (!this._shutdownFunctions.length) {
       Services.obs.addObserver(this, this.TOPIC_SHUTDOWN);
     }
     this._shutdownFunctions.push(aFunc);
@@ -867,7 +867,7 @@ var PlacesUtils = {
     switch (aTopic) {
       case this.TOPIC_SHUTDOWN:
         Services.obs.removeObserver(this, this.TOPIC_SHUTDOWN);
-        while (this._shutdownFunctions.length > 0) {
+        while (this._shutdownFunctions.length) {
           this._shutdownFunctions.shift().apply(this);
         }
         break;
@@ -2824,7 +2824,7 @@ var GuidHelper = {
           "SELECT b.id, b.guid from moz_bookmarks b WHERE b.guid = :guid LIMIT 1",
           { guid: aGuid }
         );
-        if (rows.length == 0) {
+        if (!rows.length) {
           throw new Error("no item found for the given GUID");
         }
 
@@ -2879,7 +2879,7 @@ var GuidHelper = {
           "SELECT b.id, b.guid from moz_bookmarks b WHERE b.id = :id LIMIT 1",
           { id: aItemId }
         );
-        if (rows.length == 0) {
+        if (!rows.length) {
           throw new Error("no item found for the given itemId");
         }
 

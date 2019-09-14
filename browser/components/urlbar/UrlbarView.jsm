@@ -762,7 +762,7 @@ class UrlbarView {
 
     let tagsContainer = item._elements.get("tagsContainer");
     tagsContainer.textContent = "";
-    if (result.payload.tags && result.payload.tags.length > 0) {
+    if (result.payload.tags && result.payload.tags.length) {
       tagsContainer.append(
         ...result.payload.tags.map((tag, i) => {
           const element = this._createElement("span");

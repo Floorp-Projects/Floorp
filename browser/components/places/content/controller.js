@@ -939,7 +939,7 @@ PlacesController.prototype = {
       );
     }
 
-    if (transactions.length > 0) {
+    if (transactions.length) {
       await PlacesUIUtils.batchUpdatesForNode(
         this._view.result,
         totalItems,
@@ -1114,7 +1114,7 @@ PlacesController.prototype = {
   },
 
   _releaseClipboardOwnership: function PC__releaseClipboardOwnership() {
-    if (this.cutNodes.length > 0) {
+    if (this.cutNodes.length) {
       // This clears the logical clipboard, doesn't remove data.
       this.clipboard.emptyClipboard(Ci.nsIClipboard.kGlobalClipboard);
     }
@@ -1175,7 +1175,7 @@ PlacesController.prototype = {
     // This order matters here!  It controls how this and other applications
     // select data to be inserted based on type.
     contents.forEach(function(content) {
-      if (content.entries.length > 0) {
+      if (content.entries.length) {
         hasData = true;
         let glue =
           content.type == PlacesUtils.TYPE_X_MOZ_PLACE ? "," : PlacesUtils.endl;
@@ -1309,7 +1309,7 @@ PlacesController.prototype = {
       this._clearClipboard();
     }
 
-    if (itemsToSelect.length > 0) {
+    if (itemsToSelect.length) {
       this._view.selectItems(itemsToSelect, false);
     }
   },

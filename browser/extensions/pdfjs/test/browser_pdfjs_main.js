@@ -62,7 +62,7 @@ add_task(async function test() {
         var viewBookmark = content.document.querySelector("a#viewBookmark");
         viewBookmark.click();
 
-        Assert.ok(viewBookmark.href.length > 0, "viewBookmark button has href");
+        Assert.ok(!!viewBookmark.href.length, "viewBookmark button has href");
 
         var viewer = content.wrappedJSObject.PDFViewerApplication;
         await viewer.close();

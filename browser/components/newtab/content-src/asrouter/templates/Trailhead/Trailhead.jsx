@@ -112,7 +112,7 @@ export class Trailhead extends React.PureComponent {
    * Report to telemetry additional information about the form submission.
    */
   _getFormInfo() {
-    const value = { has_flow_params: this.props.flowParams.flowId.length > 0 };
+    const value = { has_flow_params: !!this.props.flowParams.flowId.length };
     return { value };
   }
 

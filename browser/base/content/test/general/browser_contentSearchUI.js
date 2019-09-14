@@ -746,10 +746,10 @@ function checkState(
       s => s.type == "formHistory"
     ),
 
-    tableHidden: expectedSuggestions.length == 0,
+    tableHidden: !expectedSuggestions.length,
 
     inputValue: expectedInputVal,
-    ariaExpanded: expectedSuggestions.length == 0 ? "false" : "true",
+    ariaExpanded: !expectedSuggestions.length ? "false" : "true",
   };
   if (expectedSelectedButtonIdx != undefined) {
     expectedState.selectedButtonIndex = expectedSelectedButtonIdx;

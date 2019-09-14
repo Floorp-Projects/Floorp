@@ -143,7 +143,7 @@ export default class AddressOption extends ObservedPropertiesMixin(RichOption) {
         continue;
       }
 
-      if (lineEl.children.length > 0) {
+      if (lineEl.children.length) {
         lineEl.append(this.dataset.fieldSeparator);
       }
       lineEl.appendChild(fieldEl);

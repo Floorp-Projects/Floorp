@@ -25,7 +25,7 @@ function run_test() {
       d.startsWith("www.google.")
     )
   );
-  Assert.ok(SearchStaticData.getAlternateDomains("google.com").length == 0);
+  Assert.ok(!SearchStaticData.getAlternateDomains("google.com").length);
 
   // Test that methods from SearchStaticData module can be overwritten,
   // needed for hotfixing.

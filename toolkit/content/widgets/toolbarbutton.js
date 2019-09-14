@@ -109,7 +109,7 @@
 
         this.appendChild(this.constructor.badgedFragment.cloneNode(true));
 
-        if (moveChildren.length > 0) {
+        if (moveChildren.length) {
           let { badgeStack, icon } = this;
           for (let child of moveChildren) {
             badgeStack.insertBefore(child, icon);

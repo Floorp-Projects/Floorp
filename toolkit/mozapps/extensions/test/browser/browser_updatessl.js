@@ -88,7 +88,7 @@ function add_update_test(mainURL, redirectURL, expectedStatus) {
 
 function run_update_tests(callback) {
   function run_next_update_test() {
-    if (gTests.length == 0) {
+    if (!gTests.length) {
       callback();
       return;
     }

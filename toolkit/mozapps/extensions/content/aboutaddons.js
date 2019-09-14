@@ -852,7 +852,7 @@ customElements.define("panel-item", PanelItem);
 
 class AddonOptions extends HTMLElement {
   connectedCallback() {
-    if (this.children.length == 0) {
+    if (!this.children.length) {
       this.render();
     }
   }
@@ -1035,7 +1035,7 @@ customElements.define("five-star-rating", FiveStarRating);
 
 class ContentSelectDropdown extends HTMLElement {
   connectedCallback() {
-    if (this.children.length > 0) {
+    if (this.children.length) {
       return;
     }
     // This creates the menulist and menupopup elements needed for the inline
@@ -1332,7 +1332,7 @@ class AddonPermissionsList extends HTMLElement {
 
     this.textContent = "";
 
-    if (msgs.length > 0) {
+    if (msgs.length) {
       // Add a row for each permission message.
       for (let msg of msgs) {
         let row = document.createElement("div");
@@ -1363,7 +1363,7 @@ customElements.define("addon-permissions-list", AddonPermissionsList);
 
 class AddonDetails extends HTMLElement {
   connectedCallback() {
-    if (this.children.length == 0) {
+    if (!this.children.length) {
       this.render();
     }
     this.deck.addEventListener("view-changed", this);
@@ -1628,7 +1628,7 @@ customElements.define("addon-details", AddonDetails);
 class AddonCard extends HTMLElement {
   connectedCallback() {
     // If we've already rendered we can just update, otherwise render.
-    if (this.children.length > 0) {
+    if (this.children.length) {
       this.update();
     } else {
       this.render();
@@ -1658,7 +1658,7 @@ class AddonCard extends HTMLElement {
 
   set updateInstall(install) {
     this._updateInstall = install;
-    if (this.children.length > 0) {
+    if (this.children.length) {
       this.update();
     }
   }
@@ -1683,7 +1683,7 @@ class AddonCard extends HTMLElement {
     if (install && install.state == AddonManager.STATE_AVAILABLE) {
       this.updateInstall = install;
     }
-    if (this.children.length > 0) {
+    if (this.children.length) {
       this.render();
     }
   }
@@ -2067,7 +2067,7 @@ class AddonCard extends HTMLElement {
   }
 
   expand() {
-    if (this.children.length == 0) {
+    if (!this.children.length) {
       this.expanded = true;
     } else {
       throw new Error("expand() is only supported before render()");
@@ -2379,7 +2379,7 @@ class AddonList extends HTMLElement {
     // happpen as close to each other as possible.
     this.registerListener();
     // Don't render again if we were rendered prior to being inserted.
-    if (this.children.length == 0) {
+    if (!this.children.length) {
       // Render the initial view.
       this.render();
     }
@@ -2545,7 +2545,7 @@ class AddonList extends HTMLElement {
     let sectionCards = this.getCards(section);
 
     // If this is the first card in the section, create the heading.
-    if (sectionCards.length == 0) {
+    if (!sectionCards.length) {
       section.appendChild(this.createSectionHeading(sectionIndex));
     }
 
@@ -2621,7 +2621,7 @@ class AddonList extends HTMLElement {
     section.setAttribute("section", index);
 
     // Render the heading and add-ons if there are any.
-    if (addons.length > 0) {
+    if (addons.length) {
       section.appendChild(this.createSectionHeading(index));
 
       for (let addon of addons) {

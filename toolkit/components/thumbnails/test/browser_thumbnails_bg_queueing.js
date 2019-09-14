@@ -16,7 +16,7 @@ function* runTests() {
     BackgroundPageThumbs.capture(url, {
       timeout: isTimeoutTest ? 100 : 30000,
       onDone: function onDone(capturedURL) {
-        ok(urls.length > 0, "onDone called, so URLs should still remain");
+        ok(!!urls.length, "onDone called, so URLs should still remain");
         is(
           capturedURL,
           urls.shift(),

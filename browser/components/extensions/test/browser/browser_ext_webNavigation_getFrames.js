@@ -83,7 +83,7 @@ add_task(async function testWebNavigationFrames() {
         while (
           getAllFramesDetails.filter(
             details => details.frameId == nonExistentFrameId
-          ).length > 0
+          ).length
         ) {
           nonExistentFrameId += 1;
         }

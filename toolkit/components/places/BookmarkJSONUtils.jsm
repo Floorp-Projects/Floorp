@@ -249,11 +249,7 @@ BookmarkImporter.prototype = {
       PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER
     );
 
-    if (
-      nodes.length == 0 ||
-      !nodes[0].children ||
-      nodes[0].children.length == 0
-    ) {
+    if (!nodes.length || !nodes[0].children || !nodes[0].children.length) {
       return;
     }
 
@@ -276,7 +272,7 @@ BookmarkImporter.prototype = {
     // match what we need for insertTree, and we also have mappings of folders
     // so we can repair any searches after inserting the bookmarks (see bug 824502).
     for (let node of nodes) {
-      if (!node.children || node.children.length == 0) {
+      if (!node.children || !node.children.length) {
         continue;
       } // Nothing to restore for this root
 
@@ -292,7 +288,7 @@ BookmarkImporter.prototype = {
     // Now we can add the actual nodes to the database.
     for (let node of nodes) {
       // Drop any nodes without children, we can't insert them.
-      if (!node.children || node.children.length == 0) {
+      if (!node.children || !node.children.length) {
         continue;
       }
 
@@ -478,7 +474,7 @@ function translateTreeTypes(node) {
       .split(",")
       .filter(
         aTag =>
-          aTag.length > 0 && aTag.length <= PlacesUtils.bookmarks.MAX_TAG_LENGTH
+          !!aTag.length && aTag.length <= PlacesUtils.bookmarks.MAX_TAG_LENGTH
       );
 
     // If we end up with none, then delete the property completely.

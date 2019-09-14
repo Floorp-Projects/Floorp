@@ -1308,7 +1308,7 @@ class AsyncTabSwitcher {
 
   addLogFlag(flag, ...subFlags) {
     if (this.logging()) {
-      if (subFlags.length > 0) {
+      if (subFlags.length) {
         flag += `(${subFlags.map(f => (f ? 1 : 0)).join("")})`;
       }
       this._logFlags.push(flag);
@@ -1420,13 +1420,13 @@ class AsyncTabSwitcher {
       lastMatch = i;
     }
 
-    if (unloadedTabsStrings.length > 0) {
+    if (unloadedTabsStrings.length) {
       accum += `${unloadedTabsStrings.join(",")}:(unloaded) `;
     }
 
     accum += "cached: " + this.tabLayerCache.length + " ";
 
-    if (this._logFlags.length > 0) {
+    if (this._logFlags.length) {
       accum += `[${this._logFlags.join(",")}] `;
       this._logFlags = [];
     }

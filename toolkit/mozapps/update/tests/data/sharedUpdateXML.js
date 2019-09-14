@@ -395,7 +395,7 @@ function readFileBytes(aFile) {
     let bytes = bis.readByteArray(Math.min(65535, count));
     data.push(String.fromCharCode.apply(null, bytes));
     count -= bytes.length;
-    if (bytes.length == 0) {
+    if (!bytes.length) {
       throw new Error("Nothing read from input stream!");
     }
   }

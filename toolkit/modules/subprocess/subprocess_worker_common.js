@@ -30,7 +30,7 @@ class BasePipe {
   shiftPending() {
     let result = this.pending.shift();
 
-    if (this.closing && this.pending.length == 0) {
+    if (this.closing && !this.pending.length) {
       this.close();
     }
 

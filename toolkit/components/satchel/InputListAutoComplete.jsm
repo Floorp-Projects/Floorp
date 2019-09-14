@@ -14,11 +14,10 @@ InputListAutoComplete.prototype = {
 
   autoCompleteSearch(aUntrimmedSearchString, aField) {
     let [values, labels] = this.getListSuggestions(aField);
-    let searchResult =
-      values.length > 0
-        ? Ci.nsIAutoCompleteResult.RESULT_SUCCESS
-        : Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
-    let defaultIndex = values.length > 0 ? 0 : -1;
+    let searchResult = values.length
+      ? Ci.nsIAutoCompleteResult.RESULT_SUCCESS
+      : Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
+    let defaultIndex = values.length ? 0 : -1;
 
     return new FormAutoCompleteResult(
       aUntrimmedSearchString,

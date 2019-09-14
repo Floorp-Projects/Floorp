@@ -142,7 +142,7 @@ var ParentUtils = {
       record => record.guid
     );
 
-    if (guids.length == 0) {
+    if (!guids.length) {
       return;
     }
 
@@ -161,7 +161,7 @@ var ParentUtils = {
       record => record.guid
     );
 
-    if (guids.length == 0) {
+    if (!guids.length) {
       return;
     }
 

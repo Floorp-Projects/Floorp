@@ -43,7 +43,7 @@ async function getSearchExtensions() {
 add_task(async function test_validate_manifest() {
   let searchExtensions = await getSearchExtensions();
   ok(
-    searchExtensions.length > 0,
+    !!searchExtensions.length,
     `Found ${searchExtensions.length} search extensions`
   );
   for (const xpi of searchExtensions) {

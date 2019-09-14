@@ -63,7 +63,7 @@ async function setupToolboxTest(extensionId) {
       filterRequest
     );
 
-    return requests.length > 0;
+    return !!requests.length;
   });
 
   // Call a function defined in the target extension to make assertions

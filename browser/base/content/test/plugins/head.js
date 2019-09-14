@@ -471,7 +471,7 @@ function promiseUpdatePluginBindings(browser) {
     if (!elems || elems.length < 1) {
       elems = doc.getElementsByTagName("object");
     }
-    if (elems && elems.length > 0) {
+    if (elems && elems.length) {
       elems[0].clientTop;
     }
   });

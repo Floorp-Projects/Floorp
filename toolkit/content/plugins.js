@@ -22,7 +22,7 @@ RPMAddMessageListener("PluginList", function({ data: aPlugins }) {
 
   // "Installed plugins"
   var id, label;
-  if (aPlugins.length > 0) {
+  if (aPlugins.length) {
     id = "plugs";
     label = "installed-plugins-label";
   } else {

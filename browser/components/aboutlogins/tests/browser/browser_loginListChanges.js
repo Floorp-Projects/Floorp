@@ -70,7 +70,7 @@ add_task(async function test_login_removed() {
   await ContentTask.spawn(browser, login, async removedLogin => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     let loginRemoved = await ContentTaskUtils.waitForCondition(() => {
-      return loginList._loginGuidsSortedOrder.length == 0;
+      return !loginList._loginGuidsSortedOrder.length;
     }, "Waiting for login to get removed");
     ok(loginRemoved, "The login should be removed from the page");
   });
@@ -121,7 +121,7 @@ add_task(async function test_all_logins_removed() {
   await ContentTask.spawn(browser, null, async () => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     let loginFound = await ContentTaskUtils.waitForCondition(() => {
-      return loginList._loginGuidsSortedOrder.length == 0;
+      return !loginList._loginGuidsSortedOrder.length;
     }, "Waiting for logins to be cleared");
     ok(loginFound, "Logins should be cleared");
     ok(

@@ -243,7 +243,7 @@ async function expectPopupOpen(browser) {
   await BrowserTestUtils.waitForCondition(() => {
     const listItemElems = getDisplayedPopupItems(browser);
     return (
-      [...listItemElems].length > 0 &&
+      !![...listItemElems].length &&
       [...listItemElems].every(item => {
         return (
           (item.getAttribute("originaltype") == "autofill-profile" ||
@@ -329,7 +329,7 @@ function removeCreditCards(guids) {
 
 function getNotification(index = 0) {
   let notifications = PopupNotifications.panel.childNodes;
-  ok(notifications.length > 0, "at least one notification displayed");
+  ok(!!notifications.length, "at least one notification displayed");
   ok(true, notifications.length + " notification(s)");
   return notifications[index];
 }

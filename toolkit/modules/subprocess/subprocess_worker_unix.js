@@ -165,7 +165,7 @@ class InputPipe extends Pipe {
       }
     }
 
-    if (reads.length == 0) {
+    if (!reads.length) {
       io.updatePollFds();
     }
     return result;
@@ -250,7 +250,7 @@ class OutputPipe extends Pipe {
       }
     }
 
-    if (writes.length == 0) {
+    if (!writes.length) {
       io.updatePollFds();
     }
   }

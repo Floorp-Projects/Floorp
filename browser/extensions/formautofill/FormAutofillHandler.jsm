@@ -517,7 +517,7 @@ class FormAutofillSection {
    */
   createRecord() {
     let details = this.fieldDetails;
-    if (!this.isEnabled() || !details || details.length == 0) {
+    if (!this.isEnabled() || !details || !details.length) {
       return null;
     }
 

@@ -231,7 +231,7 @@ class UrlbarEventBufferer {
     // If any event has been deferred for this search, then defer all subsequent
     // events so that the user does not experience them out of order.
     // All events will be replayed when _deferringTimeout fires.
-    if (this._eventsQueue.length > 0) {
+    if (this._eventsQueue.length) {
       return true;
     }
 

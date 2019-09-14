@@ -180,7 +180,7 @@ this.sessions = class extends ExtensionAPI {
               }
             }
 
-            if (recentlyClosedTabs.length > 0) {
+            if (recentlyClosedTabs.length) {
               // Sort the tabs.
               recentlyClosedTabs.sort((a, b) => b.closedAt - a.closedAt);
 

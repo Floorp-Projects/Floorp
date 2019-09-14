@@ -307,7 +307,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
       });
       // Otherwise, append it
       if (!hasMatch) {
-        const initialized = !!(action.data.rows && action.data.rows.length > 0);
+        const initialized = !!(action.data.rows && !!action.data.rows.length);
         const section = Object.assign(
           { title: "", rows: [], enabled: false },
           action.data,
@@ -327,7 +327,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
           // Disabling a section (SECTION_UPDATE with empty rows) does not retain pinned cards.
           if (
             action.data.rows &&
-            action.data.rows.length > 0 &&
+            !!action.data.rows.length &&
             section.rows.find(card => card.pinned)
           ) {
             const rows = Array.from(action.data.rows);

@@ -21,7 +21,7 @@ class MatchURLFilters {
       throw new TypeError("filters should be an array");
     }
 
-    if (filters.length == 0) {
+    if (!filters.length) {
       throw new Error("filters array should not be empty");
     }
 

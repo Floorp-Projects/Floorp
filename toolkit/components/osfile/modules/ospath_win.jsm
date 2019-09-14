@@ -255,7 +255,7 @@ var normalize = function(path) {
       case ".": // Ignore
         break;
       case "..":
-        if (stack.length == 0) {
+        if (!stack.length) {
           if (absolute) {
             throw new Error("Path is ill-formed: attempting to go past root");
           } else {

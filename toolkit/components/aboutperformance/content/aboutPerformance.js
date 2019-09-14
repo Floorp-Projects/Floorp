@@ -269,7 +269,7 @@ var State = {
    */
   async update() {
     // If the buffer is empty, add one value for bootstraping purposes.
-    if (this._buffer.length == 0) {
+    if (!this._buffer.length) {
       this._latest = await this._promiseSnapshot();
       this._buffer.push(this._latest);
       await wait(BUFFER_SAMPLING_RATE_MS * 1.1);

@@ -2853,7 +2853,7 @@ function run_FunctionType_tests() {
   Assert.equal(f_t.size, undefined);
   Assert.ok(f_t.abi === ctypes.default_abi);
   Assert.ok(f_t.returnType === g_t);
-  Assert.ok(f_t.argTypes.length == 0);
+  Assert.ok(!f_t.argTypes.length);
 
   Assert.equal(f_t.toString(), "type " + name);
   Assert.equal(f_t.toSource(), "ctypes.FunctionType(ctypes.default_abi, g_t)");

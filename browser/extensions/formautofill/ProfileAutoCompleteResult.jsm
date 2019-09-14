@@ -78,7 +78,7 @@ class ProfileAutoCompleteResult {
     // The result code of this result object.
     if (resultCode) {
       this.searchResult = resultCode;
-    } else if (matchingProfiles.length > 0) {
+    } else if (matchingProfiles.length) {
       this.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
     } else {
       this.searchResult = Ci.nsIAutoCompleteResult.RESULT_NOMATCH;

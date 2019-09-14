@@ -92,7 +92,7 @@ var RecentlyClosedTabsAndWindowsMenuUtils = {
     let closedWindowData = SessionStore.getClosedWindowData(false);
     let doc = aWindow.document;
     let fragment = doc.createDocumentFragment();
-    if (closedWindowData.length != 0) {
+    if (closedWindowData.length) {
       let menuLabelString = navigatorBundle.GetStringFromName(
         "menuUndoCloseWindowLabel"
       );

@@ -179,8 +179,7 @@ if (this.Components) {
 
       // Is it safe to kill the worker?
       let safe =
-        result.openedFiles.length == 0 &&
-        result.openedDirectoryIterators.length == 0;
+        !result.openedFiles.length && !result.openedDirectoryIterators.length;
       result.killed = safe && kill;
 
       return new Meta(result, { shutdown: result.killed });

@@ -301,7 +301,7 @@ var gXPInstallObserver = {
       i => i.addon.signedState <= AddonManager.SIGNEDSTATE_MISSING
     );
     let someUnsigned =
-      unsigned.length > 0 && unsigned.length < installInfo.installs.length;
+      !!unsigned.length && unsigned.length < installInfo.installs.length;
 
     options.eventCallback = aEvent => {
       switch (aEvent) {
@@ -361,7 +361,7 @@ var gXPInstallObserver = {
       );
       notification.setAttribute("warning", "true");
       options.learnMoreURL += "unsigned-addons";
-    } else if (unsigned.length == 0) {
+    } else if (!unsigned.length) {
       // All add-ons are verified or don't need to be verified
       messageString = gNavigatorBundle.getString("addonConfirmInstall.message");
       notification.removeAttribute("warning");
@@ -450,7 +450,7 @@ var gXPInstallObserver = {
 
     PopupNotifications.remove(notifications, true);
 
-    return notifications.length > 0;
+    return !!notifications.length;
   },
 
   logWarningFullScreenInstallBlocked() {

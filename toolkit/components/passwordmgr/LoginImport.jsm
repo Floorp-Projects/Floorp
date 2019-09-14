@@ -63,7 +63,7 @@ this.LoginImport.prototype = {
     // Thus, merging with existing data is not a use case we support.  This
     // restriction might be removed to support re-importing passwords set by an
     // old version by flipping the import preference and restarting.
-    if (this.store.data.logins.length > 0) {
+    if (this.store.data.logins.length) {
       throw new Error(
         "Unable to import saved passwords because some data " +
           "has already been imported or saved."

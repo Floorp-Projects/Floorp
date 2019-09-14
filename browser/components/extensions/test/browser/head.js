@@ -502,7 +502,7 @@ async function openExtensionContextMenu(selector = "#img1") {
   );
 
   // Return null if the extension only has one item and therefore no extension menu.
-  if (topLevelMenu.length == 0) {
+  if (!topLevelMenu.length) {
     return null;
   }
 

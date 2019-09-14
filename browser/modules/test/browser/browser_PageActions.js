@@ -1396,7 +1396,7 @@ add_task(async function removeRetainState() {
   // Get the list of actions initially in the urlbar.
   let initialActionsInUrlbar = PageActions.actionsInUrlbar(window);
   Assert.ok(
-    initialActionsInUrlbar.length > 0,
+    !!initialActionsInUrlbar.length,
     "This test expects there to be at least one action in the urlbar initially (like the bookmark star)"
   );
 
@@ -1754,7 +1754,7 @@ add_task(async function contextMenu() {
     true
   );
   ok(
-    snapshot.parent && snapshot.parent.length > 0,
+    snapshot.parent && !!snapshot.parent.length,
     "Got parent telemetry events in the snapshot"
   );
   let relatedEvents = snapshot.parent

@@ -81,7 +81,7 @@ async function run_test_1() {
   Assert.notEqual(testPlugin, null);
 
   let addons = await AddonManager.getAddonsByTypes(["plugin"]);
-  Assert.ok(addons.length > 0);
+  Assert.ok(!!addons.length);
 
   addons.forEach(function(p) {
     if (p.description == TEST_PLUGIN_DESCRIPTION) {

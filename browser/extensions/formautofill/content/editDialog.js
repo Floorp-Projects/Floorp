@@ -132,9 +132,7 @@ class AutofillEditDialog {
   updateSaveButtonState() {
     // Toggle disabled attribute on the save button based on
     // whether the form is filled or empty.
-    if (
-      Object.keys(this._elements.fieldContainer.buildFormObject()).length == 0
-    ) {
+    if (!Object.keys(this._elements.fieldContainer.buildFormObject()).length) {
       this._elements.save.setAttribute("disabled", true);
     } else {
       this._elements.save.removeAttribute("disabled");

@@ -987,7 +987,7 @@ var AddonManagerInternal = {
       this.types[type].providers = this.types[type].providers.filter(
         p => p != aProvider
       );
-      if (this.types[type].providers.length == 0) {
+      if (!this.types[type].providers.length) {
         let oldType = this.types[type].type;
         delete this.types[type];
 
@@ -1366,7 +1366,7 @@ var AddonManagerInternal = {
     let difference = Extension.comparePermissions(oldPerms, newPerms);
 
     // If there are no new permissions, just go ahead with the update
-    if (difference.origins.length == 0 && difference.permissions.length == 0) {
+    if (!difference.origins.length && !difference.permissions.length) {
       return Promise.resolve();
     }
 
@@ -4614,7 +4614,7 @@ AMTelemetry = {
 
     extra = { ...extraVars, ...extra };
 
-    let hasExtraVars = Object.keys(extra).length > 0;
+    let hasExtraVars = !!Object.keys(extra).length;
     extra = this.formatExtraVars(extra);
 
     this.recordEvent({

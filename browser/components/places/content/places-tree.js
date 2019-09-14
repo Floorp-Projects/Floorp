@@ -741,7 +741,7 @@
 
         var concreteGuid = PlacesUtils.getConcreteItemGuid(node);
         if (
-          guids.length == 0 ||
+          !guids.length ||
           !PlacesUtils.nodeIsContainer(node) ||
           checkedGuidsSet.has(concreteGuid)
         ) {
@@ -768,11 +768,7 @@
         // this node if we don't find any additional results here.
         var previousOpenness = node.containerOpen;
         node.containerOpen = true;
-        for (
-          var child = 0;
-          child < node.childCount && guids.length > 0;
-          child++
-        ) {
+        for (var child = 0; child < node.childCount && guids.length; child++) {
           var childNode = node.getChild(child);
           var found = findNodes(childNode);
           if (!foundOne) {

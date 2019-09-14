@@ -254,10 +254,10 @@ XULStore.prototype = {
       if (attrs && attr in attrs) {
         delete attrs[attr];
 
-        if (Object.getOwnPropertyNames(attrs).length == 0) {
+        if (!Object.getOwnPropertyNames(attrs).length) {
           delete ids[id];
 
-          if (Object.getOwnPropertyNames(ids).length == 0) {
+          if (!Object.getOwnPropertyNames(ids).length) {
             delete this._data[docURI];
           }
         }

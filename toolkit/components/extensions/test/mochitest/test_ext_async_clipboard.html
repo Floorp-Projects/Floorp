@@ -331,7 +331,7 @@ add_task(async function test_contentscript_clipboard_nocontents_read() {
       // and read from it, the data transfer object contains an item of type
       // text/plain and kind string, but we can't call getAsString on it to verify
       // that at least it is an empty string because the callback never gets invoked.
-      if (dataT.items.length == 0 ||
+      if (!dataT.items.length ||
         (dataT.items.length == 1 && dataT.items[0].type == "text/plain" &&
          dataT.items[0].kind == "string")) {
         browser.test.succeed("Read promise successfully resolved");

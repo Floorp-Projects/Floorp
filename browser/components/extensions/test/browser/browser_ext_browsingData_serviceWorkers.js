@@ -90,7 +90,7 @@ add_task(async function testServiceWorkers() {
   await extension.awaitMessage("serviceWorkersRemoved");
 
   // The serviceWorkers and not necessarily removed immediately.
-  while (serviceWorkers.length > 0) {
+  while (serviceWorkers.length) {
     serviceWorkers = serviceWorkerManager.getAllRegistrations();
     await new Promise(resolve => setTimeout(resolve, 1));
   }

@@ -480,7 +480,7 @@ SimpleTest.registerCleanupFunction(() => {
     let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
     if (chromeWin && chromeWin.PopupNotifications) {
       let notes = chromeWin.PopupNotifications._currentNotifications;
-      if (notes.length > 0) {
+      if (notes.length) {
         dump("Removing " + notes.length + " popup notifications.\n");
       }
       for (let note of notes) {

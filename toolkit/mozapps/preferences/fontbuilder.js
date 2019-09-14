@@ -28,11 +28,11 @@ var FontBuilder = {
     let defaultFont = null;
     // Load Font Lists
     let fonts = await this.enumerator.EnumerateFontsAsync(aLanguage, aFontType);
-    if (fonts.length > 0) {
+    if (fonts.length) {
       defaultFont = this.enumerator.getDefaultFont(aLanguage, aFontType);
     } else {
       fonts = await this.enumerator.EnumerateFontsAsync(aLanguage, "");
-      if (fonts.length > 0) {
+      if (fonts.length) {
         defaultFont = this.enumerator.getDefaultFont(aLanguage, "");
       }
     }
@@ -44,7 +44,7 @@ var FontBuilder = {
     // Build the UI for the Default Font and Fonts for this CSS type.
     const popup = document.createXULElement("menupopup");
     let separator;
-    if (fonts.length > 0) {
+    if (fonts.length) {
       let menuitem = document.createXULElement("menuitem");
       if (defaultFont) {
         document.l10n.setAttributes(menuitem, "fonts-label-default", {

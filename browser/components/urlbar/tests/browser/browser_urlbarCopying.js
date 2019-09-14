@@ -241,7 +241,7 @@ var tests = [
 
 function nextTest() {
   let testCase = tests.shift();
-  if (tests.length == 0) {
+  if (!tests.length) {
     runTest(testCase, finish);
   } else {
     runTest(testCase, nextTest);
@@ -292,7 +292,7 @@ function testCopy(copyVal, targetValue, cb) {
       offsets.push([startBracket, endBracket - 1]);
       copyVal = copyVal.replace("<", "").replace(">", "");
     }
-    if (offsets.length == 0 || copyVal != gURLBar.value) {
+    if (!offsets.length || copyVal != gURLBar.value) {
       ok(false, "invalid copyVal: " + copyVal);
     }
     gURLBar.selectionStart = offsets[0][0];

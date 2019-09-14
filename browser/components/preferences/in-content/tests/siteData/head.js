@@ -262,7 +262,7 @@ async function loadServiceWorkerTestPage(url) {
 function promiseServiceWorkersCleared() {
   return BrowserTestUtils.waitForCondition(() => {
     let serviceWorkers = serviceWorkerManager.getAllRegistrations();
-    if (serviceWorkers.length == 0) {
+    if (!serviceWorkers.length) {
       ok(true, "Cleared all service workers");
       return true;
     }

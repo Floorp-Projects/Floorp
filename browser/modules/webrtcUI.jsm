@@ -699,8 +699,8 @@ function prompt(aBrowser, aRequest) {
             browser._devicePermissionPrincipals || [];
           browser._devicePermissionPrincipals.push(principal);
 
-          let camNeeded = videoDevices.length > 0;
-          let micNeeded = audioDevices.length > 0;
+          let camNeeded = !!videoDevices.length;
+          let micNeeded = !!audioDevices.length;
           checkOSPermission(camNeeded, micNeeded).then(havePermission => {
             if (havePermission) {
               let mm = browser.messageManager;
@@ -1067,8 +1067,8 @@ function prompt(aBrowser, aRequest) {
           aBrowser._devicePermissionPrincipals.push(principal);
         }
 
-        let camNeeded = videoDevices.length > 0;
-        let micNeeded = audioDevices.length > 0;
+        let camNeeded = !!videoDevices.length;
+        let micNeeded = !!audioDevices.length;
         let havePermission = await checkOSPermission(camNeeded, micNeeded);
         if (!havePermission) {
           denyRequestNoPermission(notification.browser, aRequest);

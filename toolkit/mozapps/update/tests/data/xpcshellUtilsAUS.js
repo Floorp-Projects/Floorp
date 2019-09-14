@@ -854,7 +854,7 @@ function setupTestCommon(aAppUpdateAutoEnabled = false, aAllowBits = false) {
     .split(".")[0];
 
   if (gDebugTestLog && !gIsServiceTest) {
-    if (gTestsToLog.length == 0 || gTestsToLog.includes(gTestID)) {
+    if (!gTestsToLog.length || gTestsToLog.includes(gTestID)) {
       let logFile = do_get_file(gTestID + ".log", true);
       if (!logFile.exists()) {
         logFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);

@@ -839,7 +839,7 @@ var AeroPeek = {
     win.gTaskbarTabGroup.destroy();
     delete win.gTaskbarTabGroup;
 
-    if (this.windows.length == 0) {
+    if (!this.windows.length) {
       this.destroy();
     }
   },

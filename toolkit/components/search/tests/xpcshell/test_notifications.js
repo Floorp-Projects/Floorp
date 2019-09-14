@@ -41,7 +41,7 @@ class SearchObserver {
 
     this.expectedNotifications.shift();
 
-    if (this.expectedNotifications.length == 0) {
+    if (!this.expectedNotifications.length) {
       this.deferred.resolve(this.addedEngine);
       Services.obs.removeObserver(
         this.observer,

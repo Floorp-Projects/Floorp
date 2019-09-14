@@ -71,7 +71,7 @@ function shortURL({ url }) {
 
   // Remove the eTLD (e.g., com, net) and the preceding period from the hostname
   const eTLD = getETLD(hostname);
-  const eTLDExtra = eTLD.length > 0 ? -(eTLD.length + 1) : Infinity;
+  const eTLDExtra = eTLD.length ? -(eTLD.length + 1) : Infinity;
 
   // Ideally get the short eTLD-less host but fall back to longer url parts
   return (

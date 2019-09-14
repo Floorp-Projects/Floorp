@@ -55,7 +55,7 @@ async function assertTelemetry(expectedHistograms, expectedScalars) {
     );
   }, "should have the correct number of histograms");
 
-  if (Object.entries(expectedScalars).length > 0) {
+  if (Object.entries(expectedScalars).length) {
     await TestUtils.waitForCondition(() => {
       scalars =
         Services.telemetry.getSnapshotForKeyedScalars("main", false).parent ||
