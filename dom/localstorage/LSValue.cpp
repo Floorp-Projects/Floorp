@@ -9,8 +9,71 @@
 namespace mozilla {
 namespace dom {
 
+bool LSValue::InitFromString(const nsAString& aBuffer) {
+  MOZ_ASSERT(mBuffer.IsVoid());
+  MOZ_ASSERT(!mUTF16Length);
+  MOZ_ASSERT(!mCompressed);
+
+  if (aBuffer.IsVoid()) {
+    return true;
+  }
+
+  nsCString converted;
+  if (NS_WARN_IF(!CopyUTF16toUTF8(aBuffer, converted, fallible))) {
+    return false;
+  }
+
+  nsCString convertedAndCompressed;
+  if (NS_WARN_IF(!SnappyCompress(converted, convertedAndCompressed))) {
+    return false;
+  }
+
+  if (convertedAndCompressed.IsVoid()) {
+    mBuffer = converted;
+    mUTF16Length = aBuffer.Length();
+  } else {
+    mBuffer = convertedAndCompressed;
+    mUTF16Length = aBuffer.Length();
+    mCompressed = true;
+  }
+
+  return true;
+}
+
+nsresult LSValue::InitFromStatement(mozIStorageStatement* aStatement,
+                                    uint32_t aIndex) {
+  MOZ_ASSERT(aStatement);
+  MOZ_ASSERT(mBuffer.IsVoid());
+  MOZ_ASSERT(!mUTF16Length);
+  MOZ_ASSERT(!mCompressed);
+
+  nsCString buffer;
+  nsresult rv = aStatement->GetUTF8String(aIndex, buffer);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  int32_t utf16Length;
+  rv = aStatement->GetInt32(aIndex + 1, &utf16Length);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  int32_t compressed;
+  rv = aStatement->GetInt32(aIndex + 2, &compressed);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mBuffer = buffer;
+  mUTF16Length = utf16Length;
+  mCompressed = compressed;
+
+  return NS_OK;
+}
+
 const LSValue& VoidLSValue() {
-  static const LSValue sVoidLSValue(VoidCString(), 0, false);
+  static const LSValue sVoidLSValue;
 
   return sVoidLSValue;
 }

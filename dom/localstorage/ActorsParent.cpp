@@ -7913,25 +7913,11 @@ nsresult PrepareDatastoreOp::LoadDataOp::DoDatastoreWork() {
       return rv;
     }
 
-    nsCString buffer;
-    rv = stmt->GetUTF8String(1, buffer);
+    LSValue value;
+    rv = value.InitFromStatement(stmt, 1);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-
-    int32_t utf16Length;
-    rv = stmt->GetInt32(2, &utf16Length);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    int32_t compressed;
-    rv = stmt->GetInt32(3, &compressed);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    LSValue value(buffer, utf16Length, compressed);
 
     mPrepareDatastoreOp->mValues.Put(key, value);
     auto item = mPrepareDatastoreOp->mOrderedItems.AppendElement();
@@ -8013,11 +7999,15 @@ PrepareDatastoreOp::CompressFunction::OnFunctionCall(
   }
 
   nsCString compressed;
-  if (!SnappyCompress(value, compressed)) {
-    compressed = value;
+  if (NS_WARN_IF(!SnappyCompress(value, compressed))) {
+    return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIVariant> result = new storage::UTF8TextVariant(compressed);
+  if (!compressed.IsVoid()) {
+    value = compressed;
+  }
+
+  nsCOMPtr<nsIVariant> result = new storage::UTF8TextVariant(value);
 
   result.forget(aResult);
   return NS_OK;
@@ -8051,7 +8041,11 @@ PrepareDatastoreOp::CompressibleFunction::OnFunctionCall(
   }
 
   nsCString compressed;
-  bool compressible = SnappyCompress(value, compressed);
+  if (NS_WARN_IF(!SnappyCompress(value, compressed))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  bool compressible = !compressed.IsVoid();
 
   nsCOMPtr<nsIVariant> result = new storage::IntegerVariant(compressible);
 
