@@ -87,7 +87,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 // since it needs to be able to track things like new frameLoader globals that
 // are created before other framework code has been initialized.
 Services.ppmm.loadProcessScript(
-  "data:,ChromeUtils.import('resource://gre/modules/ExtensionProcessScript.jsm')",
+  "resource://gre/modules/extensionProcessScriptLoader.js",
   true
 );
 
