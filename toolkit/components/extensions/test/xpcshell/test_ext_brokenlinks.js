@@ -12,6 +12,7 @@ add_task(async function testXPIMissingBackGroundScript() {
     manifest: {
       background: {
         scripts: ["missing.js"],
+        persistent: false,
       },
     },
   });

@@ -491,8 +491,8 @@ add_task(async function test_addon_postinstall_incognito_hidden_checkbox() {
         applications: { gecko: { id: "static-theme@mozilla.com" } },
         theme: {
           colors: {
-            frame: "#FFFFFF",
-            tab_background_text: "#000",
+            accentcolor: "#FFFFFF",
+            textcolor: "#000",
           },
         },
       },
