@@ -77,7 +77,7 @@ const whitelist = {
   processScripts: new Set([
     "chrome://global/content/process-content.js",
     "resource:///modules/ContentObservers.js",
-    "data:,ChromeUtils.import('resource://gre/modules/ExtensionProcessScript.jsm')",
+    "resource://gre/modules/extensionProcessScriptLoader.js",
     "resource://devtools/client/jsonview/converter-observer.js",
     "resource://gre/modules/WebRequestContent.js",
   ]),
