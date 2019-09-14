@@ -50,20 +50,15 @@ class ShareButtonTest {
         //  - Visit a URL, wait until it's loaded
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            dismissTrackingOnboarding()
             verifyPageContent(defaultWebPage.content)
         }
 
         // From the 3-dot menu next to the Select share menu
         navigationToolbar {
         }.openThreeDotMenu {
-
-            // Verify Share button exists, and click it
             verifyShareButton()
             clickShareButton()
-
-            // Verify title
-            // Verify Send to Device title
-            // Verify Share a link title
             verifyShareDialogTitle()
             verifySendToDeviceTitle()
             verifyShareALinkTitle()

@@ -67,6 +67,7 @@ class TabbedBrowsingTest {
 
         navigationToolbar {
         }.openNewTabAndEnterToBrowser(defaultWebPage.url) {
+            dismissTrackingOnboarding()
             verifyPageContent(defaultWebPage.content)
             verifyTabCounter("1")
         }.openHomeScreen { }
@@ -97,6 +98,8 @@ class TabbedBrowsingTest {
 
         navigationToolbar {
         }.openNewTabAndEnterToBrowser(defaultWebPage.url) {
+            dismissTrackingOnboarding()
+
             verifyPageContent(defaultWebPage.content)
             verifyTabCounter("1")
         }.openHomeScreen {
@@ -123,6 +126,7 @@ class TabbedBrowsingTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            dismissTrackingOnboarding()
             verifyPageContent(defaultWebPage.content)
         }.openHomeScreen { }
 

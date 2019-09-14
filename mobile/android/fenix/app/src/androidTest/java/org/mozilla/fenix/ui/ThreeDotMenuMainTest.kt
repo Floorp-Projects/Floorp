@@ -59,6 +59,7 @@ class ThreeDotMenuMainTest {
         }.goBack {
         }.openThreeDotMenu {
         }.openHelp {
+            dismissTrackingOnboarding()
             verifyHelpUrl()
         }.openHomeScreen {
         }.openThreeDotMenu {
