@@ -17,21 +17,27 @@ bool SnappyCompress(const nsACString& aSource, nsACString& aDest) {
   size_t uncompressedLength = aSource.Length();
 
   if (uncompressedLength <= 16) {
-    return false;
+    aDest.SetIsVoid(true);
+    return true;
   }
 
   size_t compressedLength = snappy::MaxCompressedLength(uncompressedLength);
 
-  aDest.SetLength(compressedLength);
+  if (NS_WARN_IF(!aDest.SetLength(compressedLength, fallible))) {
+    return false;
+  }
 
   snappy::RawCompress(aSource.BeginReading(), uncompressedLength,
                       aDest.BeginWriting(), &compressedLength);
 
   if (compressedLength >= uncompressedLength) {
-    return false;
+    aDest.SetIsVoid(true);
+    return true;
   }
 
-  aDest.SetLength(compressedLength);
+  if (NS_WARN_IF(!aDest.SetLength(compressedLength, fallible))) {
+    return false;
+  }
 
   return true;
 }
