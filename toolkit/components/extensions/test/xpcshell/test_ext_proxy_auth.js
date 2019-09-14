@@ -115,11 +115,8 @@ add_task(async function test_webRequest_auth_proxy() {
 
   let handlingExt = getExtension(background);
 
-  // proxy.register is deprecated - bug 1443259.
-  ExtensionTestUtils.failOnSchemaWarnings(false);
   await handlingExt.startup();
   await handlingExt.awaitMessage("pac-ready");
-  ExtensionTestUtils.failOnSchemaWarnings(true);
 
   authManager.clearAll();
 
@@ -160,11 +157,8 @@ add_task(async function test_webRequest_auth_proxy_system() {
 
   let handlingExt = getExtension(background);
 
-  // proxy.register is deprecated - bug 1443259.
-  ExtensionTestUtils.failOnSchemaWarnings(false);
   await handlingExt.startup();
   await handlingExt.awaitMessage("pac-ready");
-  ExtensionTestUtils.failOnSchemaWarnings(true);
 
   function fetch(url) {
     return new Promise((resolve, reject) => {

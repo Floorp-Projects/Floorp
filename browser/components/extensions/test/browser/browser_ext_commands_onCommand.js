@@ -238,9 +238,8 @@ add_task(async function test_user_defined_commands() {
       },
     ]);
   });
-  ExtensionTestUtils.failOnSchemaWarnings(false);
+
   await extension.startup();
-  ExtensionTestUtils.failOnSchemaWarnings(true);
   await extension.awaitMessage("ready");
 
   async function runTest(window) {
@@ -324,11 +323,7 @@ add_task(async function test_user_defined_commands() {
     incognitoOverride: "spanning",
     background,
   });
-
-  // unrecognized_property in manifest triggers warning.
-  ExtensionTestUtils.failOnSchemaWarnings(false);
   await extension.startup();
-  ExtensionTestUtils.failOnSchemaWarnings(true);
   await extension.awaitMessage("ready");
   keysetID = `ext-keyset-id-${makeWidgetId(extension.id)}`;
 

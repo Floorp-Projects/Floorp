@@ -45,9 +45,7 @@ add_task(async function() {
     ]);
   });
 
-  ExtensionTestUtils.failOnSchemaWarnings(false);
   await extension.startup();
-  ExtensionTestUtils.failOnSchemaWarnings(true);
 
   // Do this a few times to make sure the pop-up is reloaded each time.
   for (let i = 0; i < 3; i++) {
