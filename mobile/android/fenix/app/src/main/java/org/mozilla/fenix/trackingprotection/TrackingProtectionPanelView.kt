@@ -9,19 +9,13 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.net.toUri
+import androidx.core.view.isGone
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_tracking_protection_panel.*
 import kotlinx.android.synthetic.main.fragment_quick_settings_dialog_sheet.url
 import kotlinx.android.synthetic.main.switch_with_description.view.*
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory.CRYPTOMINING
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory.FINGERPRINTING
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory.SOCIAL
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory.AD
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory.ANALYTICS
-import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.getHostFromUrl
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.CROSS_SITE_TRACKING_COOKIES
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.CRYPTOMINERS
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.FINGERPRINTERS
@@ -63,40 +57,24 @@ interface TrackingProtectionPanelViewInteractor {
 class TrackingProtectionPanelView(
     override val containerView: ViewGroup,
     val interactor: TrackingProtectionPanelInteractor
-) : LayoutContainer {
+) : LayoutContainer, View.OnClickListener {
+
     val view: ConstraintLayout = LayoutInflater.from(containerView.context)
         .inflate(R.layout.component_tracking_protection_panel, containerView, true)
         .findViewById(R.id.panel_wrapper)
 
-    private val context get() = view.context
+    private var mode: TrackingProtectionState.Mode = TrackingProtectionState.Mode.Normal
 
-    var mode: TrackingProtectionState.Mode = TrackingProtectionState.Mode.Normal
-        private set
-
-    var trackers: List<Tracker> = listOf()
-        private set
-
-    var bucketedTrackers: HashMap<TrackingProtectionCategory, List<String>> = HashMap()
-
-    var loadedTrackers: List<Tracker> = listOf()
-        private set
-
-    var bucketedLoadedTrackers: HashMap<TrackingProtectionCategory, List<String>> = HashMap()
+    private var bucketedTrackers = TrackerBuckets()
+    private var bucketedLoadedTrackers = TrackerBuckets()
 
     fun update(state: TrackingProtectionState) {
         if (state.mode != mode) {
             mode = state.mode
         }
 
-        if (state.listTrackers != trackers) {
-            trackers = state.listTrackers
-            bucketedTrackers = getHashMapOfTrackersForCategory(state.listTrackers)
-        }
-
-        if (state.listTrackersLoaded != loadedTrackers) {
-            loadedTrackers = state.listTrackersLoaded
-            bucketedLoadedTrackers = getHashMapOfTrackersForCategory(state.listTrackersLoaded)
-        }
+        bucketedTrackers.updateIfNeeded(state.listTrackers)
+        bucketedLoadedTrackers.updateIfNeeded(state.listTrackersLoaded)
 
         when (val mode = state.mode) {
             is TrackingProtectionState.Mode.Normal -> setUIForNormalMode(state)
@@ -110,134 +88,75 @@ class TrackingProtectionPanelView(
     private fun setUIForNormalMode(state: TrackingProtectionState) {
         details_mode.visibility = View.GONE
         normal_mode.visibility = View.VISIBLE
-        protection_settings.visibility =
-            if (state.session?.customTabConfig != null) View.GONE else View.VISIBLE
+        protection_settings.isGone = state.session?.customTabConfig != null
 
-        not_blocking_header.visibility =
-            if (bucketedLoadedTrackers.size == 0) View.GONE else View.VISIBLE
+        not_blocking_header.isGone = bucketedLoadedTrackers.isEmpty()
         bindUrl(state.url)
         bindTrackingProtectionInfo(state.isTrackingProtectionEnabled)
         protection_settings.setOnClickListener {
             interactor.selectTrackingProtectionSettings()
         }
 
-        blocking_header.visibility =
-            if (bucketedTrackers.size == 0) View.GONE else View.VISIBLE
+        blocking_header.isGone = bucketedTrackers.isEmpty()
         updateCategoryVisibility()
         setCategoryClickListeners()
     }
 
-    @Suppress("ComplexMethod")
     private fun updateCategoryVisibility() {
-        cross_site_tracking.visibility = bucketedTrackers.getVisibility(CROSS_SITE_TRACKING_COOKIES)
-        social_media_trackers.visibility = bucketedTrackers.getVisibility(SOCIAL_MEDIA_TRACKERS)
-        fingerprinters.visibility = bucketedTrackers.getVisibility(FINGERPRINTERS)
-        tracking_content.visibility = bucketedTrackers.getVisibility(TRACKING_CONTENT)
-        cryptominers.visibility = bucketedTrackers.getVisibility(CRYPTOMINERS)
+        cross_site_tracking.isGone = bucketedTrackers[CROSS_SITE_TRACKING_COOKIES].isEmpty()
+        social_media_trackers.isGone = bucketedTrackers[SOCIAL_MEDIA_TRACKERS].isEmpty()
+        fingerprinters.isGone = bucketedTrackers[FINGERPRINTERS].isEmpty()
+        tracking_content.isGone = bucketedTrackers[TRACKING_CONTENT].isEmpty()
+        cryptominers.isGone = bucketedTrackers[CRYPTOMINERS].isEmpty()
 
-        cross_site_tracking_loaded.visibility =
-            bucketedLoadedTrackers.getVisibility(CROSS_SITE_TRACKING_COOKIES)
-        social_media_trackers_loaded.visibility =
-            bucketedLoadedTrackers.getVisibility(SOCIAL_MEDIA_TRACKERS)
-        fingerprinters_loaded.visibility = bucketedLoadedTrackers.getVisibility(FINGERPRINTERS)
-        tracking_content_loaded.visibility = bucketedLoadedTrackers.getVisibility(TRACKING_CONTENT)
-        cryptominers_loaded.visibility = bucketedLoadedTrackers.getVisibility(CRYPTOMINERS)
+        cross_site_tracking_loaded.isGone =
+            bucketedLoadedTrackers[CROSS_SITE_TRACKING_COOKIES].isEmpty()
+        social_media_trackers_loaded.isGone =
+            bucketedLoadedTrackers[SOCIAL_MEDIA_TRACKERS].isEmpty()
+        fingerprinters_loaded.isGone = bucketedLoadedTrackers[FINGERPRINTERS].isEmpty()
+        tracking_content_loaded.isGone = bucketedLoadedTrackers[TRACKING_CONTENT].isEmpty()
+        cryptominers_loaded.isGone = bucketedLoadedTrackers[CRYPTOMINERS].isEmpty()
     }
 
-    private fun HashMap<TrackingProtectionCategory, List<String>>.getVisibility(
-        category: TrackingProtectionCategory
-    ): Int = if (this[category]?.isNotEmpty() == true) View.VISIBLE else View.GONE
-
     private fun setCategoryClickListeners() {
-        social_media_trackers.setOnClickListener {
-            interactor.openDetails(SOCIAL_MEDIA_TRACKERS, categoryBlocked = true)
-        }
-        fingerprinters.setOnClickListener {
-            interactor.openDetails(FINGERPRINTERS, categoryBlocked = true)
-        }
-        cross_site_tracking.setOnClickListener {
-            interactor.openDetails(CROSS_SITE_TRACKING_COOKIES, categoryBlocked = true)
-        }
-        tracking_content.setOnClickListener {
-            interactor.openDetails(TRACKING_CONTENT, categoryBlocked = true)
-        }
-        cryptominers.setOnClickListener {
-            interactor.openDetails(CRYPTOMINERS, categoryBlocked = true)
-        }
-        social_media_trackers_loaded.setOnClickListener {
-            interactor.openDetails(SOCIAL_MEDIA_TRACKERS, categoryBlocked = false)
-        }
-        fingerprinters_loaded.setOnClickListener {
-            interactor.openDetails(FINGERPRINTERS, categoryBlocked = false)
-        }
-        cross_site_tracking_loaded.setOnClickListener {
-            interactor.openDetails(CROSS_SITE_TRACKING_COOKIES, categoryBlocked = false)
-        }
-        tracking_content_loaded.setOnClickListener {
-            interactor.openDetails(TRACKING_CONTENT, categoryBlocked = false)
-        }
-        cryptominers_loaded.setOnClickListener {
-            interactor.openDetails(CRYPTOMINERS, categoryBlocked = false)
-        }
+        social_media_trackers.setOnClickListener(this)
+        fingerprinters.setOnClickListener(this)
+        cross_site_tracking.setOnClickListener(this)
+        tracking_content.setOnClickListener(this)
+        cryptominers.setOnClickListener(this)
+        social_media_trackers_loaded.setOnClickListener(this)
+        fingerprinters_loaded.setOnClickListener(this)
+        cross_site_tracking_loaded.setOnClickListener(this)
+        tracking_content_loaded.setOnClickListener(this)
+        cryptominers_loaded.setOnClickListener(this)
+    }
+
+    override fun onClick(v: View) {
+        val category = getCategory(v) ?: return
+        interactor.openDetails(category, categoryBlocked = !isLoaded(v))
     }
 
     private fun setUIForDetailsMode(
         category: TrackingProtectionCategory,
         categoryBlocked: Boolean
     ) {
+        val context = view.context
+
         normal_mode.visibility = View.GONE
         details_mode.visibility = View.VISIBLE
         category_title.text = context.getString(category.title)
-        val stringList = bucketedTrackers[category]?.joinToString("\n")
-        blocking_text_list.text = stringList
+        blocking_text_list.text = bucketedTrackers[category].joinToString("\n")
         category_description.text = context.getString(category.description)
-        details_blocking_header.text =
-            context.getString(
-                if (categoryBlocked) R.string.enhanced_tracking_protection_blocked else
-                    R.string.enhanced_tracking_protection_allowed
-            )
+        details_blocking_header.text = context.getString(
+            if (categoryBlocked) {
+                R.string.enhanced_tracking_protection_blocked
+            } else {
+                R.string.enhanced_tracking_protection_allowed
+            }
+        )
         details_back.setOnClickListener {
             interactor.onBackPressed()
         }
-    }
-
-    private fun getHashMapOfTrackersForCategory(
-        list: List<Tracker>
-    ): HashMap<TrackingProtectionCategory, List<String>> {
-        val hashMap = HashMap<TrackingProtectionCategory, List<String>>()
-        items@ for (item in list) {
-            when {
-                item.trackingCategories.contains(CRYPTOMINING) -> {
-                    hashMap[CRYPTOMINERS] =
-                        (hashMap[CRYPTOMINERS]
-                            ?: listOf()).plus(item.url.getHostFromUrl() ?: item.url)
-                    continue@items
-                }
-                item.trackingCategories.contains(FINGERPRINTING) -> {
-                    hashMap[FINGERPRINTERS] =
-                        (hashMap[FINGERPRINTERS]
-                            ?: listOf()).plus(item.url.getHostFromUrl() ?: item.url)
-                    continue@items
-                }
-                item.trackingCategories.contains(SOCIAL) -> {
-                    hashMap[SOCIAL_MEDIA_TRACKERS] =
-                        (hashMap[SOCIAL_MEDIA_TRACKERS] ?: listOf()).plus(
-                            item.url.getHostFromUrl() ?: item.url
-                        )
-                    continue@items
-                }
-                item.trackingCategories.contains(AD) ||
-                        item.trackingCategories.contains(SOCIAL) ||
-                        item.trackingCategories.contains(ANALYTICS) -> {
-                    hashMap[TRACKING_CONTENT] =
-                        (hashMap[TRACKING_CONTENT] ?: listOf()).plus(
-                            item.url.getHostFromUrl() ?: item.url
-                        )
-                    continue@items
-                }
-            }
-        }
-        return hashMap
     }
 
     private fun bindUrl(url: String) {
@@ -246,7 +165,7 @@ class TrackingProtectionPanelView(
 
     private fun bindTrackingProtectionInfo(isTrackingProtectionOn: Boolean) {
         tracking_protection.switchItemDescription.text =
-            context.getString(if (isTrackingProtectionOn) R.string.etp_panel_on else R.string.etp_panel_off)
+            view.context.getString(if (isTrackingProtectionOn) R.string.etp_panel_on else R.string.etp_panel_off)
         tracking_protection.switch_widget.isChecked = isTrackingProtectionOn
 
         tracking_protection.switch_widget.setOnCheckedChangeListener { _, isChecked ->
@@ -261,6 +180,39 @@ class TrackingProtectionPanelView(
                 interactor.onBackPressed()
                 true
             }
+            else -> false
+        }
+    }
+
+    companion object {
+
+        /**
+         * Returns the [TrackingProtectionCategory] corresponding to the view ID.
+         */
+        private fun getCategory(v: View) = when (v.id) {
+            R.id.social_media_trackers, R.id.social_media_trackers_loaded -> SOCIAL_MEDIA_TRACKERS
+            R.id.fingerprinters, R.id.fingerprinters_loaded -> FINGERPRINTERS
+            R.id.cross_site_tracking, R.id.cross_site_tracking_loaded -> CROSS_SITE_TRACKING_COOKIES
+            R.id.tracking_content, R.id.tracking_content_loaded -> TRACKING_CONTENT
+            R.id.cryptominers, R.id.cryptominers_loaded -> CRYPTOMINERS
+            else -> null
+        }
+
+        /**
+         * Returns true if the view corresponds to a "loaded" category
+         */
+        private fun isLoaded(v: View) = when (v.id) {
+            R.id.social_media_trackers_loaded,
+            R.id.fingerprinters_loaded,
+            R.id.cross_site_tracking_loaded,
+            R.id.tracking_content_loaded,
+            R.id.cryptominers_loaded -> true
+
+            R.id.social_media_trackers,
+            R.id.fingerprinters,
+            R.id.cross_site_tracking,
+            R.id.tracking_content,
+            R.id.cryptominers -> false
             else -> false
         }
     }
