@@ -19,7 +19,7 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.TestApplication
 import org.mozilla.fenix.ext.clearAndCommit
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.settings.DeleteBrowsingDataOnQuitType
+import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType
 import org.mozilla.fenix.settings.PhoneFeature
 import org.robolectric.annotation.Config
 

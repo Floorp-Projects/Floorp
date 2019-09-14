@@ -47,7 +47,7 @@ import org.mozilla.fenix.ext.toTab
 import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior
-import org.mozilla.fenix.utils.deleteAndQuit
+import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 
 @ExperimentalCoroutinesApi
 @ObsoleteCoroutinesApi
@@ -98,7 +98,7 @@ class DefaultBrowserToolbarControllerTest {
         every { any<Session>().toTab(any()) } returns currentSessionAsTab
 
         mockkStatic(
-            "org.mozilla.fenix.utils.DeleteAndQuitKt"
+            "org.mozilla.fenix.settings.deletebrowsingdata.DeleteAndQuitKt"
         )
         every { deleteAndQuit(any(), any()) } just Runs
 

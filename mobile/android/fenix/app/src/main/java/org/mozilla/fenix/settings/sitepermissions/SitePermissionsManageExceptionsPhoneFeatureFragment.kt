@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.settings
+package org.mozilla.fenix.settings.sitepermissions
 
 import android.content.Intent
 import android.net.Uri
@@ -27,6 +27,9 @@ import org.jetbrains.anko.yesButton
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.settings.PhoneFeature
+import org.mozilla.fenix.settings.initBlockedByAndroidView
+import org.mozilla.fenix.settings.setStartCheckedIndicator
 
 @SuppressWarnings("TooManyFunctions")
 class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {

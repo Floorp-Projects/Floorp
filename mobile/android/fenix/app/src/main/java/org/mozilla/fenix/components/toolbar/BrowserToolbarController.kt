@@ -30,7 +30,7 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.toTab
 import org.mozilla.fenix.lib.Do
 import org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior
-import org.mozilla.fenix.utils.deleteAndQuit
+import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 
 /**
  * An interface that handles the view manipulation of the BrowserToolbar, triggered by the Interactor

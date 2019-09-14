@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.settings
+package org.mozilla.fenix.settings.deletebrowsingdata
 
 import android.content.DialogInterface
 import android.os.Bundle
@@ -44,7 +44,7 @@ class DeleteBrowsingDataFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        controller = DefaultDeleteBrowsingDataController(context!!)
+        controller = DefaultDeleteBrowsingDataController(requireContext())
 
         sessionObserver = object : SessionManager.Observer {
             override fun onSessionAdded(session: Session) = updateTabCount()

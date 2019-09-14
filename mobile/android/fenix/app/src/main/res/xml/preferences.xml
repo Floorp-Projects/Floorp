@@ -19,11 +19,11 @@
         app:iconSpaceReserved="false"
         app:isPreferenceVisible="false">
 
-        <org.mozilla.fenix.settings.AccountPreference
+        <org.mozilla.fenix.settings.account.AccountPreference
             android:icon="@drawable/ic_account"
             android:key="@string/pref_key_account" />
 
-        <org.mozilla.fenix.settings.AccountAuthErrorPreference
+        <org.mozilla.fenix.settings.account.AccountAuthErrorPreference
             android:icon="@drawable/ic_account_warning"
             android:key="@string/pref_key_account_auth_error"/>
     </androidx.preference.PreferenceCategory>

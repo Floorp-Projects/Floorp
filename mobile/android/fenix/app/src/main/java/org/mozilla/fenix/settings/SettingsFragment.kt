@@ -64,6 +64,8 @@ import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.settings.account.AccountAuthErrorPreference
+import org.mozilla.fenix.settings.account.AccountPreference
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")

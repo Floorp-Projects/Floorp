@@ -9,7 +9,7 @@
         android:title="@string/preferences_default_search_engine"
         android:selectable="false"
         app:iconSpaceReserved="false">
-        <org.mozilla.fenix.settings.RadioSearchEngineListPreference
+        <org.mozilla.fenix.settings.search.RadioSearchEngineListPreference
             android:selectable="false"/>
         <SwitchPreference
             android:defaultValue="true"

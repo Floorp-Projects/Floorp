@@ -115,7 +115,7 @@
 
     <fragment
         android:id="@+id/SitePermissionsManagePhoneFeature"
-        android:name="org.mozilla.fenix.settings.SitePermissionsManagePhoneFeatureFragment"
+        android:name="org.mozilla.fenix.settings.sitepermissions.SitePermissionsManagePhoneFeatureFragment"
         tools:layout="@layout/fragment_manage_site_permissions_feature_phone">
         <argument
             android:name="permission"
@@ -124,7 +124,7 @@
 
     <fragment
         android:id="@+id/sitePermissionsExceptionsFragment"
-        android:name="org.mozilla.fenix.settings.SitePermissionsExceptionsFragment"
+        android:name="org.mozilla.fenix.settings.sitepermissions.SitePermissionsExceptionsFragment"
         android:label="@string/preference_exceptions"
         tools:layout="@layout/fragment_site_permissions_exceptions">
         <action
@@ -135,7 +135,7 @@
 
     <fragment
         android:id="@+id/sitePermissionsDetailsExceptionsFragment"
-        android:name="org.mozilla.fenix.settings.SitePermissionsDetailsExceptionsFragment"
+        android:name="org.mozilla.fenix.settings.sitepermissions.SitePermissionsDetailsExceptionsFragment"
         tools:layout="@xml/site_permissions_details_exceptions_preferences">
         <action
             android:id="@+id/action_site_permissions_to_exceptions_to_manage_phone_feature"
@@ -148,7 +148,7 @@
 
     <fragment
         android:id="@+id/sitePermissionsManageExceptionsPhoneFeatureFragment"
-        android:name="org.mozilla.fenix.settings.SitePermissionsManageExceptionsPhoneFeatureFragment"
+        android:name="org.mozilla.fenix.settings.sitepermissions.SitePermissionsManageExceptionsPhoneFeatureFragment"
         tools:layout="@layout/fragment_manage_site_permissions_feature_phone">
         <argument
             android:name="phoneFeatureId"
@@ -372,7 +372,7 @@
         android:label="@string/preferences_data_choices" />
     <fragment
         android:id="@+id/sitePermissionsFragment"
-        android:name="org.mozilla.fenix.settings.SitePermissionsFragment"
+        android:name="org.mozilla.fenix.settings.sitepermissions.SitePermissionsFragment"
         android:label="@string/preferences_site_permissions">
         <action
             android:id="@+id/action_site_permissions_to_manage_phone_features"
@@ -398,12 +398,12 @@
     </fragment>
     <fragment
         android:id="@+id/searchEngineFragment"
-        android:name="org.mozilla.fenix.settings.SearchEngineFragment"
+        android:name="org.mozilla.fenix.settings.search.SearchEngineFragment"
         android:label="@string/preferences_search" />
 
     <fragment
         android:id="@+id/turnOnSyncFragment"
-        android:name="org.mozilla.fenix.settings.TurnOnSyncFragment"
+        android:name="org.mozilla.fenix.settings.account.TurnOnSyncFragment"
         android:label="@string/preferences_sync">
         <action
             android:id="@+id/action_turnOnSyncFragment_to_pairFragment"
@@ -455,7 +455,7 @@
     </fragment>
     <fragment
         android:id="@+id/deleteBrowsingDataFragment"
-        android:name="org.mozilla.fenix.settings.DeleteBrowsingDataFragment"
+        android:name="org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataFragment"
         android:label="@string/preferences_delete_browsing_data" />
     <fragment
         android:id="@+id/exceptionsFragment"
@@ -540,14 +540,14 @@
     </dialog>
     <fragment
         android:id="@+id/accountProblemFragment"
-        android:name="org.mozilla.fenix.settings.AccountProblemFragment">
+        android:name="org.mozilla.fenix.settings.account.AccountProblemFragment">
         <action
             android:id="@+id/action_accountProblemFragment_to_signOutFragment"
             app:destination="@id/signOutFragment" />
     </fragment>
     <dialog
         android:id="@+id/signOutFragment"
-        android:name="org.mozilla.fenix.settings.SignOutFragment" />
+        android:name="org.mozilla.fenix.settings.account.SignOutFragment" />
     <action
         android:id="@+id/action_global_shareFragment"
         app:destination="@id/shareFragment" />
@@ -582,7 +582,7 @@
     </fragment>
     <fragment
         android:id="@+id/deleteBrowsingDataOnQuitFragment"
-        android:name="org.mozilla.fenix.settings.DeleteBrowsingDataOnQuitFragment"
+        android:name="org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitFragment"
         android:label="DeleteBrowsingDataOnQuitFragment" />
 
     <fragment

@@ -22,7 +22,7 @@ import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.ext.getPreferenceKey
-import org.mozilla.fenix.settings.DeleteBrowsingDataOnQuitType
+import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType
 import org.mozilla.fenix.settings.PhoneFeature
 import java.security.InvalidParameterException
 

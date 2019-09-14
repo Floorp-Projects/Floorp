@@ -4,7 +4,7 @@
 
 @file:Suppress("DEPRECATION")
 
-package org.mozilla.fenix.utils
+package org.mozilla.fenix.settings.deletebrowsingdata
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.every
@@ -30,7 +30,7 @@ import org.mozilla.fenix.TestApplication
 import org.mozilla.fenix.components.PermissionStorage
 import org.mozilla.fenix.ext.clearAndCommit
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.settings.DeleteBrowsingDataOnQuitType
+import org.mozilla.fenix.utils.Settings
 import org.robolectric.annotation.Config
 
 @ObsoleteCoroutinesApi

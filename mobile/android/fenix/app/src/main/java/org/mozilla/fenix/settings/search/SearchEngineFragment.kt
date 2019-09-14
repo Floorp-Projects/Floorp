@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.settings
+package org.mozilla.fenix.settings.search
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -11,6 +11,7 @@ import androidx.preference.SwitchPreference
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.settings.SharedPreferenceUpdater
 
 class SearchEngineFragment : PreferenceFragmentCompat() {
 
