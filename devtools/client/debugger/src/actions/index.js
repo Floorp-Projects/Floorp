@@ -22,6 +22,9 @@ import * as threads from "./threads";
 import * as toolbox from "./toolbox";
 import * as preview from "./preview";
 
+// eslint-disable-next-line import/named
+import { objectInspector } from "devtools-reps";
+
 export default {
   ...ast,
   ...navigation,
@@ -34,6 +37,7 @@ export default {
   ...pause,
   ...ui,
   ...fileSearch,
+  ...objectInspector.actions,
   ...projectTextSearch,
   ...quickOpen,
   ...sourceTree,

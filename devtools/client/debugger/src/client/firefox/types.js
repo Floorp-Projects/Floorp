@@ -260,7 +260,7 @@ export type DebuggerClient = {
   connect: () => Promise<*>,
   request: (packet: Object) => Promise<*>,
   attachConsole: (actor: String, listeners: Array<*>) => Promise<*>,
-  createObjectClient: (grip: Grip) => {},
+  createObjectClient: (grip: Grip) => ObjectClient,
   release: (actor: String) => {},
 };
 
@@ -338,6 +338,12 @@ export type SourceClient = {
  */
 export type ObjectClient = {
   getPrototypeAndProperties: () => any,
+  addWatchpoint: (
+    property: string,
+    label: string,
+    watchpointType: string
+  ) => {},
+  removeWatchpoint: (property: string) => {},
 };
 
 /**

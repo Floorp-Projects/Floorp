@@ -2321,6 +2321,16 @@ function getChildren(options) {
   }
 
   return addToCache(makeNodesForProperties(loadedProps, item));
+} // Builds an expression that resolves to the value of the item in question
+// e.g. `b` in { a: { b: 2 } } resolves to `a.b`
+
+
+function getPathExpression(item) {
+  if (item && item.parent) {
+    return `${getPathExpression(item.parent)}.${item.name}`;
+  }
+
+  return item.name;
 }
 
 function getParent(item) {
@@ -2431,6 +2441,7 @@ module.exports = {
   getChildrenWithEvaluations,
   getClosestGripNode,
   getClosestNonBucketNode,
+  getPathExpression,
   getParent,
   getParentGripValue,
   getNonPrototypeParentGripValue,
@@ -2484,12 +2495,14 @@ module.exports = {
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-function initialState() {
+function initialState(overrides) {
   return {
     expandedPaths: new Set(),
     loadedProperties: new Map(),
     evaluations: new Map(),
-    actors: new Set()
+    actors: new Set(),
+    watchpoints: new Map(),
+    ...overrides
   };
 }
 
@@ -2517,6 +2530,34 @@ function reducer(state = initialState(), action = {}) {
     });
   }
 
+  if (type == "SET_WATCHPOINT") {
+    const {
+      watchpoint,
+      property,
+      path
+    } = data;
+    const obj = state.loadedProperties.get(path);
+    return cloneState({
+      loadedProperties: new Map(state.loadedProperties).set(path, updateObject(obj, property, watchpoint)),
+      watchpoints: new Map(state.watchpoints).set(data.actor, data.watchpoint)
+    });
+  }
+
+  if (type === "REMOVE_WATCHPOINT") {
+    const {
+      path,
+      property,
+      actor
+    } = data;
+    const obj = state.loadedProperties.get(path);
+    const watchpoints = new Map(state.watchpoints);
+    watchpoints.delete(actor);
+    return cloneState({
+      loadedProperties: new Map(state.loadedProperties).set(path, updateObject(obj, property, null)),
+      watchpoints: watchpoints
+    });
+  }
+
   if (type === "NODE_PROPERTIES_LOADED") {
     return cloneState({
       actors: data.actor ? new Set(state.actors || []).add(data.actor) : state.actors,
@@ -2540,10 +2581,22 @@ function reducer(state = initialState(), action = {}) {
 
 
   if (type === "RESUME" || type == "NAVIGATE") {
-    return initialState();
+    return initialState({
+      watchpoints: state.watchpoints
+    });
   }
 
   return state;
+}
+
+function updateObject(obj, property, watchpoint) {
+  return { ...obj,
+    ownProperties: { ...obj.ownProperties,
+      [property]: { ...obj.ownProperties[property],
+        watchpoint
+      }
+    }
+  };
 }
 
 function getObjectInspectorState(state) {
@@ -2562,6 +2615,10 @@ function getActors(state) {
   return getObjectInspectorState(state).actors;
 }
 
+function getWatchpoints(state) {
+  return getObjectInspectorState(state).watchpoints;
+}
+
 function getLoadedProperties(state) {
   return getObjectInspectorState(state).loadedProperties;
 }
@@ -2576,6 +2633,7 @@ function getEvaluations(state) {
 
 const selectors = {
   getActors,
+  getWatchpoints,
   getEvaluations,
   getExpandedPathKeys,
   getExpandedPaths,
@@ -7395,9 +7453,12 @@ const utils = __webpack_require__(116);
 
 const reducer = __webpack_require__(115);
 
+const actions = __webpack_require__(485);
+
 module.exports = {
   ObjectInspector,
   utils,
+  actions,
   reducer
 };
 
@@ -7521,6 +7582,12 @@ class ObjectInspector extends Component {
     if (this.roots !== nextProps.roots) {
       this.cachedNodes.clear();
       return;
+    }
+
+    for (const [path, properties] of nextProps.loadedProperties) {
+      if (properties !== this.props.loadedProperties.get(path)) {
+        this.cachedNodes.delete(path);
+      }
     } // If there are new evaluations, we want to remove the existing cached
     // nodes from the cache.
 
@@ -7549,7 +7616,7 @@ class ObjectInspector extends Component {
     // - OR the focused node changed.
     // - OR the active node changed.
 
-    return loadedProperties.size !== nextProps.loadedProperties.size || evaluations.size !== nextProps.evaluations.size || expandedPaths.size !== nextProps.expandedPaths.size && [...nextProps.expandedPaths].every(path => nextProps.loadedProperties.has(path)) || expandedPaths.size === nextProps.expandedPaths.size && [...nextProps.expandedPaths].some(key => !expandedPaths.has(key)) || this.focusedItem !== nextProps.focusedItem || this.activeItem !== nextProps.activeItem || this.roots !== nextProps.roots;
+    return loadedProperties !== nextProps.loadedProperties || loadedProperties.size !== nextProps.loadedProperties.size || evaluations.size !== nextProps.evaluations.size || expandedPaths.size !== nextProps.expandedPaths.size && [...nextProps.expandedPaths].every(path => nextProps.loadedProperties.has(path)) || expandedPaths.size === nextProps.expandedPaths.size && [...nextProps.expandedPaths].some(key => !expandedPaths.has(key)) || this.focusedItem !== nextProps.focusedItem || this.activeItem !== nextProps.activeItem || this.roots !== nextProps.roots;
   }
 
   componentWillUnmount() {
@@ -7747,8 +7814,14 @@ const {
 } = __webpack_require__(196);
 
 const {
+  getPathExpression,
+  getValue
+} = __webpack_require__(114);
+
+const {
   getLoadedProperties,
-  getActors
+  getActors,
+  getWatchpoints
 } = __webpack_require__(115);
 
 /**
@@ -7817,6 +7890,67 @@ function nodePropertiesLoaded(node, actor, properties) {
     }
   };
 }
+/*
+ * This action adds a property watchpoint to an object
+ */
+
+
+function addWatchpoint(item, watchpoint) {
+  return async function ({
+    dispatch,
+    client
+  }) {
+    const {
+      parent,
+      name
+    } = item;
+    const object = getValue(parent);
+
+    if (!object) {
+      return;
+    }
+
+    const path = parent.path;
+    const property = name;
+    const label = getPathExpression(item);
+    const actor = object.actor;
+    await client.addWatchpoint(object, property, label, watchpoint);
+    dispatch({
+      type: "SET_WATCHPOINT",
+      data: {
+        path,
+        watchpoint,
+        property,
+        actor
+      }
+    });
+  };
+}
+/*
+ * This action removes a property watchpoint from an object
+ */
+
+
+function removeWatchpoint(item) {
+  return async function ({
+    dispatch,
+    client
+  }) {
+    const object = getValue(item.parent);
+    const property = item.name;
+    const path = item.parent.path;
+    const actor = object.actor;
+    await client.removeWatchpoint(object, property);
+    dispatch({
+      type: "REMOVE_WATCHPOINT",
+      data: {
+        path,
+        property,
+        actor
+      }
+    });
+  };
+}
 
 function closeObjectInspector() {
   return async ({
@@ -7852,9 +7986,14 @@ function rootsChanged(props) {
 
 function releaseActors(state, client) {
   const actors = getActors(state);
+  const watchpoints = getWatchpoints(state);
 
   for (const actor of actors) {
-    client.releaseActor(actor);
+    // Watchpoints are stored in object actors.
+    // If we release the actor we lose the watchpoint.
+    if (!watchpoints.has(actor)) {
+      client.releaseActor(actor);
+    }
   }
 }
 
@@ -7887,7 +8026,9 @@ module.exports = {
   nodeCollapse,
   nodeLoadProperties,
   nodePropertiesLoaded,
-  rootsChanged
+  rootsChanged,
+  addWatchpoint,
+  removeWatchpoint
 };
 
 /***/ }),
@@ -7957,7 +8098,13 @@ const {
 } = Utils.node;
 
 class ObjectInspectorItem extends Component {
-  // eslint-disable-next-line complexity
+  static get defaultProps() {
+    return {
+      onContextMenu: () => {}
+    };
+  } // eslint-disable-next-line complexity
+
+
   getLabelAndValue() {
     const {
       item,
@@ -8072,7 +8219,8 @@ class ObjectInspectorItem extends Component {
       expanded,
       onCmdCtrlClick,
       onDoubleClick,
-      dimTopLevelWindow
+      dimTopLevelWindow,
+      onContextMenu
     } = this.props;
     const parentElementProps = {
       className: classnames("node object-node", {
@@ -8101,7 +8249,8 @@ class ObjectInspectorItem extends Component {
         if (Utils.selection.documentHasSelection() && !(e.target && e.target.matches && e.target.matches(".arrow"))) {
           e.stopPropagation();
         }
-      }
+      },
+      onContextMenu: e => onContextMenu(e, item)
     };
 
     if (onDoubleClick) {
@@ -8149,6 +8298,24 @@ class ObjectInspectorItem extends Component {
     }, label);
   }
 
+  renderWatchpointButton() {
+    const {
+      item,
+      removeWatchpoint
+    } = this.props;
+
+    if (!item || !item.contents || !item.contents.watchpoint) {
+      return;
+    }
+
+    const watchpoint = item.contents.watchpoint;
+    return dom.button({
+      className: `remove-${watchpoint}-watchpoint`,
+      title: L10N.getStr("watchpoints.removeWatchpoint"),
+      onClick: () => removeWatchpoint(item)
+    });
+  }
+
   render() {
     const {
       arrow
@@ -8161,7 +8328,7 @@ class ObjectInspectorItem extends Component {
     const delimiter = value && labelElement ? dom.span({
       className: "object-delimiter"
     }, ": ") : null;
-    return dom.div(this.getTreeItemProps(), arrow, labelElement, delimiter, value);
+    return dom.div(this.getTreeItemProps(), arrow, labelElement, delimiter, value, this.renderWatchpointButton());
   }
 
 }

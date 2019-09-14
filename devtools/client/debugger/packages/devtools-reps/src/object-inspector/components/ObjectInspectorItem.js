@@ -80,6 +80,12 @@ type Props = {
 };
 
 class ObjectInspectorItem extends Component<Props> {
+  static get defaultProps() {
+    return {
+      onContextMenu: () => {},
+    };
+  }
+
   // eslint-disable-next-line complexity
   getLabelAndValue(): {
     value?: string | Element,
@@ -203,6 +209,7 @@ class ObjectInspectorItem extends Component<Props> {
       onCmdCtrlClick,
       onDoubleClick,
       dimTopLevelWindow,
+      onContextMenu,
     } = this.props;
 
     const parentElementProps: Object = {
@@ -245,6 +252,7 @@ class ObjectInspectorItem extends Component<Props> {
           e.stopPropagation();
         }
       },
+      onContextMenu: e => onContextMenu(e, item),
     };
 
     if (onDoubleClick) {
@@ -292,6 +300,21 @@ class ObjectInspectorItem extends Component<Props> {
     );
   }
 
+  renderWatchpointButton() {
+    const { item, removeWatchpoint } = this.props;
+
+    if (!item || !item.contents || !item.contents.watchpoint) {
+      return;
+    }
+
+    const watchpoint = item.contents.watchpoint;
+    return dom.button({
+      className: `remove-${watchpoint}-watchpoint`,
+      title: L10N.getStr("watchpoints.removeWatchpoint"),
+      onClick: () => removeWatchpoint(item),
+    });
+  }
+
   render() {
     const { arrow } = this.props;
 
@@ -307,7 +330,8 @@ class ObjectInspectorItem extends Component<Props> {
       arrow,
       labelElement,
       delimiter,
-      value
+      value,
+      this.renderWatchpointButton()
     );
   }
 }

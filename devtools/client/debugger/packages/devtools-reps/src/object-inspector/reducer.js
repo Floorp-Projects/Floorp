@@ -4,12 +4,14 @@
 
 import type { ReduxAction, State } from "./types";
 
-function initialState() {
+function initialState(overrides) {
   return {
     expandedPaths: new Set(),
     loadedProperties: new Map(),
     evaluations: new Map(),
     actors: new Set(),
+    watchpoints: new Map(),
+    ...overrides,
   };
 }
 
@@ -31,6 +33,34 @@ function reducer(
     const expandedPaths = new Set(state.expandedPaths);
     expandedPaths.delete(data.node.path);
     return cloneState({ expandedPaths });
+  }
+
+  if (type == "SET_WATCHPOINT") {
+    const { watchpoint, property, path } = data;
+    const obj = state.loadedProperties.get(path);
+
+    return cloneState({
+      loadedProperties: new Map(state.loadedProperties).set(
+        path,
+        updateObject(obj, property, watchpoint)
+      ),
+      watchpoints: new Map(state.watchpoints).set(data.actor, data.watchpoint),
+    });
+  }
+
+  if (type === "REMOVE_WATCHPOINT") {
+    const { path, property, actor } = data;
+    const obj = state.loadedProperties.get(path);
+    const watchpoints = new Map(state.watchpoints);
+    watchpoints.delete(actor);
+
+    return cloneState({
+      loadedProperties: new Map(state.loadedProperties).set(
+        path,
+        updateObject(obj, property, null)
+      ),
+      watchpoints: watchpoints,
+    });
   }
 
   if (type === "NODE_PROPERTIES_LOADED") {
@@ -66,10 +96,23 @@ function reducer(
   // NOTE: we clear the state on resume because otherwise the scopes pane
   // would be out of date. Bug 1514760
   if (type === "RESUME" || type == "NAVIGATE") {
-    return initialState();
+    return initialState({ watchpoints: state.watchpoints });
   }
 
   return state;
+}
+
+function updateObject(obj, property, watchpoint) {
+  return {
+    ...obj,
+    ownProperties: {
+      ...obj.ownProperties,
+      [property]: {
+        ...obj.ownProperties[property],
+        watchpoint,
+      },
+    },
+  };
 }
 
 function getObjectInspectorState(state) {
@@ -88,6 +131,10 @@ function getActors(state) {
   return getObjectInspectorState(state).actors;
 }
 
+function getWatchpoints(state) {
+  return getObjectInspectorState(state).watchpoints;
+}
+
 function getLoadedProperties(state) {
   return getObjectInspectorState(state).loadedProperties;
 }
@@ -102,6 +149,7 @@ function getEvaluations(state) {
 
 const selectors = {
   getActors,
+  getWatchpoints,
   getEvaluations,
   getExpandedPathKeys,
   getExpandedPaths,

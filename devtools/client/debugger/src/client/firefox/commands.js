@@ -188,6 +188,25 @@ function removeXHRBreakpoint(path: string, method: string) {
   return currentThreadFront.removeXHRBreakpoint(path, method);
 }
 
+function addWatchpoint(
+  object: Grip,
+  property: string,
+  label: string,
+  watchpointType: string
+) {
+  if (currentTarget.traits.watchpoints) {
+    const objectClient = createObjectClient(object);
+    return objectClient.addWatchpoint(property, label, watchpointType);
+  }
+}
+
+function removeWatchpoint(object: Grip, property: string) {
+  if (currentTarget.traits.watchpoints) {
+    const objectClient = createObjectClient(object);
+    return objectClient.removeWatchpoint(property);
+  }
+}
+
 // Get the string key to use for a breakpoint location.
 // See also duplicate code in breakpoint-actor-map.js :(
 function locationKey(location: BreakpointLocation) {
@@ -514,6 +533,8 @@ const clientCommands = {
   setBreakpoint,
   setXHRBreakpoint,
   removeXHRBreakpoint,
+  addWatchpoint,
+  removeWatchpoint,
   removeBreakpoint,
   evaluate,
   evaluateInFrame,

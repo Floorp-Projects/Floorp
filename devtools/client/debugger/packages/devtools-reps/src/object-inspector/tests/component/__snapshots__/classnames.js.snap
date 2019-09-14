@@ -24,6 +24,7 @@ exports[`ObjectInspector - classnames has the expected class 1`] = `
     <div
       className="node object-node"
       onClick={[Function]}
+      onContextMenu={[Function]}
     >
       <span
         className="object-label"
@@ -69,6 +70,7 @@ exports[`ObjectInspector - classnames has the inline class when inline prop is t
     <div
       className="node object-node"
       onClick={[Function]}
+      onContextMenu={[Function]}
     >
       <span
         className="object-label"
@@ -114,6 +116,7 @@ exports[`ObjectInspector - classnames has the nowrap class when disableWrap prop
     <div
       className="node object-node"
       onClick={[Function]}
+      onContextMenu={[Function]}
     >
       <span
         className="object-label"

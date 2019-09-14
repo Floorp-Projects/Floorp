@@ -25,6 +25,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders collapsed top-level window 
     <div
       className="node object-node"
       onClick={[Function]}
+      onContextMenu={[Function]}
     >
       <button
         className="arrow"
@@ -80,6 +81,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
     <div
       className="node object-node focused"
       onClick={[Function]}
+      onContextMenu={[Function]}
     >
       <button
         className="arrow expanded"
@@ -109,6 +111,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
     <div
       className="node object-node"
       onClick={[Function]}
+      onContextMenu={[Function]}
     >
       <button
         className="arrow"
@@ -163,6 +166,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
     <div
       className="node object-node lessen"
       onClick={[Function]}
+      onContextMenu={[Function]}
     >
       <button
         className="arrow"
@@ -218,6 +222,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
     <div
       className="node object-node focused"
       onClick={[Function]}
+      onContextMenu={[Function]}
     >
       <button
         className="arrow expanded"
@@ -261,6 +266,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
     <div
       className="node object-node lessen"
       onClick={[Function]}
+      onContextMenu={[Function]}
     >
       <span
         className="object-label"
