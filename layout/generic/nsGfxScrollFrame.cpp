@@ -2103,7 +2103,6 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mCollapsedResizer(false),
       mWillBuildScrollableLayer(false),
       mIsScrollParent(false),
-      mIsScrollableLayerInRootContainer(false),
       mAddClipRectToLayer(false),
       mHasBeenScrolled(false),
       mIgnoreMomentumScroll(false),
@@ -3435,9 +3434,6 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   nsIScrollableFrame* sf = do_QueryFrame(mOuter);
   MOZ_ASSERT(sf);
 
-  // Are we the root content document's root scroll frame?
-  bool isRcdRsf = mIsRoot && mOuter->PresContext()->IsRootContentDocument();
-
   if (ignoringThisScrollFrame) {
     // Root scrollframes have FrameMetrics and clipping on their container
     // layers, so don't apply clipping again.
@@ -3627,11 +3623,6 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         aBuilder);
     if (mWillBuildScrollableLayer && aBuilder->IsPaintingToWindow()) {
       asrSetter.EnterScrollFrame(sf);
-    }
-
-    if (mIsScrollableLayerInRootContainer && isRcdRsf) {
-      aBuilder->SetActiveScrolledRootForRootScrollframe(
-          aBuilder->CurrentActiveScrolledRoot());
     }
 
     if (mWillBuildScrollableLayer && aBuilder->BuildCompositorHitTestInfo()) {
@@ -4027,7 +4018,7 @@ Maybe<ScrollMetadata> ScrollFrameHelper::ComputeScrollMetadata(
     LayerManager* aLayerManager, const nsIFrame* aContainerReferenceFrame,
     const Maybe<ContainerLayerParameters>& aParameters,
     const DisplayItemClip* aClip) const {
-  if (!mWillBuildScrollableLayer || mIsScrollableLayerInRootContainer) {
+  if (!mWillBuildScrollableLayer) {
     return Nothing();
   }
 

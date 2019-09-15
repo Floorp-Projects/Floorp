@@ -1117,17 +1117,6 @@ class nsDisplayListBuilder {
   const DisplayItemClipChain* FuseClipChainUpTo(
       const DisplayItemClipChain* aClipChain, const ActiveScrolledRoot* aASR);
 
-  /**
-   * Only used for containerful root scrolling. This is a workaround.
-   */
-  void SetActiveScrolledRootForRootScrollframe(const ActiveScrolledRoot* aASR) {
-    mActiveScrolledRootForRootScrollframe = aASR;
-  }
-
-  const ActiveScrolledRoot* ActiveScrolledRootForRootScrollframe() const {
-    return mActiveScrolledRootForRootScrollframe;
-  }
-
   const ActiveScrolledRoot* GetFilterASR() const { return mFilterASR; }
 
   /**
@@ -1982,7 +1971,6 @@ class nsDisplayListBuilder {
       mClipDeduplicator;
   DisplayItemClipChain* mFirstClipChainToDestroy;
   nsTArray<nsDisplayItem*> mTemporaryItems;
-  const ActiveScrolledRoot* mActiveScrolledRootForRootScrollframe;
   nsDisplayListBuilderMode mMode;
   nsDisplayTableBackgroundSet* mTableBackgroundSet;
   ViewID mCurrentScrollParentId;
