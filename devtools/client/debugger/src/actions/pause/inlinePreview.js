@@ -6,10 +6,9 @@
 import { sortBy } from "lodash";
 import { getOriginalFrameScope, getGeneratedFrameScope } from "../../selectors";
 import { features } from "../../utils/prefs";
-import { validateThreadContext } from "../../utils/context";
 
 import type { OriginalScope } from "../../utils/pause/mapScopes";
-import type { ThreadContext, Frame, Scope, Previews } from "../../types";
+import type { ThreadId, Frame, Scope, Previews } from "../../types";
 import type { ThunkArgs } from "../types";
 
 // We need to display all variables in the current functional scope so
@@ -25,13 +24,14 @@ function getLocalScopeLevels(originalAstScopes): number {
   return levels;
 }
 
-export function generateInlinePreview(cx: ThreadContext, frame: ?Frame) {
+export function generateInlinePreview(thread: ThreadId, frame: ?Frame) {
   return async function({ dispatch, getState, parser, client }: ThunkArgs) {
     if (!frame || !features.inlinePreview) {
       return;
     }
 
-    const { thread } = cx;
+    const originalAstScopes = await parser.getScopes(frame.location);
+
     const originalFrameScopes = getOriginalFrameScope(
       getState(),
       thread,
@@ -49,18 +49,13 @@ export function generateInlinePreview(cx: ThreadContext, frame: ?Frame) {
       (originalFrameScopes && originalFrameScopes.scope) ||
       (generatedFrameScopes && generatedFrameScopes.scope);
 
-    if (!scopes || !scopes.bindings) {
-      return;
-    }
-
-    const originalAstScopes = await parser.getScopes(frame.location);
-    validateThreadContext(getState(), cx);
-    if (!originalAstScopes) {
+    if (!scopes || !scopes.bindings || !originalAstScopes) {
       return;
     }
 
     const previews: Previews = {};
     const pausedOnLine: number = frame.location.line;
+
     const levels: number = getLocalScopeLevels(originalAstScopes);
 
     for (
@@ -74,14 +69,13 @@ export function generateInlinePreview(cx: ThreadContext, frame: ?Frame) {
           bindings[key] = argument[key];
         });
       });
-
-      const previewBindings = Object.keys(bindings).map(async name => {
+      for (const name in bindings) {
         // We want to show values of properties of objects only and not
         // function calls on other data types like someArr.forEach etc..
         let properties = null;
         if (bindings[name].value.class === "Object") {
           const root = {
-            name,
+            name: name,
             path: name,
             contents: { value: bindings[name].value },
           };
@@ -97,22 +91,16 @@ export function generateInlinePreview(cx: ThreadContext, frame: ?Frame) {
           properties
         );
 
-        Object.keys(preview).forEach(line => {
+        for (const line in preview) {
           previews[line] = (previews[line] || []).concat(preview[line]);
-        });
-      });
-      await Promise.all(previewBindings);
+        }
+      }
 
       scopes = scopes.parent;
     }
 
-    Object.keys(previews).forEach(line => {
+    for (const line in previews) {
       previews[line] = sortBy(previews[line], ["column"]);
-    });
-
-    // Bail if there are no previews to display
-    if (Object.keys(previews).length == 0) {
-      return;
     }
 
     return dispatch({
@@ -213,12 +201,12 @@ function getExpressionNameAndValue(
         displayName += `.${meta.property}`;
       } else if (displayValue && displayValue.preview) {
         const { ownProperties } = displayValue.preview;
-        Object.keys(ownProperties).forEach(prop => {
+        for (const prop in ownProperties) {
           if (prop === meta.property) {
             displayValue = ownProperties[prop].value;
             displayName += `.${meta.property}`;
           }
-        });
+        }
       }
       meta = meta.parent;
     }
