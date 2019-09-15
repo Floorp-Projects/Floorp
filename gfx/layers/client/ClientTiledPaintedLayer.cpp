@@ -85,21 +85,6 @@ static LayerToParentLayerMatrix4x4 GetTransformToAncestorsParentLayer(
        ancestorParent ? iter != ancestorParent : iter.IsValid();
        iter = iter.GetParent()) {
     transform = transform * iter.GetTransform();
-
-    if (StaticPrefs::layout_scroll_root_frame_containers()) {
-      // When scrolling containers, layout adds a post-scale into the transform
-      // of the displayport-ancestor (which we pick up in GetTransform() above)
-      // to cancel out the pres shell resolution (for historical reasons). The
-      // compositor in turn cancels out this post-scale (i.e., scales by the
-      // pres shell resolution), and to get correct calculations, we need to do
-      // so here, too.
-      //
-      // With containerless scrolling, the offending post-scale is on the
-      // parent layer of the displayport-ancestor, which we don't reach in this
-      // loop, so we don't need to worry about it.
-      float presShellResolution = iter.GetPresShellResolution();
-      transform.PostScale(presShellResolution, presShellResolution, 1.0f);
-    }
   }
   return ViewAs<LayerToParentLayerMatrix4x4>(transform);
 }

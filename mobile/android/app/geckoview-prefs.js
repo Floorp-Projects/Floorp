@@ -50,9 +50,6 @@ pref("dom.storageManager.enabled", true);
 // enable Visual Viewport API
 pref("dom.visualviewport.enabled", true);
 
-// Use containerless scrolling.
-pref("layout.scroll.root-frame-containers", false);
-
 // Inherit locale from the OS, used for multi-locale builds
 pref("intl.locale.requested", "");
 

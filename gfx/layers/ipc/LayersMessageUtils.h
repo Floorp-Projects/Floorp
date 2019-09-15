@@ -400,7 +400,6 @@ struct ParamTraits<mozilla::layers::ScrollMetadata>
     WriteParam(aMsg, aParam.mHasScrollgrab);
     WriteParam(aMsg, aParam.mIsLayersIdRoot);
     WriteParam(aMsg, aParam.mIsAutoDirRootContentRTL);
-    WriteParam(aMsg, aParam.mUsesContainerScrolling);
     WriteParam(aMsg, aParam.mForceDisableApz);
     WriteParam(aMsg, aParam.mResolutionUpdated);
     WriteParam(aMsg, aParam.mDisregardedDirection);
@@ -433,8 +432,6 @@ struct ParamTraits<mozilla::layers::ScrollMetadata>
                                 &paramType::SetIsLayersIdRoot) &&
             ReadBoolForBitfield(aMsg, aIter, aResult,
                                 &paramType::SetIsAutoDirRootContentRTL) &&
-            ReadBoolForBitfield(aMsg, aIter, aResult,
-                                &paramType::SetUsesContainerScrolling) &&
             ReadBoolForBitfield(aMsg, aIter, aResult,
                                 &paramType::SetForceDisableApz) &&
             ReadBoolForBitfield(aMsg, aIter, aResult,
