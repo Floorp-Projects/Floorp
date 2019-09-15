@@ -660,12 +660,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // descendant scrollframes also have their displayports removed.
   bool mIsScrollParent : 1;
 
-  // Whether we are the root scroll frame that is used for containerful
-  // scrolling with a display port. If true, the scrollable frame
-  // shouldn't attach frame metrics to its layers because the container
-  // will already have the necessary frame metrics.
-  bool mIsScrollableLayerInRootContainer : 1;
-
   // If true, add clipping in ScrollFrameHelper::ClipLayerToDisplayPort.
   bool mAddClipRectToLayer : 1;
 
