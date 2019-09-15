@@ -471,11 +471,6 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   virtual void SetHasOutOfFlowContentInsideFilter() = 0;
 
   /**
-   * Whether or not this frame uses containerful scrolling.
-   */
-  virtual bool UsesContainerScrolling() const = 0;
-
-  /**
    * Determine if we should build a scrollable layer for this scroll frame and
    * return the result. It will also record this result on the scroll frame.
    * Pass the visible rect in aVisibleRect. On return it will be set to the

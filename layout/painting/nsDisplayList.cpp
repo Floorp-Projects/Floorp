@@ -1507,8 +1507,7 @@ AnimatedGeometryRoot* nsDisplayListBuilder::FindAnimatedGeometryRootFor(
 void nsDisplayListBuilder::UpdateShouldBuildAsyncZoomContainer() {
   Document* document = mReferenceFrame->PresContext()->Document();
   mBuildAsyncZoomContainer =
-      nsLayoutUtils::AllowZoomingForDocument(document) &&
-      !StaticPrefs::layout_scroll_root_frame_containers();
+      nsLayoutUtils::AllowZoomingForDocument(document);
 }
 
 void nsDisplayListBuilder::UpdateShouldBuildBackdropRootContainer() {
@@ -2729,9 +2728,6 @@ bool nsDisplayList::ComputeVisibilityForRoot(nsDisplayListBuilder* aBuilder,
 
   nsRegion r;
   const ActiveScrolledRoot* rootASR = nullptr;
-  if (StaticPrefs::layout_scroll_root_frame_containers()) {
-    rootASR = aBuilder->ActiveScrolledRootForRootScrollframe();
-  }
   r.And(*aVisibleRegion, GetClippedBoundsWithRespectToASR(aBuilder, rootASR));
   return ComputeVisibilityForSublist(aBuilder, aVisibleRegion, r.GetBounds());
 }
@@ -2910,9 +2906,7 @@ FrameLayerBuilder* nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
       rootLayer->SetScrollMetadata(nsTArray<ScrollMetadata>());
     }
 
-    float resolutionUniform = StaticPrefs::layout_scroll_root_frame_containers()
-                                  ? presShell->GetResolution()
-                                  : 1.0f;
+    float resolutionUniform = 1.0f;
     float resolutionX = resolutionUniform;
     float resolutionY = resolutionUniform;
 
@@ -2947,9 +2941,6 @@ FrameLayerBuilder* nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
     }
     // Root is being scaled up by the X/Y resolution. Scale it back down.
     root->SetPostScale(1.0f / resolutionX, 1.0f / resolutionY);
-    if (StaticPrefs::layout_scroll_root_frame_containers()) {
-      root->SetScaleToResolution(resolutionUniform);
-    }
 
     auto callback = [root](ScrollableLayerGuid::ViewID aScrollId) -> bool {
       return nsLayoutUtils::ContainsMetricsWithId(root, aScrollId);
@@ -3603,9 +3594,7 @@ Maybe<nsRect> nsDisplayItem::GetClipWithRespectToASR(
     return Some(clip->GetClipRect());
   }
 #ifdef DEBUG
-  if (!StaticPrefs::layout_scroll_root_frame_containers()) {
-    MOZ_ASSERT(false, "item should have finite clip with respect to aASR");
-  }
+  MOZ_ASSERT(false, "item should have finite clip with respect to aASR");
 #endif
   return Nothing();
 }
@@ -7303,22 +7292,13 @@ void nsDisplayResolution::HitTest(nsDisplayListBuilder* aBuilder,
 already_AddRefed<Layer> nsDisplayResolution::BuildLayer(
     nsDisplayListBuilder* aBuilder, LayerManager* aManager,
     const ContainerLayerParameters& aContainerParameters) {
-  PresShell* presShell = mFrame->PresShell();
-  float rootLayerResolution = StaticPrefs::layout_scroll_root_frame_containers()
-                                  ? presShell->GetResolution()
-                                  : 1.0f;
+  float rootLayerResolution = 1.0f;
   ContainerLayerParameters containerParameters(
       rootLayerResolution, rootLayerResolution, nsIntPoint(),
       aContainerParameters);
 
   RefPtr<Layer> layer =
       nsDisplaySubDocument::BuildLayer(aBuilder, aManager, containerParameters);
-
-  if (StaticPrefs::layout_scroll_root_frame_containers()) {
-    layer->SetPostScale(1.0f / presShell->GetResolution(),
-                        1.0f / presShell->GetResolution());
-    layer->AsContainerLayer()->SetScaleToResolution(presShell->GetResolution());
-  }
 
   return layer.forget();
 }
@@ -10162,9 +10142,7 @@ Maybe<nsRect> nsDisplayMasksAndClipPaths::GetClipWithRespectToASR(
     return Some(childList->GetClippedBoundsWithRespectToASR(aBuilder, aASR));
   }
 #ifdef DEBUG
-  if (!StaticPrefs::layout_scroll_root_frame_containers()) {
-    MOZ_ASSERT(false, "item should have finite clip with respect to aASR");
-  }
+  MOZ_ASSERT(false, "item should have finite clip with respect to aASR");
 #endif
   return Nothing();
 }

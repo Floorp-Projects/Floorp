@@ -5125,14 +5125,6 @@
   value: true
   mirror: always
 
-# Default to containerless scrolling.
-# This and code dependent on it should be removed once containerless scrolling
-# looks stable.
-- name: layout.scroll.root-frame-containers
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # This pref is to be set by test code only.
 - name: layout.scrollbars.always-layerize-track
   type: RelaxedAtomicBool

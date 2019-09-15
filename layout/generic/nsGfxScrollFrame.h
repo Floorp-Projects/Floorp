@@ -430,8 +430,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
   void SetZoomableByAPZ(bool aZoomable);
   void SetHasOutOfFlowContentInsideFilter();
 
-  bool UsesContainerScrolling() const;
-
   bool UsesOverlayScrollbars() const;
 
   // In the case where |aDestination| is given, elements which are entirely out
@@ -1073,9 +1071,6 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   virtual void MarkScrollbarsDirtyForReflow() const override {
     mHelper.MarkScrollbarsDirtyForReflow();
   }
-  virtual bool UsesContainerScrolling() const override {
-    return mHelper.UsesContainerScrolling();
-  }
   virtual bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
                                      nsRect* aVisibleRect, nsRect* aDirtyRect,
                                      bool aSetBase) override {
@@ -1621,9 +1616,6 @@ class nsXULScrollFrame final : public nsBoxFrame,
 
   virtual void SetTransformingByAPZ(bool aTransforming) override {
     mHelper.SetTransformingByAPZ(aTransforming);
-  }
-  virtual bool UsesContainerScrolling() const override {
-    return mHelper.UsesContainerScrolling();
   }
   bool IsTransformingByAPZ() const override {
     return mHelper.IsTransformingByAPZ();
