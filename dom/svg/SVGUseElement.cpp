@@ -236,25 +236,47 @@ void SVGUseElement::NodeWillBeDestroyed(const nsINode* aNode) {
   UnlinkSource();
 }
 
-bool SVGUseElement::IsCyclicReferenceTo(const Element& aTarget) const {
+// Returns whether this node could ever be displayed.
+static bool NodeCouldBeRendered(const nsINode& aNode) {
+  if (aNode.IsSVGElement(nsGkAtoms::symbol)) {
+    // Only <symbol> elements in the root of a <svg:use> shadow tree are
+    // displayed.
+    auto* shadowRoot = ShadowRoot::FromNodeOrNull(aNode.GetParentNode());
+    return shadowRoot && shadowRoot->Host()->IsSVGElement(nsGkAtoms::use);
+  }
+  // TODO: Do we have other cases we can optimize out easily?
+  return true;
+}
+
+// Circular loop detection, plus detection of whether this shadow tree is
+// rendered at all.
+auto SVGUseElement::ScanAncestors(const Element& aTarget) const -> ScanResult {
   if (&aTarget == this) {
-    return true;
+    return ScanResult::CyclicReference;
   }
-  if (mOriginal && mOriginal->IsCyclicReferenceTo(aTarget)) {
-    return true;
+  if (mOriginal &&
+      mOriginal->ScanAncestors(aTarget) == ScanResult::CyclicReference) {
+    return ScanResult::CyclicReference;
   }
+  auto result = ScanResult::Ok;
   for (nsINode* parent = GetParentOrShadowHostNode(); parent;
        parent = parent->GetParentOrShadowHostNode()) {
     if (parent == &aTarget) {
-      return true;
+      return ScanResult::CyclicReference;
     }
     if (auto* use = SVGUseElement::FromNode(*parent)) {
       if (mOriginal && use->mOriginal == mOriginal) {
-        return true;
+        return ScanResult::CyclicReference;
       }
     }
+    // Do we have other similar cases we can optimize out easily?
+    if (!NodeCouldBeRendered(*parent)) {
+      // NOTE(emilio): We can't just return here. If we're cyclic, we need to
+      // know.
+      result = ScanResult::Invisible;
+    }
   }
-  return false;
+  return result;
 }
 
 //----------------------------------------------------------------------
@@ -300,9 +322,7 @@ void SVGUseElement::UpdateShadowTree() {
     return;
   }
 
-  // circular loop detection
-
-  if (IsCyclicReferenceTo(*targetElement)) {
+  if (ScanAncestors(*targetElement) != ScanResult::Ok) {
     return;
   }
 
