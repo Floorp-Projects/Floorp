@@ -20,19 +20,16 @@ class gfxFT2FontBase : public gfxFont {
       const RefPtr<mozilla::gfx::UnscaledFontFreeType>& aUnscaledFont,
       cairo_scaled_font_t* aScaledFont,
       RefPtr<mozilla::gfx::SharedFTFace>&& aFTFace, gfxFontEntry* aFontEntry,
-      const gfxFontStyle* aFontStyle, gfxFloat aAdjustedSize = 0.0);
+      const gfxFontStyle* aFontStyle, int aLoadFlags, bool aEmbolden);
   virtual ~gfxFT2FontBase();
 
   uint32_t GetGlyph(uint32_t aCharCode);
-  void GetGlyphExtents(uint32_t aGlyph, cairo_text_extents_t* aExtents);
   uint32_t GetSpaceGlyph() override;
   bool ProvidesGetGlyph() const override { return true; }
   virtual uint32_t GetGlyph(uint32_t unicode,
                             uint32_t variation_selector) override;
   bool ProvidesGlyphWidths() const override { return true; }
   int32_t GetGlyphWidth(uint16_t aGID) override;
-
-  bool SetupCairoFont(DrawTarget* aDrawTarget) override;
 
   FontType GetType() const override { return FONT_TYPE_FT2; }
 
@@ -44,23 +41,24 @@ class gfxFT2FontBase : public gfxFont {
   void UnlockFTFace();
 
  private:
-  uint32_t GetCharExtents(char aChar, cairo_text_extents_t* aExtents);
+  uint32_t GetCharExtents(char aChar, gfxFloat* aWidth, gfxFloat* aHeight);
   uint32_t GetCharWidth(char aChar, gfxFloat* aWidth);
 
-  // Get advance of a single glyph from FreeType, and return true;
-  // or return false if we should fall back to getting the glyph
-  // extents from cairo instead.
-  bool GetFTGlyphAdvance(uint16_t aGID, int32_t* aWidth);
-
-  void InitMetrics();
+  // Get advance (and optionally height) of a single glyph from FreeType,
+  // and return true, or return false if we failed.
+  bool GetFTGlyphExtents(uint16_t aGID, int32_t* aWidth,
+                         int32_t* aHeight = nullptr);
 
  protected:
+  void InitMetrics();
   const Metrics& GetHorizontalMetrics() override;
+  FT_Fixed GetEmboldenAdvance(FT_Face aFace, FT_Fixed aAdvance);
 
   RefPtr<mozilla::gfx::SharedFTFace> mFTFace;
 
   uint32_t mSpaceGlyph;
   Metrics mMetrics;
+  int mFTLoadFlags;
   bool mEmbolden;
 
   // For variation/multiple-master fonts, this will be an array of the values

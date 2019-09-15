@@ -25,8 +25,11 @@ namespace gfx {
 // which is a requirement when we consider runtime switchable backends and so on
 ScaledFontFreeType::ScaledFontFreeType(
     cairo_scaled_font_t* aScaledFont, RefPtr<SharedFTFace>&& aFace,
-    const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize)
-    : ScaledFontBase(aUnscaledFont, aSize), mFace(std::move(aFace)) {
+    const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
+    bool aApplySyntheticBold)
+    : ScaledFontBase(aUnscaledFont, aSize),
+      mFace(std::move(aFace)),
+      mApplySyntheticBold(aApplySyntheticBold) {
   SetCairoScaledFont(aScaledFont);
 }
 
@@ -38,6 +41,10 @@ SkTypeface* ScaledFontFreeType::CreateSkTypeface() {
 void ScaledFontFreeType::SetupSkFontDrawOptions(SkFont& aFont) {
   // SkFontHost_cairo does not support subpixel text positioning
   aFont.setSubpixel(false);
+
+  if (mApplySyntheticBold) {
+    aFont.setEmbolden(true);
+  }
 
   aFont.setEmbeddedBitmaps(true);
 }
@@ -51,7 +58,9 @@ bool ScaledFontFreeType::GetFontInstanceData(FontInstanceDataOutput aCb,
                                                        mFace->GetFace());
   }
 
-  aCb(nullptr, 0, variations.data(), variations.size(), aBaton);
+  InstanceData instance(this);
+  aCb(reinterpret_cast<uint8_t*>(&instance), sizeof(instance),
+      variations.data(), variations.size(), aBaton);
   return true;
 }
 
@@ -69,6 +78,10 @@ bool ScaledFontFreeType::GetWRFontInstanceOptions(
   options.synthetic_italics =
       wr::DegreesToSyntheticItalics(GetSyntheticObliqueAngle());
 
+  if (mApplySyntheticBold) {
+    options.flags |= wr::FontInstanceFlags_SYNTHETIC_BOLD;
+  }
+
   wr::FontInstancePlatformOptions platformOptions;
   platformOptions.lcd_filter = wr::FontLCDFilter::None;
   platformOptions.hinting = wr::FontHinting::None;
@@ -84,10 +97,28 @@ bool ScaledFontFreeType::GetWRFontInstanceOptions(
   return true;
 }
 
+ScaledFontFreeType::InstanceData::InstanceData(
+    const wr::FontInstanceOptions* aOptions,
+    const wr::FontInstancePlatformOptions* aPlatformOptions)
+    : mApplySyntheticBold(false) {
+  if (aOptions) {
+    if (aOptions->flags & wr::FontInstanceFlags_SYNTHETIC_BOLD) {
+      mApplySyntheticBold = true;
+    }
+  }
+}
+
 already_AddRefed<ScaledFont> UnscaledFontFreeType::CreateScaledFont(
     Float aGlyphSize, const uint8_t* aInstanceData,
     uint32_t aInstanceDataLength, const FontVariation* aVariations,
     uint32_t aNumVariations) {
+  if (aInstanceDataLength < sizeof(ScaledFontFreeType::InstanceData)) {
+    gfxWarning() << "FreeType scaled font instance data is truncated.";
+    return nullptr;
+  }
+  const ScaledFontFreeType::InstanceData& instanceData =
+      *reinterpret_cast<const ScaledFontFreeType::InstanceData*>(aInstanceData);
+
   RefPtr<SharedFTFace> face(InitFace());
   if (!face) {
     gfxWarning() << "Attempted to deserialize FreeType scaled font without "
@@ -138,12 +169,22 @@ already_AddRefed<ScaledFont> UnscaledFontFreeType::CreateScaledFont(
     ApplyVariationsToFace(aVariations, aNumVariations, face->GetFace());
   }
 
-  RefPtr<ScaledFontFreeType> scaledFont = new ScaledFontFreeType(
-      cairoScaledFont, std::move(face), this, aGlyphSize);
+  RefPtr<ScaledFontFreeType> scaledFont =
+      new ScaledFontFreeType(cairoScaledFont, std::move(face), this, aGlyphSize,
+                             instanceData.mApplySyntheticBold);
 
   cairo_scaled_font_destroy(cairoScaledFont);
 
   return scaledFont.forget();
+}
+
+already_AddRefed<ScaledFont> UnscaledFontFreeType::CreateScaledFontFromWRFont(
+    Float aGlyphSize, const wr::FontInstanceOptions* aOptions,
+    const wr::FontInstancePlatformOptions* aPlatformOptions,
+    const FontVariation* aVariations, uint32_t aNumVariations) {
+  ScaledFontFreeType::InstanceData instanceData(aOptions, aPlatformOptions);
+  return CreateScaledFont(aGlyphSize, reinterpret_cast<uint8_t*>(&instanceData),
+                          sizeof(instanceData), aVariations, aNumVariations);
 }
 
 bool ScaledFontFreeType::HasVariationSettings() {
