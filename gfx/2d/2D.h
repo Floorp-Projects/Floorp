@@ -57,6 +57,9 @@ typedef FT_FaceRec_* FT_Face;
 
 typedef int FT_Error;
 
+struct _FcPattern;
+typedef _FcPattern FcPattern;
+
 struct ID3D11Texture2D;
 struct ID3D11Device;
 struct ID2D1Device;
@@ -746,6 +749,63 @@ struct GlyphMetrics {
   Float mHeight;
 };
 
+#ifdef MOZ_ENABLE_FREETYPE
+class SharedFTFace;
+
+/** SharedFTFaceData abstracts data that may be used to back a SharedFTFace.
+ * Its main function is to manage the lifetime of the data and ensure that it
+ * lasts as long as the face.
+ */
+class SharedFTFaceData {
+ public:
+  /** Utility for creating a new face from this data. */
+  virtual already_AddRefed<SharedFTFace> CloneFace(int aFaceIndex = 0) {
+    return nullptr;
+  }
+  /** Binds the data's lifetime to the face. */
+  virtual void BindData() = 0;
+  /** Signals that the data is no longer needed by a face. */
+  virtual void ReleaseData() = 0;
+};
+
+/** Wrapper class for ref-counted SharedFTFaceData that handles calling the
+ * appropriate ref-counting methods
+ */
+template <class T>
+class SharedFTFaceRefCountedData : public SharedFTFaceData {
+ public:
+  void BindData() { static_cast<T*>(this)->AddRef(); }
+  void ReleaseData() { static_cast<T*>(this)->Release(); }
+};
+
+/** SharedFTFace is a shared wrapper around an FT_Face. It is ref-counted,
+ * unlike FT_Face itself, so that it may be shared among many users with
+ * RefPtr. Users should take care to lock SharedFTFace before accessing any
+ * FT_Face fields that may change to ensure exclusive access to it. It also
+ * allows backing data's lifetime to be bound to it via SharedFTFaceData so
+ * that the data will not disappear before the face does.
+ */
+class SharedFTFace : public external::AtomicRefCounted<SharedFTFace> {
+ public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SharedFTFace)
+
+  explicit SharedFTFace(FT_Face aFace, SharedFTFaceData* aData = nullptr);
+  virtual ~SharedFTFace();
+
+  FT_Face GetFace() const { return mFace; }
+  SharedFTFaceData* GetData() const { return mData; }
+
+  void Lock() { mLock.Lock(); }
+  bool TryLock() { return mLock.TryLock(); }
+  void Unlock() { mLock.Unlock(); }
+
+ private:
+  FT_Face mFace;
+  SharedFTFaceData* mData;
+  Mutex mLock;
+};
+#endif
+
 class UnscaledFont : public SupportsThreadSafeWeakPtr<UnscaledFont> {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(UnscaledFont)
@@ -813,7 +873,7 @@ class ScaledFont : public SupportsThreadSafeWeakPtr<ScaledFont> {
 
   virtual FontType GetType() const = 0;
   virtual Float GetSize() const = 0;
-  virtual AntialiasMode GetDefaultAAMode();
+  virtual AntialiasMode GetDefaultAAMode() { return AntialiasMode::DEFAULT; }
 
   static uint32_t DeletionCounter() { return sDeletionCounter; }
 
@@ -1662,6 +1722,19 @@ class GFX2D_API Factory {
       bool aApplySyntheticBold = false);
 #endif
 
+#ifdef MOZ_WIDGET_GTK
+  static already_AddRefed<ScaledFont> CreateScaledFontForFontconfigFont(
+      const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
+      cairo_scaled_font_t* aScaledFont, RefPtr<SharedFTFace> aFace,
+      FcPattern* aPattern);
+#endif
+
+#ifdef MOZ_WIDGET_ANDROID
+  static already_AddRefed<ScaledFont> CreateScaledFontForFreeTypeFont(
+      const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
+      cairo_scaled_font_t* aScaledFont, RefPtr<SharedFTFace> aFace);
+#endif
+
   /**
    * This creates a NativeFontResource from TrueType data.
    *
@@ -1799,8 +1872,14 @@ class GFX2D_API Factory {
 
   static FT_Face NewFTFace(FT_Library aFTLibrary, const char* aFileName,
                            int aFaceIndex);
+  static already_AddRefed<SharedFTFace> NewSharedFTFace(FT_Library aFTLibrary,
+                                                        const char* aFilename,
+                                                        int aFaceIndex);
   static FT_Face NewFTFaceFromData(FT_Library aFTLibrary, const uint8_t* aData,
                                    size_t aDataSize, int aFaceIndex);
+  static already_AddRefed<SharedFTFace> NewSharedFTFaceFromData(
+      FT_Library aFTLibrary, const uint8_t* aData, size_t aDataSize,
+      int aFaceIndex, SharedFTFaceData* aSharedData = nullptr);
   static void ReleaseFTFace(FT_Face aFace);
   static FT_Error LoadFTGlyph(FT_Face aFace, uint32_t aGlyphIndex,
                               int32_t aFlags);

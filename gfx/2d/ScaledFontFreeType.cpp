@@ -8,7 +8,6 @@
 #include "UnscaledFontFreeType.h"
 #include "NativeFontResourceFreeType.h"
 #include "Logging.h"
-#include "StackArray.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
 #ifdef USE_SKIA
@@ -25,15 +24,23 @@ namespace gfx {
 // This is mainly because FT_Face is not good for sharing between libraries,
 // which is a requirement when we consider runtime switchable backends and so on
 ScaledFontFreeType::ScaledFontFreeType(
-    cairo_scaled_font_t* aScaledFont, FT_Face aFace,
+    cairo_scaled_font_t* aScaledFont, RefPtr<SharedFTFace>&& aFace,
     const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize)
-    : ScaledFontBase(aUnscaledFont, aSize), mFace(aFace) {
+    : ScaledFontBase(aUnscaledFont, aSize), mFace(std::move(aFace)) {
   SetCairoScaledFont(aScaledFont);
 }
 
 #ifdef USE_SKIA
 SkTypeface* ScaledFontFreeType::CreateSkTypeface() {
-  return SkCreateTypefaceFromCairoFTFont(mScaledFont, mFace);
+  return SkCreateTypefaceFromCairoFTFont(mScaledFont, mFace->GetFace(),
+                                         mFace.get());
+}
+
+void ScaledFontFreeType::SetupSkFontDrawOptions(SkFont& aFont) {
+  // SkFontHost_cairo does not support subpixel text positioning
+  aFont.setSubpixel(false);
+
+  aFont.setEmbeddedBitmaps(true);
 }
 #endif
 
@@ -41,7 +48,8 @@ bool ScaledFontFreeType::GetFontInstanceData(FontInstanceDataOutput aCb,
                                              void* aBaton) {
   std::vector<FontVariation> variations;
   if (HasVariationSettings()) {
-    UnscaledFontFreeType::GetVariationSettingsFromFace(&variations, mFace);
+    UnscaledFontFreeType::GetVariationSettingsFromFace(&variations,
+                                                       mFace->GetFace());
   }
 
   aCb(nullptr, 0, variations.data(), variations.size(), aBaton);
@@ -70,111 +78,39 @@ bool ScaledFontFreeType::GetWRFontInstanceOptions(
   *aOutPlatformOptions = Some(platformOptions);
 
   if (HasVariationSettings()) {
-    UnscaledFontFreeType::GetVariationSettingsFromFace(aOutVariations, mFace);
+    UnscaledFontFreeType::GetVariationSettingsFromFace(aOutVariations,
+                                                       mFace->GetFace());
   }
 
   return true;
-}
-
-FT_Face UnscaledFontFreeType::InitFace() {
-  if (mFace) {
-    return mFace;
-  }
-  if (mFile.empty()) {
-    return nullptr;
-  }
-  FT_Face face = Factory::NewFTFace(nullptr, mFile.c_str(), mIndex);
-  if (!face) {
-    gfxWarning() << "Failed initializing FreeType face from filename";
-    return nullptr;
-  }
-  mOwnsFace = true;
-  mFace = face;
-  return mFace;
-}
-
-static cairo_user_data_key_t sNativeFontResourceKey;
-
-static void ReleaseNativeFontResource(void* aData) {
-  static_cast<NativeFontResource*>(aData)->Release();
-}
-
-static cairo_user_data_key_t sFaceKey;
-
-static void ReleaseFace(void* aData) {
-  Factory::ReleaseFTFace(static_cast<FT_Face>(aData));
 }
 
 already_AddRefed<ScaledFont> UnscaledFontFreeType::CreateScaledFont(
     Float aGlyphSize, const uint8_t* aInstanceData,
     uint32_t aInstanceDataLength, const FontVariation* aVariations,
     uint32_t aNumVariations) {
-  FT_Face face = InitFace();
+  RefPtr<SharedFTFace> face(InitFace());
   if (!face) {
     gfxWarning() << "Attempted to deserialize FreeType scaled font without "
                     "FreeType face";
     return nullptr;
   }
 
-  NativeFontResourceFreeType* nfr =
-      static_cast<NativeFontResourceFreeType*>(mNativeFontResource.get());
-  FT_Face varFace = nullptr;
-  if (nfr && aNumVariations > 0) {
-    varFace = nfr->CloneFace();
-    if (varFace) {
+  if (aNumVariations > 0 && face->GetData()) {
+    if (RefPtr<SharedFTFace> varFace = face->GetData()->CloneFace()) {
       face = varFace;
-    } else {
-      gfxWarning() << "Failed cloning face for variations";
     }
-  }
-
-  StackArray<FT_Fixed, 32> coords(aNumVariations);
-  for (uint32_t i = 0; i < aNumVariations; i++) {
-    coords[i] = std::round(aVariations[i].mValue * 65536.0);
   }
 
   int flags = FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING;
-  if (face->face_flags & FT_FACE_FLAG_TRICKY) {
+  if (face->GetFace()->face_flags & FT_FACE_FLAG_TRICKY) {
     flags &= ~FT_LOAD_NO_AUTOHINT;
   }
   cairo_font_face_t* font = cairo_ft_font_face_create_for_ft_face(
-      face, flags, coords.data(), aNumVariations);
+      face->GetFace(), flags, 0, face.get());
   if (cairo_font_face_status(font) != CAIRO_STATUS_SUCCESS) {
     gfxWarning() << "Failed creating Cairo font face for FreeType face";
-    if (varFace) {
-      Factory::ReleaseFTFace(varFace);
-    }
     return nullptr;
-  }
-
-  if (nfr) {
-    // Bug 1362117 - Cairo may keep the font face alive after the owning
-    // NativeFontResource was freed. To prevent this, we must bind the
-    // NativeFontResource to the font face so that it stays alive at least as
-    // long as the font face.
-    nfr->AddRef();
-    cairo_status_t err = CAIRO_STATUS_SUCCESS;
-    bool cleanupFace = false;
-    if (varFace) {
-      err =
-          cairo_font_face_set_user_data(font, &sFaceKey, varFace, ReleaseFace);
-    }
-
-    if (err != CAIRO_STATUS_SUCCESS) {
-      cleanupFace = true;
-    } else {
-      err = cairo_font_face_set_user_data(font, &sNativeFontResourceKey, nfr,
-                                          ReleaseNativeFontResource);
-    }
-    if (err != CAIRO_STATUS_SUCCESS) {
-      gfxWarning() << "Failed binding NativeFontResource to Cairo font face";
-      if (varFace && cleanupFace) {
-        Factory::ReleaseFTFace(varFace);
-      }
-      nfr->Release();
-      cairo_font_face_destroy(font);
-      return nullptr;
-    }
   }
 
   cairo_matrix_t sizeMatrix;
@@ -198,23 +134,23 @@ already_AddRefed<ScaledFont> UnscaledFontFreeType::CreateScaledFont(
     return nullptr;
   }
 
-  RefPtr<ScaledFontFreeType> scaledFont =
-      new ScaledFontFreeType(cairoScaledFont, face, this, aGlyphSize);
+  // Only apply variations if we have an explicitly cloned face.
+  if (aNumVariations > 0 && face != GetFace()) {
+    ApplyVariationsToFace(aVariations, aNumVariations, face->GetFace());
+  }
+
+  RefPtr<ScaledFontFreeType> scaledFont = new ScaledFontFreeType(
+      cairoScaledFont, std::move(face), this, aGlyphSize);
 
   cairo_scaled_font_destroy(cairoScaledFont);
-
-  // Only apply variations if we have an explicitly cloned face. Otherwise,
-  // if the pattern holds the pathname, Cairo will handle setting of variations.
-  if (varFace) {
-    ApplyVariationsToFace(aVariations, aNumVariations, varFace);
-  }
 
   return scaledFont.forget();
 }
 
 bool ScaledFontFreeType::HasVariationSettings() {
   // Check if the FT face has been cloned.
-  return mFace && mFace->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS &&
+  return mFace &&
+         mFace->GetFace()->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS &&
          mFace !=
              static_cast<UnscaledFontFreeType*>(mUnscaledFont.get())->GetFace();
 }
