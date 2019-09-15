@@ -1143,7 +1143,7 @@ fuzzy-if(skiaContent,0-1,0-3280) == 438987-2c.html 438987-2-ref.html
 != about:blank 438987-2-ref.html # check that backgrounds work at all
 == 439004-1.html 439004-1-ref.html
 == 439639-1.html 439639-1-ref.html
-== 439910.html 439910-ref.html
+fuzzy-if(gtkWidget,0-255,0-6) == 439910.html 439910-ref.html
 fuzzy-if(skiaContent,0-1,0-1) == 440112.html 440112-ref.html
 == 440149-1.html 440149-1-ref.html
 == 441259-1.html 441259-1-ref.html
@@ -1187,7 +1187,7 @@ fuzzy-if(webrender,0-4,0-361) == 449519-1.html 449519-1-ref.html
 == 455105-2.html 455105-ref.html
 == 455171-5.html 455171-5-ref.html
 == 455280-1.xhtml 455280-1-ref.xhtml
-== 455826-1.html 455826-1-ref.html
+fails-if(Android) == 455826-1.html 455826-1-ref.html
 fails-if(Android||cocoaWidget||winWidget) == chrome://reftest/content/bugs/456147.xul 456147-ref.html # bug 458047
 fuzzy-if(Android,0-11,0-41) fuzzy-if(winWidget||gtkWidget,0-4,0-6) fuzzy-if(d2d,0-16,0-95) fuzzy-if(skiaContent,0-42,0-154) fuzzy-if(webrender,56-60,449-518) == 456219-1a.html 456219-1-ref.html # bug 1128229
 fuzzy-if(Android,0-11,0-41) fuzzy-if(winWidget||gtkWidget,0-4,0-6) fuzzy-if(d2d,0-16,0-99) fuzzy-if(skiaContent,0-42,0-154) fuzzy-if(webrender,56-60,449-518) == 456219-1b.html 456219-1-ref.html # bug 1128229
@@ -2089,7 +2089,7 @@ fuzzy-if(winWidget&&!webrender,0-104,0-1420) == 1513423-1.html 1513423-1-ref.htm
 fuzzy-if(winWidget&&!webrender,0-89,0-1418) == 1513423-2.html 1513423-2-ref.html
 == 1513423-3.html 1513423-3-ref.html
 fuzzy-if(!webrender,1-5,66-547) fuzzy-if(geckoview&&!webrender,1-2,64-141) == 1529992-1.html 1529992-1-ref.html
-fuzzy-if(!webrender,0-6,0-34) fuzzy-if(geckoview,9-9,44-44) fails-if(webrender) == 1529992-2.html 1529992-2-ref.html
+fuzzy-if(!webrender,0-6,0-34) fuzzy-if(Android,9-14,44-60) fails-if(webrender) == 1529992-2.html 1529992-2-ref.html
 == 1535040-1.html 1535040-1-ref.html
 == 1545360-1.xhtml 1545360-1-ref.xhtml
 skip-if(!asyncPan) == 1544895.html 1544895-ref.html
@@ -2100,7 +2100,7 @@ pref(image.downscale-during-decode.enabled,true) == 1553571-1.html 1553571-1-ref
 == 1558937-1.html 1558937-1-ref.html
 != 1563484.html 1563484-notref.html
 == 1563484.html 1563484-ref.html
-fuzzy-if(!webrender||!winWidget,254-255,464-1613) fuzzy-if(geckoview&&webrender,253-253,1392-1397) == 1562733-rotated-nastaliq-1.html 1562733-rotated-nastaliq-1-ref.html
+fuzzy-if(!webrender||!winWidget,251-255,464-1613) fuzzy-if(geckoview&&webrender,251-253,1392-1397) == 1562733-rotated-nastaliq-1.html 1562733-rotated-nastaliq-1-ref.html
 fuzzy-if(winWidget&&webrender,0-31,0-3) fuzzy-if(geckoview&&webrender,0-93,0-26) == 1562733-rotated-nastaliq-2.html 1562733-rotated-nastaliq-2-ref.html
 test-pref(plain_text.wrap_long_lines,false) != 1565129.txt 1565129.txt
 fuzzy(0-32,0-8) fuzzy-if(Android&&webrender,0-32,0-1458) == 1576553-1.html 1576553-1-ref.html
