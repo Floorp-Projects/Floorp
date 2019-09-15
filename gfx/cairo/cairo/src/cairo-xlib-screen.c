@@ -262,7 +262,7 @@ _cairo_xlib_init_screen_font_options (Display *dpy,
     cairo_font_options_set_hint_style (&info->font_options, hint_style);
     cairo_font_options_set_antialias (&info->font_options, antialias);
     cairo_font_options_set_subpixel_order (&info->font_options, subpixel_order);
-    _cairo_font_options_set_lcd_filter (&info->font_options, lcd_filter);
+    cairo_font_options_set_lcd_filter (&info->font_options, lcd_filter);
     cairo_font_options_set_hint_metrics (&info->font_options, CAIRO_HINT_METRICS_ON);
 }
 
