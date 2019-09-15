@@ -98,12 +98,6 @@ ScaledFontFontconfig::InstanceData::InstanceData(
       embolden) {
     mFlags |= EMBOLDEN;
   }
-  FcBool vertical;
-  if (FcPatternGetBool(aPattern, FC_VERTICAL_LAYOUT, 0, &vertical) ==
-          FcResultMatch &&
-      vertical) {
-    mFlags |= VERTICAL_LAYOUT;
-  }
 
   cairo_font_options_t* fontOptions = cairo_font_options_create();
   cairo_scaled_font_get_font_options(aScaledFont, fontOptions);
@@ -221,9 +215,6 @@ ScaledFontFontconfig::InstanceData::InstanceData(
     if (aOptions->flags & wr::FontInstanceFlags_SYNTHETIC_BOLD) {
       mFlags |= EMBOLDEN;
     }
-    if (aOptions->flags & wr::FontInstanceFlags_VERTICAL_LAYOUT) {
-      mFlags |= VERTICAL_LAYOUT;
-    }
     if (aOptions->render_mode == wr::FontRenderMode::Subpixel) {
       mAntialias = AntialiasMode::SUBPIXEL;
       if (aOptions->flags & wr::FontInstanceFlags_SUBPIXEL_BGR) {
@@ -339,9 +330,6 @@ void ScaledFontFontconfig::InstanceData::SetupFontOptions(
   if (mFlags & AUTOHINT) {
     loadFlags |= FT_LOAD_FORCE_AUTOHINT;
   }
-  if (mFlags & VERTICAL_LAYOUT) {
-    loadFlags |= FT_LOAD_VERTICAL_LAYOUT;
-  }
   if (mFlags & EMBOLDEN) {
     synthFlags |= CAIRO_FT_SYNTHESIZE_BOLD;
   }
@@ -385,9 +373,6 @@ bool ScaledFontFontconfig::GetWRFontInstanceOptions(
   }
   if (mInstanceData.mFlags & InstanceData::EMBOLDEN) {
     options.flags |= wr::FontInstanceFlags_SYNTHETIC_BOLD;
-  }
-  if (mInstanceData.mFlags & InstanceData::VERTICAL_LAYOUT) {
-    options.flags |= wr::FontInstanceFlags_VERTICAL_LAYOUT;
   }
   if (mInstanceData.mFlags & InstanceData::EMBEDDED_BITMAP) {
     options.flags |= wr::FontInstanceFlags_EMBEDDED_BITMAPS;

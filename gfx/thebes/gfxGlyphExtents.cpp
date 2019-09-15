@@ -47,13 +47,11 @@ bool gfxGlyphExtents::GetTightGlyphExtentsAppUnits(gfxFont* aFont,
       return false;
     }
 
-    if (aFont->SetupCairoFont(aDrawTarget)) {
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
-      ++gGlyphExtentsSetupLazyTight;
+    ++gGlyphExtentsSetupLazyTight;
 #endif
-      aFont->SetupGlyphExtents(aDrawTarget, aGlyphID, true, this);
-      entry = mTightGlyphExtents.GetEntry(aGlyphID);
-    }
+    aFont->SetupGlyphExtents(aDrawTarget, aGlyphID, true, this);
+    entry = mTightGlyphExtents.GetEntry(aGlyphID);
     if (!entry) {
       NS_WARNING("Could not get glyph extents");
       return false;
