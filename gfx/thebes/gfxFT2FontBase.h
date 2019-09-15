@@ -37,7 +37,7 @@ class gfxFT2FontBase : public gfxFont {
 
   static void SetupVarCoords(FT_MM_Var* aMMVar,
                              const nsTArray<gfxFontVariation>& aVariations,
-                             nsTArray<FT_Fixed>* aCoords);
+                             FT_Face aFTFace);
 
  private:
   uint32_t GetCharExtents(char aChar, cairo_text_extents_t* aExtents);
@@ -65,6 +65,37 @@ class gfxFT2FontBase : public gfxFont {
   nsTArray<FT_Fixed> mCoords;
 
   mozilla::UniquePtr<nsDataHashtable<nsUint32HashKey, int32_t>> mGlyphWidths;
+};
+
+// Helper classes used for clearing out user font data when FT font
+// face is destroyed. Since multiple faces may use the same data, be
+// careful to assure that the data is only cleared out when all uses
+// expire. The font entry object contains a refptr to FTUserFontData and
+// each FT face created from that font entry contains a refptr to that
+// same FTUserFontData object.
+
+class FTUserFontData final
+    : public mozilla::gfx::SharedFTFaceRefCountedData<FTUserFontData> {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FTUserFontData)
+
+  FTUserFontData(const uint8_t* aData, uint32_t aLength)
+      : mFontData(aData), mLength(aLength) {}
+
+  const uint8_t* FontData() const { return mFontData; }
+
+  already_AddRefed<mozilla::gfx::SharedFTFace> CloneFace(
+      int aFaceIndex = 0) override;
+
+ private:
+  ~FTUserFontData() {
+    if (mFontData) {
+      free((void*)mFontData);
+    }
+  }
+
+  const uint8_t* mFontData;
+  uint32_t mLength;
 };
 
 #endif /* GFX_FT2FONTBASE_H */
