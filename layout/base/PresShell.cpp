@@ -5164,21 +5164,6 @@ bool PresShell::AsyncPanZoomEnabled() {
   return gfxPlatform::AsyncPanZoomEnabled();
 }
 
-void PresShell::SetIgnoreViewportScrolling(bool aIgnore) {
-  if (IgnoringViewportScrolling() == aIgnore) {
-    return;
-  }
-  RenderingState state(this);
-  if (aIgnore) {
-    state.mRenderingStateFlags |=
-        RenderingStateFlags::IgnoringViewportScrolling;
-  } else {
-    state.mRenderingStateFlags &=
-        ~RenderingStateFlags::IgnoringViewportScrolling;
-  }
-  SetRenderingState(state);
-}
-
 nsresult PresShell::SetResolutionAndScaleTo(float aResolution,
                                             ResolutionChangeOrigin aOrigin) {
   if (!(aResolution > 0.0)) {

@@ -966,7 +966,6 @@ class PresShell final : public nsStubDocumentObserver,
    * of painting.  If we are ignoring, then layers aren't clipped to
    * the CSS viewport and scrollbars aren't drawn.
    */
-  void SetIgnoreViewportScrolling(bool aIgnore);
   bool IgnoringViewportScrolling() const {
     return !!(mRenderingStateFlags &
               RenderingStateFlags::IgnoringViewportScrolling);
