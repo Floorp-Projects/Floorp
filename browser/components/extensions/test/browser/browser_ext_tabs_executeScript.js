@@ -383,19 +383,6 @@ add_task(async function testExecuteScript() {
           await browser.tabs.remove(tab.id);
         }),
 
-        browser.tabs.create({ url: "about:blank" }).then(async tab => {
-          const result = await browser.tabs.executeScript(tab.id, {
-            code: "location.href",
-            matchAboutBlank: true,
-          });
-          browser.test.assertEq(
-            "about:blank",
-            result[0],
-            "Script executed correctly in new tab"
-          );
-          await browser.tabs.remove(tab.id);
-        }),
-
         new Promise(resolve => {
           browser.runtime.onMessage.addListener(message => {
             browser.test.assertEq(
