@@ -97,7 +97,21 @@ class SVGUseElement final : public SVGUseElementBase,
                         nsIPrincipal* aSubjectPrincipal, bool aNotify) final;
 
  protected:
-  bool IsCyclicReferenceTo(const Element& aTarget) const;
+  // Information from walking our ancestors and a given target.
+  enum class ScanResult {
+    // Nothing that should stop us from rendering the shadow tree.
+    Ok,
+    // We're never going to be displayed, so no point in updating the shadow
+    // tree.
+    //
+    // However if we're referenced from another tree that tree may need to be
+    // rendered.
+    Invisible,
+    // We're a cyclic reference to either an ancestor or another shadow tree. We
+    // shouldn't render this <use> element.
+    CyclicReference,
+  };
+  ScanResult ScanAncestors(const Element& aTarget) const;
 
   /**
    * Helper that provides a reference to the element with the ID that is

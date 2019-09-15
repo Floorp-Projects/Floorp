@@ -11,7 +11,11 @@ style, script {
  display: none;
 }
 
-/* This is only to be overridden by the rule right below. */
+/*
+ * This is only to be overridden by the rule right below.
+ *
+ * NOTE(emilio): NodeCouldBeRendered in SVGUseElement.cpp relies on this.
+ */
 symbol {
  display: none !important;
 }
