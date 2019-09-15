@@ -36,10 +36,6 @@ symbol:-moz-use-shadow-tree-root {
   display: inline !important;
 }
 
-switch {
- -moz-binding: none !important;
-}
-
 svg:not(:root), symbol, image, marker, pattern, foreignObject {
  overflow: hidden;
 }
