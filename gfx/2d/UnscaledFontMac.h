@@ -42,6 +42,11 @@ class UnscaledFontMac final : public UnscaledFont {
       uint32_t aInstanceDataLength, const FontVariation* aVariations,
       uint32_t aNumVariations) override;
 
+  already_AddRefed<ScaledFont> CreateScaledFontFromWRFont(
+      Float aGlyphSize, const wr::FontInstanceOptions* aOptions,
+      const wr::FontInstancePlatformOptions* aPlatformOptions,
+      const FontVariation* aVariations, uint32_t aNumVariations) override;
+
   static CGFontRef CreateCGFontWithVariations(CGFontRef aFont,
                                               uint32_t aVariationCount,
                                               const FontVariation* aVariations);
