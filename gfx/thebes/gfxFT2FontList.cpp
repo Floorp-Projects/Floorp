@@ -145,15 +145,25 @@ FTUserFontData* FT2FontEntry::GetUserFontData() {
  */
 
 cairo_scaled_font_t* FT2FontEntry::CreateScaledFont(
-    const gfxFontStyle* aStyle, RefPtr<SharedFTFace> aFace) {
-  int flags = gfxPlatform::GetPlatform()->FontHintingEnabled()
-                  ? FT_LOAD_DEFAULT
-                  : (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
+    const gfxFontStyle* aStyle, RefPtr<SharedFTFace> aFace, int* aOutLoadFlags,
+    unsigned int* aOutSynthFlags) {
+  int loadFlags = gfxPlatform::GetPlatform()->FontHintingEnabled()
+                      ? FT_LOAD_DEFAULT
+                      : (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
   if (aFace->GetFace()->face_flags & FT_FACE_FLAG_TRICKY) {
-    flags &= ~FT_LOAD_NO_AUTOHINT;
+    loadFlags &= ~FT_LOAD_NO_AUTOHINT;
   }
+
+  unsigned int synthFlags = 0;
+  if (aStyle->NeedsSyntheticBold(this)) {
+    synthFlags |= CAIRO_FT_SYNTHESIZE_BOLD;
+  }
+
+  *aOutLoadFlags = loadFlags;
+  *aOutSynthFlags = synthFlags;
+
   cairo_font_face_t* cairoFace = cairo_ft_font_face_create_for_ft_face(
-      aFace->GetFace(), flags, 0, aFace.get());
+      aFace->GetFace(), loadFlags, synthFlags, aFace.get());
   if (!cairoFace) {
     return nullptr;
   }
@@ -230,7 +240,10 @@ gfxFont* FT2FontEntry::CreateFontInstance(const gfxFontStyle* aStyle) {
     }
   }
 
-  cairo_scaled_font_t* scaledFont = CreateScaledFont(aStyle, face);
+  int loadFlags;
+  unsigned int synthFlags;
+  cairo_scaled_font_t* scaledFont =
+      CreateScaledFont(aStyle, face, &loadFlags, &synthFlags);
   if (!scaledFont) {
     return nullptr;
   }
@@ -245,7 +258,8 @@ gfxFont* FT2FontEntry::CreateFontInstance(const gfxFontStyle* aStyle) {
   }
 
   gfxFont* font =
-      new gfxFT2Font(unscaledFont, scaledFont, std::move(face), this, aStyle);
+      new gfxFT2Font(unscaledFont, scaledFont, std::move(face), this, aStyle,
+                     loadFlags, (synthFlags & CAIRO_FT_SYNTHESIZE_BOLD) != 0);
   cairo_scaled_font_destroy(scaledFont);
   return font;
 }

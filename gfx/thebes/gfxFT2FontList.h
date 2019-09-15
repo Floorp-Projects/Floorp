@@ -57,7 +57,8 @@ class FT2FontEntry : public gfxFontEntry {
   // Create a cairo_scaled_font for this face, with the given style.
   // This may fail and return null, so caller must be prepared to handle this.
   cairo_scaled_font_t* CreateScaledFont(
-      const gfxFontStyle* aStyle, RefPtr<mozilla::gfx::SharedFTFace> aFace);
+      const gfxFontStyle* aStyle, RefPtr<mozilla::gfx::SharedFTFace> aFace,
+      int* aOutLoadFlags, unsigned int* aOutSynthFlags);
 
   nsresult ReadCMAP(FontInfoData* aFontInfoData = nullptr) override;
 

@@ -14,13 +14,16 @@
 namespace mozilla {
 namespace gfx {
 
+class UnscaledFontFreeType;
+
 class ScaledFontFreeType : public ScaledFontBase {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontFreeType, override)
 
   ScaledFontFreeType(cairo_scaled_font_t* aScaledFont,
                      RefPtr<SharedFTFace>&& aFace,
-                     const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize);
+                     const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
+                     bool aApplySyntheticBold = false);
 
   FontType GetType() const override { return FontType::FREETYPE; }
 
@@ -43,7 +46,21 @@ class ScaledFontFreeType : public ScaledFontBase {
   bool HasVariationSettings() override;
 
  private:
+  friend UnscaledFontFreeType;
+
   RefPtr<SharedFTFace> mFace;
+
+  bool mApplySyntheticBold;
+
+  struct InstanceData {
+    explicit InstanceData(ScaledFontFreeType* aScaledFont)
+        : mApplySyntheticBold(aScaledFont->mApplySyntheticBold) {}
+
+    InstanceData(const wr::FontInstanceOptions* aOptions,
+                 const wr::FontInstancePlatformOptions* aPlatformOptions);
+
+    bool mApplySyntheticBold;
+  };
 };
 
 }  // namespace gfx
