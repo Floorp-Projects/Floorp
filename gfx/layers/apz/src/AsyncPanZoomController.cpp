@@ -4669,8 +4669,6 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     mScrollMetadata.SetIsLayersIdRoot(aScrollMetadata.IsLayersIdRoot());
     mScrollMetadata.SetIsAutoDirRootContentRTL(
         aScrollMetadata.IsAutoDirRootContentRTL());
-    mScrollMetadata.SetUsesContainerScrolling(
-        aScrollMetadata.UsesContainerScrolling());
     Metrics().SetIsScrollInfoLayer(aLayerMetrics.IsScrollInfoLayer());
     mScrollMetadata.SetForceDisableApz(aScrollMetadata.IsApzForceDisabled());
     mScrollMetadata.SetDisregardedDirection(

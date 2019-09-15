@@ -1209,17 +1209,6 @@ bool nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
       GetHighResolutionDisplayPort(aContent, &newDisplayPort);
   MOZ_ASSERT(hasDisplayPort);
 
-  if (StaticPrefs::layout_scroll_root_frame_containers()) {
-    nsIFrame* rootScrollFrame = aPresShell->GetRootScrollFrame();
-    if (rootScrollFrame && aContent == rootScrollFrame->GetContent() &&
-        nsLayoutUtils::UsesAsyncScrolling(rootScrollFrame)) {
-      // We are setting a root displayport for a document.
-      // If we have APZ, then set a special flag on the pres shell so
-      // that we don't get scrollbars drawn.
-      aPresShell->SetIgnoreViewportScrolling(true);
-    }
-  }
-
   InvalidateForDisplayPortChange(aContent, hadDisplayPort, oldDisplayPort,
                                  newDisplayPort, aRepaintMode);
 
@@ -9005,9 +8994,6 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
               aScrollFrame->GetParent()));
     }
 
-    metadata.SetUsesContainerScrolling(
-        scrollableFrame->UsesContainerScrolling());
-
     metadata.SetSnapInfo(scrollableFrame->GetScrollSnapInfo());
 
     ScrollStyles scrollStyles = scrollableFrame->GetScrollStyles();
@@ -9228,18 +9214,16 @@ Maybe<ScrollMetadata> nsLayoutUtils::GetRootMetadata(
   PresShell* presShell = presContext->PresShell();
   Document* document = presShell->GetDocument();
 
-  // If we're using containerless scrolling, there is still one case where we
-  // want the root container layer to have metrics. If the parent process is
-  // using XUL windows, there is no root scrollframe, and without explicitly
-  // creating metrics there will be no guaranteed top-level APZC.
-  bool addMetrics = StaticPrefs::layout_scroll_root_frame_containers() ||
-                    (XRE_IsParentProcess() && !presShell->GetRootScrollFrame());
+  // There is one case where we want the root container layer to have metrics.
+  // If the parent process is using XUL windows, there is no root scrollframe,
+  // and without explicitly creating metrics there will be no guaranteed top-level
+  // APZC.
+  bool addMetrics = XRE_IsParentProcess() && !presShell->GetRootScrollFrame();
 
   // Add metrics if there are none in the layer tree with the id (create an id
   // if there isn't one already) of the root scroll frame/root content.
   bool ensureMetricsForRootId =
       nsLayoutUtils::AsyncPanZoomEnabled(frame) &&
-      !StaticPrefs::layout_scroll_root_frame_containers() &&
       aBuilder->IsPaintingToWindow() && !presContext->GetParentPresContext();
 
   nsIContent* content = nullptr;

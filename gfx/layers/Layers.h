@@ -1346,7 +1346,6 @@ class Layer {
     return mScrollMetadata;
   }
   bool HasScrollableFrameMetrics() const;
-  bool HasRootScrollableFrameMetrics() const;
   bool IsScrollableWithoutContent() const;
   const EventRegions& GetEventRegions() const { return mEventRegions; }
   ContainerLayer* GetParent() { return mParent; }
