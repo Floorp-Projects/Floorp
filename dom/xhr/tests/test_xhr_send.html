@@ -62,9 +62,9 @@ function testExceptionInToString() {
     SimpleTest.finish();
   }
   try {
-    x.send({toString() { throw "dummy"; }});
+    x.send({toString() { throw new Error("dummy"); }});
   } catch(ex) {
-    is(ex, "dummy");
+    is(ex.message, "dummy");
     SimpleTest.finish();
   }
 }

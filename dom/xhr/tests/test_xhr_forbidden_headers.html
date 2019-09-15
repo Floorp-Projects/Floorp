@@ -5,14 +5,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=308484
 -->
 <head>
   <title>Test for Bug 308484</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=308484">Mozilla Bug 308484</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -56,10 +56,10 @@ function  startTest() {
   request.send(); // headers aren't set on the channel until send()
 
   // Read out headers
-  var channel = SpecialPowers.wrap(request).channel.QueryInterface(SpecialPowers.Ci.nsIHttpChannel);
+  channel = SpecialPowers.wrap(request).channel.QueryInterface(SpecialPowers.Ci.nsIHttpChannel);
   for (i = 0; i < headers.length; i++) {
     // Retrieving Content-Length will throw an exception
-    var value = null;
+    value = null;
     try {
       value = channel.getRequestHeader(headers[i]);
     }

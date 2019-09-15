@@ -87,7 +87,7 @@ function* runTest() {
   is(document.baseURI, "http://example.org/", "wrong doc baseURI");
 
   // use content XHR and access URI properties from content privileged script
-  xhr = new XMLHttpRequest;
+  var xhr = new XMLHttpRequest;
   xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.xml");
   xhr.onreadystatechange = function(e) {
     if (!xhr.responseXML) {

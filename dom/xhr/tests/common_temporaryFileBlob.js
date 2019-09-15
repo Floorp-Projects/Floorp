@@ -1,3 +1,5 @@
+// This file expects next() to be defined in the scope it is imported into.
+/* global next */
 var data = new Array(256).join("1234567890ABCDEF");
 
 function createXHR() {

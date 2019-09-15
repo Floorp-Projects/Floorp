@@ -34,8 +34,8 @@ Tests of DOM Worker Threads relative load
 
     var worker = new Worker(urls[++index]);
     worker.onmessage = messageHandler;
-    worker.onerror = function(event) {
-      ok(false, "Worker had an error: " + event.message);
+    worker.onerror = function(e) {
+      ok(false, "Worker had an error: " + e.message);
       SimpleTest.finish();
     };
     worker.postMessage("start");

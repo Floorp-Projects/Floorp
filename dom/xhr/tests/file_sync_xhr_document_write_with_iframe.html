@@ -13,6 +13,7 @@ addEventListener('load', evt => {
   document.write(
     '<body>' +
     '<iframe src="about:blank"></iframe>' +
+    // eslint-disable-next-line no-useless-concat
     '<script>window.opener.postMessage("DONE", "*");</' + 'script>' +
     '</body>');
   document.close();

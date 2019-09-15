@@ -31,19 +31,23 @@ Tests of DOM Worker Threads XHR(Bug 450452 )
     switch (args.type) {
       case "progress": {
         ok(parseInt(args.current) <= parseInt(args.total));
-      } break;
+        break;
+      }
       case "error": {
         ok(false, "XHR error: " + args.error);
-      } break;
+        break;
+      }
       case "upload.load": {
         gotUploadLoad = true;
-      } break;
+        break;
+      }
       case "load": {
         ok(gotUploadLoad, "Should have gotten upload load event");
         gotLoadend = true;
         is(args.data, "A noisy noise annoys an oyster.", "correct data");
         document.getElementById("content").textContent = args.data;
-      } break;
+        break;
+      }
       case "loadend": {
         ok(gotLoadend, "Should have gotten load.");
         SimpleTest.finish();

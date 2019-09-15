@@ -2,7 +2,7 @@
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
-
+/* eslint-env worker */
 onmessage = function(event) {
   const url = event.data;
 
@@ -13,7 +13,7 @@ onmessage = function(event) {
   const refText = xhr.responseText;
 
   function getResponse(type) {
-    var xhr = new XMLHttpRequest();
+    xhr = new XMLHttpRequest();
     xhr.open("GET", url, false);
     if (type !== undefined) {
       xhr.responseType = type;
@@ -48,7 +48,7 @@ onmessage = function(event) {
   // property.
 
   function testResponseTextException(type) {
-    var xhr = new XMLHttpRequest();
+    xhr = new XMLHttpRequest();
     xhr.open("GET", url, false);
     xhr.responseType = type;
     xhr.send();

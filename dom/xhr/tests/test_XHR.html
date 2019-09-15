@@ -77,7 +77,7 @@ URL.revokeObjectURL(blobURL);
 
 for (i = 0; i < failFiles.length; ++i) {
   xhr = new XMLHttpRequest();
-  var didthrow = false;
+  let didthrow = false;
   try {
     xhr.open(failFiles[i][1], failFiles[i][0], false);
     xhr.send(null);
@@ -95,28 +95,28 @@ for (i = 0; i < failFiles.length; ++i) {
 }
 
 function checkResponseTextAccessThrows(xhr) {
-  var didthrow = false;
+  let didthrow = false;
   try { xhr.responseText } catch (e) { didthrow = true; }
   ok(didthrow, "should have thrown when accessing responseText");
 }
 function checkResponseXMLAccessThrows(xhr) {
-  var didthrow = false;
+  let didthrow = false;
   try { xhr.responseXML } catch (e) { didthrow = true; }
   ok(didthrow, "should have thrown when accessing responseXML");
 }
 function checkSetResponseType(xhr, type) {
-  var didthrow = false;
+  let didthrow = false;
   try { xhr.responseType = type; } catch (e) { didthrow = true; }
   is(xhr.responseType, type, "responseType should be " + type);
   ok(!didthrow, "should not have thrown when setting responseType");
 }
 function checkSetResponseTypeThrows(xhr, type) {
-  var didthrow = false;
+  let didthrow = false;
   try { xhr.responseType = type; } catch (e) { didthrow = true; }
   ok(didthrow, "should have thrown when setting responseType");
 }
 function checkOpenThrows(xhr, method, url, async) {
-  var didthrow = false;
+  let didthrow = false;
   try { xhr.open(method, url, async); } catch (e) { didthrow = true; }
   ok(didthrow, "should have thrown when open is called");
 }
@@ -235,7 +235,7 @@ is(JSON.stringify(xhr.response), jsonObjStr, "correct result");
 is(xhr.response, xhr.response, "returning the same object on each access");
 
 // with invalid json
-var xhr = new XMLHttpRequest();
+xhr = new XMLHttpRequest();
 xhr.open("POST", 'responseIdentical.sjs');
 xhr.responseType = 'json';
 xhr.onloadend = continueTest;
@@ -335,7 +335,7 @@ while (xhr.readyState != 4)
 
 xhr.onreadystatechange = null;
 
-var b = xhr.response;
+b = xhr.response;
 ok(b != null, "should have a non-null blob");
 is(b.size, 65536, "wrong blob size");
 
