@@ -35,7 +35,7 @@ function setupAndRunTests() {
 }
 
 function createFiles() {
-  var filesToCreate = new Array();
+  var filesToCreate = [];
   extensions.forEach(function (extension) {
     filesToCreate.push({name: "testfile" + extension, data: testData});
   });
@@ -45,7 +45,7 @@ function createFiles() {
                               gen.next();
                             },
                             function (msg) {
-                              testDOMFiles = new Array;
+                              testDOMFiles = [];
                               ok(false, "File creation error: " + msg);
                               gen.next();
                             });
@@ -55,13 +55,13 @@ function createFiles() {
 function continueTest() { gen.next(); }
 
 function* runTests() {
-xhr = new XMLHttpRequest();
+var xhr = new XMLHttpRequest();
 xhr.open("GET", "file_XHRSendData_doc.xml", false);
 xhr.send();
-testDoc1 = xhr.responseXML;
+var testDoc1 = xhr.responseXML;
 is(testDoc1.inputEncoding, "windows-1252", "wrong encoding");
 
-testDoc2 = document.implementation.createDocument("", "", null);
+var testDoc2 = document.implementation.createDocument("", "", null);
 testDoc2.appendChild(testDoc2.createComment(" doc 2 "));
 testDoc2.appendChild(testDoc2.createElement("res"));
 testDoc2.documentElement.appendChild(testDoc2.createTextNode("text"));
@@ -74,7 +74,7 @@ shortInt8View[0] = 3;
 
 var longArray = new ArrayBuffer(512);
 var longInt8View = new Uint8Array(longArray);
-for (var i = 0; i < longInt8View.length; i++) {
+for (let i = 0; i < longInt8View.length; i++) {
   longInt8View[i] = i % 255;
 }
 
@@ -87,7 +87,7 @@ var longInt16View2 = new Uint16Array(longArray, 256, 64)
 var longInt8View1 = new Int8Array(longArraySlice)
 var longInt8View2 = new Int8Array(longArray, 256, 128)
 
-tests = [{ body: null,
+var tests = [{ body: null,
            resBody: "",
          },
          { body: undefined,
@@ -202,7 +202,7 @@ tests = [{ body: null,
          },
          ];
 
-for (var i = 0; i < testDOMFiles.length; i++) {
+for (let i = 0; i < testDOMFiles.length; i++) {
   tests.push({ body: testDOMFiles[i],
                resBody: testData,
                resContentType: fileTypes[i],
@@ -211,7 +211,7 @@ for (var i = 0; i < testDOMFiles.length; i++) {
 }
 
 try {
-  for (test of tests) {
+  for (var test of tests) {
     xhr = new XMLHttpRequest;
     xhr.open("POST", "file_XHRSendData.sjs", !!test.resType);
     if (test.contentType)
@@ -259,8 +259,8 @@ try {
 
 function is_identical_arraybuffer(ab1, ab2) {
   is(ab1.byteLength, ab2.byteLength, "arraybuffer byteLengths not equal");
-  u8v1 = new Uint8Array(ab1);
-  u8v2 = new Uint8Array(ab2);
+  var u8v1 = new Uint8Array(ab1);
+  var u8v2 = new Uint8Array(ab2);
   is(String.fromCharCode.apply(String, u8v1),
      String.fromCharCode.apply(String, u8v2), "arraybuffer values not equal");
 }

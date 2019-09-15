@@ -7,7 +7,7 @@ add_task(async _ => {
     );
     xhr.responseType = "blob";
     xhr.send("");
-    xhr.onloadend = _ => {
+    xhr.onloadend = __ => {
       is(xhr.response.blobImplType, "EmptyBlobImpl", "We want a EmptyBlobImpl");
       resolve();
     };
@@ -29,7 +29,7 @@ add_task(async _ => {
         return data;
       },
     });
-    xhr.onloadend = _ => {
+    xhr.onloadend = __ => {
       is(
         xhr.response.blobImplType,
         "MemoryBlobImpl",
@@ -59,7 +59,7 @@ add_task(async _ => {
         return data;
       },
     });
-    xhr.onloadend = _ => {
+    xhr.onloadend = __ => {
       is(
         xhr.response.blobImplType,
         "StreamBlobImpl[TemporaryBlobImpl]",

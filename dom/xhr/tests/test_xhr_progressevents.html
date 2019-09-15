@@ -134,10 +134,10 @@ function* runTests() {
                       ];
   var responseType;
   var fileExpectedResult = "";
-  for (var i = 0; i < 65536; i++) {
+  for (let i = 0; i < 65536; i++) {
     fileExpectedResult += String.fromCharCode(i & 255);
   }
-  while (responseType = responseTypes.shift()) {
+  while ((responseType = responseTypes.shift())) {
     let tests = [{ open: "Content-Type=text/plain", name: "simple test" },
                  { data: "hello world" },
                  { data: "\u0000\u0001\u0002\u0003" },
@@ -220,7 +220,7 @@ function* runTests() {
         if (!testState.file)
           xhrClose = closeConn();
 
-        e = yield undefined;
+        let e = yield undefined;
         is(e.type, "readystatechange", "should readystate to done closing " + testState.name);
         is(xhr.readyState, xhr.DONE, "should be in state DONE closing " + testState.name);
         log("readystate to 4");
@@ -279,7 +279,7 @@ function* runTests() {
 
       while(testState.pendingBytes) {
         log("waiting for more bytes: " + testState.pendingBytes);
-        e = yield undefined;
+        let e = yield undefined;
         // Readystate can fire several times between each progress event.
         if (e.type === "readystatechange")
           continue;
