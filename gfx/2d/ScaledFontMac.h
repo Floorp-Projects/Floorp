@@ -32,6 +32,7 @@ class ScaledFontMac : public ScaledFontBase {
   FontType GetType() const override { return FontType::MAC; }
 #ifdef USE_SKIA
   SkTypeface* CreateSkTypeface() override;
+  void SetupSkFontDrawOptions(SkFont& aFont) override;
 #endif
   already_AddRefed<Path> GetPathForGlyphs(const GlyphBuffer& aBuffer,
                                           const DrawTarget* aTarget) override;

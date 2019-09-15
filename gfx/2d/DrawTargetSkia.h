@@ -147,8 +147,6 @@ class DrawTargetSkia : public DrawTarget {
 
   void MarkChanged();
 
-  bool ShouldLCDRenderText(FontType aFontType, AntialiasMode aAntialiasMode);
-
   void DrawGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
                   const Pattern& aPattern,
                   const StrokeOptions* aStrokeOptions = nullptr,
