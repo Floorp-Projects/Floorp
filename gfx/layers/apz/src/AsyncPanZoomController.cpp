@@ -4110,37 +4110,6 @@ CSSPoint AsyncPanZoomController::GetCurrentAsyncScrollOffsetInCssPixels(
   return GetEffectiveScrollOffset(aMode);
 }
 
-AsyncTransform AsyncPanZoomController::GetCurrentAsyncViewportTransform(
-    AsyncTransformConsumer aMode) const {
-  RecursiveMutexAutoLock lock(mRecursiveMutex);
-  AutoApplyAsyncTestAttributes testAttributeApplier(this);
-
-  if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
-    return AsyncTransform();
-  }
-
-  CSSPoint lastPaintViewportOffset;
-  if (mLastContentPaintMetrics.IsScrollable()) {
-    lastPaintViewportOffset =
-        mLastContentPaintMetrics.GetLayoutViewport().TopLeft();
-  }
-
-  CSSPoint currentViewportOffset = GetEffectiveLayoutViewport(aMode).TopLeft();
-
-  // Unlike the visual viewport, the layout viewport does not change size
-  // (in the sense of "number of CSS pixels of page content it covers")
-  // when zooming, so the async transform of the layout viewport does not
-  // have an async zoom component. (The translation still needs to be
-  // multiplied by the non-async zoom, to get it into the correct coordinates.)
-  CSSToParentLayerScale2D effectiveZoom =
-      Metrics().LayersPixelsPerCSSPixel() * LayerToParentLayerScale(1.0f);
-  ParentLayerPoint translation =
-      (currentViewportOffset - lastPaintViewportOffset) * effectiveZoom;
-  LayerToParentLayerScale compositedAsyncZoom;
-
-  return AsyncTransform(compositedAsyncZoom, -translation);
-}
-
 AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
     AsyncTransformConsumer aMode, AsyncTransformComponents aComponents) const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
@@ -4190,29 +4159,6 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
   }
 
   return AsyncTransform(compositedAsyncZoom, -translation);
-}
-
-AsyncTransform
-AsyncPanZoomController::GetCurrentAsyncTransformForFixedAdjustment(
-    AsyncTransformConsumer aMode) const {
-  RecursiveMutexAutoLock lock(mRecursiveMutex);
-
-  // We need to apply test attributes here so GetVisualViewport() uses the
-  // adjusted zoom. GetCurrentAsync[Viewport]Transform() uses the applier
-  // as well, which is fine as it's reentrant so the attributes won't be
-  // double applied.
-  AutoApplyAsyncTestAttributes testAttributeApplier(this);
-
-  // Use the layout viewport to adjust fixed position elements if and only if
-  // it's larger than the visual viewport (assuming we're scrolling the RCD-RSF
-  // with apz.allow_zooming enabled).
-  // FIXME: bug 1525793 -- this may need to handle zooming or not on a
-  // per-document basis.
-  return (StaticPrefs::apz_allow_zooming() && Metrics().IsRootContent() &&
-          Metrics().GetVisualViewport().Size() <=
-              Metrics().GetLayoutViewport().Size())
-             ? GetCurrentAsyncViewportTransform(aMode)
-             : GetCurrentAsyncTransform(aMode);
 }
 
 AsyncTransformComponentMatrix
