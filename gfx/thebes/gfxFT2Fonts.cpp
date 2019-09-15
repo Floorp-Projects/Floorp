@@ -153,11 +153,12 @@ void gfxFT2Font::AddRange(const char16_t* aText, uint32_t aOffset,
 }
 
 gfxFT2Font::gfxFT2Font(const RefPtr<UnscaledFontFreeType>& aUnscaledFont,
-                       cairo_scaled_font_t* aCairoFont, FT_Face aFTFace,
+                       cairo_scaled_font_t* aCairoFont,
+                       RefPtr<mozilla::gfx::SharedFTFace>&& aFTFace,
                        FT2FontEntry* aFontEntry, const gfxFontStyle* aFontStyle)
     : gfxFT2FontBase(aUnscaledFont, aCairoFont, aFontEntry, aFontStyle),
       mCharGlyphCache(32),
-      mFTFace(aFTFace) {
+      mFTFace(std::move(aFTFace)) {
   NS_ASSERTION(mFontEntry,
                "Unable to find font entry for font.  Something is whack.");
   // TODO: use FreeType emboldening instead of multi-strike?
@@ -168,12 +169,8 @@ gfxFT2Font::~gfxFT2Font() {}
 
 already_AddRefed<ScaledFont> gfxFT2Font::GetScaledFont(DrawTarget* aTarget) {
   if (!mAzureScaledFont) {
-    NativeFont nativeFont;
-    nativeFont.mType = NativeFontType::FREETYPE_FACE;
-    nativeFont.mFont = mFTFace;
-
-    mAzureScaledFont = Factory::CreateScaledFontForNativeFont(
-        nativeFont, GetUnscaledFont(), GetAdjustedSize(), GetCairoScaledFont());
+    mAzureScaledFont = Factory::CreateScaledFontForFreeTypeFont(
+        GetUnscaledFont(), GetAdjustedSize(), GetCairoScaledFont(), mFTFace);
     InitializeScaledFont();
   }
 

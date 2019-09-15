@@ -789,6 +789,10 @@ gfxFont::gfxFont(const RefPtr<UnscaledFont>& aUnscaledFont,
   ++gFontCount;
 #endif
 
+  if (MOZ_UNLIKELY(StaticPrefs::gfx_text_disable_aa_AtStartup())) {
+    mAntialiasOption = kAntialiasNone;
+  }
+
   // Turn off AA for Ahem for testing purposes when requested.
   if (MOZ_UNLIKELY(StaticPrefs::gfx_font_rendering_ahem_antialias_none() &&
                    mFontEntry->FamilyName().EqualsLiteral("Ahem"))) {

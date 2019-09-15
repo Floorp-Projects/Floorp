@@ -213,30 +213,6 @@ void gfxFT2FontBase::InitMetrics() {
     return;
   }
 
-  if (face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
-    // Resolve variations from entry (descriptor) and style (property)
-    AutoTArray<gfxFontVariation, 8> settings;
-    mFontEntry->GetVariationsForStyle(settings, mStyle);
-    SetupVarCoords(mFontEntry->GetMMVar(), settings, &mCoords);
-    if (!mCoords.IsEmpty()) {
-#if MOZ_TREE_FREETYPE
-      FT_Set_Var_Design_Coordinates(face, mCoords.Length(), mCoords.Elements());
-#else
-      typedef FT_Error (*SetCoordsFunc)(FT_Face, FT_UInt, FT_Fixed*);
-      static SetCoordsFunc setCoords;
-      static bool firstTime = true;
-      if (firstTime) {
-        firstTime = false;
-        setCoords =
-            (SetCoordsFunc)dlsym(RTLD_DEFAULT, "FT_Set_Var_Design_Coordinates");
-      }
-      if (setCoords) {
-        (*setCoords)(face, mCoords.Length(), mCoords.Elements());
-      }
-#endif
-    }
-  }
-
   const FT_Size_Metrics& ftMetrics = face->size->metrics;
 
   mMetrics.maxAscent = FLOAT_FROM_26_6(ftMetrics.ascender);
@@ -607,22 +583,52 @@ bool gfxFT2FontBase::SetupCairoFont(DrawTarget* aDrawTarget) {
 /*static*/
 void gfxFT2FontBase::SetupVarCoords(
     FT_MM_Var* aMMVar, const nsTArray<gfxFontVariation>& aVariations,
-    nsTArray<FT_Fixed>* aCoords) {
-  aCoords->TruncateLength(0);
+    FT_Face aFTFace) {
   if (!aMMVar) {
     return;
   }
 
+  nsTArray<FT_Fixed> coords;
   for (unsigned i = 0; i < aMMVar->num_axis; ++i) {
-    aCoords->AppendElement(aMMVar->axis[i].def);
+    coords.AppendElement(aMMVar->axis[i].def);
     for (const auto& v : aVariations) {
       if (aMMVar->axis[i].tag == v.mTag) {
         FT_Fixed val = v.mValue * 0x10000;
         val = std::min(val, aMMVar->axis[i].maximum);
         val = std::max(val, aMMVar->axis[i].minimum);
-        (*aCoords)[i] = val;
+        coords[i] = val;
         break;
       }
     }
   }
+
+  if (!coords.IsEmpty()) {
+#if MOZ_TREE_FREETYPE
+    FT_Set_Var_Design_Coordinates(aFTFace, coords.Length(), coords.Elements());
+#else
+    typedef FT_Error (*SetCoordsFunc)(FT_Face, FT_UInt, FT_Fixed*);
+    static SetCoordsFunc setCoords;
+    static bool firstTime = true;
+    if (firstTime) {
+      firstTime = false;
+      setCoords =
+          (SetCoordsFunc)dlsym(RTLD_DEFAULT, "FT_Set_Var_Design_Coordinates");
+    }
+    if (setCoords) {
+      (*setCoords)(aFTFace, coords.Length(), coords.Elements());
+    }
+#endif
+  }
+}
+
+already_AddRefed<SharedFTFace> FTUserFontData::CloneFace(int aFaceIndex) {
+  RefPtr<SharedFTFace> face = Factory::NewSharedFTFaceFromData(
+      nullptr, mFontData, mLength, aFaceIndex, this);
+  if (!face ||
+      (FT_Select_Charmap(face->GetFace(), FT_ENCODING_UNICODE) != FT_Err_Ok &&
+       FT_Select_Charmap(face->GetFace(), FT_ENCODING_MS_SYMBOL) !=
+           FT_Err_Ok)) {
+    return nullptr;
+  }
+  return face.forget();
 }
