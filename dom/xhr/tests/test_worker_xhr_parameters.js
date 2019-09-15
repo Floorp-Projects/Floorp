@@ -31,7 +31,7 @@ var validParameters = [
 var invalidParameters = [
   {
     get mozSystem() {
-      throw "Bla";
+      throw new Error("Bla");
     },
   },
 ];

@@ -4,7 +4,7 @@
  */
 
 onmessage = function(event) {
-  throw "No messages should reach me!";
+  throw new Error("No messages should reach me!");
 };
 
 var xhr = new XMLHttpRequest();

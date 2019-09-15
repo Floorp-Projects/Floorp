@@ -1,3 +1,4 @@
+/* eslint-env worker */
 importScripts("common_temporaryFileBlob.js");
 
 function info(msg) {

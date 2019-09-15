@@ -14,7 +14,6 @@ obj*/
 # dom/ exclusions which should be removed (aka ESLint enabled)
 dom/media/test/
 !dom/media/test/marionette/yttest/*.js
-dom/xhr/
 
 # build/ third-party code
 build/pgo/js-input/

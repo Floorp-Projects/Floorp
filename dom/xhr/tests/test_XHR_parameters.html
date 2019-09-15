@@ -38,7 +38,7 @@ function runTests() {
   ];
 
   let invalidParameters = [
-    {get mozSystem() { throw "Bla"; } },
+    {get mozSystem() { throw new Error("Bla"); } },
   ];
 
   let havePrivileges = false;

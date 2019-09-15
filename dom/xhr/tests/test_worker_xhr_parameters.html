@@ -16,10 +16,12 @@
 <script class="testbody" type="application/javascript">
 
 function message(event) {
-  if (event.data.test == 'ok')
+  if (event.data.test == 'ok') {
     ok(event.data.a, event.data.event);
-  else if(event.data.test == 'is')
+  }
+  else if(event.data.test == 'is') {
     is(event.data.a, event.data.b, event.data.event);
+  }
   else if(event.data.test == 'finish') {
     run();
   }
