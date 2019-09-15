@@ -55,8 +55,7 @@ SkTypeface* ScaledFontFontconfig::CreateSkTypeface() {
                             : (mInstanceData.mFlags & InstanceData::LCD_VERTICAL
                                    ? kRGB_V_SkPixelGeometry
                                    : kRGB_H_SkPixelGeometry);
-  return SkCreateTypefaceFromCairoFTFont(mScaledFont, mFace->GetFace(),
-                                         mFace.get(), geo,
+  return SkCreateTypefaceFromCairoFTFont(mFace->GetFace(), mFace.get(), geo,
                                          mInstanceData.mLcdFilter);
 }
 

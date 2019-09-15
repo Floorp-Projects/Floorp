@@ -72,6 +72,8 @@ using namespace mozilla::gfx;
 using namespace mozilla::unicode;
 using mozilla::dom::SystemFontListEntry;
 
+static FT_Library gPlatformFTLibrary = nullptr;
+
 gfxPlatformGtk::gfxPlatformGtk() {
   if (!gfxPlatform::IsHeadless()) {
     gtk_init(nullptr, nullptr);
@@ -105,6 +107,10 @@ gfxPlatformGtk::gfxPlatformGtk() {
   // Set default display fps to 60
   mWaylandFrameDelay = 1000 / 60;
 #endif
+
+  gPlatformFTLibrary = Factory::NewFTLibrary();
+  MOZ_ASSERT(gPlatformFTLibrary);
+  Factory::SetFTLibrary(gPlatformFTLibrary);
 }
 
 gfxPlatformGtk::~gfxPlatformGtk() {
@@ -113,6 +119,9 @@ gfxPlatformGtk::~gfxPlatformGtk() {
     XCloseDisplay(mCompositorDisplay);
   }
 #endif  // MOZ_X11
+
+  Factory::ReleaseFTLibrary(gPlatformFTLibrary);
+  gPlatformFTLibrary = nullptr;
 }
 
 void gfxPlatformGtk::FlushContentDrawing() {
@@ -262,10 +271,6 @@ gfxFontGroup* gfxPlatformGtk::CreateFontGroup(
     gfxFloat aDevToCssSize) {
   return new gfxFontGroup(aFontFamilyList, aStyle, aTextPerf, aUserFontSet,
                           aDevToCssSize);
-}
-
-FT_Library gfxPlatformGtk::GetFTLibrary() {
-  return gfxFcPlatformFontList::GetFTLibrary();
 }
 
 static int32_t sDPI = 0;
@@ -468,7 +473,7 @@ bool gfxPlatformGtk::CheckVariationFontSupport() {
   // in older versions, it seems too incomplete/unstable for us to use
   // until at least 2.7.1.
   FT_Int major, minor, patch;
-  FT_Library_Version(GetFTLibrary(), &major, &minor, &patch);
+  FT_Library_Version(Factory::GetFTLibrary(), &major, &minor, &patch);
   return major * 1000000 + minor * 1000 + patch >= 2007001;
 }
 

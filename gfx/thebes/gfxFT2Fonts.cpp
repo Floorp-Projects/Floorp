@@ -156,9 +156,9 @@ gfxFT2Font::gfxFT2Font(const RefPtr<UnscaledFontFreeType>& aUnscaledFont,
                        cairo_scaled_font_t* aCairoFont,
                        RefPtr<mozilla::gfx::SharedFTFace>&& aFTFace,
                        FT2FontEntry* aFontEntry, const gfxFontStyle* aFontStyle)
-    : gfxFT2FontBase(aUnscaledFont, aCairoFont, aFontEntry, aFontStyle),
-      mCharGlyphCache(32),
-      mFTFace(std::move(aFTFace)) {
+    : gfxFT2FontBase(aUnscaledFont, aCairoFont, std::move(aFTFace), aFontEntry,
+                     aFontStyle),
+      mCharGlyphCache(32) {
   NS_ASSERTION(mFontEntry,
                "Unable to find font entry for font.  Something is whack.");
   // TODO: use FreeType emboldening instead of multi-strike?

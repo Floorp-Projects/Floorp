@@ -246,8 +246,6 @@ gfxFontGroup* gfxAndroidPlatform::CreateFontGroup(
                           aDevToCssSize);
 }
 
-FT_Library gfxAndroidPlatform::GetFTLibrary() { return gPlatformFTLibrary; }
-
 bool gfxAndroidPlatform::FontHintingEnabled() {
   // In "mobile" builds, we sometimes use non-reflow-zoom, so we
   // might not want hinting.  Let's see.

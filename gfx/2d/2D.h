@@ -795,14 +795,30 @@ class SharedFTFace : public external::AtomicRefCounted<SharedFTFace> {
   FT_Face GetFace() const { return mFace; }
   SharedFTFaceData* GetData() const { return mData; }
 
-  void Lock() { mLock.Lock(); }
-  bool TryLock() { return mLock.TryLock(); }
+  /** Locks the face for exclusive access by a given owner. Returns true if
+   * the given owner is acquiring the lock for the first time, and false if
+   * the owner was the prior owner of the lock. Thus the return value can be
+   * used to do owner-specific initialization of the FT face such as setting
+   * a size or transform that may have been invalidated by a previous owner.
+   * If no owner is given, then the user should avoid modify any state on
+   * the face so as not to invalidate the prior owner's modification.
+   */
+  bool Lock(void* aOwner = nullptr) {
+    mLock.Lock();
+    if (mLockOwner == aOwner || !aOwner) {
+      return true;
+    } else {
+      mLockOwner = aOwner;
+      return false;
+    }
+  }
   void Unlock() { mLock.Unlock(); }
 
  private:
   FT_Face mFace;
   SharedFTFaceData* mData;
   Mutex mLock;
+  void* mLockOwner;
 };
 #endif
 
