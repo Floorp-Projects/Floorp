@@ -3626,19 +3626,20 @@ NS_IMETHODIMP
 nsDocShell::GetContentBlockingLog(Promise** aPromise) {
   NS_ENSURE_ARG_POINTER(aPromise);
 
-  if (!mContentViewer) {
-    *aPromise = nullptr;
-    return NS_ERROR_FAILURE;
-  }
-
   Document* doc = mContentViewer->GetDocument();
   ErrorResult rv;
   RefPtr<Promise> promise = Promise::Create(doc->GetOwnerGlobal(), rv);
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
   }
-  promise->MaybeResolve(
-      NS_ConvertUTF8toUTF16(doc->GetContentBlockingLog()->Stringify()));
+
+  if (mContentViewer) {
+    promise->MaybeResolve(
+        NS_ConvertUTF8toUTF16(doc->GetContentBlockingLog()->Stringify()));
+  } else {
+    promise->MaybeRejectWithUndefined();
+  }
+
   promise.forget(aPromise);
   return NS_OK;
 }
