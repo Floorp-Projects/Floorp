@@ -18,8 +18,9 @@ class gfxFT2FontBase : public gfxFont {
  public:
   gfxFT2FontBase(
       const RefPtr<mozilla::gfx::UnscaledFontFreeType>& aUnscaledFont,
-      cairo_scaled_font_t* aScaledFont, gfxFontEntry* aFontEntry,
-      const gfxFontStyle* aFontStyle);
+      cairo_scaled_font_t* aScaledFont,
+      RefPtr<mozilla::gfx::SharedFTFace>&& aFTFace, gfxFontEntry* aFontEntry,
+      const gfxFontStyle* aFontStyle, gfxFloat aAdjustedSize = 0.0);
   virtual ~gfxFT2FontBase();
 
   uint32_t GetGlyph(uint32_t aCharCode);
@@ -39,6 +40,9 @@ class gfxFT2FontBase : public gfxFont {
                              const nsTArray<gfxFontVariation>& aVariations,
                              FT_Face aFTFace);
 
+  FT_Face LockFTFace();
+  void UnlockFTFace();
+
  private:
   uint32_t GetCharExtents(char aChar, cairo_text_extents_t* aExtents);
   uint32_t GetCharWidth(char aChar, gfxFloat* aWidth);
@@ -52,6 +56,8 @@ class gfxFT2FontBase : public gfxFont {
 
  protected:
   const Metrics& GetHorizontalMetrics() override;
+
+  RefPtr<mozilla::gfx::SharedFTFace> mFTFace;
 
   uint32_t mSpaceGlyph;
   Metrics mMetrics;
