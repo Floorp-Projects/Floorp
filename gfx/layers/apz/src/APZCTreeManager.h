@@ -525,8 +525,6 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    *    NOT reflect async scrolling, i.e. they should be the layer tree's
    *    copy of the metrics, or APZC's last-content-paint metrics.
    * @param aScrollbarData The scrollbar data for the the scroll thumb layer.
-   * @param aScrollbarIsDescendant True iff. the scroll thumb layer is a
-   *    descendant of the layer bearing the scroll frame's metrics.
    * @param aOutClipTransform If not null, and |aScrollbarIsDescendant| is true,
    *    this will be populated with a transform that should be applied to the
    *    clip rects of all layers between the scroll thumb layer and the ancestor
@@ -538,7 +536,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
       const LayerToParentLayerMatrix4x4& aCurrentTransform,
       const gfx::Matrix4x4& aScrollableContentTransform,
       AsyncPanZoomController* aApzc, const FrameMetrics& aMetrics,
-      const ScrollbarData& aScrollbarData, bool aScrollbarIsDescendant,
+      const ScrollbarData& aScrollbarData,
       AsyncTransformComponentMatrix* aOutClipTransform);
 
   /**
@@ -848,20 +846,17 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
     ScrollbarData mThumbData;
     ScrollableLayerGuid mTargetGuid;
     CSSTransformMatrix mTargetTransform;
-    bool mTargetIsAncestor;
 
     ScrollThumbInfo(const uint64_t& aThumbAnimationId,
                     const CSSTransformMatrix& aThumbTransform,
                     const ScrollbarData& aThumbData,
                     const ScrollableLayerGuid& aTargetGuid,
-                    const CSSTransformMatrix& aTargetTransform,
-                    bool aTargetIsAncestor)
+                    const CSSTransformMatrix& aTargetTransform)
         : mThumbAnimationId(aThumbAnimationId),
           mThumbTransform(aThumbTransform),
           mThumbData(aThumbData),
           mTargetGuid(aTargetGuid),
-          mTargetTransform(aTargetTransform),
-          mTargetIsAncestor(aTargetIsAncestor) {
+          mTargetTransform(aTargetTransform) {
       MOZ_ASSERT(mTargetGuid.mScrollId == mThumbData.mTargetViewId);
     }
   };
