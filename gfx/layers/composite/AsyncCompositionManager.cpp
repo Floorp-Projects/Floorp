@@ -1142,12 +1142,9 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
             // layers. We do this by using GetTransform() as the base transform
             // rather than GetLocalTransform(), which would include those
             // factors.
-            AsyncTransform asyncTransformForFixedAdjustment =
-                sampler->GetCurrentAsyncTransformForFixedAdjustment(wrapper);
             LayerToParentLayerMatrix4x4 transformWithoutOverscrollOrOmta =
                 layer->GetTransformTyped() *
-                CompleteAsyncTransform(
-                    AdjustForClip(asyncTransformForFixedAdjustment, layer));
+                CompleteAsyncTransform(AdjustForClip(asyncTransform, layer));
             AlignFixedAndStickyLayers(layer, layer, metrics.GetScrollId(),
                                       oldTransform,
                                       transformWithoutOverscrollOrOmta,
