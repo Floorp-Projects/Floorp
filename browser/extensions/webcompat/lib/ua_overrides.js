@@ -53,54 +53,45 @@ class UAOverrides {
     }
 
     const { blocks, matches, telemetryKey, uaTransformer } = override.config;
-    // Where standard extension match-patterns do the job, we use them.
-    // Otherwise we match regular expressions ourselves, on *all* requests.
-    const regex = matches instanceof RegExp && matches;
-    const urls = regex ? ["*://*/*"] : matches;
     const listener = details => {
-      if (!regex || details.url.match(regex)) {
-        // Don't actually override the UA for an experiment if the user is not
-        // part of the experiment (unless they force-enabed the override).
-        if (
-          !override.config.experiment ||
-          override.experimentActive ||
-          override.permanentPrefEnabled === true
-        ) {
-          if (telemetryKey && !details.frameId) {
-            // For now, we only care about Telemetry on Fennec, where telemetry
-            // is sent in Java code (as part of the core ping). That code must
-            // be aware of each key we send, which we send as a SharedPreference.
-            browser.sharedPreferences.setBoolPref(`${telemetryKey}Used`, true);
-          }
+      // Don't actually override the UA for an experiment if the user is not
+      // part of the experiment (unless they force-enabed the override).
+      if (
+        !override.config.experiment ||
+        override.experimentActive ||
+        override.permanentPrefEnabled === true
+      ) {
+        if (telemetryKey && !details.frameId) {
+          // For now, we only care about Telemetry on Fennec, where telemetry
+          // is sent in Java code (as part of the core ping). That code must
+          // be aware of each key we send, which we send as a SharedPreference.
+          browser.sharedPreferences.setBoolPref(`${telemetryKey}Used`, true);
+        }
 
-          for (const header of details.requestHeaders) {
-            if (header.name.toLowerCase() === "user-agent") {
-              header.value = uaTransformer(header.value);
-            }
+        for (const header of details.requestHeaders) {
+          if (header.name.toLowerCase() === "user-agent") {
+            header.value = uaTransformer(header.value);
           }
         }
       }
       return { requestHeaders: details.requestHeaders };
     };
 
-    browser.webRequest.onBeforeSendHeaders.addListener(listener, { urls }, [
-      "blocking",
-      "requestHeaders",
-    ]);
+    browser.webRequest.onBeforeSendHeaders.addListener(
+      listener,
+      { urls: matches },
+      ["blocking", "requestHeaders"]
+    );
 
     const listeners = { onBeforeSendHeaders: listener };
     if (blocks) {
-      const bregex = blocks instanceof RegExp && blocks;
-      const burls = bregex ? ["*://*/*"] : blocks;
-
       const blistener = details => {
-        const cancel = !bregex || !!details.url.match(bregex);
-        return { cancel };
+        return { cancel: true };
       };
 
       browser.webRequest.onBeforeRequest.addListener(
         blistener,
-        { urls: burls },
+        { urls: blocks },
         ["blocking"]
       );
 
