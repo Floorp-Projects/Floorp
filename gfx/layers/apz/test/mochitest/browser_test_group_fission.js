@@ -5,6 +5,7 @@ add_task(async function setup_pref() {
       // iframes
       ["layout.throttled_frame_rate", 60],
       ["dom.animations-api.getAnimations.enabled", true],
+      ["dom.animations-api.timelines.enabled", true],
     ],
   });
 });
