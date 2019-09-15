@@ -645,20 +645,23 @@ impl BatchBuilder {
         surface_spatial_node_index: SpatialNodeIndex,
         z_generator: &mut ZBufferIdGenerator,
     ) {
-        // Add each run in this picture to the batch.
-        for prim_instance in &pic.prim_list.prim_instances {
-            self.add_prim_to_batch(
-                prim_instance,
-                ctx,
-                gpu_cache,
-                render_tasks,
-                deferred_resolves,
-                prim_headers,
-                transforms,
-                root_spatial_node_index,
-                surface_spatial_node_index,
-                z_generator,
-            );
+        for cluster in &pic.prim_list.clusters {
+            // Add each run in this picture to the batch.
+            for prim_instance in &cluster.prim_instances {
+                self.add_prim_to_batch(
+                    prim_instance,
+                    cluster.spatial_node_index,
+                    ctx,
+                    gpu_cache,
+                    render_tasks,
+                    deferred_resolves,
+                    prim_headers,
+                    transforms,
+                    root_spatial_node_index,
+                    surface_spatial_node_index,
+                    z_generator,
+                );
+            }
         }
     }
 
@@ -669,6 +672,7 @@ impl BatchBuilder {
     fn add_prim_to_batch(
         &mut self,
         prim_instance: &PrimitiveInstance,
+        prim_spatial_node_index: SpatialNodeIndex,
         ctx: &RenderTargetContext,
         gpu_cache: &mut GpuCache,
         render_tasks: &RenderTaskGraph,
@@ -690,7 +694,7 @@ impl BatchBuilder {
 
         let transform_id = transforms
             .get_id(
-                prim_instance.spatial_node_index,
+                prim_spatial_node_index,
                 root_spatial_node_index,
                 ctx.clip_scroll_tree,
             );
@@ -1081,7 +1085,8 @@ impl BatchBuilder {
                     // Convert all children of the 3D hierarchy root into batches.
                     Picture3DContext::In { root_data: Some(ref list), .. } => {
                         for child in list {
-                            let child_prim_instance = &picture.prim_list.prim_instances[child.anchor.prim_instance_index];
+                            let cluster = &picture.prim_list.clusters[child.anchor.cluster_index];
+                            let child_prim_instance = &cluster.prim_instances[child.anchor.instance_index];
                             let child_prim_info = &ctx.scratch.prim_info[child_prim_instance.visibility_info.0 as usize];
 
                             let child_pic_index = match child_prim_instance.kind {
