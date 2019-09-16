@@ -154,6 +154,10 @@ var UrlbarUtils = {
   // unit separator.
   TITLE_TAGS_SEPARATOR: "\x1F",
 
+  // Regex matching single words (no spaces, dots or url-like chars).
+  // We accept a trailing dot though.
+  REGEXP_SINGLE_WORD: /^[^\s.?@:/]+\.?$/,
+
   /**
    * Adds a url to history as long as it isn't in a private browsing window,
    * and it is valid.
@@ -457,6 +461,19 @@ var UrlbarUtils = {
       (event.inputType.startsWith("insertFromPaste") ||
         event.inputType == "insertFromYank")
     );
+  },
+
+  /**
+   * Given a string, checks if it looks like a single word host, not containing
+   * spaces nor dots (apart from a possible trailing one).
+   * @note This matching should stay in sync with the related code in
+   * nsDefaultURIFixup::KeywordURIFixup
+   * @param {string} value
+   * @returns {boolean} Whether the value looks like a single word host.
+   */
+  looksLikeSingleWordHost(value) {
+    let str = value.trim();
+    return this.REGEXP_SINGLE_WORD.test(str);
   },
 };
 

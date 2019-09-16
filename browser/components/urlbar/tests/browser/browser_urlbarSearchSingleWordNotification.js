@@ -39,33 +39,70 @@ async function runURLBarSearchTest({
   expectNotification,
   aWindow = window,
 }) {
-  aWindow.gURLBar.value = valueToOpen;
-  let expectedURI;
-  if (!expectSearch) {
-    expectedURI = "http://" + valueToOpen + "/";
-  } else {
-    expectedURI = (await Services.search.getDefault()).getSubmission(
-      valueToOpen,
-      null,
-      "keyword"
-    ).uri.spec;
-  }
-  aWindow.gURLBar.focus();
-  let docLoadPromise = BrowserTestUtils.waitForDocLoadAndStopIt(
-    expectedURI,
-    aWindow.gBrowser.selectedBrowser
-  );
-  EventUtils.synthesizeKey("VK_RETURN", {}, aWindow);
+  // Test both directly setting a value and pressing enter, or setting the
+  // value through input events, like the user would do.
+  const setValueFns = [
+    value => {
+      aWindow.gURLBar.value = value;
+    },
+    value => {
+      return UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        waitForFocus,
+        value,
+      });
+    },
+  ];
 
-  await Promise.all([
-    docLoadPromise,
-    promiseNotification(
-      aWindow.gBrowser,
-      "keyword-uri-fixup",
-      expectNotification,
-      valueToOpen
-    ),
-  ]);
+  for (let i = 0; i < setValueFns.length; ++i) {
+    await setValueFns[i](valueToOpen);
+    let expectedURI;
+    if (!expectSearch) {
+      expectedURI = "http://" + valueToOpen + "/";
+    } else {
+      expectedURI = (await Services.search.getDefault()).getSubmission(
+        valueToOpen,
+        null,
+        "keyword"
+      ).uri.spec;
+    }
+    aWindow.gURLBar.focus();
+    let docLoadPromise = BrowserTestUtils.waitForDocLoadAndStopIt(
+      expectedURI,
+      aWindow.gBrowser.selectedBrowser
+    );
+    EventUtils.synthesizeKey("VK_RETURN", {}, aWindow);
+
+    await Promise.all([
+      docLoadPromise,
+      promiseNotification(
+        aWindow.gBrowser,
+        "keyword-uri-fixup",
+        expectNotification,
+        valueToOpen
+      ),
+    ]);
+
+    if (expectNotification) {
+      let notificationBox = aWindow.gBrowser.getNotificationBox(
+        aWindow.gBrowser.selectedBrowser
+      );
+      let notification = notificationBox.getNotificationWithValue(
+        "keyword-uri-fixup"
+      );
+      // Confirm the notification only on the last loop.
+      if (i == setValueFns.length - 1) {
+        docLoadPromise = BrowserTestUtils.waitForDocLoadAndStopIt(
+          "http://" + valueToOpen + "/",
+          aWindow.gBrowser.selectedBrowser
+        );
+        notification.querySelector("button").click();
+        await docLoadPromise;
+      } else {
+        notificationBox.currentNotification.close();
+      }
+    }
+  }
 }
 
 add_task(async function test_navigate_full_domain() {
@@ -75,7 +112,7 @@ add_task(async function test_navigate_full_domain() {
   ));
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await runURLBarSearchTest({
-    valueToOpen: "www.mozilla.org",
+    valueToOpen: "www.singlewordtest.org",
     expectSearch: false,
     expectNotification: false,
   });
@@ -166,45 +203,44 @@ function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
     } else {
       win = window;
     }
-    let browser = win.gBrowser;
-    let tab = await BrowserTestUtils.openNewForegroundTab(browser);
 
+    // Remove the domain from the whitelist.
     Services.prefs.setBoolPref(pref, false);
-    await runURLBarSearchTest({
-      valueToOpen: hostName,
-      expectSearch: true,
-      expectNotification: true,
-      aWindow: win,
-    });
 
-    let notificationBox = browser.getNotificationBox(tab.linkedBrowser);
-    let notification = notificationBox.getNotificationWithValue(
-      "keyword-uri-fixup"
+    await BrowserTestUtils.withNewTab(
+      {
+        gBrowser: win.gBrowser,
+        url: "about:blank",
+      },
+      browser =>
+        runURLBarSearchTest({
+          valueToOpen: hostName,
+          expectSearch: true,
+          expectNotification: true,
+          aWindow: win,
+        })
     );
-    let docLoadPromise = BrowserTestUtils.waitForDocLoadAndStopIt(
-      "http://" + hostName + "/",
-      tab.linkedBrowser
-    );
-    notification.querySelector("button").click();
 
     // check pref value
     let prefValue = Services.prefs.getBoolPref(pref);
     is(prefValue, !isPrivate, "Pref should have the correct state.");
 
-    await docLoadPromise;
-    browser.removeTab(tab);
-
     // Now try again with the pref set.
-    tab = browser.selectedTab = BrowserTestUtils.addTab(browser, "about:blank");
-    await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
     // In a private window, the notification should appear again.
-    await runURLBarSearchTest({
-      valueToOpen: hostName,
-      expectSearch: isPrivate,
-      expectNotification: isPrivate,
-      aWindow: win,
-    });
-    browser.removeTab(tab);
+    await BrowserTestUtils.withNewTab(
+      {
+        gBrowser: win.gBrowser,
+        url: "about:blank",
+      },
+      browser =>
+        runURLBarSearchTest({
+          valueToOpen: hostName,
+          expectSearch: isPrivate,
+          expectNotification: isPrivate,
+          aWindow: win,
+        })
+    );
+
     if (isPrivate) {
       info("Waiting for private window to close");
       await BrowserTestUtils.closeWindow(win);
