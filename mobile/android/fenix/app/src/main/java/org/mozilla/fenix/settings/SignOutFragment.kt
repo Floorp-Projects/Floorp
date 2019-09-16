@@ -35,7 +35,7 @@ class SignOutFragment : BottomSheetDialogFragment() {
         dialog.setOnShowListener {
             val bottomSheet = dialog.findViewById<View>(
                 com.google.android.material.R.id.design_bottom_sheet
-            ) as? FrameLayout
+            ) as FrameLayout
             val behavior = BottomSheetBehavior.from(bottomSheet)
             behavior.state = BottomSheetBehavior.STATE_EXPANDED
         }

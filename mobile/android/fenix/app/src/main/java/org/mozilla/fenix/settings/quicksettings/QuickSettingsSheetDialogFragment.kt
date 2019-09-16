@@ -111,7 +111,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
             BottomSheetDialog(requireContext(), this.theme).apply {
                 setOnShowListener {
                     val bottomSheet =
-                        findViewById<View>(MaterialR.id.design_bottom_sheet) as? FrameLayout
+                        findViewById<View>(MaterialR.id.design_bottom_sheet) as FrameLayout
                     val behavior = BottomSheetBehavior.from(bottomSheet)
                     behavior.state = BottomSheetBehavior.STATE_EXPANDED
                 }
