@@ -55,9 +55,7 @@ const TEST_CASES = [
   {
     type: "certificateError",
     testURL: "https://self-signed.example.com",
-    // We still show a default identity icon for cert error pages. We will
-    // change it to show a not secure lock icon in Bug 1566813.
-    img_url: `url("chrome://browser/skin/identity-icon.svg")`,
+    img_url: `url("chrome://browser/skin/connection-mixed-passive-loaded.svg")`,
   },
   {
     type: "localhost",
