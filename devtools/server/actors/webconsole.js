@@ -189,7 +189,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     this.conn.addActorPool(this._actorPool);
 
     this._prefs = {};
-    this.dbg = this.parentActor.makeDebugger();
+    this.dbg = this.parentActor.dbg;
 
     this._gripDepth = 0;
     this._evalCounter = 0;
@@ -406,10 +406,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
 
   typeName: "console",
 
-  get globalDebugObject() {
-    return this.parentActor.threadActor.globalDebugObject;
-  },
-
   grip: function() {
     return { actor: this.actorID };
   },
@@ -469,7 +465,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     this._webConsoleCommandsCache = null;
     this._lastConsoleInputEvaluation = null;
     this._evalWindow = null;
-    this.dbg.disable();
     this.dbg = null;
     this.conn = null;
   },
@@ -566,7 +561,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
             Error("sources not yet implemented")
           ),
         createEnvironmentActor: env => this.createEnvironmentActor(env),
-        getGlobalDebugObject: () => this.globalDebugObject,
       },
       this.conn
     );

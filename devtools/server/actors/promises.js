@@ -135,7 +135,6 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
             "PromisesActor",
             Error("createEnvironmentActor not yet implemented")
           ),
-        getGlobalDebugObject: () => null,
       },
       this.conn
     );
