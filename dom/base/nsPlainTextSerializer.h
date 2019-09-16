@@ -117,6 +117,7 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   nsresult DoOpenContainer(const nsAtom* aTag);
   void OpenContainerForOutputFormatted(const nsAtom* aTag);
   nsresult DoCloseContainer(const nsAtom* aTag);
+  void CloseContainerForOutputFormatted(const nsAtom* aTag);
   nsresult DoAddLeaf(const nsAtom* aTag);
 
   void DoAddText();

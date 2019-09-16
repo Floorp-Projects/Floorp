@@ -1056,16 +1056,15 @@ nsresult nsPlainTextSerializer::DoCloseContainer(const nsAtom* aTag) {
     }
   }
 
-  //////////////////////////////////////////////////////////////
-  if (!mSettings.HasFlag(nsIDocumentEncoder::OutputFormatted)) {
-    return NS_OK;
+  if (mSettings.HasFlag(nsIDocumentEncoder::OutputFormatted)) {
+    CloseContainerForOutputFormatted(aTag);
   }
-  //////////////////////////////////////////////////////////////
-  // The rest of this routine is formatted output stuff,
-  // which we should skip if we're not formatted:
-  //////////////////////////////////////////////////////////////
 
-  // Pop the currentConverted stack
+  return NS_OK;
+}
+
+void nsPlainTextSerializer::CloseContainerForOutputFormatted(
+    const nsAtom* aTag) {
   const bool currentNodeIsConverted = IsCurrentNodeConverted();
 
   if (aTag == nsGkAtoms::h1 || aTag == nsGkAtoms::h2 || aTag == nsGkAtoms::h3 ||
@@ -1111,8 +1110,6 @@ nsresult nsPlainTextSerializer::DoCloseContainer(const nsAtom* aTag) {
              !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("_"));
   }
-
-  return NS_OK;
 }
 
 bool nsPlainTextSerializer::MustSuppressLeaf() const {
