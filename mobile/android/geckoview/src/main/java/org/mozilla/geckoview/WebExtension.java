@@ -68,7 +68,7 @@ public class WebExtension {
         /**
          * Set this flag if you want to enable content scripts messaging.
          * To listen to such messages you can use
-         * {@link WebExtension#setMessageDelegate}.
+         * {@link GeckoSession#setMessageDelegate}.
          */
         public static final long ALLOW_CONTENT_MESSAGING = 1 << 0;
 
