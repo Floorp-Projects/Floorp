@@ -168,6 +168,7 @@ nsBaseWidget::nsBaseWidget()
       mOriginalBounds(nullptr),
       mClipRectCount(0),
       mSizeMode(nsSizeMode_Normal),
+      mIsTiled(false),
       mPopupLevel(ePopupLevelTop),
       mPopupType(ePopupTypeAny),
       mHasRemoteContent(false),
