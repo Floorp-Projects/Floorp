@@ -2031,9 +2031,7 @@ var gPrivacyPane = {
       let malware = malwareTable.value
         .split(",")
         .filter(
-          x =>
-            x !== "goog-unwanted-proto" &&
-            x !== "goog-unwanted-shavar"
+          x => x !== "goog-unwanted-proto" && x !== "goog-unwanted-shavar"
         );
 
       if (blockUncommonUnwanted.checked) {
