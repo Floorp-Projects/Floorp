@@ -546,6 +546,20 @@ raptor-tp6m-27-fenix-cold:
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
 
+raptor-tp6m-28-fenix-cold:
+    description: "Raptor tp6m-28 cold page-load on Fenix"
+    try-name: raptor-tp6m-28-fenix-cold
+    treeherder-symbol: Rap-fenix(tp6m-c-28)
+    run-on-projects: []
+    e10s: true
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-cold-28
+            - --app=fenix
+            - --binary-path=org.mozilla.fenix.performancetest
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
+
 raptor-scn-power-idle-fenix:
     description: "Raptor idle-browser power-usage test on Fenix"
     try-name: raptor-scn-power-idle-fenix
