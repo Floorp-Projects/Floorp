@@ -86,7 +86,7 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
  private:
   ~nsPlainTextSerializer();
 
-  nsresult GetAttributeValue(nsAtom* aName, nsString& aValueRet) const;
+  nsresult GetAttributeValue(const nsAtom* aName, nsString& aValueRet) const;
   void AddToLine(const char16_t* aStringToAdd, int32_t aLength);
 
   void MaybeWrapAndOutputCompleteLines();
@@ -114,9 +114,10 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
    * HTML element and the atom is a static atom. Otherwise, nullptr is returned.
    */
   static nsAtom* GetIdForContent(nsIContent* aContent);
-  nsresult DoOpenContainer(nsAtom* aTag);
-  nsresult DoCloseContainer(nsAtom* aTag);
-  nsresult DoAddLeaf(nsAtom* aTag);
+  nsresult DoOpenContainer(const nsAtom* aTag);
+  void OpenContainerForOutputFormatted(const nsAtom* aTag);
+  nsresult DoCloseContainer(const nsAtom* aTag);
+  nsresult DoAddLeaf(const nsAtom* aTag);
 
   void DoAddText();
   // @param aText Ignored if aIsLineBreak is true.
@@ -144,7 +145,7 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   void PushBool(nsTArray<bool>& aStack, bool aValue);
   bool PopBool(nsTArray<bool>& aStack);
 
-  bool IsIgnorableRubyAnnotation(nsAtom* aTag) const;
+  bool IsIgnorableRubyAnnotation(const nsAtom* aTag) const;
 
   // @return true, iff the elements' whitespace and newline characters have to
   //         be preserved according to its style or because it's a `<pre>`
@@ -349,7 +350,7 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   // The tag stack: the stack of tags we're operating on, so we can nest.
   // The stack only ever points to static atoms, so they don't need to be
   // refcounted.
-  nsAtom** mTagStack;
+  const nsAtom** mTagStack;
   uint32_t mTagStackIndex;
 
   // The stack indicating whether the elements we've been operating on are

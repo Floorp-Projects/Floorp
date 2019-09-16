@@ -62,7 +62,7 @@ static const char16_t kSPACE = ' ';
 
 constexpr int32_t kNoFlags = 0;
 
-static int32_t HeaderLevel(nsAtom* aTag);
+static int32_t HeaderLevel(const nsAtom* aTag);
 static int32_t GetUnicharWidth(char16_t ucs);
 static int32_t GetUnicharStringWidth(const nsString& aString);
 
@@ -263,7 +263,7 @@ nsPlainTextSerializer::nsPlainTextSerializer()
   // initialize the tag stack to zero:
   // The stack only ever contains pointers to static atoms, so they don't
   // need refcounting.
-  mTagStack = new nsAtom*[TagStackSize];
+  mTagStack = new const nsAtom*[TagStackSize];
   mTagStackIndex = 0;
   mIgnoreAboveIndex = (uint32_t)kNotFound;
 
@@ -410,7 +410,8 @@ bool nsPlainTextSerializer::PopBool(nsTArray<bool>& aStack) {
   return returnValue;
 }
 
-bool nsPlainTextSerializer::IsIgnorableRubyAnnotation(nsAtom* aTag) const {
+bool nsPlainTextSerializer::IsIgnorableRubyAnnotation(
+    const nsAtom* aTag) const {
   if (mSettings.GetWithRubyAnnotation()) {
     return false;
   }
@@ -610,7 +611,7 @@ nsPlainTextSerializer::AppendDocumentStart(Document* aDocument) {
   return NS_OK;
 }
 
-nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
+nsresult nsPlainTextSerializer::DoOpenContainer(const nsAtom* aTag) {
   if (IsIgnorableRubyAnnotation(aTag)) {
     // Ignorable ruby annotation shouldn't be replaced by a placeholder
     // character, neither any of its descendants.
@@ -846,16 +847,14 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
     EnsureVerticalSpace(0);
   }
 
-  //////////////////////////////////////////////////////////////
-  if (!mSettings.HasFlag(nsIDocumentEncoder::OutputFormatted)) {
-    return NS_OK;
+  if (mSettings.HasFlag(nsIDocumentEncoder::OutputFormatted)) {
+    OpenContainerForOutputFormatted(aTag);
   }
-  //////////////////////////////////////////////////////////////
-  // The rest of this routine is formatted output stuff,
-  // which we should skip if we're not formatted:
-  //////////////////////////////////////////////////////////////
+  return NS_OK;
+}
 
-  // Push on stack
+void nsPlainTextSerializer::OpenContainerForOutputFormatted(
+    const nsAtom* aTag) {
   const bool currentNodeIsConverted = IsCurrentNodeConverted();
 
   if (aTag == nsGkAtoms::h1 || aTag == nsGkAtoms::h2 || aTag == nsGkAtoms::h3 ||
@@ -917,11 +916,9 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
      or something. To ensure that happens, tell the serializer we're
      already in whitespace so it won't output more. */
   mInWhitespace = true;
-
-  return NS_OK;
 }
 
-nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
+nsresult nsPlainTextSerializer::DoCloseContainer(const nsAtom* aTag) {
   if (IsIgnorableRubyAnnotation(aTag)) {
     mIgnoredChildNodeLevel--;
     return NS_OK;
@@ -1185,7 +1182,7 @@ void CreateLineOfDashes(nsAString& aResult, const uint32_t aWrapColumn) {
   }
 }
 
-nsresult nsPlainTextSerializer::DoAddLeaf(nsAtom* aTag) {
+nsresult nsPlainTextSerializer::DoAddLeaf(const nsAtom* aTag) {
   mPreformattedBlockBoundary = false;
 
   if (!DoOutput()) {
@@ -1719,7 +1716,7 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
  * Gets the value of an attribute in a string. If the function returns
  * NS_ERROR_NOT_AVAILABLE, there was none such attribute specified.
  */
-nsresult nsPlainTextSerializer::GetAttributeValue(nsAtom* aName,
+nsresult nsPlainTextSerializer::GetAttributeValue(const nsAtom* aName,
                                                   nsString& aValueRet) const {
   if (mElement) {
     if (mElement->GetAttr(kNameSpaceID_None, aName, aValueRet)) {
@@ -1797,7 +1794,7 @@ bool nsPlainTextSerializer::IsInOL() const {
 /*
   @return 0 = no header, 1 = h1, ..., 6 = h6
 */
-int32_t HeaderLevel(nsAtom* aTag) {
+int32_t HeaderLevel(const nsAtom* aTag) {
   if (aTag == nsGkAtoms::h1) {
     return 1;
   }
