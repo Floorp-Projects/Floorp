@@ -21,6 +21,9 @@ permalink: /changelog/
 * **feature-pwa**
   * Adds `WebAppHideToolbarFeature.onToolbarVisibilityChange` to be notified when the toolbar is shown or hidden.
 
+* **engine-gecko-nightly**
+  * Added the ability to exfiltrate Gecko categorical histograms.
+
 # 13.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v12.0.0...v13.0.0)
