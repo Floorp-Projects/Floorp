@@ -133,6 +133,11 @@ add_task(async function setup() {
   // Set to allow the cert presented by our H2 server
   do_get_profile();
 
+  Services.prefs.setStringPref(
+    "services.settings.server",
+    `http://localhost:${proxy_port + 1}/remote-settings-dummy/v1`
+  );
+
   Services.prefs.setBoolPref("network.http.spdy.enabled", true);
   Services.prefs.setBoolPref("network.http.spdy.enabled.http2", true);
 
@@ -153,6 +158,7 @@ add_task(async function setup() {
 });
 
 registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("services.settings.server");
   Services.prefs.clearUserPref("network.http.spdy.enabled");
   Services.prefs.clearUserPref("network.http.spdy.enabled.http2");
   Services.prefs.clearUserPref("network.dns.native-is-localhost");
