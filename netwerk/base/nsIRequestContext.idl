@@ -94,11 +94,6 @@ interface nsIRequestContext : nsISupports
   [notxpcom,nostdcall] attribute SpdyPushCachePtr spdyPushCache;
 
   /**
-   * This holds a cached value of the user agent override.
-   */
-  [notxpcom,nostdcall] attribute ACString userAgentOverride;
-
-  /**
    * Increases/decrease the number of non-tailed requests in this context.
    * If the count drops to zero, all tail-blocked callbacks are notified
    * shortly after that to be unblocked.

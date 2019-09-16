@@ -60,7 +60,6 @@ class RequestContext final : public nsIRequestContext, public nsITimerCallback {
   uint64_t mID;
   Atomic<uint32_t> mBlockingTransactionCount;
   nsAutoPtr<SpdyPushCache> mSpdyCache;
-  nsCString mUserAgentOverride;
 
   typedef nsCOMPtr<nsIRequestTailUnblockCallback> PendingTailRequest;
   // Number of known opened non-tailed requets
@@ -186,15 +185,6 @@ void RequestContext::SetSpdyPushCache(SpdyPushCache* aSpdyPushCache) {
 }
 
 uint64_t RequestContext::GetID() { return mID; }
-
-const nsACString& RequestContext::GetUserAgentOverride() {
-  return mUserAgentOverride;
-}
-
-void RequestContext::SetUserAgentOverride(
-    const nsACString& aUserAgentOverride) {
-  mUserAgentOverride = aUserAgentOverride;
-}
 
 NS_IMETHODIMP
 RequestContext::AddNonTailRequest() {
