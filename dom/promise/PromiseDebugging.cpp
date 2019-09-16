@@ -265,14 +265,20 @@ void PromiseDebugging::FlushUncaughtRejectionsInternal() {
       continue;
     }
 
+    bool suppressReporting = false;
     for (size_t j = 0; j < observers.Length(); ++j) {
       RefPtr<UncaughtRejectionObserver> obs =
           static_cast<UncaughtRejectionObserver*>(observers[j].get());
 
-      obs->OnLeftUncaught(promise, IgnoreErrors());
+      if (obs->OnLeftUncaught(promise, IgnoreErrors())) {
+        suppressReporting = true;
+      }
     }
-    JSAutoRealm ar(cx, promise);
-    Promise::ReportRejectedPromise(cx, promise);
+
+    if (!suppressReporting) {
+      JSAutoRealm ar(cx, promise);
+      Promise::ReportRejectedPromise(cx, promise);
+    }
   }
   storage->mUncaughtRejections.clear();
 
