@@ -674,11 +674,20 @@
       if (!options.noOverwrite) {
         flags = flags | Const.MOVEFILE_REPLACE_EXISTING;
       }
-      throw_on_zero(
-        "move",
-        WinFile.MoveFileEx(sourcePath, destPath, flags),
-        sourcePath
-      );
+
+      // call File.copy and File.remove function as a fallback
+      // if WinFile.MoveFileEx function fails due to various reasons
+      // such as the user may not have enough permissions
+      // to read/write the file.
+      let result = WinFile.MoveFileEx(sourcePath, destPath, flags);
+      if (result != 0) {
+        throw_on_zero(
+          "move",
+          File.copy(sourcePath, destPath, options),
+          sourcePath
+        );
+        throw_on_zero("move", File.remove(sourcePath), sourcePath);
+      }
 
       // Inherit NTFS permissions from the destination directory
       // if possible.
