@@ -2615,6 +2615,8 @@ var SessionStoreInternal = {
       return;
     }
 
+    aChannel.QueryInterface(Ci.nsIHttpChannel);
+
     if (!aChannel.isDocument || !aChannel.loadInfo) {
       return; // Not a document load.
     }
