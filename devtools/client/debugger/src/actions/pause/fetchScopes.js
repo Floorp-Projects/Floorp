@@ -27,7 +27,7 @@ export function fetchScopes(cx: ThreadContext) {
     });
 
     scopes.then(() => {
-      dispatch(generateInlinePreview(cx.thread, frame));
+      dispatch(generateInlinePreview(cx, frame));
     });
     await dispatch(mapScopes(cx, scopes, frame));
   };

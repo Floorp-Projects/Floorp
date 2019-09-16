@@ -25,6 +25,15 @@ type Props = {
 };
 
 class InlinePreviews extends Component<Props> {
+  shouldComponentUpdate(nextProps) {
+    const { previews } = nextProps;
+    if (!previews) {
+      return false;
+    }
+
+    return true;
+  }
+
   render() {
     const {
       editor,
