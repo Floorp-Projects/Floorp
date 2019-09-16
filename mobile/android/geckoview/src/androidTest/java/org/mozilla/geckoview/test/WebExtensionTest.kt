@@ -93,9 +93,9 @@ class WebExtensionTest : BaseSessionTest() {
                 // Ignored for this test
             }
 
-            override fun onMessage(message: Any,
+            override fun onMessage(nativeApp: String, message: Any,
                                    sender: WebExtension.MessageSender): GeckoResult<Any>? {
-                checkSender(sender, background)
+                checkSender(nativeApp, sender, background)
 
                 if (!awaitingResponse) {
                     assertThat("We should receive a message from the WebExtension", message as String,
@@ -285,7 +285,7 @@ class WebExtensionTest : BaseSessionTest() {
 
         val messageDelegate = object : WebExtension.MessageDelegate {
             override fun onConnect(port: WebExtension.Port) {
-                checkSender(port.sender, background)
+                checkSender(port.name, port.sender, background)
 
                 Assert.assertEquals(port.name, "browser")
 
@@ -293,7 +293,7 @@ class WebExtensionTest : BaseSessionTest() {
                 contentPort = port
             }
 
-            override fun onMessage(message: Any,
+            override fun onMessage(nativeApp: String, message: Any,
                                    sender: WebExtension.MessageSender): GeckoResult<Any>? {
                 // Ignored for this test
                 return null
@@ -353,7 +353,7 @@ class WebExtensionTest : BaseSessionTest() {
         val messageDelegate = object : WebExtension.MessageDelegate {
             override fun onConnect(port: WebExtension.Port) {
                 Assert.assertEquals(messaging, port.sender.webExtension)
-                checkSender(port.sender, background)
+                checkSender(port.name, port.sender, background)
 
                 Assert.assertEquals(port.name, "browser")
                 messagingPort = port
@@ -371,7 +371,7 @@ class WebExtensionTest : BaseSessionTest() {
                 }
             }
 
-            override fun onMessage(message: Any,
+            override fun onMessage(nativeApp: String, message: Any,
                                    sender: WebExtension.MessageSender): GeckoResult<Any>? {
                 Assert.assertEquals(messaging, sender.webExtension)
 
@@ -406,7 +406,9 @@ class WebExtensionTest : BaseSessionTest() {
         testPortDisconnect(false, true)
     }
 
-    fun checkSender(sender: WebExtension.MessageSender, background: Boolean) {
+    fun checkSender(nativeApp: String, sender: WebExtension.MessageSender, background: Boolean) {
+        Assert.assertEquals("nativeApp should always be 'browser'", nativeApp, "browser")
+
         if (background) {
             // For background scripts we only want messages from the extension, this should never
             // happen and it's a bug if we get here.
@@ -438,15 +440,15 @@ class WebExtensionTest : BaseSessionTest() {
         val messageDelegate = object : WebExtension.MessageDelegate {
             override fun onConnect(port: WebExtension.Port) {
                 Assert.assertEquals(messaging, port.sender.webExtension)
-                checkSender(port.sender, background)
+                checkSender(port.name, port.sender, background)
 
                 port.disconnect()
             }
 
-            override fun onMessage(message: Any,
+            override fun onMessage(nativeApp: String, message: Any,
                                    sender: WebExtension.MessageSender): GeckoResult<Any>? {
                 Assert.assertEquals(messaging, sender.webExtension)
-                checkSender(sender, background)
+                checkSender(nativeApp, sender, background)
 
                 if (message is JSONObject) {
                     if (message.getString("type") == "portDisconnected") {
@@ -505,7 +507,7 @@ class WebExtensionTest : BaseSessionTest() {
                 port.disconnect()
             }
 
-            override fun onMessage(message: Any,
+            override fun onMessage(nativeApp: String, message: Any,
                                    sender: WebExtension.MessageSender): GeckoResult<Any>? {
                 Assert.assertEquals(messaging, sender.webExtension)
                 Assert.assertEquals(WebExtension.MessageSender.ENV_TYPE_CONTENT_SCRIPT,
@@ -558,7 +560,7 @@ class WebExtensionTest : BaseSessionTest() {
         var extension: WebExtension? = null;
 
         val messageDelegate = object : WebExtension.MessageDelegate {
-            override fun onMessage(message: Any,
+            override fun onMessage(nativeApp: String, message: Any,
                                    sender: WebExtension.MessageSender): GeckoResult<Any>? {
                 Assert.assertEquals(extension, sender.webExtension)
                 Assert.assertEquals(WebExtension.MessageSender.ENV_TYPE_EXTENSION,

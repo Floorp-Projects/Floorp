@@ -220,6 +220,8 @@ public class WebExtension {
          * Called whenever the WebExtension sends a message to an app using
          * <code>runtime.sendNativeMessage</code>.
          *
+         * @param nativeApp The application identifier of the MessageDelegate that
+         *                  sent this message.
          * @param message The message that was sent, either a primitive type or
          *                a {@link org.json.JSONObject}.
          * @param sender The {@link MessageSender} corresponding to the frame
@@ -231,7 +233,8 @@ public class WebExtension {
          *         message.
          */
         @Nullable
-        default GeckoResult<Object> onMessage(final @NonNull Object message,
+        default GeckoResult<Object> onMessage(final @NonNull String nativeApp,
+                                              final @NonNull Object message,
                                               final @NonNull MessageSender sender) {
             return null;
         }
@@ -473,9 +476,10 @@ public class WebExtension {
 
     private static final MessageDelegate NULL_MESSAGE_DELEGATE = new MessageDelegate() {
         @Override
-        public GeckoResult<Object> onMessage(final @NonNull Object message,
+        public GeckoResult<Object> onMessage(final @NonNull String nativeApp,
+                                             final @NonNull Object message,
                                              final @NonNull MessageSender sender) {
-            Log.d(LOGTAG, "Unhandled message from " +
+            Log.d(LOGTAG, "Unhandled message from " + nativeApp + " id=" +
                     sender.webExtension.id + ": " + message.toString());
             return null;
         }
