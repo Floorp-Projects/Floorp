@@ -483,6 +483,7 @@ class UrlbarInput {
    * @param {Event} event The event that picked the result.
    */
   pickResult(result, event) {
+    let originalUntrimmedValue = this.untrimmedValue;
     let isCanonized = this.setValueFromResult(result, event);
     let where = this._whereToOpen(event);
     let openParams = {
@@ -510,6 +511,34 @@ class UrlbarInput {
     openParams.postData = postData;
 
     switch (result.type) {
+      case UrlbarUtils.RESULT_TYPE.URL: {
+        // Bug 1578856: both the provider and the docshell run heuristics to
+        // decide how to handle a non-url string, either fixing it to a url, or
+        // searching for it.
+        // Some preferences can control the docshell behavior, for example
+        // if dns_first_for_single_words is true, the docshell looks up the word
+        // against the dns server, and either loads it as an url or searches for
+        // it, depending on the lookup result. The provider instead will always
+        // return a fixed url in this case, because URIFixup is synchronous and
+        // can't do a synchronous dns lookup. A possible long term solution
+        // would involve sharing the docshell logic with the provider, along
+        // with the dns lookup.
+        // For now, in this specific case, we'll override the result's url
+        // with the input value, and let it pass through to _loadURL(), and
+        // finally to the docshell.
+        // This also means that in some cases the heuristic result will show a
+        // Visit entry, but the docshell will instead execute a search. It's a
+        // rare case anyway, most likely to happen for enterprises customizing
+        // the urifixup prefs.
+        if (
+          result.heuristic &&
+          UrlbarPrefs.get("browser.fixup.dns_first_for_single_words") &&
+          UrlbarUtils.looksLikeSingleWordHost(originalUntrimmedValue)
+        ) {
+          url = originalUntrimmedValue;
+        }
+        break;
+      }
       case UrlbarUtils.RESULT_TYPE.KEYWORD: {
         // If this result comes from a bookmark keyword, let it inherit the
         // current document's principal, otherwise bookmarklets would break.
@@ -566,6 +595,37 @@ class UrlbarInput {
           this.startQuery();
           return;
         }
+
+        if (
+          result.heuristic &&
+          UrlbarUtils.looksLikeSingleWordHost(originalUntrimmedValue)
+        ) {
+          // The docshell when fixes a single word to a search, also checks the
+          // dns and prompts the user whether they wanted to rather visit that
+          // as a host. On a positive answer, it adds to the domains whitelist
+          // that we use to make decisions. Because here we are directly asking
+          // for a search, bypassing the docshell, we must do it here.
+          // See URIFixupChild.jsm and keyword-uri-fixup.
+          let flags =
+            Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
+            Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+          // Don't interrupt the load action in case of errors.
+          try {
+            let fixupInfo = Services.uriFixup.getFixupURIInfo(
+              originalUntrimmedValue.trim(),
+              flags
+            );
+            this.window.gKeywordURIFixup({
+              target: this.window.gBrowser.selectedBrowser,
+              data: fixupInfo,
+            });
+          } catch (ex) {
+            Cu.reportError(
+              `An error occured while trying to fixup "${originalUntrimmedValue.trim()}": ${ex}`
+            );
+          }
+        }
+
         const actionDetails = {
           isSuggestion: !!result.payload.suggestion,
           alias: result.payload.keyword,
