@@ -21,6 +21,8 @@
 namespace mozilla {
 namespace gfx {
 
+class UnscaledFontMac;
+
 class ScaledFontMac : public ScaledFontBase {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontMac, override)
@@ -53,11 +55,28 @@ class ScaledFontMac : public ScaledFontBase {
 
  private:
   friend class DrawTargetSkia;
+  friend class UnscaledFontMac;
+
   CGFontRef mFont;
   CTFontRef mCTFont;  // only created if CTFontDrawGlyphs is available, otherwise null
+
   Color mFontSmoothingBackgroundColor;
   bool mUseFontSmoothing;
   bool mApplySyntheticBold;
+
+  struct InstanceData {
+    explicit InstanceData(ScaledFontMac* aScaledFont)
+        : mFontSmoothingBackgroundColor(aScaledFont->mFontSmoothingBackgroundColor),
+          mUseFontSmoothing(aScaledFont->mUseFontSmoothing),
+          mApplySyntheticBold(aScaledFont->mApplySyntheticBold) {}
+
+    InstanceData(const wr::FontInstanceOptions* aOptions,
+                 const wr::FontInstancePlatformOptions* aPlatformOptions);
+
+    Color mFontSmoothingBackgroundColor;
+    bool mUseFontSmoothing;
+    bool mApplySyntheticBold;
+  };
 
   typedef void(CTFontDrawGlyphsFuncT)(CTFontRef, const CGGlyph[], const CGPoint[], size_t,
                                       CGContextRef);
