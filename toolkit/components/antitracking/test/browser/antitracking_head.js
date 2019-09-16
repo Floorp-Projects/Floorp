@@ -309,10 +309,14 @@ this.AntiTracking = {
             "@mozilla.org/url-classifier/dbservice;1"
           ].getService(Ci.nsIURIClassifier);
           let feature = classifier.getFeatureByName("tracking-annotation");
-          await TestUtils.waitForCondition(
-            () => feature.skipHostList == item[1].toLowerCase(),
-            "Skip list service initialized"
-          );
+          await TestUtils.waitForCondition(() => {
+            for (let x of item[1].toLowerCase().split(",")) {
+              if (feature.skipHostList.split(",").includes(x)) {
+                return true;
+              }
+            }
+            return false;
+          }, "Skip list service initialized");
           break;
         }
       }
