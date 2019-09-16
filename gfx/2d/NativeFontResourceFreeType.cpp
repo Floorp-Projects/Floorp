@@ -12,13 +12,15 @@ namespace mozilla {
 namespace gfx {
 
 NativeFontResourceFreeType::NativeFontResourceFreeType(
-    UniquePtr<uint8_t[]>&& aFontData, uint32_t aDataLength,
-    FT_Library aFTLibrary)
-    : mFontData(std::move(aFontData)),
-      mDataLength(aDataLength),
-      mFTLibrary(aFTLibrary) {}
+    UniquePtr<uint8_t[]>&& aFontData, uint32_t aDataLength, FT_Face aFace)
+    : mFontData(std::move(aFontData)), mDataLength(aDataLength), mFace(aFace) {}
 
-NativeFontResourceFreeType::~NativeFontResourceFreeType() {}
+NativeFontResourceFreeType::~NativeFontResourceFreeType() {
+  if (mFace) {
+    Factory::ReleaseFTFace(mFace);
+    mFace = nullptr;
+  }
+}
 
 template <class T>
 already_AddRefed<T> NativeFontResourceFreeType::CreateInternal(
@@ -32,7 +34,18 @@ already_AddRefed<T> NativeFontResourceFreeType::CreateInternal(
   }
   memcpy(fontData.get(), aFontData, aDataLength);
 
-  RefPtr<T> resource = new T(std::move(fontData), aDataLength, aFTLibrary);
+  FT_Face face =
+      Factory::NewFTFaceFromData(aFTLibrary, fontData.get(), aDataLength, 0);
+  if (!face) {
+    return nullptr;
+  }
+  if (FT_Select_Charmap(face, FT_ENCODING_UNICODE) != FT_Err_Ok &&
+      FT_Select_Charmap(face, FT_ENCODING_MS_SYMBOL) != FT_Err_Ok) {
+    Factory::ReleaseFTFace(face);
+    return nullptr;
+  }
+
+  RefPtr<T> resource = new T(std::move(fontData), aDataLength, face);
   return resource.forget();
 }
 
@@ -46,40 +59,26 @@ already_AddRefed<NativeFontResourceFreeType> NativeFontResourceFreeType::Create(
 already_AddRefed<UnscaledFont> NativeFontResourceFreeType::CreateUnscaledFont(
     uint32_t aIndex, const uint8_t* aInstanceData,
     uint32_t aInstanceDataLength) {
-  if (RefPtr<SharedFTFace> face = CloneFace()) {
-    return MakeAndAddRef<UnscaledFontFreeType>(std::move(face));
-  }
-  return nullptr;
+  RefPtr<UnscaledFont> unscaledFont = new UnscaledFontFreeType(mFace, this);
+  return unscaledFont.forget();
 }
 #endif
 
-already_AddRefed<SharedFTFace> NativeFontResourceFreeType::CloneFace(
-    int aFaceIndex) {
-  RefPtr<SharedFTFace> face = Factory::NewSharedFTFaceFromData(
-      mFTLibrary, mFontData.get(), mDataLength, aFaceIndex, this);
-  if (!face ||
-      (FT_Select_Charmap(face->GetFace(), FT_ENCODING_UNICODE) != FT_Err_Ok &&
-       FT_Select_Charmap(face->GetFace(), FT_ENCODING_MS_SYMBOL) !=
-           FT_Err_Ok)) {
-    return nullptr;
-  }
-  return face.forget();
+FT_Face NativeFontResourceFreeType::CloneFace() {
+  return Factory::NewFTFaceFromData(mFace->glyph->library, mFontData.get(),
+                                    mDataLength, 0);
 }
 
 #ifdef MOZ_WIDGET_GTK
 NativeFontResourceFontconfig::NativeFontResourceFontconfig(
-    UniquePtr<uint8_t[]>&& aFontData, uint32_t aDataLength,
-    FT_Library aFTLibrary)
-    : NativeFontResourceFreeType(std::move(aFontData), aDataLength,
-                                 aFTLibrary) {}
+    UniquePtr<uint8_t[]>&& aFontData, uint32_t aDataLength, FT_Face aFace)
+    : NativeFontResourceFreeType(std::move(aFontData), aDataLength, aFace) {}
 
 already_AddRefed<UnscaledFont> NativeFontResourceFontconfig::CreateUnscaledFont(
     uint32_t aIndex, const uint8_t* aInstanceData,
     uint32_t aInstanceDataLength) {
-  if (RefPtr<SharedFTFace> face = CloneFace()) {
-    return MakeAndAddRef<UnscaledFontFontconfig>(std::move(face));
-  }
-  return nullptr;
+  RefPtr<UnscaledFont> unscaledFont = new UnscaledFontFontconfig(mFace, this);
+  return unscaledFont.forget();
 }
 
 already_AddRefed<NativeFontResourceFontconfig>

@@ -157,24 +157,19 @@ static inline bool HasCPUIDBit(unsigned int level, CPUIDRegister reg,
 #ifdef MOZ_ENABLE_FREETYPE
 extern "C" {
 
-void mozilla_AddRefSharedFTFace(void* aContext) {
-  if (aContext) {
-    static_cast<mozilla::gfx::SharedFTFace*>(aContext)->AddRef();
-  }
+FT_Face mozilla_NewFTFace(FT_Library aFTLibrary, const char* aFileName,
+                          int aFaceIndex) {
+  return mozilla::gfx::Factory::NewFTFace(aFTLibrary, aFileName, aFaceIndex);
 }
 
-void mozilla_ReleaseSharedFTFace(void* aContext) {
-  if (aContext) {
-    static_cast<mozilla::gfx::SharedFTFace*>(aContext)->Release();
-  }
+FT_Face mozilla_NewFTFaceFromData(FT_Library aFTLibrary, const uint8_t* aData,
+                                  size_t aDataSize, int aFaceIndex) {
+  return mozilla::gfx::Factory::NewFTFaceFromData(aFTLibrary, aData, aDataSize,
+                                                  aFaceIndex);
 }
 
-int mozilla_LockSharedFTFace(void* aContext, void* aOwner) {
-  return int(static_cast<mozilla::gfx::SharedFTFace*>(aContext)->Lock(aOwner));
-}
-
-void mozilla_UnlockSharedFTFace(void* aContext) {
-  static_cast<mozilla::gfx::SharedFTFace*>(aContext)->Unlock();
+void mozilla_ReleaseFTFace(FT_Face aFace) {
+  mozilla::gfx::Factory::ReleaseFTFace(aFace);
 }
 
 FT_Error mozilla_LoadFTGlyph(FT_Face aFace, uint32_t aGlyphIndex,
@@ -559,6 +554,16 @@ already_AddRefed<ScaledFont> Factory::CreateScaledFontForNativeFont(
 #  endif
       return font.forget();
     }
+#elif defined(MOZ_WIDGET_GTK)
+    case NativeFontType::FONTCONFIG_PATTERN:
+      return MakeAndAddRef<ScaledFontFontconfig>(
+          aScaledFont, static_cast<FcPattern*>(aNativeFont.mFont),
+          aUnscaledFont, aSize);
+#elif defined(MOZ_WIDGET_ANDROID)
+    case NativeFontType::FREETYPE_FACE:
+      return MakeAndAddRef<ScaledFontFreeType>(
+          aScaledFont, static_cast<FT_Face>(aNativeFont.mFont), aUnscaledFont,
+          aSize);
 #endif
     default:
       gfxWarning() << "Invalid native font type specified.";
@@ -629,26 +634,6 @@ already_AddRefed<ScaledFont> Factory::CreateScaledFontForMacFont(
 }
 #endif
 
-#ifdef MOZ_WIDGET_GTK
-already_AddRefed<ScaledFont> Factory::CreateScaledFontForFontconfigFont(
-    const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
-    cairo_scaled_font_t* aScaledFont, RefPtr<SharedFTFace> aFace,
-    FcPattern* aPattern) {
-  return MakeAndAddRef<ScaledFontFontconfig>(aScaledFont, std::move(aFace),
-                                             aPattern, aUnscaledFont, aSize);
-}
-#endif
-
-#ifdef MOZ_WIDGET_ANDROID
-already_AddRefed<ScaledFont> Factory::CreateScaledFontForFreeTypeFont(
-    const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
-    cairo_scaled_font_t* aScaledFont, RefPtr<SharedFTFace> aFace,
-    bool aApplySyntheticBold) {
-  return MakeAndAddRef<ScaledFontFreeType>(
-      aScaledFont, std::move(aFace), aUnscaledFont, aSize, aApplySyntheticBold);
-}
-#endif
-
 already_AddRefed<DrawTarget> Factory::CreateDualDrawTarget(
     DrawTarget* targetA, DrawTarget* targetB) {
   MOZ_ASSERT(targetA && targetB);
@@ -678,23 +663,6 @@ void Factory::SetBGRSubpixelOrder(bool aBGR) { mBGRSubpixelOrder = aBGR; }
 bool Factory::GetBGRSubpixelOrder() { return mBGRSubpixelOrder; }
 
 #ifdef MOZ_ENABLE_FREETYPE
-SharedFTFace::SharedFTFace(FT_Face aFace, SharedFTFaceData* aData)
-    : mFace(aFace),
-      mData(aData),
-      mLock("SharedFTFace::mLock"),
-      mLockOwner(nullptr) {
-  if (mData) {
-    mData->BindData();
-  }
-}
-
-SharedFTFace::~SharedFTFace() {
-  Factory::ReleaseFTFace(mFace);
-  if (mData) {
-    mData->ReleaseData();
-  }
-}
-
 void Factory::SetFTLibrary(FT_Library aFTLibrary) { mFTLibrary = aFTLibrary; }
 
 FT_Library Factory::GetFTLibrary() {
@@ -731,16 +699,6 @@ FT_Face Factory::NewFTFace(FT_Library aFTLibrary, const char* aFileName,
   return face;
 }
 
-already_AddRefed<SharedFTFace> Factory::NewSharedFTFace(FT_Library aFTLibrary,
-                                                        const char* aFilename,
-                                                        int aFaceIndex) {
-  if (FT_Face face = NewFTFace(aFTLibrary, aFilename, aFaceIndex)) {
-    return MakeAndAddRef<SharedFTFace>(face);
-  } else {
-    return nullptr;
-  }
-}
-
 FT_Face Factory::NewFTFaceFromData(FT_Library aFTLibrary, const uint8_t* aData,
                                    size_t aDataSize, int aFaceIndex) {
   StaticMutexAutoLock lock(mFTLock);
@@ -753,17 +711,6 @@ FT_Face Factory::NewFTFaceFromData(FT_Library aFTLibrary, const uint8_t* aData,
     return nullptr;
   }
   return face;
-}
-
-already_AddRefed<SharedFTFace> Factory::NewSharedFTFaceFromData(
-    FT_Library aFTLibrary, const uint8_t* aData, size_t aDataSize,
-    int aFaceIndex, SharedFTFaceData* aSharedData) {
-  if (FT_Face face =
-          NewFTFaceFromData(aFTLibrary, aData, aDataSize, aFaceIndex)) {
-    return MakeAndAddRef<SharedFTFace>(face, aSharedData);
-  } else {
-    return nullptr;
-  }
 }
 
 void Factory::ReleaseFTFace(FT_Face aFace) {

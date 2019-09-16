@@ -27,6 +27,8 @@ class gfxMacFont : public gfxFont {
   /* overrides for the pure virtual methods in gfxFont */
   uint32_t GetSpaceGlyph() override { return mSpaceGlyph; }
 
+  bool SetupCairoFont(DrawTarget* aDrawTarget) override;
+
   /* override Measure to add padding for antialiasing */
   RunMetrics Measure(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
                      BoundingBoxType aBoundingBoxType, DrawTarget* aDrawTargetForTightBoundingBox,
@@ -43,8 +45,6 @@ class gfxMacFont : public gfxFont {
 
   already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(
       mozilla::gfx::DrawTarget* aTarget) override;
-
-  bool ShouldRoundXOffset(cairo_t* aCairo) const override;
 
   void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                               FontCacheSizes* aSizes) const override;
