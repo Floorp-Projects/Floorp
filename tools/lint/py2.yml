@@ -19,6 +19,7 @@ py2:
         - servo
         - taskcluster/docker/funsize-update-generator
         - taskcluster/docker/visual-metrics
+        - testing/condprofile
         - testing/gtest
         - testing/mochitest
         - testing/mozharness

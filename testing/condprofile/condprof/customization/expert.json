@@ -1,0 +1,12 @@
+{
+   "name": "expert",
+   "addons":{
+      "uBlock":"https://addons.mozilla.org/firefox/downloads/file/3361355/ublock_origin-1.21.2-an+fx.xpi"
+   },
+   "prefs":{
+
+   },
+   "scenario": {
+       "heavy": {"max_urls": 150}
+   }
+}
