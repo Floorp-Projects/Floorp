@@ -67,6 +67,10 @@ extern "C"
 {
     void mozilla_LockFTLibrary(FT_Library aLibrary);
     void mozilla_UnlockFTLibrary(FT_Library aLibrary);
+    void mozilla_AddRefSharedFTFace(void* aContext);
+    void mozilla_ReleaseSharedFTFace(void* aContext);
+    void mozilla_LockSharedFTFace(void* aContext);
+    void mozilla_UnlockSharedFTFace(void* aContext);
     FT_Error mozilla_LoadFTGlyph(FT_Face aFace, uint32_t aGlyphIndex, int32_t aFlags);
 }
 
@@ -88,14 +92,10 @@ void SkInitCairoFT(bool fontHintingEnabled)
     }
 }
 
-#ifndef CAIRO_HAS_FC_FONT
-typedef struct _FcPattern FcPattern;
-#endif
-
 class SkScalerContext_CairoFT : public SkScalerContext_FreeType_Base {
 public:
     SkScalerContext_CairoFT(sk_sp<SkTypeface> typeface, const SkScalerContextEffects& effects, const SkDescriptor* desc,
-                            cairo_font_face_t* fontFace, FcPattern* pattern);
+                            cairo_font_face_t* fontFace, SkPixelGeometry pixelGeometry, FT_LcdFilter lcdFilter);
     virtual ~SkScalerContext_CairoFT();
 
     bool isValid() const {
@@ -114,10 +114,6 @@ protected:
 private:
     bool computeShapeMatrix(const SkMatrix& m);
     void prepareGlyph(FT_GlyphSlot glyph);
-
-#ifdef CAIRO_HAS_FC_FONT
-    void parsePattern(FcPattern* pattern);
-#endif
 
     cairo_scaled_font_t* fScaledFont;
     FT_Int32 fLoadGlyphFlags;
@@ -180,7 +176,7 @@ public:
     {
         SkScalerContext_CairoFT* ctx =
             new SkScalerContext_CairoFT(sk_ref_sp(const_cast<SkCairoFTTypeface*>(this)),
-                                        effects, desc, fFontFace, fPattern);
+                                        effects, desc, fFontFace, fPixelGeometry, fLcdFilter);
         if (!ctx->isValid()) {
             delete ctx;
             return nullptr;
@@ -190,11 +186,6 @@ public:
 
     virtual void onFilterRec(SkScalerContextRec* rec) const override
     {
-        // No subpixel AA unless enabled in Fontconfig.
-        if (!fPattern && isLCD(*rec)) {
-            rec->fMaskFormat = SkMask::kA8_Format;
-        }
-
         // rotated text looks bad with hinting, so we disable it as needed
         if (!gFontHintingEnabled || !isAxisAligned(*rec)) {
             rec->setHinting(kNo_SkFontHinting);
@@ -251,18 +242,16 @@ public:
         return 0;
     }
 
-    SkCairoFTTypeface(cairo_font_face_t* fontFace, FcPattern* pattern, FT_Face face)
+    SkCairoFTTypeface(cairo_font_face_t* fontFace, FT_Face face, void* faceContext, SkPixelGeometry pixelGeometry, FT_LcdFilter lcdFilter)
         : SkTypeface(SkFontStyle::Normal())
         , fFontFace(fontFace)
-        , fPattern(pattern)
         , fFTFace(face)
+        , fFTFaceContext(faceContext)
+        , fPixelGeometry(pixelGeometry)
+        , fLcdFilter(lcdFilter)
     {
+        mozilla_AddRefSharedFTFace(fFTFaceContext);
         cairo_font_face_reference(fFontFace);
-#ifdef CAIRO_HAS_FC_FONT
-        if (fPattern) {
-            FcPatternReference(fPattern);
-        }
-#endif
     }
 
     cairo_font_face_t* GetCairoFontFace() const { return fFontFace; }
@@ -275,15 +264,6 @@ public:
         if (fFTFace) {
             return !FT_IS_SCALABLE(fFTFace);
         }
-#ifdef CAIRO_HAS_FC_FONT
-        if (fPattern) {
-            FcBool outline;
-            if (FcPatternGetBool(fPattern, FC_OUTLINE, 0, &outline) != FcResultMatch ||
-                !outline) {
-                return true;
-            }
-        }
-#endif
         return false;
     }
 
@@ -291,23 +271,21 @@ private:
     ~SkCairoFTTypeface()
     {
         cairo_font_face_destroy(fFontFace);
-#ifdef CAIRO_HAS_FC_FONT
-        if (fPattern) {
-            FcPatternDestroy(fPattern);
-        }
-#endif
+        mozilla_ReleaseSharedFTFace(fFTFaceContext);
     }
 
     cairo_font_face_t* fFontFace;
-    FcPattern* fPattern;
-    FT_Face    fFTFace;
+    FT_Face            fFTFace;
+    void*              fFTFaceContext;
+    SkPixelGeometry    fPixelGeometry;
+    FT_LcdFilter       fLcdFilter;
 };
 
 static bool FindByCairoFontFace(SkTypeface* typeface, void* context) {
     return static_cast<SkCairoFTTypeface*>(typeface)->GetCairoFontFace() == static_cast<cairo_font_face_t*>(context);
 }
 
-SkTypeface* SkCreateTypefaceFromCairoFTFontWithFontconfig(cairo_scaled_font_t* scaledFont, FcPattern* pattern, FT_Face face)
+SkTypeface* SkCreateTypefaceFromCairoFTFont(cairo_scaled_font_t* scaledFont, FT_Face face, void* faceContext, SkPixelGeometry pixelGeometry, uint8_t lcdFilter)
 {
     cairo_font_face_t* fontFace = cairo_scaled_font_get_font_face(scaledFont);
     SkASSERT(cairo_font_face_status(fontFace) == CAIRO_STATUS_SUCCESS);
@@ -315,22 +293,17 @@ SkTypeface* SkCreateTypefaceFromCairoFTFontWithFontconfig(cairo_scaled_font_t* s
 
     sk_sp<SkTypeface> typeface = SkTypefaceCache::FindByProcAndRef(FindByCairoFontFace, fontFace);
     if (!typeface) {
-        typeface = sk_make_sp<SkCairoFTTypeface>(fontFace, pattern, face);
+        typeface = sk_make_sp<SkCairoFTTypeface>(fontFace, face, faceContext, pixelGeometry, (FT_LcdFilter)lcdFilter);
         SkTypefaceCache::Add(typeface);
     }
 
     return typeface.release();
 }
 
-SkTypeface* SkCreateTypefaceFromCairoFTFont(cairo_scaled_font_t* scaledFont, FT_Face face)
-{
-    return SkCreateTypefaceFromCairoFTFontWithFontconfig(scaledFont, nullptr, face);
-}
-
 SkScalerContext_CairoFT::SkScalerContext_CairoFT(sk_sp<SkTypeface> typeface, const SkScalerContextEffects& effects, const SkDescriptor* desc,
-                                                 cairo_font_face_t* fontFace, FcPattern* pattern)
+                                                 cairo_font_face_t* fontFace, SkPixelGeometry pixelGeometry, FT_LcdFilter lcdFilter)
     : SkScalerContext_FreeType_Base(std::move(typeface), effects, desc)
-    , fLcdFilter(FT_LCD_FILTER_NONE)
+    , fLcdFilter(lcdFilter)
 {
     SkMatrix matrix;
     fRec.getSingleMatrix(&matrix);
@@ -345,14 +318,6 @@ SkScalerContext_CairoFT::SkScalerContext_CairoFT(sk_sp<SkTypeface> typeface, con
 
     computeShapeMatrix(matrix);
 
-    fRec.fFlags |= SkScalerContext::kEmbeddedBitmapText_Flag;
-
-#ifdef CAIRO_HAS_FC_FONT
-    if (pattern) {
-        parsePattern(pattern);
-    }
-#endif
-
     FT_Int32 loadFlags = FT_LOAD_DEFAULT;
 
     if (SkMask::kBW_Format == fRec.fMaskFormat) {
@@ -363,6 +328,24 @@ SkScalerContext_CairoFT::SkScalerContext_CairoFT(sk_sp<SkTypeface> typeface, con
         }
         loadFlags |= FT_LOAD_MONOCHROME;
     } else {
+        if (isLCD(fRec)) {
+            switch (pixelGeometry) {
+            case kRGB_H_SkPixelGeometry:
+            default:
+                break;
+            case kRGB_V_SkPixelGeometry:
+                fRec.fFlags |= SkScalerContext::kLCD_Vertical_Flag;
+                break;
+            case kBGR_H_SkPixelGeometry:
+                fRec.fFlags |= SkScalerContext::kLCD_BGROrder_Flag;
+                break;
+            case kBGR_V_SkPixelGeometry:
+                fRec.fFlags |= SkScalerContext::kLCD_Vertical_Flag |
+                               SkScalerContext::kLCD_BGROrder_Flag;
+                break;
+            }
+        }
+
         switch (fRec.getHinting()) {
         case kNo_SkFontHinting:
             loadFlags |= FT_LOAD_NO_HINTING;
@@ -420,105 +403,6 @@ SkScalerContext_CairoFT::~SkScalerContext_CairoFT()
 {
     cairo_scaled_font_destroy(fScaledFont);
 }
-
-#ifdef CAIRO_HAS_FC_FONT
-void SkScalerContext_CairoFT::parsePattern(FcPattern* pattern)
-{
-    FcBool antialias, autohint, bitmap, embolden, hinting;
-
-    if (FcPatternGetBool(pattern, FC_AUTOHINT, 0, &autohint) == FcResultMatch && autohint) {
-        fRec.fFlags |= SkScalerContext::kForceAutohinting_Flag;
-    }
-    if (FcPatternGetBool(pattern, FC_EMBOLDEN, 0, &embolden) == FcResultMatch && embolden) {
-        fRec.fFlags |= SkScalerContext::kEmbolden_Flag;
-    }
-
-    // Match cairo-ft's handling of embeddedbitmap:
-    // If AA is explicitly disabled, leave bitmaps enabled.
-    // Otherwise, disable embedded bitmaps unless explicitly enabled.
-    if (FcPatternGetBool(pattern, FC_ANTIALIAS, 0, &antialias) == FcResultMatch && !antialias) {
-        fRec.fMaskFormat = SkMask::kBW_Format;
-    } else if (FcPatternGetBool(pattern, FC_EMBEDDED_BITMAP, 0, &bitmap) != FcResultMatch || !bitmap) {
-        fRec.fFlags &= ~SkScalerContext::kEmbeddedBitmapText_Flag;
-    }
-
-    if (fRec.fMaskFormat != SkMask::kBW_Format) {
-        int rgba;
-        if (!isLCD(fRec) ||
-            FcPatternGetInteger(pattern, FC_RGBA, 0, &rgba) != FcResultMatch) {
-            rgba = FC_RGBA_UNKNOWN;
-        }
-        switch (rgba) {
-        case FC_RGBA_RGB:
-            break;
-        case FC_RGBA_BGR:
-            fRec.fFlags |= SkScalerContext::kLCD_BGROrder_Flag;
-            break;
-        case FC_RGBA_VRGB:
-            fRec.fFlags |= SkScalerContext::kLCD_Vertical_Flag;
-            break;
-        case FC_RGBA_VBGR:
-            fRec.fFlags |= SkScalerContext::kLCD_Vertical_Flag |
-                           SkScalerContext::kLCD_BGROrder_Flag;
-            break;
-        default:
-            fRec.fMaskFormat = SkMask::kA8_Format;
-            break;
-        }
-
-        int filter;
-        if (isLCD(fRec)) {
-            if (FcPatternGetInteger(pattern, FC_LCD_FILTER, 0, &filter) != FcResultMatch) {
-                filter = FC_LCD_LEGACY;
-            }
-            switch (filter) {
-            case FC_LCD_NONE:
-                fLcdFilter = FT_LCD_FILTER_NONE;
-                break;
-            case FC_LCD_DEFAULT:
-                fLcdFilter = FT_LCD_FILTER_DEFAULT;
-                break;
-            case FC_LCD_LIGHT:
-                fLcdFilter = FT_LCD_FILTER_LIGHT;
-                break;
-            case FC_LCD_LEGACY:
-            default:
-                fLcdFilter = FT_LCD_FILTER_LEGACY;
-                break;
-            }
-        }
-    }
-
-    if (fRec.getHinting() != kNo_SkFontHinting) {
-        // Hinting was requested, so check if the fontconfig pattern needs to override it.
-        // If hinting is either explicitly enabled by fontconfig or not configured, try to
-        // parse the hint style. Otherwise, ensure hinting is disabled.
-        int hintstyle;
-        if (FcPatternGetBool(pattern, FC_HINTING, 0, &hinting) != FcResultMatch || hinting) {
-            if (FcPatternGetInteger(pattern, FC_HINT_STYLE, 0, &hintstyle) != FcResultMatch) {
-                hintstyle = FC_HINT_FULL;
-            }
-        } else {
-            hintstyle = FC_HINT_NONE;
-        }
-        switch (hintstyle) {
-        case FC_HINT_NONE:
-            fRec.setHinting(kNo_SkFontHinting);
-            break;
-        case FC_HINT_SLIGHT:
-            fRec.setHinting(kSlight_SkFontHinting);
-            break;
-        case FC_HINT_MEDIUM:
-        default:
-            fRec.setHinting(kNormal_SkFontHinting);
-            break;
-        case FC_HINT_FULL:
-            fRec.setHinting(kFull_SkFontHinting);
-            break;
-        }
-    }
-}
-#endif
 
 bool SkScalerContext_CairoFT::computeShapeMatrix(const SkMatrix& m)
 {
