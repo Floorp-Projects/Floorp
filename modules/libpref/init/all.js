@@ -25,6 +25,7 @@
   pref("security.tls.version.min", 3);
 #endif
 pref("security.tls.version.max", 4);
+pref("security.tls.version.enable-deprecated", false);
 pref("security.tls.version.fallback-limit", 4);
 pref("security.tls.insecure_fallback_hosts", "");
 // Turn off post-handshake authentication for TLS 1.3 by default,
