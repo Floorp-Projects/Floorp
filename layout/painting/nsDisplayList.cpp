@@ -10454,17 +10454,13 @@ void nsDisplayFilters::PaintAsLayer(nsDisplayListBuilder* aBuilder,
   nsDisplayFiltersGeometry::UpdateDrawResult(this, imgParams.result);
 }
 
-bool nsDisplayFilters::CanCreateWebRenderCommands(
-    nsDisplayListBuilder* aBuilder) {
+bool nsDisplayFilters::CanCreateWebRenderCommands() {
   WrFiltersHolder wrFilters;
   Maybe<nsRect> filterClip;
   auto filterChain = mFrame->StyleEffects()->mFilters.AsSpan();
-  if (!CreateWebRenderCSSFilters(filterChain, mFrame, wrFilters) &&
-      !nsSVGIntegrationUtils::BuildWebRenderFilters(mFrame, filterChain,
-                                                    wrFilters, filterClip)) {
-    return false;
-  }
-  return true;
+  return CreateWebRenderCSSFilters(filterChain, mFrame, wrFilters) ||
+         nsSVGIntegrationUtils::BuildWebRenderFilters(mFrame, filterChain,
+                                                      wrFilters, filterClip);
 }
 
 bool nsDisplayFilters::CreateWebRenderCommands(
