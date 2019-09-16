@@ -497,7 +497,7 @@ exports.registerFront = function(cls) {
  *    If we are instantiating a target-scoped front, this is a reference to the front's
  *    Target instance, otherwise this is null.
  */
-function getFront(client, typeName, form, target = null) {
+async function getFront(client, typeName, form, target = null) {
   const type = types.getType(typeName);
   if (!type) {
     throw new Error(`No spec for front type '${typeName}'.`);
@@ -521,19 +521,13 @@ function getFront(client, typeName, form, target = null) {
         ` actor's form.`
     );
   }
-  // Historically, all global and target scoped front were the first protocol.js in the
-  // hierarchy of fronts. So that they have to self-own themself. But now, Root and Target
-  // are fronts and should own them. The only issue here is that we should manage the
-  // front *before* calling initialize which is going to try managing child fronts.
+
   if (!target) {
-    instance.manage(instance);
+    await instance.manage(instance);
   } else {
-    target.manage(instance);
+    await target.manage(instance);
   }
 
-  if (typeof instance.initialize == "function") {
-    return instance.initialize().then(() => instance);
-  }
   return instance;
 }
 exports.getFront = getFront;
