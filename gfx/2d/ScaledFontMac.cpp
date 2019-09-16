@@ -174,6 +174,29 @@ SkTypeface* ScaledFontMac::CreateSkTypeface() {
     return typeface;
   }
 }
+
+void ScaledFontMac::SetupSkFontDrawOptions(SkFont& aFont) {
+  aFont.setSubpixel(true);
+
+  // Normally, Skia enables LCD FontSmoothing which creates thicker fonts
+  // and also enables subpixel AA. CoreGraphics without font smoothing
+  // explicitly creates thinner fonts and grayscale AA.
+  // CoreGraphics doesn't support a configuration that produces thicker
+  // fonts with grayscale AA as LCD Font Smoothing enables or disables
+  // both. However, Skia supports it by enabling font smoothing (producing
+  // subpixel AA) and converts it to grayscale AA. Since Skia doesn't
+  // support subpixel AA on transparent backgrounds, we still want font
+  // smoothing for the thicker fonts, even if it is grayscale AA.
+  //
+  // With explicit Grayscale AA (from -moz-osx-font-smoothing:grayscale),
+  // we want to have grayscale AA with no smoothing at all. This means
+  // disabling the LCD font smoothing behaviour.
+  // To accomplish this we have to explicitly disable hinting,
+  // and disable LCDRenderText.
+  if (aFont.getEdging() == SkFont::Edging::kAntiAlias && !mUseFontSmoothing) {
+    aFont.setHinting(kNo_SkFontHinting);
+  }
+}
 #endif
 
 // private API here are the public options on OS X

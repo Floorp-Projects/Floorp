@@ -20,34 +20,20 @@ class ScaledFontFontconfig;
 class UnscaledFontFreeType : public UnscaledFont {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(UnscaledFontFreeType, override)
-  explicit UnscaledFontFreeType(FT_Face aFace, bool aOwnsFace = false)
-      : mFace(aFace), mOwnsFace(aOwnsFace), mIndex(0) {}
-  explicit UnscaledFontFreeType(const char* aFile, uint32_t aIndex = 0)
-      : mFace(nullptr), mOwnsFace(false), mFile(aFile), mIndex(aIndex) {}
-  explicit UnscaledFontFreeType(std::string&& aFile, uint32_t aIndex = 0)
-      : mFace(nullptr),
-        mOwnsFace(false),
-        mFile(std::move(aFile)),
-        mIndex(aIndex) {}
-  UnscaledFontFreeType(FT_Face aFace, NativeFontResource* aNativeFontResource)
-      : mFace(aFace),
-        mOwnsFace(false),
-        mIndex(0),
-        mNativeFontResource(aNativeFontResource) {}
-  virtual ~UnscaledFontFreeType() {
-    if (mOwnsFace) {
-      Factory::ReleaseFTFace(mFace);
-    }
-  }
+  explicit UnscaledFontFreeType(const RefPtr<SharedFTFace>& aFace)
+      : mFace(aFace), mIndex(0) {}
+  explicit UnscaledFontFreeType(const char* aFile, uint32_t aIndex = 0,
+                                RefPtr<SharedFTFace> aFace = nullptr)
+      : mFace(std::move(aFace)), mFile(aFile), mIndex(aIndex) {}
+  explicit UnscaledFontFreeType(std::string&& aFile, uint32_t aIndex = 0,
+                                RefPtr<SharedFTFace> aFace = nullptr)
+      : mFace(std::move(aFace)), mFile(std::move(aFile)), mIndex(aIndex) {}
 
   FontType GetType() const override { return FontType::FREETYPE; }
 
-  FT_Face GetFace() const { return mFace; }
-  const char* GetFile() const { return mFile.c_str(); }
+  const RefPtr<SharedFTFace>& GetFace() const { return mFace; }
+  const std::string& GetFile() const { return mFile; }
   uint32_t GetIndex() const { return mIndex; }
-  const RefPtr<NativeFontResource>& GetNativeFontResource() const {
-    return mNativeFontResource;
-  }
 
   bool GetFontFileData(FontFileDataOutput aDataCallback, void* aBaton) override;
 
@@ -55,9 +41,9 @@ class UnscaledFontFreeType : public UnscaledFont {
 
   bool GetWRFontDescriptor(WRFontDescriptorOutput aCb, void* aBaton) override;
 
-#ifdef MOZ_WIDGET_ANDROID
-  FT_Face InitFace();
+  RefPtr<SharedFTFace> InitFace();
 
+#ifdef MOZ_WIDGET_ANDROID
   already_AddRefed<ScaledFont> CreateScaledFont(
       Float aGlyphSize, const uint8_t* aInstanceData,
       uint32_t aInstanceDataLength, const FontVariation* aVariations,
@@ -65,11 +51,9 @@ class UnscaledFontFreeType : public UnscaledFont {
 #endif
 
  protected:
-  FT_Face mFace;
-  bool mOwnsFace;
+  RefPtr<SharedFTFace> mFace;
   std::string mFile;
   uint32_t mIndex;
-  RefPtr<NativeFontResource> mNativeFontResource;
 
   friend class ScaledFontFreeType;
   friend class ScaledFontFontconfig;
@@ -85,14 +69,14 @@ class UnscaledFontFreeType : public UnscaledFont {
 class UnscaledFontFontconfig : public UnscaledFontFreeType {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(UnscaledFontFontconfig, override)
-  explicit UnscaledFontFontconfig(FT_Face aFace, bool aOwnsFace = false)
-      : UnscaledFontFreeType(aFace, aOwnsFace) {}
-  explicit UnscaledFontFontconfig(const char* aFile, uint32_t aIndex = 0)
-      : UnscaledFontFreeType(aFile, aIndex) {}
-  explicit UnscaledFontFontconfig(std::string&& aFile, uint32_t aIndex = 0)
-      : UnscaledFontFreeType(std::move(aFile), aIndex) {}
-  UnscaledFontFontconfig(FT_Face aFace, NativeFontResource* aNativeFontResource)
-      : UnscaledFontFreeType(aFace, aNativeFontResource) {}
+  explicit UnscaledFontFontconfig(const RefPtr<SharedFTFace>& aFace)
+      : UnscaledFontFreeType(aFace) {}
+  explicit UnscaledFontFontconfig(const char* aFile, uint32_t aIndex = 0,
+                                  RefPtr<SharedFTFace> aFace = nullptr)
+      : UnscaledFontFreeType(aFile, aIndex, std::move(aFace)) {}
+  explicit UnscaledFontFontconfig(std::string&& aFile, uint32_t aIndex = 0,
+                                  RefPtr<SharedFTFace> aFace = nullptr)
+      : UnscaledFontFreeType(std::move(aFile), aIndex, std::move(aFace)) {}
 
   FontType GetType() const override { return FontType::FONTCONFIG; }
 

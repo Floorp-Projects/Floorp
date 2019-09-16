@@ -8,15 +8,16 @@
 #include "UnscaledFontFreeType.h"
 #include "NativeFontResourceFreeType.h"
 #include "Logging.h"
-#include "StackArray.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
 #ifdef USE_SKIA
 #  include "skia/include/ports/SkTypeface_cairo.h"
+#  include "HelpersSkia.h"
 #endif
 
 #include <fontconfig/fcfreetype.h>
 
+#include FT_LCD_FILTER_H
 #include FT_MULTIPLE_MASTERS_H
 
 namespace mozilla {
@@ -27,38 +28,71 @@ namespace gfx {
 // This is mainly because FT_Face is not good for sharing between libraries,
 // which is a requirement when we consider runtime switchable backends and so on
 ScaledFontFontconfig::ScaledFontFontconfig(
-    cairo_scaled_font_t* aScaledFont, FcPattern* aPattern,
-    const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize)
-    : ScaledFontBase(aUnscaledFont, aSize), mPattern(aPattern) {
+    cairo_scaled_font_t* aScaledFont, RefPtr<SharedFTFace>&& aFace,
+    FcPattern* aPattern, const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize)
+    : ScaledFontBase(aUnscaledFont, aSize),
+      mFace(std::move(aFace)),
+      mInstanceData(aScaledFont, aPattern) {
   SetCairoScaledFont(aScaledFont);
-  FcPatternReference(aPattern);
 }
 
-ScaledFontFontconfig::~ScaledFontFontconfig() { FcPatternDestroy(mPattern); }
+ScaledFontFontconfig::ScaledFontFontconfig(
+    cairo_scaled_font_t* aScaledFont, RefPtr<SharedFTFace>&& aFace,
+    const InstanceData& aInstanceData,
+    const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize)
+    : ScaledFontBase(aUnscaledFont, aSize),
+      mFace(std::move(aFace)),
+      mInstanceData(aInstanceData) {
+  SetCairoScaledFont(aScaledFont);
+}
 
 #ifdef USE_SKIA
 SkTypeface* ScaledFontFontconfig::CreateSkTypeface() {
-  return SkCreateTypefaceFromCairoFTFontWithFontconfig(mScaledFont, mPattern);
+  SkPixelGeometry geo = mInstanceData.mFlags & InstanceData::SUBPIXEL_BGR
+                            ? (mInstanceData.mFlags & InstanceData::LCD_VERTICAL
+                                   ? kBGR_V_SkPixelGeometry
+                                   : kBGR_H_SkPixelGeometry)
+                            : (mInstanceData.mFlags & InstanceData::LCD_VERTICAL
+                                   ? kRGB_V_SkPixelGeometry
+                                   : kRGB_H_SkPixelGeometry);
+  return SkCreateTypefaceFromCairoFTFont(mScaledFont, mFace->GetFace(),
+                                         mFace.get(), geo,
+                                         mInstanceData.mLcdFilter);
+}
+
+void ScaledFontFontconfig::SetupSkFontDrawOptions(SkFont& aFont) {
+  // SkFontHost_cairo does not support subpixel text positioning
+  aFont.setSubpixel(false);
+
+  if (mInstanceData.mFlags & InstanceData::AUTOHINT) {
+    aFont.setForceAutoHinting(true);
+  }
+  if (mInstanceData.mFlags & InstanceData::EMBEDDED_BITMAP) {
+    aFont.setEmbeddedBitmaps(true);
+  }
+  if (mInstanceData.mFlags & InstanceData::EMBOLDEN) {
+    aFont.setEmbolden(true);
+  }
+
+  aFont.setHinting(GfxHintingToSkiaHinting(mInstanceData.mHinting));
 }
 #endif
+
+AntialiasMode ScaledFontFontconfig::GetDefaultAAMode() {
+  return mInstanceData.mAntialias;
+}
 
 ScaledFontFontconfig::InstanceData::InstanceData(
     cairo_scaled_font_t* aScaledFont, FcPattern* aPattern)
     : mFlags(0),
-      mHintStyle(FC_HINT_NONE),
-      mSubpixelOrder(FC_RGBA_UNKNOWN),
-      mLcdFilter(FC_LCD_LEGACY) {
+      mAntialias(AntialiasMode::NONE),
+      mHinting(FontHinting::NONE),
+      mLcdFilter(FT_LCD_FILTER_LEGACY) {
   // Record relevant Fontconfig properties into instance data.
   FcBool autohint;
   if (FcPatternGetBool(aPattern, FC_AUTOHINT, 0, &autohint) == FcResultMatch &&
       autohint) {
     mFlags |= AUTOHINT;
-  }
-  FcBool bitmap;
-  if (FcPatternGetBool(aPattern, FC_EMBEDDED_BITMAP, 0, &bitmap) ==
-          FcResultMatch &&
-      bitmap) {
-    mFlags |= EMBEDDED_BITMAP;
   }
   FcBool embolden;
   if (FcPatternGetBool(aPattern, FC_EMBOLDEN, 0, &embolden) == FcResultMatch &&
@@ -70,24 +104,6 @@ ScaledFontFontconfig::InstanceData::InstanceData(
           FcResultMatch &&
       vertical) {
     mFlags |= VERTICAL_LAYOUT;
-  }
-
-  FcBool antialias;
-  if (FcPatternGetBool(aPattern, FC_ANTIALIAS, 0, &antialias) !=
-          FcResultMatch ||
-      antialias) {
-    mFlags |= ANTIALIAS;
-
-    // Only record subpixel order and lcd filtering if antialiasing is enabled.
-    int rgba;
-    if (FcPatternGetInteger(aPattern, FC_RGBA, 0, &rgba) == FcResultMatch) {
-      mSubpixelOrder = rgba;
-    }
-    int filter;
-    if (FcPatternGetInteger(aPattern, FC_LCD_FILTER, 0, &filter) ==
-        FcResultMatch) {
-      mLcdFilter = filter;
-    }
   }
 
   cairo_font_options_t* fontOptions = cairo_font_options_create();
@@ -106,19 +122,96 @@ ScaledFontFontconfig::InstanceData::InstanceData(
           FcResultMatch) {
         hintstyle = FC_HINT_FULL;
       }
-      mHintStyle = hintstyle;
+      switch (hintstyle) {
+        case FC_HINT_SLIGHT:
+          mHinting = FontHinting::LIGHT;
+          break;
+        case FC_HINT_MEDIUM:
+          mHinting = FontHinting::NORMAL;
+          break;
+        case FC_HINT_FULL:
+          mHinting = FontHinting::FULL;
+          break;
+        case FC_HINT_NONE:
+        default:
+          break;
+      }
     }
   }
   cairo_font_options_destroy(fontOptions);
+
+  FcBool antialias;
+  if (FcPatternGetBool(aPattern, FC_ANTIALIAS, 0, &antialias) ==
+          FcResultMatch &&
+      !antialias) {
+    // If AA is explicitly disabled, leave bitmaps enabled.
+    mFlags |= EMBEDDED_BITMAP;
+  } else {
+    mAntialias = AntialiasMode::GRAY;
+
+    // Otherwise, if AA is enabled, disable embedded bitmaps unless explicitly
+    // enabled.
+    FcBool bitmap;
+    if (mHinting != FontHinting::NONE &&
+        FcPatternGetBool(aPattern, FC_EMBEDDED_BITMAP, 0, &bitmap) ==
+            FcResultMatch &&
+        bitmap) {
+      mFlags |= EMBEDDED_BITMAP;
+    }
+
+    // Only record subpixel order and lcd filtering if antialiasing is enabled.
+    int rgba;
+    if (mFlags & HINT_METRICS &&
+        FcPatternGetInteger(aPattern, FC_RGBA, 0, &rgba) == FcResultMatch) {
+      switch (rgba) {
+        case FC_RGBA_RGB:
+        case FC_RGBA_BGR:
+        case FC_RGBA_VRGB:
+        case FC_RGBA_VBGR:
+          mAntialias = AntialiasMode::SUBPIXEL;
+          if (rgba == FC_RGBA_VRGB || rgba == FC_RGBA_VBGR) {
+            mFlags |= LCD_VERTICAL;
+          }
+          if (rgba == FC_RGBA_BGR || rgba == FC_RGBA_VBGR) {
+            mFlags |= SUBPIXEL_BGR;
+          }
+          break;
+        case FC_RGBA_NONE:
+        case FC_RGBA_UNKNOWN:
+        default:
+          break;
+      }
+    }
+
+    int filter;
+    if (mAntialias == AntialiasMode::SUBPIXEL &&
+        FcPatternGetInteger(aPattern, FC_LCD_FILTER, 0, &filter) ==
+        FcResultMatch) {
+      switch (filter) {
+        case FC_LCD_NONE:
+          mLcdFilter = FT_LCD_FILTER_NONE;
+          break;
+        case FC_LCD_DEFAULT:
+          mLcdFilter = FT_LCD_FILTER_DEFAULT;
+          break;
+        case FC_LCD_LIGHT:
+          mLcdFilter = FT_LCD_FILTER_LIGHT;
+          break;
+        case FC_LCD_LEGACY:
+        default:
+          break;
+      }
+    }
+  }
 }
 
 ScaledFontFontconfig::InstanceData::InstanceData(
     const wr::FontInstanceOptions* aOptions,
     const wr::FontInstancePlatformOptions* aPlatformOptions)
     : mFlags(HINT_METRICS),
-      mHintStyle(FC_HINT_FULL),
-      mSubpixelOrder(FC_RGBA_UNKNOWN),
-      mLcdFilter(FC_LCD_LEGACY) {
+      mAntialias(AntialiasMode::NONE),
+      mHinting(FontHinting::FULL),
+      mLcdFilter(FT_LCD_FILTER_LEGACY) {
   if (aOptions) {
     if (aOptions->flags & wr::FontInstanceFlags_FORCE_AUTOHINT) {
       mFlags |= AUTOHINT;
@@ -132,165 +225,141 @@ ScaledFontFontconfig::InstanceData::InstanceData(
     if (aOptions->flags & wr::FontInstanceFlags_VERTICAL_LAYOUT) {
       mFlags |= VERTICAL_LAYOUT;
     }
-    if (aOptions->render_mode != wr::FontRenderMode::Mono) {
-      mFlags |= ANTIALIAS;
-      if (aOptions->render_mode == wr::FontRenderMode::Subpixel) {
-        if (aOptions->flags & wr::FontInstanceFlags_SUBPIXEL_BGR) {
-          mSubpixelOrder = aOptions->flags & wr::FontInstanceFlags_LCD_VERTICAL
-                               ? FC_RGBA_VBGR
-                               : FC_RGBA_BGR;
-        } else {
-          mSubpixelOrder = aOptions->flags & wr::FontInstanceFlags_LCD_VERTICAL
-                               ? FC_RGBA_VRGB
-                               : FC_RGBA_RGB;
-        }
+    if (aOptions->render_mode == wr::FontRenderMode::Subpixel) {
+      mAntialias = AntialiasMode::SUBPIXEL;
+      if (aOptions->flags & wr::FontInstanceFlags_SUBPIXEL_BGR) {
+        mFlags |= SUBPIXEL_BGR;
       }
+      if (aOptions->flags & wr::FontInstanceFlags_LCD_VERTICAL) {
+        mFlags |= LCD_VERTICAL;
+      }
+    } else if (aOptions->render_mode != wr::FontRenderMode::Mono) {
+      mAntialias = AntialiasMode::GRAY;
     }
   }
   if (aPlatformOptions) {
     switch (aPlatformOptions->hinting) {
       case wr::FontHinting::None:
-        mHintStyle = FC_HINT_NONE;
+        mHinting = FontHinting::NONE;
         break;
       case wr::FontHinting::Light:
-        mHintStyle = FC_HINT_SLIGHT;
+        mHinting = FontHinting::LIGHT;
         break;
       case wr::FontHinting::Normal:
-        mHintStyle = FC_HINT_MEDIUM;
+        mHinting = FontHinting::NORMAL;
         break;
       default:
         break;
     }
     switch (aPlatformOptions->lcd_filter) {
       case wr::FontLCDFilter::None:
-        mLcdFilter = FC_LCD_NONE;
+        mLcdFilter = FT_LCD_FILTER_NONE;
         break;
       case wr::FontLCDFilter::Default:
-        mLcdFilter = FC_LCD_DEFAULT;
+        mLcdFilter = FT_LCD_FILTER_DEFAULT;
         break;
       case wr::FontLCDFilter::Light:
-        mLcdFilter = FC_LCD_LIGHT;
+        mLcdFilter = FT_LCD_FILTER_LIGHT;
         break;
       default:
         break;
     }
-  }
-}
-
-void ScaledFontFontconfig::InstanceData::SetupPattern(
-    FcPattern* aPattern) const {
-  if (mFlags & AUTOHINT) {
-    FcPatternAddBool(aPattern, FC_AUTOHINT, FcTrue);
-  }
-  if (mFlags & EMBEDDED_BITMAP) {
-    FcPatternAddBool(aPattern, FC_EMBEDDED_BITMAP, FcTrue);
-  }
-  if (mFlags & EMBOLDEN) {
-    FcPatternAddBool(aPattern, FC_EMBOLDEN, FcTrue);
-  }
-  if (mFlags & VERTICAL_LAYOUT) {
-    FcPatternAddBool(aPattern, FC_VERTICAL_LAYOUT, FcTrue);
-  }
-
-  if (mFlags & ANTIALIAS) {
-    FcPatternAddBool(aPattern, FC_ANTIALIAS, FcTrue);
-    if (mSubpixelOrder != FC_RGBA_UNKNOWN) {
-      FcPatternAddInteger(aPattern, FC_RGBA, mSubpixelOrder);
-    }
-    if (mLcdFilter != FC_LCD_LEGACY) {
-      FcPatternAddInteger(aPattern, FC_LCD_FILTER, mLcdFilter);
-    }
-  } else {
-    FcPatternAddBool(aPattern, FC_ANTIALIAS, FcFalse);
-  }
-
-  if (mHintStyle) {
-    FcPatternAddBool(aPattern, FC_HINTING, FcTrue);
-    FcPatternAddInteger(aPattern, FC_HINT_STYLE, mHintStyle);
-  } else {
-    FcPatternAddBool(aPattern, FC_HINTING, FcFalse);
   }
 }
 
 void ScaledFontFontconfig::InstanceData::SetupFontOptions(
-    cairo_font_options_t* aFontOptions) const {
+    cairo_font_options_t* aFontOptions, int* aOutLoadFlags,
+    unsigned int* aOutSynthFlags) const {
+  // For regular (non-printer) fonts, enable hint metrics as well as hinting
+  // and (possibly subpixel) antialiasing.
+  cairo_font_options_set_hint_metrics(aFontOptions, mFlags & HINT_METRICS ? CAIRO_HINT_METRICS_ON : CAIRO_HINT_METRICS_OFF);
+
+  cairo_hint_style_t hinting;
+  switch (mHinting) {
+    case FontHinting::NONE:
+      hinting = CAIRO_HINT_STYLE_NONE;
+      break;
+    case FontHinting::LIGHT:
+      hinting = CAIRO_HINT_STYLE_SLIGHT;
+      break;
+    case FontHinting::NORMAL:
+      hinting = CAIRO_HINT_STYLE_MEDIUM;
+      break;
+    case FontHinting::FULL:
+      hinting = CAIRO_HINT_STYLE_FULL;
+      break;
+  }
+  cairo_font_options_set_hint_style(aFontOptions, hinting);
+
+  switch (mAntialias) {
+    case AntialiasMode::NONE:
+      cairo_font_options_set_antialias(aFontOptions, CAIRO_ANTIALIAS_NONE);
+      break;
+    case AntialiasMode::GRAY:
+    default:
+      cairo_font_options_set_antialias(aFontOptions, CAIRO_ANTIALIAS_GRAY);
+      break;
+    case AntialiasMode::SUBPIXEL: {
+      cairo_font_options_set_antialias(aFontOptions,
+                                       CAIRO_ANTIALIAS_SUBPIXEL);
+      cairo_font_options_set_subpixel_order(
+          aFontOptions,
+          mFlags & SUBPIXEL_BGR
+              ? (mFlags & LCD_VERTICAL ? CAIRO_SUBPIXEL_ORDER_VBGR
+                                       : CAIRO_SUBPIXEL_ORDER_BGR)
+              : (mFlags & LCD_VERTICAL ? CAIRO_SUBPIXEL_ORDER_VRGB
+                                       : CAIRO_SUBPIXEL_ORDER_RGB));
+      cairo_lcd_filter_t lcdFilter = CAIRO_LCD_FILTER_DEFAULT;
+      switch (mLcdFilter) {
+      case FT_LCD_FILTER_NONE:
+          lcdFilter = CAIRO_LCD_FILTER_NONE;
+          break;
+      case FT_LCD_FILTER_DEFAULT:
+          lcdFilter = CAIRO_LCD_FILTER_FIR5;
+          break;
+      case FT_LCD_FILTER_LIGHT:
+          lcdFilter = CAIRO_LCD_FILTER_FIR3;
+          break;
+      case FT_LCD_FILTER_LEGACY:
+          lcdFilter = CAIRO_LCD_FILTER_INTRA_PIXEL;
+          break;
+      }
+      cairo_font_options_set_lcd_filter(aFontOptions, lcdFilter);
+      break;
+    }
+  }
+
   // Try to build a sane initial set of Cairo font options based on the
   // Fontconfig pattern.
-  if (mFlags & HINT_METRICS) {
-    // For regular (non-printer) fonts, enable hint metrics as well as hinting
-    // and (possibly subpixel) antialiasing.
-    cairo_font_options_set_hint_metrics(aFontOptions, CAIRO_HINT_METRICS_ON);
+  int loadFlags = FT_LOAD_DEFAULT;
+  unsigned int synthFlags = 0;
 
-    cairo_hint_style_t hinting;
-    switch (mHintStyle) {
-      case FC_HINT_NONE:
-        hinting = CAIRO_HINT_STYLE_NONE;
-        break;
-      case FC_HINT_SLIGHT:
-        hinting = CAIRO_HINT_STYLE_SLIGHT;
-        break;
-      case FC_HINT_MEDIUM:
-      default:
-        hinting = CAIRO_HINT_STYLE_MEDIUM;
-        break;
-      case FC_HINT_FULL:
-        hinting = CAIRO_HINT_STYLE_FULL;
-        break;
-    }
-    cairo_font_options_set_hint_style(aFontOptions, hinting);
-
-    if (mFlags & ANTIALIAS) {
-      cairo_subpixel_order_t subpixel = CAIRO_SUBPIXEL_ORDER_DEFAULT;
-      switch (mSubpixelOrder) {
-        case FC_RGBA_RGB:
-          subpixel = CAIRO_SUBPIXEL_ORDER_RGB;
-          break;
-        case FC_RGBA_BGR:
-          subpixel = CAIRO_SUBPIXEL_ORDER_BGR;
-          break;
-        case FC_RGBA_VRGB:
-          subpixel = CAIRO_SUBPIXEL_ORDER_VRGB;
-          break;
-        case FC_RGBA_VBGR:
-          subpixel = CAIRO_SUBPIXEL_ORDER_VBGR;
-          break;
-        default:
-          break;
-      }
-      if (subpixel != CAIRO_SUBPIXEL_ORDER_DEFAULT) {
-        cairo_font_options_set_antialias(aFontOptions,
-                                         CAIRO_ANTIALIAS_SUBPIXEL);
-        cairo_font_options_set_subpixel_order(aFontOptions, subpixel);
-      } else {
-        cairo_font_options_set_antialias(aFontOptions, CAIRO_ANTIALIAS_GRAY);
-      }
-    } else {
-      cairo_font_options_set_antialias(aFontOptions, CAIRO_ANTIALIAS_NONE);
-    }
-  } else {
-    // For printer fonts, disable hint metrics and hinting. Don't allow subpixel
-    // antialiasing.
-    cairo_font_options_set_hint_metrics(aFontOptions, CAIRO_HINT_METRICS_OFF);
-    cairo_font_options_set_hint_style(aFontOptions, CAIRO_HINT_STYLE_NONE);
-    cairo_font_options_set_antialias(aFontOptions, mFlags & ANTIALIAS
-                                                       ? CAIRO_ANTIALIAS_GRAY
-                                                       : CAIRO_ANTIALIAS_NONE);
+  if (!(mFlags & EMBEDDED_BITMAP)) {
+    loadFlags |= FT_LOAD_NO_BITMAP;
   }
+  if (mFlags & AUTOHINT) {
+    loadFlags |= FT_LOAD_FORCE_AUTOHINT;
+  }
+  if (mFlags & VERTICAL_LAYOUT) {
+    loadFlags |= FT_LOAD_VERTICAL_LAYOUT;
+  }
+  if (mFlags & EMBOLDEN) {
+    synthFlags |= CAIRO_FT_SYNTHESIZE_BOLD;
+  }
+
+  *aOutLoadFlags = loadFlags;
+  *aOutSynthFlags = synthFlags;
 }
 
 bool ScaledFontFontconfig::GetFontInstanceData(FontInstanceDataOutput aCb,
                                                void* aBaton) {
-  InstanceData instance(GetCairoScaledFont(), mPattern);
-
   std::vector<FontVariation> variations;
   if (HasVariationSettings()) {
-    FT_Face face = nullptr;
-    if (FcPatternGetFTFace(mPattern, FC_FT_FACE, 0, &face) == FcResultMatch) {
-      UnscaledFontFreeType::GetVariationSettingsFromFace(&variations, face);
-    }
+    UnscaledFontFreeType::GetVariationSettingsFromFace(&variations,
+                                                       mFace->GetFace());
   }
 
-  aCb(reinterpret_cast<uint8_t*>(&instance), sizeof(instance),
+  aCb(reinterpret_cast<uint8_t*>(&mInstanceData), sizeof(mInstanceData),
       variations.data(), variations.size(), aBaton);
   return true;
 }
@@ -312,110 +381,67 @@ bool ScaledFontFontconfig::GetWRFontInstanceOptions(
   platformOptions.lcd_filter = wr::FontLCDFilter::Legacy;
   platformOptions.hinting = wr::FontHinting::Normal;
 
-  FcBool autohint;
-  if (FcPatternGetBool(mPattern, FC_AUTOHINT, 0, &autohint) == FcResultMatch &&
-      autohint) {
+  if (mInstanceData.mFlags & InstanceData::AUTOHINT) {
     options.flags |= wr::FontInstanceFlags_FORCE_AUTOHINT;
   }
-  FcBool embolden;
-  if (FcPatternGetBool(mPattern, FC_EMBOLDEN, 0, &embolden) == FcResultMatch &&
-      embolden) {
+  if (mInstanceData.mFlags & InstanceData::EMBOLDEN) {
     options.flags |= wr::FontInstanceFlags_SYNTHETIC_BOLD;
   }
-  FcBool vertical;
-  if (FcPatternGetBool(mPattern, FC_VERTICAL_LAYOUT, 0, &vertical) ==
-          FcResultMatch &&
-      vertical) {
+  if (mInstanceData.mFlags & InstanceData::VERTICAL_LAYOUT) {
     options.flags |= wr::FontInstanceFlags_VERTICAL_LAYOUT;
   }
-
-  FcBool antialias;
-  if (FcPatternGetBool(mPattern, FC_ANTIALIAS, 0, &antialias) !=
-          FcResultMatch ||
-      antialias) {
-    int rgba;
-    if (FcPatternGetInteger(mPattern, FC_RGBA, 0, &rgba) == FcResultMatch) {
-      switch (rgba) {
-        case FC_RGBA_RGB:
-        case FC_RGBA_BGR:
-        case FC_RGBA_VRGB:
-        case FC_RGBA_VBGR:
-          options.render_mode = wr::FontRenderMode::Subpixel;
-          if (rgba == FC_RGBA_VRGB || rgba == FC_RGBA_VBGR) {
-            options.flags |= wr::FontInstanceFlags_LCD_VERTICAL;
-          }
-          platformOptions.hinting = wr::FontHinting::LCD;
-          if (rgba == FC_RGBA_BGR || rgba == FC_RGBA_VBGR) {
-            options.flags |= wr::FontInstanceFlags_SUBPIXEL_BGR;
-          }
-          break;
-        case FC_RGBA_NONE:
-        case FC_RGBA_UNKNOWN:
-        default:
-          break;
+  if (mInstanceData.mFlags & InstanceData::EMBEDDED_BITMAP) {
+    options.flags |= wr::FontInstanceFlags_EMBEDDED_BITMAPS;
+  }
+  if (mInstanceData.mAntialias != AntialiasMode::NONE) {
+    if (mInstanceData.mAntialias == AntialiasMode::SUBPIXEL) {
+      options.render_mode = wr::FontRenderMode::Subpixel;
+      platformOptions.hinting = wr::FontHinting::LCD;
+      if (mInstanceData.mFlags & InstanceData::LCD_VERTICAL) {
+        options.flags |= wr::FontInstanceFlags_LCD_VERTICAL;
+      }
+      if (mInstanceData.mFlags & InstanceData::SUBPIXEL_BGR) {
+        options.flags |= wr::FontInstanceFlags_SUBPIXEL_BGR;
       }
     }
 
-    if (options.render_mode == wr::FontRenderMode::Subpixel) {
-      int filter;
-      if (FcPatternGetInteger(mPattern, FC_LCD_FILTER, 0, &filter) ==
-          FcResultMatch) {
-        switch (filter) {
-          case FC_LCD_NONE:
-            platformOptions.lcd_filter = wr::FontLCDFilter::None;
-            break;
-          case FC_LCD_DEFAULT:
-            platformOptions.lcd_filter = wr::FontLCDFilter::Default;
-            break;
-          case FC_LCD_LIGHT:
-            platformOptions.lcd_filter = wr::FontLCDFilter::Light;
-            break;
-          case FC_LCD_LEGACY:
-          default:
-            break;
-        }
-      }
+    switch (mInstanceData.mLcdFilter) {
+      case FT_LCD_FILTER_NONE:
+        platformOptions.lcd_filter = wr::FontLCDFilter::None;
+        break;
+      case FT_LCD_FILTER_DEFAULT:
+        platformOptions.lcd_filter = wr::FontLCDFilter::Default;
+        break;
+      case FT_LCD_FILTER_LIGHT:
+        platformOptions.lcd_filter = wr::FontLCDFilter::Light;
+        break;
+      case FT_LCD_FILTER_LEGACY:
+      default:
+        break;
     }
 
-    // Match cairo-ft's handling of embeddedbitmap:
-    // If AA is explicitly disabled, leave bitmaps enabled.
-    // Otherwise, disable embedded bitmaps unless explicitly enabled.
-    FcBool bitmap;
-    if (FcPatternGetBool(mPattern, FC_EMBEDDED_BITMAP, 0, &bitmap) ==
-            FcResultMatch &&
-        bitmap) {
-      options.flags |= wr::FontInstanceFlags_EMBEDDED_BITMAPS;
+    switch (mInstanceData.mHinting) {
+      case FontHinting::NONE:
+        platformOptions.hinting = wr::FontHinting::None;
+        break;
+      case FontHinting::LIGHT:
+        platformOptions.hinting = wr::FontHinting::Light;
+        break;
+      case FontHinting::NORMAL:
+        platformOptions.hinting = wr::FontHinting::Normal;
+        break;
+      case FontHinting::FULL:
+        break;
     }
   } else {
     options.render_mode = wr::FontRenderMode::Mono;
-    platformOptions.hinting = wr::FontHinting::Mono;
-    options.flags |= wr::FontInstanceFlags_EMBEDDED_BITMAPS;
-  }
 
-  FcBool hinting;
-  int hintstyle;
-  if (FcPatternGetBool(mPattern, FC_HINTING, 0, &hinting) != FcResultMatch ||
-      hinting) {
-    if (FcPatternGetInteger(mPattern, FC_HINT_STYLE, 0, &hintstyle) !=
-        FcResultMatch) {
-      hintstyle = FC_HINT_FULL;
-    }
-  } else {
-    hintstyle = FC_HINT_NONE;
-  }
-
-  if (hintstyle == FC_HINT_NONE) {
-    platformOptions.hinting = wr::FontHinting::None;
-  } else if (options.render_mode != wr::FontRenderMode::Mono) {
-    switch (hintstyle) {
-      case FC_HINT_SLIGHT:
-        platformOptions.hinting = wr::FontHinting::Light;
+    switch (mInstanceData.mHinting) {
+      case FontHinting::NONE:
+        platformOptions.hinting = wr::FontHinting::None;
         break;
-      case FC_HINT_MEDIUM:
-        platformOptions.hinting = wr::FontHinting::Normal;
-        break;
-      case FC_HINT_FULL:
       default:
+        platformOptions.hinting = wr::FontHinting::Mono;
         break;
     }
   }
@@ -424,25 +450,11 @@ bool ScaledFontFontconfig::GetWRFontInstanceOptions(
   *aOutPlatformOptions = Some(platformOptions);
 
   if (HasVariationSettings()) {
-    FT_Face face = nullptr;
-    if (FcPatternGetFTFace(mPattern, FC_FT_FACE, 0, &face) == FcResultMatch) {
-      UnscaledFontFreeType::GetVariationSettingsFromFace(aOutVariations, face);
-    }
+    UnscaledFontFreeType::GetVariationSettingsFromFace(aOutVariations,
+                                                       mFace->GetFace());
   }
 
   return true;
-}
-
-static cairo_user_data_key_t sNativeFontResourceKey;
-
-static void ReleaseNativeFontResource(void* aData) {
-  static_cast<NativeFontResource*>(aData)->Release();
-}
-
-static cairo_user_data_key_t sFaceKey;
-
-static void ReleaseFace(void* aData) {
-  Factory::ReleaseFTFace(static_cast<FT_Face>(aData));
 }
 
 already_AddRefed<ScaledFont> UnscaledFontFontconfig::CreateScaledFont(
@@ -456,75 +468,30 @@ already_AddRefed<ScaledFont> UnscaledFontFontconfig::CreateScaledFont(
       *reinterpret_cast<const ScaledFontFontconfig::InstanceData*>(
           aInstanceData);
 
-  FcPattern* pattern = FcPatternCreate();
-  if (!pattern) {
-    gfxWarning() << "Failed initializing Fontconfig pattern for scaled font";
+  RefPtr<SharedFTFace> face(InitFace());
+  if (!face) {
+    gfxWarning() << "Attempted to deserialize Fontconfig scaled font without "
+                    "FreeType face";
     return nullptr;
   }
-  FT_Face face = GetFace();
-  NativeFontResourceFreeType* nfr =
-      static_cast<NativeFontResourceFreeType*>(mNativeFontResource.get());
-  FT_Face varFace = nullptr;
-  if (face) {
-    if (nfr && aNumVariations > 0) {
-      varFace = nfr->CloneFace();
-      if (!varFace) {
-        gfxWarning() << "Failed cloning face for variations";
-      }
+
+  if (aNumVariations > 0 && face->GetData()) {
+    if (RefPtr<SharedFTFace> varFace = face->GetData()->CloneFace()) {
+      face = varFace;
     }
-    FcPatternAddFTFace(pattern, FC_FT_FACE, varFace ? varFace : face);
-  } else {
-    FcPatternAddString(pattern, FC_FILE,
-                       reinterpret_cast<const FcChar8*>(GetFile()));
-    FcPatternAddInteger(pattern, FC_INDEX, GetIndex());
-  }
-  FcPatternAddDouble(pattern, FC_PIXEL_SIZE, aSize);
-  instanceData.SetupPattern(pattern);
-
-  StackArray<FT_Fixed, 32> coords(aNumVariations);
-  for (uint32_t i = 0; i < aNumVariations; i++) {
-    coords[i] = std::round(aVariations[i].mValue * 65536.0);
   }
 
-  cairo_font_face_t* font = cairo_ft_font_face_create_for_pattern(
-      pattern, coords.data(), aNumVariations);
+  cairo_font_options_t* fontOptions = cairo_font_options_create();
+  int loadFlags;
+  unsigned int synthFlags;
+  instanceData.SetupFontOptions(fontOptions, &loadFlags, &synthFlags);
+
+  cairo_font_face_t* font = cairo_ft_font_face_create_for_ft_face(
+      face->GetFace(), loadFlags, synthFlags, face.get());
   if (cairo_font_face_status(font) != CAIRO_STATUS_SUCCESS) {
     gfxWarning() << "Failed creating Cairo font face for Fontconfig pattern";
-    FcPatternDestroy(pattern);
-    if (varFace) {
-      Factory::ReleaseFTFace(varFace);
-    }
+    cairo_font_options_destroy(fontOptions);
     return nullptr;
-  }
-
-  if (nfr) {
-    // Bug 1362117 - Cairo may keep the font face alive after the owning
-    // NativeFontResource was freed. To prevent this, we must bind the
-    // NativeFontResource to the font face so that it stays alive at least as
-    // long as the font face.
-    nfr->AddRef();
-    cairo_status_t err = CAIRO_STATUS_SUCCESS;
-    bool cleanupFace = false;
-    if (varFace) {
-      err =
-          cairo_font_face_set_user_data(font, &sFaceKey, varFace, ReleaseFace);
-    }
-    if (err != CAIRO_STATUS_SUCCESS) {
-      cleanupFace = true;
-    } else {
-      err = cairo_font_face_set_user_data(font, &sNativeFontResourceKey, nfr,
-                                          ReleaseNativeFontResource);
-    }
-    if (err != CAIRO_STATUS_SUCCESS) {
-      gfxWarning() << "Failed binding NativeFontResource to Cairo font face";
-      if (varFace && cleanupFace) {
-        Factory::ReleaseFTFace(varFace);
-      }
-      nfr->Release();
-      cairo_font_face_destroy(font);
-      FcPatternDestroy(pattern);
-      return nullptr;
-    }
   }
 
   cairo_matrix_t sizeMatrix;
@@ -532,9 +499,6 @@ already_AddRefed<ScaledFont> UnscaledFontFontconfig::CreateScaledFont(
 
   cairo_matrix_t identityMatrix;
   cairo_matrix_init_identity(&identityMatrix);
-
-  cairo_font_options_t* fontOptions = cairo_font_options_create();
-  instanceData.SetupFontOptions(fontOptions);
 
   cairo_scaled_font_t* cairoScaledFont =
       cairo_scaled_font_create(font, &sizeMatrix, &identityMatrix, fontOptions);
@@ -544,21 +508,18 @@ already_AddRefed<ScaledFont> UnscaledFontFontconfig::CreateScaledFont(
 
   if (cairo_scaled_font_status(cairoScaledFont) != CAIRO_STATUS_SUCCESS) {
     gfxWarning() << "Failed creating Cairo scaled font for font face";
-    FcPatternDestroy(pattern);
     return nullptr;
   }
 
-  RefPtr<ScaledFontFontconfig> scaledFont =
-      new ScaledFontFontconfig(cairoScaledFont, pattern, this, aSize);
+  // Only apply variations if we have an explicitly cloned face.
+  if (aNumVariations > 0 && face != GetFace()) {
+    ApplyVariationsToFace(aVariations, aNumVariations, face->GetFace());
+  }
+
+  RefPtr<ScaledFontFontconfig> scaledFont = new ScaledFontFontconfig(
+      cairoScaledFont, std::move(face), instanceData, this, aSize);
 
   cairo_scaled_font_destroy(cairoScaledFont);
-  FcPatternDestroy(pattern);
-
-  // Only apply variations if we have an explicitly cloned face. Otherwise,
-  // if the pattern holds the pathname, Cairo will handle setting of variations.
-  if (varFace) {
-    ApplyVariationsToFace(aVariations, aNumVariations, varFace);
-  }
 
   return scaledFont.forget();
 }
@@ -574,11 +535,10 @@ already_AddRefed<ScaledFont> UnscaledFontFontconfig::CreateScaledFontFromWRFont(
 
 bool ScaledFontFontconfig::HasVariationSettings() {
   // Check if the FT face has been cloned.
-  FT_Face face = nullptr;
-  return FcPatternGetFTFace(mPattern, FC_FT_FACE, 0, &face) == FcResultMatch &&
-         face && face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS &&
-         face != static_cast<UnscaledFontFontconfig*>(mUnscaledFont.get())
-                     ->GetFace();
+  return mFace &&
+         mFace->GetFace()->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS &&
+         mFace != static_cast<UnscaledFontFontconfig*>(mUnscaledFont.get())
+                      ->GetFace();
 }
 
 already_AddRefed<UnscaledFont> UnscaledFontFontconfig::CreateFromFontDescriptor(

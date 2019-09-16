@@ -18,14 +18,18 @@ class ScaledFontFreeType : public ScaledFontBase {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontFreeType, override)
 
-  ScaledFontFreeType(cairo_scaled_font_t* aScaledFont, FT_Face aFace,
+  ScaledFontFreeType(cairo_scaled_font_t* aScaledFont,
+                     RefPtr<SharedFTFace>&& aFace,
                      const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize);
 
   FontType GetType() const override { return FontType::FREETYPE; }
 
 #ifdef USE_SKIA
-  virtual SkTypeface* CreateSkTypeface() override;
+  SkTypeface* CreateSkTypeface() override;
+  void SetupSkFontDrawOptions(SkFont& aFont) override;
 #endif
+
+  AntialiasMode GetDefaultAAMode() override { return AntialiasMode::GRAY; }
 
   bool CanSerialize() override { return true; }
 
@@ -39,7 +43,7 @@ class ScaledFontFreeType : public ScaledFontBase {
   bool HasVariationSettings() override;
 
  private:
-  FT_Face mFace;
+  RefPtr<SharedFTFace> mFace;
 };
 
 }  // namespace gfx
