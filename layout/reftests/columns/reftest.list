@@ -19,6 +19,9 @@ fuzzy-if(webrender,0-126,0-364) == column-balancing-overflow-005.html column-bal
 == column-balancing-004.html column-balancing-004.ref.html
 pref(layout.css.column-span.enabled,true) == column-balancing-paged-001.html column-balancing-paged-001-ref.html
 == column-box-alignment-rtl.html column-box-alignment-rtl-ref.html
+== column-box-alignment-rtl-2.html column-box-alignment-rtl-2-ref.html
+== column-box-alignment-rtl-3.html column-box-alignment-rtl-3-ref.html
+== column-box-alignment-rtl-4.html column-box-alignment-rtl-4-ref.html
 == columnfill-balance.html columnfill-balance-ref.html
 fuzzy-if(OSX,0-32,0-1000) == columnfill-auto.html columnfill-auto-ref.html
 == columnfill-auto-2.html columnfill-auto-2-ref.html
@@ -51,6 +54,10 @@ pref(layout.css.column-span.enabled,true) == first-line-first-letter.html first-
 # default-enabled (Bug 1426010).
 default-preferences pref(layout.css.column-span.enabled,true)
 == min-width-2.html min-width-2-ref.html
+== column-box-alignment-rtl.html column-box-alignment-rtl-ref.html
+== column-box-alignment-rtl-2.html column-box-alignment-rtl-2-ref.html
+== column-box-alignment-rtl-3.html column-box-alignment-rtl-3-ref.html
+== column-box-alignment-rtl-4.html column-box-alignment-rtl-4-ref.html
 == column-balancing-nested-001.html column-balancing-nested-001-ref.html
 == zero-height-nondirty-reflow.html zero-height-nondirty-reflow-ref.html
 default-preferences
