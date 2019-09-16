@@ -6,13 +6,34 @@
 
 const { WorkerDispatcher } = require("../worker-utils");
 
-const dispatcher = new WorkerDispatcher();
-const start = dispatcher.start.bind(dispatcher);
-const stop = dispatcher.stop.bind(dispatcher);
+let startArgs;
+let dispatcher;
+
+function getDispatcher() {
+  if (!dispatcher) {
+    dispatcher = new WorkerDispatcher();
+    dispatcher.start(...startArgs);
+  }
+  return dispatcher;
+}
+
+function start(...args) {
+  startArgs = args;
+}
+
+function stop() {
+  if (dispatcher) {
+    dispatcher.stop();
+    dispatcher = null;
+    startArgs = null;
+  }
+}
 
 // The search worker support just one task at this point,
 // which is searching through specified resource.
-const searchInResource = dispatcher.task("searchInResource");
+function searchInResource(...args) {
+  return getDispatcher().invoke("searchInResource", ...args);
+}
 
 module.exports = {
   start,
