@@ -1306,11 +1306,12 @@ void nsPlainTextSerializer::MaybeWrapAndOutputCompleteLines() {
 
       // -1 (trim a char at the break position)
       // only if the line break was a space.
-      nsAutoString restOfLine;
+      nsAutoString restOfContent;
       if (nsCRT::IsAsciiSpace(mCurrentLine.mContent.CharAt(goodSpace))) {
-        mCurrentLine.mContent.Right(restOfLine, contentLength - goodSpace - 1);
+        mCurrentLine.mContent.Right(restOfContent,
+                                    contentLength - goodSpace - 1);
       } else {
-        mCurrentLine.mContent.Right(restOfLine, contentLength - goodSpace);
+        mCurrentLine.mContent.Right(restOfContent, contentLength - goodSpace);
       }
       // if breaker was U+0020, it has to consider for delsp=yes support
       const bool breakBySpace = mCurrentLine.mContent.CharAt(goodSpace) == ' ';
@@ -1319,7 +1320,7 @@ void nsPlainTextSerializer::MaybeWrapAndOutputCompleteLines() {
       mCurrentLine.mContent.Truncate();
       // Space stuff new line?
       if (mSettings.HasFlag(nsIDocumentEncoder::OutputFormatFlowed)) {
-        if (!restOfLine.IsEmpty() && IsSpaceStuffable(restOfLine.get()) &&
+        if (!restOfContent.IsEmpty() && IsSpaceStuffable(restOfContent.get()) &&
             mCurrentLine.mCiteQuoteLevel ==
                 0  // We space-stuff quoted lines anyway
         ) {
@@ -1328,7 +1329,7 @@ void nsPlainTextSerializer::MaybeWrapAndOutputCompleteLines() {
           // XXX doesn't seem to work correctly for ' '
         }
       }
-      mCurrentLine.mContent.Append(restOfLine);
+      mCurrentLine.mContent.Append(restOfContent);
       currentLineContentWidth = GetUnicharStringWidth(mCurrentLine.mContent);
       mEmptyLines = -1;
     } else {
