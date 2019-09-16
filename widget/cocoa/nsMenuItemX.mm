@@ -331,19 +331,30 @@ void nsMenuItemX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+bool IsMenuStructureElement(nsIContent* aContent) {
+  return aContent->IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menuitem,
+                                      nsGkAtoms::menuseparator);
+}
+
 void nsMenuItemX::ObserveContentRemoved(dom::Document* aDocument, nsIContent* aContainer,
                                         nsIContent* aChild, nsIContent* aPreviousSibling) {
   if (aChild == mCommandElement) {
     mMenuGroupOwner->UnregisterForContentChanges(mCommandElement);
     mCommandElement = nullptr;
   }
-
-  mMenuParent->SetRebuild(true);
+  if (IsMenuStructureElement(aChild)) {
+    mMenuParent->SetRebuild(true);
+  }
 }
 
 void nsMenuItemX::ObserveContentInserted(dom::Document* aDocument, nsIContent* aContainer,
                                          nsIContent* aChild) {
-  mMenuParent->SetRebuild(true);
+  // The child node could come from the custom element that is for display, so
+  // only rebuild the menu if the child is related to the structure of the
+  // menu.
+  if (IsMenuStructureElement(aChild)) {
+    mMenuParent->SetRebuild(true);
+  }
 }
 
 void nsMenuItemX::SetupIcon() {
