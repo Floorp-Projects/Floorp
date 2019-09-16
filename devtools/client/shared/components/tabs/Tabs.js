@@ -198,12 +198,24 @@ define(function(require, exports, module) {
       let activeTab = this.state.activeTab;
       const tabCount = this.props.children.length;
 
+      const ltr = event.target.ownerDocument.dir == "ltr";
+      const nextOrLastTab = Math.min(tabCount - 1, activeTab + 1);
+      const previousOrFirstTab = Math.max(0, activeTab - 1);
+
       switch (event.code) {
         case "ArrowRight":
-          activeTab = Math.min(tabCount - 1, activeTab + 1);
+          if (ltr) {
+            activeTab = nextOrLastTab;
+          } else {
+            activeTab = previousOrFirstTab;
+          }
           break;
         case "ArrowLeft":
-          activeTab = Math.max(0, activeTab - 1);
+          if (ltr) {
+            activeTab = previousOrFirstTab;
+          } else {
+            activeTab = nextOrLastTab;
+          }
           break;
       }
 
