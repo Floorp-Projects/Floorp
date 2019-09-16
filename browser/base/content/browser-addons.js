@@ -682,14 +682,6 @@ var gXPInstallObserver = {
         options.sourceURI = browser.currentURI;
         options.eventCallback = function(aEvent) {
           switch (aEvent) {
-            case "shown":
-              let notificationElement = [...this.owner.panel.children].find(
-                n => n.notification == this
-              );
-              if (notificationElement) {
-                notificationElement.setAttribute("mainactiondisabled", "true");
-              }
-              break;
             case "removed":
               options.contentWindow = null;
               options.sourceURI = null;
@@ -701,6 +693,7 @@ var gXPInstallObserver = {
           accessKey: gNavigatorBundle.getString(
             "addonInstall.acceptButton2.accesskey"
           ),
+          disabled: true,
           callback: () => {},
         };
         let secondaryAction = {

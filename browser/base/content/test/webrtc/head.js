@@ -663,21 +663,24 @@ function promiseReloadFrame(aFrameId) {
   });
 }
 
-async function runTests(tests, options = {}) {
-  let leaf = options.relativeURI || "get_user_media.html";
-
+async function openNewTestTab(leaf = "get_user_media.html") {
   let rootDir = getRootDirectory(gTestPath);
   rootDir = rootDir.replace(
     "chrome://mochitests/content/",
     "https://example.com/"
   );
   let absoluteURI = rootDir + leaf;
-  let cleanup = options.cleanup || (() => expectNoObserverCalled());
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, absoluteURI);
   let browser = tab.linkedBrowser;
 
   browser.messageManager.loadFrameScript(CONTENT_SCRIPT_HELPER, true);
+  return browser;
+}
+
+async function runTests(tests, options = {}) {
+  let cleanup = options.cleanup || (() => expectNoObserverCalled());
+  let browser = await openNewTestTab(options.relativeURI);
 
   is(
     PopupNotifications._currentNotifications.length,

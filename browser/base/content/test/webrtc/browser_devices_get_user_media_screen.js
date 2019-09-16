@@ -784,7 +784,43 @@ var gTests = [
         "warning message is still shown"
       );
 
+      gBrowser.removeCurrentTab();
       win.close();
+
+      await openNewTestTab();
+    },
+  },
+  {
+    desc: "Switching between tabs does not bleed state into other prompts",
+    run: async function checkSwitchingTabs() {
+      // Open a new window in the background to have a choice in the menulist.
+      let win = await BrowserTestUtils.openNewBrowserWindow();
+      await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:newtab");
+      BrowserWindowTracker.orderedWindows[1].focus();
+
+      let promise = promisePopupNotificationShown("webRTC-shareDevices");
+      await promiseRequestDevice(false, true, null, "window");
+      await promise;
+      await expectObserverCalled("getUserMedia:request");
+
+      let notification = PopupNotifications.panel.firstElementChild;
+      ok(notification.button.disabled, "Allow button is disabled");
+
+      await openNewTestTab("get_user_media_in_xorigin_frame.html");
+
+      promise = promisePopupNotificationShown("webRTC-shareDevices");
+      await promiseRequestDevice(true, true, "frame1");
+      await promise;
+      await expectObserverCalled("getUserMedia:request");
+
+      notification = PopupNotifications.panel.firstElementChild;
+      ok(!notification.button.disabled, "Allow button is not disabled");
+
+      gBrowser.removeCurrentTab();
+      gBrowser.removeCurrentTab();
+      win.close();
+
+      await openNewTestTab();
     },
   },
 ];
