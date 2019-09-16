@@ -1500,13 +1500,11 @@ void MacroAssembler::patchNopToCall(uint8_t* call, uint8_t* target) {
   Instruction* inst = (Instruction*)call - 6 /* six nops */;
   Assembler::WriteLoad64Instructions(inst, ScratchRegister, (uint64_t)target);
   inst[4] = InstReg(op_special, ScratchRegister, zero, ra, ff_jalr);
-  AutoFlushICache::flush(uintptr_t(inst), 6 * 4);
 #else
   Instruction* inst = (Instruction*)call - 4 /* four nops */;
   Assembler::WriteLuiOriInstructions(inst, &inst[1], ScratchRegister,
                                      (uint32_t)target);
   inst[2] = InstReg(op_special, ScratchRegister, zero, ra, ff_jalr);
-  AutoFlushICache::flush(uintptr_t(inst), 4 * 4);
 #endif
 }
 
@@ -1524,9 +1522,6 @@ void MacroAssembler::patchCallToNop(uint8_t* call) {
 #ifdef JS_CODEGEN_MIPS64
   inst[4].makeNop();
   inst[5].makeNop();
-  AutoFlushICache::flush(uintptr_t(inst), 6 * 4);
-#else
-  AutoFlushICache::flush(uintptr_t(inst), 4 * 4);
 #endif
 }
 

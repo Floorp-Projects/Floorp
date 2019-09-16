@@ -617,27 +617,6 @@ struct IonScriptCounts {
 
 struct VMFunction;
 
-struct AutoFlushICache {
- private:
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
-    defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-  uintptr_t start_;
-  uintptr_t stop_;
-#  ifdef JS_JITSPEW
-  const char* name_;
-#  endif
-  bool inhibit_;
-  AutoFlushICache* prev_;
-#endif
-
- public:
-  static void setRange(uintptr_t p, size_t len);
-  static void flush(uintptr_t p, size_t len);
-  static void setInhibit();
-  ~AutoFlushICache();
-  explicit AutoFlushICache(const char* nonce, bool inhibit = false);
-};
-
 }  // namespace jit
 
 namespace gc {

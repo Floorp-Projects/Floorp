@@ -190,7 +190,7 @@ JitCode* BaselineCacheIRCompiler::compile() {
     EmitStubGuardFailure(masm);
   }
 
-  Linker linker(masm, "getStubCode");
+  Linker linker(masm);
   Rooted<JitCode*> newStubCode(cx_, linker.newCode(cx_, CodeKind::Baseline));
   if (!newStubCode) {
     cx_->recoverFromOutOfMemory();

@@ -427,7 +427,7 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
     uint32_t totalCodeSize = masm.currentOffset();
     uint8_t* codeBuf = (uint8_t*)js_malloc(totalCodeSize);
     if (codeBuf) {
-      masm.executableCopy(codeBuf, totalCodeSize);
+      masm.executableCopy(codeBuf);
 
       const CodeRangeVector& codeRanges = code->codeRanges;
       MOZ_ASSERT(codeRanges.length() >= inputs.length());

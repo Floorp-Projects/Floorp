@@ -1204,7 +1204,7 @@ bool wasm::EnsureBuiltinThunksInitialized() {
     return false;
   }
 
-  masm.executableCopy(thunks->codeBase, /* flushICache = */ false);
+  masm.executableCopy(thunks->codeBase);
   memset(thunks->codeBase + masm.bytesNeeded(), 0,
          allocSize - masm.bytesNeeded());
 

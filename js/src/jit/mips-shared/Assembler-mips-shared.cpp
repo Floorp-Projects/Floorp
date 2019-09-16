@@ -1740,8 +1740,6 @@ void AssemblerMIPSShared::ToggleToJmp(CodeLocationLabel inst_) {
   MOZ_ASSERT(inst->extractOpcode() == ((uint32_t)op_andi >> OpcodeShift));
   // We converted beq to andi, so now we restore it.
   inst->setOpcode(op_beq);
-
-  AutoFlushICache::flush(uintptr_t(inst), 4);
 }
 
 void AssemblerMIPSShared::ToggleToCmp(CodeLocationLabel inst_) {
@@ -1751,8 +1749,6 @@ void AssemblerMIPSShared::ToggleToCmp(CodeLocationLabel inst_) {
   MOZ_ASSERT(inst->extractOpcode() == ((uint32_t)op_beq >> OpcodeShift));
   // Replace "beq $zero, $zero, offset" with "andi $zero, $zero, offset"
   inst->setOpcode(op_andi);
-
-  AutoFlushICache::flush(uintptr_t(inst), 4);
 }
 
 void AssemblerMIPSShared::UpdateLuiOriValue(Instruction* inst0,
