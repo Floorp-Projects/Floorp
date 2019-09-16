@@ -36,7 +36,7 @@ add_task(async function test_sideloading() {
     id: ID1,
     name: "Test 1",
     userDisabled: true,
-    permissions: ["history", "https://*/*"],
+    permissions: ["tabs", "https://*/*"],
     iconURL: "foo-icon.png",
   });
 
