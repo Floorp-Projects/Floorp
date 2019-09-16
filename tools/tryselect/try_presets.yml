@@ -34,6 +34,16 @@ devtools:
         - "'mochitest-devtools | 'mochitest-chrome 'mac !asan !-sw !qr"
         - "'xpcshell 'linux64/ !asan !shippable"
 
+devtools-linux:
+    selector: fuzzy
+    description: >-
+        Runs the tests relevant to the Firefox Devtools, on Linux only.
+    query:
+        - "'debugger | 'node-devtools"
+        - "'mozlint-eslint"
+        - "'mochitest-devtools | 'mochitest-chrome 'linux64 !asan !shippable !-sw !qr"
+        - "'xpcshell 'linux64/ !asan !shippable"
+
 perf:
     selector: fuzzy
     description: >-
