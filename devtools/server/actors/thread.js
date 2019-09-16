@@ -89,8 +89,7 @@ loader.lazyRequireGetter(
  *          - window: The global window object.
  *          - preNest: Function called before entering a nested event loop.
  *          - postNest: Function called after exiting a nested event loop.
- *          - makeDebugger: A function that takes no arguments and instantiates
- *            a Debugger that manages its globals on its own.
+ *          - dbg: a Debugger instance that manages its globals on its own.
  * @param aGlobal object [optional]
  *        An optional (for content debugging only) reference to the content
  *        window.
@@ -167,7 +166,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
   get dbg() {
     if (!this._dbg) {
-      this._dbg = this._parent.makeDebugger();
+      this._dbg = this._parent.dbg;
       this._dbg.uncaughtExceptionHook = this.uncaughtExceptionHook;
       this._dbg.onDebuggerStatement = this.onDebuggerStatement;
       this._dbg.onNewScript = this.onNewScript;
@@ -307,11 +306,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this.clearDebuggees();
     this.conn.removeActorPool(this._threadLifetimePool);
     this._threadLifetimePool = null;
-
-    if (!this._dbg) {
-      return;
-    }
-    this._dbg.disable();
     this._dbg = null;
   },
 
@@ -1638,7 +1632,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         promote: () => this.threadObjectGrip(actor),
         isThreadLifetimePool: () =>
           actor.registeredPool !== this.threadLifetimePool,
-        getGlobalDebugObject: () => this.globalDebugObject,
       },
       this.conn
     );

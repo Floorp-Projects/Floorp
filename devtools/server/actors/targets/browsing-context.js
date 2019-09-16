@@ -314,6 +314,16 @@ const browsingContextTargetPrototype = {
     return !!this._attached;
   },
 
+  /*
+   * Return a Debugger instance or create one if there is none yet
+   */
+  get dbg() {
+    if (!this._dbg) {
+      this._dbg = this.makeDebugger();
+    }
+    return this._dbg;
+  },
+
   /**
    * Try to locate the console actor if it exists.
    */
@@ -1016,6 +1026,11 @@ const browsingContextTargetPrototype = {
     if (this._frameDescriptorActorPool !== null) {
       this._frameDescriptorActorPool.destroy();
       this._frameDescriptorActorPool = null;
+    }
+
+    if (this._dbg) {
+      this._dbg.disable();
+      this._dbg = null;
     }
 
     this._attached = false;

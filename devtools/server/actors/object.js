@@ -78,7 +78,6 @@ const proto = {
       getGripDepth,
       incrementGripDepth,
       decrementGripDepth,
-      getGlobalDebugObject,
     },
     conn
   ) {
@@ -98,7 +97,6 @@ const proto = {
       getGripDepth,
       incrementGripDepth,
       decrementGripDepth,
-      getGlobalDebugObject,
     };
     this._originalDescriptors = new Map();
   },
