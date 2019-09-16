@@ -1,0 +1,235 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+job-defaults:
+    run-on-projects:
+        - try
+        - mozilla-central
+    treeherder:
+        kind: other
+        tier: 2
+    run:
+        using: run-task
+        checkout: false
+        tooltool-downloads: public
+    worker:
+        max-run-time: 5400
+        env:
+            MOZ_FETCHES_DIR: fetches
+            CONDPROF_ARCHIVES: /builds/worker/archive
+            CONDPROF_ROOT: fetches/condprofile
+jobs:
+    windows2012-64-firefox:
+        worker-type: b-win2012
+        description: Creates or updates conditioned profiles on Win64
+        treeherder:
+            symbol: condprof(firefox)
+            platform: windows2012-64/opt
+        index:
+            product: firefox
+            job-name: condprof-win64
+        dependencies:
+            build-win64/opt: build-win64/opt
+        fetches:
+            build-win64/opt:
+                - artifact: target.common.tests.tar.gz
+                - artifact: target.condprof.tests.tar.gz
+                - artifact: target.zip
+        run:
+            using: run-task
+            command: >-
+                cd %CONDPROF_ROOT% &&
+                python3.exe condprof/runner.py --geckodriver z:/%USERNAME%/fetches/bin/geckodriver.exe --firefox firefox/firefox.exe z:/%USERNAME%/archive
+        worker:
+            artifacts:
+                - name: public/condprof
+                  path: archive
+                  type: directory
+    linux64-firefox:
+        worker-type: b-linux
+        description: Creates or updates conditioned profiles on Linux
+        treeherder:
+            symbol: condprof(firefox)
+            platform: linux64/opt
+        index:
+            product: firefox
+            job-name: condprof-linux64
+        dependencies:
+            build-linux/opt: build-linux-shippable/opt
+        fetches:
+            build-linux/opt:
+                - artifact: target.common.tests.tar.gz
+                - artifact: target.condprof.tests.tar.gz
+                - artifact: target.tar.bz2
+        run:
+            using: run-task
+            command: >-
+                $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3.6 $CONDPROF_ROOT &&
+                cd $CONDPROF_ROOT &&
+                export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
+                bin/python3.6 condprof/runner.py --firefox $MOZ_FETCHES_DIR/firefox/firefox-bin $CONDPROF_ARCHIVES
+        worker:
+            docker-image: {in-tree: condprof}
+            artifacts:
+                - name: public/condprof
+                  path: /builds/worker/archive
+                  type: directory
+    macosx64-firefox:
+        worker-type: t-osx-1014
+        description: Creates or updates conditioned profiles on macOS
+        treeherder:
+            symbol: condprof(firefox)
+            platform: macosx64/opt
+        dependencies:
+            build-macosx64/opt: build-macosx64/opt
+        fetches:
+            build-macosx64/opt:
+                - artifact: target.common.tests.tar.gz
+                - artifact: target.condprof.tests.tar.gz
+                - artifact: target.dmg
+        index:
+            product: firefox
+            job-name: condprof-macosx64
+        run:
+            using: run-task
+            command: >-
+                $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3 $CONDPROF_ROOT &&
+                export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
+                cd $CONDPROF_ROOT &&
+                bin/python3 condprof/runner.py --firefox $MOZ_FETCHES_DIR/target.dmg ../../archive
+        worker:
+            artifacts:
+                - name: public/condprof
+                  path: archive
+                  type: directory
+    android-hw-g5-7-0-arm7-api-16-geckoview:
+        worker-type: t-bitbar-gw-perf-g5
+        description: Creates or update conditioned profiles on GeckoView+G5
+        treeherder:
+            symbol: condprof(geckoview)
+            platform: android-hw-g5-7-0-arm7-api-16/opt
+        index:
+            product: firefox
+            job-name: condprof-g5-geckoview_example
+        dependencies:
+            build-linux/opt: build-linux-shippable/opt
+            build-android-api-16/opt: build-android-api-16/opt
+        fetches:
+            build-linux/opt:
+                - artifact: target.common.tests.tar.gz
+                - artifact: target.condprof.tests.tar.gz
+            build-android-api-16/opt:
+                - artifact: geckoview_example.apk
+        run:
+            run-as-root: true
+            using: run-task
+            command: >-
+                adb install -r $MOZ_FETCHES_DIR/geckoview_example.apk &&
+                $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3 $CONDPROF_ROOT &&
+                cd $CONDPROF_ROOT &&
+                export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
+                bin/python3 condprof/runner.py --device-name g5 --firefox org.mozilla.geckoview_example ../../archive
+        worker:
+            artifacts:
+                - name: public/condprof
+                  path: archive
+                  type: directory
+    android-hw-g5-7-0-arm7-api-16-fenix:
+        worker-type: t-bitbar-gw-perf-g5
+        description: Creates or update conditioned profiles on Fenix+G5
+        treeherder:
+            symbol: condprof(fenix)
+            platform: android-hw-g5-7-0-arm7-api-16/opt
+        index:
+            product: firefox
+            job-name: condprof-g5-fenix
+        dependencies:
+            build-linux/opt: build-linux-shippable/opt
+        fetches:
+            build-linux/opt:
+                - artifact: target.common.tests.tar.gz
+                - artifact: target.condprof.tests.tar.gz
+        run:
+            run-as-root: true
+            command: >-
+                curl -L -o target.apk https://index.taskcluster.net/v1/task/project.mobile.fenix.v2.nightly.latest/artifacts/public/build/armeabi-v7a/geckoNightly/target.apk &&
+                adb install -r target.apk &&
+                rm -rf target.apk &&
+                $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3 $CONDPROF_ROOT &&
+                cd $CONDPROF_ROOT &&
+                export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
+                bin/python3 condprof/runner.py --device-name g5 --firefox org.mozilla.fenix.nightly ../../archive
+        worker:
+            artifacts:
+                - name: public/condprof
+                  path: archive
+                  type: directory
+    android-hw-p2-8-0-aarch64-fenix:
+        worker-type: t-bitbar-gw-perf-p2
+        description: Creates or update conditioned profiles on Fenix+P2
+        treeherder:
+            symbol: condprof(fenix)
+            platform: android-hw-p2-8-0-android-aarch64/opt
+        dependencies:
+            build-linux/opt: build-linux-shippable/opt
+        fetches:
+            build-linux/opt:
+                - artifact: target.common.tests.tar.gz
+                - artifact: target.condprof.tests.tar.gz
+        index:
+            product: firefox
+            job-name: condprof-p2_aarch64-fenix
+        run:
+            run-as-root: true
+            command: >-
+                curl -L -o target.apk https://index.taskcluster.net/v1/task/project.mobile.fenix.v2.nightly.latest/artifacts/public/build/arm64-v8a/geckoNightly/target.apk &&
+                adb install -r target.apk &&
+                rm -rf target.apk &&
+                $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3 $CONDPROF_ROOT &&
+                cd $CONDPROF_ROOT &&
+                export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
+                bin/python3 condprof/runner.py --device-name p2_aarch64 --firefox org.mozilla.fenix.nightly ../../archive
+        worker:
+            artifacts:
+                - name: public/condprof
+                  path: archive
+                  type: directory
+    android-hw-p2-8-0-android-aarch64-geckoview:
+        worker-type: t-bitbar-gw-perf-p2
+        description: Creates or update conditioned profiles on GeckoView+P2
+        treeherder:
+            symbol: condprof(geckoview)
+            platform: android-hw-p2-8-0-android-aarch64/opt
+        dependencies:
+            build-linux/opt: build-linux-shippable/opt
+            build-android-api-16/opt: build-android-api-16/opt
+        index:
+            product: firefox
+            job-name: condprof-p2_aarch64-geckoview_example
+        fetches:
+            build-linux/opt:
+                - artifact: target.common.tests.tar.gz
+                - artifact: target.condprof.tests.tar.gz
+            build-android-api-16/opt:
+                - artifact: geckoview_example.apk
+        run:
+            run-as-root: true
+            using: run-task
+            command: >-
+                adb install -r $MOZ_FETCHES_DIR/geckoview_example.apk &&
+                $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3 $CONDPROF_ROOT &&
+                cd $CONDPROF_ROOT &&
+                export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
+                bin/python3 condprof/runner.py --device-name p2_aarch64 --firefox org.mozilla.geckoview_example ../../archive
+        worker:
+            artifacts:
+                - name: public/condprof
+                  path: archive
+                  type: directory

@@ -44,6 +44,7 @@ EXCLUSIVE_COMPONENTS = [
     'windows',
     # test suites
     'awsy',
+    'condprofile',
     'cppunittest',
     'firefox-ui',
     'geckoview',
