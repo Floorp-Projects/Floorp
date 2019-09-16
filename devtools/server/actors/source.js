@@ -399,17 +399,21 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     // alive.
     const isWasm = this._source.introductionType === "wasm";
     if (!isWasm && !scripts.some(script => !script.isFunction)) {
-      scripts.length = 0;
-      function addScripts(script) {
-        scripts.push(script);
-        script.getChildScripts().forEach(addScripts);
-      }
+      let newScript;
       try {
-        addScripts(this._source.reparse());
+        newScript = this._source.reparse();
       } catch (e) {
         // reparse() will throw if the source is not valid JS. This can happen
         // if this source is the resurrection of a GC'ed source and there are
         // parse errors in the refetched contents.
+      }
+      if (newScript) {
+        scripts.length = 0;
+        function addScripts(script) {
+          scripts.push(script);
+          script.getChildScripts().forEach(addScripts);
+        }
+        addScripts(newScript);
       }
     }
 
