@@ -1241,22 +1241,22 @@ nsresult nsPlainTextSerializer::DoAddLeaf(nsAtom* aTag) {
 }
 
 /**
- * Adds as many newline as necessary to get |noOfRows| empty lines
+ * Adds as many newline as necessary to get |aNumberOfRows| empty lines
  *
- * noOfRows = -1    :   Being in the middle of some line of text
- * noOfRows =  0    :   Being at the start of a line
- * noOfRows =  n>0  :   Having n empty lines before the current line.
+ * aNumberOfRows = -1    :   Being in the middle of some line of text
+ * aNumberOfRows =  0    :   Being at the start of a line
+ * aNumberOfRows =  n>0  :   Having n empty lines before the current line.
  */
-void nsPlainTextSerializer::EnsureVerticalSpace(int32_t noOfRows) {
+void nsPlainTextSerializer::EnsureVerticalSpace(const int32_t aNumberOfRows) {
   // If we have something in the indent we probably want to output
   // it and it's not included in the count for empty lines so we don't
   // realize that we should start a new line.
-  if (noOfRows >= 0 && !mCurrentLine.mIndentation.mHeader.IsEmpty()) {
+  if (aNumberOfRows >= 0 && !mCurrentLine.mIndentation.mHeader.IsEmpty()) {
     EndLine(false);
     mInWhitespace = true;
   }
 
-  while (mEmptyLines < noOfRows) {
+  while (mEmptyLines < aNumberOfRows) {
     EndLine(false);
     mInWhitespace = true;
   }
