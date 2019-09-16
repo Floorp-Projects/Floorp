@@ -54,7 +54,7 @@ ws = { optional = true, version = "0.9" }
 svg_fmt = "0.4"
 
 [dev-dependencies]
-mozangle = "0.2"
+mozangle = "0.3.1"
 rand = "0.4"
 
 [target.'cfg(any(target_os = "android", all(unix, not(target_os = "macos"))))'.dependencies]
