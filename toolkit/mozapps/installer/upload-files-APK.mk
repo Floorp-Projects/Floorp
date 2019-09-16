@@ -36,6 +36,7 @@ RELEASE_SIGN_ANDROID_APK = \
 ROOT_FILES := \
   application.ini \
   package-name.txt \
+  ua-update.json \
   platform.ini \
   removed-files \
   $(NULL)

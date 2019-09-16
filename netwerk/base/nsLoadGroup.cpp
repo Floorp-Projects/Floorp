@@ -715,6 +715,19 @@ nsLoadGroup::SetDefaultLoadFlags(uint32_t aFlags) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsLoadGroup::GetUserAgentOverrideCache(nsACString& aUserAgentOverrideCache) {
+  aUserAgentOverrideCache = mUserAgentOverrideCache;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoadGroup::SetUserAgentOverrideCache(
+    const nsACString& aUserAgentOverrideCache) {
+  mUserAgentOverrideCache = aUserAgentOverrideCache;
+  return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void nsLoadGroup::TelemetryReport() {
