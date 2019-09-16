@@ -471,6 +471,17 @@ bool gfxDWriteFont::HasBitmapStrikeForSize(uint32_t aSize) {
 
 uint32_t gfxDWriteFont::GetSpaceGlyph() { return mSpaceGlyph; }
 
+bool gfxDWriteFont::SetupCairoFont(DrawTarget* aDrawTarget) {
+  cairo_scaled_font_t* scaledFont = InitCairoScaledFont();
+  if (cairo_scaled_font_status(scaledFont) != CAIRO_STATUS_SUCCESS) {
+    // Don't cairo_set_scaled_font as that would propagate the error to
+    // the cairo_t, precluding any further drawing.
+    return false;
+  }
+  cairo_set_scaled_font(gfxFont::RefCairo(aDrawTarget), scaledFont);
+  return true;
+}
+
 bool gfxDWriteFont::IsValid() const { return mFontFace != nullptr; }
 
 IDWriteFontFace* gfxDWriteFont::GetFontFace() { return mFontFace.get(); }
@@ -567,7 +578,7 @@ int32_t gfxDWriteFont::GetGlyphWidth(uint16_t aGID) {
   return width;
 }
 
-bool gfxDWriteFont::GetForceGDIClassic() const {
+bool gfxDWriteFont::GetForceGDIClassic() {
   return static_cast<gfxDWriteFontEntry*>(mFontEntry.get())
              ->GetForceGDIClassic() &&
          cairo_dwrite_get_cleartype_rendering_mode() < 0 &&
@@ -576,7 +587,7 @@ bool gfxDWriteFont::GetForceGDIClassic() const {
 }
 
 DWRITE_MEASURING_MODE
-gfxDWriteFont::GetMeasuringMode() const {
+gfxDWriteFont::GetMeasuringMode() {
   return GetForceGDIClassic()
              ? DWRITE_MEASURING_MODE_GDI_CLASSIC
              : gfxWindowsPlatform::GetPlatform()->DWriteMeasuringMode();
@@ -689,13 +700,4 @@ already_AddRefed<ScaledFont> gfxDWriteFont::GetScaledFont(
 
   RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
   return scaledFont.forget();
-}
-
-bool gfxDWriteFont::ShouldRoundXOffset(cairo_t* aCairo) const {
-  // show_glyphs is implemented on the font and so is used for all Cairo
-  // surface types; however, it may pixel-snap depending on the dwrite
-  // rendering mode
-  return GetForceGDIClassic() ||
-         gfxWindowsPlatform::GetPlatform()->DWriteMeasuringMode() !=
-             DWRITE_MEASURING_MODE_NATURAL;
 }

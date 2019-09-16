@@ -50,6 +50,8 @@ class gfxAndroidPlatform : public gfxPlatform {
   bool FontHintingEnabled() override;
   bool RequiresLinearZoom() override;
 
+  FT_Library GetFTLibrary() override;
+
   already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource()
       override;
 
