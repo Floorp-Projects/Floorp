@@ -52,7 +52,8 @@ class InputType {
   virtual bool IsTooShort() const;
   virtual bool IsValueMissing() const;
   virtual bool HasTypeMismatch() const;
-  virtual bool HasPatternMismatch() const;
+  // May return Nothing() if the JS engine failed to evaluate the regex.
+  virtual mozilla::Maybe<bool> HasPatternMismatch() const;
   virtual bool IsRangeOverflow() const;
   virtual bool IsRangeUnderflow() const;
   virtual bool HasStepMismatch(bool aUseZeroIfValueNaN) const;

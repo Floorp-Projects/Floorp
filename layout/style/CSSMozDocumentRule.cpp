@@ -64,7 +64,8 @@ bool CSSMozDocumentRule::Match(const Document* aDoc, nsIURI* aDocURI,
     case DocumentMatchingFunction::RegExp: {
       NS_ConvertUTF8toUTF16 spec(aDocURISpec);
       NS_ConvertUTF8toUTF16 regex(aPattern);
-      return nsContentUtils::IsPatternMatching(spec, regex, aDoc);
+      return nsContentUtils::IsPatternMatching(spec, regex, aDoc)
+          .valueOr(false);
     }
   }
   MOZ_ASSERT_UNREACHABLE("Unknown matching function");

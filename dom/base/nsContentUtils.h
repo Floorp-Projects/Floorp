@@ -2459,10 +2459,12 @@ class nsContentUtils {
    * @param aValue    the string to check.
    * @param aPattern  the string defining the pattern.
    * @param aDocument the owner document of the element.
-   * @result          whether the given string is matches the pattern.
+   * @result          whether the given string is matches the pattern, or
+   *                  Nothing() if the pattern couldn't be evaluated.
    */
-  static bool IsPatternMatching(nsAString& aValue, nsAString& aPattern,
-                                const Document* aDocument);
+  static mozilla::Maybe<bool> IsPatternMatching(nsAString& aValue,
+                                                nsAString& aPattern,
+                                                const Document* aDocument);
 
   /**
    * Calling this adds support for

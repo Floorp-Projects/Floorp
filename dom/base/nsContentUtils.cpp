@@ -6286,8 +6286,9 @@ static void ReportPatternCompileFailure(nsAString& aPattern,
 }
 
 // static
-bool nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
-                                       const Document* aDocument) {
+Maybe<bool> nsContentUtils::IsPatternMatching(nsAString& aValue,
+                                              nsAString& aPattern,
+                                              const Document* aDocument) {
   NS_ASSERTION(aDocument, "aDocument should be a valid pointer (not null)");
 
   // The fact that we're using a JS regexp under the hood should not be visible
@@ -6315,7 +6316,7 @@ bool nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
     aPattern.Cut(0, 4);
     aPattern.Cut(aPattern.Length() - 2, 2);
     ReportPatternCompileFailure(aPattern, aDocument, cx);
-    return true;
+    return Some(true);
   }
 
   JS::Rooted<JS::Value> rval(cx, JS::NullValue());
@@ -6323,10 +6324,10 @@ bool nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
   if (!JS::ExecuteRegExpNoStatics(cx, re,
                                   static_cast<char16_t*>(aValue.BeginWriting()),
                                   aValue.Length(), &idx, true, &rval)) {
-    return true;
+    return Nothing();
   }
 
-  return !rval.isNull();
+  return Some(!rval.isNull());
 }
 
 // static
