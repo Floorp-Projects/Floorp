@@ -51,6 +51,8 @@ internal class EngineObserver(
             it.reject()
             true
         }
+
+        session.webAppManifest = null
     }
 
     private fun isHostEquals(sessionUrl: String, newUrl: String): Boolean {

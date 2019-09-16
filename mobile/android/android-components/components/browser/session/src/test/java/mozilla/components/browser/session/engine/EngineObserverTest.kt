@@ -233,6 +233,21 @@ class EngineObserverTest {
     }
 
     @Test
+    fun engineObserverClearsWebAppManifestIfNewPageStartsLoading() {
+        val session = Session("https://www.mozilla.org")
+        val manifest = WebAppManifest(name = "Mozilla", startUrl = "https://mozilla.org")
+
+        val observer = EngineObserver(session)
+        observer.onWebAppManifestLoaded(manifest)
+
+        assertEquals(manifest, session.webAppManifest)
+
+        observer.onLocationChange("https://getpocket.com")
+
+        assertNull(session.webAppManifest)
+    }
+
+    @Test
     fun engineObserverPassingHitResult() {
         val session = Session("https://www.mozilla.org")
         val observer = EngineObserver(session)
