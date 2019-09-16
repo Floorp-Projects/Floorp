@@ -1184,7 +1184,7 @@ static bool IsItemProbablyActive(nsDisplayItem* aItem,
     }
     case DisplayItemType::TYPE_FILTER: {
       nsDisplayFilters* filters = static_cast<nsDisplayFilters*>(aItem);
-      return filters->CanCreateWebRenderCommands(aDisplayListBuilder);
+      return filters->CanCreateWebRenderCommands();
     }
     default:
       // TODO: handle other items?
