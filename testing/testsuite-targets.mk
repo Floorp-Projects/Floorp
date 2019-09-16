@@ -114,6 +114,7 @@ endif
 
 TEST_PKGS_TARGZ := \
   common \
+  condprof \
   cppunittest \
   mochitest \
   reftest \

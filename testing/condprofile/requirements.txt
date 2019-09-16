@@ -1,0 +1,7 @@
+./mozfile
+./mozprofile
+./mozdevice
+
+arsenic==19.1
+requests==2.22.0
+pyyaml==5.1.2
