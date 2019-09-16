@@ -1748,7 +1748,8 @@ class GFX2D_API Factory {
 #ifdef MOZ_WIDGET_ANDROID
   static already_AddRefed<ScaledFont> CreateScaledFontForFreeTypeFont(
       const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
-      cairo_scaled_font_t* aScaledFont, RefPtr<SharedFTFace> aFace);
+      cairo_scaled_font_t* aScaledFont, RefPtr<SharedFTFace> aFace,
+      bool aApplySyntheticBold = false);
 #endif
 
   /**

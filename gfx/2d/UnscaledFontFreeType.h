@@ -48,6 +48,11 @@ class UnscaledFontFreeType : public UnscaledFont {
       Float aGlyphSize, const uint8_t* aInstanceData,
       uint32_t aInstanceDataLength, const FontVariation* aVariations,
       uint32_t aNumVariations) override;
+
+  already_AddRefed<ScaledFont> CreateScaledFontFromWRFont(
+      Float aGlyphSize, const wr::FontInstanceOptions* aOptions,
+      const wr::FontInstancePlatformOptions* aPlatformOptions,
+      const FontVariation* aVariations, uint32_t aNumVariations) override;
 #endif
 
  protected:

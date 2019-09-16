@@ -642,9 +642,10 @@ already_AddRefed<ScaledFont> Factory::CreateScaledFontForFontconfigFont(
 #ifdef MOZ_WIDGET_ANDROID
 already_AddRefed<ScaledFont> Factory::CreateScaledFontForFreeTypeFont(
     const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
-    cairo_scaled_font_t* aScaledFont, RefPtr<SharedFTFace> aFace) {
-  return MakeAndAddRef<ScaledFontFreeType>(aScaledFont, std::move(aFace),
-                                           aUnscaledFont, aSize);
+    cairo_scaled_font_t* aScaledFont, RefPtr<SharedFTFace> aFace,
+    bool aApplySyntheticBold) {
+  return MakeAndAddRef<ScaledFontFreeType>(
+      aScaledFont, std::move(aFace), aUnscaledFont, aSize, aApplySyntheticBold);
 }
 #endif
 

@@ -80,11 +80,6 @@ bool gfxGraphiteShaper::ShapeText(DrawTarget* aDrawTarget,
                                   uint32_t aLength, Script aScript,
                                   bool aVertical, RoundingFlags aRounding,
                                   gfxShapedText* aShapedText) {
-  // some font back-ends require this in order to get proper hinted metrics
-  if (!mFont->SetupCairoFont(aDrawTarget)) {
-    return false;
-  }
-
   const gfxFontStyle* style = mFont->GetStyle();
 
   if (!mGrFont) {
