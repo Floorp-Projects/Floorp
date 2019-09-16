@@ -704,23 +704,9 @@ var gIdentityHandler = {
   },
 
   /**
-   * Updates the identity block user interface with the data from this object.
+   * Updates the security identity in the identity block.
    */
-  refreshIdentityBlock() {
-    if (!this._identityBox) {
-      return;
-    }
-
-    // If this condition is true, the URL bar will have an "invalid"
-    // pageproxystate, which will hide the security indicators. Thus, we can
-    // safely avoid updating the security UI.
-    //
-    // This will also filter out intermediate about:blank loads to avoid
-    // flickering the identity block and doing unnecessary work.
-    if (this._hasInvalidPageProxyState()) {
-      return;
-    }
-
+  _refreshIdentityIcons() {
     let icon_label = "";
     let tooltip = "";
     let icon_country_label = "";
@@ -834,12 +820,6 @@ var gIdentityHandler = {
       }
     }
 
-    // Hide the shield icon if it is a chrome page.
-    this._trackingProtectionIconContainer.classList.toggle(
-      "chromeUI",
-      this._isSecureInternalUI
-    );
-
     if (this._isCertUserOverridden) {
       this._identityBox.classList.add("certUserOverridden");
       // Cert is trusted because of a security exception, verifier is a special string.
@@ -848,6 +828,43 @@ var gIdentityHandler = {
       );
     }
 
+    // Gray lock icon for secure connections if pref set
+    this._updateAttribute(
+      this._identityIcon,
+      "lock-icon-gray",
+      this._useGrayLockIcon
+    );
+
+    // Push the appropriate strings out to the UI
+    this._identityIcon.setAttribute("tooltiptext", tooltip);
+
+    if (this._pageExtensionPolicy) {
+      let extensionName = this._pageExtensionPolicy.name;
+      this._identityIcon.setAttribute(
+        "tooltiptext",
+        gNavigatorBundle.getFormattedString("identity.extension.tooltip", [
+          extensionName,
+        ])
+      );
+    }
+
+    this._identityIconLabels.setAttribute("tooltiptext", tooltip);
+    this._identityIconLabel.setAttribute("value", icon_label);
+    this._identityIconCountryLabel.setAttribute("value", icon_country_label);
+    // Set cropping and direction
+    this._identityIconLabel.setAttribute(
+      "crop",
+      icon_country_label ? "end" : "center"
+    );
+    this._identityIconLabel.parentNode.style.direction = icon_labels_dir;
+    // Hide completely if the organization label is empty
+    this._identityIconLabel.parentNode.collapsed = !icon_label;
+  },
+
+  /**
+   * Updates the permissions block in the identity block.
+   */
+  _refreshPermissionIcons() {
     let permissionAnchors = this._permissionAnchors;
 
     // hide all permission icons
@@ -889,38 +906,35 @@ var gIdentityHandler = {
       let icon = permissionAnchors.popup;
       icon.setAttribute("showing", "true");
     }
+  },
 
-    // Gray lock icon for secure connections if pref set
-    this._updateAttribute(
-      this._identityIcon,
-      "lock-icon-gray",
-      this._useGrayLockIcon
-    );
-
-    // Push the appropriate strings out to the UI
-    this._identityIcon.setAttribute("tooltiptext", tooltip);
-
-    if (this._pageExtensionPolicy) {
-      let extensionName = this._pageExtensionPolicy.name;
-      this._identityIcon.setAttribute(
-        "tooltiptext",
-        gNavigatorBundle.getFormattedString("identity.extension.tooltip", [
-          extensionName,
-        ])
-      );
+  /**
+   * Updates the identity block user interface with the data from this object.
+   */
+  refreshIdentityBlock() {
+    if (!this._identityBox) {
+      return;
     }
 
-    this._identityIconLabels.setAttribute("tooltiptext", tooltip);
-    this._identityIconLabel.setAttribute("value", icon_label);
-    this._identityIconCountryLabel.setAttribute("value", icon_country_label);
-    // Set cropping and direction
-    this._identityIconLabel.setAttribute(
-      "crop",
-      icon_country_label ? "end" : "center"
+    // If this condition is true, the URL bar will have an "invalid"
+    // pageproxystate, which will hide the security indicators. Thus, we can
+    // safely avoid updating the security UI.
+    //
+    // This will also filter out intermediate about:blank loads to avoid
+    // flickering the identity block and doing unnecessary work.
+    if (this._hasInvalidPageProxyState()) {
+      return;
+    }
+
+    this._refreshIdentityIcons();
+
+    this._refreshPermissionIcons();
+
+    // Hide the shield icon if it is a chrome page.
+    this._trackingProtectionIconContainer.classList.toggle(
+      "chromeUI",
+      this._isSecureInternalUI
     );
-    this._identityIconLabel.parentNode.style.direction = icon_labels_dir;
-    // Hide completely if the organization label is empty
-    this._identityIconLabel.parentNode.collapsed = !icon_label;
   },
 
   /**
