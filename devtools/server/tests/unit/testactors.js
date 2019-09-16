@@ -119,6 +119,7 @@ function TestTargetActor(connection, global) {
       );
     },
   });
+  this.dbg = this.makeDebugger();
 }
 
 TestTargetActor.prototype = {

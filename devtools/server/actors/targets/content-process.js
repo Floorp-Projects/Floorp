@@ -108,6 +108,16 @@ const ContentProcessTargetActor = ActorClassWithSpec(contentProcessTargetSpec, {
     return this._sources;
   },
 
+  /*
+   * Return a Debugger instance or create one if there is none yet
+   */
+  get dbg() {
+    if (!this._dbg) {
+      this._dbg = this.makeDebugger();
+    }
+    return this._dbg;
+  },
+
   form: function() {
     if (!this._consoleActor) {
       this._consoleActor = new WebConsoleActor(this.conn, this);
@@ -184,6 +194,11 @@ const ContentProcessTargetActor = ActorClassWithSpec(contentProcessTargetSpec, {
     if (this._sources) {
       this._sources.destroy();
       this._sources = null;
+    }
+
+    if (this._dbg) {
+      this._dbg.disable();
+      this._dbg = null;
     }
   },
 });

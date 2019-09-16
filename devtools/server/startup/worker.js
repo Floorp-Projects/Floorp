@@ -71,18 +71,26 @@ this.addEventListener("message", function(event) {
 
       let sources = null;
 
+      const makeWorkerDebugger = makeDebugger.bind(null, {
+        findDebuggees: () => {
+          return [this.global];
+        },
+
+        shouldAddNewGlobalAsDebuggee: () => {
+          return true;
+        },
+      });
+
       const parent = {
         actorID: packet.id,
 
-        makeDebugger: makeDebugger.bind(null, {
-          findDebuggees: () => {
-            return [this.global];
-          },
-
-          shouldAddNewGlobalAsDebuggee: () => {
-            return true;
-          },
-        }),
+        get dbg() {
+          if (!this._dbg) {
+            this._dbg = makeWorkerDebugger();
+          }
+          return this._dbg;
+        },
+        makeDebugger: makeWorkerDebugger,
 
         get sources() {
           if (sources === null) {
