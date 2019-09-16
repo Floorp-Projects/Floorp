@@ -22,7 +22,6 @@ exclude: true
   ([bug 1576730]({{bugzilla}}1576730))
 - Added overloads of [`GeckoSession.loadUri()`][71.6] that accept a map of 
   additional HTTP request headers.
-- Added support for exposing the content blocking log in [`ContentBlockingController`][71.7].({{bugzilla}}1580201)
 
 [71.1]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onBooleanScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
 [71.2]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onLongScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
@@ -30,7 +29,6 @@ exclude: true
 [71.4]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onHistogram-org.mozilla.geckoview.RuntimeTelemetry.Metric-
 [71.5]: {{javadoc_uri}}/RuntimeTelemetry.Metric.html
 [71.6]: {{javadoc_uri}}/GeckoSession.html#loadUri-java.lang.String-java.io.File-java.util.Map-
-[71.7]: {{javadoc_uri}}/ContentBlockingController.html
 
 ## v70
 - Added API for session context assignment
@@ -353,4 +351,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 6e353ab446ba296fd348d123651d024d21a15651
+[api-version]: 0dfb569344bf7d3675f7b208707925b880b9eaf3
