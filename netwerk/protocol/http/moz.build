@@ -141,7 +141,6 @@ LOCAL_INCLUDES += [
 ]
 
 EXTRA_JS_MODULES += [
-    'UAOverridesBootstrapper.jsm',
     'WellKnownOpportunisticUtils.jsm',
 ]
 
