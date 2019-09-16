@@ -1215,9 +1215,8 @@ bool wasm::EnsureBuiltinThunksInitialized() {
   MOZ_ASSERT(masm.callSiteTargets().empty());
   MOZ_ASSERT(masm.trapSites().empty());
 
-  jit::FlushICache(thunks->codeBase, thunks->codeSize);
-  if (!ExecutableAllocator::makeExecutable(thunks->codeBase,
-                                           thunks->codeSize)) {
+  if (!ExecutableAllocator::makeExecutableAndFlushICache(thunks->codeBase,
+                                                         thunks->codeSize)) {
     return false;
   }
 
