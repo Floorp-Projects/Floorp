@@ -13,8 +13,8 @@ job-defaults:
     description: release partners bouncer submission job
     worker-type:
         by-release-level:
-            production: scriptworker-prov-v1/bouncer-v1
-            staging: scriptworker-prov-v1/bouncer-dev
+            production: scriptworker-k8s/gecko-3-bouncer
+            staging: scriptworker-k8s/gecko-1-bouncer
     worker:
         implementation: bouncer-submission
     scopes:
