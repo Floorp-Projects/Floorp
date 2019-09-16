@@ -163,12 +163,6 @@ interface nsISSLSocketControl : nsISupports {
     attribute ACString esniTxt;
 
     /**
-     * If the server certificate is present, serverCertIsBuiltInRoot is true if
-     * the root certificate for the server certificate is built in.
-     */
-    readonly attribute boolean serverRootCertIsBuiltInRoot;
-
-    /**
      * True iff the connection was resumed using the resumption token.
      */
     readonly attribute boolean resumed;
