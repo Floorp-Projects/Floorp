@@ -4,11 +4,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!ENTITY app.name.short "layoutdebug">
-<!ENTITY app.name.long "Layout Debugger">
-<!ENTITY app.version "prototype_a">
-<!ENTITY app.author "mozilla.org">
-
 <!ENTITY ldb.MainWindow.title "Layout Debugger">
 
 <!ENTITY ldb.BackButton.label "Back">
