@@ -115,7 +115,7 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
     // We may have been canceled already, either by on-modify-request
     // listeners or by load group observers; in that case, don't create IPDL
     // connection. See nsHttpChannel::AsyncOpen().
-     return mStatus;
+    return mStatus;
   }
 
   gHttpHandler->OnOpeningDocumentRequest(this);
@@ -317,7 +317,9 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
 
   if (aInit) {
     HttpBaseChannel::ReplacementChannelConfig config(*aInit);
-    HttpBaseChannel::ConfigureReplacementChannel(newChannel, config);
+    HttpBaseChannel::ConfigureReplacementChannel(
+        newChannel, config,
+        HttpBaseChannel::ConfigureReason::DocumentChannelReplacement);
   }
 
   if (aContentDisposition) {
