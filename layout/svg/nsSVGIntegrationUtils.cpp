@@ -1199,6 +1199,15 @@ bool nsSVGIntegrationUtils::BuildWebRenderFilters(
                                                  aWrFilters, aPostFilterClip);
 }
 
+bool nsSVGIntegrationUtils::CanCreateWebRenderFiltersForFrame(
+    nsIFrame* aFrame) {
+  WrFiltersHolder wrFilters;
+  Maybe<nsRect> filterClip;
+  auto filterChain = aFrame->StyleEffects()->mFilters.AsSpan();
+  return CreateWebRenderCSSFilters(filterChain, aFrame, wrFilters) ||
+         BuildWebRenderFilters(aFrame, filterChain, wrFilters, filterClip);
+}
+
 class PaintFrameCallback : public gfxDrawingCallback {
  public:
   PaintFrameCallback(nsIFrame* aFrame, const nsSize aPaintServerSize,

@@ -1505,8 +1505,7 @@ AnimatedGeometryRoot* nsDisplayListBuilder::FindAnimatedGeometryRootFor(
 
 void nsDisplayListBuilder::UpdateShouldBuildAsyncZoomContainer() {
   Document* document = mReferenceFrame->PresContext()->Document();
-  mBuildAsyncZoomContainer =
-      nsLayoutUtils::AllowZoomingForDocument(document);
+  mBuildAsyncZoomContainer = nsLayoutUtils::AllowZoomingForDocument(document);
 }
 
 void nsDisplayListBuilder::UpdateShouldBuildBackdropRootContainer() {
@@ -10227,13 +10226,7 @@ bool nsDisplayBackdropRootContainer::CreateWebRenderCommands(
 /* static */
 bool nsDisplayBackdropFilters::CanCreateWebRenderCommands(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) {
-  WrFiltersHolder wrFilters;
-  Maybe<nsRect> filterClip;
-  auto filterChain = aFrame->StyleEffects()->mBackdropFilters.AsSpan();
-  return nsSVGIntegrationUtils::CreateWebRenderCSSFilters(filterChain, aFrame,
-                                                          wrFilters) ||
-         nsSVGIntegrationUtils::BuildWebRenderFilters(aFrame, filterChain,
-                                                      wrFilters, filterClip);
+  return nsSVGIntegrationUtils::CanCreateWebRenderFiltersForFrame(aFrame);
 }
 
 bool nsDisplayBackdropFilters::CreateWebRenderCommands(
@@ -10370,13 +10363,7 @@ void nsDisplayFilters::PaintAsLayer(nsDisplayListBuilder* aBuilder,
 }
 
 bool nsDisplayFilters::CanCreateWebRenderCommands() {
-  WrFiltersHolder wrFilters;
-  Maybe<nsRect> filterClip;
-  auto filterChain = mFrame->StyleEffects()->mFilters.AsSpan();
-  return nsSVGIntegrationUtils::CreateWebRenderCSSFilters(filterChain, mFrame,
-                                                          wrFilters) ||
-         nsSVGIntegrationUtils::BuildWebRenderFilters(mFrame, filterChain,
-                                                      wrFilters, filterClip);
+  return nsSVGIntegrationUtils::CanCreateWebRenderFiltersForFrame(mFrame);
 }
 
 bool nsDisplayFilters::CreateWebRenderCommands(
