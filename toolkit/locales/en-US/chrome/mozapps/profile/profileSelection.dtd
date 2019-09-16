@@ -7,12 +7,8 @@
 
 <!ENTITY            windowtitle.label      "&brandShortName; - Choose User Profile">
 
-<!ENTITY            profilename.label      "Profile Name:">
-
 <!ENTITY            start.label            "Start &brandShortName;">
 <!ENTITY            exit.label             "Exit">
-
-<!ENTITY            availprofiles.label    "Available Profiles">
 
 <!ENTITY            newButton.label        "Create Profile…">
 <!ENTITY            newButton.accesskey    "C">

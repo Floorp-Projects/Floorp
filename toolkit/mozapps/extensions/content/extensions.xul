@@ -11,13 +11,6 @@
 <?xml-stylesheet href="chrome://global/content/tabprompts.css" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin/tabprompts.css" type="text/css"?>
 
-<!DOCTYPE page [
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
-%brandDTD;
-<!ENTITY % extensionsDTD SYSTEM "chrome://mozapps/locale/extensions/extensions.dtd">
-%extensionsDTD;
-]>
-
 <!-- @CSP: Soon, about:addons will not be implemented using XUL anymore (see Bug 1558982).
    - Until then we have to whitelist the following things:
    - *) the 'oncommand' handler for cmd_focusSearch within extensions.xul, using
