@@ -519,6 +519,12 @@ renaming_overrides_prefixing = true
   inline static StyleAngle Zero();
   inline float ToDegrees() const;
   inline double ToRadians() const;
+  StyleAngle operator+(const StyleAngle& aAngle) const {
+    return StyleAngle{_0 + aAngle._0};
+  }
+  StyleAngle operator-(const StyleAngle& aAngle) const {
+    return StyleAngle{_0 - aAngle._0};
+  }
 """
 
 "TextOverflow" = """
