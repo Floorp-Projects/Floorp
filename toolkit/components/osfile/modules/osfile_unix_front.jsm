@@ -719,9 +719,15 @@
         return;
       }
 
-      // Call File.copy and File.remove as a fallback in all the cases
-      // where UnixFile.rename function fails
-      // for instance, if we are moving data from a device to another one
+      // If the error is not EXDEV ("not on the same device"),
+      // or if the error is EXDEV and we have passed an option
+      // that prevents us from crossing devices, throw the
+      // error.
+      if (ctypes.errno != Const.EXDEV || options.noCopy) {
+        throw new File.Error("move", ctypes.errno, sourcePath);
+      }
+
+      // Otherwise, copy and remove.
       File.copy(sourcePath, destPath, options);
       // FIXME: Clean-up in case of copy error?
       File.remove(sourcePath);
