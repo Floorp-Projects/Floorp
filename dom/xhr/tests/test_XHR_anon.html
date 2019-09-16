@@ -23,17 +23,17 @@ document.cookie = "foo=bar";
 let am = {
   authMgr: null,
 
-  init: function() {
+  init() {
     this.authMgr = SpecialPowers.Cc["@mozilla.org/network/http-auth-manager;1"]
                                 .getService(SpecialPowers.Ci.nsIHttpAuthManager)
   },
 
-  addIdentity: function() {
+  addIdentity() {
     this.authMgr.setAuthIdentity("http", "example.com", -1, "basic", "testrealm",
                                  "", "example.com", "user1", "password1");
   },
 
-  tearDown: function() {
+  tearDown() {
     this.authMgr.clearAll();
   },
 }
