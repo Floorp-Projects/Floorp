@@ -999,6 +999,8 @@ var gIdentityHandler = {
     } else if (this._isSecureConnection) {
       connection = "secure";
       customRoot = this._hasCustomRoot();
+    } else if (this._isAboutCertErrorPage) {
+      connection = "cert-error-page";
     }
 
     // Determine if there are insecure login forms.

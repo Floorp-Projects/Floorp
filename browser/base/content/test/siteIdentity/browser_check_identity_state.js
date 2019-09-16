@@ -25,6 +25,19 @@ function getConnectionState() {
   return document.getElementById("identity-popup").getAttribute("connection");
 }
 
+function getSecurityConnectionBG() {
+  // Get the background image of the security connection.
+  document.getElementById("identity-box").click();
+  gIdentityHandler.refreshIdentityPopup();
+  return gBrowser.ownerGlobal
+    .getComputedStyle(
+      document
+        .getElementById("identity-popup-mainView")
+        .getElementsByClassName("identity-popup-security-connection")[0]
+    )
+    .getPropertyValue("background-image");
+}
+
 function getReaderModeURL() {
   // Gets the reader mode URL from "identity-popup mainView panel header span"
   document.getElementById("identity-box").click();
@@ -333,15 +346,31 @@ async function noCertErrorTest(secureCheck) {
   let promise = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
   BrowserTestUtils.loadURI(gBrowser, "https://nocert.example.com/");
   await promise;
-  is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
-  is(getConnectionState(), "not-secure", "Connection should be file");
+  is(
+    getIdentityMode(),
+    "certErrorPage",
+    "Identity should be the cert error page."
+  );
+  is(
+    getConnectionState(),
+    "cert-error-page",
+    "Connection should be the cert error page."
+  );
 
   gBrowser.selectedTab = oldTab;
   is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
 
   gBrowser.selectedTab = newTab;
-  is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
-  is(getConnectionState(), "not-secure", "Connection should be file");
+  is(
+    getIdentityMode(),
+    "certErrorPage",
+    "Identity should be the cert error page."
+  );
+  is(
+    getConnectionState(),
+    "cert-error-page",
+    "Connection should be the cert error page."
+  );
 
   gBrowser.removeTab(newTab);
   gBrowser.removeTab(oldTab);
@@ -376,8 +405,16 @@ async function noCertErrorFromNavigationTest(secureCheck) {
     true,
     "Should be an about:certerror"
   );
-  is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
-  is(getConnectionState(), "not-secure", "Connection should be file");
+  is(
+    getIdentityMode(),
+    "certErrorPage",
+    "Identity should be the cert error page."
+  );
+  is(
+    getConnectionState(),
+    "cert-error-page",
+    "Connection should be the cert error page."
+  );
 
   gBrowser.removeTab(newTab);
 
@@ -387,6 +424,22 @@ async function noCertErrorFromNavigationTest(secureCheck) {
 add_task(async function test_about_net_error_uri_from_navigation_tab() {
   await noCertErrorFromNavigationTest(true);
   await noCertErrorFromNavigationTest(false);
+});
+
+add_task(async function noCertErrorSecurityConnectionBGTest() {
+  let tab = BrowserTestUtils.addTab(gBrowser);
+  gBrowser.selectedTab = tab;
+  let promise = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
+  BrowserTestUtils.loadURI(gBrowser, "https://nocert.example.com/");
+  await promise;
+
+  is(
+    getSecurityConnectionBG(),
+    `url("chrome://browser/skin/connection-mixed-passive-loaded.svg")`,
+    "Security connection should show a warning lock icon."
+  );
+
+  BrowserTestUtils.removeTab(tab);
 });
 
 async function aboutUriTest(secureCheck) {

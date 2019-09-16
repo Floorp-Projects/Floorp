@@ -29,7 +29,7 @@ const kTestcases = [
   {
     uri: "https://expired.example.com",
     expectErrorPage: true,
-    expectedIdentityMode: "unknownIdentity",
+    expectedIdentityMode: "certErrorPage",
   },
 ];
 

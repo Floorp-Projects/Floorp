@@ -29,7 +29,7 @@
 
           <vbox class="identity-popup-security-connection">
             <description class="identity-popup-connection-not-secure"
-                         when-connection="not-secure secure-cert-user-overridden secure-custom-root">&identity.connectionNotSecure2;</description>
+                         when-connection="not-secure secure-cert-user-overridden secure-custom-root cert-error-page">&identity.connectionNotSecure2;</description>
             <description class="identity-popup-connection-secure"
                          when-connection="secure secure-ev">&identity.connectionSecure3;</description>
             <description when-connection="chrome">&identity.connectionInternal;</description>
@@ -57,13 +57,13 @@
         </vbox>
         <button id="identity-popup-security-expander"
                 class="identity-popup-expander"
-                when-connection="not-secure secure secure-ev secure-cert-user-overridden"
+                when-connection="not-secure secure secure-ev secure-cert-user-overridden cert-error-page"
                 oncommand="gIdentityHandler.showSecuritySubView(); gIdentityHandler.recordClick('security_subview_btn');"/>
       </hbox>
 
       <!-- Permissions Section -->
       <hbox class="identity-popup-section"
-            when-connection="not-secure secure secure-ev secure-cert-user-overridden file extension">
+            when-connection="not-secure secure secure-ev secure-cert-user-overridden file extension cert-error-page">
         <vbox id="identity-popup-permissions-content" flex="1" role="group"
               aria-labelledby="identity-popup-permissions-headline">
           <hbox id="identity-popup-permissions-header" align="center">
@@ -94,7 +94,7 @@
       <vbox class="identity-popup-security-content">
         <vbox class="identity-popup-security-connection">
           <description class="identity-popup-connection-not-secure"
-                       when-connection="not-secure secure-cert-user-overridden">&identity.connectionNotSecureSecurityView;</description>
+                       when-connection="not-secure secure-cert-user-overridden cert-error-page">&identity.connectionNotSecureSecurityView;</description>
           <description class="identity-popup-connection-secure"
                        when-connection="secure secure-ev">&identity.connectionVerified3;</description>
         </vbox>
@@ -123,7 +123,7 @@
                 oncommand="gIdentityHandler.removeCertException()"/>
 
         <!-- Connection is Not Secure -->
-        <description when-connection="not-secure"
+        <description when-connection="not-secure cert-error-page"
                      and-when-loginforms="secure">&identity.description.insecure;</description>
 
         <!-- Insecure login forms -->
