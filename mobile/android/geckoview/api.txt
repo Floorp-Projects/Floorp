@@ -1277,7 +1277,7 @@ package org.mozilla.geckoview {
 
   @UiThread public static interface WebExtension.MessageDelegate {
     method @Nullable default public void onConnect(@NonNull WebExtension.Port);
-    method @Nullable default public GeckoResult<Object> onMessage(@NonNull Object, @NonNull WebExtension.MessageSender);
+    method @Nullable default public GeckoResult<Object> onMessage(@NonNull String, @NonNull Object, @NonNull WebExtension.MessageSender);
   }
 
   @UiThread public static class WebExtension.MessageSender {
