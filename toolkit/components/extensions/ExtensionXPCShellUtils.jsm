@@ -955,6 +955,16 @@ var ExtensionTestUtils = {
     return new ExternallyInstalledWrapper(this.currentScope, id);
   },
 
+  failOnSchemaWarnings(warningsAsErrors = true) {
+    let prefName = "extensions.webextensions.warnings-as-errors";
+    Services.prefs.setBoolPref(prefName, warningsAsErrors);
+    if (!warningsAsErrors) {
+      this.currentScope.registerCleanupFunction(() => {
+        Services.prefs.setBoolPref(prefName, true);
+      });
+    }
+  },
+
   get remoteContentScripts() {
     return REMOTE_CONTENT_SCRIPTS;
   },

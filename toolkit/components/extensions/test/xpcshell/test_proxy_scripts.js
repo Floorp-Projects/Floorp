@@ -57,8 +57,11 @@ async function testProxyScript(script, expected = {}) {
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
+  // proxy.register and proxy.onProxyError are deprecated - bug 1443259.
+  ExtensionTestUtils.failOnSchemaWarnings(false);
   await extension.startup();
   await extension.awaitMessage("ready");
+  ExtensionTestUtils.failOnSchemaWarnings(true);
 
   let errorWait = extension.awaitMessage("proxy-error-received");
 
@@ -82,8 +85,11 @@ async function testProxyScript(script, expected = {}) {
       "Error should include stack trace"
     );
   }
+  // proxy.unregister is deprecated - bug 1443259.
+  ExtensionTestUtils.failOnSchemaWarnings(false);
   extension.sendMessage("unregister-proxy-script");
   await extension.awaitFinish("proxy");
+  ExtensionTestUtils.failOnSchemaWarnings(true);
   await extension.unload();
 }
 
@@ -162,8 +168,11 @@ async function getExtension(proxyResult) {
     },
   };
   let extension = ExtensionTestUtils.loadExtension(extensionData);
+  // proxy.register is deprecated - bug 1443259.
+  ExtensionTestUtils.failOnSchemaWarnings(false);
   await extension.startup();
   await extension.awaitMessage("ready");
+  ExtensionTestUtils.failOnSchemaWarnings(true);
   return extension;
 }
 

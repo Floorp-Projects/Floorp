@@ -54,6 +54,7 @@ async function testCloseMessageWithButton(warningMessage, doc) {
 }
 
 async function installExtensionWithWarning(doc) {
+  await pushPref("extensions.webextensions.warnings-as-errors", false);
   await installTemporaryExtensionFromXPI(
     {
       id: EXTENSION_ID,
@@ -65,6 +66,7 @@ async function installExtensionWithWarning(doc) {
     },
     doc
   );
+  await SpecialPowers.popPrefEnv();
 
   info("Wait until a debug target item appears");
   await waitUntil(() => findDebugTargetByText(EXTENSION_NAME, doc));

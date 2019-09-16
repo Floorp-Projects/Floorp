@@ -654,7 +654,9 @@ add_task(async function test_non_gecko_bss_install() {
     manifest,
     useAddonManager: "temporary",
   });
+  ExtensionTestUtils.failOnSchemaWarnings(false);
   await extension.startup();
+  ExtensionTestUtils.failOnSchemaWarnings(true);
 
   const addon = await promiseAddonByID(ID);
   notEqual(addon, null, "Add-on is installed");

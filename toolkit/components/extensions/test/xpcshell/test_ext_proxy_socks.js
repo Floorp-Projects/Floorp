@@ -543,8 +543,11 @@ add_task(async function test_webRequest_socks_proxy() {
     },
   });
 
+  // proxy.register is deprecated - bug 1443259.
+  ExtensionTestUtils.failOnSchemaWarnings(false);
   await handlingExt.startup();
   await handlingExt.awaitMessage("pac-ready");
+  ExtensionTestUtils.failOnSchemaWarnings(true);
 
   let contentPage = await ExtensionTestUtils.loadContentPage(
     `http://localhost/`
