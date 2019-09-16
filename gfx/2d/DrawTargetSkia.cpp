@@ -911,29 +911,6 @@ void DrawTargetSkia::Fill(const Path* aPath, const Pattern& aPattern,
   mCanvas->drawPath(skiaPath->GetPath(), paint.mPaint);
 }
 
-bool DrawTargetSkia::ShouldLCDRenderText(FontType aFontType,
-                                         AntialiasMode aAntialiasMode) {
-  // Only allow subpixel AA if explicitly permitted.
-  if (!GetPermitSubpixelAA()) {
-    return false;
-  }
-
-  if (aAntialiasMode == AntialiasMode::DEFAULT) {
-    switch (aFontType) {
-      case FontType::MAC:
-      case FontType::GDI:
-      case FontType::DWRITE:
-      case FontType::FONTCONFIG:
-        return true;
-      case FontType::FREETYPE:
-      default:
-        // TODO: Figure out what to do for the other platforms.
-        return false;
-    }
-  }
-  return (aAntialiasMode == AntialiasMode::SUBPIXEL);
-}
-
 #ifdef MOZ_WIDGET_COCOA
 static inline CGAffineTransform GfxMatrixToCGAffineTransform(const Matrix& m) {
   CGAffineTransform t;
@@ -1321,56 +1298,14 @@ void DrawTargetSkia::DrawGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
 
   SkFont font(sk_ref_sp(typeface), SkFloatToScalar(skiaFont->mSize));
 
-  bool useSubpixelAA = ShouldLCDRenderText(aFont->GetType(), aaMode);
+  bool useSubpixelAA =
+      GetPermitSubpixelAA() &&
+      (aaMode == AntialiasMode::DEFAULT || aaMode == AntialiasMode::SUBPIXEL);
   font.setEdging(useSubpixelAA ? SkFont::Edging::kSubpixelAntiAlias
                                : (aaEnabled ? SkFont::Edging::kAntiAlias
                                             : SkFont::Edging::kAlias));
 
-  bool useSubpixelText = true;
-  switch (aFont->GetType()) {
-    case FontType::FREETYPE:
-    case FontType::FONTCONFIG:
-      // SkFontHost_cairo does not support subpixel text positioning,
-      // so only enable it for other font hosts.
-      useSubpixelText = false;
-      break;
-    case FontType::MAC:
-      if (aaMode == AntialiasMode::GRAY) {
-        // Normally, Skia enables LCD FontSmoothing which creates thicker fonts
-        // and also enables subpixel AA. CoreGraphics without font smoothing
-        // explicitly creates thinner fonts and grayscale AA.
-        // CoreGraphics doesn't support a configuration that produces thicker
-        // fonts with grayscale AA as LCD Font Smoothing enables or disables
-        // both. However, Skia supports it by enabling font smoothing (producing
-        // subpixel AA) and converts it to grayscale AA. Since Skia doesn't
-        // support subpixel AA on transparent backgrounds, we still want font
-        // smoothing for the thicker fonts, even if it is grayscale AA.
-        //
-        // With explicit Grayscale AA (from -moz-osx-font-smoothing:grayscale),
-        // we want to have grayscale AA with no smoothing at all. This means
-        // disabling the LCD font smoothing behaviour.
-        // To accomplish this we have to explicitly disable hinting,
-        // and disable LCDRenderText.
-        font.setHinting(kNo_SkFontHinting);
-      }
-      break;
-#ifdef XP_WIN
-    case FontType::DWRITE: {
-      ScaledFontDWrite* dwriteFont = static_cast<ScaledFontDWrite*>(aFont);
-      if (dwriteFont->ForceGDIMode()) {
-        font.setEmbeddedBitmaps(true);
-        useSubpixelText = false;
-      } else {
-        font.setEmbeddedBitmaps(dwriteFont->UseEmbeddedBitmaps());
-      }
-      break;
-    }
-#endif
-    default:
-      break;
-  }
-
-  font.setSubpixel(useSubpixelText);
+  skiaFont->SetupSkFontDrawOptions(font);
 
   // Limit the amount of internal batch allocations Skia does.
   const uint32_t kMaxGlyphBatchSize = 8192;

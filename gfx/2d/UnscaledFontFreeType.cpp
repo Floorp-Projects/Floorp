@@ -54,9 +54,11 @@ bool UnscaledFontFreeType::GetFontFileData(FontFileDataOutput aDataCallback,
   bool success = false;
   FT_ULong length = 0;
   // Request the SFNT file. This may not always succeed for all font types.
-  if (FT_Load_Sfnt_Table(mFace, 0, 0, nullptr, &length) == FT_Err_Ok) {
+  if (FT_Load_Sfnt_Table(mFace->GetFace(), 0, 0, nullptr, &length) ==
+      FT_Err_Ok) {
     uint8_t* fontData = new uint8_t[length];
-    if (FT_Load_Sfnt_Table(mFace, 0, 0, fontData, &length) == FT_Err_Ok) {
+    if (FT_Load_Sfnt_Table(mFace->GetFace(), 0, 0, fontData, &length) ==
+        FT_Err_Ok) {
       aDataCallback(fontData, length, 0, aBaton);
       success = true;
     }
@@ -85,6 +87,21 @@ bool UnscaledFontFreeType::GetWRFontDescriptor(WRFontDescriptorOutput aCb,
   aCb(reinterpret_cast<const uint8_t*>(mFile.data()), mFile.size(), mIndex,
       aBaton);
   return true;
+}
+
+RefPtr<SharedFTFace> UnscaledFontFreeType::InitFace() {
+  if (mFace) {
+    return mFace;
+  }
+  if (mFile.empty()) {
+    return nullptr;
+  }
+  mFace = Factory::NewSharedFTFace(nullptr, mFile.c_str(), mIndex);
+  if (!mFace) {
+    gfxWarning() << "Failed initializing FreeType face from filename";
+    return nullptr;
+  }
+  return mFace;
 }
 
 void UnscaledFontFreeType::GetVariationSettingsFromFace(
