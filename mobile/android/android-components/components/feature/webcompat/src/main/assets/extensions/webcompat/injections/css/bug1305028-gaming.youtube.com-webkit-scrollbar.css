@@ -1,0 +1,14 @@
+/**
+ * gaming.youtube.com - The vertical scrollbar displayed for the main pane is
+ * partially overlapped by the video itself
+ * Bug #1305028 - https://bugzilla.mozilla.org/show_bug.cgi?id=1305028
+ *
+ * The scrollbar in the main player area is overlapped by the player, making the
+ * design look broken. In Chrome, YouTube is using ::-webkit-scrollbar to style
+ * the bar to match their expectations, but this doesn't work in Firefox.
+ * To make it look less broken, we hide the scrollbar for the main video pane
+ * entirely.
+ */
+ytg-scroll-pane.ytg-watch-page {
+  scrollbar-width: none;
+}

@@ -120,6 +120,10 @@ projects:
     path: components/feature/qr
     description: 'A feature that provides functionality for scanning QR codes.'
     publish: true
+  feature-webcompat:
+    path: components/feature/webcompat
+    description: 'Feature that provides hotfixes for websites from Mozillas Web Compatibility team'
+    publish: true
   browser-awesomebar:
     path: components/browser/awesomebar
     description: 'A customizable awesomebar component for browsers.'

@@ -1,0 +1,16 @@
+/**
+ * discordapp.com - -webkit-scrollbar dependency causes visible white line
+ * Part of Bug #1432935 - https://bugzilla.mozilla.org/show_bug.cgi?id=1432935
+ * WebCompat issue #7919 - https://webcompat.com/issues/7919
+ *
+ * Discord depends on -webkit-scrollbar for styling and hiding their scrollbars
+ * in the UI. Previously, the scrollbars overlapped content permanently.
+ * However, this issue seems to be addressed now, but a small white line
+ * still remains. While Discord is working on this, let's get rid of these
+ * lines.
+ */
+.themeGhostHairline-DBD-2d .pad-29zQak,
+.themeGhostHairlineChannels-3G0x9_ .pad-29zQak {
+  width: 3px !important;
+  left: -3px !important;
+}
