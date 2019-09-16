@@ -3364,6 +3364,8 @@ public class GeckoSession implements Parcelable {
         * @return A {@link GeckoResult} which holds the returned GeckoSession. May be null, in
          *        which case the request for a new window by web content will fail. e.g.,
          *        <code>window.open()</code> will return null.
+         *        The implementation of onNewSession is responsible for maintaining a reference
+         *        to the returned object, to prevent it from being garbage collected.
         */
         @UiThread
         default @Nullable GeckoResult<GeckoSession> onNewSession(@NonNull GeckoSession session,
