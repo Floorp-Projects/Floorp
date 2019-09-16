@@ -47,6 +47,7 @@
 #identity-popup[connection=chrome] [when-connection~=chrome],
 #identity-popup[connection=file] [when-connection~=file],
 #identity-popup[connection=extension] [when-connection~=extension],
+#identity-popup[connection=cert-error-page] [when-connection~=cert-error-page],
 /* Show insecure login forms messages when needed. */
 #identity-popup[loginforms=insecure] [when-loginforms=insecure],
 /* Show weak cipher messages when needed. */
@@ -390,7 +391,8 @@
   -moz-context-properties: fill, fill-opacity;
 }
 
-#identity-popup[connection=secure-cert-user-overridden] .identity-popup-security-connection {
+#identity-popup[connection=secure-cert-user-overridden] .identity-popup-security-connection,
+#identity-popup[connection=cert-error-page] .identity-popup-security-connection {
   background-image: url(chrome://browser/skin/connection-mixed-passive-loaded.svg);
   fill: unset;
   -moz-context-properties: fill;
