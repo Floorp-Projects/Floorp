@@ -15,7 +15,6 @@
 #endif
 
 #ifdef USE_SKIA
-#  include "skia/include/core/SkFont.h"
 #  include "skia/include/core/SkPath.h"
 #  include "skia/include/core/SkTypeface.h"
 #endif
@@ -48,7 +47,6 @@ class ScaledFontBase : public ScaledFont {
 
 #ifdef USE_SKIA
   SkTypeface* GetSkTypeface();
-  virtual void SetupSkFontDrawOptions(SkFont& aFont) {}
 #endif
 
 #ifdef USE_CAIRO_SCALED_FONT

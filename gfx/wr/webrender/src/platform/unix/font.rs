@@ -16,7 +16,7 @@ use freetype::freetype::{FT_Fixed, FT_Matrix, FT_Set_Transform, FT_String, FT_UL
 use freetype::freetype::{FT_Err_Unimplemented_Feature};
 use freetype::freetype::{FT_LOAD_COLOR, FT_LOAD_DEFAULT, FT_LOAD_FORCE_AUTOHINT};
 use freetype::freetype::{FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH, FT_LOAD_NO_AUTOHINT};
-use freetype::freetype::{FT_LOAD_NO_BITMAP, FT_LOAD_NO_HINTING};
+use freetype::freetype::{FT_LOAD_NO_BITMAP, FT_LOAD_NO_HINTING, FT_LOAD_VERTICAL_LAYOUT};
 use freetype::freetype::{FT_FACE_FLAG_SCALABLE, FT_FACE_FLAG_FIXED_SIZES};
 use freetype::freetype::{FT_FACE_FLAG_MULTIPLE_MASTERS};
 use freetype::succeeded;
@@ -414,6 +414,9 @@ impl FontContext {
         }
         if !font.flags.contains(FontInstanceFlags::EMBEDDED_BITMAPS) {
             load_flags |= FT_LOAD_NO_BITMAP;
+        }
+        if font.flags.contains(FontInstanceFlags::VERTICAL_LAYOUT) {
+            load_flags |= FT_LOAD_VERTICAL_LAYOUT;
         }
 
         load_flags |= FT_LOAD_COLOR;
