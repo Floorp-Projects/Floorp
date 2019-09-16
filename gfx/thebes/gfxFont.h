@@ -1520,9 +1520,6 @@ class gfxFont {
   // when rendering to the given drawTarget.
   RoundingFlags GetRoundOffsetsToPixels(DrawTarget* aDrawTarget);
 
-  virtual bool ShouldHintMetrics() const { return true; }
-  virtual bool ShouldRoundXOffset(cairo_t* aCairo) const { return true; }
-
   // Font metrics
   struct Metrics {
     gfxFloat capHeight;
@@ -1689,8 +1686,12 @@ class gfxFont {
 
   gfxGlyphExtents* GetOrCreateGlyphExtents(int32_t aAppUnitsPerDevUnit);
 
+  // You need to call SetupCairoFont on aDrawTarget just before calling this.
   void SetupGlyphExtents(DrawTarget* aDrawTarget, uint32_t aGlyphID,
                          bool aNeedTight, gfxGlyphExtents* aExtents);
+
+  // This is called by the default Draw() implementation above.
+  virtual bool SetupCairoFont(DrawTarget* aDrawTarget) = 0;
 
   virtual bool AllowSubpixelAA() { return true; }
 
@@ -1860,6 +1861,11 @@ class gfxFont {
   // Return a cloned font resized and offset to simulate sub/superscript
   // glyphs. This does not add a reference to the returned font.
   gfxFont* GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel);
+
+  /**
+   * Return the reference cairo_t object from aDT.
+   */
+  static cairo_t* RefCairo(mozilla::gfx::DrawTarget* aDT);
 
  protected:
   virtual const Metrics& GetHorizontalMetrics() = 0;

@@ -304,6 +304,8 @@ enum class NativeSurfaceType : int8_t {
 
 enum class NativeFontType : int8_t {
   GDI_LOGFONT,
+  FREETYPE_FACE,
+  FONTCONFIG_PATTERN,
 };
 
 enum class FontStyle : int8_t { NORMAL, ITALIC, BOLD, BOLD_ITALIC };
