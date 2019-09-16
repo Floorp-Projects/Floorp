@@ -49,7 +49,8 @@ static bool Execute(JSContext* cx, MacroAssembler& masm) {
   if (!code) {
     return false;
   }
-  if (!ExecutableAllocator::makeExecutable(code->raw(), code->bufferSize())) {
+  if (!ExecutableAllocator::makeExecutableAndFlushICache(code->raw(),
+                                                         code->bufferSize())) {
     return false;
   }
 

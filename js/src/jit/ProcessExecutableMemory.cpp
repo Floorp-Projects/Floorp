@@ -709,7 +709,14 @@ bool js::jit::CanLikelyAllocateMoreExecutableMemory() {
 }
 
 bool js::jit::ReprotectRegion(void* start, size_t size,
-                              ProtectionSetting protection) {
+                              ProtectionSetting protection,
+                              MustFlushICache flushICache) {
+  // Flush ICache when making code executable, before we modify |size|.
+  if (flushICache == MustFlushICache::Yes) {
+    MOZ_ASSERT(protection == ProtectionSetting::Executable);
+    jit::FlushICache(start, size);
+  }
+
   // Calculate the start of the page containing this region,
   // and account for this extra memory within size.
   size_t pageSize = gc::SystemPageSize();
