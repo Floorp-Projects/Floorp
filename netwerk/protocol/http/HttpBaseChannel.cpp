@@ -3226,6 +3226,21 @@ HttpBaseChannel::CloneReplacementChannelConfig(bool aPreserveMethod,
     nsAutoCString method;
     mRequestHead.Method(method);
     config.method = Some(method);
+
+    config.uploadStream = mUploadStream;
+    config.uploadStreamHasHeaders = mUploadStreamHasHeaders;
+
+    nsAutoCString contentType;
+    nsresult rv = mRequestHead.GetHeader(nsHttp::Content_Type, contentType);
+    if (NS_SUCCEEDED(rv)) {
+      config.contentType = Some(contentType);
+    }
+
+    nsAutoCString contentLength;
+    rv = mRequestHead.GetHeader(nsHttp::Content_Length, contentLength);
+    if (NS_SUCCEEDED(rv)) {
+      config.contentLength = Some(contentLength);
+    }
   }
 
   return config;
@@ -3337,6 +3352,56 @@ HttpBaseChannel::CloneReplacementChannelConfig(bool aPreserveMethod,
     return;  // no other options to set
   }
 
+  if (config.uploadStream) {
+    nsCOMPtr<nsIUploadChannel> uploadChannel = do_QueryInterface(httpChannel);
+    nsCOMPtr<nsIUploadChannel2> uploadChannel2 = do_QueryInterface(httpChannel);
+    if (uploadChannel2 || uploadChannel) {
+      // rewind upload stream
+      nsCOMPtr<nsISeekableStream> seekable =
+          do_QueryInterface(config.uploadStream);
+      if (seekable) {
+        seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+      }
+
+      // replicate original call to SetUploadStream...
+      if (uploadChannel2) {
+        const nsACString& ctype =
+            config.contentType ? *config.contentType : VoidCString();
+        // If header is not present mRequestHead.HasHeaderValue will truncated
+        // it.  But we want to end up with a void string, not an empty string,
+        // because ExplicitSetUploadStream treats the former as "no header" and
+        // the latter as "header with empty string value".
+
+        const nsACString& method =
+            config.method ? *config.method : VoidCString();
+
+        int64_t len = (!config.contentLength || config.contentLength->IsEmpty())
+                          ? -1
+                          : nsCRT::atoll(config.contentLength->get());
+        uploadChannel2->ExplicitSetUploadStream(config.uploadStream, ctype, len,
+                                                method,
+                                                config.uploadStreamHasHeaders);
+      } else {
+        if (config.uploadStreamHasHeaders) {
+          uploadChannel->SetUploadStream(config.uploadStream, EmptyCString(),
+                                         -1);
+        } else {
+          nsAutoCString ctype;
+          if (config.contentType) {
+            ctype = *config.contentType;
+          } else {
+            ctype = NS_LITERAL_CSTRING("application/octet-stream");
+          }
+          if (config.contentLength && !config.contentLength->IsEmpty()) {
+            uploadChannel->SetUploadStream(
+                config.uploadStream, ctype,
+                nsCRT::atoll(config.contentLength->get()));
+          }
+        }
+      }
+    }
+  }
+
   if (config.referrerInfo) {
     DebugOnly<nsresult> success;
     success = httpChannel->SetReferrerInfo(config.referrerInfo);
@@ -3358,6 +3423,10 @@ HttpBaseChannel::ReplacementChannelConfig::ReplacementChannelConfig(
   method = aInit.method();
   referrerInfo = aInit.referrerInfo();
   timedChannel = aInit.timedChannel();
+  uploadStream = aInit.uploadStream();
+  uploadStreamHasHeaders = aInit.uploadStreamHasHeaders();
+  contentType = aInit.contentType();
+  contentLength = aInit.contentLength();
 }
 
 dom::ReplacementChannelConfigInit
@@ -3370,6 +3439,10 @@ HttpBaseChannel::ReplacementChannelConfig::Serialize() {
   config.method() = method;
   config.referrerInfo() = referrerInfo;
   config.timedChannel() = timedChannel;
+  config.uploadStream() = uploadStream;
+  config.uploadStreamHasHeaders() = uploadStreamHasHeaders;
+  config.contentType() = contentType;
+  config.contentLength() = contentLength;
 
   return config;
 }
@@ -3404,53 +3477,6 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
   }
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel);
-  if (preserveMethod && httpChannel) {
-    nsCOMPtr<nsIUploadChannel> uploadChannel = do_QueryInterface(httpChannel);
-    nsCOMPtr<nsIUploadChannel2> uploadChannel2 = do_QueryInterface(httpChannel);
-    if (mUploadStream && (uploadChannel2 || uploadChannel)) {
-      // rewind upload stream
-      nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mUploadStream);
-      MOZ_ASSERT(seekable);
-
-      seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
-
-      // replicate original call to SetUploadStream...
-      if (uploadChannel2) {
-        nsAutoCString ctype;
-        // If header is not present mRequestHead.HasHeaderValue will truncated
-        // it.  But we want to end up with a void string, not an empty string,
-        // because ExplicitSetUploadStream treats the former as "no header" and
-        // the latter as "header with empty string value".
-        nsresult ctypeOK = mRequestHead.GetHeader(nsHttp::Content_Type, ctype);
-        if (NS_FAILED(ctypeOK)) {
-          ctype.SetIsVoid(true);
-        }
-        nsAutoCString clen;
-        Unused << mRequestHead.GetHeader(nsHttp::Content_Length, clen);
-        nsAutoCString method;
-        mRequestHead.Method(method);
-        int64_t len = clen.IsEmpty() ? -1 : nsCRT::atoll(clen.get());
-        uploadChannel2->ExplicitSetUploadStream(
-            mUploadStream, ctype, len, method, mUploadStreamHasHeaders);
-      } else {
-        if (mUploadStreamHasHeaders) {
-          uploadChannel->SetUploadStream(mUploadStream, EmptyCString(), -1);
-        } else {
-          nsAutoCString ctype;
-          if (NS_FAILED(mRequestHead.GetHeader(nsHttp::Content_Type, ctype))) {
-            ctype = NS_LITERAL_CSTRING("application/octet-stream");
-          }
-          nsAutoCString clen;
-          if (NS_SUCCEEDED(
-                  mRequestHead.GetHeader(nsHttp::Content_Length, clen)) &&
-              !clen.IsEmpty()) {
-            uploadChannel->SetUploadStream(mUploadStream, ctype,
-                                           nsCRT::atoll(clen.get()));
-          }
-        }
-      }
-    }
-  }
 
   ReplacementChannelConfig config = CloneReplacementChannelConfig(
       preserveMethod, redirectFlags, LOAD_REPLACE);
