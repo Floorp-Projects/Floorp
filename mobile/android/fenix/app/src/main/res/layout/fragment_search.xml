@@ -43,11 +43,66 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/fill_link_from_clipboard"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:focusable="true"
+        android:clickable="true"
+        android:background="?selectableItemBackground"
+        android:paddingStart="20dp"
+        android:paddingEnd="8dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="@id/toolbar_wrapper"
+        app:layout_constraintTop_toBottomOf="@id/toolbar_wrapper"
+        app:layout_constraintStart_toStartOf="@id/toolbar_wrapper">
+
+        <ImageView
+            android:id="@+id/link_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:tint="?primaryText"
+            android:src="@drawable/ic_link"
+            android:importantForAccessibility="no"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <TextView
+            android:id="@+id/clipboard_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:textSize="15sp"
+            android:textColor="?primaryText"
+            android:maxLines="1"
+            android:ellipsize="end"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/clipboard_url"
+            app:layout_constraintStart_toEndOf="@id/link_icon"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintVertical_chainStyle="packed"
+            android:text="@string/awesomebar_clipboard_title"/>
+
+        <TextView
+            android:id="@+id/clipboard_url"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textColor="?accent"
+            android:textAppearance="@style/Subtitle12TextStyle"
+            android:maxLines="1"
+            android:ellipsize="end"
+            app:layout_constraintTop_toBottomOf="@id/clipboard_title"
+            app:layout_constraintStart_toStartOf="@id/clipboard_title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintVertical_chainStyle="packed"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <TextView
-        android:id="@+id/searchWithShortcuts"
+        android:id="@+id/search_with_shortcuts"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
         android:fontFamily="Inter UI"
         android:letterSpacing="0.15"
         android:text="@string/search_shortcuts_search_with"
@@ -57,7 +112,7 @@
         android:textStyle="bold"
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="@id/toolbar_wrapper"
-        app:layout_constraintTop_toBottomOf="@id/toolbar_wrapper" />
+        app:layout_constraintTop_toBottomOf="@id/fill_link_from_clipboard" />
 
     <View
         android:id="@+id/search_divider"

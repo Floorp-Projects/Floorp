@@ -11,6 +11,7 @@ import mozilla.components.feature.intent.processing.TabIntentProcessor
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import org.mozilla.fenix.test.Mockable
+import org.mozilla.fenix.utils.ClipboardHandler
 
 /**
  * Component group for miscellaneous components.
@@ -38,5 +39,9 @@ class Utilities(
 
     val customTabIntentProcessor by lazy {
         CustomTabIntentProcessor(sessionManager, sessionUseCases.loadUrl, context.resources)
+    }
+
+    val clipboardHandler by lazy {
+        ClipboardHandler(context)
     }
 }

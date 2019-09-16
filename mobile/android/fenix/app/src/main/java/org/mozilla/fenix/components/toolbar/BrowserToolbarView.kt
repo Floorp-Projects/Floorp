@@ -1,9 +1,9 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.fenix.components.toolbar
 
-import android.content.ClipData
-import android.content.ClipDescription.MIMETYPE_TEXT_PLAIN
-import android.content.ClipboardManager
-import android.content.Context.CLIPBOARD_SERVICE
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -54,7 +54,7 @@ class BrowserToolbarView(
         val isCustomTabSession = customTabSession != null
 
         view.setOnUrlLongClickListener {
-            val clipboard = view.context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+            val clipboard = view.context.components.utils.clipboardHandler
             val customView = LayoutInflater.from(view.context).inflate(R.layout.browser_toolbar_popup_window, null)
             val popupWindow = PopupWindow(customView,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -64,22 +64,22 @@ class BrowserToolbarView(
 
             popupWindow.elevation = view.context.dimen(R.dimen.mozac_browser_menu_elevation).toFloat()
 
-            customView.paste.isVisible = clipboard.containsText() && !isCustomTabSession
-            customView.paste_and_go.isVisible = clipboard.containsText() && !isCustomTabSession
+            customView.paste.isVisible = !clipboard.url.isNullOrEmpty() && !isCustomTabSession
+            customView.paste_and_go.isVisible = !clipboard.url.isNullOrEmpty() && !isCustomTabSession
 
             customView.copy.setOnClickListener {
                 popupWindow.dismiss()
-                clipboard.primaryClip = ClipData.newPlainText("Text", view.url.toString())
+                clipboard.text = view.url.toString()
             }
 
             customView.paste.setOnClickListener {
                 popupWindow.dismiss()
-                interactor.onBrowserToolbarPaste(clipboard.primaryClip?.getItemAt(0)?.text.toString())
+                interactor.onBrowserToolbarPaste(clipboard.text!!)
             }
 
             customView.paste_and_go.setOnClickListener {
                 popupWindow.dismiss()
-                interactor.onBrowserToolbarPasteAndGo(clipboard.primaryClip?.getItemAt(0)?.text.toString())
+                interactor.onBrowserToolbarPasteAndGo(clipboard.text!!)
             }
 
             popupWindow.showAsDropDown(view, view.context.dimen(R.dimen.context_menu_x_offset), 0, Gravity.START)
@@ -160,10 +160,6 @@ class BrowserToolbarView(
     @Suppress("UNUSED_PARAMETER")
     fun update(state: BrowserFragmentState) {
         // Intentionally leaving this as a stub for now since we don't actually want to update currently
-    }
-
-    private fun ClipboardManager.containsText(): Boolean {
-        return (primaryClipDescription?.hasMimeType(MIMETYPE_TEXT_PLAIN) ?: false && primaryClip?.itemCount != 0)
     }
 
     companion object {

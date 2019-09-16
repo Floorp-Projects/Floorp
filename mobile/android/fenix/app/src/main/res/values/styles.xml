@@ -258,6 +258,11 @@
         <item name="android:textSize">14sp</item>
     </style>
 
+    <style name="Subtitle12TextStyle" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:textColor">?secondaryText</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
     <style name="ToolbarTitleTextStyle" parent="HeaderTextStyle">
         <item name="android:textSize">20sp</item>
     </style>
