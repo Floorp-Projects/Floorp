@@ -63,6 +63,8 @@ static LazyLogModule sFontInfoLog("fontInfoLog");
 #define LOG(args) MOZ_LOG(sFontInfoLog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(sFontInfoLog, mozilla::LogLevel::Debug)
 
+static cairo_user_data_key_t sFTUserFontDataKey;
+
 static __inline void BuildKeyNameFromFontName(nsACString& aName) {
   ToLowerCase(aName);
 }
@@ -74,65 +76,91 @@ static __inline void BuildKeyNameFromFontName(nsACString& aName) {
 // memory long-term.
 // This may fail (resulting in a null FT_Face), e.g. if it fails to
 // allocate memory to uncompress a font from omnijar.
-already_AddRefed<SharedFTFace> FT2FontEntry::GetFTFace(bool aCommit) {
-  if (mFTFace) {
-    return do_AddRef(mFTFace);
-  }
+class AutoFTFace {
+ public:
+  explicit AutoFTFace(FT2FontEntry* aFontEntry)
+      : mFace(nullptr),
+        mFontDataBuf(nullptr),
+        mDataLength(0),
+        mOwnsFace(false) {
+    if (aFontEntry->mFTFace) {
+      mFace = aFontEntry->mFTFace;
+      return;
+    }
 
-  NS_ASSERTION(!mFilename.IsEmpty(),
-               "can't use GetFTFace for fonts without a filename");
+    NS_ASSERTION(!aFontEntry->mFilename.IsEmpty(),
+                 "can't use AutoFTFace for fonts without a filename");
 
-  // A relative path (no initial "/") means this is a resource in
-  // omnijar, not an installed font on the device.
-  // The NS_ASSERTIONs here should never fail, as the resource must have
-  // been read successfully during font-list initialization or we'd never
-  // have created the font entry. The only legitimate runtime failure
-  // here would be memory allocation, in which case mFace remains null.
-  RefPtr<SharedFTFace> face;
-  if (mFilename[0] != '/') {
-    RefPtr<nsZipArchive> reader = Omnijar::GetReader(Omnijar::Type::GRE);
-    nsZipItem* item = reader->GetItem(mFilename.get());
-    NS_ASSERTION(item, "failed to find zip entry");
+    // A relative path (no initial "/") means this is a resource in
+    // omnijar, not an installed font on the device.
+    // The NS_ASSERTIONs here should never fail, as the resource must have
+    // been read successfully during font-list initialization or we'd never
+    // have created the font entry. The only legitimate runtime failure
+    // here would be memory allocation, in which case mFace remains null.
+    if (aFontEntry->mFilename[0] != '/') {
+      RefPtr<nsZipArchive> reader = Omnijar::GetReader(Omnijar::Type::GRE);
+      nsZipItem* item = reader->GetItem(aFontEntry->mFilename.get());
+      NS_ASSERTION(item, "failed to find zip entry");
 
-    uint32_t bufSize = item->RealSize();
-    uint8_t* fontDataBuf = static_cast<uint8_t*>(malloc(bufSize));
-    if (fontDataBuf) {
-      nsZipCursor cursor(item, reader, fontDataBuf, bufSize);
-      cursor.Copy(&bufSize);
-      NS_ASSERTION(bufSize == item->RealSize(), "error reading bundled font");
-      RefPtr<FTUserFontData> ufd = new FTUserFontData(fontDataBuf, bufSize);
-      face = ufd->CloneFace(mFTFontIndex);
-      if (!face) {
+      uint32_t bufSize = item->RealSize();
+      mFontDataBuf = static_cast<uint8_t*>(malloc(bufSize));
+      if (mFontDataBuf) {
+        nsZipCursor cursor(item, reader, mFontDataBuf, bufSize);
+        cursor.Copy(&bufSize);
+        NS_ASSERTION(bufSize == item->RealSize(), "error reading bundled font");
+        mDataLength = bufSize;
+        mFace = Factory::NewFTFaceFromData(nullptr, mFontDataBuf, bufSize,
+                                           aFontEntry->mFTFontIndex);
+        if (!mFace) {
+          NS_WARNING("failed to create freetype face");
+        }
+      }
+    } else {
+      mFace = Factory::NewFTFace(nullptr, aFontEntry->mFilename.get(),
+                                 aFontEntry->mFTFontIndex);
+      if (!mFace) {
         NS_WARNING("failed to create freetype face");
-        return nullptr;
       }
     }
-  } else {
-    face = Factory::NewSharedFTFace(nullptr, mFilename.get(), mFTFontIndex);
-    if (!face) {
-      NS_WARNING("failed to create freetype face");
-      return nullptr;
-    }
-    if (FT_Err_Ok != FT_Select_Charmap(face->GetFace(), FT_ENCODING_UNICODE) &&
-        FT_Err_Ok !=
-            FT_Select_Charmap(face->GetFace(), FT_ENCODING_MS_SYMBOL)) {
+    if (FT_Err_Ok != FT_Select_Charmap(mFace, FT_ENCODING_UNICODE) &&
+        FT_Err_Ok != FT_Select_Charmap(mFace, FT_ENCODING_MS_SYMBOL)) {
       NS_WARNING("failed to select Unicode or symbol charmap");
     }
+    mOwnsFace = true;
   }
 
-  if (aCommit) {
-    mFTFace = face;
+  ~AutoFTFace() {
+    if (mFace && mOwnsFace) {
+      Factory::ReleaseFTFace(mFace);
+      if (mFontDataBuf) {
+        free(mFontDataBuf);
+      }
+    }
   }
 
-  return face.forget();
-}
+  operator FT_Face() { return mFace; }
 
-FTUserFontData* FT2FontEntry::GetUserFontData() {
-  if (mFTFace && mFTFace->GetData()) {
-    return static_cast<FTUserFontData*>(mFTFace->GetData());
+  // If we 'forget' the FT_Face (used when ownership is handed over to Cairo),
+  // we do -not- free the mFontDataBuf (if used); that also becomes the
+  // responsibility of the new owner of the face.
+  FT_Face forget() {
+    NS_ASSERTION(mOwnsFace, "can't forget() when we didn't own the face");
+    mOwnsFace = false;
+    return mFace;
   }
-  return nullptr;
-}
+
+  const uint8_t* FontData() const { return mFontDataBuf; }
+  uint32_t DataLength() const { return mDataLength; }
+
+ private:
+  FT_Face mFace;
+  uint8_t* mFontDataBuf;  // Uncompressed data (for fonts stored in a JAR),
+                          // or null for fonts instantiated from a file.
+                          // If non-null, this must survive as long as the
+                          // FT_Face.
+  uint32_t mDataLength;   // Size of mFontDataBuf, if present.
+  bool mOwnsFace;
+};
 
 /*
  * FT2FontEntry
@@ -145,25 +173,8 @@ FTUserFontData* FT2FontEntry::GetUserFontData() {
  */
 
 cairo_scaled_font_t* FT2FontEntry::CreateScaledFont(
-    const gfxFontStyle* aStyle, RefPtr<SharedFTFace> aFace, int* aOutLoadFlags,
-    unsigned int* aOutSynthFlags) {
-  int loadFlags = gfxPlatform::GetPlatform()->FontHintingEnabled()
-                      ? FT_LOAD_DEFAULT
-                      : (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
-  if (aFace->GetFace()->face_flags & FT_FACE_FLAG_TRICKY) {
-    loadFlags &= ~FT_LOAD_NO_AUTOHINT;
-  }
-
-  unsigned int synthFlags = 0;
-  if (aStyle->NeedsSyntheticBold(this)) {
-    synthFlags |= CAIRO_FT_SYNTHESIZE_BOLD;
-  }
-
-  *aOutLoadFlags = loadFlags;
-  *aOutSynthFlags = synthFlags;
-
-  cairo_font_face_t* cairoFace = cairo_ft_font_face_create_for_ft_face(
-      aFace->GetFace(), loadFlags, synthFlags, aFace.get());
+    const gfxFontStyle* aStyle) {
+  cairo_font_face_t* cairoFace = CairoFontFace(aStyle);
   if (!cairoFace) {
     return nullptr;
   }
@@ -195,8 +206,18 @@ cairo_scaled_font_t* FT2FontEntry::CreateScaledFont(
 
 FT2FontEntry::~FT2FontEntry() {
   if (mMMVar) {
-    FT_Done_MM_Var(mFTFace->GetFace()->glyph->library, mMMVar);
+    FT_Done_MM_Var(mFTFace->glyph->library, mMMVar);
   }
+
+  // Do nothing for mFTFace here since FTFontDestroyFunc is called by cairo.
+  mFTFace = nullptr;
+
+#ifndef ANDROID
+  if (mFontFace) {
+    cairo_font_face_destroy(mFontFace);
+    mFontFace = nullptr;
+  }
+#endif
 }
 
 gfxFontEntry* FT2FontEntry::Clone() const {
@@ -210,56 +231,29 @@ gfxFontEntry* FT2FontEntry::Clone() const {
   return fe;
 }
 
-gfxFont* FT2FontEntry::CreateFontInstance(const gfxFontStyle* aStyle) {
-  RefPtr<SharedFTFace> face = GetFTFace(true);
-  if (!face) {
-    return nullptr;
-  }
+static cairo_user_data_key_t sFTFaceKey;
 
-  // If variations are present, we will not use our cached mFTFace
-  // but always create a new one as it will have custom variation
-  // coordinates applied.
-  if ((!mVariationSettings.IsEmpty() ||
-       (aStyle && !aStyle->variationSettings.IsEmpty())) &&
-      (face->GetFace()->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS)) {
-    // Create a separate FT_Face because we need to apply custom
-    // variation settings to it.
-    RefPtr<SharedFTFace> varFace;
-    if (!mFilename.IsEmpty() && mFilename[0] == '/') {
-      varFace =
-          Factory::NewSharedFTFace(nullptr, mFilename.get(), mFTFontIndex);
-    } else {
-      varFace = face->GetData()->CloneFace(mFTFontIndex);
-    }
-    if (varFace) {
-      // Resolve variations from entry (descriptor) and style (property)
-      AutoTArray<gfxFontVariation, 8> settings;
-      GetVariationsForStyle(settings, aStyle ? *aStyle : gfxFontStyle());
-      gfxFT2FontBase::SetupVarCoords(GetMMVar(), settings, varFace->GetFace());
-      face = std::move(varFace);
-    }
-  }
-
-  int loadFlags;
-  unsigned int synthFlags;
-  cairo_scaled_font_t* scaledFont =
-      CreateScaledFont(aStyle, face, &loadFlags, &synthFlags);
+gfxFont* FT2FontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle) {
+  cairo_scaled_font_t* scaledFont = CreateScaledFont(aFontStyle);
   if (!scaledFont) {
     return nullptr;
   }
 
   RefPtr<UnscaledFontFreeType> unscaledFont(mUnscaledFont);
   if (!unscaledFont) {
-    unscaledFont = !mFilename.IsEmpty() && mFilename[0] == '/'
-                       ? new UnscaledFontFreeType(mFilename.BeginReading(),
-                                                  mFTFontIndex, mFTFace)
-                       : new UnscaledFontFreeType(mFTFace);
+    unscaledFont =
+        !mFilename.IsEmpty() && mFilename[0] == '/'
+            ? new UnscaledFontFreeType(mFilename.BeginReading(), mFTFontIndex)
+            : new UnscaledFontFreeType(mFTFace);
     mUnscaledFont = unscaledFont;
   }
 
-  gfxFont* font =
-      new gfxFT2Font(unscaledFont, scaledFont, std::move(face), this, aStyle,
-                     loadFlags, (synthFlags & CAIRO_FT_SYNTHESIZE_BOLD) != 0);
+  cairo_font_face_t* face = cairo_scaled_font_get_font_face(scaledFont);
+  FT_Face ftFace =
+      static_cast<FT_Face>(cairo_font_face_get_user_data(face, &sFTFaceKey));
+
+  gfxFont* font = new gfxFT2Font(unscaledFont, scaledFont,
+                                 ftFace ? ftFace : mFTFace, this, aFontStyle);
   cairo_scaled_font_destroy(scaledFont);
   return font;
 }
@@ -271,23 +265,54 @@ FT2FontEntry* FT2FontEntry::CreateFontEntry(
   // Ownership of aFontData is passed in here; the fontEntry must
   // retain it as long as the FT_Face needs it, and ensure it is
   // eventually deleted.
-  RefPtr<FTUserFontData> ufd = new FTUserFontData(aFontData, aLength);
-  RefPtr<SharedFTFace> face = ufd->CloneFace();
+  FT_Face face = Factory::NewFTFaceFromData(nullptr, aFontData, aLength, 0);
   if (!face) {
+    free((void*)aFontData);
+    return nullptr;
+  }
+  if (FT_Err_Ok != FT_Select_Charmap(face, FT_ENCODING_UNICODE) &&
+      FT_Err_Ok != FT_Select_Charmap(face, FT_ENCODING_MS_SYMBOL)) {
+    Factory::ReleaseFTFace(face);
+    free((void*)aFontData);
     return nullptr;
   }
   // Create our FT2FontEntry, which inherits the name of the userfont entry
   // as it's not guaranteed that the face has valid names (bug 737315)
-  FT2FontEntry* fe =
-      FT2FontEntry::CreateFontEntry(face->GetFace(), nullptr, 0, aFontName);
+  FT2FontEntry* fe = FT2FontEntry::CreateFontEntry(face, nullptr, 0, aFontName,
+                                                   aFontData, aLength);
   if (fe) {
-    fe->mFTFace = face;
     fe->mStyleRange = aStyle;
     fe->mWeightRange = aWeight;
     fe->mStretchRange = aStretch;
     fe->mIsDataUserFont = true;
   }
   return fe;
+}
+
+class FTUserFontData {
+ public:
+  FTUserFontData(FT_Face aFace, const uint8_t* aData, uint32_t aLength)
+      : mFace(aFace), mFontData(aData), mLength(aLength) {}
+
+  ~FTUserFontData() {
+    Factory::ReleaseFTFace(mFace);
+    if (mFontData) {
+      free((void*)mFontData);
+    }
+  }
+
+  const uint8_t* FontData() const { return mFontData; }
+  uint32_t Length() const { return mLength; }
+
+ private:
+  FT_Face mFace;
+  const uint8_t* mFontData;
+  uint32_t mLength;
+};
+
+static void FTFontDestroyFunc(void* data) {
+  FTUserFontData* userFontData = static_cast<FTUserFontData*>(data);
+  delete userFontData;
 }
 
 /* static */
@@ -343,10 +368,9 @@ static FontWeight FTFaceGetWeight(FT_Face aFace) {
 // as we don't want to keep a freetype face for every installed font
 // permanently in memory.
 /* static */
-FT2FontEntry* FT2FontEntry::CreateFontEntry(FT_Face aFace,
-                                            const char* aFilename,
-                                            uint8_t aIndex,
-                                            const nsACString& aName) {
+FT2FontEntry* FT2FontEntry::CreateFontEntry(
+    FT_Face aFace, const char* aFilename, uint8_t aIndex,
+    const nsACString& aName, const uint8_t* aFontData, uint32_t aLength) {
   FT2FontEntry* fe = new FT2FontEntry(aName);
   fe->mStyleRange =
       SlantStyleRange(FTFaceIsItalic(aFace) ? FontSlantStyle::Italic()
@@ -354,6 +378,22 @@ FT2FontEntry* FT2FontEntry::CreateFontEntry(FT_Face aFace,
   fe->mWeightRange = WeightRange(FTFaceGetWeight(aFace));
   fe->mFilename = aFilename;
   fe->mFTFontIndex = aIndex;
+
+  if (aFontData) {
+    fe->mFTFace = aFace;
+    int flags = gfxPlatform::GetPlatform()->FontHintingEnabled()
+                    ? FT_LOAD_DEFAULT
+                    : (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
+    if (aFace->face_flags & FT_FACE_FLAG_TRICKY) {
+      flags &= ~FT_LOAD_NO_AUTOHINT;
+    }
+    fe->mFontFace =
+        cairo_ft_font_face_create_for_ft_face(aFace, flags, nullptr, 0);
+    FTUserFontData* userFontData =
+        new FTUserFontData(aFace, aFontData, aLength);
+    cairo_font_face_set_user_data(fe->mFontFace, &sFTUserFontDataKey,
+                                  userFontData, FTFontDestroyFunc);
+  }
 
   return fe;
 }
@@ -375,6 +415,76 @@ static FT2FontEntry* CreateNamedFontEntry(FT_Face aFace, const char* aFilename,
 
 FT2FontEntry* gfxFT2Font::GetFontEntry() {
   return static_cast<FT2FontEntry*>(mFontEntry.get());
+}
+
+cairo_font_face_t* FT2FontEntry::CairoFontFace(const gfxFontStyle* aStyle) {
+  // Create our basic (no-variations) mFontFace if not already present;
+  // this also ensures we have mFTFace available.
+  if (!mFontFace) {
+    AutoFTFace face(this);
+    if (!face) {
+      return nullptr;
+    }
+    int flags = gfxPlatform::GetPlatform()->FontHintingEnabled()
+                    ? FT_LOAD_DEFAULT
+                    : (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
+    if (FT_Face(face)->face_flags & FT_FACE_FLAG_TRICKY) {
+      flags &= ~FT_LOAD_NO_AUTOHINT;
+    }
+    mFontFace = cairo_ft_font_face_create_for_ft_face(face, flags, nullptr, 0);
+    auto userFontData =
+        new FTUserFontData(face, face.FontData(), face.DataLength());
+    cairo_font_face_set_user_data(mFontFace, &sFTUserFontDataKey, userFontData,
+                                  FTFontDestroyFunc);
+    mFTFace = face.forget();
+  }
+
+  // If variations are present, we will not use our cached mFontFace
+  // but always create a new cairo_font_face_t because its FT_Face will
+  // have custom variation coordinates applied.
+  if ((!mVariationSettings.IsEmpty() ||
+       (aStyle && !aStyle->variationSettings.IsEmpty())) &&
+      (mFTFace->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS)) {
+    int flags = gfxPlatform::GetPlatform()->FontHintingEnabled()
+                    ? FT_LOAD_DEFAULT
+                    : (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
+    if (mFTFace->face_flags & FT_FACE_FLAG_TRICKY) {
+      flags &= ~FT_LOAD_NO_AUTOHINT;
+    }
+    // Resolve variations from entry (descriptor) and style (property)
+    AutoTArray<gfxFontVariation, 8> settings;
+    GetVariationsForStyle(settings, aStyle ? *aStyle : gfxFontStyle());
+    AutoTArray<FT_Fixed, 8> coords;
+    gfxFT2FontBase::SetupVarCoords(GetMMVar(), settings, &coords);
+    // Create a separate FT_Face because we need to apply custom
+    // variation settings to it.
+    FT_Face ftFace;
+    if (!mFilename.IsEmpty() && mFilename[0] == '/') {
+      ftFace = Factory::NewFTFace(nullptr, mFilename.get(), mFTFontIndex);
+    } else {
+      auto ufd = reinterpret_cast<FTUserFontData*>(
+          cairo_font_face_get_user_data(mFontFace, &sFTUserFontDataKey));
+      ftFace = Factory::NewFTFaceFromData(nullptr, ufd->FontData(),
+                                          ufd->Length(), mFTFontIndex);
+    }
+    // The variation coordinates will actually be applied to ftFace by
+    // gfxFT2FontBase::InitMetrics, so we don't need to do it here.
+    cairo_font_face_t* cairoFace = cairo_ft_font_face_create_for_ft_face(
+        ftFace, flags, coords.Elements(), coords.Length());
+    // Set up user data to properly release the FT_Face when the cairo face
+    // is deleted.
+    if (cairo_font_face_set_user_data(
+            cairoFace, &sFTFaceKey, ftFace,
+            (cairo_destroy_func_t)&Factory::ReleaseFTFace)) {
+      // set_user_data failed! discard, and fall back to default face
+      cairo_font_face_destroy(cairoFace);
+      FT_Done_Face(ftFace);
+    } else {
+      return cairoFace;
+    }
+  }
+
+  return mFontFace;
 }
 
 // Copied/modified from similar code in gfxMacPlatformFontList.mm:
@@ -450,14 +560,14 @@ nsresult FT2FontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
 
 nsresult FT2FontEntry::CopyFontTable(uint32_t aTableTag,
                                      nsTArray<uint8_t>& aBuffer) {
-  RefPtr<SharedFTFace> face = GetFTFace();
+  AutoFTFace face(this);
   if (!face) {
     return NS_ERROR_FAILURE;
   }
 
   FT_Error status;
   FT_ULong len = 0;
-  status = FT_Load_Sfnt_Table(face->GetFace(), aTableTag, 0, nullptr, &len);
+  status = FT_Load_Sfnt_Table(face, aTableTag, 0, nullptr, &len);
   if (status != FT_Err_Ok || len == 0) {
     return NS_ERROR_FAILURE;
   }
@@ -466,17 +576,19 @@ nsresult FT2FontEntry::CopyFontTable(uint32_t aTableTag,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   uint8_t* buf = aBuffer.Elements();
-  status = FT_Load_Sfnt_Table(face->GetFace(), aTableTag, 0, buf, &len);
+  status = FT_Load_Sfnt_Table(face, aTableTag, 0, buf, &len);
   NS_ENSURE_TRUE(status == FT_Err_Ok, NS_ERROR_FAILURE);
 
   return NS_OK;
 }
 
 hb_blob_t* FT2FontEntry::GetFontTable(uint32_t aTableTag) {
-  if (FTUserFontData* userFontData = GetUserFontData()) {
+  if (mFontFace) {
     // if there's a cairo font face, we may be able to return a blob
     // that just wraps a range of the attached user font data
-    if (userFontData->FontData()) {
+    FTUserFontData* userFontData = static_cast<FTUserFontData*>(
+        cairo_font_face_get_user_data(mFontFace, &sFTUserFontDataKey));
+    if (userFontData && userFontData->FontData()) {
       return gfxFontUtils::GetTableFromFontData(userFontData->FontData(),
                                                 aTableTag);
     }
@@ -493,10 +605,9 @@ bool FT2FontEntry::HasVariations() {
   }
   mHasVariationsInitialized = true;
 
-  RefPtr<SharedFTFace> face = GetFTFace();
+  AutoFTFace face(this);
   if (face) {
-    mHasVariations =
-        face->GetFace()->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS;
+    mHasVariations = FT_Face(face)->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS;
   }
 
   return mHasVariations;
@@ -530,11 +641,11 @@ FT_MM_Var* FT2FontEntry::GetMMVar() {
     return mMMVar;
   }
   mMMVarInitialized = true;
-  RefPtr<SharedFTFace> face = GetFTFace(true);
+  AutoFTFace face(this);
   if (!face) {
     return nullptr;
   }
-  if (FT_Err_Ok != FT_Get_MM_Var(face->GetFace(), &mMMVar)) {
+  if (FT_Err_Ok != FT_Get_MM_Var(face, &mMMVar)) {
     mMMVar = nullptr;
   }
   return mMMVar;
@@ -1051,10 +1162,10 @@ void FT2FontEntry::CheckForBrokenFont(const nsACString& aFamilyKey) {
   // Droid Sans Arabic from certain phones, as identified by the
   // font checksum in the 'head' table
   if (aFamilyKey.EqualsLiteral("droid sans arabic")) {
-    RefPtr<SharedFTFace> face = GetFTFace();
+    AutoFTFace face(this);
     if (face) {
-      const TT_Header* head = static_cast<const TT_Header*>(
-          FT_Get_Sfnt_Table(face->GetFace(), ft_sfnt_head));
+      const TT_Header* head =
+          static_cast<const TT_Header*>(FT_Get_Sfnt_Table(face, ft_sfnt_head));
       if (head && head->CheckSum_Adjust == 0xe445242) {
         mIgnoreGSUB = true;
       }
@@ -1628,14 +1739,14 @@ searchDone:
   // from the userfont entry rather than the actual font.
 
   // Ensure existence of mFTFace in the original entry
-  RefPtr<SharedFTFace> face = fontEntry->GetFTFace(true);
-  if (!face) {
+  fontEntry->CairoFontFace();
+  if (!fontEntry->mFTFace) {
     return nullptr;
   }
 
-  FT2FontEntry* fe =
-      FT2FontEntry::CreateFontEntry(face->GetFace(), fontEntry->mFilename.get(),
-                                    fontEntry->mFTFontIndex, fontEntry->Name());
+  FT2FontEntry* fe = FT2FontEntry::CreateFontEntry(
+      fontEntry->mFTFace, fontEntry->mFilename.get(), fontEntry->mFTFontIndex,
+      fontEntry->Name(), nullptr);
   if (fe) {
     fe->mStyleRange = aStyleForEntry;
     fe->mWeightRange = aWeightForEntry;

@@ -74,7 +74,6 @@ class ScaledFontDWrite final : public ScaledFontBase {
 
 #ifdef USE_SKIA
   SkTypeface* CreateSkTypeface() override;
-  void SetupSkFontDrawOptions(SkFont& aFont) override;
   SkFontStyle mStyle;
 #endif
 

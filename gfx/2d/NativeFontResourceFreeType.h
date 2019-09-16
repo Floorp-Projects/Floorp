@@ -15,9 +15,7 @@
 namespace mozilla {
 namespace gfx {
 
-class NativeFontResourceFreeType
-    : public NativeFontResource,
-      public SharedFTFaceRefCountedData<NativeFontResourceFreeType> {
+class NativeFontResourceFreeType : public NativeFontResource {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(NativeFontResourceFreeType, override)
 
@@ -33,12 +31,11 @@ class NativeFontResourceFreeType
 
   ~NativeFontResourceFreeType();
 
-  already_AddRefed<SharedFTFace> CloneFace(int aFaceIndex = 0) override;
+  FT_Face CloneFace();
 
  protected:
   NativeFontResourceFreeType(UniquePtr<uint8_t[]>&& aFontData,
-                             uint32_t aDataLength,
-                             FT_Library aFTLibrary = nullptr);
+                             uint32_t aDataLength, FT_Face aFace);
 
   template <class T>
   static already_AddRefed<T> CreateInternal(uint8_t* aFontData,
@@ -47,7 +44,7 @@ class NativeFontResourceFreeType
 
   UniquePtr<uint8_t[]> mFontData;
   uint32_t mDataLength;
-  FT_Library mFTLibrary;
+  FT_Face mFace;
 };
 
 #ifdef MOZ_WIDGET_GTK
@@ -68,8 +65,7 @@ class NativeFontResourceFontconfig final : public NativeFontResourceFreeType {
   friend class NativeFontResourceFreeType;
 
   NativeFontResourceFontconfig(UniquePtr<uint8_t[]>&& aFontData,
-                               uint32_t aDataLength,
-                               FT_Library aFTLibrary = nullptr);
+                               uint32_t aDataLength, FT_Face aFace);
 };
 #endif
 

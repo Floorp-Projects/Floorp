@@ -366,7 +366,7 @@ cairo_font_options_get_subpixel_order (const cairo_font_options_t *options)
  * Since: 1.8
  **/
 void
-cairo_font_options_set_lcd_filter (cairo_font_options_t *options,
+_cairo_font_options_set_lcd_filter (cairo_font_options_t *options,
 				    cairo_lcd_filter_t    lcd_filter)
 {
     if (cairo_font_options_status (options))
@@ -374,7 +374,6 @@ cairo_font_options_set_lcd_filter (cairo_font_options_t *options,
 
     options->lcd_filter = lcd_filter;
 }
-slim_hidden_def (cairo_font_options_set_lcd_filter);
 
 /**
  * _cairo_font_options_get_lcd_filter:
