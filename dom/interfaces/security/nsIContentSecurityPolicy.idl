@@ -257,6 +257,13 @@ interface nsIContentSecurityPolicy : nsISerializable
   [noscript, notxpcom, nostdcall] readonly attribute unsigned long long innerWindowID;
 
   /**
+   * Warning: Do not set that attribute unless you know exactly what you are doing!
+   *
+   * Primarily used to allow Devtools to edit inline styles!
+   */
+  [noscript, notxpcom, nostdcall] attribute boolean skipAllowInlineStyleCheck;
+
+  /**
    *  Ensure we have a nsIEventTarget to use to label CSPReportSenderRunnable
    */
   [noscript] void ensureEventTarget(in nsIEventTarget aEventTarget);
