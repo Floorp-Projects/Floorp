@@ -22,6 +22,8 @@ public class WebExtensionController {
          *            do not call {@link GeckoSession#loadUri} on it.
          * @return A {@link GeckoResult} which holds the returned GeckoSession. May be null, in
          *        which case the request for a new tab by the extension will fail.
+         *        The implementation of onNewTab is responsible for maintaining a reference
+         *        to the returned object, to prevent it from being garbage collected.
          */
         @UiThread
         @Nullable
