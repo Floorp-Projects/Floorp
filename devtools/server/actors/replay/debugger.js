@@ -26,6 +26,12 @@ ChromeUtils.defineModuleGetter(
   "resource://devtools/shared/execution-point-utils.js"
 );
 
+loader.lazyRequireGetter(
+  this,
+  "ReplayInspector",
+  "devtools/server/actors/replay/inspector"
+);
+
 ///////////////////////////////////////////////////////////////////////////////
 // ReplayDebugger
 ///////////////////////////////////////////////////////////////////////////////
@@ -119,7 +125,8 @@ ReplayPool.prototype = {
       }
       this.getObject(data.id)._preview = {
         ...preview,
-        enumerableOwnProperties: mapify(preview.enumerableOwnProperties),
+        properties: mapify(preview.properties),
+        callResults: mapify(preview.callResults),
       };
     }
 
@@ -1107,6 +1114,12 @@ ReplayDebuggerFrame.prototype = {
 // ReplayDebuggerObject
 ///////////////////////////////////////////////////////////////////////////////
 
+// See replay.js
+const PropertyLevels = {
+  BASIC: 1,
+  FULL: 2,
+};
+
 function ReplayDebuggerObject(pool, data) {
   this._dbg = pool.dbg;
   this._pool = pool;
@@ -1173,18 +1186,30 @@ ReplayDebuggerObject.prototype = {
   },
 
   unsafeDereference() {
-    // Direct access to the referent is not currently available.
-    return null;
+    if (this.class == "Array") {
+      // ReplayInspector converts arrays to objects in this process, which we
+      // don't want to happen.
+      return null;
+    }
+
+    return ReplayInspector.wrapObject(this);
   },
 
   getOwnPropertyNames() {
+    if (this._preview && this._preview.level >= PropertyLevels.FULL) {
+      // The preview will include all properties of the object.
+      return this.getEnumerableOwnPropertyNamesForPreview();
+    }
     this._ensureProperties();
     return [...this._properties.keys()];
   },
 
   getEnumerableOwnPropertyNamesForPreview() {
-    if (this._preview && this._preview.enumerableOwnProperties) {
-      return [...this._preview.enumerableOwnProperties.keys()];
+    if (this._preview && this._preview.level >= PropertyLevels.BASIC) {
+      if (!this._preview.properties) {
+        return [];
+      }
+      return [...this._preview.properties.keys()];
     }
     return this.getOwnPropertyNames();
   },
@@ -1203,20 +1228,10 @@ ReplayDebuggerObject.prototype = {
 
   getOwnPropertyDescriptor(name) {
     name = name.toString();
-    if (this._preview) {
-      if (this._preview.enumerableOwnProperties) {
-        const desc = this._preview.enumerableOwnProperties.get(name);
-        if (desc) {
-          return this._convertPropertyDescriptor(desc);
-        }
-      }
-      if (name == "length") {
-        return this._convertPropertyDescriptor(this._preview.lengthProperty);
-      }
-      if (name == "displayName") {
-        return this._convertPropertyDescriptor(
-          this._preview.displayNameProperty
-        );
+    if (this._preview && this._preview.properties) {
+      const desc = this._preview.properties.get(name);
+      if (desc || this._preview.level == PropertyLevels.FULL) {
+        return this._convertPropertyDescriptor(desc);
       }
     }
     this._ensureProperties();
@@ -1230,7 +1245,7 @@ ReplayDebuggerObject.prototype = {
         return;
       }
       const id = this._data.id;
-      const properties = this._dbg._sendRequestAllowDiverge(
+      const { properties } = this._dbg._sendRequestAllowDiverge(
         { type: "getObjectProperties", id },
         []
       );
@@ -1279,6 +1294,19 @@ ReplayDebuggerObject.prototype = {
     });
   },
 
+  replayHasCallResult(name) {
+    return (
+      this._preview &&
+      this._preview.callResults &&
+      this._preview.callResults.has(name)
+    );
+  },
+
+  replayCallResult(name) {
+    const value = this._preview.callResults.get(name);
+    return this._pool.convertValue(value);
+  },
+
   unwrap() {
     if (!this.isProxy) {
       return this;
@@ -1320,7 +1348,10 @@ ReplayDebuggerObject.prototype = {
   },
 
   apply(thisv, args) {
-    assert(this._pool == this._dbg._pool);
+    if (this._pool != this._dbg._pool) {
+      return undefined;
+    }
+
     thisv = this._dbg._convertValueForChild(thisv);
     args = (args || []).map(v => this._dbg._convertValueForChild(v));
 
@@ -1362,25 +1393,20 @@ ReplayDebuggerObject.prototype = {
     return this._data.typedArrayLength;
   },
 
-  getContainerSize() {
-    return this._data.containerSize;
-  },
-
-  getRegExpString() {
-    return this._data.regExpString;
-  },
-
-  getDateTime() {
-    return this._data.dateTime;
-  },
-
-  getErrorProperties() {
-    return this._data.errorProperties;
-  },
-
   makeDebuggeeValue(obj) {
-    assert(obj instanceof ReplayDebuggerObject);
-    return obj;
+    if (obj instanceof ReplayDebuggerObject) {
+      return obj;
+    }
+    const rv = ReplayInspector.unwrapObject(obj);
+    if (rv) {
+      return rv;
+    }
+    ThrowError("Can't make debuggee value");
+    return null; // For eslint
+  },
+
+  replayIsInstance(name) {
+    return this._data.isInstance == name;
   },
 
   preventExtensions: NotAllowed,
