@@ -34,23 +34,64 @@ function checksCertTab(tabsCount) {
   );
 }
 
+function injectErrorPageFrame(tab, src) {
+  return ContentTask.spawn(
+    tab.linkedBrowser,
+    { frameSrc: src },
+    async function({ frameSrc }) {
+      let loaded = ContentTaskUtils.waitForEvent(
+        content.wrappedJSObject,
+        "DOMFrameContentLoaded"
+      );
+      let iframe = content.document.createElement("iframe");
+      iframe.src = frameSrc;
+      content.document.body.appendChild(iframe);
+      await loaded;
+      // We will have race conditions when accessing the frame content after setting a src,
+      // so we can't wait for AboutNetErrorLoad. Let's wait for the certerror class to
+      // appear instead (which should happen at the same time as AboutNetErrorLoad).
+      await ContentTaskUtils.waitForCondition(() =>
+        iframe.contentDocument.body.classList.contains("certerror")
+      );
+    }
+  );
+}
+
+async function openErrorPage(useFrame) {
+  let src = "https://expired.example.com/";
+  let dummyPage =
+    getRootDirectory(gTestPath).replace(
+      "chrome://mochitests/content",
+      "https://example.com"
+    ) + "dummy_page.html";
+
+  let tab;
+  if (useFrame) {
+    info("Loading cert error page in an iframe");
+    tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, dummyPage);
+    await injectErrorPageFrame(tab, src);
+  } else {
+    let certErrorLoaded;
+    tab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      () => {
+        gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, src);
+        let browser = gBrowser.selectedBrowser;
+        certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
+      },
+      false
+    );
+    info("Loading and waiting for the cert error");
+    await certErrorLoaded;
+  }
+
+  return tab;
+}
+
 add_task(async function testBadCert() {
   info("Testing bad cert");
-  let url = "https://expired.example.com/";
-  let browser;
-  let certErrorLoaded;
-  await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    () => {
-      gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url);
-      browser = gBrowser.selectedBrowser;
-      certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
-    },
-    false
-  );
 
-  info("Loading and waiting for the cert error");
-  await certErrorLoaded;
+  let tab = await openErrorPage();
 
   SpecialPowers.pushPrefEnv({
     set: [[PREF, true]],
@@ -59,7 +100,7 @@ add_task(async function testBadCert() {
   let tabsCount = gBrowser.tabs.length;
   let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
 
-  await ContentTask.spawn(browser, null, async function() {
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     let advancedButton = content.document.getElementById("advancedButton");
     Assert.ok(advancedButton, "advancedButton found");
     Assert.equal(
@@ -69,6 +110,45 @@ add_task(async function testBadCert() {
     );
     advancedButton.click();
     let viewCertificate = content.document.getElementById("viewCertificate");
+    Assert.ok(viewCertificate, "viewCertificate found");
+    Assert.equal(
+      viewCertificate.hasAttribute("disabled"),
+      false,
+      "viewCertificate should be clickable"
+    );
+
+    viewCertificate.click();
+  });
+  await loaded;
+  checksCertTab(tabsCount);
+
+  gBrowser.removeCurrentTab(); // closes about:certificate
+  gBrowser.removeCurrentTab(); // closes https://expired.example.com/
+});
+
+add_task(async function testBadCertIframe() {
+  info("Testing bad cert in an iframe");
+
+  let tab = await openErrorPage(true);
+
+  SpecialPowers.pushPrefEnv({
+    set: [[PREF, true]],
+  });
+
+  let tabsCount = gBrowser.tabs.length;
+  let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
+
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+    let doc = content.document.querySelector("iframe").contentDocument;
+    let advancedButton = doc.getElementById("advancedButton");
+    Assert.ok(advancedButton, "advancedButton found");
+    Assert.equal(
+      advancedButton.hasAttribute("disabled"),
+      false,
+      "advancedButton should be clickable"
+    );
+    advancedButton.click();
+    let viewCertificate = doc.getElementById("viewCertificate");
     Assert.ok(viewCertificate, "viewCertificate found");
     Assert.equal(
       viewCertificate.hasAttribute("disabled"),

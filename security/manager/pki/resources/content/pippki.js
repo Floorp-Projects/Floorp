@@ -34,9 +34,7 @@ function viewCertHelper(parent, cert) {
     let ownerGlobal = window.docShell.chromeEventHandler.ownerGlobal;
     let derb64 = encodeURIComponent(cert.getBase64DERString());
     let url = `about:certificate?cert=${derb64}`;
-    ownerGlobal.openTrustedLinkIn(url, "tab", {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
+    ownerGlobal.openTrustedLinkIn(url, "tab");
   } else {
     Services.ww.openWindow(
       parent,
