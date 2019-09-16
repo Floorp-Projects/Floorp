@@ -7,7 +7,7 @@
 // else the test runner gets in the way of notifications due to bug 857897.
 
 const URL =
-  "https://example.com/browser/browser/base/content/test/general/offlineQuotaNotification.html";
+  "http://mochi.test:8888/browser/browser/base/content/test/general/offlineQuotaNotification.html";
 
 registerCleanupFunction(function() {
   // Clean up after ourself
@@ -18,9 +18,6 @@ registerCleanupFunction(function() {
   );
   Services.perms.removeFromPrincipal(principal, "offline-app");
   Services.prefs.clearUserPref("offline-apps.quota.warn");
-  Services.prefs.clearUserPref("offline-apps.quota.warn");
-  Services.prefs.clearUserPref("browser.cache.offline.enable");
-  Services.prefs.clearUserPref("browser.cache.offline.storage.enable");
   let { OfflineAppCacheHelper } = ChromeUtils.import(
     "resource://gre/modules/offlineAppCache.jsm"
   );
@@ -45,9 +42,6 @@ function checkInContentPreferences(win) {
 async function test() {
   waitForExplicitFinish();
 
-  Services.prefs.setBoolPref("browser.cache.offline.enable", true);
-  Services.prefs.setBoolPref("browser.cache.offline.storage.enable", true);
-  Services.prefs.setBoolPref("offline-apps.allow_by_default", false);
   let notificationShown = promiseNotification();
 
   // Open a new tab.
