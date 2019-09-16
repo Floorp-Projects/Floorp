@@ -32,7 +32,7 @@ import android.text.format.Time;
 import android.util.Log;
 
 class FilePickerResultHandler implements ActivityResultHandler {
-    private static final String LOGTAG = "GeckoFilePickerResultHandler";
+    private static final String LOGTAG = "FilePickerResultHandler";
     private static final String UPLOADS_DIR = "uploads";
     private static final String ACTION_INLINE_DATA = "inline-data";
 
@@ -223,38 +223,40 @@ class FilePickerResultHandler implements ActivityResultHandler {
                         fileName += fileExt;
                     }
                 }
+                final String tempFileName = fileName;
+                ThreadUtils.postToBackgroundThread(() -> {
+                    // Now write the data to the temp file
+                    FileOutputStream fos = null;
+                    try {
+                        tempDir = FileUtils.createTempDir(cacheDir, "tmp_");
 
-                // Now write the data to the temp file
-                FileOutputStream fos = null;
-                try {
-                    tempDir = FileUtils.createTempDir(cacheDir, "tmp_");
+                        File file = new File(tempDir, tempFileName);
+                        fos = new FileOutputStream(file);
+                        InputStream is = cr.openInputStream(uri);
+                        byte[] buf = new byte[4096];
+                        int len = is.read(buf);
+                        while (len != -1) {
+                            fos.write(buf, 0, len);
+                            len = is.read(buf);
+                        }
+                        fos.close();
+                        is.close();
+                        String tempFile = file.getAbsolutePath();
+                        sendResult(tempFile);
 
-                    File file = new File(tempDir, fileName);
-                    fos = new FileOutputStream(file);
-                    InputStream is = cr.openInputStream(uri);
-                    byte[] buf = new byte[4096];
-                    int len = is.read(buf);
-                    while (len != -1) {
-                        fos.write(buf, 0, len);
-                        len = is.read(buf);
+                        if (tabId > -1 && tempDir != null) {
+                            Tabs.registerOnTabsChangedListener(this);
+                        }
+                    } catch (IOException ex) {
+                        Log.i(LOGTAG, "Error writing file", ex);
+                    } finally {
+                        if (fos != null) {
+                            try {
+                                fos.close();
+                            } catch (IOException e) { /* not much to do here */ }
+                        }
                     }
-                    fos.close();
-                    is.close();
-                    String tempFile = file.getAbsolutePath();
-                    sendResult((tempFile == null) ? "" : tempFile);
-
-                    if (tabId > -1 && tempDir != null) {
-                        Tabs.registerOnTabsChangedListener(this);
-                    }
-                } catch (IOException ex) {
-                    Log.i(LOGTAG, "Error writing file", ex);
-                } finally {
-                    if (fos != null) {
-                        try {
-                            fos.close();
-                        } catch (IOException e) { /* not much to do here */ }
-                    }
-                }
+                });
             } else {
                 sendResult("");
             }
