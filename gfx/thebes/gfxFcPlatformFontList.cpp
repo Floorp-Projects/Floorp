@@ -91,8 +91,6 @@ static const char* ToCharPtr(const FcChar8* aStr) {
   return reinterpret_cast<const char*>(aStr);
 }
 
-FT_Library gfxFcPlatformFontList::sCairoFTLibrary = nullptr;
-
 // canonical name ==> first en name or first name if no en name
 // This is the required logic for fullname lookups as per CSS3 Fonts spec.
 static uint32_t FindCanonicalNameIndex(FcPattern* aFont,
@@ -1348,10 +1346,9 @@ gfxFontconfigFont::gfxFontconfigFont(
     cairo_scaled_font_t* aScaledFont, RefPtr<SharedFTFace>&& aFTFace,
     FcPattern* aPattern, gfxFloat aAdjustedSize, gfxFontEntry* aFontEntry,
     const gfxFontStyle* aFontStyle)
-    : gfxFT2FontBase(aUnscaledFont, aScaledFont, aFontEntry, aFontStyle),
-      mFTFace(std::move(aFTFace)),
+    : gfxFT2FontBase(aUnscaledFont, aScaledFont, std::move(aFTFace), aFontEntry,
+                     aFontStyle, aAdjustedSize),
       mPattern(aPattern) {
-  mAdjustedSize = aAdjustedSize;
 }
 
 gfxFontconfigFont::~gfxFontconfigFont() {}
@@ -2216,43 +2213,6 @@ void gfxFcPlatformFontList::ClearLangGroupPrefFonts() {
   ClearGenericMappings();
   gfxPlatformFontList::ClearLangGroupPrefFonts();
   mAlwaysUseFontconfigGenerics = PrefFontListsUseOnlyGenerics();
-}
-
-/* static */
-FT_Library gfxFcPlatformFontList::GetFTLibrary() {
-  if (!sCairoFTLibrary) {
-    // Use cairo's FT_Library so that cairo takes care of shutdown of the
-    // FT_Library after it has destroyed its font_faces, and FT_Done_Face
-    // has been called on each FT_Face, at least until this bug is fixed:
-    // https://bugs.freedesktop.org/show_bug.cgi?id=18857
-    //
-    // Cairo keeps it's own FT_Library object for creating FT_Face
-    // instances, so use that. There's no simple API for accessing this
-    // so use the hacky method below of making a font and extracting
-    // the library pointer from that.
-
-    FcPattern* pat =
-        FcPatternBuild(0, FC_FAMILY, FcTypeString, "serif", (char*)0);
-    cairo_font_face_t* face = cairo_ft_font_face_create_for_pattern(pat);
-    FcPatternDestroy(pat);
-
-    cairo_matrix_t identity;
-    cairo_matrix_init_identity(&identity);
-    cairo_font_options_t* options = cairo_font_options_create();
-    cairo_scaled_font_t* sf =
-        cairo_scaled_font_create(face, &identity, &identity, options);
-    cairo_font_options_destroy(options);
-    cairo_font_face_destroy(face);
-
-    FT_Face ft = cairo_ft_scaled_font_lock_face(sf);
-
-    sCairoFTLibrary = ft->glyph->library;
-
-    cairo_ft_scaled_font_unlock_face(sf);
-    cairo_scaled_font_destroy(sf);
-  }
-
-  return sCairoFTLibrary;
 }
 
 gfxPlatformFontList::PrefFontList* gfxFcPlatformFontList::FindGenericFamilies(
