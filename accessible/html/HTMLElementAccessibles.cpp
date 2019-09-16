@@ -170,8 +170,6 @@ HTMLSummaryAccessible* HTMLSummaryAccessible::FromDetails(Accessible* details) {
     }
   }
 
-  MOZ_ASSERT(summaryAccessible,
-             "Details objects should have at least one summary");
   return summaryAccessible;
 }
 
