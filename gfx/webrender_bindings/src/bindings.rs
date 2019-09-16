@@ -367,22 +367,6 @@ impl<'a> Into<ImageDescriptor> for &'a WrImageDescriptor {
     }
 }
 
-/// cbindgen:field-names=[mHandle]
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct WrExternalImageId(pub u64);
-
-impl Into<ExternalImageId> for WrExternalImageId {
-    fn into(self) -> ExternalImageId {
-        ExternalImageId(self.0)
-    }
-}
-impl Into<WrExternalImageId> for ExternalImageId {
-    fn into(self) -> WrExternalImageId {
-        WrExternalImageId(self.0)
-    }
-}
-
 #[repr(u32)]
 #[allow(dead_code)]
 enum WrExternalImageType {
@@ -411,12 +395,12 @@ struct WrExternalImage {
 extern "C" {
     fn wr_renderer_lock_external_image(
         renderer: *mut c_void,
-        external_image_id: WrExternalImageId,
+        external_image_id: ExternalImageId,
         channel_index: u8,
         rendering: ImageRendering) -> WrExternalImage;
     fn wr_renderer_unlock_external_image(
         renderer: *mut c_void,
-        external_image_id: WrExternalImageId,
+        external_image_id: ExternalImageId,
         channel_index: u8);
 }
 
@@ -433,7 +417,7 @@ impl ExternalImageHandler for WrExternalImageHandler {
             rendering: ImageRendering)
             -> ExternalImage {
 
-        let image = unsafe { wr_renderer_lock_external_image(self.external_image_obj, id.into(), channel_index, rendering) };
+        let image = unsafe { wr_renderer_lock_external_image(self.external_image_obj, id, channel_index, rendering) };
         ExternalImage {
             uv: TexelRect::new(image.u0, image.v0, image.u1, image.v1),
             source: match image.image_type {
@@ -448,7 +432,7 @@ impl ExternalImageHandler for WrExternalImageHandler {
               id: ExternalImageId,
               channel_index: u8) {
         unsafe {
-            wr_renderer_unlock_external_image(self.external_image_obj, id.into(), channel_index);
+            wr_renderer_unlock_external_image(self.external_image_obj, id, channel_index);
         }
     }
 }
@@ -1629,7 +1613,7 @@ pub extern "C" fn wr_resource_updates_add_external_image(
     txn: &mut Transaction,
     image_key: WrImageKey,
     descriptor: &WrImageDescriptor,
-    external_image_id: WrExternalImageId,
+    external_image_id: ExternalImageId,
     image_type: &ExternalImageType,
     channel_index: u8
 ) {
@@ -1638,7 +1622,7 @@ pub extern "C" fn wr_resource_updates_add_external_image(
         descriptor.into(),
         ImageData::External(
             ExternalImageData {
-                id: external_image_id.into(),
+                id: external_image_id,
                 channel_index: channel_index,
                 image_type: *image_type,
             }
@@ -1676,7 +1660,7 @@ pub extern "C" fn wr_resource_updates_update_external_image(
     txn: &mut Transaction,
     key: WrImageKey,
     descriptor: &WrImageDescriptor,
-    external_image_id: WrExternalImageId,
+    external_image_id: ExternalImageId,
     image_type: &ExternalImageType,
     channel_index: u8
 ) {
@@ -1685,7 +1669,7 @@ pub extern "C" fn wr_resource_updates_update_external_image(
         descriptor.into(),
         ImageData::External(
             ExternalImageData {
-                id: external_image_id.into(),
+                id: external_image_id,
                 channel_index,
                 image_type: *image_type,
             }
@@ -1699,7 +1683,7 @@ pub extern "C" fn wr_resource_updates_update_external_image_with_dirty_rect(
     txn: &mut Transaction,
     key: WrImageKey,
     descriptor: &WrImageDescriptor,
-    external_image_id: WrExternalImageId,
+    external_image_id: ExternalImageId,
     image_type: &ExternalImageType,
     channel_index: u8,
     dirty_rect: DeviceIntRect,
@@ -1709,7 +1693,7 @@ pub extern "C" fn wr_resource_updates_update_external_image_with_dirty_rect(
         descriptor.into(),
         ImageData::External(
             ExternalImageData {
-                id: external_image_id.into(),
+                id: external_image_id,
                 channel_index,
                 image_type: *image_type,
             }

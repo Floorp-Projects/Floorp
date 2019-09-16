@@ -44,7 +44,6 @@ typedef wr::WrImageKey ImageKey;
 typedef wr::WrFontKey FontKey;
 typedef wr::WrFontInstanceKey FontInstanceKey;
 typedef wr::WrEpoch Epoch;
-typedef wr::WrExternalImageId ExternalImageId;
 
 typedef mozilla::Maybe<mozilla::wr::IdNamespace> MaybeIdNamespace;
 typedef mozilla::Maybe<mozilla::wr::ImageMask> MaybeImageMask;
@@ -687,12 +686,12 @@ static inline wr::WrOpacityProperty ToWrOpacityProperty(uint64_t id,
 
 // Whenever possible, use wr::ExternalImageId instead of manipulating uint64_t.
 inline uint64_t AsUint64(const ExternalImageId& aId) {
-  return static_cast<uint64_t>(aId.mHandle);
+  return static_cast<uint64_t>(aId._0);
 }
 
 static inline ExternalImageId ToExternalImageId(uint64_t aID) {
   ExternalImageId Id;
-  Id.mHandle = aID;
+  Id._0 = aID;
   return Id;
 }
 
