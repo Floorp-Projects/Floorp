@@ -4,17 +4,7 @@
 
 <!-- Don't localize these. They're here until they have
      a better place to live. -->
-<!ENTITY syncBrand.fullName.label "Firefox Sync">
 <!ENTITY syncBrand.shortName.label "Sync">
-
-<!-- Main titles. -->
-<!ENTITY sync.title.connect.label 'Connect to &syncBrand.shortName.label;'>
-
-<!-- J-PAKE Key Screen -->
-<!ENTITY sync.subtitle.connect.label 'To activate your new device, select “Set up &syncBrand.shortName.label;” on the device.'>
-<!ENTITY sync.subtitle.pair.label 'To activate, select “Pair a device” on your other device.'>
-<!ENTITY sync.pin.default.label '...\n...\n...\n'>
-<!ENTITY sync.link.nodevice.label 'I don\&apos;t have the device with me…'>
 
 <!-- Configure Engines -->
 <!ENTITY sync.configure.engines.title.passwords2 'Logins'>
@@ -41,15 +31,9 @@
 
 <!-- Firefox Account strings. -->
 
-<!-- Localization note: these are shown in screens after the user has
-     created or signed in to an account, and take the user back to
-     Firefox. -->
-<!ENTITY fxaccount_back_to_browsing 'Back to browsing'>
-
 <!ENTITY fxaccount_getting_started_welcome_to_sync 'Welcome to &syncBrand.shortName.label;'>
 <!ENTITY fxaccount_getting_started_description2 'Sign in to sync your tabs, bookmarks, logins &amp; more.'>
 <!ENTITY fxaccount_getting_started_get_started 'Get started'>
-<!ENTITY fxaccount_getting_started_old_firefox 'Using an older version of &syncBrand.shortName.label;?'>
 
 <!ENTITY fxaccount_status_auth_server 'Account server'>
 <!ENTITY fxaccount_status_sync_now 'Sync now'>
