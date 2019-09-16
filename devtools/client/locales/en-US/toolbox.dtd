@@ -7,8 +7,6 @@
 
 <!ENTITY closeCmd.key  "W">
 <!ENTITY toggleToolbox.key  "I">
-<!ENTITY toggleToolboxF12.keycode          "VK_F12">
-<!ENTITY toggleToolboxF12.keytext          "F12">
 
 <!-- LOCALIZATION NOTE (options.context.advancedSettings): This is the label for
   -  the heading of the advanced settings group in the options panel. -->
@@ -34,11 +32,6 @@
   -  dropdown list that controls the default color unit used in the inspector.
   -  This label is visible in the options panel. -->
 <!ENTITY options.defaultColorUnit.label "Default color unit">
-
-<!-- LOCALIZATION NOTE (options.defaultColorUnit.accesskey): This is the access
-  -  key for a dropdown list that controls the default color unit used in the
-  -  inspector. This is visible in the options panel. -->
-<!ENTITY options.defaultColorUnit.accesskey "U">
 
 <!-- LOCALIZATION NOTE (options.defaultColorUnit.authored): This is used in the
   -  'Default color unit' dropdown list and is visible in the options panel. -->
@@ -122,11 +115,6 @@
   -  tools. -->
 <!ENTITY options.selectDevToolsTheme.label2   "Themes">
 
-<!-- LOCALIZATION NOTE (options.usedeveditiontheme.*) Options under the
-  -  toolbox for enabling and disabling the Developer Edition browser theme. -->
-<!ENTITY options.usedeveditiontheme.label   "Use Developer Edition browser theme">
-<!ENTITY options.usedeveditiontheme.tooltip "Toggles the Developer Edition browser theme.">
-
 <!-- LOCALIZATION NOTE (options.webconsole.label): This is the label for the
   -  heading of the group of Web Console preferences in the options panel. -->
 <!ENTITY options.webconsole.label            "Web Console">
@@ -194,7 +182,5 @@ Gecko platform symbols">
 <!ENTITY options.sourceeditor.expandtab.label           "Indent using spaces">
 <!ENTITY options.sourceeditor.expandtab.tooltip         "Use spaces instead of the tab character">
 <!ENTITY options.sourceeditor.tabsize.label             "Tab size">
-<!ENTITY options.sourceeditor.tabsize.accesskey         "T">
 <!ENTITY options.sourceeditor.keybinding.label          "Keybindings">
-<!ENTITY options.sourceeditor.keybinding.accesskey      "K">
 <!ENTITY options.sourceeditor.keybinding.default.label  "Default">

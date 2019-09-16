@@ -61,8 +61,6 @@
 <!ENTITY performanceUI.table.function.tooltip         "The name and source location of the sampled function.">
 <!ENTITY performanceUI.table.totalAlloc               "Total Sampled Allocations">
 <!ENTITY performanceUI.table.totalAlloc.tooltip       "The total number of Object allocations sampled at this location and in callees.">
-<!ENTITY performanceUI.table.selfAlloc                "Self Sampled Allocations">
-<!ENTITY performanceUI.table.selfAlloc.tooltip        "The number of Object allocations sampled at this location.">
 
 <!-- LOCALIZATION NOTE (performanceUI.options.filter.tooltiptext): This string
   -  is displayed next to the filter button-->

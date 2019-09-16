@@ -52,7 +52,6 @@
 <!ENTITY viewMenu_resetzoom_label "Reset Zoom">
 <!ENTITY viewMenu_resetzoom_accesskey "R">
 
-<!ENTITY projectButton_label "Open App">
 <!ENTITY runtimeButton_label "Select Runtime">
 
 <!-- We try to repicate Firefox' bindings: -->
@@ -105,7 +104,6 @@
 
 <!-- Prefs -->
 <!ENTITY prefs_title "Preferences">
-<!ENTITY prefs_editor_title "Editor">
 <!ENTITY prefs_general_title "General">
 <!ENTITY prefs_restore "Restore Defaults">
 <!ENTITY prefs_manage_components "Manage Extra Components">
@@ -123,7 +121,6 @@
 <!ENTITY device_typeboolean "Boolean">
 <!ENTITY device_typenumber "Integer">
 <!ENTITY device_typestring "String">
-<!ENTITY device_typeobject "Object">
 <!ENTITY device_typenone "Select a type">
 
 <!-- Device Preferences -->
@@ -132,13 +129,6 @@
 <!ENTITY devicepreference_newname "New preference name">
 <!ENTITY devicepreference_newtext "Preference value">
 <!ENTITY devicepreference_addnew "Add new preference">
-
-<!-- Device Settings -->
-<!ENTITY devicesetting_title "Device Settings">
-<!ENTITY devicesetting_search "Search settings">
-<!ENTITY devicesetting_newname "New setting name">
-<!ENTITY devicesetting_newtext "Setting value">
-<!ENTITY devicesetting_addnew "Add new setting">
 
 <!-- WiFi Authentication -->
 <!-- LOCALIZATION NOTE (wifi_auth_header): The header displayed on the dialog
