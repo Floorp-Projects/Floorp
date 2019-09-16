@@ -691,7 +691,7 @@ def load_histograms_into_dict(ordered_pairs, strict_type_checks):
 # just Histograms.json.  For each file's basename, we have a specific
 # routine to parse that file, and return a dictionary mapping histogram
 # names to histogram parameters.
-def from_Histograms_json(filename, strict_type_checks):
+def from_json(filename, strict_type_checks):
     with open(filename, 'r') as f:
         try:
             def hook(ps):
@@ -731,17 +731,17 @@ def from_nsDeprecatedOperationList(filename, strict_type_checks):
     return histograms
 
 
-FILENAME_PARSERS = {
-    'Histograms.json': from_Histograms_json,
-    'nsDeprecatedOperationList.h': from_nsDeprecatedOperationList,
-}
+FILENAME_PARSERS = [
+    (lambda x: from_json if x.endswith('.json') else None),
+    (lambda x: from_nsDeprecatedOperationList if x == 'nsDeprecatedOperationList.h' else None),
+]
 
 # Similarly to the dance above with buildconfig, usecounters may not be
 # available, so handle that gracefully.
 try:
     import usecounters
 
-    FILENAME_PARSERS['UseCounters.conf'] = from_UseCounters_conf
+    FILENAME_PARSERS.append(lambda x: from_UseCounters_conf if x == 'UseCounters.conf' else None)
 except ImportError:
     pass
 
@@ -755,7 +755,15 @@ the histograms defined in filenames.
 
     all_histograms = OrderedDict()
     for filename in filenames:
-        parser = FILENAME_PARSERS[os.path.basename(filename)]
+        parser = None
+        for checkFn in FILENAME_PARSERS:
+            parser = checkFn(os.path.basename(filename))
+            if parser is not None:
+                break
+
+        if parser is None:
+            ParserError("Don't know how to parse %s." % filename).handle_now()
+
         histograms = parser(filename, strict_type_checks)
 
         # OrderedDicts are important, because then the iteration order over
