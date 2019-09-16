@@ -753,6 +753,12 @@ ReplayDebugger.prototype = {
     return message;
   },
 
+  _newConsoleMessage(message) {
+    if (this.onConsoleMessage) {
+      this.onConsoleMessage(this._convertConsoleMessage(message));
+    }
+  },
+
   findAllConsoleMessages() {
     const messages = this._sendRequestMainChild({
       type: "findConsoleMessages",
