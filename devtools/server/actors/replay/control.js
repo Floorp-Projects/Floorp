@@ -519,6 +519,9 @@ function CheckpointInfo() {
 
   // If the checkpoint is saved, any debugger statement hits in its region.
   this.debuggerStatements = [];
+
+  // If the checkpoint is saved, any events in its region.
+  this.events = [];
 }
 
 function getCheckpointInfo(id) {
@@ -661,6 +664,10 @@ function forSavedCheckpointsInRange(start, end, callback) {
   }
 }
 
+function forAllSavedCheckpoints(callback) {
+  forSavedCheckpointsInRange(FirstCheckpointId, gLastFlushCheckpoint, callback);
+}
+
 function getSavedCheckpoint(checkpoint) {
   while (!gCheckpoints[checkpoint].saved) {
     checkpoint--;
@@ -795,15 +802,11 @@ function unscannedRegions() {
     }
   }
 
-  forSavedCheckpointsInRange(
-    FirstCheckpointId,
-    gLastFlushCheckpoint,
-    checkpoint => {
-      if (!findScanChild(checkpoint)) {
-        addRegion(checkpoint, nextSavedCheckpoint(checkpoint));
-      }
+  forAllSavedCheckpoints(checkpoint => {
+    if (!findScanChild(checkpoint)) {
+      addRegion(checkpoint, nextSavedCheckpoint(checkpoint));
     }
-  );
+  });
 
   const lastFlush = gLastFlushCheckpoint || FirstCheckpointId;
   if (lastFlush != gRecordingEndpoint) {
@@ -1213,13 +1216,13 @@ async function finishResume() {
       continue;
     }
 
-    let hits = [];
+    const hits = [];
 
     // Find any breakpoint hits in this region of the recording.
     for (const bp of gBreakpoints) {
       if (canFindHits(bp)) {
         const bphits = await findHits(checkpoint, bp);
-        hits = hits.concat(bphits);
+        hits.push(...bphits);
       }
     }
 
@@ -1227,15 +1230,15 @@ async function finishResume() {
     // steps for the current frame.
     if (checkpoint == startCheckpoint && hasSteppingBreakpoint()) {
       const steps = await findFrameSteps(gPausePoint);
-      hits = hits.concat(
-        steps.filter(point => {
+      hits.push(
+        ...steps.filter(point => {
           return gBreakpoints.some(bp => positionSubsumes(bp, point.position));
         })
       );
     }
 
     // Always pause at debugger statements, as if they are breakpoint hits.
-    hits = hits.concat(getCheckpointInfo(checkpoint).debuggerStatements);
+    hits.push(...getCheckpointInfo(checkpoint).debuggerStatements);
 
     const hit = findClosestPoint(
       hits,
@@ -1467,6 +1470,39 @@ function updateNearbyPoints() {
 // associated with the logpoint.
 const gLogpoints = [];
 
+async function evaluateLogpoint({ point, text, condition, callback }) {
+  assert(point);
+  if (!condition) {
+    callback(point, ["Loading..."]);
+  }
+  let skipPauseData = false;
+  const manifest = {
+    shouldSkip: () => false,
+    contents() {
+      return { kind: "hitLogpoint", text, condition, skipPauseData };
+    },
+    onFinished(child, { pauseData, result, resultData, restoredSnapshot }) {
+      if (restoredSnapshot && !skipPauseData) {
+        // Gathering pause data sometimes triggers a snapshot restore.
+        skipPauseData = true;
+        sendAsyncManifest(manifest);
+      } else {
+        if (result) {
+          if (!skipPauseData) {
+            addPauseData(point, pauseData, /* trackCached */ true);
+          }
+          callback(point, result, resultData);
+        }
+        child.divergedFromRecording = true;
+      }
+    },
+    point,
+    expectedDuration: 250,
+    lowPriority: true,
+  };
+  sendAsyncManifest(manifest);
+}
+
 // Asynchronously invoke a logpoint's callback with all results from hitting
 // the logpoint in the range of the recording covered by checkpoint.
 async function findLogpointHits(
@@ -1475,35 +1511,59 @@ async function findLogpointHits(
 ) {
   const hits = await findHits(checkpoint, position);
   for (const point of hits) {
-    if (!condition) {
-      callback(point, ["Loading..."]);
+    evaluateLogpoint({ point, text, condition, callback });
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Event Breakpoints
+////////////////////////////////////////////////////////////////////////////////
+
+// Event kinds which will be logged. For now this set can only grow, as we don't
+// have a way to remove old event logpoints from the client.
+const gLoggedEvents = [];
+
+const gEventFrameEntryPoints = new Map();
+
+async function findEventFrameEntry(checkpoint, progress) {
+  if (gEventFrameEntryPoints.has(progress)) {
+    return gEventFrameEntryPoints.get(progress);
+  }
+
+  const savedCheckpoint = getSavedCheckpoint(checkpoint);
+  await scanRecording(savedCheckpoint);
+  await sendAsyncManifest({
+    shouldSkip: () => gEventFrameEntryPoints.has(progress),
+    contents: () => ({ kind: "findEventFrameEntry", checkpoint, progress }),
+    onFinished: (_, { rv }) => gEventFrameEntryPoints.set(progress, rv),
+    scanCheckpoint: savedCheckpoint,
+  });
+
+  return gEventFrameEntryPoints.get(progress);
+}
+
+async function findEventLogpointHits(checkpoint, event, callback) {
+  for (const info of getCheckpointInfo(checkpoint).events) {
+    if (info.event == event) {
+      const point = await findEventFrameEntry(info.checkpoint, info.progress);
+      if (point) {
+        evaluateLogpoint({ point, text: "arguments[0]", callback });
+      }
     }
-    let skipPauseData = false;
-    const manifest = {
-      shouldSkip: () => false,
-      contents() {
-        return { kind: "hitLogpoint", text, condition, skipPauseData };
-      },
-      onFinished(child, { pauseData, result, resultData, restoredSnapshot }) {
-        if (restoredSnapshot && !skipPauseData) {
-          // Gathering pause data sometimes triggers a snapshot restore.
-          skipPauseData = true;
-          sendAsyncManifest(manifest);
-        } else {
-          if (result) {
-            if (!skipPauseData) {
-              addPauseData(point, pauseData, /* trackCached */ true);
-            }
-            callback(point, result, resultData);
-          }
-          child.divergedFromRecording = true;
-        }
-      },
-      point,
-      expectedDuration: 250,
-      lowPriority: true,
-    };
-    sendAsyncManifest(manifest);
+  }
+}
+
+function setActiveEventBreakpoints(events, callback) {
+  dumpv(`SetActiveEventBreakpoints ${JSON.stringify(events)}`);
+
+  for (const event of events) {
+    if (gLoggedEvents.some(info => info.event == event)) {
+      continue;
+    }
+    gLoggedEvents.push({ event, callback });
+    forAllSavedCheckpoints(checkpoint =>
+      findEventLogpointHits(checkpoint, event, callback)
+    );
   }
 }
 
@@ -1519,6 +1579,7 @@ function handleResumeManifestResponse({
   consoleMessages,
   scripts,
   debuggerStatements,
+  events,
 }) {
   if (!point.position) {
     addCheckpoint(point.checkpoint - 1, duration);
@@ -1539,9 +1600,16 @@ function handleResumeManifestResponse({
     }
   });
 
+  const savedCheckpoint = getSavedCheckpoint(
+    point.position ? point.checkpoint : point.checkpoint - 1
+  );
+
   for (const point of debuggerStatements) {
-    const checkpoint = getSavedCheckpoint(point.checkpoint);
-    getCheckpointInfo(checkpoint).debuggerStatements.push(point);
+    getCheckpointInfo(savedCheckpoint).debuggerStatements.push(point);
+  }
+
+  for (const event of events) {
+    getCheckpointInfo(savedCheckpoint).events.push(event);
   }
 
   // In repaint stress mode, the child process creates a checkpoint before every
@@ -1653,6 +1721,9 @@ function ensureFlushed() {
         findBreakpointHits(checkpoint, position)
       );
       gLogpoints.forEach(logpoint => findLogpointHits(checkpoint, logpoint));
+      for (const { event, callback } of gLoggedEvents) {
+        findEventLogpointHits(checkpoint, event, callback);
+      }
     }
   );
 
@@ -1801,10 +1872,8 @@ const gControl = {
 
     // Start searching for breakpoint hits in the recording immediately.
     if (canFindHits(position)) {
-      forSavedCheckpointsInRange(
-        FirstCheckpointId,
-        gLastFlushCheckpoint,
-        checkpoint => findBreakpointHits(checkpoint, position)
+      forAllSavedCheckpoints(checkpoint =>
+        findBreakpointHits(checkpoint, position)
       );
     }
 
@@ -1916,12 +1985,12 @@ const gControl = {
   // Add a new logpoint.
   addLogpoint(logpoint) {
     gLogpoints.push(logpoint);
-    forSavedCheckpointsInRange(
-      FirstCheckpointId,
-      gLastFlushCheckpoint,
-      checkpoint => findLogpointHits(checkpoint, logpoint)
+    forAllSavedCheckpoints(checkpoint =>
+      findLogpointHits(checkpoint, logpoint)
     );
   },
+
+  setActiveEventBreakpoints,
 
   unscannedRegions,
   cachedPoints,
@@ -2011,22 +2080,18 @@ function maybeDumpStatistics() {
   let timeTotal = 0;
   let scanDurationTotal = 0;
 
-  forSavedCheckpointsInRange(
-    FirstCheckpointId,
-    gLastFlushCheckpoint,
-    checkpoint => {
-      const checkpointTime = timeForSavedCheckpoint(checkpoint);
-      const info = getCheckpointInfo(checkpoint);
+  forAllSavedCheckpoints(checkpoint => {
+    const checkpointTime = timeForSavedCheckpoint(checkpoint);
+    const info = getCheckpointInfo(checkpoint);
 
-      timeTotal += checkpointTime;
-      if (info.scanTime) {
-        delayTotal += checkpointTime * (info.scanTime - info.assignTime);
-        scanDurationTotal += info.scanDuration;
-      } else {
-        unscannedTotal += checkpointTime;
-      }
+    timeTotal += checkpointTime;
+    if (info.scanTime) {
+      delayTotal += checkpointTime * (info.scanTime - info.assignTime);
+      scanDurationTotal += info.scanDuration;
+    } else {
+      unscannedTotal += checkpointTime;
     }
-  );
+  });
 
   const memoryUsage = [];
   let totalSaved = 0;

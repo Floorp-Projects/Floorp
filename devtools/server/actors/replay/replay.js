@@ -23,7 +23,7 @@
 
 const CC = Components.Constructor;
 
-// Create a sandbox with the resources we need. require() doesn't work here.
+// Create a sandbox with the resources we need.
 const sandbox = Cu.Sandbox(
   CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")(),
   {
@@ -49,14 +49,13 @@ const {
   findClosestPoint,
 } = sandbox;
 
-function formatDisplayName(frame) {
-  if (frame.type === "call") {
-    const callee = frame.callee;
-    return callee.name || callee.userDisplayName || callee.displayName;
-  }
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const jsmScope = require("resource://devtools/shared/Loader.jsm");
+const { DebuggerNotificationObserver } = Cu.getGlobalForObject(jsmScope);
 
-  return `(${frame.type})`;
-}
+const {
+  eventBreakpointForNotification,
+} = require("devtools/server/actors/utils/event-breakpoints");
 
 const dbg = new Debugger();
 const gFirstGlobal = dbg.makeGlobalObjectReference(sandbox);
@@ -69,6 +68,7 @@ dbg.onNewGlobalObject = function(global) {
     gAllGlobals.push(global);
 
     scanningOnNewGlobal(global);
+    eventListenerOnNewGlobal(global);
   } catch (e) {
     // Ignore errors related to adding a same-compartment debuggee.
     // See bug 1523755.
@@ -385,6 +385,40 @@ function NewTimeWarpTarget() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Event State
+///////////////////////////////////////////////////////////////////////////////
+
+const gNewEvents = [];
+
+const gDebuggerNotificationObserver = new DebuggerNotificationObserver();
+gDebuggerNotificationObserver.addListener(eventBreakpointListener);
+
+function eventListenerOnNewGlobal(global) {
+  try {
+    gDebuggerNotificationObserver.connect(global.unsafeDereference());
+  } catch (e) {}
+}
+
+function eventBreakpointListener(notification) {
+  const event = eventBreakpointForNotification(dbg, notification);
+  if (!event) {
+    return;
+  }
+
+  // Advance the progress counter before and after each event, so that we can
+  // determine later if any JS ran between the two points.
+  RecordReplayControl.advanceProgressCounter();
+
+  if (notification.phase == "pre") {
+    const progress = RecordReplayControl.progressCounter();
+
+    if (gManifest.kind == "resume") {
+      gNewEvents.push({ event, checkpoint: gLastCheckpoint, progress });
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Recording Scanning
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -599,6 +633,16 @@ function findFrameSteps({ targetPoint, breakpointOffsets }) {
   });
 
   return steps;
+}
+
+function findEventFrameEntry({ checkpoint, progress }) {
+  const entryHits = findChangeFrames(checkpoint, 0, "EnterFrame", 0);
+  for (const hit of entryHits) {
+    if (hit.progress == progress + 1) {
+      return hit;
+    }
+  }
+  return null;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -945,6 +989,10 @@ const gManifestStartHandlers = {
     RecordReplayControl.manifestFinished(findFrameSteps(info));
   },
 
+  findEventFrameEntry(progress) {
+    RecordReplayControl.manifestFinished({ rv: findEventFrameEntry(progress) });
+  },
+
   flushRecording() {
     RecordReplayControl.flushRecording();
     RecordReplayControl.manifestFinished();
@@ -1066,10 +1114,12 @@ function finishResume(point) {
     consoleMessages: gNewConsoleMessages,
     scripts: gNewScripts,
     debuggerStatements: gNewDebuggerStatements,
+    events: gNewEvents,
   });
   gNewConsoleMessages.length = 0;
   gNewScripts.length = 0;
   gNewDebuggerStatements.length = 0;
+  gNewEvents.length = 0;
 }
 
 // Handlers that run after a checkpoint is reached to see if the manifest has
@@ -1225,6 +1275,7 @@ function getScriptData(id) {
     displayName: script.displayName,
     url: script.url,
     format: script.format,
+    mainOffset: script.mainOffset,
   };
 }
 
@@ -1672,6 +1723,15 @@ function getPauseData() {
   }
 
   return rv;
+}
+
+function formatDisplayName(frame) {
+  if (frame.type === "call") {
+    const callee = frame.callee;
+    return callee.name || callee.userDisplayName || callee.displayName;
+  }
+
+  return `(${frame.type})`;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

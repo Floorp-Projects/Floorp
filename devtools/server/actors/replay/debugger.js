@@ -299,6 +299,14 @@ ReplayDebugger.prototype = {
     return [];
   },
 
+  replayGetExecutionPointPosition({ position }) {
+    const script = this._getScript(position.script);
+    if (position.kind == "EnterFrame") {
+      return { script, offset: script.mainOffset };
+    }
+    return { script, offset: position.offset };
+  },
+
   /////////////////////////////////////////////////////////
   // Paused/running state
   /////////////////////////////////////////////////////////
@@ -753,6 +761,21 @@ ReplayDebugger.prototype = {
   },
 
   /////////////////////////////////////////////////////////
+  // Event Breakpoint methods
+  /////////////////////////////////////////////////////////
+
+  replaySetActiveEventBreakpoints(events, callback) {
+    this._control.setActiveEventBreakpoints(
+      events,
+      (point, result, resultData) => {
+        const pool = new ReplayPool(this, resultData);
+        const converted = result.map(v => pool.convertValue(v));
+        callback(point, converted);
+      }
+    );
+  },
+
+  /////////////////////////////////////////////////////////
   // Handlers
   /////////////////////////////////////////////////////////
 
@@ -804,6 +827,9 @@ ReplayDebuggerScript.prototype = {
   get format() {
     return this._data.format;
   },
+  get mainOffset() {
+    return this._data.mainOffset;
+  },
 
   _forward(type, value) {
     return this._dbg._sendRequestMainChild({ type, id: this._data.id, value });
@@ -813,6 +839,7 @@ ReplayDebuggerScript.prototype = {
     return this._forward("getLineOffsets", line);
   },
   getOffsetLocation(pc) {
+    assert(pc !== undefined);
     return this._forward("getOffsetLocation", pc);
   },
   getSuccessorOffsets(pc) {

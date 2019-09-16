@@ -544,6 +544,25 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         this._eventBreakpointListener
       );
     }
+
+    if (isReplaying && this._options.logEventBreakpoints) {
+      const logpointId = `logGroup-${Math.random()}`;
+      this.dbg.replaySetActiveEventBreakpoints(ids, (executionPoint, rv) => {
+        const { script, offset } = this.dbg.replayGetExecutionPointPosition(
+          executionPoint
+        );
+        const { lineNumber, columnNumber } = script.getOffsetLocation(offset);
+        const message = {
+          filename: script.url,
+          lineNumber,
+          columnNumber,
+          executionPoint,
+          arguments: rv,
+          logpointId,
+        };
+        this._parent._consoleActor.onConsoleAPICall(message);
+      });
+    }
   },
 
   _onNewDebuggee(global) {
