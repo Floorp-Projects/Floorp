@@ -1,0 +1,18 @@
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<div id="divvy">Hello World!</div>
+<script>
+const cpmm = SpecialPowers.Services.cpmm;
+function recordingFinished() {
+  cpmm.sendAsyncMessage("RecordingFinished");
+}
+
+const divvy = document.getElementById("divvy");
+divvy.addEventListener("mousedown", e => {
+  divvy.innerText = "Goodbye World!";
+  window.setTimeout(recordingFinished);
+});
+
+window.setTimeout(() => {
+  synthesizeMouseAtCenter(divvy, {});
+});
+</script>
