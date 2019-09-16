@@ -287,9 +287,6 @@ class Mitmproxy(Playback):
 
 
 class MitmproxyDesktop(Mitmproxy):
-    def __init__(self, config):
-        Mitmproxy.__init__(self, config)
-
     def setup(self):
         """
         Installs certificates.
@@ -396,10 +393,6 @@ class MitmproxyDesktop(Mitmproxy):
 
 
 class MitmproxyAndroid(Mitmproxy):
-    def __init__(self, config, android_device):
-        Mitmproxy.__init__(self, config)
-        self.android_device = android_device
-
     @property
     def certutil_sleep_seconds(self):
         """Time to sleep, in seconds, after issuing a `certutil` command."""

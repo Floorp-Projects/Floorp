@@ -307,7 +307,7 @@ either Raptor or browsertime."""
     def start_playback(self, test):
         # creating the playback tool
         self.get_playback_config(test)
-        self.playback = get_playback(self.config, self.device)
+        self.playback = get_playback(self.config)
 
         self.playback.config['playback_files'] = self.get_recording_paths(test)
 
