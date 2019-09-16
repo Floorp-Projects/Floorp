@@ -7,12 +7,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginStart="64dp"
     android:background="?android:selectableItemBackground"
     android:clickable="true"
     android:focusable="true"
     android:gravity="center_vertical"
     android:minHeight="?android:attr/listPreferredItemHeight"
+    android:paddingStart="64dp"
     android:paddingEnd="?android:attr/scrollbarSize">
 
     <LinearLayout
@@ -27,9 +27,9 @@
 
     <TextView
         android:id="@android:id/title"
-        android:textColor="@color/state_list_text_color"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:textColor="@color/state_list_text_color"
         android:textSize="16sp"
         app:layout_constraintBottom_toTopOf="@android:id/summary"
         app:layout_constraintEnd_toEndOf="parent"
