@@ -324,6 +324,11 @@ bool nsStyleUtil::CSPAllowsInlineStyle(
     return true;
   }
 
+  // Hack to allow Devtools to edit inline styles
+  if (csp->GetSkipAllowInlineStyleCheck()) {
+    return true;
+  }
+
   // query the nonce
   nsAutoString nonce;
   if (aElement && aElement->NodeInfo()->NameAtom() == nsGkAtoms::style) {

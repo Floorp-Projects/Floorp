@@ -193,6 +193,7 @@ already_AddRefed<nsIContentSecurityPolicy> CSPInfoToCSP(
       return nullptr;
     }
   }
+  csp->SetSkipAllowInlineStyleCheck(aCSPInfo.skipAllowInlineStyleCheck());
 
   for (uint32_t i = 0; i < aCSPInfo.policyInfos().Length(); i++) {
     const PolicyInfo& policyInfo = aCSPInfo.policyInfos()[i];
@@ -239,6 +240,7 @@ nsresult CSPToCSPInfo(nsIContentSecurityPolicy* aCSP, CSPInfo* aCSPInfo) {
   aCSP->GetReferrer(referrer);
 
   uint64_t windowID = aCSP->GetInnerWindowID();
+  bool skipAllowInlineStyleCheck = aCSP->GetSkipAllowInlineStyleCheck();
 
   nsTArray<PolicyInfo> policyInfos;
   for (uint32_t i = 0; i < count; ++i) {
@@ -251,8 +253,9 @@ nsresult CSPToCSPInfo(nsIContentSecurityPolicy* aCSP, CSPInfo* aCSPInfo) {
                                          policy->getReportOnlyFlag(),
                                          policy->getDeliveredViaMetaTagFlag()));
   }
-  *aCSPInfo = CSPInfo(std::move(policyInfos), requestingPrincipalInfo,
-                      selfURISpec, referrer, windowID);
+  *aCSPInfo =
+      CSPInfo(std::move(policyInfos), requestingPrincipalInfo, selfURISpec,
+              referrer, windowID, skipAllowInlineStyleCheck);
   return NS_OK;
 }
 
