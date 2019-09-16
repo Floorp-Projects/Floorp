@@ -111,7 +111,8 @@ class DocumentChannelParent : public nsIInterfaceRequestor,
 
   void FinishReplacementChannelSetup(bool aSucceeded);
 
-  typedef MozPromise<uint64_t, nsresult, false> ContentProcessIdPromise;
+  typedef MozPromise<uint64_t, nsresult, true /* exclusive */>
+      ContentProcessIdPromise;
   void TriggerCrossProcessSwitch(
       already_AddRefed<ContentProcessIdPromise> aPromise, uint64_t aIdentifier,
       nsHttpChannel* aChannel);
