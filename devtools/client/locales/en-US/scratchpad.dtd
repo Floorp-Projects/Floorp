@@ -90,10 +90,6 @@
 <!ENTITY display.accesskey            "D">
 <!ENTITY display.key                  "l">
 
-<!ENTITY pprint.label                 "Pretty Print">
-<!ENTITY pprint.key                   "p">
-<!ENTITY pprint.accesskey             "P">
-
 <!-- LOCALIZATION NOTE (environmentMenu.label, accesskey): This menu item was
   -  renamed from "Context" to avoid confusion with the right-click context
   -  menu in the text area. It refers to the JavaScript Environment (or context)
@@ -121,18 +117,10 @@
   -->
 <!ENTITY helpMenu.label               "Help">
 <!ENTITY helpMenu.accesskey           "H">
-<!ENTITY helpMenuWin.label            "Help">
 <!ENTITY helpMenuWin.accesskey        "H">
 
 <!ENTITY documentationLink.label      "Scratchpad Help on MDN">
 <!ENTITY documentationLink.accesskey  "D">
-
-
-<!-- LOCALIZATION NOTE (resetContext2.label): This command allows the developer
-  -  to reset/clear the global object of the environment where the code executes.
-  -->
-<!ENTITY resetContext2.label          "Reset Variables">
-<!ENTITY resetContext2.accesskey      "T">
 
 <!ENTITY reloadAndRun.label           "Reload And Run">
 <!ENTITY reloadAndRun.accesskey       "E">
