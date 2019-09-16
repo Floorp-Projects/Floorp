@@ -68,12 +68,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Downloads.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "UserAgentOverrides",
-  "resource://gre/modules/UserAgentOverrides.jsm"
-);
-
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
 ChromeUtils.defineModuleGetter(
@@ -124,6 +118,19 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/uuid-generator;1",
   "nsIUUIDGenerator"
 );
+
+XPCOMUtils.defineLazyGetter(this, "DEFAULT_UA", function() {
+  return Cc["@mozilla.org/network/protocol;1?name=http"].getService(
+    Ci.nsIHttpProtocolHandler
+  ).userAgent;
+});
+
+XPCOMUtils.defineLazyGetter(this, "DESKTOP_UA", function() {
+  return DEFAULT_UA.replace(
+    /Android \d.+?; [a-zA-Z]+/,
+    "X11; Linux x86_64"
+  ).replace(/Gecko\/[0-9\.]+/, "Gecko/20100101");
+});
 
 if (AppConstants.MOZ_ENABLE_PROFILER_SPS) {
   XPCOMUtils.defineLazyServiceGetter(
@@ -595,6 +602,7 @@ var BrowserApp = {
     GlobalEventDispatcher.registerListener(this, [
       "Browser:LoadManifest",
       "Browser:Quit",
+      "DesktopMode:Change",
       "Fonts:Reload",
       "FormHistory:Init",
       "FullScreen:Exit",
@@ -652,7 +660,6 @@ var BrowserApp = {
     CharacterEncoding.init();
     ActivityObserver.init();
     RemoteDebugger.init(window);
-    DesktopUserAgent.init();
     Distribution.init();
     Tabs.init();
     SearchEngines.init();
@@ -2324,6 +2331,13 @@ var BrowserApp = {
 
       case "Fonts:Reload":
         FontEnumerator.updateFontList();
+        break;
+
+      case "DesktopMode:Change":
+        let tab = this.getTabForId(data.tabId);
+        if (tab) {
+          tab.reloadWithMode(data.desktopMode);
+        }
         break;
 
       case "FormHistory:Init": {
@@ -4003,94 +4017,6 @@ var LightWeightThemeStuff = {
   },
 };
 
-var DesktopUserAgent = {
-  DESKTOP_UA: null,
-  TCO_DOMAIN: "t.co",
-  TCO_REPLACE: / Gecko.*/,
-
-  init: function ua_init() {
-    GlobalEventDispatcher.registerListener(this, "DesktopMode:Change");
-    UserAgentOverrides.addComplexOverride(this.onRequest.bind(this));
-
-    // See https://developer.mozilla.org/en/Gecko_user_agent_string_reference
-    this.DESKTOP_UA = Cc["@mozilla.org/network/protocol;1?name=http"]
-      .getService(Ci.nsIHttpProtocolHandler)
-      .userAgent.replace(/Android \d.+?; [a-zA-Z]+/, "X11; Linux x86_64")
-      .replace(/Gecko\/[0-9\.]+/, "Gecko/20100101");
-  },
-
-  onRequest: function(channel, defaultUA) {
-    if (AppConstants.NIGHTLY_BUILD && this.TCO_DOMAIN == channel.URI.host) {
-      // Force the referrer
-      channel.referrer = channel.URI;
-
-      // Send a bot-like UA to t.co to get a real redirect. We strip off the
-      // "Gecko/x.y Firefox/x.y" part
-      return defaultUA.replace(this.TCO_REPLACE, "");
-    }
-
-    let channelWindow = this._getWindowForRequest(channel);
-    let tab = BrowserApp.getTabForWindow(channelWindow);
-    if (tab) {
-      return this.getUserAgentForTab(tab);
-    }
-
-    return null;
-  },
-
-  getUserAgentForTab: function ua_getUserAgentForTab(aTab) {
-    // Send desktop UA if "Request Desktop Site" is enabled.
-    if (aTab.desktopMode) {
-      return this.DESKTOP_UA;
-    }
-
-    return null;
-  },
-
-  _getRequestLoadContext: function ua_getRequestLoadContext(aRequest) {
-    if (aRequest && aRequest.notificationCallbacks) {
-      try {
-        return aRequest.notificationCallbacks.getInterface(Ci.nsILoadContext);
-      } catch (ex) {}
-    }
-
-    if (
-      aRequest &&
-      aRequest.loadGroup &&
-      aRequest.loadGroup.notificationCallbacks
-    ) {
-      try {
-        return aRequest.loadGroup.notificationCallbacks.getInterface(
-          Ci.nsILoadContext
-        );
-      } catch (ex) {}
-    }
-
-    return null;
-  },
-
-  _getWindowForRequest: function ua_getWindowForRequest(aRequest) {
-    let loadContext = this._getRequestLoadContext(aRequest);
-    if (loadContext) {
-      try {
-        return loadContext.associatedWindow;
-      } catch (e) {
-        // loadContext.associatedWindow can throw when there's no window
-      }
-    }
-    return null;
-  },
-
-  onEvent: function ua_onEvent(event, data, callback) {
-    if (event === "DesktopMode:Change") {
-      let tab = BrowserApp.getTabForId(data.tabId);
-      if (tab) {
-        tab.reloadWithMode(data.desktopMode);
-      }
-    }
-  },
-};
-
 function nsBrowserAccess() {}
 
 nsBrowserAccess.prototype = {
@@ -4392,6 +4318,13 @@ Tab.prototype = {
 
     this.browser.docShell.setOriginAttributes(attrs);
 
+    let desktopMode = "desktopMode" in aParams ? aParams.desktopMode : false;
+    if (desktopMode) {
+      this.browser.docShell.customUserAgent = DESKTOP_UA;
+    } else {
+      this.browser.docShell.customUserAgent = "";
+    }
+
     // Set the new docShell load flags based on network state.
     if (Tabs.useCache) {
       this.browser.docShell.defaultLoadFlags |= Ci.nsIRequest.LOAD_FROM_CACHE;
@@ -4611,6 +4544,14 @@ Tab.prototype = {
       // We were redirected; reload the original URL
       url = this.originalURI.spec;
     }
+
+    if (aDesktopMode) {
+      this.browser.docShell.customUserAgent = DESKTOP_UA;
+    } else {
+      // Clear custom UA
+      this.browser.docShell.customUserAgent = "";
+    }
+
     let loadURIOptions = {
       triggeringPrincipal: this.browser.contentPrincipal,
       loadFlags,
