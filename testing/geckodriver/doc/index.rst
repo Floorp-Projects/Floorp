@@ -29,6 +29,7 @@ For users
    Capabilities.md
    Usage.md
    Flags.md
+   Profiles.md
    Bugs.md
    TraceLogs.md
    CrashReports.md
