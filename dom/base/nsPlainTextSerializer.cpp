@@ -62,7 +62,7 @@ constexpr int32_t kNoFlags = 0;
 
 static int32_t HeaderLevel(nsAtom* aTag);
 static int32_t GetUnicharWidth(char16_t ucs);
-static int32_t GetUnicharStringWidth(const char16_t* pwcs, int32_t n);
+static int32_t GetUnicharStringWidth(const nsString& aString);
 
 // Someday may want to make this non-const:
 static const uint32_t TagStackSize = 500;
@@ -1214,8 +1214,8 @@ void nsPlainTextSerializer::MaybeWrapAndOutputCompleteLines() {
   int32_t linelength = mCurrentLine.mContent.Length();
 
   // The width of the line as it will appear on the screen (approx.).
-  uint32_t currentLineContentWidth = GetUnicharStringWidth(
-      mCurrentLine.mContent.get(), mCurrentLine.mContent.Length());
+  uint32_t currentLineContentWidth =
+      GetUnicharStringWidth(mCurrentLine.mContent);
 
   // Yes, wrap!
   // The "+4" is to avoid wrap lines that only would be a couple
@@ -1315,8 +1315,7 @@ void nsPlainTextSerializer::MaybeWrapAndOutputCompleteLines() {
         }
       }
       mCurrentLine.mContent.Append(restOfLine);
-      currentLineContentWidth = GetUnicharStringWidth(
-          mCurrentLine.mContent.get(), mCurrentLine.mContent.Length());
+      currentLineContentWidth = GetUnicharStringWidth(mCurrentLine.mContent);
       linelength = mCurrentLine.mContent.Length();
       mEmptyLines = -1;
     } else {
@@ -1920,7 +1919,10 @@ int32_t GetUnicharWidth(char16_t ucs) {
           (ucs >= 0xffe0 && ucs <= 0xffe6));
 }
 
-int32_t GetUnicharStringWidth(const char16_t* pwcs, int32_t n) {
+int32_t GetUnicharStringWidth(const nsString& aString) {
+  const char16_t* pwcs = aString.get();
+  int32_t n = aString.Length();
+
   int32_t w, width = 0;
 
   for (; *pwcs && n-- > 0; pwcs++)
