@@ -138,7 +138,7 @@ bool InputType::IsValueMissing() const { return false; }
 
 bool InputType::HasTypeMismatch() const { return false; }
 
-bool InputType::HasPatternMismatch() const { return false; }
+Maybe<bool> InputType::HasPatternMismatch() const { return Some(false); }
 
 bool InputType::IsRangeOverflow() const { return false; }
 

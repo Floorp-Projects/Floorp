@@ -1,0 +1,15 @@
+<script>
+function start() {
+  document.addEventListener('DOMAttrModified', function() {
+    b.scroll()
+    b.setAttribute('dir', 'ltr')
+    b.dir = ''
+  })
+  a.setAttribute('d', '')
+}
+document.addEventListener('DOMContentLoaded', start)
+</script>
+<form dir="rtl">
+<object id="a">
+<input value="X" multiple pattern="[]">
+<p id="b">
