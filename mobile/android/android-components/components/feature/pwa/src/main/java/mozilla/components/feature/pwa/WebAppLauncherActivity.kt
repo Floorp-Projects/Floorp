@@ -11,7 +11,6 @@ import android.os.Bundle
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -25,7 +24,9 @@ import mozilla.components.support.base.log.logger.Logger
  * Based on the Web App Manifest (display) it will decide whether the app is launched in the browser or in a
  * standalone activity.
  */
-class WebAppLauncherActivity : AppCompatActivity(), CoroutineScope by MainScope() {
+class WebAppLauncherActivity : AppCompatActivity() {
+
+    private val scope = MainScope()
     private val logger = Logger("WebAppLauncherActivity")
     private lateinit var storage: ManifestStorage
 
@@ -33,19 +34,19 @@ class WebAppLauncherActivity : AppCompatActivity(), CoroutineScope by MainScope(
         super.onCreate(savedInstanceState)
         storage = ManifestStorage(this)
 
-        intent.data?.let { startUrl ->
-            launch {
-                val manifest = loadManifest(startUrl.toString())
-                routeManifest(startUrl, manifest)
-            }
-        }
+        val startUrl = intent.data ?: return finish()
 
-        finish()
+        scope.launch {
+            val manifest = loadManifest(startUrl.toString())
+            routeManifest(startUrl, manifest)
+
+            finish()
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        coroutineContext.cancel()
+        scope.cancel()
     }
 
     @VisibleForTesting(otherwise = PRIVATE)
