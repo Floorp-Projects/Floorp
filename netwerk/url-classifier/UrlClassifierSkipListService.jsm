@@ -34,9 +34,9 @@ class Feature {
     if (!this.remoteEntries) {
       let remoteEntries;
       try {
-        remoteEntries = await RemoteSettings(COLLECTION_NAME).get({
-          syncIfEmpty: false,
-        });
+        // The data will be initially available from the local DB (via a
+        // resource:// URI).
+        remoteEntries = await RemoteSettings(COLLECTION_NAME).get();
       } catch (e) {
         remoteEntries = [];
       }
