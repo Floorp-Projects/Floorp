@@ -589,8 +589,13 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
   }
 
   // get our border and padding
+  // Bug 1499281: Remove borderPadding since only our parent ColumnSetWrapper
+  // can have border and padding.
   LogicalMargin borderPadding = aReflowInput.ComputedLogicalBorderPadding();
   borderPadding.ApplySkipSides(GetLogicalSkipSides(&aReflowInput));
+  MOZ_ASSERT(!StaticPrefs::layout_css_column_span_enabled() ||
+                 borderPadding.IsAllZero(),
+             "Only our parent ColumnSetWrapper can have border and padding!");
 
   nsRect contentRect(0, 0, 0, 0);
   nsOverflowAreas overflowRects;
@@ -609,23 +614,29 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
           ? aReflowInput.mParentReflowInput->ComputedBSize()
           : aReflowInput.ComputedBSize();
 
-  // For RTL, since the columns might not fill the frame exactly, we
-  // need to account for the slop. Otherwise we'll waste time moving the
-  // columns by some tiny amount
+  if (!StaticPrefs::layout_css_column_span_enabled()) {
+    // For RTL, since the columns might not fill the frame exactly, we
+    // need to account for the slop. Otherwise we'll waste time moving the
+    // columns by some tiny amount
 
-  // XXX when all of layout is converted to logical coordinates, we
-  //     probably won't need to do this hack any more. For now, we
-  //     confine it to the legacy horizontal-rl case
-  if (!wm.IsVertical() && isRTL) {
-    nscoord availISize = aReflowInput.AvailableISize();
-    if (aReflowInput.ComputedISize() != NS_UNCONSTRAINEDSIZE) {
-      availISize = aReflowInput.ComputedISize();
-    }
-    if (availISize != NS_UNCONSTRAINEDSIZE) {
-      childOrigin.I(wm) =
-          containerSize.width - borderPadding.Left(wm) - availISize;
+    // XXX when all of layout is converted to logical coordinates, we
+    //     probably won't need to do this hack any more. For now, we
+    //     confine it to the legacy horizontal-rl case
+    //
+    // XXX When column-span is enabled, our available inline-size has been
+    //     constrained by ColumnSetWrapperFrame.
+    if (!wm.IsVertical() && isRTL) {
+      nscoord availISize = aReflowInput.AvailableISize();
+      if (aReflowInput.ComputedISize() != NS_UNCONSTRAINEDSIZE) {
+        availISize = aReflowInput.ComputedISize();
+      }
+      if (availISize != NS_UNCONSTRAINEDSIZE) {
+        childOrigin.I(wm) =
+            containerSize.width - borderPadding.Left(wm) - availISize;
 
-      COLUMN_SET_LOG("%s: childOrigin.iCoord=%d", __func__, childOrigin.I(wm));
+        COLUMN_SET_LOG("%s: childOrigin.iCoord=%d", __func__,
+                       childOrigin.I(wm));
+      }
     }
   }
 
@@ -935,9 +946,6 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
   mLastFrameStatus = aStatus;
 
   if (StaticPrefs::layout_css_column_span_enabled()) {
-    MOZ_ASSERT(borderPadding.IsAllZero(),
-               "Only our parent ColumnSetWrapper can have border and padding!");
-
     if (computedBSize != NS_UNCONSTRAINEDSIZE && !HasColumnSpanSiblings()) {
       NS_ASSERTION(aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE,
                    "Available block-size should be constrained because it's "
