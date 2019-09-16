@@ -9,7 +9,7 @@
 
 #include "AudioChannelService.h"
 #include "AudioNode.h"
-#include "nsIAudioChannelAgent.h"
+#include "AudioChannelAgent.h"
 #include "mozilla/TimeStamp.h"
 
 namespace mozilla {
@@ -80,7 +80,7 @@ class AudioDestinationNode final : public AudioNode,
   SelfReference<AudioDestinationNode> mOfflineRenderingRef;
   uint32_t mFramesToProduce;
 
-  nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;
+  RefPtr<AudioChannelAgent> mAudioChannelAgent;
   RefPtr<MediaInputPort> mCaptureStreamPort;
 
   RefPtr<Promise> mOfflineRenderingPromise;
