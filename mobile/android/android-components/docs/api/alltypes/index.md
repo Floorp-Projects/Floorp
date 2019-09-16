@@ -109,6 +109,7 @@
 | [mozilla.components.feature.contextmenu.ContextMenuCandidate](../mozilla.components.feature.contextmenu/-context-menu-candidate/index.md) | A candidate for an item to be displayed in the context menu. |
 | [mozilla.components.feature.contextmenu.ContextMenuFeature](../mozilla.components.feature.contextmenu/-context-menu-feature/index.md) | Feature for displaying a context menu after long-pressing web content. |
 | [mozilla.components.feature.contextmenu.ContextMenuFragment](../mozilla.components.feature.contextmenu/-context-menu-fragment/index.md) | [DialogFragment](#) implementation to display the actual context menu dialog. |
+| [mozilla.components.feature.contextmenu.ContextMenuUseCases](../mozilla.components.feature.contextmenu/-context-menu-use-cases/index.md) | Contains use cases related to the context menu feature. |
 | [org.mozilla.telemetry.util.ContextUtils](../org.mozilla.telemetry.util/-context-utils/index.md) |  |
 | [mozilla.components.feature.session.CoordinateScrollingFeature](../mozilla.components.feature.session/-coordinate-scrolling-feature/index.md) | Feature implementation for connecting an [EngineView](../mozilla.components.concept.engine/-engine-view/index.md) with any View that you want to coordinate scrolling behavior with. |
 | [kotlinx.coroutines.CoroutineScope](../mozilla.components.browser.engine.gecko/kotlinx.coroutines.-coroutine-scope/index.md) (extensions in package mozilla.components.browser.engine.gecko) |  |

@@ -2,7 +2,7 @@
 
 # ContextMenuFeature
 
-`class ContextMenuFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuFeature.kt#L36)
+`class ContextMenuFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuFeature.kt#L47)
 
 Feature for displaying a context menu after long-pressing web content.
 
@@ -14,7 +14,7 @@ menu the related [HitResult](../../mozilla.components.concept.engine/-hit-result
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `ContextMenuFeature(fragmentManager: FragmentManager, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, candidates: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`ContextMenuCandidate`](../-context-menu-candidate/index.md)`>, engineView: `[`EngineView`](../../mozilla.components.concept.engine/-engine-view/index.md)`, sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)`<br>Feature for displaying a context menu after long-pressing web content. |
+| [&lt;init&gt;](-init-.md) | `ContextMenuFeature(fragmentManager: FragmentManager, store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`, candidates: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`ContextMenuCandidate`](../-context-menu-candidate/index.md)`>, engineView: `[`EngineView`](../../mozilla.components.concept.engine/-engine-view/index.md)`, useCases: `[`ContextMenuUseCases`](../-context-menu-use-cases/index.md)`, customTabId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)`<br>Feature for displaying a context menu after long-pressing web content. |
 
 ### Functions
 
