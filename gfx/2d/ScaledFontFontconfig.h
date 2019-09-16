@@ -53,10 +53,9 @@ class ScaledFontFontconfig : public ScaledFontBase {
       AUTOHINT = 1 << 0,
       EMBEDDED_BITMAP = 1 << 1,
       EMBOLDEN = 1 << 2,
-      VERTICAL_LAYOUT = 1 << 3,
-      HINT_METRICS = 1 << 4,
-      LCD_VERTICAL = 1 << 5,
-      SUBPIXEL_BGR = 1 << 6,
+      HINT_METRICS = 1 << 3,
+      LCD_VERTICAL = 1 << 4,
+      SUBPIXEL_BGR = 1 << 5,
     };
 
     InstanceData(cairo_scaled_font_t* aScaledFont, FcPattern* aPattern);

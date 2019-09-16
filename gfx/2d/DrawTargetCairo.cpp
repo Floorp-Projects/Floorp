@@ -9,7 +9,6 @@
 #include "SourceSurfaceCairo.h"
 #include "PathCairo.h"
 #include "HelpersCairo.h"
-#include "ScaledFontBase.h"
 #include "BorrowedContext.h"
 #include "FilterNodeSoftware.h"
 #include "mozilla/Scoped.h"
@@ -1275,8 +1274,7 @@ void DrawTargetCairo::FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
   AutoPrepareForDrawing prep(this, mContext);
   AutoClearDeviceOffset clear(aPattern);
 
-  ScaledFontBase* scaledFont = static_cast<ScaledFontBase*>(aFont);
-  cairo_set_scaled_font(mContext, scaledFont->GetCairoScaledFont());
+  cairo_set_scaled_font(mContext, aFont->GetCairoScaledFont());
 
   cairo_pattern_t* pat =
       GfxPatternToCairoPattern(aPattern, aOptions.mAlpha, GetTransform());
@@ -1584,6 +1582,12 @@ already_AddRefed<FilterNode> DrawTargetCairo::CreateFilter(FilterType aType) {
 void DrawTargetCairo::GetGlyphRasterizationMetrics(
     ScaledFont* aScaledFont, const uint16_t* aGlyphIndices, uint32_t aNumGlyphs,
     GlyphMetrics* aGlyphMetrics) {
+  cairo_scaled_font_t* cairoFont = aScaledFont->GetCairoScaledFont();
+  if (!cairoFont ||
+      cairo_scaled_font_status(cairoFont) != CAIRO_STATUS_SUCCESS) {
+    return;
+  }
+  cairo_set_scaled_font(mContext, cairoFont);
   for (uint32_t i = 0; i < aNumGlyphs; i++) {
     cairo_glyph_t glyph;
     cairo_text_extents_t extents;
