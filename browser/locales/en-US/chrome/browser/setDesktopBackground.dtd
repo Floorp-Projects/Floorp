@@ -17,5 +17,4 @@
 <!ENTITY color.label                "Color:">
 <!ENTITY setDesktopBackground.title "Set Desktop Background">
 <!ENTITY openDesktopPrefs.label     "Open Desktop Preferences">
-<!ENTITY closeWindow.key            "w">
 <!ENTITY previewUnavailable         "Preview unavailable">

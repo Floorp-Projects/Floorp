@@ -10,4 +10,3 @@
    remain unchanged across different versions (Nightly, Beta, etc.). -->
 <!ENTITY  brandProductName      "Firefox">
 <!ENTITY  vendorShortName       "Mozilla">
-<!ENTITY  trademarkInfo.part1   "Firefox and the Firefox logos are trademarks of the Mozilla Foundation.">
