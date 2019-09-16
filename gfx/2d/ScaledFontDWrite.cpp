@@ -185,16 +185,6 @@ SkTypeface* ScaledFontDWrite::CreateSkTypeface() {
   return SkCreateTypefaceFromDWriteFont(factory, mFontFace, mStyle,
                                         mRenderingMode, gamma, contrast);
 }
-
-void ScaledFontDWrite::SetupSkFontDrawOptions(SkFont& aFont) {
-  if (ForceGDIMode()) {
-    aFont.setEmbeddedBitmaps(true);
-    aFont.setSubpixel(false);
-  } else {
-    aFont.setEmbeddedBitmaps(UseEmbeddedBitmaps());
-    aFont.setSubpixel(true);
-  }
-}
 #endif
 
 void ScaledFontDWrite::CopyGlyphsToBuilder(const GlyphBuffer& aBuffer,
