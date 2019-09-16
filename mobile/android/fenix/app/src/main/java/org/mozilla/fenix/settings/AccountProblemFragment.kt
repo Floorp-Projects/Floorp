@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
@@ -45,14 +46,13 @@ class AccountProblemFragment : PreferenceFragmentCompat(), AccountObserver {
         (activity as AppCompatActivity).supportActionBar?.show()
 
         val accountManager = requireComponents.backgroundServices.accountManager
+        accountManager.register(this, owner = this)
 
         // We may have fixed our auth problem, in which case close this fragment.
         if (accountManager.authenticatedAccount() != null && !accountManager.accountNeedsReauth()) {
             findNavController().popBackStack()
             return
         }
-
-        accountManager.register(this, owner = this)
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -73,8 +73,9 @@ class AccountProblemFragment : PreferenceFragmentCompat(), AccountObserver {
     override fun onLoggedOut() = closeFragment()
 
     private fun closeFragment() {
-        lifecycleScope.launch {
-            findNavController().popBackStack()
+        lifecycleScope.launch(Dispatchers.Main) {
+            findNavController()
+                .popBackStack(R.id.accountProblemFragment, true)
         }
     }
 }
