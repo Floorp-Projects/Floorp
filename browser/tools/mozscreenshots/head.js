@@ -33,16 +33,14 @@ async function setup() {
   await AddonManager.installTemporaryAddon(dir);
 
   info("Checking for mozscreenshots extension");
-  return new Promise(async resolve => {
-    let aAddon = await AddonManager.getAddonByID("mozscreenshots@mozilla.org");
-    isnot(aAddon, null, "The mozscreenshots extension should be installed");
-    TestRunner = ChromeUtils.import(
-      "resource://mozscreenshots/TestRunner.jsm",
-      {}
-    ).TestRunner;
-    TestRunner.initTest(this);
-    resolve();
-  });
+
+  let aAddon = await AddonManager.getAddonByID("mozscreenshots@mozilla.org");
+  isnot(aAddon, null, "The mozscreenshots extension should be installed");
+  TestRunner = ChromeUtils.import(
+    "resource://mozscreenshots/TestRunner.jsm",
+    {}
+  ).TestRunner;
+  TestRunner.initTest(this);
 }
 
 /**

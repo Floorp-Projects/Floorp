@@ -294,13 +294,6 @@ module.exports = {
     }
   }, {
     "files": [
-      "browser/components/extensions/ExtensionControlledPopup.jsm",
-      "browser/components/extensions/test/browser/browser_ext_devtools_network.js",
-      "browser/components/extensions/test/browser/browser_ext_tabs_zoom.js",
-      "browser/components/places/tests/browser/browser_bookmarksProperties.js",
-      "browser/components/preferences/in-content/tests/browser_extension_controlled.js",
-      "browser/extensions/formautofill/FormAutofillParent.jsm",
-      "browser/tools/mozscreenshots/head.js",
       "devtools/client/aboutdebugging/test/browser/helper-addons.js",
       "devtools/client/inspector/animation/animation.js",
       "devtools/client/inspector/changes/ChangesView.js",
@@ -320,18 +313,6 @@ module.exports = {
       "dom/tests/browser/browser_persist_cookies.js",
       "dom/tests/browser/browser_persist_mixed_content_image.js",
       "netwerk/test/unit/test_http2-proxy.js",
-      "toolkit/components/contentprefs/ContentPrefService2.jsm",
-      "toolkit/components/extensions/ExtensionShortcuts.jsm",
-      "toolkit/components/extensions/ExtensionTestCommon.jsm",
-      "toolkit/components/extensions/test/browser/browser_ext_themes_dynamic_getCurrent.js",
-      "toolkit/components/extensions/test/browser/browser_ext_themes_warnings.js",
-      "toolkit/components/passwordmgr/test/browser/browser_autocomplete_footer.js",
-      "toolkit/components/remotebrowserutils/tests/browser/browser_httpResponseProcessSelection.js",
-      "toolkit/components/satchel/FormHistory.jsm",
-      "toolkit/content/tests/browser/browser_findbar.js",
-      "toolkit/modules/NewTabUtils.jsm",
-      "toolkit/mozapps/extensions/test/browser/browser_CTP_plugins.js",
-      "toolkit/mozapps/extensions/test/browser/head.js",
     ],
     "rules": {
       "no-async-promise-executor": "off",
