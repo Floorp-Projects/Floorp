@@ -1586,8 +1586,10 @@ function handleResumeManifestResponse({
     getCheckpointInfo(point.checkpoint).point = point;
   }
 
-  if (gDebugger && gDebugger.onConsoleMessage) {
-    consoleMessages.forEach(msg => gDebugger.onConsoleMessage(msg));
+  if (gDebugger) {
+    consoleMessages.forEach(msg => {
+      gDebugger._newConsoleMessage(msg);
+    });
   }
 
   if (gDebugger) {
