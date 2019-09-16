@@ -1456,7 +1456,7 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
   // overall size even though they may each be much smaller. This can lead to
   // allocating much larger textures than necessary in webrender.
   //
-  // Don’t bother fixing this unless we run into this in the real world, though.
+  // Don't bother fixing this unless we run into this in the real world, though.
   auto layerBounds = LayerIntRect::FromUnknownRect(
       ScaleToOutsidePixelsOffset(groupBounds, scale.width, scale.height,
                                  appUnitsPerDevPixel, residualOffset));
