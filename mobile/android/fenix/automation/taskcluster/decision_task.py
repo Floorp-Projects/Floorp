@@ -96,6 +96,7 @@ def release(builder, channel, engine, is_staging, version_name):
         signing_task['label'],
         taskcluster_apk_paths,
         channel=channel,
+        variant=variant,
         # TODO until org.mozilla.fenix.nightly is made public, put it on the internally-testable track
         override_google_play_track=None if channel != "nightly" else "internal",
         is_staging=is_staging,
@@ -108,21 +109,16 @@ def release_as_fennec(builder, is_staging, version_name):
     variant = get_variant('fennecProduction', 'geckoBeta')
     channel = 'fennec-production'
 
-    build_tasks = {}
-    signing_tasks = {}
-
-    build_task_id = _generate_slug_id()
-    build_tasks[build_task_id] = builder.craft_assemble_release_task(variant, channel, is_staging, version_name)
-
-    signing_task_id = _generate_slug_id()
-    signing_tasks[signing_task_id] = builder.craft_release_signing_task(
-        build_task_id,
+    build_task = builder.craft_assemble_release_task(variant, channel, is_staging, version_name)
+    signing_task = builder.craft_release_signing_task(
+        build_task['label'],
         variant.upstream_artifacts(),
         channel,
+        variant,
         is_staging,
     )
 
-    return (build_tasks, signing_tasks)
+    return [build_task, signing_task]
 
 
 def nightly_to_production_app(builder, is_staging, version_name):
@@ -132,41 +128,28 @@ def nightly_to_production_app(builder, is_staging, version_name):
     variant = get_variant('fenixNightlyLegacy', 'geckoNightly')
     taskcluster_apk_paths = variant.upstream_artifacts()
 
-    build_tasks = {}
-    signing_tasks = {}
-    push_tasks = {}
-    other_tasks = {}
-
-    build_task_id = _generate_slug_id()
-    build_tasks[build_task_id] = builder.craft_assemble_release_task(
+    build_task = builder.craft_assemble_release_task(
         variant, 'nightly-legacy', is_staging, version_name)
 
-    signing_task_id = _generate_slug_id()
-    signing_tasks[signing_task_id] = builder.craft_release_signing_task(
-        build_task_id,
+    signing_task = builder.craft_release_signing_task(
+        build_task['label'],
         taskcluster_apk_paths,
         channel='production',  # Since we're publishing to the "production" app, we need to sign for production
         is_staging=is_staging,
         publish_to_index=False,
     )
 
-    push_task_id = _generate_slug_id()
-    push_tasks[push_task_id] = builder.craft_push_task(
-        signing_task_id,
+    push_task = builder.craft_push_task(
+        signing_task['label'],
         taskcluster_apk_paths,
         channel='production',  # We're publishing to the "production" app on the "nightly" track
+        variant=variant,
         override_google_play_track='nightly',
         is_staging=is_staging,
     )
 
+    tasks = [build_task, signing_task, push_task]
     if not is_staging:
-        nimbledroid_task_id = _generate_slug_id()
-        other_tasks[nimbledroid_task_id] = builder.craft_upload_apk_nimbledroid_task(
-            build_task_id
-        )
+        tasks.append(builder.craft_upload_apk_nimbledroid_task(build_task['label']))
 
-    return (build_tasks, signing_tasks, push_tasks, other_tasks)
-
-
-def _generate_slug_id():
-    return taskcluster.slugId()
+    return tasks

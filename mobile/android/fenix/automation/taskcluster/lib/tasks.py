@@ -516,7 +516,7 @@ class TaskBuilder(object):
         )
 
     def craft_push_task(
-        self, signing_task_label, apk_paths, channel, is_staging=False, override_google_play_track=None
+        self, signing_task_label, apk_paths, channel, variant, is_staging=False, override_google_play_track=None,
     ):
         payload = {
             "commit": True,
@@ -544,7 +544,7 @@ class TaskBuilder(object):
                     ':dep' if is_staging else ''
                 )
             ],
-            name="Push task",
+            name="Push task {}".format(variant.name),
             description="Upload signed release builds of Fenix to Google Play",
             payload=payload,
             treeherder={
