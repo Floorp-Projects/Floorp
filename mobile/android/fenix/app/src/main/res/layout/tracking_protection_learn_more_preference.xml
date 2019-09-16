@@ -14,9 +14,9 @@
         android:layout_height="0dp"
         android:adjustViewBounds="true"
         android:importantForAccessibility="no"
-        android:src="@drawable/ic_etp_artwork"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_etp_artwork" />
 
     <TextView
         android:id="@android:id/title"
@@ -69,11 +69,11 @@
         android:layout_height="0dp"
         android:layout_marginStart="12dp"
         android:importantForAccessibility="no"
-        android:src="@drawable/ic_arrowhead_right"
         android:tint="@color/primary_text_dark_theme"
         app:layout_constraintBottom_toBottomOf="@id/learn_more"
         app:layout_constraintStart_toEndOf="@id/learn_more"
-        app:layout_constraintTop_toTopOf="@id/learn_more" />
+        app:layout_constraintTop_toTopOf="@id/learn_more"
+        app:srcCompat="@drawable/ic_arrowhead_right" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline"

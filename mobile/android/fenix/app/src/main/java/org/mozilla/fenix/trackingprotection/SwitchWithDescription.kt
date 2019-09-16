@@ -7,18 +7,20 @@ package org.mozilla.fenix.trackingprotection
 import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.withStyledAttributes
 import kotlinx.android.synthetic.main.switch_with_description.view.*
 import kotlinx.android.synthetic.main.tracking_protection_category.view.switchItemDescription
 import kotlinx.android.synthetic.main.tracking_protection_category.view.switchItemTitle
+import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import org.mozilla.fenix.R
 
 class SwitchWithDescription @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : ConstraintLayout(context, attrs) {
+) : ConstraintLayout(context, attrs, defStyleAttr) {
 
     init {
         LayoutInflater.from(context).inflate(R.layout.switch_with_description, this, true)
@@ -28,19 +30,19 @@ class SwitchWithDescription @JvmOverloads constructor(
                 R.styleable.SwitchWithDescription_switchIcon,
                 R.drawable.ic_tracking_protection
             )
-            switch_widget?.setCompoundDrawablesWithIntrinsicBounds(
-                resources.getDrawable(
-                    id,
-                    context.theme
-                ), null, null, null
+            switch_widget.putCompoundDrawablesRelativeWithIntrinsicBounds(
+                start = AppCompatResources.getDrawable(
+                    context,
+                    id
+                )
             )
-            switchItemTitle?.text = resources.getString(
+            switchItemTitle.text = resources.getString(
                 getResourceId(
                     R.styleable.SwitchWithDescription_switchTitle,
                     R.string.preference_enhanced_tracking_protection
                 )
             )
-            switchItemDescription?.text = resources.getString(
+            switchItemDescription.text = resources.getString(
                 getResourceId(
                     R.styleable.SwitchWithDescription_switchDescription,
                     R.string.preference_enhanced_tracking_protection_explanation

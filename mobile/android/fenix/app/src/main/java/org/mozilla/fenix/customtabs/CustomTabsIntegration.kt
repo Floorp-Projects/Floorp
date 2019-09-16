@@ -8,6 +8,7 @@ import android.app.Activity
 import android.content.Context
 import android.view.Gravity
 import android.view.View
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.widget.NestedScrollView
 import com.airbnb.lottie.LottieCompositionFactory
@@ -69,9 +70,15 @@ class CustomTabsIntegration(
             toolbar.displaySeparatorView = false
 
             toolbar.setTrackingProtectionIcons(
-                iconOnNoTrackersBlocked = context.getDrawable(R.drawable.ic_tracking_protection_enabled)!!,
+                iconOnNoTrackersBlocked = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.ic_tracking_protection_enabled
+                )!!,
                 iconOnTrackersBlocked = lottieDrawable,
-                iconDisabledForSite = context.getDrawable(R.drawable.ic_tracking_protection_disabled)!!
+                iconDisabledForSite = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.ic_tracking_protection_disabled
+                )!!
             )
         }
     }

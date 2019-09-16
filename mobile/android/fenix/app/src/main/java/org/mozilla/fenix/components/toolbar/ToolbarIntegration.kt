@@ -6,6 +6,7 @@ package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
 import android.view.ViewGroup
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.navigation.NavOptions
 import androidx.navigation.Navigation
 import com.airbnb.lottie.LottieCompositionFactory
@@ -70,9 +71,15 @@ class ToolbarIntegration(
                         context.settings.shouldUseTrackingProtection && FeatureFlags.etpCategories
 
                     toolbar.setTrackingProtectionIcons(
-                        iconOnNoTrackersBlocked = context.getDrawable(R.drawable.ic_tracking_protection_enabled)!!,
+                        iconOnNoTrackersBlocked = AppCompatResources.getDrawable(
+                            context,
+                            R.drawable.ic_tracking_protection_enabled
+                        )!!,
                         iconOnTrackersBlocked = lottieDrawable,
-                        iconDisabledForSite = context.getDrawable(R.drawable.ic_tracking_protection_disabled)!!
+                        iconDisabledForSite = AppCompatResources.getDrawable(
+                            context,
+                            R.drawable.ic_tracking_protection_disabled
+                        )!!
                     )
                 }
 
