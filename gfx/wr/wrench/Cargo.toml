@@ -42,7 +42,7 @@ headless = [ "osmesa-sys", "osmesa-src" ]
 
 [target.'cfg(target_os = "windows")'.dependencies]
 dwrote = "0.9"
-mozangle = {version = "0.2", features = ["egl"]}
+mozangle = {version = "0.3.1", features = ["egl"]}
 
 [target.'cfg(all(unix, not(target_os = "android")))'.dependencies]
 font-loader = "0.7"
