@@ -216,7 +216,7 @@ class TaskBuilder(object):
             treeherder=treeherder,
         )
 
-    def craft_upload_apk_nimbledroid_task(self, assemble_task_id):
+    def craft_upload_apk_nimbledroid_task(self, assemble_task_label):
         # For GeckoView, upload nightly (it has release config) by default, all Release builds have WV
         return self._craft_build_ish_task(
             name="Upload Release APK to Nimbledroid",
@@ -234,7 +234,7 @@ class TaskBuilder(object):
                 'tier': 2,
             },
             scopes=["secrets:get:project/mobile/fenix/nimbledroid"],
-            dependencies=[assemble_task_id],
+            dependencies={'build': assemble_task_label},
         )
 
     def craft_detekt_task(self):
