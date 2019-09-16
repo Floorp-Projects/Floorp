@@ -38,6 +38,7 @@ def pr(builder):
         builder.craft_ktlint_task,
         builder.craft_lint_task,
         builder.craft_compare_locales_task,
+        builder.craft_ui_tests_task,
     ):
         tasks.append(craft_function())
 
@@ -46,12 +47,9 @@ def pr(builder):
 
     return tasks
 
-
-def push(builder):
-    all_tasks = pr(builder)
-    all_tasks.append(builder.craft_ui_tests_task())
-    return all_tasks
-
+def push():
+    # We want the same tasks on pushes than on PRs, for now.
+    return pr()
 
 def raptor(builder, is_staging):
     mozharness_task_id = fetch_mozharness_task_id()
