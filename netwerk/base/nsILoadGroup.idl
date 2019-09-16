@@ -95,10 +95,4 @@ interface nsILoadGroup : nsIRequest
      * the docShell has created the default request.)
      */
     attribute nsLoadFlags defaultLoadFlags;
-
-    /**
-     * The cached user agent override created by UserAgentOverrides.jsm. Used
-     * for all sub-resource requests in the loadgroup.
-     */
-    attribute ACString userAgentOverrideCache;
 };
