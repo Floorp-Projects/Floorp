@@ -576,7 +576,7 @@ nsresult SharedSurfacesAnimation::UpdateKey(
   }
 
   MOZ_ASSERT(data);
-  if (mId.mHandle != data->Id().mHandle) {
+  if (wr::AsUint64(mId) != wr::AsUint64(data->Id())) {
     mKeys.Clear();
     mId = data->Id();
   }

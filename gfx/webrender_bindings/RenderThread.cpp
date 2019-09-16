@@ -692,11 +692,11 @@ void RenderThread::DeferredRenderTextureHostDestroy() {
 }
 
 RenderTextureHost* RenderThread::GetRenderTexture(
-    wr::WrExternalImageId aExternalImageId) {
+    wr::ExternalImageId aExternalImageId) {
   MOZ_ASSERT(IsInRenderThread());
 
   MutexAutoLock lock(mRenderTextureMapLock);
-  auto it = mRenderTextures.find(aExternalImageId.mHandle);
+  auto it = mRenderTextures.find(AsUint64(aExternalImageId));
   MOZ_ASSERT(it != mRenderTextures.end());
   if (it == mRenderTextures.end()) {
     return nullptr;

@@ -213,7 +213,7 @@ class RenderThread final {
   void UnregisterExternalImageDuringShutdown(uint64_t aExternalImageId);
 
   /// Can only be called from the render thread.
-  RenderTextureHost* GetRenderTexture(WrExternalImageId aExternalImageId);
+  RenderTextureHost* GetRenderTexture(ExternalImageId aExternalImageId);
 
   /// Can be called from any thread.
   bool IsDestroyed(wr::WindowId aWindowId);
