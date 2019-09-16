@@ -169,7 +169,8 @@
 #identity-box[pageproxystate="valid"].weakCipher > #identity-icon,
 #identity-box[pageproxystate="valid"].mixedDisplayContent > #identity-icon,
 #identity-box[pageproxystate="valid"].mixedDisplayContentLoadedActiveBlocked > #identity-icon,
-#identity-box[pageproxystate="valid"].certUserOverridden > #identity-icon {
+#identity-box[pageproxystate="valid"].certUserOverridden > #identity-icon,
+#identity-box[pageproxystate="valid"].certErrorPage > #identity-icon {
   list-style-image: url(chrome://browser/skin/connection-mixed-passive-loaded.svg);
   fill: unset;
 }
