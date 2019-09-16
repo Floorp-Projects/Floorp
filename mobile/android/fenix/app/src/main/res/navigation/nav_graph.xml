@@ -504,6 +504,9 @@
         <action
             android:id="@+id/action_shareFragment_to_accountProblemFragment"
             app:destination="@id/accountProblemFragment" />
+        <action
+            android:id="@+id/action_shareFragment_to_addNewDeviceFragment"
+            app:destination="@id/addNewDeviceFragment" />
     </dialog>
     <dialog
         android:id="@+id/quickSettingsSheetDialogFragment"
@@ -581,4 +584,9 @@
         android:id="@+id/deleteBrowsingDataOnQuitFragment"
         android:name="org.mozilla.fenix.settings.DeleteBrowsingDataOnQuitFragment"
         android:label="DeleteBrowsingDataOnQuitFragment" />
+
+    <fragment
+        android:id="@+id/addNewDeviceFragment"
+        android:name="org.mozilla.fenix.share.AddNewDeviceFragment"
+        android:label="AddNewDeviceFragment" />
 </navigation>

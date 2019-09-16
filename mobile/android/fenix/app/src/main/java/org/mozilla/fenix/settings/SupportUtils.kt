@@ -28,7 +28,8 @@ object SupportUtils {
         PRIVATE_BROWSING_MYTHS("common-myths-about-private-browsing"),
         YOUR_RIGHTS("your-rights"),
         TRACKING_PROTECTION("tracking-protection-firefox-preview"),
-        WHATS_NEW("whats-new-firefox-preview")
+        WHATS_NEW("whats-new-firefox-preview"),
+        SEND_TABS("send-tab-firefox-preview-another-device")
     }
 
     /**

@@ -10,7 +10,6 @@ import android.content.Intent.ACTION_SEND
 import android.content.Intent.EXTRA_TEXT
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import androidx.annotation.VisibleForTesting
-import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import com.google.android.material.snackbar.Snackbar
@@ -88,11 +87,8 @@ class DefaultShareController(
     }
 
     override fun handleAddNewDevice() {
-        AlertDialog.Builder(fragment.requireContext()).apply {
-            setMessage(R.string.sync_connect_device_dialog)
-            setPositiveButton(R.string.sync_confirmation_button) { dialog, _ -> dialog.cancel() }
-            create()
-        }.show()
+        val directions = ShareFragmentDirections.actionShareFragmentToAddNewDeviceFragment()
+        navController.navigate(directions)
     }
 
     override fun handleShareToDevice(device: Device) {

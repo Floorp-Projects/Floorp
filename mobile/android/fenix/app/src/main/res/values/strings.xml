@@ -379,7 +379,6 @@
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Open tabs</string>
 
-
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Delete history</string>
@@ -597,6 +596,14 @@
     <string name="sync_confirmation_button">Got it</string>
     <!-- Share error message -->
     <string name="share_error_snackbar">Cannot share to this app</string>
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Send to device</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">No Devices Connected</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Learn About Sending Tabs…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Connect Another Device…</string>
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
