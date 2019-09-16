@@ -494,6 +494,10 @@ class HttpBaseChannel : public nsHashPropertyBag,
     Maybe<nsCString> method;
     nsCOMPtr<nsIReferrerInfo> referrerInfo;
     Maybe<dom::TimedChannelInfo> timedChannel;
+    nsCOMPtr<nsIInputStream> uploadStream;
+    bool uploadStreamHasHeaders;
+    Maybe<nsCString> contentType;
+    Maybe<nsCString> contentLength;
 
     dom::ReplacementChannelConfigInit Serialize();
   };
