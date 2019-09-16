@@ -146,6 +146,7 @@
 .boxmodel-bottom {
   width: calc(100% - 2px);
   text-align: center;
+  z-index: 1; /* workaround for bug 1559706 */
 }
 
 .boxmodel-padding.boxmodel-top {
@@ -183,6 +184,7 @@
 .boxmodel-padding.boxmodel-right {
   top: 22px;
   line-height: 80px;
+  z-index: 1; /* workaround for bug 1559706 */
 }
 
 .boxmodel-size {
