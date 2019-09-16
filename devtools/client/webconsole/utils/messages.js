@@ -310,7 +310,7 @@ function transformPageErrorPacket(packet) {
       }
     : null;
 
-  const matchesCSS = /^(?:CSS|Layout)\b/.test(pageError.category);
+  const matchesCSS = pageError.category == "CSS Parser";
   const messageSource = matchesCSS
     ? MESSAGE_SOURCE.CSS
     : MESSAGE_SOURCE.JAVASCRIPT;
