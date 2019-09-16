@@ -11,36 +11,43 @@ function runTest() {
 
     try {
       readyState = xhr.readyState;
-    }
-    catch (e) {
+    } catch (e) {
       readyState = "[exception]";
     }
 
     try {
       responseText = xhr.responseText;
-    }
-    catch (e) {
+    } catch (e) {
       responseText = "[exception]";
     }
 
     try {
       status = xhr.status;
-    }
-    catch (e) {
+    } catch (e) {
       status = "[exception]";
     }
 
     try {
       statusText = xhr.statusText;
-    }
-    catch (e) {
+    } catch (e) {
       statusText = "[exception]";
     }
 
-    var str = event.type + "(" + readyState + ", '" + responseText + "', " +
-              status + ", '" + statusText + "'";
-    if ((("ProgressEvent" in this) && event instanceof ProgressEvent) ||
-        (("WorkerProgressEvent" in this) && event instanceof WorkerProgressEvent)) {
+    var str =
+      event.type +
+      "(" +
+      readyState +
+      ", '" +
+      responseText +
+      "', " +
+      status +
+      ", '" +
+      statusText +
+      "'";
+    if (
+      ("ProgressEvent" in this && event instanceof ProgressEvent) ||
+      ("WorkerProgressEvent" in this && event instanceof WorkerProgressEvent)
+    ) {
       str += ", progressEvent";
     }
     str += ")";
@@ -50,7 +57,7 @@ function runTest() {
 
   xhr.onerror = function(event) {
     throw new Error("Error: " + xhr.statusText);
-  }
+  };
 
   xhr.onload = function(event) {
     throw new Error("Shouldn't have gotten load event!");

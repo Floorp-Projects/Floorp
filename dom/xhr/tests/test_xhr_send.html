@@ -31,7 +31,7 @@ function simplePostTest() {
       is(x.responseText, "somedata", "Should have processed POST");
       undefinedPostTest();
     }
-    x.send({toString: function() { return "somedata"; }});
+    x.send({toString() { return "somedata"; }});
 }
 
 function undefinedPostTest() {
@@ -41,7 +41,7 @@ function undefinedPostTest() {
       is(x.responseText, "undefined", "Should have processed POST");
       nullPostTest();
     }
-    x.send({toString: function() { return undefined; }});
+    x.send({toString() { return undefined; }});
 }
 
 function nullPostTest() {
@@ -51,7 +51,7 @@ function nullPostTest() {
       is(x.responseText, "null", "Should have processed POST");
       testExceptionInToString();
     }
-    x.send({toString: function() { return null; }});
+    x.send({toString() { return null; }});
 }
 
 function testExceptionInToString() {
@@ -62,7 +62,7 @@ function testExceptionInToString() {
     SimpleTest.finish();
   }
   try {
-    x.send({toString: function() { throw "dummy"; }});
+    x.send({toString() { throw "dummy"; }});
   } catch(ex) {
     is(ex, "dummy");
     SimpleTest.finish();

@@ -10,13 +10,11 @@ function onload(event) {
   }
 
   if (event.target.status != 200) {
-    var message = { type: "error",
-                    error: event.target.status };
+    var message = { type: "error", error: event.target.status };
     postMessage(message);
   }
 
-  var message = { type: "load",
-                  data: xhr.responseText };
+  var message = { type: "load", data: xhr.responseText };
   postMessage(message);
 }
 
@@ -24,8 +22,7 @@ xhr.onload = onload;
 xhr.addEventListener("load", onload);
 xhr.removeEventListener("load", onload);
 if (!xhr.onload) {
-  var message = { type: "error",
-                  error: "Lost message listener!" };
+  var message = { type: "error", error: "Lost message listener!" };
   postMessage(message);
 }
 
@@ -33,8 +30,7 @@ xhr.onerror = function(event) {
   if (event.target != xhr) {
     throw "onerror event.target != xhr";
   }
-  var message = { type: "error",
-                  error: event.target.status };
+  var message = { type: "error", error: event.target.status };
   postMessage(message);
 };
 xhr.onerror = xhr.onerror;
@@ -46,9 +42,7 @@ function onprogress(event) {
   if (event.target != xhr) {
     throw "onprogress event.target != xhr";
   }
-  var message = { type: "progress",
-                  current: event.loaded,
-                  total: event.total };
+  var message = { type: "progress", current: event.loaded, total: event.total };
   postMessage(message);
 }
 xhr.addEventListener("progress", onprogress);
@@ -58,19 +52,19 @@ xhr.removeEventListener("doopety", function(event) {});
 
 xhr.onloadend = function(event) {
   var message = { type: "loadend" };
-  postMessage(message);  
-}
+  postMessage(message);
+};
 
 var upload = xhr.upload;
-upload.onprogress = function(event) { };
-upload.addEventListener("foo", function(event) { });
-upload.removeEventListener("foo", function(event) { });
-upload.addEventListener("load", function(event) { });
-upload.removeEventListener("foo", function(event) { });
+upload.onprogress = function(event) {};
+upload.addEventListener("foo", function(event) {});
+upload.removeEventListener("foo", function(event) {});
+upload.addEventListener("load", function(event) {});
+upload.removeEventListener("foo", function(event) {});
 upload.onload = function(event) {
   var message = { type: "upload.load" };
   postMessage(message);
-}
+};
 
 onmessage = function(event) {
   if (xhr.DONE != 4 || XMLHttpRequest.DONE != 4) {
@@ -81,4 +75,4 @@ onmessage = function(event) {
   }
   xhr.open("POST", event.data);
   xhr.send("Data to send");
-}
+};

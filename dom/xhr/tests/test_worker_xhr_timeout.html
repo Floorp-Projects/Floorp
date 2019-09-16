@@ -26,22 +26,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=498998
   var worker = new Worker("../../../dom/xhr/tests/test_XHR_timeout.js");
 
   worker.addEventListener("message", function (event) {
-    if (event.data == "done") {
-      SimpleTest.finish();
-      return;
-    }
-    if (event.data == "start") {
-      return;
-    }
-    if (event.data.type == "is") {
-      SimpleTest.is(event.data.got, event.data.expected, event.data.msg);
-      return;
-    }
-    if (event.data.type == "ok") {
-      SimpleTest.ok(event.data.bool, event.data.msg);
-      return;
-    }
-  });
+  if (event.data == "done") {
+    SimpleTest.finish();
+    return;
+  }
+  if (event.data == "start") {
+    return;
+  }
+  if (event.data.type == "is") {
+    SimpleTest.is(event.data.got, event.data.expected, event.data.msg);
+    return;
+  }
+  if (event.data.type == "ok") {
+    SimpleTest.ok(event.data.bool, event.data.msg);
+    
+  }
+});
   // Final test harness setup and launch.
   (function() {
     SimpleTest.waitForExplicitFinish();
