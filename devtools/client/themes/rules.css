@@ -11,20 +11,12 @@
   --rule-unused-value-text-color: var(--grey-45);
   --rule-overridden-name-text-color: var(--grey-50);
   --rule-overridden-value-text-color: var(--grey-45);
-
-  /* This should be --yellow-50 but since we need an opacity of 0.4, we hard-code the
-  resulting color here for now. */
-  --rule-property-highlight-background-color: #FFF697;
 }
 
 :root.theme-dark {
   --rule-highlight-background-color: #521C76;
   --rule-header-background-color: #222225;
   --rule-pseudo-class-text-color: var(--yellow-50);
-
-  /* This should be --yellow-50 but since we need an opacity of 0.3, we hard-code the
-  resulting color here for now. */
-  --rule-property-highlight-background-color: #605913;
 
   --rule-unused-name-text-color: var(--grey-45);
   --rule-unused-value-text-color: #787878;
@@ -148,10 +140,6 @@
 
 .ruleview-property:not(:hover) > .ruleview-enableproperty {
   pointer-events: none;
-}
-
-.ruleview-property-highlight-background-color {
-  background-color: var(--rule-property-highlight-background-color);
 }
 
 .ruleview-expandable-container {
@@ -700,11 +688,5 @@
 }
 
 .flash-out {
-  animation: flash-out 1s ease-out;
-}
-
-@keyframes flash-out {
-  from {
-    background: var(--rule-property-highlight-background-color);
-  }
+  transition: background 1s;
 }
