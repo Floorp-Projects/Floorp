@@ -94,7 +94,7 @@ RUN git clone https://github.com/mozilla-mobile/focus-android.git
 
 # Build project and run gradle tasks once to pull all dependencies
 WORKDIR /opt/focus-android
-RUN ./gradlew --no-daemon assemble testFocusX86DebugUnitTest lint pmd checkstyle spotbugs detektCheck ktlint
+RUN ./gradlew --no-daemon assemble testFocusDebugUnitTest lint pmd checkstyle spotbugs detektCheck ktlint
 
 # -- Post setup -------------------------------------------------------------------------
 

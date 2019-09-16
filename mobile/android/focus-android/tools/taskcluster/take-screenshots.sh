@@ -25,7 +25,7 @@ export LC_ALL="en_US.UTF-8"
 emulator64-arm -avd test -noaudio -no-window -no-accel -gpu off -verbose &
 
 # Build and install app & test APKs (while the emulator is booting..)
-./gradlew --no-daemon assembleFocusWebviewDebug assembleFocusWebviewDebugAndroidTest
+./gradlew --no-daemon assembleFocusDebug assembleFocusDebugAndroidTest
 
 # Start our server for running screencap on the emulator host (via HTTP)
 python $directory/screencap-server.py &
@@ -37,7 +37,7 @@ python $directory/generate_screengrab_config.py $@
 /opt/focus-android/tools/taskcluster/android-wait-for-emulator.sh
 
 # Install app and make sure directory for taking screenshot exists.
-adb install -r app/build/outputs/apk/app-focus-webview-debug.apk
+adb install -r app/build/outputs/apk/focus/nightly/app-focus-armeabi-v7a-debug.apk
 adb shell mkdir /data/data/org.mozilla.focus.debug/files
 
 # Take screenshots

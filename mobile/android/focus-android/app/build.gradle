@@ -45,7 +45,7 @@ android {
         release {
             minifyEnabled true
             shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
             applicationIdSuffix ".debug"
@@ -110,8 +110,8 @@ android {
     }
 
     packagingOptions {
-        exclude 'META-INF/atomicfu.kotlin_module'
-        exclude 'META-INF/proguard/coroutines.pro'
+        pickFirst 'META-INF/atomicfu.kotlin_module'
+        pickFirst 'META-INF/proguard/coroutines.pro'
     }
 }
 
@@ -159,8 +159,6 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:3.14.1'
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
 
     focusImplementation 'com.adjust.sdk:adjust-android:4.11.4'
     focusImplementation 'com.android.installreferrer:installreferrer:1.0' // Required by Adjust
@@ -198,7 +196,8 @@ dependencies {
         exclude group: 'com.android.support', module: 'design'
         exclude group: 'com.android.support', module: 'recyclerview-v7'
     }
-    implementation 'androidx.test:runner:1.2.0'
+    androidTestImplementation 'androidx.test:core:1.2.0'
+    testImplementation 'androidx.test:runner:1.2.0'
     testImplementation 'androidx.test:rules:1.2.0'
 
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'

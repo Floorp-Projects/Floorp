@@ -15,7 +15,8 @@ class TelemetrySessionObserver : SessionManager.Observer {
             Session.Source.ACTION_SEND -> TelemetryWrapper.shareIntentEvent(session.searchTerms.isNotEmpty())
             Session.Source.TEXT_SELECTION -> TelemetryWrapper.textSelectionIntentEvent()
             Session.Source.HOME_SCREEN -> TelemetryWrapper.openHomescreenShortcutEvent()
-            Session.Source.CUSTOM_TAB -> TelemetryWrapper.customTabsIntentEvent(generateOptions(session.customTabConfig!!))
+            Session.Source.CUSTOM_TAB -> TelemetryWrapper.customTabsIntentEvent(
+                    generateOptions(session.customTabConfig!!))
             else -> {
                 // For other session types we create events at the place where we create the sessions.
             }

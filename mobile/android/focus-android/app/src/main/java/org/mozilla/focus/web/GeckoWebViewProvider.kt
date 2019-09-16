@@ -5,7 +5,6 @@
 
 package org.mozilla.focus.web
 
-import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import android.net.Uri
@@ -93,7 +92,8 @@ class GeckoWebViewProvider : IWebViewProvider {
                     .build())
             val contentBlockingBuilder = ContentBlocking.Settings.Builder()
             if (Settings.getInstance(context).shouldUseSafeBrowsing()) {
-                contentBlockingBuilder.safeBrowsing(ContentBlocking.SafeBrowsing.MALWARE or ContentBlocking.SafeBrowsing.PHISHING)
+                contentBlockingBuilder.safeBrowsing(ContentBlocking.SafeBrowsing.MALWARE or
+                        ContentBlocking.SafeBrowsing.PHISHING)
             }
             runtimeSettingsBuilder.contentBlocking(contentBlockingBuilder.build())
             runtimeSettingsBuilder.crashHandler(CrashHandlerService::class.java)
@@ -270,9 +270,11 @@ class GeckoWebViewProvider : IWebViewProvider {
                         Settings.getInstance(context).shouldUseSafeBrowsing()
                     var cats = geckoRuntime!!.settings.contentBlocking.safeBrowsingCategories
                     if (shouldUseSafeBrowsing) {
-                        cats = cats or ContentBlocking.SafeBrowsing.MALWARE or ContentBlocking.SafeBrowsing.PHISHING
+                        cats = cats or ContentBlocking.SafeBrowsing.MALWARE or
+                                ContentBlocking.SafeBrowsing.PHISHING
                     } else {
-                        cats = cats and ContentBlocking.SafeBrowsing.MALWARE.inv() and ContentBlocking.SafeBrowsing.PHISHING.inv()
+                        cats = cats and ContentBlocking.SafeBrowsing.MALWARE.inv() and
+                                ContentBlocking.SafeBrowsing.PHISHING.inv()
                     }
                     geckoRuntime!!.settings.contentBlocking.setSafeBrowsing(cats)
                 }

@@ -20,9 +20,9 @@ before_install:
   - tools/taskcluster/accept-license.sh
 
 script:
-  - ./gradlew -Pcoverage --no-daemon clean assembleFocusX86Nightly
+  - ./gradlew -Pcoverage --no-daemon clean assembleFocusNightly
   - echo "--" > .adjust_token
-  - ./gradlew -Pcoverage --no-daemon jacocoFocusX86NightlyTestReport
+  - ./gradlew -Pcoverage --no-daemon jacocoTestReportFocusNightly
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)

@@ -24,8 +24,8 @@ gcloud:
   #results-history-name: tmp_parallel 
 
   # test and app are the only required args
-  app: /opt/focus-android/app/build/outputs/apk/focusArm/debug/app-focus-arm-debug.apk
-  test: /opt/focus-android/app/build/outputs/apk/androidTest/focusArm/debug/app-focus-arm-debug-androidTest.apk
+  app: /opt/focus-android/app/build/outputs/apk/focusArm/debug/app-focus-armeabi-v7a-debug.apk
+  test: /opt/focus-android/app/build/outputs/apk/androidTest/focusArm/debug/app-focus-armeabi-v7a-debug-androidTest.apk
   auto-google-login: true
   use-orchestrator: true
   environment-variables:
