@@ -184,8 +184,8 @@ int32_t nsPlainTextSerializer::CurrentLine::FindWrapIndexForContent(
       // https://bugzilla.mozilla.org/show_bug.cgi?id=333064 for more
       // information.
       goodSpace = (prefixwidth > aWrapColumn) ? 1 : aWrapColumn - prefixwidth;
-      const int32_t linelength = mContent.Length();
-      while (goodSpace < linelength &&
+      const int32_t contentLength = mContent.Length();
+      while (goodSpace < contentLength &&
              !nsCRT::IsAsciiSpace(mContent.CharAt(goodSpace))) {
         goodSpace++;
       }
@@ -1300,17 +1300,17 @@ void nsPlainTextSerializer::MaybeWrapAndOutputCompleteLines() {
     const int32_t goodSpace = mCurrentLine.FindWrapIndexForContent(
         mWrapColumn, currentLineContentWidth, mLineBreaker);
 
-    const int32_t linelength = mCurrentLine.mContent.Length();
-    if ((goodSpace < linelength) && (goodSpace > 0)) {
+    const int32_t contentLength = mCurrentLine.mContent.Length();
+    if ((goodSpace < contentLength) && (goodSpace > 0)) {
       // Found a place to break
 
       // -1 (trim a char at the break position)
       // only if the line break was a space.
       nsAutoString restOfLine;
       if (nsCRT::IsAsciiSpace(mCurrentLine.mContent.CharAt(goodSpace))) {
-        mCurrentLine.mContent.Right(restOfLine, linelength - goodSpace - 1);
+        mCurrentLine.mContent.Right(restOfLine, contentLength - goodSpace - 1);
       } else {
-        mCurrentLine.mContent.Right(restOfLine, linelength - goodSpace);
+        mCurrentLine.mContent.Right(restOfLine, contentLength - goodSpace);
       }
       // if breaker was U+0020, it has to consider for delsp=yes support
       const bool breakBySpace = mCurrentLine.mContent.CharAt(goodSpace) == ' ';
