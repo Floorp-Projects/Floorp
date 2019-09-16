@@ -254,14 +254,14 @@ add_task(async function e10sLostKeys() {
   BrowserTestUtils.removeTab(tab);
 });
 
-function promiseFindFinished(searchText, highlightOn) {
-  return new Promise(async resolve => {
-    let findbar = await gBrowser.getFindBar();
-    findbar.startFind(findbar.FIND_NORMAL);
-    let highlightElement = findbar.getElement("highlight");
-    if (highlightElement.checked != highlightOn) {
-      highlightElement.click();
-    }
+async function promiseFindFinished(searchText, highlightOn) {
+  let findbar = await gBrowser.getFindBar();
+  findbar.startFind(findbar.FIND_NORMAL);
+  let highlightElement = findbar.getElement("highlight");
+  if (highlightElement.checked != highlightOn) {
+    highlightElement.click();
+  }
+  return new Promise(resolve => {
     executeSoon(() => {
       findbar._findField.value = searchText;
 
