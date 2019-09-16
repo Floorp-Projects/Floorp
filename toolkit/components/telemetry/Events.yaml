@@ -142,6 +142,7 @@ addonsManager:
       - "firefox"
       - "fennec"
       - "geckoview"
+      - "thunderbird"
     record_in_processes: ["main"]
     bug_numbers: [1433335, 1515697, 1523641, 1549770]
     release_channel_collection: opt-out
@@ -166,6 +167,7 @@ addonsManager:
       - "firefox"
       - "fennec"
       - "geckoview"
+      - "thunderbird"
     record_in_processes: ["main"]
     bug_numbers: [1433335, 1515697, 1523641, 1549770]
     release_channel_collection: opt-out
@@ -264,6 +266,7 @@ addonsManager:
       - "firefox"
       - "fennec"
       - "geckoview"
+      - "thunderbird"
     record_in_processes: ["main"]
     bug_numbers: [1544927]
     release_channel_collection: opt-out
@@ -284,6 +287,7 @@ addonsManager:
       - "firefox"
       - "fennec"
       - "geckoview"
+      - "thunderbird"
     record_in_processes: ["main"]
     bug_numbers: [1572711]
     release_channel_collection: opt-out
@@ -633,6 +637,7 @@ pwmgr:
     notification_emails: ["loines@mozilla.com", "passwords-dev@mozilla.org"]
     products:
       - "firefox"
+      - "thunderbird"
     record_in_processes: ["main"]
     release_channel_collection: opt-out
     expiry_version: never
@@ -715,6 +720,7 @@ telemetry.test:
       - "firefox"
       - "fennec"
       - "geckoview"
+      - "thunderbird"
     record_in_processes: ["main"]
     description: This is a test entry for Telemetry.
     expiry_version: never
@@ -730,6 +736,7 @@ telemetry.test:
       - "firefox"
       - "fennec"
       - "geckoview"
+      - "thunderbird"
     record_in_processes: ["main"]
     description: This is an opt-out test entry.
     expiry_version: never
@@ -743,6 +750,7 @@ telemetry.test:
       - "firefox"
       - "fennec"
       - "geckoview"
+      - "thunderbird"
     record_in_processes: ["main"]
     description: This is a test entry with an expired version.
     expiry_version: "3"
@@ -756,6 +764,7 @@ telemetry.test:
       - "firefox"
       - "fennec"
       - "geckoview"
+      - "thunderbird"
     record_in_processes: ["main"]
     expiry_version: "999"
   main_only:
@@ -766,6 +775,7 @@ telemetry.test:
       - "firefox"
       - "fennec"
       - "geckoview"
+      - "thunderbird"
     record_in_processes: ["main"]
     description: This event is used to test main-process only recording.
     expiry_version: never
@@ -777,6 +787,7 @@ telemetry.test:
       - "firefox"
       - "fennec"
       - "geckoview"
+      - "thunderbird"
     record_in_processes: ["content"]
     description: This event is used to test content-process only recording.
     expiry_version: never
@@ -791,6 +802,7 @@ telemetry.test:
       - "firefox"
       - "fennec"
       - "geckoview"
+      - "thunderbird"
     record_in_processes: ["main", "content"]
     description: This event is used to test main and content process recording.
     expiry_version: never
@@ -802,6 +814,7 @@ telemetry.test:
       - "firefox"
       - "fennec"
       - "geckoview"
+      - "thunderbird"
     record_in_processes: ["main"]
     description: This event is used to test default products main recording.
     expiry_version: never
@@ -812,7 +825,7 @@ telemetry.test:
     record_in_processes: ["main"]
     description: This event is used to test desktop-only main recording.
     expiry_version: never
-    products: ["firefox"]
+    products: ["firefox","thunderbird"]
   multiproduct:
     objects: ["object1"]
     bug_numbers: [1452552]
@@ -820,7 +833,7 @@ telemetry.test:
     record_in_processes: ["main"]
     description: This event is used to test multiproduct main recording.
     expiry_version: never
-    products: ["firefox", "fennec", "geckoview"]
+    products: ["firefox", "fennec", "geckoview","thunderbird"]
   mobile_only:
     objects: ["object1"]
     bug_numbers: [1452552]
@@ -841,6 +854,7 @@ telemetry.test.second:
       - "firefox"
       - "fennec"
       - "geckoview"
+      - "thunderbird"
     record_in_processes: ["main"]
     description: This is a test entry for Telemetry.
     expiry_version: never
@@ -1733,6 +1747,7 @@ uptake.remotecontent.result:
       - "firefox"
       - "fennec"
       - "geckoview"
+      - "thunderbird"
     record_in_processes: ["main"]
     release_channel_collection: opt-out
     expiry_version: never
