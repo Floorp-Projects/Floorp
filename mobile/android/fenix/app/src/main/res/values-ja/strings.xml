@@ -639,7 +639,7 @@
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">ブラウジングデータを削除</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">タブを開く</string>
+    <string name="preferences_delete_browsing_data_tabs_title">開いているタブ</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d 個のタブ</string>
     <!-- Title for the data and history items in Delete browsing data -->

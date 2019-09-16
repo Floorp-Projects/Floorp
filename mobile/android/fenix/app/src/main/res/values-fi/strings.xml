@@ -34,6 +34,8 @@
     <string name="browser_menu_stop">Pysäytä</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Ohje</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">Mitä uutta</string>
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Asetukset</string>
     <!-- Browser menu button that opens a user's library -->
@@ -535,6 +537,15 @@
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Selvä</string>
 
+    <!-- Notifications -->
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
+    <string name="notification_pbm_channel_name">Yksityisen selauksen istunto</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text">Poista yksityiset välilehdet</string>
+    <!-- Notification action to open Fenix and resume the current browsing session. -->
+    <string name="notification_pbm_action_open">Avaa</string>
+    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
+    <string name="notification_pbm_action_delete_and_open">Poista ja avaa</string>
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Kokoelma poistettu</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -609,6 +620,9 @@
     <string name="preferences_delete_browsing_data_site_permissions">Sivustojen käyttöoikeudet</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Poista selaustiedot</string>
+
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">Poista selaustiedot lopettaessa</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message">Kaikki selaustietosi poistetaan.</string>
