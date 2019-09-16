@@ -102,6 +102,7 @@ var PromiseTestUtils = {
           this._ensureDOMPromiseRejectionsProcessedReason
         ) {
           observed = true;
+          return true;
         }
       },
       onConsumed() {},
