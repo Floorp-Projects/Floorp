@@ -2033,8 +2033,7 @@ var gPrivacyPane = {
         .filter(
           x =>
             x !== "goog-unwanted-proto" &&
-            x !== "goog-unwanted-shavar" &&
-            x !== "test-unwanted-simple"
+            x !== "goog-unwanted-shavar"
         );
 
       if (blockUncommonUnwanted.checked) {
@@ -2043,8 +2042,6 @@ var gPrivacyPane = {
         } else {
           malware.push("goog-unwanted-proto");
         }
-
-        malware.push("test-unwanted-simple");
       }
 
       // sort alphabetically to keep the pref consistent
