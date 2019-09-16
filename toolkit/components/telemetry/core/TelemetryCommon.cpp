@@ -188,6 +188,8 @@ SupportedProduct GetCurrentProduct() {
   } else {
     return SupportedProduct::Fennec;
   }
+#elif defined(MOZ_THUNDERBIRD)
+  return SupportedProduct::Thunderbird;
 #else
   return SupportedProduct::Firefox;
 #endif

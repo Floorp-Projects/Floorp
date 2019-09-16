@@ -112,20 +112,26 @@ function checkEditTelemetryRecorded(expectedCount, msg) {
     Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
     false
   );
-  const telemetryProps = Object.freeze({
-    category: "pwmgr",
-    method: "filled_field_edited",
-    object: "generatedpassword",
-  });
-  const results = snapshot.parent.filter(([time, category, method, object]) => {
-    return (
-      category === telemetryProps.category &&
-      method === telemetryProps.method &&
-      object === telemetryProps.object
+  let resultsCount = 0;
+  if ("parent" in snapshot) {
+    const telemetryProps = Object.freeze({
+      category: "pwmgr",
+      method: "filled_field_edited",
+      object: "generatedpassword",
+    });
+    const results = snapshot.parent.filter(
+      ([time, category, method, object]) => {
+        return (
+          category === telemetryProps.category &&
+          method === telemetryProps.method &&
+          object === telemetryProps.object
+        );
+      }
     );
-  });
+    resultsCount = results.length;
+  }
   equal(
-    results.length,
+    resultsCount,
     expectedCount,
     "Check count of pwmgr.filled_field_edited for generatedpassword: " + msg
   );

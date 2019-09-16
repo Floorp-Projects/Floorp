@@ -285,6 +285,7 @@ browser.engagement:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'main'
     record_into_store:
@@ -2261,6 +2262,7 @@ telemetry:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - all
 
@@ -2356,6 +2358,7 @@ telemetry:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'main'
 
@@ -2426,6 +2429,7 @@ telemetry:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'main'
     record_into_store:
@@ -2445,6 +2449,7 @@ telemetry:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'main'
     record_into_store:
@@ -4207,6 +4212,7 @@ startup:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - main
     record_into_store:
@@ -4397,6 +4403,7 @@ blocklist:
     products:
       - 'firefox'
       - 'fennec'
+      - 'thunderbird'
     record_in_processes:
       - main
 
@@ -4417,6 +4424,7 @@ blocklist:
     products:
       - 'firefox'
       - 'fennec'
+      - 'thunderbird'
     record_in_processes:
       - main
 
@@ -4436,6 +4444,7 @@ blocklist:
       - awagner@mozilla.com
     products:
       - 'firefox'
+      - 'thunderbird'
     record_in_processes:
       - main
 
@@ -4455,6 +4464,7 @@ blocklist:
     products:
       - 'firefox'
       - 'fennec'
+      - 'thunderbird'
     record_in_processes:
       - main
 
@@ -4471,6 +4481,7 @@ firstStartup:
     release_channel_collection: opt-out
     products:
       - 'firefox'
+      - 'thunderbird'
     record_in_processes:
       - main
 
@@ -4493,6 +4504,7 @@ telemetry.test:
       - 'fennec'
       - 'geckoview'
       - 'geckoview_streaming'
+      - 'thunderbird'
     record_in_processes:
       - 'main'
 
@@ -4510,6 +4522,7 @@ telemetry.test:
       - 'fennec'
       - 'geckoview'
       - 'geckoview_streaming'
+      - 'thunderbird'
     record_in_processes:
       - 'main'
 
@@ -4527,6 +4540,7 @@ telemetry.test:
       - 'fennec'
       - 'geckoview'
       - 'geckoview_streaming'
+      - 'thunderbird'
     record_in_processes:
       - 'main'
 
@@ -4542,6 +4556,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'main'
 
@@ -4557,6 +4572,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'main'
 
@@ -4573,6 +4589,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'main'
 
@@ -4589,6 +4606,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'main'
 
@@ -4606,6 +4624,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'main'
 
@@ -4623,6 +4642,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'main'
 
@@ -4639,6 +4659,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'main'
 
@@ -4655,6 +4676,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'main'
 
@@ -4671,6 +4693,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'content'
 
@@ -4687,6 +4710,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'main'
       - 'content'
@@ -4703,6 +4727,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'content'
 
@@ -4718,6 +4743,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'socket'
 
@@ -4733,6 +4759,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'all'
 
@@ -4748,6 +4775,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'all_childs'
 
@@ -4763,6 +4791,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'all'
 
@@ -4778,6 +4807,7 @@ telemetry.test:
       - 'all'
     products:
       - firefox
+      - thunderbird
 
   keyed_desktop_only:
     bug_numbers:
@@ -4792,6 +4822,7 @@ telemetry.test:
       - 'all'
     products:
       - firefox
+      - thunderbird
 
   multiproduct:
     bug_numbers:
@@ -4807,6 +4838,7 @@ telemetry.test:
       - firefox
       - fennec
       - geckoview
+      - thunderbird
 
   mobile_only:
     bug_numbers:
@@ -4863,6 +4895,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'main'
     record_into_store:
@@ -4881,6 +4914,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'main'
     record_into_store:
@@ -4899,6 +4933,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'main'
     record_into_store:
@@ -4918,6 +4953,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'main'
     record_into_store:
@@ -4937,6 +4973,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'main'
     record_into_store:
@@ -4957,6 +4994,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'thunderbird'
     record_in_processes:
       - 'main'
     record_into_store:
