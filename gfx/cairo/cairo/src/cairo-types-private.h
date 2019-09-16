@@ -137,30 +137,6 @@ struct _cairo_array {
     cairo_bool_t is_snapshot;
 };
 
-/**
- * cairo_lcd_filter_t:
- * @CAIRO_LCD_FILTER_DEFAULT: Use the default LCD filter for
- *   font backend and target device
- * @CAIRO_LCD_FILTER_NONE: Do not perform LCD filtering
- * @CAIRO_LCD_FILTER_INTRA_PIXEL: Intra-pixel filter
- * @CAIRO_LCD_FILTER_FIR3: FIR filter with a 3x3 kernel
- * @CAIRO_LCD_FILTER_FIR5: FIR filter with a 5x5 kernel
- *
- * The LCD filter specifies the low-pass filter applied to LCD-optimized
- * bitmaps generated with an antialiasing mode of %CAIRO_ANTIALIAS_SUBPIXEL.
- *
- * Note: This API was temporarily made available in the public
- * interface during the 1.7.x development series, but was made private
- * before 1.8.
- **/
-typedef enum _cairo_lcd_filter {
-    CAIRO_LCD_FILTER_DEFAULT,
-    CAIRO_LCD_FILTER_NONE,
-    CAIRO_LCD_FILTER_INTRA_PIXEL,
-    CAIRO_LCD_FILTER_FIR3,
-    CAIRO_LCD_FILTER_FIR5
-} cairo_lcd_filter_t;
-
 typedef enum _cairo_round_glyph_positions {
     CAIRO_ROUND_GLYPH_POS_DEFAULT,
     CAIRO_ROUND_GLYPH_POS_ON,

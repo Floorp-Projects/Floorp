@@ -52,11 +52,16 @@
 
 CAIRO_BEGIN_DECLS
 
+typedef enum {
+    CAIRO_FT_SYNTHESIZE_BOLD = 1 << 0,
+    CAIRO_FT_SYNTHESIZE_OBLIQUE = 1 << 1
+} cairo_ft_synthesize_t;
+
 cairo_public cairo_font_face_t *
 cairo_ft_font_face_create_for_ft_face (FT_Face         face,
 				       int             load_flags,
-                                       const FT_Fixed *var_coords,
-                                       int             num_var_coords);
+				       unsigned int    synth_flags,
+				       void	      *face_context);
 
 cairo_public FT_Face
 cairo_ft_scaled_font_lock_face (cairo_scaled_font_t *scaled_font);
@@ -67,9 +72,7 @@ cairo_ft_scaled_font_unlock_face (cairo_scaled_font_t *scaled_font);
 #if CAIRO_HAS_FC_FONT
 
 cairo_public cairo_font_face_t *
-cairo_ft_font_face_create_for_pattern (FcPattern      *pattern,
-                                       const FT_Fixed *var_coords,
-                                       int             num_var_coords);
+cairo_ft_font_face_create_for_pattern (FcPattern      *pattern);
 
 cairo_public void
 cairo_ft_font_options_substitute (const cairo_font_options_t *options,
