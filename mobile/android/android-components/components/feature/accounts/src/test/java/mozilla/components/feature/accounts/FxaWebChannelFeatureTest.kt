@@ -23,6 +23,7 @@ import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
+import org.json.JSONException
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -155,6 +156,47 @@ class FxaWebChannelFeatureTest {
         assertTrue(FxaWebChannelFeature.ports.containsValue(port))
     }
 
+    @Test
+    fun `COMMAND_STATUS configured with CWTS must provided a boolean=true flag to the web-channel`() {
+        val sessionManager = mock<SessionManager>()
+        val accountManager = mock<FxaAccountManager>()
+        val session = mock<Session>()
+        val engineSession = mock<EngineSession>()
+        val ext = mock<WebExtension>()
+        val messageHandler = argumentCaptor<MessageHandler>()
+        val responseToTheWebChannel = argumentCaptor<JSONObject>()
+        val port = mock<Port>()
+        val expectedEngines = setOf(SyncEngine.HISTORY)
+
+        FxaWebChannelFeature.installedWebExt = ext
+
+        whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
+        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(port.engineSession).thenReturn(engineSession)
+
+        val webchannelFeature =
+            spy(FxaWebChannelFeature(testContext, null, mock(), sessionManager, accountManager, setOf(FxaCapability.CHOOSE_WHAT_TO_SYNC)))
+        webchannelFeature.onSessionAdded(session)
+        verify(ext).registerContentMessageHandler(
+            eq(engineSession),
+            eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
+            messageHandler.capture()
+        )
+        messageHandler.value.onPortConnected(port)
+
+        val requestFromTheWebChannel = JSONObject(
+            """{
+             "message":{
+                "command": "fxaccounts:fxa_status",
+                "messageId":123
+             }
+            }""".trimIndent()
+        )
+        messageHandler.value.onPortMessage(requestFromTheWebChannel, mock())
+        verify(port).postMessage(responseToTheWebChannel.capture())
+        assertTrue(responseToTheWebChannel.value.getCWTSSupport()!!)
+    }
+
     // Receiving and responding a fxa-status message if sync is configured with one engine
     @Test
     fun `COMMAND_STATUS configured with one engine must be provided to the web-channel`() {
@@ -197,8 +239,9 @@ class FxaWebChannelFeatureTest {
         messageHandler.value.onPortMessage(requestFromTheWebChannel, mock())
         verify(port).postMessage(responseToTheWebChannel.capture())
 
-        val capabilitiesFromWebChannel = responseToTheWebChannel.value.getCapabilities()
+        val capabilitiesFromWebChannel = responseToTheWebChannel.value.getSupportedEngines()
         assertTrue(capabilitiesFromWebChannel.size == 1)
+        assertNull(responseToTheWebChannel.value.getCWTSSupport())
 
         assertTrue(responseToTheWebChannel.value.isSignedInUserNull())
     }
@@ -245,11 +288,12 @@ class FxaWebChannelFeatureTest {
         messageHandler.value.onPortMessage(requestFromTheWebChannel, mock())
         verify(port).postMessage(responseToTheWebChannel.capture())
 
-        val capabilitiesFromWebChannel = responseToTheWebChannel.value.getCapabilities()
+        val capabilitiesFromWebChannel = responseToTheWebChannel.value.getSupportedEngines()
         assertTrue(expectedEngines.all {
             capabilitiesFromWebChannel.contains(it.nativeName)
         })
 
+        assertNull(responseToTheWebChannel.value.getCWTSSupport())
         assertTrue(responseToTheWebChannel.value.isSignedInUserNull())
     }
 
@@ -298,11 +342,12 @@ class FxaWebChannelFeatureTest {
         messageHandler.value.onPortMessage(requestFromTheWebChannel, mock())
         verify(port).postMessage(responseToTheWebChannel.capture())
 
-        val capabilitiesFromWebChannel = responseToTheWebChannel.value.getCapabilities()
+        val capabilitiesFromWebChannel = responseToTheWebChannel.value.getSupportedEngines()
         assertTrue(expectedEngines.all {
             capabilitiesFromWebChannel.contains(it.nativeName)
         })
 
+        assertNull(responseToTheWebChannel.value.getCWTSSupport())
         assertTrue(responseToTheWebChannel.value.isSignedInUserNull())
     }
 
@@ -349,11 +394,12 @@ class FxaWebChannelFeatureTest {
         messageHandler.value.onPortMessage(requestFromTheWebChannel, mock())
         verify(port).postMessage(responseToTheWebChannel.capture())
 
-        val capabilitiesFromWebChannel = responseToTheWebChannel.value.getCapabilities()
+        val capabilitiesFromWebChannel = responseToTheWebChannel.value.getSupportedEngines()
         assertTrue(expectedEngines.all {
             capabilitiesFromWebChannel.contains(it.nativeName)
         })
 
+        assertNull(responseToTheWebChannel.value.getCWTSSupport())
         assertTrue(responseToTheWebChannel.value.isSignedInUserNull())
     }
 
@@ -400,11 +446,12 @@ class FxaWebChannelFeatureTest {
         messageHandler.value.onPortMessage(requestFromTheWebChannel, mock())
         verify(port).postMessage(responseToTheWebChannel.capture())
 
-        val capabilitiesFromWebChannel = responseToTheWebChannel.value.getCapabilities()
+        val capabilitiesFromWebChannel = responseToTheWebChannel.value.getSupportedEngines()
         assertTrue(expectedEngines.all {
             capabilitiesFromWebChannel.contains(it.nativeName)
         })
 
+        assertNull(responseToTheWebChannel.value.getCWTSSupport())
         assertTrue(responseToTheWebChannel.value.isSignedInUserNull())
     }
 
@@ -448,8 +495,8 @@ class FxaWebChannelFeatureTest {
         messageHandler.value.onPortMessage(requestFromTheWebChannel, mock())
         verify(port).postMessage(responseToTheWebChannel.capture())
 
-        val capabilitiesFromWebChannel = responseToTheWebChannel.value.getCapabilities()
-
+        assertNull(responseToTheWebChannel.value.getCWTSSupport())
+        val capabilitiesFromWebChannel = responseToTheWebChannel.value.getSupportedEngines()
         assertTrue(capabilitiesFromWebChannel.isEmpty())
     }
 
@@ -589,7 +636,7 @@ class FxaWebChannelFeatureTest {
         return webchannelFeature
     }
 
-    private fun JSONObject.getCapabilities(): List<String> {
+    private fun JSONObject.getSupportedEngines(): List<String> {
         val engines = this.getJSONObject("message")
             .getJSONObject("data")
             .getJSONObject("capabilities")
@@ -600,6 +647,17 @@ class FxaWebChannelFeatureTest {
             list.add(engines[i].toString())
         }
         return list
+    }
+
+    private fun JSONObject.getCWTSSupport(): Boolean? {
+        return try {
+            this.getJSONObject("message")
+                .getJSONObject("data")
+                .getJSONObject("capabilities")
+                .getBoolean("choose_what_to_sync")
+        } catch (e: JSONException) {
+            null
+        }
     }
 
     private fun JSONObject.isSignedInUserNull(): Boolean {
