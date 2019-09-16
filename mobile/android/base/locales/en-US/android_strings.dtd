@@ -14,12 +14,6 @@
 <!ENTITY firstrun_panel_title_customize "Customize">
 <!ENTITY firstrun_customize_message "Make &brandShortName; your own.">
 <!ENTITY firstrun_customize_subtext "Customize &brandShortName; with add-ons. Block ads, add features, or choose a new theme to reflect your personality.">
-<!ENTITY firstrun_bookmarks_title "History">
-<!ENTITY firstrun_bookmarks_message "Your faves, front and center">
-<!ENTITY firstrun_bookmarks_subtext "Get results from your bookmarks and history when you search.">
-<!ENTITY firstrun_data_title "Data">
-<!ENTITY firstrun_data_message "Less data, more savings">
-<!ENTITY firstrun_data_subtext2 "Turn off images to spend less data on every site you visit.">
 <!ENTITY firstrun_sync_title "Sync">
 <!ENTITY updatednewfirstrun_sync_title "Account">
 <!ENTITY firstrun_sync_message3 "Sync your bookmarks, history, and passwords to your phone.">
@@ -28,25 +22,12 @@
 <!ENTITY updatednewfirstrun_sync_subtext "Sign in to your account to get the most out of &brandShortName;">
 <!ENTITY firstrun_sendtab_title "Send Tab">
 <!ENTITY firstrun_sendtab_message "Share tabs from mobile to desktop — instantly.">
-<!ENTITY firstrun_signin_message "Get connected, get started">
 <!ENTITY firstrun_signin_button "Sign in to Sync">
 <!ENTITY newfirstrun_signin_button "Turn on Sync">
 <!ENTITY updatednewfirstrun_signin_button "Sign in to &brandShortName;">
 <!ENTITY onboard_start_button_browser "Start Browsing">
-<!ENTITY firstrun_button_notnow "Not right now">
 <!ENTITY firstrun_button_next "Next">
 <!ENTITY firstrun_signup_button "Sign up">
-
-<!ENTITY firstrun_tabqueue_title "Links">
-
-<!ENTITY firstrun_readerview_title "Articles">
-<!-- Localization note (firstrun_readerview_message): This is a casual way of describing getting rid of unnecessary things, and is referring to simplifying websites so only the article text and images are visible, removing unnecessary headers or ads. -->
-<!ENTITY firstrun_readerview_message "Lose the clutter">
-<!ENTITY firstrun_readerview_subtext "Use Reader View to make articles nicer to read \u2014 even offline.">
-
-<!-- Localization note (firstrun_devices_title): This is a casual way of addressing the user, somewhat referring to their online identity (which would include other devices, Firefox usage, accounts, etc). -->
-<!ENTITY firstrun_account_title "You">
-<!ENTITY firstrun_account_message "Have &brandShortName; on another device?">
 
 <!ENTITY  onboard_start_restricted1 "Stay safe and in control with this simplified version of &brandShortName;.">
 
@@ -275,7 +256,6 @@
 <!ENTITY pref_header_accessibility "Accessibility">
 <!ENTITY pref_header_notifications "Notifications">
 <!ENTITY pref_header_advanced "Advanced">
-<!ENTITY pref_header_help "Help">
 <!ENTITY pref_header_vendor "&vendorShortName;">
 
 <!ENTITY pref_cookies_menu "Cookies">
@@ -339,9 +319,6 @@
 <!ENTITY custom_tabs_menu_footer "Powered by &brandShortName;">
 <!-- Long-click title of CustomTabsActivity will copy URL to clipboard and display this hint -->
 <!ENTITY custom_tabs_hint_url_copy "URL copied">
-
-<!ENTITY pref_pwa "Progressive Web Apps">
-<!ENTITY pref_pwa_summary "Allow web apps to be added to home screen">
 
 <!ENTITY tab_queue_toast_message3 "Tab saved in &brandShortName;">
 <!ENTITY tab_queue_toast_action "Open now">
@@ -450,7 +427,6 @@ shown from Android O while a tab is being queued.-->
 <!ENTITY datareporting_notification_title "&brandShortName; stats &amp; data">
 <!ENTITY datareporting_notification_action "Choose what to share">
 <!-- Used in datareporting_notification_ticket_text, but unused in strings.xml. -->
-<!ENTITY datareporting_notification_action_long "Choose what information to share">
 <!ENTITY datareporting_notification_summary "To improve your experience, &brandShortName; automatically sends some information to &vendorShortName;.">
 <!-- When this item is removed, also remove datareporting_notification_action_long:
      it is unused in strings.xml. -->
@@ -677,10 +653,6 @@ shown from Android O while a tab is being queued.-->
 <!ENTITY home_pinned_site "Pinned site">
 <!ENTITY home_unpinned_site "Unpinned site">
 
-<!ENTITY remote_tabs_panel_moved_title "Where did my tabs go?">
-<!ENTITY remote_tabs_panel_moved_desc "We\'ve moved your tabs from other devices into a panel on your home page that can be easily accessed every time you open a new tab.">
-<!ENTITY remote_tabs_panel_moved_link "Take me to my new panel.">
-
 <!ENTITY pin_site_dialog_hint "Enter a search keyword">
 
 <!ENTITY filepicker_title "Choose File">
@@ -689,8 +661,6 @@ shown from Android O while a tab is being queued.-->
 <!ENTITY filepicker_video_title "Choose or record a video">
 <!ENTITY filepicker_permission_denied "Required permissions not granted, reverting to the system file picker.">
 
-<!-- Site identity popup -->
-<!ENTITY identity_connected_to "You are connected to">
 <!-- Localization note (identity_run_by) : This string appears between a
 domain name (above) and an organization name (below). E.g.
 
