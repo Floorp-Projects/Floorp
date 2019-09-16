@@ -8,6 +8,8 @@ import android.app.ActivityManager.TaskDescription
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import androidx.core.net.toUri
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.concept.engine.manifest.WebAppManifest
@@ -26,11 +28,14 @@ fun WebAppManifest.toTaskDescription(icon: Bitmap?) =
 /**
  * Creates a [CustomTabConfig] that styles a custom tab toolbar to match the manifest theme.
  */
-fun WebAppManifest.toCustomTabConfig() =
-    CustomTabConfig(
+fun WebAppManifest.toCustomTabConfig(): CustomTabConfig {
+    val backgroundColor = this.backgroundColor
+    return CustomTabConfig(
         toolbarColor = themeColor,
-        navigationBarColor = backgroundColor?.let {
-            if (isDark(it)) Color.BLACK else Color.WHITE
+        navigationBarColor = if (SDK_INT >= Build.VERSION_CODES.O && backgroundColor != null) {
+            if (isDark(backgroundColor)) Color.BLACK else Color.WHITE
+        } else {
+            null
         },
         closeButtonIcon = null,
         enableUrlbarHiding = true,
@@ -38,6 +43,7 @@ fun WebAppManifest.toCustomTabConfig() =
         showShareMenuItem = true,
         menuItems = emptyList()
     )
+}
 
 /**
  * Returns the scope of the manifest as a [Uri] for use

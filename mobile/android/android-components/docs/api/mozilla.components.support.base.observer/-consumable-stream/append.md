@@ -2,7 +2,7 @@
 
 # append
 
-`@Synchronized fun append(vararg values: `[`T`](index.md#T)`): `[`ConsumableStream`](index.md)`<`[`T`](index.md#T)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/Consumable.kt#L168)
+`@Synchronized fun append(vararg values: `[`T`](index.md#T)`): `[`ConsumableStream`](index.md)`<`[`T`](index.md#T)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/Consumable.kt#L165)
 
 Copies the stream and appends the provided values.
 

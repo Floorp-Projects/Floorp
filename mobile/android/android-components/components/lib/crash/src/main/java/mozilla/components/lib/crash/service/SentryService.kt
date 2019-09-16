@@ -35,21 +35,21 @@ class SentryService(
     clientFactory: SentryClientFactory = AndroidSentryClientFactory(context)
 ) : CrashReporterService {
     private val client: SentryClient by lazy { SentryClientFactory.sentryClient(
-        Uri.parse(dsn).buildUpon()
-            .appendQueryParameter("uncaught.handler.enabled", "false")
-            .build()
-            .toString(),
-        clientFactory).apply {
-        this.environment = environment
-        tags.forEach { entry ->
-            addTag(entry.key, entry.value)
-        }
+            Uri.parse(dsn).buildUpon()
+                .appendQueryParameter("uncaught.handler.enabled", "false")
+                .build()
+                .toString(),
+            clientFactory).apply {
+            this.environment = environment
+            tags.forEach { entry ->
+                addTag(entry.key, entry.value)
+            }
 
-        // Add default tags
-        addTag("ac.version", Build.version)
-        addTag("ac.git", Build.gitHash)
-        addTag("ac.as.build_version", Build.applicationServicesVersion)
-    }
+            // Add default tags
+            addTag("ac.version", Build.version)
+            addTag("ac.git", Build.gitHash)
+            addTag("ac.as.build_version", Build.applicationServicesVersion)
+        }
     }
 
     override fun report(crash: Crash.UncaughtExceptionCrash) {
@@ -76,6 +76,7 @@ class SentryService(
                 .setCategory(this.category)
                 .setLevel(this.level.toSentryBreadcrumbLevel())
                 .setType(this.type.toSentryBreadcrumbType())
+                .setTimestamp(this.date)
                 .build()
     }
 

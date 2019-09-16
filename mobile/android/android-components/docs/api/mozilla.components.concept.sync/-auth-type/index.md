@@ -9,7 +9,7 @@
 | Name | Summary |
 |---|---|
 | [Existing](-existing.md) | `object Existing : `[`AuthType`](./index.md)<br>Account restored from hydrated state on disk. |
-| [OtherExternal](-other-external/index.md) | `data class OtherExternal : `[`AuthType`](./index.md)<br>Account was created for an unknown external reason, identified by [action](-other-external/action.md). |
+| [OtherExternal](-other-external/index.md) | `data class OtherExternal : `[`AuthType`](./index.md)<br>Account was created for an unknown external reason, hopefully identified by [action](-other-external/action.md). |
 | [Pairing](-pairing.md) | `object Pairing : `[`AuthType`](./index.md)<br>Account created via pairing (similar to sign-in, but without requiring credentials). |
 | [Recovered](-recovered.md) | `object Recovered : `[`AuthType`](./index.md)<br>Existing account was recovered from an authentication problem. |
 | [Shared](-shared.md) | `object Shared : `[`AuthType`](./index.md)<br>Account created via a shared account state from another app. |
@@ -21,7 +21,7 @@
 | Name | Summary |
 |---|---|
 | [Existing](-existing.md) | `object Existing : `[`AuthType`](./index.md)<br>Account restored from hydrated state on disk. |
-| [OtherExternal](-other-external/index.md) | `data class OtherExternal : `[`AuthType`](./index.md)<br>Account was created for an unknown external reason, identified by [action](-other-external/action.md). |
+| [OtherExternal](-other-external/index.md) | `data class OtherExternal : `[`AuthType`](./index.md)<br>Account was created for an unknown external reason, hopefully identified by [action](-other-external/action.md). |
 | [Pairing](-pairing.md) | `object Pairing : `[`AuthType`](./index.md)<br>Account created via pairing (similar to sign-in, but without requiring credentials). |
 | [Recovered](-recovered.md) | `object Recovered : `[`AuthType`](./index.md)<br>Existing account was recovered from an authentication problem. |
 | [Shared](-shared.md) | `object Shared : `[`AuthType`](./index.md)<br>Account created via a shared account state from another app. |

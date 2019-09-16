@@ -4,7 +4,7 @@
 
 package mozilla.components.browser.engine.gecko.glean
 
-import mozilla.components.browser.engine.gecko.GleanMetrics.GleanGeckoHistogramMapping
+import mozilla.components.browser.engine.gecko.GleanMetrics.GleanGeckoMetricsMapping
 import org.mozilla.geckoview.RuntimeTelemetry
 
 /**
@@ -19,9 +19,21 @@ import org.mozilla.geckoview.RuntimeTelemetry
  * providing an instance to `GeckoRuntimeSettings.Builder().telemetryDelegate`.
  */
 class GeckoAdapter : RuntimeTelemetry.Delegate {
-    override fun onHistogram(metric: RuntimeTelemetry.Metric<LongArray>) {
-        // Note that the `GleanGeckoHistogramMapping` is automatically generated at
+    override fun onHistogram(metric: RuntimeTelemetry.Histogram) {
+        // Note that the `GleanGeckoMetricsMapping` is automatically generated at
         // build time by the Glean SDK parsers.
-        GleanGeckoHistogramMapping[metric.name]?.accumulateSamples(metric.value)
+        GleanGeckoMetricsMapping.getHistogram(metric.name)?.accumulateSamples(metric.value)
+    }
+
+    override fun onBooleanScalar(metric: RuntimeTelemetry.Metric<Boolean>) {
+        GleanGeckoMetricsMapping.getBooleanScalar(metric.name)?.set(metric.value)
+    }
+
+    override fun onStringScalar(metric: RuntimeTelemetry.Metric<String>) {
+        GleanGeckoMetricsMapping.getStringScalar(metric.name)?.set(metric.value)
+    }
+
+    override fun onLongScalar(metric: RuntimeTelemetry.Metric<Long>) {
+        GleanGeckoMetricsMapping.getQuantityScalar(metric.name)?.set(metric.value)
     }
 }

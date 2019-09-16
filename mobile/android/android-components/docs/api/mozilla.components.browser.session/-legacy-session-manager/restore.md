@@ -2,7 +2,7 @@
 
 # restore
 
-`fun restore(snapshot: `[`Snapshot`](../-session-manager/-snapshot/index.md)`, updateSelection: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/LegacySessionManager.kt#L242)
+`fun restore(snapshot: `[`Snapshot`](../-session-manager/-snapshot/index.md)`, updateSelection: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/LegacySessionManager.kt#L243)
 
 Restores sessions from the provided [Snapshot](#).
 
@@ -16,6 +16,6 @@ notification will fire.
 
 ### Parameters
 
-`snapshot` - A [Snapshot](#) which may be produced by [createSnapshot](create-snapshot.md).
+`snapshot` - A [SessionManager.Snapshot](../-session-manager/-snapshot/index.md) which may be produced by [createSnapshot](create-snapshot.md).
 
 `updateSelection` - Whether the selected session should be updated from the restored snapshot.

@@ -4,7 +4,7 @@
 
 `AD` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L181)
 
-Blocks advertisement trackers.
+Blocks advertisement trackers from the ads-track-digest256 list.
 
 ### Inherited Properties
 

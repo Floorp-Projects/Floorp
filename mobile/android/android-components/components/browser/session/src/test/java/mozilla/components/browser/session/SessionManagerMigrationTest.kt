@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.session
 
+import mozilla.components.browser.session.ext.toFindResultState
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -12,6 +13,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
+import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -67,6 +69,34 @@ class SessionManagerMigrationTest {
         assertEquals(1, store.state.customTabs.size)
 
         val tab = store.state.customTabs[0]
+        assertEquals("https://www.mozilla.org", tab.content.url)
+    }
+
+    @Test
+    fun `Migrating a custom tab session`() {
+        val store = BrowserStore()
+
+        val sessionManager = SessionManager(engine = mock(), store = store)
+
+        val customTabSession = Session("https://www.mozilla.org")
+        customTabSession.customTabConfig = mock()
+        sessionManager.add(customTabSession)
+
+        assertEquals(0, sessionManager.sessions.size)
+        assertEquals(1, sessionManager.all.size)
+        assertEquals(0, store.state.tabs.size)
+        assertEquals(1, store.state.customTabs.size)
+
+        val customTab = store.state.customTabs[0]
+        assertEquals("https://www.mozilla.org", customTab.content.url)
+
+        customTabSession.customTabConfig = null
+        assertEquals(1, sessionManager.sessions.size)
+        assertEquals(1, sessionManager.all.size)
+        assertEquals(1, store.state.tabs.size)
+        assertEquals(0, store.state.customTabs.size)
+
+        val tab = store.state.tabs[0]
         assertEquals("https://www.mozilla.org", tab.content.url)
     }
 
@@ -804,5 +834,57 @@ class SessionManagerMigrationTest {
         store.state.findTab("session2")!!.also { tab ->
             assertEquals(engineSession, tab.engineState.engineSession)
         }
+    }
+
+    @Test
+    fun `Adding a prompt request`() {
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store)
+
+        val session = Session(id = "session", initialUrl = "https://www.mozilla.org")
+        manager.add(session)
+
+        assertNull(session.promptRequest.peek())
+        assertNull(store.state.findTab("session")!!.content.promptRequest)
+
+        val promptRequest: PromptRequest = mock()
+        session.promptRequest = Consumable.from(promptRequest)
+
+        assertEquals(promptRequest, session.promptRequest.peek())
+        store.state.findTab("session")!!.also { tab ->
+            assertNotNull(tab.content.promptRequest)
+            assertSame(promptRequest, tab.content.promptRequest)
+        }
+
+        session.promptRequest.consume { true }
+        store.state.findTab("session")!!.also { tab ->
+            assertNull(tab.content.promptRequest)
+        }
+    }
+
+    @Test
+    fun `Adding a find result`() {
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store)
+
+        val session = Session(id = "session", initialUrl = "https://www.mozilla.org")
+        manager.add(session)
+
+        assertTrue(session.findResults.isEmpty())
+        assertTrue(store.state.findTab("session")!!.content.findResults.isEmpty())
+
+        val result = Session.FindResult(0, 0, false)
+        session.findResults += result
+
+        assertEquals(1, session.findResults.size)
+        assertEquals(result, session.findResults.last())
+        store.state.findTab("session")!!.also { tab ->
+            assertEquals(1, tab.content.findResults.size)
+            assertEquals(result.toFindResultState(), tab.content.findResults.last())
+        }
+
+        session.findResults = emptyList()
+        assertTrue(session.findResults.isEmpty())
+        assertTrue(store.state.findTab("session")!!.content.findResults.isEmpty())
     }
 }

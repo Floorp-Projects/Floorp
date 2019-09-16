@@ -15,7 +15,6 @@ import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import mozilla.components.service.glean.Glean
-import mozilla.components.service.glean.net.HttpPingUploader
 
 /**
  * This class is the worker class used by [WorkManager] to handle uploading the ping to the server.
@@ -38,7 +37,7 @@ class PingUploadWorker(context: Context, params: WorkerParameters) : Worker(cont
 
         /**
          * Build the [OneTimeWorkRequest] for enqueueing in the [WorkManager].  This also adds a tag
-         * by which [isWorkScheduled] can tell if the worker object has been enqueued.
+         * by which enqueued requests can be identified.
          *
          * @return [OneTimeWorkRequest] representing the task for the [WorkManager] to enqueue and run
          */
@@ -64,8 +63,8 @@ class PingUploadWorker(context: Context, params: WorkerParameters) : Worker(cont
          * @return true if process was successful
          */
         private fun uploadPings(): Boolean {
-            val httpPingUploader = HttpPingUploader()
-            return Glean.pingStorageEngine.process(httpPingUploader::upload)
+            val httpPingUploader = Glean.httpClient
+            return Glean.pingStorageEngine.process(httpPingUploader::doUpload)
         }
 
         /**

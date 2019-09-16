@@ -6,7 +6,7 @@ package mozilla.components.feature.downloads
 
 import android.os.Bundle
 import androidx.fragment.app.DialogFragment
-import mozilla.components.browser.session.Download
+import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.support.utils.DownloadUtils
 
 /**
@@ -24,10 +24,12 @@ abstract class DownloadDialogFragment : DialogFragment() {
      */
     var onStartDownload: () -> Unit = {}
 
+    var onCancelDownload: () -> Unit = {}
+
     /**
      * add the metadata of this download object to the arguments of this fragment.
      */
-    fun setDownload(download: Download) {
+    fun setDownload(download: DownloadState) {
         val args = arguments ?: Bundle()
         args.putString(KEY_FILE_NAME, download.fileName
             ?: DownloadUtils.guessFileName(null, download.url, download.contentType))

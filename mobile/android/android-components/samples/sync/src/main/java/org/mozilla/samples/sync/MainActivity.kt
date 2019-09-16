@@ -166,7 +166,7 @@ class MainActivity :
 
     override fun onLoginComplete(code: String, state: String, action: String, fragment: LoginFragment) {
         launch {
-            supportFragmentManager?.popBackStack()
+            supportFragmentManager.popBackStack()
             accountManager.finishAuthenticationAsync(
                 FxaAuthData(action.toAuthType(), code = code, state = state)
             ).await()
@@ -186,7 +186,7 @@ class MainActivity :
     }
 
     private fun openWebView(url: String) {
-        supportFragmentManager?.beginTransaction()?.apply {
+        supportFragmentManager.beginTransaction().apply {
             replace(R.id.container, LoginFragment.create(url, REDIRECT_URL))
             addToBackStack(null)
             commit()

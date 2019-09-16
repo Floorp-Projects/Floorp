@@ -4,7 +4,7 @@
   "version": "1.0",
   "content_scripts": [
     {
-      "matches": ["https://acounts.firefox.com/*"],
+      "matches": ["https://accounts.firefox.com/*"],
       "js": ["fxawebchannel.js"],
       "run_at": "document_start"
     }

@@ -80,9 +80,9 @@ sealed class AuthType {
     object Pairing : AuthType()
 
     /**
-     * Account was created for an unknown external reason, identified by [action].
+     * Account was created for an unknown external reason, hopefully identified by [action].
      */
-    data class OtherExternal(val action: String) : AuthType()
+    data class OtherExternal(val action: String?) : AuthType()
 
     /**
      * Account created via a shared account state from another app.

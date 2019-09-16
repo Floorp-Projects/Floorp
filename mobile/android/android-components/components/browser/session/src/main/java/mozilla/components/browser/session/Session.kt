@@ -9,9 +9,14 @@ import mozilla.components.browser.session.engine.EngineSessionHolder
 import mozilla.components.browser.session.engine.request.LoadRequestMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.session.ext.syncDispatch
+import mozilla.components.browser.session.ext.toFindResultState
 import mozilla.components.browser.session.ext.toSecurityInfoState
+import mozilla.components.browser.session.ext.toTabSessionState
+import mozilla.components.browser.state.action.ContentAction.AddFindResultAction
+import mozilla.components.browser.state.action.ContentAction.ClearFindResultsAction
 import mozilla.components.browser.state.action.ContentAction.ConsumeDownloadAction
 import mozilla.components.browser.state.action.ContentAction.ConsumeHitResultAction
+import mozilla.components.browser.state.action.ContentAction.ConsumePromptRequestAction
 import mozilla.components.browser.state.action.ContentAction.RemoveIconAction
 import mozilla.components.browser.state.action.ContentAction.RemoveThumbnailAction
 import mozilla.components.browser.state.action.ContentAction.UpdateDownloadAction
@@ -19,11 +24,14 @@ import mozilla.components.browser.state.action.ContentAction.UpdateHitResultActi
 import mozilla.components.browser.state.action.ContentAction.UpdateIconAction
 import mozilla.components.browser.state.action.ContentAction.UpdateLoadingStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdateProgressAction
+import mozilla.components.browser.state.action.ContentAction.UpdatePromptRequestAction
 import mozilla.components.browser.state.action.ContentAction.UpdateSearchTermsAction
 import mozilla.components.browser.state.action.ContentAction.UpdateSecurityInfoAction
 import mozilla.components.browser.state.action.ContentAction.UpdateThumbnailAction
 import mozilla.components.browser.state.action.ContentAction.UpdateTitleAction
 import mozilla.components.browser.state.action.ContentAction.UpdateUrlAction
+import mozilla.components.browser.state.action.CustomTabListAction.RemoveCustomTabAction
+import mozilla.components.browser.state.action.TabListAction.AddTabAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.store.BrowserStore
@@ -263,8 +271,16 @@ class Session(
     /**
      * Configuration data in case this session is used for a Custom Tab.
      */
-    var customTabConfig: CustomTabConfig? by Delegates.observable<CustomTabConfig?>(null) { _, _, new ->
+    var customTabConfig: CustomTabConfig? by Delegates.observable<CustomTabConfig?>(null) { _, old, new ->
         notifyObservers { onCustomTabConfigChanged(this@Session, new) }
+
+        // The custom tab config is set to null when we're migrating custom
+        // tabs to regular tabs, so we have to dispatch the corresponding
+        // browser actions to keep the store in sync.
+        if (old != new && new == null) {
+            store?.syncDispatch(RemoveCustomTabAction(id))
+            store?.syncDispatch(AddTabAction(toTabSessionState()))
+        }
     }
 
     /**
@@ -371,6 +387,12 @@ class Session(
                 onFindResult(this@Session, new.last())
             }
         }
+
+        if (new.isNotEmpty()) {
+            store?.syncDispatch(AddFindResultAction(id, new.last().toFindResultState()))
+        } else {
+            store?.syncDispatch(ClearFindResultsAction(id))
+        }
     }
 
     /**
@@ -451,10 +473,19 @@ class Session(
     /**
      * [Consumable] State for a prompt request from web content.
      */
-    var promptRequest: Consumable<PromptRequest> by Delegates.vetoable(Consumable.empty()) {
-        _, _, request ->
-            val consumers = wrapConsumers<PromptRequest> { onPromptRequested(this@Session, it) }
-            !request.consumeBy(consumers)
+    var promptRequest: Consumable<PromptRequest> by Delegates.vetoable(Consumable.empty()) { _, _, request ->
+        store?.let {
+            val promptRequest = request.peek()
+            if (promptRequest == null) {
+                it.syncDispatch(ConsumePromptRequestAction(id))
+            } else {
+                it.syncDispatch(UpdatePromptRequestAction(id, promptRequest))
+                request.onConsume { it.syncDispatch(ConsumePromptRequestAction(id)) }
+            }
+        }
+
+        val consumers = wrapConsumers<PromptRequest> { onPromptRequested(this@Session, it) }
+        !request.consumeBy(consumers)
     }
 
     /**

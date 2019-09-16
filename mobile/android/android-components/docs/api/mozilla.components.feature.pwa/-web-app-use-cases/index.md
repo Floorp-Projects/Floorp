@@ -2,7 +2,7 @@
 
 # WebAppUseCases
 
-`class WebAppUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/WebAppUseCases.kt#L15)
+`class WebAppUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/WebAppUseCases.kt#L16)
 
 These use cases allow for adding a web app or web site to the homescreen.
 
@@ -28,4 +28,5 @@ These use cases allow for adding a web app or web site to the homescreen.
 
 | Name | Summary |
 |---|---|
-| [isPinningSupported](is-pinning-supported.md) | `fun isPinningSupported(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
+| [isInstallable](is-installable.md) | `fun isInstallable(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Checks to see if the current session can be installed as a Progressive Web App. |
+| [isPinningSupported](is-pinning-supported.md) | `fun isPinningSupported(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Checks if the launcher supports adding shortcuts. |

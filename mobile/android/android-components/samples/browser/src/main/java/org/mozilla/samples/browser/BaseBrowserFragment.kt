@@ -106,7 +106,8 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
         downloadsFeature.set(
             feature = DownloadsFeature(
                 requireContext().applicationContext,
-                sessionManager = components.sessionManager,
+                store = components.store,
+                useCases = components.downloadsUseCases,
                 fragmentManager = childFragmentManager,
                 onDownloadCompleted = { download, id ->
                     Logger.debug("Download done. ID#$id $download")
@@ -124,13 +125,15 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
         val scrollFeature = CoordinateScrollingFeature(components.sessionManager, layout.engineView, layout.toolbar)
 
         val contextMenuFeature = ContextMenuFeature(
-            requireFragmentManager(),
-            components.sessionManager,
-            ContextMenuCandidate.defaultCandidates(
+            fragmentManager = requireFragmentManager(),
+            store = components.store,
+            candidates = ContextMenuCandidate.defaultCandidates(
                 requireContext(),
                 components.tabsUseCases,
+                components.contextMenuUseCases,
                 layout),
-            layout.engineView)
+            engineView = layout.engineView,
+            useCases = components.contextMenuUseCases)
 
         promptFeature.set(
             feature = PromptFeature(

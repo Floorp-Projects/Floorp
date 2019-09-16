@@ -2,7 +2,7 @@
 
 # ERROR
 
-`ERROR` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/Breadcrumb.kt#L62)
+`ERROR` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/Breadcrumb.kt#L68)
 
 ERROR level.
 

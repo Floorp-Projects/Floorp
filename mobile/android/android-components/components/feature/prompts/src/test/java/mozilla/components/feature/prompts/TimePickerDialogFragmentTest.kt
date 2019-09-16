@@ -94,7 +94,7 @@ class TimePickerDialogFragmentTest {
         )
         fragment.feature = mockFeature
         doReturn(testContext).`when`(fragment).requireContext()
-        fragment.onCancel(null)
+        fragment.onCancel(mock())
         verify(mockFeature).onCancel("sessionId")
     }
 

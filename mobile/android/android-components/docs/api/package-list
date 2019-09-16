@@ -147,6 +147,7 @@ mozilla.components.feature.findinpage.view
 mozilla.components.feature.intent.ext
 mozilla.components.feature.intent.processing
 mozilla.components.feature.media
+mozilla.components.feature.media.ext
 mozilla.components.feature.media.state
 mozilla.components.feature.prompts
 mozilla.components.feature.push
@@ -167,7 +168,6 @@ mozilla.components.feature.tabs
 mozilla.components.feature.tabs.tabstray
 mozilla.components.feature.tabs.toolbar
 mozilla.components.feature.toolbar
-mozilla.components.feature.webnotifications
 mozilla.components.lib.crash
 mozilla.components.lib.crash.handler
 mozilla.components.lib.crash.prompt
@@ -205,6 +205,7 @@ mozilla.components.service.glean.config
 mozilla.components.service.glean.debug
 mozilla.components.service.glean.error
 mozilla.components.service.glean.histogram
+mozilla.components.service.glean.net
 mozilla.components.service.glean.private
 mozilla.components.service.glean.storages
 mozilla.components.service.glean.testing
@@ -239,6 +240,7 @@ mozilla.components.support.ktx.android.org.json
 mozilla.components.support.ktx.android.os
 mozilla.components.support.ktx.android.util
 mozilla.components.support.ktx.android.view
+mozilla.components.support.ktx.android.widget
 mozilla.components.support.ktx.java.io
 mozilla.components.support.ktx.kotlin
 mozilla.components.support.ktx.kotlinx.coroutines.flow

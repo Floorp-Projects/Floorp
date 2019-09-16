@@ -22,6 +22,12 @@ android {
     }
 }
 
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions.freeCompilerArgs += [
+            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi"
+    ]
+}
+
 dependencies {
 
     implementation project(':browser-session')
@@ -30,6 +36,7 @@ dependencies {
     implementation project(':support-utils')
 
     implementation Dependencies.androidx_core_ktx
+    implementation Dependencies.androidx_localbroadcastmanager
     implementation Dependencies.kotlin_coroutines
     implementation Dependencies.kotlin_stdlib
 

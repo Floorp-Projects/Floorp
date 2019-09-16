@@ -57,6 +57,18 @@ internal object ContentStateReducer {
             is ContentAction.ConsumeHitResultAction -> updateContentState(state, action.sessionId) {
                 it.copy(hitResult = null)
             }
+            is ContentAction.UpdatePromptRequestAction -> updateContentState(state, action.sessionId) {
+                it.copy(promptRequest = action.promptRequest)
+            }
+            is ContentAction.ConsumePromptRequestAction -> updateContentState(state, action.sessionId) {
+                it.copy(promptRequest = null)
+            }
+            is ContentAction.AddFindResultAction -> updateContentState(state, action.sessionId) {
+                it.copy(findResults = it.findResults + action.findResult)
+            }
+            is ContentAction.ClearFindResultsAction -> updateContentState(state, action.sessionId) {
+                it.copy(findResults = emptyList())
+            }
         }
     }
 }

@@ -22,7 +22,6 @@ package mozilla.components.concept.engine.webnotifications
  * notification was clicked.
  * @property onClose Callback called when the notification is dismissed.
  */
-@Suppress("Unused")
 data class WebNotification(
     val origin: String,
     val title: String? = null,

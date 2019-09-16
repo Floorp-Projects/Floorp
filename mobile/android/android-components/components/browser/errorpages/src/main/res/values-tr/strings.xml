@@ -60,6 +60,9 @@
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Çevrimdışı kip</string>
 
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Tarayıcı şu an çevrimdışı kipte çalışıyor ve istenen öğeye bağlanamaz.</p><ul><li>Bilgisayarınız etkin bir ağa bağlı mı?</li><li>Çevrimiçi kipe geçerek sayfayı tazelemek için “Yeniden dene” düğmesine tıklayın.</li></ul>]]></string>
+
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Güvenlik nedeniyle bağlantı noktası kısıtlanmış</string>
     <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
@@ -67,6 +70,15 @@
 
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Bağlantı sıfırlandı</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>Bağlantı anlaşması yapılırken ağ bağlantısı kesildi. Lütfen tekrar deneyin.</p>
+      <ul>
+        <li>Site geçici olarak kullanılamıyor veya çok meşgul olabilir. Birkaç dakika sonra tekrar deneyin.</li>
+        <li>Hiçbir sayfa açılmıyorsa cihazınızın mobil internet veya Wi-Fi bağlantısını kontrol edin.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">Güvensiz dosya türü</string>

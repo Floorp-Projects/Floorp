@@ -10,7 +10,7 @@ This class provides access to a centralized registry of all active sessions.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `LegacySessionManager(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, delegate: `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](../-session-manager/-observer/index.md)`> = ObserverRegistry())`<br>This class provides access to a centralized registry of all active sessions. |
+| [&lt;init&gt;](-init-.md) | `LegacySessionManager(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, engineSessionLinker: `[`EngineSessionLinker`](../-session-manager/-engine-session-linker/index.md)`, delegate: `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](../-session-manager/-observer/index.md)`> = ObserverRegistry())`<br>This class provides access to a centralized registry of all active sessions. |
 
 ### Properties
 

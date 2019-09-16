@@ -36,6 +36,18 @@ With this minimal setup the crash reporting library will capture "uncaught excep
 
 ⚠️ Note: To avoid conflicting setups do not use any other crash reporting libraries/services independently from this library.
 
+### Recording crash breadcrumbs to supported services
+
+Using the `CrashReporter` instance to record crash breadcrumbs.  These breadcrumbs will then be sent when a crash occurs to aid in debugging.  Breadcrumbs are reported only if the underlying crash reporter service supports it.
+
+⚠️ Note: Directly using Sentry's breadcrumb will not work as expected on Android 10 or above.  Using the `CrashReporter` breadcrumb is preferred. 
+
+```Kotlin
+crashReporter.recordCrashBreadcrumb(
+  CrashBreadcrumb("Settings button clicked", data, "UI", Level.INFO, Type.USER)
+)
+```
+
 ### Sending crash reports to Sentry
 
 ⚠️ Note: The crash reporter library is compiled against the Sentry SDK but it doesn't require it as a dependency. The app using the component is responsible for adding the Sentry dependency to its build files in order to use Sentry crash reporting.

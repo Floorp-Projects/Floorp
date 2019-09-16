@@ -37,6 +37,7 @@ dependencies {
 
     implementation project(':support-base')
     implementation project(':support-ktx')
+    implementation project(':support-utils')
 
     // We only compile against Sentry, GeckoView, and Glean. It's up to the app to add those dependencies if it wants to
     // send crash reports to Socorro (GV) or Sentry.

@@ -13,7 +13,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.session.Download
+import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.support.test.any
@@ -33,14 +33,14 @@ class FetchDownloadManagerTest {
 
     private lateinit var broadcastManager: LocalBroadcastManager
     private lateinit var service: MockDownloadService
-    private lateinit var download: Download
+    private lateinit var download: DownloadState
     private lateinit var downloadManager: FetchDownloadManager<MockDownloadService>
 
     @Before
     fun setup() {
         broadcastManager = LocalBroadcastManager.getInstance(testContext)
         service = MockDownloadService()
-        download = Download(
+        download = DownloadState(
             "http://ipv4.download.thinkbroadband.com/5MB.zip",
             "", "application/zip", 5242880,
             "Mozilla/5.0 (Linux; Android 7.1.1) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/8.0 Chrome/69.0.3497.100 Mobile Safari/537.36"

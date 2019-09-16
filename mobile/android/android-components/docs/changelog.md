@@ -4,13 +4,45 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 12.0.0-SNAPSHOT  (In Development)
+# 13.0.0-SNAPSHOT  (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v11.0.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/72?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v12.0.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/73?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+* **browser-session**
+  * Clear session icon only if URL host changes.
+
+* **feature-pwa**
+  * Adds `WebAppUseCases.isInstallable` to check if the current session can be installed as a Progressive Web App.
+
+* **feature-downloads**
+  *  ⚠️ **This is a breaking change**: The `feature-downloads` component has been migrated to `browser-state` from `browser-session`. Therefore creating a `DownloadsFeature` requires a `BrowserStore` instance (instead of a `SessionManager` instance) and a `DownloadsUseCases` instance now.
+
+* **feature-contextmenu**
+  *  ⚠️ **This is a breaking change**: The `feature-contextmenu` component has been migrated to `browser-state` from `browser-session`. Therefore creating a `ContextMenuFeature` requires a `BrowserStore` instance (instead of a `SessionManager` instance) and a `ContextMenuUseCases` instance now.
+
+* **service-glean**
+  * ⚠️ **This is a breaking change**: applications need to use `ConceptFetchHttpUploader` for overriding the ping uploading mechanism instead of directly using `concept-fetch` implementations.
+
+* **feature-tabs**
+  * ⚠️ **This is a breaking change**: Methods that have been accepting a parent `Session` parameter now expect the parent id (`String`).
+  
+* **browser-menu**
+   * Adds the ability to create a BrowserMenuImageSwitch, a BrowserMenuSwitch with icon
+
+# 12.0.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v11.0.0...v12.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/72?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v12.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v12.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v12.0.0/buildSrc/src/main/java/Config.kt)
+
+* **browser-engine-gecko-nightly**, **browser-engine-gecko-beta** and **browser-engine-gecko**
+  * The `TrackingProtectionPolicy.recommended()` and `TrackingProtectionPolicy.strict()`  policies are now aligned with standard and strict (respectively) policies on FireFox desktop, for more details see the [issue #4349](https://github.com/mozilla-mobile/android-components/issues/4349).
 
 * **browser-engine-gecko-nightly** and **browser-engine-gecko-beta**
   * The `TrackingProtectionPolicy.select` function now allows you to indicate if `strictSocialTrackingProtection` should be activated or not. When it is active blocks trackers from the social-tracking-protection-digest256 list, for more details take a look at the [issue #4320](https://github.com/mozilla-mobile/android-components/issues/4320)
@@ -19,7 +51,7 @@ permalink: /changelog/
     strictSocialTrackingProtection = true
   )
   ```
-  
+
 * **context-menu**
   * Exposed title tag from GV in HitResult. Fixes [#1444]. If title is null or blank the src value is returned for title.
 
@@ -72,8 +104,14 @@ permalink: /changelog/
 * **feature-pwa**
   * Adds the ability to create a basic shortcut with a custom label
 
-* **browser-menu**
-   * Adds the ability to create a BrowserMenuImageSwitch, a BrowserMenuSwitch with icon
+* **browser-engine-gecko-nightly**
+  * Adds support for exposing Gecko scalars through the Glean SDK. See [bug 1579365](https://bugzilla.mozilla.org/show_bug.cgi?id=1579365) for details.
+
+* **support-utils**
+  * `Intent.asForegroundServicePendingIntent(Context)` extension method to create pending intent for the service that will play nicely with background execution limitations introduced in Android O (e.g. foreground service).
+
+* **concept-sync**
+  * ⚠️ **This is a breaking change**: `action` param of `AuthType.OtherExternal` is now optional. Missing `action` indicates that we really don't know what external authType we've hit.
 
 # 11.0.0
 
@@ -111,6 +149,9 @@ permalink: /changelog/
 
 * **browser-session**, **feature-intent**
   * ⚠️ **This is a breaking change**: Moved `Intent` related code from `browser-session` to `feature-intent`.
+
+* **feature-media**
+  * The `Intent` launched from the media notification now has its action set to `MediaFeature.ACTION_SWITCH_TAB`. In addition to that the extra `MediaFeature.EXTRA_TAB_ID` contains the id of the tab the media notification is displayed for.
 
 # 10.0.1
 

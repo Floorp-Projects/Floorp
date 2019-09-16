@@ -34,6 +34,7 @@ import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection.OFF_FOR
 import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection.OFF_GLOBALLY
 import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED
 import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection.ON_TRACKERS_BLOCKED
+import mozilla.components.support.ktx.android.widget.adjustMaxTextSize
 
 /**
  * Sub-component of the browser toolbar responsible for displaying the URL and related controls.
@@ -179,18 +180,18 @@ internal class DisplayToolbar(
     internal val titleView = AppCompatTextView(context).apply {
         id = R.id.mozac_browser_toolbar_title_view
         gravity = Gravity.CENTER_VERTICAL
-        textSize = URL_TEXT_SIZE_SP
+        textSize = BrowserToolbar.URL_TEXT_SIZE_SP
         visibility = View.GONE
 
-        setSingleLine(true)
+        setSingleLine()
     }
 
     internal val urlView = AppCompatTextView(context).apply {
         id = R.id.mozac_browser_toolbar_url_view
         gravity = Gravity.CENTER_VERTICAL
-        textSize = URL_TEXT_SIZE_SP
+        textSize = BrowserToolbar.URL_TEXT_SIZE_SP
 
-        setSingleLine(true)
+        setSingleLine()
         isClickable = true
         isFocusable = true
 
@@ -415,10 +416,13 @@ internal class DisplayToolbar(
             /* With a title view, the url and title split the rest of the space vertically. The
             title view and url should be centered as a singular unit in the middle third. */
             titleView.measure(urlWidthSpec, thirdFixedHeightSpec)
+            titleView.adjustMaxTextSize(thirdFixedHeightSpec)
             urlView.measure(urlWidthSpec, thirdFixedHeightSpec)
+            urlView.adjustMaxTextSize(thirdFixedHeightSpec)
         } else {
             // With no title view, the url view takes up the rest of the space
             urlView.measure(urlWidthSpec, fixedHeightSpec)
+            urlView.adjustMaxTextSize(fixedHeightSpec)
         }
 
         val progressHeightSpec = MeasureSpec.makeMeasureSpec(
@@ -648,6 +652,5 @@ internal class DisplayToolbar(
 
         internal const val BOTTOM_PROGRESS_BAR = 0
         private const val TOP_PROGRESS_BAR = 1
-        private const val URL_TEXT_SIZE_SP = 15f
     }
 }

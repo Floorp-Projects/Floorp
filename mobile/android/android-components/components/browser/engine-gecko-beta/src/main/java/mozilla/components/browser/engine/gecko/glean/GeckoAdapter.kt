@@ -4,7 +4,7 @@
 
 package mozilla.components.browser.engine.gecko.glean
 
-import mozilla.components.browser.engine.gecko.GleanMetrics.GleanGeckoHistogramMapping
+import mozilla.components.browser.engine.gecko.GleanMetrics.GleanGeckoMetricsMapping
 import org.mozilla.geckoview.RuntimeTelemetry
 
 /**
@@ -20,8 +20,8 @@ import org.mozilla.geckoview.RuntimeTelemetry
  */
 class GeckoAdapter : RuntimeTelemetry.Delegate {
     override fun onTelemetryReceived(metric: RuntimeTelemetry.Metric) {
-        // Note that the `GleanGeckoHistogramMapping` is automatically generated at
+        // Note that the `GleanGeckoMetricsMapping` is automatically generated at
         // build time by the Glean SDK parsers.
-        GleanGeckoHistogramMapping[metric.name]?.accumulateSamples(metric.values)
+        GleanGeckoMetricsMapping.getHistogram(metric.name)?.accumulateSamples(metric.values)
     }
 }

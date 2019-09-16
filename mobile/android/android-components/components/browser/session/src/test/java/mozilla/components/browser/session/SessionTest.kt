@@ -12,8 +12,12 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.engine.request.LoadRequestMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestOption
+import mozilla.components.browser.session.ext.toFindResultState
 import mozilla.components.browser.session.ext.toSecurityInfoState
+import mozilla.components.browser.session.ext.toTabSessionState
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.CustomTabListAction
+import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.HitResult
@@ -303,6 +307,24 @@ class SessionTest {
 
         assertNotNull(config)
         assertEquals("id", config!!.id)
+    }
+
+    @Test
+    fun `action is dispatched when custom tab config is set`() {
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+        session.customTabConfig = mock()
+
+        verify(store, never()).dispatch(CustomTabListAction.RemoveCustomTabAction(session.id))
+        verify(store, never()).dispatch(TabListAction.AddTabAction(session.toTabSessionState()))
+
+        session.customTabConfig = null
+        verify(store).dispatch(CustomTabListAction.RemoveCustomTabAction(session.id))
+        verify(store).dispatch(TabListAction.AddTabAction(session.toTabSessionState()))
+        verifyNoMoreInteractions(store)
     }
 
     @Test
@@ -724,6 +746,24 @@ class SessionTest {
     }
 
     @Test
+    fun `action is dispatched when find results are updated`() {
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+
+        val result: Session.FindResult = Session.FindResult(0, 1, false)
+        session.findResults += result
+        verify(store).dispatch(ContentAction.AddFindResultAction(session.id, result.toFindResultState()))
+
+        session.findResults = emptyList()
+        verify(store).dispatch(ContentAction.ClearFindResultsAction(session.id))
+
+        verifyNoMoreInteractions(store)
+    }
+
+    @Test
     fun `observer is notified when desktop mode is set`() {
         val observer = mock(Session.Observer::class.java)
         val session = Session("https://www.mozilla.org")
@@ -907,6 +947,25 @@ class SessionTest {
 
         assertTrue(promptCallbackExecuted)
         assertTrue(session.contentPermissionRequest.isConsumed())
+    }
+
+    @Test
+    fun `action is dispatched when prompt request changes`() {
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+
+        session.promptRequest = Consumable.empty()
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(session.id))
+
+        val promptRequest: PromptRequest = mock()
+        session.promptRequest = Consumable.from(promptRequest)
+        verify(store).dispatch(ContentAction.UpdatePromptRequestAction(session.id, promptRequest))
+
+        session.promptRequest.consume { true }
+        verify(store, times(2)).dispatch(ContentAction.ConsumePromptRequestAction(session.id))
     }
 
     @Test

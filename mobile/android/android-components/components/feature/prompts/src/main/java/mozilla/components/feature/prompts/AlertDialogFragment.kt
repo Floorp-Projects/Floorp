@@ -47,7 +47,7 @@ internal class AlertDialogFragment : PromptDialogFragment() {
             .create()
     }
 
-    override fun onCancel(dialog: DialogInterface?) {
+    override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)
         feature?.onCancel(sessionId)
     }

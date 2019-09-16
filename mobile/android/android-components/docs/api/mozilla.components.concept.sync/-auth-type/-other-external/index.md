@@ -4,16 +4,16 @@
 
 `data class OtherExternal : `[`AuthType`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L85)
 
-Account was created for an unknown external reason, identified by [action](action.md).
+Account was created for an unknown external reason, hopefully identified by [action](action.md).
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `OtherExternal(action: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`<br>Account was created for an unknown external reason, identified by [action](action.md). |
+| [&lt;init&gt;](-init-.md) | `OtherExternal(action: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?)`<br>Account was created for an unknown external reason, hopefully identified by [action](action.md). |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
-| [action](action.md) | `val action: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [action](action.md) | `val action: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?` |

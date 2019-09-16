@@ -5,10 +5,10 @@
 package mozilla.components.feature.downloads.manager
 
 import android.content.Context
-import mozilla.components.browser.session.Download
+import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 
-typealias OnDownloadCompleted = (Download, Long) -> Unit
+typealias OnDownloadCompleted = (DownloadState, Long) -> Unit
 
 interface DownloadManager {
 
@@ -23,7 +23,7 @@ interface DownloadManager {
      * @return the id reference of the scheduled download.
      */
     fun download(
-        download: Download,
+        download: DownloadState,
         cookie: String = ""
     ): Long?
 

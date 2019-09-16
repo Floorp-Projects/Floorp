@@ -19,6 +19,7 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -138,7 +139,15 @@ class GeckoEngineTest {
         engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
 
         val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
-        assertEquals(trackingStrictCategories, ContentBlocking.AT_STRICT)
+        val artificialCategory =
+            TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id +
+                // This category isn't on stable yet we have to remove it
+                TrackingProtectionPolicy.TrackingCategory.MOZILLA_SOCIAL.id
+
+        assertEquals(
+            (trackingStrictCategories - artificialCategory) + engine.settings.safeBrowsingPolicy.sumBy { it.id },
+            contentBlockingSettings.categories
+        )
 
         val safeStrictBrowsingCategories = SafeBrowsingPolicy.RECOMMENDED.id
         assertEquals(safeStrictBrowsingCategories, ContentBlocking.SB_ALL)
@@ -156,6 +165,38 @@ class GeckoEngineTest {
             engine.settings.domStorageEnabled = false
             fail("Expected UnsupportedOperationException")
         } catch (e: UnsupportedSettingException) { }
+    }
+
+    @Test
+    fun `the SCRIPTS_AND_SUB_RESOURCES tracking protection category must not be passed to gecko view`() {
+
+        val geckoRunTime = GeckoRuntime.getDefault(testContext)
+
+        val engine = GeckoEngine(testContext, runtime = geckoRunTime)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
+
+        val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
+        val artificialCategory =
+            TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id +
+                // This category isn't on stable yet we have to remove it
+                TrackingProtectionPolicy.TrackingCategory.MOZILLA_SOCIAL.id
+
+        assertEquals(
+            (trackingStrictCategories - artificialCategory) + engine.settings.safeBrowsingPolicy.sumBy { it.id },
+            geckoRunTime.settings.contentBlocking.categories
+        )
+
+        geckoRunTime.settings.contentBlocking.categories = 0
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.select(
+            arrayOf(TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)
+        )
+
+        assertEquals(
+            engine.settings.safeBrowsingPolicy.sumBy { it.id },
+            geckoRunTime.settings.contentBlocking.categories
+        )
     }
 
     @Test
@@ -193,8 +234,17 @@ class GeckoEngineTest {
         verify(runtimeSettings).remoteDebuggingEnabled = true
         verify(runtimeSettings).autoplayDefault = GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED
 
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
         val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
-        assertEquals(trackingStrictCategories, ContentBlocking.AT_STRICT)
+        val artificialCategory =
+            TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id +
+                // This category isn't on stable yet we have to remove it
+                TrackingProtectionPolicy.TrackingCategory.MOZILLA_SOCIAL.id
+
+        assertEquals(
+            (trackingStrictCategories - artificialCategory) + engine.settings.safeBrowsingPolicy.sumBy { it.id },
+            contentBlockingSettings.categories
+        )
 
         assertTrue(contentBlockingSettings.contains(SafeBrowsingPolicy.RECOMMENDED))
 

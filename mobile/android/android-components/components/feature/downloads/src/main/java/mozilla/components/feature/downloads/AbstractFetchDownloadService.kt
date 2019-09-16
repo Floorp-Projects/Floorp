@@ -22,7 +22,7 @@ import androidx.core.net.toUri
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.withContext
-import mozilla.components.browser.session.Download
+import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Header
 import mozilla.components.concept.fetch.Headers.Names.CONTENT_LENGTH
@@ -83,7 +83,7 @@ abstract class AbstractFetchDownloadService : CoroutineService() {
         sendDownloadCompleteBroadcast(downloadID)
     }
 
-    private suspend fun performDownload(download: Download) = withContext(IO) {
+    private suspend fun performDownload(download: DownloadState) = withContext(IO) {
         val headers = listOf(
             CONTENT_TYPE to download.contentType,
             CONTENT_LENGTH to download.contentLength?.toString(),
@@ -120,7 +120,7 @@ abstract class AbstractFetchDownloadService : CoroutineService() {
      * Encapsulates different behaviour depending on the SDK version.
      */
     internal fun useFileStream(
-        download: Download,
+        download: DownloadState,
         block: (OutputStream) -> Unit
     ) {
         if (SDK_INT >= Build.VERSION_CODES.Q) {
@@ -131,7 +131,7 @@ abstract class AbstractFetchDownloadService : CoroutineService() {
     }
 
     @TargetApi(Build.VERSION_CODES.Q)
-    private fun useFileStreamScopedStorage(download: Download, block: (OutputStream) -> Unit) {
+    private fun useFileStreamScopedStorage(download: DownloadState, block: (OutputStream) -> Unit) {
         val values = ContentValues().apply {
             put(MediaStore.Downloads.DISPLAY_NAME, download.fileName)
             put(MediaStore.Downloads.MIME_TYPE, download.contentType ?: "*/*")
@@ -153,7 +153,7 @@ abstract class AbstractFetchDownloadService : CoroutineService() {
 
     @TargetApi(Build.VERSION_CODES.P)
     @Suppress("Deprecation")
-    private fun useFileStreamLegacy(download: Download, block: (OutputStream) -> Unit) {
+    private fun useFileStreamLegacy(download: DownloadState, block: (OutputStream) -> Unit) {
         val dir = Environment.getExternalStoragePublicDirectory(download.destinationDirectory)
         val file = File(dir, download.fileName!!)
         FileOutputStream(file).use(block)
