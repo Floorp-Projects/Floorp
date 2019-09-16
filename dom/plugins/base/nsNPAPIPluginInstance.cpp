@@ -34,7 +34,6 @@
 #include "nsILoadContext.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
-#include "AudioChannelAgent.h"
 #include "AudioChannelService.h"
 
 using namespace mozilla;
