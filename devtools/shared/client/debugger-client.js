@@ -65,6 +65,11 @@ function DebuggerClient(transport) {
    */
   this.mainRoot = null;
   this.expectReply("root", packet => {
+    if (packet.error) {
+      console.error("Error when waiting for root actor", packet);
+      return;
+    }
+
     this.mainRoot = new RootFront(this, packet);
 
     // Root Front is a special case, managing itself as it doesn't have any parent.
