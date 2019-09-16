@@ -103,7 +103,6 @@ namespace jit {
 class JitRuntime;
 class JitActivation;
 struct PcScriptCache;
-struct AutoFlushICache;
 class CompileRuntime;
 
 #ifdef JS_SIMULATOR_ARM64

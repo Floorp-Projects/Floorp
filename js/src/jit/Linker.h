@@ -20,7 +20,6 @@ namespace jit {
 class Linker {
   MacroAssembler& masm;
   mozilla::Maybe<AutoWritableJitCodeFallible> awjcf;
-  AutoFlushICache afc;
 
   JitCode* fail(JSContext* cx) {
     ReportOutOfMemory(cx);
@@ -29,10 +28,7 @@ class Linker {
 
  public:
   // Construct a linker with a rooted macro assembler.
-  explicit Linker(MacroAssembler& masm, const char* name)
-      : masm(masm), afc(name) {
-    masm.finish();
-  }
+  explicit Linker(MacroAssembler& masm) : masm(masm) { masm.finish(); }
 
   // Create a new JitCode object and populate it with the contents of the
   // macro assember buffer.

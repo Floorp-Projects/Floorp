@@ -2697,7 +2697,7 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
   masm.moveValue(UndefinedValue(), result);
   masm.ret();
 
-  Linker linker(masm, "RegExpMatcherStub");
+  Linker linker(masm);
   JitCode* code = linker.newCode(cx, CodeKind::Other);
   if (!code) {
     return nullptr;
@@ -2878,7 +2878,7 @@ JitCode* JitRealm::generateRegExpSearcherStub(JSContext* cx) {
   masm.move32(Imm32(RegExpSearcherResultFailed), result);
   masm.ret();
 
-  Linker linker(masm, "RegExpSearcherStub");
+  Linker linker(masm);
   JitCode* code = linker.newCode(cx, CodeKind::Other);
   if (!code) {
     return nullptr;
@@ -3016,7 +3016,7 @@ JitCode* JitRealm::generateRegExpTesterStub(JSContext* cx) {
   masm.freeStack(sizeof(irregexp::InputOutputData));
   masm.ret();
 
-  Linker linker(masm, "RegExpTesterStub");
+  Linker linker(masm);
   JitCode* code = linker.newCode(cx, CodeKind::Other);
   if (!code) {
     return nullptr;
@@ -8868,7 +8868,7 @@ JitCode* JitRealm::generateStringConcatStub(JSContext* cx) {
   masm.movePtr(ImmPtr(nullptr), output);
   masm.ret();
 
-  Linker linker(masm, "StringConcatStub");
+  Linker linker(masm);
   JitCode* code = linker.newCode(cx, CodeKind::Other);
 
 #ifdef JS_ION_PERF
@@ -10763,7 +10763,7 @@ bool CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints) {
     js_free(ionScript);
   });
 
-  Linker linker(masm, "IonLink");
+  Linker linker(masm);
   JitCode* code = linker.newCode(cx, CodeKind::Ion);
   if (!code) {
     return false;

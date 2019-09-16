@@ -112,7 +112,6 @@ bool DebugState::incrementStepperCount(JSContext* cx, uint32_t funcIndex) {
   AutoWritableJitCode awjc(
       cx->runtime(), code_->segment(Tier::Debug).base() + codeRange.begin(),
       codeRange.end() - codeRange.begin());
-  AutoFlushICache afc("Code::incrementStepperCount");
 
   for (const CallSite& callSite : callSites(Tier::Debug)) {
     if (callSite.kind() != CallSite::Breakpoint) {
@@ -143,7 +142,6 @@ bool DebugState::decrementStepperCount(JSFreeOp* fop, uint32_t funcIndex) {
   AutoWritableJitCode awjc(
       fop->runtime(), code_->segment(Tier::Debug).base() + codeRange.begin(),
       codeRange.end() - codeRange.begin());
-  AutoFlushICache afc("Code::decrementStepperCount");
 
   for (const CallSite& callSite : callSites(Tier::Debug)) {
     if (callSite.kind() != CallSite::Breakpoint) {
@@ -181,9 +179,6 @@ void DebugState::toggleBreakpointTrap(JSRuntime* rt, uint32_t offset,
   }
 
   AutoWritableJitCode awjc(rt, codeSegment.base(), codeSegment.length());
-  AutoFlushICache afc("Code::toggleBreakpointTrap");
-  AutoFlushICache::setRange(uintptr_t(codeSegment.base()),
-                            codeSegment.length());
   toggleDebugTrap(debugTrapOffset, enabled);
 }
 
@@ -304,9 +299,6 @@ void DebugState::adjustEnterAndLeaveFrameTrapsState(JSContext* cx,
   const ModuleSegment& codeSegment = code_->segment(Tier::Debug);
   AutoWritableJitCode awjc(cx->runtime(), codeSegment.base(),
                            codeSegment.length());
-  AutoFlushICache afc("Code::adjustEnterAndLeaveFrameTrapsState");
-  AutoFlushICache::setRange(uintptr_t(codeSegment.base()),
-                            codeSegment.length());
   for (const CallSite& callSite : callSites(Tier::Debug)) {
     if (callSite.kind() != CallSite::EnterFrame &&
         callSite.kind() != CallSite::LeaveFrame) {
