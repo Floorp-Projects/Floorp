@@ -59,7 +59,6 @@
 <!ENTITY cmd.properties.accesskey  "i">
 
 <!ENTITY cmd.sortby_name.label              "Sort By Name">
-<!ENTITY cmd.sortby_name.accesskey          "S">
 <!ENTITY cmd.context_sortby_name.accesskey  "r">
 
 <!ENTITY cmd.new_bookmark.label            "New Bookmark…">

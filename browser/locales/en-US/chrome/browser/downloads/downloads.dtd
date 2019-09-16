@@ -112,12 +112,6 @@
      -->
 <!ENTITY downloadDetails.label            "Download Details">
 
-<!-- LOCALIZATION NOTE (openDownloadsFolder.label):
-     This command is not currently available in the user interface, but the
-     string was preserved by bug 1362207 to be used in a future version.
-     -->
-<!ENTITY openDownloadsFolder.label        "Open Downloads Folder">
-
 <!ENTITY clearDownloadsButton.label       "Clear Downloads">
 <!ENTITY clearDownloadsButton.tooltip     "Clears completed, canceled and failed downloads">
 
@@ -131,9 +125,3 @@
      This string is shown when there are no items in the Downloads Panel.
      -->
 <!ENTITY downloadsPanelEmpty.label        "No downloads for this session.">
-
-<!-- LOCALIZATION NOTE (downloadsListNoMatch.label):
-     This string is shown when some search terms are specified, but there are no
-     results in the Downloads view.
-     -->
-<!ENTITY downloadsListNoMatch.label       "Could not find any matching downloads.">
