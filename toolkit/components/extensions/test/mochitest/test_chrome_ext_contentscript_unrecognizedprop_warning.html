@@ -60,7 +60,9 @@ add_task(async function test_contentscript() {
     }]);
   });
 
+  ExtensionTestUtils.failOnSchemaWarnings(false);
   await extension.startup();
+  ExtensionTestUtils.failOnSchemaWarnings(true);
 
   window.open(`${BASE}/file_sample.html`);
 

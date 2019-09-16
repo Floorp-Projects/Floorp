@@ -14,6 +14,7 @@ add_task(async function() {
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
+  await pushPref("extensions.webextensions.warnings-as-errors", false);
   await installTemporaryExtensionFromXPI(
     {
       id: EXTENSION_ID,
@@ -25,6 +26,7 @@ add_task(async function() {
     },
     document
   );
+  await SpecialPowers.popPrefEnv();
 
   info("Wait until a debug target item appears");
   await waitUntil(() => findDebugTargetByText(EXTENSION_NAME, document));

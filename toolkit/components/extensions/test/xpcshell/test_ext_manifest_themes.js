@@ -29,5 +29,7 @@ async function test_theme_property(property) {
 add_task(async function test_manifest_themes() {
   await test_theme_property("images");
   await test_theme_property("colors");
+  ExtensionTestUtils.failOnSchemaWarnings(false);
   await test_theme_property("unrecognized_key");
+  ExtensionTestUtils.failOnSchemaWarnings(true);
 });

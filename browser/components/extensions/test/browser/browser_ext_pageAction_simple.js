@@ -55,7 +55,9 @@ add_task(async function test_pageAction_basic() {
     ]);
   });
 
+  ExtensionTestUtils.failOnSchemaWarnings(false);
   await extension.startup();
+  ExtensionTestUtils.failOnSchemaWarnings(true);
   await extension.awaitMessage("page-action-shown");
 
   let elem = await getPageActionButton(extension);
