@@ -1156,6 +1156,7 @@ function prompt(aBrowser, aRequest) {
 
     options.checkbox = {
       label: stringBundle.getString("getUserMedia.remember"),
+      checked: principal.isAddonOrExpandedAddonPrincipal,
       checkedState: reasonForNoPermanentAllow
         ? {
             disableMainAction: true,
