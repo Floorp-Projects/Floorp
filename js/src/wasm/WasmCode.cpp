@@ -347,8 +347,7 @@ UniqueModuleSegment ModuleSegment::create(Tier tier, MacroAssembler& masm,
     return nullptr;
   }
 
-  // We'll flush the icache after static linking, in initialize().
-  masm.executableCopy(codeBytes.get(), /* flushICache = */ false);
+  masm.executableCopy(codeBytes.get());
 
   return js::MakeUnique<ModuleSegment>(tier, std::move(codeBytes), codeLength,
                                        linkData);
@@ -714,7 +713,7 @@ bool LazyStubTier::createMany(const Uint32Vector& funcExportIndices,
                          &codePtr, &interpRangeIndex))
     return false;
 
-  masm.executableCopy(codePtr, /* flushICache = */ false);
+  masm.executableCopy(codePtr);
   PatchDebugSymbolicAccesses(codePtr, masm);
   memset(codePtr + masm.bytesNeeded(), 0, codeLength - masm.bytesNeeded());
 

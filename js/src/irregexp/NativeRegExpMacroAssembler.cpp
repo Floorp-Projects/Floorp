@@ -505,7 +505,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
         masm.jump(&return_temp0);
     }
 
-    Linker linker(masm, "RegExp");
+    Linker linker(masm);
     JitCode* code = linker.newCode(cx, CodeKind::RegExp);
     if (!code)
         return RegExpCode();

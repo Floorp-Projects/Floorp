@@ -521,12 +521,9 @@ bool Assembler::swapBuffer(wasm::Bytes& bytes) {
   return true;
 }
 
-void Assembler::executableCopy(uint8_t* buffer, bool flushICache) {
+void Assembler::executableCopy(uint8_t* buffer) {
   MOZ_ASSERT(isFinished);
   m_buffer.executableCopy(buffer);
-  if (flushICache) {
-    AutoFlushICache::setRange(uintptr_t(buffer), m_buffer.size());
-  }
 }
 
 class RelocationIterator {
@@ -709,12 +706,6 @@ static void TraceOneDataRelocation(JSTracer* trc,
 
     MacroAssemblerARM::ma_mov_patch(Imm32(int32_t(ptr)), dest,
                                     Assembler::Always, rs, iter);
-
-    // L_LDR won't cause any instructions to be updated.
-    if (rs != Assembler::L_LDR) {
-      AutoFlushICache::flush(uintptr_t(iter.cur()), 4);
-      AutoFlushICache::flush(uintptr_t(iter.next()), 4);
-    }
   }
 }
 
@@ -2345,8 +2336,6 @@ void Assembler::PatchWrite_NearCall(CodeLocationLabel start,
   // 24 << 2 byte bl instruction.
   uint8_t* dest = toCall.raw();
   new (inst) InstBLImm(BOffImm(dest - (uint8_t*)inst), Always);
-  // Ensure everyone sees the code that was just written into memory.
-  AutoFlushICache::flush(uintptr_t(inst), 4);
 }
 
 void Assembler::PatchDataWithValueCheck(CodeLocationLabel label,
@@ -2368,13 +2357,6 @@ void Assembler::PatchDataWithValueCheck(CodeLocationLabel label,
     InstructionIterator iter(ptr);
     MacroAssembler::ma_mov_patch(Imm32(int32_t(newValue.value)), dest, Always,
                                  rs, iter);
-  }
-
-  // L_LDR won't cause any instructions to be updated.
-  if (rs != L_LDR) {
-    InstructionIterator iter(ptr);
-    AutoFlushICache::flush(uintptr_t(iter.cur()), 4);
-    AutoFlushICache::flush(uintptr_t(iter.next()), 4);
   }
 }
 
@@ -2554,7 +2536,6 @@ void Assembler::ToggleToJmp(CodeLocationLabel inst_) {
   // Zero bits 20-27, then set 24-27 to be correct for a branch.
   // 20-23 will be party of the B's immediate, and should be 0.
   *ptr = (*ptr & ~(0xff << 20)) | (0xa0 << 20);
-  AutoFlushICache::flush(uintptr_t(ptr), 4);
 }
 
 void Assembler::ToggleToCmp(CodeLocationLabel inst_) {
@@ -2574,8 +2555,6 @@ void Assembler::ToggleToCmp(CodeLocationLabel inst_) {
 
   // Zero out bits 20-27, then set them to be correct for a compare.
   *ptr = (*ptr & ~(0xff << 20)) | (0x35 << 20);
-
-  AutoFlushICache::flush(uintptr_t(ptr), 4);
 }
 
 void Assembler::ToggleCall(CodeLocationLabel inst_, bool enabled) {
@@ -2604,8 +2583,6 @@ void Assembler::ToggleCall(CodeLocationLabel inst_, bool enabled) {
   } else {
     *inst = InstNOP();
   }
-
-  AutoFlushICache::flush(uintptr_t(inst), 4);
 }
 
 size_t Assembler::ToggledCallSize(uint8_t* code) {

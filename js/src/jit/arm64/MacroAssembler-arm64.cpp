@@ -682,7 +682,6 @@ void MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset) {
   MOZ_RELEASE_ASSERT((relTarget & 0x3) == 0);
   MOZ_RELEASE_ASSERT(vixl::IsInt26(relTarget00));
   bl(inst, relTarget00);
-  AutoFlushICache::flush(uintptr_t(inst), 4);
 }
 
 CodeOffset MacroAssembler::farJumpWithPatch() {
@@ -739,7 +738,6 @@ void MacroAssembler::patchNopToCall(uint8_t* call, uint8_t* target) {
   Instruction* instr = reinterpret_cast<Instruction*>(inst);
   MOZ_ASSERT(instr->IsBL() || instr->IsNOP());
   bl(instr, (target - inst) >> 2);
-  AutoFlushICache::flush(uintptr_t(inst), 4);
 }
 
 void MacroAssembler::patchCallToNop(uint8_t* call) {
@@ -747,7 +745,6 @@ void MacroAssembler::patchCallToNop(uint8_t* call) {
   Instruction* instr = reinterpret_cast<Instruction*>(inst);
   MOZ_ASSERT(instr->IsBL() || instr->IsNOP());
   nop(instr);
-  AutoFlushICache::flush(uintptr_t(inst), 4);
 }
 
 void MacroAssembler::pushReturnAddress() {
