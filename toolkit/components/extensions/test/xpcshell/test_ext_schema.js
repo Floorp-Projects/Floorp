@@ -33,6 +33,22 @@ add_task(async function testEmptySchema() {
   await extension.unload();
 });
 
+add_task(async function test_warnings_as_errors() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: { unrecognized_property_that_should_be_treated_as_a_warning: 1 },
+  });
+
+  // Tests should be run with extensions.webextensions.warnings-as-errors=true
+  // by default, and prevent extensions with manifest warnings from loading.
+  await Assert.rejects(
+    extension.startup(),
+    /unrecognized_property_that_should_be_treated_as_a_warning/,
+    "extension with invalid manifest should not load if warnings-as-errors=true"
+  );
+  // When ExtensionTestUtils.failOnSchemaWarnings(false) is called, startup is
+  // expected to succeed, as shown by the next "testUnknownProperties" test.
+});
+
 add_task(async function testUnknownProperties() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -45,7 +61,9 @@ add_task(async function testUnknownProperties() {
   });
 
   let { messages } = await promiseConsoleOutput(async () => {
+    ExtensionTestUtils.failOnSchemaWarnings(false);
     await extension.startup();
+    ExtensionTestUtils.failOnSchemaWarnings(true);
   });
 
   AddonTestUtils.checkMessages(messages, {
