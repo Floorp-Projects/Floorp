@@ -237,28 +237,36 @@ Further Reading
 Running Address Bar Extensions
 ------------------------------
 
-Because ``browser.urlbar`` is a privileged API, any extension that uses it must
-also be privileged. Running privileged extensions requires jumping through a few
-hoops and depends on their signed state. Since we're interested in extensions
-primarily for running experiments, there are three particular signed states
-relevant to us:
+``browser.urlbar`` is a privileged API. There are two different points to
+consider when it comes to running an extension that uses privileged APIs:
+loading the extension in the first place, and granting it access to privileged
+APIs. There's a certain bar for loading any extension regardless of its API
+usage that depends on its signed state and the Firefox build you want to run it
+in. There's yet a higher bar for granting it access to privileged APIs. This
+section discusses how to load extensions so that they can access privileged
+APIs.
+
+Since we're interested in extensions primarily for running experiments, there
+are three particular signed states relevant to us:
 
 Unsigned
-  Extensions that are not signed can be loaded temporarily using a Firefox build
-  where the build-time setting ``AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS`` is
-  true [source__]. Such builds include Nightly and Developer Edition but not
-  Beta or Release [source__]. You can load extensions temporarily by visiting
+  There are two ways to run unsigned extensions that use privileged APIs.
+
+  They can be loaded temporarily using a Firefox build where the build-time
+  setting ``AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS`` is true [source__]. Such
+  builds include Nightly and Developer Edition but not Beta or Release
+  [source__]. You can load extensions temporarily by visiting
   about:debugging#/runtime/this-firefox and clicking "Load Temporary Add-on."
   `web-ext <Workflow_>`__ also loads extensions temporarily.
 
   __ https://searchfox.org/mozilla-central/rev/3a61fb322f74a0396878468e50e4f4e97e369825/toolkit/components/extensions/Extension.jsm#1816
   __ https://searchfox.org/mozilla-central/search?q=MOZ_ALLOW_LEGACY_EXTENSIONS&redirect=false
 
-  Unsigned extensions can also be loaded normally (not temporarily) by setting
-  the pref ``xpinstall.signatures.required`` to false and using a Firefox build
-  where the build-time setting ``AppConstants.MOZ_REQUIRE_SIGNING`` is false
-  [source__, source__]. As in the previous paragraph, such builds include
-  Nightly and Developer Edition but not Beta or Release [source__].
+  They can be also be loaded normally (not temporarily) if you use a Firefox
+  build where the build-time setting ``AppConstants.MOZ_REQUIRE_SIGNING`` is
+  false [source__, source__] and you set the ``xpinstall.signatures.required``
+  pref to false. As in the previous paragraph, such builds include Nightly and
+  Developer Edition but not Beta or Release [source__].
 
   __ https://searchfox.org/mozilla-central/rev/7088fc958db5935eba24b413b1f16d6ab7bd13ea/toolkit/mozapps/extensions/internal/XPIProvider.jsm#2378
   __ https://searchfox.org/mozilla-central/rev/7088fc958db5935eba24b413b1f16d6ab7bd13ea/toolkit/mozapps/extensions/internal/AddonSettings.jsm#36
@@ -268,32 +276,38 @@ Unsigned
   more.
 
 Signed for testing (Signed for QA)
-  Extensions that are signed for testing must run with the pref
-  ``xpinstall.signatures.dev-root`` set to true and use a Firefox build where
-  the build-time setting ``AppConstants.MOZ_REQUIRE_SIGNING`` is false
+  Signed-for-testing extensions that use privileged APIs can be run using the
+  same techniques for running unsigned extensions.
+
+  They can also be loaded normally (not temporarily) if you use a Firefox build
+  where the build-time setting ``AppConstants.MOZ_REQUIRE_SIGNING`` is false and
+  you set the ``xpinstall.signatures.dev-root`` pref to true
   [source__]. ``xpinstall.signatures.dev-root`` does not exist by default and
   must be created.
 
-  You deal with extensions signed for testing when you are writing extensions
-  for experiments. See the Experiments_ section for details. "Signed for QA" is
-  another way of referring to this signed state.
-
   __ https://searchfox.org/mozilla-central/rev/25d9b05653f3417243af25a46fd6769addb6a50b/toolkit/mozapps/extensions/internal/XPIInstall.jsm#263
 
+  You encounter extensions that are signed for testing when you are writing
+  extensions for experiments. See the Experiments_ section for details.
+
+  "Signed for QA" is another way of referring to this signed state.
+
 Signed for release
-  Extensions that are signed for release can be run in any Firefox build, with
-  no special requirements.
+  Signed-for-release extensions that use privileged APIs can be run in any
+  Firefox build with no special requirements.
 
-  You deal with extensions signed for release when you are writing extensions
-  for experiments. See the Experiments_ section for details.
+  You encounter extensions that are signed for release when you are writing
+  extensions for experiments. See the Experiments_ section for details.
 
-To see console logs from the extension in the browser console, check the "Show
+The ``Extension.isPrivileged`` getter__ determines whether an extension can
+access privileged APIs. If you have a custom Firefox build and you want to grant
+your extension access regardless of its signed state and how it's loaded, you
+can modify the getter to return true unconditionally. This can be useful in a
+pinch.
+
+To see console logs from extensions in the browser console, check the "Show
 Content Messages" checkbox in the console. This is necessary because extensions
 run outside the main process.
-
-If you have a custom Firefox build and you want to force your extension to be
-loaded regardless of signed state, you can modify the ``Extension.isPrivileged``
-getter__ to return true unconditionally. This can be useful in a pinch.
 
 __ https://searchfox.org/mozilla-central/rev/34cb8d0a2a324043bcfc2c56f37b31abe7fb23a8/toolkit/components/extensions/Extension.jsm#1812
 
