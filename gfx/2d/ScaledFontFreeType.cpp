@@ -32,8 +32,7 @@ ScaledFontFreeType::ScaledFontFreeType(
 
 #ifdef USE_SKIA
 SkTypeface* ScaledFontFreeType::CreateSkTypeface() {
-  return SkCreateTypefaceFromCairoFTFont(mScaledFont, mFace->GetFace(),
-                                         mFace.get());
+  return SkCreateTypefaceFromCairoFTFont(mFace->GetFace(), mFace.get());
 }
 
 void ScaledFontFreeType::SetupSkFontDrawOptions(SkFont& aFont) {

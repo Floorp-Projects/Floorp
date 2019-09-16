@@ -58,8 +58,6 @@ class gfxPlatformGtk : public gfxPlatform {
    */
   void FlushContentDrawing() override;
 
-  FT_Library GetFTLibrary() override;
-
   static int32_t GetFontScaleDPI();
   static double GetFontScaleFactor();
 

@@ -74,7 +74,6 @@ class gfxFT2Font : public gfxFT2FontBase {
       CharGlyphMapEntryType;
   typedef nsTHashtable<CharGlyphMapEntryType> CharGlyphMap;
   CharGlyphMap mCharGlyphCache;
-  RefPtr<mozilla::gfx::SharedFTFace> mFTFace;
 };
 
 #endif /* GFX_FT2FONTS_H */

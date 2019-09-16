@@ -169,8 +169,8 @@ void mozilla_ReleaseSharedFTFace(void* aContext) {
   }
 }
 
-void mozilla_LockSharedFTFace(void* aContext) {
-  static_cast<mozilla::gfx::SharedFTFace*>(aContext)->Lock();
+int mozilla_LockSharedFTFace(void* aContext, void* aOwner) {
+  return int(static_cast<mozilla::gfx::SharedFTFace*>(aContext)->Lock(aOwner));
 }
 
 void mozilla_UnlockSharedFTFace(void* aContext) {
@@ -678,7 +678,10 @@ bool Factory::GetBGRSubpixelOrder() { return mBGRSubpixelOrder; }
 
 #ifdef MOZ_ENABLE_FREETYPE
 SharedFTFace::SharedFTFace(FT_Face aFace, SharedFTFaceData* aData)
-    : mFace(aFace), mData(aData), mLock("SharedFTFace::mLock") {
+    : mFace(aFace),
+      mData(aData),
+      mLock("SharedFTFace::mLock"),
+      mLockOwner(nullptr) {
   if (mData) {
     mData->BindData();
   }
