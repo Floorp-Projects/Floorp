@@ -563,3 +563,15 @@ raptor-tp6m-27-refbrow-cold:
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
+
+raptor-tp6m-28-refbrow-cold:
+    description: "Raptor tp6m-28 cold page-load on the reference browser"
+    try-name: raptor-tp6m-28-refbrow-cold
+    treeherder-symbol: Rap-refbrow(tp6m-c-28)
+    e10s: true
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-cold-28
+            - --app=refbrow
+            - --binary-path=org.mozilla.reference.browser.raptor
+            - --activity=org.mozilla.reference.browser.BrowserTestActivity

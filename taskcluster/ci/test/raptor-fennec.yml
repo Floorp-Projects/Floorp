@@ -602,3 +602,16 @@ raptor-tp6m-27-fennec-cold:
             - --test=raptor-tp6m-cold-27
             - --app=fennec
             - --binary=org.mozilla.fennec_aurora
+
+raptor-tp6m-28-fennec-cold:
+    description: "Raptor tp6m-28 cold page-load on Fennec"
+    max-run-time: 2700
+    try-name: raptor-tp6m-28-fennec-cold
+    treeherder-symbol: Rap(tp6m-c-28)
+    run-on-projects: []
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-cold-28
+            - --app=fennec
+            - --binary=org.mozilla.fennec_aurora
