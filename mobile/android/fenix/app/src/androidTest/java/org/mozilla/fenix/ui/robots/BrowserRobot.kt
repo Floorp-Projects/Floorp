@@ -52,11 +52,6 @@ class BrowserRobot {
                 .check((matches(withText(containsString(expectedText)))))
     }
 
-    fun dismissTrackingOnboarding() {
-        mDevice.wait(Until.findObject(By.res("close_onboarding")), TestAssetHelper.waitingTime)
-        dismissOnboardingButton().click()
-    }
-
     class Transition {
         private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 

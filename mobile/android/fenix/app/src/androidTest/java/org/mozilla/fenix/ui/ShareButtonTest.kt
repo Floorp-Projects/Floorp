@@ -50,7 +50,6 @@ class ShareButtonTest {
         //  - Visit a URL, wait until it's loaded
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-            dismissTrackingOnboarding()
             verifyPageContent(defaultWebPage.content)
         }
 
