@@ -326,7 +326,7 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
   bool IsTooShort();
   bool IsValueMissing() const;
   bool HasTypeMismatch() const;
-  bool HasPatternMismatch() const;
+  mozilla::Maybe<bool> HasPatternMismatch() const;
   bool IsRangeOverflow() const;
   bool IsRangeUnderflow() const;
   bool HasStepMismatch(bool aUseZeroIfValueNaN = false) const;

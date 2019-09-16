@@ -46,6 +46,7 @@ class Element;
 #endif
 
 class nsImageLoadingContent : public nsIImageLoadingContent {
+ protected:
   template <typename T>
   using Maybe = mozilla::Maybe<T>;
   using Nothing = mozilla::Nothing;

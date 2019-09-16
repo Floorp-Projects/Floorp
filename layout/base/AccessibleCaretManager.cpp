@@ -825,7 +825,8 @@ bool AccessibleCaretManager::IsPhoneNumber(nsAString& aCandidate) const {
   RefPtr<Document> doc = mPresShell->GetDocument();
   nsAutoString phoneNumberRegex(
       NS_LITERAL_STRING("(^\\+)?[0-9 ,\\-.()*#pw]{1,30}$"));
-  return nsContentUtils::IsPatternMatching(aCandidate, phoneNumberRegex, doc);
+  return nsContentUtils::IsPatternMatching(aCandidate, phoneNumberRegex, doc)
+      .valueOr(false);
 }
 
 void AccessibleCaretManager::SelectMoreIfPhoneNumber() const {

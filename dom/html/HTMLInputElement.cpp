@@ -6588,7 +6588,7 @@ bool HTMLInputElement::HasTypeMismatch() const {
   return mInputType->HasTypeMismatch();
 }
 
-bool HTMLInputElement::HasPatternMismatch() const {
+Maybe<bool> HTMLInputElement::HasPatternMismatch() const {
   return mInputType->HasPatternMismatch();
 }
 
@@ -6678,7 +6678,11 @@ void HTMLInputElement::UpdateTypeMismatchValidityState() {
 }
 
 void HTMLInputElement::UpdatePatternMismatchValidityState() {
-  SetValidityState(VALIDITY_STATE_PATTERN_MISMATCH, HasPatternMismatch());
+  Maybe<bool> hasMismatch = HasPatternMismatch();
+  // Don't update if the JS engine failed to evaluate it.
+  if (hasMismatch.isSome()) {
+    SetValidityState(VALIDITY_STATE_PATTERN_MISMATCH, hasMismatch.value());
+  }
 }
 
 void HTMLInputElement::UpdateRangeOverflowValidityState() {
