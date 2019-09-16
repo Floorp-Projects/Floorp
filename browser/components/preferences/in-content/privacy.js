@@ -2031,7 +2031,10 @@ var gPrivacyPane = {
       let malware = malwareTable.value
         .split(",")
         .filter(
-          x => x !== "goog-unwanted-proto" && x !== "goog-unwanted-shavar"
+          x =>
+            x !== "goog-unwanted-proto" &&
+            x !== "goog-unwanted-shavar" &&
+            x !== "test-unwanted-simple"
         );
 
       if (blockUncommonUnwanted.checked) {
@@ -2040,6 +2043,8 @@ var gPrivacyPane = {
         } else {
           malware.push("goog-unwanted-proto");
         }
+
+        malware.push("test-unwanted-simple");
       }
 
       // sort alphabetically to keep the pref consistent
