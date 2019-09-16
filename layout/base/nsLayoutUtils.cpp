@@ -9986,6 +9986,152 @@ ComputedStyle* nsLayoutUtils::StyleForScrollbar(nsIFrame* aScrollbarPart) {
   return style.get();
 }
 
+// The distance is measured between the initial position and the intersection of
+// the ray with the box
+// https://drafts.fxtf.org/motion-1/#size-sides
+static CSSCoord ComputeSides(const CSSPoint& aInitialPosition,
+                             const CSSSize& aContainerSize,
+                             const StyleAngle& aAngle) {
+  // Given an acute angle |theta| (i.e. |t|) of a right-angled triangle, the
+  // hypotenuse |h| is the side that connects the two acute angles. The side
+  // |b| adjacent to |theta| is the side of the triangle that connects |theta|
+  // to the right angle.
+  //
+  // e.g. if the angle |t| is 0 ~ 90 degrees, and b * tan(theta) <= b',
+  //      h = b / cos(t):
+  //                       b*tan(t)
+  //       (0, 0) #--------*-----*--# (aContainerSize.width, 0)
+  //              |        |    /   |
+  //              |        |   /    |
+  //              |        b  h     |
+  //              |        |t/      |
+  //              |        |/       |
+  //    (aInitialPosition) *---b'---* (aContainerSize.width, aInitialPosition.y)
+  //              |        |        |
+  //              |        |        |
+  //              |        |        |
+  //              |        |        |
+  //              |        |        |
+  //              #-----------------# (aContainerSize.width,
+  //  (0, aContainerSize.height)       aContainerSize.height)
+  double theta = aAngle.ToRadians();
+  double sint = sin(theta);
+  double cost = cos(theta);
+
+  double b = cost >= 0 ? aInitialPosition.y
+                       : aContainerSize.height - aInitialPosition.y;
+  double bPrime = sint >= 0 ? aContainerSize.width - aInitialPosition.x
+                            : aInitialPosition.x;
+  sint = std::fabs(sint);
+  cost = std::fabs(cost);
+
+  // If |b * tan(theta)| is larger than |bPrime|, the intersection is
+  // on the other side, and |b'| is the opposite side of angle |theta| in this
+  // case.
+  //
+  // e.g. If b * tan(theta) > b', h = b' / sin(theta):
+  //   *----*
+  //   |    |
+  //   |   /|
+  //   b  /t|
+  //   |t/  |
+  //   |/   |
+  //   *-b'-*
+  if (b * sint > bPrime * cost) {
+    return bPrime / sint;
+  }
+  return b / cost;
+}
+
+static CSSCoord ComputeRayPathLength(const nsIFrame* aFrame,
+                                     const StyleRaySize aRaySizeType,
+                                     const StyleAngle& aAngle) {
+  // We use GetContainingBlock() for now. TYLin said this function is buggy in
+  // modern CSS layout, but is ok for most cases.
+  // FIXME: Bug 1581237: This is still not clear that which box we should use
+  // for calculating the path length. We may need to update this.
+  // https://github.com/w3c/fxtf-drafts/issues/369
+  // FIXME: Bug 1579294: SVG layout may get a |container| with empty mRect
+  // (e.g. nsSVGOuterSVGAnonChildFrame), which makes the path length zero.
+  const nsIFrame* container = aFrame->GetContainingBlock();
+  if (!container) {
+    // If there is no parent frame, it's impossible to calculate the path
+    // length, so return 0.0.
+    return 0.0;
+  }
+
+  // The initial position is (0, 0) in |aFrame|, and we have to transform it
+  // into the space of |container|, so use GetOffsetsTo() to get the delta
+  // value.
+  // FIXME: Bug 1559232: The initial position will be adjusted after
+  // supporting `offset-position`.
+  const CSSPoint initialPos =
+      CSSPixel::FromAppUnits(aFrame->GetOffsetTo(container));
+  // FIXME: We need a better definition for containing box in the spec. For now,
+  // we use border box for calculation.
+  // https://github.com/w3c/fxtf-drafts/issues/369
+  const CSSRect containerRect =
+      CSSPixel::FromAppUnits(container->GetRectRelativeToSelf());
+  if (aRaySizeType == StyleRaySize::Sides) {
+    // If the initial position is not within the box, the distance is 0.
+    if (!containerRect.Contains(initialPos)) {
+      return 0.0;
+    }
+
+    return ComputeSides(initialPos, containerRect.Size(), aAngle);
+  }
+
+  // left: the length between the initial point and the left side.
+  // right: the length between the initial point and the right side.
+  // top: the length between the initial point and the top side.
+  // bottom: the lenght between the initial point and the bottom side.
+  CSSCoord left = std::abs(initialPos.x);
+  CSSCoord right = std::abs(containerRect.width - initialPos.x);
+  CSSCoord top = std::abs(initialPos.y);
+  CSSCoord bottom = std::abs(containerRect.height - initialPos.y);
+
+  switch (aRaySizeType) {
+    case StyleRaySize::ClosestSide:
+      return std::min({left, right, top, bottom});
+
+    case StyleRaySize::FarthestSide:
+      return std::max({left, right, top, bottom});
+
+    case StyleRaySize::ClosestCorner:
+    case StyleRaySize::FarthestCorner: {
+      CSSCoord h = 0;
+      CSSCoord v = 0;
+      if (aRaySizeType == StyleRaySize::ClosestCorner) {
+        h = std::min(left, right);
+        v = std::min(top, bottom);
+      } else {
+        h = std::max(left, right);
+        v = std::max(top, bottom);
+      }
+      return sqrt(h.value * h.value + v.value * v.value);
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupported ray size");
+  }
+
+  return 0.0;
+}
+
+static CSSCoord ComputeRayUsedDistance(const nsStyleDisplay* aDisplay,
+                                       const nsSize& aSize,
+                                       const CSSCoord& aPathLength) {
+  MOZ_ASSERT(aDisplay->mOffsetPath.IsRay());
+
+  CSSCoord usedDistance =
+      aDisplay->mOffsetDistance.ResolveToCSSPixels(aPathLength);
+
+  if (aDisplay->mOffsetPath.AsRay().contain) {
+    // TODO: In the next patch.
+  }
+
+  return usedDistance;
+}
+
 /* static */
 Maybe<MotionPathData> nsLayoutUtils::ResolveMotionPath(const nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame);
@@ -10044,9 +10190,20 @@ Maybe<MotionPathData> nsLayoutUtils::ResolveMotionPath(const nsIFrame* aFrame) {
     Point tangent;
     point = gfxPath->ComputePointAtLength(usedDistance, &tangent);
     directionAngle = (double)atan2(tangent.y, tangent.x);  // In Radian.
+  } else if (display->mOffsetPath.IsRay()) {
+    const auto& ray = display->mOffsetPath.AsRay();
+    CSSCoord pathLength = ComputeRayPathLength(aFrame, ray.size, ray.angle);
+    CSSCoord usedDistance =
+        ComputeRayUsedDistance(display, aFrame->GetSize(), pathLength);
+
+    // 0deg pointing up and positive angles representing clockwise rotation.
+    directionAngle = StyleAngle{ray.angle.ToDegrees() - 90.0f}.ToRadians();
+
+    point.x = usedDistance * cos(directionAngle);
+    point.y = usedDistance * sin(directionAngle);
   } else {
-    // Bug 1480665: Implement ray() function.
-    NS_WARNING("Unsupported offset-path value");
+    MOZ_ASSERT_UNREACHABLE("Unsupported offset-path value");
+    return Nothing();
   }
 
   const StyleOffsetRotate& rotate = display->mOffsetRotate;
