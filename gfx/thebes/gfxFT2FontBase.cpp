@@ -37,8 +37,7 @@ gfxFT2FontBase::gfxFT2FontBase(
       mSpaceGlyph(0),
       mFTLoadFlags(aLoadFlags | FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH |
                    FT_LOAD_COLOR),
-      mEmbolden(aEmbolden),
-      mFTSize(1.0) {
+      mEmbolden(aEmbolden) {
   cairo_scaled_font_reference(mScaledFont);
 }
 
@@ -48,8 +47,9 @@ FT_Face gfxFT2FontBase::LockFTFace() {
   if (!mFTFace->Lock(this)) {
     FT_Set_Transform(mFTFace->GetFace(), nullptr, nullptr);
 
-    FT_F26Dot6 charSize = NS_lround(mFTSize * 64.0);
-    FT_Set_Char_Size(mFTFace->GetFace(), charSize, charSize, 0, 0);
+    gfxFloat size = std::max(GetAdjustedSize(), 1.0);
+    FT_Set_Char_Size(mFTFace->GetFace(), FT_F26Dot6(size * 64.0 + 0.5),
+                     FT_F26Dot6(size * 64.0 + 0.5), 0, 0);
   }
   return mFTFace->GetFace();
 }
@@ -174,38 +174,6 @@ uint32_t gfxFT2FontBase::GetCharWidth(char aChar, gfxFloat* aWidth) {
   }
 }
 
-/**
- * Find the closest available fixed strike size, if applicable, to the
- * desired font size.
- */
-static double FindClosestSize(FT_Face aFace, double aSize) {
-  // FT size selection does not actually support sizes smaller than 1 and will
-  // clamp this internally, regardless of what is requested. Do the clamp here
-  // instead so that glyph extents/font matrix scaling will compensate it, as
-  // Cairo normally would.
-  if (aSize < 1.0) {
-    aSize = 1.0;
-  }
-  if (FT_IS_SCALABLE(aFace)) {
-    return aSize;
-  }
-  double bestDist = DBL_MAX;
-  FT_Int bestSize = -1;
-  for (FT_Int i = 0; i < aFace->num_fixed_sizes; i++) {
-    double dist = aFace->available_sizes[i].y_ppem / 64.0 - aSize;
-    // If the previous best is smaller than the desired size, prefer
-    // a bigger size. Otherwise, just choose whatever size is closest.
-    if (bestDist < 0 ? dist >= bestDist : fabs(dist) <= bestDist) {
-      bestDist = dist;
-      bestSize = i;
-    }
-  }
-  if (bestSize < 0) {
-    return aSize;
-  }
-  return aFace->available_sizes[bestSize].y_ppem / 64.0;
-}
-
 void gfxFT2FontBase::InitMetrics() {
   mFUnitsConvFactor = 0.0;
 
@@ -215,12 +183,6 @@ void gfxFT2FontBase::InitMetrics() {
     mSpaceGlyph = GetGlyph(' ');
     return;
   }
-
-  // Cairo metrics are normalized to em-space, so that whatever fixed size
-  // might actually be chosen is factored out. They are then later scaled by
-  // the font matrix to the target adjusted size. Stash the chosen closest
-  // size here for later scaling of the metrics.
-  mFTSize = FindClosestSize(mFTFace->GetFace(), GetAdjustedSize());
 
   // Explicitly lock the face so we can release it early before calling
   // back into Cairo below.
@@ -543,10 +505,6 @@ bool gfxFT2FontBase::GetFTGlyphExtents(uint16_t aGID, int32_t* aAdvance,
 
   bool hintMetrics = ShouldHintMetrics();
 
-  // Normalize out the loaded FT glyph size and then scale to the actually
-  // desired size, in case these two sizes differ.
-  gfxFloat extentsScale = GetAdjustedSize() / mFTSize;
-
   // Due to freetype bug 52683 we MUST use the linearHoriAdvance field when
   // dealing with a variation font; also use it for scalable fonts when not
   // applying hinting. Otherwise, prefer hinted width from glyph->advance.x.
@@ -558,21 +516,17 @@ bool gfxFT2FontBase::GetFTGlyphExtents(uint16_t aGID, int32_t* aAdvance,
     advance = face.get()->glyph->advance.x << 10;  // convert 26.6 to 16.16
   }
   advance += GetEmboldenAdvance(face.get(), advance);
-  // Hinting was requested, but FT did not apply any hinting to the metrics.
-  // Round the advance here to approximate hinting as Cairo does. This must
-  // happen BEFORE we apply the glyph extents scale, just like FT hinting
-  // would.
   if (hintMetrics && (mFTLoadFlags & FT_LOAD_NO_HINTING)) {
     advance = (advance + 0x8000) & 0xffff0000u;
   }
-  *aAdvance = NS_lround(advance * extentsScale);
+  *aAdvance = advance;
 
   if (aHeight) {
     FT_F26Dot6 height = -face.get()->glyph->metrics.horiBearingY;
     if (hintMetrics && (mFTLoadFlags & FT_LOAD_NO_HINTING)) {
       height &= -64;
     }
-    *aHeight = NS_lround(height * extentsScale);
+    *aHeight = height;
   }
   return true;
 }
