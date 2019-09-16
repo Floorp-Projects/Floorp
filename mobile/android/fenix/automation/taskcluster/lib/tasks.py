@@ -410,6 +410,7 @@ class TaskBuilder(object):
         deadline = taskcluster.fromNow('1 day')
         expires = taskcluster.fromNow(DEFAULT_EXPIRES_IN)
 
+        routes.append('checks')
         if self.trust_level == 3:
             routes.append('tc-treeherder.v2.fenix.{}'.format(self.commit))
 

@@ -41,6 +41,9 @@ def pr(builder):
     ):
         tasks.append(craft_function())
 
+    for task in tasks:
+        task['attributes']['code-review'] = True
+
     return tasks
 
 
