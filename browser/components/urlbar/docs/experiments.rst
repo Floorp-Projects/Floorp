@@ -392,6 +392,9 @@ Further Reading
 `Client Implementation Guidelines for Experiments <https://docs.telemetry.mozilla.org/cookbooks/client_guidelines.html>`_
   Relevant documentation from the telemetry team.
 
+#ask-experimenter Slack channel
+  A friendly place to get answers to your experiment questions.
+
 The Experiment Development Process
 ----------------------------------
 
@@ -454,11 +457,14 @@ This section describes an experiment's life cycle.
    from "Draft" to "Ready for Sign-Off," which allows QA and other teams to sign
    off on their portions of the experiment.
 
-10. Engineering asks the Experimenter team to sign the extension "for testing"
-    (or "for QA"). Michael (mythmon) is a good contact. Build the extension zip
-    file using web-ext as discussed in Workflow_. Attach it to a bug (a metabug
-    for implementing the extension, for example), needinfo Michael, and ask him
-    to sign it. He'll attach the signed version to the bug.
+10. Engineering requests the extension be signed "for testing" (or "for
+    QA"). Michael (mythmon) from the Experiments team and Rehan (rdalal) from
+    Services Engineering are good contacts. Build the extension zip file using
+    web-ext as discussed in Workflow_. Attach it to a bug (a metabug for
+    implementing the extension, for example), needinfo Michael or Rehan, and ask
+    him to sign it. He'll attach the signed version to the bug. If neither
+    Michael nor Rehan is available, try asking in the #ask-experimenter Slack
+    channel.
 
 11. Engineering sends QA the link to the signed extension and works with them to
     resolve bugs they find.
