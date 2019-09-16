@@ -49,7 +49,7 @@ class CrashReporter(
     private val nonFatalCrashIntent: PendingIntent? = null
 ) {
     internal val logger = Logger("mozac/CrashReporter")
-    internal val crashBreadcrumbs = arrayListOf<Breadcrumb>()
+    internal val crashBreadcrumbs = BreadcrumbPriorityQueue(BREADCRUMB_MAX_NUM)
 
     init {
         if (services.isEmpty()) {
@@ -96,9 +96,6 @@ class CrashReporter(
      * ```
      */
     fun recordCrashBreadcrumb(breadcrumb: Breadcrumb) {
-        if (crashBreadcrumbs.size >= BREADCRUMB_MAX_NUM) {
-            crashBreadcrumbs.removeAt(0)
-        }
         crashBreadcrumbs.add(breadcrumb)
     }
 

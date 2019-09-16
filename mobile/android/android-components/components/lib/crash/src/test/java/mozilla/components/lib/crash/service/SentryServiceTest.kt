@@ -185,12 +185,14 @@ class SentryServiceTest {
         reporter.recordCrashBreadcrumb(
                 Breadcrumb(testMessage, testData, testCategory, testLevel, testType)
         )
+        var crashBreadCrumbs = arrayListOf<Breadcrumb>()
+        crashBreadCrumbs.addAll(reporter.crashBreadcrumbs)
         val nativeCrash = Crash.NativeCodeCrash(
                 "dump.path",
                 true,
                 "extras.path",
                 isFatal = false,
-                breadcrumbs = reporter.crashBreadcrumbs)
+                breadcrumbs = crashBreadCrumbs)
 
         service.report(nativeCrash)
         verify(clientContext).recordBreadcrumb(any())
