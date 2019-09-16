@@ -174,29 +174,6 @@ SkTypeface* ScaledFontMac::CreateSkTypeface() {
     return typeface;
   }
 }
-
-void ScaledFontMac::SetupSkFontDrawOptions(SkFont& aFont) {
-  aFont.setSubpixel(true);
-
-  // Normally, Skia enables LCD FontSmoothing which creates thicker fonts
-  // and also enables subpixel AA. CoreGraphics without font smoothing
-  // explicitly creates thinner fonts and grayscale AA.
-  // CoreGraphics doesn't support a configuration that produces thicker
-  // fonts with grayscale AA as LCD Font Smoothing enables or disables
-  // both. However, Skia supports it by enabling font smoothing (producing
-  // subpixel AA) and converts it to grayscale AA. Since Skia doesn't
-  // support subpixel AA on transparent backgrounds, we still want font
-  // smoothing for the thicker fonts, even if it is grayscale AA.
-  //
-  // With explicit Grayscale AA (from -moz-osx-font-smoothing:grayscale),
-  // we want to have grayscale AA with no smoothing at all. This means
-  // disabling the LCD font smoothing behaviour.
-  // To accomplish this we have to explicitly disable hinting,
-  // and disable LCDRenderText.
-  if (aFont.getEdging() == SkFont::Edging::kAntiAlias && !mUseFontSmoothing) {
-    aFont.setHinting(kNo_SkFontHinting);
-  }
-}
 #endif
 
 // private API here are the public options on OS X
@@ -431,10 +408,7 @@ bool ScaledFontMac::GetFontInstanceData(FontInstanceDataOutput aCb,
   if (!GetVariationsForCTFont(mCTFont, &variations)) {
     return false;
   }
-
-  InstanceData instance(this);
-  aCb(reinterpret_cast<uint8_t*>(&instance), sizeof(instance),
-      variations.data(), variations.size(), aBaton);
+  aCb(nullptr, 0, variations.data(), variations.size(), aBaton);
   return true;
 }
 
@@ -458,27 +432,6 @@ bool ScaledFontMac::GetWRFontInstanceOptions(
       wr::DegreesToSyntheticItalics(GetSyntheticObliqueAngle());
   *aOutOptions = Some(options);
   return true;
-}
-
-ScaledFontMac::InstanceData::InstanceData(
-    const wr::FontInstanceOptions* aOptions,
-    const wr::FontInstancePlatformOptions* aPlatformOptions)
-    : mUseFontSmoothing(true), mApplySyntheticBold(false) {
-  if (aOptions) {
-    if (!(aOptions->flags & wr::FontInstanceFlags_FONT_SMOOTHING)) {
-      mUseFontSmoothing = false;
-    }
-    if (aOptions->flags & wr::FontInstanceFlags_SYNTHETIC_BOLD) {
-      mApplySyntheticBold = true;
-    }
-    if (aOptions->bg_color.a != 0) {
-      mFontSmoothingBackgroundColor =
-          Color(aOptions->bg_color.r * (1.0f / 255.0f),
-                aOptions->bg_color.g * (1.0f / 255.0f),
-                aOptions->bg_color.b * (1.0f / 255.0f),
-                aOptions->bg_color.a * (1.0f / 255.0f));
-    }
-  }
 }
 
 static CFDictionaryRef CreateVariationDictionaryOrNull(
@@ -602,13 +555,6 @@ already_AddRefed<ScaledFont> UnscaledFontMac::CreateScaledFont(
     uint32_t aNumVariations)
 
 {
-  if (aInstanceDataLength < sizeof(ScaledFontMac::InstanceData)) {
-    gfxWarning() << "Mac scaled font instance data is truncated.";
-    return nullptr;
-  }
-  const ScaledFontMac::InstanceData& instanceData =
-      *reinterpret_cast<const ScaledFontMac::InstanceData*>(aInstanceData);
-
   CGFontRef fontRef = mFont;
   if (aNumVariations > 0) {
     CGFontRef varFont =
@@ -618,10 +564,8 @@ already_AddRefed<ScaledFont> UnscaledFontMac::CreateScaledFont(
     }
   }
 
-  RefPtr<ScaledFontMac> scaledFont = new ScaledFontMac(
-      fontRef, this, aGlyphSize, fontRef != mFont,
-      instanceData.mFontSmoothingBackgroundColor,
-      instanceData.mUseFontSmoothing, instanceData.mApplySyntheticBold);
+  RefPtr<ScaledFontMac> scaledFont =
+      new ScaledFontMac(fontRef, this, aGlyphSize, fontRef != mFont);
 
   if (mNeedsCairo && !scaledFont->PopulateCairoScaledFont()) {
     gfxWarning() << "Unable to create cairo scaled Mac font.";
@@ -629,15 +573,6 @@ already_AddRefed<ScaledFont> UnscaledFontMac::CreateScaledFont(
   }
 
   return scaledFont.forget();
-}
-
-already_AddRefed<ScaledFont> UnscaledFontMac::CreateScaledFontFromWRFont(
-    Float aGlyphSize, const wr::FontInstanceOptions* aOptions,
-    const wr::FontInstancePlatformOptions* aPlatformOptions,
-    const FontVariation* aVariations, uint32_t aNumVariations) {
-  ScaledFontMac::InstanceData instanceData(aOptions, aPlatformOptions);
-  return CreateScaledFont(aGlyphSize, reinterpret_cast<uint8_t*>(&instanceData),
-                          sizeof(instanceData), aVariations, aNumVariations);
 }
 
 #ifdef USE_CAIRO_SCALED_FONT
