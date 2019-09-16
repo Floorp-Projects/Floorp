@@ -12,6 +12,8 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
@@ -24,12 +26,15 @@ class WebAppHideToolbarFeatureTest {
     @Test
     fun `hides toolbar immediately`() {
         val toolbar: View = mock()
+        var changeResult = true
 
-        WebAppHideToolbarFeature(mock(), toolbar, "id", listOf(mock()))
+        WebAppHideToolbarFeature(mock(), toolbar, "id", listOf(mock())) { changeResult = it }
         verify(toolbar).visibility = View.GONE
+        assertFalse(changeResult)
 
-        WebAppHideToolbarFeature(mock(), toolbar, "id", emptyList())
+        WebAppHideToolbarFeature(mock(), toolbar, "id", emptyList()) { changeResult = it }
         verify(toolbar).visibility = View.VISIBLE
+        assertTrue(changeResult)
     }
 
     @Test

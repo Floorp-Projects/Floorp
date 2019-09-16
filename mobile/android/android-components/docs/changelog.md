@@ -15,6 +15,9 @@ permalink: /changelog/
 * **feature-media**
   * Playback will now be stopped and the media notification will get removed if the app's task is getting removed (app is swiped away in task switcher).
 
+* **feature-pwa**
+  * Adds `WebAppHideToolbarFeature.onToolbarVisibilityChange` to be notified when the toolbar is shown or hidden.
+
 # 13.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v12.0.0...v13.0.0)

@@ -7,7 +7,7 @@ package mozilla.components.feature.pwa.feature
 import android.net.Uri
 import android.view.View
 import androidx.core.net.toUri
-import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.manifest.WebAppManifest
@@ -23,34 +23,46 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
  * @param sessionId ID of the custom tab session.
  * @param trustedScopes Scopes to hide the toolbar at.
  * Scopes correspond to [WebAppManifest.scope]. They can be a path (PWA) or just an origin (TWA).
+ * @param onToolbarVisibilityChange Called when the toolbar is changed to be visible or hidden.
  */
 class WebAppHideToolbarFeature(
     private val sessionManager: SessionManager,
     private val toolbar: View,
     private val sessionId: String,
-    private var trustedScopes: List<Uri>
+    private var trustedScopes: List<Uri>,
+    private val onToolbarVisibilityChange: (visible: Boolean) -> Unit = {}
 ) : Session.Observer, LifecycleAwareFeature {
 
     init {
         // Hide the toolbar by default to prevent a flash.
         // If trusted scopes is empty, we're probably a normal custom tab so don't hide the toolbar.
-        toolbar.isGone = trustedScopes.isNotEmpty()
+        setToolbarVisible(trustedScopes.isEmpty())
+    }
+
+    private fun setToolbarVisible(visible: Boolean) {
+        toolbar.isVisible = visible
+        onToolbarVisibilityChange(visible)
     }
 
     /**
      * Hides or reveals the toolbar when the session navigates to a new URL.
      */
     override fun onUrlChanged(session: Session, url: String) {
-        toolbar.isGone = isInScope(url.toUri(), trustedScopes)
+        setToolbarVisible(!isInScope(url.toUri(), trustedScopes))
     }
 
     /**
      * Hides or reveals the toolbar when the list of trusted scopes is changed.
      */
     fun onTrustedScopesChange(trustedScopes: List<Uri>) {
-        val url = sessionManager.findSessionById(sessionId)?.url?.toUri()
+        val session = sessionManager.findSessionById(sessionId)
         this.trustedScopes = trustedScopes
-        toolbar.isGone = url?.let { isInScope(url, trustedScopes) } ?: false
+
+        if (session != null) {
+            setToolbarVisible(!isInScope(session.url.toUri(), trustedScopes))
+        } else {
+            setToolbarVisible(true)
+        }
     }
 
     override fun start() {
