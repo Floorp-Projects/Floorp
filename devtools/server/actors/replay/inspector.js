@@ -55,6 +55,7 @@ const ReplayInspector = {
         get(_, name) {
           switch (name) {
             case "getAllStyleSheets":
+            case "getContentState":
             case "getCSSStyleRules":
             case "getRuleLine":
             case "getRuleColumn":
