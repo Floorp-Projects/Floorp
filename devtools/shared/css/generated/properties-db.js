@@ -8344,6 +8344,7 @@ exports.CSS_PROPERTIES = {
       "initial",
       "none",
       "path",
+      "ray",
       "revert",
       "unset"
     ]
