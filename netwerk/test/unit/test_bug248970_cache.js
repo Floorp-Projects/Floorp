@@ -129,6 +129,9 @@ function run_test() {
   // Simulate a profile dir for xpcshell
   do_get_profile();
 
+  Services.prefs.setBoolPref("browser.cache.offline.enable", true);
+  Services.prefs.setBoolPref("browser.cache.offline.storage.enable", true);
+
   appCache = Cc["@mozilla.org/network/application-cache-service;1"]
     .getService(Ci.nsIApplicationCacheService)
     .getApplicationCache("fake-client-id|fake-group-id");
