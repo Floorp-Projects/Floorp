@@ -60,7 +60,6 @@ class gfxFT2FontBase : public gfxFont {
   Metrics mMetrics;
   int mFTLoadFlags;
   bool mEmbolden;
-  gfxFloat mFTSize;
 
   // For variation/multiple-master fonts, this will be an array of the values
   // for each axis, as specified by mStyle.variationSettings (or the font's
