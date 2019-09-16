@@ -93,8 +93,6 @@ static const char* ToCharPtr(const FcChar8* aStr) {
 
 FT_Library gfxFcPlatformFontList::sCairoFTLibrary = nullptr;
 
-static cairo_user_data_key_t sFcFontlistUserFontDataKey;
-
 // canonical name ==> first en name or first name if no en name
 // This is the required logic for fullname lookups as per CSS3 Fonts spec.
 static uint32_t FindCanonicalNameIndex(FcPattern* aFont,
@@ -251,13 +249,10 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsACString& aFaceName,
                                                bool aIgnoreFcCharmap)
     : gfxFontEntry(aFaceName),
       mFontPattern(aFontPattern),
-      mFTFace(nullptr),
       mFTFaceInitialized(false),
       mIgnoreFcCharmap(aIgnoreFcCharmap),
       mHasVariationsInitialized(false),
-      mAspect(0.0),
-      mFontData(nullptr),
-      mLength(0) {
+      mAspect(0.0) {
   GetFontProperties(aFontPattern, &mWeightRange, &mStretchRange, &mStyleRange);
 }
 
@@ -292,7 +287,8 @@ static FcPattern* CreatePatternForFace(FT_Face aFace) {
   return pattern;
 }
 
-static FT_Face CreateFaceForPattern(FcPattern* aPattern) {
+static already_AddRefed<SharedFTFace> CreateFaceForPattern(
+    FcPattern* aPattern) {
   FcChar8* filename;
   if (FcPatternGetString(aPattern, FC_FILE, 0, &filename) != FcResultMatch) {
     return nullptr;
@@ -301,31 +297,26 @@ static FT_Face CreateFaceForPattern(FcPattern* aPattern) {
   if (FcPatternGetInteger(aPattern, FC_INDEX, 0, &index) != FcResultMatch) {
     index = 0;  // default to 0 if not found in pattern
   }
-  return Factory::NewFTFace(nullptr, ToCharPtr(filename), index);
+  return Factory::NewSharedFTFace(nullptr, ToCharPtr(filename), index);
 }
 
 gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsACString& aFaceName,
                                                WeightRange aWeight,
                                                StretchRange aStretch,
                                                SlantStyleRange aStyle,
-                                               const uint8_t* aData,
-                                               uint32_t aLength, FT_Face aFace)
+                                               RefPtr<SharedFTFace>&& aFace)
     : gfxFontEntry(aFaceName),
-      mFTFace(aFace),
+      mFTFace(std::move(aFace)),
       mFTFaceInitialized(true),
       mIgnoreFcCharmap(true),
       mHasVariationsInitialized(false),
-      mAspect(0.0),
-      mFontData(aData),
-      mLength(aLength) {
+      mAspect(0.0) {
   mWeightRange = aWeight;
   mStyleRange = aStyle;
   mStretchRange = aStretch;
   mIsDataUserFont = true;
 
-  mFontPattern = CreatePatternForFace(mFTFace);
-
-  mUserFontData = new FTUserFontData(mFTFace, mFontData);
+  mFontPattern = CreatePatternForFace(mFTFace->GetFace());
 }
 
 gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsACString& aFaceName,
@@ -335,12 +326,9 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsACString& aFaceName,
                                                SlantStyleRange aStyle)
     : gfxFontEntry(aFaceName),
       mFontPattern(aFontPattern),
-      mFTFace(nullptr),
       mFTFaceInitialized(false),
       mHasVariationsInitialized(false),
-      mAspect(0.0),
-      mFontData(nullptr),
-      mLength(0) {
+      mAspect(0.0) {
   mWeightRange = aWeight;
   mStyleRange = aStyle;
   mStretchRange = aStretch;
@@ -388,7 +376,7 @@ gfxFontconfigFontEntry::~gfxFontconfigFontEntry() {
     // non-null here, so we don't need to do it again.
     if (sDoneVar) {
       MOZ_ASSERT(mFTFace, "How did mMMVar get set without a face?");
-      (*sDoneVar)(mFTFace->glyph->library, mMMVar);
+      (*sDoneVar)(mFTFace->GetFace()->glyph->library, mMMVar);
     } else {
       free(mMMVar);
     }
@@ -481,44 +469,17 @@ bool gfxFontconfigFontEntry::TestCharacterMap(uint32_t aCh) {
 
 hb_blob_t* gfxFontconfigFontEntry::GetFontTable(uint32_t aTableTag) {
   // for data fonts, read directly from the font data
-  if (mFontData) {
-    return gfxFontUtils::GetTableFromFontData(mFontData, aTableTag);
+  if (FTUserFontData* ufd = GetUserFontData()) {
+    return gfxFontUtils::GetTableFromFontData(ufd->FontData(), aTableTag);
   }
 
   return gfxFontEntry::GetFontTable(aTableTag);
 }
 
-void gfxFontconfigFontEntry::MaybeReleaseFTFace() {
-  // don't release if either HB or Gr face still exists
-  if (mHBFace || mGrFace) {
-    return;
-  }
-  // only close out FT_Face for system fonts, not for data fonts
-  if (!mIsDataUserFont) {
-    if (mFTFace) {
-      if (mMMVar) {
-        if (sDoneVar) {
-          (*sDoneVar)(mFTFace->glyph->library, mMMVar);
-        } else {
-          free(mMMVar);
-        }
-        mMMVar = nullptr;
-      }
-      Factory::ReleaseFTFace(mFTFace);
-      mFTFace = nullptr;
-    }
-    mFTFaceInitialized = false;
-  }
-}
-
-void gfxFontconfigFontEntry::ForgetHBFace() {
-  gfxFontEntry::ForgetHBFace();
-  MaybeReleaseFTFace();
-}
+void gfxFontconfigFontEntry::ForgetHBFace() { gfxFontEntry::ForgetHBFace(); }
 
 void gfxFontconfigFontEntry::ReleaseGrFace(gr_face* aFace) {
   gfxFontEntry::ReleaseGrFace(aFace);
-  MaybeReleaseFTFace();
 }
 
 double gfxFontconfigFontEntry::GetAspect() {
@@ -567,8 +528,13 @@ double gfxFontconfigFontEntry::GetAspect() {
 }
 
 static void PrepareFontOptions(FcPattern* aPattern,
-                               cairo_font_options_t* aFontOptions) {
+                               cairo_font_options_t* aFontOptions,
+                               int* aOutLoadFlags,
+                               unsigned int* aOutSynthFlags) {
   NS_ASSERTION(aFontOptions, "null font options passed to PrepareFontOptions");
+
+  int loadFlags = FT_LOAD_DEFAULT;
+  unsigned int synthFlags = 0;
 
   // xxx - taken from the gfxFontconfigFonts code, needs to be reviewed
 
@@ -718,21 +684,63 @@ static void PrepareFontOptions(FcPattern* aPattern,
     antialias = CAIRO_ANTIALIAS_SUBPIXEL;
   }
   cairo_font_options_set_antialias(aFontOptions, antialias);
-}
 
-static void ReleaseFTUserFontData(void* aData) {
-  static_cast<FTUserFontData*>(aData)->Release();
-}
+  FcBool bitmap;
+  if (FcPatternGetBool(aPattern, FC_EMBEDDED_BITMAP, 0, &bitmap) !=
+      FcResultMatch) {
+    bitmap = FcFalse;
+  }
+  if (fc_antialias && (hint_style == CAIRO_HINT_STYLE_NONE || !bitmap)) {
+    loadFlags |= FT_LOAD_NO_BITMAP;
+  }
 
-static cairo_user_data_key_t sFcFontlistFTFaceKey;
+  int fc_lcd_filter;
+  if (FcPatternGetInteger(aPattern, FC_LCD_FILTER, 0, &fc_lcd_filter) ==
+      FcResultMatch) {
+    cairo_lcd_filter_t lcd_filter = CAIRO_LCD_FILTER_DEFAULT;
+    switch (fc_lcd_filter) {
+      case FC_LCD_NONE:
+        lcd_filter = CAIRO_LCD_FILTER_NONE;
+        break;
+      case FC_LCD_DEFAULT:
+        lcd_filter = CAIRO_LCD_FILTER_FIR5;
+        break;
+      case FC_LCD_LIGHT:
+        lcd_filter = CAIRO_LCD_FILTER_FIR3;
+        break;
+      case FC_LCD_LEGACY:
+        lcd_filter = CAIRO_LCD_FILTER_INTRA_PIXEL;
+        break;
+    }
+    cairo_font_options_set_lcd_filter(aFontOptions, lcd_filter);
+  }
 
-static void ReleaseFTFace(void* aData) {
-  Factory::ReleaseFTFace(static_cast<FT_Face>(aData));
+  FcBool autohint;
+  if (FcPatternGetBool(aPattern, FC_AUTOHINT, 0, &autohint) == FcResultMatch &&
+      autohint) {
+    loadFlags |= FT_LOAD_FORCE_AUTOHINT;
+  }
+
+  FcBool vertical;
+  if (FcPatternGetBool(aPattern, FC_VERTICAL_LAYOUT, 0, &vertical) ==
+          FcResultMatch &&
+      vertical) {
+    loadFlags |= FT_LOAD_VERTICAL_LAYOUT;
+  }
+
+  FcBool embolden;
+  if (FcPatternGetBool(aPattern, FC_EMBOLDEN, 0, &embolden) == FcResultMatch &&
+      embolden) {
+    synthFlags |= CAIRO_FT_SYNTHESIZE_BOLD;
+  }
+
+  *aOutLoadFlags = loadFlags;
+  *aOutSynthFlags = synthFlags;
 }
 
 cairo_scaled_font_t* gfxFontconfigFontEntry::CreateScaledFont(
     FcPattern* aRenderPattern, gfxFloat aAdjustedSize,
-    const gfxFontStyle* aStyle, FT_Face aFTFace) {
+    const gfxFontStyle* aStyle, RefPtr<SharedFTFace> aFTFace) {
   if (aStyle->NeedsSyntheticBold(this)) {
     FcPatternAddBool(aRenderPattern, FC_EMBOLDEN, FcTrue);
   }
@@ -748,45 +756,19 @@ cairo_scaled_font_t* gfxFontconfigFontEntry::CreateScaledFont(
     FcPatternAddBool(aRenderPattern, FC_EMBEDDED_BITMAP, FcFalse);
   }
 
-  AutoTArray<FT_Fixed, 8> coords;
-  if (HasVariations()) {
-    FT_Face ftFace = GetFTFace();
-    if (ftFace) {
-      AutoTArray<gfxFontVariation, 8> settings;
-      GetVariationsForStyle(settings, *aStyle);
-      gfxFT2FontBase::SetupVarCoords(GetMMVar(), settings, &coords);
-    }
+  if (HasVariations() && aFTFace != mFTFace) {
+    AutoTArray<gfxFontVariation, 8> settings;
+    GetVariationsForStyle(settings, *aStyle);
+    gfxFT2FontBase::SetupVarCoords(GetMMVar(), settings, aFTFace->GetFace());
   }
 
-  cairo_font_face_t* face = cairo_ft_font_face_create_for_pattern(
-      aRenderPattern, coords.Elements(), coords.Length());
+  cairo_font_options_t* fontOptions = cairo_font_options_create();
+  int loadFlags;
+  unsigned int synthFlags;
+  PrepareFontOptions(aRenderPattern, fontOptions, &loadFlags, &synthFlags);
 
-  if (aFTFace) {
-    if (cairo_font_face_set_user_data(face, &sFcFontlistFTFaceKey, aFTFace,
-                                      ReleaseFTFace) != CAIRO_STATUS_SUCCESS) {
-      NS_WARNING("Failed binding FT_Face to Cairo font face");
-      cairo_font_face_destroy(face);
-      Factory::ReleaseFTFace(aFTFace);
-      return nullptr;
-    }
-  }
-
-  if (mFontData) {
-    // for data fonts, add the face/data pointer to the cairo font face
-    // so that it ges deleted whenever cairo decides
-    NS_ASSERTION(mFTFace, "FT_Face is null when setting user data");
-    NS_ASSERTION(mUserFontData,
-                 "user font data is null when setting user data");
-    mUserFontData.get()->AddRef();
-    if (cairo_font_face_set_user_data(face, &sFcFontlistUserFontDataKey,
-                                      mUserFontData, ReleaseFTUserFontData) !=
-        CAIRO_STATUS_SUCCESS) {
-      NS_WARNING("Failed binding FTUserFontData to Cairo font face");
-      mUserFontData.get()->Release();
-      cairo_font_face_destroy(face);
-      return nullptr;
-    }
-  }
+  cairo_font_face_t* face = cairo_ft_font_face_create_for_ft_face(
+      aFTFace->GetFace(), loadFlags, synthFlags, aFTFace.get());
 
   cairo_scaled_font_t* scaledFont = nullptr;
 
@@ -795,9 +777,6 @@ cairo_scaled_font_t* gfxFontconfigFontEntry::CreateScaledFont(
 
   cairo_matrix_init_scale(&sizeMatrix, aAdjustedSize, aAdjustedSize);
   cairo_matrix_init_identity(&identityMatrix);
-
-  cairo_font_options_t* fontOptions = cairo_font_options_create();
-  PrepareFontOptions(aRenderPattern, fontOptions);
 
   scaledFont =
       cairo_scaled_font_create(face, &sizeMatrix, &identityMatrix, fontOptions);
@@ -892,12 +871,11 @@ void gfxFontconfigFontEntry::UnscaledFontCache::MoveToFront(size_t aIndex) {
 }
 
 already_AddRefed<UnscaledFontFontconfig>
-gfxFontconfigFontEntry::UnscaledFontCache::Lookup(const char* aFile,
+gfxFontconfigFontEntry::UnscaledFontCache::Lookup(const std::string& aFile,
                                                   uint32_t aIndex) {
   for (size_t i = 0; i < kNumEntries; i++) {
     RefPtr<UnscaledFontFontconfig> entry(mUnscaledFonts[i]);
-    if (entry && !strcmp(entry->GetFile(), aFile) &&
-        entry->GetIndex() == aIndex) {
+    if (entry && entry->GetFile() == aFile && entry->GetIndex() == aIndex) {
       MoveToFront(i);
       return entry.forget();
     }
@@ -941,11 +919,6 @@ static double ChooseFontSize(gfxFontconfigFontEntry* aEntry,
 
 gfxFont* gfxFontconfigFontEntry::CreateFontInstance(
     const gfxFontStyle* aFontStyle) {
-  FcPattern* fontPattern = mFontPattern;
-  if (!fontPattern) {
-    return nullptr;
-  }
-
   nsAutoRef<FcPattern> pattern(FcPatternCreate());
   if (!pattern) {
     NS_WARNING("Failed to create Fontconfig pattern for font instance");
@@ -955,25 +928,25 @@ gfxFont* gfxFontconfigFontEntry::CreateFontInstance(
   double size = ChooseFontSize(this, *aFontStyle);
   FcPatternAddDouble(pattern, FC_PIXEL_SIZE, size);
 
-  FT_Face face = mFTFace;
-  if (face && face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
-    // For variation fonts, we create a new FT_Face and FcPattern here
-    // so that variation coordinates from the style can be applied
-    // without affecting other font instances created from the same
-    // entry (font resource).
-    if (mFontData) {
+  RefPtr<SharedFTFace> face = GetFTFace();
+  if (!face) {
+    NS_WARNING("Failed to get FreeType face for pattern");
+    return nullptr;
+  }
+  if (face->GetFace()->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
+    // For variation fonts, we create a new FT_Face here so that
+    // variation coordinates from the style can be applied without
+    // affecting other font instances created from the same entry
+    // (font resource).
+    if (face->GetData()) {
       // For user fonts: create a new FT_Face from the font data, and then
       // make a pattern from that.
-      face = Factory::NewFTFaceFromData(nullptr, mFontData, mLength, 0);
-      fontPattern = CreatePatternForFace(face);
+      face = face->GetData()->CloneFace();
     } else {
       // For system fonts: create a new FT_Face and store it in a copy of
       // the original mFontPattern.
-      fontPattern = FcPatternDuplicate(mFontPattern);
-      face = CreateFaceForPattern(fontPattern);
-      if (face) {
-        FcPatternAddFTFace(fontPattern, FC_FT_FACE, face);
-      } else {
+      face = CreateFaceForPattern(mFontPattern);
+      if (!face) {
         // I don't think CreateFaceForPattern above should ever fail,
         // but just in case let's fall back here.
         face = mFTFace;
@@ -983,56 +956,59 @@ gfxFont* gfxFontconfigFontEntry::CreateFontInstance(
 
   PreparePattern(pattern, aFontStyle->printerFont);
   nsAutoRef<FcPattern> renderPattern(
-      FcFontRenderPrepare(nullptr, pattern, fontPattern));
-  if (fontPattern != mFontPattern) {
-    // Discard temporary pattern used for variation support
-    FcPatternDestroy(fontPattern);
-  }
+      FcFontRenderPrepare(nullptr, pattern, mFontPattern));
   if (!renderPattern) {
     NS_WARNING("Failed to prepare Fontconfig pattern for font instance");
-    if (face != mFTFace) {
-      Factory::ReleaseFTFace(face);
-    }
     return nullptr;
   }
 
-  cairo_scaled_font_t* scaledFont = CreateScaledFont(
-      renderPattern, size, aFontStyle, face != mFTFace ? face : nullptr);
+  cairo_scaled_font_t* scaledFont =
+      CreateScaledFont(renderPattern, size, aFontStyle, face);
 
-  const FcChar8* file = ToFcChar8Ptr("");
+  std::string file;
   int index = 0;
-  if (!mFontData) {
+  if (!face->GetData()) {
+    const FcChar8* fcFile;
     if (FcPatternGetString(renderPattern, FC_FILE, 0,
-                           const_cast<FcChar8**>(&file)) != FcResultMatch ||
+                           const_cast<FcChar8**>(&fcFile)) != FcResultMatch ||
         FcPatternGetInteger(renderPattern, FC_INDEX, 0, &index) !=
             FcResultMatch) {
       NS_WARNING("No file in Fontconfig pattern for font instance");
       return nullptr;
     }
+    file = ToCharPtr(fcFile);
   }
 
   RefPtr<UnscaledFontFontconfig> unscaledFont =
-      mUnscaledFontCache.Lookup(ToCharPtr(file), index);
+      mUnscaledFontCache.Lookup(file, index);
   if (!unscaledFont) {
-    unscaledFont = mFontData
-                       ? new UnscaledFontFontconfig(mFTFace)
-                       : new UnscaledFontFontconfig(ToCharPtr(file), index);
+    unscaledFont = mFTFace->GetData() ? new UnscaledFontFontconfig(mFTFace)
+                                      : new UnscaledFontFontconfig(
+                                            std::move(file), index, mFTFace);
     mUnscaledFontCache.Add(unscaledFont);
   }
 
-  gfxFont* newFont = new gfxFontconfigFont(
-      unscaledFont, scaledFont, renderPattern, size, this, aFontStyle);
+  gfxFont* newFont =
+      new gfxFontconfigFont(unscaledFont, scaledFont, std::move(face),
+                            renderPattern, size, this, aFontStyle);
   cairo_scaled_font_destroy(scaledFont);
 
   return newFont;
 }
 
-FT_Face gfxFontconfigFontEntry::GetFTFace() {
+const RefPtr<SharedFTFace>& gfxFontconfigFontEntry::GetFTFace() {
   if (!mFTFaceInitialized) {
     mFTFaceInitialized = true;
     mFTFace = CreateFaceForPattern(mFontPattern);
   }
   return mFTFace;
+}
+
+FTUserFontData* gfxFontconfigFontEntry::GetUserFontData() {
+  if (mFTFace && mFTFace->GetData()) {
+    return static_cast<FTUserFontData*>(mFTFace->GetData());
+  }
+  return nullptr;
 }
 
 bool gfxFontconfigFontEntry::HasVariations() {
@@ -1056,9 +1032,9 @@ bool gfxFontconfigFontEntry::HasVariations() {
       mHasVariations = true;
     }
   } else {
-    FT_Face face = GetFTFace();
-    if (face) {
-      mHasVariations = face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS;
+    if (GetFTFace()) {
+      mHasVariations =
+          mFTFace->GetFace()->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS;
     }
   }
 
@@ -1074,11 +1050,10 @@ FT_MM_Var* gfxFontconfigFontEntry::GetMMVar() {
   if (!sGetVar) {
     return nullptr;
   }
-  FT_Face face = GetFTFace();
-  if (!face) {
+  if (!GetFTFace()) {
     return nullptr;
   }
-  if (FT_Err_Ok != (*sGetVar)(face, &mMMVar)) {
+  if (FT_Err_Ok != (*sGetVar)(mFTFace->GetFace(), &mMMVar)) {
     mMMVar = nullptr;
   }
   return mMMVar;
@@ -1105,20 +1080,20 @@ nsresult gfxFontconfigFontEntry::CopyFontTable(uint32_t aTableTag,
   NS_ASSERTION(!mIsDataUserFont,
                "data fonts should be reading tables directly from memory");
 
-  FT_Face face = GetFTFace();
-  if (!face) {
+  if (!GetFTFace()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   FT_ULong length = 0;
-  if (FT_Load_Sfnt_Table(face, aTableTag, 0, nullptr, &length) != 0) {
+  if (FT_Load_Sfnt_Table(mFTFace->GetFace(), aTableTag, 0, nullptr, &length) !=
+      0) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   if (!aBuffer.SetLength(length, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  if (FT_Load_Sfnt_Table(face, aTableTag, 0, aBuffer.Elements(), &length) !=
-      0) {
+  if (FT_Load_Sfnt_Table(mFTFace->GetFace(), aTableTag, 0, aBuffer.Elements(),
+                         &length) != 0) {
     aBuffer.Clear();
     return NS_ERROR_FAILURE;
   }
@@ -1370,10 +1345,11 @@ void gfxFontconfigFontFamily::AddFacesToFontList(Func aAddPatternFunc) {
 
 gfxFontconfigFont::gfxFontconfigFont(
     const RefPtr<UnscaledFontFontconfig>& aUnscaledFont,
-    cairo_scaled_font_t* aScaledFont, FcPattern* aPattern,
-    gfxFloat aAdjustedSize, gfxFontEntry* aFontEntry,
+    cairo_scaled_font_t* aScaledFont, RefPtr<SharedFTFace>&& aFTFace,
+    FcPattern* aPattern, gfxFloat aAdjustedSize, gfxFontEntry* aFontEntry,
     const gfxFontStyle* aFontStyle)
     : gfxFT2FontBase(aUnscaledFont, aScaledFont, aFontEntry, aFontStyle),
+      mFTFace(std::move(aFTFace)),
       mPattern(aPattern) {
   mAdjustedSize = aAdjustedSize;
 }
@@ -1383,12 +1359,9 @@ gfxFontconfigFont::~gfxFontconfigFont() {}
 already_AddRefed<ScaledFont> gfxFontconfigFont::GetScaledFont(
     mozilla::gfx::DrawTarget* aTarget) {
   if (!mAzureScaledFont) {
-    NativeFont nativeFont;
-    nativeFont.mType = NativeFontType::FONTCONFIG_PATTERN;
-    nativeFont.mFont = GetPattern();
-
-    mAzureScaledFont = Factory::CreateScaledFontForNativeFont(
-        nativeFont, GetUnscaledFont(), GetAdjustedSize(), GetCairoScaledFont());
+    mAzureScaledFont = Factory::CreateScaledFontForFontconfigFont(
+        GetUnscaledFont(), GetAdjustedSize(), GetCairoScaledFont(), mFTFace,
+        GetPattern());
     InitializeScaledFont();
   }
 
@@ -1984,21 +1957,14 @@ gfxFontEntry* gfxFcPlatformFontList::MakePlatformFont(
     const nsACString& aFontName, WeightRange aWeightForEntry,
     StretchRange aStretchForEntry, SlantStyleRange aStyleForEntry,
     const uint8_t* aFontData, uint32_t aLength) {
-  FT_Face face = Factory::NewFTFaceFromData(nullptr, aFontData, aLength, 0);
+  RefPtr<FTUserFontData> ufd = new FTUserFontData(aFontData, aLength);
+  RefPtr<SharedFTFace> face = ufd->CloneFace();
   if (!face) {
-    free((void*)aFontData);
     return nullptr;
   }
-  if (FT_Err_Ok != FT_Select_Charmap(face, FT_ENCODING_UNICODE) &&
-      FT_Err_Ok != FT_Select_Charmap(face, FT_ENCODING_MS_SYMBOL)) {
-    Factory::ReleaseFTFace(face);
-    free((void*)aFontData);
-    return nullptr;
-  }
-
   return new gfxFontconfigFontEntry(aFontName, aWeightForEntry,
-                                    aStretchForEntry, aStyleForEntry, aFontData,
-                                    aLength, face);
+                                    aStretchForEntry, aStyleForEntry,
+                                    std::move(face));
 }
 
 bool gfxFcPlatformFontList::FindAndAddFamilies(
@@ -2267,8 +2233,7 @@ FT_Library gfxFcPlatformFontList::GetFTLibrary() {
 
     FcPattern* pat =
         FcPatternBuild(0, FC_FAMILY, FcTypeString, "serif", (char*)0);
-    cairo_font_face_t* face =
-        cairo_ft_font_face_create_for_pattern(pat, nullptr, 0);
+    cairo_font_face_t* face = cairo_ft_font_face_create_for_pattern(pat);
     FcPatternDestroy(pat);
 
     cairo_matrix_t identity;
