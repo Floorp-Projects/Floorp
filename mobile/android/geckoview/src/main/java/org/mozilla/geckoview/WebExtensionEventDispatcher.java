@@ -220,7 +220,7 @@ import java.util.Map;
             return;
         }
 
-        final GeckoResult<Object> response = delegate.onMessage(content, sender);
+        final GeckoResult<Object> response = delegate.onMessage(nativeApp, content, sender);
         if (response == null) {
             callback.sendSuccess(null);
             return;
