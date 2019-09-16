@@ -25,19 +25,36 @@ using namespace mozilla::gfx;
 
 gfxFT2FontBase::gfxFT2FontBase(
     const RefPtr<UnscaledFontFreeType>& aUnscaledFont,
-    cairo_scaled_font_t* aScaledFont, gfxFontEntry* aFontEntry,
-    const gfxFontStyle* aFontStyle)
+    cairo_scaled_font_t* aScaledFont,
+    RefPtr<mozilla::gfx::SharedFTFace>&& aFTFace, gfxFontEntry* aFontEntry,
+    const gfxFontStyle* aFontStyle, gfxFloat aAdjustedSize)
     : gfxFont(aUnscaledFont, aFontEntry, aFontStyle, kAntialiasDefault,
               aScaledFont),
+      mFTFace(std::move(aFTFace)),
       mSpaceGlyph(0) {
   mEmbolden = aFontStyle->NeedsSyntheticBold(aFontEntry);
 
   cairo_scaled_font_reference(mScaledFont);
 
+  mAdjustedSize = aAdjustedSize;
+
   InitMetrics();
 }
 
 gfxFT2FontBase::~gfxFT2FontBase() { cairo_scaled_font_destroy(mScaledFont); }
+
+FT_Face gfxFT2FontBase::LockFTFace() {
+  if (!mFTFace->Lock(this)) {
+    FT_Set_Transform(mFTFace->GetFace(), nullptr, nullptr);
+
+    gfxFloat size = std::max(GetAdjustedSize(), 1.0);
+    FT_Set_Char_Size(mFTFace->GetFace(), FT_F26Dot6(size * 64.0 + 0.5),
+                     FT_F26Dot6(size * 64.0 + 0.5), 0, 0);
+  }
+  return mFTFace->GetFace();
+}
+
+void gfxFT2FontBase::UnlockFTFace() { mFTFace->Unlock(); }
 
 uint32_t gfxFT2FontBase::GetGlyph(uint32_t aCharCode) {
   // FcFreeTypeCharIndex needs to lock the FT_Face and can end up searching
@@ -183,7 +200,7 @@ void gfxFT2FontBase::InitMetrics() {
 
   // Explicitly lock the face so we can release it early before calling
   // back into Cairo below.
-  FT_Face face = cairo_ft_scaled_font_lock_face(GetCairoScaledFont());
+  FT_Face face = LockFTFace();
 
   if (MOZ_UNLIKELY(!face)) {
     // No face.  This unfortunate situation might happen if the font
@@ -358,7 +375,7 @@ void gfxFT2FontBase::InitMetrics() {
 
   // Release the face lock to safely load glyphs with GetCharExtents if
   // necessary without recursively locking.
-  cairo_ft_scaled_font_unlock_face(GetCairoScaledFont());
+  UnlockFTFace();
 
   gfxFloat width;
   mSpaceGlyph = GetCharWidth(' ', &width);
