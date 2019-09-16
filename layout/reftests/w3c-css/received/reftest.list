@@ -1046,11 +1046,11 @@ fails == css-writing-modes/table-progression-slr-002.html css-writing-modes/tabl
 fails == css-writing-modes/table-progression-srl-002.html css-writing-modes/table-progression-002-ref.html
 == css-writing-modes/table-progression-vlr-001.html css-writing-modes/table-progression-001-ref.html
 fails == css-writing-modes/table-progression-vlr-002.html css-writing-modes/table-progression-002-ref.html
-fails == css-writing-modes/table-progression-vlr-003.html css-writing-modes/table-progression-001-ref.html
+== css-writing-modes/table-progression-vlr-003.html css-writing-modes/table-progression-001-ref.html
 fails == css-writing-modes/table-progression-vlr-004.html css-writing-modes/table-progression-002-ref.html
 == css-writing-modes/table-progression-vrl-001.html css-writing-modes/table-progression-001-ref.html
 fails == css-writing-modes/table-progression-vrl-002.html css-writing-modes/table-progression-002-ref.html
-fails == css-writing-modes/table-progression-vrl-003.html css-writing-modes/table-progression-001-ref.html
+== css-writing-modes/table-progression-vrl-003.html css-writing-modes/table-progression-001-ref.html
 fails == css-writing-modes/table-progression-vrl-004.html css-writing-modes/table-progression-002-ref.html
 fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-003.xht reference/ref-filled-green-100px-square.xht
 fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-005.xht reference/ref-filled-green-100px-square.xht
