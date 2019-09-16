@@ -222,6 +222,11 @@ class nsSVGIntegrationUtils final {
       WrFiltersHolder& aWrFilters, mozilla::Maybe<nsRect>& aPostFilterClip);
 
   /**
+   * Check if the filters present on |aFrame| are supported by WebRender.
+   */
+  static bool CanCreateWebRenderFiltersForFrame(nsIFrame* aFrame);
+
+  /**
    * @param aRenderingContext the target rendering context in which the paint
    * server will be rendered
    * @param aTarget the target frame onto which the paint server will be
