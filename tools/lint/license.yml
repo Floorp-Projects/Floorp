@@ -103,7 +103,6 @@ license:
         - toolkit/components/reputationservice/chromium/chrome/common/safe_browsing/csd.pb.h
         - toolkit/mozapps/update/updater/crctable.h
         - tools/lint/eslint/eslint-plugin-mozilla/lib/configs
-        - tools/lint/test/
         - xpcom/base/ErrorList.py
         - xpcom/components/gen_static_components.py
         - xpcom/ds/HTMLAtoms.py
