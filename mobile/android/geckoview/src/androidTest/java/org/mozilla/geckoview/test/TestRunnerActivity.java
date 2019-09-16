@@ -28,6 +28,7 @@ import android.support.annotation.Nullable;
 import android.view.Surface;
 
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class TestRunnerActivity extends Activity {
     private static final String LOGTAG = "TestRunnerActivity";
@@ -41,6 +42,7 @@ public class TestRunnerActivity extends Activity {
     private boolean mKillProcessOnDestroy;
 
     private HashMap<GeckoSession, GeckoDisplay> mDisplays = new HashMap<>();
+    private HashSet<GeckoSession> mOwnedSessions = new HashSet<>();
 
     private GeckoSession.PermissionDelegate mPermissionDelegate = new GeckoSession.PermissionDelegate() {
         @Override
@@ -149,6 +151,7 @@ public class TestRunnerActivity extends Activity {
         session.setNavigationDelegate(mNavigationDelegate);
         session.setContentDelegate(mContentDelegate);
         session.setPermissionDelegate(mPermissionDelegate);
+        mOwnedSessions.add(session);
         return session;
     }
 
@@ -172,6 +175,7 @@ public class TestRunnerActivity extends Activity {
 
             session.releaseDisplay(display);
         }
+        mOwnedSessions.remove(session);
         session.close();
     }
 
