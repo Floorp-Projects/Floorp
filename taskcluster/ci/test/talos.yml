@@ -302,7 +302,7 @@ talos-perf-reftest:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             windows10-aarch64/opt: ['try']
             macosx.*64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
-            default: ['trunk', 'try']
+            default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 1200
     mozharness:
         extra-options:
