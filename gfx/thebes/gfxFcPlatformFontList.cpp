@@ -527,11 +527,12 @@ double gfxFontconfigFontEntry::GetAspect() {
 
 static void PrepareFontOptions(FcPattern* aPattern,
                                cairo_font_options_t* aFontOptions,
-                               int* aOutLoadFlags,
+                               int* aOutLoadFlags, int* aOutLoadTarget,
                                unsigned int* aOutSynthFlags) {
   NS_ASSERTION(aFontOptions, "null font options passed to PrepareFontOptions");
 
   int loadFlags = FT_LOAD_DEFAULT;
+  int loadTarget = 0;
   unsigned int synthFlags = 0;
 
   // xxx - taken from the gfxFontconfigFonts code, needs to be reviewed
@@ -543,8 +544,8 @@ static void PrepareFontOptions(FcPattern* aPattern,
   }
 
   // Font options are set explicitly here to improve cairo's caching
-  // behavior and to record the relevant parts of the pattern for
-  // SetupCairoFont (so that the pattern can be released).
+  // behavior and to record the relevant parts of the pattern so that
+  // the pattern can be released.
   //
   // Most font_options have already been set as defaults on the FcPattern
   // with cairo_ft_font_options_substitute(), then user and system
@@ -611,29 +612,28 @@ static void PrepareFontOptions(FcPattern* aPattern,
   }
 
   cairo_hint_style_t hint_style;
-  if (printing || !hinting) {
-    hint_style = CAIRO_HINT_STYLE_NONE;
-  } else {
-    int fc_hintstyle;
-    if (FcPatternGetInteger(aPattern, FC_HINT_STYLE, 0, &fc_hintstyle) !=
-        FcResultMatch) {
-      fc_hintstyle = FC_HINT_FULL;
-    }
-    switch (fc_hintstyle) {
-      case FC_HINT_NONE:
-        hint_style = CAIRO_HINT_STYLE_NONE;
-        break;
-      case FC_HINT_SLIGHT:
-        hint_style = CAIRO_HINT_STYLE_SLIGHT;
-        break;
-      case FC_HINT_MEDIUM:
-      default:  // This fallback mirrors _get_pattern_ft_options in cairo.
-        hint_style = CAIRO_HINT_STYLE_MEDIUM;
-        break;
-      case FC_HINT_FULL:
-        hint_style = CAIRO_HINT_STYLE_FULL;
-        break;
-    }
+  int fc_hintstyle = FC_HINT_NONE;
+  if ((!printing || hinting) &&
+      FcPatternGetInteger(aPattern, FC_HINT_STYLE, 0, &fc_hintstyle) !=
+          FcResultMatch) {
+    fc_hintstyle = FC_HINT_FULL;
+  }
+  switch (fc_hintstyle) {
+    case FC_HINT_NONE:
+      hint_style = CAIRO_HINT_STYLE_NONE;
+      loadTarget = FT_LOAD_NO_HINTING;
+      break;
+    case FC_HINT_SLIGHT:
+      hint_style = CAIRO_HINT_STYLE_SLIGHT;
+      loadTarget = FT_LOAD_TARGET_LIGHT;
+      break;
+    case FC_HINT_MEDIUM:
+    default:  // This fallback mirrors _get_pattern_ft_options in cairo.
+      hint_style = CAIRO_HINT_STYLE_MEDIUM;
+      break;
+    case FC_HINT_FULL:
+      hint_style = CAIRO_HINT_STYLE_FULL;
+      break;
   }
   cairo_font_options_set_hint_style(aFontOptions, hint_style);
 
@@ -676,10 +676,19 @@ static void PrepareFontOptions(FcPattern* aPattern,
   cairo_antialias_t antialias;
   if (!fc_antialias) {
     antialias = CAIRO_ANTIALIAS_NONE;
+    if (fc_hintstyle != FC_HINT_NONE) {
+      loadTarget = FT_LOAD_TARGET_MONO;
+    }
+    loadTarget |= FT_LOAD_MONOCHROME;
   } else if (rgba == FC_RGBA_NONE) {
     antialias = CAIRO_ANTIALIAS_GRAY;
   } else {
     antialias = CAIRO_ANTIALIAS_SUBPIXEL;
+    if (fc_hintstyle == FC_HINT_FULL) {
+      loadTarget = rgba == FC_RGBA_VRGB || rgba == FC_RGBA_VBGR
+                       ? FT_LOAD_TARGET_LCD_V
+                       : FT_LOAD_TARGET_LCD;
+    }
   }
   cairo_font_options_set_antialias(aFontOptions, antialias);
 
@@ -719,13 +728,6 @@ static void PrepareFontOptions(FcPattern* aPattern,
     loadFlags |= FT_LOAD_FORCE_AUTOHINT;
   }
 
-  FcBool vertical;
-  if (FcPatternGetBool(aPattern, FC_VERTICAL_LAYOUT, 0, &vertical) ==
-          FcResultMatch &&
-      vertical) {
-    loadFlags |= FT_LOAD_VERTICAL_LAYOUT;
-  }
-
   FcBool embolden;
   if (FcPatternGetBool(aPattern, FC_EMBOLDEN, 0, &embolden) == FcResultMatch &&
       embolden) {
@@ -733,12 +735,14 @@ static void PrepareFontOptions(FcPattern* aPattern,
   }
 
   *aOutLoadFlags = loadFlags;
+  *aOutLoadTarget = loadTarget;
   *aOutSynthFlags = synthFlags;
 }
 
 cairo_scaled_font_t* gfxFontconfigFontEntry::CreateScaledFont(
     FcPattern* aRenderPattern, gfxFloat aAdjustedSize,
-    const gfxFontStyle* aStyle, RefPtr<SharedFTFace> aFTFace) {
+    const gfxFontStyle* aStyle, RefPtr<SharedFTFace> aFTFace,
+    int* aOutLoadFlags, unsigned int* aOutSynthFlags) {
   if (aStyle->NeedsSyntheticBold(this)) {
     FcPatternAddBool(aRenderPattern, FC_EMBOLDEN, FcTrue);
   }
@@ -762,8 +766,13 @@ cairo_scaled_font_t* gfxFontconfigFontEntry::CreateScaledFont(
 
   cairo_font_options_t* fontOptions = cairo_font_options_create();
   int loadFlags;
+  int loadTarget;
   unsigned int synthFlags;
-  PrepareFontOptions(aRenderPattern, fontOptions, &loadFlags, &synthFlags);
+  PrepareFontOptions(aRenderPattern, fontOptions, &loadFlags, &loadTarget,
+                     &synthFlags);
+
+  *aOutLoadFlags = loadFlags | loadTarget;
+  *aOutSynthFlags = synthFlags;
 
   cairo_font_face_t* face = cairo_ft_font_face_create_for_ft_face(
       aFTFace->GetFace(), loadFlags, synthFlags, aFTFace.get());
@@ -960,8 +969,10 @@ gfxFont* gfxFontconfigFontEntry::CreateFontInstance(
     return nullptr;
   }
 
-  cairo_scaled_font_t* scaledFont =
-      CreateScaledFont(renderPattern, size, aFontStyle, face);
+  int loadFlags;
+  unsigned int synthFlags;
+  cairo_scaled_font_t* scaledFont = CreateScaledFont(
+      renderPattern, size, aFontStyle, face, &loadFlags, &synthFlags);
 
   std::string file;
   int index = 0;
@@ -986,9 +997,9 @@ gfxFont* gfxFontconfigFontEntry::CreateFontInstance(
     mUnscaledFontCache.Add(unscaledFont);
   }
 
-  gfxFont* newFont =
-      new gfxFontconfigFont(unscaledFont, scaledFont, std::move(face),
-                            renderPattern, size, this, aFontStyle);
+  gfxFont* newFont = new gfxFontconfigFont(
+      unscaledFont, scaledFont, std::move(face), renderPattern, size, this,
+      aFontStyle, loadFlags, (synthFlags & CAIRO_FT_SYNTHESIZE_BOLD) != 0);
   cairo_scaled_font_destroy(scaledFont);
 
   return newFont;
@@ -1345,10 +1356,12 @@ gfxFontconfigFont::gfxFontconfigFont(
     const RefPtr<UnscaledFontFontconfig>& aUnscaledFont,
     cairo_scaled_font_t* aScaledFont, RefPtr<SharedFTFace>&& aFTFace,
     FcPattern* aPattern, gfxFloat aAdjustedSize, gfxFontEntry* aFontEntry,
-    const gfxFontStyle* aFontStyle)
+    const gfxFontStyle* aFontStyle, int aLoadFlags, bool aEmbolden)
     : gfxFT2FontBase(aUnscaledFont, aScaledFont, std::move(aFTFace), aFontEntry,
-                     aFontStyle, aAdjustedSize),
+                     aFontStyle, aLoadFlags, aEmbolden),
       mPattern(aPattern) {
+  mAdjustedSize = aAdjustedSize;
+  InitMetrics();
 }
 
 gfxFontconfigFont::~gfxFontconfigFont() {}
@@ -1364,6 +1377,10 @@ already_AddRefed<ScaledFont> gfxFontconfigFont::GetScaledFont(
 
   RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
   return scaledFont.forget();
+}
+
+bool gfxFontconfigFont::ShouldHintMetrics() const {
+  return !GetStyle()->printerFont;
 }
 
 gfxFcPlatformFontList::gfxFcPlatformFontList()

@@ -155,14 +155,14 @@ void gfxFT2Font::AddRange(const char16_t* aText, uint32_t aOffset,
 gfxFT2Font::gfxFT2Font(const RefPtr<UnscaledFontFreeType>& aUnscaledFont,
                        cairo_scaled_font_t* aCairoFont,
                        RefPtr<mozilla::gfx::SharedFTFace>&& aFTFace,
-                       FT2FontEntry* aFontEntry, const gfxFontStyle* aFontStyle)
+                       FT2FontEntry* aFontEntry, const gfxFontStyle* aFontStyle,
+                       int aLoadFlags, bool aEmbolden)
     : gfxFT2FontBase(aUnscaledFont, aCairoFont, std::move(aFTFace), aFontEntry,
-                     aFontStyle),
+                     aFontStyle, aLoadFlags, aEmbolden),
       mCharGlyphCache(32) {
   NS_ASSERTION(mFontEntry,
                "Unable to find font entry for font.  Something is whack.");
-  // TODO: use FreeType emboldening instead of multi-strike?
-  mApplySyntheticBold = aFontStyle->NeedsSyntheticBold(aFontEntry);
+  InitMetrics();
 }
 
 gfxFT2Font::~gfxFT2Font() {}
@@ -170,12 +170,17 @@ gfxFT2Font::~gfxFT2Font() {}
 already_AddRefed<ScaledFont> gfxFT2Font::GetScaledFont(DrawTarget* aTarget) {
   if (!mAzureScaledFont) {
     mAzureScaledFont = Factory::CreateScaledFontForFreeTypeFont(
-        GetUnscaledFont(), GetAdjustedSize(), GetCairoScaledFont(), mFTFace);
+        GetUnscaledFont(), GetAdjustedSize(), GetCairoScaledFont(), mFTFace,
+        GetStyle()->NeedsSyntheticBold(GetFontEntry()));
     InitializeScaledFont();
   }
 
   RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
   return scaledFont.forget();
+}
+
+bool gfxFT2Font::ShouldHintMetrics() const {
+  return !gfxPlatform::GetPlatform()->RequiresLinearZoom();
 }
 
 void gfxFT2Font::FillGlyphDataForChar(FT_Face face, uint32_t ch,
@@ -198,13 +203,7 @@ void gfxFT2Font::FillGlyphDataForChar(FT_Face face, uint32_t ch,
     return;
   }
 
-  FT_Int32 flags = gfxPlatform::GetPlatform()->FontHintingEnabled()
-                       ? FT_LOAD_DEFAULT
-                       : (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
-  if (face->face_flags & FT_FACE_FLAG_TRICKY) {
-    flags &= ~FT_LOAD_NO_AUTOHINT;
-  }
-  FT_Error err = Factory::LoadFTGlyph(face, gid, flags);
+  FT_Error err = Factory::LoadFTGlyph(face, gid, mFTLoadFlags);
 
   if (err) {
     // hmm, this is weird, we failed to load a glyph that we had?
@@ -217,7 +216,8 @@ void gfxFT2Font::FillGlyphDataForChar(FT_Face face, uint32_t ch,
   gd->glyphIndex = gid;
   gd->lsbDelta = face->glyph->lsb_delta;
   gd->rsbDelta = face->glyph->rsb_delta;
-  gd->xAdvance = face->glyph->advance.x;
+  gd->xAdvance =
+      face->glyph->advance.x + GetEmboldenAdvance(face, face->glyph->advance.x);
 }
 
 void gfxFT2Font::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,

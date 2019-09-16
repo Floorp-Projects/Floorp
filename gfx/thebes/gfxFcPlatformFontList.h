@@ -103,7 +103,8 @@ class gfxFontconfigFontEntry : public gfxFontEntry {
   // helper method for creating cairo font from pattern
   cairo_scaled_font_t* CreateScaledFont(
       FcPattern* aRenderPattern, gfxFloat aAdjustedSize,
-      const gfxFontStyle* aStyle, RefPtr<mozilla::gfx::SharedFTFace> aFTFace);
+      const gfxFontStyle* aStyle, RefPtr<mozilla::gfx::SharedFTFace> aFTFace,
+      int* aOutLoadFlags, unsigned int* aOutSynthFlags);
 
   // override to pull data from FTFace
   virtual nsresult CopyFontTable(uint32_t aTableTag,
@@ -209,13 +210,15 @@ class gfxFontconfigFont : public gfxFT2FontBase {
       cairo_scaled_font_t* aScaledFont,
       RefPtr<mozilla::gfx::SharedFTFace>&& aFTFace, FcPattern* aPattern,
       gfxFloat aAdjustedSize, gfxFontEntry* aFontEntry,
-      const gfxFontStyle* aFontStyle);
+      const gfxFontStyle* aFontStyle, int aLoadFlags, bool aEmbolden);
 
   FontType GetType() const override { return FONT_TYPE_FONTCONFIG; }
   virtual FcPattern* GetPattern() const { return mPattern; }
 
   virtual already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(
       DrawTarget* aTarget) override;
+
+  bool ShouldHintMetrics() const override;
 
  private:
   virtual ~gfxFontconfigFont();

@@ -22,13 +22,16 @@ class gfxFT2Font : public gfxFT2FontBase {
   gfxFT2Font(const RefPtr<mozilla::gfx::UnscaledFontFreeType>& aUnscaledFont,
              cairo_scaled_font_t* aCairoFont,
              RefPtr<mozilla::gfx::SharedFTFace>&& aFTFace,
-             FT2FontEntry* aFontEntry, const gfxFontStyle* aFontStyle);
+             FT2FontEntry* aFontEntry, const gfxFontStyle* aFontStyle,
+             int aLoadFlags, bool aEmbolden);
   virtual ~gfxFT2Font();
 
   FT2FontEntry* GetFontEntry();
 
   already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(
       DrawTarget* aTarget) override;
+
+  bool ShouldHintMetrics() const override;
 
   void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                               FontCacheSizes* aSizes) const override;
