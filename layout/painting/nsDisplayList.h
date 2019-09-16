@@ -6844,7 +6844,7 @@ class nsDisplayFilters : public nsDisplayEffectsBase {
       const StackingContextHelper& aSc,
       mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
-  bool CanCreateWebRenderCommands(nsDisplayListBuilder* aBuilder);
+  bool CanCreateWebRenderCommands();
 
  private:
   NS_DISPLAY_ALLOW_CLONING()
