@@ -206,8 +206,15 @@ class nsSVGIntegrationUtils final {
   static void PaintFilter(const PaintFramesParams& aParams);
 
   /**
-   * Try to build WebRender filters for a frame if the filters applied to it are
-   * supported.
+   * Build WebRender filters for a frame with CSS filters applied to it.
+   */
+  static bool CreateWebRenderCSSFilters(
+      mozilla::Span<const mozilla::StyleFilter> aFilters, nsIFrame* aFrame,
+      WrFiltersHolder& aWrFilters);
+
+  /**
+   * Try to build WebRender filters for a frame with SVG filters applied to it
+   * if the filters are supported.
    */
   static bool BuildWebRenderFilters(
       nsIFrame* aFilteredFrame,
