@@ -73,7 +73,7 @@ class RenderCompositorANGLE : public RenderCompositor {
   EGLConfig mEGLConfig;
   EGLSurface mEGLSurface;
 
-  int mUseTripleBuffering;
+  bool mUseTripleBuffering;
 
   RefPtr<ID3D11Device> mDevice;
   RefPtr<ID3D11DeviceContext> mCtx;
