@@ -32,13 +32,14 @@ enum PromiseDebuggingState { "pending", "fulfilled", "rejected" };
 callback interface UncaughtRejectionObserver {
   /**
    * A Promise has been left in `rejected` state and is the
-   * last in its chain.
+   * last in its chain. If this callback returns true, the rejection
+   * will not be reported.
    *
    * @param p A currently uncaught Promise. If `p` is is eventually
    * caught, i.e. if its `then` callback is called, `onConsumed` will
    * be called.
    */
-  void onLeftUncaught(object p);
+  boolean onLeftUncaught(object p);
 
   /**
    * A Promise previously left uncaught is not the last in its
