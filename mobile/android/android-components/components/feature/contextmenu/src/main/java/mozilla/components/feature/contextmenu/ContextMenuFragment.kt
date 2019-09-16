@@ -6,6 +6,7 @@ package mozilla.components.feature.contextmenu
 
 import android.annotation.SuppressLint
 import android.app.Dialog
+import android.content.DialogInterface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -17,7 +18,7 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.state.SessionState
 
 private const val KEY_TITLE = "title"
 private const val KEY_SESSION_ID = "session_id"
@@ -41,7 +42,6 @@ class ContextMenuFragment : DialogFragment() {
         val builder = AlertDialog.Builder(requireContext())
             .setCustomTitle(createDialogTitleView(inflater))
             .setView(createDialogContentView(inflater))
-            .setOnCancelListener { feature?.onMenuCancelled(sessionId) }
 
         return builder.create()
     }
@@ -76,12 +76,16 @@ class ContextMenuFragment : DialogFragment() {
         dismiss()
     }
 
+    override fun onCancel(dialog: DialogInterface) {
+        feature?.onMenuCancelled(sessionId)
+    }
+
     companion object {
         /**
          * Create a new [ContextMenuFragment].
          */
         fun create(
-            session: Session,
+            tab: SessionState,
             title: String,
             ids: List<String>,
             labels: List<String>
@@ -90,7 +94,7 @@ class ContextMenuFragment : DialogFragment() {
             arguments.putString(KEY_TITLE, title)
             arguments.putStringArrayList(KEY_IDS, ArrayList(ids))
             arguments.putStringArrayList(KEY_LABELS, ArrayList(labels))
-            arguments.putString(KEY_SESSION_ID, session.id)
+            arguments.putString(KEY_SESSION_ID, tab.id)
 
             val fragment = ContextMenuFragment()
             fragment.arguments = arguments

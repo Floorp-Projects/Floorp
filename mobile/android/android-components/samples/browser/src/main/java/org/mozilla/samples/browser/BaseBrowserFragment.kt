@@ -125,13 +125,15 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
         val scrollFeature = CoordinateScrollingFeature(components.sessionManager, layout.engineView, layout.toolbar)
 
         val contextMenuFeature = ContextMenuFeature(
-            requireFragmentManager(),
-            components.sessionManager,
-            ContextMenuCandidate.defaultCandidates(
+            fragmentManager = requireFragmentManager(),
+            store = components.store,
+            candidates = ContextMenuCandidate.defaultCandidates(
                 requireContext(),
                 components.tabsUseCases,
+                components.contextMenuUseCases,
                 layout),
-            layout.engineView)
+            engineView = layout.engineView,
+            useCases = components.contextMenuUseCases)
 
         promptFeature.set(
             feature = PromptFeature(
