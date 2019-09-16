@@ -13,4 +13,4 @@ self.onmessage = function(event) {
   xhr.setRequestHeader(customHeader, customHeaderValue);
   xhr.send();
   postMessage({ response: xhr.responseText, header: customHeader });
-}
+};

@@ -1,9 +1,9 @@
 function ok(what, msg) {
-  postMessage({ event: msg, test: 'ok', a: what });
+  postMessage({ event: msg, test: "ok", a: what });
 }
 
 function is(a, b, msg) {
-  postMessage({ event: msg, test: 'is', a: a, b: b });
+  postMessage({ event: msg, test: "is", a, b });
 }
 
 // This is a copy of dom/xhr/tests/test_XHR_parameters.js
@@ -11,11 +11,15 @@ var validParameters = [
   undefined,
   null,
   {},
-  {mozSystem: ""},
-  {mozSystem: 0},
-  {mozAnon: 1},
-  {mozAnon: []},
-  {get mozAnon() { return true; }},
+  { mozSystem: "" },
+  { mozSystem: 0 },
+  { mozAnon: 1 },
+  { mozAnon: [] },
+  {
+    get mozAnon() {
+      return true;
+    },
+  },
   0,
   7,
   Math.PI,
@@ -25,12 +29,14 @@ var validParameters = [
 ];
 
 var invalidParameters = [
-  {get mozSystem() { throw "Bla"; } },
+  {
+    get mozSystem() {
+      throw "Bla";
+    },
+  },
 ];
 
-
 function testParameters(havePrivileges) {
-
   function testValidParameter(value) {
     var xhr;
     try {
@@ -53,15 +59,18 @@ function testParameters(havePrivileges) {
     is(xhr.mozSystem, expectedSystem, "testing mozSystem");
   }
 
-
   function testInvalidParameter(value) {
     try {
       new XMLHttpRequest(value);
-      ok(false, "invalid parameter did not cause exception: " +
-         JSON.stringify(value));
+      ok(
+        false,
+        "invalid parameter did not cause exception: " + JSON.stringify(value)
+      );
     } catch (ex) {
-      ok(true, "invalid parameter raised exception as expected: " +
-       JSON.stringify(ex));
+      ok(
+        true,
+        "invalid parameter raised exception as expected: " + JSON.stringify(ex)
+      );
     }
   }
 
@@ -71,5 +80,5 @@ function testParameters(havePrivileges) {
 
 self.onmessage = function onmessage(event) {
   testParameters(event.data);
-  postMessage({test: "finish"});
+  postMessage({ test: "finish" });
 };

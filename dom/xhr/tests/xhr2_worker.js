@@ -57,24 +57,26 @@ onmessage = function(event) {
 
     try {
       xhr.responseText;
-    }
-    catch(e) {
+    } catch (e) {
       exception = e;
     }
 
     if (!exception) {
-      throw new Error("Failed to throw when getting responseText on '" + type +
-                      "' type");
+      throw new Error(
+        "Failed to throw when getting responseText on '" + type + "' type"
+      );
     }
 
     if (exception.name != "InvalidStateError") {
-      throw new Error("Unexpected error when getting responseText on '" + type +
-                      "' type");
+      throw new Error(
+        "Unexpected error when getting responseText on '" + type + "' type"
+      );
     }
 
     if (exception.code != DOMException.INVALID_STATE_ERR) {
-      throw new Error("Unexpected error code when getting responseText on '" + type +
-                      "' type");
+      throw new Error(
+        "Unexpected error code when getting responseText on '" + type + "' type"
+      );
     }
   }
 
@@ -97,4 +99,4 @@ onmessage = function(event) {
   }
 
   postMessage("done");
-}
+};

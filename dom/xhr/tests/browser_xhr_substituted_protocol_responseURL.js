@@ -15,7 +15,11 @@ add_task(async function test() {
     xhr.responseType = "text";
     xhr.open("get", TEST_URL);
     xhr.addEventListener("loadend", () => {
-      is(xhr.responseURL, TEST_URL, "original URL is given instead of substitution");
+      is(
+        xhr.responseURL,
+        TEST_URL,
+        "original URL is given instead of substitution"
+      );
       resolve();
     });
     xhr.send();
