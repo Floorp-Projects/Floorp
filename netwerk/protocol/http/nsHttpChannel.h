@@ -533,8 +533,6 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   void MaybeWarnAboutAppCache();
 
-  void SetLoadGroupUserAgentOverride();
-
   void SetOriginHeader();
   void SetDoNotTrack();
 

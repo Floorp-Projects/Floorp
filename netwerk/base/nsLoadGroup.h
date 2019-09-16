@@ -87,8 +87,6 @@ class nsLoadGroup : public nsILoadGroup,
   mozilla::TimeStamp mDefaultRequestCreationTime;
   uint32_t mTimedRequests;
   uint32_t mCachedRequests;
-
-  nsCString mUserAgentOverrideCache;
 };
 
 }  // namespace net
