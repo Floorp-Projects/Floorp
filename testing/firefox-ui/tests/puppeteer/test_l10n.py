@@ -21,8 +21,8 @@ class TestL10n(PuppeteerMixin, MarionetteTestCase):
         dtds = ['chrome://branding/locale/brand.dtd',
                 'chrome://browser/locale/baseMenuOverlay.dtd']
 
-        value = self.l10n.localize_entity(dtds, 'helpSafeMode.label')
-        elm = self.marionette.find_element(By.ID, 'helpSafeMode')
+        value = self.l10n.localize_entity(dtds, 'aboutProduct2.label')
+        elm = self.marionette.find_element(By.ID, 'aboutName')
         self.assertEqual(value, elm.get_attribute('label'))
 
         self.assertRaises(NoSuchElementException,
