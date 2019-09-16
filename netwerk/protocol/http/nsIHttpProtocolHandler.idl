@@ -182,15 +182,6 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
 #define NS_HTTP_ON_MAY_CHANGE_PROCESS_TOPIC "http-on-may-change-process"
 
 /**
- * Before an HTTP request corresponding to a channel with the LOAD_DOCUMENT_URI
- * flag is sent to the server, this observer topic is notified. The observer of
- * this topic can then choose to modify the user agent for this request before
- * the request is actually sent to the server. Additionally, the modified user
- * agent will be propagated to sub-resource requests from the same load group.
- */
-#define NS_HTTP_ON_USERAGENT_REQUEST_TOPIC "http-on-useragent-request"
-
-/**
  * This topic is notified for every http channel right after it called
  * OnStopRequest on its listener, regardless whether it was finished
  * successfully, failed or has been canceled.

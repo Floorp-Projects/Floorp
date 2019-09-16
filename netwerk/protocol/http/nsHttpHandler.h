@@ -375,11 +375,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
     NotifyObservers(chan, NS_HTTP_ON_STOP_REQUEST_TOPIC);
   }
 
-  // Called by the channel and cached in the loadGroup
-  void OnUserAgentRequest(nsIHttpChannel* chan) {
-    NotifyObservers(chan, NS_HTTP_ON_USERAGENT_REQUEST_TOPIC);
-  }
-
   // Called by the channel before setting up the transaction
   void OnBeforeConnect(nsIHttpChannel* chan) {
     NotifyObservers(chan, NS_HTTP_ON_BEFORE_CONNECT_TOPIC);
@@ -486,8 +481,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   void NotifyObservers(nsIChannel* chan, const char* event);
 
   void SetFastOpenOSSupport();
-
-  void EnsureUAOverridesInit();
 
   // Checks if there are any user certs or active smart cards on a different
   // thread. Updates mSpeculativeConnectEnabled when done.
