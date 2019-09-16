@@ -6,8 +6,7 @@ package org.mozilla.fenix.exceptions
 
 import android.text.SpannableString
 import android.text.method.LinkMovementMethod
-import android.text.style.ClickableSpan
-import android.text.style.ForegroundColorSpan
+import android.text.style.UnderlineSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -58,25 +57,15 @@ class ExceptionsView(
             adapter = ExceptionsAdapter(interactor)
             layoutManager = LinearLayoutManager(container.context)
         }
-        val descriptionText = String
-            .format(
-                view.exceptions_empty_view.text.toString(),
-                System.getProperty("line.separator")
-            )
-        val linkStartIndex = descriptionText.indexOf("\n\n") + 2
-        val linkAction = object : ClickableSpan() {
-            override fun onClick(widget: View?) {
-                interactor.onLearnMore()
-            }
+        val learnMoreText = view.exceptions_learn_more.text.toString()
+        val textWithLink = SpannableString(learnMoreText).apply {
+            setSpan(UnderlineSpan(), 0, learnMoreText.length, 0)
         }
-        val textWithLink = SpannableString(descriptionText).apply {
-            setSpan(linkAction, linkStartIndex, descriptionText.length, 0)
-            val colorSpan = ForegroundColorSpan(view.exceptions_empty_view.currentTextColor)
-            setSpan(colorSpan, linkStartIndex, descriptionText.length, 0)
+        with(view.exceptions_learn_more) {
+            movementMethod = LinkMovementMethod.getInstance()
+            text = textWithLink
+            setOnClickListener { interactor.onLearnMore() }
         }
-
-        view.exceptions_empty_view.movementMethod = LinkMovementMethod.getInstance()
-        view.exceptions_empty_view.text = textWithLink
     }
 
     fun update(state: ExceptionsFragmentState) {
