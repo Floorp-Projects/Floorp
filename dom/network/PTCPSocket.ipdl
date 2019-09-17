@@ -41,16 +41,7 @@ parent:
   // |binaryType| (from TCPOption.binaryType).
   async Open(nsString host, uint16_t port, bool useSSL, bool useArrayBuffers);
 
-  // Ask parent to open a socket and bind the newly-opened socket to a local
-  // address specified in |localAddr| and |localPort|.
-  async OpenBind(nsCString host, uint16_t port,
-                 nsCString localAddr, uint16_t localPort,
-                 bool useSSL, bool reuseAddrPort,
-                 bool aUseArrayBuffers, nsCString aFilter);
-
-  // When child's send() is called, this message requrests parent to send
-  // data and update it's trackingNumber.
-  async Data(SendableData data, uint32_t trackingNumber);
+  async Data(SendableData data);
 
   // Forward calling to child's upgradeToSecure() method to parent.
   async StartTLS();

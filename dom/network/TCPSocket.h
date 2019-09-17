@@ -109,16 +109,6 @@ class TCPSocket final : public DOMEventTargetHelper,
                                                  const SocketOptions& aOptions,
                                                  ErrorResult& aRv);
 
-  // Perform a send operation that's asssociated with a sequence number. Used in
-  // IPC scenarios to track the number of bytes buffered at any given time.
-  void SendWithTrackingNumber(const nsACString& aData,
-                              const uint32_t& aTrackingNumber,
-                              ErrorResult& aRv);
-  void SendWithTrackingNumber(JSContext* aCx, const ArrayBuffer& aData,
-                              uint32_t aByteOffset,
-                              const Optional<uint32_t>& aByteLength,
-                              const uint32_t& aTrackingNumber,
-                              ErrorResult& aRv);
   // Create a TCPSocket object from an existing low-level socket connection.
   // Used by the TCPServerSocket implementation when a new connection is
   // accepted.

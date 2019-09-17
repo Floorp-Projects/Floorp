@@ -52,16 +52,9 @@ class TCPSocketChild : public mozilla::net::PTCPSocketChild,
 
   void SendOpen(nsITCPSocketCallback* aSocket, bool aUseSSL,
                 bool aUseArrayBuffers);
-  void SendWindowlessOpenBind(nsITCPSocketCallback* aSocket,
-                              const nsACString& aRemoteHost,
-                              uint16_t aRemotePort,
-                              const nsACString& aLocalHost, uint16_t aLocalPort,
-                              bool aUseSSL, bool aUseRealtimeOptions);
-  NS_IMETHOD SendSendArray(nsTArray<uint8_t>& aArray, uint32_t aTrackingNumber);
-  void SendSend(const nsACString& aData, uint32_t aTrackingNumber);
+  void SendSend(const nsACString& aData);
   nsresult SendSend(const ArrayBuffer& aData, uint32_t aByteOffset,
-                    uint32_t aByteLength, uint32_t aTrackingNumber);
-  void SendSendArray(nsTArray<uint8_t>* arr, uint32_t trackingNumber);
+                    uint32_t aByteLength);
   void SetSocket(TCPSocket* aSocket);
 
   void GetHost(nsAString& aHost);
@@ -73,12 +66,10 @@ class TCPSocketChild : public mozilla::net::PTCPSocketChild,
   mozilla::ipc::IPCResult RecvRequestDelete();
   mozilla::ipc::IPCResult RecvUpdateBufferedAmount(
       const uint32_t& aBufferred, const uint32_t& aTrackingNumber);
-  nsresult SetFilterName(const nsACString& aFilterName);
 
  private:
   nsString mHost;
   uint16_t mPort;
-  nsCString mFilterName;
   nsCOMPtr<nsIEventTarget> mIPCEventTarget;
 };
 
