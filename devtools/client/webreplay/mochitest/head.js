@@ -189,46 +189,6 @@ async function warpToMessage(hud, dbg, text) {
   }
 }
 
-// For tests that need webconsole test features.
-const BrowserTest = {
-  gTestPath,
-  ok,
-  is,
-  registerCleanupFunction,
-  waitForExplicitFinish,
-  BrowserTestUtils,
-};
-
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/webconsole/test/browser/head.js",
-  BrowserTest
-);
-
-async function checkMessageObjectContents(msg, expected, expandList = []) {
-  const oi = msg.querySelector(".tree");
-  const node = oi.querySelector(".tree-node");
-  BrowserTest.expandObjectInspectorNode(node);
-
-  for (const label of expandList) {
-    const labelNode = await waitFor(() =>
-      BrowserTest.findObjectInspectorNode(oi, label)
-    );
-    BrowserTest.expandObjectInspectorNode(labelNode);
-  }
-
-  const properties = await waitFor(() => {
-    const nodes = BrowserTest.getObjectInspectorNodes(oi);
-    if (nodes && nodes.length > 1) {
-      return [...nodes].map(n => n.textContent);
-    }
-    return null;
-  });
-
-  expected.forEach(s => {
-    ok(properties.find(v => v.includes(s)), `Object contents include "${s}"`);
-  });
-}
-
 const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );

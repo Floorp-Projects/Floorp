@@ -132,10 +132,7 @@ const previewers = {
 
   RegExp: [
     function({ obj, hooks }, grip) {
-      const str = DevToolsUtils.callPropertyOnObject(obj, "toString");
-      if (typeof str != "string") {
-        return false;
-      }
+      const str = ObjectUtils.getRegExpString(obj);
 
       grip.displayString = hooks.createValueGrip(str);
       return true;
@@ -144,7 +141,7 @@ const previewers = {
 
   Date: [
     function({ obj, hooks }, grip) {
-      const time = DevToolsUtils.callPropertyOnObject(obj, "getTime");
+      const time = ObjectUtils.getDateTime(obj);
       if (typeof time != "number") {
         return false;
       }
@@ -207,10 +204,7 @@ const previewers = {
 
   Set: [
     function(objectActor, grip) {
-      const size = DevToolsUtils.getProperty(objectActor.obj, "size");
-      if (typeof size != "number") {
-        return false;
-      }
+      const size = ObjectUtils.getContainerSize(objectActor.obj);
 
       grip.preview = {
         kind: "ArrayLike",
@@ -262,10 +256,7 @@ const previewers = {
 
   Map: [
     function(objectActor, grip) {
-      const size = DevToolsUtils.getProperty(objectActor.obj, "size");
-      if (typeof size != "number") {
-        return false;
-      }
+      const size = ObjectUtils.getContainerSize(objectActor.obj);
 
       grip.preview = {
         kind: "MapLike",
@@ -568,21 +559,11 @@ previewers.Object = [
       case "SyntaxError":
       case "TypeError":
       case "URIError":
-        const name = DevToolsUtils.getProperty(obj, "name");
-        const msg = DevToolsUtils.getProperty(obj, "message");
-        const stack = DevToolsUtils.getProperty(obj, "stack");
-        const fileName = DevToolsUtils.getProperty(obj, "fileName");
-        const lineNumber = DevToolsUtils.getProperty(obj, "lineNumber");
-        const columnNumber = DevToolsUtils.getProperty(obj, "columnNumber");
-        grip.preview = {
-          kind: "Error",
-          name: hooks.createValueGrip(name),
-          message: hooks.createValueGrip(msg),
-          stack: hooks.createValueGrip(stack),
-          fileName: hooks.createValueGrip(fileName),
-          lineNumber: hooks.createValueGrip(lineNumber),
-          columnNumber: hooks.createValueGrip(columnNumber),
-        };
+        grip.preview = { kind: "Error" };
+        const properties = ObjectUtils.getErrorProperties(obj);
+        Object.keys(properties).forEach(p => {
+          grip.preview[p] = hooks.createValueGrip(properties[p]);
+        });
         return true;
       default:
         return false;

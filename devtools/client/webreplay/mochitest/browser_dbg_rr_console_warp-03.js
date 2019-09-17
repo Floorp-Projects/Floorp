@@ -6,13 +6,51 @@
 
 "use strict";
 
+const BrowserTest = {
+  gTestPath,
+  ok,
+  is,
+  registerCleanupFunction,
+  waitForExplicitFinish,
+  BrowserTestUtils,
+};
+
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/webconsole/test/browser/head.js",
+  BrowserTest
+);
+
+async function checkMessageObjectContents(msg, expected, expandList = []) {
+  const oi = msg.querySelector(".tree");
+  const node = oi.querySelector(".tree-node");
+  BrowserTest.expandObjectInspectorNode(node);
+
+  for (const label of expandList) {
+    const labelNode = await waitFor(() =>
+      BrowserTest.findObjectInspectorNode(oi, label)
+    );
+    BrowserTest.expandObjectInspectorNode(labelNode);
+  }
+
+  const properties = await waitFor(() => {
+    const nodes = BrowserTest.getObjectInspectorNodes(oi);
+    if (nodes && nodes.length > 1) {
+      return [...nodes].map(n => n.textContent);
+    }
+    return null;
+  });
+
+  expected.forEach(s => {
+    ok(properties.find(v => v.includes(s)), `Object contents include "${s}"`);
+  });
+}
+
 function checkJumpIcon(msg) {
   const jumpIcon = msg.querySelector(".jump-definition");
   ok(jumpIcon, "Found a jump icon");
 }
 
-// Test the objects produced by console.log() calls and by evaluating various
-// expressions in the console after time warping.
+// Test evaluating various expressions in the console after time warping.
 add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_rr_objects.html", {
     waitForRecording: true,
@@ -25,24 +63,18 @@ add_task(async function() {
 
   await waitForMessage(hud, "Array(20) [ 0, 1, 2, 3, 4, 5,");
   await waitForMessage(hud, "Uint8Array(20) [ 0, 1, 2, 3, 4, 5,");
-  await waitForMessage(hud, "Set(22) [ {…}, {…}, 0, 1, 2, 3, 4, 5,");
+  await waitForMessage(hud, "Set(22) [ null, null, 0, 1, 2, 3, 4, 5,");
   await waitForMessage(
     hud,
     "Map(21) { {…} → {…}, 0 → 1, 1 → 2, 2 → 3, 3 → 4, 4 → 5,"
   );
-  await waitForMessage(hud, "WeakSet(20) [ {…}, {…}, {…},");
-  await waitForMessage(hud, "WeakMap(20) { {…} → {…}, {…} → {…},");
+  await waitForMessage(hud, "WeakSet(10)");
+  await waitForMessage(hud, "WeakMap(10)");
   await waitForMessage(
     hud,
     "Object { a: 0, a0: 0, a1: 1, a2: 2, a3: 3, a4: 4,"
   );
   await waitForMessage(hud, "/abc/gi");
-  await waitForMessage(hud, "Date");
-
-  // Note: this message has an associated stack but we don't have an easy way to
-  // check its contents as BrowserTest.checkMessageStack requires the stack to
-  // be collapsed.
-  await waitForMessage(hud, 'RangeError: "foo"');
 
   msg = await waitForMessage(hud, "function bar()");
   checkJumpIcon(msg);
