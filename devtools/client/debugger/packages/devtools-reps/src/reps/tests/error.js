@@ -596,3 +596,25 @@ describe("Error - Error with invalid stack", () => {
     expectActorAttribute(renderedComponent, stub.actor);
   });
 });
+
+describe("Error - Error with undefined-grip stack", () => {
+  // Test object:
+  // x = new Error("sd");
+  // x.stack = undefined;
+  const stub = stubs.get("Error with undefined-grip stack");
+
+  it("correctly selects Error Rep for Error object", () => {
+    expect(getRep(stub)).toBe(ErrorRep.rep);
+  });
+
+  it("renders with expected text", () => {
+    const renderedComponent = shallow(
+      ErrorRep.rep({
+        object: stub,
+      })
+    );
+
+    expect(renderedComponent).toMatchSnapshot();
+    expectActorAttribute(renderedComponent, stub.actor);
+  });
+});
