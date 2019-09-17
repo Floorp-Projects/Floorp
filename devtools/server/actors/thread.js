@@ -406,6 +406,11 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
   },
 
+  toggleEventLogging(logEventBreakpoints) {
+    this._options.logEventBreakpoints = logEventBreakpoints;
+    return this._options.logEventBreakpoints;
+  },
+
   _setBreakpointsOnAttach(breakpoints) {
     for (const { location, options } of Object.values(breakpoints)) {
       this.setBreakpoint(location, options);
@@ -2082,6 +2087,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return {
       pauseOnExceptions: this._options.pauseOnExceptions,
       ignoreCaughtExceptions: this._options.ignoreCaughtExceptions,
+      logEventBreakpoints: this._options.logEventBreakpoints,
       skipBreakpoints: this.skipBreakpoints,
       breakpoints: this.breakpointActorMap.listKeys(),
     };
