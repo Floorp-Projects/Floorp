@@ -653,23 +653,33 @@ class EditorBase : public nsIEditor,
     bool mRestoreContentEditableCount;
 
     /**
-     * Extend mChangedRange to include `aNode`.
+     * The following methods modifies some data of this struct and
+     * `EditSubActionData` struct.  Currently, these are required only
+     * by `HTMLEditor`.  Therefore, for cutting the runtime cost of
+     * `TextEditor`, these methods should be called only by `HTMLEditor`.
+     * But it's fine to use these methods in `TextEditor` if necessary.
+     * If so, you need to call `DidDeleteText()` and `DidInsertText()`
+     * from `SetTextNodeWithoutTransaction()`.
      */
-    nsresult AddNodeToChangedRange(const HTMLEditor& aHTMLEditor,
-                                   nsINode& aNode);
-
-    /**
-     * Extend mChangedRange to include `aPoint`.
-     */
-    nsresult AddPointToChangedRange(const HTMLEditor& aHTMLEditor,
-                                    const EditorRawDOMPoint& aPoint);
-
-    /**
-     * Extend mChangedRange to include `aStart` and `aEnd`.
-     */
-    nsresult AddRangeToChangedRange(const HTMLEditor& aHTMLEditor,
-                                    const EditorRawDOMPoint& aStart,
-                                    const EditorRawDOMPoint& aEnd);
+    void DidCreateElement(EditorBase& aEditorBase, Element& aNewElement);
+    void DidInsertContent(EditorBase& aEditorBase, nsIContent& aNewContent);
+    void WillDeleteContent(EditorBase& aEditorBase,
+                           nsIContent& aRemovingContent);
+    void DidSplitContent(EditorBase& aEditorBase,
+                         nsIContent& aExistingRightContent,
+                         nsIContent& aNewLeftContent);
+    void WillJoinContents(EditorBase& aEditorBase, nsIContent& aLeftContent,
+                          nsIContent& aRightContent);
+    void DidJoinContents(EditorBase& aEditorBase, nsIContent& aLeftContent,
+                         nsIContent& aRightContent);
+    void DidInsertText(EditorBase& aEditorBase,
+                       const EditorRawDOMPoint& aInsertionPoint,
+                       const nsAString& aString);
+    void DidDeleteText(EditorBase& aEditorBase,
+                       const EditorRawDOMPoint& aStartInTextNode);
+    void WillDeleteRange(EditorBase& aEditorBase,
+                         const EditorRawDOMPoint& aStart,
+                         const EditorRawDOMPoint& aEnd);
 
    private:
     void Clear() {
@@ -689,6 +699,25 @@ class EditorBase : public nsIEditor,
       mDidDeleteEmptyParentBlocks = false;
       mRestoreContentEditableCount = false;
     }
+
+    /**
+     * Extend mChangedRange to include `aNode`.
+     */
+    nsresult AddNodeToChangedRange(const HTMLEditor& aHTMLEditor,
+                                   nsINode& aNode);
+
+    /**
+     * Extend mChangedRange to include `aPoint`.
+     */
+    nsresult AddPointToChangedRange(const HTMLEditor& aHTMLEditor,
+                                    const EditorRawDOMPoint& aPoint);
+
+    /**
+     * Extend mChangedRange to include `aStart` and `aEnd`.
+     */
+    nsresult AddRangeToChangedRange(const HTMLEditor& aHTMLEditor,
+                                    const EditorRawDOMPoint& aStart,
+                                    const EditorRawDOMPoint& aEnd);
 
     TopLevelEditSubActionData() = default;
     TopLevelEditSubActionData(const TopLevelEditSubActionData& aOther) = delete;
@@ -2617,6 +2646,8 @@ class EditorBase : public nsIEditor,
   // A Tristate value.
   uint8_t mSpellcheckCheckboxState;
 
+  // If true, initialization was succeeded.
+  bool mInitSucceeded;
   // If false, transactions should not change Selection even after modifying
   // the DOM tree.
   bool mAllowsTransactionsToChangeSelection;

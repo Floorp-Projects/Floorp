@@ -76,17 +76,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT
   nsresult GetParagraphState(bool* aMixed, nsAString& outFormat);
 
-  void DidCreateNode(Element& aNewElement);
-  void DidInsertNode(nsIContent& aNode);
-  void WillDeleteNode(nsINode& aChild);
-  void DidSplitNode(nsINode& aExistingRightNode, nsINode& aNewLeftNode);
-  void WillJoinNodes(nsINode& aLeftNode, nsINode& aRightNode);
-  void DidJoinNodes(nsINode& aLeftNode, nsINode& aRightNode);
-  void DidInsertText(nsINode& aTextNode, int32_t aOffset,
-                     const nsAString& aString);
-  void DidDeleteText(nsINode& aTextNode, int32_t aOffset, int32_t aLength);
-  void WillDeleteSelection();
-
  protected:
   virtual ~HTMLEditRules() = default;
 
