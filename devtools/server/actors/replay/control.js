@@ -559,19 +559,22 @@ const FlushMs = 0.5 * 1000;
 let gLastPickedChildId = 0;
 
 function addSavedCheckpoint(checkpoint) {
-  // Use a round robin approach when picking children for saving checkpoints.
-  let child;
-  while (true) {
-    gLastPickedChildId = (gLastPickedChildId + 1) % gReplayingChildren.length;
-    child = gReplayingChildren[gLastPickedChildId];
-    if (child) {
-      break;
-    }
-  }
-
   getCheckpointInfo(checkpoint).saved = true;
   getCheckpointInfo(checkpoint).assignTime = Date.now();
-  child.addSavedCheckpoint(checkpoint);
+
+  if (RecordReplayControl.canRewind()) {
+    // Use a round robin approach when picking children for saving checkpoints.
+    let child;
+    while (true) {
+      gLastPickedChildId = (gLastPickedChildId + 1) % gReplayingChildren.length;
+      child = gReplayingChildren[gLastPickedChildId];
+      if (child) {
+        break;
+      }
+    }
+
+    child.addSavedCheckpoint(checkpoint);
+  }
 }
 
 function addCheckpoint(checkpoint, duration) {
@@ -1798,8 +1801,10 @@ function spawnReplayingChild() {
 const NumReplayingChildren = 4;
 
 function spawnReplayingChildren() {
-  for (let i = 0; i < NumReplayingChildren; i++) {
-    spawnReplayingChild();
+  if (RecordReplayControl.canRewind()) {
+    for (let i = 0; i < NumReplayingChildren; i++) {
+      spawnReplayingChild();
+    }
   }
   addSavedCheckpoint(FirstCheckpointId);
 }
