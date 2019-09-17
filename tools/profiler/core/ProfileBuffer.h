@@ -169,8 +169,11 @@ class ProfileBuffer final {
   }
 
  private:
-  // Used when duplicating sleeping stacks (to avoid spurious mallocs).
-  mozilla::UniquePtr<mozilla::BlocksRingBuffer::Byte[]> mDuplicationBuffer;
+  // Pre-allocated (to avoid spurious mallocs) temporary buffer used when:
+  // - Duplicating sleeping stacks.
+  // - Adding JIT info.
+  // - Streaming stacks to JSON.
+  mozilla::UniquePtr<mozilla::BlocksRingBuffer::Byte[]> mWorkerBuffer;
 
   double mFirstSamplingTimeNs = 0.0;
   double mLastSamplingTimeNs = 0.0;

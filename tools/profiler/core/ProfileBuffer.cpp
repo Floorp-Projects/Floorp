@@ -15,12 +15,12 @@
 using namespace mozilla;
 
 // 65536 bytes should be plenty for a single backtrace.
-static constexpr auto DuplicationBufferBytes = MakePowerOfTwo32<65536>();
+static constexpr auto WorkerBufferBytes = MakePowerOfTwo32<65536>();
 
 ProfileBuffer::ProfileBuffer(BlocksRingBuffer& aBuffer, PowerOfTwo32 aCapacity)
     : mEntries(aBuffer),
-      mDuplicationBuffer(MakeUnique<BlocksRingBuffer::Byte[]>(
-          DuplicationBufferBytes.Value())) {
+      mWorkerBuffer(
+          MakeUnique<BlocksRingBuffer::Byte[]>(WorkerBufferBytes.Value())) {
   // Only ProfileBuffer should control this buffer, and it should be empty when
   // there is no ProfileBuffer using it.
   MOZ_ASSERT(mEntries.BufferLength().isNothing());
