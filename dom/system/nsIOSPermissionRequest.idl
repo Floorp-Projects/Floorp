@@ -36,6 +36,9 @@ interface nsIOSPermissionRequest: nsISupports
   /* Get the permission state for video capture */
   void getVideoCapturePermissionState(out uint16_t aVideo);
 
+  /* Get the permission state for screen capture */
+  void getScreenCapturePermissionState(out uint16_t aScreen);
+
   /*
    * Request permission to access video capture devices. Returns a
    * promise that resolves with |true| after the browser has been
