@@ -482,51 +482,61 @@ class SyncedBookmarksMirror {
    *        and should be merged into the local tree. This option is set to
    *        `true` for incoming records, and `false` for successfully uploaded
    *        records. Tests can also pass `false` to set up an existing mirror.
+   * @param {AbortSignal} [options.signal]
+   *        An abort signal that can be used to interrupt the operation. If
+   *        omitted, storing incoming items can still be interrupted when the
+   *        mirror is finalized.
    */
-  async store(records, { needsMerge = true } = {}) {
-    let options = { needsMerge };
+  async store(records, { needsMerge = true, signal = null } = {}) {
+    let options = {
+      needsMerge,
+      signal: anyAborted(this.finalizeController.signal, signal),
+    };
     await this.db.executeBeforeShutdown("SyncedBookmarksMirror: store", db =>
       db.executeTransaction(async () => {
-        await Async.yieldingForEach(
-          records,
-          async record => {
-            let guid = PlacesSyncUtils.bookmarks.recordIdToGuid(record.id);
-            if (guid == PlacesUtils.bookmarks.rootGuid) {
-              // The engine should hard DELETE Places roots from the server.
-              throw new TypeError("Can't store Places root");
-            }
+        for (let record of records) {
+          if (options.signal.aborted) {
+            throw new SyncedBookmarksMirror.InterruptedError(
+              "Interrupted while storing incoming items"
+            );
+          }
+          let guid = PlacesSyncUtils.bookmarks.recordIdToGuid(record.id);
+          if (guid == PlacesUtils.bookmarks.rootGuid) {
+            // The engine should hard DELETE Places roots from the server.
+            throw new TypeError("Can't store Places root");
+          }
+          if (MirrorLog.level <= Log.Level.Trace) {
             MirrorLog.trace(`Storing in mirror: ${record.cleartextToString()}`);
-            switch (record.type) {
-              case "bookmark":
-                await this.storeRemoteBookmark(record, options);
-                return;
+          }
+          switch (record.type) {
+            case "bookmark":
+              await this.storeRemoteBookmark(record, options);
+              continue;
 
-              case "query":
-                await this.storeRemoteQuery(record, options);
-                return;
+            case "query":
+              await this.storeRemoteQuery(record, options);
+              continue;
 
-              case "folder":
-                await this.storeRemoteFolder(record, options);
-                return;
+            case "folder":
+              await this.storeRemoteFolder(record, options);
+              continue;
 
-              case "livemark":
-                await this.storeRemoteLivemark(record, options);
-                return;
+            case "livemark":
+              await this.storeRemoteLivemark(record, options);
+              continue;
 
-              case "separator":
-                await this.storeRemoteSeparator(record, options);
-                return;
+            case "separator":
+              await this.storeRemoteSeparator(record, options);
+              continue;
 
-              default:
-                if (record.deleted) {
-                  await this.storeRemoteTombstone(record, options);
-                  return;
-                }
-            }
-            MirrorLog.warn("Ignoring record with unknown type", record.type);
-          },
-          yieldState
-        );
+            default:
+              if (record.deleted) {
+                await this.storeRemoteTombstone(record, options);
+                continue;
+              }
+          }
+          MirrorLog.warn("Ignoring record with unknown type", record.type);
+        }
       })
     );
   }
@@ -831,7 +841,7 @@ class SyncedBookmarksMirror {
     return rows.map(row => row.getResultByName("guid"));
   }
 
-  async storeRemoteBookmark(record, { needsMerge }) {
+  async storeRemoteBookmark(record, { needsMerge, signal }) {
     let guid = PlacesSyncUtils.bookmarks.recordIdToGuid(record.id);
 
     let url = validateURL(record.bmkUri);
@@ -875,6 +885,11 @@ class SyncedBookmarksMirror {
     let tags = record.tags;
     if (tags && Array.isArray(tags)) {
       for (let rawTag of tags) {
+        if (signal.aborted) {
+          throw new SyncedBookmarksMirror.InterruptedError(
+            "Interrupted while storing tags for incoming bookmark"
+          );
+        }
         let tag = validateTag(rawTag);
         if (!tag) {
           continue;
@@ -971,7 +986,7 @@ class SyncedBookmarksMirror {
     );
   }
 
-  async storeRemoteFolder(record, { needsMerge }) {
+  async storeRemoteFolder(record, { needsMerge, signal }) {
     let guid = PlacesSyncUtils.bookmarks.recordIdToGuid(record.id);
     let parentGuid = PlacesSyncUtils.bookmarks.recordIdToGuid(record.parentid);
     let serverModified = determineServerModified(record);
@@ -1001,6 +1016,11 @@ class SyncedBookmarksMirror {
         children,
         SQLITE_MAX_VARIABLE_NUMBER - 1
       )) {
+        if (signal.aborted) {
+          throw new SyncedBookmarksMirror.InterruptedError(
+            "Interrupted while storing children for incoming folder"
+          );
+        }
         // Builds a fragment like `(?2, ?1, 0), (?3, ?1, 1), ...`, where ?1 is
         // the folder's GUID, [?2, ?3] are the first and second child GUIDs
         // (SQLite binding parameters index from 1), and [0, 1] are the
