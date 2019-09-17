@@ -6,36 +6,29 @@
 
 var EXPORTED_SYMBOLS = ["ExtFindChild"];
 
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
-);
-
 ChromeUtils.defineModuleGetter(
   this,
   "FindContent",
   "resource://gre/modules/FindContent.jsm"
 );
 
-class ExtFindChild extends ActorChild {
-  async receiveMessage(message) {
+class ExtFindChild extends JSWindowActorChild {
+  receiveMessage(message) {
     if (!this._findContent) {
-      this._findContent = new FindContent(this.mm.docShell);
+      this._findContent = new FindContent(this.docShell);
     }
 
-    let data;
     switch (message.name) {
       case "ext-Finder:CollectResults":
         this.finderInited = true;
-        data = await this._findContent.findRanges(message.data);
-        this.mm.sendAsyncMessage("ext-Finder:CollectResultsFinished", data);
-        break;
+        return this._findContent.findRanges(message.data);
       case "ext-Finder:HighlightResults":
-        data = this._findContent.highlightResults(message.data);
-        this.mm.sendAsyncMessage("ext-Finder:HighlightResultsFinished", data);
-        break;
-      case "ext-Finder:clearHighlighting":
+        return this._findContent.highlightResults(message.data);
+      case "ext-Finder:ClearHighlighting":
         this._findContent.highlighter.highlight(false);
         break;
     }
+
+    return null;
   }
 }

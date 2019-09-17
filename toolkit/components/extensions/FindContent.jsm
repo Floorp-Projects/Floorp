@@ -9,6 +9,18 @@ var EXPORTED_SYMBOLS = ["FindContent"];
 
 /* exported FindContent */
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "FinderIterator",
+  "resource://gre/modules/FinderIterator.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  this,
+  "FinderHighlighter",
+  "resource://gre/modules/FinderHighlighter.jsm"
+);
+
 class FindContent {
   constructor(docShell) {
     const { Finder } = ChromeUtils.import("resource://gre/modules/Finder.jsm");
@@ -17,39 +29,14 @@ class FindContent {
 
   get iterator() {
     if (!this._iterator) {
-      const { FinderIterator } = ChromeUtils.import(
-        "resource://gre/modules/FinderIterator.jsm"
-      );
-      this._iterator = Object.assign({}, FinderIterator);
-
-      // Native FinderIterator._collectFrames skips frames if they are scrolled out
-      // of viewport.  Override with method that doesn't do that.
-      this._iterator._collectFrames = window => {
-        let frames = [];
-        if (!("frames" in window) || !window.frames.length) {
-          return frames;
-        }
-
-        for (let i = 0, l = window.frames.length; i < l; ++i) {
-          let frame = window.frames[i];
-          if (!frame || !frame.frameElement) {
-            continue;
-          }
-          frames.push(frame, ...this._iterator._collectFrames(frame));
-        }
-
-        return frames;
-      };
+      this._iterator = new FinderIterator();
     }
     return this._iterator;
   }
 
   get highlighter() {
     if (!this._highlighter) {
-      const { FinderHighlighter } = ChromeUtils.import(
-        "resource://gre/modules/FinderHighlighter.jsm"
-      );
-      this._highlighter = new FinderHighlighter(this.finder);
+      this._highlighter = new FinderHighlighter(this.finder, true);
     }
     return this._highlighter;
   }
@@ -90,7 +77,7 @@ class FindContent {
         entireWord: !!entireWord,
         finder: this.finder,
         listener: this.finder,
-        useSubFrames: true,
+        useSubFrames: false,
       });
 
       iteratorPromise.then(() => {
@@ -128,7 +115,6 @@ class FindContent {
     let rangeData = [];
     let nodeCountWin = 0;
     let lastDoc;
-    let framePos = -1;
     let walker;
     let node;
 
@@ -147,11 +133,11 @@ class FindContent {
         node = walker.nextNode();
         // Reset node count.
         nodeCountWin = 0;
-        framePos++;
       }
       lastDoc = doc;
 
-      let data = { framePos, text: range.toString() };
+      // The framePos will be set by the parent process later.
+      let data = { framePos: 0, text: range.toString() };
       rangeData.push(data);
 
       if (node != range.startContainer) {

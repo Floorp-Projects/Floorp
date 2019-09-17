@@ -2,39 +2,35 @@
 "use strict";
 
 function frameScript() {
-  let frame = this.content.frames[0].frames[1];
-  let docShell = frame.docShell;
+  let docShell = content.docShell;
   let controller = docShell
     .QueryInterface(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.nsISelectionDisplay)
     .QueryInterface(Ci.nsISelectionController);
   let selection = controller.getSelection(controller.SELECTION_FIND);
+  if (!selection.rangeCount) {
+    return {
+      text: "",
+    };
+  }
+
   let range = selection.getRangeAt(0);
   let scope = {};
   ChromeUtils.import("resource://gre/modules/FindContent.jsm", scope);
   let highlighter = new scope.FindContent(docShell).highlighter;
-  let r1 = frame.parent.frameElement.getBoundingClientRect();
-  let f1 = highlighter._getFrameElementOffsets(frame.parent);
-  let r2 = frame.frameElement.getBoundingClientRect();
-  let f2 = highlighter._getFrameElementOffsets(frame);
+  let r1 = content.parent.frameElement.getBoundingClientRect();
+  let f1 = highlighter._getFrameElementOffsets(content.parent);
+  let r2 = content.frameElement.getBoundingClientRect();
+  let f2 = highlighter._getFrameElementOffsets(content);
   let r3 = range.getBoundingClientRect();
   let rect = {
     top: r1.top + r2.top + r3.top + f1.y + f2.y,
     left: r1.left + r2.left + r3.left + f1.x + f2.x,
   };
-  this.sendAsyncMessage("test:find:selectionTest", {
+  return {
     text: selection.toString(),
     rect,
-  });
-}
-
-function waitForMessage(messageManager, topic) {
-  return new Promise(resolve => {
-    messageManager.addMessageListener(topic, function messageListener(message) {
-      messageManager.removeMessageListener(topic, messageListener);
-      resolve(message);
-    });
-  });
+  };
 }
 
 add_task(async function testFind() {
@@ -251,36 +247,104 @@ add_task(async function testFind() {
   let { top, left } = rectData[5].rectsAndTexts.rectList[0];
   await extension.unload();
 
-  let { selectedBrowser } = gBrowser;
-
-  let frameScriptUrl = `data:,(${frameScript}).call(this)`;
-  selectedBrowser.messageManager.loadFrameScript(frameScriptUrl, false, true);
-  let message = await waitForMessage(
-    selectedBrowser.messageManager,
-    "test:find:selectionTest"
+  let subFrameBrowsingContext = gBrowser.selectedBrowser.browsingContext
+    .getChildren()[0]
+    .getChildren()[1];
+  let result = await SpecialPowers.spawn(
+    subFrameBrowsingContext,
+    [],
+    frameScript
   );
 
   info("Test that text was highlighted properly.");
   is(
-    message.data.text,
+    result.text,
     "bananA",
-    `The text that was highlighted: - Expected: bananA, Actual: ${
-      message.data.text
-    }`
+    `The text that was highlighted: - Expected: bananA, Actual: ${result.text}`
   );
 
   info(
     "Test that rectangle data returned from the search matches the highlighted result."
   );
   is(
-    message.data.rect.top,
+    result.rect.top,
     top,
-    `rect.top: - Expected: ${message.data.rect.top}, Actual: ${top}`
+    `rect.top: - Expected: ${result.rect.top}, Actual: ${top}`
   );
   is(
-    message.data.rect.left,
+    result.rect.left,
     left,
-    `rect.left: - Expected: ${message.data.rect.left}, Actual: ${left}`
+    `rect.left: - Expected: ${result.rect.left}, Actual: ${left}`
+  );
+});
+
+add_task(async function testRemoveHighlighting() {
+  async function background() {
+    function awaitLoad(tabId, url) {
+      return new Promise(resolve => {
+        browser.tabs.onUpdated.addListener(function listener(
+          tabId_,
+          changed,
+          tab
+        ) {
+          if (
+            tabId == tabId_ &&
+            changed.status == "complete" &&
+            tab.url == url
+          ) {
+            browser.tabs.onUpdated.removeListener(listener);
+            resolve();
+          }
+        });
+      });
+    }
+
+    let url =
+      "http://example.com/browser/browser/components/extensions/test/browser/file_find_frames.html";
+    let tab = await browser.tabs.update({ url });
+    await awaitLoad(tab.id, url);
+
+    let data = await browser.find.find("banana", { includeRangeData: true });
+
+    browser.test.log("Test that `data.count` is the expected value.");
+    browser.test.assertEq(
+      6,
+      data.count,
+      "The value returned from `data.count`"
+    );
+
+    await browser.find.highlightResults({ rangeIndex: 5 });
+
+    browser.find.removeHighlighting();
+
+    browser.test.sendMessage("test:find:WebExtensionFinished");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["find", "tabs"],
+    },
+    background,
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("test:find:WebExtensionFinished");
+  await extension.unload();
+
+  let subFrameBrowsingContext = gBrowser.selectedBrowser.browsingContext
+    .getChildren()[0]
+    .getChildren()[1];
+  let result = await SpecialPowers.spawn(
+    subFrameBrowsingContext,
+    [],
+    frameScript
+  );
+
+  info("Test that highlight was cleared properly.");
+  is(
+    result.text,
+    "",
+    `The text that was highlighted: - Expected: '', Actual: ${result.text}`
   );
 });
 

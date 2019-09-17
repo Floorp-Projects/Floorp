@@ -163,6 +163,19 @@ let ACTORS = {
     allFrames: true,
   },
 
+  ExtFind: {
+    child: {
+      moduleURI: "resource://gre/actors/ExtFindChild.jsm",
+      messages: [
+        "ext-Finder:CollectResults",
+        "ext-Finder:HighlightResults",
+        "ext-Finder:ClearHighlighting",
+      ],
+    },
+
+    allFrames: true,
+  },
+
   FindBar: {
     parent: {
       moduleURI: "resource://gre/actors/FindBarParent.jsm",
@@ -271,17 +284,6 @@ let LEGACY_ACTORS = {
     child: {
       module: "resource://gre/actors/ControllersChild.jsm",
       messages: ["ControllerCommands:Do", "ControllerCommands:DoWithParams"],
-    },
-  },
-
-  ExtFind: {
-    child: {
-      module: "resource://gre/actors/ExtFindChild.jsm",
-      messages: [
-        "ext-Finder:CollectResults",
-        "ext-Finder:HighlightResults",
-        "ext-Finder:clearHighlighting",
-      ],
     },
   },
 
