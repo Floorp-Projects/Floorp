@@ -205,6 +205,7 @@ nsresult TextEditor::EndEditorInit() {
   // we're initializing the editor.
   ClearUndoRedo();
   EnableUndoRedo();
+  mInitSucceeded = true;
   return NS_OK;
 }
 
@@ -718,13 +719,18 @@ nsresult TextEditor::DeleteSelectionWithTransaction(
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eDeleteSelectedContent, aDirection);
 
-  if (mRules && mRules->AsHTMLEditRules()) {
+  if (AsHTMLEditor()) {
     if (!deleteNode) {
-      RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
-      htmlEditRules->WillDeleteSelection();
+      // XXX We may remove multiple ranges in the following.  Therefore,
+      //     this must have a bug since we only add the first range into
+      //     the changed range.
+      TopLevelEditSubActionDataRef().WillDeleteRange(
+          *this, EditorBase::GetStartPoint(*SelectionRefPtr()),
+          EditorBase::GetEndPoint(*SelectionRefPtr()));
     } else if (!deleteCharData) {
-      RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
-      htmlEditRules->WillDeleteNode(*deleteNode);
+      MOZ_ASSERT(deleteNode->IsContent());
+      TopLevelEditSubActionDataRef().WillDeleteContent(
+          *this, *deleteNode->AsContent());
     }
   }
 
@@ -746,10 +752,10 @@ nsresult TextEditor::DeleteSelectionWithTransaction(
   // Delete the specified amount
   nsresult rv = DoTransactionInternal(deleteSelectionTransaction);
 
-  if (mRules && mRules->AsHTMLEditRules() && deleteCharData) {
+  if (AsHTMLEditor() && deleteCharData) {
     MOZ_ASSERT(deleteNode);
-    RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
-    htmlEditRules->DidDeleteText(*deleteNode, deleteCharOffset, 1);
+    TopLevelEditSubActionDataRef().DidDeleteText(*this,
+                                                 EditorRawDOMPoint(deleteNode));
   }
 
   if (mTextServicesDocument && NS_SUCCEEDED(rv) && deleteNode &&
