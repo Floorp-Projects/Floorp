@@ -420,6 +420,11 @@ class nsCocoaUtils {
    */
   static nsresult RequestAudioCapturePermission(RefPtr<Promise>& aPromise);
 
+  /**
+   * Request screen capture permission from the OS using an unreliable method.
+   */
+  static nsresult MaybeRequestScreenCapturePermission();
+
  private:
   /**
    * Completion handlers used as an argument to the macOS API to

@@ -1375,6 +1375,21 @@ void nsCocoaUtils::ResolveAudioCapturePromises(bool aGranted) {
   NS_DispatchToMainThread(runnable.forget());
 }
 
+//
+// Attempt to trigger a dialog requesting permission to record the screen.
+// Unlike with the camera and microphone, there is no API to request permission
+// to record the screen or to receive a callback when permission is explicitly
+// allowed or denied. Here we attempt to trigger the dialog by attempting to
+// capture a 1x1 pixel section of the screen. The permission dialog is not
+// guaranteed to be displayed because the user may have already been prompted
+// in which case macOS does not display the dialog again.
+//
+nsresult nsCocoaUtils::MaybeRequestScreenCapturePermission() {
+  AutoCFRelease<CGImageRef> image =
+      CGDisplayCreateImageForRect(kCGDirectMainDisplay, CGRectMake(0, 0, 1, 1));
+  return NS_OK;
+}
+
 void nsCocoaUtils::ResolveVideoCapturePromises(bool aGranted) {
   // Resolve on main thread
   nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction("ResolveVideoCapturePromise", [aGranted]() {

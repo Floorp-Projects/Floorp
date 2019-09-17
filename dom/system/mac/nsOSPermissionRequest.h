@@ -24,6 +24,8 @@ class nsOSPermissionRequest : public nsOSPermissionRequestBase {
 
   NS_IMETHOD RequestAudioCapturePermission(
       JSContext* aCx, mozilla::dom::Promise** aPromiseOut) override;
+
+  NS_IMETHOD MaybeRequestScreenCapturePermission() override;
 };
 
 #endif
