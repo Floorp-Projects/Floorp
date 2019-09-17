@@ -22,9 +22,11 @@ add_task(async () => {
   const tab = await addTab(VISISTED_URI);
 
   info("Open tested page in the same tab");
-  await BrowserTestUtils.loadURI(
-    tab.linkedBrowser,
-    "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI)
+  tab.linkedBrowser.loadURI(
+    "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI),
+    {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    }
   );
 
   info("Open the inspector");
