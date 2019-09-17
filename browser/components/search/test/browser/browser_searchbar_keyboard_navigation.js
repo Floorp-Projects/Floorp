@@ -174,7 +174,7 @@ add_task(async function test_arrows() {
 add_task(async function test_typing_clears_button_selection() {
   is(
     Services.focus.focusedElement,
-    textbox.inputField,
+    textbox,
     "the search bar should be focused"
   ); // from the previous test.
   ok(!textbox.selectedButton, "no button should be selected");
@@ -196,7 +196,7 @@ add_task(async function test_typing_clears_button_selection() {
 add_task(async function test_tab() {
   is(
     Services.focus.focusedElement,
-    textbox.inputField,
+    textbox,
     "the search bar should be focused"
   ); // from the previous test.
 

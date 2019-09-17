@@ -288,12 +288,18 @@ add_task(async function testAutocomplete() {
   searchBar.textbox.showHistoryPopup();
   await popupShownPromise;
   checkMenuEntries(searchEntries);
+  searchBar.textbox.closePopup();
 });
 
 add_task(async function testClearHistory() {
   // Open the textbox context menu to trigger controller attachment.
   let textbox = searchBar.textbox;
-  let popupShownPromise = BrowserTestUtils.waitForEvent(textbox, "popupshown");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    window,
+    "popupshown",
+    false,
+    event => event.target.classList.contains("textbox-contextmenu")
+  );
   EventUtils.synthesizeMouseAtCenter(textbox, {
     type: "contextmenu",
     button: 2,

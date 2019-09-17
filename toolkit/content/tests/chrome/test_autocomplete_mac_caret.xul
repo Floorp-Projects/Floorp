@@ -4,12 +4,13 @@
 
 <window title="Autocomplete Widget Test"
         onload="setTimeout(keyCaretTest, 0);"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
-<textbox id="autocomplete" type="autocomplete"/>
+<html:input id="autocomplete" is="autocomplete-input"/>
 
 <script class="testbody" type="application/javascript">
 <![CDATA[
@@ -51,10 +52,14 @@ function checkKeyCaretTest(key, expectedStart, expectedEnd, result, testid)
 {
   var autocomplete = $("autocomplete");
   var keypressFired = false;
-  SpecialPowers.addSystemEventListener(autocomplete.inputField, "keypress", () => {
-    keypressFired = true;
-  }, {once: true});
+  function listener(event) {
+    if (event.target == autocomplete) {
+      keypressFired = true;
+    }
+  }
+  SpecialPowers.addSystemEventListener(window, "keypress", listener, false);
   synthesizeKey(key, {});
+  SpecialPowers.removeSystemEventListener(window, "keypress", listener, false);
   is(keypressFired, result, `${testid} keypress event should${result ? "" : " not"} be fired`);
   is(autocomplete.selectionStart, expectedStart, testid + " selectionStart");
   is(autocomplete.selectionEnd, expectedEnd, testid + " selectionEnd");

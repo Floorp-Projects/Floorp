@@ -61,7 +61,6 @@ toolkit.jar:
    content/global/viewZoomOverlay.js
 #endif
    content/global/widgets.css
-   content/global/bindings/autocomplete.xml    (widgets/autocomplete.xml)
    content/global/bindings/calendar.js         (widgets/calendar.js)
    content/global/bindings/datekeeper.js       (widgets/datekeeper.js)
    content/global/bindings/datepicker.js       (widgets/datepicker.js)
@@ -73,6 +72,7 @@ toolkit.jar:
    content/global/bindings/textbox.xml         (widgets/textbox.xml)
    content/global/bindings/timekeeper.js       (widgets/timekeeper.js)
    content/global/bindings/timepicker.js       (widgets/timepicker.js)
+   content/global/elements/autocomplete-input.js              (widgets/autocomplete-input.js)
    content/global/elements/autocomplete-popup.js              (widgets/autocomplete-popup.js)
    content/global/elements/autocomplete-richlistitem.js       (widgets/autocomplete-richlistitem.js)
    content/global/elements/browser-custom-element.js          (widgets/browser-custom-element.js)
