@@ -1380,6 +1380,64 @@ Document::Document(const char* aContentType)
   mReferrerInfo = new dom::ReferrerInfo(nullptr);
 }
 
+bool Document::CallerIsTrustedAboutNetError(JSContext* aCx, JSObject* aObject) {
+  nsIPrincipal* principal = nsContentUtils::SubjectPrincipal(aCx);
+  if (NS_WARN_IF(!principal)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_OK;
+  rv = principal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  if (!uri) {
+    return false;
+  }
+
+  // getSpec is an expensive operation, hence we first check the scheme
+  // to see if the caller is actually an about: page.
+  if (!uri->SchemeIs("about")) {
+    return false;
+  }
+
+  nsAutoCString aboutSpec;
+  rv = uri->GetSpec(aboutSpec);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return StringBeginsWith(aboutSpec, NS_LITERAL_CSTRING("about:neterror"));
+}
+
+void Document::GetNetErrorInfo(mozilla::dom::NetErrorInfo& aInfo,
+                               ErrorResult& aRv) {
+  nsCOMPtr<nsISupports> info;
+  nsCOMPtr<nsITransportSecurityInfo> tsi;
+  nsresult rv = NS_OK;
+  if (NS_WARN_IF(!mFailedChannel)) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  rv = mFailedChannel->GetSecurityInfo(getter_AddRefs(info));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
+  tsi = do_QueryInterface(info);
+  if (NS_WARN_IF(!tsi)) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  nsAutoString errorCodeString;
+  rv = tsi->GetErrorCodeString(errorCodeString);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
+  aInfo.mErrorCodeString.Assign(errorCodeString);
+}
+
 bool Document::CallerIsTrustedAboutCertError(JSContext* aCx,
                                              JSObject* aObject) {
   nsIPrincipal* principal = nsContentUtils::SubjectPrincipal(aCx);

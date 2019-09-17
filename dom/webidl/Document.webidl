@@ -322,6 +322,11 @@ partial interface Document {
   FailedCertSecurityInfo getFailedCertSecurityInfo();
 };
 
+partial interface Document {
+  [Func="Document::CallerIsTrustedAboutNetError", Throws]
+  NetErrorInfo getNetErrorInfo();
+};
+
 // https://w3c.github.io/page-visibility/#extensions-to-the-document-interface
 partial interface Document {
   readonly attribute boolean hidden;
