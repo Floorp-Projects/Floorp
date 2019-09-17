@@ -209,3 +209,13 @@ jobs:
           - {weekday: 'Friday', hour: 3, minute: 0}
           - {weekday: 'Saturday', hour: 3, minute: 0}
           - {weekday: 'Sunday', hour: 3, minute: 0}
+
+    - name: condprof
+      job:
+          type: decision-task
+          treeherder-symbol: condprof
+          target-tasks-method: condprof
+      run-on-projects:
+          - mozilla-central
+      when:
+          - {hour: 16, minute: 00}
