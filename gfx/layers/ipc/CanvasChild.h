@@ -75,6 +75,12 @@ class CanvasChild final : public PCanvasChild {
   void EndTransaction();
 
   /**
+   * @returns true if the canvas IPC classes have not been used for some time
+   *          and can be cleaned up.
+   */
+  bool ShouldBeCleanedUp() const;
+
+  /**
    * Create a DrawTargetRecording for a canvas texture.
    * @param aSize size for the DrawTarget
    * @param aFormat SurfaceFormat for the DrawTarget
@@ -123,6 +129,7 @@ class CanvasChild final : public PCanvasChild {
   TextureType mTextureType = TextureType::Unknown;
   uint32_t mLastWriteLockCheckpoint = 0;
   uint32_t mTransactionsSinceGetDataSurface = kCacheDataSurfaceThreshold;
+  TimeStamp mLastNonEmptyTransaction = TimeStamp::NowLoRes();
   bool mIsInTransaction = false;
   bool mHasOutstandingWriteLock = false;
 };
