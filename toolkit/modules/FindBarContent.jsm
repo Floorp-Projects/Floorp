@@ -22,15 +22,13 @@ const FIND_TYPEAHEAD = 1;
 const FIND_LINKS = 2;
 
 class FindBarContent {
-  constructor(mm) {
-    this.mm = mm;
+  constructor(actor) {
+    this.actor = actor;
 
     this.findMode = 0;
     this.inQuickFind = false;
 
-    this.mm.addMessageListener("Findbar:UpdateState", this);
-
-    Services.els.addSystemEventListener(this.mm, "mouseup", this, false);
+    this.addedEventListener = false;
   }
 
   start(event) {
@@ -38,6 +36,16 @@ class FindBarContent {
   }
 
   startQuickFind(event, autostart = false) {
+    if (!this.addedEventListener) {
+      this.addedEventListener = true;
+      Services.els.addSystemEventListener(
+        this.actor.document.defaultView,
+        "mouseup",
+        this,
+        false
+      );
+    }
+
     let mode = FIND_TYPEAHEAD;
     if (
       event.charCode == "'".charAt(0) ||
@@ -50,18 +58,6 @@ class FindBarContent {
     // to ensure we pass any further keypresses, too.
     this.findMode = mode;
     this.passKeyToParent(event);
-  }
-
-  receiveMessage(msg) {
-    switch (msg.name) {
-      case "Findbar:UpdateState":
-        this.findMode = msg.data.findMode;
-        this.inQuickFind = msg.data.hasQuickFindTimeout;
-        if (msg.data.isOpenAndFocused) {
-          this.inPassThrough = false;
-        }
-        break;
-    }
   }
 
   handleEvent(event) {
@@ -107,12 +103,12 @@ class FindBarContent {
     for (let prop of kRequiredProps) {
       fakeEvent[prop] = event[prop];
     }
-    this.mm.sendAsyncMessage("Findbar:Keypress", fakeEvent);
+    this.actor.sendAsyncMessage("Findbar:Keypress", fakeEvent);
   }
 
   onMouseup(event) {
     if (this.findMode != FIND_NORMAL) {
-      this.mm.sendAsyncMessage("Findbar:Mouseup");
+      this.actor.sendAsyncMessage("Findbar:Mouseup", {});
     }
   }
 }

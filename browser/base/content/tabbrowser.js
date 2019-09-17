@@ -68,9 +68,6 @@
       }
       messageManager.addMessageListener("RefreshBlocker:Blocked", this);
 
-      // To correctly handle keypresses for potential FindAsYouType, while
-      // the tab's find bar is not yet initialized.
-      messageManager.addMessageListener("Findbar:Keypress", this);
       this._setFindbarData();
 
       XPCOMUtils.defineLazyModuleGetters(this, {
@@ -4937,16 +4934,6 @@
             { isAppTab: tab.pinned },
             "BrowserTab"
           );
-          break;
-        }
-        case "Findbar:Keypress": {
-          let tab = this.getTabForBrowser(browser);
-          if (!this.isFindBarInitialized(tab)) {
-            let fakeEvent = data;
-            this.getFindBar(tab).then(findbar => {
-              findbar._onBrowserKeypress(fakeEvent);
-            });
-          }
           break;
         }
         case "RefreshBlocker:Blocked": {
