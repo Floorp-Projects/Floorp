@@ -715,14 +715,11 @@ struct DIGroup {
 
       // Convert mInvalidRect to image space by subtracting the corner of the
       // image bounds
-      auto dirtyRect = ViewAs<ImagePixel>(
-          mInvalidRect - mVisibleRect.ToUnknownRect().TopLeft());
+      auto dirtyRect = ViewAs<ImagePixel>(mInvalidRect);
 
       auto bottomRight = dirtyRect.BottomRight();
       GP("check invalid %d %d - %d %d\n", bottomRight.x, bottomRight.y,
          dtSize.width, dtSize.height);
-      MOZ_RELEASE_ASSERT(bottomRight.x <= dtSize.width &&
-                         bottomRight.y <= dtSize.height);
       GP("Update Blob %d %d %d %d\n", mInvalidRect.x, mInvalidRect.y,
          mInvalidRect.width, mInvalidRect.height);
       if (!aResources.UpdateBlobImage(
