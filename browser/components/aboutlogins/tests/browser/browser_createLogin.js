@@ -195,6 +195,11 @@ add_task(async function test_create_login() {
       let editButton = loginItem.shadowRoot.querySelector(".edit-button");
       editButton.click();
 
+      await ContentTaskUtils.waitForCondition(
+        () => loginItem.dataset.editing,
+        "waiting for 'edit' mode"
+      );
+
       let passwordInput = loginItem.shadowRoot.querySelector(
         "input[name='password']"
       );
