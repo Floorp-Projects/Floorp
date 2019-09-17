@@ -84,12 +84,13 @@ class BlocksRingBuffer {
   // Near-infinite index type, not expecting overflow.
   using Index = uint64_t;
 
+ public:
   // Using ModuloBuffer as underlying circular byte buffer.
   using Buffer = ModuloBuffer<uint32_t, Index>;
+  using Byte = Buffer::Byte;
   using BufferWriter = Buffer::Writer;
   using BufferReader = Buffer::Reader;
 
- public:
   // Length type for total buffer (as PowerOfTwo<Length>) and each entry.
   using Length = uint32_t;
 
@@ -157,6 +158,13 @@ class BlocksRingBuffer {
     }
     bool operator>=(const BlockIndex& aRhs) const {
       return mBlockIndex >= aRhs.mBlockIndex;
+    }
+
+    // Temporary escape hatches to let legacy code access block indices.
+    // TODO: Remove this when legacy code has been modernized.
+    uint64_t ConvertToU64() const { return uint64_t(mBlockIndex); }
+    static BlockIndex ConvertFromU64(uint64_t aIndex) {
+      return BlockIndex(Index(aIndex));
     }
 
    private:
