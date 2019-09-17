@@ -2524,7 +2524,7 @@ int32_t RecordContentFrameTime(
   int32_t fracLatencyNorm = lround(latencyNorm * 100.0);
 
 #ifdef MOZ_GECKO_PROFILER
-  if (profiler_is_active()) {
+  if (profiler_can_accept_markers()) {
     class ContentFramePayload : public ProfilerMarkerPayload {
      public:
       ContentFramePayload(const mozilla::TimeStamp& aStartTime,
