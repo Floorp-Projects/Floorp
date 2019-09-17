@@ -457,7 +457,8 @@ class TextEditor : public EditorBase,
    *
    * @ param aString   The string to be set.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult SetTextAsSubAction(const nsAString& aString);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  SetTextAsSubAction(const nsAString& aString);
 
   /**
    * ReplaceSelectionAsSubAction() replaces selection with aString.
@@ -659,6 +660,14 @@ class TextEditor : public EditorBase,
    */
   EditActionResult ComputeValueFromTextNodeAndPaddingBRElement(
       nsAString& aValue) const;
+
+  /**
+   * SetTextWithoutTransaction() is optimized method to set `<input>.value`
+   * and `<textarea>.value` to aValue without transaction.  This must be
+   * called only when it's not `HTMLEditor` and undo/redo is disabled.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  SetTextWithoutTransaction(const nsAString& aValue);
 
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
