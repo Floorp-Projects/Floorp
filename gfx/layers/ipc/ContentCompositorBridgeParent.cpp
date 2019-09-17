@@ -361,7 +361,7 @@ void ContentCompositorBridgeParent::ShadowLayersUpdated(
 
   auto endTime = TimeStamp::Now();
 #ifdef MOZ_GECKO_PROFILER
-  if (profiler_is_active()) {
+  if (profiler_can_accept_markers()) {
     class ContentBuildPayload : public ProfilerMarkerPayload {
      public:
       ContentBuildPayload(const mozilla::TimeStamp& aStartTime,

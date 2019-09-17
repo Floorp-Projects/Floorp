@@ -205,7 +205,7 @@ class SceneBuiltNotification : public wr::NotificationHandler {
         "SceneBuiltNotificationRunnable", [parent, epoch, startTime]() {
           auto endTime = TimeStamp::Now();
 #ifdef MOZ_GECKO_PROFILER
-          if (profiler_is_active()) {
+          if (profiler_can_accept_markers()) {
             class ContentFullPaintPayload : public ProfilerMarkerPayload {
              public:
               ContentFullPaintPayload(const mozilla::TimeStamp& aStartTime,
