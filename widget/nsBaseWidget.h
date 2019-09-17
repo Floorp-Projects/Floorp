@@ -167,6 +167,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
 
   virtual void SetSizeMode(nsSizeMode aMode) override;
   virtual nsSizeMode SizeMode() override { return mSizeMode; }
+  virtual bool IsTiled() const override { return mIsTiled; }
 
   virtual bool IsFullyOccluded() const override { return mIsFullyOccluded; }
 
@@ -691,6 +692,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   mozilla::UniquePtr<LayoutDeviceIntRect[]> mClipRects;
   uint32_t mClipRectCount;
   nsSizeMode mSizeMode;
+  bool mIsTiled;
   nsPopupLevel mPopupLevel;
   nsPopupType mPopupType;
   SizeConstraints mSizeConstraints;
