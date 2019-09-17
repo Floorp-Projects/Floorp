@@ -720,15 +720,6 @@ void TCPSocket::CloseHelper(bool waitForUnsentData) {
   }
 }
 
-void TCPSocket::SendWithTrackingNumber(const nsACString& aData,
-                                       const uint32_t& aTrackingNumber,
-                                       mozilla::ErrorResult& aRv) {
-  MOZ_ASSERT(mSocketBridgeParent);
-  mTrackingNumber = aTrackingNumber;
-  // The JSContext isn't necessary for string values; it's a codegen limitation.
-  Send(nullptr, aData, aRv);
-}
-
 bool TCPSocket::Send(JSContext* aCx, const nsACString& aData,
                      mozilla::ErrorResult& aRv) {
   if (mReadyState != TCPReadyState::Open) {
@@ -739,7 +730,7 @@ bool TCPSocket::Send(JSContext* aCx, const nsACString& aData,
   uint64_t byteLength;
   nsCOMPtr<nsIInputStream> stream;
   if (mSocketBridgeChild) {
-    mSocketBridgeChild->SendSend(aData, ++mTrackingNumber);
+    mSocketBridgeChild->SendSend(aData);
     byteLength = aData.Length();
   } else {
     nsresult rv = NS_NewCStringInputStream(getter_AddRefs(stream), aData);
@@ -754,16 +745,6 @@ bool TCPSocket::Send(JSContext* aCx, const nsACString& aData,
     }
   }
   return Send(stream, byteLength);
-}
-
-void TCPSocket::SendWithTrackingNumber(JSContext* aCx, const ArrayBuffer& aData,
-                                       uint32_t aByteOffset,
-                                       const Optional<uint32_t>& aByteLength,
-                                       const uint32_t& aTrackingNumber,
-                                       mozilla::ErrorResult& aRv) {
-  MOZ_ASSERT(mSocketBridgeParent);
-  mTrackingNumber = aTrackingNumber;
-  Send(aCx, aData, aByteOffset, aByteLength, aRv);
 }
 
 bool TCPSocket::Send(JSContext* aCx, const ArrayBuffer& aData,
@@ -782,8 +763,7 @@ bool TCPSocket::Send(JSContext* aCx, const ArrayBuffer& aData,
       aByteLength.WasPassed() ? aByteLength.Value() : aData.Length();
 
   if (mSocketBridgeChild) {
-    nsresult rv = mSocketBridgeChild->SendSend(aData, aByteOffset, byteLength,
-                                               ++mTrackingNumber);
+    nsresult rv = mSocketBridgeChild->SendSend(aData, aByteOffset, byteLength);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aRv.Throw(rv);
       return false;
@@ -820,6 +800,10 @@ bool TCPSocket::Send(nsIInputStream* aStream, uint32_t aByteLength) {
     return !bufferFull;
   }
 
+  // This is used to track how many packets we have been told to send. Signaling
+  // this back to the user of this API allows the user to know how many packets
+  // are currently in flight over IPC.
+  ++mTrackingNumber;
   if (mWaitingForStartTLS) {
     // When we are waiting for starttls, newStream is added to pendingData
     // and will be appended to multiplexStream after tls had been set up.

@@ -43,16 +43,6 @@ using namespace net;
 
 namespace dom {
 
-static void FireInteralError(TCPSocketParent* aActor, uint32_t aLineNo) {
-  MOZ_ASSERT(aActor->IPCOpen());
-
-  mozilla::Unused << aActor->SendCallback(
-      NS_LITERAL_STRING("onerror"),
-      TCPError(NS_LITERAL_STRING("InvalidStateError"),
-               NS_LITERAL_STRING("Internal error")),
-      static_cast<uint32_t>(TCPReadyState::Connecting));
-}
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TCPSocketParentBase)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
@@ -95,82 +85,6 @@ mozilla::ipc::IPCResult TCPSocketParent::RecvOpen(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult TCPSocketParent::RecvOpenBind(
-    const nsCString& aRemoteHost, const uint16_t& aRemotePort,
-    const nsCString& aLocalAddr, const uint16_t& aLocalPort,
-    const bool& aUseSSL, const bool& aReuseAddrPort,
-    const bool& aUseArrayBuffers, const nsCString& aFilter) {
-  nsresult rv;
-  nsCOMPtr<nsISocketTransportService> sts =
-      do_GetService("@mozilla.org/network/socket-transport-service;1", &rv);
-  if (NS_FAILED(rv)) {
-    FireInteralError(this, __LINE__);
-    return IPC_OK();
-  }
-
-  nsCOMPtr<nsISocketTransport> socketTransport;
-  if (aUseSSL) {
-    AutoTArray<nsCString, 1> socketTypes = {NS_LITERAL_CSTRING("ssl")};
-    rv = sts->CreateTransport(socketTypes, aRemoteHost, aRemotePort, nullptr,
-                              getter_AddRefs(socketTransport));
-  } else {
-    rv = sts->CreateTransport(nsTArray<nsCString>(), aRemoteHost, aRemotePort,
-                              nullptr, getter_AddRefs(socketTransport));
-  }
-
-  if (NS_FAILED(rv)) {
-    FireInteralError(this, __LINE__);
-    return IPC_OK();
-  }
-
-  // in most cases aReuseAddrPort is false, but ICE TCP needs
-  // sockets options set that allow addr/port reuse
-  socketTransport->SetReuseAddrPort(aReuseAddrPort);
-
-  PRNetAddr prAddr;
-  if (PR_SUCCESS != PR_InitializeNetAddr(PR_IpAddrAny, aLocalPort, &prAddr)) {
-    FireInteralError(this, __LINE__);
-    return IPC_OK();
-  }
-  if (PR_SUCCESS != PR_StringToNetAddr(aLocalAddr.BeginReading(), &prAddr)) {
-    FireInteralError(this, __LINE__);
-    return IPC_OK();
-  }
-
-  mozilla::net::NetAddr addr;
-  PRNetAddrToNetAddr(&prAddr, &addr);
-  rv = socketTransport->Bind(&addr);
-  if (NS_FAILED(rv)) {
-    FireInteralError(this, __LINE__);
-    return IPC_OK();
-  }
-
-  if (!aFilter.IsEmpty()) {
-    nsAutoCString contractId(NS_NETWORK_TCP_SOCKET_FILTER_HANDLER_PREFIX);
-    contractId.Append(aFilter);
-    nsCOMPtr<nsISocketFilterHandler> filterHandler =
-        do_GetService(contractId.get());
-    if (!filterHandler) {
-      NS_ERROR("Content doesn't have a valid filter");
-      FireInteralError(this, __LINE__);
-      return IPC_OK();
-    }
-    rv = filterHandler->NewFilter(getter_AddRefs(mFilter));
-    if (NS_FAILED(rv)) {
-      NS_ERROR("Cannot create filter that content specified");
-      FireInteralError(this, __LINE__);
-      return IPC_OK();
-    }
-  }
-
-  mSocket = new TCPSocket(nullptr, NS_ConvertUTF8toUTF16(aRemoteHost),
-                          aRemotePort, aUseSSL, aUseArrayBuffers);
-  mSocket->SetSocketBridgeParent(this);
-  rv = mSocket->InitWithUnconnectedTransport(socketTransport);
-  NS_ENSURE_SUCCESS(rv, IPC_OK());
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult TCPSocketParent::RecvStartTLS() {
   NS_ENSURE_TRUE(mSocket, IPC_OK());
   ErrorResult rv;
@@ -199,26 +113,8 @@ mozilla::ipc::IPCResult TCPSocketParent::RecvResume() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult TCPSocketParent::RecvData(
-    const SendableData& aData, const uint32_t& aTrackingNumber) {
+mozilla::ipc::IPCResult TCPSocketParent::RecvData(const SendableData& aData) {
   ErrorResult rv;
-
-  if (mFilter) {
-    mozilla::net::NetAddr addr;  // dummy value
-    bool allowed;
-    MOZ_ASSERT(aData.type() == SendableData::TArrayOfuint8_t,
-               "Unsupported data type for filtering");
-    const nsTArray<uint8_t>& data(aData.get_ArrayOfuint8_t());
-    nsresult nsrv =
-        mFilter->FilterPacket(&addr, data.Elements(), data.Length(),
-                              nsISocketFilter::SF_OUTGOING, &allowed);
-
-    // Reject sending of unallowed data
-    if (NS_WARN_IF(NS_FAILED(nsrv)) || !allowed) {
-      TCPSOCKET_LOG(("%s: Dropping outgoing TCP packet", __FUNCTION__));
-      return IPC_FAIL_NO_REASON(this);
-    }
-  }
 
   switch (aData.type()) {
     case SendableData::TArrayOfuint8_t: {
@@ -233,14 +129,13 @@ mozilla::ipc::IPCResult TCPSocketParent::RecvData(
         return IPC_FAIL_NO_REASON(this);
       }
       Optional<uint32_t> byteLength(buffer.Length());
-      mSocket->SendWithTrackingNumber(autoCx, data, 0, byteLength,
-                                      aTrackingNumber, rv);
+      mSocket->Send(autoCx, data, 0, byteLength, rv);
       break;
     }
 
     case SendableData::TnsCString: {
       const nsCString& strData = aData.get_nsCString();
-      mSocket->SendWithTrackingNumber(strData, aTrackingNumber, rv);
+      mSocket->Send(nullptr, strData, rv);
       break;
     }
 
@@ -274,19 +169,6 @@ void TCPSocketParent::FireArrayBufferDataEvent(nsTArray<uint8_t>& aBuffer,
   nsTArray<uint8_t> arr;
   arr.SwapElements(aBuffer);
 
-  if (mFilter) {
-    bool allowed;
-    mozilla::net::NetAddr addr;
-    nsresult nsrv =
-        mFilter->FilterPacket(&addr, arr.Elements(), arr.Length(),
-                              nsISocketFilter::SF_INCOMING, &allowed);
-    // receiving unallowed data, drop it.
-    if (NS_WARN_IF(NS_FAILED(nsrv)) || !allowed) {
-      TCPSOCKET_LOG(("%s: Dropping incoming TCP packet", __FUNCTION__));
-      return;
-    }
-  }
-
   SendableData data(arr);
   SendEvent(NS_LITERAL_STRING("data"), data, aReadyState);
 }
@@ -294,8 +176,6 @@ void TCPSocketParent::FireArrayBufferDataEvent(nsTArray<uint8_t>& aBuffer,
 void TCPSocketParent::FireStringDataEvent(const nsACString& aData,
                                           TCPReadyState aReadyState) {
   SendableData data((nsCString(aData)));
-
-  MOZ_ASSERT(!mFilter, "Socket filtering doesn't support nsCString");
 
   SendEvent(NS_LITERAL_STRING("data"), data, aReadyState);
 }
