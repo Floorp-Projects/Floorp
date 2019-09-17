@@ -669,6 +669,20 @@ class TextEditor : public EditorBase,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
   SetTextWithoutTransaction(const nsAString& aValue);
 
+  /**
+   * EnsurePaddingBRElementInMultilineEditor() creates a padding `<br>` element
+   * at end of multiline text editor.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  EnsurePaddingBRElementInMultilineEditor();
+
+  /**
+   * EnsureCaretNotAtEndOfTextNode() collapses selection at the padding `<br>`
+   * element (i.e., container becomes the anonymous `<div>` element) if
+   * `Selection` is at end of the text node.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult EnsureCaretNotAtEndOfTextNode();
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
