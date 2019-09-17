@@ -23,20 +23,24 @@ const kIterationSizeMax = 100;
 const kTimeoutPref = "findbar.iteratorTimeout";
 
 /**
- * FinderIterator singleton. See the documentation for the `start()` method to
+ * FinderIterator. See the documentation for the `start()` method to
  * learn more.
  */
-var FinderIterator = {
-  _currentParams: null,
-  _listeners: new Map(),
-  _catchingUp: new Set(),
-  _previousParams: null,
-  _previousRanges: [],
-  _spawnId: 0,
+function FinderIterator() {
+  this._listeners = new Map();
+  this._currentParams = null;
+  this._catchingUp = new Set();
+  this._previousParams = null;
+  this._previousRanges = [];
+  this._spawnId = 0;
+  this._timer = null;
+  this.ranges = [];
+  this.running = false;
+  this.useSubFrames = false;
+}
+
+FinderIterator.prototype = {
   _timeout: Services.prefs.getIntPref(kTimeoutPref),
-  _timer: null,
-  ranges: [],
-  running: false,
 
   // Expose `kIterationSizeMax` to the outside world for unit tests to use.
   get kIterationSizeMax() {

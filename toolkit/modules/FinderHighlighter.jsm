@@ -181,14 +181,7 @@ function FinderHighlighter(finder, useTop = false) {
 
 FinderHighlighter.prototype = {
   get iterator() {
-    if (this._iterator) {
-      return this._iterator;
-    }
-    this._iterator = ChromeUtils.import(
-      "resource://gre/modules/FinderIterator.jsm",
-      null
-    ).FinderIterator;
-    return this._iterator;
+    return this.finder.iterator;
   },
 
   // Get the top-most window when allowed. When out-of-process frames are used,
@@ -202,8 +195,7 @@ FinderHighlighter.prototype = {
       } catch (ex) {}
     }
 
-    // A later patch will change this to just 'window'.
-    return window.top;
+    return window;
   },
 
   useModal() {
@@ -275,10 +267,12 @@ FinderHighlighter.prototype = {
     this._found = false;
     this._useSubFrames = useSubFrames;
 
+    let result = { searchString: word, highlight, found: false };
+
     if (!controller || !doc || !doc.documentElement) {
       // Without the selection controller,
       // we are unable to (un)highlight any matches
-      return;
+      return result;
     }
 
     if (highlight) {
@@ -299,7 +293,7 @@ FinderHighlighter.prototype = {
         (this.useModal() &&
           this.iterator._areParamsEqual(params, dict.lastIteratorParams))
       ) {
-        return;
+        return result;
       }
 
       if (!this.useModal()) {
@@ -316,7 +310,9 @@ FinderHighlighter.prototype = {
       this._found = true;
     }
 
-    this.notifyFinished({ highlight, found: this._found });
+    result.found = this._found;
+    this.notifyFinished(result);
+    return result;
   },
 
   // FinderIterator listener implementation
@@ -498,7 +494,7 @@ FinderHighlighter.prototype = {
    *   {Boolean} storeResult   Indicator if the search string should be stored
    *                           by the consumer of the Finder.
    */
-  update(data) {
+  async update(data, foundInThisFrame) {
     let window = this.finder._getWindow();
     let dict = this.getForWindow(window);
     let foundRange = this.finder._fastFind.getFoundRange();
@@ -506,7 +502,7 @@ FinderHighlighter.prototype = {
     if (
       data.result == Ci.nsITypeAheadFind.FIND_NOTFOUND ||
       !data.searchString ||
-      !foundRange
+      (foundInThisFrame && !foundRange)
     ) {
       this.hide(window);
       return;
@@ -528,7 +524,7 @@ FinderHighlighter.prototype = {
           params = { word: data.searchString, linksOnly: data.linksOnly };
         }
         if (params) {
-          this.highlight(
+          await this.highlight(
             true,
             params.word,
             params.linksOnly,
@@ -556,7 +552,7 @@ FinderHighlighter.prototype = {
     }
 
     if (this._highlightAll) {
-      this.highlight(
+      await this.highlight(
         true,
         data.searchString,
         data.linksOnly,
@@ -581,6 +577,16 @@ FinderHighlighter.prototype = {
     dict.frames.clear();
     dict.modalHighlightRectsMap.clear();
     dict.brightText = null;
+  },
+
+  /**
+   * Removes the outline from a single window. This is done when
+   * switching the current search to a new frame.
+   */
+  clearCurrentOutline(window = null) {
+    let dict = this.getForWindow(this.getTopWindow(window));
+    this._finishOutlineAnimations(dict);
+    this._removeRangeOutline(window);
   },
 
   /**

@@ -159,7 +159,7 @@ var FindHelper = {
       return this.doFind(searchString);
     }
 
-    this._finder.findAgain(findBackwards, false, false);
+    this._finder.findAgain(searchString, findBackwards, false, false);
     return { searchString, findBackwards };
   },
 

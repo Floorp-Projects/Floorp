@@ -6,59 +6,18 @@
 
 var EXPORTED_SYMBOLS = ["FinderChild"];
 
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
-);
-
 ChromeUtils.defineModuleGetter(
   this,
   "Finder",
   "resource://gre/modules/Finder.jsm"
 );
 
-const MESSAGES = [
-  "Finder:CaseSensitive",
-  "Finder:EntireWord",
-  "Finder:FastFind",
-  "Finder:FindAgain",
-  "Finder:SetSearchStringToSelection",
-  "Finder:GetInitialSelection",
-  "Finder:Highlight",
-  "Finder:HighlightAllChange",
-  "Finder:EnableSelection",
-  "Finder:RemoveSelection",
-  "Finder:FocusContent",
-  "Finder:FindbarClose",
-  "Finder:FindbarOpen",
-  "Finder:KeyPress",
-  "Finder:MatchesCount",
-  "Finder:ModalHighlightChange",
-];
-
-class FinderChild extends ActorChild {
-  constructor(dispatcher) {
-    super(dispatcher);
-
-    this._finder = new Finder(this.docShell);
-    this._finder.addResultListener(this);
-
-    for (let msg of MESSAGES) {
-      this.mm.addMessageListener(msg, this);
+class FinderChild extends JSWindowActorChild {
+  get finder() {
+    if (!this._finder) {
+      this._finder = new Finder(this.docShell);
     }
-  }
-
-  onFindResult(aData) {
-    this.mm.sendAsyncMessage("Finder:Result", aData);
-  }
-
-  // When the child receives messages with results of requestMatchesCount,
-  // it passes them forward to the parent.
-  onMatchesCountResult(aData) {
-    this.mm.sendAsyncMessage("Finder:MatchesResult", aData);
-  }
-
-  onHighlightFinished(aData) {
-    this.mm.sendAsyncMessage("Finder:HighlightFinished", aData);
+    return this._finder;
   }
 
   receiveMessage(aMessage) {
@@ -66,87 +25,121 @@ class FinderChild extends ActorChild {
 
     switch (aMessage.name) {
       case "Finder:CaseSensitive":
-        this._finder.caseSensitive = data.caseSensitive;
+        this.finder.caseSensitive = data.caseSensitive;
         break;
 
       case "Finder:EntireWord":
-        this._finder.entireWord = data.entireWord;
+        this.finder.entireWord = data.entireWord;
         break;
 
       case "Finder:SetSearchStringToSelection": {
-        let selection = this._finder.setSearchStringToSelection();
-        this.mm.sendAsyncMessage("Finder:CurrentSelectionResult", {
-          selection,
-          initial: false,
+        return new Promise(resolve => {
+          resolve(this.finder.setSearchStringToSelection());
         });
-        break;
       }
 
       case "Finder:GetInitialSelection": {
-        let selection = this._finder.getActiveSelectionText();
-        this.mm.sendAsyncMessage("Finder:CurrentSelectionResult", {
-          selection,
-          initial: true,
+        return new Promise(resolve => {
+          resolve(this.finder.getActiveSelectionText());
         });
-        break;
       }
 
       case "Finder:FastFind":
-        this._finder.fastFind(
-          data.searchString,
-          data.linksOnly,
-          data.drawOutline
-        );
-        break;
+        return new Promise(resolve => {
+          let result = this.finder.fastFind(
+            data.searchString,
+            data.linksOnly,
+            data.drawOutline
+          );
+          resolve(result);
+        });
 
       case "Finder:FindAgain":
-        this._finder.findAgain(
-          data.findBackwards,
-          data.linksOnly,
-          data.drawOutline
-        );
-        break;
+        return new Promise(resolve => {
+          resolve(
+            this.finder.findAgain(
+              data.searchString,
+              data.findBackwards,
+              data.linksOnly,
+              data.drawOutline
+            )
+          );
+        });
+
+      case "Finder:FindInFrame":
+        return this.finder.findInFrame(data);
 
       case "Finder:Highlight":
-        this._finder.highlight(data.highlight, data.word, data.linksOnly);
-        break;
+        return this.finder
+          .highlight(
+            data.highlight,
+            data.searchString,
+            data.linksOnly,
+            data.useSubFrames
+          )
+          .then(result => {
+            if (result) {
+              result.browsingContextId = this.browsingContext.id;
+            }
+            return result;
+          });
+
+      case "Finder:UpdateHighlightAndMatchCount":
+        return this.finder.updateHighlightAndMatchCount(data).then(result => {
+          if (result) {
+            result.browsingContextId = this.browsingContext.id;
+          }
+          return result;
+        });
 
       case "Finder:HighlightAllChange":
-        this._finder.onHighlightAllChange(data.highlightAll);
+        this.finder.onHighlightAllChange(data.highlightAll);
         break;
 
       case "Finder:EnableSelection":
-        this._finder.enableSelection();
+        this.finder.enableSelection();
         break;
 
       case "Finder:RemoveSelection":
-        this._finder.removeSelection();
+        this.finder.removeSelection(data.keepHighlight);
         break;
 
       case "Finder:FocusContent":
-        this._finder.focusContent();
+        this.finder.focusContent();
         break;
 
       case "Finder:FindbarClose":
-        this._finder.onFindbarClose();
+        this.finder.onFindbarClose();
         break;
 
       case "Finder:FindbarOpen":
-        this._finder.onFindbarOpen();
+        this.finder.onFindbarOpen();
         break;
 
       case "Finder:KeyPress":
-        var KeyboardEvent = this._finder._getWindow().KeyboardEvent;
-        this._finder.keyPress(new KeyboardEvent("keypress", data));
+        var KeyboardEvent = this.finder._getWindow().KeyboardEvent;
+        this.finder.keyPress(new KeyboardEvent("keypress", data));
         break;
 
       case "Finder:MatchesCount":
-        this._finder.requestMatchesCount(data.searchString, data.linksOnly);
-        break;
+        return this.finder
+          .requestMatchesCount(
+            data.searchString,
+            data.linksOnly,
+            data.useSubFrames
+          )
+          .then(result => {
+            if (result) {
+              result.browsingContextId = this.browsingContext.id;
+            }
+            return result;
+          });
 
       case "Finder:ModalHighlightChange":
-        this._finder.onModalHighlightChange(data.useModalHighlight);
+        this.finder.onModalHighlightChange(data.useModalHighlight);
         break;
     }
+
+    return null;
   }
 }

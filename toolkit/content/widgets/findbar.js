@@ -578,10 +578,12 @@
       if (typeof aHighlight != "boolean") {
         aHighlight = this._highlightAll;
       }
-      if (aHighlight !== this._highlightAll && !aFromPrefObserver) {
-        this._prefsvc.setBoolPref("findbar.highlightAll", aHighlight);
+      if (aHighlight !== this._highlightAll) {
+        this._highlightAll = aHighlight;
+        if (!aFromPrefObserver) {
+          this._prefsvc.setBoolPref("findbar.highlightAll", aHighlight);
+        }
       }
-      this._highlightAll = aHighlight;
       let checkbox = this.getElement("highlight");
       checkbox.checked = this._highlightAll;
     }
@@ -1022,6 +1024,7 @@
 
     _findAgain(aFindPrevious) {
       this.browser.finder.findAgain(
+        this._findField.value,
         aFindPrevious,
         this._findMode == this.FIND_LINKS,
         this._findMode != this.FIND_NORMAL
@@ -1182,10 +1185,11 @@
     /* Fetches the currently selected text and sets that as the text to search
      next. This is a MacOS specific feature. */
     onFindSelectionCommand() {
-      let searchString = this.browser.finder.setSearchStringToSelection();
-      if (searchString) {
-        this._findField.value = searchString;
-      }
+      this.browser.finder.setSearchStringToSelection().then(searchInfo => {
+        if (searchInfo.selectedText) {
+          this._findField.value = searchInfo.selectedText;
+        }
+      });
     }
 
     _onFindFieldFocus() {
