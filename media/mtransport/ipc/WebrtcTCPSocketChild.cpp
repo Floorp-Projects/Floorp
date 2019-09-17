@@ -65,7 +65,7 @@ WebrtcTCPSocketChild::~WebrtcTCPSocketChild() {
 
 void WebrtcTCPSocketChild::AsyncOpen(
     const nsCString& aHost, const int& aPort, const nsCString& aLocalAddress,
-    const int& aLocalPort, const net::LoadInfoArgs& aArgs,
+    const int& aLocalPort, bool aUseTls, const net::LoadInfoArgs& aArgs,
     const nsCString& aAlpn, const dom::TabId& aTabId,
     NrSocketProxyConfig::ProxyPolicy aProxyPolicy) {
   LOG(("WebrtcTCPSocketChild::AsyncOpen %p %s:%d\n", this, aHost.get(), aPort));
@@ -86,7 +86,7 @@ void WebrtcTCPSocketChild::AsyncOpen(
                                                                         aTabId);
   }
 
-  SendAsyncOpen(aHost, aPort, aLocalAddress, aLocalPort, aArgs, aAlpn,
+  SendAsyncOpen(aHost, aPort, aLocalAddress, aLocalPort, aUseTls, aArgs, aAlpn,
                 aProxyPolicy);
 }
 

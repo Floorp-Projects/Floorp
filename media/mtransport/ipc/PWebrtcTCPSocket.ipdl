@@ -23,6 +23,7 @@ parent:
                   int32_t aPort,
                   nsCString aLocalAddress,
                   int32_t aLocalPort,
+                  bool aUseTls,
                   LoadInfoArgs aLoadInfoArgs,
                   nsCString aAlpn,
                   int proxyPolicy);
