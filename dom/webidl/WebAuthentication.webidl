@@ -149,9 +149,7 @@ enum PublicKeyCredentialType {
 dictionary PublicKeyCredentialDescriptor {
     required PublicKeyCredentialType      type;
     required BufferSource                 id;
-    // Transports is a string that is matched against the AuthenticatorTransport
-    // enumeration so that we have forward-compatibility for new transports.
-    sequence<DOMString>                   transports;
+    sequence<AuthenticatorTransport>      transports;
 };
 
 enum AuthenticatorTransport {
