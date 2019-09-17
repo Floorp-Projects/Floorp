@@ -10,6 +10,7 @@
 #include "nsThreadUtils.h"
 #include "WebAuthnCoseIdentifiers.h"
 #include "mozilla/dom/AuthenticatorAttestationResponse.h"
+#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PWebAuthnTransaction.h"
 #include "mozilla/dom/WebAuthnManager.h"
