@@ -84,6 +84,7 @@ var AboutLoginsParent = {
       );
     }
 
+    this._subscribers.add(message.target);
     switch (message.name) {
       case "AboutLogins:CreateLogin": {
         let newLogin = message.data.login;
@@ -260,8 +261,6 @@ var AboutLoginsParent = {
           Services.obs.addObserver(this, UIState.ON_UPDATE);
           this._observersAdded = true;
         }
-        this._subscribers.add(message.target);
-
         let messageManager = message.target.messageManager;
 
         const logins = await this.getAllLogins();
