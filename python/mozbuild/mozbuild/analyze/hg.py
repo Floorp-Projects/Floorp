@@ -157,7 +157,7 @@ class Report(object):
         for x in res:
             data.append(x)
         if format == 'pretty':
-            print (data)
+            print(data)
         else:
             file_name = self.name + '.' + format
             content = None
@@ -171,4 +171,4 @@ class Report(object):
             file_path = mozpath.join(dst, file_name)
             with open(file_path, 'wb') as f:
                 f.write(content)
-            print ("Created report: %s" % file_path)
+            print("Created report: %s" % file_path)

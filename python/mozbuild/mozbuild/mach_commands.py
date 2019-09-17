@@ -1340,7 +1340,7 @@ class Analyze(MachCommandBase):
             g.close()
         else:
             res = 'Please make sure you have a local tup db *or* specify the location with --path.'
-            print ('Could not find a valid tup db in ' + path, res, sep='\n')
+            print('Could not find a valid tup db in ' + path, res, sep='\n')
             return 1
 
     @SubCommand('analyze', 'all',
@@ -1361,7 +1361,7 @@ class Analyze(MachCommandBase):
         try:
             self.virtualenv_manager.install_pip_package('tablib==0.12.1')
         except Exception:
-            print ('Could not install tablib via pip.')
+            print('Could not install tablib via pip.')
             return 1
         if path is None:
             # go find tup db and make a cost_dict
@@ -1374,7 +1374,7 @@ class Analyze(MachCommandBase):
                 r.generate_output(format, limit, self.topobjdir)
             else:
                 res = 'Please specify the location of cost_dict.gz with --path.'
-                print ('Could not find %s to make a cost dictionary.' % db_path, res, sep='\n')
+                print('Could not find %s to make a cost dictionary.' % db_path, res, sep='\n')
                 return 1
         else:
             # path to cost_dict.gz was specified
@@ -1383,7 +1383,7 @@ class Analyze(MachCommandBase):
                 r.generate_output(format, limit, self.topobjdir)
             else:
                 res = 'Please specify the location of cost_dict.gz with --path.'
-                print ('Could not find cost_dict.gz at %s' % path, res, sep='\n')
+                print('Could not find cost_dict.gz at %s' % path, res, sep='\n')
                 return 1
 
 

@@ -57,7 +57,7 @@ class Graph(object):
         elif self.connect is None:
             raise Exception
         if not self.table_check():
-            print ('\n Tup db does not have the necessary tables.')
+            print('\n Tup db does not have the necessary tables.')
             raise Exception
         self.node_dict = {}
         self.results = None
@@ -95,7 +95,7 @@ class Graph(object):
                 WHERE dir=? AND name=?', (nodeid, part)).fetchone()
             # fetchone should be ok bc dir and and name combo is unique
             if ret is None:
-                print ("\nCould not find id number for '%s'" % filepath)
+                print("\nCould not find id number for '%s'" % filepath)
                 return None
             nodeid = ret[0]
         return nodeid
@@ -114,9 +114,9 @@ class Graph(object):
             if node is not None:
                 sec = node.cost / 1000.0
                 m, s = sec / 60, sec % 60
-                print ("\n------ Summary for %s ------\
-                    \nTotal Build Time (mm:ss) = %d:%d\nNum Downstream Commands = %d"
-                       % (f, m, s, node.num_cmds))
+                print("\n------ Summary for %s ------\
+                      \nTotal Build Time (mm:ss) = %d:%d\nNum Downstream Commands = %d"
+                      % (f, m, s, node.num_cmds))
 
     def populate(self):
         # make nodes for files with downstream commands
