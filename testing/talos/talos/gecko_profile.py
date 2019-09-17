@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """
-module to handle Gecko profilling.
+module to handle Gecko profiling.
 """
 from __future__ import absolute_import
 
@@ -21,7 +21,7 @@ LOG = get_proxy_logger()
 
 class GeckoProfile(object):
     """
-    Handle Gecko profilling.
+    Handle Gecko profiling.
 
     This allow to collect Gecko profiling data and to zip results in one file.
     """
