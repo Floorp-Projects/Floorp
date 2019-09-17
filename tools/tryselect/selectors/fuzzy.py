@@ -72,14 +72,14 @@ fzf_shortcuts = {
     '?': 'toggle-preview',
 }
 
-fzf_header_shortcuts = {
-    'cursor-up': 'ctrl-k',
-    'cursor-down': 'ctrl-j',
-    'toggle-select': 'tab',
-    'select-all': 'ctrl-a',
-    'accept': 'enter',
-    'cancel': 'ctrl-c',
-}
+fzf_header_shortcuts = [
+    ('select', 'tab'),
+    ('accept', 'enter'),
+    ('cancel', 'ctrl-c'),
+    ('select-all', 'ctrl-a'),
+    ('cursor-up', 'up'),
+    ('cursor-down', 'down'),
+]
 
 
 class FuzzyParser(BaseTryParser):
@@ -208,7 +208,7 @@ def fzf_bootstrap(update=False):
 
 def format_header():
     shortcuts = []
-    for action, key in sorted(fzf_header_shortcuts.iteritems()):
+    for action, key in fzf_header_shortcuts:
         shortcuts.append('{t.white}{action}{t.normal}: {t.yellow}<{key}>{t.normal}'.format(
                          t=terminal, action=action, key=key))
     return FZF_HEADER.format(shortcuts=', '.join(shortcuts), t=terminal)
