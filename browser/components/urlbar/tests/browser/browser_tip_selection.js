@@ -16,6 +16,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 const MEGABAR_PREF = "browser.urlbar.megabar";
+const HELP_URL = "about:mozilla";
+const TIP_URL = "about:about";
 
 // Tests keyboard selection within UrlbarUtils.RESULT_TYPE.TIP results.
 
@@ -64,8 +66,8 @@ add_task(async function tipIsSecondResult() {
         text: "This is a test intervention.",
         buttonText: "Done",
         data: "test",
-        helpUrl:
-          "https://support.mozilla.org/en-US/kb/delete-browsing-search-download-history-firefox",
+        helpUrl: HELP_URL,
+        buttonUrl: TIP_URL,
       }
     ),
     new UrlbarResult(
@@ -146,6 +148,29 @@ add_task(async function tipIsSecondResult() {
     "The selected element should be the tip help button."
   );
 
+  EventUtils.synthesizeKey("VK_RETURN");
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  Assert.equal(
+    gURLBar.value,
+    HELP_URL,
+    "Should have navigated to the tip's help page."
+  );
+
+  gURLBar.search("test");
+  await promiseSearchComplete();
+
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  Assert.ok(
+    UrlbarTestUtils.getSelectedElement(window).classList.contains(
+      "urlbarView-tip-button"
+    ),
+    "The selected element should be the tip button."
+  );
+  EventUtils.synthesizeKey("VK_RETURN");
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  Assert.equal(gURLBar.value, TIP_URL, "Should have navigated to the tip URL.");
+
   UrlbarProvidersManager.unregisterProvider(provider);
 });
 
@@ -164,9 +189,6 @@ add_task(async function tipIsOnlyResult() {
       }
     ),
   ];
-
-  // The previous test can interfere with this one if it's in the same window.
-  let newWin = await BrowserTestUtils.openNewBrowserWindow();
 
   let provider = new TipTestProvider(matches);
   UrlbarProvidersManager.registerProvider(provider);
@@ -228,5 +250,59 @@ add_task(async function tipIsOnlyResult() {
   );
 
   UrlbarProvidersManager.unregisterProvider(provider);
-  await BrowserTestUtils.closeWindow(newWin);
+});
+
+add_task(async function mouseSelection() {
+  let matches = [
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.TIP,
+      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      {
+        icon: "",
+        text: "This is a test intervention.",
+        buttonText: "Done",
+        data: "test",
+        helpUrl: HELP_URL,
+        buttonUrl: TIP_URL,
+      }
+    ),
+  ];
+
+  let provider = new TipTestProvider(matches);
+  UrlbarProvidersManager.registerProvider(provider);
+
+  gURLBar.search("test");
+  await promiseSearchComplete();
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  Assert.ok(
+    UrlbarTestUtils.getSelectedElement(window).classList.contains(
+      "urlbarView-tip-help"
+    ),
+    "The selected element should be the tip help button."
+  );
+  let element = UrlbarTestUtils.getSelectedElement(window);
+  EventUtils.synthesizeMouseAtCenter(element, {}, element.ownerGlobal);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  Assert.equal(
+    gURLBar.value,
+    HELP_URL,
+    "Should have navigated to the tip's help page."
+  );
+
+  gURLBar.search("test");
+  await promiseSearchComplete();
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  Assert.ok(
+    UrlbarTestUtils.getSelectedElement(window).classList.contains(
+      "urlbarView-tip-button"
+    ),
+    "The selected element should be the tip button."
+  );
+  element = UrlbarTestUtils.getSelectedElement(window);
+  EventUtils.synthesizeMouseAtCenter(element, {}, element.ownerGlobal);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  Assert.equal(gURLBar.value, TIP_URL, "Should have navigated to the tip URL.");
+
+  UrlbarProvidersManager.unregisterProvider(provider);
 });
