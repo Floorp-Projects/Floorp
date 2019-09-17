@@ -46,7 +46,7 @@ parent:
                      RTCIceServer[] iceServers,
                      RTCIceTransportPolicy icePolicy);
 
-  async SetProxyServer(TabId id,
+  async SetProxyConfig(TabId id,
                        LoadInfoArgs args, // Does this have the id?
                        nsCString alpn);
 
