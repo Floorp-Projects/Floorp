@@ -37,6 +37,7 @@ class FindInPageIntegration(
             }
             view.visibility = View.VISIBLE
             (feature as FindInPageFeature).bind(session)
+            view.layoutParams.height = toolbar.height
         }
     }
 }
