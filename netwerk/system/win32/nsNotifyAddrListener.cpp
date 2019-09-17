@@ -386,8 +386,12 @@ nsresult nsNotifyAddrListener::Init(void) {
   mCheckEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
   NS_ENSURE_TRUE(mCheckEvent, NS_ERROR_OUT_OF_MEMORY);
 
-  rv = NS_NewNamedThread("Link Monitor", getter_AddRefs(mThread), this);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIThreadPool> threadPool = new nsThreadPool();
+  MOZ_ALWAYS_SUCCEEDS(threadPool->SetThreadLimit(1));
+  MOZ_ALWAYS_SUCCEEDS(
+      threadPool->SetThreadStackSize(nsIThreadManager::kThreadPoolStackSize));
+  MOZ_ALWAYS_SUCCEEDS(threadPool->SetName(NS_LITERAL_CSTRING("Link Monitor")));
+  mThread = threadPool.forget();
 
   return NS_OK;
 }
@@ -404,7 +408,7 @@ nsresult nsNotifyAddrListener::Shutdown(void) {
   mShutdown = true;
   SetEvent(mCheckEvent);
 
-  nsresult rv = mThread ? mThread->Shutdown() : NS_OK;
+  nsresult rv = mThread ? mThread->ShutdownWithTimeout(2000) : NS_OK;
 
   // Have to break the cycle here, otherwise nsNotifyAddrListener holds
   // onto the thread and the thread holds onto the nsNotifyAddrListener
