@@ -10,12 +10,8 @@
       frameWindow = testFrame.contentWindow;
       testframe.remove();
 
-      try {
-        // Shouldn't crash at this line.
-        content.textContent = "location=" + frameWindow.location;
-      } catch (e) {
-        // location.toString() should throw after the BrowsingContext is discarded.
-      }
+      // Shouldn't crash at this line.
+      content.textContent = "location=" + frameWindow.location;
 
       document.documentElement.className = "";
     }
