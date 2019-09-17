@@ -172,10 +172,15 @@ void ProfileBuffer::CollectOverheadStats(TimeDuration aSamplingTime,
 }
 
 ProfilerBufferInfo ProfileBuffer::GetProfilerBufferInfo() const {
-  return {
-      BufferRangeStart(), BufferRangeEnd(), mEntries.BufferLength()->Value(),
-      mIntervalsNs,       mOverheadsNs,     mLockingsNs,
-      mCleaningsNs,       mCountersNs,      mThreadsNs};
+  return {BufferRangeStart(),
+          BufferRangeEnd(),
+          mEntries.BufferLength()->Value() / 8,  // 8 bytes per entry.
+          mIntervalsNs,
+          mOverheadsNs,
+          mLockingsNs,
+          mCleaningsNs,
+          mCountersNs,
+          mThreadsNs};
 }
 
 /* ProfileBufferCollector */
