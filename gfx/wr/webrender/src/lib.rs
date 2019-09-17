@@ -110,6 +110,7 @@ mod record;
 mod render_backend;
 mod render_target;
 mod render_task_graph;
+mod render_task_cache;
 mod render_task;
 mod renderer;
 mod resource_cache;
