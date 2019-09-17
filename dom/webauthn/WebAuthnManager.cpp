@@ -532,7 +532,19 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
       // Serialize transports.
       if (s.mTransports.WasPassed()) {
         uint8_t transports = 0;
-        for (const auto& t : s.mTransports.Value()) {
+
+        // Transports is a string, but we match it to an enumeration so
+        // that we have forward-compatibility, ignoring unknown transports.
+        for (const nsAString& str : s.mTransports.Value()) {
+          NS_ConvertUTF16toUTF8 cStr(str);
+          int i = FindEnumStringIndexImpl(
+              cStr.get(), cStr.Length(), AuthenticatorTransportValues::strings);
+          if (i < 0 ||
+              i >= static_cast<int>(AuthenticatorTransport::EndGuard_)) {
+            continue;  // Unknown enum
+          }
+          AuthenticatorTransport t = static_cast<AuthenticatorTransport>(i);
+
           if (t == AuthenticatorTransport::Usb) {
             transports |= U2F_AUTHENTICATOR_TRANSPORT_USB;
           }
