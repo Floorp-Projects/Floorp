@@ -25,11 +25,11 @@ async function enableExtensionDebugging() {
 /**
  * Install an extension using the AddonManager so it does not show up as temporary.
  */
-function installRegularExtension(pathOrFile) {
+async function installRegularExtension(pathOrFile) {
   const isFile = typeof pathOrFile.isFile === "function" && pathOrFile.isFile();
   const file = isFile ? pathOrFile : _getSupportsFile(pathOrFile).file;
-  return new Promise(async (resolve, reject) => {
-    const install = await AddonManager.getInstallForFile(file);
+  const install = await AddonManager.getInstallForFile(file);
+  return new Promise((resolve, reject) => {
     if (!install) {
       throw new Error(`An install was not created for ${file.path}`);
     }

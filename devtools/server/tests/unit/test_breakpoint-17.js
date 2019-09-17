@@ -46,10 +46,10 @@ add_task(
   })
 );
 
-function set_breakpoints(packet, threadFront) {
-  return new Promise(async resolve => {
+async function set_breakpoints(packet, threadFront) {
+  const source = await getSourceById(threadFront, packet.frame.where.actor);
+  return new Promise(resolve => {
     let first, second;
-    const source = await getSourceById(threadFront, packet.frame.where.actor);
 
     source
       .setBreakpoint(firstLocation)
