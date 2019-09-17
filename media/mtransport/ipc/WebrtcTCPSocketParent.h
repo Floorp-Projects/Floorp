@@ -26,7 +26,8 @@ class WebrtcTCPSocketParent : public PWebrtcTCPSocketParent,
   mozilla::ipc::IPCResult RecvAsyncOpen(const nsCString& aHost,
                                         const int& aPort,
                                         const LoadInfoArgs& aLoadInfoArgs,
-                                        const nsCString& aAlpn) override;
+                                        const nsCString& aAlpn,
+                                        const int& aProxyPolicy) override;
 
   mozilla::ipc::IPCResult RecvWrite(nsTArray<uint8_t>&& aWriteData) override;
 

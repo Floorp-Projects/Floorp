@@ -140,7 +140,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
  private:
   void InitLocalAddrs();  // for stun local address IPC request
   nsresult InitProxy();
-  void SetProxy();
+  std::unique_ptr<NrSocketProxyConfig> GetProxyConfig() const;
 
   class StunAddrsHandler : public net::StunAddrsListener {
    public:
@@ -186,7 +186,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
                           const CandidateInfo& aCandidateInfo);
 
   bool IsIceCtxReady() const {
-    return mProxyResolveCompleted && mLocalAddrsCompleted;
+    return !mWaitingOnProxyLookup && mLocalAddrsCompleted;
   }
 
   // The parent PC
@@ -209,11 +209,10 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // gathering or start checking)
   std::vector<nsCOMPtr<nsIRunnable>> mQueuedIceCtxOperations;
 
-  // Used to track the state of the request.
-  bool mProxyResolveCompleted;
-
-  // Used to track proxy existence and socket proxy configuration.
-  std::unique_ptr<NrSocketProxyConfig> mProxyConfig;
+  // If the "media.peerconnection.ice.proxy_only_if_behind_proxy" pref is set,
+  // we need to test this before we can know what proxy policy to use.
+  bool mWaitingOnProxyLookup;
+  bool mForceProxy;
 
   // Used to cancel incoming stun addrs response
   RefPtr<net::StunAddrsRequestChild> mStunAddrsRequest;

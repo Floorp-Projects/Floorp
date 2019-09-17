@@ -26,7 +26,8 @@ class MediaTransportParent : public dom::PMediaTransportParent {
       const RTCIceTransportPolicy& icePolicy);
   mozilla::ipc::IPCResult RecvSetProxyConfig(const dom::TabId& tabId,
                                              const net::LoadInfoArgs& args,
-                                             const nsCString& alpn);
+                                             const nsCString& alpn,
+                                             const int& proxyPolicy);
   mozilla::ipc::IPCResult RecvEnsureProvisionalTransport(
       const string& transportId, const string& localUfrag,
       const string& localPwd, const int& componentCount);

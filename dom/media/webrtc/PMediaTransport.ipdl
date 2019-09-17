@@ -48,7 +48,8 @@ parent:
 
   async SetProxyConfig(TabId id,
                        LoadInfoArgs args, // Does this have the id?
-                       nsCString alpn);
+                       nsCString alpn,
+                       int proxyPolicy);
 
   async EnsureProvisionalTransport(string transportId,
                                    string localUfrag,

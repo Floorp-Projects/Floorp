@@ -21,6 +21,7 @@
 #include "mozilla/dom/ipc/IdType.h"     // TabId
 #include "mozilla/dom/PContentChild.h"  // LoadInfoArgs
 #include "nsIProtocolProxyCallback.h"
+#include "mtransport/nr_socket_proxy_config.h"
 
 class nsISocketTransport;
 
@@ -52,7 +53,8 @@ class WebrtcTCPSocket : public nsIHttpUpgradeListener,
 
   void SetTabId(dom::TabId aTabId);
   nsresult Open(const nsCString& aHost, const int& aPort,
-                const net::LoadInfoArgs& aArgs, const nsCString& aAlpn);
+                const net::LoadInfoArgs& aArgs, const nsCString& aAlpn,
+                NrSocketProxyConfig::ProxyPolicy aProxyPolicy);
   nsresult Write(nsTArray<uint8_t>&& aBytes);
   nsresult Close();
 
@@ -75,6 +77,7 @@ class WebrtcTCPSocket : public nsIHttpUpgradeListener,
   net::LoadInfoArgs mLoadInfoArgs;
   nsCString mAlpn;
   bool mSsl = false;
+  bool mForceProxy = false;
 
   nsresult DoProxyConfigLookup();
   nsresult OpenWithHttpProxy();

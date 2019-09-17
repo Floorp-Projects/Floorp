@@ -163,8 +163,6 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
   RefPtr<NrIceCtx> mIceCtx;
   RefPtr<NrIceResolver> mDNSResolver;
   std::map<std::string, Transport> mTransports;
-  bool mProxyOnlyIfBehindProxy = false;
-  bool mProxyOnly = false;
   bool mObfuscateHostAddresses = false;
 
   // mDNS Support
@@ -430,11 +428,6 @@ nsresult MediaTransportHandlerSTS::CreateIceCtx(
                                               __func__);
         }
 
-        mProxyOnlyIfBehindProxy = Preferences::GetBool(
-            "media.peerconnection.ice.proxy_only_if_behind_proxy", false);
-        mProxyOnly =
-            Preferences::GetBool("media.peerconnection.ice.proxy_only", false);
-
         mIceCtx->SignalGatheringStateChange.connect(
             this, &MediaTransportHandlerSTS::OnGatheringStateChange);
         mIceCtx->SignalConnectionStateChange.connect(
@@ -657,17 +650,13 @@ void MediaTransportHandlerSTS::StartIceGathering(
   mInitPromise->Then(
       mStsThread, __func__,
       [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
-        if (mIceCtx->GetProxyConfig() && mProxyOnlyIfBehindProxy) {
-          mProxyOnly = true;
-        }
-
         mObfuscateHostAddresses = aObfuscateHostAddresses;
 
         // Belt and suspenders - in e10s mode, the call below to SetStunAddrs
         // needs to have the proper flags set on ice ctx.  For non-e10s,
         // setting those flags happens in StartGathering.  We could probably
         // just set them here, and only do it here.
-        mIceCtx->SetCtxFlags(aDefaultRouteOnly, mProxyOnly);
+        mIceCtx->SetCtxFlags(aDefaultRouteOnly);
 
         if (aStunAddrs.Length()) {
           mIceCtx->SetStunAddrs(aStunAddrs);
@@ -675,8 +664,7 @@ void MediaTransportHandlerSTS::StartIceGathering(
 
         // Start gathering, but only if there are streams
         if (!mIceCtx->GetStreams().empty()) {
-          mIceCtx->StartGathering(aDefaultRouteOnly, mProxyOnly,
-                                  aObfuscateHostAddresses);
+          mIceCtx->StartGathering(aDefaultRouteOnly, aObfuscateHostAddresses);
           return;
         }
 

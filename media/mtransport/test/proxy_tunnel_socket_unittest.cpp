@@ -37,7 +37,8 @@ class NrTcpSocketTest : public MtransportTest {
   void SetUp() override {
     nsCString alpn = NS_LITERAL_CSTRING("webrtc");
     std::shared_ptr<NrSocketProxyConfig> config;
-    config.reset(new NrSocketProxyConfig(0, alpn, net::LoadInfoArgs()));
+    config.reset(new NrSocketProxyConfig(0, alpn, net::LoadInfoArgs(),
+                                         NrSocketProxyConfig::kForceProxy));
     // config is never used but must be non-null
     mSProxy = new NrTcpSocket(config);
     int r = nr_socket_create_int((void*)mSProxy.get(), mSProxy->vtbl(),

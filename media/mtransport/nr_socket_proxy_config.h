@@ -19,8 +19,11 @@ class LoadInfoArgs;
 
 class NrSocketProxyConfig {
  public:
+  typedef enum { kDisableProxy, kEnableProxy, kForceProxy } ProxyPolicy;
+
   NrSocketProxyConfig(uint64_t aTabId, const nsCString& aAlpn,
-                      const net::LoadInfoArgs& aArgs);
+                      const net::LoadInfoArgs& aArgs, ProxyPolicy aProxyPolicy);
+
   // We need to actually write the default impl ourselves, because the compiler
   // needs to know how to destroy mPrivate in case an exception is thrown, even
   // though we disable exceptions in our build.
@@ -31,6 +34,7 @@ class NrSocketProxyConfig {
   uint64_t GetTabId() const;
   const nsCString& GetAlpn() const;
   const net::LoadInfoArgs& GetLoadInfoArgs() const;
+  ProxyPolicy GetProxyPolicy() const;
 
  private:
   // LoadInfoArgs includes stuff that conflicts with nICEr includes.
