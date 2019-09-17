@@ -13,6 +13,7 @@
 #include "nsIRunnable.h"
 #include "nsIObserver.h"
 #include "nsThreadUtils.h"
+#include "nsThreadPool.h"
 #include "nsCOMPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Mutex.h"
@@ -60,7 +61,9 @@ class nsNotifyAddrListener : public nsINetworkLinkService,
   bool CheckICSGateway(PIP_ADAPTER_ADDRESSES aAdapter);
   bool CheckICSStatus(PWCHAR aAdapterName);
 
-  nsCOMPtr<nsIThread> mThread;
+  // This threadpool only ever holds 1 thread. It is a threadpool and not a
+  // regular thread so that we may call shutdownWithTimeout on it.
+  nsCOMPtr<nsIThreadPool> mThread;
 
  private:
   // Returns the new timeout period for coalescing (or INFINITE)
