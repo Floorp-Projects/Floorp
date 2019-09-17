@@ -3559,7 +3559,6 @@ var BrowserOnClick = {
     mm.addMessageListener("Browser:SiteBlockedError", this);
     mm.addMessageListener("Browser:SetSSLErrorReportAuto", this);
     mm.addMessageListener("Browser:ResetSSLPreferences", this);
-    mm.addMessageListener("Browser:SSLErrorReportTelemetry", this);
   },
 
   uninit() {
@@ -3568,7 +3567,6 @@ var BrowserOnClick = {
     mm.removeMessageListener("Browser:SiteBlockedError", this);
     mm.removeMessageListener("Browser:SetSSLErrorReportAuto", this);
     mm.removeMessageListener("Browser:ResetSSLPreferences", this);
-    mm.removeMessageListener("Browser:SSLErrorReportTelemetry", this);
   },
 
   receiveMessage(msg) {
@@ -3609,12 +3607,6 @@ var BrowserOnClick = {
           bin = TLS_ERROR_REPORT_TELEMETRY_AUTO_CHECKED;
         }
         Services.telemetry.getHistogramById("TLS_ERROR_REPORT_UI").add(bin);
-        break;
-      case "Browser:SSLErrorReportTelemetry":
-        let reportStatus = msg.data.reportStatus;
-        Services.telemetry
-          .getHistogramById("TLS_ERROR_REPORT_UI")
-          .add(reportStatus);
         break;
     }
   },
