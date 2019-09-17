@@ -227,10 +227,6 @@ pref("browser.cache.offline.insecure.enable",  false);
 // offline cache capacity in kilobytes
 pref("browser.cache.offline.capacity",         512000);
 
-// the user should be warned if offline app disk usage exceeds this amount
-// (in kilobytes)
-pref("offline-apps.quota.warn",        51200);
-
 // Don't show "Open with" option on download dialog if true.
 pref("browser.download.forbid_open_with", false);
 
