@@ -26,35 +26,36 @@ class ProfilerMarker;
 
 // NOTE!  If you add entries, you need to verify if they need to be added to the
 // switch statement in DuplicateLastSample!
-#define FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(MACRO)                   \
-  MACRO(CategoryPair, int)                                          \
-  MACRO(CollectionStart, double)                                    \
-  MACRO(CollectionEnd, double)                                      \
-  MACRO(Label, const char*)                                         \
-  MACRO(FrameFlags, uint64_t)                                       \
-  MACRO(DynamicStringFragment, char*) /* char[kNumChars], really */ \
-  MACRO(JitReturnAddr, void*)                                       \
-  MACRO(LineNumber, int)                                            \
-  MACRO(ColumnNumber, int)                                          \
-  MACRO(NativeLeafAddr, void*)                                      \
-  MACRO(Marker, ProfilerMarker*)                                    \
-  MACRO(Pause, double)                                              \
-  MACRO(Responsiveness, double)                                     \
-  MACRO(Resume, double)                                             \
-  MACRO(ThreadId, int)                                              \
-  MACRO(Time, double)                                               \
-  MACRO(CounterId, void*)                                           \
-  MACRO(CounterKey, uint64_t)                                       \
-  MACRO(Number, uint64_t)                                           \
-  MACRO(Count, int64_t)                                             \
-  MACRO(ProfilerOverheadTime, double)                               \
-  MACRO(ProfilerOverheadDuration, double)
+// This will evaluate the MACRO with (KIND, TYPE, SIZE)
+#define FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(MACRO)                    \
+  MACRO(CategoryPair, int, sizeof(int))                              \
+  MACRO(CollectionStart, double, sizeof(double))                     \
+  MACRO(CollectionEnd, double, sizeof(double))                       \
+  MACRO(Label, const char*, sizeof(const char*))                     \
+  MACRO(FrameFlags, uint64_t, sizeof(uint64_t))                      \
+  MACRO(DynamicStringFragment, char*, ProfileBufferEntry::kNumChars) \
+  MACRO(JitReturnAddr, void*, sizeof(void*))                         \
+  MACRO(LineNumber, int, sizeof(int))                                \
+  MACRO(ColumnNumber, int, sizeof(int))                              \
+  MACRO(NativeLeafAddr, void*, sizeof(void*))                        \
+  MACRO(Marker, ProfilerMarker*, sizeof(ProfilerMarker*))            \
+  MACRO(Pause, double, sizeof(double))                               \
+  MACRO(Responsiveness, double, sizeof(double))                      \
+  MACRO(Resume, double, sizeof(double))                              \
+  MACRO(ThreadId, int, sizeof(int))                                  \
+  MACRO(Time, double, sizeof(double))                                \
+  MACRO(CounterId, void*, sizeof(void*))                             \
+  MACRO(CounterKey, uint64_t, sizeof(uint64_t))                      \
+  MACRO(Number, uint64_t, sizeof(uint64_t))                          \
+  MACRO(Count, int64_t, sizeof(int64_t))                             \
+  MACRO(ProfilerOverheadTime, double, sizeof(double))                \
+  MACRO(ProfilerOverheadDuration, double, sizeof(double))
 
 class ProfileBufferEntry {
  public:
   enum class Kind : uint8_t {
     INVALID = 0,
-#define KIND(k, t) k,
+#define KIND(KIND, TYPE, SIZE) KIND,
     FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(KIND)
 #undef KIND
         LIMIT
@@ -78,17 +79,17 @@ class ProfileBufferEntry {
   ProfileBufferEntry(Kind aKind, int aInt);
 
  public:
-#define CTOR(k, t)                            \
-  static ProfileBufferEntry k(t aVal) {       \
-    return ProfileBufferEntry(Kind::k, aVal); \
+#define CTOR(KIND, TYPE, SIZE)                   \
+  static ProfileBufferEntry KIND(TYPE aVal) {    \
+    return ProfileBufferEntry(Kind::KIND, aVal); \
   }
   FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(CTOR)
 #undef CTOR
 
   Kind GetKind() const { return mKind; }
 
-#define IS_KIND(k, t) \
-  bool Is##k() const { return mKind == Kind::k; }
+#define IS_KIND(KIND, TYPE, SIZE) \
+  bool Is##KIND() const { return mKind == Kind::KIND; }
   FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(IS_KIND)
 #undef IS_KIND
 
