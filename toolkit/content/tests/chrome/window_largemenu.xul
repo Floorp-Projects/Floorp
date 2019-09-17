@@ -102,7 +102,7 @@ function popupShown()
 
   var popup = document.getElementById("popup");
   var rect = popup.getBoundingClientRect();
-  var scrollbox = document.getAnonymousNodes(popup)[0].scrollbox;
+  var scrollbox = popup.scrollBox.scrollbox;
   var expectedScrollPos = 0;
 
   if (gTestIndex == 0) {
@@ -225,10 +225,10 @@ function contextMenuPopupShown()
   var popup = document.getElementById("popup");
   var rect = popup.getBoundingClientRect();
   var labelrect = document.getElementById("label").getBoundingClientRect();
-  
+
   // Click to open popup in popupHidden() occurs at (4,4) in label's coordinate space
   var clickX = clickY = 4;
-  
+
   var testPopupAppearedRightOfCursor = true;
   switch (gTests[gTestIndex]) {
     case "context menu enough space below":

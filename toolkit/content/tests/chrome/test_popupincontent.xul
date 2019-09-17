@@ -6,8 +6,8 @@
         onload="setTimeout(nextTest, 0);"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
-  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
 <!--
   This test checks that popups in content areas don't extend past the content area.
@@ -83,8 +83,15 @@ function nextTest()
   }
 }
 
-function popupShown()
+async function popupShown()
 {
+  // Popup may have wrong initial size in non e10s mode tests, because
+  // layout is not yet ready for popup content lazy population on
+  // popupshowing event.
+  await new Promise(r =>
+    requestAnimationFrame(() => requestAnimationFrame(r))
+  );
+
   var windowrect = document.documentElement.getBoundingClientRect();
   var popuprect = $("popup").getBoundingClientRect();
 
@@ -114,7 +121,7 @@ function popupShown()
 
   $("menu").open = false;
 }
- 
+
 ]]>
 </script>
 

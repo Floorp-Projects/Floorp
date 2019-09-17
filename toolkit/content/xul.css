@@ -229,7 +229,6 @@ menubar > menu:empty {
 /********* menupopup, panel, & tooltip ***********/
 
 menupopup {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#popup");
   -moz-box-orient: vertical;
 }
 
@@ -513,17 +512,6 @@ menulist[popuponly="true"] {
   height: 0 !important;
   min-height: 0 !important;
   border: 0 !important;
-}
-
-menulist > menupopup > .popup-internal-box > .scrollbutton-up,
-menulist > menupopup > .popup-internal-box > .arrowscrollbox-overflow-start-indicator,
-menulist > menupopup > .popup-internal-box > .arrowscrollbox-overflow-end-indicator,
-menulist > menupopup > .popup-internal-box > .scrollbutton-down {
-  display: none;
-}
-
-menulist > menupopup > .popup-internal-box > .arrowscrollbox-scrollbox {
-  overflow: auto;
 }
 
 /********** splitter **********/
