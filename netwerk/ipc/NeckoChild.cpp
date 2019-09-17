@@ -29,7 +29,7 @@
 #ifdef MOZ_WEBRTC
 #  include "mozilla/net/ProxyConfigLookupChild.h"
 #  include "mozilla/net/StunAddrsRequestChild.h"
-#  include "mozilla/net/WebrtcProxyChannelChild.h"
+#  include "mozilla/net/WebrtcTCPSocketChild.h"
 #endif
 
 #include "SerializedLoadContext.h"
@@ -95,21 +95,19 @@ bool NeckoChild::DeallocPStunAddrsRequestChild(PStunAddrsRequestChild* aActor) {
   return true;
 }
 
-PWebrtcProxyChannelChild* NeckoChild::AllocPWebrtcProxyChannelChild(
+PWebrtcTCPSocketChild* NeckoChild::AllocPWebrtcTCPSocketChild(
     const TabId& tabId) {
   // We don't allocate here: instead we always use IPDL constructor that takes
   // an existing object
   MOZ_ASSERT_UNREACHABLE(
-      "AllocPWebrtcProxyChannelChild should not be called on"
+      "AllocPWebrtcTCPSocketChild should not be called on"
       " child");
   return nullptr;
 }
 
-bool NeckoChild::DeallocPWebrtcProxyChannelChild(
-    PWebrtcProxyChannelChild* aActor) {
+bool NeckoChild::DeallocPWebrtcTCPSocketChild(PWebrtcTCPSocketChild* aActor) {
 #ifdef MOZ_WEBRTC
-  WebrtcProxyChannelChild* child =
-      static_cast<WebrtcProxyChannelChild*>(aActor);
+  WebrtcTCPSocketChild* child = static_cast<WebrtcTCPSocketChild*>(aActor);
   child->ReleaseIPDLReference();
 #endif
   return true;

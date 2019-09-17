@@ -43,7 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "mozilla/ErrorNames.h"
 
-#include "WebrtcProxyChannelWrapper.h"
+#include "WebrtcTCPSocketWrapper.h"
 
 namespace mozilla {
 using namespace net;
@@ -68,14 +68,14 @@ NrSocketProxy::NrSocketProxy(const shared_ptr<NrSocketProxyConfig>& aConfig)
     : mClosed(false),
       mReadOffset(0),
       mConfig(aConfig),
-      mWebrtcProxyChannel(nullptr) {
+      mWebrtcTCPSocket(nullptr) {
   r_log(LOG_GENERIC, LOG_DEBUG, "NrSocketProxy::NrSocketProxy %p\n", this);
   MOZ_ASSERT(mConfig, "config should not be null");
 }
 
 NrSocketProxy::~NrSocketProxy() {
   r_log(LOG_GENERIC, LOG_DEBUG, "NrSocketProxy::~NrSocketProxy %p\n", this);
-  MOZ_ASSERT(!mWebrtcProxyChannel, "webrtc proxy channel not null");
+  MOZ_ASSERT(!mWebrtcTCPSocket, "webrtc proxy channel not null");
 }
 
 int NrSocketProxy::create(nr_transport_addr* aAddr) {
@@ -104,9 +104,9 @@ int NrSocketProxy::connect(nr_transport_addr* aAddr) {
     return R_FAILED;
   }
 
-  mWebrtcProxyChannel = new WebrtcProxyChannelWrapper(this);
+  mWebrtcTCPSocket = new WebrtcTCPSocketWrapper(this);
 
-  mWebrtcProxyChannel->AsyncOpen(host, port, mConfig);
+  mWebrtcTCPSocket->AsyncOpen(host, port, mConfig);
 
   // trigger nr_socket_buffered to set write/read callback
   return R_WOULDBLOCK;
@@ -122,9 +122,9 @@ void NrSocketProxy::close() {
   mClosed = true;
 
   // We're not always open at this point.
-  if (mWebrtcProxyChannel) {
-    mWebrtcProxyChannel->Close();
-    mWebrtcProxyChannel = nullptr;
+  if (mWebrtcTCPSocket) {
+    mWebrtcTCPSocket->Close();
+    mWebrtcTCPSocket = nullptr;
   }
 }
 
@@ -147,7 +147,7 @@ int NrSocketProxy::write(const void* aBuffer, size_t aCount, size_t* aWrote) {
     writeData.SetLength(aCount);
     memcpy(writeData.Elements(), aBuffer, aCount);
 
-    mWebrtcProxyChannel->SendWrite(std::move(writeData));
+    mWebrtcTCPSocket->SendWrite(std::move(writeData));
   }
 
   return 0;
@@ -218,7 +218,7 @@ int NrSocketProxy::accept(nr_transport_addr* aAddr, nr_socket** aSocket) {
   return R_INTERNAL;
 }
 
-// WebrtcProxyChannelCallback
+// WebrtcTCPSocketCallback
 void NrSocketProxy::OnClose(nsresult aReason) {
   nsCString errorName;
   GetErrorName(aReason, errorName);
@@ -260,7 +260,7 @@ void NrSocketProxy::DoCallbacks() {
 
   // We're always ready to write after we're connected. The parent process will
   // buffer writes for us.
-  if (!mClosed && mWebrtcProxyChannel && (poll_flags() & PR_POLL_WRITE) != 0) {
+  if (!mClosed && mWebrtcTCPSocket && (poll_flags() & PR_POLL_WRITE) != 0) {
     fire_callback(NR_ASYNC_WAIT_WRITE);
   }
 }
@@ -279,9 +279,8 @@ size_t NrSocketProxy::CountUnreadBytes() const {
   return count;
 }
 
-void NrSocketProxy::AssignChannel_DoNotUse(
-    WebrtcProxyChannelWrapper* aWrapper) {
-  mWebrtcProxyChannel = aWrapper;
+void NrSocketProxy::AssignChannel_DoNotUse(WebrtcTCPSocketWrapper* aWrapper) {
+  mWebrtcTCPSocket = aWrapper;
 }
 
 }  // namespace mozilla

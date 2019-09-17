@@ -4,24 +4,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_net_WebrtcProxyChannelParent_h
-#define mozilla_net_WebrtcProxyChannelParent_h
+#ifndef mozilla_net_WebrtcTCPSocketParent_h
+#define mozilla_net_WebrtcTCPSocketParent_h
 
-#include "mozilla/net/PWebrtcProxyChannelParent.h"
+#include "mozilla/net/PWebrtcTCPSocketParent.h"
 
-#include "WebrtcProxyChannelCallback.h"
+#include "WebrtcTCPSocketCallback.h"
 
 class nsIAuthPromptProvider;
 
 namespace mozilla {
 namespace net {
 
-class WebrtcProxyChannel;
+class WebrtcTCPSocket;
 
-class WebrtcProxyChannelParent : public PWebrtcProxyChannelParent,
-                                 public WebrtcProxyChannelCallback {
+class WebrtcTCPSocketParent : public PWebrtcTCPSocketParent,
+                              public WebrtcTCPSocketCallback {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcProxyChannelParent, override)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcTCPSocketParent, override)
 
   mozilla::ipc::IPCResult RecvAsyncOpen(const nsCString& aHost,
                                         const int& aPort,
@@ -34,9 +34,9 @@ class WebrtcProxyChannelParent : public PWebrtcProxyChannelParent,
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  explicit WebrtcProxyChannelParent(dom::TabId aTabId);
+  explicit WebrtcTCPSocketParent(dom::TabId aTabId);
 
-  // WebrtcProxyChannelCallback
+  // WebrtcTCPSocketCallback
   void OnClose(nsresult aReason) override;
   void OnConnected() override;
   void OnRead(nsTArray<uint8_t>&& bytes) override;
@@ -45,16 +45,16 @@ class WebrtcProxyChannelParent : public PWebrtcProxyChannelParent,
   void ReleaseIPDLReference() { Release(); }
 
  protected:
-  virtual ~WebrtcProxyChannelParent();
+  virtual ~WebrtcTCPSocketParent();
 
  private:
   void CleanupChannel();
 
   // Indicates that IPC is open.
-  RefPtr<WebrtcProxyChannel> mChannel;
+  RefPtr<WebrtcTCPSocket> mChannel;
 };
 
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // mozilla_net_WebrtcProxyChannelParent_h
+#endif  // mozilla_net_WebrtcTCPSocketParent_h

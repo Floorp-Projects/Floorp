@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef webrtc_proxy_channel_h__
-#define webrtc_proxy_channel_h__
+#ifndef webrtc_tcp_socket_h__
+#define webrtc_tcp_socket_h__
 
 #include <list>
 
@@ -27,16 +27,16 @@ class nsISocketTransport;
 namespace mozilla {
 namespace net {
 
-class WebrtcProxyChannelCallback;
-class WebrtcProxyData;
+class WebrtcTCPSocketCallback;
+class WebrtcTCPData;
 
-class WebrtcProxyChannel : public nsIHttpUpgradeListener,
-                           public nsIStreamListener,
-                           public nsIInputStreamCallback,
-                           public nsIOutputStreamCallback,
-                           public nsIInterfaceRequestor,
-                           public nsIAuthPromptProvider,
-                           public nsIProtocolProxyCallback {
+class WebrtcTCPSocket : public nsIHttpUpgradeListener,
+                        public nsIStreamListener,
+                        public nsIInputStreamCallback,
+                        public nsIOutputStreamCallback,
+                        public nsIInterfaceRequestor,
+                        public nsIAuthPromptProvider,
+                        public nsIProtocolProxyCallback {
  public:
   NS_DECL_NSIHTTPUPGRADELISTENER
   NS_DECL_NSIINPUTSTREAMCALLBACK
@@ -48,7 +48,7 @@ class WebrtcProxyChannel : public nsIHttpUpgradeListener,
   NS_FORWARD_SAFE_NSIAUTHPROMPTPROVIDER(mAuthProvider)
   NS_DECL_NSIPROTOCOLPROXYCALLBACK
 
-  explicit WebrtcProxyChannel(WebrtcProxyChannelCallback* aCallbacks);
+  explicit WebrtcTCPSocket(WebrtcTCPSocketCallback* aCallbacks);
 
   void SetTabId(dom::TabId aTabId);
   nsresult Open(const nsCString& aHost, const int& aPort,
@@ -59,14 +59,14 @@ class WebrtcProxyChannel : public nsIHttpUpgradeListener,
   size_t CountUnwrittenBytes() const;
 
  protected:
-  virtual ~WebrtcProxyChannel();
+  virtual ~WebrtcTCPSocket();
 
   // protected for gtests
   virtual void InvokeOnClose(nsresult aReason);
   virtual void InvokeOnConnected();
   virtual void InvokeOnRead(nsTArray<uint8_t>&& aReadData);
 
-  RefPtr<WebrtcProxyChannelCallback> mProxyCallbacks;
+  RefPtr<WebrtcTCPSocketCallback> mProxyCallbacks;
 
  private:
   bool mClosed;
@@ -85,7 +85,7 @@ class WebrtcProxyChannel : public nsIHttpUpgradeListener,
   void CloseWithReason(nsresult aReason);
 
   size_t mWriteOffset;
-  std::list<WebrtcProxyData> mWriteQueue;
+  std::list<WebrtcTCPData> mWriteQueue;
   nsCOMPtr<nsIAuthPromptProvider> mAuthProvider;
 
   // Indicates that the channel is CONNECTed
@@ -99,4 +99,4 @@ class WebrtcProxyChannel : public nsIHttpUpgradeListener,
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // webrtc_proxy_channel_h__
+#endif  // webrtc_tcp_socket_h__
