@@ -37,8 +37,9 @@ add_task(async function test() {
         "infoGroups must have the same length of adjustedCerts"
       );
 
-      let tabName = certificateSection.shadowRoot.querySelector("#tab0")
-        .textContent;
+      let tabName = certificateSection.shadowRoot.querySelector(
+        ".certificate-tabs"
+      ).children[0].innerText;
       Assert.equal(tabName, expectedTabName, "Tab name should be the same");
 
       function getElementByAttribute(source, property, target) {
@@ -50,26 +51,10 @@ add_task(async function test() {
         return null;
       }
 
-      function checkBooleans(got, expected) {
-        let gotBool;
-        if (got === "Yes") {
-          gotBool = true;
-        } else if (got === "No") {
-          gotBool = false;
-        } else {
-          gotBool = null;
-        }
-        Assert.equal(
-          gotBool,
-          expected,
-          "If adjustedCertElments returned a true, this value should be Yes, otherwise it should be No"
-        );
-      }
-
       for (let infoGroup of infoGroups) {
         let sectionTitle = infoGroup.shadowRoot.querySelector(
           ".info-group-title"
-        ).textContent;
+        ).innerText;
 
         let adjustedCertsElem = getElementByAttribute(
           adjustedCerts,
@@ -115,11 +100,6 @@ add_task(async function test() {
             adjustedCertsElemInfo = "";
           }
 
-          if (typeof adjustedCertsElemInfo === "boolean") {
-            checkBooleans(infoItemInfo, adjustedCertsElemInfo);
-            continue;
-          }
-
           if (
             adjustedCertsElemLabel === "timestamp" ||
             adjustedCertsElemLabel === "not-after" ||
@@ -134,7 +114,10 @@ add_task(async function test() {
             continue;
           }
 
-          if (Array.isArray(adjustedCertsElemInfo)) {
+          if (
+            typeof adjustedCertsElemInfo !== "string" ||
+            Array.isArray(adjustedCertsElemInfo)
+          ) {
             // there is a case where we have a boolean
             adjustedCertsElemInfo = adjustedCertsElemInfo
               .toString()
