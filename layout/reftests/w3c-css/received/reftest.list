@@ -606,7 +606,7 @@ fuzzy-if(OSX||winWidget,0-255,0-1540) == css-writing-modes/block-flow-direction-
 fuzzy-if(OSX||winWidget,0-255,0-1540) == css-writing-modes/block-flow-direction-slr-054.xht css-writing-modes/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,0-255,0-1540) == css-writing-modes/block-flow-direction-slr-055.xht css-writing-modes/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,0-255,0-1540) == css-writing-modes/block-flow-direction-slr-056.xht css-writing-modes/block-flow-direction-001-ref.xht
-fails == css-writing-modes/block-flow-direction-slr-058.xht css-writing-modes/block-flow-direction-001-ref.xht
+fuzzy-if(OSX||winWidget,0-255,0-1540) == css-writing-modes/block-flow-direction-slr-058.xht css-writing-modes/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,0-255,0-1540) == css-writing-modes/block-flow-direction-slr-060.xht css-writing-modes/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,0-255,0-1540) == css-writing-modes/block-flow-direction-slr-062.xht css-writing-modes/block-flow-direction-043-ref.xht
 fuzzy-if(OSX||winWidget,0-255,0-1540) == css-writing-modes/block-flow-direction-slr-063.xht css-writing-modes/block-flow-direction-043-ref.xht
@@ -708,14 +708,14 @@ fuzzy-if(OSX||winWidget,0-215,0-780) == css-writing-modes/central-baseline-align
 == css-writing-modes/clip-rect-vrl-012.xht css-writing-modes/clip-rect-vrl-012-ref.xht
 == css-writing-modes/clip-rect-vrl-014.xht css-writing-modes/clip-rect-vrl-014-ref.xht
 == css-writing-modes/clip-rect-vrl-016.xht css-writing-modes/clip-rect-vrl-016-ref.xht
-fails == css-writing-modes/contiguous-floated-table-vlr-003.xht reference/ref-filled-green-100px-square.xht
-fails == css-writing-modes/contiguous-floated-table-vlr-005.xht reference/ref-filled-green-100px-square.xht
-fails == css-writing-modes/contiguous-floated-table-vlr-007.xht reference/ref-filled-green-100px-square.xht
-fails == css-writing-modes/contiguous-floated-table-vlr-009.xht reference/ref-filled-green-100px-square.xht
-fails == css-writing-modes/contiguous-floated-table-vrl-002.xht reference/ref-filled-green-100px-square.xht
-fails == css-writing-modes/contiguous-floated-table-vrl-004.xht reference/ref-filled-green-100px-square.xht
-fails == css-writing-modes/contiguous-floated-table-vrl-006.xht reference/ref-filled-green-100px-square.xht
-fails == css-writing-modes/contiguous-floated-table-vrl-008.xht reference/ref-filled-green-100px-square.xht
+== css-writing-modes/contiguous-floated-table-vlr-003.xht reference/ref-filled-green-100px-square.xht
+== css-writing-modes/contiguous-floated-table-vlr-005.xht reference/ref-filled-green-100px-square.xht
+== css-writing-modes/contiguous-floated-table-vlr-007.xht reference/ref-filled-green-100px-square.xht
+== css-writing-modes/contiguous-floated-table-vlr-009.xht reference/ref-filled-green-100px-square.xht
+== css-writing-modes/contiguous-floated-table-vrl-002.xht reference/ref-filled-green-100px-square.xht
+== css-writing-modes/contiguous-floated-table-vrl-004.xht reference/ref-filled-green-100px-square.xht
+== css-writing-modes/contiguous-floated-table-vrl-006.xht reference/ref-filled-green-100px-square.xht
+== css-writing-modes/contiguous-floated-table-vrl-008.xht reference/ref-filled-green-100px-square.xht
 == css-writing-modes/different-block-flow-dir-001.xht reference/ref-filled-green-100px-square.xht
 == css-writing-modes/different-block-flow-dir-002.xht reference/ref-filled-green-100px-square.xht
 fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) == css-writing-modes/direction-vlr-003.xht css-writing-modes/direction-vlr-003-ref.xht
@@ -1041,17 +1041,17 @@ fuzzy-if(OSX||winWidget,0-110,0-1200) == css-writing-modes/table-column-order-00
 fuzzy-if(winWidget,0-110,0-1200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/table-column-order-slr-007.xht css-writing-modes/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,0-110,0-1200) == css-writing-modes/table-column-order-srl-006.xht css-writing-modes/block-flow-direction-001-ref.xht
 == css-writing-modes/table-progression-slr-001.html css-writing-modes/table-progression-slr-001-ref.html
-fails == css-writing-modes/table-progression-slr-002.html css-writing-modes/table-progression-002-ref.html
+== css-writing-modes/table-progression-slr-002.html css-writing-modes/table-progression-002-ref.html
 == css-writing-modes/table-progression-srl-001.html css-writing-modes/table-progression-001-ref.html
-fails == css-writing-modes/table-progression-srl-002.html css-writing-modes/table-progression-002-ref.html
+== css-writing-modes/table-progression-srl-002.html css-writing-modes/table-progression-002-ref.html
 == css-writing-modes/table-progression-vlr-001.html css-writing-modes/table-progression-001-ref.html
-fails == css-writing-modes/table-progression-vlr-002.html css-writing-modes/table-progression-002-ref.html
+== css-writing-modes/table-progression-vlr-002.html css-writing-modes/table-progression-002-ref.html
 == css-writing-modes/table-progression-vlr-003.html css-writing-modes/table-progression-001-ref.html
-fails == css-writing-modes/table-progression-vlr-004.html css-writing-modes/table-progression-002-ref.html
+== css-writing-modes/table-progression-vlr-004.html css-writing-modes/table-progression-002-ref.html
 == css-writing-modes/table-progression-vrl-001.html css-writing-modes/table-progression-001-ref.html
-fails == css-writing-modes/table-progression-vrl-002.html css-writing-modes/table-progression-002-ref.html
+== css-writing-modes/table-progression-vrl-002.html css-writing-modes/table-progression-002-ref.html
 == css-writing-modes/table-progression-vrl-003.html css-writing-modes/table-progression-001-ref.html
-fails == css-writing-modes/table-progression-vrl-004.html css-writing-modes/table-progression-002-ref.html
+== css-writing-modes/table-progression-vrl-004.html css-writing-modes/table-progression-002-ref.html
 fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-003.xht reference/ref-filled-green-100px-square.xht
 fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-005.xht reference/ref-filled-green-100px-square.xht
 fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-007.xht reference/ref-filled-green-100px-square.xht
