@@ -46,7 +46,7 @@ use crate::resource_cache::PlainCacheOwn;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::resource_cache::PlainResources;
 use crate::scene::{Scene, SceneProperties};
-use crate::scene_builder::*;
+use crate::scene_builder_thread::*;
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 #[cfg(feature = "debugger")]

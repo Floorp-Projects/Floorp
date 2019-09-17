@@ -80,7 +80,7 @@ use crate::render_backend::{FrameId, RenderBackend};
 use crate::render_task_graph::RenderTaskGraph;
 use crate::render_task::{RenderTask, RenderTaskData, RenderTaskKind};
 use crate::resource_cache::ResourceCache;
-use crate::scene_builder::{SceneBuilder, LowPrioritySceneBuilder};
+use crate::scene_builder_thread::{SceneBuilderThread, LowPrioritySceneBuilderThread};
 use crate::screen_capture::AsyncScreenshotGrabber;
 use crate::shade::{Shaders, WrShaders};
 use smallvec::SmallVec;
@@ -2096,7 +2096,7 @@ impl Renderer {
         let lp_scene_thread_name = format!("WRSceneBuilderLP#{}", options.renderer_id.unwrap_or(0));
         let glyph_rasterizer = GlyphRasterizer::new(workers)?;
 
-        let (scene_builder, scene_tx, scene_rx) = SceneBuilder::new(
+        let (scene_builder, scene_tx, scene_rx) = SceneBuilderThread::new(
             config,
             api_tx.clone(),
             scene_builder_hooks,
@@ -2118,7 +2118,7 @@ impl Renderer {
 
         let low_priority_scene_tx = if options.support_low_priority_transactions {
             let (low_priority_scene_tx, low_priority_scene_rx) = channel();
-            let lp_builder = LowPrioritySceneBuilder {
+            let lp_builder = LowPrioritySceneBuilderThread {
                 rx: low_priority_scene_rx,
                 tx: scene_tx.clone(),
                 simulate_slow_ms: 0,

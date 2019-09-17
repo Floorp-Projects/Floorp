@@ -32,7 +32,7 @@ use crate::render_task_graph::{RenderPassKind, RenderPass};
 use crate::render_task::{RenderTask, RenderTaskLocation, RenderTaskKind};
 use crate::resource_cache::{ResourceCache};
 use crate::scene::{ScenePipeline, SceneProperties};
-use crate::scene_builder::DocumentStats;
+use crate::scene_builder_thread::DocumentStats;
 use crate::segment::SegmentBuilder;
 use std::{f32, mem};
 use std::sync::Arc;
