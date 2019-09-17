@@ -1,0 +1,595 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<bindings id="autocompleteBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="autocomplete"
+           extends="chrome://global/content/bindings/textbox.xml#textbox">
+    <content sizetopopup="pref">
+      <xul:moz-input-box anonid="moz-input-box" flex="1">
+        <html:input anonid="input" class="textbox-input"
+                    allowevents="true"
+                    autocomplete="off"
+                    xbl:inherits="value,type=inputtype,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,mozactionhint"/>
+      </xul:moz-input-box>
+      <xul:popupset anonid="popupset" class="autocomplete-result-popupset"/>
+    </content>
+
+    <implementation implements="nsIAutoCompleteInput, nsIDOMXULMenuListElement">
+      <field name="mController">null</field>
+      <field name="mSearchNames">null</field>
+      <field name="mIgnoreInput">false</field>
+      <field name="noRollupOnEmptySearch">false</field>
+
+      <constructor><![CDATA[
+        this.mController = Cc["@mozilla.org/autocomplete/controller;1"].
+          getService(Ci.nsIAutoCompleteController);
+      ]]></constructor>
+
+      <!-- =================== nsIAutoCompleteInput =================== -->
+
+      <field name="_popup">null</field>
+      <property name="popup" readonly="true">
+        <getter><![CDATA[
+          // Memoize the result in a field rather than replacing this property,
+          // so that it can be reset along with the binding.
+          if (this._popup) {
+            return this._popup;
+          }
+
+          let popup = null;
+          let popupId = this.getAttribute("autocompletepopup");
+          if (popupId) {
+            popup = document.getElementById(popupId);
+          }
+          if (!popup) {
+            popup = document.createXULElement("panel", { is: "autocomplete-richlistbox-popup" });
+            popup.setAttribute("type", "autocomplete-richlistbox");
+            popup.setAttribute("noautofocus", "true");
+
+            let popupset = document.getAnonymousElementByAttribute(this, "anonid", "popupset");
+            popupset.appendChild(popup);
+          }
+          popup.mInput = this;
+
+          return this._popup = popup;
+        ]]></getter>
+      </property>
+      <property name="popupElement" readonly="true"
+                onget="return this.popup;"/>
+
+      <property name="controller" onget="return this.mController;" readonly="true"/>
+
+      <property name="popupOpen"
+                onget="return this.popup.popupOpen;"
+                onset="if (val) this.openPopup(); else this.closePopup();"/>
+
+      <property name="disableAutoComplete"
+                onset="this.setAttribute('disableautocomplete', val); return val;"
+                onget="return this.getAttribute('disableautocomplete') == 'true';"/>
+
+      <property name="completeDefaultIndex"
+                onset="this.setAttribute('completedefaultindex', val); return val;"
+                onget="return this.getAttribute('completedefaultindex') == 'true';"/>
+
+      <property name="completeSelectedIndex"
+                onset="this.setAttribute('completeselectedindex', val); return val;"
+                onget="return this.getAttribute('completeselectedindex') == 'true';"/>
+
+      <property name="forceComplete"
+                onset="this.setAttribute('forcecomplete', val); return val;"
+                onget="return this.getAttribute('forcecomplete') == 'true';"/>
+
+      <property name="minResultsForPopup"
+                onset="this.setAttribute('minresultsforpopup', val); return val;"
+                onget="var m = parseInt(this.getAttribute('minresultsforpopup')); return isNaN(m) ? 1 : m;"/>
+
+      <property name="timeout"
+                onset="this.setAttribute('timeout', val); return val;"
+                onget="var t = parseInt(this.getAttribute('timeout')); return isNaN(t) ? 50 : t;"/>
+
+      <property name="searchParam"
+                onget="return this.getAttribute('autocompletesearchparam') || '';"
+                onset="this.setAttribute('autocompletesearchparam', val); return val;"/>
+
+      <property name="searchCount" readonly="true"
+                onget="this.initSearchNames(); return this.mSearchNames.length;"/>
+
+      <property name="PrivateBrowsingUtils" readonly="true">
+        <getter><![CDATA[
+          let module = {};
+          ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm", module);
+          Object.defineProperty(this, "PrivateBrowsingUtils", {
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            value: module.PrivateBrowsingUtils,
+          });
+          return module.PrivateBrowsingUtils;
+        ]]></getter>
+      </property>
+
+      <property name="inPrivateContext" readonly="true"
+                onget="return this.PrivateBrowsingUtils.isWindowPrivate(window);"/>
+
+      <property name="noRollupOnCaretMove" readonly="true"
+                onget="return this.popup.getAttribute('norolluponanchor') == 'true'"/>
+
+      <!-- This is the maximum number of drop-down rows we get when we
+            hit the drop marker beside fields that have it (like the URLbar).-->
+      <field name="maxDropMarkerRows" readonly="true">14</field>
+
+      <method name="getSearchAt">
+        <parameter name="aIndex"/>
+        <body><![CDATA[
+          this.initSearchNames();
+          return this.mSearchNames[aIndex];
+        ]]></body>
+      </method>
+
+      <method name="setTextValueWithReason">
+        <parameter name="aValue"/>
+        <parameter name="aReason"/>
+        <body><![CDATA[
+          if (aReason == Ci.nsIAutoCompleteInput
+                           .TEXTVALUE_REASON_COMPLETEDEFAULT) {
+            this._textValueSetByCompleteDefault = true;
+          }
+          this.textValue = aValue;
+          this._textValueSetByCompleteDefault = false;
+        ]]></body>
+      </method>
+
+      <property name="textValue">
+        <getter><![CDATA[
+          if (typeof this.onBeforeTextValueGet == "function") {
+            let result = this.onBeforeTextValueGet();
+            if (result) {
+              return result.value;
+            }
+          }
+          return this.value;
+        ]]></getter>
+        <setter><![CDATA[
+          if (typeof this.onBeforeTextValueSet == "function" &&
+              !this._textValueSetByCompleteDefault) {
+            val = this.onBeforeTextValueSet(val);
+          }
+
+          // "input" event is automatically dispatched by the editor if
+          // necessary.
+          this._setValueInternal(val, true);
+
+          return this.value;
+        ]]></setter>
+      </property>
+
+      <method name="selectTextRange">
+        <parameter name="aStartIndex"/>
+        <parameter name="aEndIndex"/>
+        <body><![CDATA[
+          this.inputField.setSelectionRange(aStartIndex, aEndIndex);
+        ]]></body>
+      </method>
+
+      <method name="onSearchBegin">
+        <body><![CDATA[
+          if (this.popup && typeof this.popup.onSearchBegin == "function")
+            this.popup.onSearchBegin();
+        ]]></body>
+      </method>
+
+      <method name="onSearchComplete">
+        <body><![CDATA[
+          if (this.mController.matchCount == 0)
+            this.setAttribute("nomatch", "true");
+          else
+            this.removeAttribute("nomatch");
+
+          if (this.ignoreBlurWhileSearching && !this.focused) {
+            this.handleEnter();
+            this.detachController();
+          }
+        ]]></body>
+      </method>
+
+      <method name="onTextEntered">
+        <parameter name="event"/>
+        <body><![CDATA[
+          if (this.getAttribute("notifylegacyevents") === "true") {
+            let e = new CustomEvent("textEntered", {
+              bubbles: false,
+              cancelable: true,
+              detail: { rootEvent: event }
+            });
+            return !this.dispatchEvent(e);
+          }
+        ]]></body>
+      </method>
+
+      <method name="onTextReverted">
+        <body><![CDATA[
+          if (this.getAttribute("notifylegacyevents") === "true") {
+            let e = new CustomEvent("textReverted", {
+              bubbles: false,
+              cancelable: true
+            });
+            return !this.dispatchEvent(e);
+          }
+        ]]></body>
+      </method>
+
+      <!-- =================== nsIDOMXULMenuListElement =================== -->
+
+      <property name="editable" readonly="true"
+                onget="return true;" />
+
+      <property name="crop"
+                onset="this.setAttribute('crop',val); return val;"
+                onget="return this.getAttribute('crop');"/>
+
+      <property name="open"
+                onget="return this.getAttribute('open') == 'true';">
+        <setter><![CDATA[
+          if (val)
+            this.showHistoryPopup();
+          else
+            this.closePopup();
+        ]]></setter>
+      </property>
+
+      <!-- =================== PUBLIC MEMBERS =================== -->
+
+      <field name="valueIsTyped">false</field>
+      <field name="_textValueSetByCompleteDefault">false</field>
+      <property name="value"
+                onset="return this._setValueInternal(val, false);">
+        <getter><![CDATA[
+          if (typeof this.onBeforeValueGet == "function") {
+            var result = this.onBeforeValueGet();
+            if (result)
+              return result.value;
+          }
+          return this.inputField.value;
+        ]]></getter>
+      </property>
+
+      <property name="focused" readonly="true"
+                onget="return this.getAttribute('focused') == 'true';"/>
+
+      <!-- maximum number of rows to display at a time -->
+      <property name="maxRows"
+                onset="this.setAttribute('maxrows', val); return val;"
+                onget="return parseInt(this.getAttribute('maxrows')) || 0;"/>
+
+      <!-- option to allow scrolling through the list via the tab key, rather than
+           tab moving focus out of the textbox -->
+      <property name="tabScrolling"
+                onset="this.setAttribute('tabscrolling', val); return val;"
+                onget="return this.getAttribute('tabscrolling') == 'true';"/>
+
+      <!-- option to completely ignore any blur events while searches are
+           still going on. -->
+      <property name="ignoreBlurWhileSearching"
+                onset="this.setAttribute('ignoreblurwhilesearching', val); return val;"
+                onget="return this.getAttribute('ignoreblurwhilesearching') == 'true';"/>
+
+      <!-- option to highlight entries that don't have any matches -->
+      <property name="highlightNonMatches"
+                onset="this.setAttribute('highlightnonmatches', val); return val;"
+                onget="return this.getAttribute('highlightnonmatches') == 'true';"/>
+
+      <!-- =================== PRIVATE MEMBERS =================== -->
+
+      <!-- ::::::::::::: autocomplete controller ::::::::::::: -->
+
+      <method name="attachController">
+        <body><![CDATA[
+          this.mController.input = this;
+        ]]></body>
+      </method>
+
+      <method name="detachController">
+        <body><![CDATA[
+          if (this.mController.input == this)
+            this.mController.input = null;
+        ]]></body>
+      </method>
+
+      <!-- ::::::::::::: popup opening ::::::::::::: -->
+
+      <method name="openPopup">
+        <body><![CDATA[
+          if (this.focused)
+            this.popup.openAutocompletePopup(this, this);
+        ]]></body>
+      </method>
+
+      <method name="closePopup">
+        <body><![CDATA[
+          this.popup.closePopup();
+        ]]></body>
+      </method>
+
+      <method name="showHistoryPopup">
+        <body><![CDATA[
+          // Store our "normal" maxRows on the popup, so that it can reset the
+          // value when the popup is hidden.
+          this.popup._normalMaxRows = this.maxRows;
+
+          // Increase our maxRows temporarily, since we want the dropdown to
+          // be bigger in this case. The popup's popupshowing/popuphiding
+          // handlers will take care of resetting this.
+          this.maxRows = this.maxDropMarkerRows;
+
+          // Ensure that we have focus.
+          if (!this.focused)
+            this.focus();
+          this.attachController();
+          this.mController.startSearch("");
+        ]]></body>
+      </method>
+
+      <method name="toggleHistoryPopup">
+        <body><![CDATA[
+          if (!this.popup.popupOpen)
+            this.showHistoryPopup();
+          else
+            this.closePopup();
+        ]]></body>
+      </method>
+
+      <!-- ::::::::::::: key handling ::::::::::::: -->
+
+      <field name="_selectionDetails">null</field>
+      <method name="onKeyPress">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          return this.handleKeyPress(aEvent);
+        ]]></body>
+      </method>
+
+      <method name="handleKeyPress">
+        <parameter name="aEvent"/>
+        <parameter name="aOptions"/>
+        <body><![CDATA[
+          if (aEvent.target.localName != "textbox")
+            return true; // Let child buttons of autocomplete take input
+
+          // Re: urlbarDeferred, see the comment in urlbarBindings.xml.
+          if (aEvent.defaultPrevented && !aEvent.urlbarDeferred) {
+            return false;
+          }
+
+          const isMac = /Mac/.test(navigator.platform);
+          var cancel = false;
+
+          // Catch any keys that could potentially move the caret. Ctrl can be
+          // used in combination with these keys on Windows and Linux; and Alt
+          // can be used on OS X, so make sure the unused one isn't used.
+          let metaKey = isMac ? aEvent.ctrlKey : aEvent.altKey;
+          if (!metaKey) {
+            switch (aEvent.keyCode) {
+              case KeyEvent.DOM_VK_LEFT:
+              case KeyEvent.DOM_VK_RIGHT:
+              case KeyEvent.DOM_VK_HOME:
+                cancel = this.mController.handleKeyNavigation(aEvent.keyCode);
+                break;
+            }
+          }
+
+          // Handle keys that are not part of a keyboard shortcut (no Ctrl or Alt)
+          if (!aEvent.ctrlKey && !aEvent.altKey) {
+            switch (aEvent.keyCode) {
+              case KeyEvent.DOM_VK_TAB:
+                if (this.tabScrolling && this.popup.popupOpen)
+                  cancel = this.mController.handleKeyNavigation(aEvent.shiftKey ?
+                                                                KeyEvent.DOM_VK_UP :
+                                                                KeyEvent.DOM_VK_DOWN);
+                else if (this.forceComplete && this.mController.matchCount >= 1)
+                  this.mController.handleTab();
+                break;
+              case KeyEvent.DOM_VK_UP:
+              case KeyEvent.DOM_VK_DOWN:
+              case KeyEvent.DOM_VK_PAGE_UP:
+              case KeyEvent.DOM_VK_PAGE_DOWN:
+                cancel = this.mController.handleKeyNavigation(aEvent.keyCode);
+                break;
+            }
+          }
+
+          // Handle readline/emacs-style navigation bindings on Mac.
+          if (isMac &&
+              this.popup.popupOpen &&
+              aEvent.ctrlKey &&
+              (aEvent.key === "n" || aEvent.key === "p")) {
+            const effectiveKey = (aEvent.key === "p") ?
+                                 KeyEvent.DOM_VK_UP :
+                                 KeyEvent.DOM_VK_DOWN;
+            cancel = this.mController.handleKeyNavigation(effectiveKey);
+          }
+
+          // Handle keys we know aren't part of a shortcut, even with Alt or
+          // Ctrl.
+          switch (aEvent.keyCode) {
+            case KeyEvent.DOM_VK_ESCAPE:
+              cancel = this.mController.handleEscape();
+              break;
+            case KeyEvent.DOM_VK_RETURN:
+              if (isMac) {
+                // Prevent the default action, since it will beep on Mac
+                if (aEvent.metaKey)
+                  aEvent.preventDefault();
+              }
+              if (this.popup.selectedIndex >= 0) {
+                this._selectionDetails = {
+                  index: this.popup.selectedIndex,
+                  kind: "key",
+                };
+              }
+              cancel = this.handleEnter(aEvent, aOptions);
+              break;
+            case KeyEvent.DOM_VK_DELETE:
+              if (isMac && !aEvent.shiftKey) {
+                break;
+              }
+              cancel = this.handleDelete();
+              break;
+            case KeyEvent.DOM_VK_BACK_SPACE:
+              if (isMac && aEvent.shiftKey) {
+                cancel = this.handleDelete();
+              }
+              break;
+            case KeyEvent.DOM_VK_DOWN:
+            case KeyEvent.DOM_VK_UP:
+              if (aEvent.altKey)
+                this.toggleHistoryPopup();
+              break;
+            case KeyEvent.DOM_VK_F4:
+              if (!isMac) {
+                this.toggleHistoryPopup();
+              }
+              break;
+          }
+
+          if (cancel) {
+            aEvent.stopPropagation();
+            aEvent.preventDefault();
+          }
+
+          return true;
+        ]]></body>
+      </method>
+
+      <method name="handleEnter">
+        <parameter name="event"/>
+        <body><![CDATA[
+          return this.mController.handleEnter(false, event || null);
+        ]]></body>
+      </method>
+
+      <method name="handleDelete">
+        <body><![CDATA[
+          return this.mController.handleDelete();
+        ]]></body>
+      </method>
+
+      <!-- ::::::::::::: miscellaneous ::::::::::::: -->
+
+      <method name="initSearchNames">
+        <body><![CDATA[
+          if (!this.mSearchNames) {
+            var names = this.getAttribute("autocompletesearch");
+            if (!names)
+              this.mSearchNames = [];
+            else
+              this.mSearchNames = names.split(" ");
+          }
+        ]]></body>
+      </method>
+
+      <method name="_focus">
+        <!-- doesn't reset this.mController -->
+        <body><![CDATA[
+          this._dontBlur = true;
+          this.focus();
+          this._dontBlur = false;
+        ]]></body>
+      </method>
+
+      <method name="resetActionType">
+        <body><![CDATA[
+          if (this.mIgnoreInput)
+            return;
+          this.removeAttribute("actiontype");
+        ]]></body>
+      </method>
+
+      <method name="_setValueInternal">
+        <parameter name="aValue"/>
+        <parameter name="aIsUserInput"/>
+        <body><![CDATA[
+          this.mIgnoreInput = true;
+
+          if (typeof this.onBeforeValueSet == "function")
+            aValue = this.onBeforeValueSet(aValue);
+
+          if (typeof this.trimValue == "function" &&
+              !this._textValueSetByCompleteDefault)
+            aValue = this.trimValue(aValue);
+
+          this.valueIsTyped = false;
+          if (aIsUserInput) {
+            this.inputField.setUserInput(aValue);
+          } else {
+            this.inputField.value = aValue;
+          }
+
+          if (typeof this.formatValue == "function")
+            this.formatValue();
+
+          this.mIgnoreInput = false;
+          var event = document.createEvent("Events");
+          event.initEvent("ValueChange", true, true);
+          this.inputField.dispatchEvent(event);
+          return aValue;
+        ]]></body>
+      </method>
+
+      <method name="onInput">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (!this.mIgnoreInput && this.mController.input == this) {
+            this.valueIsTyped = true;
+            this.mController.handleText();
+          }
+          this.resetActionType();
+        ]]></body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="input"><![CDATA[
+        this.onInput(event);
+      ]]></handler>
+
+      <handler event="keypress" phase="capturing" group="system"
+               action="return this.onKeyPress(event);"/>
+
+      <handler event="compositionstart" phase="capturing"
+               action="if (this.mController.input == this) this.mController.handleStartComposition();"/>
+
+      <handler event="compositionend" phase="capturing"
+               action="if (this.mController.input == this) this.mController.handleEndComposition();"/>
+
+      <handler event="focus" phase="capturing"><![CDATA[
+        this.attachController();
+        if (window.gBrowser && window.gBrowser.selectedBrowser.hasAttribute("usercontextid")) {
+          this.userContextId = parseInt(window.gBrowser.selectedBrowser.getAttribute("usercontextid"));
+        } else {
+          this.userContextId = 0;
+        }
+      ]]></handler>
+
+      <handler event="blur" phase="capturing"><![CDATA[
+        if (!this._dontBlur) {
+          if (this.forceComplete && this.mController.matchCount >= 1) {
+            // If forceComplete is requested, we need to call the enter processing
+            // on blur so the input will be forced to the closest match.
+            // Thunderbird is the only consumer of forceComplete and this is used
+            // to force an recipient's email to the exact address book entry.
+            this.mController.handleEnter(true);
+          }
+          if (!this.ignoreBlurWhileSearching)
+            this.detachController();
+        }
+      ]]></handler>
+    </handlers>
+  </binding>
+</bindings>

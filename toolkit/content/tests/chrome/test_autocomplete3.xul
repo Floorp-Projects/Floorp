@@ -3,15 +3,13 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
 <window title="Autocomplete Widget Test 3"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/1999/xhtml">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
-<html:input id="autocomplete"
-            is="autocomplete-input"
-            autocompletesearch="simple"/>
+<textbox id="autocomplete" type="autocomplete"
+         autocompletesearch="simple"/>
 
 <script class="testbody" type="application/javascript">
 <![CDATA[
