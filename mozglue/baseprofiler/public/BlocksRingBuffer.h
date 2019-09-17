@@ -926,6 +926,77 @@ class BlocksRingBuffer {
     return PutObjects(aOb);
   }
 
+  // Append the contents of another BlocksRingBuffer to this one.
+  BlockIndex AppendContents(const BlocksRingBuffer& aSrc) {
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
+
+    if (MOZ_UNLIKELY(!mMaybeUnderlyingBuffer)) {
+      // We are out-of-session, could not append contents.
+      return BlockIndex{};
+    }
+
+    baseprofiler::detail::BaseProfilerMaybeAutoLock srcLock(aSrc.mMutex);
+
+    if (MOZ_UNLIKELY(!aSrc.mMaybeUnderlyingBuffer)) {
+      // The other BRB is out-of-session, nothing to copy, we're done.
+      return BlockIndex{};
+    }
+
+    const Index srcStartIndex = Index(aSrc.mFirstReadIndex);
+    const Index srcEndIndex = Index(aSrc.mNextWriteIndex);
+    const Length bytesToCopy = static_cast<Length>(srcEndIndex - srcStartIndex);
+
+    if (MOZ_UNLIKELY(bytesToCopy == 0)) {
+      // The other BRB is empty, nothing to copy, we're done.
+      return BlockIndex{};
+    }
+
+    // Don't allow an entry to wrap around and overwrite itself!
+    MOZ_RELEASE_ASSERT(bytesToCopy <=
+                       mMaybeUnderlyingBuffer->mBuffer.BufferLength().Value());
+
+    // We will put all copied blocks at the end of the current buffer.
+    const Index dstStartIndex = Index(mNextWriteIndex);
+    // Compute where the copy will end...
+    const Index dstEndIndex = dstStartIndex + bytesToCopy;
+    // ... which is where the following block will go.
+    mNextWriteIndex = BlockIndex(dstEndIndex);
+
+    while (dstEndIndex >
+           Index(mFirstReadIndex) +
+               mMaybeUnderlyingBuffer->mBuffer.BufferLength().Value()) {
+      // About to trample on an old block.
+      EntryReader reader = ReaderInBlockAt(mFirstReadIndex);
+      // Call provided entry destructor for that entry.
+      if (mMaybeUnderlyingBuffer->mEntryDestructor) {
+        mMaybeUnderlyingBuffer->mEntryDestructor(reader);
+      }
+      mMaybeUnderlyingBuffer->mClearedBlockCount += 1;
+      MOZ_ASSERT(reader.CurrentIndex() <= Index(reader.NextBlockIndex()));
+      // Move the buffer reading start past this cleared block.
+      mFirstReadIndex = reader.NextBlockIndex();
+    }
+
+    // Update our pushed count with the number of live blocks we are copying.
+    mMaybeUnderlyingBuffer->mPushedBlockCount +=
+        aSrc.mMaybeUnderlyingBuffer->mPushedBlockCount -
+        aSrc.mMaybeUnderlyingBuffer->mClearedBlockCount;
+
+    const auto readerEnd =
+        aSrc.mMaybeUnderlyingBuffer->mBuffer.ReaderAt(srcEndIndex);
+    auto writer = mMaybeUnderlyingBuffer->mBuffer.WriterAt(dstStartIndex);
+    // Copy all the bytes. TODO: Optimize with memcpy's?
+    for (auto reader =
+             aSrc.mMaybeUnderlyingBuffer->mBuffer.ReaderAt(srcStartIndex);
+         reader != readerEnd; ++reader, ++writer) {
+      *writer = *reader;
+    }
+    MOZ_ASSERT(writer == mMaybeUnderlyingBuffer->mBuffer.WriterAt(
+                             Index(mNextWriteIndex)));
+
+    return BlockIndex(dstStartIndex);
+  }
+
   // Clear all entries, calling entry destructor (if any), and move read index
   // to the end so that these entries cannot be read anymore.
   void Clear() {
