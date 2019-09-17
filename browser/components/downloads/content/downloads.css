@@ -29,21 +29,6 @@
 
 /*** Downloads View ***/
 
-/**
- * The downloads richlistbox may list thousands of items, and it turns out
- * XBL binding attachment, and even more so detachment, is a performance hog.
- * This hack makes sure we don't apply any binding to inactive items (inactive
- * items are history downloads that haven't been in the visible area).
- * We can do this because the richlistbox implementation does not interact
- * much with the richlistitem binding.  However, this may turn out to have
- * some side effects (see bug 828111 for the details).
- *
- * We might be able to do away with this workaround once bug 653881 is fixed.
- */
-#downloadsRichListBox > richlistitem:not([active]) {
-  -moz-binding: none;
-}
-
 #downloadsRichListBox > richlistitem button {
   /* These buttons should never get focus, as that would "disable"
      the downloads view controller (it's only used when the richlistbox
