@@ -168,11 +168,14 @@ let gWindows = new WeakMap();
  * 'Highlight All' feature, which can highlight all find occurrences in a page.
  *
  * @param {Finder} finder Finder.jsm instance
+ * @param {boolean} useTop check and use top-level windows for rectangle
+ *                         computation, if possible.
  */
-function FinderHighlighter(finder) {
+function FinderHighlighter(finder, useTop = false) {
   this._highlightAll = Services.prefs.getBoolPref(kHighlightAllPref);
   this._modal = Services.prefs.getBoolPref(kModalHighlightPref);
   this._useSubFrames = false;
+  this._useTop = useTop;
   this.finder = finder;
 }
 
@@ -186,6 +189,21 @@ FinderHighlighter.prototype = {
       null
     ).FinderIterator;
     return this._iterator;
+  },
+
+  // Get the top-most window when allowed. When out-of-process frames are used,
+  // this will usually be the same as the passed-in window. The checkUseTop
+  // argument can be used to instead check the _useTop flag which can be used
+  // to enable rectangle coordinate checks.
+  getTopWindow(window, checkUseTop) {
+    if (this._useSubFrames || (checkUseTop && this._useTop)) {
+      try {
+        return window.top;
+      } catch (ex) {}
+    }
+
+    // A later patch will change this to just 'window'.
+    return window.top;
   },
 
   useModal() {
@@ -348,8 +366,8 @@ FinderHighlighter.prototype = {
       );
       findSelection.addRange(range);
       // Check if the range is inside an (i)frame.
-      if (window != window.top) {
-        let dict = this.getForWindow(window.top);
+      if (window != this.getTopWindow(window)) {
+        let dict = this.getForWindow(this.getTopWindow(window));
         // Add this frame to the list, so that we'll be able to find it later
         // when we need to clear its selection(s).
         dict.frames.set(window, {});
@@ -371,7 +389,7 @@ FinderHighlighter.prototype = {
    *                              Optional, defaults to the finder window.
    */
   show(window = null) {
-    window = (window || this.finder._getWindow()).top;
+    window = this.getTopWindow(window || this.finder._getWindow());
     let dict = this.getForWindow(window);
     if (!this.useModal() || dict.visible) {
       return;
@@ -396,7 +414,7 @@ FinderHighlighter.prototype = {
    */
   hide(window, skipRange = null, event = null) {
     try {
-      window = window.top;
+      window = this.getTopWindow(window);
     } catch (ex) {
       Cu.reportError(ex);
       return;
@@ -553,11 +571,11 @@ FinderHighlighter.prototype = {
    * keep to build the mask for.
    */
   clear(window = null) {
-    if (!window || !window.top) {
+    if (!window || !this.getTopWindow(window)) {
       return;
     }
 
-    let dict = this.getForWindow(window.top);
+    let dict = this.getForWindow(this.getTopWindow(window));
     this._finishOutlineAnimations(dict);
     dict.dynamicRangesSet.clear();
     dict.frames.clear();
@@ -573,14 +591,14 @@ FinderHighlighter.prototype = {
    */
   onLocationChange() {
     let window = this.finder._getWindow();
-    if (!window || !window.top) {
+    if (!window || !this.getTopWindow(window)) {
       return;
     }
     this.hide(window);
     this.clear(window);
     this._removeRangeOutline(window);
 
-    gWindows.delete(window.top);
+    gWindows.delete(this.getTopWindow(window));
   },
 
   /**
@@ -663,18 +681,18 @@ FinderHighlighter.prototype = {
    * @return {Rect}
    */
   _getRootBounds(window, includeScroll = true) {
-    let dwu = this._getDWU(window.top);
+    let dwu = this._getDWU(this.getTopWindow(window, true));
     let cssPageRect = Rect.fromRect(dwu.getRootBounds());
     let scrollX = {};
     let scrollY = {};
-    if (includeScroll && window == window.top) {
+    if (includeScroll && window == this.getTopWindow(window, true)) {
       dwu.getScrollXY(false, scrollX, scrollY);
       cssPageRect.translate(scrollX.value, scrollY.value);
     }
 
     // If we're in a frame, update the position of the rect (top/ left).
     let currWin = window;
-    while (currWin != window.top) {
+    while (currWin != this.getTopWindow(window, true)) {
       let frameOffsets = this._getFrameElementOffsets(currWin);
       cssPageRect.translate(frameOffsets.x, frameOffsets.y);
 
@@ -692,7 +710,10 @@ FinderHighlighter.prototype = {
         // is also an iframe the scroll offsets from the parents' documentElement
         // (inverse scroll position) needs to be subtracted from the parent
         // window rect.
-        if (el.getAttribute("scrolling") == "no" && currWin != window.top) {
+        if (
+          el.getAttribute("scrolling") == "no" &&
+          currWin != this.getTopWindow(window, true)
+        ) {
           let docEl = currWin.document.documentElement;
           parentRect.translate(-docEl.scrollLeft, -docEl.scrollTop);
         }
@@ -725,7 +746,7 @@ FinderHighlighter.prototype = {
 
     // Getting style info is super expensive, causing reflows, so let's cache
     // frame border widths and padding values aggressively.
-    let dict = this.getForWindow(window.top);
+    let dict = this.getForWindow(this.getTopWindow(window, true));
     let frameData = dict.frames.get(window);
     if (!frameData) {
       dict.frames.set(window, (frameData = {}));
@@ -921,10 +942,10 @@ FinderHighlighter.prototype = {
     }
     let document = node.ownerDocument;
     let window = document.defaultView;
-    let dict = this.getForWindow(window.top);
+    let dict = this.getForWindow(this.getTopWindow(window));
 
     // Check if we're in a frameset (including iframes).
-    if (window != window.top) {
+    if (window != this.getTopWindow(window)) {
       if (!dict.frames.has(window)) {
         dict.frames.set(window, {});
       }
@@ -970,7 +991,7 @@ FinderHighlighter.prototype = {
       bounds = this._getRootBounds(window);
     }
 
-    let topBounds = this._getRootBounds(window.top, false);
+    let topBounds = this._getRootBounds(this.getTopWindow(window, true), false);
     let rects = [];
     // A range may consist of multiple rectangles, we can also do these kind of
     // precise cut-outs. range.getBoundingClientRect() returns the fully
@@ -1007,7 +1028,7 @@ FinderHighlighter.prototype = {
     let rectsAndTexts = this._getRangeRectsAndTexts(range, dict);
 
     // Only fetch the rect at this point, if not passed in as argument.
-    dict = dict || this.getForWindow(window.top);
+    dict = dict || this.getForWindow(this.getTopWindow(window));
     let oldRectsAndTexts = dict.modalHighlightRectsMap.get(range);
     dict.modalHighlightRectsMap.set(range, rectsAndTexts);
     // Check here if we suddenly went down to zero rects from more than zero before,
@@ -1075,7 +1096,7 @@ FinderHighlighter.prototype = {
       !outlineAnonNode || rectCount !== previousRectCount || rectCount != 1;
     dict.previousRangeRectsAndTexts = rectsAndTexts;
 
-    let window = range.startContainer.ownerGlobal.top;
+    let window = this.getTopWindow(range.startContainer.ownerGlobal);
     let document = window.document;
     // First see if we need to and can remove the previous outline nodes.
     if (rebuildOutline) {
@@ -1282,7 +1303,7 @@ FinderHighlighter.prototype = {
    * @param {nsIDOMWindow} window Window to draw in.
    */
   _maybeCreateModalHighlightNodes(window) {
-    window = window.top;
+    window = this.getTopWindow(window);
     let dict = this.getForWindow(window);
     if (dict.modalHighlightOutline) {
       if (!dict.modalHighlightAllMask) {
@@ -1319,7 +1340,7 @@ FinderHighlighter.prototype = {
    * @param {Boolean} [paintContent]
    */
   _repaintHighlightAllMask(window, paintContent = true) {
-    window = window.top;
+    window = this.getTopWindow(window);
     let dict = this.getForWindow(window);
 
     const kMaskId = kModalIdPrefix + "-findbar-modalHighlight-outlineMask";
@@ -1403,7 +1424,7 @@ FinderHighlighter.prototype = {
    * @param {nsIDOMWindow} window
    */
   _removeHighlightAllMask(window) {
-    window = window.top;
+    window = this.getTopWindow(window);
     let dict = this.getForWindow(window);
     if (!dict.modalHighlightAllMask) {
       return;
@@ -1462,7 +1483,7 @@ FinderHighlighter.prototype = {
       return;
     }
 
-    window = window.top;
+    window = this.getTopWindow(window);
     let dict = this.getForWindow(window);
     // Bail out early if the repaint scheduler is paused or when we're supposed
     // to ignore the next paint (i.e. content change).
@@ -1564,13 +1585,12 @@ FinderHighlighter.prototype = {
    * @param {nsIDOMWindow} window
    */
   _addModalHighlightListeners(window) {
-    window = window.top;
+    window = this.getTopWindow(window);
     let dict = this.getForWindow(window);
     if (dict.highlightListeners) {
       return;
     }
 
-    window = window.top;
     dict.highlightListeners = [
       this._scheduleRepaintOfMask.bind(this, window, { contentChanged: true }),
       this._scheduleRepaintOfMask.bind(this, window, { updateAllRanges: true }),
@@ -1607,7 +1627,7 @@ FinderHighlighter.prototype = {
    * @param {nsIDOMWindow} window
    */
   _removeModalHighlightListeners(window) {
-    window = window.top;
+    window = this.getTopWindow(window);
     let dict = this.getForWindow(window);
     if (!dict.highlightListeners) {
       return;
