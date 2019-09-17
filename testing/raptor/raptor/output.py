@@ -13,13 +13,16 @@ import filters
 import json
 import os
 
+from abc import ABCMeta, abstractmethod
 from logger.logger import RaptorLogger
 
-LOG = RaptorLogger(component='raptor-output')
+LOG = RaptorLogger(component='perftest-output')
 
 
-class Output(object):
-    """class for raptor output"""
+class PerftestOutput(object):
+    """Abstract base class to handle output of perftest results"""
+
+    __metaclass__ = ABCMeta
 
     def __init__(self, results, supporting_data, subtest_alert_on):
         """
@@ -31,6 +34,290 @@ class Output(object):
         self.summarized_supporting_data = []
         self.summarized_screenshots = []
         self.subtest_alert_on = subtest_alert_on
+
+    @abstractmethod
+    def summarize(self, test_names):
+        raise NotImplementedError()
+
+    def summarize_supporting_data(self):
+        '''
+        Supporting data was gathered outside of the main raptor test; it will be kept
+        separate from the main raptor test results. Summarize it appropriately.
+
+        supporting_data = {'type': 'data-type',
+                           'test': 'raptor-test-ran-when-data-was-gathered',
+                           'unit': 'unit that the values are in',
+                           'values': {
+                               'name': value,
+                               'nameN': valueN}}
+
+        More specifically, power data will look like this:
+
+        supporting_data = {'type': 'power',
+                           'test': 'raptor-speedometer-geckoview',
+                           'unit': 'mAh',
+                           'values': {
+                               'cpu': cpu,
+                               'wifi': wifi,
+                               'screen': screen,
+                               'proportional': proportional}}
+
+        We want to treat each value as a 'subtest'; and for the overall aggregated
+        test result, we'll sum together all subtest values.
+        '''
+        if self.supporting_data is None:
+            return
+
+        self.summarized_supporting_data = []
+
+        for data_set in self.supporting_data:
+            suites = []
+            test_results = {
+                'framework': {
+                    'name': 'raptor',
+                },
+                'suites': suites,
+            }
+
+            data_type = data_set['type']
+            LOG.info("summarizing %s data" % data_type)
+
+            # suite name will be name of the actual raptor test that ran, plus the type of
+            # supporting data i.e. 'raptor-speedometer-geckoview-power'
+            vals = []
+            subtests = []
+            suite = {
+                'name': data_set['test'] + "-" + data_set['type'],
+                'type': data_set['type'],
+                'subtests': subtests,
+                'lowerIsBetter': True,
+                'unit': data_set['unit'],
+                'alertThreshold': 2.0
+            }
+
+            suites.append(suite)
+
+            # each supporting data measurement becomes a subtest, with the measurement type
+            # used for the subtest name. i.e. 'raptor-speedometer-geckoview-power-cpu'
+            # the overall 'suite' value for supporting data will be the sum of all measurements
+            for measurement_name, value in data_set['values'].iteritems():
+                new_subtest = {}
+                new_subtest['name'] = data_set['test'] + "-" + data_type + "-" + measurement_name
+                new_subtest['value'] = value
+                new_subtest['lowerIsBetter'] = True
+                new_subtest['alertThreshold'] = 2.0
+                new_subtest['unit'] = data_set['unit']
+                subtests.append(new_subtest)
+                vals.append([new_subtest['value'], new_subtest['name']])
+
+            if len(subtests) > 1:
+                suite['value'] = self.construct_summary(vals, testname="supporting_data")
+
+            subtests.sort(key=lambda subtest: subtest['name'])
+            suites.sort(key=lambda suite: suite['name'])
+
+            self.summarized_supporting_data.append(test_results)
+
+        return
+
+    def output(self, test_names):
+        """output to file and perfherder data json"""
+        if os.getenv('MOZ_UPLOAD_DIR'):
+            # i.e. testing/mozharness/build/raptor.json locally; in production it will
+            # be at /tasks/task_*/build/ (where it will be picked up by mozharness later
+            # and made into a tc artifact accessible in treeherder as perfherder-data.json)
+            results_path = os.path.join(os.path.dirname(os.environ['MOZ_UPLOAD_DIR']),
+                                        'raptor.json')
+            screenshot_path = os.path.join(os.path.dirname(os.environ['MOZ_UPLOAD_DIR']),
+                                           'screenshots.html')
+        else:
+            results_path = os.path.join(os.getcwd(), 'raptor.json')
+            screenshot_path = os.path.join(os.getcwd(), 'screenshots.html')
+
+        if self.summarized_results == {}:
+            LOG.error("no summarized raptor results found for %s" %
+                      ', '.join(test_names))
+        else:
+            with open(results_path, 'w') as f:
+                for result in self.summarized_results:
+                    f.write("%s\n" % result)
+
+        if len(self.summarized_screenshots) > 0:
+            with open(screenshot_path, 'w') as f:
+                for result in self.summarized_screenshots:
+                    f.write("%s\n" % result)
+            LOG.info("screen captures can be found locally at: %s" % screenshot_path)
+
+        # now that we've checked for screen captures too, if there were no actual
+        # test results we can bail out here
+        if self.summarized_results == {}:
+            return False, 0
+
+        # when gecko_profiling, we don't want results ingested by Perfherder
+        extra_opts = self.summarized_results['suites'][0].get('extraOptions', [])
+        test_type = self.summarized_results['suites'][0].get('type', '')
+
+        output_perf_data = True
+        not_posting = '- not posting regular test results for perfherder'
+        if 'gecko_profile' in extra_opts:
+            LOG.info("gecko profiling enabled %s" % not_posting)
+            output_perf_data = False
+        elif test_type == 'scenario':
+            # if a resource-usage flag was supplied the perfherder data
+            # will still be output from output_supporting_data
+            LOG.info("scenario test type was run %s" % not_posting)
+            output_perf_data = False
+
+        total_perfdata = 0
+        if output_perf_data:
+            # if we have supporting data i.e. power, we ONLY want those measurements
+            # dumped out. TODO: Bug 1515406 - Add option to output both supplementary
+            # data (i.e. power) and the regular Raptor test result
+            # Both are already available as separate PERFHERDER_DATA json blobs
+            if len(self.summarized_supporting_data) == 0:
+                LOG.info("PERFHERDER_DATA: %s" % json.dumps(self.summarized_results))
+                total_perfdata = 1
+            else:
+                LOG.info("supporting data measurements exist - only posting those to perfherder")
+
+        json.dump(self.summarized_results, open(results_path, 'w'), indent=2,
+                  sort_keys=True)
+        LOG.info("results can also be found locally at: %s" % results_path)
+
+        return True, total_perfdata
+
+    def output_supporting_data(self, test_names):
+        '''
+        Supporting data was gathered outside of the main raptor test; it has already
+        been summarized, now output it appropriately.
+
+        We want to output supporting data in a completely separate perfherder json blob and
+        in a corresponding file artifact. This way, supporting data can be ingested as its own
+        test suite in perfherder and alerted upon if desired; kept outside of the test results
+        from the actual Raptor test which was run when the supporting data was gathered.
+        '''
+        if len(self.summarized_supporting_data) == 0:
+            LOG.error("no summarized supporting data found for %s" %
+                      ', '.join(test_names))
+            return False, 0
+
+        total_perfdata = 0
+        for next_data_set in self.summarized_supporting_data:
+            data_type = next_data_set['suites'][0]['type']
+
+            if os.environ['MOZ_UPLOAD_DIR']:
+                # i.e. testing/mozharness/build/raptor.json locally; in production it will
+                # be at /tasks/task_*/build/ (where it will be picked up by mozharness later
+                # and made into a tc artifact accessible in treeherder as perfherder-data.json)
+                results_path = os.path.join(os.path.dirname(os.environ['MOZ_UPLOAD_DIR']),
+                                            'raptor-%s.json' % data_type)
+            else:
+                results_path = os.path.join(os.getcwd(), 'raptor-%s.json' % data_type)
+
+            # dump data to raptor-data.json artifact
+            json.dump(next_data_set, open(results_path, 'w'), indent=2, sort_keys=True)
+
+            # the output that treeherder expects to find
+            LOG.info("PERFHERDER_DATA: %s" % json.dumps(next_data_set))
+            LOG.info("%s results can also be found locally at: %s" % (data_type, results_path))
+            total_perfdata += 1
+
+        return True, total_perfdata
+
+    def construct_summary(self, vals, testname):
+
+        def _filter(vals, value=None):
+            if value is None:
+                return [i for i, j in vals]
+            return [i for i, j in vals if j == value]
+
+        if testname.startswith('raptor-v8_7'):
+            return 100 * filters.geometric_mean(_filter(vals))
+
+        if testname.startswith('raptor-speedometer'):
+            correctionFactor = 3
+            results = _filter(vals)
+            # speedometer has 16 tests, each of these are made of up 9 subtests
+            # and a sum of the 9 values.  We receive 160 values, and want to use
+            # the 16 test values, not the sub test values.
+            if len(results) != 160:
+                raise Exception("Speedometer has 160 subtests, found: %s instead" % len(results))
+
+            results = results[9::10]
+            score = 60 * 1000 / filters.geometric_mean(results) / correctionFactor
+            return score
+
+        if testname.startswith('raptor-stylebench'):
+            # see https://bug-172968-attachments.webkit.org/attachment.cgi?id=319888
+            correctionFactor = 3
+            results = _filter(vals)
+
+            # stylebench has 5 tests, each of these are made of up 5 subtests
+            #
+            #   * Adding classes.
+            #   * Removing classes.
+            #   * Mutating attributes.
+            #   * Adding leaf elements.
+            #   * Removing leaf elements.
+            #
+            # which are made of two subtests each (sync/async) and repeated 5 times
+            # each, thus, the list here looks like:
+            #
+            #   [Test name/Adding classes - 0/ Sync; <x>]
+            #   [Test name/Adding classes - 0/ Async; <y>]
+            #   [Test name/Adding classes - 0; <x> + <y>]
+            #   [Test name/Removing classes - 0/ Sync; <x>]
+            #   [Test name/Removing classes - 0/ Async; <y>]
+            #   [Test name/Removing classes - 0; <x> + <y>]
+            #   ...
+            #   [Test name/Adding classes - 1 / Sync; <x>]
+            #   [Test name/Adding classes - 1 / Async; <y>]
+            #   [Test name/Adding classes - 1 ; <x> + <y>]
+            #   ...
+            #   [Test name/Removing leaf elements - 4; <x> + <y>]
+            #   [Test name; <sum>] <- This is what we want.
+            #
+            # So, 5 (subtests) *
+            #     5 (repetitions) *
+            #     3 (entries per repetition (sync/async/sum)) =
+            #     75 entries for test before the sum.
+            #
+            # We receive 76 entries per test, which ads up to 380. We want to use
+            # the 5 test entries, not the rest.
+            if len(results) != 380:
+                raise Exception("StyleBench has 380 entries, found: %s instead" % len(results))
+            results = results[75::76]
+            return 60 * 1000 / filters.geometric_mean(results) / correctionFactor
+
+        if testname.startswith(('raptor-kraken', 'raptor-sunspider', 'supporting_data')):
+            return sum(_filter(vals))
+
+        if testname.startswith(('raptor-unity-webgl', 'raptor-webaudio')):
+            # webaudio_score and unity_webgl_score: self reported as 'Geometric Mean'
+            return filters.mean(_filter(vals, 'Geometric Mean'))
+
+        if testname.startswith('raptor-assorted-dom'):
+            return round(filters.geometric_mean(_filter(vals)), 2)
+
+        if testname.startswith('raptor-wasm-misc'):
+            # wasm_misc_score: self reported as '__total__'
+            return filters.mean(_filter(vals, '__total__'))
+
+        if testname.startswith('raptor-wasm-godot'):
+            # wasm_godot_score: first-interactive mean
+            return filters.mean(_filter(vals, 'first-interactive'))
+
+        if testname.startswith('raptor-youtube-playback'):
+            return round(filters.mean(_filter(vals)), 2)
+
+        if len(vals) > 1:
+            return round(filters.geometric_mean(_filter(vals)), 2)
+
+        return round(filters.mean(_filter(vals)), 2)
+
+
+class RaptorOutput(PerftestOutput):
+    """class for raptor output"""
 
     def summarize(self, test_names):
         suites = []
@@ -173,6 +460,10 @@ class Output(object):
             if len(subtests) > 1:
                 suite['value'] = self.construct_summary(vals, testname=test.name)
 
+            subtests.sort(key=lambda subtest: subtest['name'])
+
+        suites.sort(key=lambda suite: suite['name'])
+
         self.summarized_results = test_results
 
     def combine_browser_cycles(self):
@@ -293,95 +584,6 @@ class Output(object):
         # now it is safe to delete the original entries that were made by each cycle
         self.summarized_results['suites'] = [item for item in self.summarized_results['suites']
                                              if item.get('to_be_deleted') is not True]
-
-    def summarize_supporting_data(self):
-        '''
-        Supporting data was gathered outside of the main raptor test; it will be kept
-        separate from the main raptor test results. Summarize it appropriately.
-
-        supporting_data = {'type': 'data-type',
-                           'test': 'raptor-test-ran-when-data-was-gathered',
-                           'unit': 'unit that the values are in',
-                           'values': {
-                               'name': value,
-                               'nameN': valueN}}
-
-        More specifically, power data will look like this:
-
-        supporting_data = {'type': 'power',
-                           'test': 'raptor-speedometer-geckoview',
-                           'unit': 'mAh',
-                           'values': {
-                               'cpu': cpu,
-                               'wifi': wifi,
-                               'screen': screen,
-                               'proportional': proportional}}
-
-        We want to treat each value as a 'subtest'; and for the overall aggregated
-        test result we will add all of these subtest values togther.
-        '''
-        if self.supporting_data is None:
-            return
-
-        self.summarized_supporting_data = []
-        support_data_by_type = {}
-
-        for data_set in self.supporting_data:
-
-            data_type = data_set['type']
-            LOG.info("summarizing %s data" % data_type)
-
-            if data_type not in support_data_by_type:
-                support_data_by_type[data_type] = {
-                    'framework': {
-                        'name': 'raptor',
-                    },
-                    'suites': [],
-                }
-
-            # suite name will be name of the actual raptor test that ran, plus the type of
-            # supporting data i.e. 'raptor-speedometer-geckoview-power'
-            vals = []
-            subtests = []
-            suite = {
-                'name': data_set['test'] + "-" + data_set['type'],
-                'type': data_set['type'],
-                'subtests': subtests,
-                'lowerIsBetter': True,
-                'unit': data_set['unit'],
-                'alertThreshold': 2.0
-            }
-
-            support_data_by_type[data_type]['suites'].append(suite)
-
-            # each supporting data measurement becomes a subtest, with the measurement type
-            # used for the subtest name. i.e. 'power-cpu'
-            # the overall 'suite' value for supporting data is dependent on
-            # the unit of the values, by default the sum of all measurements
-            # is taken.
-            for measurement_name, value in data_set['values'].iteritems():
-                new_subtest = {}
-                new_subtest['name'] = data_type + "-" + measurement_name
-                new_subtest['value'] = value
-                new_subtest['lowerIsBetter'] = True
-                new_subtest['alertThreshold'] = 2.0
-                new_subtest['unit'] = data_set['unit']
-                subtests.append(new_subtest)
-                vals.append([new_subtest['value'], new_subtest['name']])
-
-            if len(subtests) >= 1:
-                suite['value'] = self.construct_summary(
-                    vals,
-                    testname="supporting_data",
-                    unit=data_set['unit']
-                )
-
-        # split the supporting data by type, there will be one
-        # perfherder output per type
-        for data_type in support_data_by_type:
-            self.summarized_supporting_data.append(support_data_by_type[data_type])
-
-        return
 
     def parseSpeedometerOutput(self, test):
         # each benchmark 'index' becomes a subtest; each pagecycle / iteration
@@ -887,8 +1089,8 @@ class Output(object):
         for pagecycle in data:
             for _sub, _value in pagecycle[0].iteritems():
                 try:
-                    percent_dropped = float(_value['droppedFrames']) / _value['decodedFrames'] \
-                                      * 100.0
+                    percent_dropped = (float(_value['droppedFrames']) /
+                                       _value['decodedFrames'] * 100.0)
                 except ZeroDivisionError:
                     # if no frames have been decoded the playback failed completely
                     percent_dropped = 100.0
@@ -958,281 +1160,126 @@ class Output(object):
 
         self.summarized_screenshots.append("""</table></body> </html>""")
 
-    def output(self, test_names):
-        """output to file and perfherder data json """
-        if os.getenv('MOZ_UPLOAD_DIR'):
-            # i.e. testing/mozharness/build/raptor.json locally; in production it will
-            # be at /tasks/task_*/build/ (where it will be picked up by mozharness later
-            # and made into a tc artifact accessible in treeherder as perfherder-data.json)
-            results_path = os.path.join(os.path.dirname(os.environ['MOZ_UPLOAD_DIR']),
-                                        'raptor.json')
-            screenshot_path = os.path.join(os.path.dirname(os.environ['MOZ_UPLOAD_DIR']),
-                                           'screenshots.html')
-        else:
-            results_path = os.path.join(os.getcwd(), 'raptor.json')
-            screenshot_path = os.path.join(os.getcwd(), 'screenshots.html')
 
-        if self.summarized_results == {}:
-            LOG.error("no summarized raptor results found for %s" %
+class BrowsertimeOutput(PerftestOutput):
+    """class for browsertime output"""
+
+    def summarize(self, test_names):
+        """
+        Summarize the parsed browsertime test output, and format accordingly so the output can
+        be ingested by Perfherder.
+
+        At this point each entry in self.results for browsertime-pageload tests is in this format:
+
+        {'statistics':{'fcp': {u'p99': 932, u'mdev': 10.0941, u'min': 712, u'p90': 810, u'max':
+        932, u'median': 758, u'p10': 728, u'stddev': 50, u'mean': 769}, 'dcf': {u'p99': 864,
+        u'mdev': 11.6768, u'min': 614, u'p90': 738, u'max': 864, u'median': 670, u'p10': 632,
+        u'stddev': 58, u'mean': 684}, 'fnbpaint': {u'p99': 830, u'mdev': 9.6851, u'min': 616,
+        u'p90': 719, u'max': 830, u'median': 668, u'p10': 642, u'stddev': 48, u'mean': 680},
+        'loadtime': {u'p99': 5818, u'mdev': 111.7028, u'min': 3220, u'p90': 4450, u'max': 5818,
+        u'median': 3476, u'p10': 3241, u'stddev': 559, u'mean': 3642}}, 'name':
+        'raptor-tp6-guardian-firefox', 'url': 'https://www.theguardian.co.uk', 'lower_is_better':
+        True, 'measurements': {'fcp': [932, 744, 744, 810, 712, 775, 759, 744, 777, 739, 809, 906,
+        734, 742, 760, 758, 728, 792, 757, 759, 742, 759, 775, 726, 730], 'dcf': [864, 679, 637,
+        662, 652, 651, 710, 679, 646, 689, 686, 845, 670, 694, 632, 703, 670, 738, 633, 703, 614,
+        703, 650, 622, 670], 'fnbpaint': [830, 648, 666, 704, 616, 683, 678, 650, 685, 651, 719,
+        820, 634, 664, 681, 664, 642, 703, 668, 670, 669, 668, 681, 652, 642], 'loadtime': [4450,
+        3592, 3770, 3345, 3453, 3220, 3434, 3621, 3511, 3416, 3430, 5818, 4729, 3406, 3506, 3588,
+        3245, 3381, 3707, 3241, 3595, 3483, 3236, 3390, 3476]}, 'subtest_unit': 'ms', 'bt_ver':
+        '4.9.2-android', 'alert_threshold': 2, 'cold': True, 'type': 'browsertime-pageload',
+        'unit': 'ms', 'browser': "{u'userAgent': u'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13;
+        rv:70.0) Gecko/20100101 Firefox/70.0', u'windowSize': u'1366x694'}"}
+
+        Now we must process this further and prepare the result for output suitable for perfherder
+        ingestion.
+
+        Note: For the overall subtest values/results (i.e. for each measurement type) we will use
+        the Browsertime-provided statistics, instead of calcuating our own geomeans from the
+        replicates.
+        """
+        LOG.info("preparing browsertime results for output")
+
+        suites = []
+        test_results = {
+            'framework': {
+                'name': 'browsertime',
+            },
+            'suites': suites,
+        }
+
+        # check if we actually have any results
+        if len(self.results) == 0:
+            LOG.error("no browsertime test results found for %s" %
                       ', '.join(test_names))
-        else:
-            with open(results_path, 'w') as f:
-                for result in self.summarized_results:
-                    f.write("%s\n" % result)
+            return
 
-        if len(self.summarized_screenshots) > 0:
-            with open(screenshot_path, 'w') as f:
-                for result in self.summarized_screenshots:
-                    f.write("%s\n" % result)
-            LOG.info("screen captures can be found locally at: %s" % screenshot_path)
+        for test in self.results:
+            vals = []
+            subtests = []
+            suite = {
+                'name': test['name'],
+                'type': test['type'],
+                'extraOptions': test['extra_options'],
+                'subtests': subtests,
+                'lowerIsBetter': test['lower_is_better'],
+                'unit': test['unit'],
+                'alertThreshold': float(test['alert_threshold'])
+            }
 
-        # now that we've checked for screen captures too, if there were no actual
-        # test results we can bail out here
-        if self.summarized_results == {}:
-            return False, 0
+            # Check if the test has set optional properties
+            if hasattr(test, "alert_change_type"):
+                suite['alertChangeType'] = test['alert_change_type']
 
-        # when gecko_profiling, we don't want results ingested by Perfherder
-        extra_opts = self.summarized_results['suites'][0].get('extraOptions', [])
-        test_type = self.summarized_results['suites'][0].get('type', '')
+            # process results for pageloader type of tests
+            if test["type"] != "browsertime-pageload":
+                LOG.error("output.summarize received unsupported test results type for %s" %
+                          test['name'])
+                continue
 
-        output_perf_data = True
-        not_posting = '- not posting regular test results for perfherder'
-        if 'gecko_profile' in extra_opts:
-            LOG.info("gecko profiling enabled %s" % not_posting)
-            output_perf_data = False
-        elif test_type == 'scenario':
-            # if a resource-usage flag was supplied the perfherder data
-            # will still be output from output_supporting_data
-            LOG.info("scenario test type was run %s" % not_posting)
-            output_perf_data = False
+            suites.append(suite)
 
-        total_perfdata = 0
-        if output_perf_data:
-            # if we have supporting data i.e. power, we ONLY want those measurements
-            # dumped out. TODO: Bug 1515406 - Add option to output both supplementary
-            # data (i.e. power) and the regular Raptor test result
-            # Both are already available as separate PERFHERDER_DATA json blobs
-            if len(self.summarized_supporting_data) == 0:
-                LOG.info("PERFHERDER_DATA: %s" % json.dumps(self.summarized_results))
-                total_perfdata = 1
-            else:
-                LOG.info("supporting data measurements exist - only posting those to perfherder")
+            for measurement_name, replicates in test['measurements'].iteritems():
+                new_subtest = {}
+                new_subtest['name'] = measurement_name
+                new_subtest['replicates'] = replicates
+                new_subtest['lowerIsBetter'] = test['subtest_lower_is_better']
+                new_subtest['alertThreshold'] = float(test['alert_threshold'])
+                new_subtest['value'] = 0
+                new_subtest['unit'] = test['subtest_unit']
 
-        json.dump(self.summarized_results, open(results_path, 'w'), indent=2,
-                  sort_keys=True)
-        LOG.info("results can also be found locally at: %s" % results_path)
+                # if 'alert_on' is set for this particular measurement, then we want to set the
+                # flag in the perfherder output to turn on alerting for this subtest
+                if self.subtest_alert_on is not None:
+                    if measurement_name in self.subtest_alert_on:
+                        LOG.info("turning on subtest alerting for measurement type: %s"
+                                 % measurement_name)
+                        new_subtest['shouldAlert'] = True
 
-        return True, total_perfdata
+                # for the subtest (page-load measurement type) overall score/result/value, we
+                # want to use the median of the replicates - now instead of calculating this
+                # ourselves, we will take this value from the browsertime results themselves
+                # as browsertime calculates the mean (and other values) automatically for us
+                bt_measurement_median = test['statistics'][measurement_name]['median']
+                new_subtest['value'] = bt_measurement_median
 
-    def output_supporting_data(self, test_names):
-        '''
-        Supporting data was gathered outside of the main raptor test; it has already
-        been summarized, now output it appropriately.
+                # we have a vals list that contains all the top level results for each of the
+                # measurement types; this will be used to calculate an overall test result
+                # which will be the geomean of all of the top level results of each type
+                vals.append([new_subtest['value'], new_subtest['name']])
+                subtests.append(new_subtest)
 
-        We want to output supporting data in a completely separate perfherder json blob and
-        in a corresponding file artifact. This way supporting data can be ingested as it's own
-        test suite in perfherder and alerted upon if desired. Kept outside of the test results
-        from the actual Raptor test that was ran when the supporting data was gathered.
-        '''
-        if len(self.summarized_supporting_data) == 0:
-            LOG.error("no summarized supporting data found for %s" %
-                      ', '.join(test_names))
-            return False, 0
+            # for pageload tests, if there are > 1 subtests here, that means there
+            # were multiple measurement types captured in each single pageload; we want
+            # to get the mean of those values and report 1 overall 'suite' value
+            # for the page; all replicates will still be available in the JSON artifact
 
-        total_perfdata = 0
-        for next_data_set in self.summarized_supporting_data:
-            data_type = next_data_set['suites'][0]['type']
+            # summarize results to get top overall suite result
+            if len(subtests) > 1:
+                suite['value'] = self.construct_summary(vals,
+                                                        testname=test['name'])
 
-            if os.environ['MOZ_UPLOAD_DIR']:
-                # i.e. testing/mozharness/build/raptor.json locally; in production it will
-                # be at /tasks/task_*/build/ (where it will be picked up by mozharness later
-                # and made into a tc artifact accessible in treeherder as perfherder-data.json)
-                results_path = os.path.join(os.path.dirname(os.environ['MOZ_UPLOAD_DIR']),
-                                            'raptor-%s.json' % data_type)
-            else:
-                results_path = os.path.join(os.getcwd(), 'raptor-%s.json' % data_type)
+            subtests.sort(key=lambda subtest: subtest['name'])
 
-            # dump data to raptor-data.json artifact
-            json.dump(next_data_set, open(results_path, 'w'), indent=2, sort_keys=True)
+        suites.sort(key=lambda suite: suite['name'])
 
-            # the output that treeherder expects to find
-            LOG.info("PERFHERDER_DATA: %s" % json.dumps(next_data_set))
-            LOG.info("%s results can also be found locally at: %s" % (data_type, results_path))
-            total_perfdata += 1
-
-        return True, total_perfdata
-
-    @classmethod
-    def v8_Metric(cls, val_list):
-        results = [i for i, j in val_list]
-        score = 100 * filters.geometric_mean(results)
-        return score
-
-    @classmethod
-    def JS_Metric(cls, val_list):
-        """v8 benchmark score"""
-        results = [i for i, j in val_list]
-        return sum(results)
-
-    @classmethod
-    def speedometer_score(cls, val_list):
-        """
-        speedometer_score: https://bug-172968-attachments.webkit.org/attachment.cgi?id=319888
-        """
-        correctionFactor = 3
-        results = [i for i, j in val_list]
-        # speedometer has 16 tests, each of these are made of up 9 subtests
-        # and a sum of the 9 values.  We receive 160 values, and want to use
-        # the 16 test values, not the sub test values.
-        if len(results) != 160:
-            raise Exception("Speedometer has 160 subtests, found: %s instead" % len(results))
-
-        results = results[9::10]
-        score = 60 * 1000 / filters.geometric_mean(results) / correctionFactor
-        return score
-
-    @classmethod
-    def benchmark_score(cls, val_list):
-        """
-        benchmark_score: ares6/jetstream self reported as 'geomean'
-        """
-        results = [i for i, j in val_list if j == 'geomean']
-        return filters.mean(results)
-
-    @classmethod
-    def webaudio_score(cls, val_list):
-        """
-        webaudio_score: self reported as 'Geometric Mean'
-        """
-        results = [i for i, j in val_list if j == 'Geometric Mean']
-        return filters.mean(results)
-
-    @classmethod
-    def unity_webgl_score(cls, val_list):
-        """
-        unity_webgl_score: self reported as 'Geometric Mean'
-        """
-        results = [i for i, j in val_list if j == 'Geometric Mean']
-        return filters.mean(results)
-
-    @classmethod
-    def wasm_misc_score(cls, val_list):
-        """
-        wasm_misc_score: self reported as '__total__'
-        """
-        results = [i for i, j in val_list if j == '__total__']
-        return filters.mean(results)
-
-    @classmethod
-    def wasm_godot_score(cls, val_list):
-        """
-        wasm_godot_score: first-interactive mean
-        """
-        results = [i for i, j in val_list if j == 'first-interactive']
-        return filters.mean(results)
-
-    @classmethod
-    def stylebench_score(cls, val_list):
-        """
-        stylebench_score: https://bug-172968-attachments.webkit.org/attachment.cgi?id=319888
-        """
-        correctionFactor = 3
-        results = [i for i, j in val_list]
-
-        # stylebench has 5 tests, each of these are made of up 5 subtests
-        #
-        #   * Adding classes.
-        #   * Removing classes.
-        #   * Mutating attributes.
-        #   * Adding leaf elements.
-        #   * Removing leaf elements.
-        #
-        # which are made of two subtests each (sync/async) and repeated 5 times
-        # each, thus, the list here looks like:
-        #
-        #   [Test name/Adding classes - 0/ Sync; <x>]
-        #   [Test name/Adding classes - 0/ Async; <y>]
-        #   [Test name/Adding classes - 0; <x> + <y>]
-        #   [Test name/Removing classes - 0/ Sync; <x>]
-        #   [Test name/Removing classes - 0/ Async; <y>]
-        #   [Test name/Removing classes - 0; <x> + <y>]
-        #   ...
-        #   [Test name/Adding classes - 1 / Sync; <x>]
-        #   [Test name/Adding classes - 1 / Async; <y>]
-        #   [Test name/Adding classes - 1 ; <x> + <y>]
-        #   ...
-        #   [Test name/Removing leaf elements - 4; <x> + <y>]
-        #   [Test name; <sum>] <- This is what we want.
-        #
-        # So, 5 (subtests) *
-        #     5 (repetitions) *
-        #     3 (entries per repetition (sync/async/sum)) =
-        #     75 entries for test before the sum.
-        #
-        # We receive 76 entries per test, which ads up to 380. We want to use
-        # the 5 test entries, not the rest.
-        if len(results) != 380:
-            raise Exception("StyleBench has 380 entries, found: %s instead" % len(results))
-
-        results = results[75::76]
-        score = 60 * 1000 / filters.geometric_mean(results) / correctionFactor
-        return score
-
-    @classmethod
-    def sunspider_score(cls, val_list):
-        results = [i for i, j in val_list]
-        return sum(results)
-
-    @classmethod
-    def assorted_dom_score(cls, val_list):
-        results = [i for i, j in val_list]
-        return round(filters.geometric_mean(results), 2)
-
-    @classmethod
-    def youtube_playback_performance_score(cls, val_list):
-        """Calculate percentage of failed tests."""
-        results = [i for i, j in val_list]
-        return round(filters.mean(results), 2)
-
-    @classmethod
-    def supporting_data_total(cls, val_list):
-        results = [i for i, j in val_list]
-        return sum(results)
-
-    @classmethod
-    def supporting_data_average(cls, val_list):
-        results = [i for i, j in val_list]
-        return sum(results)/len(results)
-
-    def construct_summary(self, vals, testname, unit=None):
-        if testname.startswith('raptor-v8_7'):
-            return self.v8_Metric(vals)
-        elif testname.startswith('raptor-kraken'):
-            return self.JS_Metric(vals)
-        elif testname.startswith('raptor-speedometer'):
-            return self.speedometer_score(vals)
-        elif testname.startswith('raptor-stylebench'):
-            return self.stylebench_score(vals)
-        elif testname.startswith('raptor-sunspider'):
-            return self.sunspider_score(vals)
-        elif testname.startswith('raptor-unity-webgl'):
-            return self.unity_webgl_score(vals)
-        elif testname.startswith('raptor-webaudio'):
-            return self.webaudio_score(vals)
-        elif testname.startswith('raptor-assorted-dom'):
-            return self.assorted_dom_score(vals)
-        elif testname.startswith('raptor-wasm-misc'):
-            return self.wasm_misc_score(vals)
-        elif testname.startswith('raptor-wasm-godot'):
-            return self.wasm_godot_score(vals)
-        elif testname.startswith('raptor-youtube-playback'):
-            return self.youtube_playback_performance_score(vals)
-        elif testname.startswith('supporting_data'):
-            if unit and unit in ('%',):
-                return self.supporting_data_average(vals)
-            else:
-                return self.supporting_data_total(vals)
-        elif len(vals) > 1:
-            return round(filters.geometric_mean([i for i, j in vals]), 2)
-        else:
-            return round(filters.mean([i for i, j in vals]), 2)
+        self.summarized_results = test_results
