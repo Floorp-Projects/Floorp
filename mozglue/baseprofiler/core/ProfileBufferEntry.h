@@ -54,12 +54,34 @@ class ProfilerMarker;
 
 class ProfileBufferEntry {
  public:
-  enum class Kind : uint8_t {
+  // The `Kind` is a single byte identifying the type of data that is actually
+  // stored in a `ProfileBufferEntry`, as per the list in
+  // `FOR_EACH_PROFILE_BUFFER_ENTRY_KIND`.
+  //
+  // This byte is also used to identify entries in BlocksRingBuffer blocks, for
+  // both "legacy" entries that do contain a `ProfileBufferEntry`, and for new
+  // types of entries that may carry more data of different types.
+  // TODO: Eventually each type of "legacy" entry should be replaced with newer,
+  // more efficient kinds of entries (e.g., stack frames could be stored in one
+  // bigger entry, instead of multiple `ProfileBufferEntry`s); then we could
+  // discard `ProfileBufferEntry` and move this enum to a more appropriate spot.
+  using KindUnderlyingType = uint8_t;
+  enum class Kind : KindUnderlyingType {
     INVALID = 0,
 #define KIND(KIND, TYPE, SIZE) KIND,
     FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(KIND)
 #undef KIND
-        LIMIT
+
+    // Any value under `LEGACY_LIMIT` represents a `ProfileBufferEntry`.
+    LEGACY_LIMIT,
+
+    // Any value starting here does *not* represent a `ProfileBufferEntry` and
+    // requires separate decoding and handling.
+
+    // Marker data, including payload.
+    MarkerData = LEGACY_LIMIT,
+
+    MODERN_LIMIT
   };
 
   ProfileBufferEntry();
