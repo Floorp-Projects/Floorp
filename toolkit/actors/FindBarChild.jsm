@@ -6,9 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["FindBarChild"];
 
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -20,9 +17,9 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/BrowserUtils.jsm"
 );
 
-class FindBarChild extends ActorChild {
-  constructor(dispatcher) {
-    super(dispatcher);
+class FindBarChild extends JSWindowActorChild {
+  constructor() {
+    super();
 
     this._findKey = null;
 
@@ -32,10 +29,20 @@ class FindBarChild extends ActorChild {
       () => {
         let tmp = {};
         ChromeUtils.import("resource://gre/modules/FindBarContent.jsm", tmp);
-        return new tmp.FindBarContent(this.mm);
+        return new tmp.FindBarContent(this);
       },
       { inQuickFind: false, inPassThrough: false }
     );
+  }
+
+  receiveMessage(msg) {
+    if (msg.name == "Findbar:UpdateState") {
+      this.findMode = msg.data.findMode;
+      this.inQuickFind = msg.data.hasQuickFindTimeout;
+      if (msg.data.isOpenAndFocused) {
+        this.inPassThrough = false;
+      }
+    }
   }
 
   /**
@@ -73,7 +80,7 @@ class FindBarChild extends ActorChild {
     }
 
     // disable FAYT in about:blank to prevent FAYT opening unexpectedly.
-    let location = this.content.location.href;
+    let location = this.document.location.href;
     if (location == "about:blank") {
       return null;
     }
@@ -83,7 +90,7 @@ class FindBarChild extends ActorChild {
       event.altKey ||
       event.metaKey ||
       event.defaultPrevented ||
-      !BrowserUtils.mimeTypeIsTextBased(this.content.document.contentType) ||
+      !BrowserUtils.mimeTypeIsTextBased(this.document.contentType) ||
       !BrowserUtils.canFindInPage(location)
     ) {
       return null;
