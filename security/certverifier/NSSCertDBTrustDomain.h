@@ -78,8 +78,10 @@ nsresult DefaultServerNicknameForCert(const CERTCertificate* cert,
  * Build nsTArray<uint8_t>s out of the issuer, serial, subject and public key
  * data from the supplied certificate for use in revocation checks.
  *
- * @param cert
- *        The CERTCertificate* from which to extract the data.
+ * @param certDER
+ *        The Input that references the encoded bytes of the certificate.
+ * @param endEntityOrCA
+ *        Whether the certificate is an end-entity or CA.
  * @param out encIssuer
  *        The array to populate with issuer data.
  * @param out encSerial
@@ -89,21 +91,23 @@ nsresult DefaultServerNicknameForCert(const CERTCertificate* cert,
  * @param out encPubKey
  *        The array to populate with public key data.
  * @return
- *        NS_OK, unless there's a memory allocation problem, in which case
- *        NS_ERROR_OUT_OF_MEMORY.
+ *        Result::Success, unless there's a problem decoding the certificate.
  */
-nsresult BuildRevocationCheckArrays(const UniqueCERTCertificate& cert,
-                                    /*out*/ nsTArray<uint8_t>& issuerBytes,
-                                    /*out*/ nsTArray<uint8_t>& serialBytes,
-                                    /*out*/ nsTArray<uint8_t>& subjectBytes,
-                                    /*out*/ nsTArray<uint8_t>& pubKeyBytes);
+pkix::Result BuildRevocationCheckArrays(pkix::Input certDER,
+                                        pkix::EndEntityOrCA endEntityOrCA,
+                                        /*out*/ nsTArray<uint8_t>& issuerBytes,
+                                        /*out*/ nsTArray<uint8_t>& serialBytes,
+                                        /*out*/ nsTArray<uint8_t>& subjectBytes,
+                                        /*out*/ nsTArray<uint8_t>& pubKeyBytes);
 #else
 /**
  * Build strings of base64 encoded issuer, serial, subject and public key data
  * from the supplied certificate for use in revocation checks.
  *
- * @param cert
- *        The CERTCertificate* from which to extract the data.
+ * @param certDER
+ *        The Input that references the encoded bytes of the certificate.
+ * @param endEntityOrCA
+ *        Whether the certificate is an end-entity or CA.
  * @param out encIssuer
  *        The string to populate with base64 encoded issuer data.
  * @param out encSerial
@@ -113,14 +117,15 @@ nsresult BuildRevocationCheckArrays(const UniqueCERTCertificate& cert,
  * @param out encPubKey
  *        The string to populate with base64 encoded public key data.
  * @return
- *        NS_OK, unless there's a Base64 encoding problem, in which case
- *        NS_ERROR_FAILURE.
+ *        Result::Success, unless there's a problem decoding the certificate or
+ *        a Base64 encoding problem.
  */
-nsresult BuildRevocationCheckStrings(const CERTCertificate* cert,
-                                     /*out*/ nsCString& encIssuer,
-                                     /*out*/ nsCString& encSerial,
-                                     /*out*/ nsCString& encSubject,
-                                     /*out*/ nsCString& encPubKey);
+pkix::Result BuildRevocationCheckStrings(pkix::Input certDER,
+                                         pkix::EndEntityOrCA endEntityOrCA,
+                                         /*out*/ nsCString& encIssuer,
+                                         /*out*/ nsCString& encSerial,
+                                         /*out*/ nsCString& encSubject,
+                                         /*out*/ nsCString& encPubKey);
 #endif
 
 void SaveIntermediateCerts(const UniqueCERTCertList& certList);

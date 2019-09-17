@@ -337,19 +337,6 @@ Result NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
                                           const CertPolicyId& policy,
                                           Input candidateCertDER,
                                           /*out*/ TrustLevel& trustLevel) {
-  // XXX: This would be cleaner and more efficient if we could get the trust
-  // information without constructing a CERTCertificate here, but NSS doesn't
-  // expose it in any other easy-to-use fashion. The use of
-  // CERT_NewTempCertificate to get a CERTCertificate shouldn't be a
-  // performance problem because NSS will just find the existing
-  // CERTCertificate in its in-memory cache and return it.
-  SECItem candidateCertDERSECItem = UnsafeMapInputToSECItem(candidateCertDER);
-  UniqueCERTCertificate candidateCert(CERT_NewTempCertificate(
-      CERT_GetDefaultCertDB(), &candidateCertDERSECItem, nullptr, false, true));
-  if (!candidateCert) {
-    return MapPRErrorCodeToResult(PR_GetError());
-  }
-
   // Check the certificate against the OneCRL cert blocklist
 #ifdef MOZ_NEW_CERT_STORAGE
   if (!mCertStorage) {
@@ -370,8 +357,9 @@ Result NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
     nsTArray<uint8_t> subjectBytes;
     nsTArray<uint8_t> pubKeyBytes;
 
-    nsresult nsrv = BuildRevocationCheckArrays(
-        candidateCert, issuerBytes, serialBytes, subjectBytes, pubKeyBytes);
+    Result result =
+        BuildRevocationCheckArrays(candidateCertDER, endEntityOrCA, issuerBytes,
+                                   serialBytes, subjectBytes, pubKeyBytes);
 #else
     bool isCertRevoked;
 
@@ -380,20 +368,21 @@ Result NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
     nsAutoCString encSubject;
     nsAutoCString encPubKey;
 
-    nsresult nsrv = BuildRevocationCheckStrings(
-        candidateCert.get(), encIssuer, encSerial, encSubject, encPubKey);
+    Result result =
+        BuildRevocationCheckStrings(candidateCertDER, endEntityOrCA, encIssuer,
+                                    encSerial, encSubject, encPubKey);
 #endif
 
-    if (NS_FAILED(nsrv)) {
-      return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    if (result != Success) {
+      return result;
     }
 
 #ifdef MOZ_NEW_CERT_STORAGE
-    nsrv = mCertStorage->GetRevocationState(
+    nsresult nsrv = mCertStorage->GetRevocationState(
         issuerBytes, serialBytes, subjectBytes, pubKeyBytes, &revocationState);
 #else
-    nsrv = mCertBlocklist->IsCertRevoked(encIssuer, encSerial, encSubject,
-                                         encPubKey, &isCertRevoked);
+    nsresult nsrv = mCertBlocklist->IsCertRevoked(
+        encIssuer, encSerial, encSubject, encPubKey, &isCertRevoked);
 #endif
     if (NS_FAILED(nsrv)) {
       return Result::FATAL_ERROR_LIBRARY_FAILURE;
@@ -418,6 +407,31 @@ Result NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
     }
   }
 
+  // This may be a third-party intermediate.
+  for (const auto& thirdPartyIntermediateInput :
+       mThirdPartyIntermediateInputs) {
+    if (InputsAreEqual(candidateCertDER, thirdPartyIntermediateInput)) {
+      trustLevel = TrustLevel::InheritsTrust;
+      return Success;
+    }
+  }
+
+  // XXX: This would be cleaner and more efficient if we could get the trust
+  // information without constructing a CERTCertificate here, but NSS doesn't
+  // expose it in any other easy-to-use fashion. The use of
+  // CERT_NewTempCertificate to get a CERTCertificate shouldn't be a
+  // performance problem for certificates already known to NSS because NSS will
+  // just find the existing CERTCertificate in its in-memory cache and return
+  // it. For certificates not already in NSS (namely third-party roots and
+  // intermediates), we want to avoid calling CERT_NewTempCertificate
+  // repeatedly, so we've already checked if the candidate certificate is a
+  // third-party certificate, above.
+  SECItem candidateCertDERSECItem = UnsafeMapInputToSECItem(candidateCertDER);
+  UniqueCERTCertificate candidateCert(CERT_NewTempCertificate(
+      CERT_GetDefaultCertDB(), &candidateCertDERSECItem, nullptr, false, true));
+  if (!candidateCert) {
+    return MapPRErrorCodeToResult(PR_GetError());
+  }
   // XXX: CERT_GetCertTrust seems to be abusing SECStatus as a boolean, where
   // SECSuccess means that there is a trust record and SECFailure means there
   // is not a trust record. I looked at NSS's internal uses of
@@ -1438,74 +1452,77 @@ nsresult DefaultServerNicknameForCert(const CERTCertificate* cert,
 }
 
 #ifdef MOZ_NEW_CERT_STORAGE
-nsresult BuildRevocationCheckArrays(const UniqueCERTCertificate& cert,
-                                    /*out*/ nsTArray<uint8_t>& issuerBytes,
-                                    /*out*/ nsTArray<uint8_t>& serialBytes,
-                                    /*out*/ nsTArray<uint8_t>& subjectBytes,
-                                    /*out*/ nsTArray<uint8_t>& pubKeyBytes) {
+Result BuildRevocationCheckArrays(Input certDER, EndEntityOrCA endEntityOrCA,
+                                  /*out*/ nsTArray<uint8_t>& issuerBytes,
+                                  /*out*/ nsTArray<uint8_t>& serialBytes,
+                                  /*out*/ nsTArray<uint8_t>& subjectBytes,
+                                  /*out*/ nsTArray<uint8_t>& pubKeyBytes) {
+  BackCert cert(certDER, endEntityOrCA, nullptr);
+  Result rv = cert.Init();
+  if (rv != Success) {
+    return rv;
+  }
   issuerBytes.Clear();
-  if (!issuerBytes.AppendElements(
-          BitwiseCast<char*, uint8_t*>(cert->derIssuer.data),
-          cert->derIssuer.len)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  Input issuer(cert.GetIssuer());
+  issuerBytes.AppendElements(issuer.UnsafeGetData(), issuer.GetLength());
   serialBytes.Clear();
-  if (!serialBytes.AppendElements(
-          BitwiseCast<char*, uint8_t*>(cert->serialNumber.data),
-          cert->serialNumber.len)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  Input serial(cert.GetSerialNumber());
+  serialBytes.AppendElements(serial.UnsafeGetData(), serial.GetLength());
   subjectBytes.Clear();
-  if (!subjectBytes.AppendElements(
-          BitwiseCast<char*, uint8_t*>(cert->derSubject.data),
-          cert->derSubject.len)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  Input subject(cert.GetSubject());
+  subjectBytes.AppendElements(subject.UnsafeGetData(), subject.GetLength());
   pubKeyBytes.Clear();
-  if (!pubKeyBytes.AppendElements(
-          BitwiseCast<char*, uint8_t*>(cert->derPublicKey.data),
-          cert->derPublicKey.len)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return NS_OK;
+  Input pubKey(cert.GetSubjectPublicKeyInfo());
+  pubKeyBytes.AppendElements(pubKey.UnsafeGetData(), pubKey.GetLength());
+
+  return Success;
 }
 #else
-nsresult BuildRevocationCheckStrings(const CERTCertificate* cert,
-                                     /*out*/ nsCString& encIssuer,
-                                     /*out*/ nsCString& encSerial,
-                                     /*out*/ nsCString& encSubject,
-                                     /*out*/ nsCString& encPubKey) {
+Result BuildRevocationCheckStrings(Input certDER, EndEntityOrCA endEntityOrCA,
+                                   /*out*/ nsCString& encIssuer,
+                                   /*out*/ nsCString& encSerial,
+                                   /*out*/ nsCString& encSubject,
+                                   /*out*/ nsCString& encPubKey) {
   // Convert issuer, serial, subject and pubKey data to Base64 encoded DER
+  BackCert cert(certDER, endEntityOrCA, nullptr);
+  Result result = cert.Init();
+  if (result != Success) {
+    return result;
+  }
+  Input issuer(cert.GetIssuer());
   nsDependentCSubstring issuerString(
-      BitwiseCast<char*, uint8_t*>(cert->derIssuer.data), cert->derIssuer.len);
+      reinterpret_cast<const char*>(issuer.UnsafeGetData()),
+      issuer.GetLength());
+  Input serial(cert.GetSerialNumber());
   nsDependentCSubstring serialString(
-      BitwiseCast<char*, uint8_t*>(cert->serialNumber.data),
-      cert->serialNumber.len);
+      reinterpret_cast<const char*>(serial.UnsafeGetData()),
+      serial.GetLength());
+  Input subject(cert.GetSubject());
   nsDependentCSubstring subjectString(
-      BitwiseCast<char*, uint8_t*>(cert->derSubject.data),
-      cert->derSubject.len);
+      reinterpret_cast<const char*>(subject.UnsafeGetData()),
+      subject.GetLength());
+  Input pubKey(cert.GetSubjectPublicKeyInfo());
   nsDependentCSubstring pubKeyString(
-      BitwiseCast<char*, uint8_t*>(cert->derPublicKey.data),
-      cert->derPublicKey.len);
+      reinterpret_cast<const char*>(pubKey.UnsafeGetData()),
+      pubKey.GetLength());
 
   nsresult rv = Base64Encode(issuerString, encIssuer);
   if (NS_FAILED(rv)) {
-    return rv;
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
   rv = Base64Encode(serialString, encSerial);
   if (NS_FAILED(rv)) {
-    return rv;
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
   rv = Base64Encode(subjectString, encSubject);
   if (NS_FAILED(rv)) {
-    return rv;
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
   rv = Base64Encode(pubKeyString, encPubKey);
   if (NS_FAILED(rv)) {
-    return rv;
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
-
-  return NS_OK;
+  return Success;
 }
 #endif
 
