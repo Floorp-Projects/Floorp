@@ -39,8 +39,8 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef nr_socket_proxy_h__
-#define nr_socket_proxy_h__
+#ifndef nr_socket_tcp_h__
+#define nr_socket_tcp_h__
 
 #include <list>
 
@@ -63,14 +63,14 @@ namespace net {
 class WebrtcTCPSocketWrapper;
 }  // namespace net
 
-class NrSocketProxyData;
+class NrTcpSocketData;
 class NrSocketProxyConfig;
 
-class NrSocketProxy : public NrSocketBase, public WebrtcTCPSocketCallback {
+class NrTcpSocket : public NrSocketBase, public WebrtcTCPSocketCallback {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrSocketProxy, override)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrTcpSocket, override)
 
-  explicit NrSocketProxy(const std::shared_ptr<NrSocketProxyConfig>& aConfig);
+  explicit NrTcpSocket(const std::shared_ptr<NrSocketProxyConfig>& aConfig);
 
   // NrSocketBase
   int create(nr_transport_addr* aAddr) override;
@@ -99,7 +99,7 @@ class NrSocketProxy : public NrSocketBase, public WebrtcTCPSocketCallback {
   void AssignChannel_DoNotUse(WebrtcTCPSocketWrapper* aWrapper);
 
  protected:
-  virtual ~NrSocketProxy();
+  virtual ~NrTcpSocket();
 
  private:
   void DoCallbacks();
@@ -107,7 +107,7 @@ class NrSocketProxy : public NrSocketBase, public WebrtcTCPSocketCallback {
   bool mClosed;
 
   size_t mReadOffset;
-  std::list<NrSocketProxyData> mReadQueue;
+  std::list<NrTcpSocketData> mReadQueue;
 
   std::shared_ptr<NrSocketProxyConfig> mConfig;
 
@@ -116,4 +116,4 @@ class NrSocketProxy : public NrSocketBase, public WebrtcTCPSocketCallback {
 
 }  // namespace mozilla
 
-#endif  // nr_socket_proxy_h__
+#endif  // nr_socket_tcp_h__

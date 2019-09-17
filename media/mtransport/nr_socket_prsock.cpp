@@ -140,7 +140,7 @@ nrappkit copyright:
 
 #  include "mozilla/dom/network/TCPSocketChild.h"
 #  include "mozilla/dom/network/UDPSocketChild.h"
-#  include "nr_socket_proxy.h"
+#  include "nr_socket_tcp.h"
 
 #  ifdef LOG_TEMP_INFO
 #    define LOG_INFO LOG_TEMP_INFO
@@ -2082,31 +2082,19 @@ int NrSocketBase::CreateSocket(
 
   // create IPC bridge for content process
   if (XRE_IsParentProcess()) {
+    // TODO: Make NrTcpSocket work on the parent process
     *sock = new NrSocket();
   } else if (XRE_IsSocketProcess()) {
-    if (addr->protocol == IPPROTO_TCP && config) {
-      *sock = new NrSocketProxy(config);
+    if (addr->protocol == IPPROTO_TCP) {
+      *sock = new NrTcpSocket(config);
     } else {
       *sock = new NrSocket();
     }
   } else {
-    switch (addr->protocol) {
-      case IPPROTO_UDP:
-        *sock = new NrUdpSocketIpc();
-        break;
-      case IPPROTO_TCP:
-#if defined(MOZILLA_INTERNAL_API)
-        if (!config) {
-          nsCOMPtr<nsIThread> main_thread;
-          NS_GetMainThread(getter_AddRefs(main_thread));
-          *sock = new NrTcpSocketIpc(main_thread.get());
-        } else {
-          *sock = new NrSocketProxy(config);
-        }
-#else
-        ABORT(R_REJECTED);
-#endif
-        break;
+    if (addr->protocol == IPPROTO_TCP) {
+      *sock = new NrTcpSocket(config);
+    } else {
+      *sock = new NrUdpSocketIpc();
     }
   }
 

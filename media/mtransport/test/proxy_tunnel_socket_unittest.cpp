@@ -10,7 +10,7 @@
 #include <numeric>
 
 #include "mozilla/net/NeckoChannelParams.h"
-#include "nr_socket_proxy.h"
+#include "nr_socket_tcp.h"
 #include "nr_socket_proxy_config.h"
 #include "WebrtcTCPSocketWrapper.h"
 
@@ -23,9 +23,9 @@ using namespace mozilla;
 // update TestReadMultipleSizes if you change this
 const std::string kHelloMessage = "HELLO IS IT ME YOU'RE LOOKING FOR?";
 
-class NrSocketProxyTest : public MtransportTest {
+class NrTcpSocketTest : public MtransportTest {
  public:
-  NrSocketProxyTest()
+  NrTcpSocketTest()
       : mSProxy(nullptr),
         nr_socket_(nullptr),
         mEmptyArray(0),
@@ -39,7 +39,7 @@ class NrSocketProxyTest : public MtransportTest {
     std::shared_ptr<NrSocketProxyConfig> config;
     config.reset(new NrSocketProxyConfig(0, alpn, net::LoadInfoArgs()));
     // config is never used but must be non-null
-    mSProxy = new NrSocketProxy(config);
+    mSProxy = new NrTcpSocket(config);
     int r = nr_socket_create_int((void*)mSProxy.get(), mSProxy->vtbl(),
                                  &nr_socket_);
     ASSERT_EQ(0, r);
@@ -51,7 +51,7 @@ class NrSocketProxyTest : public MtransportTest {
   void TearDown() override { mSProxy->close(); }
 
   static void readable_cb(NR_SOCKET s, int how, void* cb_arg) {
-    NrSocketProxyTest* test = (NrSocketProxyTest*)cb_arg;
+    NrTcpSocketTest* test = (NrTcpSocketTest*)cb_arg;
     size_t capacity = std::min(test->mReadChunkSize, test->mReadAllowance);
     nsTArray<uint8_t> array(capacity);
     size_t read;
@@ -71,12 +71,12 @@ class NrSocketProxyTest : public MtransportTest {
     test->mReadChunkSize += test->mReadChunkSizeIncrement;
 
     if (test->mReadAllowance > 0) {
-      NR_ASYNC_WAIT(s, how, &NrSocketProxyTest::readable_cb, cb_arg);
+      NR_ASYNC_WAIT(s, how, &NrTcpSocketTest::readable_cb, cb_arg);
     }
   }
 
   static void writable_cb(NR_SOCKET s, int how, void* cb_arg) {
-    NrSocketProxyTest* test = (NrSocketProxyTest*)cb_arg;
+    NrTcpSocketTest* test = (NrTcpSocketTest*)cb_arg;
     test->mConnected = true;
   }
 
@@ -85,7 +85,7 @@ class NrSocketProxyTest : public MtransportTest {
   }
 
  protected:
-  RefPtr<NrSocketProxy> mSProxy;
+  RefPtr<NrTcpSocket> mSProxy;
   nr_socket* nr_socket_;
 
   nsTArray<uint8_t> mData;
@@ -98,12 +98,12 @@ class NrSocketProxyTest : public MtransportTest {
   bool mConnected;
 };
 
-TEST_F(NrSocketProxyTest, TestCreate) {}
+TEST_F(NrTcpSocketTest, TestCreate) {}
 
-TEST_F(NrSocketProxyTest, TestConnected) {
+TEST_F(NrTcpSocketTest, TestConnected) {
   ASSERT_TRUE(!mConnected);
 
-  NR_ASYNC_WAIT(mSProxy, NR_ASYNC_WAIT_WRITE, &NrSocketProxyTest::writable_cb,
+  NR_ASYNC_WAIT(mSProxy, NR_ASYNC_WAIT_WRITE, &NrTcpSocketTest::writable_cb,
                 this);
 
   // still not connected just registered for writes...
@@ -114,11 +114,11 @@ TEST_F(NrSocketProxyTest, TestConnected) {
   ASSERT_TRUE(mConnected);
 }
 
-TEST_F(NrSocketProxyTest, TestRead) {
+TEST_F(NrTcpSocketTest, TestRead) {
   nsTArray<uint8_t> array;
   array.AppendElements(kHelloMessage.c_str(), kHelloMessage.length());
 
-  NR_ASYNC_WAIT(mSProxy, NR_ASYNC_WAIT_READ, &NrSocketProxyTest::readable_cb,
+  NR_ASYNC_WAIT(mSProxy, NR_ASYNC_WAIT_READ, &NrTcpSocketTest::readable_cb,
                 this);
   // this will read 0 bytes here
   mSProxy->OnRead(std::move(array));
@@ -133,7 +133,7 @@ TEST_F(NrSocketProxyTest, TestRead) {
   ASSERT_EQ(kHelloMessage, DataString());
 }
 
-TEST_F(NrSocketProxyTest, TestReadConstantConsumeSize) {
+TEST_F(NrTcpSocketTest, TestReadConstantConsumeSize) {
   std::string data;
 
   // triangle number
@@ -161,7 +161,7 @@ TEST_F(NrSocketProxyTest, TestReadConstantConsumeSize) {
   // read same amount each callback
   mReadChunkSize = 128;
   mReadChunkSizeIncrement = 0;
-  NR_ASYNC_WAIT(mSProxy, NR_ASYNC_WAIT_READ, &NrSocketProxyTest::readable_cb,
+  NR_ASYNC_WAIT(mSProxy, NR_ASYNC_WAIT_READ, &NrTcpSocketTest::readable_cb,
                 this);
 
   ASSERT_EQ(data.length(), mSProxy->CountUnreadBytes());
@@ -173,7 +173,7 @@ TEST_F(NrSocketProxyTest, TestReadConstantConsumeSize) {
   ASSERT_EQ(data, DataString());
 }
 
-TEST_F(NrSocketProxyTest, TestReadNone) {
+TEST_F(NrTcpSocketTest, TestReadNone) {
   char buf[4096];
   size_t read = 0;
   int r = nr_socket_read(nr_socket_, buf, sizeof(buf), &read, 0);
@@ -193,7 +193,7 @@ TEST_F(NrSocketProxyTest, TestReadNone) {
   ASSERT_EQ(kHelloMessage, std::string(buf, read));
 }
 
-TEST_F(NrSocketProxyTest, TestReadMultipleSizes) {
+TEST_F(NrTcpSocketTest, TestReadMultipleSizes) {
   using namespace std;
 
   string data;
@@ -227,7 +227,7 @@ TEST_F(NrSocketProxyTest, TestReadMultipleSizes) {
 
   // don't need to read 0 on the first read, so start at 1 and keep going
   mReadChunkSize = 1;
-  NR_ASYNC_WAIT(mSProxy, NR_ASYNC_WAIT_READ, &NrSocketProxyTest::readable_cb,
+  NR_ASYNC_WAIT(mSProxy, NR_ASYNC_WAIT_READ, &NrTcpSocketTest::readable_cb,
                 this);
   // start callbacks
   mSProxy->OnRead(std::move(mEmptyArray));
@@ -236,7 +236,7 @@ TEST_F(NrSocketProxyTest, TestReadMultipleSizes) {
   ASSERT_EQ(data, DataString());
 }
 
-TEST_F(NrSocketProxyTest, TestReadConsumeReadDrain) {
+TEST_F(NrTcpSocketTest, TestReadConsumeReadDrain) {
   std::string data;
   // ~26kb total; should be even
   const int kCount = 512;
@@ -255,7 +255,7 @@ TEST_F(NrSocketProxyTest, TestReadConsumeReadDrain) {
   mReadAllowance = kCount / 2 * kHelloMessage.length();
   // start by reading 1 byte
   mReadChunkSize = 1;
-  NR_ASYNC_WAIT(mSProxy, NR_ASYNC_WAIT_READ, &NrSocketProxyTest::readable_cb,
+  NR_ASYNC_WAIT(mSProxy, NR_ASYNC_WAIT_READ, &NrTcpSocketTest::readable_cb,
                 this);
   mSProxy->OnRead(std::move(mEmptyArray));
 
@@ -273,7 +273,7 @@ TEST_F(NrSocketProxyTest, TestReadConsumeReadDrain) {
   // remove read limit
   mReadAllowance = -1;
   // used entire read allowance so we need to setup a new await
-  NR_ASYNC_WAIT(mSProxy, NR_ASYNC_WAIT_READ, &NrSocketProxyTest::readable_cb,
+  NR_ASYNC_WAIT(mSProxy, NR_ASYNC_WAIT_READ, &NrTcpSocketTest::readable_cb,
                 this);
   // start callbacks
   mSProxy->OnRead(std::move(mEmptyArray));
