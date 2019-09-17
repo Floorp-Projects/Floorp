@@ -54,32 +54,9 @@ class VideoFrameMarkerPayload : public ProfilerMarkerPayload {
         mAudioPositionUs(aAudioPositionUs),
         mVideoFrameTimeUs(aVideoFrameTimeUs) {}
 
-  BlocksRingBuffer::Length TagAndSerializationBytes() const override {
-    return CommonPropsTagAndSerializationBytes() +
-           BlocksRingBuffer::SumBytes(mAudioPositionUs, mVideoFrameTimeUs);
-  }
-
-  void SerializeTagAndPayload(
-      BlocksRingBuffer::EntryWriter& aEntryWriter) const override {
-    static const DeserializerTag tag = TagForDeserializer(Deserialize);
-    SerializeTagAndCommonProps(tag, aEntryWriter);
-    aEntryWriter.WriteObject(mAudioPositionUs);
-    aEntryWriter.WriteObject(mVideoFrameTimeUs);
-  }
-
-  static UniquePtr<ProfilerMarkerPayload> Deserialize(
-      BlocksRingBuffer::EntryReader& aEntryReader) {
-    ProfilerMarkerPayload::CommonProps props =
-        DeserializeCommonProps(aEntryReader);
-    auto audioPositionUs = aEntryReader.ReadObject<int64_t>();
-    auto videoFrameTimeUs = aEntryReader.ReadObject<int64_t>();
-    return UniquePtr<ProfilerMarkerPayload>(new VideoFrameMarkerPayload(
-        std::move(props), audioPositionUs, videoFrameTimeUs));
-  }
-
   void StreamPayload(SpliceableJSONWriter& aWriter,
                      const TimeStamp& aProcessStartTime,
-                     UniqueStacks& aUniqueStacks) const override {
+                     UniqueStacks& aUniqueStacks) {
     StreamCommonProps("UpdateRenderVideoFrames", aWriter, aProcessStartTime,
                       aUniqueStacks);
     aWriter.IntProperty("audio", mAudioPositionUs);
@@ -87,12 +64,6 @@ class VideoFrameMarkerPayload : public ProfilerMarkerPayload {
   }
 
  private:
-  VideoFrameMarkerPayload(CommonProps&& aCommonProps, int64_t aAudioPositionUs,
-                          int64_t aVideoFrameTimeUs)
-      : ProfilerMarkerPayload(std::move(aCommonProps)),
-        mAudioPositionUs(aAudioPositionUs),
-        mVideoFrameTimeUs(aVideoFrameTimeUs) {}
-
   int64_t mAudioPositionUs;
   int64_t mVideoFrameTimeUs;
 };

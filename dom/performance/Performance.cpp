@@ -221,7 +221,7 @@ void Performance::Mark(const nsAString& aName, ErrorResult& aRv) {
   InsertUserEntry(performanceMark);
 
 #ifdef MOZ_GECKO_PROFILER
-  if (profiler_can_accept_markers()) {
+  if (profiler_is_active()) {
     nsCOMPtr<EventTarget> et = do_QueryInterface(GetOwner());
     nsCOMPtr<nsIDocShell> docShell =
         nsContentUtils::GetDocShellForEventTarget(et);
@@ -305,7 +305,7 @@ void Performance::Measure(const nsAString& aName,
   InsertUserEntry(performanceMeasure);
 
 #ifdef MOZ_GECKO_PROFILER
-  if (profiler_can_accept_markers()) {
+  if (profiler_is_active()) {
     TimeStamp startTimeStamp =
         CreationTimeStamp() + TimeDuration::FromMilliseconds(startTime);
     TimeStamp endTimeStamp =
