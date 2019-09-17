@@ -23,7 +23,7 @@ use env_logger;
 use crate::driver::{DefaultAbortSignal, Driver};
 use crate::error::{Error, ErrorKind, Result};
 use crate::guid::{Guid, ROOT_GUID, UNFILED_GUID};
-use crate::merge::{Merger, StructureCounts};
+use crate::merge::{to_strings, Merger, StructureCounts};
 use crate::tree::{
     self, Builder, Content, DivergedParent, DivergedParentGuid, Item, Kind, MergeState, Problem,
     ProblemCounts, Problems, Tree, Validity,
@@ -476,20 +476,17 @@ fn unchanged_newer_changed_older() {
             ("bookmarkFFFF", RemoteWithNewRemoteStructure)
         })
     });
-    let expected_deletions = vec!["folderAAAAAA", "folderCCCCCC"];
+    let expected_deletions = &["folderAAAAAA", "folderCCCCCC"];
     let expected_telem = StructureCounts {
-        remote_revives: 0,
         local_deletes: 1,
-        local_revives: 0,
         remote_deletes: 1,
-        dupes: 0,
         merged_nodes: 6,
-        merged_deletions: 2,
+        ..StructureCounts::default()
     };
 
     assert_eq!(&expected_tree, merged_root.node());
 
-    let mut deletions = merged_root.deletions().map(|d| d.guid).collect::<Vec<_>>();
+    let mut deletions = merged_root.deletions().collect::<Vec<_>>();
     deletions.sort();
     assert_eq!(deletions, expected_deletions);
 
@@ -927,20 +924,17 @@ fn complex_orphaning() {
             })
         })
     });
-    let expected_deletions = vec!["folderBBBBBB", "folderEEEEEE"];
+    let expected_deletions = &["folderBBBBBB", "folderEEEEEE"];
     let expected_telem = StructureCounts {
-        remote_revives: 0,
         local_deletes: 1,
-        local_revives: 0,
         remote_deletes: 1,
-        dupes: 0,
         merged_nodes: 7,
-        merged_deletions: 2,
+        ..StructureCounts::default()
     };
 
     assert_eq!(&expected_tree, merged_root.node());
 
-    let mut deletions = merged_root.deletions().map(|d| d.guid).collect::<Vec<_>>();
+    let mut deletions = merged_root.deletions().collect::<Vec<_>>();
     deletions.sort();
     assert_eq!(deletions, expected_deletions);
 
@@ -1021,20 +1015,17 @@ fn locally_modified_remotely_deleted() {
             })
         })
     });
-    let expected_deletions = vec!["folderBBBBBB", "folderEEEEEE"];
+    let expected_deletions = &["folderBBBBBB", "folderEEEEEE"];
     let expected_telem = StructureCounts {
-        remote_revives: 0,
         local_deletes: 1,
-        local_revives: 0,
         remote_deletes: 1,
-        dupes: 0,
         merged_nodes: 7,
-        merged_deletions: 2,
+        ..StructureCounts::default()
     };
 
     assert_eq!(&expected_tree, merged_root.node());
 
-    let mut deletions = merged_root.deletions().map(|d| d.guid).collect::<Vec<_>>();
+    let mut deletions = merged_root.deletions().collect::<Vec<_>>();
     deletions.sort();
     assert_eq!(deletions, expected_deletions);
 
@@ -1095,7 +1086,7 @@ fn locally_deleted_remotely_modified() {
             ("bookmarkGGGG", RemoteWithNewRemoteStructure)
         })
     });
-    let expected_deletions = vec![
+    let expected_deletions = &[
         "bookmarkCCCC",
         "bookmarkEEEE",
         "folderBBBBBB",
@@ -1104,16 +1095,13 @@ fn locally_deleted_remotely_modified() {
     let expected_telem = StructureCounts {
         remote_revives: 1,
         local_deletes: 2,
-        local_revives: 0,
-        remote_deletes: 0,
-        dupes: 0,
         merged_nodes: 4,
-        merged_deletions: 4,
+        ..StructureCounts::default()
     };
 
     assert_eq!(&expected_tree, merged_root.node());
 
-    let mut deletions = merged_root.deletions().map(|d| d.guid).collect::<Vec<_>>();
+    let mut deletions = merged_root.deletions().collect::<Vec<_>>();
     deletions.sort();
     assert_eq!(deletions, expected_deletions);
 
@@ -1140,17 +1128,25 @@ fn nonexistent_on_one_side() {
     let mut expected_root = Item::new(ROOT_GUID, Kind::Folder);
     expected_root.needs_merge = true;
     let expected_tree = merged_nodes!(ROOT_GUID, Unchanged, {});
-    let expected_deletions = vec!["bookmarkAAAA", "bookmarkBBBB"];
+    let expected_deletions = &["bookmarkAAAA", "bookmarkBBBB"];
     let expected_telem = StructureCounts {
-        merged_deletions: 2,
         ..StructureCounts::default()
     };
 
     assert_eq!(&expected_tree, merged_root.node());
 
-    let mut deletions = merged_root.deletions().map(|d| d.guid).collect::<Vec<_>>();
+    let mut deletions = merged_root.deletions().collect::<Vec<_>>();
     deletions.sort();
     assert_eq!(deletions, expected_deletions);
+
+    let ops = merged_root.completion_ops();
+    assert_eq!(
+        ops.summarize(),
+        &[
+            "Flag remote bookmarkBBBB as merged",
+            "Delete local tombstone bookmarkAAAA",
+        ]
+    );
 
     assert_eq!(merged_root.counts(), &expected_telem);
 }
@@ -1221,16 +1217,15 @@ fn clear_folder_then_delete() {
             ("bookmarkCCCC", Remote)
         })
     });
-    let expected_deletions = vec!["folderAAAAAA", "folderDDDDDD"];
+    let expected_deletions = &["folderAAAAAA", "folderDDDDDD"];
     let expected_telem = StructureCounts {
         merged_nodes: 7,
-        merged_deletions: 2,
         ..StructureCounts::default()
     };
 
     assert_eq!(&expected_tree, merged_root.node());
 
-    let mut deletions = merged_root.deletions().map(|d| d.guid).collect::<Vec<_>>();
+    let mut deletions = merged_root.deletions().collect::<Vec<_>>();
     deletions.sort();
     assert_eq!(deletions, expected_deletions);
 
@@ -1303,20 +1298,17 @@ fn newer_move_to_deleted() {
             ("bookmarkBBBB", Remote)
         })
     });
-    let expected_deletions = vec!["folderAAAAAA", "folderCCCCCC"];
+    let expected_deletions = &["folderAAAAAA", "folderCCCCCC"];
     let expected_telem = StructureCounts {
-        remote_revives: 0,
         local_deletes: 1,
-        local_revives: 0,
         remote_deletes: 1,
-        dupes: 0,
         merged_nodes: 6,
-        merged_deletions: 2,
+        ..StructureCounts::default()
     };
 
     assert_eq!(&expected_tree, merged_root.node());
 
-    let mut deletions = merged_root.deletions().map(|d| d.guid).collect::<Vec<_>>();
+    let mut deletions = merged_root.deletions().collect::<Vec<_>>();
     deletions.sort();
     assert_eq!(deletions, expected_deletions);
 
@@ -1383,13 +1375,8 @@ fn deduping_multiple_candidates() {
         })
     });
     let expected_telem = StructureCounts {
-        remote_revives: 0,
-        local_deletes: 0,
-        local_revives: 0,
-        remote_deletes: 0,
-        dupes: 0,
         merged_nodes: 6,
-        merged_deletions: 0,
+        ..StructureCounts::default()
     };
 
     assert_eq!(&expected_tree, merged_root.node());
@@ -1465,13 +1452,9 @@ fn deduping_local_newer() {
         })
     });
     let expected_telem = StructureCounts {
-        remote_revives: 0,
-        local_deletes: 0,
-        local_revives: 0,
-        remote_deletes: 0,
         dupes: 2,
         merged_nodes: 5,
-        merged_deletions: 0,
+        ..StructureCounts::default()
     };
 
     assert_eq!(&expected_tree, merged_root.node());
@@ -1621,13 +1604,9 @@ fn deduping_remote_newer() {
         })
     });
     let expected_telem = StructureCounts {
-        remote_revives: 0,
-        local_deletes: 0,
-        local_revives: 0,
-        remote_deletes: 0,
         dupes: 6,
         merged_nodes: 11,
-        merged_deletions: 0,
+        ..StructureCounts::default()
     };
 
     assert_eq!(&expected_tree, merged_root.node());
@@ -1760,13 +1739,9 @@ fn complex_deduping() {
         })
     });
     let expected_telem = StructureCounts {
-        remote_revives: 0,
-        local_deletes: 0,
-        local_revives: 0,
-        remote_deletes: 0,
         dupes: 6,
         merged_nodes: 9,
-        merged_deletions: 0,
+        ..StructureCounts::default()
     };
 
     assert_eq!(&expected_tree, merged_root.node());
@@ -1799,20 +1774,19 @@ fn left_pane_root() {
     let merged_root = merger.merge().unwrap();
 
     let expected_tree = merged_nodes!(ROOT_GUID, Local);
-    let expected_deletions = vec![
+    let expected_deletions = &[
         "folderLEFTPC",
         "folderLEFTPF",
         "folderLEFTPQ",
         "folderLEFTPR",
     ];
     let expected_telem = StructureCounts {
-        merged_deletions: 4,
         ..StructureCounts::default()
     };
 
     assert_eq!(&expected_tree, merged_root.node());
 
-    let mut deletions = merged_root.deletions().map(|d| d.guid).collect::<Vec<_>>();
+    let mut deletions = merged_root.deletions().collect::<Vec<_>>();
     deletions.sort();
     assert_eq!(deletions, expected_deletions);
 
@@ -1857,7 +1831,7 @@ fn livemarks() {
         ("toolbar_____", LocalWithNewLocalStructure),
         ("unfiled_____", RemoteWithNewRemoteStructure)
     });
-    let expected_deletions = vec![
+    let expected_deletions = &[
         "livemarkAAAA",
         "livemarkBBBB",
         "livemarkCCCC",
@@ -1866,14 +1840,12 @@ fn livemarks() {
     ];
     let expected_telem = StructureCounts {
         merged_nodes: 3,
-        // A, B, and C are counted twice, since they exist on both sides.
-        merged_deletions: 8,
         ..StructureCounts::default()
     };
 
     assert_eq!(&expected_tree, merged_root.node());
 
-    let mut deletions = merged_root.deletions().map(|d| d.guid).collect::<Vec<_>>();
+    let mut deletions = merged_root.deletions().collect::<Vec<_>>();
     deletions.sort();
     assert_eq!(deletions, expected_deletions);
 
@@ -1956,7 +1928,7 @@ fn non_syncable_items() {
             ("bookmarkGGGG", Remote)
         })
     });
-    let expected_deletions = vec![
+    let expected_deletions = &[
         "bookmarkEEEE", // Non-syncable locally.
         "bookmarkFFFF", // Non-syncable locally.
         "bookmarkIIII", // Non-syncable remotely.
@@ -1971,13 +1943,12 @@ fn non_syncable_items() {
     ];
     let expected_telem = StructureCounts {
         merged_nodes: 5,
-        merged_deletions: 16,
         ..StructureCounts::default()
     };
 
     assert_eq!(&expected_tree, merged_root.node());
 
-    let mut deletions = merged_root.deletions().map(|d| d.guid).collect::<Vec<_>>();
+    let mut deletions = merged_root.deletions().collect::<Vec<_>>();
     deletions.sort();
     assert_eq!(deletions, expected_deletions);
 
@@ -2081,13 +2052,9 @@ fn applying_two_empty_folders_matches_only_one() {
         })
     });
     let expected_telem = StructureCounts {
-        remote_revives: 0,
-        local_deletes: 0,
-        local_revives: 0,
-        remote_deletes: 0,
         dupes: 1,
         merged_nodes: 4,
-        merged_deletions: 0,
+        ..StructureCounts::default()
     };
 
     assert_eq!(&expected_tree, merged_root.node());
@@ -2150,13 +2117,9 @@ fn deduping_ignores_parent_title() {
         })
     });
     let expected_telem = StructureCounts {
-        remote_revives: 0,
-        local_deletes: 0,
-        local_revives: 0,
-        remote_deletes: 0,
         dupes: 1,
         merged_nodes: 2,
-        merged_deletions: 0,
+        ..StructureCounts::default()
     };
 
     assert_eq!(&expected_tree, merged_root.node());
@@ -2253,7 +2216,7 @@ fn invalid_guids() {
             let count = self.0.get();
             self.0.set(count + 1);
             assert!(
-                &[")(*&", "shortGUID", "loooooongGUID", "!@#$%^", "",].contains(&old_guid.as_str()),
+                &[")(*&", "shortGUID", "loooooongGUID", "!@#$%^", ""].contains(&old_guid.as_str()),
                 "Didn't expect to generate new GUID for {}",
                 old_guid
             );
@@ -2307,16 +2270,15 @@ fn invalid_guids() {
             ("item00000004", LocalWithNewLocalStructure)
         })
     });
-    let expected_deletions = vec!["", "!@#$%^", "loooooongGUID", "shortGUID"];
+    let expected_deletions = &["", "!@#$%^", "loooooongGUID", "shortGUID"];
     let expected_telem = StructureCounts {
         merged_nodes: 9,
-        merged_deletions: 4,
         ..StructureCounts::default()
     };
 
     assert_eq!(&expected_tree, merged_root.node());
 
-    let mut deletions = merged_root.deletions().map(|d| d.guid).collect::<Vec<_>>();
+    let mut deletions = merged_root.deletions().collect::<Vec<_>>();
     deletions.sort();
     assert_eq!(deletions, expected_deletions);
 
@@ -2498,20 +2460,13 @@ fn deleted_user_content_roots() {
         })
     });
     let expected_telem = StructureCounts {
-        remote_revives: 0,
-        local_deletes: 0,
-        local_revives: 0,
-        remote_deletes: 0,
-        dupes: 0,
         merged_nodes: 4,
-        merged_deletions: 1,
+        ..StructureCounts::default()
     };
 
     assert_eq!(&expected_tree, merged_root.node());
 
-    // TODO(lina): Remove invalid tombstones from both sides.
-    let deletions = merged_root.deletions().map(|d| d.guid).collect::<Vec<_>>();
-    assert_eq!(deletions, vec![Into::<Guid>::into("toolbar_____")]);
+    assert_eq!(merged_root.deletions().count(), 1);
 
     assert_eq!(merged_root.counts(), &expected_telem);
 }
@@ -2700,44 +2655,68 @@ fn reupload_replace() {
             ("folderGGGGGG", Local)
         })
     });
-    let expected_deletions = vec![
+    let expected_deletions = &[
         // C is invalid on both sides, so we need to upload a tombstone.
-        ("bookmarkCCCC", true),
+        "bookmarkCCCC",
         // E is invalid locally and deleted remotely, so doesn't need a
         // tombstone.
-        ("bookmarkEEEE", false),
+        "bookmarkEEEE",
         // H is invalid locally and doesn't exist remotely, so doesn't need a
         // tombstone.
-        ("bookmarkHHHH", false),
+        "bookmarkHHHH",
         // I is deleted locally and invalid remotely, so needs a tombstone.
-        ("bookmarkIIII", true),
+        "bookmarkIIII",
         // J doesn't exist locally and invalid remotely, so needs a tombstone.
-        ("bookmarkJJJJ", true),
+        "bookmarkJJJJ",
     ];
     let expected_telem = StructureCounts {
         merged_nodes: 10,
-        // C is double-counted: it's deleted on both sides, so
-        // `merged_deletions` is 6, even though we only have 5 expected
-        // deletions.
-        merged_deletions: 6,
         ..StructureCounts::default()
     };
 
     assert_eq!(&expected_tree, merged_root.node());
 
-    let mut deletions = merged_root
-        .deletions()
-        .map(|d| (d.guid.as_ref(), d.should_upload_tombstone))
-        .collect::<Vec<(&str, bool)>>();
-    deletions.sort_by(|a, b| a.0.cmp(&b.0));
+    let mut deletions = merged_root.deletions().collect::<Vec<_>>();
+    deletions.sort();
     assert_eq!(deletions, expected_deletions);
+
+    let ops = merged_root.completion_ops();
+    let mut summary = ops.summarize();
+    summary.sort();
+    assert_eq!(
+        summary,
+        &[
+            "Apply remote bookmarkFFFF",
+            "Apply remote bookmarkKKKK",
+            "Delete local item bookmarkCCCC",
+            "Delete local item bookmarkEEEE",
+            "Delete local item bookmarkHHHH",
+            "Flag local bookmarkAAAA as unmerged",
+            "Flag local bookmarkKKKK as unmerged",
+            "Flag local folderBBBBBB as unmerged",
+            "Flag local folderGGGGGG as unmerged",
+            "Flag local toolbar_____ as unmerged",
+            "Flag remote bookmarkEEEE as merged",
+            "Insert local tombstone bookmarkCCCC",
+            "Insert local tombstone bookmarkJJJJ",
+            "Move bookmarkKKKK into unfiled_____ at 0",
+            "Upload item bookmarkAAAA",
+            "Upload item bookmarkKKKK",
+            "Upload item folderBBBBBB",
+            "Upload item folderGGGGGG",
+            "Upload item toolbar_____",
+            "Upload tombstone bookmarkCCCC",
+            "Upload tombstone bookmarkIIII",
+            "Upload tombstone bookmarkJJJJ",
+        ]
+    );
 
     assert_eq!(merged_root.counts(), &expected_telem);
 }
 
 #[test]
 fn completion_ops() {
-    let local_tree = nodes!({
+    let mut local_tree_builder = Builder::try_from(nodes!({
         ("menu________", Folder, {
             ("bookmarkAAAA", Bookmark),
             ("bookmarkBBBB", Bookmark),
@@ -2747,15 +2726,18 @@ fn completion_ops() {
         ("toolbar_____", Folder, {
             ("bookmarkEEEE", Bookmark)
         }),
-        ("unfiled_____", Folder),
+        ("unfiled_____", Folder[needs_merge = true], {
+            ("bookmarkIIII", Bookmark)
+        }),
         ("mobile______", Folder, {
             ("bookmarkFFFF", Bookmark[needs_merge = true, age = 10])
         })
-    })
-    .into_tree()
+    }))
     .unwrap();
+    local_tree_builder.deletion("bookmarkJJJJ".into());
+    let local_tree = local_tree_builder.into_tree().unwrap();
 
-    let remote_tree = nodes!({
+    let mut remote_tree_builder = Builder::try_from(nodes!({
         ("menu________", Folder[needs_merge = true], {
             ("bookmarkAAAA", Bookmark),
             ("bookmarkDDDD", Bookmark),
@@ -2767,14 +2749,16 @@ fn completion_ops() {
             ("bookmarkGGGG", Bookmark[needs_merge = true])
         }),
         ("unfiled_____", Folder[needs_merge = true], {
-            ("bookmarkHHHH", Bookmark[needs_merge = true])
+            ("bookmarkHHHH", Bookmark[needs_merge = true]),
+            ("bookmarkJJJJ", Bookmark)
         }),
         ("mobile______", Folder, {
             ("bookmarkFFFF", Bookmark[needs_merge = true, age = 5])
         })
-    })
-    .into_tree()
+    }))
     .unwrap();
+    remote_tree_builder.deletion("bookmarkIIII".into());
+    let remote_tree = remote_tree_builder.into_tree().unwrap();
 
     let merger = Merger::new(&local_tree, &remote_tree);
     let merged_root = merger.merge().unwrap();
@@ -2790,7 +2774,7 @@ fn completion_ops() {
         ("toolbar_____", UnchangedWithNewLocalStructure, {
             ("bookmarkGGGG", Remote)
         }),
-        ("unfiled_____", UnchangedWithNewLocalStructure, {
+        ("unfiled_____", LocalWithNewLocalStructure, {
            ("bookmarkHHHH", Remote)
         }),
         ("mobile______", Unchanged, {
@@ -2803,10 +2787,7 @@ fn completion_ops() {
     let ops = merged_root.completion_ops();
     assert!(ops.change_guids.is_empty());
     assert_eq!(
-        ops.apply_remote_items
-            .iter()
-            .map(|op| op.to_string())
-            .collect::<Vec<String>>(),
+        to_strings(&ops.apply_remote_items).collect::<Vec<_>>(),
         &[
             "Apply remote bookmarkEEEE",
             "Apply remote bookmarkGGGG",
@@ -2815,10 +2796,7 @@ fn completion_ops() {
         ]
     );
     assert_eq!(
-        ops.apply_new_local_structure
-            .iter()
-            .map(|op| op.to_string())
-            .collect::<Vec<String>>(),
+        to_strings(&ops.apply_new_local_structure).collect::<Vec<_>>(),
         &[
             "Move bookmarkDDDD into menu________ at 1",
             "Move bookmarkBBBB into menu________ at 3",
@@ -2827,14 +2805,34 @@ fn completion_ops() {
             "Move bookmarkHHHH into unfiled_____ at 0",
         ]
     );
-    assert!(ops.upload.is_empty());
+    assert!(ops.set_local_unmerged.is_empty());
     assert_eq!(
-        ops.skip_upload
-            .iter()
-            .map(|op| op.to_string())
-            .collect::<Vec<String>>(),
-        &["Don't upload bookmarkFFFF",]
+        to_strings(&ops.set_local_merged).collect::<Vec<_>>(),
+        &["Flag local bookmarkFFFF as merged"]
     );
+    assert_eq!(
+        to_strings(&ops.set_remote_merged).collect::<Vec<_>>(),
+        &[
+            "Flag remote menu________ as merged",
+            "Flag remote bookmarkEEEE as merged",
+            "Flag remote toolbar_____ as merged",
+            "Flag remote bookmarkGGGG as merged",
+            "Flag remote bookmarkHHHH as merged",
+            "Flag remote bookmarkFFFF as merged",
+            "Flag remote bookmarkIIII as merged",
+        ]
+    );
+    let mut delete_local_items = to_strings(&ops.delete_local_items).collect::<Vec<_>>();
+    delete_local_items.sort();
+    assert_eq!(delete_local_items, &["Delete local item bookmarkIIII"]);
+    assert!(ops.insert_local_tombstones.is_empty());
+    assert_eq!(
+        to_strings(&ops.upload_items).collect::<Vec<_>>(),
+        &["Upload item unfiled_____"]
+    );
+    let mut upload_tombstones = to_strings(&ops.upload_tombstones).collect::<Vec<_>>();
+    upload_tombstones.sort();
+    assert_eq!(upload_tombstones, &["Upload tombstone bookmarkJJJJ"]);
 }
 
 #[test]
@@ -2893,10 +2891,7 @@ fn problems() {
     let mut summary = problems.summarize().collect::<Vec<_>>();
     summary.sort_by(|a, b| a.guid().cmp(b.guid()));
     assert_eq!(
-        summary
-            .into_iter()
-            .map(|s| s.to_string())
-            .collect::<Vec<String>>(),
+        to_strings(&summary).collect::<Vec<_>>(),
         &[
             "bookmarkAAAA is an orphan",
             "bookmarkBBBB is in children of folderCCCCCC and has parent folderDDDDDD",

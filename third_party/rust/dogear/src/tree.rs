@@ -76,10 +76,16 @@ impl Tree {
         Node(self, &self.entries[0])
     }
 
-    /// Returns an iterator for all tombstoned GUIDs.
+    /// Returns the set of all tombstoned GUIDs.
     #[inline]
-    pub fn deletions(&self) -> impl Iterator<Item = &Guid> {
-        self.deleted_guids.iter()
+    pub fn deletions(&self) -> &HashSet<Guid> {
+        &self.deleted_guids
+    }
+
+    /// Indicates if the GUID exists in the tree.
+    #[inline]
+    pub fn exists(&self, guid: &Guid) -> bool {
+        self.entry_index_by_guid.contains_key(guid)
     }
 
     /// Indicates if the GUID is known to be deleted. If `Tree::node_for_guid`
@@ -1425,7 +1431,14 @@ impl ProblemCounts {
 pub struct Node<'t>(&'t Tree, &'t TreeEntry);
 
 impl<'t> Node<'t> {
+    /// Returns the item for this node.
+    #[inline]
+    pub fn item(&self) -> &'t Item {
+        &self.1.item
+    }
+
     /// Returns content info for deduping this item, if available.
+    #[inline]
     pub fn content(&self) -> Option<&'t Content> {
         self.1.content.as_ref()
     }
@@ -1528,7 +1541,7 @@ impl<'t> Node<'t> {
     }
 
     fn to_ascii_fragment(&self, prefix: &str) -> String {
-        match self.1.item.kind {
+        match self.item().kind {
             Kind::Folder => {
                 let children_prefix = format!("{}| ", prefix);
                 let children = self
@@ -1541,13 +1554,13 @@ impl<'t> Node<'t> {
                     "📂"
                 };
                 if children.is_empty() {
-                    format!("{}{} {}", prefix, kind, self.1.item)
+                    format!("{}{} {}", prefix, kind, self.item())
                 } else {
                     format!(
                         "{}{} {}\n{}",
                         prefix,
                         kind,
-                        self.1.item,
+                        self.item(),
                         children.join("\n")
                     )
                 }
@@ -1558,7 +1571,7 @@ impl<'t> Node<'t> {
                 } else {
                     "🔖"
                 };
-                format!("{}{} {}", prefix, kind, self.1.item)
+                format!("{}{} {}", prefix, kind, self.item())
             }
         }
     }
@@ -1573,21 +1586,22 @@ impl<'t> Node<'t> {
     /// these are non-syncable.
     #[inline]
     pub fn is_built_in_root(&self) -> bool {
-        self.1.item.guid.is_built_in_root()
+        self.item().guid.is_built_in_root()
     }
 }
 
 impl<'t> Deref for Node<'t> {
     type Target = Item;
 
+    #[inline]
     fn deref(&self) -> &Item {
-        &self.1.item
+        self.item()
     }
 }
 
 impl<'t> fmt::Display for Node<'t> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.1.item.fmt(f)
+        self.item().fmt(f)
     }
 }
 

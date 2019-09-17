@@ -2873,6 +2873,13 @@ add_task(async function test_unchanged_newer_changed_older() {
     "Should merge children of changed side first, even if they're older"
   );
 
+  let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+  deepEqual(
+    tombstones.map(({ guid }) => guid),
+    ["folderCCCCCC"],
+    "Should store local tombstone for C"
+  );
+
   await storeChangesInMirror(buf, changesToUpload);
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 

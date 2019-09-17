@@ -166,7 +166,6 @@ add_task(async function test_complex_orphaning() {
     mergeTelemetryCounts,
     [
       { name: "items", count: 10 },
-      { name: "deletes", count: 2 },
       { name: "localDeletes", count: 1 },
       { name: "remoteDeletes", count: 1 },
     ],
@@ -437,7 +436,6 @@ add_task(async function test_locally_modified_remotely_deleted() {
     mergeTelemetryCounts,
     [
       { name: "items", count: 8 },
-      { name: "deletes", count: 4 },
       { name: "localRevives", count: 1 },
       { name: "remoteDeletes", count: 2 },
     ],
@@ -487,6 +485,9 @@ add_task(async function test_locally_modified_remotely_deleted() {
     },
     "Should restore A and relocate (F G) to menu"
   );
+
+  let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+  deepEqual(tombstones, [], "Should not store local tombstones");
 
   await storeChangesInMirror(buf, changesToUpload);
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
@@ -646,7 +647,6 @@ add_task(async function test_locally_deleted_remotely_modified() {
     mergeTelemetryCounts,
     [
       { name: "items", count: 8 },
-      { name: "deletes", count: 4 },
       { name: "remoteRevives", count: 1 },
       { name: "localDeletes", count: 2 },
     ],
@@ -931,8 +931,8 @@ add_task(async function test_nonexistent_on_one_side() {
   let changesToUpload = await buf.apply();
   deepEqual(
     await buf.fetchUnmergedGuids(),
-    ["bookmarkBBBB", PlacesUtils.bookmarks.menuGuid],
-    "Should leave B tombstone and menu with new remote structure unmerged"
+    [PlacesUtils.bookmarks.menuGuid],
+    "Should leave menu with new remote structure unmerged"
   );
 
   let menuInfo = await PlacesUtils.bookmarks.fetch(

@@ -18,6 +18,7 @@ use crate::driver::{
     AbortSignal, DefaultAbortSignal, DefaultDriver, Driver, TelemetryEvent, TreeStats,
 };
 use crate::error::Error;
+use crate::guid::Guid;
 use crate::merge::{MergedRoot, Merger};
 use crate::tree::Tree;
 
@@ -63,6 +64,7 @@ pub trait Store {
         let (local_tree, time) = with_timing(|| self.fetch_local_tree())?;
         driver.record_telemetry_event(TelemetryEvent::FetchLocalTree(TreeStats {
             items: local_tree.size(),
+            deletions: local_tree.deletions().len(),
             problems: local_tree.problems().counts(),
             time,
         }));
@@ -73,6 +75,7 @@ pub trait Store {
         let (remote_tree, time) = with_timing(|| self.fetch_remote_tree())?;
         driver.record_telemetry_event(TelemetryEvent::FetchRemoteTree(TreeStats {
             items: remote_tree.size(),
+            deletions: local_tree.deletions().len(),
             problems: remote_tree.problems().counts(),
             time,
         }));
@@ -89,12 +92,12 @@ pub trait Store {
             merged_root.node().to_ascii_string(),
             merged_root
                 .local_deletions()
-                .map(|d| d.guid.as_str())
+                .map(Guid::as_str)
                 .collect::<Vec<_>>()
                 .join(", "),
             merged_root
                 .remote_deletions()
-                .map(|d| d.guid.as_str())
+                .map(Guid::as_str)
                 .collect::<Vec<_>>()
                 .join(", ")
         );
