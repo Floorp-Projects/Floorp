@@ -251,17 +251,6 @@ void CompositorBridgeChild::InitForContent(uint32_t aNamespace) {
   mCanSend = true;
   mIdNamespace = aNamespace;
 
-  if (gfx::gfxVars::RemoteCanvasEnabled()) {
-    ipc::Endpoint<PCanvasParent> parentEndpoint;
-    ipc::Endpoint<PCanvasChild> childEndpoint;
-    nsresult rv = PCanvas::CreateEndpoints(OtherPid(), base::GetCurrentProcId(),
-                                           &parentEndpoint, &childEndpoint);
-    if (NS_SUCCEEDED(rv)) {
-      Unused << SendInitPCanvasParent(std::move(parentEndpoint));
-      mCanvasChild = new CanvasChild(std::move(childEndpoint));
-    }
-  }
-
   sCompositorBridge = this;
 }
 
@@ -943,12 +932,29 @@ PTextureChild* CompositorBridgeChild::CreateTexture(
 }
 
 already_AddRefed<CanvasChild> CompositorBridgeChild::GetCanvasChild() {
+  MOZ_ASSERT(gfx::gfxVars::RemoteCanvasEnabled());
+  if (!mCanvasChild) {
+    ipc::Endpoint<PCanvasParent> parentEndpoint;
+    ipc::Endpoint<PCanvasChild> childEndpoint;
+    nsresult rv = PCanvas::CreateEndpoints(OtherPid(), base::GetCurrentProcId(),
+                                           &parentEndpoint, &childEndpoint);
+    if (NS_SUCCEEDED(rv)) {
+      Unused << SendInitPCanvasParent(std::move(parentEndpoint));
+      mCanvasChild = new CanvasChild(std::move(childEndpoint));
+    }
+  }
+
   return do_AddRef(mCanvasChild);
 }
 
 void CompositorBridgeChild::EndCanvasTransaction() {
   if (mCanvasChild) {
     mCanvasChild->EndTransaction();
+    if (mCanvasChild->ShouldBeCleanedUp()) {
+      mCanvasChild->Destroy();
+      Unused << SendReleasePCanvasParent();
+      mCanvasChild = nullptr;
+    }
   }
 }
 
