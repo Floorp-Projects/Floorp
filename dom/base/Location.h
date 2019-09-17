@@ -34,7 +34,7 @@ class Location final : public nsISupports,
  public:
   typedef BrowsingContext::LocationProxy RemoteProxy;
 
-  Location(nsPIDOMWindowInner* aWindow, BrowsingContext* aBrowsingContext);
+  Location(nsPIDOMWindowInner* aWindow, nsIDocShell* aDocShell);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Location)
@@ -144,7 +144,7 @@ class Location final : public nsISupports,
 
   nsString mCachedHash;
   nsCOMPtr<nsPIDOMWindowInner> mInnerWindow;
-  uint64_t mBrowsingContextId;
+  nsWeakPtr mDocShell;
 };
 
 }  // namespace dom
