@@ -25,6 +25,18 @@ if not(CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'aarch64'):
         'TestURIMutator.cpp',
     ]
 
+# run the test on windows only
+if (CONFIG['OS_TARGET'] == 'WINNT'):
+    UNIFIED_SOURCES += [
+        'TestNetworkLinkIdHashingWindows.cpp'
+    ]
+
+# run the test on mac only
+if (CONFIG['OS_TARGET'] == 'Darwin'):
+    UNIFIED_SOURCES += [
+        'TestNetworkLinkIdHashingDarwin.cpp'
+    ]
+
 TEST_HARNESS_FILES.gtest += [
     'urltestdata.json',
 ]
@@ -42,6 +54,18 @@ LOCAL_INCLUDES += [
     '/toolkit/components/jsoncpp/include',
     '/xpcom/tests/gtest',
 ]
+
+# windows includes only
+if (CONFIG['OS_TARGET'] == 'WINNT'):
+    LOCAL_INCLUDES += [
+        '/netwerk/system/win32'
+    ]
+
+# mac includes only
+if (CONFIG['OS_TARGET'] == 'Darwin'):
+    LOCAL_INCLUDES += [
+        '/netwerk/system/mac'
+    ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

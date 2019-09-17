@@ -263,9 +263,32 @@ static bool ipv4NetworkId(SHA1Sum* sha1) {
   return false;
 }
 
+//
+// Sort and hash the prefixes and netmasks
+//
+void nsNetworkLinkService::HashSortedPrefixesAndNetmasks(
+    std::vector<prefix_and_netmask> prefixAndNetmaskStore, SHA1Sum* sha1) {
+  // getifaddrs does not guarantee the interfaces will always be in the same order.
+  // We want to make sure the hash remains consistent Regardless of the interface order.
+  std::sort(prefixAndNetmaskStore.begin(), prefixAndNetmaskStore.end(),
+            [](prefix_and_netmask a, prefix_and_netmask b) {
+              // compare prefixStore
+              int comparedPrefix = memcmp(&a.first, &b.first, sizeof(in6_addr));
+              if (comparedPrefix == 0) {
+                // compare netmaskStore
+                return memcmp(&a.second, &b.second, sizeof(in6_addr)) < 0;
+              }
+              return comparedPrefix < 0;
+            });
+
+  for (const auto& prefixAndNetmask : prefixAndNetmaskStore) {
+    sha1->update(&prefixAndNetmask.first, sizeof(in6_addr));
+    sha1->update(&prefixAndNetmask.second, sizeof(in6_addr));
+  }
+}
+
 static bool ipv6NetworkId(SHA1Sum* sha1) {
   struct ifaddrs* ifap;
-  using prefix_and_netmask = std::pair<in6_addr, in6_addr>;
   std::vector<prefix_and_netmask> prefixAndNetmaskStore;
 
   if (!getifaddrs(&ifap)) {
@@ -312,23 +335,8 @@ static bool ipv6NetworkId(SHA1Sum* sha1) {
     return false;
   }
 
-  // getifaddrs does not guarantee the interfaces will always be in the same order.
-  // We want to make sure the hash remains consistent Regardless of the interface order.
-  std::sort(prefixAndNetmaskStore.begin(), prefixAndNetmaskStore.end(),
-            [](prefix_and_netmask a, prefix_and_netmask b) {
-              // compare prefixStore
-              int comparedPrefix = memcmp(&a.first, &b.first, sizeof(in6_addr));
-              if (comparedPrefix == 0) {
-                // compare netmaskStore
-                return memcmp(&a.second, &b.second, sizeof(in6_addr)) < 0;
-              }
-              return comparedPrefix < 0;
-            });
+  nsNetworkLinkService::HashSortedPrefixesAndNetmasks(prefixAndNetmaskStore, sha1);
 
-  for (const auto& prefixAndNetmask : prefixAndNetmaskStore) {
-    sha1->update(&prefixAndNetmask.first, sizeof(in6_addr));
-    sha1->update(&prefixAndNetmask.second, sizeof(in6_addr));
-  }
   return true;
 }
 
