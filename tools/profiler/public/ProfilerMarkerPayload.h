@@ -651,7 +651,7 @@ class LogMarkerPayload : public ProfilerMarkerPayload {
 class JsAllocationMarkerPayload : public ProfilerMarkerPayload {
  public:
   JsAllocationMarkerPayload(const mozilla::TimeStamp& aStartTime,
-                            const JS::RecordAllocationInfo& aInfo,
+                            JS::RecordAllocationInfo&& aInfo,
                             UniqueProfilerBacktrace aStack)
       : ProfilerMarkerPayload(aStartTime, aStartTime, mozilla::Nothing(),
                               mozilla::Nothing(), std::move(aStack)),
@@ -698,6 +698,19 @@ class JsAllocationMarkerPayload : public ProfilerMarkerPayload {
 };
 
 namespace mozilla {
+
+// Serialize a pointed-at ProfilerMarkerPayload, may be null when there are no
+// payloads.
+template <>
+struct BlocksRingBuffer::Serializer<const ProfilerMarkerPayload*> {
+  static Length Bytes(const ProfilerMarkerPayload* aPayload) {
+    return ProfilerMarkerPayload::TagAndSerializationBytes(aPayload);
+  }
+
+  static void Write(EntryWriter& aEW, const ProfilerMarkerPayload* aPayload) {
+    ProfilerMarkerPayload::TagAndSerialize(aPayload, aEW);
+  }
+};
 
 // Serialize a pointed-at ProfilerMarkerPayload, may be null when there are no
 // payloads.
