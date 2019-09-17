@@ -57,8 +57,8 @@ add_task(async function test_escape_key_to_cancel() {
 add_task(async function test_initial_focus() {
   gConfirmationDialog.show(options);
   ok(!gConfirmationDialog.hidden, "The dialog should be visible");
-  is(gConfirmationDialog.shadowRoot.activeElement, cancelButton,
-     "After initially opening the dialog, the cancel button should be focused");
+  is(gConfirmationDialog.shadowRoot.activeElement, confirmButton,
+     "After initially opening the dialog, the confirm button should be focused");
   gConfirmationDialog.hide();
 });
 
@@ -66,8 +66,8 @@ add_task(async function test_tab_focus() {
   gConfirmationDialog.show(options);
   ok(!gConfirmationDialog.hidden, "The dialog should be visible");
   sendKey("TAB");
-  is(gConfirmationDialog.shadowRoot.activeElement, confirmButton,
-     "After opening the dialog and tabbing once, the confirm delete button should be focused");
+  is(gConfirmationDialog.shadowRoot.activeElement, cancelButton,
+     "After opening the dialog and tabbing once, the cancel button should be focused");
   gConfirmationDialog.hide();
 });
 
@@ -77,9 +77,9 @@ add_task(async function test_enter_key_to_cancel() {
   sendKey("RETURN");
   try {
     await showPromise;
-    ok(false, "The dialog Promise should not resolve after hitting Return with the cancel button focused");
+    ok(true, "The dialog Promise should resolve after hitting Return with the confirm button focused");
   } catch (ex) {
-    ok(true, "The dialog Promise should reject after hitting Return with the cancel button focused");
+    ok(false, "The dialog Promise should not reject after hitting Return with the confirm button focused");
   }
 });
 
@@ -90,9 +90,9 @@ add_task(async function test_enter_key_to_confirm() {
   sendKey("RETURN");
   try {
     await showPromise;
-    ok(true, "The dialog Promise should resolve after hitting Return with the confirm button focused");
+    ok(false, "The dialog Promise should not resolve after hitting Return with the cancel button focused");
   } catch (ex) {
-    ok(false, "The dialog Promise should not reject after hitting Return with the confirm button focused");
+    ok(true, "The dialog Promise should reject after hitting Return with the cancel button focused");
   }
 });
 
