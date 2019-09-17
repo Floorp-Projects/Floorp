@@ -8,39 +8,29 @@
 
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/net/NeckoChannelParams.h"
+#include "mozilla/net/WebrtcProxyConfig.h"
 
 namespace mozilla {
 
 class NrSocketProxyConfig::Private {
  public:
-  uint64_t mTabId;
-  nsCString mAlpn;
-  net::LoadInfoArgs mLoadInfoArgs;
-  ProxyPolicy mProxyPolicy;
+  net::WebrtcProxyConfig mProxyConfig;
 };
 
-NrSocketProxyConfig::NrSocketProxyConfig(uint64_t aTabId,
-                                         const nsCString& aAlpn,
-                                         const net::LoadInfoArgs& aArgs,
-                                         ProxyPolicy aProxyPolicy)
-    : mPrivate(new Private({aTabId, aAlpn, aArgs, aProxyPolicy})) {}
+NrSocketProxyConfig::NrSocketProxyConfig(
+    const net::WebrtcProxyConfig& aProxyConfig)
+    : mPrivate(new Private({aProxyConfig})) {}
 
 NrSocketProxyConfig::NrSocketProxyConfig(NrSocketProxyConfig&& aOrig)
     : mPrivate(std::move(aOrig.mPrivate)) {}
 
 NrSocketProxyConfig::~NrSocketProxyConfig() {}
 
-uint64_t NrSocketProxyConfig::GetTabId() const { return mPrivate->mTabId; }
-
-const nsCString& NrSocketProxyConfig::GetAlpn() const {
-  return mPrivate->mAlpn;
+const net::WebrtcProxyConfig& NrSocketProxyConfig::GetConfig() const {
+  return mPrivate->mProxyConfig;
 }
 
-const net::LoadInfoArgs& NrSocketProxyConfig::GetLoadInfoArgs() const {
-  return mPrivate->mLoadInfoArgs;
-}
-
-NrSocketProxyConfig::ProxyPolicy NrSocketProxyConfig::GetProxyPolicy() const {
-  return mPrivate->mProxyPolicy;
+bool NrSocketProxyConfig::GetForceProxy() const {
+  return mPrivate->mProxyConfig.forceProxy();
 }
 }  // namespace mozilla

@@ -5,7 +5,7 @@
 include protocol PBackground;
 
 #ifdef MOZ_WEBRTC
-include NeckoChannelParams;
+include WebrtcProxyConfig;
 
 // ParamTraits stuff for generated code and other classes we don't want to change
 include "mozilla/net/NrIceStunAddrMessageUtils.h";
@@ -19,7 +19,6 @@ using struct mozilla::dom::MovableRTCStatsReportInternal from "mozilla/media/web
 using WebrtcGlobalLog from "mozilla/media/webrtc/WebrtcGlobal.h";
 using mozilla::dom::RTCIceServer from "mozilla/dom/RTCConfigurationBinding.h";
 using mozilla::dom::RTCIceTransportPolicy from "mozilla/dom/RTCConfigurationBinding.h";
-using TabId from "mozilla/dom/ipc/IdType.h";
 
 // ParamTraits stuff for our own classes
 using MediaPacket from "mtransport/mediapacket.h";
@@ -46,10 +45,7 @@ parent:
                      RTCIceServer[] iceServers,
                      RTCIceTransportPolicy icePolicy);
 
-  async SetProxyConfig(TabId id,
-                       LoadInfoArgs args, // Does this have the id?
-                       nsCString alpn,
-                       int proxyPolicy);
+  async SetProxyConfig(WebrtcProxyConfig proxyConfig);
 
   async EnsureProvisionalTransport(string transportId,
                                    string localUfrag,

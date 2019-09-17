@@ -25,6 +25,7 @@ UNIFIED_SOURCES += [
 IPDL_SOURCES += [
     'PStunAddrsRequest.ipdl',
     'PWebrtcTCPSocket.ipdl',
+    'WebrtcProxyConfig.ipdlh',
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

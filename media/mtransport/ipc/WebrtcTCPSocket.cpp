@@ -139,9 +139,8 @@ void WebrtcTCPSocket::CloseWithReason(nsresult aReason) {
 
 nsresult WebrtcTCPSocket::Open(
     const nsCString& aHost, const int& aPort, const nsCString& aLocalAddress,
-    const int& aLocalPort, bool aUseTls, const Maybe<net::LoadInfoArgs>& aArgs,
-    const Maybe<nsCString>& aAlpn,
-    const Maybe<NrSocketProxyConfig::ProxyPolicy>& aProxyPolicy) {
+    const int& aLocalPort, bool aUseTls,
+    const Maybe<net::WebrtcProxyConfig>& aProxyConfig) {
   LOG(("WebrtcTCPSocket::Open %p\n", this));
 
   if (NS_WARN_IF(mOpened)) {
@@ -168,15 +167,9 @@ nsresult WebrtcTCPSocket::Open(
   mTls = aUseTls;
   mLocalAddress = aLocalAddress;
   mLocalPort = aLocalPort;
+  mProxyConfig = aProxyConfig;
 
-  if (aProxyPolicy.isSome() &&
-      *aProxyPolicy != NrSocketProxyConfig::kDisableProxy) {
-    mLoadInfoArgs = *aArgs;
-    mAlpn = *aAlpn;
-    if (*aProxyPolicy == NrSocketProxyConfig::kForceProxy) {
-      mForceProxy = true;
-    }
-
+  if (mProxyConfig.isSome()) {
     // We need to figure out whether a proxy needs to be used for mURI before
     // we can start on establishing a connection.
     rv = DoProxyConfigLookup();
@@ -256,7 +249,8 @@ NS_IMETHODIMP WebrtcTCPSocket::OnProxyAvailable(nsICancelable* aRequest,
 }
 
 nsresult WebrtcTCPSocket::OpenWithoutHttpProxy(nsIProxyInfo* aSocksProxyInfo) {
-  if (NS_WARN_IF(mForceProxy && !aSocksProxyInfo)) {
+  if (NS_WARN_IF(mProxyConfig.isSome() && mProxyConfig->forceProxy() &&
+                 !aSocksProxyInfo)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -340,7 +334,7 @@ nsresult WebrtcTCPSocket::OpenWithHttpProxy() {
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo;
-  Maybe<net::LoadInfoArgs> loadInfoArgs = Some(mLoadInfoArgs);
+  Maybe<net::LoadInfoArgs> loadInfoArgs = Some(mProxyConfig->loadInfoArgs());
   rv = LoadInfoArgsToLoadInfo(loadInfoArgs, getter_AddRefs(loadInfo));
   if (NS_FAILED(rv)) {
     LOG(("WebrtcTCPSocket %p: could not init load info\n", this));
@@ -389,7 +383,7 @@ nsresult WebrtcTCPSocket::OpenWithHttpProxy() {
     return NS_ERROR_FAILURE;
   }
 
-  rv = httpChannel->HTTPUpgrade(mAlpn, this);
+  rv = httpChannel->HTTPUpgrade(mProxyConfig->alpn(), this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

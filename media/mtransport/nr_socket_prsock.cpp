@@ -1642,8 +1642,7 @@ int NrSocketBase::CreateSocket(
     ABORT(R_REJECTED);
   }
 
-  if (config && config->GetProxyPolicy() == NrSocketProxyConfig::kForceProxy &&
-      addr->protocol == IPPROTO_UDP) {
+  if (config && config->GetForceProxy() && addr->protocol == IPPROTO_UDP) {
     ABORT(R_REJECTED);
   }
 

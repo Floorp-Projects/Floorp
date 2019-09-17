@@ -136,11 +136,8 @@ mozilla::ipc::IPCResult MediaTransportParent::RecvCreateIceCtx(
 }
 
 mozilla::ipc::IPCResult MediaTransportParent::RecvSetProxyConfig(
-    const dom::TabId& tabId, const net::LoadInfoArgs& args,
-    const nsCString& alpn, const int& proxyPolicy) {
-  mImpl->mHandler->SetProxyConfig(NrSocketProxyConfig(
-      tabId, alpn, args,
-      static_cast<NrSocketProxyConfig::ProxyPolicy>(proxyPolicy)));
+    const net::WebrtcProxyConfig& aProxyConfig) {
+  mImpl->mHandler->SetProxyConfig(NrSocketProxyConfig(aProxyConfig));
   return ipc::IPCResult::Ok();
 }
 

@@ -20,19 +20,13 @@ namespace net {
 mozilla::ipc::IPCResult WebrtcTCPSocketParent::RecvAsyncOpen(
     const nsCString& aHost, const int& aPort, const nsCString& aLocalAddress,
     const int& aLocalPort, const bool& aUseTls,
-    const Maybe<LoadInfoArgs>& aLoadInfoArgs, const Maybe<nsCString>& aAlpn,
-    const Maybe<int>& aProxyPolicy) {
+    const Maybe<WebrtcProxyConfig>& aProxyConfig) {
   LOG(("WebrtcTCPSocketParent::RecvAsyncOpen %p to %s:%d\n", this, aHost.get(),
        aPort));
 
   MOZ_ASSERT(mChannel, "webrtc TCP socket should be non-null");
-  Maybe<NrSocketProxyConfig::ProxyPolicy> proxyPolicy;
-  if (aProxyPolicy.isSome()) {
-    proxyPolicy =
-        Some(static_cast<NrSocketProxyConfig::ProxyPolicy>(*aProxyPolicy));
-  }
   mChannel->Open(aHost, aPort, aLocalAddress, aLocalPort, aUseTls,
-                 aLoadInfoArgs, aAlpn, proxyPolicy);
+                 aProxyConfig);
 
   return IPC_OK();
 }
