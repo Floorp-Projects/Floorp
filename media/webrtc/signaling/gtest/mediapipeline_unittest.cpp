@@ -153,7 +153,7 @@ class LoopbackTransport : public MediaTransportHandler {
 
   // We will probably be able to move the proxy lookup stuff into
   // this class once we move mtransport to its own process.
-  void SetProxyServer(NrSocketProxyConfig&& aProxyConfig) override {}
+  void SetProxyConfig(NrSocketProxyConfig&& aProxyConfig) override {}
 
   void EnsureProvisionalTransport(const std::string& aTransportId,
                                   const std::string& aLocalUfrag,

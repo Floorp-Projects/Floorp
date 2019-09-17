@@ -421,7 +421,7 @@ void PeerConnectionMedia::EnsureIceGathering(bool aDefaultRouteOnly,
     // was constructed with a peerIdentity constraint, not when isolated
     // streams are added.  If we ever need to signal to the proxy that the
     // media is isolated, then we would need to restructure this code.
-    mTransportHandler->SetProxyServer(std::move(*mProxyConfig));
+    mTransportHandler->SetProxyConfig(std::move(*mProxyConfig));
     mProxyConfig.reset();
   }
 
