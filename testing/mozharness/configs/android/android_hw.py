@@ -4,8 +4,6 @@
 # mozharness configuration from android_common.py, or similar.
 
 config = {
-    "robocop_package_name": "org.mozilla.roboexample.test",
-    "marionette_address": "%(device_ip)s:2828",
     "exes": {},
     "env": {
         "DISPLAY": ":0.0",
