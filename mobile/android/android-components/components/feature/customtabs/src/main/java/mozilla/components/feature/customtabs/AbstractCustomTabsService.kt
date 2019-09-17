@@ -133,4 +133,8 @@ abstract class AbstractCustomTabsService : CustomTabsService() {
     override fun updateVisuals(sessionToken: CustomTabsSessionToken, bundle: Bundle?): Boolean {
         return false
     }
+
+    override fun receiveFile(sessionToken: CustomTabsSessionToken, uri: Uri, purpose: Int, extras: Bundle?): Boolean {
+        return false
+    }
 }
