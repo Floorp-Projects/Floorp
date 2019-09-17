@@ -2731,6 +2731,11 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
   AddZIndexAsSubAction(int32_t aChange);
 
+  /**
+   * OnDocumentModified() is called when editor content is changed.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult OnDocumentModified();
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
@@ -4166,7 +4171,8 @@ class HTMLEditor final : public TextEditor,
   SetInlinePropertyOnNodeImpl(nsIContent& aNode, nsAtom& aProperty,
                               nsAtom* aAttribute, const nsAString& aValue);
   typedef enum { eInserted, eAppended } InsertedOrAppended;
-  void DoContentInserted(nsIContent* aChild, InsertedOrAppended);
+  MOZ_CAN_RUN_SCRIPT void DoContentInserted(
+      nsIContent* aChild, InsertedOrAppended aInsertedOrAppended);
 
   /**
    * Returns an anonymous Element of type aTag,
