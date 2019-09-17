@@ -58,7 +58,7 @@ raptor-tp6m-4-fennec64:
     treeherder-symbol: Rap(tp6m-4-f64)
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-4
+            - --test=raptor-tp6m-4-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
