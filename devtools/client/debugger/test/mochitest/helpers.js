@@ -1036,6 +1036,17 @@ function invokeInTab(fnc, ...args) {
   });
 }
 
+
+function clickElementInTab(selector) {
+  info(`click element ${selector} in tab`);
+
+  return ContentTask.spawn(gBrowser.selectedBrowser, { selector }, function*({
+    selector
+  }) {
+    content.wrappedJSObject.document.querySelector(selector).click();
+  });
+}
+
 const isLinux = Services.appinfo.OS === "Linux";
 const isMac = Services.appinfo.OS === "Darwin";
 const cmdOrCtrl = isLinux ? { ctrlKey: true } : { metaKey: true };
@@ -1293,7 +1304,8 @@ const selectors = {
   inlinePreviewOpenInspector: ".inline-preview-value button.open-inspector",
   addGetWatchpoint: "#node-menu-add-get-watchpoint",
   addSetWatchpoint: "#node-menu-add-set-watchpoint",
-  removeWatchpoint: "#node-menu-remove-watchpoint"
+  removeWatchpoint: "#node-menu-remove-watchpoint",
+  logEventsCheckbox: ".events-header input",
 };
 
 function getSelector(elementName, ...args) {

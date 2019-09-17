@@ -4,6 +4,8 @@
 
 // @flow
 
+import { prefs } from "../utils/prefs";
+
 import type { State } from "./types";
 import type {
   EventListenerAction,
@@ -16,6 +18,7 @@ export type EventListenersState = {|
   +active: EventListenerActiveList,
   +categories: EventListenerCategoryList,
   +expanded: EventListenerExpandedList,
+  +logEventBreakpoints: boolean,
 |};
 
 export function initialEventListenerState(): EventListenersState {
@@ -23,6 +26,7 @@ export function initialEventListenerState(): EventListenersState {
     active: [],
     categories: [],
     expanded: [],
+    logEventBreakpoints: prefs.logEventBreakpoints,
   };
 }
 
@@ -39,6 +43,12 @@ function update(
 
     case "UPDATE_EVENT_LISTENER_EXPANDED":
       return { ...state, expanded: action.expanded };
+
+    case "TOGGLE_EVENT_LISTENERS": {
+      const { logEventBreakpoints } = action;
+      prefs.logEventBreakpoints = logEventBreakpoints;
+      return { ...state, logEventBreakpoints };
+    }
 
     default:
       return state;
@@ -59,6 +69,10 @@ export function getEventListenerExpanded(
   state: State
 ): EventListenerExpandedList {
   return state.eventListenerBreakpoints.expanded;
+}
+
+export function shouldLogEventBreakpoints(state: State) {
+  return state.eventListenerBreakpoints.logEventBreakpoints;
 }
 
 export default update;
