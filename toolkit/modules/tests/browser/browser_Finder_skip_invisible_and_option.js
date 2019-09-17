@@ -54,7 +54,7 @@ add_task(async function test_skip_invisible() {
         );
 
         promiseFind = waitForFind();
-        finder.findAgain(false, false, false);
+        finder.findAgain("a", false, false, false);
         findResult = await promiseFind;
       }
       is(

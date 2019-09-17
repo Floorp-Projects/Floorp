@@ -44,7 +44,7 @@ add_task(async function test_bug1174036() {
 
       // Find the second 'e' (in the third textarea).
       promiseFind = waitForFind();
-      finder.findAgain(false, false, false);
+      finder.findAgain("e", false, false, false);
       findResult = await promiseFind;
       is(
         findResult.result,
@@ -55,7 +55,7 @@ add_task(async function test_bug1174036() {
 
       // Ensure that we properly wrap to the second textarea.
       promiseFind = waitForFind();
-      finder.findAgain(false, false, false);
+      finder.findAgain("e", false, false, false);
       findResult = await promiseFind;
       is(
         findResult.result,

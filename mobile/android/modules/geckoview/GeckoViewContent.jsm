@@ -340,7 +340,12 @@ class GeckoViewContent extends GeckoViewModule {
     if (!aData.searchString || aData.searchString === finder.searchString) {
       // Search again.
       aData.searchString = finder.searchString;
-      finder.findAgain(!!aData.backwards, !!aData.linksOnly, drawOutline);
+      finder.findAgain(
+        aData.searchString,
+        !!aData.backwards,
+        !!aData.linksOnly,
+        drawOutline
+      );
     } else {
       finder.fastFind(aData.searchString, !!aData.linksOnly, drawOutline);
     }

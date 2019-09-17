@@ -163,6 +163,36 @@ let ACTORS = {
     allFrames: true,
   },
 
+  // This is the actor that responds to requests from the find toolbar and
+  // searches for matches and highlights them.
+  Finder: {
+    child: {
+      moduleURI: "resource://gre/actors/FinderChild.jsm",
+      messages: [
+        "Finder:CaseSensitive",
+        "Finder:EntireWord",
+        "Finder:FastFind",
+        "Finder:FindAgain",
+        "Finder:FindInFrame",
+        "Finder:SetSearchStringToSelection",
+        "Finder:GetInitialSelection",
+        "Finder:Highlight",
+        "Finder:UpdateHighlightAndMatchCount",
+        "Finder:HighlightAllChange",
+        "Finder:EnableSelection",
+        "Finder:RemoveSelection",
+        "Finder:FocusContent",
+        "Finder:FindbarClose",
+        "Finder:FindbarOpen",
+        "Finder:KeyPress",
+        "Finder:MatchesCount",
+        "Finder:ModalHighlightChange",
+      ],
+    },
+
+    allFrames: true,
+  },
+
   InlineSpellChecker: {
     parent: {
       moduleURI: "resource://gre/actors/InlineSpellCheckerParent.jsm",
@@ -246,13 +276,6 @@ let LEGACY_ACTORS = {
       events: {
         keypress: { mozSystemGroup: true },
       },
-    },
-  },
-
-  Finder: {
-    child: {
-      module: "resource://gre/actors/FinderChild.jsm",
-      messages: ["Finder:Initialize"],
     },
   },
 
