@@ -65,6 +65,7 @@ export default class LoginList extends HTMLElement {
     window.addEventListener("AboutLoginsShowBlankLogin", this);
     this._list.addEventListener("click", this);
     this.addEventListener("keydown", this);
+    this.addEventListener("keyup", this);
     this._createLoginButton.addEventListener("click", this);
   }
 
@@ -224,7 +225,21 @@ export default class LoginList extends HTMLElement {
         break;
       }
       case "keydown": {
-        this._handleKeyboardNav(event);
+        this._handleTabbingToExternalElements(event);
+
+        // Since Space will select a login in the list, prevent it from
+        // also scrolling the list.
+        if (
+          this.shadowRoot.activeElement &&
+          this.shadowRoot.activeElement.closest("ol") &&
+          event.key == " "
+        ) {
+          event.preventDefault();
+        }
+        break;
+      }
+      case "keyup": {
+        this._handleKeyboardNavWithinList(event);
         break;
       }
     }
@@ -421,7 +436,7 @@ export default class LoginList extends HTMLElement {
     }
   }
 
-  _handleKeyboardNav(event) {
+  _handleTabbingToExternalElements(event) {
     if (
       (this._createLoginButton == this.shadowRoot.activeElement ||
         (this._list == this.shadowRoot.activeElement &&
@@ -449,8 +464,11 @@ export default class LoginList extends HTMLElement {
         event.preventDefault();
         loginItem.focus();
       }
-      return;
-    } else if (this._list != this.shadowRoot.activeElement) {
+    }
+  }
+
+  _handleKeyboardNavWithinList(event) {
+    if (this._list != this.shadowRoot.activeElement) {
       return;
     }
 
