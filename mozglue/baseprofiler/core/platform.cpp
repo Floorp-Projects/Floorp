@@ -1607,6 +1607,8 @@ static void locked_profiler_stream_json_for_this_process(
 
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
+  AUTO_PROFILER_STATS(base_locked_profiler_stream_json_for_this_process);
+
   double collectionStart = profiler_time();
 
   ProfileBuffer& buffer = ActivePS::Buffer(aLock);
