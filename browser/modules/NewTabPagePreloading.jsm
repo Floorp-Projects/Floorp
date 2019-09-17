@@ -71,12 +71,6 @@ let NewTabPagePreloading = {
     let panel = gBrowser.getPanel(browser);
     gBrowser.tabpanels.appendChild(panel);
 
-    if (remoteType != E10SUtils.NOT_REMOTE) {
-      // For remote browsers, we need to make sure that the webProgress is
-      // instantiated, otherwise the parent won't get informed about the state
-      // of the preloaded browser until it gets attached to a tab.
-      browser.webProgress;
-    }
     return browser;
   },
 
