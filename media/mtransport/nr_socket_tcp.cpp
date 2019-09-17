@@ -248,7 +248,9 @@ void NrTcpSocket::OnClose(nsresult aReason) {
 
 void NrTcpSocket::OnConnected(const nsCString& aProxyType) {
   r_log(LOG_GENERIC, LOG_DEBUG, "NrTcpSocket::OnConnected %p\n", this);
-  mProxyType = aProxyType;
+  if (aProxyType != "" && aProxyType != "direct") {
+    my_addr_.is_proxied = true;
+  }
 
   DoCallbacks();
 }
