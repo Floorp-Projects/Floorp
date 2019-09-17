@@ -417,6 +417,27 @@ class ModuloBuffer {
       mIndex += aLength;
     }
 
+    // Read data into a mutable iterator and move both iterators ahead.
+    void ReadInto(Iterator</* IsBufferConst */ false>& aDst, Length aLength) {
+      // Don't allow data larger than the buffer.
+      MOZ_ASSERT(aLength <= mModuloBuffer->BufferLength().Value());
+      MOZ_ASSERT(aLength <= aDst.mModuloBuffer->BufferLength().Value());
+      // Offset inside the buffer (corresponding to our Index).
+      Offset offset = OffsetInBuffer();
+      // Compute remaining bytes between this offset and the end of the buffer.
+      Length remaining = mModuloBuffer->BufferLength().Value() - offset;
+      if (MOZ_LIKELY(remaining >= aLength)) {
+        // Can read everything we need before the end of the buffer.
+        aDst.Write(&mModuloBuffer->mBuffer[offset], aLength);
+      } else {
+        // Read as much as possible before the end of the buffer.
+        aDst.Write(&mModuloBuffer->mBuffer[offset], remaining);
+        // And then continue from the beginning of the buffer.
+        aDst.Write(&mModuloBuffer->mBuffer[0], (aLength - remaining));
+      }
+      mIndex += aLength;
+    }
+
     // Read data into an object and move iterator ahead.
     // Note that this overwrites `aObject` with bytes from the buffer.
     // Restricted to trivially-copyable types, which support this without
