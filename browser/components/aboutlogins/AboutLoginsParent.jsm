@@ -46,6 +46,123 @@ const HIDE_MOBILE_FOOTER_PREF = "signon.management.page.hideMobileFooter";
 // even if it is disabled for other consumers such as about:newtab.
 const EXPECTED_ABOUTLOGINS_REMOTE_TYPE = E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE;
 
+// App store badges sourced from https://developer.apple.com/app-store/marketing/guidelines/#section-badges.
+// This array mirrors the file names from the App store directory (./content/third-party/app-store)
+const APP_STORE_LOCALES = [
+  "az",
+  "ar",
+  "bg",
+  "cs",
+  "da",
+  "de",
+  "el",
+  "en",
+  "es-mx",
+  "es",
+  "et",
+  "fi",
+  "fr",
+  "he",
+  "hu",
+  "id",
+  "it",
+  "ja",
+  "ko",
+  "lt",
+  "lv",
+  "my",
+  "nb",
+  "nl",
+  "nn",
+  "pl",
+  "pt-br",
+  "pt-pt",
+  "ro",
+  "ru",
+  "si",
+  "sk",
+  "sv",
+  "th",
+  "tl",
+  "tr",
+  "vi",
+  "zh-hans",
+  "zh-hant",
+];
+
+// Google play badges sourced from https://play.google.com/intl/en_us/badges/
+// This array mirrors the file names from the play store directory (./content/third-party/play-store)
+const PLAY_STORE_LOCALES = [
+  "af",
+  "ar",
+  "az",
+  "be",
+  "bg",
+  "bn",
+  "bs",
+  "ca",
+  "cs",
+  "da",
+  "de",
+  "el",
+  "en",
+  "es",
+  "et",
+  "eu",
+  "fa",
+  "fr",
+  "gl",
+  "gu",
+  "he",
+  "hi",
+  "hr",
+  "hu",
+  "hy",
+  "id",
+  "is",
+  "it",
+  "ja",
+  "ka",
+  "kk",
+  "km",
+  "kn",
+  "ko",
+  "lo",
+  "lt",
+  "lv",
+  "mk",
+  "mr",
+  "ms",
+  "my",
+  "nb",
+  "ne",
+  "nl",
+  "nn",
+  "pa",
+  "pl",
+  "pt-br",
+  "pt",
+  "ro",
+  "ru",
+  "si",
+  "sk",
+  "sl",
+  "sq",
+  "sr",
+  "sv",
+  "ta",
+  "te",
+  "th",
+  "tl",
+  "tr",
+  "uk",
+  "ur",
+  "uz",
+  "vi",
+  "zh-cn",
+  "zh-tw",
+];
+
 const convertSubjectToLogin = subject => {
   subject.QueryInterface(Ci.nsILoginMetaInfo).QueryInterface(Ci.nsILoginInfo);
   const login = LoginHelper.loginToVanillaObject(subject);
@@ -266,154 +383,36 @@ var AboutLoginsParent = {
 
         const logins = await this.getAllLogins();
         try {
-          messageManager.sendAsyncMessage("AboutLogins:AllLogins", logins);
-
+          let syncState;
           if (FXA_ENABLED) {
-            let syncState = this.getSyncState();
-            messageManager.sendAsyncMessage("AboutLogins:SyncState", syncState);
+            syncState = this.getSyncState();
             this.updatePasswordSyncNotificationState();
           }
 
-          // App store badges sourced from https://developer.apple.com/app-store/marketing/guidelines/#section-badges.
-          // This array mirrors the file names from the App store directory (./content/third-party/app-store)
-          const appStoreLocales = [
-            "az",
-            "ar",
-            "bg",
-            "cs",
-            "da",
-            "de",
-            "el",
-            "en",
-            "es-mx",
-            "es",
-            "et",
-            "fi",
-            "fr",
-            "he",
-            "hu",
-            "id",
-            "it",
-            "ja",
-            "ko",
-            "lt",
-            "lv",
-            "my",
-            "nb",
-            "nl",
-            "nn",
-            "pl",
-            "pt-br",
-            "pt-pt",
-            "ro",
-            "ru",
-            "si",
-            "sk",
-            "sv",
-            "th",
-            "tl",
-            "tr",
-            "vi",
-            "zh-hans",
-            "zh-hant",
-          ];
-
-          // Google play badges sourced from https://play.google.com/intl/en_us/badges/
-          // This array mirrors the file names from the play store directory (./content/third-party/play-store)
-          const playStoreLocales = [
-            "af",
-            "ar",
-            "az",
-            "be",
-            "bg",
-            "bn",
-            "bs",
-            "ca",
-            "cs",
-            "da",
-            "de",
-            "el",
-            "en",
-            "es",
-            "et",
-            "eu",
-            "fa",
-            "fr",
-            "gl",
-            "gu",
-            "he",
-            "hi",
-            "hr",
-            "hu",
-            "hy",
-            "id",
-            "is",
-            "it",
-            "ja",
-            "ka",
-            "kk",
-            "km",
-            "kn",
-            "ko",
-            "lo",
-            "lt",
-            "lv",
-            "mk",
-            "mr",
-            "ms",
-            "my",
-            "nb",
-            "ne",
-            "nl",
-            "nn",
-            "pa",
-            "pl",
-            "pt-br",
-            "pt",
-            "ro",
-            "ru",
-            "si",
-            "sk",
-            "sl",
-            "sq",
-            "sr",
-            "sv",
-            "ta",
-            "te",
-            "th",
-            "tl",
-            "tr",
-            "uk",
-            "ur",
-            "uz",
-            "vi",
-            "zh-cn",
-            "zh-tw",
-          ];
-
           const playStoreBadgeLanguage = Services.locale.negotiateLanguages(
             Services.locale.appLocalesAsBCP47,
-            playStoreLocales,
-            "en-US",
+            PLAY_STORE_LOCALES,
+            "en-us",
             Services.locale.langNegStrategyLookup
-          );
+          )[0];
 
           const appStoreBadgeLanguage = Services.locale.negotiateLanguages(
             Services.locale.appLocalesAsBCP47,
-            appStoreLocales,
-            "en-US",
+            APP_STORE_LOCALES,
+            "en-us",
             Services.locale.langNegStrategyLookup
-          );
+          )[0];
 
           const selectedBadgeLanguages = {
-            appStoreBadge: appStoreBadgeLanguage,
-            playStoreBadge: playStoreBadgeLanguage,
+            appStoreBadgeLanguage,
+            playStoreBadgeLanguage,
           };
 
-          messageManager.sendAsyncMessage(
-            "AboutLogins:LocalizeBadges",
-            selectedBadgeLanguages
-          );
+          messageManager.sendAsyncMessage("AboutLogins:Setup", {
+            logins,
+            syncState,
+            selectedBadgeLanguages,
+          });
 
           if (BREACH_ALERTS_ENABLED) {
             const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
