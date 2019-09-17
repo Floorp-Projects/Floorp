@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Discard a new BrowsingContext during window.open nested event loop</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+add_task(async function() {
+  const TOPIC = "dangerous:test-only:new-browser-child-ready";
+
+  let found = false;
+  function observer(subject, topic, data) {
+    let win = SpecialPowers.wrap(subject);
+    if (SpecialPowers.compare(win.opener, window)) {
+      found = true;
+      SpecialPowers.removeObserver(observer, TOPIC);
+
+      win.close();
+      // window.close() is not synchronous, so we need to wait for the
+      // BrowsingContext to actually become discarded after we call it, to
+      // make sure that the window provider actually has a discarded BC at the
+      // end of its own nested event loop.
+      SpecialPowers.Services.tm.spinEventLoopUntil(() => !win.opener);
+    }
+  }
+  SpecialPowers.addObserver(observer, TOPIC);
+
+  let win = window.open();
+
+  is(found, true, "Our observer should have fired for the new window");
+  is(win, null, "window.open() should return null when new window is already closed");
+});
+</script>
+</body>
+</html>
