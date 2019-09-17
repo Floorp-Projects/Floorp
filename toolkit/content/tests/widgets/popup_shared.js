@@ -216,7 +216,7 @@ function eventOccurred(event) {
   }
 }
 
-function checkResult() {
+async function checkResult() {
   var step = null;
   var test = gPopupTests[gTestIndex];
   if ("steps" in test) {
@@ -224,7 +224,7 @@ function checkResult() {
   }
 
   if ("result" in test) {
-    test.result(test.testname, step);
+    await test.result(test.testname, step);
   }
 
   if ("autohide" in test) {
