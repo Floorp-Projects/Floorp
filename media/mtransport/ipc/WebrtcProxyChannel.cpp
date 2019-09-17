@@ -19,6 +19,7 @@
 #include "nsString.h"
 #include "mozilla/dom/ContentProcessManager.h"
 #include "mozilla/dom/BrowserParent.h"
+#include "nsISocketTransportService.h"
 
 #include "WebrtcProxyChannelCallback.h"
 #include "WebrtcProxyLog.h"
@@ -43,7 +44,8 @@ class WebrtcProxyData {
 NS_IMPL_ISUPPORTS(WebrtcProxyChannel, nsIAuthPromptProvider,
                   nsIHttpUpgradeListener, nsIInputStreamCallback,
                   nsIInterfaceRequestor, nsIOutputStreamCallback,
-                  nsIRequestObserver, nsIStreamListener)
+                  nsIRequestObserver, nsIStreamListener,
+                  nsIProtocolProxyCallback)
 
 WebrtcProxyChannel::WebrtcProxyChannel(WebrtcProxyChannelCallback* aCallbacks)
     : mProxyCallbacks(aCallbacks),
@@ -137,45 +139,171 @@ void WebrtcProxyChannel::CloseWithReason(nsresult aReason) {
 nsresult WebrtcProxyChannel::Open(const nsCString& aHost, const int& aPort,
                                   const net::LoadInfoArgs& aArgs,
                                   const nsCString& aAlpn) {
-  LOG(("WebrtcProxyChannel::AsyncOpen %p\n", this));
+  LOG(("WebrtcProxyChannel::Open %p\n", this));
 
-  if (mOpened) {
+  if (NS_WARN_IF(mOpened)) {
     LOG(("WebrtcProxyChannel %p: proxy channel already open\n", this));
     CloseWithReason(NS_ERROR_FAILURE);
     return NS_ERROR_FAILURE;
   }
 
   mOpened = true;
-
-  nsresult rv;
   nsCString spec = NS_LITERAL_CSTRING("http://") + aHost;
 
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
-           .SetSpec(spec)
-           .SetPort(aPort)
-           .Finalize(uri);
+  nsresult rv = NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
+                    .SetSpec(spec)
+                    .SetPort(aPort)
+                    .Finalize(mURI);
 
-  if (NS_FAILED(rv)) {
-    LOG(("WebrtcProxyChannel %p: bad proxy connect uri set\n", this));
-    CloseWithReason(rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    CloseWithReason(NS_ERROR_FAILURE);
+    return NS_ERROR_FAILURE;
+  }
+
+  mLoadInfoArgs = aArgs;
+  mAlpn = aAlpn;
+
+  // We need to figure out whether a proxy needs to be used for mURI before we
+  // can start on establishing a connection.
+  rv = DoProxyConfigLookup();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    CloseWithReason(NS_ERROR_FAILURE);
+  }
+
+  return rv;
+}
+
+nsresult WebrtcProxyChannel::DoProxyConfigLookup() {
+  nsresult rv;
+  nsCOMPtr<nsIProtocolProxyService> pps =
+      do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
+  nsCOMPtr<nsIChannel> channel;
+  rv = NS_NewChannel(getter_AddRefs(channel), mURI,
+                     nsContentUtils::GetSystemPrincipal(),
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                     nsIContentPolicy::TYPE_OTHER);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIEventTarget> target =
+      SystemGroup::EventTargetFor(TaskCategory::Network);
+  nsCOMPtr<nsICancelable> proxyRequest;
+
+  rv = pps->AsyncResolve(channel,
+                         nsIProtocolProxyService::RESOLVE_PREFER_HTTPS_PROXY |
+                             nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL,
+                         this, target, getter_AddRefs(proxyRequest));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // We pick back up in OnProxyAvailable
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP WebrtcProxyChannel::OnProxyAvailable(nsICancelable* aRequest,
+                                                   nsIChannel* aChannel,
+                                                   nsIProxyInfo* aProxyinfo,
+                                                   nsresult aResult) {
+  nsresult rv;
+
+  if (NS_SUCCEEDED(aResult) && aProxyinfo) {
+    nsCString proxyType;
+    rv = aProxyinfo->GetType(proxyType);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      CloseWithReason(rv);
+      return rv;
+    }
+
+    if (proxyType == "http" || proxyType == "https") {
+      rv = OpenWithHttpProxy();
+    } else if (proxyType == "socks" || proxyType == "socks4" ||
+               proxyType == "direct") {
+      rv = OpenWithoutHttpProxy(aProxyinfo);
+    }
+  } else {
+    rv = OpenWithoutHttpProxy(nullptr);
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    CloseWithReason(rv);
+  }
+
+  return rv;
+}
+
+nsresult WebrtcProxyChannel::OpenWithoutHttpProxy(
+    nsIProxyInfo* aSocksProxyInfo) {
+  nsCString host;
+  int32_t port;
+
+  nsresult rv = mURI->GetHost(host);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = mURI->GetPort(&port);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  AutoTArray<nsCString, 1> socketTypes;
+  if (mSsl) {
+    socketTypes.AppendElement(NS_LITERAL_CSTRING("ssl"));
+  }
+
+  nsCOMPtr<nsISocketTransportService> sts =
+      do_GetService("@mozilla.org/network/socket-transport-service;1");
+  rv = sts->CreateTransport(socketTypes, host, port, aSocksProxyInfo,
+                            getter_AddRefs(mTransport));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIInputStream> socketIn;
+  rv = mTransport->OpenInputStream(0, 0, 0, getter_AddRefs(socketIn));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  mSocketIn = do_QueryInterface(socketIn);
+  if (NS_WARN_IF(!mSocketIn)) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsCOMPtr<nsIOutputStream> socketOut;
+  rv = mTransport->OpenOutputStream(nsITransport::OPEN_UNBUFFERED, 0, 0,
+                                    getter_AddRefs(socketOut));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  mSocketOut = do_QueryInterface(socketOut);
+  if (NS_WARN_IF(!mSocketOut)) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  return FinishOpen();
+}
+
+nsresult WebrtcProxyChannel::OpenWithHttpProxy() {
+  nsresult rv;
   nsCOMPtr<nsIIOService> ioService;
   ioService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
     LOG(("WebrtcProxyChannel %p: io service missing\n", this));
-    CloseWithReason(rv);
     return rv;
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo;
-  Maybe<net::LoadInfoArgs> loadInfoArgs = Some(aArgs);
+  Maybe<net::LoadInfoArgs> loadInfoArgs = Some(mLoadInfoArgs);
   rv = LoadInfoArgsToLoadInfo(loadInfoArgs, getter_AddRefs(loadInfo));
   if (NS_FAILED(rv)) {
     LOG(("WebrtcProxyChannel %p: could not init load info\n", this));
-    CloseWithReason(rv);
     return rv;
   }
 
@@ -186,7 +314,7 @@ nsresult WebrtcProxyChannel::Open(const nsCString& aHost, const int& aPort,
   // introduce new behavior. can't follow redirects on connect anyway.
   nsCOMPtr<nsIChannel> localChannel;
   rv = ioService->NewChannelFromURIWithProxyFlags(
-      uri, nullptr,
+      mURI, nullptr,
       // Proxy flags are overridden by SetConnectOnly()
       0, loadInfo->LoadingNode(), loadInfo->LoadingPrincipal(),
       loadInfo->TriggeringPrincipal(),
@@ -197,7 +325,6 @@ nsresult WebrtcProxyChannel::Open(const nsCString& aHost, const int& aPort,
       nsIContentPolicy::TYPE_OTHER, getter_AddRefs(localChannel));
   if (NS_FAILED(rv)) {
     LOG(("WebrtcProxyChannel %p: bad open channel\n", this));
-    CloseWithReason(rv);
     return rv;
   }
 
@@ -206,7 +333,6 @@ nsresult WebrtcProxyChannel::Open(const nsCString& aHost, const int& aPort,
 
   if (!httpChannel) {
     LOG(("WebrtcProxyChannel %p: not an http channel\n", this));
-    CloseWithReason(NS_ERROR_FAILURE);
     return NS_ERROR_FAILURE;
   }
 
@@ -220,22 +346,28 @@ nsresult WebrtcProxyChannel::Open(const nsCString& aHost, const int& aPort,
                        nsIClassOfService::DontThrottle);
   } else {
     LOG(("WebrtcProxyChannel %p: could not set class of service\n", this));
-    CloseWithReason(NS_ERROR_FAILURE);
     return NS_ERROR_FAILURE;
   }
 
-  rv = httpChannel->HTTPUpgrade(aAlpn, this);
-  NS_ENSURE_SUCCESS(rv, rv);
+  rv = httpChannel->HTTPUpgrade(mAlpn, this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   rv = httpChannel->SetConnectOnly();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   rv = NS_MaybeOpenChannelUsingAsyncOpen(httpChannel, this);
 
   if (NS_FAILED(rv)) {
     LOG(("WebrtcProxyChannel %p: cannot async open\n", this));
-    CloseWithReason(rv);
     return rv;
   }
+
+  // This picks back up in OnTransportAvailable once we have connected to the
+  // proxy, and performed the http upgrade to switch the proxy into passthrough
+  // mode.
 
   return NS_OK;
 }
@@ -305,6 +437,9 @@ NS_IMETHODIMP
 WebrtcProxyChannel::OnTransportAvailable(nsISocketTransport* aTransport,
                                          nsIAsyncInputStream* aSocketIn,
                                          nsIAsyncOutputStream* aSocketOut) {
+  // This is called only in the http proxy case, once we have connected to the
+  // http proxy and performed the http upgrade to switch it over to passthrough
+  // mode. That process is started async by OpenWithHttpProxy.
   LOG(("WebrtcProxyChannel::OnTransportAvailable %p\n", this));
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(!mTransport, "already called transport available on webrtc proxy");
@@ -337,6 +472,15 @@ WebrtcProxyChannel::OnTransportAvailable(nsISocketTransport* aTransport,
     CloseWithReason(rv);
     return rv;
   }
+
+  return FinishOpen();
+}
+
+nsresult WebrtcProxyChannel::FinishOpen() {
+  // mTransport, mSocketIn, and mSocketOut are all set. We may have set them in
+  // OnTransportAvailable (in the http/https proxy case), or in
+  // OpenWithoutHttpProxy. From here on out, this class functions the same for
+  // these two cases.
 
   mSocketIn->AsyncWait(this, 0, 0, nullptr);
 

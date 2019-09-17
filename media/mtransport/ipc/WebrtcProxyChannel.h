@@ -18,13 +18,14 @@
 #include "nsIStreamListener.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
-#include "mozilla/dom/ipc/IdType.h"  // TabId
+#include "mozilla/dom/ipc/IdType.h"     // TabId
+#include "mozilla/dom/PContentChild.h"  // LoadInfoArgs
+#include "nsIProtocolProxyCallback.h"
 
 class nsISocketTransport;
 
 namespace mozilla {
 namespace net {
-class LoadInfoArgs;
 
 class WebrtcProxyChannelCallback;
 class WebrtcProxyData;
@@ -34,7 +35,8 @@ class WebrtcProxyChannel : public nsIHttpUpgradeListener,
                            public nsIInputStreamCallback,
                            public nsIOutputStreamCallback,
                            public nsIInterfaceRequestor,
-                           public nsIAuthPromptProvider {
+                           public nsIAuthPromptProvider,
+                           public nsIProtocolProxyCallback {
  public:
   NS_DECL_NSIHTTPUPGRADELISTENER
   NS_DECL_NSIINPUTSTREAMCALLBACK
@@ -44,6 +46,7 @@ class WebrtcProxyChannel : public nsIHttpUpgradeListener,
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_FORWARD_SAFE_NSIAUTHPROMPTPROVIDER(mAuthProvider)
+  NS_DECL_NSIPROTOCOLPROXYCALLBACK
 
   explicit WebrtcProxyChannel(WebrtcProxyChannelCallback* aCallbacks);
 
@@ -68,7 +71,15 @@ class WebrtcProxyChannel : public nsIHttpUpgradeListener,
  private:
   bool mClosed;
   bool mOpened;
+  nsCOMPtr<nsIURI> mURI;
+  net::LoadInfoArgs mLoadInfoArgs;
+  nsCString mAlpn;
+  bool mSsl = false;
 
+  nsresult DoProxyConfigLookup();
+  nsresult OpenWithHttpProxy();
+  nsresult OpenWithoutHttpProxy(nsIProxyInfo* aSocksProxyInfo);
+  nsresult FinishOpen();
   void EnqueueWrite_s(nsTArray<uint8_t>&& aWriteData);
 
   void CloseWithReason(nsresult aReason);
