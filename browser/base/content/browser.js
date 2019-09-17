@@ -4735,10 +4735,7 @@ const BrowserSearch = {
     }
 
     let focusUrlBarIfSearchFieldIsNotActive = function(aSearchBar) {
-      if (
-        !aSearchBar ||
-        document.activeElement != aSearchBar.textbox.inputField
-      ) {
+      if (!aSearchBar || document.activeElement != aSearchBar.textbox) {
         // Limit the results to search suggestions, like the search bar.
         gURLBar.search(UrlbarTokenizer.RESTRICT.SEARCH);
       }

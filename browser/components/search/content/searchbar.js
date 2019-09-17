@@ -51,7 +51,8 @@
         <image class="searchbar-search-icon"></image>
         <image class="searchbar-search-icon-overlay"></image>
       </hbox>
-      <textbox class="searchbar-textbox" type="autocomplete" inputtype="search" placeholder="&searchInput.placeholder;" flex="1" autocompletepopup="PopupSearchAutoComplete" autocompletesearch="search-autocomplete" autocompletesearchparam="searchbar-history" maxrows="10" completeselectedindex="true" minresultsforpopup="0"/>
+      <html:input class="searchbar-textbox" is="autocomplete-input" type="search" placeholder="&searchInput.placeholder;" autocompletepopup="PopupSearchAutoComplete" autocompletesearch="search-autocomplete" autocompletesearchparam="searchbar-history" maxrows="10" completeselectedindex="true" minresultsforpopup="0"/>
+      <menupopup class="textbox-contextmenu"></menupopup>
       <hbox class="search-go-container">
         <image class="search-go-button urlbar-icon" hidden="true" onclick="handleSearchCommand(event);" tooltiptext="&contentSearchSubmit.tooltip;"></image>
       </hbox>
@@ -79,6 +80,10 @@
 
       this._stringBundle = this.querySelector("stringbundle");
       this._textbox = this.querySelector(".searchbar-textbox");
+
+      this._menupopup = null;
+      this._pasteAndSearchMenuItem = null;
+      this._suggestMenuItem = null;
 
       this._setupTextboxEventListeners();
       this._initTextbox();
@@ -199,7 +204,9 @@
       if (
         this._textbox &&
         this._textbox.mController &&
-        this._textbox.mController.input == this
+        this._textbox.mController.input &&
+        this._textbox.mController.input.wrappedJSObject ==
+          this.nsIAutocompleteInput
       ) {
         this._textbox.mController.input = null;
       }
@@ -432,9 +439,8 @@
       if (
         !this._preventClickSelectsAll &&
         UrlbarPrefs.get("clickSelectsAll") &&
-        document.activeElement == this._textbox.inputField &&
-        this._textbox.inputField.selectionStart ==
-          this._textbox.inputField.selectionEnd
+        document.activeElement == this._textbox &&
+        this._textbox.selectionStart == this._textbox.selectionEnd
       ) {
         this._textbox.editor.selectAll();
       }
@@ -498,8 +504,7 @@
         event => {
           // If the input field is still focused then a different window has
           // received focus, ignore the next focus event.
-          this._ignoreFocus =
-            document.activeElement == this._textbox.inputField;
+          this._ignoreFocus = document.activeElement == this._textbox;
         },
         true
       );
@@ -639,6 +644,18 @@
         true
       );
 
+      if (AppConstants.platform == "macosx") {
+        this.textbox.addEventListener(
+          "keypress",
+          event => {
+            if (event.keyCode == KeyEvent.DOM_VK_F4) {
+              this.textbox.openSearch();
+            }
+          },
+          true
+        );
+      }
+
       this.textbox.addEventListener("dragover", event => {
         let types = event.dataTransfer.types;
         if (
@@ -661,11 +678,40 @@
           this.openSuggestionsPanel();
         }
       });
+
+      this.textbox.addEventListener("contextmenu", event => {
+        if (event.target != this.textbox) {
+          return;
+        }
+
+        if (!this._menupopup) {
+          this._buildContextMenu();
+        }
+
+        BrowserSearch.searchBar._textbox.closePopup();
+        let enabled = Services.prefs.getBoolPref(
+          "browser.search.suggest.enabled"
+        );
+        this._suggestMenuItem.setAttribute("checked", enabled);
+
+        let controller = document.commandDispatcher.getControllerForCommand(
+          "cmd_paste"
+        );
+        enabled = controller.isCommandEnabled("cmd_paste");
+        if (enabled) {
+          this._pasteAndSearchMenuItem.removeAttribute("disabled");
+        } else {
+          this._pasteAndSearchMenuItem.setAttribute("disabled", "true");
+        }
+
+        this._menupopup.openPopupAtScreen(event.screenX, event.screenY, true);
+        event.preventDefault();
+      });
     }
 
     _initTextbox() {
       // nsIController
-      this.searchbarController = {
+      let searchbarController = {
         textbox: this.textbox,
         supportsCommand(command) {
           return (
@@ -699,29 +745,14 @@
           }
         },
       };
+      this.textbox.controllers.appendController(searchbarController);
 
       if (this.parentNode.parentNode.localName == "toolbarpaletteitem") {
         return;
       }
 
-      let inputBox = document.getAnonymousElementByAttribute(
-        this.textbox,
-        "anonid",
-        "moz-input-box"
-      );
-
-      // Force the Custom Element to upgrade until Bug 1470242 handles this:
-      window.customElements.upgrade(inputBox);
-      let cxmenu = inputBox.menupopup;
-      cxmenu.addEventListener(
-        "popupshowing",
-        () => {
-          this._initContextMenu(cxmenu);
-        },
-        { capture: true, once: true }
-      );
-
-      this.textbox.setAttribute("aria-owns", this.textbox.popup.id);
+      this.setAttribute("role", "combobox");
+      this.setAttribute("aria-owns", this.textbox.popup.id);
 
       // This overrides the searchParam property in autocomplete.xml. We're
       // hijacking this property as a vehicle for delivering the privacy
@@ -846,94 +877,75 @@
       };
     }
 
-    _initContextMenu(aMenu) {
-      let stringBundle = this._stringBundle;
+    _buildContextMenu() {
+      const raw = `
+          <menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo"/>
+          <menuseparator/>
+          <menuitem label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" cmd="cmd_cut"/>
+          <menuitem label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" cmd="cmd_copy"/>
+          <menuitem label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;" cmd="cmd_paste"/>
+          <menuitem anonid="paste-and-search" oncommand="BrowserSearch.pasteAndSearch(event)"/>
+          <menuitem label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" cmd="cmd_delete"/>
+          <menuseparator/>
+          <menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" cmd="cmd_selectAll"/>
+          <menuseparator/>
+          <menuitem cmd="cmd_clearHistory"/>
+          <menuitem cmd="cmd_togglesuggest" type="checkbox" autocheck="false"/>
+      `;
 
-      let pasteAndSearch, suggestMenuItem;
-      let element, label, akey;
+      this._menupopup = this.querySelector(".textbox-contextmenu");
 
-      element = document.createXULElement("menuseparator");
-      aMenu.appendChild(element);
+      let frag = MozXULElement.parseXULToFragment(raw, [
+        "chrome://global/locale/textcontext.dtd",
+      ]);
 
-      let insertLocation = aMenu.firstElementChild;
-      while (
-        insertLocation.nextElementSibling &&
-        insertLocation.getAttribute("cmd") != "cmd_paste"
-      ) {
-        insertLocation = insertLocation.nextElementSibling;
-      }
-      if (insertLocation) {
-        element = document.createXULElement("menuitem");
-        label = stringBundle.getString("cmd_pasteAndSearch");
-        element.setAttribute("label", label);
-        element.setAttribute("anonid", "paste-and-search");
-        element.setAttribute(
-          "oncommand",
-          "BrowserSearch.pasteAndSearch(event)"
-        );
-        aMenu.insertBefore(element, insertLocation.nextElementSibling);
-        pasteAndSearch = element;
-      }
+      // Insert attributes that come from localized properties
+      let el = frag.querySelector('[anonid="paste-and-search"]');
+      el.setAttribute(
+        "label",
+        this._stringBundle.getString("cmd_pasteAndSearch")
+      );
 
-      element = document.createXULElement("menuitem");
-      label = stringBundle.getString("cmd_clearHistory");
-      akey = stringBundle.getString("cmd_clearHistory_accesskey");
-      element.setAttribute("label", label);
-      element.setAttribute("accesskey", akey);
-      element.setAttribute("cmd", "cmd_clearhistory");
-      aMenu.appendChild(element);
+      el = frag.querySelector('[cmd="cmd_clearHistory"]');
+      el.setAttribute(
+        "label",
+        this._stringBundle.getString("cmd_clearHistory")
+      );
+      el.setAttribute(
+        "accesskey",
+        this._stringBundle.getString("cmd_clearHistory_accesskey")
+      );
 
-      element = document.createXULElement("menuitem");
-      label = stringBundle.getString("cmd_showSuggestions");
-      akey = stringBundle.getString("cmd_showSuggestions_accesskey");
-      element.setAttribute("anonid", "toggle-suggest-item");
-      element.setAttribute("label", label);
-      element.setAttribute("accesskey", akey);
-      element.setAttribute("cmd", "cmd_togglesuggest");
-      element.setAttribute("type", "checkbox");
-      element.setAttribute("autocheck", "false");
-      suggestMenuItem = element;
-      aMenu.appendChild(element);
+      el = frag.querySelector('[cmd="cmd_togglesuggest"]');
+      el.setAttribute(
+        "label",
+        this._stringBundle.getString("cmd_showSuggestions")
+      );
+      el.setAttribute(
+        "accesskey",
+        this._stringBundle.getString("cmd_showSuggestions_accesskey")
+      );
 
-      if (AppConstants.platform == "macosx") {
-        this.textbox.addEventListener(
-          "keypress",
-          event => {
-            if (event.keyCode == KeyEvent.DOM_VK_F4) {
-              this.textbox.openSearch();
-            }
-          },
-          true
-        );
-      }
+      this._menupopup.appendChild(frag);
 
-      this.textbox.controllers.appendController(this.searchbarController);
+      this._pasteAndSearchMenuItem = this._menupopup.querySelector(
+        '[anonid="paste-and-search"]'
+      );
+      this._suggestMenuItem = this._menupopup.querySelector(
+        '[cmd="cmd_togglesuggest"]'
+      );
 
-      let onpopupshowing = function() {
-        BrowserSearch.searchBar._textbox.closePopup();
-        if (suggestMenuItem) {
-          let enabled = Services.prefs.getBoolPref(
-            "browser.search.suggest.enabled"
+      this._menupopup.addEventListener("command", cmdEvt => {
+        let cmd = cmdEvt.originalTarget.getAttribute("cmd");
+        if (cmd) {
+          let controller = document.commandDispatcher.getControllerForCommand(
+            cmd
           );
-          suggestMenuItem.setAttribute("checked", enabled);
+          controller.doCommand(cmd);
+          cmdEvt.stopPropagation();
+          cmdEvt.preventDefault();
         }
-
-        if (!pasteAndSearch) {
-          return;
-        }
-
-        let controller = document.commandDispatcher.getControllerForCommand(
-          "cmd_paste"
-        );
-        let enabled = controller.isCommandEnabled("cmd_paste");
-        if (enabled) {
-          pasteAndSearch.removeAttribute("disabled");
-        } else {
-          pasteAndSearch.setAttribute("disabled", "true");
-        }
-      };
-      aMenu.addEventListener("popupshowing", onpopupshowing);
-      onpopupshowing();
+      });
     }
   }
 

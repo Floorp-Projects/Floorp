@@ -89,47 +89,7 @@
 
       testAccessibleTree("txc_password", accTree);
 
-      //////////////////////////////////////////////////////////////////////////
-      // autocomplete textbox
-
-      accTree = {
-        // textbox
-        role: ROLE_AUTOCOMPLETE,
-        children: [
-          {
-            // html:input
-            role: ROLE_ENTRY,
-            children: [
-              {
-                // #text
-                role: ROLE_TEXT_LEAF,
-                children: []
-              }
-            ]
-          },
-          {
-            // xul:menupopup
-            role: ROLE_COMBOBOX_LIST,
-            children: []
-          },
-          {
-            // xul:richlistbox
-            role: ROLE_COMBOBOX_LIST,
-            children: []
-          }
-        ]
-      };
-
-      var txc = document.getElementById("txc_autocomplete");
-      SimpleTest.ok(txc, "Testing (New) Toolkit autocomplete widget.");
-
-      // Dumb access to trigger popup lazy creation.
-      dump("Trigget popup lazy creation");
-      waitForEvent(EVENT_REORDER, txc, () => {
-        testAccessibleTree("txc_autocomplete", accTree);
-        SimpleTest.finish();
-      });
-      txc.popup.initialize();
+      SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
@@ -157,7 +117,6 @@
       <textbox id="txc_search_searchbutton" searchbutton="true" is="search-textbox" value="hello"/>
       <textbox id="txc_number" type="number" value="44"/>
       <textbox id="txc_password" type="password" value="hello"/>
-      <textbox id="txc_autocomplete" type="autocomplete" value="hello"/>
     </vbox>
   </hbox>
 
