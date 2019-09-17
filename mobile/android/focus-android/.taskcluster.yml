@@ -171,7 +171,12 @@ tasks:
               && python tools/taskcluster/release.py \
                 --tag ${event.release.tag_name} \
                 --channel alpha \
-                --commit
+                --commit \
+                --output /opt/focus-android/app/build/outputs/apk \
+                --apk focus/release/app-focus-armeabi-v7a-release-unsigned.apk \
+                --apk focus/release/app-focus-arm64-release-unsigned.apk \
+                --apk klar/release/app-klar-armeabi-v7a-release-unsigned.apk \
+                --apk klar/release/app-klar-arm64-release-unsigned.apk
           artifacts:
             public/task-graph.json:
               type: file
@@ -247,7 +252,12 @@ tasks:
               && git submodule update --init
               && python tools/taskcluster/release.py \
                 --channel nightly \
-                --commit
+                --commit \
+                --output /opt/focus-android/app/build/outputs/apk \
+                --apk focus/nightly/app-focus-armeabi-v7a-nightly-unsigned.apk \
+                --apk focus/nightly/app-focus-arm64-nightly-unsigned.apk \
+                --apk klar/nightly/app-klar-armeabi-v71-nightly-unsigned.apk \
+                --apk klar/nightly/app-klar-arm64-nightly-unsigned.apk
           artifacts:
             public/task-graph.json:
               type: file

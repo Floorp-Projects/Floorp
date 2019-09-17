@@ -60,7 +60,7 @@ android {
         }
     }
 
-    flavorDimensions "product"
+    flavorDimensions "product", "abi"
 
     productFlavors {
         // In most countries we are Firefox Focus - but in some we need to be Firefox Klar
@@ -74,15 +74,17 @@ android {
 
             applicationIdSuffix ".klar"
         }
-    }
 
-    splits {
-        abi {
-            enable true
+        x86 {
+            dimension "abi"
+        }
 
-            reset()
+        arm {
+            dimension "abi"
+        }
 
-            include "x86", "armeabi-v7a", "arm64-v8a"
+        aarch64 {
+            dimension "abi"
         }
     }
 
@@ -97,16 +99,31 @@ android {
         }
 
         // Release
-        focusRelease.root = 'src/focusRelease'
-        klarRelease.root = 'src/klarRelease'
+        focusX86Release.root = 'src/focusRelease'
+        focusArmRelease.root = 'src/focusRelease'
+        focusAarch64Release.root = 'src/focusRelease'
+
+        klarX86Release.root = 'src/klarRelease'
+        klarArmRelease.root = 'src/klarRelease'
+        klarAarch64Release.root = 'src/klarRelease'
 
         // Debug
-        focusDebug.root = 'src/focusDebug'
-        klarDebug.root = 'src/klarDebug'
+        focusX86Debug.root = 'src/focusDebug'
+        focusArmDebug.root = 'src/focusDebug'
+        focusAarch64Debug.root = 'src/focusDebug'
+
+        klarX86Debug.root = 'src/klarDebug'
+        klarArmDebug.root = 'src/klarDebug'
+        klarAarch64Debug.root = 'src/klarDebug'
 
         // Nightly
-        focusNightly.root = 'src/focusNightly'
-        klarNightly.root = 'src/klarNightly'
+        focusX86Nightly.root = 'src/focusNightly'
+        focusArmNightly.root = 'src/focusNightly'
+        focusAarch64Nightly.root = 'src/focusNightly'
+
+        klarX86Nightly.root = 'src/klarNightly'
+        klarArmNightly.root = 'src/klarNightly'
+        klarAarch64Nightly.root = 'src/klarNightly'
     }
 
     packagingOptions {
@@ -494,25 +511,5 @@ if (project.hasProperty("coverage")) {
                 applicationIdSuffix ".coverage"
             }
         }
-    }
-}
-
-// -------------------------------------------------------------------------------------------------
-// Task for printing APK information for the requested variant
-// Usage: "./gradlew printVariant -PvariantBuildType=nightly -PvariantProduct=focus"
-// -------------------------------------------------------------------------------------------------
-task printVariant {
-    doLast {
-        def rawVariant = android.applicationVariants.find {
-            it.buildType.name == variantBuildType &&
-                    it.productFlavors.find { it.dimension == 'product' }.name == variantProduct
-        }
-        println 'variant: ' + groovy.json.JsonOutput.toJson([
-                name: rawVariant.name,
-                apks: rawVariant.variantData.outputScope.apkDatas.collect { [
-                        abi: it.filters.find { it.filterType == 'ABI' }.identifier,
-                        fileName: it.outputFileName,
-                ]}
-        ])
     }
 }
