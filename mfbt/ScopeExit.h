@@ -98,9 +98,10 @@ class MOZ_STACK_CLASS ScopeExit {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   }
 
-  ScopeExit(ScopeExit&& rhs)
+  ScopeExit(ScopeExit&& rhs MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mExitFunction(std::move(rhs.mExitFunction)),
         mExecuteOnDestruction(rhs.mExecuteOnDestruction) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     rhs.release();
   }
 
