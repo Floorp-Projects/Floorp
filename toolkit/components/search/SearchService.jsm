@@ -1664,15 +1664,12 @@ SearchService.prototype = {
 
     let engineSelector = new SearchEngineSelector();
     let locale = Services.locale.appLocaleAsBCP47;
-    // TODO: engineSelector needs to support default region, we cant
-    // just use "us" as a default region.
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1575554
-    let region = Services.prefs.getCharPref("browser.search.region", "us");
+    let region = Services.prefs.getCharPref("browser.search.region", "default");
 
     await engineSelector.init();
     let { engines, privateDefault } = engineSelector.fetchEngineConfiguration(
-      region,
-      locale
+      locale,
+      region
     );
 
     this._searchDefault = engines[0].engineName;
