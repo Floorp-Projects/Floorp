@@ -451,6 +451,11 @@ var PreferenceExperiments = {
     for (const [preferenceName, preferenceInfo] of Object.entries(
       preferences
     )) {
+      // Ensure preferenceBranchType is set, using the default from
+      // the schema. This also modifies the preferenceInfo for use in
+      // the rest of the function.
+      preferenceInfo.preferenceBranchType =
+        preferenceInfo.preferenceBranchType || "default";
       const { preferenceBranchType, preferenceType } = preferenceInfo;
       const preferenceBranch = PreferenceBranchType[preferenceBranchType];
       if (!preferenceBranch) {
