@@ -15,7 +15,7 @@ use crate::image::{self, Repetition};
 use crate::intern;
 use crate::prim_store::{ClipData, ImageMaskData, SpaceMapper, VisibleMaskImageTile};
 use crate::prim_store::{PointKey, SizeKey, RectangleKey};
-use crate::render_task::to_cache_size;
+use crate::render_task_cache::to_cache_size;
 use crate::resource_cache::{ImageRequest, ResourceCache};
 use std::{cmp, ops, u32};
 use crate::util::{extract_inner_rect_safe, project_rect, ScaleOffset};
