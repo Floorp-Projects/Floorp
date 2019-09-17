@@ -3,7 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/EndianUtils.h"
 #include "gfx2DGlue.h"
+#include "mozilla/gfx/Swizzle.h"
 
 #include "YCbCrUtils.h"
 #include "yuv_convert.h"
@@ -236,6 +238,13 @@ ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
                           yuvtype,
                           srcData.mYUVColorSpace);
   }
+#if MOZ_BIG_ENDIAN
+  // libyuv makes endian-correct result, which needs to be swapped to BGRX
+  if (aDestFormat != SurfaceFormat::R5G6B5_UINT16)
+    gfx::SwizzleData(aDestBuffer, aStride, gfx::SurfaceFormat::X8R8G8B8,
+                     aDestBuffer, aStride, gfx::SurfaceFormat::B8G8R8X8,
+                     srcData.mPicSize);
+#endif
 }
 
 void
@@ -257,6 +266,12 @@ ConvertYCbCrAToARGB(const uint8_t* aSrcY,
                         aSrcStrideYA,
                         aSrcStrideUV,
                         aDstStrideARGB);
+#if MOZ_BIG_ENDIAN
+  // libyuv makes endian-correct result, which needs to be swapped to BGRA
+  gfx::SwizzleData(aDstARGB, aDstStrideARGB, gfx::SurfaceFormat::A8R8G8B8,
+                   aDstARGB, aDstStrideARGB, gfx::SurfaceFormat::B8G8R8A8,
+                   IntSize(aWidth, aHeight));
+#endif
 }
 
 } // namespace gfx
