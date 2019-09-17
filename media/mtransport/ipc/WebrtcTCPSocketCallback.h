@@ -4,15 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef webrtc_proxy_channel_callback_h__
-#define webrtc_proxy_channel_callback_h__
+#ifndef webrtc_tcp_socket_callback_h__
+#define webrtc_tcp_socket_callback_h__
 
 #include "nsTArray.h"
 
 namespace mozilla {
 namespace net {
 
-class WebrtcProxyChannelCallback {
+class WebrtcTCPSocketCallback {
  public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
@@ -21,10 +21,10 @@ class WebrtcProxyChannelCallback {
   virtual void OnRead(nsTArray<uint8_t>&& aReadData) = 0;
 
  protected:
-  virtual ~WebrtcProxyChannelCallback() = default;
+  virtual ~WebrtcTCPSocketCallback() = default;
 };
 
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // webrtc_proxy_channel_callback_h__
+#endif  // webrtc_tcp_socket_callback_h__

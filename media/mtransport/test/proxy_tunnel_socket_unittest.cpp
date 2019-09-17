@@ -12,7 +12,7 @@
 #include "mozilla/net/NeckoChannelParams.h"
 #include "nr_socket_proxy.h"
 #include "nr_socket_proxy_config.h"
-#include "WebrtcProxyChannelWrapper.h"
+#include "WebrtcTCPSocketWrapper.h"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
@@ -45,7 +45,7 @@ class NrSocketProxyTest : public MtransportTest {
     ASSERT_EQ(0, r);
 
     // fake calling AsyncOpen() due to IPC calls. must be non-null
-    mSProxy->AssignChannel_DoNotUse(new WebrtcProxyChannelWrapper(nullptr));
+    mSProxy->AssignChannel_DoNotUse(new WebrtcTCPSocketWrapper(nullptr));
   }
 
   void TearDown() override { mSProxy->close(); }

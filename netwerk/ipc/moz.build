@@ -54,7 +54,7 @@ if not CONFIG['MOZ_WEBRTC']:
   IPDL_SOURCES += [
       '../../media/mtransport/ipc/PProxyConfigLookup.ipdl',
       '../../media/mtransport/ipc/PStunAddrsRequest.ipdl',
-      '../../media/mtransport/ipc/PWebrtcProxyChannel.ipdl',
+      '../../media/mtransport/ipc/PWebrtcTCPSocket.ipdl',
   ]
   EXPORTS.mozilla.net += [
       '../../media/mtransport/ipc/NrIceStunAddrMessageUtils.h',

@@ -560,8 +560,8 @@ VIRTUAL_CALL_CLASSES = set([
     ("PSpeechSynthesisRequest", "parent"),
     ("PStunAddrsRequest", "child"),
     ("PStunAddrsRequest", "parent"),
-    ("PWebrtcProxyChannel", "child"),
-    ("PWebrtcProxyChannel", "parent"),
+    ("PWebrtcTCPSocket", "child"),
+    ("PWebrtcTCPSocket", "parent"),
 
     # .h includes something that's a LOCAL_INCLUDE
     ("PBackgroundLocalStorageCache", "child"),

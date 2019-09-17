@@ -33,7 +33,7 @@
 #ifdef MOZ_WEBRTC
 #  include "mozilla/net/ProxyConfigLookupParent.h"
 #  include "mozilla/net/StunAddrsRequestParent.h"
-#  include "mozilla/net/WebrtcProxyChannelParent.h"
+#  include "mozilla/net/WebrtcTCPSocketParent.h"
 #endif
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/ContentParent.h"
@@ -324,10 +324,10 @@ bool NeckoParent::DeallocPStunAddrsRequestParent(
   return true;
 }
 
-PWebrtcProxyChannelParent* NeckoParent::AllocPWebrtcProxyChannelParent(
+PWebrtcTCPSocketParent* NeckoParent::AllocPWebrtcTCPSocketParent(
     const TabId& aTabId) {
 #ifdef MOZ_WEBRTC
-  WebrtcProxyChannelParent* parent = new WebrtcProxyChannelParent(aTabId);
+  WebrtcTCPSocketParent* parent = new WebrtcTCPSocketParent(aTabId);
   parent->AddRef();
   return parent;
 #else
@@ -335,11 +335,10 @@ PWebrtcProxyChannelParent* NeckoParent::AllocPWebrtcProxyChannelParent(
 #endif
 }
 
-bool NeckoParent::DeallocPWebrtcProxyChannelParent(
-    PWebrtcProxyChannelParent* aActor) {
+bool NeckoParent::DeallocPWebrtcTCPSocketParent(
+    PWebrtcTCPSocketParent* aActor) {
 #ifdef MOZ_WEBRTC
-  WebrtcProxyChannelParent* parent =
-      static_cast<WebrtcProxyChannelParent*>(aActor);
+  WebrtcTCPSocketParent* parent = static_cast<WebrtcTCPSocketParent*>(aActor);
   parent->Release();
 #endif
   return true;

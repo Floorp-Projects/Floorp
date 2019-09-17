@@ -4,21 +4,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_net_WebrtcProxyChannelChild_h
-#define mozilla_net_WebrtcProxyChannelChild_h
+#ifndef mozilla_net_WebrtcTCPSocketChild_h
+#define mozilla_net_WebrtcTCPSocketChild_h
 
-#include "mozilla/net/PWebrtcProxyChannelChild.h"
+#include "mozilla/net/PWebrtcTCPSocketChild.h"
 #include "mozilla/dom/ipc/IdType.h"
 
 namespace mozilla {
 
 namespace net {
 
-class WebrtcProxyChannelCallback;
+class WebrtcTCPSocketCallback;
 
-class WebrtcProxyChannelChild : public PWebrtcProxyChannelChild {
+class WebrtcTCPSocketChild : public PWebrtcTCPSocketChild {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcProxyChannelChild)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcTCPSocketChild)
 
   mozilla::ipc::IPCResult RecvOnClose(const nsresult& aReason) override;
 
@@ -26,7 +26,7 @@ class WebrtcProxyChannelChild : public PWebrtcProxyChannelChild {
 
   mozilla::ipc::IPCResult RecvOnRead(nsTArray<uint8_t>&& aReadData) override;
 
-  explicit WebrtcProxyChannelChild(WebrtcProxyChannelCallback* aProxyCallbacks);
+  explicit WebrtcTCPSocketChild(WebrtcTCPSocketCallback* aProxyCallbacks);
 
   void AsyncOpen(const nsCString& aHost, const int& aPort,
                  const net::LoadInfoArgs& aArgs, const nsCString& aAlpn,
@@ -36,12 +36,12 @@ class WebrtcProxyChannelChild : public PWebrtcProxyChannelChild {
   void ReleaseIPDLReference() { Release(); }
 
  protected:
-  virtual ~WebrtcProxyChannelChild();
+  virtual ~WebrtcTCPSocketChild();
 
-  RefPtr<WebrtcProxyChannelCallback> mProxyCallbacks;
+  RefPtr<WebrtcTCPSocketCallback> mProxyCallbacks;
 };
 
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // mozilla_net_WebrtcProxyChannelChild_h
+#endif  // mozilla_net_WebrtcTCPSocketChild_h

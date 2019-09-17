@@ -4,15 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef webrtc_proxy_channel_wrapper__
-#define webrtc_proxy_channel_wrapper__
+#ifndef webrtc_tcp_socket_wrapper__
+#define webrtc_tcp_socket_wrapper__
 
 #include <memory>
 
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 
-#include "mozilla/net/WebrtcProxyChannelCallback.h"
+#include "mozilla/net/WebrtcTCPSocketCallback.h"
 
 class nsIEventTarget;
 
@@ -22,46 +22,46 @@ class NrSocketProxyConfig;
 
 namespace net {
 
-class WebrtcProxyChannelChild;
+class WebrtcTCPSocketChild;
 
 /**
- * WebrtcProxyChannelWrapper is a protector class for mtransport and IPDL.
+ * WebrtcTCPSocketWrapper is a protector class for mtransport and IPDL.
  * mtransport and IPDL cannot include headers from each other due to conflicting
  * typedefs. Also it helps users by dispatching calls to the appropriate thread
  * based on mtransport's and IPDL's threading requirements.
  *
- * WebrtcProxyChannelWrapper is only used in the child process.
- * WebrtcProxyChannelWrapper does not dispatch for the parent process.
- * WebrtcProxyChannelCallback calls are dispatched to the STS thread.
+ * WebrtcTCPSocketWrapper is only used in the child process.
+ * WebrtcTCPSocketWrapper does not dispatch for the parent process.
+ * WebrtcTCPSocketCallback calls are dispatched to the STS thread.
  * IPDL calls are dispatched to the main thread.
  */
-class WebrtcProxyChannelWrapper : public WebrtcProxyChannelCallback {
+class WebrtcTCPSocketWrapper : public WebrtcTCPSocketCallback {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcProxyChannelWrapper, override)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcTCPSocketWrapper, override)
 
-  explicit WebrtcProxyChannelWrapper(WebrtcProxyChannelCallback* aCallbacks);
+  explicit WebrtcTCPSocketWrapper(WebrtcTCPSocketCallback* aCallbacks);
 
   virtual void AsyncOpen(const nsCString& aHost, const int& aPort,
                          const std::shared_ptr<NrSocketProxyConfig>& aConfig);
   virtual void SendWrite(nsTArray<uint8_t>&& aReadData);
   virtual void Close();
 
-  // WebrtcProxyChannelCallback
+  // WebrtcTCPSocketCallback
   virtual void OnClose(nsresult aReason) override;
   virtual void OnConnected() override;
   virtual void OnRead(nsTArray<uint8_t>&& aReadData) override;
 
  protected:
-  RefPtr<WebrtcProxyChannelCallback> mProxyCallbacks;
-  RefPtr<WebrtcProxyChannelChild> mWebrtcProxyChannel;
+  RefPtr<WebrtcTCPSocketCallback> mProxyCallbacks;
+  RefPtr<WebrtcTCPSocketChild> mWebrtcTCPSocket;
 
   nsCOMPtr<nsIEventTarget> mMainThread;
   nsCOMPtr<nsIEventTarget> mSocketThread;
 
-  virtual ~WebrtcProxyChannelWrapper();
+  virtual ~WebrtcTCPSocketWrapper();
 };
 
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // webrtc_proxy_channel_wrapper__
+#endif  // webrtc_tcp_socket_wrapper__
