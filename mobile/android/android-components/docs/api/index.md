@@ -114,6 +114,7 @@
 | [mozilla.components.feature.tabs.tabstray](mozilla.components.feature.tabs.tabstray/index.md) |  |
 | [mozilla.components.feature.tabs.toolbar](mozilla.components.feature.tabs.toolbar/index.md) |  |
 | [mozilla.components.feature.toolbar](mozilla.components.feature.toolbar/index.md) |  |
+| [mozilla.components.feature.webcompat](mozilla.components.feature.webcompat/index.md) |  |
 | [mozilla.components.lib.crash](mozilla.components.lib.crash/index.md) |  |
 | [mozilla.components.lib.crash.handler](mozilla.components.lib.crash.handler/index.md) |  |
 | [mozilla.components.lib.crash.prompt](mozilla.components.lib.crash.prompt/index.md) |  |

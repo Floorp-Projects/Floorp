@@ -19,7 +19,7 @@
 | [MOZILLA_SOCIAL](-m-o-z-i-l-l-a_-s-o-c-i-a-l.md) | Blocks social trackers from the social-tracking-protection-digest256 list. |
 | [SCRIPTS_AND_SUB_RESOURCES](-s-c-r-i-p-t-s_-a-n-d_-s-u-b_-r-e-s-o-u-r-c-e-s.md) | Blocks content like scripts and sub-resources. |
 | [RECOMMENDED](-r-e-c-o-m-m-e-n-d-e-d.md) |  |
-| [STRICT](-s-t-r-i-c-t.md) | Combining the [RECOMMENDED](-r-e-c-o-m-m-e-n-d-e-d.md) categories plus [CRYPTOMINING](-c-r-y-p-t-o-m-i-n-i-n-g.md) and [FINGERPRINTING](-f-i-n-g-e-r-p-r-i-n-t-i-n-g.md). |
+| [STRICT](-s-t-r-i-c-t.md) | Combining the [RECOMMENDED](-r-e-c-o-m-m-e-n-d-e-d.md) categories plus [SCRIPTS_AND_SUB_RESOURCES](-s-c-r-i-p-t-s_-a-n-d_-s-u-b_-r-e-s-o-u-r-c-e-s.md) and [FINGERPRINTING](-f-i-n-g-e-r-p-r-i-n-t-i-n-g.md). |
 
 ### Properties
 

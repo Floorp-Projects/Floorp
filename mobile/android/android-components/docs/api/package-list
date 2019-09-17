@@ -168,6 +168,7 @@ mozilla.components.feature.tabs
 mozilla.components.feature.tabs.tabstray
 mozilla.components.feature.tabs.toolbar
 mozilla.components.feature.toolbar
+mozilla.components.feature.webcompat
 mozilla.components.lib.crash
 mozilla.components.lib.crash.handler
 mozilla.components.lib.crash.prompt

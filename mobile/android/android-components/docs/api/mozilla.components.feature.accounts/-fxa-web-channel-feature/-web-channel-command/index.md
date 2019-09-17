@@ -2,7 +2,7 @@
 
 # WebChannelCommand
 
-`enum class WebChannelCommand` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/accounts/src/main/java/mozilla/components/feature/accounts/FxaWebChannelFeature.kt#L168)
+`enum class WebChannelCommand` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/accounts/src/main/java/mozilla/components/feature/accounts/FxaWebChannelFeature.kt#L181)
 
 ### Enum Values
 
