@@ -93,21 +93,6 @@ class TextEditRules {
 
   // TextEditRules implementation methods
 
-  /**
-   * Creates a trailing break in the text doc if there is not one already.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult CreateTrailingBRIfNeeded();
-
-  /**
-   * CollapseSelectionToTrailingBRIfNeeded() collapses selection after the
-   * text node if:
-   * - the editor is text editor
-   * - and Selection is collapsed at the end of the text node
-   * - and the text node is followed by a padding <br> element for empty last
-   *   line.
-   */
-  MOZ_MUST_USE nsresult CollapseSelectionToTrailingBRIfNeeded();
-
   bool IsSingleLineEditor() const;
   bool IsPlaintextEditor() const;
 
