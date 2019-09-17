@@ -1979,6 +1979,10 @@ var gBrowserInit = {
     // until all of its dependencies are handled.
     Services.appShell.hiddenDOMWindow;
 
+    // We need to set the OfflineApps message listeners up before we
+    // load homepages, which might need them.
+    OfflineApps.init();
+
     gBrowser.addEventListener(
       "InsecureLoginFormsStateChange",
       function() {
@@ -7926,6 +7930,115 @@ var BrowserOffline = {
     }
 
     this._uiElement.setAttribute("checked", aOffline);
+  },
+};
+
+var OfflineApps = {
+  warnUsage(browser, principal, host) {
+    if (!browser) {
+      return;
+    }
+
+    let mainAction = {
+      label: gNavigatorBundle.getString("offlineApps.manageUsage"),
+      accessKey: gNavigatorBundle.getString("offlineApps.manageUsageAccessKey"),
+      callback: this.manage,
+    };
+
+    let warnQuotaKB = Services.prefs.getIntPref("offline-apps.quota.warn");
+    // This message shows the quota in MB, and so we divide the quota (in kb) by 1024.
+    let message = gNavigatorBundle.getFormattedString("offlineApps.usage", [
+      host,
+      warnQuotaKB / 1024,
+    ]);
+
+    let anchorID = "indexedDB-notification-icon";
+    let options = {
+      persistent: true,
+      hideClose: true,
+    };
+    PopupNotifications.show(
+      browser,
+      "offline-app-usage",
+      message,
+      anchorID,
+      mainAction,
+      null,
+      options
+    );
+
+    // Now that we've warned once, prevent the warning from showing up
+    // again.
+    Services.perms.addFromPrincipal(
+      principal,
+      "offline-app",
+      Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN
+    );
+  },
+
+  // XXX: duplicated in preferences/advanced.js
+  _getOfflineAppUsage(host, groups) {
+    let cacheService = Cc[
+      "@mozilla.org/network/application-cache-service;1"
+    ].getService(Ci.nsIApplicationCacheService);
+    if (!groups) {
+      try {
+        groups = cacheService.getGroups();
+      } catch (ex) {
+        return 0;
+      }
+    }
+
+    let usage = 0;
+    for (let group of groups) {
+      let uri = Services.io.newURI(group);
+      if (uri.asciiHost == host) {
+        let cache = cacheService.getActiveCache(group);
+        usage += cache.usage;
+      }
+    }
+
+    return usage;
+  },
+
+  _usedMoreThanWarnQuota(principal, asciiHost) {
+    // if the user has already allowed excessive usage, don't bother checking
+    if (
+      Services.perms.testExactPermissionFromPrincipal(
+        principal,
+        "offline-app"
+      ) != Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN
+    ) {
+      let usageBytes = this._getOfflineAppUsage(asciiHost);
+      let warnQuotaKB = Services.prefs.getIntPref("offline-apps.quota.warn");
+      // The pref is in kb, the usage we get is in bytes, so multiply the quota
+      // to compare correctly:
+      if (usageBytes >= warnQuotaKB * 1024) {
+        return true;
+      }
+    }
+
+    return false;
+  },
+
+  manage() {
+    openPreferences("panePrivacy");
+  },
+
+  receiveMessage(msg) {
+    if (msg.name !== "OfflineApps:CheckUsage") {
+      return;
+    }
+    let uri = makeURI(msg.data.uri);
+    let principal = E10SUtils.deserializePrincipal(msg.data.principal);
+    if (this._usedMoreThanWarnQuota(principal, uri.asciiHost)) {
+      this.warnUsage(msg.target, principal, uri.host);
+    }
+  },
+
+  init() {
+    let mm = window.messageManager;
+    mm.addMessageListener("OfflineApps:CheckUsage", this);
   },
 };
 
