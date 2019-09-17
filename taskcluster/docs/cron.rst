@@ -68,6 +68,10 @@ and so is undesirable.
         - {weekday: 'Monday', hour: 10, minute: 0}
         - {weekday: 'Thursday', hour: 10, minute: 0}
 
+.. note::
+
+   Times are expressed in UTC (Coordinated Universal Time)
+
 
 Decision Tasks
 ..............
