@@ -675,22 +675,22 @@ static void proxy_MaskIPv6Addr(PRIPv6Addr& addr, uint16_t mask_len) {
 
   if (mask_len > 96) {
     addr.pr_s6_addr32[3] =
-        PR_htonl(PR_ntohl(addr.pr_s6_addr32[3]) & (~0L << (128 - mask_len)));
+        PR_htonl(PR_ntohl(addr.pr_s6_addr32[3]) & (~0uL << (128 - mask_len)));
   } else if (mask_len > 64) {
     addr.pr_s6_addr32[3] = 0;
     addr.pr_s6_addr32[2] =
-        PR_htonl(PR_ntohl(addr.pr_s6_addr32[2]) & (~0L << (96 - mask_len)));
+        PR_htonl(PR_ntohl(addr.pr_s6_addr32[2]) & (~0uL << (96 - mask_len)));
   } else if (mask_len > 32) {
     addr.pr_s6_addr32[3] = 0;
     addr.pr_s6_addr32[2] = 0;
     addr.pr_s6_addr32[1] =
-        PR_htonl(PR_ntohl(addr.pr_s6_addr32[1]) & (~0L << (64 - mask_len)));
+        PR_htonl(PR_ntohl(addr.pr_s6_addr32[1]) & (~0uL << (64 - mask_len)));
   } else {
     addr.pr_s6_addr32[3] = 0;
     addr.pr_s6_addr32[2] = 0;
     addr.pr_s6_addr32[1] = 0;
     addr.pr_s6_addr32[0] =
-        PR_htonl(PR_ntohl(addr.pr_s6_addr32[0]) & (~0L << (32 - mask_len)));
+        PR_htonl(PR_ntohl(addr.pr_s6_addr32[0]) & (~0uL << (32 - mask_len)));
   }
 }
 
