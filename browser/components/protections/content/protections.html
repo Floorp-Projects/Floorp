@@ -30,7 +30,7 @@
         <div class="card-header">
           <img class="icon light" src="chrome://browser/content/logos/tracking-protection.svg"/>
           <img class="icon dark" src="chrome://browser/content/logos/tracking-protection-dark-theme.svg"/>
-          <div class="wrapper">
+          <div>
             <h2 class="card-title" data-l10n-id="etp-card-title"></h2>
             <p class="content" data-l10n-id="etp-card-content"></p>
             <p id="protection-details" role="link" tabindex="0" data-l10n-title="go-to-privacy-settings"></p>
@@ -115,52 +115,54 @@
           <div class="card-header">
             <img class="icon" src="chrome://browser/content/logos/monitor.svg"/>
             <div class="wrapper">
-              <h2 id="monitor-title" class="card-title" data-l10n-id="monitor-title"></h2>
-              <p id="monitor-header-content" class="content">
-                <span>
-                  <!-- Insert Monitor header content here. -->
-                </span>
-                <a target="_blank" href="" id="monitor-link" data-l10n-id="monitor-link"></a>
-              </p>
-              <img class="icon-small" src="chrome://browser/skin/reload.svg"/>
-              <span class="monitor-scanned-text" data-l10n-id="auto-scan"></span>
+              <div>
+                <h2 id="monitor-title" class="card-title" data-l10n-id="monitor-title"></h2>
+                <p id="monitor-header-content" class="content">
+                  <span>
+                    <!-- Insert Monitor header content here. -->
+                  </span>
+                  <a target="_blank" href="" id="monitor-link" data-l10n-id="monitor-link"></a>
+                </p>
+                <div class="monitor-scanned-wrapper">
+                  <img class="icon-small" src="chrome://browser/skin/reload.svg"/>
+                  <span class="monitor-scanned-text" data-l10n-id="auto-scan"></span>
+                </div>
+              </div>
+              <a target="_blank" id="sign-up-for-monitor-link">
+                <!-- Insert Monitor link content here. -->
+              </a>
             </div>
-            <a target="_blank" id="sign-up-for-monitor-link">
-              <!-- Insert Monitor link content here. -->
-            </a>
           </div>
           <div class="card-body hidden">
             <div class="body-wrapper">
               <div id="monitor-body-content">
-                <div class="monitor-info-wrapper">
-                  <div class="monitor-block email">
-                      <span class="monitor-stat">
-                        <img class="icon-med" src="chrome://browser/skin/mail.svg"/>
-                        <span data-type="stored-emails">
-                          <!-- Display number of stored emails here. -->
+                <div class="monitor-block email">
+                    <span class="monitor-stat">
+                      <img class="icon-med" src="chrome://browser/skin/mail.svg"/>
+                      <span data-type="stored-emails">
+                        <!-- Display number of stored emails here. -->
+                      </span>
+                    </span>
+                    <span id="info-monitored-addresses" class="info-text"></span>
+                  </div>
+                  <div class="monitor-block breaches">
+                    <span class="monitor-stat">
+                      <img class="icon-med" src="chrome://browser/skin/fxa/avatar.svg"/>
+                      <span data-type="known-breaches">
+                        <!-- Display number of known breaches here. -->
+                      </span>
+                    </span>
+                    <span id="info-known-breaches" class="info-text"></span>
+                  </div>
+                  <div class="monitor-block passwords">
+                    <span class="monitor-stat">
+                        <img class="icon-med" src="chrome://browser/skin/login.svg"/>
+                        <span data-type="exposed-passwords">
+                          <!-- Display number of exposed passwords here. -->
                         </span>
-                      </span>
-                      <span id="info-monitored-addresses" class="info-text"></span>
-                    </div>
-                    <div class="monitor-block breaches">
-                      <span class="monitor-stat">
-                        <img class="icon-med" src="chrome://browser/skin/fxa/avatar.svg"/>
-                        <span data-type="known-breaches">
-                          <!-- Display number of known breaches here. -->
-                        </span>
-                      </span>
-                      <span id="info-known-breaches" class="info-text"></span>
-                    </div>
-                    <div class="monitor-block passwords">
-                      <span class="monitor-stat">
-                          <img class="icon-med" src="chrome://browser/skin/login.svg"/>
-                          <span data-type="exposed-passwords">
-                            <!-- Display number of exposed passwords here. -->
-                          </span>
-                      </span>
-                      <span id="info-exposed-passwords" class="info-text"></span>
-                    </div>
-                </div>
+                    </span>
+                    <span id="info-exposed-passwords" class="info-text"></span>
+                  </div>
                 <div id="full-report-link" class="monitor-view-full-report" data-l10n-id="full-report-link">
                   <a target="_blank" id="monitor-inline-link" data-l10n-name="monitor-inline-link" href=""></a>
                 </div>
@@ -181,14 +183,16 @@
         <div class="card-header">
           <img class="icon" src="chrome://browser/content/logos/lockwise.svg"/>
           <div class="wrapper">
-            <h2 id="lockwise-title" class="card-title">
-              <!-- Insert Lockwise card title here. -->
-            </h2>
-            <p id="lockwise-header-content" class="content">
-              <!-- Insert Lockwise header content here. -->
-            </p>
+            <div>
+              <h2 id="lockwise-title" class="card-title">
+                <!-- Insert Lockwise card title here. -->
+              </h2>
+              <p id="lockwise-header-content" class="content">
+                <!-- Insert Lockwise header content here. -->
+              </p>
+            </div>
+            <button id="open-about-logins-button" class="primary" data-l10n-id="about-logins-view-logins-button" data-l10n-title="go-to-saved-logins"></button>
           </div>
-          <button id="open-about-logins-button" class="primary" data-l10n-id="about-logins-view-logins-button" data-l10n-title="go-to-saved-logins"></button>
         </div>
         <div class="card-body hidden">
           <div id="lockwise-body-content" class="body-wrapper">
@@ -229,10 +233,12 @@
         <div class="card-header">
           <img class="icon" src="chrome://browser/content/logos/proxy.svg" />
           <div class="wrapper">
-            <h3 class="card-title" data-l10n-id="proxy-title"></h3>
-            <p class="content" data-l10n-id="proxy-header-content"></p>
+            <div>
+              <h3 class="card-title" data-l10n-id="proxy-title"></h3>
+              <p class="content" data-l10n-id="proxy-header-content"></p>
+            </div>
+            <a target="_blank" id="get-proxy-extension-link" data-l10n-id="get-proxy-extension-link"></a>
           </div>
-          <a target="_blank" id="get-proxy-extension-link" data-l10n-id="get-proxy-extension-link"></a>
          </div>
        </section>
     </div>
