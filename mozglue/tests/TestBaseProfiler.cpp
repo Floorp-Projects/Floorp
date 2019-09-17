@@ -1475,10 +1475,9 @@ void TestProfilerMarkerSerialization() {
 
   constexpr int data = 42;
   {
-    UniquePtr<baseprofiler::ProfilerMarkerPayload> testPayload{
-        new BaseTestMarkerPayload(data)};
-
-    rb.PutObject(testPayload);
+    BaseTestMarkerPayload payload(data);
+    rb.PutObject(
+        static_cast<const baseprofiler::ProfilerMarkerPayload*>(&payload));
   }
 
   int read = 0;
@@ -1644,8 +1643,8 @@ void TestProfiler() {
     // Just making sure all payloads know how to (de)serialize and stream.
     baseprofiler::profiler_add_marker(
         "TracingMarkerPayload", baseprofiler::ProfilingCategoryPair::OTHER,
-        MakeUnique<baseprofiler::TracingMarkerPayload>(
-            "category", baseprofiler::TRACING_EVENT));
+        baseprofiler::TracingMarkerPayload("category",
+                                           baseprofiler::TRACING_EVENT));
 
     auto cause =
 #  if defined(__linux__) || defined(__ANDROID__)
@@ -1656,37 +1655,37 @@ void TestProfiler() {
 #  endif
     baseprofiler::profiler_add_marker(
         "FileIOMarkerPayload", baseprofiler::ProfilingCategoryPair::OTHER,
-        MakeUnique<baseprofiler::FileIOMarkerPayload>(
+        baseprofiler::FileIOMarkerPayload(
             "operation", "source", "filename", TimeStamp::NowUnfuzzed(),
             TimeStamp::NowUnfuzzed(), std::move(cause)));
 
     baseprofiler::profiler_add_marker(
         "UserTimingMarkerPayload", baseprofiler::ProfilingCategoryPair::OTHER,
-        MakeUnique<baseprofiler::UserTimingMarkerPayload>(
-            "name", TimeStamp::NowUnfuzzed(), Nothing{}, Nothing{}));
+        baseprofiler::UserTimingMarkerPayload("name", TimeStamp::NowUnfuzzed(),
+                                              Nothing{}, Nothing{}));
 
     baseprofiler::profiler_add_marker(
         "HangMarkerPayload", baseprofiler::ProfilingCategoryPair::OTHER,
-        MakeUnique<baseprofiler::HangMarkerPayload>(TimeStamp::NowUnfuzzed(),
-                                                    TimeStamp::NowUnfuzzed()));
+        baseprofiler::HangMarkerPayload(TimeStamp::NowUnfuzzed(),
+                                        TimeStamp::NowUnfuzzed()));
 
     baseprofiler::profiler_add_marker(
         "LongTaskMarkerPayload", baseprofiler::ProfilingCategoryPair::OTHER,
-        MakeUnique<baseprofiler::LongTaskMarkerPayload>(
-            TimeStamp::NowUnfuzzed(), TimeStamp::NowUnfuzzed()));
+        baseprofiler::LongTaskMarkerPayload(TimeStamp::NowUnfuzzed(),
+                                            TimeStamp::NowUnfuzzed()));
 
     {
       std::string s = "text payload";
       baseprofiler::profiler_add_marker(
           "TextMarkerPayload", baseprofiler::ProfilingCategoryPair::OTHER,
-          MakeUnique<baseprofiler::TextMarkerPayload>(
-              s, TimeStamp::NowUnfuzzed(), TimeStamp::NowUnfuzzed()));
+          baseprofiler::TextMarkerPayload(s, TimeStamp::NowUnfuzzed(),
+                                          TimeStamp::NowUnfuzzed()));
     }
 
     baseprofiler::profiler_add_marker(
         "LogMarkerPayload", baseprofiler::ProfilingCategoryPair::OTHER,
-        MakeUnique<baseprofiler::LogMarkerPayload>("module", "text",
-                                                   TimeStamp::NowUnfuzzed()));
+        baseprofiler::LogMarkerPayload("module", "text",
+                                       TimeStamp::NowUnfuzzed()));
 
     printf("Sleep 1s...\n");
     {
