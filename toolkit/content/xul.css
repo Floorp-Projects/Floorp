@@ -475,10 +475,6 @@ textbox[is="search-textbox"] {
 /* SeaMonkey uses its own autocomplete and the toolkit's autocomplete widget */
 %ifndef MOZ_SUITE
 
-textbox[type="autocomplete"] {
-  -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete");
-}
-
 panel[type="autocomplete-richlistbox"] {
   -moz-binding: none;
 }

@@ -18,6 +18,7 @@
         buttons="accept, cancel"
         buttoniconaccept="save"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         onload="BookmarkPropertiesPanel.onDialogLoad();"
         onunload="BookmarkPropertiesPanel.onDialogUnload();"
         style="min-width: 30em;"
@@ -31,6 +32,7 @@
   <script src="chrome://browser/content/places/editBookmark.js"/>
   <script src="chrome://browser/content/places/bookmarkProperties.js"/>
   <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
   <script src="chrome://browser/content/utilityOverlay.js"/>
   <script src="chrome://browser/content/places/places-tree.js"/>
 
