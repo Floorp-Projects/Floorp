@@ -31,9 +31,8 @@ class WebrtcTCPSocketChild : public PWebrtcTCPSocketChild {
 
   void AsyncOpen(const nsCString& aHost, const int& aPort,
                  const nsCString& aLocalAddress, const int& aLocalPort,
-                 bool aUseTls, const Maybe<net::LoadInfoArgs>& aArgs,
-                 const Maybe<nsCString>& aAlpn, const Maybe<dom::TabId>& aTabId,
-                 const Maybe<NrSocketProxyConfig::ProxyPolicy>& aProxyPolicy);
+                 bool aUseTls,
+                 const std::shared_ptr<NrSocketProxyConfig>& aProxyConfig);
 
   void AddIPDLReference() { AddRef(); }
   void ReleaseIPDLReference() { Release(); }

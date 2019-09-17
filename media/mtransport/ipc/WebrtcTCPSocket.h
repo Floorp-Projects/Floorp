@@ -18,10 +18,8 @@
 #include "nsIStreamListener.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
-#include "mozilla/dom/ipc/IdType.h"     // TabId
-#include "mozilla/dom/PContentChild.h"  // LoadInfoArgs
 #include "nsIProtocolProxyCallback.h"
-#include "mtransport/nr_socket_proxy_config.h"
+#include "mozilla/net/WebrtcProxyConfig.h"
 
 class nsISocketTransport;
 
@@ -54,9 +52,8 @@ class WebrtcTCPSocket : public nsIHttpUpgradeListener,
   void SetTabId(dom::TabId aTabId);
   nsresult Open(const nsCString& aHost, const int& aPort,
                 const nsCString& aLocalAddress, const int& aLocalPort,
-                bool aUseTls, const Maybe<net::LoadInfoArgs>& aArgs,
-                const Maybe<nsCString>& aAlpn,
-                const Maybe<NrSocketProxyConfig::ProxyPolicy>& aProxyPolicy);
+                bool aUseTls,
+                const Maybe<net::WebrtcProxyConfig>& aProxyConfig);
   nsresult Write(nsTArray<uint8_t>&& aBytes);
   nsresult Close();
 
@@ -76,10 +73,8 @@ class WebrtcTCPSocket : public nsIHttpUpgradeListener,
   bool mClosed;
   bool mOpened;
   nsCOMPtr<nsIURI> mURI;
-  net::LoadInfoArgs mLoadInfoArgs;
-  nsCString mAlpn;
   bool mTls = false;
-  bool mForceProxy = false;
+  Maybe<WebrtcProxyConfig> mProxyConfig;
   nsCString mLocalAddress;
   uint16_t mLocalPort = 0;
   nsCString mProxyType;

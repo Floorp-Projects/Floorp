@@ -24,10 +24,8 @@ class MediaTransportParent : public dom::PMediaTransportParent {
   mozilla::ipc::IPCResult RecvCreateIceCtx(
       const string& name, nsTArray<RTCIceServer>&& iceServers,
       const RTCIceTransportPolicy& icePolicy);
-  mozilla::ipc::IPCResult RecvSetProxyConfig(const dom::TabId& tabId,
-                                             const net::LoadInfoArgs& args,
-                                             const nsCString& alpn,
-                                             const int& proxyPolicy);
+  mozilla::ipc::IPCResult RecvSetProxyConfig(
+      const net::WebrtcProxyConfig& aProxyConfig);
   mozilla::ipc::IPCResult RecvEnsureProvisionalTransport(
       const string& transportId, const string& localUfrag,
       const string& localPwd, const int& componentCount);

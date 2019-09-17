@@ -11,7 +11,6 @@
 
 #include "mozilla/net/NeckoChannelParams.h"
 #include "nr_socket_tcp.h"
-#include "nr_socket_proxy_config.h"
 #include "WebrtcTCPSocketWrapper.h"
 
 #define GTEST_HAS_RTTI 0
@@ -35,12 +34,7 @@ class NrTcpSocketTest : public MtransportTest {
         mConnected(false) {}
 
   void SetUp() override {
-    nsCString alpn = NS_LITERAL_CSTRING("webrtc");
-    std::shared_ptr<NrSocketProxyConfig> config;
-    config.reset(new NrSocketProxyConfig(0, alpn, net::LoadInfoArgs(),
-                                         NrSocketProxyConfig::kForceProxy));
-    // config is never used but must be non-null
-    mSProxy = new NrTcpSocket(config);
+    mSProxy = new NrTcpSocket(nullptr);
     int r = nr_socket_create_int((void*)mSProxy.get(), mSProxy->vtbl(),
                                  &nr_socket_);
     ASSERT_EQ(0, r);

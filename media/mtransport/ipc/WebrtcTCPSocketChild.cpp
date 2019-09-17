@@ -66,29 +66,34 @@ WebrtcTCPSocketChild::~WebrtcTCPSocketChild() {
 
 void WebrtcTCPSocketChild::AsyncOpen(
     const nsCString& aHost, const int& aPort, const nsCString& aLocalAddress,
-    const int& aLocalPort, bool aUseTls, const Maybe<net::LoadInfoArgs>& aArgs,
-    const Maybe<nsCString>& aAlpn, const Maybe<dom::TabId>& aTabId,
-    const Maybe<NrSocketProxyConfig::ProxyPolicy>& aProxyPolicy) {
+    const int& aLocalPort, bool aUseTls,
+    const std::shared_ptr<NrSocketProxyConfig>& aProxyConfig) {
   LOG(("WebrtcTCPSocketChild::AsyncOpen %p %s:%d\n", this, aHost.get(), aPort));
 
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");
 
   AddIPDLReference();
 
+  Maybe<net::WebrtcProxyConfig> proxyConfig;
+  Maybe<dom::TabId> tabId;
+  if (aProxyConfig) {
+    proxyConfig = Some(aProxyConfig->GetConfig());
+    tabId = Some(proxyConfig->tabId());
+  }
+
   if (IsNeckoChild()) {
     // We're on a content process
     gNeckoChild->SetEventTargetForActor(this, GetMainThreadEventTarget());
-    gNeckoChild->SendPWebrtcTCPSocketConstructor(this, aTabId);
+    gNeckoChild->SendPWebrtcTCPSocketConstructor(this, tabId);
   } else if (IsSocketProcessChild()) {
     // We're on a socket process
     SocketProcessChild::GetSingleton()->SetEventTargetForActor(
         this, GetMainThreadEventTarget());
     SocketProcessChild::GetSingleton()->SendPWebrtcTCPSocketConstructor(this,
-                                                                        aTabId);
+                                                                        tabId);
   }
 
-  SendAsyncOpen(aHost, aPort, aLocalAddress, aLocalPort, aUseTls, aArgs, aAlpn,
-                aProxyPolicy);
+  SendAsyncOpen(aHost, aPort, aLocalAddress, aLocalPort, aUseTls, proxyConfig);
 }
 
 }  // namespace net
