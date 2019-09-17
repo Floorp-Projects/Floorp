@@ -155,7 +155,7 @@ class MockExtension {
     });
   }
 
-  startup() {
+  async startup() {
     if (this.installType == "temporary") {
       return AddonManager.installTemporaryAddon(this.file).then(async addon => {
         this.addon = addon;
@@ -167,8 +167,8 @@ class MockExtension {
       this.addonPromise = new Promise(resolve => {
         this.resolveAddon = resolve;
       });
-      return new Promise(async (resolve, reject) => {
-        let install = await AddonManager.getInstallForFile(this.file);
+      let install = await AddonManager.getInstallForFile(this.file);
+      return new Promise((resolve, reject) => {
         let listener = {
           onInstallFailed: reject,
           onInstallEnded: async (install, newAddon) => {
