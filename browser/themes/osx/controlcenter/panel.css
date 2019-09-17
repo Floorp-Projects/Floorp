@@ -14,6 +14,7 @@
 }
 
 .tracking-protection-button:-moz-focusring,
+.protections-popup-tp-switch:-moz-focusring,
 #identity-popup-securityView-body > button:-moz-focusring {
   box-shadow: var(--focus-ring-box-shadow);
 }

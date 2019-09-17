@@ -7,3 +7,7 @@
 .tracking-protection-button > .button-box > .button-icon {
   margin-inline-end: 5px;
 }
+
+.protections-popup-tp-switch:-moz-focusring {
+  outline: 1px dotted;
+}
