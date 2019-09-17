@@ -688,7 +688,6 @@ class EngineSessionTest {
         assertTrue(recommendedPolicy.contains(TrackingCategory.SOCIAL))
         assertTrue(recommendedPolicy.contains(TrackingCategory.TEST))
 
-        assertTrue(recommendedPolicy.contains(TrackingCategory.FINGERPRINTING))
         assertTrue(recommendedPolicy.contains(TrackingCategory.CRYPTOMINING))
         assertFalse(recommendedPolicy.contains(TrackingCategory.CONTENT))
 
@@ -699,7 +698,6 @@ class EngineSessionTest {
         assertTrue(strictPolicy.contains(TrackingCategory.ANALYTICS))
         assertTrue(strictPolicy.contains(TrackingCategory.SOCIAL))
         assertTrue(strictPolicy.contains(TrackingCategory.TEST))
-        assertTrue(strictPolicy.contains(TrackingCategory.FINGERPRINTING))
         assertTrue(strictPolicy.contains(TrackingCategory.CRYPTOMINING))
         assertFalse(strictPolicy.contains(TrackingCategory.CONTENT))
     }
