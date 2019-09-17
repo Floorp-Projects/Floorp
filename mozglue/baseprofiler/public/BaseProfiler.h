@@ -712,12 +712,13 @@ MFBT_API void profiler_add_marker(const char* aMarkerName,
       ::mozilla::baseprofiler::profiler_add_marker(                     \
           markerName,                                                   \
           ::mozilla::baseprofiler::ProfilingCategoryPair::categoryPair, \
-          ::mozilla::MakeUnique<PayloadType> parenthesizedPayloadArgs); \
+          PayloadType parenthesizedPayloadArgs);                        \
     } while (false)
 
 MFBT_API void profiler_add_marker(const char* aMarkerName,
                                   ProfilingCategoryPair aCategoryPair,
-                                  UniquePtr<ProfilerMarkerPayload> aPayload);
+                                  const ProfilerMarkerPayload& aPayload);
+
 MFBT_API void profiler_add_js_marker(const char* aMarkerName);
 
 // Insert a marker in the profile timeline for a specified thread.
