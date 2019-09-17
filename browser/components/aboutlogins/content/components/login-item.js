@@ -391,6 +391,10 @@ export default class LoginItem extends HTMLElement {
         if (!this._isFormValid({ reportErrors: true })) {
           return;
         }
+        if (!this.hasPendingChanges()) {
+          this._toggleEditing(false);
+          return;
+        }
         let loginUpdates = this._loginFromForm();
         if (this._login.guid) {
           loginUpdates.guid = this._login.guid;
@@ -489,10 +493,8 @@ export default class LoginItem extends HTMLElement {
   }
 
   hasPendingChanges() {
-    let { origin = "", username = "", password = "" } = this._login || {};
-
     let valuesChanged = !window.AboutLoginsUtils.doLoginsMatch(
-      { origin, username, password },
+      Object.assign({ username: "", password: "", origin: "" }, this._login),
       this._loginFromForm()
     );
 
@@ -574,8 +576,16 @@ export default class LoginItem extends HTMLElement {
       return;
     }
 
-    this.setLogin(login);
-    this._toggleEditing(false);
+    let valuesChanged =
+      this.dataset.editing &&
+      !window.AboutLoginsUtils.doLoginsMatch(login, this._loginFromForm());
+    if (valuesChanged) {
+      this.showConfirmationDialog("discard-changes", () => {
+        this.setLogin(login);
+      });
+    } else {
+      this.setLogin(login);
+    }
   }
 
   /**
@@ -635,12 +645,12 @@ export default class LoginItem extends HTMLElement {
   }
 
   _loginFromForm() {
-    return {
+    return Object.assign({}, this._login, {
       username: this._usernameInput.value.trim(),
       password: this._passwordInput.value,
       origin:
         window.AboutLoginsUtils.getLoginOrigin(this._originInput.value) || "",
-    };
+    });
   }
 
   _recordTelemetryEvent(eventObject) {
