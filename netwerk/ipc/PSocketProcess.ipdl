@@ -44,7 +44,8 @@ parent:
   async RecordChildEvents(ChildEventData[] events);
   async RecordDiscardedData(DiscardedData data);
 
-  async PWebrtcTCPSocket(TabId tabId);
+  /* tabId is only required for web-proxy support, which isn't always needed */
+  async PWebrtcTCPSocket(TabId? tabId);
   async PDNSRequest(nsCString hostName, OriginAttributes originAttributes,
                     uint32_t flags);
   async PProxyConfigLookup();

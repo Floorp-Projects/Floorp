@@ -24,9 +24,9 @@ parent:
                   nsCString aLocalAddress,
                   int32_t aLocalPort,
                   bool aUseTls,
-                  LoadInfoArgs aLoadInfoArgs,
-                  nsCString aAlpn,
-                  int proxyPolicy);
+                  LoadInfoArgs? aLoadInfoArgs,
+                  nsCString? aAlpn,
+                  int? proxyPolicy);
   async Write(uint8_t[] aWriteData);
   async Close();
 

@@ -102,7 +102,8 @@ class NeckoParent : public PNeckoParent {
   PStunAddrsRequestParent* AllocPStunAddrsRequestParent();
   bool DeallocPStunAddrsRequestParent(PStunAddrsRequestParent* aActor);
 
-  PWebrtcTCPSocketParent* AllocPWebrtcTCPSocketParent(const TabId& aTabId);
+  PWebrtcTCPSocketParent* AllocPWebrtcTCPSocketParent(
+      const Maybe<TabId>& aTabId);
   bool DeallocPWebrtcTCPSocketParent(PWebrtcTCPSocketParent* aActor);
 
   PAltDataOutputStreamParent* AllocPAltDataOutputStreamParent(

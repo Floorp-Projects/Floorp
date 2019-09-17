@@ -70,7 +70,6 @@ NrTcpSocket::NrTcpSocket(const shared_ptr<NrSocketProxyConfig>& aConfig)
       mConfig(aConfig),
       mWebrtcTCPSocket(nullptr) {
   r_log(LOG_GENERIC, LOG_DEBUG, "NrTcpSocket::NrTcpSocket %p\n", this);
-  MOZ_ASSERT(mConfig, "config should not be null");
 }
 
 NrTcpSocket::~NrTcpSocket() {

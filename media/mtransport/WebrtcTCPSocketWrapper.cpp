@@ -57,12 +57,21 @@ void WebrtcTCPSocketWrapper::AsyncOpen(
     return;
   }
 
+  Maybe<net::LoadInfoArgs> loadInfoArgs;
+  Maybe<nsCString> alpn;
+  Maybe<dom::TabId> tabId;
+  Maybe<NrSocketProxyConfig::ProxyPolicy> proxyPolicy;
+  if (aConfig) {
+    loadInfoArgs = Some(aConfig->GetLoadInfoArgs());
+    alpn = Some(aConfig->GetAlpn());
+    tabId = Some(dom::TabId(aConfig->GetTabId()));
+    proxyPolicy = Some(aConfig->GetProxyPolicy());
+  }
+
   MOZ_ASSERT(!mWebrtcTCPSocket, "wrapper already open");
   mWebrtcTCPSocket = new WebrtcTCPSocketChild(this);
   mWebrtcTCPSocket->AsyncOpen(aHost, aPort, aLocalAddress, aLocalPort, aUseTls,
-                              aConfig->GetLoadInfoArgs(), aConfig->GetAlpn(),
-                              dom::TabId(aConfig->GetTabId()),
-                              aConfig->GetProxyPolicy());
+                              loadInfoArgs, alpn, tabId, proxyPolicy);
 }
 
 void WebrtcTCPSocketWrapper::SendWrite(nsTArray<uint8_t>&& aReadData) {

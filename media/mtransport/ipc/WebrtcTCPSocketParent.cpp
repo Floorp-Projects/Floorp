@@ -20,15 +20,19 @@ namespace net {
 mozilla::ipc::IPCResult WebrtcTCPSocketParent::RecvAsyncOpen(
     const nsCString& aHost, const int& aPort, const nsCString& aLocalAddress,
     const int& aLocalPort, const bool& aUseTls,
-    const LoadInfoArgs& aLoadInfoArgs, const nsCString& aAlpn,
-    const int& aProxyPolicy) {
+    const Maybe<LoadInfoArgs>& aLoadInfoArgs, const Maybe<nsCString>& aAlpn,
+    const Maybe<int>& aProxyPolicy) {
   LOG(("WebrtcTCPSocketParent::RecvAsyncOpen %p to %s:%d\n", this, aHost.get(),
        aPort));
 
   MOZ_ASSERT(mChannel, "webrtc TCP socket should be non-null");
+  Maybe<NrSocketProxyConfig::ProxyPolicy> proxyPolicy;
+  if (aProxyPolicy.isSome()) {
+    proxyPolicy =
+        Some(static_cast<NrSocketProxyConfig::ProxyPolicy>(*aProxyPolicy));
+  }
   mChannel->Open(aHost, aPort, aLocalAddress, aLocalPort, aUseTls,
-                 aLoadInfoArgs, aAlpn,
-                 static_cast<NrSocketProxyConfig::ProxyPolicy>(aProxyPolicy));
+                 aLoadInfoArgs, aAlpn, proxyPolicy);
 
   return IPC_OK();
 }
@@ -65,13 +69,15 @@ void WebrtcTCPSocketParent::ActorDestroy(ActorDestroyReason aWhy) {
   CleanupChannel();
 }
 
-WebrtcTCPSocketParent::WebrtcTCPSocketParent(dom::TabId aTabId) {
+WebrtcTCPSocketParent::WebrtcTCPSocketParent(const Maybe<dom::TabId>& aTabId) {
   MOZ_COUNT_CTOR(WebrtcTCPSocketParent);
 
   LOG(("WebrtcTCPSocketParent::WebrtcTCPSocketParent %p\n", this));
 
   mChannel = new WebrtcTCPSocket(this);
-  mChannel->SetTabId(aTabId);
+  if (aTabId.isSome()) {
+    mChannel->SetTabId(*aTabId);
+  }
 }
 
 WebrtcTCPSocketParent::~WebrtcTCPSocketParent() {
