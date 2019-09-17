@@ -410,7 +410,8 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic,
       nsTObserverArray<AudioChannelAgent*>::ForwardIterator iter(
           winData->mAgents);
       while (iter.HasMore()) {
-        iter.GetNext()->WindowVolumeChanged();
+        iter.GetNext()->WindowVolumeChanged(winData->mConfig.mVolume,
+                                            winData->mConfig.mMuted);
       }
     }
   }
@@ -439,9 +440,11 @@ void AudioChannelService::RefreshAgents(
   }
 }
 
-void AudioChannelService::RefreshAgentsVolume(nsPIDOMWindowOuter* aWindow) {
-  RefreshAgents(aWindow,
-                [](AudioChannelAgent* agent) { agent->WindowVolumeChanged(); });
+void AudioChannelService::RefreshAgentsVolume(nsPIDOMWindowOuter* aWindow,
+                                              float aVolume, bool aMuted) {
+  RefreshAgents(aWindow, [aVolume, aMuted](AudioChannelAgent* agent) {
+    agent->WindowVolumeChanged(aVolume, aMuted);
+  });
 }
 
 void AudioChannelService::RefreshAgentsSuspend(nsPIDOMWindowOuter* aWindow,
