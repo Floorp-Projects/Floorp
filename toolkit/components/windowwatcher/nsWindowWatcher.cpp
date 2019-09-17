@@ -937,10 +937,10 @@ nsresult nsWindowWatcher::OpenWindowInternal(
 
   // As required by spec, new windows always start out same-process, even if the
   // URL being loaded will eventually load in a new process.
-  MOZ_ASSERT_IF(windowIsNew, newDocShell);
+  MOZ_DIAGNOSTIC_ASSERT(!windowIsNew || newDocShell);
   // New top-level windows are only opened in the parent process and are, by
   // definition, always in-process.
-  MOZ_ASSERT_IF(isNewToplevelWindow, newDocShell);
+  MOZ_DIAGNOSTIC_ASSERT(!isNewToplevelWindow || newDocShell);
 
   // Copy sandbox flags to the new window if activeDocsSandboxFlags says to do
   // so.  Note that it's only nonzero if the window is new, so clobbering
