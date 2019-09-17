@@ -1144,8 +1144,13 @@ class EditorBase : public nsIEditor,
       const nsAString& aStringToInsert, Text& aTextNode, int32_t aOffset,
       bool aSuppressIME = false);
 
-  MOZ_CAN_RUN_SCRIPT nsresult SetTextImpl(const nsAString& aString,
-                                          Text& aTextNode);
+  /**
+   * SetTextNodeWithoutTransaction() is optimized path to set new value to
+   * the text node directly and without transaction.  This is used when
+   * setting `<input>.value` and `<textarea>.value`.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  SetTextNodeWithoutTransaction(const nsAString& aString, Text& aTextNode);
 
   /**
    * DeleteNodeWithTransaction() removes aNode from the DOM tree.
