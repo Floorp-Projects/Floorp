@@ -153,11 +153,20 @@ class UrlMatcher {
         const val DISCONNECT = "Disconnect"
         const val SOCIAL = "Social"
         const val DEFAULT = "default"
+        const val CRYPTOMINING = "Cryptomining"
+        const val FINGERPRINTING = "Fingerprinting"
 
         private val ignoredCategories = setOf("Legacy Disconnect", "Legacy Content")
         private val disconnectMoved = setOf("Facebook", "Twitter")
         private val webfontExtensions = arrayOf(".woff2", ".woff", ".eot", ".ttf", ".otf")
-        private val supportedCategories = setOf(ADVERTISING, ANALYTICS, SOCIAL, CONTENT)
+        private val supportedCategories = setOf(
+                ADVERTISING,
+                ANALYTICS,
+                SOCIAL,
+                CONTENT,
+                CRYPTOMINING,
+                FINGERPRINTING
+        )
 
         /**
          * Creates a new matcher instance for the provided URL lists.
