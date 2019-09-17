@@ -67,6 +67,14 @@ button.dismiss-button {
   padding: 16px 32px;
 }
 
+.buttons {
+  display: flex;
+}
+
+.buttons.macosx > .confirm-button {
+  order: 1;
+}
+
 .buttons > button {
   min-width: 140px;
 }
