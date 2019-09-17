@@ -14,6 +14,7 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import mozilla.components.feature.media.ext.isForCustomTabSession
 import mozilla.components.feature.media.ext.pauseIfPlaying
 import mozilla.components.feature.media.ext.playIfPaused
 import mozilla.components.feature.media.ext.toPlaybackState
@@ -59,6 +60,22 @@ internal class MediaService : Service() {
         }
 
         return START_NOT_STICKY
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        val state = MediaStateMachine.state
+
+        if (state.isForCustomTabSession()) {
+            // Custom Tabs have their own lifetime management (bound to the liftime of the activity)
+            // and do not need to be handled here.
+            return
+        }
+
+        MediaStateMachine.reset()
+
+        state.pauseIfPlaying()
+
+        shutdown()
     }
 
     private fun processCurrentState() {

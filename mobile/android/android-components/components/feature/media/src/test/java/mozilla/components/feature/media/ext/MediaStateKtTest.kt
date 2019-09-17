@@ -10,8 +10,10 @@ import mozilla.components.feature.media.MockMedia
 import mozilla.components.feature.media.state.MediaState
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
@@ -65,5 +67,40 @@ class MediaStateKtTest {
         val pausedState = MediaState.Paused(session = mock(), media = listOf(pausedMedia))
         pausedState.playIfPaused()
         verify(pausedMedia.controller).play()
+    }
+
+    @Test
+    fun `isForCustomTabSession() extension method`() {
+        assertFalse(
+            MediaState.Playing(
+                Session("https://www.mozilla.org"), media = listOf(mock())
+            ).isForCustomTabSession()
+        )
+
+        assertTrue(
+            MediaState.Playing(
+                Session("https://www.mozilla.org").also {
+                    it.customTabConfig = mock()
+                }, media = listOf(mock())
+            ).isForCustomTabSession()
+        )
+
+        assertFalse(
+            MediaState.Paused(
+                Session("https://www.mozilla.org"), media = listOf(mock())
+            ).isForCustomTabSession()
+        )
+
+        assertTrue(
+            MediaState.Paused(
+                Session("https://www.mozilla.org").also {
+                    it.customTabConfig = mock()
+                }, media = listOf(mock())
+            ).isForCustomTabSession()
+        )
+
+        assertFalse(
+            MediaState.None.isForCustomTabSession()
+        )
     }
 }
