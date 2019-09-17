@@ -91,6 +91,9 @@ class imgRequest final : public nsIStreamListener,
   void StartDecoding();
 
   inline uint64_t InnerWindowID() const { return mInnerWindowId; }
+  void SetInnerWindowID(uint64_t aInnerWindowId) {
+    mInnerWindowId = aInnerWindowId;
+  }
 
   // Set the cache validation information (expiry time, whether we must
   // validate, etc) on the cache entry based on the request information.
