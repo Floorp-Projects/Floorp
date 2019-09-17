@@ -312,12 +312,10 @@ class ArtifactJob(object):
 
 
 class AndroidArtifactJob(ArtifactJob):
-    package_re = r'public/build/target\.apk'
+    package_re = r'public/build/geckoview_example\.apk'
     product = 'mobile'
 
     package_artifact_patterns = {
-        'application.ini',
-        'platform.ini',
         '**/*.so',
     }
 
@@ -378,14 +376,12 @@ class LinuxArtifactJob(ArtifactJob):
     product = 'firefox'
 
     _package_artifact_patterns = {
-        '{product}/application.ini',
         '{product}/crashreporter',
         '{product}/dependentlibs.list',
         '{product}/{product}',
         '{product}/{product}-bin',
         '{product}/minidump-analyzer',
         '{product}/pingsender',
-        '{product}/platform.ini',
         '{product}/plugin-container',
         '{product}/updater',
         '{product}/**/*.so',
@@ -539,8 +535,6 @@ class WinArtifactJob(ArtifactJob):
 
     _package_artifact_patterns = {
         '{product}/dependentlibs.list',
-        '{product}/platform.ini',
-        '{product}/application.ini',
         '{product}/**/*.dll',
         '{product}/*.exe',
         '{product}/*.tlb',
@@ -1044,9 +1038,6 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
 
         urls = []
         for artifact_name in self._artifact_job.find_candidate_artifacts(artifacts):
-            # We can easily extract the task ID from the URL.  We can't easily
-            # extract the build ID; we use the .ini files embedded in the
-            # downloaded artifact for this.
             url = get_artifact_url(taskId, artifact_name)
             urls.append(url)
         if urls:
@@ -1106,8 +1097,6 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
 
         with zipfile.ZipFile(processed_filename) as zf:
             for info in zf.infolist():
-                if info.filename.endswith('.ini'):
-                    continue
                 n = mozpath.join(distdir, info.filename)
                 fh = FileAvoidWrite(n, readmode='rb')
                 shutil.copyfileobj(zf.open(info), fh)
@@ -1211,9 +1200,6 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
 
         urls = []
         for artifact_name in self._artifact_job.find_candidate_artifacts(artifacts):
-            # We can easily extract the task ID from the URL.  We can't easily
-            # extract the build ID; we use the .ini files embedded in the
-            # downloaded artifact for this.
             url = get_artifact_url(taskId, artifact_name)
             urls.append(url)
         if not urls:
