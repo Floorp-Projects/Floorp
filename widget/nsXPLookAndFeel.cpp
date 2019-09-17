@@ -17,6 +17,7 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StaticPrefs_editor.h"
 #include "mozilla/StaticPrefs_findbar.h"
+#include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
@@ -847,7 +848,8 @@ nsresult nsXPLookAndFeel::GetColorImpl(ColorID aID,
 #endif
 
   if (aID == ColorID::TextSelectBackgroundAttention) {
-    if (StaticPrefs::findbar_modalHighlight()) {
+    if (StaticPrefs::findbar_modalHighlight() &&
+        !StaticPrefs::fission_autostart()) {
       aResult = NS_RGBA(0, 0, 0, 0);
       return NS_OK;
     }
