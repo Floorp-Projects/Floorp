@@ -40,12 +40,10 @@
 namespace mozilla {
 namespace dom {
 
-Location::Location(nsPIDOMWindowInner* aWindow, BrowsingContext* aBrowsingContext)
+Location::Location(nsPIDOMWindowInner* aWindow, nsIDocShell* aDocShell)
     : mInnerWindow(aWindow) {
-  // aBrowsingContext can be null if it gets called after nsDocShell::Destory().
-  if (aBrowsingContext) {
-    mBrowsingContextId = aBrowsingContext->Id();
-  }
+  // aDocShell can be null if it gets called after nsDocShell::Destory().
+  mDocShell = do_GetWeakReference(aDocShell);
 }
 
 Location::~Location() {}
@@ -62,21 +60,21 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(Location)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Location)
 
 BrowsingContext* Location::GetBrowsingContext() {
-  RefPtr<BrowsingContext> bc = BrowsingContext::Get(mBrowsingContextId);
-  return bc.get();
+  if (nsCOMPtr<nsIDocShell> docShell = GetDocShell()) {
+    return docShell->GetBrowsingContext();
+  }
+  return nullptr;
 }
 
 already_AddRefed<nsIDocShell> Location::GetDocShell() {
-  if (RefPtr<BrowsingContext> bc = GetBrowsingContext()) {
-    return do_AddRef(bc->GetDocShell());
-  }
-  return nullptr;
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
+  return docShell.forget();
 }
 
 nsresult Location::GetURI(nsIURI** aURI, bool aGetInnermostURI) {
   *aURI = nullptr;
 
-  nsCOMPtr<nsIDocShell> docShell(GetDocShell());
+  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
   if (!docShell) {
     return NS_OK;
   }
@@ -551,7 +549,7 @@ void Location::SetSearch(const nsAString& aSearch,
 }
 
 void Location::Reload(bool aForceget, ErrorResult& aRv) {
-  nsCOMPtr<nsIDocShell> docShell(GetDocShell());
+  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
   if (!docShell) {
     return aRv.Throw(NS_ERROR_FAILURE);
   }
@@ -605,20 +603,13 @@ void Location::Assign(const nsAString& aUrl, nsIPrincipal& aSubjectPrincipal,
 bool Location::CallerSubsumes(nsIPrincipal* aSubjectPrincipal) {
   MOZ_ASSERT(aSubjectPrincipal);
 
-  RefPtr<BrowsingContext> bc(GetBrowsingContext());
-  if (MOZ_UNLIKELY(!bc) || MOZ_UNLIKELY(bc->IsDiscarded()) || !bc->IsInProcess()) {
-    return false;
-  }
-
   // Get the principal associated with the location object.  Note that this is
   // the principal of the page which will actually be navigated, not the
   // principal of the Location object itself.  This is why we need this check
   // even though we only allow limited cross-origin access to Location objects
   // in general.
-  nsCOMPtr<nsPIDOMWindowOuter> outer = bc->GetDOMWindow();
-  MOZ_DIAGNOSTIC_ASSERT(outer);
+  nsCOMPtr<nsPIDOMWindowOuter> outer = mInnerWindow->GetOuterWindow();
   if (MOZ_UNLIKELY(!outer)) return false;
-
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(outer);
   bool subsumes = false;
   nsresult rv = aSubjectPrincipal->SubsumesConsideringDomain(
