@@ -53,6 +53,7 @@ class WebrtcTCPSocket : public nsIHttpUpgradeListener,
 
   void SetTabId(dom::TabId aTabId);
   nsresult Open(const nsCString& aHost, const int& aPort,
+                const nsCString& aLocalAddress, const int& aLocalPort,
                 const net::LoadInfoArgs& aArgs, const nsCString& aAlpn,
                 NrSocketProxyConfig::ProxyPolicy aProxyPolicy);
   nsresult Write(nsTArray<uint8_t>&& aBytes);
@@ -78,6 +79,8 @@ class WebrtcTCPSocket : public nsIHttpUpgradeListener,
   nsCString mAlpn;
   bool mSsl = false;
   bool mForceProxy = false;
+  nsCString mLocalAddress;
+  uint16_t mLocalPort = 0;
 
   nsresult DoProxyConfigLookup();
   nsresult OpenWithHttpProxy();

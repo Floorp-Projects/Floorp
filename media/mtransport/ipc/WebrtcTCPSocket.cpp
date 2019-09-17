@@ -137,6 +137,8 @@ void WebrtcTCPSocket::CloseWithReason(nsresult aReason) {
 }
 
 nsresult WebrtcTCPSocket::Open(const nsCString& aHost, const int& aPort,
+                               const nsCString& aLocalAddress,
+                               const int& aLocalPort,
                                const net::LoadInfoArgs& aArgs,
                                const nsCString& aAlpn,
                                NrSocketProxyConfig::ProxyPolicy aProxyPolicy) {
@@ -166,6 +168,8 @@ nsresult WebrtcTCPSocket::Open(const nsCString& aHost, const int& aPort,
   if (aProxyPolicy == NrSocketProxyConfig::kForceProxy) {
     mForceProxy = true;
   }
+  mLocalAddress = aLocalAddress;
+  mLocalPort = aLocalPort;
 
   if (aProxyPolicy == NrSocketProxyConfig::kDisableProxy) {
     rv = OpenWithoutHttpProxy(nullptr);
@@ -274,6 +278,26 @@ nsresult WebrtcTCPSocket::OpenWithoutHttpProxy(nsIProxyInfo* aSocksProxyInfo) {
       do_GetService("@mozilla.org/network/socket-transport-service;1");
   rv = sts->CreateTransport(socketTypes, host, port, aSocksProxyInfo,
                             getter_AddRefs(mTransport));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mTransport->SetReuseAddrPort(true);
+
+  PRNetAddr prAddr;
+  if (NS_WARN_IF(PR_SUCCESS !=
+                 PR_InitializeNetAddr(PR_IpAddrAny, mLocalPort, &prAddr))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (NS_WARN_IF(PR_SUCCESS !=
+                 PR_StringToNetAddr(mLocalAddress.BeginReading(), &prAddr))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mozilla::net::NetAddr addr;
+  PRNetAddrToNetAddr(&prAddr, &addr);
+  rv = mTransport->Bind(&addr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
