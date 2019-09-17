@@ -825,6 +825,21 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "-moz-column-span": {
+    "isInherited": false,
+    "subproperties": [
+      "column-span"
+    ],
+    "supports": [],
+    "values": [
+      "all",
+      "inherit",
+      "initial",
+      "none",
+      "revert",
+      "unset"
+    ]
+  },
   "-moz-column-width": {
     "isInherited": false,
     "subproperties": [
@@ -5666,6 +5681,21 @@ exports.CSS_PROPERTIES = {
       "revert",
       "thick",
       "thin",
+      "unset"
+    ]
+  },
+  "column-span": {
+    "isInherited": false,
+    "subproperties": [
+      "column-span"
+    ],
+    "supports": [],
+    "values": [
+      "all",
+      "inherit",
+      "initial",
+      "none",
+      "revert",
       "unset"
     ]
   },
