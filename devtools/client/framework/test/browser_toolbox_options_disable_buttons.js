@@ -130,9 +130,9 @@ function testToggleToolboxButtons() {
 
   const toolbarButtonNodes = [...doc.querySelectorAll(".command-button")];
 
-  // NOTE: the web-replay buttons only appear if the feature is enabled.
+  // NOTE: the web-replay buttons are not checkboxes
   is(
-    checkNodes.length + 1,
+    checkNodes.length + 2,
     toolbox.toolbarButtons.length,
     "All of the buttons are toggleable."
   );
