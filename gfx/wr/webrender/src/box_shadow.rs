@@ -6,7 +6,7 @@ use api::{BorderRadius, BoxShadowClipMode, ClipMode, ColorF, PrimitiveKeyKind};
 use api::MAX_BLUR_RADIUS;
 use api::units::*;
 use crate::clip::{ClipItemKey, ClipItemKeyKind};
-use crate::display_list_flattener::DisplayListFlattener;
+use crate::scene_building::SceneBuilder;
 use crate::gpu_cache::GpuCacheHandle;
 use crate::gpu_types::BoxShadowStretchMode;
 use crate::prim_store::ScrollNodeAndClipChain;
@@ -68,7 +68,7 @@ pub struct BoxShadowCacheKey {
     pub br_bottom_left: DeviceIntSize,
 }
 
-impl<'a> DisplayListFlattener<'a> {
+impl<'a> SceneBuilder<'a> {
     pub fn add_box_shadow(
         &mut self,
         clip_and_scroll: ScrollNodeAndClipChain,

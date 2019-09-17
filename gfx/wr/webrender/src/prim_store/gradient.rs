@@ -7,7 +7,7 @@ use api::{
     PremultipliedColorF, LineOrientation,
 };
 use api::units::{LayoutPoint, LayoutSize, LayoutVector2D};
-use crate::display_list_flattener::IsVisible;
+use crate::scene_building::IsVisible;
 use euclid::approxeq::ApproxEq;
 use crate::frame_builder::FrameBuildingState;
 use crate::gpu_cache::{GpuCacheHandle, GpuDataRequest};

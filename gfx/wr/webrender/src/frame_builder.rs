@@ -6,23 +6,17 @@ use api::{ColorF, DebugFlags, DocumentLayer, FontRenderMode, PremultipliedColorF
 use api::{PipelineId};
 use api::units::*;
 use crate::batch::{BatchBuilder, AlphaBatchBuilder, AlphaBatchContainer};
-use crate::clip::{ClipDataStore, ClipStore, ClipChainStack};
+use crate::clip::{ClipStore, ClipChainStack};
 use crate::clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use crate::debug_render::DebugItem;
-use crate::display_list_flattener::{DisplayListFlattener};
 use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind, ZBufferIdGenerator};
 use crate::gpu_types::TransformData;
-use crate::hit_test::{HitTester, HitTestingScene};
-#[cfg(feature = "replay")]
-use crate::hit_test::HitTestingSceneStats;
 use crate::internal_types::{FastHashMap, PlaneSplitter, SavedTargetIndex};
 use crate::picture::{PictureUpdateState, SurfaceInfo, ROOT_SURFACE_INDEX, SurfaceIndex, RecordedDirtyRegion};
 use crate::picture::{RetainedTiles, TileCacheInstance, DirtyRegion, SurfaceRenderTasks, SubpixelMode};
-use crate::prim_store::{PrimitiveStore, SpaceMapper, PictureIndex, PrimitiveDebugId, PrimitiveScratchBuffer};
+use crate::prim_store::{SpaceMapper, PictureIndex, PrimitiveDebugId, PrimitiveScratchBuffer};
 use crate::prim_store::{DeferredResolve, PrimitiveVisibilityMask};
-#[cfg(feature = "replay")]
-use crate::prim_store::{PrimitiveStoreStats};
 use crate::profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
 use crate::render_backend::{DataStores, FrameStamp, FrameId};
 use crate::render_target::{RenderTarget, PictureCacheTarget, TextureCacheRenderTarget};
@@ -31,8 +25,7 @@ use crate::render_task_graph::{RenderTaskId, RenderTaskGraph, RenderTaskGraphCou
 use crate::render_task_graph::{RenderPassKind, RenderPass};
 use crate::render_task::{RenderTask, RenderTaskLocation, RenderTaskKind};
 use crate::resource_cache::{ResourceCache};
-use crate::scene::{ScenePipeline, SceneProperties};
-use crate::scene_builder_thread::DocumentStats;
+use crate::scene::{BuiltScene, ScenePipeline, SceneProperties};
 use crate::segment::SegmentBuilder;
 use std::{f32, mem};
 use std::sync::Arc;
@@ -106,20 +99,12 @@ impl FrameGlobalResources {
     }
 }
 
-/// A builder structure for `render_task_graph::Frame`
+/// Produces the frames that are sent to the renderer.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct FrameBuilder {
-    output_rect: DeviceIntRect,
-    background_color: Option<ColorF>,
-    root_pic_index: PictureIndex,
     /// Cache of surface tiles from the previous frame builder
     /// that can optionally be consumed by this frame builder.
     pending_retained_tiles: RetainedTiles,
-    pub prim_store: PrimitiveStore,
-    pub clip_store: ClipStore,
-    #[cfg_attr(feature = "capture", serde(skip))] //TODO
-    pub hit_testing_scene: Arc<HitTestingScene>,
-    pub config: FrameBuilderConfig,
     pub globals: FrameGlobalResources,
 }
 
@@ -212,82 +197,17 @@ pub struct PictureState {
 }
 
 impl FrameBuilder {
-    #[cfg(feature = "replay")]
-    pub fn empty() -> Self {
+    pub fn new() -> Self {
         FrameBuilder {
-            hit_testing_scene: Arc::new(HitTestingScene::new(&HitTestingSceneStats::empty())),
-            prim_store: PrimitiveStore::new(&PrimitiveStoreStats::empty()),
-            clip_store: ClipStore::new(),
-            output_rect: DeviceIntRect::zero(),
-            background_color: None,
-            root_pic_index: PictureIndex(0),
             pending_retained_tiles: RetainedTiles::new(),
             globals: FrameGlobalResources::empty(),
-            config: FrameBuilderConfig {
-                default_font_render_mode: FontRenderMode::Mono,
-                dual_source_blending_is_enabled: true,
-                dual_source_blending_is_supported: false,
-                chase_primitive: ChasePrimitive::Nothing,
-                enable_picture_caching: false,
-                testing: false,
-                gpu_supports_fast_clears: false,
-                gpu_supports_advanced_blend: false,
-                advanced_blend_is_coherent: false,
-                batch_lookback_count: 0,
-                background_color: None,
-            },
         }
     }
 
     /// Provide any cached surface tiles from the previous frame builder
     /// to a new frame builder. These will be consumed or dropped the
     /// first time a new frame builder creates a frame.
-    pub fn set_retained_resources(
-        &mut self,
-        retained_tiles: RetainedTiles,
-        globals: FrameGlobalResources,
-    ) {
-        assert!(self.pending_retained_tiles.caches.is_empty());
-        self.pending_retained_tiles = retained_tiles;
-        self.globals = globals;
-    }
-
-    pub fn with_display_list_flattener(
-        output_rect: DeviceIntRect,
-        background_color: Option<ColorF>,
-        flattener: DisplayListFlattener,
-    ) -> Self {
-        FrameBuilder {
-            hit_testing_scene: Arc::new(flattener.hit_testing_scene),
-            prim_store: flattener.prim_store,
-            clip_store: flattener.clip_store,
-            root_pic_index: flattener.root_pic_index,
-            output_rect,
-            background_color,
-            pending_retained_tiles: RetainedTiles::new(),
-            config: flattener.config,
-            globals: FrameGlobalResources::empty(),
-        }
-    }
-
-    /// Get the memory usage statistics to pre-allocate for the next scene.
-    pub fn get_stats(&self) -> DocumentStats {
-        DocumentStats {
-            prim_store_stats: self.prim_store.get_stats(),
-            hit_test_stats: self.hit_testing_scene.get_stats(),
-        }
-    }
-
-    /// Destroy an existing frame builder. This is called just before
-    /// a frame builder is replaced with a newly built scene.
-    pub fn destroy(
-        self,
-        retained_tiles: &mut RetainedTiles,
-    ) -> FrameGlobalResources {
-        self.prim_store.destroy(
-            retained_tiles,
-        );
-
+    pub fn set_retained_resources(&mut self, retained_tiles: RetainedTiles) {
         // In general, the pending retained tiles are consumed by the frame
         // builder the first time a frame is built after a new scene has
         // arrived. However, if two scenes arrive in quick succession, the
@@ -296,18 +216,15 @@ impl FrameBuilder {
         // be lost, causing a full invalidation of the entire screen. To
         // avoid this, if there are still pending tiles, include them in
         // the retained tiles passed to the next frame builder.
-        retained_tiles.merge(self.pending_retained_tiles);
-
-        self.globals
+        self.pending_retained_tiles.merge(retained_tiles);
     }
 
     /// Compute the contribution (bounding rectangles, and resources) of layers and their
     /// primitives in screen space.
     fn build_layer_screen_rects_and_cull_layers(
         &mut self,
+        scene: &mut BuiltScene,
         global_screen_world_rect: WorldRect,
-        clip_scroll_tree: &ClipScrollTree,
-        pipelines: &FastHashMap<PipelineId, Arc<ScenePipeline>>,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskGraph,
@@ -323,34 +240,34 @@ impl FrameBuilder {
     ) -> Option<RenderTaskId> {
         profile_scope!("cull");
 
-        if self.prim_store.pictures.is_empty() {
+        if scene.prim_store.pictures.is_empty() {
             return None
         }
 
         scratch.begin_frame();
 
-        let root_spatial_node_index = clip_scroll_tree.root_reference_frame_index();
+        let root_spatial_node_index = scene.clip_scroll_tree.root_reference_frame_index();
 
         const MAX_CLIP_COORD: f32 = 1.0e9;
 
         let frame_context = FrameBuildingContext {
             global_device_pixel_scale,
             scene_properties,
-            pipelines,
+            pipelines: &scene.src.pipelines,
             global_screen_world_rect,
-            clip_scroll_tree,
+            clip_scroll_tree: &scene.clip_scroll_tree,
             max_local_clip: LayoutRect::new(
                 LayoutPoint::new(-MAX_CLIP_COORD, -MAX_CLIP_COORD),
                 LayoutSize::new(2.0 * MAX_CLIP_COORD, 2.0 * MAX_CLIP_COORD),
             ),
             debug_flags,
-            fb_config: &self.config,
+            fb_config: &scene.config,
         };
 
         let root_render_task = RenderTask::new_picture(
-            RenderTaskLocation::Fixed(self.output_rect),
-            self.output_rect.size.to_f32(),
-            self.root_pic_index,
+            RenderTaskLocation::Fixed(scene.output_rect),
+            scene.output_rect.size.to_f32(),
+            scene.root_pic_index,
             DeviceIntPoint::zero(),
             UvRectKind::Rect,
             ROOT_SPATIAL_NODE_INDEX,
@@ -368,7 +285,7 @@ impl FrameBuilder {
             ROOT_SPATIAL_NODE_INDEX,
             0.0,
             global_screen_world_rect,
-            clip_scroll_tree,
+            &scene.clip_scroll_tree,
             global_device_pixel_scale,
         );
         surfaces.push(root_surface);
@@ -387,11 +304,11 @@ impl FrameBuilder {
         // be rendered this frame.
         PictureUpdateState::update_all(
             surfaces,
-            self.root_pic_index,
-            &mut self.prim_store.pictures,
+            scene.root_pic_index,
+            &mut scene.prim_store.pictures,
             &frame_context,
             gpu_cache,
-            &self.clip_store,
+            &scene.clip_store,
             data_stores,
         );
 
@@ -400,18 +317,18 @@ impl FrameBuilder {
 
             let visibility_context = FrameVisibilityContext {
                 global_device_pixel_scale,
-                clip_scroll_tree,
+                clip_scroll_tree: &scene.clip_scroll_tree,
                 global_screen_world_rect,
                 surfaces,
                 debug_flags,
                 scene_properties,
-                config: &self.config,
+                config: &scene.config,
             };
 
             let mut visibility_state = FrameVisibilityState {
                 resource_cache,
                 gpu_cache,
-                clip_store: &mut self.clip_store,
+                clip_store: &mut scene.clip_store,
                 scratch,
                 tile_cache: None,
                 retained_tiles: &mut retained_tiles,
@@ -420,8 +337,8 @@ impl FrameBuilder {
                 render_tasks,
             };
 
-            self.prim_store.update_visibility(
-                self.root_pic_index,
+            scene.prim_store.update_visibility(
+                scene.root_pic_index,
                 ROOT_SURFACE_INDEX,
                 &global_screen_world_rect,
                 &visibility_context,
@@ -432,7 +349,7 @@ impl FrameBuilder {
         let mut frame_state = FrameBuildingState {
             render_tasks,
             profile_counters,
-            clip_store: &mut self.clip_store,
+            clip_store: &mut scene.clip_store,
             resource_cache,
             gpu_cache,
             transforms: transform_palette,
@@ -460,11 +377,11 @@ impl FrameBuilder {
         );
         frame_state.push_dirty_region(default_dirty_region);
 
-        let (pic_context, mut pic_state, mut prim_list) = self
+        let (pic_context, mut pic_state, mut prim_list) = scene
             .prim_store
-            .pictures[self.root_pic_index.0]
+            .pictures[scene.root_pic_index.0]
             .take_context(
-                self.root_pic_index,
+                scene.root_pic_index,
                 WorldRect::max_rect(),
                 root_spatial_node_index,
                 root_spatial_node_index,
@@ -478,7 +395,7 @@ impl FrameBuilder {
         {
             profile_marker!("PreparePrims");
 
-            self.prim_store.prepare_primitives(
+            scene.prim_store.prepare_primitives(
                 &mut prim_list,
                 &pic_context,
                 &mut pic_state,
@@ -489,7 +406,7 @@ impl FrameBuilder {
             );
         }
 
-        let pic = &mut self.prim_store.pictures[self.root_pic_index.0];
+        let pic = &mut scene.prim_store.pictures[scene.root_pic_index.0];
         pic.restore_context(
             prim_list,
             pic_context,
@@ -512,11 +429,10 @@ impl FrameBuilder {
 
     pub fn build(
         &mut self,
+        scene: &mut BuiltScene,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         stamp: FrameStamp,
-        clip_scroll_tree: &mut ClipScrollTree,
-        pipelines: &FastHashMap<PipelineId, Arc<ScenePipeline>>,
         global_device_pixel_scale: DevicePixelScale,
         layer: DocumentLayer,
         device_origin: DeviceIntPoint,
@@ -535,20 +451,20 @@ impl FrameBuilder {
         let mut profile_counters = FrameProfileCounters::new();
         profile_counters
             .total_primitives
-            .set(self.prim_store.prim_count());
+            .set(scene.prim_store.prim_count());
 
         resource_cache.begin_frame(stamp);
         gpu_cache.begin_frame(stamp);
 
         self.globals.update(gpu_cache);
 
-        clip_scroll_tree.update_tree(
+        scene.clip_scroll_tree.update_tree(
             pan,
             global_device_pixel_scale,
             scene_properties,
         );
-        let mut transform_palette = clip_scroll_tree.build_transform_palette();
-        self.clip_store.clear_old_instances();
+        let mut transform_palette = scene.clip_scroll_tree.build_transform_palette();
+        scene.clip_store.clear_old_instances();
 
         let mut render_tasks = RenderTaskGraph::new(
             stamp.frame_id(),
@@ -556,13 +472,12 @@ impl FrameBuilder {
         );
         let mut surfaces = Vec::new();
 
-        let output_size = self.output_rect.size.to_i32();
-        let screen_world_rect = (self.output_rect.to_f32() / global_device_pixel_scale).round_out();
+        let output_size = scene.output_rect.size.to_i32();
+        let screen_world_rect = (scene.output_rect.to_f32() / global_device_pixel_scale).round_out();
 
         let main_render_task_id = self.build_layer_screen_rects_and_cull_layers(
+            scene,
             screen_world_rect,
-            clip_scroll_tree,
-            pipelines,
             resource_cache,
             gpu_cache,
             &mut render_tasks,
@@ -588,24 +503,24 @@ impl FrameBuilder {
             passes = render_tasks.generate_passes(
                 main_render_task_id,
                 output_size,
-                self.config.gpu_supports_fast_clears,
+                scene.config.gpu_supports_fast_clears,
             );
 
             // Used to generated a unique z-buffer value per primitive.
             let mut z_generator = ZBufferIdGenerator::new(layer);
-            let use_dual_source_blending = self.config.dual_source_blending_is_enabled &&
-                                           self.config.dual_source_blending_is_supported;
+            let use_dual_source_blending = scene.config.dual_source_blending_is_enabled &&
+                                           scene.config.dual_source_blending_is_supported;
 
             for pass in &mut passes {
                 let mut ctx = RenderTargetContext {
                     global_device_pixel_scale,
-                    prim_store: &self.prim_store,
+                    prim_store: &scene.prim_store,
                     resource_cache,
                     use_dual_source_blending,
-                    use_advanced_blending: self.config.gpu_supports_advanced_blend,
-                    break_advanced_blend_batches: !self.config.advanced_blend_is_coherent,
-                    batch_lookback_count: self.config.batch_lookback_count,
-                    clip_scroll_tree,
+                    use_advanced_blending: scene.config.gpu_supports_advanced_blend,
+                    break_advanced_blend_batches: !scene.config.advanced_blend_is_coherent,
+                    batch_lookback_count: scene.config.batch_lookback_count,
+                    clip_scroll_tree: &scene.clip_scroll_tree,
                     data_stores,
                     surfaces: &surfaces,
                     scratch,
@@ -619,7 +534,7 @@ impl FrameBuilder {
                     gpu_cache,
                     &mut render_tasks,
                     &mut deferred_resolves,
-                    &self.clip_store,
+                    &scene.clip_store,
                     &mut transform_palette,
                     &mut prim_headers,
                     &mut z_generator,
@@ -646,12 +561,12 @@ impl FrameBuilder {
         resource_cache.end_frame(texture_cache_profile);
 
         Frame {
-            content_origin: self.output_rect.origin,
+            content_origin: scene.output_rect.origin,
             device_rect: DeviceIntRect::new(
                 device_origin,
-                self.output_rect.size,
+                scene.output_rect.size,
             ),
-            background_color: self.background_color,
+            background_color: scene.background_color,
             layer,
             profile_counters,
             passes,
@@ -665,19 +580,6 @@ impl FrameBuilder {
             recorded_dirty_regions: mem::replace(&mut scratch.recorded_dirty_regions, Vec::new()),
             debug_items: mem::replace(&mut scratch.debug_items, Vec::new()),
         }
-    }
-
-    pub fn create_hit_tester(
-        &mut self,
-        clip_scroll_tree: &ClipScrollTree,
-        clip_data_store: &ClipDataStore,
-    ) -> HitTester {
-        HitTester::new(
-            Arc::clone(&self.hit_testing_scene),
-            clip_scroll_tree,
-            &self.clip_store,
-            clip_data_store,
-        )
     }
 }
 

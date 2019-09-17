@@ -13,7 +13,7 @@ use api::{ApiMsg, BuiltDisplayList, ClearCache, DebugCommand, DebugFlags};
 use api::{BuiltDisplayListIter, DisplayItem};
 use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestFlags, HitTestResult};
 use api::{IdNamespace, MemoryReport, PipelineId, RenderNotifier, SceneMsg, ScrollClamping};
-use api::{ScrollLocation, ScrollNodeState, TransactionMsg, ResourceUpdate, BlobImageKey};
+use api::{ScrollLocation, TransactionMsg, ResourceUpdate, BlobImageKey};
 use api::{NotificationRequest, Checkpoint};
 use api::{ClipIntern, FilterDataIntern, PrimitiveKeyKind};
 use api::units::*;
@@ -22,7 +22,7 @@ use api::channel::{MsgReceiver, MsgSender, Payload};
 use api::CaptureBits;
 #[cfg(feature = "replay")]
 use api::CapturedDocument;
-use crate::clip_scroll_tree::{SpatialNodeIndex, ClipScrollTree};
+use crate::clip_scroll_tree::SpatialNodeIndex;
 #[cfg(feature = "debugger")]
 use crate::debug_server;
 use crate::frame_builder::{FrameBuilder, FrameBuilderConfig};
@@ -45,7 +45,7 @@ use crate::resource_cache::ResourceCache;
 use crate::resource_cache::PlainCacheOwn;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::resource_cache::PlainResources;
-use crate::scene::{Scene, SceneProperties};
+use crate::scene::{BuiltScene, SceneProperties};
 use crate::scene_builder_thread::*;
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
@@ -328,30 +328,27 @@ impl DataStores {
 }
 
 struct Document {
-    // The id of this document
+    /// The id of this document
     id: DocumentId,
-    // The latest built scene, usable to build frames.
-    // received from the scene builder thread.
-    scene: Scene,
 
-    // Temporary list of removed pipelines received from the scene builder
-    // thread and forwarded to the renderer.
+    /// Temporary list of removed pipelines received from the scene builder
+    /// thread and forwarded to the renderer.
     removed_pipelines: Vec<(PipelineId, DocumentId)>,
 
     view: DocumentView,
 
-    /// The ClipScrollTree for this document which tracks SpatialNodes, ClipNodes, and ClipChains.
-    /// This is stored here so that we are able to preserve scrolling positions between rendered
-    /// frames.
-    clip_scroll_tree: ClipScrollTree,
-
     /// The id and time of the current frame.
     stamp: FrameStamp,
 
-    // the `Option` here is only to deal with borrow checker
-    frame_builder: Option<FrameBuilder>,
-    // A set of pipelines that the caller has requested be
-    // made available as output textures.
+    /// The latest built scene, usable to build frames.
+    /// received from the scene builder thread.
+    scene: BuiltScene,
+
+    /// The builder object that prodces frames, kept around to preserve some retained state.
+    frame_builder: FrameBuilder,
+
+    /// A set of pipelines that the caller has requested be
+    /// made available as output textures.
     output_pipelines: FastHashSet<PipelineId>,
 
     /// A data structure to allow hit testing against rendered frames. This is updated
@@ -367,8 +364,8 @@ struct Document {
     frame_is_valid: bool,
     hit_tester_is_valid: bool,
     rendered_frame_is_valid: bool,
-    // We track this information to be able to display debugging information from the
-    // renderer.
+    /// We track this information to be able to display debugging information from the
+    /// renderer.
     has_built_scene: bool,
 
     data_stores: DataStores,
@@ -391,7 +388,6 @@ impl Document {
     ) -> Self {
         Document {
             id,
-            scene: Scene::new(),
             removed_pipelines: Vec::new(),
             view: DocumentView {
                 device_rect: size.into(),
@@ -401,9 +397,9 @@ impl Document {
                 pinch_zoom_factor: 1.0,
                 device_pixel_ratio: default_device_pixel_ratio,
             },
-            clip_scroll_tree: ClipScrollTree::new(),
             stamp: FrameStamp::first(id),
-            frame_builder: None,
+            scene: BuiltScene::empty(),
+            frame_builder: FrameBuilder::new(),
             output_pipelines: FastHashSet::default(),
             hit_tester: None,
             dynamic_properties: SceneProperties::new(),
@@ -418,7 +414,7 @@ impl Document {
     }
 
     fn can_render(&self) -> bool {
-        self.frame_builder.is_some() && self.scene.has_root_pipeline()
+        self.scene.src.has_root_pipeline()
     }
 
     fn has_pixels(&self) -> bool {
@@ -431,7 +427,7 @@ impl Document {
     ) -> DocumentOps {
         match message {
             FrameMsg::UpdateEpoch(pipeline_id, epoch) => {
-                self.scene.update_epoch(pipeline_id, epoch);
+                self.scene.src.update_epoch(pipeline_id, epoch);
             }
             FrameMsg::Scroll(delta, cursor) => {
                 profile_scope!("Scroll");
@@ -498,7 +494,7 @@ impl Document {
             }
             FrameMsg::GetScrollNodeState(tx) => {
                 profile_scope!("GetScrollNodeState");
-                tx.send(self.get_scroll_node_state()).unwrap();
+                tx.send(self.scene.clip_scroll_tree.get_scroll_node_state()).unwrap();
             }
             FrameMsg::UpdateDynamicProperties(property_bindings) => {
                 self.dynamic_properties.set_properties(property_bindings);
@@ -513,7 +509,7 @@ impl Document {
                 }
             }
             FrameMsg::SetIsTransformPinchZooming(is_zooming, animation_id) => {
-                let node = self.clip_scroll_tree.spatial_nodes.iter_mut()
+                let node = self.scene.clip_scroll_tree.spatial_nodes.iter_mut()
                     .find(|node| node.is_transform_bound_to_property(animation_id));
                 if let Some(node) = node {
                     if node.is_pinch_zooming != is_zooming {
@@ -544,13 +540,11 @@ impl Document {
                 "First frame increment must happen before build_frame()");
 
         let frame = {
-            let frame_builder = self.frame_builder.as_mut().unwrap();
-            let frame = frame_builder.build(
+            let frame = self.frame_builder.build(
+                &mut self.scene,
                 resource_cache,
                 gpu_cache,
                 self.stamp,
-                &mut self.clip_scroll_tree,
-                &self.scene.pipelines,
                 accumulated_scale_factor,
                 self.view.layer,
                 self.view.device_rect.origin,
@@ -563,10 +557,7 @@ impl Document {
                 &mut self.render_task_counters,
                 debug_flags,
             );
-            self.hit_tester = Some(frame_builder.create_hit_tester(
-                &self.clip_scroll_tree,
-                &self.data_stores.clip,
-            ));
+            self.hit_tester = Some(self.scene.create_hit_tester(&self.data_stores.clip));
             frame
         };
 
@@ -583,35 +574,30 @@ impl Document {
     }
 
     fn rebuild_hit_tester(&mut self) {
-        if let Some(ref mut frame_builder) = self.frame_builder {
-            let accumulated_scale_factor = self.view.accumulated_scale_factor();
-            let pan = self.view.pan.to_f32() / accumulated_scale_factor;
+        let accumulated_scale_factor = self.view.accumulated_scale_factor();
+        let pan = self.view.pan.to_f32() / accumulated_scale_factor;
 
-            self.clip_scroll_tree.update_tree(
+            self.scene.clip_scroll_tree.update_tree(
                 pan,
                 accumulated_scale_factor,
                 &self.dynamic_properties,
             );
 
-            self.hit_tester = Some(frame_builder.create_hit_tester(
-                &self.clip_scroll_tree,
-                &self.data_stores.clip,
-            ));
-            self.hit_tester_is_valid = true;
-        }
+        self.hit_tester = Some(self.scene.create_hit_tester(&self.data_stores.clip));
+        self.hit_tester_is_valid = true;
     }
 
     pub fn updated_pipeline_info(&mut self) -> PipelineInfo {
         let removed_pipelines = self.removed_pipelines.take_and_preallocate();
         PipelineInfo {
-            epochs: self.scene.pipeline_epochs.iter()
+            epochs: self.scene.src.pipeline_epochs.iter()
                 .map(|(&pipeline_id, &epoch)| ((pipeline_id, self.id), epoch)).collect(),
             removed_pipelines,
         }
     }
 
     pub fn discard_frame_state_for_pipeline(&mut self, pipeline_id: PipelineId) {
-        self.clip_scroll_tree
+        self.scene.clip_scroll_tree
             .discard_frame_state_for_pipeline(pipeline_id);
     }
 
@@ -621,7 +607,7 @@ impl Document {
         scroll_location: ScrollLocation,
         scroll_node_index: Option<SpatialNodeIndex>,
     ) -> bool {
-        self.clip_scroll_tree.scroll_nearest_scrolling_ancestor(scroll_location, scroll_node_index)
+        self.scene.clip_scroll_tree.scroll_nearest_scrolling_ancestor(scroll_location, scroll_node_index)
     }
 
     /// Returns true if the node actually changed position or false otherwise.
@@ -631,46 +617,37 @@ impl Document {
         id: ExternalScrollId,
         clamp: ScrollClamping
     ) -> bool {
-        self.clip_scroll_tree.scroll_node(origin, id, clamp)
-    }
-
-    pub fn get_scroll_node_state(&self) -> Vec<ScrollNodeState> {
-        self.clip_scroll_tree.get_scroll_node_state()
+        self.scene.clip_scroll_tree.scroll_node(origin, id, clamp)
     }
 
     pub fn new_async_scene_ready(
         &mut self,
-        mut built_scene: BuiltScene,
+        built_scene: BuiltScene,
         recycler: &mut Recycler,
     ) {
-        self.scene = built_scene.scene;
         self.frame_is_valid = false;
         self.hit_tester_is_valid = false;
 
-        // Give the old frame builder a chance to destroy any resources.
+        // Give the old scene a chance to destroy any resources.
         // Right now, all this does is build a hash map of any cached
-        // surface tiles, that can be provided to the next frame builder.
+        // surface tiles, that can be provided to the next scene.
+        // TODO(nical) - It's a bit awkward how these retained tiles live
+        // in the scene's prim store then temporarily in the frame builder
+        // and then presumably back in the prim store during the next frame
+        // build.
         let mut retained_tiles = RetainedTiles::new();
-        if let Some(frame_builder) = self.frame_builder.take() {
-            let globals = frame_builder.destroy(
-                &mut retained_tiles,
-            );
+        self.scene.prim_store.destroy(&mut retained_tiles);
+        let old_scrolling_states = self.scene.clip_scroll_tree.drain();
 
-            // Provide any cached tiles from the previous frame builder to
-            // the newly built one.
-            built_scene.frame_builder.set_retained_resources(
-                retained_tiles,
-                globals,
-            );
-        }
+        self.scene = built_scene;
 
-        self.frame_builder = Some(built_scene.frame_builder);
+        // Provide any cached tiles from the previous scene to
+        // the newly built one.
+        self.frame_builder.set_retained_resources(retained_tiles);
 
         self.scratch.recycle(recycler);
 
-        let old_scrolling_states = self.clip_scroll_tree.drain();
-        self.clip_scroll_tree = built_scene.clip_scroll_tree;
-        self.clip_scroll_tree.finalize_and_apply_pending_scroll_offsets(old_scrolling_states);
+        self.scene.clip_scroll_tree.finalize_and_apply_pending_scroll_offsets(old_scrolling_states);
     }
 }
 
@@ -1152,15 +1129,15 @@ impl RenderBackend {
                         for (id, doc) in &self.documents {
                             let captured = CapturedDocument {
                                 document_id: *id,
-                                root_pipeline_id: doc.scene.root_pipeline_id,
+                                root_pipeline_id: doc.scene.src.root_pipeline_id,
                             };
                             tx.send(captured).unwrap();
 
                             // notify the active recorder
                             if let Some(ref mut r) = self.recorder {
-                                let pipeline_id = doc.scene.root_pipeline_id.unwrap();
-                                let epoch =  doc.scene.pipeline_epochs[&pipeline_id];
-                                let pipeline = &doc.scene.pipelines[&pipeline_id];
+                                let pipeline_id = doc.scene.src.root_pipeline_id.unwrap();
+                                let epoch =  doc.scene.src.pipeline_epochs[&pipeline_id];
+                                let pipeline = &doc.scene.src.pipelines[&pipeline_id];
                                 let scene_msg = SceneMsg::SetDisplayList {
                                     list_descriptor: pipeline.display_list.descriptor().clone(),
                                     epoch,
@@ -1630,7 +1607,7 @@ impl RenderBackend {
         for (_, doc) in &self.documents {
             let mut debug_doc = debug_server::TreeNode::new("document");
 
-            for (_, pipeline) in &doc.scene.pipelines {
+            for (_, pipeline) in &doc.scene.src.pipelines {
                 let mut debug_dl = debug_server::TreeNode::new("display-list");
                 self.traverse_items(&mut pipeline.display_list.iter(), &mut debug_dl);
                 debug_doc.add_child(debug_dl);
@@ -1657,7 +1634,7 @@ impl RenderBackend {
             let debug_node = debug_server::TreeNode::new("document clip-scroll tree");
             let mut builder = debug_server::TreeNodeBuilder::new(debug_node);
 
-            doc.clip_scroll_tree.print_with(&mut builder);
+            doc.scene.clip_scroll_tree.print_with(&mut builder);
 
             debug_root.add(builder.build());
         }
@@ -1671,9 +1648,7 @@ impl RenderBackend {
         let op = ops.size_of_op;
         report.gpu_cache_metadata = self.gpu_cache.size_of(ops);
         for (_id, doc) in &self.documents {
-            if let Some(ref fb) = doc.frame_builder {
-                report.clip_stores += fb.clip_store.size_of(ops);
-            }
+            report.clip_stores += doc.scene.clip_store.size_of(ops);
             report.hit_testers += doc.hit_tester.size_of(ops);
 
             doc.data_stores.report_memory(ops, &mut report)
@@ -1734,7 +1709,7 @@ impl RenderBackend {
             debug!("\tdocument {:?}", id);
             if config.bits.contains(CaptureBits::SCENE) {
                 let file_name = format!("scene-{}-{}", id.namespace_id.0, id.id);
-                config.serialize(&doc.scene, file_name);
+                config.serialize(&doc.scene.src, file_name);
             }
             if config.bits.contains(CaptureBits::FRAME) {
                 let rendered_document = doc.build_frame(
@@ -1754,9 +1729,9 @@ impl RenderBackend {
                 let file_name = format!("frame-{}-{}", id.namespace_id.0, id.id);
                 config.serialize(&rendered_document.frame, file_name);
                 let file_name = format!("clip-scroll-{}-{}", id.namespace_id.0, id.id);
-                config.serialize_tree(&doc.clip_scroll_tree, file_name);
+                config.serialize_tree(&doc.scene.clip_scroll_tree, file_name);
                 let file_name = format!("builder-{}-{}", id.namespace_id.0, id.id);
-                config.serialize(doc.frame_builder.as_ref().unwrap(), file_name);
+                config.serialize(&doc.frame_builder, file_name);
                 let file_name = format!("scratch-{}-{}", id.namespace_id.0, id.id);
                 config.serialize(&doc.scratch, file_name);
                 let file_name = format!("properties-{}-{}", id.namespace_id.0, id.id);
@@ -1826,6 +1801,7 @@ impl RenderBackend {
         profile_counters: &mut BackendProfileCounters,
     ) {
         use crate::capture::CaptureConfig;
+        use crate::scene::Scene;
 
         debug!("capture: loading {:?}", root);
         let backend = CaptureConfig::deserialize::<PlainRenderBackend, _>(root, "backend")
@@ -1871,14 +1847,16 @@ impl RenderBackend {
             let data_stores = CaptureConfig::deserialize::<DataStores, _>(root, &data_stores_name)
                 .expect(&format!("Unable to open {}.ron", data_stores_name));
 
+            let mut built_scene = BuiltScene::empty();
+            built_scene.src = scene;
+
             let doc = Document {
                 id,
-                scene: scene.clone(),
+                scene: built_scene,
                 removed_pipelines: Vec::new(),
                 view: view.clone(),
-                clip_scroll_tree: ClipScrollTree::new(),
                 stamp: FrameStamp::first(id),
-                frame_builder: Some(FrameBuilder::empty()),
+                frame_builder: FrameBuilder::new(),
                 output_pipelines: FastHashSet::default(),
                 dynamic_properties: SceneProperties::new(),
                 hit_tester: None,
@@ -1920,7 +1898,7 @@ impl RenderBackend {
 
             scenes_to_build.push(LoadScene {
                 document_id: id,
-                scene: doc.scene.clone(),
+                scene: doc.scene.src.clone(),
                 view: view.clone(),
                 config: self.frame_config.clone(),
                 output_pipelines: doc.output_pipelines.clone(),
