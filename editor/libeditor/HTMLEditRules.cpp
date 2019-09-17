@@ -771,7 +771,6 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
   }
 
   switch (aInfo.mEditSubAction) {
-    case EditSubAction::eInsertElement:
     case EditSubAction::eInsertQuotedText: {
       *aCancel = IsReadonly() || IsDisabled();
       nsresult rv = MOZ_KnownLive(HTMLEditorRef())
@@ -811,6 +810,7 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
     case EditSubAction::eDeleteSelectedContent:
     case EditSubAction::eIncreaseZIndex:
     case EditSubAction::eIndent:
+    case EditSubAction::eInsertElement:
     case EditSubAction::eInsertHTMLSource:
     case EditSubAction::eInsertParagraphSeparator:
     case EditSubAction::eInsertText:
@@ -840,7 +840,6 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
   AutoSafeEditorData setData(*this, *mHTMLEditor);
 
   switch (aInfo.mEditSubAction) {
-    case EditSubAction::eInsertElement:
     case EditSubAction::eInsertQuotedText:
       return NS_OK;
     case EditSubAction::eComputeTextToOutput:
@@ -851,6 +850,7 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
     case EditSubAction::eDeleteSelectedContent:
     case EditSubAction::eIncreaseZIndex:
     case EditSubAction::eIndent:
+    case EditSubAction::eInsertElement:
     case EditSubAction::eInsertHTMLSource:
     case EditSubAction::eInsertLineBreak:
     case EditSubAction::eInsertParagraphSeparator:
