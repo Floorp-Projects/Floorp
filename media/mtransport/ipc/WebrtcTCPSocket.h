@@ -82,6 +82,7 @@ class WebrtcTCPSocket : public nsIHttpUpgradeListener,
   bool mForceProxy = false;
   nsCString mLocalAddress;
   uint16_t mLocalPort = 0;
+  nsCString mProxyType;
 
   nsresult DoProxyConfigLookup();
   nsresult OpenWithHttpProxy();

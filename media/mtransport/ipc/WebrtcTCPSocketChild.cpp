@@ -30,11 +30,12 @@ mozilla::ipc::IPCResult WebrtcTCPSocketChild::RecvOnClose(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult WebrtcTCPSocketChild::RecvOnConnected() {
+mozilla::ipc::IPCResult WebrtcTCPSocketChild::RecvOnConnected(
+    const nsCString& aProxyType) {
   LOG(("WebrtcTCPSocketChild::RecvOnConnected %p\n", this));
 
   MOZ_ASSERT(mProxyCallbacks, "webrtc TCP callbacks should be non-null");
-  mProxyCallbacks->OnConnected();
+  mProxyCallbacks->OnConnected(aProxyType);
 
   return IPC_OK();
 }

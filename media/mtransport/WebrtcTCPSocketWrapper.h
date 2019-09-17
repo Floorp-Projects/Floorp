@@ -50,7 +50,7 @@ class WebrtcTCPSocketWrapper : public WebrtcTCPSocketCallback {
 
   // WebrtcTCPSocketCallback
   virtual void OnClose(nsresult aReason) override;
-  virtual void OnConnected() override;
+  virtual void OnConnected(const nsCString& aProxyType) override;
   virtual void OnRead(nsTArray<uint8_t>&& aReadData) override;
 
  protected:
