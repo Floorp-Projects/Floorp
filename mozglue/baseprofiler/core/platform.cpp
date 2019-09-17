@@ -902,6 +902,12 @@ void RacyFeatures::SetInactive() { sActiveAndFeatures = 0; }
 bool RacyFeatures::IsActive() { return uint32_t(sActiveAndFeatures) & Active; }
 
 /* static */
+void RacyFeatures::SetPaused() { sActiveAndFeatures |= Paused; }
+
+/* static */
+void RacyFeatures::SetUnpaused() { sActiveAndFeatures &= ~Paused; }
+
+/* static */
 bool RacyFeatures::IsActiveWithFeature(uint32_t aFeature) {
   uint32_t af = sActiveAndFeatures;  // copy it first
   return (af & Active) && (af & aFeature);
@@ -911,6 +917,12 @@ bool RacyFeatures::IsActiveWithFeature(uint32_t aFeature) {
 bool RacyFeatures::IsActiveWithoutPrivacy() {
   uint32_t af = sActiveAndFeatures;  // copy it first
   return (af & Active) && !(af & ProfilerFeature::Privacy);
+}
+
+/* static */
+bool RacyFeatures::IsActiveAndUnpausedWithoutPrivacy() {
+  uint32_t af = sActiveAndFeatures;  // copy it first
+  return (af & Active) && !(af & (Paused | ProfilerFeature::Privacy));
 }
 
 // Each live thread has a RegisteredThread, and we store a reference to it in
@@ -2933,6 +2945,7 @@ void profiler_pause() {
       return;
     }
 
+    RacyFeatures::SetPaused();
     ActivePS::SetIsPaused(lock, true);
     ActivePS::Buffer(lock).AddEntry(ProfileBufferEntry::Pause(profiler_time()));
   }
@@ -2953,6 +2966,7 @@ void profiler_resume() {
     ActivePS::Buffer(lock).AddEntry(
         ProfileBufferEntry::Resume(profiler_time()));
     ActivePS::SetIsPaused(lock, false);
+    RacyFeatures::SetUnpaused();
   }
 }
 
@@ -3195,7 +3209,7 @@ static void racy_profiler_add_marker(const char* aMarkerName,
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   // This function is hot enough that we use RacyFeatures, not ActivePS.
-  if (!RacyFeatures::IsActiveWithoutPrivacy()) {
+  if (!profiler_can_accept_markers()) {
     return;
   }
 
@@ -3245,6 +3259,10 @@ void profiler_add_marker_for_thread(int aThreadId,
                                     UniquePtr<ProfilerMarkerPayload> aPayload) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
+  if (!profiler_can_accept_markers()) {
+    return;
+  }
+
 #  ifdef DEBUG
   {
     PSAutoLock lock;
@@ -3287,7 +3305,7 @@ void profiler_tracing(const char* aCategoryString, const char* aMarkerName,
   VTUNE_TRACING(aMarkerName, aKind);
 
   // This function is hot enough that we use RacyFeatures, notActivePS.
-  if (!RacyFeatures::IsActiveWithoutPrivacy()) {
+  if (!profiler_can_accept_markers()) {
     return;
   }
 
@@ -3307,7 +3325,7 @@ void profiler_tracing(const char* aCategoryString, const char* aMarkerName,
   VTUNE_TRACING(aMarkerName, aKind);
 
   // This function is hot enough that we use RacyFeatures, notActivePS.
-  if (!RacyFeatures::IsActiveWithoutPrivacy()) {
+  if (!profiler_can_accept_markers()) {
     return;
   }
 
