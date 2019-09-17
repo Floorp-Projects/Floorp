@@ -171,14 +171,7 @@ class TextEditor : public EditorBase,
    * <br> element for empty editor, returns true.  If editor's root element has
    * non-empty text nodes or other nodes like <br>, returns false.
    */
-  nsresult IsEmpty(bool* aIsEmpty) const;
-  bool IsEmpty() const {
-    bool isEmpty = false;
-    nsresult rv = IsEmpty(&isEmpty);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "Checking whether the editor is empty failed");
-    return NS_SUCCEEDED(rv) && isEmpty;
-  }
+  virtual bool IsEmpty() const;
 
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult HandleKeyPressEvent(

@@ -1700,15 +1700,6 @@ class EditorBase : public nsIEditor,
                                               nsIContent& aRightNode);
 
   /**
-   * HasPaddingBRElementForEmptyEditor() returns true if there is a padding
-   * <br> element for empty editor.  When this returns true, it means that
-   * we're empty.
-   */
-  bool HasPaddingBRElementForEmptyEditor() const {
-    return !!mPaddingBRElementForEmptyEditor;
-  }
-
-  /**
    * EnsureNoPaddingBRElementForEmptyEditor() removes padding <br> element
    * for empty editor if there is.
    */
