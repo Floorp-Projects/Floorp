@@ -378,7 +378,10 @@ class EntryGetter {
       : mBlockIt(aReader.At(
             BlocksRingBuffer::BlockIndex::ConvertFromU64(aInitialReadPos))),
         mBlockItEnd(aReader.end()) {
-    Read();
+    if (!ReadLegacyOrEnd()) {
+      // Find and read the next non-legacy entry.
+      Next();
+    }
   }
 
   bool Has() const { return mBlockIt != mBlockItEnd; }
@@ -390,8 +393,14 @@ class EntryGetter {
 
   void Next() {
     MOZ_ASSERT(Has(), "Caller should have checked `Has()` before `Next()`");
-    ++mBlockIt;
-    Read();
+    for (;;) {
+      ++mBlockIt;
+      if (ReadLegacyOrEnd()) {
+        // Either we're at the end, or we could read a legacy entry -> Done.
+        break;
+      }
+      // Otherwise loop around until we hit the end or a legacy entry.
+    }
   }
 
   ProfileBuffer::BlockIndex CurBlockIndex() const {
@@ -401,12 +410,27 @@ class EntryGetter {
   uint64_t CurPos() const { return CurBlockIndex().ConvertToU64(); }
 
  private:
-  void Read() {
+  // Try to read the entry at the current `mBlockIt` position.
+  // * If we're at the end of the buffer, just return `true`.
+  // * If there is a "legacy" entry (containing a real `ProfileBufferEntry`),
+  //   read it into `mEntry`, and return `true` as well.
+  // * Otherwise the entry contains a "modern" type that cannot be read into
+  // `mEntry`, return `false` (so `EntryGetter` can skip to another entry).
+  bool ReadLegacyOrEnd() {
     if (!Has()) {
-      return;
+      return true;
     }
     BlocksRingBuffer::EntryReader aER = *mBlockIt;
+    auto type = static_cast<ProfileBufferEntry::Kind>(
+        aER.PeekObject<ProfileBufferEntry::KindUnderlyingType>());
+    MOZ_ASSERT(static_cast<ProfileBufferEntry::KindUnderlyingType>(type) <
+               static_cast<ProfileBufferEntry::KindUnderlyingType>(
+                   ProfileBufferEntry::Kind::MODERN_LIMIT));
+    if (type >= ProfileBufferEntry::Kind::LEGACY_LIMIT) {
+      return false;
+    }
     aER.Read(&mEntry, aER.RemainingBytes());
+    return true;
   }
 
   ProfileBufferEntry mEntry;
@@ -766,6 +790,7 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
 
       // Skip over the markers. We process them in StreamMarkersToJSON().
       while (e.Has()) {
+        MOZ_ASSERT(!e.Get().IsMarker());
         if (e.Get().IsMarker()) {
           e.Next();
         } else {
@@ -788,28 +813,38 @@ void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
                                         const TimeStamp& aProcessStartTime,
                                         double aSinceTime,
                                         UniqueStacks& aUniqueStacks) const {
-  mEntries.Read([&](BlocksRingBuffer::Reader* aReader) {
-    MOZ_ASSERT(
-        aReader,
-        "BlocksRingBuffer cannot be out-of-session when sampler is running");
+  mEntries.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+    auto type = static_cast<ProfileBufferEntry::Kind>(
+        aER.ReadObject<ProfileBufferEntry::KindUnderlyingType>());
+    MOZ_ASSERT(static_cast<ProfileBufferEntry::KindUnderlyingType>(type) <
+               static_cast<ProfileBufferEntry::KindUnderlyingType>(
+                   ProfileBufferEntry::Kind::MODERN_LIMIT));
+    if (type == ProfileBufferEntry::Kind::MarkerData &&
+        aER.ReadObject<int>() == aThreadId) {
+      // Adapted from ProfilerMarker::StreamJSON()
 
-    EntryGetter e(*aReader);
+      // Schema:
+      //   [name, time, category, data]
 
-    // Stream all markers whose threadId matches aThreadId. We skip other
-    // entries, because we process them in StreamSamplesToJSON().
-    //
-    // NOTE: The ThreadId of a marker is determined by its GetThreadId() method,
-    // rather than ThreadId buffer entries, as markers can be added outside of
-    // samples.
-    while (e.Has()) {
-      if (e.Get().IsMarker()) {
-        const ProfilerMarker* marker = e.Get().GetMarker();
-        if (marker->GetTime() >= aSinceTime &&
-            marker->GetThreadId() == aThreadId) {
-          marker->StreamJSON(aWriter, aProcessStartTime, aUniqueStacks);
+      aWriter.StartArrayElement();
+      {
+        std::string name = aER.ReadObject<std::string>();
+        const ProfilingCategoryPairInfo& info = GetProfilingCategoryPairInfo(
+            static_cast<ProfilingCategoryPair>(aER.ReadObject<uint32_t>()));
+        auto payload = aER.ReadObject<UniquePtr<ProfilerMarkerPayload>>();
+        double time = aER.ReadObject<double>();
+        MOZ_ASSERT(aER.IndexInEntry() == aER.EntryBytes());
+
+        aUniqueStacks.mUniqueStrings->WriteElement(aWriter, name.c_str());
+        aWriter.DoubleElement(time);
+        aWriter.IntElement(unsigned(info.mCategory));
+        if (payload) {
+          aWriter.StartObjectElement(SpliceableJSONWriter::SingleLineStyle);
+          { payload->StreamPayload(aWriter, aProcessStartTime, aUniqueStacks); }
+          aWriter.EndObject();
         }
       }
-      e.Next();
+      aWriter.EndArray();
     }
   });
 }
