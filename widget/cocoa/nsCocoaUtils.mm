@@ -7,6 +7,7 @@
 
 #include <cmath>
 
+#include "AppleUtils.h"
 #include "gfx2DGlue.h"
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
@@ -1186,6 +1187,79 @@ nsresult nsCocoaUtils::GetVideoCapturePermissionState(uint16_t& aPermissionState
 
 nsresult nsCocoaUtils::GetAudioCapturePermissionState(uint16_t& aPermissionState) {
   return GetPermissionState(AVMediaTypeAudio, aPermissionState);
+}
+
+// Set |aPermissionState| to PERMISSION_STATE_AUTHORIZED if this application
+// has already been granted permission to record the screen in macOS Security
+// and Privacy system settings. If we do not have permission (because the user
+// hasn't yet been asked yet or the user previously denied the prompt), use
+// PERMISSION_STATE_DENIED. Returns NS_ERROR_NOT_IMPLEMENTED on macOS 10.14
+// and earlier.
+nsresult nsCocoaUtils::GetScreenCapturePermissionState(uint16_t& aPermissionState) {
+  aPermissionState = nsIOSPermissionRequest::PERMISSION_STATE_NOTDETERMINED;
+
+  // Only attempt to check screen recording authorization status on 10.15+.
+  // On earlier macOS versions, screen recording is allowed by default.
+  if (@available(macOS 10.15, *)) {
+    // Unlike with camera and microphone capture, there is no support for
+    // checking the screen recording permission status. Instead, an application
+    // can use the presence of window names (which are privacy sensitive) in
+    // the window info list as an indication. The list only includes window
+    // names if the calling application has been authorized to record the
+    // screen. However, this does not allow us to differentiate between the
+    // denied and not-yet-decided state which is what is what
+    // AVAuthorizationStatusNotDetermined indicates for camera and microphone.
+    AutoCFRelease<CFArrayRef> windowArray =
+        CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly, kCGNullWindowID);
+    if (!windowArray) {
+      LOG("GetScreenCapturePermissionState() ERROR: got NULL window info list");
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    CFIndex windowCount = CFArrayGetCount(windowArray);
+    LOG("GetScreenCapturePermissionState() returned %ld windows", windowCount);
+    if (windowCount == 0) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    uint32_t windowsWithNames = 0;
+    for (CFIndex i = 0; i < windowCount; i++) {
+      CFDictionaryRef windowDict =
+          reinterpret_cast<CFDictionaryRef>(CFArrayGetValueAtIndex(windowArray, i));
+
+      // Check for the presence of the window name
+      CFStringRef windowName =
+          reinterpret_cast<CFStringRef>(CFDictionaryGetValue(windowDict, kCGWindowName));
+      if (windowName) {
+        windowsWithNames++;
+      } else {
+        // We encountered a window with no name property indicating we
+        // don't have screen recording permission. No need to continue.
+        break;
+      }
+    }
+
+    LOG("GetScreenCapturePermissionState(): %d/%d named windows", windowsWithNames,
+        (uint32_t)windowCount);
+
+    if (windowsWithNames == windowCount) {
+      // All windows in the list have the name property. We have already
+      // been given permission to record the screen.
+      LOG("screen authorization status: authorized");
+      aPermissionState = nsIOSPermissionRequest::PERMISSION_STATE_AUTHORIZED;
+    } else {
+      // We don't have permission to record the screen and we can't
+      // differntiate between the scenario when the user explicitly
+      // denied permission and when the user has not been asked yet.
+      LOG("screen authorization status: not authorized");
+      aPermissionState = nsIOSPermissionRequest::PERMISSION_STATE_DENIED;
+    }
+
+    return NS_OK;
+  }
+
+  LOG("GetScreenCapturePermissionState(): nothing to do, not on 10.15+");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult nsCocoaUtils::RequestVideoCapturePermission(RefPtr<Promise>& aPromise) {
