@@ -9,6 +9,7 @@
 #ifndef BaseProfilerDetail_h
 #define BaseProfilerDetail_h
 
+#include "mozilla/Maybe.h"
 #include "mozilla/PlatformMutex.h"
 
 #ifdef DEBUG
@@ -98,6 +99,70 @@ class MOZ_RAII BaseProfilerAutoLock {
 
  private:
   BaseProfilerMutex& mMutex;
+};
+
+// Thin shell around mozglue PlatformMutex, for Base Profiler internal use.
+// Actual mutex may be disabled at construction time.
+// Does not preserve behavior in JS record/replay.
+class BaseProfilerMaybeMutex : private ::mozilla::detail::MutexImpl {
+ public:
+  explicit BaseProfilerMaybeMutex(bool aActivate) {
+    if (aActivate) {
+      mMaybeMutex.emplace();
+    }
+  }
+
+  BaseProfilerMaybeMutex(const BaseProfilerMaybeMutex&) = delete;
+  BaseProfilerMaybeMutex& operator=(const BaseProfilerMaybeMutex&) = delete;
+  BaseProfilerMaybeMutex(BaseProfilerMaybeMutex&&) = delete;
+  BaseProfilerMaybeMutex& operator=(BaseProfilerMaybeMutex&&) = delete;
+
+  ~BaseProfilerMaybeMutex() = default;
+
+  bool IsActivated() const { return mMaybeMutex.isSome(); }
+
+  void Lock() {
+    if (IsActivated()) {
+      mMaybeMutex->Lock();
+    }
+  }
+
+  void Unlock() {
+    if (IsActivated()) {
+      mMaybeMutex->Unlock();
+    }
+  }
+
+  void AssertCurrentThreadOwns() const {
+#ifdef MOZ_BASE_PROFILER_DEBUG
+    if (IsActivated()) {
+      mMaybeMutex->AssertCurrentThreadOwns();
+    }
+#endif  // MOZ_BASE_PROFILER_DEBUG
+  }
+
+ private:
+  Maybe<BaseProfilerMutex> mMaybeMutex;
+};
+
+// RAII class to lock a mutex.
+class MOZ_RAII BaseProfilerMaybeAutoLock {
+ public:
+  explicit BaseProfilerMaybeAutoLock(BaseProfilerMaybeMutex& aMaybeMutex)
+      : mMaybeMutex(aMaybeMutex) {
+    mMaybeMutex.Lock();
+  }
+
+  BaseProfilerMaybeAutoLock(const BaseProfilerMaybeAutoLock&) = delete;
+  BaseProfilerMaybeAutoLock& operator=(const BaseProfilerMaybeAutoLock&) =
+      delete;
+  BaseProfilerMaybeAutoLock(BaseProfilerMaybeAutoLock&&) = delete;
+  BaseProfilerMaybeAutoLock& operator=(BaseProfilerMaybeAutoLock&&) = delete;
+
+  ~BaseProfilerMaybeAutoLock() { mMaybeMutex.Unlock(); }
+
+ private:
+  BaseProfilerMaybeMutex& mMaybeMutex;
 };
 
 }  // namespace detail
