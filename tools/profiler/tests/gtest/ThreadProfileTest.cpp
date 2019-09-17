@@ -14,40 +14,46 @@
 // Make sure we can record one entry and read it
 TEST(ThreadProfile, InsertOneEntry)
 {
-  mozilla::BlocksRingBuffer blocksRingBuffer(
-      BlocksRingBuffer::ThreadSafety::WithMutex);
-  auto pb = MakeUnique<ProfileBuffer>(
-      blocksRingBuffer,
-      mozilla::PowerOfTwo32(2 * (1 + uint32_t(sizeof(ProfileBufferEntry)))));
+  auto pb = MakeUnique<ProfileBuffer>(mozilla::PowerOfTwo32(10));
   pb->AddEntry(ProfileBufferEntry::Time(123.1));
-  ProfileBufferEntry entry = pb->GetEntry(pb->BufferRangeStart());
-  ASSERT_TRUE(entry.IsTime());
-  ASSERT_EQ(123.1, entry.GetDouble());
+  ASSERT_TRUE(pb->GetEntry(pb->mRangeStart).IsTime());
+  ASSERT_TRUE(pb->GetEntry(pb->mRangeStart).GetDouble() == 123.1);
 }
 
 // See if we can insert some entries
 TEST(ThreadProfile, InsertEntriesNoWrap)
 {
-  mozilla::BlocksRingBuffer blocksRingBuffer(
-      BlocksRingBuffer::ThreadSafety::WithMutex);
-  auto pb = MakeUnique<ProfileBuffer>(
-      blocksRingBuffer,
-      mozilla::PowerOfTwo32(100 * (1 + uint32_t(sizeof(ProfileBufferEntry)))));
-  const int test_size = 50;
+  auto pb = MakeUnique<ProfileBuffer>(mozilla::PowerOfTwo32(100));
+  int test_size = 50;
   for (int i = 0; i < test_size; i++) {
     pb->AddEntry(ProfileBufferEntry::Time(i));
   }
-  int times = 0;
-  uint64_t readPos = pb->BufferRangeStart();
-  while (readPos != pb->BufferRangeEnd()) {
-    ProfileBufferEntry entry = pb->GetEntry(readPos);
+  uint64_t readPos = pb->mRangeStart;
+  while (readPos != pb->mRangeEnd) {
+    ASSERT_TRUE(pb->GetEntry(readPos).IsTime());
+    ASSERT_TRUE(pb->GetEntry(readPos).GetDouble() == readPos);
     readPos++;
-    if (entry.GetKind() == ProfileBufferEntry::Kind::INVALID) {
-      continue;
-    }
-    ASSERT_TRUE(entry.IsTime());
-    ASSERT_EQ(times, entry.GetDouble());
-    times++;
   }
-  ASSERT_EQ(test_size, times);
+}
+
+// See if evicting works as it should in the basic case
+TEST(ThreadProfile, InsertEntriesWrap)
+{
+  int entries = 32;
+  auto pb = MakeUnique<ProfileBuffer>(mozilla::PowerOfTwo32(entries));
+  ASSERT_TRUE(pb->mRangeStart == 0);
+  ASSERT_TRUE(pb->mRangeEnd == 0);
+  int test_size = 43;
+  for (int i = 0; i < test_size; i++) {
+    pb->AddEntry(ProfileBufferEntry::Time(i));
+  }
+  // We inserted 11 more entries than fit in the buffer, so the first 11 entries
+  // should have been evicted, and the range start should have increased to 11.
+  ASSERT_TRUE(pb->mRangeStart == 11);
+  uint64_t readPos = pb->mRangeStart;
+  while (readPos != pb->mRangeEnd) {
+    ASSERT_TRUE(pb->GetEntry(readPos).IsTime());
+    ASSERT_TRUE(pb->GetEntry(readPos).GetDouble() == readPos);
+    readPos++;
+  }
 }
