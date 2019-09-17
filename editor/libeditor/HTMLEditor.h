@@ -138,6 +138,14 @@ class HTMLEditor final : public TextEditor,
   NS_IMETHOD BeginningOfDocument() override;
   NS_IMETHOD SetFlags(uint32_t aFlags) override;
 
+  /**
+   * IsEmpty() checks whether the editor is empty.  If editor has only padding
+   * <br> element for empty editor, returns true.  If editor's root element has
+   * non-empty text nodes or other nodes like <br>, returns false even if there
+   * are only empty blocks.
+   */
+  virtual bool IsEmpty() const override;
+
   virtual bool CanPaste(int32_t aClipboardType) const override;
   using EditorBase::CanPaste;
 

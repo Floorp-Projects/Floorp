@@ -181,15 +181,6 @@ nsresult TextEditRules::AfterEdit() {
   return NS_OK;
 }
 
-bool TextEditRules::DocumentIsEmpty() const {
-  bool retVal = false;
-  if (!mTextEditor || NS_FAILED(mTextEditor->IsEmpty(&retVal))) {
-    retVal = true;
-  }
-
-  return retVal;
-}
-
 EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(!AsHTMLEditor());
@@ -725,7 +716,7 @@ EditActionResult TextEditor::HandleDeleteSelection(
 
   // if there is only padding <br> element for empty editor, cancel the
   // operation.
-  if (HasPaddingBRElementForEmptyEditor()) {
+  if (mPaddingBRElementForEmptyEditor) {
     return EditActionCanceled();
   }
   EditActionResult result =
@@ -801,7 +792,7 @@ EditActionResult TextEditor::ComputeValueFromTextNodeAndPaddingBRElement(
 
   // If there is a padding <br> element, there's no content.  So output empty
   // string.
-  if (HasPaddingBRElementForEmptyEditor()) {
+  if (mPaddingBRElementForEmptyEditor) {
     aValue.Truncate();
     return EditActionHandled();
   }
