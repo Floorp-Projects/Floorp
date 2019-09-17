@@ -129,6 +129,7 @@ class PannerNode final : public AudioNode {
       aRv.ThrowRangeError(
           u"The rolloffFactor value passed to PannerNode must not be "
           u"negative.");
+      return;
     }
 
     mRolloffFactor = aRolloffFactor;
