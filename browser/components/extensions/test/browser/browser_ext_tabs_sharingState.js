@@ -5,10 +5,16 @@ add_task(async function test_tabs_mediaIndicators() {
     set: [["extensions.webextensions.tabhide.enabled", true]],
   });
 
+  let initialTab = gBrowser.selectedTab;
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    "http://example.com/"
+    "http://example.com/#tab-sharing"
   );
+
+  // Ensure that the tab to hide is not selected (otherwise
+  // it will not be hidden because it is selected).
+  gBrowser.selectedTab = initialTab;
+
   // updateBrowserSharing is called when a request for media icons occurs.  We're
   // just testing that extension tabs get the info and are updated when it is
   // called.
@@ -22,8 +28,16 @@ add_task(async function test_tabs_mediaIndicators() {
   });
 
   async function background() {
-    let tabs = await browser.tabs.query({ microphone: true });
+    let tabs = await browser.tabs.query({ url: "http://example.com/*" });
     let testTab = tabs[0];
+
+    browser.test.assertEq(
+      testTab.url,
+      "http://example.com/#tab-sharing",
+      "Got the expected tab url"
+    );
+
+    browser.test.assertFalse(testTab.active, "test tab should not be selected");
 
     let state = testTab.sharingState;
     browser.test.assertTrue(state.camera, "sharing camera was turned on");
@@ -49,14 +63,27 @@ add_task(async function test_tabs_mediaIndicators() {
     tabs = await browser.tabs.query({ hidden: true });
     browser.test.assertEq(tabs.length, 0, "unable to hide sharing tab");
 
-    browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       if (testTab.id !== tabId) {
         return;
       }
-      let state = tab.sharingState;
+      let state = changeInfo.sharingState;
+
+      // Ignore tab update events unrelated to the sharing state.
+      if (!state) {
+        return;
+      }
+
       browser.test.assertFalse(state.camera, "sharing camera was turned off");
       browser.test.assertFalse(state.microphone, "sharing mic was turned off");
       browser.test.assertFalse(state.screen, "sharing screen was turned off");
+
+      // Verify we can hide the tab once it is not shared over webRTC anymore.
+      let hidden = await browser.tabs.hide(testTab.id);
+      browser.test.assertEq(hidden.length, 1, "tab hidden successfully");
+      tabs = await browser.tabs.query({ hidden: true });
+      browser.test.assertEq(tabs.length, 1, "hidden tab found");
+
       browser.test.notifyPass("done");
     });
     browser.test.sendMessage("ready");
@@ -73,7 +100,12 @@ add_task(async function test_tabs_mediaIndicators() {
   // Test that onUpdated is called after the sharing state is changed from
   // chrome code.
   await extension.awaitMessage("ready");
-  gBrowser.resetBrowserSharing(tab.linkedBrowser);
+
+  info("Updating browser sharing on the test tab");
+
+  // Clear only the webRTC part of the browser sharing state
+  // (used to test Bug 1577480 regression fix).
+  gBrowser.updateBrowserSharing(tab.linkedBrowser, { webRTC: null });
 
   await extension.awaitFinish("done");
   await extension.unload();
