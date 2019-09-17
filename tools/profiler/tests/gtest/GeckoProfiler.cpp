@@ -40,7 +40,8 @@ TEST(BaseProfiler, BlocksRingBuffer)
   for (size_t i = 0; i < MBSize * 3; ++i) {
     buffer[i] = uint8_t('A' + i);
   }
-  BlocksRingBuffer rb(&buffer[MBSize], MakePowerOfTwo32<MBSize>());
+  BlocksRingBuffer rb(BlocksRingBuffer::ThreadSafety::WithMutex,
+                      &buffer[MBSize], MakePowerOfTwo32<MBSize>());
 
   {
     nsCString cs(NS_LITERAL_CSTRING("nsCString"));
