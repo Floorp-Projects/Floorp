@@ -15,11 +15,11 @@ interface mozISyncedBookmarksMirrorProgressListener : nsISupports {
   // taken to build the tree, number of items in the tree, and a map of
   // structure problem counts for validation telemetry.
   void onFetchLocalTree(in long long took, in long long itemCount,
-                        in nsIPropertyBag problems);
+                        in long long deletedCount, in nsIPropertyBag problems);
 
   // Called after the merger builds the remote tree from the mirror database.
   void onFetchRemoteTree(in long long took, in long long itemCount,
-                         in nsIPropertyBag problems);
+                         in long long deletedCount, in nsIPropertyBag problems);
 
   // Called after the merger builds the merged tree, including structure change
   // counts for event telemetry.
