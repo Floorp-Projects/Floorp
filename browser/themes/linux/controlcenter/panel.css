@@ -24,3 +24,7 @@
 #protections-popup toolbarbutton:not([disabled="true"]):hover:active {
   color: inherit;
 }
+
+.protections-popup-tp-switch:-moz-focusring {
+  outline: 1px dotted;
+}
