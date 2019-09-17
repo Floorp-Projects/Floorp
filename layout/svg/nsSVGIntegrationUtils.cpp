@@ -26,6 +26,7 @@
 #include "FrameLayerBuilder.h"
 #include "BasicLayers.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "nsCSSRendering.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/Unused.h"
@@ -1206,6 +1207,20 @@ bool nsSVGIntegrationUtils::CanCreateWebRenderFiltersForFrame(
   auto filterChain = aFrame->StyleEffects()->mFilters.AsSpan();
   return CreateWebRenderCSSFilters(filterChain, aFrame, wrFilters) ||
          BuildWebRenderFilters(aFrame, filterChain, wrFilters, filterClip);
+}
+
+bool nsSVGIntegrationUtils::UsesSVGEffectsNotSupportedInCompositor(
+    nsIFrame* aFrame) {
+  // WebRender supports masks / clip-paths and some filters in the compositor.
+  // Non-WebRender doesn't support any SVG effects in the compositor.
+  if (aFrame->StyleEffects()->HasFilters()) {
+    return !gfx::gfxVars::UseWebRender() ||
+           !nsSVGIntegrationUtils::CanCreateWebRenderFiltersForFrame(aFrame);
+  }
+  if (nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(aFrame)) {
+    return !gfx::gfxVars::UseWebRender();
+  }
+  return false;
 }
 
 class PaintFrameCallback : public gfxDrawingCallback {
