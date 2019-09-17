@@ -227,7 +227,7 @@ class Sandbox(dict):
             raise SandboxExecutionError(source_stack, type(actual), actual,
                                         sys.exc_info()[2])
 
-        except Exception as e:
+        except Exception:
             # Need to copy the stack otherwise we get a reference and that is
             # mutated during the finally.
             exc = sys.exc_info()
