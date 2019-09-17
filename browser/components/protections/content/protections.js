@@ -15,7 +15,7 @@ window.addEventListener("beforeunload", () => {
 
 document.addEventListener("DOMContentLoaded", e => {
   let todayInMs = Date.now();
-  let weekAgoInMs = todayInMs - 7 * 24 * 60 * 60 * 1000;
+  let weekAgoInMs = todayInMs - 6 * 24 * 60 * 60 * 1000;
   RPMSendAsyncMessage("FetchContentBlockingEvents", {
     from: weekAgoInMs,
     to: todayInMs,
