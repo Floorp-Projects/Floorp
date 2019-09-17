@@ -84,46 +84,43 @@ class AdbProcess extends EventEmitter {
   // We startup by launching adb in server mode, and setting
   // the tcp socket preference to |true|
   async start() {
-    return new Promise(async (resolve, reject) => {
-      const onSuccessfulStart = () => {
-        this._ready = true;
-        this.emit("adb-ready");
-        resolve();
-      };
+    const onSuccessfulStart = () => {
+      this._ready = true;
+      this.emit("adb-ready");
+    };
 
-      const isAdbRunning = await check();
-      if (isAdbRunning) {
-        dumpn("Found ADB process running, not restarting");
-        onSuccessfulStart();
-        return;
-      }
-      dumpn("Didn't find ADB process running, restarting");
+    const isAdbRunning = await check();
+    if (isAdbRunning) {
+      dumpn("Found ADB process running, not restarting");
+      onSuccessfulStart();
+      return;
+    }
+    dumpn("Didn't find ADB process running, restarting");
 
-      this._didRunInitially = true;
-      const process = Cc["@mozilla.org/process/util;1"].createInstance(
-        Ci.nsIProcess
-      );
+    this._didRunInitially = true;
+    const process = Cc["@mozilla.org/process/util;1"].createInstance(
+      Ci.nsIProcess
+    );
 
-      // FIXME: Bug 1481691 - We should avoid extracting files every time.
-      const adbFile = await this._getAdbFile();
-      process.init(adbFile);
-      // Hide command prompt window on Windows
-      process.startHidden = true;
-      process.noShell = true;
-      const params = ["start-server"];
-      let isStarted = false;
-      try {
-        await this._runProcess(process, params);
-        isStarted = await waitUntil(check);
-      } catch (e) {}
+    // FIXME: Bug 1481691 - We should avoid extracting files every time.
+    const adbFile = await this._getAdbFile();
+    process.init(adbFile);
+    // Hide command prompt window on Windows
+    process.startHidden = true;
+    process.noShell = true;
+    const params = ["start-server"];
+    let isStarted = false;
+    try {
+      await this._runProcess(process, params);
+      isStarted = await waitUntil(check);
+    } catch (e) {}
 
-      if (isStarted) {
-        onSuccessfulStart();
-      } else {
-        this._ready = false;
-        reject();
-      }
-    });
+    if (isStarted) {
+      onSuccessfulStart();
+    } else {
+      this._ready = false;
+      throw new Error("ADB Process didn't start");
+    }
   }
 
   /**

@@ -89,12 +89,12 @@ class ChangesView {
     if (this.changesFrontPromise) {
       return this.changesFrontPromise;
     }
-    this.changesFrontPromise = new Promise(async resolve => {
+    this.changesFrontPromise = (async () => {
       const target = this.inspector.currentTarget;
       const front = await target.getFront("changes");
       this.onChangesFront(front);
-      resolve(front);
-    });
+      return front;
+    })();
     return this.changesFrontPromise;
   }
 

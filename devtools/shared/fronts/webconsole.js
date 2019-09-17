@@ -200,7 +200,7 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
    * Evaluate a JavaScript expression asynchronously.
    * See evaluateJS for parameter and response information.
    */
-  evaluateJSAsync(string, opts = {}) {
+  async evaluateJSAsync(string, opts = {}) {
     const options = {
       text: string,
       frameActor: opts.frameActor,
@@ -210,8 +210,8 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
       mapped: opts.mapped,
     };
 
-    return new Promise(async (resolve, reject) => {
-      const { resultID } = await super.evaluateJSAsync(options);
+    const { resultID } = await super.evaluateJSAsync(options);
+    return new Promise((resolve, reject) => {
       // Null check this in case the client has been detached while sending
       // the one way request
       if (this.pendingEvaluationResults) {
