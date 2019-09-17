@@ -140,7 +140,6 @@ nrappkit copyright:
 
 #  include "mozilla/dom/network/TCPSocketChild.h"
 #  include "mozilla/dom/network/UDPSocketChild.h"
-#  include "nr_socket_tcp.h"
 
 #  ifdef LOG_TEMP_INFO
 #    define LOG_INFO LOG_TEMP_INFO
@@ -171,6 +170,8 @@ extern "C" {
 #include "nr_socket_prsock.h"
 #include "simpletokenbucket.h"
 #include "test_nr_socket.h"
+#include "nr_socket_tcp.h"
+#include "nr_socket_proxy_config.h"
 
 // Implement the nsISupports ref counting
 namespace mozilla {
@@ -2077,6 +2078,11 @@ int NrSocketBase::CreateSocket(
   int r, _status;
 
   if (IsForbiddenAddress(addr)) {
+    ABORT(R_REJECTED);
+  }
+
+  if (config && config->GetProxyPolicy() == NrSocketProxyConfig::kForceProxy &&
+      addr->protocol == IPPROTO_UDP) {
     ABORT(R_REJECTED);
   }
 
