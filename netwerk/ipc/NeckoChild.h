@@ -28,7 +28,7 @@ class NeckoChild : public PNeckoChild {
   PStunAddrsRequestChild* AllocPStunAddrsRequestChild();
   bool DeallocPStunAddrsRequestChild(PStunAddrsRequestChild* aActor);
 
-  PWebrtcTCPSocketChild* AllocPWebrtcTCPSocketChild(const TabId& tabId);
+  PWebrtcTCPSocketChild* AllocPWebrtcTCPSocketChild(const Maybe<TabId>& tabId);
   bool DeallocPWebrtcTCPSocketChild(PWebrtcTCPSocketChild* aActor);
 
   PAltDataOutputStreamChild* AllocPAltDataOutputStreamChild(

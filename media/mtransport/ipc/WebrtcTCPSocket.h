@@ -54,9 +54,9 @@ class WebrtcTCPSocket : public nsIHttpUpgradeListener,
   void SetTabId(dom::TabId aTabId);
   nsresult Open(const nsCString& aHost, const int& aPort,
                 const nsCString& aLocalAddress, const int& aLocalPort,
-                bool aUseTls, const net::LoadInfoArgs& aArgs,
-                const nsCString& aAlpn,
-                NrSocketProxyConfig::ProxyPolicy aProxyPolicy);
+                bool aUseTls, const Maybe<net::LoadInfoArgs>& aArgs,
+                const Maybe<nsCString>& aAlpn,
+                const Maybe<NrSocketProxyConfig::ProxyPolicy>& aProxyPolicy);
   nsresult Write(nsTArray<uint8_t>&& aBytes);
   nsresult Close();
 
