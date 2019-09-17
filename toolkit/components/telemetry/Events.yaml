@@ -390,7 +390,7 @@ urlbar:
         type of the selected result in the urlbar panel. One of:
           "autofill", "visit", "bookmark", "history", "keyword", "search",
           "searchsuggestion", "switchtab", "remotetab", "extension", "oneoff",
-          "keywordoffer", "canonized", "none"
+          "keywordoffer", "canonized", "tip", "tiphelp", "none"
   abandonment:
     objects: ["blur"]
     release_channel_collection: opt-out
