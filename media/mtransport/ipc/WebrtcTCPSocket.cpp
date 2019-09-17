@@ -136,12 +136,11 @@ void WebrtcTCPSocket::CloseWithReason(nsresult aReason) {
   InvokeOnClose(aReason);
 }
 
-nsresult WebrtcTCPSocket::Open(const nsCString& aHost, const int& aPort,
-                               const nsCString& aLocalAddress,
-                               const int& aLocalPort, bool aUseTls,
-                               const net::LoadInfoArgs& aArgs,
-                               const nsCString& aAlpn,
-                               NrSocketProxyConfig::ProxyPolicy aProxyPolicy) {
+nsresult WebrtcTCPSocket::Open(
+    const nsCString& aHost, const int& aPort, const nsCString& aLocalAddress,
+    const int& aLocalPort, bool aUseTls, const Maybe<net::LoadInfoArgs>& aArgs,
+    const Maybe<nsCString>& aAlpn,
+    const Maybe<NrSocketProxyConfig::ProxyPolicy>& aProxyPolicy) {
   LOG(("WebrtcTCPSocket::Open %p\n", this));
 
   if (NS_WARN_IF(mOpened)) {
@@ -165,21 +164,23 @@ nsresult WebrtcTCPSocket::Open(const nsCString& aHost, const int& aPort,
     return NS_ERROR_FAILURE;
   }
 
-  mLoadInfoArgs = aArgs;
-  mAlpn = aAlpn;
   mTls = aUseTls;
-  if (aProxyPolicy == NrSocketProxyConfig::kForceProxy) {
-    mForceProxy = true;
-  }
   mLocalAddress = aLocalAddress;
   mLocalPort = aLocalPort;
 
-  if (aProxyPolicy == NrSocketProxyConfig::kDisableProxy) {
-    rv = OpenWithoutHttpProxy(nullptr);
-  } else {
-    // We need to figure out whether a proxy needs to be used for mURI before we
-    // can start on establishing a connection.
+  if (aProxyPolicy.isSome() &&
+      *aProxyPolicy != NrSocketProxyConfig::kDisableProxy) {
+    mLoadInfoArgs = *aArgs;
+    mAlpn = *aAlpn;
+    if (*aProxyPolicy == NrSocketProxyConfig::kForceProxy) {
+      mForceProxy = true;
+    }
+
+    // We need to figure out whether a proxy needs to be used for mURI before
+    // we can start on establishing a connection.
     rv = DoProxyConfigLookup();
+  } else {
+    rv = OpenWithoutHttpProxy(nullptr);
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {

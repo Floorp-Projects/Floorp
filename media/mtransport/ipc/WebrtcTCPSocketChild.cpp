@@ -65,9 +65,9 @@ WebrtcTCPSocketChild::~WebrtcTCPSocketChild() {
 
 void WebrtcTCPSocketChild::AsyncOpen(
     const nsCString& aHost, const int& aPort, const nsCString& aLocalAddress,
-    const int& aLocalPort, bool aUseTls, const net::LoadInfoArgs& aArgs,
-    const nsCString& aAlpn, const dom::TabId& aTabId,
-    NrSocketProxyConfig::ProxyPolicy aProxyPolicy) {
+    const int& aLocalPort, bool aUseTls, const Maybe<net::LoadInfoArgs>& aArgs,
+    const Maybe<nsCString>& aAlpn, const Maybe<dom::TabId>& aTabId,
+    const Maybe<NrSocketProxyConfig::ProxyPolicy>& aProxyPolicy) {
   LOG(("WebrtcTCPSocketChild::AsyncOpen %p %s:%d\n", this, aHost.get(), aPort));
 
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");

@@ -143,7 +143,8 @@ parent:
 
   async PStunAddrsRequest();
 
-  async PWebrtcTCPSocket(TabId tabId);
+  /* tabId is only required for web-proxy support, which isn't always needed */
+  async PWebrtcTCPSocket(TabId? tabId);
 
   async PProxyConfigLookup();
 

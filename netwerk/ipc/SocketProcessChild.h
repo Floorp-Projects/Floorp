@@ -45,8 +45,7 @@ class SocketProcessChild final : public PSocketProcessChild {
       Endpoint<mozilla::PProfilerChild>&& aEndpoint);
   mozilla::ipc::IPCResult RecvSocketProcessTelemetryPing();
 
-  PWebrtcTCPSocketChild* AllocPWebrtcTCPSocketChild(
-      const PBrowserOrId& browser);
+  PWebrtcTCPSocketChild* AllocPWebrtcTCPSocketChild(const Maybe<TabId>& tabId);
   bool DeallocPWebrtcTCPSocketChild(PWebrtcTCPSocketChild* aActor);
   PDNSRequestChild* AllocPDNSRequestChild(
       const nsCString& aHost, const OriginAttributes& aOriginAttributes,

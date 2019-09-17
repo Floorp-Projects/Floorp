@@ -195,7 +195,7 @@ void SocketProcessChild::DestroySocketProcessBridgeParent(ProcessId aId) {
 }
 
 PWebrtcTCPSocketChild* SocketProcessChild::AllocPWebrtcTCPSocketChild(
-    const PBrowserOrId& browser) {
+    const Maybe<TabId>& tabId) {
   // We don't allocate here: instead we always use IPDL constructor that takes
   // an existing object
   MOZ_ASSERT_UNREACHABLE(

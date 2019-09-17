@@ -123,7 +123,7 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvRecordDiscardedData(
 }
 
 PWebrtcTCPSocketParent* SocketProcessParent::AllocPWebrtcTCPSocketParent(
-    const TabId& aTabId) {
+    const Maybe<TabId>& aTabId) {
 #ifdef MOZ_WEBRTC
   WebrtcTCPSocketParent* parent = new WebrtcTCPSocketParent(aTabId);
   parent->AddRef();
