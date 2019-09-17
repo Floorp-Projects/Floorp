@@ -90,6 +90,25 @@ class MediaStateMachineTest {
     }
 
     @Test
+    fun `Resetting the media state`() {
+        val sessionManager = SessionManager(mock())
+
+        MediaStateMachine.start(sessionManager)
+
+        MediaStateMachine.transitionTo(MediaState.Playing(mock(), listOf(mock())))
+        assertTrue(MediaStateMachine.state is MediaState.Playing)
+
+        MediaStateMachine.reset()
+        assertEquals(MediaState.None, MediaStateMachine.state)
+
+        MediaStateMachine.transitionTo(MediaState.Paused(mock(), listOf(mock())))
+        assertTrue(MediaStateMachine.state is MediaState.Paused)
+
+        MediaStateMachine.reset()
+        assertEquals(MediaState.None, MediaStateMachine.state)
+    }
+
+    @Test
     fun `State is updated after session is removed`() {
         val sessionManager = SessionManager(mock())
 

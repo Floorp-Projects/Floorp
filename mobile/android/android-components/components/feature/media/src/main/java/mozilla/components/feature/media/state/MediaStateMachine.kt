@@ -67,6 +67,13 @@ object MediaStateMachine : Observable<MediaStateMachine.Observer> by ObserverReg
         state = MediaState.None
     }
 
+    /**
+     * Resets the [MediaState] to [MediaState.None].
+     */
+    fun reset() {
+        state = MediaState.None
+    }
+
     @Synchronized
     internal fun transitionTo(state: MediaState) {
         if (this.state == state) {

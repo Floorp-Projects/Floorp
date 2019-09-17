@@ -37,6 +37,11 @@ fun MediaState.getSession(): Session? {
 }
 
 /**
+ * Returns true if this [MediaState] is associated with a Custom Tab [Session].
+ */
+fun MediaState.isForCustomTabSession() = getSession()?.isCustomTabSession() ?: false
+
+/**
  * Turns the [MediaState] into a [PlaybackStateCompat] to be used with a `MediaSession`.
  */
 internal fun MediaState.toPlaybackState() =

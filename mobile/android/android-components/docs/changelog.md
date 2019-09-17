@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-media**
+  * Playback will now be stopped and the media notification will get removed if the app's task is getting removed (app is swiped away in task switcher).
+
 # 13.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v12.0.0...v13.0.0)
