@@ -798,3 +798,13 @@ def target_tasks_raptor_tp6m(full_task_graph, parameters, graph_config):
                 return True
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+
+@_target_task('condprof')
+def target_tasks_condprof(full_task_graph, parameters, graph_config):
+    """
+    Select tasks required for building conditioned profiles.
+    """
+    for name, task in full_task_graph.tasks.iteritems():
+        if task.kind == "condprof":
+            yield name
