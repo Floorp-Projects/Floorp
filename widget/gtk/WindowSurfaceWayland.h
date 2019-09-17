@@ -161,6 +161,10 @@ class WindowImageSurface {
   WindowImageSurface(gfxImageSurface* aImageSurface,
                      const LayoutDeviceIntRegion& aUpdateRegion);
 
+  bool OverlapsSurface(class WindowImageSurface& aBottomSurface);
+
+  const LayoutDeviceIntRegion* GetUpdateRegion() { return &mUpdateRegion; };
+
  private:
   RefPtr<gfx::SourceSurface> mSurface;
   RefPtr<gfxImageSurface> mImageSurface;
@@ -226,12 +230,8 @@ class WindowSurfaceWayland : public WindowSurface {
   WindowBackBuffer* CreateWaylandBuffer(int aWidth, int aHeight);
   WindowBackBuffer* GetWaylandBufferToDraw(bool aCanSwitchBuffer);
 
-  already_AddRefed<gfx::DrawTarget> LockWaylandBuffer(bool aCanSwitchBuffer);
+  already_AddRefed<gfx::DrawTarget> LockWaylandBuffer();
   void UnlockWaylandBuffer();
-
-  bool CanDrawToWaylandBufferDirectly(
-      const LayoutDeviceIntRect& aScreenRect,
-      const LayoutDeviceIntRegion& aUpdatedRegion);
 
   already_AddRefed<gfx::DrawTarget> LockImageSurface(
       const gfx::IntSize& aLockSize);
@@ -285,6 +285,11 @@ class WindowSurfaceWayland : public WindowSurface {
   // to draw into.
   bool mDrawToWaylandBufferDirectly;
 
+  // Set when our cached drawings (mDelayedImageCommits) contains
+  // full screen damage. That means we can safely switch WaylandBuffer
+  // at LockWaylandBuffer().
+  bool mCanSwitchWaylandBuffer;
+
   // Set when actual WaylandBuffer contains drawings which are not send to
   // wayland compositor yet.
   bool mBufferPendingCommit;
@@ -295,11 +300,6 @@ class WindowSurfaceWayland : public WindowSurface {
   // Thus we use mBufferCommitAllowed to disable commit by callbacks
   // (FrameCallbackHandler(), DelayedCommitHandler())
   bool mBufferCommitAllowed;
-
-  // Set when WindowSurfaceWayland::Lock() requested drawing area matches
-  // nsWindow size. When whole window is repainted we can switch WaylandBuffer
-  // and throw away any cached drawings from previous rendering.
-  bool mWholeWindowBufferDamage;
 
   // We need to clear WaylandBuffer when entire transparent window is repainted.
   // This typically apply to popup windows.
