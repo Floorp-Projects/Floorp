@@ -11,11 +11,7 @@
 
 /* ::::: autocomplete ::::: */
 
-html|input[is="autocomplete-input"] {
-  margin: 2px 4px; /* matches xul <textbox> default margin */
-}
-
-html|input[nomatch="true"][highlightnonmatches="true"] {
+textbox[nomatch="true"][highlightnonmatches="true"] {
   color: red;
 }
 
