@@ -7,6 +7,7 @@
 #ifndef mozilla_net_DocumentChannelParent_h
 #define mozilla_net_DocumentChannelParent_h
 
+#include "mozilla/MozPromise.h"
 #include "mozilla/Variant.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/NeckoParent.h"
@@ -109,6 +110,11 @@ class DocumentChannelParent : public nsIInterfaceRequestor,
   void RedirectToRealChannelFinished(nsresult aRv);
 
   void FinishReplacementChannelSetup(bool aSucceeded);
+
+  typedef MozPromise<uint64_t, nsresult, false> ContentProcessIdPromise;
+  void TriggerCrossProcessSwitch(
+      already_AddRefed<ContentProcessIdPromise> aPromise, uint64_t aIdentifier,
+      nsHttpChannel* aChannel);
 
   // This defines a variant that describes all the attribute setters (and their
   // parameters) from nsIParentChannel

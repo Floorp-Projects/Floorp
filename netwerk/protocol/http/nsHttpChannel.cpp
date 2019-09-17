@@ -9,6 +9,7 @@
 
 #include <inttypes.h>
 
+#include "DocumentChannelParent.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
@@ -2579,18 +2580,26 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
       return NS_OK;
     }
 
-    // notify "http-on-may-change-process" observers
-    gHttpHandler->OnMayChangeProcess(this);
+    nsCOMPtr<nsIParentChannel> parentChannel;
+    NS_QueryNotificationCallbacks(this, parentChannel);
 
-    if (mRedirectContentProcessIdPromise) {
-      MOZ_ASSERT(!mOnStartRequestCalled);
+    RefPtr<DocumentChannelParent> documentChannelParent =
+        do_QueryObject(parentChannel);
 
-      PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse2);
-      rv = StartCrossProcessRedirect();
-      if (NS_SUCCEEDED(rv)) {
-        return NS_OK;
+    if (!documentChannelParent) {
+      // notify "http-on-may-change-process" observers
+      gHttpHandler->OnMayChangeProcess(this);
+
+      if (mRedirectContentProcessIdPromise) {
+        MOZ_ASSERT(!mOnStartRequestCalled);
+
+        PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse2);
+        rv = StartCrossProcessRedirect();
+        if (NS_SUCCEEDED(rv)) {
+          return NS_OK;
+        }
+        PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse2);
       }
-      PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse2);
     }
   }
 
@@ -7284,8 +7293,16 @@ NS_IMETHODIMP nsHttpChannel::SwitchProcessTo(
   LOG(("nsHttpChannel::SwitchProcessTo [this=%p]", this));
   LogCallingScriptLocation(this);
 
-  // We cannot do this after OnStartRequest of the listener has been called.
-  NS_ENSURE_FALSE(mOnStartRequestCalled, NS_ERROR_NOT_AVAILABLE);
+  nsCOMPtr<nsIParentChannel> parentChannel;
+  NS_QueryNotificationCallbacks(this, parentChannel);
+  RefPtr<DocumentChannelParent> documentChannelParent =
+      do_QueryObject(parentChannel);
+  // This is a temporary change as the DocumentChannelParent currently must go
+  // through the nsHttpChannel to perform a process switch via SessionStore.
+  if (!documentChannelParent) {
+    // We cannot do this after OnStartRequest of the listener has been called.
+    NS_ENSURE_FALSE(mOnStartRequestCalled, NS_ERROR_NOT_AVAILABLE);
+  }
 
   mRedirectContentProcessIdPromise =
       DomPromiseListener::Create(aContentProcessIdPromise);
@@ -7731,15 +7748,21 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
       return NS_OK;
     }
 
-    gHttpHandler->OnMayChangeProcess(this);
+    nsCOMPtr<nsIParentChannel> parentChannel;
+    NS_QueryNotificationCallbacks(this, parentChannel);
+    RefPtr<DocumentChannelParent> documentChannelParent =
+        do_QueryObject(parentChannel);
+    if (!documentChannelParent) {
+      gHttpHandler->OnMayChangeProcess(this);
 
-    if (mRedirectContentProcessIdPromise) {
-      PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest1);
-      rv = StartCrossProcessRedirect();
-      if (NS_SUCCEEDED(rv)) {
-        return NS_OK;
+      if (mRedirectContentProcessIdPromise) {
+        PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest1);
+        rv = StartCrossProcessRedirect();
+        if (NS_SUCCEEDED(rv)) {
+          return NS_OK;
+        }
+        PopRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest1);
       }
-      PopRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest1);
     }
   }
 
