@@ -50,15 +50,9 @@ export class InfoItem extends HTMLElement {
       this.handleTimeZone(info);
       return;
     }
-    if (typeof this.item.info === "boolean") {
-      document.l10n.setAttributes(info, "certificate-viewer-boolean", {
-        boolean: this.item.info,
-      });
-    } else {
-      info.textContent = Array.isArray(this.item.info)
-        ? this.item.info.join(", ")
-        : this.item.info;
-    }
+    info.textContent = Array.isArray(this.item.info)
+      ? this.item.info.join(", ")
+      : this.item.info;
 
     this.classList.add(labelText);
 
