@@ -1329,7 +1329,7 @@ class TestInfoCommand(MachCommandBase):
                         break
             if show_tests:
                 for key in by_component['tests']:
-                    by_component['tests'][key].sort()
+                    by_component['tests'][key].sort(key=lambda k: k['test'])
 
         if show_summary:
             by_component['summary'] = {}
