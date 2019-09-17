@@ -9,11 +9,7 @@ function boom()
     document.body.appendChild(frame);
     var frameLoc = frame.contentWindow.location;
     document.body.removeChild(frame)
-    try {
-      frameLoc.origin;
-    } catch (e) {
-      // This is expected to throw.
-    }
+    frameLoc.origin;
     document.documentElement.removeAttribute('class');
 }
 
