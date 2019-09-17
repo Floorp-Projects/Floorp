@@ -522,7 +522,7 @@ load 810726.html
 load 812822-1.html
 load 812879-1.html
 load 812879-2.html
-load 812893.html
+pref(layout.css.column-span.enabled,true) asserts(4-13) load 812893.html # bug 1581653
 load 814995.html
 load 822910.xhtml
 load 824297-1.html
