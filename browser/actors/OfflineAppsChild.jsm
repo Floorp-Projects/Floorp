@@ -7,16 +7,9 @@
 var EXPORTED_SYMBOLS = ["OfflineAppsChild"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 const { ActorChild } = ChromeUtils.import(
   "resource://gre/modules/ActorChild.jsm"
 );
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
-});
 
 class OfflineAppsChild extends ActorChild {
   constructor(dispatcher) {
@@ -26,15 +19,9 @@ class OfflineAppsChild extends ActorChild {
     this._docIdMap = new Map();
 
     this._docManifestSet = new Set();
-
-    this._observerAdded = false;
   }
 
   registerWindow(aWindow) {
-    if (!this._observerAdded) {
-      this._observerAdded = true;
-      Services.obs.addObserver(this, "offline-cache-update-completed", true);
-    }
     let manifestURI = this._getManifestURI(aWindow);
     this._docManifestSet.add(manifestURI.spec);
   }
@@ -95,19 +82,6 @@ class OfflineAppsChild extends ActorChild {
         this._startFetching(doc);
       }
       this._docIdMap.delete(aMessage.data.docId);
-    }
-  }
-
-  observe(aSubject, aTopic, aState) {
-    if (aTopic == "offline-cache-update-completed") {
-      let cacheUpdate = aSubject.QueryInterface(Ci.nsIOfflineCacheUpdate);
-      let uri = cacheUpdate.manifestURI;
-      if (uri && this._docManifestSet.has(uri.spec)) {
-        this.mm.sendAsyncMessage("OfflineApps:CheckUsage", {
-          uri: uri.spec,
-          principal: E10SUtils.serializePrincipal(cacheUpdate.loadingPrincipal),
-        });
-      }
     }
   }
 }
