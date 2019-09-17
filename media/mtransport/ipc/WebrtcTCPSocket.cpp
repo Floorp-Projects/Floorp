@@ -138,7 +138,8 @@ void WebrtcTCPSocket::CloseWithReason(nsresult aReason) {
 
 nsresult WebrtcTCPSocket::Open(const nsCString& aHost, const int& aPort,
                                const net::LoadInfoArgs& aArgs,
-                               const nsCString& aAlpn) {
+                               const nsCString& aAlpn,
+                               NrSocketProxyConfig::ProxyPolicy aProxyPolicy) {
   LOG(("WebrtcTCPSocket::Open %p\n", this));
 
   if (NS_WARN_IF(mOpened)) {
@@ -162,10 +163,18 @@ nsresult WebrtcTCPSocket::Open(const nsCString& aHost, const int& aPort,
 
   mLoadInfoArgs = aArgs;
   mAlpn = aAlpn;
+  if (aProxyPolicy == NrSocketProxyConfig::kForceProxy) {
+    mForceProxy = true;
+  }
 
-  // We need to figure out whether a proxy needs to be used for mURI before we
-  // can start on establishing a connection.
-  rv = DoProxyConfigLookup();
+  if (aProxyPolicy == NrSocketProxyConfig::kDisableProxy) {
+    rv = OpenWithoutHttpProxy(nullptr);
+  } else {
+    // We need to figure out whether a proxy needs to be used for mURI before we
+    // can start on establishing a connection.
+    rv = DoProxyConfigLookup();
+  }
+
   if (NS_WARN_IF(NS_FAILED(rv))) {
     CloseWithReason(NS_ERROR_FAILURE);
   }
@@ -239,6 +248,10 @@ NS_IMETHODIMP WebrtcTCPSocket::OnProxyAvailable(nsICancelable* aRequest,
 }
 
 nsresult WebrtcTCPSocket::OpenWithoutHttpProxy(nsIProxyInfo* aSocksProxyInfo) {
+  if (NS_WARN_IF(mForceProxy && !aSocksProxyInfo)) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsCString host;
   int32_t port;
 

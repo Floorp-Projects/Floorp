@@ -171,7 +171,8 @@ void MediaTransportHandlerIPC::SetProxyConfig(
         if (mChild) {
           mChild->SendSetProxyConfig(dom::TabId(aProxyConfig.GetTabId()),
                                      aProxyConfig.GetLoadInfoArgs(),
-                                     aProxyConfig.GetAlpn());
+                                     aProxyConfig.GetAlpn(),
+                                     aProxyConfig.GetProxyPolicy());
         }
       },
       [](const nsCString& aError) {});

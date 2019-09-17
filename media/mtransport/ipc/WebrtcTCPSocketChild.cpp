@@ -63,10 +63,10 @@ WebrtcTCPSocketChild::~WebrtcTCPSocketChild() {
   LOG(("WebrtcTCPSocketChild::~WebrtcTCPSocketChild %p\n", this));
 }
 
-void WebrtcTCPSocketChild::AsyncOpen(const nsCString& aHost, const int& aPort,
-                                     const net::LoadInfoArgs& aArgs,
-                                     const nsCString& aAlpn,
-                                     const dom::TabId& aTabId) {
+void WebrtcTCPSocketChild::AsyncOpen(
+    const nsCString& aHost, const int& aPort, const net::LoadInfoArgs& aArgs,
+    const nsCString& aAlpn, const dom::TabId& aTabId,
+    NrSocketProxyConfig::ProxyPolicy aProxyPolicy) {
   LOG(("WebrtcTCPSocketChild::AsyncOpen %p %s:%d\n", this, aHost.get(), aPort));
 
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");
@@ -85,7 +85,7 @@ void WebrtcTCPSocketChild::AsyncOpen(const nsCString& aHost, const int& aPort,
                                                                         aTabId);
   }
 
-  SendAsyncOpen(aHost, aPort, aArgs, aAlpn);
+  SendAsyncOpen(aHost, aPort, aArgs, aAlpn, aProxyPolicy);
 }
 
 }  // namespace net

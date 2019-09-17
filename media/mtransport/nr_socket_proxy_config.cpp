@@ -16,12 +16,14 @@ class NrSocketProxyConfig::Private {
   uint64_t mTabId;
   nsCString mAlpn;
   net::LoadInfoArgs mLoadInfoArgs;
+  ProxyPolicy mProxyPolicy;
 };
 
 NrSocketProxyConfig::NrSocketProxyConfig(uint64_t aTabId,
                                          const nsCString& aAlpn,
-                                         const net::LoadInfoArgs& aArgs)
-    : mPrivate(new Private({aTabId, aAlpn, aArgs})) {}
+                                         const net::LoadInfoArgs& aArgs,
+                                         ProxyPolicy aProxyPolicy)
+    : mPrivate(new Private({aTabId, aAlpn, aArgs, aProxyPolicy})) {}
 
 NrSocketProxyConfig::NrSocketProxyConfig(NrSocketProxyConfig&& aOrig)
     : mPrivate(std::move(aOrig.mPrivate)) {}
@@ -38,4 +40,7 @@ const net::LoadInfoArgs& NrSocketProxyConfig::GetLoadInfoArgs() const {
   return mPrivate->mLoadInfoArgs;
 }
 
+NrSocketProxyConfig::ProxyPolicy NrSocketProxyConfig::GetProxyPolicy() const {
+  return mPrivate->mProxyPolicy;
+}
 }  // namespace mozilla

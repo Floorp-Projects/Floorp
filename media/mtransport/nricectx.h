@@ -306,12 +306,10 @@ class NrIceCtx {
     return proxy_config_;
   }
 
-  void SetCtxFlags(bool default_route_only, bool proxy_only);
-
-  bool proxy_only() const { return proxy_only_; }
+  void SetCtxFlags(bool default_route_only);
 
   // Start ICE gathering
-  nsresult StartGathering(bool default_route_only, bool proxy_only,
+  nsresult StartGathering(bool default_route_only,
                           bool obfuscate_host_addresses);
 
   // Start checking
@@ -395,7 +393,6 @@ class NrIceCtx {
   Policy policy_;
   RefPtr<TestNat> nat_;
   std::shared_ptr<NrSocketProxyConfig> proxy_config_;
-  bool proxy_only_;
   bool obfuscate_host_addresses_;
   std::map<std::string, std::string> obfuscated_host_addresses_;
 };

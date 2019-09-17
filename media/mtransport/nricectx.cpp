@@ -280,7 +280,6 @@ NrIceCtx::NrIceCtx(const std::string& name, Policy policy)
       policy_(policy),
       nat_(nullptr),
       proxy_config_(nullptr),
-      proxy_only_(false),
       obfuscate_host_addresses_(false) {}
 
 /* static */
@@ -852,7 +851,7 @@ nsresult NrIceCtx::SetProxyConfig(NrSocketProxyConfig&& config) {
   return NS_OK;
 }
 
-void NrIceCtx::SetCtxFlags(bool default_route_only, bool proxy_only) {
+void NrIceCtx::SetCtxFlags(bool default_route_only) {
   ASSERT_ON_THREAD(sts_target_);
 
   if (default_route_only) {
@@ -860,15 +859,9 @@ void NrIceCtx::SetCtxFlags(bool default_route_only, bool proxy_only) {
   } else {
     nr_ice_ctx_remove_flags(ctx_, NR_ICE_CTX_FLAGS_ONLY_DEFAULT_ADDRS);
   }
-
-  if (proxy_only) {
-    nr_ice_ctx_add_flags(ctx_, NR_ICE_CTX_FLAGS_ONLY_PROXY);
-  } else {
-    nr_ice_ctx_remove_flags(ctx_, NR_ICE_CTX_FLAGS_ONLY_PROXY);
-  }
 }
 
-nsresult NrIceCtx::StartGathering(bool default_route_only, bool proxy_only,
+nsresult NrIceCtx::StartGathering(bool default_route_only,
                                   bool obfuscate_host_addresses) {
   ASSERT_ON_THREAD(sts_target_);
 
@@ -876,9 +869,7 @@ nsresult NrIceCtx::StartGathering(bool default_route_only, bool proxy_only,
 
   SetGatheringState(ICE_CTX_GATHER_STARTED);
 
-  SetCtxFlags(default_route_only, proxy_only);
-
-  proxy_only_ = proxy_only;
+  SetCtxFlags(default_route_only);
 
   // This might start gathering for the first time, or again after
   // renegotiation, or might do nothing at all if gathering has already
@@ -1098,11 +1089,6 @@ int nr_socket_local_create(void* obj, nr_transport_addr* addr,
 
   if (obj) {
     config = static_cast<NrIceCtx*>(obj)->GetProxyConfig();
-    bool ctx_proxy_only = static_cast<NrIceCtx*>(obj)->proxy_only();
-
-    if (ctx_proxy_only && !config) {
-      ABORT(R_FAILED);
-    }
   }
 
   r = NrSocketBase::CreateSocket(addr, &sock, config);

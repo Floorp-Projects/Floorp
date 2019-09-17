@@ -22,7 +22,8 @@ parent:
   async AsyncOpen(nsCString aHost,
                   int32_t aPort,
                   LoadInfoArgs aLoadInfoArgs,
-                  nsCString aAlpn);
+                  nsCString aAlpn,
+                  int proxyPolicy);
   async Write(uint8_t[] aWriteData);
   async Close();
 
