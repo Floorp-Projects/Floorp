@@ -76,12 +76,12 @@
       <label value="&editBookmarkOverlay.tags.label;"
              accesskey="&editBookmarkOverlay.tags.accesskey;"
              control="editBMPanel_tagsField"/>
-      <hbox flex="1" align="center">
-        <textbox id="editBMPanel_tagsField"
-                 type="autocomplete"
-                 flex="1"
+      <hbox flex="1" align="center" role="combobox">
+        <html:input id="editBMPanel_tagsField"
+                 is="autocomplete-input"
+                 style="-moz-box-flex: 1;"
                  autocompletesearch="places-tag-autocomplete"
-                 autocompletepopup="PopupAutoComplete"
+                 autocompletepopup="editBMPanel_tagsAutocomplete"
                  completedefaultindex="true"
                  completeselectedindex="true"
                  tabscrolling="true"
@@ -93,6 +93,17 @@
                 tooltiptextdown="&editBookmarkOverlay.tagsExpanderDown.tooltip;"
                 tooltiptextup="&editBookmarkOverlay.expanderUp.tooltip;"
                 oncommand="gEditItemOverlay.toggleTagsSelector().catch(Cu.reportError);"/>
+        <popupset>
+          <panel is="autocomplete-richlistbox-popup"
+                 type="autocomplete-richlistbox"
+                 id="editBMPanel_tagsAutocomplete"
+                 role="group"
+                 noautofocus="true"
+                 hidden="true"
+                 overflowpadding="4"
+                 norolluponanchor="true"
+                 nomaxresults="true"/>
+        </popupset>
       </hbox>
     </vbox>
 

@@ -44,12 +44,23 @@
       </menulist>
 
       <vbox id="customSettings" hidden="true">
-        <textbox id="homePageUrl"
-                class="uri-element check-home-page-controlled"
-                data-preference-related="browser.startup.homepage"
-                type="autocomplete"
-                data-l10n-id="home-homepage-custom-url"
-                autocompletesearch="unifiedcomplete" />
+        <box role="combobox">
+          <html:input id="homePageUrl"
+                      type="text"
+                      is="autocomplete-input"
+                      class="uri-element check-home-page-controlled"
+                      style="-moz-box-flex: 1;"
+                      data-preference-related="browser.startup.homepage"
+                      data-l10n-id="home-homepage-custom-url"
+                      autocompletepopup="homePageUrlAutocomplete"
+                      autocompletesearch="unifiedcomplete" />
+          <popupset>
+            <panel id="homePageUrlAutocomplete"
+                   is="autocomplete-richlistbox-popup"
+                   type="autocomplete-richlistbox"
+                   noautofocus="true"/>
+          </popupset>
+        </box>
         <hbox class="homepage-buttons">
           <button id="useCurrentBtn"
                   is="highlightable-button"

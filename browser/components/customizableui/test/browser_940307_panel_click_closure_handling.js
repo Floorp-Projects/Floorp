@@ -53,19 +53,23 @@ add_task(async function searchbar_in_panel() {
 
   searchbar.value = "foo";
   searchbar.focus();
-  // Reaching into this context menu is pretty evil, but hey... it's a test.
-  let textbox = document.getAnonymousElementByAttribute(
-    searchbar.textbox,
-    "anonid",
-    "moz-input-box"
-  );
-  let contextmenu = textbox.menupopup;
-  let contextMenuShown = promisePanelElementShown(window, contextmenu);
+
+  // Can't use promisePanelElementShown() here since the search bar
+  // creates its context menu lazily the first time it is opened.
+  let contextMenuShown = new Promise(resolve => {
+    let listener = event => {
+      if (searchbar._menupopup && event.target == searchbar._menupopup) {
+        window.removeEventListener("popupshown", listener);
+        resolve(searchbar._menupopup);
+      }
+    };
+    window.addEventListener("popupshown", listener);
+  });
   EventUtils.synthesizeMouseAtCenter(searchbar, {
     type: "contextmenu",
     button: 2,
   });
-  await contextMenuShown;
+  let contextmenu = await contextMenuShown;
 
   ok(isOverflowOpen(), "Panel should still be open");
 
