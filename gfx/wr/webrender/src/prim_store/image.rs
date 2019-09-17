@@ -20,9 +20,9 @@ use crate::prim_store::{
     SizeKey, InternablePrimitive,
 };
 use crate::render_target::RenderTargetKind;
-use crate::render_task::{
-    BlitSource, RenderTask, RenderTaskCacheEntryHandle, RenderTaskCacheKey,
-    RenderTaskCacheKeyKind,
+use crate::render_task::{BlitSource, RenderTask};
+use crate::render_task_cache::{
+    RenderTaskCacheEntryHandle, RenderTaskCacheKey, RenderTaskCacheKeyKind
 };
 use crate::resource_cache::{ImageRequest, ResourceCache};
 use crate::util::pack_as_float;

@@ -29,8 +29,8 @@ use crate::internal_types::{FastHashMap, FastHashSet, TextureSource, TextureUpda
 use crate::profiler::{ResourceProfileCounters, TextureCacheProfileCounters};
 use crate::render_backend::{FrameId, FrameStamp};
 use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
-use crate::render_task::{RenderTaskCache, RenderTaskCacheKey};
-use crate::render_task::{RenderTaskCacheEntry, RenderTaskCacheEntryHandle};
+use crate::render_task_cache::{RenderTaskCache, RenderTaskCacheKey};
+use crate::render_task_cache::{RenderTaskCacheEntry, RenderTaskCacheEntryHandle};
 use smallvec::SmallVec;
 use std::collections::hash_map::Entry::{self, Occupied, Vacant};
 use std::collections::hash_map::{Iter, IterMut};

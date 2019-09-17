@@ -10,7 +10,7 @@ use crate::display_list_flattener::DisplayListFlattener;
 use crate::gpu_cache::GpuCacheHandle;
 use crate::gpu_types::BoxShadowStretchMode;
 use crate::prim_store::ScrollNodeAndClipChain;
-use crate::render_task::RenderTaskCacheEntryHandle;
+use crate::render_task_cache::RenderTaskCacheEntryHandle;
 use crate::util::RectHelpers;
 use crate::internal_types::LayoutPrimitiveInfo;
 
