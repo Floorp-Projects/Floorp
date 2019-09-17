@@ -227,6 +227,12 @@ class nsSVGIntegrationUtils final {
   static bool CanCreateWebRenderFiltersForFrame(nsIFrame* aFrame);
 
   /**
+   * Check if |aFrame| uses any SVG effects that cannot be rendered in the
+   * compositor.
+   */
+  static bool UsesSVGEffectsNotSupportedInCompositor(nsIFrame* aFrame);
+
+  /**
    * @param aRenderingContext the target rendering context in which the paint
    * server will be rendered
    * @param aTarget the target frame onto which the paint server will be
