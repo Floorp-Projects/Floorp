@@ -1059,7 +1059,7 @@ nsresult TextEditor::SetTextAsSubAction(const nsAString& aString) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(mPlaceholderBatch);
 
-  if (NS_WARN_IF(!mRules)) {
+  if (NS_WARN_IF(!mInitSucceeded)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
@@ -1091,11 +1091,14 @@ nsresult TextEditor::SetTextAsSubAction(const nsAString& aString) {
     // XXX We should make ReplaceSelectionAsSubAction() take range.  Then,
     //     we can saving the expensive cost of modifying `Selection` here.
     nsresult rv;
-    if (mRules && mRules->DocumentIsEmpty()) {
+    if (IsEmpty()) {
       rv = SelectionRefPtr()->Collapse(rootElement, 0);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                            "Selection::Collapse() failed, but ignored");
     } else {
+      // XXX Oh, we shouldn't select padding `<br>` element for empty last
+      //     line here since we will need to recreate it in multiline
+      //     text editor.
       ErrorResult error;
       SelectionRefPtr()->SelectAllChildren(*rootElement, error);
       NS_WARNING_ASSERTION(
@@ -1312,44 +1315,29 @@ already_AddRefed<Element> TextEditor::GetInputEventTargetElement() {
   return target.forget();
 }
 
-nsresult TextEditor::IsEmpty(bool* aIsEmpty) const {
-  if (NS_WARN_IF(!mRules)) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  *aIsEmpty = true;
-
+bool TextEditor::IsEmpty() const {
   if (mPaddingBRElementForEmptyEditor) {
-    return NS_OK;
+    return true;
   }
 
   // Even if there is no padding <br> element for empty editor, we should be
   // detected as empty editor if all the children are text nodes and these
   // have no content.
-  Element* rootElement = GetRoot();
-  if (!rootElement) {
-    // XXX Why don't we return an error in such case??
-    return NS_OK;
+  Element* anonymousDivElement = GetRoot();
+  if (!anonymousDivElement) {
+    return true;  // Don't warn it, this is possible, e.g., 997805.html
   }
 
-  for (nsIContent* child = rootElement->GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    if (!EditorBase::IsTextNode(child) ||
-        static_cast<nsTextNode*>(child)->TextDataLength()) {
-      *aIsEmpty = false;
-      return NS_OK;
-    }
-  }
-
-  return NS_OK;
+  // Only when there is non-empty text node, we are not empty.
+  return !anonymousDivElement->GetFirstChild() ||
+         !anonymousDivElement->GetFirstChild()->IsText() ||
+         !anonymousDivElement->GetFirstChild()->Length();
 }
 
 NS_IMETHODIMP
 TextEditor::GetDocumentIsEmpty(bool* aDocumentIsEmpty) {
-  nsresult rv = IsEmpty(aDocumentIsEmpty);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  MOZ_ASSERT(aDocumentIsEmpty);
+  *aDocumentIsEmpty = IsEmpty();
   return NS_OK;
 }
 
@@ -1362,12 +1350,10 @@ TextEditor::GetTextLength(int32_t* aCount) {
 
   // special-case for empty document, to account for the padding <br> element
   // for empty editor.
-  bool isEmpty = false;
-  nsresult rv = IsEmpty(&isEmpty);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  if (isEmpty) {
+  // XXX This should be overridden by `HTMLEditor` and we should return the
+  //     first text node's length from `TextEditor` instead.  The following
+  //     code is too expensive.
+  if (IsEmpty()) {
     return NS_OK;
   }
 
@@ -2078,28 +2064,29 @@ void TextEditor::OnEndHandlingTopLevelEditSubAction() {
 
 nsresult TextEditor::SelectEntireDocument() {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!AsHTMLEditor());
 
-  if (!mRules) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  Element* rootElement = GetRoot();
-  if (NS_WARN_IF(!rootElement)) {
+  if (!mInitSucceeded) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
+  Element* anonymousDivElement = GetRoot();
+  if (NS_WARN_IF(!anonymousDivElement)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   // If we're empty, don't select all children because that would select the
   // padding <br> element for empty editor.
-  if (rules->DocumentIsEmpty()) {
-    nsresult rv = SelectionRefPtr()->Collapse(rootElement, 0);
+  if (IsEmpty()) {
+    nsresult rv = SelectionRefPtr()->Collapse(anonymousDivElement, 0);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "Failed to move caret to start of the editor root element");
     return rv;
   }
+
+  // XXX We just need to select all of first text node (if there is).
+  //     Why do we do this kind of complicated things?
 
   // Don't select the trailing BR node if we have one
   nsCOMPtr<nsIContent> childNode;
@@ -2115,7 +2102,7 @@ nsresult TextEditor::SelectEntireDocument() {
   if (childNode && EditorBase::IsPaddingBRElementForEmptyLastLine(*childNode)) {
     ErrorResult error;
     MOZ_KnownLive(SelectionRefPtr())
-        ->SetStartAndEndInLimiter(RawRangeBoundary(rootElement, 0),
+        ->SetStartAndEndInLimiter(RawRangeBoundary(anonymousDivElement, 0),
                                   EditorRawDOMPoint(childNode), error);
     NS_WARNING_ASSERTION(!error.Failed(),
                          "Failed to select all children of the editor root "
@@ -2124,7 +2111,7 @@ nsresult TextEditor::SelectEntireDocument() {
   }
 
   ErrorResult error;
-  SelectionRefPtr()->SelectAllChildren(*rootElement, error);
+  SelectionRefPtr()->SelectAllChildren(*anonymousDivElement, error);
   NS_WARNING_ASSERTION(
       !error.Failed(),
       "Failed to select all children of the editor root element");
