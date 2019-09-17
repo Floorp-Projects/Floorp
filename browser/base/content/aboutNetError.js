@@ -251,58 +251,44 @@ function initPage() {
     document.getElementById("netErrorButtonContainer").style.display = "none";
   }
 
-  window.addEventListener(
-    "AboutNetErrorOptions",
-    function(evt) {
-      // Pinning errors are of type nssFailure2
-      if (getErrorCode() == "nssFailure2") {
-        let shortDesc = document.getElementById("errorShortDescText")
-          .textContent;
-        document.getElementById("learnMoreContainer").style.display = "block";
-        var options = JSON.parse(evt.detail);
-        if (options && options.enabled) {
-          var checkbox = document.getElementById("automaticallyReportInFuture");
-          showCertificateErrorReporting();
-          if (options.automatic) {
-            // set the checkbox
-            checkbox.checked = true;
-          }
-
-          checkbox.addEventListener("change", function(changeEvt) {
-            var event = new CustomEvent("AboutNetErrorSetAutomatic", {
-              bubbles: true,
-              detail: changeEvt.target.checked,
-            });
-            document.dispatchEvent(event);
-          });
-        }
-        const hasPrefStyleError = [
-          "interrupted", // This happens with subresources that are above the max tls
-          "SSL_ERROR_PROTOCOL_VERSION_ALERT",
-          "SSL_ERROR_UNSUPPORTED_VERSION",
-          "SSL_ERROR_NO_CYPHER_OVERLAP",
-          "SSL_ERROR_NO_CIPHERS_SUPPORTED",
-        ].some(substring => shortDesc.includes(substring));
-        // If it looks like an error that is user config based
-        if (
-          getErrorCode() == "nssFailure2" &&
-          hasPrefStyleError &&
-          options &&
-          options.changedCertPrefs
-        ) {
-          showPrefChangeContainer();
-        }
-      }
-      if (getErrorCode() == "sslv3Used") {
-        document.getElementById("advancedButton").style.display = "none";
-      }
-    },
-    true,
-    true
-  );
-
-  var event = new CustomEvent("AboutNetErrorLoad", { bubbles: true });
+  // Dispatch this event only for tests.
+  let event = new CustomEvent("AboutNetErrorLoad", { bubbles: true });
   document.dispatchEvent(event);
+
+  setNetErrorMessageFromCode();
+  let learnMoreLink = document.getElementById("learnMoreLink");
+  let baseURL = RPMGetFormatURLPref("app.support.baseURL");
+  learnMoreLink.setAttribute("href", baseURL + "connection-not-secure");
+
+  // Pinning errors are of type nssFailure2
+  if (err == "nssFailure2") {
+    setupErrorUI();
+
+    RPMAddMessageListener("HasChangedCertPrefs", msg => {
+      let hasChangedCertPrefs = msg.data.hasChangedCertPrefs;
+
+      let errorCode = document.getNetErrorInfo().errorCodeString;
+      let hasPrefStyleError = [
+        "interrupted", // This happens with subresources that are above the max tls
+        "SSL_ERROR_PROTOCOL_VERSION_ALERT",
+        "SSL_ERROR_UNSUPPORTED_VERSION",
+        "SSL_ERROR_NO_CYPHER_OVERLAP",
+        "SSL_ERROR_NO_CIPHERS_SUPPORTED",
+      ].some(substring => {
+        return substring == errorCode;
+      });
+
+      // If it looks like an error that is user config based
+      if (hasPrefStyleError && hasChangedCertPrefs) {
+        showPrefChangeContainer();
+      }
+    });
+    RPMSendAsyncMessage("GetChangedCertPrefs");
+  }
+
+  if (err == "sslv3Used") {
+    document.getElementById("advancedButton").style.display = "none";
+  }
 
   if (err == "inadequateSecurityError" || err == "blockedByPolicy") {
     // Remove the "Try again" button from pages that don't need it.
@@ -314,6 +300,80 @@ function initPage() {
     for (var span of container.querySelectorAll("span.hostname")) {
       span.textContent = document.location.hostname;
     }
+  }
+}
+
+function setupErrorUI() {
+  document.getElementById("learnMoreContainer").style.display = "block";
+
+  let checkbox = document.getElementById("automaticallyReportInFuture");
+  checkbox.addEventListener("change", function({ target: { checked } }) {
+    document.dispatchEvent(
+      new CustomEvent("AboutNetErrorSetAutomatic", {
+        detail: checked,
+        bubbles: true,
+      })
+    );
+  });
+
+  let errorReportingEnabled = RPMGetBoolPref(
+    "security.ssl.errorReporting.enabled"
+  );
+  if (errorReportingEnabled) {
+    showCertificateErrorReporting();
+    let errorReportingAutomatic = RPMGetBoolPref(
+      "security.ssl.errorReporting.automatic"
+    );
+    checkbox.checked = !!errorReportingAutomatic;
+  }
+
+  // Values for telemtery bins: see TLS_ERROR_REPORT_UI in Histograms.json
+  const TLS_ERROR_REPORT_TELEMETRY_UI_SHOWN = 0;
+  RPMSendAsyncMessage("Browser:SSLErrorReportTelemetry", {
+    reportStatus: TLS_ERROR_REPORT_TELEMETRY_UI_SHOWN,
+  });
+}
+
+async function setNetErrorMessageFromCode() {
+  let hostString = document.location.hostname;
+  let port = document.location.port;
+  if (port && port != 443) {
+    hostString += ":" + port;
+  }
+
+  let securityInfo;
+  try {
+    securityInfo = document.getNetErrorInfo();
+  } catch (ex) {
+    // We don't have a securityInfo when this is for example a DNS error.
+    return;
+  }
+
+  let desc = document.getElementById("errorShortDescText");
+  let errorCodeStr = securityInfo.errorCodeString;
+  try {
+    let [errorCodeMsg] = await document.l10n.formatValues([
+      {
+        id: errorCodeStr
+          .split("_")
+          .join("-")
+          .toLowerCase(),
+      },
+    ]);
+    document.l10n.setAttributes(desc, "ssl-connection-error", {
+      errorMessage: errorCodeMsg,
+      hostname: hostString,
+    });
+    let desc2 = document.getElementById("errorShortDescText2");
+    document.l10n.setAttributes(desc2, "cert-error-code-prefix", {
+      error: errorCodeStr,
+    });
+  } catch (e) {
+    console.error("No strings exist for this error type");
+    document.l10n.setAttributes(desc, "ssl-connection-error", {
+      errorMsg: errorCodeStr,
+      hostname: hostString,
+    });
   }
 }
 
@@ -365,30 +425,8 @@ function initPageCertError() {
 
   addAutofocus("#returnButton");
   setupAdvancedButton();
+  setupErrorUI();
 
-  document.getElementById("learnMoreContainer").style.display = "block";
-
-  let checkbox = document.getElementById("automaticallyReportInFuture");
-  checkbox.addEventListener("change", function({ target: { checked } }) {
-    document.dispatchEvent(
-      new CustomEvent("AboutNetErrorSetAutomatic", {
-        detail: checked,
-        bubbles: true,
-      })
-    );
-  });
-
-  let errorReportingEnabled = RPMGetBoolPref(
-    "security.ssl.errorReporting.enabled"
-  );
-  if (errorReportingEnabled) {
-    document.getElementById("certificateErrorReporting").style.display =
-      "block";
-    let errorReportingAutomatic = RPMGetBoolPref(
-      "security.ssl.errorReporting.automatic"
-    );
-    checkbox.checked = !!errorReportingAutomatic;
-  }
   let hideAddExceptionButton = RPMGetBoolPref(
     "security.certerror.hideAddException",
     false
