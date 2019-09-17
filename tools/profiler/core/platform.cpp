@@ -279,7 +279,12 @@ typedef const PSAutoLock& PSLockRef;
 class CorePS {
  private:
   CorePS()
-      : mProcessStartTime(TimeStamp::ProcessCreation())
+      : mProcessStartTime(TimeStamp::ProcessCreation()),
+        // This doesn't need its own mutex, because all uses are currently
+        // guarded by gPSMutex, and it is used inside the critical section of
+        // the sampler, where mutexes cannot be used.
+        // TODO: Make it `WithMutex` in later patch...
+        mCoreBlocksRingBuffer(BlocksRingBuffer::ThreadSafety::WithoutMutex)
 #ifdef USE_LUL_STACKWALK
         ,
         mLul(nullptr)
@@ -331,6 +336,9 @@ class CorePS {
 
   // No PSLockRef is needed for this field because it's immutable.
   PS_GET_LOCKLESS(TimeStamp, ProcessStartTime)
+
+  // No PSLockRef is needed for this field because it's thread-safe.
+  PS_GET_LOCKLESS(BlocksRingBuffer&, CoreBlocksRingBuffer)
 
   PS_GET(const Vector<UniquePtr<RegisteredThread>>&, RegisteredThreads)
 
@@ -416,6 +424,17 @@ class CorePS {
   // The time that the process started.
   const TimeStamp mProcessStartTime;
 
+  // The thread-safe blocks-oriented ring buffer into which all profiling data
+  // is recorded.
+  // ActivePS controls the lifetime of the underlying contents buffer: When
+  // ActivePS does not exist, mCoreBlocksRingBuffer is empty and rejects all
+  // reads&writes; see ActivePS for further details.
+  // Note: This needs to live here outside of ActivePS, because some producers
+  // are indirectly controlled (e.g., by atomic flags) and therefore may still
+  // attempt to write some data shortly after ActivePS has shutdown and deleted
+  // the underlying buffer in memory.
+  BlocksRingBuffer mCoreBlocksRingBuffer;
+
   // Info on all the registered threads.
   // ThreadIds in mRegisteredThreads are unique.
   Vector<UniquePtr<RegisteredThread>> mRegisteredThreads;
@@ -479,7 +498,9 @@ class ActivePS {
         mInterval(aInterval),
         mFeatures(AdjustFeatures(aFeatures, aFilterCount)),
         // 8 bytes per entry.
-        mBuffer(MakeUnique<ProfileBuffer>(PowerOfTwo32(aCapacity.Value() * 8))),
+        mProfileBuffer(
+            MakeUnique<ProfileBuffer>(CorePS::CoreBlocksRingBuffer(),
+                                      PowerOfTwo32(aCapacity.Value() * 8))),
         // The new sampler thread doesn't start sampling immediately because the
         // main loop within Run() is blocked until this function's caller
         // unlocks gPSMutex.
@@ -613,7 +634,7 @@ class ActivePS {
   static size_t SizeOf(PSLockRef, MallocSizeOf aMallocSizeOf) {
     size_t n = aMallocSizeOf(sInstance);
 
-    n += sInstance->mBuffer->SizeOfIncludingThis(aMallocSizeOf);
+    n += sInstance->mProfileBuffer->SizeOfIncludingThis(aMallocSizeOf);
 
     // Measurement of the following members may be added later if DMD finds it
     // is worthwhile:
@@ -668,7 +689,7 @@ class ActivePS {
 
   PS_GET(const Vector<std::string>&, Filters)
 
-  static ProfileBuffer& Buffer(PSLockRef) { return *sInstance->mBuffer.get(); }
+  static ProfileBuffer& Buffer(PSLockRef) { return *sInstance->mProfileBuffer; }
 
   static const Vector<LiveProfiledThreadData>& LiveProfiledThreads(PSLockRef) {
     return sInstance->mLiveProfiledThreads;
@@ -756,7 +777,7 @@ class ActivePS {
       LiveProfiledThreadData& thread = sInstance->mLiveProfiledThreads[i];
       if (thread.mRegisteredThread == aRegisteredThread) {
         thread.mProfiledThreadData->NotifyUnregistered(
-            sInstance->mBuffer->BufferRangeEnd());
+            sInstance->mProfileBuffer->BufferRangeEnd());
         MOZ_RELEASE_ASSERT(sInstance->mDeadProfiledThreads.append(
             std::move(thread.mProfiledThreadData)));
         sInstance->mLiveProfiledThreads.erase(
@@ -773,7 +794,7 @@ class ActivePS {
 #endif
 
   static void DiscardExpiredDeadProfiledThreads(PSLockRef) {
-    uint64_t bufferRangeStart = sInstance->mBuffer->BufferRangeStart();
+    uint64_t bufferRangeStart = sInstance->mProfileBuffer->BufferRangeStart();
     // Discard any dead threads that were unregistered before bufferRangeStart.
     sInstance->mDeadProfiledThreads.eraseIf(
         [bufferRangeStart](
@@ -792,7 +813,7 @@ class ActivePS {
     for (size_t i = 0; i < registeredPages.length(); i++) {
       RefPtr<PageInformation>& page = registeredPages[i];
       if (page->DocShellId().Equals(aRegisteredDocShellId)) {
-        page->NotifyUnregistered(sInstance->mBuffer->BufferRangeEnd());
+        page->NotifyUnregistered(sInstance->mProfileBuffer->BufferRangeEnd());
         MOZ_RELEASE_ASSERT(
             sInstance->mDeadProfiledPages.append(std::move(page)));
         registeredPages.erase(&registeredPages[i--]);
@@ -801,7 +822,7 @@ class ActivePS {
   }
 
   static void DiscardExpiredPages(PSLockRef) {
-    uint64_t bufferRangeStart = sInstance->mBuffer->BufferRangeStart();
+    uint64_t bufferRangeStart = sInstance->mProfileBuffer->BufferRangeStart();
     // Discard any dead pages that were unregistered before
     // bufferRangeStart.
     sInstance->mDeadProfiledPages.eraseIf(
@@ -850,7 +871,7 @@ class ActivePS {
 #endif
 
   static void ClearExpiredExitProfiles(PSLockRef) {
-    uint64_t bufferRangeStart = sInstance->mBuffer->BufferRangeStart();
+    uint64_t bufferRangeStart = sInstance->mProfileBuffer->BufferRangeStart();
     // Discard exit profiles that were gathered before our buffer RangeStart.
 #ifdef MOZ_BASE_PROFILER
     if (bufferRangeStart != 0 && sInstance->mBaseProfileThreads) {
@@ -879,8 +900,8 @@ class ActivePS {
   static void AddExitProfile(PSLockRef aLock, const nsCString& aExitProfile) {
     ClearExpiredExitProfiles(aLock);
 
-    MOZ_RELEASE_ASSERT(sInstance->mExitProfiles.append(
-        ExitProfile{aExitProfile, sInstance->mBuffer->BufferRangeEnd()}));
+    MOZ_RELEASE_ASSERT(sInstance->mExitProfiles.append(ExitProfile{
+        aExitProfile, sInstance->mProfileBuffer->BufferRangeEnd()}));
   }
 
   static Vector<nsCString> MoveExitProfiles(PSLockRef aLock) {
@@ -920,10 +941,10 @@ class ActivePS {
   const uint32_t mGeneration;
   static uint32_t sNextGeneration;
 
-  // The maximum number of entries in mBuffer.
+  // The maximum number of entries in mProfileBuffer.
   const PowerOfTwo32 mCapacity;
 
-  // The maximum duration of entries in mBuffer, in seconds.
+  // The maximum duration of entries in mProfileBuffer, in seconds.
   const Maybe<double> mDuration;
 
   // The interval between samples, measured in milliseconds.
@@ -937,7 +958,7 @@ class ActivePS {
 
   // The buffer into which all samples are recorded. Always non-null. Always
   // used in conjunction with CorePS::m{Live,Dead}Threads.
-  const UniquePtr<ProfileBuffer> mBuffer;
+  const UniquePtr<ProfileBuffer> mProfileBuffer;
 
   // ProfiledThreadData objects for any threads that were profiled at any point
   // during this run of the profiler:
@@ -2044,11 +2065,13 @@ static void StreamPages(PSLockRef aLock, SpliceableJSONWriter& aWriter) {
 }
 
 #if defined(GP_OS_android)
-static UniquePtr<ProfileBuffer> CollectJavaThreadProfileData() {
+static UniquePtr<ProfileBuffer> CollectJavaThreadProfileData(
+    BlocksRingBuffer& bufferManager) {
   // locked_profiler_start uses sample count is 1000 for Java thread.
   // This entry size is enough now, but we might have to estimate it
   // if we can customize it
-  auto buffer = MakeUnique<ProfileBuffer>(MakePowerOfTwo32<8 * 1024 * 1024>());
+  auto buffer = MakeUnique<ProfileBuffer>(bufferManager,
+                                          MakePowerOfTwo32<8 * 1024 * 1024>());
 
   int sampleId = 0;
   while (true) {
@@ -2161,7 +2184,10 @@ static void locked_profiler_stream_json_for_this_process(
     if (ActivePS::FeatureJava(aLock)) {
       java::GeckoJavaSampler::Pause();
 
-      UniquePtr<ProfileBuffer> javaBuffer = CollectJavaThreadProfileData();
+      BlocksRingBuffer bufferManager(
+          BlocksRingBuffer::ThreadSafety::WithoutMutex);
+      UniquePtr<ProfileBuffer> javaBuffer =
+          CollectJavaThreadProfileData(bufferManager);
 
       // Thread id of java Main thread is 0, if we support profiling of other
       // java thread, we have to get thread id and name via JNI.
@@ -3979,12 +4005,15 @@ UniqueProfilerBacktrace profiler_get_backtrace() {
 #endif
 
   // 65536 bytes should be plenty for a single backtrace.
-  auto buffer = MakeUnique<ProfileBuffer>(MakePowerOfTwo32<65536>());
+  auto bufferManager = MakeUnique<BlocksRingBuffer>(
+      BlocksRingBuffer::ThreadSafety::WithoutMutex);
+  auto buffer =
+      MakeUnique<ProfileBuffer>(*bufferManager, MakePowerOfTwo32<65536>());
 
   DoSyncSample(lock, *registeredThread, now, regs, *buffer.get());
 
-  return UniqueProfilerBacktrace(
-      new ProfilerBacktrace("SyncProfile", tid, std::move(buffer)));
+  return UniqueProfilerBacktrace(new ProfilerBacktrace(
+      "SyncProfile", tid, std::move(bufferManager), std::move(buffer)));
 }
 
 void ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {

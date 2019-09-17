@@ -19,16 +19,25 @@ using namespace mozilla;
 // 65536 bytes should be plenty for a single backtrace.
 static constexpr auto DuplicationBufferBytes = MakePowerOfTwo32<65536>();
 
-// mEntries doesn't need its own mutex, because it is guarded by gPSMutex.
-ProfileBuffer::ProfileBuffer(PowerOfTwo32 aCapacity)
-    : mEntries(BlocksRingBuffer::ThreadSafety::WithoutMutex, aCapacity),
+ProfileBuffer::ProfileBuffer(BlocksRingBuffer& aBuffer, PowerOfTwo32 aCapacity)
+    : mEntries(aBuffer),
       mDuplicationBuffer(MakeUnique<BlocksRingBuffer::Byte[]>(
-          DuplicationBufferBytes.Value())) {}
+          DuplicationBufferBytes.Value())) {
+  // Only ProfileBuffer should control this buffer, and it should be empty when
+  // there is no ProfileBuffer using it.
+  MOZ_ASSERT(mEntries.BufferLength().isNothing());
+  // Allocate the requested capacity.
+  mEntries.Set(aCapacity);
+}
 
 ProfileBuffer::~ProfileBuffer() {
   while (mStoredMarkers.peek()) {
     delete mStoredMarkers.popHead();
   }
+  // Only ProfileBuffer controls this buffer, and it should be empty when there
+  // is no ProfileBuffer using it.
+  mEntries.Reset();
+  MOZ_ASSERT(mEntries.BufferLength().isNothing());
 }
 
 /* static */
