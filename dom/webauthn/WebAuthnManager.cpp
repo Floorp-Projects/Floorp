@@ -10,7 +10,6 @@
 #include "nsThreadUtils.h"
 #include "WebAuthnCoseIdentifiers.h"
 #include "mozilla/dom/AuthenticatorAttestationResponse.h"
-#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PWebAuthnTransaction.h"
 #include "mozilla/dom/WebAuthnManager.h"
@@ -533,18 +532,7 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
       // Serialize transports.
       if (s.mTransports.WasPassed()) {
         uint8_t transports = 0;
-
-        // Transports is a string, but we match it to an enumeration so
-        // that we have forward-compatibility, ignoring unknown transports.
-        for (const auto& str : s.mTransports.Value()) {
-          int i = FindEnumStringIndexImpl(
-              str.get(), str.Length(), AuthenticatorTransportValues::strings);
-          if (i < 0 ||
-              i >= static_cast<int>(AuthenticatorTransport::EndGuard_)) {
-            continue;  // Unknown enum
-          }
-          AuthenticatorTransport t = static_cast<AuthenticatorTransport>(i);
-
+        for (const auto& t : s.mTransports.Value()) {
           if (t == AuthenticatorTransport::Usb) {
             transports |= U2F_AUTHENTICATOR_TRANSPORT_USB;
           }
