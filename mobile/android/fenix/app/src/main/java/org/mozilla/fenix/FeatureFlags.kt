@@ -4,6 +4,9 @@ package org.mozilla.fenix
  * A single source for setting feature flags that are mostly based on build type.
  */
 object FeatureFlags {
+    // lazy is used to suppress "Condition is always 'true'" warnings when using the flags.
+    // https://github.com/mozilla-mobile/fenix/pull/4077#issuecomment-511964072
+
     // A convenience flag for production builds.
     private val production by lazy { BuildConfig.BUILD_TYPE == "fenixProduction" }
     // A convenience flag for beta builds.
