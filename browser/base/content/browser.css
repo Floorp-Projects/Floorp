@@ -387,7 +387,7 @@ toolbarpaletteitem {
   #urlbar-contextual-tip-icon {
     background-image: var(--webextension-contextual-tip-icon-2x);
   }
-  
+
   :root[lwt-popup-brighttext] #urlbar-contextual-tip-icon {
     background-image: var(--webextension-contextual-tip-icon-2x-light);
   }
@@ -670,7 +670,6 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] {
-  -moz-binding: none;
   height: auto;
 }
 

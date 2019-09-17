@@ -485,7 +485,6 @@ panel[type="autocomplete-richlistbox"] {
 }
 
 .autocomplete-richlistitem {
-  -moz-binding: none;
   -moz-box-orient: vertical;
   -moz-box-align: center;
   overflow: -moz-hidden-unscrollable;
