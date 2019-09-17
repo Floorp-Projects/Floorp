@@ -132,6 +132,22 @@
         .catch(arrivingHereIsBad);
     });
 
+    // Test with an unexpected transport on a valid credential
+    add_task(async () => {
+      let cred = validCred;
+      cred.transports = ["unknown", "usb"];
+
+      let publicKey = {
+        challenge: gAssertionChallenge,
+        unknownValue: "hi",
+        allowCredentials: [cred]
+      };
+
+      await requestGetAssertion({publicKey})
+        .then(arrivingHereIsGood)
+        .catch(arrivingHereIsBad);
+    });
+
     // Test with an invalid credential
     add_task(async () => {
       let publicKey = {
