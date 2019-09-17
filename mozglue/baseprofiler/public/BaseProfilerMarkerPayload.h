@@ -37,19 +37,15 @@ class ProfilerMarkerPayload {
       const Maybe<std::string>& aDocShellId = Nothing(),
       const Maybe<uint32_t>& aDocShellHistoryId = Nothing(),
       UniqueProfilerBacktrace aStack = nullptr)
-      : mStack(std::move(aStack)),
-        mDocShellId(aDocShellId),
-        mDocShellHistoryId(aDocShellHistoryId) {}
+      : mCommonProps{TimeStamp{}, TimeStamp{}, std::move(aStack),
+                     std::move(aDocShellId), std::move(aDocShellHistoryId)} {}
 
   ProfilerMarkerPayload(const TimeStamp& aStartTime, const TimeStamp& aEndTime,
                         const Maybe<std::string>& aDocShellId = Nothing(),
                         const Maybe<uint32_t>& aDocShellHistoryId = Nothing(),
                         UniqueProfilerBacktrace aStack = nullptr)
-      : mStartTime(aStartTime),
-        mEndTime(aEndTime),
-        mStack(std::move(aStack)),
-        mDocShellId(aDocShellId),
-        mDocShellHistoryId(aDocShellHistoryId) {}
+      : mCommonProps{aStartTime, aEndTime, std::move(aStack),
+                     std::move(aDocShellId), std::move(aDocShellHistoryId)} {}
 
   virtual ~ProfilerMarkerPayload() {}
 
@@ -57,9 +53,20 @@ class ProfilerMarkerPayload {
                              const TimeStamp& aProcessStartTime,
                              UniqueStacks& aUniqueStacks) = 0;
 
-  TimeStamp GetStartTime() const { return mStartTime; }
+  TimeStamp GetStartTime() const { return mCommonProps.mStartTime; }
 
  protected:
+  struct CommonProps {
+    TimeStamp mStartTime;
+    TimeStamp mEndTime;
+    UniqueProfilerBacktrace mStack;
+    Maybe<std::string> mDocShellId;
+    Maybe<uint32_t> mDocShellHistoryId;
+  };
+
+  explicit ProfilerMarkerPayload(CommonProps&& aCommonProps)
+      : mCommonProps(std::move(aCommonProps)) {}
+
   MFBT_API void StreamType(const char* aMarkerType,
                            SpliceableJSONWriter& aWriter);
   MFBT_API void StreamCommonProps(const char* aMarkerType,
@@ -68,11 +75,7 @@ class ProfilerMarkerPayload {
                                   UniqueStacks& aUniqueStacks);
 
  private:
-  TimeStamp mStartTime;
-  TimeStamp mEndTime;
-  UniqueProfilerBacktrace mStack;
-  Maybe<std::string> mDocShellId;
-  Maybe<uint32_t> mDocShellHistoryId;
+  CommonProps mCommonProps;
 };
 
 #define DECL_BASE_STREAM_PAYLOAD                              \
