@@ -51,6 +51,7 @@ devtools.jar:
     content/aboutdebugging/index.html (aboutdebugging/index.html)
     content/aboutdebugging/aboutdebugging.css (aboutdebugging/aboutdebugging.css)
     content/responsive/index.xhtml (responsive/index.xhtml)
+    content/responsive/toolbar.xhtml (responsive/toolbar.xhtml)
     content/dom/index.html (dom/index.html)
     content/dom/main.js (dom/main.js)
     content/accessibility/index.html (accessibility/index.html)
