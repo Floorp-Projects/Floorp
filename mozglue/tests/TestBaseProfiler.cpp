@@ -1448,8 +1448,15 @@ void TestProfiler() {
     std::thread threadFib([]() {
       AUTO_BASE_PROFILER_REGISTER_THREAD("fibonacci");
       SleepMilli(5);
+      auto cause =
+#  if defined(__linux__) || defined(__ANDROID__)
+          // Currently disabled on these platforms, so just return a null.
+          decltype(baseprofiler::profiler_get_backtrace()){};
+#  else
+          baseprofiler::profiler_get_backtrace();
+#  endif
       AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE("fibonacci", "First leaf call",
-                                           OTHER, nullptr);
+                                           OTHER, std::move(cause));
       static const unsigned long long fibStart = 37;
       printf("Fibonacci(%llu)...\n", fibStart);
       AUTO_BASE_PROFILER_LABEL("Label around Fibonacci", OTHER);
