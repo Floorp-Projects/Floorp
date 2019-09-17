@@ -66,6 +66,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/FailedCertSecurityInfoBinding.h"
+#include "mozilla/dom/NetErrorInfoBinding.h"
 #include <bitset>  // for member
 
 // windows.h #defines CreateEvent
@@ -2499,6 +2500,18 @@ class Document : public nsINode,
    * exists. This is only relevant to error pages.
    */
   nsIChannel* GetFailedChannel() const { return mFailedChannel; }
+
+  /**
+   * This function checks if the document that is trying to access
+   * GetNetErrorInfo is a trusted about net error page or not.
+   */
+  static bool CallerIsTrustedAboutNetError(JSContext* aCx, JSObject* aObject);
+
+  /**
+   * Get security info like error code for a failed channel. This
+   * property is only exposed to about:neterror documents.
+   */
+  void GetNetErrorInfo(mozilla::dom::NetErrorInfo& aInfo, ErrorResult& aRv);
 
   /**
    * This function checks if the document that is trying to access

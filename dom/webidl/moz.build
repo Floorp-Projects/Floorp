@@ -686,6 +686,7 @@ WEBIDL_FILES = [
     'NativeOSFileInternals.webidl',
     'Navigator.webidl',
     'NetDashboard.webidl',
+    'NetErrorInfo.webidl',
     'NetworkInformation.webidl',
     'NetworkOptions.webidl',
     'NodeFilter.webidl',
