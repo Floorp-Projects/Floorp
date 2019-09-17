@@ -380,7 +380,7 @@ impl<'a> CachedReader<'a> {
 /// the first not-yet-copied item with those bounds in the old list and copy that.
 /// Any items found in the old list but not the new one can be safely assumed to
 /// have been deleted.
-fn merge_blob_images(old_buf: &[u8], new_buf: &[u8], mut dirty_rect: Box2d) -> Vec<u8> {
+fn merge_blob_images(old_buf: &[u8], new_buf: &[u8], dirty_rect: Box2d) -> Vec<u8> {
 
     let mut result = BlobWriter::new();
     dlog!("dirty rect: {:?}", dirty_rect);
@@ -394,11 +394,6 @@ fn merge_blob_images(old_buf: &[u8], new_buf: &[u8], mut dirty_rect: Box2d) -> V
 
     // we currently only support merging blobs that have the same origin
     assert_eq!(old_reader.reader.origin, new_reader.origin);
-
-    dirty_rect.x1 += new_reader.origin.x;
-    dirty_rect.y1 += new_reader.origin.y;
-    dirty_rect.x2 += new_reader.origin.x;
-    dirty_rect.y2 += new_reader.origin.y;
 
     // Loop over both new and old entries merging them.
     // Both new and old must have the same number of entries that
