@@ -927,9 +927,17 @@ class AsyncScrollbarDragStarter final : public nsAPostRefreshObserver {
   AsyncDragMetrics mDragMetrics;
 };
 
-static bool UsesSVGEffects(nsIFrame* aFrame) {
-  return aFrame->StyleEffects()->HasFilters() ||
-         nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(aFrame);
+static bool UsesSVGEffectsNotSupportedInCompositor(nsIFrame* aFrame) {
+  // WebRender supports masks / clip-paths and some filters in the compositor.
+  // Non-WebRender doesn't support any SVG effects in the compositor.
+  if (aFrame->StyleEffects()->HasFilters()) {
+    return !gfx::gfxVars::UseWebRender() ||
+           !nsSVGIntegrationUtils::CanCreateWebRenderFiltersForFrame(aFrame);
+  }
+  if (nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(aFrame)) {
+    return !gfx::gfxVars::UseWebRender();
+  }
+  return false;
 }
 
 static bool ScrollFrameWillBuildScrollInfoLayer(nsIFrame* aScrollFrame) {
@@ -938,14 +946,9 @@ static bool ScrollFrameWillBuildScrollInfoLayer(nsIFrame* aScrollFrame) {
    * change to nsDisplayListBuilder::ShouldBuildScrollInfoItemsForHoisting()
    * in nsDisplayList.cpp.
    */
-  if (gfx::gfxVars::UseWebRender()) {
-    // If WebRender is enabled, even scrollframes enclosed in SVG effects can
-    // be drag-scrolled by APZ.
-    return false;
-  }
   nsIFrame* current = aScrollFrame;
   while (current) {
-    if (UsesSVGEffects(current)) {
+    if (UsesSVGEffectsNotSupportedInCompositor(current)) {
       return true;
     }
     current = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(current);
