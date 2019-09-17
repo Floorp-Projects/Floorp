@@ -232,8 +232,19 @@ body {
   grid-row: 2 / 3;
   display: grid;
   align-items: center;
-  /* We're going to have the run button, the history nav and the close button */
-  grid-template-columns: auto 1fr auto auto auto;
+  /*
+     * The following elements are going to be present in the toolbar:
+     *   - The run button
+     *   - The history nav
+     *   - A separator
+     *   - The close button
+     *
+     * +------------------------------------------+
+     * | ▶︎ Run                          ˄ ˅ 🔍 | ✖️ |
+     * +------------------------------------------+
+     *
+     */
+  grid-template-columns: auto 1fr auto auto auto auto auto;
   height: unset;
 }
 
@@ -251,10 +262,18 @@ body {
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-history-prevExpressionButton {
-  grid-column: -3 / -4;
+  grid-column: -5 / -6;
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-history-nextExpressionButton {
+  grid-column: -4 / -5;
+}
+
+.jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-reverseSearchButton {
+  grid-column: -3 / -4;
+}
+
+.jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-historyNavSeparator {
   grid-column: -2 / -3;
 }
 
@@ -263,17 +282,22 @@ body {
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-history-prevExpressionButton::before {
-  background-image: url("chrome://devtools/skin/images/arrowhead-up.svg");
+  background-image: url(chrome://devtools/skin/images/arrowhead-up.svg);
   background-size: 16px;
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-history-nextExpressionButton::before {
-  background-image: url("chrome://devtools/skin/images/arrowhead-down.svg");
+  background-image: url(chrome://devtools/skin/images/arrowhead-down.svg);
   background-size: 16px;
 }
 
+.jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-reverseSearchButton::before {
+  background-image: url(chrome://devtools/skin/images/webconsole/reverse-search.svg);
+  background-size: 14px;
+}
+
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-closeButton::before {
-  background-image: url("chrome://devtools/skin/images/close.svg");
+  background-image: url(chrome://devtools/skin/images/close.svg);
 }
 
 .jsterm-editor .webconsole-input-openEditorButton {
