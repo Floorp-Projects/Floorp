@@ -34,8 +34,8 @@ loader.lazyGetter(this, "NetworkDetailsPanel", function() {
   return createFactory(require("./NetworkDetailsPanel"));
 });
 
-loader.lazyGetter(this, "SearchPanel", function() {
-  return createFactory(require("./search/SearchPanel"));
+loader.lazyGetter(this, "NetworkActionBar", function() {
+  return createFactory(require("./NetworkActionBar"));
 });
 
 // MediaQueryList object responsible for switching sidebar splitter
@@ -86,7 +86,7 @@ class MonitorPanel extends Component {
     MediaQuerySingleRow.addListener(this.onLayoutChange);
     MediaQueryVert.addListener(this.onLayoutChange);
     this.persistDetailsPanelSize();
-    this.persistSearchPanelSize();
+    this.persistActionBarSize();
   }
 
   componentWillReceiveProps(nextProps) {
@@ -104,7 +104,7 @@ class MonitorPanel extends Component {
     MediaQuerySingleRow.removeListener(this.onLayoutChange);
     MediaQueryVert.removeListener(this.onLayoutChange);
     this.persistDetailsPanelSize();
-    this.persistSearchPanelSize();
+    this.persistActionBarSize();
   }
 
   persistDetailsPanelSize() {
@@ -124,9 +124,9 @@ class MonitorPanel extends Component {
     }
   }
 
-  persistSearchPanelSize() {
+  persistActionBarSize() {
     const { clientWidth, clientHeight } =
-      findDOMNode(this.refs.searchPanel) || {};
+      findDOMNode(this.refs.actionBar) || {};
     if (clientWidth) {
       Services.prefs.setIntPref(
         "devtools.netmonitor.panes-search-width",
@@ -158,7 +158,7 @@ class MonitorPanel extends Component {
     );
   }
 
-  renderSearchPanel() {
+  renderActionBar() {
     const { connector, isEmpty, panelOpen } = this.props;
 
     const initialWidth = Services.prefs.getIntPref(
@@ -177,8 +177,8 @@ class MonitorPanel extends Component {
       splitterSize: panelOpen ? 1 : 0,
       startPanel:
         panelOpen &&
-        SearchPanel({
-          ref: "searchPanel",
+        NetworkActionBar({
+          ref: "actionBar",
           connector,
         }),
       endPanel: RequestList({ isEmpty, connector }),
@@ -220,7 +220,7 @@ class MonitorPanel extends Component {
         minSize: "50px",
         maxSize: "80%",
         splitterSize: networkDetailsOpen ? 1 : 0,
-        startPanel: this.renderSearchPanel(),
+        startPanel: this.renderActionBar(),
         endPanel:
           networkDetailsOpen &&
           NetworkDetailsPanel({
