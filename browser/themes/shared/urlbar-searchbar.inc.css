@@ -47,9 +47,12 @@
 
 .searchbar-textbox {
   -moz-appearance: none;
+  -moz-box-flex: 1;
   background: none;
   color: inherit;
-  margin: 0;
+  border: none;
+  font: inherit;
+  margin: 0 !important; /* override autocomplete.css */
 }
 
 #urlbar:hover,

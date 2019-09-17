@@ -176,7 +176,7 @@ add_no_popup_task(function click_doesnt_open_popup() {
   EventUtils.synthesizeMouseAtCenter(textbox, {});
   is(
     Services.focus.focusedElement,
-    textbox.inputField,
+    textbox,
     "Should have focused the search bar"
   );
   is(textbox.selectionStart, 0, "Should have selected all of the text");
@@ -199,7 +199,7 @@ add_task(async function click_opens_popup() {
 
   is(
     Services.focus.focusedElement,
-    textbox.inputField,
+    textbox,
     "Should have focused the search bar"
   );
   is(textbox.selectionStart, 0, "Should have selected all of the text");
@@ -217,14 +217,22 @@ add_no_popup_task(async function right_click_doesnt_open_popup() {
   gURLBar.focus();
   textbox.value = "foo";
 
-  let contextPopup = textbox.inputField.parentNode.menupopup;
-  let promise = promiseEvent(contextPopup, "popupshown");
+  // Can't wait for an event on the actual menu since it is created
+  // lazily the first time it is displayed.
+  let promise = new Promise(resolve => {
+    let listener = event => {
+      if (searchbar._menupopup && event.target == searchbar._menupopup) {
+        resolve(searchbar._menupopup);
+      }
+    };
+    window.addEventListener("popupshown", listener);
+  });
   context_click(textbox);
-  await promise;
+  let contextPopup = await promise;
 
   is(
     Services.focus.focusedElement,
-    textbox.inputField,
+    textbox,
     "Should have focused the search bar"
   );
   is(textbox.selectionStart, 0, "Should have selected all of the text");
@@ -253,7 +261,7 @@ add_task(async function focus_change_closes_popup() {
 
   is(
     Services.focus.focusedElement,
-    textbox.inputField,
+    textbox,
     "Should have focused the search bar"
   );
   is(textbox.selectionStart, 0, "Should have selected all of the text");
@@ -286,7 +294,7 @@ add_task(async function focus_change_closes_small_popup() {
 
   is(
     Services.focus.focusedElement,
-    textbox.inputField,
+    textbox,
     "Should have focused the search bar"
   );
 
@@ -313,7 +321,7 @@ add_task(async function escape_closes_popup() {
 
   is(
     Services.focus.focusedElement,
-    textbox.inputField,
+    textbox,
     "Should have focused the search bar"
   );
   is(textbox.selectionStart, 0, "Should have selected all of the text");
@@ -342,23 +350,17 @@ add_task(async function contextmenu_closes_popup() {
 
   is(
     Services.focus.focusedElement,
-    textbox.inputField,
+    textbox,
     "Should have focused the search bar"
   );
   is(textbox.selectionStart, 0, "Should have selected all of the text");
   is(textbox.selectionEnd, 3, "Should have selected all of the text");
 
   promise = promiseEvent(searchPopup, "popuphidden");
-
-  // synthesizeKey does not work with VK_CONTEXT_MENU (bug 1127368)
-  EventUtils.synthesizeMouseAtCenter(textbox, {
-    type: "contextmenu",
-    button: null,
-  });
-
+  context_click(textbox);
   await promise;
 
-  let contextPopup = textbox.inputField.parentNode.menupopup;
+  let contextPopup = searchbar._menupopup;
   promise = promiseEvent(contextPopup, "popuphidden");
   contextPopup.hidePopup();
   await promise;
@@ -384,7 +386,7 @@ add_task(async function tab_opens_popup() {
 
   is(
     Services.focus.focusedElement,
-    textbox.inputField,
+    textbox,
     "Should have focused the search bar"
   );
   is(textbox.selectionStart, 0, "Should have selected all of the text");
@@ -408,7 +410,7 @@ add_no_popup_task(function tab_doesnt_open_popup() {
 
   is(
     Services.focus.focusedElement,
-    textbox.inputField,
+    textbox,
     "Should have focused the search bar"
   );
   is(textbox.selectionStart, 0, "Should have selected all of the text");
@@ -433,7 +435,7 @@ add_task(async function refocus_window_doesnt_open_popup_mouse() {
 
   is(
     Services.focus.focusedElement,
-    textbox.inputField,
+    textbox,
     "Should have focused the search bar"
   );
   is(textbox.selectionStart, 0, "Should have selected all of the text");
@@ -480,7 +482,7 @@ add_task(async function refocus_window_doesnt_open_popup_keyboard() {
 
   is(
     Services.focus.focusedElement,
-    textbox.inputField,
+    textbox,
     "Should have focused the search bar"
   );
   is(textbox.selectionStart, 0, "Should have selected all of the text");
@@ -541,7 +543,7 @@ add_task(async function dont_consume_clicks() {
 
   is(
     Services.focus.focusedElement,
-    textbox.inputField,
+    textbox,
     "Should have focused the search bar"
   );
   is(textbox.selectionStart, 0, "Should have selected all of the text");
@@ -579,7 +581,7 @@ add_task(async function drop_opens_popup() {
   let homeButton = document.getElementById("home-button");
   EventUtils.synthesizeDrop(
     homeButton,
-    textbox.inputField,
+    textbox,
     [[{ type: "text/plain", data: "foo" }]],
     "move",
     window
@@ -593,7 +595,7 @@ add_task(async function drop_opens_popup() {
   );
   is(
     Services.focus.focusedElement,
-    textbox.inputField,
+    textbox,
     "Should have focused the search bar"
   );
   promise = promiseEvent(searchPopup, "popuphidden");
