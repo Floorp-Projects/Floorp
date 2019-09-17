@@ -10,14 +10,11 @@ use api::channel::MsgSender;
 use api::units::LayoutSize;
 #[cfg(feature = "capture")]
 use crate::capture::CaptureConfig;
-use crate::frame_builder::{FrameBuilderConfig, FrameBuilder};
-use crate::clip_scroll_tree::ClipScrollTree;
-use crate::display_list_flattener::DisplayListFlattener;
-use crate::hit_test::HitTestingSceneStats;
+use crate::frame_builder::FrameBuilderConfig;
+use crate::scene_building::SceneBuilder;
 use crate::intern::{Internable, Interner, UpdateList};
 use crate::internal_types::{FastHashMap, FastHashSet};
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
-use crate::prim_store::PrimitiveStoreStats;
 use crate::prim_store::backdrop::Backdrop;
 use crate::prim_store::borders::{ImageBorder, NormalBorderPrim};
 use crate::prim_store::gradient::{LinearGradient, RadialGradient};
@@ -28,7 +25,7 @@ use crate::prim_store::text_run::TextRun;
 use crate::resource_cache::{AsyncBlobImageInfo, FontInstanceMap};
 use crate::render_backend::DocumentView;
 use crate::renderer::{PipelineInfo, SceneBuilderHooks};
-use crate::scene::Scene;
+use crate::scene::{Scene, BuiltScene, SceneStats};
 use std::iter;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::mem::replace;
@@ -130,12 +127,6 @@ pub struct LoadScene {
     pub interners: Interners,
 }
 
-pub struct BuiltScene {
-    pub scene: Scene,
-    pub frame_builder: FrameBuilder,
-    pub clip_scroll_tree: ClipScrollTree,
-}
-
 // Message from render backend to scene builder.
 pub enum SceneBuilderRequest {
     Transactions(Vec<Box<Transaction>>),
@@ -228,24 +219,6 @@ macro_rules! declare_interners {
 
 enumerate_interners!(declare_interners);
 
-/// Stores the allocation sizes of various arrays in the frame
-/// builder. This is retrieved from the current frame builder
-/// and used to reserve an approximately correct capacity of
-/// the arrays for the next scene that is getting built.
-pub struct DocumentStats {
-    pub prim_store_stats: PrimitiveStoreStats,
-    pub hit_test_stats: HitTestingSceneStats,
-}
-
-impl DocumentStats {
-    pub fn empty() -> DocumentStats {
-        DocumentStats {
-            prim_store_stats: PrimitiveStoreStats::empty(),
-            hit_test_stats: HitTestingSceneStats::empty(),
-        }
-    }
-}
-
 // A document in the scene builder contains the current scene,
 // as well as a persistent clip interner. This allows clips
 // to be de-duplicated, and persisted in the GPU cache between
@@ -253,7 +226,7 @@ impl DocumentStats {
 struct Document {
     scene: Scene,
     interners: Interners,
-    doc_stats: DocumentStats,
+    stats: SceneStats,
 }
 
 impl Document {
@@ -261,7 +234,7 @@ impl Document {
         Document {
             scene,
             interners: Interners::default(),
-            doc_stats: DocumentStats::empty(),
+            stats: SceneStats::empty(),
         }
     }
 }
@@ -398,30 +371,19 @@ impl SceneBuilderThread {
             let mut interner_updates = None;
 
             if item.scene.has_root_pipeline() {
-                let mut clip_scroll_tree = ClipScrollTree::new();
-                let mut new_scene = Scene::new();
-
-                let frame_builder = DisplayListFlattener::create_frame_builder(
+                built_scene = Some(SceneBuilder::build(
                     &item.scene,
-                    &mut clip_scroll_tree,
                     item.font_instances,
                     &item.view,
                     &item.output_pipelines,
                     &self.config,
-                    &mut new_scene,
                     &mut item.interners,
-                    &DocumentStats::empty(),
-                );
+                    &SceneStats::empty(),
+                ));
 
                 interner_updates = Some(
                     item.interners.end_frame_and_get_pending_updates()
                 );
-
-                built_scene = Some(BuiltScene {
-                    scene: new_scene,
-                    frame_builder,
-                    clip_scroll_tree,
-                });
             }
 
             self.documents.insert(
@@ -429,7 +391,7 @@ impl SceneBuilderThread {
                 Document {
                     scene: item.scene,
                     interners: item.interners,
-                    doc_stats: DocumentStats::empty(),
+                    stats: SceneStats::empty(),
                 },
             );
 
@@ -493,34 +455,25 @@ impl SceneBuilderThread {
         let mut interner_updates = None;
         if scene.has_root_pipeline() {
             if let Some(request) = txn.request_scene_build.take() {
-                let mut clip_scroll_tree = ClipScrollTree::new();
-                let mut new_scene = Scene::new();
-
-                let frame_builder = DisplayListFlattener::create_frame_builder(
+                let built = SceneBuilder::build(
                     &scene,
-                    &mut clip_scroll_tree,
                     request.font_instances,
                     &request.view,
                     &request.output_pipelines,
                     &self.config,
-                    &mut new_scene,
                     &mut doc.interners,
-                    &doc.doc_stats,
+                    &doc.stats,
                 );
 
                 // Update the allocation stats for next scene
-                doc.doc_stats = frame_builder.get_stats();
+                doc.stats = built.get_stats();
 
                 // Retrieve the list of updates from the clip interner.
                 interner_updates = Some(
                     doc.interners.end_frame_and_get_pending_updates()
                 );
 
-                built_scene = Some(BuiltScene {
-                    scene: new_scene,
-                    frame_builder,
-                    clip_scroll_tree,
-                });
+                built_scene = Some(built);
             }
         }
 
@@ -564,7 +517,7 @@ impl SceneBuilderThread {
                             .filter(|txn| txn.built_scene.is_some())
                             .map(|txn| {
                                 txn.built_scene.as_ref().unwrap()
-                                    .scene.pipeline_epochs.iter()
+                                    .src.pipeline_epochs.iter()
                                     .zip(iter::repeat(txn.document_id))
                                     .map(|((&pipeline_id, &epoch), document_id)| ((pipeline_id, document_id), epoch))
                             }).flatten().collect(),

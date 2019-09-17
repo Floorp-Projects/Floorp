@@ -8,7 +8,7 @@ use api::{
     PremultipliedColorF, Shadow, YuvColorSpace, ColorRange, YuvFormat,
 };
 use api::units::*;
-use crate::display_list_flattener::{CreateShadow, IsVisible};
+use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::FrameBuildingState;
 use crate::gpu_cache::{GpuCache, GpuDataRequest};
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};

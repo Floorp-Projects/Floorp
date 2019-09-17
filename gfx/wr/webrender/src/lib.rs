@@ -88,7 +88,6 @@ mod debug_render;
 #[cfg(feature = "debugger")]
 mod debug_server;
 mod device;
-mod display_list_flattener;
 mod ellipse;
 mod filterdata;
 mod frame_builder;
@@ -116,6 +115,7 @@ mod renderer;
 mod resource_cache;
 mod scene;
 mod scene_builder_thread;
+mod scene_building;
 mod screen_capture;
 mod segment;
 mod shade;
