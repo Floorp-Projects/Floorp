@@ -80,3 +80,12 @@ nsOSPermissionRequest::RequestAudioCapturePermission(JSContext* aCx, Promise** a
   promiseHandle.forget(aPromiseOut);
   return rv;
 }
+
+NS_IMETHODIMP
+nsOSPermissionRequest::MaybeRequestScreenCapturePermission() {
+  if (!nsCocoaFeatures::OnCatalinaOrLater()) {
+    return nsOSPermissionRequestBase::MaybeRequestScreenCapturePermission();
+  }
+
+  return nsCocoaUtils::MaybeRequestScreenCapturePermission();
+}

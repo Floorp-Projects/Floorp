@@ -55,4 +55,15 @@ interface nsIOSPermissionRequest: nsISupports
    */
   [implicit_jscontext, must_use]
   Promise requestAudioCapturePermission();
+
+  /*
+   * Request permission to capture the screen using an unreliable method.
+   * Attemps to trigger a screen capture permission dialog. Whether or not
+   * the dialog is displayed and whether or not the user grants permission
+   * to record the screen is not available to the caller. This method has
+   * limited utility because it does not block to wait for a dialog
+   * prompt or the user's reponse if a dialog is displayed. And the dialog
+   * is not guaranteed to be displayed per OS restrictions.
+   */
+  void maybeRequestScreenCapturePermission();
 };
