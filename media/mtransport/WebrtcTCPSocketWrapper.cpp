@@ -43,22 +43,24 @@ WebrtcTCPSocketWrapper::~WebrtcTCPSocketWrapper() {
 }
 
 void WebrtcTCPSocketWrapper::AsyncOpen(
-    const nsCString& aHost, const int& aPort,
-    const shared_ptr<NrSocketProxyConfig>& aConfig) {
+    const nsCString& aHost, const int& aPort, const nsCString& aLocalAddress,
+    const int& aLocalPort, const shared_ptr<NrSocketProxyConfig>& aConfig) {
   if (!NS_IsMainThread()) {
     MOZ_ALWAYS_SUCCEEDS(mMainThread->Dispatch(
-        NewRunnableMethod<const nsCString, const int,
-                          const shared_ptr<NrSocketProxyConfig>>(
+        NewRunnableMethod<const nsCString, const int, const nsCString,
+                          const int, const shared_ptr<NrSocketProxyConfig>>(
             "WebrtcTCPSocketWrapper::AsyncOpen", this,
-            &WebrtcTCPSocketWrapper::AsyncOpen, aHost, aPort, aConfig)));
+            &WebrtcTCPSocketWrapper::AsyncOpen, aHost, aPort, aLocalAddress,
+            aLocalPort, aConfig)));
     return;
   }
 
   MOZ_ASSERT(!mWebrtcTCPSocket, "wrapper already open");
   mWebrtcTCPSocket = new WebrtcTCPSocketChild(this);
-  mWebrtcTCPSocket->AsyncOpen(
-      aHost, aPort, aConfig->GetLoadInfoArgs(), aConfig->GetAlpn(),
-      dom::TabId(aConfig->GetTabId()), aConfig->GetProxyPolicy());
+  mWebrtcTCPSocket->AsyncOpen(aHost, aPort, aLocalAddress, aLocalPort,
+                              aConfig->GetLoadInfoArgs(), aConfig->GetAlpn(),
+                              dom::TabId(aConfig->GetTabId()),
+                              aConfig->GetProxyPolicy());
 }
 
 void WebrtcTCPSocketWrapper::SendWrite(nsTArray<uint8_t>&& aReadData) {
