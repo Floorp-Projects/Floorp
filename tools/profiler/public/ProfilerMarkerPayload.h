@@ -8,6 +8,7 @@
 #define ProfilerMarkerPayload_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/BlocksRingBuffer.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
@@ -46,20 +47,17 @@ class ProfilerMarkerPayload {
       const mozilla::Maybe<nsID>& aDocShellId = mozilla::Nothing(),
       const mozilla::Maybe<uint32_t>& aDocShellHistoryId = mozilla::Nothing(),
       UniqueProfilerBacktrace aStack = nullptr)
-      : mStack(std::move(aStack)),
-        mDocShellId(aDocShellId),
-        mDocShellHistoryId(aDocShellHistoryId) {}
+      : mCommonProps{mozilla::TimeStamp{}, mozilla::TimeStamp{},
+                     std::move(aStack), std::move(aDocShellId),
+                     std::move(aDocShellHistoryId)} {}
 
   ProfilerMarkerPayload(
       const mozilla::TimeStamp& aStartTime, const mozilla::TimeStamp& aEndTime,
       const mozilla::Maybe<nsID>& aDocShellId = mozilla::Nothing(),
       const mozilla::Maybe<uint32_t>& aDocShellHistoryId = mozilla::Nothing(),
       UniqueProfilerBacktrace aStack = nullptr)
-      : mStartTime(aStartTime),
-        mEndTime(aEndTime),
-        mStack(std::move(aStack)),
-        mDocShellId(aDocShellId),
-        mDocShellHistoryId(aDocShellHistoryId) {}
+      : mCommonProps{aStartTime, aEndTime, std::move(aStack),
+                     std::move(aDocShellId), std::move(aDocShellHistoryId)} {}
 
   virtual ~ProfilerMarkerPayload() {}
 
@@ -67,20 +65,27 @@ class ProfilerMarkerPayload {
                              const mozilla::TimeStamp& aProcessStartTime,
                              UniqueStacks& aUniqueStacks) = 0;
 
-  mozilla::TimeStamp GetStartTime() const { return mStartTime; }
+  mozilla::TimeStamp GetStartTime() const { return mCommonProps.mStartTime; }
 
  protected:
+  struct CommonProps {
+    mozilla::TimeStamp mStartTime;
+    mozilla::TimeStamp mEndTime;
+    UniqueProfilerBacktrace mStack;
+    mozilla::Maybe<nsID> mDocShellId;
+    mozilla::Maybe<uint32_t> mDocShellHistoryId;
+  };
+
+  explicit ProfilerMarkerPayload(CommonProps&& aCommonProps)
+      : mCommonProps(std::move(aCommonProps)) {}
+
   void StreamType(const char* aMarkerType, SpliceableJSONWriter& aWriter);
   void StreamCommonProps(const char* aMarkerType, SpliceableJSONWriter& aWriter,
                          const mozilla::TimeStamp& aProcessStartTime,
                          UniqueStacks& aUniqueStacks);
 
  private:
-  mozilla::TimeStamp mStartTime;
-  mozilla::TimeStamp mEndTime;
-  UniqueProfilerBacktrace mStack;
-  mozilla::Maybe<nsID> mDocShellId;
-  mozilla::Maybe<uint32_t> mDocShellHistoryId;
+  CommonProps mCommonProps;
 };
 
 #define DECL_STREAM_PAYLOAD                                               \
