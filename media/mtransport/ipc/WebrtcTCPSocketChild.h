@@ -9,6 +9,7 @@
 
 #include "mozilla/net/PWebrtcTCPSocketChild.h"
 #include "mozilla/dom/ipc/IdType.h"
+#include "mtransport/nr_socket_proxy_config.h"
 
 namespace mozilla {
 
@@ -30,7 +31,8 @@ class WebrtcTCPSocketChild : public PWebrtcTCPSocketChild {
 
   void AsyncOpen(const nsCString& aHost, const int& aPort,
                  const net::LoadInfoArgs& aArgs, const nsCString& aAlpn,
-                 const dom::TabId& aTabId);
+                 const dom::TabId& aTabId,
+                 NrSocketProxyConfig::ProxyPolicy aProxyPolicy);
 
   void AddIPDLReference() { AddRef(); }
   void ReleaseIPDLReference() { Release(); }
