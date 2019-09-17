@@ -1677,7 +1677,8 @@ class nsDisplayListBuilder {
 
   void ClearWillChangeBudget();
 
-  void EnterSVGEffectsContents(nsDisplayList* aHoistedItemsStorage);
+  void EnterSVGEffectsContents(nsIFrame* aEffectsFrame,
+                               nsDisplayList* aHoistedItemsStorage);
   void ExitSVGEffectsContents();
 
   bool ShouldBuildScrollInfoItemsForHoisting() const;
@@ -1977,7 +1978,7 @@ class nsDisplayListBuilder {
   ViewID mCurrentScrollbarTarget;
   MaybeScrollDirection mCurrentScrollbarDirection;
   Preserves3DContext mPreserves3DCtx;
-  int32_t mSVGEffectsBuildingDepth;
+  nsTArray<nsIFrame*> mSVGEffectsFrames;
   // When we are inside a filter, the current ASR at the time we entered the
   // filter. Otherwise nullptr.
   const ActiveScrolledRoot* mFilterASR;

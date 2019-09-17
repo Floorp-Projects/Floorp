@@ -1234,7 +1234,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mTableBackgroundSet(nullptr),
       mCurrentScrollParentId(ScrollableLayerGuid::NULL_SCROLL_ID),
       mCurrentScrollbarTarget(ScrollableLayerGuid::NULL_SCROLL_ID),
-      mSVGEffectsBuildingDepth(0),
       mFilterASR(nullptr),
       mContainsBlendMode(false),
       mIsBuildingScrollbar(false),
@@ -2605,21 +2604,20 @@ bool nsDisplayListBuilder::AddToAGRBudget(nsIFrame* aFrame) {
 }
 
 void nsDisplayListBuilder::EnterSVGEffectsContents(
-    nsDisplayList* aHoistedItemsStorage) {
-  MOZ_ASSERT(mSVGEffectsBuildingDepth >= 0);
+    nsIFrame* aEffectsFrame, nsDisplayList* aHoistedItemsStorage) {
   MOZ_ASSERT(aHoistedItemsStorage);
-  if (mSVGEffectsBuildingDepth == 0) {
+  if (mSVGEffectsFrames.IsEmpty()) {
     MOZ_ASSERT(!mScrollInfoItemsForHoisting);
     mScrollInfoItemsForHoisting = aHoistedItemsStorage;
   }
-  mSVGEffectsBuildingDepth++;
+  mSVGEffectsFrames.AppendElement(aEffectsFrame);
 }
 
 void nsDisplayListBuilder::ExitSVGEffectsContents() {
-  mSVGEffectsBuildingDepth--;
-  MOZ_ASSERT(mSVGEffectsBuildingDepth >= 0);
+  MOZ_ASSERT(!mSVGEffectsFrames.IsEmpty());
+  mSVGEffectsFrames.RemoveLastElement();
   MOZ_ASSERT(mScrollInfoItemsForHoisting);
-  if (mSVGEffectsBuildingDepth == 0) {
+  if (mSVGEffectsFrames.IsEmpty()) {
     mScrollInfoItemsForHoisting = nullptr;
   }
 }
@@ -2630,7 +2628,12 @@ bool nsDisplayListBuilder::ShouldBuildScrollInfoItemsForHoisting() const {
    * are created, make a corresponding change to
    * ScrollFrameWillBuildScrollInfoLayer() in nsSliderFrame.cpp.
    */
-  return !gfxVars::UseWebRender() && mSVGEffectsBuildingDepth > 0;
+  for (nsIFrame* frame : mSVGEffectsFrames) {
+    if (nsSVGIntegrationUtils::UsesSVGEffectsNotSupportedInCompositor(frame)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void nsDisplayListBuilder::AppendNewScrollInfoItemForHoisting(
