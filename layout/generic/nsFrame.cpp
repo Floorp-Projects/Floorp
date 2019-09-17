@@ -3170,7 +3170,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
         nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(this, dirtyRect);
     visibleRect = nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(
         this, visibleRect);
-    aBuilder->EnterSVGEffectsContents(&hoistedScrollInfoItemsStorage);
+    aBuilder->EnterSVGEffectsContents(this, &hoistedScrollInfoItemsStorage);
   }
 
   bool useStickyPosition =
