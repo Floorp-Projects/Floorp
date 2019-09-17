@@ -22,12 +22,17 @@
 
   /* Colors for the loading indicator */
   --protection-report-loader-color-stop: #AEAEAE3D;
-  --protection-report-loader-gradient-opacity: .95;
+  --protection-report-loader-gradient-opacity: 0.95;
 }
 
 body {
   margin-top: 40px;
   margin-bottom: 80px;
+  box-sizing: border-box;
+}
+
+*, *:before, *:after {
+  box-sizing: inherit;
 }
 
 body[focuseddatatype=social] {
@@ -65,24 +70,34 @@ h2 {
   margin: 0 auto;
 }
 
+.card-header .wrapper {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  align-items: center;
+}
+
 .card-header > button,
-#sign-up-for-monitor-link,
-#get-proxy-extension-link {
+#get-proxy-extension-link,
+#open-about-logins-button,
+#sign-up-for-monitor-link {
+  grid-area: 1 / 5 / 1 / -1;
+  margin: 0;
+  height: 38px;
   font-size: 0.95em;
   cursor: pointer;
-  margin-inline-end: 15px;
-  margin-inline-start: 15px;
   padding: 10px;
-  align-self: center;
   text-align: center;
+  line-height: initial;
 }
 
-.card.lockwise-card .card-header,
-.card.monitor-card.no-logins .card-header,
-.card.proxy-card .card-header {
-  grid-template-columns: 2fr 6fr 7fr;
+.card:not(.has-logins) .wrapper div:nth-child(1) {
+  grid-area: 1 / 1 / 1 / 5;
+  padding-inline-end: 15px;
 }
 
+.card.has-logins .wrapper div:nth-child(1) {
+  grid-area: 1 / 1 / 1 / -1;
+}
 
 /* We want to hide certain components depending on its state. */
 .etp-card .icon.dark,
@@ -158,7 +173,7 @@ a.hidden,
 }
 
 .card .content {
-  margin-bottom: 24px;
+  margin-bottom: 0px;
   margin-top: 5px;
   font-size: .93em;
   cursor: default;
@@ -166,14 +181,16 @@ a.hidden,
 }
 
 #protection-details {
-  padding: 4px;
   padding-inline-start: 24px;
+  padding-inline-end: 3px;
   -moz-context-properties: fill;
   fill: currentColor;
   background: url("chrome://browser/skin/settings.svg") no-repeat 3px 3px;
   font-size: 0.75em;
-  display: inline;
   cursor: default;
+  width: max-content;
+  margin-top: 24px;
+  margin-bottom: 0;
 }
 
 #protection-details:dir(rtl) {
@@ -218,7 +235,7 @@ a.hidden,
 
 #graph-wrapper {
   width: 100%;
-  margin-top: 30px;
+  margin-top: 33px;
   margin-bottom: 25px;
 }
 
@@ -304,8 +321,8 @@ a.hidden,
 
 .bar-count {
   position: absolute;
-  top: -25px;
-  font-size: .8em;
+  top: -21px;
+  font-size: 0.8em;
 }
 
 /* Legend */
@@ -531,26 +548,22 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 /* Monitor card */
 
 #monitor-body-content .monitor-breached-passwords {
-  grid: 1fr / minmax(70px, auto) 1fr;
+  grid: 1fr / repeat(7, 1fr);
   grid-row: 3;
+  grid-column: 1 / -1;
   display: grid;
   align-items: center;
   font-size: 0.85em;
   border-top: 1px solid var(--in-content-border-color);
   padding-top: 20px;
   line-height: 18px;
-  grid-column-gap: 10px;
   margin-bottom: 20px;
 }
 
-.monitor-info-wrapper {
-  display: grid;
-  grid: 1fr / 1fr 1fr 1fr;
-  grid-gap: 10px;
-}
-
-.monitor-scanned-text {
+.monitor-scanned-wrapper {
+  margin-top: 24px;
   font-size: 0.85em;
+  display: block;
 }
 
 .monitor-card #monitor-header-content > a {
@@ -561,8 +574,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 
 .monitor-card.has-logins #monitor-body-content {
   display: grid;
-  grid: 1fr 50px auto / 1fr 100px;
-  grid-column-gap: 12px;
+  grid: 1fr 50px auto / repeat(7, 1fr);
   align-items: center;
 }
 
@@ -572,24 +584,31 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   border-radius: 4px;
   color: #FFFFFF;
   text-align: center;
-  padding: 25px 5px 25px 5px;
+  padding: 25px 10px;
+  margin-inline-end: 15px;
 }
 
 .email {
   background: linear-gradient(162.33deg, #AB71FF 0%, #9059FF 100%);
+  grid-column-start: 1;
+  grid-column-end: 3;
 }
 
 .breaches {
   background: linear-gradient(162.33deg, #9059FF 0%, #7542E5 100%);
+  grid-column-start: 3;
+  grid-column-end: 5;
 }
 
 .passwords {
   background: linear-gradient(162.33deg, #7542E5 0%, #592ACB 100%);
+  grid-column-start: 5;
+  grid-column-end: 7;
 }
 
 .monitor-view-full-report {
   grid-row: 2;
-  grid-column: span 2;
+  grid-column: span 7;
   font-size: 0.85em;
   color: var(--in-content-deemphasized-text);
 }
@@ -621,16 +640,22 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 }
 
 .info-text {
-  font-size: .75em;
+  font-size: 0.75em;
   line-height: 13px;
   margin-block-start: 5px;
 }
 
 .number-of-breaches.block {
   font-size: 1.45em;
-  color: var(--grey-90);
   background-color: var(--orange-50);
   padding: 15px;
+  grid-column: 1 / 2;
+  width: 70px;
+  height: 48px;
+}
+
+#password-warning {
+  grid-column: 2 / -1;
 }
 
 #sign-up-for-monitor-link,
@@ -681,7 +706,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 
   100% {
     background-position-x: 700px;
-    opacity: .02;
+    opacity: 0.02;
   }
 }
 
