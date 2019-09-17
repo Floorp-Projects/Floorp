@@ -16,9 +16,24 @@
 #include "rtc_base/stringutils.h"
 
 #include <dvdmedia.h>
+#include <Dbt.h>
+#include <ks.h>
+#include <ksmedia.h>
 
 namespace webrtc {
 namespace videocapturemodule {
+
+BOOL isCaptureDevice(DEV_BROADCAST_HDR *pHdr)
+{
+  if (pHdr == NULL) {
+    return FALSE;
+  }
+  if (pHdr->dbch_devicetype != DBT_DEVTYP_DEVICEINTERFACE) {
+    return FALSE;
+  }
+  DEV_BROADCAST_DEVICEINTERFACE* pDi = (DEV_BROADCAST_DEVICEINTERFACE*)pHdr;
+  return pDi->dbcc_classguid == KSCATEGORY_CAPTURE;
+}
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -35,7 +50,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
     else if (uiMsg == WM_DEVICECHANGE)
     {
         pParent = (DeviceInfoDS*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-        if (pParent)
+        if (pParent && isCaptureDevice((PDEV_BROADCAST_HDR)lParam))
         {
             pParent->DeviceChange();
         }
@@ -56,7 +71,8 @@ DeviceInfoDS* DeviceInfoDS::Create() {
 DeviceInfoDS::DeviceInfoDS()
     : _dsDevEnum(NULL),
       _dsMonikerDevEnum(NULL),
-      _CoUninitializeIsRequired(true) {
+      _CoUninitializeIsRequired(true),
+      _hdevnotify(NULL) {
   // 1) Initialize the COM library (make Windows load the DLLs).
   //
   // CoInitializeEx must be called at least once, and is usually called only
@@ -110,6 +126,14 @@ DeviceInfoDS::DeviceInfoDS()
     _hwnd = CreateWindow(_wndClass.lpszClassName, NULL, 0, CW_USEDEFAULT,
                          CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL,
                          NULL, _hInstance, this);
+
+    DEV_BROADCAST_DEVICEINTERFACE di = { 0 };
+    di.dbcc_size = sizeof(di);
+    di.dbcc_devicetype  = DBT_DEVTYP_DEVICEINTERFACE;
+    di.dbcc_classguid  = KSCATEGORY_CAPTURE;
+
+    _hdevnotify = RegisterDeviceNotification(_hwnd, &di,
+                                             DEVICE_NOTIFY_WINDOW_HANDLE);
   }
 }
 
@@ -118,6 +142,10 @@ DeviceInfoDS::~DeviceInfoDS() {
   RELEASE_AND_CLEAR(_dsDevEnum);
   if (_CoUninitializeIsRequired) {
     CoUninitialize();
+  }
+  if (_hdevnotify)
+  {
+    UnregisterDeviceNotification(_hdevnotify);
   }
   if (_hwnd != NULL) {
     DestroyWindow(_hwnd);
