@@ -181,7 +181,6 @@ OptionsPanel.prototype = {
       const commandButton = toolbarButtons.filter(
         toggleableButton => toggleableButton.id === checkbox.id
       )[0];
-
       Services.prefs.setBoolPref(
         commandButton.visibilityswitch,
         checkbox.checked
@@ -196,12 +195,7 @@ OptionsPanel.prototype = {
       const checkboxInput = this.panelDoc.createElement("input");
       checkboxInput.setAttribute("type", "checkbox");
       checkboxInput.setAttribute("id", button.id);
-      const defaultValue =
-        button.id !== "command-button-replay"
-          ? true
-          : Services.prefs.getBoolPref("devtools.recordreplay.mvp.enabled");
-
-      if (Services.prefs.getBoolPref(button.visibilityswitch, defaultValue)) {
+      if (Services.prefs.getBoolPref(button.visibilityswitch, true)) {
         checkboxInput.setAttribute("checked", true);
       }
       checkboxInput.addEventListener(
