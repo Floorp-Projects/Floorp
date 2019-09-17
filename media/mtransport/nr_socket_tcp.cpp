@@ -97,16 +97,26 @@ int NrTcpSocket::create(nr_transport_addr* aAddr) {
 int NrTcpSocket::connect(nr_transport_addr* aAddr) {
   r_log(LOG_GENERIC, LOG_DEBUG, "NrTcpSocket::Connect %p\n", this);
 
-  nsCString host;
-  int port;
+  nsCString remote_addr;
+  int remote_port;
 
-  if (nr_transport_addr_get_addrstring_and_port(aAddr, &host, &port)) {
+  if (NS_WARN_IF(nr_transport_addr_get_addrstring_and_port(aAddr, &remote_addr,
+                                                           &remote_port))) {
+    return R_FAILED;
+  }
+
+  nsCString local_addr;
+  int local_port;
+
+  if (NS_WARN_IF(nr_transport_addr_get_addrstring_and_port(
+          &my_addr_, &local_addr, &local_port))) {
     return R_FAILED;
   }
 
   mWebrtcTCPSocket = new WebrtcTCPSocketWrapper(this);
 
-  mWebrtcTCPSocket->AsyncOpen(host, port, mConfig);
+  mWebrtcTCPSocket->AsyncOpen(remote_addr, remote_port, local_addr, local_port,
+                              mConfig);
 
   // trigger nr_socket_buffered to set write/read callback
   return R_WOULDBLOCK;

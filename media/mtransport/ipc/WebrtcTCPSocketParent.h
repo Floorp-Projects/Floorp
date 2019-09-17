@@ -23,11 +23,10 @@ class WebrtcTCPSocketParent : public PWebrtcTCPSocketParent,
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcTCPSocketParent, override)
 
-  mozilla::ipc::IPCResult RecvAsyncOpen(const nsCString& aHost,
-                                        const int& aPort,
-                                        const LoadInfoArgs& aLoadInfoArgs,
-                                        const nsCString& aAlpn,
-                                        const int& aProxyPolicy) override;
+  mozilla::ipc::IPCResult RecvAsyncOpen(
+      const nsCString& aHost, const int& aPort, const nsCString& aLocalAddress,
+      const int& aLocalPort, const LoadInfoArgs& aLoadInfoArgs,
+      const nsCString& aAlpn, const int& aProxyPolicy) override;
 
   mozilla::ipc::IPCResult RecvWrite(nsTArray<uint8_t>&& aWriteData) override;
 

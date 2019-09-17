@@ -30,6 +30,7 @@ class WebrtcTCPSocketChild : public PWebrtcTCPSocketChild {
   explicit WebrtcTCPSocketChild(WebrtcTCPSocketCallback* aProxyCallbacks);
 
   void AsyncOpen(const nsCString& aHost, const int& aPort,
+                 const nsCString& aLocalAddress, const int& aLocalPort,
                  const net::LoadInfoArgs& aArgs, const nsCString& aAlpn,
                  const dom::TabId& aTabId,
                  NrSocketProxyConfig::ProxyPolicy aProxyPolicy);
