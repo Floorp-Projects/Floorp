@@ -553,9 +553,8 @@ fn rasterize_blob(job: Job) -> (BlobImageRequest, BlobImageResult) {
     let result = unsafe {
         if wr_moz2d_render_cb(
             ByteSlice::new(&job.commands[..]),
-            descriptor.rect.size.width,
-            descriptor.rect.size.height,
             descriptor.format,
+            &descriptor.rect,
             &job.visible_rect,
             job.tile_size.as_ref(),
             job.request.tile.as_ref(),
