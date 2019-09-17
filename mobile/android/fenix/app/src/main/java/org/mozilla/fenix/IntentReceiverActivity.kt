@@ -6,7 +6,6 @@ package org.mozilla.fenix
 
 import android.app.Activity
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import kotlinx.coroutines.MainScope
@@ -17,7 +16,6 @@ import org.mozilla.fenix.customtabs.AuthCustomTabActivity.Companion.EXTRA_AUTH_C
 import org.mozilla.fenix.customtabs.CustomTabActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
 
 class IntentReceiverActivity : Activity() {
@@ -35,11 +33,6 @@ class IntentReceiverActivity : Activity() {
             return
         }
 
-        val isPrivate = packageManager
-            ?.getActivityInfo(componentName, PackageManager.GET_META_DATA)
-            ?.metaData
-            ?.getBoolean(PRIVATE_MODE) ?: this.settings.usePrivateMode
-
         MainScope().launch {
             // The intent property is nullable, but the rest of the code below
             // assumes it is not. If it's null, then we make a new one and open
@@ -48,7 +41,7 @@ class IntentReceiverActivity : Activity() {
 
             val intentProcessors = listOf(
                 components.utils.customTabIntentProcessor,
-                if (isPrivate) components.utils.privateIntentProcessor else components.utils.intentProcessor
+                components.utils.intentProcessor
             )
 
             if (intent.getBooleanExtra(SPEECH_PROCESSING, false)) {
@@ -148,7 +141,6 @@ class IntentReceiverActivity : Activity() {
         private const val SPEECH_REQUEST_CODE = 0
         const val SPEECH_PROCESSING = "speech_processing"
         const val PREVIOUS_INTENT = "previous_intent"
-        const val PRIVATE_MODE = "private"
         const val ACTION_OPEN_TAB = "org.mozilla.fenix.OPEN_TAB"
         const val ACTION_OPEN_PRIVATE_TAB = "org.mozilla.fenix.OPEN_PRIVATE_TAB"
     }
