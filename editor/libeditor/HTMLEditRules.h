@@ -60,17 +60,6 @@ class HTMLEditRules : public TextEditRules {
   virtual nsresult DetachEditor() override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual nsresult BeforeEdit() override;
   MOZ_CAN_RUN_SCRIPT virtual nsresult AfterEdit() override;
-  // NOTE: Don't mark WillDoAction() nor DidDoAction() as MOZ_CAN_RUN_SCRIPT
-  //       because they are too generic and doing it makes a lot of public
-  //       editor methods marked as MOZ_CAN_RUN_SCRIPT too, but some of them
-  //       may not causes running script.  So, ideal fix must be that we make
-  //       each method callsed by this method public.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual nsresult WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
-                                bool* aHandled) override;
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual nsresult DidDoAction(EditSubActionInfo& aInfo,
-                               nsresult aResult) override;
   virtual bool DocumentIsEmpty() const override;
 
   /**

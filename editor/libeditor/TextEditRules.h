@@ -21,7 +21,6 @@
 
 namespace mozilla {
 
-class EditSubActionInfo;
 class HTMLEditor;
 class HTMLEditRules;
 namespace dom {
@@ -79,16 +78,6 @@ class TextEditRules {
   virtual nsresult DetachEditor();
   virtual nsresult BeforeEdit();
   MOZ_CAN_RUN_SCRIPT virtual nsresult AfterEdit();
-  // NOTE: Don't mark WillDoAction() nor DidDoAction() as MOZ_CAN_RUN_SCRIPT
-  //       because they are too generic and doing it makes a lot of public
-  //       editor methods marked as MOZ_CAN_RUN_SCRIPT too, but some of them
-  //       may not causes running script.  So, ideal fix must be that we make
-  //       each method callsed by this method public.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual nsresult WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
-                                bool* aHandled);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual nsresult DidDoAction(EditSubActionInfo& aInfo, nsresult aResult);
 
   /**
    * Return false if the editor has non-empty text nodes or non-text
@@ -96,8 +85,6 @@ class TextEditRules {
    * return true.
    */
   virtual bool DocumentIsEmpty() const;
-
-  bool DontEchoPassword() const;
 
  protected:
   virtual ~TextEditRules() = default;
@@ -112,13 +99,6 @@ class TextEditRules {
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult CreateTrailingBRIfNeeded();
 
   /**
-   * Creates a padding <br> element for empty editor if the root element has no
-   * editable content.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
-  CreatePaddingBRElementForEmptyEditorIfNeeded();
-
-  /**
    * CollapseSelectionToTrailingBRIfNeeded() collapses selection after the
    * text node if:
    * - the editor is text editor
@@ -128,13 +108,8 @@ class TextEditRules {
    */
   MOZ_MUST_USE nsresult CollapseSelectionToTrailingBRIfNeeded();
 
-  bool IsPasswordEditor() const;
-  bool IsMaskingPassword() const;
   bool IsSingleLineEditor() const;
   bool IsPlaintextEditor() const;
-  bool IsReadonly() const;
-  bool IsDisabled() const;
-  bool IsMailEditor() const;
 
  private:
   TextEditor* MOZ_NON_OWNING_REF mTextEditor;
@@ -217,54 +192,6 @@ class TextEditRules {
 #endif  // #ifdef DEBUG
 
   bool mIsHTMLEditRules;
-};
-
-/**
- * An object to encapsulate any additional info needed to be passed
- * to rules system by the editor.
- * TODO: This class (almost struct, though) is ugly and its size isn't
- *       optimized.  Should be refined later.
- */
-class MOZ_STACK_CLASS EditSubActionInfo final {
- public:
-  explicit EditSubActionInfo(EditSubAction aEditSubAction)
-      : mEditSubAction(aEditSubAction),
-        inString(nullptr),
-        outString(nullptr),
-        outputFormat(nullptr),
-        maxLength(-1),
-        flags(0),
-        collapsedAction(nsIEditor::eNext),
-        stripWrappers(nsIEditor::eStrip),
-        entireList(false),
-        bulletType(nullptr),
-        alignType(nullptr),
-        blockType(nullptr) {}
-
-  EditSubAction mEditSubAction;
-
-  // EditSubAction::eInsertText / EditSubAction::eInsertTextComingFromIME
-  const nsAString* inString;
-  nsAString* outString;
-  const nsAString* outputFormat;
-  int32_t maxLength;
-
-  // EditSubAction::eComputeTextToOutput
-  uint32_t flags;
-
-  // EditSubAction::eDeleteSelectedContent
-  nsIEditor::EDirection collapsedAction;
-  nsIEditor::EStripWrappers stripWrappers;
-
-  // EditSubAction::eCreateOrChangeList
-  bool entireList;
-  const nsAString* bulletType;
-
-  // EditSubAction::eSetOrClearAlignment
-  const nsAString* alignType;
-
-  // EditSubAction::eCreateOrRemoveBlock
-  const nsAString* blockType;
 };
 
 }  // namespace mozilla

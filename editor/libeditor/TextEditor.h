@@ -769,7 +769,7 @@ class TextEditor : public EditorBase,
    * @param aQuotedText         String to insert.  This will be quoted by ">"
    *                            automatically.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE virtual nsresult
   InsertWithQuotationsAsSubAction(const nsAString& aQuotedText);
 
   /**

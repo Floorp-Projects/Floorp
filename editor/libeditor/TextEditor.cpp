@@ -651,7 +651,6 @@ nsresult TextEditor::DeleteSelectionAsSubAction(EDirection aDirectionAndAmount,
 
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eDeleteSelectedContent, aDirectionAndAmount);
-  EditSubActionInfo subActionInfo(EditSubAction::eDeleteSelectedContent);
 
   EditActionResult result =
       HandleDeleteSelection(aDirectionAndAmount, aStripWrappers);
@@ -1945,10 +1944,10 @@ nsresult TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
     editActionData.SetData(stuffToPaste);
     if (!stuffToPaste.IsEmpty()) {
       AutoPlaceholderBatch treatAsOneTransaction(*this);
-      rv = InsertWithQuotationsAsSubAction(stuffToPaste);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return EditorBase::ToGenericNSResult(rv);
-      }
+      nsresult rv = InsertWithQuotationsAsSubAction(stuffToPaste);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "InsertWithQuotationsAsSubAction() failed");
+      return EditorBase::ToGenericNSResult(rv);
     }
   }
   return NS_OK;
@@ -1958,8 +1957,9 @@ nsresult TextEditor::InsertWithQuotationsAsSubAction(
     const nsAString& aQuotedText) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
+  if (IsReadonly() || IsDisabled()) {
+    return NS_OK;
+  }
 
   // Let the citer quote it for us:
   nsString quotedStuff;
@@ -1977,22 +1977,18 @@ nsresult TextEditor::InsertWithQuotationsAsSubAction(
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertText, nsIEditor::eNext);
 
-  EditSubActionInfo subActionInfo(EditSubAction::eInsertQuotedText);
-  bool cancel, handled;
-  rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
+  // XXX Do we need to support paste-as-quotation in password editor (and
+  //     also in single line editor)?
+  MaybeDoAutoPasswordMasking();
+
+  rv = EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  if (cancel) {
-    return NS_OK;  // Rules canceled the operation.
-  }
-  MOZ_ASSERT(!handled, "WillDoAction() shouldn't handle in this case");
+
   rv = InsertTextAsSubAction(quotedStuff);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  // XXX Why don't we call TextEditRules::DidDoAction()?
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InsertTextAsSubAction() failed");
+  return rv;
 }
 
 nsresult TextEditor::SharedOutputString(uint32_t aFlags, bool* aIsCollapsed,
