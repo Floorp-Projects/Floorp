@@ -61,11 +61,11 @@ template <>
 struct BlocksRingBuffer::Serializer<ProfilerBacktrace> {
   static Length Bytes(const ProfilerBacktrace& aBacktrace) {
     if (!aBacktrace.mProfileBuffer) {
-      return 1;
+      return ULEB128Size<Length>(0);
     }
     auto bufferBytes = SumBytes(*aBacktrace.mBlocksRingBuffer);
     if (bufferBytes == 0) {
-      return 1;
+      return ULEB128Size<Length>(0);
     }
     return bufferBytes +
            SumBytes(aBacktrace.mThreadId,
@@ -88,7 +88,7 @@ struct BlocksRingBuffer::Serializer<UniquePtr<ProfilerBacktrace, Destructor>> {
   static Length Bytes(
       const UniquePtr<ProfilerBacktrace, Destructor>& aBacktrace) {
     if (!aBacktrace) {
-      return 1;
+      return ULEB128Size<Length>(0);
     }
     return SumBytes(*aBacktrace);
   }
