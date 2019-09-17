@@ -13,6 +13,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import sys
 
+from six.moves import range
+
 
 class LoggingHandler(logging.Handler):
     """Custom logging handler that works with terminal window dressing.
@@ -59,7 +61,7 @@ class TerminalFooter(object):
         self.fh = sys.stdout
 
     def _clear_lines(self, n):
-        for i in xrange(n):
+        for i in range(n):
             self.fh.write(self.t.move_x(0))
             self.fh.write(self.t.clear_eol())
             self.fh.write(self.t.move_up())

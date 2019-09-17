@@ -19,14 +19,9 @@ from mach.config import (
     StringType,
 )
 from mach.decorators import SettingsProvider
-
 from mozunit import main
+from six import string_types
 
-
-if sys.version_info[0] == 3:
-    str_type = str
-else:
-    str_type = basestring
 
 CONFIG1 = r"""
 [foo]
@@ -197,11 +192,11 @@ class TestConfigSettings(unittest.TestCase):
         a.int = -4
         a.path = './foo/bar'
 
-        self.assertIsInstance(a.string, str_type)
+        self.assertIsInstance(a.string, string_types)
         self.assertIsInstance(a.boolean, bool)
         self.assertIsInstance(a.pos_int, int)
         self.assertIsInstance(a.int, int)
-        self.assertIsInstance(a.path, str_type)
+        self.assertIsInstance(a.path, string_types)
 
     def test_retrieval_type(self):
         self.retrieval_type_helper(Provider2)
