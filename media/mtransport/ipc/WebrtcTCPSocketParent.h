@@ -39,7 +39,7 @@ class WebrtcTCPSocketParent : public PWebrtcTCPSocketParent,
 
   // WebrtcTCPSocketCallback
   void OnClose(nsresult aReason) override;
-  void OnConnected() override;
+  void OnConnected(const nsCString& aProxyType) override;
   void OnRead(nsTArray<uint8_t>&& bytes) override;
 
   void AddIPDLReference() { AddRef(); }

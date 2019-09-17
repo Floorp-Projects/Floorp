@@ -86,11 +86,13 @@ class NrTcpSocket : public NrSocketBase, public WebrtcTCPSocketCallback {
   int listen(int aBacklog) override;
   int accept(nr_transport_addr* aAddr, nr_socket** aSocket) override;
 
-  bool IsProxied() const override { return true; }
+  bool IsProxied() const override {
+    return mProxyType != "" && mProxyType != "direct";
+  }
 
   // WebrtcTCPSocketCallback
   void OnClose(nsresult aReason) override;
-  void OnConnected() override;
+  void OnConnected(const nsCString& aProxyType) override;
   void OnRead(nsTArray<uint8_t>&& aReadData) override;
 
   size_t CountUnreadBytes() const;
@@ -107,6 +109,7 @@ class NrTcpSocket : public NrSocketBase, public WebrtcTCPSocketCallback {
   bool mClosed;
 
   size_t mReadOffset;
+  nsCString mProxyType;
   std::list<NrTcpSocketData> mReadQueue;
 
   std::shared_ptr<NrSocketProxyConfig> mConfig;

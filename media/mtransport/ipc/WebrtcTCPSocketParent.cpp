@@ -107,10 +107,10 @@ void WebrtcTCPSocketParent::OnRead(nsTArray<uint8_t>&& aReadData) {
   }
 }
 
-void WebrtcTCPSocketParent::OnConnected() {
+void WebrtcTCPSocketParent::OnConnected(const nsCString& aProxyType) {
   LOG(("WebrtcTCPSocketParent::OnConnected %p\n", this));
 
-  if (mChannel && !SendOnConnected()) {
+  if (mChannel && !SendOnConnected(aProxyType)) {
     CleanupChannel();
   }
 }

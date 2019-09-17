@@ -472,7 +472,7 @@ void FakeWebrtcTCPSocket::InvokeOnClose(nsresult aReason) {
 }
 
 void FakeWebrtcTCPSocket::InvokeOnConnected() {
-  mProxyCallbacks->OnConnected();
+  mProxyCallbacks->OnConnected(NS_LITERAL_CSTRING("http"));
 }
 
 void FakeWebrtcTCPSocket::InvokeOnRead(nsTArray<uint8_t>&& aReadData) {
@@ -494,7 +494,7 @@ class WebrtcTCPSocketTest : public MtransportTest {
 
   // WebrtcTCPSocketCallback forwards from mCallback
   void OnClose(nsresult aReason);
-  void OnConnected();
+  void OnConnected(const nsCString& aProxyType);
   void OnRead(nsTArray<uint8_t>&& aReadData);
 
   void SetUp() override;
@@ -534,7 +534,7 @@ class WebrtcTCPSocketTestCallback : public WebrtcTCPSocketCallback {
 
   // WebrtcTCPSocketCallback
   void OnClose(nsresult aReason) override;
-  void OnConnected() override;
+  void OnConnected(const nsCString& aProxyType) override;
   void OnRead(nsTArray<uint8_t>&& aReadData) override;
 
  protected:
@@ -566,7 +566,9 @@ void WebrtcTCPSocketTest::OnRead(nsTArray<uint8_t>&& aReadData) {
   AppendReadData(aReadData.Elements(), aReadData.Length());
 }
 
-void WebrtcTCPSocketTest::OnConnected() { mOnConnectedCalled = true; }
+void WebrtcTCPSocketTest::OnConnected(const nsCString& aProxyType) {
+  mOnConnectedCalled = true;
+}
 
 void WebrtcTCPSocketTest::OnClose(nsresult aReason) { mOnCloseCalled = true; }
 
@@ -614,7 +616,9 @@ void WebrtcTCPSocketTestCallback::OnClose(nsresult aReason) {
   mTest->OnClose(aReason);
 }
 
-void WebrtcTCPSocketTestCallback::OnConnected() { mTest->OnConnected(); }
+void WebrtcTCPSocketTestCallback::OnConnected(const nsCString& aProxyType) {
+  mTest->OnConnected(aProxyType);
+}
 
 void WebrtcTCPSocketTestCallback::OnRead(nsTArray<uint8_t>&& aReadData) {
   mTest->OnRead(std::move(aReadData));

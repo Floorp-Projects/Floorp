@@ -23,7 +23,7 @@ class WebrtcTCPSocketChild : public PWebrtcTCPSocketChild {
 
   mozilla::ipc::IPCResult RecvOnClose(const nsresult& aReason) override;
 
-  mozilla::ipc::IPCResult RecvOnConnected() override;
+  mozilla::ipc::IPCResult RecvOnConnected(const nsCString& aProxyType) override;
 
   mozilla::ipc::IPCResult RecvOnRead(nsTArray<uint8_t>&& aReadData) override;
 
