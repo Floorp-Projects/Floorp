@@ -294,16 +294,6 @@ module.exports = {
     }
   }, {
     "files": [
-      "devtools/client/aboutdebugging/test/browser/helper-addons.js",
-      "devtools/client/inspector/animation/animation.js",
-      "devtools/client/inspector/changes/ChangesView.js",
-      "devtools/client/inspector/markup/test/helper_screenshot_node.js",
-      "devtools/client/performance/modules/widgets/graphs.js",
-      "devtools/client/scratchpad/scratchpad.js",
-      "devtools/client/webconsole/webconsole-wrapper.js",
-      "devtools/server/tests/unit/test_breakpoint-17.js",
-      "devtools/shared/adb/adb-process.js",
-      "devtools/shared/fronts/webconsole.js",
       "dom/l10n/tests/mochitest/document_l10n/non-system-principal/test.html",
       "dom/payments/test/test_basiccard.html",
       "dom/payments/test/test_bug1478740.html",

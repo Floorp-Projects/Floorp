@@ -165,12 +165,12 @@ class AnimationInspector {
     if (this.animationsFrontPromise) {
       return this.animationsFrontPromise;
     }
-    this.animationsFrontPromise = new Promise(async resolve => {
+    this.animationsFrontPromise = (async () => {
       const target = this.inspector.currentTarget;
       const front = await target.getFront("animations");
       front.setWalkerActor(this.inspector.walker);
-      resolve(front);
-    });
+      return front;
+    })();
     return this.animationsFrontPromise;
   }
 
