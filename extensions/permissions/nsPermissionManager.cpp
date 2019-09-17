@@ -900,8 +900,6 @@ void nsPermissionManager::Startup() {
 #define PERMISSIONS_FILE_NAME "permissions.sqlite"
 #define HOSTS_SCHEMA_VERSION 10
 
-#define HOSTPERM_FILE_NAME "hostperm.1"
-
 // Default permissions are read from a URL - this is the preference we read
 // to find that URL. If not set, don't use any default permissions.
 static const char kDefaultsUrlPrefName[] = "permissions.manager.defaultsUrl";
@@ -1651,7 +1649,7 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
   // check whether to import or just read in the db
   if (tableExists) return Read();
 
-  return Import();
+  return NS_OK;
 }
 
 // sets the schema version and creates the moz_perms table.
@@ -2862,33 +2860,6 @@ nsresult nsPermissionManager::Read() {
 
 static const char kMatchTypeHost[] = "host";
 static const char kMatchTypeOrigin[] = "origin";
-
-// Import() will read a file from the profile directory and add them to the
-// database before deleting the file - ie, this is a one-shot operation that
-// will not succeed on subsequent runs as the file imported from is removed.
-nsresult nsPermissionManager::Import() {
-  nsresult rv;
-
-  nsCOMPtr<nsIFile> permissionsFile;
-  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                              getter_AddRefs(permissionsFile));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = permissionsFile->AppendNative(NS_LITERAL_CSTRING(HOSTPERM_FILE_NAME));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIInputStream> fileInputStream;
-  rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream),
-                                  permissionsFile);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = _DoImport(fileInputStream, mDBConn);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // we successfully imported and wrote to the DB - delete the old file.
-  permissionsFile->Remove(false);
-  return NS_OK;
-}
 
 // ImportDefaults will read a URL with default permissions and add them to the
 // in-memory copy of permissions.  The database is *not* written to.
