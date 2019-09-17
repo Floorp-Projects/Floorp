@@ -340,6 +340,7 @@ exports.globals = {
   NodeFilter,
   DOMRect,
   Element,
+  Event,
   FileReader,
   FormData,
   isWorker: false,
@@ -401,19 +402,10 @@ lazyGlobal("indexedDB", () => {
 lazyGlobal("isReplaying", () => {
   return exports.modules.Debugger.recordReplayProcessKind() == "Middleman";
 });
-
-// Globals which the ReplayInspector provides an alternate implementation for.
-const inspectorGlobals = {
-  CSSRule,
-  Event,
-};
-
-for (const [name, value] of Object.entries(inspectorGlobals)) {
-  lazyGlobal(name, () => {
-    if (exports.modules.Debugger.recordReplayProcessKind() == "Middleman") {
-      const ReplayInspector = require("devtools/server/actors/replay/inspector");
-      return ReplayInspector[`create${name}`](value);
-    }
-    return value;
-  });
-}
+lazyGlobal("CSSRule", () => {
+  if (exports.modules.Debugger.recordReplayProcessKind() == "Middleman") {
+    const ReplayInspector = require("devtools/server/actors/replay/inspector");
+    return ReplayInspector.createCSSRule(CSSRule);
+  }
+  return CSSRule;
+});

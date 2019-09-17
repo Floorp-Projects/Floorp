@@ -76,6 +76,16 @@ const ReplayInspector = {
     );
   },
 
+  // Create the CSSRule object to bind for other server users.
+  createCSSRule(rule) {
+    return {
+      ...rule,
+      isInstance(node) {
+        return gFixedProxy.CSSRule.isInstance(node);
+      },
+    };
+  },
+
   wrapRequireHook(requireHook) {
     return (id, require) => {
       const rv = requireHook(id, require);
@@ -99,30 +109,7 @@ const ReplayInspector = {
   getDebuggerObject(node) {
     return unwrapValue(node);
   },
-
-  // For use by ReplayDebugger.
-  wrapObject,
-  unwrapObject(obj) {
-    return proxyMap.get(obj);
-  },
 };
-
-// Objects we need to override isInstance for.
-const gOverrideIsInstance = ["CSSRule", "Event"];
-
-for (const name of gOverrideIsInstance) {
-  ReplayInspector[`create${name}`] = original => ({
-    ...original,
-    isInstance(obj) {
-      const unwrapped = proxyMap.get(obj);
-      if (!unwrapped) {
-        return original.isInstance(obj);
-      }
-      assert(unwrapped instanceof ReplayDebugger.Object);
-      return unwrapped.replayIsInstance(name);
-    },
-  });
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Require Substitutions
@@ -297,7 +284,6 @@ function unwrapValue(value) {
 }
 
 function getObjectProperty(obj, name) {
-  assert(obj._pool == dbg()._pool);
   const rv = dbg()._sendRequestAllowDiverge({
     type: "getObjectPropertyValue",
     id: obj._data.id,
@@ -307,7 +293,6 @@ function getObjectProperty(obj, name) {
 }
 
 function setObjectProperty(obj, name, value) {
-  assert(obj._pool == dbg()._pool);
   const rv = dbg()._sendRequestAllowDiverge({
     type: "setObjectPropertyValue",
     id: obj._data.id,
