@@ -607,6 +607,10 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
   // reflowInput's ComputedWidth() is UNCONSTRAINED (in which case we'll get
   // a containerSize.width of zero here). In that case, the column positions
   // will be adjusted later, after our correct contentSize is known.
+  //
+  // When column-span is enabled, containerSize.width is always constrained.
+  // However, for RTL, we need to adjust the column positions as well after our
+  // correct containerSize is known.
   nsSize containerSize = aReflowInput.ComputedSizeAsContainerIfConstrained();
 
   const nscoord computedBSize =
@@ -1004,14 +1008,23 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
   // columns with the correct container width. (In other writing modes,
   // correct containerSize was not required for column positioning so we don't
   // need this fixup.)
-  if (wm.IsVerticalRL() && containerSize.width != contentSize.Width(wm)) {
+  //
+  // When column-span is enabled, RTL column positions also depend on
+  // ColumnSet's actual contentSize. We need this fixup, too.
+  if ((wm.IsVerticalRL() ||
+       (StaticPrefs::layout_css_column_span_enabled() && isRTL)) &&
+      containerSize.width != contentSize.Width(wm)) {
     const nsSize finalContainerSize = aDesiredSize.PhysicalSize();
+    nsOverflowAreas overflowRects;
     for (nsIFrame* child : mFrames) {
       // Get the logical position as set previously using a provisional or
       // dummy containerSize, and reset with the correct container size.
       child->SetPosition(wm, child->GetLogicalPosition(wm, containerSize),
                          finalContainerSize);
+      ConsiderChildOverflow(overflowRects, child);
     }
+    aDesiredSize.mOverflowAreas = overflowRects;
+    aDesiredSize.UnionOverflowAreasWithDesiredBounds();
   }
 
   colData.mFeasible =
