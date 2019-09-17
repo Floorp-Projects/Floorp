@@ -9,9 +9,12 @@
 #include "nsIObserver.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/SHA1.h"
 
 #include <SystemConfiguration/SCNetworkReachability.h>
 #include <SystemConfiguration/SystemConfiguration.h>
+
+using prefix_and_netmask = std::pair<in6_addr, in6_addr>;
 
 class nsNetworkLinkService : public nsINetworkLinkService, public nsIObserver {
  public:
@@ -23,6 +26,10 @@ class nsNetworkLinkService : public nsINetworkLinkService, public nsIObserver {
 
   nsresult Init();
   nsresult Shutdown();
+
+  static void HashSortedPrefixesAndNetmasks(
+      std::vector<prefix_and_netmask> prefixAndNetmaskStore,
+      mozilla::SHA1Sum* sha1);
 
  protected:
   virtual ~nsNetworkLinkService();
