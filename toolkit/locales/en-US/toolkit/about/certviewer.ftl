@@ -55,12 +55,3 @@ certificate-viewer-timestamp = Timestamp
 certificate-viewer-value = Value
 certificate-viewer-version = Version
 certificate-viewer-business-category = Business Category
-# This is a label of Miscellaneous section
-certificate-viewer-download = Download
-# This message is used to replace boolean values (true/false) in several certificate fields, e.g. Certificate Authority
-# Variables:
-#   $boolean (String) - true/false value for the specific field
-certificate-viewer-boolean = { $boolean ->
-  [true] Yes
- *[false] No
-}
