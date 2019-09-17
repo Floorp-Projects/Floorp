@@ -266,10 +266,16 @@ imply_option('--build-backends', build_backend)
 
 
 @depends('--enable-artifact-builds', '--disable-compile-environment',
-         '--enable-build-backend', '--help')
+         '--enable-build-backend', '--enable-project', '--enable-application',
+         '--help')
 @imports('sys')
 def build_backend_defaults(artifact_builds, compile_environment, requested_backends,
-                           _):
+                           project, application, _):
+    if application:
+        project = application[0]
+    elif project:
+        project = project[0]
+
     if 'Tup' in requested_backends:
         # As a special case, if Tup was requested, do not combine it with any
         # Make based backend by default.
@@ -281,7 +287,7 @@ def build_backend_defaults(artifact_builds, compile_environment, requested_backe
     # Normally, we'd use target.os == 'WINNT', but a dependency on target
     # would require target to depend on --help, as well as host and shell,
     # and this is not a can of worms we can open at the moment.
-    if sys.platform == 'win32' and compile_environment:
+    if sys.platform == 'win32' and compile_environment and project != 'mobile/android':
         all_backends.append('VisualStudio')
     return tuple(all_backends) or None
 
