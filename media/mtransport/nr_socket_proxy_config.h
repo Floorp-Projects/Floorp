@@ -8,21 +8,15 @@
 #define nr_socket_proxy_config__
 
 #include <memory>
-#include "nsString.h"
-
-class nsIPrincipal;
 
 namespace mozilla {
 namespace net {
-class LoadInfoArgs;
+class WebrtcProxyConfig;
 }
 
 class NrSocketProxyConfig {
  public:
-  typedef enum { kDisableProxy, kEnableProxy, kForceProxy } ProxyPolicy;
-
-  NrSocketProxyConfig(uint64_t aTabId, const nsCString& aAlpn,
-                      const net::LoadInfoArgs& aArgs, ProxyPolicy aProxyPolicy);
+  explicit NrSocketProxyConfig(const net::WebrtcProxyConfig& aProxyConfig);
 
   // We need to actually write the default impl ourselves, because the compiler
   // needs to know how to destroy mPrivate in case an exception is thrown, even
@@ -31,13 +25,11 @@ class NrSocketProxyConfig {
 
   ~NrSocketProxyConfig();
 
-  uint64_t GetTabId() const;
-  const nsCString& GetAlpn() const;
-  const net::LoadInfoArgs& GetLoadInfoArgs() const;
-  ProxyPolicy GetProxyPolicy() const;
+  const net::WebrtcProxyConfig& GetConfig() const;
+  bool GetForceProxy() const;
 
  private:
-  // LoadInfoArgs includes stuff that conflicts with nICEr includes.
+  // dom::ProxyConfig includes stuff that conflicts with nICEr includes.
   // Make it possible to include this header file without tripping over this
   // problem.
   class Private;

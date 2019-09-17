@@ -757,14 +757,9 @@ std::unique_ptr<NrSocketProxyConfig> PeerConnectionMedia::GetProxyConfig()
     const {
   MOZ_ASSERT(NS_IsMainThread());
 
-  NrSocketProxyConfig::ProxyPolicy proxyPolicy =
-      NrSocketProxyConfig::kEnableProxy;
-
-  if (mForceProxy) {
-    proxyPolicy = NrSocketProxyConfig::kForceProxy;
-  } else if (Preferences::GetBool("media.peerconnection.disable_http_proxy",
-                                  false)) {
-    proxyPolicy = NrSocketProxyConfig::kDisableProxy;
+  if (!mForceProxy &&
+      Preferences::GetBool("media.peerconnection.disable_http_proxy", false)) {
+    return nullptr;
   }
 
   nsCString alpn = NS_LITERAL_CSTRING("webrtc,c-webrtc");
@@ -773,6 +768,7 @@ std::unique_ptr<NrSocketProxyConfig> PeerConnectionMedia::GetProxyConfig()
     // Android doesn't have browser child apparently...
     return nullptr;
   }
+
   TabId id = browserChild->GetTabId();
   nsCOMPtr<nsILoadInfo> loadInfo = new net::LoadInfo(
       nsContentUtils::GetSystemPrincipal(), nullptr, nullptr, 0, 0);
@@ -780,8 +776,8 @@ std::unique_ptr<NrSocketProxyConfig> PeerConnectionMedia::GetProxyConfig()
   Maybe<net::LoadInfoArgs> loadInfoArgs;
   MOZ_ALWAYS_SUCCEEDS(
       mozilla::ipc::LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs));
-  return std::unique_ptr<NrSocketProxyConfig>(
-      new NrSocketProxyConfig(id, alpn, *loadInfoArgs, proxyPolicy));
+  return std::unique_ptr<NrSocketProxyConfig>(new NrSocketProxyConfig(
+      net::WebrtcProxyConfig(id, alpn, *loadInfoArgs, mForceProxy)));
 }
 
 }  // namespace mozilla

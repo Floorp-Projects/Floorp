@@ -169,10 +169,7 @@ void MediaTransportHandlerIPC::SetProxyConfig(
       [aProxyConfig = std::move(aProxyConfig), this,
        self = RefPtr<MediaTransportHandlerIPC>(this)](bool /*dummy*/) mutable {
         if (mChild) {
-          mChild->SendSetProxyConfig(dom::TabId(aProxyConfig.GetTabId()),
-                                     aProxyConfig.GetLoadInfoArgs(),
-                                     aProxyConfig.GetAlpn(),
-                                     aProxyConfig.GetProxyPolicy());
+          mChild->SendSetProxyConfig(aProxyConfig.GetConfig());
         }
       },
       [](const nsCString& aError) {});
