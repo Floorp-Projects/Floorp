@@ -140,9 +140,20 @@ skip css-writing-modes/abs-pos-non-replaced-icb-vlr-021.xht
 skip css-writing-modes/abs-pos-non-replaced-icb-vrl-020.xht
 
 # Bug 1244601
+fails css-writing-modes/block-flow-direction-slr-058.xht
 fails css-writing-modes/block-flow-direction-srl-057.xht
 fails css-writing-modes/block-flow-direction-vlr-018.xht
 fails css-writing-modes/block-flow-direction-vrl-017.xht
+
+# Bug 1185430
+fails css-writing-modes/contiguous-floated-table-vlr-00?.xht
+fails css-writing-modes/contiguous-floated-table-vrl-00?.xht
+fails css-writing-modes/table-progression-slr-002.html
+fails css-writing-modes/table-progression-srl-002.html
+fails css-writing-modes/table-progression-vlr-00?.html
+      css-writing-modes/table-progression-vlr-001.html
+fails css-writing-modes/table-progression-vrl-00?.html
+      css-writing-modes/table-progression-vrl-001.html
 
 css-writing-modes/flexbox_align-items-stretch-writing-modes.html
 
