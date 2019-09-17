@@ -5,6 +5,33 @@ var { AsyncShutdown } = ChromeUtils.import(
   "resource://gre/modules/AsyncShutdown.jsm"
 );
 
+add_task(async function test_abort_store() {
+  let buf = await openMirror("abort_store");
+
+  let controller = new AbortController();
+  controller.abort();
+  await Assert.rejects(
+    storeRecords(
+      buf,
+      [
+        {
+          id: "menu",
+          parentid: "places",
+          type: "folder",
+          children: [],
+        },
+      ],
+      { signal: controller.signal }
+    ),
+    ex => ex.name == "InterruptedError",
+    "Should abort storing when signaled"
+  );
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});
+
 add_task(async function test_abort_merging() {
   let buf = await openMirror("abort_merging");
 
