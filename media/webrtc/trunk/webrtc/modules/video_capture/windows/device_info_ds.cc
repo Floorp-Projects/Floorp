@@ -20,6 +20,29 @@
 namespace webrtc {
 namespace videocapturemodule {
 
+LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
+{
+    DeviceInfoDS* pParent;
+    if (uiMsg == WM_CREATE)
+    {
+        pParent = (DeviceInfoDS*)((LPCREATESTRUCT)lParam)->lpCreateParams;
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pParent);
+    }
+    else if (uiMsg == WM_DESTROY)
+    {
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, NULL);
+    }
+    else if (uiMsg == WM_DEVICECHANGE)
+    {
+        pParent = (DeviceInfoDS*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+        if (pParent)
+        {
+            pParent->DeviceChange();
+        }
+    }
+    return DefWindowProc(hWnd, uiMsg, wParam, lParam);
+}
+
 // static
 DeviceInfoDS* DeviceInfoDS::Create() {
   DeviceInfoDS* dsInfo = new DeviceInfoDS();
@@ -76,6 +99,18 @@ DeviceInfoDS::DeviceInfoDS()
                        << " => RPC_E_CHANGED_MODE, error 0x" << rtc::ToHex(hr);
     }
   }
+
+  _hInstance = reinterpret_cast<HINSTANCE>(GetModuleHandle(NULL));
+  _wndClass = {0};
+  _wndClass.lpfnWndProc = &WndProc;
+  _wndClass.lpszClassName = TEXT("DeviceInfoDS");
+  _wndClass.hInstance = _hInstance;
+
+  if (RegisterClass(&_wndClass)) {
+    _hwnd = CreateWindow(_wndClass.lpszClassName, NULL, 0, CW_USEDEFAULT,
+                         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL,
+                         NULL, _hInstance, this);
+  }
 }
 
 DeviceInfoDS::~DeviceInfoDS() {
@@ -84,6 +119,10 @@ DeviceInfoDS::~DeviceInfoDS() {
   if (_CoUninitializeIsRequired) {
     CoUninitialize();
   }
+  if (_hwnd != NULL) {
+    DestroyWindow(_hwnd);
+  }
+  UnregisterClass(_wndClass.lpszClassName, _hInstance);
 }
 
 int32_t DeviceInfoDS::Init() {
