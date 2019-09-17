@@ -73,7 +73,7 @@ load 1388230-2.html
 load 1405830.html
 load 1418477.html
 load 1432853.html
-asserts(1-4) load 1460787-1.html
+asserts(2-4) load 1460787-1.html
 load 1464165-1.html
 load 1471157.html
 load 1488219.html

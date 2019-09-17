@@ -2652,9 +2652,8 @@ void ReflowInput::CalculateBlockSideMargins(LayoutFrameType aFrameType) {
   nscoord computedISizeCBWM = ComputedSize(cbWM).ISize(cbWM);
   if (computedISizeCBWM == NS_UNCONSTRAINEDSIZE) {
     // For orthogonal flows, where we found a parent orthogonal-limit
-    // for AvailableISize() in Init(), we don't have meaningful sizes to
-    // adjust.  Act like the sum is already correct (below).
-    return;
+    // for AvailableISize() in Init(), we'll use the same here as well.
+    computedISizeCBWM = availISizeCBWM;
   }
 
   LAYOUT_WARN_IF_FALSE(NS_UNCONSTRAINEDSIZE != computedISizeCBWM &&
