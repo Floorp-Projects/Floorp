@@ -1110,12 +1110,6 @@ var gProtectionsHandler = {
       "tracking-protection-icon-animatable-image"
     ));
   },
-  get appMenuLabel() {
-    delete this.appMenuLabel;
-    return (this.appMenuLabel = document.getElementById(
-      "appMenu-protection-report-text"
-    ));
-  },
   get _protectionsIconBox() {
     delete this._protectionsIconBox;
     return (this._protectionsIconBox = document.getElementById(
@@ -1244,20 +1238,6 @@ var gProtectionsHandler = {
   },
 
   strings: {
-    get appMenuTitle() {
-      delete this.appMenuTitle;
-      return (this.appMenuTitle = gNavigatorBundle.getString(
-        "protectionReport.title"
-      ));
-    },
-
-    get appMenuTooltip() {
-      delete this.appMenuTooltip;
-      return (this.appMenuTooltip = gNavigatorBundle.getString(
-        "protectionReport.tooltip"
-      ));
-    },
-
     get activeTooltipText() {
       delete this.activeTooltipText;
       return (this.activeTooltipText = gNavigatorBundle.getString(
@@ -1327,9 +1307,6 @@ var gProtectionsHandler = {
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
     gProtectionsHandler._protectionsPopupSendReportLearnMore.href =
       baseURL + "blocking-breakage";
-
-    this.appMenuLabel.setAttribute("value", this.strings.appMenuTitle);
-    this.appMenuLabel.setAttribute("tooltiptext", this.strings.appMenuTooltip);
 
     // Add an observer to observe that the history has been cleared.
     Services.obs.addObserver(this, "browser:purge-session-history");

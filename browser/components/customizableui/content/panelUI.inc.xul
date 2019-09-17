@@ -251,9 +251,13 @@
         <toolbaritem>
           <toolbarbutton id="appMenu-protection-report-button"
                class="subviewbutton subviewbutton-iconic"
-               oncommand="gProtectionsHandler.openProtections();">
+               oncommand="gProtectionsHandler.openProtections();"
+               data-l10n-id="appmenuitem-protection-report-tooltip">
             <image id="appMenu-protection-report-icon" class="toolbarbutton-icon"/>
-            <label id="appMenu-protection-report-text" class="toolbarbutton-text">Privacy Protections</label>
+            <label id="appMenu-protection-report-text"
+                   class="toolbarbutton-text"
+                   data-l10n-id="appmenuitem-protection-report-title">
+            </label>
           </toolbarbutton>
         </toolbaritem>
         <toolbarseparator id="appMenu-tp-separator"/>
