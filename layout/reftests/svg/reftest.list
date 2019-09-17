@@ -380,7 +380,7 @@ fuzzy-if(skiaContent,0-1,0-5) == pattern-scale-01a.svg pattern-scale-01-ref.svg
 == pattern-scale-01b.svg pattern-scale-01-ref.svg
 fuzzy-if(skiaContent,0-3,0-5) == pattern-scale-01c.svg pattern-scale-01-ref.svg
 fuzzy-if(webrender,0-2,0-227) == pattern-transform-presence-01.svg pattern-transform-presence-01-ref.svg
-fuzzy-if(skiaContent||webrender,0-72,0-1245) fuzzy-if(geckoview&&webrender, 67-67,1246-1246) == pattern-transformed-01.svg pattern-transformed-01-ref.svg
+fuzzy-if(skiaContent||webrender,0-72,0-1245) == pattern-transformed-01.svg pattern-transformed-01-ref.svg
 
 == polygon-01.svg polygon-01-ref.svg
 == polygon-marker-01.svg pass.svg
@@ -395,7 +395,7 @@ fuzzy-if(skiaContent||webrender,0-72,0-1245) fuzzy-if(geckoview&&webrender, 67-6
 
 == radialGradient-basic-01.svg pass.svg
 == radialGradient-basic-02.svg pass.svg
-fuzzy-if(cocoaWidget,0-4,0-15982) fuzzy-if(winWidget,0-4,0-92) fuzzy-if(skiaContent,0-4,0-60) fuzzy-if(geckoview&&webrender,0-4,0-330) == radialGradient-basic-03.svg radialGradient-basic-03-ref.svg
+fuzzy-if(cocoaWidget,0-4,0-15982) fuzzy-if(winWidget,0-4,0-92) fuzzy-if(skiaContent,0-4,0-60) fuzzy-if(geckoview&&webrender,0-4,0-159) == radialGradient-basic-03.svg radialGradient-basic-03-ref.svg
 == radialGradient-basic-04.svg pass.svg
 == radialGradient-fr-01.svg pass.svg
 fuzzy(0-1,0-3235) fuzzy-if(winWidget,0-1,0-7030) == radialGradient-fr-02.svg radialGradient-fr-02-ref.svg
