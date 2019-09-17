@@ -153,7 +153,7 @@ void nsDOMNavigationTiming::NotifyLoadEventEnd() {
 
   if (IsTopLevelContentDocumentInContentProcess()) {
 #ifdef MOZ_GECKO_PROFILER
-    if (profiler_can_accept_markers() || PAGELOAD_LOG_ENABLED()) {
+    if (profiler_is_active() || PAGELOAD_LOG_ENABLED()) {
       TimeDuration elapsed = mLoadEventEnd - mNavigationStart;
       TimeDuration duration = mLoadEventEnd - mLoadEventStart;
       nsAutoCString spec;
@@ -345,7 +345,7 @@ void nsDOMNavigationTiming::TTITimeout(nsITimer* aTimer) {
   mTTITimer = nullptr;
 
 #ifdef MOZ_GECKO_PROFILER
-  if (profiler_can_accept_markers() || PAGELOAD_LOG_ENABLED()) {
+  if (profiler_is_active() || PAGELOAD_LOG_ENABLED()) {
     TimeDuration elapsed = mTTFI - mNavigationStart;
     MOZ_ASSERT(elapsed.ToMilliseconds() > 0);
     TimeDuration elapsedLongTask =
@@ -428,7 +428,7 @@ void nsDOMNavigationTiming::NotifyContentfulPaintForRootContentDocument(
   mContentfulPaint = aCompositeEndTime;
 
 #ifdef MOZ_GECKO_PROFILER
-  if (profiler_can_accept_markers() || PAGELOAD_LOG_ENABLED()) {
+  if (profiler_is_active() || PAGELOAD_LOG_ENABLED()) {
     TimeDuration elapsed = mContentfulPaint - mNavigationStart;
     nsAutoCString spec;
     if (mLoadedURI) {

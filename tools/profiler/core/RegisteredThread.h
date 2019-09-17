@@ -8,6 +8,8 @@
 #define RegisteredThread_h
 
 #include "platform.h"
+#include "ProfilerMarker.h"
+#include "ProfilerMarkerPayload.h"
 #include "ThreadInfo.h"
 
 #include "js/TraceLoggerAPI.h"
@@ -35,9 +37,30 @@ class RacyRegisteredThread final {
 
   bool IsBeingProfiled() const { return mIsBeingProfiled; }
 
+  void AddPendingMarker(const char* aMarkerName,
+                        JS::ProfilingCategoryPair aCategoryPair,
+                        mozilla::UniquePtr<ProfilerMarkerPayload> aPayload,
+                        double aTime) {
+    // Note: We don't assert on mIsBeingProfiled, because it could have changed
+    // between the check in the caller and now.
+    ProfilerMarker* marker = new ProfilerMarker(
+        aMarkerName, aCategoryPair, mThreadId, std::move(aPayload), aTime);
+    mPendingMarkers.insert(marker);
+  }
+
+  // Called within signal. Function must be reentrant.
+  ProfilerMarkerLinkedList* GetPendingMarkers() {
+    // The profiled thread is interrupted, so we can access the list safely.
+    // Unless the profiled thread was in the middle of changing the list when
+    // we interrupted it - in that case, accessList() will return null.
+    return mPendingMarkers.accessList();
+  }
+
   // This is called on every profiler restart. Put things that should happen at
   // that time here.
   void ReinitializeOnResume() {
+    mPendingMarkers.reset();
+
     // This is needed to cause an initial sample to be taken from sleeping
     // threads that had been observed prior to the profiler stopping and
     // restarting. Otherwise sleeping threads would not have any samples to
@@ -83,6 +106,9 @@ class RacyRegisteredThread final {
 
  private:
   class ProfilingStack mProfilingStack;
+
+  // A list of pending markers that must be moved to the circular buffer.
+  ProfilerSignalSafeLinkedList<ProfilerMarker> mPendingMarkers;
 
   // mThreadId contains the thread ID of the current thread. It is safe to read
   // this from multiple threads concurrently, as it will never be mutated.

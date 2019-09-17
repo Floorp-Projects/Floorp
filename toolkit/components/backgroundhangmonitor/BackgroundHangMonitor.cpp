@@ -494,7 +494,7 @@ void BackgroundHangThread::ReportHang(TimeDuration aHangTime) {
 
   // If the profiler is enabled, add a marker.
 #ifdef MOZ_GECKO_PROFILER
-  if (profiler_can_accept_markers()) {
+  if (profiler_is_active()) {
     TimeStamp endTime = TimeStamp::Now();
     TimeStamp startTime = endTime - aHangTime;
     AUTO_PROFILER_STATS(add_marker_with_HangMarkerPayload);

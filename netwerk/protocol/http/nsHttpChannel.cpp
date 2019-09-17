@@ -5916,7 +5916,7 @@ nsresult nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv) {
   }
 
 #ifdef MOZ_GECKO_PROFILER
-  if (profiler_can_accept_markers()) {
+  if (profiler_is_active()) {
     int32_t priority = PRIORITY_NORMAL;
     GetPriority(&priority);
 
@@ -6354,7 +6354,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
 #ifdef MOZ_GECKO_PROFILER
   mLastStatusReported =
       TimeStamp::Now();  // in case we enable the profiler after AsyncOpen()
-  if (profiler_can_accept_markers()) {
+  if (profiler_is_active()) {
     profiler_add_network_marker(mURI, mPriority, mChannelId,
                                 NetworkLoadType::LOAD_START,
                                 mChannelCreationTimestamp, mLastStatusReported,
@@ -8230,7 +8230,7 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
   MaybeReportTimingData();
 
 #ifdef MOZ_GECKO_PROFILER
-  if (profiler_can_accept_markers() && !mRedirectURI) {
+  if (profiler_is_active() && !mRedirectURI) {
     // Don't include this if we already redirected
     // These do allocations/frees/etc; avoid if not active
     nsCOMPtr<nsIURI> uri;

@@ -20,7 +20,7 @@ class MOZ_RAII AutoProfilerStyleMarker {
   explicit AutoProfilerStyleMarker(UniqueProfilerBacktrace aCause,
                                    const Maybe<nsID>& aDocShellId,
                                    const Maybe<uint32_t>& aDocShellHistoryId)
-      : mActive(profiler_can_accept_markers()),
+      : mActive(profiler_is_active()),
         mStartTime(TimeStamp::Now()),
         mCause(std::move(aCause)),
         mDocShellId(aDocShellId),

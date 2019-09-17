@@ -7,43 +7,37 @@
 #define MOZ_PROFILE_BUFFER_H
 
 #include "ProfileBufferEntry.h"
+#include "ProfilerMarker.h"
 
-#include "mozilla/BlocksRingBuffer.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PowerOfTwo.h"
 
 namespace mozilla {
 namespace baseprofiler {
 
-// Class storing most profiling data in a BlocksRingBuffer.
-//
+// A fixed-capacity circular buffer.
 // This class is used as a queue of entries which, after construction, never
 // allocates. This makes it safe to use in the profiler's "critical section".
+// Entries are appended at the end. Once the queue capacity has been reached,
+// adding a new entry will evict an old entry from the start of the queue.
+// Positions in the queue are represented as 64-bit unsigned integers which
+// only increase and never wrap around.
+// mRangeStart and mRangeEnd describe the range in that uint64_t space which is
+// covered by the queue contents.
+// Internally, the buffer uses a fixed-size storage and applies a modulo
+// operation when accessing entries in that storage buffer. "Evicting" an entry
+// really just means that an existing entry in the storage buffer gets
+// overwritten and that mRangeStart gets incremented.
 class ProfileBuffer final {
  public:
-  // Opaque type containing a block index, which should not be modified outside
-  // of BlocksRingBuffer.
-  // TODO: Eventually, all uint64_t values should be replaced with BlockIndex,
-  // because external users should only store and compare them, but not do other
-  // arithmetic operations (that uint64_t supports).
-  using BlockIndex = BlocksRingBuffer::BlockIndex;
-
   // ProfileBuffer constructor
-  // @param aBuffer The empty BlocksRingBuffer to use as buffer manager.
-  // @param aCapacity The capacity of the buffer in memory.
-  ProfileBuffer(BlocksRingBuffer& aBuffer, PowerOfTwo32 aCapacity);
-
-  // ProfileBuffer constructor
-  // @param aBuffer The pre-filled BlocksRingBuffer to use as buffer manager.
-  explicit ProfileBuffer(BlocksRingBuffer& aBuffer);
+  // @param aCapacity The capacity of the buffer.
+  explicit ProfileBuffer(PowerOfTwo32 aCapacity);
 
   ~ProfileBuffer();
 
-  bool IsThreadSafe() const { return mEntries.IsThreadSafe(); }
-
   // Add |aEntry| to the buffer, ignoring what kind of entry it is.
-  // Returns the position of the entry.
-  uint64_t AddEntry(const ProfileBufferEntry& aEntry);
+  void AddEntry(const ProfileBufferEntry& aEntry);
 
   // Add to the buffer a sample start (ThreadId) entry for aThreadId.
   // Returns the position of the entry.
@@ -88,7 +82,16 @@ class ProfileBuffer final {
 
   void DiscardSamplesBeforeTime(double aTime);
 
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
+  void AddStoredMarker(ProfilerMarker* aStoredMarker);
+
+  // The following method is not signal safe!
+  void DeleteExpiredStoredMarkers();
+
+  // Access an entry in the buffer.
+  ProfileBufferEntry& GetEntry(uint64_t aPosition) const {
+    return mEntries[aPosition & mEntryIndexMask];
+  }
+
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
   void CollectOverheadStats(TimeDuration aSamplingTime, TimeDuration aLocking,
@@ -98,47 +101,38 @@ class ProfileBuffer final {
   ProfilerBufferInfo GetProfilerBufferInfo() const;
 
  private:
-  // Add |aEntry| to the provider BlocksRingBuffer.
-  // `static` because it may be used to add an entry to a `BlocksRingBuffer`
-  // that is not attached to a `ProfileBuffer`.
-  static BlockIndex AddEntry(BlocksRingBuffer& aBlocksRingBuffer,
-                             const ProfileBufferEntry& aEntry);
+  // The storage that backs our buffer. Holds capacity entries.
+  // All accesses to entries in mEntries need to go through GetEntry(), which
+  // translates the given buffer position from the near-infinite uint64_t space
+  // into the entry storage space.
+  UniquePtr<ProfileBufferEntry[]> mEntries;
 
-  // Add a sample start (ThreadId) entry for aThreadId to the provided
-  // BlocksRingBuffer. Returns the position of the entry.
-  // `static` because it may be used to add an entry to a `BlocksRingBuffer`
-  // that is not attached to a `ProfileBuffer`.
-  static BlockIndex AddThreadIdEntry(BlocksRingBuffer& aBlocksRingBuffer,
-                                     int aThreadId);
-
-  // The circular-ring storage in which this ProfileBuffer stores its data.
-  BlocksRingBuffer& mEntries;
+  // A mask such that pos & mEntryIndexMask == pos % capacity.
+  PowerOfTwoMask32 mEntryIndexMask;
 
  public:
-  // `BufferRangeStart()` and `BufferRangeEnd()` return `uint64_t` values
-  // corresponding to the first entry and past the last entry stored in
-  // `mEntries`.
+  // mRangeStart and mRangeEnd are uint64_t values that strictly advance and
+  // never wrap around. mRangeEnd is always greater than or equal to
+  // mRangeStart, but never gets more than capacity steps ahead of
+  // mRangeStart, because we can only store a fixed number of entries in the
+  // buffer. Once the entire buffer is in use, adding a new entry will evict an
+  // entry from the front of the buffer (and increase mRangeStart).
+  // In other words, the following conditions hold true at all times:
+  //  (1) mRangeStart <= mRangeEnd
+  //  (2) mRangeEnd - mRangeStart <= capacity
   //
-  // The returned values are not guaranteed to be stable, because other threads
-  // may also be accessing the buffer concurrently. But they will always
-  // increase, and can therefore give an indication of how far these values have
-  // *at least* reached. In particular:
-  // - Entries whose index is strictly less that `BufferRangeStart()` have been
-  //   discarded by now, so any related data may also be safely discarded.
-  // - It is safe to try and read entries at any index strictly less than
-  //   `BufferRangeEnd()` -- but note that these reads may fail by the time you
-  //   request them, as old entries get overwritten by new ones.
-  uint64_t BufferRangeStart() const {
-    return mEntries.GetState().mRangeStart.ConvertToU64();
-  }
-  uint64_t BufferRangeEnd() const {
-    return mEntries.GetState().mRangeEnd.ConvertToU64();
-  }
+  // If there are no live entries, then mRangeStart == mRangeEnd.
+  // Otherwise, mRangeStart is the first live entry and mRangeEnd is one past
+  // the last live entry, and also the position at which the next entry will be
+  // added.
+  // (mRangeEnd - mRangeStart) always gives the number of live entries.
+  uint64_t mRangeStart;
+  uint64_t mRangeEnd;
+
+  // Markers that marker entries in the buffer might refer to.
+  ProfilerMarkerLinkedList mStoredMarkers;
 
  private:
-  // Used when duplicating sleeping stacks (to avoid spurious mallocs).
-  const UniquePtr<BlocksRingBuffer::Byte[]> mDuplicationBuffer;
-
   // Time from launch (ns) when first sampling was recorded.
   double mFirstSamplingTimeNs = 0.0;
   // Time from launch (ns) when last sampling was recorded.
@@ -173,9 +167,7 @@ class ProfileBufferCollector final : public ProfilerStackCollector {
     return Some(mSamplePositionInBuffer);
   }
 
-  Maybe<uint64_t> BufferRangeStart() override {
-    return Some(mBuf.BufferRangeStart());
-  }
+  Maybe<uint64_t> BufferRangeStart() override { return Some(mBuf.mRangeStart); }
 
   virtual void CollectNativeLeafAddr(void* aAddr) override;
   virtual void CollectProfilingStackFrame(

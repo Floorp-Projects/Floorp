@@ -38,8 +38,7 @@ void ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer,
                                     double aSinceTime, bool JSTracerEnabled,
                                     ProfilerCodeAddressService* aService) {
   if (mJITFrameInfoForPreviousJSContexts &&
-      mJITFrameInfoForPreviousJSContexts->HasExpired(
-          aBuffer.BufferRangeStart())) {
+      mJITFrameInfoForPreviousJSContexts->HasExpired(aBuffer.mRangeStart)) {
     mJITFrameInfoForPreviousJSContexts = nullptr;
   }
 
@@ -288,8 +287,7 @@ void ProfiledThreadData::NotifyAboutToLoseJSContext(
   MOZ_RELEASE_ASSERT(aContext);
 
   if (mJITFrameInfoForPreviousJSContexts &&
-      mJITFrameInfoForPreviousJSContexts->HasExpired(
-          aBuffer.BufferRangeStart())) {
+      mJITFrameInfoForPreviousJSContexts->HasExpired(aBuffer.mRangeStart)) {
     mJITFrameInfoForPreviousJSContexts = nullptr;
   }
 
