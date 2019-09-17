@@ -322,6 +322,7 @@ CompositorBridgeParent::CompositorBridgeParent(
       mPendingTransaction{0},
       mPaused(false),
       mHaveCompositionRecorder(false),
+      mIsForcedFirstPaint(false),
       mUseExternalSurfaceSize(aUseExternalSurfaceSize),
       mEGLSurfaceSize(aSurfaceSize),
       mOptions(aOptions),
@@ -418,7 +419,7 @@ CompositorBridgeParent::~CompositorBridgeParent() {
 
 void CompositorBridgeParent::ForceIsFirstPaint() {
   if (mWrBridge) {
-    mWrBridge->ForceIsFirstPaint();
+    mIsForcedFirstPaint = true;
   } else {
     mCompositionManager->ForceIsFirstPaint();
   }
@@ -2138,6 +2139,11 @@ void CompositorBridgeParent::NotifyPipelineRendered(
     mWrBridge->RemoveEpochDataPriorTo(aEpoch);
 
     if (!mPaused) {
+      if (mIsForcedFirstPaint) {
+        uiController->NotifyFirstPaint();
+        mIsForcedFirstPaint = false;
+      }
+
       TransactionId transactionId = mWrBridge->FlushTransactionIdsForEpoch(
           aEpoch, aCompositeStartId, aCompositeStart, aRenderStart,
           aCompositeEnd, uiController);
