@@ -979,16 +979,24 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
             void* pc = e.Get().GetPtr();
             e.Next();
 
-            nsCString buf;
+            nsAutoCString buf;
 
             if (!aUniqueStacks.mCodeAddressService ||
                 !aUniqueStacks.mCodeAddressService->GetFunction(pc, buf) ||
                 buf.IsEmpty()) {
-              // Bug 753041: We need a double cast here to tell GCC that we
-              // don't want to sign extend 32-bit addresses starting with
-              // 0xFXXXXXX.
-              unsigned long long pcULL = (unsigned long long)(uintptr_t)pc;
-              buf.AppendPrintf("0x%llx", pcULL);
+              buf.AppendASCII("0x");
+              // `AppendInt` only knows `uint32_t` or `uint64_t`, but because
+              // these are just aliases for *two* of (`unsigned`, `unsigned
+              // long`, and `unsigned long long`), a call with `uintptr_t` could
+              // use the third type and therefore would be ambiguous.
+              // So we want to force using exactly `uint32_t` or `uint64_t`,
+              // whichever matches the size of `uintptr_t`.
+              // (The outer cast to `uint` should then be a no-op.)
+              using uint =
+                  std::conditional_t<sizeof(uintptr_t) <= sizeof(uint32_t),
+                                     uint32_t, uint64_t>;
+              buf.AppendInt(static_cast<uint>(reinterpret_cast<uintptr_t>(pc)),
+                            16);
             }
 
             stack = aUniqueStacks.AppendFrame(
@@ -1032,7 +1040,7 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
             dynStrBuf[kMaxFrameKeyLength - 1] = '\0';
             bool hasDynamicString = (i != 0);
 
-            nsCString frameLabel;
+            nsAutoCStringN<1024> frameLabel;
             if (label[0] != '\0' && hasDynamicString) {
               if (frameFlags & uint32_t(FrameFlags::STRING_TEMPLATE_METHOD)) {
                 frameLabel.AppendPrintf("%s.%s", label, dynStrBuf.get());
