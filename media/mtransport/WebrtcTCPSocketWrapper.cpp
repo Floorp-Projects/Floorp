@@ -125,13 +125,13 @@ void WebrtcTCPSocketWrapper::OnRead(nsTArray<uint8_t>&& aReadData) {
           &WebrtcTCPSocketCallback::OnRead, std::move(aReadData))));
 }
 
-void WebrtcTCPSocketWrapper::OnConnected() {
+void WebrtcTCPSocketWrapper::OnConnected(const nsCString& aProxyType) {
   MOZ_ASSERT(NS_IsMainThread(), "not on main thread");
   MOZ_ASSERT(mProxyCallbacks, "webrtc TCP callbacks should be non-null");
 
-  MOZ_ALWAYS_SUCCEEDS(mSocketThread->Dispatch(
-      NewRunnableMethod("WebrtcTCPSocketWrapper::OnConnected", mProxyCallbacks,
-                        &WebrtcTCPSocketCallback::OnConnected)));
+  MOZ_ALWAYS_SUCCEEDS(mSocketThread->Dispatch(NewRunnableMethod<nsCString>(
+      "WebrtcTCPSocketWrapper::OnConnected", mProxyCallbacks,
+      &WebrtcTCPSocketCallback::OnConnected, aProxyType)));
 }
 
 }  // namespace net

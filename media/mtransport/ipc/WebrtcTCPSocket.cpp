@@ -231,17 +231,16 @@ NS_IMETHODIMP WebrtcTCPSocket::OnProxyAvailable(nsICancelable* aRequest,
   nsresult rv;
 
   if (NS_SUCCEEDED(aResult) && aProxyinfo) {
-    nsCString proxyType;
-    rv = aProxyinfo->GetType(proxyType);
+    rv = aProxyinfo->GetType(mProxyType);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       CloseWithReason(rv);
       return rv;
     }
 
-    if (proxyType == "http" || proxyType == "https") {
+    if (mProxyType == "http" || mProxyType == "https") {
       rv = OpenWithHttpProxy();
-    } else if (proxyType == "socks" || proxyType == "socks4" ||
-               proxyType == "direct") {
+    } else if (mProxyType == "socks" || mProxyType == "socks4" ||
+               mProxyType == "direct") {
       rv = OpenWithoutHttpProxy(aProxyinfo);
     }
   } else {
@@ -452,7 +451,7 @@ void WebrtcTCPSocket::InvokeOnConnected() {
 
   MOZ_ASSERT(mProxyCallbacks, "webrtc TCP callback should be non-null");
 
-  mProxyCallbacks->OnConnected();
+  mProxyCallbacks->OnConnected(mProxyType);
 }
 
 void WebrtcTCPSocket::InvokeOnRead(nsTArray<uint8_t>&& aReadData) {

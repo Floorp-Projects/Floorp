@@ -246,8 +246,9 @@ void NrTcpSocket::OnClose(nsresult aReason) {
   DoCallbacks();
 }
 
-void NrTcpSocket::OnConnected() {
+void NrTcpSocket::OnConnected(const nsCString& aProxyType) {
   r_log(LOG_GENERIC, LOG_DEBUG, "NrTcpSocket::OnConnected %p\n", this);
+  mProxyType = aProxyType;
 
   DoCallbacks();
 }

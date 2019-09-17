@@ -32,7 +32,7 @@ parent:
 
 child:
   async OnClose(nsresult aReason);
-  async OnConnected();
+  async OnConnected(nsCString aProxyType);
   async OnRead(uint8_t[] aReadData);
 
   async __delete__();
