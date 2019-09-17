@@ -340,7 +340,7 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||skiaContent,0-1,0-10000) ==
 
 fuzzy-if(Android,0-8,0-200) == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg
 
-fuzzy(0-16,0-193) fuzzy-if(skiaContent,0-7,0-193) fuzzy-if(webrender,54-54,124-435) == outline.html outline-ref.html # Bug 1392106, Bug 1503525
+fuzzy(0-16,0-193) fuzzy-if(skiaContent,0-7,0-193) == outline.html outline-ref.html # Bug 1392106, Bug 1503525
 
 == overflow-on-outer-svg-01.svg overflow-on-outer-svg-01-ref.svg
 == overflow-on-outer-svg-02a.xhtml overflow-on-outer-svg-02-ref.xhtml
@@ -355,7 +355,7 @@ fuzzy(0-16,0-193) fuzzy-if(skiaContent,0-7,0-193) fuzzy-if(webrender,54-54,124-4
 == paint-on-maskLayer-1c.html paint-on-maskLayer-1-ref.html
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-16,0-5) == paint-order-01.svg paint-order-01-ref.svg
 == paint-order-02.svg paint-order-02-ref.svg
-fuzzy-if(webrender,72-73,96-1804) == paint-order-03.svg paint-order-03-ref.svg
+== paint-order-03.svg paint-order-03-ref.svg
 
 #fuzzy(0-23,0-60) fails-if(d2d) == path-01.svg path-01-ref.svg
 == path-02.svg pass.svg
