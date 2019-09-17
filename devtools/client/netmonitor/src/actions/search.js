@@ -34,7 +34,7 @@ const { searchInResource } = require("../workers/search/index");
  * from this module and consumed by Network panel UI.
  */
 function search(connector, query) {
-  let cancelled = false;
+  let canceled = false;
 
   // Instantiate an `ongoingSearch` function/object. It's responsible
   // for triggering set of asynchronous steps like fetching
@@ -57,12 +57,15 @@ function search(connector, query) {
     // search through the resource structure.
     const requests = getDisplayedRequests(state);
     for (const request of requests) {
-      if (cancelled) {
+      if (canceled) {
         return;
       }
 
       // Fetch all data for the resource.
       await loadResource(connector, request);
+      if (canceled) {
+        return;
+      }
 
       // The state changed, so make sure to get fresh new reference
       // to the updated resource object.
@@ -76,7 +79,11 @@ function search(connector, query) {
   // Implement support for canceling (used e.g. when a new search
   // is executed or the user stops the searching manually).
   newOngoingSearch.cancel = () => {
-    cancelled = true;
+    canceled = true;
+  };
+
+  newOngoingSearch.isCanceled = () => {
+    return canceled;
   };
 
   return newOngoingSearch;
@@ -107,6 +114,7 @@ async function loadResource(connector, resource) {
 function searchResource(resource, query) {
   return async (dispatch, getState) => {
     const state = getState();
+    const ongoingSearch = getOngoingSearch(state);
 
     const modifiers = {
       caseSensitive: state.search.caseSensitive,
@@ -116,7 +124,7 @@ function searchResource(resource, query) {
     // value is an array with search occurrences.
     const result = await searchInResource(resource, query, modifiers);
 
-    if (!result.length) {
+    if (!result.length || ongoingSearch.isCanceled()) {
       return;
     }
 
@@ -151,6 +159,17 @@ function addSearchQuery(query) {
 function clearSearchResults() {
   return {
     type: CLEAR_SEARCH_RESULTS,
+  };
+}
+
+/**
+ * Used to clear and cancel an ongoing search.
+ * @returns {Function}
+ */
+function clearSearchResultAndCancel() {
+  return (dispatch, getState) => {
+    dispatch(stopOngoingSearch());
+    dispatch(clearSearchResults());
   };
 }
 
@@ -271,4 +290,5 @@ module.exports = {
   navigate,
   setTargetSearchResult,
   toggleCaseSensitiveSearch,
+  clearSearchResultAndCancel,
 };
