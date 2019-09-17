@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
-<?xml-stylesheet 
+<?xml-stylesheet
   href="chrome://mochikit/content/tests/SimpleTest/test.css"
   type="text/css"?>
 <!--
@@ -10,19 +10,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348233
 <window title="Mozilla Bug 437844 and Bug 348233"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/javascript" 
+  <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" 
+  <script type="application/javascript"
           src="chrome://mochikit/content/chrome-harness.js"></script>
   <script type="application/javascript"
           src="RegisterUnregisterChrome.js"></script>
 
   <body  xmlns="http://www.w3.org/1999/xhtml">
-    <a target="_blank" 
+    <a target="_blank"
        href="https://bugzilla.mozilla.org/show_bug.cgi?id=437844">
       Mozilla Bug 437844
     </a>
-    <a target="_blank" 
+    <a target="_blank"
        href="https://bugzilla.mozilla.org/show_bug.cgi?id=348233">
       Mozilla Bug 348233
     </a>
@@ -37,7 +37,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348233
   <script class="testbody" type="application/javascript">
     <![CDATA[
 
-      SimpleTest.expectAssertions(14, 54);
+      SimpleTest.expectAssertions(14, 55);
 
       /** Test for Bug 437844 and Bug 348233 **/
       SimpleTest.waitForExplicitFinish();

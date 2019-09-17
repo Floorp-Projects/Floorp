@@ -578,7 +578,7 @@ add_task(async function enter_during_autocomplete_should_prevent_autoclose() {
 
       // Start autocomplete with the registered tag.
       tagsField.value = "";
-      let popup = document.getElementById("PopupAutoComplete");
+      let popup = document.getElementById("editBMPanel_tagsAutocomplete");
       let promiseShown = BrowserTestUtils.waitForEvent(popup, "popupshown");
       tagsField.focus();
       EventUtils.sendString("a", window);
@@ -622,7 +622,7 @@ add_task(async function escape_during_autocomplete_should_prevent_autoclose() {
 
       // Start autocomplete with the registered tag.
       tagsField.value = "";
-      let popup = document.getElementById("PopupAutoComplete");
+      let popup = document.getElementById("editBMPanel_tagsAutocomplete");
       let promiseShown = BrowserTestUtils.waitForEvent(popup, "popupshown");
       tagsField.focus();
       EventUtils.sendString("a", window);
