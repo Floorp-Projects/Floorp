@@ -17,6 +17,7 @@
 #include "nsCOMPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/SHA1.h"
 
 class nsNotifyAddrListener : public nsINetworkLinkService,
                              public nsIRunnable,
@@ -33,6 +34,8 @@ class nsNotifyAddrListener : public nsINetworkLinkService,
 
   nsresult Init(void);
   void CheckLinkStatus(void);
+  static void HashSortedNetworkIds(const std::vector<GUID> nwGUIDS,
+                                   mozilla::SHA1Sum& sha1);
 
  protected:
   class ChangeEvent : public mozilla::Runnable {
