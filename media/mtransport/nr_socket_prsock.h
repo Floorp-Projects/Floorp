@@ -123,8 +123,6 @@ class NrSocketBase {
   virtual int listen(int backlog) = 0;
   virtual int accept(nr_transport_addr* addrp, nr_socket** sockp) = 0;
 
-  virtual bool IsProxied() const = 0;
-
   // Implementations of the async_event APIs
   virtual int async_wait(int how, NR_async_cb cb, void* cb_arg, char* function,
                          int line);
@@ -186,8 +184,6 @@ class NrSocket : public NrSocketBase, public nsASocketHandler {
   virtual int read(void* buf, size_t maxlen, size_t* len) override;
   virtual int listen(int backlog) override;
   virtual int accept(nr_transport_addr* addrp, nr_socket** sockp) override;
-
-  virtual bool IsProxied() const override { return false; }
 
  protected:
   virtual ~NrSocket() {
@@ -266,8 +262,6 @@ class NrUdpSocketIpc : public NrSocketIpc {
   virtual int read(void* buf, size_t maxlen, size_t* len) override;
   virtual int listen(int backlog) override;
   virtual int accept(nr_transport_addr* addrp, nr_socket** sockp) override;
-
-  virtual bool IsProxied() const override { return false; }
 
  private:
   virtual ~NrUdpSocketIpc();
