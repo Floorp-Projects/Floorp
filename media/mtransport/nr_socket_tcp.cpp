@@ -97,12 +97,18 @@ int NrTcpSocket::create(nr_transport_addr* aAddr) {
 int NrTcpSocket::connect(nr_transport_addr* aAddr) {
   r_log(LOG_GENERIC, LOG_DEBUG, "NrTcpSocket::Connect %p\n", this);
 
-  nsCString remote_addr;
+  nsCString remote_host;
   int remote_port;
 
-  if (NS_WARN_IF(nr_transport_addr_get_addrstring_and_port(aAddr, &remote_addr,
+  if (NS_WARN_IF(nr_transport_addr_get_addrstring_and_port(aAddr, &remote_host,
                                                            &remote_port))) {
     return R_FAILED;
+  }
+
+  bool use_tls = false;
+  if (my_addr_.tls_host[0]) {
+    remote_host = my_addr_.tls_host;
+    use_tls = true;
   }
 
   nsCString local_addr;
@@ -115,8 +121,8 @@ int NrTcpSocket::connect(nr_transport_addr* aAddr) {
 
   mWebrtcTCPSocket = new WebrtcTCPSocketWrapper(this);
 
-  mWebrtcTCPSocket->AsyncOpen(remote_addr, remote_port, local_addr, local_port,
-                              mConfig);
+  mWebrtcTCPSocket->AsyncOpen(remote_host, remote_port, local_addr, local_port,
+                              use_tls, mConfig);
 
   // trigger nr_socket_buffered to set write/read callback
   return R_WOULDBLOCK;

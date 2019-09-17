@@ -43,6 +43,7 @@ class WebrtcTCPSocketWrapper : public WebrtcTCPSocketCallback {
 
   virtual void AsyncOpen(const nsCString& aHost, const int& aPort,
                          const nsCString& aLocalAddress, const int& aLocalPort,
+                         bool aUseTls,
                          const std::shared_ptr<NrSocketProxyConfig>& aConfig);
   virtual void SendWrite(nsTArray<uint8_t>&& aReadData);
   virtual void Close();

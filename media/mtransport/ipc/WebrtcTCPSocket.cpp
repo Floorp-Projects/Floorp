@@ -138,7 +138,7 @@ void WebrtcTCPSocket::CloseWithReason(nsresult aReason) {
 
 nsresult WebrtcTCPSocket::Open(const nsCString& aHost, const int& aPort,
                                const nsCString& aLocalAddress,
-                               const int& aLocalPort,
+                               const int& aLocalPort, bool aUseTls,
                                const net::LoadInfoArgs& aArgs,
                                const nsCString& aAlpn,
                                NrSocketProxyConfig::ProxyPolicy aProxyPolicy) {
@@ -151,7 +151,9 @@ nsresult WebrtcTCPSocket::Open(const nsCString& aHost, const int& aPort,
   }
 
   mOpened = true;
-  nsCString spec = NS_LITERAL_CSTRING("http://") + aHost;
+  nsCString schemePrefix =
+      aUseTls ? NS_LITERAL_CSTRING("https://") : NS_LITERAL_CSTRING("http://");
+  nsCString spec = schemePrefix + aHost;
 
   nsresult rv = NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
                     .SetSpec(spec)
@@ -165,6 +167,7 @@ nsresult WebrtcTCPSocket::Open(const nsCString& aHost, const int& aPort,
 
   mLoadInfoArgs = aArgs;
   mAlpn = aAlpn;
+  mTls = aUseTls;
   if (aProxyPolicy == NrSocketProxyConfig::kForceProxy) {
     mForceProxy = true;
   }
@@ -270,7 +273,7 @@ nsresult WebrtcTCPSocket::OpenWithoutHttpProxy(nsIProxyInfo* aSocksProxyInfo) {
   }
 
   AutoTArray<nsCString, 1> socketTypes;
-  if (mSsl) {
+  if (mTls) {
     socketTypes.AppendElement(NS_LITERAL_CSTRING("ssl"));
   }
 
