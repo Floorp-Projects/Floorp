@@ -11,6 +11,7 @@
 
 namespace mozilla {
 
+class BlocksRingBuffer;
 class TimeStamp;
 
 namespace baseprofiler {
@@ -24,7 +25,8 @@ class UniqueStacks;
 class ProfilerBacktrace {
  public:
   ProfilerBacktrace(const char* aName, int aThreadId,
-                    UniquePtr<ProfileBuffer> aBuffer);
+                    UniquePtr<BlocksRingBuffer> aBlocksRingBuffer,
+                    UniquePtr<ProfileBuffer> aProfileBuffer);
   ~ProfilerBacktrace();
 
   // ProfilerBacktraces' stacks are deduplicated in the context of the
@@ -43,7 +45,10 @@ class ProfilerBacktrace {
 
   UniqueFreePtr<char> mName;
   int mThreadId;
-  UniquePtr<ProfileBuffer> mBuffer;
+  // `BlocksRingBuffer` in which `mProfileBuffer` stores its data; must be
+  // located before `mProfileBuffer` so that it's destroyed after.
+  UniquePtr<BlocksRingBuffer> mBlocksRingBuffer;
+  UniquePtr<ProfileBuffer> mProfileBuffer;
 };
 
 }  // namespace baseprofiler
