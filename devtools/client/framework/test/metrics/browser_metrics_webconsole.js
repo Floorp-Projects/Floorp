@@ -20,6 +20,19 @@ add_task(async function() {
   const webconsoleLoader = panel._frameWindow.getBrowserLoaderForWindow();
   const loaders = [loader.loader, webconsoleLoader.loader];
 
+  const whitelist = [
+    "@loader/unload.js",
+    "@loader/options.js",
+    "chrome.js",
+    "resource://devtools/client/webconsole/constants.js",
+    "resource://devtools/client/webconsole/utils.js",
+    "resource://devtools/client/webconsole/utils/messages.js",
+    "resource://devtools/client/webconsole/utils/l10n.js",
+    "resource://devtools/client/netmonitor/src/utils/request-utils.js",
+    "resource://devtools/client/webconsole/types.js",
+  ];
+  runDuplicatedModulesTest(loaders, whitelist);
+
   runMetricsTest({
     filterString: "devtools/client/webconsole",
     loaders,

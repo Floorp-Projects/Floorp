@@ -18,6 +18,10 @@ add_task(async function() {
   // The inspector does not use a dedicated browser loader.
   const loaders = [loader.loader];
 
+  // Duplicated modules whitelist for the inspector is empty because the
+  // inspector is only using the DevTools loader.
+  runDuplicatedModulesTest(loaders, []);
+
   runMetricsTest({
     filterString: "devtools/client/inspector",
     loaders,
