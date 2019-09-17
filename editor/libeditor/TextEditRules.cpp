@@ -45,12 +45,6 @@ namespace mozilla {
 
 using namespace dom;
 
-#define CANCEL_OPERATION_IF_READONLY_OR_DISABLED \
-  if (IsReadonly() || IsDisabled()) {            \
-    *aCancel = true;                             \
-    return NS_OK;                                \
-  }
-
 #define CANCEL_OPERATION_AND_RETURN_EDIT_ACTION_RESULT_IF_READONLY_OF_DISABLED \
   if (IsReadonly() || IsDisabled()) {                                          \
     return EditActionCanceled(NS_OK);                                          \
@@ -184,75 +178,6 @@ nsresult TextEditRules::AfterEdit() {
       NS_SUCCEEDED(rv),
       "Failed to selection to after the text node in TextEditor");
   return NS_OK;
-}
-
-nsresult TextEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
-                                     bool* aHandled) {
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-
-  MOZ_ASSERT(aCancel);
-  MOZ_ASSERT(aHandled);
-
-  *aCancel = false;
-  *aHandled = false;
-
-  AutoSafeEditorData setData(*this, *mTextEditor);
-
-  // my kingdom for dynamic cast
-  switch (aInfo.mEditSubAction) {
-    case EditSubAction::eInsertQuotedText: {
-      CANCEL_OPERATION_IF_READONLY_OR_DISABLED
-
-      // XXX Do we need to support paste-as-quotation in password editor (and
-      //     also in single line editor)?
-      TextEditorRef().MaybeDoAutoPasswordMasking();
-
-      nsresult rv = MOZ_KnownLive(TextEditorRef())
-                        .EnsureNoPaddingBRElementForEmptyEditor();
-      NS_WARNING_ASSERTION(NS_FAILED(rv),
-                           "Failed to remove padding <br> element");
-      return rv;
-    }
-    case EditSubAction::eComputeTextToOutput:
-    case EditSubAction::eDeleteSelectedContent:
-    case EditSubAction::eInsertElement:
-    case EditSubAction::eInsertLineBreak:
-    case EditSubAction::eInsertText:
-    case EditSubAction::eInsertTextComingFromIME:
-    case EditSubAction::eSetText:
-    case EditSubAction::eUndo:
-    case EditSubAction::eRedo:
-      MOZ_ASSERT_UNREACHABLE("This path should've been dead code");
-      return NS_ERROR_UNEXPECTED;
-    default:
-      return NS_ERROR_FAILURE;
-  }
-}
-
-nsresult TextEditRules::DidDoAction(EditSubActionInfo& aInfo,
-                                    nsresult aResult) {
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-
-  switch (aInfo.mEditSubAction) {
-    case EditSubAction::eComputeTextToOutput:
-    case EditSubAction::eDeleteSelectedContent:
-    case EditSubAction::eInsertElement:
-    case EditSubAction::eInsertLineBreak:
-    case EditSubAction::eInsertText:
-    case EditSubAction::eInsertTextComingFromIME:
-    case EditSubAction::eSetText:
-    case EditSubAction::eUndo:
-    case EditSubAction::eRedo:
-      MOZ_ASSERT_UNREACHABLE("This path should've been dead code");
-      return NS_ERROR_UNEXPECTED;
-    default:
-      // Don't fail on transactions we don't handle here!
-      return NS_OK;
-  }
 }
 
 bool TextEditRules::DocumentIsEmpty() const {
@@ -1057,32 +982,12 @@ EditActionResult TextEditor::TruncateInsertionStringForMaxLength(
   return EditActionHandled();
 }
 
-bool TextEditRules::IsPasswordEditor() const {
-  return mTextEditor ? mTextEditor->IsPasswordEditor() : false;
-}
-
-bool TextEditRules::IsMaskingPassword() const {
-  MOZ_ASSERT(IsPasswordEditor());
-  return mTextEditor ? mTextEditor->IsMaskingPassword() : true;
-}
-
 bool TextEditRules::IsSingleLineEditor() const {
   return mTextEditor ? mTextEditor->IsSingleLineEditor() : false;
 }
 
 bool TextEditRules::IsPlaintextEditor() const {
   return mTextEditor ? mTextEditor->IsPlaintextEditor() : false;
-}
-
-bool TextEditRules::IsReadonly() const {
-  return mTextEditor ? mTextEditor->IsReadonly() : false;
-}
-
-bool TextEditRules::IsDisabled() const {
-  return mTextEditor ? mTextEditor->IsDisabled() : false;
-}
-bool TextEditRules::IsMailEditor() const {
-  return mTextEditor ? mTextEditor->IsMailEditor() : false;
 }
 
 bool TextEditor::CanEchoPasswordNow() const {
