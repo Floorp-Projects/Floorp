@@ -295,16 +295,20 @@ struct DIGroup {
   IntRect mInvalidRect;
   nsRect mGroupBounds;
   LayerIntRect mVisibleRect;
+  LayerIntRect mLastVisibleRect;
+  // this is the intersection of mVisibleRect and mLastVisibleRect
+  // we ensure that mInvalidRect is contained in mPreservedRect
+  IntRect mPreservedRect;
   int32_t mAppUnitsPerDevPixel;
   gfx::Size mScale;
   ScrollableLayerGuid::ViewID mScrollId;
   LayerPoint mResidualOffset;
-  LayerIntRect mLayerBounds;
+  LayerIntRect mLayerBounds; // mGroupBounds converted to Layer space
   // The current bounds of the blob image
-  IntRect mImageBounds;
+  IntRect mImageBounds; // mLayerBounds in unknown units
   // mImageBounds clipped to the container/parent of the
   // current item being processed.
-  IntRect mClippedImageBounds;
+  IntRect mClippedImageBounds; // mLayerBounds with the clipping of any containers applied
   Maybe<mozilla::Pair<wr::RenderRoot, wr::BlobImageKey>> mKey;
   std::vector<RefPtr<ScaledFont>> mFonts;
 
@@ -313,8 +317,11 @@ struct DIGroup {
         mScrollId(ScrollableLayerGuid::NULL_SCROLL_ID) {}
 
   void InvalidateRect(const IntRect& aRect) {
+    auto r = aRect.Intersect(mPreservedRect);
     // Empty rects get dropped
-    mInvalidRect = mInvalidRect.Union(aRect);
+    if (!r.IsEmpty()) {
+      mInvalidRect = mInvalidRect.Union(r);
+    }
   }
 
   IntRect ItemBounds(nsDisplayItem* aItem) {
@@ -411,7 +418,7 @@ struct DIGroup {
       GP("frame invalid invalidate: %s\n", aItem->Name());
       GP("old rect: %d %d %d %d\n", aData->mRect.x, aData->mRect.y,
          aData->mRect.width, aData->mRect.height);
-      InvalidateRect(aData->mRect.Intersect(mImageBounds));
+      InvalidateRect(aData->mRect);
       // We want to snap to outside pixels. When should we multiply by the
       // matrix?
       // XXX: TransformBounds is expensive. We should avoid doing it if we have
@@ -432,8 +439,7 @@ struct DIGroup {
       if (!combined.IsEmpty()) {
         // There might be no point in doing this elaborate tracking here to get
         // smaller areas
-        InvalidateRect(aData->mRect.Intersect(
-            mImageBounds));  // invalidate the old area -- in theory combined
+        InvalidateRect(aData->mRect);  // invalidate the old area -- in theory combined
                              // should take care of this
         UniquePtr<nsDisplayItemGeometry> geometry(
             aItem->AllocateGeometry(aBuilder));
@@ -467,7 +473,7 @@ struct DIGroup {
               aData->mGeometry->ComputeInvalidationRegion());
           IntRect transformedRect =
               ToDeviceSpace(clippedBounds, aMatrix, appUnitsPerDevPixel);
-          InvalidateRect(aData->mRect.Intersect(mImageBounds));
+          InvalidateRect(aData->mRect);
           aData->mRect = transformedRect.Intersect(mClippedImageBounds);
           InvalidateRect(aData->mRect);
 
@@ -496,7 +502,7 @@ struct DIGroup {
               aData->mGeometry->ComputeInvalidationRegion());
           IntRect transformedRect =
               ToDeviceSpace(clippedBounds, aMatrix, appUnitsPerDevPixel);
-          InvalidateRect(aData->mRect.Intersect(mImageBounds));
+          InvalidateRect(aData->mRect);
           aData->mRect = transformedRect.Intersect(mClippedImageBounds);
           InvalidateRect(aData->mRect);
 
@@ -514,7 +520,7 @@ struct DIGroup {
             aData->mGeometry = std::move(geometry);
             IntRect transformedRect =
                 ToDeviceSpace(clippedBounds, aMatrix, appUnitsPerDevPixel);
-            InvalidateRect(aData->mRect.Intersect(mImageBounds));
+            InvalidateRect(aData->mRect);
             aData->mRect = transformedRect.Intersect(mClippedImageBounds);
             InvalidateRect(aData->mRect);
             GP("DetectContainerLayerPropertiesBoundsChange change\n");
@@ -613,7 +619,7 @@ struct DIGroup {
     LayoutDeviceRect itemBounds =
         (LayerRect(mVisibleRect) - mResidualOffset) / scale;
 
-    if (mInvalidRect.IsEmpty()) {
+    if (mInvalidRect.IsEmpty() && mVisibleRect.IsEqualEdges(mLastVisibleRect)) {
       GP("Not repainting group because it's empty\n");
       GP("End EndGroup\n");
       if (mKey) {
@@ -787,7 +793,8 @@ struct DIGroup {
       }
 
       bool dirty = true;
-      if (!mInvalidRect.Contains(bounds)) {
+      auto preservedBounds = bounds.Intersect(mPreservedRect);
+      if (!mInvalidRect.Contains(preservedBounds)) {
         GP("Passing\n");
         dirty = false;
         BlobItemData* data = GetBlobItemData(item);
@@ -1274,6 +1281,8 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
       groupData->mFollowingGroup.mResidualOffset =
           currentGroup->mResidualOffset;
       groupData->mFollowingGroup.mVisibleRect = currentGroup->mVisibleRect;
+      groupData->mFollowingGroup.mLastVisibleRect = currentGroup->mLastVisibleRect;
+      groupData->mFollowingGroup.mPreservedRect = currentGroup->mPreservedRect;
 
       currentGroup = &groupData->mFollowingGroup;
 
@@ -1524,10 +1533,11 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
   group.mResidualOffset = residualOffset;
   group.mGroupBounds = groupBounds;
   group.mLayerBounds = layerBounds;
+  group.mLastVisibleRect = group.mVisibleRect;
   group.mVisibleRect = visibleRect;
+  group.mPreservedRect = group.mVisibleRect.Intersect(group.mLastVisibleRect).ToUnknownRect();
   group.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
   group.mImageBounds = layerBounds.ToUnknownRect();
-  group.mImageBounds = visibleRect.ToUnknownRect();
   group.mClippedImageBounds = group.mImageBounds;
 
   g.mTransform = Matrix::Scaling(scale.width, scale.height)
