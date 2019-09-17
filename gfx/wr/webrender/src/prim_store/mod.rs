@@ -15,7 +15,7 @@ use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, Coordinat
 use crate::clip::{ClipDataStore, ClipNodeFlags, ClipChainId, ClipChainInstance, ClipItemKind};
 use crate::debug_colors;
 use crate::debug_render::DebugItem;
-use crate::display_list_flattener::{CreateShadow, IsVisible};
+use crate::scene_building::{CreateShadow, IsVisible};
 use euclid::{SideOffsets2D, Transform3D, Rect, Scale, Size2D, Point2D};
 use euclid::approxeq::ApproxEq;
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
@@ -1840,7 +1840,7 @@ impl PrimitiveStore {
     /// Destroy an existing primitive store. This is called just before
     /// a primitive store is replaced with a newly built scene.
     pub fn destroy(
-        mut self,
+        &mut self,
         retained_tiles: &mut RetainedTiles,
     ) {
         for pic in &mut self.pictures {
@@ -4082,7 +4082,7 @@ fn update_opacity_binding(
 }
 
 /// Trait for primitives that are directly internable.
-/// see DisplayListFlattener::add_primitive<P>
+/// see SceneBuilder::add_primitive<P>
 pub trait InternablePrimitive: intern::Internable<InternData = PrimitiveSceneData> + Sized {
     /// Build a new key from self with `info`.
     fn into_key(

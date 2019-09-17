@@ -7,7 +7,7 @@ use api::{NormalBorder as ApiNormalBorder, RepeatMode};
 use api::units::*;
 use crate::ellipse::Ellipse;
 use euclid::vec2;
-use crate::display_list_flattener::DisplayListFlattener;
+use crate::scene_building::SceneBuilder;
 use crate::gpu_types::{BorderInstance, BorderSegment, BrushFlags};
 use crate::prim_store::{BorderSegmentInfo, BrushSegment, NinePatchDescriptor};
 use crate::prim_store::{EdgeAaSegmentMask, ScrollNodeAndClipChain};
@@ -208,7 +208,7 @@ pub fn ensure_no_corner_overlap(
     }
 }
 
-impl<'a> DisplayListFlattener<'a> {
+impl<'a> SceneBuilder<'a> {
     pub fn add_normal_border(
         &mut self,
         info: &LayoutPrimitiveInfo,
