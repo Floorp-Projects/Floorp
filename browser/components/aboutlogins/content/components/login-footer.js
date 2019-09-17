@@ -52,26 +52,24 @@ export default class LoginFooter extends HTMLElement {
   }
 
   _setAppStoreImage(lang) {
-    const currLang = lang.toLowerCase();
     let appStoreLink =
       "chrome://browser/content/aboutlogins/third-party/app-store/app_" +
-      currLang +
+      lang +
       ".png";
     this._imageAppStore.setAttribute("src", appStoreLink);
   }
 
   _setPlayStoreImage(lang) {
-    const currLang = lang.toLowerCase();
     let playStoreLink =
       "chrome://browser/content/aboutlogins/third-party/play-store/play_" +
-      currLang +
+      lang +
       ".png";
     this._imagePlayStore.setAttribute("src", playStoreLink);
   }
 
   showStoreIconsForLocales(appLocales) {
-    this._setAppStoreImage(appLocales.appStoreBadge[0]);
-    this._setPlayStoreImage(appLocales.playStoreBadge[0]);
+    this._setAppStoreImage(appLocales.appStoreBadgeLanguage);
+    this._setPlayStoreImage(appLocales.playStoreBadgeLanguage);
   }
 }
 customElements.define("login-footer", LoginFooter);
