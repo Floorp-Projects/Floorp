@@ -207,6 +207,10 @@ class RacyFeatures {
 
   static void SetInactive() { sActiveAndFeatures = 0; }
 
+  static void SetPaused() { sActiveAndFeatures |= Paused; }
+
+  static void SetUnpaused() { sActiveAndFeatures &= ~Paused; }
+
   static bool IsActive() { return uint32_t(sActiveAndFeatures) & Active; }
 
   static bool IsActiveWithFeature(uint32_t aFeature) {
@@ -219,12 +223,18 @@ class RacyFeatures {
     return (af & Active) && !(af & ProfilerFeature::Privacy);
   }
 
- private:
-  static const uint32_t Active = 1u << 31;
+  static bool IsActiveAndUnpausedWithoutPrivacy() {
+    uint32_t af = sActiveAndFeatures;  // copy it first
+    return (af & Active) && !(af & (Paused | ProfilerFeature::Privacy));
+  }
 
-// Ensure Active doesn't overlap with any of the feature bits.
+ private:
+  static constexpr uint32_t Active = 1u << 31;
+  static constexpr uint32_t Paused = 1u << 30;
+
+// Ensure Active/Paused don't overlap with any of the feature bits.
 #  define NO_OVERLAP(n_, str_, Name_, desc_) \
-    static_assert(ProfilerFeature::Name_ != Active, "bad Active value");
+    static_assert(ProfilerFeature::Name_ != Paused, "bad feature value");
 
   PROFILER_FOR_EACH_FEATURE(NO_OVERLAP);
 
@@ -422,6 +432,19 @@ void profiler_clear_js_context();
 // calls.
 inline bool profiler_is_active() {
   return mozilla::profiler::detail::RacyFeatures::IsActive();
+}
+
+// Same as profiler_is_active(), but with the same extra checks that determine
+// if the profiler would currently store markers. So this should be used before
+// doing some potentially-expensive work that's used in a marker. E.g.:
+//
+//   if (profiler_can_accept_markers()) {
+//     ExpensiveMarkerPayload expensivePayload = CreateExpensivePayload();
+//     BASE_PROFILER_ADD_MARKER_WITH_PAYLOAD(name, OTHER, expensivePayload);
+//   }
+inline bool profiler_can_accept_markers() {
+  return mozilla::profiler::detail::RacyFeatures::
+      IsActiveAndUnpausedWithoutPrivacy();
 }
 
 // Is the profiler active, and is the current thread being profiled?
