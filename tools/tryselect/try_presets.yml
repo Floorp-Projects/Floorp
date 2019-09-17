@@ -26,23 +26,20 @@ devtools:
     description: >-
         Runs the tests relevant to the Firefox Devtools
     query:
-        - "'debugger | 'node-devtools"
+        - "'node-debugger | 'node-devtools"
         - "'mozlint-eslint"
-        - "'mochitest-devtools | 'mochitest-chrome 'linux64 | 'windows10 !asan !shippable !-sw !qr"
-        # mac opt tests only run with shippable, so we cannot use the same
-        # selector as linux and windows.
-        - "'mochitest-devtools | 'mochitest-chrome 'mac !asan !-sw !qr"
-        - "'xpcshell 'linux64/ !asan !shippable"
+        - "'mochitest-devtools-chrome-e10s | 'mochitest-chrome-1proc 'linux64/ | 'windows10-64/ | 'macosx1014-64"
+        - "'xpcshell-e10s 'linux64/"
 
 devtools-linux:
     selector: fuzzy
     description: >-
         Runs the tests relevant to the Firefox Devtools, on Linux only.
     query:
-        - "'debugger | 'node-devtools"
+        - "'node-debugger | 'node-devtools"
         - "'mozlint-eslint"
-        - "'mochitest-devtools | 'mochitest-chrome 'linux64 !asan !shippable !-sw !qr"
-        - "'xpcshell 'linux64/ !asan !shippable"
+        - "'mochitest-devtools-chrome-e10s | 'mochitest-chrome-1proc 'linux64/"
+        - "'xpcshell-e10s 'linux64/"
 
 perf:
     selector: fuzzy
