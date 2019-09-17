@@ -490,7 +490,7 @@ To see more help for a specific command, run:
         except FailedCommandError as e:
             print(e.message)
             return e.exit_code
-        except Exception as e:
+        except Exception:
             exc_type, exc_value, exc_tb = sys.exc_info()
 
             # The first two frames are us and are never used.

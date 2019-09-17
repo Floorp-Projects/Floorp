@@ -11,6 +11,7 @@ import sys
 import buildconfig
 import mozunit
 import pytest
+from six import text_type
 
 from mozboot.bootstrap import update_or_create_build_telemetry_config
 
@@ -29,7 +30,7 @@ def run_mach(tmpdir):
     """
     # Use tmpdir as the mozbuild state path, and enable telemetry in
     # a machrc there.
-    update_or_create_build_telemetry_config(unicode(tmpdir.join('machrc')))
+    update_or_create_build_telemetry_config(text_type(tmpdir.join('machrc')))
     env = dict(os.environ)
     env[b'MOZBUILD_STATE_PATH'] = str(tmpdir)
     env[b'MACH_TELEMETRY_NO_SUBMIT'] = b'1'
