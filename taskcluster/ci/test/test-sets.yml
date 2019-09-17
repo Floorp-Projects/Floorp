@@ -538,6 +538,16 @@ android-hw-arm7-raptor:
     - raptor-tp6m-8-fennec64
     - raptor-tp6m-9-fennec64
     - raptor-tp6m-10-fennec64
+    - raptor-tp6m-1-fennec68
+    - raptor-tp6m-2-fennec68
+    - raptor-tp6m-3-fennec68
+    - raptor-tp6m-4-fennec68
+    - raptor-tp6m-5-fennec68
+    - raptor-tp6m-6-fennec68
+    - raptor-tp6m-7-fennec68
+    - raptor-tp6m-8-fennec68
+    - raptor-tp6m-9-fennec68
+    - raptor-tp6m-10-fennec68
     - raptor-tp6m-1-fennec-cold
     - raptor-tp6m-2-fennec-cold
     - raptor-tp6m-3-fennec-cold
@@ -579,6 +589,20 @@ android-hw-arm7-raptor:
     - raptor-tp6m-12-fennec64-cold
     - raptor-tp6m-13-fennec64-cold
     - raptor-tp6m-14-fennec64-cold
+    - raptor-tp6m-1-fennec68-cold
+    - raptor-tp6m-2-fennec68-cold
+    - raptor-tp6m-3-fennec68-cold
+    - raptor-tp6m-4-fennec68-cold
+    - raptor-tp6m-5-fennec68-cold
+    - raptor-tp6m-6-fennec68-cold
+    - raptor-tp6m-7-fennec68-cold
+    - raptor-tp6m-8-fennec68-cold
+    - raptor-tp6m-9-fennec68-cold
+    - raptor-tp6m-10-fennec68-cold
+    - raptor-tp6m-11-fennec68-cold
+    - raptor-tp6m-12-fennec68-cold
+    - raptor-tp6m-13-fennec68-cold
+    - raptor-tp6m-14-fennec68-cold
     - raptor-tp6m-1-refbrow-cold
     - raptor-tp6m-2-refbrow-cold
     - raptor-tp6m-3-refbrow-cold
@@ -737,6 +761,20 @@ android-hw-aarch64-raptor:
     - raptor-tp6m-12-fennec64-cold
     - raptor-tp6m-13-fennec64-cold
     - raptor-tp6m-14-fennec64-cold
+    - raptor-tp6m-1-fennec68-cold
+    - raptor-tp6m-2-fennec68-cold
+    - raptor-tp6m-3-fennec68-cold
+    - raptor-tp6m-4-fennec68-cold
+    - raptor-tp6m-5-fennec68-cold
+    - raptor-tp6m-6-fennec68-cold
+    - raptor-tp6m-7-fennec68-cold
+    - raptor-tp6m-8-fennec68-cold
+    - raptor-tp6m-9-fennec68-cold
+    - raptor-tp6m-10-fennec68-cold
+    - raptor-tp6m-11-fennec68-cold
+    - raptor-tp6m-12-fennec68-cold
+    - raptor-tp6m-13-fennec68-cold
+    - raptor-tp6m-14-fennec68-cold
     - raptor-tp6m-1-refbrow-cold
     - raptor-tp6m-2-refbrow-cold
     - raptor-tp6m-3-refbrow-cold
@@ -867,6 +905,16 @@ android-hw-arm7-raptor-nightly:
     - raptor-tp6m-8-fennec64
     - raptor-tp6m-9-fennec64
     - raptor-tp6m-10-fennec64
+    - raptor-tp6m-1-fennec68
+    - raptor-tp6m-2-fennec68
+    - raptor-tp6m-3-fennec68
+    - raptor-tp6m-4-fennec68
+    - raptor-tp6m-5-fennec68
+    - raptor-tp6m-6-fennec68
+    - raptor-tp6m-7-fennec68
+    - raptor-tp6m-8-fennec68
+    - raptor-tp6m-9-fennec68
+    - raptor-tp6m-10-fennec68
 
 android-hw-aarch64-raptor-nightly:
     - raptor-speedometer-fennec
