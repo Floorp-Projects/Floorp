@@ -106,6 +106,10 @@ menulist > menupopup:not([position]) {
   margin-top: -2px;
 }
 
+menulist > menupopup > .popup-internal-box {
+  padding: 0;
+}
+
 menupopup[customoptionstyling="true"] {
   -moz-appearance: none;
   padding-top: 0;
