@@ -162,7 +162,7 @@ test-coverage:
                     - win64-node
                 win.*32.*:
                     - win32-node
-                default: []
+                android-em-7.*: []
 
 test-coverage-gpu:
     description: "Per-test coverage for tests that require gpu instances"
