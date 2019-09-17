@@ -102,6 +102,9 @@ CycleCollectedJSContext::~CycleCollectedJSContext() {
   mUncaughtRejections.reset();
   mConsumedRejections.reset();
 
+  mAboutToBeNotifiedRejectedPromises.Clear();
+  mPendingUnhandledRejections.Clear();
+
   JS_DestroyContext(mJSContext);
   mJSContext = nullptr;
 
