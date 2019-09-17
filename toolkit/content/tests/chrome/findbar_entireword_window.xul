@@ -181,6 +181,9 @@
             }
             listener = {
               onMatchesCountResult: res => {
+                if (searchString && res.searchString != searchString)
+                  return;
+
                 gFindBar.browser.finder.removeResultListener(listener);
                 data.matches = res;
                 resolve(data);

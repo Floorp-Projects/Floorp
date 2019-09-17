@@ -49,7 +49,7 @@ add_task(async function test_offscreen_text() {
         if (t == 0) {
           finder.fastFind(TARGET_TEXT, false, false);
         } else {
-          finder.findAgain(false, false, false);
+          finder.findAgain(TARGET_TEXT, false, false, false);
         }
         let findResult = await promiseFind;
         is(
@@ -61,7 +61,7 @@ add_task(async function test_offscreen_text() {
 
       // Find one more time and make sure we wrap.
       let promiseFind = waitForFind();
-      finder.findAgain(false, false, false);
+      finder.findAgain(TARGET_TEXT, false, false, false);
       let findResult = await promiseFind;
       is(
         findResult.result,

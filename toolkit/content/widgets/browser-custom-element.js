@@ -608,12 +608,6 @@
     get finder() {
       if (this.isRemoteBrowser) {
         if (!this._remoteFinder) {
-          // Don't attempt to create the remote finder if the
-          // messageManager has already gone away
-          if (!this.messageManager) {
-            return null;
-          }
-
           let jsm = "resource://gre/modules/FinderParent.jsm";
           let { FinderParent } = ChromeUtils.import(jsm, {});
           this._remoteFinder = new FinderParent(this);
