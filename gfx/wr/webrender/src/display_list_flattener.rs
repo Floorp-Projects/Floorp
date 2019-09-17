@@ -38,7 +38,7 @@ use crate::prim_store::text_run::TextRun;
 use crate::render_backend::{DocumentView};
 use crate::resource_cache::{FontInstanceMap, ImageRequest};
 use crate::scene::{Scene, StackingContextHelpers};
-use crate::scene_builder::{DocumentStats, Interners};
+use crate::scene_builder_thread::{DocumentStats, Interners};
 use crate::spatial_node::{StickyFrameInfo, ScrollFrameKind};
 use std::{f32, mem, usize, ops};
 use std::collections::vec_deque::VecDeque;

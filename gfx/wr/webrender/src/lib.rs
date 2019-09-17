@@ -115,7 +115,7 @@ mod render_task;
 mod renderer;
 mod resource_cache;
 mod scene;
-mod scene_builder;
+mod scene_builder_thread;
 mod screen_capture;
 mod segment;
 mod shade;

@@ -266,7 +266,7 @@ impl Document {
     }
 }
 
-pub struct SceneBuilder {
+pub struct SceneBuilderThread {
     documents: FastHashMap<DocumentId, Document>,
     rx: Receiver<SceneBuilderRequest>,
     tx: Sender<SceneBuilderResult>,
@@ -277,7 +277,7 @@ pub struct SceneBuilder {
     size_of_ops: Option<MallocSizeOfOps>,
 }
 
-impl SceneBuilder {
+impl SceneBuilderThread {
     pub fn new(
         config: FrameBuilderConfig,
         api_tx: MsgSender<ApiMsg>,
@@ -287,7 +287,7 @@ impl SceneBuilder {
         let (in_tx, in_rx) = channel();
         let (out_tx, out_rx) = channel();
         (
-            SceneBuilder {
+            SceneBuilderThread {
                 documents: FastHashMap::default(),
                 rx: in_rx,
                 tx: out_tx,
@@ -641,13 +641,13 @@ impl SceneBuilder {
 ///
 /// After rasterizing blobs, the secene building request is forwarded to the normal scene
 /// builder where the FrameBuilder is generated.
-pub struct LowPrioritySceneBuilder {
+pub struct LowPrioritySceneBuilderThread {
     pub rx: Receiver<SceneBuilderRequest>,
     pub tx: Sender<SceneBuilderRequest>,
     pub simulate_slow_ms: u32,
 }
 
-impl LowPrioritySceneBuilder {
+impl LowPrioritySceneBuilderThread {
     pub fn run(&mut self) {
         loop {
             match self.rx.recv() {
