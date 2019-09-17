@@ -3289,10 +3289,12 @@ already_AddRefed<Element> HTMLEditor::InsertBRElementWithTransaction(
   return newBRElement.forget();
 }
 
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 void HTMLEditor::ContentAppended(nsIContent* aFirstNewContent) {
   DoContentInserted(aFirstNewContent, eAppended);
 }
 
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 void HTMLEditor::ContentInserted(nsIContent* aChild) {
   DoContentInserted(aChild, eInserted);
 }
@@ -3344,10 +3346,12 @@ void HTMLEditor::DoContentInserted(nsIContent* aChild,
       // Ignore insertion of the padding <br> element.
       return;
     }
-    RefPtr<HTMLEditRules> htmlRules = mRules->AsHTMLEditRules();
-    if (htmlRules) {
-      htmlRules->DocumentModified();
+    nsresult rv = OnDocumentModified();
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return;
     }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "OnDocumentModified() failed, but ignored");
 
     // Update spellcheck for only the newly-inserted node (bug 743819)
     if (mInlineSpellChecker) {
@@ -3363,6 +3367,7 @@ void HTMLEditor::DoContentInserted(nsIContent* aChild,
   }
 }
 
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 void HTMLEditor::ContentRemoved(nsIContent* aChild,
                                 nsIContent* aPreviousSibling) {
   if (!IsInObservedSubtree(aChild)) {
@@ -3391,10 +3396,12 @@ void HTMLEditor::ContentRemoved(nsIContent* aChild,
       return;
     }
 
-    RefPtr<HTMLEditRules> htmlRules = mRules->AsHTMLEditRules();
-    if (htmlRules) {
-      htmlRules->DocumentModified();
+    nsresult rv = OnDocumentModified();
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return;
     }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "OnDocumentModified() failed, but ignored");
   }
 }
 

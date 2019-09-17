@@ -11146,25 +11146,12 @@ EditActionResult HTMLEditor::AddZIndexAsSubAction(int32_t aChange) {
                                  : EditActionHandled(NS_OK);
 }
 
-nsresult HTMLEditRules::DocumentModified() {
-  nsContentUtils::AddScriptRunner(
-      NewRunnableMethod("HTMLEditRules::DocumentModifiedWorker", this,
-                        &HTMLEditRules::DocumentModifiedWorker));
-  // Be aware, if DocumentModifiedWorker() is called synchronously, the
+nsresult HTMLEditor::OnDocumentModified() {
+  nsContentUtils::AddScriptRunner(NewRunnableMethod(
+      "HTMLEditor::OnModifyDocument", this, &HTMLEditor::OnModifyDocument));
+  // Be aware, if OnModifyDocument() may be called synchronously, the
   // editor might have been destroyed here.
-  return NS_OK;
-}
-
-void HTMLEditRules::DocumentModifiedWorker() {
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return;
-  }
-
-  RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
-  nsresult rv = htmlEditor->OnModifyDocument();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::OnModifyDocument() failed");
-  Unused << rv;
+  return Destroyed() ? NS_ERROR_EDITOR_DESTROYED : NS_OK;
 }
 
 }  // namespace mozilla
