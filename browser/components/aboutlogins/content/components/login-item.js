@@ -134,15 +134,17 @@ export default class LoginItem extends HTMLElement {
       timeUsed: this._login.timeLastUsed || "",
     });
 
+    document.l10n.setAttributes(this._favicon, "login-favicon", {
+      title: this._login.title,
+    });
+
     if (this._login.faviconDataURI) {
       this._faviconWrapper.classList.add("hide-default-favicon");
       this._favicon.src = this._login.faviconDataURI;
-      document.l10n.setAttributes(this._favicon, "login-favicon", {
-        title: this._login.title,
-      });
       this._favicon.hidden = false;
     } else {
       // reset the src and alt attributes if the currently selected favicon doesn't have a favicon
+      this._favicon.src = "";
       this._favicon.hidden = true;
       this._faviconWrapper.classList.remove("hide-default-favicon");
     }
@@ -552,6 +554,11 @@ export default class LoginItem extends HTMLElement {
       !window.AboutLoginsUtils.doLoginsMatch(login, this._loginFromForm())
     ) {
       return;
+    }
+
+    // Add faviconDataURI to new login
+    if (this._login.faviconDataURI) {
+      login.faviconDataURI = this._login.faviconDataURI;
     }
 
     this.setLogin(login);
