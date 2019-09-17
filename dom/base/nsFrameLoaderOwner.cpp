@@ -122,10 +122,18 @@ void nsFrameLoaderOwner::ChangeRemoteness(
     ourFrame->ResetFrameLoader();
   }
 
+  // If the element is focused, or the current mouse over target then
+  // we need to update that state for the new BrowserParent too.
   if (nsFocusManager* fm = nsFocusManager::GetFocusManager()) {
     if (fm->GetFocusedElement() == owner) {
       fm->ActivateRemoteFrameIfNeeded(*owner);
     }
+  }
+
+  if (owner->GetPrimaryFrame()) {
+    EventStateManager* eventManager =
+        owner->GetPrimaryFrame()->PresContext()->EventStateManager();
+    eventManager->RecomputeMouseEnterStateForRemoteFrame(*owner);
   }
 
   // Assuming this element is a XULFrameElement, once we've reset our
