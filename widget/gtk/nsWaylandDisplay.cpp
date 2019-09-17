@@ -258,6 +258,61 @@ bool nsWaylandDisplay::DispatchEventQueue() {
   return true;
 }
 
+void nsWaylandDisplay::SyncEnd() {
+  wl_callback_destroy(mSyncCallback);
+  mSyncCallback = nullptr;
+}
+
+static void wayland_sync_callback(void* data, struct wl_callback* callback,
+                                  uint32_t time) {
+  auto display = static_cast<nsWaylandDisplay*>(data);
+  display->SyncEnd();
+}
+
+static const struct wl_callback_listener sync_callback_listener = {
+    .done = wayland_sync_callback};
+
+void nsWaylandDisplay::SyncBegin() {
+  WaitForSyncEnd();
+
+  // Use wl_display_sync() to synchronize wayland events.
+  // See dri2_wl_swap_buffers_with_damage() from MESA
+  // or wl_display_roundtrip_queue() from wayland-client.
+  struct wl_display* displayWrapper =
+      static_cast<wl_display*>(wl_proxy_create_wrapper((void*)mDisplay));
+  if (!displayWrapper) {
+    NS_WARNING("Failed to create wl_proxy wrapper!");
+    return;
+  }
+
+  wl_proxy_set_queue((struct wl_proxy*)displayWrapper, mEventQueue);
+  mSyncCallback = wl_display_sync(displayWrapper);
+  wl_proxy_wrapper_destroy((void*)displayWrapper);
+
+  if (!mSyncCallback) {
+    NS_WARNING("Failed to create wl_display_sync callback!");
+    return;
+  }
+
+  wl_callback_add_listener(mSyncCallback, &sync_callback_listener, this);
+  wl_display_flush(mDisplay);
+}
+
+void nsWaylandDisplay::WaitForSyncEnd() {
+  // We're done here
+  if (!mSyncCallback) {
+    return;
+  }
+
+  while (mSyncCallback != nullptr) {
+    if (wl_display_dispatch_queue(mDisplay, mEventQueue) == -1) {
+      NS_WARNING("wl_display_dispatch_queue failed!");
+      SyncEnd();
+      return;
+    }
+  }
+}
+
 bool nsWaylandDisplay::Matches(wl_display* aDisplay) {
   return mThreadId == PR_GetCurrentThread() && aDisplay == mDisplay;
 }
@@ -320,6 +375,7 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
       mSubcompositor(nullptr),
       mSeat(nullptr),
       mShm(nullptr),
+      mSyncCallback(nullptr),
       mPrimarySelectionDeviceManager(nullptr),
       mRegistry(nullptr),
       mDmabuf(nullptr),
