@@ -470,6 +470,13 @@ add_task(async function test_reupload_replace() {
     },
   });
 
+  let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+  deepEqual(
+    tombstones.map(({ guid }) => guid),
+    ["bookmarkEEEE", "queryDDDDDDD"],
+    "Should store local tombstones for (E D)"
+  );
+
   await storeChangesInMirror(buf, changesToUpload);
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 
@@ -785,6 +792,9 @@ add_task(async function test_corrupt_remote_roots() {
     },
     "Should not corrupt local roots"
   );
+
+  let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+  deepEqual(tombstones, [], "Should not store local tombstones");
 
   await storeChangesInMirror(buf, changesToUpload);
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
@@ -1634,6 +1644,13 @@ add_task(async function test_move_into_orphaned() {
     "Should treat local tree as canonical if server is missing new parent"
   );
 
+  let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+  deepEqual(
+    tombstones.map(({ guid }) => guid),
+    ["bookmarkDDDD"],
+    "Should store local tombstone for D"
+  );
+
   await storeChangesInMirror(buf, changesToUpload);
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 
@@ -2010,6 +2027,8 @@ add_task(async function test_tombstone_as_child() {
     },
     "Should have ignored tombstone record"
   );
+  let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+  deepEqual(tombstones, [], "Should not store local tombstones");
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
@@ -2190,15 +2209,20 @@ add_task(async function test_non_syncable_items() {
   deepEqual(
     await buf.fetchUnmergedGuids(),
     [
+      "bookmarkFFFF",
       "bookmarkIIII",
       "bookmarkJJJJ",
+      "folderAAAAAA",
+      "folderDDDDDD",
+      "folderLEFTPC",
       "folderLEFTPF",
+      "folderLEFTPQ",
       "folderLEFTPR",
       PlacesUtils.bookmarks.menuGuid,
       "rootHHHHHHHH",
       PlacesUtils.bookmarks.unfiledGuid,
     ],
-    "Should leave non-syncable items unmerged"
+    "Should leave non-syncable items and roots with new remote structure unmerged"
   );
 
   let datesAdded = await promiseManyDatesAdded([
@@ -2415,6 +2439,23 @@ add_task(async function test_non_syncable_items() {
       ],
     },
     "Should exclude non-syncable items from new local structure"
+  );
+
+  let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+  deepEqual(
+    tombstones.map(({ guid }) => guid),
+    [
+      "bookmarkFFFF",
+      "bookmarkIIII",
+      "folderAAAAAA",
+      "folderDDDDDD",
+      "folderLEFTPC",
+      "folderLEFTPF",
+      "folderLEFTPQ",
+      "folderLEFTPR",
+      "rootHHHHHHHH",
+    ],
+    "Should store local tombstones for non-syncable items"
   );
 
   await storeChangesInMirror(buf, changesToUpload);
@@ -2833,6 +2874,13 @@ add_task(async function test_invalid_guid() {
       },
     ],
   });
+
+  let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+  deepEqual(
+    tombstones.map(({ guid }) => guid),
+    ["bad!guid~"],
+    "Should store local tombstone for C's invalid GUID"
+  );
 
   await storeChangesInMirror(buf, changesToUpload);
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");

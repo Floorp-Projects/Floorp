@@ -68,6 +68,7 @@ pub enum TelemetryEvent {
 pub struct TreeStats {
     pub time: Duration,
     pub items: usize,
+    pub deletions: usize,
     pub problems: ProblemCounts,
 }
 

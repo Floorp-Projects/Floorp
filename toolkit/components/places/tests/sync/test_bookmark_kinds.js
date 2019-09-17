@@ -225,10 +225,12 @@ add_task(async function test_mismatched_folder_types() {
 
   info("Apply remote");
   let changesToUpload = await buf.apply();
+  // We leave livemarks unmerged because we're about to upload tombstones for
+  // them, anyway.
   deepEqual(
     await buf.fetchUnmergedGuids(),
-    [PlacesUtils.bookmarks.toolbarGuid],
-    "Should leave toolbar with new remote structure unmerged"
+    ["l1nZZXfB8nC7", "livemarkBBBB", PlacesUtils.bookmarks.toolbarGuid],
+    "Should leave livemarks and toolbar with new remote structure unmerged"
   );
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
@@ -250,6 +252,13 @@ add_task(async function test_mismatched_folder_types() {
       title: BookmarksToolbarTitle,
     },
     "Should delete livemarks locally"
+  );
+
+  let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+  deepEqual(
+    tombstones.map(({ guid }) => guid),
+    ["l1nZZXfB8nC7", "livemarkBBBB"],
+    "Should store local tombstones for livemarks"
   );
 
   await storeChangesInMirror(buf, changesToUpload);

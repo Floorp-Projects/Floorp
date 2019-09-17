@@ -703,19 +703,39 @@ class SyncedBookmarksMirror {
           Ci.mozISyncedBookmarksMirrorCallback,
         ]),
         // `mozISyncedBookmarksMirrorProgressListener` methods.
-        onFetchLocalTree: (took, count, problems) => {
-          this.progress.stepWithItemCount(
+        onFetchLocalTree: (took, itemCount, deleteCount, problemsBag) => {
+          let counts = [
+            {
+              name: "items",
+              count: itemCount,
+            },
+            {
+              name: "deletions",
+              count: deleteCount,
+            },
+          ];
+          this.progress.stepWithTelemetry(
             ProgressTracker.STEPS.FETCH_LOCAL_TREE,
             took,
-            count
+            counts
           );
           // We don't record local tree problems in validation telemetry.
         },
-        onFetchRemoteTree: (took, count, problemsBag) => {
-          this.progress.stepWithItemCount(
+        onFetchRemoteTree: (took, itemCount, deleteCount, problemsBag) => {
+          let counts = [
+            {
+              name: "items",
+              count: itemCount,
+            },
+            {
+              name: "deletions",
+              count: deleteCount,
+            },
+          ];
+          this.progress.stepWithTelemetry(
             ProgressTracker.STEPS.FETCH_REMOTE_TREE,
             took,
-            count
+            counts
           );
           // Record validation telemetry for problems in the remote tree.
           let problems = bagToNamedCounts(problemsBag, [
@@ -726,12 +746,12 @@ class SyncedBookmarksMirror {
             "parentChildDisagreements",
             "missingChildren",
           ]);
-          this.recordValidationTelemetry(took, count, problems);
+          let checked = itemCount + deleteCount;
+          this.recordValidationTelemetry(took, checked, problems);
         },
         onMerge: (took, countsBag) => {
           let counts = bagToNamedCounts(countsBag, [
             "items",
-            "deletes",
             "dupes",
             "remoteRevives",
             "localDeletes",
@@ -1578,7 +1598,6 @@ async function cleanupMirrorDatabase(db) {
     await db.execute(`DROP TABLE changeGuidOps`);
     await db.execute(`DROP TABLE itemsToApply`);
     await db.execute(`DROP TABLE applyNewLocalStructureOps`);
-    await db.execute(`DROP TABLE itemsToRemove`);
     await db.execute(`DROP VIEW localTags`);
     await db.execute(`DROP TABLE itemsAdded`);
     await db.execute(`DROP TABLE guidsChanged`);
@@ -1729,17 +1748,6 @@ async function initializeTempMirrorEntities(db) {
         lastModified = OLD.lastModifiedMicroseconds
       WHERE guid = OLD.mergedGuid;
     END`);
-
-  // Stages all items to delete locally and remotely. Items to delete locally
-  // don't need tombstones: since we took the remote deletion, the tombstone
-  // already exists on the server. Items to delete remotely, or non-syncable
-  // items to delete on both sides, need tombstones.
-  await db.execute(`CREATE TEMP TABLE itemsToRemove(
-    guid TEXT PRIMARY KEY,
-    localLevel INTEGER NOT NULL,
-    shouldUploadTombstone BOOLEAN NOT NULL,
-    dateRemovedMicroseconds INTEGER NOT NULL
-  ) WITHOUT ROWID`);
 
   // A view of local bookmark tags. Tags, like keywords, are associated with
   // URLs, so two bookmarks with the same URL should have the same tags. Unlike
