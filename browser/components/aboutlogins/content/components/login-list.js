@@ -458,13 +458,24 @@ export default class LoginList extends HTMLElement {
 
     let isLTR = document.dir == "ltr";
     let activeDescendantId = this._list.getAttribute("aria-activedescendant");
-    let activeDescendant = activeDescendantId
-      ? this.shadowRoot.getElementById(activeDescendantId)
-      : this._list.firstElementChild;
+    let activeDescendant =
+      activeDescendantId && this.shadowRoot.getElementById(activeDescendantId);
+    if (!activeDescendant || activeDescendant.hidden) {
+      activeDescendant =
+        this._list.querySelector(".login-list-item[data-guid]:not([hidden])") ||
+        this._list.firstElementChild;
+    }
     let newlyFocusedItem = null;
+    let previousItem = activeDescendant.previousElementSibling;
+    while (previousItem && previousItem.hidden) {
+      previousItem = previousItem.previousElementSibling;
+    }
+    let nextItem = activeDescendant.nextElementSibling;
+    while (nextItem && nextItem.hidden) {
+      nextItem = nextItem.nextElementSibling;
+    }
     switch (event.key) {
       case "ArrowDown": {
-        let nextItem = activeDescendant.nextElementSibling;
         if (!nextItem) {
           return;
         }
@@ -472,9 +483,7 @@ export default class LoginList extends HTMLElement {
         break;
       }
       case "ArrowLeft": {
-        let item = isLTR
-          ? activeDescendant.previousElementSibling
-          : activeDescendant.nextElementSibling;
+        let item = isLTR ? previousItem : nextItem;
         if (!item) {
           return;
         }
@@ -482,9 +491,7 @@ export default class LoginList extends HTMLElement {
         break;
       }
       case "ArrowRight": {
-        let item = isLTR
-          ? activeDescendant.nextElementSibling
-          : activeDescendant.previousElementSibling;
+        let item = isLTR ? nextItem : previousItem;
         if (!item) {
           return;
         }
@@ -492,7 +499,6 @@ export default class LoginList extends HTMLElement {
         break;
       }
       case "ArrowUp": {
-        let previousItem = activeDescendant.previousElementSibling;
         if (!previousItem) {
           return;
         }
