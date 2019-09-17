@@ -45,7 +45,7 @@ export async function onConnect(connection: any, actions: Object) {
     pauseWorkersUntilAttach: true,
     wasmBinarySource: supportsWasm,
     skipBreakpoints: prefs.skipPausing,
-    logEventBreakpoints: features.logEventBreakpoints,
+    logEventBreakpoints: prefs.logEventBreakpoints,
   });
 
   // Retrieve possible event listener breakpoints

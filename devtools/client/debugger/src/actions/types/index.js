@@ -181,6 +181,10 @@ export type EventListenerAction =
   | {|
       +type: "UPDATE_EVENT_LISTENER_EXPANDED",
       +expanded: EventListenerExpandedList,
+    |}
+  | {|
+      +type: "TOGGLE_EVENT_LISTENERS",
+      +logEventBreakpoints: boolean,
     |};
 
 /**

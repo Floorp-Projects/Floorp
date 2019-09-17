@@ -88,7 +88,7 @@ export function setupHelper(obj: Object) {
       evaluate: expression => evaluate(dbg, expression),
       sendPacketToThread: packet => sendPacketToThread(dbg, packet),
       sendPacket: packet => sendPacket(dbg, packet),
-      dumpThread: () => sendPacketToThread(dbg, { type: "dumpThread" }),
+      dumpThread: () => dbg.connection.tabConnection.threadFront.dumpThread(),
       getDocument: url => getDocumentForUrl(dbg, url),
     },
     formatters: {

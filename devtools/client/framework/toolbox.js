@@ -598,7 +598,7 @@ Toolbox.prototype = {
         "devtools.debugger.skip-pausing"
       ),
       logEventBreakpoints: Services.prefs.getBoolPref(
-        "devtools.debugger.features.log-event-breakpoints"
+        "devtools.debugger.log-event-breakpoints"
       ),
     });
 
