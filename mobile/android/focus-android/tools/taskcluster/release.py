@@ -14,6 +14,8 @@ import os
 import taskcluster
 import lib.tasks
 
+from lib.gradle import get_variant
+
 TASK_ID = os.environ.get('TASK_ID')
 SCHEDULER_ID = os.environ.get('SCHEDULER_ID')
 HEAD_REV = os.environ.get('MOBILE_HEAD_REV')
@@ -28,15 +30,7 @@ BUILDER = lib.tasks.TaskBuilder(
     scheduler_id=SCHEDULER_ID,
 )
 
-def generate_build_task(apks, tag):
-    artifacts = {}
-    for apk in apks:
-        artifact = {
-            "type": 'file',
-            "path": apk,
-            "expires": taskcluster.stringDate(taskcluster.fromNow('1 year'))
-        }
-        artifacts["public/%s" % os.path.basename(apk)] = artifact
+def generate_build_task(artifacts, tag):
 
     checkout = "git fetch origin && git reset --hard origin/master" if tag is None else "git fetch origin && git checkout %s" % (tag)
 
@@ -46,7 +40,6 @@ def generate_build_task(apks, tag):
         # Non-tagged (nightly) builds should contain all languages
         checkout = checkout + ' && python tools/l10n/filter-release-translations.py'
         assemble_task = 'assembleRelease'
-
 
     return taskcluster.slugId(), BUILDER.build_task(
         name="(Focus for Android) Build task",
@@ -64,10 +57,7 @@ def generate_build_task(apks, tag):
             "secrets:get:project/focus/tokens"
         ])
 
-def generate_signing_task(build_task_id, apks, tag):
-    artifacts = []
-    for apk in apks:
-        artifacts.append("public/" + os.path.basename(apk))
+def generate_signing_task(build_task_id, upstream_artifacts, tag):
 
     routes = []
 
@@ -92,23 +82,20 @@ def generate_signing_task(build_task_id, apks, tag):
         name="(Focus for Android) Signing task",
         description="Sign release builds of Focus/Klar",
         signing_format=signing_format,
-        apks=artifacts,
+        apks=upstream_artifacts,
         scopes=scopes,
         routes=routes
     )
 
-def generate_push_task(signing_task_id, apks, channel, commit):
-    artifacts = []
-    for apk in apks:
-        artifacts.append("public/" + os.path.basename(apk))
+def generate_push_task(signing_task_id, upstream_artifacts, channel, commit):
 
-    print artifacts
+    print upstream_artifacts
 
     return taskcluster.slugId(), BUILDER.build_push_task(
         signing_task_id,
         name="(Focus for Android) Push task",
         description="Upload signed release builds of Focus/Klar to Google Play",
-        apks=artifacts,
+        apks=upstream_artifacts,
         scopes=[
             "project:mobile:focus:releng:googleplay:product:focus"
         ],
@@ -126,24 +113,29 @@ def populate_chain_of_trust_required_but_unused_files():
             json.dump({}, f)    # Yaml is a super-set of JSON.
 
 
-def release(apks, channel, commit, tag):
+def release(variants, channel, commit, tag):
     queue = taskcluster.Queue({ 'baseUrl': 'http://taskcluster/queue/v1' })
 
     task_graph = {}
+    artifacts = []
+    upstream_artifacts = []
+    for variant in variants:
+        artifacts.extend(variant.artifacts())
+        upstream_artifacts.extend(variant.upstream_artifacts())
 
-    build_task_id, build_task = generate_build_task(apks, tag)
+    build_task_id, build_task = generate_build_task(artifacts, tag)
     lib.tasks.schedule_task(queue, build_task_id, build_task)
 
     task_graph[build_task_id] = {}
     task_graph[build_task_id]["task"] = queue.task(build_task_id)
 
-    sign_task_id, sign_task = generate_signing_task(build_task_id, apks, tag)
+    sign_task_id, sign_task = generate_signing_task(build_task_id, upstream_artifacts, tag)
     lib.tasks.schedule_task(queue, sign_task_id, sign_task)
 
     task_graph[sign_task_id] = {}
     task_graph[sign_task_id]["task"] = queue.task(sign_task_id)
 
-    push_task_id, push_task = generate_push_task(sign_task_id, apks, channel, commit)
+    push_task_id, push_task = generate_push_task(sign_task_id, upstream_artifacts, channel, commit)
     lib.tasks.schedule_task(queue, push_task_id, push_task)
 
     task_graph[push_task_id] = {}
@@ -166,11 +158,13 @@ if __name__ == "__main__":
     parser.add_argument('--channel', dest="channel", action="store", choices=['internal', 'alpha', 'nightly'], help="", required=True)
     parser.add_argument('--commit', dest="commit", action="store_true", help="commit the google play transaction")
     parser.add_argument('--tag', dest="tag", action="store", help="git tag to build from")
-    parser.add_argument('--apk', dest="apks", metavar="path", action="append", help="Path to APKs to sign and upload", required=True)
-    parser.add_argument('--output', dest="output", metavar="path", action="store", help="Path to the build output", required=True)
 
     result = parser.parse_args()
 
-    apks = map(lambda x: result.output + '/' + x, result.apks)
+    variants = []
+    for product in ('focus', 'klar'):
+        build_type = "release" if result.channel == "alpha" else result.channel
+        my_variant = get_variant(build_type, product)
+        variants.append(my_variant)
 
-    release(apks, result.channel, result.commit, result.tag)
+    release(variants, result.channel, result.commit, result.tag)

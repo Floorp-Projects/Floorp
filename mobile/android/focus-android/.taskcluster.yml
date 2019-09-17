@@ -171,12 +171,7 @@ tasks:
               && python tools/taskcluster/release.py \
                 --tag ${event.release.tag_name} \
                 --channel alpha \
-                --commit \
-                --output /opt/focus-android/app/build/outputs/apk \
-                --apk focus/release/app-focus-armeabi-v7a-release-unsigned.apk \
-                --apk focus/release/app-focus-arm64-release-unsigned.apk \
-                --apk klar/release/app-klar-armeabi-v7a-release-unsigned.apk \
-                --apk klar/release/app-klar-arm64-release-unsigned.apk
+                --commit
           artifacts:
             public/task-graph.json:
               type: file
@@ -197,7 +192,7 @@ tasks:
           description: Scheduling tasks for releasing Focus/Klar
           owner: ${event.sender.login}@users.noreply.github.com
           source: ${repository}/raw/${event.release.tag_name}/.taskcluster.yml
-# Nighly builds
+# Nightly builds
   - $if: 'tasks_for == "cron"'
     then:
       $let:
@@ -252,12 +247,7 @@ tasks:
               && git submodule update --init
               && python tools/taskcluster/release.py \
                 --channel nightly \
-                --commit \
-                --output /opt/focus-android/app/build/outputs/apk \
-                --apk focus/nightly/app-focus-armeabi-v7a-nightly-unsigned.apk \
-                --apk focus/nightly/app-focus-arm64-nightly-unsigned.apk \
-                --apk klar/nightly/app-klar-armeabi-v71-nightly-unsigned.apk \
-                --apk klar/nightly/app-klar-arm64-nightly-unsigned.apk
+                --commit
           artifacts:
             public/task-graph.json:
               type: file
