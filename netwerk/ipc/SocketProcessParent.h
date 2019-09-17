@@ -53,9 +53,8 @@ class SocketProcessParent final
   mozilla::ipc::IPCResult RecvRecordDiscardedData(
       const DiscardedData& aDiscardedData);
 
-  PWebrtcProxyChannelParent* AllocPWebrtcProxyChannelParent(
-      const TabId& aTabId);
-  bool DeallocPWebrtcProxyChannelParent(PWebrtcProxyChannelParent* aActor);
+  PWebrtcTCPSocketParent* AllocPWebrtcTCPSocketParent(const TabId& aTabId);
+  bool DeallocPWebrtcTCPSocketParent(PWebrtcTCPSocketParent* aActor);
   PDNSRequestParent* AllocPDNSRequestParent(
       const nsCString& aHost, const OriginAttributes& aOriginAttributes,
       const uint32_t& aFlags);

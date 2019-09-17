@@ -29,7 +29,7 @@ mtransport_lcppsrcs = [
     'transportlayerlog.cpp',
     'transportlayerloopback.cpp',
     'transportlayersrtp.cpp',
-    'WebrtcProxyChannelWrapper.cpp',
+    'WebrtcTCPSocketWrapper.cpp',
 ]
 
 mtransport_cppsrcs = [

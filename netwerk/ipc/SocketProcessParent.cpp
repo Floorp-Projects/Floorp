@@ -13,7 +13,7 @@
 #  include "mozilla/dom/ContentProcessManager.h"
 #  include "mozilla/dom/BrowserParent.h"
 #  include "mozilla/net/ProxyConfigLookupParent.h"
-#  include "mozilla/net/WebrtcProxyChannelParent.h"
+#  include "mozilla/net/WebrtcTCPSocketParent.h"
 #endif
 
 namespace mozilla {
@@ -122,10 +122,10 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvRecordDiscardedData(
   return IPC_OK();
 }
 
-PWebrtcProxyChannelParent* SocketProcessParent::AllocPWebrtcProxyChannelParent(
+PWebrtcTCPSocketParent* SocketProcessParent::AllocPWebrtcTCPSocketParent(
     const TabId& aTabId) {
 #ifdef MOZ_WEBRTC
-  WebrtcProxyChannelParent* parent = new WebrtcProxyChannelParent(aTabId);
+  WebrtcTCPSocketParent* parent = new WebrtcTCPSocketParent(aTabId);
   parent->AddRef();
   return parent;
 #else
@@ -133,11 +133,10 @@ PWebrtcProxyChannelParent* SocketProcessParent::AllocPWebrtcProxyChannelParent(
 #endif
 }
 
-bool SocketProcessParent::DeallocPWebrtcProxyChannelParent(
-    PWebrtcProxyChannelParent* aActor) {
+bool SocketProcessParent::DeallocPWebrtcTCPSocketParent(
+    PWebrtcTCPSocketParent* aActor) {
 #ifdef MOZ_WEBRTC
-  WebrtcProxyChannelParent* parent =
-      static_cast<WebrtcProxyChannelParent*>(aActor);
+  WebrtcTCPSocketParent* parent = static_cast<WebrtcTCPSocketParent*>(aActor);
   parent->Release();
 #endif
   return true;

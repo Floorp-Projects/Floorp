@@ -26,7 +26,7 @@ include protocol PParentToChildStream; //FIXME: bug #792908
 include protocol PStunAddrsRequest;
 include protocol PFileChannel;
 include protocol PClassifierDummyChannel;
-include protocol PWebrtcProxyChannel;
+include protocol PWebrtcTCPSocket;
 include protocol PSocketProcessBridge;
 include protocol PProxyConfigLookup;
 include protocol PDocumentChannel;
@@ -68,7 +68,7 @@ nested(upto inside_cpow) sync protocol PNecko
   manages PAltDataOutputStream;
   manages PStunAddrsRequest;
   manages PClassifierDummyChannel;
-  manages PWebrtcProxyChannel;
+  manages PWebrtcTCPSocket;
   manages PProxyConfigLookup;
   manages PDocumentChannel;
 
@@ -143,7 +143,7 @@ parent:
 
   async PStunAddrsRequest();
 
-  async PWebrtcProxyChannel(TabId tabId);
+  async PWebrtcTCPSocket(TabId tabId);
 
   async PProxyConfigLookup();
 

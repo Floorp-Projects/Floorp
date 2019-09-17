@@ -4,19 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef webrtc_proxy_log_h__
-#define webrtc_proxy_log_h__
+#ifndef webrtc_tcp_socket_log_h__
+#define webrtc_tcp_socket_log_h__
 
 #include "mozilla/Logging.h"
 
 namespace mozilla {
 namespace net {
-extern LazyLogModule webrtcProxyLog;
+extern LazyLogModule webrtcTCPSocketLog;
 }  // namespace net
 }  // namespace mozilla
 
 #undef LOG
 #define LOG(args) \
-  MOZ_LOG(mozilla::net::webrtcProxyLog, mozilla::LogLevel::Debug, args)
+  MOZ_LOG(mozilla::net::webrtcTCPSocketLog, mozilla::LogLevel::Debug, args)
 
-#endif  // webrtc_proxy_log_h__
+#endif  // webrtc_tcp_socket_log_h__
