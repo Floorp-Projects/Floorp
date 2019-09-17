@@ -7,6 +7,8 @@ from __future__ import absolute_import, unicode_literals
 import os
 import sys
 
+from six import text_type
+
 
 def setenv(key, value):
     """Compatibility shim to ensure the proper string type is used with
@@ -15,9 +17,9 @@ def setenv(key, value):
     encoding = "mbcs" if sys.platform == "win32" else "utf-8"
 
     if sys.version_info[0] == 2:
-        if isinstance(key, unicode):
+        if isinstance(key, text_type):
             key = key.encode(encoding)
-        if isinstance(value, unicode):
+        if isinstance(value, text_type):
             value = value.encode(encoding)
     else:
         if isinstance(key, bytes):
