@@ -26,7 +26,7 @@ add_task(async function() {
       await BrowserTestUtils.synthesizeMouseAtCenter("#brandLogo", {}, browser);
 
       let doc = window.document;
-      let searchInput = BrowserSearch.searchBar.textbox;
+      let searchInput = BrowserSearch.searchBar.textbox.inputField;
       isnot(
         searchInput,
         doc.activeElement,
