@@ -16,6 +16,7 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragment
@@ -69,8 +70,14 @@ class DefaultBrowserToolbarController(
     }
 
     override fun handleToolbarPasteAndGo(text: String) {
-        activity.components.core.sessionManager.selectedSession?.searchTerms = ""
-        activity.components.useCases.sessionUseCases.loadUrl(text)
+        if (text.isUrl()) {
+            activity.components.core.sessionManager.selectedSession?.searchTerms = ""
+            activity.components.useCases.sessionUseCases.loadUrl.invoke(text)
+            return
+        }
+
+        activity.components.core.sessionManager.selectedSession?.searchTerms = text
+        activity.components.useCases.searchUseCases.defaultSearch.invoke(text)
     }
 
     override fun handleToolbarClick() {

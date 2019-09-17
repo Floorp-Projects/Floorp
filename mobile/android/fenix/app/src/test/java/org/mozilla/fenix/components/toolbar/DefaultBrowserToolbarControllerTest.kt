@@ -24,6 +24,7 @@ import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import org.junit.After
@@ -65,9 +66,9 @@ class DefaultBrowserToolbarControllerTest {
     private val getSupportUrl: () -> String = { "https://supportUrl.org" }
     private val openInFenixIntent: Intent = mockk(relaxed = true)
     private val currentSessionAsTab: Tab = mockk(relaxed = true)
-    private val bottomSheetBehavior: QuickActionSheetBehavior<NestedScrollView> =
-        mockk(relaxed = true)
+    private val bottomSheetBehavior: QuickActionSheetBehavior<NestedScrollView> = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
+    private val searchUseCases: SearchUseCases = mockk(relaxed = true)
     private val sessionUseCases: SessionUseCases = mockk(relaxed = true)
     private val scope: LifecycleCoroutineScope = mockk(relaxed = true)
 
@@ -104,6 +105,7 @@ class DefaultBrowserToolbarControllerTest {
         every { activity.components.analytics } returns analytics
         every { analytics.metrics } returns metrics
         every { activity.components.useCases.sessionUseCases } returns sessionUseCases
+        every { activity.components.useCases.searchUseCases } returns searchUseCases
         every { activity.components.core.sessionManager.selectedSession } returns currentSession
     }
 
@@ -126,8 +128,19 @@ class DefaultBrowserToolbarControllerTest {
     }
 
     @Test
-    fun handleBrowserToolbarPasteAndGo() {
+    fun handleBrowserToolbarPasteAndGoSearch() {
         val pastedText = "Mozilla"
+
+        controller.handleToolbarPasteAndGo(pastedText)
+        verifyOrder {
+            currentSession.searchTerms = "Mozilla"
+            searchUseCases.defaultSearch.invoke(pastedText)
+        }
+    }
+
+    @Test
+    fun handleBrowserToolbarPasteAndGoUrl() {
+        val pastedText = "https://mozilla.org"
 
         controller.handleToolbarPasteAndGo(pastedText)
         verifyOrder {

@@ -64,8 +64,8 @@ class BrowserToolbarView(
 
             popupWindow.elevation = view.context.dimen(R.dimen.mozac_browser_menu_elevation).toFloat()
 
-            customView.paste.isVisible = !clipboard.url.isNullOrEmpty() && !isCustomTabSession
-            customView.paste_and_go.isVisible = !clipboard.url.isNullOrEmpty() && !isCustomTabSession
+            customView.paste.isVisible = !clipboard.text.isNullOrEmpty() && !isCustomTabSession
+            customView.paste_and_go.isVisible = !clipboard.text.isNullOrEmpty() && !isCustomTabSession
 
             customView.copy.setOnClickListener {
                 popupWindow.dismiss()
