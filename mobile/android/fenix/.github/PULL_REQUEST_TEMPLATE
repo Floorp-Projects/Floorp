@@ -10,7 +10,8 @@
 ### After merge
 - [ ] **Milestone**: Make sure issues finished by this pull request are added to the [milestone](https://github.com/mozilla-mobile/fenix/milestones) of the version currently in development.
 
-<!-- To download an APK when reviewing a PR:
+### To download an APK when reviewing a PR:
 1. click on Show All Checks,
 2. click Details next to "Taskcluster (pull_request)" after it appears and then finishes with a green checkmark,
-3. click on the "Fenix - assemble" task, then click "Run Artifacts". -->
+3. click on the "Fenix - assemble" task, then click "Run Artifacts".
+4. the APK links should be on the left side of the screen, named for each CPU architecture
