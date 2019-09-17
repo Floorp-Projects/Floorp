@@ -358,11 +358,11 @@ fuzzy-if(geckoview&&webrender,0-198,0-781) == mfrac-B-6.html mfrac-B-6-7-ref.htm
 fuzzy-if(OSX,0-1,0-100) fuzzy-if(skiaContent,0-1,0-14) == mfrac-C-1.html mfrac-C-1-ref.html
 pref(mathml.mfrac_linethickness_names.disabled,false) == mfrac-C-2.html mfrac-C-2-ref.html
 fuzzy-if(geckoview&&webrender,0-198,0-776) == mfrac-C-3.html mfrac-C-3-ref.html
-fuzzy-if(geckoview&&webrender,0-198,0-271) == mfrac-C-4.html mfrac-C-4-ref.html
+fuzzy-if(geckoview&&webrender,0-198,0-270) == mfrac-C-4.html mfrac-C-4-ref.html
 fuzzy-if(OSX,0-1,0-100) fuzzy-if(skiaContent,0-1,0-14) == mfrac-D-1.html mfrac-D-1-ref.html
 pref(mathml.mfrac_linethickness_names.disabled,false) == mfrac-D-2.html mfrac-D-2-ref.html
 fuzzy-if(geckoview&&webrender,0-198,0-776) == mfrac-D-3.html mfrac-D-3-ref.html
-fuzzy-if(geckoview&&webrender,0-198,0-271) == mfrac-D-4.html mfrac-D-4-ref.html
+fuzzy-if(geckoview&&webrender,0-198,0-270) == mfrac-D-4.html mfrac-D-4-ref.html
 == mfrac-E-1.html mfrac-E-1-ref.html
 == shadow-dom-1.html shadow-dom-1-ref.html
 pref(dom.meta-viewport.enabled,true) pref(font.size.inflation.emPerLine,25) fuzzy-if(webrender&&!gtkWidget,0-255,0-324) == font-inflation-1.html font-inflation-1-ref.html
