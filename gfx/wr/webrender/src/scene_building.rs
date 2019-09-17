@@ -370,7 +370,7 @@ impl<'a> SceneBuilder<'a> {
             device_pixel_scale,
         );
 
-        builder.flatten_items(
+        builder.build_items(
             &mut root_pipeline.display_list.iter(),
             root_pipeline.pipeline_id,
             true,
@@ -762,7 +762,7 @@ impl<'a> SceneBuilder<'a> {
         );
     }
 
-    fn flatten_items(
+    fn build_items(
         &mut self,
         traversal: &mut BuiltDisplayListIter<'a>,
         pipeline_id: PipelineId,
@@ -781,14 +781,14 @@ impl<'a> SceneBuilder<'a> {
                     _ => (),
                 }
 
-                self.flatten_item(
+                self.build_item(
                     item,
                     pipeline_id,
                     apply_pipeline_clip,
                 )
             };
 
-            // If flatten_item created a sub-traversal, we need `traversal` to have the
+            // If build_item created a sub-traversal, we need `traversal` to have the
             // same state as the completed subtraversal, so we reinitialize it here.
             if let Some(mut subtraversal) = subtraversal {
                 subtraversal.merge_debug_stats_from(traversal);
@@ -813,7 +813,7 @@ impl<'a> SceneBuilder<'a> {
         }
     }
 
-    fn flatten_sticky_frame(
+    fn build_sticky_frame(
         &mut self,
         info: &StickyFrameDisplayItem,
         parent_node_index: SpatialNodeIndex,
@@ -836,7 +836,7 @@ impl<'a> SceneBuilder<'a> {
         self.id_to_index_mapper.map_spatial_node(info.id, index);
     }
 
-    fn flatten_scroll_frame(
+    fn build_scroll_frame(
         &mut self,
         item: &DisplayItemRef,
         info: &ScrollFrameDisplayItem,
@@ -872,7 +872,7 @@ impl<'a> SceneBuilder<'a> {
         );
     }
 
-    fn flatten_reference_frame(
+    fn build_reference_frame(
         &mut self,
         traversal: &mut BuiltDisplayListIter<'a>,
         pipeline_id: PipelineId,
@@ -893,7 +893,7 @@ impl<'a> SceneBuilder<'a> {
         );
 
         self.rf_mapper.push_scope();
-        self.flatten_items(
+        self.build_items(
             traversal,
             pipeline_id,
             apply_pipeline_clip,
@@ -902,7 +902,7 @@ impl<'a> SceneBuilder<'a> {
     }
 
 
-    fn flatten_stacking_context(
+    fn build_stacking_context(
         &mut self,
         traversal: &mut BuiltDisplayListIter<'a>,
         pipeline_id: PipelineId,
@@ -968,7 +968,7 @@ impl<'a> SceneBuilder<'a> {
         }
 
         self.rf_mapper.push_offset(origin.to_vector());
-        self.flatten_items(
+        self.build_items(
             traversal,
             pipeline_id,
             apply_pipeline_clip && clip_chain_id == ClipChainId::NONE,
@@ -978,7 +978,7 @@ impl<'a> SceneBuilder<'a> {
         self.pop_stacking_context();
     }
 
-    fn flatten_iframe(
+    fn build_iframe(
         &mut self,
         info: &IframeDisplayItem,
         spatial_node_index: SpatialNodeIndex,
@@ -1039,7 +1039,7 @@ impl<'a> SceneBuilder<'a> {
         );
 
         self.rf_mapper.push_scope();
-        self.flatten_items(
+        self.build_items(
             &mut pipeline.display_list.iter(),
             pipeline.pipeline_id,
             true,
@@ -1130,7 +1130,7 @@ impl<'a> SceneBuilder<'a> {
         snap_to_device.snap_rect(rect)
     }
 
-    fn flatten_item<'b>(
+    fn build_item<'b>(
         &'b mut self,
         item: DisplayItemRef<'a, 'b>,
         pipeline_id: PipelineId,
@@ -1364,7 +1364,7 @@ impl<'a> SceneBuilder<'a> {
             DisplayItem::PushStackingContext(ref info) => {
                 let space = self.get_space(&info.spatial_id);
                 let mut subtraversal = item.sub_iter();
-                self.flatten_stacking_context(
+                self.build_stacking_context(
                     &mut subtraversal,
                     pipeline_id,
                     &info.stacking_context,
@@ -1381,7 +1381,7 @@ impl<'a> SceneBuilder<'a> {
             DisplayItem::PushReferenceFrame(ref info) => {
                 let parent_space = self.get_space(&info.parent_spatial_id);
                 let mut subtraversal = item.sub_iter();
-                self.flatten_reference_frame(
+                self.build_reference_frame(
                     &mut subtraversal,
                     pipeline_id,
                     parent_space,
@@ -1393,7 +1393,7 @@ impl<'a> SceneBuilder<'a> {
             }
             DisplayItem::Iframe(ref info) => {
                 let space = self.get_space(&info.space_and_clip.spatial_id);
-                self.flatten_iframe(
+                self.build_iframe(
                     info,
                     space,
                 );
@@ -1478,7 +1478,7 @@ impl<'a> SceneBuilder<'a> {
             },
             DisplayItem::ScrollFrame(ref info) => {
                 let parent_space = self.get_space(&info.parent_space_and_clip.spatial_id);
-                self.flatten_scroll_frame(
+                self.build_scroll_frame(
                     &item,
                     info,
                     parent_space,
@@ -1487,7 +1487,7 @@ impl<'a> SceneBuilder<'a> {
             }
             DisplayItem::StickyFrame(ref info) => {
                 let parent_space = self.get_space(&info.parent_spatial_id);
-                self.flatten_sticky_frame(
+                self.build_sticky_frame(
                     info,
                     parent_space,
                 );
