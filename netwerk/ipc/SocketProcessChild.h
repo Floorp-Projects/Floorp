@@ -51,8 +51,6 @@ class SocketProcessChild final : public PSocketProcessChild {
       const nsCString& aHost, const OriginAttributes& aOriginAttributes,
       const uint32_t& aFlags);
   bool DeallocPDNSRequestChild(PDNSRequestChild*);
-  PProxyConfigLookupChild* AllocPProxyConfigLookupChild();
-  bool DeallocPProxyConfigLookupChild(PProxyConfigLookupChild* aActor);
 
   void CleanUp();
   void DestroySocketProcessBridgeParent(ProcessId aId);

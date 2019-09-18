@@ -251,13 +251,6 @@ class NeckoParent : public PNeckoParent {
 
   mozilla::ipc::IPCResult RecvEnsureHSTSData(
       EnsureHSTSDataResolver&& aResolver);
-
-  PProxyConfigLookupParent* AllocPProxyConfigLookupParent();
-
-  virtual mozilla::ipc::IPCResult RecvPProxyConfigLookupConstructor(
-      PProxyConfigLookupParent* aActor) override;
-
-  bool DeallocPProxyConfigLookupParent(PProxyConfigLookupParent* aActor);
 };
 
 }  // namespace net
