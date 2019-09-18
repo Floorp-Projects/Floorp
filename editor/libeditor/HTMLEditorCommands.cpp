@@ -558,16 +558,21 @@ nsresult ParagraphStateCommand::GetCurrentState(
     return NS_ERROR_INVALID_ARG;
   }
 
-  bool outMixed;
-  nsAutoString outStateString;
-  nsresult rv = aHTMLEditor->GetParagraphState(&outMixed, outStateString);
-  if (NS_SUCCEEDED(rv)) {
-    nsAutoCString tOutStateString;
-    LossyCopyUTF16toASCII(outStateString, tOutStateString);
-    aParams.SetBool(STATE_MIXED, outMixed);
-    aParams.SetCString(STATE_ATTRIBUTE, tOutStateString);
+  ErrorResult error;
+  ParagraphStateAtSelection state(*aHTMLEditor, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
   }
-  return rv;
+  aParams.SetBool(STATE_MIXED, state.IsMixed());
+  if (NS_WARN_IF(!state.GetFirstParagraphStateAtSelection())) {
+    // XXX This is odd behavior, we should fix this later.
+    aParams.SetCString(STATE_ATTRIBUTE, NS_LITERAL_CSTRING("x"));
+  } else {
+    nsCString paragraphState;  // Don't use `nsAutoCString` for avoiding copy.
+    state.GetFirstParagraphStateAtSelection()->ToUTF8String(paragraphState);
+    aParams.SetCString(STATE_ATTRIBUTE, paragraphState);
+  }
+  return NS_OK;
 }
 
 nsresult ParagraphStateCommand::SetState(HTMLEditor* aHTMLEditor,

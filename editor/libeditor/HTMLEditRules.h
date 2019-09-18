@@ -59,9 +59,6 @@ class HTMLEditRules : public TextEditRules {
   virtual nsresult Init(TextEditor* aTextEditor) override;
   virtual nsresult DetachEditor() override;
 
-  MOZ_CAN_RUN_SCRIPT
-  nsresult GetParagraphState(bool* aMixed, nsAString& outFormat);
-
  protected:
   virtual ~HTMLEditRules() = default;
 
@@ -69,14 +66,6 @@ class HTMLEditRules : public TextEditRules {
     MOZ_ASSERT(mData);
     return mData->HTMLEditorRef();
   }
-
-  nsresult AppendInnerFormatNodes(nsTArray<OwningNonNull<nsINode>>& aArray,
-                                  nsINode* aNode);
-  nsresult GetFormatString(nsINode* aNode, nsAString& outFormat);
-
-  MOZ_CAN_RUN_SCRIPT
-  nsresult GetParagraphFormatNodes(
-      nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
 
  protected:
   HTMLEditor* mHTMLEditor;
