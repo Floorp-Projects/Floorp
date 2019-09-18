@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, DebugCommand, DocumentId, ExternalImageData, ExternalImageId};
+use api::{ColorF, DebugCommand, DocumentId, ExternalImageData, ExternalImageId, PrimitiveFlags};
 use api::{ImageFormat, ItemTag, NotificationRequest, Shadow, FilterOp, MAX_BLUR_RADIUS};
 use api::units::*;
 use api;
@@ -554,7 +554,7 @@ pub struct LayoutPrimitiveInfo {
     /// but that's an ongoing project, so for now it exists and is used :(
     pub rect: LayoutRect,
     pub clip_rect: LayoutRect,
-    pub is_backface_visible: bool,
+    pub flags: PrimitiveFlags,
     pub hit_info: Option<ItemTag>,
 }
 
@@ -563,7 +563,7 @@ impl LayoutPrimitiveInfo {
         Self {
             rect,
             clip_rect,
-            is_backface_visible: true,
+            flags: PrimitiveFlags::default(),
             hit_info: None,
         }
     }

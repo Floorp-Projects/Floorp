@@ -4,7 +4,7 @@
 
 use api::{MixBlendMode, PipelineId, PremultipliedColorF, FilterPrimitiveKind};
 use api::{PropertyBinding, PropertyBindingId, FilterPrimitive, FontRenderMode};
-use api::{DebugFlags, RasterSpace, ImageKey, ColorF};
+use api::{DebugFlags, RasterSpace, ImageKey, ColorF, PrimitiveFlags};
 use api::units::*;
 use crate::box_shadow::{BLUR_SAMPLE_SCALE};
 use crate::clip::{ClipStore, ClipChainInstance, ClipDataHandle, ClipChainId};
@@ -2283,7 +2283,7 @@ impl PrimitiveList {
         prim_instance: PrimitiveInstance,
         prim_size: LayoutSize,
         spatial_node_index: SpatialNodeIndex,
-        is_backface_visible: bool,
+        prim_flags: PrimitiveFlags,
         insert_position: PrimitiveListPosition,
     ) {
         let mut flags = ClusterFlags::empty();
@@ -2300,7 +2300,7 @@ impl PrimitiveList {
             _ => {}
         }
 
-        if is_backface_visible {
+        if prim_flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE) {
             flags.insert(ClusterFlags::IS_BACKFACE_VISIBLE);
         }
 
@@ -2345,13 +2345,13 @@ impl PrimitiveList {
         prim_instance: PrimitiveInstance,
         prim_size: LayoutSize,
         spatial_node_index: SpatialNodeIndex,
-        is_backface_visible: bool,
+        flags: PrimitiveFlags,
     ) {
         self.push(
             prim_instance,
             prim_size,
             spatial_node_index,
-            is_backface_visible,
+            flags,
             PrimitiveListPosition::Begin,
         )
     }
@@ -2362,13 +2362,13 @@ impl PrimitiveList {
         prim_instance: PrimitiveInstance,
         prim_size: LayoutSize,
         spatial_node_index: SpatialNodeIndex,
-        is_backface_visible: bool,
+        flags: PrimitiveFlags,
     ) {
         self.push(
             prim_instance,
             prim_size,
             spatial_node_index,
-            is_backface_visible,
+            flags,
             PrimitiveListPosition::End,
         )
     }
@@ -2583,7 +2583,7 @@ impl PicturePrimitive {
         context_3d: Picture3DContext<OrderedPictureChild>,
         frame_output_pipeline_id: Option<PipelineId>,
         apply_local_clip_rect: bool,
-        is_backface_visible: bool,
+        flags: PrimitiveFlags,
         requested_raster_space: RasterSpace,
         prim_list: PrimitiveList,
         spatial_node_index: SpatialNodeIndex,
@@ -2600,7 +2600,7 @@ impl PicturePrimitive {
             frame_output_pipeline_id,
             extra_gpu_data_handles: SmallVec::new(),
             apply_local_clip_rect,
-            is_backface_visible,
+            is_backface_visible: flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE),
             requested_raster_space,
             spatial_node_index,
             local_rect: LayoutRect::zero(),
