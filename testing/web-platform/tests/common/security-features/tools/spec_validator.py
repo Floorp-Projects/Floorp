@@ -205,9 +205,11 @@ def validate(spec_json, details):
         test_expansion_schema, 'source_context_list',
         spec_json['source_context_list_schema'].keys())
 
+    # Should be consistent with `preprocess_redirection` in
+    # `/common/security-features/subresource/subresource.py`.
     assert_atom_or_list_items_from(test_expansion_schema, 'redirection', [
         'no-redirect', 'keep-origin', 'swap-origin', 'keep-scheme',
-        'swap-scheme'
+        'swap-scheme', 'downgrade'
     ])
     for subresource in leaf_values(test_expansion_schema['subresource']):
         assert subresource in valid_subresource_names, "Invalid subresource %s" % subresource
