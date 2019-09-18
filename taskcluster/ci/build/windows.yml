@@ -877,7 +877,7 @@ win32-devedition-nightly/opt:
     run:
         script: mozharness/scripts/fx_desktop_build.py
         secrets: true
-        options: [enable-pgo, append-env-variables-from-configs]
+        options: [append-env-variables-from-configs]
         config:
             - builds/releng_base_firefox.py
             - builds/taskcluster_base_windows.py
