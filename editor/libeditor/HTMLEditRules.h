@@ -60,8 +60,6 @@ class HTMLEditRules : public TextEditRules {
   virtual nsresult DetachEditor() override;
 
   MOZ_CAN_RUN_SCRIPT
-  nsresult GetAlignment(bool* aMixed, nsIHTMLEditor::EAlignment* aAlign);
-  MOZ_CAN_RUN_SCRIPT
   nsresult GetParagraphState(bool* aMixed, nsAString& outFormat);
 
  protected:
