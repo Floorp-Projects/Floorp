@@ -6,9 +6,6 @@
 
 #ifdef XP_WIN
 #  include "objbase.h"
-// Some Windows header defines this, so undef it as it conflicts with our
-// function of the same name.
-#  undef GetCurrentTime
 #endif
 
 #include "mozilla/dom/HTMLMediaElement.h"
