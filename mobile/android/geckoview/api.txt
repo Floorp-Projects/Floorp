@@ -379,6 +379,7 @@ package org.mozilla.geckoview {
     method @AnyThread public void readFromParcel(@NonNull Parcel);
     method @UiThread @NonNull public GeckoResult<Void> registerWebExtension(@NonNull WebExtension);
     method @UiThread public void setDelegate(@Nullable GeckoRuntime.Delegate);
+    method @UiThread public void setServiceWorkerDelegate(@Nullable GeckoRuntime.ServiceWorkerDelegate);
     method @UiThread public void setWebNotificationDelegate(@Nullable WebNotificationDelegate);
     method @AnyThread public void shutdown();
     method @UiThread @NonNull public GeckoResult<Void> unregisterWebExtension(@NonNull WebExtension);
@@ -391,6 +392,10 @@ package org.mozilla.geckoview {
 
   public static interface GeckoRuntime.Delegate {
     method @UiThread public void onShutdown();
+  }
+
+  @UiThread public static interface GeckoRuntime.ServiceWorkerDelegate {
+    method @UiThread @NonNull public GeckoResult<GeckoSession> onOpenWindow(@NonNull String);
   }
 
   @AnyThread public final class GeckoRuntimeSettings extends RuntimeSettings {
