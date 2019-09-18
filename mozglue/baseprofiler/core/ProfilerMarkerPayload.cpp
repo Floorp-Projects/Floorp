@@ -40,17 +40,21 @@ void ProfilerMarkerPayload::StreamCommonProps(
     const char* aMarkerType, SpliceableJSONWriter& aWriter,
     const TimeStamp& aProcessStartTime, UniqueStacks& aUniqueStacks) {
   StreamType(aMarkerType, aWriter);
-  WriteTime(aWriter, aProcessStartTime, mStartTime, "startTime");
-  WriteTime(aWriter, aProcessStartTime, mEndTime, "endTime");
-  if (mDocShellId) {
-    aWriter.StringProperty("docShellId", mDocShellId->c_str());
+  WriteTime(aWriter, aProcessStartTime, mCommonProps.mStartTime, "startTime");
+  WriteTime(aWriter, aProcessStartTime, mCommonProps.mEndTime, "endTime");
+  if (mCommonProps.mDocShellId) {
+    aWriter.StringProperty("docShellId", mCommonProps.mDocShellId->c_str());
   }
-  if (mDocShellHistoryId) {
-    aWriter.DoubleProperty("docshellHistoryId", mDocShellHistoryId.ref());
+  if (mCommonProps.mDocShellHistoryId) {
+    aWriter.DoubleProperty("docshellHistoryId",
+                           mCommonProps.mDocShellHistoryId.ref());
   }
-  if (mStack) {
+  if (mCommonProps.mStack) {
     aWriter.StartObjectProperty("stack");
-    { mStack->StreamJSON(aWriter, aProcessStartTime, aUniqueStacks); }
+    {
+      mCommonProps.mStack->StreamJSON(aWriter, aProcessStartTime,
+                                      aUniqueStacks);
+    }
     aWriter.EndObject();
   }
 }
