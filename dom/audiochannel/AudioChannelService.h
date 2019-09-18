@@ -38,15 +38,10 @@ class AudioPlaybackConfig {
         mSuspend(aSuspended),
         mNumberOfAgents(0) {}
 
-  void SetConfig(float aVolume, bool aMuted, uint32_t aSuspended) {
-    mVolume = aVolume;
-    mMuted = aMuted;
-    mSuspend = aSuspended;
-  }
-
   float mVolume;
   bool mMuted;
   uint32_t mSuspend;
+  bool mCapturedAudio = false;
   uint32_t mNumberOfAgents;
 };
 

@@ -630,6 +630,7 @@ void AudioDestinationNode::NotifyAudibleStateChanged(bool aAudible) {
 
   WindowVolumeChanged(config.mVolume, config.mMuted);
   WindowSuspendChanged(config.mSuspend);
+  WindowAudioCaptureChanged(config.mCapturedAudio);
 }
 
 }  // namespace dom
