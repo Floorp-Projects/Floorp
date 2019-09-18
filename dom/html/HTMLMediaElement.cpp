@@ -1187,9 +1187,8 @@ class HTMLMediaElement::AudioChannelAgentCallback final
   void StartAudioChannelAgent() {
     MOZ_ASSERT(mAudioChannelAgent);
     MOZ_ASSERT(!mAudioChannelAgent->IsPlayingStarted());
-    AudioPlaybackConfig config;
-    if (NS_WARN_IF(NS_FAILED(mAudioChannelAgent->NotifyStartedPlaying(
-            &config, IsOwnerAudible())))) {
+    if (NS_WARN_IF(NS_FAILED(
+            mAudioChannelAgent->NotifyStartedPlaying(IsOwnerAudible())))) {
       return;
     }
 
