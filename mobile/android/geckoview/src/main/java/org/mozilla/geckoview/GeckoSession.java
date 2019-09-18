@@ -453,6 +453,7 @@ public class GeckoSession implements Parcelable {
                 "GeckoView:FullScreenEnter",
                 "GeckoView:FullScreenExit",
                 "GeckoView:WebAppManifest",
+                "GeckoView:FirstContentfulPaint",
             }
         ) {
             @Override
@@ -505,6 +506,8 @@ public class GeckoSession implements Parcelable {
                     } catch (JSONException e) {
                         Log.e(LOGTAG, "Failed to convert web app manifest to JSON", e);
                     }
+                } else if ("GeckoView:FirstContentfulPaint".equals(event)) {
+                    delegate.onFirstContentfulPaint(GeckoSession.this);
                 }
             }
         };
@@ -3108,6 +3111,20 @@ public class GeckoSession implements Parcelable {
          */
         @UiThread
         default void onFirstComposite(@NonNull GeckoSession session) {}
+
+        /**
+         * Notification that the first content paint has occurred.
+         * This callback is invoked for the first content paint after
+         * a page has been loaded. The function {@link #onFirstComposite(GeckoSession)}
+         * will be called once the compositor has started rendering. However, it is
+         * possible for the compositor to start rendering before there is any content to render.
+         * onFirstContentfulPaint() is called once some content has been rendered. It may be nothing
+         * more than the page background color. It is not an indication that the whole page has
+         * been rendered.
+         * @param session The GeckoSession that had a first paint event.
+         */
+        @UiThread
+        default void onFirstContentfulPaint(@NonNull GeckoSession session) {}
 
         /**
          * This is fired when the loaded document has a valid Web App Manifest present.
