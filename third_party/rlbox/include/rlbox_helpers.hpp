@@ -8,6 +8,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "rlbox_stdlib_polyfill.hpp"
+
 namespace rlbox {
 namespace detail {
   const int CompileErrorCode = 42;
@@ -38,6 +40,13 @@ namespace detail {
     static_assert(!(CondExpr), Message)
 #endif
 
+#ifdef RLBOX_ENABLE_DEBUG_ASSERTIONS
+#  define RLBOX_DEBUG_ASSERT(...)                                              \
+    ::rlbox::detail::dynamic_check(__VA_ARGS__, "Debug assertion failed")
+#else
+#  define RLBOX_DEBUG_ASSERT(...) (void)0
+#endif
+
 #define RLBOX_UNUSED(...) (void)__VA_ARGS__
 
 #define RLBOX_REQUIRE_SEMI_COLON static_assert(true)
@@ -57,6 +66,22 @@ namespace detail {
 #endif
   }
 
+// Create an extension point so applications can provide their own shared lock
+// implementation
+#ifndef rlbox_use_custom_shared_lock
+#  define rlbox_shared_lock(name) std::shared_timed_mutex name
+#  define rlbox_acquire_shared_guard(name, ...)                                \
+    std::shared_lock<std::shared_timed_mutex> name(__VA_ARGS__)
+#  define rlbox_acquire_unique_guard(name, ...)                                \
+    std::unique_lock<std::shared_timed_mutex> name(__VA_ARGS__)
+#else
+#  if !defined(rlbox_shared_lock) || !defined(rlbox_acquire_shared_guard) ||   \
+    !defined(rlbox_acquire_unique_guard)
+#    error                                                                     \
+      "rlbox_use_custom_shared_lock defined but missing definitions for rlbox_shared_lock, rlbox_acquire_shared_guard, rlbox_acquire_unique_guard"
+#  endif
+#endif
+
 #define rlbox_detail_forward_binop_to_base(opSymbol, ...)                      \
   template<typename T_Rhs>                                                     \
   inline auto operator opSymbol(T_Rhs rhs)                                     \
@@ -74,7 +99,8 @@ namespace detail {
     return sandbox_const_cast<detail::rlbox_remove_wrapper_t<result_type>>(    \
       const_cast<T_ConstClassPtr>(this)->func_name());                         \
   } else if constexpr (detail::is_fundamental_or_enum_v<result_type> ||        \
-                       detail::is_std_array_v<result_type>) {                  \
+                       detail::is_std_array_v<result_type> ||                  \
+                       detail::is_func_ptr_v<result_type>) {                   \
     return const_cast<T_ConstClassPtr>(this)->func_name();                     \
   } else {                                                                     \
     return const_cast<result_type>(                                            \
@@ -90,7 +116,8 @@ namespace detail {
     return sandbox_const_cast<detail::rlbox_remove_wrapper_t<result_type>>(    \
       const_cast<T_ConstClassPtr>(this)->func_name(__VA_ARGS__));              \
   } else if constexpr (detail::is_fundamental_or_enum_v<result_type> ||        \
-                       detail::is_std_array_v<result_type>) {                  \
+                       detail::is_std_array_v<result_type> ||                  \
+                       detail::is_func_ptr_v<result_type>) {                   \
     return const_cast<T_ConstClassPtr>(this)->func_name(__VA_ARGS__);          \
   } else {                                                                     \
     return const_cast<result_type>(                                            \
@@ -127,9 +154,9 @@ namespace detail {
   }
 
   template<typename T, typename T2>
-  inline auto return_first_result(T first_task, T2 second_task)
+  [[nodiscard]] inline auto return_first_result(T first_task, T2 second_task)
   {
-    using T_Result = std::invoke_result_t<T>;
+    using T_Result = rlbox::detail::polyfill::invoke_result_t<T>;
 
     if constexpr (std::is_void_v<T_Result>) {
       first_task();
@@ -164,10 +191,7 @@ But C++ doesn't seem to allow the above
   friend class rlbox_sandbox;                                                  \
                                                                                \
   template<typename U1, typename U2>                                           \
-  friend class sandbox_callback;                                               \
-                                                                               \
-  template<typename U1, typename U2>                                           \
-  friend class sandbox_function;
+  friend class sandbox_callback;
 
 }
 

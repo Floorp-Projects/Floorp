@@ -32,9 +32,12 @@ using valid_array_el_t =
   std::conditional_t<std::is_void_v<T> || std::is_function_v<T>, int, T>;
 
 template<typename T>
-constexpr bool is_func_or_func_ptr =
-  std::is_function_v<T> || std::is_function_v<std::remove_pointer_t<T>> ||
-  std::is_member_function_pointer_v<T>;
+constexpr bool is_func_ptr_v = (std::is_pointer_v<T> &&
+                                std::is_function_v<std::remove_pointer_t<T>>) ||
+                               std::is_member_function_pointer_v<T>;
+
+template<typename T>
+constexpr bool is_func_or_func_ptr = std::is_function_v<T> || is_func_ptr_v<T>;
 
 template<typename T>
 constexpr bool is_one_level_ptr_v =
@@ -61,6 +64,9 @@ using add_const_from_pointer = std::conditional_t<
   std::is_pointer_v<T>,
   std::remove_pointer_t<std::add_const_t<std::remove_pointer_t<T>>>,
   T>;
+
+template<typename T>
+using remove_cv_ref_t = std::remove_cv_t<std::remove_reference_t<T>>;
 
 template<typename T>
 using c_to_std_array_t =
@@ -376,7 +382,8 @@ namespace convert_detail {
     T_LongType,
     T_LongLongType,
     T_PointerType,
-    std::enable_if_t<std::is_unsigned_v<T> && !std::is_const_v<T>>>
+    std::enable_if_t<std::is_unsigned_v<T> && !std::is_same_v<T, bool> &&
+                     !std::is_const_v<T>>>
   {
     using type = std::make_unsigned_t<
       typename convert_base_types_t_helper<std::make_signed_t<T>,

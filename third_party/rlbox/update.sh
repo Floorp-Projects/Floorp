@@ -5,7 +5,7 @@
 
 MY_TEMP_DIR=`mktemp -d -t rlbox_update.XXXXXX` || exit 1
 
-git clone https://github.com/PLSysSec/rlbox_api_cpp17 ${MY_TEMP_DIR}/rlbox
+git clone https://github.com/PLSysSec/rlbox_sandboxing_api ${MY_TEMP_DIR}/rlbox
 
 COMMIT=$(git -C ${MY_TEMP_DIR}/rlbox rev-parse HEAD)
 perl -p -i -e "s/\[commit [0-9a-f]{40}\]/[commit ${COMMIT}]/" README-mozilla;
@@ -23,5 +23,6 @@ hg addremove $FILES
 
 echo "###"
 echo "### Updated rlbox to $COMMIT."
+echo "### Remember to update any newly added files to /config/external/rlbox/moz.build"
 echo "### Remember to verify and commit the changes to source control!"
 echo "###"
