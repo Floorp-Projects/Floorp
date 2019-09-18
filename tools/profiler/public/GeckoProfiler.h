@@ -174,7 +174,10 @@ class Vector;
           "Have the JavaScript engine track allocations")                      \
                                                                                \
     MACRO(15, "preferencereads", PreferenceReads,                              \
-          "Track when preferences are read")
+          "Track when preferences are read")                                   \
+    MACRO(16, "nativeallocations", NativeAllocations,                          \
+          "Collect the stacks from a smaller subset of all native "            \
+          "allocations, biasing towards collecting larger allocations")
 
 struct ProfilerFeature {
 #  define DECLARE(n_, str_, Name_, desc_)                     \
