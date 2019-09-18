@@ -2,7 +2,7 @@
 
 # AuthType
 
-`sealed class AuthType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L61)
+`sealed class AuthType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L63)
 
 ### Types
 

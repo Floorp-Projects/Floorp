@@ -25,5 +25,6 @@ Other components can subscribe to the state machine to get notified about [Media
 
 | Name | Summary |
 |---|---|
+| [reset](reset.md) | `fun reset(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Resets the [MediaState](../-media-state/index.md) to [MediaState.None](../-media-state/-none/index.md). |
 | [start](start.md) | `fun start(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Start observing [Session](../../mozilla.components.browser.session/-session/index.md) and their [Media](../../mozilla.components.concept.engine.media/-media/index.md) and create an aggregated [MediaState](../-media-state/index.md) that can be observed. |
 | [stop](stop.md) | `fun stop(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Stop observing [Session](../../mozilla.components.browser.session/-session/index.md) and their [Media](../../mozilla.components.concept.engine.media/-media/index.md). |

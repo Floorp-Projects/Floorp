@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`WebAppHideToolbarFeature(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, toolbar: <ERROR CLASS>, sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, trustedScopes: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<<ERROR CLASS>>)`
+`WebAppHideToolbarFeature(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, toolbar: <ERROR CLASS>, sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, trustedScopes: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<<ERROR CLASS>>, onToolbarVisibilityChange: (visible: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = {})`
 
 Hides a custom tab toolbar for Progressive Web Apps and Trusted Web Activities.
 
@@ -17,3 +17,5 @@ Once the [Session](../../mozilla.components.browser.session/-session/index.md) n
 
 `trustedScopes` - Scopes to hide the toolbar at.
 Scopes correspond to [WebAppManifest.scope](../../mozilla.components.concept.engine.manifest/-web-app-manifest/scope.md). They can be a path (PWA) or just an origin (TWA).
+
+`onToolbarVisibilityChange` - Called when the toolbar is changed to be visible or hidden.
