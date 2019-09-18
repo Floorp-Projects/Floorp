@@ -119,6 +119,32 @@ var MathMLFeatureDetection = {
         return this._has_menclose;
     },
 
+    has_munderover: function() {
+        if (!this.hasOwnProperty("_has_munderover")) {
+            document.body.insertAdjacentHTML("beforeend", "<math>\
+<munderover>\
+  <mspace width='20px'></mspace>\
+  <mspace width='20px'></mspace>\
+  <mspace width='20px'></mspace>\
+</munderover>\
+<munderover>\
+  <mspace width='40px'></mspace>\
+  <mspace width='40px'></mspace>\
+  <mspace width='40px'></mspace>\
+</munderover>\
+</math>");
+            var math = document.body.lastElementChild;
+            var munderover = math.getElementsByTagName("munderover");
+            // width_delta will be 20px per MathML, 3 * 20 = 60px if mundeover does not stack its children and 0px if mspace is not supported.
+            var width_delta =
+                munderover[1].getBoundingClientRect().width -
+                munderover[0].getBoundingClientRect().width;
+            this._has_munderover = width_delta > 10 && width_delta < 30;
+            document.body.removeChild(math);
+        }
+        return this._has_munderover;
+    },
+
     has_dir: function() {
         if (!this.hasOwnProperty("_has_dir")) {
             document.body.insertAdjacentHTML("beforeend", "<math style='direction: ltr !important;'>\
