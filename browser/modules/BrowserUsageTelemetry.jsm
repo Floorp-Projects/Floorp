@@ -93,6 +93,7 @@ const URLBAR_SELECTED_RESULT_TYPES = {
   remotetab: 9,
   extension: 10,
   "preloaded-top-site": 11,
+  tip: 12,
 };
 
 /**
