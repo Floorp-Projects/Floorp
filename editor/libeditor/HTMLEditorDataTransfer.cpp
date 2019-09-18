@@ -431,7 +431,7 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
   nsCOMPtr<nsINode> insertedContextParent;
   for (OwningNonNull<nsINode>& curNode : nodeList) {
     if (NS_WARN_IF(curNode == fragmentAsNode) ||
-        NS_WARN_IF(TextEditUtils::IsBody(curNode))) {
+        NS_WARN_IF(curNode->IsHTMLElement(nsGkAtoms::body))) {
       return NS_ERROR_FAILURE;
     }
 
@@ -575,7 +575,7 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
                curNode->IsContent() ? curNode->AsContent() : nullptr;
            content && !insertedPoint.IsSet(); content = content->GetParent()) {
         if (NS_WARN_IF(!content->GetParent()) ||
-            NS_WARN_IF(TextEditUtils::IsBody(content->GetParent()))) {
+            NS_WARN_IF(content->GetParent()->IsHTMLElement(nsGkAtoms::body))) {
           continue;
         }
         nsCOMPtr<nsINode> oldParent = content->GetParentNode();
