@@ -297,6 +297,11 @@ class nsCocoaUtils {
   static NSString* ToNSString(const nsAString& aString);
 
   /**
+   * Makes NSString instance for aCString.
+   */
+  static NSString* ToNSString(const nsACString& aCString);
+
+  /**
    * Returns NSRect for aGeckoRect.
    * Just copies values between the two types; it does no coordinate-system
    * conversion, so both rects must have the same coordinate origin/direction.
