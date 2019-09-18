@@ -10,6 +10,9 @@ const kFissionEnabledPref = "fission.autostart";
 const kModalHighlightPref = "findbar.modalHighlight";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -21,6 +24,15 @@ ChromeUtils.defineModuleGetter(
   this,
   "Rect",
   "resource://gre/modules/Geometry.jsm"
+);
+
+const kPrefLetterboxing = "privacy.resistFingerprinting.letterboxing";
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "isLetterboxingEnabled",
+  kPrefLetterboxing,
+  false
 );
 
 function FinderParent(browser) {
@@ -520,10 +532,24 @@ FinderParent.prototype = {
   onFindbarClose() {
     this._lastFoundBrowsingContext = null;
     this.sendMessageToAllContexts("Finder:FindbarClose");
+
+    if (isLetterboxingEnabled) {
+      let window = this._browser.ownerGlobal;
+      if (window.RFPHelper) {
+        window.RFPHelper.contentSizeUpdated(window);
+      }
+    }
   },
 
   onFindbarOpen() {
     this.sendMessageToAllContexts("Finder:FindbarOpen");
+
+    if (isLetterboxingEnabled) {
+      let window = this._browser.ownerGlobal;
+      if (window.RFPHelper) {
+        window.RFPHelper.contentSizeUpdated(window);
+      }
+    }
   },
 
   onModalHighlightChange(aUseModalHighlight) {
