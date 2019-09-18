@@ -466,7 +466,6 @@ description#identity-popup-content-verifier,
 
 #identity-popup-breakageReportView-collection-url,
 #protections-popup-sendReportView-collection-url {
-  font: inherit;
   -moz-appearance: none;
   border: none;
 }
