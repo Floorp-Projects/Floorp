@@ -5754,12 +5754,9 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
       fieldInitializers = setupFieldInitializers(classContentsIfConstructor);
     }
 
-    uint32_t innerScriptLine, innerScriptColumn;
-    parser->errorReporter().lineAndColumnAt(
-        funNode->pn_pos.begin, &innerScriptLine, &innerScriptColumn);
     BytecodeEmitter bce2(this, parser, funbox, innerScript,
-                         /* lazyScript = */ nullptr, innerScriptLine,
-                         innerScriptColumn, nestedMode, fieldInitializers);
+                         /* lazyScript = */ nullptr, funbox->startLine,
+                         funbox->startColumn, nestedMode, fieldInitializers);
     if (!bce2.init(funNode->pn_pos)) {
       return false;
     }
