@@ -3770,6 +3770,7 @@ void profiler_pause() {
       return;
     }
 
+    RacyFeatures::SetPaused();
     ActivePS::SetIsPaused(lock, true);
     ActivePS::Buffer(lock).AddEntry(ProfileBufferEntry::Pause(profiler_time()));
   }
@@ -3794,6 +3795,7 @@ void profiler_resume() {
     ActivePS::Buffer(lock).AddEntry(
         ProfileBufferEntry::Resume(profiler_time()));
     ActivePS::SetIsPaused(lock, false);
+    RacyFeatures::SetUnpaused();
   }
 
   // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
@@ -4064,7 +4066,7 @@ static void racy_profiler_add_marker(const char* aMarkerName,
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   // This function is hot enough that we use RacyFeatures, not ActivePS.
-  if (!RacyFeatures::IsActiveWithoutPrivacy()) {
+  if (!profiler_can_accept_markers()) {
     return;
   }
 
@@ -4107,6 +4109,9 @@ void profiler_add_js_marker(const char* aMarkerName) {
 }
 
 void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info) {
+  if (!profiler_can_accept_markers()) {
+    return;
+  }
   AUTO_PROFILER_STATS(add_marker_with_JsAllocationMarkerPayload);
   profiler_add_marker(
       "JS allocation", JS::ProfilingCategoryPair::JS,
@@ -4120,7 +4125,7 @@ void profiler_add_network_marker(
     mozilla::net::CacheDisposition aCacheDisposition,
     const mozilla::net::TimingStruct* aTimings, nsIURI* aRedirectURI,
     UniqueProfilerBacktrace aSource) {
-  if (!profiler_is_active()) {
+  if (!profiler_can_accept_markers()) {
     return;
   }
   // These do allocations/frees/etc; avoid if not active
@@ -4150,6 +4155,10 @@ void profiler_add_marker_for_thread(int aThreadId,
                                     const char* aMarkerName,
                                     UniquePtr<ProfilerMarkerPayload> aPayload) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  if (!profiler_can_accept_markers()) {
+    return;
+  }
 
 #ifdef DEBUG
   {
@@ -4192,7 +4201,7 @@ void profiler_tracing(const char* aCategoryString, const char* aMarkerName,
   VTUNE_TRACING(aMarkerName, aKind);
 
   // This function is hot enough that we use RacyFeatures, notActivePS.
-  if (!RacyFeatures::IsActiveWithoutPrivacy()) {
+  if (!profiler_can_accept_markers()) {
     return;
   }
 
@@ -4212,7 +4221,7 @@ void profiler_tracing(const char* aCategoryString, const char* aMarkerName,
   VTUNE_TRACING(aMarkerName, aKind);
 
   // This function is hot enough that we use RacyFeatures, notActivePS.
-  if (!RacyFeatures::IsActiveWithoutPrivacy()) {
+  if (!profiler_can_accept_markers()) {
     return;
   }
 

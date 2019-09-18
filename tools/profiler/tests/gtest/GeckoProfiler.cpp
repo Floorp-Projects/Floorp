@@ -458,11 +458,13 @@ TEST(GeckoProfiler, Pause)
   const char* filters[] = {"GeckoMain"};
 
   ASSERT_TRUE(!profiler_is_paused());
+  ASSERT_TRUE(!profiler_can_accept_markers());
 
   profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL, features,
                  filters, MOZ_ARRAY_LENGTH(filters));
 
   ASSERT_TRUE(!profiler_is_paused());
+  ASSERT_TRUE(profiler_can_accept_markers());
 
   // Check that we are writing samples while not paused.
   Maybe<ProfilerBufferInfo> info1 = profiler_get_buffer_info();
@@ -470,9 +472,16 @@ TEST(GeckoProfiler, Pause)
   Maybe<ProfilerBufferInfo> info2 = profiler_get_buffer_info();
   ASSERT_TRUE(info1->mRangeEnd != info2->mRangeEnd);
 
+  // Check that we are writing markers while not paused.
+  info1 = profiler_get_buffer_info();
+  PROFILER_ADD_MARKER("Not paused", OTHER);
+  info2 = profiler_get_buffer_info();
+  ASSERT_TRUE(info1->mRangeEnd != info2->mRangeEnd);
+
   profiler_pause();
 
   ASSERT_TRUE(profiler_is_paused());
+  ASSERT_TRUE(!profiler_can_accept_markers());
 
   // Check that we are not writing samples while paused.
   info1 = profiler_get_buffer_info();
@@ -480,13 +489,21 @@ TEST(GeckoProfiler, Pause)
   info2 = profiler_get_buffer_info();
   ASSERT_TRUE(info1->mRangeEnd == info2->mRangeEnd);
 
+  // Check that we are now writing markers while paused.
+  info1 = profiler_get_buffer_info();
+  PROFILER_ADD_MARKER("Paused", OTHER);
+  info2 = profiler_get_buffer_info();
+  ASSERT_TRUE(info1->mRangeEnd == info2->mRangeEnd);
+
   profiler_resume();
 
   ASSERT_TRUE(!profiler_is_paused());
+  ASSERT_TRUE(profiler_can_accept_markers());
 
   profiler_stop();
 
   ASSERT_TRUE(!profiler_is_paused());
+  ASSERT_TRUE(!profiler_can_accept_markers());
 }
 
 // A class that keeps track of how many instances have been created, streamed,
