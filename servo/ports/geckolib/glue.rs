@@ -6562,6 +6562,14 @@ pub unsafe extern "C" fn Servo_IsPropertyIdRecordedInUseCounter(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn Servo_IsUnknownPropertyRecordedInUseCounter(
+    use_counters: &UseCounters,
+    p: CountedUnknownProperty,
+) -> bool {
+    use_counters.counted_unknown_properties.recorded(p)
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn Servo_IsCssPropertyRecordedInUseCounter(
     use_counters: &UseCounters,
     property: *const nsACString,
