@@ -2468,17 +2468,17 @@ mod tests {
             0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0x2603u16,
             0xD83Du16, 0xDCA9u16, 0x00B6u16,
         ];
-        assert_eq!(utf16_valid_up_to(&valid[..]), 16);;
+        assert_eq!(utf16_valid_up_to(&valid[..]), 16);
         let lone_high = vec![
             0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16,
             0x2603u16, 0xD83Du16, 0x00B6u16,
         ];
-        assert_eq!(utf16_valid_up_to(&lone_high[..]), 14);;
+        assert_eq!(utf16_valid_up_to(&lone_high[..]), 14);
         let lone_low = vec![
             0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16,
             0x2603u16, 0xDCA9u16, 0x00B6u16,
         ];
-        assert_eq!(utf16_valid_up_to(&lone_low[..]), 14);;
+        assert_eq!(utf16_valid_up_to(&lone_low[..]), 14);
         let lone_high_at_end = vec![
             0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16,
             0x2603u16, 0x00B6u16, 0xD83Du16,

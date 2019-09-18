@@ -12,7 +12,7 @@
 
 [package]
 name = "encoding_c"
-version = "0.9.4"
+version = "0.9.5"
 authors = ["Henri Sivonen <hsivonen@hsivonen.fi>"]
 description = "C API for encoding_rs"
 homepage = "https://docs.rs/encoding_c/"
@@ -22,7 +22,7 @@ keywords = ["ffi", "capi", "encoding", "unicode", "charset"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/hsivonen/encoding_c"
 [dependencies.encoding_rs]
-version = "0.8.19"
+version = "0.8.20"
 
 [features]
 fast-big5-hanzi-encode = ["encoding_rs/fast-big5-hanzi-encode"]

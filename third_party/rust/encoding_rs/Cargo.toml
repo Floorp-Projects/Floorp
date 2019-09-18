@@ -12,7 +12,7 @@
 
 [package]
 name = "encoding_rs"
-version = "0.8.19"
+version = "0.8.20"
 authors = ["Henri Sivonen <hsivonen@hsivonen.fi>"]
 description = "A Gecko-oriented implementation of the Encoding Standard"
 homepage = "https://docs.rs/encoding_rs/"
