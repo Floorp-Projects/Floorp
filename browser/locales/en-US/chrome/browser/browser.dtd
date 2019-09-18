@@ -794,9 +794,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY tabHideControlled.disableButton.accesskey "D">
 
 <!ENTITY pageActionButton.tooltip "Page actions">
-<!ENTITY pageAction.addToUrlbar.label "Add to Address Bar">
-<!ENTITY pageAction.removeFromUrlbar.label "Remove from Address Bar">
-<!ENTITY pageAction.manageExtension.label "Manage Extension…">
 
 <!ENTITY sendToDevice.syncNotReady.label "Syncing Devices…">
 
