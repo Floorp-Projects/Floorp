@@ -30,6 +30,8 @@
         src="data:text/html,&lt;div contenteditable id='contenteditable'&gt;&lt;/div&gt;"></iframe><br/>
 <iframe id="iframe5" width="200" height="50" src="data:text/html,&lt;input id='input'&gt;"></iframe>
 <iframe id="iframe6" width="200" height="50" src="data:text/html,&lt;input id='password' type='password'&gt;"></iframe><br/>
+<iframe id="iframe7" width="300" height="150"
+        src="data:text/html,&lt;span contenteditable id='contenteditable'&gt;&lt;/span&gt;"></iframe><br/>
 <input id="input" type="text"/><br/>
 <input id="password" type="password"/><br/>
 </p>
@@ -5186,6 +5188,61 @@ function runBug1530649Test()
      "runBug1530649Test: Committing the new composition string shouldn't remove the last space");
 }
 
+function runBug1571375Test()
+{
+  let contenteditableBySpan = document.getElementById("iframe7").contentDocument.getElementById("contenteditable");
+  let windowOfContenteditableBySpan = document.getElementById("iframe7").contentWindow;
+  let selection = windowOfContenteditableBySpan.getSelection();
+  let doc = document.getElementById("iframe7").contentDocument;
+
+  contenteditableBySpan.focus();
+
+  contenteditableBySpan.innerHTML = "hello world";
+  let range = doc.createRange();
+  range.setStart(contenteditableBySpan.firstChild, 6);
+  range.setEnd(contenteditableBySpan.firstChild, 11);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  synthesizeCompositionChange({
+    composition: {string: "world", clauses: [{length: 5, attr: COMPOSITION_ATTR_RAW_CLAUSE}]},
+    caret: { start: 5, length: 0 },
+  });
+  synthesizeComposition({type: "compositioncommit", data: "world", key: " "});
+  is(contenteditableBySpan.innerHTML, "hello world",
+     "runBug1571375Test: space must not be removed by commit");
+
+  contenteditableBySpan.innerHTML = "hello world";
+  range = doc.createRange();
+  range.setStart(contenteditableBySpan.firstChild, 0);
+  range.setEnd(contenteditableBySpan.firstChild, 5);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  synthesizeCompositionChange({
+    composition: {string: "hello", clauses: [{length: 5, attr: COMPOSITION_ATTR_RAW_CLAUSE}]},
+    caret: { start: 5, length: 0 },
+  });
+  synthesizeComposition({type: "compositioncommit", data: "hello", key: " "});
+  is(contenteditableBySpan.innerHTML, "hello world",
+     "runBug1571375Test: space must not be removed by commit");
+
+  contenteditableBySpan.innerHTML = "hello world<div>.</div>";
+  range = doc.createRange();
+  range.setStart(contenteditableBySpan.firstChild, 6);
+  range.setEnd(contenteditableBySpan.firstChild, 11);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  synthesizeCompositionChange({
+    composition: {string: "world", clauses: [{length: 5, attr: COMPOSITION_ATTR_RAW_CLAUSE}]},
+    caret: {start: 0, length: 0}}
+  );
+  synthesizeComposition({type: "compositioncommit", data: "world", key: " "});
+  is(contenteditableBySpan.innerHTML, "hello world<div>.</div>",
+     "runBug1571375Test: space must not be removed by commit");
+}
+
 function runCSSTransformTest()
 {
   textarea.focus();
@@ -9105,6 +9162,7 @@ async function runTest()
   runBug722639Test();
   runBug1375825Test();
   runBug1530649Test();
+  runBug1571375Test();
   runForceCommitTest();
   runNestedSettingValue();
   runBug811755Test();
