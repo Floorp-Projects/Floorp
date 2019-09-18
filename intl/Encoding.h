@@ -15,6 +15,7 @@
 #define mozilla_Encoding_h
 
 #include "mozilla/CheckedInt.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/Span.h"
 #include "mozilla/Tuple.h"
@@ -243,6 +244,17 @@ class Encoding final {
   inline bool CanEncodeEverything() const {
     return encoding_can_encode_everything(this);
   }
+
+  /**
+   * Checks whether this encoding maps one byte to one Basic Multilingual
+   * Plane code point (i.e. byte length equals decoded UTF-16 length) and
+   * vice versa (for mappable characters).
+   *
+   * `true` iff this encoding is on the list of Legacy single-byte
+   * encodings (https://encoding.spec.whatwg.org/#legacy-single-byte-encodings)
+   * in the spec or x-user-defined.
+   */
+  inline bool IsSingleByte() const { return encoding_is_single_byte(this); }
 
   /**
    * Checks whether the bytes 0x00...0x7F map exclusively to the characters
@@ -1010,6 +1022,35 @@ class Decoder final {
     uint32_t result = decoder_decode_to_utf16_without_replacement(
         this, aSrc.Elements(), &srcRead, aDst.Elements(), &dstWritten, aLast);
     return MakeTuple(result, srcRead, dstWritten);
+  }
+
+  /**
+   * Checks for compatibility with storing Unicode scalar values as unsigned
+   * bytes taking into account the state of the decoder.
+   *
+   * Returns `mozilla::Nothing()` if the decoder is still waiting for (parts of) a
+   * potential BOM.
+   *
+   * Otherwise returns the index of the first byte whose unsigned value doesn't
+   * directly correspond to the decoded Unicode scalar value, or the length
+   * of the input if all bytes in the input decode directly to scalar values
+   * corresponding to the unsigned byte values. (This is always returns zero
+   * for UTF-16LE, UTF-16BE, and replacement. It's also zero when a multibyte
+   * decoder is in the middle of a multibyte sequence.)
+   *
+   * Does not change the state of the decoder.
+   *
+   * Do not use this unless you are supporting SpiderMonkey-style string
+   * storage optimizations.
+   */
+  inline mozilla::Maybe<size_t> Latin1ByteCompatibleUpTo(
+      Span<const uint8_t> aBuffer) const {
+    size_t upTo = decoder_latin1_byte_compatible_up_to(
+        this, aBuffer.Elements(), aBuffer.Length());
+    if (upTo == MaxValue<size_t>::value) {
+      return mozilla::Nothing();
+    }
+    return mozilla::Some(upTo);
   }
 
  private:
