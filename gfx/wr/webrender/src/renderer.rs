@@ -2876,6 +2876,8 @@ impl Renderer {
                 let dirty_regions =
                     mem::replace(&mut frame.recorded_dirty_regions, Vec::new());
                 results.recorded_dirty_regions.extend(dirty_regions);
+                let dirty_rects = mem::replace(&mut frame.dirty_rects, Vec::new());
+                results.dirty_rects.extend(dirty_rects);
 
                 // If we're the last document, don't call end_pass here, because we'll
                 // be moving on to drawing the debug overlays. See the comment above
@@ -5647,8 +5649,23 @@ pub struct RendererStats {
 /// some non-repr(C) data.
 #[derive(Debug, Default)]
 pub struct RenderResults {
+    /// Statistics about the frame that was rendered.
     pub stats: RendererStats,
+
+    /// A list of dirty world rects. This is only currently
+    /// useful to test infrastructure.
+    /// TODO(gw): This needs to be refactored / removed.
     pub recorded_dirty_regions: Vec<RecordedDirtyRegion>,
+
+    /// A list of the device dirty rects that were updated
+    /// this frame.
+    /// TODO(gw): This is an initial interface, likely to change in future.
+    /// TODO(gw): The dirty rects here are currently only useful when scrolling
+    ///           is not occurring. They are still correct in the case of
+    ///           scrolling, but will be very large (until we expose proper
+    ///           OS compositor support where the dirty rects apply to a
+    ///           specific picture cache slice / OS compositor surface).
+    pub dirty_rects: Vec<DeviceIntRect>,
 }
 
 #[cfg(any(feature = "capture", feature = "replay"))]
