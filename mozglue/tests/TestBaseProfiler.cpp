@@ -829,10 +829,53 @@ void TestBlocksRingBufferAPI() {
     //   ?   ?   ?   ?   ?   ?   ?   ?   ?   ? S[4 |    int(6)    ]E ?
     VERIFY_START_END_DESTROYED(26, 31, 0);
 
+    {
+      // Create a 2nd buffer and fill it with `7` and `8`.
+      uint8_t buffer2[MBSize];
+      BlocksRingBuffer rb2(BlocksRingBuffer::ThreadSafety::WithoutMutex,
+                           buffer2, MakePowerOfTwo32<MBSize>());
+      rb2.PutObject(uint32_t(7));
+      rb2.PutObject(uint32_t(8));
+      // Main buffer shouldn't have changed.
+      VERIFY_START_END_DESTROYED(26, 31, 0);
+
+      // Append contents of rb2 to rb, this should end up being the same as
+      // pushing the two numbers.
+      rb.AppendContents(rb2);
+      //  32  33  34  35  36  37  38  39  40  41  26  27  28  29  30  31
+      //      int(7)    ] [4 |    int(8)    ]E ? S[4 |    int(6)    ] [4 |
+      VERIFY_START_END_DESTROYED(26, 41, 0);
+
+      // Append contents of rb2 to rb again, to verify that rb2 was not modified
+      // above. This should destroy `6` and the first `7`.
+      rb.AppendContents(rb2);
+      //  48  49  50  51  36  37  38  39  40  41  42  43  44  45  46  47
+      //  int(8)    ]E ? S[4 |    int(8)    ] [4 |    int(7)    ] [4 |
+      VERIFY_START_END_DESTROYED(36, 51, 7);
+
+      // End of block where rb2 lives, to verify that it is not needed anymore
+      // for its copied values to survive in rb.
+    }
+    VERIFY_START_END_DESTROYED(36, 51, 7);
+
+    // bi6 should now have been cleared.
+    rb.ReadAt(bi6, [](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeReader) {
+      MOZ_RELEASE_ASSERT(aMaybeReader.isNothing());
+    });
+
+    // Check that we have `8`, `7`, `8`.
+    count = 0;
+    uint32_t expected[3] = {8, 7, 8};
+    rb.ReadEach([&](BlocksRingBuffer::EntryReader& aReader) {
+      MOZ_RELEASE_ASSERT(count < 3);
+      MOZ_RELEASE_ASSERT(aReader.ReadObject<uint32_t>() == expected[count++]);
+    });
+    MOZ_RELEASE_ASSERT(count == 3);
+
     // End of block where rb lives, BlocksRingBuffer destructor should call
     // entry destructor for remaining entries.
   }
-  MOZ_RELEASE_ASSERT(lastDestroyed == 6);
+  MOZ_RELEASE_ASSERT(lastDestroyed == 8);
 
   // Check that only the provided stack-based sub-buffer was modified.
   uint32_t changed = 0;
