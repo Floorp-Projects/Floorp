@@ -7,7 +7,6 @@
 #include "HTMLEditor.h"
 
 #include "HTMLEditUtils.h"
-#include "TextEditUtils.h"
 #include "WSRunObject.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ContentIterator.h"
@@ -4253,7 +4252,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
   bool bOnlyBreaks = true;
   for (auto& curNode : arrayOfNodes) {
     // if curNode is not a Break or empty inline, we're done
-    if (!TextEditUtils::IsBreak(curNode) && !IsEmptyInineNode(curNode)) {
+    if (!curNode->IsHTMLElement(nsGkAtoms::br) && !IsEmptyInineNode(curNode)) {
       bOnlyBreaks = false;
       break;
     }
@@ -6427,7 +6426,7 @@ nsresult HTMLEditor::AlignContentsAtSelection(const nsAString& aAlignType) {
       return rv;
     }
 
-    if (TextEditUtils::IsBreak(node)) {
+    if (node->IsHTMLElement(nsGkAtoms::br)) {
       // The special case createEmptyDivElement code (below) that consumes
       // `<br>` elements can cause tables to split if the start node of the
       // selection is not in a table cell or caption, for example parent is a
@@ -6499,7 +6498,8 @@ EditActionResult HTMLEditor::AlignContentsAtSelectionWithEmptyDivElement(
   // creating extra lines, if possible.
   if (nsCOMPtr<nsIContent> maybeBRContent =
           GetNextEditableHTMLNodeInBlock(splitNodeResult.SplitPoint())) {
-    if (TextEditUtils::IsBreak(maybeBRContent) && pointToInsertDiv.GetChild()) {
+    if (maybeBRContent->IsHTMLElement(nsGkAtoms::br) &&
+        pointToInsertDiv.GetChild()) {
       // Making use of html structure... if next node after where we are
       // putting our div is not a block, then the br we found is in same block
       // we are, so it's safe to consume it.
@@ -8449,7 +8449,7 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
         splitAfterNewBR = true;
       }
     }
-    if (!pointToInsertBR.IsSet() && TextEditUtils::IsBreak(nearNode)) {
+    if (!pointToInsertBR.IsSet() && nearNode->IsHTMLElement(nsGkAtoms::br)) {
       brContent = nearNode;
     }
   }
@@ -9812,7 +9812,7 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
     if (blockElementAtCaret &&
         blockElementAtCaret == blockElementParentAtPreviousEditableContent &&
         previousEditableContent &&
-        TextEditUtils::IsBreak(previousEditableContent)) {
+        previousEditableContent->IsHTMLElement(nsGkAtoms::br)) {
       // If it's an invisible `<br>` element, we need to insert a padding
       // `<br>` element for making empty line have one-line height.
       if (!IsVisibleBRElement(previousEditableContent)) {
@@ -9862,7 +9862,7 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
   //  or `<hr>`, current caret position is fine.
   if (nsIContent* previousEditableContentInBlock =
           GetPreviousEditableHTMLNodeInBlock(point)) {
-    if (TextEditUtils::IsBreak(previousEditableContentInBlock) ||
+    if (previousEditableContentInBlock->IsHTMLElement(nsGkAtoms::br) ||
         EditorBase::IsTextNode(previousEditableContentInBlock) ||
         HTMLEditUtils::IsImage(previousEditableContentInBlock) ||
         previousEditableContentInBlock->IsHTMLElement(nsGkAtoms::hr)) {
@@ -9873,10 +9873,9 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
   // `<hr>`, current caret position is fine.
   if (nsIContent* nextEditableContentInBlock =
           GetNextEditableHTMLNodeInBlock(point)) {
-    if (TextEditUtils::IsBreak(nextEditableContentInBlock) ||
-        EditorBase::IsTextNode(nextEditableContentInBlock) ||
-        nextEditableContentInBlock->IsAnyOfHTMLElements(nsGkAtoms::img,
-                                                        nsGkAtoms::hr)) {
+    if (EditorBase::IsTextNode(nextEditableContentInBlock) ||
+        nextEditableContentInBlock->IsAnyOfHTMLElements(
+            nsGkAtoms::br, nsGkAtoms::img, nsGkAtoms::hr)) {
       return NS_OK;
     }
   }
@@ -9932,7 +9931,7 @@ nsIContent* HTMLEditor::FindNearEditableContent(
   // XXX This comment sounds odd.  editableContent may have already crossed
   //     breaks and/or images if they are non-editable.
   while (editableContent && !EditorBase::IsTextNode(editableContent) &&
-         !TextEditUtils::IsBreak(editableContent) &&
+         !editableContent->IsHTMLElement(nsGkAtoms::br) &&
          !HTMLEditUtils::IsImage(editableContent)) {
     if (aDirection == nsIEditor::ePrevious) {
       editableContent = GetPreviousEditableHTMLNode(*editableContent);

@@ -10,7 +10,6 @@
 
 #include "HTMLEditUtils.h"
 #include "InternetCiter.h"
-#include "TextEditUtils.h"
 #include "WSRunObject.h"
 #include "mozilla/dom/Comment.h"
 #include "mozilla/dom/DataTransfer.h"
@@ -366,7 +365,8 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
   // element at end of what we paste, it will make the existing invisible
   // `<br>` element visible.
   WSRunObject wsObj(this, pointToInsert);
-  if (wsObj.mEndReasonNode && TextEditUtils::IsBreak(wsObj.mEndReasonNode) &&
+  if (wsObj.mEndReasonNode &&
+      wsObj.mEndReasonNode->IsHTMLElement(nsGkAtoms::br) &&
       !IsVisibleBRElement(wsObj.mEndReasonNode)) {
     AutoEditorDOMPointChildInvalidator lockOffset(pointToInsert);
     rv = DeleteNodeWithTransaction(MOZ_KnownLive(*wsObj.mEndReasonNode));

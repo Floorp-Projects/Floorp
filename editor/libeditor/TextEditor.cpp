@@ -7,7 +7,6 @@
 
 #include "EditAggregateTransaction.h"
 #include "InternetCiter.h"
-#include "TextEditUtils.h"
 #include "gfxFontUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ContentIterator.h"
