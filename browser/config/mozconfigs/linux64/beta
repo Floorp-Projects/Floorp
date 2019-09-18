@@ -1,5 +1,3 @@
-. "$topsrcdir/build/mozconfig.pgo"
-
 . "$topsrcdir/browser/config/mozconfigs/linux64/common-opt"
 
 ac_add_options --enable-official-branding

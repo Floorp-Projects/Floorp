@@ -39,7 +39,6 @@ whitelist['release']['linux32'] += [
 ]
 whitelist['release']['linux64'] += [
     'export MOZILLA_OFFICIAL=1',
-    '. "$topsrcdir/build/mozconfig.pgo"',
 ]
 
 if __name__ == '__main__':
