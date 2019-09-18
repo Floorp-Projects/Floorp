@@ -14448,6 +14448,35 @@ bool Document::InlineScriptAllowedByCSP() {
   return allowsInlineScript;
 }
 
+// Some use-counter sanity-checking.
+static_assert(size_t(eUseCounter_Count) -
+                      size_t(eUseCounter_FirstCSSProperty) ==
+                  size_t(eCSSProperty_COUNT_with_aliases),
+              "");
+static_assert(size_t(eUseCounter_Count) * 2 ==
+                  size_t(Telemetry::HistogramUseCounterCount),
+              "");
+
+#define ASSERT_CSS_COUNTER(id_, method_)                        \
+  static_assert(size_t(eUseCounter_property_##method_) -        \
+                        size_t(eUseCounter_FirstCSSProperty) == \
+                    size_t(id_),                                \
+                "");
+#define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) privatename_
+#define CSS_PROP_LONGHAND(name_, id_, method_, ...) \
+  ASSERT_CSS_COUNTER(eCSSProperty_##id_, method_)
+#define CSS_PROP_SHORTHAND(name_, id_, method_, ...) \
+  ASSERT_CSS_COUNTER(eCSSProperty_##id_, method_)
+#define CSS_PROP_ALIAS(name_, aliasid_, id_, method_, ...) \
+  ASSERT_CSS_COUNTER(eCSSPropertyAlias_##aliasid_, method_)
+#include "mozilla/ServoCSSPropList.h"
+#undef CSS_PROP_ALIAS
+#undef CSS_PROP_SHORTHAND
+#undef CSS_PROP_LONGHAND
+#undef CSS_PROP_PUBLIC_OR_PRIVATE
+#undef ASSERT_CSS_COUNTER
+
+
 void Document::PropagateUseCountersToPage() {
   if (mDisplayDocument) {
     // If we are a resource document, we won't have a docshell and so we won't
