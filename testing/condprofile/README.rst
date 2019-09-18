@@ -8,7 +8,7 @@ Unlike testing/profiles, the **conditioned profiles** are a collection of full
 Gecko profiles that are dynamically updated every day.
 
 Each profile is created or updated using a **scenario** and a
-**customization**, and eventually uploaded as artifact in TaskCluster.
+**customization**, and eventually uploaded as an artifact in TaskCluster.
 
 The goal of the project is to build a collection of profiles that we can use in
 our performance or functional tests instead of the empty profile that we
@@ -22,8 +22,8 @@ A full cycle of how this tool is used in Taskcluster looks like this:
 
 For each combination of scenario, customization and platform:
 
-- grabs an existing profile in taskcluster
-- browses the web using the scenario, via the webdriver client
+- grabs an existing profile in Taskcluster
+- browses the web using the scenario, via the WebDriver client
 - recreates a tarball with the updated profile
 - uploads it as an index artifact into TaskCluster - maintains a changelog of each change
 
@@ -58,11 +58,11 @@ Customizations are JSON files registered into condprof/customizations,
 and they provide four keys:
 
 - **name**: the name of the customization
-- **addons**: a mapping of addons to install.
+- **addons**: a mapping of add-ons to install.
 - **prefs**: a mapping of prefs to set
 - **scenario**: a mapping of options to pass to a specific scenario
 
-In the example below, we install uBlock, set a pref and pass the
+In the example below, we install uBlock, set a pref, and pass the
 **max_urls** option to the **heavy** scenario.
 
   {
@@ -87,7 +87,7 @@ Unlike the profile creator, the client is Python 2 and 3 compatible.
 You can grab a conditioned profile using the client API::
 
    >>> from condprof.client import get_profile
-   >>> get_profile(".", "win64", "cold", "days", "default")
+   >>> get_profile(".", "win64", "cold", "default")
 
 or the **cp-client** script that gets install when you run the
 conditioned profile installer.
@@ -95,7 +95,7 @@ conditioned profile installer.
 Running locally
 ===============
 
-Unfortunately, we can't hook the conditioned profile builder in mach
+Unfortunately, we can't hook the conditioned profile builder into mach
 at this point. We need to wait for everything in the tree to be fully
 Python 3 compatible.
 
@@ -108,4 +108,4 @@ Get a mozilla-central source clone and do the following::
    $ cd testing/condprofile
    $ virtualenv .
 
-From there you can trigger profiles creation using **bin/cp-creator**
+From there you can trigger profiles creation using **bin/cp-creator**.
