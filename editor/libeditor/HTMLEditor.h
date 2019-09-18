@@ -2757,8 +2757,7 @@ class HTMLEditor final : public TextEditor,
    *     all over the document is ediable (i.e., in design mode or `<body>`
    *     or `<html>` has `contenteditable` attribute).
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE virtual nsresult
-  InitEditorContentAndSelection() override;
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult InitEditorContentAndSelection();
 
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult SelectAllInternal() override;
