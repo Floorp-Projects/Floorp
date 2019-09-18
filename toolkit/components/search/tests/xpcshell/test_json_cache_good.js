@@ -27,14 +27,7 @@ const enginesCache = {
   buildID: "TBD",
   appVersion: "TBD",
   locale: "en-US",
-  visibleDefaultEngines: [
-    "engine",
-    "engine-pref",
-    "engine-rel-searchform-purpose",
-    "engine-chromeicon",
-    "engine-resourceicon",
-    "engine-reordered",
-  ],
+  visibleDefaultEngines: ["engine1", "engine2"],
   metaData: {
     searchDefault: "Test search engine",
     searchDefaultHash: "TBD",
@@ -42,8 +35,7 @@ const enginesCache = {
     searchDefaultExpir: 1567694909002,
     current: "",
     hash: "TBD",
-    visibleDefaultEngines:
-      "engine,engine-pref,engine-rel-searchform-purpose,engine-chromeicon,engine-resourceicon,engine-reordered",
+    visibleDefaultEngines: "engine1,engine2",
     visibleDefaultEnginesHash: "TBD",
   },
   engines: [
