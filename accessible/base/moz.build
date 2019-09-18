@@ -47,6 +47,7 @@ UNIFIED_SOURCES += [
     'nsCoreUtils.cpp',
     'nsEventShell.cpp',
     'nsTextEquivUtils.cpp',
+    'Pivot.cpp',
     'SelectionManager.cpp',
     'StyleInfo.cpp',
     'TextAttrs.cpp',
