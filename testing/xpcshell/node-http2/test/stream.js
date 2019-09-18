@@ -105,25 +105,25 @@ var example_frames = [
   { type: 'WINDOW_UPDATE', flags: {}, settings: {} },
   { type: 'RST_STREAM', flags: {}, error: 'CANCEL' },
   { type: 'HEADERS', flags: {}, headers: {}, priority: undefined },
-  { type: 'DATA', flags: {}, data: new Buffer(5) },
+  { type: 'DATA', flags: {}, data: Buffer.alloc(5) },
   { type: 'PUSH_PROMISE', flags: {}, headers: {}, promised_stream: new Stream(util.log, null) }
 ];
 
 var invalid_incoming_frames = {
   IDLE: [
-    { type: 'DATA', flags: {}, data: new Buffer(5) },
+    { type: 'DATA', flags: {}, data: Buffer.alloc(5) },
     { type: 'WINDOW_UPDATE', flags: {}, settings: {} },
     { type: 'PUSH_PROMISE', flags: {}, headers: {} },
     { type: 'RST_STREAM', flags: {}, error: 'CANCEL' }
   ],
   RESERVED_LOCAL: [
-    { type: 'DATA', flags: {}, data: new Buffer(5) },
+    { type: 'DATA', flags: {}, data: Buffer.alloc(5) },
     { type: 'HEADERS', flags: {}, headers: {}, priority: undefined },
     { type: 'PUSH_PROMISE', flags: {}, headers: {} },
     { type: 'WINDOW_UPDATE', flags: {}, settings: {} }
   ],
   RESERVED_REMOTE: [
-    { type: 'DATA', flags: {}, data: new Buffer(5) },
+    { type: 'DATA', flags: {}, data: Buffer.alloc(5) },
     { type: 'PUSH_PROMISE', flags: {}, headers: {} },
     { type: 'WINDOW_UPDATE', flags: {}, settings: {} }
   ],
@@ -132,7 +132,7 @@ var invalid_incoming_frames = {
   HALF_CLOSED_LOCAL: [
   ],
   HALF_CLOSED_REMOTE: [
-    { type: 'DATA', flags: {}, data: new Buffer(5) },
+    { type: 'DATA', flags: {}, data: Buffer.alloc(5) },
     { type: 'HEADERS', flags: {}, headers: {}, priority: undefined },
     { type: 'PUSH_PROMISE', flags: {}, headers: {} }
   ]
@@ -140,17 +140,17 @@ var invalid_incoming_frames = {
 
 var invalid_outgoing_frames = {
   IDLE: [
-    { type: 'DATA', flags: {}, data: new Buffer(5) },
+    { type: 'DATA', flags: {}, data: Buffer.alloc(5) },
     { type: 'WINDOW_UPDATE', flags: {}, settings: {} },
     { type: 'PUSH_PROMISE', flags: {}, headers: {} }
   ],
   RESERVED_LOCAL: [
-    { type: 'DATA', flags: {}, data: new Buffer(5) },
+    { type: 'DATA', flags: {}, data: Buffer.alloc(5) },
     { type: 'PUSH_PROMISE', flags: {}, headers: {} },
     { type: 'WINDOW_UPDATE', flags: {}, settings: {} }
   ],
   RESERVED_REMOTE: [
-    { type: 'DATA', flags: {}, data: new Buffer(5) },
+    { type: 'DATA', flags: {}, data: Buffer.alloc(5) },
     { type: 'HEADERS', flags: {}, headers: {}, priority: undefined },
     { type: 'PUSH_PROMISE', flags: {}, headers: {} },
     { type: 'WINDOW_UPDATE', flags: {}, settings: {} }
@@ -158,7 +158,7 @@ var invalid_outgoing_frames = {
   OPEN: [
   ],
   HALF_CLOSED_LOCAL: [
-    { type: 'DATA', flags: {}, data: new Buffer(5) },
+    { type: 'DATA', flags: {}, data: Buffer.alloc(5) },
     { type: 'HEADERS', flags: {}, headers: {}, priority: undefined },
     { type: 'PUSH_PROMISE', flags: {}, headers: {} }
   ],
@@ -167,7 +167,7 @@ var invalid_outgoing_frames = {
   CLOSED: [
     { type: 'WINDOW_UPDATE', flags: {}, settings: {} },
     { type: 'HEADERS', flags: {}, headers: {}, priority: undefined },
-    { type: 'DATA', flags: {}, data: new Buffer(5) },
+    { type: 'DATA', flags: {}, data: Buffer.alloc(5) },
     { type: 'PUSH_PROMISE', flags: {}, headers: {}, promised_stream: new Stream(util.log, null) }
   ]
 };
@@ -260,11 +260,11 @@ describe('stream.js', function() {
           { wait    : 5 },
           { method  : { name: 'end', arguments: [] } },
           { event   : { name: 'state', data: ['HALF_CLOSED_LOCAL'] } },
-          { outgoing: { type: 'DATA', flags: { END_STREAM: true  }, data: new Buffer(0) } },
+          { outgoing: { type: 'DATA', flags: { END_STREAM: true  }, data: Buffer.alloc(0) } },
 
           { wait    : 10 },
           { incoming: { type: 'HEADERS', flags: { }, headers: { ':status': 200 } } },
-          { incoming: { type: 'DATA'   , flags: { END_STREAM: true  }, data: new Buffer(5) } },
+          { incoming: { type: 'DATA'   , flags: { END_STREAM: true  }, data: Buffer.alloc(5) } },
           { event   : { name: 'headers', data: [{ ':status': 200 }] } },
           { event   : { name: 'state', data: ['CLOSED'] } },
 
@@ -274,15 +274,15 @@ describe('stream.js', function() {
     });
     describe('answering request', function() {
       it('should trigger the appropriate state transitions and outgoing frames', function(done) {
-        var payload = new Buffer(5);
+        var payload = Buffer.alloc(5);
         execute_sequence([
           { incoming: { type: 'HEADERS', flags: { }, headers: { ':path': '/' } } },
           { event   : { name: 'state', data: ['OPEN'] } },
           { event   : { name: 'headers', data: [{ ':path': '/' }] } },
 
           { wait    : 5 },
-          { incoming: { type: 'DATA', flags: { }, data: new Buffer(5) } },
-          { incoming: { type: 'DATA', flags: { END_STREAM: true  }, data: new Buffer(10) } },
+          { incoming: { type: 'DATA', flags: { }, data: Buffer.alloc(5) } },
+          { incoming: { type: 'DATA', flags: { END_STREAM: true  }, data: Buffer.alloc(10) } },
           { event   : { name: 'state', data: ['HALF_CLOSED_REMOTE'] } },
 
           { wait    : 5 },
@@ -300,7 +300,7 @@ describe('stream.js', function() {
     });
     describe('sending push stream', function() {
       it('should trigger the appropriate state transitions and outgoing frames', function(done) {
-        var payload = new Buffer(5);
+        var payload = Buffer.alloc(5);
         var pushStream;
 
         execute_sequence([
@@ -348,7 +348,7 @@ describe('stream.js', function() {
     });
     describe('receiving push stream', function() {
       it('should trigger the appropriate state transitions and outgoing frames', function(done) {
-        var payload = new Buffer(5);
+        var payload = Buffer.alloc(5);
         var original_stream = createStream();
         var promised_stream = createStream();
 
