@@ -2157,8 +2157,12 @@ already_AddRefed<SharedCertVerifier> GetDefaultCertVerifier() {
   if (!nssComponent) {
     return nullptr;
   }
+  nsresult rv = nssComponent->BlockUntilLoadableRootsLoaded();
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
   RefPtr<SharedCertVerifier> result;
-  nsresult rv = nssComponent->GetDefaultCertVerifier(getter_AddRefs(result));
+  rv = nssComponent->GetDefaultCertVerifier(getter_AddRefs(result));
   if (NS_FAILED(rv)) {
     return nullptr;
   }
