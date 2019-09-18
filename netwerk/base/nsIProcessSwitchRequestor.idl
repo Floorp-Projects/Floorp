@@ -4,26 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsISupports.idl"
-#include "nsIAsyncVerifyRedirectCallback.idl"
-#include "nsIHttpChannel.idl"
-
-[scriptable, uuid(d2471b64-0292-4cb5-b801-914e34b31af0)]
-interface nsICrossProcessSwitchChannel : nsISupports
-{
-  /**
-   *  When a process switch is about to start,
-   *  nsHttpChannel will call this method on DocumentChannelParent or
-   *  HttpChannelParent
-   *
-   *  @param channel
-   *         nsIHttpChannel caller.
-   *  @param identifier
-   *         identifier from SessionStore to be passed to the childChannel in
-   *         order to identify it.
-   */
-  void triggerCrossProcessSwitch(in nsIHttpChannel channel, in uint64_t identifier);
-};
+#include "nsIChannel.idl"
 
 /**
  * The nsIProcessSwitchRequestor interface allows clients to instruct

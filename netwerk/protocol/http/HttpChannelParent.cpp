@@ -289,7 +289,6 @@ NS_INTERFACE_MAP_BEGIN(HttpChannelParent)
   NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectReadyCallback)
   NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIRedirectResultListener)
-  NS_INTERFACE_MAP_ENTRY(nsICrossProcessSwitchChannel)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIParentRedirectingChannel)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(HttpChannelParent)
 NS_INTERFACE_MAP_END
