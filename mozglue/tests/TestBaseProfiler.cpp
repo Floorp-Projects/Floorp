@@ -486,6 +486,75 @@ void TestModuloBuffer() {
     MOZ_RELEASE_ASSERT(buffer[i] == uint8_t('A' + i));
   }
 
+  // This test function does a `ReadInto` as directed, and checks that the
+  // result is the same as if the copy had been done manually byte-by-byte.
+  // `TestReadInto(3, 7, 2)` copies from index 3 to index 7, 2 bytes long.
+  // Return the output string (from `ReadInto`) for external checks.
+  auto TestReadInto = [](MB::Index aReadFrom, MB::Index aWriteTo,
+                         MB::Length aBytes) {
+    constexpr uint32_t TRISize = 16;
+
+    // Prepare an input buffer, all different elements.
+    uint8_t input[TRISize + 1] = "ABCDEFGHIJKLMNOP";
+    const MB mbInput(input, MakePowerOfTwo32<TRISize>());
+
+    // Prepare an output buffer, different from input.
+    uint8_t output[TRISize + 1] = "abcdefghijklmnop";
+    MB mbOutput(output, MakePowerOfTwo32<TRISize>());
+
+    // Run ReadInto.
+    auto writer = mbOutput.WriterAt(aWriteTo);
+    mbInput.ReaderAt(aReadFrom).ReadInto(writer, aBytes);
+
+    // Do the same operation manually.
+    uint8_t outputCheck[TRISize + 1] = "abcdefghijklmnop";
+    MB mbOutputCheck(outputCheck, MakePowerOfTwo32<TRISize>());
+    auto readerCheck = mbInput.ReaderAt(aReadFrom);
+    auto writerCheck = mbOutputCheck.WriterAt(aWriteTo);
+    for (MB::Length i = 0; i < aBytes; ++i) {
+      *writerCheck++ = *readerCheck++;
+    }
+
+    // Compare the two outputs.
+    for (uint32_t i = 0; i < TRISize; ++i) {
+#  ifdef TEST_MODULOBUFFER_FAILURE_DEBUG
+      // Only used when debugging failures.
+      if (output[i] != outputCheck[i]) {
+        printf(
+            "*** from=%u to=%u bytes=%u i=%u\ninput:  '%s'\noutput: "
+            "'%s'\ncheck:  '%s'\n",
+            unsigned(aReadFrom), unsigned(aWriteTo), unsigned(aBytes),
+            unsigned(i), input, output, outputCheck);
+      }
+#  endif
+      MOZ_RELEASE_ASSERT(output[i] == outputCheck[i]);
+    }
+
+#  ifdef TEST_MODULOBUFFER_HELPER
+    // Only used when adding more tests.
+    printf("*** from=%u to=%u bytes=%u output: %s\n", unsigned(aReadFrom),
+           unsigned(aWriteTo), unsigned(aBytes), output);
+#  endif
+
+    return std::string(reinterpret_cast<const char*>(output));
+  };
+
+  // A few manual checks:
+  constexpr uint32_t TRISize = 16;
+  MOZ_RELEASE_ASSERT(TestReadInto(0, 0, 0) == "abcdefghijklmnop");
+  MOZ_RELEASE_ASSERT(TestReadInto(0, 0, TRISize) == "ABCDEFGHIJKLMNOP");
+  MOZ_RELEASE_ASSERT(TestReadInto(0, 5, TRISize) == "LMNOPABCDEFGHIJK");
+  MOZ_RELEASE_ASSERT(TestReadInto(5, 0, TRISize) == "FGHIJKLMNOPABCDE");
+
+  // Test everything! (16^3 = 4096, not too much.)
+  for (MB::Index r = 0; r < TRISize; ++r) {
+    for (MB::Index w = 0; w < TRISize; ++w) {
+      for (MB::Length len = 0; len < TRISize; ++len) {
+        TestReadInto(r, w, len);
+      }
+    }
+  }
+
   printf("TestModuloBuffer done\n");
 }
 
