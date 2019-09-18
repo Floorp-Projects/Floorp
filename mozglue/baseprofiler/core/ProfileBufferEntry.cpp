@@ -272,17 +272,6 @@ uint32_t UniqueStacks::GetOrAddStackIndex(const StackKey& aStack) {
   return count;
 }
 
-template <typename RangeT, typename PosT>
-struct PositionInRangeComparator final {
-  bool Equals(const RangeT& aRange, PosT aPos) const {
-    return aRange.mRangeStart <= aPos && aPos < aRange.mRangeEnd;
-  }
-
-  bool LessThan(const RangeT& aRange, PosT aPos) const {
-    return aRange.mRangeEnd <= aPos;
-  }
-};
-
 uint32_t UniqueStacks::GetOrAddFrameIndex(const FrameKey& aFrame) {
   uint32_t count = mFrameToIndexMap.count();
   auto entry = mFrameToIndexMap.lookupForAdd(aFrame);
@@ -384,24 +373,45 @@ static void WriteSample(SpliceableJSONWriter& aWriter,
 
 class EntryGetter {
  public:
-  explicit EntryGetter(const ProfileBuffer& aBuffer,
+  explicit EntryGetter(BlocksRingBuffer::Reader& aReader,
                        uint64_t aInitialReadPos = 0)
-      : mBuffer(aBuffer), mReadPos(aBuffer.mRangeStart) {
-    if (aInitialReadPos != 0) {
-      MOZ_RELEASE_ASSERT(aInitialReadPos >= aBuffer.mRangeStart &&
-                         aInitialReadPos <= aBuffer.mRangeEnd);
-      mReadPos = aInitialReadPos;
-    }
+      : mBlockIt(aReader.At(
+            BlocksRingBuffer::BlockIndex::ConvertFromU64(aInitialReadPos))),
+        mBlockItEnd(aReader.end()) {
+    Read();
   }
 
-  bool Has() const { return mReadPos != mBuffer.mRangeEnd; }
-  const ProfileBufferEntry& Get() const { return mBuffer.GetEntry(mReadPos); }
-  void Next() { mReadPos++; }
-  uint64_t CurPos() { return mReadPos; }
+  bool Has() const { return mBlockIt != mBlockItEnd; }
+
+  const ProfileBufferEntry& Get() const {
+    MOZ_ASSERT(Has(), "Caller should have checked `Has()` before `Get()`");
+    return mEntry;
+  }
+
+  void Next() {
+    MOZ_ASSERT(Has(), "Caller should have checked `Has()` before `Next()`");
+    ++mBlockIt;
+    Read();
+  }
+
+  ProfileBuffer::BlockIndex CurBlockIndex() const {
+    return mBlockIt.CurrentBlockIndex();
+  }
+
+  uint64_t CurPos() const { return CurBlockIndex().ConvertToU64(); }
 
  private:
-  const ProfileBuffer& mBuffer;
-  uint64_t mReadPos;
+  void Read() {
+    if (!Has()) {
+      return;
+    }
+    BlocksRingBuffer::EntryReader aER = *mBlockIt;
+    aER.Read(&mEntry, aER.RemainingBytes());
+  }
+
+  ProfileBufferEntry mEntry;
+  BlocksRingBuffer::BlockIterator mBlockIt;
+  const BlocksRingBuffer::BlockIterator mBlockItEnd;
 };
 
 // The following grammar shows legal sequences of profile buffer entries.
@@ -548,222 +558,229 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
                                         UniqueStacks& aUniqueStacks) const {
   UniquePtr<char[]> dynStrBuf = MakeUnique<char[]>(kMaxFrameKeyLength);
 
-  EntryGetter e(*this);
+  mEntries.Read([&](BlocksRingBuffer::Reader* aReader) {
+    MOZ_ASSERT(
+        aReader,
+        "BlocksRingBuffer cannot be out-of-session when sampler is running");
 
-  for (;;) {
-    // This block skips entries until we find the start of the next sample.
-    // This is useful in three situations.
-    //
-    // - The circular buffer overwrites old entries, so when we start parsing
-    //   we might be in the middle of a sample, and we must skip forward to the
-    //   start of the next sample.
-    //
-    // - We skip samples that don't have an appropriate ThreadId or Time.
-    //
-    // - We skip range Pause, Resume, CollectionStart, Marker, Counter
-    //   and CollectionEnd entries between samples.
-    while (e.Has()) {
+    EntryGetter e(*aReader);
+
+    for (;;) {
+      // This block skips entries until we find the start of the next sample.
+      // This is useful in three situations.
+      //
+      // - The circular buffer overwrites old entries, so when we start parsing
+      //   we might be in the middle of a sample, and we must skip forward to
+      //   the start of the next sample.
+      //
+      // - We skip samples that don't have an appropriate ThreadId or Time.
+      //
+      // - We skip range Pause, Resume, CollectionStart, Marker, Counter
+      //   and CollectionEnd entries between samples.
+      while (e.Has()) {
+        if (e.Get().IsThreadId()) {
+          break;
+        }
+        e.Next();
+      }
+
+      if (!e.Has()) {
+        break;
+      }
+
       if (e.Get().IsThreadId()) {
-        break;
+        int threadId = e.Get().GetInt();
+        e.Next();
+
+        // Ignore samples that are for the wrong thread.
+        if (threadId != aThreadId) {
+          continue;
+        }
       } else {
-        e.Next();
+        // Due to the skip_to_next_sample block above, if we have an entry here
+        // it must be a ThreadId entry.
+        MOZ_CRASH();
       }
-    }
 
-    if (!e.Has()) {
-      break;
-    }
+      ProfileSample sample;
 
-    if (e.Get().IsThreadId()) {
-      int threadId = e.Get().GetInt();
-      e.Next();
-
-      // Ignore samples that are for the wrong thread.
-      if (threadId != aThreadId) {
-        continue;
-      }
-    } else {
-      // Due to the skip_to_next_sample block above, if we have an entry here
-      // it must be a ThreadId entry.
-      MOZ_CRASH();
-    }
-
-    ProfileSample sample;
-
-    if (e.Has() && e.Get().IsTime()) {
-      sample.mTime = e.Get().GetDouble();
-      e.Next();
-
-      // Ignore samples that are too old.
-      if (sample.mTime < aSinceTime) {
-        continue;
-      }
-    } else {
-      ERROR_AND_CONTINUE("expected a Time entry");
-    }
-
-    UniqueStacks::StackKey stack =
-        aUniqueStacks.BeginStack(UniqueStacks::FrameKey("(root)"));
-
-    int numFrames = 0;
-    while (e.Has()) {
-      if (e.Get().IsNativeLeafAddr()) {
-        numFrames++;
-
-        void* pc = e.Get().GetPtr();
+      if (e.Has() && e.Get().IsTime()) {
+        sample.mTime = e.Get().GetDouble();
         e.Next();
 
-        static const uint32_t BUF_SIZE = 256;
-        char buf[BUF_SIZE];
-
-        // Bug 753041: We need a double cast here to tell GCC that we don't
-        // want to sign extend 32-bit addresses starting with 0xFXXXXXX.
-        unsigned long long pcULL = (unsigned long long)(uintptr_t)pc;
-        SprintfLiteral(buf, "%#llx", pcULL);
-
-        // If the "MOZ_BASE_PROFILER_SYMBOLICATE" env-var is set, we add a local
-        // symbolication description to the PC address. This is off by default,
-        // and mainly intended for local development.
-        static const bool preSymbolicate = []() {
-          const char* symbolicate = getenv("MOZ_BASE_PROFILER_SYMBOLICATE");
-          return symbolicate && symbolicate[0] != '\0';
-        }();
-        if (preSymbolicate) {
-          MozCodeAddressDetails details;
-          if (MozDescribeCodeAddress(pc, &details)) {
-            // Replace \0 terminator with space.
-            const uint32_t pcLen = strlen(buf);
-            buf[pcLen] = ' ';
-            // Add description after space. Note: Using a frame number of 0,
-            // as using `numFrames` wouldn't help here, and would prevent
-            // combining same function calls that happen at different depths.
-            // TODO: Remove unsightly "#00: " if too annoying. :-)
-            MozFormatCodeAddressDetails(buf + pcLen + 1, BUF_SIZE - (pcLen + 1),
-                                        0, pc, &details);
-          }
+        // Ignore samples that are too old.
+        if (sample.mTime < aSinceTime) {
+          continue;
         }
+      } else {
+        ERROR_AND_CONTINUE("expected a Time entry");
+      }
 
-        stack = aUniqueStacks.AppendFrame(stack, UniqueStacks::FrameKey(buf));
+      UniqueStacks::StackKey stack =
+          aUniqueStacks.BeginStack(UniqueStacks::FrameKey("(root)"));
 
-      } else if (e.Get().IsLabel()) {
-        numFrames++;
+      int numFrames = 0;
+      while (e.Has()) {
+        if (e.Get().IsNativeLeafAddr()) {
+          numFrames++;
 
-        const char* label = e.Get().GetString();
-        e.Next();
-
-        using FrameFlags = ProfilingStackFrame::Flags;
-        uint32_t frameFlags = 0;
-        if (e.Has() && e.Get().IsFrameFlags()) {
-          frameFlags = uint32_t(e.Get().GetUint64());
+          void* pc = e.Get().GetPtr();
           e.Next();
-        }
 
-        bool relevantForJS = frameFlags & uint32_t(FrameFlags::RELEVANT_FOR_JS);
+          static const uint32_t BUF_SIZE = 256;
+          char buf[BUF_SIZE];
 
-        // Copy potential dynamic string fragments into dynStrBuf, so that
-        // dynStrBuf will then contain the entire dynamic string.
-        size_t i = 0;
-        dynStrBuf[0] = '\0';
-        while (e.Has()) {
-          if (e.Get().IsDynamicStringFragment()) {
-            char chars[ProfileBufferEntry::kNumChars];
-            e.Get().CopyCharsInto(chars);
-            for (char c : chars) {
-              if (i < kMaxFrameKeyLength) {
-                dynStrBuf[i] = c;
-                i++;
-              }
+          // Bug 753041: We need a double cast here to tell GCC that we don't
+          // want to sign extend 32-bit addresses starting with 0xFXXXXXX.
+          unsigned long long pcULL = (unsigned long long)(uintptr_t)pc;
+          SprintfLiteral(buf, "%#llx", pcULL);
+
+          // If the "MOZ_BASE_PROFILER_SYMBOLICATE" env-var is set, we add a
+          // local symbolication description to the PC address. This is off by
+          // default, and mainly intended for local development.
+          static const bool preSymbolicate = []() {
+            const char* symbolicate = getenv("MOZ_BASE_PROFILER_SYMBOLICATE");
+            return symbolicate && symbolicate[0] != '\0';
+          }();
+          if (preSymbolicate) {
+            MozCodeAddressDetails details;
+            if (MozDescribeCodeAddress(pc, &details)) {
+              // Replace \0 terminator with space.
+              const uint32_t pcLen = strlen(buf);
+              buf[pcLen] = ' ';
+              // Add description after space. Note: Using a frame number of 0,
+              // as using `numFrames` wouldn't help here, and would prevent
+              // combining same function calls that happen at different depths.
+              // TODO: Remove unsightly "#00: " if too annoying. :-)
+              MozFormatCodeAddressDetails(
+                  buf + pcLen + 1, BUF_SIZE - (pcLen + 1), 0, pc, &details);
             }
+          }
+
+          stack = aUniqueStacks.AppendFrame(stack, UniqueStacks::FrameKey(buf));
+
+        } else if (e.Get().IsLabel()) {
+          numFrames++;
+
+          const char* label = e.Get().GetString();
+          e.Next();
+
+          using FrameFlags = ProfilingStackFrame::Flags;
+          uint32_t frameFlags = 0;
+          if (e.Has() && e.Get().IsFrameFlags()) {
+            frameFlags = uint32_t(e.Get().GetUint64());
             e.Next();
-          } else {
-            break;
           }
-        }
-        dynStrBuf[kMaxFrameKeyLength - 1] = '\0';
-        bool hasDynamicString = (i != 0);
 
-        std::string frameLabel;
-        if (label[0] != '\0' && hasDynamicString) {
-          if (frameFlags & uint32_t(FrameFlags::STRING_TEMPLATE_METHOD)) {
-            frameLabel += label;
-            frameLabel += '.';
-            frameLabel += dynStrBuf.get();
-          } else if (frameFlags &
-                     uint32_t(FrameFlags::STRING_TEMPLATE_GETTER)) {
-            frameLabel += "get ";
-            frameLabel += label;
-            frameLabel += '.';
-            frameLabel += dynStrBuf.get();
-          } else if (frameFlags &
-                     uint32_t(FrameFlags::STRING_TEMPLATE_SETTER)) {
-            frameLabel += "set ";
-            frameLabel += label;
-            frameLabel += '.';
+          bool relevantForJS =
+              frameFlags & uint32_t(FrameFlags::RELEVANT_FOR_JS);
+
+          // Copy potential dynamic string fragments into dynStrBuf, so that
+          // dynStrBuf will then contain the entire dynamic string.
+          size_t i = 0;
+          dynStrBuf[0] = '\0';
+          while (e.Has()) {
+            if (e.Get().IsDynamicStringFragment()) {
+              char chars[ProfileBufferEntry::kNumChars];
+              e.Get().CopyCharsInto(chars);
+              for (char c : chars) {
+                if (i < kMaxFrameKeyLength) {
+                  dynStrBuf[i] = c;
+                  i++;
+                }
+              }
+              e.Next();
+            } else {
+              break;
+            }
+          }
+          dynStrBuf[kMaxFrameKeyLength - 1] = '\0';
+          bool hasDynamicString = (i != 0);
+
+          std::string frameLabel;
+          if (label[0] != '\0' && hasDynamicString) {
+            if (frameFlags & uint32_t(FrameFlags::STRING_TEMPLATE_METHOD)) {
+              frameLabel += label;
+              frameLabel += '.';
+              frameLabel += dynStrBuf.get();
+            } else if (frameFlags &
+                       uint32_t(FrameFlags::STRING_TEMPLATE_GETTER)) {
+              frameLabel += "get ";
+              frameLabel += label;
+              frameLabel += '.';
+              frameLabel += dynStrBuf.get();
+            } else if (frameFlags &
+                       uint32_t(FrameFlags::STRING_TEMPLATE_SETTER)) {
+              frameLabel += "set ";
+              frameLabel += label;
+              frameLabel += '.';
+              frameLabel += dynStrBuf.get();
+            } else {
+              frameLabel += label;
+              frameLabel += ' ';
+              frameLabel += dynStrBuf.get();
+            }
+          } else if (hasDynamicString) {
             frameLabel += dynStrBuf.get();
           } else {
             frameLabel += label;
-            frameLabel += ' ';
-            frameLabel += dynStrBuf.get();
           }
-        } else if (hasDynamicString) {
-          frameLabel += dynStrBuf.get();
+
+          Maybe<unsigned> line;
+          if (e.Has() && e.Get().IsLineNumber()) {
+            line = Some(unsigned(e.Get().GetInt()));
+            e.Next();
+          }
+
+          Maybe<unsigned> column;
+          if (e.Has() && e.Get().IsColumnNumber()) {
+            column = Some(unsigned(e.Get().GetInt()));
+            e.Next();
+          }
+
+          Maybe<ProfilingCategoryPair> categoryPair;
+          if (e.Has() && e.Get().IsCategoryPair()) {
+            categoryPair =
+                Some(ProfilingCategoryPair(uint32_t(e.Get().GetInt())));
+            e.Next();
+          }
+
+          stack = aUniqueStacks.AppendFrame(
+              stack,
+              UniqueStacks::FrameKey(std::move(frameLabel), relevantForJS, line,
+                                     column, categoryPair));
+
         } else {
-          frameLabel += label;
+          break;
         }
-
-        Maybe<unsigned> line;
-        if (e.Has() && e.Get().IsLineNumber()) {
-          line = Some(unsigned(e.Get().GetInt()));
-          e.Next();
-        }
-
-        Maybe<unsigned> column;
-        if (e.Has() && e.Get().IsColumnNumber()) {
-          column = Some(unsigned(e.Get().GetInt()));
-          e.Next();
-        }
-
-        Maybe<ProfilingCategoryPair> categoryPair;
-        if (e.Has() && e.Get().IsCategoryPair()) {
-          categoryPair =
-              Some(ProfilingCategoryPair(uint32_t(e.Get().GetInt())));
-          e.Next();
-        }
-
-        stack = aUniqueStacks.AppendFrame(
-            stack, UniqueStacks::FrameKey(std::move(frameLabel), relevantForJS,
-                                          line, column, categoryPair));
-
-      } else {
-        break;
       }
-    }
 
-    if (numFrames == 0) {
-      // It is possible to have empty stacks if native stackwalking is
-      // disabled. Skip samples with empty stacks. (See Bug 1497985).
-      // Thus, don't use ERROR_AND_CONTINUE, but just continue.
-      continue;
-    }
+      if (numFrames == 0) {
+        // It is possible to have empty stacks if native stackwalking is
+        // disabled. Skip samples with empty stacks. (See Bug 1497985).
+        // Thus, don't use ERROR_AND_CONTINUE, but just continue.
+        continue;
+      }
 
-    sample.mStack = aUniqueStacks.GetOrAddStackIndex(stack);
+      sample.mStack = aUniqueStacks.GetOrAddStackIndex(stack);
 
-    // Skip over the markers. We process them in StreamMarkersToJSON().
-    while (e.Has()) {
-      if (e.Get().IsMarker()) {
+      // Skip over the markers. We process them in StreamMarkersToJSON().
+      while (e.Has()) {
+        if (e.Get().IsMarker()) {
+          e.Next();
+        } else {
+          break;
+        }
+      }
+
+      if (e.Has() && e.Get().IsResponsiveness()) {
+        sample.mResponsiveness = Some(e.Get().GetDouble());
         e.Next();
-      } else {
-        break;
       }
-    }
 
-    if (e.Has() && e.Get().IsResponsiveness()) {
-      sample.mResponsiveness = Some(e.Get().GetDouble());
-      e.Next();
+      WriteSample(aWriter, *aUniqueStacks.mUniqueStrings, sample);
     }
-
-    WriteSample(aWriter, *aUniqueStacks.mUniqueStrings, sample);
-  }
+  });
 }
 
 void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
@@ -771,142 +788,154 @@ void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
                                         const TimeStamp& aProcessStartTime,
                                         double aSinceTime,
                                         UniqueStacks& aUniqueStacks) const {
-  EntryGetter e(*this);
+  mEntries.Read([&](BlocksRingBuffer::Reader* aReader) {
+    MOZ_ASSERT(
+        aReader,
+        "BlocksRingBuffer cannot be out-of-session when sampler is running");
 
-  // Stream all markers whose threadId matches aThreadId. We skip other entries,
-  // because we process them in StreamSamplesToJSON().
-  //
-  // NOTE: The ThreadId of a marker is determined by its GetThreadId() method,
-  // rather than ThreadId buffer entries, as markers can be added outside of
-  // samples.
-  while (e.Has()) {
-    if (e.Get().IsMarker()) {
-      const ProfilerMarker* marker = e.Get().GetMarker();
-      if (marker->GetTime() >= aSinceTime &&
-          marker->GetThreadId() == aThreadId) {
-        marker->StreamJSON(aWriter, aProcessStartTime, aUniqueStacks);
+    EntryGetter e(*aReader);
+
+    // Stream all markers whose threadId matches aThreadId. We skip other
+    // entries, because we process them in StreamSamplesToJSON().
+    //
+    // NOTE: The ThreadId of a marker is determined by its GetThreadId() method,
+    // rather than ThreadId buffer entries, as markers can be added outside of
+    // samples.
+    while (e.Has()) {
+      if (e.Get().IsMarker()) {
+        const ProfilerMarker* marker = e.Get().GetMarker();
+        if (marker->GetTime() >= aSinceTime &&
+            marker->GetThreadId() == aThreadId) {
+          marker->StreamJSON(aWriter, aProcessStartTime, aUniqueStacks);
+        }
       }
+      e.Next();
     }
-    e.Next();
-  }
+  });
 }
 
 void ProfileBuffer::StreamProfilerOverheadToJSON(
     SpliceableJSONWriter& aWriter, const TimeStamp& aProcessStartTime,
     double aSinceTime) const {
-  enum Schema : uint32_t {
-    TIME = 0,
-    LOCKING = 1,
-    MARKER_CLEANING = 2,
-    COUNTERS = 3,
-    THREADS = 4
-  };
+  mEntries.Read([&](BlocksRingBuffer::Reader* aReader) {
+    MOZ_ASSERT(
+        aReader,
+        "BlocksRingBuffer cannot be out-of-session when sampler is running");
 
-  EntryGetter e(*this);
+    EntryGetter e(*aReader);
 
-  aWriter.StartObjectProperty("profilerOverhead");
-  aWriter.StartObjectProperty("samples");
-  // Stream all sampling overhead data. We skip other entries, because we
-  // process them in StreamSamplesToJSON()/etc.
-  {
-    JSONSchemaWriter schema(aWriter);
-    schema.WriteField("time");
-    schema.WriteField("locking");
-    schema.WriteField("expiredMarkerCleaning");
-    schema.WriteField("counters");
-    schema.WriteField("threads");
-  }
+    enum Schema : uint32_t {
+      TIME = 0,
+      LOCKING = 1,
+      MARKER_CLEANING = 2,
+      COUNTERS = 3,
+      THREADS = 4
+    };
 
-  aWriter.StartArrayProperty("data");
-  double firstTime = 0.0;
-  double lastTime = 0.0;
-  ProfilerStats intervals, overheads, lockings, cleanings, counters, threads;
-  while (e.Has()) {
-    // valid sequence: ProfilerOverheadTime, ProfilerOverheadDuration * 4
-    if (e.Get().IsProfilerOverheadTime()) {
-      double time = e.Get().GetDouble();
-      if (time >= aSinceTime) {
-        e.Next();
-        if (!e.Has() || !e.Get().IsProfilerOverheadDuration()) {
-          ERROR_AND_CONTINUE(
-              "expected a ProfilerOverheadDuration entry after "
-              "ProfilerOverheadTime");
-        }
-        double locking = e.Get().GetDouble();
-        e.Next();
-        if (!e.Has() || !e.Get().IsProfilerOverheadDuration()) {
-          ERROR_AND_CONTINUE(
-              "expected a ProfilerOverheadDuration entry after "
-              "ProfilerOverheadTime,ProfilerOverheadDuration");
-        }
-        double cleaning = e.Get().GetDouble();
-        e.Next();
-        if (!e.Has() || !e.Get().IsProfilerOverheadDuration()) {
-          ERROR_AND_CONTINUE(
-              "expected a ProfilerOverheadDuration entry after "
-              "ProfilerOverheadTime,ProfilerOverheadDuration*2");
-        }
-        double counter = e.Get().GetDouble();
-        e.Next();
-        if (!e.Has() || !e.Get().IsProfilerOverheadDuration()) {
-          ERROR_AND_CONTINUE(
-              "expected a ProfilerOverheadDuration entry after "
-              "ProfilerOverheadTime,ProfilerOverheadDuration*3");
-        }
-        double thread = e.Get().GetDouble();
-
-        if (firstTime == 0.0) {
-          firstTime = time;
-        } else {
-          // Note that we'll have 1 fewer interval than other numbers (because
-          // we need both ends of an interval to know its duration). The final
-          // difference should be insignificant over the expected many thousands
-          // of iterations.
-          intervals.Count(time - lastTime);
-        }
-        lastTime = time;
-        overheads.Count(locking + cleaning + counter + thread);
-        lockings.Count(locking);
-        cleanings.Count(cleaning);
-        counters.Count(counter);
-        threads.Count(thread);
-
-        AutoArraySchemaWriter writer(aWriter);
-        writer.DoubleElement(TIME, time);
-        writer.DoubleElement(LOCKING, locking);
-        writer.DoubleElement(MARKER_CLEANING, cleaning);
-        writer.DoubleElement(COUNTERS, counter);
-        writer.DoubleElement(THREADS, thread);
-      }
+    aWriter.StartObjectProperty("profilerOverhead");
+    aWriter.StartObjectProperty("samples");
+    // Stream all sampling overhead data. We skip other entries, because we
+    // process them in StreamSamplesToJSON()/etc.
+    {
+      JSONSchemaWriter schema(aWriter);
+      schema.WriteField("time");
+      schema.WriteField("locking");
+      schema.WriteField("expiredMarkerCleaning");
+      schema.WriteField("counters");
+      schema.WriteField("threads");
     }
-    e.Next();
-  }
-  aWriter.EndArray();  // data
-  aWriter.EndObject();  // samples
 
-  // Only output statistics if there is at least one full interval (and
-  // therefore at least two samplings.)
-  if (intervals.n > 0) {
-    aWriter.StartObjectProperty("statistics");
-    aWriter.DoubleProperty("profiledDuration", lastTime - firstTime);
-    aWriter.IntProperty("samplingCount", overheads.n);
-    aWriter.DoubleProperty("overheadDurations", overheads.sum);
-    aWriter.DoubleProperty("overheadPercentage",
-                           overheads.sum / (lastTime - firstTime));
+    aWriter.StartArrayProperty("data");
+    double firstTime = 0.0;
+    double lastTime = 0.0;
+    ProfilerStats intervals, overheads, lockings, cleanings, counters, threads;
+    while (e.Has()) {
+      // valid sequence: ProfilerOverheadTime, ProfilerOverheadDuration * 4
+      if (e.Get().IsProfilerOverheadTime()) {
+        double time = e.Get().GetDouble();
+        if (time >= aSinceTime) {
+          e.Next();
+          if (!e.Has() || !e.Get().IsProfilerOverheadDuration()) {
+            ERROR_AND_CONTINUE(
+                "expected a ProfilerOverheadDuration entry after "
+                "ProfilerOverheadTime");
+          }
+          double locking = e.Get().GetDouble();
+          e.Next();
+          if (!e.Has() || !e.Get().IsProfilerOverheadDuration()) {
+            ERROR_AND_CONTINUE(
+                "expected a ProfilerOverheadDuration entry after "
+                "ProfilerOverheadTime,ProfilerOverheadDuration");
+          }
+          double cleaning = e.Get().GetDouble();
+          e.Next();
+          if (!e.Has() || !e.Get().IsProfilerOverheadDuration()) {
+            ERROR_AND_CONTINUE(
+                "expected a ProfilerOverheadDuration entry after "
+                "ProfilerOverheadTime,ProfilerOverheadDuration*2");
+          }
+          double counter = e.Get().GetDouble();
+          e.Next();
+          if (!e.Has() || !e.Get().IsProfilerOverheadDuration()) {
+            ERROR_AND_CONTINUE(
+                "expected a ProfilerOverheadDuration entry after "
+                "ProfilerOverheadTime,ProfilerOverheadDuration*3");
+          }
+          double thread = e.Get().GetDouble();
+
+          if (firstTime == 0.0) {
+            firstTime = time;
+          } else {
+            // Note that we'll have 1 fewer interval than other numbers (because
+            // we need both ends of an interval to know its duration). The final
+            // difference should be insignificant over the expected many
+            // thousands of iterations.
+            intervals.Count(time - lastTime);
+          }
+          lastTime = time;
+          overheads.Count(locking + cleaning + counter + thread);
+          lockings.Count(locking);
+          cleanings.Count(cleaning);
+          counters.Count(counter);
+          threads.Count(thread);
+
+          AutoArraySchemaWriter writer(aWriter);
+          writer.DoubleElement(TIME, time);
+          writer.DoubleElement(LOCKING, locking);
+          writer.DoubleElement(MARKER_CLEANING, cleaning);
+          writer.DoubleElement(COUNTERS, counter);
+          writer.DoubleElement(THREADS, thread);
+        }
+      }
+      e.Next();
+    }
+    aWriter.EndArray();   // data
+    aWriter.EndObject();  // samples
+
+    // Only output statistics if there is at least one full interval (and
+    // therefore at least two samplings.)
+    if (intervals.n > 0) {
+      aWriter.StartObjectProperty("statistics");
+      aWriter.DoubleProperty("profiledDuration", lastTime - firstTime);
+      aWriter.IntProperty("samplingCount", overheads.n);
+      aWriter.DoubleProperty("overheadDurations", overheads.sum);
+      aWriter.DoubleProperty("overheadPercentage",
+                             overheads.sum / (lastTime - firstTime));
 #  define PROFILER_STATS(name, var)                           \
     aWriter.DoubleProperty("mean" name, (var).sum / (var).n); \
     aWriter.DoubleProperty("min" name, (var).min);            \
     aWriter.DoubleProperty("max" name, (var).max);
-    PROFILER_STATS("Interval", intervals);
-    PROFILER_STATS("Overhead", overheads);
-    PROFILER_STATS("Lockings", lockings);
-    PROFILER_STATS("Cleaning", cleanings);
-    PROFILER_STATS("Counter", counters);
-    PROFILER_STATS("Thread", threads);
+      PROFILER_STATS("Interval", intervals);
+      PROFILER_STATS("Overhead", overheads);
+      PROFILER_STATS("Lockings", lockings);
+      PROFILER_STATS("Cleaning", cleanings);
+      PROFILER_STATS("Counter", counters);
+      PROFILER_STATS("Thread", threads);
 #  undef PROFILER_STATS
-    aWriter.EndObject();  // statistics
-  }
-  aWriter.EndObject();  // profilerOverhead
+      aWriter.EndObject();  // statistics
+    }
+    aWriter.EndObject();  // profilerOverhead
+  });
 }
 
 struct CounterKeyedSample {
@@ -939,146 +968,153 @@ void ProfileBuffer::StreamCountersToJSON(SpliceableJSONWriter& aWriter,
   // error indicates a bug in the ProfileBuffer writing or the parser itself,
   // or possibly flaky hardware.
 
-  EntryGetter e(*this);
-  enum Schema : uint32_t { TIME = 0, NUMBER = 1, COUNT = 2 };
+  mEntries.Read([&](BlocksRingBuffer::Reader* aReader) {
+    MOZ_ASSERT(
+        aReader,
+        "BlocksRingBuffer cannot be out-of-session when sampler is running");
 
-  // Stream all counters. We skip other entries, because we process them in
-  // StreamSamplesToJSON()/etc.
-  //
-  // Valid sequence in the buffer:
-  // CounterID
-  // Time
-  // ( CounterKey Count Number? )*
-  //
-  // And the JSON (example):
-  // "counters": {
-  //  "name": "malloc",
-  //  "category": "Memory",
-  //  "description": "Amount of allocated memory",
-  //  "sample_groups": {
-  //   "id": 0,
-  //   "samples": {
-  //    "schema": {"time": 0, "number": 1, "count": 2},
-  //    "data": [
-  //     [
-  //      16117.033968000002,
-  //      2446216,
-  //      6801320
-  //     ],
-  //     [
-  //      16118.037638,
-  //      2446216,
-  //      6801320
-  //     ],
-  //    ],
-  //   }
-  //  }
-  // },
+    EntryGetter e(*aReader);
 
-  // Build the map of counters and populate it
-  HashMap<void*, CounterMap> counters;
+    enum Schema : uint32_t { TIME = 0, NUMBER = 1, COUNT = 2 };
 
-  while (e.Has()) {
-    // skip all non-Counters, including if we start in the middle of a counter
-    if (e.Get().IsCounterId()) {
-      void* id = e.Get().GetPtr();
-      CounterMap& counter = LookupOrAdd(counters, id);
-      e.Next();
-      if (!e.Has() || !e.Get().IsTime()) {
-        ERROR_AND_CONTINUE("expected a Time entry");
-      }
-      double time = e.Get().GetDouble();
-      if (time >= aSinceTime) {
+    // Stream all counters. We skip other entries, because we process them in
+    // StreamSamplesToJSON()/etc.
+    //
+    // Valid sequence in the buffer:
+    // CounterID
+    // Time
+    // ( CounterKey Count Number? )*
+    //
+    // And the JSON (example):
+    // "counters": {
+    //  "name": "malloc",
+    //  "category": "Memory",
+    //  "description": "Amount of allocated memory",
+    //  "sample_groups": {
+    //   "id": 0,
+    //   "samples": {
+    //    "schema": {"time": 0, "number": 1, "count": 2},
+    //    "data": [
+    //     [
+    //      16117.033968000002,
+    //      2446216,
+    //      6801320
+    //     ],
+    //     [
+    //      16118.037638,
+    //      2446216,
+    //      6801320
+    //     ],
+    //    ],
+    //   }
+    //  }
+    // },
+
+    // Build the map of counters and populate it
+    HashMap<void*, CounterMap> counters;
+
+    while (e.Has()) {
+      // skip all non-Counters, including if we start in the middle of a counter
+      if (e.Get().IsCounterId()) {
+        void* id = e.Get().GetPtr();
+        CounterMap& counter = LookupOrAdd(counters, id);
         e.Next();
-        while (e.Has() && e.Get().IsCounterKey()) {
-          uint64_t key = e.Get().GetUint64();
-          CounterKeyedSamples& data = LookupOrAdd(counter, key);
-          e.Next();
-          if (!e.Has() || !e.Get().IsCount()) {
-            ERROR_AND_CONTINUE("expected a Count entry");
-          }
-          int64_t count = e.Get().GetUint64();
-          e.Next();
-          uint64_t number;
-          if (!e.Has() || !e.Get().IsNumber()) {
-            number = 0;
-          } else {
-            number = e.Get().GetInt64();
-          }
-          CounterKeyedSample sample = {time, number, count};
-          MOZ_RELEASE_ASSERT(data.append(sample));
+        if (!e.Has() || !e.Get().IsTime()) {
+          ERROR_AND_CONTINUE("expected a Time entry");
         }
-      } else {
-        // skip counter sample - only need to skip the initial counter
-        // id, then let the loop at the top skip the rest
-      }
-    }
-    e.Next();
-  }
-  // we have a map of a map of counter entries; dump them to JSON
-  if (counters.count() == 0) {
-    return;
-  }
-
-  aWriter.StartArrayProperty("counters");
-  for (auto iter = counters.iter(); !iter.done(); iter.next()) {
-    CounterMap& counter = iter.get().value();
-    const BaseProfilerCount* base_counter =
-        static_cast<const BaseProfilerCount*>(iter.get().key());
-
-    aWriter.Start();
-    aWriter.StringProperty("name", base_counter->mLabel);
-    aWriter.StringProperty("category", base_counter->mCategory);
-    aWriter.StringProperty("description", base_counter->mDescription);
-
-    aWriter.StartObjectProperty("sample_groups");
-    for (auto counter_iter = counter.iter(); !counter_iter.done();
-         counter_iter.next()) {
-      CounterKeyedSamples& samples = counter_iter.get().value();
-      uint64_t key = counter_iter.get().key();
-
-      size_t size = samples.length();
-      if (size == 0) {
-        continue;
-      }
-      aWriter.IntProperty("id", static_cast<int64_t>(key));
-      aWriter.StartObjectProperty("samples");
-      {
-        // XXX Can we assume a missing count means 0?
-        JSONSchemaWriter schema(aWriter);
-        schema.WriteField("time");
-        schema.WriteField("number");
-        schema.WriteField("count");
-      }
-
-      aWriter.StartArrayProperty("data");
-      uint64_t previousNumber = 0;
-      int64_t previousCount = 0;
-      for (size_t i = 0; i < size; i++) {
-        // Encode as deltas, and only encode if different than the last sample
-        if (i == 0 || samples[i].mNumber != previousNumber ||
-            samples[i].mCount != previousCount) {
-          MOZ_ASSERT(i == 0 || samples[i].mTime >= samples[i - 1].mTime);
-          MOZ_ASSERT(samples[i].mNumber >= previousNumber);
-          MOZ_ASSERT(samples[i].mNumber - previousNumber <=
-                     uint64_t(std::numeric_limits<int64_t>::max()));
-
-          AutoArraySchemaWriter writer(aWriter);
-          writer.DoubleElement(TIME, samples[i].mTime);
-          writer.IntElement(NUMBER, static_cast<int64_t>(samples[i].mNumber -
-                                                         previousNumber));
-          writer.IntElement(COUNT, samples[i].mCount - previousCount);
-          previousNumber = samples[i].mNumber;
-          previousCount = samples[i].mCount;
+        double time = e.Get().GetDouble();
+        if (time >= aSinceTime) {
+          e.Next();
+          while (e.Has() && e.Get().IsCounterKey()) {
+            uint64_t key = e.Get().GetUint64();
+            CounterKeyedSamples& data = LookupOrAdd(counter, key);
+            e.Next();
+            if (!e.Has() || !e.Get().IsCount()) {
+              ERROR_AND_CONTINUE("expected a Count entry");
+            }
+            int64_t count = e.Get().GetUint64();
+            e.Next();
+            uint64_t number;
+            if (!e.Has() || !e.Get().IsNumber()) {
+              number = 0;
+            } else {
+              number = e.Get().GetInt64();
+            }
+            CounterKeyedSample sample = {time, number, count};
+            MOZ_RELEASE_ASSERT(data.append(sample));
+          }
+        } else {
+          // skip counter sample - only need to skip the initial counter
+          // id, then let the loop at the top skip the rest
         }
       }
-      aWriter.EndArray();   // data
-      aWriter.EndObject();  // samples
+      e.Next();
     }
-    aWriter.EndObject();  // sample groups
-    aWriter.End();        // for each counter
-  }
-  aWriter.EndArray();  // counters
+    // we have a map of a map of counter entries; dump them to JSON
+    if (counters.count() == 0) {
+      return;
+    }
+
+    aWriter.StartArrayProperty("counters");
+    for (auto iter = counters.iter(); !iter.done(); iter.next()) {
+      CounterMap& counter = iter.get().value();
+      const BaseProfilerCount* base_counter =
+          static_cast<const BaseProfilerCount*>(iter.get().key());
+
+      aWriter.Start();
+      aWriter.StringProperty("name", base_counter->mLabel);
+      aWriter.StringProperty("category", base_counter->mCategory);
+      aWriter.StringProperty("description", base_counter->mDescription);
+
+      aWriter.StartObjectProperty("sample_groups");
+      for (auto counter_iter = counter.iter(); !counter_iter.done();
+           counter_iter.next()) {
+        CounterKeyedSamples& samples = counter_iter.get().value();
+        uint64_t key = counter_iter.get().key();
+
+        size_t size = samples.length();
+        if (size == 0) {
+          continue;
+        }
+        aWriter.IntProperty("id", static_cast<int64_t>(key));
+        aWriter.StartObjectProperty("samples");
+        {
+          // XXX Can we assume a missing count means 0?
+          JSONSchemaWriter schema(aWriter);
+          schema.WriteField("time");
+          schema.WriteField("number");
+          schema.WriteField("count");
+        }
+
+        aWriter.StartArrayProperty("data");
+        uint64_t previousNumber = 0;
+        int64_t previousCount = 0;
+        for (size_t i = 0; i < size; i++) {
+          // Encode as deltas, and only encode if different than the last sample
+          if (i == 0 || samples[i].mNumber != previousNumber ||
+              samples[i].mCount != previousCount) {
+            MOZ_ASSERT(i == 0 || samples[i].mTime >= samples[i - 1].mTime);
+            MOZ_ASSERT(samples[i].mNumber >= previousNumber);
+            MOZ_ASSERT(samples[i].mNumber - previousNumber <=
+                       uint64_t(std::numeric_limits<int64_t>::max()));
+
+            AutoArraySchemaWriter writer(aWriter);
+            writer.DoubleElement(TIME, samples[i].mTime);
+            writer.IntElement(NUMBER, static_cast<int64_t>(samples[i].mNumber -
+                                                           previousNumber));
+            writer.IntElement(COUNT, samples[i].mCount - previousCount);
+            previousNumber = samples[i].mNumber;
+            previousCount = samples[i].mCount;
+          }
+        }
+        aWriter.EndArray();   // data
+        aWriter.EndObject();  // samples
+      }
+      aWriter.EndObject();  // sample groups
+      aWriter.End();        // for each counter
+    }
+    aWriter.EndArray();  // counters
+  });
 }
 
 #  undef ERROR_AND_CONTINUE
@@ -1103,178 +1139,235 @@ static void AddPausedRange(SpliceableJSONWriter& aWriter, const char* aReason,
 
 void ProfileBuffer::StreamPausedRangesToJSON(SpliceableJSONWriter& aWriter,
                                              double aSinceTime) const {
-  EntryGetter e(*this);
+  mEntries.Read([&](BlocksRingBuffer::Reader* aReader) {
+    MOZ_ASSERT(
+        aReader,
+        "BlocksRingBuffer cannot be out-of-session when sampler is running");
 
-  Maybe<double> currentPauseStartTime;
-  Maybe<double> currentCollectionStartTime;
+    EntryGetter e(*aReader);
 
-  while (e.Has()) {
-    if (e.Get().IsPause()) {
-      currentPauseStartTime = Some(e.Get().GetDouble());
-    } else if (e.Get().IsResume()) {
-      AddPausedRange(aWriter, "profiler-paused", currentPauseStartTime,
-                     Some(e.Get().GetDouble()));
-      currentPauseStartTime = Nothing();
-    } else if (e.Get().IsCollectionStart()) {
-      currentCollectionStartTime = Some(e.Get().GetDouble());
-    } else if (e.Get().IsCollectionEnd()) {
-      AddPausedRange(aWriter, "collecting", currentCollectionStartTime,
-                     Some(e.Get().GetDouble()));
-      currentCollectionStartTime = Nothing();
+    Maybe<double> currentPauseStartTime;
+    Maybe<double> currentCollectionStartTime;
+
+    while (e.Has()) {
+      if (e.Get().IsPause()) {
+        currentPauseStartTime = Some(e.Get().GetDouble());
+      } else if (e.Get().IsResume()) {
+        AddPausedRange(aWriter, "profiler-paused", currentPauseStartTime,
+                       Some(e.Get().GetDouble()));
+        currentPauseStartTime = Nothing();
+      } else if (e.Get().IsCollectionStart()) {
+        currentCollectionStartTime = Some(e.Get().GetDouble());
+      } else if (e.Get().IsCollectionEnd()) {
+        AddPausedRange(aWriter, "collecting", currentCollectionStartTime,
+                       Some(e.Get().GetDouble()));
+        currentCollectionStartTime = Nothing();
+      }
+      e.Next();
     }
-    e.Next();
-  }
 
-  if (currentPauseStartTime) {
-    AddPausedRange(aWriter, "profiler-paused", currentPauseStartTime,
-                   Nothing());
-  }
-  if (currentCollectionStartTime) {
-    AddPausedRange(aWriter, "collecting", currentCollectionStartTime,
-                   Nothing());
-  }
+    if (currentPauseStartTime) {
+      AddPausedRange(aWriter, "profiler-paused", currentPauseStartTime,
+                     Nothing());
+    }
+    if (currentCollectionStartTime) {
+      AddPausedRange(aWriter, "collecting", currentCollectionStartTime,
+                     Nothing());
+    }
+  });
 }
 
 bool ProfileBuffer::DuplicateLastSample(int aThreadId,
                                         const TimeStamp& aProcessStartTime,
                                         Maybe<uint64_t>& aLastSample) {
-  if (aLastSample && *aLastSample < mRangeStart) {
-    // The last sample is no longer within the buffer range, so we cannot use
-    // it. Reset the stored buffer position to Nothing().
-    aLastSample.reset();
-  }
-
   if (!aLastSample) {
     return false;
   }
 
-  uint64_t lastSampleStartPos = *aLastSample;
+  BlocksRingBuffer tempBuffer(BlocksRingBuffer::ThreadSafety::WithoutMutex,
+                              mDuplicationBuffer.get(), DuplicationBufferBytes);
 
-  MOZ_RELEASE_ASSERT(GetEntry(lastSampleStartPos).IsThreadId() &&
-                     GetEntry(lastSampleStartPos).GetInt() == aThreadId);
+  const bool ok = mEntries.Read([&](BlocksRingBuffer::Reader* aReader) {
+    MOZ_ASSERT(
+        aReader,
+        "BlocksRingBuffer cannot be out-of-session when sampler is running");
+
+    EntryGetter e(*aReader, *aLastSample);
+
+    if (e.CurPos() != *aLastSample) {
+      // The last sample is no longer within the buffer range, so we cannot
+      // use it. Reset the stored buffer position to Nothing().
+      aLastSample.reset();
+      return false;
+    }
+
+    MOZ_RELEASE_ASSERT(e.Has() && e.Get().IsThreadId() &&
+                       e.Get().GetInt() == aThreadId);
+
+    e.Next();
+
+    // Go through the whole entry and duplicate it, until we find the next
+    // one.
+    while (e.Has()) {
+      switch (e.Get().GetKind()) {
+        case ProfileBufferEntry::Kind::Pause:
+        case ProfileBufferEntry::Kind::Resume:
+        case ProfileBufferEntry::Kind::CollectionStart:
+        case ProfileBufferEntry::Kind::CollectionEnd:
+        case ProfileBufferEntry::Kind::ThreadId:
+          // We're done.
+          return true;
+        case ProfileBufferEntry::Kind::Time:
+          // Copy with new time
+          AddEntry(tempBuffer,
+                   ProfileBufferEntry::Time(
+                       (TimeStamp::NowUnfuzzed() - aProcessStartTime)
+                           .ToMilliseconds()));
+          break;
+        case ProfileBufferEntry::Kind::Marker:
+        case ProfileBufferEntry::Kind::CounterKey:
+        case ProfileBufferEntry::Kind::Number:
+        case ProfileBufferEntry::Kind::Count:
+        case ProfileBufferEntry::Kind::Responsiveness:
+          // Don't copy anything not part of a thread's stack sample
+          break;
+        case ProfileBufferEntry::Kind::CounterId:
+          // CounterId is normally followed by Time - if so, we'd like
+          // to skip it.  If we duplicate Time, it won't hurt anything, just
+          // waste buffer space (and this can happen if the CounterId has
+          // fallen off the end of the buffer, but Time (and Number/Count)
+          // are still in the buffer).
+          e.Next();
+          if (e.Has() && e.Get().GetKind() != ProfileBufferEntry::Kind::Time) {
+            // this would only happen if there was an invalid sequence
+            // in the buffer.  Don't skip it.
+            continue;
+          }
+          // we've skipped Time
+          break;
+        case ProfileBufferEntry::Kind::ProfilerOverheadTime:
+          // ProfilerOverheadTime is normally followed by
+          // ProfilerOverheadDuration*4 - if so, we'd like to skip it. Don't
+          // duplicate, as we are in the middle of a sampling and will soon
+          // capture its own overhead.
+          e.Next();
+          // A missing Time would only happen if there was an invalid
+          // sequence in the buffer. Don't skip unexpected entry.
+          if (e.Has() &&
+              e.Get().GetKind() !=
+                  ProfileBufferEntry::Kind::ProfilerOverheadDuration) {
+            continue;
+          }
+          e.Next();
+          if (e.Has() &&
+              e.Get().GetKind() !=
+                  ProfileBufferEntry::Kind::ProfilerOverheadDuration) {
+            continue;
+          }
+          e.Next();
+          if (e.Has() &&
+              e.Get().GetKind() !=
+                  ProfileBufferEntry::Kind::ProfilerOverheadDuration) {
+            continue;
+          }
+          e.Next();
+          if (e.Has() &&
+              e.Get().GetKind() !=
+                  ProfileBufferEntry::Kind::ProfilerOverheadDuration) {
+            continue;
+          }
+          // we've skipped ProfilerOverheadTime and
+          // ProfilerOverheadDuration*4.
+          break;
+        default: {
+          // Copy anything else we don't know about.
+          AddEntry(tempBuffer, e.Get());
+          break;
+        }
+      }
+      e.Next();
+    }
+    return true;
+  });
+
+  if (!ok) {
+    return false;
+  }
+
+  // If the buffer was big enough, there won't be any cleared blocks.
+  if (tempBuffer.GetState().mClearedBlockCount != 0) {
+    // No need to try to read stack again as it won't fit. Reset the stored
+    // buffer position to Nothing().
+    aLastSample.reset();
+    return false;
+  }
 
   aLastSample = Some(AddThreadIdEntry(aThreadId));
 
-  EntryGetter e(*this, lastSampleStartPos + 1);
+  tempBuffer.Read([&](BlocksRingBuffer::Reader* aReader) {
+    MOZ_ASSERT(aReader, "tempBuffer cannot be out-of-session");
 
-  // Go through the whole entry and duplicate it, until we find the next one.
-  while (e.Has()) {
-    switch (e.Get().GetKind()) {
-      case ProfileBufferEntry::Kind::Pause:
-      case ProfileBufferEntry::Kind::Resume:
-      case ProfileBufferEntry::Kind::CollectionStart:
-      case ProfileBufferEntry::Kind::CollectionEnd:
-      case ProfileBufferEntry::Kind::ThreadId:
-        // We're done.
-        return true;
-      case ProfileBufferEntry::Kind::Time:
-        // Copy with new time
-        AddEntry(ProfileBufferEntry::Time(
-            (TimeStamp::NowUnfuzzed() - aProcessStartTime).ToMilliseconds()));
-        break;
-      case ProfileBufferEntry::Kind::Marker:
-      case ProfileBufferEntry::Kind::CounterKey:
-      case ProfileBufferEntry::Kind::Number:
-      case ProfileBufferEntry::Kind::Count:
-      case ProfileBufferEntry::Kind::Responsiveness:
-        // Don't copy anything not part of a thread's stack sample
-        break;
-      case ProfileBufferEntry::Kind::CounterId:
-        // CounterId is normally followed by Time - if so, we'd like
-        // to skip it.  If we duplicate Time, it won't hurt anything, just
-        // waste buffer space (and this can happen if the CounterId has
-        // fallen off the end of the buffer, but Time (and Number/Count)
-        // are still in the buffer).
-        e.Next();
-        if (e.Has() && e.Get().GetKind() != ProfileBufferEntry::Kind::Time) {
-          // this would only happen if there was an invalid sequence
-          // in the buffer.  Don't skip it.
-          continue;
-        }
-        // we've skipped Time
-        break;
-      case ProfileBufferEntry::Kind::ProfilerOverheadTime:
-        // ProfilerOverheadTime is normally followed by
-        // ProfilerOverheadDuration*4 - if so, we'd like to skip it. Don't
-        // duplicate, as we are in the middle of a sampling and will soon
-        // capture its own overhead.
-        e.Next();
-        // A missing Time would only happen if there was an invalid sequence
-        // in the buffer. Don't skip unexpected entry.
-        if (e.Has() && e.Get().GetKind() !=
-                           ProfileBufferEntry::Kind::ProfilerOverheadDuration) {
-          continue;
-        }
-        e.Next();
-        if (e.Has() && e.Get().GetKind() !=
-                           ProfileBufferEntry::Kind::ProfilerOverheadDuration) {
-          continue;
-        }
-        e.Next();
-        if (e.Has() && e.Get().GetKind() !=
-                           ProfileBufferEntry::Kind::ProfilerOverheadDuration) {
-          continue;
-        }
-        e.Next();
-        if (e.Has() && e.Get().GetKind() !=
-                           ProfileBufferEntry::Kind::ProfilerOverheadDuration) {
-          continue;
-        }
-        // we've skipped ProfilerOverheadTime and ProfilerOverheadDuration*4.
-        break;
-      default: {
-        // Copy anything else we don't know about.
-        ProfileBufferEntry entry = e.Get();
-        AddEntry(entry);
-        break;
-      }
+    EntryGetter e(*aReader);
+
+    while (e.Has()) {
+      AddEntry(e.Get());
+      e.Next();
     }
-    e.Next();
-  }
+  });
+
   return true;
 }
 
 void ProfileBuffer::DiscardSamplesBeforeTime(double aTime) {
-  EntryGetter e(*this);
-  for (;;) {
-    // This block skips entries until we find the start of the next sample.
-    // This is useful in three situations.
-    //
-    // - The circular buffer overwrites old entries, so when we start parsing
-    //   we might be in the middle of a sample, and we must skip forward to the
-    //   start of the next sample.
-    //
-    // - We skip samples that don't have an appropriate ThreadId or Time.
-    //
-    // - We skip range Pause, Resume, CollectionStart, Marker, and CollectionEnd
-    //   entries between samples.
-    while (e.Has()) {
-      if (e.Get().IsThreadId()) {
-        break;
-      } else {
-        e.Next();
-      }
-    }
+  const BlockIndex firstBlockToKeep =
+      mEntries.Read([&](BlocksRingBuffer::Reader* aReader) {
+        MOZ_ASSERT(aReader,
+                   "BlocksRingBuffer cannot be out-of-session when sampler is "
+                   "running");
 
-    if (!e.Has()) {
-      break;
-    }
+        EntryGetter e(*aReader);
 
-    MOZ_RELEASE_ASSERT(e.Get().IsThreadId());
-    uint64_t sampleStartPos = e.CurPos();
-    e.Next();
+        const BlockIndex bufferStartPos = e.CurBlockIndex();
+        for (;;) {
+          // This block skips entries until we find the start of the next
+          // sample. This is useful in three situations.
+          //
+          // - The circular buffer overwrites old entries, so when we start
+          //   parsing we might be in the middle of a sample, and we must skip
+          //   forward to the start of the next sample.
+          //
+          // - We skip samples that don't have an appropriate ThreadId or Time.
+          //
+          // - We skip range Pause, Resume, CollectionStart, Marker, and
+          //   CollectionEnd entries between samples.
+          while (e.Has()) {
+            if (e.Get().IsThreadId()) {
+              break;
+            }
+            e.Next();
+          }
 
-    if (e.Has() && e.Get().IsTime()) {
-      double sampleTime = e.Get().GetDouble();
+          if (!e.Has()) {
+            return bufferStartPos;
+          }
 
-      if (sampleTime >= aTime) {
-        // This is the first sample within the window of time that we want to
-        // keep. Throw away all samples before sampleStartPos and return.
-        mRangeStart = sampleStartPos;
-        return;
-      }
-    }
-  }
+          MOZ_RELEASE_ASSERT(e.Get().IsThreadId());
+          const BlockIndex sampleStartPos = e.CurBlockIndex();
+          e.Next();
+
+          if (e.Has() && e.Get().IsTime()) {
+            double sampleTime = e.Get().GetDouble();
+
+            if (sampleTime >= aTime) {
+              // This is the first sample within the window of time that we want
+              // to keep. Throw away all samples before sampleStartPos and
+              // return.
+              return sampleStartPos;
+            }
+          }
+        }
+      });
+  mEntries.ClearBefore(firstBlockToKeep);
 }
 
 // END ProfileBuffer
