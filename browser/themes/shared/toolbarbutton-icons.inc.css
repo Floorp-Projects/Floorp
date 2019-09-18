@@ -20,6 +20,7 @@ toolbar[brighttext] {
 }
 
 .toolbarbutton-animatable-box {
+  display: block;
   position: absolute;
   overflow: hidden;
   z-index: 2;
@@ -59,7 +60,7 @@ toolbar[brighttext] {
   display: none;
 }
 #nav-bar-customization-target > #stop-reload-button > :-moz-any(#reload-button, #stop-button) > .toolbarbutton-animatable-box {
-  display: -moz-box;
+  display: block;
 }
 
 #stop-reload-button[animate] > #reload-button > .toolbarbutton-icon,

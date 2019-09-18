@@ -70,6 +70,10 @@
   border-block: 1px solid var(--chrome-content-separator-color);
 }
 
+.urlbarView:not(.megabar):not([hidden]) {
+  display: block;
+}
+
 #urlbar-contextual-tip {
   align-items: center;
   display: flex;
@@ -421,7 +425,6 @@
   color: var(--autocomplete-popup-color);
   border-color: var(--arrowpanel-border-color);
 }
-
 #PopupSearchAutoComplete .autocomplete-richlistitem[selected] {
   background: var(--autocomplete-popup-highlight-background);
   color: var(--autocomplete-popup-highlight-color);
