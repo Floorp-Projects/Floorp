@@ -406,7 +406,7 @@ class LogModuleManager {
     }
 
 #ifdef MOZ_GECKO_PROFILER
-    if (mAddProfilerMarker && profiler_is_active()) {
+    if (mAddProfilerMarker && profiler_can_accept_markers()) {
       PROFILER_ADD_MARKER_WITH_PAYLOAD("LogMessages", OTHER, LogMarkerPayload,
                                        (aName, buffToWrite, TimeStamp::Now()));
     }
