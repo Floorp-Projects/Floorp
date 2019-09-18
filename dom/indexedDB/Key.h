@@ -57,37 +57,43 @@ class Key {
   }
 
   bool operator==(const Key& aOther) const {
-    Assert(!mBuffer.IsVoid() && !aOther.mBuffer.IsVoid());
+    MOZ_ASSERT(!mBuffer.IsVoid());
+    MOZ_ASSERT(!aOther.mBuffer.IsVoid());
 
     return mBuffer.Equals(aOther.mBuffer);
   }
 
   bool operator!=(const Key& aOther) const {
-    Assert(!mBuffer.IsVoid() && !aOther.mBuffer.IsVoid());
+    MOZ_ASSERT(!mBuffer.IsVoid());
+    MOZ_ASSERT(!aOther.mBuffer.IsVoid());
 
     return !mBuffer.Equals(aOther.mBuffer);
   }
 
   bool operator<(const Key& aOther) const {
-    Assert(!mBuffer.IsVoid() && !aOther.mBuffer.IsVoid());
+    MOZ_ASSERT(!mBuffer.IsVoid());
+    MOZ_ASSERT(!aOther.mBuffer.IsVoid());
 
     return Compare(mBuffer, aOther.mBuffer) < 0;
   }
 
   bool operator>(const Key& aOther) const {
-    Assert(!mBuffer.IsVoid() && !aOther.mBuffer.IsVoid());
+    MOZ_ASSERT(!mBuffer.IsVoid());
+    MOZ_ASSERT(!aOther.mBuffer.IsVoid());
 
     return Compare(mBuffer, aOther.mBuffer) > 0;
   }
 
   bool operator<=(const Key& aOther) const {
-    Assert(!mBuffer.IsVoid() && !aOther.mBuffer.IsVoid());
+    MOZ_ASSERT(!mBuffer.IsVoid());
+    MOZ_ASSERT(!aOther.mBuffer.IsVoid());
 
     return Compare(mBuffer, aOther.mBuffer) <= 0;
   }
 
   bool operator>=(const Key& aOther) const {
-    Assert(!mBuffer.IsVoid() && !aOther.mBuffer.IsVoid());
+    MOZ_ASSERT(!mBuffer.IsVoid());
+    MOZ_ASSERT(!aOther.mBuffer.IsVoid());
 
     return Compare(mBuffer, aOther.mBuffer) >= 0;
   }
@@ -107,26 +113,26 @@ class Key {
   bool IsArray() const { return !IsUnset() && *BufferStart() >= eArray; }
 
   double ToFloat() const {
-    Assert(IsFloat());
+    MOZ_ASSERT(IsFloat());
     const EncodedDataType* pos = BufferStart();
     double res = DecodeNumber(pos, BufferEnd());
-    Assert(pos >= BufferEnd());
+    MOZ_ASSERT(pos >= BufferEnd());
     return res;
   }
 
   double ToDateMsec() const {
-    Assert(IsDate());
+    MOZ_ASSERT(IsDate());
     const EncodedDataType* pos = BufferStart();
     double res = DecodeNumber(pos, BufferEnd());
-    Assert(pos >= BufferEnd());
+    MOZ_ASSERT(pos >= BufferEnd());
     return res;
   }
 
   void ToString(nsString& aString) const {
-    Assert(IsString());
+    MOZ_ASSERT(IsString());
     const EncodedDataType* pos = BufferStart();
     DecodeString(pos, BufferEnd(), aString);
-    Assert(pos >= BufferEnd());
+    MOZ_ASSERT(pos >= BufferEnd());
   }
 
   IDBResult<void, IDBSpecialValue::Invalid> SetFromString(
@@ -357,14 +363,6 @@ class Key {
 
   template <typename T>
   nsresult SetFromSource(T* aSource, uint32_t aIndex);
-
-  void Assert(bool aCondition) const
-#ifdef DEBUG
-      ;
-#else
-  {
-  }
-#endif
 };
 
 }  // namespace indexedDB
