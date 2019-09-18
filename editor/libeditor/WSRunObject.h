@@ -139,8 +139,12 @@ class MOZ_STACK_CLASS WSRunScanner {
    * host.  aScanEndPoint (aScanEndNode and aScanEndOffset) must be later
    * point from aScanStartPoint (aScanStartNode and aScanStartOffset).
    * The end point is currently used only with InsertText().  Therefore,
-   * currently, this assumes that the range does not cross block boundary.  If
-   * you use aScanEndPoint newly, please test enough.
+   * currently, this assumes that the range does not cross block boundary.
+   *
+   * Actually, WSRunScanner scans white space type at mScanStartPoint position
+   * only.
+   *
+   * If you use aScanEndPoint newly, please test enough.
    */
   template <typename PT, typename CT>
   WSRunScanner(const HTMLEditor* aHTMLEditor,
