@@ -5425,9 +5425,12 @@ class DatabaseOperationBase : public Runnable,
 
   ~DatabaseOperationBase() override { MOZ_ASSERT(mActorDestroyed); }
 
-  static void GetBindingClauseForKeyRange(const SerializedKeyRange& aKeyRange,
-                                          const nsACString& aKeyColumnName,
-                                          nsAutoCString& aBindingClause);
+  static nsAutoCString MaybeGetBindingClauseForKeyRange(
+      const Maybe<SerializedKeyRange>& aOptionalKeyRange,
+      const nsACString& aKeyColumnName);
+
+  static nsAutoCString GetBindingClauseForKeyRange(
+      const SerializedKeyRange& aKeyRange, const nsACString& aKeyColumnName);
 
   static uint64_t ReinterpretDoubleAsUInt64(double aDouble);
 
@@ -9267,6 +9270,14 @@ constexpr bool IsIncreasingOrder(const IDBCursor::Direction aDirection) {
 constexpr bool IsKeyCursor(const Cursor::Type aType) {
   return aType == OpenCursorParams::TObjectStoreOpenKeyCursorParams ||
          aType == OpenCursorParams::TIndexOpenKeyCursorParams;
+}
+
+// TODO: In principle, this could be constexpr, if operator+(nsLiteralCString,
+// nsLiteralCString) were constexpr and returned a literal type.
+nsAutoCString MakeDirectionClause(const IDBCursor::Direction aDirection) {
+  return NS_LITERAL_CSTRING(" ORDER BY ") + kColumnNameKey +
+         (IsIncreasingOrder(aDirection) ? NS_LITERAL_CSTRING(" ASC")
+                                        : NS_LITERAL_CSTRING(" DESC"));
 }
 
 nsresult LocalizeKey(const Key& aBaseKey, const nsCString& aLocale,
@@ -18111,45 +18122,54 @@ UpgradeFileIdsFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
 }
 
 // static
-void DatabaseOperationBase::GetBindingClauseForKeyRange(
-    const SerializedKeyRange& aKeyRange, const nsACString& aKeyColumnName,
-    nsAutoCString& aBindingClause) {
+nsAutoCString DatabaseOperationBase::MaybeGetBindingClauseForKeyRange(
+    const Maybe<SerializedKeyRange>& aOptionalKeyRange,
+    const nsACString& aKeyColumnName) {
+  return aOptionalKeyRange.isSome()
+             ? GetBindingClauseForKeyRange(aOptionalKeyRange.ref(),
+                                           aKeyColumnName)
+             : nsAutoCString{};
+}
+
+// static
+nsAutoCString DatabaseOperationBase::GetBindingClauseForKeyRange(
+    const SerializedKeyRange& aKeyRange, const nsACString& aKeyColumnName) {
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(!aKeyColumnName.IsEmpty());
 
   NS_NAMED_LITERAL_CSTRING(andStr, " AND ");
   NS_NAMED_LITERAL_CSTRING(spacecolon, " :");
 
+  nsAutoCString result;
   if (aKeyRange.isOnly()) {
     // Both keys equal.
-    aBindingClause = andStr + aKeyColumnName + NS_LITERAL_CSTRING(" =") +
-                     spacecolon + kStmtParamNameLowerKey;
-    return;
-  }
-
-  aBindingClause.Truncate();
-
-  if (!aKeyRange.lower().IsUnset()) {
-    // Lower key is set.
-    aBindingClause.Append(andStr + aKeyColumnName);
-    aBindingClause.AppendLiteral(" >");
-    if (!aKeyRange.lowerOpen()) {
-      aBindingClause.AppendLiteral("=");
+    result = andStr + aKeyColumnName + NS_LITERAL_CSTRING(" =") + spacecolon +
+             kStmtParamNameLowerKey;
+  } else {
+    if (!aKeyRange.lower().IsUnset()) {
+      // Lower key is set.
+      result.Append(andStr + aKeyColumnName);
+      result.AppendLiteral(" >");
+      if (!aKeyRange.lowerOpen()) {
+        result.AppendLiteral("=");
+      }
+      result.Append(spacecolon + kStmtParamNameLowerKey);
     }
-    aBindingClause.Append(spacecolon + kStmtParamNameLowerKey);
-  }
 
-  if (!aKeyRange.upper().IsUnset()) {
-    // Upper key is set.
-    aBindingClause.Append(andStr + aKeyColumnName);
-    aBindingClause.AppendLiteral(" <");
-    if (!aKeyRange.upperOpen()) {
-      aBindingClause.AppendLiteral("=");
+    if (!aKeyRange.upper().IsUnset()) {
+      // Upper key is set.
+      result.Append(andStr + aKeyColumnName);
+      result.AppendLiteral(" <");
+      if (!aKeyRange.upperOpen()) {
+        result.AppendLiteral("=");
+      }
+      result.Append(spacecolon + kStmtParamNameUpperKey);
     }
-    aBindingClause.Append(spacecolon + kStmtParamNameUpperKey);
   }
 
-  MOZ_ASSERT(!aBindingClause.IsEmpty());
+  MOZ_ASSERT(!result.IsEmpty());
+
+  return result;
 }
 
 // static
@@ -18765,11 +18785,8 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
       return rv;
     }
   } else {
-    nsAutoCString keyRangeClause;
-    if (aKeyRange.isSome()) {
-      GetBindingClauseForKeyRange(aKeyRange.ref(), kStmtParamNameKey,
-                                  keyRangeClause);
-    }
+    const auto keyRangeClause =
+        MaybeGetBindingClauseForKeyRange(aKeyRange, kColumnNameKey);
 
     rv = aConnection->GetCachedStatement(
         NS_LITERAL_CSTRING("SELECT index_data_values, key "
@@ -24638,13 +24655,8 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
 
   AUTO_PROFILER_LABEL("ObjectStoreGetRequestOp::DoDatabaseWork", DOM);
 
-  const bool hasKeyRange = mOptionalKeyRange.isSome();
-
-  nsAutoCString keyRangeClause;
-  if (hasKeyRange) {
-    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(), kColumnNameKey,
-                                keyRangeClause);
-  }
+  const auto keyRangeClause =
+      MaybeGetBindingClauseForKeyRange(mOptionalKeyRange, kColumnNameKey);
 
   nsCString limitClause;
   if (mLimit) {
@@ -24670,7 +24682,7 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
     return rv;
   }
 
-  if (hasKeyRange) {
+  if (mOptionalKeyRange.isSome()) {
     rv = BindKeyRangeToStatement(mOptionalKeyRange.ref(), stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -24832,13 +24844,8 @@ nsresult ObjectStoreGetKeyRequestOp::DoDatabaseWork(
 
   AUTO_PROFILER_LABEL("ObjectStoreGetKeyRequestOp::DoDatabaseWork", DOM);
 
-  const bool hasKeyRange = mOptionalKeyRange.isSome();
-
-  nsAutoCString keyRangeClause;
-  if (hasKeyRange) {
-    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(), kColumnNameKey,
-                                keyRangeClause);
-  }
+  const auto keyRangeClause =
+      MaybeGetBindingClauseForKeyRange(mOptionalKeyRange, kColumnNameKey);
 
   nsAutoCString limitClause;
   if (mLimit) {
@@ -24864,7 +24871,7 @@ nsresult ObjectStoreGetKeyRequestOp::DoDatabaseWork(
     return rv;
   }
 
-  if (hasKeyRange) {
+  if (mOptionalKeyRange.isSome()) {
     rv = BindKeyRangeToStatement(mOptionalKeyRange.ref(), stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -24970,9 +24977,8 @@ nsresult ObjectStoreDeleteRequestOp::DoDatabaseWork(
       return rv;
     }
   } else {
-    nsAutoCString keyRangeClause;
-    GetBindingClauseForKeyRange(mParams.keyRange(), kColumnNameKey,
-                                keyRangeClause);
+    const auto keyRangeClause =
+        GetBindingClauseForKeyRange(mParams.keyRange(), kColumnNameKey);
 
     rv = aConnection->ExecuteCachedStatement(
         NS_LITERAL_CSTRING("DELETE FROM object_data "
@@ -25084,13 +25090,8 @@ nsresult ObjectStoreCountRequestOp::DoDatabaseWork(
 
   AUTO_PROFILER_LABEL("ObjectStoreCountRequestOp::DoDatabaseWork", DOM);
 
-  const bool hasKeyRange = mParams.optionalKeyRange().isSome();
-
-  nsAutoCString keyRangeClause;
-  if (hasKeyRange) {
-    GetBindingClauseForKeyRange(mParams.optionalKeyRange().ref(),
-                                kColumnNameKey, keyRangeClause);
-  }
+  const auto keyRangeClause = MaybeGetBindingClauseForKeyRange(
+      mParams.optionalKeyRange(), kColumnNameKey);
 
   nsCString query = NS_LITERAL_CSTRING(
                         "SELECT count(*) "
@@ -25110,7 +25111,7 @@ nsresult ObjectStoreCountRequestOp::DoDatabaseWork(
     return rv;
   }
 
-  if (hasKeyRange) {
+  if (mParams.optionalKeyRange().isSome()) {
     rv = BindKeyRangeToStatement(mParams.optionalKeyRange().ref(), stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -25240,11 +25241,8 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     indexTable.AssignLiteral("index_data ");
   }
 
-  nsAutoCString keyRangeClause;
-  if (hasKeyRange) {
-    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(), kColumnNameValue,
-                                keyRangeClause);
-  }
+  const auto keyRangeClause =
+      MaybeGetBindingClauseForKeyRange(mOptionalKeyRange, kColumnNameValue);
 
   nsCString limitClause;
   if (mLimit) {
@@ -25420,11 +25418,8 @@ nsresult IndexGetKeyRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     indexTable.AssignLiteral("index_data ");
   }
 
-  nsAutoCString keyRangeClause;
-  if (hasKeyRange) {
-    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(), kColumnNameValue,
-                                keyRangeClause);
-  }
+  const auto keyRangeClause =
+      MaybeGetBindingClauseForKeyRange(mOptionalKeyRange, kColumnNameValue);
 
   nsCString limitClause;
   if (mLimit) {
@@ -25521,11 +25516,8 @@ nsresult IndexCountRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     indexTable.AssignLiteral("index_data ");
   }
 
-  nsAutoCString keyRangeClause;
-  if (hasKeyRange) {
-    GetBindingClauseForKeyRange(mParams.optionalKeyRange().ref(),
-                                kColumnNameValue, keyRangeClause);
-  }
+  const auto keyRangeClause = MaybeGetBindingClauseForKeyRange(
+      mParams.optionalKeyRange(), kColumnNameValue);
 
   nsCString query = NS_LITERAL_CSTRING(
                         "SELECT count(*) "
@@ -25776,6 +25768,7 @@ void Cursor::OpenOp::PrepareKeyConditionClauses(
     bool open;
     mCursor->SetOptionalKeyRange(mOptionalKeyRange, &open);
 
+    // TODO: The first condition is probably redundant.
     if (mOptionalKeyRange.isSome() && !mCursor->mRangeKey.IsUnset()) {
       AppendConditionClause(aKeyString, kStmtParamNameRangeKey,
                             isIncreasingOrder, !open, keyRangeClause);
@@ -25867,35 +25860,17 @@ nsresult Cursor::OpenOp::DoObjectStoreDatabaseWork(
 
   const bool usingKeyRange = mOptionalKeyRange.isSome();
 
-  nsCString queryStart = NS_LITERAL_CSTRING("SELECT ") + kColumnNameKey +
-                         NS_LITERAL_CSTRING(
-                             ", file_ids, data "
-                             "FROM object_data "
-                             "WHERE object_store_id = :") +
-                         kStmtParamNameId;
+  const nsCString queryStart = NS_LITERAL_CSTRING("SELECT ") + kColumnNameKey +
+                               NS_LITERAL_CSTRING(
+                                   ", file_ids, data "
+                                   "FROM object_data "
+                                   "WHERE object_store_id = :") +
+                               kStmtParamNameId;
 
-  nsAutoCString keyRangeClause;
-  if (usingKeyRange) {
-    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(), kColumnNameKey,
-                                keyRangeClause);
-  }
+  const auto keyRangeClause =
+      MaybeGetBindingClauseForKeyRange(mOptionalKeyRange, kColumnNameKey);
 
-  nsAutoCString directionClause =
-      NS_LITERAL_CSTRING(" ORDER BY ") + kColumnNameKey;
-  switch (mCursor->mDirection) {
-    case IDBCursor::NEXT:
-    case IDBCursor::NEXT_UNIQUE:
-      directionClause.AppendLiteral(" ASC");
-      break;
-
-    case IDBCursor::PREV:
-    case IDBCursor::PREV_UNIQUE:
-      directionClause.AppendLiteral(" DESC");
-      break;
-
-    default:
-      MOZ_CRASH("Should never get here!");
-  }
+  const auto& directionClause = MakeDirectionClause(mCursor->mDirection);
 
   // Note: Changing the number or order of SELECT columns in the query will
   // require changes to CursorOpBase::PopulateResponseFromStatement.
@@ -25961,16 +25936,10 @@ nsresult Cursor::OpenOp::DoObjectStoreKeyDatabaseWork(
                              "WHERE object_store_id = :") +
                          kStmtParamNameId;
 
-  nsAutoCString keyRangeClause;
-  if (usingKeyRange) {
-    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(), kColumnNameKey,
-                                keyRangeClause);
-  }
+  const auto keyRangeClause =
+      MaybeGetBindingClauseForKeyRange(mOptionalKeyRange, kColumnNameKey);
 
-  const nsAutoCString directionClause =
-      NS_LITERAL_CSTRING(" ORDER BY ") + kColumnNameKey +
-      (IsIncreasingOrder(mCursor->mDirection) ? NS_LITERAL_CSTRING(" ASC")
-                                              : NS_LITERAL_CSTRING(" DESC"));
+  const auto& directionClause = MakeDirectionClause(mCursor->mDirection);
 
   // Note: Changing the number or order of SELECT columns in the query will
   // require changes to CursorOpBase::PopulateResponseFromStatement.
@@ -26063,11 +26032,8 @@ nsresult Cursor::OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection) {
                                  "WHERE index_table.index_id = :") +
                              kStmtParamNameId;
 
-  nsAutoCString keyRangeClause;
-  if (usingKeyRange) {
-    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(), sortColumn,
-                                keyRangeClause);
-  }
+  const auto keyRangeClause =
+      MaybeGetBindingClauseForKeyRange(mOptionalKeyRange, sortColumn);
 
   nsAutoCString directionClause = NS_LITERAL_CSTRING(" ORDER BY ") + sortColumn;
 
@@ -26178,11 +26144,8 @@ nsresult Cursor::OpenOp::DoIndexKeyDatabaseWork(
                              table + NS_LITERAL_CSTRING(" WHERE index_id = :") +
                              kStmtParamNameId;
 
-  nsAutoCString keyRangeClause;
-  if (usingKeyRange) {
-    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(), sortColumn,
-                                keyRangeClause);
-  }
+  const auto keyRangeClause =
+      MaybeGetBindingClauseForKeyRange(mOptionalKeyRange, sortColumn);
 
   nsAutoCString directionClause = NS_LITERAL_CSTRING(" ORDER BY ") + sortColumn;
 
