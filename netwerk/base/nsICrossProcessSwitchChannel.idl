@@ -37,3 +37,41 @@ interface nsICrossProcessSwitchChannel : nsISupports
    */
   void triggerCrossProcessSwitch(in nsIHttpChannel channel, in uint64_t identifier);
 };
+
+/**
+ * The nsIProcessSwitchRequestor interface allows clients to instruct
+ * SessionStore.jsm that a channel setup has completed and a process switch
+ * may be required. This works alongside the on-may-change-process observer
+ * notification.
+ * This interface must be used only from the XPCOM main thread.
+ */
+[scriptable, uuid(fce8497b-c57c-4557-b360-3efefc83eff5)]
+interface nsIProcessSwitchRequestor : nsISupports
+{
+  /**
+   * The underlying channel object that was intercepted and that could trigger
+   * a process.
+   */
+  readonly attribute nsIChannel channel;
+
+  /**
+   * Instructs the callee to be loaded in a new process. Like 'redirectTo'
+   * this can only be used on channels that have not yet called their
+   * listener's OnStartRequest(). Can only be called during the
+   * http-on-may-change-process observer notification.
+   *
+   * @param aTabPromise   a promise which resolves to a nsIRemotTab object
+   *                      which the load will proceed in.
+   * @param aIdentifier   a 64-bit ID which will be provided to the
+   *                      ChildProcessChannelListener.
+   */
+  [must_use] void switchProcessTo(in Promise aTabPromise,
+                                  in unsigned long long aIdentifier);
+
+  /**
+   * Used to determine if there is a Cross-Origin-Opener-Policy mismatch
+   * that would require switching the channel to another process.
+   * @throws NS_ERROR_NOT_AVAILABLE if we don't have a responseHead
+   */
+  [must_use] boolean hasCrossOriginOpenerPolicyMismatch();
+};

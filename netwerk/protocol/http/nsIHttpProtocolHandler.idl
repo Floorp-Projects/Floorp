@@ -175,9 +175,9 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
 
 /**
  * The observer of this topic is notified before before the response for a HTTP
- * load is available. The "subject" of the notification is the nsIHttpChannel
- * instance. Observers may call "switchProcessTo" to perform a process switch
- * while this is being run.
+ * load is available. The "subject" of the notification is the
+ * nsIProcessSwitchRequestor instance. Observers may call "switchProcessTo" to
+ * perform a process switch while this is being run.
  */
 #define NS_HTTP_ON_MAY_CHANGE_PROCESS_TOPIC "http-on-may-change-process"
 
