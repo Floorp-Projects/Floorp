@@ -70,7 +70,6 @@ using namespace dom;
 TextEditor::TextEditor()
     : mWrapColumn(0),
       mMaxTextLength(-1),
-      mInitTriggerCounter(0),
       mNewlineHandling(nsIPlaintextEditor::eNewlinesPasteToFirst),
 #ifdef XP_WIN
       mCaretStyle(1),
@@ -123,21 +122,37 @@ NS_INTERFACE_MAP_END_INHERITING(EditorBase)
 nsresult TextEditor::Init(Document& aDoc, Element* aRoot,
                           nsISelectionController* aSelCon, uint32_t aFlags,
                           const nsAString& aInitialValue) {
-  mInitSucceeded = false;
+  MOZ_ASSERT(!AsHTMLEditor());
+  MOZ_ASSERT(!mInitSucceeded,
+             "TextEditor::Init() called again without calling PreDestroy()?");
 
-  nsresult rulesRv = NS_OK;
-  {
-    // block to scope AutoEditInitRulesTrigger
-    AutoEditInitRulesTrigger rulesTrigger(this, rulesRv);
-
-    // Init the base editor
-    nsresult rv = EditorBase::Init(aDoc, aRoot, aSelCon, aFlags, aInitialValue);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  // Init the base editor
+  nsresult rv = EditorBase::Init(aDoc, aRoot, aSelCon, aFlags, aInitialValue);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rulesRv), "Failed to initialize us");
-  return EditorBase::ToGenericNSResult(rulesRv);
+
+  // XXX `eNotEditing` is a lie since InitEditorContentAndSelection() may
+  //     insert padding `<br>`.
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  rv = InitEditorContentAndSelection();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // XXX Sholdn't we expose `NS_ERROR_EDITOR_DESTROYED` even though this
+    //     is a public method?
+    return EditorBase::ToGenericNSResult(rv);
+  }
+
+  // Throw away the old transaction manager if this is not the first time that
+  // we're initializing the editor.
+  ClearUndoRedo();
+  EnableUndoRedo();
+  MOZ_ASSERT(!mInitSucceeded, "TextEditor::Init() shouldn't be nested");
+  mInitSucceeded = true;
+  return NS_OK;
 }
 
 static int32_t sNewlineHandlingPref = -1, sCaretStylePref = -1;
@@ -172,33 +187,6 @@ void TextEditor::GetDefaultEditorPrefs(int32_t& aNewlineHandling,
 
   aNewlineHandling = sNewlineHandlingPref;
   aCaretStyle = sCaretStylePref;
-}
-
-void TextEditor::BeginEditorInit() { mInitTriggerCounter++; }
-
-nsresult TextEditor::EndEditorInit() {
-  MOZ_ASSERT(mInitTriggerCounter > 0, "ended editor init before we began?");
-  mInitTriggerCounter--;
-  if (mInitTriggerCounter) {
-    return NS_OK;
-  }
-
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  nsresult rv = InitEditorContentAndSelection();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Throw away the old transaction manager if this is not the first time that
-  // we're initializing the editor.
-  ClearUndoRedo();
-  EnableUndoRedo();
-  mInitSucceeded = true;
-  return NS_OK;
 }
 
 NS_IMETHODIMP

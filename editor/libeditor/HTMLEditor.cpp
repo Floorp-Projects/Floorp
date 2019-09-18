@@ -215,58 +215,71 @@ NS_INTERFACE_MAP_END_INHERITING(TextEditor)
 nsresult HTMLEditor::Init(Document& aDoc, Element* aRoot,
                           nsISelectionController* aSelCon, uint32_t aFlags,
                           const nsAString& aInitialValue) {
+  MOZ_ASSERT(!mInitSucceeded,
+             "HTMLEditor::Init() called again without calling PreDestroy()?");
   MOZ_ASSERT(aInitialValue.IsEmpty(), "Non-empty initial values not supported");
 
-  nsresult rulesRv = NS_OK;
-
-  {
-    // block to scope AutoEditInitRulesTrigger
-    AutoEditInitRulesTrigger rulesTrigger(this, rulesRv);
-
-    // Init the plaintext editor
-    nsresult rv = TextEditor::Init(aDoc, aRoot, nullptr, aFlags, aInitialValue);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    // Init mutation observer
-    aDoc.AddMutationObserverUnlessExists(this);
-
-    if (!mRootElement) {
-      UpdateRootElement();
-    }
-
-    // disable Composer-only features
-    if (IsMailEditor()) {
-      SetAbsolutePositioningEnabled(false);
-      SetSnapToGridEnabled(false);
-    }
-
-    // Init the HTML-CSS utils
-    mCSSEditUtils = MakeUnique<CSSEditUtils>(this);
-
-    // disable links
-    Document* doc = GetDocument();
-    if (NS_WARN_IF(!doc)) {
-      return NS_ERROR_FAILURE;
-    }
-    if (!IsPlaintextEditor() && !IsInteractionAllowed()) {
-      mDisabledLinkHandling = true;
-      mOldLinkHandlingEnabled = doc->LinkHandlingEnabled();
-      doc->SetLinkHandlingEnabled(false);
-    }
-
-    // init the type-in state
-    mTypeInState = new TypeInState();
-
-    if (!IsInteractionAllowed()) {
-      // ignore any errors from this in case the file is missing
-      AddOverrideStyleSheetInternal(
-          NS_LITERAL_STRING("resource://gre/res/EditorOverride.css"));
-    }
+  nsresult rv = EditorBase::Init(aDoc, aRoot, nullptr, aFlags, aInitialValue);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
-  NS_ENSURE_SUCCESS(rulesRv, rulesRv);
 
+  // Init mutation observer
+  aDoc.AddMutationObserverUnlessExists(this);
+
+  if (!mRootElement) {
+    UpdateRootElement();
+  }
+
+  // disable Composer-only features
+  if (IsMailEditor()) {
+    SetAbsolutePositioningEnabled(false);
+    SetSnapToGridEnabled(false);
+  }
+
+  // Init the HTML-CSS utils
+  mCSSEditUtils = MakeUnique<CSSEditUtils>(this);
+
+  // disable links
+  Document* document = GetDocument();
+  if (NS_WARN_IF(!document)) {
+    return NS_ERROR_FAILURE;
+  }
+  if (!IsPlaintextEditor() && !IsInteractionAllowed()) {
+    mDisabledLinkHandling = true;
+    mOldLinkHandlingEnabled = document->LinkHandlingEnabled();
+    document->SetLinkHandlingEnabled(false);
+  }
+
+  // init the type-in state
+  mTypeInState = new TypeInState();
+
+  if (!IsInteractionAllowed()) {
+    // ignore any errors from this in case the file is missing
+    AddOverrideStyleSheetInternal(
+        NS_LITERAL_STRING("resource://gre/res/EditorOverride.css"));
+  }
+
+  // XXX `eNotEditing` is a lie since InitEditorContentAndSelection() may
+  //     insert padding `<br>`.
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  rv = InitEditorContentAndSelection();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // XXX Sholdn't we expose `NS_ERROR_EDITOR_DESTROYED` even though this
+    //     is a public method?
+    return EditorBase::ToGenericNSResult(rv);
+  }
+
+  // Throw away the old transaction manager if this is not the first time that
+  // we're initializing the editor.
+  ClearUndoRedo();
+  EnableUndoRedo();
+  MOZ_ASSERT(!mInitSucceeded, "HTMLEditor::Init() shouldn't be nested");
+  mInitSucceeded = true;
   return NS_OK;
 }
 
@@ -274,6 +287,8 @@ void HTMLEditor::PreDestroy(bool aDestroyingFrames) {
   if (mDidPreDestroy) {
     return;
   }
+
+  mInitSucceeded = false;
 
   // FYI: Cannot create AutoEditActionDataSetter here.  However, it does not
   //      necessary for the methods called by the following code.

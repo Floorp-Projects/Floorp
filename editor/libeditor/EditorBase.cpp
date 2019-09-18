@@ -481,6 +481,8 @@ void EditorBase::PreDestroy(bool aDestroyingFrames) {
     AsTextEditor()->MaskAllCharacters();
   }
 
+  mInitSucceeded = false;
+
   Selection* selection = GetSelection();
   if (selection) {
     selection->RemoveSelectionListener(this);
