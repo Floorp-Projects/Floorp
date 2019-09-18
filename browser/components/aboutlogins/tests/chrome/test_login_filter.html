@@ -74,10 +74,10 @@ add_task(async function test_list_filtered() {
     [LOGINS[0].username + "-notfound", 0],
     [LOGINS[0].username.substr(2, 3), 1],
     ["", 2],
-    // The password is not used for search.
-    [LOGINS[0].password, 0],
+    // The password is also used for search when MP is disabled.
+    [LOGINS[0].password, 1],
     [LOGINS[0].password + "-notfound", 0],
-    [LOGINS[0].password.substr(2, 3), 0],
+    [LOGINS[0].password.substr(2, 3), 1],
     ["", 2],
     [LOGINS[0].origin, 2],
     [LOGINS[0].origin + "-notfound", 0],

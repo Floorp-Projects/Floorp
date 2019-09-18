@@ -51,7 +51,6 @@ add_task(async function test() {
   await mpDialogShown;
 
   registerCleanupFunction(function() {
-    LoginTestUtils.masterPassword.disable();
     Services.logins.removeAllLogins();
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   });
@@ -167,6 +166,45 @@ add_task(async function test() {
     ok(
       revealCheckbox.checked,
       "reveal checkbox should be checked if MP dialog authenticated"
+    );
+  });
+
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+    let loginFilter = Cu.waiveXrays(
+      content.document.querySelector("login-filter")
+    );
+    loginFilter.value = "pass1";
+    let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
+    is(
+      loginList._list.querySelectorAll(
+        ".login-list-item[data-guid]:not([hidden])"
+      ).length,
+      0,
+      "login-list should not show any results since the filter won't search passwords when MP is enabled"
+    );
+    loginFilter.value = "";
+    is(
+      loginList._list.querySelectorAll(
+        ".login-list-item[data-guid]:not([hidden])"
+      ).length,
+      1,
+      "login-list should show all results since the filter is empty"
+    );
+  });
+  LoginTestUtils.masterPassword.disable();
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+    Cu.waiveXrays(content).AboutLoginsUtils.masterPasswordEnabled = false;
+    let loginFilter = Cu.waiveXrays(
+      content.document.querySelector("login-filter")
+    );
+    loginFilter.value = "pass1";
+    let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
+    is(
+      loginList._list.querySelectorAll(
+        ".login-list-item[data-guid]:not([hidden])"
+      ).length,
+      1,
+      "login-list should show login with matching password since MP is disabled"
     );
   });
 });

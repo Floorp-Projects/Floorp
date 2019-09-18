@@ -326,7 +326,7 @@ var AboutLoginsParent = {
         break;
       }
       case "AboutLogins:MasterPasswordRequest": {
-        // This doesn't harm if passwords are not encrypted
+        // This does no harm if master password isn't set.
         let tokendb = Cc["@mozilla.org/security/pk11tokendb;1"].createInstance(
           Ci.nsIPK11TokenDB
         );
@@ -412,6 +412,7 @@ var AboutLoginsParent = {
             logins,
             syncState,
             selectedBadgeLanguages,
+            masterPasswordEnabled: LoginHelper.isMasterPasswordSet(),
           });
 
           if (BREACH_ALERTS_ENABLED) {
@@ -439,7 +440,6 @@ var AboutLoginsParent = {
             ex
           );
         }
-
         break;
       }
       case "AboutLogins:UpdateLogin": {
