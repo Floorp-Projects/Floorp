@@ -481,6 +481,17 @@ class UrlbarController {
       return;
     }
 
+    // Do not modify existing telemetry types.  To add a new type:
+    //
+    // * Set telemetryType appropriately below.
+    // * Add the type to BrowserUsageTelemetry.URLBAR_SELECTED_RESULT_TYPES.
+    // * See n_values in Histograms.json for FX_URLBAR_SELECTED_RESULT_TYPE and
+    //   FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE.  If your new type causes the
+    //   number of types to become larger than n_values, you'll need to replace
+    //   these histograms with new ones.  See "Changing a histogram" in the
+    //   telemetry docs for more.
+    // * Add a test named browser_UsageTelemetry_urlbar_newType.js to
+    //   browser/modules/test/browser.
     let telemetryType;
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
@@ -517,7 +528,7 @@ class UrlbarController {
         break;
       case UrlbarUtils.RESULT_TYPE.TIP:
         telemetryType = "tip";
-        return;
+        break;
       default:
         Cu.reportError(`Unknown Result Type ${result.type}`);
         return;
@@ -526,8 +537,6 @@ class UrlbarController {
     Services.telemetry
       .getHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX")
       .add(resultIndex);
-    // You can add values but don't change any of the existing values.
-    // Otherwise you'll break our data.
     if (telemetryType in URLBAR_SELECTED_RESULT_TYPES) {
       Services.telemetry
         .getHistogramById("FX_URLBAR_SELECTED_RESULT_TYPE")
