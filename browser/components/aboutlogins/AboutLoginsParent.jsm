@@ -414,20 +414,7 @@ var AboutLoginsParent = {
             masterPasswordEnabled: LoginHelper.isMasterPasswordSet(),
           });
 
-          if (BREACH_ALERTS_ENABLED) {
-            const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
-              logins
-            );
-            messageManager.sendAsyncMessage(
-              "AboutLogins:UpdateBreaches",
-              breachesByLoginGUID
-            );
-          }
-
-          messageManager.sendAsyncMessage(
-            "AboutLogins:SendFavicons",
-            await this.getAllFavicons(logins)
-          );
+          await this._sendAllLoginRelatedObjects(logins, messageManager);
         } catch (ex) {
           if (ex.result != Cr.NS_ERROR_NOT_INITIALIZED) {
             throw ex;
@@ -493,10 +480,9 @@ var AboutLoginsParent = {
 
     if (topic == "passwordmgr-crypto-login") {
       this.removeNotifications(MASTER_PASSWORD_NOTIFICATION_ID);
-      this.messageSubscribers(
-        "AboutLogins:AllLogins",
-        await this.getAllLogins()
-      );
+      let logins = await this.getAllLogins();
+      this.messageSubscribers("AboutLogins:AllLogins", logins);
+      await this._sendAllLoginRelatedObjects(logins);
       return;
     }
 
@@ -717,6 +703,27 @@ var AboutLoginsParent = {
       }
       throw e;
     }
+  },
+
+  async _sendAllLoginRelatedObjects(logins, messageManager) {
+    let sendMessageFn = (name, details) => {
+      if (messageManager) {
+        messageManager.sendAsyncMessage(name, details);
+      } else {
+        this.messageSubscribers(name, details);
+      }
+    };
+    if (BREACH_ALERTS_ENABLED) {
+      sendMessageFn(
+        "AboutLogins:UpdateBreaches",
+        await LoginBreaches.getPotentialBreachesByLoginGUID(logins)
+      );
+    }
+
+    sendMessageFn(
+      "AboutLogins:SendFavicons",
+      await this.getAllFavicons(logins)
+    );
   },
 
   getSyncState() {
