@@ -747,59 +747,62 @@ EditActionResult HTMLEditor::CanHandleHTMLEditSubAction() const {
   return EditActionIgnored();
 }
 
-nsresult HTMLEditRules::GetListState(bool* aMixed, bool* aOL, bool* aUL,
-                                     bool* aDL) {
-  NS_ENSURE_TRUE(aMixed && aOL && aUL && aDL, NS_ERROR_NULL_POINTER);
-  *aMixed = false;
-  *aOL = false;
-  *aUL = false;
-  *aDL = false;
-  bool bNonList = false;
+ListElementSelectionState::ListElementSelectionState(HTMLEditor& aHTMLEditor,
+                                                     ErrorResult& aRv) {
+  MOZ_ASSERT(!aRv.Failed());
 
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
+    aRv.Throw(NS_ERROR_EDITOR_DESTROYED);
+    return;
   }
 
-  AutoSafeEditorData setData(*this, *mHTMLEditor);
+  // XXX Should we create another constructor which won't create
+  //     AutoEditActionDataSetter?  Or should we create another
+  //     AutoEditActionDataSetter which won't nest edit action?
+  EditorBase::AutoEditActionDataSetter editActionData(aHTMLEditor,
+                                                      EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    aRv = EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
+    return;
+  }
 
   AutoTArray<OwningNonNull<nsINode>, 64> arrayOfNodes;
-  nsresult rv = HTMLEditorRef().CollectEditTargetNodesInExtendedSelectionRanges(
+  nsresult rv = aHTMLEditor.CollectEditTargetNodesInExtendedSelectionRanges(
       arrayOfNodes, EditSubAction::eCreateOrChangeList,
       HTMLEditor::CollectNonEditableNodes::No);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    aRv = EditorBase::ToGenericNSResult(rv);
+    return;
   }
 
   // Examine list type for nodes in selection.
   for (const auto& curNode : arrayOfNodes) {
     if (!curNode->IsElement()) {
-      bNonList = true;
+      mIsOtherContentSelected = true;
     } else if (curNode->IsHTMLElement(nsGkAtoms::ul)) {
-      *aUL = true;
+      mIsULElementSelected = true;
     } else if (curNode->IsHTMLElement(nsGkAtoms::ol)) {
-      *aOL = true;
+      mIsOLElementSelected = true;
     } else if (curNode->IsHTMLElement(nsGkAtoms::li)) {
-      if (dom::Element* parent = curNode->GetParentElement()) {
+      if (Element* parent = curNode->GetParentElement()) {
         if (parent->IsHTMLElement(nsGkAtoms::ul)) {
-          *aUL = true;
+          mIsULElementSelected = true;
         } else if (parent->IsHTMLElement(nsGkAtoms::ol)) {
-          *aOL = true;
+          mIsOLElementSelected = true;
         }
       }
     } else if (curNode->IsAnyOfHTMLElements(nsGkAtoms::dl, nsGkAtoms::dt,
                                             nsGkAtoms::dd)) {
-      *aDL = true;
+      mIsDLElementSelected = true;
     } else {
-      bNonList = true;
+      mIsOtherContentSelected = true;
+    }
+
+    if (mIsULElementSelected && mIsOLElementSelected && mIsDLElementSelected &&
+        mIsOtherContentSelected) {
+      break;
     }
   }
-
-  // hokey arithmetic with booleans
-  if ((*aUL + *aOL + *aDL + bNonList) > 1) {
-    *aMixed = true;
-  }
-
-  return NS_OK;
 }
 
 nsresult HTMLEditRules::GetListItemState(bool* aMixed, bool* aLI, bool* aDT,

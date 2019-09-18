@@ -60,8 +60,6 @@ class HTMLEditRules : public TextEditRules {
   virtual nsresult DetachEditor() override;
 
   MOZ_CAN_RUN_SCRIPT
-  nsresult GetListState(bool* aMixed, bool* aOL, bool* aUL, bool* aDL);
-  MOZ_CAN_RUN_SCRIPT
   nsresult GetListItemState(bool* aMixed, bool* aLI, bool* aDT, bool* aDD);
   MOZ_CAN_RUN_SCRIPT
   nsresult GetAlignment(bool* aMixed, nsIHTMLEditor::EAlignment* aAlign);
