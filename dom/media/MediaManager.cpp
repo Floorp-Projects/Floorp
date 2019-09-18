@@ -88,12 +88,6 @@
 #  include <tchar.h>
 #endif
 
-// GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
-// GetTickCount() and conflicts with MediaStream::GetCurrentTime.
-#ifdef GetCurrentTime
-#  undef GetCurrentTime
-#endif
-
 // XXX Workaround for bug 986974 to maintain the existing broken semantics
 template <>
 struct nsIMediaDevice::COMTypeInfo<mozilla::MediaDevice, void> {
