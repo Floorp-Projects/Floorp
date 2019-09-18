@@ -240,7 +240,7 @@ describe("<DSCard>", () => {
       wrapper.instance().observer = {
         unobserve: sandbox.stub(),
       };
-      wrapper.instance().placholderElement = "element";
+      wrapper.instance().placeholderElement = "element";
 
       wrapper.instance().onSeen([
         {
@@ -258,12 +258,30 @@ describe("<DSCard>", () => {
 
     it("should setup proper placholder ref for isSeen", () => {
       wrapper.instance().setPlaceholderRef("element");
-      assert.equal(wrapper.instance().placholderElement, "element");
+      assert.equal(wrapper.instance().placeholderElement, "element");
     });
 
     it("should setup observer on componentDidMount", () => {
       wrapper = mount(<DSCard />);
       assert.isTrue(!!wrapper.instance().observer);
+    });
+  });
+  describe("DSCard with Idle Callback", () => {
+    let windowStub = {
+      requestIdleCallback: sinon.stub().returns(1),
+      cancelIdleCallback: sinon.stub(),
+    };
+    beforeEach(() => {
+      wrapper = shallow(<DSCard windowObj={windowStub} />);
+    });
+
+    it("should call requestIdleCallback on componentDidMount", () => {
+      assert.calledOnce(windowStub.requestIdleCallback);
+    });
+
+    it("should call cancelIdleCallback on componentWillUnmount", () => {
+      wrapper.instance().componentWillUnmount();
+      assert.calledOnce(windowStub.cancelIdleCallback);
     });
   });
 });
