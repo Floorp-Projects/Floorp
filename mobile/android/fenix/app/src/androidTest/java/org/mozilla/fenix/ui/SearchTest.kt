@@ -67,7 +67,7 @@ class SearchTest {
         }.openSearch {
             scrollToSearchEngineSettings()
             clickSearchEngineSettings()
-            verifySearchEngineSettings()
+            verifySearchSettings()
         }
     }
 

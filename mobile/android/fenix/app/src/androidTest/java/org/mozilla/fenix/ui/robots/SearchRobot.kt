@@ -41,7 +41,7 @@ class SearchRobot {
     fun verifySearchWithText() = assertSearchWithText()
     fun verifyDuckDuckGoResults() = assertDuckDuckGoResults()
     fun verifyDuckDuckGoURL() = assertDuckDuckGoURL()
-    fun verifySearchEngineSettings() = assertSearchEngineSettings()
+    fun verifySearchSettings() = assertSearchSettings()
     fun verifySearchBarEmpty() = assertSearchBarEmpty()
 
     fun clickScanButton() {
@@ -161,8 +161,8 @@ private fun assertSearchWithText() =
     onView(allOf(withText("SEARCH WITH")))
         .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
-private fun assertSearchEngineSettings() =
-    onView(allOf(withText("Search engine")))
+private fun assertSearchSettings() =
+    onView(allOf(withText("Default search engine")))
         .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertSearchBarEmpty() = browserToolbarEditView().check(matches(withText("")))

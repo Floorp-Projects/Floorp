@@ -49,7 +49,7 @@ import org.mozilla.fenix.R.string.pref_key_make_default_browser
 import org.mozilla.fenix.R.string.pref_key_privacy_link
 import org.mozilla.fenix.R.string.pref_key_rate
 import org.mozilla.fenix.R.string.pref_key_remote_debugging
-import org.mozilla.fenix.R.string.pref_key_search_engine_settings
+import org.mozilla.fenix.R.string.pref_key_search_settings
 import org.mozilla.fenix.R.string.pref_key_sign_in
 import org.mozilla.fenix.R.string.pref_key_site_permissions
 import org.mozilla.fenix.R.string.pref_key_theme
@@ -124,12 +124,6 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
             findPreference<DefaultBrowserPreference>(getPreferenceKey(R.string.pref_key_make_default_browser))
         defaultBrowserPreference?.updateSwitch()
 
-        val searchEnginePreference =
-            findPreference<Preference>(getPreferenceKey(R.string.pref_key_search_engine_settings))
-        searchEnginePreference?.summary = context?.let {
-            requireComponents.search.searchEngineManager.getDefaultSearchEngine(it).name
-        }
-
         val trackingProtectionPreference =
             findPreference<Preference>(getPreferenceKey(R.string.pref_key_tracking_protection_settings))
         trackingProtectionPreference?.summary = context?.let {
@@ -158,7 +152,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
     @Suppress("ComplexMethod", "LongMethod")
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
         when (preference.key) {
-            resources.getString(pref_key_search_engine_settings) -> {
+            resources.getString(pref_key_search_settings) -> {
                 navigateToSearchEngineSettings()
             }
             resources.getString(pref_key_tracking_protection_settings) -> {

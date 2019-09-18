@@ -5,25 +5,32 @@
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <org.mozilla.fenix.settings.RadioSearchEngineListPreference />
-    <SwitchPreference
-        android:defaultValue="true"
-        android:key="@string/pref_key_show_search_suggestions"
-        android:title="@string/preferences_show_search_suggestions"
-        app:iconSpaceReserved="false" />
-    <SwitchPreference
-        android:defaultValue="true"
-        android:key="@string/pref_key_show_clipboard_suggestions"
-        android:title="@string/preferences_show_clipboard_suggestions"
-        app:iconSpaceReserved="false" />
-    <SwitchPreference
-        android:defaultValue="true"
-        android:key="@string/pref_key_search_browsing_history"
-        android:title='@string/preferences_search_browsing_history'
-        app:iconSpaceReserved="false" />
-    <SwitchPreference
-        android:defaultValue="true"
-        android:key="@string/pref_key_search_bookmarks"
-        android:title='@string/preferences_search_bookmarks'
-        app:iconSpaceReserved="false" />
+    <PreferenceCategory
+        android:title="@string/preferences_default_search_engine"
+        android:selectable="false"
+        app:iconSpaceReserved="false">
+        <org.mozilla.fenix.settings.RadioSearchEngineListPreference
+            android:selectable="false"/>
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="@string/pref_key_show_search_suggestions"
+            android:title="@string/preferences_show_search_suggestions"
+            app:iconSpaceReserved="false"
+            app:allowDividerAbove="false"/>
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="@string/pref_key_show_clipboard_suggestions"
+            android:title="@string/preferences_show_clipboard_suggestions"
+            app:iconSpaceReserved="false" />
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="@string/pref_key_search_browsing_history"
+            android:title='@string/preferences_search_browsing_history'
+            app:iconSpaceReserved="false" />
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="@string/pref_key_search_bookmarks"
+            android:title='@string/preferences_search_bookmarks'
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
 </PreferenceScreen>

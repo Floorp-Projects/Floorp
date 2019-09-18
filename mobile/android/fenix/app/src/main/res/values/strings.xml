@@ -116,7 +116,9 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">About</string>
     <!-- Preference for settings related to changing the default search engine -->
-    <string name="preferences_search_engine">Search engine</string>
+    <string name="preferences_default_search_engine">Default search engine</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Search</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Help</string>
     <!-- Preference link to rating Fenix on the Play Store -->

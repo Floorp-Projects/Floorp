@@ -20,7 +20,7 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
 
     override fun onResume() {
         super.onResume()
-        (activity as AppCompatActivity).title = getString(R.string.preferences_search_engine)
+        (activity as AppCompatActivity).title = getString(R.string.preferences_search)
         (activity as AppCompatActivity).supportActionBar?.show()
 
         val searchSuggestionsPreference =

@@ -399,7 +399,7 @@
     <fragment
         android:id="@+id/searchEngineFragment"
         android:name="org.mozilla.fenix.settings.SearchEngineFragment"
-        android:label="@string/preferences_search_engine" />
+        android:label="@string/preferences_search" />
 
     <fragment
         android:id="@+id/turnOnSyncFragment"
