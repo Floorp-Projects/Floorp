@@ -30,11 +30,6 @@ ChromeUtils.defineModuleGetter(
   "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "OSCrypto",
-  "resource://gre/modules/OSCrypto.jsm"
-);
 
 /**
  * Converts an array of chrome bookmark objects into one our own places code
@@ -78,6 +73,9 @@ function ChromeProfileMigrator() {
 
 ChromeProfileMigrator.prototype = Object.create(MigratorPrototype);
 
+ChromeProfileMigrator.prototype._keychainServiceName = "Chrome Safe Storage";
+ChromeProfileMigrator.prototype._keychainAccountName = "Chrome";
+
 ChromeProfileMigrator.prototype._getChromeUserDataPathIfExists = async function() {
   if (this._chromeUserDataPath) {
     return this._chromeUserDataPath;
@@ -104,9 +102,9 @@ ChromeProfileMigrator.prototype.getResources = async function Chrome_getResource
         GetHistoryResource(profileFolder),
         GetCookiesResource(profileFolder),
       ];
-      if (AppConstants.platform == "win") {
+      if (AppConstants.platform == "win" || AppConstants.platform == "macosx") {
         possibleResourcePromises.push(
-          GetWindowsPasswordsResource(profileFolder)
+          this._GetPasswordsResource(profileFolder)
         );
       }
       let possibleResources = await Promise.all(possibleResourcePromises);
@@ -431,11 +429,19 @@ async function GetCookiesResource(aProfileFolder) {
   };
 }
 
-async function GetWindowsPasswordsResource(aProfileFolder) {
+ChromeProfileMigrator.prototype._GetPasswordsResource = async function(
+  aProfileFolder
+) {
   let loginPath = OS.Path.join(aProfileFolder, "Login Data");
   if (!(await OS.File.exists(loginPath))) {
     return null;
   }
+
+  let {
+    _keychainServiceName,
+    _keychainAccountName,
+    _keychainMockPassphrase = null,
+  } = this;
 
   return {
     type: MigrationUtils.resourceTypes.PASSWORDS,
@@ -456,7 +462,34 @@ async function GetWindowsPasswordsResource(aProfileFolder) {
       if (!rows) {
         return;
       }
-      let crypto = new OSCrypto();
+
+      let crypto;
+      try {
+        if (AppConstants.platform == "win") {
+          let { OSCrypto } = ChromeUtils.import(
+            "resource://gre/modules/OSCrypto.jsm"
+          );
+          crypto = new OSCrypto();
+        } else if (AppConstants.platform == "macosx") {
+          let { ChromeMacOSLoginCrypto } = ChromeUtils.import(
+            "resource:///modules/ChromeMacOSLoginCrypto.jsm"
+          );
+          crypto = new ChromeMacOSLoginCrypto(
+            _keychainServiceName,
+            _keychainAccountName,
+            _keychainMockPassphrase
+          );
+        } else {
+          aCallback(false);
+          return;
+        }
+      } catch (ex) {
+        // Handle the user canceling Keychain access or other OSCrypto errors.
+        Cu.reportError(ex);
+        aCallback(false);
+        return;
+      }
+
       let logins = [];
       let fallbackCreationDate = new Date();
       for (let row of rows) {
@@ -470,7 +503,7 @@ async function GetWindowsPasswordsResource(aProfileFolder) {
           }
           let loginInfo = {
             username: row.getResultByName("username_value"),
-            password: crypto.decryptData(
+            password: await crypto.decryptData(
               crypto.arrayToString(row.getResultByName("password_value")),
               null
             ),
@@ -526,11 +559,13 @@ async function GetWindowsPasswordsResource(aProfileFolder) {
       } catch (e) {
         Cu.reportError(e);
       }
-      crypto.finalize();
+      if (crypto.finalize) {
+        crypto.finalize();
+      }
       aCallback(true);
     },
   };
-}
+};
 
 ChromeProfileMigrator.prototype.classDescription = "Chrome Profile Migrator";
 ChromeProfileMigrator.prototype.contractID =
@@ -544,6 +579,8 @@ ChromeProfileMigrator.prototype.classID = Components.ID(
  **/
 function ChromiumProfileMigrator() {
   this._chromeUserDataPathSuffix = "Chromium";
+  this._keychainServiceName = "Chromium Safe Storage";
+  this._keychainAccountName = "Chromium";
 }
 
 ChromiumProfileMigrator.prototype = Object.create(
