@@ -18,7 +18,6 @@
   locale/@AB_CD@/browser/aboutDownloads.dtd       (%chrome/aboutDownloads.dtd)
   locale/@AB_CD@/browser/aboutDownloads.properties (%chrome/aboutDownloads.properties)
   locale/@AB_CD@/browser/aboutHome.dtd            (%chrome/aboutHome.dtd)
-  locale/@AB_CD@/browser/aboutHome.properties     (%chrome/aboutHome.properties)
   locale/@AB_CD@/browser/aboutPrivateBrowsing.dtd (%chrome/aboutPrivateBrowsing.dtd)
   locale/@AB_CD@/browser/browser.properties       (%chrome/browser.properties)
   locale/@AB_CD@/browser/config.dtd               (%chrome/config.dtd)
