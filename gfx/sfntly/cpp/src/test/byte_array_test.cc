@@ -28,7 +28,7 @@ const int32_t BYTE_ARRAY_SIZES[] =
 
 void FillTestByteArray(ByteArray* ba, int32_t size) {
   for (int32_t i = 0; i < size; ++i) {
-    ba->Put(i, (byte_t)(i % 256));
+    ba->Put(i, (uint8_t)(i % 256));
   }
 }
 

@@ -446,12 +446,12 @@ class NameTable : public SubTableContainerTable, public RefCounted<NameTable> {
   class NameEntry : public RefCounted<NameEntry> {
    public:
     NameEntry();
-    NameEntry(const NameEntryId& name_entry_id, const ByteVector& name_bytes);
+    NameEntry(const NameEntryId& name_entry_id, const std::vector<uint8_t>& name_bytes);
     NameEntry(int32_t platform_id,
               int32_t encoding_id,
               int32_t language_id,
               int32_t name_id,
-              const ByteVector& name_bytes);
+              const std::vector<uint8_t>& name_bytes);
     virtual ~NameEntry();
 
     NameEntryId& name_entry_id() { return name_entry_id_; }
@@ -462,7 +462,7 @@ class NameTable : public SubTableContainerTable, public RefCounted<NameTable> {
 
     // Get the bytes for name.  Returned pointer is the address of private
     // member of this class, do not attempt to delete.
-    ByteVector* NameAsBytes();
+    std::vector<uint8_t>* NameAsBytes();
 
     // C++ port only: get the length of NameAsBytes.
     int32_t NameBytesLength();
@@ -477,10 +477,10 @@ class NameTable : public SubTableContainerTable, public RefCounted<NameTable> {
 
    private:
     void Init(int32_t platform_id, int32_t encoding_id, int32_t language_id,
-              int32_t name_id, const ByteVector* name_bytes);
+              int32_t name_id, const std::vector<uint8_t>* name_bytes);
 
     NameEntryId name_entry_id_;
-    ByteVector name_bytes_;
+    std::vector<uint8_t> name_bytes_;
 
     friend class NameEntryBuilder;
   };
@@ -492,14 +492,14 @@ class NameTable : public SubTableContainerTable, public RefCounted<NameTable> {
    public:
     NameEntryBuilder();
     NameEntryBuilder(const NameEntryId& name_entry_id,
-                     const ByteVector& name_bytes);
+                     const std::vector<uint8_t>& name_bytes);
     explicit NameEntryBuilder(const NameEntryId& name_entry_id);
     explicit NameEntryBuilder(NameEntry* entry);
     virtual ~NameEntryBuilder();
 
     virtual void SetName(const UChar* name);
-    virtual void SetName(const ByteVector& name_bytes);
-    virtual void SetName(const ByteVector& name_bytes,
+    virtual void SetName(const std::vector<uint8_t>& name_bytes);
+    virtual void SetName(const std::vector<uint8_t>& name_bytes,
                          int32_t offset,
                          int32_t length);
 
@@ -510,7 +510,7 @@ class NameTable : public SubTableContainerTable, public RefCounted<NameTable> {
 
    private:
     void Init(int32_t platform_id, int32_t encoding_id, int32_t language_id,
-              int32_t name_id, const ByteVector* name_bytes);
+              int32_t name_id, const std::vector<uint8_t>* name_bytes);
 
     Ptr<NameEntry> name_entry_;
   };
@@ -647,10 +647,10 @@ class NameTable : public SubTableContainerTable, public RefCounted<NameTable> {
 
   // Get the name as bytes for the specified name. If there is no entry for the
   // requested name, then empty vector is returned.
-  virtual void NameAsBytes(int32_t index, ByteVector* b);
+  virtual void NameAsBytes(int32_t index, std::vector<uint8_t>* b);
   virtual void NameAsBytes(int32_t platform_id, int32_t encoding_id,
                            int32_t language_id, int32_t name_id,
-                           ByteVector* b);
+                           std::vector<uint8_t>* b);
 
   // Get the name as a UChar* for the given name record. If there is no
   // encoding conversion available for the name record then a best attempt
@@ -724,13 +724,13 @@ class NameTable : public SubTableContainerTable, public RefCounted<NameTable> {
   // Note: ICU UConverter* convention requires caller to ucnv_close() it.
   static UConverter* GetCharset(int32_t platform_id, int32_t encoding_id);
 
-  // Note: Output will be stored in ByteVector* b.  Original data in b will be
+  // Note: Output will be stored in std::vector<uint8_t>* b.  Original data in b will be
   // erased and replaced with converted name bytes.
   static void ConvertToNameBytes(const UChar* name, int32_t platform_id,
-                                 int32_t encoding_id, ByteVector* b);
+                                 int32_t encoding_id, std::vector<uint8_t>* b);
 
   // Note: ICU UChar* convention requires caller to delete[] it.
-  static UChar* ConvertFromNameBytes(ByteVector* name_bytes,
+  static UChar* ConvertFromNameBytes(std::vector<uint8_t>* name_bytes,
                                      int32_t platform_id, int32_t encoding_id);
 };  // class NameTable
 typedef Ptr<NameTable> NameTablePtr;

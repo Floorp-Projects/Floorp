@@ -60,12 +60,12 @@ class LocaTable : public Table, public RefCounted<LocaTable> {
     // SetLocaList(List) method.
     // If there is no current data for the loca table builder or the loca list
     // have not been previously set then this will return an empty List.
-    IntegerList* LocaList();
+    std::vector<int32_t>* LocaList();
 
     // Set the list of locas to be used for building this table. If any existing
     // list was already retrieved with the LocaList() method then the
     // connection of that previous list to this builder will be broken.
-    void SetLocaList(IntegerList* list);
+    void SetLocaList(std::vector<int32_t>* list);
 
     // Return the offset for the given glyph id. Valid glyph ids are from 0 to
     // one less than the number of glyphs. The zero entry is the special entry
@@ -129,13 +129,13 @@ class LocaTable : public Table, public RefCounted<LocaTable> {
     // Internal method to get the loca list if already generated and if not to
     // initialize the state of the builder.
     // @return the loca list
-    IntegerList* GetLocaList();
+    std::vector<int32_t>* GetLocaList();
 
     void ClearLoca(bool nullify);
 
     int32_t format_version_;  // Note: IndexToLocFormat
     int32_t num_glyphs_;
-    IntegerList loca_;
+    std::vector<int32_t> loca_;
   };
 
   virtual ~LocaTable();
