@@ -35,6 +35,8 @@ data class AuthFlowUrl(val state: String, val url: String)
 interface OAuthAccount : AutoCloseable {
     fun beginOAuthFlowAsync(scopes: Set<String>): Deferred<AuthFlowUrl?>
     fun beginPairingFlowAsync(pairingUrl: String, scopes: Set<String>): Deferred<AuthFlowUrl?>
+    fun getCurrentDeviceId(): String?
+    fun getSessionToken(): String?
     fun getProfileAsync(ignoreCache: Boolean): Deferred<Profile?>
     fun getProfileAsync(): Deferred<Profile?>
     fun completeOAuthFlowAsync(code: String, state: String): Deferred<Boolean>

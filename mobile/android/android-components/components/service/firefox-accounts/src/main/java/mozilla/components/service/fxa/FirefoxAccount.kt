@@ -140,6 +140,28 @@ class FirefoxAccount internal constructor(
         }
     }
 
+    /**
+     * Returns current FxA Device ID for an authenticated account.
+     *
+     * @return Current device's FxA ID, if available. `null` otherwise.
+     */
+    override fun getCurrentDeviceId(): String? {
+        return handleFxaExceptions(logger, "getCurrentDeviceId", { null }) {
+            inner.getCurrentDeviceId()
+        }
+    }
+
+    /**
+     * Returns session token for an authenticated account.
+     *
+     * @return Current account's session token, if available. `null` otherwise.
+     */
+    override fun getSessionToken(): String? {
+        return handleFxaExceptions(logger, "getSessionToken", { null }) {
+            inner.getSessionToken()
+        }
+    }
+
     override fun migrateFromSessionTokenAsync(sessionToken: String, kSync: String, kXCS: String): Deferred<Boolean> {
         return scope.async {
             handleFxaExceptions(logger, "migrateFromSessionToken") {
