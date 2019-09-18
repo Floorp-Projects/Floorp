@@ -87,10 +87,12 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
         ) {
           sortedMatches.unshift(match);
           handled.add(match);
+          context.maxResults -= UrlbarUtils.getSpanForResult(match) - 1;
           count--;
         } else if (group == RESULT_TYPE_TO_GROUP.get(match.type)) {
           sortedMatches.push(match);
           handled.add(match);
+          context.maxResults -= UrlbarUtils.getSpanForResult(match) - 1;
           count--;
         } else if (!RESULT_TYPE_TO_GROUP.has(match.type)) {
           let errorMsg = `Result type ${
