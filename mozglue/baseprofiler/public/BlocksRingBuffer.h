@@ -2003,13 +2003,8 @@ struct BlocksRingBuffer::Serializer<BlocksRingBuffer> {
     aEW.WriteULEB128<Length>(len);
     aEW.WriteObject(start);
     aEW.WriteObject(end);
-    // Write all the bytes. TODO: Optimize with memcpy's?
-    const auto readerEnd =
-        aBuffer.mMaybeUnderlyingBuffer->mBuffer.ReaderAt(end);
-    for (auto reader = aBuffer.mMaybeUnderlyingBuffer->mBuffer.ReaderAt(start);
-         reader != readerEnd; ++reader) {
-      aEW.WriteObject(*reader);
-    }
+    // Write all the bytes.
+    aBuffer.mMaybeUnderlyingBuffer->mBuffer.ReaderAt(start).ReadInto(aEW, len);
     // And write stats.
     aEW.WriteObject(aBuffer.mMaybeUnderlyingBuffer->mPushedBlockCount);
     aEW.WriteObject(aBuffer.mMaybeUnderlyingBuffer->mClearedBlockCount);
@@ -2046,12 +2041,9 @@ struct BlocksRingBuffer::Deserializer<BlocksRingBuffer> {
     aBuffer.mNextWriteIndex = BlocksRingBuffer::BlockIndex(end);
     MOZ_ASSERT(end - start == len);
     // Copy bytes into the buffer.
-    const auto writerEnd =
-        aBuffer.mMaybeUnderlyingBuffer->mBuffer.WriterAt(end);
-    for (auto writer = aBuffer.mMaybeUnderlyingBuffer->mBuffer.WriterAt(start);
-         writer != writerEnd; ++writer, ++aER) {
-      *writer = *aER;
-    }
+    auto writer = aBuffer.mMaybeUnderlyingBuffer->mBuffer.WriterAt(start);
+    aER.ReadInto(writer, len);
+    MOZ_ASSERT(writer.CurrentIndex() == end);
     // Finally copy stats.
     aBuffer.mMaybeUnderlyingBuffer->mPushedBlockCount = aER.ReadObject<decltype(
         aBuffer.mMaybeUnderlyingBuffer->mPushedBlockCount)>();
