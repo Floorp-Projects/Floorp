@@ -1114,7 +1114,7 @@ void HttpChannelChild::OnStopRequest(
   mCacheReadEnd = timing.cacheReadEnd;
 
 #ifdef MOZ_GECKO_PROFILER
-  if (profiler_is_active()) {
+  if (profiler_can_accept_markers()) {
     int32_t priority = PRIORITY_NORMAL;
     GetPriority(&priority);
     profiler_add_network_marker(
