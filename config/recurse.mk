@@ -187,6 +187,13 @@ toolkit/components/telemetry: layout/style/export
 ifdef ENABLE_CLANG_PLUGIN
 $(filter-out config/host build/unix/stdc++compat/% build/clang-plugin/%,$(compile_targets)): build/clang-plugin/host build/clang-plugin/tests/target-objects
 build/clang-plugin/tests/target-objects: build/clang-plugin/host
+# clang-plugin tests require js-confdefs.h on js standalone builds and mozilla-config.h on
+# other builds, because they are -include'd.
+ifdef JS_STANDALONE
+build/clang-plugin/tests/target-objects: js/src/export
+else
+build/clang-plugin/tests/target-objects: mozilla-config.h
+endif
 endif
 
 # Interdependencies that moz.build world don't know about yet for compilation.
