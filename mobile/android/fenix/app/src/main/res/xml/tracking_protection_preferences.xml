@@ -19,15 +19,15 @@
         android:defaultValue="false"
         android:dependency="@string/pref_key_tracking_protection"
         android:key="@string/pref_key_tracking_protection_standard"
-        android:summary="@string/preference_enhanced_tracking_protection_standard_description"
+        android:summary="@string/preference_enhanced_tracking_protection_standard_description_2"
         android:title="@string/preference_enhanced_tracking_protection_standard_option"
         app:isPreferenceVisible="false" />
     <org.mozilla.fenix.settings.RadioButtonInfoPreference
         android:defaultValue="true"
         android:dependency="@string/pref_key_tracking_protection"
         android:key="@string/pref_key_tracking_protection_strict"
-        android:summary="@string/preference_enhanced_tracking_protection_strict_description"
-        android:title="@string/preference_enhanced_tracking_protection_strict"
+        android:summary="@string/preference_enhanced_tracking_protection_strict_default_description"
+        android:title="@string/preference_enhanced_tracking_protection_strict_default"
         app:isPreferenceVisible="false" />
     <Preference
         android:icon="@drawable/ic_info"
