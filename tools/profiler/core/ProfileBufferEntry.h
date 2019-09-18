@@ -22,42 +22,70 @@
 #include "nsString.h"
 
 class ProfilerCodeAddressService;
-class ProfilerMarker;
 
 // NOTE!  If you add entries, you need to verify if they need to be added to the
 // switch statement in DuplicateLastSample!
-#define FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(MACRO)                   \
-  MACRO(CategoryPair, int)                                          \
-  MACRO(CollectionStart, double)                                    \
-  MACRO(CollectionEnd, double)                                      \
-  MACRO(Label, const char*)                                         \
-  MACRO(FrameFlags, uint64_t)                                       \
-  MACRO(DynamicStringFragment, char*) /* char[kNumChars], really */ \
-  MACRO(JitReturnAddr, void*)                                       \
-  MACRO(LineNumber, int)                                            \
-  MACRO(ColumnNumber, int)                                          \
-  MACRO(NativeLeafAddr, void*)                                      \
-  MACRO(Marker, ProfilerMarker*)                                    \
-  MACRO(Pause, double)                                              \
-  MACRO(Responsiveness, double)                                     \
-  MACRO(Resume, double)                                             \
-  MACRO(ThreadId, int)                                              \
-  MACRO(Time, double)                                               \
-  MACRO(CounterId, void*)                                           \
-  MACRO(CounterKey, uint64_t)                                       \
-  MACRO(Number, uint64_t)                                           \
-  MACRO(Count, int64_t)                                             \
-  MACRO(ProfilerOverheadTime, double)                               \
-  MACRO(ProfilerOverheadDuration, double)
+// This will evaluate the MACRO with (KIND, TYPE, SIZE)
+#define FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(MACRO)                    \
+  MACRO(CategoryPair, int, sizeof(int))                              \
+  MACRO(CollectionStart, double, sizeof(double))                     \
+  MACRO(CollectionEnd, double, sizeof(double))                       \
+  MACRO(Label, const char*, sizeof(const char*))                     \
+  MACRO(FrameFlags, uint64_t, sizeof(uint64_t))                      \
+  MACRO(DynamicStringFragment, char*, ProfileBufferEntry::kNumChars) \
+  MACRO(JitReturnAddr, void*, sizeof(void*))                         \
+  MACRO(LineNumber, int, sizeof(int))                                \
+  MACRO(ColumnNumber, int, sizeof(int))                              \
+  MACRO(NativeLeafAddr, void*, sizeof(void*))                        \
+  MACRO(Pause, double, sizeof(double))                               \
+  MACRO(Responsiveness, double, sizeof(double))                      \
+  MACRO(Resume, double, sizeof(double))                              \
+  MACRO(ThreadId, int, sizeof(int))                                  \
+  MACRO(Time, double, sizeof(double))                                \
+  MACRO(TimeBeforeCompactStack, double, sizeof(double))              \
+  MACRO(CounterId, void*, sizeof(void*))                             \
+  MACRO(CounterKey, uint64_t, sizeof(uint64_t))                      \
+  MACRO(Number, uint64_t, sizeof(uint64_t))                          \
+  MACRO(Count, int64_t, sizeof(int64_t))                             \
+  MACRO(ProfilerOverheadTime, double, sizeof(double))                \
+  MACRO(ProfilerOverheadDuration, double, sizeof(double))
 
 class ProfileBufferEntry {
  public:
-  enum class Kind : uint8_t {
+  // The `Kind` is a single byte identifying the type of data that is actually
+  // stored in a `ProfileBufferEntry`, as per the list in
+  // `FOR_EACH_PROFILE_BUFFER_ENTRY_KIND`.
+  //
+  // This byte is also used to identify entries in BlocksRingBuffer blocks, for
+  // both "legacy" entries that do contain a `ProfileBufferEntry`, and for new
+  // types of entries that may carry more data of different types.
+  // TODO: Eventually each type of "legacy" entry should be replaced with newer,
+  // more efficient kinds of entries (e.g., stack frames could be stored in one
+  // bigger entry, instead of multiple `ProfileBufferEntry`s); then we could
+  // discard `ProfileBufferEntry` and move this enum to a more appropriate spot.
+  using KindUnderlyingType = uint8_t;
+  enum class Kind : KindUnderlyingType {
     INVALID = 0,
-#define KIND(k, t) k,
+#define KIND(KIND, TYPE, SIZE) KIND,
     FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(KIND)
 #undef KIND
-        LIMIT
+
+    // Any value under `LEGACY_LIMIT` represents a `ProfileBufferEntry`.
+    LEGACY_LIMIT,
+
+    // Any value starting here does *not* represent a `ProfileBufferEntry` and
+    // requires separate decoding and handling.
+
+    // Marker data, including payload.
+    MarkerData = LEGACY_LIMIT,
+
+    // Collection of legacy stack entries, must follow a ThreadId and
+    // TimeBeforeCompactStack (which are not included in the CompactStack;
+    // TimeBeforeCompactStack is equivalent to Time, but indicates that a
+    // CompactStack follows shortly afterwards).
+    CompactStack,
+
+    MODERN_LIMIT
   };
 
   ProfileBufferEntry();
@@ -71,24 +99,23 @@ class ProfileBufferEntry {
   ProfileBufferEntry(Kind aKind, const char* aString);
   ProfileBufferEntry(Kind aKind, char aChars[kNumChars]);
   ProfileBufferEntry(Kind aKind, void* aPtr);
-  ProfileBufferEntry(Kind aKind, ProfilerMarker* aMarker);
   ProfileBufferEntry(Kind aKind, double aDouble);
   ProfileBufferEntry(Kind aKind, int64_t aInt64);
   ProfileBufferEntry(Kind aKind, uint64_t aUint64);
   ProfileBufferEntry(Kind aKind, int aInt);
 
  public:
-#define CTOR(k, t)                            \
-  static ProfileBufferEntry k(t aVal) {       \
-    return ProfileBufferEntry(Kind::k, aVal); \
+#define CTOR(KIND, TYPE, SIZE)                   \
+  static ProfileBufferEntry KIND(TYPE aVal) {    \
+    return ProfileBufferEntry(Kind::KIND, aVal); \
   }
   FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(CTOR)
 #undef CTOR
 
   Kind GetKind() const { return mKind; }
 
-#define IS_KIND(k, t) \
-  bool Is##k() const { return mKind == Kind::k; }
+#define IS_KIND(KIND, TYPE, SIZE) \
+  bool Is##KIND() const { return mKind == Kind::KIND; }
   FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(IS_KIND)
 #undef IS_KIND
 
@@ -105,7 +132,6 @@ class ProfileBufferEntry {
 
   const char* GetString() const;
   void* GetPtr() const;
-  ProfilerMarker* GetMarker() const;
   double GetDouble() const;
   int GetInt() const;
   int64_t GetInt64() const;

@@ -111,13 +111,9 @@ uint32_t js::jit::SA(FloatRegister r) {
   return r.id() << SAShift;
 }
 
-void Assembler::executableCopy(uint8_t* buffer, bool flushICache) {
+void Assembler::executableCopy(uint8_t* buffer) {
   MOZ_ASSERT(isFinished);
   m_buffer.executableCopy(buffer);
-
-  if (flushICache) {
-    AutoFlushICache::setRange(uintptr_t(buffer), m_buffer.size());
-  }
 }
 
 uintptr_t Assembler::GetPointer(uint8_t* instPtr) {
@@ -153,7 +149,6 @@ static void TraceOneDataRelocation(JSTracer* trc,
       awjc.emplace(code);
     }
     AssemblerMIPSShared::UpdateLuiOriValue(inst, inst->next(), uint32_t(ptr));
-    AutoFlushICache::flush(uintptr_t(inst), 8);
   }
 }
 
@@ -308,9 +303,6 @@ void Assembler::PatchWrite_NearCall(CodeLocationLabel start,
                                      (uint32_t)dest);
   inst[2] = InstReg(op_special, ScratchRegister, zero, ra, ff_jalr);
   inst[3] = InstNOP();
-
-  // Ensure everyone sees the code that was just written into memory.
-  AutoFlushICache::flush(uintptr_t(inst), PatchWrite_NearCallSize());
 }
 
 uint32_t Assembler::ExtractLuiOriValue(Instruction* inst0, Instruction* inst1) {
@@ -348,8 +340,6 @@ void Assembler::PatchDataWithValueCheck(CodeLocationLabel label,
   // Replace with new value
   AssemblerMIPSShared::UpdateLuiOriValue(inst, inst->next(),
                                          uint32_t(newValue.value));
-
-  AutoFlushICache::flush(uintptr_t(inst), 8);
 }
 
 uint32_t Assembler::ExtractInstructionImmediate(uint8_t* code) {
@@ -373,6 +363,4 @@ void Assembler::ToggleCall(CodeLocationLabel inst_, bool enabled) {
     InstNOP nop;
     *i2 = nop;
   }
-
-  AutoFlushICache::flush(uintptr_t(i2), 4);
 }

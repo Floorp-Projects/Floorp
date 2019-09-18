@@ -683,17 +683,16 @@ var DB = {
    */
   get conn() {
     delete this.conn;
-    let conn = new Promise(async (resolve, reject) => {
+    let conn = (async () => {
       try {
         this._instance = await this._establishConn();
       } catch (e) {
         log("Failed to establish database connection: " + e);
-        reject(e);
-        return;
+        throw e;
       }
 
-      resolve(this._instance);
-    });
+      return this._instance;
+    })();
 
     return (this.conn = conn);
   },

@@ -422,16 +422,18 @@ class App extends PureComponent {
         onToggleUserAgentInput,
         onUpdateDeviceModal,
       }),
-      Viewports({
-        screenshot,
-        viewports,
-        onBrowserMounted,
-        onChangeViewportOrientation,
-        onContentResize,
-        onRemoveDeviceAssociation,
-        doResizeViewport,
-        onResizeViewport,
-      }),
+      !Services.prefs.getBoolPref("devtools.responsive.browserUI.enabled")
+        ? Viewports({
+            screenshot,
+            viewports,
+            onBrowserMounted,
+            onChangeViewportOrientation,
+            onContentResize,
+            onRemoveDeviceAssociation,
+            doResizeViewport,
+            onResizeViewport,
+          })
+        : null,
       devices.isModalOpen
         ? DeviceModal({
             deviceAdderViewportTemplate,

@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html class=reftest-wait>
+<meta charset=utf-8>
+<div id=result></div>
+<div id=source style="width:1px;word-break:break-all">Does my innerText have spaces?</div>
+<script>
+document.getElementById("result").textContent =
+  document.getElementById("source").innerText;
+document.documentElement.className = "";
+</script>

@@ -349,7 +349,11 @@ const ActionSchemas = {
                       type: ["string", "number", "boolean"],
                     },
                   },
-                  required: ["preferenceType", "preferenceValue"],
+                  required: [
+                    "preferenceType",
+                    "preferenceBranchType",
+                    "preferenceValue",
+                  ],
                 },
               },
             },

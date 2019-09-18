@@ -1233,7 +1233,7 @@ class UrlbarView {
   }
 
   _on_resize() {
-    if (this.megabar) {
+    if (this.input.megabar) {
       return;
     }
 

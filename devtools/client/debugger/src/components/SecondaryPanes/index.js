@@ -27,6 +27,7 @@ import {
   getThreadContext,
   getSourceFromId,
   getSkipPausing,
+  shouldLogEventBreakpoints,
 } from "../../selectors";
 
 import AccessibleImage from "../shared/AccessibleImage";
@@ -99,6 +100,7 @@ type Props = {
   shouldPauseOnCaughtExceptions: boolean,
   workers: ThreadList,
   skipPausing: boolean,
+  logEventBreakpoints: boolean,
   source: ?Source,
   toggleShortcutsModal: () => void,
   toggleAllBreakpoints: typeof actions.toggleAllBreakpoints,
@@ -106,6 +108,7 @@ type Props = {
   evaluateExpressions: typeof actions.evaluateExpressions,
   pauseOnExceptions: typeof actions.pauseOnExceptions,
   breakOnNext: typeof actions.breakOnNext,
+  toggleEventLogging: typeof actions.toggleEventLogging,
 };
 
 const mdnLink =
@@ -277,6 +280,26 @@ class SecondaryPanes extends Component<Props, State> {
     ];
   }
 
+  getEventButtons() {
+    const { logEventBreakpoints } = this.props;
+    return [
+      <div key="events-buttons">
+        <label
+          className="events-header"
+          title={L10N.getStr("eventlisteners.log.label")}
+          onClick={e => e.stopPropagation()}
+        >
+          <input
+            type="checkbox"
+            checked={logEventBreakpoints ? "checked" : ""}
+            onChange={e => this.props.toggleEventLogging()}
+          />
+          {L10N.getStr("eventlisteners.log")}
+        </label>
+      </div>,
+    ];
+  }
+
   getWatchItem(): AccordionPaneItem {
     return {
       header: L10N.getStr("watchExpressions.header"),
@@ -366,7 +389,7 @@ class SecondaryPanes extends Component<Props, State> {
     return {
       header: L10N.getStr("eventListenersHeader1"),
       className: "event-listeners-pane",
-      buttons: [],
+      buttons: this.getEventButtons(),
       component: <EventListeners />,
       opened: prefs.eventListenersVisible,
       onToggle: opened => {
@@ -540,6 +563,7 @@ const mapStateToProps = state => {
     shouldPauseOnCaughtExceptions: getShouldPauseOnCaughtExceptions(state),
     workers: getThreads(state),
     skipPausing: getSkipPausing(state),
+    logEventBreakpoints: shouldLogEventBreakpoints(state),
     source:
       selectedFrame && getSourceFromId(state, selectedFrame.location.sourceId),
   };
@@ -553,5 +577,6 @@ export default connect(
     pauseOnExceptions: actions.pauseOnExceptions,
     toggleMapScopes: actions.toggleMapScopes,
     breakOnNext: actions.breakOnNext,
+    toggleEventLogging: actions.toggleEventLogging,
   }
 )(SecondaryPanes);

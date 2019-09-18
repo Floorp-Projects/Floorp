@@ -1,6 +1,7 @@
 {
     "stages": "3",
     "build_libcxx": true,
+    "build_wasm": true,
     "build_type": "Release",
     "assertions": false,
     "python_path": "/usr/bin/python2.7",

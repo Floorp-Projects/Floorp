@@ -27,6 +27,7 @@ const test = new SearchConfigTest({
             "ast",
             "az",
             "ca",
+            "ca-valencia",
             "cak",
             "da",
             "de",

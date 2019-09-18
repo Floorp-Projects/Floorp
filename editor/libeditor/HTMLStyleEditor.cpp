@@ -165,8 +165,15 @@ nsresult HTMLEditor::SetInlinePropertyInternal(
   }
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eInsertElement, nsIEditor::eNext);
+      *this, EditSubAction::eInsertElement, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   {
     AutoSelectionRestorer restoreSelectionLater(*this);
@@ -1260,8 +1267,16 @@ nsresult HTMLEditor::RemoveAllInlinePropertiesAsAction(
   }
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eRemoveAllTextProperties, nsIEditor::eNext);
+      *this, EditSubAction::eRemoveAllTextProperties, nsIEditor::eNext,
+      ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return EditorBase::ToGenericNSResult(ignoredError.StealNSResult());
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   nsresult rv = RemoveInlinePropertyInternal(nullptr, nullptr);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -1366,8 +1381,16 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(nsAtom* aProperty,
   }
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eRemoveTextProperty, nsIEditor::eNext);
+      *this, EditSubAction::eRemoveTextProperty, nsIEditor::eNext,
+      ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   {
     AutoSelectionRestorer restoreSelectionLater(*this);
@@ -1580,8 +1603,16 @@ nsresult HTMLEditor::RelativeFontChange(FontSize aDir) {
 
   // Wrap with txn batching, rules sniffing, and selection preservation code
   AutoPlaceholderBatch treatAsOneTransaction(*this);
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eSetTextProperty, nsIEditor::eNext);
+      *this, EditSubAction::eSetTextProperty, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
+
   AutoSelectionRestorer restoreSelectionLater(*this);
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
 

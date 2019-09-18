@@ -8,7 +8,7 @@ use api::{
     PremultipliedColorF, Shadow, YuvColorSpace, ColorRange, YuvFormat,
 };
 use api::units::*;
-use crate::display_list_flattener::{CreateShadow, IsVisible};
+use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::FrameBuildingState;
 use crate::gpu_cache::{GpuCache, GpuDataRequest};
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
@@ -20,9 +20,9 @@ use crate::prim_store::{
     SizeKey, InternablePrimitive,
 };
 use crate::render_target::RenderTargetKind;
-use crate::render_task::{
-    BlitSource, RenderTask, RenderTaskCacheEntryHandle, RenderTaskCacheKey,
-    RenderTaskCacheKeyKind,
+use crate::render_task::{BlitSource, RenderTask};
+use crate::render_task_cache::{
+    RenderTaskCacheEntryHandle, RenderTaskCacheKey, RenderTaskCacheKeyKind
 };
 use crate::resource_cache::{ImageRequest, ResourceCache};
 use crate::util::pack_as_float;

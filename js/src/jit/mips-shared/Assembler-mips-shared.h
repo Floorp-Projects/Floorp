@@ -859,7 +859,7 @@ class AssemblerMIPSShared : public AssemblerShared {
   bool appendRawCode(const uint8_t* code, size_t numBytes);
   bool reserve(size_t size);
   bool swapBuffer(wasm::Bytes& bytes);
-  void executableCopy(void* buffer, bool flushICache = true);
+  void executableCopy(void* buffer);
   void copyJumpRelocationTable(uint8_t* dest);
   void copyDataRelocationTable(uint8_t* dest);
 

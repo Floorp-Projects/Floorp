@@ -488,7 +488,7 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   :root[tabsintitlebar] > #navigator-toolbox > #titlebar {
     -moz-appearance: -moz-window-titlebar-maximized;
   }
-  :root[tabsintitlebar][sizemode="normal"] > #navigator-toolbox > #titlebar {
+  :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) > #navigator-toolbox > #titlebar {
     -moz-appearance: -moz-window-titlebar;
   }
   :root[tabsintitlebar]:not([inDOMFullscreen]) > #navigator-toolbox > #titlebar:-moz-lwtheme {

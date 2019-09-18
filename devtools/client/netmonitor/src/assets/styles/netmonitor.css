@@ -18,6 +18,7 @@
 @import "chrome://devtools/content/netmonitor/src/assets/styles/Toolbar.css";
 @import "chrome://devtools/content/netmonitor/src/assets/styles/StatusBar.css";
 @import "chrome://devtools/content/netmonitor/src/assets/styles/RequestList.css";
+@import "chrome://devtools/content/netmonitor/src/assets/styles/NetworkActionBar.css";
 @import "chrome://devtools/content/netmonitor/src/assets/styles/NetworkDetailsPanel.css";
 @import "chrome://devtools/content/netmonitor/src/assets/styles/StatisticsPanel.css";
 @import "chrome://devtools/content/netmonitor/src/assets/styles/CustomRequestPanel.css";

@@ -366,8 +366,6 @@ Services.obs.addObserver(
         contents.arguments.forEach(v =>
           contents.argumentsData.addValue(v, PropertyLevels.FULL)
         );
-
-        ClearPausedState();
       }
 
       newConsoleMessage(contents);
@@ -911,12 +909,6 @@ function getDebuggeeValue(value) {
   return value;
 }
 
-// eslint-disable-next-line no-unused-vars
-function ClearPausedState() {
-  gPausedObjects = new IdMap();
-  gDereferencedObjects = new Map();
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // Manifest Management
 ///////////////////////////////////////////////////////////////////////////////
@@ -1015,7 +1007,6 @@ const gManifestStartHandlers = {
   getPauseData() {
     divergeFromRecording();
     const data = getPauseData();
-    data.paintData = RecordReplayControl.repaint();
     RecordReplayControl.manifestFinished(data);
   },
 
@@ -1034,12 +1025,7 @@ const gManifestStartHandlers = {
     const displayName = formatDisplayName(frame);
     const rv = frame.evalWithBindings(`[${text}]`, { displayName });
 
-    let pauseData;
-    if (!skipPauseData) {
-      pauseData = getPauseData();
-      pauseData.paintData = RecordReplayControl.repaint();
-      ClearPausedState();
-    }
+    const pauseData = skipPauseData ? undefined : getPauseData();
 
     let result;
     if (rv.return) {
@@ -1188,6 +1174,12 @@ function processManifestAfterCheckpoint(point, restoredSnapshot) {
 function HitCheckpoint(id) {
   gLastCheckpoint = id;
   const point = currentExecutionPoint();
+
+  // Reset paused state at each checkpoint. In order to reach the checkpoint we
+  // must have unpaused, and resetting the state allows these objects to be
+  // collected by the GC.
+  gPausedObjects = new IdMap();
+  gDereferencedObjects = new Map();
 
   try {
     processManifestAfterCheckpoint(point);
@@ -1778,13 +1770,16 @@ PreviewedObjects.prototype = {
 // as the server will end up needing to make more requests before the client can
 // finish pausing.
 function getPauseData() {
+  const paintData = RecordReplayControl.repaint();
+
   const numFrames = countScriptFrames();
   if (!numFrames) {
-    return {};
+    return { paintData };
   }
 
   const rv = new PreviewedObjects();
 
+  rv.paintData = paintData;
   rv.frames = [];
   rv.scripts = {};
   rv.offsetMetadata = [];

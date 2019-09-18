@@ -80,7 +80,7 @@ use crate::render_backend::{FrameId, RenderBackend};
 use crate::render_task_graph::RenderTaskGraph;
 use crate::render_task::{RenderTask, RenderTaskData, RenderTaskKind};
 use crate::resource_cache::ResourceCache;
-use crate::scene_builder::{SceneBuilder, LowPrioritySceneBuilder};
+use crate::scene_builder_thread::{SceneBuilderThread, LowPrioritySceneBuilderThread};
 use crate::screen_capture::AsyncScreenshotGrabber;
 use crate::shade::{Shaders, WrShaders};
 use smallvec::SmallVec;
@@ -2096,7 +2096,7 @@ impl Renderer {
         let lp_scene_thread_name = format!("WRSceneBuilderLP#{}", options.renderer_id.unwrap_or(0));
         let glyph_rasterizer = GlyphRasterizer::new(workers)?;
 
-        let (scene_builder, scene_tx, scene_rx) = SceneBuilder::new(
+        let (scene_builder, scene_tx, scene_rx) = SceneBuilderThread::new(
             config,
             api_tx.clone(),
             scene_builder_hooks,
@@ -2118,7 +2118,7 @@ impl Renderer {
 
         let low_priority_scene_tx = if options.support_low_priority_transactions {
             let (low_priority_scene_tx, low_priority_scene_rx) = channel();
-            let lp_builder = LowPrioritySceneBuilder {
+            let lp_builder = LowPrioritySceneBuilderThread {
                 rx: low_priority_scene_rx,
                 tx: scene_tx.clone(),
                 simulate_slow_ms: 0,
@@ -2876,6 +2876,8 @@ impl Renderer {
                 let dirty_regions =
                     mem::replace(&mut frame.recorded_dirty_regions, Vec::new());
                 results.recorded_dirty_regions.extend(dirty_regions);
+                let dirty_rects = mem::replace(&mut frame.dirty_rects, Vec::new());
+                results.dirty_rects.extend(dirty_rects);
 
                 // If we're the last document, don't call end_pass here, because we'll
                 // be moving on to drawing the debug overlays. See the comment above
@@ -5647,8 +5649,23 @@ pub struct RendererStats {
 /// some non-repr(C) data.
 #[derive(Debug, Default)]
 pub struct RenderResults {
+    /// Statistics about the frame that was rendered.
     pub stats: RendererStats,
+
+    /// A list of dirty world rects. This is only currently
+    /// useful to test infrastructure.
+    /// TODO(gw): This needs to be refactored / removed.
     pub recorded_dirty_regions: Vec<RecordedDirtyRegion>,
+
+    /// A list of the device dirty rects that were updated
+    /// this frame.
+    /// TODO(gw): This is an initial interface, likely to change in future.
+    /// TODO(gw): The dirty rects here are currently only useful when scrolling
+    ///           is not occurring. They are still correct in the case of
+    ///           scrolling, but will be very large (until we expose proper
+    ///           OS compositor support where the dirty rects apply to a
+    ///           specific picture cache slice / OS compositor surface).
+    pub dirty_rects: Vec<DeviceIntRect>,
 }
 
 #[cfg(any(feature = "capture", feature = "replay"))]

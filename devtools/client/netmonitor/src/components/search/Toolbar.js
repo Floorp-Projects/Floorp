@@ -36,6 +36,7 @@ class Toolbar extends Component {
       search: PropTypes.func.isRequired,
       closeSearch: PropTypes.func.isRequired,
       addSearchQuery: PropTypes.func.isRequired,
+      clearSearchResultAndCancel: PropTypes.func.isRequired,
       caseSensitive: PropTypes.bool.isRequired,
       toggleCaseSensitiveSearch: PropTypes.func.isRequired,
       connector: PropTypes.object.isRequired,
@@ -119,14 +120,18 @@ class Toolbar extends Component {
    * Render Search box.
    */
   renderFilterBox() {
-    const { addSearchQuery, clearSearchResults, connector } = this.props;
+    const {
+      addSearchQuery,
+      clearSearchResultAndCancel,
+      connector,
+    } = this.props;
     return SearchBox({
       keyShortcut: "CmdOrCtrl+Shift+F",
       placeholder: L10N.getStr("netmonitor.search.toolbar.inputPlaceholder"),
       type: "search",
       delay: FILTER_SEARCH_DELAY,
       ref: this.props.searchboxRef,
-      onClearButtonClick: () => clearSearchResults(),
+      onClearButtonClick: () => clearSearchResultAndCancel(),
       onChange: query => addSearchQuery(query),
       onKeyDown: event => this.onKeyDown(event, connector),
     });
@@ -152,7 +157,8 @@ module.exports = connect(
   dispatch => ({
     closeSearch: () => dispatch(Actions.closeSearch()),
     openSearch: () => dispatch(Actions.openSearch()),
-    clearSearchResults: () => dispatch(Actions.clearSearchResults()),
+    clearSearchResultAndCancel: () =>
+      dispatch(Actions.clearSearchResultAndCancel()),
     toggleCaseSensitiveSearch: () =>
       dispatch(Actions.toggleCaseSensitiveSearch()),
     search: (connector, query) => dispatch(Actions.search(connector, query)),

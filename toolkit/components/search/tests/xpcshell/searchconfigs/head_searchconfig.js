@@ -163,8 +163,8 @@ class SearchConfigTest {
     if (useEngineSelector) {
       let engines = [];
       let configs = await engineSelector.fetchEngineConfiguration(
-        region,
-        locale
+        locale,
+        region
       );
       for (let config of configs.engines) {
         let engine = await this._getExtensionEngine(config);

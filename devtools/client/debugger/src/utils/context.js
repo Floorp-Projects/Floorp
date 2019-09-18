@@ -62,7 +62,7 @@ export function validateNavigateContext(state: State, cx: Context) {
   }
 }
 
-function validateThreadContext(state: State, cx: ThreadContext) {
+export function validateThreadContext(state: State, cx: ThreadContext) {
   const newcx = getThreadContext(state);
 
   if (cx.thread != newcx.thread) {

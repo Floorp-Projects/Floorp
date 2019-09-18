@@ -6,9 +6,8 @@
 
 #include "ProfileBuffer.h"
 
-#include "ProfilerMarker.h"
-
 #include "BaseProfiler.h"
+#include "js/GCAPI.h"
 #include "jsfriendapi.h"
 #include "mozilla/MathAlgorithms.h"
 #include "nsJSPrincipals.h"
@@ -16,38 +15,67 @@
 
 using namespace mozilla;
 
-ProfileBuffer::ProfileBuffer(PowerOfTwo32 aCapacity)
-    : mEntries(MakeUnique<ProfileBufferEntry[]>(aCapacity.Value())),
-      mEntryIndexMask(aCapacity.Mask()),
-      mRangeStart(0),
-      mRangeEnd(0) {}
+// 65536 bytes should be plenty for a single backtrace.
+static constexpr auto WorkerBufferBytes = MakePowerOfTwo32<65536>();
+
+ProfileBuffer::ProfileBuffer(BlocksRingBuffer& aBuffer, PowerOfTwo32 aCapacity)
+    : mEntries(aBuffer),
+      mWorkerBuffer(
+          MakeUnique<BlocksRingBuffer::Byte[]>(WorkerBufferBytes.Value())) {
+  // Only ProfileBuffer should control this buffer, and it should be empty when
+  // there is no ProfileBuffer using it.
+  MOZ_ASSERT(mEntries.BufferLength().isNothing());
+  // Allocate the requested capacity.
+  mEntries.Set(aCapacity);
+}
+
+ProfileBuffer::ProfileBuffer(BlocksRingBuffer& aBuffer) : mEntries(aBuffer) {
+  // Assume the given buffer is not empty.
+  MOZ_ASSERT(mEntries.BufferLength().isSome());
+}
 
 ProfileBuffer::~ProfileBuffer() {
-  while (mStoredMarkers.peek()) {
-    delete mStoredMarkers.popHead();
+  // Only ProfileBuffer controls this buffer, and it should be empty when there
+  // is no ProfileBuffer using it.
+  mEntries.Reset();
+  MOZ_ASSERT(mEntries.BufferLength().isNothing());
+}
+
+/* static */
+BlocksRingBuffer::BlockIndex ProfileBuffer::AddEntry(
+    BlocksRingBuffer& aBlocksRingBuffer, const ProfileBufferEntry& aEntry) {
+  switch (aEntry.GetKind()) {
+#define SWITCH_KIND(KIND, TYPE, SIZE)                                        \
+  case ProfileBufferEntry::Kind::KIND: {                                     \
+    /* Rooting analysis cannot get through `BlocksRingBuffer`'s heavy use of \
+     * lambdas and `std::function`s, which then trips it when used from      \
+     * `MergeStacks()` where unrooted js objects are manipulated. */         \
+    JS::AutoSuppressGCAnalysis nogc;                                         \
+    return aBlocksRingBuffer.PutFrom(&aEntry, 1 + (SIZE));                   \
+  }
+
+    FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(SWITCH_KIND)
+
+#undef SWITCH_KIND
+    default:
+      MOZ_ASSERT(false, "Unhandled ProfilerBuffer entry KIND");
+      return BlockIndex{};
   }
 }
 
 // Called from signal, call only reentrant functions
-void ProfileBuffer::AddEntry(const ProfileBufferEntry& aEntry) {
-  GetEntry(mRangeEnd++) = aEntry;
+uint64_t ProfileBuffer::AddEntry(const ProfileBufferEntry& aEntry) {
+  return AddEntry(mEntries, aEntry).ConvertToU64();
+}
 
-  // The distance between mRangeStart and mRangeEnd must never exceed
-  // capacity, so advance mRangeStart if necessary.
-  if (mRangeEnd - mRangeStart > mEntryIndexMask.MaskValue() + 1) {
-    mRangeStart++;
-  }
+/* static */
+BlocksRingBuffer::BlockIndex ProfileBuffer::AddThreadIdEntry(
+    BlocksRingBuffer& aBlocksRingBuffer, int aThreadId) {
+  return AddEntry(aBlocksRingBuffer, ProfileBufferEntry::ThreadId(aThreadId));
 }
 
 uint64_t ProfileBuffer::AddThreadIdEntry(int aThreadId) {
-  uint64_t pos = mRangeEnd;
-  AddEntry(ProfileBufferEntry::ThreadId(aThreadId));
-  return pos;
-}
-
-void ProfileBuffer::AddStoredMarker(ProfilerMarker* aStoredMarker) {
-  aStoredMarker->SetPositionInBuffer(mRangeEnd);
-  mStoredMarkers.insert(aStoredMarker);
+  return AddThreadIdEntry(mEntries, aThreadId).ConvertToU64();
 }
 
 void ProfileBuffer::CollectCodeLocation(
@@ -87,28 +115,15 @@ void ProfileBuffer::CollectCodeLocation(
   }
 }
 
-void ProfileBuffer::DeleteExpiredStoredMarkers() {
-  AUTO_PROFILER_STATS(gecko_ProfileBuffer_DeleteExpiredStoredMarkers);
-
-  // Delete markers of samples that have been overwritten due to circular
-  // buffer wraparound.
-  while (mStoredMarkers.peek() &&
-         mStoredMarkers.peek()->HasExpired(mRangeStart)) {
-    delete mStoredMarkers.popHead();
-  }
-}
-
-size_t ProfileBuffer::SizeOfIncludingThis(
-    mozilla::MallocSizeOf aMallocSizeOf) const {
-  size_t n = aMallocSizeOf(this);
-  n += aMallocSizeOf(mEntries.get());
-
+size_t ProfileBuffer::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
   // Measurement of the following members may be added later if DMD finds it
   // is worthwhile:
   // - memory pointed to by the elements within mEntries
-  // - mStoredMarkers
+  return mEntries.SizeOfExcludingThis(aMallocSizeOf);
+}
 
-  return n;
+size_t ProfileBuffer::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
+  return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
 void ProfileBuffer::CollectOverheadStats(TimeDuration aSamplingTime,
@@ -146,9 +161,15 @@ void ProfileBuffer::CollectOverheadStats(TimeDuration aSamplingTime,
 }
 
 ProfilerBufferInfo ProfileBuffer::GetProfilerBufferInfo() const {
-  return {mRangeStart,  mRangeEnd,    mEntryIndexMask.MaskValue() + 1,
-          mIntervalsNs, mOverheadsNs, mLockingsNs,
-          mCleaningsNs, mCountersNs,  mThreadsNs};
+  return {BufferRangeStart(),
+          BufferRangeEnd(),
+          mEntries.BufferLength()->Value() / 8,  // 8 bytes per entry.
+          mIntervalsNs,
+          mOverheadsNs,
+          mLockingsNs,
+          mCleaningsNs,
+          mCountersNs,
+          mThreadsNs};
 }
 
 /* ProfileBufferCollector */

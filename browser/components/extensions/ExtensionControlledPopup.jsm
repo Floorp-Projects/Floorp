@@ -358,40 +358,40 @@ class ExtensionControlledPopup {
     description.appendChild(link);
   }
 
-  _ensureWindowReady(win) {
+  async _ensureWindowReady(win) {
+    if (win.closed) {
+      throw new Error("window is closed");
+    }
+    let promises = [];
+    let listenersToRemove = [];
+    function promiseEvent(type) {
+      promises.push(
+        new Promise(resolve => {
+          let listener = () => {
+            win.removeEventListener(type, listener);
+            resolve();
+          };
+          win.addEventListener(type, listener);
+          listenersToRemove.push([type, listener]);
+        })
+      );
+    }
+    let { focusedWindow, activeWindow } = Services.focus;
+    if (activeWindow != win) {
+      promiseEvent("activate");
+    }
+    if (focusedWindow) {
+      // We may have focused a non-remote child window, find the browser window:
+      let { rootTreeItem } = focusedWindow.docShell;
+      rootTreeItem.QueryInterface(Ci.nsIDocShell);
+      focusedWindow = rootTreeItem.contentViewer.DOMDocument.defaultView;
+    }
+    if (focusedWindow != win) {
+      promiseEvent("focus");
+    }
+    let unloadListener;
+    // eslint-disable-next-line no-async-promise-executor
     return new Promise(async (resolve, reject) => {
-      if (win.closed) {
-        reject();
-        return;
-      }
-      let promises = [];
-      let listenersToRemove = [];
-      function promiseEvent(type) {
-        promises.push(
-          new Promise(resolve => {
-            let listener = () => {
-              win.removeEventListener(type, listener);
-              resolve();
-            };
-            win.addEventListener(type, listener);
-            listenersToRemove.push([type, listener]);
-          })
-        );
-      }
-      let { focusedWindow, activeWindow } = Services.focus;
-      if (activeWindow != win) {
-        promiseEvent("activate");
-      }
-      if (focusedWindow) {
-        // We may have focused a non-remote child window, find the browser window:
-        let { rootTreeItem } = focusedWindow.docShell;
-        rootTreeItem.QueryInterface(Ci.nsIDocShell);
-        focusedWindow = rootTreeItem.contentViewer.DOMDocument.defaultView;
-      }
-      if (focusedWindow != win) {
-        promiseEvent("focus");
-      }
-      let unloadListener;
       if (promises.length) {
         unloadListener = () => {
           for (let [type, listener] of listenersToRemove) {
@@ -401,11 +401,20 @@ class ExtensionControlledPopup {
         };
         win.addEventListener("unload", unloadListener, { once: true });
       }
-      await Promise.all(promises);
+      let error;
+      try {
+        await Promise.all(promises);
+      } catch (ex) {
+        error = ex;
+      }
       if (unloadListener) {
         win.removeEventListener("unload", unloadListener);
       }
-      resolve();
+      if (error) {
+        reject(new Error("window unloaded"));
+      } else {
+        resolve();
+      }
     });
   }
 }

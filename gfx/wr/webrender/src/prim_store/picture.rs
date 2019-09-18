@@ -7,7 +7,7 @@ use api::{
     PropertyBinding, PropertyBindingId, CompositeOperator,
 };
 use api::units::{Au, LayoutSize, LayoutVector2D};
-use crate::display_list_flattener::IsVisible;
+use crate::scene_building::IsVisible;
 use crate::filterdata::SFilterData;
 use crate::intern::ItemUid;
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};

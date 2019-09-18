@@ -84,12 +84,13 @@ class BlocksRingBuffer {
   // Near-infinite index type, not expecting overflow.
   using Index = uint64_t;
 
+ public:
   // Using ModuloBuffer as underlying circular byte buffer.
   using Buffer = ModuloBuffer<uint32_t, Index>;
+  using Byte = Buffer::Byte;
   using BufferWriter = Buffer::Writer;
   using BufferReader = Buffer::Reader;
 
- public:
   // Length type for total buffer (as PowerOfTwo<Length>) and each entry.
   using Length = uint32_t;
 
@@ -159,6 +160,13 @@ class BlocksRingBuffer {
       return mBlockIndex >= aRhs.mBlockIndex;
     }
 
+    // Temporary escape hatches to let legacy code access block indices.
+    // TODO: Remove this when legacy code has been modernized.
+    uint64_t ConvertToU64() const { return uint64_t(mBlockIndex); }
+    static BlockIndex ConvertFromU64(uint64_t aIndex) {
+      return BlockIndex(Index(aIndex));
+    }
+
    private:
     // Only BlocksRingBuffer internal functions and serializers can convert
     // between `BlockIndex` and `Index`.
@@ -169,25 +177,34 @@ class BlocksRingBuffer {
     Index mBlockIndex;
   };
 
+  enum class ThreadSafety { WithoutMutex, WithMutex };
+
   // Default constructor starts out-of-session (nothing to read or write).
-  BlocksRingBuffer() = default;
+  explicit BlocksRingBuffer(ThreadSafety aThreadSafety)
+      : mMutex(aThreadSafety != ThreadSafety::WithoutMutex) {}
 
   // Constructors with no entry destructor, the oldest entries will be silently
   // overwritten/destroyed.
 
   // Create a buffer of the given length.
-  explicit BlocksRingBuffer(PowerOfTwo<Length> aLength)
-      : mMaybeUnderlyingBuffer(Some(UnderlyingBuffer(aLength))) {}
+  explicit BlocksRingBuffer(ThreadSafety aThreadSafety,
+                            PowerOfTwo<Length> aLength)
+      : mMutex(aThreadSafety != ThreadSafety::WithoutMutex),
+        mMaybeUnderlyingBuffer(Some(UnderlyingBuffer(aLength))) {}
 
   // Take ownership of an existing buffer.
-  BlocksRingBuffer(UniquePtr<Buffer::Byte[]> aExistingBuffer,
+  BlocksRingBuffer(ThreadSafety aThreadSafety,
+                   UniquePtr<Buffer::Byte[]> aExistingBuffer,
                    PowerOfTwo<Length> aLength)
-      : mMaybeUnderlyingBuffer(
+      : mMutex(aThreadSafety != ThreadSafety::WithoutMutex),
+        mMaybeUnderlyingBuffer(
             Some(UnderlyingBuffer(std::move(aExistingBuffer), aLength))) {}
 
   // Use an externally-owned buffer.
-  BlocksRingBuffer(Buffer::Byte* aExternalBuffer, PowerOfTwo<Length> aLength)
-      : mMaybeUnderlyingBuffer(
+  BlocksRingBuffer(ThreadSafety aThreadSafety, Buffer::Byte* aExternalBuffer,
+                   PowerOfTwo<Length> aLength)
+      : mMutex(aThreadSafety != ThreadSafety::WithoutMutex),
+        mMaybeUnderlyingBuffer(
             Some(UnderlyingBuffer(aExternalBuffer, aLength))) {}
 
   // Constructors with an entry destructor, which will be called with an
@@ -198,26 +215,32 @@ class BlocksRingBuffer {
 
   // Create a buffer of the given length.
   template <typename EntryDestructor>
-  explicit BlocksRingBuffer(PowerOfTwo<Length> aLength,
+  explicit BlocksRingBuffer(ThreadSafety aThreadSafety,
+                            PowerOfTwo<Length> aLength,
                             EntryDestructor&& aEntryDestructor)
-      : mMaybeUnderlyingBuffer(Some(UnderlyingBuffer(
+      : mMutex(aThreadSafety != ThreadSafety::WithoutMutex),
+        mMaybeUnderlyingBuffer(Some(UnderlyingBuffer(
             aLength, std::forward<EntryDestructor>(aEntryDestructor)))) {}
 
   // Take ownership of an existing buffer.
   template <typename EntryDestructor>
-  explicit BlocksRingBuffer(UniquePtr<Buffer::Byte[]> aExistingBuffer,
+  explicit BlocksRingBuffer(ThreadSafety aThreadSafety,
+                            UniquePtr<Buffer::Byte[]> aExistingBuffer,
                             PowerOfTwo<Length> aLength,
                             EntryDestructor&& aEntryDestructor)
-      : mMaybeUnderlyingBuffer(Some(UnderlyingBuffer(
+      : mMutex(aThreadSafety != ThreadSafety::WithoutMutex),
+        mMaybeUnderlyingBuffer(Some(UnderlyingBuffer(
             std::move(aExistingBuffer), aLength,
             std::forward<EntryDestructor>(aEntryDestructor)))) {}
 
   // Use an externally-owned buffer.
   template <typename EntryDestructor>
-  explicit BlocksRingBuffer(Buffer::Byte* aExternalBuffer,
+  explicit BlocksRingBuffer(ThreadSafety aThreadSafety,
+                            Buffer::Byte* aExternalBuffer,
                             PowerOfTwo<Length> aLength,
                             EntryDestructor&& aEntryDestructor)
-      : mMaybeUnderlyingBuffer(Some(UnderlyingBuffer(
+      : mMutex(aThreadSafety != ThreadSafety::WithoutMutex),
+        mMaybeUnderlyingBuffer(Some(UnderlyingBuffer(
             aExternalBuffer, aLength,
             std::forward<EntryDestructor>(aEntryDestructor)))) {}
 
@@ -226,20 +249,20 @@ class BlocksRingBuffer {
   ~BlocksRingBuffer() {
 #ifdef DEBUG
     // Needed because of lock DEBUG-check in `DestroyAllEntries()`.
-    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
 #endif  // DEBUG
     DestroyAllEntries();
   }
 
   // Remove underlying buffer, if any.
   void Reset() {
-    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
     ResetUnderlyingBuffer();
   }
 
   // Create a buffer of the given length.
   void Set(PowerOfTwo<Length> aLength) {
-    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
     ResetUnderlyingBuffer();
     mMaybeUnderlyingBuffer.emplace(aLength);
   }
@@ -247,14 +270,14 @@ class BlocksRingBuffer {
   // Take ownership of an existing buffer.
   void Set(UniquePtr<Buffer::Byte[]> aExistingBuffer,
            PowerOfTwo<Length> aLength) {
-    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
     ResetUnderlyingBuffer();
     mMaybeUnderlyingBuffer.emplace(std::move(aExistingBuffer), aLength);
   }
 
   // Use an externally-owned buffer.
   void Set(Buffer::Byte* aExternalBuffer, PowerOfTwo<Length> aLength) {
-    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
     ResetUnderlyingBuffer();
     mMaybeUnderlyingBuffer.emplace(aExternalBuffer, aLength);
   }
@@ -262,7 +285,7 @@ class BlocksRingBuffer {
   // Create a buffer of the given length, with entry destructor.
   template <typename EntryDestructor>
   void Set(PowerOfTwo<Length> aLength, EntryDestructor&& aEntryDestructor) {
-    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
     ResetUnderlyingBuffer();
     mMaybeUnderlyingBuffer.emplace(
         aLength, std::forward<EntryDestructor>(aEntryDestructor));
@@ -272,7 +295,7 @@ class BlocksRingBuffer {
   template <typename EntryDestructor>
   void Set(UniquePtr<Buffer::Byte[]> aExistingBuffer,
            PowerOfTwo<Length> aLength, EntryDestructor&& aEntryDestructor) {
-    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
     ResetUnderlyingBuffer();
     mMaybeUnderlyingBuffer.emplace(
         std::move(aExistingBuffer), aLength,
@@ -283,25 +306,27 @@ class BlocksRingBuffer {
   template <typename EntryDestructor>
   void Set(Buffer::Byte* aExternalBuffer, PowerOfTwo<Length> aLength,
            EntryDestructor&& aEntryDestructor) {
-    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
     ResetUnderlyingBuffer();
     mMaybeUnderlyingBuffer.emplace(
         aExternalBuffer, aLength,
         std::forward<EntryDestructor>(aEntryDestructor));
   }
 
+  bool IsThreadSafe() const { return mMutex.IsActivated(); }
+
   // Lock the buffer mutex and run the provided callback.
   // This can be useful when the caller needs to explicitly lock down this
   // buffer, but not do anything else with it.
   template <typename Callback>
   auto LockAndRun(Callback&& aCallback) const {
-    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
     return std::forward<Callback>(aCallback)();
   }
 
   // Buffer length in bytes.
   Maybe<PowerOfTwo<Length>> BufferLength() const {
-    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
     return mMaybeUnderlyingBuffer.map([](const UnderlyingBuffer& aBuffer) {
       return aBuffer.mBuffer.BufferLength();
     });
@@ -344,7 +369,7 @@ class BlocksRingBuffer {
   // Note that these may change right after this thread-safe call, so they
   // should only be used for statistical purposes.
   State GetState() const {
-    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
     return {
         mFirstReadIndex, mNextWriteIndex,
         mMaybeUnderlyingBuffer ? mMaybeUnderlyingBuffer->mPushedBlockCount : 0,
@@ -642,7 +667,7 @@ class BlocksRingBuffer {
   template <typename Callback>
   auto Read(Callback&& aCallback) const {
     {
-      baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
+      baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
       if (MOZ_LIKELY(mMaybeUnderlyingBuffer)) {
         Reader reader(*this);
         return std::forward<Callback>(aCallback)(&reader);
@@ -670,7 +695,7 @@ class BlocksRingBuffer {
   // store `EntryReader`, because it may become invalid after this call.
   template <typename Callback>
   auto ReadAt(BlockIndex aBlockIndex, Callback&& aCallback) const {
-    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
     MOZ_ASSERT(aBlockIndex <= mNextWriteIndex);
     Maybe<EntryReader> maybeEntryReader;
     if (MOZ_LIKELY(mMaybeUnderlyingBuffer) && aBlockIndex >= mFirstReadIndex &&
@@ -814,7 +839,7 @@ class BlocksRingBuffer {
   template <typename CallbackBytes, typename Callback>
   auto ReserveAndPut(CallbackBytes aCallbackBytes, Callback&& aCallback) {
     {  // Locked block.
-      baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
+      baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
       if (MOZ_LIKELY(mMaybeUnderlyingBuffer)) {
         Length bytes = std::forward<CallbackBytes>(aCallbackBytes)();
         // Don't allow even half of the buffer length. More than that would
@@ -901,10 +926,81 @@ class BlocksRingBuffer {
     return PutObjects(aOb);
   }
 
+  // Append the contents of another BlocksRingBuffer to this one.
+  BlockIndex AppendContents(const BlocksRingBuffer& aSrc) {
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
+
+    if (MOZ_UNLIKELY(!mMaybeUnderlyingBuffer)) {
+      // We are out-of-session, could not append contents.
+      return BlockIndex{};
+    }
+
+    baseprofiler::detail::BaseProfilerMaybeAutoLock srcLock(aSrc.mMutex);
+
+    if (MOZ_UNLIKELY(!aSrc.mMaybeUnderlyingBuffer)) {
+      // The other BRB is out-of-session, nothing to copy, we're done.
+      return BlockIndex{};
+    }
+
+    const Index srcStartIndex = Index(aSrc.mFirstReadIndex);
+    const Index srcEndIndex = Index(aSrc.mNextWriteIndex);
+    const Length bytesToCopy = static_cast<Length>(srcEndIndex - srcStartIndex);
+
+    if (MOZ_UNLIKELY(bytesToCopy == 0)) {
+      // The other BRB is empty, nothing to copy, we're done.
+      return BlockIndex{};
+    }
+
+    // Don't allow an entry to wrap around and overwrite itself!
+    MOZ_RELEASE_ASSERT(bytesToCopy <=
+                       mMaybeUnderlyingBuffer->mBuffer.BufferLength().Value());
+
+    // We will put all copied blocks at the end of the current buffer.
+    const Index dstStartIndex = Index(mNextWriteIndex);
+    // Compute where the copy will end...
+    const Index dstEndIndex = dstStartIndex + bytesToCopy;
+    // ... which is where the following block will go.
+    mNextWriteIndex = BlockIndex(dstEndIndex);
+
+    while (dstEndIndex >
+           Index(mFirstReadIndex) +
+               mMaybeUnderlyingBuffer->mBuffer.BufferLength().Value()) {
+      // About to trample on an old block.
+      EntryReader reader = ReaderInBlockAt(mFirstReadIndex);
+      // Call provided entry destructor for that entry.
+      if (mMaybeUnderlyingBuffer->mEntryDestructor) {
+        mMaybeUnderlyingBuffer->mEntryDestructor(reader);
+      }
+      mMaybeUnderlyingBuffer->mClearedBlockCount += 1;
+      MOZ_ASSERT(reader.CurrentIndex() <= Index(reader.NextBlockIndex()));
+      // Move the buffer reading start past this cleared block.
+      mFirstReadIndex = reader.NextBlockIndex();
+    }
+
+    // Update our pushed count with the number of live blocks we are copying.
+    mMaybeUnderlyingBuffer->mPushedBlockCount +=
+        aSrc.mMaybeUnderlyingBuffer->mPushedBlockCount -
+        aSrc.mMaybeUnderlyingBuffer->mClearedBlockCount;
+
+    const auto readerEnd =
+        aSrc.mMaybeUnderlyingBuffer->mBuffer.ReaderAt(srcEndIndex);
+    auto writer = mMaybeUnderlyingBuffer->mBuffer.WriterAt(dstStartIndex);
+    // Copy all the bytes. TODO: Optimize with memcpy's?
+    for (auto reader =
+             aSrc.mMaybeUnderlyingBuffer->mBuffer.ReaderAt(srcStartIndex);
+         reader != readerEnd; ++reader, ++writer) {
+      *writer = *reader;
+    }
+    MOZ_ASSERT(writer == mMaybeUnderlyingBuffer->mBuffer.WriterAt(
+                             Index(mNextWriteIndex)));
+
+    return BlockIndex(dstStartIndex);
+  }
+
   // Clear all entries, calling entry destructor (if any), and move read index
   // to the end so that these entries cannot be read anymore.
   void Clear() {
-    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
     ClearAllEntries();
   }
 
@@ -912,7 +1008,7 @@ class BlocksRingBuffer {
   // destructor (if any), and move read index to the end so that these entries
   // cannot be read anymore.
   void ClearBefore(BlockIndex aBlockIndex) {
-    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
     if (!mMaybeUnderlyingBuffer) {
       return;
     }
@@ -957,7 +1053,7 @@ class BlocksRingBuffer {
 
 #ifdef DEBUG
   void Dump() const {
-    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
     if (!mMaybeUnderlyingBuffer) {
       printf("empty BlocksRingBuffer\n");
       return;
@@ -1087,7 +1183,7 @@ class BlocksRingBuffer {
   friend struct Deserializer<UniquePtr<BlocksRingBuffer>>;
 
   // Mutex guarding the following members.
-  mutable baseprofiler::detail::BaseProfilerMutex mMutex;
+  mutable baseprofiler::detail::BaseProfilerMaybeMutex mMutex;
 
   struct UnderlyingBuffer {
     // Create a buffer of the given length.
@@ -1869,7 +1965,7 @@ struct BlocksRingBuffer::Deserializer<Variant<Ts...>> {
 template <>
 struct BlocksRingBuffer::Serializer<BlocksRingBuffer> {
   static Length Bytes(const BlocksRingBuffer& aBuffer) {
-    baseprofiler::detail::BaseProfilerAutoLock lock(aBuffer.mMutex);
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(aBuffer.mMutex);
     if (aBuffer.mMaybeUnderlyingBuffer.isNothing()) {
       // Out-of-session, we only need 1 byte to store a length of 0.
       return ULEB128Size<Length>(0);
@@ -1887,7 +1983,7 @@ struct BlocksRingBuffer::Serializer<BlocksRingBuffer> {
   }
 
   static void Write(EntryWriter& aEW, const BlocksRingBuffer& aBuffer) {
-    baseprofiler::detail::BaseProfilerAutoLock lock(aBuffer.mMutex);
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(aBuffer.mMutex);
     if (aBuffer.mMaybeUnderlyingBuffer.isNothing()) {
       // Out-of-session, only store a length of 0.
       aEW.WriteULEB128<Length>(0);
@@ -1907,13 +2003,8 @@ struct BlocksRingBuffer::Serializer<BlocksRingBuffer> {
     aEW.WriteULEB128<Length>(len);
     aEW.WriteObject(start);
     aEW.WriteObject(end);
-    // Write all the bytes. TODO: Optimize with memcpy's?
-    const auto readerEnd =
-        aBuffer.mMaybeUnderlyingBuffer->mBuffer.ReaderAt(end);
-    for (auto reader = aBuffer.mMaybeUnderlyingBuffer->mBuffer.ReaderAt(start);
-         reader != readerEnd; ++reader) {
-      aEW.WriteObject(*reader);
-    }
+    // Write all the bytes.
+    aBuffer.mMaybeUnderlyingBuffer->mBuffer.ReaderAt(start).ReadInto(aEW, len);
     // And write stats.
     aEW.WriteObject(aBuffer.mMaybeUnderlyingBuffer->mPushedBlockCount);
     aEW.WriteObject(aBuffer.mMaybeUnderlyingBuffer->mClearedBlockCount);
@@ -1950,12 +2041,9 @@ struct BlocksRingBuffer::Deserializer<BlocksRingBuffer> {
     aBuffer.mNextWriteIndex = BlocksRingBuffer::BlockIndex(end);
     MOZ_ASSERT(end - start == len);
     // Copy bytes into the buffer.
-    const auto writerEnd =
-        aBuffer.mMaybeUnderlyingBuffer->mBuffer.WriterAt(end);
-    for (auto writer = aBuffer.mMaybeUnderlyingBuffer->mBuffer.WriterAt(start);
-         writer != writerEnd; ++writer, ++aER) {
-      *writer = *aER;
-    }
+    auto writer = aBuffer.mMaybeUnderlyingBuffer->mBuffer.WriterAt(start);
+    aER.ReadInto(writer, len);
+    MOZ_ASSERT(writer.CurrentIndex() == end);
     // Finally copy stats.
     aBuffer.mMaybeUnderlyingBuffer->mPushedBlockCount = aER.ReadObject<decltype(
         aBuffer.mMaybeUnderlyingBuffer->mPushedBlockCount)>();
@@ -2014,8 +2102,9 @@ struct BlocksRingBuffer::Deserializer<UniquePtr<BlocksRingBuffer>> {
       return bufferUPtr;
     }
     // We have a non-empty buffer.
-    // allocate an empty BlocksRingBuffer.
-    bufferUPtr = MakeUnique<BlocksRingBuffer>();
+    // allocate an empty BlocksRingBuffer without mutex.
+    bufferUPtr = MakeUnique<BlocksRingBuffer>(
+        BlocksRingBuffer::ThreadSafety::WithoutMutex);
     // Rewind the reader before the length and deserialize the contents, using
     // the non-UniquePtr Deserializer.
     aER -= ULEB128Size(len);

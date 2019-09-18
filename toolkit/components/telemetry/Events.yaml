@@ -1835,9 +1835,10 @@ security.ui.permissionprompt:
     ]
     bug_numbers:
       - 1536454
+      - 1578266
     description: >
       When a permission prompt was shown.
-    expiry_version: "72"
+    expiry_version: "74"
     notification_emails:
       - jhofmann@mozilla.com
       - ehsan@mozilla.com
@@ -1871,9 +1872,10 @@ security.ui.permissionprompt:
     ]
     bug_numbers:
       - 1536454
+      - 1578266
     description: >
       When a permission prompt was removed, with the reasons being represented in the method field.
-    expiry_version: "72"
+    expiry_version: "74"
     notification_emails:
       - jhofmann@mozilla.com
       - ehsan@mozilla.com

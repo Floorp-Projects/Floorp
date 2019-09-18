@@ -7,8 +7,8 @@ Preferences
 The following preferences are used by SSL Error reporting:
 
 "security.ssl.errorReporting.enabled"
-  Should the SSL Error Reporting UI be shown on pin violations? Default
-  value: ``true``
+  Should the SSL Error Reporting UI be shown on TLS error pages? Default value:
+  ``false``.
 
 "security.ssl.errorReporting.url"
   Where should SSL error reports be sent? Default value:

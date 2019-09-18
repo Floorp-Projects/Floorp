@@ -371,6 +371,11 @@ nsresult PaymentRequestManager::SendRequestPayment(
     PaymentRequest* aRequest, const IPCPaymentActionRequest& aAction,
     bool aResponseExpected) {
   PaymentRequestChild* requestChild = GetPaymentChild(aRequest);
+  // bug 1580496, ignoring the case that requestChild is nullptr. It could be
+  // nullptr while the corresponding nsPIDOMWindowInner is nullptr.
+  if (NS_WARN_IF(!requestChild)) {
+    return NS_ERROR_FAILURE;
+  }
   nsresult rv = requestChild->RequestPayment(aAction);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

@@ -60,6 +60,7 @@ add_task(async function test_zoom_api() {
     let awaitZoom = async (tabId, newValue) => {
       let listener;
 
+      // eslint-disable-next-line no-async-promise-executor
       await new Promise(async resolve => {
         listener = info => {
           if (info.tabId == tabId && info.newZoomFactor == newValue) {

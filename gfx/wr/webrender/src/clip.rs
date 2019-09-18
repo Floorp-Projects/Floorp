@@ -15,7 +15,7 @@ use crate::image::{self, Repetition};
 use crate::intern;
 use crate::prim_store::{ClipData, ImageMaskData, SpaceMapper, VisibleMaskImageTile};
 use crate::prim_store::{PointKey, SizeKey, RectangleKey};
-use crate::render_task::to_cache_size;
+use crate::render_task_cache::to_cache_size;
 use crate::resource_cache::{ImageRequest, ResourceCache};
 use std::{cmp, ops, u32};
 use crate::util::{extract_inner_rect_safe, project_rect, ScaleOffset};
@@ -380,10 +380,6 @@ impl ClipNodeInfo {
                         rect.size,
                     );
 
-                    // TODO: As a followup, if the image is a tiled blob, the device_image_rect below
-                    // will be set to the blob's visible area.
-                    let device_image_rect = DeviceIntRect::from_size(props.descriptor.size);
-
                     for Repetition { origin, .. } in repetitions {
                         let layout_image_rect = LayoutRect {
                             origin,
@@ -392,7 +388,7 @@ impl ClipNodeInfo {
                         let tiles = image::tiles(
                             &layout_image_rect,
                             &visible_rect,
-                            &device_image_rect,
+                            &props.visible_rect,
                             tile_size as i32,
                         );
                         for tile in tiles {

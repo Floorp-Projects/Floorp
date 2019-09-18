@@ -1210,7 +1210,7 @@ SharedModule ModuleGenerator::finishModule(
       return nullptr;
     }
 
-    masm_.executableCopy(debugUnlinkedCode->begin(), /* flushICache = */ false);
+    masm_.executableCopy(debugUnlinkedCode->begin());
 
     debugLinkData = std::move(linkData_);
     debugBytecode = &bytecode;

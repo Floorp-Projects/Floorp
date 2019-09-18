@@ -192,6 +192,7 @@ nsresult HTMLEditor::InsertTableCellsWithTransaction(
   IgnoredErrorResult ignoredError;
   CellData cellDataAtSelection(*this, *table, startRowIndex, startColIndex,
                                ignoredError);
+  ignoredError.SuppressException();
   if (NS_WARN_IF(cellDataAtSelection.FailedOrNotFound())) {
     return NS_ERROR_FAILURE;
   }
@@ -213,7 +214,14 @@ nsresult HTMLEditor::InsertTableCellsWithTransaction(
   AutoPlaceholderBatch treateAsOneTransaction(*this);
   // Prevent auto insertion of BR in new cell until we're done
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eInsertNode, nsIEditor::eNext);
+      *this, EditSubAction::eInsertNode, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
+  ignoredError.SuppressException();
 
   // We control selection resetting after the insert.
   AutoSelectionSetterAfterTableEdit setCaret(
@@ -422,6 +430,7 @@ nsresult HTMLEditor::InsertTableColumnsWithTransaction(
   IgnoredErrorResult ignoredError;
   CellData cellDataAtSelection(*this, *table, startRowIndex, startColIndex,
                                ignoredError);
+  ignoredError.SuppressException();
   if (NS_WARN_IF(cellDataAtSelection.FailedOrNotFound())) {
     return NS_ERROR_FAILURE;
   }
@@ -438,7 +447,13 @@ nsresult HTMLEditor::InsertTableColumnsWithTransaction(
   AutoPlaceholderBatch treateAsOneTransaction(*this);
   // Prevent auto insertion of <br> element in new cell until we're done.
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eInsertNode, nsIEditor::eNext);
+      *this, EditSubAction::eInsertNode, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   switch (aInsertPosition) {
     case InsertPosition::eBeforeSelectedCell:
@@ -611,6 +626,7 @@ nsresult HTMLEditor::InsertTableRowsWithTransaction(
   IgnoredErrorResult ignoredError;
   CellData cellDataAtSelection(*this, *table, startRowIndex, startColIndex,
                                ignoredError);
+  ignoredError.SuppressException();
   if (NS_WARN_IF(cellDataAtSelection.FailedOrNotFound())) {
     return NS_ERROR_FAILURE;
   }
@@ -627,7 +643,13 @@ nsresult HTMLEditor::InsertTableRowsWithTransaction(
   AutoPlaceholderBatch treateAsOneTransaction(*this);
   // Prevent auto insertion of BR in new cell until we're done
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eInsertNode, nsIEditor::eNext);
+      *this, EditSubAction::eInsertNode, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   switch (aInsertPosition) {
     case InsertPosition::eBeforeSelectedCell:
@@ -891,8 +913,15 @@ nsresult HTMLEditor::DeleteTableCellWithTransaction(
 
   AutoPlaceholderBatch treateAsOneTransaction(*this);
   // Prevent rules testing until we're done
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eDeleteNode, nsIEditor::eNext);
+      *this, EditSubAction::eDeleteNode, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   ErrorResult error;
   RefPtr<Element> firstSelectedCellElement =
@@ -1160,8 +1189,16 @@ nsresult HTMLEditor::DeleteTableCellContentsWithTransaction() {
 
   AutoPlaceholderBatch treateAsOneTransaction(*this);
   // Prevent rules testing until we're done
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eDeleteNode, nsIEditor::eNext);
+      *this, EditSubAction::eDeleteNode, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
+
   // Don't let Rules System change the selection
   AutoTransactionsConserveSelection dontChangeSelection(*this);
 
@@ -1247,8 +1284,15 @@ nsresult HTMLEditor::DeleteSelectedTableColumnsWithTransaction(
   AutoPlaceholderBatch treateAsOneTransaction(*this);
 
   // Prevent rules testing until we're done
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eDeleteNode, nsIEditor::eNext);
+      *this, EditSubAction::eDeleteNode, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   // Shortcut the case of deleting all columns in table
   if (!startColIndex && aNumberOfColumnsToDelete >= tableSize.mColumnCount) {
@@ -1472,8 +1516,15 @@ nsresult HTMLEditor::DeleteSelectedTableRowsWithTransaction(
   AutoPlaceholderBatch treateAsOneTransaction(*this);
 
   // Prevent rules testing until we're done
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eDeleteNode, nsIEditor::eNext);
+      *this, EditSubAction::eDeleteNode, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   // Shortcut the case of deleting all rows in table
   if (!startRowIndex && aNumberOfRowsToDelete >= tableSize.mRowCount) {
@@ -1582,8 +1633,16 @@ nsresult HTMLEditor::DeleteTableRowWithTransaction(Element& aTableElement,
   }
 
   // Prevent rules testing until we're done
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eDeleteNode, nsIEditor::eNext);
+      *this, EditSubAction::eDeleteNode, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
+  ignoredError.SuppressException();
 
   // Scan through cells in row to do rowspan adjustments
   // Note that after we delete row, startRowIndex will point to the cells in
@@ -1601,7 +1660,6 @@ nsresult HTMLEditor::DeleteTableRowWithTransaction(Element& aTableElement,
   AutoTArray<SpanCell, 10> spanCellArray;
   RefPtr<Element> cellInDeleteRow;
   int32_t columnIndex = 0;
-  IgnoredErrorResult ignoredError;
   while (aRowIndex < tableSize.mRowCount &&
          columnIndex < tableSize.mColumnCount) {
     CellData cellData(*this, aTableElement, aRowIndex, columnIndex,
@@ -2116,8 +2174,15 @@ HTMLEditor::SplitTableCell() {
 
   AutoPlaceholderBatch treateAsOneTransaction(*this);
   // Prevent auto insertion of BR in new cell until we're done
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eInsertNode, nsIEditor::eNext);
+      *this, EditSubAction::eInsertNode, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return EditorBase::ToGenericNSResult(ignoredError.StealNSResult());
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   // We reset selection
   AutoSelectionSetterAfterTableEdit setCaret(
@@ -2368,8 +2433,15 @@ HTMLEditor::SwitchTableCellHeaderType(Element* aSourceCell,
   AutoPlaceholderBatch treatAsOneTransaction(*this);
   // Prevent auto insertion of BR in new cell created by
   // ReplaceContainerAndCloneAttributesWithTransaction().
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eInsertNode, nsIEditor::eNext);
+      *this, EditSubAction::eInsertNode, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return EditorBase::ToGenericNSResult(ignoredError.StealNSResult());
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   // Save current selection to restore when done.
   // This is needed so ReplaceContainerAndCloneAttributesWithTransaction()
@@ -2491,6 +2563,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents) {
       for (CellData cellData; colIndex < tableSize.mColumnCount;
            colIndex = cellData.NextColumnIndex()) {
         cellData.Update(*this, *table, rowIndex, colIndex, ignoredError);
+        ignoredError.SuppressException();
         if (NS_WARN_IF(cellData.FailedOrNotFound())) {
           return NS_ERROR_FAILURE;
         }
@@ -2568,6 +2641,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents) {
       for (int32_t colIndex = 0; colIndex < tableSize.mColumnCount;
            colIndex = cellData.NextColumnIndex()) {
         cellData.Update(*this, *table, rowIndex, colIndex, ignoredError);
+        ignoredError.SuppressException();
         if (NS_WARN_IF(cellData.FailedOrNotFound())) {
           return NS_ERROR_FAILURE;
         }
@@ -2632,7 +2706,13 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents) {
     // All cell contents are merged. Delete the empty cells we accumulated
     // Prevent rules testing until we're done
     AutoEditSubActionNotifier startToHandleEditSubAction(
-        *this, EditSubAction::eDeleteNode, nsIEditor::eNext);
+        *this, EditSubAction::eDeleteNode, nsIEditor::eNext, ignoredError);
+    if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+      return EditorBase::ToGenericNSResult(ignoredError.StealNSResult());
+    }
+    NS_WARNING_ASSERTION(
+        !ignoredError.Failed(),
+        "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
     for (uint32_t i = 0, n = deleteList.Length(); i < n; i++) {
       RefPtr<Element> nodeToBeRemoved = deleteList[i];
@@ -2774,8 +2854,15 @@ nsresult HTMLEditor::MergeCells(RefPtr<Element> aTargetCell,
   }
 
   // Prevent rules testing until we're done
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eDeleteNode, nsIEditor::eNext);
+      *this, EditSubAction::eDeleteNode, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   // Don't need to merge if cell is empty
   if (!IsEmptyCell(aCellToMerge)) {
@@ -3024,8 +3111,15 @@ nsresult HTMLEditor::NormalizeTableInternal(Element& aTableOrElementInTable) {
 
   AutoPlaceholderBatch treateAsOneTransaction(*this);
   // Prevent auto insertion of BR in new cell until we're done
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eInsertNode, nsIEditor::eNext);
+      *this, EditSubAction::eInsertNode, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   // XXX If there is a cell which has bigger or smaller "rowspan" or "colspan"
   //     values, FixBadRowSpan() will return error.  So, we can do nothing
@@ -3046,7 +3140,6 @@ nsresult HTMLEditor::NormalizeTableInternal(Element& aTableOrElementInTable) {
   }
 
   // Fill in missing cellmap locations with empty cells
-  IgnoredErrorResult ignoredError;
   for (int32_t rowIndex = 0; rowIndex < tableSize.mRowCount; rowIndex++) {
     RefPtr<Element> previousCellElementInRow;
     for (int32_t colIndex = 0; colIndex < tableSize.mColumnCount; colIndex++) {

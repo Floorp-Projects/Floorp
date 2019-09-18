@@ -52,8 +52,8 @@
             <p class="message" id="message"></p>
           </div>
           <div class="buttons">
-            <button class="confirm-button danger-button" tabindex="2"></button>
-            <button class="cancel-button" tabindex="1" data-l10n-id="confirmation-dialog-cancel-button"></button>
+            <button class="confirm-button danger-button"></button>
+            <button class="cancel-button" data-l10n-id="confirmation-dialog-cancel-button"></button>
           </div>
         </div>
       </div>
@@ -240,7 +240,7 @@
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/menu-button.css">
       <button class="menu-button ghost-button" data-l10n-id="menu"></button>
       <ul class="menu" role="menu" hidden>
-        <button role="menuitem" class="menuitem-button menuitem-import ghost-button" hidden data-supported-platforms="Win32" data-event-name="AboutLoginsImport" data-l10n-id="menu-menuitem-import"></button>
+        <button role="menuitem" class="menuitem-button menuitem-import ghost-button" hidden data-supported-platforms="Win32,MacIntel" data-event-name="AboutLoginsImport" data-l10n-id="menu-menuitem-import"></button>
         <button role="menuitem" class="menuitem-button menuitem-preferences ghost-button" data-event-name="AboutLoginsOpenPreferences" data-l10n-id="menu-menuitem-preferences"></button>
         <hr role="separator" class="menuitem-separator"></hr>
         <button role="menuitem" class="menuitem-button menuitem-help ghost-button" data-event-name="AboutLoginsGetHelp" data-l10n-id="about-logins-menu-menuitem-help"></button>

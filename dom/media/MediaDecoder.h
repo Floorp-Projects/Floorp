@@ -52,13 +52,6 @@ struct SharedDummyStream;
 
 enum class Visibility : uint8_t;
 
-// GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
-// GetTickCount() and conflicts with MediaDecoder::GetCurrentTime
-// implementation.
-#  ifdef GetCurrentTime
-#    undef GetCurrentTime
-#  endif
-
 struct MOZ_STACK_CLASS MediaDecoderInit {
   MediaDecoderOwner* const mOwner;
   const double mVolume;

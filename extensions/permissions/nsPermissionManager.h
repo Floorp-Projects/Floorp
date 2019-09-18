@@ -464,7 +464,6 @@ class nsPermissionManager final : public nsIPermissionManager,
   nsresult OpenDatabase(nsIFile* permissionsFile);
   nsresult InitDB(bool aRemoveFile);
   nsresult CreateTable();
-  nsresult Import();
   nsresult ImportDefaults();
   nsresult _DoImport(nsIInputStream* inputStream, mozIStorageConnection* aConn);
   nsresult Read();

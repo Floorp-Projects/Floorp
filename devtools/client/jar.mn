@@ -51,6 +51,7 @@ devtools.jar:
     content/aboutdebugging/index.html (aboutdebugging/index.html)
     content/aboutdebugging/aboutdebugging.css (aboutdebugging/aboutdebugging.css)
     content/responsive/index.xhtml (responsive/index.xhtml)
+    content/responsive/toolbar.xhtml (responsive/toolbar.xhtml)
     content/dom/index.html (dom/index.html)
     content/dom/main.js (dom/main.js)
     content/accessibility/index.html (accessibility/index.html)
@@ -129,6 +130,7 @@ devtools.jar:
     skin/images/webconsole/editor.svg (themes/images/webconsole/editor.svg)
     skin/images/webconsole/input.svg (themes/images/webconsole/input.svg)
     skin/images/webconsole/navigation.svg (themes/images/webconsole/navigation.svg)
+    skin/images/webconsole/reverse-search.svg (themes/images/webconsole/reverse-search.svg)
     skin/images/webconsole/return.svg (themes/images/webconsole/return.svg)
     skin/images/webconsole/run.svg (themes/images/webconsole/run.svg)
     skin/images/breadcrumbs-scrollbutton.svg (themes/images/breadcrumbs-scrollbutton.svg)
@@ -229,6 +231,7 @@ devtools.jar:
     # Netmonitor
     content/netmonitor/src/assets/styles/httpi.css (netmonitor/src/assets/styles/httpi.css)
     content/netmonitor/src/assets/styles/netmonitor.css (netmonitor/src/assets/styles/netmonitor.css)
+    content/netmonitor/src/assets/styles/NetworkActionBar.css (netmonitor/src/assets/styles/NetworkActionBar.css)
     content/netmonitor/src/assets/styles/NetworkDetailsPanel.css (netmonitor/src/assets/styles/NetworkDetailsPanel.css)
     content/netmonitor/src/assets/styles/CustomRequestPanel.css (netmonitor/src/assets/styles/CustomRequestPanel.css)
     content/netmonitor/src/assets/styles/RequestList.css (netmonitor/src/assets/styles/RequestList.css)

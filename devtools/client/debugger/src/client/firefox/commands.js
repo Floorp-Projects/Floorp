@@ -419,6 +419,12 @@ async function getSources(
   return sources.map(source => prepareSourcePayload(client, source));
 }
 
+async function toggleEventLogging(logEventBreakpoints: boolean) {
+  return forEachThread(thread =>
+    thread.toggleEventLogging(logEventBreakpoints)
+  );
+}
+
 async function fetchSources(): Promise<Array<GeneratedSourceData>> {
   return getSources(currentThreadFront);
 }
@@ -544,6 +550,7 @@ const clientCommands = {
   getProperties,
   getFrameScopes,
   pauseOnExceptions,
+  toggleEventLogging,
   fetchSources,
   registerSourceActor,
   fetchThreads,

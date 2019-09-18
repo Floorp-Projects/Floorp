@@ -5431,6 +5431,25 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
     case JSJITCOMPILER_WASM_DELAY_TIER2:
       jit::JitOptions.wasmDelayTier2 = !!value;
       break;
+    case JSJITCOMPILER_WASM_JIT_BASELINE:
+      JS::ContextOptionsRef(cx).setWasmBaseline(!!value);
+      break;
+#ifdef ENABLE_WASM_CRANELIFT
+    case JSJITCOMPILER_WASM_JIT_CRANELIFT:
+      JS::ContextOptionsRef(cx).setWasmCranelift(!!value);
+      if (!!value) {
+        JS::ContextOptionsRef(cx).setWasmIon(false);
+      }
+      break;
+#endif
+    case JSJITCOMPILER_WASM_JIT_ION:
+      JS::ContextOptionsRef(cx).setWasmIon(!!value);
+#ifdef ENABLE_WASM_CRANELIFT
+      if (!!value) {
+        JS::ContextOptionsRef(cx).setWasmCranelift(false);
+      }
+#endif
+      break;
 #ifdef DEBUG
     case JSJITCOMPILER_FULL_DEBUG_CHECKS:
       jit::JitOptions.fullDebugChecks = !!value;
@@ -5486,6 +5505,17 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
       break;
     case JSJITCOMPILER_WASM_FOLD_OFFSETS:
       *valueOut = jit::JitOptions.wasmFoldOffsets ? 1 : 0;
+      break;
+    case JSJITCOMPILER_WASM_JIT_BASELINE:
+      *valueOut = JS::ContextOptionsRef(cx).wasmBaseline() ? 1 : 0;
+      break;
+#ifdef ENABLE_WASM_CRANELIFT
+    case JSJITCOMPILER_WASM_JIT_CRANELIFT:
+      *valueOut = JS::ContextOptionsRef(cx).wasmCranelift() ? 1 : 0;
+      break;
+#endif
+    case JSJITCOMPILER_WASM_JIT_ION:
+      *valueOut = JS::ContextOptionsRef(cx).wasmIon() ? 1 : 0;
       break;
 #  ifdef DEBUG
     case JSJITCOMPILER_FULL_DEBUG_CHECKS:

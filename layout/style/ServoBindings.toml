@@ -402,6 +402,7 @@ cbindgen-types = [
     { gecko = "StyleFontFaceSourceListComponent", servo = "font_face::FontFaceSourceListComponent" },
     { gecko = "StyleFontLanguageOverride", servo = "values::computed::font::FontLanguageOverride" },
     { gecko = "StyleOffsetPath", servo = "values::computed::motion::OffsetPath" },
+    { gecko = "StyleGenericOffsetPath", servo = "values::generics::motion::OffsetPath" },
     { gecko = "StyleOffsetRotate", servo = "values::computed::motion::OffsetRotate" },
     { gecko = "StylePathCommand", servo = "values::specified::svg_path::PathCommand" },
     { gecko = "StyleUnicodeRange", servo = "cssparser::UnicodeRange" },

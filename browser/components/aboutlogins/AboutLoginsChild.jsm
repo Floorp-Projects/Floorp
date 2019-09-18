@@ -64,6 +64,8 @@ class AboutLoginsChild extends ActorChild {
               "AboutLogins:MasterPasswordRequest"
             );
           },
+          // Default to enabled just in case a search is attempted before we get a response.
+          masterPasswordEnabled: true,
         };
         waivedContent.AboutLoginsUtils = Cu.cloneInto(
           AboutLoginsUtils,
@@ -177,9 +179,6 @@ class AboutLoginsChild extends ActorChild {
       case "AboutLogins:AllLogins":
         this.sendToContent("AllLogins", message.data);
         break;
-      case "AboutLogins:LocalizeBadges":
-        this.sendToContent("LocalizeBadges", message.data);
-        break;
       case "AboutLogins:LoginAdded":
         this.sendToContent("LoginAdded", message.data);
         break;
@@ -196,6 +195,11 @@ class AboutLoginsChild extends ActorChild {
         break;
       case "AboutLogins:SendFavicons":
         this.sendToContent("SendFavicons", message.data);
+        break;
+      case "AboutLogins:Setup":
+        this.sendToContent("Setup", message.data);
+        Cu.waiveXrays(this.content).AboutLoginsUtils.masterPasswordEnabled =
+          message.data.masterPasswordEnabled;
         break;
       case "AboutLogins:ShowLoginItemError":
         this.sendToContent("ShowLoginItemError", message.data);

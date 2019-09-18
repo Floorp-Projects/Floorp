@@ -374,7 +374,7 @@
 }
 
 /* Search one-offs. */
-#urlbar .search-one-offs {
+#urlbar .search-one-offs:not([hidden]) {
   display: flex;
   align-items: start;
   padding-block: 16px;

@@ -3,6 +3,7 @@
 // This test checks that theme warnings are properly emitted.
 
 function waitForConsole(task, message) {
+  // eslint-disable-next-line no-async-promise-executor
   return new Promise(async resolve => {
     SimpleTest.monitorConsole(resolve, [
       {

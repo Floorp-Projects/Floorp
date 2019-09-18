@@ -2868,7 +2868,10 @@ extern JS_PUBLIC_API void JS_SetOffthreadIonCompilationEnabled(JSContext* cx,
   Register(SPECTRE_VALUE_MASKING, "spectre.value-masking") \
   Register(SPECTRE_JIT_TO_CXX_CALLS, "spectre.jit-to-C++-calls") \
   Register(WASM_FOLD_OFFSETS, "wasm.fold-offsets") \
-  Register(WASM_DELAY_TIER2, "wasm.delay-tier2")
+  Register(WASM_DELAY_TIER2, "wasm.delay-tier2") \
+  Register(WASM_JIT_BASELINE, "wasm.baseline") \
+  Register(WASM_JIT_CRANELIFT, "wasm.cranelift") \
+  Register(WASM_JIT_ION, "wasm.ion")
 // clang-format on
 
 typedef enum JSJitCompilerOption {

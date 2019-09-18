@@ -551,7 +551,7 @@ JitCode* IonCacheIRCompiler::compile() {
     }
   }
 
-  Linker linker(masm, "getStubCode");
+  Linker linker(masm);
   Rooted<JitCode*> newStubCode(cx_, linker.newCode(cx_, CodeKind::Ion));
   if (!newStubCode) {
     cx_->recoverFromOutOfMemory();

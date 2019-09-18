@@ -9869,21 +9869,6 @@ static bool HasHttpScheme(nsIURI* aURI) {
 
   nsCOMPtr<nsIContentSecurityPolicy> csp = aLoadState->Csp();
   if (csp) {
-    // Check CSP navigate-to
-    bool allowsNavigateTo = false;
-    aRv = csp->GetAllowsNavigateTo(aLoadState->URI(), aLoadInfo,
-                                   false, /* aWasRedirected */
-                                   false, /* aEnforceWhitelist */
-                                   &allowsNavigateTo);
-    if (NS_FAILED(aRv)) {
-      return false;
-    }
-
-    if (!allowsNavigateTo) {
-      aRv = NS_ERROR_CSP_NAVIGATE_TO_VIOLATION;
-      return false;
-    }
-
     // Navigational requests that are same origin need to be upgraded in case
     // upgrade-insecure-requests is present.
     bool upgradeInsecureRequests = false;
@@ -10135,6 +10120,22 @@ static bool HasHttpScheme(nsIURI* aURI) {
     }
   }
 
+  nsCOMPtr<nsIContentSecurityPolicy> csp = aLoadState->Csp();
+  if (csp) {
+    nsCOMPtr<nsILoadInfo> loadInfo;
+    MOZ_ALWAYS_SUCCEEDS(aChannel->GetLoadInfo(getter_AddRefs(loadInfo)));
+    // Check CSP navigate-to
+    bool allowsNavigateTo = false;
+    rv = csp->GetAllowsNavigateTo(aLoadState->URI(), loadInfo,
+                                  false, /* aWasRedirected */
+                                  false, /* aEnforceWhitelist */
+                                  &allowsNavigateTo);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!allowsNavigateTo) {
+      return NS_ERROR_CSP_NAVIGATE_TO_VIOLATION;
+    }
+  }
   return rv;
 }
 
