@@ -3627,6 +3627,12 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
   }
 #endif
 
+#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
+  if (ActivePS::FeatureNativeAllocations(aLock)) {
+    mozilla::profiler::enable_native_allocations();
+  }
+#endif
+
   // At the very end, set up RacyFeatures.
   RacyFeatures::SetActive(ActivePS::Features(aLock));
 }
