@@ -1213,6 +1213,7 @@ class TestInfoCommand(MachCommandBase):
                     filter_values, filter_keys, show_components, output_file):
         import mozpack.path as mozpath
         import re
+        from mozbuild.build_commands import Build
         from moztest.resolve import TestResolver
 
         def matches_filters(test):
@@ -1245,6 +1246,13 @@ class TestInfoCommand(MachCommandBase):
             filter_values = filter_values.split(',')
         else:
             filter_values = []
+
+        try:
+            self.config_environment
+        except BuildEnvironmentNotFoundException:
+            print("Looks like configure has not run yet, running it now...")
+            builder = Build(self._mach_context)
+            builder.configure()
 
         print("Finding tests...")
         resolver = self._spawn(TestResolver)
