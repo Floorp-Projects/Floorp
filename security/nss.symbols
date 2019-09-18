@@ -337,6 +337,7 @@ PK11_GetBestSlot
 PK11_GetBestSlotMultiple
 PK11_GetBlockSize
 PK11_GetCertFromPrivateKey
+PK11_GetCertsMatchingPrivateKey
 PK11_GetDefaultArray
 PK11_GetDefaultFlags
 PK11_GetDisabledReason
