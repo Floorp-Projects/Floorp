@@ -7,6 +7,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/UniquePtrExtensions.h"
+#include "mozilla/Utf8.h"
 
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -2953,7 +2954,7 @@ nsLocalFile::GetPersistentDescriptor(nsACString& aPersistentDescriptor) {
 
 NS_IMETHODIMP
 nsLocalFile::SetPersistentDescriptor(const nsACString& aPersistentDescriptor) {
-  if (IsUTF8(aPersistentDescriptor)) {
+  if (IsUtf8(aPersistentDescriptor)) {
     return InitWithPath(NS_ConvertUTF8toUTF16(aPersistentDescriptor));
   } else {
     return InitWithNativePath(aPersistentDescriptor);

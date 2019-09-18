@@ -16,6 +16,7 @@
 #include "mozilla/ipc/TransportSecurityInfoUtils.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/Span.h"
+#include "mozilla/TextUtils.h"
 #include "mozilla/Unused.h"
 #include "nsArray.h"
 #include "nsCOMPtr.h"
@@ -556,7 +557,7 @@ void nsNSSCertificate::GetSubjectAltNames() {
             current->name.other.len);
         // dNSName fields are defined as type IA5String and thus should
         // be limited to ASCII characters.
-        if (IsASCII(nameFromCert)) {
+        if (IsAscii(nameFromCert)) {
           name.Assign(NS_ConvertASCIItoUTF16(nameFromCert));
           mSubjectAltNames.push_back(name);
         }

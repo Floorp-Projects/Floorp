@@ -9,6 +9,7 @@
 #include "nsISupportsUtils.h"
 #include "nsStringEnumerator.h"
 #include "nsNetUtil.h"
+#include "mozilla/Utf8.h"
 
 using namespace mozilla;
 
@@ -55,7 +56,7 @@ bool nsMIMEInfoAndroid::GetMimeInfoForMimeType(const nsACString& aMimeType,
 
   nsIHandlerApp* systemDefault = nullptr;
 
-  if (!IsUTF8(aMimeType)) return false;
+  if (!IsUtf8(aMimeType)) return false;
 
   NS_ConvertUTF8toUTF16 mimeType(aMimeType);
 

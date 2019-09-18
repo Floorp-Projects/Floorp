@@ -15,6 +15,8 @@
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "punycode.h"
+#include "mozilla/TextUtils.h"
+#include "mozilla/Utf8.h"
 
 // Currently we use the non-transitional processing option -- see
 // http://unicode.org/reports/tr46/
@@ -339,7 +341,7 @@ NS_IMETHODIMP nsIDNService::IsACE(const nsACString& input, bool* _retval) {
 NS_IMETHODIMP nsIDNService::Normalize(const nsACString& input,
                                       nsACString& output) {
   // protect against bogus input
-  NS_ENSURE_TRUE(IsUTF8(input), NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(IsUtf8(input), NS_ERROR_UNEXPECTED);
 
   NS_ConvertUTF8toUTF16 inUTF16(input);
   normalizeFullStops(inUTF16);
@@ -419,7 +421,7 @@ NS_IMETHODIMP nsIDNService::ConvertToDisplayIDN(const nsACString& input,
   bool isACE;
   IsACE(input, &isACE);
 
-  if (IsASCII(input)) {
+  if (IsAscii(input)) {
     // first, canonicalize the host to lowercase, for whitelist lookup
     _retval = input;
     ToLowerCase(_retval);
@@ -433,7 +435,7 @@ NS_IMETHODIMP nsIDNService::ConvertToDisplayIDN(const nsACString& input,
       ACEtoUTF8(
           temp, _retval,
           isInWhitelist(temp) ? eStringPrepIgnoreErrors : eStringPrepForUI);
-      *_isASCII = IsASCII(_retval);
+      *_isASCII = IsAscii(_retval);
     } else {
       *_isASCII = true;
     }
@@ -463,13 +465,13 @@ NS_IMETHODIMP nsIDNService::ConvertToDisplayIDN(const nsACString& input,
     // the host is converted to ACE by the normalizer, then the host may contain
     // unsafe characters, so leave it ACE encoded. see bug 283016, bug 301694,
     // and bug 309311.
-    *_isASCII = IsASCII(_retval);
+    *_isASCII = IsAscii(_retval);
     if (!*_isASCII && !isInWhitelist(_retval)) {
       // UTF8toACE with eStringPrepForUI may return a domain name where
       // some labels are in UTF-8 and some are in ACE, depending on
       // whether they are considered safe for display
       rv = UTF8toACE(_retval, _retval, eStringPrepForUI);
-      *_isASCII = IsASCII(_retval);
+      *_isASCII = IsAscii(_retval);
       return rv;
     }
   }
@@ -567,7 +569,7 @@ nsresult nsIDNService::stringPrepAndACE(const nsAString& in, nsACString& out,
     return NS_ERROR_MALFORMED_URI;
   }
 
-  if (IsASCII(in)) {
+  if (IsAscii(in)) {
     LossyCopyUTF16toASCII(in, out);
     return NS_OK;
   }
@@ -578,7 +580,7 @@ nsresult nsIDNService::stringPrepAndACE(const nsAString& in, nsACString& out,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (IsASCII(strPrep)) {
+  if (IsAscii(strPrep)) {
     LossyCopyUTF16toASCII(strPrep, out);
     return NS_OK;
   }
@@ -673,7 +675,7 @@ bool nsIDNService::isInWhitelist(const nsACString& host) {
     nsAutoCString tld(host);
     // make sure the host is ACE for lookup and check that there are no
     // unassigned codepoints
-    if (!IsASCII(tld) && NS_FAILED(UTF8toACE(tld, tld, eStringPrepForDNS))) {
+    if (!IsAscii(tld) && NS_FAILED(UTF8toACE(tld, tld, eStringPrepForDNS))) {
       return false;
     }
 
@@ -702,7 +704,7 @@ bool nsIDNService::isLabelSafe(const nsAString& label) {
   }
 
   // We should never get here if the label is ASCII
-  NS_ASSERTION(!IsASCII(label), "ASCII label in IDN checking");
+  NS_ASSERTION(!IsAscii(label), "ASCII label in IDN checking");
   if (mRestrictionProfile == eASCIIOnlyProfile) {
     return false;
   }

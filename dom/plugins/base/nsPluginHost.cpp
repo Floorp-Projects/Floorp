@@ -58,6 +58,7 @@
 #include "mozilla/LoadInfo.h"
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/plugins/PluginTypes.h"
+#include "mozilla/TextUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ipc/URIUtils.h"
 
@@ -1375,7 +1376,7 @@ nsresult nsPluginHost::GetPlugin(const nsACString& aMimeType,
 
 // Normalize 'host' to ACE.
 nsresult nsPluginHost::NormalizeHostname(nsCString& host) {
-  if (IsASCII(host)) {
+  if (IsAscii(host)) {
     ToLowerCase(host);
     return NS_OK;
   }

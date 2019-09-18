@@ -12,7 +12,9 @@
 #include "nsReadableUtils.h"
 #include "nsCRTGlue.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/TextUtils.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Utf8.h"
 #include "nsTArray.h"
 #include "gtest/gtest.h"
 #include "gtest/MozGTestBench.h"  // For MOZ_GTEST_BENCH
@@ -2025,56 +2027,56 @@ MOZ_GTEST_BENCH_F(Strings, PerfStripCharsCRLF, [this] {
 
 MOZ_GTEST_BENCH_F(Strings, PerfIsUTF8One, [this] {
   for (int i = 0; i < 200000; i++) {
-    bool b = IsUTF8(*BlackBox(&mAsciiOneUtf8));
+    bool b = IsUtf8(*BlackBox(&mAsciiOneUtf8));
     BlackBox(&b);
   }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfIsUTF8Fifteen, [this] {
   for (int i = 0; i < 200000; i++) {
-    bool b = IsUTF8(*BlackBox(&mAsciiFifteenUtf8));
+    bool b = IsUtf8(*BlackBox(&mAsciiFifteenUtf8));
     BlackBox(&b);
   }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfIsUTF8Hundred, [this] {
   for (int i = 0; i < 200000; i++) {
-    bool b = IsUTF8(*BlackBox(&mAsciiHundredUtf8));
+    bool b = IsUtf8(*BlackBox(&mAsciiHundredUtf8));
     BlackBox(&b);
   }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfIsUTF8Example3, [this] {
   for (int i = 0; i < 100000; i++) {
-    bool b = IsUTF8(*BlackBox(&mExample3Utf8));
+    bool b = IsUtf8(*BlackBox(&mExample3Utf8));
     BlackBox(&b);
   }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfIsASCII8One, [this] {
   for (int i = 0; i < 200000; i++) {
-    bool b = IsASCII(*BlackBox(&mAsciiOneUtf8));
+    bool b = IsAscii(*BlackBox(&mAsciiOneUtf8));
     BlackBox(&b);
   }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfIsASCIIFifteen, [this] {
   for (int i = 0; i < 200000; i++) {
-    bool b = IsASCII(*BlackBox(&mAsciiFifteenUtf8));
+    bool b = IsAscii(*BlackBox(&mAsciiFifteenUtf8));
     BlackBox(&b);
   }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfIsASCIIHundred, [this] {
   for (int i = 0; i < 200000; i++) {
-    bool b = IsASCII(*BlackBox(&mAsciiHundredUtf8));
+    bool b = IsAscii(*BlackBox(&mAsciiHundredUtf8));
     BlackBox(&b);
   }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfIsASCIIExample3, [this] {
   for (int i = 0; i < 100000; i++) {
-    bool b = IsASCII(*BlackBox(&mExample3Utf8));
+    bool b = IsAscii(*BlackBox(&mExample3Utf8));
     BlackBox(&b);
   }
 });

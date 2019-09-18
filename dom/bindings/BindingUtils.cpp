@@ -2654,7 +2654,7 @@ bool NonVoidByteStringToJsval(JSContext* cx, const nsACString& str,
 void NormalizeUSVString(nsAString& aString) { EnsureUTF16Validity(aString); }
 
 void NormalizeUSVString(binding_detail::FakeString& aString) {
-  EnsureUTF16ValiditySpan(aString);
+  EnsureUtf16ValiditySpan(aString);
 }
 
 bool ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,

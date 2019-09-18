@@ -13,6 +13,7 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Utf8.h"
 #include "nsCOMPtr.h"
 #include "nsIStringBundle.h"
 #include "nsNSSASN1Object.h"
@@ -743,7 +744,7 @@ static nsresult ProcessExtKeyUsage(SECItem* extData, nsAString& text) {
 void LossyUTF8ToUTF16(const char* str, uint32_t len,
                       /*out*/ nsAString& result) {
   auto span = MakeSpan(str, len);
-  if (IsUTF8(span)) {
+  if (IsUtf8(span)) {
     CopyUTF8toUTF16(span, result);
   } else {
     // Actually Latin1 despite ASCII in the legacy name

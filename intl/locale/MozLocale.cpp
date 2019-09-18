@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/TextUtils.h"
 #include "mozilla/intl/MozLocale.h"
 
 #include "nsReadableUtils.h"
@@ -11,13 +12,14 @@
 #include "unicode/uloc.h"
 
 using namespace mozilla::intl;
+using mozilla::IsAscii;
 
 /**
  * Note: The file name is `MozLocale` to avoid compilation problems on
  * case-insensitive Windows. The class name is `Locale`.
  */
 Locale::Locale(const nsACString& aLocale) {
-  if (aLocale.IsEmpty() || !IsASCII(aLocale)) {
+  if (aLocale.IsEmpty() || !IsAscii(aLocale)) {
     mIsWellFormed = false;
     return;
   }

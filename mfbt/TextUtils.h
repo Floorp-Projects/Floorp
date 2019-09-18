@@ -10,35 +10,86 @@
 #define mozilla_TextUtils_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Latin1.h"
 #include "mozilla/TypeTraits.h"
 
 namespace mozilla {
 
-namespace detail {
+// See Utf8.h for IsUtf8() and conversions between UTF-8 and UTF-16.
+// See Latin1.h for testing UTF-16 and UTF-8 for Latin1ness and
+// for conversions to and from Latin1.
 
-template <typename Char>
-class MakeUnsignedChar : public MakeUnsigned<Char> {};
-
-template <>
-class MakeUnsignedChar<char16_t> {
- public:
-  using Type = char16_t;
-};
-
-template <>
-class MakeUnsignedChar<char32_t> {
- public:
-  using Type = char32_t;
-};
-
-}  // namespace detail
+// The overloads below are not templated in order to make
+// implicit conversions to span work as expected for the Span
+// overloads.
 
 /** Returns true iff |aChar| is ASCII, i.e. in the range [0, 0x80). */
-template <typename Char>
-constexpr bool IsAscii(Char aChar) {
-  using UnsignedChar = typename detail::MakeUnsignedChar<Char>::Type;
-  auto uc = static_cast<UnsignedChar>(aChar);
-  return uc < 0x80;
+constexpr bool IsAscii(unsigned char aChar) { return aChar < 0x80; }
+
+/** Returns true iff |aChar| is ASCII, i.e. in the range [0, 0x80). */
+constexpr bool IsAscii(signed char aChar) {
+  return IsAscii(static_cast<unsigned char>(aChar));
+}
+
+/** Returns true iff |aChar| is ASCII, i.e. in the range [0, 0x80). */
+constexpr bool IsAscii(char aChar) {
+  return IsAscii(static_cast<unsigned char>(aChar));
+}
+
+/** Returns true iff |aChar| is ASCII, i.e. in the range [0, 0x80). */
+constexpr bool IsAscii(char16_t aChar) { return aChar < 0x80; }
+
+/** Returns true iff |aChar| is ASCII, i.e. in the range [0, 0x80). */
+constexpr bool IsAscii(char32_t aChar) { return aChar < 0x80; }
+
+/**
+ * Returns |true| iff |aString| contains only ASCII characters, that is,
+ * characters in the range [0x00, 0x80).
+ *
+ * @param aString a 8-bit wide string to scan
+ */
+inline bool IsAscii(mozilla::Span<const char> aString) {
+#if MOZ_HAS_JSRUST()
+  size_t length = aString.Length();
+  const char* ptr = aString.Elements();
+  // For short strings, avoid the function call, since, the SIMD
+  // code won't have a chance to kick in anyway.
+  if (length < 16) {
+    const uint8_t* uptr = reinterpret_cast<const uint8_t*>(ptr);
+    uint8_t accu = 0;
+    for (size_t i = 0; i < length; i++) {
+      accu |= uptr[i];
+    }
+    return accu < 0x80;
+  }
+  return encoding_mem_is_ascii(ptr, length);
+#else
+  for (char c : aString) {
+    if (!IsAscii(c)) {
+      return false;
+    }
+  }
+  return true;
+#endif
+}
+
+/**
+ * Returns |true| iff |aString| contains only ASCII characters, that is,
+ * characters in the range [0x00, 0x80).
+ *
+ * @param aString a 16-bit wide string to scan
+ */
+inline bool IsAscii(mozilla::Span<const char16_t> aString) {
+#if MOZ_HAS_JSRUST()
+  return encoding_mem_is_basic_latin(aString.Elements(), aString.Length());
+#else
+  for (char16_t c : aString) {
+    if (!IsAscii(c)) {
+      return false;
+    }
+  }
+  return true;
+#endif
 }
 
 /**
@@ -55,16 +106,39 @@ constexpr bool IsAsciiNullTerminated(const Char* aChar) {
   return true;
 }
 
+#if MOZ_HAS_JSRUST()
 /**
- * Returns true iff |aChar| is Latin-1 but not ASCII, i.e. in the range
- * [0x80, 0xFF].
+ * Returns the index of the first unpaired surrogate or
+ * the length of the string if there are none.
  */
-template <typename Char>
-constexpr bool IsNonAsciiLatin1(Char aChar) {
-  using UnsignedChar = typename detail::MakeUnsignedChar<Char>::Type;
-  auto uc = static_cast<UnsignedChar>(aChar);
-  return uc >= 0x80 && uc <= 0xFF;
+inline size_t Utf16ValidUpTo(mozilla::Span<const char16_t> aString) {
+  return encoding_mem_utf16_valid_up_to(aString.Elements(), aString.Length());
 }
+
+/**
+ * Replaces unpaired surrogates with U+FFFD in the argument.
+ *
+ * Note: If you have an nsAString, use EnsureUTF16Validity() from
+ * nsReadableUtils.h instead to avoid unsharing a valid shared
+ * string.
+ */
+inline void EnsureUtf16ValiditySpan(mozilla::Span<char16_t> aString) {
+  encoding_mem_ensure_utf16_validity(aString.Elements(), aString.Length());
+}
+
+/**
+ * Convert ASCII to UTF-16. In debug builds, assert that the input is
+ * ASCII.
+ *
+ * The length of aDest must not be less than the length of aSource.
+ */
+inline void ConvertAsciitoUtf16(mozilla::Span<const char> aSource,
+                                mozilla::Span<char16_t> aDest) {
+  MOZ_ASSERT(IsAscii(aSource));
+  ConvertLatin1toUtf16(aSource, aDest);
+}
+
+#endif  // MOZ_HAS_JSRUST
 
 /**
  * Returns true iff |aChar| matches Ascii Whitespace.

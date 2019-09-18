@@ -7,6 +7,8 @@
 #include <string.h>
 
 #include "mozilla/EndianUtils.h"
+#include "mozilla/TextUtils.h"
+#include "mozilla/Utf8.h"
 #include <stdint.h>
 #include <algorithm>
 #include <opus/opus.h>
@@ -109,7 +111,7 @@ bool OggCodecState::AddVorbisComment(UniquePtr<MetadataTags>& aTags,
   }
   uint32_t valueLength = aLength - (div - aComment);
   nsCString value = nsCString(div + 1, valueLength);
-  if (!IsUTF8(value)) {
+  if (!IsUtf8(value)) {
     LOG(LogLevel::Debug, ("Skipping comment: invalid UTF-8 in value"));
     return false;
   }
@@ -1598,7 +1600,7 @@ bool SkeletonState::DecodeFisbone(ogg_packet* aPacket) {
             return false;
           }
 
-          if ((i == 0 && IsASCII(strMsg)) || (i != 0 && IsUTF8(strMsg))) {
+          if ((i == 0 && IsAscii(strMsg)) || (i != 0 && IsUtf8(strMsg))) {
             EMsgHeaderType eHeaderType = kFieldTypeMaps[i].mMsgHeaderType;
             field->mValuesStore.LookupForAdd(eHeaderType)
                 .OrInsert([i, msgHead, msgProbe]() {

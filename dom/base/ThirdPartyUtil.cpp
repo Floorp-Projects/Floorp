@@ -23,6 +23,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/TextUtils.h"
 #include "mozilla/Unused.h"
 #include "nsGlobalWindowOuter.h"
 
@@ -433,7 +434,7 @@ NS_IMETHODIMP
 ThirdPartyUtil::GetBaseDomainFromSchemeHost(const nsACString& aScheme,
                                             const nsACString& aAsciiHost,
                                             nsACString& aBaseDomain) {
-  MOZ_DIAGNOSTIC_ASSERT(IsASCII(aAsciiHost));
+  MOZ_DIAGNOSTIC_ASSERT(IsAscii(aAsciiHost));
 
   // Get the base domain. this will fail if the host contains a leading dot,
   // more than one trailing dot, or is otherwise malformed.
