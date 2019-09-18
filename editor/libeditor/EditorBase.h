@@ -81,6 +81,7 @@ class IMEContentObserver;
 class InsertNodeTransaction;
 class InsertTextTransaction;
 class JoinNodeTransaction;
+class ListElementSelectionState;
 class PlaceholderTransaction;
 class PresShell;
 class SplitNodeResult;
@@ -2669,6 +2670,7 @@ class EditorBase : public nsIEditor,
   friend class InsertNodeTransaction;
   friend class InsertTextTransaction;
   friend class JoinNodeTransaction;
+  friend class ListElementSelectionState;
   friend class SplitNodeTransaction;
   friend class TextEditRules;
   friend class TypeInState;

@@ -29,7 +29,6 @@ namespace mozilla {
 using dom::Element;
 
 // prototype
-MOZ_CAN_RUN_SCRIPT
 static nsresult GetListState(HTMLEditor* aHTMLEditor, bool* aMixed,
                              nsAString& aLocalName);
 
@@ -1315,27 +1314,28 @@ nsresult InsertTagCommand::GetCommandStateParams(
  *****************************************************************************/
 
 static nsresult GetListState(HTMLEditor* aHTMLEditor, bool* aMixed,
-                             nsAString& aLocalName)
-    MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
+                             nsAString& aLocalName) {
   MOZ_ASSERT(aHTMLEditor);
   MOZ_ASSERT(aMixed);
 
   *aMixed = false;
   aLocalName.Truncate();
 
-  bool bOL, bUL, bDL;
-  nsresult rv = aHTMLEditor->GetListState(aMixed, &bOL, &bUL, &bDL);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (*aMixed) {
+  ErrorResult error;
+  ListElementSelectionState state(*aHTMLEditor, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+  if (state.IsNotOneTypeListElementSelected()) {
+    *aMixed = true;
     return NS_OK;
   }
 
-  if (bOL) {
+  if (state.IsOLElementSelected()) {
     aLocalName.AssignLiteral("ol");
-  } else if (bUL) {
+  } else if (state.IsULElementSelected()) {
     aLocalName.AssignLiteral("ul");
-  } else if (bDL) {
+  } else if (state.IsDLElementSelected()) {
     aLocalName.AssignLiteral("dl");
   }
   return NS_OK;

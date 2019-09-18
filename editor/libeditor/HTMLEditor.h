@@ -44,6 +44,7 @@ class AutoSelectionSetterAfterTableEdit;
 class AutoSetTemporaryAncestorLimiter;
 class EditActionResult;
 class EmptyEditableFunctor;
+class ListElementSelectionState;
 class MoveNodeResult;
 class ResizerSelectionListener;
 class SplitRangeOffFromNodeResult;
@@ -4364,10 +4365,35 @@ class HTMLEditor final : public TextEditor,
   friend class EditorBase;
   friend class EmptyEditableFunctor;
   friend class HTMLEditRules;
+  friend class ListElementSelectionState;
   friend class SlurpBlobEventListener;
   friend class TextEditor;
   friend class WSRunObject;
   friend class WSRunScanner;
+};
+
+/**
+ * ListElementSelectionState class gets which list element is selected right
+ * now.
+ */
+class MOZ_STACK_CLASS ListElementSelectionState final {
+ public:
+  ListElementSelectionState() = delete;
+  ListElementSelectionState(HTMLEditor& aHTMLEditor, ErrorResult& aRv);
+
+  bool IsOLElementSelected() const { return mIsOLElementSelected; }
+  bool IsULElementSelected() const { return mIsULElementSelected; }
+  bool IsDLElementSelected() const { return mIsDLElementSelected; }
+  bool IsNotOneTypeListElementSelected() const {
+    return (mIsOLElementSelected + mIsULElementSelected + mIsDLElementSelected +
+            mIsOtherContentSelected) > 1;
+  }
+
+ private:
+  bool mIsOLElementSelected = false;
+  bool mIsULElementSelected = false;
+  bool mIsDLElementSelected = false;
+  bool mIsOtherContentSelected = false;
 };
 
 }  // namespace mozilla
