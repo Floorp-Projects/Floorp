@@ -22,8 +22,6 @@ webrender_bindings = { path = "../../../../gfx/webrender_bindings", optional = t
 cubeb-coreaudio = { path = "../../../../media/libcubeb/cubeb-coreaudio-rs", optional = true }
 cubeb-pulse = { path = "../../../../media/libcubeb/cubeb-pulse-rs", optional = true, features=["pulse-dlopen"] }
 cubeb-sys = { version = "0.5.0", optional = true, features=["gecko-in-tree"] }
-encoding_c = "0.9.0"
-encoding_c_mem = "0.2.0"
 encoding_glue = { path = "../../../../intl/encoding_glue" }
 audioipc-client = { path = "../../../../media/audioipc/client", optional = true }
 audioipc-server = { path = "../../../../media/audioipc/server", optional = true }
@@ -57,7 +55,7 @@ cubeb_coreaudio_rust = ["cubeb-sys", "cubeb-coreaudio"]
 cubeb_pulse_rust = ["cubeb-sys", "cubeb-pulse"]
 gecko_debug = ["geckoservo/gecko_debug", "nsstring/gecko_debug"]
 gecko_refcount_logging = ["geckoservo/gecko_refcount_logging"]
-simd-accel = ["encoding_c/simd-accel", "encoding_glue/simd-accel"]
+simd-accel = ["encoding_glue/simd-accel"]
 moz_memory = ["mp4parse_capi/mp4parse_fallible"]
 moz_places = ["bookmark_sync"]
 spidermonkey_rust = ["jsrust_shared/baldrdash"]

@@ -1213,8 +1213,6 @@ dependencies = [
  "cubeb-coreaudio 0.1.0",
  "cubeb-pulse 0.2.0",
  "cubeb-sys 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "encoding_c 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "encoding_c_mem 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "encoding_glue 0.1.0",
  "env_logger 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "geckoservo 0.0.1",
@@ -1489,6 +1487,8 @@ name = "jsrust_shared"
 version = "0.1.0"
 dependencies = [
  "baldrdash 0.1.0",
+ "encoding_c 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding_c_mem 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "mozilla-central-workspace-hack 0.1.0",
 ]
 
