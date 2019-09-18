@@ -11,6 +11,7 @@
   padding: 0;
 }
 
+html|button,
 html|input,
 html|textarea {
   font: inherit;

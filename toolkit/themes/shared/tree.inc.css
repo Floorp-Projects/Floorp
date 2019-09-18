@@ -193,7 +193,6 @@ treechildren::-moz-tree-cell-text(selected, editing) {
 html|input.tree-input {
   -moz-appearance: none;
   -moz-box-flex: 1;
-  font: inherit;
   border: 1px solid Highlight;
   margin: 0;
   margin-inline-start: -4px;
