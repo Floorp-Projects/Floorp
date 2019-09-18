@@ -14453,20 +14453,22 @@ bool Document::InlineScriptAllowedByCSP() {
 static_assert(size_t(eUseCounter_EndCSSProperties) -
                       size_t(eUseCounter_FirstCSSProperty) ==
                   size_t(eCSSProperty_COUNT_with_aliases),
-              "");
+              "We should have the right amount of CSS property use counters");
 static_assert(size_t(eUseCounter_Count) -
                       size_t(eUseCounter_FirstCountedUnknownProperty) ==
                   size_t(CountedUnknownProperty::Count),
-              "");
+              "We should have the right amount of counted unknown properties"
+              " use counters");
 static_assert(size_t(eUseCounter_Count) * 2 ==
                   size_t(Telemetry::HistogramUseCounterCount),
-              "");
+              "There should be two histograms (document and page)"
+              " for each use counter");
 
 #define ASSERT_CSS_COUNTER(id_, method_)                        \
   static_assert(size_t(eUseCounter_property_##method_) -        \
                         size_t(eUseCounter_FirstCSSProperty) == \
                     size_t(id_),                                \
-                "");
+                "Order for CSS counters and CSS property id should match");
 #define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) privatename_
 #define CSS_PROP_LONGHAND(name_, id_, method_, ...) \
   ASSERT_CSS_COUNTER(eCSSProperty_##id_, method_)
