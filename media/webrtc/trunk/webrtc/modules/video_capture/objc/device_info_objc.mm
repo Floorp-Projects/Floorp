@@ -113,7 +113,9 @@
       queue:[NSOperationQueue mainQueue]
       usingBlock:^(NSNotification *note) {
           [_lock lock];
-          if(_owner)
+          AVCaptureDevice *device = [note object];
+          BOOL isVideoDevice = [device hasMediaType: AVMediaTypeVideo];
+          if(isVideoDevice && _owner)
               _owner->DeviceChange();
           [_lock unlock];
       }];
@@ -123,7 +125,9 @@
       queue:[NSOperationQueue mainQueue]
       usingBlock:^(NSNotification *note) {
           [_lock lock];
-          if(_owner)
+          AVCaptureDevice *device = [note object];
+          BOOL isVideoDevice = [device hasMediaType: AVMediaTypeVideo];
+          if(isVideoDevice && _owner)
               _owner->DeviceChange();
           [_lock unlock];
       }];
