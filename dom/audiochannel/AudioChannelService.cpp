@@ -321,7 +321,9 @@ AudioPlaybackConfig AudioChannelService::GetMediaConfig(
   AudioPlaybackConfig config(1.0, false, nsISuspendedTypes::NONE_SUSPENDED);
 
   if (!aWindow) {
-    config.SetConfig(0.0, true, nsISuspendedTypes::SUSPENDED_BLOCK);
+    config.mVolume = 0.0;
+    config.mMuted = true;
+    config.mSuspend = nsISuspendedTypes::SUSPENDED_BLOCK;
     return config;
   }
 
@@ -338,6 +340,7 @@ AudioPlaybackConfig AudioChannelService::GetMediaConfig(
       config.mSuspend = winData->mOwningAudioFocus
                             ? config.mSuspend
                             : nsISuspendedTypes::SUSPENDED_STOP_DISPOSABLE;
+      config.mCapturedAudio = winData->mIsAudioCaptured;
     }
 
     config.mVolume *= window->GetAudioVolume();
@@ -716,7 +719,6 @@ void AudioChannelService::AudioChannelWindow::AppendAgent(
 
   RequestAudioFocus(aAgent);
   AppendAgentAndIncreaseAgentsNum(aAgent);
-  AudioCapturedChanged(aAgent, AudioCaptureState::eCapturing);
   if (aAudible == AudibleState::eAudible) {
     AudioAudibleChanged(aAgent, AudibleState::eAudible,
                         AudibleChangedReasons::eDataAudibleChanged);
