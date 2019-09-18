@@ -1153,7 +1153,7 @@ linux64-aarch64/opt:
         tier: 2
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian9-arm64-build}
+        docker-image: {in-tree: debian10-arm64-build}
         max-run-time: 7200
     run:
         using: mozharness
