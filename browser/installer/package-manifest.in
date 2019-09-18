@@ -371,6 +371,10 @@ bin/libfreebl_64int_3.so
 @RESPATH@/chrome/pippki@JAREXT@
 @RESPATH@/chrome/pippki.manifest
 
+#if defined(XP_WIN) && !defined(_ARM64_)
+@BINPATH@/@DLL_PREFIX@osclientcerts@DLL_SUFFIX@
+#endif
+
 ; For process sandboxing
 #if defined(MOZ_SANDBOX)
 #if defined(XP_LINUX)
