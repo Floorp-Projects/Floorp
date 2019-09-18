@@ -61,6 +61,7 @@ class TaskBuilder(object):
                 ('sentry_dsn', '.sentry_token'),
                 ('leanplum', '.leanplum_token'),
                 ('adjust', '.adjust_token'),
+                ('digital_asset_links', '.digital_asset_links_token'),
                 ('firebase', 'app/src/{}/res/values/firebase.xml'.format(variant.build_type)),
             )
         )
@@ -106,6 +107,7 @@ class TaskBuilder(object):
             'echo "https://fake@sentry.prod.mozaws.net/368" > .sentry_token',
             'echo "--" > .adjust_token',
             'echo "-:-" > .leanplum_token',
+            'touch .digital_asset_links_token',
             './gradlew --no-daemon clean assemble{}'.format(variant.name),
         ))
 

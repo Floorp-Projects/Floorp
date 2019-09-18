@@ -81,6 +81,7 @@ gen-external-apklibs
 # Token files
 .leanplum_token
 .adjust_token
+.digital_asset_links_token
 
 
 # Python Byte-compiled / optimized / DLL files
