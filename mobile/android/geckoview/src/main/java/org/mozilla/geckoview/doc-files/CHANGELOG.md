@@ -31,7 +31,7 @@ exclude: true
   ([bug 1511033]({{bugzilla}}1511033))
 - Added ['GeckoRuntimeSettings.Builder#aboutConfigEnabled'][71.11] to control whether or
   not `about:config` should be available.
-
+- Added [`GeckoSession.ContentDelegate.onFirstContentfulPaint()`][71.12]
 [71.1]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onBooleanScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
 [71.2]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onLongScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
 [71.3]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onStringScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
@@ -43,6 +43,7 @@ exclude: true
 [71.9]: {{javadoc_uri}}/GeckoRuntime.ServiceWorkerDelegate.html
 [71.10]: {{javadoc_uri}}/GeckoRuntime#setServiceWorkerDelegate-org.mozilla.geckoview.GeckoRuntime.ServiceWorkerDelegate-
 [71.11]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#aboutConfigEnabled-boolean-
+[71.12]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onFirstContentfulPaint-org.mozilla.geckoview.GeckoSession-
 
 ## v70
 - Added API for session context assignment
@@ -365,4 +366,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 16e050b1d50a9909b936c740a94220eaff4115a3
+[api-version]: 40441c6fcd77218d1d32b468894558141d8ccad9
