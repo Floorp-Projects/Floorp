@@ -12,6 +12,7 @@
 #ifndef encoding_rs_mem_cpp_h_
 #define encoding_rs_mem_cpp_h_
 
+#include <optional>
 #include <string_view>
 #include <tuple>
 #include "gsl/gsl"
@@ -124,13 +125,6 @@ inline size_t convert_latin1_to_utf8(gsl::span<const char> src,
  * Returns the number of bytes read and the number of bytes written.
  *
  * If the output isn't large enough, not all input is consumed.
- *
- * # Safety
- *
- * Note that this function may write garbage beyond the number of bytes
- * indicated by the return value, so using a `&mut str` interpreted as
- * `&mut [u8]` as the destination is not safe. If you want to convert into
- * a `&mut str`, use `convert_utf16_to_str()` instead of this function.
  *
  * # Undefined behavior
  *
@@ -308,6 +302,34 @@ inline size_t convert_utf8_to_utf16(std::string_view src,
           reinterpret_cast<const char*>(src.data())),
       src.size(), encoding_rs::mem::detail::null_to_bogus<char16_t>(dst.data()),
       dst.size());
+}
+
+/**
+ * Converts potentially-invalid UTF-8 to valid UTF-16 signaling on error.
+ *
+ * The length of the destination buffer must be at least the length of the
+ * source buffer.
+ *
+ * Returns the number of `char16_t`s written or `std::nullopt` if the input was
+ * invalid.
+ *
+ * When the input was invalid, some output may have been written.
+ *
+ * # Panics
+ *
+ * Panics if the destination buffer is shorter than stated above.
+ */
+inline std::optional<size_t> convert_utf8_to_utf16_without_replacement(
+    std::string_view src, gsl::span<char16_t> dst) {
+  size_t val = encoding_mem_convert_utf8_to_utf16_without_replacement(
+      encoding_rs::mem::detail::null_to_bogus<const char>(
+          reinterpret_cast<const char*>(src.data())),
+      src.size(), encoding_rs::mem::detail::null_to_bogus<char16_t>(dst.data()),
+      dst.size());
+  if (val == SIZE_MAX) {
+    return std::nullopt;
+  }
+  return val;
 }
 
 /**
@@ -537,6 +559,16 @@ inline bool is_utf8_latin1(std::string_view buffer) {
 inline size_t utf16_valid_up_to(std::u16string_view buffer) {
   return encoding_mem_utf16_valid_up_to(
       encoding_rs::mem::detail::null_to_bogus<const char16_t>(buffer.data()),
+      buffer.size());
+}
+
+/**
+ * Returns the index of first byte that starts a non-Latin1 byte
+ * sequence, or the length of the string if there are none.
+ */
+inline size_t utf8_latin1_up_to(std::string_view buffer) {
+  return encoding_mem_utf8_latin1_up_to(
+      encoding_rs::mem::detail::null_to_bogus<const char>(buffer.data()),
       buffer.size());
 }
 

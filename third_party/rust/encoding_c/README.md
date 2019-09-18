@@ -6,6 +6,11 @@
 
 encoding_c is an FFI wrapper for [encoding_rs](https://github.com/hsivonen/encoding_rs).
 
+## Bindings for `encoding_rs::mem`
+
+See the [`encoding_c_mem` crate](https://crates.io/crates/encoding_c_mem)
+for bindings for `encoding_rs::mem`.
+
 ## Licensing
 
 Please see the file named
@@ -16,7 +21,7 @@ Please see the file named
 This crate is meant for use in binaries compiled with `panic = 'abort'`, which
 is _required_ for correctness! Unwinding across FFI is Undefined Behavior, and
 this crate does nothing to try to prevent unwinding across the FFI if
-compliled with unwinding enabled.
+compiled with unwinding enabled.
 
 ## C/C++ Headers
 
@@ -28,7 +33,22 @@ GSL and the C++ standard library. Since C++ project typically roll their own
 string classes, etc., it's probably necessary for C++ projects to manually
 adapt the header to their replacements of standard-library types.
 
+There's a [write-up](https://hsivonen.fi/modern-cpp-in-rust/) about the C++
+wrappers.
+
 ## Release Notes
+
+### 0.9.4
+
+* Fix bogus C header.
+
+### 0.9.3
+
+* Fix bogus C++ header.
+
+### 0.9.2
+
+* Wrap `Decoder::latin1_byte_compatible_up_to`.
 
 ### 0.9.1
 

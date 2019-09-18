@@ -20,6 +20,9 @@
 //! U+00FF, inclusive, and does not refer to the windows-1252 range. This
 //! in-memory encoding is sometimes used as a storage optimization of text
 //! when UTF-16 indexing and length semantics are exposed.
+//!
+//! The FFI binding for this module are in the
+//! [encoding_c_mem crate](https://github.com/hsivonen/encoding_c_mem).
 
 use std::borrow::Cow;
 
@@ -653,7 +656,7 @@ pub fn is_utf8_latin1(buffer: &[u8]) -> bool {
     is_utf8_latin1_impl(buffer).is_none()
 }
 
-/// Checks whether the buffer represents only code point less than or equal
+/// Checks whether the buffer represents only code points less than or equal
 /// to U+00FF.
 ///
 /// Fails fast. (I.e. returns before having read the whole buffer if code
@@ -1282,7 +1285,7 @@ pub fn is_utf16_bidi(buffer: &[u16]) -> bool {
     is_utf16_bidi_impl(buffer)
 }
 
-/// Checks whether a code point triggers right-to-left processing.
+/// Checks whether a scalar value triggers right-to-left processing.
 ///
 /// The check is done on a Unicode block basis without regard to assigned
 /// vs. unassigned code points in the block. Hebrew presentation forms in
@@ -1538,14 +1541,14 @@ pub fn convert_str_to_utf16(src: &str, dst: &mut [u16]) -> usize {
             if byte < 0xE0 {
                 if byte >= 0x80 {
                     // Two-byte
-                    let second = bytes[read + 1];
+                    let second = unsafe { *(bytes.get_unchecked(read + 1)) };
                     let point = ((u16::from(byte) & 0x1F) << 6) | (u16::from(second) & 0x3F);
-                    dst[written] = point;
+                    unsafe { *(dst.get_unchecked_mut(written)) = point };
                     read += 2;
                     written += 1;
                 } else {
                     // ASCII: write and go back to SIMD.
-                    dst[written] = u16::from(byte);
+                    unsafe { *(dst.get_unchecked_mut(written)) = u16::from(byte) };
                     read += 1;
                     written += 1;
                     // Intuitively, we should go back to the outer loop only
@@ -1557,25 +1560,27 @@ pub fn convert_str_to_utf16(src: &str, dst: &mut [u16]) -> usize {
                 }
             } else if byte < 0xF0 {
                 // Three-byte
-                let second = bytes[read + 1];
-                let third = bytes[read + 2];
+                let second = unsafe { *(bytes.get_unchecked(read + 1)) };
+                let third = unsafe { *(bytes.get_unchecked(read + 2)) };
                 let point = ((u16::from(byte) & 0xF) << 12)
                     | ((u16::from(second) & 0x3F) << 6)
                     | (u16::from(third) & 0x3F);
-                dst[written] = point;
+                unsafe { *(dst.get_unchecked_mut(written)) = point };
                 read += 3;
                 written += 1;
             } else {
                 // Four-byte
-                let second = bytes[read + 1];
-                let third = bytes[read + 2];
-                let fourth = bytes[read + 3];
+                let second = unsafe { *(bytes.get_unchecked(read + 1)) };
+                let third = unsafe { *(bytes.get_unchecked(read + 2)) };
+                let fourth = unsafe { *(bytes.get_unchecked(read + 3)) };
                 let point = ((u32::from(byte) & 0x7) << 18)
                     | ((u32::from(second) & 0x3F) << 12)
                     | ((u32::from(third) & 0x3F) << 6)
                     | (u32::from(fourth) & 0x3F);
-                dst[written] = (0xD7C0 + (point >> 10)) as u16;
-                dst[written + 1] = (0xDC00 + (point & 0x3FF)) as u16;
+                unsafe { *(dst.get_unchecked_mut(written)) = (0xD7C0 + (point >> 10)) as u16 };
+                unsafe {
+                    *(dst.get_unchecked_mut(written + 1)) = (0xDC00 + (point & 0x3FF)) as u16
+                };
                 read += 4;
                 written += 2;
             }
@@ -1589,6 +1594,30 @@ pub fn convert_str_to_utf16(src: &str, dst: &mut [u16]) -> usize {
             continue 'inner;
         }
     }
+}
+
+/// Converts potentially-invalid UTF-8 to valid UTF-16 signaling on error.
+///
+/// The length of the destination buffer must be at least the length of the
+/// source buffer.
+///
+/// Returns the number of `u16`s written or `None` if the input was invalid.
+///
+/// When the input was invalid, some output may have been written.
+///
+/// # Panics
+///
+/// Panics if the destination buffer is shorter than stated above.
+pub fn convert_utf8_to_utf16_without_replacement(src: &[u8], dst: &mut [u16]) -> Option<usize> {
+    assert!(
+        dst.len() >= src.len(),
+        "Destination must not be shorter than the source."
+    );
+    let (read, written) = convert_utf8_to_utf16_up_to_invalid(src, dst);
+    if read == src.len() {
+        return Some(written);
+    }
+    None
 }
 
 /// Converts potentially-invalid UTF-16 to valid UTF-8 with errors replaced
@@ -1625,12 +1654,12 @@ pub fn convert_utf16_to_utf8_partial(src: &[u16], dst: &mut [u8]) -> (usize, usi
     // Letting the transitions be mere intra-function jumps, even to
     // basic blocks out-of-lined to the end of the function would wipe
     // away a quarter of Arabic encode performance on Haswell!
-    let (read, written) = convert_utf16_to_utf16_partial_inner(src, dst);
+    let (read, written) = convert_utf16_to_utf8_partial_inner(src, dst);
     if unsafe { likely(read == src.len()) } {
         return (read, written);
     }
     let (tail_read, tail_written) =
-        convert_utf16_to_utf16_partial_tail(&src[read..], &mut dst[written..]);
+        convert_utf16_to_utf8_partial_tail(&src[read..], &mut dst[written..]);
     (read + tail_read, written + tail_written)
 }
 
@@ -1738,10 +1767,9 @@ pub fn convert_latin1_to_utf16(src: &[u8], dst: &mut [u16]) {
 ///
 /// # Safety
 ///
-/// Note that this function may write garbage beyond the number of bytes
-/// indicated by the return value, so using a `&mut str` interpreted as
-/// `&mut [u8]` as the destination is not safe. If you want to convert into
-/// a `&mut str`, use `convert_utf16_to_str()` instead of this function.
+/// If you want to convert into a `&mut str`, use
+/// `convert_utf16_to_str_partial()` instead of using this function
+/// together with the `unsafe` method `as_bytes_mut()` on `&mut str`.
 pub fn convert_latin1_to_utf8_partial(src: &[u8], dst: &mut [u8]) -> (usize, usize) {
     let src_len = src.len();
     let src_ptr = src.as_ptr();
@@ -2016,6 +2044,19 @@ pub fn encode_latin1_lossy<'a>(string: &'a str) -> Cow<'a, [u8]> {
 /// valid UTF-16 in its entirety, the length of the input.
 pub fn utf16_valid_up_to(buffer: &[u16]) -> usize {
     utf16_valid_up_to_impl(buffer)
+}
+
+/// Returns the index of first byte that starts an invalid byte
+/// sequence or a non-Latin1 byte sequence, or the length of the
+/// string if there are neither.
+pub fn utf8_latin1_up_to(buffer: &[u8]) -> usize {
+    is_utf8_latin1_impl(buffer).unwrap_or(buffer.len())
+}
+
+/// Returns the index of first byte that starts a non-Latin1 byte
+/// sequence, or the length of the string if there are none.
+pub fn str_latin1_up_to(buffer: &str) -> usize {
+    is_str_latin1_impl(buffer).unwrap_or(buffer.len())
 }
 
 /// Replaces unpaired surrogates in the input with the REPLACEMENT CHARACTER.
@@ -2442,7 +2483,7 @@ mod tests {
             0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16, 0u16,
             0x2603u16, 0x00B6u16, 0xD83Du16,
         ];
-        assert_eq!(utf16_valid_up_to(&lone_high_at_end[..]), 15);;
+        assert_eq!(utf16_valid_up_to(&lone_high_at_end[..]), 15);
     }
 
     #[test]
@@ -3234,4 +3275,61 @@ mod tests {
         assert_eq!(encode_latin1_lossy("a\u{E4}"), &(b"a\xE4")[..]);
     }
 
+    #[test]
+    fn test_convert_utf8_to_utf16_without_replacement() {
+        let mut buf = [0u16; 5];
+        assert_eq!(
+            convert_utf8_to_utf16_without_replacement(b"ab", &mut buf[..2]),
+            Some(2)
+        );
+        assert_eq!(buf[0], u16::from(b'a'));
+        assert_eq!(buf[1], u16::from(b'b'));
+        assert_eq!(buf[2], 0);
+        assert_eq!(
+            convert_utf8_to_utf16_without_replacement(b"\xC3\xA4c", &mut buf[..3]),
+            Some(2)
+        );
+        assert_eq!(buf[0], 0xE4);
+        assert_eq!(buf[1], u16::from(b'c'));
+        assert_eq!(buf[2], 0);
+        assert_eq!(
+            convert_utf8_to_utf16_without_replacement(b"\xE2\x98\x83", &mut buf[..3]),
+            Some(1)
+        );
+        assert_eq!(buf[0], 0x2603);
+        assert_eq!(buf[1], u16::from(b'c'));
+        assert_eq!(buf[2], 0);
+        assert_eq!(
+            convert_utf8_to_utf16_without_replacement(b"\xE2\x98\x83d", &mut buf[..4]),
+            Some(2)
+        );
+        assert_eq!(buf[0], 0x2603);
+        assert_eq!(buf[1], u16::from(b'd'));
+        assert_eq!(buf[2], 0);
+        assert_eq!(
+            convert_utf8_to_utf16_without_replacement(b"\xE2\x98\x83\xC3\xA4", &mut buf[..5]),
+            Some(2)
+        );
+        assert_eq!(buf[0], 0x2603);
+        assert_eq!(buf[1], 0xE4);
+        assert_eq!(buf[2], 0);
+        assert_eq!(
+            convert_utf8_to_utf16_without_replacement(b"\xF0\x9F\x93\x8E", &mut buf[..4]),
+            Some(2)
+        );
+        assert_eq!(buf[0], 0xD83D);
+        assert_eq!(buf[1], 0xDCCE);
+        assert_eq!(buf[2], 0);
+        assert_eq!(
+            convert_utf8_to_utf16_without_replacement(b"\xF0\x9F\x93\x8Ee", &mut buf[..5]),
+            Some(3)
+        );
+        assert_eq!(buf[0], 0xD83D);
+        assert_eq!(buf[1], 0xDCCE);
+        assert_eq!(buf[2], u16::from(b'e'));
+        assert_eq!(
+            convert_utf8_to_utf16_without_replacement(b"\xF0\x9F\x93", &mut buf[..5]),
+            None
+        );
+    }
 }

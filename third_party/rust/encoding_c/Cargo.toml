@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "encoding_c"
-version = "0.9.1"
+version = "0.9.4"
 authors = ["Henri Sivonen <hsivonen@hsivonen.fi>"]
 description = "C API for encoding_rs"
 homepage = "https://docs.rs/encoding_c/"
@@ -22,7 +22,7 @@ keywords = ["ffi", "capi", "encoding", "unicode", "charset"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/hsivonen/encoding_c"
 [dependencies.encoding_rs]
-version = "0.8.11"
+version = "0.8.19"
 
 [features]
 fast-big5-hanzi-encode = ["encoding_rs/fast-big5-hanzi-encode"]

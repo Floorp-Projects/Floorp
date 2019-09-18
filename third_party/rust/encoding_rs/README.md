@@ -86,6 +86,18 @@ one directly. (It wraps this crate and adds UTF-7 decoding.)
 For mappings to and from Windows code page identifiers, use the
 [`codepage`](https://crates.io/crates/codepage) crate.
 
+## Preparing Text for the Encoders
+
+Normalizing text into Unicode Normalization Form C prior to encoding text into
+a legacy encoding minimizes unmappable characters. Text can be normalized to
+Unicode Normalization Form C using the
+[`unic-normal`](https://crates.io/crates/unic-normal) crate.
+
+The exception is windows-1258, which after normalizing to Unicode Normalization
+Form C requires tone marks to be decomposed in order to minimize unmappable
+characters. Vietnamese tone marks can be decomposed using the
+[`detone`](https://crates.io/crates/detone) crate.
+
 ## Licensing
 
 Please see the file named
@@ -106,10 +118,11 @@ An FFI layer for encoding_rs is available as a
 with a [demo C++ wrapper](https://github.com/hsivonen/encoding_c/blob/master/include/encoding_rs_cpp.h)
 using the C++ standard library and [GSL](https://github.com/Microsoft/GSL/) types.
 
+The bindings for the `mem` module are in the
+[encoding_c_mem crate](https://github.com/hsivonen/encoding_c_mem).
+
 For the Gecko context, there's a
 [C++ wrapper using the MFBT/XPCOM types](https://searchfox.org/mozilla-central/source/intl/Encoding.h#100).
-
-These bindings do not cover the `mem` module.
 
 There's a [write-up](https://hsivonen.fi/modern-cpp-in-rust/) about the C++
 wrappers.
@@ -403,6 +416,16 @@ To regenerate the generated code:
 - [ ] ~Investigate [Bob Steagall's lookup table acceleration for UTF-8](https://github.com/BobSteagall/CppNow2018/blob/master/FastConversionFromUTF-8/Fast%20Conversion%20From%20UTF-8%20with%20C%2B%2B%2C%20DFAs%2C%20and%20SSE%20Intrinsics%20-%20Bob%20Steagall%20-%20C%2B%2BNow%202018.pdf).~
 
 ## Release Notes
+
+### 0.8.19
+
+* Removed a bunch of bound checks in `convert_str_to_utf16`.
+* Added `mem::convert_utf8_to_utf16_without_replacement`.
+
+### 0.8.18
+
+* Added `mem::utf8_latin1_up_to` and `mem::str_latin1_up_to`.
+* Added `Decoder::latin1_byte_compatible_up_to`.
 
 ### 0.8.17
 
