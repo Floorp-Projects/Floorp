@@ -11,6 +11,9 @@ import mozilla.components.support.utils.WebURLFinder
 
 private const val MIME_TYPE_TEXT_PLAIN = "text/plain"
 
+/**
+ * A clipboard utility class that allows copying and pasting links/text to & from the clipboard
+ */
 class ClipboardHandler(context: Context) {
     private val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
@@ -30,6 +33,8 @@ class ClipboardHandler(context: Context) {
 
     val url: String?
         get() {
+            if (text == null) { return null }
+
             val finder = WebURLFinder(text)
             return finder.bestWebURL()
         }

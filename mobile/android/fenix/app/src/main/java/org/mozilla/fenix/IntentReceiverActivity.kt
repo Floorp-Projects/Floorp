@@ -40,8 +40,8 @@ class IntentReceiverActivity : Activity() {
             val intent = intent?.let { Intent(intent) } ?: Intent()
 
             val intentProcessors = listOf(
-                components.utils.customTabIntentProcessor,
-                components.utils.intentProcessor
+                components.intentProcessors.customTabIntentProcessor,
+                components.intentProcessors.intentProcessor
             )
 
             if (intent.getBooleanExtra(SPEECH_PROCESSING, false)) {
@@ -60,7 +60,7 @@ class IntentReceiverActivity : Activity() {
 
     private fun setIntentActivity(intent: Intent) {
         val openToBrowser = when {
-            components.utils.customTabIntentProcessor.matches(intent) -> {
+            components.intentProcessors.customTabIntentProcessor.matches(intent) -> {
                 // TODO this needs to change: https://github.com/mozilla-mobile/fenix/issues/5225
                 val activityClass = if (intent.hasExtra(EXTRA_AUTH_CUSTOM_TAB)) {
                     AuthCustomTabActivity::class

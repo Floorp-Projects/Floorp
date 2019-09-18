@@ -204,7 +204,7 @@ class SearchFragment : Fragment(), BackHandler {
         fill_link_from_clipboard.setOnClickListener {
             (activity as HomeActivity)
                 .openToBrowserAndLoad(
-                    searchTermOrURL = requireContext().components.utils.clipboardHandler.url ?: "",
+                    searchTermOrURL = requireContext().components.clipboardHandler.url ?: "",
                     newTab = searchStore.state.session == null,
                     from = BrowserDirection.FromSearch
                 )
@@ -216,7 +216,7 @@ class SearchFragment : Fragment(), BackHandler {
             updateSearchEngineIcon(it)
             updateSearchShortuctsIcon(it)
             updateSearchWithLabel(it)
-            updateClipboardSuggestion(it, requireContext().components.utils.clipboardHandler.url)
+            updateClipboardSuggestion(it, requireContext().components.clipboardHandler.url)
         }
 
         startPostponedEnterTransition()
@@ -244,7 +244,7 @@ class SearchFragment : Fragment(), BackHandler {
             toolbarView.view.requestFocus()
         }
 
-        updateClipboardSuggestion(searchStore.state, requireContext().components.utils.clipboardHandler.url)
+        updateClipboardSuggestion(searchStore.state, requireContext().components.clipboardHandler.url)
 
         permissionDidUpdate = false
         (activity as AppCompatActivity).supportActionBar?.hide()

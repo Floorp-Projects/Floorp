@@ -7,6 +7,7 @@ package org.mozilla.fenix.components
 import android.content.Context
 import io.mockk.mockk
 import kotlinx.coroutines.ObsoleteCoroutinesApi
+import org.mozilla.fenix.utils.ClipboardHandler
 
 @ObsoleteCoroutinesApi
 class TestComponents(private val context: Context) : Components(context) {
@@ -25,8 +26,8 @@ class TestComponents(private val context: Context) : Components(context) {
             core.client
         )
     }
-    override val utils by lazy {
-        Utilities(
+    override val intentProcessors by lazy {
+        IntentProcessors(
             context,
             core.sessionManager,
             useCases.sessionUseCases,
@@ -34,4 +35,6 @@ class TestComponents(private val context: Context) : Components(context) {
         )
     }
     override val analytics by lazy { Analytics(context) }
+
+    override val clipboardHandler by lazy { ClipboardHandler(context) }
 }

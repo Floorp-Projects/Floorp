@@ -54,7 +54,7 @@ class BrowserToolbarView(
         val isCustomTabSession = customTabSession != null
 
         view.setOnUrlLongClickListener {
-            val clipboard = view.context.components.utils.clipboardHandler
+            val clipboard = view.context.components.clipboardHandler
             val customView = LayoutInflater.from(view.context).inflate(R.layout.browser_toolbar_popup_window, null)
             val popupWindow = PopupWindow(customView,
                 LinearLayout.LayoutParams.WRAP_CONTENT,

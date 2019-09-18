@@ -7,6 +7,7 @@ package org.mozilla.fenix.components
 import android.content.Context
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import org.mozilla.fenix.test.Mockable
+import org.mozilla.fenix.utils.ClipboardHandler
 
 /**
  * Provides access to all components.
@@ -22,7 +23,10 @@ class Components(private val context: Context) {
     val useCases by lazy {
         UseCases(context, core.sessionManager, core.engine.settings, search.searchEngineManager, core.client)
     }
-    val utils by lazy { Utilities(context, core.sessionManager, useCases.sessionUseCases, useCases.searchUseCases) }
+    val intentProcessors by lazy {
+        IntentProcessors(context, core.sessionManager, useCases.sessionUseCases, useCases.searchUseCases)
+    }
     val analytics by lazy { Analytics(context) }
     val publicSuffixList by lazy { PublicSuffixList(context) }
+    val clipboardHandler by lazy { ClipboardHandler(context) }
 }
