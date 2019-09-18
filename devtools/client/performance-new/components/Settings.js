@@ -186,6 +186,16 @@ const featureCheckboxes = [
     value: "preferencereads",
     title: "Track Preference Reads",
   },
+  {
+    name: "JS Allocations",
+    value: "jsallocations",
+    title: "Track JavaScript allocations (Experimental.)",
+  },
+  {
+    name: "Native Allocations",
+    value: "nativeallocations",
+    title: "Track native allocations (Experimental.)",
+  },
 ];
 
 /**
@@ -357,7 +367,8 @@ class Settings extends PureComponent {
       // Contain the overflow of the slide down animation with the first div.
       div(
         { className: "perf-settings-details-contents" },
-        // Provide a second <div> element for the contents of the slide down animation.
+        // Provide a second <div> element for the contents of the slide down
+        // animation.
         div(
           { className: "perf-settings-details-contents-slider" },
           div(
