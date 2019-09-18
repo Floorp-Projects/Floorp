@@ -56,6 +56,25 @@ function findBreakpointAtLocation(
   });
 }
 
+// returns the closest active column breakpoint to current cursorPosition in editor.
+function findClosestBreakpointToCursor(lineBreakpoints, cursorPosition) {
+  const closestBreakpoint = lineBreakpoints.reduce((closestBp, currentBp) => {
+    // check that editor is re-rendered and breakpoints are assigned.
+    if (typeof closestBp === "object") {
+      const currentColumn = currentBp.generatedLocation.column;
+      const closestColumn = closestBp.generatedLocation.column;
+      // check that breakpoint has a column.
+      if (currentColumn && closestColumn) {
+        const currentDistance = Math.abs(currentColumn - cursorPosition.column);
+        const closestDistance = Math.abs(closestColumn - cursorPosition.column);
+
+        return currentDistance < closestDistance ? currentBp : closestBp;
+      }
+    }
+  }, lineBreakpoints[0] || {});
+  return closestBreakpoint;
+}
+
 /*
  * Finds a breakpoint at a location (line, column) of the
  * selected source.
@@ -83,4 +102,9 @@ export function getBreakpointsAtLine(state: State, line: number): Breakpoint[] {
   return breakpoints.filter(
     breakpoint => getLocation(breakpoint, selectedSource).line === line
   );
+}
+
+export function getClosestBreakpoint(state: State, cursorPosition: Object) {
+  const lineBreakpoints = getBreakpointsAtLine(state, cursorPosition.line);
+  return findClosestBreakpointToCursor(lineBreakpoints, cursorPosition);
 }
