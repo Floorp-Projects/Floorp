@@ -348,6 +348,11 @@ const getRelativeRect = function(node, relativeTo) {
  *        - {Boolean} useXulWrapper
  *          Defaults to false. If the tooltip is hosted in a XUL document, use a XUL panel
  *          in order to use all the screen viewport available.
+ *        - {Boolean} noAutoHide
+ *          Defaults to false. If this property is set to false or omitted, the
+ *          tooltip will automatically disappear after a few seconds. If this
+ *          attribute is set to true, this will not happen and the tooltip will
+ *          only hide when the user moves the mouse to another element.
  */
 function HTMLTooltip(
   toolboxDoc,
@@ -357,6 +362,7 @@ function HTMLTooltip(
     type = "normal",
     consumeOutsideClicks = true,
     useXulWrapper = false,
+    noAutoHide = false,
   } = {}
 ) {
   EventEmitter.decorate(this);
@@ -365,7 +371,9 @@ function HTMLTooltip(
   this.id = id;
   this.className = className;
   this.type = type;
-  this.consumeOutsideClicks = consumeOutsideClicks;
+  this.noAutoHide = noAutoHide;
+  // consumeOutsideClicks cannot be used if the tooltip is not closed on click
+  this.consumeOutsideClicks = this.noAutoHide ? false : consumeOutsideClicks;
   this.useXulWrapper = this._isXUL() && useXulWrapper;
   this.preferredWidth = "auto";
   this.preferredHeight = "auto";
@@ -780,8 +788,12 @@ HTMLTooltip.prototype = {
    * is hidden.
    */
   async hide({ fromMouseup = false } = {}) {
-    // Exit if the disable autohide setting is in effect.
-    if (Services.prefs.getBoolPref("devtools.popup.disable_autohide", false)) {
+    // Exit if the disable autohide setting is in effect or if hide() is called
+    // from a mouseup event and the tooltip has noAutoHide set to true.
+    if (
+      Services.prefs.getBoolPref("devtools.popup.disable_autohide", false) ||
+      (this.noAutoHide && this.isVisible() && fromMouseup)
+    ) {
       return;
     }
 
@@ -986,6 +998,8 @@ HTMLTooltip.prototype = {
     panel.setAttribute("consumeoutsideclicks", false);
     panel.setAttribute("incontentshell", false);
     panel.setAttribute("noautofocus", true);
+    panel.setAttribute("noautohide", this.noAutoHide);
+
     panel.setAttribute("ignorekeys", true);
     panel.setAttribute("tooltip", "aHTMLTooltip");
 

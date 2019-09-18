@@ -178,6 +178,7 @@ TooltipsOverlay.prototype = {
         tooltip = new HTMLTooltip(doc, {
           type: "doorhanger",
           useXulWrapper: true,
+          noAutoHide: true,
         });
         tooltip.startTogglingOnHover(
           this.view.element,
