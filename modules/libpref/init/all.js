@@ -148,7 +148,7 @@ pref("security.webauth.webauthn_enable_softtoken", false);
   pref("security.webauth.webauthn_enable_usbtoken", true);
 #endif
 
-pref("security.ssl.errorReporting.enabled", true);
+pref("security.ssl.errorReporting.enabled", false);
 pref("security.ssl.errorReporting.url", "https://incoming.telemetry.mozilla.org/submit/sslreports/");
 pref("security.ssl.errorReporting.automatic", false);
 
@@ -226,10 +226,6 @@ pref("browser.cache.offline.insecure.enable",  false);
 
 // offline cache capacity in kilobytes
 pref("browser.cache.offline.capacity",         512000);
-
-// the user should be warned if offline app disk usage exceeds this amount
-// (in kilobytes)
-pref("offline-apps.quota.warn",        51200);
 
 // Don't show "Open with" option on download dialog if true.
 pref("browser.download.forbid_open_with", false);

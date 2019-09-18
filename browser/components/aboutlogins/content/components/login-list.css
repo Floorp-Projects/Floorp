@@ -130,6 +130,10 @@ ol {
 .labels {
   flex-grow: 1;
   overflow: hidden;
+  min-height: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .title,

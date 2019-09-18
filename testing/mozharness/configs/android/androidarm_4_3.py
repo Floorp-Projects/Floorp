@@ -5,7 +5,6 @@
 
 config = {
     "deprecated_sdk_path": True,
-    "robocop_package_name": "org.mozilla.roboexample.test",
     "tooltool_manifest_path": "testing/config/tooltool-manifests/androidarm_4_3/releng.manifest",
     "emulator_manifest": """
         [
@@ -29,7 +28,6 @@ config = {
         "PATH": "%(PATH)s:%(abs_work_dir)s/android-sdk-linux/tools:%(abs_work_dir)s/android-sdk-linux/platform-tools",
         "MINIDUMP_SAVEPATH": "%(abs_work_dir)s/../minidumps"
     },
-    "marionette_extra": "--emulator",
     "bogomips_minimum": 250,
     # in support of test-verify
     "android_version": 18,

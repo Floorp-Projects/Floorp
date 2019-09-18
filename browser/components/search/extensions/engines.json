@@ -53,6 +53,8 @@
             "startsWith": ["bn", "en"]
           }
         }
+      }, {
+        "included": { "regions": ["default"] }
       }],
       "aliases": ["@bing"]
     },
@@ -77,6 +79,8 @@
       "webExtensionId": "amazondotcom@search.mozilla.org",
       "webExtensionVersion": "1.1",
       "appliesTo": [{
+        "included": { "regions": ["default"] }
+      }, {
         "included": {
           "locales": {
             "matches": [
@@ -239,6 +243,8 @@
       "webExtensionId": "ebay@search.mozilla.org",
       "webExtensionVersion": "1.0",
       "appliesTo": [{
+        "included": { "regions": ["default"] }
+      }, {
         "included": { "locales": { "matches": ["en-US"] } },
         "excluded": { "regions": ["ru", "tr", "by", "kz"] }
       }, {
@@ -752,10 +758,10 @@
       "webExtensionVersion": "1.0",
       "appliesTo": [{
         "included": { "locales": { "matches": [
-          "en-US", "ach", "an", "bs", "ca", "ca-valencia", "crh",
-          "en-CA", "ga-IE", "gn", "hr", "ia", "ka", "kk", "km", "lo",
-          "lt", "mai",  "ms", "my", "ne-NP", "oc", "pt-BR", "sl", "tl",
-          "tr", "ur", "uz", "wo"
+          "default", "en-US", "ach", "an", "bs", "ca", "ca-valencia",
+          "crh", "en-CA", "ga-IE", "gn", "hr", "ia", "ka", "kk", "km",
+          "lo", "lt", "mai",  "ms", "my", "ne-NP", "oc", "pt-BR",
+          "sl", "tl", "tr", "ur", "uz", "wo"
         ]}}
       }, {
         "included": { "locales": { "matches": ["ja-JP-mac", "ja"]}},
@@ -815,6 +821,8 @@
       "webExtensionId": "wikipedia@search.mozilla.org",
       "webExtensionVersion": "1.0",
       "appliesTo": [ {
+        "included": { "everywhere": true }
+      }, {
         "included": { "locales": { "matches": [
           "af", "an", "ar", "as", "ast", "az", "be", "bg",
           "br", "bs", "crh", "cy", "da", "de", "dsb",
@@ -828,11 +836,6 @@
           "zh-CN", "zh-TW"
         ]}},
         "webExtensionLocales": ["$USER_LOCALE"]
-      }, {
-        "included": { "locales": { "matches": [
-          "en-CA", "en-GB", "en-US", "en-ZA", "ach", "xh"
-          ]}},
-          "webExtensionLocales": ["en"]
       }, {
         "included": { "locales": { "matches": [ "be" ] } },
         "webExtensionLocales": ["be", "be-tarask"]

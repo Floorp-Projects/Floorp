@@ -278,12 +278,14 @@ window:not([chromehidden~="toolbar"]) #nav-bar[nonemptyoverflow] > .overflow-but
 }
 %ifdef MOZ_WIDGET_GTK
 @media (-moz-gtk-csd-reversed-placement: 0) {
-  :root:not([sizemode=normal]) .titlebar-spacer[type="pre-tabs"] {
+  :root:not([sizemode=normal]) .titlebar-spacer[type="pre-tabs"],
+  :root[gtktiledwindow=true] .titlebar-spacer[type="pre-tabs"] {
     display: none;
   }
 }
 @media (-moz-gtk-csd-reversed-placement) {
-  :root:not([sizemode=normal]) .titlebar-spacer[type="post-tabs"] {
+  :root:not([sizemode=normal]) .titlebar-spacer[type="post-tabs"],
+  :root[gtktiledwindow=true] .titlebar-spacer[type="post-tabs"] {
     display: none;
   }
 }
@@ -385,7 +387,7 @@ toolbarpaletteitem {
   #urlbar-contextual-tip-icon {
     background-image: var(--webextension-contextual-tip-icon-2x);
   }
-  
+
   :root[lwt-popup-brighttext] #urlbar-contextual-tip-icon {
     background-image: var(--webextension-contextual-tip-icon-2x-light);
   }
@@ -668,7 +670,6 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] {
-  -moz-binding: none;
   height: auto;
 }
 

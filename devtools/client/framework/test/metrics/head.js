@@ -93,3 +93,61 @@ function runMetricsTest({ filterString, loaders, panelName }) {
     "Successfully recorded char count for " + panelName
   );
 }
+
+function getDuplicatedModules(loaders) {
+  const allModules = getFilteredModules("", loaders);
+
+  const uniqueModules = new Set();
+  const duplicatedModules = new Set();
+  for (const mod of allModules) {
+    if (uniqueModules.has(mod)) {
+      duplicatedModules.add(mod);
+    }
+    uniqueModules.add(mod);
+  }
+
+  return duplicatedModules;
+}
+
+/**
+ * Check that modules are only loaded once in a given set of loaders.
+ * Panels might load the same module twice by mistake if they are both using
+ * a BrowserLoader and the regular DevTools Loader.
+ *
+ * @param {Array} loaders
+ *        Array of Loader instances.
+ * @param {Array} whitelist
+ *        Array of Strings which are paths to known duplicated modules.
+ *        The test will also fail if a whitelisted module is not found in the
+ *        duplicated modules.
+ */
+function runDuplicatedModulesTest(loaders, whitelist) {
+  const duplicatedModules = getDuplicatedModules(loaders);
+
+  // Remove whitelisted entries, and fail if a whitelisted entry is not found.
+  for (const whitelistedModule of whitelist) {
+    const deleted = duplicatedModules.delete(whitelistedModule);
+    if (!deleted) {
+      ok(
+        false,
+        "Whitelisted module not found in the duplicated modules: [" +
+          whitelistedModule +
+          "]. Whitelist should be updated."
+      );
+    }
+  }
+
+  // Prepare a log string with the paths of all duplicated modules.
+  let duplicatedModulesLog = "";
+  for (const mod of duplicatedModules) {
+    duplicatedModulesLog += `  [duplicated module] ${mod}\n`;
+  }
+
+  // Check that duplicatedModules Set is empty.
+  is(
+    duplicatedModules.size,
+    0,
+    "Duplicated module load detected. List of duplicated modules:\n" +
+      duplicatedModulesLog
+  );
+}

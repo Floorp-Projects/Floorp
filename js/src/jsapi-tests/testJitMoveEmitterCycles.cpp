@@ -57,7 +57,7 @@ static js::jit::JitCode* linkAndAllocate(JSContext* cx,
                                          js::jit::MacroAssembler* masm) {
   using namespace js;
   using namespace js::jit;
-  Linker l(*masm, "test");
+  Linker l(*masm);
   return l.newCode(cx, CodeKind::Ion);
 }
 

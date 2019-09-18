@@ -10,12 +10,6 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TypeTraits.h"
 
-// GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
-// GetTickCount().
-#ifdef GetCurrentTime
-#  undef GetCurrentTime
-#endif
-
 namespace mozilla {
 
 // Utility class that converts time values represented as an unsigned integral

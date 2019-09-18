@@ -347,8 +347,7 @@ UniqueModuleSegment ModuleSegment::create(Tier tier, MacroAssembler& masm,
     return nullptr;
   }
 
-  // We'll flush the icache after static linking, in initialize().
-  masm.executableCopy(codeBytes.get(), /* flushICache = */ false);
+  masm.executableCopy(codeBytes.get());
 
   return js::MakeUnique<ModuleSegment>(tier, std::move(codeBytes), codeLength,
                                        linkData);
@@ -378,11 +377,9 @@ bool ModuleSegment::initialize(const CodeTier& codeTier,
     return false;
   }
 
-  jit::FlushICache(base(), RoundupCodeLength(length()));
-
   // Reprotect the whole region to avoid having separate RW and RX mappings.
-  if (!ExecutableAllocator::makeExecutable(base(),
-                                           RoundupCodeLength(length()))) {
+  if (!ExecutableAllocator::makeExecutableAndFlushICache(
+          base(), RoundupCodeLength(length()))) {
     return false;
   }
 
@@ -716,7 +713,7 @@ bool LazyStubTier::createMany(const Uint32Vector& funcExportIndices,
                          &codePtr, &interpRangeIndex))
     return false;
 
-  masm.executableCopy(codePtr, /* flushICache = */ false);
+  masm.executableCopy(codePtr);
   PatchDebugSymbolicAccesses(codePtr, masm);
   memset(codePtr + masm.bytesNeeded(), 0, codeLength - masm.bytesNeeded());
 
@@ -724,8 +721,7 @@ bool LazyStubTier::createMany(const Uint32Vector& funcExportIndices,
     Assembler::Bind(codePtr, label);
   }
 
-  jit::FlushICache(codePtr, codeLength);
-  if (!ExecutableAllocator::makeExecutable(codePtr, codeLength)) {
+  if (!ExecutableAllocator::makeExecutableAndFlushICache(codePtr, codeLength)) {
     return false;
   }
 

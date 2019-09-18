@@ -837,6 +837,11 @@ class nsIWidget : public nsISupports {
   virtual nsSizeMode SizeMode() = 0;
 
   /**
+   * Ask whether the window is tiled.
+   */
+  virtual bool IsTiled() const = 0;
+
+  /**
    * Ask wether the widget is fully occluded
    */
   virtual bool IsFullyOccluded() const = 0;

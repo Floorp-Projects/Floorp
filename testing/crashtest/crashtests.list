@@ -13,6 +13,7 @@ include ../../dom/base/crashtests/crashtests.list
 include ../../dom/bindings/crashtests/crashtests.list
 include ../../dom/canvas/crashtests/crashtests.list
 include ../../dom/events/crashtests/crashtests.list
+include ../../dom/fetch/tests/crashtests/crashtests.list
 include ../../dom/file/tests/crashtests/crashtests.list
 include ../../dom/html/crashtests/crashtests.list
 include ../../dom/indexedDB/crashtests/crashtests.list

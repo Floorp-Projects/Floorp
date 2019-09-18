@@ -60,6 +60,7 @@ pref("devtools.debugger.skip-pausing", false);
 pref("devtools.debugger.logging", false);
 pref("devtools.debugger.map-scopes-enabled", false);
 pref("devtools.debugger.log-actions", false);
+pref("devtools.debugger.log-event-breakpoints", false);
 
 pref("devtools.debugger.features.wasm", true);
 pref("devtools.debugger.features.shortcuts", true);
@@ -85,5 +86,4 @@ pref("devtools.debugger.features.log-points", true);
 pref("devtools.debugger.features.overlay-step-buttons", false);
 pref("devtools.debugger.features.overlay-step-buttons", true);
 pref("devtools.debugger.features.inline-preview", true);
-pref("devtools.debugger.features.log-event-breakpoints", false);
 pref("devtools.debugger.features.watchpoints", false);

@@ -15,7 +15,7 @@ import subprocess
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
-from mozharness.base.log import WARNING, FATAL
+from mozharness.base.log import WARNING
 from mozharness.base.script import BaseScript, PreScriptAction
 from mozharness.mozilla.automation import TBPL_RETRY
 from mozharness.mozilla.mozbase import MozbaseMixin
@@ -125,13 +125,11 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
 
         # these are necessary since self.config is read only
         c = self.config
-        abs_dirs = self.query_abs_dirs()
         self.installer_url = c.get('installer_url')
         self.installer_path = c.get('installer_path')
         self.test_url = c.get('test_url')
         self.test_packages_url = c.get('test_packages_url')
         self.test_manifest = c.get('test_manifest')
-        self.robocop_path = os.path.join(abs_dirs['abs_work_dir'], "robocop.apk")
         suite = c.get('test_suite')
         if suite and '-chunked' in suite:
             suite = suite[:suite.index('-chunked')]
@@ -166,11 +164,6 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
             dirs['abs_test_install_dir'], 'reftest')
         dirs['abs_xpcshell_dir'] = os.path.join(
             dirs['abs_test_install_dir'], 'xpcshell')
-        dirs['abs_marionette_dir'] = os.path.join(
-            dirs['abs_test_install_dir'], 'marionette', 'harness', 'marionette_harness')
-        dirs['abs_marionette_tests_dir'] = os.path.join(
-            dirs['abs_test_install_dir'], 'marionette', 'tests', 'testing',
-            'marionette', 'harness', 'marionette_harness', 'tests')
 
         for key in dirs.keys():
             if key not in abs_dirs:
@@ -224,15 +217,7 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
             'log_tbpl_level': self.log_tbpl_level,
             'log_raw_level': self.log_raw_level,
             'error_summary_file': error_summary_file,
-            # marionette options
-            'address': c.get('marionette_address') % {'device_ip': self.device_ip},
-            'gecko_log': os.path.join(dirs["abs_blob_upload_dir"], 'gecko.log'),
-            'marionette_extra': c.get('marionette_extra', ''),
             'xpcshell_extra': c.get('xpcshell_extra', ''),
-            'test_manifest': os.path.join(
-                dirs['abs_marionette_tests_dir'],
-                self.config.get('marionette_test_manifest', '')
-            ),
         }
 
         user_paths = json.loads(os.environ.get('MOZHARNESS_TEST_PATHS', '""'))
@@ -303,7 +288,6 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
             return [(self.test_suite, self.test_suite)]
         # per-test mode: determine test suites to run
         all = [('mochitest', {'mochitest-plain': 'mochitest-plain',
-                              'mochitest-chrome': 'mochitest-chrome',
                               'mochitest-plain-gpu': 'mochitest-plain-gpu'}),
                ('reftest', {'reftest': 'reftest', 'crashtest': 'crashtest'}),
                ('xpcshell', {'xpcshell': 'xpcshell'})]
@@ -340,24 +324,17 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
             requirements = os.path.join(dirs['abs_mochitest_dir'],
                                         'websocketprocessbridge',
                                         'websocketprocessbridge_requirements.txt')
-        elif ('marionette', 'marionette') in suites:
-            requirements = os.path.join(dirs['abs_test_install_dir'],
-                                        'config', 'marionette_requirements.txt')
         if requirements:
             self.register_virtualenv_module(requirements=[requirements],
                                             two_pass=True)
 
     def download_and_extract(self):
         """
-        Download and extract fennec APK, tests.zip, host utils, and robocop (if required).
+        Download and extract product APK, tests.zip, and host utils.
         """
         super(AndroidHardwareTest, self).download_and_extract(
             suite_categories=self._query_suite_categories())
         dirs = self.query_abs_dirs()
-        if self.test_suite and self.test_suite.startswith('robocop'):
-            robocop_url = self.installer_url[:self.installer_url.rfind('/')] + '/robocop.apk'
-            self.info("Downloading robocop...")
-            self.download_file(robocop_url, 'robocop.apk', dirs['abs_work_dir'], error_level=FATAL)
         self.xre_path = self.download_hostutils(dirs['abs_xre_dir'])
 
     def install(self):
@@ -372,9 +349,6 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
         assert self.installer_path is not None, \
             "Either add installer_path to the config or use --installer-path."
         self.install_apk(self.installer_path)
-        # Install Robocop if required
-        if self.test_suite and self.test_suite.startswith('robocop'):
-            self.install_apk(self.robocop_path)
         self.info("Finished installing apps for %s" % self.device_name)
 
     def run_tests(self):

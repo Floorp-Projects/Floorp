@@ -33,6 +33,54 @@
 #include "cubeb_strings.h"
 #include "cubeb_utils.h"
 
+// Windows 10 exposes the IAudioClient3 interface to create low-latency streams.
+// Copy the interface definition from audioclient.h here to make the code simpler
+// and so that we can still access IAudioClient3 via COM if cubeb was compiled
+// against an older SDK.
+#ifndef __IAudioClient3_INTERFACE_DEFINED__
+#define __IAudioClient3_INTERFACE_DEFINED__
+MIDL_INTERFACE("7ED4EE07-8E67-4CD4-8C1A-2B7A5987AD42")
+IAudioClient3 : public IAudioClient
+{
+public:
+    virtual HRESULT STDMETHODCALLTYPE GetSharedModeEnginePeriod(
+        /* [annotation][in] */
+        _In_  const WAVEFORMATEX *pFormat,
+        /* [annotation][out] */
+        _Out_  UINT32 *pDefaultPeriodInFrames,
+        /* [annotation][out] */
+        _Out_  UINT32 *pFundamentalPeriodInFrames,
+        /* [annotation][out] */
+        _Out_  UINT32 *pMinPeriodInFrames,
+        /* [annotation][out] */
+        _Out_  UINT32 *pMaxPeriodInFrames) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE GetCurrentSharedModeEnginePeriod(
+        /* [unique][annotation][out] */
+        _Out_  WAVEFORMATEX **ppFormat,
+        /* [annotation][out] */
+        _Out_  UINT32 *pCurrentPeriodInFrames) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE InitializeSharedAudioStream(
+        /* [annotation][in] */
+        _In_  DWORD StreamFlags,
+        /* [annotation][in] */
+        _In_  UINT32 PeriodInFrames,
+        /* [annotation][in] */
+        _In_  const WAVEFORMATEX *pFormat,
+        /* [annotation][in] */
+        _In_opt_  LPCGUID AudioSessionGuid) = 0;
+};
+#ifdef __CRT_UUID_DECL
+// Required for MinGW
+__CRT_UUID_DECL(IAudioClient3, 0x7ED4EE07, 0x8E67, 0x4CD4, 0x8C, 0x1A, 0x2B, 0x7A, 0x59, 0x87, 0xAD, 0x42)
+#endif
+#endif
+// Copied from audioclient.h in the Windows 10 SDK
+#ifndef AUDCLNT_E_ENGINE_PERIODICITY_LOCKED
+#define AUDCLNT_E_ENGINE_PERIODICITY_LOCKED    AUDCLNT_ERR(0x028)
+#endif
+
 #ifndef PKEY_Device_FriendlyName
 DEFINE_PROPERTYKEY(PKEY_Device_FriendlyName,    0xa45c254e, 0xdf1c, 0x4efd, 0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0, 14);    // DEVPROP_TYPE_STRING
 #endif
@@ -692,7 +740,7 @@ get_rate(cubeb_stream * stm)
 uint32_t
 hns_to_frames(uint32_t rate, REFERENCE_TIME hns)
 {
-  return std::ceil(hns / 10000000.0 * rate);
+  return std::ceil((hns - 1) / 10000000.0 * rate);
 }
 
 uint32_t
@@ -1600,21 +1648,26 @@ wasapi_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * laten
     return CUBEB_ERROR;
   }
 
-  /* The second parameter is for exclusive mode, that we don't use. */
+  REFERENCE_TIME minimum_period;
   REFERENCE_TIME default_period;
-  hr = client->GetDevicePeriod(&default_period, NULL);
+  hr = client->GetDevicePeriod(&default_period, &minimum_period);
   if (FAILED(hr)) {
     LOG("Could not get device period: %lx", hr);
     return CUBEB_ERROR;
   }
 
-  LOG("default device period: %I64d", default_period);
+  LOG("default device period: %I64d, minimum device period: %I64d", default_period, minimum_period);
 
-  /* According to the docs, the best latency we can achieve is by synchronizing
-     the stream and the engine.
+  /* If we're on Windows 10, we can use IAudioClient3 to get minimal latency.
+     Otherwise, according to the docs, the best latency we can achieve is by
+     synchronizing the stream and the engine.
      http://msdn.microsoft.com/en-us/library/windows/desktop/dd370871%28v=vs.85%29.aspx */
 
-  *latency_frames = hns_to_frames(params.rate, default_period);
+  #ifdef _WIN32_WINNT_WIN10
+    *latency_frames = hns_to_frames(params.rate, minimum_period);
+  #else
+    *latency_frames = hns_to_frames(params.rate, default_period);
+  #endif
 
   LOG("Minimum latency in frames: %u", *latency_frames);
 
@@ -1720,6 +1773,109 @@ handle_channel_layout(cubeb_stream * stm,  EDataFlow direction, com_heap_ptr<WAV
   }
 }
 
+static bool
+initialize_iaudioclient3(com_ptr<IAudioClient> & audio_client,
+                         cubeb_stream * stm,
+                         const com_heap_ptr<WAVEFORMATEX> & mix_format,
+                         DWORD flags,
+                         EDataFlow direction)
+{
+  com_ptr<IAudioClient3> audio_client3;
+  audio_client->QueryInterface<IAudioClient3>(audio_client3.receive());
+  if (!audio_client3) {
+    LOG("Could not get IAudioClient3 interface");
+    return false;
+  }
+
+  if (flags & AUDCLNT_STREAMFLAGS_LOOPBACK) {
+    // IAudioClient3 doesn't work with loopback streams, and will return error
+    // 88890021: AUDCLNT_E_INVALID_STREAM_FLAG
+    LOG("Audio stream is loopback, not using IAudioClient3");
+    return false;
+  }
+
+  // IAudioClient3 doesn't support AUDCLNT_STREAMFLAGS_NOPERSIST, and will return
+  // AUDCLNT_E_INVALID_STREAM_FLAG. This is undocumented.
+  flags = flags ^ AUDCLNT_STREAMFLAGS_NOPERSIST;
+
+  // Some people have reported glitches with capture streams:
+  // http://blog.nirbheek.in/2018/03/low-latency-audio-on-windows-with.html
+  if (direction == eCapture) {
+    LOG("Audio stream is capture, not using IAudioClient3");
+    return false;
+  }
+
+  // Possibly initialize a shared-mode stream using IAudioClient3. Initializing
+  // a stream this way lets you request lower latencies, but also locks the global
+  // WASAPI engine at that latency.
+  // - If we request a shared-mode stream, streams created with IAudioClient will
+  //   have their latency adjusted to match. When  the shared-mode stream is
+  //   closed, they'll go back to normal.
+  // - If there's already a shared-mode stream running, then we cannot request
+  //   the engine change to a different latency - we have to match it.
+  // - It's antisocial to lock the WASAPI engine at its default latency. If we
+  //   would do this, then stop and use IAudioClient instead.
+
+  HRESULT hr;
+  uint32_t default_period = 0, fundamental_period = 0, min_period = 0, max_period = 0;
+  hr = audio_client3->GetSharedModeEnginePeriod(mix_format.get(), &default_period, &fundamental_period, &min_period, &max_period);
+  if (FAILED(hr)) {
+    LOG("Could not get shared mode engine period: error: %lx", hr);
+    return false;
+  }
+  uint32_t requested_latency = stm->latency;
+  if (requested_latency >= default_period) {
+    LOG("Requested latency %i greater than default latency %i, not using IAudioClient3", requested_latency, default_period);
+    return false;
+  }
+  LOG("Got shared mode engine period: default=%i fundamental=%i min=%i max=%i", default_period, fundamental_period, min_period, max_period);
+  // Snap requested latency to a valid value
+  uint32_t old_requested_latency = requested_latency;
+  if (requested_latency < min_period) {
+    requested_latency = min_period;
+  }
+  requested_latency -= (requested_latency - min_period) % fundamental_period;
+  if (requested_latency != old_requested_latency) {
+    LOG("Requested latency %i was adjusted to %i", old_requested_latency, requested_latency);
+  }
+
+  hr = audio_client3->InitializeSharedAudioStream(flags, requested_latency, mix_format.get(), NULL);
+  if (SUCCEEDED(hr)) {
+    return true;
+  }
+  else if (hr == AUDCLNT_E_ENGINE_PERIODICITY_LOCKED) {
+    LOG("Got AUDCLNT_E_ENGINE_PERIODICITY_LOCKED, adjusting latency request");
+  } else {
+    LOG("Could not initialize shared stream with IAudioClient3: error: %lx", hr);
+    return false;
+  }
+
+  uint32_t current_period = 0;
+  WAVEFORMATEX* current_format = nullptr;
+  // We have to pass a valid WAVEFORMATEX** and not nullptr, otherwise
+  // GetCurrentSharedModeEnginePeriod will return E_POINTER
+  hr = audio_client3->GetCurrentSharedModeEnginePeriod(&current_format, &current_period);
+  CoTaskMemFree(current_format);
+  if (FAILED(hr)) {
+    LOG("Could not get current shared mode engine period: error: %lx", hr);
+    return false;
+  }
+
+  if (current_period >= default_period) {
+    LOG("Current shared mode engine period %i too high, not using IAudioClient", current_period);
+    return false;
+  }
+
+  hr = audio_client3->InitializeSharedAudioStream(flags, current_period, mix_format.get(), NULL);
+  if (SUCCEEDED(hr)) {
+    LOG("Current shared mode engine period is %i instead of requested %i", current_period, requested_latency);
+    return true;
+  }
+
+  LOG("Could not initialize shared stream with IAudioClient3: error: %lx", hr);
+  return false;
+}
+
 #define DIRECTION_NAME (direction == eCapture ? "capture" : "render")
 
 template<typename T>
@@ -1770,9 +1926,15 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
 
     /* Get a client. We will get all other interfaces we need from
      * this pointer. */
-    hr = device->Activate(__uuidof(IAudioClient),
+    hr = device->Activate(__uuidof(IAudioClient3),
                           CLSCTX_INPROC_SERVER,
                           NULL, audio_client.receive_vpp());
+    if (hr == E_NOINTERFACE) {
+      hr = device->Activate(__uuidof(IAudioClient),
+                            CLSCTX_INPROC_SERVER,
+                            NULL, audio_client.receive_vpp());
+    }
+
     if (FAILED(hr)) {
       LOG("Could not activate the device to get an audio"
           " client for %s: error: %lx\n", DIRECTION_NAME, hr);
@@ -1837,12 +1999,16 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
     flags |= AUDCLNT_STREAMFLAGS_EVENTCALLBACK;
   }
 
-  hr = audio_client->Initialize(AUDCLNT_SHAREMODE_SHARED,
-                                flags,
-                                frames_to_hns(stm, stm->latency),
-                                0,
-                                mix_format.get(),
-                                NULL);
+  if (initialize_iaudioclient3(audio_client, stm, mix_format, flags, direction)) {
+    LOG("Initialized with IAudioClient3");
+  } else {
+    hr = audio_client->Initialize(AUDCLNT_SHAREMODE_SHARED,
+                                  flags,
+                                  frames_to_hns(stm, stm->latency),
+                                  0,
+                                  mix_format.get(),
+                                  NULL);
+  }
   if (FAILED(hr)) {
     LOG("Unable to initialize audio client for %s: %lx.", DIRECTION_NAME, hr);
     return CUBEB_ERROR;

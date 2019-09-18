@@ -76,15 +76,6 @@ class TextEditRules {
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult Init(TextEditor* aTextEditor);
   virtual nsresult DetachEditor();
-  virtual nsresult BeforeEdit();
-  MOZ_CAN_RUN_SCRIPT virtual nsresult AfterEdit();
-
-  /**
-   * Return false if the editor has non-empty text nodes or non-text
-   * nodes.  Otherwise, i.e., there is no meaningful content,
-   * return true.
-   */
-  virtual bool DocumentIsEmpty() const;
 
  protected:
   virtual ~TextEditRules() = default;

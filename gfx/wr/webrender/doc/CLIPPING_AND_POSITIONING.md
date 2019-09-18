@@ -56,12 +56,11 @@ There are three types of `SpatialNodes`:
   3. Sticky frames are responsible for implementing position:sticky behavior.
      This is also an 2D translation.
 
-`SpatialNodes` are defined as items in the display list. After display list
-"flattening" each node is traversed hierarchically during the
-`ClipScrollTree::update()` step. Once reference frame transforms and relative
-offsets are calculated, a to screen space transformation can be calculated for
-each `SpatialNode`. This transformation is added the `TransformPalette` and
-becomes directly available to WebRender shaders.
+`SpatialNodes` are defined as items in the display list. After scene building
+each node is traversed hierarchically during the `ClipScrollTree::update()` step.
+Once reference frame transforms and relative offsets are calculated, a to screen
+space transformation can be calculated for each `SpatialNode`. This transformation
+is added the `TransformPalette` and becomes directly available to WebRender shaders.
 
 In addition to screen space transformation calculation, the `SpatialNode` tree
 is divided up into _compatible coordinate systems_. These are coordinate systems
@@ -131,7 +130,7 @@ conversion from `ClipId` into `ClipNodeIndex` or `ClipChainIndex`, and from
 scene-wide `ClipScrollTree`.
 
 Nodes are added to their respective arrays sequentially as the display list is
-processed during "flattening." When encountering an iframe, the
+processed during scene building. When encountering an iframe, the
 `DisplayListFlattener` must start processing the nodes for that iframe's
 pipeline, meaning that nodes are now being added out of order to the node arrays
 of the `ClipScrollTree`. In this case, the `ClipScrollTree` fills in the gaps in

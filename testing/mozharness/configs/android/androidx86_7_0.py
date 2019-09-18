@@ -28,7 +28,6 @@ config = {
         "MINIDUMP_SAVEPATH": "%(abs_work_dir)s/../minidumps",
         # "LIBGL_DEBUG": "verbose"
     },
-    "marionette_extra": "--emulator",
     "bogomips_minimum": 3000,
     # in support of test-verify
     "android_version": 24,

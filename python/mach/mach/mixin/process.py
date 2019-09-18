@@ -12,6 +12,7 @@ import signal
 import subprocess
 import sys
 
+from mozbuild.util import ensure_subprocess_env
 from mozprocess.processhandler import ProcessHandlerMixin
 
 from .logging import LoggingMixin
@@ -102,22 +103,7 @@ class ProcessExecutionMixin(LoggingMixin):
 
         self.log(logging.DEBUG, 'process', {'env': use_env}, 'Environment: {env}')
 
-        # There is a bug in subprocess where it doesn't like unicode types in
-        # environment variables. Here, ensure all unicode are converted to
-        # binary. utf-8 is our globally assumed default. If the caller doesn't
-        # want UTF-8, they shouldn't pass in a unicode instance.
-        normalized_env = {}
-        for k, v in use_env.items():
-            if isinstance(k, unicode):
-                k = k.encode('utf-8', 'strict')
-
-            if isinstance(v, unicode):
-                v = v.encode('utf-8', 'strict')
-
-            normalized_env[k] = v
-
-        use_env = normalized_env
-
+        use_env = ensure_subprocess_env(use_env)
         if pass_thru:
             proc = subprocess.Popen(args, cwd=cwd, env=use_env)
             status = None

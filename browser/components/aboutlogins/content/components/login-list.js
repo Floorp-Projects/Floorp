@@ -65,6 +65,7 @@ export default class LoginList extends HTMLElement {
     window.addEventListener("AboutLoginsShowBlankLogin", this);
     this._list.addEventListener("click", this);
     this.addEventListener("keydown", this);
+    this.addEventListener("keyup", this);
     this._createLoginButton.addEventListener("click", this);
   }
 
@@ -224,7 +225,21 @@ export default class LoginList extends HTMLElement {
         break;
       }
       case "keydown": {
-        this._handleKeyboardNav(event);
+        this._handleTabbingToExternalElements(event);
+
+        // Since Space will select a login in the list, prevent it from
+        // also scrolling the list.
+        if (
+          this.shadowRoot.activeElement &&
+          this.shadowRoot.activeElement.closest("ol") &&
+          event.key == " "
+        ) {
+          event.preventDefault();
+        }
+        break;
+      }
+      case "keyup": {
+        this._handleKeyboardNavWithinList(event);
         break;
       }
     }
@@ -393,7 +408,9 @@ export default class LoginList extends HTMLElement {
             login.origin.toLocaleLowerCase().includes(this._filter) ||
             (!!login.httpRealm &&
               login.httpRealm.toLocaleLowerCase().includes(this._filter)) ||
-            login.username.toLocaleLowerCase().includes(this._filter)
+            login.username.toLocaleLowerCase().includes(this._filter) ||
+            (!window.AboutLoginsUtils.masterPasswordEnabled &&
+              login.password.toLocaleLowerCase().includes(this._filter))
           );
         })
       );
@@ -421,7 +438,7 @@ export default class LoginList extends HTMLElement {
     }
   }
 
-  _handleKeyboardNav(event) {
+  _handleTabbingToExternalElements(event) {
     if (
       (this._createLoginButton == this.shadowRoot.activeElement ||
         (this._list == this.shadowRoot.activeElement &&
@@ -435,7 +452,10 @@ export default class LoginList extends HTMLElement {
       if (event.shiftKey) {
         return;
       }
-      if (this.classList.contains("no-logins")) {
+      if (
+        this.classList.contains("no-logins") &&
+        !this.classList.contains("create-login-selected")
+      ) {
         let loginIntro = document.querySelector("login-intro");
         event.preventDefault();
         loginIntro.focus();
@@ -446,20 +466,34 @@ export default class LoginList extends HTMLElement {
         event.preventDefault();
         loginItem.focus();
       }
-      return;
-    } else if (this._list != this.shadowRoot.activeElement) {
+    }
+  }
+
+  _handleKeyboardNavWithinList(event) {
+    if (this._list != this.shadowRoot.activeElement) {
       return;
     }
 
     let isLTR = document.dir == "ltr";
     let activeDescendantId = this._list.getAttribute("aria-activedescendant");
-    let activeDescendant = activeDescendantId
-      ? this.shadowRoot.getElementById(activeDescendantId)
-      : this._list.firstElementChild;
+    let activeDescendant =
+      activeDescendantId && this.shadowRoot.getElementById(activeDescendantId);
+    if (!activeDescendant || activeDescendant.hidden) {
+      activeDescendant =
+        this._list.querySelector(".login-list-item[data-guid]:not([hidden])") ||
+        this._list.firstElementChild;
+    }
     let newlyFocusedItem = null;
+    let previousItem = activeDescendant.previousElementSibling;
+    while (previousItem && previousItem.hidden) {
+      previousItem = previousItem.previousElementSibling;
+    }
+    let nextItem = activeDescendant.nextElementSibling;
+    while (nextItem && nextItem.hidden) {
+      nextItem = nextItem.nextElementSibling;
+    }
     switch (event.key) {
       case "ArrowDown": {
-        let nextItem = activeDescendant.nextElementSibling;
         if (!nextItem) {
           return;
         }
@@ -467,9 +501,7 @@ export default class LoginList extends HTMLElement {
         break;
       }
       case "ArrowLeft": {
-        let item = isLTR
-          ? activeDescendant.previousElementSibling
-          : activeDescendant.nextElementSibling;
+        let item = isLTR ? previousItem : nextItem;
         if (!item) {
           return;
         }
@@ -477,9 +509,7 @@ export default class LoginList extends HTMLElement {
         break;
       }
       case "ArrowRight": {
-        let item = isLTR
-          ? activeDescendant.nextElementSibling
-          : activeDescendant.previousElementSibling;
+        let item = isLTR ? nextItem : previousItem;
         if (!item) {
           return;
         }
@@ -487,7 +517,6 @@ export default class LoginList extends HTMLElement {
         break;
       }
       case "ArrowUp": {
-        let previousItem = activeDescendant.previousElementSibling;
         if (!previousItem) {
           return;
         }

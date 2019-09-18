@@ -58,6 +58,7 @@ class nsIWidget;
 class nsRange;
 
 namespace mozilla {
+class AlignStateAtSelection;
 class AutoSelectionRestorer;
 class AutoTopLevelEditSubActionNotifier;
 class AutoTransactionBatch;
@@ -81,6 +82,8 @@ class IMEContentObserver;
 class InsertNodeTransaction;
 class InsertTextTransaction;
 class JoinNodeTransaction;
+class ListElementSelectionState;
+class ListItemElementSelectionState;
 class PlaceholderTransaction;
 class PresShell;
 class SplitNodeResult;
@@ -1700,15 +1703,6 @@ class EditorBase : public nsIEditor,
                                               nsIContent& aRightNode);
 
   /**
-   * HasPaddingBRElementForEmptyEditor() returns true if there is a padding
-   * <br> element for empty editor.  When this returns true, it means that
-   * we're empty.
-   */
-  bool HasPaddingBRElementForEmptyEditor() const {
-    return !!mPaddingBRElementForEmptyEditor;
-  }
-
-  /**
    * EnsureNoPaddingBRElementForEmptyEditor() removes padding <br> element
    * for empty editor if there is.
    */
@@ -2093,19 +2087,20 @@ class EditorBase : public nsIEditor,
    * GetTopLevelEditSubAction() is EditSubAction::eNone and somebody starts to
    * handle aEditSubAction.
    *
-   * @param aEditSubAction      Top level edit sub action which will be
-   *                            handled soon.
-   * @param aDirection          Direction of aEditSubAction.
+   * @param aTopLevelEditSubAction              Top level edit sub action which
+   *                                            will be handled soon.
+   * @param aDirectionOfTopLevelEditSubAction   Direction of aEditSubAction.
    */
-  virtual void OnStartToHandleTopLevelEditSubAction(
-      EditSubAction aEditSubAction, nsIEditor::EDirection aDirection);
+  MOZ_CAN_RUN_SCRIPT virtual void OnStartToHandleTopLevelEditSubAction(
+      EditSubAction aTopLevelEditSubAction,
+      nsIEditor::EDirection aDirectionOfTopLevelEditSubAction,
+      ErrorResult& aRv);
 
   /**
    * OnEndHandlingTopLevelEditSubAction() is called after
    * SetTopLevelEditSubAction() is handled.
    */
-  MOZ_CAN_RUN_SCRIPT
-  virtual void OnEndHandlingTopLevelEditSubAction();
+  MOZ_CAN_RUN_SCRIPT virtual nsresult OnEndHandlingTopLevelEditSubAction();
 
   /**
    * OnStartToHandleEditSubAction() and OnEndHandlingEditSubAction() are called
@@ -2495,9 +2490,10 @@ class EditorBase : public nsIEditor,
    */
   class MOZ_RAII AutoEditSubActionNotifier final {
    public:
-    AutoEditSubActionNotifier(
+    MOZ_CAN_RUN_SCRIPT AutoEditSubActionNotifier(
         EditorBase& aEditorBase, EditSubAction aEditSubAction,
-        nsIEditor::EDirection aDirection MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+        nsIEditor::EDirection aDirection,
+        ErrorResult& aRv MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
         : mEditorBase(aEditorBase), mIsTopLevel(true) {
       MOZ_GUARD_OBJECT_NOTIFIER_INIT;
       // The top level edit sub action has already be set if this is nested call
@@ -2505,16 +2501,16 @@ class EditorBase : public nsIEditor,
       //     handling via selectionchange event listener or mutation event
       //     listener.
       if (!mEditorBase.GetTopLevelEditSubAction()) {
-        mEditorBase.OnStartToHandleTopLevelEditSubAction(aEditSubAction,
-                                                         aDirection);
+        MOZ_KnownLive(mEditorBase)
+            .OnStartToHandleTopLevelEditSubAction(aEditSubAction, aDirection,
+                                                  aRv);
       } else {
         mIsTopLevel = false;
       }
       mEditorBase.OnStartToHandleEditSubAction();
     }
 
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    ~AutoEditSubActionNotifier() {
+    MOZ_CAN_RUN_SCRIPT ~AutoEditSubActionNotifier() {
       mEditorBase.OnEndHandlingEditSubAction();
       if (mIsTopLevel) {
         MOZ_KnownLive(mEditorBase).OnEndHandlingTopLevelEditSubAction();
@@ -2665,6 +2661,7 @@ class EditorBase : public nsIEditor,
   // Whether we are an HTML editor class.
   bool mIsHTMLEditorClass;
 
+  friend class AlignStateAtSelection;
   friend class CompositionTransaction;
   friend class CreateElementTransaction;
   friend class CSSEditUtils;
@@ -2676,6 +2673,8 @@ class EditorBase : public nsIEditor,
   friend class InsertNodeTransaction;
   friend class InsertTextTransaction;
   friend class JoinNodeTransaction;
+  friend class ListElementSelectionState;
+  friend class ListItemElementSelectionState;
   friend class SplitNodeTransaction;
   friend class TextEditRules;
   friend class TypeInState;

@@ -598,7 +598,7 @@ Toolbox.prototype = {
         "devtools.debugger.skip-pausing"
       ),
       logEventBreakpoints: Services.prefs.getBoolPref(
-        "devtools.debugger.features.log-event-breakpoints"
+        "devtools.debugger.log-event-breakpoints"
       ),
     });
 
@@ -2014,7 +2014,12 @@ Toolbox.prototype = {
   _commandIsVisible: function(button) {
     const { isTargetSupported, isCurrentlyVisible, visibilityswitch } = button;
 
-    if (!Services.prefs.getBoolPref(visibilityswitch, true)) {
+    const defaultValue =
+      button.id !== "command-button-replay"
+        ? true
+        : Services.prefs.getBoolPref("devtools.recordreplay.mvp.enabled");
+
+    if (!Services.prefs.getBoolPref(visibilityswitch, defaultValue)) {
       return false;
     }
 

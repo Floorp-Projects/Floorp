@@ -741,6 +741,22 @@ def rust_simd(value, target):
 set_config('MOZ_RUST_SIMD', rust_simd)
 set_define('MOZ_RUST_SIMD', rust_simd)
 
+
+# Additional system headers defined at the application level
+# ==============================================================
+
+option('--enable-app-system-headers', env='MOZ_APP_SYSTEM_HEADERS',
+       help='Use additional system headers defined in $MOZ_BUILD_APP/app-system-headers.mozbuild')
+
+@depends('--enable-app-system-headers')
+def app_system_headers(value):
+    if value:
+        return True
+
+set_config('MOZ_APP_SYSTEM_HEADERS', app_system_headers)
+set_define('MOZ_APP_SYSTEM_HEADERS', app_system_headers)
+
+
 # Printing
 # ==============================================================
 @depends(target)

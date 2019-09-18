@@ -115,7 +115,7 @@ const proto = {
     }
     const desc = this.obj.getOwnPropertyDescriptor(property);
 
-    if (desc.set || desc.get) {
+    if (desc.set || desc.get || !desc.configurable) {
       return;
     }
 

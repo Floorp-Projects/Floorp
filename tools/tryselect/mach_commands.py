@@ -215,11 +215,34 @@ class TrySelect(MachCommandBase):
                 description='Select tasks on try using a fuzzy finder',
                 parser=get_parser('fuzzy'))
     def try_fuzzy(self, **kwargs):
-        """Select which tasks to use with fzf.
+        """Select which tasks to run with a fuzzy finding interface (fzf).
 
-        This selector runs all task labels through a fuzzy finding interface.
-        All selected task labels and their dependencies will be scheduled on
-        try.
+        When entering the fzf interface you'll be confronted by two panes. The
+        one on the left contains every possible task you can schedule, the one
+        on the right contains the list of selected tasks. In other words, the
+        tasks that will be scheduled once you you press <enter>.
+
+        At first fzf will automatically select whichever task is under your
+        cursor, which simplifies the case when you are looking for a single
+        task. But normally you'll want to select many tasks. To accomplish
+        you'll generally start by typing a query in the search bar to filter
+        down the list of tasks (see Extended Search below). Then you'll either:
+
+        A) Move the cursor to each task you want and press <tab> to select it.
+        Notice it now shows up in the pane to the right.
+
+        OR
+
+        B) Press <ctrl-a> to select every task that matches your filter.
+
+        You can delete your query, type a new one and select further tasks as
+        many times as you like. Once you are happy with your selection, press
+        <enter> to push the selected tasks to try.
+
+        All selected task labels and their dependencies will be scheduled. This
+        means you can select a test task and its build will automatically be
+        filled in.
+
 
         Keyboard Shortcuts
         ------------------
@@ -227,20 +250,22 @@ class TrySelect(MachCommandBase):
         When in the fuzzy finder interface, start typing to filter down the
         task list. Then use the following keyboard shortcuts to select tasks:
 
-          accept: <enter>
-          cancel: <ctrl-c> or <esc>
-          cursor-up: <ctrl-k> or <up>
-          cursor-down: <ctrl-j> or <down>
-          toggle-select-down: <tab>
-          toggle-select-up: <shift-tab>
-          select-all: <ctrl-a>
-          deselect-all: <ctrl-d>
-          toggle-all: <ctrl-t>
-          clear-input: <alt-bspace>
+          Ctrl-K / Up    => Move cursor up
+          Ctrl-J / Down  => Move cursor down
+          Tab            => Select task + move cursor down
+          Shift-Tab      => Select task + move cursor up
+          Ctrl-A         => Select all currently filtered tasks
+          Ctrl-D         => De-select all currently filtered tasks
+          Ctrl-T         => Toggle select all currently filtered tasks
+          Alt-Bspace     => Clear query from input bar
+          Enter          => Accept selection and exit
+          Ctrl-C / Esc   => Cancel selection and exit
+          ?              => Toggle preview pane
 
         There are many more shortcuts enabled by default, you can also define
         your own shortcuts by setting `--bind` in the $FZF_DEFAULT_OPTS
         environment variable. See `man fzf` for more info.
+
 
         Extended Search
         ---------------
@@ -256,6 +281,13 @@ class TrySelect(MachCommandBase):
         For example:
 
           ^start 'exact | !ignore fuzzy end$
+
+
+        Documentation
+        -------------
+
+        For more detailed documentation, please see:
+        https://firefox-source-docs.mozilla.org/tools/try/selectors/fuzzy.html
         """
         if kwargs.pop('interactive'):
             kwargs['query'].append('INTERACTIVE')

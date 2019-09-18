@@ -1,6 +1,6 @@
 {
   "name": "@mozilla/normandy-action-argument-schemas",
-  "version": "0.8.2",
+  "version": "0.9.0",
   "description": "Schemas for Normandy action arguments",
   "main": "index.js",
   "author": "Michael Cooper <mcooper@mozilla.com>",

@@ -166,17 +166,20 @@ class ExecutableAllocator {
   ExecutablePool* poolForSize(size_t n);
 
   static void reprotectPool(JSRuntime* rt, ExecutablePool* pool,
-                            ProtectionSetting protection);
+                            ProtectionSetting protection,
+                            MustFlushICache flushICache);
 
  public:
   MOZ_MUST_USE
   static bool makeWritable(void* start, size_t size) {
-    return ReprotectRegion(start, size, ProtectionSetting::Writable);
+    return ReprotectRegion(start, size, ProtectionSetting::Writable,
+                           MustFlushICache::No);
   }
 
   MOZ_MUST_USE
-  static bool makeExecutable(void* start, size_t size) {
-    return ReprotectRegion(start, size, ProtectionSetting::Executable);
+  static bool makeExecutableAndFlushICache(void* start, size_t size) {
+    return ReprotectRegion(start, size, ProtectionSetting::Executable,
+                           MustFlushICache::Yes);
   }
 
   static void poisonCode(JSRuntime* rt, JitPoisonRangeVector& ranges);

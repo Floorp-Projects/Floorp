@@ -40,10 +40,13 @@ class nsTableWrapperFrame;
 class nsRange;
 
 namespace mozilla {
+class AlignStateAtSelection;
 class AutoSelectionSetterAfterTableEdit;
 class AutoSetTemporaryAncestorLimiter;
 class EditActionResult;
 class EmptyEditableFunctor;
+class ListElementSelectionState;
+class ListItemElementSelectionState;
 class MoveNodeResult;
 class ResizerSelectionListener;
 class SplitRangeOffFromNodeResult;
@@ -137,6 +140,14 @@ class HTMLEditor final : public TextEditor,
                         const nsAString& aValue) override;
   NS_IMETHOD BeginningOfDocument() override;
   NS_IMETHOD SetFlags(uint32_t aFlags) override;
+
+  /**
+   * IsEmpty() checks whether the editor is empty.  If editor has only padding
+   * <br> element for empty editor, returns true.  If editor's root element has
+   * non-empty text nodes or other nodes like <br>, returns false even if there
+   * are only empty blocks.
+   */
+  virtual bool IsEmpty() const override;
 
   virtual bool CanPaste(int32_t aClipboardType) const override;
   using EditorBase::CanPaste;
@@ -2723,11 +2734,18 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
   AddZIndexAsSubAction(int32_t aChange);
 
+  /**
+   * OnDocumentModified() is called when editor content is changed.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult OnDocumentModified();
+
  protected:  // Called by helper classes.
-  virtual void OnStartToHandleTopLevelEditSubAction(
-      EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
-  MOZ_CAN_RUN_SCRIPT
-  virtual void OnEndHandlingTopLevelEditSubAction() override;
+  MOZ_CAN_RUN_SCRIPT virtual void OnStartToHandleTopLevelEditSubAction(
+      EditSubAction aTopLevelEditSubAction,
+      nsIEditor::EDirection aDirectionOfTopLevelEditSubAction,
+      ErrorResult& aRv) override;
+  MOZ_CAN_RUN_SCRIPT virtual nsresult OnEndHandlingTopLevelEditSubAction()
+      override;
 
  protected:  // Shouldn't be used by friend classes
   virtual ~HTMLEditor();
@@ -4158,7 +4176,8 @@ class HTMLEditor final : public TextEditor,
   SetInlinePropertyOnNodeImpl(nsIContent& aNode, nsAtom& aProperty,
                               nsAtom* aAttribute, const nsAString& aValue);
   typedef enum { eInserted, eAppended } InsertedOrAppended;
-  void DoContentInserted(nsIContent* aChild, InsertedOrAppended);
+  MOZ_CAN_RUN_SCRIPT void DoContentInserted(
+      nsIContent* aChild, InsertedOrAppended aInsertedOrAppended);
 
   /**
    * Returns an anonymous Element of type aTag,
@@ -4342,16 +4361,84 @@ class HTMLEditor final : public TextEditor,
 
   ParagraphSeparator mDefaultParagraphSeparator;
 
+  friend class AlignStateAtSelection;
   friend class AutoSelectionSetterAfterTableEdit;
   friend class AutoSetTemporaryAncestorLimiter;
   friend class CSSEditUtils;
   friend class EditorBase;
   friend class EmptyEditableFunctor;
   friend class HTMLEditRules;
+  friend class ListElementSelectionState;
+  friend class ListItemElementSelectionState;
   friend class SlurpBlobEventListener;
   friend class TextEditor;
   friend class WSRunObject;
   friend class WSRunScanner;
+};
+
+/**
+ * ListElementSelectionState class gets which list element is selected right
+ * now.
+ */
+class MOZ_STACK_CLASS ListElementSelectionState final {
+ public:
+  ListElementSelectionState() = delete;
+  ListElementSelectionState(HTMLEditor& aHTMLEditor, ErrorResult& aRv);
+
+  bool IsOLElementSelected() const { return mIsOLElementSelected; }
+  bool IsULElementSelected() const { return mIsULElementSelected; }
+  bool IsDLElementSelected() const { return mIsDLElementSelected; }
+  bool IsNotOneTypeListElementSelected() const {
+    return (mIsOLElementSelected + mIsULElementSelected + mIsDLElementSelected +
+            mIsOtherContentSelected) > 1;
+  }
+
+ private:
+  bool mIsOLElementSelected = false;
+  bool mIsULElementSelected = false;
+  bool mIsDLElementSelected = false;
+  bool mIsOtherContentSelected = false;
+};
+
+/**
+ * ListItemElementSelectionState class gets which list item element is selected
+ * right now.
+ */
+class MOZ_STACK_CLASS ListItemElementSelectionState final {
+ public:
+  ListItemElementSelectionState() = delete;
+  ListItemElementSelectionState(HTMLEditor& aHTMLEditor, ErrorResult& aRv);
+
+  bool IsLIElementSelected() const { return mIsLIElementSelected; }
+  bool IsDTElementSelected() const { return mIsDTElementSelected; }
+  bool IsDDElementSelected() const { return mIsDDElementSelected; }
+  bool IsNotOneTypeDefinitionListItemElementSelected() const {
+    return (mIsDTElementSelected + mIsDDElementSelected +
+            mIsOtherElementSelected) > 1;
+  }
+
+ private:
+  bool mIsLIElementSelected = false;
+  bool mIsDTElementSelected = false;
+  bool mIsDDElementSelected = false;
+  bool mIsOtherElementSelected = false;
+};
+
+/**
+ * AlignStateAtSelection class gets alignment at selection.
+ * XXX This currently returns only first alignment.
+ */
+class MOZ_STACK_CLASS AlignStateAtSelection final {
+ public:
+  AlignStateAtSelection() = delete;
+  AlignStateAtSelection(HTMLEditor& aHTMLEditor, ErrorResult& aRv);
+
+  nsIHTMLEditor::EAlignment AlignmentAtSelectionStart() const {
+    return mFirstAlign;
+  }
+
+ private:
+  nsIHTMLEditor::EAlignment mFirstAlign = nsIHTMLEditor::eLeft;
 };
 
 }  // namespace mozilla

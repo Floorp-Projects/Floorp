@@ -12807,6 +12807,13 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
       "path('M 80 80 A 45 45, 0, 0, 0, 1.25e2 1.25e2 L 125 80 Z')",
       "path('M100-200h20z')",
       "path('M10,10L20.6.5z')",
+      "ray(45deg closest-side)",
+      "ray(0rad farthest-side)",
+      "ray(0.5turn closest-corner contain)",
+      "ray(200grad farthest-corner)",
+      "ray(sides 180deg)",
+      "ray(contain farthest-side 180deg)",
+      "ray(calc(180deg - 45deg) farthest-side)",
     ],
     invalid_values: [
       "path('')",
@@ -12815,6 +12822,10 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
       "path('M 10 Z')",
       "path('M 10-10 20')",
       "path('M 10 10 C 20 20 40 20')",
+      "ray(0deg)",
+      "ray(closest-side)",
+      "ray(0deg, closest-side)",
+      "ray(contain 0deg closest-side contain)",
     ],
   };
 

@@ -4305,7 +4305,6 @@ void MacroAssembler::patchNopToCall(uint8_t* call, uint8_t* target) {
              reinterpret_cast<Instruction*>(inst)->is<InstNOP>());
 
   new (inst) InstBLImm(BOffImm(target - inst), Assembler::Always);
-  AutoFlushICache::flush(uintptr_t(inst), 4);
 }
 
 void MacroAssembler::patchCallToNop(uint8_t* call) {
@@ -4313,7 +4312,6 @@ void MacroAssembler::patchCallToNop(uint8_t* call) {
   MOZ_ASSERT(reinterpret_cast<Instruction*>(inst)->is<InstBLImm>() ||
              reinterpret_cast<Instruction*>(inst)->is<InstNOP>());
   new (inst) InstNOP();
-  AutoFlushICache::flush(uintptr_t(inst), 4);
 }
 
 void MacroAssembler::pushReturnAddress() { push(lr); }

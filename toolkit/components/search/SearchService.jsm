@@ -1098,6 +1098,21 @@ SearchService.prototype = {
         this._visibleDefaultEngines.length ||
       this._visibleDefaultEngines.some(notInCacheVisibleEngines);
 
+    let enginesCorrupted = false;
+    if (
+      !rebuildCache &&
+      cache.engines.filter(e => e.isBuiltin).length !=
+        cache.visibleDefaultEngines
+    ) {
+      rebuildCache = true;
+      enginesCorrupted = true;
+    }
+
+    Services.telemetry.scalarSet(
+      "browser.searchinit.engines_cache_corrupted",
+      enginesCorrupted
+    );
+
     if (!rebuildCache) {
       SearchUtils.log("_loadEngines: loading from cache directories");
       this._loadEnginesFromCache(cache);
@@ -1649,15 +1664,12 @@ SearchService.prototype = {
 
     let engineSelector = new SearchEngineSelector();
     let locale = Services.locale.appLocaleAsBCP47;
-    // TODO: engineSelector needs to support default region, we cant
-    // just use "us" as a default region.
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1575554
-    let region = Services.prefs.getCharPref("browser.search.region", "us");
+    let region = Services.prefs.getCharPref("browser.search.region", "default");
 
     await engineSelector.init();
     let { engines, privateDefault } = engineSelector.fetchEngineConfiguration(
-      region,
-      locale
+      locale,
+      region
     );
 
     this._searchDefault = engines[0].engineName;

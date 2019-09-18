@@ -2510,13 +2510,11 @@ bool nsTextEditorState::SetValue(const nsAString& aValue,
 }
 
 bool nsTextEditorState::HasNonEmptyValue() {
+  // If the frame for editor is alive, we can compute it with mTextEditor.
+  // Otherwise, we need to check cached value via GetValue().
   if (mTextEditor && mBoundFrame && mEditorInitialized &&
       !mIsCommittingComposition) {
-    bool empty;
-    nsresult rv = mTextEditor->IsEmpty(&empty);
-    if (NS_SUCCEEDED(rv)) {
-      return !empty;
-    }
+    return !mTextEditor->IsEmpty();
   }
 
   nsAutoString value;

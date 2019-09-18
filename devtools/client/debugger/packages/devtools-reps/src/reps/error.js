@@ -164,14 +164,18 @@ function getStacktraceElements(props, preview) {
  *                  - {Number} lineNumber
  */
 function parseStackString(stack) {
-  const res = [];
   if (!stack) {
-    return res;
+    return [];
   }
 
   const isStacktraceALongString = isLongString(stack);
   const stackString = isStacktraceALongString ? stack.initial : stack;
 
+  if (typeof stackString !== "string") {
+    return [];
+  }
+
+  const res = [];
   stackString.split("\n").forEach((frame, index, frames) => {
     if (!frame) {
       // Skip any blank lines
