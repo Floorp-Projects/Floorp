@@ -284,6 +284,44 @@ add_task(async function testTabOpenMenulist() {
   await panelHidden;
 });
 
+if (AppConstants.platform == "macosx") {
+  // Test that using the mouse to open a menulist still allows keyboard navigation
+  // inside it.
+  add_task(async function testNavigateMouseOpenedMenulist() {
+    await openPopup();
+    let popup = gMainMenulist.menupopup;
+    let shown = BrowserTestUtils.waitForEvent(popup, "popupshown");
+    gMainMenulist.open = true;
+    await shown;
+    ok(gMainMenulist.open, "menulist open");
+    let oldFocus = document.activeElement;
+    let oldSelectedItem = gMainMenulist.selectedItem;
+    ok(
+      oldSelectedItem.hasAttribute("_moz-menuactive"),
+      "Selected item should show up as active"
+    );
+    EventUtils.synthesizeKey("KEY_ArrowDown");
+    await TestUtils.waitForCondition(
+      () => !oldSelectedItem.hasAttribute("_moz-menuactive")
+    );
+    is(oldFocus, document.activeElement, "Focus should not move on mac");
+    ok(
+      !oldSelectedItem.hasAttribute("_moz-menuactive"),
+      "Selected item should change"
+    );
+
+    let menuHidden = BrowserTestUtils.waitForEvent(popup, "popuphidden");
+    let panelHidden = BrowserTestUtils.waitForEvent(gPanel, "popuphidden");
+    EventUtils.synthesizeKey("KEY_Tab");
+    await menuHidden;
+    ok(!gMainMenulist.open, "menulist closed after Tab");
+    // Tab in an open menulist closes the menulist, but also dismisses the panel
+    // above it (bug 1566673). So, we just wait for the panel to hide rather than
+    // using hidePopup().
+    await panelHidden;
+  });
+}
+
 // Test that pressing space in a textbox inserts a space (instead of trying to
 // activate the control).
 add_task(async function testSpaceTextbox() {
