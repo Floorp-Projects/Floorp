@@ -75,12 +75,6 @@ class nsAccessiblePivot final : public nsIAccessiblePivot {
                              bool aSearchCurrent, nsresult* aResult);
 
   /*
-   * Search in preorder for the first text accessible.
-   */
-  mozilla::a11y::HyperTextAccessible* SearchForText(Accessible* aAccessible,
-                                                    bool aBackward);
-
-  /*
    * Get the effective root for this pivot, either the true root or modal root.
    */
   Accessible* GetActiveRoot() const {
