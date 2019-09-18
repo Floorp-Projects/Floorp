@@ -368,11 +368,6 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     return *this;
   }
 
-  CompileOptions& setIntroductionScript(JSScript* s) {
-    introductionScriptRoot = s;
-    return *this;
-  }
-
   CompileOptions& setScriptOrModule(JSScript* s) {
     scriptOrModuleRoot = s;
     return *this;
