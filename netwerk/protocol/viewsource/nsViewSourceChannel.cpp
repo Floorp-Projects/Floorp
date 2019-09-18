@@ -41,8 +41,6 @@ NS_INTERFACE_MAP_BEGIN(nsViewSourceChannel)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIRequest, nsIViewSourceChannel)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIChannel, nsIViewSourceChannel)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIViewSourceChannel)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIProcessSwitchRequestor,
-                                     IsNsHttpChannel())
 NS_INTERFACE_MAP_END
 
 nsresult nsViewSourceChannel::Init(nsIURI* uri, nsILoadInfo* aLoadInfo) {
@@ -1041,50 +1039,4 @@ void nsViewSourceChannel::SetHasSandboxedAuxiliaryNavigations(
     mHttpChannelInternal->SetHasSandboxedAuxiliaryNavigations(
         aHasSandboxedAuxiliaryNavigations);
   }
-}
-
-//-----------------------------------------------------------------------------
-// nsViewSourceChannel::nsIProcessSwitchRequestor
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP nsViewSourceChannel::GetChannel(nsIChannel** aChannel) {
-  if (!IsNsHttpChannel()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  *aChannel = mHttpChannel;
-  NS_ADDREF(*aChannel);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsViewSourceChannel::SwitchProcessTo(mozilla::dom::Promise* aBrowserParent,
-                                     uint64_t aIdentifier) {
-  if (!IsNsHttpChannel()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  nsCOMPtr<mozilla::net::nsHttpChannel> httpChannel =
-      do_QueryInterface(mHttpChannel);
-  return httpChannel->SwitchProcessTo(aBrowserParent, aIdentifier);
-}
-
-NS_IMETHODIMP
-nsViewSourceChannel::HasCrossOriginOpenerPolicyMismatch(bool* aMismatch) {
-  if (!IsNsHttpChannel()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  MOZ_ASSERT(aMismatch);
-  if (!aMismatch) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  *aMismatch = false;
-  return NS_OK;
-}
-
-bool nsViewSourceChannel::IsNsHttpChannel() const {
-  if (!mHttpChannel) {
-    return false;
-  }
-  nsCOMPtr<mozilla::net::nsHttpChannel> httpChannel =
-      do_QueryInterface(mHttpChannel);
-  return !!httpChannel;
 }
