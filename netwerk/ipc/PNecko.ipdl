@@ -28,7 +28,6 @@ include protocol PFileChannel;
 include protocol PClassifierDummyChannel;
 include protocol PWebrtcTCPSocket;
 include protocol PSocketProcessBridge;
-include protocol PProxyConfigLookup;
 include protocol PDocumentChannel;
 
 include IPCStream;
@@ -69,7 +68,6 @@ nested(upto inside_cpow) sync protocol PNecko
   manages PStunAddrsRequest;
   manages PClassifierDummyChannel;
   manages PWebrtcTCPSocket;
-  manages PProxyConfigLookup;
   manages PDocumentChannel;
 
 parent:
@@ -145,8 +143,6 @@ parent:
 
   /* tabId is only required for web-proxy support, which isn't always needed */
   async PWebrtcTCPSocket(TabId? tabId);
-
-  async PProxyConfigLookup();
 
   /**
    * WebExtension-specific remote resource loading

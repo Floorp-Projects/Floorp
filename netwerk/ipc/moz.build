@@ -52,7 +52,6 @@ IPDL_SOURCES = [
 # needed so --disable-webrtc builds work (yes, a bit messy)
 if not CONFIG['MOZ_WEBRTC']:
   IPDL_SOURCES += [
-      '../../media/mtransport/ipc/PProxyConfigLookup.ipdl',
       '../../media/mtransport/ipc/PStunAddrsRequest.ipdl',
       '../../media/mtransport/ipc/PWebrtcTCPSocket.ipdl',
   ]

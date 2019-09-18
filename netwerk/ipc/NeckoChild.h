@@ -95,9 +95,6 @@ class NeckoChild : public PNeckoChild {
 
   bool DeallocPClassifierDummyChannelChild(
       PClassifierDummyChannelChild* aChannel);
-
-  PProxyConfigLookupChild* AllocPProxyConfigLookupChild();
-  bool DeallocPProxyConfigLookupChild(PProxyConfigLookupChild* aActor);
 };
 
 /**

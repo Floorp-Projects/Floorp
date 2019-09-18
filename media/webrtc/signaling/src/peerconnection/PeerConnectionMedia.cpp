@@ -20,19 +20,14 @@
 #include "nsILoadInfo.h"
 #include "nsIContentPolicy.h"
 #include "nsIProxyInfo.h"
-#include "nsIProtocolProxyService.h"
 #include "nsIPrincipal.h"
 #include "mozilla/LoadInfo.h"
-#include "nsProxyRelease.h"
-#include "nsIHttpChannelInternal.h"
+#include "nsIProxiedChannel.h"
 
 #include "nsIScriptGlobalObject.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/net/NeckoChild.h"
-#include "mozilla/net/ProxyConfigLookup.h"
-#include "mozilla/net/ProxyConfigLookupChild.h"
-#include "mozilla/net/SocketProcessChild.h"
 #include "MediaManager.h"
 #include "WebrtcGmpVideoCodec.h"
 
@@ -70,7 +65,6 @@ PeerConnectionMedia::PeerConnectionMedia(PeerConnectionImpl* parent)
       mParentName(parent->GetName()),
       mMainThread(mParent->GetMainThread()),
       mSTSThread(mParent->GetSTSThread()),
-      mWaitingOnProxyLookup(false),
       mForceProxy(false),
       mStunAddrsRequest(nullptr),
       mLocalAddrsCompleted(false),
@@ -99,60 +93,44 @@ void PeerConnectionMedia::InitLocalAddrs() {
   }
 }
 
-static net::ProxyConfigLookupChild* CreateActor(PeerConnectionMedia* aSelf) {
-  RefPtr<PeerConnectionMedia> self = aSelf;
-  return new net::ProxyConfigLookupChild(
-      [self](bool aProxied) { self->ProxySettingReceived(aProxied); });
-}
-
-nsresult PeerConnectionMedia::InitProxy() {
-  // Allow mochitests to disable this, since mochitest configures a fake proxy
-  // that serves up content.
-  mForceProxy =
-      Preferences::GetBool("media.peerconnection.ice.proxy_only", false);
-  if (mForceProxy) {
-    // Matter is settled, we're done.
-    return NS_OK;
+bool PeerConnectionMedia::ShouldForceProxy() const {
+  if (Preferences::GetBool("media.peerconnection.ice.proxy_only", false)) {
+    return true;
   }
 
-  mWaitingOnProxyLookup = Preferences::GetBool(
-      "media.peerconnection.ice.proxy_only_if_behind_proxy", false);
-  if (!mWaitingOnProxyLookup) {
-    // We won't be forcing the use of a proxy.
-    return NS_OK;
+  if (!Preferences::GetBool(
+          "media.peerconnection.ice.proxy_only_if_behind_proxy", false)) {
+    return false;
   }
 
-  // We have to determine if we're behind a proxy before we can decide whether
-  // to set mForceProxy.
-  if (XRE_IsContentProcess()) {
-    if (NS_WARN_IF(!net::gNeckoChild)) {
-      return NS_ERROR_FAILURE;
-    }
+  // Ok, we're supposed to be proxy_only, but only if a proxy is configured.
+  // Let's just see if the document was loaded via a proxy.
 
-    net::gNeckoChild->SendPProxyConfigLookupConstructor(CreateActor(this));
-    return NS_OK;
+  nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal = GetChannel();
+  if (!httpChannelInternal) {
+    return false;
   }
 
-  if (XRE_IsSocketProcess()) {
-    net::SocketProcessChild* child = net::SocketProcessChild::GetSingleton();
-    if (!child) {
-      return NS_ERROR_FAILURE;
-    }
-
-    child->SendPProxyConfigLookupConstructor(CreateActor(this));
-    return NS_OK;
+  nsCOMPtr<nsIProxiedChannel> proxiedChannel =
+      do_QueryInterface(httpChannelInternal);
+  if (!proxiedChannel) {
+    return false;
   }
 
-  RefPtr<PeerConnectionMedia> self = this;
-  return net::ProxyConfigLookup::Create(
-      [self](bool aProxied) { self->ProxySettingReceived(aProxied); });
+  nsCOMPtr<nsIProxyInfo> proxyInfo;
+  proxiedChannel->GetProxyInfo(getter_AddRefs(proxyInfo));
+  if (!proxyInfo) {
+    return false;
+  }
+
+  nsCString proxyType;
+  proxyInfo->GetType(proxyType);
+
+  return !proxyType.IsEmpty() && !proxyType.EqualsLiteral("direct");
 }
 
 nsresult PeerConnectionMedia::Init() {
-  nsresult rv = InitProxy();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  mForceProxy = ShouldForceProxy();
 
   // setup the stun local addresses IPC async call
   InitLocalAddrs();
@@ -379,47 +357,57 @@ void PeerConnectionMedia::GatherIfReady() {
   PerformOrEnqueueIceCtxOperation(runnable);
 }
 
-nsresult PeerConnectionMedia::SetTargetForDefaultLocalAddressLookup() {
+already_AddRefed<nsIHttpChannelInternal> PeerConnectionMedia::GetChannel()
+    const {
   Document* doc = mParent->GetWindow()->GetExtantDoc();
-  if (!doc) {
+  if (NS_WARN_IF(!doc)) {
     NS_WARNING("Unable to get document from window");
-    return NS_ERROR_NOT_AVAILABLE;
+    return nullptr;
   }
 
   if (!doc->GetDocumentURI()->SchemeIs("file")) {
     nsIChannel* channel = doc->GetChannel();
     if (!channel) {
       NS_WARNING("Unable to get channel from document");
-      return NS_ERROR_NOT_AVAILABLE;
+      return nullptr;
     }
 
     nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
         do_QueryInterface(channel);
-    if (!httpChannelInternal) {
+    if (NS_WARN_IF(!httpChannelInternal)) {
       CSFLogInfo(LOGTAG, "%s: Document does not have an HTTP channel",
                  __FUNCTION__);
-      return NS_OK;
+      return nullptr;
     }
-
-    nsCString remoteIp;
-    nsresult rv = httpChannelInternal->GetRemoteAddress(remoteIp);
-    if (NS_FAILED(rv) || remoteIp.IsEmpty()) {
-      CSFLogError(LOGTAG, "%s: Failed to get remote IP address: %d",
-                  __FUNCTION__, (int)rv);
-      return rv;
-    }
-
-    int32_t remotePort;
-    rv = httpChannelInternal->GetRemotePort(&remotePort);
-    if (NS_FAILED(rv)) {
-      CSFLogError(LOGTAG, "%s: Failed to get remote port number: %d",
-                  __FUNCTION__, (int)rv);
-      return rv;
-    }
-
-    mTransportHandler->SetTargetForDefaultLocalAddressLookup(remoteIp.get(),
-                                                             remotePort);
+    return httpChannelInternal.forget();
   }
+  return nullptr;
+}
+
+nsresult PeerConnectionMedia::SetTargetForDefaultLocalAddressLookup() {
+  nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal = GetChannel();
+  if (!httpChannelInternal) {
+    return NS_OK;
+  }
+
+  nsCString remoteIp;
+  nsresult rv = httpChannelInternal->GetRemoteAddress(remoteIp);
+  if (NS_FAILED(rv) || remoteIp.IsEmpty()) {
+    CSFLogError(LOGTAG, "%s: Failed to get remote IP address: %d", __FUNCTION__,
+                (int)rv);
+    return rv;
+  }
+
+  int32_t remotePort;
+  rv = httpChannelInternal->GetRemotePort(&remotePort);
+  if (NS_FAILED(rv)) {
+    CSFLogError(LOGTAG, "%s: Failed to get remote port number: %d",
+                __FUNCTION__, (int)rv);
+    return rv;
+  }
+
+  mTransportHandler->SetTargetForDefaultLocalAddressLookup(remoteIp.get(),
+                                                           remotePort);
 
   return NS_OK;
 }
@@ -763,16 +751,6 @@ bool PeerConnectionMedia::AnyCodecHasPluginID(uint64_t aPluginID) {
 
 nsPIDOMWindowInner* PeerConnectionMedia::GetWindow() const {
   return mParent->GetWindow();
-}
-
-void PeerConnectionMedia::ProxySettingReceived(bool aProxied) {
-  if (mDestroyed) {
-    // PeerConnectionMedia is no longer waiting
-    return;
-  }
-  mWaitingOnProxyLookup = false;
-  mForceProxy = aProxied;
-  FlushIceCtxOperationQueueIfReady();
 }
 
 std::unique_ptr<NrSocketProxyConfig> PeerConnectionMedia::GetProxyConfig()
