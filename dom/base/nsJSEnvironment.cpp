@@ -1238,11 +1238,6 @@ static TimeDuration TimeBetween(TimeStamp start, TimeStamp end) {
   return end - start;
 }
 
-MOZ_ALWAYS_INLINE
-static uint32_t TimeBetweenInMillis(TimeStamp start, TimeStamp end) {
-  return uint32_t(TimeBetween(start, end).ToMilliseconds());
-}
-
 static TimeDuration TimeUntilNow(TimeStamp start) {
   if (start.IsNull()) {
     return TimeDuration();
@@ -1250,26 +1245,11 @@ static TimeDuration TimeUntilNow(TimeStamp start) {
   return TimeBetween(start, TimeStamp::Now());
 }
 
-MOZ_ALWAYS_INLINE
-static uint32_t TimeUntilNowInMillis(TimeStamp start) {
-  return uint32_t(TimeUntilNow(start).ToMilliseconds());
-}
-
 struct CycleCollectorStats {
-  constexpr CycleCollectorStats()
-      : mMaxGCDuration(0),
-        mRanSyncForgetSkippable(false),
-        mSuspected(0),
-        mMaxSkippableDuration(0),
-        mMaxSliceTime(0),
-        mMaxSliceTimeSinceClear(0),
-        mTotalSliceTime(0),
-        mAnyLockedOut(false),
-        mFile(nullptr) {}
+  constexpr CycleCollectorStats() = default;
 
   void Init() {
     Clear();
-    mMaxSliceTimeSinceClear = 0;
 
     char* env = getenv("MOZ_CCTIMER");
     if (!env) {
@@ -1292,18 +1272,8 @@ struct CycleCollectorStats {
   void Clear() {
     if (mFile && mFile != stdout && mFile != stderr) {
       fclose(mFile);
-      mFile = nullptr;
     }
-    mBeginSliceTime = TimeStamp();
-    mEndSliceTime = TimeStamp();
-    mBeginTime = TimeStamp();
-    mMaxGCDuration = 0;
-    mRanSyncForgetSkippable = false;
-    mSuspected = 0;
-    mMaxSkippableDuration = 0;
-    mMaxSliceTime = 0;
-    mTotalSliceTime = 0;
-    mAnyLockedOut = false;
+    *this = CycleCollectorStats();
   }
 
   void PrepareForCycleCollectionSlice(TimeStamp aDeadline = TimeStamp());
@@ -1335,7 +1305,7 @@ struct CycleCollectorStats {
                             percent);
     }
 
-    uint32_t sliceTime = TimeBetweenInMillis(mBeginSliceTime, mEndSliceTime);
+    TimeDuration sliceTime = TimeBetween(mBeginSliceTime, mEndSliceTime);
     mMaxSliceTime = std::max(mMaxSliceTime, sliceTime);
     mMaxSliceTimeSinceClear = std::max(mMaxSliceTimeSinceClear, sliceTime);
     mTotalSliceTime += sliceTime;
@@ -1354,32 +1324,32 @@ struct CycleCollectorStats {
   TimeStamp mBeginTime;
 
   // The longest GC finishing duration for any slice of the current CC.
-  uint32_t mMaxGCDuration;
+  TimeDuration mMaxGCDuration;
 
   // True if we ran sync forget skippable in any slice of the current CC.
-  bool mRanSyncForgetSkippable;
+  bool mRanSyncForgetSkippable = false;
 
   // Number of suspected objects at the start of the current CC.
-  uint32_t mSuspected;
+  uint32_t mSuspected = 0;
 
   // The longest duration spent on sync forget skippable in any slice of the
   // current CC.
-  uint32_t mMaxSkippableDuration;
+  TimeDuration mMaxSkippableDuration;
 
   // The longest pause of any slice in the current CC.
-  uint32_t mMaxSliceTime;
+  TimeDuration mMaxSliceTime;
 
   // The longest slice time since ClearMaxCCSliceTime() was called.
-  uint32_t mMaxSliceTimeSinceClear;
+  TimeDuration mMaxSliceTimeSinceClear;
 
   // The total amount of time spent actually running the current CC.
-  uint32_t mTotalSliceTime;
+  TimeDuration mTotalSliceTime;
 
   // True if we were locked out by the GC in any slice of the current CC.
-  bool mAnyLockedOut;
+  bool mAnyLockedOut = false;
 
   // A file to dump CC activity to; set by MOZ_CCTIMER environment variable.
-  FILE* mFile;
+  FILE* mFile = nullptr;
 
   // In case CC slice was triggered during idle time, set to the end of the idle
   // period.
@@ -1396,7 +1366,7 @@ void CycleCollectorStats::PrepareForCycleCollectionSlice(TimeStamp aDeadline) {
   if (sCCLockedOut) {
     mAnyLockedOut = true;
     FinishAnyIncrementalGC();
-    uint32_t gcTime = TimeBetweenInMillis(mBeginSliceTime, TimeStamp::Now());
+    TimeDuration gcTime = TimeUntilNow(mBeginSliceTime);
     mMaxGCDuration = std::max(mMaxGCDuration, gcTime);
   }
 }
@@ -1412,8 +1382,8 @@ void CycleCollectorStats::RunForgetSkippable() {
   }
 
   if (ranSyncForgetSkippable) {
-    mMaxSkippableDuration = std::max(
-        mMaxSkippableDuration, TimeUntilNowInMillis(beginForgetSkippable));
+    mMaxSkippableDuration =
+        std::max(mMaxSkippableDuration, TimeUntilNow(beginForgetSkippable));
     mRanSyncForgetSkippable = true;
   }
 }
@@ -1508,11 +1478,11 @@ void nsJSContext::RunCycleCollectorWorkSlice(int64_t aWorkBudget) {
 }
 
 void nsJSContext::ClearMaxCCSliceTime() {
-  gCCStats.mMaxSliceTimeSinceClear = 0;
+  gCCStats.mMaxSliceTimeSinceClear = TimeDuration();
 }
 
 uint32_t nsJSContext::GetMaxCCSliceTimeSinceClear() {
-  return gCCStats.mMaxSliceTimeSinceClear;
+  return gCCStats.mMaxSliceTimeSinceClear.ToMilliseconds();
 }
 
 static bool ICCRunnerFired(TimeStamp aDeadline) {
@@ -1603,7 +1573,7 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
   Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_FULL,
                         ccNowDuration.ToMilliseconds());
   Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_MAX_PAUSE,
-                        gCCStats.mMaxSliceTime);
+                        gCCStats.mMaxSliceTime.ToMilliseconds());
 
   if (!sLastCCEndTime.IsNull()) {
     TimeDuration timeBetween = TimeBetween(sLastCCEndTime, gCCStats.mBeginTime);
@@ -1631,25 +1601,26 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
     }
 
     const char16_t* kFmt =
-        u"CC(T+%.1f)[%s-%i] max pause: %lums, total time: %lums, slices: %lu, "
+        u"CC(T+%.1f)[%s-%i] max pause: %.fms, total time: %.fms, slices: %lu, "
         u"suspected: %lu, visited: %lu RCed and %lu%s GCed, collected: %lu "
         u"RCed and %lu GCed (%lu|%lu|%lu waiting for GC)%s\n"
         u"ForgetSkippable %lu times before CC, min: %.f ms, max: %.f ms, avg: "
-        u"%.f ms, total: %.f ms, max sync: %lu ms, removed: %lu";
+        u"%.f ms, total: %.f ms, max sync: %.f ms, removed: %lu";
     nsString msg;
     nsTextFormatter::ssprintf(
         msg, kFmt, delta.ToMicroseconds() / PR_USEC_PER_SEC,
-        ProcessNameForCollectorLog(), getpid(), gCCStats.mMaxSliceTime,
-        gCCStats.mTotalSliceTime, aResults.mNumSlices, gCCStats.mSuspected,
-        aResults.mVisitedRefCounted, aResults.mVisitedGCed, mergeMsg.get(),
-        aResults.mFreedRefCounted, aResults.mFreedGCed, sCCollectedWaitingForGC,
-        sCCollectedZonesWaitingForGC, sLikelyShortLivingObjectsNeedingGC,
-        gcMsg.get(), sForgetSkippableBeforeCC,
-        sMinForgetSkippableTime.ToMilliseconds(),
+        ProcessNameForCollectorLog(), getpid(),
+        gCCStats.mMaxSliceTime.ToMilliseconds(),
+        gCCStats.mTotalSliceTime.ToMilliseconds(), aResults.mNumSlices,
+        gCCStats.mSuspected, aResults.mVisitedRefCounted, aResults.mVisitedGCed,
+        mergeMsg.get(), aResults.mFreedRefCounted, aResults.mFreedGCed,
+        sCCollectedWaitingForGC, sCCollectedZonesWaitingForGC,
+        sLikelyShortLivingObjectsNeedingGC, gcMsg.get(),
+        sForgetSkippableBeforeCC, sMinForgetSkippableTime.ToMilliseconds(),
         sMaxForgetSkippableTime.ToMilliseconds(),
         sTotalForgetSkippableTime.ToMilliseconds() / cleanups,
         sTotalForgetSkippableTime.ToMilliseconds(),
-        gCCStats.mMaxSkippableDuration, sRemovedPurples);
+        gCCStats.mMaxSkippableDuration.ToMilliseconds(), sRemovedPurples);
     if (StaticPrefs::javascript_options_mem_log()) {
       nsCOMPtr<nsIConsoleService> cs =
           do_GetService(NS_CONSOLESERVICE_CONTRACTID);
@@ -1666,10 +1637,10 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
     const char16_t* kJSONFmt =
         u"{ \"timestamp\": %llu, "
         u"\"duration\": %.f, "
-        u"\"max_slice_pause\": %lu, "
-        u"\"total_slice_pause\": %lu, "
-        u"\"max_finish_gc_duration\": %lu, "
-        u"\"max_sync_skippable_duration\": %lu, "
+        u"\"max_slice_pause\": %.f, "
+        u"\"total_slice_pause\": %.f, "
+        u"\"max_finish_gc_duration\": %.f, "
+        u"\"max_sync_skippable_duration\": %.f, "
         u"\"suspected\": %lu, "
         u"\"visited\": { "
         u"\"RCed\": %lu, "
@@ -1693,9 +1664,11 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
     nsString json;
     nsTextFormatter::ssprintf(
         json, kJSONFmt, PR_Now(), ccNowDuration.ToMilliseconds(),
-        gCCStats.mMaxSliceTime, gCCStats.mTotalSliceTime,
-        gCCStats.mMaxGCDuration, gCCStats.mMaxSkippableDuration,
-        gCCStats.mSuspected, aResults.mVisitedRefCounted, aResults.mVisitedGCed,
+        gCCStats.mMaxSliceTime.ToMilliseconds(),
+        gCCStats.mTotalSliceTime.ToMilliseconds(),
+        gCCStats.mMaxGCDuration.ToMilliseconds(),
+        gCCStats.mMaxSkippableDuration.ToMilliseconds(), gCCStats.mSuspected,
+        aResults.mVisitedRefCounted, aResults.mVisitedGCed,
         aResults.mFreedRefCounted, aResults.mFreedGCed, sCCollectedWaitingForGC,
         sCCollectedZonesWaitingForGC, sLikelyShortLivingObjectsNeedingGC,
         aResults.mForcedGC, sForgetSkippableBeforeCC,
