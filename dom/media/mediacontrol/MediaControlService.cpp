@@ -105,6 +105,7 @@ void MediaControlService::AddMediaController(
   MOZ_DIAGNOSTIC_ASSERT(!mControllers.GetValue(cId),
                         "Controller has been added already!");
   mControllers.Put(cId, aController);
+  mControllerHistory.AppendElement(cId);
   LOG("Add media controller %" PRId64 ", currentNum=%" PRId64, cId,
       GetControllersNum());
 }
@@ -116,6 +117,7 @@ void MediaControlService::RemoveMediaController(
   MOZ_DIAGNOSTIC_ASSERT(mControllers.GetValue(cId),
                         "Controller does not exist!");
   mControllers.Remove(cId);
+  mControllerHistory.RemoveElement(cId);
   LOG("Remove media controller %" PRId64 ", currentNum=%" PRId64, cId,
       GetControllersNum());
 }
@@ -150,6 +152,14 @@ void MediaControlService::ShutdownAllControllers() const {
 
 uint64_t MediaControlService::GetControllersNum() const {
   return mControllers.Count();
+}
+
+already_AddRefed<MediaController>
+MediaControlService::GetLastAddedController() {
+  if (mControllerHistory.IsEmpty()) {
+    return nullptr;
+  }
+  return GetControllerById(mControllerHistory.LastElement()).forget();
 }
 
 }  // namespace dom
