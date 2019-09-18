@@ -954,7 +954,6 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
       nr_ice_candidate_pair_set_state(pair->pctx,pair,NR_ICE_PAIR_STATE_FROZEN);
       if(r=nr_ice_component_insert_pair(comp,pair)) {
         *error=(r==R_NO_MEMORY)?500:400;
-        nr_ice_candidate_pair_destroy(&pair);
         ABORT(r);
       }
 
@@ -1679,6 +1678,7 @@ int nr_ice_component_finalize(nr_ice_component *lcomp, nr_ice_component *rcomp)
 int nr_ice_component_insert_pair(nr_ice_component *pcomp, nr_ice_cand_pair *pair)
   {
     int r,_status;
+    int pair_inserted=0;
 
     /* Pairs for peer reflexive are marked SUCCEEDED immediately */
     if (pair->state != NR_ICE_PAIR_STATE_FROZEN &&
@@ -1689,6 +1689,8 @@ int nr_ice_component_insert_pair(nr_ice_component *pcomp, nr_ice_cand_pair *pair
 
     if(r=nr_ice_candidate_pair_insert(&pair->remote->stream->check_list,pair))
       ABORT(r);
+
+    pair_inserted=1;
 
     /* Make sure the check timer is running, if the stream was previously
      * started. We will not start streams just because a pair was created,
@@ -1706,6 +1708,9 @@ int nr_ice_component_insert_pair(nr_ice_component *pcomp, nr_ice_cand_pair *pair
 
     _status=0;
   abort:
+    if (_status && !pair_inserted) {
+      nr_ice_candidate_pair_destroy(&pair);
+    }
     return(_status);
   }
 
