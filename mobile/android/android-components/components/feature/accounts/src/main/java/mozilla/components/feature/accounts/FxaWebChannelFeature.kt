@@ -207,35 +207,45 @@ class FxaWebChannelFeature(
          * Handles the [COMMAND_STATUS] event from the web-channel.
          * Responds with supported application capabilities and information about currently signed-in Firefox Account.
          */
+        @Suppress("ComplexMethod")
         private fun processFxaStatusCommand(
             accountManager: FxaAccountManager,
             messageId: String,
             fxaCapabilities: Set<FxaCapability>
         ): JSONObject {
-            return JSONObject().also { status ->
-                status.put("id", CHANNEL_ID)
-                status.put("message", JSONObject().also { message ->
-                    message.put("messageId", messageId)
-                    message.put("command", COMMAND_STATUS)
-                    message.put("data", JSONObject().also { data ->
-                        data.put("capabilities", JSONObject().also { capabilities ->
-                            capabilities.put("engines", JSONArray().also { engines ->
-                                accountManager.supportedSyncEngines()?.forEach { engine ->
-                                    engines.put(engine.nativeName)
-                                } ?: emptyArray<SyncEngine>()
-                            })
-
-                            if (fxaCapabilities.contains(FxaCapability.CHOOSE_WHAT_TO_SYNC)) {
-                                capabilities.put("choose_what_to_sync", true)
-                            }
+            val status =  JSONObject()
+            status.put("id", CHANNEL_ID)
+            status.put("message", JSONObject().also { message ->
+                message.put("messageId", messageId)
+                message.put("command", COMMAND_STATUS)
+                message.put("data", JSONObject().also { data ->
+                    data.put("capabilities", JSONObject().also { capabilities ->
+                        capabilities.put("engines", JSONArray().also { engines ->
+                            accountManager.supportedSyncEngines()?.forEach { engine ->
+                                engines.put(engine.nativeName)
+                            } ?: emptyArray<SyncEngine>()
                         })
-                        // Since accountManager currently can't provide us with a sessionToken, this is
-                        // hard-coded to null.
-                        // Fix this once https://github.com/mozilla/application-services/issues/1669 is resolved.
-                        data.put("signedInUser", JSONObject.NULL)
+
+                        if (fxaCapabilities.contains(FxaCapability.CHOOSE_WHAT_TO_SYNC)) {
+                            capabilities.put("choose_what_to_sync", true)
+                        }
                     })
+                    val account = accountManager.authenticatedAccount()
+                    if (account == null) {
+                        data.put("signedInUser", JSONObject.NULL)
+                    } else {
+                        data.put("signedInUser", JSONObject().also { signedInUser ->
+                            signedInUser.put("email", accountManager.accountProfile()?.email ?: JSONObject.NULL)
+                            signedInUser.put("uid", accountManager.accountProfile()?.uid ?: JSONObject.NULL)
+                            signedInUser.put("sessionToken", account.getSessionToken() ?: JSONObject.NULL)
+                            // Our account state machine only ever completes authentication for
+                            // "verified" accounts, so this is always 'true'.
+                            signedInUser.put("verified", true)
+                        })
+                    }
                 })
-            }
+            })
+            return status
         }
 
         /**
