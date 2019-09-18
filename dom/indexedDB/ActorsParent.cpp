@@ -5505,6 +5505,17 @@ class DatabaseOperationBase : public Runnable,
       uint64_t aIntData, FileManager* aFileManager, const nsAString& aFileIds,
       StructuredCloneReadInfo* aInfo);
 
+  template <typename KeyTransformation>
+  static nsresult MaybeBindKeyToStatement(
+      const Key& aKey, mozIStorageStatement* aStatement,
+      const nsCString& aParameterName,
+      const KeyTransformation& aKeyTransformation);
+
+  template <typename KeyTransformation>
+  static nsresult BindTransformedKeyRangeToStatement(
+      const SerializedKeyRange& aKeyRange, mozIStorageStatement* aStatement,
+      const KeyTransformation& aKeyTransformation);
+
   // Not to be overridden by subclasses.
   NS_DECL_MOZISTORAGEPROGRESSHANDLER
 };
@@ -9256,6 +9267,23 @@ constexpr bool IsIncreasingOrder(const IDBCursor::Direction aDirection) {
 constexpr bool IsKeyCursor(const Cursor::Type aType) {
   return aType == OpenCursorParams::TObjectStoreOpenKeyCursorParams ||
          aType == OpenCursorParams::TIndexOpenKeyCursorParams;
+}
+
+nsresult LocalizeKey(const Key& aBaseKey, const nsCString& aLocale,
+                     Key* const aLocalizedKey) {
+  MOZ_ASSERT(aLocalizedKey);
+  MOZ_ASSERT(!aLocale.IsEmpty());
+
+  ErrorResult errorResult;
+  const auto result =
+      aBaseKey.ToLocaleBasedKey(*aLocalizedKey, aLocale, errorResult);
+  if (!result.Is(Ok, errorResult)) {
+    return NS_WARN_IF(result.Is(Exception, errorResult))
+               ? errorResult.StealNSResult()
+               : NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
+  }
+
+  return NS_OK;
 }
 }  // namespace
 
@@ -18316,26 +18344,22 @@ nsresult DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
 }
 
 // static
-nsresult DatabaseOperationBase::BindKeyRangeToStatement(
-    const SerializedKeyRange& aKeyRange, mozIStorageStatement* aStatement) {
+template <typename KeyTransformation>
+nsresult DatabaseOperationBase::MaybeBindKeyToStatement(
+    const Key& aKey, mozIStorageStatement* const aStatement,
+    const nsCString& aParameterName,
+    const KeyTransformation& aKeyTransformation) {
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aStatement);
 
-  nsresult rv = NS_OK;
-
-  if (!aKeyRange.lower().IsUnset()) {
-    rv = aKeyRange.lower().BindToStatement(aStatement, kStmtParamNameLowerKey);
+  if (!aKey.IsUnset()) {
+    nsresult rv;
+    const auto& transformedKey = aKeyTransformation(aKey, &rv);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-  }
 
-  if (aKeyRange.isOnly()) {
-    return rv;
-  }
-
-  if (!aKeyRange.upper().IsUnset()) {
-    rv = aKeyRange.upper().BindToStatement(aStatement, kStmtParamNameUpperKey);
+    rv = transformedKey.BindToStatement(aStatement, aParameterName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -18345,54 +18369,56 @@ nsresult DatabaseOperationBase::BindKeyRangeToStatement(
 }
 
 // static
-nsresult DatabaseOperationBase::BindKeyRangeToStatement(
-    const SerializedKeyRange& aKeyRange, mozIStorageStatement* aStatement,
-    const nsCString& aLocale) {
+template <typename KeyTransformation>
+nsresult DatabaseOperationBase::BindTransformedKeyRangeToStatement(
+    const SerializedKeyRange& aKeyRange, mozIStorageStatement* const aStatement,
+    const KeyTransformation& aKeyTransformation) {
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aStatement);
-  MOZ_ASSERT(!aLocale.IsEmpty());
 
-  nsresult rv = NS_OK;
-
-  if (!aKeyRange.lower().IsUnset()) {
-    Key lower;
-    ErrorResult errorResult;
-    auto result =
-        aKeyRange.lower().ToLocaleBasedKey(lower, aLocale, errorResult);
-    if (!result.Is(Ok, errorResult)) {
-      return NS_WARN_IF(result.Is(Exception, errorResult))
-                 ? errorResult.StealNSResult()
-                 : NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
-    }
-
-    rv = lower.BindToStatement(aStatement, kStmtParamNameLowerKey);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  nsresult rv =
+      MaybeBindKeyToStatement(aKeyRange.lower(), aStatement,
+                              kStmtParamNameLowerKey, aKeyTransformation);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   if (aKeyRange.isOnly()) {
     return rv;
   }
 
-  if (!aKeyRange.upper().IsUnset()) {
-    Key upper;
-    ErrorResult errorResult;
-    auto result =
-        aKeyRange.upper().ToLocaleBasedKey(upper, aLocale, errorResult);
-    if (!result.Is(Ok, errorResult)) {
-      return NS_WARN_IF(result.Is(Exception, errorResult))
-                 ? errorResult.StealNSResult()
-                 : NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
-    }
-
-    rv = upper.BindToStatement(aStatement, kStmtParamNameUpperKey);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  rv = MaybeBindKeyToStatement(aKeyRange.upper(), aStatement,
+                               kStmtParamNameUpperKey, aKeyTransformation);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   return NS_OK;
+}
+
+// static
+nsresult DatabaseOperationBase::BindKeyRangeToStatement(
+    const SerializedKeyRange& aKeyRange,
+    mozIStorageStatement* const aStatement) {
+  return BindTransformedKeyRangeToStatement(
+      aKeyRange, aStatement, [](const Key& key, nsresult* rv) -> const auto& {
+        *rv = NS_OK;
+        return key;
+      });
+}
+
+// static
+nsresult DatabaseOperationBase::BindKeyRangeToStatement(
+    const SerializedKeyRange& aKeyRange, mozIStorageStatement* const aStatement,
+    const nsCString& aLocale) {
+  MOZ_ASSERT(!aLocale.IsEmpty());
+
+  return BindTransformedKeyRangeToStatement(
+      aKeyRange, aStatement, [&aLocale](const Key& key, nsresult* rv) {
+        Key localizedKey;
+        *rv = LocalizeKey(key, aLocale, &localizedKey);
+        return localizedKey;
+      });
 }
 
 // static
