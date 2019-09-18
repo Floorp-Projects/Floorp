@@ -9,10 +9,12 @@
 #include "nscore.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/JSONWriter.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ProfilerCounts.h"
+#include "mozilla/ThreadLocal.h"
 
 #include "replace_malloc.h"
 
@@ -63,6 +65,96 @@ static size_t MallocSizeOf(const void* aPtr) {
 }
 
 //---------------------------------------------------------------------------
+// Per-thread blocking of intercepts
+//---------------------------------------------------------------------------
+
+// On MacOS, and Linux the first __thread/thread_local access calls malloc,
+// which leads to an infinite loop. So we use pthread-based TLS instead, which
+// somehow doesn't have this problem.
+#if !defined(XP_DARWIN) && !defined(XP_LINUX)
+#  define PROFILER_THREAD_LOCAL(T) MOZ_THREAD_LOCAL(T)
+#else
+#  define PROFILER_THREAD_LOCAL(T) \
+    ::mozilla::detail::ThreadLocal<T, ::mozilla::detail::ThreadLocalKeyStorage>
+#endif
+
+class ThreadIntercept {
+  // When set to true, malloc does not intercept additional allocations. This is
+  // needed because collecting stacks creates new allocations. When blocked,
+  // these allocations are then ignored by the memory hook.
+  static PROFILER_THREAD_LOCAL(bool) tlsIsBlocked;
+
+  // This is a quick flag to check and see if the allocations feature is enabled
+  // or disabled.
+  static mozilla::Atomic<bool, mozilla::Relaxed,
+                         mozilla::recordreplay::Behavior::DontPreserve>
+      sAllocationsFeatureEnabled;
+
+  ThreadIntercept() = default;
+
+  // Only allow consumers to access this information if they run
+  // ThreadIntercept::MaybeGet and ask through the non-static version.
+  static bool IsBlocked_() { return tlsIsBlocked.get(); }
+
+ public:
+  static void Init() { tlsIsBlocked.infallibleInit(); }
+
+  // The ThreadIntercept object can only be created through this method, the
+  // constructor is private. This is so that we only check to see if the native
+  // allocations are turned on once, and not multiple times through the calls.
+  // The feature maybe be toggled between different stages of the memory hook.
+  static Maybe<ThreadIntercept> MaybeGet() {
+    if (sAllocationsFeatureEnabled && !ThreadIntercept::IsBlocked_()) {
+      // Only return thread intercepts when the native allocations feature is
+      // enabled and we aren't blocked.
+      return Some(ThreadIntercept());
+    }
+    return Nothing();
+  }
+
+  void Block() {
+    MOZ_ASSERT(!tlsIsBlocked.get());
+    tlsIsBlocked.set(true);
+  }
+
+  void Unblock() {
+    MOZ_ASSERT(tlsIsBlocked.get());
+    tlsIsBlocked.set(false);
+  }
+
+  bool IsBlocked() const { return ThreadIntercept::IsBlocked_(); }
+
+  static void EnableAllocationFeature() { sAllocationsFeatureEnabled = true; }
+
+  static void DisableAllocationFeature() { sAllocationsFeatureEnabled = false; }
+};
+
+PROFILER_THREAD_LOCAL(bool) ThreadIntercept::tlsIsBlocked;
+mozilla::Atomic<bool, mozilla::Relaxed,
+                mozilla::recordreplay::Behavior::DontPreserve>
+    ThreadIntercept::sAllocationsFeatureEnabled(false);
+
+// An object of this class must be created (on the stack) before running any
+// code that might allocate.
+class AutoBlockIntercepts {
+  ThreadIntercept& mThreadIntercept;
+
+ public:
+  // Disallow copy and assign.
+  AutoBlockIntercepts(const AutoBlockIntercepts&) = delete;
+  void operator=(const AutoBlockIntercepts&) = delete;
+
+  explicit AutoBlockIntercepts(ThreadIntercept& aThreadIntercept)
+      : mThreadIntercept(aThreadIntercept) {
+    mThreadIntercept.Block();
+  }
+  ~AutoBlockIntercepts() {
+    MOZ_ASSERT(mThreadIntercept.IsBlocked());
+    mThreadIntercept.Unblock();
+  }
+};
+
+//---------------------------------------------------------------------------
 // malloc/free callbacks
 //---------------------------------------------------------------------------
 
@@ -70,13 +162,27 @@ static void AllocCallback(void* aPtr, size_t aReqSize) {
   if (!aPtr) {
     return;
   }
+
+  // The first part of this function does not allocate.
   size_t actualSize = gMallocTable.malloc_usable_size(aPtr);
   if (actualSize > 0) {
-    // this never allocates
     sCounter->Add(actualSize);
   }
 
+  auto threadIntercept = ThreadIntercept::MaybeGet();
+  if (threadIntercept.isNothing()) {
+    // Either the native allocations feature is not turned on, or we  may be
+    // recursing into a memory hook, return. We'll still collect counter
+    // information about this allocation, but no stack.
+    return;
+  }
+
+  // The next part of the function requires allocations, so block the memory
+  // hooks from recursing on any new allocations coming in.
+  AutoBlockIntercepts block(threadIntercept.ref());
+
   // XXX add optional stackwalk here
+
   // We're ignoring aReqSize here
 }
 
@@ -85,8 +191,20 @@ static void FreeCallback(void* aPtr) {
     return;
   }
 
-  // this never allocates
+  // The first part of this function does not allocate.
   sCounter->Add(-((int64_t)MallocSizeOf(aPtr)));
+
+  auto threadIntercept = ThreadIntercept::MaybeGet();
+  if (threadIntercept.isNothing()) {
+    // Either the native allocations feature is not turned on, or we  may be
+    // recursing into a memory hook, return. We'll still collect counter
+    // information about this allocation, but no stack.
+    return;
+  }
+
+  // The next part of the function requires allocations, so block the memory
+  // hooks from recursing on any new allocations coming in.
+  AutoBlockIntercepts block(threadIntercept.ref());
 
   // XXX add optional stackwalk here
 }
@@ -209,6 +327,9 @@ void install_memory_hooks() {
   if (!sCounter) {
     sCounter = new ProfilerCounterTotal("malloc", "Memory",
                                         "Amount of allocated memory");
+    // Also initialize the ThreadIntercept, even if native allocation tracking
+    // won't be turned on. This way the TLS will be initialized.
+    ThreadIntercept::Init();
   }
   jemalloc_replace_dynamic(replace_init);
 }
@@ -218,6 +339,13 @@ void install_memory_hooks() {
 // than adding overhead here of mutexes it's cheaper for the performance to just
 // leak these values.
 void remove_memory_hooks() { jemalloc_replace_dynamic(nullptr); }
+
+void enable_native_allocations() { ThreadIntercept::EnableAllocationFeature(); }
+
+// This is safe to call even if native allocations hasn't been enabled.
+void disable_native_allocations() {
+  ThreadIntercept::DisableAllocationFeature();
+}
 
 }  // namespace profiler
 }  // namespace mozilla
