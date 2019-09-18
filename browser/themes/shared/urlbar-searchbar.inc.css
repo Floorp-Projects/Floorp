@@ -455,6 +455,7 @@
 }
 
 #star-button-box[animationsenabled] > #star-button[starred][animate] + #star-button-animatable-box {
+  display: block;
   position: absolute;
   overflow: hidden;
   top: calc(50% - 16.5px); /* 16.5px is half the height of the sprite */
