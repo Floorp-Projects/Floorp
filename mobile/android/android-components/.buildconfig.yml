@@ -276,6 +276,10 @@ projects:
     path: components/support/locale
     description: 'A component to allow apps to change the system defined language by their custom one'
     publish: true
+  support-webextensions:
+    path: components/support/webextensions
+    description: 'A component containing building blocks for features implemented as web extensions.'
+    publish: true
   lib-crash:
     path: components/lib/crash
     description: 'A generic crash reporter library that can report crashes to multiple services.'

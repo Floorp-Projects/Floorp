@@ -11,10 +11,8 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.runWithSessionIdOrSelected
 import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Port
-import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.SyncEngine
@@ -22,11 +20,11 @@ import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.toAuthType
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.webextensions.WebExtensionController
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.lang.ClassCastException
-import java.util.WeakHashMap
 
 /**
  * Configurable FxA capabilities.
@@ -41,8 +39,6 @@ enum class FxaCapability {
  * For more information https://github.com/mozilla/fxa/blob/master/packages/fxa-content-server/docs/relier-communication-protocols/fx-webchannel.md
  * This feature uses a web extension to communicate with FxA Web Content.
  *
- * Boilerplate around installing and communicating with the extension will be cleaned up as part https://github.com/mozilla-mobile/android-components/issues/4297.
- *
  * @property context a reference to the context.
  * @property customTabSessionId optional custom tab session ID, if feature is being used with a custom tab.
  * @property engine a reference to application's browser engine.
@@ -50,7 +46,6 @@ enum class FxaCapability {
  * @property accountManager a reference to application's [FxaAccountManager].
  * @property fxaCapabilities a set of [FxaCapability] that client supports.
  */
-@Suppress("TooManyFunctions")
 class FxaWebChannelFeature(
     private val context: Context,
     private val customTabSessionId: String?,
@@ -60,25 +55,27 @@ class FxaWebChannelFeature(
     private val fxaCapabilities: Set<FxaCapability> = emptySet()
 ) : SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature {
 
+    @VisibleForTesting
+    // This is an internal var to make it mutable for unit testing purposes only
+    internal var extensionController = WebExtensionController(WEB_CHANNEL_EXTENSION_ID, WEB_CHANNEL_EXTENSION_URL)
+
     override fun start() {
         // Runs observeSelected (if we're not in a custom tab) or observeFixed (if we are).
         observeIdOrSelected(customTabSessionId)
 
         sessionManager.runWithSessionIdOrSelected(customTabSessionId) { session ->
-            registerContentMessageHandler(session)
+            registerFxaContentMessageHandler(session)
         }
 
-        if (installedWebExt == null) {
-            install(engine)
-        }
+        extensionController.install(engine)
     }
 
     override fun onSessionAdded(session: Session) {
-        registerContentMessageHandler(session)
+        registerFxaContentMessageHandler(session)
     }
 
     override fun onSessionRemoved(session: Session) {
-        ports.remove(sessionManager.getEngineSession(session))
+        extensionController.disconnectPort(sessionManager.getEngineSession(session))
     }
 
     @Suppress("MaxLineLength", "")
@@ -99,18 +96,9 @@ class FxaWebChannelFeature(
      *     oauth-login      ------>                             authentication completed within fxa web content, this class receives OAuth code & state
      */
     private class WebChannelViewContentMessageHandler(
-        private val engineSession: EngineSession,
         private val accountManager: FxaAccountManager,
         private val fxaCapabilities: Set<FxaCapability>
     ) : MessageHandler {
-        override fun onPortConnected(port: Port) {
-            ports[port.engineSession] = port
-        }
-
-        override fun onPortDisconnected(port: Port) {
-            ports.remove(port.engineSession)
-        }
-
         override fun onPortMessage(message: Any, port: Port) {
             val json = try {
                 message as JSONObject
@@ -121,12 +109,13 @@ class FxaWebChannelFeature(
             }
 
             val payload: JSONObject
-            val command: WebChannelCommand?
+            val command: WebChannelCommand
             val messageId: String
 
             try {
                 payload = json.getJSONObject("message")
-                command = payload.getString("command").toWebChannelCommand()
+                command = payload.getString("command").toWebChannelCommand() ?: throw
+                    JSONException("Couldn't get WebChannel command")
                 messageId = payload.optString("messageId", "")
             } catch (e: JSONException) {
                 // We don't have control over what messages we will get from the webchannel.
@@ -138,33 +127,21 @@ class FxaWebChannelFeature(
                 return
             }
 
-            if (command == null) {
-                // TODO ideally, this should log to Sentry.
-                logger.error("Couldn't get WebChannel command")
-                return
-            }
-
             logger.debug("Processing WebChannel command: $command")
-            when (command) {
-                WebChannelCommand.CAN_LINK_ACCOUNT -> processCanLinkAccountCommand(
-                    messageId, engineSession
-                )
-                WebChannelCommand.FXA_STATUS -> processFxaStatusCommand(
-                    accountManager, messageId, engineSession, fxaCapabilities
-                )
-                WebChannelCommand.OAUTH_LOGIN -> processOauthLoginCommand(
-                    accountManager, payload
-                )
+
+            val response = when (command) {
+                WebChannelCommand.CAN_LINK_ACCOUNT -> processCanLinkAccountCommand(messageId)
+                WebChannelCommand.FXA_STATUS -> processFxaStatusCommand(accountManager, messageId, fxaCapabilities)
+                WebChannelCommand.OAUTH_LOGIN -> processOauthLoginCommand(accountManager, payload)
             }
+            response?.let { port.postMessage(it) }
         }
     }
 
-    private fun registerContentMessageHandler(session: Session) {
+    private fun registerFxaContentMessageHandler(session: Session) {
         val engineSession = sessionManager.getOrCreateEngineSession(session)
-        val messageHandler = WebChannelViewContentMessageHandler(
-            engineSession, accountManager, fxaCapabilities
-        )
-        registerMessageHandler(engineSession, messageHandler)
+        val messageHandler = WebChannelViewContentMessageHandler(accountManager, fxaCapabilities)
+        extensionController.registerContentMessageHandler(engineSession, messageHandler)
     }
 
     @VisibleForTesting
@@ -172,8 +149,7 @@ class FxaWebChannelFeature(
         private val logger = Logger("mozac-fxawebchannel")
 
         internal const val WEB_CHANNEL_EXTENSION_ID = "mozacWebchannel"
-        internal const val WEB_CHANNEL_EXTENSION_URL =
-            "resource://android/assets/extensions/fxawebchannel/"
+        internal const val WEB_CHANNEL_EXTENSION_URL = "resource://android/assets/extensions/fxawebchannel/"
 
         // Constants for incoming messages from the WebExtension.
         private const val CHANNEL_ID = "account_updates"
@@ -206,52 +182,16 @@ class FxaWebChannelFeature(
          */
         private const val COMMAND_STATUS = "fxaccounts:fxa_status"
 
-        @Volatile
-        internal var installedWebExt: WebExtension? = null
-
-        @Volatile
-        private var registerContentMessageHandler: (WebExtension) -> Unit? = { }
-
-        internal var ports = WeakHashMap<EngineSession, Port>()
-
-        /**
-         * Installs the WebChannel web extension in the provided engine.
-         *
-         * @param engine a reference to the application's browser engine.
-         */
-        fun install(engine: Engine) {
-            engine.installWebExtension(WEB_CHANNEL_EXTENSION_ID, WEB_CHANNEL_EXTENSION_URL,
-                    onSuccess = {
-                        logger.debug("Installed extension: ${it.id}")
-                        registerContentMessageHandler(it)
-                        installedWebExt = it
-                    },
-                    onError = { ext, throwable ->
-                        logger.error("Failed to install extension: $ext", throwable)
-                    }
-            )
-        }
-
-        fun registerMessageHandler(session: EngineSession, messageHandler: MessageHandler) {
-            registerContentMessageHandler = {
-                if (!it.hasContentMessageHandler(session, WEB_CHANNEL_EXTENSION_ID)) {
-                    it.registerContentMessageHandler(session, WEB_CHANNEL_EXTENSION_ID, messageHandler)
-                }
-            }
-
-            installedWebExt?.let { registerContentMessageHandler(it) }
-        }
-
         /**
          * Handles the [COMMAND_CAN_LINK_ACCOUNT] event from the web-channel.
          * Currently this always response with 'ok=true'.
          * On Fx Desktop, this event prompts a possible "another user was previously logged in on
          * this device" warning. Currently we don't support propagating this warning to a consuming application.
          */
-        private fun processCanLinkAccountCommand(messageId: String, engineSession: EngineSession) {
+        private fun processCanLinkAccountCommand(messageId: String): JSONObject {
             // TODO don't allow linking if we're logged in already? This is requested after user
             // entered their credentials.
-            val status = JSONObject().also { status ->
+            return JSONObject().also { status ->
                 status.put("id", CHANNEL_ID)
                 status.put("message", JSONObject().also { message ->
                     message.put("messageId", messageId)
@@ -261,8 +201,6 @@ class FxaWebChannelFeature(
                     })
                 })
             }
-
-            sendContentMessage(status, engineSession)
         }
 
         /**
@@ -272,10 +210,9 @@ class FxaWebChannelFeature(
         private fun processFxaStatusCommand(
             accountManager: FxaAccountManager,
             messageId: String,
-            engineSession: EngineSession,
             fxaCapabilities: Set<FxaCapability>
-        ) {
-            val status = JSONObject().also { status ->
+        ): JSONObject {
+            return JSONObject().also { status ->
                 status.put("id", CHANNEL_ID)
                 status.put("message", JSONObject().also { message ->
                     message.put("messageId", messageId)
@@ -299,14 +236,12 @@ class FxaWebChannelFeature(
                     })
                 })
             }
-
-            sendContentMessage(status, engineSession)
         }
 
         /**
          * Handles the [COMMAND_OAUTH_LOGIN] event from the web-channel.
          */
-        private fun processOauthLoginCommand(accountManager: FxaAccountManager, payload: JSONObject) {
+        private fun processOauthLoginCommand(accountManager: FxaAccountManager, payload: JSONObject): JSONObject? {
             val authType: AuthType
             val code: String
             val state: String
@@ -319,7 +254,7 @@ class FxaWebChannelFeature(
             } catch (e: JSONException) {
                 // TODO ideally, this should log to Sentry.
                 logger.error("Error while processing WebChannel oauth-login command", e)
-                return
+                return null
             }
 
             accountManager.finishAuthenticationAsync(FxaAuthData(
@@ -327,12 +262,8 @@ class FxaWebChannelFeature(
                 code = code,
                 state = state
             ))
-        }
 
-        private fun sendContentMessage(msg: Any, engineSession: EngineSession) {
-            val port = ports[engineSession]
-            port?.postMessage(msg)
-                ?: throw IllegalStateException("No port connected for provided session. Message not sent.")
+            return null
         }
 
         private fun String.toWebChannelCommand(): WebChannelCommand? {
