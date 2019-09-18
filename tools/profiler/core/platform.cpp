@@ -3101,7 +3101,7 @@ void profiler_init(void* aStackTop) {
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
   // Start counting memory allocations (outside of lock because this may call
   // profiler_add_sampled_counter which would attempt to take the lock.)
-  mozilla::profiler::install_memory_counter(true);
+  mozilla::profiler::install_memory_hooks();
 #endif
 
   // We do this with gPSMutex unlocked. The comment in profiler_stop() explains
@@ -3598,7 +3598,7 @@ void profiler_start(PowerOfTwo32 aCapacity, double aInterval,
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
   // Start counting memory allocations (outside of lock because this may call
   // profiler_add_sampled_counter which would attempt to take the lock.)
-  mozilla::profiler::install_memory_counter(true);
+  mozilla::profiler::install_memory_hooks();
 #endif
 
   // We do these operations with gPSMutex unlocked. The comments in
@@ -3646,13 +3646,6 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
     }
   }
 
-#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
-  // Start counting memory allocations (outside of lock because this may
-  // call profiler_add_sampled_counter which would attempt to take the
-  // lock.)
-  mozilla::profiler::install_memory_counter(true);
-#endif
-
   // We do these operations with gPSMutex unlocked. The comments in
   // profiler_stop() explain why.
   if (samplerThread) {
@@ -3674,10 +3667,6 @@ static MOZ_MUST_USE SamplerThread* locked_profiler_stop(PSLockRef aLock) {
 
   // At the very start, clear RacyFeatures.
   RacyFeatures::SetInactive();
-
-#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
-  mozilla::profiler::install_memory_counter(false);
-#endif
 
 #if defined(GP_OS_android)
   if (ActivePS::FeatureJava(aLock)) {
@@ -3717,6 +3706,12 @@ static MOZ_MUST_USE SamplerThread* locked_profiler_stop(PSLockRef aLock) {
     }
   }
 
+#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
+  if (ActivePS::FeatureNativeAllocations(aLock)) {
+    mozilla::profiler::disable_native_allocations();
+  }
+#endif
+
   // The Stop() call doesn't actually stop Run(); that happens in this
   // function's caller when the sampler thread is destroyed. Stop() just gives
   // the SamplerThread a chance to do some cleanup with gPSMutex locked.
@@ -3730,6 +3725,12 @@ void profiler_stop() {
   LOG("profiler_stop");
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
+  // Remove the hooks early, as native allocations (if they are on) can be
+  // quite expensive.
+  mozilla::profiler::remove_memory_hooks();
+#endif
 
   SamplerThread* samplerThread;
   {

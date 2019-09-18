@@ -37,7 +37,16 @@
 #  include <android/log.h>
 #endif
 
-static mozilla::UniquePtr<ProfilerCounterTotal> sCounter;
+// The counters start out as a nullptr, and then get initialized only once. They
+// are never destroyed, as it would cause race conditions for the memory hooks
+// that use the counters. This helps guard against potentially expensive
+// operations like using a mutex.
+//
+// In addition, this is a raw pointer and not a UniquePtr, as the counter
+// machinery will try and de-register itself from the profiler. This could
+// happen after the profiler and its PSMutex was already destroyed, resulting in
+// a crash.
+static ProfilerCounterTotal* sCounter;
 
 namespace mozilla {
 namespace profiler {
@@ -196,17 +205,19 @@ namespace profiler {
 // Initialization
 //---------------------------------------------------------------------------
 
-void install_memory_counter(bool aInstall) {
-  if (aInstall) {
-    if (!sCounter) {
-      sCounter = MakeUnique<ProfilerCounterTotal>("malloc", "Memory",
-                                                  "Amount of allocated memory");
-    }
-    jemalloc_replace_dynamic(replace_init);
-  } else {
-    jemalloc_replace_dynamic(nullptr);
+void install_memory_hooks() {
+  if (!sCounter) {
+    sCounter = new ProfilerCounterTotal("malloc", "Memory",
+                                        "Amount of allocated memory");
   }
+  jemalloc_replace_dynamic(replace_init);
 }
+
+// Remove the hooks, but leave the sCounter machinery. Deleting the counter
+// would race with any existing memory hooks that are currently running. Rather
+// than adding overhead here of mutexes it's cheaper for the performance to just
+// leak these values.
+void remove_memory_hooks() { jemalloc_replace_dynamic(nullptr); }
 
 }  // namespace profiler
 }  // namespace mozilla
