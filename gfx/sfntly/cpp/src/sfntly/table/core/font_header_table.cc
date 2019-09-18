@@ -92,7 +92,7 @@ int32_t FontHeaderTable::GlyphDataFormat() {
 
 FontHeaderTable::FontHeaderTable(Header* header, ReadableFontData* data)
     : Table(header, data) {
-  IntegerList checksum_ranges;
+  std::vector<int32_t> checksum_ranges;
   checksum_ranges.push_back(0);
   checksum_ranges.push_back(Offset::kCheckSumAdjustment);
   checksum_ranges.push_back(Offset::kMagicNumber);

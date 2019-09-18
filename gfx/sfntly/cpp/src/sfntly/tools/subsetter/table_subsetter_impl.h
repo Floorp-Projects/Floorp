@@ -26,10 +26,10 @@ class TableSubsetterImpl : public TableSubsetter {
   TableSubsetterImpl(const int32_t* tags, size_t tags_length);
   virtual ~TableSubsetterImpl();
   virtual bool TagHandled(int32_t tag);
-  virtual IntegerSet* TagsHandled();
+  virtual std::set<int32_t>* TagsHandled();
 
  protected:
-  IntegerSet tags_;
+  std::set<int32_t> tags_;
 };
 
 }  // namespace sfntly

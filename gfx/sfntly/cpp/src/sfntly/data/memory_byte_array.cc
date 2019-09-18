@@ -24,7 +24,7 @@ MemoryByteArray::MemoryByteArray(int32_t length)
     : ByteArray(0, length), b_(NULL), allocated_(true) {
 }
 
-MemoryByteArray::MemoryByteArray(byte_t* b, int32_t filled_length)
+MemoryByteArray::MemoryByteArray(uint8_t* b, int32_t filled_length)
     : ByteArray(filled_length, filled_length), b_(b), allocated_(false) {
   assert(b);
 }
@@ -43,18 +43,18 @@ int32_t MemoryByteArray::CopyTo(OutputStream* os,
 
 void MemoryByteArray::Init() {
   if (allocated_ && b_ == NULL) {
-    b_ = new byte_t[Size()];
+    b_ = new uint8_t[Size()];
     memset(b_, 0, Size());
   }
 }
 
-void MemoryByteArray::InternalPut(int32_t index, byte_t b) {
+void MemoryByteArray::InternalPut(int32_t index, uint8_t b) {
   Init();
   b_[index] = b;
 }
 
 int32_t MemoryByteArray::InternalPut(int32_t index,
-                                     byte_t* b,
+                                     uint8_t* b,
                                      int32_t offset,
                                      int32_t length) {
   assert(b);
@@ -63,13 +63,13 @@ int32_t MemoryByteArray::InternalPut(int32_t index,
   return length;
 }
 
-byte_t MemoryByteArray::InternalGet(int32_t index) {
+uint8_t MemoryByteArray::InternalGet(int32_t index) {
   Init();
   return b_[index];
 }
 
 int32_t MemoryByteArray::InternalGet(int32_t index,
-                                     byte_t* b,
+                                     uint8_t* b,
                                      int32_t offset,
                                      int32_t length) {
   assert(b);
@@ -85,7 +85,7 @@ void MemoryByteArray::Close() {
   b_ = NULL;
 }
 
-byte_t* MemoryByteArray::Begin() {
+uint8_t* MemoryByteArray::Begin() {
   Init();
   return b_;
 }

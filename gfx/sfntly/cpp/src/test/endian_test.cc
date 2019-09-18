@@ -25,7 +25,7 @@
 namespace sfntly {
 
 bool TestEndian() {
-  byte_t test_data[] = {
+  uint8_t test_data[] = {
       0x68, 0x65, 0x61, 0x64,  // 0: head
       0xca, 0xca, 0xca, 0xca,  // 4: ubyte, byte, char
       0x00, 0x18, 0x80, 0x18,  // 8: ushort, short

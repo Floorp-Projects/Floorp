@@ -374,13 +374,13 @@ public:
       virtual ~Builder();
       SegmentList* segments();
       void set_segments(SegmentList* segments);
-      IntegerList* glyph_id_array();
-      void set_glyph_id_array(IntegerList* glyph_id_array);
+      std::vector<int32_t>* glyph_id_array();
+      void set_glyph_id_array(std::vector<int32_t>* glyph_id_array);
 
      protected:
       Builder(WritableFontData* data, int32_t offset, const CMapId& cmap_id);
       Builder(ReadableFontData* data, int32_t offset, const CMapId& cmap_id);
-      Builder(SegmentList* segments, IntegerList* glyph_id_array,
+      Builder(SegmentList* segments, std::vector<int32_t>* glyph_id_array,
               const CMapId& cmap_id);
       explicit Builder(const CMapId& cmap_id);
 
@@ -395,7 +395,7 @@ public:
       void Initialize(ReadableFontData* data);
 
       SegmentList segments_;
-      IntegerList glyph_id_array_;
+      std::vector<int32_t> glyph_id_array_;
     };
 
     CMap::CharacterIterator* Iterator();

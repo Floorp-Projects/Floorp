@@ -39,7 +39,7 @@ int32_t GrowableMemoryByteArray::CopyTo(OutputStream* os,
   return length;
 }
 
-void GrowableMemoryByteArray::InternalPut(int32_t index, byte_t b) {
+void GrowableMemoryByteArray::InternalPut(int32_t index, uint8_t b) {
   if ((size_t)index >= b_.size()) {
     b_.resize((size_t)(index + 1));
   }
@@ -47,7 +47,7 @@ void GrowableMemoryByteArray::InternalPut(int32_t index, byte_t b) {
 }
 
 int32_t GrowableMemoryByteArray::InternalPut(int32_t index,
-                                             byte_t* b,
+                                             uint8_t* b,
                                              int32_t offset,
                                              int32_t length) {
   if ((size_t)index + length >= b_.size()) {
@@ -59,12 +59,12 @@ int32_t GrowableMemoryByteArray::InternalPut(int32_t index,
   return length;
 }
 
-byte_t GrowableMemoryByteArray::InternalGet(int32_t index) {
+uint8_t GrowableMemoryByteArray::InternalGet(int32_t index) {
   return b_[index];
 }
 
 int32_t GrowableMemoryByteArray::InternalGet(int32_t index,
-                                             byte_t* b,
+                                             uint8_t* b,
                                              int32_t offset,
                                              int32_t length) {
   memcpy(b + offset, &(b_[0]) + index, length);
@@ -75,7 +75,7 @@ void GrowableMemoryByteArray::Close() {
   b_.clear();
 }
 
-byte_t* GrowableMemoryByteArray::Begin() {
+uint8_t* GrowableMemoryByteArray::Begin() {
   return &(b_[0]);
 }
 

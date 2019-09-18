@@ -70,7 +70,7 @@ void LoadFile(const char* input_file_path, ByteVector* input_buffer) {
 #else
   input_file = fopen(input_file_path, "rb");
 #endif
-  EXPECT_NE(input_file, static_cast<FILE*>(NULL));
+  EXPECT_NE(input_file, reinterpret_cast<FILE*>(NULL));
   fseek(input_file, 0, SEEK_END);
   size_t file_size = ftell(input_file);
   fseek(input_file, 0, SEEK_SET);
@@ -90,7 +90,7 @@ void SerializeToFile(MemoryOutputStream* output_stream, const char* file_path) {
 #else
   output_file = fopen(file_path, "wb");
 #endif
-  EXPECT_NE(output_file, static_cast<FILE*>(NULL));
+  EXPECT_NE(output_file, reinterpret_cast<FILE*>(NULL));
   fwrite(output_stream->Get(), 1, output_stream->Size(), output_file);
   fflush(output_file);
   fclose(output_file);
