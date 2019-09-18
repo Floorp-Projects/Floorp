@@ -172,6 +172,7 @@ let gWindows = new WeakMap();
 function FinderHighlighter(finder) {
   this._highlightAll = Services.prefs.getBoolPref(kHighlightAllPref);
   this._modal = Services.prefs.getBoolPref(kModalHighlightPref);
+  this._useSubFrames = false;
   this.finder = finder;
 }
 
@@ -235,18 +236,20 @@ FinderHighlighter.prototype = {
    * Toggle highlighting all occurrences of a word in a page. This method will
    * be called recursively for each (i)frame inside a page.
    *
-   * @param {Booolean} highlight   Whether highlighting should be turned on
-   * @param {String}   word        Needle to search for and highlight when found
-   * @param {Boolean}  linksOnly   Only consider nodes that are links for the search
-   * @param {Boolean}  drawOutline Whether found links should be outlined.
+   * @param {Booolean} highlight    Whether highlighting should be turned on
+   * @param {String}   word         Needle to search for and highlight when found
+   * @param {Boolean}  linksOnly    Only consider nodes that are links for the search
+   * @param {Boolean}  drawOutline  Whether found links should be outlined.
+   * @param {Boolean}  useSubFrames Whether to iterate over subframes.
    * @yield {Promise}  that resolves once the operation has finished
    */
-  async highlight(highlight, word, linksOnly, drawOutline) {
+  async highlight(highlight, word, linksOnly, drawOutline, useSubFrames) {
     let window = this.finder._getWindow();
     let dict = this.getForWindow(window);
     let controller = this.finder._getSelectionController(window);
     let doc = window.document;
     this._found = false;
+    this._useSubFrames = useSubFrames;
 
     if (!controller || !doc || !doc.documentElement) {
       // Without the selection controller,
@@ -264,6 +267,7 @@ FinderHighlighter.prototype = {
         finder: this.finder,
         listener: this,
         useCache: true,
+        useSubFrames,
         window,
       };
       if (
@@ -484,6 +488,7 @@ FinderHighlighter.prototype = {
       return;
     }
 
+    this._useSubFrames = data.useSubFrames;
     if (!this._modal) {
       if (this._highlightAll) {
         dict.previousFoundRange = dict.currentFoundRange;
@@ -503,7 +508,8 @@ FinderHighlighter.prototype = {
             true,
             params.word,
             params.linksOnly,
-            params.drawOutline
+            params.drawOutline,
+            data.useSubFrames
           );
         }
       }
@@ -526,7 +532,13 @@ FinderHighlighter.prototype = {
     }
 
     if (this._highlightAll) {
-      this.highlight(true, data.searchString, data.linksOnly, data.drawOutline);
+      this.highlight(
+        true,
+        data.searchString,
+        data.linksOnly,
+        data.drawOutline,
+        data.useSubFrames
+      );
     }
   },
 

@@ -90,6 +90,7 @@ class FindContent {
         entireWord: !!entireWord,
         finder: this.finder,
         listener: this.finder,
+        useSubFrames: true,
       });
 
       iteratorPromise.then(() => {

@@ -134,6 +134,7 @@ Finder.prototype = {
         entireWord: this._fastFind.entireWord,
         linksOnly: options.linksOnly,
         word: options.searchString,
+        useSubFrames: true,
       })
     ) {
       this.iterator.stop();
@@ -231,6 +232,7 @@ Finder.prototype = {
       findAgain: false,
       drawOutline: aDrawOutline,
       linksOnly: aLinksOnly,
+      useSubFrames: true,
     });
   },
 
@@ -253,6 +255,7 @@ Finder.prototype = {
       findAgain: true,
       drawOutline: aDrawOutline,
       linksOnly: aLinksOnly,
+      useSubFrames: true,
     });
   },
 
@@ -272,8 +275,14 @@ Finder.prototype = {
     return searchString;
   },
 
-  async highlight(aHighlight, aWord, aLinksOnly) {
-    await this.highlighter.highlight(aHighlight, aWord, aLinksOnly);
+  async highlight(aHighlight, aWord, aLinksOnly, aUseSubFrames = true) {
+    await this.highlighter.highlight(
+      aHighlight,
+      aWord,
+      aLinksOnly,
+      false,
+      aUseSubFrames
+    );
   },
 
   getInitialSelection() {
@@ -458,7 +467,7 @@ Finder.prototype = {
     this._currentMatchesCountResult = null;
   },
 
-  requestMatchesCount(aWord, aLinksOnly) {
+  requestMatchesCount(aWord, aLinksOnly, aUseSubFrames = true) {
     if (
       this._lastFindResult == Ci.nsITypeAheadFind.FIND_NOTFOUND ||
       this.searchString == "" ||
@@ -479,6 +488,7 @@ Finder.prototype = {
       entireWord: this._fastFind.entireWord,
       linksOnly: aLinksOnly,
       word: aWord,
+      aUseSubFrames,
     };
     if (!this.iterator.continueRunning(params)) {
       this.iterator.stop();
@@ -491,6 +501,7 @@ Finder.prototype = {
           limit: this.matchesCountLimit,
           listener: this,
           useCache: true,
+          aUseSubFrames,
         })
       )
       .then(() => {
@@ -528,8 +539,8 @@ Finder.prototype = {
 
   onIteratorReset() {},
 
-  onIteratorRestart({ word, linksOnly }) {
-    this.requestMatchesCount(word, linksOnly);
+  onIteratorRestart({ word, linksOnly, useSubFrames }) {
+    this.requestMatchesCount(word, linksOnly, useSubFrames);
   },
 
   onIteratorStart() {
