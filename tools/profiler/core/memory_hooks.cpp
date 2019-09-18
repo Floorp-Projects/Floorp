@@ -18,6 +18,7 @@
 #include "mozilla/ThreadLocal.h"
 
 #include "GeckoProfiler.h"
+#include "prenv.h"
 #include "replace_malloc.h"
 
 #include <ctype.h>
@@ -386,8 +387,32 @@ void install_memory_hooks() {
 void remove_memory_hooks() { jemalloc_replace_dynamic(nullptr); }
 
 void enable_native_allocations() {
-  EnsureBernoulliIsInstalled();
-  ThreadIntercept::EnableAllocationFeature();
+  // The bloat log tracks allocations and de-allocations. This can conflict
+  // with the memory hook machinery, as the bloat log creates its own
+  // allocations. This means we can re-enter inside the bloat log machinery. At
+  // this time, the bloat log does not know about cannot handle the native
+  // allocation feature. For now just disable the feature.
+  //
+  // At the time of this writing, we hit this assertion:
+  // IsIdle(oldState) || IsRead(oldState) in Checker::StartReadOp()
+  //
+  //    #01: GetBloatEntry(char const*, unsigned int)
+  //    #02: NS_LogCtor
+  //    #03: profiler_get_backtrace()
+  //    #04: profiler_add_native_allocation_marker(long long)
+  //    #05: mozilla::profiler::AllocCallback(void*, unsigned long)
+  //    #06: replace_calloc(unsigned long, unsigned long)
+  //    #07: PLDHashTable::ChangeTable(int)
+  //    #08: PLDHashTable::Add(void const*, std::nothrow_t const&)
+  //    #09: nsBaseHashtable<nsDepCharHashKey, nsAutoPtr<BloatEntry>, ...
+  //    #10: GetBloatEntry(char const*, unsigned int)
+  //    #11: NS_LogCtor
+  //    #12: profiler_get_backtrace()
+  //    ...
+  if (!PR_GetEnv("XPCOM_MEM_BLOAT_LOG")) {
+    EnsureBernoulliIsInstalled();
+    ThreadIntercept::EnableAllocationFeature();
+  }
 }
 
 // This is safe to call even if native allocations hasn't been enabled.
