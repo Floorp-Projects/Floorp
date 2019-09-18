@@ -368,7 +368,7 @@
               <menuitem id="sync-setup"
                         class="sync-ui-item"
                         hidden="true"
-                        oncommand="gSync.openPrefs('menubar')" data-l10n-id="menu-tools-fxa-sign-in"/>
+                        oncommand="gSync.openPrefs('menubar')" data-l10n-id="menu-tools-sync-sign-in"/>
               <menuitem id="sync-enable"
                         class="sync-ui-item"
                         hidden="true"
@@ -376,7 +376,7 @@
               <menuitem id="sync-unverifieditem"
                         class="sync-ui-item"
                         hidden="true"
-                        oncommand="gSync.openPrefs('menubar')" data-l10n-id="menu-tools-fxa-sign-in"/>
+                        oncommand="gSync.openPrefs('menubar')" data-l10n-id="menu-tools-sync-sign-in"/>
               <menuitem id="sync-syncnowitem"
                         class="sync-ui-item"
                         hidden="true"
@@ -384,7 +384,7 @@
               <menuitem id="sync-reauthitem"
                         class="sync-ui-item"
                         hidden="true"
-                        oncommand="gSync.openSignInAgainPage('menubar');" data-l10n-id="menu-tools-fxa-re-auth"/>
+                        oncommand="gSync.openSignInAgainPage('menubar');" data-l10n-id="menu-tools-sync-re-auth"/>
               <menuseparator id="devToolsSeparator"/>
               <menu id="webDeveloperMenu" data-l10n-id="menu-tools-web-developer">
                 <menupopup id="menuWebDeveloperPopup">
