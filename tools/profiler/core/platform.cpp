@@ -280,11 +280,11 @@ class CorePS {
  private:
   CorePS()
       : mProcessStartTime(TimeStamp::ProcessCreation()),
-        // This doesn't need its own mutex, because all uses are currently
-        // guarded by gPSMutex, and it is used inside the critical section of
-        // the sampler, where mutexes cannot be used.
-        // TODO: Make it `WithMutex` in later patch...
-        mCoreBlocksRingBuffer(BlocksRingBuffer::ThreadSafety::WithoutMutex)
+        // This needs its own mutex, because it is used concurrently from
+        // functions guarded by gPSMutex as well as others without safety (e.g.,
+        // profiler_add_marker). It is *not* used inside the critical section of
+        // the sampler, because mutexes cannot be used there.
+        mCoreBlocksRingBuffer(BlocksRingBuffer::ThreadSafety::WithMutex)
 #ifdef USE_LUL_STACKWALK
         ,
         mLul(nullptr)
@@ -1696,24 +1696,17 @@ static void DoNativeBacktrace(PSLockRef aLock,
 // ProfileBuffer::StreamSamplesToJSON.
 static inline void DoSharedSample(PSLockRef aLock, bool aIsSynchronous,
                                   RegisteredThread& aRegisteredThread,
-                                  const TimeStamp& aNow, const Registers& aRegs,
-                                  Maybe<uint64_t>* aLastSample,
+                                  const Registers& aRegs, uint64_t aSamplePos,
                                   ProfileBuffer& aBuffer) {
   // WARNING: this function runs within the profiler's "critical section".
 
+  MOZ_ASSERT(!aBuffer.IsThreadSafe(),
+             "Mutexes cannot be used inside this critical section");
+
   MOZ_RELEASE_ASSERT(ActivePS::Exists(aLock));
 
-  uint64_t samplePos =
-      aBuffer.AddThreadIdEntry(aRegisteredThread.Info()->ThreadId());
-  if (aLastSample) {
-    *aLastSample = Some(samplePos);
-  }
-
-  TimeDuration delta = aNow - CorePS::ProcessStartTime();
-  aBuffer.AddEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
-
   ProfileBufferCollector collector(aBuffer, ActivePS::Features(aLock),
-                                   samplePos);
+                                   aSamplePos);
   NativeStack nativeStack;
 #if defined(HAVE_NATIVE_UNWIND)
   if (ActivePS::FeatureStackWalk(aLock)) {
@@ -1740,34 +1733,41 @@ static void DoSyncSample(PSLockRef aLock, RegisteredThread& aRegisteredThread,
                          ProfileBuffer& aBuffer) {
   // WARNING: this function runs within the profiler's "critical section".
 
-  DoSharedSample(aLock, /* aIsSynchronous = */ true, aRegisteredThread, aNow,
-                 aRegs, /* aLastSample = */ nullptr, aBuffer);
+  uint64_t samplePos =
+      aBuffer.AddThreadIdEntry(aRegisteredThread.Info()->ThreadId());
+
+  TimeDuration delta = aNow - CorePS::ProcessStartTime();
+  aBuffer.AddEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
+
+  DoSharedSample(aLock, /* aIsSynchronous = */ true, aRegisteredThread, aRegs,
+                 samplePos, aBuffer);
 }
 
 // Writes the components of a periodic sample to ActivePS's ProfileBuffer.
+// The ThreadId entry is already written in the main ProfileBuffer, its location
+// is `aSamplePos`, we can write the rest to `aBuffer` (which may be different).
 static void DoPeriodicSample(PSLockRef aLock,
                              RegisteredThread& aRegisteredThread,
                              ProfiledThreadData& aProfiledThreadData,
-                             const TimeStamp& aNow, const Registers& aRegs) {
+                             const TimeStamp& aNow, const Registers& aRegs,
+                             uint64_t aSamplePos, ProfileBuffer& aBuffer) {
   // WARNING: this function runs within the profiler's "critical section".
 
-  ProfileBuffer& buffer = ActivePS::Buffer(aLock);
-
-  DoSharedSample(aLock, /* aIsSynchronous = */ false, aRegisteredThread, aNow,
-                 aRegs, &aProfiledThreadData.LastSample(), buffer);
+  DoSharedSample(aLock, /* aIsSynchronous = */ false, aRegisteredThread, aRegs,
+                 aSamplePos, aBuffer);
 
   ProfilerMarkerLinkedList* pendingMarkersList =
       aRegisteredThread.RacyRegisteredThread().GetPendingMarkers();
   while (pendingMarkersList && pendingMarkersList->peek()) {
     ProfilerMarker* marker = pendingMarkersList->popHead();
-    buffer.AddMarker(marker);
+    aBuffer.AddMarker(marker);
   }
 
   ThreadResponsiveness* resp = aProfiledThreadData.GetThreadResponsiveness();
   if (resp && resp->HasData()) {
     double delta = resp->GetUnresponsiveDuration(
         (aNow - CorePS::ProcessStartTime()).ToMilliseconds());
-    buffer.AddEntry(ProfileBufferEntry::Responsiveness(delta));
+    aBuffer.AddEntry(ProfileBufferEntry::Responsiveness(delta));
   }
 }
 
@@ -2514,6 +2514,18 @@ static SamplerThread* NewSamplerThread(PSLockRef aLock, uint32_t aGeneration,
 void SamplerThread::Run() {
   PR_SetCurrentThreadName("SamplerThread");
 
+  // Use local BlocksRingBuffer&ProfileBuffer to capture the stack.
+  // (This is to avoid touching the CorePS::BlocksRingBuffer lock while
+  // a thread is suspended, because that thread could be working with
+  // the CorePS::BlocksRingBuffer as well.)
+  BlocksRingBuffer localBlocksRingBuffer(
+      BlocksRingBuffer::ThreadSafety::WithoutMutex);
+  ProfileBuffer localProfileBuffer(localBlocksRingBuffer,
+                                   MakePowerOfTwo32<65536>());
+
+  // Will be kept between collections, to know what each collection does.
+  auto previousState = localBlocksRingBuffer.GetState();
+
   // This will be positive if we are running behind schedule (sampling less
   // frequently than desired) and negative if we are ahead of schedule.
   TimeDuration lastSleepOvershoot = 0;
@@ -2550,7 +2562,6 @@ void SamplerThread::Run() {
 
         // handle per-process generic counters
         const Vector<BaseProfilerCount*>& counters = CorePS::Counters(lock);
-        TimeStamp now = TimeStamp::NowUnfuzzed();
         for (auto& counter : counters) {
           // create Buffer entries for each counter
           buffer.AddEntry(ProfileBufferEntry::CounterId(counter));
@@ -2597,12 +2608,48 @@ void SamplerThread::Run() {
 
           AUTO_PROFILER_STATS(gecko_SamplerThread_Run_DoPeriodicSample);
 
-          now = TimeStamp::NowUnfuzzed();
+          TimeStamp now = TimeStamp::NowUnfuzzed();
+
+          // Add the thread ID now, so we know its position in the main buffer,
+          // which is used by some JS data.
+          // (DoPeriodicSample only knows about the temporary local buffer.)
+          uint64_t samplePos =
+              buffer.AddThreadIdEntry(registeredThread->Info()->ThreadId());
+          profiledThreadData->LastSample() = Some(samplePos);
+
+          // Also add the time, so it's always there after the thread ID, as
+          // expected by the parser. (Other stack data is optional.)
+          TimeDuration delta = now - CorePS::ProcessStartTime();
+          buffer.AddEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
+
+          // Suspend the thread and collect its stack data in the local buffer.
           mSampler.SuspendAndSampleAndResumeThread(
               lock, *registeredThread, [&](const Registers& aRegs) {
                 DoPeriodicSample(lock, *registeredThread, *profiledThreadData,
-                                 now, aRegs);
+                                 now, aRegs, samplePos, localProfileBuffer);
               });
+
+          // If data is complete, copy it into the global buffer.
+          auto state = localBlocksRingBuffer.GetState();
+          if (NS_WARN_IF(state.mClearedBlockCount !=
+                         previousState.mClearedBlockCount)) {
+            LOG("Stack sample too big for local storage, needed %u bytes",
+                unsigned(state.mRangeEnd.ConvertToU64() -
+                         previousState.mRangeEnd.ConvertToU64()));
+          } else if (state.mRangeEnd.ConvertToU64() -
+                         previousState.mRangeEnd.ConvertToU64() >=
+                     CorePS::CoreBlocksRingBuffer().BufferLength()->Value()) {
+            LOG("Stack sample too big for profiler storage, needed %u bytes",
+                unsigned(state.mRangeEnd.ConvertToU64() -
+                         previousState.mRangeEnd.ConvertToU64()));
+          } else {
+            CorePS::CoreBlocksRingBuffer().AppendContents(
+                localBlocksRingBuffer);
+          }
+
+          // Clean up for the next run.
+          localBlocksRingBuffer.Clear();
+          previousState = localBlocksRingBuffer.GetState();
         }
 
 #if defined(USE_LUL_STACKWALK)
@@ -4042,8 +4089,10 @@ static void racy_profiler_add_marker(
                          ? aPayload->GetStartTime()
                          : TimeStamp::NowUnfuzzed();
   TimeDuration delta = origin - CorePS::ProcessStartTime();
-  racyRegisteredThread->AddPendingMarker(
-      aMarkerName, aCategoryPair, std::move(aPayload), delta.ToMilliseconds());
+  CorePS::CoreBlocksRingBuffer().PutObjects(
+      ProfileBufferEntry::Kind::MarkerData, racyRegisteredThread->ThreadId(),
+      WrapBlocksRingBufferUnownedCString(aMarkerName),
+      static_cast<uint32_t>(aCategoryPair), aPayload, delta.ToMilliseconds());
 }
 
 void profiler_add_marker(const char* aMarkerName,
@@ -4110,46 +4159,42 @@ void profiler_add_network_marker(
           PromiseFlatCString(redirect_spec).get(), std::move(aSource)));
 }
 
-// This logic needs to add a marker for a different thread, so we actually need
-// to lock here.
 void profiler_add_marker_for_thread(int aThreadId,
                                     JS::ProfilingCategoryPair aCategoryPair,
                                     const char* aMarkerName,
                                     UniquePtr<ProfilerMarkerPayload> aPayload) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PSAutoLock lock(gPSMutex);
-  if (!ActivePS::Exists(lock)) {
-    return;
-  }
+#ifdef DEBUG
+  {
+    PSAutoLock lock(gPSMutex);
+    if (!ActivePS::Exists(lock)) {
+      return;
+    }
 
-  // Create the ProfilerMarker which we're going to store.
+    // Assert that our thread ID makes sense
+    bool realThread = false;
+    const Vector<UniquePtr<RegisteredThread>>& registeredThreads =
+        CorePS::RegisteredThreads(lock);
+    for (auto& thread : registeredThreads) {
+      RefPtr<ThreadInfo> info = thread->Info();
+      if (info->ThreadId() == aThreadId) {
+        realThread = true;
+        break;
+      }
+    }
+    MOZ_ASSERT(realThread, "Invalid thread id");
+  }
+#endif
+
   TimeStamp origin = (aPayload && !aPayload->GetStartTime().IsNull())
                          ? aPayload->GetStartTime()
                          : TimeStamp::NowUnfuzzed();
   TimeDuration delta = origin - CorePS::ProcessStartTime();
-  ProfilerMarker* marker =
-      new ProfilerMarker(aMarkerName, aCategoryPair, aThreadId,
-                         std::move(aPayload), delta.ToMilliseconds());
-
-#ifdef DEBUG
-  // Assert that our thread ID makes sense
-  bool realThread = false;
-  const Vector<UniquePtr<RegisteredThread>>& registeredThreads =
-      CorePS::RegisteredThreads(lock);
-  for (auto& thread : registeredThreads) {
-    RefPtr<ThreadInfo> info = thread->Info();
-    if (info->ThreadId() == aThreadId) {
-      realThread = true;
-      break;
-    }
-  }
-  MOZ_ASSERT(realThread, "Invalid thread id");
-#endif
-
-  // Insert the marker into the buffer
-  ProfileBuffer& buffer = ActivePS::Buffer(lock);
-  buffer.AddMarker(marker);
+  CorePS::CoreBlocksRingBuffer().PutObjects(
+      ProfileBufferEntry::Kind::MarkerData, aThreadId,
+      WrapBlocksRingBufferUnownedCString(aMarkerName),
+      static_cast<uint32_t>(aCategoryPair), aPayload, delta.ToMilliseconds());
 }
 
 void profiler_tracing(const char* aCategoryString, const char* aMarkerName,
