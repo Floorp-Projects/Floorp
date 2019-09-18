@@ -451,6 +451,7 @@ add_task(async function test_login_list_item_removed_next_selected() {
     logins.push({
       guid: `${i}`,
       username: `jared${i}${group}${String.fromCharCode(97 + i)}@example.com`,
+      password: "omgsecret!!1",
       origin: "https://www.example.com",
     });
   }

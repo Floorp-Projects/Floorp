@@ -393,7 +393,9 @@ export default class LoginList extends HTMLElement {
             login.origin.toLocaleLowerCase().includes(this._filter) ||
             (!!login.httpRealm &&
               login.httpRealm.toLocaleLowerCase().includes(this._filter)) ||
-            login.username.toLocaleLowerCase().includes(this._filter)
+            login.username.toLocaleLowerCase().includes(this._filter) ||
+            (!window.AboutLoginsUtils.masterPasswordEnabled &&
+              login.password.toLocaleLowerCase().includes(this._filter))
           );
         })
       );
