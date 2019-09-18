@@ -253,7 +253,7 @@ _Sample apps using various components._
 ```
 $ git clone https://github.com/mozilla-mobile/android-components.git
 $ cd android-components
-$ ./gradlew
+$ ./gradlew assemble
 ```
 
 ## Android Studio ##
