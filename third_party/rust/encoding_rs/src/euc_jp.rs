@@ -52,6 +52,10 @@ impl EucJpDecoder {
         })
     }
 
+    pub fn in_neutral_state(&self) -> bool {
+        self.pending.is_none()
+    }
+
     fn plus_one_if_lead(&self, byte_length: usize) -> Option<usize> {
         byte_length.checked_add(if self.pending.is_none() { 0 } else { 1 })
     }

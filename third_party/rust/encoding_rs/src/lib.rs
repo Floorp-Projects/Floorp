@@ -11,7 +11,7 @@
     feature = "cargo-clippy",
     allow(doc_markdown, inline_always, new_ret_no_self)
 )]
-#![doc(html_root_url = "https://docs.rs/encoding_rs/0.8.17")]
+#![doc(html_root_url = "https://docs.rs/encoding_rs/0.8.19")]
 
 //! encoding_rs is a Gecko-oriented Free Software / Open Source implementation
 //! of the [Encoding Standard](https://encoding.spec.whatwg.org/) in Rust.
@@ -247,6 +247,18 @@
 //! to the encodings defined in the Encoding Standard. The
 //! [charset](https://crates.io/crates/charset) wraps encoding_rs and adds
 //! UTF-7 decoding for email purposes.
+//!
+//! # Preparing Text for the Encoders
+//!
+//! Normalizing text into Unicode Normalization Form C prior to encoding text
+//! into a legacy encoding minimizes unmappable characters. Text can be
+//! normalized to Unicode Normalization Form C using the
+//! [`unic-normal`](https://crates.io/crates/unic-normal) crate.
+//!
+//! The exception is windows-1258, which after normalizing to Unicode
+//! Normalization Form C requires tone marks to be decomposed in order to
+//! minimize unmappable characters. Vietnamese tone marks can be decomposed
+//! using the [`detone`](https://crates.io/crates/detone) crate.
 //!
 //! # Streaming & Non-Streaming; Rust & C/C++
 //!
@@ -4196,6 +4208,33 @@ impl Decoder {
                             decode_to_utf16_after_two_potential_bom_bytes,
                             decode_to_utf16_checking_end_with_offset,
                             u16);
+
+    /// Checks for compatibility with storing Unicode scalar values as unsigned
+    /// bytes taking into account the state of the decoder.
+    ///
+    /// Returns `None` if the decoder is still waiting for (parts of) a potential
+    /// BOM.
+    ///
+    /// Otherwise returns the index of the first byte whose unsigned value doesn't
+    /// directly correspond to the decoded Unicode scalar value, or the length
+    /// of the input if all bytes in the input decode directly to scalar values
+    /// corresponding to the unsigned byte values. (This is always returns zero
+    /// for UTF-16LE, UTF-16BE, and replacement. It's also zero when a multibyte
+    /// decoder is in the middle of a multibyte sequence.)
+    ///
+    /// Does not change the state of the decoder.
+    ///
+    /// Do not use this unless you are supporting SpiderMonkey/V8-style string
+    /// storage optimizations.
+    ///
+    /// Available via the C wrapper.
+    pub fn latin1_byte_compatible_up_to(&self, bytes: &[u8]) -> Option<usize> {
+        match self.life_cycle {
+            DecoderLifeCycle::Converting => Some(self.variant.latin1_byte_compatible_up_to(bytes)),
+            DecoderLifeCycle::Finished => panic!("Must not use a decoder that has finished."),
+            _ => None,
+        }
+    }
 }
 
 /// Result of a (potentially partial) encode operation without replacement.
@@ -5683,5 +5722,303 @@ mod tests {
         assert!(WINDOWS_1258.is_single_byte());
         assert!(X_MAC_CYRILLIC.is_single_byte());
         assert!(X_USER_DEFINED.is_single_byte());
+    }
+
+    #[test]
+    fn test_latin1_byte_compatible_up_to() {
+        let buffer = b"a\x81\xB6\xF6\xF0\x82\xB4";
+        assert_eq!(
+            BIG5.new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            1
+        );
+        assert_eq!(
+            EUC_JP
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            1
+        );
+        assert_eq!(
+            EUC_KR
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            1
+        );
+        assert_eq!(
+            GB18030
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            1
+        );
+        assert_eq!(
+            GBK.new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            1
+        );
+        assert_eq!(
+            REPLACEMENT
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            0
+        );
+        assert_eq!(
+            SHIFT_JIS
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            1
+        );
+        assert_eq!(
+            UTF_8
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            1
+        );
+        assert_eq!(
+            UTF_16BE
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            0
+        );
+        assert_eq!(
+            UTF_16LE
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            0
+        );
+        assert_eq!(
+            ISO_2022_JP
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            1
+        );
+
+        assert_eq!(
+            IBM866
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            1
+        );
+        assert_eq!(
+            ISO_8859_2
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            2
+        );
+        assert_eq!(
+            ISO_8859_3
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            2
+        );
+        assert_eq!(
+            ISO_8859_4
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            2
+        );
+        assert_eq!(
+            ISO_8859_5
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            2
+        );
+        assert_eq!(
+            ISO_8859_6
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            2
+        );
+        assert_eq!(
+            ISO_8859_7
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            2
+        );
+        assert_eq!(
+            ISO_8859_8
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            3
+        );
+        assert_eq!(
+            ISO_8859_10
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            2
+        );
+        assert_eq!(
+            ISO_8859_13
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            4
+        );
+        assert_eq!(
+            ISO_8859_14
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            4
+        );
+        assert_eq!(
+            ISO_8859_15
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            6
+        );
+        assert_eq!(
+            ISO_8859_16
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            4
+        );
+        assert_eq!(
+            ISO_8859_8_I
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            3
+        );
+        assert_eq!(
+            KOI8_R
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            1
+        );
+        assert_eq!(
+            KOI8_U
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            1
+        );
+        assert_eq!(
+            MACINTOSH
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            1
+        );
+        assert_eq!(
+            WINDOWS_874
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            2
+        );
+        assert_eq!(
+            WINDOWS_1250
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            4
+        );
+        assert_eq!(
+            WINDOWS_1251
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            1
+        );
+        assert_eq!(
+            WINDOWS_1252
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            5
+        );
+        assert_eq!(
+            WINDOWS_1253
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            3
+        );
+        assert_eq!(
+            WINDOWS_1254
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            4
+        );
+        assert_eq!(
+            WINDOWS_1255
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            3
+        );
+        assert_eq!(
+            WINDOWS_1256
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            1
+        );
+        assert_eq!(
+            WINDOWS_1257
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            4
+        );
+        assert_eq!(
+            WINDOWS_1258
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            4
+        );
+        assert_eq!(
+            X_MAC_CYRILLIC
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            1
+        );
+        assert_eq!(
+            X_USER_DEFINED
+                .new_decoder_without_bom_handling()
+                .latin1_byte_compatible_up_to(buffer)
+                .unwrap(),
+            1
+        );
+
+        assert!(UTF_8
+            .new_decoder()
+            .latin1_byte_compatible_up_to(buffer)
+            .is_none());
+
+        let mut decoder = UTF_8.new_decoder();
+        let mut output = [0u16; 4];
+        let _ = decoder.decode_to_utf16(b"\xEF", &mut output, false);
+        assert!(decoder.latin1_byte_compatible_up_to(buffer).is_none());
+        let _ = decoder.decode_to_utf16(b"\xBB\xBF", &mut output, false);
+        assert_eq!(decoder.latin1_byte_compatible_up_to(buffer), Some(1));
+        let _ = decoder.decode_to_utf16(b"\xEF", &mut output, false);
+        assert_eq!(decoder.latin1_byte_compatible_up_to(buffer), Some(0));
     }
 }

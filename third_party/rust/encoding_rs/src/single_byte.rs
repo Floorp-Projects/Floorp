@@ -227,6 +227,24 @@ impl SingleByteDecoder {
             }
         }
     }
+
+    pub fn latin1_byte_compatible_up_to(&self, buffer: &[u8]) -> usize {
+        let mut bytes = buffer;
+        let mut total = 0;
+        loop {
+            if let Some((non_ascii, offset)) = validate_ascii(bytes) {
+                total += offset;
+                let mapped = unsafe { *(self.table.get_unchecked(non_ascii as usize - 0x80usize)) };
+                if mapped != u16::from(non_ascii) {
+                    return total;
+                }
+                total += 1;
+                bytes = &bytes[offset + 1..];
+            } else {
+                return total;
+            }
+        }
+    }
 }
 
 pub struct SingleByteEncoder {
@@ -685,5 +703,4 @@ mod tests {
         encode_single_byte(X_MAC_CYRILLIC, &data::SINGLE_BYTE_DATA.x_mac_cyrillic);
     }
     // END GENERATED CODE
-
 }

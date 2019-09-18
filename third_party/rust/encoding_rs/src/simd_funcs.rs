@@ -451,5 +451,4 @@ mod tests {
         let masked = alu & 0x8080808080808080;
         assert_eq!(masked.trailing_zeros(), 39);
     }
-
 }

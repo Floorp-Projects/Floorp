@@ -23,6 +23,10 @@ impl Big5Decoder {
         VariantDecoder::Big5(Big5Decoder { lead: None })
     }
 
+    pub fn in_neutral_state(&self) -> bool {
+        self.lead.is_none()
+    }
+
     fn plus_one_if_lead(&self, byte_length: usize) -> Option<usize> {
         byte_length.checked_add(match self.lead {
             None => 0,

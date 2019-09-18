@@ -14,16 +14,13 @@
 #ifndef cheddar_generated_encoding_rs_h
 #define cheddar_generated_encoding_rs_h
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include "encoding_rs_statics.h"
-
-
 
 /// Implements the
 /// [_get an encoding_](https://encoding.spec.whatwg.org/#concept-encoding-get)
@@ -37,8 +34,8 @@ extern "C" {
 /// This is the right function to use if the action upon the method returning
 /// `NULL` is to use a fallback encoding (e.g. `WINDOWS_1252_ENCODING`) instead.
 /// When the action upon the method returning `NULL` is not to proceed with
-/// a fallback but to refuse processing, `encoding_for_label_no_replacement()` is
-/// more appropriate.
+/// a fallback but to refuse processing, `encoding_for_label_no_replacement()`
+/// is more appropriate.
 ///
 /// The argument buffer can be in any ASCII-compatible encoding. It is not
 /// required to be UTF-8.
@@ -52,7 +49,8 @@ extern "C" {
 ///
 /// UB ensues if `label` and `label_len` don't designate a valid memory block
 /// of if `label` is `NULL`.
-ENCODING_RS_ENCODING const* encoding_for_label(uint8_t const* label, size_t label_len);
+ENCODING_RS_ENCODING const* encoding_for_label(uint8_t const* label,
+                                               size_t label_len);
 
 /// This function behaves the same as `encoding_for_label()`, except when
 /// `encoding_for_label()` would return `REPLACEMENT_ENCODING`, this method
@@ -81,7 +79,8 @@ ENCODING_RS_ENCODING const* encoding_for_label(uint8_t const* label, size_t labe
 ///
 /// UB ensues if `label` and `label_len` don't designate a valid memory block
 /// of if `label` is `NULL`.
-ENCODING_RS_ENCODING const* encoding_for_label_no_replacement(uint8_t const* label, size_t label_len);
+ENCODING_RS_ENCODING const* encoding_for_label_no_replacement(
+    uint8_t const* label, size_t label_len);
 
 /// Performs non-incremental BOM sniffing.
 ///
@@ -103,10 +102,11 @@ ENCODING_RS_ENCODING const* encoding_for_label_no_replacement(uint8_t const* lab
 ///
 /// UB ensues if `buffer` and `*buffer_len` don't designate a valid memory
 /// block of if `buffer` is `NULL`.
-ENCODING_RS_ENCODING const* encoding_for_bom(uint8_t const* buffer, size_t* buffer_len);
+ENCODING_RS_ENCODING const* encoding_for_bom(uint8_t const* buffer,
+                                             size_t* buffer_len);
 
-/// Writes the name of the given `ENCODING_RS_ENCODING` to a caller-supplied buffer as
-/// ASCII and returns the number of bytes / ASCII characters written.
+/// Writes the name of the given `ENCODING_RS_ENCODING` to a caller-supplied
+/// buffer as ASCII and returns the number of bytes / ASCII characters written.
 ///
 /// The output is not null-terminated.
 ///
@@ -155,16 +155,18 @@ bool encoding_is_single_byte(ENCODING_RS_ENCODING const* encoding);
 /// # Undefined behavior
 ///
 /// UB ensues if the argument is `NULL`.
-ENCODING_RS_ENCODING const* encoding_output_encoding(ENCODING_RS_ENCODING const* encoding);
+ENCODING_RS_ENCODING const* encoding_output_encoding(
+    ENCODING_RS_ENCODING const* encoding);
 
-/// Allocates a new `ENCODING_RS_DECODER` for the given `ENCODING_RS_ENCODING` on the heap with BOM
-/// sniffing enabled and returns a pointer to the newly-allocated `ENCODING_RS_DECODER`.
+/// Allocates a new `ENCODING_RS_DECODER` for the given `ENCODING_RS_ENCODING`
+/// on the heap with BOM sniffing enabled and returns a pointer to the
+/// newly-allocated `ENCODING_RS_DECODER`.
 ///
 /// BOM sniffing may cause the returned decoder to morph into a decoder
 /// for UTF-8, UTF-16LE or UTF-16BE instead of this encoding.
 ///
-/// Once the allocated `ENCODING_RS_DECODER` is no longer needed, the caller _MUST_
-/// deallocate it by passing the pointer returned by this function to
+/// Once the allocated `ENCODING_RS_DECODER` is no longer needed, the caller
+/// _MUST_ deallocate it by passing the pointer returned by this function to
 /// `decoder_free()`.
 ///
 /// # Undefined behavior
@@ -172,8 +174,9 @@ ENCODING_RS_ENCODING const* encoding_output_encoding(ENCODING_RS_ENCODING const*
 /// UB ensues if the argument is `NULL`.
 ENCODING_RS_DECODER* encoding_new_decoder(ENCODING_RS_ENCODING const* encoding);
 
-/// Allocates a new `ENCODING_RS_DECODER` for the given `ENCODING_RS_ENCODING` on the heap with BOM
-/// removal and returns a pointer to the newly-allocated `ENCODING_RS_DECODER`.
+/// Allocates a new `ENCODING_RS_DECODER` for the given `ENCODING_RS_ENCODING`
+/// on the heap with BOM removal and returns a pointer to the newly-allocated
+/// `ENCODING_RS_DECODER`.
 ///
 /// If the input starts with bytes that are the BOM for this encoding,
 /// those bytes are removed. However, the decoder never morphs into a
@@ -181,17 +184,19 @@ ENCODING_RS_DECODER* encoding_new_decoder(ENCODING_RS_ENCODING const* encoding);
 /// (potentially malformed) input to the decoding algorithm for this
 /// encoding.
 ///
-/// Once the allocated `ENCODING_RS_DECODER` is no longer needed, the caller _MUST_
-/// deallocate it by passing the pointer returned by this function to
+/// Once the allocated `ENCODING_RS_DECODER` is no longer needed, the caller
+/// _MUST_ deallocate it by passing the pointer returned by this function to
 /// `decoder_free()`.
 ///
 /// # Undefined behavior
 ///
 /// UB ensues if the argument is `NULL`.
-ENCODING_RS_DECODER* encoding_new_decoder_with_bom_removal(ENCODING_RS_ENCODING const* encoding);
+ENCODING_RS_DECODER* encoding_new_decoder_with_bom_removal(
+    ENCODING_RS_ENCODING const* encoding);
 
-/// Allocates a new `ENCODING_RS_DECODER` for the given `ENCODING_RS_ENCODING` on the heap with BOM
-/// handling disabled and returns a pointer to the newly-allocated `ENCODING_RS_DECODER`.
+/// Allocates a new `ENCODING_RS_DECODER` for the given `ENCODING_RS_ENCODING`
+/// on the heap with BOM handling disabled and returns a pointer to the
+/// newly-allocated `ENCODING_RS_DECODER`.
 ///
 /// If the input starts with bytes that look like a BOM, those bytes are
 /// not treated as a BOM. (Hence, the decoder never morphs into a decoder
@@ -202,18 +207,20 @@ ENCODING_RS_DECODER* encoding_new_decoder_with_bom_removal(ENCODING_RS_ENCODING 
 /// `encoding_new_decoder_with_bom_removal()` instead of this function to cause
 /// the BOM to be removed.
 ///
-/// Once the allocated `ENCODING_RS_DECODER` is no longer needed, the caller _MUST_
-/// deallocate it by passing the pointer returned by this function to
+/// Once the allocated `ENCODING_RS_DECODER` is no longer needed, the caller
+/// _MUST_ deallocate it by passing the pointer returned by this function to
 /// `decoder_free()`.
 ///
 /// # Undefined behavior
 ///
 /// UB ensues if the argument is `NULL`.
-ENCODING_RS_DECODER* encoding_new_decoder_without_bom_handling(ENCODING_RS_ENCODING const* encoding);
+ENCODING_RS_DECODER* encoding_new_decoder_without_bom_handling(
+    ENCODING_RS_ENCODING const* encoding);
 
-/// Allocates a new `ENCODING_RS_DECODER` for the given `ENCODING_RS_ENCODING` into memory provided by
-/// the caller with BOM sniffing enabled. (In practice, the target should
-/// likely be a pointer previously returned by `encoding_new_decoder()`.)
+/// Allocates a new `ENCODING_RS_DECODER` for the given `ENCODING_RS_ENCODING`
+/// into memory provided by the caller with BOM sniffing enabled. (In practice,
+/// the target should likely be a pointer previously returned by
+/// `encoding_new_decoder()`.)
 ///
 /// Note: If the caller has already performed BOM sniffing but has
 /// not removed the BOM, the caller should still use this function in
@@ -222,10 +229,11 @@ ENCODING_RS_DECODER* encoding_new_decoder_without_bom_handling(ENCODING_RS_ENCOD
 /// # Undefined behavior
 ///
 /// UB ensues if either argument is `NULL`.
-void encoding_new_decoder_into(ENCODING_RS_ENCODING const* encoding, ENCODING_RS_DECODER* decoder);
+void encoding_new_decoder_into(ENCODING_RS_ENCODING const* encoding,
+                               ENCODING_RS_DECODER* decoder);
 
-/// Allocates a new `ENCODING_RS_DECODER` for the given `ENCODING_RS_ENCODING` into memory provided by
-/// the caller with BOM removal.
+/// Allocates a new `ENCODING_RS_DECODER` for the given `ENCODING_RS_ENCODING`
+/// into memory provided by the caller with BOM removal.
 ///
 /// If the input starts with bytes that are the BOM for this encoding,
 /// those bytes are removed. However, the decoder never morphs into a
@@ -233,17 +241,18 @@ void encoding_new_decoder_into(ENCODING_RS_ENCODING const* encoding, ENCODING_RS
 /// (potentially malformed) input to the decoding algorithm for this
 /// encoding.
 ///
-/// Once the allocated `ENCODING_RS_DECODER` is no longer needed, the caller _MUST_
-/// deallocate it by passing the pointer returned by this function to
+/// Once the allocated `ENCODING_RS_DECODER` is no longer needed, the caller
+/// _MUST_ deallocate it by passing the pointer returned by this function to
 /// `decoder_free()`.
 ///
 /// # Undefined behavior
 ///
 /// UB ensues if either argument is `NULL`.
-void encoding_new_decoder_with_bom_removal_into(ENCODING_RS_ENCODING const* encoding, ENCODING_RS_DECODER* decoder);
+void encoding_new_decoder_with_bom_removal_into(
+    ENCODING_RS_ENCODING const* encoding, ENCODING_RS_DECODER* decoder);
 
-/// Allocates a new `ENCODING_RS_DECODER` for the given `ENCODING_RS_ENCODING` into memory provided by
-/// the caller with BOM handling disabled.
+/// Allocates a new `ENCODING_RS_DECODER` for the given `ENCODING_RS_ENCODING`
+/// into memory provided by the caller with BOM handling disabled.
 ///
 /// If the input starts with bytes that look like a BOM, those bytes are
 /// not treated as a BOM. (Hence, the decoder never morphs into a decoder
@@ -257,15 +266,17 @@ void encoding_new_decoder_with_bom_removal_into(ENCODING_RS_ENCODING const* enco
 /// # Undefined behavior
 ///
 /// UB ensues if either argument is `NULL`.
-void encoding_new_decoder_without_bom_handling_into(ENCODING_RS_ENCODING const* encoding, ENCODING_RS_DECODER* decoder);
+void encoding_new_decoder_without_bom_handling_into(
+    ENCODING_RS_ENCODING const* encoding, ENCODING_RS_DECODER* decoder);
 
-/// Allocates a new `ENCODING_RS_ENCODER` for the given `ENCODING_RS_ENCODING` on the heap and returns a
-/// pointer to the newly-allocated `ENCODING_RS_ENCODER`. (Exception, if the `ENCODING_RS_ENCODING` is
-/// `replacement`, a new `ENCODING_RS_DECODER` for UTF-8 is instantiated (and that
-/// `ENCODING_RS_DECODER` reports `UTF_8` as its `ENCODING_RS_ENCODING`).
+/// Allocates a new `ENCODING_RS_ENCODER` for the given `ENCODING_RS_ENCODING`
+/// on the heap and returns a pointer to the newly-allocated
+/// `ENCODING_RS_ENCODER`. (Exception, if the `ENCODING_RS_ENCODING` is
+/// `replacement`, a new `ENCODING_RS_DECODER` for UTF-8 is instantiated (and
+/// that `ENCODING_RS_DECODER` reports `UTF_8` as its `ENCODING_RS_ENCODING`).
 ///
-/// Once the allocated `ENCODING_RS_ENCODER` is no longer needed, the caller _MUST_
-/// deallocate it by passing the pointer returned by this function to
+/// Once the allocated `ENCODING_RS_ENCODER` is no longer needed, the caller
+/// _MUST_ deallocate it by passing the pointer returned by this function to
 /// `encoder_free()`.
 ///
 /// # Undefined behavior
@@ -273,14 +284,15 @@ void encoding_new_decoder_without_bom_handling_into(ENCODING_RS_ENCODING const* 
 /// UB ensues if the argument is `NULL`.
 ENCODING_RS_ENCODER* encoding_new_encoder(ENCODING_RS_ENCODING const* encoding);
 
-/// Allocates a new `ENCODING_RS_ENCODER` for the given `ENCODING_RS_ENCODING` into memory provided by
-/// the caller. (In practice, the target should likely be a pointer previously
-/// returned by `encoding_new_encoder()`.)
+/// Allocates a new `ENCODING_RS_ENCODER` for the given `ENCODING_RS_ENCODING`
+/// into memory provided by the caller. (In practice, the target should likely
+/// be a pointer previously returned by `encoding_new_encoder()`.)
 ///
 /// # Undefined behavior
 ///
 /// UB ensues if either argument is `NULL`.
-void encoding_new_encoder_into(ENCODING_RS_ENCODING const* encoding, ENCODING_RS_ENCODER* encoder);
+void encoding_new_encoder_into(ENCODING_RS_ENCODING const* encoding,
+                               ENCODING_RS_ENCODER* encoder);
 
 /// Validates UTF-8.
 ///
@@ -329,9 +341,11 @@ size_t encoding_ascii_valid_up_to(uint8_t const* buffer, size_t buffer_len);
 ///
 /// UB ensues if `buffer` and `buffer_len` don't designate a valid memory
 /// block of if `buffer` is `NULL`.
-size_t encoding_iso_2022_jp_ascii_valid_up_to(uint8_t const* buffer, size_t buffer_len);
+size_t encoding_iso_2022_jp_ascii_valid_up_to(uint8_t const* buffer,
+                                              size_t buffer_len);
 
-/// Deallocates a `ENCODING_RS_DECODER` previously allocated by `encoding_new_decoder()`.
+/// Deallocates a `ENCODING_RS_DECODER` previously allocated by
+/// `encoding_new_decoder()`.
 ///
 /// # Undefined behavior
 ///
@@ -346,7 +360,8 @@ void decoder_free(ENCODING_RS_DECODER* decoder);
 /// # Undefined behavior
 ///
 /// UB ensues if the argument is `NULL`.
-ENCODING_RS_ENCODING const* decoder_encoding(ENCODING_RS_DECODER const* decoder);
+ENCODING_RS_ENCODING const* decoder_encoding(
+    ENCODING_RS_DECODER const* decoder);
 
 /// Query the worst-case UTF-8 output size _with replacement_.
 ///
@@ -359,7 +374,8 @@ ENCODING_RS_ENCODING const* decoder_encoding(ENCODING_RS_DECODER const* decoder)
 /// # Undefined behavior
 ///
 /// UB ensues if `decoder` is `NULL`.
-size_t decoder_max_utf8_buffer_length(ENCODING_RS_DECODER const* decoder, size_t byte_length);
+size_t decoder_max_utf8_buffer_length(ENCODING_RS_DECODER const* decoder,
+                                      size_t byte_length);
 
 /// Query the worst-case UTF-8 output size _without replacement_.
 ///
@@ -374,7 +390,8 @@ size_t decoder_max_utf8_buffer_length(ENCODING_RS_DECODER const* decoder, size_t
 /// # Undefined behavior
 ///
 /// UB ensues if `decoder` is `NULL`.
-size_t decoder_max_utf8_buffer_length_without_replacement(ENCODING_RS_DECODER const* decoder, size_t byte_length);
+size_t decoder_max_utf8_buffer_length_without_replacement(
+    ENCODING_RS_DECODER const* decoder, size_t byte_length);
 
 /// Incrementally decode a byte stream into UTF-8 with malformed sequences
 /// replaced with the REPLACEMENT CHARACTER.
@@ -395,7 +412,10 @@ size_t decoder_max_utf8_buffer_length_without_replacement(ENCODING_RS_DECODER co
 /// designate a valid block of memory.
 ///
 /// [1]: https://docs.rs/encoding_rs/0.6.10/encoding_rs/struct.Decoder.html
-uint32_t decoder_decode_to_utf8(ENCODING_RS_DECODER* decoder, uint8_t const* src, size_t* src_len, uint8_t* dst, size_t* dst_len, bool last, bool* had_replacements);
+uint32_t decoder_decode_to_utf8(ENCODING_RS_DECODER* decoder,
+                                uint8_t const* src, size_t* src_len,
+                                uint8_t* dst, size_t* dst_len, bool last,
+                                bool* had_replacements);
 
 /// Incrementally decode a byte stream into UTF-8 _without replacement_.
 ///
@@ -415,7 +435,9 @@ uint32_t decoder_decode_to_utf8(ENCODING_RS_DECODER* decoder, uint8_t const* src
 /// designate a valid block of memory.
 ///
 /// [1]: https://docs.rs/encoding_rs/0.6.10/encoding_rs/struct.Decoder.html
-uint32_t decoder_decode_to_utf8_without_replacement(ENCODING_RS_DECODER* decoder, uint8_t const* src, size_t* src_len, uint8_t* dst, size_t* dst_len, bool last);
+uint32_t decoder_decode_to_utf8_without_replacement(
+    ENCODING_RS_DECODER* decoder, uint8_t const* src, size_t* src_len,
+    uint8_t* dst, size_t* dst_len, bool last);
 
 /// Query the worst-case UTF-16 output size (with or without replacement).
 ///
@@ -431,7 +453,8 @@ uint32_t decoder_decode_to_utf8_without_replacement(ENCODING_RS_DECODER* decoder
 /// # Undefined behavior
 ///
 /// UB ensues if `decoder` is `NULL`.
-size_t decoder_max_utf16_buffer_length(ENCODING_RS_DECODER const* decoder, size_t u16_length);
+size_t decoder_max_utf16_buffer_length(ENCODING_RS_DECODER const* decoder,
+                                       size_t u16_length);
 
 /// Incrementally decode a byte stream into UTF-16 with malformed sequences
 /// replaced with the REPLACEMENT CHARACTER.
@@ -452,7 +475,10 @@ size_t decoder_max_utf16_buffer_length(ENCODING_RS_DECODER const* decoder, size_
 /// designate a valid block of memory.
 ///
 /// [1]: https://docs.rs/encoding_rs/0.6.10/encoding_rs/struct.Decoder.html
-uint32_t decoder_decode_to_utf16(ENCODING_RS_DECODER* decoder, uint8_t const* src, size_t* src_len, char16_t* dst, size_t* dst_len, bool last, bool* had_replacements);
+uint32_t decoder_decode_to_utf16(ENCODING_RS_DECODER* decoder,
+                                 uint8_t const* src, size_t* src_len,
+                                 char16_t* dst, size_t* dst_len, bool last,
+                                 bool* had_replacements);
 
 /// Incrementally decode a byte stream into UTF-16 _without replacement_.
 ///
@@ -472,9 +498,38 @@ uint32_t decoder_decode_to_utf16(ENCODING_RS_DECODER* decoder, uint8_t const* sr
 /// designate a valid block of memory.
 ///
 /// [1]: https://docs.rs/encoding_rs/0.6.10/encoding_rs/struct.Decoder.html
-uint32_t decoder_decode_to_utf16_without_replacement(ENCODING_RS_DECODER* decoder, uint8_t const* src, size_t* src_len, char16_t* dst, size_t* dst_len, bool last);
+uint32_t decoder_decode_to_utf16_without_replacement(
+    ENCODING_RS_DECODER* decoder, uint8_t const* src, size_t* src_len,
+    char16_t* dst, size_t* dst_len, bool last);
 
-/// Deallocates an `ENCODING_RS_ENCODER` previously allocated by `encoding_new_encoder()`.
+/// Checks for compatibility with storing Unicode scalar values as unsigned
+/// bytes taking into account the state of the decoder.
+///
+/// Returns `SIZE_MAX` if the decoder is still waiting for (parts of) a
+/// potential BOM.
+///
+/// Otherwise returns the index of the first byte whose unsigned value doesn't
+/// directly correspond to the decoded Unicode scalar value, or the length
+/// of the input if all bytes in the input decode directly to scalar values
+/// corresponding to the unsigned byte values. (This is always returns zero
+/// for UTF-16LE, UTF-16BE, and replacement. It's also zero when a multibyte
+/// decoder is in the middle of a multibyte sequence.)
+///
+/// Does not change the state of the decoder.
+///
+/// Do not use this unless you are supporting SpiderMonkey/V8-style string
+/// storage optimizations.
+///
+/// # Undefined behavior
+///
+/// UB ensues if `buffer` and `*buffer_len` don't designate a valid memory
+/// block of if `buffer` is `NULL`.
+size_t decoder_latin1_byte_compatible_up_to(ENCODING_RS_DECODER const* decoder,
+                                            uint8_t const* buffer,
+                                            size_t buffer_len);
+
+/// Deallocates an `ENCODING_RS_ENCODER` previously allocated by
+/// `encoding_new_encoder()`.
 ///
 /// # Undefined behavior
 ///
@@ -486,7 +541,8 @@ void encoder_free(ENCODING_RS_ENCODER* encoder);
 /// # Undefined behavior
 ///
 /// UB ensues if the argument is `NULL`.
-ENCODING_RS_ENCODING const* encoder_encoding(ENCODING_RS_ENCODER const* encoder);
+ENCODING_RS_ENCODING const* encoder_encoding(
+    ENCODING_RS_ENCODER const* encoder);
 
 /// Returns `true` if this is an ISO-2022-JP encoder that's not in the
 /// ASCII state and `false` otherwise.
@@ -503,7 +559,8 @@ bool encoder_has_pending_state(ENCODING_RS_ENCODER const* encoder);
 /// given the current state of the encoder and `byte_length` number of
 /// additional input code units if there are no unmappable characters in
 /// the input or `SIZE_MAX` if `size_t` would overflow.
-size_t encoder_max_buffer_length_from_utf8_if_no_unmappables(ENCODING_RS_ENCODER const* encoder, size_t byte_length);
+size_t encoder_max_buffer_length_from_utf8_if_no_unmappables(
+    ENCODING_RS_ENCODER const* encoder, size_t byte_length);
 
 /// Query the worst-case output size when encoding from UTF-8 without
 /// replacement.
@@ -511,7 +568,8 @@ size_t encoder_max_buffer_length_from_utf8_if_no_unmappables(ENCODING_RS_ENCODER
 /// Returns the size of the output buffer in bytes that will not overflow
 /// given the current state of the encoder and `byte_length` number of
 /// additional input code units or `SIZE_MAX` if `size_t` would overflow.
-size_t encoder_max_buffer_length_from_utf8_without_replacement(ENCODING_RS_ENCODER const* encoder, size_t byte_length);
+size_t encoder_max_buffer_length_from_utf8_without_replacement(
+    ENCODING_RS_ENCODER const* encoder, size_t byte_length);
 
 /// Incrementally encode into byte stream from UTF-8 with unmappable
 /// characters replaced with HTML (decimal) numeric character references.
@@ -535,7 +593,10 @@ size_t encoder_max_buffer_length_from_utf8_without_replacement(ENCODING_RS_ENCOD
 /// designate a valid block of memory.
 ///
 /// [1]: https://docs.rs/encoding_rs/0.6.10/encoding_rs/struct.Encoder.html
-uint32_t encoder_encode_from_utf8(ENCODING_RS_ENCODER* encoder, uint8_t const* src, size_t* src_len, uint8_t* dst, size_t* dst_len, bool last, bool* had_replacements);
+uint32_t encoder_encode_from_utf8(ENCODING_RS_ENCODER* encoder,
+                                  uint8_t const* src, size_t* src_len,
+                                  uint8_t* dst, size_t* dst_len, bool last,
+                                  bool* had_replacements);
 
 /// Incrementally encode into byte stream from UTF-8 _without replacement_.
 ///
@@ -558,7 +619,9 @@ uint32_t encoder_encode_from_utf8(ENCODING_RS_ENCODER* encoder, uint8_t const* s
 /// designate a valid block of memory.
 ///
 /// [1]: https://docs.rs/encoding_rs/0.6.10/encoding_rs/struct.Encoder.html
-uint32_t encoder_encode_from_utf8_without_replacement(ENCODING_RS_ENCODER* encoder, uint8_t const* src, size_t* src_len, uint8_t* dst, size_t* dst_len, bool last);
+uint32_t encoder_encode_from_utf8_without_replacement(
+    ENCODING_RS_ENCODER* encoder, uint8_t const* src, size_t* src_len,
+    uint8_t* dst, size_t* dst_len, bool last);
 
 /// Query the worst-case output size when encoding from UTF-16 with
 /// replacement.
@@ -567,7 +630,8 @@ uint32_t encoder_encode_from_utf8_without_replacement(ENCODING_RS_ENCODER* encod
 /// given the current state of the encoder and `u16_length` number of
 /// additional input code units if there are no unmappable characters in
 /// the input or `SIZE_MAX` if `size_t` would overflow.
-size_t encoder_max_buffer_length_from_utf16_if_no_unmappables(ENCODING_RS_ENCODER const* encoder, size_t u16_length);
+size_t encoder_max_buffer_length_from_utf16_if_no_unmappables(
+    ENCODING_RS_ENCODER const* encoder, size_t u16_length);
 
 /// Query the worst-case output size when encoding from UTF-16 without
 /// replacement.
@@ -575,7 +639,8 @@ size_t encoder_max_buffer_length_from_utf16_if_no_unmappables(ENCODING_RS_ENCODE
 /// Returns the size of the output buffer in bytes that will not overflow
 /// given the current state of the encoder and `u16_length` number of
 /// additional input code units or `SIZE_MAX` if `size_t` would overflow.
-size_t encoder_max_buffer_length_from_utf16_without_replacement(ENCODING_RS_ENCODER const* encoder, size_t u16_length);
+size_t encoder_max_buffer_length_from_utf16_without_replacement(
+    ENCODING_RS_ENCODER const* encoder, size_t u16_length);
 
 /// Incrementally encode into byte stream from UTF-16 with unmappable
 /// characters replaced with HTML (decimal) numeric character references.
@@ -596,7 +661,10 @@ size_t encoder_max_buffer_length_from_utf16_without_replacement(ENCODING_RS_ENCO
 /// designate a valid block of memory.
 ///
 /// [1]: https://docs.rs/encoding_rs/0.6.10/encoding_rs/struct.Encoder.html
-uint32_t encoder_encode_from_utf16(ENCODING_RS_ENCODER* encoder, char16_t const* src, size_t* src_len, uint8_t* dst, size_t* dst_len, bool last, bool* had_replacements);
+uint32_t encoder_encode_from_utf16(ENCODING_RS_ENCODER* encoder,
+                                   char16_t const* src, size_t* src_len,
+                                   uint8_t* dst, size_t* dst_len, bool last,
+                                   bool* had_replacements);
 
 /// Incrementally encode into byte stream from UTF-16 _without replacement_.
 ///
@@ -616,13 +684,12 @@ uint32_t encoder_encode_from_utf16(ENCODING_RS_ENCODER* encoder, char16_t const*
 /// designate a valid block of memory.
 ///
 /// [1]: https://docs.rs/encoding_rs/0.6.10/encoding_rs/struct.Encoder.html
-uint32_t encoder_encode_from_utf16_without_replacement(ENCODING_RS_ENCODER* encoder, char16_t const* src, size_t* src_len, uint8_t* dst, size_t* dst_len, bool last);
-
-
+uint32_t encoder_encode_from_utf16_without_replacement(
+    ENCODING_RS_ENCODER* encoder, char16_t const* src, size_t* src_len,
+    uint8_t* dst, size_t* dst_len, bool last);
 
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif

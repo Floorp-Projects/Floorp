@@ -59,6 +59,14 @@ impl Gb18030Decoder {
         })
     }
 
+    pub fn in_neutral_state(&self) -> bool {
+        self.first.is_none()
+            && self.second.is_none()
+            && self.third.is_none()
+            && self.pending.is_none()
+            && self.pending_ascii.is_none()
+    }
+
     fn extra_from_state(&self, byte_length: usize) -> Option<usize> {
         byte_length.checked_add(
             self.pending.count()

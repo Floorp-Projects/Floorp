@@ -158,6 +158,67 @@ impl VariantDecoder {
             VariantDecoder::Utf16(ref mut v) => v.decode_to_utf8_raw(src, dst, last),
         }
     }
+
+    pub fn latin1_byte_compatible_up_to(&self, buffer: &[u8]) -> usize {
+        if let Some(n) = match *self {
+            VariantDecoder::SingleByte(ref v) => Some(v.latin1_byte_compatible_up_to(buffer)),
+            VariantDecoder::Utf8(ref v) => {
+                if v.in_neutral_state() {
+                    None
+                } else {
+                    Some(0)
+                }
+            }
+            VariantDecoder::Gb18030(ref v) => {
+                if v.in_neutral_state() {
+                    None
+                } else {
+                    Some(0)
+                }
+            }
+            VariantDecoder::Big5(ref v) => {
+                if v.in_neutral_state() {
+                    None
+                } else {
+                    Some(0)
+                }
+            }
+            VariantDecoder::EucJp(ref v) => {
+                if v.in_neutral_state() {
+                    None
+                } else {
+                    Some(0)
+                }
+            }
+            VariantDecoder::Iso2022Jp(ref v) => {
+                if v.in_neutral_state() {
+                    Some(Encoding::iso_2022_jp_ascii_valid_up_to(buffer))
+                } else {
+                    Some(0)
+                }
+            }
+            VariantDecoder::ShiftJis(ref v) => {
+                if v.in_neutral_state() {
+                    None
+                } else {
+                    Some(0)
+                }
+            }
+            VariantDecoder::EucKr(ref v) => {
+                if v.in_neutral_state() {
+                    None
+                } else {
+                    Some(0)
+                }
+            }
+            VariantDecoder::UserDefined(_) => None,
+            VariantDecoder::Replacement(_) | VariantDecoder::Utf16(_) => Some(0),
+        } {
+            n
+        } else {
+            Encoding::ascii_valid_up_to(buffer)
+        }
+    }
 }
 
 pub enum VariantEncoder {
@@ -336,9 +397,7 @@ impl VariantEncoding {
             VariantEncoding::ShiftJis => ShiftJisEncoder::new(encoding),
             VariantEncoding::EucKr => EucKrEncoder::new(encoding),
             VariantEncoding::UserDefined => UserDefinedEncoder::new(encoding),
-            VariantEncoding::Utf16Be | VariantEncoding::Replacement | VariantEncoding::Utf16Le => {
-                unreachable!()
-            }
+            VariantEncoding::Utf16Be | VariantEncoding::Replacement | VariantEncoding::Utf16Le => unreachable!(),
         }
     }
 
