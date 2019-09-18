@@ -497,11 +497,6 @@ BUILD_BASE_CONFIG_OPTIONS = [
         "type": "string",
         "dest": "branch",
         "help": "This sets the branch we will be building this for."}],
-    [['--enable-pgo'], {
-        "action": "store_true",
-        "dest": "pgo_build",
-        "default": False,
-        "help": "Sets the build to run in PGO mode"}],
     [['--enable-nightly'], {
         "action": "store_true",
         "dest": "nightly_build",
@@ -708,9 +703,6 @@ or run without that action (ie: --no-{action})"
                 env["MOZ_UPDATE_CHANNEL"] = "nightly-%s" % (self.branch,)
             self.info("Update channel set to: {}".format(env["MOZ_UPDATE_CHANNEL"]))
 
-        if self.config.get('pgo_build') or self._compile_against_pgo():
-            env['MOZ_PGO'] = '1'
-
         return env
 
     def query_mach_build_env(self, multiLocale=None):
@@ -729,20 +721,6 @@ or run without that action (ie: --no-{action})"
                 mach_env['UPLOAD_PATH'] = os.path.join(mach_env['UPLOAD_PATH'],
                                                        'en-US')
         return mach_env
-
-    def _compile_against_pgo(self):
-        """determines whether a build should be run with pgo even if it is
-        not a classified as a 'pgo build'.
-
-        requirements:
-        1) must be a platform that can run against pgo
-        2) must be a nightly build
-        """
-        c = self.config
-        if self.stage_platform in c['pgo_platforms']:
-            if self.query_is_nightly():
-                return True
-        return False
 
     def _rm_old_package(self):
         """rm the old package."""
@@ -1128,10 +1106,6 @@ or run without that action (ie: --no-{action})"
         # one-off configs for variants isn't conducive to this since derived
         # configs we need to be reset and we don't like requiring boilerplate
         # in derived configs.
-
-        # All PGO builds are shipped. This takes care of Linux and Windows.
-        if self.config.get('pgo_build'):
-            return True
 
         # Debug builds are never shipped.
         if self.config.get('debug_build'):
