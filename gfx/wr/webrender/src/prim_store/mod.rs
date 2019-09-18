@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, ClipMode, ColorF};
-use api::{ImageRendering, RepeatMode, PrimitiveFlags};
+use api::{ImageRendering, RepeatMode};
 use api::{PremultipliedColorF, PropertyBinding, Shadow, GradientStop};
 use api::{BoxShadowClipMode, LineStyle, LineOrientation, BorderStyle};
 use api::{PrimitiveKeyKind};
@@ -389,7 +389,7 @@ impl GpuCacheAddress {
 #[derive(MallocSizeOf)]
 pub struct PrimitiveSceneData {
     pub prim_size: LayoutSize,
-    pub flags: PrimitiveFlags,
+    pub is_backface_visible: bool,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -653,7 +653,7 @@ impl From<WorldPoint> for PointKey {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Debug, Clone, Eq, MallocSizeOf, PartialEq, Hash)]
 pub struct PrimKeyCommonData {
-    pub flags: PrimitiveFlags,
+    pub is_backface_visible: bool,
     pub prim_size: SizeKey,
 }
 
@@ -662,7 +662,7 @@ impl PrimKeyCommonData {
         info: &LayoutPrimitiveInfo,
     ) -> Self {
         PrimKeyCommonData {
-            flags: info.flags,
+            is_backface_visible: info.is_backface_visible,
             prim_size: info.rect.size.into(),
         }
     }
@@ -686,13 +686,13 @@ pub struct PrimitiveKey {
 
 impl PrimitiveKey {
     pub fn new(
-        flags: PrimitiveFlags,
+        is_backface_visible: bool,
         prim_size: LayoutSize,
         kind: PrimitiveKeyKind,
     ) -> Self {
         PrimitiveKey {
             common: PrimKeyCommonData {
-                flags,
+                is_backface_visible,
                 prim_size: prim_size.into(),
             },
             kind,
@@ -736,7 +736,7 @@ impl From<PrimitiveKeyKind> for PrimitiveTemplateKind {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(MallocSizeOf)]
 pub struct PrimTemplateCommonData {
-    pub flags: PrimitiveFlags,
+    pub is_backface_visible: bool,
     pub may_need_repetition: bool,
     pub prim_size: LayoutSize,
     pub opacity: PrimitiveOpacity,
@@ -750,7 +750,7 @@ pub struct PrimTemplateCommonData {
 impl PrimTemplateCommonData {
     pub fn with_key_common(common: PrimKeyCommonData) -> Self {
         PrimTemplateCommonData {
-            flags: common.flags,
+            is_backface_visible: common.is_backface_visible,
             may_need_repetition: true,
             prim_size: common.prim_size.into(),
             gpu_cache_handle: GpuCacheHandle::new(),
@@ -853,7 +853,7 @@ impl InternablePrimitive for PrimitiveKeyKind {
         info: &LayoutPrimitiveInfo,
     ) -> PrimitiveKey {
         PrimitiveKey::new(
-            info.flags,
+            info.is_backface_visible,
             info.rect.size,
             self,
         )

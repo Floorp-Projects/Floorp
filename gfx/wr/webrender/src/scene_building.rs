@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayListIter, PrimitiveFlags};
+use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayListIter};
 use api::{ClipId, ColorF, CommonItemProperties, ComplexClipRegion, ComponentTransferFuncType, RasterSpace};
 use api::{DisplayItem, DisplayItemRef, ExtendMode, ExternalScrollId, FilterData};
 use api::{FilterOp, FilterPrimitive, FontInstanceKey, GlyphInstance, GlyphOptions, GradientStop};
@@ -668,7 +668,7 @@ impl<'a> SceneBuilder<'a> {
                     ),
                     LayoutSize::zero(),
                     clip_chain_instance.spatial_node_index,
-                    PrimitiveFlags::IS_BACKFACE_VISIBLE,
+                    true,
                 );
 
                 remaining_prims.add_prim_to_start(
@@ -678,7 +678,7 @@ impl<'a> SceneBuilder<'a> {
                     ),
                     LayoutSize::zero(),
                     clip_chain_instance.spatial_node_index,
-                    PrimitiveFlags::IS_BACKFACE_VISIBLE,
+                    true,
                 );
             }
         }
@@ -688,7 +688,7 @@ impl<'a> SceneBuilder<'a> {
         // Now, create a picture with tile caching enabled that will hold all
         // of the primitives selected as belonging to the main scroll root.
         let pic_key = PictureKey::new(
-            PrimitiveFlags::IS_BACKFACE_VISIBLE,
+            true,
             LayoutSize::zero(),
             Picture {
                 composite_mode_key: PictureCompositeKey::Identity,
@@ -700,7 +700,7 @@ impl<'a> SceneBuilder<'a> {
             .intern(&pic_key, || {
                 PrimitiveSceneData {
                     prim_size: LayoutSize::zero(),
-                    flags: PrimitiveFlags::IS_BACKFACE_VISIBLE,
+                    is_backface_visible: true,
                 }
             }
             );
@@ -732,7 +732,7 @@ impl<'a> SceneBuilder<'a> {
             Picture3DContext::Out,
             None,
             true,
-            PrimitiveFlags::IS_BACKFACE_VISIBLE,
+            true,
             RasterSpace::Screen,
             prim_list,
             main_scroll_root,
@@ -758,7 +758,7 @@ impl<'a> SceneBuilder<'a> {
             instance,
             LayoutSize::zero(),
             main_scroll_root,
-            PrimitiveFlags::IS_BACKFACE_VISIBLE,
+            true,
         );
     }
 
@@ -1110,7 +1110,7 @@ impl<'a> SceneBuilder<'a> {
         let layout = LayoutPrimitiveInfo {
             rect: snap_to_device.snap_rect(&rect),
             clip_rect: snap_to_device.snap_rect(&clip_rect),
-            flags: common.flags,
+            is_backface_visible: common.is_backface_visible,
             hit_info: common.hit_info,
         };
 
@@ -1594,7 +1594,7 @@ impl<'a> SceneBuilder<'a> {
             .intern(&prim_key, || {
                 PrimitiveSceneData {
                     prim_size: info.rect.size,
-                    flags: info.flags,
+                    is_backface_visible: info.is_backface_visible,
                 }
             });
 
@@ -1659,7 +1659,7 @@ impl<'a> SceneBuilder<'a> {
         prim_instance: PrimitiveInstance,
         prim_size: LayoutSize,
         spatial_node_index: SpatialNodeIndex,
-        flags: PrimitiveFlags,
+        is_backface_visible: bool,
     ) {
         // Add primitive to the top-most stacking context on the stack.
         if prim_instance.is_chased() {
@@ -1671,7 +1671,7 @@ impl<'a> SceneBuilder<'a> {
             prim_instance,
             prim_size,
             spatial_node_index,
-            flags,
+            is_backface_visible,
         );
     }
 
@@ -1762,7 +1762,7 @@ impl<'a> SceneBuilder<'a> {
             prim_instance,
             info.rect.size,
             clip_and_scroll.spatial_node_index,
-            info.flags,
+            info.is_backface_visible,
         );
     }
 
@@ -1821,7 +1821,7 @@ impl<'a> SceneBuilder<'a> {
                     ExtendedPrimitiveInstance {
                         instance,
                         spatial_node_index: sc.spatial_node_index,
-                        flags: sc.prim_flags,
+                        is_backface_visible: sc.is_backface_visible,
                     }
                 });
                 (true, extra_instance)
@@ -1895,18 +1895,12 @@ impl<'a> SceneBuilder<'a> {
             |sc| sc.snap_to_device.clone(),
         );
 
-        let prim_flags = if is_backface_visible {
-            PrimitiveFlags::IS_BACKFACE_VISIBLE
-        } else {
-            PrimitiveFlags::empty()
-        };
-
         // Push the SC onto the stack, so we know how to handle things in
         // pop_stacking_context.
         self.sc_stack.push(FlattenedStackingContext {
             prim_list: PrimitiveList::empty(),
             pipeline_id,
-            prim_flags,
+            is_backface_visible,
             requested_raster_space,
             spatial_node_index,
             clip_chain_id,
@@ -1945,7 +1939,7 @@ impl<'a> SceneBuilder<'a> {
                             prim,
                             LayoutSize::zero(),
                             stacking_context.spatial_node_index,
-                            PrimitiveFlags::IS_BACKFACE_VISIBLE,
+                            true,
                         );
                     }
 
@@ -1967,7 +1961,7 @@ impl<'a> SceneBuilder<'a> {
                             prim,
                             LayoutSize::zero(),
                             stacking_context.spatial_node_index,
-                            PrimitiveFlags::IS_BACKFACE_VISIBLE,
+                            true,
                         );
                     }
 
@@ -2024,7 +2018,7 @@ impl<'a> SceneBuilder<'a> {
             // Now, create a picture with tile caching enabled that will hold all
             // of the primitives selected as belonging to the main scroll root.
             let pic_key = PictureKey::new(
-                PrimitiveFlags::IS_BACKFACE_VISIBLE,
+                true,
                 LayoutSize::zero(),
                 Picture {
                     composite_mode_key: PictureCompositeKey::Identity,
@@ -2036,7 +2030,7 @@ impl<'a> SceneBuilder<'a> {
                 .intern(&pic_key, || {
                     PrimitiveSceneData {
                         prim_size: LayoutSize::zero(),
-                        flags: PrimitiveFlags::IS_BACKFACE_VISIBLE,
+                        is_backface_visible: true,
                     }
                 }
                 );
@@ -2060,7 +2054,7 @@ impl<'a> SceneBuilder<'a> {
                 Picture3DContext::Out,
                 None,
                 true,
-                PrimitiveFlags::IS_BACKFACE_VISIBLE,
+                true,
                 RasterSpace::Screen,
                 stacking_context.prim_list,
                 scroll_root,
@@ -2084,7 +2078,7 @@ impl<'a> SceneBuilder<'a> {
                 instance,
                 LayoutSize::zero(),
                 scroll_root,
-                PrimitiveFlags::IS_BACKFACE_VISIBLE,
+                true,
             );
             stacking_context.prim_list = prim_list;
         }
@@ -2097,7 +2091,7 @@ impl<'a> SceneBuilder<'a> {
                 leaf_context_3d,
                 leaf_output_pipeline_id,
                 true,
-                stacking_context.prim_flags,
+                stacking_context.is_backface_visible,
                 stacking_context.requested_raster_space,
                 stacking_context.prim_list,
                 stacking_context.spatial_node_index,
@@ -2113,7 +2107,7 @@ impl<'a> SceneBuilder<'a> {
         let mut cur_instance = create_prim_instance(
             leaf_pic_index,
             leaf_composite_mode.into(),
-            stacking_context.prim_flags,
+            stacking_context.is_backface_visible,
             ClipChainId::NONE,
             &mut self.interners,
         );
@@ -2129,7 +2123,7 @@ impl<'a> SceneBuilder<'a> {
             prims.push(ExtendedPrimitiveInstance {
                 instance: cur_instance,
                 spatial_node_index: stacking_context.spatial_node_index,
-                flags: stacking_context.prim_flags,
+                is_backface_visible: stacking_context.is_backface_visible,
             });
 
             let mut prim_list = PrimitiveList::empty();
@@ -2138,7 +2132,7 @@ impl<'a> SceneBuilder<'a> {
                     ext_prim.instance,
                     LayoutSize::zero(),
                     ext_prim.spatial_node_index,
-                    ext_prim.flags,
+                    ext_prim.is_backface_visible,
                 );
             }
 
@@ -2153,7 +2147,7 @@ impl<'a> SceneBuilder<'a> {
                     },
                     stacking_context.frame_output_pipeline_id,
                     true,
-                    stacking_context.prim_flags,
+                    stacking_context.is_backface_visible,
                     stacking_context.requested_raster_space,
                     prim_list,
                     stacking_context.spatial_node_index,
@@ -2165,7 +2159,7 @@ impl<'a> SceneBuilder<'a> {
             cur_instance = create_prim_instance(
                 current_pic_index,
                 PictureCompositeKey::Identity,
-                stacking_context.prim_flags,
+                stacking_context.is_backface_visible,
                 ClipChainId::NONE,
                 &mut self.interners,
             );
@@ -2177,7 +2171,7 @@ impl<'a> SceneBuilder<'a> {
             stacking_context.composite_ops.filters,
             stacking_context.composite_ops.filter_primitives,
             stacking_context.composite_ops.filter_datas,
-            stacking_context.prim_flags,
+            stacking_context.is_backface_visible,
             stacking_context.requested_raster_space,
             stacking_context.spatial_node_index,
             true,
@@ -2206,7 +2200,7 @@ impl<'a> SceneBuilder<'a> {
                 cur_instance.clone(),
                 LayoutSize::zero(),
                 stacking_context.spatial_node_index,
-                stacking_context.prim_flags,
+                stacking_context.is_backface_visible,
             );
 
             let blend_pic_index = PictureIndex(self.prim_store.pictures
@@ -2216,7 +2210,7 @@ impl<'a> SceneBuilder<'a> {
                     Picture3DContext::Out,
                     None,
                     true,
-                    stacking_context.prim_flags,
+                    stacking_context.is_backface_visible,
                     stacking_context.requested_raster_space,
                     prim_list,
                     stacking_context.spatial_node_index,
@@ -2229,7 +2223,7 @@ impl<'a> SceneBuilder<'a> {
             cur_instance = create_prim_instance(
                 blend_pic_index,
                 composite_mode.into(),
-                stacking_context.prim_flags,
+                stacking_context.is_backface_visible,
                 ClipChainId::NONE,
                 &mut self.interners,
             );
@@ -2266,7 +2260,7 @@ impl<'a> SceneBuilder<'a> {
                     cur_instance,
                     LayoutSize::zero(),
                     stacking_context.spatial_node_index,
-                    stacking_context.prim_flags,
+                    stacking_context.is_backface_visible,
                 );
                 None
             }
@@ -2283,7 +2277,7 @@ impl<'a> SceneBuilder<'a> {
             self.add_primitive_instance_to_3d_root(ExtendedPrimitiveInstance {
                 instance,
                 spatial_node_index: stacking_context.spatial_node_index,
-                flags: stacking_context.prim_flags,
+                is_backface_visible: stacking_context.is_backface_visible,
             });
         }
 
@@ -2612,6 +2606,7 @@ impl<'a> SceneBuilder<'a> {
                         blur_filter.sanitize();
                         let composite_mode = PictureCompositeMode::Filter(blur_filter);
                         let composite_mode_key = Some(composite_mode.clone()).into();
+                        let is_backface_visible = true; //TODO: double check this
 
                         // Pass through configuration information about whether WR should
                         // do the bounding rect inflation for text shadows.
@@ -2627,7 +2622,7 @@ impl<'a> SceneBuilder<'a> {
                                 Picture3DContext::Out,
                                 None,
                                 is_passthrough,
-                                PrimitiveFlags::IS_BACKFACE_VISIBLE,
+                                is_backface_visible,
                                 raster_space,
                                 prim_list,
                                 pending_shadow.clip_and_scroll.spatial_node_index,
@@ -2637,7 +2632,7 @@ impl<'a> SceneBuilder<'a> {
                         );
 
                         let shadow_pic_key = PictureKey::new(
-                            PrimitiveFlags::IS_BACKFACE_VISIBLE,
+                            true,
                             LayoutSize::zero(),
                             Picture { composite_mode_key },
                         );
@@ -2647,7 +2642,7 @@ impl<'a> SceneBuilder<'a> {
                             .intern(&shadow_pic_key, || {
                                 PrimitiveSceneData {
                                     prim_size: LayoutSize::zero(),
-                                    flags: PrimitiveFlags::IS_BACKFACE_VISIBLE,
+                                    is_backface_visible: true,
                                 }
                             }
                         );
@@ -2669,7 +2664,7 @@ impl<'a> SceneBuilder<'a> {
                             shadow_prim_instance,
                             LayoutSize::zero(),
                             pending_shadow.clip_and_scroll.spatial_node_index,
-                            PrimitiveFlags::IS_BACKFACE_VISIBLE,
+                            true,
                         );
                     }
                 }
@@ -2747,7 +2742,7 @@ impl<'a> SceneBuilder<'a> {
             shadow_prim_instance,
             info.rect.size,
             pending_primitive.clip_and_scroll.spatial_node_index,
-            info.flags,
+            info.is_backface_visible,
         );
     }
 
@@ -3303,7 +3298,7 @@ impl<'a> SceneBuilder<'a> {
         // a clip for each stacking context.
         for stacking_context in self.sc_stack.iter().rev().take_while(|sc| !sc.is_backdrop_root) {
             let clip_chain_id = stacking_context.clip_chain_id;
-            let prim_flags = stacking_context.prim_flags;
+            let is_backface_visible = stacking_context.is_backface_visible;
             let composite_mode = None;
 
             let mut prim_list = PrimitiveList::empty();
@@ -3311,7 +3306,7 @@ impl<'a> SceneBuilder<'a> {
                 instance,
                 LayoutSize::zero(),
                 backdrop_spatial_node_index,
-                prim_flags,
+                is_backface_visible,
             );
 
             backdrop_pic_index = PictureIndex(self.prim_store.pictures
@@ -3321,7 +3316,7 @@ impl<'a> SceneBuilder<'a> {
                     Picture3DContext::Out,
                     None,
                     true,
-                    prim_flags,
+                    is_backface_visible,
                     requested_raster_space,
                     prim_list,
                     backdrop_spatial_node_index,
@@ -3335,7 +3330,7 @@ impl<'a> SceneBuilder<'a> {
             instance = create_prim_instance(
                 backdrop_pic_index,
                 composite_mode.into(),
-                prim_flags,
+                is_backface_visible,
                 clip_chain_id,
                 &mut self.interners,
             );
@@ -3347,7 +3342,7 @@ impl<'a> SceneBuilder<'a> {
             filters,
             filter_primitives,
             filter_datas,
-            info.flags,
+            info.is_backface_visible,
             requested_raster_space,
             backdrop_spatial_node_index,
             false,
@@ -3370,7 +3365,7 @@ impl<'a> SceneBuilder<'a> {
                 filters,
                 filter_primitives,
                 filter_datas,
-                info.flags,
+                info.is_backface_visible,
                 requested_raster_space,
                 backdrop_spatial_node_index,
                 false,
@@ -3392,7 +3387,7 @@ impl<'a> SceneBuilder<'a> {
                 filtered_instance,
                 LayoutSize::zero(),
                 backdrop_spatial_node_index,
-                info.flags,
+                info.is_backface_visible,
             );
     }
 
@@ -3400,7 +3395,7 @@ impl<'a> SceneBuilder<'a> {
         let mut flattened_items = None;
         let mut backdrop_root =  None;
         let mut spatial_node_index = SpatialNodeIndex::INVALID;
-        let mut prim_flags = PrimitiveFlags::default();
+        let mut is_backface_visible = true;
         for sc in self.sc_stack.iter_mut().rev() {
             // Add child contents to parent stacking context
             if let Some((_, flattened_instance)) = flattened_items.take() {
@@ -3408,7 +3403,7 @@ impl<'a> SceneBuilder<'a> {
                     flattened_instance,
                     LayoutSize::zero(),
                     spatial_node_index,
-                    prim_flags,
+                    is_backface_visible,
                 );
             }
             flattened_items = sc.cut_item_sequence(
@@ -3418,7 +3413,7 @@ impl<'a> SceneBuilder<'a> {
                 Picture3DContext::Out,
             );
             spatial_node_index = sc.spatial_node_index;
-            prim_flags = sc.prim_flags;
+            is_backface_visible = sc.is_backface_visible;
             if sc.is_backdrop_root {
                 backdrop_root = Some(sc);
                 break;
@@ -3433,7 +3428,7 @@ impl<'a> SceneBuilder<'a> {
                 instance,
                 LayoutSize::zero(),
                 spatial_node_index,
-                prim_flags,
+                is_backface_visible,
             );
 
         Some(pic_index)
@@ -3446,7 +3441,7 @@ impl<'a> SceneBuilder<'a> {
         mut filter_ops: Vec<Filter>,
         mut filter_primitives: Vec<FilterPrimitive>,
         filter_datas: Vec<FilterData>,
-        flags: PrimitiveFlags,
+        is_backface_visible: bool,
         requested_raster_space: RasterSpace,
         spatial_node_index: SpatialNodeIndex,
         inflate_if_required: bool,
@@ -3499,7 +3494,7 @@ impl<'a> SceneBuilder<'a> {
                 cur_instance.clone(),
                 LayoutSize::zero(),
                 spatial_node_index,
-                flags,
+                is_backface_visible,
             );
 
             let filter_pic_index = PictureIndex(self.prim_store.pictures
@@ -3509,7 +3504,7 @@ impl<'a> SceneBuilder<'a> {
                     Picture3DContext::Out,
                     None,
                     true,
-                    flags,
+                    is_backface_visible,
                     requested_raster_space,
                     prim_list,
                     spatial_node_index,
@@ -3524,7 +3519,7 @@ impl<'a> SceneBuilder<'a> {
             cur_instance = create_prim_instance(
                 current_pic_index,
                 composite_mode.into(),
-                flags,
+                is_backface_visible,
                 ClipChainId::NONE,
                 &mut self.interners,
             );
@@ -3570,7 +3565,7 @@ impl<'a> SceneBuilder<'a> {
                 cur_instance.clone(),
                 LayoutSize::zero(),
                 spatial_node_index,
-                flags,
+                is_backface_visible,
             );
 
             let filter_pic_index = PictureIndex(self.prim_store.pictures
@@ -3580,7 +3575,7 @@ impl<'a> SceneBuilder<'a> {
                     Picture3DContext::Out,
                     None,
                     true,
-                    flags,
+                    is_backface_visible,
                     requested_raster_space,
                     prim_list,
                     spatial_node_index,
@@ -3595,7 +3590,7 @@ impl<'a> SceneBuilder<'a> {
             cur_instance = create_prim_instance(
                 current_pic_index,
                 Some(composite_mode).into(),
-                flags,
+                is_backface_visible,
                 ClipChainId::NONE,
                 &mut self.interners,
             );
@@ -3627,7 +3622,7 @@ pub trait IsVisible {
 struct ExtendedPrimitiveInstance {
     instance: PrimitiveInstance,
     spatial_node_index: SpatialNodeIndex,
-    flags: PrimitiveFlags,
+    is_backface_visible: bool,
 }
 
 /// Properties of a stacking context that are maintained
@@ -3637,8 +3632,8 @@ struct FlattenedStackingContext {
     /// The list of primitive instances added to this stacking context.
     prim_list: PrimitiveList,
 
-    /// Primitive instance flags for compositing this stacking context
-    prim_flags: PrimitiveFlags,
+    /// Whether this stacking context is visible when backfacing
+    is_backface_visible: bool,
 
     /// Whether or not the caller wants this drawn in
     /// screen space (quality) or local space (performance)
@@ -3719,7 +3714,7 @@ impl FlattenedStackingContext {
         }
 
         // If backface visibility is explicitly set.
-        if !self.prim_flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE) {
+        if !self.is_backface_visible {
             return false;
         }
 
@@ -3761,7 +3756,7 @@ impl FlattenedStackingContext {
                 flat_items_context_3d,
                 None,
                 true,
-                self.prim_flags,
+                self.is_backface_visible,
                 self.requested_raster_space,
                 mem::replace(&mut self.prim_list, PrimitiveList::empty()),
                 self.spatial_node_index,
@@ -3773,7 +3768,7 @@ impl FlattenedStackingContext {
         let prim_instance = create_prim_instance(
             pic_index,
             composite_mode.into(),
-            self.prim_flags,
+            self.is_backface_visible,
             self.clip_chain_id,
             interners,
         );
@@ -3841,12 +3836,12 @@ impl From<PendingPrimitive<TextRun>> for ShadowItem {
 fn create_prim_instance(
     pic_index: PictureIndex,
     composite_mode_key: PictureCompositeKey,
-    flags: PrimitiveFlags,
+    is_backface_visible: bool,
     clip_chain_id: ClipChainId,
     interners: &mut Interners,
 ) -> PrimitiveInstance {
     let pic_key = PictureKey::new(
-        flags,
+        is_backface_visible,
         LayoutSize::zero(),
         Picture { composite_mode_key },
     );
@@ -3856,7 +3851,7 @@ fn create_prim_instance(
         .intern(&pic_key, || {
             PrimitiveSceneData {
                 prim_size: LayoutSize::zero(),
-                flags,
+                is_backface_visible,
             }
         }
     );

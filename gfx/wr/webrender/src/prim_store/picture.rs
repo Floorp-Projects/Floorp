@@ -4,7 +4,7 @@
 
 use api::{
     ColorU, MixBlendMode, FilterPrimitiveInput, FilterPrimitiveKind, ColorSpace,
-    PropertyBinding, PropertyBindingId, CompositeOperator, PrimitiveFlags,
+    PropertyBinding, PropertyBindingId, CompositeOperator,
 };
 use api::units::{Au, LayoutSize, LayoutVector2D};
 use crate::scene_building::IsVisible;
@@ -239,14 +239,14 @@ pub type PictureKey = PrimKey<Picture>;
 
 impl PictureKey {
     pub fn new(
-        flags: PrimitiveFlags,
+        is_backface_visible: bool,
         prim_size: LayoutSize,
         pic: Picture,
     ) -> Self {
 
         PictureKey {
             common: PrimKeyCommonData {
-                flags,
+                is_backface_visible,
                 prim_size: prim_size.into(),
             },
             kind: pic,
@@ -288,7 +288,7 @@ impl InternablePrimitive for Picture {
         info: &LayoutPrimitiveInfo,
     ) -> PictureKey {
         PictureKey::new(
-            info.flags,
+            info.is_backface_visible,
             info.rect.size,
             self,
         )

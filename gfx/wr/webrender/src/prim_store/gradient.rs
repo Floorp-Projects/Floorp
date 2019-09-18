@@ -4,7 +4,7 @@
 
 use api::{
     ColorF, ColorU, ExtendMode, GradientStop,
-    PremultipliedColorF, LineOrientation, PrimitiveFlags,
+    PremultipliedColorF, LineOrientation,
 };
 use api::units::{LayoutPoint, LayoutSize, LayoutVector2D};
 use crate::scene_building::IsVisible;
@@ -78,13 +78,13 @@ pub struct LinearGradientKey {
 
 impl LinearGradientKey {
     pub fn new(
-        flags: PrimitiveFlags,
+        is_backface_visible: bool,
         prim_size: LayoutSize,
         linear_grad: LinearGradient,
     ) -> Self {
         LinearGradientKey {
             common: PrimKeyCommonData {
-                flags,
+                is_backface_visible,
                 prim_size: prim_size.into(),
             },
             extend_mode: linear_grad.extend_mode,
@@ -308,7 +308,7 @@ impl InternablePrimitive for LinearGradient {
         info: &LayoutPrimitiveInfo,
     ) -> LinearGradientKey {
         LinearGradientKey::new(
-            info.flags,
+            info.is_backface_visible,
             info.rect.size,
             self
         )
@@ -384,13 +384,13 @@ pub struct RadialGradientKey {
 
 impl RadialGradientKey {
     pub fn new(
-        flags: PrimitiveFlags,
+        is_backface_visible: bool,
         prim_size: LayoutSize,
         radial_grad: RadialGradient,
     ) -> Self {
         RadialGradientKey {
             common: PrimKeyCommonData {
-                flags,
+                is_backface_visible,
                 prim_size: prim_size.into(),
             },
             extend_mode: radial_grad.extend_mode,
@@ -538,7 +538,7 @@ impl InternablePrimitive for RadialGradient {
         info: &LayoutPrimitiveInfo,
     ) -> RadialGradientKey {
         RadialGradientKey::new(
-            info.flags,
+            info.is_backface_visible,
             info.rect.size,
             self,
         )
