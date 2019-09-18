@@ -14450,9 +14450,13 @@ bool Document::InlineScriptAllowedByCSP() {
 }
 
 // Some use-counter sanity-checking.
-static_assert(size_t(eUseCounter_Count) -
+static_assert(size_t(eUseCounter_EndCSSProperties) -
                       size_t(eUseCounter_FirstCSSProperty) ==
                   size_t(eCSSProperty_COUNT_with_aliases),
+              "");
+static_assert(size_t(eUseCounter_Count) -
+                      size_t(eUseCounter_FirstCountedUnknownProperty) ==
+                  size_t(CountedUnknownProperty::Count),
               "");
 static_assert(size_t(eUseCounter_Count) * 2 ==
                   size_t(Telemetry::HistogramUseCounterCount),
@@ -14486,6 +14490,13 @@ void Document::SetCssUseCounterBits() {
     auto id = nsCSSPropertyID(i);
     if (Servo_IsPropertyIdRecordedInUseCounter(mStyleUseCounters.get(), id)) {
       SetUseCounter(nsCSSProps::UseCounterFor(id));
+    }
+  }
+
+  for (size_t i = 0; i < size_t(CountedUnknownProperty::Count); ++i) {
+    if (Servo_IsUnknownPropertyRecordedInUseCounter(
+          mStyleUseCounters.get(), CountedUnknownProperty(i))) {
+      SetUseCounter(UseCounter(eUseCounter_FirstCountedUnknownProperty + i));
     }
   }
 }
