@@ -7642,6 +7642,9 @@ class Cursor final : public PBackgroundIDBCursorParent {
       const CursorRequestParams& aParams) override;
 
   bool IsLocaleAware() const { return !mLocale.IsEmpty(); }
+
+  void SetOptionalKeyRange(const Maybe<SerializedKeyRange>& aOptionalKeyRange,
+                           bool* aOpen);
 };
 
 class Cursor::CursorOpBase : public TransactionDatabaseOperationBase {
@@ -7690,8 +7693,6 @@ class Cursor::OpenOp final : public Cursor::CursorOpBase {
 
   // Reference counted.
   ~OpenOp() override = default;
-
-  void GetRangeKeyInfo(bool aLowerBound, Key* aKey, bool* aOpen);
 
   // Should be called on the connection thread.
   void PrepareKeyConditionClauses(const nsACString& aKeyString,
@@ -25702,37 +25703,31 @@ nsresult Cursor::CursorOpBase::PopulateResponseFromStatement(
   return NS_OK;
 }
 
-void Cursor::OpenOp::GetRangeKeyInfo(bool aLowerBound, Key* aKey, bool* aOpen) {
-  AssertIsOnConnectionThread();
-  MOZ_ASSERT(aKey);
-  MOZ_ASSERT(aKey->IsUnset());
+void Cursor::SetOptionalKeyRange(
+    const Maybe<SerializedKeyRange>& aOptionalKeyRange, bool* const aOpen) {
+  MOZ_ASSERT(mRangeKey.IsUnset());
   MOZ_ASSERT(aOpen);
 
-  if (mOptionalKeyRange.isSome()) {
-    ErrorResult rv;
-    const SerializedKeyRange& range = mOptionalKeyRange.ref();
-    if (range.isOnly()) {
-      *aKey = range.lower();
-      *aOpen = false;
-      if (mCursor->IsLocaleAware()) {
-        Unused << range.lower().ToLocaleBasedKey(*aKey, mCursor->mLocale, rv);
+  if (aOptionalKeyRange.isSome()) {
+    const SerializedKeyRange& range = aOptionalKeyRange.ref();
+
+    const bool lowerBound = !IsIncreasingOrder(mDirection);
+    *aOpen =
+        !range.isOnly() && (lowerBound ? range.lowerOpen() : range.upperOpen());
+
+    const auto& bound =
+        (range.isOnly() || lowerBound) ? range.lower() : range.upper();
+    if (IsLocaleAware()) {
+      ErrorResult rv;
+      Unused << bound.ToLocaleBasedKey(mRangeKey, mLocale, rv);
+
+      // XXX Explain why the error is ignored here (If it's impossible, then we
+      //     should change this to an assertion.)
+      if (rv.Failed()) {
+        rv.SuppressException();
       }
     } else {
-      *aKey = aLowerBound ? range.lower() : range.upper();
-      *aOpen = aLowerBound ? range.lowerOpen() : range.upperOpen();
-      if (mCursor->IsLocaleAware()) {
-        if (aLowerBound) {
-          Unused << range.lower().ToLocaleBasedKey(*aKey, mCursor->mLocale, rv);
-        } else {
-          Unused << range.upper().ToLocaleBasedKey(*aKey, mCursor->mLocale, rv);
-        }
-      }
-    }
-
-    // XXX Explain why the error is ignored here (If it's impossible, then we
-    //     should change this to an assertion.)
-    if (rv.Failed()) {
-      rv.SuppressException();
+      mRangeKey = bound;
     }
   } else {
     *aOpen = false;
@@ -25752,16 +25747,14 @@ void Cursor::OpenOp::PrepareKeyConditionClauses(
                         !isIncreasingOrder, true, continueToKeyRangeClause);
 
   {
-    Key bound;
     bool open;
-    GetRangeKeyInfo(!isIncreasingOrder, &bound, &open);
+    mCursor->SetOptionalKeyRange(mOptionalKeyRange, &open);
 
-    if (mOptionalKeyRange.isSome() && !bound.IsUnset()) {
+    if (mOptionalKeyRange.isSome() && !mCursor->mRangeKey.IsUnset()) {
       AppendConditionClause(aKeyString, kStmtParamNameRangeKey,
                             isIncreasingOrder, !open, keyRangeClause);
       AppendConditionClause(aKeyString, kStmtParamNameRangeKey,
                             isIncreasingOrder, !open, continueToKeyRangeClause);
-      mCursor->mRangeKey = std::move(bound);
     }
   }
 
@@ -25778,13 +25771,11 @@ void Cursor::OpenOp::PrepareIndexKeyConditionClause(
   const bool isIncreasingOrder = IsIncreasingOrder(mCursor->mDirection);
 
   {
-    Key bound;
     bool open;
-    GetRangeKeyInfo(!isIncreasingOrder, &bound, &open);
-    if (mOptionalKeyRange.isSome() && !bound.IsUnset()) {
+    mCursor->SetOptionalKeyRange(mOptionalKeyRange, &open);
+    if (mOptionalKeyRange.isSome() && !mCursor->mRangeKey.IsUnset()) {
       AppendConditionClause(aSortColumn, kStmtParamNameRangeKey,
                             isIncreasingOrder, !open, aQueryStart);
-      mCursor->mRangeKey = std::move(bound);
     }
   }
 
