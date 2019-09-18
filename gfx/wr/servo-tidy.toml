@@ -9,7 +9,6 @@ packages = [
     "crossbeam-utils",
     "gl_generator",
     "lazy_static",
-    "nix",
     "percent-encoding",
     "rand",
     "rand_core",
