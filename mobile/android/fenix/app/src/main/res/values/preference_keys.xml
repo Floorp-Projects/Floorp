@@ -96,6 +96,10 @@
     <string name="pref_key_tracking_protection_standard" translatable="false">pref_key_tracking_protection_standard</string>
     <string name="pref_key_tracking_protection_strict" translatable="false">pref_key_tracking_protection_strict</string>
     <string name="pref_key_tracking_protection_onboarding" translatable="false">pref_key_tracking_protection_onboarding</string>
+
+    <!-- Privacy Settings -->
+    <string name="pref_key_launch_links_in_private_mode" translatable="false">pref_key_launch_links_in_private_mode</string>
+
     <!-- Quick Action Sheet -->
     <string name="pref_key_bounce_quick_action" translatable="false">pref_key_bounce_quick_action</string>
     <string name="pref_key_reader_mode_notification" translatable="false">pref_key_reader_mode_notification</string>

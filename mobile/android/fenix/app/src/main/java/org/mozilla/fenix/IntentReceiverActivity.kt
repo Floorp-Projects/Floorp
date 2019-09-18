@@ -8,6 +8,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.speech.RecognizerIntent
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import org.mozilla.fenix.components.metrics.Event
@@ -17,6 +18,7 @@ import org.mozilla.fenix.customtabs.CustomTabActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
+import org.mozilla.fenix.utils.Settings
 
 class IntentReceiverActivity : Activity() {
 
@@ -25,6 +27,7 @@ class IntentReceiverActivity : Activity() {
     private var previousIntent: Intent? = null
 
     @Suppress("ComplexMethod")
+    @VisibleForTesting
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -39,9 +42,12 @@ class IntentReceiverActivity : Activity() {
             // the HomeActivity.
             val intent = intent?.let { Intent(intent) } ?: Intent()
 
+            val intentProcessor = if (Settings.getInstance(applicationContext).alwaysOpenInPrivateMode)
+                components.intentProcessors.privateIntentProcessor else components.intentProcessors.intentProcessor
+
             val intentProcessors = listOf(
                 components.intentProcessors.customTabIntentProcessor,
-                components.intentProcessors.intentProcessor
+                intentProcessor
             )
 
             if (intent.getBooleanExtra(SPEECH_PROCESSING, false)) {

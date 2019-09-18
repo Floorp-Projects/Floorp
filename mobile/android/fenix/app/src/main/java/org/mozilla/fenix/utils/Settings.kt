@@ -80,6 +80,11 @@ class Settings private constructor(
         default = false
     )
 
+    var alwaysOpenInPrivateMode by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_launch_links_in_private_mode),
+        default = false
+    )
+
     var defaultSearchEngineName by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_search_engine),
         default = ""

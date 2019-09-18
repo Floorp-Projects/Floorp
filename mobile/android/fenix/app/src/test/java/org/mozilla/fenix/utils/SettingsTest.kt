@@ -56,6 +56,25 @@ class SettingsTest {
     }
 
     @Test
+    fun alwaysOpenInPrivateMode() {
+        // When just created
+        // Then
+        assertFalse(settings.alwaysOpenInPrivateMode)
+
+        // When
+        settings.alwaysOpenInPrivateMode = true
+
+        // Then
+        assertTrue(settings.alwaysOpenInPrivateMode)
+
+        // When
+        settings.alwaysOpenInPrivateMode = false
+
+        // Then
+        assertFalse(settings.usePrivateMode)
+    }
+
+    @Test
     fun clearDataOnQuit() {
         // When just created
         // Then
