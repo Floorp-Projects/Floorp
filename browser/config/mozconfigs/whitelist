@@ -30,12 +30,9 @@ for platform in all_platforms:
         'ac_add_options --enable-official-branding',
         'export BUILDING_RELEASE=1',
     ]
-whitelist['release']['win32'] += ['export MOZ_PGO=1']
-whitelist['release']['win64'] += ['export MOZ_PGO=1']
 
 whitelist['release']['linux32'] += [
     'export MOZILLA_OFFICIAL=1',
-    'export MOZ_PGO=1',
 ]
 whitelist['release']['linux64'] += [
     'export MOZILLA_OFFICIAL=1',
