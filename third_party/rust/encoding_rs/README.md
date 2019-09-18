@@ -417,6 +417,14 @@ To regenerate the generated code:
 
 ## Release Notes
 
+### 0.8.20
+
+* Make `Decoder::latin1_byte_compatible_up_to` return `None` in more
+  cases to make the method actually useful. While this could be argued
+  to be a breaking change due to the bug fix changing semantics, it does
+  not break callers that had to handle the `None` case in a reasonable
+  way anyway.
+
 ### 0.8.19
 
 * Removed a bunch of bound checks in `convert_str_to_utf16`.

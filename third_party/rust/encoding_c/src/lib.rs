@@ -911,15 +911,13 @@ pub unsafe extern "C" fn decoder_decode_to_utf16_without_replacement(
 /// Checks for compatibility with storing Unicode scalar values as unsigned
 /// bytes taking into account the state of the decoder.
 ///
-/// Returns `SIZE_MAX` if the decoder is still waiting for (parts of) a potential
-/// BOM.
+/// Returns `SIZE_MAX` if the decoder is not in a neutral state, including waiting
+/// for the BOM or if the encoding is never Latin-byte-compatible.
 ///
 /// Otherwise returns the index of the first byte whose unsigned value doesn't
 /// directly correspond to the decoded Unicode scalar value, or the length
 /// of the input if all bytes in the input decode directly to scalar values
-/// corresponding to the unsigned byte values. (This is always returns zero
-/// for UTF-16LE, UTF-16BE, and replacement. It's also zero when a multibyte
-/// decoder is in the middle of a multibyte sequence.)
+/// corresponding to the unsigned byte values.
 ///
 /// Does not change the state of the decoder.
 ///

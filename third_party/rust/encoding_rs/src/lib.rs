@@ -11,7 +11,7 @@
     feature = "cargo-clippy",
     allow(doc_markdown, inline_always, new_ret_no_self)
 )]
-#![doc(html_root_url = "https://docs.rs/encoding_rs/0.8.19")]
+#![doc(html_root_url = "https://docs.rs/encoding_rs/0.8.20")]
 
 //! encoding_rs is a Gecko-oriented Free Software / Open Source implementation
 //! of the [Encoding Standard](https://encoding.spec.whatwg.org/) in Rust.
@@ -4212,15 +4212,13 @@ impl Decoder {
     /// Checks for compatibility with storing Unicode scalar values as unsigned
     /// bytes taking into account the state of the decoder.
     ///
-    /// Returns `None` if the decoder is still waiting for (parts of) a potential
-    /// BOM.
+    /// Returns `None` if the decoder is not in a neutral state, including waiting
+    /// for the BOM or if the encoding is never Latin-byte-compatible.
     ///
     /// Otherwise returns the index of the first byte whose unsigned value doesn't
     /// directly correspond to the decoded Unicode scalar value, or the length
     /// of the input if all bytes in the input decode directly to scalar values
-    /// corresponding to the unsigned byte values. (This is always returns zero
-    /// for UTF-16LE, UTF-16BE, and replacement. It's also zero when a multibyte
-    /// decoder is in the middle of a multibyte sequence.)
+    /// corresponding to the unsigned byte values.
     ///
     /// Does not change the state of the decoder.
     ///
@@ -4230,7 +4228,9 @@ impl Decoder {
     /// Available via the C wrapper.
     pub fn latin1_byte_compatible_up_to(&self, bytes: &[u8]) -> Option<usize> {
         match self.life_cycle {
-            DecoderLifeCycle::Converting => Some(self.variant.latin1_byte_compatible_up_to(bytes)),
+            DecoderLifeCycle::Converting => {
+                return self.variant.latin1_byte_compatible_up_to(bytes);
+            }
             DecoderLifeCycle::Finished => panic!("Must not use a decoder that has finished."),
             _ => None,
         }
@@ -5760,13 +5760,10 @@ mod tests {
                 .unwrap(),
             1
         );
-        assert_eq!(
-            REPLACEMENT
-                .new_decoder_without_bom_handling()
-                .latin1_byte_compatible_up_to(buffer)
-                .unwrap(),
-            0
-        );
+        assert!(REPLACEMENT
+            .new_decoder_without_bom_handling()
+            .latin1_byte_compatible_up_to(buffer)
+            .is_none());
         assert_eq!(
             SHIFT_JIS
                 .new_decoder_without_bom_handling()
@@ -5781,20 +5778,14 @@ mod tests {
                 .unwrap(),
             1
         );
-        assert_eq!(
-            UTF_16BE
-                .new_decoder_without_bom_handling()
-                .latin1_byte_compatible_up_to(buffer)
-                .unwrap(),
-            0
-        );
-        assert_eq!(
-            UTF_16LE
-                .new_decoder_without_bom_handling()
-                .latin1_byte_compatible_up_to(buffer)
-                .unwrap(),
-            0
-        );
+        assert!(UTF_16BE
+            .new_decoder_without_bom_handling()
+            .latin1_byte_compatible_up_to(buffer)
+            .is_none());
+        assert!(UTF_16LE
+            .new_decoder_without_bom_handling()
+            .latin1_byte_compatible_up_to(buffer)
+            .is_none());
         assert_eq!(
             ISO_2022_JP
                 .new_decoder_without_bom_handling()
@@ -6019,6 +6010,6 @@ mod tests {
         let _ = decoder.decode_to_utf16(b"\xBB\xBF", &mut output, false);
         assert_eq!(decoder.latin1_byte_compatible_up_to(buffer), Some(1));
         let _ = decoder.decode_to_utf16(b"\xEF", &mut output, false);
-        assert_eq!(decoder.latin1_byte_compatible_up_to(buffer), Some(0));
+        assert_eq!(decoder.latin1_byte_compatible_up_to(buffer), None);
     }
 }

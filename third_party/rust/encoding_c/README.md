@@ -38,6 +38,10 @@ wrappers.
 
 ## Release Notes
 
+### 0.9.5
+
+* Adjust documentation for encoding_rs 0.8.20.
+
 ### 0.9.4
 
 * Fix bogus C header.

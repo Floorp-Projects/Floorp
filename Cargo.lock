@@ -956,10 +956,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "encoding_c"
-version = "0.9.4"
+version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "encoding_rs 0.8.19 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding_rs 0.8.20 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -967,21 +967,21 @@ name = "encoding_c_mem"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "encoding_rs 0.8.19 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding_rs 0.8.20 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "encoding_glue"
 version = "0.1.0"
 dependencies = [
- "encoding_rs 0.8.19 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding_rs 0.8.20 (registry+https://github.com/rust-lang/crates.io-index)",
  "nserror 0.1.0",
  "nsstring 0.1.0",
 ]
 
 [[package]]
 name = "encoding_rs"
-version = "0.8.19"
+version = "0.8.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cfg-if 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1487,7 +1487,7 @@ name = "jsrust_shared"
 version = "0.1.0"
 dependencies = [
  "baldrdash 0.1.0",
- "encoding_c 0.9.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding_c 0.9.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "encoding_c_mem 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "mozilla-central-workspace-hack 0.1.0",
 ]
@@ -1990,7 +1990,7 @@ name = "nsstring"
 version = "0.1.0"
 dependencies = [
  "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "encoding_rs 0.8.19 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding_rs 0.8.20 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -2739,7 +2739,7 @@ name = "shift_or_euc"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "encoding_rs 0.8.19 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding_rs 0.8.20 (registry+https://github.com/rust-lang/crates.io-index)",
  "memchr 2.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -2748,7 +2748,7 @@ name = "shift_or_euc_c"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "encoding_rs 0.8.19 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding_rs 0.8.20 (registry+https://github.com/rust-lang/crates.io-index)",
  "shift_or_euc 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -3818,9 +3818,9 @@ dependencies = [
 "checksum dtoa-short 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "068d4026697c1a18f0b0bb8cfcad1b0c151b90d8edb9bf4c235ad68128920d1d"
 "checksum dwrote 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "0bd1369e02db5e9b842a9b67bce8a2fcc043beafb2ae8a799dd482d46ea1ff0d"
 "checksum either 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "18785c1ba806c258137c937e44ada9ee7e69a37e3c72077542cd2f069d78562a"
-"checksum encoding_c 0.9.4 (registry+https://github.com/rust-lang/crates.io-index)" = "a388c1f7db016b361d6dc2ce8d1f979db686ea934073550f0f7b3583456e44f0"
+"checksum encoding_c 0.9.5 (registry+https://github.com/rust-lang/crates.io-index)" = "496d019370fbe1b5b2c4e9ade3d644ffa8ae3a0d9097c4aec2bc7636d47d8304"
 "checksum encoding_c_mem 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)" = "af4f65ffc57f1abd3d901cf5a2bc88230d7c2a0f9ae5f93d9908eb98ee3b733c"
-"checksum encoding_rs 0.8.19 (registry+https://github.com/rust-lang/crates.io-index)" = "79906e1ad1f7f8bc48864fcc6ffd58336fb5992e627bf61928099cb25fdf4314"
+"checksum encoding_rs 0.8.20 (registry+https://github.com/rust-lang/crates.io-index)" = "87240518927716f79692c2ed85bfe6e98196d18c6401ec75355760233a7e12e9"
 "checksum env_logger 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "aafcde04e90a5226a6443b7aabdb016ba2f8307c847d524724bd9b346dd1a2d3"
 "checksum error-chain 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ff511d5dc435d703f4971bc399647c9bc38e20cb41452e3b9feb4765419ed3f3"
 "checksum euclid 0.20.0 (registry+https://github.com/rust-lang/crates.io-index)" = "2c4786521fec183792e755bf32cd0188e4e7628c6d0fcfd51426435b9081a106"
