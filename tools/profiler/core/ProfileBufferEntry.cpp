@@ -740,6 +740,8 @@ class EntryGetter {
     }
   }
 
+  BlocksRingBuffer::BlockIterator Iterator() const { return mBlockIt; }
+
   ProfileBuffer::BlockIndex CurBlockIndex() const {
     return mBlockIt.CurrentBlockIndex();
   }
@@ -965,6 +967,155 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
 
       ProfileSample sample;
 
+      auto ReadStack = [&](EntryGetter& e, uint64_t entryPosition) {
+        UniqueStacks::StackKey stack =
+            aUniqueStacks.BeginStack(UniqueStacks::FrameKey("(root)"));
+
+        int numFrames = 0;
+        while (e.Has()) {
+          if (e.Get().IsNativeLeafAddr()) {
+            numFrames++;
+
+            void* pc = e.Get().GetPtr();
+            e.Next();
+
+            nsCString buf;
+
+            if (!aUniqueStacks.mCodeAddressService ||
+                !aUniqueStacks.mCodeAddressService->GetFunction(pc, buf) ||
+                buf.IsEmpty()) {
+              // Bug 753041: We need a double cast here to tell GCC that we
+              // don't want to sign extend 32-bit addresses starting with
+              // 0xFXXXXXX.
+              unsigned long long pcULL = (unsigned long long)(uintptr_t)pc;
+              buf.AppendPrintf("0x%llx", pcULL);
+            }
+
+            stack = aUniqueStacks.AppendFrame(
+                stack, UniqueStacks::FrameKey(buf.get()));
+
+          } else if (e.Get().IsLabel()) {
+            numFrames++;
+
+            const char* label = e.Get().GetString();
+            e.Next();
+
+            using FrameFlags = js::ProfilingStackFrame::Flags;
+            uint32_t frameFlags = 0;
+            if (e.Has() && e.Get().IsFrameFlags()) {
+              frameFlags = uint32_t(e.Get().GetUint64());
+              e.Next();
+            }
+
+            bool relevantForJS =
+                frameFlags & uint32_t(FrameFlags::RELEVANT_FOR_JS);
+
+            // Copy potential dynamic string fragments into dynStrBuf, so that
+            // dynStrBuf will then contain the entire dynamic string.
+            size_t i = 0;
+            dynStrBuf[0] = '\0';
+            while (e.Has()) {
+              if (e.Get().IsDynamicStringFragment()) {
+                char chars[ProfileBufferEntry::kNumChars];
+                e.Get().CopyCharsInto(chars);
+                for (char c : chars) {
+                  if (i < kMaxFrameKeyLength) {
+                    dynStrBuf[i] = c;
+                    i++;
+                  }
+                }
+                e.Next();
+              } else {
+                break;
+              }
+            }
+            dynStrBuf[kMaxFrameKeyLength - 1] = '\0';
+            bool hasDynamicString = (i != 0);
+
+            nsCString frameLabel;
+            if (label[0] != '\0' && hasDynamicString) {
+              if (frameFlags & uint32_t(FrameFlags::STRING_TEMPLATE_METHOD)) {
+                frameLabel.AppendPrintf("%s.%s", label, dynStrBuf.get());
+              } else if (frameFlags &
+                         uint32_t(FrameFlags::STRING_TEMPLATE_GETTER)) {
+                frameLabel.AppendPrintf("get %s.%s", label, dynStrBuf.get());
+              } else if (frameFlags &
+                         uint32_t(FrameFlags::STRING_TEMPLATE_SETTER)) {
+                frameLabel.AppendPrintf("set %s.%s", label, dynStrBuf.get());
+              } else {
+                frameLabel.AppendPrintf("%s %s", label, dynStrBuf.get());
+              }
+            } else if (hasDynamicString) {
+              frameLabel.Append(dynStrBuf.get());
+            } else {
+              frameLabel.Append(label);
+            }
+
+            Maybe<unsigned> line;
+            if (e.Has() && e.Get().IsLineNumber()) {
+              line = Some(unsigned(e.Get().GetInt()));
+              e.Next();
+            }
+
+            Maybe<unsigned> column;
+            if (e.Has() && e.Get().IsColumnNumber()) {
+              column = Some(unsigned(e.Get().GetInt()));
+              e.Next();
+            }
+
+            Maybe<JS::ProfilingCategoryPair> categoryPair;
+            if (e.Has() && e.Get().IsCategoryPair()) {
+              categoryPair =
+                  Some(JS::ProfilingCategoryPair(uint32_t(e.Get().GetInt())));
+              e.Next();
+            }
+
+            stack = aUniqueStacks.AppendFrame(
+                stack,
+                UniqueStacks::FrameKey(std::move(frameLabel), relevantForJS,
+                                       line, column, categoryPair));
+
+          } else if (e.Get().IsJitReturnAddr()) {
+            numFrames++;
+
+            // A JIT frame may expand to multiple frames due to inlining.
+            void* pc = e.Get().GetPtr();
+            const Maybe<Vector<UniqueStacks::FrameKey>>& frameKeys =
+                aUniqueStacks.LookupFramesForJITAddressFromBufferPos(
+                    pc, entryPosition ? entryPosition : e.CurPos());
+            MOZ_RELEASE_ASSERT(
+                frameKeys,
+                "Attempting to stream samples for a buffer range "
+                "for which we don't have JITFrameInfo?");
+            for (const UniqueStacks::FrameKey& frameKey : *frameKeys) {
+              stack = aUniqueStacks.AppendFrame(stack, frameKey);
+            }
+
+            e.Next();
+
+          } else {
+            break;
+          }
+        }
+
+        if (numFrames == 0) {
+          // It is possible to have empty stacks if native stackwalking is
+          // disabled. Skip samples with empty stacks. (See Bug 1497985).
+          // Thus, don't use ERROR_AND_CONTINUE, but just continue by returning
+          // from this lambda.
+          return;
+        }
+
+        sample.mStack = aUniqueStacks.GetOrAddStackIndex(stack);
+
+        if (e.Has() && e.Get().IsResponsiveness()) {
+          sample.mResponsiveness = Some(e.Get().GetDouble());
+          e.Next();
+        }
+
+        WriteSample(aWriter, *aUniqueStacks.mUniqueStrings, sample);
+      };  // End of `ReadStack(EntryGetter&)` lambda.
+
       if (e.Has() && e.Get().IsTime()) {
         sample.mTime = e.Get().GetDouble();
         e.Next();
@@ -973,153 +1124,51 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
         if (sample.mTime < aSinceTime) {
           continue;
         }
+
+        ReadStack(e, 0);
+      } else if (e.Has() && e.Get().IsTimeBeforeCompactStack()) {
+        sample.mTime = e.Get().GetDouble();
+
+        // Ignore samples that are too old.
+        if (sample.mTime < aSinceTime) {
+          e.Next();
+          continue;
+        }
+
+        BlocksRingBuffer::BlockIterator it = e.Iterator();
+        for (;;) {
+          ++it;
+          if (it.IsAtEnd()) {
+            break;
+          }
+          BlocksRingBuffer::EntryReader er = *it;
+          ProfileBufferEntry::Kind kind =
+              er.ReadObject<ProfileBufferEntry::Kind>();
+          if (kind == ProfileBufferEntry::Kind::CompactStack) {
+            BlocksRingBuffer tempBuffer(
+                BlocksRingBuffer::ThreadSafety::WithoutMutex,
+                mWorkerBuffer.get(), WorkerBufferBytes);
+            er.ReadIntoObject(tempBuffer);
+            tempBuffer.Read([&](BlocksRingBuffer::Reader* aReader) {
+              MOZ_ASSERT(aReader,
+                         "Local BlocksRingBuffer cannot be out-of-session");
+              EntryGetter stackEntryGetter(*aReader);
+              if (stackEntryGetter.Has()) {
+                ReadStack(stackEntryGetter,
+                          er.CurrentBlockIndex().ConvertToU64());
+              }
+            });
+            break;
+          }
+          MOZ_ASSERT(kind >= ProfileBufferEntry::Kind::LEGACY_LIMIT,
+                     "There should be no legacy entries between "
+                     "TimeBeforeCompactStack and CompactStack");
+        }
+
+        e.Next();
       } else {
         ERROR_AND_CONTINUE("expected a Time entry");
       }
-
-      UniqueStacks::StackKey stack =
-          aUniqueStacks.BeginStack(UniqueStacks::FrameKey("(root)"));
-
-      int numFrames = 0;
-      while (e.Has()) {
-        if (e.Get().IsNativeLeafAddr()) {
-          numFrames++;
-
-          void* pc = e.Get().GetPtr();
-          e.Next();
-
-          nsCString buf;
-
-          if (!aUniqueStacks.mCodeAddressService ||
-              !aUniqueStacks.mCodeAddressService->GetFunction(pc, buf) ||
-              buf.IsEmpty()) {
-            // Bug 753041: We need a double cast here to tell GCC that we don't
-            // want to sign extend 32-bit addresses starting with 0xFXXXXXX.
-            unsigned long long pcULL = (unsigned long long)(uintptr_t)pc;
-            buf.AppendPrintf("0x%llx", pcULL);
-          }
-
-          stack = aUniqueStacks.AppendFrame(stack,
-                                            UniqueStacks::FrameKey(buf.get()));
-
-        } else if (e.Get().IsLabel()) {
-          numFrames++;
-
-          const char* label = e.Get().GetString();
-          e.Next();
-
-          using FrameFlags = js::ProfilingStackFrame::Flags;
-          uint32_t frameFlags = 0;
-          if (e.Has() && e.Get().IsFrameFlags()) {
-            frameFlags = uint32_t(e.Get().GetUint64());
-            e.Next();
-          }
-
-          bool relevantForJS =
-              frameFlags & uint32_t(FrameFlags::RELEVANT_FOR_JS);
-
-          // Copy potential dynamic string fragments into dynStrBuf, so that
-          // dynStrBuf will then contain the entire dynamic string.
-          size_t i = 0;
-          dynStrBuf[0] = '\0';
-          while (e.Has()) {
-            if (e.Get().IsDynamicStringFragment()) {
-              char chars[ProfileBufferEntry::kNumChars];
-              e.Get().CopyCharsInto(chars);
-              for (char c : chars) {
-                if (i < kMaxFrameKeyLength) {
-                  dynStrBuf[i] = c;
-                  i++;
-                }
-              }
-              e.Next();
-            } else {
-              break;
-            }
-          }
-          dynStrBuf[kMaxFrameKeyLength - 1] = '\0';
-          bool hasDynamicString = (i != 0);
-
-          nsCString frameLabel;
-          if (label[0] != '\0' && hasDynamicString) {
-            if (frameFlags & uint32_t(FrameFlags::STRING_TEMPLATE_METHOD)) {
-              frameLabel.AppendPrintf("%s.%s", label, dynStrBuf.get());
-            } else if (frameFlags &
-                       uint32_t(FrameFlags::STRING_TEMPLATE_GETTER)) {
-              frameLabel.AppendPrintf("get %s.%s", label, dynStrBuf.get());
-            } else if (frameFlags &
-                       uint32_t(FrameFlags::STRING_TEMPLATE_SETTER)) {
-              frameLabel.AppendPrintf("set %s.%s", label, dynStrBuf.get());
-            } else {
-              frameLabel.AppendPrintf("%s %s", label, dynStrBuf.get());
-            }
-          } else if (hasDynamicString) {
-            frameLabel.Append(dynStrBuf.get());
-          } else {
-            frameLabel.Append(label);
-          }
-
-          Maybe<unsigned> line;
-          if (e.Has() && e.Get().IsLineNumber()) {
-            line = Some(unsigned(e.Get().GetInt()));
-            e.Next();
-          }
-
-          Maybe<unsigned> column;
-          if (e.Has() && e.Get().IsColumnNumber()) {
-            column = Some(unsigned(e.Get().GetInt()));
-            e.Next();
-          }
-
-          Maybe<JS::ProfilingCategoryPair> categoryPair;
-          if (e.Has() && e.Get().IsCategoryPair()) {
-            categoryPair =
-                Some(JS::ProfilingCategoryPair(uint32_t(e.Get().GetInt())));
-            e.Next();
-          }
-
-          stack = aUniqueStacks.AppendFrame(
-              stack,
-              UniqueStacks::FrameKey(std::move(frameLabel), relevantForJS, line,
-                                     column, categoryPair));
-
-        } else if (e.Get().IsJitReturnAddr()) {
-          numFrames++;
-
-          // A JIT frame may expand to multiple frames due to inlining.
-          void* pc = e.Get().GetPtr();
-          const Maybe<Vector<UniqueStacks::FrameKey>>& frameKeys =
-              aUniqueStacks.LookupFramesForJITAddressFromBufferPos(pc,
-                                                                   e.CurPos());
-          MOZ_RELEASE_ASSERT(frameKeys,
-                             "Attempting to stream samples for a buffer range "
-                             "for which we don't have JITFrameInfo?");
-          for (const UniqueStacks::FrameKey& frameKey : *frameKeys) {
-            stack = aUniqueStacks.AppendFrame(stack, frameKey);
-          }
-
-          e.Next();
-
-        } else {
-          break;
-        }
-      }
-
-      if (numFrames == 0) {
-        // It is possible to have empty stacks if native stackwalking is
-        // disabled. Skip samples with empty stacks. (See Bug 1497985).
-        // Thus, don't use ERROR_AND_CONTINUE, but just continue.
-        continue;
-      }
-
-      sample.mStack = aUniqueStacks.GetOrAddStackIndex(stack);
-
-      if (e.Has() && e.Get().IsResponsiveness()) {
-        sample.mResponsiveness = Some(e.Get().GetDouble());
-        e.Next();
-      }
-
-      WriteSample(aWriter, *aUniqueStacks.mUniqueStrings, sample);
     }
   });
 }
@@ -1162,11 +1211,53 @@ void ProfileBuffer::AddJITInfoForRange(uint64_t aRangeStart, int aThreadId,
               continue;
             }
 
-            while (e.Has() && !e.Get().IsThreadId()) {
-              if (e.Get().IsJitReturnAddr()) {
-                aJITAddressConsumer(e.Get().GetPtr());
-              }
+            if (e.Has() && e.Get().IsTime()) {
+              // Legacy stack.
               e.Next();
+              while (e.Has() && !e.Get().IsThreadId()) {
+                if (e.Get().IsJitReturnAddr()) {
+                  aJITAddressConsumer(e.Get().GetPtr());
+                }
+                e.Next();
+              }
+            } else if (e.Has() && e.Get().IsTimeBeforeCompactStack()) {
+              // Compact stack.
+              BlocksRingBuffer::BlockIterator it = e.Iterator();
+              for (;;) {
+                ++it;
+                if (it.IsAtEnd()) {
+                  break;
+                }
+                BlocksRingBuffer::EntryReader er = *it;
+                ProfileBufferEntry::Kind kind =
+                    er.ReadObject<ProfileBufferEntry::Kind>();
+                if (kind == ProfileBufferEntry::Kind::CompactStack) {
+                  BlocksRingBuffer tempBuffer(
+                      BlocksRingBuffer::ThreadSafety::WithoutMutex,
+                      mWorkerBuffer.get(), WorkerBufferBytes);
+                  er.ReadIntoObject(tempBuffer);
+                  tempBuffer.Read([&](BlocksRingBuffer::Reader* aReader) {
+                    MOZ_ASSERT(
+                        aReader,
+                        "Local BlocksRingBuffer cannot be out-of-session");
+                    EntryGetter stackEntryGetter(*aReader);
+                    while (stackEntryGetter.Has()) {
+                      if (stackEntryGetter.Get().IsJitReturnAddr()) {
+                        aJITAddressConsumer(stackEntryGetter.Get().GetPtr());
+                      }
+                      stackEntryGetter.Next();
+                    }
+                  });
+                  break;
+                }
+                MOZ_ASSERT(kind >= ProfileBufferEntry::Kind::LEGACY_LIMIT,
+                           "There should be no legacy entries between "
+                           "TimeBeforeCompactStack and CompactStack");
+              }
+
+              e.Next();
+            } else {
+              ERROR_AND_CONTINUE("expected a Time entry");
             }
           }
         });
@@ -1591,7 +1682,7 @@ bool ProfileBuffer::DuplicateLastSample(int aThreadId,
   }
 
   BlocksRingBuffer tempBuffer(BlocksRingBuffer::ThreadSafety::WithoutMutex,
-                              mDuplicationBuffer.get(), DuplicationBufferBytes);
+                              mWorkerBuffer.get(), WorkerBufferBytes);
 
   const bool ok = mEntries.Read([&](BlocksRingBuffer::Reader* aReader) {
     MOZ_ASSERT(
@@ -1630,6 +1721,49 @@ bool ProfileBuffer::DuplicateLastSample(int aThreadId,
                        (TimeStamp::NowUnfuzzed() - aProcessStartTime)
                            .ToMilliseconds()));
           break;
+        case ProfileBufferEntry::Kind::TimeBeforeCompactStack: {
+          // Copy with new time, followed by a compact stack.
+          AddEntry(tempBuffer,
+                   ProfileBufferEntry::TimeBeforeCompactStack(
+                       (TimeStamp::NowUnfuzzed() - aProcessStartTime)
+                           .ToMilliseconds()));
+
+          // The `CompactStack` *must* be present afterwards, but may not
+          // immediately follow `TimeBeforeCompactStack` (e.g., some markers
+          // could be written in-between), so we need to look for it in the
+          // following entries.
+          BlocksRingBuffer::BlockIterator it = e.Iterator();
+          for (;;) {
+            ++it;
+            if (it.IsAtEnd()) {
+              break;
+            }
+            BlocksRingBuffer::EntryReader er = *it;
+            auto kind = static_cast<ProfileBufferEntry::Kind>(
+                er.PeekObject<ProfileBufferEntry::KindUnderlyingType>());
+            MOZ_ASSERT(
+                static_cast<ProfileBufferEntry::KindUnderlyingType>(kind) <
+                static_cast<ProfileBufferEntry::KindUnderlyingType>(
+                    ProfileBufferEntry::Kind::MODERN_LIMIT));
+            if (kind == ProfileBufferEntry::Kind::CompactStack) {
+              // Found our CompactStack, just make a copy of the whole entry.
+              auto bytes = er.RemainingBytes();
+              MOZ_ASSERT(bytes < 65536);
+              tempBuffer.Put(bytes, [&](BlocksRingBuffer::EntryWriter* aEW) {
+                MOZ_ASSERT(aEW, "tempBuffer cannot be out-of-session");
+                er.ReadInto(*aEW, bytes);
+              });
+              break;
+            }
+            MOZ_ASSERT(kind >= ProfileBufferEntry::Kind::LEGACY_LIMIT,
+                       "There should be no legacy entries between "
+                       "TimeBeforeCompactStack and CompactStack");
+            // Here, we have encountered a non-legacy entry that was not the
+            // CompactStack we're looking for; just continue the search...
+          }
+          // We're done.
+          return true;
+        }
         case ProfileBufferEntry::Kind::CounterKey:
         case ProfileBufferEntry::Kind::Number:
         case ProfileBufferEntry::Kind::Count:
@@ -1709,16 +1843,7 @@ bool ProfileBuffer::DuplicateLastSample(int aThreadId,
 
   aLastSample = Some(AddThreadIdEntry(aThreadId));
 
-  tempBuffer.Read([&](BlocksRingBuffer::Reader* aReader) {
-    MOZ_ASSERT(aReader, "tempBuffer cannot be out-of-session");
-
-    EntryGetter e(*aReader);
-
-    while (e.Has()) {
-      AddEntry(e.Get());
-      e.Next();
-    }
-  });
+  mEntries.AppendContents(tempBuffer);
 
   return true;
 }
@@ -1760,7 +1885,7 @@ void ProfileBuffer::DiscardSamplesBeforeTime(double aTime) {
       const BlockIndex sampleStartPos = e.CurBlockIndex();
       e.Next();
 
-      if (e.Has() && e.Get().IsTime()) {
+      if (e.Has() && (e.Get().IsTime() || e.Get().IsTimeBeforeCompactStack())) {
         double sampleTime = e.Get().GetDouble();
 
         if (sampleTime >= aTime) {
