@@ -102,40 +102,6 @@ static void SimpleParseKeyValuePairs(
 
 #if defined(XP_WIN)
 namespace {
-nsresult CollectProcessInfo(ProcessInfo& info) {
-  // IsWow64Process2 is only available on Windows 10+, so we have to dynamically
-  // check for its existence.
-  typedef BOOL(WINAPI * LPFN_IWP2)(HANDLE, USHORT*, USHORT*);
-  LPFN_IWP2 iwp2 = reinterpret_cast<LPFN_IWP2>(
-      GetProcAddress(GetModuleHandle(L"kernel32"), "IsWow64Process2"));
-  BOOL isWow64 = false;
-  USHORT processMachine = IMAGE_FILE_MACHINE_UNKNOWN;
-  USHORT nativeMachine = IMAGE_FILE_MACHINE_UNKNOWN;
-  BOOL gotWow64Value;
-  if (iwp2) {
-    gotWow64Value = iwp2(GetCurrentProcess(), &processMachine, &nativeMachine);
-    if (gotWow64Value) {
-      info.isWow64 = (processMachine != IMAGE_FILE_MACHINE_UNKNOWN);
-    }
-  } else {
-    gotWow64Value = IsWow64Process(GetCurrentProcess(), &isWow64);
-    // The function only indicates a WOW64 environment if it's 32-bit x86
-    // running on x86-64, so emulate what IsWow64Process2 would have given.
-    if (gotWow64Value && info.isWow64) {
-      processMachine = IMAGE_FILE_MACHINE_I386;
-      nativeMachine = IMAGE_FILE_MACHINE_AMD64;
-    }
-  }
-  NS_WARNING_ASSERTION(gotWow64Value, "IsWow64Process failed");
-  if (gotWow64Value) {
-    // Set this always, even for the x86-on-arm64 case.
-    // Additional information if we're running x86-on-arm64
-    info.isWowARM64 = (processMachine == IMAGE_FILE_MACHINE_I386 &&
-                       nativeMachine == IMAGE_FILE_MACHINE_ARM64);
-  }
-  return NS_OK;
-}
-
 static nsresult GetFolderDiskInfo(nsIFile* file, FolderDiskInfo& info) {
   info.model.Truncate();
   info.revision.Truncate();
@@ -247,7 +213,7 @@ static nsresult CollectDiskInfo(nsIFile* greDir, nsIFile* winDir,
   return GetFolderDiskInfo(profDir, info.profile);
 }
 
-static nsresult CollectOSInfo(OSInfo& info) {
+nsresult GetInstallYear(uint32_t& aYear) {
   HKEY hKey;
   LONG status = RegOpenKeyExW(
       HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0,
@@ -279,7 +245,7 @@ static nsresult CollectOSInfo(OSInfo& info) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  info.installYear = 1900UL + time.tm_year;
+  aYear = 1900UL + time.tm_year;
   return NS_OK;
 }
 
@@ -818,6 +784,53 @@ nsresult nsSystemInfo::Init() {
     return rv;
   }
 
+  // IsWow64Process2 is only available on Windows 10+, so we have to dynamically
+  // check for its existence.
+  typedef BOOL(WINAPI * LPFN_IWP2)(HANDLE, USHORT*, USHORT*);
+  LPFN_IWP2 iwp2 = reinterpret_cast<LPFN_IWP2>(
+      GetProcAddress(GetModuleHandle(L"kernel32"), "IsWow64Process2"));
+  BOOL isWow64 = false;
+  USHORT processMachine = IMAGE_FILE_MACHINE_UNKNOWN;
+  USHORT nativeMachine = IMAGE_FILE_MACHINE_UNKNOWN;
+  BOOL gotWow64Value;
+  if (iwp2) {
+    gotWow64Value = iwp2(GetCurrentProcess(), &processMachine, &nativeMachine);
+    if (gotWow64Value) {
+      isWow64 = (processMachine != IMAGE_FILE_MACHINE_UNKNOWN);
+    }
+  } else {
+    gotWow64Value = IsWow64Process(GetCurrentProcess(), &isWow64);
+    // The function only indicates a WOW64 environment if it's 32-bit x86
+    // running on x86-64, so emulate what IsWow64Process2 would have given.
+    if (gotWow64Value && isWow64) {
+      processMachine = IMAGE_FILE_MACHINE_I386;
+      nativeMachine = IMAGE_FILE_MACHINE_AMD64;
+    }
+  }
+  NS_WARNING_ASSERTION(gotWow64Value, "IsWow64Process failed");
+  if (gotWow64Value) {
+    // Set this always, even for the x86-on-arm64 case.
+    rv = SetPropertyAsBool(NS_LITERAL_STRING("isWow64"), !!isWow64);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    // Additional information if we're running x86-on-arm64
+    bool isWowARM64 = (processMachine == IMAGE_FILE_MACHINE_I386 &&
+                       nativeMachine == IMAGE_FILE_MACHINE_ARM64);
+    rv = SetPropertyAsBool(NS_LITERAL_STRING("isWowARM64"), !!isWowARM64);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  uint32_t installYear = 0;
+  if (NS_SUCCEEDED(GetInstallYear(installYear))) {
+    rv = SetPropertyAsUint32(NS_LITERAL_STRING("installYear"), installYear);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
 #  ifndef __MINGW32__
   nsAutoString avInfo, antiSpyInfo, firewallInfo;
   if (NS_SUCCEEDED(
@@ -1083,27 +1096,7 @@ static bool GetJSObjForDiskInfo(JSContext* aCx, JS::Handle<JSObject*> aParent,
   JS::Rooted<JS::Value> val(aCx, JS::ObjectValue(*jsInfo));
   return JS_SetProperty(aCx, aParent, propName, val);
 }
-
-JSObject* GetJSObjForOSInfo(JSContext* aCx, const OSInfo& info) {
-  JS::Rooted<JSObject*> jsInfo(aCx, JS_NewPlainObject(aCx));
-
-  JS::Rooted<JS::Value> valInstallYear(aCx, JS::Int32Value(info.installYear));
-  JS_SetProperty(aCx, jsInfo, "installYear", valInstallYear);
-  return jsInfo;
-}
-
 #endif
-
-JSObject* GetJSObjForProcessInfo(JSContext* aCx, const ProcessInfo& info) {
-  JS::Rooted<JSObject*> jsInfo(aCx, JS_NewPlainObject(aCx));
-
-  JS::Rooted<JS::Value> valisWow64(aCx, JS::BooleanValue(info.isWow64));
-  JS_SetProperty(aCx, jsInfo, "isWow64", valisWow64);
-
-  JS::Rooted<JS::Value> valisWowARM64(aCx, JS::BooleanValue(info.isWowARM64));
-  JS_SetProperty(aCx, jsInfo, "isWowARM64", valisWowARM64);
-  return jsInfo;
-}
 
 RefPtr<mozilla::LazyIdleThread> nsSystemInfo::GetHelperThread() {
   if (!mLazyHelperThread) {
@@ -1111,63 +1104,6 @@ RefPtr<mozilla::LazyIdleThread> nsSystemInfo::GetHelperThread() {
         new LazyIdleThread(3000, NS_LITERAL_CSTRING("SystemInfoIdleThread"));
   }
   return mLazyHelperThread;
-}
-
-NS_IMETHODIMP
-nsSystemInfo::GetOsInfo(JSContext* aCx, Promise** aResult) {
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = nullptr;
-  if (!XRE_IsParentProcess()) {
-    return NS_ERROR_FAILURE;
-  }
-#if defined(XP_WIN)
-  nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
-  if (NS_WARN_IF(!global)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  ErrorResult erv;
-  RefPtr<Promise> promise = Promise::Create(global, erv);
-  if (NS_WARN_IF(erv.Failed())) {
-    return erv.StealNSResult();
-  }
-
-  if (!mOSInfoPromise) {
-    RefPtr<mozilla::LazyIdleThread> lazyIOThread = GetHelperThread();
-
-    mOSInfoPromise = InvokeAsync(lazyIOThread, __func__, []() {
-      OSInfo info;
-      nsresult rv = CollectOSInfo(info);
-      if (NS_SUCCEEDED(rv)) {
-        return OSInfoPromise::CreateAndResolve(info, __func__);
-      }
-      return OSInfoPromise::CreateAndReject(rv, __func__);
-    });
-  };
-
-  // Chain the new promise to the extant mozpromise
-  RefPtr<Promise> capturedPromise = promise;
-  mOSInfoPromise->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      [capturedPromise](const OSInfo& info) {
-        AutoJSAPI jsapi;
-        if (NS_WARN_IF(!jsapi.Init(capturedPromise->GetGlobalObject()))) {
-          capturedPromise->MaybeReject(NS_ERROR_UNEXPECTED);
-          return;
-        }
-        JSContext* cx = jsapi.cx();
-        JS::Rooted<JS::Value> val(
-            cx, JS::ObjectValue(*GetJSObjForOSInfo(cx, info)));
-        capturedPromise->MaybeResolve(val);
-      },
-      [capturedPromise](const nsresult rv) {
-        // Resolve with null when installYear is not available from the system
-        capturedPromise->MaybeResolve(JS::NullHandleValue);
-      });
-
-  promise.forget(aResult);
-#endif
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1223,8 +1159,9 @@ nsSystemInfo::GetDiskInfo(JSContext* aCx, Promise** aResult) {
   mDiskInfoPromise->Then(
       GetMainThreadSerialEventTarget(), __func__,
       [capturedPromise](const DiskInfo& info) {
+        RefPtr<nsIGlobalObject> global = capturedPromise->GetGlobalObject();
         AutoJSAPI jsapi;
-        if (NS_WARN_IF(!jsapi.Init(capturedPromise->GetGlobalObject()))) {
+        if (!global || !jsapi.Init(global)) {
           capturedPromise->MaybeReject(NS_ERROR_UNEXPECTED);
           return;
         }
@@ -1299,8 +1236,9 @@ nsSystemInfo::GetCountryCode(JSContext* aCx, Promise** aResult) {
   mCountryCodePromise->Then(
       GetMainThreadSerialEventTarget(), __func__,
       [capturedPromise](const nsString& countryCode) {
+        RefPtr<nsIGlobalObject> global = capturedPromise->GetGlobalObject();
         AutoJSAPI jsapi;
-        if (NS_WARN_IF(!jsapi.Init(capturedPromise->GetGlobalObject()))) {
+        if (!global || !jsapi.Init(global)) {
           capturedPromise->MaybeReject(NS_ERROR_UNEXPECTED);
           return;
         }
@@ -1313,64 +1251,6 @@ nsSystemInfo::GetCountryCode(JSContext* aCx, Promise** aResult) {
       },
       [capturedPromise](const nsresult rv) {
         // Resolve with null when countryCode is not available from the system
-        capturedPromise->MaybeResolve(JS::NullHandleValue);
-      });
-
-  promise.forget(aResult);
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSystemInfo::GetProcessInfo(JSContext* aCx, Promise** aResult) {
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = nullptr;
-
-  if (!XRE_IsParentProcess()) {
-    return NS_ERROR_FAILURE;
-  }
-#if defined(XP_WIN)
-  nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
-  if (NS_WARN_IF(!global)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  ErrorResult erv;
-  RefPtr<Promise> promise = Promise::Create(global, erv);
-  if (NS_WARN_IF(erv.Failed())) {
-    return erv.StealNSResult();
-  }
-
-  if (!mProcessInfoPromise) {
-    RefPtr<mozilla::LazyIdleThread> lazyIOThread = GetHelperThread();
-
-    mProcessInfoPromise = InvokeAsync(lazyIOThread, __func__, []() {
-      ProcessInfo info;
-      nsresult rv = CollectProcessInfo(info);
-      if (NS_SUCCEEDED(rv)) {
-        return ProcessInfoPromise::CreateAndResolve(info, __func__);
-      }
-      return ProcessInfoPromise::CreateAndReject(rv, __func__);
-    });
-  };
-
-  // Chain the new promise to the extant mozpromise
-  RefPtr<Promise> capturedPromise = promise;
-  mProcessInfoPromise->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      [capturedPromise](const ProcessInfo& info) {
-        AutoJSAPI jsapi;
-        if (NS_WARN_IF(!jsapi.Init(capturedPromise->GetGlobalObject()))) {
-          capturedPromise->MaybeReject(NS_ERROR_UNEXPECTED);
-          return;
-        }
-        JSContext* cx = jsapi.cx();
-        JS::Rooted<JS::Value> val(
-            cx, JS::ObjectValue(*GetJSObjForProcessInfo(cx, info)));
-        capturedPromise->MaybeResolve(val);
-      },
-      [capturedPromise](const nsresult rv) {
-        // Resolve with null when installYear is not available from the system
         capturedPromise->MaybeResolve(JS::NullHandleValue);
       });
 

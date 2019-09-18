@@ -88,10 +88,6 @@ const SYSTEM_ADDON_INSTALL_DATE = Date.now();
 
 const EXPECTED_HDD_FIELDS = ["profile", "binary", "system"];
 
-const EXPECTED_OS_FIELDS = ["installYear"];
-
-const EXPECTED_PROCESS_FIELDS = ["isWow64", "isWowARM64"];
-
 // Valid attribution code to write so that settings.attribution can be tested.
 const ATTRIBUTION_CODE = "source%3Dgoogle.com";
 
@@ -187,14 +183,6 @@ var SysInfo = {
 
   get diskInfo() {
     return this._genuine.QueryInterface(Ci.nsISystemInfo).diskInfo;
-  },
-
-  get osInfo() {
-    return this._genuine.QueryInterface(Ci.nsISystemInfo).osInfo;
-  },
-
-  get processInfo() {
-    return this._genuine.QueryInterface(Ci.nsISystemInfo).processInfo;
   },
 
   QueryInterface: ChromeUtils.generateQI(["nsIPropertyBag2", "nsISystemInfo"]),
@@ -2401,36 +2389,6 @@ if (gIsWindows) {
       checkString(data.system.hdd[k].model);
       checkString(data.system.hdd[k].revision);
       checkString(data.system.hdd[k].type);
-    }
-  });
-
-  add_task(async function test_environmentOSInfo() {
-    await TelemetryEnvironment.testCleanRestart().onInitialized();
-    let data = TelemetryEnvironment.currentEnvironment;
-    Assert.deepEqual(
-      data.system.osData,
-      { installYear: null },
-      "Should have no data yet."
-    );
-    await TelemetryEnvironment.delayedInit();
-    data = TelemetryEnvironment.currentEnvironment;
-    for (let k of EXPECTED_OS_FIELDS) {
-      checkString(data.system.osInfo[k]);
-    }
-  });
-
-  add_task(async function test_environmentProcessInfo() {
-    await TelemetryEnvironment.testCleanRestart().onInitialized();
-    let data = TelemetryEnvironment.currentEnvironment;
-    Assert.deepEqual(
-      data.system.processData,
-      { isWow64: null, isWowARM64: null },
-      "Should have no data yet."
-    );
-    await TelemetryEnvironment.delayedInit();
-    data = TelemetryEnvironment.currentEnvironment;
-    for (let k of EXPECTED_PROCESS_FIELDS) {
-      checkString(data.system.processInfo[k]);
     }
   });
 }

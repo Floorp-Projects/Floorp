@@ -28,26 +28,11 @@ struct DiskInfo {
   FolderDiskInfo system;
 };
 
-struct OSInfo {
-  uint32_t installYear;
-};
-
-struct ProcessInfo {
-  bool isWow64;
-  bool isWowARM64;
-};
-
 typedef mozilla::MozPromise<DiskInfo, nsresult, /* IsExclusive */ false>
     DiskInfoPromise;
 
 typedef mozilla::MozPromise<nsAutoString, nsresult, /* IsExclusive */ false>
     CountryCodePromise;
-
-typedef mozilla::MozPromise<OSInfo, nsresult, /* IsExclusive */ false>
-    OSInfoPromise;
-
-typedef mozilla::MozPromise<ProcessInfo, nsresult, /* IsExclusive */ false>
-    ProcessInfoPromise;
 
 class nsSystemInfo final : public nsISystemInfo, public nsHashPropertyBag {
  public:
@@ -79,8 +64,6 @@ class nsSystemInfo final : public nsISystemInfo, public nsHashPropertyBag {
 
   RefPtr<DiskInfoPromise> mDiskInfoPromise;
   RefPtr<CountryCodePromise> mCountryCodePromise;
-  RefPtr<OSInfoPromise> mOSInfoPromise;
-  RefPtr<ProcessInfoPromise> mProcessInfoPromise;
   RefPtr<mozilla::LazyIdleThread> mLazyHelperThread;
   RefPtr<mozilla::LazyIdleThread> GetHelperThread();
 };
