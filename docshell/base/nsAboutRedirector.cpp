@@ -10,14 +10,9 @@
 #include "nsBaseChannel.h"
 #include "mozilla/ArrayUtils.h"
 #include "nsIProtocolHandler.h"
+#include "mozilla/Preferences.h"
 
-#if defined(MOZ_WIDGET_ANDROID) && defined(RELEASE_OR_BETA)
-#  define ABOUT_CONFIG_BLOCKED_GV
-#endif
-
-#ifdef ABOUT_CONFIG_BLOCKED_GV
-#  include "mozilla/jni/Utils.h"  // for mozilla::jni::IsFennec()
-#endif
+#define ABOUT_CONFIG_ENABLED_PREF "general.aboutConfig.enable"
 
 NS_IMPL_ISUPPORTS(nsAboutRedirector, nsIAboutModule)
 
@@ -163,13 +158,10 @@ nsAboutRedirector::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
     return NS_OK;
   }
 
-#ifdef ABOUT_CONFIG_BLOCKED_GV
-  // We don't want to allow access to about:config from
-  // GeckoView on release or beta, but it's fine for Fennec.
-  if (path.EqualsASCII("config") && !mozilla::jni::IsFennec()) {
+  if (path.EqualsASCII("config") &&
+      !mozilla::Preferences::GetBool(ABOUT_CONFIG_ENABLED_PREF, true)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-#endif
 
   for (int i = 0; i < kRedirTotal; i++) {
     if (!strcmp(path.get(), kRedirMap[i].id)) {
