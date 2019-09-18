@@ -19,21 +19,28 @@ dictionary TextEncoderEncodeIntoResult {
 interface TextEncoder {
   constructor();
 
+  /*
+   * This is DOMString in the spec, but the value is always ASCII
+   * and short. By declaring this as ByteString, we get the same
+   * end result (storage as inline Latin1 string in SpiderMonkey)
+   * with fewer conversions.
+   */
   [Constant]
-  readonly attribute DOMString encoding;
+  readonly attribute ByteString encoding;
+
   /*
    * This is spec-wise USVString but marking it as
-   * DOMString to avoid duplicate work. Since the
-   * UTF-16 to UTF-8 converter performs processing
-   * that's equivalent to first converting a
-   * DOMString to a USVString, let's avoid having
-   * the binding code doing it, too.
+   * JSString as an optimization. (The SpiderMonkey-provided
+   * conversion to UTF-8 takes care of replacing lone
+   * surrogates with the REPLACEMENT CHARACTER, so the
+   * observable behavior of USVString is matched.)
    */
   [NewObject]
-  Uint8Array encode(optional DOMString input = "");
+  Uint8Array encode(optional JSString input = "");
 
   /*
    * The same comment about USVString as above applies here.
    */
-  TextEncoderEncodeIntoResult encodeInto(DOMString source, Uint8Array destination);
+  [CanOOM]
+  TextEncoderEncodeIntoResult encodeInto(JSString source, Uint8Array destination);
 };
