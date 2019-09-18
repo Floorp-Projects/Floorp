@@ -77,6 +77,7 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
         event.detail.value.selectedBadgeLanguages
       );
       handleSyncState(event.detail.value.syncState);
+      document.documentElement.classList.add("initialized");
       break;
     }
     case "ShowLoginItemError": {
