@@ -439,7 +439,7 @@ template <class ParseHandler, typename Unit>
 typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
   MOZ_ASSERT(checkOptionsCalled_);
 
-  Directives directives(options().strictOption);
+  Directives directives(options().forceStrictMode());
   GlobalSharedContext globalsc(cx_, ScopeKind::Global, directives,
                                options().extraWarningsOption);
   SourceParseContext globalpc(this, &globalsc, /* newDirectives = */ nullptr);
