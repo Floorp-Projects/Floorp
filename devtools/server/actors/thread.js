@@ -408,6 +408,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
   toggleEventLogging(logEventBreakpoints) {
     this._options.logEventBreakpoints = logEventBreakpoints;
+    this._updateEventLogging();
     return this._options.logEventBreakpoints;
   },
 
@@ -544,8 +545,13 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       );
     }
 
+    this._updateEventLogging();
+  },
+
+  _updateEventLogging() {
     if (isReplaying && this._options.logEventBreakpoints) {
       const logpointId = `logGroup-${Math.random()}`;
+      const ids = [...this._activeEventBreakpoints];
       this.dbg.replaySetActiveEventBreakpoints(ids, (executionPoint, rv) => {
         const { script, offset } = this.dbg.replayGetExecutionPointPosition(
           executionPoint
