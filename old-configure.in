@@ -2199,7 +2199,7 @@ MOZ_ARG_DISABLE_BOOL(sandbox,
     MOZ_SANDBOX=1)
 
 case "$OS_TARGET" in
-WINNT|Darwin)
+WINNT|Darwin|OpenBSD)
 ;;
 Linux)
     case $CPU_ARCH in
@@ -2212,7 +2212,7 @@ Linux)
     esac
     ;;
 *)
-    # Only enable the sandbox by default on Linux, macOS, and Windows
+    # Only enable the sandbox by default on Linux, OpenBSD, macOS, and Windows
     MOZ_SANDBOX=
 ;;
 esac
