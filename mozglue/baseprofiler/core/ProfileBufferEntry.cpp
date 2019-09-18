@@ -10,6 +10,7 @@
 
 #  include "ProfileBufferEntry.h"
 
+#  include "BaseProfilerMarkerPayload.h"
 #  include "platform.h"
 #  include "ProfileBuffer.h"
 
@@ -43,11 +44,6 @@ ProfileBufferEntry::ProfileBufferEntry(Kind aKind, void* aPtr) : mKind(aKind) {
   memcpy(mStorage, &aPtr, sizeof(aPtr));
 }
 
-ProfileBufferEntry::ProfileBufferEntry(Kind aKind, ProfilerMarker* aMarker)
-    : mKind(aKind) {
-  memcpy(mStorage, &aMarker, sizeof(aMarker));
-}
-
 ProfileBufferEntry::ProfileBufferEntry(Kind aKind, double aDouble)
     : mKind(aKind) {
   memcpy(mStorage, &aDouble, sizeof(aDouble));
@@ -75,12 +71,6 @@ const char* ProfileBufferEntry::GetString() const {
 
 void* ProfileBufferEntry::GetPtr() const {
   void* result;
-  memcpy(&result, mStorage, sizeof(result));
-  return result;
-}
-
-ProfilerMarker* ProfileBufferEntry::GetMarker() const {
-  ProfilerMarker* result;
   memcpy(&result, mStorage, sizeof(result));
   return result;
 }
@@ -788,16 +778,6 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
 
       sample.mStack = aUniqueStacks.GetOrAddStackIndex(stack);
 
-      // Skip over the markers. We process them in StreamMarkersToJSON().
-      while (e.Has()) {
-        MOZ_ASSERT(!e.Get().IsMarker());
-        if (e.Get().IsMarker()) {
-          e.Next();
-        } else {
-          break;
-        }
-      }
-
       if (e.Has() && e.Get().IsResponsiveness()) {
         sample.mResponsiveness = Some(e.Get().GetDouble());
         e.Next();
@@ -821,8 +801,6 @@ void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
                    ProfileBufferEntry::Kind::MODERN_LIMIT));
     if (type == ProfileBufferEntry::Kind::MarkerData &&
         aER.ReadObject<int>() == aThreadId) {
-      // Adapted from ProfilerMarker::StreamJSON()
-
       // Schema:
       //   [name, time, category, data]
 
@@ -1259,7 +1237,6 @@ bool ProfileBuffer::DuplicateLastSample(int aThreadId,
                        (TimeStamp::NowUnfuzzed() - aProcessStartTime)
                            .ToMilliseconds()));
           break;
-        case ProfileBufferEntry::Kind::Marker:
         case ProfileBufferEntry::Kind::CounterKey:
         case ProfileBufferEntry::Kind::Number:
         case ProfileBufferEntry::Kind::Count:

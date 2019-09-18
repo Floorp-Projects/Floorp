@@ -23,8 +23,6 @@
 namespace mozilla {
 namespace baseprofiler {
 
-class ProfilerMarker;
-
 // NOTE!  If you add entries, you need to verify if they need to be added to the
 // switch statement in DuplicateLastSample!
 // This will evaluate the MACRO with (KIND, TYPE, SIZE)
@@ -39,7 +37,6 @@ class ProfilerMarker;
   MACRO(LineNumber, int, sizeof(int))                                \
   MACRO(ColumnNumber, int, sizeof(int))                              \
   MACRO(NativeLeafAddr, void*, sizeof(void*))                        \
-  MACRO(Marker, ProfilerMarker*, sizeof(ProfilerMarker*))            \
   MACRO(Pause, double, sizeof(double))                               \
   MACRO(Responsiveness, double, sizeof(double))                      \
   MACRO(Resume, double, sizeof(double))                              \
@@ -95,7 +92,6 @@ class ProfileBufferEntry {
   ProfileBufferEntry(Kind aKind, const char* aString);
   ProfileBufferEntry(Kind aKind, char aChars[kNumChars]);
   ProfileBufferEntry(Kind aKind, void* aPtr);
-  ProfileBufferEntry(Kind aKind, ProfilerMarker* aMarker);
   ProfileBufferEntry(Kind aKind, double aDouble);
   ProfileBufferEntry(Kind aKind, int64_t aInt64);
   ProfileBufferEntry(Kind aKind, uint64_t aUint64);
@@ -129,7 +125,6 @@ class ProfileBufferEntry {
 
   const char* GetString() const;
   void* GetPtr() const;
-  ProfilerMarker* GetMarker() const;
   double GetDouble() const;
   int GetInt() const;
   int64_t GetInt64() const;

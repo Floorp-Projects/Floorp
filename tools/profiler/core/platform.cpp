@@ -1756,13 +1756,6 @@ static void DoPeriodicSample(PSLockRef aLock,
   DoSharedSample(aLock, /* aIsSynchronous = */ false, aRegisteredThread, aRegs,
                  aSamplePos, aBuffer);
 
-  ProfilerMarkerLinkedList* pendingMarkersList =
-      aRegisteredThread.RacyRegisteredThread().GetPendingMarkers();
-  while (pendingMarkersList && pendingMarkersList->peek()) {
-    ProfilerMarker* marker = pendingMarkersList->popHead();
-    aBuffer.AddMarker(marker);
-  }
-
   ThreadResponsiveness* resp = aProfiledThreadData.GetThreadResponsiveness();
   if (resp && resp->HasData()) {
     double delta = resp->GetUnresponsiveDuration(
@@ -2550,7 +2543,6 @@ void SamplerThread::Run() {
 
       ActivePS::ClearExpiredExitProfiles(lock);
 
-      ActivePS::Buffer(lock).DeleteExpiredStoredMarkers();
       TimeStamp expiredMarkersCleaned = TimeStamp::NowUnfuzzed();
 
       if (!ActivePS::IsPaused(lock)) {
