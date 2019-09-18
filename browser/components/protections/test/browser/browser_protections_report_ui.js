@@ -509,7 +509,7 @@ add_task(async function test_etp_header_string() {
       let l10nID = content.document
         .querySelector("#protection-details")
         .getAttribute("data-l10n-id");
-      return l10nID == "protection-header-details-standard";
+      return l10nID == "protection-report-header-details-standard";
     }, "The standard string is showing");
   });
 
@@ -520,7 +520,7 @@ add_task(async function test_etp_header_string() {
       let l10nID = content.document
         .querySelector("#protection-details")
         .getAttribute("data-l10n-id");
-      return l10nID == "protection-header-details-strict";
+      return l10nID == "protection-report-header-details-strict";
     }, "The strict string is showing");
   });
 
@@ -531,8 +531,8 @@ add_task(async function test_etp_header_string() {
       let l10nID = content.document
         .querySelector("#protection-details")
         .getAttribute("data-l10n-id");
-      return l10nID == "protection-header-details-custom";
-    }, "The strict string is showing");
+      return l10nID == "protection-report-header-details-custom";
+    }, "The custom string is showing");
   });
 
   Services.prefs.setStringPref("browser.contentblocking.category", "standard");
