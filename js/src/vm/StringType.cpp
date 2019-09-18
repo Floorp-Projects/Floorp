@@ -17,6 +17,8 @@
 #include "mozilla/TextUtils.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Utf8.h"
+#include "mozilla/Vector.h"
 
 #include <algorithm>    // std::{all_of,copy_n,enable_if,is_const,move}
 #include <type_traits>  // std::is_unsigned
@@ -32,6 +34,7 @@
 #include "js/Symbol.h"
 #include "js/UbiNode.h"
 #include "util/StringBuffer.h"
+#include "util/Unicode.h"
 #include "vm/GeckoProfiler.h"
 
 #include "vm/GeckoProfiler-inl.h"
@@ -128,6 +131,125 @@ JS::ubi::Node::Size JS::ubi::Concrete<JSString>::size(
 }
 
 const char16_t JS::ubi::Concrete<JSString>::concreteTypeName[] = u"JSString";
+
+mozilla::Maybe<mozilla::Tuple<size_t, size_t> > JSString::encodeUTF8Partial(
+    const JS::AutoRequireNoGC& nogc, mozilla::Span<char> buffer) const {
+  mozilla::Vector<const JSString*, 16, SystemAllocPolicy> stack;
+  const JSString* current = this;
+  char16_t pendingLeadSurrogate = 0;  // U+0000 means no pending lead surrogate
+  size_t totalRead = 0;
+  size_t totalWritten = 0;
+  for (;;) {
+    if (current->isRope()) {
+      JSRope& rope = current->asRope();
+      if (!stack.append(rope.rightChild())) {
+        // OOM
+        return mozilla::Nothing();
+      }
+      current = rope.leftChild();
+      continue;
+    }
+
+    JSLinearString& linear = current->asLinear();
+    if (MOZ_LIKELY(linear.hasLatin1Chars())) {
+      if (MOZ_UNLIKELY(pendingLeadSurrogate)) {
+        if (buffer.Length() < 3) {
+          return mozilla::Some(mozilla::MakeTuple(totalRead, totalWritten));
+        }
+        buffer[0] = '\xEF';
+        buffer[1] = '\xBF';
+        buffer[2] = '\xBD';
+        buffer = buffer.From(3);
+        totalRead += 1;  // pendingLeadSurrogate
+        totalWritten += 3;
+        pendingLeadSurrogate = 0;
+      }
+      auto src = mozilla::AsChars(
+          mozilla::MakeSpan(linear.latin1Chars(nogc), linear.length()));
+      size_t read;
+      size_t written;
+      mozilla::Tie(read, written) =
+          mozilla::ConvertLatin1toUtf8Partial(src, buffer);
+      buffer = buffer.From(written);
+      totalRead += read;
+      totalWritten += written;
+      if (read < src.Length()) {
+        return mozilla::Some(mozilla::MakeTuple(totalRead, totalWritten));
+      }
+    } else {
+      auto src = mozilla::MakeSpan(linear.twoByteChars(nogc), linear.length());
+      if (MOZ_UNLIKELY(pendingLeadSurrogate)) {
+        char16_t first = 0;
+        if (!src.IsEmpty()) {
+          first = src[0];
+        }
+        if (unicode::IsTrailSurrogate(first)) {
+          // Got a surrogate pair
+          if (buffer.Length() < 4) {
+            return mozilla::Some(mozilla::MakeTuple(totalRead, totalWritten));
+          }
+          uint32_t astral = unicode::UTF16Decode(pendingLeadSurrogate, first);
+          buffer[0] = char(0b1111'0000 | (astral >> 18));
+          buffer[1] = char(0b1000'0000 | ((astral >> 12) & 0b11'1111));
+          buffer[2] = char(0b1000'0000 | ((astral >> 6) & 0b11'1111));
+          buffer[3] = char(0b1000'0000 | (astral & 0b11'1111));
+          src = src.From(1);
+          buffer = buffer.From(4);
+          totalRead += 2;  // both pendingLeadSurrogate and first!
+          totalWritten += 4;
+        } else {
+          // unpaired surrogate
+          if (buffer.Length() < 3) {
+            return mozilla::Some(mozilla::MakeTuple(totalRead, totalWritten));
+          }
+          buffer[0] = '\xEF';
+          buffer[1] = '\xBF';
+          buffer[2] = '\xBD';
+          buffer = buffer.From(3);
+          totalRead += 1;  // pendingLeadSurrogate
+          totalWritten += 3;
+        }
+        pendingLeadSurrogate = 0;
+      }
+      if (src.IsEmpty()) {
+        return mozilla::Some(mozilla::MakeTuple(totalRead, totalWritten));
+      }
+      char16_t last = src[src.Length() - 1];
+      if (unicode::IsLeadSurrogate(last)) {
+        src = src.To(src.Length() - 1);
+        pendingLeadSurrogate = last;
+      } else {
+        MOZ_ASSERT(!pendingLeadSurrogate);
+      }
+      size_t read;
+      size_t written;
+      mozilla::Tie(read, written) =
+          mozilla::ConvertUtf16toUtf8Partial(src, buffer);
+      buffer = buffer.From(written);
+      totalRead += read;
+      totalWritten += written;
+      if (read < src.Length()) {
+        return mozilla::Some(mozilla::MakeTuple(totalRead, totalWritten));
+      }
+    }
+    if (stack.empty()) {
+      break;
+    }
+    current = stack.popCopy();
+  }
+  if (MOZ_UNLIKELY(pendingLeadSurrogate)) {
+    if (buffer.Length() < 3) {
+      return mozilla::Some(mozilla::MakeTuple(totalRead, totalWritten));
+    }
+    buffer[0] = '\xEF';
+    buffer[1] = '\xBF';
+    buffer[2] = '\xBD';
+    // No need to update buffer and pendingLeadSurrogate anymore
+    totalRead += 1;
+    totalWritten += 3;
+  }
+  return mozilla::Some(mozilla::MakeTuple(totalRead, totalWritten));
+}
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
 
