@@ -847,16 +847,6 @@ class ContentDelegateTest : BaseSessionTest() {
         mainSession.releaseDisplay(display)
     }
 
-    @WithDisplay(width = 10, height = 10)
-    @Test fun firstContentfulPaint() {
-        mainSession.loadTestPath(HELLO_HTML_PATH)
-        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
-            @AssertCalled(count = 1)
-            override fun onFirstContentfulPaint(session: GeckoSession) {
-            }
-        })
-    }
-
     @Test fun webAppManifest() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitUntilCalled(object : Callbacks.All {
