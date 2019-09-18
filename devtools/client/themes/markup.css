@@ -40,6 +40,8 @@ body {
 #root {
   float: left;
   min-width: 100%;
+  /* Accommodates for DOM mutation breakpoint and pseudo icons */
+  padding-left: 5px;
 }
 
 /* Reset the global rotation of the icon done for RTL layout.
@@ -175,6 +177,32 @@ ul.children + .tag-line::before {
   background-position-y: -2px;
   /* Unset transition-property to prevent the markup outline from horizontal shifting */
   transition-property: none;
+}
+
+.markup-tag-mutation-marker {
+  display: none;
+  position: absolute;
+  top: 2px;
+  height: 12px;
+  width: 12px;
+  background-image: url(resource://devtools/client/debugger/images/markup-breakpoint.svg);
+  background-repeat: no-repeat;
+  background-size: 12px 12px;
+  margin-left: -7px;
+  background-position: right center;
+  -moz-context-properties: fill, stroke;
+  fill: var(--blue-50);
+  fill-opacity: 1;
+  stroke: none;
+  z-index: 2;
+}
+
+.markup-tag-mutation-marker.has-mutations {
+  display: block;
+}
+
+.tag-line[selected] .markup-tag-mutation-marker {
+  stroke: #fff;
 }
 
 .html-editor-container {
@@ -371,10 +399,10 @@ ul.children + .tag-line::before {
   content: "";
   background: var(--markup-pseudoclass-disk-color);
   border-radius: 50%;
-  width: .8em;
-  height: .8em;
-  margin-top: .3em;
-  left: 1px;
+  width: 6px;
+  height: 6px;
+  margin-top: 5px;
+  left: 8px;
   position: absolute;
   z-index: 1;
 }

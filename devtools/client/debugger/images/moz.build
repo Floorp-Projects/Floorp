@@ -29,6 +29,7 @@ DevToolsModules(
     'home.svg',
     'info.svg',
     'loader.svg',
+    'markup-breakpoint.svg',
     'next-circle.svg',
     'next.svg',
     'pane-collapse.svg',

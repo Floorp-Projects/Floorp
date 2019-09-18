@@ -1423,7 +1423,8 @@ MarkupView.prototype = {
         type === "characterData" ||
         type === "customElementDefined" ||
         type === "events" ||
-        type === "pseudoClassLock"
+        type === "pseudoClassLock" ||
+        type === "mutationBreakpoint"
       ) {
         container.update();
       } else if (
