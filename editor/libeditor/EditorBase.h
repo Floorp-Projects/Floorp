@@ -58,6 +58,7 @@ class nsIWidget;
 class nsRange;
 
 namespace mozilla {
+class AlignStateAtSelection;
 class AutoSelectionRestorer;
 class AutoTopLevelEditSubActionNotifier;
 class AutoTransactionBatch;
@@ -2660,6 +2661,7 @@ class EditorBase : public nsIEditor,
   // Whether we are an HTML editor class.
   bool mIsHTMLEditorClass;
 
+  friend class AlignStateAtSelection;
   friend class CompositionTransaction;
   friend class CreateElementTransaction;
   friend class CSSEditUtils;

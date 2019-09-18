@@ -859,35 +859,29 @@ nsresult AlignCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsIHTMLEditor::EAlignment firstAlign;
-  bool outMixed;
-  nsresult rv = aHTMLEditor->GetAlignment(&outMixed, &firstAlign);
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString outStateString;
-  switch (firstAlign) {
+  ErrorResult error;
+  AlignStateAtSelection state(*aHTMLEditor, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+  nsCString alignment;  // Don't use `nsAutoCString` to avoid copying string.
+  switch (state.AlignmentAtSelectionStart()) {
     default:
     case nsIHTMLEditor::eLeft:
-      outStateString.AssignLiteral("left");
+      alignment.AssignLiteral("left");
       break;
-
     case nsIHTMLEditor::eCenter:
-      outStateString.AssignLiteral("center");
+      alignment.AssignLiteral("center");
       break;
-
     case nsIHTMLEditor::eRight:
-      outStateString.AssignLiteral("right");
+      alignment.AssignLiteral("right");
       break;
-
     case nsIHTMLEditor::eJustify:
-      outStateString.AssignLiteral("justify");
+      alignment.AssignLiteral("justify");
       break;
   }
-  nsAutoCString tOutStateString;
-  LossyCopyUTF16toASCII(outStateString, tOutStateString);
-  aParams.SetBool(STATE_MIXED, outMixed);
-  aParams.SetCString(STATE_ATTRIBUTE, tOutStateString);
+  aParams.SetBool(STATE_MIXED, false);
+  aParams.SetCString(STATE_ATTRIBUTE, alignment);
   return NS_OK;
 }
 
