@@ -27,7 +27,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/dom/Selection.h"
-#include "mozilla/TextEditRules.h"
 #include "mozilla/EventListenerManager.h"
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"

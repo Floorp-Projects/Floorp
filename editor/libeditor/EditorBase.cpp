@@ -19,7 +19,6 @@
 #include "DeleteTextTransaction.h"          // for DeleteTextTransaction
 #include "EditAggregateTransaction.h"       // for EditAggregateTransaction
 #include "EditorEventListener.h"            // for EditorEventListener
-#include "HTMLEditRules.h"                  // for HTMLEditRules
 #include "InsertNodeTransaction.h"          // for InsertNodeTransaction
 #include "InsertTextTransaction.h"          // for InsertTextTransaction
 #include "JoinNodeTransaction.h"            // for JoinNodeTransaction
@@ -2635,7 +2634,7 @@ EditorRawDOMPoint EditorBase::FindBetterInsertionPoint(
     // We cannot find "better" insertion point in HTML editor.
     // WARNING: When you add some code to find better node in HTML editor,
     //          you need to call this before calling InsertTextWithTransaction()
-    //          in HTMLEditRules.
+    //          in HTMLEditor.
     return aPoint;
   }
 

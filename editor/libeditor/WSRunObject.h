@@ -14,7 +14,6 @@
 namespace mozilla {
 
 class HTMLEditor;
-class HTMLEditRules;
 
 // class WSRunObject represents the entire whitespace situation
 // around a given point.  It collects up a list of nodes that contain
@@ -603,8 +602,6 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
   // Non-owning.
   HTMLEditor* mHTMLEditor;
 
-  // Opening this class up for pillaging.
-  friend class HTMLEditRules;
   // Opening this class up for more pillaging.
   friend class HTMLEditor;
 };

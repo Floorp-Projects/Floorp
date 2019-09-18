@@ -6,7 +6,6 @@
 #include "mozilla/TextEditor.h"
 
 #include "EditAggregateTransaction.h"
-#include "HTMLEditRules.h"
 #include "InternetCiter.h"
 #include "TextEditUtils.h"
 #include "gfxFontUtils.h"
@@ -21,7 +20,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_editor.h"
-#include "mozilla/TextEditRules.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TextServicesDocument.h"
@@ -96,16 +94,11 @@ TextEditor::~TextEditor() {
   // Remove event listeners. Note that if we had an HTML editor,
   //  it installed its own instead of these
   RemoveEventListeners();
-
-  if (mRules) mRules->DetachEditor();
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(TextEditor)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(TextEditor, EditorBase)
-  if (tmp->mRules) {
-    tmp->mRules->DetachEditor();
-  }
   if (tmp->mMaskTimer) {
     tmp->mMaskTimer->Cancel();
   }
@@ -130,9 +123,7 @@ NS_INTERFACE_MAP_END_INHERITING(EditorBase)
 nsresult TextEditor::Init(Document& aDoc, Element* aRoot,
                           nsISelectionController* aSelCon, uint32_t aFlags,
                           const nsAString& aInitialValue) {
-  if (mRules) {
-    mRules->DetachEditor();
-  }
+  mInitSucceeded = false;
 
   nsresult rulesRv = NS_OK;
   {
@@ -197,10 +188,11 @@ nsresult TextEditor::EndEditorInit() {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsresult rv = InitRules();
+  nsresult rv = InitEditorContentAndSelection();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
   // Throw away the old transaction manager if this is not the first time that
   // we're initializing the editor.
   ClearUndoRedo();
@@ -312,19 +304,6 @@ bool TextEditor::UpdateMetaCharset(Document& aDocument,
     return NS_SUCCEEDED(rv);
   }
   return false;
-}
-
-nsresult TextEditor::InitRules() {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  if (!mRules) {
-    // instantiate the rules for this text editor
-    mRules = new TextEditRules();
-  }
-  nsresult rv = InitEditorContentAndSelection();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "InitEditorContentAndSelection() failed");
-  return rv;
 }
 
 nsresult TextEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
@@ -648,7 +627,7 @@ nsresult TextEditor::DeleteSelectionAsSubAction(EDirection aDirectionAndAmount,
 
   MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
 
-  if (!mRules) {
+  if (NS_WARN_IF(!mInitSucceeded)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
@@ -946,7 +925,7 @@ nsresult TextEditor::InsertTextAsSubAction(const nsAString& aStringToInsert) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(mPlaceholderBatch);
 
-  if (!mRules) {
+  if (NS_WARN_IF(!mInitSucceeded)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
@@ -991,7 +970,7 @@ TextEditor::InsertLineBreak() {
 nsresult TextEditor::InsertLineBreakAsSubAction() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (!mRules) {
+  if (NS_WARN_IF(!mInitSucceeded)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 

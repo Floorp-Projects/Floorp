@@ -7,13 +7,11 @@
 #include <math.h>
 
 #include "HTMLEditorEventListener.h"
-#include "HTMLEditRules.h"
 #include "HTMLEditUtils.h"
 #include "TextEditUtils.h"
 #include "mozilla/EditAction.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/TextEditRules.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/EventTarget.h"

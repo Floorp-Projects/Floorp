@@ -25,8 +25,6 @@ class nsAtom;
 class nsINode;
 
 namespace mozilla {
-
-class HTMLEditRules;
 namespace dom {
 class Selection;
 }  // namespace dom
@@ -150,8 +148,6 @@ class TypeInState final {
   nsTArray<PropItem*> mClearedArray;
   EditorDOMPoint mLastSelectionPoint;
   int32_t mRelativeFontSize;
-
-  friend class HTMLEditRules;
 };
 
 }  // namespace mozilla
