@@ -7,6 +7,7 @@
 const {
   MANIFEST_CATEGORIES,
   MANIFEST_ISSUE_LEVELS,
+  MANIFEST_MEMBER_VALUE_TYPES,
   FETCH_MANIFEST_FAILURE,
   FETCH_MANIFEST_START,
   FETCH_MANIFEST_SUCCESS,
@@ -40,6 +41,16 @@ function _processRawManifestMembers(rawManifest) {
     }
   }
 
+  function getValueTypeForMember(key) {
+    switch (key) {
+      case "theme_color":
+      case "background_color":
+        return MANIFEST_MEMBER_VALUE_TYPES.COLOR;
+      default:
+        return MANIFEST_MEMBER_VALUE_TYPES.STRING;
+    }
+  }
+
   const res = {
     [MANIFEST_CATEGORIES.IDENTITY]: [],
     [MANIFEST_CATEGORIES.PRESENTATION]: [],
@@ -52,7 +63,8 @@ function _processRawManifestMembers(rawManifest) {
 
   for (const [key, value] of rawMembers) {
     const category = getCategoryForMember(key);
-    res[category].push({ key, value });
+    const type = getValueTypeForMember(key);
+    res[category].push({ key, value, type });
   }
 
   return res;
