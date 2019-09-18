@@ -92,7 +92,6 @@
 #urlbar-contextual-tip-button {
   height: 2.3em;
   width: 9.15em;
-  font-size: inherit;
   border: none;
   border-radius: 2px;
   color: white;
@@ -427,4 +426,3 @@
   background: var(--autocomplete-popup-highlight-background);
   color: var(--autocomplete-popup-highlight-color);
 }
-
