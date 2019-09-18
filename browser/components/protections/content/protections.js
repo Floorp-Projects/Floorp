@@ -41,17 +41,17 @@ document.addEventListener("DOMContentLoaded", e => {
   if (cbCategory == "custom") {
     protectionDetails.setAttribute(
       "data-l10n-id",
-      "protection-header-details-custom"
+      "protection-report-header-details-custom"
     );
   } else if (cbCategory == "strict") {
     protectionDetails.setAttribute(
       "data-l10n-id",
-      "protection-header-details-strict"
+      "protection-report-header-details-strict"
     );
   } else {
     protectionDetails.setAttribute(
       "data-l10n-id",
-      "protection-header-details-standard"
+      "protection-report-header-details-standard"
     );
   }
 
