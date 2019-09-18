@@ -15,6 +15,7 @@
 #include "nsHttpChannel.h"
 #include "nsHttpAuthCache.h"
 #include "nsStandardURL.h"
+#include "nsICrossProcessSwitchChannel.h"
 #include "nsIDOMWindow.h"
 #include "nsIHttpChannel.h"
 #include "nsIStandardURL.h"
@@ -804,6 +805,14 @@ void nsHttpHandler::NotifyObservers(nsIChannel* chan, const char* event) {
   LOG(("nsHttpHandler::NotifyObservers [chan=%p event=\"%s\"]\n", chan, event));
   nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
   if (obsService) obsService->NotifyObservers(chan, event, nullptr);
+}
+
+void nsHttpHandler::NotifyObservers(nsIProcessSwitchRequestor* request,
+                                    const char* event) {
+  LOG(("nsHttpHandler::NotifyObservers [request=%p event=\"%s\"]\n", request,
+       event));
+  nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
+  if (obsService) obsService->NotifyObservers(request, event, nullptr);
 }
 
 nsresult nsHttpHandler::AsyncOnChannelRedirect(
