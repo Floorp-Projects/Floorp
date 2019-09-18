@@ -70,6 +70,37 @@ add_task(async function test_start() {
   FinderIterator.reset();
 });
 
+add_task(async function test_subframes() {
+  let findText = "test";
+  let rangeCount = 300;
+  prepareIterator(findText, rangeCount);
+
+  let count = 0;
+  await FinderIterator.start({
+    caseSensitive: false,
+    entireWord: false,
+    finder: gMockFinder,
+    listener: {
+      onIteratorRangeFound(range) {
+        ++count;
+        Assert.equal(range.toString(), findText, "Text content should match");
+      },
+    },
+    word: findText,
+    useSubFrames: true,
+  });
+
+  Assert.equal(rangeCount, count, "Amount of ranges yielded should match!");
+  Assert.ok(!FinderIterator.running, "Running state should match");
+  Assert.equal(
+    FinderIterator._previousRanges.length,
+    rangeCount,
+    "Ranges cache should match"
+  );
+
+  FinderIterator.reset();
+});
+
 add_task(async function test_valid_arguments() {
   let findText = "foo";
   let rangeCount = 20;
