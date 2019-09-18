@@ -256,10 +256,13 @@ class MozbuildObject(ProcessExecutionMixin):
     @property
     def virtualenv_manager(self):
         if self._virtualenv_manager is None:
+            name = "init"
+            if six.PY3:
+                name += "_py3"
             self._virtualenv_manager = VirtualenvManager(
                 self.topsrcdir,
                 self.topobjdir,
-                os.path.join(self.topobjdir, '_virtualenvs', 'init'),
+                os.path.join(self.topobjdir, '_virtualenvs', name),
                 sys.stdout,
                 os.path.join(self.topsrcdir, 'build', 'virtualenv_packages.txt')
                 )
