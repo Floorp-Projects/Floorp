@@ -14,7 +14,7 @@ use variant::*;
 // Rust 1.14.0 requires the following despite the asterisk above.
 use super::in_inclusive_range16;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 enum Iso2022JpDecoderState {
     Ascii,
     Roman,
@@ -42,6 +42,14 @@ impl Iso2022JpDecoder {
             output_flag: false,
             pending_prepended: false,
         })
+    }
+
+    pub fn in_neutral_state(&self) -> bool {
+        self.decoder_state == Iso2022JpDecoderState::Ascii
+            && self.output_state == Iso2022JpDecoderState::Ascii
+            && self.lead == 0u8
+            && !self.output_flag
+            && !self.pending_prepended
     }
 
     fn extra_to_input_from_state(&self, byte_length: usize) -> Option<usize> {
@@ -1041,5 +1049,4 @@ mod tests {
         assert!(had_errors);
         assert_eq!(&output[..written], expectation);
     }
-
 }

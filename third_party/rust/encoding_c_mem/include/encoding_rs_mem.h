@@ -163,16 +163,10 @@ size_t encoding_mem_convert_latin1_to_utf8(const char* src, size_t src_len,
  * (i.e. U+0000 to U+00FF, inclusive) to UTF-8 with potentially insufficient
  * output space.
  *
- * Returns the number of bytes read and the number of bytes written.
+ * Writes the number of code units read into `*src_len` and the number of
+ * bytes written into `*dst_len`.
  *
  * If the output isn't large enough, not all input is consumed.
- *
- * # Safety
- *
- * Note that this function may write garbage beyond the number of bytes
- * indicated by the return value, so using a `&mut str` interpreted as
- * `&mut [u8]` as the destination is not safe. If you want to convert into
- * a `&mut str`, use `convert_utf16_to_str()` instead of this function.
  *
  * # Undefined behavior
  *
@@ -275,7 +269,8 @@ size_t encoding_mem_convert_utf16_to_utf8(const char16_t* src, size_t src_len,
  * with the REPLACEMENT CHARACTER with potentially insufficient output
  * space.
  *
- * Returns the number of code units read and the number of bytes written.
+ * Writes the number of code units read into `*src_len` and the number of
+ * bytes written into `*dst_len`.
  *
  * Guarantees that the bytes in the destination beyond the number of
  * bytes claimed as written by the second item of the return tuple
@@ -360,6 +355,34 @@ size_t encoding_mem_convert_utf8_to_latin1_lossy(const char* src,
  */
 size_t encoding_mem_convert_utf8_to_utf16(const char* src, size_t src_len,
                                           char16_t* dst, size_t dst_len);
+
+/**
+ * Converts potentially-invalid UTF-8 to valid UTF-16 signaling on error.
+ *
+ * The length of the destination buffer must be at least the length of the
+ * source buffer.
+ *
+ * Returns the number of `char16_t`s written or `SIZE_MAX` if the input was
+ * invalid.
+ *
+ * When the input was invalid, some output may have been written.
+ *
+ * # Panics
+ *
+ * Panics if the destination buffer is shorter than stated above.
+ *
+ * # Undefined behavior
+ *
+ * UB ensues if `src` and `src_len` don't designate a valid memory block, if
+ * `src` is `NULL`, if `dst` and `dst_len` don't designate a valid memory
+ * block, if `dst` is `NULL` or if the two memory blocks overlap. (If
+ * `src_len` is `0`, `src` may be bogus but still has to be non-`NULL` and
+ * aligned. Likewise for `dst` and `dst_len`.)
+ */
+size_t encoding_mem_convert_utf8_to_utf16_without_replacement(const char* src,
+                                                              size_t src_len,
+                                                              char16_t* dst,
+                                                              size_t dst_len);
 
 /**
  * Copies ASCII from source to destination up to the first non-ASCII byte
@@ -519,7 +542,7 @@ bool encoding_mem_is_char_bidi(char32_t c);
 bool encoding_mem_is_str_bidi(const char* buffer, size_t len);
 
 /**
- * Checks whether the buffer represents only code point less than or equal
+ * Checks whether the buffer represents only code points less than or equal
  * to U+00FF.
  *
  * Fails fast. (I.e. returns before having read the whole buffer if code
@@ -647,6 +670,32 @@ bool encoding_mem_is_utf8_latin1(const char* buffer, size_t len);
  * still has to be non-`NULL` and aligned.)
  */
 size_t encoding_mem_utf16_valid_up_to(const char16_t* buffer, size_t len);
+
+/**
+ * Returns the index of first byte that starts an invalid byte
+ * sequence or a non-Latin1 byte sequence, or the length of the
+ * string if there are neither.
+ *
+ * # Undefined behavior
+ *
+ * UB ensues if `buffer` and `buffer_len` don't designate a valid memory block
+ * or if `buffer` is `NULL`. (If `buffer_len` is `0`, `buffer` may be bogus but
+ * still has to be non-`NULL` and aligned.)
+ */
+size_t encoding_mem_utf8_latin1_up_to(const char* buffer, size_t len);
+
+/**
+ * Returns the index of first byte that starts a non-Latin1 byte
+ * sequence, or the length of the string if there are none.
+ *
+ * # Undefined behavior
+ *
+ * UB ensues if `buffer` and `buffer_len` don't designate a valid memory block,
+ * if `buffer` is `NULL`, or if the memory block does not contain valid UTF-8.
+ * (If `buffer_len` is `0`, `buffer` may be bogus but still has to be non-`NULL`
+ * and aligned.)
+ */
+size_t encoding_mem_str_latin1_up_to(const char* buffer, size_t len);
 
 #ifdef __cplusplus
 }  // extern "C"
