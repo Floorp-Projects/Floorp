@@ -291,6 +291,7 @@ constexpr auto kStmtParamNameIndexDataValues =
 constexpr auto kStmtParamNameData = NS_LITERAL_CSTRING("data");
 constexpr auto kStmtParamNameFileIds = NS_LITERAL_CSTRING("file_ids");
 constexpr auto kStmtParamNameValueLocale = NS_LITERAL_CSTRING("value_locale");
+constexpr auto kStmtParamNameLimit = NS_LITERAL_CSTRING("limit");
 
 // The following constants define some names of columns in tables, which are
 // referred to in remote locations, e.g. in calls to
@@ -9295,6 +9296,12 @@ nsresult LocalizeKey(const Key& aBaseKey, const nsCString& aLocale,
   }
 
   return NS_OK;
+}
+
+nsAutoCString ToAutoCString(const uint32_t aInt) {
+  nsAutoCString result;
+  result.AppendInt(aInt);
+  return result;
 }
 }  // namespace
 
@@ -25777,11 +25784,11 @@ void Cursor::OpenOp::PrepareKeyConditionClauses(
     }
   }
 
-  mCursor->mContinueQuery =
-      aQueryStart + keyRangeClause + aDirectionClause + kOpenLimit;
+  const nsAutoCString suffix = aDirectionClause + kOpenLimit +
+                               NS_LITERAL_CSTRING(":") + kStmtParamNameLimit;
+  mCursor->mContinueQuery = aQueryStart + keyRangeClause + suffix;
 
-  mCursor->mContinueToQuery =
-      aQueryStart + continueToKeyRangeClause + aDirectionClause + kOpenLimit;
+  mCursor->mContinueToQuery = aQueryStart + continueToKeyRangeClause + suffix;
 }
 
 void Cursor::OpenOp::PrepareIndexKeyConditionClause(
@@ -25803,8 +25810,7 @@ void Cursor::OpenOp::PrepareIndexKeyConditionClause(
 
   mCursor->mContinueToQuery =
       aQueryStart + NS_LITERAL_CSTRING(" AND sort_column ") + comparisonChar +
-      NS_LITERAL_CSTRING("= :") + kStmtParamNameCurrentKey + aDirectionClause +
-      kOpenLimit;
+      NS_LITERAL_CSTRING("= :") + kStmtParamNameCurrentKey;
 
   switch (mCursor->mDirection) {
     case IDBCursor::NEXT:
@@ -25817,7 +25823,7 @@ void Cursor::OpenOp::PrepareIndexKeyConditionClause(
           NS_LITERAL_CSTRING(" OR ") + aObjectDataKeyPrefix +
           NS_LITERAL_CSTRING("object_data_key ") + comparisonChar +
           NS_LITERAL_CSTRING(" :") + kStmtParamNameObjectKey +
-          NS_LITERAL_CSTRING(" ) ") + aDirectionClause + kOpenLimit;
+          NS_LITERAL_CSTRING(" ) ");
 
       mCursor->mContinuePrimaryKeyQuery =
           aQueryStart +
@@ -25831,19 +25837,26 @@ void Cursor::OpenOp::PrepareIndexKeyConditionClause(
               ") OR "
               "sort_column ") +
           comparisonChar + NS_LITERAL_CSTRING(" :") + kStmtParamNameCurrentKey +
-          NS_LITERAL_CSTRING(")") + aDirectionClause + kOpenLimit;
+          NS_LITERAL_CSTRING(")");
       break;
 
     case IDBCursor::NEXT_UNIQUE:
     case IDBCursor::PREV_UNIQUE:
       mCursor->mContinueQuery =
           aQueryStart + NS_LITERAL_CSTRING(" AND sort_column ") +
-          comparisonChar + NS_LITERAL_CSTRING(" :") + kStmtParamNameCurrentKey +
-          aDirectionClause + kOpenLimit;
+          comparisonChar + NS_LITERAL_CSTRING(" :") + kStmtParamNameCurrentKey;
       break;
 
     default:
       MOZ_CRASH("Should never get here!");
+  }
+
+  const nsAutoCString suffix = aDirectionClause + kOpenLimit +
+                               NS_LITERAL_CSTRING(":") + kStmtParamNameLimit;
+  mCursor->mContinueQuery += suffix;
+  mCursor->mContinueToQuery += suffix;
+  if (!mCursor->mContinuePrimaryKeyQuery.IsEmpty()) {
+    mCursor->mContinuePrimaryKeyQuery += suffix;
   }
 }
 
@@ -26355,12 +26368,17 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   nsAutoCString countString;
   countString.AppendInt(advanceCount);
 
-  nsCString query = continueQuery + countString;
-
   const bool usingRangeKey = !mCursor->mRangeKey.IsUnset();
 
   DatabaseConnection::CachedStatement stmt;
-  nsresult rv = aConnection->GetCachedStatement(query, &stmt);
+  nsresult rv = aConnection->GetCachedStatement(continueQuery, &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Bind limit.
+  rv = stmt->BindUTF8StringByName(kStmtParamNameLimit,
+                                  ToAutoCString(advanceCount));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
