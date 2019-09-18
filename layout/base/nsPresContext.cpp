@@ -10,6 +10,9 @@
 #include "nsPresContextInlines.h"
 
 #include "mozilla/ArrayUtils.h"
+#if defined(MOZ_WIDGET_ANDROID)
+#  include "mozilla/AsyncEventDispatcher.h"
+#endif
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/EventDispatcher.h"
@@ -2361,6 +2364,11 @@ void nsPresContext::NotifyContentfulPaint() {
       if (nsRootPresContext* rootPresContext = GetRootPresContext()) {
         mFirstContentfulPaintTransactionId =
             Some(rootPresContext->mRefreshDriver->LastTransactionId().Next());
+#if defined(MOZ_WIDGET_ANDROID)
+        (new AsyncEventDispatcher(mDocument,
+            NS_LITERAL_STRING("MozFirstContentfulPaint"), CanBubble::eYes,
+            ChromeOnlyDispatch::eYes))->PostDOMEvent();
+#endif
       }
     }
   }
