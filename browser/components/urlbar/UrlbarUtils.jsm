@@ -373,6 +373,30 @@ var UrlbarUtils = {
   },
 
   /**
+   * Get the number of rows a result should span in the autocomplete dropdown.
+   *
+   * @param {UrlbarResult} result The result being created.
+   * @returns {number}
+   *          The number of rows the result should span in the autocomplete
+   *          dropdown.
+   */
+  getSpanForResult(result) {
+    switch (result.type) {
+      case UrlbarUtils.RESULT_TYPE.URL:
+      case UrlbarUtils.RESULT_TYPE.BOOKMARKS:
+      case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
+      case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
+      case UrlbarUtils.RESULT_TYPE.KEYWORD:
+      case UrlbarUtils.RESULT_TYPE.SEARCH:
+      case UrlbarUtils.RESULT_TYPE.OMNIBOX:
+        return 1;
+      case UrlbarUtils.RESULT_TYPE.TIP:
+        return 3;
+    }
+    return 1;
+  },
+
+  /**
    * Tries to initiate a speculative connection to a given url.
    * @param {nsISearchEngine|nsIURI|URL|string} urlOrEngine entity to initiate
    *        a speculative connection for.
