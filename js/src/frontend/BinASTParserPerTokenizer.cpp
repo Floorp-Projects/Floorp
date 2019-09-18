@@ -333,6 +333,8 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::makeEmptyFunctionNode(
 
   BINJS_TRY_DECL(result, handler_.newFunction(syntaxKind, pos));
 
+  funbox->setStart(start, 0, pos.begin);
+  funbox->setEnd(pos.end);
   handler_.setFunctionBox(result, funbox);
 
   return result;

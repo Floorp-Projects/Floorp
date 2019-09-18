@@ -2,20 +2,19 @@
 
 const g = newGlobal({newCompartment: true, useWindowProxy: true});
 const dbg = Debugger(g);
-const obj = dbg.addDebuggee(g);
+const gw = dbg.addDebuggee(g);
 
 function test(f, expected) {
-    const object = obj.makeDebuggeeValue(f);
-    assertEq(object.callable, true);
-    console.log("object name: " + object.displayName);
-    assertEq(object.script.startColumn, expected);
+    const fw = gw.makeDebuggeeValue(f);
+    assertEq(fw.callable, true);
+    assertEq(fw.script.startColumn, expected);
 }
 
 g.eval(`
 function f1() { }
 `);
-
 test(g.f1, 11);
+
 g.eval(`
 var f2 = function({ a, b, c }, d, e, ...more) { };
 `);
@@ -25,6 +24,7 @@ g.eval(`
 var f3 = function *() { };
 `);
 test(g.f3, 19);
+
 g.eval(`
 var f4 = async function
   () { };
@@ -50,6 +50,16 @@ var myInstance = new MyClass();
 test(g.myInstance.method, 10);
 test(g.myInstance.constructor, 14);
 
+const gEager = newGlobal({newCompartment: true, useWindowProxy: true, disableLazyParsing: true});
+const eagerDbg = Debugger(gEager);
+const gEagerWrapped = eagerDbg.addDebuggee(gEager);
+gEager.eval(`
+function f7() { }
+`);
+const f7w = gEagerWrapped.makeDebuggeeValue(gEager.f7);
+assertEq(f7w.callable, true);
+assertEq(f7w.script.startColumn, 11);
+
 g.eval(`
 function f8() {
     return function f8Inner() { }
@@ -68,7 +78,7 @@ let column;
 dbg.onDebuggerStatement = function (frame) {
     column = frame.script.startColumn;
     hit += 1;
-}
+};
 
 g.eval(`    debugger;`);
 assertEq(column, 0);
