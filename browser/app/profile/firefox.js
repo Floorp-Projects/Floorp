@@ -2097,8 +2097,8 @@ pref("devtools.serviceWorkers.testing.enabled", false);
 // Enable the Network Monitor
 pref("devtools.netmonitor.enabled", true);
 
-// Enable Network Search in Nightly builds.
-#if defined(NIGHTLY_BUILD)
+// Enable Network Search in Nightly and DevEdition/Beta builds.
+#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
   pref("devtools.netmonitor.features.search", true);
 #else
   pref("devtools.netmonitor.features.search", false);
