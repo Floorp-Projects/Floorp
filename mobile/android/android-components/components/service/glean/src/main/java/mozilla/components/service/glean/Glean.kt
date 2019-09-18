@@ -91,6 +91,7 @@ open class GleanInternalAPI internal constructor () {
      * as shared preferences
      * @param configuration A Glean [Configuration] object with global settings.
      */
+    @JvmOverloads
     fun initialize(
         applicationContext: Context,
         configuration: Configuration = Configuration()
@@ -268,6 +269,7 @@ open class GleanInternalAPI internal constructor () {
      * @param branch The experiment branch (maximum 30 bytes)
      * @param extra Optional metadata to output with the ping
      */
+    @JvmOverloads
     fun setExperimentActive(
         experimentId: String,
         branch: String,
