@@ -45,6 +45,7 @@ class AutoSetTemporaryAncestorLimiter;
 class EditActionResult;
 class EmptyEditableFunctor;
 class ListElementSelectionState;
+class ListItemElementSelectionState;
 class MoveNodeResult;
 class ResizerSelectionListener;
 class SplitRangeOffFromNodeResult;
@@ -4366,6 +4367,7 @@ class HTMLEditor final : public TextEditor,
   friend class EmptyEditableFunctor;
   friend class HTMLEditRules;
   friend class ListElementSelectionState;
+  friend class ListItemElementSelectionState;
   friend class SlurpBlobEventListener;
   friend class TextEditor;
   friend class WSRunObject;
@@ -4394,6 +4396,30 @@ class MOZ_STACK_CLASS ListElementSelectionState final {
   bool mIsULElementSelected = false;
   bool mIsDLElementSelected = false;
   bool mIsOtherContentSelected = false;
+};
+
+/**
+ * ListItemElementSelectionState class gets which list item element is selected
+ * right now.
+ */
+class MOZ_STACK_CLASS ListItemElementSelectionState final {
+ public:
+  ListItemElementSelectionState() = delete;
+  ListItemElementSelectionState(HTMLEditor& aHTMLEditor, ErrorResult& aRv);
+
+  bool IsLIElementSelected() const { return mIsLIElementSelected; }
+  bool IsDTElementSelected() const { return mIsDTElementSelected; }
+  bool IsDDElementSelected() const { return mIsDDElementSelected; }
+  bool IsNotOneTypeDefinitionListItemElementSelected() const {
+    return (mIsDTElementSelected + mIsDDElementSelected +
+            mIsOtherElementSelected) > 1;
+  }
+
+ private:
+  bool mIsLIElementSelected = false;
+  bool mIsDTElementSelected = false;
+  bool mIsDDElementSelected = false;
+  bool mIsOtherElementSelected = false;
 };
 
 }  // namespace mozilla

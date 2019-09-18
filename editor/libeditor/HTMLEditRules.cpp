@@ -805,59 +805,62 @@ ListElementSelectionState::ListElementSelectionState(HTMLEditor& aHTMLEditor,
   }
 }
 
-nsresult HTMLEditRules::GetListItemState(bool* aMixed, bool* aLI, bool* aDT,
-                                         bool* aDD) {
-  NS_ENSURE_TRUE(aMixed && aLI && aDT && aDD, NS_ERROR_NULL_POINTER);
-  *aMixed = false;
-  *aLI = false;
-  *aDT = false;
-  *aDD = false;
-  bool bNonList = false;
+ListItemElementSelectionState::ListItemElementSelectionState(
+    HTMLEditor& aHTMLEditor, ErrorResult& aRv) {
+  MOZ_ASSERT(!aRv.Failed());
 
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
+    aRv.Throw(NS_ERROR_EDITOR_DESTROYED);
+    return;
   }
 
-  AutoSafeEditorData setData(*this, *mHTMLEditor);
+  // XXX Should we create another constructor which won't create
+  //     AutoEditActionDataSetter?  Or should we create another
+  //     AutoEditActionDataSetter which won't nest edit action?
+  EditorBase::AutoEditActionDataSetter editActionData(aHTMLEditor,
+                                                      EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    aRv = EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
+    return;
+  }
 
   AutoTArray<OwningNonNull<nsINode>, 64> arrayOfNodes;
-  nsresult rv = HTMLEditorRef().CollectEditTargetNodesInExtendedSelectionRanges(
+  nsresult rv = aHTMLEditor.CollectEditTargetNodesInExtendedSelectionRanges(
       arrayOfNodes, EditSubAction::eCreateOrChangeList,
       HTMLEditor::CollectNonEditableNodes::No);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    aRv = EditorBase::ToGenericNSResult(rv);
+    return;
   }
 
   // examine list type for nodes in selection
   for (const auto& node : arrayOfNodes) {
     if (!node->IsElement()) {
-      bNonList = true;
+      mIsOtherElementSelected = true;
     } else if (node->IsAnyOfHTMLElements(nsGkAtoms::ul, nsGkAtoms::ol,
                                          nsGkAtoms::li)) {
-      *aLI = true;
+      mIsLIElementSelected = true;
     } else if (node->IsHTMLElement(nsGkAtoms::dt)) {
-      *aDT = true;
+      mIsDTElementSelected = true;
     } else if (node->IsHTMLElement(nsGkAtoms::dd)) {
-      *aDD = true;
+      mIsDDElementSelected = true;
     } else if (node->IsHTMLElement(nsGkAtoms::dl)) {
-      if (*aDT && *aDD) {
+      if (mIsDTElementSelected && mIsDDElementSelected) {
         continue;
       }
       // need to look inside dl and see which types of items it has
       DefinitionListItemScanner scanner(*node->AsElement());
-      *aDT |= scanner.DTElementFound();
-      *aDD |= scanner.DDElementFound();
+      mIsDTElementSelected |= scanner.DTElementFound();
+      mIsDDElementSelected |= scanner.DDElementFound();
     } else {
-      bNonList = true;
+      mIsOtherElementSelected = true;
+    }
+
+    if (mIsLIElementSelected && mIsDTElementSelected && mIsDDElementSelected &&
+        mIsOtherElementSelected) {
+      break;
     }
   }
-
-  // hokey arithmetic with booleans
-  if (*aDT + *aDD + bNonList > 1) {
-    *aMixed = true;
-  }
-
-  return NS_OK;
 }
 
 nsresult HTMLEditRules::GetAlignment(bool* aMixed,

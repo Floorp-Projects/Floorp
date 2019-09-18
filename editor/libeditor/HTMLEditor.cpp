@@ -2064,17 +2064,22 @@ HTMLEditor::GetListItemState(bool* aMixed, bool* aLI, bool* aDT, bool* aDD) {
       NS_WARN_IF(!aDD)) {
     return NS_ERROR_INVALID_ARG;
   }
-  if (!mRules) {
+  if (!mInitSucceeded) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
+  ErrorResult error;
+  ListItemElementSelectionState state(*this, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
   }
 
-  RefPtr<HTMLEditRules> htmlRules(mRules->AsHTMLEditRules());
-  return htmlRules->GetListItemState(aMixed, aLI, aDT, aDD);
+  // XXX Why do we ignore `<li>` element selected state?
+  *aMixed = state.IsNotOneTypeDefinitionListItemElementSelected();
+  *aLI = state.IsLIElementSelected();
+  *aDT = state.IsDTElementSelected();
+  *aDD = state.IsDDElementSelected();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
