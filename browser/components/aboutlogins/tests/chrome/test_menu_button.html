@@ -74,8 +74,8 @@ add_task(async function test_menu_open_close() {
     "waiting for firstVisibleItem to get focus again");
   ok(firstVisibleItem.matches(":focus"), "firstVisibleItem should be focused after tabbing to it again");
 
-  if (navigator.platform == "Win32") {
-    // The Import menuitem is only visible on Windows, where we will need another Tab
+  if (navigator.platform == "Win32" || navigator.platform == "MacIntel") {
+    // The Import menuitem is only visible on Windows/macOS, where we will need another Tab
     // press to get to the Preferences item.
     let preferencesItem = gMenuButton.shadowRoot.querySelector(".menuitem-preferences");
     sendKey("DOWN");
@@ -127,7 +127,7 @@ add_task(async function test_menu_keyboard_cycling() {
     "menuitem-mobile-android",
     "menuitem-mobile-ios",
   ];
-  if (navigator.platform == "Win32") {
+  if (navigator.platform == "Win32" || navigator.platform == "MacIntel") {
     allItems = ["menuitem-import", ...allItems];
   }
 

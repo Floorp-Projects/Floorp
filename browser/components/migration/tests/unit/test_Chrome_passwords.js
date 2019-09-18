@@ -1,6 +1,8 @@
 "use strict";
 
-const { OSCrypto } = ChromeUtils.import("resource://gre/modules/OSCrypto.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 const PROFILE = {
   id: "Default",
@@ -88,12 +90,14 @@ const TEST_LOGINS = [
   },
 ];
 
-var crypto = new OSCrypto();
+var loginCrypto;
 var dbConn;
 
-function promiseSetPassword(login) {
+async function promiseSetPassword(login) {
+  let encryptedString = await loginCrypto.encryptData(login.password);
+  info(`promiseSetPassword: ${encryptedString}`);
   let passwordValue = new Uint8Array(
-    crypto.stringToArray(crypto.encryptData(login.password))
+    loginCrypto.stringToArray(encryptedString)
   );
   return dbConn.execute(
     `UPDATE logins
@@ -181,15 +185,80 @@ function generateDifferentLogin(login) {
 }
 
 add_task(async function setup() {
-  let loginDataFile = do_get_file(
-    "AppData/Local/Google/Chrome/User Data/Default/Login Data"
-  );
-  dbConn = await Sqlite.openConnection({ path: loginDataFile.path });
-  registerFakePath("LocalAppData", do_get_file("AppData/Local/"));
+  let dirSvcPath;
+  let pathId;
+  let profilePathSegments;
+
+  // Use a mock service and account name to avoid a Keychain auth. prompt that
+  // would block the test from finishing if Chrome has already created a matching
+  // Keychain entry. This allows us to still exercise the keychain lookup code.
+  // The mock encryption passphrase is used when the Keychain item isn't found.
+  let mockMacOSKeychain = {
+    passphrase: "bW96aWxsYWZpcmVmb3g=",
+    serviceName: "TESTING Chrome Safe Storage",
+    accountName: "TESTING Chrome",
+  };
+  if (AppConstants.platform == "macosx") {
+    let { ChromeMacOSLoginCrypto } = ChromeUtils.import(
+      "resource:///modules/ChromeMacOSLoginCrypto.jsm"
+    );
+    loginCrypto = new ChromeMacOSLoginCrypto(
+      mockMacOSKeychain.serviceName,
+      mockMacOSKeychain.accountName,
+      mockMacOSKeychain.passphrase
+    );
+    dirSvcPath = "Library/";
+    pathId = "ULibDir";
+    profilePathSegments = [
+      "Application Support",
+      "Google",
+      "Chrome",
+      "Default",
+      "Login Data",
+    ];
+  } else if (AppConstants.platform == "win") {
+    const { OSCrypto } = ChromeUtils.import(
+      "resource://gre/modules/OSCrypto.jsm"
+    );
+    loginCrypto = new OSCrypto();
+    dirSvcPath = "AppData/Local/";
+    pathId = "LocalAppData";
+    profilePathSegments = [
+      "Google",
+      "Chrome",
+      "User Data",
+      "Default",
+      "Login Data",
+    ];
+  } else {
+    throw new Error("Not implemented");
+  }
+  let dirSvcFile = do_get_file(dirSvcPath);
+  registerFakePath(pathId, dirSvcFile);
+
+  // We don't import osfile.jsm until after registering the fake path, because
+  // importing osfile will sometimes greedily fetch certain path identifiers
+  // from the dir service, which means they get cached, which means we can't
+  // register a fake path for them anymore.
+  const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+  info(OS.Path.join(dirSvcFile.path, ...profilePathSegments));
+  let loginDataFilePath = OS.Path.join(dirSvcFile.path, ...profilePathSegments);
+  dbConn = await Sqlite.openConnection({ path: loginDataFilePath });
+
+  if (AppConstants.platform == "macosx") {
+    let migrator = await MigrationUtils.getMigrator("chrome");
+    Object.assign(migrator.wrappedJSObject, {
+      _keychainServiceName: mockMacOSKeychain.serviceName,
+      _keychainAccountName: mockMacOSKeychain.accountName,
+      _keychainMockPassphrase: mockMacOSKeychain.passphrase,
+    });
+  }
 
   registerCleanupFunction(() => {
     Services.logins.removeAllLogins();
-    crypto.finalize();
+    if (loginCrypto.finalize) {
+      loginCrypto.finalize();
+    }
     return dbConn.close();
   });
 });
