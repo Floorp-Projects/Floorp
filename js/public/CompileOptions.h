@@ -114,7 +114,6 @@ class JS_PUBLIC_API TransitiveCompileOptions {
  public:
   // POD options.
   bool selfHostingMode = false;
-  bool canLazilyParse = true;
   bool extraWarningsOption = false;
   bool werrorOption = false;
   AsmJSOption asmJSOption = AsmJSOption::Disabled;
@@ -407,11 +406,6 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     return *this;
   }
 
-  CompileOptions& setCanLazilyParse(bool clp) {
-    canLazilyParse = clp;
-    return *this;
-  }
-
   CompileOptions& setSourceIsLazy(bool l) {
     sourceIsLazy = l;
     return *this;
@@ -442,6 +436,11 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
   // Set introduction information according to any currently executing script.
   CompileOptions& setIntroductionInfoToCaller(JSContext* cx,
                                               const char* introductionType);
+
+  CompileOptions& setForceFullParse() {
+    forceFullParse_ = true;
+    return *this;
+  }
 
   CompileOptions& setForceStrictMode() {
     forceStrictMode_ = true;
