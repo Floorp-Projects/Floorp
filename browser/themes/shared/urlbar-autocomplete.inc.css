@@ -51,7 +51,7 @@
   width: calc(100% - 2 * @urlbarViewHorizontalMargin@);
 }
 
-.urlbarView.megabar:not([hidden]) {
+.urlbarView:not([hidden]) {
   display: block;
 }
 
@@ -68,10 +68,6 @@
   background: var(--autocomplete-popup-background);
   color: var(--autocomplete-popup-color);
   border-block: 1px solid var(--chrome-content-separator-color);
-}
-
-.urlbarView:not(.megabar):not([hidden]) {
-  display: block;
 }
 
 #urlbar-contextual-tip {
