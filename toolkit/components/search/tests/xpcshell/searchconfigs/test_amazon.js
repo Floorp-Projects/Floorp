@@ -162,7 +162,7 @@ const test = new SearchConfigTest({
       included: [
         {
           locales: {
-            matches: ["ca", "en-CA"],
+            matches: ["en-CA"],
           },
         },
         {
