@@ -297,7 +297,9 @@ var AboutProtectionsHandler = {
     );
 
     return (
-      region === "US" && !alreadyInstalled && languages.data.includes("en-US")
+      region.toLowerCase() === "us" &&
+      !alreadyInstalled &&
+      languages.data.toLowerCase().includes("en-us")
     );
   },
 
