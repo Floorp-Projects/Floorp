@@ -863,175 +863,198 @@ ListItemElementSelectionState::ListItemElementSelectionState(
   }
 }
 
-nsresult HTMLEditRules::GetAlignment(bool* aMixed,
-                                     nsIHTMLEditor::EAlignment* aAlign) {
-  MOZ_ASSERT(aMixed && aAlign);
+AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
+                                             ErrorResult& aRv) {
+  MOZ_ASSERT(!aRv.Failed());
 
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
+    aRv = EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
+    return;
   }
 
-  AutoSafeEditorData setData(*this, *mHTMLEditor);
+  // XXX Should we create another constructor which won't create
+  //     AutoEditActionDataSetter?  Or should we create another
+  //     AutoEditActionDataSetter which won't nest edit action?
+  EditorBase::AutoEditActionDataSetter editActionData(aHTMLEditor,
+                                                      EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    aRv = EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
+    return;
+  }
 
-  // For now, just return first alignment.  We'll lie about if it's mixed.
-  // This is for efficiency given that our current ui doesn't care if it's
+  // For now, just return first alignment.  We don't check if it's mixed.
+  // This is for efficiency given that our current UI doesn't care if it's
   // mixed.
-  // cmanske: NOT TRUE! We would like to pay attention to mixed state in Format
-  // | Align submenu!
+  // cmanske: NOT TRUE! We would like to pay attention to mixed state in
+  // [Format] -> [Align] submenu!
 
-  // This routine assumes that alignment is done ONLY via divs
+  // This routine assumes that alignment is done ONLY by `<div>` elements
+  // if aHTMLEditor is not in CSS mode.
 
-  // Default alignment is left
-  *aMixed = false;
-  *aAlign = nsIHTMLEditor::eLeft;
-
-  // Get selection location
-  if (NS_WARN_IF(!HTMLEditorRef().GetRoot())) {
-    return NS_ERROR_FAILURE;
+  if (NS_WARN_IF(!aHTMLEditor.GetRoot())) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
   }
-  OwningNonNull<Element> root = *HTMLEditorRef().GetRoot();
 
-  int32_t rootOffset =
-      root->GetParentNode() ? root->GetParentNode()->ComputeIndexOf(root) : -1;
+  OwningNonNull<Element> bodyOrDocumentElement = *aHTMLEditor.GetRoot();
+  EditorRawDOMPoint atBodyOrDocumentElement(bodyOrDocumentElement);
 
-  nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
+  nsRange* firstRange = aHTMLEditor.SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
   }
   EditorRawDOMPoint atStartOfSelection(firstRange->StartRef());
   if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
   }
   MOZ_ASSERT(atStartOfSelection.IsSetAndValid());
 
-  // Is the selection collapsed?
-  nsCOMPtr<nsINode> nodeToExamine;
-  if (SelectionRefPtr()->IsCollapsed() ||
-      atStartOfSelection.GetContainerAsText()) {
-    // If selection is collapsed, we want to look at the container of selection
-    // start and its ancestors for divs with alignment on them.  If we are in a
-    // text node, then that is the node of interest.
-    nodeToExamine = atStartOfSelection.GetContainer();
-    if (NS_WARN_IF(!nodeToExamine)) {
-      return NS_ERROR_FAILURE;
+  nsIContent* editTargetContent = nullptr;
+  // If selection is collapsed or in a text node, take the container.
+  if (aHTMLEditor.SelectionRefPtr()->IsCollapsed() ||
+      atStartOfSelection.IsInTextNode()) {
+    editTargetContent = atStartOfSelection.GetContainerAsContent();
+    if (NS_WARN_IF(!editTargetContent)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
     }
-  } else if (atStartOfSelection.IsContainerHTMLElement(nsGkAtoms::html) &&
-             atStartOfSelection.Offset() == static_cast<uint32_t>(rootOffset)) {
-    // If we have selected the body, let's look at the first editable node
-    nodeToExamine = HTMLEditorRef().GetNextEditableNode(atStartOfSelection);
-    if (NS_WARN_IF(!nodeToExamine)) {
-      return NS_ERROR_FAILURE;
+  }
+  // If selection container is the `<body>` element which is set to
+  // `HTMLDocument.body`, take first editable node in it.
+  // XXX Why don't we just compare `atStartOfSelection.GetChild()` and
+  //     `bodyOrDocumentElement`?  Then, we can avoid computing the
+  //     offset.
+  else if (atStartOfSelection.IsContainerHTMLElement(nsGkAtoms::html) &&
+           atBodyOrDocumentElement.IsSet() &&
+           atStartOfSelection.Offset() == atBodyOrDocumentElement.Offset()) {
+    editTargetContent = aHTMLEditor.GetNextEditableNode(atStartOfSelection);
+    if (NS_WARN_IF(!editTargetContent)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
     }
-  } else {
+  }
+  // Otherwise, use first selected node.
+  // XXX Only for retreiving it, the following block treats all selected
+  //     ranges.  `HTMLEditor` should have
+  //     `GetFirstSelectionRangeExtendedToHardLineStartAndEnd()`.
+  else {
     AutoTArray<RefPtr<nsRange>, 4> arrayOfRanges;
-    HTMLEditorRef().GetSelectionRangesExtendedToHardLineStartAndEnd(
+    aHTMLEditor.GetSelectionRangesExtendedToHardLineStartAndEnd(
         arrayOfRanges, EditSubAction::eSetOrClearAlignment);
 
-    // Use these ranges to construct a list of nodes to act on.
-    nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
-    nsresult rv = HTMLEditorRef().CollectEditTargetNodes(
+    AutoTArray<OwningNonNull<nsINode>, 64> arrayOfNodes;
+    nsresult rv = aHTMLEditor.CollectEditTargetNodes(
         arrayOfRanges, arrayOfNodes, EditSubAction::eSetOrClearAlignment,
         HTMLEditor::CollectNonEditableNodes::Yes);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(arrayOfNodes.IsEmpty()) ||
+        NS_WARN_IF(!arrayOfNodes[0]->IsContent())) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
     }
-    nodeToExamine = arrayOfNodes.SafeElementAt(0);
-    if (NS_WARN_IF(!nodeToExamine)) {
-      return NS_ERROR_FAILURE;
-    }
+    editTargetContent = arrayOfNodes[0]->AsContent();
   }
 
-  RefPtr<Element> blockParent = HTMLEditorRef().GetBlock(*nodeToExamine);
-  if (NS_WARN_IF(!blockParent)) {
-    return NS_ERROR_FAILURE;
+  Element* blockElementAtEditTarget = HTMLEditor::GetBlock(*editTargetContent);
+  if (NS_WARN_IF(!blockElementAtEditTarget)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
   }
 
-  if (HTMLEditorRef().IsCSSEnabled() &&
-      CSSEditUtils::IsCSSEditableProperty(blockParent, nullptr,
+  if (aHTMLEditor.IsCSSEnabled() &&
+      CSSEditUtils::IsCSSEditableProperty(blockElementAtEditTarget, nullptr,
                                           nsGkAtoms::align)) {
     // We are in CSS mode and we know how to align this element with CSS
     nsAutoString value;
     // Let's get the value(s) of text-align or margin-left/margin-right
     CSSEditUtils::GetCSSEquivalentToHTMLInlineStyleSet(
-        blockParent, nullptr, nsGkAtoms::align, value, CSSEditUtils::eComputed);
+        blockElementAtEditTarget, nullptr, nsGkAtoms::align, value,
+        CSSEditUtils::eComputed);
     if (value.EqualsLiteral("center") || value.EqualsLiteral("-moz-center") ||
         value.EqualsLiteral("auto auto")) {
-      *aAlign = nsIHTMLEditor::eCenter;
-      return NS_OK;
+      mFirstAlign = nsIHTMLEditor::eCenter;
+      return;
     }
     if (value.EqualsLiteral("right") || value.EqualsLiteral("-moz-right") ||
         value.EqualsLiteral("auto 0px")) {
-      *aAlign = nsIHTMLEditor::eRight;
-      return NS_OK;
+      mFirstAlign = nsIHTMLEditor::eRight;
+      return;
     }
     if (value.EqualsLiteral("justify")) {
-      *aAlign = nsIHTMLEditor::eJustify;
-      return NS_OK;
+      mFirstAlign = nsIHTMLEditor::eJustify;
+      return;
     }
-    *aAlign = nsIHTMLEditor::eLeft;
-    return NS_OK;
+    // XXX In RTL document, is this expected?
+    mFirstAlign = nsIHTMLEditor::eLeft;
+    return;
   }
 
-  // Check up the ladder for divs with alignment
-  bool isFirstNodeToExamine = true;
-  for (; nodeToExamine; nodeToExamine = nodeToExamine->GetParentNode()) {
-    if (!isFirstNodeToExamine &&
-        nodeToExamine->IsHTMLElement(nsGkAtoms::table)) {
-      // The node to examine is a table and this is not the first node we
-      // examine; let's break here to materialize the 'inline-block' behaviour
-      // of html tables regarding to text alignment
-      return NS_OK;
+  for (nsINode* containerNode = editTargetContent; containerNode;
+       containerNode = containerNode->GetParentNode()) {
+    // If the node is a parent `<table>` element of edit target, let's break
+    // here to materialize the 'inline-block' behaviour of html tables
+    // regarding to text alignment.
+    if (containerNode != editTargetContent &&
+        containerNode->IsHTMLElement(nsGkAtoms::table)) {
+      return;
     }
 
-    if (CSSEditUtils::IsCSSEditableProperty(nodeToExamine, nullptr,
+    if (CSSEditUtils::IsCSSEditableProperty(containerNode, nullptr,
                                             nsGkAtoms::align)) {
       nsAutoString value;
-      CSSEditUtils::GetSpecifiedProperty(*nodeToExamine, *nsGkAtoms::textAlign,
+      CSSEditUtils::GetSpecifiedProperty(*containerNode, *nsGkAtoms::textAlign,
                                          value);
       if (!value.IsEmpty()) {
         if (value.EqualsLiteral("center")) {
-          *aAlign = nsIHTMLEditor::eCenter;
-          return NS_OK;
+          mFirstAlign = nsIHTMLEditor::eCenter;
+          return;
         }
         if (value.EqualsLiteral("right")) {
-          *aAlign = nsIHTMLEditor::eRight;
-          return NS_OK;
+          mFirstAlign = nsIHTMLEditor::eRight;
+          return;
         }
         if (value.EqualsLiteral("justify")) {
-          *aAlign = nsIHTMLEditor::eJustify;
-          return NS_OK;
+          mFirstAlign = nsIHTMLEditor::eJustify;
+          return;
         }
         if (value.EqualsLiteral("left")) {
-          *aAlign = nsIHTMLEditor::eLeft;
-          return NS_OK;
+          mFirstAlign = nsIHTMLEditor::eLeft;
+          return;
         }
         // XXX
         // text-align: start and end aren't supported yet
       }
     }
 
-    if (HTMLEditUtils::SupportsAlignAttr(*nodeToExamine)) {
-      // Check for alignment
-      nsAutoString typeAttrVal;
-      nodeToExamine->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::align,
-                                          typeAttrVal);
-      ToLowerCase(typeAttrVal);
-      if (!typeAttrVal.IsEmpty()) {
-        if (typeAttrVal.EqualsLiteral("center")) {
-          *aAlign = nsIHTMLEditor::eCenter;
-        } else if (typeAttrVal.EqualsLiteral("right")) {
-          *aAlign = nsIHTMLEditor::eRight;
-        } else if (typeAttrVal.EqualsLiteral("justify")) {
-          *aAlign = nsIHTMLEditor::eJustify;
-        } else {
-          *aAlign = nsIHTMLEditor::eLeft;
-        }
-        return NS_OK;
-      }
+    if (!HTMLEditUtils::SupportsAlignAttr(*containerNode)) {
+      continue;
     }
-    isFirstNodeToExamine = false;
+
+    nsAutoString alignAttributeValue;
+    containerNode->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::align,
+                                        alignAttributeValue);
+    if (alignAttributeValue.IsEmpty()) {
+      continue;
+    }
+
+    if (alignAttributeValue.LowerCaseEqualsASCII("center")) {
+      mFirstAlign = nsIHTMLEditor::eCenter;
+      return;
+    }
+    if (alignAttributeValue.LowerCaseEqualsASCII("right")) {
+      mFirstAlign = nsIHTMLEditor::eRight;
+      return;
+    }
+    // XXX This is odd case.  `<div align="justify">` is not in any standards.
+    if (alignAttributeValue.LowerCaseEqualsASCII("justify")) {
+      mFirstAlign = nsIHTMLEditor::eJustify;
+      return;
+    }
+    // XXX In RTL document, is this expected?
+    mFirstAlign = nsIHTMLEditor::eLeft;
+    return;
   }
-  return NS_OK;
 }
 
 static nsStaticAtom& MarginPropertyAtomForIndent(nsINode& aNode) {

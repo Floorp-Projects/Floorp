@@ -40,6 +40,7 @@ class nsTableWrapperFrame;
 class nsRange;
 
 namespace mozilla {
+class AlignStateAtSelection;
 class AutoSelectionSetterAfterTableEdit;
 class AutoSetTemporaryAncestorLimiter;
 class EditActionResult;
@@ -4360,6 +4361,7 @@ class HTMLEditor final : public TextEditor,
 
   ParagraphSeparator mDefaultParagraphSeparator;
 
+  friend class AlignStateAtSelection;
   friend class AutoSelectionSetterAfterTableEdit;
   friend class AutoSetTemporaryAncestorLimiter;
   friend class CSSEditUtils;
@@ -4420,6 +4422,23 @@ class MOZ_STACK_CLASS ListItemElementSelectionState final {
   bool mIsDTElementSelected = false;
   bool mIsDDElementSelected = false;
   bool mIsOtherElementSelected = false;
+};
+
+/**
+ * AlignStateAtSelection class gets alignment at selection.
+ * XXX This currently returns only first alignment.
+ */
+class MOZ_STACK_CLASS AlignStateAtSelection final {
+ public:
+  AlignStateAtSelection() = delete;
+  AlignStateAtSelection(HTMLEditor& aHTMLEditor, ErrorResult& aRv);
+
+  nsIHTMLEditor::EAlignment AlignmentAtSelectionStart() const {
+    return mFirstAlign;
+  }
+
+ private:
+  nsIHTMLEditor::EAlignment mFirstAlign = nsIHTMLEditor::eLeft;
 };
 
 }  // namespace mozilla
