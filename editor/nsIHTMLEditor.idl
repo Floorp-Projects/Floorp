@@ -253,7 +253,6 @@ interface nsIHTMLEditor : nsISupports
    * @param aUL       true if an "ul" list is selected.
    * @param aDL       true if a "dl" list is selected.
    */
-  [can_run_script]
   void getListState(out boolean aMixed, out boolean aOL, out boolean aUL,
                     out boolean aDL);
 
