@@ -30,8 +30,9 @@ class ProfileBuffer final {
   using BlockIndex = BlocksRingBuffer::BlockIndex;
 
   // ProfileBuffer constructor
-  // @param aCapacity The capacity of the buffer.
-  explicit ProfileBuffer(PowerOfTwo32 aCapacity);
+  // @param aBuffer The BlocksRingBuffer to use as buffer manager.
+  // @param aCapacity The capacity of the buffer in memory.
+  ProfileBuffer(BlocksRingBuffer& aBuffer, PowerOfTwo32 aCapacity);
 
   ~ProfileBuffer();
 
@@ -113,7 +114,7 @@ class ProfileBuffer final {
                                      int aThreadId);
 
   // The circular-ring storage in which this ProfileBuffer stores its data.
-  BlocksRingBuffer mEntries;
+  BlocksRingBuffer& mEntries;
 
  public:
   // `BufferRangeStart()` and `BufferRangeEnd()` return `uint64_t` values

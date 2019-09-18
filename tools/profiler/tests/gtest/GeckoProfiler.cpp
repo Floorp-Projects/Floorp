@@ -270,11 +270,14 @@ TEST(GeckoProfiler, EnsureStarted)
   {
     // Active -> Active with same settings
 
+    Maybe<ProfilerBufferInfo> info0 = profiler_get_buffer_info();
+    ASSERT_TRUE(info0->mRangeEnd > 0);
+
     // First, write some samples into the buffer.
     PR_Sleep(PR_MillisecondsToInterval(500));
 
     Maybe<ProfilerBufferInfo> info1 = profiler_get_buffer_info();
-    ASSERT_TRUE(info1->mRangeEnd > 0);
+    ASSERT_TRUE(info1->mRangeEnd > info0->mRangeEnd);
 
     // Call profiler_ensure_started with the same settings as before.
     // This operation must not clear our buffer!
@@ -286,10 +289,14 @@ TEST(GeckoProfiler, EnsureStarted)
         PROFILER_DEFAULT_ENTRIES.Value(), PROFILER_DEFAULT_INTERVAL, features,
         filters, MOZ_ARRAY_LENGTH(filters), Some(PROFILER_DEFAULT_DURATION));
 
-    // Check that our position in the buffer stayed the same or advanced.
-    // In particular, it shouldn't have reverted to the start.
+    // Check that our position in the buffer stayed the same or advanced, but
+    // not by much, and the range-start after profiler_ensure_started shouldn't
+    // have passed the range-end before.
     Maybe<ProfilerBufferInfo> info2 = profiler_get_buffer_info();
     ASSERT_TRUE(info2->mRangeEnd >= info1->mRangeEnd);
+    ASSERT_TRUE(info2->mRangeEnd - info1->mRangeEnd <
+                info1->mRangeEnd - info0->mRangeEnd);
+    ASSERT_TRUE(info2->mRangeStart < info1->mRangeEnd);
   }
 
   {
@@ -309,8 +316,10 @@ TEST(GeckoProfiler, EnsureStarted)
                       PROFILER_DEFAULT_INTERVAL, differentFeatures, filters,
                       MOZ_ARRAY_LENGTH(filters));
 
+    // Check the the buffer was cleared, so its range-start should be at/after
+    // its range-end before.
     Maybe<ProfilerBufferInfo> info2 = profiler_get_buffer_info();
-    ASSERT_TRUE(info2->mRangeEnd < info1->mRangeEnd);
+    ASSERT_TRUE(info2->mRangeStart >= info1->mRangeEnd);
   }
 
   {
