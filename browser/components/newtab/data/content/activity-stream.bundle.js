@@ -8443,7 +8443,7 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
     this.onLinkClick = this.onLinkClick.bind(this);
 
     this.setPlaceholderRef = element => {
-      this.placholderElement = element;
+      this.placeholderElement = element;
     };
 
     this.state = {
@@ -8477,8 +8477,8 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
       const entry = entries.find(e => e.isIntersecting);
 
       if (entry) {
-        if (this.placholderElement) {
-          this.observer.unobserve(this.placholderElement);
+        if (this.placeholderElement) {
+          this.observer.unobserve(this.placeholderElement);
         } // Stop observing since element has been seen
 
 
@@ -8491,8 +8491,8 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
 
   onIdleCallback() {
     if (!this.state.isSeen) {
-      if (this.observer && this.placholderElement) {
-        this.observer.unobserve(this.placholderElement);
+      if (this.observer && this.placeholderElement) {
+        this.observer.unobserve(this.placeholderElement);
       }
 
       this.setState({
@@ -8502,18 +8502,22 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
   }
 
   componentDidMount() {
-    this.idleCallbackId = window.requestIdleCallback(this.onIdleCallback.bind(this));
+    this.idleCallbackId = this.props.windowObj.requestIdleCallback(this.onIdleCallback.bind(this));
 
-    if (this.placholderElement) {
+    if (this.placeholderElement) {
       this.observer = new IntersectionObserver(this.onSeen.bind(this));
-      this.observer.observe(this.placholderElement);
+      this.observer.observe(this.placeholderElement);
     }
   }
 
   componentWillUnmount() {
     // Remove observer on unmount
-    if (this.observer && this.placholderElement) {
-      this.observer.unobserve(this.placholderElement);
+    if (this.observer && this.placeholderElement) {
+      this.observer.unobserve(this.placeholderElement);
+    }
+
+    if (this.idleCallbackId) {
+      this.props.windowObj.cancelIdleCallback(this.idleCallbackId);
     }
   }
 
@@ -8583,6 +8587,10 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
   }
 
 }
+DSCard_DSCard.defaultProps = {
+  windowObj: window // Added to support unit tests
+
+};
 const PlaceholderDSCard = props => external_React_default.a.createElement(DSCard_DSCard, {
   placeholder: true
 });
