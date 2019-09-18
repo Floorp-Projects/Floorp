@@ -279,7 +279,12 @@ nsresult WSRunObject::InsertText(Document& aDocument,
   }
 
   WSFragment* beforeRun = FindNearestRun(mScanStartPoint, false);
-  WSFragment* afterRun = FindNearestRun(mScanEndPoint, true);
+  // If mScanStartPoint isn't equal to mScanEndPoint, it will replace text (i.e.
+  // committing composition). And afterRun will be end point of replaced range.
+  // So we want to know this white space type (trailing whitespace etc) of
+  // this end point, not inserted (start) point, so we re-scan white space type.
+  WSRunObject afterRunObject(mHTMLEditor, mScanEndPoint);
+  WSFragment* afterRun = afterRunObject.FindNearestRun(mScanEndPoint, true);
 
   EditorDOMPoint pointToInsert(mScanStartPoint);
   nsAutoString theString(aStringToInsert);
@@ -672,7 +677,7 @@ nsresult WSRunScanner::GetWSNodes() {
   // collect up an array of nodes that are contiguous with the insertion point
   // and which contain only whitespace.  Stop if you reach non-ws text or a new
   // block boundary.
-  EditorDOMPoint start(mScanStartPoint), end(mScanEndPoint);
+  EditorDOMPoint start(mScanStartPoint), end(mScanStartPoint);
   nsCOMPtr<nsINode> wsBoundingParent = GetWSBoundingParent();
 
   // first look backwards to find preceding ws nodes
@@ -781,12 +786,11 @@ nsresult WSRunScanner::GetWSNodes() {
   }
 
   // then look ahead to find following ws nodes
-  if (Text* textNode = mScanEndPoint.GetContainerAsText()) {
+  if (Text* textNode = end.GetContainerAsText()) {
     // don't need to put it on list. it already is from code above
     const nsTextFragment* textFrag = &textNode->TextFragment();
-    if (!mScanEndPoint.IsEndOfContainer()) {
-      for (uint32_t i = mScanEndPoint.Offset(); i < textNode->TextLength();
-           i++) {
+    if (!end.IsEndOfContainer()) {
+      for (uint32_t i = end.Offset(); i < textNode->TextLength(); i++) {
         // sanity bounds check the char position.  bug 136165
         if (i >= textFrag->GetLength()) {
           MOZ_ASSERT_UNREACHABLE("looking beyond end of text fragment");
