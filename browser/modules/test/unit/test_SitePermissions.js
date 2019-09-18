@@ -47,7 +47,6 @@ add_task(async function testPermissionsListing() {
     "desktop-notification",
     "focus-tab-by-prompt",
     "geo",
-    "image",
     "install",
     "microphone",
     "popup",
@@ -209,7 +208,6 @@ add_task(async function testExactHostMatch() {
     exactHostMatched.push("midi-sysex");
   }
   let nonExactHostMatched = [
-    "image",
     "cookie",
     "popup",
     "install",
