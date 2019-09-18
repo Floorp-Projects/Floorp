@@ -41,7 +41,7 @@ char* ToNewCString(const nsAString& aSource) {
   }
 
   auto len = aSource.Length();
-  LossyConvertUTF16toLatin1(aSource, MakeSpan(dest, len));
+  LossyConvertUtf16toLatin1(aSource, MakeSpan(dest, len));
   dest[len] = 0;
   return dest;
 }
@@ -64,7 +64,7 @@ char* ToNewUTF8String(const nsAString& aSource, uint32_t* aUTF8Count) {
   size_t destLenVal = destLen.value();
   char* dest = static_cast<char*>(moz_xmalloc(destLenVal));
 
-  size_t written = ConvertUTF16toUTF8(aSource, MakeSpan(dest, destLenVal));
+  size_t written = ConvertUtf16toUtf8(aSource, MakeSpan(dest, destLenVal));
   dest[written] = 0;
 
   if (aUTF8Count) {
@@ -111,7 +111,7 @@ char16_t* ToNewUnicode(const nsACString& aSource) {
   }
 
   auto len = aSource.Length();
-  ConvertLatin1toUTF16(aSource, MakeSpan(dest, len));
+  ConvertLatin1toUtf16(aSource, MakeSpan(dest, len));
   dest[len] = 0;
   return dest;
 }
@@ -132,7 +132,7 @@ char16_t* UTF8ToNewUnicode(const nsACString& aSource, uint32_t* aUTF16Count) {
 
   char16_t* dest = (char16_t*)moz_xmalloc(allocLength.value());
 
-  size_t written = ConvertUTF8toUTF16(aSource, MakeSpan(dest, lengthPlusOne));
+  size_t written = ConvertUtf8toUtf16(aSource, MakeSpan(dest, lengthPlusOne));
   dest[written] = 0;
 
   if (aUTF16Count) {

@@ -10,6 +10,7 @@
 #include "ExampleStylesheet.h"
 #include "ServoBindings.h"
 #include "mozilla/Encoding.h"
+#include "mozilla/Utf8.h"
 #include "mozilla/NullPrincipalURI.h"
 #include "mozilla/css/SheetParsingMode.h"
 #include "ReferrerInfo.h"
@@ -54,7 +55,7 @@ static void ServoSetPropertyByIdBench(const nsACString& css) {
   RefPtr<URLExtraData> data =
       new URLExtraData(NullPrincipalURI::Create(), referrerInfo.forget(),
                        NullPrincipal::CreateWithoutOriginAttributes());
-  ASSERT_TRUE(IsUTF8(css));
+  ASSERT_TRUE(IsUtf8(css));
 
   for (int i = 0; i < SETPROPERTY_REPETITIONS; i++) {
     Servo_DeclarationBlock_SetPropertyById(

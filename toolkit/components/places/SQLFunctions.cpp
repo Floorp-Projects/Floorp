@@ -18,6 +18,7 @@
 #include "nsPrintfCString.h"
 #include "nsNavHistory.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Utf8.h"
 #include "nsVariant.h"
 
 // Maximum number of chars to search through.
@@ -373,7 +374,7 @@ nsDependentCSubstring MatchAutoCompleteFunction::fixupURISpec(
   // Otherwise, we will simply use our original string.
   bool unescaped = NS_UnescapeURL(aURISpec.BeginReading(), aURISpec.Length(),
                                   esc_SkipControl, aSpecBuf);
-  if (unescaped && IsUTF8(aSpecBuf)) {
+  if (unescaped && IsUtf8(aSpecBuf)) {
     fixedSpec.Rebind(aSpecBuf, 0);
   } else {
     fixedSpec.Rebind(aURISpec, 0);

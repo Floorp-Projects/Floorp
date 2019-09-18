@@ -32,7 +32,6 @@ EXPORTS.mozilla += [
 EXPORTS += [
     '../third_party/rust/encoding_c/include/encoding_rs.h',
     '../third_party/rust/encoding_c/include/encoding_rs_statics.h',
-    '../third_party/rust/encoding_c_mem/include/encoding_rs_mem.h',
     '../third_party/rust/shift_or_euc_c/include/shift_or_euc.h',
 ]
 

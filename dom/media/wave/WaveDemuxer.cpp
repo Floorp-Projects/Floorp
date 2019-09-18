@@ -11,6 +11,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/EndianUtils.h"
+#include "mozilla/Utf8.h"
 #include "BufferReader.h"
 #include "VideoUtils.h"
 #include "TimeUnits.h"
@@ -229,7 +230,7 @@ bool WAVTrackDemuxer::ListChunkParserInit(uint32_t aChunkSize) {
 
     bytesRead += length;
 
-    if (!IsUTF8(val)) {
+    if (!IsUtf8(val)) {
       mHeaderParser.Reset();
       continue;
     }

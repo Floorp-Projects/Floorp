@@ -10,6 +10,8 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/TextUtils.h"
+#include "mozilla/Utf8.h"
 #include "nsISupportsPrimitives.h"
 
 using namespace mozilla;
@@ -79,11 +81,11 @@ nsresult nsTextToSubURI::convertURItoUnicode(const nsCString& aCharset,
   bool isStatefulCharset = statefulCharset(aCharset.get());
 
   if (!isStatefulCharset) {
-    if (IsASCII(aURI)) {
+    if (IsAscii(aURI)) {
       CopyASCIItoUTF16(aURI, aOut);
       return NS_OK;
     }
-    if (IsUTF8(aURI)) {
+    if (IsUtf8(aURI)) {
       CopyUTF8toUTF16(aURI, aOut);
       return NS_OK;
     }
@@ -148,7 +150,7 @@ nsTextToSubURI::UnEscapeNonAsciiURI(const nsACString& aCharset,
   // leave the URI as it is if it's not UTF-8 and aCharset is not a ASCII
   // superset since converting "http:" with such an encoding is always a bad
   // idea.
-  if (!IsUTF8(unescapedSpec) &&
+  if (!IsUtf8(unescapedSpec) &&
       (aCharset.LowerCaseEqualsLiteral("utf-16") ||
        aCharset.LowerCaseEqualsLiteral("utf-16be") ||
        aCharset.LowerCaseEqualsLiteral("utf-16le") ||

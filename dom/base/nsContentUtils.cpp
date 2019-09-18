@@ -8038,7 +8038,7 @@ class BulkAppender {
   void Append(Span<const char> aStr) {
     size_t len = aStr.Length();
     MOZ_ASSERT(mPosition + len <= mHandle.Length());
-    ConvertLatin1toUTF16(aStr, mHandle.AsSpan().From(mPosition));
+    ConvertLatin1toUtf16(aStr, mHandle.AsSpan().From(mPosition));
     mPosition += len;
   }
 
