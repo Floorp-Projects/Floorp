@@ -713,6 +713,14 @@ class TextEditor : public EditorBase,
  protected:  // Shouldn't be used by friend classes
   virtual ~TextEditor();
 
+  /**
+   * InitEditorContentAndSelection() may insert a padding `<br>` element for
+   * if it's required in the anonymous `<div>` element and collapse selection
+   * at the end if there is no selection ranges.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE virtual nsresult
+  InitEditorContentAndSelection();
+
   int32_t WrapWidth() const { return mWrapColumn; }
 
   /**

@@ -2751,6 +2751,17 @@ class HTMLEditor final : public TextEditor,
  protected:  // Shouldn't be used by friend classes
   virtual ~HTMLEditor();
 
+  /**
+   * InitEditorContentAndSelection() may insert `<br>` elements and padding
+   * `<br>` elements if they are required for `<body>` or document element.
+   * And collapse selection at the end if there is no selection ranges.
+   * XXX I think that this should work with active editing host unless
+   *     all over the document is ediable (i.e., in design mode or `<body>`
+   *     or `<html>` has `contenteditable` attribute).
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE virtual nsresult
+  InitEditorContentAndSelection() override;
+
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult SelectAllInternal() override;
 

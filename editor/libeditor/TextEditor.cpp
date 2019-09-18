@@ -321,8 +321,10 @@ nsresult TextEditor::InitRules() {
     // instantiate the rules for this text editor
     mRules = new TextEditRules();
   }
-  RefPtr<TextEditRules> textEditRules(mRules);
-  return textEditRules->Init(this);
+  nsresult rv = InitEditorContentAndSelection();
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "InitEditorContentAndSelection() failed");
+  return rv;
 }
 
 nsresult TextEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {

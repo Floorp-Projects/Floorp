@@ -73,8 +73,6 @@ class TextEditRules {
   HTMLEditRules* AsHTMLEditRules();
   const HTMLEditRules* AsHTMLEditRules() const;
 
-  MOZ_CAN_RUN_SCRIPT
-  virtual nsresult Init(TextEditor* aTextEditor);
   virtual nsresult DetachEditor();
 
  protected:
