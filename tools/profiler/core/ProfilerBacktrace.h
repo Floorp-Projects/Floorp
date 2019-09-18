@@ -16,14 +16,16 @@ class ThreadInfo;
 class UniqueStacks;
 
 namespace mozilla {
+class BlocksRingBuffer;
 class TimeStamp;
-}
+}  // namespace mozilla
 
 // ProfilerBacktrace encapsulates a synchronous sample.
 class ProfilerBacktrace {
  public:
   ProfilerBacktrace(const char* aName, int aThreadId,
-                    mozilla::UniquePtr<ProfileBuffer> aBuffer);
+                    UniquePtr<mozilla::BlocksRingBuffer> aBlocksRingBuffer,
+                    mozilla::UniquePtr<ProfileBuffer> aProfileBuffer);
   ~ProfilerBacktrace();
 
   // ProfilerBacktraces' stacks are deduplicated in the context of the
@@ -42,7 +44,10 @@ class ProfilerBacktrace {
 
   mozilla::UniqueFreePtr<char> mName;
   int mThreadId;
-  mozilla::UniquePtr<ProfileBuffer> mBuffer;
+  // `BlocksRingBuffer` in which `mProfileBuffer` stores its data; must be
+  // located before `mProfileBuffer` so that it's destroyed after.
+  UniquePtr<mozilla::BlocksRingBuffer> mBlocksRingBuffer;
+  mozilla::UniquePtr<ProfileBuffer> mProfileBuffer;
 };
 
 #endif  // __PROFILER_BACKTRACE_H
