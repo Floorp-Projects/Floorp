@@ -6,8 +6,8 @@
 #ifndef MOZ_PROFILE_BUFFER_H
 #define MOZ_PROFILE_BUFFER_H
 
+#include "GeckoProfiler.h"
 #include "ProfileBufferEntry.h"
-#include "ProfilerMarker.h"
 
 #include "mozilla/BlocksRingBuffer.h"
 #include "mozilla/Maybe.h"
@@ -98,11 +98,6 @@ class ProfileBuffer final {
 
   void DiscardSamplesBeforeTime(double aTime);
 
-  void AddMarker(ProfilerMarker* aMarker);
-
-  // The following method is not signal safe!
-  void DeleteExpiredStoredMarkers();
-
   // Read an entry in the buffer. Slow!
   ProfileBufferEntry GetEntry(uint64_t aPosition) const {
     ProfileBufferEntry entry;
@@ -172,9 +167,6 @@ class ProfileBuffer final {
   uint64_t BufferRangeEnd() const {
     return mEntries.GetState().mRangeEnd.ConvertToU64();
   }
-
-  // Markers that marker entries in the buffer might refer to.
-  ProfilerMarkerLinkedList mStoredMarkers;
 
  private:
   // Used when duplicating sleeping stacks (to avoid spurious mallocs).
