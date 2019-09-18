@@ -125,8 +125,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   // Callback while background channel is destroyed.
   void OnBackgroundChildDestroyed(HttpBackgroundChannelChild* aBgChild);
 
-  nsresult CrossProcessRedirectFinished(nsresult aStatus);
-
  protected:
   mozilla::ipc::IPCResult RecvOnStartRequest(
       const nsresult& channelStatus, const nsHttpResponseHead& responseHead,
