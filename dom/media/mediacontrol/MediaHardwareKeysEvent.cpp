@@ -46,9 +46,21 @@ void MediaHardwareKeysEventListener::OnKeyPressed(
     MediaControlKeysEvent aKeyEvent) {
   LOG_KEY("OnKeyPressed '%s'", aKeyEvent);
   switch (aKeyEvent) {
-    case MediaControlKeysEvent::ePlayPause:
-      // TODO : implement playing/pausing controller in following patch.
+    case MediaControlKeysEvent::ePlayPause: {
+      RefPtr<MediaControlService> service = MediaControlService::GetService();
+      MOZ_ASSERT(service);
+      RefPtr<MediaController> controller = service->GetLastAddedController();
+      if (!controller) {
+        return;
+      }
+
+      if (controller->IsPlaying()) {
+        controller->Pause();
+      } else {
+        controller->Play();
+      }
       return;
+    }
     case MediaControlKeysEvent::eNext:
     case MediaControlKeysEvent::ePrev:
       // TODO : implement related controller functions.

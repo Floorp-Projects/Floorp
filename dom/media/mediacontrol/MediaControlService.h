@@ -43,6 +43,8 @@ class MediaControlService final : public nsIObserver {
   void RemoveMediaController(const RefPtr<MediaController>& aController);
   uint64_t GetControllersNum() const;
 
+  already_AddRefed<MediaController> GetLastAddedController();
+
  private:
   MediaControlService();
   ~MediaControlService();
@@ -55,6 +57,7 @@ class MediaControlService final : public nsIObserver {
   void ShutdownAllControllers() const;
 
   nsDataHashtable<nsUint64HashKey, RefPtr<MediaController>> mControllers;
+  nsTArray<uint64_t> mControllerHistory;
   AudioFocusManager mAudioFocusManager;
   MediaHardwareKeysManager mHardwareKeysManager;
 };
