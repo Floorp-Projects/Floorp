@@ -199,7 +199,7 @@ data class ContextMenuCandidate(
 
                 snackbarDelegate.show(
                     snackBarParentView = snackBarParentView,
-                    text = R.string.mozac_feature_contextmenu_snackbar_text_copied,
+                    text = R.string.mozac_feature_contextmenu_snackbar_link_copied,
                     duration = Snackbar.LENGTH_SHORT
                 )
             }
@@ -223,7 +223,7 @@ data class ContextMenuCandidate(
 
                 snackbarDelegate.show(
                     snackBarParentView = snackBarParentView,
-                    text = R.string.mozac_feature_contextmenu_snackbar_text_copied,
+                    text = R.string.mozac_feature_contextmenu_snackbar_link_copied,
                     duration = Snackbar.LENGTH_SHORT
                 )
             }
