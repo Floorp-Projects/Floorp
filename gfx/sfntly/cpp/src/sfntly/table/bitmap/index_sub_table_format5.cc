@@ -104,8 +104,8 @@ int32_t IndexSubTableFormat5::Builder::GlyphStartOffset(int32_t glyph_id) {
   if (check == -1) {
     return -1;
   }
-  IntegerList* glyph_array = GetGlyphArray();
-  IntegerList::iterator it = std::find(glyph_array->begin(),
+  std::vector<int32_t>* glyph_array = GetGlyphArray();
+  std::vector<int32_t>::iterator it = std::find(glyph_array->begin(),
                                        glyph_array->end(),
                                        glyph_id);
   if (it == glyph_array->end()) {
@@ -215,7 +215,7 @@ int32_t IndexSubTableFormat5::Builder::SubSerialize(
     slice.Attach(down_cast<WritableFontData*>(new_data->Slice(size)));
     size += BigMetrics()->SubSerialize(slice);
     size += new_data->WriteULong(size, glyph_array_.size());
-    for (IntegerList::iterator b = glyph_array_.begin(), e = glyph_array_.end();
+    for (std::vector<int32_t>::iterator b = glyph_array_.begin(), e = glyph_array_.end();
                                b != e; b++) {
       size += new_data->WriteUShort(size, *b);
     }
@@ -245,11 +245,11 @@ BigGlyphMetrics::Builder* IndexSubTableFormat5::Builder::BigMetrics() {
   return metrics_;
 }
 
-IntegerList* IndexSubTableFormat5::Builder::GlyphArray() {
+std::vector<int32_t>* IndexSubTableFormat5::Builder::GlyphArray() {
   return GetGlyphArray();
 }
 
-void IndexSubTableFormat5::Builder::SetGlyphArray(const IntegerList& v) {
+void IndexSubTableFormat5::Builder::SetGlyphArray(const std::vector<int32_t>& v) {
   glyph_array_.clear();
   glyph_array_ = v;
   set_model_changed();
@@ -277,7 +277,7 @@ IndexSubTableFormat5::Builder::Builder(ReadableFontData* data,
     : IndexSubTable::Builder(data, first_glyph_index, last_glyph_index) {
 }
 
-IntegerList* IndexSubTableFormat5::Builder::GetGlyphArray() {
+std::vector<int32_t>* IndexSubTableFormat5::Builder::GetGlyphArray() {
   if (glyph_array_.empty()) {
     Initialize(InternalReadData());
     set_model_changed();

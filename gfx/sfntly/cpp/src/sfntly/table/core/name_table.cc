@@ -19,8 +19,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <unicode/unistr.h>
-
 #include "sfntly/font.h"
 #include "sfntly/port/exception_type.h"
 
@@ -80,7 +78,7 @@ NameTable::NameEntry::NameEntry() {
 }
 
 NameTable::NameEntry::NameEntry(const NameEntryId& name_entry_id,
-                                const ByteVector& name_bytes) {
+                                const std::vector<uint8_t>& name_bytes) {
   Init(name_entry_id.platform_id(),
        name_entry_id.encoding_id(),
        name_entry_id.language_id(),
@@ -92,13 +90,13 @@ NameTable::NameEntry::NameEntry(int32_t platform_id,
                                 int32_t encoding_id,
                                 int32_t language_id,
                                 int32_t name_id,
-                                const ByteVector& name_bytes) {
+                                const std::vector<uint8_t>& name_bytes) {
   Init(platform_id, encoding_id, language_id, name_id, &name_bytes);
 }
 
 NameTable::NameEntry::~NameEntry() {}
 
-ByteVector* NameTable::NameEntry::NameAsBytes() {
+std::vector<uint8_t>* NameTable::NameEntry::NameAsBytes() {
   return &name_bytes_;
 }
 
@@ -121,7 +119,7 @@ void NameTable::NameEntry::Init(int32_t platform_id,
                                 int32_t encoding_id,
                                 int32_t language_id,
                                 int32_t name_id,
-                                const ByteVector* name_bytes) {
+                                const std::vector<uint8_t>* name_bytes) {
   name_entry_id_ = NameEntryId(platform_id, encoding_id, language_id, name_id);
   if (name_bytes) {
     name_bytes_ = *name_bytes;
@@ -138,7 +136,7 @@ NameTable::NameEntryBuilder::NameEntryBuilder() {
 }
 
 NameTable::NameEntryBuilder::NameEntryBuilder(const NameEntryId& name_entry_id,
-                                              const ByteVector& name_bytes) {
+                                              const std::vector<uint8_t>& name_bytes) {
   Init(name_entry_id.platform_id(),
        name_entry_id.encoding_id(),
        name_entry_id.language_id(),
@@ -176,14 +174,14 @@ void NameTable::NameEntryBuilder::SetName(const UChar* name) {
                                 &name_entry_->name_bytes_);
 }
 
-void NameTable::NameEntryBuilder::SetName(const ByteVector& name_bytes) {
+void NameTable::NameEntryBuilder::SetName(const std::vector<uint8_t>& name_bytes) {
   name_entry_->name_bytes_.clear();
   std::copy(name_bytes.begin(),
             name_bytes.end(),
             name_entry_->name_bytes_.begin());
 }
 
-void NameTable::NameEntryBuilder::SetName(const ByteVector& name_bytes,
+void NameTable::NameEntryBuilder::SetName(const std::vector<uint8_t>& name_bytes,
                                           int32_t offset,
                                           int32_t length) {
   name_entry_->name_bytes_.clear();
@@ -196,7 +194,7 @@ void NameTable::NameEntryBuilder::Init(int32_t platform_id,
                                        int32_t encoding_id,
                                        int32_t language_id,
                                        int32_t name_id,
-                                       const ByteVector* name_bytes) {
+                                       const std::vector<uint8_t>* name_bytes) {
   name_entry_ = new NameEntry();
   name_entry_->Init(platform_id, encoding_id, language_id, name_id, name_bytes);
 }
@@ -467,7 +465,7 @@ int32_t NameTable::NameId(int32_t index) {
                            OffsetForNameRecord(index));
 }
 
-void NameTable::NameAsBytes(int32_t index, ByteVector* b) {
+void NameTable::NameAsBytes(int32_t index, std::vector<uint8_t>* b) {
   assert(b);
   b->clear();
 
@@ -475,26 +473,30 @@ void NameTable::NameAsBytes(int32_t index, ByteVector* b) {
   if (length <= 0)
     return;
 
+  int32_t offset = NameOffset(index);
+  if (offset < 0)
+    return;
+
   b->resize(length);
-  data_->ReadBytes(NameOffset(index), &((*b)[0]), 0, length);
+  data_->ReadBytes(offset, &((*b)[0]), 0, length);
 }
 
 void NameTable::NameAsBytes(int32_t platform_id,
                             int32_t encoding_id,
                             int32_t language_id,
                             int32_t name_id,
-                            ByteVector* b) {
+                            std::vector<uint8_t>* b) {
   assert(b);
   NameEntryPtr entry;
   entry.Attach(GetNameEntry(platform_id, encoding_id, language_id, name_id));
   if (entry) {
-    ByteVector* name = entry->NameAsBytes();
+    std::vector<uint8_t>* name = entry->NameAsBytes();
     std::copy(name->begin(), name->end(), b->begin());
   }
 }
 
 UChar* NameTable::Name(int32_t index) {
-  ByteVector b;
+  std::vector<uint8_t> b;
   NameAsBytes(index, &b);
   return ConvertFromNameBytes(&b, PlatformId(index), EncodingId(index));
 }
@@ -512,7 +514,7 @@ UChar* NameTable::Name(int32_t platform_id,
 }
 
 CALLER_ATTACH NameTable::NameEntry* NameTable::GetNameEntry(int32_t index) {
-  ByteVector b;
+  std::vector<uint8_t> b;
   NameAsBytes(index, &b);
   NameEntryPtr instance = new NameEntry(PlatformId(index),
                                         EncodingId(index),
@@ -648,7 +650,7 @@ UConverter* NameTable::GetCharset(int32_t platform_id, int32_t encoding_id) {
 void NameTable::ConvertToNameBytes(const UChar* name,
                                    int32_t platform_id,
                                    int32_t encoding_id,
-                                   ByteVector* b) {
+                                   std::vector<uint8_t>* b) {
   assert(b);
   assert(name);
   b->clear();
@@ -675,7 +677,7 @@ void NameTable::ConvertToNameBytes(const UChar* name,
   ucnv_close(cs);
 }
 
-UChar* NameTable::ConvertFromNameBytes(ByteVector* name_bytes,
+UChar* NameTable::ConvertFromNameBytes(std::vector<uint8_t>* name_bytes,
                                        int32_t platform_id,
                                        int32_t encoding_id) {
   if (name_bytes == NULL || name_bytes->size() == 0) {

@@ -40,7 +40,7 @@ bool TestEncoding() {
   for (i = 0; i < 7; ++i) {
     int32_t encoded = TestUtils::EncodeOneChar(conv, (int16_t)from[i]);
     for (; encoded; encoded <<= 8) {
-      byte_t b = (encoded & 0xff000000) >> 24;
+      uint8_t b = (encoded & 0xff000000) >> 24;
       if (!b)
         continue;
       EXPECT_EQ(want[j], b);
