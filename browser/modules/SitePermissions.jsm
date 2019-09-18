@@ -1029,10 +1029,6 @@ var gPermissionObject = {
     },
   },
 
-  image: {
-    states: [SitePermissions.ALLOW, SitePermissions.BLOCK],
-  },
-
   cookie: {
     states: [
       SitePermissions.ALLOW,
