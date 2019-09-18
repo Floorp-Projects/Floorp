@@ -644,6 +644,7 @@ P12U_ExportPKCS12Object(char *nn, char *outfile, PK11SlotInfo *inSlot,
     }
     certlist = PK11_FindCertsFromNickname(nn, slotPw);
     if (!certlist) {
+        PORT_SetError(SEC_ERROR_UNKNOWN_CERT);
         SECU_PrintError(progName, "find user certs from nickname failed");
         pk12uErrno = PK12UERR_FINDCERTBYNN;
         return;

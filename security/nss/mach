@@ -579,10 +579,10 @@ def parse_arguments():
         action=covAction)
 
     parser_commands = subparsers.add_parser(
-        'mach-commands',
+        'mach-completion',
         help="list commands")
     parser_commands.add_argument(
-        'mach-commands',
+        'mach-completion',
         nargs='*',
         action=commandsAction)
 

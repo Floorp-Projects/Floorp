@@ -114,6 +114,14 @@ function convertTask(def) {
   if (def.cycle) {
     env.NSS_CYCLES = def.cycle;
   }
+  if (def.kind === "build") {
+    // Disable leak checking during builds (bug 1579290).
+    if (env.ASAN_OPTIONS) {
+      env.ASAN_OPTIONS += ":detect_leaks=0";
+    } else {
+      env.ASAN_OPTIONS = "detect_leaks=0";
+    }
+  }
 
   let payload = {
     env,
@@ -143,7 +151,7 @@ function convertTask(def) {
   }
 
   let extra = Object.assign({
-      treeherder: parseTreeherder(def)
+    treeherder: parseTreeherder(def)
   }, parameters);
 
   return {

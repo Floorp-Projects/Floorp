@@ -54,6 +54,9 @@ build_64=0
 clean=0
 rebuild_gyp=0
 rebuild_nspr=0
+build_nspr_tests=0
+run_nspr_tests=0
+exit_after_nspr=0
 target=Debug
 verbose=0
 fuzz=0
@@ -117,6 +120,9 @@ while [ $# -gt 0 ]; do
         --static) gyp_params+=(-Dstatic_libs=1) ;;
         --ct-verif) gyp_params+=(-Dct_verif=1) ;;
         --nspr) nspr_clean; rebuild_nspr=1 ;;
+        --nspr-test-build) build_nspr_tests=1 ;;
+        --nspr-test-run) run_nspr_tests=1 ;;
+        --nspr-only) exit_after_nspr=1 ;;
         --with-nspr=?*) set_nspr_path "${1#*=}"; no_local_nspr=1 ;;
         --system-nspr) set_nspr_path "/usr/include/nspr/:"; no_local_nspr=1 ;;
         --system-sqlite) gyp_params+=(-Duse_system_sqlite=1) ;;
@@ -225,6 +231,11 @@ if [[ "$rebuild_nspr" = 1 && "$no_local_nspr" = 0 ]]; then
     nspr_build
     mv -f "$nspr_config.new" "$nspr_config"
 fi
+
+if [ "$exit_after_nspr" = 1 ]; then
+  exit 0
+fi
+
 # gyp.
 if [ "$rebuild_gyp" = 1 ]; then
     if ! hash "$GYP" 2> /dev/null; then

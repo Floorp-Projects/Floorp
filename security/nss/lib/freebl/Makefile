@@ -119,6 +119,9 @@ else
         DEFINES += -DNSS_X86
 endif
 endif
+ifeq ($(CPU_ARCH),aarch64)
+    EXTRA_SRCS += gcm-aarch64.c
+endif
 
 ifeq ($(OS_TARGET),OSF1)
     DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_NO_MP_WORD
@@ -241,9 +244,6 @@ ifeq ($(CPU_ARCH),arm)
     DEFINES += -DMP_USE_UINT_DIGIT
     DEFINES += -DSHA_NO_LONG_LONG # avoid 64-bit arithmetic in SHA512
     MPI_SRCS += mpi_arm.c
-endif
-ifeq ($(CPU_ARCH),aarch64)
-    EXTRA_SRCS += gcm-aarch64.c
 endif
 ifeq ($(CPU_ARCH),ppc)
 ifdef USE_64

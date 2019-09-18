@@ -9,7 +9,8 @@
 #include "secerr.h"
 
 /* old gcc doesn't support some poly64x2_t intrinsic */
-#if defined(__clang__) || (defined(__GNUC__) && __GNUC__ > 6)
+#if defined(__aarch64__) && defined(IS_LITTLE_ENDIAN) && \
+    (defined(__clang__) || defined(__GNUC__) && __GNUC__ > 6)
 
 #include <arm_neon.h>
 

@@ -118,6 +118,8 @@
             [ 'comm_client==1', {
               'dependencies': [
                 'cmd/smimetools/smimetools.gyp:cmsutil',
+                'cmd/atob/atob.gyp:atob',
+                'cmd/btoa/btoa.gyp:btoa',
               ],
             }],
             [ 'mozilla_client==0', {
