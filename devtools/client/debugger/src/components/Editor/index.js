@@ -62,6 +62,7 @@ import {
   getEditor,
   clearEditor,
   getCursorLine,
+  getCursorColumn,
   lineAtHeight,
   toSourceLine,
   getDocument,
@@ -277,14 +278,40 @@ class Editor extends PureComponent<Props, State> {
   onToggleConditionalPanel = (key, e: KeyboardEvent) => {
     e.stopPropagation();
     e.preventDefault();
+
+    const {
+      conditionalPanelLocation,
+      closeConditionalPanel,
+      openConditionalPanel,
+      selectedSource,
+    } = this.props;
+
     const line = this.getCurrentLine();
+
+    const { codeMirror } = this.state.editor;
+    // add one to column for correct position in editor.
+    const column = getCursorColumn(codeMirror) + 1;
+
+    if (conditionalPanelLocation) {
+      return closeConditionalPanel();
+    }
+
+    if (!selectedSource) {
+      return;
+    }
 
     if (typeof line !== "number") {
       return;
     }
 
-    const isLog = key === L10N.getStr("toggleCondPanel.logPoint.key");
-    this.toggleConditionalPanel(line, isLog);
+    return openConditionalPanel(
+      {
+        line,
+        column,
+        sourceId: selectedSource.id,
+      },
+      false
+    );
   };
 
   onEditorScroll = debounce(this.props.updateViewport, 75);
@@ -438,32 +465,6 @@ class Editor extends PureComponent<Props, State> {
       jumpToMappedLocation(cx, sourceLocation);
     }
   }
-
-  toggleConditionalPanel = (line, log: boolean = false) => {
-    const {
-      conditionalPanelLocation,
-      closeConditionalPanel,
-      openConditionalPanel,
-      selectedSource,
-    } = this.props;
-
-    if (conditionalPanelLocation) {
-      return closeConditionalPanel();
-    }
-
-    if (!selectedSource) {
-      return;
-    }
-
-    return openConditionalPanel(
-      {
-        line: line,
-        sourceId: selectedSource.id,
-        sourceUrl: selectedSource.url,
-      },
-      log
-    );
-  };
 
   shouldScrollToLocation(nextProps, editor) {
     const { selectedLocation, selectedSource } = this.props;

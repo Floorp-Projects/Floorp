@@ -262,6 +262,10 @@ export function getCursorLine(codeMirror: Object): number {
   return codeMirror.getCursor().line;
 }
 
+export function getCursorColumn(codeMirror: Object): number {
+  return codeMirror.getCursor().ch;
+}
+
 export function getTokenEnd(codeMirror: Object, line: number, column: number) {
   const token = codeMirror.getTokenAt({
     line: line,
