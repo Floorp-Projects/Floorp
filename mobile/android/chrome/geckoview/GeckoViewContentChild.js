@@ -91,7 +91,6 @@ class GeckoViewContentChild extends GeckoViewChildModule {
     addEventListener("MozDOMFullscreen:Request", this, false);
     addEventListener("contextmenu", this, { capture: true });
     addEventListener("DOMContentLoaded", this, false);
-    addEventListener("MozFirstContentfulPaint", this, false);
   }
 
   onDisable() {
@@ -105,7 +104,6 @@ class GeckoViewContentChild extends GeckoViewChildModule {
     removeEventListener("MozDOMFullscreen:Request", this);
     removeEventListener("contextmenu", this, { capture: true });
     removeEventListener("DOMContentLoaded", this);
-    removeEventListener("MozFirstContentfulPaint", this);
   }
 
   collectSessionState() {
@@ -482,13 +480,7 @@ class GeckoViewContentChild extends GeckoViewChildModule {
             });
           }
         });
-        break;
       }
-      case "MozFirstContentfulPaint":
-        this.eventDispatcher.sendRequest({
-          type: "GeckoView:FirstContentfulPaint",
-        });
-        break;
     }
   }
 
