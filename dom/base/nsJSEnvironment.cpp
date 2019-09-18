@@ -185,7 +185,8 @@ static bool sNeedsFullCC = false;
 static bool sNeedsFullGC = false;
 static bool sNeedsGCAfterCC = false;
 static bool sIncrementalCC = false;
-static int32_t sActiveIntersliceGCBudget = 5;  // ms;
+static TimeDuration sActiveIntersliceGCBudget =
+    TimeDuration::FromMilliseconds(5);
 
 static TimeStamp sFirstCollectionTime;
 
@@ -1723,21 +1724,18 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
 
 // static
 bool InterSliceGCRunnerFired(TimeStamp aDeadline, void* aData) {
-  MOZ_ASSERT(sActiveIntersliceGCBudget > 0);
+  MOZ_ASSERT(sActiveIntersliceGCBudget);
   // We use longer budgets when the CC has been locked out but the CC has tried
   // to run since that means we may have significant amount garbage to collect
   // and better to GC in several longer slices than in a very long one.
-  int64_t budget =
-      aDeadline.IsNull()
-          ? int64_t(sActiveIntersliceGCBudget * 2)
-          : int64_t((aDeadline - TimeStamp::Now()).ToMilliseconds());
+  TimeDuration budget = aDeadline.IsNull() ? sActiveIntersliceGCBudget * 2
+                                           : aDeadline - TimeStamp::Now();
   if (sCCLockedOut && sCCLockedOutTime) {
     TimeDuration lockedTime = TimeStamp::Now() - sCCLockedOutTime;
-    int32_t maxSliceGCBudget = sActiveIntersliceGCBudget * 10;
+    TimeDuration maxSliceGCBudget = sActiveIntersliceGCBudget * 10;
     double percentOfLockedTime =
         std::min(lockedTime / kMaxCCLockedoutTime, 1.0);
-    budget = static_cast<int64_t>(
-        std::max((double)budget, percentOfLockedTime * maxSliceGCBudget));
+    budget = std::max(budget, maxSliceGCBudget.MultDouble(percentOfLockedTime));
   }
 
   TimeStamp startTimeStamp = TimeStamp::Now();
@@ -1745,7 +1743,8 @@ bool InterSliceGCRunnerFired(TimeStamp aDeadline, void* aData) {
   uintptr_t reason = reinterpret_cast<uintptr_t>(aData);
   nsJSContext::GarbageCollectNow(
       aData ? static_cast<JS::GCReason>(reason) : JS::GCReason::INTER_SLICE_GC,
-      nsJSContext::IncrementalGC, nsJSContext::NonShrinkingGC, budget);
+      nsJSContext::IncrementalGC, nsJSContext::NonShrinkingGC,
+      budget.ToMilliseconds());
 
   sGCUnnotifiedTotalTime = TimeDuration();
   TimeStamp now = TimeStamp::Now();
@@ -1795,8 +1794,8 @@ void GCTimerFired(nsITimer* aTimer, void* aClosure) {
       },
       "GCTimerFired::InterSliceGCRunnerFired",
       StaticPrefs::javascript_options_gc_delay_interslice(),
-      sActiveIntersliceGCBudget, true, [] { return sShuttingDown; },
-      TaskCategory::GarbageCollection);
+      sActiveIntersliceGCBudget.ToMilliseconds(), true,
+      [] { return sShuttingDown; }, TaskCategory::GarbageCollection);
 }
 
 // static
@@ -2285,8 +2284,8 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
             },
             "DOMGCSliceCallback::InterSliceGCRunnerFired",
             StaticPrefs::javascript_options_gc_delay_interslice(),
-            sActiveIntersliceGCBudget, true, [] { return sShuttingDown; },
-            TaskCategory::GarbageCollection);
+            sActiveIntersliceGCBudget.ToMilliseconds(), true,
+            [] { return sShuttingDown; }, TaskCategory::GarbageCollection);
       }
 
       if (ShouldTriggerCC(nsCycleCollector_suspectedCount())) {
@@ -2430,7 +2429,7 @@ static void SetMemoryGCSliceTimePrefChangedCallback(const char* aPrefName,
   int32_t pref = Preferences::GetInt(aPrefName, -1);
   // handle overflow and negative pref values
   if (pref > 0 && pref < 100000) {
-    sActiveIntersliceGCBudget = pref;
+    sActiveIntersliceGCBudget = TimeDuration::FromMilliseconds(pref);
     SetGCParameter(JSGC_SLICE_TIME_BUDGET_MS, pref);
   } else {
     ResetGCParameter(JSGC_SLICE_TIME_BUDGET_MS);
