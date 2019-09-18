@@ -584,6 +584,16 @@ NSString* nsCocoaUtils::ToNSString(const nsAString& aString) {
 }
 
 // static
+NSString* nsCocoaUtils::ToNSString(const nsACString& aCString) {
+  if (aCString.IsEmpty()) {
+    return [NSString string];
+  }
+  return [[[NSString alloc] initWithBytes:aCString.BeginReading()
+                                   length:aCString.Length()
+                                 encoding:NSUTF8StringEncoding] autorelease];
+}
+
+// static
 void nsCocoaUtils::GeckoRectToNSRect(const nsIntRect& aGeckoRect, NSRect& aOutCocoaRect) {
   aOutCocoaRect.origin.x = aGeckoRect.x;
   aOutCocoaRect.origin.y = aGeckoRect.y;
