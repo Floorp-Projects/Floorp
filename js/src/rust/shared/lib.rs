@@ -14,3 +14,6 @@
  */
 #[cfg(feature = "baldrdash")]
 extern crate baldrdash;
+
+extern crate encoding_c;
+extern crate encoding_c_mem;
