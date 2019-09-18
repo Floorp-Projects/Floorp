@@ -13,6 +13,8 @@ namespace profiler {
 
 void install_memory_hooks();
 void remove_memory_hooks();
+void enable_native_allocations();
+void disable_native_allocations();
 
 }  // namespace profiler
 }  // namespace mozilla
