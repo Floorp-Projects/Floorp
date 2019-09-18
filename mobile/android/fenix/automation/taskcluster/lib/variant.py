@@ -28,3 +28,7 @@ class Variant:
 
     def upstream_artifacts(self):
         return [apk.taskcluster_path for apk in self._apks]
+
+    @property
+    def upstream_artifacts_per_abi(self):
+        return {apk.abi: apk.taskcluster_path for apk in self._apks}

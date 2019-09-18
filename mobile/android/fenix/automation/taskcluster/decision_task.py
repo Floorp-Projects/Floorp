@@ -61,23 +61,8 @@ def raptor(builder, is_staging):
     build_task = builder.craft_assemble_raptor_task(variant)
     signing_task = builder.craft_raptor_signing_task(build_task['label'], variant, is_staging)
 
-    tasks = [build_task, signing_task]
-
-    for abi in ('armeabi-v7a', 'arm64-v8a'):
-        variant_apk = variant.get_apk(abi)
-        all_raptor_craft_functions = [
-            builder.craft_raptor_tp6m_cold_task(for_suite=i)
-                for i in range(1, 28)
-            ] + [
-                builder.craft_raptor_youtube_playback_task,
-            ]
-        for craft_function in all_raptor_craft_functions:
-            raptor_task = craft_function(
-                signing_task['label'], mozharness_task_id, variant_apk, gecko_revision, is_staging
-            )
-            tasks.append(raptor_task)
-
-    return tasks
+    # Raptor tests are generated in taskgraph
+    return [build_task, signing_task]
 
 
 def release(builder, channel, engine, is_staging, version_name):

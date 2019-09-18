@@ -123,6 +123,7 @@ class TaskBuilder(object):
                 'symbol': 'A',
                 'tier': 1,
             },
+            attributes={'build-type': 'raptor'},
         )
 
     def craft_assemble_pr_task(self, variant):
@@ -316,7 +317,7 @@ class TaskBuilder(object):
 
     def _craft_build_ish_task(
         self, name, description, command, dependencies=None, artifacts=None,
-        routes=None, treeherder=None, env_vars=None, scopes=None
+        routes=None, treeherder=None, env_vars=None, scopes=None, attributes=None
     ):
         artifacts = {} if artifacts is None else artifacts
         scopes = [] if scopes is None else scopes
@@ -361,9 +362,10 @@ class TaskBuilder(object):
             routes=routes,
             scopes=scopes,
             treeherder=treeherder,
+            attributes=attributes,
         )
 
-    def _craft_signing_task(self, name, description, signing_type, assemble_task_label, apk_paths, routes, treeherder):
+    def _craft_signing_task(self, name, description, signing_type, assemble_task_label, apk_paths, routes, treeherder, attributes=None):
         signing_format = "autograph_apk"
         payload = {
             'upstreamArtifacts': [{
@@ -387,6 +389,7 @@ class TaskBuilder(object):
             description=description,
             payload=payload,
             treeherder=treeherder,
+            attributes=attributes,
         )
 
     def _craft_default_task_definition(
@@ -401,11 +404,13 @@ class TaskBuilder(object):
         scopes=None,
         treeherder=None,
         notify=None,
+        attributes=None
     ):
         dependencies = {} if dependencies is None else dependencies
         scopes = [] if scopes is None else scopes
         routes = [] if routes is None else routes
         treeherder = {} if treeherder is None else treeherder
+        attributes = {} if attributes is None else attributes
 
         created = datetime.datetime.now()
         deadline = taskcluster.fromNow('1 day')
@@ -422,7 +427,7 @@ class TaskBuilder(object):
             extra['notify'] = notify
 
         return {
-            "attributes": {},
+            "attributes": attributes,
             "dependencies": dependencies,
             "label": name,
             "task": {
@@ -477,8 +482,15 @@ class TaskBuilder(object):
                 'machine': {
                     'platform': 'android-all',
                 },
+                'collection': {
+                    'opt': True,
+                },
                 'symbol': 'As',
                 'tier': 1,
+            },
+            attributes={
+                'build-type': 'raptor',
+                'apks': variant.upstream_artifacts_per_abi,
             },
         )
 
@@ -558,158 +570,6 @@ class TaskBuilder(object):
                 'tier': 1,
             },
         )
-
-    def craft_raptor_tp6m_cold_task(self, for_suite):
-
-        def craft_function(signing_task_label, mozharness_task_id, variant_apk, gecko_revision, is_staging, force_run_on_64_bit_device=False):
-            return self._craft_raptor_task(
-                signing_task_label,
-                mozharness_task_id,
-                variant_apk,
-                gecko_revision,
-                is_staging,
-                name_prefix='raptor tp6m-cold-{}'.format(for_suite),
-                description='Raptor tp6m cold on Fenix',
-                test_name='raptor-tp6m-cold-{}'.format(for_suite),
-                job_symbol='tp6m-c-{}'.format(for_suite),
-                force_run_on_64_bit_device=force_run_on_64_bit_device,
-            )
-        return craft_function
-
-    def craft_raptor_youtube_playback_task(self, signing_task_label, mozharness_task_id, variant_apk, gecko_revision,
-                                           is_staging, force_run_on_64_bit_device=False):
-        return self._craft_raptor_task(
-            signing_task_label,
-            mozharness_task_id,
-            variant_apk,
-            gecko_revision,
-            is_staging,
-            name_prefix='raptor youtube playback',
-            description='Raptor YouTube Playback on Fenix',
-            test_name='raptor-youtube-playback',
-            job_symbol='ytp',
-            group_symbol='Rap',
-            force_run_on_64_bit_device=force_run_on_64_bit_device,
-        )
-
-    def _craft_raptor_task(
-        self,
-        signing_task_label,
-        mozharness_task_id,
-        variant_apk,
-        gecko_revision,
-        is_staging,
-        name_prefix,
-        description,
-        test_name,
-        job_symbol,
-        group_symbol=None,
-        force_run_on_64_bit_device=False,
-    ):
-        worker_type = 'gecko-t-bitbar-gw-perf-p2' if force_run_on_64_bit_device or variant_apk.abi == 'arm64-v8a' else 'gecko-t-bitbar-gw-perf-g5'
-
-        if force_run_on_64_bit_device:
-            treeherder_platform = 'android-hw-p2-8-0-arm7-api-16'
-        elif variant_apk.abi == 'armeabi-v7a':
-            treeherder_platform = 'android-hw-g5-7-0-arm7-api-16'
-        elif variant_apk.abi == 'arm64-v8a':
-            treeherder_platform = 'android-hw-p2-8-0-android-aarch64'
-        else:
-            raise ValueError('Unsupported architecture "{}"'.format(variant_apk.abi))
-
-        task_name = '{} {}: forPerformanceTest {}'.format(
-            name_prefix, variant_apk.abi, '(on 64-bit-device)' if force_run_on_64_bit_device else ''
-        )
-
-        apk_url = '{}/<signing>/artifacts/{}'.format(_DEFAULT_TASK_URL, variant_apk.taskcluster_path)
-        command = [[
-            "/builds/taskcluster/script.py",
-            "bash",
-            "./test-linux.sh",
-            "--cfg=mozharness/configs/raptor/android_hw_config.py",
-            "--test={}".format(test_name),
-            "--app=fenix",
-            "--binary=org.mozilla.fenix.performancetest",
-            "--activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity",
-            "--download-symbols=ondemand",
-        ]]
-        # Bug 1558456 - Stop tracking youtube-playback-test on motoG5 for >1080p cases
-        if variant_apk.abi == 'armeabi-v7a' and test_name == 'raptor-youtube-playback':
-            params_query = '&'.join(ARM_RAPTOR_URL_PARAMS)
-            add_extra_params_option = "--test-url-params={}".format(params_query)
-            command[0].append(add_extra_params_option)
-
-        return self._craft_default_task_definition(
-            worker_type=worker_type,
-            provisioner_id='proj-autophone',
-            dependencies={'signing': signing_task_label},
-            name=task_name,
-            description=description,
-            routes=['notify.email.perftest-alerts@mozilla.com.on-failed'] if not is_staging else [],
-            payload={
-                "maxRunTime": 2700,
-                "artifacts": [{
-                    'path': '{}'.format(worker_path),
-                    'expires': taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN)),
-                    'type': 'directory',
-                    'name': 'public/{}/'.format(public_folder)
-                } for worker_path, public_folder in (
-                    ('artifacts/public', 'test'),
-                    ('workspace/logs', 'logs'),
-                    ('workspace/build/blobber_upload_dir', 'test_info'),
-                )],
-                "command": command,
-                "env": {
-                    "EXTRA_MOZHARNESS_CONFIG": {'task-reference': json.dumps({
-                        "test_packages_url": "{}/{}/artifacts/public/build/en-US/target.test_packages.json".format(_DEFAULT_TASK_URL, mozharness_task_id),
-                        "installer_url": apk_url,
-                    })},
-                    "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/mozilla-central",
-                    "GECKO_HEAD_REV": gecko_revision,
-                    "MOZ_AUTOMATION": "1",
-                    "MOZ_HIDE_RESULTS_TABLE": "1",
-                    "MOZ_NO_REMOTE": "1",
-                    "MOZ_NODE_PATH": "/usr/local/bin/node",
-                    "MOZHARNESS_CONFIG": "raptor/android_hw_config.py",
-                    "MOZHARNESS_SCRIPT": "raptor_script.py",
-                    "MOZHARNESS_URL": "{}/{}/artifacts/public/build/en-US/mozharness.zip".format(_DEFAULT_TASK_URL, mozharness_task_id),
-                    "MOZILLA_BUILD_URL": {'task-reference': apk_url},
-                    "NEED_XVFB": "false",
-                    "NO_FAIL_ON_TEST_ERRORS": "1",
-                    "SCCACHE_DISABLE": "1",
-                    "TASKCLUSTER_WORKER_TYPE": worker_type[len('gecko-'):],
-                    "TRY_COMMIT_MSG": "",
-                    "TRY_SELECTOR": "fuzzy",
-                    "XPCOM_DEBUG_BREAK": "warn",
-                },
-                "mounts": [{
-                    "content": {
-                        "url": "https://hg.mozilla.org/mozilla-central/raw-file/{}/taskcluster/scripts/tester/test-linux.sh".format(gecko_revision),
-                    },
-                    "file": "test-linux.sh",
-                }]
-            },
-            treeherder={
-                'jobKind': 'test',
-                'groupSymbol': 'Rap' if group_symbol is None else group_symbol,
-                'machine': {
-                    'platform': treeherder_platform,
-                },
-                'symbol': job_symbol,
-                'tier': 2,
-            },
-            notify={
-                'email': {
-                    'link': {
-                        'text': "Treeherder Job",
-                        'href': "https://treeherder.mozilla.org/#/jobs?repo=fenix&revision={}".format(self.commit),
-                    },
-                    'subject': '[fenix] Raptor job "{}" failed'.format(task_name),
-                    'content': "This calls for an action of the Performance team. Use the link to view it on Treeherder.",
-                },
-            },
-        )
-
 
 def schedule_task(queue, taskId, task):
     print("TASK", taskId)
