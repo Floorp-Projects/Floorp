@@ -527,8 +527,6 @@ class BrowserParent final : public PBrowserParent,
 
   void Deactivate(bool aWindowLowering);
 
-  void MouseEnterIntoWidget();
-
   bool MapEventCoordinatesForChildProcess(mozilla::WidgetEvent* aEvent);
 
   void MapEventCoordinatesForChildProcess(const LayoutDeviceIntPoint& aOffset,
