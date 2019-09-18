@@ -132,7 +132,7 @@ TEST_P(CMapIteratorTests, IteratorTest) {
   CMapTable::CMap::CharacterIterator* character_iterator = NULL;
   character_iterator = cmap_->Iterator();
   EXPECT_NE(character_iterator,
-            static_cast<CMapTable::CMap::CharacterIterator*>(NULL));
+            reinterpret_cast<CMapTable::CMap::CharacterIterator*>(NULL));
   CompareCMapIterAndBitSet(character_iterator, bit_set);
   delete character_iterator;
   delete bit_set;

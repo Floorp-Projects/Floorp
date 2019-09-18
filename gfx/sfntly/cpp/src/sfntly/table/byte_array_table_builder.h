@@ -36,7 +36,7 @@ class ByteArrayTableBuilder : public TableBasedTableBuilder {
   // start of the table.
   // @param index index relative to the start of the table
   // @param b byte value to set
-  virtual void SetByteValue(int32_t index, byte_t b);
+  virtual void SetByteValue(int32_t index, uint8_t b);
 
   // Get the number of bytes set for this table. It may include padding bytes at
   // the end.

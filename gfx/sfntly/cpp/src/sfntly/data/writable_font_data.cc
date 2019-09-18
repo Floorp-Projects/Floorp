@@ -47,20 +47,20 @@ WritableFontData* WritableFontData::CreateWritableFontData(int32_t length) {
 //                  not too useful without copying, but it's not performance
 //                  savvy to do copying.
 CALLER_ATTACH
-WritableFontData* WritableFontData::CreateWritableFontData(ByteVector* b) {
+WritableFontData* WritableFontData::CreateWritableFontData(std::vector<uint8_t>* b) {
   ByteArrayPtr ba = new GrowableMemoryByteArray();
   ba->Put(0, b);
   WritableFontDataPtr wfd = new WritableFontData(ba);
   return wfd.Detach();
 }
 
-int32_t WritableFontData::WriteByte(int32_t index, byte_t b) {
+int32_t WritableFontData::WriteByte(int32_t index, uint8_t b) {
   array_->Put(BoundOffset(index), b);
   return 1;
 }
 
 int32_t WritableFontData::WriteBytes(int32_t index,
-                                     byte_t* b,
+                                     uint8_t* b,
                                      int32_t offset,
                                      int32_t length) {
   return array_->Put(BoundOffset(index),
@@ -69,16 +69,16 @@ int32_t WritableFontData::WriteBytes(int32_t index,
                      BoundLength(index, length));
 }
 
-int32_t WritableFontData::WriteBytes(int32_t index, ByteVector* b) {
+int32_t WritableFontData::WriteBytes(int32_t index, std::vector<uint8_t>* b) {
   assert(b);
   return WriteBytes(index, &((*b)[0]), 0, b->size());
 }
 
 int32_t WritableFontData::WriteBytesPad(int32_t index,
-                                        ByteVector* b,
+                                        std::vector<uint8_t>* b,
                                         int32_t offset,
                                         int32_t length,
-                                        byte_t pad) {
+                                        uint8_t pad) {
   int32_t written =
       array_->Put(BoundOffset(index),
                   &((*b)[0]),
@@ -90,30 +90,30 @@ int32_t WritableFontData::WriteBytesPad(int32_t index,
 }
 
 int32_t WritableFontData::WritePadding(int32_t index, int32_t count) {
-  return WritePadding(index, count, (byte_t)0);
+  return WritePadding(index, count, (uint8_t)0);
 }
 
 int32_t WritableFontData::WritePadding(int32_t index, int32_t count,
-                                       byte_t pad) {
+                                       uint8_t pad) {
   for (int32_t i = 0; i < count; ++i) {
     array_->Put(index + i, pad);
   }
   return count;
 }
 
-int32_t WritableFontData::WriteChar(int32_t index, byte_t c) {
+int32_t WritableFontData::WriteChar(int32_t index, uint8_t c) {
   return WriteByte(index, c);
 }
 
 int32_t WritableFontData::WriteUShort(int32_t index, int32_t us) {
-  WriteByte(index, (byte_t)((us >> 8) & 0xff));
-  WriteByte(index + 1, (byte_t)(us & 0xff));
+  WriteByte(index, (uint8_t)((us >> 8) & 0xff));
+  WriteByte(index + 1, (uint8_t)(us & 0xff));
   return 2;
 }
 
 int32_t WritableFontData::WriteUShortLE(int32_t index, int32_t us) {
-  WriteByte(index, (byte_t)(us & 0xff));
-  WriteByte(index + 1, (byte_t)((us >> 8) & 0xff));
+  WriteByte(index, (uint8_t)(us & 0xff));
+  WriteByte(index + 1, (uint8_t)((us >> 8) & 0xff));
   return 2;
 }
 
@@ -122,25 +122,25 @@ int32_t WritableFontData::WriteShort(int32_t index, int32_t s) {
 }
 
 int32_t WritableFontData::WriteUInt24(int32_t index, int32_t ui) {
-  WriteByte(index, (byte_t)((ui >> 16) & 0xff));
-  WriteByte(index + 1, (byte_t)((ui >> 8) & 0xff));
-  WriteByte(index + 2, (byte_t)(ui & 0xff));
+  WriteByte(index, (uint8_t)((ui >> 16) & 0xff));
+  WriteByte(index + 1, (uint8_t)((ui >> 8) & 0xff));
+  WriteByte(index + 2, (uint8_t)(ui & 0xff));
   return 3;
 }
 
 int32_t WritableFontData::WriteULong(int32_t index, int64_t ul) {
-  WriteByte(index, (byte_t)((ul >> 24) & 0xff));
-  WriteByte(index + 1, (byte_t)((ul >> 16) & 0xff));
-  WriteByte(index + 2, (byte_t)((ul >> 8) & 0xff));
-  WriteByte(index + 3, (byte_t)(ul & 0xff));
+  WriteByte(index, (uint8_t)((ul >> 24) & 0xff));
+  WriteByte(index + 1, (uint8_t)((ul >> 16) & 0xff));
+  WriteByte(index + 2, (uint8_t)((ul >> 8) & 0xff));
+  WriteByte(index + 3, (uint8_t)(ul & 0xff));
   return 4;
 }
 
 int32_t WritableFontData::WriteULongLE(int32_t index, int64_t ul) {
-  WriteByte(index, (byte_t)(ul & 0xff));
-  WriteByte(index + 1, (byte_t)((ul >> 8) & 0xff));
-  WriteByte(index + 2, (byte_t)((ul >> 16) & 0xff));
-  WriteByte(index + 3, (byte_t)((ul >> 24) & 0xff));
+  WriteByte(index, (uint8_t)(ul & 0xff));
+  WriteByte(index + 1, (uint8_t)((ul >> 8) & 0xff));
+  WriteByte(index + 2, (uint8_t)((ul >> 16) & 0xff));
+  WriteByte(index + 3, (uint8_t)((ul >> 24) & 0xff));
   return 4;
 }
 

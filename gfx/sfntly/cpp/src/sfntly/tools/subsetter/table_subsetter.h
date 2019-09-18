@@ -26,7 +26,7 @@ namespace sfntly {
 class Subsetter;
 class TableSubsetter : virtual public RefCount {
  public:
-  virtual IntegerSet* TagsHandled() = 0;
+  virtual std::set<int32_t>* TagsHandled() = 0;
   virtual bool TagHandled(int32_t tag) = 0;
   virtual bool Subset(Subsetter* subsetter, Font* font,
                       Font::Builder* font_builder) = 0;

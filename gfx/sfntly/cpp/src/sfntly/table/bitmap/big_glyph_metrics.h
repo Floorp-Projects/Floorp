@@ -50,21 +50,21 @@ class BigGlyphMetrics : public GlyphMetrics,
     virtual ~Builder();
 
     int32_t Height();
-    void SetHeight(byte_t height);
+    void SetHeight(uint8_t height);
     int32_t Width();
-    void SetWidth(byte_t width);
+    void SetWidth(uint8_t width);
     int32_t HoriBearingX();
-    void SetHoriBearingX(byte_t bearing);
+    void SetHoriBearingX(uint8_t bearing);
     int32_t HoriBearingY();
-    void SetHoriBearingY(byte_t bearing);
+    void SetHoriBearingY(uint8_t bearing);
     int32_t HoriAdvance();
-    void SetHoriAdvance(byte_t advance);
+    void SetHoriAdvance(uint8_t advance);
     int32_t VertBearingX();
-    void SetVertBearingX(byte_t bearing);
+    void SetVertBearingX(uint8_t bearing);
     int32_t VertBearingY();
-    void SetVertBearingY(byte_t bearing);
+    void SetVertBearingY(uint8_t bearing);
     int32_t VertAdvance();
-    void SetVertAdvance(byte_t advance);
+    void SetVertAdvance(uint8_t advance);
 
     virtual CALLER_ATTACH FontDataTable* SubBuildTable(ReadableFontData* data);
     virtual void SubDataSet();

@@ -81,11 +81,11 @@ void FontData::Init(ByteArray* ba) {
   bound_length_ = GROWABLE_SIZE;
 }
 
-int32_t FontData::BoundOffset(int32_t offset) {
+int32_t FontData::BoundOffset(int32_t offset) const {
   return offset + bound_offset_;
 }
 
-int32_t FontData::BoundLength(int32_t offset, int32_t length) {
+int32_t FontData::BoundLength(int32_t offset, int32_t length) const {
   return std::min<int32_t>(length, bound_length_ - offset);
 }
 

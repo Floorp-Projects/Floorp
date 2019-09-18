@@ -53,8 +53,8 @@ class IndexSubTableFormat1 : public IndexSubTable,
     virtual bool SubReadyToSerialize();
     virtual int32_t SubSerialize(WritableFontData* new_data);
 
-    IntegerList* OffsetArray();
-    void SetOffsetArray(const IntegerList& offset_array);
+    std::vector<int32_t>* OffsetArray();
+    void SetOffsetArray(const std::vector<int32_t>& offset_array);
     CALLER_ATTACH BitmapGlyphInfoIter* Iterator();
 
     static CALLER_ATTACH Builder* CreateBuilder();
@@ -78,7 +78,7 @@ class IndexSubTableFormat1 : public IndexSubTable,
     Builder(ReadableFontData* data,
             int32_t first_glyph_index,
             int32_t last_glyph_index);
-    IntegerList* GetOffsetArray();
+    std::vector<int32_t>* GetOffsetArray();
     void Initialize(ReadableFontData* data);
 
     static int32_t DataLength(ReadableFontData* data,
@@ -86,7 +86,7 @@ class IndexSubTableFormat1 : public IndexSubTable,
                               int32_t first_glyph_index,
                               int32_t last_glyph_index);
 
-    IntegerList offset_array_;
+    std::vector<int32_t> offset_array_;
   };
 
   virtual ~IndexSubTableFormat1();

@@ -31,7 +31,7 @@ int32_t ByteArrayTableBuilder::ByteValue(int32_t index) {
   return data->ReadByte(index);
 }
 
-void ByteArrayTableBuilder::SetByteValue(int32_t index, byte_t b) {
+void ByteArrayTableBuilder::SetByteValue(int32_t index, uint8_t b) {
   WritableFontDataPtr data = InternalWriteData();
   if (data == NULL) {
 #if !defined (SFNTLY_NO_EXCEPTION)

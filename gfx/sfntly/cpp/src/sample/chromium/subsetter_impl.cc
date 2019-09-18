@@ -20,10 +20,12 @@
 
 #include <algorithm>
 #include <iterator>
+#include <limits>
 #include <map>
 #include <set>
+#include <string>
 
-#include <unicode/unistr.h>
+#include <unicode/ustring.h>
 #include <unicode/uversion.h>
 
 #include "sfntly/table/bitmap/eblc_table.h"
@@ -40,18 +42,22 @@
 #include "sfntly/port/memory_input_stream.h"
 #include "sfntly/port/memory_output_stream.h"
 
-#if defined U_USING_ICU_NAMESPACE
-  U_NAMESPACE_USE
-#endif
-
 namespace {
 
 using namespace sfntly;
 
+/**
+ * std::u16string and icu::UnicodeString can't be used here.
+ * UChar is not always char16_t in some platforms. std::u16string is avoided.
+ * icu::UnicodeString C++ API is also avoided to make it more portable across
+ * platforms due to C++ ABI compatility issue.
+ */
+typedef std::basic_string<UChar> UCharString;
+
 // The bitmap tables must be greater than 16KB to trigger bitmap subsetter.
 static const int BITMAP_SIZE_THRESHOLD = 16384;
 
-void ConstructName(UChar* name_part, UnicodeString* name, int32_t name_id) {
+void ConstructName(UChar* name_part, UCharString* name, int32_t name_id) {
   switch (name_id) {
     case NameId::kFullFontName:
       *name = name_part;
@@ -59,7 +65,7 @@ void ConstructName(UChar* name_part, UnicodeString* name, int32_t name_id) {
     case NameId::kFontFamilyName:
     case NameId::kPreferredFamily:
     case NameId::kWWSFamilyName: {
-      UnicodeString original = *name;
+      UCharString original = *name;
       *name = name_part;
       *name += original;
       break;
@@ -74,6 +80,38 @@ void ConstructName(UChar* name_part, UnicodeString* name, int32_t name_id) {
       // Simply ignore it.
       break;
   }
+}
+
+// Convert UTF-8 string into UTF-16 string.
+//
+// Ill-formed input is replaced with U+FFFD.
+// Otherwise, return empty string if other error occurs during the conversion.
+UCharString ConvertFromUtf8(const char* src) {
+  int32_t srcLength = strlen(src);
+  int32_t destCapacity = srcLength + 1;
+  UChar* buffer = new UChar[destCapacity];
+  UCharString dest;
+  if (buffer == NULL) {
+    return dest;
+  }
+  int32_t destLength;
+  UErrorCode errorCode = U_ZERO_ERROR;
+  u_strFromUTF8WithSub(buffer, destCapacity, &destLength, src, srcLength,
+                       0xfffd, // Unicode replacement character
+                       NULL,
+                       &errorCode);
+  if (U_SUCCESS(errorCode)) {
+    dest.append(buffer, destLength);
+  }
+  delete[] buffer;
+  return dest;
+}
+
+int32_t CaseCompareUtf16(const UCharString& str1,
+                         const UCharString& str2, uint32_t option) {
+  UErrorCode errorCode = U_ZERO_ERROR;
+  return u_strCaseCompare(str1.c_str(), str1.length(), str2.c_str(),
+                          str2.length(), option, &errorCode);
 }
 
 int32_t HashCode(int32_t platform_id, int32_t encoding_id, int32_t language_id,
@@ -92,14 +130,14 @@ int32_t HashCode(int32_t platform_id, int32_t encoding_id, int32_t language_id,
 }
 
 bool HasName(const char* font_name, Font* font) {
-  UnicodeString font_string = UnicodeString::fromUTF8(font_name);
-  if (font_string.isEmpty())
+  UCharString font_string = ConvertFromUtf8(font_name);
+  if (font_string.empty())
     return false;
-  UnicodeString regular_suffix = UnicodeString::fromUTF8(" Regular");
-  UnicodeString alt_font_string = font_string;
+  UCharString regular_suffix = ConvertFromUtf8(" Regular");
+  UCharString alt_font_string = font_string;
   alt_font_string += regular_suffix;
 
-  typedef std::map<int32_t, UnicodeString> NameMap;
+  typedef std::map<int32_t, UCharString> NameMap;
   NameMap names;
   NameTablePtr name_table = down_cast<NameTable*>(font->GetTable(Tag::name));
   if (name_table == NULL) {
@@ -134,8 +172,8 @@ bool HasName(const char* font_name, Font* font) {
 
   if (!names.empty()) {
     for (NameMap::iterator i = names.begin(), e = names.end(); i != e; ++i) {
-      if (i->second.caseCompare(font_string, 0) == 0 ||
-          i->second.caseCompare(alt_font_string, 0) == 0) {
+      if (CaseCompareUtf16(i->second, font_string, 0) == 0 ||
+          CaseCompareUtf16(i->second, alt_font_string, 0) == 0) {
         return true;
       }
     }
@@ -270,6 +308,10 @@ bool SetupGlyfBuilders(Font::Builder* font_builder,
     for (int32_t j = last_glyph_id + 1; j <= *i; ++j) {
       loca_list[j] = last_offset;
     }
+
+    if (last_offset > std::numeric_limits<int32_t>::max() - length)
+      return false;
+
     last_offset += length;
     loca_list[*i + 1] = last_offset;
     last_glyph_id = *i;
@@ -284,14 +326,15 @@ bool SetupGlyfBuilders(Font::Builder* font_builder,
 
 bool HasOverlap(int32_t range_begin, int32_t range_end,
                 const IntegerSet& glyph_ids) {
-  if (range_begin == range_end) {
+  if (range_begin == range_end)
     return glyph_ids.find(range_begin) != glyph_ids.end();
-  } else if (range_end > range_begin) {
-    IntegerSet::const_iterator left = glyph_ids.lower_bound(range_begin);
-    IntegerSet::const_iterator right = glyph_ids.lower_bound(range_end);
-    return right != left;
-  }
-  return false;
+
+  if (range_begin >= range_end)
+    return false;
+
+  IntegerSet::const_iterator left = glyph_ids.lower_bound(range_begin);
+  IntegerSet::const_iterator right = glyph_ids.lower_bound(range_end);
+  return left != right;
 }
 
 // Initialize builder, returns false if glyph_id subset is not covered.
@@ -379,14 +422,14 @@ bool InitializeBitmapBuilder(EbdtTable::Builder* ebdt, EblcTable::Builder* eblc,
 
 void CopyBigGlyphMetrics(BigGlyphMetrics::Builder* source,
                          BigGlyphMetrics::Builder* target) {
-  target->SetHeight(static_cast<byte_t>(source->Height()));
-  target->SetWidth(static_cast<byte_t>(source->Width()));
-  target->SetHoriBearingX(static_cast<byte_t>(source->HoriBearingX()));
-  target->SetHoriBearingY(static_cast<byte_t>(source->HoriBearingY()));
-  target->SetHoriAdvance(static_cast<byte_t>(source->HoriAdvance()));
-  target->SetVertBearingX(static_cast<byte_t>(source->VertBearingX()));
-  target->SetVertBearingY(static_cast<byte_t>(source->VertBearingY()));
-  target->SetVertAdvance(static_cast<byte_t>(source->VertAdvance()));
+  target->SetHeight(static_cast<uint8_t>(source->Height()));
+  target->SetWidth(static_cast<uint8_t>(source->Width()));
+  target->SetHoriBearingX(static_cast<uint8_t>(source->HoriBearingX()));
+  target->SetHoriBearingY(static_cast<uint8_t>(source->HoriBearingY()));
+  target->SetHoriAdvance(static_cast<uint8_t>(source->HoriAdvance()));
+  target->SetVertBearingX(static_cast<uint8_t>(source->VertBearingX()));
+  target->SetVertBearingY(static_cast<uint8_t>(source->VertBearingY()));
+  target->SetVertAdvance(static_cast<uint8_t>(source->VertAdvance()));
 }
 
 CALLER_ATTACH IndexSubTable::Builder*
@@ -649,11 +692,7 @@ bool SubsetterImpl::LoadFont(const char* font_name,
   FontArray font_array;
   factory_->LoadFonts(&mis, &font_array);
   font_ = FindFont(font_name, font_array);
-  if (font_ == NULL) {
-    return false;
-  }
-
-  return true;
+  return font_ != NULL;
 }
 
 int SubsetterImpl::SubsetFont(const unsigned int* glyph_ids,
@@ -687,12 +726,14 @@ int SubsetterImpl::SubsetFont(const unsigned int* glyph_ids,
 
   MemoryOutputStream output_stream;
   factory_->SerializeFont(new_font, &output_stream);
-  int length = static_cast<int>(output_stream.Size());
-  if (length > 0) {
-    *output_buffer = new unsigned char[length];
-    memcpy(*output_buffer, output_stream.Get(), length);
+  size_t length = output_stream.Size();
+  if (length == 0 ||
+      length > static_cast<size_t>(std::numeric_limits<int>::max())) {
+    return 0;
   }
 
+  *output_buffer = new unsigned char[length];
+  memcpy(*output_buffer, output_stream.Get(), length);
   return length;
 }
 
@@ -754,6 +795,8 @@ Font* SubsetterImpl::Subset(const IntegerSet& glyph_ids, GlyphTable* glyf,
     Tag::cmap,  // Keep here for future tagged PDF development.
     Tag::name,  // Keep here due to legal concerns: copyright info inside.
   };
+  const size_t kTablesInSubSetSize =
+      sizeof(TABLES_IN_SUBSET) / sizeof(TABLES_IN_SUBSET[0]);
 
   // Setup font builders we need.
   FontBuilderPtr font_builder;
@@ -781,9 +824,8 @@ Font* SubsetterImpl::Subset(const IntegerSet& glyph_ids, GlyphTable* glyf,
   }
 
   IntegerSet allowed_tags;
-  for (size_t i = 0; i < sizeof(TABLES_IN_SUBSET) / sizeof(int32_t); ++i) {
+  for (size_t i = 0; i < kTablesInSubSetSize; ++i)
     allowed_tags.insert(TABLES_IN_SUBSET[i]);
-  }
 
   IntegerSet result;
   std::set_difference(allowed_tags.begin(), allowed_tags.end(),
@@ -792,12 +834,12 @@ Font* SubsetterImpl::Subset(const IntegerSet& glyph_ids, GlyphTable* glyf,
   allowed_tags = result;
 
   // Setup remaining builders.
-  for (IntegerSet::iterator i = allowed_tags.begin(), e = allowed_tags.end();
-                            i != e; ++i) {
-    Table* table = font_->GetTable(*i);
-    if (table) {
-      font_builder->NewTableBuilder(*i, table->ReadFontData());
-    }
+  for (IntegerSet::const_iterator it = allowed_tags.begin();
+       it != allowed_tags.end(); ++it) {
+    int32_t tag = *it;
+    Table* table = font_->GetTable(tag);
+    if (table)
+      font_builder->NewTableBuilder(tag, table->ReadFontData());
   }
 
   return font_builder->Build();

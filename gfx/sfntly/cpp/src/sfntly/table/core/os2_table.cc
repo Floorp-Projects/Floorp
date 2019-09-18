@@ -166,7 +166,7 @@ int32_t OS2Table::SFamilyClass() {
   return data_->ReadShort(Offset::kSFamilyClass);
 }
 
-void OS2Table::Panose(ByteVector* value) {
+void OS2Table::Panose(std::vector<uint8_t>* value) {
   assert(value);
   value->clear();
   value->resize(10);
@@ -189,7 +189,7 @@ int64_t OS2Table::UlUnicodeRange4() {
   return data_->ReadULong(Offset::kUlUnicodeRange4);
 }
 
-void OS2Table::AchVendId(ByteVector* b) {
+void OS2Table::AchVendId(std::vector<uint8_t>* b) {
   assert(b);
   b->clear();
   b->resize(4);
@@ -415,7 +415,7 @@ void OS2Table::Builder::SetSFamilyClass(int32_t family) {
   InternalWriteData()->WriteShort(Offset::kSFamilyClass, family);
 }
 
-void OS2Table::Builder::Panose(ByteVector* value) {
+void OS2Table::Builder::Panose(std::vector<uint8_t>* value) {
   assert(value);
   value->clear();
   value->resize(Offset::kPanoseLength);
@@ -425,7 +425,7 @@ void OS2Table::Builder::Panose(ByteVector* value) {
                                 Offset::kPanoseLength);
 }
 
-void OS2Table::Builder::SetPanose(ByteVector* panose) {
+void OS2Table::Builder::SetPanose(std::vector<uint8_t>* panose) {
   assert(panose);
   if (panose->size() != Offset::kPanoseLength) {
 #if !defined (SFNTLY_NO_EXCEPTION)
@@ -468,14 +468,14 @@ void OS2Table::Builder::SetUlUnicodeRange4(int64_t range) {
   InternalWriteData()->WriteULong(Offset::kUlUnicodeRange4, range);
 }
 
-void OS2Table::Builder::AchVendId(ByteVector* b) {
+void OS2Table::Builder::AchVendId(std::vector<uint8_t>* b) {
   assert(b);
   b->clear();
   b->resize(4);
   InternalReadData()->ReadBytes(Offset::kAchVendId, &((*b)[0]), 0, 4);
 }
 
-void OS2Table::Builder::SetAchVendId(ByteVector* b) {
+void OS2Table::Builder::SetAchVendId(std::vector<uint8_t>* b) {
   assert(b);
   assert(b->size());
   InternalWriteData()->WriteBytesPad(Offset::kAchVendId,
@@ -484,7 +484,7 @@ void OS2Table::Builder::SetAchVendId(ByteVector* b) {
                                      std::min<size_t>(
                                          (size_t)Offset::kAchVendIdLength,
                                          b->size()),
-                                     static_cast<byte_t>(' '));
+                                     static_cast<uint8_t>(' '));
 }
 
 int32_t OS2Table::Builder::FsSelection() {

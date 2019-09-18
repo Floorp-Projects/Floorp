@@ -34,16 +34,16 @@ class MemoryOutputStream : public OutputStream {
 
   virtual void Close() {}  // no-op
   virtual void Flush() {}  // no-op
-  virtual void Write(ByteVector* buffer);
-  virtual void Write(ByteVector* buffer, int32_t offset, int32_t length);
-  virtual void Write(byte_t* buffer, int32_t offset, int32_t length);
-  virtual void Write(byte_t b);
+  virtual void Write(std::vector<uint8_t>* buffer);
+  virtual void Write(std::vector<uint8_t>* buffer, int32_t offset, int32_t length);
+  virtual void Write(uint8_t* buffer, int32_t offset, int32_t length);
+  virtual void Write(uint8_t b);
 
-  byte_t* Get();
+  uint8_t* Get();
   size_t Size();
 
  private:
-  std::vector<byte_t> store_;
+  std::vector<uint8_t> store_;
 };
 
 }  // namespace sfntly

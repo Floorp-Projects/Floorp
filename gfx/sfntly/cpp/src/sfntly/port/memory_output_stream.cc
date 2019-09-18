@@ -24,11 +24,11 @@ MemoryOutputStream::MemoryOutputStream() {
 MemoryOutputStream::~MemoryOutputStream() {
 }
 
-void MemoryOutputStream::Write(ByteVector* buffer) {
+void MemoryOutputStream::Write(std::vector<uint8_t>* buffer) {
   store_.insert(store_.end(), buffer->begin(), buffer->end());
 }
 
-void MemoryOutputStream::Write(ByteVector* buffer,
+void MemoryOutputStream::Write(std::vector<uint8_t>* buffer,
                                int32_t offset,
                                int32_t length) {
   assert(buffer);
@@ -43,7 +43,7 @@ void MemoryOutputStream::Write(ByteVector* buffer,
   }
 }
 
-void MemoryOutputStream::Write(byte_t* buffer, int32_t offset, int32_t length) {
+void MemoryOutputStream::Write(uint8_t* buffer, int32_t offset, int32_t length) {
   assert(buffer);
   if (offset >= 0 && length > 0) {
     store_.insert(store_.end(), buffer + offset, buffer + offset + length);
@@ -54,11 +54,11 @@ void MemoryOutputStream::Write(byte_t* buffer, int32_t offset, int32_t length) {
   }
 }
 
-void MemoryOutputStream::Write(byte_t b) {
+void MemoryOutputStream::Write(uint8_t b) {
   store_.push_back(b);
 }
 
-byte_t* MemoryOutputStream::Get() {
+uint8_t* MemoryOutputStream::Get() {
   if (store_.empty()) {
     return NULL;
   }

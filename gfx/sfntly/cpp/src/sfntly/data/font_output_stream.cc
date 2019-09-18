@@ -29,21 +29,21 @@ FontOutputStream::~FontOutputStream() {
   // Do not close, underlying stream shall clean up themselves.
 }
 
-void FontOutputStream::Write(byte_t b) {
+void FontOutputStream::Write(uint8_t b) {
   if (stream_) {
     stream_->Write(b);
     position_++;
   }
 }
 
-void FontOutputStream::Write(ByteVector* b) {
+void FontOutputStream::Write(std::vector<uint8_t>* b) {
   if (b) {
     Write(b, 0, b->size());
     position_ += b->size();
   }
 }
 
-void FontOutputStream::Write(ByteVector* b, int32_t off, int32_t len) {
+void FontOutputStream::Write(std::vector<uint8_t>* b, int32_t off, int32_t len) {
   assert(b);
   assert(stream_);
   if (off < 0 || len < 0 || off + len < 0 ||
@@ -59,7 +59,7 @@ void FontOutputStream::Write(ByteVector* b, int32_t off, int32_t len) {
   position_ += len;
 }
 
-void FontOutputStream::Write(byte_t* b, int32_t off, int32_t len) {
+void FontOutputStream::Write(uint8_t* b, int32_t off, int32_t len) {
   assert(b);
   assert(stream_);
   if (off < 0 || len < 0 || off + len < 0) {
@@ -74,13 +74,13 @@ void FontOutputStream::Write(byte_t* b, int32_t off, int32_t len) {
   position_ += len;
 }
 
-void FontOutputStream::WriteChar(byte_t c) {
+void FontOutputStream::WriteChar(uint8_t c) {
   Write(c);
 }
 
 void FontOutputStream::WriteUShort(int32_t us) {
-  Write((byte_t)((us >> 8) & 0xff));
-  Write((byte_t)(us & 0xff));
+  Write((uint8_t)((us >> 8) & 0xff));
+  Write((uint8_t)(us & 0xff));
 }
 
 void FontOutputStream::WriteShort(int32_t s) {
@@ -88,16 +88,16 @@ void FontOutputStream::WriteShort(int32_t s) {
 }
 
 void FontOutputStream::WriteUInt24(int32_t ui) {
-  Write((byte_t)(ui >> 16) & 0xff);
-  Write((byte_t)(ui >> 8) & 0xff);
-  Write((byte_t)ui & 0xff);
+  Write((uint8_t)(ui >> 16) & 0xff);
+  Write((uint8_t)(ui >> 8) & 0xff);
+  Write((uint8_t)ui & 0xff);
 }
 
 void FontOutputStream::WriteULong(int64_t ul) {
-  Write((byte_t)((ul >> 24) & 0xff));
-  Write((byte_t)((ul >> 16) & 0xff));
-  Write((byte_t)((ul >> 8) & 0xff));
-  Write((byte_t)(ul & 0xff));
+  Write((uint8_t)((ul >> 24) & 0xff));
+  Write((uint8_t)((ul >> 16) & 0xff));
+  Write((uint8_t)((ul >> 8) & 0xff));
+  Write((uint8_t)(ul & 0xff));
 }
 
 void FontOutputStream::WriteLong(int64_t l) {

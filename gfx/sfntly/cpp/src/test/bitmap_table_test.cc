@@ -58,11 +58,18 @@ bool CommonReadingTest(Font* raw_font) {
   EXPECT_FALSE(bitmap_loca == NULL);
   EXPECT_FALSE(bitmap_table == NULL);
 
+  if (!bitmap_loca) {
+    return false;
+  }
+
   EXPECT_EQ(bitmap_loca->NumSizes(), NUM_STRIKES);
 
   // Strike 1
   BitmapSizeTablePtr strike1 = bitmap_loca->GetBitmapSizeTable(0);
   EXPECT_FALSE(strike1 == NULL);
+  if (!strike1) {
+    return false;
+  }
   EXPECT_EQ(strike1->IndexSubTableArrayOffset(), STRIKE1_ARRAY_OFFSET);
   EXPECT_EQ(strike1->NumberOfIndexSubTables(), STRIKE1_NUM_INDEX_TABLES);
   EXPECT_EQ(strike1->ColorRef(), STRIKE1_COLOR_REF);

@@ -91,7 +91,7 @@ int32_t IndexSubTableFormat3::Builder::GlyphLength(int32_t glyph_id) {
   if (loca == -1) {
     return 0;
   }
-  IntegerList* offset_array = GetOffsetArray();
+  std::vector<int32_t>* offset_array = GetOffsetArray();
   return offset_array->at(loca + 1) - offset_array->at(loca);
 }
 
@@ -108,7 +108,7 @@ void IndexSubTableFormat3::Builder::Revert() {
 }
 
 void IndexSubTableFormat3::Builder::SetOffsetArray(
-    const IntegerList& offset_array) {
+    const std::vector<int32_t>& offset_array) {
   offset_array_.clear();
   offset_array_ = offset_array;
   set_model_changed();
@@ -205,7 +205,7 @@ int32_t IndexSubTableFormat3::Builder::SubSerialize(
         EblcTable::Offset::kIndexSubTable3_offsetArray)));
     size += source->CopyTo(target);
   } else {
-    for (IntegerList::iterator b = GetOffsetArray()->begin(),
+    for (std::vector<int32_t>::iterator b = GetOffsetArray()->begin(),
                                e = GetOffsetArray()->end(); b != e; b++) {
       size += new_data->WriteUShort(size, *b);
     }
@@ -230,7 +230,7 @@ IndexSubTableFormat3::Builder::Builder(ReadableFontData* data,
     : IndexSubTable::Builder(data, first_glyph_index, last_glyph_index) {
 }
 
-IntegerList* IndexSubTableFormat3::Builder::GetOffsetArray() {
+std::vector<int32_t>* IndexSubTableFormat3::Builder::GetOffsetArray() {
   if (offset_array_.empty()) {
     Initialize(InternalReadData());
     set_model_changed();

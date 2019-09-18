@@ -59,7 +59,7 @@ class FontInputStream : public InputStream {
 
   virtual ~FontInputStream();
 
-
+  virtual int32_t Length();
   virtual int32_t Available();
   virtual void Close();
   virtual void Mark(int32_t readlimit);
@@ -67,8 +67,8 @@ class FontInputStream : public InputStream {
   virtual void Reset();
 
   virtual int32_t Read();
-  virtual int32_t Read(ByteVector* buffer);
-  virtual int32_t Read(ByteVector* buffer, int32_t offset, int32_t length);
+  virtual int32_t Read(std::vector<uint8_t>* buffer);
+  virtual int32_t Read(std::vector<uint8_t>* buffer, int32_t offset, int32_t length);
 
   // Get the current position in the stream in bytes.
   // @return the current position in bytes

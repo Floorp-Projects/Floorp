@@ -37,7 +37,7 @@ Subsetter::~Subsetter() {
   table_subsetters_.clear();
 }
 
-void Subsetter::SetGlyphs(IntegerList* glyphs) {
+void Subsetter::SetGlyphs(std::vector<int32_t>* glyphs) {
   new_to_old_glyphs_ = *glyphs;
 }
 
@@ -47,7 +47,7 @@ void Subsetter::SetCMaps(CMapIdList* cmap_ids, int32_t number) {
   // TODO(arthurhsu): IMPLEMENT
 }
 
-void Subsetter::SetRemoveTables(IntegerSet* remove_tables) {
+void Subsetter::SetRemoveTables(std::set<int32_t>* remove_tables) {
   remove_tables_ = *remove_tables;
 }
 
@@ -55,13 +55,13 @@ CALLER_ATTACH Font::Builder* Subsetter::Subset() {
   FontBuilderPtr font_builder;
   font_builder.Attach(font_factory_->NewFontBuilder());
 
-  IntegerSet table_tags;
+  std::set<int32_t> table_tags;
   for (TableMap::const_iterator i = font_->GetTableMap()->begin(),
                                 e = font_->GetTableMap()->end(); i != e; ++i) {
     table_tags.insert(i->first);
   }
   if (!remove_tables_.empty()) {
-    IntegerSet result;
+    std::set<int32_t> result;
     std::set_difference(table_tags.begin(), table_tags.end(),
                         remove_tables_.begin(), remove_tables_.end(),
                         std::inserter(result, result.end()));
@@ -73,15 +73,15 @@ CALLER_ATTACH Font::Builder* Subsetter::Subset() {
            table_subsetter != table_subsetter_end; ++table_subsetter) {
     bool handled = (*table_subsetter)->Subset(this, font_, font_builder);
     if (handled) {
-      IntegerSet* handled_tags = (*table_subsetter)->TagsHandled();
-      IntegerSet result;
+      std::set<int32_t>* handled_tags = (*table_subsetter)->TagsHandled();
+      std::set<int32_t> result;
       std::set_difference(table_tags.begin(), table_tags.end(),
                           handled_tags->begin(), handled_tags->end(),
                           std::inserter(result, result.end()));
       table_tags = result;
     }
   }
-  for (IntegerSet::iterator tag = table_tags.begin(),
+  for (std::set<int32_t>::iterator tag = table_tags.begin(),
                             tag_end = table_tags.end(); tag != tag_end; ++tag) {
     Table* table = font_->GetTable(*tag);
     if (table) {
@@ -91,7 +91,7 @@ CALLER_ATTACH Font::Builder* Subsetter::Subset() {
   return font_builder.Detach();
 }
 
-IntegerList* Subsetter::GlyphPermutationTable() {
+std::vector<int32_t>* Subsetter::GlyphPermutationTable() {
   return &new_to_old_glyphs_;
 }
 

@@ -77,7 +77,7 @@ int32_t BigGlyphMetrics::Builder::Height() {
   return InternalReadData()->ReadByte(Offset::kHeight);
 }
 
-void BigGlyphMetrics::Builder::SetHeight(byte_t height) {
+void BigGlyphMetrics::Builder::SetHeight(uint8_t height) {
   InternalWriteData()->WriteByte(Offset::kHeight, height);
 }
 
@@ -85,7 +85,7 @@ int32_t BigGlyphMetrics::Builder::Width() {
   return InternalReadData()->ReadByte(Offset::kWidth);
 }
 
-void BigGlyphMetrics::Builder::SetWidth(byte_t width) {
+void BigGlyphMetrics::Builder::SetWidth(uint8_t width) {
   InternalWriteData()->WriteByte(Offset::kWidth, width);
 }
 
@@ -93,7 +93,7 @@ int32_t BigGlyphMetrics::Builder::HoriBearingX() {
   return InternalReadData()->ReadByte(Offset::kHoriBearingX);
 }
 
-void BigGlyphMetrics::Builder::SetHoriBearingX(byte_t bearing) {
+void BigGlyphMetrics::Builder::SetHoriBearingX(uint8_t bearing) {
   InternalWriteData()->WriteByte(Offset::kHoriBearingX, bearing);
 }
 
@@ -101,7 +101,7 @@ int32_t BigGlyphMetrics::Builder::HoriBearingY() {
   return InternalReadData()->ReadByte(Offset::kHoriBearingY);
 }
 
-void BigGlyphMetrics::Builder::SetHoriBearingY(byte_t bearing) {
+void BigGlyphMetrics::Builder::SetHoriBearingY(uint8_t bearing) {
   InternalWriteData()->WriteByte(Offset::kHoriBearingY, bearing);
 }
 
@@ -109,7 +109,7 @@ int32_t BigGlyphMetrics::Builder::HoriAdvance() {
   return InternalReadData()->ReadByte(Offset::kHoriAdvance);
 }
 
-void BigGlyphMetrics::Builder::SetHoriAdvance(byte_t advance) {
+void BigGlyphMetrics::Builder::SetHoriAdvance(uint8_t advance) {
   InternalWriteData()->WriteByte(Offset::kHoriAdvance, advance);
 }
 
@@ -117,7 +117,7 @@ int32_t BigGlyphMetrics::Builder::VertBearingX() {
   return InternalReadData()->ReadByte(Offset::kVertBearingX);
 }
 
-void BigGlyphMetrics::Builder::SetVertBearingX(byte_t bearing) {
+void BigGlyphMetrics::Builder::SetVertBearingX(uint8_t bearing) {
   InternalWriteData()->WriteByte(Offset::kVertBearingX, bearing);
 }
 
@@ -125,7 +125,7 @@ int32_t BigGlyphMetrics::Builder::VertBearingY() {
   return InternalReadData()->ReadByte(Offset::kVertBearingY);
 }
 
-void BigGlyphMetrics::Builder::SetVertBearingY(byte_t bearing) {
+void BigGlyphMetrics::Builder::SetVertBearingY(uint8_t bearing) {
   InternalWriteData()->WriteByte(Offset::kVertBearingY, bearing);
 }
 
@@ -133,7 +133,7 @@ int32_t BigGlyphMetrics::Builder::VertAdvance() {
   return InternalReadData()->ReadByte(Offset::kVertAdvance);
 }
 
-void BigGlyphMetrics::Builder::SetVertAdvance(byte_t advance) {
+void BigGlyphMetrics::Builder::SetVertAdvance(uint8_t advance) {
   InternalWriteData()->WriteByte(Offset::kVertAdvance, advance);
 }
 

@@ -125,47 +125,48 @@ void TiXmlBase::ConvertUTF32ToUTF8( unsigned long input, char* output, int* leng
 	}
 }
 
-/*static*/
-int TiXmlBase::IsAlpha(unsigned char anyByte, TiXmlEncoding /*encoding*/) {
-  // This will only work for low-ascii, everything else is assumed to be a valid
-  // letter. I'm not sure this is the best approach, but it is quite tricky
-  // trying to figure out alhabetical vs. not across encoding. So take a very
-  // conservative approach.
 
-  //	if ( encoding == TIXML_ENCODING_UTF8 )
-  //	{
-  if (anyByte < 127)
-    return isalpha(anyByte);
-  else
-    return 1;  // What else to do? The unicode set is huge...get the english
-               // ones right.
-  //	}
-  //	else
-  //	{
-  //		return isalpha( anyByte );
-  //	}
+/*static*/ int TiXmlBase::IsAlpha( unsigned char anyByte, TiXmlEncoding /*encoding*/ )
+{
+	// This will only work for low-ascii, everything else is assumed to be a valid
+	// letter. I'm not sure this is the best approach, but it is quite tricky trying
+	// to figure out alhabetical vs. not across encoding. So take a very 
+	// conservative approach.
+
+//	if ( encoding == TIXML_ENCODING_UTF8 )
+//	{
+		if ( anyByte < 127 )
+			return isalpha( anyByte );
+		else
+			return 1;	// What else to do? The unicode set is huge...get the english ones right.
+//	}
+//	else
+//	{
+//		return isalpha( anyByte );
+//	}
 }
 
-/*static*/
-int TiXmlBase::IsAlphaNum(unsigned char anyByte, TiXmlEncoding /*encoding*/) {
-  // This will only work for low-ascii, everything else is assumed to be a valid
-  // letter. I'm not sure this is the best approach, but it is quite tricky
-  // trying to figure out alhabetical vs. not across encoding. So take a very
-  // conservative approach.
 
-  //	if ( encoding == TIXML_ENCODING_UTF8 )
-  //	{
-  if (anyByte < 127)
-    return isalnum(anyByte);
-  else
-    return 1;  // What else to do? The unicode set is huge...get the english
-               // ones right.
-  //	}
-  //	else
-  //	{
-  //		return isalnum( anyByte );
-  //	}
+/*static*/ int TiXmlBase::IsAlphaNum( unsigned char anyByte, TiXmlEncoding /*encoding*/ )
+{
+	// This will only work for low-ascii, everything else is assumed to be a valid
+	// letter. I'm not sure this is the best approach, but it is quite tricky trying
+	// to figure out alhabetical vs. not across encoding. So take a very 
+	// conservative approach.
+
+//	if ( encoding == TIXML_ENCODING_UTF8 )
+//	{
+		if ( anyByte < 127 )
+			return isalnum( anyByte );
+		else
+			return 1;	// What else to do? The unicode set is huge...get the english ones right.
+//	}
+//	else
+//	{
+//		return isalnum( anyByte );
+//	}
 }
+
 
 class TiXmlParsingData
 {
@@ -361,33 +362,36 @@ const char* TiXmlBase::SkipWhiteSpace( const char* p, TiXmlEncoding encoding )
 }
 
 #ifdef TIXML_USE_STL
-/*static*/
-bool TiXmlBase::StreamWhiteSpace(std::istream* in, TIXML_STRING* tag) {
-  for (;;) {
-    if (!in->good()) return false;
+/*static*/ bool TiXmlBase::StreamWhiteSpace( std::istream * in, TIXML_STRING * tag )
+{
+	for( ;; )
+	{
+		if ( !in->good() ) return false;
 
-    int c = in->peek();
-    // At this scope, we can't get to a document. So fail silently.
-    if (!IsWhiteSpace(c) || c <= 0) return true;
+		int c = in->peek();
+		// At this scope, we can't get to a document. So fail silently.
+		if ( !IsWhiteSpace( c ) || c <= 0 )
+			return true;
 
-    *tag += (char)in->get();
-  }
+		*tag += (char) in->get();
+	}
 }
 
-/*static*/
-bool TiXmlBase::StreamTo(std::istream* in, int character, TIXML_STRING* tag) {
-  // assert( character > 0 && character < 128 );	// else it won't work in
-  // utf-8
-  while (in->good()) {
-    int c = in->peek();
-    if (c == character) return true;
-    if (c <= 0)  // Silent failure: can't get document at this scope
-      return false;
+/*static*/ bool TiXmlBase::StreamTo( std::istream * in, int character, TIXML_STRING * tag )
+{
+	//assert( character > 0 && character < 128 );	// else it won't work in utf-8
+	while ( in->good() )
+	{
+		int c = in->peek();
+		if ( c == character )
+			return true;
+		if ( c <= 0 )		// Silent failure: can't get document at this scope
+			return false;
 
-    in->get();
-    *tag += (char)c;
-  }
-  return false;
+		in->get();
+		*tag += (char) c;
+	}
+	return false;
 }
 #endif
 
