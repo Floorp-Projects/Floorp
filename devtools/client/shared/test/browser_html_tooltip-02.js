@@ -9,6 +9,7 @@
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const TEST_URI = CHROME_URL_ROOT + "doc_html_tooltip-02.xul";
+const PROMISE_TIMEOUT = 3000;
 
 const {
   HTMLTooltip,
@@ -32,6 +33,7 @@ add_task(async function() {
 
 async function runTests(doc) {
   await testClickInTooltipContent(doc);
+  await testClickInTooltipIcon(doc);
   await testConsumeOutsideClicksFalse(doc);
   await testConsumeOutsideClicksTrue(doc);
   await testConsumeWithRightClick(doc);
@@ -55,6 +57,32 @@ async function testClickInTooltipContent(doc) {
   tooltip.destroy();
 }
 
+async function testClickInTooltipIcon(doc) {
+  info("Test a tooltip is not closed when clicking it's icon");
+
+  const tooltip = new HTMLTooltip(doc, { useXulWrapper, noAutoHide: true });
+  tooltip.panel.appendChild(getTooltipContent(doc));
+  tooltip.setContentSize({ width: 100, height: 50 });
+
+  const box1 = doc.getElementById("box1");
+  await showTooltip(tooltip, box1);
+
+  const onHidden = once(tooltip, "hidden");
+  box1.click();
+
+  // Hiding the tooltip is async so we need to wait for "hidden" to be emitted
+  // timing out after 3 seconds. If hidden is emitted we need to fail,
+  // otherwise the test passes.
+  const shown = await Promise.race([
+    onHidden,
+    wait(PROMISE_TIMEOUT).then(() => true),
+  ]);
+
+  ok(shown, "Tooltip is still visible");
+
+  tooltip.destroy();
+}
+
 async function testConsumeOutsideClicksFalse(doc) {
   info("Test closing a tooltip via click with consumeOutsideClicks: false");
   const box4 = doc.getElementById("box4");
@@ -69,7 +97,7 @@ async function testConsumeOutsideClicksFalse(doc) {
 
   const onBox4Clicked = once(box4, "click");
   const onHidden = once(tooltip, "hidden");
-  EventUtils.synthesizeMouseAtCenter(box4, {}, doc.defaultView);
+  box4.click();
   await onHidden;
   await onBox4Clicked;
 
@@ -95,7 +123,7 @@ async function testConsumeOutsideClicksTrue(doc) {
   await showTooltip(tooltip, doc.getElementById("box1"));
 
   const onHidden = once(tooltip, "hidden");
-  EventUtils.synthesizeMouseAtCenter(box4, {}, doc.defaultView);
+  box4.click();
   await onHidden;
 
   is(box4clicks, 0, "box4 catched no click event");
@@ -144,7 +172,7 @@ async function testClickInOuterIframe(doc) {
   await showTooltip(tooltip, doc.getElementById("box1"));
 
   const onHidden = once(tooltip, "hidden");
-  EventUtils.synthesizeMouseAtCenter(frame, {}, doc.defaultView);
+  frame.click();
   await onHidden;
 
   is(tooltip.isVisible(), false, "Tooltip is hidden");
