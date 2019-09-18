@@ -30,7 +30,7 @@
 #include "nsString.h"
 #include "nsCRT.h"
 #include "nsCRTGlue.h"
-#include "nsContentSecurityManager.h"
+#include "nsContentSecurityUtils.h"
 #include "nsDocShell.h"
 #include "nsError.h"
 #include "nsGlobalWindowInner.h"
@@ -443,8 +443,8 @@ bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
   }
 
 #if !defined(ANDROID) && (defined(NIGHTLY_BUILD) || defined(DEBUG))
-  nsContentSecurityManager::AssertEvalNotRestricted(cx, subjectPrincipal,
-                                                    scriptSample);
+  nsContentSecurityUtils::AssertEvalNotRestricted(cx, subjectPrincipal,
+                                                  scriptSample);
 #endif
 
   if (NS_FAILED(rv)) {
