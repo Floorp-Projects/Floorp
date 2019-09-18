@@ -799,7 +799,7 @@ function UpdateContextMenu() {
 }
 
 async function masterPasswordLogin(noPasswordCallback) {
-  // This doesn't harm if passwords are not encrypted
+  // This does no harm if master password isn't set.
   let tokendb = Cc["@mozilla.org/security/pk11tokendb;1"].createInstance(
     Ci.nsIPK11TokenDB
   );
