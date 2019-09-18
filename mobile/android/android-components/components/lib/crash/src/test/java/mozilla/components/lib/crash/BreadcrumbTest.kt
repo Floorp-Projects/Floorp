@@ -5,7 +5,7 @@
 package mozilla.components.lib.crash
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.lib.crash.service.CrashReporterService
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -33,16 +33,8 @@ class BreadcrumbTest {
         val testLevel = Breadcrumb.Level.CRITICAL
         val testType = Breadcrumb.Type.USER
 
-        val service = object : CrashReporterService {
-            override fun report(crash: Crash.UncaughtExceptionCrash) {
-            }
-
-            override fun report(crash: Crash.NativeCodeCrash) {
-            }
-        }
-
         val reporter = spy(CrashReporter(
-                services = listOf(service),
+                services = listOf(mock()),
                 shouldPrompt = CrashReporter.Prompt.NEVER
         ).install(testContext))
 
@@ -50,12 +42,12 @@ class BreadcrumbTest {
                 Breadcrumb(testMessage, testData, testCategory, testLevel, testType)
         )
 
-        assertEquals(reporter.crashBreadcrumbs[0].message, testMessage)
-        assertEquals(reporter.crashBreadcrumbs[0].data, testData)
-        assertEquals(reporter.crashBreadcrumbs[0].category, testCategory)
-        assertEquals(reporter.crashBreadcrumbs[0].level, testLevel)
-        assertEquals(reporter.crashBreadcrumbs[0].type, testType)
-        assertNotNull(reporter.crashBreadcrumbs[0].date)
+        assertEquals(reporter.crashBreadcrumbs.elementAt(0).message, testMessage)
+        assertEquals(reporter.crashBreadcrumbs.elementAt(0).data, testData)
+        assertEquals(reporter.crashBreadcrumbs.elementAt(0).category, testCategory)
+        assertEquals(reporter.crashBreadcrumbs.elementAt(0).level, testLevel)
+        assertEquals(reporter.crashBreadcrumbs.elementAt(0).type, testType)
+        assertNotNull(reporter.crashBreadcrumbs.elementAt(0).date)
     }
 
     @Test
@@ -66,16 +58,8 @@ class BreadcrumbTest {
         val testLevel = Breadcrumb.Level.CRITICAL
         val testType = Breadcrumb.Type.USER
 
-        val service = object : CrashReporterService {
-            override fun report(crash: Crash.UncaughtExceptionCrash) {
-            }
-
-            override fun report(crash: Crash.NativeCodeCrash) {
-            }
-        }
-
         val reporter = spy(CrashReporter(
-                services = listOf(service),
+                services = listOf(mock()),
                 shouldPrompt = CrashReporter.Prompt.NEVER
         ).install(testContext))
 
@@ -96,45 +80,6 @@ class BreadcrumbTest {
     }
 
     @Test
-    fun `Reporter stores only max number of breadcrumbs`() {
-        val testMessage = "test_Message"
-        val testData = hashMapOf("1" to "one", "2" to "two")
-        val testCategory = "testing_category"
-        val testLevel = Breadcrumb.Level.CRITICAL
-        val testType = Breadcrumb.Type.USER
-
-        val service = object : CrashReporterService {
-            override fun report(crash: Crash.UncaughtExceptionCrash) {
-            }
-
-            override fun report(crash: Crash.NativeCodeCrash) {
-            }
-        }
-
-        val reporter = spy(CrashReporter(
-                services = listOf(service),
-                shouldPrompt = CrashReporter.Prompt.NEVER
-        ).install(testContext))
-
-        repeat(CrashReporter.BREADCRUMB_MAX_NUM) {
-            reporter.recordCrashBreadcrumb(
-                    Breadcrumb(testMessage, testData, testCategory, testLevel, testType)
-            )
-        }
-        assertEquals(reporter.crashBreadcrumbs.size, CrashReporter.BREADCRUMB_MAX_NUM)
-
-        reporter.recordCrashBreadcrumb(
-                Breadcrumb(testMessage, testData, testCategory, testLevel, testType)
-        )
-        assertEquals(reporter.crashBreadcrumbs.size, CrashReporter.BREADCRUMB_MAX_NUM)
-
-        reporter.recordCrashBreadcrumb(
-                Breadcrumb(testMessage, testData, testCategory, testLevel, testType)
-        )
-        assertEquals(reporter.crashBreadcrumbs.size, CrashReporter.BREADCRUMB_MAX_NUM)
-    }
-
-    @Test
     fun `RecordBreadCrumb stores correct date`() {
         val testMessage = "test_Message"
         val testData = hashMapOf("1" to "one", "2" to "two")
@@ -142,16 +87,8 @@ class BreadcrumbTest {
         val testLevel = Breadcrumb.Level.CRITICAL
         val testType = Breadcrumb.Type.USER
 
-        val service = object : CrashReporterService {
-            override fun report(crash: Crash.UncaughtExceptionCrash) {
-            }
-
-            override fun report(crash: Crash.NativeCodeCrash) {
-            }
-        }
-
         val reporter = spy(CrashReporter(
-                services = listOf(service),
+                services = listOf(mock()),
                 shouldPrompt = CrashReporter.Prompt.NEVER
         ).install(testContext))
 
@@ -163,13 +100,13 @@ class BreadcrumbTest {
         sleep(100) /* make sure time elapsed */
         val afterDate = Date()
 
-        assertTrue(reporter.crashBreadcrumbs[0].date.after(beginDate))
-        assertTrue(reporter.crashBreadcrumbs[0].date.before(afterDate))
+        assertTrue(reporter.crashBreadcrumbs.elementAt(0).date.after(beginDate))
+        assertTrue(reporter.crashBreadcrumbs.elementAt(0).date.before(afterDate))
 
         val date = Date()
         reporter.recordCrashBreadcrumb(
                 Breadcrumb(testMessage, testData, testCategory, testLevel, testType, date)
         )
-        assertTrue(reporter.crashBreadcrumbs[1].date.compareTo(date) == 0)
+        assertTrue(reporter.crashBreadcrumbs.elementAt(1).date.compareTo(date) == 0)
     }
 }

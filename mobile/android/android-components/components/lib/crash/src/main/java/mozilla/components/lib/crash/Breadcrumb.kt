@@ -42,7 +42,7 @@ data class Breadcrumb(
      * Date of of the crash breadcrumb.
      */
     val date: Date = Date()
-) : Parcelable {
+) : Parcelable, Comparable<Breadcrumb> {
     /**
      * Crash breadcrumb priority level.
      */
@@ -96,5 +96,13 @@ data class Breadcrumb(
          * USER type.
          */
         USER
+    }
+
+    override fun compareTo(other: Breadcrumb): Int {
+        if (this.level.ordinal == other.level.ordinal) {
+            return this.date.compareTo(other.date)
+        }
+
+        return this.level.ordinal.compareTo(other.level.ordinal)
     }
 }
