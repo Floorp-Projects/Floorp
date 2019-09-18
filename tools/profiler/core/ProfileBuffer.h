@@ -27,10 +27,14 @@ class ProfileBuffer final {
   using BlockIndex = mozilla::BlocksRingBuffer::BlockIndex;
 
   // ProfileBuffer constructor
-  // @param aBuffer The BlocksRingBuffer to use as buffer manager.
+  // @param aBuffer The empty BlocksRingBuffer to use as buffer manager.
   // @param aCapacity The capacity of the buffer.
   ProfileBuffer(mozilla::BlocksRingBuffer& aBuffer,
                 mozilla::PowerOfTwo32 aCapacity);
+
+  // ProfileBuffer constructor
+  // @param aBuffer The pre-filled BlocksRingBuffer to use as buffer manager.
+  explicit ProfileBuffer(mozilla::BlocksRingBuffer& aBuffer);
 
   ~ProfileBuffer();
 

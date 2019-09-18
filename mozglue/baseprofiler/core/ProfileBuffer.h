@@ -30,9 +30,13 @@ class ProfileBuffer final {
   using BlockIndex = BlocksRingBuffer::BlockIndex;
 
   // ProfileBuffer constructor
-  // @param aBuffer The BlocksRingBuffer to use as buffer manager.
+  // @param aBuffer The empty BlocksRingBuffer to use as buffer manager.
   // @param aCapacity The capacity of the buffer in memory.
   ProfileBuffer(BlocksRingBuffer& aBuffer, PowerOfTwo32 aCapacity);
+
+  // ProfileBuffer constructor
+  // @param aBuffer The pre-filled BlocksRingBuffer to use as buffer manager.
+  explicit ProfileBuffer(BlocksRingBuffer& aBuffer);
 
   ~ProfileBuffer();
 
