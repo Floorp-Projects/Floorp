@@ -4380,18 +4380,6 @@ void EventStateManager::NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
   wrapper->mFirstOutEventElement = nullptr;
 }
 
-void EventStateManager::RecomputeMouseEnterStateForRemoteFrame(
-    Element& aElement) {
-  if (!mMouseEnterLeaveHelper ||
-      mMouseEnterLeaveHelper->mLastOverElement != &aElement) {
-    return;
-  }
-
-  if (BrowserParent* remote = BrowserParent::GetFrom(&aElement)) {
-    remote->MouseEnterIntoWidget();
-  }
-}
-
 void EventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
                                         nsIContent* aContent) {
   NS_ASSERTION(aContent, "Mouse must be over something");
