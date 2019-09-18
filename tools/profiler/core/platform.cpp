@@ -235,9 +235,68 @@ static uint32_t StartupExtraDefaultFeatures() {
   return ProfilerFeature::MainThreadIO;
 }
 
-class PSMutex : public StaticMutex {};
+// The class is a thin shell around mozglue PlatformMutex. It does not preserve
+// behavior in JS record/replay. It provides a mechanism to determine if it is
+// locked or not in order for memory hooks to avoid re-entering the profiler
+// locked state.
+class PSMutex : private ::mozilla::detail::MutexImpl {
+ public:
+  PSMutex()
+      : ::mozilla::detail::MutexImpl(
+            ::mozilla::recordreplay::Behavior::DontPreserve),
+        mIsLocked(false) {}
+  void Lock() {
+    ::mozilla::detail::MutexImpl::lock();
+    // Set mIsLocked to true, don't trust this value too much!
+    mIsLocked = true;
+  }
 
-typedef BaseAutoLock<PSMutex&> PSAutoLock;
+  void Unlock() {
+    mIsLocked = false;
+    ::mozilla::detail::MutexImpl::unlock();
+  }
+
+  // Warning! Do not mis-use this method.
+  //
+  // When the native allocations feature is turned on, memory hooks run on
+  // every single allocation. For a subset of these allocations, the stack
+  // gets sampled by running profiler_get_backtrace(), which locks the PSMutex.
+  //
+  // An issue arises when allocating while the profiler is locked FOR THE
+  // CURRENT THREAD. In this situation, if profiler_get_backtrace() were to be
+  // run, it would try to re-acquire this lock and deadlock. In order to guard
+  // against this deadlock, this method provides a check to see if the mutex is
+  // already locked.
+  //
+  // This method is not perfect, and will return many false positives when the
+  // mutex is modified by ANOTHER THREAD. In this case we will fail to collect a
+  // stack when it is valid to do so. While not a perfect solution, it is an
+  // acceptable limitation in order to have full-featured stack information.
+  //
+  // However, despite these false positives from another thread, we will not get
+  // false positive or false negatives from THE CURRENT THREAD, which is the
+  // only situation where we will get a deadlock.
+  //
+  // This non-perfect, but functional solution could be worked around if the
+  // profile_get_backtrace() mechanism were to remove all allocations.
+  // See Bug 1578792 for tracking this work.
+  bool CouldBeLockedOnCurrentThread() const { return mIsLocked; }
+
+  // This value protects against re-entering in the current thread from a
+  // a memory hook when the profiler state is locked BY THE CURRENT THREAD.
+  Atomic<bool, MemoryOrdering::Relaxed, recordreplay::Behavior::DontPreserve>
+      mIsLocked;
+};
+
+// RAII class to lock the profiler mutex.
+class MOZ_RAII PSAutoLock {
+ public:
+  explicit PSAutoLock(PSMutex& aMutex) : mMutex(aMutex) { mMutex.Lock(); }
+  ~PSAutoLock() { mMutex.Unlock(); }
+
+ private:
+  PSMutex& mMutex;
+};
 
 // Only functions that take a PSLockRef arg can access CorePS's and ActivePS's
 // fields.
@@ -4046,7 +4105,10 @@ UniqueProfilerBacktrace profiler_get_backtrace() {
   RegisteredThread* registeredThread =
       TLSRegisteredThread::RegisteredThread(lock);
   if (!registeredThread) {
-    MOZ_ASSERT(registeredThread);
+    // If this was called from a non-registered thread, return a nullptr
+    // and do no more work. This can happen from a memory hook. Before
+    // the allocation tracking there was a MOZ_ASSERT() here checking
+    // for the existence of a registeredThread.
     return nullptr;
   }
 
@@ -4136,14 +4198,22 @@ void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info) {
                                 profiler_get_backtrace()));
 }
 
+// Memory hooks can re-enter into the locked profiler state. This function
+// provides a check to avoid sampling memory allocations while the profiler
+// could potentially be locked on the current thread. There will be many false
+// positives with this check. See PSMutex::CouldBeLockedOnCurrentThread.
+bool profiler_could_be_locked_on_current_thread() {
+  return gPSMutex.CouldBeLockedOnCurrentThread();
+}
+
 void profiler_add_native_allocation_marker(const int64_t aSize) {
   if (!profiler_can_accept_markers()) {
     return;
   }
   AUTO_PROFILER_STATS(add_marker_with_NativeAllocationMarkerPayload);
-  profiler_add_marker(
-      "Native allocation", JS::ProfilingCategoryPair::OTHER,
-      NativeAllocationMarkerPayload(TimeStamp::Now(), aSize, nullptr));
+  profiler_add_marker("Native allocation", JS::ProfilingCategoryPair::OTHER,
+                      NativeAllocationMarkerPayload(TimeStamp::Now(), aSize,
+                                                    profiler_get_backtrace()));
 }
 
 void profiler_add_network_marker(
