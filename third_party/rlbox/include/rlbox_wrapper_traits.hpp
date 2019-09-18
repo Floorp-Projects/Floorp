@@ -29,9 +29,22 @@ rlbox_generate_wrapper_check(tainted);
 rlbox_generate_wrapper_check(tainted_volatile);
 rlbox_generate_wrapper_check(tainted_opaque);
 rlbox_generate_wrapper_check(sandbox_callback);
-rlbox_generate_wrapper_check(sandbox_function);
 
 #undef rlbox_generate_wrapper_check
+
+namespace detail_rlbox_is_tainted_boolean_hint {
+  template<typename T>
+  struct unwrapper : std::false_type
+  {};
+
+  template<>
+  struct unwrapper<tainted_boolean_hint> : std::true_type
+  {};
+}
+
+template<typename T>
+constexpr bool rlbox_is_tainted_boolean_hint_v =
+  detail_rlbox_is_tainted_boolean_hint::unwrapper<T>::value;
 
 template<typename T>
 constexpr bool rlbox_is_tainted_or_vol_v =
@@ -41,53 +54,57 @@ template<typename T>
 constexpr bool rlbox_is_tainted_or_opaque_v =
   rlbox_is_tainted_v<T> || rlbox_is_tainted_opaque_v<T>;
 
+// tainted_hint is NOT considered a wrapper type... This carries no particular
+// significant and is just a convention choice
 template<typename T>
 constexpr bool rlbox_is_wrapper_v =
   rlbox_is_tainted_v<T> || rlbox_is_tainted_volatile_v<T> ||
-  rlbox_is_tainted_opaque_v<T> || rlbox_is_sandbox_callback_v<T> ||
-  rlbox_is_sandbox_function_v<T>;
+  rlbox_is_tainted_opaque_v<T> || rlbox_is_sandbox_callback_v<T>;
 
 namespace detail_rlbox_remove_wrapper {
   template<typename T>
   struct unwrapper
   {
     using type = T;
+    using type_sbx = void;
   };
 
   template<typename T, typename T_Sbx>
   struct unwrapper<tainted<T, T_Sbx>>
   {
     using type = T;
+    using type_sbx = T_Sbx;
   };
 
   template<typename T, typename T_Sbx>
   struct unwrapper<tainted_volatile<T, T_Sbx>>
   {
     using type = T;
+    using type_sbx = T_Sbx;
   };
 
   template<typename T, typename T_Sbx>
   struct unwrapper<tainted_opaque<T, T_Sbx>>
   {
     using type = T;
+    using type_sbx = T_Sbx;
   };
 
   template<typename T, typename T_Sbx>
   struct unwrapper<sandbox_callback<T, T_Sbx>>
   {
     using type = T;
-  };
-
-  template<typename T, typename T_Sbx>
-  struct unwrapper<sandbox_function<T, T_Sbx>>
-  {
-    using type = T;
+    using type_sbx = T_Sbx;
   };
 }
 
 template<typename T>
 using rlbox_remove_wrapper_t =
   typename detail_rlbox_remove_wrapper::unwrapper<T>::type;
+
+template<typename T>
+using rlbox_get_wrapper_sandbox_t =
+  typename detail_rlbox_remove_wrapper::unwrapper<T>::type_sbx;
 
 template<typename T, typename T_Sbx>
 using rlbox_tainted_opaque_to_tainted_t =
