@@ -2,14 +2,21 @@
 
 #include <cstdint>
 #include <cstdlib>
-#include <memory>
 #include <mutex>
+#ifndef rlbox_use_custom_shared_lock
+#  include <shared_mutex>
+#endif
 #include <utility>
 
 #include "rlbox_helpers.hpp"
 
 namespace rlbox {
 
+/**
+ * @brief Class that implements the null sandbox. This sandbox doesn't actually
+ * provide any isolation and only serves as a stepping stone towards migrating
+ * an application to use the RLBox API.
+ */
 class rlbox_noop_sandbox
 {
 public:
@@ -21,7 +28,7 @@ public:
   using T_ShortType = short;
 
 private:
-  std::mutex callback_mutex;
+  rlbox_shared_lock(callback_mutex);
   static inline const uint32_t MAX_CALLBACKS = 64;
   void* callback_unique_keys[MAX_CALLBACKS]{ 0 };
   void* callbacks[MAX_CALLBACKS]{ 0 };
@@ -32,15 +39,19 @@ private:
     uint32_t last_callback_invoked;
   };
 
-  static inline std::unique_ptr<rlbox_noop_sandbox_thread_local> thread_data =
-    std::make_unique<rlbox_noop_sandbox_thread_local>();
+  thread_local static inline rlbox_noop_sandbox_thread_local thread_data{ 0,
+                                                                          0 };
 
   template<uint32_t N, typename T_Ret, typename... T_Args>
   static T_Ret callback_trampoline(T_Args... params)
   {
-    thread_data->last_callback_invoked = N;
+    thread_data.last_callback_invoked = N;
     using T_Func = T_Ret (*)(T_Args...);
-    T_Func func = reinterpret_cast<T_Func>(thread_data->sandbox->callbacks[N]);
+    T_Func func;
+    {
+      rlbox_acquire_shared_guard(lock, thread_data.sandbox->callback_mutex);
+      func = reinterpret_cast<T_Func>(thread_data.sandbox->callbacks[N]);
+    }
     // Callbacks are invoked through function pointers, cannot use std::forward
     // as we don't have caller context for T_Args, which means they are all
     // effectively passed by value
@@ -65,14 +76,21 @@ protected:
   }
 
   template<typename T>
-  static inline void* impl_get_unsandboxed_pointer_no_ctx(T_PointerType p,
-                                                          const void*)
+  static inline void* impl_get_unsandboxed_pointer_no_ctx(
+    T_PointerType p,
+    const void* /* example_unsandboxed_ptr */,
+    rlbox_noop_sandbox* (*/* expensive_sandbox_finder */)(
+      const void* example_unsandboxed_ptr))
   {
     return reinterpret_cast<void*>(static_cast<uintptr_t>(p));
   }
 
   template<typename T>
-  static inline T_PointerType impl_get_sandboxed_pointer_no_ctx(const void* p)
+  static inline T_PointerType impl_get_sandboxed_pointer_no_ctx(
+    const void* p,
+    const void* /* example_unsandboxed_ptr */,
+    rlbox_noop_sandbox* (*/* expensive_sandbox_finder */)(
+      const void* example_unsandboxed_ptr))
   {
     return static_cast<T_PointerType>(reinterpret_cast<uintptr_t>(p));
   }
@@ -127,27 +145,20 @@ protected:
     return nullptr;
   }
 
-#define rlbox_noop_sandbox_lookup_symbol(sandbox, func_name)                   \
-  []() {                                                                       \
-    static_assert(                                                             \
-      std::is_same_v<std::remove_reference_t<decltype(sandbox)>,               \
-                     rlbox::rlbox_sandbox<rlbox::rlbox_noop_sandbox>>,         \
-      "Forwarding another sandboxes calls to rlbox_noop_sandbox. "             \
-      "Please check the use of RLBOX_USE_STATIC_CALLS.");                      \
-    return reinterpret_cast<void*>(&func_name); /* NOLINT */                   \
-  }()
+#define rlbox_noop_sandbox_lookup_symbol(func_name)                            \
+  reinterpret_cast<void*>(&func_name) /* NOLINT */
 
   template<typename T, typename T_Converted, typename... T_Args>
   auto impl_invoke_with_func_ptr(T_Converted* func_ptr, T_Args&&... params)
   {
-    thread_data->sandbox = this;
+    thread_data.sandbox = this;
     return (*func_ptr)(params...);
   }
 
   template<typename T_Ret, typename... T_Args>
   inline T_PointerType impl_register_callback(void* key, void* callback)
   {
-    std::lock_guard<std::mutex> lock(callback_mutex);
+    rlbox_acquire_unique_guard(lock, callback_mutex);
 
     void* chosen_trampoline = nullptr;
 
@@ -168,8 +179,8 @@ protected:
   static inline std::pair<rlbox_noop_sandbox*, void*>
   impl_get_executed_callback_sandbox_and_key()
   {
-    auto sandbox = thread_data->sandbox;
-    auto callback_num = thread_data->last_callback_invoked;
+    auto sandbox = thread_data.sandbox;
+    auto callback_num = thread_data.last_callback_invoked;
     void* key = sandbox->callback_unique_keys[callback_num];
     return std::make_pair(sandbox, key);
   }
@@ -177,7 +188,7 @@ protected:
   template<typename T_Ret, typename... T_Args>
   inline void impl_unregister_callback(void* key)
   {
-    std::lock_guard<std::mutex> lock(callback_mutex);
+    rlbox_acquire_unique_guard(lock, callback_mutex);
     for (uint32_t i = 0; i < MAX_CALLBACKS; i++) {
       if (callback_unique_keys[i] == key) {
         callback_unique_keys[i] = nullptr;

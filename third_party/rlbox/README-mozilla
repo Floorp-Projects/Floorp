@@ -1,7 +1,7 @@
 This directory contains the rlbox source from the upstream repo:
-https://github.com/PLSysSec/rlbox_api_cpp17/
+https://github.com/PLSysSec/rlbox_sandboxing_api/
 
-Current version: [commit f18f879f7c7cfb563d199a8649309fce31b304c6]
+Current version: [commit d4eb25c469c45a2d18c34e96ef49581f9a5802c3]
 
 UPDATING:
 

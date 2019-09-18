@@ -28,35 +28,72 @@ class tainted_base_impl
   KEEP_CLASSES_FRIENDLY
   KEEP_CAST_FRIENDLY
 
-private:
+public:
   inline auto& impl() { return *static_cast<T_Wrap<T, T_Sbx>*>(this); }
   inline auto& impl() const
   {
     return *static_cast<const T_Wrap<T, T_Sbx>*>(this);
   }
 
-public:
+  /**
+   * @brief Unwrap a tainted value without verification. This is an unsafe
+   * operation and should be used with care.
+   */
   inline auto UNSAFE_unverified() { return impl().get_raw_value(); }
-  inline auto UNSAFE_sandboxed() { return impl().get_raw_sandbox_value(); }
   inline auto UNSAFE_unverified() const { return impl().get_raw_value(); }
-  inline auto UNSAFE_sandboxed() const
+  /**
+   * @brief Like UNSAFE_unverified, but get the underlying sandbox
+   * representation.
+   *
+   * @param sandbox Reference to sandbox.
+   *
+   * For the Wasm-based sandbox, this function additionally validates the
+   * unwrapped value against the machine model of the sandbox (LP32).
+   */
+  inline auto UNSAFE_sandboxed(rlbox_sandbox<T_Sbx>& sandbox)
   {
-    return impl().get_raw_sandbox_value();
+    return impl().get_raw_sandbox_value(sandbox);
+  }
+  inline auto UNSAFE_sandboxed(rlbox_sandbox<T_Sbx>& sandbox) const
+  {
+    return impl().get_raw_sandbox_value(sandbox);
+  }
+
+  /**
+   * @brief Unwrap a tainted value without verification. This function should
+   * be used when unwrapping is safe.
+   *
+   * @param reason An explanation why the unverified unwrapping is safe.
+   */
+  template<size_t N>
+  inline auto unverified_safe_because(const char (&reason)[N])
+  {
+    RLBOX_UNUSED(reason);
+    return UNSAFE_unverified();
+  }
+  template<size_t N>
+  inline auto unverified_safe_because(const char (&reason)[N]) const
+  {
+    RLBOX_UNUSED(reason);
+    return UNSAFE_unverified();
   }
 
 #define BinaryOpValAndPtr(opSymbol)                                            \
   template<typename T_Rhs>                                                     \
-  inline auto operator opSymbol(T_Rhs&& rhs)                                   \
+  inline constexpr auto operator opSymbol(const T_Rhs& rhs)                    \
+    const->tainted<decltype(std::declval<T>() opSymbol std::declval<           \
+                            detail::rlbox_remove_wrapper_t<T_Rhs>>()),         \
+                   T_Sbx>                                                      \
   {                                                                            \
     static_assert(detail::is_basic_type_v<T>,                                  \
                   "Operator " #opSymbol                                        \
                   " only supported for primitive and pointer types");          \
                                                                                \
     auto raw_rhs = detail::unwrap_value(rhs);                                  \
-    static_assert(std::is_integral_v<decltype(raw_rhs)>,                       \
-                  "Can only operate on numeric types");                        \
                                                                                \
     if constexpr (std::is_pointer_v<T>) {                                      \
+      static_assert(std::is_integral_v<decltype(raw_rhs)>,                     \
+                    "Can only operate on numeric types");                      \
       auto ptr = impl().get_raw_value();                                       \
       detail::dynamic_check(ptr != nullptr,                                    \
                             "Pointer arithmetic on a null pointer");           \
@@ -87,11 +124,14 @@ public:
 
 #define BinaryOp(opSymbol)                                                     \
   template<typename T_Rhs>                                                     \
-  inline auto operator opSymbol(T_Rhs&& rhs)                                   \
+  inline constexpr auto operator opSymbol(const T_Rhs& rhs)                    \
+    const->tainted<decltype(std::declval<T>() opSymbol std::declval<           \
+                            detail::rlbox_remove_wrapper_t<T_Rhs>>()),         \
+                   T_Sbx>                                                      \
   {                                                                            \
-    static_assert(detail::is_basic_type_v<T>,                                  \
+    static_assert(detail::is_fundamental_or_enum_v<T>,                         \
                   "Operator " #opSymbol                                        \
-                  " only supported for primitive and pointer types");          \
+                  " only supported for primitive  types");                     \
                                                                                \
     auto raw = impl().get_raw_value();                                         \
     auto raw_rhs = detail::unwrap_value(rhs);                                  \
@@ -115,6 +155,113 @@ public:
 
 #undef BinaryOp
 
+#define CompoundAssignmentOp(opSymbol)                                         \
+  template<typename T_Rhs>                                                     \
+  inline constexpr T_Wrap<T, T_Sbx>& operator opSymbol##=(const T_Rhs& rhs)    \
+  {                                                                            \
+    auto& this_ref = impl();                                                   \
+    this_ref = this_ref opSymbol rhs;                                          \
+    return this_ref;                                                           \
+  }                                                                            \
+  RLBOX_REQUIRE_SEMI_COLON
+
+  CompoundAssignmentOp(+);
+  CompoundAssignmentOp(-);
+  CompoundAssignmentOp(*);
+  CompoundAssignmentOp(/);
+  CompoundAssignmentOp(%);
+  CompoundAssignmentOp(^);
+  CompoundAssignmentOp(&);
+  CompoundAssignmentOp(|);
+  CompoundAssignmentOp(<<);
+  CompoundAssignmentOp(>>);
+
+#undef CompoundAssignmentOp
+
+#define PreIncDecOps(opSymbol)                                                 \
+  inline constexpr T_Wrap<T, T_Sbx>& operator opSymbol##opSymbol()             \
+  {                                                                            \
+    auto& this_ref = impl();                                                   \
+    this_ref = this_ref opSymbol 1;                                            \
+    return this_ref;                                                           \
+  }                                                                            \
+  RLBOX_REQUIRE_SEMI_COLON
+
+  PreIncDecOps(+);
+  PreIncDecOps(-);
+
+#undef PreIncDecOps
+
+#define PostIncDecOps(opSymbol)                                                \
+  inline constexpr T_Wrap<T, T_Sbx> operator opSymbol##opSymbol(int)           \
+  {                                                                            \
+    tainted<T, T_Sbx> ret = impl();                                            \
+    operator++();                                                              \
+    return ret;                                                                \
+  }                                                                            \
+  RLBOX_REQUIRE_SEMI_COLON
+
+  PostIncDecOps(+);
+  PostIncDecOps(-);
+
+#undef PostIncDecOps
+
+#define BooleanBinaryOp(opSymbol)                                              \
+  template<typename T_Rhs>                                                     \
+  inline constexpr auto operator opSymbol(const T_Rhs& rhs)                    \
+    const->tainted<decltype(std::declval<T>() opSymbol std::declval<           \
+                            detail::rlbox_remove_wrapper_t<T_Rhs>>()),         \
+                   T_Sbx>                                                      \
+  {                                                                            \
+    static_assert(detail::is_fundamental_or_enum_v<T>,                         \
+                  "Operator " #opSymbol                                        \
+                  " only supported for primitive  types");                     \
+                                                                               \
+    auto raw = impl().get_raw_value();                                         \
+    auto raw_rhs = detail::unwrap_value(rhs);                                  \
+    static_assert(std::is_integral_v<decltype(raw_rhs)>,                       \
+                  "Can only operate on numeric types");                        \
+                                                                               \
+    auto ret = raw opSymbol raw_rhs;                                           \
+    using T_Ret = decltype(ret);                                               \
+    return tainted<T_Ret, T_Sbx>::internal_factory(ret);                       \
+  }                                                                            \
+                                                                               \
+  template<typename T_Rhs>                                                     \
+  inline constexpr auto operator opSymbol(const T_Rhs&&)                       \
+    const->tainted<decltype(std::declval<T>() opSymbol std::declval<           \
+                            detail::rlbox_remove_wrapper_t<T_Rhs>>()),         \
+                   T_Sbx>                                                      \
+  {                                                                            \
+    rlbox_detail_static_fail_because(                                          \
+      detail::true_v<T_Rhs>,                                                   \
+      "C++ does not permit safe overloading of && and || operations as this "  \
+      "affects the short circuiting behaviour of these operations. RLBox "     \
+      "does let you use && and || with tainted in limited situations - when "  \
+      "all arguments starting from the second are local variables. It does "   \
+      "not allow it if arguments starting from the second  are expressions.\n" \
+      "For example the following is not allowed\n"                             \
+      "\n"                                                                     \
+      "tainted<bool, T_Sbx> a = true;\n"                                       \
+      "auto r = a && true && sandbox.invoke_sandbox_function(getBool);\n"      \
+      "\n"                                                                     \
+      "However the following would be allowed\n"                               \
+      "tainted<bool, T_Sbx> a = true;\n"                                       \
+      "auto b = true\n"                                                        \
+      "auto c = sandbox.invoke_sandbox_function(getBool);\n"                   \
+      "auto r = a && b && c;\n"                                                \
+      "\n"                                                                     \
+      "Note that these 2 programs are not identical. The first program may "   \
+      "or may not call getBool, while second program always calls getBool");   \
+    return tainted<bool, T_Sbx>(false);                                        \
+  }                                                                            \
+  RLBOX_REQUIRE_SEMI_COLON
+
+  BooleanBinaryOp(&&);
+  BooleanBinaryOp(||);
+
+#undef BooleanBinaryOp
+
 #define UnaryOp(opSymbol)                                                      \
   inline auto operator opSymbol()                                              \
   {                                                                            \
@@ -132,6 +279,64 @@ public:
   UnaryOp(~);
 
 #undef UnaryOp
+
+/**
+ * @brief Comparison operators. Comparisons to values in sandbox memory can
+ * only return a "tainted_boolean_hint" as the values in memory can be
+ * incorrect or malicously change in the future.
+ *
+ * @tparam T_Rhs
+ * @param rhs
+ * @return One of either a bool, tainted<bool>, or a tainted_boolean_hint
+ * depending on the arguments to the binary expression.
+ */
+#define CompareOp(opSymbol, permit_pointers)                                   \
+  template<typename T_Rhs>                                                     \
+  inline constexpr auto operator opSymbol(const T_Rhs& rhs) const              \
+  {                                                                            \
+    using T_RhsNoQ = detail::remove_cv_ref_t<T_Rhs>;                           \
+    constexpr bool check_rhs_hint =                                            \
+      detail::rlbox_is_tainted_volatile_v<T_RhsNoQ> ||                         \
+      detail::rlbox_is_tainted_boolean_hint_v<T_RhsNoQ>;                       \
+    constexpr bool check_lhs_hint =                                            \
+      detail::rlbox_is_tainted_volatile_v<T_Wrap<T, T_Sbx>>;                   \
+    constexpr bool is_hint = check_lhs_hint || check_rhs_hint;                 \
+                                                                               \
+    constexpr bool is_unwrapped =                                              \
+      detail::rlbox_is_tainted_v<T_Wrap<T, T_Sbx>> &&                          \
+      std::is_null_pointer_v<T_RhsNoQ>;                                        \
+                                                                               \
+    /* Sanity check - can't be a hint and unwrapped */                         \
+    static_assert(is_hint ? !is_unwrapped : true,                              \
+                  "Internal error: Could not deduce type for comparison. "     \
+                  "Please file a bug.");                                       \
+                                                                               \
+    if constexpr (!permit_pointers && std::is_pointer_v<T>) {                  \
+      rlbox_detail_static_fail_because(                                        \
+        std::is_pointer_v<T>,                                                  \
+        "Only == and != comparisons are allowed for pointers");                \
+    }                                                                          \
+                                                                               \
+    bool ret = (impl().get_raw_value() opSymbol detail::unwrap_value(rhs));    \
+                                                                               \
+    if constexpr (is_hint) {                                                   \
+      return tainted_boolean_hint(ret);                                        \
+    } else if constexpr (is_unwrapped) {                                       \
+      return ret;                                                              \
+    } else {                                                                   \
+      return tainted<bool, T_Sbx>(ret);                                        \
+    }                                                                          \
+  }                                                                            \
+  RLBOX_REQUIRE_SEMI_COLON
+
+  CompareOp(==, true /* permit_pointers */);
+  CompareOp(!=, true /* permit_pointers */);
+  CompareOp(<, false /* permit_pointers */);
+  CompareOp(<=, false /* permit_pointers */);
+  CompareOp(>, false /* permit_pointers */);
+  CompareOp(>=, false /* permit_pointers */);
+
+#undef CompareOp
 
 private:
   using T_OpSubscriptArrRet = std::conditional_t<
@@ -218,7 +423,7 @@ public:
     rlbox_detail_forward_to_const(operator*, T_OpDerefRet&);
   }
 
-  // We need to implement the -> operator even though T is not a struct
+  // We need to implement the -> operator even if T is not a struct
   // So that we can support code patterns such as the below
   // tainted<T*> a;
   // a->UNSAFE_unverified();
@@ -238,22 +443,34 @@ public:
     rlbox_detail_forward_to_const(operator->, T_Ret);
   }
 
-  // The verifier should have the following signature for the given types
-  // If tainted type is simple such as int
-  //      using T_Func = T_Ret(*)(int)
-  // If tainted type is a pointer to a simple type such as int*
-  //      using T_Func = T_Ret(*)(unique_ptr<int>)
-  // If tainted type is a pointer to class such as Foo*
-  //      using T_Func = T_Ret(*)(unique_ptr<Foo>)
-  // If tainted type is an array such as int[4]
-  //      using T_Func = T_Ret(*)(std::array<int, 4>)
-  // For completeness, if tainted_type is a class such as Foo, the
-  //  copy_and_verify is implemented in rlbox_struct_support.hpp. The verifier
-  //  should be
-  //      using T_Func = T_Ret(*)(tainted<Foo>)
-  //
-  // In the above signatures T_Ret is not constrained, and can be anything the
-  // caller chooses.
+  inline auto operator!()
+  {
+    if_constexpr_named(cond1, std::is_pointer_v<T>)
+    {
+      return impl() == nullptr;
+    }
+    else if_constexpr_named(cond2, std::is_same_v<std::remove_cv_t<T>, bool>)
+    {
+      return impl() == false;
+    }
+    else
+    {
+      auto unknownCase = !(cond1 || cond2);
+      rlbox_detail_static_fail_because(
+        unknownCase,
+        "Operator ! only permitted for pointer or boolean types. For other"
+        "types, unwrap the tainted value with the copy_and_verify API and then"
+        "use operator !");
+    }
+  }
+
+  /**
+   * @brief Copy tainted value from sandbox and verify it.
+   *
+   * @param verifer Function used to verify the copied value.
+   * @tparam T_Func the type of the verifier.
+   * @return Whatever the verifier function returns.
+   */
   template<typename T_Func>
   inline auto copy_and_verify(T_Func verifier) const
   {
@@ -267,23 +484,43 @@ public:
     else if_constexpr_named(
       cond2, detail::is_one_level_ptr_v<T> && !std::is_class_v<T_Deref>)
     {
-      static_assert(!std::is_void_v<T_Deref>,
-                    "copy_and_verify not recommended for void* as it could "
-                    "lead to some anti-patterns in verifiers. Cast it to a "
-                    "different tainted pointer with sandbox_reinterpret_cast "
-                    "and then call copy_and_verify. Alternately, you can use "
-                    "the UNSAFE_unverified API to do this without casting.");
+      // Some paths don't use the verifier
+      RLBOX_UNUSED(verifier);
 
-      auto val = impl().get_raw_value();
-      if (val == nullptr) {
-        return verifier(nullptr);
-      } else {
-        // Important to assign to a local variable (i.e. make a copy)
-        // Else, for tainted_volatile, this will allow a
-        // time-of-check-time-of-use attack
-        auto val_copy = std::make_unique<T_Deref>();
-        *val_copy = *val;
-        return verifier(std::move(val_copy));
+      if_constexpr_named(subcond1, std::is_void_v<T_Deref>)
+      {
+        rlbox_detail_static_fail_because(
+          subcond1,
+          "copy_and_verify not recommended for void* as it could lead to some "
+          "anti-patterns in verifiers. Cast it to a different tainted pointer "
+          "with sandbox_reinterpret_cast and then call copy_and_verify. "
+          "Alternately, you can use the UNSAFE_unverified API to do this "
+          "without casting.");
+        return nullptr;
+      }
+      // Test with detail::is_func_ptr_v to check for member funcs also
+      else if_constexpr_named(subcond2, detail::is_func_ptr_v<T>)
+      {
+        rlbox_detail_static_fail_because(
+          subcond2,
+          "copy_and_verify cannot be applied to function pointers as this "
+          "makes a deep copy. This is not possible for function pointers. "
+          "Consider copy_and_verify_address instead.");
+        return nullptr;
+      }
+      else
+      {
+        auto val = impl().get_raw_value();
+        if (val == nullptr) {
+          return verifier(nullptr);
+        } else {
+          // Important to assign to a local variable (i.e. make a copy)
+          // Else, for tainted_volatile, this will allow a
+          // time-of-check-time-of-use attack
+          auto val_copy = std::make_unique<T_Deref>();
+          *val_copy = *val;
+          return verifier(std::move(val_copy));
+        }
       }
     }
     else if_constexpr_named(
@@ -345,14 +582,19 @@ private:
       detail::convert_type_fundamental_or_array(target[i], *p_src_i);
     }
 
-    return std::move(target);
+    return target;
   }
 
 public:
-  // The verifier should have the following signature.
-  // If the tainted type is int*
-  //      using T_Func = T_Ret(*)(unique_ptr<int[]>)
-  // T_Ret is not constrained, and can be anything the caller chooses.
+  /**
+   * @brief Copy a range of tainted values from sandbox and verify them.
+   *
+   * @param verifer Function used to verify the copied value.
+   * @param count Number of elements to copy.
+   * @tparam T_Func the type of the verifier. If the tainted type is ``int*``
+   * then ``T_Func = T_Ret(*)(unique_ptr<int[]>)``.
+   * @return Whatever the verifier function returns.
+   */
   template<typename T_Func>
   inline auto copy_and_verify_range(T_Func verifier, std::size_t count) const
   {
@@ -370,9 +612,13 @@ public:
     return verifier(std::move(target));
   }
 
-  // The verifier should have the following signature.
-  //      using T_Func = T_Ret(*)(unique_ptr<char[]>)
-  // T_Ret is not constrained, and can be anything the caller chooses.
+  /**
+   * @brief Copy a tainted string from sandbox and verify it.
+   *
+   * @param verifer Function used to verify the copied value.
+   * @tparam T_Func the type of the verifier ``T_Ret(*)(unique_ptr<char[]>)``
+   * @return Whatever the verifier function returns.
+   */
   template<typename T_Func>
   inline auto copy_and_verify_string(T_Func verifier) const
   {
@@ -400,7 +646,125 @@ public:
 
     return verifier(std::move(target));
   }
+
+  /**
+   * @brief Copy a tainted pointer from sandbox and verify the address.
+   *
+   * This function is useful if you need to verify physical bits representing
+   * the address of a pointed to since copy_and_verify performs a deep copy and
+   * changes the address bits.
+   *
+   * @param verifer Function used to verify the copied value.
+   * @tparam T_Func the type of the verifier ``T_Ret(*)(uintptr_t)``
+   * @return Whatever the verifier function returns.
+   */
+  template<typename T_Func>
+  inline auto copy_and_verify_address(T_Func verifier)
+  {
+    static_assert(std::is_pointer_v<T>,
+                  "copy_and_verify_address must be used on pointers");
+    auto val = reinterpret_cast<uintptr_t>(impl().get_raw_value());
+    return verifier(val);
+  }
 };
+
+#define BinaryOpWrappedRhs(opSymbol)                                           \
+  template<template<typename, typename> typename T_Wrap,                       \
+           typename T,                                                         \
+           typename T_Sbx,                                                     \
+           typename T_Lhs,                                                     \
+           RLBOX_ENABLE_IF(!detail::rlbox_is_wrapper_v<T_Lhs> &&               \
+                           !detail::rlbox_is_tainted_boolean_hint_v<T_Lhs>)>   \
+  inline constexpr auto operator opSymbol(                                     \
+    const T_Lhs& lhs, const tainted_base_impl<T_Wrap, T, T_Sbx>& rhs)          \
+  {                                                                            \
+    /* Handles the case for "3 + tainted", where + is a binary op */           \
+    /* Technically pointer arithmetic can be performed as 3 + tainted_ptr */   \
+    /* as well. However, this is unusual and to keep the code simple we do */  \
+    /* not support this. */                                                    \
+    static_assert(                                                             \
+      std::is_arithmetic_v<T_Lhs>,                                             \
+      "Binary expressions between an non tainted type and tainted"             \
+      "type is only permitted if the first value is the tainted type. Try "    \
+      "changing the order of the binary expression accordingly");              \
+    auto ret = tainted<T_Lhs, T_Sbx>(lhs) opSymbol rhs.impl();                 \
+    return ret;                                                                \
+  }                                                                            \
+  RLBOX_REQUIRE_SEMI_COLON
+
+BinaryOpWrappedRhs(+);
+BinaryOpWrappedRhs(-);
+BinaryOpWrappedRhs(*);
+BinaryOpWrappedRhs(/);
+BinaryOpWrappedRhs(%);
+BinaryOpWrappedRhs(^);
+BinaryOpWrappedRhs(&);
+BinaryOpWrappedRhs(|);
+BinaryOpWrappedRhs(<<);
+BinaryOpWrappedRhs(>>);
+BinaryOpWrappedRhs(==);
+BinaryOpWrappedRhs(!=);
+BinaryOpWrappedRhs(<);
+BinaryOpWrappedRhs(<=);
+BinaryOpWrappedRhs(>);
+BinaryOpWrappedRhs(>=);
+#undef BinaryOpWrappedRhs
+
+#define BooleanBinaryOpWrappedRhs(opSymbol)                                    \
+  template<template<typename, typename> typename T_Wrap,                       \
+           typename T,                                                         \
+           typename T_Sbx,                                                     \
+           typename T_Lhs,                                                     \
+           RLBOX_ENABLE_IF(!detail::rlbox_is_wrapper_v<T_Lhs> &&               \
+                           !detail::rlbox_is_tainted_boolean_hint_v<T_Lhs>)>   \
+  inline constexpr auto operator opSymbol(                                     \
+    const T_Lhs& lhs, const tainted_base_impl<T_Wrap, T, T_Sbx>& rhs)          \
+  {                                                                            \
+    static_assert(                                                             \
+      std::is_arithmetic_v<T_Lhs>,                                             \
+      "Binary expressions between an non tainted type and tainted"             \
+      "type is only permitted if the first value is the tainted type. Try "    \
+      "changing the order of the binary expression accordingly");              \
+    auto ret = tainted<T_Lhs, T_Sbx>(lhs) opSymbol rhs.impl();                 \
+    return ret;                                                                \
+  }                                                                            \
+                                                                               \
+  template<template<typename, typename> typename T_Wrap,                       \
+           typename T,                                                         \
+           typename T_Sbx,                                                     \
+           typename T_Lhs,                                                     \
+           RLBOX_ENABLE_IF(!detail::rlbox_is_wrapper_v<T_Lhs> &&               \
+                           !detail::rlbox_is_tainted_boolean_hint_v<T_Lhs>)>   \
+  inline constexpr auto operator opSymbol(                                     \
+    const T_Lhs&, const tainted_base_impl<T_Wrap, T, T_Sbx>&&)                 \
+  {                                                                            \
+    rlbox_detail_static_fail_because(                                          \
+      detail::true_v<T_Lhs>,                                                   \
+      "C++ does not permit safe overloading of && and || operations as this "  \
+      "affects the short circuiting behaviour of these operations. RLBox "     \
+      "does let you use && and || with tainted in limited situations - when "  \
+      "all arguments starting from the second are local variables. It does "   \
+      "not allow it if arguments starting from the second  are expressions.\n" \
+      "For example the following is not allowed\n"                             \
+      "\n"                                                                     \
+      "tainted<bool, T_Sbx> a = true;\n"                                       \
+      "auto r = a && true && sandbox.invoke_sandbox_function(getBool);\n"      \
+      "\n"                                                                     \
+      "However the following would be allowed\n"                               \
+      "tainted<bool, T_Sbx> a = true;\n"                                       \
+      "auto b = true\n"                                                        \
+      "auto c = sandbox.invoke_sandbox_function(getBool);\n"                   \
+      "auto r = a && b && c;\n"                                                \
+      "\n"                                                                     \
+      "Note that these 2 programs are not identical. The first program may "   \
+      "or may not call getBool, while second program always calls getBool");   \
+    return tainted<bool, T_Sbx>(false);                                        \
+  }                                                                            \
+  RLBOX_REQUIRE_SEMI_COLON
+
+BooleanBinaryOpWrappedRhs(&&);
+BooleanBinaryOpWrappedRhs(||);
+#undef BooleanBinaryOpWrappedRhs
 
 namespace tainted_detail {
   template<typename T, typename T_Sbx>
@@ -412,6 +776,10 @@ namespace tainted_detail {
       T_Sbx>::template convert_to_sandbox_equivalent_nonclass_t<T>>>;
 }
 
+/**
+ * @brief Tainted values represent untrusted values that originate from the
+ * sandbox.
+ */
 template<typename T, typename T_Sbx>
 class tainted : public tainted_base_impl<tainted, T, T_Sbx>
 {
@@ -447,12 +815,16 @@ private:
     return data;
   }
 
-  inline std::remove_cv_t<T_SandboxedType> get_raw_sandbox_value() const
+  inline std::remove_cv_t<T_SandboxedType> get_raw_sandbox_value(
+    rlbox_sandbox<T_Sbx>& sandbox) const
   {
     std::remove_cv_t<T_SandboxedType> ret;
-    detail::convert_type_non_class<T_Sbx,
-                                   detail::adjust_type_direction::TO_SANDBOX>(
-      ret, data);
+
+    using namespace detail;
+    convert_type_non_class<T_Sbx,
+                           adjust_type_direction::TO_SANDBOX,
+                           adjust_type_context::SANDBOX>(
+      ret, data, nullptr /* example_unsandboxed_ptr */, &sandbox);
     return ret;
   };
 
@@ -461,11 +833,30 @@ private:
     rlbox_detail_forward_to_const(get_raw_value, std::remove_cv_t<T_AppType>);
   }
 
-  inline std::remove_cv_t<T_SandboxedType> get_raw_sandbox_value()
+  inline std::remove_cv_t<T_SandboxedType> get_raw_sandbox_value(
+    rlbox_sandbox<T_Sbx>& sandbox)
   {
-    rlbox_detail_forward_to_const(get_raw_sandbox_value,
-                                  std::remove_cv_t<T_SandboxedType>);
+    rlbox_detail_forward_to_const_a(
+      get_raw_sandbox_value, std::remove_cv_t<T_SandboxedType>, sandbox);
   };
+
+  inline const void* find_example_pointer_or_null() const noexcept
+  {
+    if constexpr (std::is_array_v<T>) {
+      auto& data_ref = get_raw_value_ref();
+
+      for (size_t i = 0; i < std::extent_v<T>; i++) {
+        const void* ret = data[i].find_example_pointer_or_null();
+        if (ret != nullptr) {
+          return ret;
+        }
+      }
+    } else if constexpr (std::is_pointer_v<T> && !detail::is_func_ptr_v<T>) {
+      auto data = get_raw_value();
+      return data;
+    }
+    return nullptr;
+  }
 
   // Initializing with a pointer is dangerous and permitted only internally
   template<typename T2 = T, RLBOX_ENABLE_IF(std::is_pointer_v<T2>)>
@@ -499,10 +890,14 @@ public:
     // can thus be the example_unsandboxed_ptr
     const volatile void* p_data_ref = &p.get_sandbox_value_ref();
     const void* example_unsandboxed_ptr = const_cast<const void*>(p_data_ref);
-    detail::convert_type_non_class<
-      T_Sbx,
-      detail::adjust_type_direction::TO_APPLICATION>(
-      get_raw_value_ref(), p.get_sandbox_value_ref(), example_unsandboxed_ptr);
+    using namespace detail;
+    convert_type_non_class<T_Sbx,
+                           adjust_type_direction::TO_APPLICATION,
+                           adjust_type_context::EXAMPLE>(
+      get_raw_value_ref(),
+      p.get_sandbox_value_ref(),
+      example_unsandboxed_ptr,
+      nullptr /* sandbox_ptr */);
   }
 
   // Initializing with a pointer is dangerous and permitted only internally
@@ -524,7 +919,8 @@ public:
       "with sandbox.register_callback(\"foo\"), and pass in the registered "
       "value\n "
       "3) For pointers that point to functions in the sandbox, get the "
-      "address with sandbox_function_address(sandbox, foo), and pass in the "
+      "address with get_sandbox_function_address(sandbox, foo), and pass in "
+      "the "
       "address\n "
       "4) For raw pointers, use assign_raw_pointer which performs required "
       "safety checks\n ");
@@ -544,27 +940,6 @@ public:
       "If you still want to do this, consider changing your code to store the "
       "value in sandbox memory as follows. Convert\n\n"
       "sandbox_callback<T_Func, Sbx> cb = ...;\n"
-      "tainted<T_Func, Sbx> foo = cb;\n\n"
-      "to\n\n"
-      "tainted<T_Func*, Sbx> foo_ptr = sandbox.malloc_in_sandbox<T_Func*>();\n"
-      "*foo_ptr = cb;\n\n"
-      "This would keep the assignment in sandbox memory");
-  }
-
-  tainted(
-    const sandbox_function<
-      detail::function_ptr_t<T> // Need to ensure we never generate code that
-                                // creates a sandbox_function of a non function
-      ,
-      T_Sbx>&)
-  {
-    rlbox_detail_static_fail_because(
-      detail::true_v<T>,
-      "RLBox does not support assigning sandbox_function values to tainted "
-      "types (i.e. types that live in application memory).\n"
-      "If you still want to do this, consider changing your code to store the "
-      "value in sandbox memory as follows. Convert\n\n"
-      "sandbox_function<T_Func, Sbx> cb = ...;\n"
       "tainted<T_Func, Sbx> foo = cb;\n\n"
       "to\n\n"
       "tainted<T_Func*, Sbx> foo_ptr = sandbox.malloc_in_sandbox<T_Func*>();\n"
@@ -615,7 +990,8 @@ public:
       "with sandbox.register_callback(\"foo\"), and pass in the registered "
       "value\n "
       "3) For pointers that point to functions in the sandbox, get the "
-      "address with sandbox_function_address(sandbox, foo), and pass in the "
+      "address with get_sandbox_function_address(sandbox, foo), and pass in "
+      "the "
       "address\n ");
     data = val;
   }
@@ -625,88 +1001,15 @@ public:
     return *reinterpret_cast<tainted_opaque<T, T_Sbx>*>(this);
   }
 
-  // In general comparison operators are unsafe.
-  // However comparing tainted with nullptr is fine because
-  // 1) tainted values are in application memory and thus cannot change the
-  // value after comparision
-  // 2) Checking that a pointer is null doesn't "really" taint the result as
-  // the result is always safe
-  template<typename T_Rhs>
-  inline bool operator==(T_Rhs&& arg) const
-  {
-    if_constexpr_named(
-      cond1,
-      !std::is_same_v<std::remove_const_t<std::remove_reference_t<T_Rhs>>,
-                      std::nullptr_t>)
-    {
-      rlbox_detail_static_fail_because(
-        cond1,
-        "Only comparisons to nullptr are allowed. All other comparisons to "
-        "tainted types create many antipatterns. Rather than comparing tainted "
-        "values directly, unwrap the values with the copy_and_verify API and "
-        "then perform the comparisons.");
-    }
-    else if_constexpr_named(cond2, std::is_pointer_v<T>)
-    {
-      return get_raw_value() == arg;
-    }
-    else
-    {
-      rlbox_detail_static_fail_because(
-        !cond2, "Comparisons to nullptr only permitted for pointer types");
-    }
-  }
-
-  template<typename T_Rhs>
-  inline bool operator!=(T_Rhs&& arg) const
-  {
-    if_constexpr_named(
-      cond1,
-      !std::is_same_v<std::remove_const_t<std::remove_reference_t<T_Rhs>>,
-                      std::nullptr_t>)
-    {
-      rlbox_detail_static_fail_because(
-        cond1,
-        "Only comparisons to nullptr are allowed. All other comparisons to "
-        "tainted types create many antipatterns. Rather than comparing tainted "
-        "values directly, unwrap the values with the copy_and_verify API and "
-        "then perform the comparisons.");
-    }
-    else if_constexpr_named(cond2, std::is_pointer_v<T>)
-    {
-      return get_raw_value() != arg;
-    }
-    else
-    {
-      rlbox_detail_static_fail_because(
-        !cond2, "Comparisons to nullptr only permitted for pointer types");
-    }
-  }
-
-  inline bool operator!()
-  {
-    if_constexpr_named(cond1, std::is_pointer_v<T>)
-    {
-      // Checking for null pointer
-      return get_raw_value() == nullptr;
-    }
-    else
-    {
-      auto unknownCase = !(cond1);
-      rlbox_detail_static_fail_because(
-        unknownCase,
-        "Operator ! only permitted for pointer types. For other types, unwrap "
-        "the tainted value with the copy_and_verify API and then use operator "
-        "!");
-    }
-  }
-
   template<typename T_Dummy = void>
   operator bool() const
   {
     if_constexpr_named(cond1, std::is_pointer_v<T>)
     {
-      // Checking for null pointer
+      // We return this without the tainted wrapper as the checking for null
+      // doesn't really "induce" tainting in the application If the
+      // application is checking this pointer for null, then it is robust to
+      // this pointer being null or not null
       return get_raw_value() != nullptr;
     }
     else
@@ -727,6 +1030,10 @@ inline tainted<T, T_Sbx> from_opaque(tainted_opaque<T, T_Sbx> val)
   return *reinterpret_cast<tainted<T, T_Sbx>*>(&val);
 }
 
+/**
+ * @brief Tainted volatile values are like tainted values but still point to
+ * sandbox memory. Dereferencing a tainted pointer produces a tainted_volatile.
+ */
 template<typename T, typename T_Sbx>
 class tainted_volatile : public tainted_base_impl<tainted_volatile, T, T_Sbx>
 {
@@ -766,10 +1073,11 @@ private:
     // can thus be the example_unsandboxed_ptr
     const volatile void* data_ref = &data;
     const void* example_unsandboxed_ptr = const_cast<const void*>(data_ref);
-    detail::convert_type_non_class<
-      T_Sbx,
-      detail::adjust_type_direction::TO_APPLICATION>(
-      ret, data, example_unsandboxed_ptr);
+    using namespace detail;
+    convert_type_non_class<T_Sbx,
+                           adjust_type_direction::TO_APPLICATION,
+                           adjust_type_context::EXAMPLE>(
+      ret, data, example_unsandboxed_ptr, nullptr /* sandbox_ptr */);
     return ret;
   }
 
@@ -818,6 +1126,15 @@ public:
     using T_Rhs = std::remove_reference_t<T_RhsRef>;
     using T_Rhs_El = std::remove_all_extents_t<T_Rhs>;
 
+    // Need to construct an example_unsandboxed_ptr for pointers or arrays of
+    // pointers. Since tainted_volatile is the type of data in sandbox memory,
+    // the address of data (&data) refers to a location in sandbox memory and
+    // can thus be the example_unsandboxed_ptr
+    const volatile void* data_ref = &get_sandbox_value_ref();
+    const void* example_unsandboxed_ptr = const_cast<const void*>(data_ref);
+    // Some branches don't use this
+    RLBOX_UNUSED(example_unsandboxed_ptr);
+
     if_constexpr_named(
       cond1, std::is_same_v<std::remove_const_t<T_Rhs>, std::nullptr_t>)
     {
@@ -829,27 +1146,27 @@ public:
     }
     else if_constexpr_named(cond2, detail::rlbox_is_tainted_v<T_Rhs>)
     {
-      // Need to construct an example_unsandboxed_ptr for pointers or arrays of
-      // pointers. Since tainted_volatile is the type of data in sandbox memory,
-      // the address of data (&data) refers to a location in sandbox memory and
-      // can thus be the example_unsandboxed_ptr
-      const volatile void* data_ref = &get_sandbox_value_ref();
-      const void* example_unsandboxed_ptr = const_cast<const void*>(data_ref);
-      detail::convert_type_non_class<T_Sbx,
-                                     detail::adjust_type_direction::TO_SANDBOX>(
+      using namespace detail;
+      convert_type_non_class<T_Sbx,
+                             adjust_type_direction::TO_SANDBOX,
+                             adjust_type_context::EXAMPLE>(
         get_sandbox_value_ref(),
         val.get_raw_value_ref(),
-        example_unsandboxed_ptr);
+        example_unsandboxed_ptr,
+        nullptr /* sandbox_ptr */);
     }
     else if_constexpr_named(cond3, detail::rlbox_is_tainted_volatile_v<T_Rhs>)
     {
-      detail::convert_type_non_class<T_Sbx,
-                                     detail::adjust_type_direction::NO_CHANGE>(
-        get_sandbox_value_ref(), val.get_sandbox_value_ref());
+      using namespace detail;
+      convert_type_non_class<T_Sbx,
+                             adjust_type_direction::NO_CHANGE,
+                             adjust_type_context::EXAMPLE>(
+        get_sandbox_value_ref(),
+        val.get_sandbox_value_ref(),
+        example_unsandboxed_ptr,
+        nullptr /* sandbox_ptr */);
     }
-    else if_constexpr_named(cond4,
-                            detail::rlbox_is_sandbox_callback_v<T_Rhs> ||
-                              detail::rlbox_is_sandbox_function_v<T_Rhs>)
+    else if_constexpr_named(cond4, detail::rlbox_is_sandbox_callback_v<T_Rhs>)
     {
       using T_RhsFunc = detail::rlbox_remove_wrapper_t<T_Rhs>;
 
@@ -896,7 +1213,8 @@ public:
         "with sandbox.register_callback(\"foo\"), and pass in the registered "
         "value\n "
         "3) For pointers that point to functions in the sandbox, get the "
-        "address with sandbox_function_address(sandbox, foo), and pass in the "
+        "address with get_sandbox_function_address(sandbox, foo), and pass in "
+        "the "
         "address\n "
         "4) For raw pointers, use assign_raw_pointer which performs required "
         "safety checks\n ");
@@ -936,60 +1254,11 @@ public:
       "with sandbox.register_callback(\"foo\"), and pass in the registered "
       "value\n "
       "3) For pointers that point to functions in the sandbox, get the "
-      "address with sandbox_function_address(sandbox, foo), and pass in the "
+      "address with get_sandbox_function_address(sandbox, foo), and pass in "
+      "the "
       "address\n ");
     get_sandbox_value_ref() =
       sandbox.template get_sandboxed_pointer<T_Rhs>(cast_val);
-  }
-
-  // ==, != and ! are not supported for tainted_volatile, however, we implement
-  // this to ensure the user doesn't see a confusing error message
-  template<typename T_Rhs>
-  inline bool operator==(T_Rhs&&) const
-  {
-    rlbox_detail_static_fail_because(
-      detail::true_v<T_Rhs>,
-      "Cannot compare values that are located in sandbox memory. This error "
-      "occurs if you compare a dereferenced value such as the code shown "
-      "below\n\n"
-      "tainted<int**> a = ...;\n"
-      "assert(*a == nullptr);\n\n"
-      "Instead you can write this code as \n"
-      "tainted<int*> temp = *a;\n"
-      "assert(temp == nullptr);\n");
-    return false;
-  }
-
-  template<typename T_Rhs>
-  inline bool operator!=(const std::nullptr_t&) const
-  {
-    rlbox_detail_static_fail_because(
-      detail::true_v<T_Rhs>,
-      "Cannot compare values that are located in sandbox memory. This error "
-      "occurs if you compare a dereferenced value such as the code shown "
-      "below\n\n"
-      "tainted<int**> a = ...;\n"
-      "assert(*a != nullptr);\n\n"
-      "Instead you can write this code as \n"
-      "tainted<int*> temp = *a;\n"
-      "assert(temp != nullptr);\n");
-    return false;
-  }
-
-  template<typename T_Dummy = void>
-  inline bool operator!()
-  {
-    rlbox_detail_static_fail_because(
-      detail::true_v<T_Dummy>,
-      "Cannot apply 'operator not' on values that are located in sandbox "
-      "memory. This error occurs if you compare a dereferenced value such as "
-      "the code shown below\n\n"
-      "tainted<int**> a = ...;\n"
-      "assert(!(*a));\n\n"
-      "Instead you can write this code as \n"
-      "tainted<int*> temp = *a;\n"
-      "assert(!temp);\n");
-    return false;
   }
 
   template<typename T_Dummy = void>

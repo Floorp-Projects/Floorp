@@ -11,34 +11,6 @@
 
 namespace rlbox {
 
-template<typename T, typename T_Sbx>
-class sandbox_function
-{
-  KEEP_CLASSES_FRIENDLY
-private:
-  using T_Func = detail::convert_to_sandbox_equivalent_t<T, T_Sbx>;
-  T_Func data;
-
-  // Keep constructor private as only rlbox_sandbox should be able to create
-  // this object
-  sandbox_function(T_Func p_data)
-    : data(p_data)
-  {}
-
-  inline T_Func get_raw_sandbox_value() const noexcept { return data; }
-
-  inline T_Func get_raw_sandbox_value() noexcept { return data; }
-
-public:
-  sandbox_function(const sandbox_function<T, T_Sbx>& p) = default;
-
-  inline auto UNSAFE_sandboxed() const noexcept
-  {
-    return get_raw_sandbox_value();
-  }
-  inline auto UNSAFE_sandboxed() noexcept { return get_raw_sandbox_value(); }
-};
-
 namespace callback_detail {
 
   // Compute the expected type of the callback
@@ -172,13 +144,28 @@ public:
 
   ~sandbox_callback() { unregister(); }
 
+  /**
+   * @brief Unwrap a callback without verification. This is an unsafe operation
+   * and should be used with care.
+   */
   inline auto UNSAFE_unverified() const noexcept { return get_raw_value(); }
-  inline auto UNSAFE_sandboxed() const noexcept
+  /**
+   * @brief Like UNSAFE_unverified, but get the underlying sandbox
+   * representation.
+   *
+   * @param sandbox Reference to sandbox.
+   */
+  inline auto UNSAFE_sandboxed(rlbox_sandbox<T_Sbx>& sandbox) const noexcept
   {
+    RLBOX_UNUSED(sandbox);
     return get_raw_sandbox_value();
   }
   inline auto UNSAFE_unverified() noexcept { return get_raw_value(); }
-  inline auto UNSAFE_sandboxed() noexcept { return get_raw_sandbox_value(); }
+  inline auto UNSAFE_sandboxed(rlbox_sandbox<T_Sbx>& sandbox) noexcept
+  {
+    RLBOX_UNUSED(sandbox);
+    return get_raw_sandbox_value();
+  }
 };
 
 }
