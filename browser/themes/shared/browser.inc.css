@@ -113,7 +113,7 @@ menupopup::part(drop-indicator) {
 }
 
 #library-animatable-box[animate] {
-  display: -moz-box;
+  display: block;
 }
 
 /* Back / Forward context menu */

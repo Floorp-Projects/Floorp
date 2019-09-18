@@ -251,6 +251,7 @@
 }
 
 #tracking-protection-icon-box > #tracking-protection-icon-animatable-box {
+  display: block;
   position: absolute;
   overflow: hidden;
   width: 16px;
