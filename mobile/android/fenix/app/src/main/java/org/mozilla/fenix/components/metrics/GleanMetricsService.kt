@@ -426,28 +426,36 @@ class GleanMetricsService(private val context: Context) : MetricsService {
             Glean.registerPings(Pings)
             Glean.initialize(context, Configuration(channel = BuildConfig.BUILD_TYPE))
 
-            Metrics.apply {
-                defaultBrowser.set(Browsers.all(context).isDefaultBrowser)
-                MozillaProductDetector.getMozillaBrowserDefault(context)?.also {
-                    defaultMozBrowser.set(it)
-                }
-                mozillaProducts.set(MozillaProductDetector.getInstalledMozillaProducts(context))
-            }
-
-            SearchDefaultEngine.apply {
-                val defaultEngine = context
-                    .components
-                    .search
-                    .searchEngineManager
-                    .defaultSearchEngine ?: return@apply
-
-                code.set(defaultEngine.identifier)
-                name.set(defaultEngine.name)
-                submissionUrl.set(defaultEngine.buildSearchUrl(""))
-            }
-
-            activationPing.checkAndSend()
+            setStartupMetrics()
         }
+    }
+
+    /**
+     * Sets some basic Glean metrics required by Fenix.
+     * This is a separate function to simplify testing.
+     */
+    internal fun setStartupMetrics() {
+        Metrics.apply {
+            defaultBrowser.set(Browsers.all(context).isDefaultBrowser)
+            MozillaProductDetector.getMozillaBrowserDefault(context)?.also {
+                defaultMozBrowser.set(it)
+            }
+            mozillaProducts.set(MozillaProductDetector.getInstalledMozillaProducts(context))
+        }
+
+        SearchDefaultEngine.apply {
+            val defaultEngine = context
+                .components
+                .search
+                .searchEngineManager
+                .defaultSearchEngine ?: return@apply
+
+            code.set(defaultEngine.identifier)
+            name.set(defaultEngine.name)
+            submissionUrl.set(defaultEngine.buildSearchUrl(""))
+        }
+
+        activationPing.checkAndSend()
     }
 
     override fun stop() {
