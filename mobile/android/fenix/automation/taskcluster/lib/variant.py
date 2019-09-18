@@ -4,7 +4,7 @@ import taskcluster
 class VariantApk:
     def __init__(self, build_type, abi, engine, file_name):
         self.abi = abi
-        self.taskcluster_path = 'public/build/{}/{}/target.apk'.format(abi, engine)
+        self.taskcluster_path = u'public/build/{}/{}/target.apk'.format(abi, engine)
         self.absolute_path = '/opt/fenix/app/build/outputs/apk/{}/{}/{}'.format(engine, build_type, file_name)
 
 

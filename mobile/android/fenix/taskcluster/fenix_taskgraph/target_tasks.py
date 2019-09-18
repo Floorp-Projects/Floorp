@@ -22,10 +22,17 @@ def _old_decision_filter(task, parameters):
     return standard_filter(task, parameters)
 
 
-@_target_task('nightly')
-def target_tasks_raptor(full_task_graph, parameters, graph_config):
-    # TODO Change this target task method once old-decision loader is no more
-    return target_tasks_default(full_task_graph, parameters, graph_config)
+@_target_task("nightly")
+def target_tasks_nightly(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required for a nightly build."""
+
+    def filter(task, parameters):
+        if task.attributes.get("nightly", False):
+            return True
+
+        return _old_decision_filter(task, parameters)
+
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
 
 
 @_target_task('raptor')

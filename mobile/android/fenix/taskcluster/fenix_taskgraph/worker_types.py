@@ -6,7 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from six import text_type
 
-from voluptuous import Required
+from voluptuous import Required, Optional
 
 from taskgraph.util.schema import taskref_or_string
 from taskgraph.transforms.task import payload_builder
@@ -69,8 +69,10 @@ def build_scriptworker_signing_payload(config, task, task_def):
                 Required("paths"): [text_type],
             }
         ],
+        Required("certificate-alias"): text_type,
         Required("channel"): text_type,
         Required("commit"): bool,
+        Optional("google-play-track"): text_type,
         Required("product"): text_type,
         Required("dep"): bool,
     },
@@ -81,10 +83,14 @@ def build_push_apk_payload(config, task, task_def):
     task_def["tags"]["worker-implementation"] = "scriptworker"
 
     task_def["payload"] = {
+        "certificate_alias": worker["certificate-alias"],
+        "channel": worker["channel"],
         "commit": worker["commit"],
         "upstreamArtifacts": worker["upstream-artifacts"],
-        "channel": worker["channel"],
     }
+
+    if worker.get("google-play-track"):
+        task_def["payload"]["google_play_track"] = worker["google-play-track"]
 
     scope_prefix = config.graph_config["scriptworker"]["scope-prefix"]
     task_def["scopes"].append(

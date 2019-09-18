@@ -495,7 +495,7 @@ class TaskBuilder(object):
         )
 
     def craft_release_signing_task(
-        self, build_task_id, apk_paths, channel, is_staging, publish_to_index=True
+        self, build_task_id, variant, channel, is_staging, publish_to_index=True
     ):
         if publish_to_index:
             staging_prefix = '.staging' if is_staging else ''
@@ -517,59 +517,24 @@ class TaskBuilder(object):
             description="Sign {} builds of Fenix".format(capitalized_channel),
             signing_type="dep" if is_staging else channel,
             assemble_task_label=build_task_id,
-            apk_paths=apk_paths,
+            apk_paths=variant.upstream_artifacts(),
             routes=routes,
             treeherder={
                 'jobKind': 'other',
                 'machine': {
                   'platform': 'android-all',
                 },
+                'collection': {
+                    'opt': True,
+                },
                 'symbol': '{}-s'.format(channel),
                 'tier': 1,
             },
-        )
-
-    def craft_push_task(
-        self, signing_task_label, apk_paths, channel, variant, is_staging=False, override_google_play_track=None,
-    ):
-        payload = {
-            "commit": True,
-            "channel": channel,
-            "certificate_alias": 'fenix' if is_staging else 'fenix-{}'.format(channel),
-            "upstreamArtifacts": [
-                {
-                    "paths": apk_paths,
-                    "taskId": {'task-reference': '<signing>'},
-                    "taskType": "signing"
-                }
-            ]
-        }
-
-        if override_google_play_track:
-            payload['google_play_track'] = override_google_play_track
-
-        return self._craft_default_task_definition(
-            worker_type='mobile-pushapk-dep-v1' if is_staging else 'mobile-pushapk-v1',
-            provisioner_id='scriptworker-prov-v1',
-            dependencies={'signing': signing_task_label},
-            routes=[],
-            scopes=[
-                "project:mobile:fenix:releng:googleplay:product:fenix{}".format(
-                    ':dep' if is_staging else ''
-                )
-            ],
-            name="Push task {}".format(variant.name),
-            description="Upload signed release builds of Fenix to Google Play",
-            payload=payload,
-            treeherder={
-                'jobKind': 'other',
-                'machine': {
-                  'platform': 'android-all',
-                },
-                'symbol': '{}-gp'.format(channel),
-                'tier': 1,
+            attributes={
+                'apks': variant.upstream_artifacts_per_abi,
             },
         )
+
 
 def schedule_task(queue, taskId, task):
     print("TASK", taskId)
