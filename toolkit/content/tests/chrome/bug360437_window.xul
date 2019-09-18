@@ -45,7 +45,9 @@
       info("Starting test with browser '" + browserId + "'");
       gBrowser = document.getElementById(browserId);
       gFindBar.browser = gBrowser;
-      let promise = ContentTask.spawn(gBrowser, null, async function() {
+
+      let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser);
+      let contentLoadedPromise = ContentTask.spawn(gBrowser, null, async function() {
         return new Promise(resolve => {
           addEventListener("DOMContentLoaded", function listener() {
             removeEventListener("DOMContentLoaded", listener);
@@ -54,11 +56,9 @@
         });
       });
       BrowserTestUtils.loadURI(gBrowser, "data:text/html,<form><input id='input' type='text' value='text inside an input element'></form>");
-      await promise;
-      await onDocumentLoaded();
-    }
+      await loadedPromise;
+      await contentLoadedPromise;
 
-    async function onDocumentLoaded() {
       gFindBar.onFindCommand();
 
       // Make sure the findfield is correctly focused on open
@@ -69,7 +69,10 @@
 
       // Make sure "find again" correctly transfers focus to the content element
       // when the find bar is closed.
-      gFindBar.close();
+      await new Promise(resolve => {
+        window.addEventListener("findbarclose", resolve, { once: true });
+        gFindBar.close();
+      });
       gFindBar.onFindAgainCommand(false);
       await ContentTask.spawn(gBrowser, null, async function() {
         Assert.equal(content.document.activeElement,
@@ -80,7 +83,8 @@
       // isn't in the content document.
       var textbox = document.getElementById("textbox");
       textbox.focus();
-      gFindBar.close();
+
+      ok(gFindBar.hidden, "Findbar is hidden");
       gFindBar.onFindAgainCommand(false);
       ok(textbox.hasAttribute("focused"),
          "Focus was stolen from a chrome element");
