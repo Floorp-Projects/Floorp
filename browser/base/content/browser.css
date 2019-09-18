@@ -79,7 +79,6 @@
 
 %ifdef XP_MACOSX
 #toolbar-menubar {
-  -moz-binding: none;
   visibility: collapse;
 }
 %endif
