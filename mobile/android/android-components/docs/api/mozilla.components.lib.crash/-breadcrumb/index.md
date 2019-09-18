@@ -2,7 +2,7 @@
 
 # Breadcrumb
 
-`data class Breadcrumb` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/Breadcrumb.kt#L15)
+`data class Breadcrumb : `[`Comparable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-comparable/index.html)`<`[`Breadcrumb`](./index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/Breadcrumb.kt#L15)
 
 Represents a single crash breadcrumb.
 
@@ -29,3 +29,9 @@ Represents a single crash breadcrumb.
 | [level](level.md) | `val level: `[`Level`](-level/index.md)<br>Level of the crash breadcrumb. |
 | [message](message.md) | `val message: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Message of the crash breadcrumb. |
 | [type](type.md) | `val type: `[`Type`](-type/index.md)<br>Type of the crash breadcrumb. |
+
+### Functions
+
+| Name | Summary |
+|---|---|
+| [compareTo](compare-to.md) | `fun compareTo(other: `[`Breadcrumb`](./index.md)`): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |

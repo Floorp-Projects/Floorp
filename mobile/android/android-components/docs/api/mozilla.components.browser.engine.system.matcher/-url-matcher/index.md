@@ -27,8 +27,10 @@ URLs against these lists.
 | [ADVERTISING](-a-d-v-e-r-t-i-s-i-n-g.md) | `const val ADVERTISING: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [ANALYTICS](-a-n-a-l-y-t-i-c-s.md) | `const val ANALYTICS: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [CONTENT](-c-o-n-t-e-n-t.md) | `const val CONTENT: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [CRYPTOMINING](-c-r-y-p-t-o-m-i-n-i-n-g.md) | `const val CRYPTOMINING: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [DEFAULT](-d-e-f-a-u-l-t.md) | `const val DEFAULT: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [DISCONNECT](-d-i-s-c-o-n-n-e-c-t.md) | `const val DISCONNECT: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [FINGERPRINTING](-f-i-n-g-e-r-p-r-i-n-t-i-n-g.md) | `const val FINGERPRINTING: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [SOCIAL](-s-o-c-i-a-l.md) | `const val SOCIAL: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 
 ### Companion Object Functions

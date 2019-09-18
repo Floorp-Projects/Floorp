@@ -2,7 +2,7 @@
 
 # Signin
 
-`object Signin : `[`AuthType`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L70)
+`object Signin : `[`AuthType`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L72)
 
 Account created in response to a sign-in.
 

@@ -16,7 +16,7 @@ or from the server (requires the client to have access to the profile scope).
 **Return**
 Profile (optional, if successfully retrieved) representing the user's basic profile info
 
-`fun getProfileAsync(): Deferred<`[`Profile`](../../mozilla.components.concept.sync/-profile/index.md)`?>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L157)
+`fun getProfileAsync(): Deferred<`[`Profile`](../../mozilla.components.concept.sync/-profile/index.md)`?>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L179)
 
 Overrides [OAuthAccount.getProfileAsync](../../mozilla.components.concept.sync/-o-auth-account/get-profile-async.md)
 
