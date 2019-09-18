@@ -244,15 +244,6 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
                      bool aLockCursor);
 
   /**
-   * Checks if the current mouse over element matches the given
-   * Element (which has a remote frame), and if so, notifies
-   * the BrowserParent of the mouse enter.
-   * Called when we reconstruct the BrowserParent and need to
-   * recompute state on the new object.
-   */
-  void RecomputeMouseEnterStateForRemoteFrame(Element& aElement);
-
-  /**
    * Returns true if the event is considered as user interaction event. I.e.,
    * enough obvious input to allow to open popup, etc. Otherwise, returns false.
    */
