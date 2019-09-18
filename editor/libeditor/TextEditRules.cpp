@@ -76,40 +76,28 @@ const HTMLEditRules* TextEditRules::AsHTMLEditRules() const {
   return mIsHTMLEditRules ? static_cast<const HTMLEditRules*>(this) : nullptr;
 }
 
-nsresult TextEditRules::Init(TextEditor* aTextEditor) {
-  if (NS_WARN_IF(!aTextEditor)) {
-    return NS_ERROR_INVALID_ARG;
-  }
+nsresult TextEditor::InitEditorContentAndSelection() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  Selection* selection = aTextEditor->GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  InitFields();
-
-  // We hold a non-refcounted reference back to our editor.
-  mTextEditor = aTextEditor;
-  AutoSafeEditorData setData(*this, *mTextEditor);
-
-  nsresult rv = MOZ_KnownLive(TextEditorRef())
-                    .MaybeCreatePaddingBRElementForEmptyEditor();
+  nsresult rv = MaybeCreatePaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // If the selection hasn't been set up yet, set it up collapsed to the end of
   // our editable content.
+  // XXX I think that this shouldn't do it in `HTMLEditor` because it maybe
+  //     removed by the web app and if they call `Selection::AddRange()`,
+  //     it may cause multiple selection ranges.
   if (!SelectionRefPtr()->RangeCount()) {
-    rv = TextEditorRef().CollapseSelectionToEnd();
+    nsresult rv = CollapseSelectionToEnd();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
 
   if (IsPlaintextEditor() && !IsSingleLineEditor()) {
-    nsresult rv = MOZ_KnownLive(TextEditorRef())
-                      .EnsurePaddingBRElementInMultilineEditor();
+    nsresult rv = EnsurePaddingBRElementInMultilineEditor();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

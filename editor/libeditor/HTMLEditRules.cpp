@@ -232,50 +232,33 @@ HTMLEditRules::HTMLEditRules() : mHTMLEditor(nullptr), mInitialized(false) {
   mIsHTMLEditRules = true;
 }
 
-nsresult HTMLEditRules::Init(TextEditor* aTextEditor) {
-  if (NS_WARN_IF(!aTextEditor) || NS_WARN_IF(!aTextEditor->AsHTMLEditor())) {
-    return NS_ERROR_INVALID_ARG;
-  }
+nsresult HTMLEditor::InitEditorContentAndSelection() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  mHTMLEditor = aTextEditor->AsHTMLEditor();
-  if (NS_WARN_IF(!mHTMLEditor)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  AutoSafeEditorData setData(*this, *mHTMLEditor);
-
-  nsresult rv = TextEditRules::Init(aTextEditor);
+  nsresult rv = TextEditor::InitEditorContentAndSelection();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  if (NS_WARN_IF(!mHTMLEditor)) {
+  Element* bodyOrDocumentElement = GetRoot();
+  if (NS_WARN_IF(!bodyOrDocumentElement && !GetDocument())) {
     return NS_ERROR_FAILURE;
   }
 
-  Element* bodyOrDocumentElement = HTMLEditorRef().GetRoot();
-  if (NS_WARN_IF(!bodyOrDocumentElement && !HTMLEditorRef().GetDocument())) {
-    return NS_ERROR_FAILURE;
+  if (!bodyOrDocumentElement) {
+    return NS_OK;
   }
 
-  // make a utility range for use by the listenter
-  if (bodyOrDocumentElement) {
-    nsresult rv =
-        MOZ_KnownLive(HTMLEditorRef())
-            .InsertBRElementToEmptyListItemsAndTableCellsInRange(
-                RawRangeBoundary(bodyOrDocumentElement, 0),
-                RawRangeBoundary(bodyOrDocumentElement,
-                                 bodyOrDocumentElement->GetChildCount()));
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "Failed to insert <br> elements to empty list items and table cells");
+  rv = InsertBRElementToEmptyListItemsAndTableCellsInRange(
+      RawRangeBoundary(bodyOrDocumentElement, 0),
+      RawRangeBoundary(bodyOrDocumentElement,
+                       bodyOrDocumentElement->GetChildCount()));
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    return NS_ERROR_EDITOR_DESTROYED;
   }
-
-  mInitialized = true;  // Start to handle edit sub-actions.
-
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "InsertBRElementToEmptyListItemsAndTableCellsInRange() "
+                       "failed, but ignored");
   return NS_OK;
 }
 
