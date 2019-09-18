@@ -16,7 +16,6 @@ class TextEditor;
 
 class TextEditUtils final {
  public:
-  static bool IsBody(nsINode* aNode);
   static bool IsBreak(nsINode* aNode);
 };
 
