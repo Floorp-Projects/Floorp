@@ -10,7 +10,7 @@
 #include "mozilla/ErrorResult.h"
 #include "nsGlobalWindowInner.h"
 #include "mozilla/dom/Document.h"
-#include "nsContentSecurityManager.h"
+#include "nsContentSecurityUtils.h"
 #include "nsContentUtils.h"
 #include "nsCOMPtr.h"
 #include "nsJSUtils.h"
@@ -33,8 +33,8 @@ nsresult CheckInternal(nsIContentSecurityPolicy* aCSP,
 
 #if !defined(ANDROID) && (defined(NIGHTLY_BUILD) || defined(DEBUG))
   JSContext* cx = nsContentUtils::GetCurrentJSContext();
-  nsContentSecurityManager::AssertEvalNotRestricted(cx, aSubjectPrincipal,
-                                                    aExpression);
+  nsContentSecurityUtils::AssertEvalNotRestricted(cx, aSubjectPrincipal,
+                                                  aExpression);
 #endif
 
   // The value is set at any "return", but better to have a default value here.
