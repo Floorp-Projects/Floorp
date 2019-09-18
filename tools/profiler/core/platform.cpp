@@ -478,11 +478,11 @@ class ActivePS {
         mDuration(aDuration),
         mInterval(aInterval),
         mFeatures(AdjustFeatures(aFeatures, aFilterCount)),
-        mBuffer(MakeUnique<ProfileBuffer>(aCapacity))
+        // 8 bytes per entry.
+        mBuffer(MakeUnique<ProfileBuffer>(PowerOfTwo32(aCapacity.Value() * 8))),
         // The new sampler thread doesn't start sampling immediately because the
         // main loop within Run() is blocked until this function's caller
         // unlocks gPSMutex.
-        ,
         mSamplerThread(NewSamplerThread(aLock, mGeneration, aInterval)),
         mInterposeObserver(ProfilerFeature::HasMainThreadIO(aFeatures)
                                ? new ProfilerIOInterposeObserver()
@@ -2294,7 +2294,7 @@ static void PrintUsageThenExit(int aExitCode) {
       "  started.\n"
       "  If unset, the platform default is used:\n"
       "  %u entries per process, or %u when MOZ_PROFILER_STARTUP is set.\n"
-      "  (%zu bytes per entry -> %zu or %zu total bytes per process)\n"
+      "  (8 bytes per entry -> %u or %u total bytes per process)\n"
       "\n"
       "  MOZ_PROFILER_STARTUP_DURATION=<1..>\n"
       "  If MOZ_PROFILER_STARTUP is set, specifies the maximum life time of\n"
@@ -2324,9 +2324,8 @@ static void PrintUsageThenExit(int aExitCode) {
       "               S/s=MOZ_PROFILER_STARTUP extra default/unavailable)\n",
       unsigned(PROFILER_DEFAULT_ENTRIES.Value()),
       unsigned(PROFILER_DEFAULT_STARTUP_ENTRIES.Value()),
-      sizeof(ProfileBufferEntry),
-      sizeof(ProfileBufferEntry) * PROFILER_DEFAULT_ENTRIES.Value(),
-      sizeof(ProfileBufferEntry) * PROFILER_DEFAULT_STARTUP_ENTRIES.Value());
+      unsigned(PROFILER_DEFAULT_ENTRIES.Value() * 8),
+      unsigned(PROFILER_DEFAULT_STARTUP_ENTRIES.Value() * 8));
 
 #define PRINT_FEATURE(n_, str_, Name_, desc_)                                  \
   printf("    %c %5u: \"%s\" (%s)\n", FeatureCategory(ProfilerFeature::Name_), \
@@ -3390,8 +3389,9 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
 #endif
 
   // Fall back to the default values if the passed-in values are unreasonable.
-  // Less than 8192 would not be enough for the most complex stack, so we should
-  // be able to store at least one full stack. TODO: Review magic numbers.
+  // Less than 8192 entries (65536 bytes) may not be enough for the most complex
+  // stack, so we should be able to store at least one full stack.
+  // TODO: Review magic numbers.
   PowerOfTwo32 capacity =
       (aCapacity.Value() >= 8192u) ? aCapacity : PROFILER_DEFAULT_ENTRIES;
   Maybe<double> duration = aDuration;
