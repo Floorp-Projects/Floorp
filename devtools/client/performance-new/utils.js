@@ -165,12 +165,23 @@ function calculateOverhead(interval, bufferSize, features) {
   const overheadFromStackwalk = features.includes("stackwalk") ? 0.05 : 0;
   const overheadFromJavaScrpt = features.includes("js") ? 0.05 : 0;
   const overheadFromTaskTracer = features.includes("tasktracer") ? 0.05 : 0;
+  const overheadFromJSTracer = features.includes("jstracer") ? 0.05 : 0;
+  const overheadFromJSAllocations = features.includes("jsallocations")
+    ? 0.05
+    : 0;
+  const overheadFromNativeAllocations = features.includes("nativeallocations")
+    ? 0.5
+    : 0;
+
   return clamp(
     overheadFromSampling +
       overheadFromBuffersize +
       overheadFromStackwalk +
       overheadFromJavaScrpt +
-      overheadFromTaskTracer,
+      overheadFromTaskTracer +
+      overheadFromJSTracer +
+      overheadFromJSAllocations +
+      overheadFromNativeAllocations,
     0,
     1
   );

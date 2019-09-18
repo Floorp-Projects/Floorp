@@ -353,6 +353,7 @@ function initializeState() {
     jstracer: false,
     preferencereads: false,
     jsallocations: false,
+    nativeallocations: false,
   };
 
   if (AppConstants.platform === "android") {
