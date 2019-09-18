@@ -157,8 +157,6 @@ histogram_files = [
     'Histograms.json',
     '/dom/base/UseCounters.conf',
     '/dom/base/nsDeprecatedOperationList.h',
-    '!/layout/style/ServoCSSPropList.py',
-    '/servo/components/style/properties/counted_unknown_properties.py',
 ]
 if CONFIG['MOZ_TELEMETRY_EXTRA_HISTOGRAM_FILES']:
     histogram_files.extend(CONFIG['MOZ_TELEMETRY_EXTRA_HISTOGRAM_FILES'])
