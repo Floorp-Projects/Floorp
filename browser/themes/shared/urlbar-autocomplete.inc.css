@@ -421,6 +421,7 @@
   color: var(--autocomplete-popup-color);
   border-color: var(--arrowpanel-border-color);
 }
+
 #PopupSearchAutoComplete .autocomplete-richlistitem[selected] {
   background: var(--autocomplete-popup-highlight-background);
   color: var(--autocomplete-popup-highlight-color);
