@@ -202,20 +202,14 @@ class SSLServerCertVerificationResult : public Runnable {
  public:
   NS_DECL_NSIRUNNABLE
 
-  SSLServerCertVerificationResult(
-      nsNSSSocketInfo* infoObject, PRErrorCode errorCode,
-      Telemetry::HistogramID telemetryID = Telemetry::HistogramCount,
-      uint32_t telemetryValue = -1);
+  SSLServerCertVerificationResult(nsNSSSocketInfo* infoObject,
+                                  PRErrorCode errorCode);
 
   void Dispatch();
 
  private:
   const RefPtr<nsNSSSocketInfo> mInfoObject;
-
- public:
   const PRErrorCode mErrorCode;
-  const Telemetry::HistogramID mTelemetryID;
-  const uint32_t mTelemetryValue;
 };
 
 class CertErrorRunnable : public SyncRunnableBase {
@@ -623,8 +617,8 @@ SSLServerCertVerificationResult* CertErrorRunnable::CheckCertOverrides() {
                 ? mErrorCodeMismatch
                 : mErrorCodeTime ? mErrorCodeTime : mDefaultErrorCodeToReport;
 
-  SSLServerCertVerificationResult* result = new SSLServerCertVerificationResult(
-      mInfoObject, errorCodeToReport, Telemetry::HistogramCount, -1);
+  SSLServerCertVerificationResult* result =
+      new SSLServerCertVerificationResult(mInfoObject, errorCodeToReport);
 
   return result;
 }
@@ -756,7 +750,6 @@ class SSLServerCertVerificationJob : public Runnable {
   const uint32_t mProviderFlags;
   const Time mTime;
   const PRTime mPRTime;
-  const TimeStamp mJobStartTime;
   Maybe<nsTArray<uint8_t>> mStapledOCSPResponse;
   Maybe<nsTArray<uint8_t>> mSCTsFromTLSExtension;
 };
@@ -777,7 +770,6 @@ SSLServerCertVerificationJob::SSLServerCertVerificationJob(
       mProviderFlags(providerFlags),
       mTime(time),
       mPRTime(prtime),
-      mJobStartTime(TimeStamp::Now()),
       mStapledOCSPResponse(std::move(stapledOCSPResponse)),
       mSCTsFromTLSExtension(std::move(sctsFromTLSExtension)) {}
 
@@ -1449,44 +1441,41 @@ SECStatus SSLServerCertVerificationJob::Dispatch(
 
 NS_IMETHODIMP
 SSLServerCertVerificationJob::Run() {
-  // Runs on a cert verification thread
+  // Runs on a cert verification thread and only on parent process.
+  MOZ_ASSERT(XRE_IsParentProcess());
 
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
           ("[%p] SSLServerCertVerificationJob::Run\n", mInfoObject.get()));
 
-  PRErrorCode error;
-
-  Telemetry::HistogramID successTelemetry =
-      Telemetry::SSL_SUCCESFUL_CERT_VALIDATION_TIME_MOZILLAPKIX;
-  Telemetry::HistogramID failureTelemetry =
-      Telemetry::SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_MOZILLAPKIX;
-
   // Reset the error code here so we can detect if AuthCertificate fails to
   // set the error code if/when it fails.
   PR_SetError(0, 0);
+  TimeStamp jobStartTime = TimeStamp::Now();
   SECStatus rv = AuthCertificate(*mCertVerifier, mInfoObject, mCert,
                                  mPeerCertChain, mStapledOCSPResponse,
                                  mSCTsFromTLSExtension, mProviderFlags, mTime);
   MOZ_ASSERT((mPeerCertChain && rv == SECSuccess) ||
                  (!mPeerCertChain && rv != SECSuccess),
              "AuthCertificate() should take ownership of chain on failure");
+
   if (rv == SECSuccess) {
-    uint32_t interval =
-        (uint32_t)((TimeStamp::Now() - mJobStartTime).ToMilliseconds());
-    RefPtr<SSLServerCertVerificationResult> restart(
-        new SSLServerCertVerificationResult(mInfoObject, 0, successTelemetry,
-                                            interval));
-    restart->Dispatch();
+    Telemetry::AccumulateTimeDelta(
+        Telemetry::SSL_SUCCESFUL_CERT_VALIDATION_TIME_MOZILLAPKIX,
+        jobStartTime, TimeStamp::Now());
     Telemetry::Accumulate(Telemetry::SSL_CERT_ERROR_OVERRIDES, 1);
+    RefPtr<SSLServerCertVerificationResult> runnable(
+        new SSLServerCertVerificationResult(mInfoObject, 0));
+    runnable->Dispatch();
     return NS_OK;
   }
 
   // Note: the interval is not calculated once as PR_GetError MUST be called
   // before any other  function call
-  error = PR_GetError();
+  PRErrorCode error = PR_GetError();
 
-  TimeStamp now = TimeStamp::Now();
-  Telemetry::AccumulateTimeDelta(failureTelemetry, mJobStartTime, now);
+  Telemetry::AccumulateTimeDelta(
+      Telemetry::SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_MOZILLAPKIX,
+      jobStartTime, TimeStamp::Now());
 
   if (error != 0) {
     RefPtr<CertErrorRunnable> runnable(
@@ -1640,19 +1629,10 @@ SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig,
 }
 
 SSLServerCertVerificationResult::SSLServerCertVerificationResult(
-    nsNSSSocketInfo* infoObject, PRErrorCode errorCode,
-    Telemetry::HistogramID telemetryID, uint32_t telemetryValue)
+    nsNSSSocketInfo* infoObject, PRErrorCode errorCode)
     : Runnable("psm::SSLServerCertVerificationResult"),
       mInfoObject(infoObject),
-      mErrorCode(errorCode),
-      mTelemetryID(telemetryID),
-      mTelemetryValue(telemetryValue) {
-  // We accumulate telemetry for (only) successful validations on the main
-  // thread to avoid adversely affecting performance by acquiring the mutex that
-  // we use when accumulating the telemetry for unsuccessful validations.
-  // Unsuccessful validations times are accumulated elsewhere.
-  MOZ_ASSERT(telemetryID == Telemetry::HistogramCount || errorCode == 0);
-}
+      mErrorCode(errorCode) {}
 
 void SSLServerCertVerificationResult::Dispatch() {
   nsresult rv;
@@ -1667,9 +1647,6 @@ void SSLServerCertVerificationResult::Dispatch() {
 NS_IMETHODIMP
 SSLServerCertVerificationResult::Run() {
   // TODO: Assert that we're on the socket transport thread
-  if (mTelemetryID != Telemetry::HistogramCount) {
-    Telemetry::Accumulate(mTelemetryID, mTelemetryValue);
-  }
   mInfoObject->SetCertVerificationResult(mErrorCode);
   return NS_OK;
 }
