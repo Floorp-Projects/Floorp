@@ -7,7 +7,7 @@
 const { shallow } = require("enzyme");
 const { createFactory } = require("react");
 
-const ManifestSection = createFactory(
+const ManifestItem = createFactory(
   require("devtools/client/application/src/components/manifest/ManifestItem")
 );
 
@@ -17,12 +17,12 @@ const ManifestSection = createFactory(
 
 describe("ManifestItem", () => {
   it("renders the expected snapshot for a populated item", () => {
-    const wrapper = shallow(ManifestSection({ label: "foo" }, "bar"));
+    const wrapper = shallow(ManifestItem({ label: "foo" }, "bar"));
     expect(wrapper).toMatchSnapshot();
   });
 
   it("renders the expected snapshot for an empty item", () => {
-    const wrapper = shallow(ManifestSection({ label: "foo" }));
+    const wrapper = shallow(ManifestItem({ label: "foo" }));
     expect(wrapper).toMatchSnapshot();
   });
 });

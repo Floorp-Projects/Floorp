@@ -4,6 +4,8 @@
 
 DevToolsModules(
     'Manifest.js',
+	'ManifestColorItem.css',
+    'ManifestColorItem.js',
     'ManifestEmpty.js',
 	'ManifestIssue.css',
 	'ManifestIssue.js',

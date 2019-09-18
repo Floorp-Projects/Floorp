@@ -1,0 +1,22 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.manifest-item__color {
+  /* NOTE: platform converts any color format that is in the manifest to
+           hexadecimal, so we can uppercase */
+  text-transform: uppercase;
+}
+
+.manifest-item__color::before {
+  display: inline-block;
+  content: '';
+  background-color: var(--color-value); /* injected via React */
+  border-radius: 50%;
+  width: calc(var(--base-unit) * 3);
+  height: calc(var(--base-unit) * 3);
+  margin-block-start: calc(var(--base-unit) * -0.5);
+  margin-inline-end: var(--base-unit);
+  box-shadow: 0 0 0 1px var(--theme-splitter-color);
+  vertical-align: middle;
+}

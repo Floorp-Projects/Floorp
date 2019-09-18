@@ -33,6 +33,11 @@ const MANIFEST_CATEGORIES = {
   ICONS: "icons",
 };
 
+const MANIFEST_MEMBER_VALUE_TYPES = {
+  STRING: "string",
+  COLOR: "color",
+};
+
 const MANIFEST_ISSUE_LEVELS = {
   ERROR: "error",
   WARNING: "warning",
@@ -46,6 +51,7 @@ module.exports = Object.assign(
     PAGE_TYPES,
     MANIFEST_CATEGORIES,
     MANIFEST_ISSUE_LEVELS,
+    MANIFEST_MEMBER_VALUE_TYPES,
   },
   actionTypes
 );
