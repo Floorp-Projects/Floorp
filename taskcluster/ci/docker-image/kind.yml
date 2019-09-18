@@ -156,16 +156,6 @@ jobs:
         definition: debian-build
         args:
             ARCH: amd64
-    debian9-arm64-build:
-        symbol: I(deb9-arm64)
-        parent: debian9-base
-        definition: debian-build
-        args:
-            ARCH: arm64
-    toolchain-arm64-build:
-        symbol: I(toolchain-arm64)
-        parent: debian9-arm64-build
-        definition: toolchain-build
     # Neither the debian10-raw nor the debian10-packages images can have
     # packages dependencies.
     debian10-raw:
@@ -192,6 +182,16 @@ jobs:
         definition: debian-build
         args:
             ARCH: amd64
+    debian10-arm64-build:
+        symbol: I(deb10-arm64)
+        parent: debian10-base
+        definition: debian-build
+        args:
+            ARCH: arm64
+    toolchain-arm64-build:
+        symbol: I(toolchain-arm64)
+        parent: debian10-arm64-build
+        definition: toolchain-build
     android-build:
         symbol: I(agb)
         parent: debian9-base
