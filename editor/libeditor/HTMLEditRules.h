@@ -55,8 +55,6 @@ class HTMLEditRules : public TextEditRules {
   HTMLEditRules();
 
   // TextEditRules methods
-  MOZ_CAN_RUN_SCRIPT
-  virtual nsresult Init(TextEditor* aTextEditor) override;
   virtual nsresult DetachEditor() override;
 
  protected:
