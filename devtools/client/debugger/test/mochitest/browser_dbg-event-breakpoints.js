@@ -14,9 +14,15 @@ function assertPauseLocation(dbg, line) {
 }
 
 add_task(async function() {
-  await pushPref("devtools.debugger.features.event-listeners-breakpoints", true);
+  await pushPref(
+    "devtools.debugger.features.event-listeners-breakpoints",
+    true
+  );
 
-  const dbg = await initDebugger("doc-event-breakpoints.html", "event-breakpoints");
+  const dbg = await initDebugger(
+    "doc-event-breakpoints.html",
+    "event-breakpoints"
+  );
   await selectSource(dbg, "event-breakpoints");
   await waitForSelectedSource(dbg, "event-breakpoints");
 
@@ -43,6 +49,6 @@ add_task(async function() {
   await resume(dbg);
 
   await waitForPaused(dbg);
-  assertPauseLocation(dbg, 29);
+  assertPauseLocation(dbg, 28);
   await resume(dbg);
 });

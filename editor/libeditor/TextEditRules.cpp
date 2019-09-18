@@ -123,71 +123,94 @@ nsresult TextEditRules::DetachEditor() {
   return NS_OK;
 }
 
-nsresult TextEditRules::BeforeEdit() {
-  MOZ_ASSERT(!mIsHandling);
+void TextEditor::OnStartToHandleTopLevelEditSubAction(
+    EditSubAction aTopLevelEditSubAction,
+    nsIEditor::EDirection aDirectionOfTopLevelEditSubAction, ErrorResult& aRv) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!AsHTMLEditor());
+  MOZ_ASSERT(!aRv.Failed());
 
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  EditorBase::OnStartToHandleTopLevelEditSubAction(
+      aTopLevelEditSubAction, aDirectionOfTopLevelEditSubAction, aRv);
+
+  MOZ_ASSERT(GetTopLevelEditSubAction() == aTopLevelEditSubAction);
+  MOZ_ASSERT(GetDirectionOfTopLevelEditSubAction() ==
+             aDirectionOfTopLevelEditSubAction);
+
+  if (NS_WARN_IF(Destroyed())) {
+    aRv.Throw(NS_ERROR_EDITOR_DESTROYED);
+    return;
   }
 
-#ifdef DEBUG
-  mIsHandling = true;
-#endif  // #ifdef DEBUG
-
-  return NS_OK;
-}
-
-nsresult TextEditRules::AfterEdit() {
-  MOZ_ASSERT(IsPlaintextEditor());
-
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  if (!mInitSucceeded) {
+    return;
   }
 
-#ifdef DEBUG
-  MOZ_ASSERT(mIsHandling);
-  mIsHandling = false;
-#endif  // #ifdef DEBUG
-
-  AutoSafeEditorData setData(*this, *mTextEditor);
-
-  // XXX Probably, we should spellcheck again after edit action (not top-level
-  //     sub-action) is handled because the ranges can be referred only by
-  //     users.
-  nsresult rv = TextEditorRef().HandleInlineSpellCheckAfterEdit();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (aTopLevelEditSubAction == EditSubAction::eSetText) {
+    // SetText replaces all text, so spell checker handles starting from the
+    // start of new value.
+    SetSpellCheckRestartPoint(EditorDOMPoint(mRootElement, 0));
+    return;
   }
 
-  rv = MOZ_KnownLive(TextEditorRef()).EnsurePaddingBRElementForEmptyEditor();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (!IsSingleLineEditor()) {
-    nsresult rv = MOZ_KnownLive(TextEditorRef())
-                      .EnsurePaddingBRElementInMultilineEditor();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+  if (aTopLevelEditSubAction == EditSubAction::eInsertText ||
+      aTopLevelEditSubAction == EditSubAction::eInsertTextComingFromIME) {
+    // For spell checker, previous selected node should be text node if
+    // possible. If anchor is root of editor, it may become invalid offset
+    // after inserting text.
+    EditorRawDOMPoint point = FindBetterInsertionPoint(
+        EditorRawDOMPoint(SelectionRefPtr()->AnchorRef()));
+    if (point.IsSet()) {
+      SetSpellCheckRestartPoint(point);
+      return;
     }
   }
-
-  rv = MOZ_KnownLive(TextEditorRef()).EnsureCaretNotAtEndOfTextNode();
-  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  if (SelectionRefPtr()->AnchorRef().IsSet()) {
+    SetSpellCheckRestartPoint(
+        EditorRawDOMPoint(SelectionRefPtr()->AnchorRef()));
   }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EnsureCaretNotAtEndOfTextNode() failed, but ignored");
-  return NS_OK;
 }
 
-bool TextEditRules::DocumentIsEmpty() const {
-  bool retVal = false;
-  if (!mTextEditor || NS_FAILED(mTextEditor->IsEmpty(&retVal))) {
-    retVal = true;
-  }
+nsresult TextEditor::OnEndHandlingTopLevelEditSubAction() {
+  MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
+  MOZ_ASSERT(!AsHTMLEditor());
 
-  return retVal;
+  nsresult rv;
+  while (true) {
+    if (NS_WARN_IF(Destroyed())) {
+      rv = NS_ERROR_EDITOR_DESTROYED;
+      break;
+    }
+
+    // XXX Probably, we should spellcheck again after edit action (not top-level
+    //     sub-action) is handled because the ranges can be referred only by
+    //     users.
+    if (NS_WARN_IF(NS_FAILED(rv = HandleInlineSpellCheckAfterEdit()))) {
+      break;
+    }
+
+    if (NS_WARN_IF(NS_FAILED(rv = EnsurePaddingBRElementForEmptyEditor()))) {
+      break;
+    }
+
+    if (!IsSingleLineEditor() &&
+        NS_WARN_IF(NS_FAILED(rv = EnsurePaddingBRElementInMultilineEditor()))) {
+      break;
+    }
+
+    rv = EnsureCaretNotAtEndOfTextNode();
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      break;
+    }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "EnsureCaretNotAtEndOfTextNode() failed, but ignored");
+    rv = NS_OK;
+    break;
+  }
+  EditorBase::OnEndHandlingTopLevelEditSubAction();
+  MOZ_ASSERT(!GetTopLevelEditSubAction());
+  MOZ_ASSERT(GetDirectionOfTopLevelEditSubAction() == eNone);
+  return rv;
 }
 
 EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
@@ -725,7 +748,7 @@ EditActionResult TextEditor::HandleDeleteSelection(
 
   // if there is only padding <br> element for empty editor, cancel the
   // operation.
-  if (HasPaddingBRElementForEmptyEditor()) {
+  if (mPaddingBRElementForEmptyEditor) {
     return EditActionCanceled();
   }
   EditActionResult result =
@@ -801,7 +824,7 @@ EditActionResult TextEditor::ComputeValueFromTextNodeAndPaddingBRElement(
 
   // If there is a padding <br> element, there's no content.  So output empty
   // string.
-  if (HasPaddingBRElementForEmptyEditor()) {
+  if (mPaddingBRElementForEmptyEditor) {
     aValue.Truncate();
     return EditActionHandled();
   }

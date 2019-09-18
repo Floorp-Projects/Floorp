@@ -55,6 +55,7 @@ class HTMLLIAccessible : public HyperTextAccessibleWrap {
   virtual uint64_t NativeState() const override;
 
   virtual bool InsertChildAt(uint32_t aIndex, Accessible* aChild) override;
+  virtual void RelocateChild(uint32_t aNewIndex, Accessible* aChild) override;
 
   // HTMLLIAccessible
   HTMLListBulletAccessible* Bullet() const { return mBullet; }

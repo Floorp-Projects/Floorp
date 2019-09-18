@@ -1362,8 +1362,15 @@ already_AddRefed<Element> EditorBase::CreateNodeWithTransaction(
   //     we need to redesign RangeUpdaterRef() as avoiding using indices.
   Unused << aPointToInsert.Offset();
 
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eCreateNode, nsIEditor::eNext);
+      *this, EditSubAction::eCreateNode, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return nullptr;
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   RefPtr<Element> newElement;
 
@@ -1438,8 +1445,15 @@ nsresult EditorBase::InsertNodeWithTransaction(
   }
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eInsertNode, nsIEditor::eNext);
+      *this, EditSubAction::eInsertNode, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   RefPtr<InsertNodeTransaction> transaction =
       InsertNodeTransaction::Create(*this, aContentToInsert, aPointToInsert);
@@ -1573,7 +1587,14 @@ already_AddRefed<nsIContent> EditorBase::SplitNodeWithTransaction(
   MOZ_ASSERT(aStartOfRightNode.IsSetAndValid());
 
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eSplitNode, nsIEditor::eNext);
+      *this, EditSubAction::eSplitNode, nsIEditor::eNext, aError);
+  if (NS_WARN_IF(aError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return nullptr;
+  }
+  NS_WARNING_ASSERTION(
+      !aError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
+  aError.SuppressException();
 
   // XXX Unfortunately, storing offset of the split point in
   //     SplitNodeTransaction is necessary for now.  We should fix this
@@ -1644,8 +1665,15 @@ nsresult EditorBase::JoinNodesWithTransaction(nsINode& aLeftNode,
   nsCOMPtr<nsINode> parent = aLeftNode.GetParentNode();
   MOZ_ASSERT(parent);
 
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eJoinNodes, nsIEditor::ePrevious);
+      *this, EditSubAction::eJoinNodes, nsIEditor::ePrevious, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   // Remember some values; later used for saved selection updating.
   // Find the offset between the nodes to be joined.
@@ -1717,8 +1745,15 @@ nsresult EditorBase::DeleteNodeWithTransaction(nsINode& aNode) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aNode.IsContent());
 
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eDeleteNode, nsIEditor::ePrevious);
+      *this, EditSubAction::eDeleteNode, nsIEditor::ePrevious, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   if (AsHTMLEditor()) {
     TopLevelEditSubActionDataRef().WillDeleteContent(*this, *aNode.AsContent());
@@ -2376,14 +2411,18 @@ EditorBase::GetRootElement(Element** aRootElement) {
 }
 
 void EditorBase::OnStartToHandleTopLevelEditSubAction(
-    EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) {
+    EditSubAction aTopLevelEditSubAction,
+    nsIEditor::EDirection aDirectionOfTopLevelEditSubAction, ErrorResult& aRv) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  mEditActionData->SetTopLevelEditSubAction(aEditSubAction, aDirection);
+  MOZ_ASSERT(!aRv.Failed());
+  mEditActionData->SetTopLevelEditSubAction(aTopLevelEditSubAction,
+                                            aDirectionOfTopLevelEditSubAction);
 }
 
-void EditorBase::OnEndHandlingTopLevelEditSubAction() {
+nsresult EditorBase::OnEndHandlingTopLevelEditSubAction() {
   MOZ_ASSERT(IsEditActionDataAvailable());
   mEditActionData->SetTopLevelEditSubAction(EditSubAction::eNone, eNone);
+  return NS_OK;
 }
 
 void EditorBase::DoInsertText(Text& aText, uint32_t aOffset,
@@ -2985,8 +3024,15 @@ nsresult EditorBase::DeleteTextWithTransaction(Text& aTextNode,
     return NS_ERROR_FAILURE;
   }
 
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eDeleteText, nsIEditor::ePrevious);
+      *this, EditSubAction::eDeleteText, nsIEditor::ePrevious, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   // Let listeners know what's up
   if (!mActionListeners.IsEmpty()) {
@@ -4068,9 +4114,16 @@ nsresult EditorBase::MaybeCreatePaddingBRElementForEmptyEditor() {
     return NS_OK;
   }
 
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eCreatePaddingBRElementForEmptyEditor,
-      nsIEditor::eNone);
+      nsIEditor::eNone, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   RefPtr<Element> rootElement = GetRoot();
   if (!rootElement) {

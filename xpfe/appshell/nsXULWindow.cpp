@@ -81,6 +81,7 @@ using dom::AutoNoJSAPI;
 #define WIDTH_ATTRIBUTE NS_LITERAL_STRING("width")
 #define HEIGHT_ATTRIBUTE NS_LITERAL_STRING("height")
 #define MODE_ATTRIBUTE NS_LITERAL_STRING("sizemode")
+#define TILED_ATTRIBUTE NS_LITERAL_STRING("gtktiledwindow")
 #define ZLEVEL_ATTRIBUTE NS_LITERAL_STRING("zlevel")
 
 //*****************************************************************************
@@ -1295,7 +1296,7 @@ bool nsXULWindow::UpdateWindowStateFromMiscXULAttributes() {
   // If we are told to ignore the size mode attribute, force
   // normal sizemode.
   if (mIgnoreXULSizeMode) {
-    windowElement->SetAttribute(MODE_ATTRIBUTE, NS_LITERAL_STRING("normal"),
+    windowElement->SetAttribute(MODE_ATTRIBUTE, SIZEMODE_NORMAL,
                                 IgnoreErrors());
   } else {
     // Otherwise, read sizemode from DOM and, if the window is resizable,
@@ -1783,6 +1784,13 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes() {
         Unused << SetPersistentValue(nsGkAtoms::sizemode, sizeString);
       }
     }
+    bool tiled = mWindow->IsTiled();
+    if (tiled) {
+      sizeString.Assign(NS_LITERAL_STRING("true"));
+    } else {
+      sizeString.Assign(NS_LITERAL_STRING("false"));
+    }
+    docShellElement->SetAttribute(TILED_ATTRIBUTE, sizeString, rv);
     if (persistString.Find("zlevel") >= 0) {
       uint32_t zLevel;
       nsCOMPtr<nsIWindowMediator> mediator(

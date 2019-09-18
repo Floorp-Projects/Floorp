@@ -42,7 +42,7 @@ const EXTENSION_DATA = {
         // sets the notificationCallbacks on the channel to a JS object that we
         // can't do directly QueryObject on with expected results.
         // This triggered a crash which was fixed in bug 1528188.
-        return new Promise(async (resolve, reject) => {
+        return new Promise((resolve, reject) => {
           setTimeout(resolve, 0);
         });
       },

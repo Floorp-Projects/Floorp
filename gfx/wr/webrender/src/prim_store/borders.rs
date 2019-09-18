@@ -6,7 +6,7 @@ use api::{NormalBorder, PremultipliedColorF, Shadow};
 use api::units::*;
 use crate::border::create_border_segments;
 use crate::border::NormalBorderAu;
-use crate::display_list_flattener::{CreateShadow, IsVisible};
+use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::{FrameBuildingState};
 use crate::gpu_cache::{GpuCache, GpuDataRequest};
 use crate::intern;

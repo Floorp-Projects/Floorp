@@ -6,6 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["AboutNetErrorHandler"];
 
+const PREF_SSL_IMPACT_ROOTS = ["security.tls.version.", "security.ssl3."];
 const { RemotePages } = ChromeUtils.import(
   "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm"
 );
@@ -31,6 +32,7 @@ var AboutNetErrorHandler = {
     "Browser:PrimeMitm",
     "Browser:ResetEnterpriseRootsPref",
     "Browser:SSLErrorGoBack",
+    "GetChangedCertPrefs",
   ],
 
   init() {
@@ -90,7 +92,32 @@ var AboutNetErrorHandler = {
       case "Browser:SSLErrorGoBack":
         this.goBackFromErrorPage(msg.target.browser.ownerGlobal);
         break;
+      case "Browser:SSLErrorReportTelemetry":
+        let reportStatus = msg.data.reportStatus;
+        Services.telemetry
+          .getHistogramById("TLS_ERROR_REPORT_UI")
+          .add(reportStatus);
+        break;
+      case "GetChangedCertPrefs":
+        let hasChangedCertPrefs = this.hasChangedCertPrefs();
+        this.pageListener.sendAsyncMessage("HasChangedCertPrefs", {
+          hasChangedCertPrefs,
+        });
+        break;
     }
+  },
+
+  hasChangedCertPrefs() {
+    let prefSSLImpact = PREF_SSL_IMPACT_ROOTS.reduce((prefs, root) => {
+      return prefs.concat(Services.prefs.getChildList(root));
+    }, []);
+    for (let prefName of prefSSLImpact) {
+      if (Services.prefs.prefHasUserValue(prefName)) {
+        return true;
+      }
+    }
+
+    return false;
   },
 
   /**

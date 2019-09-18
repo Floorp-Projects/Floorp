@@ -1204,7 +1204,7 @@ bool wasm::EnsureBuiltinThunksInitialized() {
     return false;
   }
 
-  masm.executableCopy(thunks->codeBase, /* flushICache = */ false);
+  masm.executableCopy(thunks->codeBase);
   memset(thunks->codeBase + masm.bytesNeeded(), 0,
          allocSize - masm.bytesNeeded());
 
@@ -1215,9 +1215,8 @@ bool wasm::EnsureBuiltinThunksInitialized() {
   MOZ_ASSERT(masm.callSiteTargets().empty());
   MOZ_ASSERT(masm.trapSites().empty());
 
-  jit::FlushICache(thunks->codeBase, thunks->codeSize);
-  if (!ExecutableAllocator::makeExecutable(thunks->codeBase,
-                                           thunks->codeSize)) {
+  if (!ExecutableAllocator::makeExecutableAndFlushICache(thunks->codeBase,
+                                                         thunks->codeSize)) {
     return false;
   }
 

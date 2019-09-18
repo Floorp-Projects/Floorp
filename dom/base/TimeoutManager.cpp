@@ -142,7 +142,7 @@ void TimeoutManager::MoveIdleToActive() {
     timeout->remove();
     mTimeouts.InsertFront(timeout);
 #if MOZ_GECKO_PROFILER
-    if (profiler_is_active()) {
+    if (profiler_can_accept_markers()) {
       if (num == 0) {
         now = TimeStamp::Now();
       }
@@ -891,7 +891,7 @@ void TimeoutManager::RunTimeout(const TimeStamp& aNow,
         // This timeout is good to run.
         bool timeout_was_cleared = window->RunTimeoutHandler(timeout, scx);
 #if MOZ_GECKO_PROFILER
-        if (profiler_is_active()) {
+        if (profiler_can_accept_markers()) {
           TimeDuration elapsed = now - timeout->SubmitTime();
           TimeDuration target = timeout->When() - timeout->SubmitTime();
           TimeDuration delta = now - timeout->When();

@@ -120,10 +120,10 @@ add_task(async function test_telemetry_events() {
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
-    let originField = loginItem.shadowRoot.querySelector(
-      'input[name="origin"]'
+    let usernameField = loginItem.shadowRoot.querySelector(
+      'input[name="username"]'
     );
-    originField.value = "https://www.example.com";
+    usernameField.value = "user1-modified";
 
     let saveButton = loginItem.shadowRoot.querySelector(".save-changes-button");
     saveButton.click();

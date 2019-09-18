@@ -476,9 +476,6 @@ ReplayDebugger.prototype = {
       // There is no preferred direction of travel after an explicit pause.
       this._direction = Direction.NONE;
 
-      // Update graphics according to the current state of the child.
-      this._control.repaint();
-
       // If breakpoint handlers for the pause haven't been called yet, don't
       // call them at all.
       this._cancelPerformPause = true;
@@ -537,13 +534,14 @@ ReplayDebugger.prototype = {
   },
 
   // Fill in the debugger with (hopefully) all data the client/server need to
-  // pause at the current location.
+  // pause at the current location. This also updates graphics to match the
+  // current location.
   _capturePauseData() {
     if (this._pool.frames.length) {
       return;
     }
 
-    const pauseData = this._control.getPauseData();
+    const pauseData = this._control.getPauseDataAndRepaint();
     if (!pauseData.frames) {
       return;
     }

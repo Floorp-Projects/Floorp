@@ -293,4 +293,25 @@ stubs.set("Error with invalid stack", {
   },
 });
 
+stubs.set("Error with undefined-grip stack", {
+  type: "object",
+  actor: "server0.conn0.child1/obj88",
+  class: "Error",
+  extensible: true,
+  frozen: false,
+  sealed: false,
+  ownPropertyLength: 4,
+  preview: {
+    kind: "Error",
+    name: "InternalError",
+    message: "too much recursion",
+    stack: {
+      type: "undefined",
+    },
+    fileName: "debugger eval code",
+    lineNumber: 13,
+    columnNumber: 13,
+  },
+});
+
 module.exports = stubs;

@@ -263,12 +263,13 @@ class _ToolbarPanelHub {
     wrapperEl.appendChild(this._createMessageContent(win, doc, content));
 
     if (content.link_text) {
-      wrapperEl.appendChild(
-        this._createElement(doc, "a", {
-          classList: "text-link",
-          content: content.link_text,
-        })
-      );
+      const anchorEl = this._createElement(doc, "a", {
+        classList: "text-link",
+        content: content.link_text,
+      });
+      // istanbul ignore next
+      anchorEl.doCommand = () => {};
+      wrapperEl.appendChild(anchorEl);
     }
 
     // Attach event listener on entire message container

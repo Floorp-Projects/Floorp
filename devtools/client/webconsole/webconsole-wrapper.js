@@ -78,24 +78,24 @@ class WebConsoleWrapper {
     this.telemetry = new Telemetry();
   }
 
-  init() {
-    return new Promise(async resolve => {
-      const attachRefToWebConsoleUI = (id, node) => {
-        this.webConsoleUI[id] = node;
-      };
-      const { webConsoleUI } = this;
-      const debuggerClient = this.hud.currentTarget.client;
+  async init() {
+    const attachRefToWebConsoleUI = (id, node) => {
+      this.webConsoleUI[id] = node;
+    };
+    const { webConsoleUI } = this;
+    const debuggerClient = this.hud.currentTarget.client;
 
-      const webConsoleClient = await this.hud.currentTarget.getFront("console");
-      this.networkDataProvider = new DataProvider({
-        actions: {
-          updateRequest: (id, data) => {
-            return this.batchedRequestUpdates({ id, data });
-          },
+    const webConsoleClient = await this.hud.currentTarget.getFront("console");
+    this.networkDataProvider = new DataProvider({
+      actions: {
+        updateRequest: (id, data) => {
+          return this.batchedRequestUpdates({ id, data });
         },
-        webConsoleClient,
-      });
+      },
+      webConsoleClient,
+    });
 
+    return new Promise(resolve => {
       const serviceContainer = {
         attachRefToWebConsoleUI,
         emitNewMessage: (node, messageId, timeStamp) => {

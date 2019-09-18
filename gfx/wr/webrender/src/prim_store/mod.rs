@@ -15,7 +15,7 @@ use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, Coordinat
 use crate::clip::{ClipDataStore, ClipNodeFlags, ClipChainId, ClipChainInstance, ClipItemKind};
 use crate::debug_colors;
 use crate::debug_render::DebugItem;
-use crate::display_list_flattener::{CreateShadow, IsVisible};
+use crate::scene_building::{CreateShadow, IsVisible};
 use euclid::{SideOffsets2D, Transform3D, Rect, Scale, Size2D, Point2D};
 use euclid::approxeq::ApproxEq;
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
@@ -41,8 +41,8 @@ use crate::prim_store::text_run::{TextRunDataHandle, TextRunPrimitive};
 use crate::render_backend::{FrameId};
 use crate::render_backend::DataStores;
 use crate::render_task_graph::RenderTaskId;
-use crate::render_task::{RenderTask, RenderTaskCacheKey, to_cache_size};
-use crate::render_task::{RenderTaskCacheKeyKind, RenderTaskCacheEntryHandle};
+use crate::render_task_cache::{RenderTaskCacheKeyKind, RenderTaskCacheEntryHandle, RenderTaskCacheKey, to_cache_size};
+use crate::render_task::RenderTask;
 use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use crate::resource_cache::{ImageProperties, ImageRequest};
 use crate::scene::SceneProperties;
@@ -1692,6 +1692,9 @@ pub struct PrimitiveScratchBuffer {
     /// verify invalidation in wrench reftests. Only collected in testing.
     pub recorded_dirty_regions: Vec<RecordedDirtyRegion>,
 
+    /// List of dirty rects for the cached pictures in this document.
+    pub dirty_rects: Vec<DeviceIntRect>,
+
     /// List of debug display items for rendering.
     pub debug_items: Vec<DebugItem>,
 }
@@ -1706,6 +1709,7 @@ impl PrimitiveScratchBuffer {
             segment_instances: SegmentInstanceStorage::new(0),
             gradient_tiles: GradientTileStorage::new(0),
             recorded_dirty_regions: Vec::new(),
+            dirty_rects: Vec::new(),
             debug_items: Vec::new(),
             prim_info: Vec::new(),
         }
@@ -1742,6 +1746,7 @@ impl PrimitiveScratchBuffer {
         self.debug_items.clear();
 
         assert!(self.recorded_dirty_regions.is_empty(), "Should have sent to Renderer");
+        assert!(self.dirty_rects.is_empty(), "Should have sent to Renderer");
     }
 
     #[allow(dead_code)]
@@ -1840,7 +1845,7 @@ impl PrimitiveStore {
     /// Destroy an existing primitive store. This is called just before
     /// a primitive store is replaced with a newly built scene.
     pub fn destroy(
-        mut self,
+        &mut self,
         retained_tiles: &mut RetainedTiles,
     ) {
         for pic in &mut self.pictures {
@@ -2289,9 +2294,12 @@ impl PrimitiveStore {
                             frame_state.gpu_cache,
                         );
                     }
-                    Some(ImageProperties { descriptor, tiling: Some(tile_size), .. }) => {
+                    Some(ImageProperties { tiling: Some(tile_size), visible_rect, .. }) => {
                         image_instance.visible_tiles.clear();
-                        let device_image_rect = DeviceIntRect::from_size(descriptor.size);
+                        // TODO: rename the blob's visible_rect into something that doesn't conflict
+                        // with the terminology we use during culling since it's not really the same
+                        // thing.
+                        let active_rect = visible_rect;
 
                         // Tighten the clip rect because decomposing the repeated image can
                         // produce primitives that are partially covering the original image
@@ -2344,7 +2352,7 @@ impl PrimitiveStore {
                             let tiles = crate::image::tiles(
                                 &layout_image_rect,
                                 &visible_rect,
-                                &device_image_rect,
+                                &active_rect,
                                 tile_size as i32,
                             );
 
@@ -4082,7 +4090,7 @@ fn update_opacity_binding(
 }
 
 /// Trait for primitives that are directly internable.
-/// see DisplayListFlattener::add_primitive<P>
+/// see SceneBuilder::add_primitive<P>
 pub trait InternablePrimitive: intern::Internable<InternData = PrimitiveSceneData> + Sized {
     /// Build a new key from self with `info`.
     fn into_key(

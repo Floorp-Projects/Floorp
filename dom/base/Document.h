@@ -66,6 +66,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/FailedCertSecurityInfoBinding.h"
+#include "mozilla/dom/NetErrorInfoBinding.h"
 #include <bitset>  // for member
 
 // windows.h #defines CreateEvent
@@ -2502,6 +2503,18 @@ class Document : public nsINode,
 
   /**
    * This function checks if the document that is trying to access
+   * GetNetErrorInfo is a trusted about net error page or not.
+   */
+  static bool CallerIsTrustedAboutNetError(JSContext* aCx, JSObject* aObject);
+
+  /**
+   * Get security info like error code for a failed channel. This
+   * property is only exposed to about:neterror documents.
+   */
+  void GetNetErrorInfo(mozilla::dom::NetErrorInfo& aInfo, ErrorResult& aRv);
+
+  /**
+   * This function checks if the document that is trying to access
    * GetFailedCertSecurityInfo is a trusted cert error page or not.
    */
   static bool CallerIsTrustedAboutCertError(JSContext* aCx, JSObject* aObject);
@@ -4025,6 +4038,10 @@ class Document : public nsINode,
 
  private:
   void InitializeLocalization(nsTArray<nsString>& aResourceIds);
+
+  // Takes the bits from mStyleUseCounters if appropriate, and sets them in
+  // mUseCounters.
+  void SetCssUseCounterBits();
 
   // Returns true if there is any valid value in the viewport meta tag.
   bool ParseWidthAndHeightInMetaViewport(const nsAString& aWidthString,

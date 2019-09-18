@@ -4625,7 +4625,7 @@
 # Is support for CSS column-span enabled?
 - name: layout.css.column-span.enabled
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Is support for CSS backdrop-filter enabled?

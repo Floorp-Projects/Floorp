@@ -5306,6 +5306,17 @@
     "n_values": 6,
     "description": "Network identification (0=None, 1=New Ipv4, 2=Same, 3=New IPv6, 4=New dual)"
   },
+  "NETWORK_ID_ONLINE": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["necko@mozilla.com"],
+    "bug_numbers": [1580130],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "releaseChannelCollection": "opt-out",
+    "labels": ["absent", "present"],
+    "description": "Network ID presence when the network connectivity checker reports that we have connectivity"
+  },
   "NETWORK_TIME_BETWEEN_NETWORK_CHANGE_EVENTS": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -10118,27 +10129,27 @@
     "n_values": 8,
     "description": "Type of call: (Bitmask) Audio = 1, Video = 2, DataChannels = 4"
   },
-  "WEBRTC_HOSTNAME_OBFUSCATION_ENABLED_ICE_DURATION": {
+  "WEBRTC_HOSTNAME_OBFUSCATION_ENABLED_ICE_DURATION_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview"],
     "alert_emails": ["dminor@mozilla.com"],
     "expires_in_version": "77",
     "kind": "exponential",
-    "high": 600,
+    "high": 30000,
     "n_buckets": 100,
     "bug_numbers": [1569250],
-    "description": "The length of time (in seconds) for the ICE state to transition from checking to connected or failed when hostname obfuscation is enabled."
+    "description": "The length of time (in milliseconds) for the ICE state to transition from checking to connected or failed when hostname obfuscation is enabled."
   },
-  "WEBRTC_HOSTNAME_OBFUSCATION_DISABLED_ICE_DURATION": {
+  "WEBRTC_HOSTNAME_OBFUSCATION_DISABLED_ICE_DURATION_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview"],
     "alert_emails": ["dminor@mozilla.com"],
     "expires_in_version": "77",
     "kind": "exponential",
-    "high": 600,
+    "high": 30000,
     "n_buckets": 100,
     "bug_numbers": [1569250],
-    "description": "The length of time (in seconds) for the ICE state to transition from checking to connected or failed when hostname obfuscation is disabled."
+    "description": "The length of time (in milliseconds) for the ICE state to transition from checking to connected or failed when hostname obfuscation is disabled."
   },
   "MEDIA_RECORDER_RECORDING_DURATION": {
     "record_in_processes": ["main", "content"],

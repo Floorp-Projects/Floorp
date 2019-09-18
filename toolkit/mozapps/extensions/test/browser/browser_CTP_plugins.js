@@ -238,7 +238,7 @@ add_task(async function test_blocklisted_plugin_disabled() {
   });
 
   // Causes appDisabled to be set.
-  await new Promise(async resolve => {
+  await new Promise(resolve => {
     // Ensure to reset the blocklist if this test exits earlier because
     // of a failure.
     registerCleanupFunction(ensurePluginEnabled);

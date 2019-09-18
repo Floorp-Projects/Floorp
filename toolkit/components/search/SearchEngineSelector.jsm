@@ -47,16 +47,13 @@ class SearchEngineSelector {
   }
 
   /**
-   * @param {string} region - Users region.
    * @param {string} locale - Users locale.
+   * @param {string} region - Users region.
    * @returns {object} result - An object with "engines" field, a sorted
    *   list of engines and optionally "privateDefault" indicating the
    *   name of the engine which should be the default in private.
    */
-  fetchEngineConfiguration(region, locale) {
-    if (!region || !locale) {
-      throw new Error("region and locale parameters required");
-    }
+  fetchEngineConfiguration(locale, region = "default") {
     log(`fetchEngineConfiguration ${region}:${locale}`);
     let cohort = Services.prefs.getCharPref("browser.search.cohort", null);
     let engines = [];

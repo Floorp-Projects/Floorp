@@ -80,7 +80,6 @@ pref("image.cache.size", 1048576); // bytes
 /* offline cache prefs */
 pref("browser.offline-apps.notify", true);
 pref("browser.cache.offline.capacity", 5120); // kilobytes
-pref("offline-apps.quota.warn", 1024); // kilobytes
 
 // Automatically shrink-to-fit image documents.
 pref("browser.enable_automatic_image_resizing", true);

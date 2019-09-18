@@ -20,6 +20,22 @@ add_task(async function() {
   const debuggerLoader = panel.panelWin.getBrowserLoaderForWindow();
   const loaders = [loader.loader, debuggerLoader.loader];
 
+  const whitelist = [
+    "@loader/unload.js",
+    "@loader/options.js",
+    "chrome.js",
+    "resource://devtools/client/shared/vendor/react-dom.js",
+    "resource://devtools/client/shared/vendor/react.js",
+    "resource://devtools/client/shared/vendor/lodash.js",
+    "resource://devtools/client/debugger/dist/vendors.js",
+    "resource://devtools/client/shared/vendor/react-prop-types.js",
+    "resource://devtools/client/shared/vendor/react-dom-factories.js",
+    "resource://devtools/client/shared/vendor/react-redux.js",
+    "resource://devtools/client/shared/vendor/redux.js",
+    "resource://devtools/client/debugger/src/workers/parser/index.js",
+  ];
+  runDuplicatedModulesTest(loaders, whitelist);
+
   runMetricsTest({
     filterString: "devtools/client/debugger",
     loaders,

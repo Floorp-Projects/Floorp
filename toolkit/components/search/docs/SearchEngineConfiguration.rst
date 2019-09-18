@@ -112,6 +112,9 @@ with identifier ``webext-engine1``, version 1.1. GB region users would get
 Special Attributes
 ------------------
 
+$USER_LOCALE
+------------
+
 If a ``webExtensionLocales`` attribute contains an element with the value
 ``"$USER_LOCALE"`` then the special value will be replaced in the
 configuration object with the users locale. For example:
@@ -131,6 +134,12 @@ configuration object with the users locale. For example:
 
 Will report either ``[us]`` or ``[gb]`` as the ``webExtensionLocales``
 depending on the user.
+
+"default"
+---------
+
+You can specify ``"default"`` as a region in the configuration if
+the engine is to be included when no region is specified.
 
 Experiments
 -----------

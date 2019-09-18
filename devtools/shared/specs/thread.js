@@ -159,6 +159,12 @@ const threadSpec = generateActorSpec({
       request: {},
     },
 
+    toggleEventLogging: {
+      request: {
+        logEventBreakpoints: Arg(0, "string"),
+      },
+    },
+
     // For testing.
     debuggerRequests: {
       response: {

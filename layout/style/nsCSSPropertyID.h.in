@@ -76,4 +76,15 @@ enum nsCSSCounterDesc {
   eCSSCounterDesc_COUNT
 };
 
+namespace mozilla {
+
+enum class CountedUnknownProperty : uint8_t {
+#define COUNTED_UNKNOWN_PROPERTY(name_, method_) method_,
+#include "mozilla/CountedUnknownProperties.h"
+#undef COUNTED_UNKNOWN_PROPERTY
+  Count,
+};
+
+} // namespace mozilla
+
 #endif /* nsCSSPropertyID_h___ */

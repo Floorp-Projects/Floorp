@@ -7,7 +7,7 @@ use api::{
     LineOrientation, LineStyle, PremultipliedColorF, Shadow,
 };
 use api::units::{Au, LayoutSizeAu, LayoutVector2D};
-use crate::display_list_flattener::{CreateShadow, IsVisible};
+use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::{FrameBuildingState};
 use crate::gpu_cache::GpuDataRequest;
 use crate::intern;

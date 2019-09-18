@@ -19,5 +19,5 @@ function loadFile(lfVarx) {
         // In practice a crash occurs before iteration 4000.
         if (k++ <= 4000)
           eval(lfVarx);
-    })
+    }, {expectExceptionOnFailure: false});
 }

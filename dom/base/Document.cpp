@@ -1380,6 +1380,64 @@ Document::Document(const char* aContentType)
   mReferrerInfo = new dom::ReferrerInfo(nullptr);
 }
 
+bool Document::CallerIsTrustedAboutNetError(JSContext* aCx, JSObject* aObject) {
+  nsIPrincipal* principal = nsContentUtils::SubjectPrincipal(aCx);
+  if (NS_WARN_IF(!principal)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_OK;
+  rv = principal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  if (!uri) {
+    return false;
+  }
+
+  // getSpec is an expensive operation, hence we first check the scheme
+  // to see if the caller is actually an about: page.
+  if (!uri->SchemeIs("about")) {
+    return false;
+  }
+
+  nsAutoCString aboutSpec;
+  rv = uri->GetSpec(aboutSpec);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return StringBeginsWith(aboutSpec, NS_LITERAL_CSTRING("about:neterror"));
+}
+
+void Document::GetNetErrorInfo(mozilla::dom::NetErrorInfo& aInfo,
+                               ErrorResult& aRv) {
+  nsCOMPtr<nsISupports> info;
+  nsCOMPtr<nsITransportSecurityInfo> tsi;
+  nsresult rv = NS_OK;
+  if (NS_WARN_IF(!mFailedChannel)) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  rv = mFailedChannel->GetSecurityInfo(getter_AddRefs(info));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
+  tsi = do_QueryInterface(info);
+  if (NS_WARN_IF(!tsi)) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  nsAutoString errorCodeString;
+  rv = tsi->GetErrorCodeString(errorCodeString);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
+  aInfo.mErrorCodeString.Assign(errorCodeString);
+}
+
 bool Document::CallerIsTrustedAboutCertError(JSContext* aCx,
                                              JSObject* aObject) {
   nsIPrincipal* principal = nsContentUtils::SubjectPrincipal(aCx);
@@ -14362,6 +14420,7 @@ void Document::PropagateUseCounters(Document* aParentDocument) {
     return;
   }
 
+  SetCssUseCounterBits();
   contentParent->mChildDocumentUseCounters |= mUseCounters;
   contentParent->mChildDocumentUseCounters |= mChildDocumentUseCounters;
 }
@@ -14389,6 +14448,61 @@ bool Document::InlineScriptAllowedByCSP() {
   }
   return allowsInlineScript;
 }
+
+// Some use-counter sanity-checking.
+static_assert(size_t(eUseCounter_EndCSSProperties) -
+                      size_t(eUseCounter_FirstCSSProperty) ==
+                  size_t(eCSSProperty_COUNT_with_aliases),
+              "We should have the right amount of CSS property use counters");
+static_assert(size_t(eUseCounter_Count) -
+                      size_t(eUseCounter_FirstCountedUnknownProperty) ==
+                  size_t(CountedUnknownProperty::Count),
+              "We should have the right amount of counted unknown properties"
+              " use counters");
+static_assert(size_t(eUseCounter_Count) * 2 ==
+                  size_t(Telemetry::HistogramUseCounterCount),
+              "There should be two histograms (document and page)"
+              " for each use counter");
+
+#define ASSERT_CSS_COUNTER(id_, method_)                        \
+  static_assert(size_t(eUseCounter_property_##method_) -        \
+                        size_t(eUseCounter_FirstCSSProperty) == \
+                    size_t(id_),                                \
+                "Order for CSS counters and CSS property id should match");
+#define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) privatename_
+#define CSS_PROP_LONGHAND(name_, id_, method_, ...) \
+  ASSERT_CSS_COUNTER(eCSSProperty_##id_, method_)
+#define CSS_PROP_SHORTHAND(name_, id_, method_, ...) \
+  ASSERT_CSS_COUNTER(eCSSProperty_##id_, method_)
+#define CSS_PROP_ALIAS(name_, aliasid_, id_, method_, ...) \
+  ASSERT_CSS_COUNTER(eCSSPropertyAlias_##aliasid_, method_)
+#include "mozilla/ServoCSSPropList.h"
+#undef CSS_PROP_ALIAS
+#undef CSS_PROP_SHORTHAND
+#undef CSS_PROP_LONGHAND
+#undef CSS_PROP_PUBLIC_OR_PRIVATE
+#undef ASSERT_CSS_COUNTER
+
+void Document::SetCssUseCounterBits() {
+  if (!mStyleUseCounters) {
+    return;
+  }
+
+  for (size_t i = 0; i < eCSSProperty_COUNT_with_aliases; ++i) {
+    auto id = nsCSSPropertyID(i);
+    if (Servo_IsPropertyIdRecordedInUseCounter(mStyleUseCounters.get(), id)) {
+      SetUseCounter(nsCSSProps::UseCounterFor(id));
+    }
+  }
+
+  for (size_t i = 0; i < size_t(CountedUnknownProperty::Count); ++i) {
+    if (Servo_IsUnknownPropertyRecordedInUseCounter(
+          mStyleUseCounters.get(), CountedUnknownProperty(i))) {
+      SetUseCounter(UseCounter(eUseCounter_FirstCountedUnknownProperty + i));
+    }
+  }
+}
+
 
 void Document::PropagateUseCountersToPage() {
   if (mDisplayDocument) {
@@ -14427,6 +14541,7 @@ void Document::ReportUseCounters() {
   }
 
   mReportedUseCounters = true;
+  SetCssUseCounterBits();
 
   // Call ReportUseCounters in all our outstanding subdocuments and resources
   // and such. This needs to be here so that all our sub documents propagate our

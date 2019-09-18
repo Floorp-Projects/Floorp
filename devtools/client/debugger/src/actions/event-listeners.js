@@ -9,6 +9,7 @@ import { uniq, remove } from "lodash";
 import {
   getActiveEventListeners,
   getEventListenerExpanded,
+  shouldLogEventBreakpoints,
 } from "../selectors";
 
 import type { ThunkArgs } from "./types";
@@ -45,6 +46,14 @@ export function removeEventListenerBreakpoints(eventsToRemove: string[]) {
     );
 
     await updateBreakpoints(dispatch, client, newEvents);
+  };
+}
+
+export function toggleEventLogging() {
+  return async ({ dispatch, getState, client }: ThunkArgs) => {
+    const logEventBreakpoints = !shouldLogEventBreakpoints(getState());
+    await client.toggleEventLogging(logEventBreakpoints);
+    dispatch({ type: "TOGGLE_EVENT_LISTENERS", logEventBreakpoints });
   };
 }
 

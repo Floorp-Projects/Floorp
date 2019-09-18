@@ -16,7 +16,7 @@ document.getElementById("xhr-button").onmousedown = xhrHandler;
 function xhrHandler() {
   var xhr = new XMLHttpRequest();
   xhr.open("GET", "doc-event-breakpoints.html", true);
-  xhr.onload = function(){
+  xhr.onload = function() {
     console.log("xhr load");
   };
   xhr.send();
@@ -24,11 +24,8 @@ function xhrHandler() {
 
 document.getElementById("timer-button").onmousedown = timerHandler;
 function timerHandler() {
-  setTimeout(
-    () => {
-      console.log("timer callback");
-    },
-    50
-  );
+  setTimeout(() => {
+    console.log("timer callback");
+  }, 50);
   console.log("timer set");
 }

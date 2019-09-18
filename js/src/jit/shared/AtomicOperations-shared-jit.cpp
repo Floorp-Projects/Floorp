@@ -872,15 +872,12 @@ bool InitializeJittedAtomics() {
   // Zero the padding.
   memset(code + codeLength, 0, roundedCodeLength - codeLength);
 
-  // Copy the code into place but do not flush, as the flush path requires a
-  // JSContext* we do not have.
-  masm.executableCopy(code, /* flushICache = */ false);
-
-  // Flush the icache using a primitive method.
-  jit::FlushICache(code, roundedCodeLength);
+  // Copy the code into place.
+  masm.executableCopy(code);
 
   // Reprotect the whole region to avoid having separate RW and RX mappings.
-  if (!ExecutableAllocator::makeExecutable(code, roundedCodeLength)) {
+  if (!ExecutableAllocator::makeExecutableAndFlushICache(code,
+                                                         roundedCodeLength)) {
     DeallocateExecutableMemory(code, roundedCodeLength);
     return false;
   }

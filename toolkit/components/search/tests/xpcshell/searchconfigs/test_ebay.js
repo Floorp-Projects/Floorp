@@ -24,6 +24,7 @@ const test = new SearchConfigTest({
             "ast",
             "br",
             "ca",
+            "ca-valencia",
             "cy",
             "de",
             "dsb",
@@ -164,7 +165,9 @@ const test = new SearchConfigTest({
       domain: "ebay.es",
       included: [
         {
-          locales: { matches: ["an", "ast", "ca", "es-ES", "eu", "gl"] },
+          locales: {
+            matches: ["an", "ast", "ca", "ca-valencia", "es-ES", "eu", "gl"],
+          },
         },
       ],
       searchUrlEnd: "1185-53479-19255-0/1",

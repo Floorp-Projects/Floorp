@@ -31,16 +31,21 @@ function updateNoLogins() {
   gElements.loginItem.classList.toggle("no-logins", numberOfLogins == 0);
 }
 
+function handleAllLogins(logins) {
+  gElements.loginList.setLogins(logins);
+  numberOfLogins = logins.length;
+  updateNoLogins();
+}
+
+function handleSyncState(syncState) {
+  gElements.fxAccountsButton.updateState(syncState);
+  gElements.loginFooter.hidden = syncState.hideMobileFooter;
+}
+
 window.addEventListener("AboutLoginsChromeToContent", event => {
   switch (event.detail.messageType) {
     case "AllLogins": {
-      gElements.loginList.setLogins(event.detail.value);
-      numberOfLogins = event.detail.value.length;
-      updateNoLogins();
-      break;
-    }
-    case "LocalizeBadges": {
-      gElements.loginFooter.showStoreIconsForLocales(event.detail.value);
+      handleAllLogins(event.detail.value);
       break;
     }
     case "LoginAdded": {
@@ -66,13 +71,20 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
       gElements.loginList.addFavicons(event.detail.value);
       break;
     }
+    case "Setup": {
+      handleAllLogins(event.detail.value.logins);
+      gElements.loginFooter.showStoreIconsForLocales(
+        event.detail.value.selectedBadgeLanguages
+      );
+      handleSyncState(event.detail.value.syncState);
+      break;
+    }
     case "ShowLoginItemError": {
       gElements.loginItem.showLoginItemError(event.detail.value);
       break;
     }
     case "SyncState": {
-      gElements.fxAccountsButton.updateState(event.detail.value);
-      gElements.loginFooter.hidden = event.detail.value.hideMobileFooter;
+      handleSyncState(event.detail.value);
       break;
     }
     case "UpdateBreaches": {

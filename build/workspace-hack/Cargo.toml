@@ -19,34 +19,47 @@ syn = { features = ["clone-impls", "default", "derive", "extra-traits", "fold", 
 log = { features = ["release_max_level_info", "release_max_level_warn", "std"],  version = "0.4.6" }
 serde = { features = ["default", "rc", "serde_derive", "std"], version = "1.0.66" }
 serde_derive = { features = ["default", "deserialize_in_place"], version = "1.0.66" }
+smallvec = { features = ["default", "serde", "std"], version = "0.6.10" }
 quote = { features = ["default", "proc-macro"], version = "0.6.11" }
 proc-macro2 = { features = ["default", "proc-macro"], version = "0.4.27" }
 
 [target."cfg(windows)".dependencies.winapi]
 version = "0.3.6"
 features = [
+    "avrt",
     "basetsd",
+    "bits",
+    "bits2_5",
+    "bitsmsg",
+    "combaseapi",
     "consoleapi",
     "dwrite",
     "dwrite_1",
     "dwrite_3",
     "errhandlingapi",
     "fileapi",
+    "guiddef",
     "handleapi",
     "hidclass",
     "hidpi",
     "hidusage",
+    "impl-default",
+    "ioapiset",
     "libloaderapi",
     "memoryapi",
     "minwinbase",
     "minwindef",
+    "namedpipeapi",
     "ntdef",
     "ntsecapi",
     "ntstatus",
+    "objbase",
     "processenv",
     "profileapi",
+    "rpcndr",
     "setupapi",
     "std",
+    "synchapi",
     "sysinfoapi",
     "timezoneapi",
     "unknwnbase",
@@ -54,5 +67,11 @@ features = [
     "wincon",
     "winerror",
     "winnls",
-    "winnt"
+    "winnt",
+    "winsock2",
+    "ws2def",
+    "ws2ipdef",
+    "ws2tcpip",
+    "wtypes",
+    "wtypesbase"
 ]

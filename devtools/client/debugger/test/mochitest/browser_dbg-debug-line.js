@@ -16,12 +16,15 @@ add_task(async function() {
   // Trigger the breakpoint ane ensure we're paused
   invokeInTab("main");
   await waitForPaused(dbg);
+  await waitForDispatch(dbg, "ADD_INLINE_PREVIEW");
 
   // Scroll element into view
   findElement(dbg, "frame", 2).focus();
 
   // Click the call stack to get to debugger-line-1
+  const dispatched = waitForDispatch(dbg, "ADD_INLINE_PREVIEW");
   await clickElement(dbg, "frame", 2);
+  await dispatched;
   await waitForRequestsToSettle(dbg);
   await waitForSelectedSource(dbg, "simple1.js");
 

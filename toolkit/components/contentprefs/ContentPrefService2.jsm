@@ -139,16 +139,16 @@ ContentPrefService2.prototype = {
       return this._connPromise;
     }
 
-    return (this._connPromise = new Promise(async (resolve, reject) => {
+    return (this._connPromise = (async () => {
       let conn;
       try {
         conn = await this._getConnection();
       } catch (e) {
         this.log("Failed to establish database connection: " + e);
-        reject(e);
+        throw e;
       }
-      resolve(conn);
-    }));
+      return conn;
+    })());
   },
 
   // nsIContentPrefService

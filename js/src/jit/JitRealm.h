@@ -716,7 +716,7 @@ class MOZ_RAII AutoWritableJitCodeFallible {
   }
 
   ~AutoWritableJitCodeFallible() {
-    if (!ExecutableAllocator::makeExecutable(addr_, size_)) {
+    if (!ExecutableAllocator::makeExecutableAndFlushICache(addr_, size_)) {
       MOZ_CRASH();
     }
     rt_->toggleAutoWritableJitCodeActive(false);

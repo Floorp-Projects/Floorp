@@ -261,6 +261,28 @@ class App extends Component {
     });
   }
 
+  renderEditorToolbar() {
+    const {
+      editorMode,
+      editorFeatureEnabled,
+      dispatch,
+      reverseSearchInputVisible,
+      serviceContainer,
+      webConsoleUI,
+    } = this.props;
+
+    return editorFeatureEnabled && editorMode
+      ? EditorToolbar({
+          key: "editor-toolbar",
+          editorMode,
+          dispatch,
+          reverseSearchInputVisible,
+          serviceContainer,
+          webConsoleUI,
+        })
+      : null;
+  }
+
   renderConsoleOutput() {
     const { onFirstMeaningfulPaint, serviceContainer } = this.props;
 
@@ -366,6 +388,7 @@ class App extends Component {
     } = this.props;
 
     const filterBar = this.renderFilterBar();
+    const editorToolbar = this.renderEditorToolbar();
     const consoleOutput = this.renderConsoleOutput();
     const notificationBox = this.renderNotificationBox();
     const jsterm = this.renderJsTerm();
@@ -375,14 +398,7 @@ class App extends Component {
 
     return this.renderRootElement([
       filterBar,
-      editorFeatureEnabled && editorMode
-        ? EditorToolbar({
-            key: "editor-toolbar",
-            dispatch,
-            editorMode,
-            webConsoleUI,
-          })
-        : null,
+      editorToolbar,
       dom.div(
         { className: "flexible-output-input", key: "in-out-container" },
         consoleOutput,

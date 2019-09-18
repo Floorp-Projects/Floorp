@@ -1968,6 +1968,7 @@ pref(layout.css.overflow-clip-box.enabled,true) == 1226278.html 1226278-ref.html
 random-if(gtkWidget) != 1238243-1.html 1238243-1-notref.html # may fail on Linux, depending on Korean fonts available
 == 1238243-2.html 1238243-2-ref.html
 fuzzy(0-100,0-2000) == 1239564.html 1239564-ref.html
+== 1241631-1.html 1241631-1-ref.html
 == 1242172-1.html 1242172-1-ref.html
 fuzzy-if(webrender,0-2,0-2601) == 1242172-2.html 1242172-2-ref.html
 == 1242781.html 1242781-ref.html

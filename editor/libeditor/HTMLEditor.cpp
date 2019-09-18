@@ -1100,8 +1100,15 @@ nsresult HTMLEditor::InsertBrElementAtSelectionWithTransaction() {
   // XXX Why do we use EditSubAction::eInsertText here?  Looks like
   //     EditSubAction::eInsertLineBreak or EditSubAction::eInsertNode
   //     is better.
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eInsertText, nsIEditor::eNext);
+      *this, EditSubAction::eInsertText, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   if (!SelectionRefPtr()->IsCollapsed()) {
     nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
@@ -1150,8 +1157,16 @@ nsresult HTMLEditor::ReplaceHeadContentsWithSourceWithTransaction(
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   // don't do any post processing, rules get confused
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eReplaceHeadWithHTMLSource, nsIEditor::eNone);
+      *this, EditSubAction::eReplaceHeadWithHTMLSource, nsIEditor::eNone,
+      ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   CommitComposition();
 
@@ -1510,8 +1525,15 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
   UndefineCaretBidiLevel();
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eInsertElement, nsIEditor::eNext);
+      *this, EditSubAction::eInsertElement, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
@@ -2019,17 +2041,21 @@ HTMLEditor::GetListState(bool* aMixed, bool* aOL, bool* aUL, bool* aDL) {
       NS_WARN_IF(!aDL)) {
     return NS_ERROR_INVALID_ARG;
   }
-  if (!mRules) {
+  if (!mInitSucceeded) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
+  ErrorResult error;
+  ListElementSelectionState state(*this, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
   }
 
-  RefPtr<HTMLEditRules> htmlRules(mRules->AsHTMLEditRules());
-  return htmlRules->GetListState(aMixed, aOL, aUL, aDL);
+  *aMixed = state.IsNotOneTypeListElementSelected();
+  *aOL = state.IsOLElementSelected();
+  *aUL = state.IsULElementSelected();
+  *aDL = state.IsDLElementSelected();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2038,17 +2064,22 @@ HTMLEditor::GetListItemState(bool* aMixed, bool* aLI, bool* aDT, bool* aDD) {
       NS_WARN_IF(!aDD)) {
     return NS_ERROR_INVALID_ARG;
   }
-  if (!mRules) {
+  if (!mInitSucceeded) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
+  ErrorResult error;
+  ListItemElementSelectionState state(*this, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
   }
 
-  RefPtr<HTMLEditRules> htmlRules(mRules->AsHTMLEditRules());
-  return htmlRules->GetListItemState(aMixed, aLI, aDT, aDD);
+  // XXX Why do we ignore `<li>` element selected state?
+  *aMixed = state.IsNotOneTypeDefinitionListItemElementSelected();
+  *aLI = state.IsLIElementSelected();
+  *aDT = state.IsDTElementSelected();
+  *aDD = state.IsDDElementSelected();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2056,17 +2087,19 @@ HTMLEditor::GetAlignment(bool* aMixed, nsIHTMLEditor::EAlignment* aAlign) {
   if (NS_WARN_IF(!aMixed) || NS_WARN_IF(!aAlign)) {
     return NS_ERROR_INVALID_ARG;
   }
-  if (!mRules) {
+  if (!mInitSucceeded) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
+  ErrorResult error;
+  AlignStateAtSelection state(*this, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
   }
 
-  RefPtr<HTMLEditRules> htmlRules(mRules->AsHTMLEditRules());
-  return htmlRules->GetAlignment(aMixed, aAlign);
+  *aMixed = false;
+  *aAlign = state.AlignmentAtSelectionStart();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2150,8 +2183,16 @@ nsresult HTMLEditor::FormatBlockContainerAsSubAction(nsAtom& aTagName) {
   MOZ_ASSERT(&aTagName != nsGkAtoms::dd && &aTagName != nsGkAtoms::dt);
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eCreateOrRemoveBlock, nsIEditor::eNext);
+      *this, EditSubAction::eCreateOrRemoveBlock, nsIEditor::eNext,
+      ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   EditActionResult result = CanHandleHTMLEditSubAction();
   if (result.Canceled() || NS_WARN_IF(result.Failed())) {
@@ -3078,8 +3119,15 @@ nsresult HTMLEditor::DeleteAllChildrenWithTransaction(Element& aElement) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   // Prevent rules testing until we're done
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eDeleteNode, nsIEditor::eNext);
+      *this, EditSubAction::eDeleteNode, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   while (nsCOMPtr<nsINode> child = aElement.GetLastChild()) {
     nsresult rv = DeleteNodeWithTransaction(*child);
@@ -3289,10 +3337,12 @@ already_AddRefed<Element> HTMLEditor::InsertBRElementWithTransaction(
   return newBRElement.forget();
 }
 
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 void HTMLEditor::ContentAppended(nsIContent* aFirstNewContent) {
   DoContentInserted(aFirstNewContent, eAppended);
 }
 
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 void HTMLEditor::ContentInserted(nsIContent* aChild) {
   DoContentInserted(aChild, eInserted);
 }
@@ -3344,10 +3394,12 @@ void HTMLEditor::DoContentInserted(nsIContent* aChild,
       // Ignore insertion of the padding <br> element.
       return;
     }
-    RefPtr<HTMLEditRules> htmlRules = mRules->AsHTMLEditRules();
-    if (htmlRules) {
-      htmlRules->DocumentModified();
+    nsresult rv = OnDocumentModified();
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return;
     }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "OnDocumentModified() failed, but ignored");
 
     // Update spellcheck for only the newly-inserted node (bug 743819)
     if (mInlineSpellChecker) {
@@ -3363,6 +3415,7 @@ void HTMLEditor::DoContentInserted(nsIContent* aChild,
   }
 }
 
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 void HTMLEditor::ContentRemoved(nsIContent* aChild,
                                 nsIContent* aPreviousSibling) {
   if (!IsInObservedSubtree(aChild)) {
@@ -3391,42 +3444,13 @@ void HTMLEditor::ContentRemoved(nsIContent* aChild,
       return;
     }
 
-    RefPtr<HTMLEditRules> htmlRules = mRules->AsHTMLEditRules();
-    if (htmlRules) {
-      htmlRules->DocumentModified();
+    nsresult rv = OnDocumentModified();
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return;
     }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "OnDocumentModified() failed, but ignored");
   }
-}
-
-void HTMLEditor::OnStartToHandleTopLevelEditSubAction(
-    EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) {
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
-
-  EditorBase::OnStartToHandleTopLevelEditSubAction(aEditSubAction, aDirection);
-  if (!rules) {
-    return;
-  }
-
-  MOZ_ASSERT(GetTopLevelEditSubAction() == aEditSubAction);
-  MOZ_ASSERT(GetDirectionOfTopLevelEditSubAction() == aDirection);
-  DebugOnly<nsresult> rv = rules->BeforeEdit();
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "HTMLEditRules::BeforeEdit() failed to handle something");
-}
-
-void HTMLEditor::OnEndHandlingTopLevelEditSubAction() {
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
-
-  // post processing
-  DebugOnly<nsresult> rv = rules ? rules->AfterEdit() : NS_OK;
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditRules::AfterEdit() failed to handle something");
-  EditorBase::OnEndHandlingTopLevelEditSubAction();
-  MOZ_ASSERT(!GetTopLevelEditSubAction());
-  MOZ_ASSERT(GetDirectionOfTopLevelEditSubAction() == eNone);
 }
 
 bool HTMLEditor::TagCanContainTag(nsAtom& aParentTag, nsAtom& aChildTag) const {
@@ -3459,22 +3483,21 @@ bool HTMLEditor::IsContainer(nsINode* aNode) const {
 nsresult HTMLEditor::SelectEntireDocument() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (!mRules) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  RefPtr<Element> rootElement = GetRoot();
-  if (NS_WARN_IF(!rootElement)) {
+  if (!mInitSucceeded) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
+  // XXX It's odd to select all of the document body if an contenteditable
+  //     element has focus.
+  RefPtr<Element> bodyOrDocumentElement = GetRoot();
+  if (NS_WARN_IF(!bodyOrDocumentElement)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   // If we're empty, don't select all children because that would select the
   // padding <br> element for empty editor.
-  if (rules->DocumentIsEmpty()) {
-    nsresult rv = SelectionRefPtr()->Collapse(rootElement, 0);
+  if (IsEmpty()) {
+    nsresult rv = SelectionRefPtr()->Collapse(bodyOrDocumentElement, 0);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "Failed to move caret to start of the editor root element");
@@ -3483,7 +3506,7 @@ nsresult HTMLEditor::SelectEntireDocument() {
 
   // Otherwise, select all children.
   ErrorResult error;
-  SelectionRefPtr()->SelectAllChildren(*rootElement, error);
+  SelectionRefPtr()->SelectAllChildren(*bodyOrDocumentElement, error);
   NS_WARNING_ASSERTION(
       !error.Failed(),
       "Failed to select all children of the editor root element");
@@ -3977,6 +4000,27 @@ bool HTMLEditor::IsVisibleTextNode(Text& aText) const {
          &aText == nextVisibleNode;
 }
 
+bool HTMLEditor::IsEmpty() const {
+  if (mPaddingBRElementForEmptyEditor) {
+    return true;
+  }
+
+  // XXX Oddly, we check body or document element's state instead of
+  //     active editing host.  Must be a bug.
+  Element* bodyOrDocumentElement = GetRoot();
+  if (!bodyOrDocumentElement) {
+    return true;
+  }
+
+  for (nsIContent* childContent = bodyOrDocumentElement->GetFirstChild();
+       childContent; childContent = childContent->GetNextSibling()) {
+    if (!childContent->IsText() || childContent->Length()) {
+      return false;
+    }
+  }
+  return true;
+}
+
 /**
  * IsEmptyNode() figures out if aNode is an empty node.  A block can have
  * children and still be considered empty, if the children are empty or
@@ -4224,8 +4268,15 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
   bool selectionIsCollapsed = SelectionRefPtr()->IsCollapsed();
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eInsertElement, nsIEditor::eNext);
+      *this, EditSubAction::eInsertElement, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   {
     AutoSelectionRestorer restoreSelectionLater(*this);

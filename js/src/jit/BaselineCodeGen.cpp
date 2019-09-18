@@ -220,7 +220,7 @@ MethodStatus BaselineCompiler::compile() {
     return Method_Error;
   }
 
-  Linker linker(masm, "Baseline");
+  Linker linker(masm);
   if (masm.oom()) {
     ReportOutOfMemory(cx);
     return Method_Error;
@@ -7089,7 +7089,7 @@ bool BaselineInterpreterGenerator::generate(BaselineInterpreter& interpreter) {
   emitOutOfLineCodeCoverageInstrumentation();
 
   {
-    Linker linker(masm, "BaselineInterpreter");
+    Linker linker(masm);
     if (masm.oom()) {
       ReportOutOfMemory(cx);
       return false;
@@ -7250,7 +7250,7 @@ JitCode* JitRuntime::generateDebugTrapHandler(JSContext* cx,
 
   masm.ret();
 
-  Linker linker(masm, "DebugTrapHandler");
+  Linker linker(masm);
   JitCode* handlerCode = linker.newCode(cx, CodeKind::Other);
   if (!handlerCode) {
     return nullptr;

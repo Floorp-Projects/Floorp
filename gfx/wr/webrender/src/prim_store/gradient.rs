@@ -7,7 +7,7 @@ use api::{
     PremultipliedColorF, LineOrientation,
 };
 use api::units::{LayoutPoint, LayoutSize, LayoutVector2D};
-use crate::display_list_flattener::IsVisible;
+use crate::scene_building::IsVisible;
 use euclid::approxeq::ApproxEq;
 use crate::frame_builder::FrameBuildingState;
 use crate::gpu_cache::{GpuCacheHandle, GpuDataRequest};
@@ -17,7 +17,7 @@ use crate::prim_store::{BrushSegment, GradientTileRange, VectorKey};
 use crate::prim_store::{PrimitiveInstanceKind, PrimitiveOpacity, PrimitiveSceneData};
 use crate::prim_store::{PrimKeyCommonData, PrimTemplateCommonData, PrimitiveStore};
 use crate::prim_store::{NinePatchDescriptor, PointKey, SizeKey, InternablePrimitive};
-use crate::render_task::RenderTaskCacheEntryHandle;
+use crate::render_task_cache::RenderTaskCacheEntryHandle;
 use std::{hash, ops::{Deref, DerefMut}, mem};
 use crate::util::pack_as_float;
 

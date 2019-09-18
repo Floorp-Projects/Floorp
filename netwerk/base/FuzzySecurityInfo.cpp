@@ -318,12 +318,6 @@ FuzzySecurityInfo::SetEsniTxt(const nsACString& aEsniTxt) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-FuzzySecurityInfo::GetServerRootCertIsBuiltInRoot(bool* aIsBuiltInRoot) {
-  *aIsBuiltInRoot = true;
-  return NS_OK;
-}
-
 void FuzzySecurityInfo::SerializeToIPC(IPC::Message* aMsg) {
   MOZ_CRASH("Unused");
 }

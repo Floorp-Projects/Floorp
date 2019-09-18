@@ -762,14 +762,12 @@ FormAutofillParent.prototype = {
               !!pendingDoorhanger && typeof pendingDoorhanger == "function"
           );
         })
-        .map(
-          pendingDoorhangers =>
-            new Promise(async resolve => {
-              for (const showDoorhanger of pendingDoorhangers) {
-                await showDoorhanger();
-              }
-              resolve();
-            })
+        .map(pendingDoorhangers =>
+          (async () => {
+            for (const showDoorhanger of pendingDoorhangers) {
+              await showDoorhanger();
+            }
+          })()
         )
     );
   },
