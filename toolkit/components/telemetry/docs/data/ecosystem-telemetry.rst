@@ -92,7 +92,7 @@ scalars and keyedScalars
 ~~~~~~~~~~~~~~~~~~~~~~~~
 This section contains the :doc:`../collection/scalars` that are valid for the pre-account ping, per process.
 Scalars are only submitted if data was added to them.
-The recorded scalars are described in `Scalars.yaml <https://searchfox.org/mozilla-central/source/toolkit/components/telemetry/Scalars.yml>`_, marked with the `pre-account` store.
+The recorded scalars are described in `Scalars.yaml <https://searchfox.org/mozilla-central/source/toolkit/components/telemetry/Scalars.yaml>`_, marked with the `pre-account` store.
 
 Send behavior
 -------------
