@@ -16,6 +16,7 @@ add_task(async function() {
   const hud = console.hud;
 
   await dbg.actions.addEventListenerBreakpoints(["event.mouse.mousedown"]);
+  await dbg.actions.toggleEventLogging();
 
   const msg = await waitForMessage(hud, "mousedown");
 
