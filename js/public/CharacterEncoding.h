@@ -285,6 +285,10 @@ LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const ConstUTF8CharsZ& utf8,
 JS_PUBLIC_API size_t GetDeflatedUTF8StringLength(JSFlatString* s);
 
 /*
+ * Note: Unlike this function, JS_EncodeStringToUTF8BufferPartial in jsapi.h
+ * does not require flattening the string first. Consider using that function
+ * instead of this one.
+ *
  * Encode |src| as UTF8. The caller must either ensure |dst| has enough space
  * to encode the entire string or pass the length of the buffer as |dstlenp|,
  * in which case the function will encode characters from the string until
