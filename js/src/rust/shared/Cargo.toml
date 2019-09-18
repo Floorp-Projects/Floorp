@@ -10,7 +10,7 @@ path = "lib.rs"
 
 [dependencies]
 baldrdash = { path = "../../wasm/cranelift", optional = true }
-encoding_c = "0.9.4"
+encoding_c = "0.9.5"
 encoding_c_mem = "0.2.4"
 mozilla-central-workspace-hack = { path = "../../../../build/workspace-hack" }
 
