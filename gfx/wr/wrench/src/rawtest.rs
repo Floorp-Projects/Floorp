@@ -118,7 +118,7 @@ impl<'a> RawtestHarness<'a> {
             clip_rect,
             clip_id: space_and_clip.clip_id,
             spatial_id: space_and_clip.spatial_id,
-            is_backface_visible: true,
+            flags: PrimitiveFlags::default(),
             hit_info: None,
         }
     }
@@ -133,7 +133,7 @@ impl<'a> RawtestHarness<'a> {
             clip_rect,
             clip_id,
             spatial_id,
-            is_backface_visible: true,
+            flags: PrimitiveFlags::default(),
             hit_info: None,
         }
     }
@@ -322,7 +322,7 @@ impl<'a> RawtestHarness<'a> {
             clip_rect: rect(0.0, 0.0, 800.0, 800.0),
             clip_id,
             spatial_id: root_space_and_clip.spatial_id,
-            is_backface_visible: true,
+            flags: PrimitiveFlags::default(),
             hit_info: None,
         };
 
@@ -410,7 +410,7 @@ impl<'a> RawtestHarness<'a> {
             clip_rect: rect(10.0, 10.0, 400.0, 400.0),
             clip_id,
             spatial_id: root_space_and_clip.spatial_id,
-            is_backface_visible: true,
+            flags: PrimitiveFlags::default(),
             hit_info: None,
         };
 
@@ -954,7 +954,7 @@ impl<'a> RawtestHarness<'a> {
                     clip_rect: rect(110., 110., 50., 2.),
                     clip_id,
                     spatial_id,
-                    is_backface_visible: true,
+                    flags: PrimitiveFlags::default(),
                     hit_info: None,
                 };
                 builder.push_line(
@@ -1209,7 +1209,7 @@ impl<'a> RawtestHarness<'a> {
                 clip_rect: rect,
                 clip_id: temp_clip_id,
                 spatial_id: space_and_clip.spatial_id,
-                is_backface_visible: true,
+                flags: PrimitiveFlags::default(),
             },
             ColorF::new(1.0, 1.0, 1.0, 1.0),
         );
@@ -1229,7 +1229,7 @@ impl<'a> RawtestHarness<'a> {
                 clip_rect: rect,
                 clip_id: ClipId::ClipChain(clip_chain_id),
                 spatial_id: space_and_clip.spatial_id,
-                is_backface_visible: true,
+                flags: PrimitiveFlags::default(),
             },
             ColorF::new(1.0, 1.0, 1.0, 1.0),
         );
