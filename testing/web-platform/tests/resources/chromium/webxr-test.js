@@ -282,8 +282,21 @@ class MockRuntime {
   }
 
   simulateVisibilityChange(visibilityState) {
-    // TODO(https://crbug.com/982099): Chrome currently does not have a way for
-    // devices to bubble up any form of visibilityChange.
+    let mojoState = null;
+    switch(visibilityState) {
+      case "visible":
+        mojoState = device.mojom.XRVisibilityState.VISIBLE;
+        break;
+      case "visible-blurred":
+        mojoState = device.mojom.XRVisibilityState.VISIBLE_BLURRED;
+        break;
+      case "hidden":
+        mojoState = device.mojom.XRVisibilityState.HIDDEN;
+        break;
+    }
+    if (mojoState) {
+      this.sessionClient_.onVisibilityStateChanged(mojoState);
+    }
   }
 
   setBoundsGeometry(bounds) {
