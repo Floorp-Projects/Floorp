@@ -512,6 +512,9 @@ class PluginParent extends JSWindowActorParent {
 
   showClickToPlayNotification(browser, plugin, showNow) {
     let window = browser.ownerGlobal;
+    if (!window.PopupNotifications) {
+      return;
+    }
     let notification = window.PopupNotifications.getNotification(
       kNotificationId,
       browser
