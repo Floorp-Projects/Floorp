@@ -504,9 +504,11 @@ impl Tile {
 
         // Do tile invalidation for any dependencies that we know now.
 
-        // Start frame assuming that the tile has the same content,
-        // unless the fractional offset of the transform root changed.
-        // If the background color of this tile changed, invalidate the whole thing.
+        // Start frame assuming that the tile has the same content.
+        self.is_same_content = true;
+
+        // If the fractional offset of the transform root changed, or tthe background
+        // color of this tile changed, invalidate the whole thing.
         if ctx.fract_changed || ctx.background_color != self.background_color {
             self.background_color = ctx.background_color;
             self.is_same_content = false;
