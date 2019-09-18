@@ -36,14 +36,9 @@ parameter must have the same value of the deprecation note added to the *IDL* fi
 See this `changeset <https://hg.mozilla.org/mozilla-central/rev/e30a357b25f1>`_ for a sample
 deprecated operation.
 
-CSS Properties
-~~~~~~~~~~~~~~
-
-Use counters for CSS properties are generated for every property Gecko supports automatically, and are counted via StyleUseCounters (`Rust code <https://searchfox.org/mozilla-central/rev/7ed8e2d3d1d7a1464ba42763a33fd2e60efcaedc/servo/components/style/use_counters/mod.rs>`_, `C++ code <https://searchfox.org/mozilla-central/rev/7ed8e2d3d1d7a1464ba42763a33fd2e60efcaedc/dom/base/Document.h#5077>`_).
-
 The UseCounters registry
 ------------------------
-Use counters for WebIDL methods/attributes are registered in the `UseCounters.conf <https://dxr.mozilla.org/mozilla-central/source/dom/base/UseCounters.conf>`_ file.  The format of this file is very strict. Each line can be:
+Use counters for WebIDL methods/attributes and CSS properties are registered in the `UseCounters.conf <https://dxr.mozilla.org/mozilla-central/source/dom/base/UseCounters.conf>`_ file.  The format of this file is very strict. Each line can be:
 
 1. a blank line
 2. a comment, which is a line that begins with ``//``
@@ -51,17 +46,22 @@ Use counters for WebIDL methods/attributes are registered in the `UseCounters.co
 
   * ``method <IDL interface name>.<IDL operation name>``
   * ``attribute <IDL interface name>.<IDL attribute name>``
+  * ``property <CSS property method name>``
   * ``custom <any valid identifier> <description>``
+
+CSS properties
+~~~~~~~~~~~~~~
+The CSS property method name should be identical to the ``method`` argument of ``CSS_PROP()`` and related macros. The only differences are that all hyphens are removed and CamelCase naming is used.  See `ServoCSSPropList.h <https://searchfox.org/mozilla-central/source/__GENERATED__/layout/style/ServoCSSPropList.h>`_ for further details.
 
 Custom use counters
 ~~~~~~~~~~~~~~~~~~~
-The <description> for custom counters will be appended to "When a document " or "When a page ", so phrase it appropriately.  For instance, "constructs a Foo object" or "calls Document.bar('some value')".  It may contain any character (including whitespace).  Custom counters are incremented when SetUseCounter(eUseCounter_custom_MyName) is called on a Document object.
+The <description> for custom counters will be appended to "When a document " or "When a page ", so phrase it appropriately.  For instance, "constructs a Foo object" or "calls Document.bar('some value')".  It may contain any character (including whitespace).  Custom counters are incremented when SetDocumentAndPageUseCounter(eUseCounter_custom_MyName) is called on an ns(I)Document object.
 
 WebIDL methods and attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Additionally to having a new entry added to the `UseCounters.conf <https://dxr.mozilla.org/mozilla-central/source/dom/base/UseCounters.conf>`_ file, WebIDL methods and attributes must have a ``[UseCounter]`` extended attribute in the Web IDL file in order for the counters to be incremented.
 
-Both additions are required because generating things from bindings codegen and ensuring all the dependencies are correct would have been rather difficult.
+Both additions are required because generating things from bindings codegen and ensuring all the dependencies are correct would have been rather difficult, and annotating the WebIDL files does nothing for identifying CSS property usage, which we would also like to track.
 
 The processor script
 ====================
@@ -78,6 +78,7 @@ gen-usecounters.py
 ------------------
 This script is called by the build system to generate:
 
+- the ``PropertyUseCounterMap.inc`` C++ header for the CSS properties;
 - the ``UseCounterList.h`` header for the WebIDL, out of the definition files.
 
 Interpreting the data

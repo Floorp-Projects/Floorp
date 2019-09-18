@@ -6,7 +6,7 @@ from __future__ import print_function
 from mozparsers.shared_telemetry_utils import ParserError
 from perfecthash import PerfectHash
 
-PHFSIZE = 1024
+PHFSIZE = 512
 
 from mozparsers import parse_histograms
 import sys
