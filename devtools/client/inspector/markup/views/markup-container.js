@@ -109,6 +109,11 @@ MarkupContainer.prototype = {
     this.tagLine.setAttribute("aria-grabbed", this.isDragging);
     this.elt.appendChild(this.tagLine);
 
+    this.mutationMarker = this.win.document.createElement("div");
+    this.mutationMarker.classList.add("markup-tag-mutation-marker");
+    this.mutationMarker.style.left = `-${this.level}em`;
+    this.tagLine.appendChild(this.mutationMarker);
+
     this.tagState = this.win.document.createElement("span");
     this.tagState.classList.add("tag-state");
     this.tagState.setAttribute("role", "presentation");
@@ -745,6 +750,16 @@ MarkupContainer.prototype = {
       this.elt.classList.add("pseudoclass-locked");
     } else {
       this.elt.classList.remove("pseudoclass-locked");
+    }
+
+    // Show and hide icon for DOM Mutation Breakpoints
+    const hasMutationBreakpoint = Object.values(
+      this.node.mutationBreakpoints
+    ).some(Boolean);
+    if (hasMutationBreakpoint) {
+      this.mutationMarker.classList.add("has-mutations");
+    } else {
+      this.mutationMarker.classList.remove("has-mutations");
     }
 
     this.updateIsDisplayed();
