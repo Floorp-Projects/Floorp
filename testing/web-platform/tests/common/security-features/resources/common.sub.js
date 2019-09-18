@@ -968,9 +968,11 @@ function getSubresourceOrigin(originType) {
 
   // These values can evaluate to either empty strings or a ":port" string.
   const httpPort = getNormalizedPort(parseInt("{{ports[http][0]}}", 10));
-  const httpsPort = getNormalizedPort(parseInt("{{ports[https][0]}}", 10));
+  const httpsRawPort = parseInt("{{ports[https][0]}}", 10);
+  const httpsPort = getNormalizedPort(httpsRawPort);
   const wsPort = getNormalizedPort(parseInt("{{ports[ws][0]}}", 10));
-  const wssPort = getNormalizedPort(parseInt("{{ports[wss][0]}}", 10));
+  const wssRawPort = parseInt("{{ports[wss][0]}}", 10);
+  const wssPort = getNormalizedPort(wssRawPort);
 
   /**
     @typedef OriginType
@@ -992,6 +994,22 @@ function getSubresourceOrigin(originType) {
     "same-ws": wsProtocol + "://" + sameOriginHost + wsPort,
     "cross-wss": wssProtocol + "://" + crossOriginHost + wssPort,
     "cross-ws": wsProtocol + "://" + crossOriginHost + wsPort,
+
+    // The following origin types are used for upgrade-insecure-requests tests:
+    // These rely on some unintuitive cleverness due to WPT's test setup:
+    // 'Upgrade-Insecure-Requests' does not upgrade the port number,
+    // so we use URLs in the form `http://[domain]:[https-port]`,
+    // which will be upgraded to `https://[domain]:[https-port]`.
+    // If the upgrade fails, the load will fail, as we don't serve HTTP over
+    // the secure port.
+    "same-http-downgrade":
+        httpProtocol + "://" + sameOriginHost + ":" + httpsRawPort,
+    "cross-http-downgrade":
+        httpProtocol + "://" + crossOriginHost + ":" + httpsRawPort,
+    "same-ws-downgrade":
+        wsProtocol + "://" + sameOriginHost + ":" + wssRawPort,
+    "cross-ws-downgrade":
+        wsProtocol + "://" + crossOriginHost + ":" + wssRawPort,
   };
 
   return originMap[originType];
