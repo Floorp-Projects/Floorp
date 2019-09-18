@@ -232,6 +232,15 @@ class BrowserToolbar @JvmOverloads constructor(
         }
 
     /**
+     * Sets the colour of the tracking protection icon.
+     */
+    var trackingProtectionColor: Int
+        get() = displayToolbar.trackingProtectionViewColor
+        set(value) {
+            displayToolbar.trackingProtectionViewColor = value
+        }
+
+    /**
      * Sets the different icons that the tracking protection icon could has depending of its
      * [Toolbar.siteTrackingProtection]
      * @param iconOnNoTrackersBlocked icon for when the site is on the state

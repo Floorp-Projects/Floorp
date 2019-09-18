@@ -147,6 +147,12 @@ internal class DisplayToolbar(
             menuView.setColorFilter(value)
         }
 
+    internal var trackingProtectionViewColor = defaultColor
+        set(value) {
+            field = value
+            trackingProtectionIconView.setColorFilter(value)
+        }
+
     internal val trackingProtectionIconView = TrackingProtectionIconView(context).apply {
         id = R.id.mozac_browser_toolbar_tracking_protection_icon_view
         isVisible = false
