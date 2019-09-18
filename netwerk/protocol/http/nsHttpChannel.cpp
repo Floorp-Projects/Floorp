@@ -7298,8 +7298,7 @@ nsresult nsHttpChannel::StartCrossProcessRedirect() {
 
   nsCOMPtr<nsIParentChannel> parentChannel;
   NS_QueryNotificationCallbacks(this, parentChannel);
-  nsCOMPtr<nsICrossProcessSwitchChannel> httpParent =
-      do_QueryInterface(parentChannel);
+  RefPtr<HttpChannelParent> httpParent = do_QueryObject(parentChannel);
   MOZ_ASSERT(httpParent);
   NS_ENSURE_TRUE(httpParent, NS_ERROR_UNEXPECTED);
 
