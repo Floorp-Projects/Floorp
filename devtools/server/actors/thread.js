@@ -1745,18 +1745,22 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       throw new Error("Unexpected mutation breakpoint type");
     }
 
-    if (this.skipBreakpoints) {
-      return;
+    const frame = this.dbg.getNewestFrame();
+    if (!frame) {
+      return undefined;
     }
 
-    const frame = this.dbg.getNewestFrame();
-    if (frame) {
-      this._pauseAndRespond(frame, {
-        type: "mutationBreakpoint",
-        mutationType,
-        message: `DOM Mutation: '${mutationType}'`,
-      });
+    const location = this.sources.getFrameLocation(frame);
+
+    if (this.skipBreakpoints || this.sources.isBlackBoxed(location.sourceUrl)) {
+      return undefined;
     }
+
+    return this._pauseAndRespond(frame, {
+      type: "mutationBreakpoint",
+      mutationType,
+      message: `DOM Mutation: '${mutationType}'`,
+    });
   },
 
   /**
