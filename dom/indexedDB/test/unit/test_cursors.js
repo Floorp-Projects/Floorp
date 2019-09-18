@@ -6,6 +6,12 @@
 var testGenerator = testSteps();
 
 function* testSteps() {
+  function checkCursor(cursor, expectedKey) {
+    is(cursor.key, expectedKey, "Correct key");
+    is(cursor.primaryKey, expectedKey, "Correct primary key");
+    is(cursor.value, "foo", "Correct value");
+  }
+
   const name = this.window ? window.location.pathname : "Splendid Test";
   const keys = [1, -1, 0, 10, 2000, "q", "z", "two", "b", "a"];
   const sortedKeys = [-1, 0, 1, 10, 2000, "a", "b", "q", "two", "z"];
@@ -85,9 +91,7 @@ function* testSteps() {
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, sortedKeys[keyIndex], "Correct key");
-      is(cursor.primaryKey, sortedKeys[keyIndex], "Correct primary key");
-      is(cursor.value, "foo", "Correct value");
+      checkCursor(cursor, sortedKeys[keyIndex]);
 
       cursor.continue();
 
@@ -100,9 +104,7 @@ function* testSteps() {
         is(e.code, DOMException.INVALID_STATE_ERR, "correct code");
       }
 
-      is(cursor.key, sortedKeys[keyIndex], "Correct key");
-      is(cursor.primaryKey, sortedKeys[keyIndex], "Correct primary key");
-      is(cursor.value, "foo", "Correct value");
+      checkCursor(cursor, sortedKeys[keyIndex]);
 
       keyIndex++;
     } else {
@@ -121,15 +123,11 @@ function* testSteps() {
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, sortedKeys[keyIndex], "Correct key");
-      is(cursor.primaryKey, sortedKeys[keyIndex], "Correct primary key");
-      is(cursor.value, "foo", "Correct value");
+      checkCursor(cursor, sortedKeys[keyIndex]);
 
       cursor.continue();
 
-      is(cursor.key, sortedKeys[keyIndex], "Correct key");
-      is(cursor.primaryKey, sortedKeys[keyIndex], "Correct primary key");
-      is(cursor.value, "foo", "Correct value");
+      checkCursor(cursor, sortedKeys[keyIndex]);
 
       keyIndex++;
     } else {
@@ -147,9 +145,7 @@ function* testSteps() {
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, sortedKeys[keyIndex], "Correct key");
-      is(cursor.primaryKey, sortedKeys[keyIndex], "Correct primary key");
-      is(cursor.value, "foo", "Correct value");
+      checkCursor(cursor, sortedKeys[keyIndex]);
 
       if (keyIndex) {
         cursor.continue();
@@ -157,9 +153,7 @@ function* testSteps() {
         cursor.continue("b");
       }
 
-      is(cursor.key, sortedKeys[keyIndex], "Correct key");
-      is(cursor.primaryKey, sortedKeys[keyIndex], "Correct primary key");
-      is(cursor.value, "foo", "Correct value");
+      checkCursor(cursor, sortedKeys[keyIndex]);
 
       keyIndex += keyIndex ? 1 : 6;
     } else {
@@ -177,9 +171,7 @@ function* testSteps() {
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, sortedKeys[keyIndex], "Correct key");
-      is(cursor.primaryKey, sortedKeys[keyIndex], "Correct primary key");
-      is(cursor.value, "foo", "Correct value");
+      checkCursor(cursor, sortedKeys[keyIndex]);
 
       if (keyIndex) {
         cursor.continue();
@@ -187,9 +179,7 @@ function* testSteps() {
         cursor.continue(10);
       }
 
-      is(cursor.key, sortedKeys[keyIndex], "Correct key");
-      is(cursor.primaryKey, sortedKeys[keyIndex], "Correct primary key");
-      is(cursor.value, "foo", "Correct value");
+      checkCursor(cursor, sortedKeys[keyIndex]);
 
       keyIndex += keyIndex ? 1 : 3;
     } else {
@@ -207,9 +197,7 @@ function* testSteps() {
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, sortedKeys[keyIndex], "Correct key");
-      is(cursor.primaryKey, sortedKeys[keyIndex], "Correct primary key");
-      is(cursor.value, "foo", "Correct value");
+      checkCursor(cursor, sortedKeys[keyIndex]);
 
       if (keyIndex) {
         cursor.continue();
@@ -217,9 +205,7 @@ function* testSteps() {
         cursor.continue("c");
       }
 
-      is(cursor.key, sortedKeys[keyIndex], "Correct key");
-      is(cursor.primaryKey, sortedKeys[keyIndex], "Correct primary key");
-      is(cursor.value, "foo", "Correct value");
+      checkCursor(cursor, sortedKeys[keyIndex]);
 
       keyIndex += keyIndex ? 1 : 7;
     } else {
@@ -241,9 +227,7 @@ function* testSteps() {
     if (cursor) {
       storedCursor = cursor;
 
-      is(cursor.key, sortedKeys[keyIndex], "Correct key");
-      is(cursor.primaryKey, sortedKeys[keyIndex], "Correct primary key");
-      is(cursor.value, "foo", "Correct value");
+      checkCursor(cursor, sortedKeys[keyIndex]);
 
       if (keyIndex == 4) {
         request = cursor.update("bar");
@@ -293,16 +277,14 @@ function* testSteps() {
     if (cursor) {
       storedCursor = cursor;
 
-      is(cursor.key, sortedKeys[keyIndex], "Correct key");
-      is(cursor.primaryKey, sortedKeys[keyIndex], "Correct primary key");
-      is(cursor.value, "foo", "Correct value");
+      checkCursor(cursor, sortedKeys[keyIndex]);
 
       if (keyIndex == 4) {
         request = cursor.delete();
         request.onerror = errorHandler;
         request.onsuccess = function(event) {
           ok(event.target.result === undefined, "Should be undefined");
-          is(keyIndex, 5, "Got result of remove before next continue");
+          is(keyIndex, 5, "Got result of delete before next continue");
           gotRemoveEvent = true;
         };
       }
@@ -345,15 +327,11 @@ function* testSteps() {
     if (cursor) {
       storedCursor = cursor;
 
-      is(cursor.key, sortedKeys[keyIndex], "Correct key");
-      is(cursor.primaryKey, sortedKeys[keyIndex], "Correct primary key");
-      is(cursor.value, "foo", "Correct value");
+      checkCursor(cursor, sortedKeys[keyIndex]);
 
       cursor.continue();
 
-      is(cursor.key, sortedKeys[keyIndex], "Correct key");
-      is(cursor.primaryKey, sortedKeys[keyIndex], "Correct primary key");
-      is(cursor.value, "foo", "Correct value");
+      checkCursor(cursor, sortedKeys[keyIndex]);
 
       keyIndex--;
     } else {
