@@ -23,7 +23,6 @@
 #include "nsUnicharUtils.h"
 
 #include "HTMLEditorEventListener.h"
-#include "HTMLEditRules.h"
 #include "HTMLEditUtils.h"
 #include "TextEditUtils.h"
 #include "TypeInState.h"
@@ -450,19 +449,6 @@ HTMLEditor::SetFlags(uint32_t aFlags) {
   mCSSAware = !NoCSS() && !IsMailEditor();
 
   return NS_OK;
-}
-
-nsresult HTMLEditor::InitRules() {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  if (!mRules) {
-    // instantiate the rules for the html editor
-    mRules = new HTMLEditRules();
-  }
-  nsresult rv = InitEditorContentAndSelection();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "InitEditorContentAndSelection() failed");
-  return rv;
 }
 
 NS_IMETHODIMP
@@ -2128,7 +2114,7 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType, bool aEntireList,
 nsresult HTMLEditor::MakeOrChangeListAsAction(
     nsAtom& aListTagName, const nsAString& aBulletType,
     SelectAllOfCurrentList aSelectAllOfCurrentList, nsIPrincipal* aPrincipal) {
-  if (!mRules) {
+  if (NS_WARN_IF(!mInitSucceeded)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
@@ -2154,7 +2140,7 @@ HTMLEditor::RemoveList(const nsAString& aListType) {
 
 nsresult HTMLEditor::RemoveListAsAction(const nsAString& aListType,
                                         nsIPrincipal* aPrincipal) {
-  if (!mRules) {
+  if (NS_WARN_IF(!mInitSucceeded)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
@@ -2185,7 +2171,7 @@ nsresult HTMLEditor::RemoveListAsAction(const nsAString& aListType,
 nsresult HTMLEditor::FormatBlockContainerAsSubAction(nsAtom& aTagName) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (!mRules) {
+  if (NS_WARN_IF(!mInitSucceeded)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
@@ -2268,7 +2254,7 @@ HTMLEditor::Indent(const nsAString& aIndent) {
 }
 
 nsresult HTMLEditor::IndentAsAction(nsIPrincipal* aPrincipal) {
-  if (!mRules) {
+  if (NS_WARN_IF(!mInitSucceeded)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
@@ -2284,7 +2270,7 @@ nsresult HTMLEditor::IndentAsAction(nsIPrincipal* aPrincipal) {
 }
 
 nsresult HTMLEditor::OutdentAsAction(nsIPrincipal* aPrincipal) {
-  if (!mRules) {
+  if (NS_WARN_IF(!mInitSucceeded)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
@@ -4258,7 +4244,7 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
     const nsAString& aColor) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (NS_WARN_IF(!mRules)) {
+  if (NS_WARN_IF(!mInitSucceeded)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 

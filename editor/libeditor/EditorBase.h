@@ -91,7 +91,6 @@ class SplitNodeResult;
 class SplitNodeTransaction;
 class TextComposition;
 class TextEditor;
-class TextEditRules;
 class TextInputListener;
 class TextServicesDocument;
 class TypeInState;
@@ -990,12 +989,10 @@ class EditorBase : public nsIEditor,
 
  protected:  // May be called by friends.
   /****************************************************************************
-   * Some classes like TextEditRules, HTMLEditRules, WSRunObject which are
-   * part of handling edit actions are allowed to call the following protected
-   * methods.  However, those methods won't prepare caches of some objects
-   * which are necessary for them.  So, if you want some following methods
-   * to do that for you, you need to create a wrapper method in public scope
-   * and call it.
+   * Some friend classes are allowed to call the following protected methods.
+   * However, those methods won't prepare caches of some objects which are
+   * necessary for them.  So, if you call them from friend classes, you need
+   * to make sure that AutoEditActionDataSetter is created.
    ****************************************************************************/
 
   bool IsEditActionDataAvailable() const {
@@ -2602,8 +2599,6 @@ class EditorBase : public nsIEditor,
   // compositionend.
   RefPtr<TextComposition> mComposition;
 
-  RefPtr<TextEditRules> mRules;
-
   RefPtr<TextInputListener> mTextInputListener;
 
   RefPtr<IMEContentObserver> mIMEContentObserver;
@@ -2669,7 +2664,6 @@ class EditorBase : public nsIEditor,
   friend class DeleteNodeTransaction;
   friend class DeleteRangeTransaction;
   friend class DeleteTextTransaction;
-  friend class HTMLEditRules;
   friend class HTMLEditUtils;
   friend class InsertNodeTransaction;
   friend class InsertTextTransaction;
@@ -2678,7 +2672,6 @@ class EditorBase : public nsIEditor,
   friend class ListItemElementSelectionState;
   friend class ParagraphStateAtSelection;
   friend class SplitNodeTransaction;
-  friend class TextEditRules;
   friend class TypeInState;
   friend class WSRunObject;
   friend class WSRunScanner;
