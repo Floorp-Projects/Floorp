@@ -36,6 +36,11 @@ parameter must have the same value of the deprecation note added to the *IDL* fi
 See this `changeset <https://hg.mozilla.org/mozilla-central/rev/e30a357b25f1>`_ for a sample
 deprecated operation.
 
+CSS Properties
+~~~~~~~~~~~~~~
+
+Use counters for CSS properties are generated for every property Gecko supports automatically, and are counted via StyleUseCounters (`Rust code <https://searchfox.org/mozilla-central/rev/7ed8e2d3d1d7a1464ba42763a33fd2e60efcaedc/servo/components/style/use_counters/mod.rs>`_, `C++ code <https://searchfox.org/mozilla-central/rev/7ed8e2d3d1d7a1464ba42763a33fd2e60efcaedc/dom/base/Document.h#5077>`_).
+
 The UseCounters registry
 ------------------------
 Use counters for WebIDL methods/attributes are registered in the `UseCounters.conf <https://dxr.mozilla.org/mozilla-central/source/dom/base/UseCounters.conf>`_ file.  The format of this file is very strict. Each line can be:
@@ -50,7 +55,7 @@ Use counters for WebIDL methods/attributes are registered in the `UseCounters.co
 
 Custom use counters
 ~~~~~~~~~~~~~~~~~~~
-The <description> for custom counters will be appended to "When a document " or "When a page ", so phrase it appropriately.  For instance, "constructs a Foo object" or "calls Document.bar('some value')".  It may contain any character (including whitespace).  Custom counters are incremented when SetDocumentAndPageUseCounter(eUseCounter_custom_MyName) is called on an ns(I)Document object.
+The <description> for custom counters will be appended to "When a document " or "When a page ", so phrase it appropriately.  For instance, "constructs a Foo object" or "calls Document.bar('some value')".  It may contain any character (including whitespace).  Custom counters are incremented when SetUseCounter(eUseCounter_custom_MyName) is called on a Document object.
 
 WebIDL methods and attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
