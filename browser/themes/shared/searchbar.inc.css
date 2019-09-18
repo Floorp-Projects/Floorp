@@ -16,6 +16,18 @@
   width: 100%;
 }
 
+.search-panel-header {
+  font-weight: normal;
+  margin: 0;
+  padding: 3px;
+  color: var(--panel-disabled-color);
+}
+
+.search-panel-header > label {
+  margin-top: 2px;
+  margin-bottom: 1px;
+}
+
 /**
  * The borders of the various elements are specified as follows.
  *
@@ -34,6 +46,7 @@
   -moz-box-align: center;
   border-top: none !important;
   border-bottom: 1px solid var(--panel-separator-color);
+  padding-inline-start: 6px;
 }
 
 .search-panel-tree[collapsed=true] + .search-one-offs > .search-panel-header,
@@ -47,18 +60,6 @@
 .search-panel-tree[collapsed=true] + .search-one-offs > .search-panel-one-offs,
 .search-panel-tree[collapsed=true] + .search-one-offs > vbox > .addengine-item:last-of-type {
   border-bottom: 1px solid var(--panel-separator-color);
-}
-
-.search-panel-header {
-  font-weight: normal;
-  margin: 0;
-  padding: 3px;
-  color: var(--panel-disabled-color);
-}
-
-.search-panel-header > label {
-  margin-top: 2px;
-  margin-bottom: 1px;
 }
 
 .search-panel-input-value {
