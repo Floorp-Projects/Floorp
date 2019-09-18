@@ -42,6 +42,7 @@ class ProfilerCodeAddressService;
   MACRO(Resume, double, sizeof(double))                              \
   MACRO(ThreadId, int, sizeof(int))                                  \
   MACRO(Time, double, sizeof(double))                                \
+  MACRO(TimeBeforeCompactStack, double, sizeof(double))              \
   MACRO(CounterId, void*, sizeof(void*))                             \
   MACRO(CounterKey, uint64_t, sizeof(uint64_t))                      \
   MACRO(Number, uint64_t, sizeof(uint64_t))                          \
@@ -77,6 +78,12 @@ class ProfileBufferEntry {
 
     // Marker data, including payload.
     MarkerData = LEGACY_LIMIT,
+
+    // Collection of legacy stack entries, must follow a ThreadId and
+    // TimeBeforeCompactStack (which are not included in the CompactStack;
+    // TimeBeforeCompactStack is equivalent to Time, but indicates that a
+    // CompactStack follows shortly afterwards).
+    CompactStack,
 
     MODERN_LIMIT
   };

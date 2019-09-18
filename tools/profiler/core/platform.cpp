@@ -2619,7 +2619,8 @@ void SamplerThread::Run() {
           // Also add the time, so it's always there after the thread ID, as
           // expected by the parser. (Other stack data is optional.)
           TimeDuration delta = now - CorePS::ProcessStartTime();
-          buffer.AddEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
+          buffer.AddEntry(ProfileBufferEntry::TimeBeforeCompactStack(
+              delta.ToMilliseconds()));
 
           // Suspend the thread and collect its stack data in the local buffer.
           mSampler.SuspendAndSampleAndResumeThread(
@@ -2628,22 +2629,37 @@ void SamplerThread::Run() {
                                  now, aRegs, samplePos, localProfileBuffer);
               });
 
-          // If data is complete, copy it into the global buffer.
+          // There *must* be a CompactStack after a TimeBeforeCompactStack; but
+          // note that other entries may have been concurrently inserted between
+          // the TimeBeforeCompactStack above and now. If the captured sample
+          // from `DoPeriodicSample` is complete, copy it into the global
+          // buffer, otherwise add an empty one to satisfy the parser that
+          // expects one.
           auto state = localBlocksRingBuffer.GetState();
           if (NS_WARN_IF(state.mClearedBlockCount !=
                          previousState.mClearedBlockCount)) {
             LOG("Stack sample too big for local storage, needed %u bytes",
                 unsigned(state.mRangeEnd.ConvertToU64() -
                          previousState.mRangeEnd.ConvertToU64()));
+            // There *must* be a CompactStack after a TimeBeforeCompactStack,
+            // even an empty one.
+            CorePS::CoreBlocksRingBuffer().PutObjects(
+                ProfileBufferEntry::Kind::CompactStack,
+                UniquePtr<BlocksRingBuffer>(nullptr));
           } else if (state.mRangeEnd.ConvertToU64() -
                          previousState.mRangeEnd.ConvertToU64() >=
                      CorePS::CoreBlocksRingBuffer().BufferLength()->Value()) {
             LOG("Stack sample too big for profiler storage, needed %u bytes",
                 unsigned(state.mRangeEnd.ConvertToU64() -
                          previousState.mRangeEnd.ConvertToU64()));
+            // There *must* be a CompactStack after a TimeBeforeCompactStack,
+            // even an empty one.
+            CorePS::CoreBlocksRingBuffer().PutObjects(
+                ProfileBufferEntry::Kind::CompactStack,
+                UniquePtr<BlocksRingBuffer>(nullptr));
           } else {
-            CorePS::CoreBlocksRingBuffer().AppendContents(
-                localBlocksRingBuffer);
+            CorePS::CoreBlocksRingBuffer().PutObjects(
+                ProfileBufferEntry::Kind::CompactStack, localBlocksRingBuffer);
           }
 
           // Clean up for the next run.
