@@ -1101,8 +1101,8 @@ SearchService.prototype = {
     let enginesCorrupted = false;
     if (
       !rebuildCache &&
-      cache.engines.filter(e => e.isBuiltin).length !=
-        cache.visibleDefaultEngines
+      cache.engines.filter(e => e._isBuiltin).length !=
+        cache.visibleDefaultEngines.length
     ) {
       rebuildCache = true;
       enginesCorrupted = true;
