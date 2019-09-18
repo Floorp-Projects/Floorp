@@ -90,6 +90,32 @@ inline bool UnsafeIsValidUtf8Latin1(mozilla::Span<const char> aString) {
 }
 
 /**
+ * Returns the index of first byte that starts an invalid byte
+ * sequence or a non-Latin1 byte sequence in a potentially-invalid UTF-8
+ * string, or the length of the string if there are neither.
+ *
+ * If you know that the argument is always absolutely guaranteed to be valid
+ * UTF-8, use the faster UnsafeValidUtf8Lati1UpTo() instead.
+ *
+ * @param aString potentially-invalid UTF-8 string to scan
+ */
+inline size_t Utf8Latin1UpTo(mozilla::Span<const char> aString) {
+  return encoding_mem_utf8_latin1_up_to(aString.Elements(), aString.Length());
+}
+
+/**
+ * Returns the index of first byte that starts a non-Latin1 byte
+ * sequence in a known-valid UTF-8 string, or the length of the
+ * string if there are none. (If the string might not be valid
+ * UTF-8, use Utf8Latin1UpTo() instead.)
+ *
+ * @param aString known-valid UTF-8 string to scan
+ */
+inline size_t UnsafeValidUtf8Lati1UpTo(mozilla::Span<const char> aString) {
+  return encoding_mem_str_latin1_up_to(aString.Elements(), aString.Length());
+}
+
+/**
  * If all the code points in the input are below U+0100, converts to Latin1,
  * i.e. unsigned byte value is Unicode scalar value. If there are code points
  * above U+00FF, produces unspecified garbage in a memory-safe way. The

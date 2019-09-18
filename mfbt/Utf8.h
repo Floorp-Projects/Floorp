@@ -13,6 +13,7 @@
 #define mozilla_Utf8_h
 
 #include "mozilla/Casting.h"    // for mozilla::AssertedCast
+#include "mozilla/IntegerTypeTraits.h"  // for mozilla::MaxValue
 #include "mozilla/Likely.h"     // for MOZ_UNLIKELY
 #include "mozilla/Maybe.h"      // for mozilla::Maybe
 #include "mozilla/Span.h"       // for mozilla::Span
@@ -349,7 +350,7 @@ inline size_t ConvertUtf8toUtf16(mozilla::Span<const char> aSource,
 
 /**
  * Converts known-valid UTF-8 to UTF-16. If the input might be invalid,
- * use ConvertUtf8toUtf16() instead.
+ * use ConvertUtf8toUtf16() or ConvertUtf8toUtf16WithoutReplacement() instead.
  *
  * Returns the number of code units written.
  *
@@ -359,6 +360,30 @@ inline size_t UnsafeConvertValidUtf8toUtf16(mozilla::Span<const char> aSource,
                                             mozilla::Span<char16_t> aDest) {
   return encoding_mem_convert_utf8_to_utf16(
       aSource.Elements(), aSource.Length(), aDest.Elements(), aDest.Length());
+}
+
+/**
+ * Converts potentially-invalid UTF-8 to valid UTF-16 signaling on error.
+ *
+ * Returns the number of code units written or `mozilla::Nothing` if the
+ * input was invalid.
+ *
+ * The length of the destination buffer must be at least the length of the
+ * source buffer.
+ *
+ * When the input was invalid, some output may have been written.
+ *
+ * If you know that the input is valid for sure, use
+ * UnsafeConvertValidUtf8toUtf16() instead.
+ */
+inline mozilla::Maybe<size_t> ConvertUtf8toUtf16WithoutReplacement(
+    mozilla::Span<const char> aSource, mozilla::Span<char16_t> aDest) {
+  size_t written = encoding_mem_convert_utf8_to_utf16_without_replacement(
+      aSource.Elements(), aSource.Length(), aDest.Elements(), aDest.Length());
+  if (MOZ_UNLIKELY(written == mozilla::MaxValue<size_t>::value)) {
+    return mozilla::Nothing();
+  }
+  return mozilla::Some(written);
 }
 
 #endif  // MOZ_HAS_JSRUST
