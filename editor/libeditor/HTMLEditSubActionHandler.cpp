@@ -4,9 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "HTMLEditRules.h"
-
-#include <stdlib.h>
+#include "HTMLEditor.h"
 
 #include "HTMLEditUtils.h"
 #include "TextEditUtils.h"
@@ -17,7 +15,6 @@
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorUtils.h"
-#include "mozilla/HTMLEditor.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Move.h"
 #include "mozilla/mozalloc.h"
@@ -168,9 +165,6 @@ class MOZ_RAII AutoSetTemporaryAncestorLimiter final {
   RefPtr<Selection> mSelection;
 };
 
-/********************************************************
- * mozilla::HTMLEditRules
- ********************************************************/
 template void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
     RangeBoundary& aStartRef, RangeBoundary& aEndRef);
 template void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
@@ -228,10 +222,6 @@ template nsIContent* HTMLEditor::FindNearEditableContent(
 template nsIContent* HTMLEditor::FindNearEditableContent(
     const EditorRawDOMPoint& aPoint, nsIEditor::EDirection aDirection);
 
-HTMLEditRules::HTMLEditRules() : mHTMLEditor(nullptr), mInitialized(false) {
-  mIsHTMLEditRules = true;
-}
-
 nsresult HTMLEditor::InitEditorContentAndSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
@@ -260,11 +250,6 @@ nsresult HTMLEditor::InitEditorContentAndSelection() {
                        "InsertBRElementToEmptyListItemsAndTableCellsInRange() "
                        "failed, but ignored");
   return NS_OK;
-}
-
-nsresult HTMLEditRules::DetachEditor() {
-  mHTMLEditor = nullptr;
-  return TextEditRules::DetachEditor();
 }
 
 void HTMLEditor::OnStartToHandleTopLevelEditSubAction(
@@ -1673,7 +1658,7 @@ bool HTMLEditor::CanContainParagraph(Element& aElement) const {
 }
 
 EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
-  if (!mRules) {
+  if (NS_WARN_IF(!mInitSucceeded)) {
     return EditActionIgnored(NS_ERROR_NOT_INITIALIZED);
   }
 
@@ -4137,7 +4122,7 @@ EditActionResult HTMLEditor::MakeOrChangeListAndListItemAsSubAction(
              &aListElementOrListItemElementTagName == nsGkAtoms::dd ||
              &aListElementOrListItemElementTagName == nsGkAtoms::dt);
 
-  if (!mRules) {
+  if (NS_WARN_IF(!mInitSucceeded)) {
     return EditActionIgnored(NS_ERROR_NOT_INITIALIZED);
   }
 

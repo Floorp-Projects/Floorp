@@ -246,7 +246,7 @@ class HTMLEditor final : public TextEditor,
    * into the DOM tree.
    * NOTE: This is available for internal use too since this does not change
    *       the DOM tree nor undo transactions, and does not refer Selection,
-   *       HTMLEditRules, etc.
+   *       etc.
    *
    * @param aTagName            The new element's tag name.  If the name is
    *                            one of "href", "anchor" or "namedanchor",
@@ -630,12 +630,10 @@ class HTMLEditor final : public TextEditor,
 
  protected:  // May be called by friends.
   /****************************************************************************
-   * Some classes like TextEditRules, HTMLEditRules, WSRunObject which are
-   * part of handling edit actions are allowed to call the following protected
-   * methods.  However, those methods won't prepare caches of some objects
-   * which are necessary for them.  So, if you want some following methods
-   * to do that for you, you need to create a wrapper method in public scope
-   * and call it.
+   * Some friend classes are allowed to call the following protected methods.
+   * However, those methods won't prepare caches of some objects which are
+   * necessary for them.  So, if you call them from friend classes, you need
+   * to make sure that AutoEditActionDataSetter is created.
    ****************************************************************************/
 
   /**
@@ -1149,9 +1147,8 @@ class HTMLEditor final : public TextEditor,
 
   /**
    * OnModifyDocument() is called when the editor is changed.  This should
-   * be called only by HTMLEditRules::DocumentModifiedWorker() to call
-   * HTMLEditRules::OnModifyDocument() with AutoEditActionDataSetter
-   * instance.
+   * be called only by runnable in HTMLEditor::OnDocumentModified() to call
+   * HTMLEditor::OnModifyDocument() with AutoEditActionDataSetter instance.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult OnModifyDocument();
 
@@ -2688,8 +2685,9 @@ class HTMLEditor final : public TextEditor,
   EnsureCaretInBlockElement(dom::Element& aElement);
 
   /**
-   * Called by `HTMLEditRules::AfterEdit()`.  This may adjust Selection, remove
-   * unnecessary empty nodes, create `<br>` elements if needed, etc.
+   * Called by `HTMLEditor::OnEndHandlingTopLevelEditSubAction()`.  This may
+   * adjust Selection, remove unnecessary empty nodes, create `<br>` elements
+   * if needed, etc.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   OnEndHandlingTopLevelEditSubActionInternal();
@@ -3487,9 +3485,6 @@ class HTMLEditor final : public TextEditor,
     bool mIsSafe;
     bool mDoDeleteSelection;
   };
-
-  MOZ_CAN_RUN_SCRIPT
-  virtual nsresult InitRules() override;
 
   virtual void CreateEventListeners() override;
   virtual nsresult InstallEventListeners() override;
@@ -4379,7 +4374,6 @@ class HTMLEditor final : public TextEditor,
   friend class CSSEditUtils;
   friend class EditorBase;
   friend class EmptyEditableFunctor;
-  friend class HTMLEditRules;
   friend class ListElementSelectionState;
   friend class ListItemElementSelectionState;
   friend class ParagraphStateAtSelection;

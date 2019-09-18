@@ -389,12 +389,10 @@ class TextEditor : public EditorBase,
 
  protected:  // May be called by friends.
   /****************************************************************************
-   * Some classes like TextEditRules, HTMLEditRules, WSRunObject which are
-   * part of handling edit actions are allowed to call the following protected
-   * methods.  However, those methods won't prepare caches of some objects
-   * which are necessary for them.  So, if you want some following methods
-   * to do that for you, you need to create a wrapper method in public scope
-   * and call it.
+   * Some friend classes are allowed to call the following protected methods.
+   * However, those methods won't prepare caches of some objects which are
+   * necessary for them.  So, if you call them from friend classes, you need
+   * to make sure that AutoEditActionDataSetter is created.
    ****************************************************************************/
 
   // Overrides of EditorBase
@@ -796,9 +794,6 @@ class TextEditor : public EditorBase,
    */
   bool IsSafeToInsertData(Document* aSourceDoc);
 
-  MOZ_CAN_RUN_SCRIPT
-  virtual nsresult InitRules();
-
   /**
    * GetAndInitDocEncoder() returns a document encoder instance for aFormatType
    * after initializing it.  The result may be cached for saving recreation
@@ -925,7 +920,6 @@ class TextEditor : public EditorBase,
   friend class DeleteNodeTransaction;
   friend class EditorBase;
   friend class InsertNodeTransaction;
-  friend class TextEditRules;
 };
 
 }  // namespace mozilla
