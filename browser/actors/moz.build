@@ -45,6 +45,7 @@ FINAL_TARGET_FILES.actors += [
     'PluginParent.jsm',
     'PromptParent.jsm',
     'RFPHelperChild.jsm',
+    'RFPHelperParent.jsm',
     'SearchTelemetryChild.jsm',
     'SwitchDocumentDirectionChild.jsm',
     'URIFixupChild.jsm',
