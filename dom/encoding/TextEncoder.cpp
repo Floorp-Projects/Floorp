@@ -13,33 +13,39 @@ namespace mozilla {
 namespace dom {
 
 void TextEncoder::Encode(JSContext* aCx, JS::Handle<JSObject*> aObj,
-                         const nsAString& aString,
+                         JS::Handle<JSString*> aString,
                          JS::MutableHandle<JSObject*> aRetval,
                          ErrorResult& aRv) {
-  // Given nsTSubstring<char16_t>::kMaxCapacity, it should be
-  // impossible for the length computation to overflow, but
-  // let's use checked math in case someone changes something
-  // in the future.
+  CheckedInt<size_t> bufLen(JS::GetStringLength(aString));
+  bufLen *= 3;  // from the contract for JS_EncodeStringToUTF8BufferPartial
   // Uint8Array::Create takes uint32_t as the length.
-  CheckedInt<uint32_t> bufLen(aString.Length());
-  bufLen *= 3;  // from the contract for ConvertUTF16toUTF8
-  if (!bufLen.isValid()) {
+  if (!bufLen.isValid() || bufLen.value() > UINT32_MAX) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
 
+  // TODO: Avoid malloc and use a stack-allocated buffer if bufLen
+  // is small.
   auto data = mozilla::MakeUniqueFallible<uint8_t[]>(bufLen.value());
   if (!data) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
 
-  size_t utf8Len = ConvertUtf16toUtf8(
-      aString, MakeSpan(reinterpret_cast<char*>(data.get()), bufLen.value()));
-  MOZ_ASSERT(utf8Len <= bufLen.value());
+  size_t read;
+  size_t written;
+  auto maybe = JS_EncodeStringToUTF8BufferPartial(
+      aCx, aString, AsWritableChars(MakeSpan(data.get(), bufLen.value())));
+  if (!maybe) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+  Tie(read, written) = *maybe;
+  MOZ_ASSERT(written <= bufLen.value());
+  MOZ_ASSERT(read == JS::GetStringLength(aString));
 
   JSAutoRealm ar(aCx, aObj);
-  JSObject* outView = Uint8Array::Create(aCx, utf8Len, data.get());
+  JSObject* outView = Uint8Array::Create(aCx, written, data.get());
   if (!outView) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
@@ -48,18 +54,26 @@ void TextEncoder::Encode(JSContext* aCx, JS::Handle<JSObject*> aObj,
   aRetval.set(outView);
 }
 
-void TextEncoder::EncodeInto(const nsAString& aSrc, const Uint8Array& aDst,
-                             TextEncoderEncodeIntoResult& aResult) {
+void TextEncoder::EncodeInto(JSContext* aCx, JS::Handle<JSString*> aSrc,
+                             const Uint8Array& aDst,
+                             TextEncoderEncodeIntoResult& aResult,
+                             OOMReporter& aError) {
   aDst.ComputeLengthAndData();
   size_t read;
   size_t written;
-  Tie(read, written) = ConvertUtf16toUtf8Partial(
-      aSrc, MakeSpan(reinterpret_cast<char*>(aDst.Data()), aDst.Length()));
+  auto maybe = JS_EncodeStringToUTF8BufferPartial(
+      aCx, aSrc, AsWritableChars(MakeSpan(aDst.Data(), aDst.Length())));
+  if (!maybe) {
+    aError.ReportOOM();
+    return;
+  }
+  Tie(read, written) = *maybe;
+  MOZ_ASSERT(written <= aDst.Length());
   aResult.mRead.Construct() = read;
   aResult.mWritten.Construct() = written;
 }
 
-void TextEncoder::GetEncoding(nsAString& aEncoding) {
+void TextEncoder::GetEncoding(nsACString& aEncoding) {
   aEncoding.AssignLiteral("utf-8");
 }
 
