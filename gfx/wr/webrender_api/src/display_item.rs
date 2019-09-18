@@ -33,6 +33,22 @@ pub const MAX_BLUR_RADIUS: f32 = 300.;
 /// events.
 pub type ItemTag = (u64, u16);
 
+bitflags! {
+    #[derive(Deserialize, MallocSizeOf, Serialize, PeekPoke)]
+    pub struct PrimitiveFlags: u8 {
+        /// The CSS backface-visibility property (yes, it can be really granular)
+        const IS_BACKFACE_VISIBLE = 1 << 0;
+        /// If set, this primitive represents part of a scroll bar
+        const IS_SCROLL_BAR = 1 << 1;
+    }
+}
+
+impl Default for PrimitiveFlags {
+    fn default() -> Self {
+        PrimitiveFlags::IS_BACKFACE_VISIBLE
+    }
+}
+
 /// A grouping of fields a lot of display items need, just to avoid
 /// repeating these over and over in this file.
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
@@ -49,19 +65,22 @@ pub struct CommonItemProperties {
     /// dubious "common" field, but because it's an Option, it usually only
     /// wastes a single byte (for None).
     pub hit_info: Option<ItemTag>,
-    /// The CSS backface-visibility property (yes, it can be really granular)
-    pub is_backface_visible: bool,
+    /// Various flags describing properties of this primitive.
+    pub flags: PrimitiveFlags,
 }
 
 impl CommonItemProperties {
     /// Convenience for tests.
-    pub fn new(clip_rect: LayoutRect, space_and_clip: SpaceAndClipInfo) -> Self {
+    pub fn new(
+        clip_rect: LayoutRect,
+        space_and_clip: SpaceAndClipInfo,
+    ) -> Self {
         Self {
             clip_rect,
             spatial_id: space_and_clip.spatial_id,
             clip_id: space_and_clip.clip_id,
             hit_info: None,
-            is_backface_visible: true,
+            flags: PrimitiveFlags::default(),
         }
     }
 }

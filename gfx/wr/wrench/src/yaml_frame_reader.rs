@@ -464,7 +464,7 @@ impl YamlFrameReader {
             clip_rect: LayoutRect::zero(),
             clip_id: ClipId::invalid(),
             spatial_id: SpatialId::new(0, PipelineId::dummy()),
-            is_backface_visible: true,
+            flags: PrimitiveFlags::default(),
             hit_info: None,
         };
         self.add_stacking_context_from_yaml(&mut builder, wrench, yaml, true, &mut info);
@@ -1643,12 +1643,21 @@ impl YamlFrameReader {
             }
 
             let space_and_clip = self.top_space_and_clip();
+            let mut flags = PrimitiveFlags::default();
+            if let Some(is_backface_visible) = item["backface-visible"].as_bool() {
+                if is_backface_visible {
+                    flags.insert(PrimitiveFlags::IS_BACKFACE_VISIBLE);
+                } else {
+                    flags.remove(PrimitiveFlags::IS_BACKFACE_VISIBLE);
+                }
+            }
+
             let mut info = CommonItemProperties {
                 clip_rect,
                 clip_id: space_and_clip.clip_id,
                 spatial_id: space_and_clip.spatial_id,
                 hit_info: self.to_hit_testing_tag(&item["hit-testing-tag"]),
-                is_backface_visible: item["backface-visible"].as_bool().unwrap_or(true),
+                flags,
             };
 
             match item_type {
@@ -2026,7 +2035,7 @@ impl YamlFrameReader {
         dl.push_stacking_context(
             bounds.origin,
             *self.spatial_id_stack.last().unwrap(),
-            info.is_backface_visible,
+            info.flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE),
             clip_node_id,
             transform_style,
             mix_blend_mode,
