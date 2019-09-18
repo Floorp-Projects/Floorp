@@ -242,10 +242,18 @@ class TestPreprocessor(unittest.TestCase):
         self.do_include_compare([
             '#filter slashslash',
             'PASS//FAIL  // FAIL',
+            '  //FAIL',
+            '//FAIL',
+            'PASS  //',
+            '//',
             '#unfilter slashslash',
             'PASS // PASS',
         ], [
             'PASS',
+            '  ',
+            '',
+            'PASS  ',
+            '',
             'PASS // PASS',
         ])
 
