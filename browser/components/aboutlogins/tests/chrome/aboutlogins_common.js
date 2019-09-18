@@ -69,5 +69,6 @@ Object.defineProperty(window, "AboutLoginsUtils", {
         login1.password == login2.password
       );
     },
+    masterPasswordEnabled: false,
   },
 });
