@@ -569,21 +569,21 @@
     <menupopup id="pageActionContextMenu"
                onpopupshowing="BrowserPageActions.onContextMenuShowing(event, this);">
       <menuitem class="pageActionContextMenuItem builtInUnpinned"
-                oncommand="BrowserPageActions.togglePinningForContextAction();"
-                data-l10n-id="page-action-add-to-urlbar"/>
+                label="&pageAction.addToUrlbar.label;"
+                oncommand="BrowserPageActions.togglePinningForContextAction();"/>
       <menuitem class="pageActionContextMenuItem builtInPinned"
-                oncommand="BrowserPageActions.togglePinningForContextAction();"
-                data-l10n-id="page-action-remove-from-urlbar"/>
+                label="&pageAction.removeFromUrlbar.label;"
+                oncommand="BrowserPageActions.togglePinningForContextAction();"/>
       <menuitem class="pageActionContextMenuItem extensionUnpinned"
-                oncommand="BrowserPageActions.togglePinningForContextAction();"
-                data-l10n-id="page-action-add-to-urlbar"/>
+                label="&pageAction.addToUrlbar.label;"
+                oncommand="BrowserPageActions.togglePinningForContextAction();"/>
       <menuitem class="pageActionContextMenuItem extensionPinned"
-                oncommand="BrowserPageActions.togglePinningForContextAction();"
-                data-l10n-id="page-action-remove-from-urlbar"/>
+                label="&pageAction.removeFromUrlbar.label;"
+                oncommand="BrowserPageActions.togglePinningForContextAction();"/>
       <menuseparator class="pageActionContextMenuItem extensionPinned extensionUnpinned"/>
       <menuitem class="pageActionContextMenuItem extensionPinned extensionUnpinned"
-                oncommand="BrowserPageActions.openAboutAddonsForContextAction();"
-                data-l10n-id="page-action-manage-extension"/>
+                label="&pageAction.manageExtension.label;"
+                oncommand="BrowserPageActions.openAboutAddonsForContextAction();"/>
     </menupopup>
 
 #include ../../components/places/content/bookmarksHistoryTooltip.inc.xul
