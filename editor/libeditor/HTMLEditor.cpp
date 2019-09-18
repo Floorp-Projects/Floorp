@@ -24,7 +24,6 @@
 
 #include "HTMLEditorEventListener.h"
 #include "HTMLEditUtils.h"
-#include "TextEditUtils.h"
 #include "TypeInState.h"
 
 #include "nsHTMLDocument.h"
@@ -883,7 +882,7 @@ void HTMLEditor::IsPrevCharInNodeWhitespace(nsIContent* aContent,
 
 bool HTMLEditor::IsVisibleBRElement(nsINode* aNode) {
   MOZ_ASSERT(aNode);
-  if (!TextEditUtils::IsBreak(aNode)) {
+  if (!aNode->IsHTMLElement(nsGkAtoms::br)) {
     return false;
   }
   // Check if there is another element or text node in block after current
@@ -893,7 +892,7 @@ bool HTMLEditor::IsVisibleBRElement(nsINode* aNode) {
   // E.g., foo<br><button contenteditable="false">button</button>
   // However, we need to ignore invisible data nodes like comment node.
   nsCOMPtr<nsINode> nextNode = GetNextHTMLElementOrTextInBlock(*aNode);
-  if (nextNode && TextEditUtils::IsBreak(nextNode)) {
+  if (nextNode && nextNode->IsHTMLElement(nsGkAtoms::br)) {
     return true;
   }
 
@@ -916,7 +915,7 @@ bool HTMLEditor::IsVisibleBRElement(nsINode* aNode) {
   // E.g., <button contenteditable="false"><br>foo
   // However, we need to ignore invisible data nodes like comment node.
   nsCOMPtr<nsINode> priorNode = GetPreviousHTMLElementOrTextInBlock(*aNode);
-  if (priorNode && TextEditUtils::IsBreak(priorNode)) {
+  if (priorNode && priorNode->IsHTMLElement(nsGkAtoms::br)) {
     return true;
   }
 
@@ -4493,7 +4492,7 @@ nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(
     deepestEditableContent = child;
   }
   while (deepestEditableContent &&
-         TextEditUtils::IsBreak(deepestEditableContent)) {
+         deepestEditableContent->IsHTMLElement(nsGkAtoms::br)) {
     deepestEditableContent =
         GetPreviousEditableHTMLNode(*deepestEditableContent);
   }

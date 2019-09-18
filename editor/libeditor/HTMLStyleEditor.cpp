@@ -6,7 +6,6 @@
 #include "mozilla/HTMLEditor.h"
 
 #include "HTMLEditUtils.h"
-#include "TextEditUtils.h"
 #include "TypeInState.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ContentIterator.h"
@@ -706,11 +705,11 @@ nsresult HTMLEditor::ClearStyle(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
     if (!secondSplitParent) {
       secondSplitParent = rightNode;
     }
-    nsCOMPtr<Element> savedBR;
+    RefPtr<Element> savedBR;
     if (!IsContainer(secondSplitParent)) {
-      if (TextEditUtils::IsBreak(secondSplitParent)) {
-        savedBR = do_QueryInterface(secondSplitParent);
-        NS_ENSURE_STATE(savedBR);
+      if (secondSplitParent->IsHTMLElement(nsGkAtoms::br)) {
+        savedBR = Element::FromNode(secondSplitParent);
+        MOZ_ASSERT(savedBR);
       }
 
       secondSplitParent = secondSplitParent->GetParentNode();

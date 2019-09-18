@@ -8,7 +8,6 @@
 
 #include "HTMLEditorEventListener.h"
 #include "HTMLEditUtils.h"
-#include "TextEditUtils.h"
 #include "mozilla/EditAction.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
