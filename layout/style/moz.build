@@ -285,6 +285,7 @@ servo_props.inputs = [
 if CONFIG['COMPILE_ENVIRONMENT']:
     GENERATED_FILES += [
         'CompositorAnimatableProperties.h',
+        'CountedUnknownProperties.h',
         'nsComputedDOMStyleGenerated.inc',
         'nsCSSPropsGenerated.inc',
         'ServoStyleConsts.h',
@@ -292,6 +293,7 @@ if CONFIG['COMPILE_ENVIRONMENT']:
 
     EXPORTS.mozilla += [
         '!CompositorAnimatableProperties.h',
+        '!CountedUnknownProperties.h',
         '!ServoStyleConsts.h',
     ]
 
@@ -299,6 +301,12 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     compositor.script = 'GenerateCompositorAnimatableProperties.py:generate'
     compositor.inputs = [
         '!ServoCSSPropList.py',
+    ]
+
+    counted_unknown = GENERATED_FILES['CountedUnknownProperties.h']
+    counted_unknown.script = 'GenerateCountedUnknownProperties.py:generate'
+    counted_unknown.inputs = [
+        '/servo/components/style/properties/counted_unknown_properties.py',
     ]
 
     computed = GENERATED_FILES['nsComputedDOMStyleGenerated.inc']
