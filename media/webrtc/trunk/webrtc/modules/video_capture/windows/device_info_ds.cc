@@ -23,7 +23,7 @@
 namespace webrtc {
 namespace videocapturemodule {
 
-BOOL isCaptureDevice(DEV_BROADCAST_HDR *pHdr)
+BOOL isVideoDevice(DEV_BROADCAST_HDR *pHdr)
 {
   if (pHdr == NULL) {
     return FALSE;
@@ -32,7 +32,7 @@ BOOL isCaptureDevice(DEV_BROADCAST_HDR *pHdr)
     return FALSE;
   }
   DEV_BROADCAST_DEVICEINTERFACE* pDi = (DEV_BROADCAST_DEVICEINTERFACE*)pHdr;
-  return pDi->dbcc_classguid == KSCATEGORY_CAPTURE;
+  return pDi->dbcc_classguid == KSCATEGORY_VIDEO_CAMERA;
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
@@ -50,7 +50,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
     else if (uiMsg == WM_DEVICECHANGE)
     {
         pParent = (DeviceInfoDS*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-        if (pParent && isCaptureDevice((PDEV_BROADCAST_HDR)lParam))
+        if (pParent && isVideoDevice((PDEV_BROADCAST_HDR)lParam))
         {
             pParent->DeviceChange();
         }
@@ -130,7 +130,7 @@ DeviceInfoDS::DeviceInfoDS()
     DEV_BROADCAST_DEVICEINTERFACE di = { 0 };
     di.dbcc_size = sizeof(di);
     di.dbcc_devicetype  = DBT_DEVTYP_DEVICEINTERFACE;
-    di.dbcc_classguid  = KSCATEGORY_CAPTURE;
+    di.dbcc_classguid  = KSCATEGORY_VIDEO_CAMERA;
 
     _hdevnotify = RegisterDeviceNotification(_hwnd, &di,
                                              DEVICE_NOTIFY_WINDOW_HANDLE);
