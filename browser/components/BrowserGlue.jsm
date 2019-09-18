@@ -2004,17 +2004,6 @@ BrowserGlue.prototype = {
     });
 
     Services.tm.idleDispatchToMainThread(() => {
-      let enableCertErrorUITelemetry = Services.prefs.getBoolPref(
-        "security.certerrors.recordEventTelemetry",
-        false
-      );
-      Services.telemetry.setEventRecordingEnabled(
-        "security.ui.certerror",
-        enableCertErrorUITelemetry
-      );
-    });
-
-    Services.tm.idleDispatchToMainThread(() => {
       Services.prefs.addObserver(
         "permissions.eventTelemetry.enabled",
         this._togglePermissionPromptTelemetry
