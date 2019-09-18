@@ -213,4 +213,25 @@ data class LabeledMetricType<T>(
 
         return getMetricWithNewName(newMetricName)
     }
+
+    /**
+     * Get the specific metric for a given label index.
+     *
+     * This only works if a set of acceptable labels were specified in the
+     * metrics.yaml file. If static labels were not defined in that file or
+     * the index of the given label is not in the set, it will be recorded under
+     * the special [OTHER_LABEL].
+     *
+     * @param labelIndex The label
+     * @return The specific metric for that label
+     */
+    operator fun get(labelIndex: Int): T {
+        val actualLabel = if (labels != null && labelIndex < labels.size) {
+            labels.elementAt(labelIndex)
+        } else {
+            OTHER_LABEL
+        }
+
+        return this[actualLabel]
+    }
 }

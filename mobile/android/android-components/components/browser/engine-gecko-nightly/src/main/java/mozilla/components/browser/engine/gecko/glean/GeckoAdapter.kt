@@ -19,10 +19,21 @@ import org.mozilla.geckoview.RuntimeTelemetry
  * providing an instance to `GeckoRuntimeSettings.Builder().telemetryDelegate`.
  */
 class GeckoAdapter : RuntimeTelemetry.Delegate {
+    // Note that the `GleanGeckoMetricsMapping` is automatically generated at
+    // build time by the Glean SDK parsers.
+
     override fun onHistogram(metric: RuntimeTelemetry.Histogram) {
-        // Note that the `GleanGeckoMetricsMapping` is automatically generated at
-        // build time by the Glean SDK parsers.
-        GleanGeckoMetricsMapping.getHistogram(metric.name)?.accumulateSamples(metric.value)
+        if (metric.isCategorical) {
+            // Gecko categorical histograms are a bit special: their value indicates
+            // the index of the label they want to accumulate 1 unit to. Moreover,
+            // Gecko batches them up before sending: each value in `metric.value` is
+            // the index of a potentially different label.
+            GleanGeckoMetricsMapping.getCategoricalMetric(metric.name)?.let { categorical ->
+                metric.value.forEach { labelIndex -> categorical[labelIndex.toInt()].add(1) }
+            }
+        } else {
+            GleanGeckoMetricsMapping.getHistogram(metric.name)?.accumulateSamples(metric.value)
+        }
     }
 
     override fun onBooleanScalar(metric: RuntimeTelemetry.Metric<Boolean>) {
