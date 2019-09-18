@@ -32,6 +32,8 @@ ProfilerBacktrace::ProfilerBacktrace(
   MOZ_ASSERT(
       !!mProfileBuffer,
       "ProfilerBacktrace only takes a non-null UniquePtr<ProfileBuffer>");
+  MOZ_ASSERT(!mBlocksRingBuffer->IsThreadSafe(),
+             "ProfilerBacktrace only takes a non-thread-safe BlocksRingBuffer");
 }
 
 ProfilerBacktrace::~ProfilerBacktrace() {}
@@ -51,6 +53,28 @@ void ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
 }
 
 }  // namespace baseprofiler
+
+// static
+template <typename Destructor>
+UniquePtr<baseprofiler::ProfilerBacktrace, Destructor> BlocksRingBuffer::
+    Deserializer<UniquePtr<baseprofiler::ProfilerBacktrace, Destructor>>::Read(
+        BlocksRingBuffer::EntryReader& aER) {
+  auto blocksRingBuffer = aER.ReadObject<UniquePtr<BlocksRingBuffer>>();
+  if (!blocksRingBuffer) {
+    return nullptr;
+  }
+  MOZ_ASSERT(!blocksRingBuffer->IsThreadSafe(),
+             "ProfilerBacktrace only stores non-thread-safe BlocksRingBuffers");
+  int threadId = aER.ReadObject<int>();
+  std::string name = aER.ReadObject<std::string>();
+  auto profileBuffer =
+      MakeUnique<baseprofiler::ProfileBuffer>(*blocksRingBuffer);
+  return UniquePtr<baseprofiler::ProfilerBacktrace, Destructor>{
+      new baseprofiler::ProfilerBacktrace(name.c_str(), threadId,
+                                          std::move(blocksRingBuffer),
+                                          std::move(profileBuffer))};
+};
+
 }  // namespace mozilla
 
 #endif  // MOZ_BASE_PROFILER
