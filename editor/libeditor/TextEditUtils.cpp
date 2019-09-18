@@ -28,14 +28,6 @@ using namespace dom;
  ******************************************************************************/
 
 /**
- * IsBody() returns true if aNode is an html body node.
- */
-bool TextEditUtils::IsBody(nsINode* aNode) {
-  MOZ_ASSERT(aNode);
-  return aNode->IsHTMLElement(nsGkAtoms::body);
-}
-
-/**
  * IsBreak() returns true if aNode is an html break node.
  */
 bool TextEditUtils::IsBreak(nsINode* aNode) {
