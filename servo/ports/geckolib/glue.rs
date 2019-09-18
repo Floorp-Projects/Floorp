@@ -6553,6 +6553,15 @@ pub unsafe extern "C" fn Servo_UseCounters_Merge(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn Servo_IsPropertyIdRecordedInUseCounter(
+    use_counters: &UseCounters,
+    id: nsCSSPropertyID,
+) -> bool {
+    let id = NonCustomPropertyId::from_nscsspropertyid(id).unwrap();
+    use_counters.non_custom_properties.recorded(id)
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn Servo_IsCssPropertyRecordedInUseCounter(
     use_counters: &UseCounters,
     property: *const nsACString,
