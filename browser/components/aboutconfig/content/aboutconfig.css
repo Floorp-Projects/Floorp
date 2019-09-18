@@ -2,24 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-html {
-  height: 100%;
-}
-
 .hidden {
   display: none;
 }
 
-body.config-background {
-  min-height: 100%;
+.table-shown > #show-all,
+.table-shown > .config-background-wrapper {
+  display: none;
+}
+
+.config-background {
   background-image: url("chrome://browser/content/aboutconfig/background.svg");
   background-repeat: no-repeat;
   background-position: center center;
-  background-size: 450px;
+  background-size: 400px;
+  height: 350px;
 }
 
-body.config-warning {
-  background-image: url("chrome://browser/content/aboutconfig/background.svg#warning");
+.config-help-text {
+  text-align: center;
 }
 
 .title {
@@ -59,15 +60,9 @@ body.config-warning {
   background-position-x: right 9px;
 }
 
-#show-all:not(.hidden) {
+#show-all {
   display: block;
   margin: 10px auto;
-}
-
-/* Ghost the button when it's not selected. */
-#show-all:not(:focus):not(:hover):not(:active) {
-  background-color: transparent;
-  opacity: .7;
 }
 
 #prefs {
