@@ -491,14 +491,14 @@ add_task(async function sendToDevice_notSignedIn() {
       },
       {
         attrs: {
-          label: "Not Connected to Sync",
+          label: "Not Connected to Firefox",
         },
         disabled: true,
       },
       null,
       {
         attrs: {
-          label: "Sign in to Sync...",
+          label: "Sign in to Firefox...",
         },
       },
       {
