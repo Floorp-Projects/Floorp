@@ -886,12 +886,6 @@ nsresult Key::SetFromSource(T* aSource, uint32_t aIndex) {
   return NS_OK;
 }
 
-#ifdef DEBUG
-
-void Key::Assert(bool aCondition) const { MOZ_ASSERT(aCondition); }
-
-#endif  // DEBUG
-
 }  // namespace indexedDB
 }  // namespace dom
 }  // namespace mozilla
