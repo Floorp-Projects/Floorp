@@ -302,6 +302,9 @@ MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSECItem, SECItem,
                                       internal::SECITEM_FreeItem_true)
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSECKEYPrivateKey, SECKEYPrivateKey,
                                       SECKEY_DestroyPrivateKey)
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSECKEYPrivateKeyList,
+                                      SECKEYPrivateKeyList,
+                                      SECKEY_DestroyPrivateKeyList)
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSECKEYPublicKey, SECKEYPublicKey,
                                       SECKEY_DestroyPublicKey)
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSECMODModule, SECMODModule,
