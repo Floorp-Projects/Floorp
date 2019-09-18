@@ -84,8 +84,12 @@ private interface OAuthObserver {
     fun onError()
 }
 
+// Necessary to fetch a profile.
 const val SCOPE_PROFILE = "profile"
+// Necessary to obtain sync keys.
 const val SCOPE_SYNC = "https://identity.mozilla.com/apps/oldsync"
+// Necessary to obtain a sessionToken, which gives full access to the account.
+const val SCOPE_SESSION = "https://identity.mozilla.com/tokens/session"
 
 /**
  * An account manager which encapsulates various internal details of an account lifecycle and provides

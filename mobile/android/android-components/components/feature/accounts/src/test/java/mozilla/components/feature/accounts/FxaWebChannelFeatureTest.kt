@@ -14,6 +14,8 @@ import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Port
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.sync.AuthType
+import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.concept.sync.Profile
 import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
@@ -26,6 +28,7 @@ import mozilla.components.support.test.whenever
 import mozilla.components.support.webextensions.WebExtensionController
 import org.json.JSONException
 import org.json.JSONObject
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -289,7 +292,7 @@ class FxaWebChannelFeatureTest {
 
     // Receiving and responding a fxa-status message if account manager is logged in
     @Test
-    fun `COMMAND_STATUS with account manager is logged in`() {
+    fun `COMMAND_STATUS with account manager is logged in with profile`() {
         val sessionManager = mock<SessionManager>()
         val accountManager = mock<FxaAccountManager>()
         val session = mock<Session>()
@@ -303,7 +306,11 @@ class FxaWebChannelFeatureTest {
 
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
-        whenever(accountManager.accountProfile()).thenReturn(mock())
+        val account = mock<OAuthAccount>()
+        val profile = Profile(uid = "testUID", email = "test@example.com", avatar = null, displayName = null)
+        whenever(account.getSessionToken()).thenReturn("testToken")
+        whenever(accountManager.accountProfile()).thenReturn(profile)
+        whenever(accountManager.authenticatedAccount()).thenReturn(account)
         whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
         whenever(accountManager.logoutAsync()).thenReturn(logoutDeferred)
         whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
@@ -338,7 +345,73 @@ class FxaWebChannelFeatureTest {
         })
 
         assertNull(responseToTheWebChannel.value.getCWTSSupport())
-        assertTrue(responseToTheWebChannel.value.isSignedInUserNull())
+
+        val signedInUser = responseToTheWebChannel.value.signedInUser()
+        assertEquals("test@example.com", signedInUser.email)
+        assertEquals("testUID", signedInUser.uid)
+        assertTrue(signedInUser.verified)
+        assertEquals("testToken", signedInUser.sessionToken)
+    }
+
+    @Test
+    fun `COMMAND_STATUS with account manager is logged in without profile`() {
+        val sessionManager = mock<SessionManager>()
+        val accountManager = mock<FxaAccountManager>()
+        val session = mock<Session>()
+        val engineSession = mock<EngineSession>()
+        val ext = mock<WebExtension>()
+        val messageHandler = argumentCaptor<MessageHandler>()
+        val responseToTheWebChannel = argumentCaptor<JSONObject>()
+        val port = mock<Port>()
+        val expectedEngines = setOf(SyncEngine.HISTORY, SyncEngine.BOOKMARKS, SyncEngine.PASSWORDS)
+        val logoutDeferred = CompletableDeferred<Unit>()
+
+        WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
+
+        val account = mock<OAuthAccount>()
+        whenever(account.getSessionToken()).thenReturn("testToken")
+        whenever(accountManager.accountProfile()).thenReturn(null)
+        whenever(accountManager.authenticatedAccount()).thenReturn(account)
+        whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
+        whenever(accountManager.logoutAsync()).thenReturn(logoutDeferred)
+        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(port.engineSession).thenReturn(engineSession)
+
+        val webchannelFeature =
+            spy(FxaWebChannelFeature(testContext, null, mock(), sessionManager, accountManager))
+
+        webchannelFeature.onSessionAdded(session)
+        verify(ext).registerContentMessageHandler(
+            eq(engineSession),
+            eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
+            messageHandler.capture()
+        )
+        messageHandler.value.onPortConnected(port)
+
+        val requestFromTheWebChannel = JSONObject(
+            """{
+             "message":{
+                "command": "fxaccounts:fxa_status",
+                "messageId":123
+             }
+            }""".trimIndent()
+        )
+
+        messageHandler.value.onPortMessage(requestFromTheWebChannel, port)
+        verify(port).postMessage(responseToTheWebChannel.capture())
+
+        val capabilitiesFromWebChannel = responseToTheWebChannel.value.getSupportedEngines()
+        assertTrue(expectedEngines.all {
+            capabilitiesFromWebChannel.contains(it.nativeName)
+        })
+
+        assertNull(responseToTheWebChannel.value.getCWTSSupport())
+
+        val signedInUser = responseToTheWebChannel.value.signedInUser()
+        assertNull(signedInUser.email)
+        assertNull(signedInUser.uid)
+        assertTrue(signedInUser.verified)
+        assertEquals("testToken", signedInUser.sessionToken)
     }
 
     // Receiving and responding a fxa-status message if account manager is logged out
@@ -656,6 +729,31 @@ class FxaWebChannelFeatureTest {
         } catch (e: JSONException) {
             null
         }
+    }
+
+    data class SignedInUser(val email: String?, val uid: String?, val sessionToken: String, val verified: Boolean)
+
+    private fun JSONObject.signedInUser(): SignedInUser {
+        val obj = this.getJSONObject("message")
+            .getJSONObject("data")
+            .getJSONObject("signedInUser")
+
+        val email = if (obj.getString("email") == "null") {
+            null
+        } else {
+            obj.getString("email")
+        }
+        val uid = if (obj.getString("uid") == "null") {
+            null
+        } else {
+            obj.getString("uid")
+        }
+        return SignedInUser(
+            email = email,
+            uid = uid,
+            sessionToken = obj.getString("sessionToken"),
+            verified = obj.getBoolean("verified")
+        )
     }
 
     private fun JSONObject.isSignedInUserNull(): Boolean {
