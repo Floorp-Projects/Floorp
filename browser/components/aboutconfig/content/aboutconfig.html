@@ -13,9 +13,10 @@
           href="chrome://global/skin/in-content/info-pages.css" title="infop">
     <link rel="stylesheet" type="text/css"
           href="chrome://browser/content/aboutconfig/aboutconfig.css">
+    <link rel="localization" href="branding/brand.ftl">
     <link rel="localization" href="browser/aboutConfig.ftl">
     <script src="chrome://browser/content/aboutconfig/aboutconfig.js"></script>
-    <title data-l10n-id="about-config2-title"></title>
+    <title data-l10n-id="about-config-page-title"></title>
   </head>
   <body>
     <div class="container" role="alertdialog" aria-labelledby="warningTitle"
@@ -23,22 +24,22 @@
 
       <div class="title">
         <h1 id="warningTitle" class="title-text"
-            data-l10n-id="about-config-warning-title"></h1>
+            data-l10n-id="about-config-intro-warning-title"></h1>
       </div>
 
       <div class="description">
-        <p id="warningDescription" data-l10n-id="about-config-warning-text"></p>
+        <p id="warningDescription" data-l10n-id="about-config-intro-warning-text"></p>
       </div>
 
       <div class="toggle-container-with-text">
         <input type="checkbox" id="showWarningNextTime" checked>
         <label for="showWarningNextTime"
-               data-l10n-id="about-config-warning-checkbox"></label>
+               data-l10n-id="about-config-intro-warning-checkbox"></label>
       </div>
 
       <div class="button-container">
         <button autofocus id="warningButton"
-                data-l10n-id="about-config-warning-button"></button>
+                data-l10n-id="about-config-intro-warning-button"></button>
       </div>
     </div>
 
@@ -52,7 +53,11 @@
 
       <table id="prefs"></table>
 
-      <button id="show-all" data-l10n-id="about-config-show-all"></button>
+      <div class="config-background-wrapper">
+        <button id="show-all" class="ghost-button" data-l10n-id="about-config-show-all"></button>
+        <div class="config-background"></div>
+        <p class="config-help-text" data-l10n-id="about-config-caution-text"></p>
+      </div>
     </template>
   </body>
 </html>

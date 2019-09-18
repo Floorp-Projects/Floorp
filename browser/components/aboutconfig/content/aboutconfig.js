@@ -426,7 +426,6 @@ function onWarningButtonClick() {
 }
 
 function loadPrefs() {
-  document.body.className = "config-background";
   [...document.styleSheets].find(s => s.title == "infop").disabled = true;
 
   let { content } = document.getElementById("main");
@@ -526,7 +525,7 @@ function filterPrefs(options = {}) {
   }
 
   let showResults = gFilterString || gFilterPattern || gFilterShowAll;
-  document.getElementById("show-all").classList.toggle("hidden", showResults);
+  document.body.classList.toggle("table-shown", showResults);
 
   let prefArray = [];
   if (showResults) {
@@ -618,9 +617,4 @@ function filterPrefs(options = {}) {
       { once: true }
     );
   }
-
-  document.body.classList.toggle(
-    "config-warning",
-    location.href.split(":").every(l => gFilterString.includes(l))
-  );
 }
