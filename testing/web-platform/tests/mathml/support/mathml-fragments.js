@@ -167,15 +167,15 @@ var FragmentHelper = {
         if (element.classList.contains("mathml-container") ||
             element.classList.contains("foreign-container")) {
             for (var i = 0; i < 10; i++)
-                this.appendChild(fragment);
+                this.appendChild(element);
             return;
         }
         var child = element.firstElementChild;
         if (child) {
-            for (; child; child = child.nexElementChild)
+            for (; child; child = child.nextElementSibling) {
                 this.forceNonEmptyDescendants(child);
+            }
             return;
         }
-        throw "Cannot append child to the element";
     },
 }
