@@ -4078,6 +4078,9 @@ nsresult HTMLEditor::DeleteMostAncestorMailCiteElementIfEmpty(
   }
   bool isEmpty = true, seenBR = false;
   IsEmptyNodeImpl(mailCiteElement, &isEmpty, true, true, false, &seenBR);
+  if (!isEmpty) {
+    return NS_OK;
+  }
   EditorDOMPoint atEmptyMailCiteElement(mailCiteElement);
   {
     AutoEditorDOMPointChildInvalidator lockOffset(atEmptyMailCiteElement);
