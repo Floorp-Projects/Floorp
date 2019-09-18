@@ -18,6 +18,7 @@
 #include "mozilla/dom/WheelEventBinding.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/TextUtils.h"
 #include "nsAttrValueInlines.h"
 #include "nsCRTGlue.h"
 #include "nsQueryObject.h"
@@ -1540,7 +1541,7 @@ int32_t HTMLInputElement::MonthsSinceJan1970(uint32_t aYear,
 
 /* static */
 Decimal HTMLInputElement::StringToDecimal(const nsAString& aValue) {
-  if (!IsASCII(aValue)) {
+  if (!IsAscii(aValue)) {
     return Decimal::nan();
   }
   NS_LossyConvertUTF16toASCII asciiString(aValue);

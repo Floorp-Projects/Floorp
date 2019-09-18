@@ -1763,11 +1763,13 @@ bool TokenStreamCharsBase<Unit>::addLineOfContext(ErrorMetadata* err,
                "should only see UTF-8 here");
 
     bool simple = utf16WindowLength == encodedWindowLength;
+#ifdef DEBUG
+    auto isAscii = [](Unit u) { return IsAscii(u); };
     MOZ_ASSERT(std::all_of(encodedWindow, encodedWindow + encodedWindowLength,
-                           IsAscii<Unit>) == simple,
+                           isAscii) == simple,
                "equal window lengths in UTF-8 should correspond only to "
                "wholly-ASCII text");
-
+#endif
     if (simple) {
       err->tokenOffset = encodedTokenOffset;
       err->lineLength = encodedWindowLength;

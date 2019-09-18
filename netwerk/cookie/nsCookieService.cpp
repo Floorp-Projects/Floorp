@@ -64,6 +64,7 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/TextUtils.h"
 #include "nsIConsoleService.h"
 #include "nsTPriorityQueue.h"
 #include "nsVariant.h"
@@ -3948,7 +3949,7 @@ nsresult nsCookieService::GetBaseDomainFromHost(
 // components are lower-cased, and UTF-8 components are normalized per
 // RFC 3454 and converted to ACE.
 nsresult nsCookieService::NormalizeHost(nsCString& aHost) {
-  if (!IsASCII(aHost)) {
+  if (!IsAscii(aHost)) {
     nsAutoCString host;
     nsresult rv = mIDNService->ConvertUTF8toACE(aHost, host);
     if (NS_FAILED(rv)) return rv;

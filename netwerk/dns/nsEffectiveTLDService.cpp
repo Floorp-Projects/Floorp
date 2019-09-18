@@ -12,6 +12,7 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/TextUtils.h"
 
 #include "MainThreadUtils.h"
 #include "nsCRT.h"
@@ -400,7 +401,7 @@ nsresult nsEffectiveTLDService::GetBaseDomainInternal(nsCString& aHostname,
 // components are lower-cased, and UTF-8 components are normalized per
 // RFC 3454 and converted to ACE.
 nsresult nsEffectiveTLDService::NormalizeHostname(nsCString& aHostname) {
-  if (!IsASCII(aHostname)) {
+  if (!IsAscii(aHostname)) {
     nsresult rv = mIDNService->ConvertUTF8toACE(aHostname, aHostname);
     if (NS_FAILED(rv)) return rv;
   }

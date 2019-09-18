@@ -34,7 +34,7 @@ void TextEncoder::Encode(JSContext* aCx, JS::Handle<JSObject*> aObj,
     return;
   }
 
-  size_t utf8Len = ConvertUTF16toUTF8(
+  size_t utf8Len = ConvertUtf16toUtf8(
       aString, MakeSpan(reinterpret_cast<char*>(data.get()), bufLen.value()));
   MOZ_ASSERT(utf8Len <= bufLen.value());
 
@@ -53,7 +53,7 @@ void TextEncoder::EncodeInto(const nsAString& aSrc, const Uint8Array& aDst,
   aDst.ComputeLengthAndData();
   size_t read;
   size_t written;
-  Tie(read, written) = ConvertUTF16toUTF8Partial(
+  Tie(read, written) = ConvertUtf16toUtf8Partial(
       aSrc, MakeSpan(reinterpret_cast<char*>(aDst.Data()), aDst.Length()));
   aResult.mRead.Construct() = read;
   aResult.mWritten.Construct() = written;

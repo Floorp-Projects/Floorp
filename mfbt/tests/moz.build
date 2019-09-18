@@ -63,12 +63,18 @@ CppUnitTests([
     'TestTypedEnum',
     'TestTypeTraits',
     'TestUniquePtr',
-    'TestUtf8',
     'TestVariant',
     'TestVector',
     'TestWeakPtr',
     'TestWrappingOperations',
     'TestXorShift128PlusRNG',
+])
+
+# Not to be unified with the rest, because this test
+# sets MOZ_PRETEND_NO_JSRUST, which changes the behavior
+# of the included headers.
+CppUnitTests([
+    'TestUtf8',
 ])
 
 if not CONFIG['MOZ_ASAN']:

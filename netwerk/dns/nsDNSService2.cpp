@@ -42,6 +42,8 @@
 #include "mozilla/net/DNSListenerProxy.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/TextUtils.h"
+#include "mozilla/Utf8.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -776,12 +778,12 @@ nsresult nsDNSService::PreprocessHostname(bool aLocalDomain,
     }
   }
 
-  if (!aIDN || IsASCII(aInput)) {
+  if (!aIDN || IsAscii(aInput)) {
     aACE = aInput;
     return NS_OK;
   }
 
-  if (!(IsUTF8(aInput) && NS_SUCCEEDED(aIDN->ConvertUTF8toACE(aInput, aACE)))) {
+  if (!(IsUtf8(aInput) && NS_SUCCEEDED(aIDN->ConvertUTF8toACE(aInput, aACE)))) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;

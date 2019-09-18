@@ -52,8 +52,10 @@
 
 #include "mozilla/LoadInfo.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/TextUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 
+using mozilla::IsAscii;
 using mozilla::dom::AutoEntryScript;
 
 static NS_DEFINE_CID(kJSURICID, NS_JSURI_CID);
@@ -1078,7 +1080,7 @@ nsresult nsJSProtocolHandler::Create(nsISupports* aOuter, REFNSIID aIID,
                                         uStr);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!IsASCII(uStr)) {
+  if (!IsAscii(uStr)) {
     rv = NS_EscapeURL(NS_ConvertUTF16toUTF8(uStr),
                       esc_AlwaysCopy | esc_OnlyNonASCII, aUTF8Spec,
                       mozilla::fallible);

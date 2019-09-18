@@ -720,7 +720,7 @@ nsresult ProxyAutoConfig::SetupJS() {
     // and otherwise inflate Latin-1 to UTF-16 and compile that.
     const char* scriptData = this->mConcatenatedPACData.get();
     size_t scriptLength = this->mConcatenatedPACData.Length();
-    if (mozilla::IsValidUtf8(scriptData, scriptLength)) {
+    if (mozilla::IsUtf8(mozilla::MakeSpan(scriptData, scriptLength))) {
       JS::SourceText<Utf8Unit> srcBuf;
       if (!srcBuf.init(cx, scriptData, scriptLength,
                        JS::SourceOwnership::Borrowed)) {

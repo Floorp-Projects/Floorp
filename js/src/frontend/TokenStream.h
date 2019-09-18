@@ -1418,7 +1418,7 @@ class TokenStreamCharsShared {
    */
   static constexpr MOZ_ALWAYS_INLINE MOZ_MUST_USE bool isAsciiCodePoint(
       int32_t unit) {
-    return mozilla::IsAscii(unit);
+    return mozilla::IsAscii(static_cast<char32_t>(unit));
   }
 
   JSAtom* drainCharBufferIntoAtom(JSContext* cx) {

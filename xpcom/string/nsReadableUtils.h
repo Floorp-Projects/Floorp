@@ -15,17 +15,9 @@
 
 #include "mozilla/Assertions.h"
 #include "nsAString.h"
-#include "mozilla/Tuple.h"
-#include "encoding_rs_mem.h"
+#include "mozilla/TextUtils.h"
 
 #include "nsTArrayForwardDeclare.h"
-
-// Can't include mozilla/Encoding.h here. The implementation is in
-// the encoding_rs crate.
-extern "C" {
-// Declared as uint8_t instead of char to match declaration in another header.
-size_t encoding_utf8_valid_up_to(uint8_t const* buffer, size_t buffer_len);
-}
 
 // From the nsstring crate
 extern "C" {
@@ -55,95 +47,6 @@ bool nscstring_fallible_append_latin1_to_utf8_check(nsACString* aThis,
                                                     size_t aOldLen);
 }
 
-/**
- * If all the code points in the input are below U+0100, converts to Latin1,
- * i.e. unsigned byte value is Unicode scalar value; not windows-1252. If
- * there are code points above U+00FF, produces garbage in a memory-safe way
- * and will likely start asserting in future debug builds. The nature of the
- * garbage depends on the CPU architecture and must not be relied upon.
- *
- * The length of aDest must be not be less than the length of aSource.
- */
-inline void LossyConvertUTF16toLatin1(mozilla::Span<const char16_t> aSource,
-                                      mozilla::Span<char> aDest) {
-  encoding_mem_convert_utf16_to_latin1_lossy(
-      aSource.Elements(), aSource.Length(), aDest.Elements(), aDest.Length());
-}
-
-/**
- * If all the code points in the input are below U+0100, converts to Latin1,
- * i.e. unsigned byte value is Unicode scalar value; not windows-1252. If
- * there are code points above U+00FF, asserts in debug builds and produces
- * garbage in memory-safe way in release builds. The nature of the garbage
- * may depend on the CPU architecture and must not be relied upon.
- *
- * The length of aDest must be not be less than the length of aSource.
- */
-inline size_t LossyConvertUTF8toLatin1(mozilla::Span<const char> aSource,
-                                       mozilla::Span<char> aDest) {
-  return encoding_mem_convert_utf8_to_latin1_lossy(
-      aSource.Elements(), aSource.Length(), aDest.Elements(), aDest.Length());
-}
-
-/**
- * Interprets unsigned byte value as Unicode scalar value (i.e. not
- * windows-1252!).
- *
- * The length of aDest must be not be less than the length of aSource.
- */
-inline void ConvertLatin1toUTF16(mozilla::Span<const char> aSource,
-                                 mozilla::Span<char16_t> aDest) {
-  encoding_mem_convert_latin1_to_utf16(aSource.Elements(), aSource.Length(),
-                                       aDest.Elements(), aDest.Length());
-}
-
-/**
- * Lone surrogates are replaced with the REPLACEMENT CHARACTER.
- *
- * The length of aDest must be at least the length of aSource times three.
- *
- * Returns the number of code units written.
- */
-inline size_t ConvertUTF16toUTF8(mozilla::Span<const char16_t> aSource,
-                                 mozilla::Span<char> aDest) {
-  return encoding_mem_convert_utf16_to_utf8(
-      aSource.Elements(), aSource.Length(), aDest.Elements(), aDest.Length());
-}
-
-/**
- * Lone surrogates are replaced with the REPLACEMENT CHARACTER.
- *
- * The conversion is guaranteed to be complete if the length of aDest is
- * at least the length of aSource times three.
- *
- * The output is always valid UTF-8 ending on scalar value boundary
- * even in the case of partial conversion.
- *
- * Returns the number of code units read and the number of code
- * units written.
- */
-inline mozilla::Tuple<size_t, size_t> ConvertUTF16toUTF8Partial(
-    mozilla::Span<const char16_t> aSource, mozilla::Span<char> aDest) {
-  size_t srcLen = aSource.Length();
-  size_t dstLen = aDest.Length();
-  encoding_mem_convert_utf16_to_utf8_partial(aSource.Elements(), &srcLen,
-                                             aDest.Elements(), &dstLen);
-  return mozilla::MakeTuple(srcLen, dstLen);
-}
-
-/**
- * Malformed byte sequences are replaced with the REPLACEMENT CHARACTER.
- *
- * The length of aDest must at least one greater than the length of aSource.
- *
- * Returns the number of code units written.
- */
-inline size_t ConvertUTF8toUTF16(mozilla::Span<const char> aSource,
-                                 mozilla::Span<char16_t> aDest) {
-  return encoding_mem_convert_utf8_to_utf16(
-      aSource.Elements(), aSource.Length(), aDest.Elements(), aDest.Length());
-}
-
 inline size_t Distance(const nsReadingIterator<char16_t>& aStart,
                        const nsReadingIterator<char16_t>& aEnd) {
   MOZ_ASSERT(aStart.get() <= aEnd.get());
@@ -155,6 +58,9 @@ inline size_t Distance(const nsReadingIterator<char>& aStart,
   MOZ_ASSERT(aStart.get() <= aEnd.get());
   return static_cast<size_t>(aEnd.get() - aStart.get());
 }
+
+// NOTE: Operations that don't need an operand to be an XPCOM string
+// are in mozilla/TextUtils.h and mozilla/Utf8.h.
 
 // UTF-8 to UTF-16
 // Invalid UTF-8 byte sequences are replaced with the REPLACEMENT CHARACTER.
@@ -474,123 +380,13 @@ char16_t* CopyUnicodeTo(const nsAString& aSource, uint32_t aSrcOffset,
                         char16_t* aDest, uint32_t aLength);
 
 /**
- * Returns |true| if |aString| contains only ASCII characters, that is,
- * characters in the range (0x00, 0x7F).
- *
- * @param aString a 16-bit wide string to scan
- */
-inline bool IsASCII(mozilla::Span<const char16_t> aString) {
-  return encoding_mem_is_basic_latin(aString.Elements(), aString.Length());
-}
-
-/**
- * Returns |true| if |aString| contains only ASCII characters, that is,
- * characters in the range (0x00, 0x7F).
- *
- * @param aString a 8-bit wide string to scan
- */
-inline bool IsASCII(mozilla::Span<const char> aString) {
-  size_t length = aString.Length();
-  const char* ptr = aString.Elements();
-  // For short strings, avoid the function call, since, the SIMD
-  // code won't have a chance to kick in anyway.
-  if (length < 16) {
-    const uint8_t* uptr = reinterpret_cast<const uint8_t*>(ptr);
-    uint8_t accu = 0;
-    for (size_t i = 0; i < length; i++) {
-      accu |= uptr[i];
-    }
-    return accu < 0x80U;
-  }
-  return encoding_mem_is_ascii(ptr, length);
-}
-
-/**
- * Returns |true| if |aString| contains only Latin1 characters, that is,
- * characters in the range (U+0000, U+00FF).
- *
- * @param aString a potentially-invalid UTF-16 string to scan
- */
-inline bool IsUTF16Latin1(mozilla::Span<const char16_t> aString) {
-  return encoding_mem_is_utf16_latin1(aString.Elements(), aString.Length());
-}
-
-/**
- * Returns |true| if |aString| contains only Latin1 characters, that is,
- * characters in the range (U+0000, U+00FF).
- *
- * If you know that the argument is always absolutely guaranteed to be valid
- * UTF-8, use the faster UnsafeIsValidUTF8Latin1() instead.
- *
- * @param aString potentially-invalid UTF-8 string to scan
- */
-inline bool IsUTF8Latin1(mozilla::Span<const char> aString) {
-  return encoding_mem_is_utf8_latin1(aString.Elements(), aString.Length());
-}
-
-/**
- * Returns |true| if |aString| contains only Latin1 characters, that is,
- * characters in the range (U+0000, U+00FF).
- *
- * The argument MUST be valid UTF-8. If you are at all unsure, use IsUTF8Latin1
- * instead!
- *
- * @param aString known-valid UTF-8 string to scan
- */
-inline bool UnsafeIsValidUTF8Latin1(mozilla::Span<const char> aString) {
-  return encoding_mem_is_str_latin1(aString.Elements(), aString.Length());
-}
-
-/**
- * Returns |true| if |aString| is a valid UTF-8 string.
- *
- * Note that this doesn't check whether the string might look like a valid
- * string in another encoding, too, e.g. ISO-2022-JP.
- *
- * @param aString an 8-bit wide string to scan
- */
-inline bool IsUTF8(mozilla::Span<const char> aString) {
-  size_t length = aString.Length();
-  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(aString.Elements());
-  // For short strings, the function call is a pessimization, and the SIMD
-  // code won't have a chance to kick in anyway.
-  if (length < 16) {
-    for (size_t i = 0; i < length; i++) {
-      if (ptr[i] >= 0x80U) {
-        ptr += i;
-        length -= i;
-        goto end;
-      }
-    }
-    return true;
-  }
-end:
-  return length == encoding_utf8_valid_up_to(ptr, length);
-}
-
-/**
- * Returns the index of the first unpaired surrogate or
- * the length of the string if there are none.
- */
-inline uint32_t UTF16ValidUpTo(mozilla::Span<const char16_t> aString) {
-  return encoding_mem_utf16_valid_up_to(aString.Elements(), aString.Length());
-}
-
-/**
- * Replaces unpaired surrogates with U+FFFD in the argument.
- */
-inline void EnsureUTF16ValiditySpan(mozilla::Span<char16_t> aString) {
-  encoding_mem_ensure_utf16_validity(aString.Elements(), aString.Length());
-}
-
-/**
  * Replaces unpaired surrogates with U+FFFD in the argument.
  *
  * Copies a shared string buffer or an otherwise read-only
  * buffer only if there are unpaired surrogates.
  */
 inline void EnsureUTF16Validity(nsAString& aString) {
-  uint32_t upTo = UTF16ValidUpTo(aString);
+  uint32_t upTo = mozilla::Utf16ValidUpTo(aString);
   uint32_t len = aString.Length();
   if (upTo == len) {
     return;
@@ -598,7 +394,7 @@ inline void EnsureUTF16Validity(nsAString& aString) {
   char16_t* ptr = aString.BeginWriting();
   auto span = mozilla::MakeSpan(ptr, len);
   span[upTo] = 0xFFFD;
-  EnsureUTF16ValiditySpan(span.From(upTo + 1));
+  mozilla::EnsureUtf16ValiditySpan(span.From(upTo + 1));
 }
 
 bool ParseString(const nsACString& aAstring, char aDelimiter,

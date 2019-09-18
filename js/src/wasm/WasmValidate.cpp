@@ -33,9 +33,11 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
+using mozilla::AsChars;
 using mozilla::CheckedInt;
 using mozilla::CheckedInt32;
-using mozilla::IsValidUtf8;
+using mozilla::IsUtf8;
+using mozilla::MakeSpan;
 using mozilla::Unused;
 
 // Decoder implementation.
@@ -1544,7 +1546,7 @@ static UniqueChars DecodeName(Decoder& d) {
     return nullptr;
   }
 
-  if (!IsValidUtf8(bytes, numBytes)) {
+  if (!IsUtf8(AsChars(MakeSpan(bytes, numBytes)))) {
     return nullptr;
   }
 

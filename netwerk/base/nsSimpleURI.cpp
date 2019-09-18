@@ -19,6 +19,7 @@
 #include "nsEscape.h"
 #include "nsError.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/TextUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "nsIURIMutator.h"
 #include "mozilla/net/MozURL.h"
@@ -624,7 +625,7 @@ NS_IMETHODIMP
 nsSimpleURI::GetAsciiSpec(nsACString& aResult) {
   nsresult rv = GetSpec(aResult);
   if (NS_FAILED(rv)) return rv;
-  MOZ_ASSERT(IsASCII(aResult), "The spec should be ASCII");
+  MOZ_ASSERT(IsAscii(aResult), "The spec should be ASCII");
   return NS_OK;
 }
 

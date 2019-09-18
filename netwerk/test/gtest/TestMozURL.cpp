@@ -4,6 +4,7 @@
 #include <regex>
 #include "json/json.h"
 #include "json/reader.h"
+#include "mozilla/TextUtils.h"
 #include "mozilla/net/MozURL.h"
 #include "nsCOMPtr.h"
 #include "nsDirectoryServiceDefs.h"
@@ -252,7 +253,7 @@ bool OriginMatchesExpectedOrigin(const nsACString& aOrigin,
 }
 
 bool IsUUID(const nsACString& aString) {
-  if (!IsASCII(aString)) {
+  if (!IsAscii(aString)) {
     return false;
   }
 
