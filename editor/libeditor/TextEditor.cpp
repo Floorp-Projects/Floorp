@@ -650,8 +650,16 @@ nsresult TextEditor::DeleteSelectionAsSubAction(EDirection aDirectionAndAmount,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eDeleteSelectedContent, aDirectionAndAmount);
+      *this, EditSubAction::eDeleteSelectedContent, aDirectionAndAmount,
+      ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   EditActionResult result =
       HandleDeleteSelection(aDirectionAndAmount, aStripWrappers);
@@ -716,8 +724,15 @@ nsresult TextEditor::DeleteSelectionWithTransaction(
 
   RefPtr<CharacterData> deleteCharData =
       CharacterData::FromNodeOrNull(deleteNode);
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eDeleteSelectedContent, aDirection);
+      *this, EditSubAction::eDeleteSelectedContent, aDirection, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   if (AsHTMLEditor()) {
     if (!deleteNode) {
@@ -937,8 +952,15 @@ nsresult TextEditor::InsertTextAsSubAction(const nsAString& aStringToInsert) {
                                     ? EditSubAction::eInsertTextComingFromIME
                                     : EditSubAction::eInsertText;
 
-  AutoEditSubActionNotifier startToHandleEditSubAction(*this, editSubAction,
-                                                       nsIEditor::eNext);
+  IgnoredErrorResult ignoredError;
+  AutoEditSubActionNotifier startToHandleEditSubAction(
+      *this, editSubAction, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   EditActionResult result = HandleInsertText(editSubAction, aStringToInsert);
   NS_WARNING_ASSERTION(result.Succeeded(), "HandleInsertText() failed");
@@ -971,8 +993,15 @@ nsresult TextEditor::InsertLineBreakAsSubAction() {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eInsertLineBreak, nsIEditor::eNext);
+      *this, EditSubAction::eInsertLineBreak, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   EditActionResult result = InsertLineFeedCharacterAtSelection();
   if (result.EditorDestroyed()) {
@@ -1017,8 +1046,15 @@ nsresult TextEditor::ReplaceTextAsAction(const nsAString& aString,
   AutoPlaceholderBatch treatAsOneTransaction(*this);
 
   // This should emulates inserting text for better undo/redo behavior.
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eInsertText, nsIEditor::eNext);
+      *this, EditSubAction::eInsertText, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return EditorBase::ToGenericNSResult(ignoredError.StealNSResult());
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   if (!aReplaceRange) {
     nsresult rv = SetTextAsSubAction(aString);
@@ -1063,8 +1099,15 @@ nsresult TextEditor::SetTextAsSubAction(const nsAString& aString) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eSetText, nsIEditor::eNext);
+      *this, EditSubAction::eSetText, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   if (IsPlaintextEditor() && !IsIMEComposing() && !IsUndoRedoEnabled() &&
       GetEditAction() != EditAction::eReplaceText && mMaxTextLength < 0) {
@@ -1510,8 +1553,15 @@ nsresult TextEditor::UndoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
 
   nsresult rv = NS_OK;
   {
+    IgnoredErrorResult ignoredError;
     AutoEditSubActionNotifier startToHandleEditSubAction(
-        *this, EditSubAction::eUndo, nsIEditor::eNone);
+        *this, EditSubAction::eUndo, nsIEditor::eNone, ignoredError);
+    if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+      return EditorBase::ToGenericNSResult(ignoredError.StealNSResult());
+    }
+    NS_WARNING_ASSERTION(
+        !ignoredError.Failed(),
+        "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
     RefPtr<TransactionManager> transactionManager(mTransactionManager);
     for (uint32_t i = 0; i < aCount; ++i) {
@@ -1582,8 +1632,15 @@ nsresult TextEditor::RedoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
 
   nsresult rv = NS_OK;
   {
+    IgnoredErrorResult ignoredError;
     AutoEditSubActionNotifier startToHandleEditSubAction(
-        *this, EditSubAction::eRedo, nsIEditor::eNone);
+        *this, EditSubAction::eRedo, nsIEditor::eNone, ignoredError);
+    if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+      return ignoredError.StealNSResult();
+    }
+    NS_WARNING_ASSERTION(
+        !ignoredError.Failed(),
+        "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
     RefPtr<TransactionManager> transactionManager(mTransactionManager);
     for (uint32_t i = 0; i < aCount; ++i) {
@@ -1966,8 +2023,15 @@ nsresult TextEditor::InsertWithQuotationsAsSubAction(
     quotedStuff.Append(char16_t('\n'));
   }
 
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eInsertText, nsIEditor::eNext);
+      *this, EditSubAction::eInsertText, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   // XXX Do we need to support paste-as-quotation in password editor (and
   //     also in single line editor)?
@@ -1997,69 +2061,6 @@ nsresult TextEditor::SharedOutputString(uint32_t aFlags, bool* aIsCollapsed,
       ComputeValueInternal(NS_LITERAL_STRING("text/plain"), aFlags, aResult);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "ComputeValueInternal() failed");
   return rv;
-}
-
-void TextEditor::OnStartToHandleTopLevelEditSubAction(
-    EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
-
-  EditorBase::OnStartToHandleTopLevelEditSubAction(aEditSubAction, aDirection);
-  if (!rules) {
-    return;
-  }
-
-  MOZ_ASSERT(GetTopLevelEditSubAction() == aEditSubAction);
-  MOZ_ASSERT(GetDirectionOfTopLevelEditSubAction() == aDirection);
-
-  if (aEditSubAction == EditSubAction::eSetText) {
-    // SetText replaces all text, so spell checker handles starting from the
-    // start of new value.
-    SetSpellCheckRestartPoint(EditorDOMPoint(mRootElement, 0));
-  } else {
-    bool useSelectionAnchor = true;
-    if (aEditSubAction == EditSubAction::eInsertText ||
-        aEditSubAction == EditSubAction::eInsertTextComingFromIME) {
-      // For spell checker, previous selected node should be text node if
-      // possible. If anchor is root of editor, it may become invalid offset
-      // after inserting text.
-      EditorRawDOMPoint point = FindBetterInsertionPoint(
-          EditorRawDOMPoint(SelectionRefPtr()->AnchorRef()));
-      if (point.IsSet()) {
-        SetSpellCheckRestartPoint(point);
-        useSelectionAnchor = false;
-      }
-    }
-    if (useSelectionAnchor && SelectionRefPtr()->AnchorRef().IsSet()) {
-      SetSpellCheckRestartPoint(
-          EditorRawDOMPoint(SelectionRefPtr()->AnchorRef()));
-    }
-  }
-
-  DebugOnly<nsresult> rv = rules->BeforeEdit();
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "TextEditRules::BeforeEdit() failed to handle something");
-}
-
-void TextEditor::OnEndHandlingTopLevelEditSubAction() {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  if (mRules) {
-    // Protect the edit rules object from dying
-    RefPtr<TextEditRules> rules(mRules);
-
-    // post processing
-    DebugOnly<nsresult> rv = rules->AfterEdit();
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "TextEditRules::AfterEdit() failed to handle something");
-  }
-  EditorBase::OnEndHandlingTopLevelEditSubAction();
-  MOZ_ASSERT(!GetTopLevelEditSubAction());
-  MOZ_ASSERT(GetDirectionOfTopLevelEditSubAction() == eNone);
 }
 
 nsresult TextEditor::SelectEntireDocument() {

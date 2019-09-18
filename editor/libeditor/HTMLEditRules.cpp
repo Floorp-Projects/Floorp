@@ -284,144 +284,149 @@ nsresult HTMLEditRules::DetachEditor() {
   return TextEditRules::DetachEditor();
 }
 
-nsresult HTMLEditRules::BeforeEdit() {
-  MOZ_ASSERT(!mIsHandling);
+void HTMLEditor::OnStartToHandleTopLevelEditSubAction(
+    EditSubAction aTopLevelEditSubAction,
+    nsIEditor::EDirection aDirectionOfTopLevelEditSubAction, ErrorResult& aRv) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!aRv.Failed());
 
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  EditorBase::OnStartToHandleTopLevelEditSubAction(
+      aTopLevelEditSubAction, aDirectionOfTopLevelEditSubAction, aRv);
+
+  MOZ_ASSERT(GetTopLevelEditSubAction() == aTopLevelEditSubAction);
+  MOZ_ASSERT(GetDirectionOfTopLevelEditSubAction() ==
+             aDirectionOfTopLevelEditSubAction);
+
+  if (NS_WARN_IF(Destroyed())) {
+    aRv.Throw(NS_ERROR_EDITOR_DESTROYED);
+    return;
   }
 
-  if (!mInitialized) {
-    return NS_OK;  // We should do nothing if we're being initialized.
+  if (!mInitSucceeded) {
+    return;  // We should do nothing if we're being initialized.
   }
-
-#ifdef DEBUG
-  mIsHandling = true;
-#endif  // #ifdef DEBUG
-
-  AutoSafeEditorData setData(*this, *mHTMLEditor);
 
   // Remember where our selection was before edit action took place:
-  if (HTMLEditorRef().GetCompositionStartPoint().IsSet()) {
+  if (GetCompositionStartPoint().IsSet()) {
     // If there is composition string, let's remember current composition
     // range.
-    HTMLEditorRef().TopLevelEditSubActionDataRef().mSelectedRange->StoreRange(
-        HTMLEditorRef().GetCompositionStartPoint(),
-        HTMLEditorRef().GetCompositionEndPoint());
+    TopLevelEditSubActionDataRef().mSelectedRange->StoreRange(
+        GetCompositionStartPoint(), GetCompositionEndPoint());
   } else {
     // Get the selection location
+    // XXX This may occur so that I think that we shouldn't throw exception
+    //     in this case.
     if (!SelectionRefPtr()->RangeCount()) {
-      return NS_ERROR_UNEXPECTED;
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return;
     }
-    HTMLEditorRef().TopLevelEditSubActionDataRef().mSelectedRange->StoreRange(
+    TopLevelEditSubActionDataRef().mSelectedRange->StoreRange(
         SelectionRefPtr()->GetRangeAt(0));
   }
-  nsCOMPtr<nsINode> selStartNode = HTMLEditorRef()
-                                       .TopLevelEditSubActionDataRef()
-                                       .mSelectedRange->mStartContainer;
-  nsCOMPtr<nsINode> selEndNode = HTMLEditorRef()
-                                     .TopLevelEditSubActionDataRef()
-                                     .mSelectedRange->mEndContainer;
+  nsCOMPtr<nsINode> selStartNode =
+      TopLevelEditSubActionDataRef().mSelectedRange->mStartContainer;
+  nsCOMPtr<nsINode> selEndNode =
+      TopLevelEditSubActionDataRef().mSelectedRange->mEndContainer;
 
   // Register with range updater to track this as we perturb the doc
-  HTMLEditorRef().RangeUpdaterRef().RegisterRangeItem(
-      HTMLEditorRef().TopLevelEditSubActionDataRef().mSelectedRange);
+  RangeUpdaterRef().RegisterRangeItem(
+      TopLevelEditSubActionDataRef().mSelectedRange);
 
   // Remember current inline styles for deletion and normal insertion ops
   bool cacheInlineStyles;
-  switch (HTMLEditorRef().GetTopLevelEditSubAction()) {
+  switch (aTopLevelEditSubAction) {
     case EditSubAction::eInsertText:
     case EditSubAction::eInsertTextComingFromIME:
     case EditSubAction::eDeleteSelectedContent:
       cacheInlineStyles = true;
       break;
     default:
-      cacheInlineStyles = IsStyleCachePreservingSubAction(
-          HTMLEditorRef().GetTopLevelEditSubAction());
+      cacheInlineStyles =
+          IsStyleCachePreservingSubAction(aTopLevelEditSubAction);
       break;
   }
   if (cacheInlineStyles) {
     nsCOMPtr<nsINode> selNode =
-        HTMLEditorRef().GetDirectionOfTopLevelEditSubAction() ==
-                nsIEditor::eNext
-            ? selEndNode
-            : selStartNode;
+        aDirectionOfTopLevelEditSubAction == nsIEditor::eNext ? selEndNode
+                                                              : selStartNode;
     if (NS_WARN_IF(!selNode)) {
-      return NS_ERROR_FAILURE;
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
     }
-    nsresult rv = MOZ_KnownLive(HTMLEditorRef()).CacheInlineStyles(*selNode);
+    nsresult rv = CacheInlineStyles(*selNode);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      aRv.Throw(rv);
+      return;
     }
   }
 
   // Stabilize the document against contenteditable count changes
-  Document* doc = HTMLEditorRef().GetDocument();
-  if (NS_WARN_IF(!doc)) {
-    return NS_ERROR_FAILURE;
+  Document* document = GetDocument();
+  if (NS_WARN_IF(!document)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
   }
-  if (doc->GetEditingState() == Document::EditingState::eContentEditable) {
-    doc->ChangeContentEditableCount(nullptr, +1);
-    HTMLEditorRef()
-        .TopLevelEditSubActionDataRef()
-        .mRestoreContentEditableCount = true;
+  if (document->GetEditingState() == Document::EditingState::eContentEditable) {
+    document->ChangeContentEditableCount(nullptr, +1);
+    TopLevelEditSubActionDataRef().mRestoreContentEditableCount = true;
   }
 
   // Check that selection is in subtree defined by body node
-  nsresult rv =
-      MOZ_KnownLive(HTMLEditorRef()).EnsureSelectionInBodyOrDocumentElement();
+  nsresult rv = EnsureSelectionInBodyOrDocumentElement();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    return NS_ERROR_EDITOR_DESTROYED;
+    aRv.Throw(NS_ERROR_EDITOR_DESTROYED);
+    return;
   }
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "EnsureSelectionInBodyOrDocumentElement() failed, but ignored");
-
-  return NS_OK;
 }
 
-nsresult HTMLEditRules::AfterEdit() {
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
+nsresult HTMLEditor::OnEndHandlingTopLevelEditSubAction() {
+  MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
-  if (!mInitialized) {
-    return NS_OK;  // We should do nothing if we're being initialized.
-  }
-
-#ifdef DEBUG
-  MOZ_ASSERT(mIsHandling);
-  mIsHandling = false;
-#endif  // #ifdef DEBUG
-
-  AutoSafeEditorData setData(*this, *mHTMLEditor);
-
-  // Do all the tricky stuff
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                    .OnEndHandlingTopLevelEditSubActionInternal();
-  // Perhaps, we need to do the following jobs even if the editor has been
-  // destroyed since they adjust some states of HTML document but don't
-  // modify the DOM tree nor Selection.
-
-  // Free up selectionState range item
-  HTMLEditorRef().RangeUpdaterRef().DropRangeItem(
-      HTMLEditorRef().TopLevelEditSubActionDataRef().mSelectedRange);
-
-  // Reset the contenteditable count to its previous value
-  if (HTMLEditorRef()
-          .TopLevelEditSubActionDataRef()
-          .mRestoreContentEditableCount) {
-    Document* doc = HTMLEditorRef().GetDocument();
-    if (NS_WARN_IF(!doc)) {
-      return NS_ERROR_FAILURE;
+  nsresult rv;
+  while (true) {
+    if (NS_WARN_IF(Destroyed())) {
+      rv = NS_ERROR_EDITOR_DESTROYED;
+      break;
     }
-    if (doc->GetEditingState() == Document::EditingState::eContentEditable) {
-      doc->ChangeContentEditableCount(nullptr, -1);
-    }
-  }
 
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "OnEndHandlingTopLevelEditSubActionInternal() failed");
+    if (!mInitSucceeded) {
+      rv = NS_OK;  // We should do nothing if we're being initialized.
+      break;
+    }
+
+    // Do all the tricky stuff
+    rv = OnEndHandlingTopLevelEditSubActionInternal();
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "OnEndHandlingTopLevelEditSubActionInternal() failied");
+    // Perhaps, we need to do the following jobs even if the editor has been
+    // destroyed since they adjust some states of HTML document but don't
+    // modify the DOM tree nor Selection.
+
+    // Free up selectionState range item
+    RangeUpdaterRef().DropRangeItem(
+        TopLevelEditSubActionDataRef().mSelectedRange);
+
+    // Reset the contenteditable count to its previous value
+    if (TopLevelEditSubActionDataRef().mRestoreContentEditableCount) {
+      Document* document = GetDocument();
+      if (NS_WARN_IF(!document)) {
+        rv = NS_ERROR_FAILURE;
+        break;
+      }
+      if (document->GetEditingState() ==
+          Document::EditingState::eContentEditable) {
+        document->ChangeContentEditableCount(nullptr, -1);
+      }
+    }
+    break;
+  }
+  EditorBase::OnEndHandlingTopLevelEditSubAction();
+  MOZ_ASSERT(!GetTopLevelEditSubAction());
+  MOZ_ASSERT(GetDirectionOfTopLevelEditSubAction() == eNone);
   return rv;
 }
 
@@ -1628,8 +1633,16 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
   //     In such case, naming the transaction "TypingTxnName" is odd.
   AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::TypingTxnName);
 
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eInsertParagraphSeparator, nsIEditor::eNext);
+      *this, EditSubAction::eInsertParagraphSeparator, nsIEditor::eNext,
+      ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return EditActionResult(ignoredError.StealNSResult());
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   UndefineCaretBidiLevel();
 
@@ -4088,13 +4101,20 @@ EditActionResult HTMLEditor::MakeOrChangeListAndListItemAsSubAction(
   //     `<dd>` or `<dt>` by
   //     HTMLEditor::MakeDefinitionListItemWithTransaction().  But this
   //     difference may be a bug.  We should investigate this later.
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this,
       &aListElementOrListItemElementTagName == nsGkAtoms::dd ||
               &aListElementOrListItemElementTagName == nsGkAtoms::dt
           ? EditSubAction::eCreateOrChangeDefinitionListItem
           : EditSubAction::eCreateOrChangeList,
-      nsIEditor::eNext);
+      nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return EditActionResult(ignoredError.StealNSResult());
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
@@ -4622,8 +4642,15 @@ nsresult HTMLEditor::RemoveListAtSelectionAsSubAction() {
   }
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eRemoveList, nsIEditor::eNext);
+      *this, EditSubAction::eRemoveList, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   if (!SelectionRefPtr()->IsCollapsed()) {
     nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
@@ -4878,8 +4905,15 @@ EditActionResult HTMLEditor::IndentAsSubAction() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eIndent, nsIEditor::eNext);
+      *this, EditSubAction::eIndent, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return EditActionResult(ignoredError.StealNSResult());
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   EditActionResult result = CanHandleHTMLEditSubAction();
   if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
@@ -5536,8 +5570,15 @@ EditActionResult HTMLEditor::OutdentAsSubAction() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eOutdent, nsIEditor::eNext);
+      *this, EditSubAction::eOutdent, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return EditActionResult(ignoredError.StealNSResult());
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   EditActionResult result = CanHandleHTMLEditSubAction();
   if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
@@ -6245,8 +6286,16 @@ EditActionResult HTMLEditor::AlignAsSubAction(const nsAString& aAlignType) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eSetOrClearAlignment, nsIEditor::eNext);
+      *this, EditSubAction::eSetOrClearAlignment, nsIEditor::eNext,
+      ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return EditActionResult(ignoredError.StealNSResult());
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   EditActionResult result = CanHandleHTMLEditSubAction();
   if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
@@ -10675,8 +10724,16 @@ EditActionResult HTMLEditor::SetSelectionToAbsoluteAsSubAction() {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eSetPositionToAbsolute, nsIEditor::eNext);
+      *this, EditSubAction::eSetPositionToAbsolute, nsIEditor::eNext,
+      ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return EditActionResult(ignoredError.StealNSResult());
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   EditActionResult result = CanHandleHTMLEditSubAction();
   if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
@@ -11024,8 +11081,16 @@ EditActionResult HTMLEditor::SetSelectionToStaticAsSubAction() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eSetPositionToStatic, nsIEditor::eNext);
+      *this, EditSubAction::eSetPositionToStatic, nsIEditor::eNext,
+      ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return EditActionResult(ignoredError.StealNSResult());
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   EditActionResult result = CanHandleHTMLEditSubAction();
   if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
@@ -11084,11 +11149,18 @@ EditActionResult HTMLEditor::AddZIndexAsSubAction(int32_t aChange) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this,
       aChange < 0 ? EditSubAction::eDecreaseZIndex
                   : EditSubAction::eIncreaseZIndex,
-      nsIEditor::eNext);
+      nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return EditActionResult(ignoredError.StealNSResult());
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   EditActionResult result = CanHandleHTMLEditSubAction();
   if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
