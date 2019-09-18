@@ -435,11 +435,6 @@ function initPageCertError() {
     document.querySelector(".exceptionDialogButtonContainer").hidden = true;
   }
 
-  let els = document.querySelectorAll("[data-telemetry-id]");
-  for (let el of els) {
-    el.addEventListener("click", recordClickTelemetry);
-  }
-
   document
     .getElementById("returnButton")
     .addEventListener("click", onReturnButtonClick);
@@ -453,42 +448,12 @@ function initPageCertError() {
     .getElementById("copyToClipboardBottom")
     .addEventListener("click", copyPEMToClipboard);
 
-  let failedCertInfo = document.getFailedCertSecurityInfo();
-  let errorCode = failedCertInfo.errorCodeString.substring(0, 40);
-  RPMRecordTelemetryEvent(
-    "security.ui.certerror",
-    "load",
-    "aboutcerterror",
-    errorCode,
-    {
-      has_sts: (getCSSClass() == "badStsCert").toString(),
-      is_frame: (window.parent != window).toString(),
-    }
-  );
-
   setCertErrorDetails();
   setTechnicalDetailsOnCertError();
 
   // Dispatch this event only for tests.
   let event = new CustomEvent("AboutNetErrorLoad", { bubbles: true });
   document.dispatchEvent(event);
-}
-
-function recordClickTelemetry(e) {
-  let target = e.originalTarget;
-  let telemetryId = target.dataset.telemetryId;
-  let failedCertInfo = document.getFailedCertSecurityInfo();
-  let errorCode = failedCertInfo.errorCodeString.substring(0, 40);
-  RPMRecordTelemetryEvent(
-    "security.ui.certerror",
-    "click",
-    telemetryId,
-    errorCode,
-    {
-      has_sts: (getCSSClass() == "badStsCert").toString(),
-      is_frame: (window.parent != window).toString(),
-    }
-  );
 }
 
 function onReturnButtonClick(e) {
@@ -1004,7 +969,6 @@ function setTechnicalDetailsOnCertError() {
       title: failedCertInfo.errorCodeString,
       id: "errorCode",
       "data-l10n-name": "error-code-link",
-      "data-telemetry-id": "error_code_link",
     },
     false
   );
@@ -1025,7 +989,6 @@ function handleErrorCodeClick(event) {
   let debugInfo = document.getElementById("certificateErrorDebugInformation");
   debugInfo.style.display = "block";
   debugInfo.scrollIntoView({ block: "start", behavior: "smooth" });
-  recordClickTelemetry(event);
 }
 
 /* Only do autofocus if we're the toplevel frame; otherwise we
