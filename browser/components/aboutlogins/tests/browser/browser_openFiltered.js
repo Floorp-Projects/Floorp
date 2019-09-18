@@ -163,7 +163,7 @@ add_task(async function test_query_parameter_filter_no_logins_for_site() {
     );
     let loginIntro = content.document.querySelector("login-intro");
     ok(
-      ContentTaskUtils.is_visible(loginIntro),
+      ContentTaskUtils.is_hidden(loginIntro),
       "login-intro should be visible when a login is not selected and we're not in create mode"
     );
 
