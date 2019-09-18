@@ -951,34 +951,10 @@ void nsTypeAheadFind::RangeStartsInsideLink(nsRange* aRange,
   *aIsStartingLink = false;
 }
 
-/* Find another match in the page. */
-NS_IMETHODIMP
-nsTypeAheadFind::FindAgain(bool aFindBackwards, bool aLinksOnly,
-                           uint16_t* aResult)
-
-{
-  *aResult = FIND_NOTFOUND;
-
-  if (!mTypeAheadBuffer.IsEmpty())
-    // Beware! This may flush notifications via synchronous
-    // ScrollSelectionIntoView.
-    FindItNow(aFindBackwards ? nsITypeAheadFind::FIND_PREVIOUS
-                             : nsITypeAheadFind::FIND_NEXT,
-              aLinksOnly, false, false, aResult);
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
+                      uint32_t aMode, bool aDontIterateFrames,
                       uint16_t* aResult) {
-  return FindInternal(FIND_INITIAL, aSearchString, aLinksOnly, false, aResult);
-}
-
-NS_IMETHODIMP
-nsTypeAheadFind::FindInFrame(const nsAString& aSearchString, bool aLinksOnly,
-                             uint32_t aMode, bool aDontIterateFrames,
-                             uint16_t* aResult) {
   if (aMode == nsITypeAheadFind::FIND_PREVIOUS ||
       aMode == nsITypeAheadFind::FIND_NEXT) {
     if (mTypeAheadBuffer.IsEmpty()) {

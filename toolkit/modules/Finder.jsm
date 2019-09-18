@@ -203,13 +203,19 @@ Finder.prototype = {
 
   /**
    * Used for normal search operations, highlights the first match.
+   * This method is used only for compatibility with non-remote browsers.
    *
    * @param aSearchString String to search for.
    * @param aLinksOnly Only consider nodes that are links for the search.
    * @param aDrawOutline Puts an outline around matched links.
    */
   fastFind(aSearchString, aLinksOnly, aDrawOutline) {
-    this._lastFindResult = this._fastFind.find(aSearchString, aLinksOnly);
+    this._lastFindResult = this._fastFind.find(
+      aSearchString,
+      aLinksOnly,
+      Ci.nsITypeAheadFind.FIND_INITIAL,
+      false
+    );
     let searchString = this._fastFind.searchString;
 
     let results = {
@@ -231,6 +237,7 @@ Finder.prototype = {
   /**
    * Repeat the previous search. Should only be called after a previous
    * call to Finder.fastFind.
+   * This method is used only for compatibility with non-remote browsers.
    *
    * @param aSearchString String to search for.
    * @param aFindBackwards Controls the search direction:
@@ -239,7 +246,15 @@ Finder.prototype = {
    * @param aDrawOutline Puts an outline around matched links.
    */
   findAgain(aSearchString, aFindBackwards, aLinksOnly, aDrawOutline) {
-    this._lastFindResult = this._fastFind.findAgain(aFindBackwards, aLinksOnly);
+    let mode = aFindBackwards
+      ? Ci.nsITypeAheadFind.FIND_PREVIOUS
+      : Ci.nsITypeAheadFind.FIND_NEXT;
+    this._lastFindResult = this._fastFind.find(
+      aFindBackwards,
+      aLinksOnly,
+      mode,
+      false
+    );
     let searchString = this._fastFind.searchString;
 
     let results = {
@@ -257,8 +272,20 @@ Finder.prototype = {
     return this._lastFindResult;
   },
 
-  findInFrame(options) {
-    this._lastFindResult = this._fastFind.findInFrame(
+  /**
+   * Used for normal search operations, highlights the first or
+   * subsequent match depending on the mode.
+   *
+   * Options are:
+   *  searchString String to search for.
+   *  findAgain True if this a find again operation.
+   *  mode Search mode from nsITypeAheadFind.
+   *  linksOnly Only consider nodes that are links for the search.
+   *  drawOutline Puts an outline around matched links.
+   *  useSubFrames True to iterate over subframes.
+   */
+  find(options) {
+    this._lastFindResult = this._fastFind.find(
       options.searchString,
       options.linksOnly,
       options.mode,
