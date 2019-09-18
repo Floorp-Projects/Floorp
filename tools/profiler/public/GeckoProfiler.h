@@ -22,6 +22,8 @@
 
 #ifndef MOZ_GECKO_PROFILER
 
+#  include "mozilla/UniquePtr.h"
+
 // This file can be #included unconditionally. However, everything within this
 // file must be guarded by a #ifdef MOZ_GECKO_PROFILER, *except* for the
 // following macros, which encapsulate the most common operations and thus
@@ -54,7 +56,7 @@
 #  define PROFILER_ADD_MARKER_WITH_PAYLOAD(markerName, categoryPair, \
                                            PayloadType, payloadArgs)
 #  define PROFILER_ADD_NETWORK_MARKER(uri, pri, channel, type, start, end, \
-                                      count, cache, timings, redirect)
+                                      count, cache, timings, redirect, ...)
 
 #  define DECLARE_DOCSHELL_AND_HISTORY_ID(docShell)
 #  define PROFILER_TRACING(categoryString, markerName, categoryPair, kind)
@@ -68,6 +70,12 @@
                                              docShell)
 #  define AUTO_PROFILER_TEXT_MARKER_DOCSHELL_CAUSE( \
       markerName, text, categoryPair, docShell, cause)
+
+using UniqueProfilerBacktrace = mozilla::UniquePtr<int>;
+static inline UniqueProfilerBacktrace profiler_get_backtrace()
+{
+  return nullptr;
+}
 
 #else  // !MOZ_GECKO_PROFILER
 
