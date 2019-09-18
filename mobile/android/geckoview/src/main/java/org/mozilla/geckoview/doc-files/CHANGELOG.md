@@ -29,6 +29,8 @@ exclude: true
 - Added [`GeckoRuntime.ServiceWorkerDelegate`][71.9] set via
   ['setServiceWorkerDelegate'][71.10] to support ServiceWorkerClients.openWindow()
   ([bug 1511033]({{bugzilla}}1511033))
+- Added ['GeckoRuntimeSettings.Builder#aboutConfigEnabled'][71.11] to control whether or
+  not `about:config` should be available.
 
 [71.1]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onBooleanScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
 [71.2]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onLongScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
@@ -40,6 +42,7 @@ exclude: true
 [71.8]: {{javadoc_uri}}/WebExtension.MessageDelegate.html#onMessage-java.lang.String-java.lang.Object-org.mozilla.geckoview.WebExtension.MessageSender-
 [71.9]: {{javadoc_uri}}/GeckoRuntime.ServiceWorkerDelegate.html
 [71.10]: {{javadoc_uri}}/GeckoRuntime#setServiceWorkerDelegate-org.mozilla.geckoview.GeckoRuntime.ServiceWorkerDelegate-
+[71.11]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#aboutConfigEnabled-boolean-
 
 ## v70
 - Added API for session context assignment
@@ -362,4 +365,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: ec6b45461c040d8dc76aa0fed4917b3c4c07d67e
+[api-version]: 16e050b1d50a9909b936c740a94220eaff4115a3
