@@ -16,6 +16,8 @@ import kotlinx.android.synthetic.main.fragment_quick_settings_dialog_sheet.url
 import kotlinx.android.synthetic.main.switch_with_description.view.*
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.CROSS_SITE_TRACKING_COOKIES
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.CRYPTOMINERS
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.FINGERPRINTERS
@@ -133,6 +135,7 @@ class TrackingProtectionPanelView(
 
     override fun onClick(v: View) {
         val category = getCategory(v) ?: return
+        v.context.metrics.track(Event.TrackingProtectionTrackerList)
         interactor.openDetails(category, categoryBlocked = !isLoaded(v))
     }
 

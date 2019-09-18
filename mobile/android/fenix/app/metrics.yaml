@@ -1288,6 +1288,77 @@ private_browsing_mode:
       - fenix-core@mozilla.com
     expires: "2020-03-01"
 
+tracking_protection:
+  exception_added:
+    type: event
+    description: >
+      A user added a tracking protection exception through the TP toggle in the panel.
+    bugs:
+      - 5312
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  panel_settings:
+    type: event
+    description: >
+      A user opened tracking protection settings from the panel.
+    bugs:
+      - 5312
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  etp_shield:
+    type: event
+    description: >
+      A user pressed the tracking protection shield icon in toolbar.
+    bugs:
+      - 5312
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  etp_tracker_list:
+    type: event
+    description: >
+      A user pressed into a list of categorized trackers in tracking protection panel.
+    bugs:
+      - 5312
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  etp_settings:
+    type: event
+    description: >
+      A user opened tracking protection settings through settings.
+    bugs:
+      - 5312
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  etp_setting_changed:
+    type: event
+    description: >
+      A user added a tracking protection exception through the TP toggle in the panel.
+    extra_keys:
+      etp_setting:
+        description: "The new setting for ETP: strict, standard"
+    bugs:
+      - 5312
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+
 private_browsing_shortcut:
   create_shortcut:
     type: event

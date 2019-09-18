@@ -14,8 +14,10 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
 
@@ -60,7 +62,7 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         }
 
         bindStrict()
-        bindRecommended()
+        bindStandard()
         setupRadioGroups()
 
         val trackingProtectionLearnMore =
@@ -88,7 +90,18 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
     private fun bindStrict() {
         val keyStrict = getString(R.string.pref_key_tracking_protection_strict)
         radioStrict = requireNotNull(findPreference(keyStrict))
+        radioStrict.onPreferenceChangeListener = SharedPreferenceUpdater()
         radioStrict.isVisible = FeatureFlags.etpCategories
+        radioStrict.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+            override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                context?.metrics?.track(
+                    Event.TrackingProtectionSettingChanged(
+                        Event.TrackingProtectionSettingChanged.Setting.STRICT
+                    )
+                )
+                return super.onPreferenceChange(preference, newValue)
+            }
+        }
         radioStrict.onInfoClickListener {
             nav(
                 R.id.trackingProtectionFragment,
@@ -101,10 +114,20 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         }
     }
 
-    private fun bindRecommended() {
+    private fun bindStandard() {
         val keyStandard = getString(R.string.pref_key_tracking_protection_standard)
         radioStandard = requireNotNull(findPreference(keyStandard))
         radioStandard.isVisible = FeatureFlags.etpCategories
+        radioStandard.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+            override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                context?.metrics?.track(
+                    Event.TrackingProtectionSettingChanged(
+                        Event.TrackingProtectionSettingChanged.Setting.STANDARD
+                    )
+                )
+                return super.onPreferenceChange(preference, newValue)
+            }
+        }
         radioStandard.onInfoClickListener {
             nav(
                 R.id.trackingProtectionFragment,

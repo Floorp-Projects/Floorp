@@ -8,11 +8,13 @@ import android.content.Context
 import android.content.SharedPreferences
 import mozilla.components.support.ktx.android.content.PreferencesHolder
 import mozilla.components.support.ktx.android.content.stringPreference
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.metrics
 
 /**
  * Contains functionality to manage custom domains for allow-list.
  */
-class ExceptionDomains(context: Context) : PreferencesHolder {
+class ExceptionDomains(val context: Context) : PreferencesHolder {
 
     override val preferences: SharedPreferences =
         context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE)
@@ -70,6 +72,7 @@ class ExceptionDomains(context: Context) : PreferencesHolder {
         if (domain in load()) {
             remove(listOf(domain))
         } else {
+            context.metrics.track(Event.TrackingProtectionException)
             add(domain)
         }
     }

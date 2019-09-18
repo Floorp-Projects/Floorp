@@ -160,6 +160,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
                 navigateToSearchEngineSettings()
             }
             resources.getString(pref_key_tracking_protection_settings) -> {
+                requireContext().metrics.track(Event.TrackingProtectionSettings)
                 navigateToTrackingProtectionSettings()
             }
             resources.getString(pref_key_site_permissions) -> {

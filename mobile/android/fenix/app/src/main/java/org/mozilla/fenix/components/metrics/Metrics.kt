@@ -20,6 +20,7 @@ import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Library
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
+import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.R
 import java.util.Locale
 
@@ -115,6 +116,11 @@ sealed class Event {
     object PrivateBrowsingStaticShortcutPrivateTab : Event()
     object TabMediaPlay : Event()
     object TabMediaPause : Event()
+    object TrackingProtectionTrackerList : Event()
+    object TrackingProtectionIconPressed : Event()
+    object TrackingProtectionSettingsPanel : Event()
+    object TrackingProtectionSettings : Event()
+    object TrackingProtectionException : Event()
 
     // Interaction events with extras
 
@@ -136,6 +142,12 @@ sealed class Event {
             // If the event is not in the allow list, we don't want to track it
             if (!switchPreferenceTelemetryAllowList.contains(preferenceKey)) { throw IllegalArgumentException() }
         }
+    }
+
+    data class TrackingProtectionSettingChanged(val setting: Setting) : Event() {
+        enum class Setting { STRICT, STANDARD }
+        override val extras: Map<TrackingProtection.etpSettingChangedKeys, String>?
+            get() = hashMapOf(TrackingProtection.etpSettingChangedKeys.etpSetting to setting.name)
     }
 
     data class OpenedApp(val source: Source) : Event() {

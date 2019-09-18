@@ -29,8 +29,10 @@ import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.exceptions.ExceptionDomains
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.tryGetHostFromUrl
@@ -145,6 +147,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), BackHan
     }
 
     private fun openTrackingProtectionSettings() {
+        requireContext().metrics.track(Event.TrackingProtectionSettingsPanel)
         nav(
             R.id.trackingProtectionPanelDialogFragment,
             TrackingProtectionPanelDialogFragmentDirections

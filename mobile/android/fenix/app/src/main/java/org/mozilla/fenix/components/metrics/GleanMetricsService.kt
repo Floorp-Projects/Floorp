@@ -37,6 +37,7 @@ import org.mozilla.fenix.GleanMetrics.SearchWidget
 import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.GleanMetrics.SyncAuth
 import org.mozilla.fenix.GleanMetrics.Tab
+import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.ext.components
 
 private class EventWrapper<T : Enum<T>>(
@@ -377,7 +378,25 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.TabMediaPause -> EventWrapper<NoExtraKeys>(
             { Tab.mediaPause.record(it) }
         )
-
+        is Event.TrackingProtectionTrackerList -> EventWrapper<NoExtraKeys>(
+            { TrackingProtection.etpTrackerList.record(it) }
+        )
+        is Event.TrackingProtectionIconPressed -> EventWrapper<NoExtraKeys>(
+            { TrackingProtection.etpShield.record(it) }
+        )
+        is Event.TrackingProtectionSettingsPanel -> EventWrapper<NoExtraKeys>(
+            { TrackingProtection.panelSettings.record(it) }
+        )
+        is Event.TrackingProtectionSettings -> EventWrapper<NoExtraKeys>(
+            { TrackingProtection.etpSettings.record(it) }
+        )
+        is Event.TrackingProtectionException -> EventWrapper<NoExtraKeys>(
+            { TrackingProtection.exceptionAdded.record(it) }
+        )
+        is Event.TrackingProtectionSettingChanged -> EventWrapper(
+            { TrackingProtection.etpSettingChanged.record(it) },
+            { TrackingProtection.etpSettingChangedKeys.valueOf(it) }
+        )
         // Don't record other events in Glean:
         is Event.AddBookmark -> null
         is Event.OpenedBookmark -> null
