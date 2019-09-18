@@ -22,4 +22,19 @@ interface nsISystemInfo : nsISupports
    */
   [implicit_jscontext]
   readonly attribute Promise countryCode;
+
+  /**
+   * Asynchronously gets OS info on the system's install year.
+   * Note: only implemented on Windows, will return null elsewhere.
+   */
+  [implicit_jscontext]
+  readonly attribute Promise osInfo;
+
+  /**
+   * Asynchronously gets process info that indicates if the process is running
+   * under Wow64 and WowARM64.
+   * Note: only implemented on Windows, will return null elsewhere.
+   */
+  [implicit_jscontext]
+  readonly attribute Promise processInfo;
 };
