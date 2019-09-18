@@ -12,19 +12,6 @@
 interface nsICrossProcessSwitchChannel : nsISupports
 {
   /**
-   *  When a process switch has been processed  (either successfully or not),
-   *  HttpChannelParent will call this method on the DocumentChannelParent or
-   *  HttpChannelParent.
-   *
-   *  @param callback
-   *         Object to inform about the async result of this method.
-   *  @param status
-   *         The error that caused the process switch to fail.
-   *         NS_OK means the process switch was processed successfully.
-   */
-  void finishCrossProcessSwitch(in nsIAsyncVerifyRedirectCallback callback, in nsresult status);
-
-  /**
    *  When a process switch is about to start,
    *  nsHttpChannel will call this method on DocumentChannelParent or
    *  HttpChannelParent

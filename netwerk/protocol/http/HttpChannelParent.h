@@ -209,9 +209,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   virtual mozilla::ipc::IPCResult RecvDivertOnStopRequest(
       const nsresult& statusCode) override;
   virtual mozilla::ipc::IPCResult RecvDivertComplete() override;
-  virtual mozilla::ipc::IPCResult RecvCrossProcessRedirectDone(
-      const nsresult& aResult,
-      const mozilla::Maybe<LoadInfoArgs>& aLoadInfoArgs) override;
   virtual mozilla::ipc::IPCResult RecvRemoveCorsPreflightCacheEntry(
       const URIParams& uri,
       const mozilla::ipc::PrincipalInfo& requestingPrincipal) override;
@@ -254,6 +251,11 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   void DivertComplete();
   void MaybeFlushPendingDiversion();
   void ResponseSynthesized();
+
+  void CrossProcessRedirectDone(
+      const nsresult& aResult,
+      const mozilla::Maybe<LoadInfoArgs>& aLoadInfoArgs);
+  void FinishCrossProcessSwitch(nsHttpChannel* aChannel, nsresult aStatus);
 
   // final step for Redirect2Verify procedure, will be invoked while both
   // redirecting and redirected channel are ready or any error happened.

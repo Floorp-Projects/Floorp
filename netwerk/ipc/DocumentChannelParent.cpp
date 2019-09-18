@@ -359,16 +359,6 @@ void DocumentChannelParent::FinishReplacementChannelSetup(bool aSucceeded) {
   }
 }
 
-NS_IMETHODIMP
-DocumentChannelParent::FinishCrossProcessSwitch(
-    nsIAsyncVerifyRedirectCallback* aCallback, nsresult aStatusCode) {
-  // This updates ParentChannelListener to point to this parent and at
-  // the same time cancels the old channel.
-  FinishReplacementChannelSetup(NS_SUCCEEDED(aStatusCode));
-
-  return NS_OK;
-}
-
 nsresult DocumentChannelParent::TriggerCrossProcessSwitch(
     nsIHttpChannel* aChannel, uint64_t aIdentifier) {
   MOZ_ASSERT_UNREACHABLE(
@@ -534,6 +524,7 @@ void DocumentChannelParent::TriggerRedirectToRealChannel(
     contentDispositionFilename = Some(contentDispositionFilenameTemp);
   }
 
+  RefPtr<DocumentChannelParent> self = this;
   if (aDestinationProcess) {
     dom::ContentParent* cp =
         dom::ContentProcessManager::GetSingleton()->GetContentProcessById(
@@ -544,24 +535,36 @@ void DocumentChannelParent::TriggerRedirectToRealChannel(
 
     MOZ_ASSERT(config);
 
-    auto result = cp->SendCrossProcessRedirect(
-        mRedirectChannelId, uri, *config, loadInfoArgs, channelId, originalURI,
-        aIdentifier, redirectMode);
-    MOZ_ASSERT(result, "SendCrossProcessRedirect failed");
-    Unused << result;
+    cp->SendCrossProcessRedirect(mRedirectChannelId, uri, *config, loadInfoArgs,
+                                 channelId, originalURI, aIdentifier,
+                                 redirectMode)
+        ->Then(
+            GetCurrentThreadSerialEventTarget(), __func__,
+            [self](Tuple<nsresult, Maybe<LoadInfoArgs>>&& aResponse) {
+              if (NS_SUCCEEDED(Get<0>(aResponse))) {
+                nsCOMPtr<nsILoadInfo> newLoadInfo;
+                MOZ_ALWAYS_SUCCEEDS(LoadInfoArgsToLoadInfo(
+                    Get<1>(aResponse), getter_AddRefs(newLoadInfo)));
+
+                if (newLoadInfo) {
+                  self->mChannel->SetLoadInfo(newLoadInfo);
+                }
+              }
+              self->RedirectToRealChannelFinished(Get<0>(aResponse));
+            },
+            [self](const mozilla::ipc::ResponseRejectReason) {
+              self->RedirectToRealChannelFinished(NS_ERROR_FAILURE);
+            });
   } else {
-    RefPtr<DocumentChannelParent> channel = this;
     SendRedirectToRealChannel(mRedirectChannelId, uri, newLoadFlags, config,
                               loadInfoArgs, mRedirects, channelId, originalURI,
                               redirectMode, redirectFlags, contentDisposition,
                               contentDispositionFilename)
         ->Then(
             GetCurrentThreadSerialEventTarget(), __func__,
-            [channel](nsresult aRv) {
-              channel->RedirectToRealChannelFinished(aRv);
-            },
-            [channel](const mozilla::ipc::ResponseRejectReason) {
-              channel->RedirectToRealChannelFinished(NS_ERROR_FAILURE);
+            [self](nsresult aRv) { self->RedirectToRealChannelFinished(aRv); },
+            [self](const mozilla::ipc::ResponseRejectReason) {
+              self->RedirectToRealChannelFinished(NS_ERROR_FAILURE);
             });
   }
 }
