@@ -10,6 +10,7 @@ members = [
   "js/src/wasm/cranelift",
   "js/rust",
   "js/src/frontend/binast", # Code generator.
+  "security/manager/ssl/osclientcerts",
   "testing/geckodriver",
   "toolkit/crashreporter/rust",
   "toolkit/library/gtest/rust",
