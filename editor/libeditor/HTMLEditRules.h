@@ -58,8 +58,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult Init(TextEditor* aTextEditor) override;
   virtual nsresult DetachEditor() override;
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual nsresult BeforeEdit() override;
-  MOZ_CAN_RUN_SCRIPT virtual nsresult AfterEdit() override;
 
   MOZ_CAN_RUN_SCRIPT
   nsresult GetListState(bool* aMixed, bool* aOL, bool* aUL, bool* aDL);

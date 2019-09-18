@@ -1100,8 +1100,15 @@ nsresult HTMLEditor::InsertBrElementAtSelectionWithTransaction() {
   // XXX Why do we use EditSubAction::eInsertText here?  Looks like
   //     EditSubAction::eInsertLineBreak or EditSubAction::eInsertNode
   //     is better.
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eInsertText, nsIEditor::eNext);
+      *this, EditSubAction::eInsertText, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   if (!SelectionRefPtr()->IsCollapsed()) {
     nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
@@ -1150,8 +1157,16 @@ nsresult HTMLEditor::ReplaceHeadContentsWithSourceWithTransaction(
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   // don't do any post processing, rules get confused
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eReplaceHeadWithHTMLSource, nsIEditor::eNone);
+      *this, EditSubAction::eReplaceHeadWithHTMLSource, nsIEditor::eNone,
+      ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   CommitComposition();
 
@@ -1510,8 +1525,15 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
   UndefineCaretBidiLevel();
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eInsertElement, nsIEditor::eNext);
+      *this, EditSubAction::eInsertElement, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
@@ -2150,8 +2172,16 @@ nsresult HTMLEditor::FormatBlockContainerAsSubAction(nsAtom& aTagName) {
   MOZ_ASSERT(&aTagName != nsGkAtoms::dd && &aTagName != nsGkAtoms::dt);
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eCreateOrRemoveBlock, nsIEditor::eNext);
+      *this, EditSubAction::eCreateOrRemoveBlock, nsIEditor::eNext,
+      ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   EditActionResult result = CanHandleHTMLEditSubAction();
   if (result.Canceled() || NS_WARN_IF(result.Failed())) {
@@ -3078,8 +3108,15 @@ nsresult HTMLEditor::DeleteAllChildrenWithTransaction(Element& aElement) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   // Prevent rules testing until we're done
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eDeleteNode, nsIEditor::eNext);
+      *this, EditSubAction::eDeleteNode, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   while (nsCOMPtr<nsINode> child = aElement.GetLastChild()) {
     nsresult rv = DeleteNodeWithTransaction(*child);
@@ -3403,37 +3440,6 @@ void HTMLEditor::ContentRemoved(nsIContent* aChild,
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "OnDocumentModified() failed, but ignored");
   }
-}
-
-void HTMLEditor::OnStartToHandleTopLevelEditSubAction(
-    EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) {
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
-
-  EditorBase::OnStartToHandleTopLevelEditSubAction(aEditSubAction, aDirection);
-  if (!rules) {
-    return;
-  }
-
-  MOZ_ASSERT(GetTopLevelEditSubAction() == aEditSubAction);
-  MOZ_ASSERT(GetDirectionOfTopLevelEditSubAction() == aDirection);
-  DebugOnly<nsresult> rv = rules->BeforeEdit();
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "HTMLEditRules::BeforeEdit() failed to handle something");
-}
-
-void HTMLEditor::OnEndHandlingTopLevelEditSubAction() {
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
-
-  // post processing
-  DebugOnly<nsresult> rv = rules ? rules->AfterEdit() : NS_OK;
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditRules::AfterEdit() failed to handle something");
-  EditorBase::OnEndHandlingTopLevelEditSubAction();
-  MOZ_ASSERT(!GetTopLevelEditSubAction());
-  MOZ_ASSERT(GetDirectionOfTopLevelEditSubAction() == eNone);
 }
 
 bool HTMLEditor::TagCanContainTag(nsAtom& aParentTag, nsAtom& aChildTag) const {
@@ -4251,8 +4257,15 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
   bool selectionIsCollapsed = SelectionRefPtr()->IsCollapsed();
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eInsertElement, nsIEditor::eNext);
+      *this, EditSubAction::eInsertElement, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   {
     AutoSelectionRestorer restoreSelectionLater(*this);
