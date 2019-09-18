@@ -13,6 +13,9 @@ import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.math.roundToInt
+import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
+import org.mozilla.geckoview.test.util.Callbacks
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -138,5 +141,35 @@ class RuntimeSettingsTest : BaseSessionTest() {
                 prefValue, `is`(0))
         assertThat("GeckoRuntimeSettings remains turned off",
                 settings.fontInflationEnabled, `is`(false))
+    }
+
+    @Test
+    @Ignore // Bug 1582150
+    fun aboutConfig() {
+        val settings = sessionRule.runtime.settings;
+
+        assertThat("about:config should be disabled by default",
+                settings.aboutConfigEnabled, equalTo(false))
+        mainSession.delegateDuringNextWait(object : Callbacks.ProgressDelegate {
+            @AssertCalled
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                assertThat("about:config load should fail", success, equalTo(false))
+            }
+        })
+
+        mainSession.loadUri("about:config")
+        mainSession.waitForPageStop()
+
+        settings.aboutConfigEnabled = true
+
+        mainSession.delegateDuringNextWait(object : Callbacks.ProgressDelegate {
+            @AssertCalled
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                assertThat("about:config load should succeed", success, equalTo(true))
+            }
+        })
+
+        mainSession.loadUri("about:config")
+        mainSession.waitForPageStop()
     }
 }

@@ -399,6 +399,7 @@ package org.mozilla.geckoview {
   }
 
   @AnyThread public final class GeckoRuntimeSettings extends RuntimeSettings {
+    method public boolean getAboutConfigEnabled();
     method @NonNull public String[] getArguments();
     method public boolean getAutomaticFontSizeAdjustment();
     method public int getAutoplayDefault();
@@ -425,6 +426,7 @@ package org.mozilla.geckoview {
     method public boolean getUseContentProcessHint();
     method public boolean getUseMaxScreenDepth();
     method public boolean getWebFontsEnabled();
+    method @NonNull public GeckoRuntimeSettings setAboutConfigEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setAutomaticFontSizeAdjustment(boolean);
     method @NonNull public GeckoRuntimeSettings setAutoplayDefault(int);
     method @NonNull public GeckoRuntimeSettings setConsoleOutputEnabled(boolean);
@@ -448,6 +450,7 @@ package org.mozilla.geckoview {
 
   @AnyThread public static final class GeckoRuntimeSettings.Builder extends RuntimeSettings.Builder {
     ctor public Builder();
+    method @NonNull public GeckoRuntimeSettings.Builder aboutConfigEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder arguments(@NonNull String[]);
     method @NonNull public GeckoRuntimeSettings.Builder automaticFontSizeAdjustment(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder autoplayDefault(int);

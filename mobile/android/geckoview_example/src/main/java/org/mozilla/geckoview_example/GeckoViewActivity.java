@@ -181,7 +181,8 @@ public class GeckoViewActivity extends AppCompatActivity {
                         .cookieBehavior(ContentBlocking.CookieBehavior.ACCEPT_NON_TRACKERS)
                         .build())
                     .crashHandler(ExampleCrashHandler.class)
-                    .telemetryDelegate(new ExampleTelemetryDelegate());
+                    .telemetryDelegate(new ExampleTelemetryDelegate())
+                    .aboutConfigEnabled(true);
 
             sGeckoRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());
 
