@@ -84,6 +84,7 @@ class InsertTextTransaction;
 class JoinNodeTransaction;
 class ListElementSelectionState;
 class ListItemElementSelectionState;
+class ParagraphStateAtSelection;
 class PlaceholderTransaction;
 class PresShell;
 class SplitNodeResult;
@@ -2675,6 +2676,7 @@ class EditorBase : public nsIEditor,
   friend class JoinNodeTransaction;
   friend class ListElementSelectionState;
   friend class ListItemElementSelectionState;
+  friend class ParagraphStateAtSelection;
   friend class SplitNodeTransaction;
   friend class TextEditRules;
   friend class TypeInState;
