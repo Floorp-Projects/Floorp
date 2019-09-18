@@ -11,6 +11,7 @@
 * Components
 */
 @import "resource://devtools/client/application/src/components/App.css";
+@import "resource://devtools/client/application/src/components/manifest/ManifestColorItem.css";
 @import "resource://devtools/client/application/src/components/manifest/ManifestIssue.css";
 @import "resource://devtools/client/application/src/components/manifest/ManifestIssueList.css";
 @import "resource://devtools/client/application/src/components/manifest/ManifestItem.css";

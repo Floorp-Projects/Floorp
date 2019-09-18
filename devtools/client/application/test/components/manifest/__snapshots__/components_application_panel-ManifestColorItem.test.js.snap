@@ -1,0 +1,24 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ManifestColorItem renders the expected snapshot for a populated color item 1`] = `
+<ManifestItem
+  label="foo"
+>
+  <span
+    className="manifest-item__color"
+    style={
+      Object {
+        "--color-value": "#ff0000",
+      }
+    }
+  >
+    #ff0000
+  </span>
+</ManifestItem>
+`;
+
+exports[`ManifestColorItem renders the expected snapshot for an empty color item 1`] = `
+<ManifestItem
+  label="foo"
+/>
+`;

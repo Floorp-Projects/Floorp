@@ -33,6 +33,7 @@ exports[`ManifestPage renders the expected snapshot when there is a manifest 1`]
       Array [
         Object {
           "key": "name",
+          "type": "string",
           "value": "foo",
         },
       ]
@@ -41,10 +42,12 @@ exports[`ManifestPage renders the expected snapshot when there is a manifest 1`]
       Array [
         Object {
           "key": "lorem",
+          "type": "string",
           "value": "ipsum",
         },
         Object {
           "key": "foo",
+          "type": "string",
           "value": "bar",
         },
       ]
