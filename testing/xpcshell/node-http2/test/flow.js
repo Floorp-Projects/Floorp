@@ -96,7 +96,7 @@ describe('flow.js', function() {
           expect(flow.read()).to.equal(dataFrame);
         });
         it('should also split DATA frames when needed', function() {
-          var buffer = new Buffer(10);
+          var buffer = Buffer.alloc(10);
           var dataFrame = { type: 'DATA', flags: {}, stream: util.random(0, 100), data: buffer };
           flow._send = util.noop;
           flow._window = 5;
@@ -132,7 +132,7 @@ describe('flow.js', function() {
           callback();
         };
 
-        var buffer = new Buffer(util.random(10, 100));
+        var buffer = Buffer.alloc(util.random(10, 100));
         flow.write({ type: 'DATA', flags: {}, data: buffer });
         flow.once('readable', function() {
           expect(flow.read()).to.be.deep.equal({
@@ -163,10 +163,10 @@ describe('flow.js', function() {
         var input = [];
         flow1._send = function _send() {
           if (input.length >= frameNumber) {
-            this.push({ type: 'DATA', flags: { END_STREAM: true }, data: new Buffer(0) });
+            this.push({ type: 'DATA', flags: { END_STREAM: true }, data: Buffer.alloc(0) });
             this.push(null);
           } else {
-            var buffer = new Buffer(util.random(1000, 100000));
+            var buffer = Buffer.allocUnsafe(util.random(1000, 100000));
             input.push(buffer);
             this.push({ type: 'DATA', flags: {}, data: buffer });
           }
@@ -207,10 +207,10 @@ describe('flow.js', function() {
         var input = [];
         flow1._send = function _send() {
           if (input.length >= frameNumber) {
-            this.push({ type: 'DATA', flags: { END_STREAM: true }, data: new Buffer(0) });
+            this.push({ type: 'DATA', flags: { END_STREAM: true }, data: Buffer.alloc(0) });
             this.push(null);
           } else {
-            var buffer = new Buffer(util.random(1000, 100000));
+            var buffer = Buffer.allocUnsafe(util.random(1000, 100000));
             input.push(buffer);
             this.push({ type: 'DATA', flags: {}, data: buffer });
           }
