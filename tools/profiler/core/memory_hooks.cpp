@@ -10,12 +10,14 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/FastBernoulliTrial.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/JSONWriter.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ProfilerCounts.h"
 #include "mozilla/ThreadLocal.h"
 
+#include "GeckoProfiler.h"
 #include "replace_malloc.h"
 
 #include <ctype.h>
@@ -50,6 +52,13 @@
 // a crash.
 static ProfilerCounterTotal* sCounter;
 
+// The gBernoulli value starts out as a nullptr, and only gets initialized once.
+// It then lives for the entire lifetime of the process. It cannot be deleted
+// without additional multi-threaded protections, since if we deleted it during
+// profiler_stop then there could be a race between threads already in a
+// memory hook that might try to access the value after or during deletion.
+static mozilla::FastBernoulliTrial* gBernoulli;
+
 namespace mozilla {
 namespace profiler {
 
@@ -62,6 +71,26 @@ static malloc_table_t gMallocTable;
 // This is only needed because of the |const void*| vs |void*| arg mismatch.
 static size_t MallocSizeOf(const void* aPtr) {
   return gMallocTable.malloc_usable_size(const_cast<void*>(aPtr));
+}
+
+// The values for the Bernoulli trial are taken from DMD. According to DMD:
+//
+//   In testing, a probability of 0.003 resulted in ~25% of heap blocks getting
+//   a stack trace and ~80% of heap bytes getting a stack trace. (This is
+//   possible because big heap blocks are more likely to get a stack trace.)
+//
+//   The random number seeds are arbitrary and were obtained from random.org.
+//
+// However this value resulted in a lot of slowdown since the profiler stacks
+// are pretty heavy to collect. The value was lowered to 10% of the original to
+// 0.0003.
+static void EnsureBernoulliIsInstalled() {
+  if (!gBernoulli) {
+    // This is only installed once. See the gBernoulli definition for more
+    // information.
+    gBernoulli =
+        new FastBernoulliTrial(0.0003, 0x8e26eeee166bc8ca, 0x56820f304a9c9ae0);
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -181,7 +210,14 @@ static void AllocCallback(void* aPtr, size_t aReqSize) {
   // hooks from recursing on any new allocations coming in.
   AutoBlockIntercepts block(threadIntercept.ref());
 
-  // XXX add optional stackwalk here
+  // Perform a bernoulli trial, which will return true or false based on its
+  // configured probability. It takes into account the byte size so that
+  // larger allocations are weighted heavier than smaller allocations.
+  MOZ_ASSERT(gBernoulli,
+             "gBernoulli must be properly installed for the memory hooks.");
+  if (gBernoulli->trial(actualSize)) {
+    profiler_add_native_allocation_marker((int64_t)actualSize);
+  }
 
   // We're ignoring aReqSize here
 }
@@ -192,7 +228,9 @@ static void FreeCallback(void* aPtr) {
   }
 
   // The first part of this function does not allocate.
-  sCounter->Add(-((int64_t)MallocSizeOf(aPtr)));
+  size_t unsignedSize = MallocSizeOf(aPtr);
+  int64_t signedSize = -((int64_t)unsignedSize);
+  sCounter->Add(signedSize);
 
   auto threadIntercept = ThreadIntercept::MaybeGet();
   if (threadIntercept.isNothing()) {
@@ -206,7 +244,14 @@ static void FreeCallback(void* aPtr) {
   // hooks from recursing on any new allocations coming in.
   AutoBlockIntercepts block(threadIntercept.ref());
 
-  // XXX add optional stackwalk here
+  // Perform a bernoulli trial, which will return true or false based on its
+  // configured probability. It takes into account the byte size so that
+  // larger allocations are weighted heavier than smaller allocations.
+  MOZ_ASSERT(gBernoulli,
+             "gBernoulli must be properly installed for the memory hooks.");
+  if (gBernoulli->trial(unsignedSize)) {
+    profiler_add_native_allocation_marker(signedSize);
+  }
 }
 
 }  // namespace profiler
@@ -340,7 +385,10 @@ void install_memory_hooks() {
 // leak these values.
 void remove_memory_hooks() { jemalloc_replace_dynamic(nullptr); }
 
-void enable_native_allocations() { ThreadIntercept::EnableAllocationFeature(); }
+void enable_native_allocations() {
+  EnsureBernoulliIsInstalled();
+  ThreadIntercept::EnableAllocationFeature();
+}
 
 // This is safe to call even if native allocations hasn't been enabled.
 void disable_native_allocations() {

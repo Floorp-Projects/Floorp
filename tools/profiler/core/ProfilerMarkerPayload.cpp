@@ -946,3 +946,34 @@ void JsAllocationMarkerPayload::StreamPayload(
   aWriter.IntProperty("size", mSize);
   aWriter.BoolProperty("inNursery", mInNursery);
 }
+
+BlocksRingBuffer::Length
+NativeAllocationMarkerPayload::TagAndSerializationBytes() const {
+  return CommonPropsTagAndSerializationBytes() +
+         BlocksRingBuffer::SumBytes(mSize);
+}
+
+void NativeAllocationMarkerPayload::SerializeTagAndPayload(
+    BlocksRingBuffer::EntryWriter& aEntryWriter) const {
+  static const DeserializerTag tag = TagForDeserializer(Deserialize);
+  SerializeTagAndCommonProps(tag, aEntryWriter);
+  aEntryWriter.WriteObject(mSize);
+}
+
+// static
+UniquePtr<ProfilerMarkerPayload> NativeAllocationMarkerPayload::Deserialize(
+    BlocksRingBuffer::EntryReader& aEntryReader) {
+  ProfilerMarkerPayload::CommonProps props =
+      DeserializeCommonProps(aEntryReader);
+  auto size = aEntryReader.ReadObject<int64_t>();
+  return UniquePtr<ProfilerMarkerPayload>(
+      new NativeAllocationMarkerPayload(std::move(props), size));
+}
+
+void NativeAllocationMarkerPayload::StreamPayload(
+    SpliceableJSONWriter& aWriter, const TimeStamp& aProcessStartTime,
+    UniqueStacks& aUniqueStacks) const {
+  StreamCommonProps("Native allocation", aWriter, aProcessStartTime,
+                    aUniqueStacks);
+  aWriter.IntProperty("size", mSize);
+}
