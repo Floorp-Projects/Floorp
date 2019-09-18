@@ -24,7 +24,7 @@ namespace sfntly {
 
 const int32_t HHEA_ASCENDER = 2023;
 const int32_t HHEA_DESCENDER = -648;
-const int32_t HHEA_LINE_GAP = 93;
+// const int32_t HHEA_LINE_GAP = 93;
 const int32_t HHEA_ADVANCE_WIDTH_MAX = 2753;
 const int32_t HHEA_MIN_LSB = -968;
 const int32_t HHEA_MIN_RSB = -411;

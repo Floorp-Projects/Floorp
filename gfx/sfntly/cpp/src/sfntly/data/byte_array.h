@@ -32,15 +32,15 @@ class ByteArray : virtual public RefCount {
   virtual ~ByteArray();
 
   // Gets the current filled and readable length of the array.
-  int32_t Length();
+  int32_t Length() const { return filled_length_; }
 
   // Gets the maximum size of the array. This is the maximum number of bytes that
   // the array can hold and all of it may not be filled with data or even fully
   // allocated yet.
-  int32_t Size();
+  int32_t Size() const { return storage_length_; }
 
   // Determines whether or not this array is growable or of fixed size.
-  bool growable() { return growable_; }
+  bool growable() const { return growable_; }
 
   int32_t SetFilledLength(int32_t filled_length);
 
@@ -55,7 +55,7 @@ class ByteArray : virtual public RefCount {
   // @param index the index into the byte array
   // @param b the buffer to put the bytes read into
   // @return the number of bytes read from the buffer
-  virtual int32_t Get(int32_t index, ByteVector* b);
+  virtual int32_t Get(int32_t index, std::vector<uint8_t>* b);
 
   // Gets the bytes from the given index and fill the buffer with them starting
   // at the offset given. As many bytes as the specified length are read unless
@@ -66,18 +66,18 @@ class ByteArray : virtual public RefCount {
   // @param length the number of bytes to put into the buffer
   // @return the number of bytes read from the buffer
   virtual int32_t Get(int32_t index,
-                      byte_t* b,
+                      uint8_t* b,
                       int32_t offset,
                       int32_t length);
 
   // Puts the specified byte into the array at the given index unless that would
   // be beyond the length of the array and it isn't growable.
-  virtual void Put(int32_t index, byte_t b);
+  virtual void Put(int32_t index, uint8_t b);
 
   // Puts the specified bytes into the array at the given index. The entire
   // buffer is put into the array unless that would extend beyond the length and
   // the array isn't growable.
-  virtual int32_t Put(int32_t index, ByteVector* b);
+  virtual int32_t Put(int32_t index, std::vector<uint8_t>* b);
 
   // Puts the specified bytes into the array at the given index. All of the bytes
   // specified are put into the array unless that would extend beyond the length
@@ -89,7 +89,7 @@ class ByteArray : virtual public RefCount {
   // @param length the number of bytes to copy into the array
   // @return the number of bytes actually written
   virtual int32_t Put(int32_t index,
-                      byte_t* b,
+                      uint8_t* b,
                       int32_t offset,
                       int32_t length);
 
@@ -149,7 +149,7 @@ class ByteArray : virtual public RefCount {
   // Stores the byte at the index given.
   // @param index the location to store at
   // @param b the byte to store
-  virtual void InternalPut(int32_t index, byte_t b) = 0;
+  virtual void InternalPut(int32_t index, uint8_t b) = 0;
 
   // Stores the array of bytes at the given index.
   // @param index the location to store at
@@ -158,14 +158,14 @@ class ByteArray : virtual public RefCount {
   // @param length the length of the byte array to store from the offset
   // @return the number of bytes actually stored
   virtual int32_t InternalPut(int32_t index,
-                              byte_t* b,
+                              uint8_t* b,
                               int32_t offset,
                               int32_t length) = 0;
 
   // Gets the byte at the index given.
   // @param index the location to get from
   // @return the byte stored at the index
-  virtual byte_t InternalGet(int32_t index) = 0;
+  virtual uint8_t InternalGet(int32_t index) = 0;
 
   // Gets the bytes at the index given of the given length.
   // @param index the location to start getting from
@@ -174,7 +174,7 @@ class ByteArray : virtual public RefCount {
   // @param length the length of bytes to read
   // @return the number of bytes actually ready
   virtual int32_t InternalGet(int32_t index,
-                              byte_t* b,
+                              uint8_t* b,
                               int32_t offset,
                               int32_t length) = 0;
 
@@ -182,7 +182,7 @@ class ByteArray : virtual public RefCount {
   virtual void Close() = 0;
 
   // C++ port only, raw pointer to the first element of storage.
-  virtual byte_t* Begin() = 0;
+  virtual uint8_t* Begin() = 0;
 
   // Java toString() not ported.
 

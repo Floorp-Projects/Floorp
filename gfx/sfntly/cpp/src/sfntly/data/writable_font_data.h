@@ -42,13 +42,13 @@ class WritableFontData : public ReadableFontData {
   // bytes.
   // @param b the byte vector to wrap
   // @return a new writable font data
-  static CALLER_ATTACH WritableFontData* CreateWritableFontData(ByteVector* b);
+  static CALLER_ATTACH WritableFontData* CreateWritableFontData(std::vector<uint8_t>* b);
 
   // Write a byte at the given index.
   // @param index index into the font data
   // @param b the byte to write
   // @return the number of bytes written
-  virtual int32_t WriteByte(int32_t index, byte_t b);
+  virtual int32_t WriteByte(int32_t index, uint8_t b);
 
   // Write the bytes from the array.
   // @param index index into the font data
@@ -58,7 +58,7 @@ class WritableFontData : public ReadableFontData {
   // @return the number of bytes actually written; -1 if the index is outside
   //         the FontData's range
   virtual int32_t WriteBytes(int32_t index,
-                             byte_t* b,
+                             uint8_t* b,
                              int32_t offset,
                              int32_t length);
 
@@ -67,7 +67,7 @@ class WritableFontData : public ReadableFontData {
   // @param b the source for the bytes to be written
   // @return the number of bytes actually written; -1 if the index is outside
   //         the FontData's range
-  virtual int32_t WriteBytes(int32_t index, ByteVector* b);
+  virtual int32_t WriteBytes(int32_t index, std::vector<uint8_t>* b);
 
   // Write the bytes from the array and pad if necessary.
   // Write to the length given using the byte array provided and if there are
@@ -80,10 +80,10 @@ class WritableFontData : public ReadableFontData {
   // @param pad the padding byte to be used if necessary
   // @return the number of bytes actually written
   virtual int32_t WriteBytesPad(int32_t index,
-                                ByteVector* b,
+                                std::vector<uint8_t>* b,
                                 int32_t offset,
                                 int32_t length,
-                                byte_t pad);
+                                uint8_t pad);
 
   // Writes padding to the FontData. The padding byte written is 0x00.
   // @param index index into the font data
@@ -96,14 +96,14 @@ class WritableFontData : public ReadableFontData {
   // @param count the number of pad bytes to write
   // @param pad the byte value to use as padding
   // @return the number of pad bytes written
-  virtual int32_t WritePadding(int32_t index, int32_t count, byte_t pad);
+  virtual int32_t WritePadding(int32_t index, int32_t count, uint8_t pad);
 
   // Write the CHAR at the given index.
   // @param index index into the font data
   // @param c the CHAR
   // @return the number of bytes actually written
   // @throws IndexOutOfBoundsException if index is outside the FontData's range
-  virtual int32_t WriteChar(int32_t index, byte_t c);
+  virtual int32_t WriteChar(int32_t index, uint8_t c);
 
   // Write the USHORT at the given index.
   // @param index index into the font data

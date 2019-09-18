@@ -17,42 +17,21 @@
 #ifndef SFNTLY_CPP_SRC_SFNTLY_PORT_TYPE_H_
 #define SFNTLY_CPP_SRC_SFNTLY_PORT_TYPE_H_
 
-#include <assert.h>
+#include <stdint.h>
 
-#if defined (_MSC_VER) && (_MSC_VER < 1600)
-  typedef unsigned char     uint8_t;
-  typedef signed char       int8_t;
-  typedef unsigned __int16  uint16_t;
-  typedef signed __int16    int16_t;
-  typedef unsigned __int32  uint32_t;
-  typedef signed __int32    int32_t;
-  typedef unsigned __int64  uint64_t;
-  typedef signed __int64    int64_t;
-  // Definitions to avoid ICU redefinition issue
-  #define U_HAVE_INT8_T 1
-  #define U_HAVE_UINT8_T 1
-  #define U_HAVE_INT16_T 1
-  #define U_HAVE_UINT16_T 1
-  #define U_HAVE_INT32_T 1
-  #define U_HAVE_UINT32_T 1
-  #define U_HAVE_INT64_T 1
-  #define U_HAVE_UINT64_T 1
-#else
-  #include <stdint.h>
-#endif
-
-#include <stddef.h>
-#include <vector>
+#include <cassert>
+#include <cstddef>
 #include <set>
+#include <vector>
 
 namespace sfntly {
 
+// deprecated
 typedef uint8_t   byte_t;
 typedef uint16_t  word_t;
 typedef uint32_t  dword_t;
 typedef uint64_t  qword_t;
-
-typedef std::vector<byte_t> ByteVector;
+typedef std::vector<uint8_t> ByteVector;
 typedef std::vector<int32_t> IntegerList;
 typedef std::set<int32_t> IntegerSet;
 

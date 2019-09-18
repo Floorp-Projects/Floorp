@@ -39,7 +39,7 @@ bool GlyphTableSubsetter::Subset(Subsetter* subsetter,
   assert(subsetter);
   assert(font_builder);
 
-  IntegerList* permutation_table = subsetter->GlyphPermutationTable();
+  std::vector<int32_t>* permutation_table = subsetter->GlyphPermutationTable();
   if (!permutation_table || permutation_table->empty())
     return false;
 
@@ -66,7 +66,7 @@ bool GlyphTableSubsetter::Subset(Subsetter* subsetter,
   }
   GlyphTable::GlyphBuilderList* glyph_builders =
       glyph_table_builder->GlyphBuilders();
-  for (IntegerList::iterator old_glyph_id = permutation_table->begin(),
+  for (std::vector<int32_t>::iterator old_glyph_id = permutation_table->begin(),
                              old_glyph_id_end = permutation_table->end();
                              old_glyph_id != old_glyph_id_end; ++old_glyph_id) {
     int old_offset = loca_table->GlyphOffset(*old_glyph_id);
@@ -81,7 +81,7 @@ bool GlyphTableSubsetter::Subset(Subsetter* subsetter,
     glyph_builder.Attach(glyph_table_builder->GlyphBuilder(copy_data));
     glyph_builders->push_back(glyph_builder);
   }
-  IntegerList loca_list;
+  std::vector<int32_t> loca_list;
   glyph_table_builder->GenerateLocaList(&loca_list);
   loca_table_builder->SetLocaList(&loca_list);
   return true;

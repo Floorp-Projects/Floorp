@@ -149,7 +149,7 @@ class Font : public RefCounted<Font> {
     CALLER_ATTACH Font* Build();
 
     // Set a unique fingerprint for the font object.
-    void SetDigest(ByteVector* digest);
+    void SetDigest(std::vector<uint8_t>* digest);
 
     // Clear all table builders.
     void ClearTableBuilders();
@@ -226,7 +226,7 @@ class Font : public RefCounted<Font> {
     int32_t entry_selector_;
     int32_t range_shift_;
     DataBlockMap data_blocks_;
-    ByteVector digest_;
+    std::vector<uint8_t> digest_;
   };
 
   virtual ~Font();
@@ -236,7 +236,7 @@ class Font : public RefCounted<Font> {
 
   // Gets a copy of the fonts digest that was created when the font was read. If
   // no digest was set at creation time then the return result will be null.
-  ByteVector* digest() { return &digest_; }
+  std::vector<uint8_t>* digest() { return &digest_; }
 
   // Get the checksum for this font.
   int64_t checksum() { return checksum_; }
@@ -265,7 +265,7 @@ class Font : public RefCounted<Font> {
   // Serialize the font to the output stream.
   // @param os the destination for the font serialization
   // @param tableOrdering the table ordering to apply
-  void Serialize(OutputStream* os, IntegerList* table_ordering);
+  void Serialize(OutputStream* os, std::vector<int32_t>* table_ordering);
 
  private:
   // Offsets to specific elements in the underlying data. These offsets are
@@ -300,7 +300,7 @@ class Font : public RefCounted<Font> {
   // @param digest the computed digest for the font; null if digest was not
   //        computed
   // Note: Current C++ port does not support SHA digest validation.
-  Font(int32_t sfnt_version, ByteVector* digest);
+  Font(int32_t sfnt_version, std::vector<uint8_t>* digest);
 
   // Build the table headers to be used for serialization. These headers will be
   // filled out with the data required for serialization. The headers will be
@@ -309,7 +309,7 @@ class Font : public RefCounted<Font> {
   // @param tableOrdering the tables to generate headers for and the order to
   //        sort them
   // @return a list of table headers ready for serialization
-  void BuildTableHeadersForSerialization(IntegerList* table_ordering,
+  void BuildTableHeadersForSerialization(std::vector<int32_t>* table_ordering,
                                          TableHeaderList* table_headers);
 
   // Searialize the headers.
@@ -330,15 +330,15 @@ class Font : public RefCounted<Font> {
   // @param defaultTableOrdering the partial ordering to be used as a seed for
   //        the full ordering
   // @param (out) table_ordering the full ordering for serialization
-  void GenerateTableOrdering(IntegerList* default_table_ordering,
-                             IntegerList* table_ordering);
+  void GenerateTableOrdering(std::vector<int32_t>* default_table_ordering,
+                             std::vector<int32_t>* table_ordering);
 
   // Get the default table ordering based on the type of the font.
   // @param (out) default_table_ordering the default table ordering
-  void DefaultTableOrdering(IntegerList* default_table_ordering);
+  void DefaultTableOrdering(std::vector<int32_t>* default_table_ordering);
 
   int32_t sfnt_version_;
-  ByteVector digest_;
+  std::vector<uint8_t> digest_;
   int64_t checksum_;
   TableMap tables_;
 };

@@ -136,14 +136,14 @@ bool TestReadableFontDataSearching() {
 
 void FillTestByteArray(ByteArray* ba, int32_t size) {
   for (int32_t i = 0; i < size; ++i) {
-    ba->Put(i, (byte_t)(i % 256));
+    ba->Put(i, (uint8_t)(i % 256));
   }
 }
 
 void ReadFontDataWithSingleByte(ReadableFontData* rfd, ByteVector* buffer) {
   buffer->resize(rfd->Length());
   for (int32_t index = 0; index < rfd->Length(); ++index) {
-    (*buffer)[index] = (byte_t)(rfd->ReadByte(index));
+    (*buffer)[index] = (uint8_t)(rfd->ReadByte(index));
   }
 }
 
@@ -178,7 +178,7 @@ void ReadFontDataWithSlidingWindow(ReadableFontData* rfd, int32_t window_size,
 
 void WriteFontDataWithSingleByte(ReadableFontData* rfd, WritableFontData* wfd) {
   for (int32_t index = 0; index < rfd->Length(); ++index) {
-    byte_t b = (byte_t)(rfd->ReadByte(index));
+    uint8_t b = (uint8_t)(rfd->ReadByte(index));
     wfd->WriteByte(index, b);
   }
 }

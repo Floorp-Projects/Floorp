@@ -52,7 +52,7 @@ void FontFactory::LoadFonts(InputStream* is, FontArray* output) {
   }
 }
 
-void FontFactory::LoadFonts(ByteVector* b, FontArray* output) {
+void FontFactory::LoadFonts(std::vector<uint8_t>* b, FontArray* output) {
   WritableFontDataPtr wfd;
   wfd.Attach(WritableFontData::CreateWritableFontData(b));
   if (IsCollection(wfd)) {
@@ -80,7 +80,7 @@ void FontFactory::LoadFontsForBuilding(InputStream* is,
   }
 }
 
-void FontFactory::LoadFontsForBuilding(ByteVector* b,
+void FontFactory::LoadFontsForBuilding(std::vector<uint8_t>* b,
                                        FontBuilderArray* output) {
   WritableFontDataPtr wfd;
   wfd.Attach(WritableFontData::CreateWritableFontData(b));
@@ -96,12 +96,8 @@ void FontFactory::LoadFontsForBuilding(ByteVector* b,
 }
 
 void FontFactory::SerializeFont(Font* font, OutputStream* os) {
-  font->Serialize(os, &table_ordering_);
-}
-
-void FontFactory::SetSerializationTableOrdering(
-    const IntegerList& table_ordering) {
-  table_ordering_ = table_ordering;
+  std::vector<int32_t> table_ordering;
+  font->Serialize(os, &table_ordering);
 }
 
 CALLER_ATTACH Font::Builder* FontFactory::NewFontBuilder() {
@@ -180,6 +176,10 @@ void FontFactory::LoadCollectionForBuilding(WritableFontData* wfd,
   int32_t version = wfd->ReadFixed(Offset::kVersion);
   UNREFERENCED_PARAMETER(version);
   int32_t num_fonts = wfd->ReadULongAsInt(Offset::kNumFonts);
+  if (num_fonts < 0)
+    return;
+  if (num_fonts > wfd->Length() / 4)
+    return;
 
   builders->reserve(num_fonts);
   int32_t offset_table_offset = Offset::kOffsetTable;
@@ -187,6 +187,9 @@ void FontFactory::LoadCollectionForBuilding(WritableFontData* wfd,
                font_number < num_fonts;
                font_number++, offset_table_offset += DataSize::kULONG) {
     int32_t offset = wfd->ReadULongAsInt(offset_table_offset);
+    if (offset < 0 || offset >= wfd->Length())
+      continue;
+
     FontBuilderPtr builder;
     builder.Attach(LoadSingleOTFForBuilding(wfd, offset));
     builders->push_back(builder);
@@ -194,14 +197,14 @@ void FontFactory::LoadCollectionForBuilding(WritableFontData* wfd,
 }
 
 bool FontFactory::IsCollection(PushbackInputStream* pbis) {
-  ByteVector tag(4);
+  std::vector<uint8_t> tag(4);
   pbis->Read(&tag);
   pbis->Unread(&tag);
   return Tag::ttcf == GenerateTag(tag[0], tag[1], tag[2], tag[3]);
 }
 
 bool FontFactory::IsCollection(ReadableFontData* rfd) {
-  ByteVector tag(4);
+  std::vector<uint8_t> tag(4);
   rfd->ReadBytes(0, &(tag[0]), 0, tag.size());
   return Tag::ttcf ==
          GenerateTag(tag[0], tag[1], tag[2], tag[3]);

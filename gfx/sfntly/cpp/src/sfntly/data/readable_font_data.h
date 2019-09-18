@@ -57,7 +57,7 @@ class ReadableFontData : public FontData,
   static const int32_t kInvalidUnsigned = -1;
   static const int64_t kInvalidLongDateTime = -1;
 
-  static CALLER_ATTACH ReadableFontData* CreateReadableFontData(ByteVector* b);
+  static CALLER_ATTACH ReadableFontData* CreateReadableFontData(std::vector<uint8_t>* b);
 
   // Gets a computed checksum for the data. This checksum uses the OpenType spec
   // calculation. Every ULong value (32 bit unsigned) in the data is summed and
@@ -72,7 +72,7 @@ class ReadableFontData : public FontData,
   // assumed to extend to the end of the data. The lengths of each range must be
   // a multiple of 4.
   // @param ranges the range bounds to use for the checksum
-  void SetCheckSumRanges(const IntegerList& ranges);
+  void SetCheckSumRanges(const std::vector<int32_t>& ranges);
 
   // Read the UBYTE at the given index.
   // @param index index into the font data
@@ -94,7 +94,7 @@ class ReadableFontData : public FontData,
   // @return the number of bytes actually read; -1 if the index is outside the
   //         bounds of the font data
   virtual int32_t ReadBytes(int32_t index,
-                            byte_t* b,
+                            uint8_t* b,
                             int32_t offset,
                             int32_t length);
 
@@ -306,7 +306,7 @@ class ReadableFontData : public FontData,
   Lock checksum_lock_;
   bool checksum_set_;
   int64_t checksum_;
-  IntegerList checksum_range_;
+  std::vector<int32_t> checksum_range_;
 };
 typedef Ptr<ReadableFontData> ReadableFontDataPtr;
 

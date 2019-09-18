@@ -65,7 +65,7 @@ int32_t SmallGlyphMetrics::Builder::Height() {
   return InternalReadData()->ReadByte(Offset::kHeight);
 }
 
-void SmallGlyphMetrics::Builder::SetHeight(byte_t height) {
+void SmallGlyphMetrics::Builder::SetHeight(uint8_t height) {
   InternalWriteData()->WriteByte(Offset::kHeight, height);
 }
 
@@ -73,7 +73,7 @@ int32_t SmallGlyphMetrics::Builder::Width() {
   return InternalReadData()->ReadByte(Offset::kWidth);
 }
 
-void SmallGlyphMetrics::Builder::SetWidth(byte_t width) {
+void SmallGlyphMetrics::Builder::SetWidth(uint8_t width) {
   InternalWriteData()->WriteByte(Offset::kWidth, width);
 }
 
@@ -81,7 +81,7 @@ int32_t SmallGlyphMetrics::Builder::BearingX() {
   return InternalReadData()->ReadByte(Offset::kBearingX);
 }
 
-void SmallGlyphMetrics::Builder::SetBearingX(byte_t bearing) {
+void SmallGlyphMetrics::Builder::SetBearingX(uint8_t bearing) {
   InternalWriteData()->WriteByte(Offset::kBearingX, bearing);
 }
 
@@ -89,7 +89,7 @@ int32_t SmallGlyphMetrics::Builder::BearingY() {
   return InternalReadData()->ReadByte(Offset::kBearingY);
 }
 
-void SmallGlyphMetrics::Builder::SetBearingY(byte_t bearing) {
+void SmallGlyphMetrics::Builder::SetBearingY(uint8_t bearing) {
   InternalWriteData()->WriteByte(Offset::kBearingY, bearing);
 }
 
@@ -97,7 +97,7 @@ int32_t SmallGlyphMetrics::Builder::Advance() {
   return InternalReadData()->ReadByte(Offset::kAdvance);
 }
 
-void SmallGlyphMetrics::Builder::SetAdvance(byte_t advance) {
+void SmallGlyphMetrics::Builder::SetAdvance(uint8_t advance) {
   InternalWriteData()->WriteByte(Offset::kAdvance, advance);
 }
 

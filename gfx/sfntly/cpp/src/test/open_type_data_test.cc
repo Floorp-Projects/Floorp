@@ -20,12 +20,12 @@
 
 namespace sfntly {
 
-const byte_t TEST_OTF_DATA[] =
+const uint8_t TEST_OTF_DATA[] =
     {0xff, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01};
 
 bool TestOTFRead() {
   ByteVector bytes;
-  for (size_t i = 0; i < sizeof(TEST_OTF_DATA) / sizeof(byte_t); ++i) {
+  for (size_t i = 0; i < sizeof(TEST_OTF_DATA) / sizeof(uint8_t); ++i) {
     bytes.push_back(TEST_OTF_DATA[i]);
   }
   ByteArrayPtr array = new MemoryByteArray(&(bytes[0]), bytes.size());
@@ -45,7 +45,7 @@ bool TestOTFRead() {
 bool TestOTFCopy() {
   ByteVector source_bytes(1024);
   for (size_t i = 0; i < source_bytes.size(); ++i) {
-    source_bytes[i] = (byte_t)(i & 0xff);
+    source_bytes[i] = (uint8_t)(i & 0xff);
   }
   ByteArrayPtr source_array = new MemoryByteArray(&(source_bytes[0]), 1024);
   ReadableFontDataPtr source = new ReadableFontData(source_array);
