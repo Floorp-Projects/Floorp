@@ -4039,10 +4039,6 @@ class Document : public nsINode,
  private:
   void InitializeLocalization(nsTArray<nsString>& aResourceIds);
 
-  // Takes the bits from mStyleUseCounters if appropriate, and sets them in
-  // mUseCounters.
-  void SetCssUseCounterBits();
-
   // Returns true if there is any valid value in the viewport meta tag.
   bool ParseWidthAndHeightInMetaViewport(const nsAString& aWidthString,
                                          const nsAString& aHeightString,
