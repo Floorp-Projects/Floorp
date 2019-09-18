@@ -1832,21 +1832,28 @@ nsresult HTMLEditor::SetParagraphFormatAsAction(
 }
 
 NS_IMETHODIMP
-HTMLEditor::GetParagraphState(bool* aMixed, nsAString& outFormat) {
+HTMLEditor::GetParagraphState(bool* aMixed, nsAString& aFirstParagraphState) {
   if (NS_WARN_IF(!aMixed)) {
     return NS_ERROR_INVALID_ARG;
   }
-  if (!mRules) {
+  if (!mInitSucceeded) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
+  ErrorResult error;
+  ParagraphStateAtSelection state(*this, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
   }
 
-  RefPtr<HTMLEditRules> htmlRules(mRules->AsHTMLEditRules());
-  return htmlRules->GetParagraphState(aMixed, outFormat);
+  *aMixed = state.IsMixed();
+  if (NS_WARN_IF(!state.GetFirstParagraphStateAtSelection())) {
+    // XXX Odd result, but keep this behavior for now...
+    aFirstParagraphState.AssignASCII("x");
+  } else {
+    state.GetFirstParagraphStateAtSelection()->ToString(aFirstParagraphState);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -219,7 +219,6 @@ interface nsIHTMLEditor : nsISupports
    * @param aMixed     True if there is more than one format
    * @return           Name of block tag. "" is returned for none.
    */
-  [can_run_script]
   AString getParagraphState(out boolean aMixed);
 
   /**

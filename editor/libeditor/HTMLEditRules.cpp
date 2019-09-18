@@ -1064,142 +1064,185 @@ static nsStaticAtom& MarginPropertyAtomForIndent(nsINode& aNode) {
                                         : *nsGkAtoms::marginLeft;
 }
 
-nsresult HTMLEditRules::GetParagraphState(bool* aMixed, nsAString& outFormat) {
-  if (NS_WARN_IF(!aMixed)) {
-    return NS_ERROR_INVALID_ARG;
+ParagraphStateAtSelection::ParagraphStateAtSelection(HTMLEditor& aHTMLEditor,
+                                                     ErrorResult& aRv) {
+  if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
+    aRv = EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
+    return;
   }
 
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  // XXX Should we create another constructor which won't create
+  //     AutoEditActionDataSetter?  Or should we create another
+  //     AutoEditActionDataSetter which won't nest edit action?
+  EditorBase::AutoEditActionDataSetter editActionData(aHTMLEditor,
+                                                      EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    aRv = EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
+    return;
   }
 
-  // This routine is *heavily* tied to our ui choices in the paragraph
-  // style popup.  I can't see a way around that.
-  *aMixed = true;
-  outFormat.Truncate(0);
-
-  AutoSafeEditorData setData(*this, *mHTMLEditor);
-
-  bool bMixed = false;
-  // using "x" as an uninitialized value, since "" is meaningful
-  nsAutoString formatStr(NS_LITERAL_STRING("x"));
-
-  nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
-  nsresult rv = GetParagraphFormatNodes(arrayOfNodes);
+  AutoTArray<OwningNonNull<nsINode>, 64> arrayOfNodes;
+  nsresult rv =
+      CollectEditableFormatNodesInSelection(aHTMLEditor, arrayOfNodes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    aRv.Throw(rv);
+    return;
   }
 
-  // post process list.  We need to replace any block nodes that are not format
-  // nodes with their content.  This is so we only have to look "up" the
-  // hierarchy to find format nodes, instead of both up and down.
+  // We need to append descendant format block if block nodes are not format
+  // block.  This is so we only have to look "up" the hierarchy to find
+  // format nodes, instead of both up and down.
   for (int32_t i = arrayOfNodes.Length() - 1; i >= 0; i--) {
-    auto& curNode = arrayOfNodes[i];
+    auto& node = arrayOfNodes[i];
     nsAutoString format;
-    // if it is a known format node we have it easy
-    if (HTMLEditor::NodeIsBlockStatic(curNode) &&
-        !HTMLEditUtils::IsFormatNode(curNode)) {
-      // arrayOfNodes.RemoveObject(curNode);
-      rv = AppendInnerFormatNodes(arrayOfNodes, curNode);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+    if (HTMLEditor::NodeIsBlockStatic(node) &&
+        !HTMLEditUtils::IsFormatNode(node)) {
+      // XXX This RemoveObject() call has already been commented out and
+      //     the above comment explained we're trying to replace non-format
+      //     block nodes in the array.  According to the following blocks and
+      //     `AppendDescendantFormatNodesAndFirstInlineNode()`, replacing
+      //     non-format block with descendants format blocks makes sense.
+      // arrayOfNodes.RemoveObject(node);
+      ParagraphStateAtSelection::AppendDescendantFormatNodesAndFirstInlineNode(
+          arrayOfNodes, *node->AsElement());
     }
   }
 
-  // we might have an empty node list.  if so, find selection parent
+  // We might have an empty node list.  if so, find selection parent
   // and put that on the list
   if (arrayOfNodes.IsEmpty()) {
-    EditorRawDOMPoint atCaret(EditorBase::GetStartPoint(*SelectionRefPtr()));
+    EditorRawDOMPoint atCaret(
+        EditorBase::GetStartPoint(*aHTMLEditor.SelectionRefPtr()));
     if (NS_WARN_IF(!atCaret.IsSet())) {
-      return NS_ERROR_FAILURE;
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
     }
     arrayOfNodes.AppendElement(*atCaret.GetContainer());
   }
 
-  // remember root node
-  Element* rootElement = HTMLEditorRef().GetRoot();
-  if (NS_WARN_IF(!rootElement)) {
-    return NS_ERROR_FAILURE;
+  Element* bodyOrDocumentElement = aHTMLEditor.GetRoot();
+  if (NS_WARN_IF(!bodyOrDocumentElement)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
   }
 
-  // loop through the nodes in selection and examine their paragraph format
-  for (auto& curNode : Reversed(arrayOfNodes)) {
-    nsAutoString format;
-    // if it is a known format node we have it easy
-    if (HTMLEditUtils::IsFormatNode(curNode)) {
-      GetFormatString(curNode, format);
-    } else if (HTMLEditor::NodeIsBlockStatic(curNode)) {
-      // this is a div or some other non-format block.
-      // we should ignore it.  Its children were appended to this list
-      // by AppendInnerFormatNodes() call above.  We will get needed
-      // info when we examine them instead.
+  for (auto& node : Reversed(arrayOfNodes)) {
+    nsAtom* paragraphStateOfNode = nsGkAtoms::_empty;
+    if (HTMLEditUtils::IsFormatNode(node)) {
+      MOZ_ASSERT(node->NodeInfo()->NameAtom());
+      paragraphStateOfNode = node->NodeInfo()->NameAtom();
+    }
+    // Ignore non-format block node since its children have been appended
+    // the list above so that we'll handle this descendants later.
+    else if (HTMLEditor::NodeIsBlockStatic(node)) {
       continue;
-    } else {
-      nsINode* node = curNode->GetParentNode();
-      while (node) {
-        if (node == rootElement) {
-          format.Truncate(0);
-          break;
-        } else if (HTMLEditUtils::IsFormatNode(node)) {
-          GetFormatString(node, format);
+    }
+    // If we meet an inline node, let's get its parent format.
+    else {
+      for (nsINode* parentNode = node->GetParentNode(); parentNode;
+           parentNode = parentNode->GetParentNode()) {
+        // If we reach `HTMLDocument.body` or `Document.documentElement`,
+        // there is no format.
+        if (parentNode == bodyOrDocumentElement) {
           break;
         }
-        // else keep looking up
-        node = node->GetParentNode();
+        if (HTMLEditUtils::IsFormatNode(parentNode)) {
+          MOZ_ASSERT(parentNode->NodeInfo()->NameAtom());
+          paragraphStateOfNode = parentNode->NodeInfo()->NameAtom();
+          break;
+        }
       }
     }
 
     // if this is the first node, we've found, remember it as the format
-    if (formatStr.EqualsLiteral("x")) {
-      formatStr = format;
+    if (!mFirstParagraphState) {
+      mFirstParagraphState = paragraphStateOfNode;
+      continue;
     }
     // else make sure it matches previously found format
-    else if (format != formatStr) {
-      bMixed = true;
+    if (mFirstParagraphState != paragraphStateOfNode) {
+      mIsMixed = true;
       break;
     }
   }
-
-  *aMixed = bMixed;
-  outFormat = formatStr;
-  return NS_OK;
 }
 
-nsresult HTMLEditRules::AppendInnerFormatNodes(
-    nsTArray<OwningNonNull<nsINode>>& aArray, nsINode* aNode) {
-  MOZ_ASSERT(aNode);
+// static
+void ParagraphStateAtSelection::AppendDescendantFormatNodesAndFirstInlineNode(
+    nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
+    Element& aNonFormatBlockElement) {
+  MOZ_ASSERT(HTMLEditor::NodeIsBlockStatic(aNonFormatBlockElement));
+  MOZ_ASSERT(!HTMLEditUtils::IsFormatNode(&aNonFormatBlockElement));
 
-  // we only need to place any one inline inside this node onto
+  // We only need to place any one inline inside this node onto
   // the list.  They are all the same for purposes of determining
   // paragraph style.  We use foundInline to track this as we are
   // going through the children in the loop below.
   bool foundInline = false;
-  for (nsIContent* child = aNode->GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    bool isBlock = HTMLEditor::NodeIsBlockStatic(*child);
-    bool isFormat = HTMLEditUtils::IsFormatNode(child);
+  for (nsIContent* childContent = aNonFormatBlockElement.GetFirstChild();
+       childContent; childContent = childContent->GetNextSibling()) {
+    bool isBlock = HTMLEditor::NodeIsBlockStatic(*childContent);
+    bool isFormat = HTMLEditUtils::IsFormatNode(childContent);
+    // If the child is a non-format block element, let's check its children
+    // recursively.
     if (isBlock && !isFormat) {
-      // if it's a div, etc., recurse
-      AppendInnerFormatNodes(aArray, child);
-    } else if (isFormat) {
-      aArray.AppendElement(*child);
-    } else if (!foundInline) {
-      // if this is the first inline we've found, use it
+      ParagraphStateAtSelection::AppendDescendantFormatNodesAndFirstInlineNode(
+          aArrayOfNodes, *childContent->AsElement());
+      continue;
+    }
+
+    // If it's a format block, append it.
+    if (isFormat) {
+      aArrayOfNodes.AppendElement(*childContent);
+      continue;
+    }
+
+    MOZ_ASSERT(!isBlock);
+
+    // If we haven't found inline node, append only this first inline node.
+    // XXX I think that this makes sense if caller of this removes
+    //     aNonFormatBlockElement from aArrayOfNodes because the last loop of
+    //     the constructor can check parent format block with
+    //     aNonFormatBlockElement.
+    if (!foundInline) {
       foundInline = true;
-      aArray.AppendElement(*child);
+      aArrayOfNodes.AppendElement(*childContent);
+      continue;
     }
   }
-  return NS_OK;
 }
 
-nsresult HTMLEditRules::GetFormatString(nsINode* aNode, nsAString& outFormat) {
-  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
+// static
+nsresult ParagraphStateAtSelection::CollectEditableFormatNodesInSelection(
+    HTMLEditor& aHTMLEditor, nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes) {
+  nsresult rv = aHTMLEditor.CollectEditTargetNodesInExtendedSelectionRanges(
+      aArrayOfNodes, EditSubAction::eCreateOrRemoveBlock,
+      HTMLEditor::CollectNonEditableNodes::Yes);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  if (HTMLEditUtils::IsFormatNode(aNode)) {
-    aNode->NodeInfo()->NameAtom()->ToString(outFormat);
-  } else {
-    outFormat.Truncate();
+  // Pre-process our list of nodes
+  for (int32_t i = aArrayOfNodes.Length() - 1; i >= 0; i--) {
+    OwningNonNull<nsINode> node = aArrayOfNodes[i];
+
+    // Remove all non-editable nodes.  Leave them be.
+    if (!aHTMLEditor.IsEditable(node)) {
+      aArrayOfNodes.RemoveElementAt(i);
+      continue;
+    }
+
+    // Scan for table elements.  If we find table elements other than table,
+    // replace it with a list of any editable non-table content.  Ditto for
+    // list elements.
+    if (HTMLEditUtils::IsTableElement(node) || HTMLEditUtils::IsList(node) ||
+        HTMLEditUtils::IsListItem(node)) {
+      aArrayOfNodes.RemoveElementAt(i);
+      aHTMLEditor.CollectChildren(node, aArrayOfNodes, i,
+                                  HTMLEditor::CollectListChildren::Yes,
+                                  HTMLEditor::CollectTableChildren::Yes,
+                                  HTMLEditor::CollectNonEditableNodes::Yes);
+    }
   }
   return NS_OK;
 }
@@ -7960,43 +8003,6 @@ Element* HTMLEditor::GetDeepestEditableOnlyChildDivBlockquoteOrListElement(
     parentElement = content->AsElement();
   }
   return parentElement;
-}
-
-nsresult HTMLEditRules::GetParagraphFormatNodes(
-    nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  nsresult rv = HTMLEditorRef().CollectEditTargetNodesInExtendedSelectionRanges(
-      outArrayOfNodes, EditSubAction::eCreateOrRemoveBlock,
-      HTMLEditor::CollectNonEditableNodes::Yes);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Pre-process our list of nodes
-  for (int32_t i = outArrayOfNodes.Length() - 1; i >= 0; i--) {
-    OwningNonNull<nsINode> testNode = outArrayOfNodes[i];
-
-    // Remove all non-editable nodes.  Leave them be.
-    if (!HTMLEditorRef().IsEditable(testNode)) {
-      outArrayOfNodes.RemoveElementAt(i);
-      continue;
-    }
-
-    // Scan for table elements.  If we find table elements other than table,
-    // replace it with a list of any editable non-table content.  Ditto for
-    // list elements.
-    if (HTMLEditUtils::IsTableElement(testNode) ||
-        HTMLEditUtils::IsList(testNode) ||
-        HTMLEditUtils::IsListItem(testNode)) {
-      outArrayOfNodes.RemoveElementAt(i);
-      HTMLEditorRef().CollectChildren(testNode, outArrayOfNodes, i,
-                                      HTMLEditor::CollectListChildren::Yes,
-                                      HTMLEditor::CollectTableChildren::Yes,
-                                      HTMLEditor::CollectNonEditableNodes::Yes);
-    }
-  }
-  return NS_OK;
 }
 
 nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(

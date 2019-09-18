@@ -48,6 +48,7 @@ class EmptyEditableFunctor;
 class ListElementSelectionState;
 class ListItemElementSelectionState;
 class MoveNodeResult;
+class ParagraphStateAtSelection;
 class ResizerSelectionListener;
 class SplitRangeOffFromNodeResult;
 class WSRunObject;
@@ -4370,6 +4371,7 @@ class HTMLEditor final : public TextEditor,
   friend class HTMLEditRules;
   friend class ListElementSelectionState;
   friend class ListItemElementSelectionState;
+  friend class ParagraphStateAtSelection;
   friend class SlurpBlobEventListener;
   friend class TextEditor;
   friend class WSRunObject;
@@ -4439,6 +4441,63 @@ class MOZ_STACK_CLASS AlignStateAtSelection final {
 
  private:
   nsIHTMLEditor::EAlignment mFirstAlign = nsIHTMLEditor::eLeft;
+};
+
+/**
+ * ParagraphStateAtSelection class gets format block types around selection.
+ */
+class MOZ_STACK_CLASS ParagraphStateAtSelection final {
+ public:
+  ParagraphStateAtSelection() = delete;
+  ParagraphStateAtSelection(HTMLEditor& aHTMLEditor, ErrorResult& aRv);
+
+  /**
+   * GetFirstParagraphStateAtSelection() returns:
+   * - nullptr if there is no format blocks nor inline nodes.
+   * - nsGkAtoms::_empty if first node is not in any format block.
+   * - a tag name of format block at first node.
+   * XXX See the private method explanations.  If selection ranges contains
+   *     non-format block first, it'll be check after its siblings.  Therefore,
+   *     this may return non-first paragraph state.
+   */
+  nsAtom* GetFirstParagraphStateAtSelection() const {
+    return mFirstParagraphState;
+  }
+
+  /**
+   * If selected nodes are not in same format node nor only in no-format blocks,
+   * this returns true.
+   */
+  bool IsMixed() const { return mIsMixed; }
+
+ private:
+  /**
+   * AppendDescendantFormatNodesAndFirstInlineNode() appends descendant
+   * format blocks and first inline child node in aNonFormatBlockElement to
+   * the last of the array (not inserting where aNonFormatBlockElement is,
+   * so that the node order becomes randomly).
+   *
+   * @param aArrayOfNodes               [in/out] Found descendant format blocks
+   *                                    and first inline node in each non-format
+   *                                    block will be appended to this.
+   * @param aNonFormatBlockElement      Must be a non-format block element.
+   */
+  static void AppendDescendantFormatNodesAndFirstInlineNode(
+      nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
+      Element& aNonFormatBlockElement);
+
+  /**
+   * CollectEditableFormatNodesInSelection() collects only editable nodes
+   * around selection ranges (with
+   * `HTMLEditor::CollectEditTargetNodesInExtendedSelectionRanges()`, see its
+   * document for the detail).  If it includes list, list item or table
+   * related elements, they will be replaced their children.
+   */
+  static nsresult CollectEditableFormatNodesInSelection(
+      HTMLEditor& aHTMLEditor, nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes);
+
+  RefPtr<nsAtom> mFirstParagraphState;
+  bool mIsMixed = false;
 };
 
 }  // namespace mozilla
