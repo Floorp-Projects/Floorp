@@ -778,6 +778,14 @@ class FxaAccountManagerTest {
             return CompletableDeferred(profile)
         }
 
+        override fun getCurrentDeviceId(): String? {
+            return null
+        }
+
+        override fun getSessionToken(): String? {
+            return null
+        }
+
         override fun completeOAuthFlowAsync(code: String, state: String): Deferred<Boolean> {
             return CompletableDeferred(true)
         }
