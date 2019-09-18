@@ -2,7 +2,9 @@ from __future__ import absolute_import
 
 
 def to_chrome_path(path):
-    return path.replace('/locales/en-US', '')
+    path = path.replace('/locales/en-US', '')
+    if path.startswith("./"):
+        path = path[2:]
     return path
 
 
@@ -39,7 +41,7 @@ def make_header():
 
 def build_migration(messages, dtds, data):
     res = make_header()
-    desc = 'Bug {0} - {1}, part {{index}}'.format(
+    desc = 'Bug {0} - {1}, part {{index}}.'.format(
         data['bug_id'], data['description'])
     res += '\n\ndef migrate(ctx):\n    """{0}"""\n\n'.format(desc)
 
