@@ -334,12 +334,7 @@ async function scheduleMac(name, base, args = "") {
   });
 
   // Build base definition.
-  let build_base = merge(mac_base, {
-    command: [
-      MAC_CHECKOUT_CMD,
-      ["bash", "-c",
-       "nss/automation/taskcluster/scripts/build_gyp.sh " + args]
-    ],
+  let build_base_without_command_symbol = merge(mac_base, {
     provisioner: "localprovisioner",
     workerType: "nss-macos-10-12",
     platform: "mac",
@@ -350,6 +345,35 @@ async function scheduleMac(name, base, args = "") {
       path: "public"
     }],
     kind: "build",
+  });
+
+  let gyp_cmd = "nss/automation/taskcluster/scripts/build_gyp.sh ";
+
+  if (!("collection" in base) ||
+      (base.collection != "make" &&
+       base.collection != "asan" &&
+       base.collection != "fips" &&
+       base.collection != "fuzz")) {
+    let nspr_gyp = gyp_cmd + "--nspr-only --nspr-test-build ";
+    // TODO (bug 1385039): nspr_gyp += "--nspr-test-run ";
+    let nspr_build = merge(build_base_without_command_symbol, {
+      command: [
+        MAC_CHECKOUT_CMD,
+        ["bash", "-c",
+         nspr_gyp + args]
+      ],
+      symbol: "NSPR"
+    });
+    // The task that tests NSPR.
+    let nspr_task_build = queue.scheduleTask(merge(nspr_build, {name}));
+  }
+
+  let build_base = merge(build_base_without_command_symbol, {
+    command: [
+      MAC_CHECKOUT_CMD,
+      ["bash", "-c",
+       gyp_cmd + args]
+    ],
     symbol: "B"
   });
 
@@ -383,17 +407,8 @@ async function scheduleMac(name, base, args = "") {
 /*****************************************************************************/
 
 async function scheduleLinux(name, overrides, args = "") {
-  // Construct a base definition.  This takes |overrides| second because
-  // callers expect to be able to overwrite the |command| key.
-  let base = merge({
-    command: [
-      "/bin/bash",
-      "-c",
-      "bin/checkout.sh && nss/automation/taskcluster/scripts/build_gyp.sh " + args
-    ],
-  }, overrides);
-  // The base for building.
-  let build_base = merge(base, {
+  let checkout_and_gyp = "bin/checkout.sh && nss/automation/taskcluster/scripts/build_gyp.sh ";
+  let artifacts_and_kind = {
     artifacts: {
       public: {
         expires: 24 * 7,
@@ -402,6 +417,45 @@ async function scheduleLinux(name, overrides, args = "") {
       }
     },
     kind: "build",
+  };
+
+  if (!("collection" in overrides) ||
+       (overrides.collection != "make" &&
+        overrides.collection != "asan" &&
+        overrides.collection != "fips" &&
+        overrides.collection != "fuzz")) {
+    let nspr_gyp = checkout_and_gyp + "--nspr-only --nspr-test-build ";
+    // TODO (bug 1385039): nspr_gyp += "--nspr-test-run ";
+
+    let nspr_base = merge({
+      command: [
+        "/bin/bash",
+        "-c",
+        nspr_gyp + args
+      ],
+    }, overrides);
+    let nspr_without_symbol = merge(nspr_base, artifacts_and_kind);
+    let nspr_build = merge(nspr_without_symbol, {
+      symbol: "NSPR",
+    });
+    // The task that tests NSPR.
+    let nspr_task_build = queue.scheduleTask(merge(nspr_build, {name}));
+  }
+
+  // Construct a base definition.  This takes |overrides| second because
+  // callers expect to be able to overwrite the |command| key.
+  let base = merge({
+    command: [
+      "/bin/bash",
+      "-c",
+      checkout_and_gyp + args
+    ],
+  }, overrides);
+
+  let base_without_symbol = merge(base, artifacts_and_kind);
+
+  // The base for building.
+  let build_base = merge(base_without_symbol, {
     symbol: "B",
   });
 
@@ -788,20 +842,44 @@ async function scheduleWindows(name, base, build_script) {
     }
   });
 
-  // Build base definition.
-  let build_base = merge(base, {
-    command: [
-      WINDOWS_CHECKOUT_CMD,
-      `bash -c 'nss/automation/taskcluster/windows/${build_script}'`
-    ],
+  let artifacts_and_kind = {
     artifacts: [{
       expires: 24 * 7,
       type: "directory",
       path: "public\\build"
     }],
     kind: "build",
+  };
+
+  let build_without_command_symbol = merge(base, artifacts_and_kind);
+
+  // Build base definition.
+  let build_base = merge(build_without_command_symbol, {
+    command: [
+      WINDOWS_CHECKOUT_CMD,
+      `bash -c 'nss/automation/taskcluster/windows/${build_script}'`
+    ],
     symbol: "B"
   });
+
+  if (!("collection" in base) ||
+      (base.collection != "make" &&
+       base.collection != "asan" &&
+       base.collection != "fips" &&
+       base.collection != "fuzz")) {
+    let nspr_gyp =
+      `bash -c 'nss/automation/taskcluster/windows/${build_script} --nspr-only --nspr-test-build'`;
+      // TODO (bug 1385039): add --nspr-test-run
+    let nspr_build = merge(build_without_command_symbol, {
+      command: [
+        WINDOWS_CHECKOUT_CMD,
+        nspr_gyp
+      ],
+      symbol: "NSPR"
+    });
+    // The task that tests NSPR.
+    let task_build = queue.scheduleTask(merge(nspr_build, {name}));
+  }
 
   // Make builds run FIPS tests, which need an extra FIPS build.
   if (base.collection == "make") {

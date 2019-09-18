@@ -176,7 +176,9 @@ cleanup:
     }
     SECITEM_FreeItem(&pubValue, PR_FALSE);
     SECITEM_FreeItem(&privID, PR_FALSE);
-    PORT_FreeArena(epki->arena, PR_TRUE);
+    if (epki && epki->arena) {
+        PORT_FreeArena(epki->arena, PR_TRUE);
+    }
     SECKEY_DestroyPublicKey(pubKey);
     SECKEY_DestroyPrivateKey(privKey);
     fprintf(stderr, "%s PrivateKeyImport %s ***********************\n",

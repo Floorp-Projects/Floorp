@@ -36,15 +36,30 @@ nspr_build()
         extra_params+=(--enable-64bit)
     fi
 
-    echo "NSPR [1/3] configure ..."
+    echo "NSPR [1/5] configure ..."
     pushd "$nspr_dir" >/dev/null
     CFLAGS="$nspr_cflags" CXXFLAGS="$nspr_cxxflags" \
           LDFLAGS="$nspr_ldflags" CC="$CC" CXX="$CCC" \
           run_verbose ../configure "${extra_params[@]}" "$@"
     popd >/dev/null
-    echo "NSPR [2/3] make ..."
+    echo "NSPR [2/5] make ..."
     run_verbose make -C "$nspr_dir"
-    echo "NSPR [3/3] install ..."
+
+    if [ "$build_nspr_tests" = 1 ]; then
+      echo "NSPR [3/5] build tests ..."
+      run_verbose make -C "$nspr_dir/pr/tests"
+    else
+        echo "NSPR [3/5] NOT building tests"
+    fi
+
+    if [[ "$build_nspr_tests" = 1 && "$run_nspr_tests" = 1 ]]; then
+      echo "NSPR [4/5] run tests ..."
+      run_verbose make -C "$nspr_dir/pr/tests" runtests
+    else
+        echo "NSPR [4/5] NOT running tests"
+    fi
+
+    echo "NSPR [5/5] install ..."
     run_verbose make -C "$nspr_dir" install
 }
 
