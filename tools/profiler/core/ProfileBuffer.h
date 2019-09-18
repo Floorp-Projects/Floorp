@@ -27,8 +27,10 @@ class ProfileBuffer final {
   using BlockIndex = mozilla::BlocksRingBuffer::BlockIndex;
 
   // ProfileBuffer constructor
+  // @param aBuffer The BlocksRingBuffer to use as buffer manager.
   // @param aCapacity The capacity of the buffer.
-  explicit ProfileBuffer(mozilla::PowerOfTwo32 aCapacity);
+  ProfileBuffer(mozilla::BlocksRingBuffer& aBuffer,
+                mozilla::PowerOfTwo32 aCapacity);
 
   ~ProfileBuffer();
 
@@ -144,7 +146,7 @@ class ProfileBuffer final {
       mozilla::BlocksRingBuffer& aBlocksRingBuffer, int aThreadId);
 
   // The circular-ring storage in which this ProfileBuffer stores its data.
-  mozilla::BlocksRingBuffer mEntries;
+  mozilla::BlocksRingBuffer& mEntries;
 
  public:
   // `BufferRangeStart()` and `BufferRangeEnd()` return `uint64_t` values
