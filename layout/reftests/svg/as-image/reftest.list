@@ -142,7 +142,7 @@ fuzzy-if(d2d,0-16,0-10) == img-content-outside-viewBox-1.html img-content-outsid
 
 == img-width-meet-1.html   img-width-meet-1-ref.html
 == img-width-meet-2.html   img-width-meet-2-ref.html
-fuzzy-if(webrender,255-255,3-3) fuzzy-if(geckoview&&webrender,255-255,3-269) == img-width-slice-1.html  img-width-slice-1-ref.html
+fuzzy-if(webrender,255-255,3-3) fuzzy-if(geckoview&&webrender,255-255,3-521) == img-width-slice-1.html  img-width-slice-1-ref.html
 == img-width-slice-2.html  img-width-slice-2-ref.html
 
 # Alternate version of "width & height both non-%-valued" tests, but now
