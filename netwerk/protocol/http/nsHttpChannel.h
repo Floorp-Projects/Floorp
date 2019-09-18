@@ -33,8 +33,8 @@
 #include "nsIRaceCacheWithNetwork.h"
 #include "mozilla/extensions/PStreamFilterParent.h"
 #include "mozilla/Mutex.h"
+#include "nsIProcessSwitchRequestor.h"
 #include "nsIRemoteTab.h"
-#include "nsICrossProcessSwitchChannel.h"
 
 class nsDNSPrefetch;
 class nsICancelable;

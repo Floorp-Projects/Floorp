@@ -13,11 +13,11 @@
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/PDocumentChannelParent.h"
 #include "mozilla/net/ParentChannelListener.h"
-#include "nsICrossProcessSwitchChannel.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIObserver.h"
 #include "nsIParentChannel.h"
 #include "nsIParentRedirectingChannel.h"
+#include "nsIProcessSwitchRequestor.h"
 #include "nsIRedirectResultListener.h"
 
 #define DOCUMENT_CHANNEL_PARENT_IID                  \
@@ -37,7 +37,6 @@ class DocumentChannelParent : public nsIInterfaceRequestor,
                               public nsIAsyncVerifyRedirectReadyCallback,
                               public nsIParentChannel,
                               public nsIChannelEventSink,
-                              public nsICrossProcessSwitchChannel,
                               public HttpChannelSecurityWarningReporter,
                               public nsIProcessSwitchRequestor {
  public:
@@ -54,7 +53,6 @@ class DocumentChannelParent : public nsIInterfaceRequestor,
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIASYNCVERIFYREDIRECTREADYCALLBACK
   NS_DECL_NSICHANNELEVENTSINK
-  NS_DECL_NSICROSSPROCESSSWITCHCHANNEL
   NS_DECL_NSIPROCESSSWITCHREQUESTOR
 
   NS_DECLARE_STATIC_IID_ACCESSOR(DOCUMENT_CHANNEL_PARENT_IID)
