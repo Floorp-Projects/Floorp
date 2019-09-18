@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use api::PrimitiveFlags;
 use api::units::*;
 use crate::clip_scroll_tree::SpatialNodeIndex;
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
@@ -34,13 +35,13 @@ pub type BackdropKey = PrimKey<Backdrop>;
 
 impl BackdropKey {
     pub fn new(
-        is_backface_visible: bool,
+        flags: PrimitiveFlags,
         prim_size: LayoutSize,
         backdrop: Backdrop,
     ) -> Self {
         BackdropKey {
             common: PrimKeyCommonData {
-                is_backface_visible,
+                flags,
                 prim_size: prim_size.into(),
             },
             kind: backdrop,
@@ -86,7 +87,7 @@ impl InternablePrimitive for Backdrop {
         info: &LayoutPrimitiveInfo,
     ) -> BackdropKey {
         BackdropKey::new(
-            info.is_backface_visible,
+            info.flags,
             info.rect.size,
             self
         )
