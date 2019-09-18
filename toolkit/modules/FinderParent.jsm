@@ -297,11 +297,7 @@ FinderParent.prototype = {
         return;
       }
 
-      response = await this.sendQueryToContext(
-        "Finder:FindInFrame",
-        aArgs,
-        currentBC
-      );
+      response = await this.sendQueryToContext("Finder:Find", aArgs, currentBC);
 
       // This can happen if the tab is closed while the find is in progress.
       if (!response) {

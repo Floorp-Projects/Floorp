@@ -44,30 +44,8 @@ class FinderChild extends JSWindowActorChild {
         });
       }
 
-      case "Finder:FastFind":
-        return new Promise(resolve => {
-          let result = this.finder.fastFind(
-            data.searchString,
-            data.linksOnly,
-            data.drawOutline
-          );
-          resolve(result);
-        });
-
-      case "Finder:FindAgain":
-        return new Promise(resolve => {
-          resolve(
-            this.finder.findAgain(
-              data.searchString,
-              data.findBackwards,
-              data.linksOnly,
-              data.drawOutline
-            )
-          );
-        });
-
-      case "Finder:FindInFrame":
-        return this.finder.findInFrame(data);
+      case "Finder:Find":
+        return this.finder.find(data);
 
       case "Finder:Highlight":
         return this.finder

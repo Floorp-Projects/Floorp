@@ -199,9 +199,7 @@ let ACTORS = {
       messages: [
         "Finder:CaseSensitive",
         "Finder:EntireWord",
-        "Finder:FastFind",
-        "Finder:FindAgain",
-        "Finder:FindInFrame",
+        "Finder:Find",
         "Finder:SetSearchStringToSelection",
         "Finder:GetInitialSelection",
         "Finder:Highlight",
