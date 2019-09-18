@@ -43,22 +43,4 @@ bool TextEditUtils::IsBreak(nsINode* aNode) {
   return aNode->IsHTMLElement(nsGkAtoms::br);
 }
 
-/******************************************************************************
- * AutoEditInitRulesTrigger
- ******************************************************************************/
-
-AutoEditInitRulesTrigger::AutoEditInitRulesTrigger(TextEditor* aTextEditor,
-                                                   nsresult& aResult)
-    : mTextEditor(aTextEditor), mResult(aResult) {
-  if (mTextEditor) {
-    mTextEditor->BeginEditorInit();
-  }
-}
-
-AutoEditInitRulesTrigger::~AutoEditInitRulesTrigger() {
-  if (mTextEditor) {
-    mResult = MOZ_KnownLive(mTextEditor)->EndEditorInit();
-  }
-}
-
 }  // namespace mozilla
