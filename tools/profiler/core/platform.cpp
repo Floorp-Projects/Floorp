@@ -4136,6 +4136,16 @@ void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info) {
                                 profiler_get_backtrace()));
 }
 
+void profiler_add_native_allocation_marker(const int64_t aSize) {
+  if (!profiler_can_accept_markers()) {
+    return;
+  }
+  AUTO_PROFILER_STATS(add_marker_with_NativeAllocationMarkerPayload);
+  profiler_add_marker(
+      "Native allocation", JS::ProfilingCategoryPair::OTHER,
+      NativeAllocationMarkerPayload(TimeStamp::Now(), aSize, nullptr));
+}
+
 void profiler_add_network_marker(
     nsIURI* aURI, int32_t aPriority, uint64_t aChannelId, NetworkLoadType aType,
     mozilla::TimeStamp aStart, mozilla::TimeStamp aEnd, int64_t aCount,

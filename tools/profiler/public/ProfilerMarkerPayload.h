@@ -697,6 +697,28 @@ class JsAllocationMarkerPayload : public ProfilerMarkerPayload {
   bool mInNursery;
 };
 
+// This payload is for collecting information about native allocations. There is
+// a memory hook into malloc and other memory functions that can sample a subset
+// of the allocations. This information is then stored in this payload.
+class NativeAllocationMarkerPayload : public ProfilerMarkerPayload {
+ public:
+  NativeAllocationMarkerPayload(const mozilla::TimeStamp& aStartTime,
+                                const int64_t aSize,
+                                UniqueProfilerBacktrace aStack)
+      : ProfilerMarkerPayload(aStartTime, aStartTime, mozilla::Nothing(),
+                              mozilla::Nothing(), std::move(aStack)),
+        mSize(aSize) {}
+
+  DECL_STREAM_PAYLOAD
+
+ private:
+  NativeAllocationMarkerPayload(CommonProps&& aCommonProps, int64_t aSize)
+      : ProfilerMarkerPayload(std::move(aCommonProps)), mSize(aSize) {}
+
+  // The size in bytes of the allocation or de-allocation.
+  int64_t mSize;
+};
+
 namespace mozilla {
 
 // Serialize a pointed-at ProfilerMarkerPayload, may be null when there are no
