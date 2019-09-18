@@ -321,9 +321,10 @@ void nsTypeAheadFind::PlayNotFoundSound() {
   }
 }
 
-nsresult nsTypeAheadFind::FindItNow(bool aIsLinksOnly,
+nsresult nsTypeAheadFind::FindItNow(uint32_t aMode, bool aIsLinksOnly,
                                     bool aIsFirstVisiblePreferred,
-                                    bool aFindPrev, uint16_t* aResult) {
+                                    bool aDontIterateFrames,
+                                    uint16_t* aResult) {
   *aResult = FIND_NOTFOUND;
   mFoundLink = nullptr;
   mFoundEditable = nullptr;
@@ -369,46 +370,57 @@ nsresult nsTypeAheadFind::FindItNow(bool aIsLinksOnly,
       "Bug 175321 Crashes with Type Ahead Find [@ nsTypeAheadFind::FindItNow]");
   if (!startingDocShell) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDocShellTreeItem> rootContentTreeItem;
   nsCOMPtr<nsIDocShell> currentDocShell;
-
-  startingDocShell->GetInProcessSameTypeRootTreeItem(
-      getter_AddRefs(rootContentTreeItem));
-  nsCOMPtr<nsIDocShell> rootContentDocShell =
-      do_QueryInterface(rootContentTreeItem);
-
-  if (!rootContentDocShell) return NS_ERROR_FAILURE;
-
+  nsCOMPtr<nsISupports> currentContainer;
   nsCOMPtr<nsISimpleEnumerator> docShellEnumerator;
-  rootContentDocShell->GetDocShellEnumerator(
-      nsIDocShellTreeItem::typeContent, nsIDocShell::ENUMERATE_FORWARDS,
-      getter_AddRefs(docShellEnumerator));
+  nsCOMPtr<nsIDocShellTreeItem> rootContentTreeItem;
+  nsCOMPtr<nsIDocShell> rootContentDocShell;
+  if (!aDontIterateFrames) {
+    // The use of GetInProcessSameTypeRootTreeItem (and later in this method) is
+    // OK here as out-of-process frames are handled externally by
+    // FinderParent.jsm, which will end up only calling this method with
+    // aDontIterateFrames set to true.
+    startingDocShell->GetInProcessSameTypeRootTreeItem(
+        getter_AddRefs(rootContentTreeItem));
+    rootContentDocShell = do_QueryInterface(rootContentTreeItem);
 
-  // Default: can start at the current document
-  nsCOMPtr<nsISupports> currentContainer =
-      do_QueryInterface(rootContentDocShell);
+    if (!rootContentDocShell) return NS_ERROR_FAILURE;
 
-  // Iterate up to current shell, if there's more than 1 that we're
-  // dealing with
-  bool hasMoreDocShells;
+    rootContentDocShell->GetDocShellEnumerator(
+        nsIDocShellTreeItem::typeContent, nsIDocShell::ENUMERATE_FORWARDS,
+        getter_AddRefs(docShellEnumerator));
 
-  while (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMoreDocShells)) &&
-         hasMoreDocShells) {
-    docShellEnumerator->GetNext(getter_AddRefs(currentContainer));
-    currentDocShell = do_QueryInterface(currentContainer);
-    if (!currentDocShell || currentDocShell == startingDocShell ||
-        aIsFirstVisiblePreferred)
-      break;
+    // Default: can start at the current document
+    currentContainer = do_QueryInterface(rootContentDocShell);
+
+    // Iterate up to current shell, if there's more than 1 that we're
+    // dealing with
+    bool hasMoreDocShells;
+
+    while (
+        NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMoreDocShells)) &&
+        hasMoreDocShells) {
+      docShellEnumerator->GetNext(getter_AddRefs(currentContainer));
+      currentDocShell = do_QueryInterface(currentContainer);
+      if (!currentDocShell || currentDocShell == startingDocShell ||
+          aIsFirstVisiblePreferred)
+        break;
+    }
+  } else {
+    currentContainer = currentDocShell = startingDocShell;
   }
 
+  bool findPrev = (aMode == FIND_PREVIOUS || aMode == FIND_LAST);
+
   // ------------ Get ranges ready ----------------
+
+  bool useSelection = (aMode != FIND_FIRST && aMode != FIND_LAST) &&
+                      (!aIsFirstVisiblePreferred || mStartFindRange);
+
   RefPtr<nsRange> returnRange;
   if (NS_FAILED(GetSearchContainers(
-          currentContainer,
-          (!aIsFirstVisiblePreferred || mStartFindRange)
-              ? selectionController.get()
-              : nullptr,
-          aIsFirstVisiblePreferred, aFindPrev, getter_AddRefs(presShell),
+          currentContainer, useSelection ? selectionController.get() : nullptr,
+          aIsFirstVisiblePreferred, findPrev, getter_AddRefs(presShell),
           getter_AddRefs(presContext)))) {
     return NS_ERROR_FAILURE;
   }
@@ -425,7 +437,7 @@ nsresult nsTypeAheadFind::FindItNow(bool aIsLinksOnly,
 
   if (mTypeAheadBuffer.IsEmpty() || !EnsureFind()) return NS_ERROR_FAILURE;
 
-  mFind->SetFindBackwards(aFindPrev);
+  mFind->SetFindBackwards(findPrev);
 
   while (true) {    // ----- Outer while loop: go through all docs -----
     while (true) {  // === Inner while loop: go through a single doc ===
@@ -462,7 +474,7 @@ nsresult nsTypeAheadFind::FindItNow(bool aIsLinksOnly,
         // At this point mStartPointRange got updated to the first
         // visible range in the viewport.  We _may_ be able to just
         // start there, if it's not taking us in the wrong direction.
-        if (aFindPrev) {
+        if (findPrev) {
           // We can continue at the end of mStartPointRange if its end is before
           // the start of returnRange or coincides with it.  Otherwise, we need
           // to continue at the start of returnRange.
@@ -631,11 +643,15 @@ nsresult nsTypeAheadFind::FindItNow(bool aIsLinksOnly,
     }
 
     // ======= end-inner-while (go through a single document) ==========
+    if (aDontIterateFrames) {
+      return NS_OK;
+    }
 
     // ---------- Nothing found yet, try next document  -------------
     bool hasTriedFirstDoc = false;
     do {
       // ==== Second inner loop - get another while  ====
+      bool hasMoreDocShells;
       if (NS_SUCCEEDED(
               docShellEnumerator->HasMoreElements(&hasMoreDocShells)) &&
           hasMoreDocShells) {
@@ -669,12 +685,12 @@ nsresult nsTypeAheadFind::FindItNow(bool aIsLinksOnly,
 
     if (continueLoop) {
       if (NS_FAILED(GetSearchContainers(
-              currentContainer, nullptr, aIsFirstVisiblePreferred, aFindPrev,
+              currentContainer, nullptr, aIsFirstVisiblePreferred, findPrev,
               getter_AddRefs(presShell), getter_AddRefs(presContext)))) {
         continue;
       }
 
-      if (aFindPrev) {
+      if (findPrev) {
         // Reverse mode: swap start and end points, so that we start
         // at end of document and go to beginning
         RefPtr<nsRange> tempRange = mStartPointRange->CloneRange();
@@ -946,7 +962,9 @@ nsTypeAheadFind::FindAgain(bool aFindBackwards, bool aLinksOnly,
   if (!mTypeAheadBuffer.IsEmpty())
     // Beware! This may flush notifications via synchronous
     // ScrollSelectionIntoView.
-    FindItNow(aLinksOnly, false, aFindBackwards, aResult);
+    FindItNow(aFindBackwards ? nsITypeAheadFind::FIND_PREVIOUS
+                             : nsITypeAheadFind::FIND_NEXT,
+              aLinksOnly, false, false, aResult);
 
   return NS_OK;
 }
@@ -954,6 +972,34 @@ nsTypeAheadFind::FindAgain(bool aFindBackwards, bool aLinksOnly,
 NS_IMETHODIMP
 nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
                       uint16_t* aResult) {
+  return FindInternal(FIND_INITIAL, aSearchString, aLinksOnly, false, aResult);
+}
+
+NS_IMETHODIMP
+nsTypeAheadFind::FindInFrame(const nsAString& aSearchString, bool aLinksOnly,
+                             uint32_t aMode, bool aDontIterateFrames,
+                             uint16_t* aResult) {
+  if (aMode == nsITypeAheadFind::FIND_PREVIOUS ||
+      aMode == nsITypeAheadFind::FIND_NEXT) {
+    if (mTypeAheadBuffer.IsEmpty()) {
+      *aResult = FIND_NOTFOUND;
+    } else {
+      FindItNow(aMode, aLinksOnly, false, aDontIterateFrames, aResult);
+    }
+
+    return NS_OK;
+  }
+
+  // Find again ignores error return values, so do so here as well.
+  nsresult rv = FindInternal(aMode, aSearchString, aLinksOnly,
+                             aDontIterateFrames, aResult);
+  return (aMode == nsITypeAheadFind::FIND_INITIAL) ? rv : NS_OK;
+}
+
+nsresult nsTypeAheadFind::FindInternal(uint32_t aMode,
+                                       const nsAString& aSearchString,
+                                       bool aLinksOnly, bool aDontIterateFrames,
+                                       uint16_t* aResult) {
   *aResult = FIND_NOTFOUND;
 
   RefPtr<PresShell> presShell = GetPresShell();
@@ -995,20 +1041,23 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
   }
 
   bool atEnd = false;
-  if (mTypeAheadBuffer.Length()) {
-    const nsAString& oldStr =
-        Substring(mTypeAheadBuffer, 0, mTypeAheadBuffer.Length());
-    const nsAString& newStr =
-        Substring(aSearchString, 0, mTypeAheadBuffer.Length());
-    if (oldStr.Equals(newStr)) atEnd = true;
+  bool isInitial = aMode == nsITypeAheadFind::FIND_INITIAL;
+  if (isInitial) {
+    if (mTypeAheadBuffer.Length()) {
+      const nsAString& oldStr =
+          Substring(mTypeAheadBuffer, 0, mTypeAheadBuffer.Length());
+      const nsAString& newStr =
+          Substring(aSearchString, 0, mTypeAheadBuffer.Length());
+      if (oldStr.Equals(newStr)) atEnd = true;
 
-    const nsAString& newStr2 =
-        Substring(aSearchString, 0, aSearchString.Length());
-    const nsAString& oldStr2 =
-        Substring(mTypeAheadBuffer, 0, aSearchString.Length());
-    if (oldStr2.Equals(newStr2)) atEnd = true;
+      const nsAString& newStr2 =
+          Substring(aSearchString, 0, aSearchString.Length());
+      const nsAString& oldStr2 =
+          Substring(mTypeAheadBuffer, 0, aSearchString.Length());
+      if (oldStr2.Equals(newStr2)) atEnd = true;
 
-    if (!atEnd) mStartFindRange = nullptr;
+      if (!atEnd) mStartFindRange = nullptr;
+    }
   }
 
   int32_t bufferLength = mTypeAheadBuffer.Length();
@@ -1018,7 +1067,7 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
   bool isFirstVisiblePreferred = false;
 
   // --------- Initialize find if 1st char ----------
-  if (bufferLength == 0) {
+  if (bufferLength == 0 && isInitial) {
     // If you can see the selection (not collapsed or thru caret browsing),
     // or if already focused on a page element, start there.
     // Otherwise we're going to start at the first visible element
@@ -1059,7 +1108,8 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
   // ----------- Find the text! ---------------------
   // Beware! This may flush notifications via synchronous
   // ScrollSelectionIntoView.
-  nsresult rv = FindItNow(aLinksOnly, isFirstVisiblePreferred, false, aResult);
+  nsresult rv = FindItNow(aMode, aLinksOnly, isFirstVisiblePreferred,
+                          aDontIterateFrames, aResult);
 
   // ---------Handle success or failure ---------------
   if (NS_SUCCEEDED(rv)) {
@@ -1075,7 +1125,7 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
         }
       }
     }
-  } else {
+  } else if (isInitial) {
     // Error sound, except when whole word matching is ON.
     if (!mEntireWord && mTypeAheadBuffer.Length() > mLastFindLength)
       PlayNotFoundSound();
