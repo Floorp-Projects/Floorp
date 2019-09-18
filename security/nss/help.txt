@@ -43,6 +43,9 @@ NSS build tool options:
     --static         create static libraries and use static linking
     --ct-verif       build with valgrind for ct-verif
     --nspr           force a rebuild of NSPR
+    --nspr-test-build when building NSPR also build its tests
+    --nspr-test-run  when building NSPR tests also run its tests
+    --nspr-only      exit after building NSPR
     --with-nspr      use the NSPR build at the given locations
                      --with-nspr=<include>:<lib> sets include and lib paths
     --system-nspr    attempt to use system nspr

@@ -30,6 +30,7 @@
 #define PRNG_ADDITONAL_DATA_CACHE_SIZE (8 * 1024) /* must be less than          \
                                                    *  PRNG_MAX_ADDITIONAL_BYTES \
                                                    */
+#define PRNG_ENTROPY_BLOCK_SIZE SHA256_LENGTH
 
 /* RESEED_COUNT is how many calls to the prng before we need to reseed
  * under normal NIST rules, you must return an error. In the NSS case, we
@@ -96,6 +97,8 @@ struct RNGContextStr {
     PRUint32 additionalAvail;
     PRBool isValid;   /* false if RNG reaches an invalid state */
     PRBool isKatTest; /* true if running NIST PRNG KAT tests */
+    /* for continuous entropy check */
+    PRUint8 previousEntropyHash[SHA256_LENGTH];
 };
 
 typedef struct RNGContextStr RNGContext;
@@ -169,6 +172,82 @@ prng_instantiate(RNGContext *rng, const PRUint8 *bytes, unsigned int len)
     return SECSuccess;
 }
 
+static PRCallOnceType coRNGInitEntropy;
+
+static PRStatus
+prng_initEntropy(void)
+{
+    size_t length;
+    PRUint8 block[PRNG_ENTROPY_BLOCK_SIZE];
+    SHA256Context ctx;
+
+    /* For FIPS 140-2 4.9.2 continuous random number generator test,
+     * fetch the initial entropy from the system RNG and keep it for
+     * later comparison. */
+    length = RNG_SystemRNG(block, sizeof(block));
+    if (length == 0) {
+        return PR_FAILURE; /* error is already set */
+    }
+    PORT_Assert(length == sizeof(block));
+
+    /* Store the hash of the entropy block rather than the block
+     * itself for backward secrecy. */
+    SHA256_Begin(&ctx);
+    SHA256_Update(&ctx, block, sizeof(block));
+    SHA256_End(&ctx, globalrng->previousEntropyHash, NULL,
+               sizeof(globalrng->previousEntropyHash));
+    PORT_Memset(block, 0, sizeof(block));
+    return PR_SUCCESS;
+}
+
+static SECStatus
+prng_getEntropy(PRUint8 *buffer, size_t requestLength)
+{
+    size_t total = 0;
+    PRUint8 block[PRNG_ENTROPY_BLOCK_SIZE];
+    PRUint8 hash[SHA256_LENGTH];
+    SHA256Context ctx;
+    SECStatus rv = SECSuccess;
+
+    if (PR_CallOnce(&coRNGInitEntropy, prng_initEntropy) != PR_SUCCESS) {
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
+    }
+
+    /* For FIPS 140-2 4.9.2 continuous random generator test,
+     * iteratively fetch fixed sized blocks from the system and
+     * compare consecutive blocks. */
+    while (total < requestLength) {
+        size_t length = RNG_SystemRNG(block, sizeof(block));
+        if (length == 0) {
+            rv = SECFailure; /* error is already set */
+            goto out;
+        }
+        PORT_Assert(length == sizeof(block));
+
+        /* Store the hash of the entropy block rather than the block
+         * itself for backward secrecy. */
+        SHA256_Begin(&ctx);
+        SHA256_Update(&ctx, block, sizeof(block));
+        SHA256_End(&ctx, hash, NULL, sizeof(hash));
+
+        if (PORT_Memcmp(globalrng->previousEntropyHash, hash, sizeof(hash)) == 0) {
+            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+            rv = SECFailure;
+            goto out;
+        }
+        PORT_Memcpy(globalrng->previousEntropyHash, hash, sizeof(hash));
+        length = PR_MIN(requestLength - total, sizeof(block));
+        PORT_Memcpy(buffer, block, length);
+        total += length;
+        buffer += length;
+    }
+
+out:
+    PORT_Memset(block, 0, sizeof block);
+    return rv;
+}
+
 /*
  * Update the global random number generator with more seeding
  * material. Use the Hash_DRBG reseed algorithm from NIST SP-800-90
@@ -182,11 +261,15 @@ prng_reseed(RNGContext *rng, const PRUint8 *entropy, unsigned int entropy_len,
 {
     PRUint8 noiseData[(sizeof rng->V_Data) + PRNG_SEEDLEN];
     PRUint8 *noise = &noiseData[0];
+    SECStatus rv;
 
     /* if entropy wasn't supplied, fetch it. (normal operation case) */
     if (entropy == NULL) {
-        entropy_len = (unsigned int)RNG_SystemRNG(
-            &noiseData[sizeof rng->V_Data], PRNG_SEEDLEN);
+        entropy_len = PRNG_SEEDLEN;
+        rv = prng_getEntropy(&noiseData[sizeof rng->V_Data], entropy_len);
+        if (rv != SECSuccess) {
+            return SECFailure; /* error is already set */
+        }
     } else {
         /* NOTE: this code is only available for testing, not to applications */
         /* if entropy was too big for the stack variable, get it from malloc */
@@ -384,7 +467,6 @@ static PRStatus
 rng_init(void)
 {
     PRUint8 bytes[PRNG_SEEDLEN * 2]; /* entropy + nonce */
-    unsigned int numBytes;
     SECStatus rv = SECSuccess;
 
     if (globalrng == NULL) {
@@ -403,18 +485,17 @@ rng_init(void)
         }
 
         /* Try to get some seed data for the RNG */
-        numBytes = (unsigned int)RNG_SystemRNG(bytes, sizeof bytes);
-        PORT_Assert(numBytes == 0 || numBytes == sizeof bytes);
-        if (numBytes != 0) {
+        rv = prng_getEntropy(bytes, sizeof bytes);
+        if (rv == SECSuccess) {
             /* if this is our first call,  instantiate, otherwise reseed
              * prng_instantiate gets a new clean state, we want to mix
              * any previous entropy we may have collected */
             if (V(globalrng)[0] == 0) {
-                rv = prng_instantiate(globalrng, bytes, numBytes);
+                rv = prng_instantiate(globalrng, bytes, sizeof bytes);
             } else {
-                rv = prng_reseed_test(globalrng, bytes, numBytes, NULL, 0);
+                rv = prng_reseed_test(globalrng, bytes, sizeof bytes, NULL, 0);
             }
-            memset(bytes, 0, numBytes);
+            memset(bytes, 0, sizeof bytes);
         } else {
             PZ_DestroyLock(globalrng->lock);
             globalrng->lock = NULL;

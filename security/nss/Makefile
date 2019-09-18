@@ -135,6 +135,7 @@ endif
 
 build_nspr: $(NSPR_CONFIG_STATUS)
 	$(MAKE) -C $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME)
+	$(MAKE) -C $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME)/pr/tests
 
 install_nspr: build_nspr
 	$(MAKE) -C $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME) install
