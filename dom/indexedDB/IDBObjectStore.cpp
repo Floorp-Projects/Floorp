@@ -73,7 +73,7 @@ IndexUpdateInfo MakeIndexUpdateInfo(const int64_t aIndexID, const Key& aKey,
   indexUpdateInfo.value() = aKey;
   if (!aLocale.IsEmpty()) {
     const auto result =
-        aKey.ToLocaleBasedKey(indexUpdateInfo.localizedValue(), aLocale, *aRv);
+        aKey.ToLocaleAwareKey(indexUpdateInfo.localizedValue(), aLocale, *aRv);
     if (result.Is(Invalid, *aRv)) {
       aRv->Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     }
