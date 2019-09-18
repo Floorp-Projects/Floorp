@@ -125,12 +125,14 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
         // The translator refers to it.
         let index = FuncIndex::new(func.index as usize);
 
-        let new_sig = init_sig(&self.environ, self.static_environ.call_conv(), index)?;
-        let new_func = ir::Function::with_name_signature(wasm_function_name(index), new_sig);
-        self.context.func = self.trans.translate(
+        self.context.func.signature =
+            init_sig(&self.environ, self.static_environ.call_conv(), index)?;
+        self.context.func.name = wasm_function_name(index);
+
+        self.trans.translate(
             func.bytecode(),
             func.offset_in_module as usize,
-            new_func,
+            &mut self.context.func,
             tenv,
         )?;
 
