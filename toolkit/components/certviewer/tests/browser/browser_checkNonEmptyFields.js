@@ -57,7 +57,8 @@ add_task(async function test() {
           Assert.ok(infoItems, "infoItems found");
 
           for (let infoItem of infoItems) {
-            let info = infoItem.shadowRoot.children[2].innerText;
+            let item = infoItem.shadowRoot.querySelector(".info");
+            let info = item.textContent;
             Assert.notEqual(info, "", "Empty strings shouldn't be rendered");
           }
         }
