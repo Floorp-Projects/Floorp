@@ -691,18 +691,19 @@ void profiler_add_marker(const char* aMarkerName,
 // the argument list used to construct that `PayloadType`. E.g.:
 // `PROFILER_ADD_MARKER_WITH_PAYLOAD("Load", DOM, TextMarkerPayload,
 //                                   ("text", start, end, ds, dsh))`
-#  define PROFILER_ADD_MARKER_WITH_PAYLOAD(                             \
-      markerName, categoryPair, PayloadType, parenthesizedPayloadArgs)  \
-    do {                                                                \
-      AUTO_PROFILER_STATS(add_marker_with_##PayloadType);               \
-      ::profiler_add_marker(                                            \
-          markerName, ::JS::ProfilingCategoryPair::categoryPair,        \
-          ::mozilla::MakeUnique<PayloadType> parenthesizedPayloadArgs); \
+#  define PROFILER_ADD_MARKER_WITH_PAYLOAD(                            \
+      markerName, categoryPair, PayloadType, parenthesizedPayloadArgs) \
+    do {                                                               \
+      AUTO_PROFILER_STATS(add_marker_with_##PayloadType);              \
+      ::profiler_add_marker(markerName,                                \
+                            ::JS::ProfilingCategoryPair::categoryPair, \
+                            PayloadType parenthesizedPayloadArgs);     \
     } while (false)
 
 void profiler_add_marker(const char* aMarkerName,
                          JS::ProfilingCategoryPair aCategoryPair,
-                         mozilla::UniquePtr<ProfilerMarkerPayload> aPayload);
+                         const ProfilerMarkerPayload& aPayload);
+
 void profiler_add_js_marker(const char* aMarkerName);
 void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info);
 

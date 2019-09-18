@@ -334,6 +334,21 @@ class LogMarkerPayload : public ProfilerMarkerPayload {
 // payloads.
 template <>
 struct BlocksRingBuffer::Serializer<
+    const baseprofiler::ProfilerMarkerPayload*> {
+  static Length Bytes(const baseprofiler::ProfilerMarkerPayload* aPayload) {
+    return baseprofiler::ProfilerMarkerPayload::TagAndSerializationBytes(
+        aPayload);
+  }
+
+  static void Write(EntryWriter& aEW,
+                    const baseprofiler::ProfilerMarkerPayload* aPayload) {
+    baseprofiler::ProfilerMarkerPayload::TagAndSerialize(aPayload, aEW);
+  }
+};
+
+// Serialize a pointed-at ProfilerMarkerPayload, may be null for no payloads.
+template <>
+struct BlocksRingBuffer::Serializer<
     UniquePtr<baseprofiler::ProfilerMarkerPayload>> {
   static Length Bytes(
       const UniquePtr<baseprofiler::ProfilerMarkerPayload>& aPayload) {
