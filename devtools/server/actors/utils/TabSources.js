@@ -328,7 +328,8 @@ TabSources.prototype = {
       if (
         url.indexOf("Scratchpad/") === 0 ||
         url.indexOf("javascript:") === 0 ||
-        url === "debugger eval code"
+        url === "debugger eval code" ||
+        url === "sandbox eval code"
       ) {
         spec.contentType = "text/javascript";
       } else {

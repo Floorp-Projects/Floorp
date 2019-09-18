@@ -563,7 +563,9 @@ class Script {
         result = Cu.evalInSandbox(
           this.matcher.jsCode,
           context.cloneScope,
-          "latest"
+          "latest",
+          "sandbox eval code",
+          1
         );
       }
     } finally {
