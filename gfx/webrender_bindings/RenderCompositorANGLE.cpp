@@ -329,6 +329,7 @@ void RenderCompositorANGLE::CreateSwapChainForDCompIfPossible(
     mVisual->SetContent(swapChain1);
     mCompositionTarget->SetRoot(mVisual);
     mCompositionDevice = dCompDevice;
+    mCompositionDevice->Commit();
     mUseTripleBuffering = useTripleBuffering;
   }
 }
@@ -360,10 +361,6 @@ void RenderCompositorANGLE::EndFrame() {
   InsertPresentWaitQuery();
 
   mSwapChain->Present(0, 0);
-
-  if (mCompositionDevice) {
-    mCompositionDevice->Commit();
-  }
 }
 
 bool RenderCompositorANGLE::WaitForGPU() {
