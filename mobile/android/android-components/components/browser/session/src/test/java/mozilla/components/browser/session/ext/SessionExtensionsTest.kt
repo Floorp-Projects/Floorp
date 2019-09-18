@@ -14,6 +14,17 @@ import java.lang.IllegalStateException
 class SessionExtensionsTest {
 
     @Test
+    fun `toTabSessionState - Can convert tab session with parent tab`() {
+        val session = Session("https://mozilla.org")
+        session.parentId = "session"
+
+        val tabState = session.toTabSessionState()
+        assertEquals(tabState.id, session.id)
+        assertEquals(tabState.content.url, session.url)
+        assertEquals(tabState.parentId, session.parentId)
+    }
+
+    @Test
     fun `toCustomTabSessionState - Can convert custom tab session`() {
         val session = Session("https://mozilla.org")
         session.customTabConfig = CustomTabConfig()
