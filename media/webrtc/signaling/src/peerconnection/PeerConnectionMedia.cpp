@@ -669,10 +669,6 @@ void PeerConnectionMedia::IceConnectionStateChange_m(
 void PeerConnectionMedia::OnCandidateFound_m(
     const std::string& aTransportId, const CandidateInfo& aCandidateInfo) {
   ASSERT_ON_THREAD(mMainThread);
-  if (mParent) {
-    mParent->OnCandidateFound(aTransportId, aCandidateInfo);
-  }
-
   if (mStunAddrsRequest && !aCandidateInfo.mMDNSAddress.empty()) {
     MOZ_ASSERT(!aCandidateInfo.mActualAddress.empty());
 
@@ -686,6 +682,10 @@ void PeerConnectionMedia::OnCandidateFound_m(
           nsCString(aCandidateInfo.mMDNSAddress.c_str()),
           nsCString(aCandidateInfo.mActualAddress.c_str()));
     }
+  }
+
+  if (mParent) {
+    mParent->OnCandidateFound(aTransportId, aCandidateInfo);
   }
 }
 
