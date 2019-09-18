@@ -10,8 +10,11 @@
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
 namespace mozilla {
 namespace profiler {
-void install_memory_counter(bool aInstall);
-}
+
+void install_memory_hooks();
+void remove_memory_hooks();
+
+}  // namespace profiler
 }  // namespace mozilla
 #endif
 
