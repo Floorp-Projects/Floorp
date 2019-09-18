@@ -1127,13 +1127,23 @@ void MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
         ParsingMode::AllowUnitlessLength,
         mElement->OwnerDoc()->GetCompatibilityMode(), mLoader, {});
 
-    // TODO(emilio): If we want to record these from CSSOM more generally, we
-    // can pass the document use counters down the FFI call. For now manually
-    // count them for compat with the old code, which is used for testing.
     if (changed) {
-      UseCounter useCounter = nsCSSProps::UseCounterFor(propertyID);
-      MOZ_ASSERT(useCounter != eUseCounter_UNKNOWN);
-      mElement->OwnerDoc()->SetUseCounter(useCounter);
+      // The normal reporting of use counters by the nsCSSParser won't happen
+      // since it doesn't have a sheet.
+      if (nsCSSProps::IsShorthand(propertyID)) {
+        CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, propertyID,
+                                             CSSEnabledState::ForAllContent) {
+          UseCounter useCounter = nsCSSProps::UseCounterFor(*subprop);
+          if (useCounter != eUseCounter_UNKNOWN) {
+            mElement->OwnerDoc()->SetUseCounter(useCounter);
+          }
+        }
+      } else {
+        UseCounter useCounter = nsCSSProps::UseCounterFor(propertyID);
+        if (useCounter != eUseCounter_UNKNOWN) {
+          mElement->OwnerDoc()->SetUseCounter(useCounter);
+        }
+      }
     }
     return;
   }
