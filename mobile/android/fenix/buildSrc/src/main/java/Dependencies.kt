@@ -180,6 +180,7 @@ object Deps {
     const val androidx_core_ktx = "androidx.core:core-ktx:${Versions.androidx_core}"
     const val androidx_transition = "androidx.transition:transition:${Versions.androidx_transition}"
     const val androidx_work_ktx = "androidx.work:work-runtime-ktx:${Versions.androidx_work}"
+    const val androidx_work_testing = "androidx.work:work-testing:${Versions.androidx_work}"
     const val google_material = "com.google.android.material:material:${Versions.google_material}"
 
     const val autodispose = "com.uber.autodispose:autodispose:${Versions.autodispose}"

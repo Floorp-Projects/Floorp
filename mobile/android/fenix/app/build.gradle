@@ -479,6 +479,7 @@ dependencies {
     androidTestImplementation Deps.mockwebserver
     testImplementation Deps.mozilla_support_test
     testImplementation Deps.androidx_junit
+    testImplementation Deps.androidx_work_testing
     testImplementation (Deps.robolectric) {
         exclude group: 'org.apache.maven'
     }
