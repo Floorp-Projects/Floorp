@@ -26,6 +26,8 @@ ProfilerBacktrace::ProfilerBacktrace(
   MOZ_ASSERT(
       !!mProfileBuffer,
       "ProfilerBacktrace only takes a non-null UniquePtr<ProfileBuffer>");
+  MOZ_ASSERT(!mBlocksRingBuffer->IsThreadSafe(),
+             "ProfilerBacktrace only takes a non-thread-safe BlocksRingBuffer");
 }
 
 ProfilerBacktrace::~ProfilerBacktrace() { MOZ_COUNT_DTOR(ProfilerBacktrace); }
