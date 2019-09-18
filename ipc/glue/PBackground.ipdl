@@ -23,6 +23,7 @@ include protocol PFileSystemRequest;
 include protocol PGamepadEventChannel;
 include protocol PGamepadTestChannel;
 include protocol PHttpBackgroundChannel;
+include protocol PIdleScheduler;
 include protocol PIPCBlobInputStream;
 include protocol PMediaTransport;
 include protocol PPendingIPCBlob;
@@ -91,6 +92,7 @@ sync protocol PBackground
   manages PGamepadEventChannel;
   manages PGamepadTestChannel;
   manages PHttpBackgroundChannel;
+  manages PIdleScheduler;
   manages PIPCBlobInputStream;
   manages PMediaTransport;
   manages PPendingIPCBlob;
@@ -230,6 +232,8 @@ parent:
 
   async RemoveEndpoint(nsString aGroupName, nsCString aEndpointURL,
                        PrincipalInfo aPrincipalInfo);
+
+  async PIdleScheduler();
 
   async PMediaTransport();
 
