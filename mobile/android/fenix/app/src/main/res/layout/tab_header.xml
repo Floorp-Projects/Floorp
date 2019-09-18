@@ -53,6 +53,7 @@
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/tabs_menu_close_all_tabs"
         android:src="@drawable/ic_delete"
+        android:tint="?primaryText"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/tabs_overflow_button"
         app:layout_constraintStart_toEndOf="@+id/share_tabs_button"
