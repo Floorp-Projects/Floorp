@@ -106,6 +106,20 @@ let ACTORS = {
     allFrames: true,
   },
 
+  RFPHelper: {
+    parent: {
+      moduleURI: "resource:///actors/RFPHelperParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/RFPHelperChild.jsm",
+      events: {
+        resize: {},
+      },
+    },
+
+    allFrames: true,
+  },
+
   SwitchDocumentDirection: {
     child: {
       moduleURI: "resource:///actors/SwitchDocumentDirectionChild.jsm",
@@ -290,17 +304,6 @@ let LEGACY_ACTORS = {
       // Only matching web pages, as opposed to internal about:, chrome: or
       // resource: pages. See https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Match_patterns
       matches: ["*://*/*"],
-    },
-  },
-
-  RFPHelper: {
-    child: {
-      module: "resource:///actors/RFPHelperChild.jsm",
-      group: "browsers",
-      events: {
-        resize: {},
-      },
-      messages: ["Finder:FindbarOpen", "Finder:FindbarClose"],
     },
   },
 
