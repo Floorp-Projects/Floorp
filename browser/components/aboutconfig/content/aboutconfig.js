@@ -351,7 +351,9 @@ class PrefRow {
     gPrefInEdit = this;
     this.editing = true;
     this.refreshElement();
+    // The type=number input isn't selected unless it's focused first.
     this.inputField.focus();
+    this.inputField.select();
   }
 
   save() {
