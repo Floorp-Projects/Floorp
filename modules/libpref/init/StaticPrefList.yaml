@@ -2922,6 +2922,11 @@
 # Prefs starting with "general."
 #---------------------------------------------------------------------------
 
+- name: general.aboutConfig.enable
+  type: bool
+  value: true
+  mirror: always
+
 - name: general.smoothScroll
   type: RelaxedAtomicBool
   value: true
