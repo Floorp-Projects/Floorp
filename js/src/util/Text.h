@@ -91,9 +91,16 @@ static inline const CharT* SkipSpace(const CharT* s, const CharT* end) {
 extern UniqueChars DuplicateStringToArena(arena_id_t destArenaId, JSContext* cx,
                                           const char* s);
 
+extern UniqueChars DuplicateStringToArena(arena_id_t destArenaId, JSContext* cx,
+                                          const char* s, size_t n);
+
 extern UniqueTwoByteChars DuplicateStringToArena(arena_id_t destArenaId,
                                                  JSContext* cx,
                                                  const char16_t* s);
+
+extern UniqueTwoByteChars DuplicateStringToArena(arena_id_t destArenaId,
+                                                 JSContext* cx,
+                                                 const char16_t* s, size_t n);
 
 /*
  * These variants do not report OOMs, you must arrange for OOMs to be reported
@@ -113,7 +120,12 @@ extern UniqueTwoByteChars DuplicateStringToArena(arena_id_t destArenaId,
 
 extern UniqueChars DuplicateString(JSContext* cx, const char* s);
 
+extern UniqueChars DuplicateString(JSContext* cx, const char* s, size_t n);
+
 extern UniqueTwoByteChars DuplicateString(JSContext* cx, const char16_t* s);
+
+extern UniqueTwoByteChars DuplicateString(JSContext* cx, const char16_t* s,
+                                          size_t n);
 
 /*
  * These variants do not report OOMs, you must arrange for OOMs to be reported
