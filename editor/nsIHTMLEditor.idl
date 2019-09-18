@@ -260,11 +260,13 @@ interface nsIHTMLEditor : nsISupports
    * getListItemState returns what list item type is in the selection.
    * @param aMixed    True if there is more than one type of list item, or
    *                  if there is some list and non-list
+   *                  XXX This ignores `<li>` element selected state.
+   *                      For example, even if `<li>` and `<dt>` are selected,
+   *                      this is set to false.
    * @param aLI       true if "li" list items are selected.
    * @param aDT       true if "dt" list items are selected.
    * @param aDD       true if "dd" list items are selected.
    */
-  [can_run_script]
   void getListItemState(out boolean aMixed, out boolean aLI,
                         out boolean aDT, out boolean aDD);
 

@@ -303,24 +303,28 @@ nsresult ListItemCommand::GetCurrentState(nsAtom* aTagName,
     return NS_ERROR_INVALID_ARG;
   }
 
-  bool bMixed, bLI, bDT, bDD;
-  nsresult rv = aHTMLEditor->GetListItemState(&bMixed, &bLI, &bDT, &bDD);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool inList = false;
-  if (!bMixed) {
-    if (bLI) {
-      inList = aTagName == nsGkAtoms::li;
-    } else if (bDT) {
-      inList = aTagName == nsGkAtoms::dt;
-    } else if (bDD) {
-      inList = aTagName == nsGkAtoms::dd;
-    }
+  ErrorResult error;
+  ListItemElementSelectionState state(*aHTMLEditor, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
   }
 
-  aParams.SetBool(STATE_ALL, !bMixed && inList);
-  aParams.SetBool(STATE_MIXED, bMixed);
+  if (state.IsNotOneTypeDefinitionListItemElementSelected()) {
+    aParams.SetBool(STATE_ALL, false);
+    aParams.SetBool(STATE_MIXED, true);
+    return NS_OK;
+  }
 
+  nsStaticAtom* selectedListItemTagName = nullptr;
+  if (state.IsLIElementSelected()) {
+    selectedListItemTagName = nsGkAtoms::li;
+  } else if (state.IsDTElementSelected()) {
+    selectedListItemTagName = nsGkAtoms::dt;
+  } else if (state.IsDDElementSelected()) {
+    selectedListItemTagName = nsGkAtoms::dd;
+  }
+  aParams.SetBool(STATE_ALL, aTagName == selectedListItemTagName);
+  aParams.SetBool(STATE_MIXED, false);
   return NS_OK;
 }
 
