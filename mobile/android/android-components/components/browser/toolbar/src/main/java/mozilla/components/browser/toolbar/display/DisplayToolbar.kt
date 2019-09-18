@@ -388,8 +388,8 @@ internal class DisplayToolbar(
         val height = MeasureSpec.getSize(heightMeasureSpec)
 
         val fixedHeightSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
-        val thirdFixedHeightSpec = MeasureSpec
-                .makeMeasureSpec(height / MEASURED_HEIGHT_THIRD_DENOMINATOR, MeasureSpec.EXACTLY)
+        val halfFixedHeightSpec = MeasureSpec
+                .makeMeasureSpec(height / MEASURED_HEIGHT_DENOMINATOR, MeasureSpec.EXACTLY)
         setMeasuredDimension(width, height)
 
         // The security indicator and menu fill the whole height and have a square shape
@@ -415,14 +415,17 @@ internal class DisplayToolbar(
         if (titleView.isVisible) {
             /* With a title view, the url and title split the rest of the space vertically. The
             title view and url should be centered as a singular unit in the middle third. */
-            titleView.measure(urlWidthSpec, thirdFixedHeightSpec)
-            titleView.adjustMaxTextSize(thirdFixedHeightSpec)
-            urlView.measure(urlWidthSpec, thirdFixedHeightSpec)
-            urlView.adjustMaxTextSize(thirdFixedHeightSpec)
+            titleView.measure(urlWidthSpec, halfFixedHeightSpec)
+            titleView.adjustMaxTextSize(halfFixedHeightSpec)
+            titleView.gravity = Gravity.BOTTOM
+            urlView.measure(urlWidthSpec, halfFixedHeightSpec)
+            urlView.adjustMaxTextSize(halfFixedHeightSpec)
+            urlView.gravity = Gravity.TOP
         } else {
             // With no title view, the url view takes up the rest of the space
             urlView.measure(urlWidthSpec, fixedHeightSpec)
             urlView.adjustMaxTextSize(fixedHeightSpec)
+            urlView.gravity = Gravity.CENTER_VERTICAL
         }
 
         val progressHeightSpec = MeasureSpec.makeMeasureSpec(
@@ -543,20 +546,16 @@ internal class DisplayToolbar(
         //   |   actions   |        |  url         [ actions ] | actions  |      |
         //   +-------------+-----------+-----------------------+----------+------+
         if (titleView.isVisible) {
-            val totalTextHeights = urlView.measuredHeight + titleView.measuredHeight
-            val totalAvailablePadding = height - totalTextHeights
-            val padding = totalAvailablePadding / MEASURED_HEIGHT_DENOMINATOR
-
             titleView.layout(
                     urlLeft,
-                    padding,
+                    0,
                     urlLeft + titleView.measuredWidth,
-                    padding + titleView.measuredHeight)
+                    titleView.measuredHeight)
             urlView.layout(
                     urlLeft,
-                    padding + titleView.measuredHeight,
+                    titleView.measuredHeight,
                     urlLeft + urlView.measuredWidth,
-                    padding + titleView.measuredHeight + urlView.measuredHeight)
+                    titleView.measuredHeight + urlView.measuredHeight)
         } else {
             urlView.layout(urlLeft, 0, urlLeft + urlView.measuredWidth, measuredHeight)
         }
@@ -647,7 +646,6 @@ internal class DisplayToolbar(
     }
 
     companion object {
-        internal const val MEASURED_HEIGHT_THIRD_DENOMINATOR = 3
         internal const val MEASURED_HEIGHT_DENOMINATOR = 2
 
         internal const val BOTTOM_PROGRESS_BAR = 0

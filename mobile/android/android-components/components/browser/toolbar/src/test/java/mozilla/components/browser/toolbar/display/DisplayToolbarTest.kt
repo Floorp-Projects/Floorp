@@ -846,15 +846,12 @@ class DisplayToolbarTest {
         assertTrue(titleViewRect.height() > 0)
 
         val totalTextHeights = urlViewRect.height() + titleViewRect.height()
-        val totalAvailablePadding = 200 - totalTextHeights
-        val padding = totalAvailablePadding / DisplayToolbar.MEASURED_HEIGHT_DENOMINATOR
 
-        // 132 = 200 * (2 / 3), since we want the title view and url to be centered as a singular unit.
-        assertTrue(totalTextHeights == 132)
+        assertTrue(totalTextHeights == 200)
         assertTrue(titleViewRect.left == urlViewRect.left)
-        assertTrue(titleViewRect.top == padding)
+        assertTrue(titleViewRect.top == 0)
         assertTrue(titleViewRect.right == urlViewRect.right)
-        assertTrue(titleViewRect.bottom == padding + titleViewRect.height())
+        assertTrue(titleViewRect.bottom == titleViewRect.height())
     }
 
     @Test
