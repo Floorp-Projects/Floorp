@@ -493,34 +493,67 @@ TEST(GeckoProfiler, Pause)
 // and destroyed.
 class GTestMarkerPayload : public ProfilerMarkerPayload {
  public:
-  explicit GTestMarkerPayload(int aN) : mN(aN) { sNumCreated++; }
+  explicit GTestMarkerPayload(int aN) : mN(aN) { ++sNumCreated; }
 
-  virtual ~GTestMarkerPayload() { sNumDestroyed++; }
+  virtual ~GTestMarkerPayload() { ++sNumDestroyed; }
 
-  virtual void StreamPayload(SpliceableJSONWriter& aWriter,
-                             const mozilla::TimeStamp& aStartTime,
-                             UniqueStacks& aUniqueStacks) override {
-    StreamCommonProps("gtest", aWriter, aStartTime, aUniqueStacks);
-    char buf[64];
-    SprintfLiteral(buf, "gtest-%d", mN);
-    aWriter.IntProperty(buf, mN);
-    sNumStreamed++;
-  }
+  DECL_STREAM_PAYLOAD
 
  private:
+  GTestMarkerPayload(CommonProps&& aCommonProps, int aN)
+      : ProfilerMarkerPayload(std::move(aCommonProps)), mN(aN) {
+    ++sNumDeserialized;
+  }
+
   int mN;
 
  public:
   // The number of GTestMarkerPayload instances that have been created,
   // streamed, and destroyed.
   static int sNumCreated;
+  static int sNumSerialized;
+  static int sNumDeserialized;
   static int sNumStreamed;
   static int sNumDestroyed;
 };
 
 int GTestMarkerPayload::sNumCreated = 0;
+int GTestMarkerPayload::sNumSerialized = 0;
+int GTestMarkerPayload::sNumDeserialized = 0;
 int GTestMarkerPayload::sNumStreamed = 0;
 int GTestMarkerPayload::sNumDestroyed = 0;
+
+BlocksRingBuffer::Length GTestMarkerPayload::TagAndSerializationBytes() const {
+  return CommonPropsTagAndSerializationBytes() + BlocksRingBuffer::SumBytes(mN);
+}
+
+void GTestMarkerPayload::SerializeTagAndPayload(
+    BlocksRingBuffer::EntryWriter& aEntryWriter) const {
+  static const DeserializerTag tag = TagForDeserializer(Deserialize);
+  SerializeTagAndCommonProps(tag, aEntryWriter);
+  aEntryWriter.WriteObject(mN);
+  ++sNumSerialized;
+}
+
+// static
+UniquePtr<ProfilerMarkerPayload> GTestMarkerPayload::Deserialize(
+    BlocksRingBuffer::EntryReader& aEntryReader) {
+  ProfilerMarkerPayload::CommonProps props =
+      DeserializeCommonProps(aEntryReader);
+  auto n = aEntryReader.ReadObject<int>();
+  return UniquePtr<ProfilerMarkerPayload>(
+      new GTestMarkerPayload(std::move(props), n));
+}
+
+void GTestMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                       const mozilla::TimeStamp& aStartTime,
+                                       UniqueStacks& aUniqueStacks) const {
+  StreamCommonProps("gtest", aWriter, aStartTime, aUniqueStacks);
+  char buf[64];
+  SprintfLiteral(buf, "gtest-%d", mN);
+  aWriter.IntProperty(buf, mN);
+  ++sNumStreamed;
+}
 
 TEST(GeckoProfiler, Markers)
 {
@@ -552,6 +585,12 @@ TEST(GeckoProfiler, Markers)
   for (int i = 0; i < 10; i++) {
     PROFILER_ADD_MARKER_WITH_PAYLOAD("M5", OTHER, GTestMarkerPayload, (i));
   }
+  // The GTestMarkerPayloads should have only been created.
+  ASSERT_EQ(GTestMarkerPayload::sNumCreated, 10);
+  ASSERT_EQ(GTestMarkerPayload::sNumSerialized, 0);
+  ASSERT_EQ(GTestMarkerPayload::sNumDeserialized, 0);
+  ASSERT_EQ(GTestMarkerPayload::sNumStreamed, 0);
+  ASSERT_EQ(GTestMarkerPayload::sNumDestroyed, 0);
 
   // Create two strings: one that is the maximum allowed length, and one that
   // is one char longer.
@@ -580,11 +619,12 @@ TEST(GeckoProfiler, Markers)
 
   UniquePtr<char[]> profile = w.WriteFunc()->CopyData();
 
-  // The GTestMarkerPayloads should have been created and streamed, but not yet
-  // destroyed.
-  ASSERT_TRUE(GTestMarkerPayload::sNumCreated == 10);
-  ASSERT_TRUE(GTestMarkerPayload::sNumStreamed == 10);
-  ASSERT_TRUE(GTestMarkerPayload::sNumDestroyed == 0);
+  // The GTestMarkerPayloads should have been streamed.
+  ASSERT_EQ(GTestMarkerPayload::sNumCreated, 10 + 0);
+  ASSERT_EQ(GTestMarkerPayload::sNumSerialized, 0 + 0);
+  ASSERT_EQ(GTestMarkerPayload::sNumDeserialized, 0 + 0);
+  ASSERT_EQ(GTestMarkerPayload::sNumStreamed, 0 + 10);
+  ASSERT_EQ(GTestMarkerPayload::sNumDestroyed, 0 + 0);
   for (int i = 0; i < 10; i++) {
     char buf[64];
     SprintfLiteral(buf, "\"gtest-%d\"", i);
@@ -634,7 +674,11 @@ TEST(GeckoProfiler, Markers)
   profiler_stop();
 
   // The GTestMarkerPayloads should have been destroyed.
-  ASSERT_TRUE(GTestMarkerPayload::sNumDestroyed == 10);
+  ASSERT_EQ(GTestMarkerPayload::sNumCreated, 10 + 0 + 0);
+  ASSERT_EQ(GTestMarkerPayload::sNumSerialized, 0 + 0 + 0);
+  ASSERT_EQ(GTestMarkerPayload::sNumDeserialized, 0 + 0 + 0);
+  ASSERT_EQ(GTestMarkerPayload::sNumStreamed, 0 + 10 + 0);
+  ASSERT_EQ(GTestMarkerPayload::sNumDestroyed, 0 + 0 + 10);
 
   for (int i = 0; i < 10; i++) {
     PROFILER_ADD_MARKER_WITH_PAYLOAD("M5", OTHER, GTestMarkerPayload, (i));
@@ -648,10 +692,13 @@ TEST(GeckoProfiler, Markers)
 
   profiler_stop();
 
-  // The second set of GTestMarkerPayloads should not have been streamed.
-  ASSERT_TRUE(GTestMarkerPayload::sNumCreated == 20);
-  ASSERT_TRUE(GTestMarkerPayload::sNumStreamed == 10);
-  ASSERT_TRUE(GTestMarkerPayload::sNumDestroyed == 20);
+  // The second set of GTestMarkerPayloads should not have been serialized or
+  // streamed.
+  ASSERT_EQ(GTestMarkerPayload::sNumCreated, 10 + 0 + 0 + 10);
+  ASSERT_EQ(GTestMarkerPayload::sNumSerialized, 0 + 0 + 0 + 0);
+  ASSERT_EQ(GTestMarkerPayload::sNumDeserialized, 0 + 0 + 0 + 0);
+  ASSERT_EQ(GTestMarkerPayload::sNumStreamed, 0 + 10 + 0 + 0);
+  ASSERT_EQ(GTestMarkerPayload::sNumDestroyed, 0 + 0 + 10 + 10);
 }
 
 TEST(GeckoProfiler, DurationLimit)
@@ -664,6 +711,8 @@ TEST(GeckoProfiler, DurationLimit)
 
   // Clear up the counters after the last test.
   GTestMarkerPayload::sNumCreated = 0;
+  GTestMarkerPayload::sNumSerialized = 0;
+  GTestMarkerPayload::sNumDeserialized = 0;
   GTestMarkerPayload::sNumStreamed = 0;
   GTestMarkerPayload::sNumDestroyed = 0;
 
@@ -675,10 +724,12 @@ TEST(GeckoProfiler, DurationLimit)
   SpliceableChunkedJSONWriter w;
   ASSERT_TRUE(profiler_stream_json_for_this_process(w));
 
-  // The first marker should be destroyed.
-  ASSERT_TRUE(GTestMarkerPayload::sNumCreated == 2);
-  ASSERT_TRUE(GTestMarkerPayload::sNumStreamed == 1);
-  ASSERT_TRUE(GTestMarkerPayload::sNumDestroyed == 1);
+  // Only the first marker should have been streamed and destroyed.
+  ASSERT_EQ(GTestMarkerPayload::sNumCreated, 2);
+  ASSERT_EQ(GTestMarkerPayload::sNumSerialized, 0);
+  ASSERT_EQ(GTestMarkerPayload::sNumDeserialized, 0);
+  ASSERT_EQ(GTestMarkerPayload::sNumStreamed, 1);
+  ASSERT_EQ(GTestMarkerPayload::sNumDestroyed, 1);
 }
 
 #define COUNTER_NAME "TestCounter"
