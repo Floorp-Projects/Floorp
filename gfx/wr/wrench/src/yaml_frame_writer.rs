@@ -203,7 +203,7 @@ fn maybe_radius_yaml(radius: &BorderRadius) -> Option<Yaml> {
 
 fn common_node(v: &mut Table, clip_id_mapper: &mut ClipIdMapper, info: &CommonItemProperties) {
     rect_node(v, "clip-rect", &info.clip_rect);
-    bool_node(v, "backface-visible", info.is_backface_visible);
+    bool_node(v, "backface-visible", info.flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE));
 
     clip_and_scroll_node(v, clip_id_mapper, info.clip_id, info.spatial_id);
 

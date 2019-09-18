@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, ClipMode, HitTestFlags, HitTestItem, HitTestResult, ItemTag};
+use api::{BorderRadius, ClipMode, HitTestFlags, HitTestItem, HitTestResult, ItemTag, PrimitiveFlags};
 use api::PipelineId;
 use api::units::*;
 use crate::clip::{ClipChainId, ClipDataStore, ClipNode, ClipItemKind, ClipStore};
@@ -104,7 +104,7 @@ impl HitTestingItem {
             rect: info.rect,
             clip_rect: info.clip_rect,
             tag,
-            is_backface_visible: info.is_backface_visible,
+            is_backface_visible: info.flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE),
             spatial_node_index,
             clip_chain_range,
         }

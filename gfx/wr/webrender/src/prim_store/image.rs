@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{
-    AlphaType, ColorDepth, ColorF, ColorU,
+    AlphaType, ColorDepth, ColorF, ColorU, PrimitiveFlags,
     ImageKey as ApiImageKey, ImageRendering,
     PremultipliedColorF, Shadow, YuvColorSpace, ColorRange, YuvFormat,
 };
@@ -85,13 +85,13 @@ pub type ImageKey = PrimKey<Image>;
 
 impl ImageKey {
     pub fn new(
-        is_backface_visible: bool,
+        flags: PrimitiveFlags,
         prim_size: LayoutSize,
         image: Image,
     ) -> Self {
         ImageKey {
             common: PrimKeyCommonData {
-                is_backface_visible,
+                flags,
                 prim_size: prim_size.into(),
             },
             kind: image,
@@ -327,7 +327,7 @@ impl InternablePrimitive for Image {
         info: &LayoutPrimitiveInfo,
     ) -> ImageKey {
         ImageKey::new(
-            info.is_backface_visible,
+            info.flags,
             info.rect.size,
             self
         )
@@ -393,14 +393,14 @@ pub type YuvImageKey = PrimKey<YuvImage>;
 
 impl YuvImageKey {
     pub fn new(
-        is_backface_visible: bool,
+        flags: PrimitiveFlags,
         prim_size: LayoutSize,
         yuv_image: YuvImage,
     ) -> Self {
 
         YuvImageKey {
             common: PrimKeyCommonData {
-                is_backface_visible,
+                flags,
                 prim_size: prim_size.into(),
             },
             kind: yuv_image,
@@ -509,7 +509,7 @@ impl InternablePrimitive for YuvImage {
         info: &LayoutPrimitiveInfo,
     ) -> YuvImageKey {
         YuvImageKey::new(
-            info.is_backface_visible,
+            info.flags,
             info.rect.size,
             self,
         )
