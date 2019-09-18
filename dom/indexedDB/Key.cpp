@@ -131,7 +131,7 @@ uint32_t Key::LengthOfEncodedBinary(const EncodedDataType* aPos,
   return CalcDecodedStringySize<uint8_t>(aPos + 1, aEnd, &encodedSectionEnd);
 }
 
-IDBResult<void, IDBSpecialValue::Invalid> Key::ToLocaleBasedKey(
+IDBResult<void, IDBSpecialValue::Invalid> Key::ToLocaleAwareKey(
     Key& aTarget, const nsCString& aLocale, ErrorResult& aRv) const {
   if (IsUnset()) {
     aTarget.Unset();
