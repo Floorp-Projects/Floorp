@@ -2,4 +2,4 @@
 
 # fontType
 
-`var fontType: `[`FontType`](../-font-type/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/readerview/src/main/java/mozilla/components/feature/readerview/ReaderViewFeature.kt#L74)
+`var fontType: `[`FontType`](../-font-type/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/readerview/src/main/java/mozilla/components/feature/readerview/ReaderViewFeature.kt#L76)

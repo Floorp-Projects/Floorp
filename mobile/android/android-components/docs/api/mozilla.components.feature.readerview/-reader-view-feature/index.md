@@ -2,11 +2,10 @@
 
 # ReaderViewFeature
 
-`class ReaderViewFeature : `[`SelectionAwareSessionObserver`](../../mozilla.components.browser.session/-selection-aware-session-observer/index.md)`, `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`BackHandler`](../../mozilla.components.support.base.feature/-back-handler/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/readerview/src/main/java/mozilla/components/feature/readerview/ReaderViewFeature.kt#L48)
+`class ReaderViewFeature : `[`SelectionAwareSessionObserver`](../../mozilla.components.browser.session/-selection-aware-session-observer/index.md)`, `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`BackHandler`](../../mozilla.components.support.base.feature/-back-handler/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/readerview/src/main/java/mozilla/components/feature/readerview/ReaderViewFeature.kt#L45)
 
 Feature implementation that provides a reader view for the selected
-session. This feature is implemented as a web extension and
-needs to be installed prior to use (see [ReaderViewFeature.install](install.md)).
+session, based on a web extension.
 
 ### Types
 
@@ -20,7 +19,7 @@ needs to be installed prior to use (see [ReaderViewFeature.install](install.md))
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `ReaderViewFeature(context: <ERROR CLASS>, engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, controlsView: `[`ReaderViewControlsView`](../../mozilla.components.feature.readerview.view/-reader-view-controls-view/index.md)`, onReaderViewAvailableChange: `[`OnReaderViewAvailableChange`](../-on-reader-view-available-change.md)` = { })`<br>Feature implementation that provides a reader view for the selected session. This feature is implemented as a web extension and needs to be installed prior to use (see [ReaderViewFeature.install](install.md)). |
+| [&lt;init&gt;](-init-.md) | `ReaderViewFeature(context: <ERROR CLASS>, engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, controlsView: `[`ReaderViewControlsView`](../../mozilla.components.feature.readerview.view/-reader-view-controls-view/index.md)`, onReaderViewAvailableChange: `[`OnReaderViewAvailableChange`](../-on-reader-view-available-change.md)` = { })`<br>Feature implementation that provides a reader view for the selected session, based on a web extension. |
 
 ### Inherited Properties
 
@@ -52,10 +51,3 @@ needs to be installed prior to use (see [ReaderViewFeature.install](install.md))
 | [observeFixed](../../mozilla.components.browser.session/-selection-aware-session-observer/observe-fixed.md) | `fun observeFixed(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Starts observing changes to the specified session. |
 | [observeIdOrSelected](../../mozilla.components.browser.session/-selection-aware-session-observer/observe-id-or-selected.md) | `fun observeIdOrSelected(sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Starts observing changes to the session matching the [sessionId](../../mozilla.components.browser.session/-selection-aware-session-observer/observe-id-or-selected.md#mozilla.components.browser.session.SelectionAwareSessionObserver$observeIdOrSelected(kotlin.String)/sessionId). If the session does not exist, then observe the selected session. |
 | [observeSelected](../../mozilla.components.browser.session/-selection-aware-session-observer/observe-selected.md) | `fun observeSelected(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Starts observing changes to the selected session (see [SessionManager.selectedSession](../../mozilla.components.browser.session/-session-manager/selected-session.md)). If a different session is selected the observer will automatically be switched over and only notified of changes to the newly selected session. |
-
-### Companion Object Functions
-
-| Name | Summary |
-|---|---|
-| [install](install.md) | `fun install(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Installs the readerview web extension in the provided engine. |
-| [registerMessageHandler](register-message-handler.md) | `fun registerMessageHandler(session: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`, messageHandler: `[`MessageHandler`](../../mozilla.components.concept.engine.webextension/-message-handler/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

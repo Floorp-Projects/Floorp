@@ -15,5 +15,6 @@
 | Name | Summary |
 |---|---|
 | [SCOPE_PROFILE](-s-c-o-p-e_-p-r-o-f-i-l-e.md) | `const val SCOPE_PROFILE: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [SCOPE_SESSION](-s-c-o-p-e_-s-e-s-s-i-o-n.md) | `const val SCOPE_SESSION: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [SCOPE_SYNC](-s-c-o-p-e_-s-y-n-c.md) | `const val SCOPE_SYNC: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [authErrorRegistry](auth-error-registry.md) | `val authErrorRegistry: `[`ObserverRegistry`](../mozilla.components.support.base.observer/-observer-registry/index.md)`<`[`AuthErrorObserver`](-auth-error-observer/index.md)`>`<br>A global registry for propagating [AuthException](../mozilla.components.concept.sync/-auth-exception/index.md) errors. Components such as [SyncManager](../mozilla.components.service.fxa.sync/-sync-manager/index.md) and [FxaDeviceRefreshManager](#) may encounter authentication problems during their normal operation, and this registry is how they inform [FxaAccountManager](-fxa-account-manager/index.md) that these errors happened. |

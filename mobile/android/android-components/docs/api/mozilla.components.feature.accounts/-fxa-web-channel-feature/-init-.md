@@ -8,5 +8,3 @@ Feature implementation that provides Firefox Accounts WebChannel support.
 For more information https://github.com/mozilla/fxa/blob/master/packages/fxa-content-server/docs/relier-communication-protocols/fx-webchannel.md
 This feature uses a web extension to communicate with FxA Web Content.
 
-Boilerplate around installing and communicating with the extension will be cleaned up as part https://github.com/mozilla-mobile/android-components/issues/4297.
-

@@ -2,7 +2,7 @@
 
 # MessageHandler
 
-`interface MessageHandler` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtension.kt#L73)
+`interface MessageHandler` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtension.kt#L96)
 
 A handler for all messaging related events, usable for both content and
 background scripts.

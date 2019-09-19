@@ -253,6 +253,7 @@ mozilla.components.support.test.ext
 mozilla.components.support.test.robolectric
 mozilla.components.support.test.robolectric.shadow
 mozilla.components.support.utils
+mozilla.components.support.webextensions
 mozilla.components.tooling.fetch.tests
 mozilla.components.tooling.lint
 mozilla.components.ui.autocomplete
