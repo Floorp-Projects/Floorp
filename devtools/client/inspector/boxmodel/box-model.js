@@ -78,7 +78,6 @@ BoxModel.prototype = {
     this._tooltip = null;
     this.document = null;
     this.inspector = null;
-    this.walker = null;
   },
 
   get highlighters() {
@@ -172,10 +171,9 @@ BoxModel.prototype = {
         return null;
       }
 
-      const nodeFront = this.inspector.selection.nodeFront;
-      const inspectorFront = nodeFront.inspectorFront;
-      // TODO: remove once this is added to the inspectorFront initialize;
-      const pageStyle = await inspectorFront.getPageStyle();
+      const { nodeFront } = this.inspector.selection;
+      const inspectorFront = this.getCurrentInspectorFront();
+      const { pageStyle } = inspectorFront;
 
       let layout = await pageStyle.getLayout(nodeFront, {
         autoMargins: true,
@@ -239,11 +237,8 @@ BoxModel.prototype = {
    * Hides the box-model highlighter on the currently selected element.
    */
   onHideBoxModelHighlighter() {
-    if (!this.inspector) {
-      return;
-    }
-
-    this.inspector.highlighter.unhighlight();
+    const { highlighter } = this.getCurrentInspectorFront();
+    highlighter.unhighlight();
   },
 
   /**
@@ -408,8 +403,9 @@ BoxModel.prototype = {
       return;
     }
 
-    const nodeFront = this.inspector.selection.nodeFront;
-    this.inspector.highlighter.highlight(nodeFront, options);
+    const { highlighter } = this.getCurrentInspectorFront();
+    const { nodeFront } = this.inspector.selection;
+    highlighter.highlight(nodeFront, options);
   },
 
   /**
@@ -465,6 +461,10 @@ BoxModel.prototype = {
       markup.off("leave", this.onMarkupViewLeave);
       markup.off("node-hover", this.onMarkupViewNodeHover);
     }
+  },
+
+  getCurrentInspectorFront() {
+    return this.inspector.selection.nodeFront.inspectorFront;
   },
 };
 
