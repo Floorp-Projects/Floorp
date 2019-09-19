@@ -89,7 +89,6 @@ add_task(async function test_initialialize() {
   await globalBrowseridManager._ensureValidToken();
   Assert.ok(!!globalBrowseridManager._token);
   Assert.ok(globalBrowseridManager._hasValidToken());
-  Assert.deepEqual(getLoginTelemetryScalar(), { SUCCESS: 1 });
 });
 
 add_task(async function test_initialializeWithAuthErrorAndDeletedAccount() {
@@ -140,7 +139,6 @@ add_task(async function test_initialializeWithAuthErrorAndDeletedAccount() {
   Assert.ok(accountStatusCalled);
   Assert.ok(!browseridManager._token);
   Assert.ok(!browseridManager._hasValidToken());
-  Assert.deepEqual(getLoginTelemetryScalar(), { REJECTED: 1 });
 });
 
 add_task(async function test_getResourceAuthenticator() {
