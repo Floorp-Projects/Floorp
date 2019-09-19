@@ -175,6 +175,15 @@ add_task(async function test_telemetry_events() {
   });
   await waitForTelemetryEventCount(13);
 
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+    let loginSort = content.document
+      .querySelector("login-list")
+      .shadowRoot.querySelector("#login-sort");
+    loginSort.selectedIndex = 1;
+    loginSort.dispatchEvent(new content.Event("change", { bubbles: true }));
+  });
+  await waitForTelemetryEventCount(14);
+
   let expectedEvents = [
     ["pwmgr", "select", "existing_login"],
     ["pwmgr", "copy", "username"],
@@ -189,6 +198,7 @@ add_task(async function test_telemetry_events() {
     ["pwmgr", "select", "existing_login"],
     ["pwmgr", "delete", "existing_login"],
     ["pwmgr", "filter", "list"],
+    ["pwmgr", "sort", "list"],
   ];
 
   TelemetryTestUtils.assertEvents(

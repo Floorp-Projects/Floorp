@@ -160,6 +160,8 @@ export default class LoginList extends HTMLElement {
       case "change": {
         this._applySort();
         this.render();
+        const extra = { sort_key: this._sortSelect.value };
+        recordTelemetryEvent({ object: "list", method: "sort", extra });
         break;
       }
       case "AboutLoginsClearSelection": {
