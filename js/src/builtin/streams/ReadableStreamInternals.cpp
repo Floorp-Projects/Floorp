@@ -51,16 +51,6 @@ using JS::Rooted;
 using JS::UndefinedHandleValue;
 using JS::Value;
 
-JS::ReadableStreamMode ReadableStream::mode() const {
-  ReadableStreamController* controller = this->controller();
-  if (controller->is<ReadableStreamDefaultController>()) {
-    return JS::ReadableStreamMode::Default;
-  }
-  return controller->as<ReadableByteStreamController>().hasExternalSource()
-             ? JS::ReadableStreamMode::ExternalSource
-             : JS::ReadableStreamMode::Byte;
-}
-
 /*** 3.5. The interface between readable streams and controllers ************/
 
 /**
