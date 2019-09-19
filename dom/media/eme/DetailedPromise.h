@@ -41,7 +41,7 @@ class DetailedPromise : public Promise {
   void MaybeReject(nsresult aArg, const nsACString& aReason);
 
   void MaybeReject(ErrorResult& aArg) = delete;
-  void MaybeReject(ErrorResult&, const nsACString& aReason);
+  void MaybeReject(ErrorResult& aArg, const nsACString& aReason);
 
  private:
   explicit DetailedPromise(nsIGlobalObject* aGlobal, const nsACString& aName);
@@ -53,6 +53,7 @@ class DetailedPromise : public Promise {
 
   enum eStatus { kSucceeded, kFailed };
   void MaybeReportTelemetry(eStatus aStatus);
+  void LogRejectionReason(uint32_t aErrorCode, const nsACString& aReason);
 
   nsCString mName;
   bool mResponded;

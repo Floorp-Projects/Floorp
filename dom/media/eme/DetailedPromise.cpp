@@ -35,23 +35,29 @@ DetailedPromise::~DetailedPromise() {
   MaybeReportTelemetry(kFailed);
 }
 
-void DetailedPromise::MaybeReject(nsresult aArg, const nsACString& aReason) {
+void DetailedPromise::LogRejectionReason(uint32_t aErrorCode,
+                                         const nsACString& aReason) {
   nsPrintfCString msg("%s promise rejected 0x%" PRIx32 " '%s'", mName.get(),
-                      static_cast<uint32_t>(aArg),
-                      PromiseFlatCString(aReason).get());
+                      aErrorCode, PromiseFlatCString(aReason).get());
   EME_LOG("%s", msg.get());
 
   MaybeReportTelemetry(kFailed);
 
   LogToBrowserConsole(NS_ConvertUTF8toUTF16(msg));
+}
+
+void DetailedPromise::MaybeReject(nsresult aArg, const nsACString& aReason) {
+  LogRejectionReason(static_cast<uint32_t>(aArg), aReason);
 
   ErrorResult rv;
   rv.ThrowDOMException(aArg, aReason);
   Promise::MaybeReject(rv);
 }
 
-void DetailedPromise::MaybeReject(ErrorResult&, const nsACString& aReason) {
-  MOZ_ASSERT_UNREACHABLE("nsresult expected in MaybeReject()");
+void DetailedPromise::MaybeReject(ErrorResult& aArg,
+                                  const nsACString& aReason) {
+  LogRejectionReason(aArg.ErrorCodeAsInt(), aReason);
+  Promise::MaybeReject(aArg);
 }
 
 /* static */
