@@ -7,9 +7,7 @@
 
 async function paste(str) {
   await SimpleTest.promiseClipboardChange(str, () => {
-    Cc["@mozilla.org/widget/clipboardhelper;1"]
-      .getService(Ci.nsIClipboardHelper)
-      .copyString(str);
+    clipboardHelper.copyString(str);
   });
   gURLBar.select();
   document.commandDispatcher
