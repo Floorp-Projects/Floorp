@@ -7024,6 +7024,11 @@
   value: false
   mirror: always
 
+- name: toolkit.telemetry.testing.overrideProductsCheck
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "ui."
 #---------------------------------------------------------------------------
