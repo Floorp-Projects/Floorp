@@ -22,7 +22,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
+import org.mockito.Mockito.anyString
+import org.mockito.Mockito.never
+import org.mockito.Mockito.reset
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyZeroInteractions
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.Implementation
@@ -36,15 +40,23 @@ class AbstractAmazonPushServiceTest {
 
     @Before
     fun setup() {
-        Mockito.reset(processor)
+        reset(processor)
         PushProcessor.install(processor)
+    }
+
+    @Test
+    fun `if registrationId exists startRegister invokes onNewToken`() {
+        val testService = TestService()
+
+        testService.start(testContext)
+        verify(processor).onNewToken(anyString())
     }
 
     @Test
     fun `onNewToken passes token to processor`() {
         service.onRegistered("token")
 
-        Mockito.verify(processor).onNewToken("token")
+        verify(processor).onNewToken("token")
     }
 
     @Test
@@ -61,7 +73,7 @@ class AbstractAmazonPushServiceTest {
         messageIntent.putExtras(bundleExtra)
         service.onMessage(messageIntent)
 
-        Mockito.verify(processor).onMessageReceived(captor.capture())
+        verify(processor).onMessageReceived(captor.capture())
 
         assertEquals("1234", captor.value.channelId)
         assertEquals("contents", captor.value.body)
@@ -82,7 +94,7 @@ class AbstractAmazonPushServiceTest {
 
         service.onRegistrationError("123")
 
-        Mockito.verify(processor).onError(captor.capture())
+        verify(processor).onError(captor.capture())
 
         assertTrue(captor.value is PushError.Registration)
         assertTrue(captor.value.desc.contains("registration failed"))
@@ -98,7 +110,7 @@ class AbstractAmazonPushServiceTest {
         messageIntent.putExtras(bundleExtra)
         service.onMessage(messageIntent)
 
-        Mockito.verify(processor).onError(captor.capture())
+        verify(processor).onError(captor.capture())
 
         assertTrue(captor.value is PushError.MalformedMessage)
         assertTrue(captor.value.desc.contains("NoSuchElementException"))
@@ -109,15 +121,37 @@ class AbstractAmazonPushServiceTest {
         val messageIntent = Intent()
         service.onMessage(messageIntent)
 
-        Mockito.verifyZeroInteractions(processor)
+        verifyZeroInteractions(processor)
     }
 
     @Test
     fun `service available reflects Amazon Device Messaging availability`() {
         assertTrue(service.isServiceAvailable(testContext))
     }
+}
 
-    class TestService : AbstractAmazonPushService()
+class TestService : AbstractAmazonPushService()
+
+@RunWith(RobolectricTestRunner::class)
+@Config(shadows = [ShadowADMMessageHandlerBase::class, ShadowADM2::class])
+class AbstractAmazonPushServiceRegistrationTest {
+
+    private val processor: PushProcessor = mock()
+    private val service = TestService()
+
+    @Before
+    fun setup() {
+        reset(processor)
+        PushProcessor.install(processor)
+    }
+
+    @Test
+    fun `if registrationId does NOT exist startRegister never invokes onNewToken`() {
+        val testService = TestService()
+
+        testService.start(testContext)
+        verify(processor, never()).onNewToken(anyString())
+    }
 }
 
 /**
@@ -146,4 +180,23 @@ class ShadowADM {
     fun __constructor__(context: Context) {}
 
     fun isSupported() = true
+
+    fun getRegistrationId() = "123"
+}
+
+/**
+ * Custom Shadow for [ADM] where the registration ID is null. Currently, we have no way to alter the
+ * Shadow class inside of the service, so this is our work around.
+ */
+@Implements(ADM::class)
+class ShadowADM2 {
+    @Implementation
+    @Suppress("UNUSED_PARAMETER")
+    fun __constructor__(context: Context) {}
+
+    fun isSupported() = true
+
+    fun getRegistrationId(): String? = null
+
+    fun startRegister() {}
 }

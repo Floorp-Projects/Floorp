@@ -28,8 +28,12 @@ abstract class AbstractAmazonPushService : ADMMessageHandlerBase("AbstractAmazon
 
     override fun start(context: Context) {
         adm = ADM(context)
-        if (adm.registrationId == null) {
+
+        val registrationId = adm.registrationId
+        if (registrationId == null) {
             adm.startRegister()
+        } else {
+            PushProcessor.requireInstance.onNewToken(registrationId)
         }
     }
 
