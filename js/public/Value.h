@@ -35,7 +35,9 @@ union Value;
 #define JSVAL_INT_MIN ((int32_t)0x80000000)
 #define JSVAL_INT_MAX ((int32_t)0x7fffffff)
 
-#if defined(JS_PUNBOX64)
+#if defined(JS_NUNBOX32)
+#  define JSVAL_TAG_SHIFT 32
+#elif defined(JS_PUNBOX64)
 #  define JSVAL_TAG_SHIFT 47
 #endif
 
@@ -342,29 +344,6 @@ union alignas(8) Value {
  private:
   uint64_t asBits_;
 
-#if defined(JS_NUNBOX32)
-  struct {
-#  if MOZ_BIG_ENDIAN
-    JSValueTag tag_;
-#  endif  // MOZ_BIG_ENDIAN
-    union {
-      int32_t i32_;
-      uint32_t u32_;
-      uint32_t boo_;  // Don't use |bool| -- it must be four bytes.
-      JSString* str_;
-      JS::Symbol* sym_;
-      JS::BigInt* bi_;
-      JSObject* obj_;
-      js::gc::Cell* cell_;
-      void* ptr_;
-      JSWhyMagic why_;
-    } payload_;
-#  if MOZ_LITTLE_ENDIAN
-    JSValueTag tag_;
-#  endif  // MOZ_LITTLE_ENDIAN
-  } s_;
-#endif  // defined(JS_NUNBOX32)
-
  public:
   constexpr Value() : asBits_(bitsFromTagAndPayload(JSVAL_TAG_UNDEFINED, 0)) {}
   Value(const Value& v) = default;
@@ -397,11 +376,7 @@ union alignas(8) Value {
 
   static constexpr uint64_t bitsFromTagAndPayload(JSValueTag tag,
                                                   PayloadType payload) {
-#if defined(JS_NUNBOX32)
-    return (uint64_t(uint32_t(tag)) << 32) | payload;
-#elif defined(JS_PUNBOX64)
-    return (uint64_t(uint32_t(tag)) << JSVAL_TAG_SHIFT) | payload;
-#endif
+    return (uint64_t(tag) << JSVAL_TAG_SHIFT) | payload;
   }
 
   static constexpr Value fromTagAndPayload(JSValueTag tag,
@@ -534,22 +509,14 @@ union alignas(8) Value {
   }
 
  private:
-  JSValueTag toTag() const {
-#if defined(JS_NUNBOX32)
-    return s_.tag_;
-#elif defined(JS_PUNBOX64)
-    return JSValueTag(asBits_ >> JSVAL_TAG_SHIFT);
-#endif
-  }
+  JSValueTag toTag() const { return JSValueTag(asBits_ >> JSVAL_TAG_SHIFT); }
 
  public:
   /*** JIT-only interfaces to interact with and create raw Values ***/
 #if defined(JS_NUNBOX32)
-  PayloadType toNunboxPayload() const {
-    return static_cast<PayloadType>(s_.payload_.i32_);
-  }
+  PayloadType toNunboxPayload() const { return uint32_t(asBits_); }
 
-  JSValueTag toNunboxTag() const { return s_.tag_; }
+  JSValueTag toNunboxTag() const { return toTag(); }
 #elif defined(JS_PUNBOX64)
   const void* bitsAsPunboxPointer() const {
     return reinterpret_cast<void*>(asBits_);
@@ -702,11 +669,7 @@ union alignas(8) Value {
 
   int32_t toInt32() const {
     MOZ_ASSERT(isInt32());
-#if defined(JS_NUNBOX32)
-    return s_.payload_.i32_;
-#elif defined(JS_PUNBOX64)
     return int32_t(asBits_);
-#endif
   }
 
   double toDouble() const {
@@ -722,7 +685,7 @@ union alignas(8) Value {
   JSString* toString() const {
     MOZ_ASSERT(isString());
 #if defined(JS_NUNBOX32)
-    return s_.payload_.str_;
+    return reinterpret_cast<JSString*>(uintptr_t(asBits_))
 #elif defined(JS_PUNBOX64)
     // Note: the 'Spectre mitigations' comment at the top of this class
     // explains why we use XOR here and in other to* methods.
@@ -733,7 +696,7 @@ union alignas(8) Value {
   JS::Symbol* toSymbol() const {
     MOZ_ASSERT(isSymbol());
 #if defined(JS_NUNBOX32)
-    return s_.payload_.sym_;
+    return reinterpret_cast<JS::Symbol*>(uintptr_t(asBits_));
 #elif defined(JS_PUNBOX64)
     return reinterpret_cast<JS::Symbol*>(asBits_ ^ JSVAL_SHIFTED_TAG_SYMBOL);
 #endif
@@ -742,7 +705,7 @@ union alignas(8) Value {
   JS::BigInt* toBigInt() const {
     MOZ_ASSERT(isBigInt());
 #if defined(JS_NUNBOX32)
-    return s_.payload_.bi_;
+    return reinterpret_cast<JS::BigInt*>(uintptr_t(asBits_));
 #elif defined(JS_PUNBOX64)
     return reinterpret_cast<JS::BigInt*>(asBits_ ^ JSVAL_SHIFTED_TAG_BIGINT);
 #endif
@@ -751,7 +714,7 @@ union alignas(8) Value {
   JSObject& toObject() const {
     MOZ_ASSERT(isObject());
 #if defined(JS_NUNBOX32)
-    return *s_.payload_.obj_;
+    return *reinterpret_cast<JSObject*>(uintptr_t(asBits_));
 #elif defined(JS_PUNBOX64)
     uint64_t ptrBits = asBits_ ^ JSVAL_SHIFTED_TAG_OBJECT;
     MOZ_ASSERT(ptrBits);
@@ -763,7 +726,7 @@ union alignas(8) Value {
   JSObject* toObjectOrNull() const {
     MOZ_ASSERT(isObjectOrNull());
 #if defined(JS_NUNBOX32)
-    return s_.payload_.obj_;
+    return reinterpret_cast<JSObject*>(uintptr_t(asBits_));
 #elif defined(JS_PUNBOX64)
     // Note: the 'Spectre mitigations' comment at the top of this class
     // explains why we use XOR here and in other to* methods.
@@ -777,7 +740,7 @@ union alignas(8) Value {
   js::gc::Cell* toGCThing() const {
     MOZ_ASSERT(isGCThing());
 #if defined(JS_NUNBOX32)
-    return s_.payload_.cell_;
+    return reinterpret_cast<js::gc::Cell*>(uintptr_t(asBits_));
 #elif defined(JS_PUNBOX64)
     uint64_t ptrBits = asBits_ & detail::ValueGCThingPayloadMask;
     MOZ_ASSERT((ptrBits & 0x7) == 0);
@@ -790,7 +753,7 @@ union alignas(8) Value {
   bool toBoolean() const {
     MOZ_ASSERT(isBoolean());
 #if defined(JS_NUNBOX32)
-    return bool(s_.payload_.boo_);
+    return bool(toNunboxPayload());
 #elif defined(JS_PUNBOX64)
     return bool(asBits_ & 0x1);
 #endif
@@ -830,24 +793,19 @@ union alignas(8) Value {
    */
 
   void setPrivate(void* ptr) {
-#if defined(JS_NUNBOX32)
-    s_.tag_ = JSValueTag(0);
-    s_.payload_.ptr_ = ptr;
-#elif defined(JS_PUNBOX64)
+#if defined(JS_PUNBOX64)
     MOZ_ASSERT(detail::IsValidUserModePointer(uintptr_t(ptr)));
-    asBits_ = uintptr_t(ptr);
 #endif
+    asBits_ = uintptr_t(ptr);
     MOZ_ASSERT(isDouble());
   }
 
   void* toPrivate() const {
     MOZ_ASSERT(isDouble());
-#if defined(JS_NUNBOX32)
-    return s_.payload_.ptr_;
-#elif defined(JS_PUNBOX64)
+#if defined(JS_PUNBOX64)
     MOZ_ASSERT(detail::IsValidUserModePointer(asBits_));
-    return reinterpret_cast<void*>(asBits_);
 #endif
+    return reinterpret_cast<void*>(uintptr_t(asBits_));
   }
 
   void setPrivateUint32(uint32_t ui) {
