@@ -8,7 +8,7 @@ transforms:
 kind-dependencies:
     - signing
 only-for-build-types:
-    - raptor
+    - performance-test
 only-for-abis:
     - armeabi-v7a
     - arm64-v8a

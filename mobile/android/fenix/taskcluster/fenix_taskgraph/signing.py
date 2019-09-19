@@ -28,11 +28,14 @@ def fetch_old_decision_dependency(config, tasks):
 
 
 @transforms.add
-def define_signing_flags(config, tasks):
+def define_signing_attributes(config, tasks):
     for task in tasks:
         dep = task["primary-dependency"]
-        # Current kind will be prepended later in the transform chain.
-        task.setdefault("attributes", {}).update(dep.attributes.copy())
+        attributes = task.setdefault("attributes", {})
+        upstream_attributes = dep.attributes.copy()
+        upstream_attributes.update(attributes)
+        task["attributes"] = upstream_attributes
+
         task["attributes"]["signed"] = True
         if "run_on_tasks_for" in task["attributes"]:
             task["run-on-tasks-for"] = task["attributes"]["run_on_tasks_for"]

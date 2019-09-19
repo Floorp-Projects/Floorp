@@ -13,8 +13,6 @@ kind-dependencies:
 
 job-defaults:
     description: Sign Fenix
-    index:
-        type: signing
     worker-type:
         by-variant:
             (nightly|nightly-legacy|production):
@@ -22,14 +20,6 @@ job-defaults:
                     '3': signing
                     default: dep-signing
             default: dep-signing
-    worker:
-        signing-type:
-            by-variant:
-                (nightly|nightly-legacy|production):
-                    by-level:
-                        '3': release-signing
-                        default: dep-signing
-                default: dep-signing
     run-on-tasks-for: []
     treeherder:
         kind: build
@@ -40,7 +30,10 @@ jobs:
     performance-test:
         attributes:
             build-type: performance-test
-        worker-type: dep-signing
+        index:
+            type: signing
+        worker:
+            signing-type: dep-signing
         dependencies:
             build: 'assemble: geckoNightlyForPerformanceTest'   # comes from the old-decision task
         treeherder:
@@ -49,16 +42,46 @@ jobs:
     production:
         attributes:
             build-type: production
+        index:
+            type: signing
+        worker:
+            signing-type:
+                by-level:
+                    '3': production-signing
+                    default: dep-signing
         dependencies:
             build: 'Build FenixProduction task'  # comes from the old-decision task
         run-on-tasks-for: [github-release]
         treeherder:
             symbol: production(s)
 
+    fennec-production:
+        attributes:
+            build-type: fennec-production
+            nightly: true
+        index:
+            type: signing
+        worker:
+            signing-type:
+                by-level:
+                    '3': fennec-production-signing
+                    default: dep-signing
+        dependencies:
+            build: 'Build FennecProduction task' # comes from the old-decision task
+        treeherder:
+            symbol: nightlyFennec(s)
+
     nightly:
         attributes:
             build-type: nightly
             nightly: true
+        index:
+            type: signing
+        worker:
+            signing-type:
+                by-level:
+                    '3': nightly-signing
+                    default: dep-signing
         dependencies:
             build: 'Build FenixNightly task' # comes from the old-decision task
         treeherder:
@@ -68,6 +91,11 @@ jobs:
         attributes:
             build-type: nightly-legacy
             nightly: true
+        worker:
+            signing-type:
+                by-level:
+                    '3': production-signing
+                    default: dep-signing
         dependencies:
             build: 'Build FenixNightlyLegacy task'  # comes from the old-decision task
         treeherder:
