@@ -202,8 +202,9 @@ FilenameType nsContentSecurityUtils::FilenameToEvalType(
 }
 
 /* static */
-void nsContentSecurityUtils::AssertEvalNotRestricted(
-    JSContext* cx, nsIPrincipal* aSubjectPrincipal, const nsAString& aScript) {
+bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
+                                           nsIPrincipal* aSubjectPrincipal,
+                                           const nsAString& aScript) {
   // This allowlist contains files that are permanently allowed to use
   // eval()-like functions. It is supposed to be restricted to files that are
   // exclusively used in testing contexts.
@@ -234,7 +235,7 @@ void nsContentSecurityUtils::AssertEvalNotRestricted(
         ("Allowing eval() %s because allowing pref is "
          "enabled",
          (systemPrincipal ? "with System Principal" : "in parent process")));
-    return;
+    return true;
   }
 
   if (XRE_IsE10sParentProcess() &&
@@ -242,12 +243,12 @@ void nsContentSecurityUtils::AssertEvalNotRestricted(
     MOZ_LOG(sCSMLog, LogLevel::Debug,
             ("Allowing eval() in parent process because allowing pref is "
              "enabled"));
-    return;
+    return true;
   }
 
   if (!systemPrincipal && !XRE_IsE10sParentProcess()) {
     // Usage of eval we are unconcerned with.
-    return;
+    return true;
   }
 
   // This preference is a file used for autoconfiguration of Firefox
@@ -262,7 +263,7 @@ void nsContentSecurityUtils::AssertEvalNotRestricted(
         ("Allowing eval() %s because of "
          "general.config.filename",
          (systemPrincipal ? "with System Principal" : "in parent process")));
-    return;
+    return true;
   }
 
   // This preference is better known as userchrome.css which allows
@@ -278,7 +279,7 @@ void nsContentSecurityUtils::AssertEvalNotRestricted(
         ("Allowing eval() %s because of "
          "toolkit.legacyUserProfileCustomizations.stylesheets",
          (systemPrincipal ? "with System Principal" : "in parent process")));
-    return;
+    return true;
   }
 
   // We permit these two common idioms to get access to the global JS object
@@ -289,31 +290,32 @@ void nsContentSecurityUtils::AssertEvalNotRestricted(
         ("Allowing eval() %s because a key string is "
          "provided",
          (systemPrincipal ? "with System Principal" : "in parent process")));
-    return;
+    return true;
   }
 
   // Check the allowlist for the provided filename. getFilename is a helper
   // function
-  auto getFilename = [](JSContext* cx) -> nsCString {
-    JS::AutoFilename scriptFilename;
-    if (JS::DescribeScriptedCaller(cx, &scriptFilename)) {
-      nsDependentCSubstring fileName_(scriptFilename.get(),
-                                      strlen(scriptFilename.get()));
-      ToLowerCase(fileName_);
-      // Extract file name alone if scriptFilename contains line number
-      // separated by multiple space delimiters in few cases.
-      int32_t fileNameIndex = fileName_.FindChar(' ');
-      if (fileNameIndex != -1) {
-        fileName_.SetLength(fileNameIndex);
-      }
-
-      nsAutoCString fileName(fileName_);
-      return std::move(fileName);
+  nsAutoCString fileName;
+  uint32_t lineNumber = 0, columnNumber = 0;
+  JS::AutoFilename rawScriptFilename;
+  if (JS::DescribeScriptedCaller(cx, &rawScriptFilename, &lineNumber,
+                                 &columnNumber)) {
+    nsDependentCSubstring fileName_(rawScriptFilename.get(),
+                                    strlen(rawScriptFilename.get()));
+    ToLowerCase(fileName_);
+    // Extract file name alone if scriptFilename contains line number
+    // separated by multiple space delimiters in few cases.
+    int32_t fileNameIndex = fileName_.FindChar(' ');
+    if (fileNameIndex != -1) {
+      fileName_.SetLength(fileNameIndex);
     }
-    return NS_LITERAL_CSTRING("unknown-file");
-  };
 
-  nsCString fileName = getFilename(cx);
+    fileName = std::move(fileName_);
+  } else {
+    fileName = NS_LITERAL_CSTRING("unknown-file");
+  }
+
+  NS_ConvertUTF8toUTF16 fileNameA(fileName);
   for (const nsLiteralCString& allowlistEntry : evalAllowlist) {
     if (fileName.Equals(allowlistEntry)) {
       MOZ_LOG(
@@ -321,17 +323,23 @@ void nsContentSecurityUtils::AssertEvalNotRestricted(
           ("Allowing eval() %s because the containing "
            "file is in the allowlist",
            (systemPrincipal ? "with System Principal" : "in parent process")));
-      return;
+      return true;
     }
   }
+
+  // Log to MOZ_LOG
+  MOZ_LOG(sCSMLog, LogLevel::Warning,
+          ("Blocking eval() %s from file %s and script "
+           "provided %s",
+           (systemPrincipal ? "with System Principal" : "in parent process"),
+           fileName.get(), NS_ConvertUTF16toUTF8(aScript).get()));
 
   // Send Telemetry
   Telemetry::EventID eventType =
       systemPrincipal ? Telemetry::EventID::Security_Evalusage_Systemcontext
                       : Telemetry::EventID::Security_Evalusage_Parentprocess;
 
-  FilenameType fileNameType =
-      FilenameToEvalType(NS_ConvertUTF8toUTF16(fileName));
+  FilenameType fileNameType = FilenameToEvalType(fileNameA);
   mozilla::Maybe<nsTArray<EventExtraEntry>> extra;
   if (fileNameType.second().isSome()) {
     extra = Some<nsTArray<EventExtraEntry>>({EventExtraEntry{
@@ -346,23 +354,56 @@ void nsContentSecurityUtils::AssertEvalNotRestricted(
   }
   Telemetry::RecordEvent(eventType, mozilla::Some(fileNameType.first()), extra);
 
-  // Crash or Log
+  // Report an error to console
+  nsCOMPtr<nsIConsoleService> console(
+      do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+  if (!console) {
+    return false;
+  }
+  nsCOMPtr<nsIScriptError> error(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
+  if (!error) {
+    return false;
+  }
+  nsCOMPtr<nsIStringBundle> bundle;
+  nsCOMPtr<nsIStringBundleService> stringService =
+      mozilla::services::GetStringBundleService();
+  if (!stringService) {
+    return false;
+  }
+  stringService->CreateBundle(
+      "chrome://global/locale/security/security.properties",
+      getter_AddRefs(bundle));
+  if (!bundle) {
+    return false;
+  }
+  nsAutoString message;
+  AutoTArray<nsString, 1> formatStrings = {fileNameA};
+  nsresult rv = bundle->FormatStringFromName("RestrictBrowserEvalUsage",
+                                             formatStrings, message);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  uint64_t windowID = nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx);
+  rv = error->InitWithWindowID(message, fileNameA, EmptyString(), lineNumber,
+                               columnNumber, nsIScriptError::errorFlag,
+                               "BrowserEvalUsage", windowID,
+                               true /* From chrome context */);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+  console->LogMessage(error);
+
+  // Maybe Crash
 #ifdef DEBUG
   MOZ_CRASH_UNSAFE_PRINTF(
       "Blocking eval() %s from file %s and script provided "
       "%s",
       (systemPrincipal ? "with System Principal" : "in parent process"),
       fileName.get(), NS_ConvertUTF16toUTF8(aScript).get());
-#else
-  MOZ_LOG(sCSMLog, LogLevel::Warning,
-          ("Blocking eval() %s from file %s and script "
-           "provided %s",
-           (systemPrincipal ? "with System Principal" : "in parent process"),
-           fileName.get(), NS_ConvertUTF16toUTF8(aScript).get()));
 #endif
 
-  // In the future, we will change this function to return false and abort JS
-  // execution without crashing the process. For now, just collect data.
+  return false;
 }
 
 #if defined(DEBUG)
