@@ -182,7 +182,7 @@
   "resource.js": ["AsyncResource", "Resource"],
   "resource://services-common/utils.js": ["CommonUtils"],
   "resource://services-crypto/utils.js": ["CryptoUtils"],
-  "resource://testing-common/services/sync/utils.js": ["AccountState", "MockFxaStorageManager", "SyncTestingInfrastructure", "configureFxAccountIdentity", "configureIdentity", "encryptPayload", "getLoginTelemetryScalar", "makeFxAccountsInternalMock", "makeIdentityConfig", "promiseNamedTimer", "promiseZeroTimer", "sumHistogram", "syncTestLogging", "waitForZeroTimer"],
+  "resource://testing-common/services/sync/utils.js": ["AccountState", "MockFxaStorageManager", "SyncTestingInfrastructure", "configureFxAccountIdentity", "configureIdentity", "encryptPayload", "makeFxAccountsInternalMock", "makeIdentityConfig", "promiseNamedTimer", "promiseZeroTimer", "sumHistogram", "syncTestLogging", "waitForZeroTimer"],
   "rest.js": ["RESTRequest", "RESTResponse", "TokenAuthenticatedRESTRequest"],
   "rotaryengine.js": ["RotaryEngine", "RotaryRecord", "RotaryStore", "RotaryTracker"],
   "RTCStatsReport.jsm": ["convertToRTCStatsReport"],

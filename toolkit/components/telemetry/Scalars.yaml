@@ -525,27 +525,6 @@ storage.sync.api.usage:
     record_in_processes:
       - main
 
-services.sync:
-  sync_login_state_transitions:
-    bug_numbers:
-      - 1375635
-      - 1523644
-    description: >
-      Records transitions between login states of "success", "unverified"
-      and "rejected.
-    expires: "72"
-    kind: boolean
-    keyed: true
-    notification_emails:
-      - sync-staff@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-      - 'geckoview'
-    record_in_processes:
-      - main
-
 identity.fxaccounts:
   missed_commands_fetched:
     bug_numbers:
