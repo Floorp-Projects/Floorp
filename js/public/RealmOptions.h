@@ -140,6 +140,12 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
+  bool getBYOBStreamReadersEnabled() const { return byobStreamReaders_; }
+  RealmCreationOptions& setBYOBStreamReadersEnabled(bool enabled) {
+    byobStreamReaders_ = enabled;
+    return *this;
+  }
+
   bool getFieldsEnabled() const { return fields_; }
   RealmCreationOptions& setFieldsEnabled(bool flag) {
     fields_ = flag;
@@ -182,6 +188,7 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool sharedMemoryAndAtomics_ = false;
   bool streams_ = false;
   bool readableByteStreams_ = false;
+  bool byobStreamReaders_ = false;
   bool fields_ = false;
   bool awaitFix_ = false;
   bool secureContext_ = false;
