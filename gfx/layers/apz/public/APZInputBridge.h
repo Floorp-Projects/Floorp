@@ -61,6 +61,17 @@ struct APZEventResult {
    * input block, otherwise InputBlockState::NO_BLOCK_ID.
    */
   uint64_t mInputBlockId;
+  /**
+   * True if the event is targeting a region with non-passive APZ-aware
+   * listeners, that is, a region where we need to dispatch the event to Gecko
+   * to see if a listener will prevent-default it.
+   * Notes:
+   *   1) This is currently only set for touch events.
+   *   2) For non-WebRender, this will have some false positives; it will
+   *      be set in some cases where we need to dispatch the event to Gecko
+   *      before handling for other reasons than APZ-aware listeners.
+   */
+  bool mHitRegionWithApzAwareListeners;
 };
 
 /**
