@@ -11,22 +11,25 @@ import android.speech.RecognizerIntent
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import mozilla.components.feature.intent.processing.TabIntentProcessor
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.customtabs.AuthCustomTabActivity
 import org.mozilla.fenix.customtabs.AuthCustomTabActivity.Companion.EXTRA_AUTH_CUSTOM_TAB
-import org.mozilla.fenix.customtabs.CustomTabActivity
+import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
-import org.mozilla.fenix.utils.Settings
 
+/**
+ * Processes incoming intents and sends them to the corresponding activity.
+ */
 class IntentReceiverActivity : Activity() {
 
     // Holds the intent that initially started this activity
     // so that it can persist through the speech activity.
     private var previousIntent: Intent? = null
 
-    @Suppress("ComplexMethod")
     @VisibleForTesting
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,20 +45,21 @@ class IntentReceiverActivity : Activity() {
             // the HomeActivity.
             val intent = intent?.let { Intent(intent) } ?: Intent()
 
-            val intentProcessor = if (Settings.getInstance(applicationContext).alwaysOpenInPrivateMode)
-                components.intentProcessors.privateIntentProcessor else components.intentProcessors.intentProcessor
+            val tabIntentProcessor = if (settings().alwaysOpenInPrivateMode) {
+                components.intentProcessors.privateIntentProcessor
+            } else {
+                components.intentProcessors.intentProcessor
+            }
 
-            val intentProcessors = listOf(
-                components.intentProcessors.customTabIntentProcessor,
-                intentProcessor
-            )
+            val intentProcessors =
+                components.intentProcessors.externalAppIntentProcessors + tabIntentProcessor
 
             if (intent.getBooleanExtra(SPEECH_PROCESSING, false)) {
                 previousIntent = intent
                 displaySpeechRecognizer()
             } else {
                 intentProcessors.any { it.process(intent) }
-                setIntentActivity(intent)
+                setIntentActivity(intent, tabIntentProcessor)
 
                 startActivity(intent)
 
@@ -64,19 +68,22 @@ class IntentReceiverActivity : Activity() {
         }
     }
 
-    private fun setIntentActivity(intent: Intent) {
+    /**
+     * Sets the activity that this [intent] will launch.
+     */
+    private fun setIntentActivity(intent: Intent, tabIntentProcessor: TabIntentProcessor) {
         val openToBrowser = when {
-            components.intentProcessors.customTabIntentProcessor.matches(intent) -> {
+            components.intentProcessors.externalAppIntentProcessors.any { it.matches(intent) } -> {
                 // TODO this needs to change: https://github.com/mozilla-mobile/fenix/issues/5225
                 val activityClass = if (intent.hasExtra(EXTRA_AUTH_CUSTOM_TAB)) {
                     AuthCustomTabActivity::class
                 } else {
-                    CustomTabActivity::class
+                    ExternalAppBrowserActivity::class
                 }
                 intent.setClassName(applicationContext, activityClass.java.name)
                 true
             }
-            intent.action == Intent.ACTION_VIEW || intent.action == Intent.ACTION_SEND -> {
+            tabIntentProcessor.matches(intent) -> {
                 intent.setClassName(applicationContext, HomeActivity::class.java.name)
                 // This Intent was launched from history (recent apps). Android will redeliver the
                 // original Intent (which might be a VIEW intent). However if there's no active browsing

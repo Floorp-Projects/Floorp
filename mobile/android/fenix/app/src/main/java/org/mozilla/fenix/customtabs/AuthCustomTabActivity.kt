@@ -12,7 +12,7 @@ import org.mozilla.fenix.ext.components
 /**
  * A special custom tab for signing into a Firefox Account. The activity is closed once the user is signed in.
  */
-class AuthCustomTabActivity : CustomTabActivity() {
+class AuthCustomTabActivity : ExternalAppBrowserActivity() {
 
     private val accountStateObserver = object : AccountObserver {
         /**

@@ -18,11 +18,11 @@ import org.robolectric.annotation.Config
 @ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
-class CustomTabActivityTest {
+class ExternalAppBrowserActivityTest {
 
     @Test
     fun getIntentSource() {
-        val activity = CustomTabActivity()
+        val activity = ExternalAppBrowserActivity()
 
         val launcherIntent = Intent(Intent.ACTION_MAIN).apply {
             addCategory(Intent.CATEGORY_LAUNCHER)

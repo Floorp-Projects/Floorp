@@ -17,7 +17,11 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.theme.CustomTabThemeManager
 import java.security.InvalidParameterException
 
-open class CustomTabActivity : HomeActivity() {
+/**
+ * Activity that holds the [ExternalAppBrowserFragment] that is launched within an external app,
+ * such as custom tabs and progressive web apps.
+ */
+open class ExternalAppBrowserActivity : HomeActivity() {
     final override fun getBreadcrumbMessage(destination: NavDestination): String {
         val fragmentName = resources.getResourceEntryName(destination.id)
         return "Changing to fragment $fragmentName, isCustomTab: true"
