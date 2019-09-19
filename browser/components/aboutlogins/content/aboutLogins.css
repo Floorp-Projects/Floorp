@@ -16,7 +16,7 @@ header {
   display: flex;
   grid-area: header;
   align-items: center;
-  background-color: var(--in-content-box-background);
+  background-color: var(--in-content-page-background);
   border-bottom: 1px solid var(--in-content-box-border-color);
   padding-inline-end: 23px;
 }
