@@ -12,6 +12,7 @@ footer {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  margin-top: 20px;
 }
 
 footer > p {
