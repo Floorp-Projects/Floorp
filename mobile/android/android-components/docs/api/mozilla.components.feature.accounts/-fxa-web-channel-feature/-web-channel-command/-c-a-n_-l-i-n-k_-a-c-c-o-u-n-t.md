@@ -2,4 +2,4 @@
 
 # CAN_LINK_ACCOUNT
 
-`CAN_LINK_ACCOUNT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/accounts/src/main/java/mozilla/components/feature/accounts/FxaWebChannelFeature.kt#L182)
+`CAN_LINK_ACCOUNT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/accounts/src/main/java/mozilla/components/feature/accounts/FxaWebChannelFeature.kt#L158)

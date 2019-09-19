@@ -2,7 +2,7 @@
 
 # Configuration
 
-`data class Configuration` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/config/Configuration.kt#L26)
+`data class Configuration` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/config/Configuration.kt#L27)
 
 The Configuration class describes how to configure the Glean.
 
@@ -10,7 +10,7 @@ The Configuration class describes how to configure the Glean.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `Configuration(serverEndpoint: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = DEFAULT_TELEMETRY_ENDPOINT, maxEvents: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = DEFAULT_MAX_EVENTS, httpClient: `[`PingUploader`](../../mozilla.components.service.glean.net/-ping-uploader/index.md)` = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() }), channel: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)` |
+| [&lt;init&gt;](-init-.md) | `Configuration(serverEndpoint: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = DEFAULT_TELEMETRY_ENDPOINT, channel: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, maxEvents: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = DEFAULT_MAX_EVENTS, httpClient: `[`PingUploader`](../../mozilla.components.service.glean.net/-ping-uploader/index.md)` = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() }))` |
 
 ### Properties
 

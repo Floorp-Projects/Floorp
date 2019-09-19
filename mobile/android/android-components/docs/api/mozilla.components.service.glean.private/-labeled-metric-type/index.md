@@ -43,7 +43,7 @@ individual storage engines and rearrange them correctly in the ping.
 
 | Name | Summary |
 |---|---|
-| [get](get.md) | `operator fun get(label: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`T`](index.md#T)<br>Get the specific metric for a given label. |
+| [get](get.md) | `operator fun get(label: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`T`](index.md#T)<br>Get the specific metric for a given label.`operator fun get(labelIndex: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`T`](index.md#T)<br>Get the specific metric for a given label index. |
 
 ### Inherited Functions
 

@@ -2,7 +2,7 @@
 
 # GeckoPort
 
-`class GeckoPort : `[`Port`](../../mozilla.components.concept.engine.webextension/-port/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/webextension/GeckoWebExtension.kt#L102)
+`class GeckoPort : `[`Port`](../../mozilla.components.concept.engine.webextension/-port/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/webextension/GeckoWebExtension.kt#L136)
 
 Gecko-based implementation of [Port](../../mozilla.components.concept.engine.webextension/-port/index.md), wrapping the native port provided by GeckoView.
 
@@ -22,4 +22,6 @@ Gecko-based implementation of [Port](../../mozilla.components.concept.engine.web
 
 | Name | Summary |
 |---|---|
-| [postMessage](post-message.md) | `fun postMessage(message: `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sends a message to this port. |
+| [disconnect](disconnect.md) | `fun disconnect(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Disconnects this port. |
+| [name](name.md) | `fun name(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Returns the name of this port. |
+| [postMessage](post-message.md) | `fun postMessage(message: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sends a message to this port. |
