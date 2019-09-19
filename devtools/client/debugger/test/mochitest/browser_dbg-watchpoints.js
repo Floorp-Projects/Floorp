@@ -16,8 +16,7 @@ add_task(async function() {
   await toggleScopeNode(dbg, 3);
   const addedWatchpoint = waitForDispatch(dbg, "SET_WATCHPOINT");
   await rightClickScopeNode(dbg, 5);
-  selectContextMenuItem(dbg, selectors.watchpointsSubmenu);
-  document.querySelector(selectors.addGetWatchpoint).click();
+  selectContextMenuItem(dbg, selectors.addGetWatchpoint);
   await addedWatchpoint;
 
   info(`Resume and wait to pause at the access to b on line 12`);
