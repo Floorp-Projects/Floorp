@@ -213,8 +213,13 @@ interface nsISearchService : nsISupports
    * This method should only be called when you need or want to wait for the
    * full initialization of the search service, which may include waiting for
    * outbound service requests.
+   *
+   * @param skipRegionCheck
+   *        Flag to avoid SearchService from waiting on the results
+   *        of the region lookups before completing initialisation.
+   *        Exposed for testing only.
    */
-  Promise init();
+  Promise init([optional] in boolean skipRegionCheck);
 
   /**
    * Exposed for testing.
