@@ -47,9 +47,3 @@ label:dir(rtl) {
 :host(.padding) * {
   padding-bottom: 10px;
 }
-
-:host(.value) *,
-:host(.method) *,
-:host(.padding) * {
-  padding-bottom: 10px;
-}
