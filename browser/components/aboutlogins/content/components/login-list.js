@@ -77,6 +77,7 @@ export default class LoginList extends HTMLElement {
       "empty-search",
       this._filter && !visibleLoginGuids.size
     );
+    this._sortSelect.disabled = !visibleLoginGuids.size;
 
     // Add all of the logins that are not in the DOM yet.
     let fragment = document.createDocumentFragment();
