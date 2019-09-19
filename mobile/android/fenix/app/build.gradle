@@ -504,10 +504,6 @@ dependencies {
     androidTestImplementation Deps.mockito_android
     testImplementation Deps.mockk
     testImplementation Deps.assertk
-
-    debugImplementation Deps.flipper
-    debugImplementation Deps.soLoader
-    releaseImplementation Deps.flipper_noop
 }
 
 if (project.hasProperty("raptor")) {

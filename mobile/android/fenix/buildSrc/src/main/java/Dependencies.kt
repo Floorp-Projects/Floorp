@@ -52,8 +52,6 @@ object Versions {
     const val mockito = "2.24.5"
     const val mockk = "1.9.kotlin12"
     const val assertk = "0.19"
-    const val flipper = "0.21.0"
-    const val soLoader = "0.5.1"
 
     const val espresso_version = "3.2.0"
     const val mockwebserver = "3.11.0"
@@ -196,10 +194,6 @@ object Deps {
     const val mockito_android = "org.mockito:mockito-android:${Versions.mockito}"
     const val mockk = "io.mockk:mockk:${Versions.mockk}"
     const val assertk = "com.willowtreeapps.assertk:assertk-jvm:${Versions.assertk}"
-
-    const val flipper = "com.facebook.flipper:flipper:${Versions.flipper}"
-    const val flipper_noop = "com.facebook.flipper:flipper-noop:${Versions.flipper}"
-    const val soLoader = "com.facebook.soloader:soloader:${Versions.soLoader}"
 
     const val espresso_contrib = "androidx.test.espresso:espresso-contrib:${Versions.espresso_version}"
     const val espresso_core = "androidx.test.espresso:espresso-core:${Versions.espresso_version}"
