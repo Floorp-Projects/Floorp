@@ -439,6 +439,23 @@ nsresult HTMLFileInputAccessible::HandleAccEvent(AccEvent* aEvent) {
   return NS_OK;
 }
 
+Accessible* HTMLFileInputAccessible::CurrentItem() const {
+  // Allow aria-activedescendant to override.
+  if (Accessible* item = HyperTextAccessibleWrap::CurrentItem()) {
+    return item;
+  }
+
+  // The HTML file input itself gets DOM focus, not the button inside it.
+  // For a11y, we want the button to get focus.
+  Accessible* button = FirstChild();
+  if (!button) {
+    MOZ_ASSERT_UNREACHABLE("File input doesn't contain a button");
+    return nullptr;
+  }
+  MOZ_ASSERT(button->IsButton());
+  return button;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLSpinnerAccessible
 ////////////////////////////////////////////////////////////////////////////////
