@@ -1832,3 +1832,16 @@ function evaluateExpressionInConsole(hud, expression) {
 function waitForInspectorPanelChange(dbg) {
   return dbg.toolbox.getPanelWhenReady("inspector");
 }
+
+const { PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
+
+// Debugger operations that are canceled because they were rendered obsolete by
+// a navigation or pause/resume end up as uncaught rejections. These never
+// indicate errors and are whitelisted in all debugger tests.
+PromiseTestUtils.whitelistRejectionsGlobally(/Page has navigated/);
+PromiseTestUtils.whitelistRejectionsGlobally(/Current thread has changed/);
+PromiseTestUtils.whitelistRejectionsGlobally(
+  /Current thread has paused or resumed/
+);
