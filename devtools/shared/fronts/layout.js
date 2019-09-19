@@ -97,6 +97,13 @@ class GridFront extends FrontClassWithSpec(gridSpec) {
   }
 
   /**
+   * Get the WalkerFront instance that owns this GridFront.
+   */
+  get walkerFront() {
+    return this.parentFront.walkerFront;
+  }
+
+  /**
    * Get the text direction of the grid container.
    * Added in Firefox 60.
    */
@@ -135,7 +142,18 @@ class GridFront extends FrontClassWithSpec(gridSpec) {
   }
 }
 
-class LayoutFront extends FrontClassWithSpec(layoutSpec) {}
+class LayoutFront extends FrontClassWithSpec(layoutSpec) {
+  /**
+   * Get the WalkerFront instance that owns this LayoutFront.
+   */
+  get walkerFront() {
+    return this.parentFront;
+  }
+
+  getAllGrids() {
+    return this.getGrids(this.walkerFront.rootNode);
+  }
+}
 
 exports.FlexboxFront = FlexboxFront;
 registerFront(FlexboxFront);
