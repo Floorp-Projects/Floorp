@@ -320,6 +320,10 @@ projects:
     path: components/lib/state
     description: 'A library for maintaining application state.'
     publish: true
+  tooling-detekt:
+    path: components/tooling/detekt
+    description: 'Custom Detekt rules.'
+    publish: false
   tooling-lint:
     path: components/tooling/lint
     description: 'Custom Lint checks for using and writing components.'

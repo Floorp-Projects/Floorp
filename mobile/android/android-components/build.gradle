@@ -19,7 +19,7 @@ buildscript {
 }
 
 plugins {
-    id("io.gitlab.arturbosch.detekt").version("1.0.1")
+    id("io.gitlab.arturbosch.detekt").version("1.0.1")  // Check version number in `Versions.detekt`
 }
 
 allprojects {
@@ -214,7 +214,6 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
-
 detekt {
     input = files("$projectDir/components", "$projectDir/buildSrc", "$projectDir/samples")
     config = files("$projectDir/config/detekt.yml")
@@ -232,6 +231,10 @@ detekt {
 }
 
 tasks.withType(io.gitlab.arturbosch.detekt.Detekt) {
+    // Custom detekt rules should be build before
+    // See https://arturbosch.github.io/detekt/extensions.html#pitfalls
+    dependsOn(":tooling-detekt:assemble")
+
     autoCorrect = true
 
     exclude "**/src/androidTest/**"
@@ -250,6 +253,7 @@ configurations {
 
 dependencies {
     ktlint "com.github.shyiko:ktlint:0.31.0"
+    detektPlugins project(":tooling-detekt")
 }
 
 task ktlint(type: JavaExec, group: "verification") {
