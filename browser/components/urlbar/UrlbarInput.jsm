@@ -850,13 +850,9 @@ class UrlbarInput {
     return this._setValue(val, true);
   }
 
-  get openViewOnFocus() {
-    return this._openViewOnFocus;
-  }
-
   get openViewOnFocusForCurrentTab() {
     return (
-      this.openViewOnFocus &&
+      this._openViewOnFocus &&
       !["about:newtab", "about:home"].includes(
         this.window.gBrowser.currentURI.spec
       ) &&
