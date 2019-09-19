@@ -122,6 +122,7 @@ class HTMLFileInputAccessible : public HyperTextAccessibleWrap {
   // Accessible
   virtual mozilla::a11y::role NativeRole() const override;
   virtual nsresult HandleAccEvent(AccEvent* aAccEvent) override;
+  virtual Accessible* CurrentItem() const override;
 };
 
 /**
