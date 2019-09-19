@@ -606,9 +606,7 @@ void MainThreadFetchResolver::OnResponseAvailableInternal(
       return;
     }
 
-    ErrorResult result;
-    result.ThrowTypeError<MSG_FETCH_FAILED>();
-    mPromise->MaybeReject(result);
+    mPromise->MaybeRejectWithTypeError<MSG_FETCH_FAILED>();
   }
 }
 
@@ -672,9 +670,7 @@ class WorkerFetchResponseRunnable final : public MainThreadWorkerRunnable {
         fetchObserver->SetState(FetchState::Errored);
       }
 
-      ErrorResult result;
-      result.ThrowTypeError<MSG_FETCH_FAILED>();
-      promise->MaybeReject(result);
+      promise->MaybeRejectWithTypeError<MSG_FETCH_FAILED>();
     }
     return true;
   }

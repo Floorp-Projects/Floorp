@@ -49,9 +49,7 @@ void DetailedPromise::LogRejectionReason(uint32_t aErrorCode,
 void DetailedPromise::MaybeReject(nsresult aArg, const nsACString& aReason) {
   LogRejectionReason(static_cast<uint32_t>(aArg), aReason);
 
-  ErrorResult rv;
-  rv.ThrowDOMException(aArg, aReason);
-  Promise::MaybeReject(rv);
+  Promise::MaybeRejectWithDOMException(aArg, aReason);
 }
 
 void DetailedPromise::MaybeReject(ErrorResult& aArg,

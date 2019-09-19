@@ -43,6 +43,44 @@ class DetailedPromise : public Promise {
   void MaybeReject(ErrorResult& aArg) = delete;
   void MaybeReject(ErrorResult& aArg, const nsACString& aReason);
 
+  // Facilities for rejecting with various spec-defined exception values.
+  inline void MaybeRejectWithDOMException(nsresult rv,
+                                          const nsACString& aMessage) {
+    MaybeReject(rv, aMessage);
+  }
+  template <int N>
+  void MaybeRejectWithDOMException(nsresult rv, const char (&aMessage)[N]) {
+    MaybeRejectWithDOMException(rv, nsLiteralCString(aMessage));
+  }
+
+  template <ErrNum errorNumber, typename... Ts>
+  void MaybeRejectWithTypeError(Ts&&... aMessageArgs) = delete;
+
+  inline void MaybeRejectWithTypeError(const nsAString& aMessage) {
+    ErrorResult res;
+    res.ThrowTypeError(aMessage);
+    MaybeReject(res, NS_ConvertUTF16toUTF8(aMessage));
+  }
+
+  template <int N>
+  void MaybeRejectWithTypeError(const char16_t (&aMessage)[N]) {
+    MaybeRejectWithTypeError(nsLiteralString(aMessage));
+  }
+
+  template <ErrNum errorNumber, typename... Ts>
+  void MaybeRejectWithRangeError(Ts&&... aMessageArgs) = delete;
+
+  inline void MaybeRejectWithRangeError(const nsAString& aMessage) {
+    ErrorResult res;
+    res.ThrowRangeError(aMessage);
+    MaybeReject(res, NS_ConvertUTF16toUTF8(aMessage));
+  }
+
+  template <int N>
+  void MaybeRejectWithRangeError(const char16_t (&aMessage)[N]) {
+    MaybeRejectWithRangeError(nsLiteralString(aMessage));
+  }
+
  private:
   explicit DetailedPromise(nsIGlobalObject* aGlobal, const nsACString& aName);
 

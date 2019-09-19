@@ -7421,11 +7421,9 @@ already_AddRefed<Promise> HTMLMediaElement::SetSinkId(const nsAString& aSinkId,
                   promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
                   break;
                 case NS_ERROR_NOT_AVAILABLE: {
-                  ErrorResult notFoundError;
-                  notFoundError.ThrowDOMException(
+                  promise->MaybeRejectWithDOMException(
                       NS_ERROR_DOM_NOT_FOUND_ERR,
-                      NS_LITERAL_CSTRING("The object can not be found here."));
-                  promise->MaybeReject(notFoundError);
+                      "The object can not be found here.");
                   break;
                 }
                 case NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR:
