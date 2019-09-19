@@ -258,10 +258,13 @@ coverity_checkers:
     reliability: medium
   DC.PREDICTABLE_KEY_PASSWORD:
     reliability: medium
+    publish: !!bool no
   DC.STREAM_BUFFER:
     reliability: medium
+    publish: !!bool no
   DC.WEAK_CRYPTO:
     reliability: low
+    publish: !!bool no
   OPEN_ARGS:
     reliability: medium
   STRING_NULL:
@@ -304,6 +307,7 @@ coverity_checkers:
     reliability: medium
   DC.STRING_BUFFER:
     reliability: medium
+    publish: !!bool no
   ENUM_AS_BOOLEAN:
     reliability: medium
   INTEGER_OVERFLOW:
@@ -340,6 +344,7 @@ coverity_checkers:
     reliability: medium
   SECURE_CODING:
     reliability: medium
+    publish: !!bool no
   SIZECHECK:
     reliability: medium
   MISSING_AUTHZ:
