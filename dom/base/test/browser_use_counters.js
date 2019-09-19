@@ -51,6 +51,24 @@ add_task(async function() {
     "SVGSVGELEMENT_CURRENTSCALE_setter"
   );
 
+  // Check for longhands.
+  await check_use_counter_iframe(
+    "file_use_counter_style.html",
+    "CSS_PROPERTY_BackgroundImage"
+  );
+
+  // Check for shorthands.
+  await check_use_counter_iframe(
+    "file_use_counter_style.html",
+    "CSS_PROPERTY_Padding"
+  );
+
+  // Check for aliases.
+  await check_use_counter_iframe(
+    "file_use_counter_style.html",
+    "CSS_PROPERTY_MozTransform"
+  );
+
   // Check that even loads from the imglib cache update use counters.  The
   // images should still be there, because we just loaded them in the last
   // set of tests.  But we won't get updated counts for the document
@@ -95,8 +113,9 @@ add_task(async function() {
   // that reference patterns defined in the same file or in data: URLs.
   await check_use_counter_direct(
     "file_use_counter_svg_fill_pattern_internal.svg",
-    "CSS_PROPERTY_FillOpacity",
+    "CSS_PROPERTY_FillOpacity"
   );
+
   // data: URLs don't correctly propagate to their referring document yet.
   //yield check_use_counter_direct("file_use_counter_svg_fill_pattern_data.svg",
   //                               "PROPERTY_FILL_OPACITY");

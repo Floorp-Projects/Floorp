@@ -14330,6 +14330,7 @@ void Document::PropagateUseCounters(Document* aParentDocument) {
     return;
   }
 
+  SetCssUseCounterBits();
   contentParent->mChildDocumentUseCounters |= mUseCounters;
   contentParent->mChildDocumentUseCounters |= mChildDocumentUseCounters;
 }
@@ -14386,6 +14387,19 @@ static_assert(size_t(eUseCounter_Count) * 2 ==
 #undef CSS_PROP_PUBLIC_OR_PRIVATE
 #undef ASSERT_CSS_COUNTER
 
+void Document::SetCssUseCounterBits() {
+  if (!mStyleUseCounters) {
+    return;
+  }
+
+  for (size_t i = 0; i < eCSSProperty_COUNT_with_aliases; ++i) {
+    auto id = nsCSSPropertyID(i);
+    if (Servo_IsPropertyIdRecordedInUseCounter(mStyleUseCounters.get(), id)) {
+      SetUseCounter(nsCSSProps::UseCounterFor(id));
+    }
+  }
+}
+
 
 void Document::PropagateUseCountersToPage() {
   if (mDisplayDocument) {
@@ -14424,6 +14438,7 @@ void Document::ReportUseCounters() {
   }
 
   mReportedUseCounters = true;
+  SetCssUseCounterBits();
 
   // Call ReportUseCounters in all our outstanding subdocuments and resources
   // and such. This needs to be here so that all our sub documents propagate our
