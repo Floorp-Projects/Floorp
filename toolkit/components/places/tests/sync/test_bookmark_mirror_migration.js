@@ -4,6 +4,10 @@
 // Keep in sync with `SyncedBookmarksMirror.jsm`.
 const CURRENT_MIRROR_SCHEMA_VERSION = 7;
 
+// The oldest schema version that we support. Any databases with schemas older
+// than this will be dropped and recreated.
+const OLDEST_SUPPORTED_MIRROR_SCHEMA_VERSION = 5;
+
 async function getIndexNames(db, table, schema = "mirror") {
   let rows = await db.execute(`PRAGMA ${schema}.index_list(${table})`);
   let names = [];
@@ -18,6 +22,47 @@ async function getIndexNames(db, table, schema = "mirror") {
   }
   return names.sort();
 }
+
+add_task(async function test_migrate_after_downgrade() {
+  await PlacesTestUtils.markBookmarksAsSynced();
+
+  let dbFile = await setupFixtureFile("mirror_v5.sqlite");
+  let oldBuf = await SyncedBookmarksMirror.open({
+    path: dbFile.path,
+    recordTelemetryEvent(object, method, value, extra) {},
+    recordStepTelemetry() {},
+    recordValidationTelemetry() {},
+  });
+
+  info("Downgrade schema version to oldest supported");
+  await oldBuf.db.setSchemaVersion(
+    OLDEST_SUPPORTED_MIRROR_SCHEMA_VERSION,
+    "mirror"
+  );
+  await oldBuf.finalize();
+
+  let buf = await SyncedBookmarksMirror.open({
+    path: dbFile.path,
+    recordTelemetryEvent(object, method, value, extra) {},
+    recordStepTelemetry() {},
+    recordValidationTelemetry() {},
+  });
+
+  // All migrations between `OLDEST_SUPPORTED_MIRROR_SCHEMA_VERSION` should
+  // be idempotent. When we downgrade, we roll back the schema version, but
+  // leave the schema changes in place, since we can't anticipate what a
+  // future version will change.
+  let schemaVersion = await buf.db.getSchemaVersion("mirror");
+  equal(
+    schemaVersion,
+    CURRENT_MIRROR_SCHEMA_VERSION,
+    "Should upgrade downgraded mirror schema"
+  );
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});
 
 // Migrations between 5 and 7 add three indexes.
 add_task(async function test_migrate_from_5_to_current() {

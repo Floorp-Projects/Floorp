@@ -1477,12 +1477,13 @@ async function migrateMirrorSchema(db, currentSchemaVersion) {
     );
   }
   if (currentSchemaVersion < 6) {
-    await db.execute(`CREATE INDEX mirror.itemURLs ON items(urlId)`);
-    await db.execute(`CREATE INDEX mirror.itemKeywords ON items(keyword)
-                      WHERE keyword NOT NULL`);
+    await db.execute(`CREATE INDEX IF NOT EXISTS mirror.itemURLs ON
+                      items(urlId)`);
+    await db.execute(`CREATE INDEX IF NOT EXISTS mirror.itemKeywords ON
+                      items(keyword) WHERE keyword NOT NULL`);
   }
   if (currentSchemaVersion < 7) {
-    await db.execute(`CREATE INDEX mirror.structurePositions ON
+    await db.execute(`CREATE INDEX IF NOT EXISTS mirror.structurePositions ON
                       structure(parentGuid, position)`);
   }
 }
