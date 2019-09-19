@@ -33,6 +33,13 @@ class FlexboxFront extends FrontClassWithSpec(flexboxSpec) {
   }
 
   /**
+   * Get the WalkerFront instance that owns this FlexboxFront.
+   */
+  get walkerFront() {
+    return this.parentFront.walkerFront;
+  }
+
+  /**
    * Get the computed style properties for the flex container.
    */
   get properties() {
@@ -62,6 +69,13 @@ class FlexItemFront extends FrontClassWithSpec(flexItemSpec) {
     }
 
     return this.conn.getFrontByID(this._form.nodeActorID);
+  }
+
+  /**
+   * Get the WalkerFront instance that owns this FlexItemFront.
+   */
+  get walkerFront() {
+    return this.parentFront.walkerFront;
   }
 
   /**
