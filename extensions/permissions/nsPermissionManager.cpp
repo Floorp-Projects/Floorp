@@ -157,6 +157,22 @@ bool IsPreloadPermission(const nsACString& aType) {
   return false;
 }
 
+void OriginAppendOASuffix(OriginAttributes aOriginAttributes,
+                          nsACString& aOrigin) {
+  // mPrivateBrowsingId must be set to false because PermissionManager is not
+  // supposed to have any knowledge of private browsing. Allowing it to be true
+  // changes the suffix being hashed.
+  aOriginAttributes.mPrivateBrowsingId = 0;
+
+  // Disable userContext for permissions.
+  aOriginAttributes.StripAttributes(
+      mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID);
+
+  nsAutoCString oaSuffix;
+  aOriginAttributes.CreateSuffix(oaSuffix);
+  aOrigin.Append(oaSuffix);
+}
+
 nsresult GetOriginFromPrincipal(nsIPrincipal* aPrincipal, nsACString& aOrigin) {
   nsresult rv = aPrincipal->GetOriginNoSuffix(aOrigin);
   // The principal may belong to the about:blank content viewer, so this can be
@@ -174,16 +190,22 @@ nsresult GetOriginFromPrincipal(nsIPrincipal* aPrincipal, nsACString& aOrigin) {
     return NS_ERROR_FAILURE;
   }
 
-  // mPrivateBrowsingId must be set to false because PermissionManager is not
-  // supposed to have any knowledge of private browsing. Allowing it to be true
-  // changes the suffix being hashed.
-  attrs.mPrivateBrowsingId = 0;
+  OriginAppendOASuffix(attrs, aOrigin);
 
-  // Disable userContext for permissions.
-  attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID);
+  return NS_OK;
+}
 
-  attrs.CreateSuffix(suffix);
-  aOrigin.Append(suffix);
+nsresult GetOriginFromURIAndOA(nsIURI* aURI,
+                               const OriginAttributes* aOriginAttributes,
+                               nsACString& aOrigin) {
+  nsAutoCString origin(aOrigin);
+  nsresult rv = ContentPrincipal::GenerateOriginNoSuffixFromURI(aURI, origin);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  OriginAppendOASuffix(*aOriginAttributes, origin);
+
+  aOrigin = origin;
+
   return NS_OK;
 }
 
@@ -773,6 +795,19 @@ nsPermissionManager::PermissionKey::CreateFromPrincipal(
     nsIPrincipal* aPrincipal, nsresult& aResult) {
   nsAutoCString origin;
   aResult = GetOriginFromPrincipal(aPrincipal, origin);
+  if (NS_WARN_IF(NS_FAILED(aResult))) {
+    return nullptr;
+  }
+
+  return new PermissionKey(origin);
+}
+
+nsPermissionManager::PermissionKey*
+nsPermissionManager::PermissionKey::CreateFromURIAndOriginAttributes(
+    nsIURI* aURI, const OriginAttributes* aOriginAttributes,
+    nsresult& aResult) {
+  nsAutoCString origin;
+  aResult = GetOriginFromURIAndOA(aURI, aOriginAttributes, origin);
   if (NS_WARN_IF(NS_FAILED(aResult))) {
     return nullptr;
   }
@@ -2273,6 +2308,14 @@ nsPermissionManager::TestPermission(nsIURI* aURI, const nsACString& aType,
                               false, true);
 }
 
+nsresult nsPermissionManager::LegacyTestPermissionFromURI(
+    nsIURI* aURI, const mozilla::OriginAttributes* aOriginAttributes,
+    const nsACString& aType, uint32_t* aPermission) {
+  return CommonTestPermission(aURI, aOriginAttributes, -1, aType, aPermission,
+                              nsIPermissionManager::UNKNOWN_ACTION, false,
+                              false, true);
+}
+
 NS_IMETHODIMP
 nsPermissionManager::TestPermissionFromWindow(mozIDOMWindow* aWindow,
                                               const nsACString& aType,
@@ -2364,12 +2407,14 @@ nsPermissionManager::GetPermissionObject(nsIPrincipal* aPrincipal,
 }
 
 nsresult nsPermissionManager::CommonTestPermissionInternal(
-    nsIPrincipal* aPrincipal, nsIURI* aURI, int32_t aTypeIndex,
+    nsIPrincipal* aPrincipal, nsIURI* aURI,
+    const OriginAttributes* aOriginAttributes, int32_t aTypeIndex,
     const nsACString& aType, uint32_t* aPermission, bool aExactHostMatch,
     bool aIncludingSession) {
   MOZ_ASSERT(aPrincipal || aURI);
-  MOZ_ASSERT_IF(aPrincipal, !aURI);
   NS_ENSURE_ARG_POINTER(aPrincipal || aURI);
+  MOZ_ASSERT_IF(aPrincipal, !aURI && !aOriginAttributes);
+  MOZ_ASSERT_IF(aURI || aOriginAttributes, !aPrincipal);
 
 #ifdef DEBUG
   {
@@ -2387,7 +2432,8 @@ nsresult nsPermissionManager::CommonTestPermissionInternal(
 
   PermissionHashKey* entry =
       aPrincipal ? GetPermissionHashKey(aPrincipal, aTypeIndex, aExactHostMatch)
-                 : GetPermissionHashKey(aURI, aTypeIndex, aExactHostMatch);
+                 : GetPermissionHashKey(aURI, aOriginAttributes, aTypeIndex,
+                                        aExactHostMatch);
   if (!entry || (!aIncludingSession &&
                  entry->GetPermission(aTypeIndex).mNonSessionExpireType ==
                      nsIPermissionManager::EXPIRE_SESSION)) {
@@ -2460,8 +2506,9 @@ nsPermissionManager::GetPermissionHashKey(nsIPrincipal* aPrincipal,
 // accepts host on the format "<foo>". This will perform an exact match lookup
 // as the string doesn't contain any dots.
 nsPermissionManager::PermissionHashKey*
-nsPermissionManager::GetPermissionHashKey(nsIURI* aURI, uint32_t aType,
-                                          bool aExactHostMatch) {
+nsPermissionManager::GetPermissionHashKey(
+    nsIURI* aURI, const OriginAttributes* aOriginAttributes, uint32_t aType,
+    bool aExactHostMatch) {
   MOZ_ASSERT(aURI);
 
 #ifdef DEBUG
@@ -2477,8 +2524,15 @@ nsPermissionManager::GetPermissionHashKey(nsIURI* aURI, uint32_t aType,
 #endif
 
   nsresult rv;
-  RefPtr<PermissionKey> key =
-      aURI ? PermissionKey::CreateFromURI(aURI, rv) : nullptr;
+  RefPtr<PermissionKey> key;
+
+  if (aOriginAttributes) {
+    key = PermissionKey::CreateFromURIAndOriginAttributes(
+        aURI, aOriginAttributes, rv);
+  } else {
+    key = PermissionKey::CreateFromURI(aURI, rv);
+  }
+
   if (!key) {
     return nullptr;
   }
@@ -2522,7 +2576,8 @@ nsPermissionManager::GetPermissionHashKey(nsIURI* aURI, uint32_t aType,
       uri = GetNextSubDomainURI(aURI);
     }
     if (uri) {
-      return GetPermissionHashKey(uri, aType, aExactHostMatch);
+      return GetPermissionHashKey(uri, aOriginAttributes, aType,
+                                  aExactHostMatch);
     }
   }
 

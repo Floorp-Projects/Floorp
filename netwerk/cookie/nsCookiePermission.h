@@ -6,8 +6,7 @@
 #define nsCookiePermission_h__
 
 #include "nsICookiePermission.h"
-#include "nsIPermissionManager.h"
-#include "nsCOMPtr.h"
+#include "nsPermissionManager.h"
 
 class nsCookiePermission final : public nsICookiePermission {
  public:
@@ -24,7 +23,7 @@ class nsCookiePermission final : public nsICookiePermission {
 
   bool EnsureInitialized() { return (mPermMgr != nullptr) || Init(); };
 
-  nsCOMPtr<nsIPermissionManager> mPermMgr;
+  RefPtr<nsPermissionManager> mPermMgr;
 };
 
 #endif
