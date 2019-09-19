@@ -1102,14 +1102,18 @@ JS_FRIEND_API JSString* GetPCCountScriptSummary(JSContext* cx, size_t script);
 JS_FRIEND_API JSString* GetPCCountScriptContents(JSContext* cx, size_t script);
 
 /**
- * Generate lcov trace file content for the current compartment, and allocate a
- * new buffer and return the content in it, the size of the newly allocated
- * content within the buffer would be set to the length out-param.
+ * Generate lcov trace file content for the current realm, and allocate a new
+ * buffer and return the content in it, the size of the newly allocated content
+ * within the buffer would be set to the length out-param. The 'All' variant
+ * will collect data for all realms in the runtime.
  *
- * In case of out-of-memory, this function returns nullptr and does not set any
- * value to the length out-param.
+ * In case of out-of-memory, this function returns nullptr. The length
+ * out-param is undefined on failure.
  */
-JS_FRIEND_API char* GetCodeCoverageSummary(JSContext* cx, size_t* length);
+JS_FRIEND_API JS::UniqueChars GetCodeCoverageSummary(JSContext* cx,
+                                                     size_t* length);
+JS_FRIEND_API JS::UniqueChars GetCodeCoverageSummaryAll(JSContext* cx,
+                                                        size_t* length);
 
 typedef bool (*DOMInstanceClassHasProtoAtDepth)(const JSClass* instanceClass,
                                                 uint32_t protoID,
