@@ -6,11 +6,15 @@ package mozilla.components.browser.toolbar.display
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
 import android.widget.ProgressBar
+import androidx.annotation.ColorInt
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.ContextCompat
@@ -25,25 +29,31 @@ import mozilla.components.browser.toolbar.internal.measureActions
 import mozilla.components.browser.toolbar.internal.wrapAction
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.concept.toolbar.Toolbar.SiteSecurity
-import mozilla.components.ui.icons.R.drawable.mozac_ic_globe
-import mozilla.components.ui.icons.R.drawable.mozac_ic_lock
+import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection
+import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection.OFF_FOR_A_SITE
+import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection.OFF_GLOBALLY
+import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED
+import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection.ON_TRACKERS_BLOCKED
+import mozilla.components.support.ktx.android.widget.adjustMaxTextSize
 
 /**
  * Sub-component of the browser toolbar responsible for displaying the URL and related controls.
  *
  * Structure:
  * ```
- *   +-------------+------+-----------------------+----------+------+
- *   | navigation  | icon | url       [ page    ] | browser  | menu |
- *   |   actions   |      |           [ actions ] | actions  |      |
- *   +-------------+------+-----------------------+----------+------+
+ *   +-------------+-------+-----------------------+----------+------+
+ *   | navigation  | icons | url       [ page    ] | browser  | menu |
+ *   |   actions   |       |           [ actions ] | actions  |      |
+ *   +-------------+-------+-----------------------+----------+------+
  * ```
  *
  * Navigation actions (optional):
  *     A dynamic list of clickable icons usually used for navigation on larger devices
  *     (e.g. “back”/”forward” buttons.)
  *
- * Icon (optional):
+ * Icons (optional):
+ *     Tracking protection indicator icon (e.g. “shield” icon) that may show a doorhanger when clicked.
+ *     Separator icon: a vertical line that separate the above and below icons.
  *     Site security indicator icon (e.g. “Lock” icon) that may show a doorhanger when clicked.
  *
  * URL:
@@ -73,61 +83,12 @@ internal class DisplayToolbar(
         get() = menuView.menuBuilder
         set(value) { menuView.menuBuilder = value }
 
-    internal val siteSecurityIconView = AppCompatImageView(context).apply {
-        setPadding(resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_icon_padding))
-
-        setImageResource(mozac_ic_globe)
-
-        // Avoiding text behind the icon being selectable. If the listener is not set
-        // with a value or null text behind the icon can be selectable.
-        // https://github.com/mozilla-mobile/reference-browser/issues/448
-        setOnClickListener(null)
-    }
-
-    internal val titleView = AppCompatTextView(context).apply {
-        id = R.id.mozac_browser_toolbar_title_view
-        gravity = Gravity.CENTER_VERTICAL
-        textSize = URL_TEXT_SIZE_SP
-        visibility = View.GONE
-
-        setSingleLine(true)
-    }
-
-    internal val urlView = AppCompatTextView(context).apply {
-        id = R.id.mozac_browser_toolbar_url_view
-        gravity = Gravity.CENTER_VERTICAL
-        textSize = URL_TEXT_SIZE_SP
-
-        setSingleLine(true)
-        isClickable = true
-        isFocusable = true
-
-        setOnClickListener {
-            if (onUrlClicked()) {
-                toolbar.editMode()
-            }
+    internal var displayTrackingProtectionIcon: Boolean = false
+        set(value) {
+            field = value
+            setTrackingProtectionState(siteTrackingProtection)
         }
-    }
-
-    private val menuView = MenuButton(context, toolbar)
-
-    private val progressView = ProgressBar(
-        context, null, android.R.attr.progressBarStyleHorizontal
-    ).apply {
-        visibility = View.GONE
-        setAccessibilityDelegate(object : View.AccessibilityDelegate() {
-            override fun onInitializeAccessibilityEvent(host: View?, event: AccessibilityEvent?) {
-                super.onInitializeAccessibilityEvent(host, event)
-                if (event?.eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
-                    // Populate the scroll event with the current progress.
-                    // See accessibility note in `updateProgress()`.
-                    event.scrollY = progress
-                    event.maxScrollY = max
-                }
-            }
-        })
-    }
-
+    internal var displaySeparatorView = false
     private val browserActions: MutableList<ActionWrapper> = mutableListOf()
     private val pageActions: MutableList<ActionWrapper> = mutableListOf()
     private val navigationActions: MutableList<ActionWrapper> = mutableListOf()
@@ -158,11 +119,23 @@ internal class DisplayToolbar(
     // Callback to determine whether to open edit mode or not.
     internal var onUrlClicked: () -> Boolean = { true }
 
-    private val defaultColor = ContextCompat.getColor(context, R.color.photonWhite)
+    @ColorInt
+    internal val defaultColor = ContextCompat.getColor(context, R.color.photonWhite)
+
+    @ColorInt
+    internal var separatorColor = ContextCompat.getColor(context, R.color.photonGrey80)
 
     private var currentSiteSecurity = SiteSecurity.INSECURE
 
-    internal var securityIconColor = Pair(defaultColor, defaultColor)
+    private var siteTrackingProtection = OFF_GLOBALLY
+
+    internal var securityIcon = context.getDrawable(R.drawable.mozac_ic_site_security)
+        set(value) {
+            field = value
+            siteSecurityIconView.setImageDrawable(value)
+        }
+
+    internal var securityIconColor = defaultColor to defaultColor
         set(value) {
             field = value
             setSiteSecurity(currentSiteSecurity)
@@ -174,7 +147,83 @@ internal class DisplayToolbar(
             menuView.setColorFilter(value)
         }
 
+    internal val trackingProtectionIconView = TrackingProtectionIconView(context).apply {
+        id = R.id.mozac_browser_toolbar_tracking_protection_icon_view
+        isVisible = false
+        setImageResource(R.drawable.mozac_tracking_protection_state_list)
+        setPadding(resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_icon_padding))
+        // Avoiding text behind the icon being selectable. If the listener is not set
+        // with a value or null text behind the icon can be selectable.
+        setOnClickListener(null)
+    }
+
+    internal val separatorView = AppCompatImageView(context).apply {
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            isVisible = false
+
+            setImageResource(R.drawable.mozac_browser_toolbar_icons_vertical_separator)
+
+            // Avoiding text behind the icon being selectable. If the listener is not set
+            // with a value or null text behind the icon can be selectable.
+            setOnClickListener(null)
+        }
+
+    internal val siteSecurityIconView = SiteSecurityIconView(context).apply {
+        setPadding(resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_icon_padding))
+
+        // Avoiding text behind the icon being selectable. If the listener is not set
+        // with a value or null text behind the icon can be selectable.
+        // https://github.com/mozilla-mobile/reference-browser/issues/448
+        setOnClickListener(null)
+    }
+
+    internal val titleView = AppCompatTextView(context).apply {
+        id = R.id.mozac_browser_toolbar_title_view
+        gravity = Gravity.CENTER_VERTICAL
+        textSize = BrowserToolbar.URL_TEXT_SIZE_SP
+        visibility = View.GONE
+
+        setSingleLine()
+    }
+
+    internal val urlView = AppCompatTextView(context).apply {
+        id = R.id.mozac_browser_toolbar_url_view
+        gravity = Gravity.CENTER_VERTICAL
+        textSize = BrowserToolbar.URL_TEXT_SIZE_SP
+
+        setSingleLine()
+        isClickable = true
+        isFocusable = true
+
+        setOnClickListener {
+            if (onUrlClicked()) {
+                toolbar.editMode()
+            }
+        }
+    }
+
+    private val menuView = MenuButton(context, toolbar)
+
+    private val progressView = ProgressBar(
+        context, null, android.R.attr.progressBarStyleHorizontal
+    ).apply {
+        visibility = View.GONE
+        setAccessibilityDelegate(object : View.AccessibilityDelegate() {
+            override fun onInitializeAccessibilityEvent(host: View?, event: AccessibilityEvent?) {
+                super.onInitializeAccessibilityEvent(host, event)
+                if (event?.eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
+                    // Populate the scroll event with the current progress.
+                    // See accessibility note in `updateProgress()`.
+                    event.scrollY = progress
+                    event.maxScrollY = max
+                }
+            }
+        })
+    }
+
     init {
+        addView(trackingProtectionIconView)
+        addView(separatorView)
         addView(siteSecurityIconView)
         addView(titleView)
         addView(urlView)
@@ -262,16 +311,58 @@ internal class DisplayToolbar(
      * Sets the site's security icon as secure if true, else the regular globe.
      */
     fun setSiteSecurity(secure: SiteSecurity) {
-        val (image, color) = when (secure) {
-            SiteSecurity.INSECURE -> Pair(mozac_ic_globe, securityIconColor.first)
-            SiteSecurity.SECURE -> Pair(mozac_ic_lock, securityIconColor.second)
+        @ColorInt val color = when (secure) {
+            SiteSecurity.INSECURE -> securityIconColor.first
+            SiteSecurity.SECURE -> securityIconColor.second
         }
-        siteSecurityIconView.apply {
-            setImageResource(image)
-            setColorFilter(color)
+        if (color == Color.TRANSPARENT) {
+            siteSecurityIconView.clearColorFilter()
+        } else {
+            siteSecurityIconView.setColorFilter(color)
         }
 
+        siteSecurityIconView.siteSecurity = secure
         currentSiteSecurity = secure
+    }
+
+    /**
+     * Sets the site's tracking protection status, as a result the visibility of the tracking
+     * protection icon and the separator icon could change:
+     * [ON_NO_TRACKERS_BLOCKED] ,[ON_TRACKERS_BLOCKED] and [OFF_FOR_A_SITE] -> icon and separator
+     * are visible
+     * [OFF_GLOBALLY] -> icon and separator are gone.
+     */
+    fun setTrackingProtectionState(state: SiteTrackingProtection) {
+        if (!displayTrackingProtectionIcon) {
+            siteTrackingProtection = state
+            return
+        }
+
+        val isSeparatorVisible = when (state) {
+            ON_NO_TRACKERS_BLOCKED, ON_TRACKERS_BLOCKED, OFF_FOR_A_SITE -> true
+            OFF_GLOBALLY -> false
+        }
+
+        separatorView.apply {
+            isVisible = if (displaySeparatorView) isSeparatorVisible else false
+            setColorFilter(separatorColor)
+        }
+
+        trackingProtectionIconView.siteTrackingProtection = state
+        siteTrackingProtection = state
+    }
+
+    internal fun setTrackingProtectionIcons(
+        iconOnNoTrackersBlocked: Drawable,
+        iconOnTrackersBlocked: Drawable,
+        iconDisabledForSite: Drawable
+    ) {
+
+        trackingProtectionIconView.setIcons(
+            iconOnNoTrackersBlocked,
+            iconOnTrackersBlocked,
+            iconDisabledForSite
+        )
     }
 
     /**
@@ -297,15 +388,18 @@ internal class DisplayToolbar(
         val height = MeasureSpec.getSize(heightMeasureSpec)
 
         val fixedHeightSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
-        val thirdFixedHeightSpec = MeasureSpec
-                .makeMeasureSpec(height / MEASURED_HEIGHT_THIRD_DENOMINATOR, MeasureSpec.EXACTLY)
+        val halfFixedHeightSpec = MeasureSpec
+                .makeMeasureSpec(height / MEASURED_HEIGHT_DENOMINATOR, MeasureSpec.EXACTLY)
         setMeasuredDimension(width, height)
 
-        // The icon and menu fill the whole height and have a square shape
-        val iconSize = height
+        // The security indicator and menu fill the whole height and have a square shape
         val squareSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
+        measureTrackingProtectionViewsIfNeeded(squareSpec)
+
         siteSecurityIconView.measure(squareSpec, squareSpec)
         menuView.measure(squareSpec, squareSpec)
+
+        val iconsWidth = siteSecurityIconView.measuredWidth + getTrackingProtectionMeasuredWidth()
 
         // Measure all actions and use the available height for determining the size (square shape)
         val navigationActionsWidth = measureActions(navigationActions, size = height)
@@ -314,18 +408,24 @@ internal class DisplayToolbar(
 
         // The url uses whatever space is left. Subtract the icon and (optionally) the menu
         val menuWidth = if (menuView.isVisible) height else 0
-        val urlWidth = (width - iconSize - browserActionsWidth - pageActionsWidth -
+        val urlWidth = (width - iconsWidth - browserActionsWidth - pageActionsWidth -
             menuWidth - navigationActionsWidth - 2 * urlBoxMargin)
         val urlWidthSpec = MeasureSpec.makeMeasureSpec(urlWidth, MeasureSpec.EXACTLY)
 
         if (titleView.isVisible) {
             /* With a title view, the url and title split the rest of the space vertically. The
             title view and url should be centered as a singular unit in the middle third. */
-            titleView.measure(urlWidthSpec, thirdFixedHeightSpec)
-            urlView.measure(urlWidthSpec, thirdFixedHeightSpec)
+            titleView.measure(urlWidthSpec, halfFixedHeightSpec)
+            titleView.adjustMaxTextSize(halfFixedHeightSpec)
+            titleView.gravity = Gravity.BOTTOM
+            urlView.measure(urlWidthSpec, halfFixedHeightSpec)
+            urlView.adjustMaxTextSize(halfFixedHeightSpec)
+            urlView.gravity = Gravity.TOP
         } else {
             // With no title view, the url view takes up the rest of the space
             urlView.measure(urlWidthSpec, fixedHeightSpec)
+            urlView.adjustMaxTextSize(fixedHeightSpec)
+            urlView.gravity = Gravity.CENTER_VERTICAL
         }
 
         val progressHeightSpec = MeasureSpec.makeMeasureSpec(
@@ -335,7 +435,7 @@ internal class DisplayToolbar(
 
         urlBoxView?.let {
             val urlBoxWidthSpec = MeasureSpec.makeMeasureSpec(
-                iconSize + urlWidth + pageActionsWidth - 2 * urlBoxMargin,
+                iconsWidth + urlWidth + pageActionsWidth - 2 * urlBoxMargin,
                 MeasureSpec.EXACTLY
             )
             it.measure(urlBoxWidthSpec, fixedHeightSpec)
@@ -363,34 +463,39 @@ internal class DisplayToolbar(
                 usedWidth + view.measuredWidth
             }
 
-        // The icon is always on the far left side of the toolbar. We cam lay it out even if it's
-        // not going to be displayed:
-        //   +-------------+------+-----------------------------------------+
-        //   | navigation  | icon |                                         |
-        //   |   actions   |      |                                         |
-        //   +-------------+------+-----------------------------------------+
+        // The security indicator is always on the far left side of the toolbar. We can lay it out
+        // even if it is not going to be displayed. While the tracking protection and its separator
+        // are not always visible, we don't lay them out, if they are not visible:
+        //   +-------------+-------+-----------------------------------------+
+        //   | navigation  | icons |                                         |
+        //   |   actions   |       |                                         |
+        //   +-------------+-------+-----------------------------------------+
+
+        val (leftSecurityIcon, rightSecurityIcon) = layoutTrackingProtectionViewIfNeeded(
+            navigationActionsWidth
+        )
 
         siteSecurityIconView.layout(
-            navigationActionsWidth,
+            leftSecurityIcon,
             0,
-            navigationActionsWidth + siteSecurityIconView.measuredWidth,
+            rightSecurityIcon,
             measuredHeight
         )
 
         // The menu is always on the far right side of the toolbar:
-        //   +-------------+------+----------------------------------+------+
-        //   | navigation  | icon |                                  | menu |
-        //   |   actions   |      |                                  |      |
-        //   +-------------+------+----------------------------------+------+
+        //   +-------------+-------+----------------------------------+------+
+        //   | navigation  | icons |                                  | menu |
+        //   |   actions   |       |                                  |      |
+        //   +-------------+-------+----------------------------------+------+
 
         val menuWidth = if (menuView.isVisible) height else 0
         menuView.layout(measuredWidth - menuView.measuredWidth, 0, measuredWidth, measuredHeight)
 
         // Now we add browser actions from the left side of the menu to the right (in reversed order):
-        //   +-------------+------+-----------------------+----------+------+
-        //   | navigation  | icon |                       | browser  | menu |
-        //   |   actions   |      |                       | actions  |      |
-        //   +-------------+------+-----------------------+----------+------+
+        //   +-------------+-------+-----------------------+----------+------+
+        //   | navigation  | icons |                       | browser  | menu |
+        //   |   actions   |       |                       | actions  |      |
+        //   +-------------+-------+-----------------------+----------+------+
 
         val browserActionWidth = browserActions
             .mapNotNull { it.view }
@@ -407,10 +512,10 @@ internal class DisplayToolbar(
             }
 
         // After browser actions we add page actions from the right to the left (in reversed order)
-        //   +-------------+------+-----------------------+----------+------+
-        //   | navigation  | icon |           [ page    ] | browser  | menu |
-        //   |   actions   |      |           [ actions ] | actions  |      |
-        //   +-------------+------+-----------------------+----------+------+
+        //   +-------------+--------+-----------------------+----------+------+
+        //   | navigation  | icons  |           [ page    ] | browser  | menu |
+        //   |   actions   |        |           [ actions ] | actions  |      |
+        //   +-------------+--------+-----------------------+----------+------+
 
         pageActions
             .mapNotNull { it.view }
@@ -425,33 +530,32 @@ internal class DisplayToolbar(
             }
 
         // Finally the URL uses whatever space is left:
-        //   +-------------+------+-----------------------+----------+------+
-        //   | navigation  | icon | url       [ page    ] | browser  | menu |
-        //   |   actions   |      |           [ actions ] | actions  |      |
-        //   +-------------+------+-----------------------+----------+------+
-        val iconWidth = if (siteSecurityIconView.isVisible) siteSecurityIconView.measuredWidth else 0
-        val urlLeft = navigationActionsWidth + iconWidth + urlBoxMargin
+        //   +-------------+--------+-----------------------+----------+------+
+        //   | navigation  | icons  | url       [ page    ] | browser  | menu |
+        //   |   actions   |        |           [ actions ] | actions  |      |
+        //   +-------------+--------+-----------------------+----------+------+
+        val iconsWidth = if (siteSecurityIconView.isVisible) {
+            siteSecurityIconView.measuredWidth + getTrackingProtectionMeasuredWidth()
+        } else 0
+
+        val urlLeft = navigationActionsWidth + iconsWidth + urlBoxMargin
 
         // If the titleView is visible, it will appear above the URL:
-        //   +-------------+------+-----------------------+----------+------+
-        //   | navigation  | icon |  title       [ page    ] | browser  | menu |
-        //   |   actions   |      |  url         [ actions ] | actions  |      |
-        //   +-------------+------+-----------------------+----------+------+
+        //   +-------------+-----------+-----------------------+----------+------+
+        //   | navigation  | icons  |  title       [ page    ] | browser  | menu |
+        //   |   actions   |        |  url         [ actions ] | actions  |      |
+        //   +-------------+-----------+-----------------------+----------+------+
         if (titleView.isVisible) {
-            val totalTextHeights = urlView.measuredHeight + titleView.measuredHeight
-            val totalAvailablePadding = height - totalTextHeights
-            val padding = totalAvailablePadding / MEASURED_HEIGHT_DENOMINATOR
-
             titleView.layout(
                     urlLeft,
-                    padding,
+                    0,
                     urlLeft + titleView.measuredWidth,
-                    padding + titleView.measuredHeight)
+                    titleView.measuredHeight)
             urlView.layout(
                     urlLeft,
-                    padding + titleView.measuredHeight,
+                    titleView.measuredHeight,
                     urlLeft + urlView.measuredWidth,
-                    padding + titleView.measuredHeight + urlView.measuredHeight)
+                    titleView.measuredHeight + urlView.measuredHeight)
         } else {
             urlView.layout(urlLeft, 0, urlLeft + urlView.measuredWidth, measuredHeight)
         }
@@ -472,12 +576,79 @@ internal class DisplayToolbar(
         }
     }
 
+    fun onStop() {
+        menuView.dismissMenu()
+    }
+
+    /**
+     * Layout the tracking protection views if they are visible and returns where the [siteSecurityIconView]
+     * must be layout (left and right) coordinates.
+     */
+    @VisibleForTesting
+    internal fun layoutTrackingProtectionViewIfNeeded(navigationActionsWidth: Int): Pair<Int, Int> {
+        val trackingProtectionWidth = trackingProtectionIconView.measuredWidth
+        val separatorWidth = getSeparatorMeasuredWidth()
+        val securityWidth = siteSecurityIconView.measuredWidth
+
+        return if (shouldTrackingProtectionViewBeVisible()) {
+            trackingProtectionIconView.layout(
+                navigationActionsWidth,
+                0,
+                navigationActionsWidth + trackingProtectionWidth,
+                measuredHeight
+            )
+
+            if (displaySeparatorView) {
+                separatorView.layout(
+                    navigationActionsWidth + trackingProtectionWidth,
+                    0,
+                    separatorWidth + navigationActionsWidth + trackingProtectionWidth,
+                    measuredHeight
+                )
+            }
+
+            navigationActionsWidth + separatorWidth + trackingProtectionWidth to
+                navigationActionsWidth + separatorWidth + securityWidth + trackingProtectionWidth
+        } else {
+            navigationActionsWidth to navigationActionsWidth + securityWidth
+        }
+    }
+
+    private fun getTrackingProtectionMeasuredWidth(): Int {
+        return if (trackingProtectionIconView.isVisible) {
+            trackingProtectionIconView.measuredWidth + getSeparatorMeasuredWidth()
+        } else 0
+    }
+
+    private fun getSeparatorMeasuredWidth(): Int {
+        return if (displaySeparatorView) separatorView.measuredWidth else 0
+    }
+
+    private fun measureTrackingProtectionViewsIfNeeded(squareSpec: Int) {
+        if (shouldTrackingProtectionViewBeVisible()) {
+            trackingProtectionIconView.measure(squareSpec, squareSpec)
+
+            if (displaySeparatorView) {
+                val height =
+                    resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_icons_separator_height)
+                val width =
+                    resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_icons_separator_width)
+                separatorView.measure(width, height)
+            }
+        }
+    }
+
+    private fun shouldTrackingProtectionViewBeVisible(): Boolean {
+        val visibleStates = arrayOf(ON_NO_TRACKERS_BLOCKED, ON_TRACKERS_BLOCKED, OFF_FOR_A_SITE)
+        val isAVisibleSate = visibleStates.any { it == siteTrackingProtection }
+
+        return displayTrackingProtectionIcon && isAVisibleSate
+    }
+
     companion object {
-        internal const val MEASURED_HEIGHT_THIRD_DENOMINATOR = 3
         internal const val MEASURED_HEIGHT_DENOMINATOR = 2
 
         internal const val BOTTOM_PROGRESS_BAR = 0
         private const val TOP_PROGRESS_BAR = 1
-        private const val URL_TEXT_SIZE_SP = 15f
     }
 }

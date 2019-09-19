@@ -29,13 +29,15 @@ import androidx.browser.customtabs.CustomTabsIntent.KEY_PENDING_INTENT
 import androidx.browser.customtabs.CustomTabsIntent.NO_TITLE
 import androidx.browser.customtabs.CustomTabsIntent.SHOW_PAGE_TITLE
 import androidx.browser.customtabs.CustomTabsIntent.TOOLBAR_ACTION_BUTTON_ID
-import mozilla.components.browser.session.tab.CustomTabActionButtonConfig
-import mozilla.components.browser.session.tab.CustomTabConfig
-import mozilla.components.browser.session.tab.CustomTabMenuItem
+import androidx.browser.customtabs.CustomTabsSessionToken
+import androidx.browser.customtabs.TrustedWebUtils.EXTRA_LAUNCH_AS_TRUSTED_WEB_ACTIVITY
+import mozilla.components.browser.state.state.CustomTabActionButtonConfig
+import mozilla.components.browser.state.state.CustomTabConfig
+import mozilla.components.browser.state.state.CustomTabConfig.Companion.EXTRA_NAVIGATION_BAR_COLOR
+import mozilla.components.browser.state.state.CustomTabMenuItem
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.toSafeBundle
 import mozilla.components.support.utils.toSafeIntent
-import java.util.UUID
 import kotlin.math.max
 
 /**
@@ -49,10 +51,27 @@ fun isCustomTabIntent(intent: Intent) = isCustomTabIntent(intent.toSafeIntent())
 /**
  * Checks if the provided intent is a custom tab intent.
  *
- * @param intent the intent to check, wrapped as a SafeIntent.
+ * @param safeIntent the intent to check, wrapped as a SafeIntent.
  * @return true if the intent is a custom tab intent, otherwise false.
  */
 fun isCustomTabIntent(safeIntent: SafeIntent) = safeIntent.hasExtra(EXTRA_SESSION)
+
+/**
+ * Checks if the provided intent is a trusted web activity intent.
+ *
+ * @param intent the intent to check.
+ * @return true if the intent is a trusted web activity intent, otherwise false.
+ */
+fun isTrustedWebActivityIntent(intent: Intent) = isTrustedWebActivityIntent(intent.toSafeIntent())
+
+/**
+ * Checks if the provided intent is a trusted web activity intent.
+ *
+ * @param safeIntent the intent to check, wrapped as a SafeIntent.
+ * @return true if the intent is a trusted web activity intent, otherwise false.
+ */
+fun isTrustedWebActivityIntent(safeIntent: SafeIntent) = isCustomTabIntent(safeIntent) &&
+    safeIntent.getBooleanExtra(EXTRA_LAUNCH_AS_TRUSTED_WEB_ACTIVITY, false)
 
 /**
  * Creates a [CustomTabConfig] instance based on the provided intent.
@@ -63,20 +82,26 @@ fun isCustomTabIntent(safeIntent: SafeIntent) = safeIntent.hasExtra(EXTRA_SESSIO
  */
 fun createCustomTabConfigFromIntent(
     intent: Intent,
-    resources: Resources
+    resources: Resources?
 ): CustomTabConfig {
     val safeIntent = intent.toSafeIntent()
 
     return CustomTabConfig(
-        id = UUID.randomUUID().toString(),
         toolbarColor = safeIntent.getColorExtra(EXTRA_TOOLBAR_COLOR),
+        navigationBarColor = safeIntent.getColorExtra(EXTRA_NAVIGATION_BAR_COLOR),
         closeButtonIcon = getCloseButtonIcon(safeIntent, resources),
         enableUrlbarHiding = safeIntent.getBooleanExtra(EXTRA_ENABLE_URLBAR_HIDING, false),
         actionButtonConfig = getActionButtonConfig(safeIntent),
         showShareMenuItem = safeIntent.getBooleanExtra(EXTRA_DEFAULT_SHARE_MENU_ITEM, false),
         menuItems = getMenuItems(safeIntent),
         exitAnimations = safeIntent.getBundleExtra(EXTRA_EXIT_ANIMATION_BUNDLE)?.unsafe,
-        titleVisible = safeIntent.getIntExtra(EXTRA_TITLE_VISIBILITY_STATE, NO_TITLE) == SHOW_PAGE_TITLE
+        titleVisible = safeIntent.getIntExtra(EXTRA_TITLE_VISIBILITY_STATE, NO_TITLE) == SHOW_PAGE_TITLE,
+        sessionToken = if (intent.extras != null) {
+            // getSessionTokenFromIntent throws if extras is null
+            CustomTabsSessionToken.getSessionTokenFromIntent(intent)
+        } else {
+            null
+        }
     )
 }
 
@@ -84,9 +109,9 @@ fun createCustomTabConfigFromIntent(
 private fun SafeIntent.getColorExtra(name: String): Int? =
     if (hasExtra(name)) getIntExtra(name, 0) else null
 
-private fun getCloseButtonIcon(intent: SafeIntent, resources: Resources): Bitmap? {
+private fun getCloseButtonIcon(intent: SafeIntent, resources: Resources?): Bitmap? {
     val icon = intent.getParcelableExtra(EXTRA_CLOSE_BUTTON_ICON) as? Bitmap
-    val maxSize = resources.getDimension(R.dimen.mozac_feature_customtabs_max_close_button_size)
+    val maxSize = resources?.getDimension(R.dimen.mozac_feature_customtabs_max_close_button_size) ?: Float.MAX_VALUE
 
     return if (icon != null && max(icon.width, icon.height) <= maxSize) {
         icon

@@ -2,7 +2,7 @@
 
 # DownloadUtils
 
-`object DownloadUtils` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/DownloadUtils.kt#L31)
+`object DownloadUtils` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/DownloadUtils.kt#L30)
 
 ### Functions
 

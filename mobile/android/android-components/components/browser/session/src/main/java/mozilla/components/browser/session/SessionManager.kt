@@ -8,6 +8,9 @@ import mozilla.components.browser.session.ext.syncDispatch
 import mozilla.components.browser.session.ext.toCustomTabSessionState
 import mozilla.components.browser.session.ext.toTabSessionState
 import mozilla.components.browser.state.action.CustomTabListAction
+import mozilla.components.browser.state.action.EngineAction.LinkEngineSessionAction
+import mozilla.components.browser.state.action.EngineAction.UpdateEngineSessionStateAction
+import mozilla.components.browser.state.action.EngineAction.UnlinkEngineSessionAction
 import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.store.BrowserStore
@@ -24,8 +27,24 @@ import java.lang.IllegalArgumentException
 class SessionManager(
     val engine: Engine,
     private val store: BrowserStore? = null,
-    private val delegate: LegacySessionManager = LegacySessionManager(engine)
+    private val delegate: LegacySessionManager = LegacySessionManager(engine, EngineSessionLinker(store))
 ) : Observable<SessionManager.Observer> by delegate {
+
+    /**
+     * This class only exists for migrating from browser-session
+     * to browser-state. We need a way to dispatch the corresponding browser
+     * actions when an engine session is linked and unlinked.
+     */
+    class EngineSessionLinker(private val store: BrowserStore?) {
+        fun link(session: Session, engineSession: EngineSession) {
+            store?.syncDispatch(LinkEngineSessionAction(session.id, engineSession))
+        }
+
+        fun unlink(session: Session) {
+            store?.syncDispatch(UnlinkEngineSessionAction(session.id))
+        }
+    }
+
     /**
      * Returns the number of session including CustomTab sessions.
      */
@@ -158,15 +177,16 @@ class SessionManager(
 
         delegate.restore(snapshot, updateSelection)
 
-        val tabs = snapshot.sessions
+        val items = snapshot.sessions
             .filter {
                 // A restored snapshot should not contain any custom tab so we should be able to safely ignore
                 // them here.
                 !it.session.isCustomTabSession()
             }
-            .map { item ->
-                item.session.toTabSessionState()
-            }
+
+        val tabs = items.map { item ->
+            item.session.toTabSessionState()
+        }
 
         val selectedTabId = if (updateSelection && snapshot.selectedSessionIndex != NO_SELECTION) {
             val index = snapshot.selectedSessionIndex
@@ -180,6 +200,11 @@ class SessionManager(
         }
 
         store?.syncDispatch(TabListAction.RestoreAction(tabs, selectedTabId))
+
+        items.forEach { item ->
+            item.engineSession?.let { store?.syncDispatch(LinkEngineSessionAction(item.session.id, it)) }
+            item.engineSessionState?.let { store?.syncDispatch(UpdateEngineSessionStateAction(item.session.id, it)) }
+        }
     }
 
     /**

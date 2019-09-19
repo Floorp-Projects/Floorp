@@ -19,15 +19,15 @@ interface WindowRequest {
     val url: String
 
     /**
-     * Prepares the provided [EngineSession] for the window request. This
-     * is used to attach state (e.g. a native session) to the engine session.
+     * Prepares an [EngineSession] for the window request. This is used to
+     * attach state (e.g. a native session or view) to the engine session.
      *
-     * @param engineSession the engine session to prepare.
+     * @return the prepared and ready-to-use [EngineSession].
      */
-    fun prepare(engineSession: EngineSession)
+    fun prepare(): EngineSession
 
     /**
      * Starts the window request.
      */
-    fun start()
+    fun start() = Unit
 }

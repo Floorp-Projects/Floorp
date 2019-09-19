@@ -19,13 +19,14 @@ Be mindful to call [onStartDownload](on-start-download.md) when you want to star
 
 | Name | Summary |
 |---|---|
+| [onCancelDownload](on-cancel-download.md) | `var onCancelDownload: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onStartDownload](on-start-download.md) | `var onStartDownload: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>A callback to trigger a download, call it when you are ready to start a download. For instance, a valid use case can be in confirmation dialog, after the positive button is clicked, this callback must be called. |
 
 ### Functions
 
 | Name | Summary |
 |---|---|
-| [setDownload](set-download.md) | `fun setDownload(download: `[`Download`](../../mozilla.components.browser.session/-download/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>add the metadata of this download object to the arguments of this fragment. |
+| [setDownload](set-download.md) | `fun setDownload(download: `[`DownloadState`](../../mozilla.components.browser.state.state.content/-download-state/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>add the metadata of this download object to the arguments of this fragment. |
 
 ### Companion Object Properties
 

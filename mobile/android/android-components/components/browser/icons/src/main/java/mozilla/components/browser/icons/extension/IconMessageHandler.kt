@@ -30,7 +30,7 @@ internal class IconMessageHandler(
 
     override fun onMessage(message: Any, source: EngineSession?): Any {
         if (message is JSONObject) {
-            message.toIconRequest()?.let { loadRequest(it) }
+            message.toIconRequest(session.private)?.let { loadRequest(it) }
         } else {
             throw IllegalStateException("Received unexpected message: $message")
         }

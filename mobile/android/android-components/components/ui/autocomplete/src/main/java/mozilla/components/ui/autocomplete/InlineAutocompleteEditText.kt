@@ -399,7 +399,6 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
      *
      * @param result the [AutocompleteResult] to apply
      */
-    @Suppress("ComplexMethod", "ReturnCount", "LongMethod")
     override fun applyAutocompleteResult(result: AutocompleteResult) {
         // If discardAutoCompleteResult is true, we temporarily disabled
         // autocomplete (due to backspacing, etc.) and we should bail early.
@@ -413,97 +412,110 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         }
 
         val text = text
-        val textLength = text.length
-        val resultLength = result.text.length
         val autoCompleteStart = text.getSpanStart(AUTOCOMPLETE_SPAN)
         autocompleteResult = result
 
         if (autoCompleteStart > -1) {
             // Autocomplete text already exists; we should replace existing autocomplete text.
-
-            // If the result and the current text don't have the same prefixes,
-            // the result is stale and we should wait for the another result to come in.
-            if (!TextUtils.regionMatches(result.text, 0, text, 0, autoCompleteStart)) {
-                return
-            }
-
-            beginSettingAutocomplete()
-
-            // Replace the existing autocomplete text with new one.
-            // replace() preserves the autocomplete spans that we set before.
-            text.replace(autoCompleteStart, textLength, result.text, autoCompleteStart, resultLength)
-
-            // Reshow the cursor if there is no longer any autocomplete text.
-            if (autoCompleteStart == resultLength) {
-                isCursorVisible = true
-            }
-
-            endSettingAutocomplete()
+            replaceAutocompleteText(result, autoCompleteStart)
         } else {
             // No autocomplete text yet; we should add autocomplete text
-
-            // If the result prefix doesn't match the current text,
-            // the result is stale and we should wait for the another result to come in.
-            if (resultLength <= textLength || !TextUtils.regionMatches(result.text, 0, text, 0, textLength)) {
-                return
-            }
-
-            val spans = text.getSpans(textLength, textLength, Any::class.java)
-            val spanStarts = IntArray(spans.size)
-            val spanEnds = IntArray(spans.size)
-            val spanFlags = IntArray(spans.size)
-
-            // Save selection/composing span bounds so we can restore them later.
-            for (i in spans.indices) {
-                val span = spans[i]
-                val spanFlag = text.getSpanFlags(span)
-
-                // We don't care about spans that are not selection or composing spans.
-                // For those spans, spanFlag[i] will be 0 and we don't restore them.
-                if (spanFlag and Spanned.SPAN_COMPOSING == 0 &&
-                        span !== Selection.SELECTION_START &&
-                        span !== Selection.SELECTION_END) {
-                    continue
-                }
-
-                spanStarts[i] = text.getSpanStart(span)
-                spanEnds[i] = text.getSpanEnd(span)
-                spanFlags[i] = spanFlag
-            }
-
-            beginSettingAutocomplete()
-
-            // First add trailing text.
-            text.append(result.text, textLength, resultLength)
-
-            // Restore selection/composing spans.
-            for (i in spans.indices) {
-                val spanFlag = spanFlags[i]
-                if (spanFlag == 0) {
-                    // Skip if the span was ignored before.
-                    continue
-                }
-                text.setSpan(spans[i], spanStarts[i], spanEnds[i], spanFlag)
-            }
-
-            // Mark added text as autocomplete text.
-            for (span in autoCompleteSpans!!) {
-                text.setSpan(span, textLength, resultLength, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            }
-
-            // Hide the cursor.
-            isCursorVisible = false
-
-            // Make sure the autocomplete text is visible. If the autocomplete text is too
-            // long, it would appear the cursor will be scrolled out of view. However, this
-            // is not the case in practice, because EditText still makes sure the cursor is
-            // still in view.
-            bringPointIntoView(resultLength)
-
-            endSettingAutocomplete()
+            addAutocompleteText(result)
         }
 
         announceForAccessibility(text.toString())
+    }
+
+    private fun replaceAutocompleteText(result: AutocompleteResult, autoCompleteStart: Int) {
+        // Autocomplete text already exists; we should replace existing autocomplete text.
+        val text = text
+        val resultLength = result.text.length
+
+        // If the result and the current text don't have the same prefixes,
+        // the result is stale and we should wait for the another result to come in.
+        if (!TextUtils.regionMatches(result.text, 0, text, 0, autoCompleteStart)) {
+            return
+        }
+
+        beginSettingAutocomplete()
+
+        // Replace the existing autocomplete text with new one.
+        // replace() preserves the autocomplete spans that we set before.
+        text.replace(autoCompleteStart, text.length, result.text, autoCompleteStart, resultLength)
+
+        // Reshow the cursor if there is no longer any autocomplete text.
+        if (autoCompleteStart == resultLength) {
+            isCursorVisible = true
+        }
+
+        endSettingAutocomplete()
+    }
+
+    private fun addAutocompleteText(result: AutocompleteResult) {
+        // No autocomplete text yet; we should add autocomplete text
+        val text = text
+        val textLength = text.length
+        val resultLength = result.text.length
+
+        // If the result prefix doesn't match the current text,
+        // the result is stale and we should wait for the another result to come in.
+        if (resultLength <= textLength || !TextUtils.regionMatches(result.text, 0, text, 0, textLength)) {
+            return
+        }
+
+        val spans = text.getSpans(textLength, textLength, Any::class.java)
+        val spanStarts = IntArray(spans.size)
+        val spanEnds = IntArray(spans.size)
+        val spanFlags = IntArray(spans.size)
+
+        // Save selection/composing span bounds so we can restore them later.
+        for (i in spans.indices) {
+            val span = spans[i]
+            val spanFlag = text.getSpanFlags(span)
+
+            // We don't care about spans that are not selection or composing spans.
+            // For those spans, spanFlag[i] will be 0 and we don't restore them.
+            if (spanFlag and Spanned.SPAN_COMPOSING == 0 &&
+                span !== Selection.SELECTION_START &&
+                span !== Selection.SELECTION_END) {
+                continue
+            }
+
+            spanStarts[i] = text.getSpanStart(span)
+            spanEnds[i] = text.getSpanEnd(span)
+            spanFlags[i] = spanFlag
+        }
+
+        beginSettingAutocomplete()
+
+        // First add trailing text.
+        text.append(result.text, textLength, resultLength)
+
+        // Restore selection/composing spans.
+        for (i in spans.indices) {
+            val spanFlag = spanFlags[i]
+            if (spanFlag == 0) {
+                // Skip if the span was ignored before.
+                continue
+            }
+            text.setSpan(spans[i], spanStarts[i], spanEnds[i], spanFlag)
+        }
+
+        // Mark added text as autocomplete text.
+        for (span in autoCompleteSpans!!) {
+            text.setSpan(span, textLength, resultLength, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+
+        // Hide the cursor.
+        isCursorVisible = false
+
+        // Make sure the autocomplete text is visible. If the autocomplete text is too
+        // long, it would appear the cursor will be scrolled out of view. However, this
+        // is not the case in practice, because EditText still makes sure the cursor is
+        // still in view.
+        bringPointIntoView(resultLength)
+
+        endSettingAutocomplete()
     }
 
     override fun noAutocompleteResult() {
@@ -592,7 +604,6 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
     private inner class TextChangeListener : TextWatcher {
         private var textLengthBeforeChange: Int = 0
 
-        @SuppressWarnings("LongMethod")
         override fun afterTextChanged(editable: Editable) {
             if (!isEnabled || settingAutoComplete) {
                 return

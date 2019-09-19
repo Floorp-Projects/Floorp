@@ -2,7 +2,7 @@
 
 # FOLLOW
 
-`FOLLOW` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L131)
+`FOLLOW` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L132)
 
 Automatically follow redirects.
 

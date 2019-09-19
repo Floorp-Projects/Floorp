@@ -167,7 +167,6 @@ class BrowserIcons(
         loadIntoViewInternal(WeakReference(view), request, placeholder, error)
     }
 
-    @Suppress("LongMethod")
     @MainThread
     private suspend fun loadIntoViewInternal(
         view: WeakReference<ImageView>,
@@ -198,6 +197,10 @@ class BrowserIcons(
             view.get()?.removeOnAttachStateChangeListener(onAttachStateChangeListener)
             view.get()?.setTag(R.id.mozac_browser_icons_tag_job, null)
         }
+    }
+
+    fun onLowMemory() {
+        sharedMemoryCache.clear()
     }
 }
 

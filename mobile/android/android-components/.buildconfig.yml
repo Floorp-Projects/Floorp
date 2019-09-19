@@ -1,4 +1,4 @@
-componentsVersion: 6.0.0
+componentsVersion: 14.0.0
 projects:
   concept-awesomebar:
     path: components/concept/awesomebar
@@ -60,6 +60,10 @@ projects:
     path: components/feature/media
     description: 'Feature component for website media related features.'
     publish: true
+  feature-webnotifications:
+    path: components/feature/webnotifications
+    description: 'Feature component for Web Notifications.'
+    publish: true
   feature-readerview:
     path: components/feature/readerview
     description: 'Feature implementation providing a Reader View WebExtension.'
@@ -67,6 +71,10 @@ projects:
   feature-search:
     path: components/feature/search
     description: 'Feature implementation connecting an engine implementation with the search module.'
+    publish: true
+  feature-sendtab:
+    path: components/feature/sendtab
+    description: 'Feature of use cases for sending tabs between devices in an FxA Account.'
     publish: true
   feature-session:
     path: components/feature/session
@@ -112,6 +120,10 @@ projects:
     path: components/feature/qr
     description: 'A feature that provides functionality for scanning QR codes.'
     publish: true
+  feature-webcompat:
+    path: components/feature/webcompat
+    description: 'Feature that provides hotfixes for websites from Mozillas Web Compatibility team'
+    publish: true
   browser-awesomebar:
     path: components/browser/awesomebar
     description: 'A customizable awesomebar component for browsers.'
@@ -135,10 +147,6 @@ projects:
   browser-engine-system:
     path: components/browser/engine-system
     description: 'Engine implementation based on the system WebView.'
-    publish: true
-  browser-engine-servo:
-    path: components/browser/engine-servo
-    description: 'Engine implementation based on the Servo Browser Engine.'
     publish: true
   browser-errorpages:
     path: components/browser/errorpages
@@ -248,6 +256,10 @@ projects:
     path: components/support/android-test
     description: 'A collection of helpers for testing components from instrumented (on device) tests.'
     publish: true
+  support-test-appservices:
+    path: components/support/test-appservices
+    description: 'A component for synchronizing Application Services'' unit testing dependencies used in Android Components.'
+    publish: true
   support-utils:
     path: components/support/utils
     description: 'A collection of generic helper classes.'
@@ -256,9 +268,17 @@ projects:
     path: components/support/rustlog
     description: 'A bridge allowing log messages from Rust code to be sent to the log system in support-base'
     publish: true
+  support-rusthttp:
+    path: components/support/rusthttp
+    description: 'A bridge allowing configuration of Rust HTTP requests without directly depending on the application services library'
+    publish: true
   support-locale:
     path: components/support/locale
     description: 'A component to allow apps to change the system defined language by their custom one'
+    publish: true
+  support-webextensions:
+    path: components/support/webextensions
+    description: 'A component containing building blocks for features implemented as web extensions.'
     publish: true
   lib-crash:
     path: components/lib/crash

@@ -26,6 +26,9 @@ class ToolbarInteractorTest {
         override var private: Boolean = false
         override var title: String = ""
 
+        override var siteTrackingProtection: Toolbar.SiteTrackingProtection =
+            Toolbar.SiteTrackingProtection.OFF_GLOBALLY
+
         override fun setSearchTerms(searchTerms: String) {
             fail()
         }
@@ -37,6 +40,10 @@ class ToolbarInteractorTest {
         override fun onBackPressed(): Boolean {
             fail()
             return false
+        }
+
+        override fun onStop() {
+            fail()
         }
 
         override fun setOnUrlCommitListener(listener: (String) -> Boolean) {

@@ -33,6 +33,7 @@ dependencies {
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
+    implementation Dependencies.androidx_work_runtime
 
     testImplementation project(':support-test')
 

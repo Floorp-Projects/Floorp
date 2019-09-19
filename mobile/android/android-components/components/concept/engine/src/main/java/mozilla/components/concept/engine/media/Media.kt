@@ -12,13 +12,24 @@ import kotlin.properties.Delegates
  * Value type that represents a media element that is present on the currently displayed page in a session.
  */
 abstract class Media(
-    delegate: Observable<Media.Observer> = ObserverRegistry()
+    delegate: Observable<Observer> = ObserverRegistry()
 ) : Observable<Media.Observer> by delegate {
+    /**
+     * The current simplified [State] of this media element (derived from [playbackState] events).
+     */
+    var state: State by Delegates.observable(State.UNKNOWN) {
+        _, old, new -> notifyObservers(old, new) { onStateChanged(this@Media, new) }
+    }
+    private set
+
     /**
      * The current [PlaybackState] of this media element.
      */
-    var playbackState: PlaybackState by Delegates.observable(PlaybackState.UNKNOWN) {
-        _, old, new -> notifyObservers(old, new) { onPlaybackStateChanged(this@Media, new) }
+    var playbackState: PlaybackState by Delegates.observable(PlaybackState.UNKNOWN) { _, old, new ->
+        notifyObservers(old, new) { onPlaybackStateChanged(this@Media, new) }
+
+        // Derive a new simplified state from the playback state events.
+        state = deriveNextState(state, playbackState)
     }
 
     /**
@@ -27,10 +38,17 @@ abstract class Media(
     abstract val controller: Controller
 
     /**
+     * The [Metadata]
+     */
+    abstract val metadata: Metadata
+
+    /**
      * Interface to be implemented by classes that want to observe a media element.
      */
     interface Observer {
+        fun onStateChanged(media: Media, state: State) = Unit
         fun onPlaybackStateChanged(media: Media, playbackState: PlaybackState) = Unit
+        fun onMetadataChanged(media: Media, metadata: Metadata) = Unit
     }
 
     /**
@@ -56,6 +74,31 @@ abstract class Media(
          * Mutes/Unmutes the media.
          */
         fun setMuted(muted: Boolean)
+    }
+
+    /**
+     * A simplified media state deprived from the [playbackState] events.
+     */
+    enum class State {
+        /**
+         * Unknown. No state has been received from the engine yet.
+         */
+        UNKNOWN,
+
+        /**
+         * This [Media] is paused.
+         */
+        PAUSED,
+
+        /**
+         * This [Media] is currently playing.
+         */
+        PLAYING,
+
+        /**
+         * Playback of this [Media] has stopped (either completed or aborted).
+         */
+        STOPPED
     }
 
     // Implementation note: This is a 1:1 mapping of the playback states that GeckoView notifies us about. Maybe we
@@ -130,6 +173,15 @@ abstract class Media(
     }
 
     /**
+     * Metadata associated with [Media].
+     *
+     * @property duration Indicates the duration of the media in seconds.
+     */
+    data class Metadata(
+        val duration: Double = -1.0
+    )
+
+    /**
      * Helper method to notify observers.
      */
     private fun notifyObservers(old: Any, new: Any, block: Observer.() -> Unit) {
@@ -138,5 +190,22 @@ abstract class Media(
         }
     }
 
-    override fun toString(): String = "Media($playbackState)"
+    override fun toString(): String = "Media(state=$state,playbackState=$playbackState)"
+}
+
+/**
+ * Derives a simplified [Media.State] from the incoming [Media.PlaybackState] event.
+ */
+private fun deriveNextState(
+    previousState: Media.State,
+    playbackState: Media.PlaybackState
+): Media.State {
+    return when (playbackState) {
+        Media.PlaybackState.PLAY -> Media.State.PLAYING
+        Media.PlaybackState.PLAYING -> Media.State.PLAYING
+        Media.PlaybackState.PAUSE -> Media.State.PAUSED
+        Media.PlaybackState.ENDED -> Media.State.STOPPED
+        Media.PlaybackState.ABORT -> Media.State.STOPPED
+        else -> previousState
+    }
 }

@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`WindowFeature(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`)`
+`WindowFeature(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`)`
 
 Feature implementation for handling window requests.
 

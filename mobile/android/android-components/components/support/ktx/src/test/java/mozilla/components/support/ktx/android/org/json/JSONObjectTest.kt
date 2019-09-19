@@ -40,6 +40,19 @@ class JSONObjectTest {
     }
 
     @Test
+    fun tryGetNull() {
+        val jsonObject = JSONObject("""{"key":null}""")
+        assertNull(jsonObject.tryGet("key"))
+        assertNull(jsonObject.tryGet("another-key"))
+    }
+
+    @Test
+    fun tryGetNotNull() {
+        val jsonObject = JSONObject("""{"key":"value"}""")
+        assertEquals("value", jsonObject.tryGet("key"))
+    }
+
+    @Test
     fun tryGetStringNull() {
         val jsonObject = JSONObject("""{"key":null}""")
         assertNull(jsonObject.tryGetString("key"))

@@ -10,3 +10,4 @@
 |---|---|
 | [doNotAskAgain](do-not-ask-again.md) | `fun doNotAskAgain(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [isAllowed](is-allowed.md) | `fun isAllowed(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
+| [toggle](toggle.md) | `fun toggle(): `[`Status`](index.md) |

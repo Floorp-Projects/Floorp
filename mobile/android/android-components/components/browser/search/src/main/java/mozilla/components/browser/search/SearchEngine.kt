@@ -104,4 +104,6 @@ class SearchEngine internal constructor(
             return uri.toString()
         }
     }
+
+    override fun toString(): String = "SearchEngine($identifier)"
 }

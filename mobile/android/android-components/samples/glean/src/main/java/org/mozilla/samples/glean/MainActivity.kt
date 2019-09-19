@@ -9,7 +9,6 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import mozilla.components.service.experiments.Experiments
-import mozilla.components.service.glean.Glean
 import org.mozilla.samples.glean.GleanMetrics.Test
 import org.mozilla.samples.glean.GleanMetrics.BrowserEngagement
 import org.mozilla.samples.glean.library.SamplesGleanLibrary
@@ -44,11 +43,6 @@ open class MainActivity : AppCompatActivity() {
                             BrowserEngagement.clickKeys.key2 to "extra_value_2"
                     )
             )
-        }
-
-        // Generate pings on click by simulating Glean handling a background event.
-        buttonSendPing.setOnClickListener {
-            Glean.handleBackgroundEvent()
         }
 
         Test.testTimespan.stop()

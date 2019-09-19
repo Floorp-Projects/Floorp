@@ -62,9 +62,20 @@ class ExceptionHandlerTest {
     fun `ExceptionHandler invokes default exception handler`() {
         val defaultExceptionHandler: Thread.UncaughtExceptionHandler = mock()
 
+        val crashReporter = CrashReporter(
+                shouldPrompt = CrashReporter.Prompt.NEVER,
+                services = listOf(object : CrashReporterService {
+                    override fun report(crash: Crash.UncaughtExceptionCrash) {
+                    }
+
+                    override fun report(crash: Crash.NativeCodeCrash) {
+                    }
+                })
+        ).install(testContext)
+
         val handler = ExceptionHandler(
             testContext,
-            mock(),
+            crashReporter,
             defaultExceptionHandler
         )
 

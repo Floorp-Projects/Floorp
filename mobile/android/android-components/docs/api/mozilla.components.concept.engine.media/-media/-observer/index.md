@@ -2,7 +2,7 @@
 
 # Observer
 
-`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L32)
+`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L48)
 
 Interface to be implemented by classes that want to observe a media element.
 
@@ -10,4 +10,6 @@ Interface to be implemented by classes that want to observe a media element.
 
 | Name | Summary |
 |---|---|
+| [onMetadataChanged](on-metadata-changed.md) | `open fun onMetadataChanged(media: `[`Media`](../index.md)`, metadata: `[`Metadata`](../-metadata/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onPlaybackStateChanged](on-playback-state-changed.md) | `open fun onPlaybackStateChanged(media: `[`Media`](../index.md)`, playbackState: `[`PlaybackState`](../-playback-state/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [onStateChanged](on-state-changed.md) | `open fun onStateChanged(media: `[`Media`](../index.md)`, state: `[`State`](../-state/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

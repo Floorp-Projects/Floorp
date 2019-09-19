@@ -69,17 +69,18 @@ class TabsUseCases(
          * @param url The URL to be loaded in the new tab.
          * @param selectTab True (default) if the new tab should be selected immediately.
          * @param startLoading True (default) if the new tab should start loading immediately.
-         * @param parent the parent session to use for the newly created session.
+         * @param parentId the id of the parent tab to use for the newly created tab.
          * @param flags the [LoadUrlFlags] to use when loading the provided URL.
          */
         operator fun invoke(
             url: String,
             selectTab: Boolean = true,
             startLoading: Boolean = true,
-            parent: Session? = null,
+            parentId: String? = null,
             flags: LoadUrlFlags = LoadUrlFlags.none()
         ): Session {
             val session = Session(url, false, Source.NEW_TAB)
+            val parent = parentId?.let { sessionManager.findSessionById(parentId) }
             sessionManager.add(session, selected = selectTab, parent = parent)
 
             if (startLoading) {
@@ -110,17 +111,18 @@ class TabsUseCases(
          * @param url The URL to be loaded in the new tab.
          * @param selectTab True (default) if the new tab should be selected immediately.
          * @param startLoading True (default) if the new tab should start loading immediately.
-         * @param parent the parent session to use for the newly created session.
+         * @param parentId the id of the parent tab to use for the newly created tab.
          * @param flags the [LoadUrlFlags] to use when loading the provided URL.
          */
         operator fun invoke(
             url: String,
             selectTab: Boolean = true,
             startLoading: Boolean = true,
-            parent: Session? = null,
+            parentId: String? = null,
             flags: LoadUrlFlags = LoadUrlFlags.none()
         ): Session {
             val session = Session(url, true, Source.NEW_TAB)
+            val parent = parentId?.let { sessionManager.findSessionById(parentId) }
             sessionManager.add(session, selected = selectTab, parent = parent)
 
             if (startLoading) {

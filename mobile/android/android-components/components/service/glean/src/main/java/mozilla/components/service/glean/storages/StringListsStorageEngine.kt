@@ -111,7 +111,8 @@ internal open class StringListsStorageEngineImplementation(
     /**
      * Sets a string list in the desired stores. This function will replace the existing list or
      * create a new list if it doesn't already exist. To add or append to an existing list, use
-     * [add] function.
+     * [add] function. If an empty list is passed in, then an [ErrorType.InvalidValue] will be
+     * generated and the method will return without recording.
      *
      * @param metricData object with metric settings
      * @param value the string list value to record
@@ -130,6 +131,17 @@ internal open class StringListsStorageEngineImplementation(
                 )
             }
             it.take(MAX_STRING_LENGTH)
+        }
+
+        // Record an error when attempting to record a zero-length list and return.
+        if (stringList.count() == 0) {
+            recordError(
+                metricData,
+                ErrorType.InvalidValue,
+                "Attempt to set() an empty string list to ${metricData.identifier}",
+                logger
+            )
+            return
         }
 
         if (stringList.count() > MAX_LIST_LENGTH_VALUE) {

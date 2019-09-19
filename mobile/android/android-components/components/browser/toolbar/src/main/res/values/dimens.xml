@@ -7,11 +7,14 @@
 
     <!-- DisplayToolbar -->
     <dimen name="mozac_browser_toolbar_progress_bar_height">3dp</dimen>
+    <dimen name="mozac_browser_toolbar_icons_separator_height">24dp</dimen>
+    <dimen name="mozac_browser_toolbar_icons_separator_width">1dp</dimen>
     <dimen name="mozac_browser_toolbar_url_fading_edge_size">24dp</dimen>
     <dimen name="mozac_browser_toolbar_icon_padding">16dp</dimen>
     <dimen name="mozac_browser_toolbar_menu_padding">16dp</dimen>
 
     <!-- EditToolbar -->
-    <dimen name="mozac_browser_toolbar_url_padding">8dp</dimen>
+    <dimen name="mozac_browser_toolbar_url_horizontal_padding">8dp</dimen>
+    <dimen name="mozac_browser_toolbar_url_vertical_padding">0dp</dimen>
     <dimen name="mozac_browser_toolbar_cancel_padding">16dp</dimen>
 </resources>

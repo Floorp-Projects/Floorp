@@ -9,3 +9,4 @@
 | Name | Summary |
 |---|---|
 | [getReadableTextColor](get-readable-text-color.md) | `fun getReadableTextColor(backgroundColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Get text color (white or black) that is readable on top of the provided background color. |
+| [isDark](is-dark.md) | `fun isDark(color: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns true if the color is dark enough that white text should be used on top of it. |

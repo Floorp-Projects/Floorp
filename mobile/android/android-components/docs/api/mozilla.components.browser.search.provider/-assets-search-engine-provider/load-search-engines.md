@@ -2,7 +2,7 @@
 
 # loadSearchEngines
 
-`suspend fun loadSearchEngines(context: <ERROR CLASS>): `[`SearchEngineList`](../-search-engine-list/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/search/src/main/java/mozilla/components/browser/search/provider/AssetsSearchEngineProvider.kt#L46)
+`suspend fun loadSearchEngines(context: <ERROR CLASS>): `[`SearchEngineList`](../-search-engine-list/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/search/src/main/java/mozilla/components/browser/search/provider/AssetsSearchEngineProvider.kt#L47)
 
 Overrides [SearchEngineProvider.loadSearchEngines](../-search-engine-provider/load-search-engines.md)
 

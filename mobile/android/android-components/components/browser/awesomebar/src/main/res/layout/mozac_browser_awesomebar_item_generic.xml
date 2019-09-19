@@ -7,16 +7,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="56dp"
-    android:layout_marginEnd="16dp"
     android:background="?android:attr/selectableItemBackground"
     android:clickable="true"
-    android:focusable="true">
+    android:focusable="true"
+    android:paddingStart="20dp"
+    android:paddingEnd="16dp">
 
     <ImageView
         android:id="@+id/mozac_browser_awesomebar_icon"
         android:layout_width="24dp"
         android:layout_height="24dp"
-        android:layout_marginStart="20dp"
         android:importantForAccessibility="no"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"

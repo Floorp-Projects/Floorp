@@ -20,6 +20,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.fetch.Client
+import mozilla.components.feature.pwa.WebAppLauncherActivity.Companion.ACTION_PWA_LAUNCHER
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -166,6 +167,29 @@ class WebAppShortcutManagerTest {
     }
 
     @Test
+    fun `buildBasicShortcut uses session title as label by default`() = runBlockingTest {
+        setSdkInt(Build.VERSION_CODES.O)
+        val expectedTitle = "Internet for people, not profit — Mozilla"
+        val session = Session("https://mozilla.org")
+        session.title = expectedTitle
+        val shortcut = manager.buildBasicShortcut(context, session)
+
+        assertEquals(expectedTitle, shortcut.shortLabel)
+    }
+
+    @Test
+    fun `buildBasicShortcut can create a shortcut with a custom name`() = runBlockingTest {
+        setSdkInt(Build.VERSION_CODES.O)
+        val title = "Internet for people, not profit — Mozilla"
+        val expectedName = "Mozilla"
+        val session = Session("https://mozilla.org")
+        session.title = title
+        val shortcut = manager.buildBasicShortcut(context, session, expectedName)
+
+        assertEquals(expectedName, shortcut.shortLabel)
+    }
+
+    @Test
     fun `updateShortcuts no-op`() = runBlockingTest {
         val manifests = listOf(WebAppManifest(name = "Demo", startUrl = "https://example.com"))
         doReturn(null).`when`(manager).buildWebAppShortcut(context, manifests[0])
@@ -205,7 +229,7 @@ class WebAppShortcutManagerTest {
         assertEquals("https://example.com", shortcut.id)
         assertEquals("Demo", shortcut.longLabel)
         assertEquals("Demo", shortcut.shortLabel)
-        assertEquals(WebAppLauncherActivity.INTENT_ACTION, intent.action)
+        assertEquals(ACTION_PWA_LAUNCHER, intent.action)
         assertEquals("https://example.com".toUri(), intent.data)
     }
 

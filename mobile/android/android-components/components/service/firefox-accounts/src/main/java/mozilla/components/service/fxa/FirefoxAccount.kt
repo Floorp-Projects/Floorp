@@ -4,6 +4,7 @@
 
 package mozilla.components.service.fxa
 
+import android.net.Uri
 import kotlinx.coroutines.async
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -11,8 +12,8 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.plus
 import mozilla.appservices.fxaclient.FirefoxAccount as InternalFxAcct
-
 import mozilla.components.concept.sync.AccessTokenInfo
+import mozilla.components.concept.sync.AuthFlowUrl
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
@@ -90,12 +91,11 @@ class FirefoxAccount internal constructor(
     ) : this(InternalFxAcct(config, persistCallback))
 
     override fun close() {
-        deviceConstellation.stopPeriodicRefresh()
         job.cancel()
         inner.close()
     }
 
-    override fun registerPersistenceCallback(callback: mozilla.components.concept.sync.StatePersistenceCallback) {
+    override fun registerPersistenceCallback(callback: StatePersistenceCallback) {
         persistCallback.setCallback(callback)
     }
 
@@ -103,21 +103,24 @@ class FirefoxAccount internal constructor(
      * Constructs a URL used to begin the OAuth flow for the requested scopes and keys.
      *
      * @param scopes List of OAuth scopes for which the client wants access
-     * @param wantsKeys Fetch keys for end-to-end encryption of data from Mozilla-hosted services
      * @return Deferred<String> that resolves to the flow URL when complete
      */
-    override fun beginOAuthFlowAsync(scopes: Set<String>, wantsKeys: Boolean): Deferred<String?> {
+    override fun beginOAuthFlowAsync(scopes: Set<String>): Deferred<AuthFlowUrl?> {
         return scope.async {
             handleFxaExceptions(logger, "begin oauth flow", { null }) {
-                inner.beginOAuthFlow(scopes.toTypedArray(), wantsKeys)
+                val url = inner.beginOAuthFlow(scopes.toTypedArray())
+                val state = Uri.parse(url).getQueryParameter("state")!!
+                AuthFlowUrl(state, url)
             }
         }
     }
 
-    override fun beginPairingFlowAsync(pairingUrl: String, scopes: Set<String>): Deferred<String?> {
+    override fun beginPairingFlowAsync(pairingUrl: String, scopes: Set<String>): Deferred<AuthFlowUrl?> {
         return scope.async {
             handleFxaExceptions(logger, "begin oauth pairing flow", { null }) {
-                inner.beginPairingFlow(pairingUrl, scopes.toTypedArray())
+                val url = inner.beginPairingFlow(pairingUrl, scopes.toTypedArray())
+                val state = Uri.parse(url).getQueryParameter("state")!!
+                AuthFlowUrl(state, url)
             }
         }
     }
@@ -134,6 +137,28 @@ class FirefoxAccount internal constructor(
             handleFxaExceptions(logger, "getProfile", { null }) {
                 inner.getProfile(ignoreCache).into()
             }
+        }
+    }
+
+    /**
+     * Returns current FxA Device ID for an authenticated account.
+     *
+     * @return Current device's FxA ID, if available. `null` otherwise.
+     */
+    override fun getCurrentDeviceId(): String? {
+        return handleFxaExceptions(logger, "getCurrentDeviceId", { null }) {
+            inner.getCurrentDeviceId()
+        }
+    }
+
+    /**
+     * Returns session token for an authenticated account.
+     *
+     * @return Current account's session token, if available. `null` otherwise.
+     */
+    override fun getSessionToken(): String? {
+        return handleFxaExceptions(logger, "getSessionToken", { null }) {
+            inner.getSessionToken()
         }
     }
 
@@ -235,6 +260,25 @@ class FirefoxAccount internal constructor(
                 null
             }
             // Re-throw all other exceptions.
+        }
+    }
+
+    /**
+     * Reset internal account state and destroy current device record.
+     * Use this when device record is no longer relevant, e.g. while logging out. On success, other
+     * devices will no longer see the current device in their device lists.
+     *
+     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
+     * Failure indicates that we may have failed to destroy current device record. Nothing to do for
+     * the consumer; device record will be cleaned up eventually via TTL.
+     */
+    override fun disconnectAsync(): Deferred<Boolean> {
+        return scope.async {
+            // TODO can this ever throw FxaUnauthorizedException? would that even make sense? or is that a bug?
+            handleFxaExceptions(logger, "disconnect", { false }) {
+                inner.disconnect()
+                true
+            }
         }
     }
 

@@ -14,6 +14,7 @@ import android.view.View
 import android.view.View.OnFocusChangeListener
 import android.view.ViewGroup
 import android.widget.ImageButton
+import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.forEach
@@ -30,6 +31,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar.Companion.BOTTOM_PROGRESS_BAR
+import mozilla.components.browser.toolbar.display.TrackingProtectionIconView
 import mozilla.components.browser.toolbar.edit.EditToolbar
 import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.AutocompleteResult
@@ -102,6 +104,16 @@ class BrowserToolbar @JvmOverloads constructor(
         }
 
     /**
+     * Set/Get whether a separator view should be visible between the tracking protection icon and
+     * the security indicator icon.
+     */
+    var displaySeparatorView: Boolean
+        get() = displayToolbar.displaySeparatorView
+        set(value) {
+            displayToolbar.displaySeparatorView = value
+        }
+
+    /**
      * Set/Get whether a site security icon (usually a lock or globe icon) should be visible next to the URL.
      */
     var displaySiteSecurityIcon: Boolean
@@ -111,8 +123,17 @@ class BrowserToolbar @JvmOverloads constructor(
         }
 
     /**
-     *  Set/Get the site security icon colours (usually a lock or globe icon). It uses a pair of integers
-     *  which represent the insecure and secure colours respectively.
+     * Set/Get the site security icon (usually a lock and globe icon). It uses a
+     * [android.graphics.drawable.StateListDrawable] where "state_site_secure" represents the secure
+     * icon and empty state represents the insecure icon.
+     */
+    var siteSecurityIcon
+        get() = displayToolbar.securityIcon
+        set(value) { displayToolbar.securityIcon = value }
+
+    /**
+     * Set/Get the site security icon colours. It uses a pair of color integers
+     * which represent the insecure and secure colours respectively.
      */
     var siteSecurityColor: Pair<Int, Int>
         get() = displayToolbar.securityIconColor
@@ -211,6 +232,51 @@ class BrowserToolbar @JvmOverloads constructor(
         }
 
     /**
+     * Sets the different icons that the tracking protection icon could has depending of its
+     * [Toolbar.siteTrackingProtection]
+     * @param iconOnNoTrackersBlocked icon for when the site is on the state
+     * [Toolbar.SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED]
+     * @param iconOnTrackersBlocked icon for when the site is on the state
+     * [Toolbar.SiteTrackingProtection.ON_TRACKERS_BLOCKED]
+     * @param iconDisabledForSite icon for when the site is on the state
+     * [Toolbar.SiteTrackingProtection.OFF_FOR_A_SITE]
+     */
+    fun setTrackingProtectionIcons(
+        iconOnNoTrackersBlocked: Drawable = requireNotNull(
+            context.getDrawable(
+                TrackingProtectionIconView.DEFAULT_ICON_ON_NO_TRACKERS_BLOCKED
+            )
+        ),
+        iconOnTrackersBlocked: Drawable = requireNotNull(
+            context.getDrawable(
+                TrackingProtectionIconView.DEFAULT_ICON_ON_TRACKERS_BLOCKED
+            )
+        ),
+        iconDisabledForSite: Drawable = requireNotNull(
+            context.getDrawable(
+                TrackingProtectionIconView.DEFAULT_ICON_OFF_FOR_A_SITE
+            )
+        )
+    ) {
+        displayToolbar.setTrackingProtectionIcons(
+            iconOnNoTrackersBlocked,
+            iconOnTrackersBlocked,
+            iconDisabledForSite
+        )
+    }
+
+    /**
+     * Sets the colour of the vertical separator between the tracking protection icon and the
+     * security indicator icon.
+     */
+    @get:ColorInt
+    var separatorColor: Int
+        get() = displayToolbar.separatorColor
+        set(@ColorInt value) {
+            displayToolbar.separatorColor = value
+        }
+
+    /**
      * Sets the size of the text for the title displayed in the toolbar.
      */
     var titleTextSize: Float
@@ -285,6 +351,29 @@ class BrowserToolbar @JvmOverloads constructor(
         }
     }
 
+    /**
+     * Sets a listener to be invoked when the site tracking protection indicator icon is clicked.
+     */
+    fun setOnTrackingProtectionClickedListener(listener: (() -> Unit)?) {
+        if (listener == null) {
+            displayToolbar.trackingProtectionIconView.setOnClickListener(null)
+            displayToolbar.trackingProtectionIconView.background = null
+        } else {
+            displayToolbar.trackingProtectionIconView.setOnClickListener {
+                listener.invoke()
+            }
+
+            val outValue = TypedValue()
+
+            context.theme.resolveAttribute(
+                android.R.attr.selectableItemBackgroundBorderless,
+                outValue,
+                true)
+
+            displayToolbar.trackingProtectionIconView.setBackgroundResource(outValue.resourceId)
+        }
+    }
+
     override fun setOnEditListener(listener: Toolbar.OnEditListener) {
         editToolbar.editListener = listener
     }
@@ -336,6 +425,25 @@ class BrowserToolbar @JvmOverloads constructor(
             field = value
         }
 
+    override var siteTrackingProtection: Toolbar.SiteTrackingProtection =
+        Toolbar.SiteTrackingProtection.OFF_GLOBALLY
+        set(value) {
+            if (field != value) {
+                displayToolbar.setTrackingProtectionState(value)
+                field = value
+            }
+        }
+
+    /**
+     * Set/Get whether a tracking protection icon (usually a shield icon) should be visible.
+     */
+    var displayTrackingProtectionIcon: Boolean = displayToolbar.displayTrackingProtectionIcon
+        get() = displayToolbar.displayTrackingProtectionIcon
+        set(value) {
+            displayToolbar.displayTrackingProtectionIcon = value
+            field = value
+        }
+
     init {
         context.obtainStyledAttributes(attrs, R.styleable.BrowserToolbar, defStyleAttr, 0).run {
             attrs?.let {
@@ -363,6 +471,12 @@ class BrowserToolbar @JvmOverloads constructor(
                     R.styleable.BrowserToolbar_browserToolbarClearColor,
                     editToolbar.clearViewColor
                 )
+
+                separatorColor = getColor(
+                    R.styleable.BrowserToolbar_browserToolbarTrackingProtectionAndSecurityIndicatorSeparatorColor,
+                    displayToolbar.separatorColor
+                )
+
                 if (peekValue(R.styleable.BrowserToolbar_browserToolbarSuggestionForegroundColor) != null) {
                     suggestionForegroundColor = getColor(
                         R.styleable.BrowserToolbar_browserToolbarSuggestionForegroundColor,
@@ -373,15 +487,17 @@ class BrowserToolbar @JvmOverloads constructor(
                     R.styleable.BrowserToolbar_browserToolbarSuggestionBackgroundColor,
                     suggestionBackgroundColor
                 )
-                val inSecure = getColor(
+                siteSecurityIcon = getDrawable(R.styleable.BrowserToolbar_browserToolbarSecurityIcon)
+                    ?: displayToolbar.securityIcon
+                val insecureColor = getColor(
                     R.styleable.BrowserToolbar_browserToolbarInsecureColor,
-                    displayToolbar.securityIconColor.first
+                    displayToolbar.defaultColor
                 )
-                val secure = getColor(
-                    R.styleable.BrowserToolbar_browserToolbarSecureColor,
-                    displayToolbar.securityIconColor.second
+                val secureColor = getColor(
+                    R.styleable.BrowserToolbar_browserToolbarInsecureColor,
+                    displayToolbar.defaultColor
                 )
-                siteSecurityColor = Pair(inSecure, secure)
+                siteSecurityColor = insecureColor to secureColor
                 val fadingEdgeLength = getDimensionPixelSize(
                     R.styleable.BrowserToolbar_browserToolbarFadingEdgeSize,
                     resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_url_fading_edge_size)
@@ -439,6 +555,10 @@ class BrowserToolbar @JvmOverloads constructor(
             return true
         }
         return false
+    }
+
+    override fun onStop() {
+        displayToolbar.onStop()
     }
 
     override fun setSearchTerms(searchTerms: String) {
@@ -688,6 +808,7 @@ class BrowserToolbar @JvmOverloads constructor(
         internal const val ACTION_PADDING_DP = 16
         internal val DEFAULT_PADDING =
             Padding(ACTION_PADDING_DP, ACTION_PADDING_DP, ACTION_PADDING_DP, ACTION_PADDING_DP)
+        internal const val URL_TEXT_SIZE_SP = 15f
     }
 }
 

@@ -4,11 +4,9 @@
 
 package mozilla.components.browser.icons
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.widget.ImageView
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
@@ -39,13 +37,11 @@ import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 class BrowserIconsTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Before
     @After
     fun cleanUp() {
-        sharedDiskCache.clear(context)
+        sharedDiskCache.clear(testContext)
         sharedMemoryCache.clear()
     }
 
@@ -57,12 +53,12 @@ class BrowserIconsTest {
         `when`(generator.generate(any(), any())).thenReturn(mockedIcon)
 
         val request = IconRequest(url = "https://www.mozilla.org")
-        val icon = BrowserIcons(context, httpClient = mock(), generator = generator)
+        val icon = BrowserIcons(testContext, httpClient = mock(), generator = generator)
             .loadIcon(request)
 
         assertEquals(mockedIcon, runBlocking { icon.await() })
 
-        verify(generator).generate(context, request)
+        verify(generator).generate(testContext, request)
     }
 
     @Test
@@ -102,7 +98,7 @@ class BrowserIconsTest {
             )
 
             val icon = BrowserIcons(
-                context,
+                testContext,
                 httpClient = HttpURLConnectionClient()
             ).loadIcon(request).await()
 
@@ -127,7 +123,7 @@ class BrowserIconsTest {
         server.start()
 
         try {
-            val icons = BrowserIcons(context, httpClient = HttpURLConnectionClient())
+            val icons = BrowserIcons(testContext, httpClient = HttpURLConnectionClient())
 
             val request = IconRequest(
                 url = "https://www.mozilla.org",
@@ -168,7 +164,7 @@ class BrowserIconsTest {
         server.start()
 
         try {
-            val icons = BrowserIcons(context, httpClient = HttpURLConnectionClient())
+            val icons = BrowserIcons(testContext, httpClient = HttpURLConnectionClient())
 
             val request = IconRequest(
                 url = "https://www.mozilla.org",

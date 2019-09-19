@@ -5,7 +5,7 @@
 package mozilla.components.feature.downloads
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.session.Download
+import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.feature.downloads.DownloadDialogFragment.Companion.KEY_FILE_NAME
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -17,12 +17,12 @@ import org.junit.runner.RunWith
 class DownloadDialogFragmentTest {
 
     private lateinit var dialog: DownloadDialogFragment
-    private lateinit var download: Download
+    private lateinit var download: DownloadState
 
     @Before
     fun setup() {
         dialog = object : DownloadDialogFragment() {}
-        download = Download(
+        download = DownloadState(
             "http://ipv4.download.thinkbroadband.com/5MB.zip",
             "5MB.zip", "application/zip", 5242880,
             "Mozilla/5.0 (Linux; Android 7.1.1) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/8.0 Chrome/69.0.3497.100 Mobile Safari/537.36"

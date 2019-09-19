@@ -66,30 +66,6 @@ class ViewTest {
         assertTrue(view.hasFocus())
     }
 
-    @Suppress("Deprecation")
-    @Test
-    fun `visibility helper methods`() {
-        val view = TextView(testContext)
-
-        view.visibility = View.GONE
-
-        assertTrue(view.isGone())
-        assertFalse(view.isVisible())
-        assertFalse(view.isInvisible())
-
-        view.visibility = View.VISIBLE
-
-        assertFalse(view.isGone())
-        assertTrue(view.isVisible())
-        assertFalse(view.isInvisible())
-
-        view.visibility = View.INVISIBLE
-
-        assertFalse(view.isGone())
-        assertFalse(view.isVisible())
-        assertTrue(view.isInvisible())
-    }
-
     @Test
     fun `setPadding should set padding`() {
         val view = TextView(testContext)

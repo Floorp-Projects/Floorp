@@ -13,6 +13,7 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 
@@ -117,5 +118,26 @@ class SelectorsKtTest {
 
         assertEquals(emptyList<TabSessionState>(), BrowserState().normalTabs)
         assertEquals(emptyList<TabSessionState>(), BrowserState().privateTabs)
+    }
+
+    @Test
+    fun `findTabOrCustomTab finds regular and custom tabs`() {
+        BrowserState(
+            tabs = listOf(createTab("https://www.mozilla.org", id = "test-id"))
+        ).also { state ->
+            assertNotNull(state.findTabOrCustomTab("test-id"))
+            assertEquals(
+                "https://www.mozilla.org",
+                state.findTabOrCustomTab("test-id")!!.content.url)
+        }
+
+        BrowserState(
+            customTabs = listOf(createCustomTab("https://www.mozilla.org", id = "test-id"))
+        ).also { state ->
+            assertNotNull(state.findTabOrCustomTab("test-id"))
+            assertEquals(
+                "https://www.mozilla.org",
+                state.findTabOrCustomTab("test-id")!!.content.url)
+        }
     }
 }

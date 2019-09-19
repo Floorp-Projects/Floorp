@@ -26,8 +26,8 @@ class ExceptionHandler(
 
         try {
             crashing = true
-
-            crashReporter.onCrash(context, Crash.UncaughtExceptionCrash(throwable))
+            crashReporter.onCrash(context, Crash.UncaughtExceptionCrash(throwable,
+                    crashReporter.crashBreadcrumbs.toSortedArrayList()))
 
             defaultExceptionHandler?.uncaughtException(thread, throwable)
         } finally {

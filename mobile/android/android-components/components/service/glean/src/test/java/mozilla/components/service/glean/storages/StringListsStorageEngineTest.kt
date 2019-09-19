@@ -11,13 +11,14 @@ import mozilla.components.service.glean.error.ErrorRecording.ErrorType
 import mozilla.components.service.glean.error.ErrorRecording.testGetNumRecordedErrors
 import mozilla.components.service.glean.private.Lifetime
 import mozilla.components.service.glean.private.StringListMetricType
-import mozilla.components.service.glean.resetGlean
+import mozilla.components.service.glean.testing.GleanTestRule
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
@@ -27,10 +28,8 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class StringListsStorageEngineTest {
 
-    @Before
-    fun setUp() {
-        resetGlean()
-    }
+    @get:Rule
+    val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())
 
     @Test
     fun `set() properly sets the value in all stores`() {
@@ -200,6 +199,28 @@ class StringListsStorageEngineTest {
             snapshot["telemetry.string_list_metric"]?.count()
         )
 
+        assertEquals(1, testGetNumRecordedErrors(metric, ErrorType.InvalidValue))
+    }
+
+    @Test
+    fun `set() records an error and returns when passed an empty list`() {
+        val metric = StringListMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Ping,
+            name = "string_list_metric",
+            sendInPings = listOf("store1")
+        )
+
+        StringListsStorageEngine.set(metricData = metric, value = listOf())
+
+        // If nothing was stored, then the snapshot should be null
+        val snapshot = StringListsStorageEngine.getSnapshot(
+            storeName = "store1",
+            clearStore = false)
+        assertNull("Empty list must not be stored", snapshot)
+
+        // Verify the error was recorded
         assertEquals(1, testGetNumRecordedErrors(metric, ErrorType.InvalidValue))
     }
 

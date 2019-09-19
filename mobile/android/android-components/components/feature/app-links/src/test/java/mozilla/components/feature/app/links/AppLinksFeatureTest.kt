@@ -8,6 +8,7 @@ package mozilla.components.feature.app.links
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import androidx.fragment.app.FragmentManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
@@ -15,11 +16,14 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
@@ -95,7 +99,7 @@ class AppLinksFeatureTest {
             mockSessionManager,
             useCases = mockUseCases,
             interceptLinkClicks = false,
-            whitelistedSchemes = setOf()
+            alwaysAllowedSchemes = setOf()
         )
 
         subject.start()
@@ -128,7 +132,7 @@ class AppLinksFeatureTest {
             mockContext,
             mockSessionManager,
             interceptLinkClicks = false,
-            whitelistedSchemes = setOf(whitelistedScheme),
+            alwaysAllowedSchemes = setOf(whitelistedScheme),
             useCases = mockUseCases
         )
 
@@ -178,7 +182,7 @@ class AppLinksFeatureTest {
             sessionManager = mockSessionManager,
             useCases = mockUseCases,
             interceptLinkClicks = false,
-            whitelistedSchemes = setOf("whitelisted")
+            alwaysAllowedSchemes = setOf("whitelisted")
         )
 
         feature.start()
@@ -297,5 +301,34 @@ class AppLinksFeatureTest {
 
         verifyNoMoreInteractions(mockDialog)
         verify(mockOpenRedirect).invoke(any())
+    }
+
+    @Test
+    fun `an external app is not opened for URLs with javascript scheme`() {
+        val javascriptUri = "javascript:;"
+
+        val openAppUseCase: AppLinksUseCases.OpenAppLinkRedirect = mock()
+        val useCases: AppLinksUseCases = mock()
+        whenever(useCases.openAppLink).thenReturn(openAppUseCase)
+
+        val feature = AppLinksFeature(
+            testContext,
+            sessionManager = mock(),
+            interceptLinkClicks = true,
+            useCases = useCases
+        )
+
+        val intent = Intent().apply {
+            data = Uri.parse(javascriptUri)
+        }
+
+        val redirect = AppLinkRedirect(
+            intent,
+            javascriptUri,
+            false)
+
+        feature.handleRedirect(redirect, Session("https://www.amazon.ca"))
+
+        verify(openAppUseCase, never()).invoke(redirect)
     }
 }

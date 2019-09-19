@@ -1,8 +1,6 @@
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public
- *  License, v. 2.0. If a copy of the MPL was not distributed with this
- *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package mozilla.components.feature.customtabs
 
@@ -11,6 +9,8 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
+import android.view.Window
+import androidx.annotation.ColorInt
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
 import mozilla.components.browser.menu.BrowserMenuBuilder
@@ -19,13 +19,15 @@ import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.runWithSession
-import mozilla.components.browser.session.tab.CustomTabActionButtonConfig
-import mozilla.components.browser.session.tab.CustomTabMenuItem
+import mozilla.components.browser.state.state.CustomTabActionButtonConfig
+import mozilla.components.browser.state.state.CustomTabMenuItem
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.content.share
+import mozilla.components.support.ktx.android.view.setNavigationBarTheme
+import mozilla.components.support.ktx.android.view.setStatusBarTheme
 import mozilla.components.support.utils.ColorUtils.getReadableTextColor
 
 /**
@@ -37,6 +39,7 @@ class CustomTabsToolbarFeature(
     private val sessionId: String? = null,
     private val menuBuilder: BrowserMenuBuilder? = null,
     private val menuItemIndex: Int = menuBuilder?.items?.size ?: 0,
+    private val window: Window? = null,
     private val shareListener: (() -> Unit)? = null,
     private val closeListener: () -> Unit
 ) : LifecycleAwareFeature, BackHandler {
@@ -67,7 +70,7 @@ class CustomTabsToolbarFeature(
             }
 
             // Change the toolbar colour
-            updateToolbarColor(config.toolbarColor)
+            updateToolbarColor(config.toolbarColor, config.navigationBarColor)
 
             // Add navigation close action
             addCloseButton(session, config.closeButtonIcon)
@@ -91,13 +94,18 @@ class CustomTabsToolbarFeature(
     }
 
     @VisibleForTesting
-    internal fun updateToolbarColor(toolbarColor: Int?) {
+    internal fun updateToolbarColor(@ColorInt toolbarColor: Int?, @ColorInt navigationBarColor: Int?) {
         toolbarColor?.let { color ->
             toolbar.setBackgroundColor(color)
             toolbar.textColor = readableColor
             toolbar.titleColor = readableColor
-            toolbar.siteSecurityColor = Pair(readableColor, readableColor)
+            toolbar.siteSecurityColor = readableColor to readableColor
             toolbar.menuViewColor = readableColor
+
+            window?.setStatusBarTheme(color)
+        }
+        navigationBarColor?.let { color ->
+            window?.setNavigationBarTheme(color)
         }
     }
 

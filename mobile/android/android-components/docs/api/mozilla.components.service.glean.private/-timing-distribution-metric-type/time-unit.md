@@ -2,4 +2,4 @@
 
 # timeUnit
 
-`val timeUnit: `[`TimeUnit`](../-time-unit/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/TimingDistributionMetricType.kt#L27)
+`val timeUnit: `[`TimeUnit`](../-time-unit/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/TimingDistributionMetricType.kt#L34)

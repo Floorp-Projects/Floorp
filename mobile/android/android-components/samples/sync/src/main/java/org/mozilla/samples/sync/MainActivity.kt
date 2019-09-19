@@ -19,6 +19,7 @@ import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceCapability
@@ -36,7 +37,13 @@ import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
 import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.support.base.log.Log
+import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
+import mozilla.components.service.fxa.FxaAuthData
+import mozilla.components.service.fxa.SyncEngine
+import mozilla.components.service.fxa.toAuthType
 import mozilla.components.support.base.log.sink.AndroidLogSink
+import mozilla.components.support.rusthttp.RustHttpConfig
+import mozilla.components.support.rustlog.RustLog
 import java.lang.Exception
 import kotlin.coroutines.CoroutineContext
 
@@ -54,8 +61,8 @@ class MainActivity :
     }
 
     init {
-        GlobalSyncableStoreProvider.configureStore("history" to historyStorage)
-        GlobalSyncableStoreProvider.configureStore("bookmarks" to bookmarksStorage)
+        GlobalSyncableStoreProvider.configureStore(SyncEngine.HISTORY to historyStorage)
+        GlobalSyncableStoreProvider.configureStore(SyncEngine.BOOKMARKS to bookmarksStorage)
     }
 
     private val accountManager by lazy {
@@ -67,7 +74,7 @@ class MainActivity :
                     type = DeviceType.MOBILE,
                     capabilities = setOf(DeviceCapability.SEND_TAB)
                 ),
-                SyncConfig(setOf("history", "bookmarks"), syncPeriodInMinutes = 15L)
+                SyncConfig(setOf(SyncEngine.HISTORY, SyncEngine.BOOKMARKS), syncPeriodInMinutes = 15L)
         )
     }
 
@@ -82,6 +89,8 @@ class MainActivity :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        RustLog.enable()
+        RustHttpConfig.setClient(lazy { HttpURLConnectionClient() })
 
         Log.addSink(AndroidLogSink())
 
@@ -106,7 +115,7 @@ class MainActivity :
         }
 
         findViewById<View>(R.id.refreshDevice).setOnClickListener {
-            launch { accountManager.authenticatedAccount()?.deviceConstellation()?.refreshDeviceStateAsync()?.await() }
+            launch { accountManager.authenticatedAccount()?.deviceConstellation()?.refreshDevicesAsync()?.await() }
         }
 
         findViewById<View>(R.id.sendTab).setOnClickListener {
@@ -155,10 +164,12 @@ class MainActivity :
         job.cancel()
     }
 
-    override fun onLoginComplete(code: String, state: String, fragment: LoginFragment) {
+    override fun onLoginComplete(code: String, state: String, action: String, fragment: LoginFragment) {
         launch {
-            supportFragmentManager?.popBackStack()
-            accountManager.finishAuthenticationAsync(code, state).await()
+            supportFragmentManager.popBackStack()
+            accountManager.finishAuthenticationAsync(
+                FxaAuthData(action.toAuthType(), code = code, state = state)
+            ).await()
         }
     }
 
@@ -175,7 +186,7 @@ class MainActivity :
     }
 
     private fun openWebView(url: String) {
-        supportFragmentManager?.beginTransaction()?.apply {
+        supportFragmentManager.beginTransaction().apply {
             replace(R.id.container, LoginFragment.create(url, REDIRECT_URL))
             addToBackStack(null)
             commit()
@@ -221,6 +232,8 @@ class MainActivity :
     }
 
     private val accountObserver = object : AccountObserver {
+        lateinit var lastAuthType: AuthType
+
         override fun onLoggedOut() {
             launch {
                 val txtView: TextView = findViewById(R.id.fxaStatusView)
@@ -255,10 +268,12 @@ class MainActivity :
             }
         }
 
-        override fun onAuthenticated(account: OAuthAccount) {
+        override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
             launch {
+                lastAuthType = authType
+
                 val txtView: TextView = findViewById(R.id.fxaStatusView)
-                txtView.text = getString(R.string.signed_in_waiting_for_profile)
+                txtView.text = getString(R.string.signed_in_waiting_for_profile, authType::class.simpleName)
 
                 findViewById<View>(R.id.buttonLogout).visibility = View.VISIBLE
                 findViewById<View>(R.id.buttonSignIn).visibility = View.INVISIBLE
@@ -279,6 +294,7 @@ class MainActivity :
                 val txtView: TextView = findViewById(R.id.fxaStatusView)
                 txtView.text = getString(
                     R.string.signed_in_with_profile,
+                    lastAuthType::class.simpleName,
                     "${profile.displayName ?: ""} ${profile.email}"
                 )
             }
@@ -309,7 +325,7 @@ class MainActivity :
                 if (bookmarksRoot == null) {
                     bookmarksResultTextView.text = getString(R.string.no_bookmarks_root)
                 } else {
-                    var bookmarksRootAndChildren = "Bookmarks\n"
+                    var bookmarksRootAndChildren = "BOOKMARKS\n"
                     fun addTreeNode(node: BookmarkNode, depth: Int) {
                         val desc = " ".repeat(depth * 2) + "${node.title} - ${node.url} (${node.guid})\n"
                         bookmarksRootAndChildren += desc

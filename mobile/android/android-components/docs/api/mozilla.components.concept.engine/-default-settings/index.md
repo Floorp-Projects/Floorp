@@ -2,7 +2,7 @@
 
 # DefaultSettings
 
-`data class DefaultSettings : `[`Settings`](../-settings/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L171)
+`data class DefaultSettings : `[`Settings`](../-settings/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L177)
 
 [Settings](../-settings/index.md) implementation used to set defaults for [Engine](../-engine/index.md) and [EngineSession](../-engine-session/index.md).
 
@@ -44,3 +44,9 @@
 | [userAgentString](user-agent-string.md) | `var userAgentString: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>Setting to control the user agent string. |
 | [verticalScrollBarEnabled](vertical-scroll-bar-enabled.md) | `var verticalScrollBarEnabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Setting to control whether or not vertical scrolling is enabled. |
 | [webFontsEnabled](web-fonts-enabled.md) | `var webFontsEnabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Setting to control whether or not Web fonts are enabled. |
+
+### Inherited Properties
+
+| Name | Summary |
+|---|---|
+| [safeBrowsingPolicy](../-settings/safe-browsing-policy.md) | `open var safeBrowsingPolicy: `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<`[`SafeBrowsingPolicy`](../-engine-session/-safe-browsing-policy/index.md)`>`<br>Setting to control tracking protection. |

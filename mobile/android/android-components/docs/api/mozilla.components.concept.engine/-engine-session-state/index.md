@@ -19,5 +19,4 @@ session.
 | Name | Summary |
 |---|---|
 | [GeckoEngineSessionState](../../mozilla.components.browser.engine.gecko/-gecko-engine-session-state/index.md) | `class GeckoEngineSessionState : `[`EngineSessionState`](./index.md) |
-| [ServoEngineSessionState](../../mozilla.components.browser.engine.servo/-servo-engine-session-state/index.md) | `class ServoEngineSessionState : `[`EngineSessionState`](./index.md)<br>No-op implementation of [EngineSessionState](./index.md). |
 | [SystemEngineSessionState](../../mozilla.components.browser.engine.system/-system-engine-session-state/index.md) | `class SystemEngineSessionState : `[`EngineSessionState`](./index.md) |

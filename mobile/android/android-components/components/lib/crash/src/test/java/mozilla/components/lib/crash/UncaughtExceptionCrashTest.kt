@@ -16,7 +16,7 @@ class UncaughtExceptionCrashTest {
     fun `UncaughtExceptionCrash wraps exception`() {
         val exception = RuntimeException("Kaput")
 
-        val crash = Crash.UncaughtExceptionCrash(exception)
+        val crash = Crash.UncaughtExceptionCrash(exception, arrayListOf())
 
         assertEquals(exception, crash.throwable)
     }

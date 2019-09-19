@@ -7,10 +7,19 @@ package mozilla.components.browser.state.action
 import android.graphics.Bitmap
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.state.CustomTabSessionState
+import mozilla.components.browser.state.state.EngineState
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.SessionState
-import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.TrackingProtectionState
+import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.browser.state.state.content.FindResultState
+import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSessionState
+import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.content.blocking.Tracker
+import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.lib.state.Action
 
 /**
@@ -153,7 +162,7 @@ sealed class ContentAction : BrowserAction() {
     /**
      * Updates the [SecurityInfoState] of the [ContentState] with the given [sessionId].
      */
-    data class UpdateSecurityInfo(val sessionId: String, val securityInfo: SecurityInfoState) : ContentAction()
+    data class UpdateSecurityInfoAction(val sessionId: String, val securityInfo: SecurityInfoState) : ContentAction()
 
     /**
      * Updates the icon of the [ContentState] with the given [sessionId].
@@ -164,4 +173,95 @@ sealed class ContentAction : BrowserAction() {
      * Updates the thumbnail of the [ContentState] with the given [sessionId].
      */
     data class UpdateThumbnailAction(val sessionId: String, val thumbnail: Bitmap) : ContentAction()
+
+    /**
+     * Updates the [DownloadState] of the [ContentState] with the given [sessionId].
+     */
+    data class UpdateDownloadAction(val sessionId: String, val download: DownloadState) : ContentAction()
+
+    /**
+     * Removes the [DownloadState] of the [ContentState] with the given [sessionId].
+     */
+    data class ConsumeDownloadAction(val sessionId: String) : ContentAction()
+
+    /**
+     * Updates the [HitResult] of the [ContentState] with the given [sessionId].
+     */
+    data class UpdateHitResultAction(val sessionId: String, val hitResult: HitResult) : ContentAction()
+
+    /**
+     * Removes the [HitResult] of the [ContentState] with the given [sessionId].
+     */
+    data class ConsumeHitResultAction(val sessionId: String) : ContentAction()
+
+    /**
+     * Updates the [PromptRequest] of the [ContentState] with the given [sessionId].
+     */
+    data class UpdatePromptRequestAction(val sessionId: String, val promptRequest: PromptRequest) : ContentAction()
+
+    /**
+     * Removes the [PromptRequest] of the [ContentState] with the given [sessionId].
+     */
+    data class ConsumePromptRequestAction(val sessionId: String) : ContentAction()
+
+    /**
+     * Adds a [FindResultState] to the [ContentState] with the given [sessionId].
+     */
+    data class AddFindResultAction(val sessionId: String, val findResult: FindResultState) : ContentAction()
+
+    /**
+     * Removes all [FindResultState]s of the [ContentState] with the given [sessionId].
+     */
+    data class ClearFindResultsAction(val sessionId: String) : ContentAction()
+}
+
+/**
+ * [BrowserAction] implementations related to updating the [TrackingProtectionState] of a single [SessionState] inside
+ * [BrowserState].
+ */
+sealed class TrackingProtectionAction : BrowserAction() {
+    /**
+     * Updates the [TrackingProtectionState.enabled] flag.
+     */
+    data class ToggleAction(val tabId: String, val enabled: Boolean) : TrackingProtectionAction()
+
+    /**
+     * Adds a [Tracker] to the [TrackingProtectionState.blockedTrackers] list.
+     */
+    data class TrackerBlockedAction(val tabId: String, val tracker: Tracker) : TrackingProtectionAction()
+
+    /**
+     * Adds a [Tracker] to the [TrackingProtectionState.loadedTrackers] list.
+     */
+    data class TrackerLoadedAction(val tabId: String, val tracker: Tracker) : TrackingProtectionAction()
+
+    /**
+     * Clears the [TrackingProtectionState.blockedTrackers] and [TrackingProtectionState.blockedTrackers] lists.
+     */
+    data class ClearTrackersAction(val tabId: String) : TrackingProtectionAction()
+}
+
+/**
+ * [BrowserAction] implementations related to updating the [EngineState] of a single [SessionState] inside
+ * [BrowserState].
+ */
+sealed class EngineAction : BrowserAction() {
+
+    /**
+     * Attaches the provided [EngineSession] to the session with the provided [sessionId].
+     */
+    data class LinkEngineSessionAction(val sessionId: String, val engineSession: EngineSession) : EngineAction()
+
+    /**
+     * Detaches the current [EngineSession] from the session with the provided [sessionId].
+     */
+    data class UnlinkEngineSessionAction(val sessionId: String) : EngineAction()
+
+    /**
+     * Updates the [EngineSessionState] of the session with the provided [sessionId].
+     */
+    data class UpdateEngineSessionStateAction(
+        val sessionId: String,
+        val engineSessionState: EngineSessionState
+    ) : EngineAction()
 }

@@ -9,15 +9,6 @@
     <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
     <string name="mozac_feature_prompts_no_more_dialogs">Diese Seite daran hindern, weitere Dialoge zu öffnen</string>
 
-    <!-- Title of a date picker dialog, this text is shown above a date picker. -->
-    <string name="mozac_feature_prompts_pick_a_date">Datum auswählen</string>
-
-    <!-- Title of a time picker dialog, this text is shown above a time picker. -->
-    <string name="mozac_feature_prompts_pick_a_time">Uhrzeit auswählen</string>
-
-    <!-- Title of a date and time picker dialog, this text is shown above the picker. -->
-    <string name="mozac_feature_prompts_pick_a_date_and_time">Datum und Uhrzeit auswählen</string>
-
     <!-- Text for a positive button, when an user selects a date in date/time picker. -->
     <string name="mozac_feature_prompts_set_date">Übernehmen</string>
 
@@ -46,4 +37,30 @@
     <!-- Text of a negative button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_deny">Ablehnen</string>
 
-    </resources>
+    <!-- Title of the month chooser dialog. -->
+    <string name="mozac_feature_prompts_set_month">Monat auswählen</string>
+    <!-- January (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jan">Jan</string>
+    <!-- February month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_feb">Feb</string>
+    <!-- March month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_mar">Mär</string>
+    <!-- April month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_apr">Apr</string>
+    <!-- May month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_may">Mai</string>
+    <!-- June month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jun">Jun</string>
+    <!-- July month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jul">Jul</string>
+    <!-- August month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_aug">Aug</string>
+    <!-- September month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_sep">Sep</string>
+    <!-- October month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_oct">Okt</string>
+    <!-- November month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_nov">Nov</string>
+    <!-- December month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_dec">Dez</string>
+</resources>

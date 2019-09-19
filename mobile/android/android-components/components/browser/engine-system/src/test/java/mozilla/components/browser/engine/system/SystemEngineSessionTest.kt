@@ -235,7 +235,10 @@ class SystemEngineSessionTest {
 
         assertNull(engineSession.trackingProtectionPolicy)
         runBlocking { engineSession.enableTrackingProtection() }
-        assertEquals(EngineSession.TrackingProtectionPolicy.all(), engineSession.trackingProtectionPolicy)
+        assertEquals(
+            EngineSession.TrackingProtectionPolicy.strict(),
+            engineSession.trackingProtectionPolicy
+        )
         assertNotNull(enabledObserved)
         assertTrue(enabledObserved as Boolean)
     }
@@ -250,7 +253,7 @@ class SystemEngineSessionTest {
             }
         })
 
-        engineSession.trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.all()
+        engineSession.trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.strict()
 
         engineSession.disableTrackingProtection()
         assertNull(engineSession.trackingProtectionPolicy)
@@ -345,8 +348,9 @@ class SystemEngineSessionTest {
         assertFalse(engineSession.settings.webFontsEnabled)
 
         assertNull(engineSession.settings.trackingProtectionPolicy)
-        engineSession.settings.trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.all()
-        verify(engineSession).enableTrackingProtection(EngineSession.TrackingProtectionPolicy.all())
+        engineSession.settings.trackingProtectionPolicy =
+            EngineSession.TrackingProtectionPolicy.strict()
+        verify(engineSession).enableTrackingProtection(EngineSession.TrackingProtectionPolicy.strict())
 
         engineSession.settings.trackingProtectionPolicy = null
         verify(engineSession).disableTrackingProtection()
@@ -366,7 +370,7 @@ class SystemEngineSessionTest {
                 javascriptEnabled = false,
                 domStorageEnabled = false,
                 webFontsEnabled = false,
-                trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.all(),
+                trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.strict(),
                 userAgentString = "userAgent",
                 mediaPlaybackRequiresUserGesture = false,
                 javaScriptCanOpenWindowsAutomatically = true,
@@ -393,7 +397,7 @@ class SystemEngineSessionTest {
         verify(webViewSettings).loadWithOverviewMode = true
         verify(webViewSettings).useWideViewPort = true
         verify(webViewSettings).setSupportMultipleWindows(true)
-        verify(engineSession).enableTrackingProtection(EngineSession.TrackingProtectionPolicy.all())
+        verify(engineSession).enableTrackingProtection(EngineSession.TrackingProtectionPolicy.strict())
         assertFalse(engineSession.webFontsEnabled)
     }
 

@@ -4,8 +4,8 @@
 
 package mozilla.components.lib.jexl.lexer
 
-import mozilla.components.lib.jexl.grammar.GrammarElement
 import mozilla.components.lib.jexl.grammar.Grammar
+import mozilla.components.lib.jexl.grammar.GrammarElement
 
 internal class LexerException(message: String) : Exception(message)
 
@@ -17,6 +17,7 @@ internal class LexerException(message: String) : Exception(message)
  * to identify the utility of any of its tokens.  Errors stemming from these tokens not being in a sensible
  * configuration should be left for the Parser to handle.
  */
+@Suppress("LargeClass")
 internal class Lexer(private val grammar: Grammar) {
     private val negateAfter = listOf(
         Token.Type.BINARY_OP,
@@ -30,7 +31,7 @@ internal class Lexer(private val grammar: Grammar) {
     /**
      * Splits the JEXL expression string into a list of tokens.
      */
-    @Suppress("ComplexMethod")
+    @Suppress("ComplexMethod", "LongMethod")
     @Throws(LexerException::class)
     fun tokenize(raw: String): List<Token> {
         val input = LexerInput(raw)

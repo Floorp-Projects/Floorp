@@ -152,7 +152,7 @@ class ObserverRegistryTest {
         assertTrue(observer.notified)
 
         // Pretend lifecycle gets destroyed
-        owner.lifecycleRegistry.markState(Lifecycle.State.DESTROYED)
+        owner.lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
 
         observer.notified = false
         registry.notifyObservers { somethingChanged() }
@@ -176,13 +176,13 @@ class ObserverRegistryTest {
         assertTrue(observer.notified)
 
         // RESUMED
-        owner.lifecycleRegistry.markState(Lifecycle.State.RESUMED)
+        owner.lifecycleRegistry.currentState = Lifecycle.State.RESUMED
         observer.notified = false
         registry.notifyObservers { somethingChanged() }
         assertTrue(observer.notified)
 
         // CREATED
-        owner.lifecycleRegistry.markState(Lifecycle.State.CREATED)
+        owner.lifecycleRegistry.currentState = Lifecycle.State.CREATED
         observer.notified = false
         registry.notifyObservers { somethingChanged() }
         assertTrue(observer.notified)
@@ -616,7 +616,7 @@ class ObserverRegistryTest {
 
     private class MockedLifecycleOwner(initialState: Lifecycle.State) : LifecycleOwner {
         val lifecycleRegistry = LifecycleRegistry(this).apply {
-            markState(initialState)
+            currentState = initialState
         }
 
         override fun getLifecycle(): Lifecycle = lifecycleRegistry

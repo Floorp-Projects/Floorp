@@ -2,7 +2,7 @@
 
 # ResponseParserException
 
-`class ResponseParserException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/search/src/main/java/mozilla/components/browser/search/suggestions/SearchSuggestionClient.kt#L28)
+`class ResponseParserException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/search/src/main/java/mozilla/components/browser/search/suggestions/SearchSuggestionClient.kt#L52)
 
 ### Constructors
 

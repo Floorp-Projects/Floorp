@@ -16,6 +16,7 @@ import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuCheckbox
 import mozilla.components.browser.menu.item.BrowserMenuDivider
+import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
@@ -27,12 +28,18 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.memory.InMemoryHistoryStorage
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
+import mozilla.components.feature.contextmenu.ContextMenuUseCases
 import mozilla.components.feature.customtabs.CustomTabIntentProcessor
-import mozilla.components.feature.intent.TabIntentProcessor
+import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
+import mozilla.components.feature.downloads.DownloadsUseCases
+import mozilla.components.feature.intent.processing.TabIntentProcessor
+import mozilla.components.feature.media.MediaFeature
 import mozilla.components.feature.media.RecordingDevicesNotificationFeature
-import mozilla.components.feature.media.notification.MediaNotificationFeature
 import mozilla.components.feature.media.state.MediaStateMachine
+import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.WebAppUseCases
+import mozilla.components.feature.pwa.intent.TrustedWebActivityIntentProcessor
+import mozilla.components.feature.pwa.intent.WebAppIntentProcessor
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.session.SessionUseCases
@@ -70,6 +77,8 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     val store by lazy { BrowserStore() }
 
+    val customTabsStore by lazy { CustomTabsServiceStore() }
+
     val sessionManager by lazy {
         SessionManager(engine, store).apply {
             sessionStorage.restore()?.let { snapshot -> restore(snapshot) }
@@ -87,12 +96,11 @@ open class DefaultComponents(private val applicationContext: Context) {
 
             RecordingDevicesNotificationFeature(applicationContext, sessionManager = this)
                 .enable()
-            val stateMachine = MediaStateMachine(sessionManager = this)
 
-            MediaNotificationFeature(applicationContext, stateMachine)
+            MediaFeature(applicationContext)
                 .enable()
 
-            stateMachine.start()
+            MediaStateMachine.start(this)
         }
     }
 
@@ -116,8 +124,19 @@ open class DefaultComponents(private val applicationContext: Context) {
     val tabIntentProcessor by lazy {
         TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch)
     }
-    val customTabIntentProcessor by lazy {
-        CustomTabIntentProcessor(sessionManager, sessionUseCases.loadUrl, applicationContext.resources)
+    val externalAppIntentProcessors by lazy {
+        listOf(
+            WebAppIntentProcessor(sessionManager, sessionUseCases.loadUrl, ManifestStorage(applicationContext)),
+            TrustedWebActivityIntentProcessor(
+                sessionManager,
+                sessionUseCases.loadUrl,
+                client,
+                applicationContext.packageManager,
+                null,
+                customTabsStore
+            ),
+            CustomTabIntentProcessor(sessionManager, sessionUseCases.loadUrl, applicationContext.resources)
+        )
     }
 
     // Menu
@@ -126,6 +145,14 @@ open class DefaultComponents(private val applicationContext: Context) {
     private val menuItems by lazy {
         val items = mutableListOf(
             menuToolbar,
+                BrowserMenuHighlightableItem("Highlight", R.drawable.mozac_ic_share, android.R.color.black, highlight =
+                BrowserMenuHighlightableItem.Highlight(
+                    R.drawable.mozac_ic_search, R.drawable.mozac_ic_stop,
+                    R.drawable.background_with_ripple,
+                    android.R.color.holo_green_dark
+                )) {
+                    Toast.makeText(applicationContext, "Highlight", Toast.LENGTH_SHORT).show()
+                },
             BrowserMenuImageText("Share", R.drawable.mozac_ic_share, android.R.color.black) {
                 Toast.makeText(applicationContext, "Share", Toast.LENGTH_SHORT).show()
             },
@@ -197,6 +224,7 @@ open class DefaultComponents(private val applicationContext: Context) {
         ShippedDomainsProvider().also { it.initialize(applicationContext) }
     }
 
-    // Tabs
     val tabsUseCases: TabsUseCases by lazy { TabsUseCases(sessionManager) }
+    val downloadsUseCases: DownloadsUseCases by lazy { DownloadsUseCases(sessionManager) }
+    val contextMenuUseCases: ContextMenuUseCases by lazy { ContextMenuUseCases(sessionManager) }
 }

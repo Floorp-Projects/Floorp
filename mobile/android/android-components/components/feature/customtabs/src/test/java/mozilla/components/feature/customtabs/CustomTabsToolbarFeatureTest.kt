@@ -10,17 +10,18 @@ import android.app.PendingIntent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.view.ViewGroup
+import android.view.Window
 import android.widget.FrameLayout
 import android.widget.ImageButton
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.core.view.forEach
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.tab.CustomTabActionButtonConfig
-import mozilla.components.browser.session.tab.CustomTabConfig
-import mozilla.components.browser.session.tab.CustomTabMenuItem
+import mozilla.components.browser.state.state.CustomTabActionButtonConfig
+import mozilla.components.browser.state.state.CustomTabConfig
+import mozilla.components.browser.state.state.CustomTabMenuItem
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.test.any
@@ -80,6 +81,19 @@ class CustomTabsToolbarFeatureTest {
     }
 
     @Test
+    fun `stop calls unregister`() {
+        val sessionManager: SessionManager = mock()
+        val session: Session = mock()
+        val feature = CustomTabsToolbarFeature(sessionManager, mock(), "") {}
+
+        `when`(sessionManager.findSessionById(anyString())).thenReturn(session)
+
+        feature.stop()
+
+        verify(session).unregister(any())
+    }
+
+    @Test
     fun `initialize returns true if session is a customtab`() {
         val session: Session = mock()
         val toolbar = spy(BrowserToolbar(testContext))
@@ -120,7 +134,7 @@ class CustomTabsToolbarFeatureTest {
 
         feature.initialize(session)
 
-        verify(feature).updateToolbarColor(anyInt())
+        verify(feature).updateToolbarColor(anyInt(), anyInt())
     }
 
     @Test
@@ -131,15 +145,36 @@ class CustomTabsToolbarFeatureTest {
 
         val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "") {})
 
-        feature.updateToolbarColor(null)
+        feature.updateToolbarColor(null, null)
 
         verify(toolbar, never()).setBackgroundColor(anyInt())
         verify(toolbar, never()).textColor = anyInt()
 
-        feature.updateToolbarColor(123)
+        feature.updateToolbarColor(123, 456)
 
         verify(toolbar).setBackgroundColor(anyInt())
         verify(toolbar).textColor = anyInt()
+    }
+
+    @Test
+    fun `updateToolbarColor changes status bar color`() {
+        val session: Session = mock()
+        val toolbar: BrowserToolbar = mock()
+        val window: Window = mock()
+        `when`(session.customTabConfig).thenReturn(mock())
+        `when`(window.decorView).thenReturn(mock())
+
+        val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "", window = window) {})
+
+        feature.updateToolbarColor(null, null)
+
+        verify(window, never()).statusBarColor = anyInt()
+        verify(window, never()).navigationBarColor = anyInt()
+
+        feature.updateToolbarColor(123, 456)
+
+        verify(window).statusBarColor = 123
+        verify(window).navigationBarColor = 456
     }
 
     @Test

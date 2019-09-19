@@ -2,7 +2,7 @@
 
 # ContentVideoBrowser
 
-`data class ContentVideoBrowser : `[`Permission`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/permission/PermissionRequest.kt#L82)
+`data class ContentVideoBrowser : `[`Permission`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/permission/PermissionRequest.kt#L84)
 
 ### Constructors
 

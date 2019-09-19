@@ -26,7 +26,8 @@ class SystemWindowRequestTest {
     fun `init request`() {
         val curWebView = mock<WebView>()
         val newWebView = mock<WebView>()
-        val request = SystemWindowRequest(curWebView, newWebView, true, true)
+        val newEngineSession = mock<SystemEngineSession>()
+        val request = SystemWindowRequest(curWebView, newEngineSession, newWebView, true, true)
 
         assertTrue(request.openAsDialog)
         assertTrue(request.triggeredByUser)
@@ -37,10 +38,10 @@ class SystemWindowRequestTest {
     fun `prepare sets webview on engine session`() {
         val curWebView = mock<WebView>()
         val newWebView = mock<WebView>()
-        val request = SystemWindowRequest(curWebView, newWebView)
+        val newEngineSession = SystemEngineSession(testContext)
+        val request = SystemWindowRequest(curWebView, newEngineSession, newWebView)
 
-        val engineSession = SystemEngineSession(testContext)
-        request.prepare(engineSession)
+        val engineSession = request.prepare() as SystemEngineSession
         assertSame(newWebView, engineSession.webView)
     }
 
@@ -49,19 +50,20 @@ class SystemWindowRequestTest {
         val curWebView = mock<WebView>()
         val newWebView = mock<WebView>()
         val resultMsg = mock<Message>()
+        val newEngineSession = mock<SystemEngineSession>()
 
-        SystemWindowRequest(curWebView, newWebView, false, false).start()
+        SystemWindowRequest(curWebView, newEngineSession, newWebView, false, false).start()
         verify(resultMsg, never()).sendToTarget()
 
-        SystemWindowRequest(curWebView, newWebView, false, false, resultMsg).start()
+        SystemWindowRequest(curWebView, newEngineSession, newWebView, false, false, resultMsg).start()
         verify(resultMsg, never()).sendToTarget()
 
         resultMsg.obj = ""
-        SystemWindowRequest(curWebView, newWebView, false, false, resultMsg).start()
+        SystemWindowRequest(curWebView, newEngineSession, newWebView, false, false, resultMsg).start()
         verify(resultMsg, never()).sendToTarget()
 
         resultMsg.obj = mock<WebView.WebViewTransport>()
-        SystemWindowRequest(curWebView, newWebView, false, false, resultMsg).start()
+        SystemWindowRequest(curWebView, newEngineSession, newWebView, false, false, resultMsg).start()
         verify(resultMsg, times(1)).sendToTarget()
     }
 }

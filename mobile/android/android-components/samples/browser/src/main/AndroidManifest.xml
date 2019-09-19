@@ -33,7 +33,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".CustomTabActivity"
+        <activity android:name=".ExternalAppBrowserActivity"
             android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
             android:windowSoftInputMode="adjustResize|stateAlwaysHidden"
             android:exported="false"
@@ -56,6 +56,12 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="mozilla.components.feature.pwa.VIEW_PWA" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="https" />
+            </intent-filter>
         </activity>
 
         <service
@@ -64,6 +70,7 @@
             tools:ignore="ExportedService">
             <intent-filter>
                 <action android:name="android.support.customtabs.action.CustomTabsService" />
+                <category android:name="androidx.browser.trusted.category.NavBarColorCustomization" />
             </intent-filter>
         </service>
 

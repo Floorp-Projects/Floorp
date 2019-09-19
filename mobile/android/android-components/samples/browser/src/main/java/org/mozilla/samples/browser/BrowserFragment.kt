@@ -19,11 +19,13 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.integration.ReaderViewIntegration
 
+/**
+ * Fragment used for browsing the web within the main app.
+ */
 class BrowserFragment : BaseBrowserFragment(), BackHandler {
     private val thumbnailsFeature = ViewBoundFeatureWrapper<ThumbnailsFeature>()
     private val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewIntegration>()
 
-    @Suppress("LongMethod")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val layout = super.onCreateView(inflater, container, savedInstanceState)
 
@@ -40,7 +42,8 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
                 components.sessionUseCases.loadUrl)
             .addSessionProvider(components.sessionManager, components.tabsUseCases.selectTab)
             .addSearchProvider(
-                components.searchEngineManager.getDefaultSearchEngine(requireContext()),
+                requireContext(),
+                components.searchEngineManager,
                 components.searchUseCases.defaultSearch,
                 fetchClient = components.client,
                 mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS)

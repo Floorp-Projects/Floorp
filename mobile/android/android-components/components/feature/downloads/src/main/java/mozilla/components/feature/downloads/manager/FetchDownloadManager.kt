@@ -19,7 +19,7 @@ import android.util.LongSparseArray
 import androidx.core.util.isEmpty
 import androidx.core.util.set
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import mozilla.components.browser.session.Download
+import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.feature.downloads.ext.isScheme
 import mozilla.components.feature.downloads.ext.putDownloadExtra
@@ -39,7 +39,7 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
     override var onDownloadCompleted: OnDownloadCompleted = noop
 ) : BroadcastReceiver(), DownloadManager {
 
-    private val queuedDownloads = LongSparseArray<Download>()
+    private val queuedDownloads = LongSparseArray<DownloadState>()
     private var isSubscribedReceiver = false
 
     override val permissions = if (SDK_INT >= P) {
@@ -54,7 +54,7 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
      * @param cookie any additional cookie to add as part of the download request.
      * @return the id reference of the scheduled download.
      */
-    override fun download(download: Download, cookie: String): Long? {
+    override fun download(download: DownloadState, cookie: String): Long? {
         if (!download.isScheme(listOf("http", "https"))) {
             // We are ignoring everything that is not http or https. This is a limitation of
             // GeckoView: https://bugzilla.mozilla.org/show_bug.cgi?id=1501735 and

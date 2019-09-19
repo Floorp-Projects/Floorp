@@ -4,14 +4,27 @@
 
 package mozilla.components.browser.session
 
+import mozilla.components.browser.session.ext.toFindResultState
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSessionState
+import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.content.blocking.Tracker
+import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.`when`
 
 /**
  * This test suite validates that calls on [SessionManager] update [BrowserStore] to create a matching state.
@@ -35,6 +48,56 @@ class SessionManagerMigrationTest {
 
         assertEquals("https://www.mozilla.org", tab.content.url)
         assertTrue(tab.content.private)
+    }
+
+    @Test
+    fun `Add custom tab session`() {
+        val store = BrowserStore()
+
+        val sessionManager = SessionManager(engine = mock(), store = store)
+
+        assertTrue(sessionManager.sessions.isEmpty())
+        assertTrue(store.state.tabs.isEmpty())
+
+        val customTabSession = Session("https://www.mozilla.org")
+        customTabSession.customTabConfig = mock()
+        sessionManager.add(customTabSession)
+
+        assertEquals(0, sessionManager.sessions.size)
+        assertEquals(1, sessionManager.all.size)
+        assertEquals(0, store.state.tabs.size)
+        assertEquals(1, store.state.customTabs.size)
+
+        val tab = store.state.customTabs[0]
+        assertEquals("https://www.mozilla.org", tab.content.url)
+    }
+
+    @Test
+    fun `Migrating a custom tab session`() {
+        val store = BrowserStore()
+
+        val sessionManager = SessionManager(engine = mock(), store = store)
+
+        val customTabSession = Session("https://www.mozilla.org")
+        customTabSession.customTabConfig = mock()
+        sessionManager.add(customTabSession)
+
+        assertEquals(0, sessionManager.sessions.size)
+        assertEquals(1, sessionManager.all.size)
+        assertEquals(0, store.state.tabs.size)
+        assertEquals(1, store.state.customTabs.size)
+
+        val customTab = store.state.customTabs[0]
+        assertEquals("https://www.mozilla.org", customTab.content.url)
+
+        customTabSession.customTabConfig = null
+        assertEquals(1, sessionManager.sessions.size)
+        assertEquals(1, sessionManager.all.size)
+        assertEquals(1, store.state.tabs.size)
+        assertEquals(0, store.state.customTabs.size)
+
+        val tab = store.state.tabs[0]
+        assertEquals("https://www.mozilla.org", tab.content.url)
     }
 
     @Test
@@ -554,5 +617,274 @@ class SessionManagerMigrationTest {
 
         assertEquals("https://getpocket.com", manager.selectedSessionOrThrow.url)
         assertEquals("https://getpocket.com", store.state.selectedTab!!.content.url)
+    }
+
+    @Test
+    fun `Adding sessions with tracking protection state`() {
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store)
+
+        val tracker1: Tracker = mock()
+        val tracker2: Tracker = mock()
+        val tracker3: Tracker = mock()
+
+        manager.add(Session(id = "session1", initialUrl = "https://www.mozilla.org").apply {
+            trackerBlockingEnabled = true
+            trackersBlocked = listOf(tracker1)
+            trackersLoaded = listOf(tracker2, tracker3)
+        })
+
+        manager.add(Session(id = "session2", initialUrl = "https://www.mozilla.org").apply {
+            trackerBlockingEnabled = false
+            trackersBlocked = listOf()
+            trackersLoaded = listOf(tracker2)
+        })
+
+        assertEquals(2, manager.sessions.size)
+        assertEquals(2, store.state.tabs.size)
+
+        store.state.findTab("session1")!!.also { tab ->
+            assertTrue(tab.trackingProtection.enabled)
+            assertEquals(1, tab.trackingProtection.blockedTrackers.size)
+            assertEquals(2, tab.trackingProtection.loadedTrackers.size)
+            assertTrue(tab.trackingProtection.blockedTrackers.contains(tracker1))
+            assertTrue(tab.trackingProtection.loadedTrackers.contains(tracker2))
+            assertTrue(tab.trackingProtection.loadedTrackers.contains(tracker3))
+        }
+
+        store.state.findTab("session2")!!.also { tab ->
+            assertFalse(tab.trackingProtection.enabled)
+            assertTrue(tab.trackingProtection.blockedTrackers.isEmpty())
+            assertEquals(1, tab.trackingProtection.loadedTrackers.size)
+            assertTrue(tab.trackingProtection.loadedTrackers.contains(tracker2))
+        }
+    }
+
+    @Test
+    fun `Updating tracking protection state of session`() {
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store)
+
+        val session = Session(id = "session", initialUrl = "https://www.mozilla.org")
+        manager.add(session)
+
+        store.state.findTab("session")!!.also { tab ->
+            assertFalse(tab.trackingProtection.enabled)
+            assertEquals(0, tab.trackingProtection.blockedTrackers.size)
+            assertEquals(0, tab.trackingProtection.loadedTrackers.size)
+        }
+
+        session.trackerBlockingEnabled = true
+
+        store.state.findTab("session")!!.also { tab ->
+            assertTrue(tab.trackingProtection.enabled)
+            assertEquals(0, tab.trackingProtection.blockedTrackers.size)
+            assertEquals(0, tab.trackingProtection.loadedTrackers.size)
+        }
+
+        session.trackersBlocked = listOf(mock())
+        session.trackersLoaded = listOf(mock())
+        session.trackersBlocked = listOf(mock(), mock())
+
+        store.state.findTab("session")!!.also { tab ->
+            assertTrue(tab.trackingProtection.enabled)
+            assertEquals(2, tab.trackingProtection.blockedTrackers.size)
+            assertEquals(1, tab.trackingProtection.loadedTrackers.size)
+        }
+
+        session.trackersBlocked = emptyList()
+        session.trackersLoaded = emptyList()
+
+        store.state.findTab("session")!!.also { tab ->
+            assertTrue(tab.trackingProtection.enabled)
+            assertEquals(0, tab.trackingProtection.blockedTrackers.size)
+            assertEquals(0, tab.trackingProtection.loadedTrackers.size)
+        }
+
+        session.trackerBlockingEnabled = false
+
+        store.state.findTab("session")!!.also { tab ->
+            assertFalse(tab.trackingProtection.enabled)
+            assertEquals(0, tab.trackingProtection.blockedTrackers.size)
+            assertEquals(0, tab.trackingProtection.loadedTrackers.size)
+        }
+    }
+
+    @Test
+    fun `Adding a hit result`() {
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store)
+
+        val session = Session(id = "session", initialUrl = "https://www.mozilla.org")
+        manager.add(session)
+
+        assertNull(session.hitResult.peek())
+        assertNull(store.state.findTab("session")!!.content.hitResult)
+
+        val hitResult: HitResult = HitResult.UNKNOWN("test")
+        session.hitResult = Consumable.from(hitResult)
+
+        assertEquals(hitResult, session.hitResult.peek())
+        store.state.findTab("session")!!.also { tab ->
+            assertNotNull(tab.content.hitResult)
+            assertSame(hitResult, tab.content.hitResult)
+        }
+
+        session.hitResult.consume { true }
+        store.state.findTab("session")!!.also { tab ->
+            assertNull(tab.content.hitResult)
+        }
+    }
+
+    @Test
+    fun `Adding a download`() {
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store)
+
+        val session = Session(id = "session", initialUrl = "https://www.mozilla.org")
+        manager.add(session)
+
+        assertNull(session.download.peek())
+        assertNull(store.state.findTab("session")!!.content.download)
+
+        val download: Download = mock()
+        `when`(download.id).thenReturn("1")
+        `when`(download.url).thenReturn("https://www.mozilla.org")
+        `when`(download.destinationDirectory).thenReturn("test")
+        session.download = Consumable.from(download)
+
+        assertEquals(download, session.download.peek())
+        store.state.findTab("session")!!.also { tab ->
+            assertNotNull(tab.content.download)
+            assertEquals(download.id, tab.content.download!!.id)
+            assertEquals(download.contentLength, tab.content.download!!.contentLength)
+            assertEquals(download.contentType, tab.content.download!!.contentType)
+            assertEquals(download.destinationDirectory, tab.content.download!!.destinationDirectory)
+            assertEquals(download.fileName, tab.content.download!!.fileName)
+            assertEquals(download.referrerUrl, tab.content.download!!.referrerUrl)
+            assertEquals(download.url, tab.content.download!!.url)
+            assertEquals(download.userAgent, tab.content.download!!.userAgent)
+        }
+
+        session.download.consume { true }
+        store.state.findTab("session")!!.also { tab ->
+            assertNull(tab.content.download)
+        }
+    }
+
+    @Test
+    fun `Linking session to engine session`() {
+        val store = BrowserStore()
+        val engine: Engine = mock()
+
+        val engineSession1: EngineSession = mock()
+        doReturn(engineSession1).`when`(engine).createSession(false)
+
+        val sessionManager = SessionManager(engine, store)
+
+        val session = Session(id = "session", initialUrl = "https://www.mozilla.org")
+        sessionManager.add(session)
+
+        assertNull(sessionManager.getEngineSession(session))
+        assertEquals(engineSession1, sessionManager.getOrCreateEngineSession(session))
+        store.state.findTab("session")!!.also { tab ->
+            assertEquals(engineSession1, tab.engineState.engineSession)
+        }
+
+        // Force unlink and link again
+        val engineSession2: EngineSession = mock()
+        doReturn(engineSession2).`when`(engine).createSession(false)
+        session.engineSessionHolder.engineSession = null
+        assertEquals(engineSession2, sessionManager.getOrCreateEngineSession(session))
+        store.state.findTab("session")!!.also { tab ->
+            assertEquals(engineSession2, tab.engineState.engineSession)
+        }
+    }
+
+    @Test
+    fun `Restoring engine session with state`() {
+        val engine: Engine = mock()
+        val store = BrowserStore()
+        val sessionManager = SessionManager(engine, store)
+
+        val engineSession: EngineSession = mock()
+        val engineSessionState: EngineSessionState = mock()
+
+        val snapshot = SessionManager.Snapshot(
+            listOf(
+                SessionManager.Snapshot.Item(
+                    session = Session(id = "session1", initialUrl = "http://www.firefox.com"),
+                    engineSessionState = engineSessionState
+                ),
+                SessionManager.Snapshot.Item(
+                    session = Session(id = "session2", initialUrl = "http://www.mozilla.org"),
+                    engineSession = engineSession
+                )
+            ),
+            selectedSessionIndex = 0
+        )
+
+        sessionManager.restore(snapshot)
+        assertEquals(2, sessionManager.size)
+
+        store.state.findTab("session1")!!.also { tab ->
+            assertEquals(engineSessionState, tab.engineState.engineSessionState)
+        }
+
+        store.state.findTab("session2")!!.also { tab ->
+            assertEquals(engineSession, tab.engineState.engineSession)
+        }
+    }
+
+    @Test
+    fun `Adding a prompt request`() {
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store)
+
+        val session = Session(id = "session", initialUrl = "https://www.mozilla.org")
+        manager.add(session)
+
+        assertNull(session.promptRequest.peek())
+        assertNull(store.state.findTab("session")!!.content.promptRequest)
+
+        val promptRequest: PromptRequest = mock()
+        session.promptRequest = Consumable.from(promptRequest)
+
+        assertEquals(promptRequest, session.promptRequest.peek())
+        store.state.findTab("session")!!.also { tab ->
+            assertNotNull(tab.content.promptRequest)
+            assertSame(promptRequest, tab.content.promptRequest)
+        }
+
+        session.promptRequest.consume { true }
+        store.state.findTab("session")!!.also { tab ->
+            assertNull(tab.content.promptRequest)
+        }
+    }
+
+    @Test
+    fun `Adding a find result`() {
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store)
+
+        val session = Session(id = "session", initialUrl = "https://www.mozilla.org")
+        manager.add(session)
+
+        assertTrue(session.findResults.isEmpty())
+        assertTrue(store.state.findTab("session")!!.content.findResults.isEmpty())
+
+        val result = Session.FindResult(0, 0, false)
+        session.findResults += result
+
+        assertEquals(1, session.findResults.size)
+        assertEquals(result, session.findResults.last())
+        store.state.findTab("session")!!.also { tab ->
+            assertEquals(1, tab.content.findResults.size)
+            assertEquals(result.toFindResultState(), tab.content.findResults.last())
+        }
+
+        session.findResults = emptyList()
+        assertTrue(session.findResults.isEmpty())
+        assertTrue(store.state.findTab("session")!!.content.findResults.isEmpty())
     }
 }

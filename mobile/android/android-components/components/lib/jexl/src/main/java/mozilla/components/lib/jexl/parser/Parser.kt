@@ -5,7 +5,12 @@
 package mozilla.components.lib.jexl.parser
 
 import mozilla.components.lib.jexl.ast.AstNode
-import mozilla.components.lib.jexl.ast.AstType
+import mozilla.components.lib.jexl.ast.BinaryExpression
+import mozilla.components.lib.jexl.ast.BranchNode
+import mozilla.components.lib.jexl.ast.Identifier
+import mozilla.components.lib.jexl.ast.Literal
+import mozilla.components.lib.jexl.ast.OperatorNode
+import mozilla.components.lib.jexl.ast.UnaryExpression
 import mozilla.components.lib.jexl.grammar.Grammar
 import mozilla.components.lib.jexl.lexer.Token
 
@@ -60,7 +65,7 @@ internal class Parser(
         tokens.forEach { parseToken(it) }
     }
 
-    @Suppress("ComplexMethod", "ThrowsCount")
+    @Suppress("ComplexMethod", "LongMethod", "ThrowsCount")
     private fun parseToken(token: Token): State? {
         if (state == State.COMPLETE) {
             throw ParserException("Token after parsing completed")
@@ -108,7 +113,11 @@ internal class Parser(
         if (cursor == null) {
             tree = node
         } else {
-            cursor!!.right = node
+            cursor?.let { cursor ->
+                if (cursor is BranchNode) {
+                    cursor.right = node
+                }
+            }
             node.parent = cursor
         }
 
@@ -177,10 +186,7 @@ internal class NextState(
 internal val handlers: Map<Token.Type, (Parser, Token) -> Unit> = mapOf(
     Token.Type.LITERAL to { parser, token ->
         parser.placeAtCursor(
-            AstNode(
-                AstType.LITERAL,
-                token.value
-            )
+            Literal(token.value)
         )
     },
 
@@ -188,18 +194,19 @@ internal val handlers: Map<Token.Type, (Parser, Token) -> Unit> = mapOf(
         val precedence = parser.grammar.elements[token.value]?.precedence ?: 0
         var parent = parser.cursor!!.parent
 
-        while (parent?.operator != null &&
-            parser.grammar.elements[parent.operator!!]!!.precedence > precedence) {
+        var operator = (parent as? OperatorNode)?.operator
+
+        while (operator != null &&
+            parser.grammar.elements[operator]!!.precedence > precedence) {
             parser.cursor = parent
-            parent = parent.parent
+            parent = parent?.parent
+            operator = (parent as? OperatorNode)?.operator
         }
 
-        val node = AstNode(
-            AstType.BINARY_EXPRESSION,
+        val node = BinaryExpression(
+            left = parser.cursor,
             operator = token.value.toString()
-        ).apply {
-            left = parser.cursor
-        }
+        )
 
         parser.cursor!!.parent = node
         parser.cursor = parent
@@ -207,10 +214,7 @@ internal val handlers: Map<Token.Type, (Parser, Token) -> Unit> = mapOf(
     },
 
     Token.Type.IDENTIFIER to { parser, token ->
-        val node = AstNode(
-            AstType.IDENTIFIER,
-            token.value
-        )
+        val node = Identifier(token.value)
 
         if (parser.nextIdentEncapsulate) {
             node.from = parser.cursor
@@ -225,8 +229,7 @@ internal val handlers: Map<Token.Type, (Parser, Token) -> Unit> = mapOf(
     },
 
     Token.Type.UNARY_OP to { parser, token ->
-        val node = AstNode(
-            AstType.UNARY_EXPRESSION,
+        val node = UnaryExpression(
             operator = token.value.toString()
         )
         parser.placeAtCursor(node)
@@ -236,9 +239,8 @@ internal val handlers: Map<Token.Type, (Parser, Token) -> Unit> = mapOf(
         val cursor = parser.cursor
 
         parser.nextIdentEncapsulate = cursor != null &&
-            (cursor.type != AstType.BINARY_EXPRESSION ||
-                (cursor.type == AstType.BINARY_EXPRESSION && cursor.right != null)) &&
-            cursor.type != AstType.UNARY_EXPRESSION
+            (cursor !is BinaryExpression || cursor.right != null) &&
+            cursor !is UnaryExpression
 
         parser.nextIdentRelative = cursor == null || !parser.nextIdentEncapsulate
 

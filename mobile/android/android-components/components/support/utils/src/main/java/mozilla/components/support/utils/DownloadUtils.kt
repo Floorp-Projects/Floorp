@@ -25,7 +25,6 @@ import android.net.Uri
 import android.webkit.MimeTypeMap
 import java.io.ByteArrayOutputStream
 import java.io.UnsupportedEncodingException
-import java.util.Locale
 import java.util.regex.Pattern
 
 object DownloadUtils {
@@ -56,14 +55,23 @@ object DownloadUtils {
      * Guess the name of the file that should be downloaded.
      *
      * This method is largely identical to [android.webkit.URLUtil.guessFileName]
-     * which unfortunately does not implement RfC 5987.
+     * which unfortunately does not implement RFC 5987.
      */
     @JvmStatic
-    @SuppressWarnings("ComplexMethod", "LongMethod", "NestedBlockDepth")
     fun guessFileName(contentDisposition: String?, url: String?, mimeType: String?): String {
-        val mimeTypeMap = MimeTypeMap.getSingleton()
+        val filename = extractFileNameFromUrl(contentDisposition, url)
+
+        // Split filename between base and extension
+        // Add an extension if filename does not have one
+        return if (filename.contains('.')) {
+            changeExtension(filename, mimeType)
+        } else {
+            filename + createExtension(mimeType)
+        }
+    }
+
+    private fun extractFileNameFromUrl(contentDisposition: String?, url: String?): String {
         var filename: String? = null
-        var extension: String? = null
 
         // Extract file name from content disposition header field
         if (contentDisposition != null) {
@@ -84,40 +92,7 @@ object DownloadUtils {
             filename = "downloadfile"
         }
 
-        // Split filename between base and extension
-        // Add an extension if filename does not have one
-        val dotIndex = filename.indexOf('.')
-        if (dotIndex < 0) {
-            if (mimeType != null) {
-                extension = mimeTypeMap.getExtensionFromMimeType(mimeType)?.let { ".$it" }
-            }
-            if (extension == null) {
-                extension = if (mimeType?.toLowerCase(Locale.ROOT)?.startsWith("text/") == true) {
-                    if (mimeType.equals("text/html", ignoreCase = true)) {
-                        ".html"
-                    } else {
-                        ".txt"
-                    }
-                } else {
-                    ".bin"
-                }
-            }
-        } else {
-            if (mimeType != null) {
-                // Compare the last segment of the extension against the mime type.
-                // If there's a mismatch, discard the entire extension.
-                val typeFromExt = mimeTypeMap.getMimeTypeFromExtension(filename.substringAfterLast('.'))
-                if (typeFromExt?.equals(mimeType, ignoreCase = true) != false) {
-                    extension = mimeTypeMap.getExtensionFromMimeType(mimeType)?.let { ".$it" }
-                }
-            }
-            if (extension == null) {
-                extension = filename.substring(dotIndex)
-            }
-            filename = filename.substring(0, dotIndex)
-        }
-
-        return filename + extension
+        return filename
     }
 
     private fun parseContentDisposition(contentDisposition: String): String? {
@@ -166,5 +141,58 @@ object DownloadUtils {
         }
 
         return stream.toString(encoding)
+    }
+
+    /**
+     * Compare the filename extension with the mime type and change it if necessary.
+     */
+    private fun changeExtension(filename: String, mimeType: String?): String {
+        var extension: String? = null
+        val dotIndex = filename.lastIndexOf('.')
+
+        if (mimeType != null) {
+            val mimeTypeMap = MimeTypeMap.getSingleton()
+            // Compare the last segment of the extension against the mime type.
+            // If there's a mismatch, discard the entire extension.
+            val typeFromExt = mimeTypeMap.getMimeTypeFromExtension(filename.substringAfterLast('.'))
+            if (typeFromExt?.equals(mimeType, ignoreCase = true) != false) {
+                extension = mimeTypeMap.getExtensionFromMimeType(mimeType)?.let { ".$it" }
+                // Check if the extension needs to be changed
+                if (extension != null && filename.endsWith(extension, ignoreCase = true)) {
+                    return filename
+                }
+            }
+        }
+
+        return if (extension != null) {
+            filename.substring(0, dotIndex) + extension
+        } else {
+            filename
+        }
+    }
+
+    /**
+     * Guess the extension for a file using the mime type.
+     */
+    private fun createExtension(mimeType: String?): String {
+        var extension: String? = null
+
+        if (mimeType != null) {
+            extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)?.let { ".$it" }
+        }
+        if (extension == null) {
+            extension = if (mimeType?.startsWith("text/", ignoreCase = true) == true) {
+                if (mimeType.equals("text/html", ignoreCase = true)) {
+                    ".html"
+                } else {
+                    ".txt"
+                }
+            } else {
+                // If there's no mime type assume binary data
+                ".bin"
+            }
+        }
+
+        return extension
     }
 }

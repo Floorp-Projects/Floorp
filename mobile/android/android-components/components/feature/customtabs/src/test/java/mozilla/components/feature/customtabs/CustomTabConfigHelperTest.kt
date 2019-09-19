@@ -9,9 +9,12 @@ import android.content.Intent
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.os.Binder
 import android.os.Bundle
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.browser.customtabs.TrustedWebUtils
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.browser.state.state.CustomTabConfig.Companion.EXTRA_NAVIGATION_BAR_COLOR
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -35,6 +38,19 @@ class CustomTabConfigHelperTest {
     }
 
     @Test
+    fun isTrustedWebActivityIntent() {
+        val customTabsIntent = CustomTabsIntent.Builder().build().intent
+        val trustedWebActivityIntent = Intent(customTabsIntent)
+            .putExtra(TrustedWebUtils.EXTRA_LAUNCH_AS_TRUSTED_WEB_ACTIVITY, true)
+        assertTrue(isTrustedWebActivityIntent(trustedWebActivityIntent))
+        assertFalse(isTrustedWebActivityIntent(customTabsIntent))
+        assertFalse(isTrustedWebActivityIntent(mock<Intent>()))
+        assertFalse(isTrustedWebActivityIntent(
+            Intent().putExtra(TrustedWebUtils.EXTRA_LAUNCH_AS_TRUSTED_WEB_ACTIVITY, true)
+        ))
+    }
+
+    @Test
     fun createFromIntentAssignsId() {
         val customTabsIntent = CustomTabsIntent.Builder().build()
         val customTabConfig = createCustomTabConfigFromIntent(customTabsIntent.intent, testContext.resources)
@@ -51,6 +67,16 @@ class CustomTabConfigHelperTest {
     }
 
     @Test
+    fun createFromIntentWithNavigationBarColor() {
+        val intent = CustomTabsIntent.Builder().build().intent.apply {
+            putExtra(EXTRA_NAVIGATION_BAR_COLOR, Color.WHITE)
+        }
+
+        val customTabConfig = createCustomTabConfigFromIntent(intent, testContext.resources)
+        assertEquals(Color.WHITE, customTabConfig.navigationBarColor)
+    }
+
+    @Test
     fun createFromIntentWithCloseButton() {
         val size = 24
         val builder = CustomTabsIntent.Builder()
@@ -61,6 +87,11 @@ class CustomTabConfigHelperTest {
         assertEquals(closeButtonIcon, customTabConfig.closeButtonIcon)
         assertEquals(size, customTabConfig.closeButtonIcon?.width)
         assertEquals(size, customTabConfig.closeButtonIcon?.height)
+
+        val customTabConfigNoResources = createCustomTabConfigFromIntent(builder.build().intent, null)
+        assertEquals(closeButtonIcon, customTabConfigNoResources.closeButtonIcon)
+        assertEquals(size, customTabConfigNoResources.closeButtonIcon?.width)
+        assertEquals(size, customTabConfigNoResources.closeButtonIcon?.height)
     }
 
     @Test
@@ -72,6 +103,9 @@ class CustomTabConfigHelperTest {
 
         val customTabConfig = createCustomTabConfigFromIntent(builder.build().intent, testContext.resources)
         assertNull(customTabConfig.closeButtonIcon)
+
+        val customTabConfigNoResources = createCustomTabConfigFromIntent(builder.build().intent, null)
+        assertEquals(closeButtonIcon, customTabConfigNoResources.closeButtonIcon)
     }
 
     @Test
@@ -104,7 +138,7 @@ class CustomTabConfigHelperTest {
         builder.enableUrlBarHiding()
 
         val customTabConfig = createCustomTabConfigFromIntent(builder.build().intent, testContext.resources)
-        assertFalse(customTabConfig.disableUrlbarHiding)
+        assertTrue(customTabConfig.enableUrlbarHiding)
     }
 
     @Test
@@ -194,5 +228,17 @@ class CustomTabConfigHelperTest {
 
         val customTabConfig = createCustomTabConfigFromIntent(customTabsIntent.intent, testContext.resources)
         assertTrue(customTabConfig.titleVisible)
+    }
+
+    @Test
+    fun createFromIntentWithSessionToken() {
+        val customTabsIntent: Intent = mock()
+        val bundle: Bundle = mock()
+        val binder: Binder = mock()
+        `when`(customTabsIntent.extras).thenReturn(bundle)
+        `when`(bundle.getBinder(CustomTabsIntent.EXTRA_SESSION)).thenReturn(binder)
+
+        val customTabConfig = createCustomTabConfigFromIntent(customTabsIntent, testContext.resources)
+        assertNotNull(customTabConfig.sessionToken)
     }
 }

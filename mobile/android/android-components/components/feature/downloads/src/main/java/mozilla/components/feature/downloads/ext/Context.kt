@@ -18,7 +18,7 @@ import androidx.core.content.getSystemService
  * Deprecated in Android Q, use MediaStore on that version.
  */
 @TargetApi(Build.VERSION_CODES.P)
-@Suppress("Deprecation", "LongParameterList", "LongMethod")
+@Suppress("Deprecation", "LongParameterList")
 internal fun Context.addCompletedDownload(
     title: String,
     description: String,

@@ -6,12 +6,6 @@
     <string name="mozac_feature_prompts_cancel">Отмена</string>
     <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
     <string name="mozac_feature_prompts_no_more_dialogs">Не давать этой странице создавать дополнительные диалоговые окна</string>
-    <!-- Title of a date picker dialog, this text is shown above a date picker. -->
-    <string name="mozac_feature_prompts_pick_a_date">Выбрать дату</string>
-    <!-- Title of a time picker dialog, this text is shown above a time picker. -->
-    <string name="mozac_feature_prompts_pick_a_time">Выбрать время</string>
-    <!-- Title of a date and time picker dialog, this text is shown above the picker. -->
-    <string name="mozac_feature_prompts_pick_a_date_and_time">Выбрать дату и время</string>
     <!-- Text for a positive button, when an user selects a date in date/time picker. -->
     <string name="mozac_feature_prompts_set_date">Установить</string>
     <!-- Text for a button that clears the selected input in the date/time picker. -->
@@ -31,4 +25,30 @@
     <string name="mozac_feature_prompts_allow">Разрешить</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_deny">Не разрешать</string>
+    <!-- Title of the month chooser dialog. -->
+    <string name="mozac_feature_prompts_set_month">Выберите месяц</string>
+    <!-- January (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jan">Янв</string>
+    <!-- February month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_feb">Фев</string>
+    <!-- March month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_mar">Мар</string>
+    <!-- April month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_apr">Апр</string>
+    <!-- May month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_may">Май</string>
+    <!-- June month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jun">Июн</string>
+    <!-- July month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jul">Июл</string>
+    <!-- August month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_aug">Авг</string>
+    <!-- September month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_sep">Сен</string>
+    <!-- October month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_oct">Окт</string>
+    <!-- November month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_nov">Ноя</string>
+    <!-- December month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_dec">Дек</string>
 </resources>

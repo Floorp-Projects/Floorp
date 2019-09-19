@@ -20,11 +20,14 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.Profile
 import mozilla.components.feature.qr.QrFeature
+import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.service.fxa.FxaException
 import mozilla.components.service.fxa.ServerConfig
+import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
+import mozilla.components.support.rustlog.RustLog
 import kotlin.coroutines.CoroutineContext
 
 @Suppress("TooManyFunctions")
@@ -33,7 +36,6 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
     private var scopesWithoutKeys: Set<String> = setOf("profile")
     private var scopesWithKeys: Set<String> = setOf("profile", "https://identity.mozilla.com/apps/oldsync")
     private var scopes: Set<String> = scopesWithoutKeys
-    private var wantsKeys: Boolean = false
 
     private lateinit var qrFeature: QrFeature
 
@@ -52,6 +54,8 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        RustLog.enable()
+        RustHttpConfig.setClient(lazy { HttpURLConnectionClient() })
 
         Log.addSink(AndroidLogSink())
 
@@ -76,7 +80,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
                         )
                         return@launch
                     }
-                    openWebView(url)
+                    openWebView(url.url)
                 }
             }
         )
@@ -85,16 +89,16 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
         findViewById<View>(R.id.buttonCustomTabs).setOnClickListener {
             launch {
-                account.beginOAuthFlowAsync(scopes, wantsKeys).await()?.let {
-                    openTab(it)
+                account.beginOAuthFlowAsync(scopes).await()?.let {
+                    openTab(it.url)
                 }
             }
         }
 
         findViewById<View>(R.id.buttonWebView).setOnClickListener {
             launch {
-                account.beginOAuthFlowAsync(scopes, wantsKeys).await()?.let {
-                    openWebView(it)
+                account.beginOAuthFlowAsync(scopes).await()?.let {
+                    openWebView(it.url)
                 }
             }
         }
@@ -110,7 +114,6 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         }
 
         findViewById<CheckBox>(R.id.checkboxKeys).setOnCheckedChangeListener { _, isChecked ->
-            wantsKeys = isChecked
             scopes = if (isChecked) scopesWithKeys else scopesWithoutKeys
         }
     }
@@ -150,7 +153,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
     override fun onLoginComplete(code: String, state: String, fragment: LoginFragment) {
         displayAndPersistProfile(code, state)
-        supportFragmentManager?.popBackStack()
+        supportFragmentManager.popBackStack()
     }
 
     private fun getAuthenticatedAccount(): FirefoxAccount? {
@@ -175,7 +178,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
     }
 
     private fun openWebView(url: String) {
-        supportFragmentManager?.beginTransaction()?.apply {
+        supportFragmentManager.beginTransaction().apply {
             replace(R.id.container, LoginFragment.create(url, REDIRECT_URL))
             addToBackStack(null)
             commit()

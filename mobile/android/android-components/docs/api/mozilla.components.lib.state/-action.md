@@ -15,3 +15,4 @@ state changes.
 | Name | Summary |
 |---|---|
 | [BrowserAction](../mozilla.components.browser.state.action/-browser-action.md) | `sealed class BrowserAction : `[`Action`](./-action.md)<br>[Action](./-action.md) implementation related to [BrowserState](../mozilla.components.browser.state.state/-browser-state/index.md). |
+| [CustomTabsAction](../mozilla.components.feature.customtabs.store/-custom-tabs-action/index.md) | `sealed class CustomTabsAction : `[`Action`](./-action.md) |

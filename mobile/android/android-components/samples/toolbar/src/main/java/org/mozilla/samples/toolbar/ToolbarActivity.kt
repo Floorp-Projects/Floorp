@@ -5,6 +5,7 @@
 package org.mozilla.samples.toolbar
 
 import android.content.res.Resources
+import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import androidx.annotation.DrawableRes
@@ -159,6 +160,9 @@ class ToolbarActivity : AppCompatActivity() {
      * A custom browser menu.
      */
     private fun setupCustomMenu() {
+
+        toolbar.siteSecurityColor = Color.TRANSPARENT to Color.TRANSPARENT
+        toolbar.siteSecurityIcon = getDrawable(R.drawable.custom_security_icon)
 
         toolbar.setBackgroundColor(
             ContextCompat.getColor(this, mozilla.components.ui.colors.R.color.photonBlue80))

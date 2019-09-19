@@ -23,6 +23,7 @@ import mozilla.components.concept.sync.AuthException
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.service.fxa.SyncAuthInfoCache
 import mozilla.components.service.fxa.SyncConfig
+import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.authErrorRegistry
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
@@ -32,8 +33,8 @@ import java.util.concurrent.TimeUnit
 
 private enum class SyncWorkerTag {
     Common,
-    Immediate,
-    Periodic
+    Immediate, // will not debounce a sync
+    Debounce // will debounce if another sync happened recently
 }
 
 private enum class SyncWorkerName {
@@ -61,8 +62,8 @@ internal class WorkManagerSyncManager(syncConfig: SyncConfig) : SyncManager(sync
         }
     }
 
-    override fun createDispatcher(stores: Set<String>): SyncDispatcher {
-        return WorkManagerSyncDispatcher(stores)
+    override fun createDispatcher(supportedEngines: Set<SyncEngine>): SyncDispatcher {
+        return WorkManagerSyncDispatcher(supportedEngines)
     }
 
     override fun dispatcherUpdated(dispatcher: SyncDispatcher) {
@@ -108,7 +109,7 @@ object WorkersLiveDataObserver {
 }
 
 class WorkManagerSyncDispatcher(
-    private val stores: Set<String>
+    private val supportedEngines: Set<SyncEngine>
 ) : SyncDispatcher, Observable<SyncStatusObserver> by ObserverRegistry(), Closeable {
     private val logger = Logger("WMSyncDispatcher")
 
@@ -135,12 +136,13 @@ class WorkManagerSyncDispatcher(
         return isSyncActive
     }
 
-    override fun syncNow(startup: Boolean) {
+    override fun syncNow(startup: Boolean, debounce: Boolean) {
         logger.debug("Immediate sync requested, startup = $startup")
         val delayMs = if (startup) {
             // Startup delay is there to avoid SQLITE_BUSY crashes, since we currently do a poor job
             // of managing database connections, and we expect there to be database writes at the start.
-            // FIXME https://github.com/mozilla-mobile/android-components/issues/1369
+            // We've done bunch of work to make this better (see https://github.com/mozilla-mobile/android-components/issues/1369),
+            // but it's not clear yet this delay is completely safe to remove.
             SYNC_STARTUP_DELAY_MS
         } else {
             0L
@@ -150,7 +152,7 @@ class WorkManagerSyncDispatcher(
             // Use the 'keep' policy to minimize overhead from multiple "sync now" operations coming in
             // at the same time.
             ExistingWorkPolicy.KEEP,
-            immediateSyncWorkRequest(delayMs)
+            regularSyncWorkRequest(delayMs, debounce)
         ).enqueue()
     }
 
@@ -194,11 +196,11 @@ class WorkManagerSyncDispatcher(
                 )
                 .setInputData(data)
                 .addTag(SyncWorkerTag.Common.name)
-                .addTag(SyncWorkerTag.Periodic.name)
+                .addTag(SyncWorkerTag.Debounce.name)
                 .build()
     }
 
-    private fun immediateSyncWorkRequest(delayMs: Long = 0L): OneTimeWorkRequest {
+    private fun regularSyncWorkRequest(delayMs: Long = 0L, debounce: Boolean = false): OneTimeWorkRequest {
         val data = getWorkerData()
         return OneTimeWorkRequestBuilder<WorkManagerSyncWorker>()
                 .setConstraints(
@@ -208,13 +210,15 @@ class WorkManagerSyncDispatcher(
                 )
                 .setInputData(data)
                 .addTag(SyncWorkerTag.Common.name)
-                .addTag(SyncWorkerTag.Immediate.name)
+                .addTag(if (debounce) SyncWorkerTag.Debounce.name else SyncWorkerTag.Immediate.name)
                 .setInitialDelay(delayMs, TimeUnit.MILLISECONDS)
                 .build()
     }
 
     private fun getWorkerData(): Data {
-        val dataBuilder = Data.Builder().putStringArray(KEY_DATA_STORES, stores.toTypedArray())
+        val dataBuilder = Data.Builder().putStringArray(
+            KEY_DATA_STORES, supportedEngines.map { it.nativeName }.toTypedArray()
+        )
 
         return dataBuilder.build()
     }
@@ -226,8 +230,8 @@ class WorkManagerSyncWorker(
 ) : CoroutineWorker(context, params) {
     private val logger = Logger("SyncWorker")
 
-    private fun isPeriodic(): Boolean {
-        return params.tags.contains(SyncWorkerTag.Periodic.name)
+    private fun isDebounced(): Boolean {
+        return params.tags.contains(SyncWorkerTag.Debounce.name)
     }
 
     private fun lastSyncedWithinStaggerBuffer(): Boolean {
@@ -235,15 +239,12 @@ class WorkManagerSyncWorker(
         return lastSyncedTs != 0L && (System.currentTimeMillis() - lastSyncedTs) < SYNC_STAGGER_BUFFER_MS
     }
 
-    @Suppress("ReturnCount", "LongMethod")
+    @Suppress("ReturnCount")
     override suspend fun doWork(): Result {
         logger.debug("Starting sync... Tagged as: ${params.tags}")
 
-        // If this is a periodic sync task, and we've very recently synced successfully, skip it.
-        // There could have been a manual or heuristic-driven syc very recently, and it's unlikely
-        // that an additional sync so shortly afterward will be valuable.
-        // NB: this does not affect manually triggered syncing in any way.
-        if (isPeriodic() && lastSyncedWithinStaggerBuffer()) {
+        // If this is a "debouncing" sync task, and we've very recently synced successfully, skip it.
+        if (isDebounced() && lastSyncedWithinStaggerBuffer()) {
             return Result.success()
         }
 
@@ -266,8 +267,7 @@ class WorkManagerSyncWorker(
 
         val resultBuilder = Data.Builder()
         syncResult.forEach {
-            val status = it.value.status
-            when (status) {
+            when (val status = it.value.status) {
                 SyncStatus.Ok -> {
                     logger.info("Synchronized store ${it.key}")
                     resultBuilder.putBoolean(it.key, true)

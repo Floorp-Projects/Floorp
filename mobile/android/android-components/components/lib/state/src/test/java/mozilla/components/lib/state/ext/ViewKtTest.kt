@@ -84,7 +84,7 @@ class ViewKtTest {
         assertEquals(0, receivedValue)
 
         // Switching to STARTED state: Receiving initial state
-        owner.lifecycleRegistry.markState(Lifecycle.State.STARTED)
+        owner.lifecycleRegistry.currentState = Lifecycle.State.STARTED
         assertTrue(latch.await(1, TimeUnit.SECONDS))
         assertEquals(24, receivedValue)
         latch = CountDownLatch(1)

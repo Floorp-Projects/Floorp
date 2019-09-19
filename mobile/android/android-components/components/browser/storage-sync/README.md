@@ -2,6 +2,11 @@
 
 A syncable implementation of `concept-storage` backed by [application-services' Places lib](https://github.com/mozilla/application-services).
 
+## Before using this component
+Products sending telemetry and using this component *must request* a data-review following [this process](https://wiki.mozilla.org/Firefox/Data_Collection).
+This component provides data collection using the [Glean SDK](https://mozilla.github.io/glean/book/index.html).
+The list of metrics being collected is available in the [metrics documentation](docs/metrics.md).
+
 ### Setting up the dependency
 
 Use Gradle to download the library from [maven.mozilla.org](https://maven.mozilla.org/) ([Setup repository](../../../README.md#maven-repository)):

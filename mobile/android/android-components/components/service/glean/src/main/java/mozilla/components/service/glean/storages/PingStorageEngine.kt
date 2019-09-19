@@ -77,7 +77,7 @@ internal class PingStorageEngine(context: Context) {
      * the ping storage directory.
      *
      * @param processingCallback Callback function to do the actual process action on the ping.
-     *                           Typically this will be the [HttpPingUploader.upload] function.
+     *                           Typically this will be a [PingUploader.upload] function.
      * @return Boolean representing the success of the upload task. This may be the value bubbled up
      *         from the callback, or if there was an error reading the files.
      */

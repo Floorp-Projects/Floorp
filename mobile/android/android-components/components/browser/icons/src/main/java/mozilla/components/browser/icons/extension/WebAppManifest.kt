@@ -19,7 +19,8 @@ import mozilla.components.concept.engine.manifest.WebAppManifest.Icon.Purpose
 fun WebAppManifest.toIconRequest() = IconRequest(
     url = startUrl,
     size = if (SDK_INT >= Build.VERSION_CODES.O) LAUNCHER_ADAPTIVE else LAUNCHER,
-    resources = icons.mapNotNull { it.toIconResource() }
+    resources = icons.mapNotNull { it.toIconResource() },
+    color = backgroundColor
 )
 
 private fun WebAppManifest.Icon.toIconResource(): IconRequest.Resource? {

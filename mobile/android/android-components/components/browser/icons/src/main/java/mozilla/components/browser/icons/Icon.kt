@@ -12,7 +12,7 @@ import android.graphics.Bitmap
  * @property bitmap The loaded icon as a [Bitmap].
  * @property color The dominant color of the icon. Will be null if no color could be extracted.
  * @property source The source of the icon.
- * @param maskable True if the icon represents as full-bleed icon that can be cropped to other shapes.
+ * @property maskable True if the icon represents as full-bleed icon that can be cropped to other shapes.
  */
 data class Icon(
     val bitmap: Bitmap,

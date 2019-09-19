@@ -10,7 +10,7 @@ import android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE
 import android.app.DownloadManager.Request
 import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.session.Download
+import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
 import mozilla.components.support.test.robolectric.testContext
@@ -27,12 +27,12 @@ import org.mockito.Mockito.verifyZeroInteractions
 @RunWith(AndroidJUnit4::class)
 class AndroidDownloadManagerTest {
 
-    private lateinit var download: Download
+    private lateinit var download: DownloadState
     private lateinit var downloadManager: AndroidDownloadManager
 
     @Before
     fun setup() {
-        download = Download(
+        download = DownloadState(
             "http://ipv4.download.thinkbroadband.com/5MB.zip",
             "", "application/zip", 5242880,
             "Mozilla/5.0 (Linux; Android 7.1.1) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/8.0 Chrome/69.0.3497.100 Mobile Safari/537.36"

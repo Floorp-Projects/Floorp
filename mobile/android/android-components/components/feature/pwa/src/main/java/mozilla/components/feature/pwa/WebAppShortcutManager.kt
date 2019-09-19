@@ -37,6 +37,7 @@ import mozilla.components.browser.icons.utils.IconMemoryCache
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.fetch.Client
+import mozilla.components.feature.pwa.WebAppLauncherActivity.Companion.ACTION_PWA_LAUNCHER
 import mozilla.components.feature.pwa.ext.installableManifest
 
 private val pwaIconMemoryCache = IconMemoryCache()
@@ -58,14 +59,21 @@ class WebAppShortcutManager(
 
     /**
      * Request to create a new shortcut on the home screen.
+     * @param context The current context.
+     * @param session The session to create the shortcut for.
+     * @param overrideShortcutName (optional) The name of the shortcut. Ignored for PWAs.
      */
-    suspend fun requestPinShortcut(context: Context, session: Session) {
+    suspend fun requestPinShortcut(
+        context: Context,
+        session: Session,
+        overrideShortcutName: String? = null
+    ) {
         if (ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {
             val manifest = session.installableManifest()
             val shortcut = if (supportWebApps && manifest != null) {
                 buildWebAppShortcut(context, manifest)
             } else {
-                buildBasicShortcut(context, session)
+                buildBasicShortcut(context, session, overrideShortcutName)
             }
 
             if (shortcut != null) {
@@ -92,14 +100,17 @@ class WebAppShortcutManager(
     /**
      * Create a new basic pinned website shortcut using info from the session.
      */
-    fun buildBasicShortcut(context: Context, session: Session): ShortcutInfoCompat? {
-        val shortcutIntent = Intent(context, WebAppLauncherActivity::class.java).apply {
-            action = WebAppLauncherActivity.INTENT_ACTION
-            data = session.url.toUri()
+    fun buildBasicShortcut(
+        context: Context,
+        session: Session,
+        overrideShortcutName: String? = null
+    ): ShortcutInfoCompat {
+        val shortcutIntent = Intent(Intent.ACTION_VIEW, session.url.toUri()).apply {
+            `package` = context.packageName
         }
 
         val builder = ShortcutInfoCompat.Builder(context, session.url)
-            .setShortLabel(session.title.ifBlank(fallbackLabel))
+            .setShortLabel((overrideShortcutName ?: session.title).ifBlank(fallbackLabel))
             .setIntent(shortcutIntent)
 
         session.icon?.let {
@@ -112,10 +123,15 @@ class WebAppShortcutManager(
     /**
      * Create a new Progressive Web App shortcut using a web app manifest.
      */
-    suspend fun buildWebAppShortcut(context: Context, manifest: WebAppManifest): ShortcutInfoCompat? {
+    suspend fun buildWebAppShortcut(
+        context: Context,
+        manifest: WebAppManifest
+    ): ShortcutInfoCompat? {
         val shortcutIntent = Intent(context, WebAppLauncherActivity::class.java).apply {
-            action = WebAppLauncherActivity.INTENT_ACTION
+            action = ACTION_PWA_LAUNCHER
             data = manifest.startUrl.toUri()
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+            `package` = context.packageName
         }
 
         val shortLabel = manifest.shortName ?: manifest.name
@@ -171,7 +187,6 @@ class WebAppShortcutManager(
  *
  * This version has its own cache to avoid affecting tab icons.
  */
-@Suppress("LongMethod")
 private fun webAppIcons(
     context: Context,
     httpClient: Client

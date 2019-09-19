@@ -2,7 +2,7 @@
 
 # playbackState
 
-`var playbackState: `[`PlaybackState`](-playback-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L20)
+`var playbackState: `[`PlaybackState`](-playback-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L28)
 
 The current [PlaybackState](-playback-state/index.md) of this media element.
 

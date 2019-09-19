@@ -9,10 +9,15 @@ import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -148,7 +153,7 @@ class ContentActionTest {
         assertNotEquals(newSecurityInfo, otherTab.content.securityInfo)
 
         store.dispatch(
-            ContentAction.UpdateSecurityInfo(tab.id, newSecurityInfo)
+            ContentAction.UpdateSecurityInfoAction(tab.id, newSecurityInfo)
         ).joinBlocking()
 
         assertEquals(newSecurityInfo, tab.content.securityInfo)
@@ -250,5 +255,159 @@ class ContentActionTest {
         assertNotEquals("I am a custom tab", updatedOtherCustomTab.content.title)
         assertNotEquals("I am a custom tab", tab.content.title)
         assertNotEquals("I am a custom tab", otherTab.content.title)
+    }
+
+    @Test
+    fun `UpdateDownloadAction updates download`() {
+        assertNull(tab.content.download)
+
+        val download1: DownloadState = mock()
+
+        store.dispatch(
+            ContentAction.UpdateDownloadAction(tab.id, download1)
+        ).joinBlocking()
+
+        assertEquals(download1, tab.content.download)
+
+        val download2: DownloadState = mock()
+
+        store.dispatch(
+            ContentAction.UpdateDownloadAction(tab.id, download2)
+        ).joinBlocking()
+
+        assertEquals(download2, tab.content.download)
+    }
+
+    @Test
+    fun `ConsumeDownloadAction removes download`() {
+        val download: DownloadState = mock()
+
+        store.dispatch(
+            ContentAction.UpdateDownloadAction(tab.id, download)
+        ).joinBlocking()
+
+        assertEquals(download, tab.content.download)
+
+        store.dispatch(
+            ContentAction.ConsumeDownloadAction(tab.id)
+        ).joinBlocking()
+
+        assertNull(tab.content.download)
+    }
+
+    @Test
+    fun `UpdateHitResultAction updates hit result`() {
+        assertNull(tab.content.hitResult)
+
+        val hitResult1: HitResult = mock()
+
+        store.dispatch(
+            ContentAction.UpdateHitResultAction(tab.id, hitResult1)
+        ).joinBlocking()
+
+        assertEquals(hitResult1, tab.content.hitResult)
+
+        val hitResult2: HitResult = mock()
+
+        store.dispatch(
+            ContentAction.UpdateHitResultAction(tab.id, hitResult2)
+        ).joinBlocking()
+
+        assertEquals(hitResult2, tab.content.hitResult)
+    }
+
+    @Test
+    fun `ConsumeHitResultAction removes hit result`() {
+        val hitResult: HitResult = mock()
+
+        store.dispatch(
+            ContentAction.UpdateHitResultAction(tab.id, hitResult)
+        ).joinBlocking()
+
+        assertEquals(hitResult, tab.content.hitResult)
+
+        store.dispatch(
+            ContentAction.ConsumeHitResultAction(tab.id)
+        ).joinBlocking()
+
+        assertNull(tab.content.hitResult)
+    }
+
+    @Test
+    fun `UpdatePromptRequestAction updates request`() {
+        assertNull(tab.content.promptRequest)
+
+        val promptRequest1: PromptRequest = mock()
+
+        store.dispatch(
+            ContentAction.UpdatePromptRequestAction(tab.id, promptRequest1)
+        ).joinBlocking()
+
+        assertEquals(promptRequest1, tab.content.promptRequest)
+
+        val promptRequest2: PromptRequest = mock()
+
+        store.dispatch(
+            ContentAction.UpdatePromptRequestAction(tab.id, promptRequest2)
+        ).joinBlocking()
+
+        assertEquals(promptRequest2, tab.content.promptRequest)
+    }
+
+    @Test
+    fun `ConsumePromptRequestAction removes result`() {
+        val promptRequest: PromptRequest = mock()
+
+        store.dispatch(
+            ContentAction.UpdatePromptRequestAction(tab.id, promptRequest)
+        ).joinBlocking()
+
+        assertEquals(promptRequest, tab.content.promptRequest)
+
+        store.dispatch(
+            ContentAction.ConsumePromptRequestAction(tab.id)
+        ).joinBlocking()
+
+        assertNull(tab.content.promptRequest)
+    }
+
+    @Test
+    fun `AddFindResultAction adds result`() {
+        assertTrue(tab.content.findResults.isEmpty())
+
+        val result: FindResultState = mock()
+        store.dispatch(
+            ContentAction.AddFindResultAction(tab.id, result)
+        ).joinBlocking()
+
+        assertEquals(1, tab.content.findResults.size)
+        assertEquals(result, tab.content.findResults.last())
+
+        val result2: FindResultState = mock()
+        store.dispatch(
+            ContentAction.AddFindResultAction(tab.id, result2)
+        ).joinBlocking()
+
+        assertEquals(2, tab.content.findResults.size)
+        assertEquals(result2, tab.content.findResults.last())
+    }
+
+    @Test
+    fun `ClearFindResultsAction removes all results`() {
+        store.dispatch(
+            ContentAction.AddFindResultAction(tab.id, mock())
+        ).joinBlocking()
+
+        store.dispatch(
+            ContentAction.AddFindResultAction(tab.id, mock())
+        ).joinBlocking()
+
+        assertEquals(2, tab.content.findResults.size)
+
+        store.dispatch(
+            ContentAction.ClearFindResultsAction(tab.id)
+        ).joinBlocking()
+
+        assertTrue(tab.content.findResults.isEmpty())
     }
 }

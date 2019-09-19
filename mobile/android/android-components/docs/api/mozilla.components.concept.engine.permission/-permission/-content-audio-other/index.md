@@ -2,7 +2,7 @@
 
 # ContentAudioOther
 
-`data class ContentAudioOther : `[`Permission`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/permission/PermissionRequest.kt#L64)
+`data class ContentAudioOther : `[`Permission`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/permission/PermissionRequest.kt#L66)
 
 ### Constructors
 

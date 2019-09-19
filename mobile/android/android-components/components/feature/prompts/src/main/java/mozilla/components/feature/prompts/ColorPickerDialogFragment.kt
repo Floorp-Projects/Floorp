@@ -47,7 +47,7 @@ internal class ColorPickerDialogFragment : PromptDialogFragment(), DialogInterfa
             .setView(createDialogContentView())
             .create()
 
-    override fun onCancel(dialog: DialogInterface?) {
+    override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)
         onClick(dialog, DialogInterface.BUTTON_NEGATIVE)
     }

@@ -73,7 +73,7 @@ internal class TextPromptDialogFragment : PromptDialogFragment(), TextWatcher {
         return addLayout(builder).create()
     }
 
-    override fun onCancel(dialog: DialogInterface?) {
+    override fun onCancel(dialog: DialogInterface) {
         feature?.onCancel(sessionId)
     }
 

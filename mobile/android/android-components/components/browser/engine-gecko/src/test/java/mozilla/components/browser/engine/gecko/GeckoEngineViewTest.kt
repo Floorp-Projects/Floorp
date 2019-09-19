@@ -15,7 +15,8 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
+import org.mockito.Mockito.never
+import org.mockito.Mockito.reset
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.GeckoResult
@@ -96,13 +97,33 @@ class GeckoEngineViewTest {
 
         engineView.render(engineSession)
 
-        verify(geckoView, Mockito.never()).releaseSession()
-        verify(engineSession, Mockito.never()).unregister(any())
+        verify(geckoView, never()).releaseSession()
+        verify(engineSession, never()).unregister(any())
 
         engineView.release()
 
         verify(geckoView).releaseSession()
         verify(engineSession).unregister(any())
+    }
+
+    @Test
+    fun `View will rebind session if process gets killed`() {
+        val engineView = GeckoEngineView(context)
+        val engineSession = mock<GeckoEngineSession>()
+        val geckoSession = mock<GeckoSession>()
+        val geckoView = mock<NestedGeckoView>()
+
+        whenever(engineSession.geckoSession).thenReturn(geckoSession)
+        engineView.currentGeckoView = geckoView
+
+        engineView.render(engineSession)
+
+        reset(geckoView)
+        verify(geckoView, never()).setSession(geckoSession)
+
+        engineView.observer.onProcessKilled()
+
+        verify(geckoView).setSession(geckoSession)
     }
 
     @Test
@@ -117,8 +138,8 @@ class GeckoEngineViewTest {
 
         engineView.render(engineSession)
 
-        Mockito.reset(geckoView)
-        verify(geckoView, Mockito.never()).setSession(geckoSession)
+        reset(geckoView)
+        verify(geckoView, never()).setSession(geckoSession)
 
         engineView.observer.onCrash()
 

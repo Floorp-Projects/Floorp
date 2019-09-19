@@ -3,6 +3,4 @@
 # &lt;init&gt;
 
 `SearchSuggestionClient(searchEngine: `[`SearchEngine`](../../mozilla.components.browser.search/-search-engine/index.md)`, fetcher: `[`SearchSuggestionFetcher`](../-search-suggestion-fetcher.md)`)`
-
-Provides an interface to get search suggestions from a given SearchEngine.
-
+`SearchSuggestionClient(context: <ERROR CLASS>, searchEngineManager: `[`SearchEngineManager`](../../mozilla.components.browser.search/-search-engine-manager/index.md)`, fetcher: `[`SearchSuggestionFetcher`](../-search-suggestion-fetcher.md)`)`

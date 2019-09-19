@@ -6,6 +6,7 @@ import androidx.work.BackoffPolicy
 import androidx.work.NetworkType
 import androidx.work.WorkerParameters
 import mozilla.components.service.glean.config.Configuration
+import mozilla.components.service.glean.getWorkerStatus
 import mozilla.components.service.glean.resetGlean
 import org.junit.Assert
 import org.junit.Before
@@ -49,5 +50,21 @@ class PingUploadWorkerTest {
     fun testDoWorkSuccess() {
         val result = pingUploadWorker!!.doWork()
         Assert.assertTrue(result.toString().contains("Success"))
+    }
+
+    @Test
+    fun `cancel() correctly cancels worker`() {
+        PingUploadWorker.enqueueWorker()
+
+        // Verify that the worker is enqueued
+        Assert.assertTrue("PingUploadWorker is enqueued",
+            getWorkerStatus(PingUploadWorker.PING_WORKER_TAG).isEnqueued)
+
+        // Cancel the worker
+        PingUploadWorker.cancel()
+
+        // Verify worker has been cancelled
+        Assert.assertFalse("PingUploadWorker is not enqueued",
+            getWorkerStatus(PingUploadWorker.PING_WORKER_TAG).isEnqueued)
     }
 }

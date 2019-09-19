@@ -24,9 +24,11 @@ import mozilla.components.service.glean.private.PingType
 import mozilla.components.service.glean.private.StringMetricType
 import mozilla.components.service.glean.private.UuidMetricType
 import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
+import mozilla.components.service.glean.scheduler.MetricsPingWorker
 import mozilla.components.service.glean.scheduler.PingUploadWorker
 import mozilla.components.service.glean.storages.StorageEngineManager
 import mozilla.components.service.glean.storages.StringsStorageEngine
+import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.service.glean.utils.getLanguageFromLocale
 import mozilla.components.service.glean.utils.getLocaleTag
 import org.json.JSONObject
@@ -37,7 +39,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
@@ -49,6 +51,7 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
 import java.time.Instant
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
@@ -60,10 +63,8 @@ import mozilla.components.service.glean.private.TimeUnit as GleanTimeUnit
 @RunWith(RobolectricTestRunner::class)
 class GleanTest {
 
-    @Before
-    fun setup() {
-        resetGlean()
-    }
+    @get:Rule
+    val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())
 
     @Test
     fun `disabling upload should disable metrics recording`() {
@@ -140,7 +141,7 @@ class GleanTest {
 
         try {
             // Simulate the first foreground event after the application starts.
-            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
             click.record()
 
             // Simulate going to background.
@@ -574,6 +575,29 @@ class GleanTest {
 
         Glean.setUploadEnabled(true)
         assertTrue(GleanInternalMetrics.os.testHasValue())
+    }
+
+    @Test
+    fun `Workers should be cancelled when disabling uploading`() {
+        // Force the MetricsPingScheduler to schedule the MetricsPingWorker
+        Glean.metricsPingScheduler.schedulePingCollection(Calendar.getInstance(), true)
+        // Enqueue a worker to send the baseline ping
+        Pings.baseline.send()
+
+        // Verify that the workers are enqueued
+        assertTrue("PingUploadWorker is enqueued",
+            getWorkerStatus(PingUploadWorker.PING_WORKER_TAG).isEnqueued)
+        assertTrue("MetricsPingWorker is enqueued",
+            getWorkerStatus(MetricsPingWorker.TAG).isEnqueued)
+
+        // Toggle upload enabled to false
+        Glean.setUploadEnabled(false)
+
+        // Verify workers have been cancelled
+        assertFalse("PingUploadWorker is not enqueued",
+            getWorkerStatus(PingUploadWorker.PING_WORKER_TAG).isEnqueued)
+        assertFalse("MetricsPingWorker is not enqueued",
+            getWorkerStatus(MetricsPingWorker.TAG).isEnqueued)
     }
 
     @Test

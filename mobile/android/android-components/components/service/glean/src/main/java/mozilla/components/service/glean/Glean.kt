@@ -19,6 +19,7 @@ import java.util.UUID
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.GleanMetrics.GleanInternalMetrics
 import mozilla.components.service.glean.GleanMetrics.Pings
+import mozilla.components.service.glean.net.BaseUploader
 import mozilla.components.service.glean.ping.PingMaker
 import mozilla.components.service.glean.private.PingType
 import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
@@ -48,6 +49,11 @@ open class GleanInternalAPI internal constructor () {
     private lateinit var storageEngineManager: StorageEngineManager
     internal lateinit var pingMaker: PingMaker
     internal lateinit var configuration: Configuration
+
+    // This is the wrapped http uploading mechanism: provides base functionalities
+    // for logging and delegates the actual upload to the implementation in
+    // the `Configuration`.
+    internal val httpClient by lazy { BaseUploader(configuration.httpClient) }
 
     private val gleanLifecycleObserver by lazy { GleanLifecycleObserver() }
 
@@ -85,7 +91,7 @@ open class GleanInternalAPI internal constructor () {
      * as shared preferences
      * @param configuration A Glean [Configuration] object with global settings.
      */
-    @Suppress("LongMethod")
+    @JvmOverloads
     fun initialize(
         applicationContext: Context,
         configuration: Configuration = Configuration()
@@ -132,7 +138,7 @@ open class GleanInternalAPI internal constructor () {
         // threaded race conditions.
         @Suppress("EXPERIMENTAL_API_USAGE")
         if (!Dispatchers.API.testingMode) {
-            metricsPingScheduler.startupCheck()
+            metricsPingScheduler.schedule()
         }
 
         // Signal Dispatcher that init is complete
@@ -206,8 +212,18 @@ open class GleanInternalAPI internal constructor () {
         if (enabled) {
             initializeCoreMetrics(applicationContext!!)
         } else {
+            cancelPingWorkers()
             clearMetrics()
         }
+    }
+
+    /**
+     * Cancel any pending [PingUploadWorker] objects that have been enqueued so that we don't
+     * accidentally upload or collect data after the upload has been disabled.
+     */
+    private fun cancelPingWorkers() {
+        MetricsPingScheduler.cancel()
+        PingUploadWorker.cancel()
     }
 
     /**
@@ -253,6 +269,7 @@ open class GleanInternalAPI internal constructor () {
      * @param branch The experiment branch (maximum 30 bytes)
      * @param extra Optional metadata to output with the ping
      */
+    @JvmOverloads
     fun setExperimentActive(
         experimentId: String,
         branch: String,
@@ -438,7 +455,7 @@ open class GleanInternalAPI internal constructor () {
     /**
      * Handle the background event and send the appropriate pings.
      */
-    fun handleBackgroundEvent() {
+    internal fun handleBackgroundEvent() {
         // Schedule the baseline and event pings
         sendPings(listOf(Pings.baseline, Pings.events))
     }
@@ -529,15 +546,47 @@ open class GleanInternalAPI internal constructor () {
     }
 
     /**
-     * Should be called from all users of the Glean testing API.
+     * TEST ONLY FUNCTION.
+     * This is called by the GleanTestRule, to enable test mode.
      *
      * This makes all asynchronous work synchronous so we can test the results of the
      * API synchronously.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    fun enableTestingMode() {
+    internal fun enableTestingMode() {
         @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.setTestingMode(enabled = true)
+    }
+
+    /**
+     * TEST ONLY FUNCTION.
+     * Resets the Glean state and trigger init again.
+     *
+     * @param context the application context to init Glean with
+     * @param config the [Configuration] to init Glean with
+     * @param clearStores if true, clear the contents of all stores
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    internal fun resetGlean(
+        context: Context,
+        config: Configuration,
+        clearStores: Boolean
+    ) {
+        Glean.enableTestingMode()
+
+        if (clearStores) {
+            // Clear all the stored data.
+            val storageManager = StorageEngineManager(applicationContext = context)
+            storageManager.clearAllStores()
+            // The experiments storage engine needs to be cleared manually as it's not listed
+            // in the `StorageEngineManager`.
+            ExperimentsStorageEngine.clearAllStores()
+        }
+
+        // Init Glean.
+        Glean.initialized = false
+        Glean.setUploadEnabled(true)
+        Glean.initialize(context, config)
     }
 }
 

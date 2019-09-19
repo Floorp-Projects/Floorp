@@ -16,11 +16,12 @@ Represents a request to open or close a browser window.
 
 | Name | Summary |
 |---|---|
-| [prepare](prepare.md) | `abstract fun prepare(engineSession: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Prepares the provided [EngineSession](../../mozilla.components.concept.engine/-engine-session/index.md) for the window request. This is used to attach state (e.g. a native session) to the engine session. |
-| [start](start.md) | `abstract fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Starts the window request. |
+| [prepare](prepare.md) | `abstract fun prepare(): `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)<br>Prepares an [EngineSession](../../mozilla.components.concept.engine/-engine-session/index.md) for the window request. This is used to attach state (e.g. a native session or view) to the engine session. |
+| [start](start.md) | `open fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Starts the window request. |
 
 ### Inheritors
 
 | Name | Summary |
 |---|---|
+| [GeckoWindowRequest](../../mozilla.components.browser.engine.gecko.window/-gecko-window-request/index.md) | `class GeckoWindowRequest : `[`WindowRequest`](./index.md)<br>Gecko-based implementation of [WindowRequest](./index.md). |
 | [SystemWindowRequest](../../mozilla.components.browser.engine.system.window/-system-window-request/index.md) | `class SystemWindowRequest : `[`WindowRequest`](./index.md)<br>WebView-based implementation of [WindowRequest](./index.md). |

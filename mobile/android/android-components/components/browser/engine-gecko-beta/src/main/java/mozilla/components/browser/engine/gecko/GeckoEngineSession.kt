@@ -8,10 +8,13 @@ import android.annotation.SuppressLint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.engine.gecko.media.GeckoMediaDelegate
 import mozilla.components.browser.engine.gecko.permission.GeckoPermissionRequest
 import mozilla.components.browser.engine.gecko.prompt.GeckoPromptDelegate
+import mozilla.components.browser.engine.gecko.window.GeckoWindowRequest
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
@@ -27,7 +30,6 @@ import mozilla.components.support.ktx.android.util.Base64
 import mozilla.components.support.ktx.kotlin.isEmail
 import mozilla.components.support.ktx.kotlin.isGeoLocation
 import mozilla.components.support.ktx.kotlin.isPhone
-import mozilla.components.support.utils.DownloadUtils
 import org.json.JSONObject
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.ContentBlocking
@@ -53,7 +55,8 @@ class GeckoEngineSession(
             .build()
         GeckoSession(settings)
     },
-    private val context: CoroutineContext = Dispatchers.IO
+    private val context: CoroutineContext = Dispatchers.IO,
+    openGeckoSession: Boolean = true
 ) : CoroutineScope, EngineSession() {
 
     internal lateinit var geckoSession: GeckoSession
@@ -85,7 +88,7 @@ class GeckoEngineSession(
         get() = context + job
 
     init {
-        createGeckoSession()
+        createGeckoSession(shouldOpen = openGeckoSession)
     }
 
     /**
@@ -169,7 +172,20 @@ class GeckoEngineSession(
         } else {
             policy.useForRegularSessions
         }
-        geckoSession.settings.useTrackingProtection = enabled
+        /**
+         * As described on https://bugzilla.mozilla.org/show_bug.cgi?id=1579264,useTrackingProtection
+         * is a misleading setting. When is set to true is blocking content (scripts/sub-resources).
+         * Instead of just turn on/off tracking protection. Until, this issue is fixed consumers need
+         * a way to indicate, if they want to block content or not, this is why we use
+         * [TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES].
+         */
+        val shouldBlockContent =
+            policy.contains(TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)
+
+        if (!enabled) {
+            disableTrackingProtectionOnGecko()
+        }
+        geckoSession.settings.useTrackingProtection = shouldBlockContent
         notifyObservers { onTrackerBlockingEnabledChange(enabled) }
     }
 
@@ -177,8 +193,17 @@ class GeckoEngineSession(
      * See [EngineSession.disableTrackingProtection]
      */
     override fun disableTrackingProtection() {
-        geckoSession.settings.useTrackingProtection = false
+        disableTrackingProtectionOnGecko()
         notifyObservers { onTrackerBlockingEnabledChange(false) }
+    }
+
+    // To fully disable tracking protection we need to change the different tracking protection
+    // variables to none.
+    private fun disableTrackingProtectionOnGecko() {
+        geckoSession.settings.useTrackingProtection = false
+        runtime.settings.contentBlocking.setAntiTracking(ContentBlocking.AntiTracking.NONE)
+        runtime.settings.contentBlocking.cookieBehavior = ContentBlocking.CookieBehavior.ACCEPT_ALL
+        runtime.settings.contentBlocking.setStrictSocialTrackingProtection(false)
     }
 
     /**
@@ -302,11 +327,8 @@ class GeckoEngineSession(
             session: GeckoSession,
             request: NavigationDelegate.LoadRequest
         ): GeckoResult<AllowOrDeny> {
-            // TODO use onNewSession and create window request:
-            // https://github.com/mozilla-mobile/android-components/issues/1503
             if (request.target == GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW) {
-                geckoSession.loadUri(request.uri)
-                return GeckoResult.fromValue(AllowOrDeny.DENY)
+                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
             }
 
             val response = settings.requestInterceptor?.onLoadRequest(
@@ -348,7 +370,15 @@ class GeckoEngineSession(
         override fun onNewSession(
             session: GeckoSession,
             uri: String
-        ): GeckoResult<GeckoSession> = GeckoResult.fromValue(null)
+        ): GeckoResult<GeckoSession> {
+            val newEngineSession = GeckoEngineSession(runtime, privateMode, defaultSettings, openGeckoSession = false)
+            notifyObservers {
+                MainScope().launch {
+                    onOpenWindowRequest(GeckoWindowRequest(uri, newEngineSession))
+                }
+            }
+            return GeckoResult.fromValue(newEngineSession.geckoSession)
+        }
 
         override fun onLoadError(
             session: GeckoSession,
@@ -486,7 +516,7 @@ class GeckoEngineSession(
             screenY: Int,
             element: GeckoSession.ContentDelegate.ContextElement
         ) {
-            val hitResult = handleLongClick(element.srcUri, element.type, element.linkUri)
+            val hitResult = handleLongClick(element.srcUri, element.type, element.linkUri, element.title)
             hitResult?.let {
                 notifyObservers { onLongPress(it) }
             }
@@ -495,10 +525,33 @@ class GeckoEngineSession(
         override fun onCrash(session: GeckoSession) {
             stateBeforeCrash = lastSessionState
 
-            geckoSession.close()
-            createGeckoSession()
+            recoverGeckoSession()
 
             notifyObservers { onCrash() }
+        }
+
+        override fun onKill(session: GeckoSession) {
+            // The content process of this session got killed (resources reclaimed by Android).
+            // Let's recover and restore the last known state.
+
+            val state = lastSessionState
+
+            recoverGeckoSession()
+
+            state?.let { geckoSession.restoreState(it) }
+
+            notifyObservers { onProcessKilled() }
+        }
+
+        private fun recoverGeckoSession() {
+            // Recover the GeckoSession after the process getting killed or crashing. We create a
+            // new underlying GeckoSession.
+            // Eventually we may be able to re-use the same GeckoSession by re-opening it. However
+            // that seems to have caused issues:
+            // https://github.com/mozilla-mobile/android-components/issues/3640
+
+            geckoSession.close()
+            createGeckoSession()
         }
 
         override fun onFullScreen(session: GeckoSession, fullScreen: Boolean) {
@@ -507,13 +560,11 @@ class GeckoEngineSession(
 
         override fun onExternalResponse(session: GeckoSession, response: GeckoSession.WebResponseInfo) {
             notifyObservers {
-                val fileName = response.filename
-                    ?: DownloadUtils.guessFileName(null, response.uri, response.contentType)
                 onExternalResource(
                         url = response.uri,
                         contentLength = response.contentLength,
                         contentType = response.contentType,
-                        fileName = fileName)
+                        fileName = response.filename)
             }
         }
 
@@ -548,35 +599,76 @@ class GeckoEngineSession(
                 onTrackerBlocked(event.toTracker())
             }
         }
+
+        override fun onContentLoaded(session: GeckoSession, event: ContentBlocking.BlockEvent) {
+            notifyObservers {
+                onTrackerLoaded(event.toTracker())
+            }
+        }
     }
 
-    @Suppress("LongMethod")
     private fun ContentBlocking.BlockEvent.toTracker(): Tracker {
-        val blockedContentCategories = ArrayList<Tracker.Category>()
+        val blockedContentCategories = mutableListOf<TrackingProtectionPolicy.TrackingCategory>()
 
-        if (categories.contains(ContentBlocking.AT_AD)) {
-            blockedContentCategories.add(Tracker.Category.Ad)
-        }
-
-        if (categories.contains(ContentBlocking.AT_ANALYTIC)) {
-            blockedContentCategories.add(Tracker.Category.Analytic)
+        if (antiTrackingCategory.contains(ContentBlocking.AntiTracking.AD)) {
+            blockedContentCategories.add(TrackingProtectionPolicy.TrackingCategory.AD)
         }
 
-        if (categories.contains(ContentBlocking.AT_SOCIAL)) {
-            blockedContentCategories.add(Tracker.Category.Social)
+        if (antiTrackingCategory.contains(ContentBlocking.AntiTracking.ANALYTIC)) {
+            blockedContentCategories.add(TrackingProtectionPolicy.TrackingCategory.ANALYTICS)
         }
 
-        if (categories.contains(ContentBlocking.AT_FINGERPRINTING)) {
-            blockedContentCategories.add(Tracker.Category.Fingerprinting)
+        if (antiTrackingCategory.contains(ContentBlocking.AntiTracking.SOCIAL)) {
+            blockedContentCategories.add(TrackingProtectionPolicy.TrackingCategory.SOCIAL)
         }
 
-        if (categories.contains(ContentBlocking.AT_CRYPTOMINING)) {
-            blockedContentCategories.add(Tracker.Category.Cryptomining)
+        if (antiTrackingCategory.contains(ContentBlocking.AntiTracking.FINGERPRINTING)) {
+            blockedContentCategories.add(TrackingProtectionPolicy.TrackingCategory.FINGERPRINTING)
         }
-        if (categories.contains(ContentBlocking.AT_CONTENT)) {
-            blockedContentCategories.add(Tracker.Category.Content)
+
+        if (antiTrackingCategory.contains(ContentBlocking.AntiTracking.CRYPTOMINING)) {
+            blockedContentCategories.add(TrackingProtectionPolicy.TrackingCategory.CRYPTOMINING)
         }
-        return Tracker(uri, blockedContentCategories)
+
+        if (antiTrackingCategory.contains(ContentBlocking.AntiTracking.CONTENT)) {
+            blockedContentCategories.add(TrackingProtectionPolicy.TrackingCategory.CONTENT)
+        }
+
+        if (antiTrackingCategory.contains(ContentBlocking.AntiTracking.TEST)) {
+            blockedContentCategories.add(TrackingProtectionPolicy.TrackingCategory.TEST)
+        }
+
+        return Tracker(
+            url = uri,
+            trackingCategories = blockedContentCategories,
+            cookiePolicies = getCookiePolicies()
+        )
+    }
+
+    private fun ContentBlocking.BlockEvent.getCookiePolicies(): List<TrackingProtectionPolicy.CookiePolicy> {
+        val cookiesPolicies = mutableListOf<TrackingProtectionPolicy.CookiePolicy>()
+
+        if (cookieBehaviorCategory == ContentBlocking.CookieBehavior.ACCEPT_ALL) {
+            cookiesPolicies.add(TrackingProtectionPolicy.CookiePolicy.ACCEPT_ALL)
+        }
+
+        if (cookieBehaviorCategory.contains(ContentBlocking.CookieBehavior.ACCEPT_FIRST_PARTY)) {
+            cookiesPolicies.add(TrackingProtectionPolicy.CookiePolicy.ACCEPT_ONLY_FIRST_PARTY)
+        }
+
+        if (cookieBehaviorCategory.contains(ContentBlocking.CookieBehavior.ACCEPT_NONE)) {
+            cookiesPolicies.add(TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE)
+        }
+
+        if (cookieBehaviorCategory.contains(ContentBlocking.CookieBehavior.ACCEPT_NON_TRACKERS)) {
+            cookiesPolicies.add(TrackingProtectionPolicy.CookiePolicy.ACCEPT_NON_TRACKERS)
+        }
+
+        if (cookieBehaviorCategory.contains(ContentBlocking.CookieBehavior.ACCEPT_VISITED)) {
+            cookiesPolicies.add(TrackingProtectionPolicy.CookiePolicy.ACCEPT_VISITED)
+        }
+
+        return cookiesPolicies
     }
 
     private operator fun Int.contains(mask: Int): Boolean {
@@ -628,7 +720,7 @@ class GeckoEngineSession(
     }
 
     @Suppress("ComplexMethod")
-    fun handleLongClick(elementSrc: String?, elementType: Int, uri: String? = null): HitResult? {
+    fun handleLongClick(elementSrc: String?, elementType: Int, uri: String? = null, title: String? = null): HitResult? {
         return when (elementType) {
             GeckoSession.ContentDelegate.ContextElement.TYPE_AUDIO ->
                 elementSrc?.let {
@@ -643,7 +735,7 @@ class GeckoEngineSession(
                     elementSrc != null && uri != null ->
                         HitResult.IMAGE_SRC(elementSrc, uri)
                     elementSrc != null ->
-                        HitResult.IMAGE(elementSrc)
+                        HitResult.IMAGE(elementSrc, title)
                     else -> HitResult.UNKNOWN("")
                 }
             }
@@ -663,7 +755,7 @@ class GeckoEngineSession(
         }
     }
 
-    private fun createGeckoSession() {
+    private fun createGeckoSession(shouldOpen: Boolean = true) {
         this.geckoSession = geckoSessionProvider()
 
         defaultSettings?.trackingProtectionPolicy?.let { enableTrackingProtection(it) }
@@ -673,7 +765,9 @@ class GeckoEngineSession(
         defaultSettings?.userAgentString?.let { geckoSession.settings.userAgentOverride = it }
         defaultSettings?.suspendMediaWhenInactive?.let { geckoSession.settings.suspendMediaWhenInactive = it }
 
-        geckoSession.open(runtime)
+        if (shouldOpen) {
+            geckoSession.open(runtime)
+        }
 
         geckoSession.navigationDelegate = createNavigationDelegate()
         geckoSession.progressDelegate = createProgressDelegate()

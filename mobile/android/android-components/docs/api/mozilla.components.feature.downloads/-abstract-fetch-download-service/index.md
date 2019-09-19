@@ -2,22 +2,18 @@
 
 # AbstractFetchDownloadService
 
-`abstract class AbstractFetchDownloadService : `[`CoroutineService`](../-coroutine-service/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/AbstractFetchDownloadService.kt#L52)
+`abstract class AbstractFetchDownloadService : `[`CoroutineService`](../-coroutine-service/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/AbstractFetchDownloadService.kt#L49)
 
 Service that performs downloads through a fetch [Client](../../mozilla.components.concept.fetch/-client/index.md) rather than through the native
 Android download manager.
 
 To use this service, you must create a subclass in your application and it to the manifest.
 
-### Parameters
-
-`broadcastManager` - Override the [LocalBroadcastManager](#) instance.
-
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `AbstractFetchDownloadService(broadcastManager: LocalBroadcastManager? = null)`<br>Service that performs downloads through a fetch [Client](../../mozilla.components.concept.fetch/-client/index.md) rather than through the native Android download manager. |
+| [&lt;init&gt;](-init-.md) | `AbstractFetchDownloadService()`<br>Service that performs downloads through a fetch [Client](../../mozilla.components.concept.fetch/-client/index.md) rather than through the native Android download manager. |
 
 ### Properties
 

@@ -209,6 +209,8 @@ glean.internal.metrics:
 glean.error:
   invalid_value:
     type: labeled_counter
+    send_in_pings:
+      - all_pings
     description:
       Counts the number of times a metric was set to an invalid value.
       The labels are the `category.name` identifier of the metric.
@@ -222,6 +224,8 @@ glean.error:
 
   invalid_label:
     type: labeled_counter
+    send_in_pings:
+      - all_pings
     description:
       Counts the number of times a metric was set with an invalid label.
       The labels are the `category.name` identifier of the metric.

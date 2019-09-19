@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean.private
 
+import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.checkPingSchema
 import mozilla.components.service.glean.getContextWithMockedInfo
@@ -11,6 +12,7 @@ import mozilla.components.service.glean.getMockWebServer
 import mozilla.components.service.glean.getWorkerStatus
 import mozilla.components.service.glean.resetGlean
 import mozilla.components.service.glean.scheduler.PingUploadWorker
+import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.service.glean.triggerWorkManager
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
@@ -18,7 +20,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -27,10 +29,8 @@ import java.util.concurrent.TimeUnit
 @RunWith(RobolectricTestRunner::class)
 class PingTypeTest {
 
-    @Before
-    fun setUp() {
-        resetGlean()
-    }
+    @get:Rule
+    val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())
 
     @Test
     fun `test sending of custom pings`() {

@@ -99,7 +99,7 @@ class ColorPickerDialogFragmentTest {
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
 
-        fragment.onCancel(null)
+        fragment.onCancel(mock())
 
         verify(mockFeature).onCancel("sessionId")
     }

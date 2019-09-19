@@ -23,6 +23,7 @@ import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
+import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
@@ -32,12 +33,15 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.Date
 
 @RunWith(AndroidJUnit4::class)
 class PlacesHistoryStorageTest {
+    @get:Rule
+    val gleanRule = GleanTestRule(testContext)
 
     private lateinit var history: PlacesHistoryStorage
 
@@ -593,8 +597,6 @@ class PlacesHistoryStorageTest {
 
     @Test
     fun `sends history telemetry pings on success`() = runBlocking {
-        resetGlean()
-
         val now = Date().asSeconds()
         val conn = object : Connection {
             var pingCount = 0
@@ -734,8 +736,6 @@ class PlacesHistoryStorageTest {
 
     @Test
     fun `sends history telemetry pings on engine failure`() = runBlocking {
-        resetGlean()
-
         val now = Date().asSeconds()
         val conn = object : Connection {
             var pingCount = 0
@@ -911,8 +911,6 @@ class PlacesHistoryStorageTest {
 
     @Test
     fun `sends history telemetry pings on sync failure`() = runBlocking {
-        resetGlean()
-
         val now = Date().asSeconds()
         val conn = object : Connection {
             var pingCount = 0

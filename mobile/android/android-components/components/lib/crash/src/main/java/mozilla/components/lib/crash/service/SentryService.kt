@@ -6,9 +6,12 @@ package mozilla.components.lib.crash.service
 
 import android.content.Context
 import android.net.Uri
+import androidx.annotation.VisibleForTesting
 import io.sentry.SentryClient
 import io.sentry.SentryClientFactory
 import io.sentry.android.AndroidSentryClientFactory
+import io.sentry.event.Breadcrumb
+import io.sentry.event.BreadcrumbBuilder
 import mozilla.components.Build
 import mozilla.components.lib.crash.Crash
 
@@ -31,31 +34,67 @@ class SentryService(
     private val sendEventForNativeCrashes: Boolean = false,
     clientFactory: SentryClientFactory = AndroidSentryClientFactory(context)
 ) : CrashReporterService {
-    private val client: SentryClient = SentryClientFactory.sentryClient(
-        Uri.parse(dsn).buildUpon()
-            .appendQueryParameter("uncaught.handler.enabled", "false")
-            .build()
-            .toString(),
-        clientFactory).apply {
-        this.environment = environment
-        tags.forEach { entry ->
-            addTag(entry.key, entry.value)
-        }
+    private val client: SentryClient by lazy { SentryClientFactory.sentryClient(
+            Uri.parse(dsn).buildUpon()
+                .appendQueryParameter("uncaught.handler.enabled", "false")
+                .build()
+                .toString(),
+            clientFactory).apply {
+            this.environment = environment
+            tags.forEach { entry ->
+                addTag(entry.key, entry.value)
+            }
 
-        // Add default tags
-        addTag("ac.version", Build.version)
-        addTag("ac.git", Build.gitHash)
-        addTag("ac.as.build_version", Build.applicationServicesVersion)
+            // Add default tags
+            addTag("ac.version", Build.version)
+            addTag("ac.git", Build.gitHash)
+            addTag("ac.as.build_version", Build.applicationServicesVersion)
+        }
     }
 
     override fun report(crash: Crash.UncaughtExceptionCrash) {
+        crash.breadcrumbs.forEach {
+            client.context.recordBreadcrumb(it.toSentryBreadcrumb())
+        }
         client.sendException(crash.throwable)
     }
 
     override fun report(crash: Crash.NativeCodeCrash) {
         if (sendEventForNativeCrashes) {
+            crash.breadcrumbs.forEach {
+                client.context.recordBreadcrumb(it.toSentryBreadcrumb())
+            }
             client.sendMessage(createMessage(crash))
         }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun mozilla.components.lib.crash.Breadcrumb.toSentryBreadcrumb(): Breadcrumb {
+        return BreadcrumbBuilder()
+                .setMessage(this.message)
+                .setData(this.data)
+                .setCategory(this.category)
+                .setLevel(this.level.toSentryBreadcrumbLevel())
+                .setType(this.type.toSentryBreadcrumbType())
+                .setTimestamp(this.date)
+                .build()
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun mozilla.components.lib.crash.Breadcrumb.Level.toSentryBreadcrumbLevel() = when (this) {
+        mozilla.components.lib.crash.Breadcrumb.Level.CRITICAL -> Breadcrumb.Level.CRITICAL
+        mozilla.components.lib.crash.Breadcrumb.Level.ERROR -> Breadcrumb.Level.ERROR
+        mozilla.components.lib.crash.Breadcrumb.Level.WARNING -> Breadcrumb.Level.WARNING
+        mozilla.components.lib.crash.Breadcrumb.Level.INFO -> Breadcrumb.Level.INFO
+        mozilla.components.lib.crash.Breadcrumb.Level.DEBUG -> Breadcrumb.Level.DEBUG
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun mozilla.components.lib.crash.Breadcrumb.Type.toSentryBreadcrumbType() = when (this) {
+        mozilla.components.lib.crash.Breadcrumb.Type.DEFAULT -> Breadcrumb.Type.DEFAULT
+        mozilla.components.lib.crash.Breadcrumb.Type.HTTP -> Breadcrumb.Type.HTTP
+        mozilla.components.lib.crash.Breadcrumb.Type.NAVIGATION -> Breadcrumb.Type.NAVIGATION
+        mozilla.components.lib.crash.Breadcrumb.Type.USER -> Breadcrumb.Type.USER
     }
 }
 

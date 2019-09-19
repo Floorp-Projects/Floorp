@@ -2,7 +2,7 @@
 
 # EngineSession
 
-`abstract class EngineSession : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L27)
+`abstract class EngineSession : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L28)
 
 Class representing a single engine session.
 
@@ -14,6 +14,7 @@ In browsers usually a session corresponds to a tab.
 |---|---|
 | [LoadUrlFlags](-load-url-flags/index.md) | `class LoadUrlFlags`<br>Describes a combination of flags provided to the engine when loading a URL. |
 | [Observer](-observer/index.md) | `interface Observer`<br>Interface to be implemented by classes that want to observe this engine session. |
+| [SafeBrowsingPolicy](-safe-browsing-policy/index.md) | `enum class SafeBrowsingPolicy`<br>Represents a safe browsing policy, which is indicates with type of site should be alerted to user as possible harmful. |
 | [TrackingProtectionPolicy](-tracking-protection-policy/index.md) | `open class TrackingProtectionPolicy`<br>Represents a tracking protection policy, which is a combination of tracker categories that should be blocked. Unless otherwise specified, a [TrackingProtectionPolicy](-tracking-protection-policy/index.md) is applicable to all session types (see [TrackingProtectionPolicyForSessionTypes](-tracking-protection-policy-for-session-types/index.md)). |
 | [TrackingProtectionPolicyForSessionTypes](-tracking-protection-policy-for-session-types/index.md) | `class TrackingProtectionPolicyForSessionTypes : `[`TrackingProtectionPolicy`](-tracking-protection-policy/index.md)<br>Subtype of [TrackingProtectionPolicy](-tracking-protection-policy/index.md) to control the type of session this policy should be applied to. By default, a policy will be applied to all sessions. |
 
@@ -37,7 +38,7 @@ In browsers usually a session corresponds to a tab.
 | [clearFindMatches](clear-find-matches.md) | `abstract fun clearFindMatches(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Clears the highlighted results of previous calls to [findAll](find-all.md) / [findNext](find-next.md). |
 | [close](close.md) | `open fun close(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Close the session. This may free underlying objects. Call this when you are finished using this session. |
 | [disableTrackingProtection](disable-tracking-protection.md) | `abstract fun disableTrackingProtection(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Disables tracking protection for this engine session. |
-| [enableTrackingProtection](enable-tracking-protection.md) | `abstract fun enableTrackingProtection(policy: `[`TrackingProtectionPolicy`](-tracking-protection-policy/index.md)` = TrackingProtectionPolicy.all()): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Enables tracking protection for this engine session. |
+| [enableTrackingProtection](enable-tracking-protection.md) | `abstract fun enableTrackingProtection(policy: `[`TrackingProtectionPolicy`](-tracking-protection-policy/index.md)` = TrackingProtectionPolicy.strict()): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Enables tracking protection for this engine session. |
 | [exitFullScreenMode](exit-full-screen-mode.md) | `abstract fun exitFullScreenMode(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Exits fullscreen mode if currently in it that state. |
 | [findAll](find-all.md) | `abstract fun findAll(text: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Finds and highlights all occurrences of the provided String and highlights them asynchronously. |
 | [findNext](find-next.md) | `abstract fun findNext(forward: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Finds and highlights the next or previous match found by [findAll](find-all.md). |
@@ -57,5 +58,4 @@ In browsers usually a session corresponds to a tab.
 | Name | Summary |
 |---|---|
 | [GeckoEngineSession](../../mozilla.components.browser.engine.gecko/-gecko-engine-session/index.md) | `class GeckoEngineSession : CoroutineScope, `[`EngineSession`](./index.md)<br>Gecko-based EngineSession implementation. |
-| [ServoEngineSession](../../mozilla.components.browser.engine.servo/-servo-engine-session/index.md) | `class ServoEngineSession : `[`EngineSession`](./index.md)<br>Servo-based EngineSession implementation. |
 | [SystemEngineSession](../../mozilla.components.browser.engine.system/-system-engine-session/index.md) | `class SystemEngineSession : `[`EngineSession`](./index.md)<br>WebView-based EngineSession implementation. |

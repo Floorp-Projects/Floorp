@@ -9,15 +9,6 @@
     <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
     <string name="mozac_feature_prompts_no_more_dialogs">阻止此页面创建更多对话框</string>
 
-    <!-- Title of a date picker dialog, this text is shown above a date picker. -->
-    <string name="mozac_feature_prompts_pick_a_date">选择日期</string>
-
-    <!-- Title of a time picker dialog, this text is shown above a time picker. -->
-    <string name="mozac_feature_prompts_pick_a_time">选择时间</string>
-
-    <!-- Title of a date and time picker dialog, this text is shown above the picker. -->
-    <string name="mozac_feature_prompts_pick_a_date_and_time">选择日期和时间</string>
-
     <!-- Text for a positive button, when an user selects a date in date/time picker. -->
     <string name="mozac_feature_prompts_set_date">设置</string>
 
@@ -46,4 +37,30 @@
     <!-- Text of a negative button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_deny">拒绝</string>
 
-    </resources>
+    <!-- Title of the month chooser dialog. -->
+    <string name="mozac_feature_prompts_set_month">选择月份</string>
+    <!-- January (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jan">1 月</string>
+    <!-- February month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_feb">2 月</string>
+    <!-- March month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_mar">3 月</string>
+    <!-- April month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_apr">4 月</string>
+    <!-- May month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_may">5 月</string>
+    <!-- June month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jun">6 月</string>
+    <!-- July month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jul">7 月</string>
+    <!-- August month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_aug">8 月</string>
+    <!-- September month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_sep">9 月</string>
+    <!-- October month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_oct">10 月</string>
+    <!-- November month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_nov">11 月</string>
+    <!-- December month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_dec">12 月</string>
+</resources>

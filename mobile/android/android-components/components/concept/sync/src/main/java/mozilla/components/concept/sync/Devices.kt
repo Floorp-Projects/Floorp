@@ -27,15 +27,6 @@ interface DeviceConstellation : Observable<DeviceEventsObserver> {
     ): Deferred<Boolean>
 
     /**
-     * Destroy current device record.
-     * Use this when device record is no longer relevant, e.g. while logging out. On success, other
-     * devices will no longer see the current device in their device lists.
-     *
-     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
-     */
-    fun destroyCurrentDeviceAsync(): Deferred<Boolean>
-
-    /**
      * Ensure that all passed in [capabilities] are configured.
      * This may involve backend service registration, or other work involving network/disc access.
      * @param capabilities A list of capabilities to configure. This is expected to be the same or
@@ -56,12 +47,6 @@ interface DeviceConstellation : Observable<DeviceEventsObserver> {
      * Use this to be notified of changes to the current device or other devices.
      */
     fun registerDeviceObserver(observer: DeviceConstellationObserver, owner: LifecycleOwner, autoPause: Boolean)
-
-    /**
-     * Get all devices in the constellation.
-     * @return A list of all devices in the constellation, or `null` on failure.
-     */
-    fun fetchAllDevicesAsync(): Deferred<List<Device>?>
 
     /**
      * Set name of the current device.
@@ -93,29 +78,19 @@ interface DeviceConstellation : Observable<DeviceEventsObserver> {
     fun processRawEventAsync(payload: String): Deferred<Boolean>
 
     /**
-     * Poll for events targeted at the current [Device]. It's expected that if a [DeviceEvent] was
-     * returned after a poll, it will not be returned in consequent polls.
-     * @return A list of [DeviceEvent] instances that are currently pending for this [Device], or `null` on failure.
-     */
-    fun pollForEventsAsync(): Deferred<List<DeviceEvent>?>
-
-    /**
-     * Begin periodically refreshing constellation state, including polling for events.
-     */
-    fun startPeriodicRefresh()
-
-    /**
-     * Stop periodically refreshing constellation state and polling for events.
-     */
-    fun stopPeriodicRefresh()
-
-    /**
-     * Refreshes [ConstellationState] and polls for device events.
+     * Refreshes [ConstellationState]. Registered [DeviceConstellationObserver] observers will be notified.
      *
-     * @return A [Deferred] that will be resolved with a success flag once operation is complete. Failure may
-     * indicate a partial success.
+     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
      */
-    fun refreshDeviceStateAsync(): Deferred<Boolean>
+    fun refreshDevicesAsync(): Deferred<Boolean>
+
+    /**
+     * Polls for any pending [DeviceEvent] events.
+     * In case of new events, registered [DeviceEventsObserver] observers will be notified.
+     *
+     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
+     */
+    fun pollForEventsAsync(): Deferred<Boolean>
 }
 
 /**
@@ -136,6 +111,9 @@ interface DeviceConstellationObserver {
 enum class DeviceType {
     DESKTOP,
     MOBILE,
+    TABLET,
+    TV,
+    VR,
     UNKNOWN
 }
 

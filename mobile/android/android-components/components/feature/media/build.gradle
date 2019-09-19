@@ -35,6 +35,7 @@ dependencies {
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
+    implementation Dependencies.androidx_media
 
     testImplementation project(':support-test')
 

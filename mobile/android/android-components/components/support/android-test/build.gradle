@@ -36,6 +36,7 @@ dependencies {
     implementation Dependencies.androidx_espresso_core
     implementation Dependencies.androidx_test_core
     implementation Dependencies.testing_leakcanary
+    implementation Dependencies.testing_mockwebserver
 }
 
 apply from: '../../../publish.gradle'

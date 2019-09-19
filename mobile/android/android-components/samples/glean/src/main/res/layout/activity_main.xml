@@ -51,20 +51,6 @@
         android:text="@string/counter_metric_info" />
 
     <Button
-        android:id="@+id/buttonSendPing"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="@string/send_baseline_ping" />
-
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
-        android:text="@string/send_ping_info" />
-
-    <Button
         android:id="@+id/buttonCheckExperiments"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

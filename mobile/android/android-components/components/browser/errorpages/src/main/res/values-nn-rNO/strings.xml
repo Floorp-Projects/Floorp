@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
+    <string name="mozac_browser_errorpages_page_title">Problem med lasting av sida</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Prøv igjen</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_go_back">Gå tilbake</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Klarte ikkje å fullføre førespurnaden</string>
+
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>Meir informasjon om denne feilen er ikkje tilgjengeleg.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Sikker tilkopling feila</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>Sida du prøver å opne kan ikkje visast fordi det ikkje kunne stadfestast at overførte data er autentiske.</li>
+        <li>Kontakt nettstadeigaren og informer om problemet.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Sikker tilkopling feila</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>Dette kan vere på grunn av eit problem med innstillingane til serveren, eller det kan vere at nokon prøver å forfalske tilkoplinga til serveren.</li>
+        <li>Dersom du tidlegare har kopla til serveren kan det vere at feilen er kortvarig, og du kan prøve igjen seinare.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Tilkoplinga vart avbroten</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>Nettlesaren vart tilkopla, men tilkoplinga vart avbroten under overføring av informasjon. Prøv igjen.</p>
+      <ul>
+        <li>Sida kan vere kortvarig utilgjengeleg, eller opptatt. Prøv igjen om ei stund.</li>
+        <li>Viss du ikkje klarer å laste sider, kontroller data- eller Wi-Fi-sambandet til eininga di.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Tilkoplinga fekk tidsavbrot</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>Nettstaden du spurde etter svarte ikkje på ein tilkoplingsførespurnad og nettlesaren har slutta å vente på svar.</p>
+      <ul>
+        <li>Kan det hende at nettstaden har unormal høg belastning akkurat no, eller er mellombels utilgjengeleg? Prøv igjen seinare.</li>
+        <li>Klarer du å kople til andre nettstadar? Kontroller at nettverkstilkoplinga til datamaskina verkar.</li>
+        <li>Er datamaskina di verna av ein brannmur eller proxy?  Feil-innstillinger kan hindre tilgang til nettet.</li>
+        <li>Har du framleis problem? Kontakt systemansvarleg eller Internett-tilbydar for meir hjelp.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Kan ikkje kople til</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>Sida kan vere mellombels utilgjengeleg, eller opptatt. Prøv igjen om ei stund.</li>
+        <li>Viss du ikkje klarer å laste nokre sider, kontroller data- eller Wi-Fi-sambandet til eininga di.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Uventa svar frå server</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>Nettstaden svarte på ein førespurnad på ein uventa måte, og nettlesaren kan ikkje fortsetje.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Nettsida vidaresender ikkje skikkeleg</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>Nettlesaren har slutta å prøve å laste det ønskte elementet. Nettstaden omdirigerer førespurnaden på ein måte slik at den aldri vil fullføre.</p>
+      <ul>
+        <li>Har du slått av eller blokkert infokapslar som er påkravd av denne nettstaden?</li>
+        <li>Dersom det ikkje hjelper å godta infokapslane til nettstaden, kan det vere eit problem med innstillingane til nettstaden, og ikkje noko problem på datamaskina di.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Fråkopla-modus</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>Nettlesaren er i fråkopla modus, og kan ikkje kople til serveren.</p>
+      <ul>
+        <li>Er datamaskina kopla til eit aktivt nettverk?</li>
+        <li>Trykk «Prøv igjen» for å byte til tilkopla modus og laste sida på nytt.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Porten har sikkerheitsrestriksjonar</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>Den førespurde adressa spesifiserte ein port (t.d. <q>mozilla.org:80</q> for port 80 på mozilla.org) som normalt vert brukt til eit <em>anna</em> føremål enn nettlesing. Nettlesaren braut av førespurnaden av sikkerheitsårsaker.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Tilkoplinga vart avbroten</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>Nettverkskoplinga vart avbroten under forhandlingar om ei tilkopling. Prøv igjen.</p>
+      <ul>
+        <li>Sida kan vere mellombels utilgjengeleg, eller opptatt. Prøv igjen om ei stund.</li>
+        <li>Viss du ikkje klarer å laste nokre sider, kontroller data- eller Wi-Fi-sambandet til eininga di.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Usikker filtype</string>
+
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+      <ul>
+        <li>Kontakt eigaren av nettstaden og informer dei om dette problemet.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Øydelagd innhaldsfeil</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>Sida du prøver å vise kan ikkje opnast på grunn av ein feil i dataoverføringa.</p>
+      <ul>
+        <li>Kontakt nettstadeigarane og informer dei om dette problemet.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Innhaldet krasja</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>Sida du prøver å vise kan ikkje opnast på grunn av ein feil i dataoverføringa.</p>
+      <ul>
+        <li>Kontakt nettstadeigarane og informer dei om dette problemet.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Feil med teiknkoding</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>Nettsida du prøver å opne kan ikkje visast fordi ho brukar ein ukjend eller ugyldig komprimeringsmetode.</p>
+      <ul>
+        <li>Kontakt den ansvarlege for nettstaden og informer dei om problemet.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Fann ikkje adressa</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>Nettlesaren fann ikkje serveren for den oppgitte adressa.</p>
+      <ul>
+        <li>Kontroller adressa for skrivefeil som t.d.
+          <strong>ww</strong>.example.com i staden for
+          <strong>www</strong>.example.com.</li>
+        <li>Viss du ikkje kan laste nokre sider, kan du sjekke data- eller Wi-Fi-tilkoplinga til eininga.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Ugyldig adresse</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>Oppgjeven adresse er ikkje i eit attkjennande format. Sjå i adresselinja om det er skrivefeil, og prøv igjen.</p>
+    ]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Adressa er ugyldig</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>Nettadresser skriv ein på følgjande måte: <strong>http://www.example.com/</strong></li>
+        <li>Pass på at du brukar framover-skråstrek (dvs. <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Ukjend protokoll</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>Adressa spesifiserer ein protokoll (f.eks. <q>wxyz://</q>) som nettlesaren ikkje forstår, slik at han ikkje kan kople seg skikkeleg til serveren.</p>
+      <ul>
+        <li>Prøver du å få tilgang til multimedia eller anna ikkje-tekstleg kjelde? Sjekk om nettstaden krev andre program i tillegg.</li>
+        <li>Nokre protokollar krev at tredjeparts programvare eller programtillegg er tilgjengelege før nettlesaren kan gjenkjenne dei.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Fann ikkje fila</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>Kan fila ha endra namn, blitt fjerna, eller kanskje endra plassering?</li>
+        <li>Er namnet skrive korrekt, er stor og liten bokstav bytt om, eller er det andre typografiske feil i adressa?</li>
+        <li>Har du tilstrekkelege tilgangsprivilegium for å opne fila?</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Tilgang til fila vart nekta</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>Den kan ha blitt fjerna, flytta eller filrettane hindrar tilgang.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Proxy avviste tilkoplinga</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>Nettlesaren er innstilt på å bruke ein proxy, men proxyen avviste tilkoplinga.</p>
+      <ul>
+        <li>Er proxyinnstillingane til nettlesaren korrekte? Kontroller innstillingane og prøv igjen.</li>
+        <li>Tillèt proxyen tilkoplingar frå dette nettverket?</li>
+        <li>Har du framleis problem? Kontakt nettverksansvarleg eller Internett-tilbydaren din for meir hjelp.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Fann ikkje proxy-serveren</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>Nettlesaren er innstilt på å bruke ein proxy, men nettlesaren klarte ikkje å finne proxyen.</p>
+      <ul>
+        <li>Er proxyinnstillingane til nettlesaren korrekte? Kontroller innstillingane og prøv igjen.</li>
+        <li>Er datamaskina tilkopla eit aktivt nettverk?</li>
+        <li>Har du framleis problem? Kontakt nettverksansvarleg eller Internett-tilbydar for meir hjelp.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problem med skadeleg kode</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>Nettstaden på %1$s er rapportert som ein angrepsnettstad, og er blokkert på grunnlag av sikkerheitsinnstillingane dine.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Problem med uønskt programvarenettstad</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>Nettstaden på %1$s er rapportert som at det leverer uønskt programvare, og er blokkert basert på sikkerheitsinnstillingane dine.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Problem med angrepsnettstad</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>Nettstaden på %1$s er rapportert som ein angrepsnettstad, og er blokkert på grunnlag av sikkerheitsinnstillingane dine.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Problemer med villeiande nettstad</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>Denne nettsida på %1$s er rapportert som ein villeiande nettstad, og er blokkert basert på sikkerheitsinnstillingane dine.</p>
+    ]]></string>
+</resources>

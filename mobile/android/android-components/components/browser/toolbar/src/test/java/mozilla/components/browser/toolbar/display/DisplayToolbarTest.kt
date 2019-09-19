@@ -4,14 +4,16 @@
 
 package mozilla.components.browser.toolbar.display
 
+import android.graphics.Color
 import android.graphics.Rect
+import android.graphics.drawable.Drawable
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.core.view.forEach
+import androidx.core.view.isVisible
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
@@ -19,6 +21,7 @@ import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
 import mozilla.components.concept.toolbar.Toolbar.SiteSecurity
+import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.processor.CollectionProcessor
@@ -28,6 +31,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -40,7 +44,6 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class DisplayToolbarTest {
@@ -77,19 +80,200 @@ class DisplayToolbarTest {
     }
 
     @Test
-    fun `icon view will use square size`() {
+    fun `tracking protection indicator view will use square size`() {
         val toolbar = mock(BrowserToolbar::class.java)
         val displayToolbar = DisplayToolbar(testContext, toolbar)
 
         val widthSpec = View.MeasureSpec.makeMeasureSpec(1024, View.MeasureSpec.EXACTLY)
         val heightSpec = View.MeasureSpec.makeMeasureSpec(56, View.MeasureSpec.EXACTLY)
 
+        displayToolbar.setTrackingProtectionState(SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED)
+        displayToolbar.displayTrackingProtectionIcon = true
         displayToolbar.measure(widthSpec, heightSpec)
 
-        val iconView = extractIconView(displayToolbar)
+        val iconView = displayToolbar.trackingProtectionIconView
 
         assertEquals(56, iconView.measuredWidth)
         assertEquals(56, iconView.measuredHeight)
+    }
+
+    @Test
+    fun `tracking protection and security indicator separator view will have 1dp width and 24 height`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(testContext, toolbar)
+
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(1024, View.MeasureSpec.EXACTLY)
+        val heightSpec = View.MeasureSpec.makeMeasureSpec(56, View.MeasureSpec.EXACTLY)
+
+        displayToolbar.displayTrackingProtectionIcon = true
+        displayToolbar.displaySeparatorView = true
+        displayToolbar.setTrackingProtectionState(SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED)
+
+        displayToolbar.measure(widthSpec, heightSpec)
+
+        val iconView = displayToolbar.separatorView
+
+        assertEquals(1, iconView.measuredWidth)
+        assertEquals(24, iconView.measuredHeight)
+    }
+
+    @Test
+    fun `tracking protection and separator views become visible when states ON OR ACTIVE are set to siteTrackingProtection`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(testContext, toolbar)
+        val trackingView = displayToolbar.trackingProtectionIconView
+        val separatorView = displayToolbar.separatorView
+
+        assertTrue(trackingView.visibility == View.GONE)
+        assertTrue(separatorView.visibility == View.GONE)
+
+        displayToolbar.displayTrackingProtectionIcon = true
+        displayToolbar.displaySeparatorView = true
+        displayToolbar.setTrackingProtectionState(SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED)
+
+        assertTrue(trackingView.isVisible)
+        assertTrue(separatorView.isVisible)
+
+        displayToolbar.setTrackingProtectionState(SiteTrackingProtection.OFF_GLOBALLY)
+
+        assertTrue(trackingView.visibility == View.GONE)
+        assertTrue(separatorView.visibility == View.GONE)
+
+        displayToolbar.setTrackingProtectionState(SiteTrackingProtection.ON_TRACKERS_BLOCKED)
+
+        assertTrue(trackingView.isVisible)
+        assertTrue(separatorView.isVisible)
+    }
+
+    @Test
+    fun `tracking protection views should only be measured when ON or ACTIVE states are set to siteTrackingProtection`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(testContext, toolbar)
+        val view = TextView(testContext)
+
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(1024, View.MeasureSpec.AT_MOST)
+        val heightSpec = View.MeasureSpec.makeMeasureSpec(200, View.MeasureSpec.AT_MOST)
+
+        displayToolbar.urlBoxView = view
+        displayToolbar.measure(widthSpec, heightSpec)
+
+        val urlView = extractUrlView(displayToolbar)
+        val securityIcon = displayToolbar.siteSecurityIconView
+
+        // Tracking protection views SHOULDN'T be measured
+        var totalViewsWidth = urlView.measuredWidth + securityIcon.measuredWidth
+        assertEquals(totalViewsWidth, view.measuredWidth)
+
+        displayToolbar.setTrackingProtectionState(SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED)
+
+        displayToolbar.measure(widthSpec, heightSpec)
+
+        totalViewsWidth = urlView.measuredWidth + securityIcon.measuredWidth
+        val trackingProtectionWidth = displayToolbar.trackingProtectionIconView.measuredWidth
+        val separatorWidth = displayToolbar.separatorView.measuredWidth
+
+        // Tracking protection views MUST be measured
+        assertEquals(totalViewsWidth + trackingProtectionWidth + separatorWidth, view.measuredWidth)
+
+        displayToolbar.setTrackingProtectionState(SiteTrackingProtection.OFF_GLOBALLY)
+        displayToolbar.measure(widthSpec, heightSpec)
+        totalViewsWidth = urlView.measuredWidth + securityIcon.measuredWidth
+
+        // Tracking protection views SHOULDN'T be measured
+        assertEquals(totalViewsWidth, view.measuredWidth)
+
+        displayToolbar.setTrackingProtectionState(SiteTrackingProtection.ON_TRACKERS_BLOCKED)
+        displayToolbar.measure(widthSpec, heightSpec)
+
+        totalViewsWidth = urlView.measuredWidth + securityIcon.measuredWidth
+
+        // Tracking protection views MUST be measured
+        assertEquals(totalViewsWidth + trackingProtectionWidth + separatorWidth, view.measuredWidth)
+
+        displayToolbar.setTrackingProtectionState(SiteTrackingProtection.OFF_FOR_A_SITE)
+        displayToolbar.measure(widthSpec, heightSpec)
+
+        totalViewsWidth = urlView.measuredWidth + securityIcon.measuredWidth
+
+        // Tracking protection views MUST be measured
+        assertEquals(totalViewsWidth + trackingProtectionWidth + separatorWidth, view.measuredWidth)
+    }
+
+    @Test
+    fun `tracking protection views should only be layout when ON or ACTIVE states are set to siteTrackingProtection`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(testContext, toolbar)
+        val navigationActionsWidth = 100
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(1024, View.MeasureSpec.AT_MOST)
+        val heightSpec = View.MeasureSpec.makeMeasureSpec(200, View.MeasureSpec.AT_MOST)
+
+        displayToolbar.displayTrackingProtectionIcon = true
+        displayToolbar.displaySeparatorView = true
+        displayToolbar.setTrackingProtectionState(SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED)
+        displayToolbar.measure(widthSpec, heightSpec)
+
+        val separatorWidth = displayToolbar.separatorView.measuredWidth
+
+        val trackingProtectionWidth = displayToolbar.trackingProtectionIconView.measuredWidth
+        val securityIconWidth = displayToolbar.siteSecurityIconView.measuredWidth
+
+        val LEFT_WITHOUT_TP_VIEWS = navigationActionsWidth
+        val RIGHT_WITHOUT_TP_VIEWS = navigationActionsWidth + securityIconWidth
+
+        val LEFT_WITH_TP_VIEWS = navigationActionsWidth + separatorWidth + trackingProtectionWidth
+
+        val RIGHT_WITH_TP_VIEWS =
+            navigationActionsWidth + separatorWidth + securityIconWidth + trackingProtectionWidth
+
+        displayToolbar.setTrackingProtectionState(SiteTrackingProtection.OFF_GLOBALLY)
+        var leftRightPair = displayToolbar.layoutTrackingProtectionViewIfNeeded(
+            navigationActionsWidth
+        )
+
+        // Tracking protection views shouldn't be layout
+        assertEquals(LEFT_WITHOUT_TP_VIEWS, leftRightPair.first)
+        assertEquals(RIGHT_WITHOUT_TP_VIEWS, leftRightPair.second)
+
+        displayToolbar.setTrackingProtectionState(SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED)
+        leftRightPair = displayToolbar.layoutTrackingProtectionViewIfNeeded(navigationActionsWidth)
+
+        // Tracking protection views MUST be layout
+        assertEquals(LEFT_WITH_TP_VIEWS, leftRightPair.first)
+        assertEquals(RIGHT_WITH_TP_VIEWS, leftRightPair.second)
+
+        displayToolbar.setTrackingProtectionState(SiteTrackingProtection.OFF_GLOBALLY)
+        leftRightPair = displayToolbar.layoutTrackingProtectionViewIfNeeded(navigationActionsWidth)
+
+        // Tracking protection views shouldn't be measured
+        assertEquals(LEFT_WITHOUT_TP_VIEWS, leftRightPair.first)
+        assertEquals(RIGHT_WITHOUT_TP_VIEWS, leftRightPair.second)
+
+        displayToolbar.setTrackingProtectionState(SiteTrackingProtection.ON_TRACKERS_BLOCKED)
+        leftRightPair = displayToolbar.layoutTrackingProtectionViewIfNeeded(navigationActionsWidth)
+
+        // Tracking protection views MUST be layout
+        assertEquals(LEFT_WITH_TP_VIEWS, leftRightPair.first)
+        assertEquals(RIGHT_WITH_TP_VIEWS, leftRightPair.second)
+    }
+
+    @Test
+    fun `setTrackingProtectionIcons will forward to TrackingProtectionIconView`() {
+        val displayToolbar = DisplayToolbar(testContext, BrowserToolbar(testContext))
+        val oldTrackingProtectionIcon = displayToolbar.trackingProtectionIconView.drawable
+        val drawable1 =
+            testContext.getDrawable(TrackingProtectionIconView.DEFAULT_ICON_ON_NO_TRACKERS_BLOCKED)!!
+        val drawable2 =
+            testContext.getDrawable(TrackingProtectionIconView.DEFAULT_ICON_ON_TRACKERS_BLOCKED)!!
+        val drawable3 =
+            testContext.getDrawable(TrackingProtectionIconView.DEFAULT_ICON_OFF_FOR_A_SITE)!!
+
+        displayToolbar.displayTrackingProtectionIcon = true
+        displayToolbar.setTrackingProtectionIcons(drawable1, drawable2, drawable3)
+
+        assertNotEquals(
+            oldTrackingProtectionIcon,
+            displayToolbar.trackingProtectionIconView.drawable
+        )
     }
 
     @Test
@@ -520,7 +704,7 @@ class DisplayToolbarTest {
         val urlView = extractUrlView(displayToolbar)
         val reloadView = extractActionView(displayToolbar, "Reload")!!
         val readerView = extractActionView(displayToolbar, "Reader Mode")!!
-        val iconView = extractIconView(displayToolbar)
+        val iconView = displayToolbar.siteSecurityIconView
 
         assertTrue(view.measuredWidth > 0)
 
@@ -549,7 +733,7 @@ class DisplayToolbarTest {
         val urlView = extractUrlView(displayToolbar)
         val reloadView = extractActionView(displayToolbar, "Reload")!!
         val readerView = extractActionView(displayToolbar, "Reader Mode")!!
-        val iconView = extractIconView(displayToolbar)
+        val iconView = displayToolbar.siteSecurityIconView
 
         val viewRect = Rect(view.left, view.top, view.right, view.bottom)
         val urlViewRect = Rect(urlView.left, urlView.top, urlView.right, urlView.bottom)
@@ -662,15 +846,12 @@ class DisplayToolbarTest {
         assertTrue(titleViewRect.height() > 0)
 
         val totalTextHeights = urlViewRect.height() + titleViewRect.height()
-        val totalAvailablePadding = 200 - totalTextHeights
-        val padding = totalAvailablePadding / DisplayToolbar.MEASURED_HEIGHT_DENOMINATOR
 
-        // 132 = 200 * (2 / 3), since we want the title view and url to be centered as a singular unit.
-        assertTrue(totalTextHeights == 132)
+        assertTrue(totalTextHeights == 200)
         assertTrue(titleViewRect.left == urlViewRect.left)
-        assertTrue(titleViewRect.top == padding)
+        assertTrue(titleViewRect.top == 0)
         assertTrue(titleViewRect.right == urlViewRect.right)
-        assertTrue(titleViewRect.bottom == padding + titleViewRect.height())
+        assertTrue(titleViewRect.bottom == titleViewRect.height())
     }
 
     @Test
@@ -778,44 +959,64 @@ class DisplayToolbarTest {
     }
 
     @Test
-    fun `iconView changes image resource when site security changes`() {
+    fun `iconView changes site secure state when site security changes`() {
         val toolbar = mock(BrowserToolbar::class.java)
         val displayToolbar = DisplayToolbar(testContext, toolbar)
-        var shadowDrawable = shadowOf(displayToolbar.siteSecurityIconView.drawable)
-        assertEquals(R.drawable.mozac_ic_globe, shadowDrawable.createdFromResId)
+        assertEquals(SiteSecurity.INSECURE, displayToolbar.siteSecurityIconView.siteSecurity)
 
         displayToolbar.setSiteSecurity(SiteSecurity.SECURE)
 
-        shadowDrawable = shadowOf(displayToolbar.siteSecurityIconView.drawable)
-        assertEquals(R.drawable.mozac_ic_lock, shadowDrawable.createdFromResId)
+        assertEquals(SiteSecurity.SECURE, displayToolbar.siteSecurityIconView.siteSecurity)
 
         displayToolbar.setSiteSecurity(SiteSecurity.INSECURE)
 
-        shadowDrawable = shadowOf(displayToolbar.siteSecurityIconView.drawable)
-        assertEquals(R.drawable.mozac_ic_globe, shadowDrawable.createdFromResId)
+        assertEquals(SiteSecurity.INSECURE, displayToolbar.siteSecurityIconView.siteSecurity)
+    }
+
+    @Test
+    fun `securityIcon is set when securityIcon changes`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(testContext, toolbar)
+
+        val icon = testContext.getDrawable(R.drawable.mozac_ic_site_security)
+        displayToolbar.securityIcon = icon
+
+        assertEquals(icon, displayToolbar.securityIcon)
+    }
+
+    @Test
+    fun `setImageDrawable is called when securityIcon changes`() {
+        val toolbar = BrowserToolbar(testContext)
+
+        val icon: Drawable = mock()
+        assertNotEquals(icon, toolbar.displayToolbar.siteSecurityIconView.drawable)
+
+        toolbar.siteSecurityIcon = icon
+        assertEquals(icon, toolbar.displayToolbar.siteSecurityIconView.drawable)
     }
 
     @Test
     fun `securityIconColor is set when securityIconColor changes`() {
-        val toolbar = mock(BrowserToolbar::class.java)
-        val displayToolbar = DisplayToolbar(testContext, toolbar)
+        val toolbar = BrowserToolbar(testContext)
 
-        displayToolbar.securityIconColor = Pair(R.color.photonBlue40, R.color.photonBlue40)
+        assertNull(toolbar.displayToolbar.siteSecurityIconView.colorFilter)
 
-        assertEquals(R.color.photonBlue40, displayToolbar.securityIconColor.first)
-        assertEquals(R.color.photonBlue40, displayToolbar.securityIconColor.second)
+        toolbar.siteSecurityColor = Color.TRANSPARENT to Color.TRANSPARENT
+        assertNull(toolbar.displayToolbar.siteSecurityIconView.colorFilter)
+
+        toolbar.siteSecurityColor = Color.BLUE to Color.BLUE
+        assertNotNull(toolbar.displayToolbar.siteSecurityIconView.colorFilter)
     }
 
     @Test
     fun `setSiteSecurity is called when securityIconColor changes`() {
         val toolbar = BrowserToolbar(testContext)
-        toolbar.displayToolbar
 
-        assertNull(toolbar.displayToolbar.siteSecurityIconView.colorFilter)
+        val icon: Drawable = mock()
+        assertNotEquals(icon, toolbar.displayToolbar.securityIcon)
 
-        toolbar.siteSecurityColor = Pair(R.color.photonBlue40, R.color.photonBlue40)
-
-        assertNotNull(toolbar.displayToolbar.siteSecurityIconView.colorFilter)
+        toolbar.siteSecurityIcon = icon
+        assertEquals(icon, toolbar.displayToolbar.securityIcon)
     }
 
     @Test
@@ -888,6 +1089,18 @@ class DisplayToolbarTest {
         assertNull(toolbar.displayToolbar.siteSecurityIconView.background)
     }
 
+    @Test
+    fun `Backgrounding the app dismisses menu if already open`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(testContext, toolbar)
+        val menuView = extractMenuView(displayToolbar)
+
+        menuView.menu = mock()
+        displayToolbar.onStop()
+
+        verify(menuView.menu)?.dismiss()
+    }
+
     companion object {
         private fun extractUrlView(displayToolbar: DisplayToolbar): TextView =
             extractView(displayToolbar) {
@@ -896,9 +1109,6 @@ class DisplayToolbarTest {
 
         private fun extractProgressView(displayToolbar: DisplayToolbar): ProgressBar =
             extractView(displayToolbar) ?: throw AssertionError("Could not find progress bar")
-
-        private fun extractIconView(displayToolbar: DisplayToolbar): ImageView =
-            extractView(displayToolbar) ?: throw AssertionError("Could not find icon view")
 
         private fun extractMenuView(displayToolbar: DisplayToolbar): MenuButton =
             extractView(displayToolbar) ?: throw AssertionError("Could not find menu view")

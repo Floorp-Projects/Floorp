@@ -36,6 +36,11 @@ import org.mozilla.samples.browser.downloads.DownloadService
 import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.integration.FindInPageIntegration
 
+/**
+ * Base fragment extended by [BrowserFragment] and [ExternalAppBrowserFragment].
+ * This class only contains shared code focused on the main browsing content.
+ * UI code specific to the app or to custom tabs can be found in the subclasses.
+ */
 abstract class BaseBrowserFragment : Fragment(), BackHandler {
     private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
     private val toolbarFeature = ViewBoundFeatureWrapper<ToolbarFeature>()
@@ -68,7 +73,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
         toolbarFeature.set(
             feature = ToolbarFeature(
                 layout.toolbar,
-                components.sessionManager,
+                components.store,
                 components.sessionUseCases.loadUrl,
                 components.defaultSearchUseCase,
                 sessionId),
@@ -101,7 +106,8 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
         downloadsFeature.set(
             feature = DownloadsFeature(
                 requireContext().applicationContext,
-                sessionManager = components.sessionManager,
+                store = components.store,
+                useCases = components.downloadsUseCases,
                 fragmentManager = childFragmentManager,
                 onDownloadCompleted = { download, id ->
                     Logger.debug("Download done. ID#$id $download")
@@ -119,13 +125,15 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
         val scrollFeature = CoordinateScrollingFeature(components.sessionManager, layout.engineView, layout.toolbar)
 
         val contextMenuFeature = ContextMenuFeature(
-            requireFragmentManager(),
-            components.sessionManager,
-            ContextMenuCandidate.defaultCandidates(
+            fragmentManager = requireFragmentManager(),
+            store = components.store,
+            candidates = ContextMenuCandidate.defaultCandidates(
                 requireContext(),
                 components.tabsUseCases,
+                components.contextMenuUseCases,
                 layout),
-            layout.engineView)
+            engineView = layout.engineView,
+            useCases = components.contextMenuUseCases)
 
         promptFeature.set(
             feature = PromptFeature(
@@ -139,7 +147,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
             owner = this,
             view = layout)
 
-        val windowFeature = WindowFeature(components.engine, components.sessionManager)
+        val windowFeature = WindowFeature(components.sessionManager)
 
         sitePermissionsFeature.set(
             feature = SitePermissionsFeature(
@@ -172,7 +180,8 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
                 context = requireContext(),
                 sessionManager = components.sessionManager,
                 sessionId = sessionId,
-                fragmentManager = requireFragmentManager()
+                fragmentManager = requireFragmentManager(),
+                interceptLinkClicks = true
             ),
             owner = this,
             view = layout

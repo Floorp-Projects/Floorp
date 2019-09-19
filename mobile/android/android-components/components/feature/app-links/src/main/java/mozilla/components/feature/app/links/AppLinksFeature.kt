@@ -38,13 +38,19 @@ import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
  * A [Boolean] flag is provided at construction to allow the feature and use cases to be landed without
  * adjoining UI. The UI will be activated in https://github.com/mozilla-mobile/android-components/issues/2974
  * and https://github.com/mozilla-mobile/android-components/issues/2975.
+ *
+ * @param alwaysAllowedSchemes List of schemes that will always be allowed to be opened in a third-party
+ * app even if [interceptLinkClicks] is `false`.
+ * @param alwaysDeniedSchemes List of schemes that will never be opened in a third-party app even if
+ * [interceptLinkClicks] is `true`.
  */
 class AppLinksFeature(
     private val context: Context,
     private val sessionManager: SessionManager,
     private val sessionId: String? = null,
     private val interceptLinkClicks: Boolean = false,
-    private val whitelistedSchemes: Set<String> = setOf("mailto", "market", "sms", "tel"),
+    private val alwaysAllowedSchemes: Set<String> = setOf("mailto", "market", "sms", "tel"),
+    private val alwaysDeniedSchemes: Set<String> = setOf("javascript"),
     private val fragmentManager: FragmentManager? = null,
     private var dialog: RedirectDialogFragment = SimpleRedirectDialogFragment.newInstance(),
     private val useCases: AppLinksUseCases = AppLinksUseCases(context)
@@ -66,7 +72,7 @@ class AppLinksFeature(
      * Starts observing app links on the selected session.
      */
     override fun start() {
-        if (interceptLinkClicks || whitelistedSchemes.isNotEmpty()) {
+        if (interceptLinkClicks || alwaysAllowedSchemes.isNotEmpty()) {
             observer.observeIdOrSelected(sessionId)
         }
         findPreviousDialogFragment()?.let {
@@ -75,7 +81,7 @@ class AppLinksFeature(
     }
 
     override fun stop() {
-        if (interceptLinkClicks || whitelistedSchemes.isNotEmpty()) {
+        if (interceptLinkClicks || alwaysAllowedSchemes.isNotEmpty()) {
             observer.stop()
         }
     }
@@ -107,8 +113,9 @@ class AppLinksFeature(
             return
         }
 
-        redirect.appIntent?.data?.scheme?.let {
-            if (!interceptLinkClicks && !whitelistedSchemes.contains(it)) {
+        redirect.appIntent?.data?.scheme?.let { scheme ->
+            if ((!interceptLinkClicks && !alwaysAllowedSchemes.contains(scheme)) ||
+                alwaysDeniedSchemes.contains(scheme)) {
                 return
             }
         }

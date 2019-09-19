@@ -9,10 +9,10 @@ import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.private.DatetimeMetricType
 import mozilla.components.service.glean.private.Lifetime
 import mozilla.components.service.glean.private.TimeUnit
-import mozilla.components.service.glean.resetGlean
+import mozilla.components.service.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.eq
@@ -25,10 +25,8 @@ import java.util.TimeZone
 @RunWith(RobolectricTestRunner::class)
 class DatetimesStorageEngineTest {
 
-    @Before
-    fun setUp() {
-        resetGlean()
-    }
+    @get:Rule
+    val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())
 
     @Test
     fun `datetime deserializer should correctly parse datetimes`() {

@@ -2,7 +2,7 @@
 
 # IconMemoryCache
 
-`class IconMemoryCache : `[`ProcessorMemoryCache`](../../mozilla.components.browser.icons.processor/-memory-icon-processor/-processor-memory-cache/index.md)`, `[`LoaderMemoryCache`](../../mozilla.components.browser.icons.loader/-memory-icon-loader/-loader-memory-cache/index.md)`, `[`PreparerMemoryCache`](../../mozilla.components.browser.icons.preparer/-memory-icon-preparer/-preparer-memory-cache/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/utils/IconMemoryCache.kt#L22)
+`class IconMemoryCache : `[`ProcessorMemoryCache`](../../mozilla.components.browser.icons.processor/-memory-icon-processor/-processor-memory-cache/index.md)`, `[`LoaderMemoryCache`](../../mozilla.components.browser.icons.loader/-memory-icon-loader/-loader-memory-cache/index.md)`, `[`PreparerMemoryCache`](../../mozilla.components.browser.icons.preparer/-memory-icon-preparer/-preparer-memory-cache/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/utils/IconMemoryCache.kt#L21)
 
 ### Constructors
 

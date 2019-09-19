@@ -15,10 +15,10 @@ import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import mozilla.components.service.glean.Glean
-import mozilla.components.service.glean.net.HttpPingUploader
 
 /**
  * This class is the worker class used by [WorkManager] to handle uploading the ping to the server.
+ * @suppress This is internal only, don't show it in the docs.
  */
 class PingUploadWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
     companion object {
@@ -37,12 +37,12 @@ class PingUploadWorker(context: Context, params: WorkerParameters) : Worker(cont
 
         /**
          * Build the [OneTimeWorkRequest] for enqueueing in the [WorkManager].  This also adds a tag
-         * by which [isWorkScheduled] can tell if the worker object has been enqueued.
+         * by which enqueued requests can be identified.
          *
          * @return [OneTimeWorkRequest] representing the task for the [WorkManager] to enqueue and run
          */
         internal fun buildWorkRequest(): OneTimeWorkRequest = OneTimeWorkRequestBuilder<PingUploadWorker>()
-            .addTag(PingUploadWorker.PING_WORKER_TAG)
+            .addTag(PING_WORKER_TAG)
             .setConstraints(buildConstraints())
             .build()
 
@@ -51,9 +51,9 @@ class PingUploadWorker(context: Context, params: WorkerParameters) : Worker(cont
          */
         internal fun enqueueWorker() {
             WorkManager.getInstance().enqueueUniqueWork(
-                PingUploadWorker.PING_WORKER_TAG,
+                PING_WORKER_TAG,
                 ExistingWorkPolicy.KEEP,
-                PingUploadWorker.buildWorkRequest())
+                buildWorkRequest())
         }
 
         /**
@@ -62,12 +62,16 @@ class PingUploadWorker(context: Context, params: WorkerParameters) : Worker(cont
          *
          * @return true if process was successful
          */
-        internal fun uploadPings(): Boolean {
-            if (Glean.getUploadEnabled()) {
-                val httpPingUploader = HttpPingUploader()
-                return Glean.pingStorageEngine.process(httpPingUploader::upload)
-            }
-            return false
+        private fun uploadPings(): Boolean {
+            val httpPingUploader = Glean.httpClient
+            return Glean.pingStorageEngine.process(httpPingUploader::doUpload)
+        }
+
+        /**
+         * Function to cancel any pending ping upload workers
+         */
+        internal fun cancel() {
+            WorkManager.getInstance().cancelUniqueWork(PING_WORKER_TAG)
         }
     }
 
@@ -84,10 +88,10 @@ class PingUploadWorker(context: Context, params: WorkerParameters) : Worker(cont
      * @return The [androidx.work.ListenableWorker.Result] of the computation
      */
     override fun doWork(): Result {
-        if (!uploadPings()) {
-            return Result.retry()
+        return when {
+            !Glean.getUploadEnabled() -> Result.failure()
+            !uploadPings() -> Result.retry()
+            else -> Result.success()
         }
-
-        return Result.success()
     }
 }

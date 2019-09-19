@@ -4,7 +4,6 @@
 
 package mozilla.components.support.ktx.kotlin
 
-import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -84,31 +83,6 @@ class StringTest {
         assertTrue("Geo:1,-1".isGeoLocation())
     }
 
-    @Suppress("Deprecation")
-    @Test
-    fun toUri() {
-        assertEquals(
-            Uri.parse("https://www.mozilla.org"),
-            "https://www.mozilla.org".toUri())
-
-        assertEquals(
-            Uri.parse("https://www.mozilla.org/en-US/firefox/new/?redirect_source=firefox-com"),
-            "https://www.mozilla.org/en-US/firefox/new/?redirect_source=firefox-com".toUri())
-
-        assertEquals(
-            Uri.parse(""),
-            "".toUri())
-
-        assertEquals(
-            Uri.parse("https://"),
-            "https://".toUri())
-
-        assertEquals(
-            Uri.parse("file://sdcard/"),
-            "file://sdcard/".toUri()
-        )
-    }
-
     @Test
     fun toDate() {
         val calendar = Calendar.getInstance()
@@ -118,6 +92,16 @@ class StringTest {
         calendar.set(2019, 10, 28, 0, 0, 0)
         assertEquals(calendar.time, "2019-11-28".toDate("yyyy-MM-dd"))
         assertNotNull("".toDate("yyyy-MM-dd"))
+    }
+
+    @Test
+    fun `string to date conversion using multiple formats`() {
+
+        assertEquals("2019-08-16T01:02".toDate("yyyy-MM-dd'T'HH:mm"), "2019-08-16T01:02".toDate())
+
+        assertEquals("2019-08-16T01:02:03".toDate("yyyy-MM-dd'T'HH:mm"), "2019-08-16T01:02:03".toDate())
+
+        assertEquals("2019-08-16".toDate("yyyy-MM-dd"), "2019-08-16".toDate())
     }
 
     @Test

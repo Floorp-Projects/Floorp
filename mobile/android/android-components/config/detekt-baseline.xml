@@ -99,8 +99,8 @@
     <ID>LongMethod:Glean.kt$GleanInternalAPI$ private fun initializeCoreMetrics(applicationContext: Context)</ID>
     <ID>LongMethod:GleanDebugActivity.kt$GleanDebugActivity$override fun onCreate(savedInstanceState: Bundle?)</ID>
     <ID>LongMethod:HttpIconLoader.kt$HttpIconLoader$override fun load(context: Context, request: IconRequest, resource: IconRequest.Resource): IconLoader.Result</ID>
-    <ID>LongMethod:HttpPingUploader.kt$HttpPingUploader$@Throws(IOException::class) internal fun performUpload(client: Client, request: Request): Boolean</ID>
-    <ID>LongMethod:HttpPingUploader.kt$HttpPingUploader$@VisibleForTesting(otherwise = PRIVATE) internal fun buildRequest(path: String, data: String, config: Configuration): Request</ID>
+    <ID>LongMethod:ConceptFetchHttpUploader.kt$HttpPingUploader$@Throws(IOException::class) internal fun performUpload(client: Client, request: Request): Boolean</ID>
+    <ID>LongMethod:ConceptFetchHttpUploader.kt$HttpPingUploader$@VisibleForTesting(otherwise = PRIVATE) internal fun buildRequest(path: String, data: String, config: Configuration): Request</ID>
     <ID>LongMethod:HttpURLConnectionClient.kt$private fun createBody(connection: HttpURLConnection, contentType: String?): Response.Body</ID>
     <ID>LongMethod:ICOIconDecoderTest.kt$ICOIconDecoderTest$@Test fun testIconSizesOfGolemFavicon()</ID>
     <ID>LongMethod:ICOIconDecoderTest.kt$ICOIconDecoderTest$@Test fun testIconSizesOfMicrosoftFavicon()</ID>

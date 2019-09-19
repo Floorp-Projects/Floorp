@@ -34,10 +34,7 @@ dependencies {
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
 
-    // We only compile against the ARM artifact. External module will decide which module to provide by build configuration.
-    // As the Kotlin/Java API is the same for all ABIs it is not important which one we import here.
-    compileOnly Gecko.geckoview_release_arm
-    testImplementation Gecko.geckoview_release_arm
+    api Gecko.geckoview_release
 
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.androidx_test_junit
@@ -51,7 +48,6 @@ dependencies {
     androidTestImplementation Dependencies.androidx_test_core
     androidTestImplementation Dependencies.androidx_test_runner
     androidTestImplementation Dependencies.androidx_test_rules
-    androidTestImplementation Gecko.geckoview_release_arm
     androidTestImplementation project(':tooling-fetch-tests')
 }
 

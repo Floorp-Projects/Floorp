@@ -18,7 +18,7 @@ sealed class HitResult(open val src: String) {
     /**
      * If the HTML element was of type 'HTMLImageElement'.
      */
-    data class IMAGE(override val src: String) : HitResult(src)
+    data class IMAGE(override val src: String, val title: String? = null) : HitResult(src)
 
     /**
      * If the HTML element was of type 'HTMLVideoElement'.

@@ -12,6 +12,7 @@ import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
 import mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.EngineView
@@ -156,15 +157,48 @@ class GeckoEngine(
                 defaultSettings?.automaticLanguageAdjustment = value
             }
 
-        override var trackingProtectionPolicy: TrackingProtectionPolicy?
-            get() = TrackingProtectionPolicy.select(runtime.settings.contentBlocking.categories)
+        override var safeBrowsingPolicy: Array<SafeBrowsingPolicy> =
+            arrayOf(SafeBrowsingPolicy.RECOMMENDED)
             set(value) {
-                value?.let {
-                    runtime.settings.contentBlocking.categories = it.categories
-                    runtime.settings.contentBlocking.cookieBehavior = it.cookiePolicy.id
+                val safeBrowsingCategories = value.sumBy { it.id }
+                val trackingCategories =
+                    trackingProtectionPolicy?.trackingCategories?.sumBy { it.id }
+                        ?: SafeBrowsingPolicy.NONE.id
+
+                runtime.settings.contentBlocking.categories =
+                    safeBrowsingCategories + trackingCategories
+                field = value
+            }
+
+        override var trackingProtectionPolicy: TrackingProtectionPolicy? = null
+            set(value) {
+                value?.let { policy ->
+
+                    val trackingCategories = policy.getAntiTrackingPolicy() +
+                        safeBrowsingPolicy.sumBy { it.id }
+
+                    runtime.settings.contentBlocking.categories = trackingCategories
+                    runtime.settings.contentBlocking.cookieBehavior = policy.cookiePolicy.id
                     defaultSettings?.trackingProtectionPolicy = value
+                    field = value
                 }
             }
+
+        private fun TrackingProtectionPolicy.getAntiTrackingPolicy(): Int {
+            /**
+             * The [TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES] is an
+             * artificial category, created with the sole purpose of going around this bug
+             * https://bugzilla.mozilla.org/show_bug.cgi?id=1579264, for this reason we have to
+             * remove its value from the valid anti tracking categories, when is present.
+             */
+            val total = trackingCategories.sumBy { it.id }
+
+            return if (contains(TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)) {
+                total - TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id
+            } else {
+                total
+            }
+        }
 
         override var remoteDebuggingEnabled: Boolean
             get() = runtime.settings.remoteDebuggingEnabled

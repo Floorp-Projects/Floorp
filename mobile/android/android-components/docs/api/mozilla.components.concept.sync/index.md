@@ -9,6 +9,8 @@
 | [AccessTokenInfo](-access-token-info/index.md) | `data class AccessTokenInfo`<br>The result of authentication with FxA via an OAuth flow. |
 | [AccountObserver](-account-observer/index.md) | `interface AccountObserver`<br>Observer interface which lets its users monitor account state changes and major events. |
 | [AuthExceptionType](-auth-exception-type/index.md) | `enum class AuthExceptionType`<br>An auth-related exception type, for use with [AuthException](-auth-exception/index.md). |
+| [AuthFlowUrl](-auth-flow-url/index.md) | `data class AuthFlowUrl`<br>An object that represents a login flow initiated by [OAuthAccount](-o-auth-account/index.md). |
+| [AuthType](-auth-type/index.md) | `sealed class AuthType` |
 | [Avatar](-avatar/index.md) | `data class Avatar` |
 | [ConstellationState](-constellation-state/index.md) | `data class ConstellationState`<br>Describes current device and other devices in the constellation. |
 | [Device](-device/index.md) | `data class Device`<br>Describes a device in the [DeviceConstellation](-device-constellation/index.md). |

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Title of the crash reporter dialog. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
+    <string name="mozac_lib_crash_dialog_title">Ospravedlňujeme sa. Aplikácia %1$s narazila na problém a zlyhala.</string>
+
+    <!-- Label of the checkbox for sending crash reports in the crash reporter dialog. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
+    <string name="mozac_lib_crash_dialog_checkbox">Odoslať správu o zlyhaní spoločnosti %1$s</string>
+
+    <!-- Label of the button closing the crash reporter dialog. -->
+    <string name="mozac_lib_crash_dialog_button_close">Zavrieť</string>
+
+    <!-- Label of the button closing the crash reporter dialog and restarting the app. -->
+    <string name="mozac_lib_crash_dialog_button_restart">Reštartovať %1$s</string>
+
+    <!-- Name of the "notification channel" used for displaying a notification when the app crashed and we can't show a prompt. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_lib_crash_channel">Zlyhania</string>
+
+    <!-- Label of a notification action/button that will send the crash report to Mozilla. -->
+    <string name="mozac_lib_crash_notification_action_report">Nahlásiť</string>
+
+    <!-- Label of notification showing that the crash report service is running. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
+    <string name="mozac_lib_send_crash_report_in_progress">Odosielanie správy o zlyhaní spoločnosti %1$s</string>
+</resources>

@@ -1,0 +1,53 @@
+{
+  "manifest_version": 2,
+  "name": "Web Compat",
+  "description": "Urgent post-release fixes for web compatibility.",
+  "version": "5.0.2",
+
+  "applications": {
+    "gecko": {
+      "id": "webcompat@mozilla.org",
+      "strict_min_version": "59.0b5"
+    }
+  },
+
+  "experiment_apis": {
+    "aboutConfigPrefs": {
+      "schema": "experiment-apis/aboutConfigPrefs.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experiment-apis/aboutConfigPrefs.js",
+        "paths": [["aboutConfigPrefs"]]
+      }
+    },
+    "aboutPage": {
+      "schema": "about-compat/aboutPage.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "about-compat/aboutPage.js",
+        "events": ["startup"]
+      }
+    }
+  },
+
+  "content_security_policy": "script-src 'self' 'sha256-MmZkN2QaIHhfRWPZ8TVRjijTn5Ci1iEabtTEWrt9CCo='; default-src 'self'; base-uri moz-extension://*;",
+
+  "permissions": [
+    "webRequest",
+    "webRequestBlocking",
+    "<all_urls>"
+  ],
+
+  "background": {
+    "scripts": [
+      "lib/module_shim.js",
+      "data/injections.js",
+      "data/ua_overrides.js",
+      "lib/about_compat_broker.js",
+      "lib/custom_functions.js",
+      "lib/injections.js",
+      "lib/ua_overrides.js",
+      "run.js"
+    ]
+  }
+}

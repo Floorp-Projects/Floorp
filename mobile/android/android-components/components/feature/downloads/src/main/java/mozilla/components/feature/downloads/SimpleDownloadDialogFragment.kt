@@ -49,8 +49,10 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
                     onStartDownload()
                 }
                 .setNegativeButton(negativeButtonText) { _, _ ->
+                    onCancelDownload()
                     dismiss()
                 }
+                .setOnCancelListener { onCancelDownload() }
                 .setCancelable(cancelable)
                 .create()
         }

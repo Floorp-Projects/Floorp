@@ -119,7 +119,8 @@ class ConsumableTest {
         assertEquals(23, consumer3.callbackValue)
     }
 
-    fun `value will be consumed if at multiple lambdas return true`() {
+    @Test
+    fun `value will be consumed if multiple lambdas return true`() {
         val consumer1 = TestConsumer(shouldConsume = true)
         val consumer2 = TestConsumer(shouldConsume = false)
         val consumer3 = TestConsumer(shouldConsume = true)
@@ -143,6 +144,33 @@ class ConsumableTest {
 
         assertTrue(consumer3.callbackTriggered)
         assertEquals(23, consumer3.callbackValue)
+    }
+
+    @Test
+    fun `value can be read and not consumed`() {
+        val consumable = Consumable.from(42)
+
+        assertEquals(42, consumable.peek())
+        assertFalse(consumable.isConsumed())
+
+        consumable.consume { true }
+        assertNull(consumable.peek())
+    }
+
+    @Test
+    fun `listeners are notified when value is consumed`() {
+        var listener1Notified = false
+        var listener2Notified = false
+
+        val consumable = Consumable.from(42) { listener1Notified = true }
+        consumable.onConsume { listener2Notified = true }
+
+        assertFalse(listener1Notified)
+        assertFalse(listener2Notified)
+
+        consumable.consume { true }
+        assertTrue(listener1Notified)
+        assertTrue(listener2Notified)
     }
 
     @Test

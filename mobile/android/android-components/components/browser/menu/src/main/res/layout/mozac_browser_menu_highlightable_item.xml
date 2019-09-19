@@ -31,7 +31,7 @@
         android:importantForAccessibility="no"/>
 
     <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/highlight_image"
+        android:id="@+id/end_image"
         android:layout_alignParentEnd="true"
         android:layout_gravity="center_vertical"
         style="@style/Mozac.Browser.Menu.Item.ImageText.Icon"

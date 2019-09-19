@@ -2,7 +2,7 @@
 
 # AssetsSearchEngineProvider
 
-`class AssetsSearchEngineProvider : `[`SearchEngineProvider`](../-search-engine-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/search/src/main/java/mozilla/components/browser/search/provider/AssetsSearchEngineProvider.kt#L36)
+`class AssetsSearchEngineProvider : `[`SearchEngineProvider`](../-search-engine-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/search/src/main/java/mozilla/components/browser/search/provider/AssetsSearchEngineProvider.kt#L37)
 
 SearchEngineProvider implementation to load the included search engines from assets.
 

@@ -11,7 +11,7 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import mozilla.components.browser.session.intent.getSessionId
+import mozilla.components.feature.intent.ext.getSessionId
 import mozilla.components.browser.tabstray.BrowserTabsTray
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.tabstray.TabsTray
@@ -19,8 +19,14 @@ import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.samples.browser.ext.components
 
+/**
+ * Activity that holds the [BrowserFragment].
+ */
 open class BrowserActivity : AppCompatActivity(), ComponentCallbacks2 {
 
+    /**
+     * Returns a new instance of [BrowserFragment] to display.
+     */
     open fun createBrowserFragment(sessionId: String?): Fragment =
         BrowserFragment.create(sessionId)
 
@@ -30,7 +36,7 @@ open class BrowserActivity : AppCompatActivity(), ComponentCallbacks2 {
 
         if (savedInstanceState == null) {
             val sessionId = SafeIntent(intent).getSessionId()
-            supportFragmentManager?.beginTransaction()?.apply {
+            supportFragmentManager.beginTransaction().apply {
                 replace(R.id.container, createBrowserFragment(sessionId))
                 commit()
             }
@@ -62,5 +68,6 @@ open class BrowserActivity : AppCompatActivity(), ComponentCallbacks2 {
 
     override fun onTrimMemory(level: Int) {
         components.sessionManager.onLowMemory()
+        components.icons.onLowMemory()
     }
 }

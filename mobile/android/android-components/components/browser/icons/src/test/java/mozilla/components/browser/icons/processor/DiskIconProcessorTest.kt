@@ -12,6 +12,7 @@ import mozilla.components.support.test.mock
 import org.junit.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 
 class DiskIconProcessorTest {
     @Test
@@ -82,5 +83,35 @@ class DiskIconProcessorTest {
         processor.process(context = mock(), request = mock(), resource = null, icon = icon, desiredSize = mock())
 
         verify(cache, never()).put(any(), any(), any(), eq(icon))
+    }
+
+    @Test
+    fun `Icon loaded in private mode is not saved in cache`() {
+        /* Can be Source.INLINE as well. To ensure that the icon is eligible for caching on the disk. */
+        val icon = Icon(mock(), source = Icon.Source.DOWNLOAD)
+        val cache: DiskIconProcessor.ProcessorDiskCache = mock()
+
+        val processor = DiskIconProcessor(cache)
+        val request: IconRequest = mock()
+        `when`(request.isPrivate).thenReturn(true)
+        val resource: IconRequest.Resource = mock()
+        processor.process(context = mock(), request = request, resource = resource, icon = icon, desiredSize = mock())
+
+        verify(cache, never()).put(any(), any(), any(), eq(icon))
+    }
+
+    @Test
+    fun `Icon loaded in non-private mode is saved in cache`() {
+        /* Can be Source.INLINE as well. To ensure that the icon is eligible for caching on the disk. */
+        val icon = Icon(mock(), source = Icon.Source.DOWNLOAD)
+        val cache: DiskIconProcessor.ProcessorDiskCache = mock()
+
+        val processor = DiskIconProcessor(cache)
+        val request: IconRequest = mock()
+        `when`(request.isPrivate).thenReturn(false)
+        val resource: IconRequest.Resource = mock()
+        processor.process(context = mock(), request = request, resource = resource, icon = icon, desiredSize = mock())
+
+        verify(cache).put(any(), eq(request), eq(resource), eq(icon))
     }
 }

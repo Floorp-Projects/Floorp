@@ -2,7 +2,7 @@
 
 # OMIT
 
-`OMIT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L148)
+`OMIT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L149)
 
 Do not send cookies with the request.
 

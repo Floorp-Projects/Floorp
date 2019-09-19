@@ -15,6 +15,9 @@
     <!-- Name of the "notification channel" used for displaying a notification when the app crashed and we can't show a prompt. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_lib_crash_channel">崩溃</string>
 
+    <!-- Label of a notification action/button that will send the crash report to Mozilla. -->
     <string name="mozac_lib_crash_notification_action_report">反馈</string>
 
+    <!-- Label of notification showing that the crash report service is running. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
+    <string name="mozac_lib_send_crash_report_in_progress">向 %1$s 发送崩溃报告</string>
 </resources>

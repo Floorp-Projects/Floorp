@@ -22,9 +22,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar.Companion.ACTION_PADDING_DP
 import mozilla.components.browser.toolbar.display.DisplayToolbar
+import mozilla.components.browser.toolbar.display.TrackingProtectionIconView.Companion.DEFAULT_ICON_OFF_FOR_A_SITE
+import mozilla.components.browser.toolbar.display.TrackingProtectionIconView.Companion.DEFAULT_ICON_ON_NO_TRACKERS_BLOCKED
+import mozilla.components.browser.toolbar.display.TrackingProtectionIconView.Companion.DEFAULT_ICON_ON_TRACKERS_BLOCKED
 import mozilla.components.browser.toolbar.edit.EditToolbar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.concept.toolbar.Toolbar.SiteSecurity
+import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -630,7 +634,7 @@ class BrowserToolbarTest {
 
     @Test
     fun `BrowserToolbar Button must set padding`() {
-        var button = BrowserToolbar.Button(mock(), "imageResource", visible = { true }) {}
+        var button = BrowserToolbar.Button(mock(), "endImageResource", visible = { true }) {}
         val linearLayout = LinearLayout(testContext)
         var view = button.createView(linearLayout)
         val padding = Padding(0, 0, 0, 0)
@@ -638,20 +642,20 @@ class BrowserToolbarTest {
         assertEquals(view.paddingTop, ACTION_PADDING_DP)
         assertEquals(view.paddingRight, ACTION_PADDING_DP)
         assertEquals(view.paddingBottom, ACTION_PADDING_DP)
-        button = BrowserToolbar.Button(mock(), "imageResource", padding = padding.copy(left = 16)) {}
+        button = BrowserToolbar.Button(mock(), "endImageResource", padding = padding.copy(left = 16)) {}
         view = button.createView(linearLayout)
         assertEquals(view.paddingLeft, 16)
-        button = BrowserToolbar.Button(mock(), "imageResource", padding = padding.copy(top = 16)) {}
+        button = BrowserToolbar.Button(mock(), "endImageResource", padding = padding.copy(top = 16)) {}
         view = button.createView(linearLayout)
         assertEquals(view.paddingTop, 16)
-        button = BrowserToolbar.Button(mock(), "imageResource", padding = padding.copy(right = 16)) {}
+        button = BrowserToolbar.Button(mock(), "endImageResource", padding = padding.copy(right = 16)) {}
         view = button.createView(linearLayout)
         assertEquals(view.paddingRight, 16)
-        button = BrowserToolbar.Button(mock(), "imageResource", padding = padding.copy(bottom = 16)) {}
+        button = BrowserToolbar.Button(mock(), "endImageResource", padding = padding.copy(bottom = 16)) {}
         view = button.createView(linearLayout)
         assertEquals(view.paddingBottom, 16)
         button = BrowserToolbar.Button(
-            mock(), "imageResource",
+            mock(), "endImageResource",
             padding = Padding(16, 20, 24, 28)
         ) {}
         view = button.createView(linearLayout)
@@ -667,7 +671,7 @@ class BrowserToolbarTest {
         var button = BrowserToolbar.ToggleButton(
             mock(),
             mock(),
-            "imageResource",
+            "endImageResource",
             "",
             visible = { true },
             selected = false,
@@ -683,7 +687,7 @@ class BrowserToolbarTest {
         button = BrowserToolbar.ToggleButton(
             mock(),
             mock(),
-            "imageResource",
+            "endImageResource",
             "",
             visible = { true },
             selected = false,
@@ -700,7 +704,7 @@ class BrowserToolbarTest {
         button = BrowserToolbar.ToggleButton(
             mock(),
             mock(),
-            "imageResource",
+            "endImageResource",
             "",
             selected = false,
             background = 0
@@ -993,6 +997,73 @@ class BrowserToolbarTest {
         toolbar.siteSecure = SiteSecurity.SECURE
 
         verify(toolbar.displayToolbar).setSiteSecurity(SiteSecurity.SECURE)
+    }
+
+    @Test
+    fun `siteTrackingProtection updates the displayToolbar`() {
+        val toolbar = BrowserToolbar(testContext)
+        toolbar.displayToolbar = spy(toolbar.displayToolbar)
+        assertEquals(SiteTrackingProtection.OFF_GLOBALLY, toolbar.siteTrackingProtection)
+
+        toolbar.siteTrackingProtection = SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED
+
+        verify(toolbar.displayToolbar).setTrackingProtectionState(SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED)
+    }
+
+    @Test
+    fun `setOnTrackingProtectionClickedListener will forward events to display toolbar`() {
+        val toolbar = BrowserToolbar(testContext)
+        val displayToolbar = toolbar.displayToolbar
+        var wasClicked = false
+
+        toolbar.setOnTrackingProtectionClickedListener { wasClicked = true }
+        displayToolbar.trackingProtectionIconView.performClick()
+
+        assertTrue(wasClicked)
+
+        toolbar.setOnTrackingProtectionClickedListener(null)
+
+        assertEquals(null, displayToolbar.trackingProtectionIconView.background)
+    }
+
+    @Test
+    fun `setTrackingProtectionIcons will forward to display toolbar`() {
+        val toolbar = BrowserToolbar(testContext)
+        toolbar.displayToolbar = spy(toolbar.displayToolbar)
+        val drawable1 = testContext.getDrawable(DEFAULT_ICON_ON_NO_TRACKERS_BLOCKED)!!
+        val drawable2 = testContext.getDrawable(DEFAULT_ICON_ON_TRACKERS_BLOCKED)!!
+        val drawable3 = testContext.getDrawable(DEFAULT_ICON_OFF_FOR_A_SITE)!!
+
+        toolbar.displayTrackingProtectionIcon = true
+        toolbar.setTrackingProtectionIcons(drawable1, drawable2, drawable3)
+
+        verify(toolbar.displayToolbar).setTrackingProtectionIcons(drawable1, drawable2, drawable3)
+    }
+
+    @Test
+    fun `separatorColor will forward to display toolbar`() {
+        val toolbar = BrowserToolbar(testContext)
+        toolbar.displayToolbar = spy(toolbar.displayToolbar)
+
+        toolbar.separatorColor = R.color.photonBlue40
+
+        verify(toolbar.displayToolbar).separatorColor =
+            R.color.photonBlue40
+        assertEquals(
+            R.color.photonBlue40,
+            toolbar.separatorColor
+        )
+    }
+
+    @Test
+    fun `displaySeparatorView will forward to display displaySeparatorView`() {
+        val toolbar = BrowserToolbar(testContext)
+        toolbar.displayToolbar = spy(toolbar.displayToolbar)
+
+        toolbar.displaySeparatorView = false
+
+        verify(toolbar.displayToolbar).displaySeparatorView = false
+        assertFalse(toolbar.displaySeparatorView)
     }
 
     @Test

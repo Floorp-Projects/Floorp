@@ -9,6 +9,7 @@ package mozilla.components.feature.push
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -91,6 +92,8 @@ class AutoPushFeature(
         // If we have a token, initialize the rust component first.
         prefToken?.let { token ->
             scope.launch {
+                logger.debug("Initializing native component with the cached token.")
+
                 connection.updateToken(token)
             }
         }
@@ -125,6 +128,8 @@ class AutoPushFeature(
      */
     override fun onNewToken(newToken: String) {
         scope.launchAndTry {
+            logger.info("Received a new registration token from push service.")
+
             connection.updateToken(newToken)
 
             // Subscribe all only if this is the first time.
@@ -143,6 +148,7 @@ class AutoPushFeature(
         scope.launchAndTry {
             val type = DeliveryManager.serviceForChannelId(message.channelId)
             DeliveryManager.with(connection) {
+                logger.info("New push message decrypted.")
                 val decrypted = decrypt(
                     channelId = message.channelId,
                     body = message.body,
@@ -162,21 +168,32 @@ class AutoPushFeature(
 
     /**
      * Register to receive push subscriptions when requested or when they have been re-registered.
+     *
+     * @param observer the observer that will be notified.
+     * @param owner the lifecycle owner for the observer. Defaults to [ProcessLifecycleOwner].
+     * @param autoPause whether to stop notifying the observer during onPause lifecycle events.
+     * Defaults to false so that subscriptions are always delivered to observers.
      */
     fun registerForSubscriptions(
         observer: PushSubscriptionObserver,
-        owner: LifecycleOwner,
-        autoPause: Boolean
+        owner: LifecycleOwner = ProcessLifecycleOwner.get(),
+        autoPause: Boolean = false
     ) = subscriptionObservers.register(observer, owner, autoPause)
 
     /**
      * Register to receive push messages for the associated [PushType].
+     *
+     * @param type the push message type that you want to be registered.
+     * @param observer the observer that will be notified.
+     * @param owner the lifecycle owner for the observer. Defaults to [ProcessLifecycleOwner].
+     * @param autoPause whether to stop notifying the observer during onPause lifecycle events.
+     * Defaults to false so that messages are always delivered to observers.
      */
     fun registerForPushMessages(
         type: PushType,
         observer: Bus.Observer<PushType, String>,
-        owner: LifecycleOwner,
-        autoPause: Boolean
+        owner: LifecycleOwner = ProcessLifecycleOwner.get(),
+        autoPause: Boolean = false
     ) = messageObserverBus.register(type, observer, owner, autoPause)
 
     /**
@@ -193,8 +210,13 @@ class AutoPushFeature(
 
     /**
      * Returns subscription information for the push type if available.
+     *
+     * Implementation notes: We need to connect this to the device constellation so that we update our subscriptions
+     * when notified by FxA. See [#3859][0].
+     *
+     * [0]: https://github.com/mozilla-mobile/android-components/issues/3859
      */
-    internal fun unsubscribeForType(type: PushType) {
+    fun unsubscribeForType(type: PushType) {
         DeliveryManager.with(connection) {
             scope.launchAndTry {
                 unsubscribe(type.toChannelId())
@@ -219,8 +241,15 @@ class AutoPushFeature(
     /**
      * Deletes the registration token locally so that it forces the service to get a new one the
      * next time hits it's messaging server.
+     *
+     * Implementation notes: This shouldn't need to be used unless we're certain. When we introduce
+     * [a polling service][0] to check if endpoints are expired, we would invoke this.
+     *
+     * [0]: https://github.com/mozilla-mobile/android-components/issues/3173
      */
     fun forceRegistrationRenewal() {
+        logger.warn("Forcing registration renewal by deleting our (cached) token.")
+
         // Remove the cached token we have.
         deleteToken(context)
 
@@ -301,7 +330,7 @@ internal object DeliveryManager {
 }
 
 /**
- * Supported push services.
+ * Supported push services. These are currently limited to Firebase Cloud Messaging and Amazon Device Messaging.
  */
 enum class ServiceType {
     FCM,
@@ -317,12 +346,22 @@ enum class Protocol {
 }
 
 /**
- * The subscription information from Autopush that can be used to send push messages to other devices.
+ * The subscription information from AutoPush that can be used to send push messages to other devices.
  */
-data class AutoPushSubscription(val type: PushType, val endpoint: String, val publicKey: String, val authKey: String)
+data class AutoPushSubscription(
+    val type: PushType,
+    val endpoint: String,
+    val publicKey: String,
+    val authKey: String
+)
 
 /**
- * Configuration object for initializing the Push Manager.
+ * Configuration object for initializing the Push Manager with an AutoPush server.
+ *
+ * @param senderId The project identifier set by the server. Contact your server ops team to know what value to set.
+ * @param serverHost The sync server address.
+ * @param protocol The socket protocol to use when communicating with the server.
+ * @param serviceType The push services that the AutoPush server supports.
  */
 data class PushConfig(
     val senderId: String,

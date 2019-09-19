@@ -28,7 +28,7 @@ android {
         }
     }
 
-    flavorDimensions "engine", "abi"
+    flavorDimensions "engine"
 
     productFlavors {
         // GeckoView release channels
@@ -46,24 +46,6 @@ android {
         system {
             dimension "engine"
         }
-
-        servo {
-            dimension "engine"
-        }
-
-        // Processor architecture
-        arm {
-            dimension "abi"
-        }
-        x86 {
-            dimension "abi"
-        }
-        aarch64 {
-            dimension "abi"
-        }
-        universal {
-            dimension "abi"
-        }
     }
 
     variantFilter { variant ->
@@ -72,40 +54,7 @@ android {
             // release versions.
             setIgnore(true)
         }
-
-        def flavors = variant.flavors*.name.toString().toLowerCase()
-        if (flavors.contains("system") && !flavors.contains("universal")) {
-            setIgnore(true)
-        }
-
-        // Only allow "universal" flavors of "system", "geckoviewNightly" and "geckoBeta" engines
-        if (flavors.contains("universal") && !(flavors.contains("system") || flavors.contains("geckonightly") || flavors.contains("geckobeta"))) {
-            setIgnore(true)
-        }
-
-        // Ignore all non-universal GeckoView Nightly builds
-        if (!flavors.contains("universal") && flavors.contains("geckonightly")) {
-            setIgnore(true)
-        }
-
-        // Ignore all non-universal GeckoView Beta builds
-        if (!flavors.contains("universal") && flavors.contains("geckobeta")) {
-            setIgnore(true)
-        }
-
-        if (flavors.contains("servo") && !flavors.contains("arm") && !flavors.contains("x86")) {
-            setIgnore(true)
-        }
     }
-}
-
-configurations {
-    geckoReleaseArmImplementation {}
-    geckoReleaseX86Implementation {}
-    geckoReleaseAarch64Implementation {}
-
-    servoX86Implementation {}
-    servoArmImplementation {}
 }
 
 dependencies {
@@ -152,24 +101,16 @@ dependencies {
     implementation project(':feature-downloads')
     implementation project(':support-ktx')
 
-    servoImplementation project(':browser-engine-servo')
-    servoX86Implementation Dependencies.mozilla_servo_x86
-    servoArmImplementation Dependencies.mozilla_servo_arm
-
     geckoNightlyImplementation project(':browser-engine-gecko-nightly')
-
     geckoBetaImplementation project(':browser-engine-gecko-beta')
-
     geckoReleaseImplementation project(':browser-engine-gecko')
-    geckoReleaseArmImplementation Gecko.geckoview_release_arm
-    geckoReleaseX86Implementation Gecko.geckoview_release_x86
-    geckoReleaseAarch64Implementation Gecko.geckoview_release_aarch64
 
     implementation Dependencies.google_material
 
     implementation Dependencies.kotlin_stdlib
 
     implementation Dependencies.androidx_appcompat
+    implementation Dependencies.androidx_core_ktx
     implementation Dependencies.androidx_constraintlayout
 
     androidTestImplementation project(':support-android-test')
@@ -180,4 +121,12 @@ dependencies {
     androidTestImplementation Dependencies.androidx_test_uiautomator
     androidTestImplementation Dependencies.androidx_espresso_core
     androidTestImplementation Dependencies.testing_mockwebserver
+}
+
+if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopsrcdir')) {
+    if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopobjdir')) {
+        ext.topobjdir = gradle."localProperties.dependencySubstitutions.geckoviewTopobjdir"
+    }
+    ext.topsrcdir = gradle."localProperties.dependencySubstitutions.geckoviewTopsrcdir"
+    apply from: "${topsrcdir}/substitute-local-geckoview.gradle"
 }

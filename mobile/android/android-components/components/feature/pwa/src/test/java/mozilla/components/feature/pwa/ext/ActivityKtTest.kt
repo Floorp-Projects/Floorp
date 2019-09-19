@@ -56,5 +56,11 @@ class ActivityKtTest {
                 orientation = WebAppManifest.Orientation.LANDSCAPE))
             verify(activity).requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
         }
+
+        run {
+            val activity: Activity = mock()
+            activity.applyOrientation(null)
+            verify(activity).requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
+        }
     }
 }

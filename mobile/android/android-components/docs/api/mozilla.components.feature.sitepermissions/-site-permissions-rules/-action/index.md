@@ -10,3 +10,9 @@
 |---|---|
 | [BLOCKED](-b-l-o-c-k-e-d.md) |  |
 | [ASK_TO_ALLOW](-a-s-k_-t-o_-a-l-l-o-w.md) |  |
+
+### Functions
+
+| Name | Summary |
+|---|---|
+| [toStatus](to-status.md) | `fun toStatus(): `[`Status`](../../-site-permissions/-status/index.md) |

@@ -81,7 +81,7 @@ else
     flank_template="$FLANK_CONF_ARM"
 fi
 
-APK_APP="./samples/${component}/build/outputs/apk/geckoNightlyUniversal/debug/samples-browser-geckoNightly-universal-debug.apk"
+APK_APP="./samples/${component}/build/outputs/apk/geckoNightly/debug/samples-browser-geckoNightly-debug.apk"
 APK_TEST="./components/${component}/engine-gecko-nightly/build/outputs/apk/androidTest/debug/browser-engine-gecko-nightly-debug-androidTest.apk"
 
 

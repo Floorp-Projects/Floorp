@@ -3,12 +3,16 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="org.mozilla.samples.glean">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
+    <!-- Note: the usesCleartextTraffic is only required for making instrumentation
+         tests work on API 23+. Also note that this requires tools:ignore="UnusedAttribute"
+         for stopping the linter from complaining on API 21 <= x < 23. -->
     <application
         android:allowBackup="true"
         android:fullBackupContent="@xml/backup_rules"
@@ -16,6 +20,8 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.DarkActionBar"
+        android:usesCleartextTraffic="true"
+        tools:ignore="UnusedAttribute"
         android:name=".GleanApplication">
         <activity android:name="org.mozilla.samples.glean.MainActivity"
             android:windowSoftInputMode="adjustResize"

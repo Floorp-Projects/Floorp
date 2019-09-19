@@ -4,9 +4,9 @@
 
 package mozilla.components.support.ktx.kotlin
 
-import android.net.Uri
 import mozilla.components.support.utils.URLStringUtils
 import java.security.MessageDigest
+import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -51,12 +51,6 @@ fun String.toDate(format: String, locale: Locale = Locale.ROOT): Date {
 }
 
 /**
- * Converts a [String] to a [Uri] object.
- */
-@Deprecated("Use Android KTX instead", ReplaceWith("toUri()", "androidx.core.net.toUri"))
-fun String.toUri() = Uri.parse(this)
-
-/**
  * Calculates a SHA1 hash for this string.
  */
 @Suppress("MagicNumber")
@@ -66,4 +60,29 @@ fun String.sha1(): String {
     return digest.joinToString(separator = "", transform = { byte ->
         String(charArrayOf(characters[byte.toInt() shr 4 and 0x0f], characters[byte.toInt() and 0x0f]))
     })
+}
+
+/**
+ * Tries to convert a [String] to a [Date] using a list of [possibleFormats].
+ * @param possibleFormats one ore more possible format.
+ * @return a [Date] object with the values in the provided in this string,
+ * if the conversion is not possible null will be returned.
+ */
+fun String.toDate(
+    vararg possibleFormats: String = arrayOf(
+            "yyyy-MM-dd'T'HH:mm",
+            "yyyy-MM-dd",
+            "yyyy-'W'ww",
+            "yyyy-MM",
+            "HH:mm"
+    )
+): Date? {
+    possibleFormats.forEach {
+        try {
+            return this.toDate(it)
+        } catch (pe: ParseException) {
+            // move to next possible format
+        }
+    }
+    return null
 }

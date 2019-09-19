@@ -8,7 +8,11 @@ package org.mozilla.telemetry;
  * Holder of a static reference to the Telemetry instance. This is required for background services
  * that somehow need to get access to the configuration and storage. This is not particular nice.
  * Hopefully we can replace this with something better.
+ *
+ * @deprecated The whole service-telemetry library is deprecated. Please use the
+ *              <a href="https://mozilla.github.io/glean/book/index.html">Glean SDK</a> instead.
  */
+@Deprecated
 public class TelemetryHolder {
     private static Telemetry telemetry;
 

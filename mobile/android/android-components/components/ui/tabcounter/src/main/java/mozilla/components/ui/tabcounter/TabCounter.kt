@@ -64,7 +64,6 @@ open class TabCounter @JvmOverloads constructor(
         return text.text
     }
 
-    @Suppress("LongMethod")
     fun setCountWithAnimation(count: Int) {
         // Don't animate from initial state.
         if (this.count == 0) {
@@ -124,7 +123,6 @@ open class TabCounter @JvmOverloads constructor(
         return animatorSet
     }
 
-    @Suppress("LongMethod")
     private fun createBoxAnimatorSet(animatorSet: AnimatorSet) {
         // The first animator, fadeout in 33 ms (49~51, 2 frames).
         val fadeOut = ObjectAnimator.ofFloat(box, "alpha",
@@ -174,7 +172,6 @@ open class TabCounter @JvmOverloads constructor(
         animatorSet.play(scaleDown2).before(scaleUp3)
     }
 
-    @Suppress("LongMethod")
     private fun createBarAnimatorSet(animatorSet: AnimatorSet) {
         val firstAnimator = animatorSet.childAnimations[0]
 

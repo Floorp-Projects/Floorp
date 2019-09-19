@@ -34,7 +34,6 @@ class DefaultIconGenerator(
     @ArrayRes private val backgroundColorsRes: Int = R.array.mozac_browser_icons_photon_palette
 ) : IconGenerator {
 
-    @Suppress("LongMethod")
     override fun generate(context: Context, request: IconRequest): Icon {
         val size = context.resources.getDimension(request.size.dimen)
         val sizePx = size.toInt()
@@ -42,7 +41,7 @@ class DefaultIconGenerator(
         val bitmap = Bitmap.createBitmap(sizePx, sizePx, ARGB_8888)
         val canvas = Canvas(bitmap)
 
-        val backgroundColor = pickColor(context.resources, request.url)
+        val backgroundColor = request.color ?: pickColor(context.resources, request.url)
 
         val paint = Paint()
         paint.color = backgroundColor

@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:Suppress("TooManyFunctions")
+
 package mozilla.components.concept.engine.manifest
 
 import android.graphics.Color
@@ -93,6 +95,14 @@ class WebAppManifestParser {
         put("related_applications", serializeRelatedApplications(manifest.relatedApplications))
         put("prefer_related_applications", manifest.preferRelatedApplications)
     }
+}
+
+/**
+ * Returns the encapsulated value if this instance represents success or `null` if it is failure.
+ */
+fun WebAppManifestParser.Result.getOrNull(): WebAppManifest? = when (this) {
+    is WebAppManifestParser.Result.Success -> manifest
+    is WebAppManifestParser.Result.Failure -> null
 }
 
 private fun parseDisplayMode(json: JSONObject): WebAppManifest.DisplayMode {

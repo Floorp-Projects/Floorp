@@ -4,7 +4,7 @@
 
 `open class ExperimentsInternalAPI` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/experiments/src/main/java/mozilla/components/service/experiments/Experiments.kt#L18)
 
-Entry point of the library.
+This is the main experiments API, which is exposed through the global [Experiments](../-experiments.md) object.
 
 ### Functions
 
@@ -17,4 +17,4 @@ Entry point of the library.
 
 | Name | Summary |
 |---|---|
-| [Experiments](../-experiments.md) | `object Experiments : `[`ExperimentsInternalAPI`](./index.md) |
+| [Experiments](../-experiments.md) | `object Experiments : `[`ExperimentsInternalAPI`](./index.md)<br>The main Experiments object. |

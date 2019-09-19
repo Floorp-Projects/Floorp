@@ -2,7 +2,7 @@
 
 # WindowFeature
 
-`class WindowFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/WindowFeature.kt#L17)
+`class WindowFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/WindowFeature.kt#L16)
 
 Feature implementation for handling window requests.
 
@@ -10,7 +10,7 @@ Feature implementation for handling window requests.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `WindowFeature(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`)`<br>Feature implementation for handling window requests. |
+| [&lt;init&gt;](-init-.md) | `WindowFeature(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`)`<br>Feature implementation for handling window requests. |
 
 ### Functions
 

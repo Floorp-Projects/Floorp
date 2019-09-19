@@ -21,10 +21,12 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
+import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
@@ -34,6 +36,8 @@ import java.util.Date
 
 @RunWith(AndroidJUnit4::class)
 class PlacesBookmarksStorageTest {
+    @get:Rule
+    val gleanRule = GleanTestRule(testContext)
 
     private var conn: Connection? = null
     private var reader: PlacesReaderConnection? = null
@@ -279,8 +283,6 @@ class PlacesBookmarksStorageTest {
 
     @Test
     fun `sends bookmarks telemetry pings on success`() = runBlocking {
-        resetGlean()
-
         val now = Date().asSeconds()
         val conn = object : Connection {
             var pingCount = 0
@@ -382,8 +384,6 @@ class PlacesBookmarksStorageTest {
 
     @Test
     fun `sends bookmarks telemetry pings on engine failure`() = runBlocking {
-        resetGlean()
-
         val now = Date().asSeconds()
         val conn = object : Connection {
             var pingCount = 0
@@ -550,8 +550,6 @@ class PlacesBookmarksStorageTest {
 
     @Test
     fun `sends bookmarks telemetry pings on sync failure`() = runBlocking {
-        resetGlean()
-
         val now = Date().asSeconds()
         val conn = object : Connection {
             var pingCount = 0

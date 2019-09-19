@@ -7,6 +7,8 @@
 package mozilla.components.lib.push.firebase
 
 import android.content.Context
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
 import com.google.firebase.FirebaseApp
 import com.google.firebase.iid.FirebaseInstanceId
 import com.google.firebase.messaging.FirebaseMessaging
@@ -83,5 +85,9 @@ abstract class AbstractFirebasePushService(
                 logger.error("Force registration renewable failed.", e)
             }
         }
+    }
+
+    override fun isServiceAvailable(context: Context): Boolean {
+        return GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS
     }
 }

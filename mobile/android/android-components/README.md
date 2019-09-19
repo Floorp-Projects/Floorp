@@ -2,6 +2,8 @@
 
 [![Task Status](https://github.taskcluster.net/v1/repository/mozilla-mobile/android-components/master/badge.svg)](https://github.taskcluster.net/v1/repository/mozilla-mobile/android-components/master/latest)
 [![codecov](https://codecov.io/gh/mozilla-mobile/android-components/branch/master/graph/badge.svg)](https://codecov.io/gh/mozilla-mobile/android-components)
+[![Bors enabled](https://bors.tech/images/badge_small.svg)](https://app.bors.tech/repositories/19637)
+[![Gitter](https://badges.gitter.im/mozilla-mobile/android-components.svg)](https://gitter.im/mozilla-mobile/android-components)
 
 _A collection of Android libraries to build browsers or browser-like applications._
 
@@ -19,7 +21,7 @@ Before you attempt to make a contribution please read the [Community Participati
 
 * [List of good first issues](https://github.com/mozilla-mobile/android-components/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) (**New contributors start here!**) and [List of "help wanted" issues](https://github.com/mozilla-mobile/android-components/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22).
 
-* IRC: [#android-components (irc.mozilla.org)](https://wiki.mozilla.org/IRC) | [view logs](https://mozilla.logbot.info/android-components/)
+* Gitter: [chat room](https://gitter.im/mozilla-mobile/android-components).
 
 * Subscribe to our mailing list [android-components@](https://lists.mozilla.org/listinfo/android-components) to keep up to date ([Archives](https://lists.mozilla.org/pipermail/android-components/)).
 
@@ -65,8 +67,6 @@ High-level components for building browser(-like) apps.
 * ⚪ [**Engine-Gecko-Beta**](components/browser/engine-gecko-beta/README.md) - *Engine* implementation based on [GeckoView](https://wiki.mozilla.org/Mobile/GeckoView) (Beta channel).
 
 * ⚪ [**Engine-Gecko-Nightly**](components/browser/engine-gecko-nightly/README.md) - *Engine* implementation based on [GeckoView](https://wiki.mozilla.org/Mobile/GeckoView) (Nightly channel).
-
-* 🔴 [**Engine-Servo**](components/browser/engine-servo/README.md) - *Engine* implementation based on the [Servo Browser Engine](https://servo.org/).
 
 * ⚪ [**Engine-System**](components/browser/engine-system/README.md) - *Engine* implementation based on the system's WebView.
 
@@ -130,6 +130,8 @@ _Combined components to implement feature-specific use cases._
 
 * 🔴 [**Search**](components/feature/search/README.md) - A component that connects an (concept) engine implementation with the browser search module.
 
+* 🔴 [**SendTab**](components/feature/sendtab/README.md) - A component for sending tabs to other devices with a registered FxA Account.
+
 * ⚪ [**Session**](components/feature/session/README.md) - A component that connects an (concept) engine implementation with the browser session and storage modules.
 
 * 🔴 [**Sync**](components/feature/sync/README.md) -A component that provides synchronization orchestration for groups of (concept) SyncableStore objects.
@@ -147,6 +149,8 @@ _Combined components to implement feature-specific use cases._
 * ⚪ [**Find In Page**](components/feature/findinpage/README.md) - A component that provides an UI widget for [find in page functionality](https://support.mozilla.org/en-US/kb/search-contents-current-page-text-or-links).
 
 * 🔴 [**Site Permissions**](components/feature/sitepermissions/README.md) - A feature for showing site permission request prompts.
+
+* 🔴 [**Web Notifications**](components/feature/webnotifications/README.md) - A component for displaying web notifications.
 
 ## UI
 
@@ -194,7 +198,11 @@ _Supporting components with generic helper code._
 
 * 🔵 [**Test**](components/support/test/README.md) - A collection of helpers for testing components in local unit tests (`src/test`).
 
+* 🔵 [**Test Appservices**](components/support/test-appservices/README.md) - A component for synchronizing Application Services' unit testing dependencies used in Android Components.
+
 * 🔵 [**Utils**](components/support/utils/README.md) - Generic utility classes to be shared between projects.
+
+* 🔵 [**Webextensions**](components/support/webextensions/README.md) - A component containing building blocks for features implemented as web extensions.
 
 ## Standalone libraries
 
@@ -239,6 +247,28 @@ _Sample apps using various components._
 * [**DataProtect**](samples/dataprotect) - An app demoing how to use the [**Dataprotect**](components/lib/dataprotect/README.md) component to load and store encrypted data in `SharedPreferences`.
 
 * [**Glean**](samples/glean) - An app demoing how to use the [**Glean**](components/service/glean/README.md) library to collect and send telemetry data.
+
+# Building #
+
+## Command line ##
+
+```
+$ git clone https://github.com/mozilla-mobile/android-components.git
+$ cd android-components
+$ ./gradlew assemble
+```
+
+## Android Studio ##
+
+If the environment variable `JAVA_HOME` is not defined, you will need to set it. If you would like to use the JDK installed by Android Studio, here's how to find it: 
+
+1. Open Android Studio.
+2. Select "Configure".
+3. Select "Default Project Structure". You should now see the Android JDK location. 
+4. Set the environment variable `JAVA_HOME` to the location. (How you set an environment variable depends on your OS.)
+5. Restart Android Studio.
+
+Once the environment variable is set, you can import the project into Android Studio with the default wizard options.
 
 # License
 

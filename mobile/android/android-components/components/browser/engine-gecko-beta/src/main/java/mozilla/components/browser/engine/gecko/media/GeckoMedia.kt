@@ -26,6 +26,9 @@ internal class GeckoMedia(
 ) : Media() {
     override val controller: Controller = GeckoMediaController(mediaElement)
 
+    override var metadata: Metadata = Metadata()
+        internal set
+
     init {
         mediaElement.delegate = MediaDelegate(this)
     }
@@ -44,7 +47,7 @@ internal class GeckoMedia(
 }
 
 private class MediaDelegate(
-    private val media: Media
+    private val media: GeckoMedia
 ) : MediaElement.Delegate {
 
     override fun onPlaybackStateChange(mediaElement: MediaElement, mediaState: Int) {
@@ -63,8 +66,11 @@ private class MediaDelegate(
         }
     }
 
+    override fun onMetadataChange(mediaElement: MediaElement, metaData: MediaElement.Metadata) {
+        media.metadata = Media.Metadata(metaData.duration)
+    }
+
     override fun onReadyStateChange(mediaElement: MediaElement, readyState: Int) = Unit
-    override fun onMetadataChange(mediaElement: MediaElement, metaData: MediaElement.Metadata) = Unit
     override fun onLoadProgress(mediaElement: MediaElement, progressInfo: MediaElement.LoadProgressInfo) = Unit
     override fun onVolumeChange(mediaElement: MediaElement, volume: Double, muted: Boolean) = Unit
     override fun onTimeChange(mediaElement: MediaElement, time: Double) = Unit

@@ -2,7 +2,7 @@
 
 # controller
 
-`abstract val controller: `[`Controller`](-controller/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L27)
+`abstract val controller: `[`Controller`](-controller/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L38)
 
 The [Controller](-controller/index.md) for controlling playback of this media element.
 

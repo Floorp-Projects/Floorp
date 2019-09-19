@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
+    <string name="mozac_browser_errorpages_page_title">Probléma az oldal betöltésekor</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Próbálja újra</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_go_back">Ugrás vissza</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">A kérés nem teljesíthető</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Jelenleg nem áll rendelkezésre további információ a problémáról vagy hibáról.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">A biztonságos kapcsolat sikertelen</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul><li>A megtekinteni kívánt oldal nem jeleníthető meg, mert a kapott adatok hitelessége nem ellenőrizhető.</li> <li>Lépjen kapcsolatba a webhely üzemeltetőjével, és értesítse a problémáról.</li></ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">A biztonságos kapcsolat sikertelen</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul><li>Ezt okozhatja a kiszolgáló nem megfelelő beállítása, de az is lehet, hogy valaki megpróbál a kiszolgáló nevében fellépni.</li><li>Ha korábban már sikeresen kapcsolódott ehhez a kiszolgálóhoz, akkor lehet, hogy a hiba csak ideiglenes, és később újra próbálkozhat.</li></ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">A kapcsolat megszakadt</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>A böngésző sikeresen kapcsolódott, de a kapcsolat megszakadt az adatok átvitelekor. Próbálja újra.</p>
+      <ul>
+        <li>Az oldal ideiglenes nem érhető el, vagy túl elfoglalt. Próbálja újra néhány pillanat múlva.</li>
+        <li>Ha egyetlen oldalt sem tud betölteni, akkor ellenőrizze az eszköz adat- vagy Wi-Fi kapcsolatát.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">A kapcsolat időtúllépés miatt megszakadt</string>
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>A kért webhely nem válaszolt a kapcsolatkezdeményezésre, és a böngésző beszüntette a várakozást a válaszra.</p><ul><li>Lehet, hogy a kiszolgáló túl sok lekérést kap, vagy ideiglenesen üzemen kívül van? Próbálja újra később.</li><li>Más webhelyeket sem képes elérni? Ellenőrizze a számítógép hálózati kapcsolatát.</li><li>Lehetséges, hogy tűzfal vagy proxy mögött van a számítógépe vagy a helyi hálózata? A helytelen beállítások zavarhatják a webböngészést.</li><li>Továbbra is fennáll a probléma? Kérjen segítséget a rendszergazdától vagy az internetszolgáltatójától.</li></ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">A kapcsolódás sikertelen</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>A webhely ideiglenesen nem érhető el, vagy túl elfoglalt. Próbálja újra néhány pillanat múlva.</li>
+        <li>Ha nem tölt be egyetlen oldal sem, akkor ellenőrizze a mobileszköz adat- vagy Wi-Fi kapcsolatát.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Váratlan válasz a kiszolgálótól</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>A webhely a hálózati kérésre váratlan módon válaszolt, ezért a böngésző nem tudja folytatni a párbeszédet.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Az oldal nem megfelelően van átirányítva</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>A böngésző megszakította a kért elem lekérésére irányuló kísérleteket. A webhely oly módon irányította át a kérést, hogy az soha nem teljesülhet.</p>
+      <ul>
+        <li>Letiltotta a webhely által megkövetelt sütiket?</li>
+        <li>Ha a webhely sütijeinek elfogadása nem oldja meg a problémát, valószínűleg a kiszolgáló beállításában van a hiba, nem az Ön számítógépében.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Kapcsolat nélküli mód</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[    
+      <p>A böngésző kapcsolat nélküli módban van, ezért nem tud csatlakozni a kért elemhez.</p>
+      <ul>
+        <li>Csatlakoztatva van a számítógép a hálózathoz?</li>
+        <li>Nyomja meg a „Próbálja újra” gombot az online módba váltáshoz és az oldal újratöltéséhez.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">A port biztonsági okok miatt tiltva van</string>
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>A kért cím olyan portot adott meg (pl. <q>mozilla.org:80</q> a mozilla.org 80-as portjához), amelyet általában <em>nem</em> szokás webböngészés céljaira használni. A böngésző nem engedélyezi ezt a lekérést az Ön védelme és biztonsága érdekében.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">A kapcsolat alaphelyzetbe állt</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>A hálózati kapcsolat megszakadt a kapcsolat újratárgyalásakor. Próbálja újra.</p>
+      <ul>
+        <li>Az oldal ideiglenes nem érhető el, vagy túl elfoglalt. Próbálja újra néhány pillanat múlva.</li>
+        <li>Ha egyetlen oldalt sem tud betölteni, akkor ellenőrizze az eszköz adat- vagy Wi-Fi kapcsolatát.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Nem biztonságos fájltípus</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul><li>Értesítse a webhely tulajdonosait erről a problémáról.</li></ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Sérült tartalom hiba</string>
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>A megtekinteni kívánt oldal nem jeleníthető meg, mert az adatátvitel közben hiba történt.</p><ul><li>Lépjen kapcsolatba a webhely üzemeltetőjével, és értesítse a problémáról.</li></ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">A tartalom összeomlott</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>A megtekinteni kívánt oldal nem jeleníthető meg, mert az adatátvitel közben hiba történt.</p><ul><li>Lépjen kapcsolatba a webhely üzemeltetőjével, és értesítse a problémáról.</li></ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Tartalomkódolási hiba</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[    
+      <p>A megtekinteni kívánt oldal nem jeleníthető meg, mert érvénytelen vagy nem támogatott tömörítési formátumot használ.</p>
+      <ul>
+        <li>Lépjen kapcsolatba a webhely üzemeltetőjével, és értesítse a problémáról.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Cím nem található</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+    
+      <p>A böngésző nem találta a megadott címhez tartozó gazdakiszolgálót.</p>
+      <ul>
+        <li>Ellenőrizze, hogy nincsenek elírások a címben, például
+          <strong>ww</strong>.example.com a
+          <strong>www</strong>.example.com helyett.</li>
+        <li>Ha egyetlen oldalt sem tud betölteni, akkor ellenőrizze az eszköz adat- vagy Wi-Fi kapcsolatát.</li>
+      </ul>
+    
+]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Érvénytelen cím</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>A megadott cím formátuma nem felismerhető. Ellenőrizze a címsorba beírtakat, javítsa a hibákat, és próbálja újra.</p>
+    ]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">A cím érvénytelen</string>
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul><li>A webcímek általában úgy néznek ki, mint a <strong>http://www.example.com/</strong></li><li>Győződjön meg róla, hogy perjeleket használ (tehát <strong>/</strong>).</li></ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Ismeretlen protokoll</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>A cím meghatározott egy protokollt (például <q>wxyz://</q>), amelyet a böngésző nem ismer fel, ezért nem képes megfelelően csatlakozni a webhelyhez.</p>
+      <ul>
+        <li>Multimédiás vagy más, nem szöveges szolgáltatást szeretne elérni? Nézze meg a webhelyet, milyen további követelményeket támaszt.</li>
+        <li>Bizonyos protokollok harmadik féltől származó szoftverek vagy bővítmények meglétét követelik meg, a böngésző csak ezek megléte esetén ismeri fel az adott protokollt.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">A fájl nem található</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>Lehet, hogy a fájlt átnevezték, eltávolították vagy áthelyezték?</li>
+        <li>Nincs elgépelés, kis- és nagybetű eltérés stb. a címben?</li>
+        <li>Rendelkezik a megfelelő hozzáférési jogokkal a kért fájlhoz?</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">A fájl elérése megtagadva</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>Lehet hogy törölve lett, át lett helyezve, vagy a fájljogosultságok megakadályozzák a hozzáférést.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">A proxykiszolgáló visszautasította a kapcsolatot</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>A böngésző proxykiszolgáló használatára van beállítva, de a proxy visszautasította a kapcsolatot.</p>
+      <ul>
+        <li>Jók a böngésző proxybeállításai? Ellenőrizze a beállításokat, és próbálja újra.</li>
+        <li>A proxyszolgáltatás engedélyezi a kapcsolatokat erről a hálózatról?</li>
+        <li>Továbbra is fennáll a probléma? Kérjen segítséget a rendszergazdától vagy az internetszolgáltatójától.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Proxykiszolgáló nem található</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>A böngésző proxykiszolgáló használatára van beállítva, de a proxy nem található.</p>
+      <ul>
+        <li>Jók a böngésző proxybeállításai? Ellenőrizze a beállításokat, és próbálja újra.</li>
+        <li>Csatlakoztatva van a számítógép a hálózathoz?</li>
+        <li>Továbbra is fennáll a probléma? Kérjen segítséget a rendszergazdától vagy az internetszolgáltatójától.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Kártékony szoftvert terjesztő webhely probléma</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>A(z) %1$s címen működő webhelyről bejelentés érkezett, hogy támadó webhely, ezért a biztonsági beállítások alapján a böngésző a hozzáférést nem engedélyezi.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Nem kívánt szoftvert terjesztő webhely probléma</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>A(z) %1$s címen működő webhelyről bejelentés érkezett, hogy nem kívánatos szoftvereket szolgál ki, ezért a biztonsági beállítások alapján a böngésző a hozzáférést nem engedélyezi.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Káros webhely probléma</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>A(z) %1$s címen működő webhelyről bejelentés érkezett, hogy ártalmas webhely lehet, ezért a biztonsági beállítások alapján a böngésző a hozzáférést nem engedélyezi.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Félrevezető oldal probléma</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>A(z) %1$s címen működő webhelyről bejelentés érkezett, hogy félrevezető webhely, ezért a biztonsági beállítások alapján a böngésző a hozzáférést nem engedélyezi.</p>]]></string>
+</resources>

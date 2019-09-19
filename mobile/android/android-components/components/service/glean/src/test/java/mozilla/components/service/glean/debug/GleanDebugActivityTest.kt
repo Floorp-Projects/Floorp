@@ -22,6 +22,9 @@ import mozilla.components.service.glean.resetGlean
 import mozilla.components.service.glean.triggerWorkManager
 import mozilla.components.service.glean.TestPingTagClient
 import mozilla.components.service.glean.getMockWebServer
+import mozilla.components.service.glean.net.ConceptFetchHttpUploader
+import mozilla.components.service.glean.testing.GleanTestRule
+import org.junit.Rule
 import org.robolectric.Shadows.shadowOf
 import java.util.concurrent.TimeUnit
 
@@ -30,10 +33,11 @@ class GleanDebugActivityTest {
 
     private val testPackageName = "mozilla.components.service.glean"
 
+    @get:Rule
+    val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())
+
     @Before
     fun setup() {
-        resetGlean()
-
         // This makes sure we have a "launch" intent in our package, otherwise
         // it will fail looking for it in `GleanDebugActivityTest`.
         val pm = ApplicationProvider.getApplicationContext<Context>().packageManager
@@ -207,7 +211,7 @@ class GleanDebugActivityTest {
 
         // Use the test client in the Glean configuration
         resetGlean(config = Glean.configuration.copy(
-            httpClient = lazy { testClient }
+            httpClient = ConceptFetchHttpUploader(lazy { testClient })
         ))
 
         // Put some metric data in the store, otherwise we won't get a ping out

@@ -28,4 +28,9 @@ interface PushService {
      * Tells the push service to delete the registration token.
      */
     fun deleteToken()
+
+    /**
+     * If the push service is support on the device.
+     */
+    fun isServiceAvailable(context: Context): Boolean
 }

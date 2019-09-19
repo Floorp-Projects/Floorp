@@ -6,14 +6,23 @@ package mozilla.components.feature.contextmenu
 
 import android.view.HapticFeedbackConstants
 import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.fragment.app.FragmentManager
-import mozilla.components.browser.session.SelectionAwareSessionObserver
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
+import mozilla.components.browser.state.selector.findTabOrCustomTab
+import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.feature.contextmenu.facts.emitClickFact
+import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 internal const val FRAGMENT_TAG = "mozac_feature_contextmenu_dialog"
@@ -26,66 +35,61 @@ internal const val FRAGMENT_TAG = "mozac_feature_contextmenu_dialog"
  * menu the related [HitResult] will be consumed.
  *
  * @property fragmentManager The [FragmentManager] to be used when displaying a context menu (fragment).
- * @property sessionManager The [SessionManager] instance in order to subscribe to the selected [Session].
+ * @property store The [BrowserStore] this feature should subscribe to.
  * @property candidates A list of [ContextMenuCandidate] objects. For every observed [HitResult] this feature will query
  * all candidates ([ContextMenuCandidate.showFor]) in order to determine which candidates want to show up in the context
  * menu. If a context menu item was selected by the user the feature will invoke the [ContextMenuCandidate.action]
  * method of the related candidate.
  * @property engineView The [EngineView]] this feature component should show context menus for.
+ * @param customTabId Optional id of a custom tab. Instead of showing context menus for the currently
+ * selected tab this feature will show only context menus for this custom tab if an id is provided.
  */
 class ContextMenuFeature(
     private val fragmentManager: FragmentManager,
-    private val sessionManager: SessionManager,
+    private val store: BrowserStore,
     private val candidates: List<ContextMenuCandidate>,
     private val engineView: EngineView,
-    private val sessionId: String? = null
+    private val useCases: ContextMenuUseCases,
+    private val customTabId: String? = null
 ) : LifecycleAwareFeature {
-    private val observer = ContextMenuObserver(sessionManager, feature = this)
+    private var scope: CoroutineScope? = null
 
     /**
      * Start observing the selected session and when needed show a context menu.
      */
     override fun start() {
-        fragmentManager.findFragmentByTag(FRAGMENT_TAG)?.let { fragment ->
-            // There's still a context menu fragment visible from the last time. Re-attach this feature so that the
-            // fragment can invoke the callback on this feature once the user makes a selection. This can happen when
-            // the app was in the background and on resume the activity and fragments get recreated.
-            reattachFragment(fragment as ContextMenuFragment)
+        scope = store.flowScoped { flow ->
+            flow.map { state -> state.findCustomTabOrSelectedTab(customTabId) }
+                .ifChanged { it?.content?.hitResult }
+                .collect { state ->
+                    val hitResult = state?.content?.hitResult
+                    if (hitResult != null) {
+                        showContextMenu(state, hitResult)
+                    } else {
+                        hideContextMenu()
+                    }
+                }
         }
-
-        observer.start(sessionId)
     }
 
     /**
      * Stop observing the selected session and do not show any context menus anymore.
      */
     override fun stop() {
-        observer.stop()
+        scope?.cancel()
     }
 
-    /**
-     * Re-attach a fragment that is still visible but not linked to this feature anymore.
-     */
-    private fun reattachFragment(fragment: ContextMenuFragment) {
-        val session = sessionManager.findSessionById(fragment.sessionId)
-
-        if (session == null || session.hitResult.isConsumed()) {
-            // If the session no longer exists or if it has no hit result (from long pressing) attached anymore then
-            // there's no reason to still show the context menu. Let's remove the fragment.
-            fragmentManager.beginTransaction()
-                .remove(fragment)
-                .commitAllowingStateLoss()
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal fun showContextMenu(tab: SessionState, hitResult: HitResult) {
+        fragmentManager.findFragmentByTag(FRAGMENT_TAG)?.let { fragment ->
+            // There's already a ContextMenuFragment being displayed. Let's only make sure it has
+            // a reference to this feature instance.
+            (fragment as ContextMenuFragment).feature = this
             return
         }
 
-        // Re-assign the feature instance so that the fragment can invoke us once the user makes a selection or cancels
-        // the dialog.
-        fragment.feature = this
-    }
-
-    internal fun onLongPress(session: Session, hitResult: HitResult) {
         val (ids, labels) = candidates
-            .filter { candidate -> candidate.showFor(session, hitResult) }
+            .filter { candidate -> candidate.showFor(tab, hitResult) }
             .fold(Pair(mutableListOf<String>(), mutableListOf<String>())) { items, candidate ->
                 items.first.add(candidate.id)
                 items.second.add(candidate.label)
@@ -94,49 +98,39 @@ class ContextMenuFeature(
 
         // We have no context menu items to show for this HitResult. Let's consume it to remove it from the Session.
         if (ids.isEmpty()) {
-            session.hitResult.consume { true }
+            useCases.consumeHitResult(tab.id)
             return
         }
 
         // We know that we are going to show a context menu. Now is the time to perform the haptic feedback.
         engineView.asView().performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
 
-        val fragment = ContextMenuFragment.create(session, hitResult.getLink(), ids, labels)
+        val fragment = ContextMenuFragment.create(tab, hitResult.getLink(), ids, labels)
         fragment.feature = this
         fragment.show(fragmentManager, FRAGMENT_TAG)
     }
 
-    internal fun onMenuItemSelected(sessionId: String, itemId: String) {
-        val session = sessionManager.findSessionById(sessionId) ?: return
-        val candidate = candidates.find { it.id == itemId } ?: return
-
-        session.hitResult.consume { hitResult ->
-            candidate.action.invoke(session, hitResult)
-            emitClickFact(candidate)
-            true
+    private fun hideContextMenu() {
+        fragmentManager.findFragmentByTag(FRAGMENT_TAG)?.let { fragment ->
+            fragmentManager.beginTransaction()
+                .remove(fragment)
+                .commitAllowingStateLoss()
         }
     }
 
-    internal fun onMenuCancelled(sessionId: String) {
-        val session = sessionManager.findSessionById(sessionId) ?: return
-        session.hitResult.consume { true }
-    }
-}
+    internal fun onMenuItemSelected(tabId: String, itemId: String) {
+        val tab = store.state.findTabOrCustomTab(tabId) ?: return
+        val candidate = candidates.find { it.id == itemId } ?: return
 
-/**
- * Observes [Session.Observer.onLongPress] of the selected session and notifies the feature whenever a context menu
- * needs to be shown.
- */
-internal class ContextMenuObserver(
-    sessionManager: SessionManager,
-    private val feature: ContextMenuFeature
-) : SelectionAwareSessionObserver(sessionManager) {
-    override fun onLongPress(session: Session, hitResult: HitResult): Boolean {
-        feature.onLongPress(session, hitResult)
-        return false
+        useCases.consumeHitResult(tab.id)
+
+        tab.content.hitResult?.let { hitResult ->
+            candidate.action.invoke(tab, hitResult)
+            emitClickFact(candidate)
+        }
     }
 
-    fun start(sessionId: String?) {
-        observeIdOrSelected(sessionId)
+    internal fun onMenuCancelled(tabId: String) {
+        useCases.consumeHitResult(tabId)
     }
 }

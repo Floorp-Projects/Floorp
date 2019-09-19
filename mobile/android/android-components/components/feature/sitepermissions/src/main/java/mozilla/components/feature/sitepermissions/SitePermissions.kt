@@ -43,6 +43,11 @@ data class SitePermissions(
         fun isAllowed() = this == ALLOWED
 
         fun doNotAskAgain() = this == ALLOWED || this == BLOCKED
+
+        fun toggle(): Status = when (this) {
+            BLOCKED, NO_DECISION -> ALLOWED
+            ALLOWED -> BLOCKED
+        }
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {

@@ -8,6 +8,8 @@ import android.os.Build
 import androidx.core.graphics.createBitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.icons.Icon
+import mozilla.components.browser.icons.IconRequest
+import mozilla.components.browser.icons.IconRequest.Resource.Type.MANIFEST_ICON
 import mozilla.components.support.test.mock
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -33,7 +35,7 @@ class AdaptiveIconProcessorTest {
 
     @Test
     fun `process returns non-maskable icons on legacy devices`() {
-        val icon = Icon(mock(), source = Icon.Source.GENERATOR, maskable = false)
+        val icon = Icon(mock(), source = Icon.Source.GENERATOR)
 
         assertEquals(
             icon,
@@ -49,8 +51,8 @@ class AdaptiveIconProcessorTest {
         val icon = AdaptiveIconProcessor().process(
             mock(),
             mock(),
-            mock(),
-            Icon(bitmap, source = Icon.Source.DISK, maskable = false),
+            IconRequest.Resource("", MANIFEST_ICON, maskable = false),
+            Icon(bitmap, source = Icon.Source.DISK),
             mock()
         )
 
@@ -69,8 +71,8 @@ class AdaptiveIconProcessorTest {
         val icon = AdaptiveIconProcessor().process(
             mock(),
             mock(),
-            mock(),
-            Icon(bitmap, source = Icon.Source.INLINE, maskable = true),
+            IconRequest.Resource("", MANIFEST_ICON, maskable = true),
+            Icon(bitmap, source = Icon.Source.INLINE),
             mock()
         )
 

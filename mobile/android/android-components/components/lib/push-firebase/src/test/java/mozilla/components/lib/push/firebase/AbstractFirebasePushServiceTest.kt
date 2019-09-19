@@ -6,6 +6,7 @@
 
 package mozilla.components.lib.push.firebase
 
+import com.google.android.gms.common.ConnectionResult
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.Dispatchers
 import mozilla.components.concept.push.EncryptedPushMessage
@@ -13,15 +14,25 @@ import mozilla.components.concept.push.PushError
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.robolectric.shadows.gms.common.ShadowGoogleApiAvailability
+import com.google.android.gms.common.GoogleApiAvailability
+import org.robolectric.shadows.gms.Shadows
 
+@RunWith(RobolectricTestRunner::class)
+@Config(shadows = [ShadowGoogleApiAvailability::class])
 class AbstractFirebasePushServiceTest {
 
     private val processor: PushProcessor = mock()
@@ -93,6 +104,19 @@ class AbstractFirebasePushServiceTest {
 
         val service = object : AbstractFirebasePushService(Dispatchers.Default) {}
         service.deleteToken()
+    }
+
+    @Test
+    fun `service available reflects Google Play Services' availability`() {
+        val service = TestService()
+
+        // By default, service is unavailable.
+        assertFalse(service.isServiceAvailable(testContext))
+
+        val shadowGoogleApiAvailability = Shadows.shadowOf(GoogleApiAvailability.getInstance())
+        shadowGoogleApiAvailability.setIsGooglePlayServicesAvailable(ConnectionResult.SUCCESS)
+
+        assertTrue(service.isServiceAvailable(testContext))
     }
 
     class TestService : AbstractFirebasePushService()

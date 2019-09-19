@@ -36,7 +36,7 @@ internal object ContentStateReducer {
             is ContentAction.UpdateSearchTermsAction -> updateContentState(state, action.sessionId) {
                 it.copy(searchTerms = action.searchTerms)
             }
-            is ContentAction.UpdateSecurityInfo -> updateContentState(state, action.sessionId) {
+            is ContentAction.UpdateSecurityInfoAction -> updateContentState(state, action.sessionId) {
                 it.copy(securityInfo = action.securityInfo)
             }
             is ContentAction.UpdateIconAction -> updateContentState(state, action.sessionId) {
@@ -44,6 +44,30 @@ internal object ContentStateReducer {
             }
             is ContentAction.UpdateThumbnailAction -> updateContentState(state, action.sessionId) {
                 it.copy(thumbnail = action.thumbnail)
+            }
+            is ContentAction.UpdateDownloadAction -> updateContentState(state, action.sessionId) {
+                it.copy(download = action.download)
+            }
+            is ContentAction.ConsumeDownloadAction -> updateContentState(state, action.sessionId) {
+                it.copy(download = null)
+            }
+            is ContentAction.UpdateHitResultAction -> updateContentState(state, action.sessionId) {
+                it.copy(hitResult = action.hitResult)
+            }
+            is ContentAction.ConsumeHitResultAction -> updateContentState(state, action.sessionId) {
+                it.copy(hitResult = null)
+            }
+            is ContentAction.UpdatePromptRequestAction -> updateContentState(state, action.sessionId) {
+                it.copy(promptRequest = action.promptRequest)
+            }
+            is ContentAction.ConsumePromptRequestAction -> updateContentState(state, action.sessionId) {
+                it.copy(promptRequest = null)
+            }
+            is ContentAction.AddFindResultAction -> updateContentState(state, action.sessionId) {
+                it.copy(findResults = it.findResults + action.findResult)
+            }
+            is ContentAction.ClearFindResultsAction -> updateContentState(state, action.sessionId) {
+                it.copy(findResults = emptyList())
             }
         }
     }

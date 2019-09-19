@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package mozilla.components.service.glean.storages
 
@@ -13,15 +13,15 @@ import mozilla.components.service.glean.private.Lifetime
 import mozilla.components.service.glean.private.TimeUnit
 import mozilla.components.service.glean.private.TimingDistributionMetricType
 import mozilla.components.service.glean.error.ErrorRecording
+import mozilla.components.service.glean.histogram.FunctionalHistogram
 import mozilla.components.service.glean.private.PingType
-import mozilla.components.service.glean.resetGlean
+import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.service.glean.timing.TimingManager
 import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
@@ -31,10 +31,8 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class TimingDistributionsStorageEngineTest {
 
-    @Before
-    fun setUp() {
-        resetGlean()
-    }
+    @get:Rule
+    val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())
 
     @After
     fun reset() {
@@ -59,8 +57,7 @@ class TimingDistributionsStorageEngineTest {
         val sample = 1L
         TimingDistributionsStorageEngine.accumulate(
             metricData = metric,
-            sample = sample,
-            timeUnit = metric.timeUnit
+            sample = sample
         )
 
         // Check that the data was correctly set in each store.
@@ -70,23 +67,16 @@ class TimingDistributionsStorageEngineTest {
                 clearStore = true
             )
             assertEquals(1, snapshot!!.size)
-            assertEquals(1L, snapshot["telemetry.test_timing_distribution"]?.values!![0])
+            assertEquals(1L, snapshot["telemetry.test_timing_distribution"]?.values!![1])
         }
     }
 
     @Test
     fun `deserializer should correctly parse timing distributions`() {
-        // We are using the TimingDistributionData here as a way to turn the object
-        // into JSON for easy comparison
-        val metric = TimingDistributionMetricType(
-            disabled = false,
-            category = "telemetry",
-            lifetime = Lifetime.Ping,
-            name = "test_timing_distribution",
-            sendInPings = listOf("store1", "store2"),
-            timeUnit = TimeUnit.Millisecond
+        val td = FunctionalHistogram(
+            TimingDistributionsStorageEngineImplementation.LOG_BASE,
+            TimingDistributionsStorageEngineImplementation.BUCKETS_PER_MAGNITUDE
         )
-        val td = TimingDistributionData(category = metric.category, name = metric.name)
 
         val persistedSample = mapOf(
             "store1#telemetry.invalid_string" to "invalid_string",
@@ -95,14 +85,8 @@ class TimingDistributionsStorageEngineTest {
             "store1#telemetry.invalid_int" to -1,
             "store1#telemetry.invalid_list" to listOf("1", "2", "3"),
             "store1#telemetry.invalid_int_list" to "[1,2,3]",
-            "store1#telemetry.invalid_td_name" to "{\"category\":\"telemetry\",\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{},\"sum\":0,\"time_unit\":2}",
-            "store1#telemetry.invalid_td_bucket_count" to "{\"category\":\"telemetry\",\"name\":\"test_timing_distribution\",\"bucket_count\":\"not an int!\",\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{},\"sum\":0,\"time_unit\":2}",
-            "store1#telemetry.invalid_td_range" to "{\"category\":\"telemetry\",\"name\":\"test_timing_distribution\",\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{},\"sum\":0,\"time_unit\":2}",
-            "store1#telemetry.invalid_td_range2" to "{\"category\":\"telemetry\",\"name\":\"test_timing_distribution\",\"bucket_count\":100,\"range\":[\"not\",\"numeric\"],\"histogram_type\":1,\"values\":{},\"sum\":0,\"time_unit\":2}",
-            "store1#telemetry.invalid_td_histogram_type" to "{\"category\":\"telemetry\",\"name\":\"test_timing_distribution\",\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":-1,\"values\":{},\"sum\":0,\"time_unit\":2}",
-            "store1#telemetry.invalid_td_values" to "{\"category\":\"telemetry\",\"name\":\"test_timing_distribution\",\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{\"0\": \"nope\"},\"sum\":0,\"time_unit\":2}",
-            "store1#telemetry.invalid_td_sum" to "{\"category\":\"telemetry\",\"name\":\"test_timing_distribution\",\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{},\"sum\":\"nope\",\"time_unit\":2}",
-            "store1#telemetry.invalid_td_time_unit" to "{\"category\":\"telemetry\",\"name\":\"test_timing_distribution\",\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{},\"sum\":0,\"time_unit\":-1}",
+            "store1#telemetry.invalid_td_values" to "{\"log_base\":2.0,\"buckets_per_magnitude\":8.0,\"values\":{\"0\": \"nope\"},\"sum\":0}",
+            "store1#telemetry.invalid_td_sum" to "{\"log_base\":2.0,\"buckets_per_magnitude\":8.0,\"values\":{},\"sum\":\"nope\"}",
             "store1#telemetry.test_timing_distribution" to td.toJsonObject().toString()
         )
 
@@ -168,23 +152,25 @@ class TimingDistributionsStorageEngineTest {
                 timeUnit = TimeUnit.Millisecond
             )
 
-            // Using the TimingDistributionData object here to easily turn the object into JSON
+            // Using the FunctionalHistogram object here to easily turn the object into JSON
             // for comparison purposes.
-            val td = TimingDistributionData(category = metric.category, name = metric.name)
-            td.accumulate(1L)
+            val td = FunctionalHistogram(
+                TimingDistributionsStorageEngineImplementation.LOG_BASE,
+                TimingDistributionsStorageEngineImplementation.BUCKETS_PER_MAGNITUDE
+            )
+            td.accumulate(1000000L)
 
             runBlocking {
                 storageEngine.accumulate(
                     metricData = metric,
-                    sample = 1000000L,
-                    timeUnit = metric.timeUnit
+                    sample = 1000000L
                 )
             }
 
             // Get snapshot from store1
             val json = storageEngine.getSnapshotAsJSON("store1", true)
             // Check for correct JSON serialization
-            assertEquals("{\"${metric.identifier}\":${td.toJsonObject()}}",
+            assertEquals("{\"${metric.identifier}\":${td.toJsonPayloadObject()}}",
                 json.toString()
             )
         }
@@ -195,13 +181,16 @@ class TimingDistributionsStorageEngineTest {
             val storageEngine = TimingDistributionsStorageEngineImplementation()
             storageEngine.applicationContext = ApplicationProvider.getApplicationContext()
 
-            val td = TimingDistributionData(category = "telemetry", name = "test_timing_distribution")
-            td.accumulate(1L)
+            val td = FunctionalHistogram(
+                TimingDistributionsStorageEngineImplementation.LOG_BASE,
+                TimingDistributionsStorageEngineImplementation.BUCKETS_PER_MAGNITUDE
+            )
+            td.accumulate(1000000L)
 
             // Get snapshot from store1
             val json = storageEngine.getSnapshotAsJSON("store1", true)
             // Check for correct JSON serialization
-            assertEquals("{\"telemetry.test_timing_distribution\":${td.toJsonObject()}}",
+            assertEquals("{\"telemetry.test_timing_distribution\":${td.toJsonPayloadObject()}}",
                 json.toString()
             )
         }
@@ -235,35 +224,6 @@ class TimingDistributionsStorageEngineTest {
     }
 
     @Test
-    fun `underflow values accumulate in the first bucket`() {
-        // Define a timing distribution metric, which will be stored in "store1".
-        val metric = TimingDistributionMetricType(
-            disabled = false,
-            category = "telemetry",
-            lifetime = Lifetime.User,
-            name = "test_timing_distribution",
-            sendInPings = listOf("store1"),
-            timeUnit = TimeUnit.Millisecond
-        )
-
-        // Attempt to accumulate an overflow sample
-        TimingManager.getElapsedNanos = { 0 }
-        val timerId = metric.start()
-        TimingManager.getElapsedNanos = { 0 }
-        metric.stopAndAccumulate(timerId)
-
-        // Check that timing distribution was recorded.
-        assertTrue("Accumulating underflow values records data",
-            metric.testHasValue())
-
-        // Make sure that the underflow landed in the correct (first) bucket
-        val snapshot = metric.testGetValue()
-        assertEquals("Accumulating overflow values should increment underflow bucket",
-            1L,
-            snapshot.values[0])
-    }
-
-    @Test
     fun `overflow values accumulate in the last bucket`() {
         // Define a timing distribution metric, which will be stored in "store1".
         val metric = TimingDistributionMetricType(
@@ -278,7 +238,7 @@ class TimingDistributionsStorageEngineTest {
         // Attempt to accumulate an overflow sample
         TimingManager.getElapsedNanos = { 0 }
         val timerId = metric.start()
-        TimingManager.getElapsedNanos = { (TimingDistributionData.DEFAULT_RANGE_MAX + 100) * 1000000 }
+        TimingManager.getElapsedNanos = { TimingDistributionsStorageEngineImplementation.MAX_SAMPLE_TIME * 2 }
         metric.stopAndAccumulate(timerId)
 
         // Check that timing distribution was recorded.
@@ -286,53 +246,14 @@ class TimingDistributionsStorageEngineTest {
             metric.testHasValue())
 
         // Make sure that the overflow landed in the correct (last) bucket
+        val hist = FunctionalHistogram(
+            TimingDistributionsStorageEngineImplementation.LOG_BASE,
+            TimingDistributionsStorageEngineImplementation.BUCKETS_PER_MAGNITUDE
+        )
         val snapshot = metric.testGetValue()
         assertEquals("Accumulating overflow values should increment last bucket",
             1L,
-            snapshot.values[TimingDistributionData.DEFAULT_RANGE_MAX])
-    }
-
-    @Test
-    fun `getBuckets() correctly populates the buckets property`() {
-        // Hand calculated values using current default range 0 - 60000 and bucket count of 100.
-        // NOTE: The final bucket, regardless of width, represents the overflow bucket to hold any
-        // values beyond the maximum (in this case the maximum is 60000)
-        val testBuckets: List<Long> = listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17,
-            19, 21, 23, 25, 28, 31, 34, 38, 42, 46, 51, 56, 62, 68, 75, 83, 92, 101, 111, 122, 135,
-            149, 164, 181, 200, 221, 244, 269, 297, 328, 362, 399, 440, 485, 535, 590, 651, 718,
-            792, 874, 964, 1064, 1174, 1295, 1429, 1577, 1740, 1920, 2118, 2337, 2579, 2846, 3140,
-            3464, 3822, 4217, 4653, 5134, 5665, 6250, 6896, 7609, 8395, 9262, 10219, 11275, 12440,
-            13726, 15144, 16709, 18436, 20341, 22443, 24762, 27321, 30144, 33259, 36696, 40488,
-            44672, 49288, 54381, 60000)
-
-        // Define a timing distribution metric, which will be stored in "store1".
-        val metric = TimingDistributionMetricType(
-            disabled = false,
-            category = "telemetry",
-            lifetime = Lifetime.User,
-            name = "test_timing_distribution",
-            sendInPings = listOf("store1"),
-            timeUnit = TimeUnit.Millisecond
-        )
-
-        // Accumulate a sample to force the lazy loading of `buckets` to occur
-        TimingManager.getElapsedNanos = { 0 }
-        val timerId = metric.start()
-        TimingManager.getElapsedNanos = { 1 }
-        metric.stopAndAccumulate(timerId)
-
-        // Check that timing distribution was recorded.
-        assertTrue("Accumulating values records data", metric.testHasValue())
-
-        // Make sure that the sample in the correct (underflow) bucket
-        val snapshot = metric.testGetValue()
-        assertEquals("Accumulating should increment correct bucket",
-            1L, snapshot.values[0])
-
-        // verify buckets lists worked
-        assertNotNull("Buckets must not be null", snapshot.buckets)
-
-        assertEquals("Bucket calculation failed", testBuckets, snapshot.buckets)
+            snapshot.values[hist.sampleToBucketMinimum(TimingDistributionsStorageEngineImplementation.MAX_SAMPLE_TIME)])
     }
 
     @Test
@@ -347,14 +268,13 @@ class TimingDistributionsStorageEngineTest {
             timeUnit = TimeUnit.Millisecond
         )
 
-        // Check that a few values correctly fall into the correct buckets (as calculated by hand)
-        // to validate the linear bucket search algorithm
+        val samples = listOf(10L, 100L, 1000L, 10000L)
 
         // Attempt to accumulate a sample to force metric to be stored
-        for (i in listOf(1L, 10L, 100L, 1000L, 10000L)) {
+        for (i in samples) {
             TimingManager.getElapsedNanos = { 0 }
             val timerId = metric.start()
-            TimingManager.getElapsedNanos = { i * 1000000 } // Convert ms to ns
+            TimingManager.getElapsedNanos = { i }
             metric.stopAndAccumulate(timerId)
         }
 
@@ -364,61 +284,32 @@ class TimingDistributionsStorageEngineTest {
         // Make sure that the samples are in the correct buckets
         val snapshot = metric.testGetValue()
 
+        val hist = FunctionalHistogram(
+            TimingDistributionsStorageEngineImplementation.LOG_BASE,
+            TimingDistributionsStorageEngineImplementation.BUCKETS_PER_MAGNITUDE
+        )
+
         // Check sum and count
-        assertEquals("Accumulating updates the sum", 11111, snapshot.sum)
-        assertEquals("Accumulating updates the count", 5, snapshot.count)
+        assertEquals("Accumulating updates the sum", 11110, snapshot.sum)
+        assertEquals("Accumulating updates the count", 4, snapshot.count)
 
-        assertEquals("Accumulating should increment correct bucket",
-            1L, snapshot.values[1])
-        assertEquals("Accumulating should increment correct bucket",
-            1L, snapshot.values[10])
-        assertEquals("Accumulating should increment correct bucket",
-            1L, snapshot.values[92])
-        assertEquals("Accumulating should increment correct bucket",
-            1L, snapshot.values[964])
-        assertEquals("Accumulating should increment correct bucket",
-            1L, snapshot.values[9262])
-    }
+        for (i in samples) {
+            val binEdge = hist.sampleToBucketMinimum(i)
+            assertEquals("Accumulating should increment correct bucket", 1L, snapshot.values[binEdge])
+        }
 
-    @Test
-    fun `toJsonObject correctly converts a TimingDistributionData object`() {
-        // Define a TimingDistributionData object
-        val tdd = TimingDistributionData(category = "telemetry", name = "test_timing_distribution")
+        val json = snapshot.toJsonPayloadObject()
+        val values = json.getJSONObject("values")
+        assertEquals(81, values.length())
 
-        // Accumulate some samples to populate sum and values properties
-        tdd.accumulate(1L)
-        tdd.accumulate(2L)
-        tdd.accumulate(3L)
+        for (i in samples) {
+            val binEdge = hist.sampleToBucketMinimum(i)
+            assertEquals("Accumulating should increment correct bucket", 1L, values.getLong(binEdge.toString()))
+            values.remove(binEdge.toString())
+        }
 
-        // Convert to JSON object using toJsonObject()
-        val jsonTdd = tdd.toJsonObject()
-
-        // Verify properties
-        assertEquals("JSON category must match Timing Distribution category",
-            "telemetry", jsonTdd.getString("category"))
-        assertEquals("JSON name must match Timing Distribution name",
-            "test_timing_distribution", jsonTdd.getString("name"))
-        assertEquals("JSON bucket count must match Timing Distribution bucket count",
-            tdd.bucketCount, jsonTdd.getInt("bucket_count"))
-        assertEquals("JSON name must match Timing Distribution name",
-            "test_timing_distribution", jsonTdd.getString("name"))
-        val jsonRange = jsonTdd.getJSONArray("range")
-        assertEquals("JSON range minimum must match Timing Distribution range minimum",
-            tdd.rangeMin, jsonRange.getLong(0))
-        assertEquals("JSON range maximum must match Timing Distribution range maximum",
-            tdd.rangeMax, jsonRange.getLong(1))
-        assertEquals("JSON histogram type must match Timing Distribution histogram type",
-            tdd.histogramType.toString().toLowerCase(), jsonTdd.getString("histogram_type"))
-        val jsonValue = jsonTdd.getJSONObject("values")
-        assertEquals("JSON values must match Timing Distribution values",
-            tdd.values[1], jsonValue.getLong("1"))
-        assertEquals("JSON values must match Timing Distribution values",
-            tdd.values[2], jsonValue.getLong("2"))
-        assertEquals("JSON values must match Timing Distribution values",
-            tdd.values[3], jsonValue.getLong("3"))
-        assertEquals("JSON sum must match Timing Distribution sum",
-            tdd.sum, jsonTdd.getLong("sum"))
-        assertEquals("JSON time unit must match Timing Distribution time unit",
-            tdd.timeUnit.toString().toLowerCase(), jsonTdd.getString("time_unit"))
+        for (k in values.keys()) {
+            assertEquals(0L, values.getLong(k))
+        }
     }
 }

@@ -6,6 +6,7 @@ package mozilla.components.browser.session.engine
 
 import android.graphics.Bitmap
 import android.os.Environment
+import androidx.core.net.toUri
 import mozilla.components.browser.session.Download
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.engine.request.LoadRequestMetadata
@@ -33,6 +34,9 @@ internal class EngineObserver(
     override fun onLocationChange(url: String) {
         if (session.url != url) {
             session.title = ""
+        }
+
+        if (!isHostEquals(session.url, url)) {
             session.icon = null
         }
 
@@ -47,6 +51,15 @@ internal class EngineObserver(
             it.reject()
             true
         }
+
+        session.webAppManifest = null
+    }
+
+    private fun isHostEquals(sessionUrl: String, newUrl: String): Boolean {
+        val sessionUri = sessionUrl.toUri()
+        val newUri = newUrl.toUri()
+
+        return sessionUri.scheme == newUri.scheme && sessionUri.host == newUri.host
     }
 
     override fun onLoadRequest(url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
@@ -76,6 +89,7 @@ internal class EngineObserver(
         if (loading) {
             session.findResults = emptyList()
             session.trackersBlocked = emptyList()
+            session.trackersLoaded = emptyList()
         }
     }
 
@@ -91,6 +105,10 @@ internal class EngineObserver(
 
     override fun onTrackerBlocked(tracker: Tracker) {
         session.trackersBlocked += tracker
+    }
+
+    override fun onTrackerLoaded(tracker: Tracker) {
+        session.trackersLoaded += tracker
     }
 
     override fun onTrackerBlockingEnabledChange(enabled: Boolean) {

@@ -5,6 +5,7 @@
 package mozilla.components.concept.engine.webextension
 
 import mozilla.components.concept.engine.EngineSession
+import org.json.JSONObject
 
 /**
  * Represents a browser extension based on the WebExtension API:
@@ -58,6 +59,28 @@ abstract class WebExtension(
      * @return true if a content message handler is active, otherwise false.
      */
     abstract fun hasContentMessageHandler(session: EngineSession, name: String): Boolean
+
+    /**
+     * Returns a connected port with the given name and for the provided
+     * [EngineSession], if one exists.
+     *
+     * @param name the name as provided to connectNative.
+     * @param session (optional) session to check for, null if port is from a
+     * background script.
+     * @return a matching port, or null if none is connected.
+     */
+    abstract fun getConnectedPort(name: String, session: EngineSession? = null): Port?
+
+    /**
+     * Disconnect a [Port] of the provided [EngineSession]. This method has
+     * no effect if there's no connected port with the given name.
+     *
+     * @param name the name as provided to connectNative, see
+     * [registerContentMessageHandler] and [registerBackgroundMessageHandler].
+     * @param session (options) session for which ports should disconnected,
+     * null if port is from a background script.
+     */
+    abstract fun disconnectPort(name: String, session: EngineSession? = null)
 }
 
 /**
@@ -120,8 +143,17 @@ abstract class Port(val engineSession: EngineSession? = null) {
     /**
      * Sends a message to this port.
      *
-     * @param message the message to send, either a primitive type
-     * or a org.json.JSONObject.
+     * @param message the message to send.
      */
-    abstract fun postMessage(message: Any)
+    abstract fun postMessage(message: JSONObject)
+
+    /**
+     * Returns the name of this port.
+     */
+    abstract fun name(): String
+
+    /**
+     * Disconnects this port.
+     */
+    abstract fun disconnect()
 }

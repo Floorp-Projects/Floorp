@@ -58,7 +58,7 @@ internal class AuthenticationDialogFragment : PromptDialogFragment() {
         return addLayout(builder).create()
     }
 
-    override fun onCancel(dialog: DialogInterface?) {
+    override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)
         feature?.onCancel(sessionId)
     }

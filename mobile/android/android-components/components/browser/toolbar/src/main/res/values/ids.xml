@@ -6,6 +6,7 @@
   -->
 
 <resources>
+    <item name="mozac_browser_toolbar_tracking_protection_icon_view" type="id"/>
     <item name="mozac_browser_toolbar_title_view" type="id"/>
     <item name="mozac_browser_toolbar_url_view" type="id"/>
     <item name="mozac_browser_toolbar_edit_url_view" type="id"/>

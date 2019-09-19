@@ -10,7 +10,6 @@ import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.GleanMetrics.Pings
 import mozilla.components.service.glean.collectAndCheckPingSchema
 import mozilla.components.service.glean.error.ErrorRecording
-import mozilla.components.service.glean.resetGlean
 import mozilla.components.service.glean.storages.BooleansStorageEngine
 import mozilla.components.service.glean.storages.CountersStorageEngine
 import mozilla.components.service.glean.storages.MockGenericStorageEngine
@@ -18,10 +17,11 @@ import mozilla.components.service.glean.storages.StringListsStorageEngine
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.service.glean.storages.TimespansStorageEngine
 import mozilla.components.service.glean.storages.UuidsStorageEngine
+import mozilla.components.service.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
@@ -44,10 +44,8 @@ class LabeledMetricTypeTest {
         override val sendInPings: List<String>
     ) : CommonMetricData
 
-    @Before
-    fun setup() {
-        resetGlean()
-    }
+    @get:Rule
+    val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())
 
     @Test
     fun `test labeled counter type`() {
@@ -560,5 +558,45 @@ class LabeledMetricTypeTest {
             assertEquals(1, snapshot.get("telemetry.labeled_metric/label$i"))
         }
         assertEquals(1, snapshot.get("telemetry.labeled_metric/__other__"))
+    }
+
+    @Test
+    fun `test recording to static labels by label index`() {
+        val counterMetric = CounterMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Application,
+            name = "labeled_counter_metric",
+            sendInPings = listOf("metrics")
+        )
+
+        val labeledCounterMetric = LabeledMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Application,
+            name = "labeled_counter_metric",
+            sendInPings = listOf("metrics"),
+            subMetric = counterMetric,
+            labels = setOf("foo", "bar", "baz")
+        )
+
+        // Increment using a label name first.
+        labeledCounterMetric["foo"].add(2)
+
+        // Now only use label indices: "foo" first.
+        labeledCounterMetric[0].add(1)
+        // Then "bar".
+        labeledCounterMetric[1].add(1)
+        // Then some out of bound index: will go to "__other__".
+        labeledCounterMetric[100].add(100)
+
+        // Only use snapshotting to make sure there's just 2 labels recorded.
+        val snapshot = CountersStorageEngine.getSnapshot(storeName = "metrics", clearStore = false)
+        assertEquals(3, snapshot!!.size)
+
+        // Use the testing API to get the values for the labels.
+        assertEquals(3, labeledCounterMetric["foo"].testGetValue())
+        assertEquals(1, labeledCounterMetric["bar"].testGetValue())
+        assertEquals(100, labeledCounterMetric["__other__"].testGetValue())
     }
 }
