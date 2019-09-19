@@ -20,14 +20,6 @@ var isUnique = SpecialPowers.getBoolPref("security.data_uri.unique_opaque_origin
 var testFramesLoaded = async function() {
   var harness = document.getElementById("harness").contentDocument;
 
-  // FIXME(Fission): The load event fires before cross-origin iframes have
-  // loaded (bug 1559841).
-  if (SpecialPowers.useRemoteSubframes) {
-    for (let i = 0; i < 100; i++) {
-      await new Promise(resolve => setTimeout(resolve, 0));
-    }
-  }
-
   // iframe from same origin, no X-F-O header - should load
   var frame = harness.getElementById("control1");
   await SpecialPowers.spawn(frame, [], () => {
