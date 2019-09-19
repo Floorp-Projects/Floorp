@@ -27,13 +27,11 @@
 #include "DataChannelProtocol.h"
 #include "DataChannelListener.h"
 #include "mozilla/net/NeckoTargetHolder.h"
+#include "DataChannelLog.h"
+
 #ifdef SCTP_DTLS_SUPPORTED
 #  include "mtransport/sigslot.h"
 #  include "mtransport/transportlayer.h"  // For TransportLayer::State
-#endif
-
-#ifndef DATACHANNEL_LOG
-#  define DATACHANNEL_LOG(args)
 #endif
 
 #ifndef EALREADY
@@ -586,8 +584,8 @@ class DataChannelOnMessageAvailable : public Runnable {
       case ON_DATA_STRING:
       case ON_DATA_BINARY:
         if (!mChannel->mListener) {
-          DATACHANNEL_LOG((
-              "DataChannelOnMessageAvailable (%d) with null Listener!", mType));
+          DC_ERROR(("DataChannelOnMessageAvailable (%d) with null Listener!",
+                    mType));
           return NS_OK;
         }
 
@@ -611,8 +609,8 @@ class DataChannelOnMessageAvailable : public Runnable {
         break;
       case ON_CHANNEL_CREATED:
         if (!mConnection->mListener) {
-          DATACHANNEL_LOG((
-              "DataChannelOnMessageAvailable (%d) with null Listener!", mType));
+          DC_ERROR(("DataChannelOnMessageAvailable (%d) with null Listener!",
+                    mType));
           return NS_OK;
         }
 

@@ -27,10 +27,6 @@
 #include "DataChannel.h"
 #include "DataChannelLog.h"
 
-#undef LOG
-#define LOG(args) \
-  MOZ_LOG(mozilla::gDataChannelLog, mozilla::LogLevel::Debug, args)
-
 // Since we've moved the windows.h include down here, we have to explicitly
 // undef GetBinaryType, otherwise we'll get really odd conflicts
 #ifdef GetBinaryType
@@ -44,7 +40,7 @@ nsDOMDataChannel::~nsDOMDataChannel() {
   // Don't call us anymore!  Likely isn't an issue (or maybe just less of
   // one) once we block GC until all the (appropriate) onXxxx handlers
   // are dropped. (See WebRTC spec)
-  LOG(("%p: Close()ing %p", this, mDataChannel.get()));
+  DC_DEBUG(("%p: Close()ing %p", this, mDataChannel.get()));
   mDataChannel->SetListener(nullptr, nullptr);
   mDataChannel->Close();
 }
@@ -105,8 +101,8 @@ nsresult nsDOMDataChannel::Init(nsPIDOMWindowInner* aDOMWindow) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = nsContentUtils::GetUTFOrigin(principal, mOrigin);
-  LOG(("%s: origin = %s\n", __FUNCTION__,
-       NS_LossyConvertUTF16toASCII(mOrigin).get()));
+  DC_DEBUG(("%s: origin = %s\n", __FUNCTION__,
+            NS_LossyConvertUTF16toASCII(mOrigin).get()));
   return rv;
 }
 
@@ -267,10 +263,10 @@ nsresult nsDOMDataChannel::DoOnMessageAvailable(const nsACString& aData,
                                                 bool aBinary) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  LOG(("DoOnMessageAvailable%s\n",
-       aBinary
-           ? ((mBinaryType == DC_BINARY_TYPE_BLOB) ? " (blob)" : " (binary)")
-           : ""));
+  DC_VERBOSE((
+      "DoOnMessageAvailable%s\n",
+      aBinary ? ((mBinaryType == DC_BINARY_TYPE_BLOB) ? " (blob)" : " (binary)")
+              : ""));
 
   nsresult rv = CheckCurrentGlobalCorrectness();
   if (NS_FAILED(rv)) {
@@ -319,10 +315,13 @@ nsresult nsDOMDataChannel::DoOnMessageAvailable(const nsACString& aData,
                           nullptr, Sequence<OwningNonNull<MessagePort>>());
   event->SetTrusted(true);
 
-  LOG(("%p(%p): %s - Dispatching\n", this, (void*)mDataChannel, __FUNCTION__));
+  DC_DEBUG(
+      ("%p(%p): %s - Dispatching\n", this, (void*)mDataChannel, __FUNCTION__));
   ErrorResult err;
   DispatchEvent(*event, err);
   if (err.Failed()) {
+    DC_ERROR(("%p(%p): %s - Failed to dispatch message", this,
+              (void*)mDataChannel, __FUNCTION__));
     NS_WARNING("Failed to dispatch the message event!!!");
   }
   return err.StealNSResult();
@@ -360,7 +359,8 @@ nsresult nsDOMDataChannel::OnSimpleEvent(nsISupports* aContext,
 }
 
 nsresult nsDOMDataChannel::OnChannelConnected(nsISupports* aContext) {
-  LOG(("%p(%p): %s - Dispatching\n", this, (void*)mDataChannel, __FUNCTION__));
+  DC_DEBUG(
+      ("%p(%p): %s - Dispatching\n", this, (void*)mDataChannel, __FUNCTION__));
 
   return OnSimpleEvent(aContext, NS_LITERAL_STRING("open"));
 }
@@ -372,8 +372,8 @@ nsresult nsDOMDataChannel::OnChannelClosed(nsISupports* aContext) {
   if (!mSentClose) {
     // Ok, we're done with it.
     mDataChannel->ReleaseConnection();
-    LOG(("%p(%p): %s - Dispatching\n", this, (void*)mDataChannel,
-         __FUNCTION__));
+    DC_DEBUG(("%p(%p): %s - Dispatching\n", this, (void*)mDataChannel,
+              __FUNCTION__));
 
     rv = OnSimpleEvent(aContext, NS_LITERAL_STRING("close"));
     // no more events can happen
@@ -386,7 +386,8 @@ nsresult nsDOMDataChannel::OnChannelClosed(nsISupports* aContext) {
 }
 
 nsresult nsDOMDataChannel::OnBufferLow(nsISupports* aContext) {
-  LOG(("%p(%p): %s - Dispatching\n", this, (void*)mDataChannel, __FUNCTION__));
+  DC_DEBUG(
+      ("%p(%p): %s - Dispatching\n", this, (void*)mDataChannel, __FUNCTION__));
 
   return OnSimpleEvent(aContext, NS_LITERAL_STRING("bufferedamountlow"));
 }

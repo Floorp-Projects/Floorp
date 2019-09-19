@@ -7,6 +7,7 @@
 EXPORTS.mozilla.net += [
     'DataChannel.h',
     'DataChannelListener.h',
+    'DataChannelLog.h',
     'DataChannelProtocol.h'
 ]
 
