@@ -20,9 +20,7 @@ class APZInputBridgeChild : public PAPZInputBridgeChild, public APZInputBridge {
   APZInputBridgeChild();
   void Destroy();
 
-  nsEventStatus ReceiveInputEvent(InputData& aEvent,
-                                  ScrollableLayerGuid* aOutTargetGuid,
-                                  uint64_t* aOutInputBlockId) override;
+  APZEventResult ReceiveInputEvent(InputData& aEvent) override;
 
  protected:
   void ProcessUnhandledEvent(LayoutDeviceIntPoint* aRefPoint,

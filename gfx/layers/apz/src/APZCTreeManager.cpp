@@ -1249,16 +1249,15 @@ void APZCTreeManager::MarkAsDetached(LayersId aLayersId) {
   mDetachedLayersIds.insert(aLayersId);
 }
 
-nsEventStatus APZCTreeManager::ReceiveInputEvent(
-    InputData& aEvent, ScrollableLayerGuid* aOutTargetGuid,
-    uint64_t* aOutInputBlockId) {
+APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
   APZThreadUtils::AssertOnControllerThread();
+  APZEventResult result;
 
   // Ignore input events when there are active tabs that are recording or
   // replaying. APZ does not work with the special layers constructed by
   // the middleman processes being communicated with here.
   if (dom::BrowserParent::AreRecordReplayTabsActive()) {
-    return nsEventStatus_eIgnore;
+    return result;
   }
 
   // Use a RAII class for updating the focus sequence number of this event
@@ -1283,22 +1282,17 @@ nsEventStatus APZCTreeManager::ReceiveInputEvent(
     // Check if the mToolbarAnimator consumed the event.
     if (isConsumed == nsEventStatus_eConsumeNoDefault) {
       APZCTM_LOG("Dynamic toolbar consumed event");
-      return isConsumed;
+      result.mStatus = isConsumed;
+      return result;
     }
   }
 #endif  // (MOZ_WIDGET_ANDROID)
 
-  // Initialize aOutInputBlockId to a sane value, and then later we overwrite
-  // it if the input event goes into a block.
-  if (aOutInputBlockId) {
-    *aOutInputBlockId = InputBlockState::NO_BLOCK_ID;
-  }
-  nsEventStatus result = nsEventStatus_eIgnore;
   CompositorHitTestInfo hitResult = CompositorHitTestInvisibleToHit;
   switch (aEvent.mInputType) {
     case MULTITOUCH_INPUT: {
       MultiTouchInput& touchInput = aEvent.AsMultiTouchInput();
-      result = ProcessTouchInput(touchInput, aOutTargetGuid, aOutInputBlockId);
+      result = ProcessTouchInput(touchInput);
       break;
     }
     case MOUSE_INPUT: {
@@ -1350,8 +1344,8 @@ nsEventStatus APZCTreeManager::ReceiveInputEvent(
           // that we need.
           confFlags.mTargetConfirmed = false;
         }
-        result = mInputQueue->ReceiveInputEvent(apzc, confFlags, mouseInput,
-                                                aOutInputBlockId);
+        result.mStatus = mInputQueue->ReceiveInputEvent(
+            apzc, confFlags, mouseInput, &result.mInputBlockId);
 
         // If we're starting an async scrollbar drag
         if (apzDragEnabled && startsDrag && hitScrollbarNode &&
@@ -1360,7 +1354,7 @@ nsEventStatus APZCTreeManager::ReceiveInputEvent(
           SetupScrollbarDrag(mouseInput, hitScrollbarNode, apzc.get());
         }
 
-        if (result == nsEventStatus_eConsumeDoDefault) {
+        if (result.mStatus == nsEventStatus_eConsumeDoDefault) {
           // This input event is part of a drag block, so whether or not it is
           // directed at a scrollbar depends on whether the drag block started
           // on a scrollbar.
@@ -1368,7 +1362,7 @@ nsEventStatus APZCTreeManager::ReceiveInputEvent(
         }
 
         // Update the out-parameters so they are what the caller expects.
-        apzc->GetGuid(aOutTargetGuid);
+        apzc->GetGuid(&result.mTargetGuid);
 
         if (!hitScrollbar) {
           // The input was not targeted at a scrollbar, so we untransform it
@@ -1391,7 +1385,7 @@ nsEventStatus APZCTreeManager::ReceiveInputEvent(
           // to apply the callback transform in the main thread, so we remove
           // the scrollid from the guid. We need to keep the layersId intact so
           // that the response from the child process doesn't get discarded.
-          aOutTargetGuid->mScrollId = ScrollableLayerGuid::NULL_SCROLL_ID;
+          result.mTargetGuid.mScrollId = ScrollableLayerGuid::NULL_SCROLL_ID;
         }
       }
       break;
@@ -1422,7 +1416,8 @@ nsEventStatus APZCTreeManager::ReceiveInputEvent(
           if (apzc) {
             SynthesizePinchGestureFromMouseWheel(wheelInput, apzc);
           }
-          return nsEventStatus_eConsumeNoDefault;
+          result.mStatus = nsEventStatus_eConsumeNoDefault;
+          return result;
         }
 
         MOZ_ASSERT(wheelInput.mAPZAction == APZWheelAction::Scroll);
@@ -1443,12 +1438,12 @@ nsEventStatus APZCTreeManager::ReceiveInputEvent(
           return result;
         }
 
-        result = mInputQueue->ReceiveInputEvent(
+        result.mStatus = mInputQueue->ReceiveInputEvent(
             apzc, TargetConfirmationFlags{hitResult}, wheelInput,
-            aOutInputBlockId);
+            &result.mInputBlockId);
 
         // Update the out-parameters so they are what the caller expects.
-        apzc->GetGuid(aOutTargetGuid);
+        apzc->GetGuid(&result.mTargetGuid);
         wheelInput.mOrigin = *untransformedOrigin;
       }
       break;
@@ -1499,12 +1494,12 @@ nsEventStatus APZCTreeManager::ReceiveInputEvent(
           return result;
         }
 
-        result = mInputQueue->ReceiveInputEvent(
+        result.mStatus = mInputQueue->ReceiveInputEvent(
             apzc, TargetConfirmationFlags{hitResult}, panInput,
-            aOutInputBlockId);
+            &result.mInputBlockId);
 
         // Update the out-parameters so they are what the caller expects.
-        apzc->GetGuid(aOutTargetGuid);
+        apzc->GetGuid(&result.mTargetGuid);
         panInput.mPanStartPoint = *untransformedStartPoint;
         panInput.mPanDisplacement = *untransformedDisplacement;
 
@@ -1529,12 +1524,12 @@ nsEventStatus APZCTreeManager::ReceiveInputEvent(
           return result;
         }
 
-        result = mInputQueue->ReceiveInputEvent(
+        result.mStatus = mInputQueue->ReceiveInputEvent(
             apzc, TargetConfirmationFlags{hitResult}, pinchInput,
-            aOutInputBlockId);
+            &result.mInputBlockId);
 
         // Update the out-parameters so they are what the caller expects.
-        apzc->GetGuid(aOutTargetGuid);
+        apzc->GetGuid(&result.mTargetGuid);
         pinchInput.mFocusPoint = *untransformedFocusPoint;
       }
       break;
@@ -1555,12 +1550,12 @@ nsEventStatus APZCTreeManager::ReceiveInputEvent(
           return result;
         }
 
-        result = mInputQueue->ReceiveInputEvent(
+        result.mStatus = mInputQueue->ReceiveInputEvent(
             apzc, TargetConfirmationFlags{hitResult}, tapInput,
-            aOutInputBlockId);
+            &result.mInputBlockId);
 
         // Update the out-parameters so they are what the caller expects.
-        apzc->GetGuid(aOutTargetGuid);
+        apzc->GetGuid(&result.mTargetGuid);
         tapInput.mPoint = *untransformedPoint;
       }
       break;
@@ -1642,14 +1637,14 @@ nsEventStatus APZCTreeManager::ReceiveInputEvent(
       APZ_KEY_LOG("Dispatching key input with apzc=%p\n", targetApzc.get());
 
       // Dispatch the event to the input queue.
-      result = mInputQueue->ReceiveInputEvent(targetApzc,
-                                              TargetConfirmationFlags{true},
-                                              keyInput, aOutInputBlockId);
+      result.mStatus = mInputQueue->ReceiveInputEvent(
+          targetApzc, TargetConfirmationFlags{true}, keyInput,
+          &result.mInputBlockId);
 
       // Any keyboard event that is dispatched to the input queue at this point
       // should have been consumed
-      MOZ_ASSERT(result == nsEventStatus_eConsumeDoDefault ||
-                 result == nsEventStatus_eConsumeNoDefault);
+      MOZ_ASSERT(result.mStatus == nsEventStatus_eConsumeDoDefault ||
+                 result.mStatus == nsEventStatus_eConsumeNoDefault);
 
       keyInput.mHandledByAPZ = true;
       focusSetter.MarkAsNonFocusChanging();
@@ -1733,9 +1728,8 @@ APZCTreeManager::GetTouchInputBlockAPZC(
   return apzc.forget();
 }
 
-nsEventStatus APZCTreeManager::ProcessTouchInput(
-    MultiTouchInput& aInput, ScrollableLayerGuid* aOutTargetGuid,
-    uint64_t* aOutInputBlockId) {
+APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
+  APZEventResult result;  // mStatus == eIgnore
   aInput.mHandledByAPZ = true;
   nsTArray<TouchBehaviorFlags> touchBehaviors;
   HitTestingTreeNodeAutoLock hitScrollbarNode;
@@ -1753,7 +1747,8 @@ nsEventStatus APZCTreeManager::ProcessTouchInput(
       if (mRetainedTouchIdentifier == -1) {
         mRetainedTouchIdentifier = mApzcForInputBlock->GetLastTouchIdentifier();
       }
-      return nsEventStatus_eConsumeNoDefault;
+      result.mStatus = nsEventStatus_eConsumeNoDefault;
+      return result;
     }
 
     mHitResultForInputBlock = CompositorHitTestInvisibleToHit;
@@ -1786,11 +1781,8 @@ nsEventStatus APZCTreeManager::ProcessTouchInput(
                mApzcForInputBlock.get());
   }
 
-  nsEventStatus result = nsEventStatus_eIgnore;
-
   if (mInScrollbarTouchDrag) {
-    result = ProcessTouchInputForScrollbarDrag(
-        aInput, hitScrollbarNode, aOutTargetGuid, aOutInputBlockId);
+    result = ProcessTouchInputForScrollbarDrag(aInput, hitScrollbarNode);
   } else {
     // If we receive a touch-cancel, it means all touches are finished, so we
     // can stop ignoring any that we were ignoring.
@@ -1814,22 +1806,19 @@ nsEventStatus APZCTreeManager::ProcessTouchInput(
         }
       }
       if (aInput.mTouches.IsEmpty()) {
-        return nsEventStatus_eConsumeNoDefault;
+        result.mStatus = nsEventStatus_eConsumeNoDefault;
+        return result;
       }
     }
 
     if (mApzcForInputBlock) {
       MOZ_ASSERT(mHitResultForInputBlock != CompositorHitTestInvisibleToHit);
 
-      mApzcForInputBlock->GetGuid(aOutTargetGuid);
-      uint64_t inputBlockId = 0;
-      result = mInputQueue->ReceiveInputEvent(
+      mApzcForInputBlock->GetGuid(&result.mTargetGuid);
+      result.mStatus = mInputQueue->ReceiveInputEvent(
           mApzcForInputBlock, TargetConfirmationFlags{mHitResultForInputBlock},
-          aInput, &inputBlockId,
+          aInput, &result.mInputBlockId,
           touchBehaviors.IsEmpty() ? Nothing() : Some(touchBehaviors));
-      if (aOutInputBlockId) {
-        *aOutInputBlockId = inputBlockId;
-      }
 
       // For computing the event to pass back to Gecko, use up-to-date
       // transforms (i.e. not anything cached in an input block). This ensures
@@ -1845,7 +1834,8 @@ nsEventStatus APZCTreeManager::ProcessTouchInput(
         Maybe<ScreenIntPoint> untransformedScreenPoint =
             UntransformBy(outTransform, touchData.mScreenPoint);
         if (!untransformedScreenPoint) {
-          return nsEventStatus_eIgnore;
+          result.mStatus = nsEventStatus_eIgnore;
+          return result;
         }
         touchData.mScreenPoint = *untransformedScreenPoint;
       }
@@ -1881,10 +1871,9 @@ static MouseInput::MouseType MultiTouchTypeToMouseType(
   return MouseInput::MOUSE_NONE;
 }
 
-nsEventStatus APZCTreeManager::ProcessTouchInputForScrollbarDrag(
+APZEventResult APZCTreeManager::ProcessTouchInputForScrollbarDrag(
     MultiTouchInput& aTouchInput,
-    const HitTestingTreeNodeAutoLock& aScrollThumbNode,
-    ScrollableLayerGuid* aOutTargetGuid, uint64_t* aOutInputBlockId) {
+    const HitTestingTreeNodeAutoLock& aScrollThumbNode) {
   MOZ_ASSERT(mRetainedTouchIdentifier == -1);
   MOZ_ASSERT(mApzcForInputBlock);
   MOZ_ASSERT(aTouchInput.mTouches.Length() == 1);
@@ -1907,8 +1896,9 @@ nsEventStatus APZCTreeManager::ProcessTouchInputForScrollbarDrag(
   // earliest, be confirmed in the subsequent SetupScrollbarDrag() call.
   TargetConfirmationFlags targetConfirmed{false};
 
-  nsEventStatus result = mInputQueue->ReceiveInputEvent(
-      mApzcForInputBlock, targetConfirmed, mouseInput, aOutInputBlockId);
+  APZEventResult result;
+  result.mStatus = mInputQueue->ReceiveInputEvent(
+      mApzcForInputBlock, targetConfirmed, mouseInput, &result.mInputBlockId);
 
   // |aScrollThumbNode| is non-null iff. this is the event that starts the drag.
   // If so, set up the drag.
@@ -1916,7 +1906,7 @@ nsEventStatus APZCTreeManager::ProcessTouchInputForScrollbarDrag(
     SetupScrollbarDrag(mouseInput, aScrollThumbNode, mApzcForInputBlock.get());
   }
 
-  mApzcForInputBlock->GetGuid(aOutTargetGuid);
+  mApzcForInputBlock->GetGuid(&result.mTargetGuid);
 
   // Since the input was targeted at a scrollbar:
   //    - The original touch event (which will be sent on to content) will
@@ -1926,7 +1916,7 @@ nsEventStatus APZCTreeManager::ProcessTouchInputForScrollbarDrag(
   // Both of these match the behaviour of mouse events that target a scrollbar;
   // see the code for handling mouse events in ReceiveInputEvent() for
   // additional explanation.
-  aOutTargetGuid->mScrollId = ScrollableLayerGuid::NULL_SCROLL_ID;
+  result.mTargetGuid.mScrollId = ScrollableLayerGuid::NULL_SCROLL_ID;
 
   return result;
 }

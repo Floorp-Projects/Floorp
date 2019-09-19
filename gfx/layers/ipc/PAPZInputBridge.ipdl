@@ -5,8 +5,8 @@
 
 using LayoutDeviceIntPoint from "Units.h";
 using struct mozilla::layers::ScrollableLayerGuid from "mozilla/layers/ScrollableLayerGuid.h";
+using struct mozilla::layers::APZEventResult from "mozilla/layers/APZInputBridge.h";
 
-using nsEventStatus from "mozilla/EventForwards.h";
 using EventMessage from "mozilla/EventForwards.h";
 using class mozilla::MultiTouchInput from "InputData.h";
 using class mozilla::MouseInput from "InputData.h";
@@ -40,46 +40,32 @@ parent:
   // implement the ReceiveInputEvent methods
 
   sync ReceiveMultiTouchInputEvent(MultiTouchInput aEvent)
-    returns (nsEventStatus       aOutStatus,
-             MultiTouchInput     aOutEvent,
-             ScrollableLayerGuid aOutTargetGuid,
-             uint64_t            aOutInputBlockId);
+    returns (APZEventResult  aOutResult,
+             MultiTouchInput aOutEvent);
 
   sync ReceiveMouseInputEvent(MouseInput aEvent)
-    returns (nsEventStatus       aOutStatus,
-             MouseInput          aOutEvent,
-             ScrollableLayerGuid aOutTargetGuid,
-             uint64_t            aOutInputBlockId);
+    returns (APZEventResult aOutResult,
+             MouseInput     aOutEvent);
 
   sync ReceivePanGestureInputEvent(PanGestureInput aEvent)
-    returns (nsEventStatus       aOutStatus,
-             PanGestureInput     aOutEvent,
-             ScrollableLayerGuid aOutTargetGuid,
-             uint64_t            aOutInputBlockId);
+    returns (APZEventResult  aOutResult,
+             PanGestureInput aOutEvent);
 
   sync ReceivePinchGestureInputEvent(PinchGestureInput aEvent)
-    returns (nsEventStatus       aOutStatus,
-             PinchGestureInput   aOutEvent,
-             ScrollableLayerGuid aOutTargetGuid,
-             uint64_t            aOutInputBlockId);
+    returns (APZEventResult    aOutResult,
+             PinchGestureInput aOutEvent);
 
   sync ReceiveTapGestureInputEvent(TapGestureInput aEvent)
-    returns (nsEventStatus       aOutStatus,
-             TapGestureInput     aOutEvent,
-             ScrollableLayerGuid aOutTargetGuid,
-             uint64_t            aOutInputBlockId);
+    returns (APZEventResult  aOutResult,
+             TapGestureInput aOutEvent);
 
   sync ReceiveScrollWheelInputEvent(ScrollWheelInput aEvent)
-    returns (nsEventStatus       aOutStatus,
-             ScrollWheelInput    aOutEvent,
-             ScrollableLayerGuid aOutTargetGuid,
-             uint64_t            aOutInputBlockId);
+    returns (APZEventResult   aOutResult,
+             ScrollWheelInput aOutEvent);
 
   sync ReceiveKeyboardInputEvent(KeyboardInput aEvent)
-    returns (nsEventStatus       aOutStatus,
-             KeyboardInput       aOutEvent,
-             ScrollableLayerGuid aOutTargetGuid,
-             uint64_t            aOutInputBlockId);
+    returns (APZEventResult aOutResult,
+             KeyboardInput  aOutEvent);
 
   async UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint, EventMessage aEventMessage);
 

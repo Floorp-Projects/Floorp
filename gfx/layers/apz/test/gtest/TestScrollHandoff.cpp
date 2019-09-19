@@ -291,12 +291,12 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1073250) {
       SingleTouchData(0, ScreenIntPoint(10, 40), ScreenSize(0, 0), 0, 0));
   secondFingerDown.mTouches.AppendElement(
       SingleTouchData(1, ScreenIntPoint(30, 20), ScreenSize(0, 0), 0, 0));
-  manager->ReceiveInputEvent(secondFingerDown, nullptr, nullptr);
+  manager->ReceiveInputEvent(secondFingerDown);
 
   // Release the fingers.
   MultiTouchInput fingersUp = secondFingerDown;
   fingersUp.mType = MultiTouchInput::MULTITOUCH_END;
-  manager->ReceiveInputEvent(fingersUp, nullptr, nullptr);
+  manager->ReceiveInputEvent(fingersUp);
 
   // Allow any animations to run their course.
   child->AdvanceAnimationsUntilEnd();
@@ -334,12 +334,12 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1231228) {
       SingleTouchData(0, ScreenIntPoint(10, 40), ScreenSize(0, 0), 0, 0));
   secondFingerDown.mTouches.AppendElement(
       SingleTouchData(1, ScreenIntPoint(30, 20), ScreenSize(0, 0), 0, 0));
-  manager->ReceiveInputEvent(secondFingerDown, nullptr, nullptr);
+  manager->ReceiveInputEvent(secondFingerDown);
 
   // Release the fingers.
   MultiTouchInput fingersUp = secondFingerDown;
   fingersUp.mType = MultiTouchInput::MULTITOUCH_END;
-  manager->ReceiveInputEvent(fingersUp, nullptr, nullptr);
+  manager->ReceiveInputEvent(fingersUp);
 
   // Allow any animations to run their course.
   child->AdvanceAnimationsUntilEnd();
@@ -417,12 +417,12 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1240202b) {
       SingleTouchData(0, ScreenIntPoint(10, 90), ScreenSize(0, 0), 0, 0));
   secondFingerDown.mTouches.AppendElement(
       SingleTouchData(1, ScreenIntPoint(10, 80), ScreenSize(0, 0), 0, 0));
-  manager->ReceiveInputEvent(secondFingerDown, nullptr, nullptr);
+  manager->ReceiveInputEvent(secondFingerDown);
 
   // Release the fingers.
   MultiTouchInput fingersUp = secondFingerDown;
   fingersUp.mType = MultiTouchInput::MULTITOUCH_END;
-  manager->ReceiveInputEvent(fingersUp, nullptr, nullptr);
+  manager->ReceiveInputEvent(fingersUp);
 
   // Allow any animations to run their course.
   child->AdvanceAnimationsUntilEnd();

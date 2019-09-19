@@ -274,14 +274,14 @@ class TestAsyncPanZoomController : public AsyncPanZoomController {
         mWaitForMainThread(false),
         mcc(aMcc) {}
 
-  nsEventStatus ReceiveInputEvent(const InputData& aEvent,
-                                  ScrollableLayerGuid* aDummy,
-                                  uint64_t* aOutInputBlockId) {
+  APZEventResult ReceiveInputEvent(const InputData& aEvent) {
     // This is a function whose signature matches exactly the ReceiveInputEvent
     // on APZCTreeManager. This allows us to templates for functions like
     // TouchDown, TouchUp, etc so that we can reuse the code for dispatching
     // events into both APZC and APZCTM.
-    return ReceiveInputEvent(aEvent, aOutInputBlockId);
+    APZEventResult result;
+    result.mStatus = ReceiveInputEvent(aEvent, &result.mInputBlockId);
+    return result;
   }
 
   nsEventStatus ReceiveInputEvent(const InputData& aEvent,
@@ -523,30 +523,25 @@ void APZCTesterBase::Tap(const RefPtr<InputReceiver>& aTarget,
                          const ScreenIntPoint& aPoint, TimeDuration aTapLength,
                          nsEventStatus (*aOutEventStatuses)[2],
                          uint64_t* aOutInputBlockId) {
-  // Even if the caller doesn't care about the block id, we need it to set the
-  // allowed touch behaviour below, so make sure aOutInputBlockId is non-null.
-  uint64_t blockId;
-  if (!aOutInputBlockId) {
-    aOutInputBlockId = &blockId;
-  }
-
-  nsEventStatus status =
-      TouchDown(aTarget, aPoint, mcc->Time(), aOutInputBlockId);
+  APZEventResult result = TouchDown(aTarget, aPoint, mcc->Time());
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[0] = status;
+    (*aOutEventStatuses)[0] = result.mStatus;
+  }
+  if (aOutInputBlockId) {
+    *aOutInputBlockId = result.mInputBlockId;
   }
   mcc->AdvanceBy(aTapLength);
 
   // If touch-action is enabled then simulate the allowed touch behaviour
   // notification that the main thread is supposed to deliver.
   if (StaticPrefs::layout_css_touch_action_enabled() &&
-      status != nsEventStatus_eConsumeNoDefault) {
-    SetDefaultAllowedTouchBehavior(aTarget, *aOutInputBlockId);
+      result.mStatus != nsEventStatus_eConsumeNoDefault) {
+    SetDefaultAllowedTouchBehavior(aTarget, result.mInputBlockId);
   }
 
-  status = TouchUp(aTarget, aPoint, mcc->Time());
+  result.mStatus = TouchUp(aTarget, aPoint, mcc->Time());
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[1] = status;
+    (*aOutEventStatuses)[1] = result.mStatus;
   }
 }
 
@@ -598,19 +593,22 @@ void APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
   }
 
   // Make sure the move is large enough to not be handled as a tap
-  nsEventStatus status =
+  APZEventResult result =
       TouchDown(aTarget,
                 ScreenIntPoint(aTouchStart.x + overcomeTouchToleranceX,
                                aTouchStart.y + overcomeTouchToleranceY),
-                mcc->Time(), aOutInputBlockId);
+                mcc->Time());
+  if (aOutInputBlockId) {
+    *aOutInputBlockId = result.mInputBlockId;
+  }
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[0] = status;
+    (*aOutEventStatuses)[0] = result.mStatus;
   }
 
   mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   // Allowed touch behaviours must be set after sending touch-start.
-  if (status != nsEventStatus_eConsumeNoDefault) {
+  if (result.mStatus != nsEventStatus_eConsumeNoDefault) {
     if (aAllowedTouchBehaviors) {
       EXPECT_EQ(1UL, aAllowedTouchBehaviors->Length());
       aTarget->SetAllowedTouchBehavior(*aOutInputBlockId,
@@ -620,27 +618,27 @@ void APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
     }
   }
 
-  status = TouchMove(aTarget, aTouchStart, mcc->Time());
+  result.mStatus = TouchMove(aTarget, aTouchStart, mcc->Time());
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[1] = status;
+    (*aOutEventStatuses)[1] = result.mStatus;
   }
 
   mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
-  status = TouchMove(aTarget, aTouchEnd, mcc->Time());
+  result.mStatus = TouchMove(aTarget, aTouchEnd, mcc->Time());
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[2] = status;
+    (*aOutEventStatuses)[2] = result.mStatus;
   }
 
   mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   if (!(aOptions & PanOptions::KeepFingerDown)) {
-    status = TouchUp(aTarget, aTouchEnd, mcc->Time());
+    result.mStatus = TouchUp(aTarget, aTouchEnd, mcc->Time());
   } else {
-    status = nsEventStatus_eIgnore;
+    result.mStatus = nsEventStatus_eIgnore;
   }
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[3] = status;
+    (*aOutEventStatuses)[3] = result.mStatus;
   }
 
   if ((aOptions & PanOptions::NoFling)) {
@@ -688,45 +686,44 @@ void APZCTesterBase::DoubleTap(const RefPtr<InputReceiver>& aTarget,
                                const ScreenIntPoint& aPoint,
                                nsEventStatus (*aOutEventStatuses)[4],
                                uint64_t (*aOutInputBlockIds)[2]) {
-  uint64_t blockId;
-  nsEventStatus status = TouchDown(aTarget, aPoint, mcc->Time(), &blockId);
+  APZEventResult result = TouchDown(aTarget, aPoint, mcc->Time());
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[0] = status;
+    (*aOutEventStatuses)[0] = result.mStatus;
   }
   if (aOutInputBlockIds) {
-    (*aOutInputBlockIds)[0] = blockId;
+    (*aOutInputBlockIds)[0] = result.mInputBlockId;
   }
   mcc->AdvanceByMillis(10);
 
   // If touch-action is enabled then simulate the allowed touch behaviour
   // notification that the main thread is supposed to deliver.
   if (StaticPrefs::layout_css_touch_action_enabled() &&
-      status != nsEventStatus_eConsumeNoDefault) {
-    SetDefaultAllowedTouchBehavior(aTarget, blockId);
+      result.mStatus != nsEventStatus_eConsumeNoDefault) {
+    SetDefaultAllowedTouchBehavior(aTarget, result.mInputBlockId);
   }
 
-  status = TouchUp(aTarget, aPoint, mcc->Time());
+  result.mStatus = TouchUp(aTarget, aPoint, mcc->Time());
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[1] = status;
+    (*aOutEventStatuses)[1] = result.mStatus;
   }
   mcc->AdvanceByMillis(10);
-  status = TouchDown(aTarget, aPoint, mcc->Time(), &blockId);
+  result = TouchDown(aTarget, aPoint, mcc->Time());
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[2] = status;
+    (*aOutEventStatuses)[2] = result.mStatus;
   }
   if (aOutInputBlockIds) {
-    (*aOutInputBlockIds)[1] = blockId;
+    (*aOutInputBlockIds)[1] = result.mInputBlockId;
   }
   mcc->AdvanceByMillis(10);
 
   if (StaticPrefs::layout_css_touch_action_enabled() &&
-      status != nsEventStatus_eConsumeNoDefault) {
-    SetDefaultAllowedTouchBehavior(aTarget, blockId);
+      result.mStatus != nsEventStatus_eConsumeNoDefault) {
+    SetDefaultAllowedTouchBehavior(aTarget, result.mInputBlockId);
   }
 
-  status = TouchUp(aTarget, aPoint, mcc->Time());
+  result.mStatus = TouchUp(aTarget, aPoint, mcc->Time());
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[3] = status;
+    (*aOutEventStatuses)[3] = result.mStatus;
   }
 }
 
