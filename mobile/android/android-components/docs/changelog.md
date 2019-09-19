@@ -27,6 +27,9 @@ permalink: /changelog/
 * **support-webextensions**
   * 🆕 New component containing building blocks for features implemented as web extensions.
 
+* **lib-push-amazon**
+  * Fixed usage of cache version of registration ID in situations when app data is deleted.
+
 # 13.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v12.0.0...v13.0.0)
