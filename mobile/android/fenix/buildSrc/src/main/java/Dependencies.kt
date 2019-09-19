@@ -59,7 +59,7 @@ object Versions {
     const val tools_test_rules = "1.3.0-alpha02"
     const val tools_test_runner = "1.3.0-alpha02"
     const val uiautomator = "2.2.0"
-    const val robolectric = "4.2"
+    const val robolectric = "4.2.1"
 
     const val google_ads_id_version = "16.0.0"
 
