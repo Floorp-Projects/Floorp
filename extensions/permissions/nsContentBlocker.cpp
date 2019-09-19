@@ -86,10 +86,12 @@ nsContentBlocker::nsContentBlocker() {
 }
 
 nsresult nsContentBlocker::Init() {
-  nsresult rv;
-  mPermissionManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mPermissionManager = nsPermissionManager::GetInstance();
+  if (!mPermissionManager) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
+  nsresult rv;
   nsCOMPtr<nsIPrefService> prefService =
       do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -292,8 +294,8 @@ nsresult nsContentBlocker::TestPermission(nsIURI* aCurrentURI,
   // preload permission.
   uint32_t permission = nsIPermissionManager::UNKNOWN_ACTION;
   if (mPermissionManager->GetHasPreloadPermissions()) {
-    rv = mPermissionManager->TestPermission(
-        aCurrentURI, kTypeString[aContentType - 1], &permission);
+    rv = mPermissionManager->LegacyTestPermissionFromURI(
+        aCurrentURI, nullptr, kTypeString[aContentType - 1], &permission);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
