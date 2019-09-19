@@ -170,14 +170,14 @@ ScreenOrientation::LockOrientationTask::Run() {
   if (mDocument->Hidden()) {
     // Active orientation lock is not the document's orientation lock.
     mPromise->MaybeResolveWithUndefined();
-    mDocument->SetOrientationPendingPromise(nullptr);
+    mDocument->ClearOrientationPendingPromise();
     return NS_OK;
   }
 
   if (mOrientationLock == hal::eScreenOrientation_None) {
     mScreenOrientation->UnlockDeviceOrientation();
     mPromise->MaybeResolveWithUndefined();
-    mDocument->SetOrientationPendingPromise(nullptr);
+    mDocument->ClearOrientationPendingPromise();
     return NS_OK;
   }
 
@@ -190,7 +190,7 @@ ScreenOrientation::LockOrientationTask::Run() {
 
   if (NS_WARN_IF(!result)) {
     mPromise->MaybeReject(NS_ERROR_UNEXPECTED);
-    mDocument->SetOrientationPendingPromise(nullptr);
+    mDocument->ClearOrientationPendingPromise();
     return NS_OK;
   }
 
@@ -199,7 +199,7 @@ ScreenOrientation::LockOrientationTask::Run() {
        mDocument->CurrentOrientationAngle() == 0)) {
     // Orientation lock will not cause an orientation change.
     mPromise->MaybeResolveWithUndefined();
-    mDocument->SetOrientationPendingPromise(nullptr);
+    mDocument->ClearOrientationPendingPromise();
   }
 
   return NS_OK;
@@ -256,7 +256,7 @@ static inline void AbortOrientationPromises(nsIDocShell* aDocShell) {
     Promise* promise = doc->GetOrientationPendingPromise();
     if (promise) {
       promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-      doc->SetOrientationPendingPromise(nullptr);
+      doc->ClearOrientationPendingPromise();
     }
   }
 
@@ -325,7 +325,10 @@ already_AddRefed<Promise> ScreenOrientation::LockInternal(
   rootShell->SetOrientationLock(aOrientation);
   AbortOrientationPromises(rootShell);
 
-  doc->SetOrientationPendingPromise(p);
+  if (!doc->SetOrientationPendingPromise(p)) {
+    p->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
+    return p.forget();
+  }
 
   nsCOMPtr<nsIRunnable> lockOrientationTask = new LockOrientationTask(
       this, p, aOrientation, doc, perm == FULLSCREEN_LOCK_ALLOWED);
@@ -553,7 +556,7 @@ ScreenOrientation::DispatchChangeEventAndResolvePromise() {
           Promise* pendingPromise = doc->GetOrientationPendingPromise();
           if (pendingPromise) {
             pendingPromise->MaybeResolveWithUndefined();
-            doc->SetOrientationPendingPromise(nullptr);
+            doc->ClearOrientationPendingPromise();
           }
         }
       });
