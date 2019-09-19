@@ -10,13 +10,9 @@
 #define builtin_stream_QueueingStrategies_h
 
 #include "js/Class.h"         // JSClass, js::ClassSpec
+#include "js/Value.h"         // JS::Value
+#include "vm/JSContext.h"     // JSContext
 #include "vm/NativeObject.h"  // js::NativeObject
-
-struct JSContext;
-
-namespace JS {
-union Value;
-}
 
 namespace js {
 
