@@ -150,7 +150,7 @@ add_task(async function() {
               let docShell = docShells[i].findItemWithName(
                 "target",
                 null,
-                null,
+                docShells[i],
                 false
               );
               let browsingContext = browsingContexts[i].findWithName(
@@ -170,7 +170,7 @@ add_task(async function() {
               let docShell = docShells[i].findItemWithName(
                 target,
                 null,
-                null,
+                docShells[i],
                 false
               );
               let browsingContext = browsingContexts[i].findWithName(
