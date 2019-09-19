@@ -38,6 +38,9 @@
       gQueue.push(new changeCurrentItem("checkbox"));
       gQueue.push(new changeCurrentItem("radio1"));
 
+      let fileBrowseButton = getAccessible("file").firstChild;
+      gQueue.push(new synthFocus("file", new focusChecker(fileBrowseButton)));
+
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
@@ -66,6 +69,7 @@
   <input id="checkbox" type="checkbox">
   <input id="radio1" type="radio" name="radiogroup">
   <input id="radio2" type="radio" name="radiogroup">
+  <input id="file" type="file">
 
   <div id="eventdump"></div>
 </body>
