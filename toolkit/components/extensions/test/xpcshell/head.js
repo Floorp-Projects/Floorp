@@ -46,6 +46,11 @@ const testEnv = {
   expectRemote: false,
 };
 
+Services.prefs.setStringPref(
+  "services.settings.server",
+  "http://localhost:7777/remote-settings-dummy/v1"
+);
+
 add_task(function check_remote() {
   Assert.equal(
     WebExtensionPolicy.useRemoteWebExtensions,
