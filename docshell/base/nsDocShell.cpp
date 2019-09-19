@@ -1057,13 +1057,6 @@ nsDOMNavigationTiming* nsDocShell::GetNavigationTiming() const {
 /* static */
 bool nsDocShell::ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
                                 nsIDocShellTreeItem* aTargetTreeItem) {
-  // We want to bypass this check for chrome callers, but only if there's
-  // JS on the stack. System callers still need to do it.
-  if (nsContentUtils::GetCurrentJSContext() &&
-      nsContentUtils::IsCallerChrome()) {
-    return true;
-  }
-
   MOZ_ASSERT(aOriginTreeItem && aTargetTreeItem, "need two docshells");
 
   // Get origin document principal
