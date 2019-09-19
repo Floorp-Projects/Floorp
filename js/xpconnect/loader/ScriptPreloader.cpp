@@ -373,7 +373,7 @@ void ScriptPreloader::FinishContentStartup() {
 }
 
 bool ScriptPreloader::WillWriteScripts() {
-  return Active() && (XRE_IsParentProcess() || mChildActor);
+  return !mDataPrepared && (XRE_IsParentProcess() || mChildActor);
 }
 
 Result<nsCOMPtr<nsIFile>, nsresult> ScriptPreloader::GetCacheFile(
