@@ -47,6 +47,14 @@ enum UseCounter : int16_t {
 #undef CSS_PROP_PUBLIC_OR_PRIVATE
 #undef CSS_PROP_USE_COUNTER
 
+  eUseCounter_EndCSSProperties,
+  eUseCounter_FirstCountedUnknownProperty = eUseCounter_EndCSSProperties,
+  __reset_hack_2 = eUseCounter_FirstCountedUnknownProperty - 1,
+
+#define COUNTED_UNKNOWN_PROPERTY(name_, method_) eUseCounter_unknown_property_##method_,
+#include "mozilla/CountedUnknownProperties.h"
+#undef COUNTED_UNKNOWN_PROPERTY
+
   eUseCounter_Count
 };
 

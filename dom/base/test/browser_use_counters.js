@@ -69,6 +69,12 @@ add_task(async function() {
     "CSS_PROPERTY_MozTransform"
   );
 
+  // Check for counted unknown properties.
+  await check_use_counter_iframe(
+    "file_use_counter_style.html",
+    "CSS_PROPERTY_WebkitPaddingStart"
+  );
+
   // Check that even loads from the imglib cache update use counters.  The
   // images should still be there, because we just loaded them in the last
   // set of tests.  But we won't get updated counts for the document
