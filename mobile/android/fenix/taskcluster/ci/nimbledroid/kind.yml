@@ -1,0 +1,43 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - fenix_taskgraph.nimbledroid:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - old-decision
+
+job-defaults:
+    description: Upload APKs to Nimbledroid for performance measurement and tracking
+    worker-type: b-android
+    worker:
+        docker-image: {in-tree: nimbledroid}
+        max-run-time: 600
+    run-on-tasks-for: []
+    treeherder:
+        kind: test
+        tier: 2
+        platform: android-all/opt
+    scopes:
+        - secrets:get:project/mobile/fenix/nimbledroid
+    run:
+        using: run-task
+        use-caches: false
+        command:
+            - python
+            - /builds/worker/checkouts/src/automation/taskcluster/upload_apk_nimbledroid.py
+            - {artifact-reference: "<build/public/build/armeabi-v7a/geckoNightly/target.apk>"}
+
+jobs:
+    nightly:
+        attributes:
+            nightly: true
+        dependencies:
+            build: Build FenixNightlyLegacy task   # Comes from the old decision task
+        treeherder:
+            symbol: nimbledroid

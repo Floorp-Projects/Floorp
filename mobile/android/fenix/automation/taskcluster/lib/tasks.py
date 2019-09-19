@@ -228,27 +228,6 @@ class TaskBuilder(object):
             treeherder=treeherder,
         )
 
-    def craft_upload_apk_nimbledroid_task(self, assemble_task_label):
-        # For GeckoView, upload nightly (it has release config) by default, all Release builds have WV
-        return self._craft_build_ish_task(
-            name="Upload Release APK to Nimbledroid",
-            description='Upload APKs to Nimbledroid for performance measurement and tracking.',
-            command=' && '.join([
-                'curl --location "{}/<build>/artifacts/public/build/armeabi-v7a/geckoNightly/target.apk" > target.apk'.format(_DEFAULT_TASK_URL),
-                'python automation/taskcluster/upload_apk_nimbledroid.py',
-            ]),
-            treeherder={
-                'jobKind': 'test',
-                'machine': {
-                  'platform': 'android-all',
-                },
-                'symbol': 'compare-locale',
-                'tier': 2,
-            },
-            scopes=["secrets:get:project/mobile/fenix/nimbledroid"],
-            dependencies={'build': assemble_task_label},
-        )
-
     def craft_detekt_task(self):
         return self._craft_clean_gradle_task(
             name='detekt',

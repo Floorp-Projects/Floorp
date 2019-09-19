@@ -12,6 +12,7 @@ import requests
 import json
 import urllib2
 import os
+import sys
 
 url = "https://nimbledroid.com/api/v2/apks"
 
@@ -32,15 +33,18 @@ def uploadApk(apk,key):
 	print json.dumps(response.json(), indent=4)
 
 
-def uploadNightlyFenixApk(key):
-	apk_url = 'https://index.taskcluster.net/v1/task/project.mobile.fenix.v2.nightly.latest/artifacts/public/build/armeabi-v7a/geckoNightly/target.apk'
+def uploadNightlyFenixApk(apk_url, key):
 	apk_data = urllib2.urlopen(apk_url).read()
 	with open('./fenix_example_nd.apk', 'wb') as f:
-    		f.write(apk_data)
+		f.write(apk_data)
 	uploadApk({'apk' : open('fenix_example_nd.apk')},key)
 
+
 # Get JSON data from taskcluster secrets service
-secrets = taskcluster.Secrets({'baseUrl': 'http://taskcluster/secrets/v1'})
+secrets = taskcluster.Secrets({
+	'rootUrl': os.environ.get('TASKCLUSTER_PROXY_URL', 'https://taskcluster.net'),
+})
 data = secrets.get('project/mobile/fenix/nimbledroid')
 # upload the nightly build to Nimbledroid
-uploadNightlyFenixApk(data['secret']['api_key'])
+apk_url = sys.argv[1]
+uploadNightlyFenixApk(apk_url, data['secret']['api_key'])

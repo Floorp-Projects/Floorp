@@ -26,7 +26,7 @@ workers:
             provisioner: aws-provisioner-v1
             implementation: docker-worker
             os: linux
-            worker-type: 'mobile-{level}-b-ref-browser'
+            worker-type: 'mobile-{level}-b-fenix'
         images:
             provisioner: aws-provisioner-v1
             implementation: docker-worker
