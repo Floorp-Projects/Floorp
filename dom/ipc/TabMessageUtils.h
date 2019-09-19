@@ -55,11 +55,6 @@ struct ParamTraits<mozilla::dom::RemoteDOMEvent> {
 };
 
 template <>
-struct ParamTraits<nsEventStatus>
-    : public ContiguousEnumSerializer<nsEventStatus, nsEventStatus_eIgnore,
-                                      nsEventStatus_eSentinel> {};
-
-template <>
 struct ParamTraits<nsSizeMode>
     : public ContiguousEnumSerializer<nsSizeMode, nsSizeMode_Normal,
                                       nsSizeMode_Invalid> {};

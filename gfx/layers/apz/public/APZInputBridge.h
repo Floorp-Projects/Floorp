@@ -21,6 +21,49 @@ class APZInputBridgeParent;
 struct ScrollableLayerGuid;
 
 /**
+ * Represents the outcome of APZ receiving and processing an input event.
+ * This is returned from APZInputBridge::ReceiveInputEvent() and related APIs.
+ */
+struct APZEventResult {
+  /**
+   * Creates a default result with a status of eIgnore, no block ID, and empty
+   * target guid.
+   */
+  APZEventResult();
+
+  /**
+   * A status flag indicated how APZ handled the event.
+   * The interpretation of each value is as follows:
+   *
+   * nsEventStatus_eConsumeNoDefault is returned to indicate the
+   *   APZ is consuming this event and the caller should discard the event with
+   *   extreme prejudice. The exact scenarios under which this is returned is
+   *   implementation-dependent and may vary.
+   * nsEventStatus_eIgnore is returned to indicate that the APZ code didn't
+   *   use this event. This might be because it was directed at a point on
+   *   the screen where there was no APZ, or because the thing the user was
+   *   trying to do was not allowed. (For example, attempting to pan a
+   *   non-pannable document).
+   * nsEventStatus_eConsumeDoDefault is returned to indicate that the APZ
+   *   code may have used this event to do some user-visible thing. Note that
+   *   in some cases CONSUMED is returned even if the event was NOT used. This
+   *   is because we cannot always know at the time of event delivery whether
+   *   the event will be used or not. So we err on the side of sending
+   *   CONSUMED when we are uncertain.
+   */
+  nsEventStatus mStatus;
+  /**
+   * The guid of the APZC this event was delivered to.
+   */
+  ScrollableLayerGuid mTargetGuid;
+  /**
+   * If this event started or was added to an input block, the id of that
+   * input block, otherwise InputBlockState::NO_BLOCK_ID.
+   */
+  uint64_t mInputBlockId;
+};
+
+/**
  * This class lives in the main process, and is accessed via the controller
  * thread (which is the process main thread for desktop, and the Java UI
  * thread for Android). This class exposes a synchronous API to deliver
@@ -42,32 +85,11 @@ class APZInputBridge {
    * handle them. The event may need to be converted to a WidgetInputEvent
    * by the caller if it wants to do this.
    *
-   * The following values may be returned by this function:
-   * nsEventStatus_eConsumeNoDefault is returned to indicate the
-   *   APZ is consuming this event and the caller should discard the event with
-   *   extreme prejudice. The exact scenarios under which this is returned is
-   *   implementation-dependent and may vary.
-   * nsEventStatus_eIgnore is returned to indicate that the APZ code didn't
-   *   use this event. This might be because it was directed at a point on
-   *   the screen where there was no APZ, or because the thing the user was
-   *   trying to do was not allowed. (For example, attempting to pan a
-   *   non-pannable document).
-   * nsEventStatus_eConsumeDoDefault is returned to indicate that the APZ
-   *   code may have used this event to do some user-visible thing. Note that
-   *   in some cases CONSUMED is returned even if the event was NOT used. This
-   *   is because we cannot always know at the time of event delivery whether
-   *   the event will be used or not. So we err on the side of sending
-   *   CONSUMED when we are uncertain.
-   *
    * @param aEvent input event object; is modified in-place
-   * @param aOutTargetGuid returns the guid of the apzc this event was
-   * delivered to. May be null.
-   * @param aOutInputBlockId returns the id of the input block that this event
-   * was added to, if that was the case. May be null.
+   * @return The result of processing the event. Refer to the documentation of
+   * APZEventResult and its field.
    */
-  virtual nsEventStatus ReceiveInputEvent(InputData& aEvent,
-                                          ScrollableLayerGuid* aOutTargetGuid,
-                                          uint64_t* aOutInputBlockId) = 0;
+  virtual APZEventResult ReceiveInputEvent(InputData& aEvent) = 0;
 
   /**
    * WidgetInputEvent handler. Transforms |aEvent| (which is assumed to be an
@@ -85,9 +107,7 @@ class APZInputBridge {
    *
    * See documentation for other ReceiveInputEvent above.
    */
-  nsEventStatus ReceiveInputEvent(WidgetInputEvent& aEvent,
-                                  ScrollableLayerGuid* aOutTargetGuid,
-                                  uint64_t* aOutInputBlockId);
+  APZEventResult ReceiveInputEvent(WidgetInputEvent& aEvent);
 
   // Returns the kind of wheel event action, if any, that will be (or was)
   // performed by APZ. If this returns true, the event must not perform a

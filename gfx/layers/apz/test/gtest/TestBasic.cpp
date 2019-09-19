@@ -339,12 +339,10 @@ TEST_F(APZCBasicTester, OverScroll_Bug1152051b) {
   // to schedule a new one since we're still overscrolled. We don't pan because
   // panning can trigger functions that clear the overscroll animation state
   // in other ways.
-  uint64_t blockId;
-  nsEventStatus status =
-      TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time(), &blockId);
+  APZEventResult result = TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time());
   if (StaticPrefs::layout_css_touch_action_enabled() &&
-      status != nsEventStatus_eConsumeNoDefault) {
-    SetDefaultAllowedTouchBehavior(apzc, blockId);
+      result.mStatus != nsEventStatus_eConsumeNoDefault) {
+    SetDefaultAllowedTouchBehavior(apzc, result.mInputBlockId);
   }
   TouchUp(apzc, ScreenIntPoint(10, 10), mcc->Time());
 

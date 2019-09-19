@@ -21,39 +21,32 @@ class APZInputBridgeParent : public PAPZInputBridgeParent {
   explicit APZInputBridgeParent(const LayersId& aLayersId);
 
   mozilla::ipc::IPCResult RecvReceiveMultiTouchInputEvent(
-      const MultiTouchInput& aEvent, nsEventStatus* aOutStatus,
-      MultiTouchInput* aOutEvent, ScrollableLayerGuid* aOutTargetGuid,
-      uint64_t* aOutInputBlockId);
+      const MultiTouchInput& aEvent, APZEventResult* aOutResult,
+      MultiTouchInput* aOutEvent);
 
-  mozilla::ipc::IPCResult RecvReceiveMouseInputEvent(
-      const MouseInput& aEvent, nsEventStatus* aOutStatus,
-      MouseInput* aOutEvent, ScrollableLayerGuid* aOutTargetGuid,
-      uint64_t* aOutInputBlockId);
+  mozilla::ipc::IPCResult RecvReceiveMouseInputEvent(const MouseInput& aEvent,
+                                                     APZEventResult* aOutResult,
+                                                     MouseInput* aOutEvent);
 
   mozilla::ipc::IPCResult RecvReceivePanGestureInputEvent(
-      const PanGestureInput& aEvent, nsEventStatus* aOutStatus,
-      PanGestureInput* aOutEvent, ScrollableLayerGuid* aOutTargetGuid,
-      uint64_t* aOutInputBlockId);
+      const PanGestureInput& aEvent, APZEventResult* aOutResult,
+      PanGestureInput* aOutEvent);
 
   mozilla::ipc::IPCResult RecvReceivePinchGestureInputEvent(
-      const PinchGestureInput& aEvent, nsEventStatus* aOutStatus,
-      PinchGestureInput* aOutEvent, ScrollableLayerGuid* aOutTargetGuid,
-      uint64_t* aOutInputBlockId);
+      const PinchGestureInput& aEvent, APZEventResult* aOutResult,
+      PinchGestureInput* aOutEvent);
 
   mozilla::ipc::IPCResult RecvReceiveTapGestureInputEvent(
-      const TapGestureInput& aEvent, nsEventStatus* aOutStatus,
-      TapGestureInput* aOutEvent, ScrollableLayerGuid* aOutTargetGuid,
-      uint64_t* aOutInputBlockId);
+      const TapGestureInput& aEvent, APZEventResult* aOutResult,
+      TapGestureInput* aOutEvent);
 
   mozilla::ipc::IPCResult RecvReceiveScrollWheelInputEvent(
-      const ScrollWheelInput& aEvent, nsEventStatus* aOutStatus,
-      ScrollWheelInput* aOutEvent, ScrollableLayerGuid* aOutTargetGuid,
-      uint64_t* aOutInputBlockId);
+      const ScrollWheelInput& aEvent, APZEventResult* aOutResult,
+      ScrollWheelInput* aOutEvent);
 
   mozilla::ipc::IPCResult RecvReceiveKeyboardInputEvent(
-      const KeyboardInput& aEvent, nsEventStatus* aOutStatus,
-      KeyboardInput* aOutEvent, ScrollableLayerGuid* aOutTargetGuid,
-      uint64_t* aOutInputBlockId);
+      const KeyboardInput& aEvent, APZEventResult* aOutResult,
+      KeyboardInput* aOutEvent);
 
   mozilla::ipc::IPCResult RecvUpdateWheelTransaction(
       const LayoutDeviceIntPoint& aRefPoint, const EventMessage& aEventMessage);
