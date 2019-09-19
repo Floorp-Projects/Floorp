@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nspr.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Components.h"
@@ -52,6 +53,7 @@ using mozilla::eLoad;
 using mozilla::EventDispatcher;
 using mozilla::LogLevel;
 using mozilla::WidgetEvent;
+using mozilla::dom::BrowserChild;
 using mozilla::dom::Document;
 
 //
@@ -243,6 +245,7 @@ nsDocLoader::Stop(void) {
   // after this, since mDocumentRequest will be null after the
   // DocLoaderIsEmpty() call.
   mChildrenInOnload.Clear();
+  mOOPChildrenLoading.Clear();
 
   // Make sure to call DocLoaderIsEmpty now so that we reset mDocumentRequest,
   // etc, as needed.  We could be getting into here from a subframe onload, in
@@ -277,7 +280,8 @@ bool nsDocLoader::IsBusy() {
   //   3. It's currently flushing layout in DocLoaderIsEmpty().
   //
 
-  if (mChildrenInOnload.Count() || mIsFlushingLayout) {
+  if (!mChildrenInOnload.IsEmpty() || !mOOPChildrenLoading.IsEmpty() ||
+      mIsFlushingLayout) {
     return true;
   }
 
@@ -286,6 +290,7 @@ bool nsDocLoader::IsBusy() {
     return false;
   }
 
+  // Check if any in-process sub-document is awaiting its 'load' event:
   bool busy;
   rv = mLoadGroup->IsPending(&busy);
   if (NS_FAILED(rv)) {
@@ -725,9 +730,7 @@ void nsDocLoader::DocLoaderIsEmpty(bool aFlushLayout) {
         //
         doStopDocumentLoad(docRequest, loadGroupStatus);
 
-        if (parent) {
-          parent->ChildDoneWithOnload(this);
-        }
+        NotifyDoneWithOnload(parent);
       }
     } else {
       MOZ_ASSERT(mDocumentOpenedButNotLoaded);
@@ -790,11 +793,21 @@ void nsDocLoader::DocLoaderIsEmpty(bool aFlushLayout) {
             }
           }
         }
-        if (parent) {
-          parent->ChildDoneWithOnload(this);
-        }
+        NotifyDoneWithOnload(parent);
       }
     }
+  }
+}
+
+void nsDocLoader::NotifyDoneWithOnload(nsDocLoader* aParent) {
+  if (aParent) {
+    // In-process parent:
+    aParent->ChildDoneWithOnload(this);
+  } else if (BrowserChild* browserChild =
+                 BrowserChild::GetFrom(static_cast<nsDocShell*>(this))) {
+    // OOP parent:
+    mozilla::Unused << browserChild->SendMaybeFireEmbedderLoadEvents(
+        /*aIsTrusted*/ true, /*aFireLoadAtEmbeddingElement*/ false);
   }
 }
 
