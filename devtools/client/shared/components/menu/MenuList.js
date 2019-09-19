@@ -133,6 +133,7 @@ class MenuList extends PureComponent {
       onMouseOut: this.onMouseOutOrBlur,
       onFocus: this.onMouseOverOrFocus,
       onBlur: this.onMouseOutOrBlur,
+      className: "menu-standard-padding",
     };
 
     if (this.props.id) {
@@ -147,7 +148,7 @@ class MenuList extends PureComponent {
       }
     });
     if (hasCheckbox) {
-      attr.className = "checkbox-container";
+      attr.className = "checkbox-container menu-standard-padding";
     }
 
     return div(attr, this.props.children);
