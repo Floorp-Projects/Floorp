@@ -46,7 +46,7 @@ typedef unsigned char Latin1Char;
 
 class Symbol;
 class BigInt;
-class Value;
+union Value;
 
 class Compartment;
 class Realm;
