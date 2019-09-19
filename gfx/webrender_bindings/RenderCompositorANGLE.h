@@ -17,9 +17,6 @@
 struct ID3D11DeviceContext;
 struct ID3D11Device;
 struct ID3D11Query;
-struct IDCompositionDevice;
-struct IDCompositionTarget;
-struct IDCompositionVisual;
 struct IDXGIFactory2;
 struct IDXGISwapChain;
 
@@ -29,6 +26,8 @@ class GLLibraryEGL;
 }  // namespace gl
 
 namespace wr {
+
+class DCLayerTree;
 
 class RenderCompositorANGLE : public RenderCompositor {
  public:
@@ -51,7 +50,7 @@ class RenderCompositorANGLE : public RenderCompositor {
 
   bool UseANGLE() const override { return true; }
 
-  bool UseDComp() const override { return !!mCompositionDevice; }
+  bool UseDComp() const override { return !!mDCLayerTree; }
 
   bool UseTripleBuffering() const override { return mUseTripleBuffering; }
 
@@ -79,9 +78,7 @@ class RenderCompositorANGLE : public RenderCompositor {
   RefPtr<ID3D11DeviceContext> mCtx;
   RefPtr<IDXGISwapChain> mSwapChain;
 
-  RefPtr<IDCompositionDevice> mCompositionDevice;
-  RefPtr<IDCompositionTarget> mCompositionTarget;
-  RefPtr<IDCompositionVisual> mVisual;
+  UniquePtr<DCLayerTree> mDCLayerTree;
 
   std::queue<RefPtr<ID3D11Query>> mWaitForPresentQueries;
   RefPtr<ID3D11Query> mRecycledQuery;
