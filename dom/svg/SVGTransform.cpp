@@ -98,7 +98,8 @@ void SVGTransform::SetRotate(float aAngle, float aCx, float aCy) {
 
 nsresult SVGTransform::SetSkewX(float aAngle) {
   double ta = tan(aAngle * kRadPerDegree);
-  NS_ENSURE_FINITE(ta, NS_ERROR_RANGE_ERR);
+  // No one actually cares about the exact error return type here.
+  NS_ENSURE_FINITE(ta, NS_ERROR_INVALID_ARG);
 
   mType = SVG_TRANSFORM_SKEWX;
   mMatrix = gfxMatrix();
@@ -111,7 +112,8 @@ nsresult SVGTransform::SetSkewX(float aAngle) {
 
 nsresult SVGTransform::SetSkewY(float aAngle) {
   double ta = tan(aAngle * kRadPerDegree);
-  NS_ENSURE_FINITE(ta, NS_ERROR_RANGE_ERR);
+  // No one actually cares about the exact error return type here.
+  NS_ENSURE_FINITE(ta, NS_ERROR_INVALID_ARG);
 
   mType = SVG_TRANSFORM_SKEWY;
   mMatrix = gfxMatrix();
