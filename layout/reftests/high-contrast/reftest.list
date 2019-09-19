@@ -1,0 +1,15 @@
+# This pref enables high-contrast mode in the testcases here:
+default-preferences test-pref(browser.display.document_color_use,2) test-pref(browser.display.permit_backplate,true)
+
+# The 'fuzzy-if' markings below are due to how the Ahem font gets
+# anti-aliased on Mac machines. There is some evidence here that
+# Ahem anti-aliasing is known to interact strangely with borders
+# [https://ln.hixie.ch/?start=1206756775&count=1], and backplate
+# behaves similarly because it also "tightly wraps" the Ahem characters.
+
+fuzzy-if(cocoaWidget,255-255,48-48) == backplate-bg-image-001.html backplate-bg-image-001-ref.html # bug 1577028
+fuzzy-if(cocoaWidget,255-255,24-24) == backplate-bg-image-002.html backplate-bg-image-002-ref.html
+fuzzy-if(cocoaWidget,255-255,34-34) == backplate-bg-image-003.html backplate-bg-image-003-ref.html
+== backplate-bg-image-004.html backplate-bg-image-004-ref.html
+fuzzy-if(cocoaWidget,255-255,96-96) == backplate-bg-image-005.html backplate-bg-image-005-ref.html
+fails  == backplate-bg-image-006.html backplate-bg-image-006-ref.html # bug 1578917
