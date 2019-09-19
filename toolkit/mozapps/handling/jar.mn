@@ -5,5 +5,5 @@
 toolkit.jar:
 % content mozapps %content/mozapps/
   content/mozapps/handling/handler.css                          (content/handler.css)
-  content/mozapps/handling/dialog.xul                           (content/dialog.xul)
+* content/mozapps/handling/dialog.xul                           (content/dialog.xul)
   content/mozapps/handling/dialog.js                            (content/dialog.js)
