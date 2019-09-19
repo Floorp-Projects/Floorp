@@ -867,11 +867,9 @@ static MOZ_MUST_USE bool RunFile(JSContext* cx, const char* filename,
         .setNoScriptRval(true);
 
     if (compileMethod == CompileUtf8::DontInflate) {
-      fprintf(stderr, "(compiling '%s' as UTF-8 without inflating)\n",
-              filename);
-
       script = JS::CompileUtf8FileDontInflate(cx, options, file);
     } else {
+      fprintf(stderr, "(compiling '%s' after inflating to UTF-16)\n", filename);
       script = JS::CompileUtf8File(cx, options, file);
     }
 
@@ -1406,8 +1404,8 @@ static MOZ_MUST_USE bool ReadEvalPrintLoop(JSContext* cx, FILE* in,
 }
 
 enum FileKind {
-  FileScript,
-  FileScriptUtf8,  // FileScript, but don't inflate to UTF-16 before parsing
+  FileScript,       // UTF-8, directly parsed as such
+  FileScriptUtf16,  // FileScript, but inflate to UTF-16 before parsing
   FileModule,
   FileBinAST
 };
@@ -1446,13 +1444,13 @@ static MOZ_MUST_USE bool Process(JSContext* cx, const char* filename,
     // It's not interactive - just execute it.
     switch (kind) {
       case FileScript:
-        if (!RunFile(cx, filename, file, CompileUtf8::InflateToUtf16,
+        if (!RunFile(cx, filename, file, CompileUtf8::DontInflate,
                      compileOnly)) {
           return false;
         }
         break;
-      case FileScriptUtf8:
-        if (!RunFile(cx, filename, file, CompileUtf8::DontInflate,
+      case FileScriptUtf16:
+        if (!RunFile(cx, filename, file, CompileUtf8::InflateToUtf16,
                      compileOnly)) {
           return false;
         }
@@ -10100,7 +10098,7 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
   }
 
   MultiStringRange filePaths = op->getMultiStringOption('f');
-  MultiStringRange utf8FilePaths = op->getMultiStringOption('u');
+  MultiStringRange utf16FilePaths = op->getMultiStringOption('u');
   MultiStringRange codeChunks = op->getMultiStringOption('e');
   MultiStringRange modulePaths = op->getMultiStringOption('m');
   MultiStringRange binASTPaths(nullptr, nullptr);
@@ -10108,7 +10106,7 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
   binASTPaths = op->getMultiStringOption('B');
 #endif  // JS_BUILD_BINAST
 
-  if (filePaths.empty() && utf8FilePaths.empty() && codeChunks.empty() &&
+  if (filePaths.empty() && utf16FilePaths.empty() && codeChunks.empty() &&
       modulePaths.empty() && binASTPaths.empty() &&
       !op->getStringArg("script")) {
     return Process(cx, nullptr, true, FileScript); /* Interactive. */
@@ -10138,10 +10136,11 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
     return false;
   }
 
-  while (!filePaths.empty() || !utf8FilePaths.empty() || !codeChunks.empty() ||
+  while (!filePaths.empty() || !utf16FilePaths.empty() || !codeChunks.empty() ||
          !modulePaths.empty() || !binASTPaths.empty()) {
     size_t fpArgno = filePaths.empty() ? SIZE_MAX : filePaths.argno();
-    size_t ufpArgno = utf8FilePaths.empty() ? SIZE_MAX : utf8FilePaths.argno();
+    size_t ufpArgno =
+        utf16FilePaths.empty() ? SIZE_MAX : utf16FilePaths.argno();
     size_t ccArgno = codeChunks.empty() ? SIZE_MAX : codeChunks.argno();
     size_t mpArgno = modulePaths.empty() ? SIZE_MAX : modulePaths.argno();
     size_t baArgno = binASTPaths.empty() ? SIZE_MAX : binASTPaths.argno();
@@ -10159,12 +10158,12 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
 
     if (ufpArgno < fpArgno && ufpArgno < ccArgno && ufpArgno < mpArgno &&
         ufpArgno < baArgno) {
-      char* path = utf8FilePaths.front();
-      if (!Process(cx, path, false, FileScriptUtf8)) {
+      char* path = utf16FilePaths.front();
+      if (!Process(cx, path, false, FileScriptUtf16)) {
         return false;
       }
 
-      utf8FilePaths.popFront();
+      utf16FilePaths.popFront();
       continue;
     }
 
@@ -10963,11 +10962,13 @@ int main(int argc, char** argv, char** envp) {
   op.setHelpWidth(80);
   op.setVersion(JS_GetImplementationVersion());
 
-  if (!op.addMultiStringOption('f', "file", "PATH", "File path to run") ||
+  if (!op.addMultiStringOption(
+          'f', "file", "PATH",
+          "File path to run, parsing file contents as UTF-8") ||
       !op.addMultiStringOption(
-          'u', "utf8-file", "PATH",
-          "File path to run, directly parsing file contents as UTF-8 "
-          "without first inflating to UTF-16") ||
+          'u', "utf16-file", "PATH",
+          "File path to run, inflating the file's UTF-8 contents to UTF-16 and "
+          "then parsing that") ||
       !op.addMultiStringOption('m', "module", "PATH", "Module path to run") ||
 #if defined(JS_BUILD_BINAST)
       !op.addMultiStringOption('B', "binast", "PATH", "BinAST path to run") ||
