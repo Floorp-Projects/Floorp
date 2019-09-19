@@ -193,6 +193,8 @@ bool nsRetrievalContextX11::WaitForX11Content() {
 void nsRetrievalContextX11::Complete(ClipboardDataType aDataType,
                                      const void* aData,
                                      int aDataRequestNumber) {
+  LOGCLIP(("nsRetrievalContextX11::Complete\n"));
+
   if (mClipboardRequestNumber != aDataRequestNumber) {
     NS_WARNING(
         "nsRetrievalContextX11::Complete() got obsoleted clipboard data.");
@@ -251,6 +253,11 @@ void nsRetrievalContextX11::Complete(ClipboardDataType aDataType,
 static void clipboard_contents_received(GtkClipboard* clipboard,
                                         GtkSelectionData* selection_data,
                                         gpointer data) {
+  int whichClipboard = GetGeckoClipboardType(clipboard);
+  LOGCLIP(("clipboard_contents_received (%s) callback\n",
+           whichClipboard == nsClipboard::kSelectionClipboard ? "primary"
+                                                              : "clipboard"));
+
   ClipboardRequestHandler* handler =
       static_cast<ClipboardRequestHandler*>(data);
   handler->Complete(selection_data);
@@ -259,6 +266,11 @@ static void clipboard_contents_received(GtkClipboard* clipboard,
 
 static void clipboard_text_received(GtkClipboard* clipboard, const gchar* text,
                                     gpointer data) {
+  int whichClipboard = GetGeckoClipboardType(clipboard);
+  LOGCLIP(("clipboard_text_received (%s) callback\n",
+           whichClipboard == nsClipboard::kSelectionClipboard ? "primary"
+                                                              : "clipboard"));
+
   ClipboardRequestHandler* handler =
       static_cast<ClipboardRequestHandler*>(data);
   handler->Complete(text);
@@ -268,6 +280,8 @@ static void clipboard_text_received(GtkClipboard* clipboard, const gchar* text,
 bool nsRetrievalContextX11::WaitForClipboardData(ClipboardDataType aDataType,
                                                  GtkClipboard* clipboard,
                                                  const char* aMimeType) {
+  LOGCLIP(("nsRetrievalContextX11::WaitForClipboardData\n"));
+
   mState = INITIAL;
   NS_ASSERTION(!mClipboardData, "Leaking clipboard content!");
 
@@ -299,10 +313,17 @@ bool nsRetrievalContextX11::WaitForClipboardData(ClipboardDataType aDataType,
 
 GdkAtom* nsRetrievalContextX11::GetTargets(int32_t aWhichClipboard,
                                            int* aTargetNums) {
+  LOGCLIP(("nsRetrievalContextX11::GetTargets(%s)\n",
+           aWhichClipboard == nsClipboard::kSelectionClipboard ? "primary"
+                                                               : "clipboard"));
+
   GtkClipboard* clipboard =
       gtk_clipboard_get(GetSelectionAtom(aWhichClipboard));
 
-  if (!WaitForClipboardData(CLIPBOARD_TARGETS, clipboard)) return nullptr;
+  if (!WaitForClipboardData(CLIPBOARD_TARGETS, clipboard)) {
+    LOGCLIP(("    WaitForClipboardData() failed!\n"));
+    return nullptr;
+  }
 
   *aTargetNums = mClipboardDataLength;
   GdkAtom* targets = static_cast<GdkAtom*>(mClipboardData);
@@ -311,12 +332,17 @@ GdkAtom* nsRetrievalContextX11::GetTargets(int32_t aWhichClipboard,
   mClipboardData = nullptr;
   mClipboardDataLength = 0;
 
+  LOGCLIP(("    returned %d targets\n", *aTargetNums));
   return targets;
 }
 
 const char* nsRetrievalContextX11::GetClipboardData(const char* aMimeType,
                                                     int32_t aWhichClipboard,
                                                     uint32_t* aContentLength) {
+  LOGCLIP(("nsRetrievalContextX11::GetClipboardData(%s)\n",
+           aWhichClipboard == nsClipboard::kSelectionClipboard ? "primary"
+                                                               : "clipboard"));
+
   GtkClipboard* clipboard;
   clipboard = gtk_clipboard_get(GetSelectionAtom(aWhichClipboard));
 
@@ -328,6 +354,10 @@ const char* nsRetrievalContextX11::GetClipboardData(const char* aMimeType,
 }
 
 const char* nsRetrievalContextX11::GetClipboardText(int32_t aWhichClipboard) {
+  LOGCLIP(("nsRetrievalContextX11::GetClipboardText(%s)\n",
+           aWhichClipboard == nsClipboard::kSelectionClipboard ? "primary"
+                                                               : "clipboard"));
+
   GtkClipboard* clipboard;
   clipboard = gtk_clipboard_get(GetSelectionAtom(aWhichClipboard));
 
@@ -337,6 +367,7 @@ const char* nsRetrievalContextX11::GetClipboardText(int32_t aWhichClipboard) {
 }
 
 void nsRetrievalContextX11::ReleaseClipboardData(const char* aClipboardData) {
+  LOGCLIP(("nsRetrievalContextX11::ReleaseClipboardData\n"));
   NS_ASSERTION(aClipboardData == mClipboardData,
                "Releasing unknown clipboard data!");
   free((void*)aClipboardData);
