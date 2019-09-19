@@ -401,8 +401,8 @@ class ScriptPreloader : public nsIObserver,
   void FinishContentStartup();
 
   // Returns true if scripts added to the cache now will be encoded and
-  // written to the cache. If we've passed the startup script loading
-  // window, or this is a content process which hasn't been asked to return
+  // written to the cache. If we've already encoded scripts for the cache
+  // write, or this is a content process which hasn't been asked to return
   // script bytecode, this will return false.
   bool WillWriteScripts();
 
