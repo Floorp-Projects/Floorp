@@ -8,7 +8,7 @@ from setuptools import setup
 
 
 PACKAGE_NAME = 'mozleak'
-PACKAGE_VERSION = '0.2'
+PACKAGE_VERSION = '1.0.0'
 
 
 setup(
