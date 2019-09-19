@@ -27,7 +27,8 @@
 // (In some cases, there are internal (private) methods that don't do this;
 // such methods should only be used by other methods that have already checked
 // the writing modes.)
-// The check ignores the StyleWritingMode_SIDEWAYS bit of writing mode, because
+// The check ignores the StyleWritingMode_VERTICAL_SIDEWAYS and
+// StyleWritingMode_TEXT_SIDEWAYS bit of writing mode, because
 // this does not affect the interpretation of logical coordinates.
 
 #define CHECK_WRITING_MODE(param)                                           \
@@ -248,21 +249,45 @@ class WritingMode {
   }
 
   /**
-   * True if the text-orientation will force all text to be rendered sideways
-   * in vertical lines, in which case we should prefer an alphabetic baseline;
-   * otherwise, the default is centered.
+   * True if vertical sideways writing mode, i.e. when
+   * writing-mode: sideways-lr | sideways-rl.
+   */
+  bool IsVerticalSideways() const {
+    return !!(mWritingMode & StyleWritingMode_VERTICAL_SIDEWAYS);
+  }
+
+  /**
+   * True if this is writing-mode: sideways-rl (convenience method).
+   */
+  bool IsSidewaysRL() const { return IsVerticalRL() && IsVerticalSideways(); }
+
+  /**
+   * True if this is writing-mode: sideways-lr (convenience method).
+   */
+  bool IsSidewaysLR() const { return IsVerticalLR() && IsVerticalSideways(); }
+
+  /**
+   * True if either text-orientation or writing-mode will force all text to be
+   * rendered sideways in vertical lines, in which case we should prefer an
+   * alphabetic baseline; otherwise, the default is centered.
+   *
    * Note that some glyph runs may be rendered sideways even if this is false,
    * due to text-orientation:mixed resolution, but in that case the dominant
    * baseline remains centered.
    */
   bool IsSideways() const {
-    return !!(mWritingMode & StyleWritingMode_SIDEWAYS);
+    return !!(mWritingMode & (StyleWritingMode_VERTICAL_SIDEWAYS |
+                              StyleWritingMode_TEXT_SIDEWAYS));
   }
 
-#ifdef DEBUG  // Used by CHECK_WRITING_MODE to compare modes without regard
-              // for the StyleWritingMode_SIDEWAYS flag.
+#ifdef DEBUG
+  // Used by CHECK_WRITING_MODE to compare modes without regard for the
+  // StyleWritingMode_VERTICAL_SIDEWAYS or StyleWritingMode_TEXT_SIDEWAYS flags.
   WritingMode IgnoreSideways() const {
-    return WritingMode(mWritingMode.bits & ~StyleWritingMode_SIDEWAYS.bits);
+    return WritingMode(
+        mWritingMode.bits &
+        ~(StyleWritingMode_VERTICAL_SIDEWAYS | StyleWritingMode_TEXT_SIDEWAYS)
+             .bits);
   }
 #endif
 
