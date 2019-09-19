@@ -31,14 +31,17 @@ nsresult CheckInternal(nsIContentSecurityPolicy* aCSP,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aAllowed);
 
-#if !defined(ANDROID) && (defined(NIGHTLY_BUILD) || defined(DEBUG))
-  JSContext* cx = nsContentUtils::GetCurrentJSContext();
-  nsContentSecurityUtils::AssertEvalNotRestricted(cx, aSubjectPrincipal,
-                                                  aExpression);
-#endif
-
   // The value is set at any "return", but better to have a default value here.
   *aAllowed = false;
+
+#if !defined(ANDROID)
+  JSContext* cx = nsContentUtils::GetCurrentJSContext();
+  if (!nsContentSecurityUtils::IsEvalAllowed(cx, aSubjectPrincipal,
+                                             aExpression)) {
+    *aAllowed = false;
+    return NS_OK;
+  }
+#endif
 
   if (!aCSP) {
     *aAllowed = true;
