@@ -14,6 +14,13 @@
   --edit-delete-button-color: #4a4a4f;
 }
 
+/* Only overwrite the deemphasized text color in non-dark mode. */
+@media not all and (prefers-color-scheme: dark) {
+  :host {
+    --in-content-deemphasized-text: #737373;
+  }
+}
+
 form {
   flex-grow: 1;
 }
@@ -192,7 +199,10 @@ input[type="url"][readOnly]:hover:active {
 
 .meta-info {
   font-size: smaller;
+  font-weight: 300;
   color: var(--in-content-deemphasized-text);
+  margin-top: 0;
+  margin-bottom: 8px;
 }
 
 .meta-info:first-of-type::before {
