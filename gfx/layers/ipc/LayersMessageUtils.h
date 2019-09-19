@@ -532,13 +532,15 @@ struct ParamTraits<mozilla::layers::APZEventResult> {
     WriteParam(aMsg, aParam.mStatus);
     WriteParam(aMsg, aParam.mTargetGuid);
     WriteParam(aMsg, aParam.mInputBlockId);
+    WriteParam(aMsg, aParam.mHitRegionWithApzAwareListeners);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     return (ReadParam(aMsg, aIter, &aResult->mStatus) &&
             ReadParam(aMsg, aIter, &aResult->mTargetGuid) &&
-            ReadParam(aMsg, aIter, &aResult->mInputBlockId));
+            ReadParam(aMsg, aIter, &aResult->mInputBlockId) &&
+            ReadParam(aMsg, aIter, &aResult->mHitRegionWithApzAwareListeners));
   }
 };
 
