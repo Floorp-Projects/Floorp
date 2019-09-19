@@ -60,7 +60,7 @@ var popupTests = [
       gExpectedTriggerNode = gIsMenu ? "notset" : gTrigger;
       synthesizeMouse(gTrigger, 4, 4, {});
     },
-    result(testname) {
+    async result(testname) {
       gExpectedTriggerNode = null;
       // menus are the anchor but non-menus are opened at screen coordinates
       is(
@@ -89,6 +89,13 @@ var popupTests = [
           testname + " opener.document.popupNode"
         );
       }
+
+      // Popup may have wrong initial size in non e10s mode tests, because
+      // layout is not yet ready for popup content lazy population on
+      // popupshowing event.
+      await new Promise(r =>
+        requestAnimationFrame(() => requestAnimationFrame(r))
+      );
 
       // this will be used in some tests to ensure the size doesn't change
       var popuprect = gMenuPopup.getBoundingClientRect();

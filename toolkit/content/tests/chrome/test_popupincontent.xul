@@ -83,8 +83,15 @@ function nextTest()
   }
 }
 
-function popupShown()
+async function popupShown()
 {
+  // Popup may have wrong initial size in non e10s mode tests, because
+  // layout is not yet ready for popup content lazy population on
+  // popupshowing event.
+  await new Promise(r =>
+    requestAnimationFrame(() => requestAnimationFrame(r))
+  );
+
   var windowrect = document.documentElement.getBoundingClientRect();
   var popuprect = $("popup").getBoundingClientRect();
 
