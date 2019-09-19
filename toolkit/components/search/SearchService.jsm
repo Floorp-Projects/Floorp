@@ -1141,7 +1141,7 @@ SearchService.prototype = {
       } else {
         let engineList = this._enginesToLocales(engines);
         for (let [id, locales] of engineList) {
-          await this.ensureBuiltinExtension(id, locales);
+          await this.ensureBuiltinExtension(id, locales, isReload);
         }
       }
       SearchUtils.log(
@@ -1185,8 +1185,10 @@ SearchService.prototype = {
    *   An array of locales to use for the WebExtension. If more than
    *   one is specified, different versions of the same engine may
    *   be installed.
+   * @param {boolean} [isReload]
+   *   is being called from maybeReloadEngines.
    */
-  async ensureBuiltinExtension(id, locales = [DEFAULT_TAG]) {
+  async ensureBuiltinExtension(id, locales = [DEFAULT_TAG], isReload = false) {
     SearchUtils.log("ensureBuiltinExtension: " + id);
     try {
       let policy = WebExtensionPolicy.getByID(id);
@@ -1199,7 +1201,12 @@ SearchService.prototype = {
       // On startup the extension may have not finished parsing the
       // manifest, wait for that here.
       await policy.readyPromise;
-      await this._installExtensionEngine(policy.extension, locales);
+      await this._installExtensionEngine(
+        policy.extension,
+        locales,
+        false,
+        isReload
+      );
       SearchUtils.log("ensureBuiltinExtension: " + id + " installed.");
     } catch (err) {
       Cu.reportError(
@@ -1259,6 +1266,7 @@ SearchService.prototype = {
     // There's no point in already reloading the list of engines, when the service
     // hasn't even initialized yet.
     if (!gInitialized || gModernConfig) {
+      SearchUtils.log("Ignoring maybeReloadEngines() as inside init()");
       return;
     }
 
@@ -2093,7 +2101,7 @@ SearchService.prototype = {
 
   // nsISearchService
   async init(skipRegionCheck = false) {
-    SearchUtils.log("SearchService.init");
+    SearchUtils.log("SearchService.init: " + skipRegionCheck);
     if (this._initStarted) {
       if (!skipRegionCheck) {
         await this._ensureKnownRegionPromise;
@@ -2257,7 +2265,7 @@ SearchService.prototype = {
     return null;
   },
 
-  async addEngineWithDetails(name, details) {
+  async addEngineWithDetails(name, details, isReload = false) {
     SearchUtils.log('addEngineWithDetails: Adding "' + name + '".');
     let isCurrent = false;
     var params = details;
@@ -2276,7 +2284,7 @@ SearchService.prototype = {
       SearchUtils.fail("Invalid template passed to addEngineWithDetails!");
     }
     let existingEngine = this._engines.get(name);
-    if (existingEngine) {
+    if (!isReload && existingEngine) {
       if (
         params.extensionID &&
         existingEngine._loadPath.startsWith(
@@ -2304,6 +2312,9 @@ SearchService.prototype = {
     if (params.extensionID) {
       newEngine._loadPath += ":" + params.extensionID;
     }
+    if (isReload && this._engines.has(newEngine.name)) {
+      newEngine._engineToUpdate = this._engines.get(newEngine.name);
+    }
 
     this._addEngineToStore(newEngine);
     if (isCurrent) {
@@ -2327,7 +2338,7 @@ SearchService.prototype = {
     return this._installExtensionEngine(extension, [DEFAULT_TAG]);
   },
 
-  async _installExtensionEngine(extension, locales, initEngine) {
+  async _installExtensionEngine(extension, locales, initEngine, isReload) {
     SearchUtils.log("installExtensionEngine: " + extension.id);
 
     let installLocale = async locale => {
@@ -2339,7 +2350,8 @@ SearchService.prototype = {
         extension,
         manifest,
         locale,
-        initEngine
+        initEngine,
+        isReload
       );
     };
 
@@ -2360,12 +2372,13 @@ SearchService.prototype = {
     extension,
     manifest,
     locale = DEFAULT_TAG,
-    initEngine = false
+    initEngine = false,
+    isReload
   ) {
     let params = this.getEngineParams(extension, manifest, locale, {
       initEngine,
     });
-    return this.addEngineWithDetails(params.name, params);
+    return this.addEngineWithDetails(params.name, params, isReload);
   },
 
   getEngineParams(extension, manifest, locale, extraParams = {}) {
