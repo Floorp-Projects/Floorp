@@ -33,6 +33,7 @@ add_task(async function test() {
     await content.document.l10n.translateElements([
       title,
       message,
+      cancelButton,
       confirmDeleteButton,
     ]);
 
