@@ -27,7 +27,6 @@ class EventQueue final : public AbstractEventQueue {
                 const MutexAutoLock& aProofOfLock) final;
   already_AddRefed<nsIRunnable> GetEvent(
       EventQueuePriority* aPriority, const MutexAutoLock& aProofOfLock) final;
-  void DidRunEvent(const MutexAutoLock& aProofOfLock) {}
 
   bool IsEmpty(const MutexAutoLock& aProofOfLock) final;
   bool HasReadyEvent(const MutexAutoLock& aProofOfLock) final;
