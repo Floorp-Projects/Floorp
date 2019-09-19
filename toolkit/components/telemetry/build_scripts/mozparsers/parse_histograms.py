@@ -8,6 +8,7 @@ import json
 import math
 import os
 import re
+import runpy
 import sys
 import atexit
 import shared_telemetry_utils as utils
@@ -731,9 +732,26 @@ def from_nsDeprecatedOperationList(filename, strict_type_checks):
     return histograms
 
 
+def from_ServoCSSPropList(filename, strict_type_checks):
+    histograms = collections.OrderedDict()
+    properties = runpy.run_path(filename)["data"]
+    for prop in properties:
+        def add_counter(context):
+            name = 'USE_COUNTER2_CSS_PROPERTY_%s_%s' % (prop.method , context.upper())
+            histograms[name] = {
+                'expires_in_version': 'never',
+                'kind': 'boolean',
+                'description': 'Whether a %s used the CSS property %s' % (context, prop.name)
+            }
+        add_counter('document')
+        add_counter('page')
+    return histograms
+
+
 FILENAME_PARSERS = {
     'Histograms.json': from_Histograms_json,
     'nsDeprecatedOperationList.h': from_nsDeprecatedOperationList,
+    'ServoCSSPropList.py': from_ServoCSSPropList,
 }
 
 # Similarly to the dance above with buildconfig, usecounters may not be
