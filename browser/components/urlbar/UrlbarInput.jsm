@@ -1475,6 +1475,10 @@ class UrlbarInput {
     });
 
     contextMenu.addEventListener("popupshowing", () => {
+      // Close the results pane when the input field contextual menu is open,
+      // because paste and go doesn't want a result selection.
+      this.view.close();
+
       let controller = this.document.commandDispatcher.getControllerForCommand(
         "cmd_paste"
       );

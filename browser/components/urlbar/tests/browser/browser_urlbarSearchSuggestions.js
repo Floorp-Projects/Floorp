@@ -102,16 +102,9 @@ add_task(async function copySuggestionText() {
     EventUtils.synthesizeKey("KEY_ArrowDown");
   }
   gURLBar.select();
-  await new Promise((resolve, reject) =>
-    waitForClipboard(
-      suggestion,
-      function() {
-        goDoCommand("cmd_copy");
-      },
-      resolve,
-      reject
-    )
-  );
+  await SimpleTest.promiseClipboardChange(suggestion, () => {
+    goDoCommand("cmd_copy");
+  });
 });
 
 async function getFirstSuggestion() {

@@ -12,9 +12,6 @@
 
 let tabs = [];
 let supportsPrimary = Services.clipboard.supportsSelectionClipboard();
-let ClipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(
-  Ci.nsIClipboardHelper
-);
 const NON_EMPTY_URL = "data:text/html,Hello";
 const TEXT_FOR_PRIMARY = "Text for PRIMARY selection";
 
@@ -32,7 +29,7 @@ add_task(async function() {
   );
 
   if (supportsPrimary) {
-    ClipboardHelper.copyStringToClipboard(
+    clipboardHelper.copyStringToClipboard(
       TEXT_FOR_PRIMARY,
       Services.clipboard.kSelectionClipboard
     );

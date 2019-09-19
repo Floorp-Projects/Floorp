@@ -21,6 +21,13 @@ XPCOMUtils.defineLazyGetter(this, "TEST_BASE_URL", () =>
   )
 );
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "clipboardHelper",
+  "@mozilla.org/widget/clipboardhelper;1",
+  "nsIClipboardHelper"
+);
+
 SearchTestUtils.init(Assert, registerCleanupFunction);
 
 /**

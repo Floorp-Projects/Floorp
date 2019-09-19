@@ -55,10 +55,6 @@ if (supportsReturnWithoutNewline) {
   pairs.push(["java\rscript:foo", "foo"]);
 }
 
-var clipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(
-  Ci.nsIClipboardHelper
-);
-
 async function paste(input) {
   try {
     await SimpleTest.promiseClipboardChange(input, () => {
