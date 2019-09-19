@@ -168,7 +168,8 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
     // describing a single media codec. Otherwise, it MUST contain no
     // parameters.
     if (videoTracks.Length() != 1) {
-      promise->MaybeReject(NS_ERROR_DOM_TYPE_ERR);
+      promise->MaybeRejectWithTypeError<MSG_NO_CODECS_PARAMETER>(
+          NS_ConvertUTF8toUTF16(videoContainer->OriginalString()));
       return promise.forget();
     }
     MOZ_DIAGNOSTIC_ASSERT(videoTracks.ElementAt(0),
@@ -183,7 +184,8 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
     // describing a single media codec. Otherwise, it MUST contain no
     // parameters.
     if (audioTracks.Length() != 1) {
-      promise->MaybeReject(NS_ERROR_DOM_TYPE_ERR);
+      promise->MaybeRejectWithTypeError<MSG_NO_CODECS_PARAMETER>(
+          NS_ConvertUTF8toUTF16(audioContainer->OriginalString()));
       return promise.forget();
     }
     MOZ_DIAGNOSTIC_ASSERT(audioTracks.ElementAt(0),
