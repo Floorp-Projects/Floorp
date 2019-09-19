@@ -9,11 +9,8 @@
 
 #include "jsapi.h"
 
+#include "js/Value.h"
 #include "vm/NativeObject.h"
-
-namespace JS {
-union Value;
-}  // namespace JS
 
 namespace js {
 

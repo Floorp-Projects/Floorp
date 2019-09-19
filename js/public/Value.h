@@ -27,7 +27,7 @@
 #include "js/Utility.h"
 
 namespace JS {
-union Value;
+class Value;
 }
 
 /* JS::Value can store a full int32_t. */
@@ -340,7 +340,7 @@ static inline double CanonicalizeNaN(double d) {
  *   conditional move (not speculated) to zero the payload register if the type
  *   doesn't match.
  */
-union alignas(8) Value {
+class alignas(8) Value {
  private:
   uint64_t asBits_;
 

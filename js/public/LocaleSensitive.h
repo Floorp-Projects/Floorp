@@ -15,14 +15,11 @@
 
 #include "js/RootingAPI.h"  // JS::Handle, JS::MutableHandle
 #include "js/Utility.h"     // JS::UniqueChars
+#include "js/Value.h"       // JS::Value
 
 struct JSContext;
 struct JSRuntime;
 class JSString;
-
-namespace JS {
-union Value;
-}
 
 /**
  * Set the default locale for the ECMAScript Internationalization API
