@@ -6,7 +6,7 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - old-decision
+    - signing
 only-for-build-types:
     - raptor
 only-for-abis:
@@ -28,7 +28,6 @@ job-defaults:
                 armeabi-v7a: android-hw-g5-7-0-arm7-api-16/opt
     dependencies:
         geckoview-nightly: geckoview-nightly
-        signing: 'sign: forPerformanceTest'     # comes from the old-decision task
     worker:
         max-run-time: 3600
         env:

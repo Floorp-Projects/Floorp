@@ -2,7 +2,11 @@
 trust-domain: mobile
 treeherder:
     group-names:
+        'forPerformanceTest': 'Builds made for Raptor and other performance tests'
         'I': 'Docker Image Builds'
+        'nightly': 'Nightly-related tasks'
+        'nightlyLegacy': 'Nightly-related tasks that ship to https://play.google.com/store/apps/details?id=org.mozilla.fenix'
+        'production': 'Release-related tasks'
         'Rap': 'Raptor tests'
         'Rap-P': 'Raptor power tests'
 

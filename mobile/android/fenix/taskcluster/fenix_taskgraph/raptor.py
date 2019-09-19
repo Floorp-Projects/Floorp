@@ -30,10 +30,6 @@ def add_variants(config, tasks):
         if build_type not in only_types:
             continue
 
-        # TODO remove this if statement once signing tasks are fully created in taskgraph
-        if not dep_task.label.startswith('sign: '):
-            continue
-
         for abi, apk_path in dep_task.attributes["apks"].items():
             if abi not in only_abis:
                 continue
@@ -52,6 +48,7 @@ def add_variants(config, tasks):
 def build_raptor_task(config, tasks):
     for task in tasks:
         signing = task.pop("primary-dependency")
+        task["dependencies"]["signing"] = signing.label
         build_type = task["attributes"]["build-type"]
         abi = task["attributes"]["abi"]
         apk = task["attributes"]["apk"]

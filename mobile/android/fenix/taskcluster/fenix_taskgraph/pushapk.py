@@ -9,43 +9,72 @@ kind.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.treeherder import inherit_treeherder_from_dep
+from taskgraph.util.treeherder import inherit_treeherder_from_dep, join_symbol
 
 
 transforms = TransformSequence()
 
 
-# TODO remove this transform once signing task are migrated to taskgraph
+_CHANNEL_PER_TASK_NAME = {
+    'nightly': 'nightly',
+    'nightly-legacy': 'production',
+    'production': 'production',
+}
+
+_GOOGLE_PLAY_TRACK_PER_TASK_NAME = {
+    'nightly': 'internal',
+    'nightly-legacy': 'nightly',
+}
+
+
 @transforms.add
-def fetch_old_decision_dependency(config, tasks):
+def build_name_and_attributes(config, tasks):
     for task in tasks:
-        for dep_task in config.kind_dependencies_tasks:
-            expected_signing_dep_label = task['dependencies']['signing']
-            if dep_task.label != expected_signing_dep_label:
-                continue
+        dep = task["primary-dependency"]
+        task["dependencies"] = {"signing": dep.label}
+        task.setdefault("attributes", {}).update(dep.attributes.copy())
+        task["name"] = _get_dependent_job_name_without_its_kind(dep)
 
-            task['primary-dependency'] = dep_task
-            yield task
+        yield task
+
+
+def _get_dependent_job_name_without_its_kind(dependent_job):
+    return dependent_job.label[len(dependent_job.kind) + 1:]
 
 
 @transforms.add
-def build_pushapk_task(config, tasks):
+def build_treeherder_definition(config, tasks):
+    for task in tasks:
+        dep = task["primary-dependency"]
+        task["treeherder"] = inherit_treeherder_from_dep(task, dep)
+        treeherder_group = dep.task["extra"]["treeherder"]["groupSymbol"]
+        treeherder_symbol = join_symbol(treeherder_group, 'gp')
+        task["treeherder"]["symbol"] = treeherder_symbol
+
+        yield task
+
+
+@transforms.add
+def build_worker_definition(config, tasks):
     for task in tasks:
         dep = task.pop("primary-dependency")
-        task.setdefault("attributes", {}).update(dep.attributes.copy())
-        if "run_on_tasks_for" in task["attributes"]:
-            task["run-on-tasks-for"] = task["attributes"]["run_on_tasks_for"]
+        task_name = task["name"]
 
-        task["treeherder"] = inherit_treeherder_from_dep(task, dep)
-        task["worker"]["upstream-artifacts"] = [{
+        worker_definition = {}
+        worker_definition["upstream-artifacts"] = [{
             "taskId": {"task-reference": "<signing>"},
             "taskType": "signing",
             "paths": dep.attributes["apks"].values(),
         }]
-        task["worker"]["dep"] = config.params["level"] != "3"
-        if not task["worker"].get("certificate-alias"):
-            task["worker"]["certificate-alias"] = "{}-{}".format(
-                task["worker"]["product"], task["worker"]["channel"]
-            )
+        worker_definition["dep"] = config.params["level"] != "3"
+        worker_definition["channel"] = _CHANNEL_PER_TASK_NAME[task_name]
 
+        # Fenix production doesn't follow the rule {product}-{channel}
+        worker_definition["certificate-alias"] = 'fenix' if task_name == 'production' else \
+            "{}-{}".format(task["worker"]["product"], worker_definition["channel"])
+
+        if _GOOGLE_PLAY_TRACK_PER_TASK_NAME.get(task_name):
+            worker_definition["google-play-track"] = _GOOGLE_PLAY_TRACK_PER_TASK_NAME[task_name]
+
+        task["worker"].update(worker_definition)
         yield task

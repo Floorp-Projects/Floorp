@@ -97,9 +97,15 @@ class TaskBuilder(object):
                 'machine': {
                     'platform': 'android-all',
                 },
+                'collection': {
+                    'opt': True,
+                },
                 'symbol': '{}-A'.format(variant.build_type),
                 'tier': 1,
             },
+            attributes={
+                'apks': variant.upstream_artifacts_per_abi,
+            }
         )
 
     def craft_assemble_raptor_task(self, variant):
@@ -125,7 +131,10 @@ class TaskBuilder(object):
                 'symbol': 'A',
                 'tier': 1,
             },
-            attributes={'build-type': 'raptor'},
+            attributes={
+                'build-type': 'raptor',
+                'apks': variant.upstream_artifacts_per_abi,
+            },
         )
 
     def craft_assemble_pr_task(self, variant):
@@ -142,7 +151,7 @@ class TaskBuilder(object):
                 },
                 'symbol': 'A',
                 'tier': 1,
-            }
+            },
         )
 
     def craft_test_pr_task(self, variant):
@@ -367,33 +376,6 @@ class TaskBuilder(object):
             attributes=attributes,
         )
 
-    def _craft_signing_task(self, name, description, signing_type, assemble_task_label, apk_paths, routes, treeherder, attributes=None):
-        signing_format = "autograph_apk"
-        payload = {
-            'upstreamArtifacts': [{
-                'paths': apk_paths,
-                'formats': [signing_format],
-                'taskId': {'task-reference': '<build>'},
-                'taskType': 'build'
-            }]
-        }
-
-        return self._craft_default_task_definition(
-            worker_type='mobile-signing-dep-v1' if signing_type == 'dep' else 'mobile-signing-v1',
-            provisioner_id='scriptworker-prov-v1',
-            dependencies={'build': assemble_task_label},
-            routes=routes,
-            scopes=[
-                "project:mobile:fenix:releng:signing:format:{}".format(signing_format),
-                "project:mobile:fenix:releng:signing:cert:{}-signing".format(signing_type),
-            ],
-            name=name,
-            description=description,
-            payload=payload,
-            treeherder=treeherder,
-            attributes=attributes,
-        )
-
     def _craft_default_task_definition(
         self,
         worker_type,
@@ -456,86 +438,6 @@ class TaskBuilder(object):
                 },
             },
         }
-
-    def craft_raptor_signing_task(
-        self, assemble_task_label, variant, is_staging,
-    ):
-        staging_prefix = '.staging' if is_staging else ''
-        routes = [
-            "index.project.mobile.fenix.v2{}.performance-test.{}.{}.{}.latest".format(
-                staging_prefix, self.date.year, self.date.month, self.date.day
-            ),
-            "index.project.mobile.fenix.v2{}.performance-test.{}.{}.{}.revision.{}".format(
-                staging_prefix, self.date.year, self.date.month, self.date.day, self.commit
-            ),
-            "index.project.mobile.fenix.v2{}.performance-test.latest".format(staging_prefix),
-        ]
-
-        return self._craft_signing_task(
-            name='sign: {}'.format('forPerformanceTest'),
-            description='Dep-signing variant {}'.format('forPerformanceTest'),
-            signing_type="dep",
-            assemble_task_label=assemble_task_label,
-            apk_paths=variant.upstream_artifacts(),
-            routes=routes,
-            treeherder={
-                'groupSymbol': 'forPerformanceTest',
-                'jobKind': 'other',
-                'machine': {
-                    'platform': 'android-all',
-                },
-                'collection': {
-                    'opt': True,
-                },
-                'symbol': 'As',
-                'tier': 1,
-            },
-            attributes={
-                'build-type': 'raptor',
-                'apks': variant.upstream_artifacts_per_abi,
-            },
-        )
-
-    def craft_release_signing_task(
-        self, build_task_id, variant, channel, is_staging, publish_to_index=True
-    ):
-        if publish_to_index:
-            staging_prefix = '.staging' if is_staging else ''
-            routes = [
-                "index.project.mobile.fenix.v2{}.{}.{}.{}.{}.latest".format(
-                    staging_prefix, channel, self.date.year, self.date.month, self.date.day
-                ),
-                "index.project.mobile.fenix.v2{}.{}.{}.{}.{}.revision.{}".format(
-                    staging_prefix, channel, self.date.year, self.date.month, self.date.day, self.commit
-                ),
-                "index.project.mobile.fenix.v2{}.{}.latest".format(staging_prefix, channel),
-            ]
-        else:
-            routes = []
-
-        capitalized_channel = upper_case_first_letter(channel)
-        return self._craft_signing_task(
-            name="Signing {} task".format(capitalized_channel),
-            description="Sign {} builds of Fenix".format(capitalized_channel),
-            signing_type="dep" if is_staging else channel,
-            assemble_task_label=build_task_id,
-            apk_paths=variant.upstream_artifacts(),
-            routes=routes,
-            treeherder={
-                'jobKind': 'other',
-                'machine': {
-                  'platform': 'android-all',
-                },
-                'collection': {
-                    'opt': True,
-                },
-                'symbol': '{}-s'.format(channel),
-                'tier': 1,
-            },
-            attributes={
-                'apks': variant.upstream_artifacts_per_abi,
-            },
-        )
 
 
 def schedule_task(queue, taskId, task):
