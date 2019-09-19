@@ -194,6 +194,9 @@ class TrackBuffersManager final
   RefPtr<RangeRemovalPromise> CodedFrameRemovalWithPromise(
       media::TimeInterval aInterval);
   bool CodedFrameRemoval(media::TimeInterval aInterval);
+  // Removes all coded frames -- this is not to spec and should be used as a
+  // last resort to clear buffers only if other methods cannot.
+  void RemoveAllCodedFrames();
   void SetAppendState(SourceBufferAttributes::AppendState aAppendState);
 
   bool HasVideo() const { return mVideoTracks.mNumTracks > 0; }
