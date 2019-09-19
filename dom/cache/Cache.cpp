@@ -214,11 +214,7 @@ class Cache::FetchHandler final : public PromiseNativeHandler {
  private:
   ~FetchHandler() {}
 
-  void Fail() {
-    ErrorResult rv;
-    rv.ThrowTypeError<MSG_FETCH_FAILED>();
-    mPromise->MaybeReject(rv);
-  }
+  void Fail() { mPromise->MaybeRejectWithTypeError<MSG_FETCH_FAILED>(); }
 
   RefPtr<CacheWorkerRef> mWorkerRef;
   RefPtr<Cache> mCache;

@@ -106,6 +106,54 @@ class Promise : public nsISupports, public SupportsWeakPtr<Promise> {
   void MaybeResolveWithClone(JSContext* aCx, JS::Handle<JS::Value> aValue);
   void MaybeRejectWithClone(JSContext* aCx, JS::Handle<JS::Value> aValue);
 
+  // Facilities for rejecting with various spec-defined exception values.
+  inline void MaybeRejectWithDOMException(nsresult rv,
+                                          const nsACString& aMessage) {
+    ErrorResult res;
+    res.ThrowDOMException(rv, aMessage);
+    MaybeReject(res);
+  }
+  template <int N>
+  void MaybeRejectWithDOMException(nsresult rv, const char (&aMessage)[N]) {
+    MaybeRejectWithDOMException(rv, nsLiteralCString(aMessage));
+  }
+
+  template <ErrNum errorNumber, typename... Ts>
+  void MaybeRejectWithTypeError(Ts&&... aMessageArgs) {
+    ErrorResult res;
+    res.ThrowTypeError<errorNumber>(std::forward<Ts>(aMessageArgs)...);
+    MaybeReject(res);
+  }
+
+  inline void MaybeRejectWithTypeError(const nsAString& aMessage) {
+    ErrorResult res;
+    res.ThrowTypeError(aMessage);
+    MaybeReject(res);
+  }
+
+  template <int N>
+  void MaybeRejectWithTypeError(const char16_t (&aMessage)[N]) {
+    MaybeRejectWithTypeError(nsLiteralString(aMessage));
+  }
+
+  template <ErrNum errorNumber, typename... Ts>
+  void MaybeRejectWithRangeError(Ts&&... aMessageArgs) {
+    ErrorResult res;
+    res.ThrowRangeError<errorNumber>(std::forward<Ts>(aMessageArgs)...);
+    MaybeReject(res);
+  }
+
+  inline void MaybeRejectWithRangeError(const nsAString& aMessage) {
+    ErrorResult res;
+    res.ThrowRangeError(aMessage);
+    MaybeReject(res);
+  }
+
+  template <int N>
+  void MaybeRejectWithRangeError(const char16_t (&aMessage)[N]) {
+    MaybeRejectWithRangeError(nsLiteralString(aMessage));
+  }
+
   // DO NOT USE MaybeRejectBrokenly with in new code.  Promises should be
   // rejected with Error instances.
   // Note: MaybeRejectBrokenly is a template so we can use it with DOMException
