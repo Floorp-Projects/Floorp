@@ -878,8 +878,7 @@ void nsCaret::ComputeCaretRects(nsIFrame* aFrame, int32_t aFrameOffset,
     // right The height of the hook rectangle is the same as the width of the
     // caret rectangle.
     if (isVertical) {
-      bool isSidewaysLR = wm.IsVerticalLR() && !wm.IsLineInverted();
-      if (isSidewaysLR) {
+      if (wm.IsSidewaysLR()) {
         aHookRect->SetRect(aCaretRect->x + bidiIndicatorSize,
                            aCaretRect->y + (!isCaretRTL ? bidiIndicatorSize * -1
                                                         : aCaretRect->height),
