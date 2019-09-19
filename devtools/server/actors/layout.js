@@ -346,7 +346,8 @@ const GridActor = ActorClassWithSpec(gridSpec, {
 
     if (SUBGRID_ENABLED) {
       form.isSubgrid =
-        gridTemplateRows === "subgrid" || gridTemplateColumns === "subgrid";
+        gridTemplateRows.startsWith("subgrid") ||
+        gridTemplateColumns.startsWith("subgrid");
     }
 
     return form;

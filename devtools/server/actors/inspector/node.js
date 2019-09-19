@@ -392,8 +392,8 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     if (
       SUBGRID_ENABLED &&
       (display === "grid" || display === "inline-grid") &&
-      (style.gridTemplateRows === "subgrid" ||
-        style.gridTemplateColumns === "subgrid")
+      (style.gridTemplateRows.startsWith("subgrid") ||
+        style.gridTemplateColumns.startsWith("subgrid"))
     ) {
       display = "subgrid";
     }
