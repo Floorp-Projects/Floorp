@@ -301,3 +301,7 @@ The following prefs are for testing purpose only.
 ``toolkit.telemetry.testing.disableFuzzingDelay``
 
   If true, ping sending is not delayed when sending between 0am and 1am local time.
+
+``toolkit.telemetry.testing.overrideProductsCheck``
+
+  If true, allow all probes to be recorded no matter what the current product is.
