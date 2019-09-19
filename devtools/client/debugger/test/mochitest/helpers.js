@@ -1302,7 +1302,6 @@ const selectors = {
   inlinePreviewLables: ".CodeMirror-linewidget .inline-preview-label",
   inlinePreviewValues: ".CodeMirror-linewidget .inline-preview-value",
   inlinePreviewOpenInspector: ".inline-preview-value button.open-inspector",
-  watchpointsSubmenu: "#node-menu-watchpoints",
   addGetWatchpoint: "#node-menu-add-get-watchpoint",
   addSetWatchpoint: "#node-menu-add-set-watchpoint",
   removeWatchpoint: "#node-menu-remove-watchpoint",
