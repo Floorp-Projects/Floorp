@@ -31,7 +31,7 @@ class JSFunction;
 
 namespace JS {
 
-class Value;
+union Value;
 
 template <typename T>
 class Handle;
