@@ -48,6 +48,6 @@
 .why-paused .message.warning {
   color: var(--theme-graphs-full-red);
   font-family: var(--monospace-font-family);
-  font-size: 12px;
+  font-size: 10px;
   font-style: normal;
 }
