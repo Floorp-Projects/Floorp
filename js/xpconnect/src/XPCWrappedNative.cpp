@@ -1149,10 +1149,6 @@ bool XPCWrappedNative::CallMethod(XPCCallContext& ccx,
   return helper.get().Call();
 }
 
-#if (__GNUC__ && __linux__ && __PPC64__ && _LITTLE_ENDIAN)
-// Work around a compiler bug on ppc64le (bug 1512162).
-__attribute__ ((noinline,noclone))
-#endif
 bool CallMethodHelper::Call() {
   mCallContext.SetRetVal(JS::UndefinedValue());
 
@@ -1311,10 +1307,6 @@ bool CallMethodHelper::GetOutParamSource(uint8_t paramIndex,
   return true;
 }
 
-#if (__GNUC__ && __linux__ && __PPC64__ && _LITTLE_ENDIAN)
-// Work around a compiler bug on ppc64le (bug 1512162).
-__attribute__ ((noinline,noclone))
-#endif
 bool CallMethodHelper::GatherAndConvertResults() {
   // now we iterate through the native params to gather and convert results
   uint8_t paramCount = mMethodInfo->GetParamCount();
