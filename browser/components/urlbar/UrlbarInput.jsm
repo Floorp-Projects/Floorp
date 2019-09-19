@@ -653,10 +653,10 @@ class UrlbarInput {
         break;
       }
       case UrlbarUtils.RESULT_TYPE.TIP: {
-        if (element.classList.contains("urlbarView-tip-help")) {
+        let helpPicked = element.classList.contains("urlbarView-tip-help");
+        if (helpPicked) {
           url = result.payload.helpUrl;
         }
-
         if (!url) {
           this.handleRevert();
           this.controller.engagementEvent.record(event, {
@@ -664,11 +664,9 @@ class UrlbarInput {
             selIndex,
             selType: "tip",
           });
-
-          // TODO: Call out to UrlbarProvider.pickElement as part of bug 1578584.
+          result.provider.pickResult(result, { helpPicked });
           return;
         }
-
         break;
       }
       case UrlbarUtils.RESULT_TYPE.OMNIBOX: {
