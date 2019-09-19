@@ -3,21 +3,6 @@
 
 "use strict";
 
-function copyToClipboard(str) {
-  return new Promise((resolve, reject) => {
-    waitForClipboard(
-      str,
-      () => {
-        Cc["@mozilla.org/widget/clipboardhelper;1"]
-          .getService(Ci.nsIClipboardHelper)
-          .copyString(str);
-      },
-      resolve,
-      reject
-    );
-  });
-}
-
 // Each test is a function that executes an urlbar action and returns the
 // expected event object, or null if no event is expected.
 const tests = [
@@ -49,7 +34,9 @@ const tests = [
     info("Paste something, press Enter.");
     gURLBar.select();
     let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    await copyToClipboard("test");
+    await SimpleTest.promiseClipboardChange("test", () => {
+      clipboardHelper.copyString("test");
+    });
     document.commandDispatcher
       .getControllerForCommand("cmd_paste")
       .doCommand("cmd_paste");
@@ -303,7 +290,9 @@ const tests = [
   async function() {
     info("Paste & Go something.");
     let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    await copyToClipboard("www.example.com");
+    await SimpleTest.promiseClipboardChange("www.example.com", () => {
+      clipboardHelper.copyString("www.example.com");
+    });
     let inputBox = gURLBar.querySelector("moz-input-box");
     let cxmenu = inputBox.menupopup;
     let cxmenuPromise = BrowserTestUtils.waitForEvent(cxmenu, "popupshown");
