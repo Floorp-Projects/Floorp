@@ -20,18 +20,23 @@ exclude: true
   `onTelemetryReceived` has been renamed to [`onHistogram`][71.4], and
   [`Metric`][71.5] now takes a type parameter.
   ([bug 1576730]({{bugzilla}}1576730))
-- Added overloads of [`GeckoSession.loadUri()`][71.6] that accept a map of
+- Added overloads of [`GeckoSession.loadUri`][71.6] that accept a map of
   additional HTTP request headers.
-- Added support for exposing the content blocking log in [`ContentBlockingController`][71.7].({{bugzilla}}1580201)
+  ([bug 1567549]({{bugzilla}}1567549))
+- Added support for exposing the content blocking log in [`ContentBlockingController`][71.7].
+  ([bug 1580201]({{bugzilla}}1580201))
 - ⚠️  Added `nativeApp` to [`WebExtension.MessageDelegate.onMessage`][71.8] which
   exposes the native application identifier that was used to send the message.
-  ({{bugzilla}}1546445)
+  ([bug 1546445]({{bugzilla}}1546445))
 - Added [`GeckoRuntime.ServiceWorkerDelegate`][71.9] set via
-  ['setServiceWorkerDelegate'][71.10] to support ServiceWorkerClients.openWindow()
+  [`setServiceWorkerDelegate`][71.10] to support [`ServiceWorkerClients.openWindow`][71.11]
   ([bug 1511033]({{bugzilla}}1511033))
-- Added ['GeckoRuntimeSettings.Builder#aboutConfigEnabled'][71.11] to control whether or
+- Added [`GeckoRuntimeSettings.Builder#aboutConfigEnabled`][71.12] to control whether or
   not `about:config` should be available.
-- Added [`GeckoSession.ContentDelegate.onFirstContentfulPaint()`][71.12]
+  ([bug 1540065]({{bugzilla}}1540065))
+- Added [`GeckoSession.ContentDelegate.onFirstContentfulPaint`][71.13]
+  ([bug 1578947]({{bugzilla}}1578947))
+
 [71.1]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onBooleanScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
 [71.2]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onLongScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
 [71.3]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onStringScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
@@ -42,8 +47,9 @@ exclude: true
 [71.8]: {{javadoc_uri}}/WebExtension.MessageDelegate.html#onMessage-java.lang.String-java.lang.Object-org.mozilla.geckoview.WebExtension.MessageSender-
 [71.9]: {{javadoc_uri}}/GeckoRuntime.ServiceWorkerDelegate.html
 [71.10]: {{javadoc_uri}}/GeckoRuntime#setServiceWorkerDelegate-org.mozilla.geckoview.GeckoRuntime.ServiceWorkerDelegate-
-[71.11]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#aboutConfigEnabled-boolean-
-[71.12]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onFirstContentfulPaint-org.mozilla.geckoview.GeckoSession-
+[71.11]: https://developer.mozilla.org/en-US/docs/Web/API/Clients/openWindow
+[71.12]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#aboutConfigEnabled-boolean-
+[71.13]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onFirstContentfulPaint-org.mozilla.geckoview.GeckoSession-
 
 ## v70
 - Added API for session context assignment
