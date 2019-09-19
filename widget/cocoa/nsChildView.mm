@@ -2708,9 +2708,7 @@ void nsChildView::ReportSwipeStarted(uint64_t aInputBlockId, bool aStartSwipe) {
 
 nsEventStatus nsChildView::DispatchAPZInputEvent(InputData& aEvent) {
   if (mAPZC) {
-    uint64_t inputBlockId = 0;
-    ScrollableLayerGuid guid;
-    return mAPZC->InputBridge()->ReceiveInputEvent(aEvent, &guid, &inputBlockId);
+    return mAPZC->InputBridge()->ReceiveInputEvent(aEvent).mStatus;
   }
   return nsEventStatus_eIgnore;
 }
@@ -2729,14 +2727,12 @@ void nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTrigger
   WidgetWheelEvent event(true, eWheel, this);
 
   if (mAPZC) {
-    uint64_t inputBlockId = 0;
-    ScrollableLayerGuid guid;
-    nsEventStatus result = nsEventStatus_eIgnore;
+    APZEventResult result;
 
     switch (aEvent.mInputType) {
       case PANGESTURE_INPUT: {
-        result = mAPZC->InputBridge()->ReceiveInputEvent(aEvent, &guid, &inputBlockId);
-        if (result == nsEventStatus_eConsumeNoDefault) {
+        result = mAPZC->InputBridge()->ReceiveInputEvent(aEvent);
+        if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
           return;
         }
 
@@ -2747,7 +2743,7 @@ void nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTrigger
           SwipeInfo swipeInfo = SendMayStartSwipe(panInput);
           event.mCanTriggerSwipe = swipeInfo.wantsSwipe;
           if (swipeInfo.wantsSwipe) {
-            if (result == nsEventStatus_eIgnore) {
+            if (result.mStatus == nsEventStatus_eIgnore) {
               // APZ has determined and that scrolling horizontally in the
               // requested direction is impossible, so it didn't do any
               // scrolling for the event.
@@ -2762,12 +2758,12 @@ void nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTrigger
               // we'll still get a call to ReportSwipeStarted, and we will
               // discard the queued events at that point.
               mSwipeEventQueue =
-                  MakeUnique<SwipeEventQueue>(swipeInfo.allowedDirections, inputBlockId);
+                  MakeUnique<SwipeEventQueue>(swipeInfo.allowedDirections, result.mInputBlockId);
             }
           }
         }
 
-        if (mSwipeEventQueue && mSwipeEventQueue->inputBlockId == inputBlockId) {
+        if (mSwipeEventQueue && mSwipeEventQueue->inputBlockId == result.mInputBlockId) {
           mSwipeEventQueue->queuedEvents.AppendElement(panInput);
         }
         break;
@@ -2779,8 +2775,8 @@ void nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTrigger
         // we need to run. Using the InputData variant would bypass that and
         // go straight to the APZCTreeManager subclass.
         event = aEvent.AsScrollWheelInput().ToWidgetWheelEvent(this);
-        result = mAPZC->InputBridge()->ReceiveInputEvent(event, &guid, &inputBlockId);
-        if (result == nsEventStatus_eConsumeNoDefault) {
+        result = mAPZC->InputBridge()->ReceiveInputEvent(event);
+        if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
           return;
         }
         break;
@@ -2790,7 +2786,7 @@ void nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTrigger
         return;
     }
     if (event.mMessage == eWheel && (event.mDeltaX != 0 || event.mDeltaY != 0)) {
-      ProcessUntransformedAPZEvent(&event, guid, inputBlockId, result);
+      ProcessUntransformedAPZEvent(&event, result);
     }
     return;
   }

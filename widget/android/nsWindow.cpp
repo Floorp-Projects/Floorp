@@ -517,18 +517,15 @@ class nsWindow::NPZCSupport final
         // to do?
         WheelDeltaAdjustmentStrategy::eNone);
 
-    ScrollableLayerGuid guid;
-    uint64_t blockId;
-    nsEventStatus status =
-        controller->InputBridge()->ReceiveInputEvent(input, &guid, &blockId);
+    APZEventResult result = controller->InputBridge()->ReceiveInputEvent(input);
 
-    if (status == nsEventStatus_eConsumeNoDefault) {
+    if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
       return true;
     }
 
-    PostInputEvent([input, guid, blockId, status](nsWindow* window) {
+    PostInputEvent([input, result](nsWindow* window) {
       WidgetWheelEvent wheelEvent = input.ToWidgetWheelEvent(window);
-      window->ProcessUntransformedAPZEvent(&wheelEvent, guid, blockId, status);
+      window->ProcessUntransformedAPZEvent(&wheelEvent, result);
     });
 
     return true;
@@ -632,18 +629,15 @@ class nsWindow::NPZCSupport final
                      ConvertButtons(buttons), origin, aTime,
                      GetEventTimeStamp(aTime), GetModifiers(aMetaState));
 
-    ScrollableLayerGuid guid;
-    uint64_t blockId;
-    nsEventStatus status =
-        controller->InputBridge()->ReceiveInputEvent(input, &guid, &blockId);
+    APZEventResult result = controller->InputBridge()->ReceiveInputEvent(input);
 
-    if (status == nsEventStatus_eConsumeNoDefault) {
+    if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
       return true;
     }
 
-    PostInputEvent([input, guid, blockId, status](nsWindow* window) {
+    PostInputEvent([input, result](nsWindow* window) {
       WidgetMouseEvent mouseEvent = input.ToWidgetMouseEvent(window);
-      window->ProcessUntransformedAPZEvent(&mouseEvent, guid, blockId, status);
+      window->ProcessUntransformedAPZEvent(&mouseEvent, result);
     });
 
     return true;
@@ -750,19 +744,16 @@ class nsWindow::NPZCSupport final
           ScreenSize::FromUnknownSize(radius), orien, pressure[i]));
     }
 
-    ScrollableLayerGuid guid;
-    uint64_t blockId;
-    nsEventStatus status =
-        controller->InputBridge()->ReceiveInputEvent(input, &guid, &blockId);
+    APZEventResult result = controller->InputBridge()->ReceiveInputEvent(input);
 
-    if (status == nsEventStatus_eConsumeNoDefault) {
+    if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
       return true;
     }
 
     // Dispatch APZ input event on Gecko thread.
-    PostInputEvent([input, guid, blockId, status](nsWindow* window) {
+    PostInputEvent([input, result](nsWindow* window) {
       WidgetTouchEvent touchEvent = input.ToWidgetTouchEvent(window);
-      window->ProcessUntransformedAPZEvent(&touchEvent, guid, blockId, status);
+      window->ProcessUntransformedAPZEvent(&touchEvent, result);
       window->DispatchHitTest(touchEvent);
     });
     return true;

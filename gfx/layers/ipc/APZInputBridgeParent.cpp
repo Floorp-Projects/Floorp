@@ -24,90 +24,77 @@ APZInputBridgeParent::APZInputBridgeParent(const LayersId& aLayersId) {
 APZInputBridgeParent::~APZInputBridgeParent() {}
 
 mozilla::ipc::IPCResult APZInputBridgeParent::RecvReceiveMultiTouchInputEvent(
-    const MultiTouchInput& aEvent, nsEventStatus* aOutStatus,
-    MultiTouchInput* aOutEvent, ScrollableLayerGuid* aOutTargetGuid,
-    uint64_t* aOutInputBlockId) {
+    const MultiTouchInput& aEvent, APZEventResult* aOutResult,
+    MultiTouchInput* aOutEvent) {
   MultiTouchInput event = aEvent;
 
-  *aOutStatus = mTreeManager->InputBridge()->ReceiveInputEvent(
-      event, aOutTargetGuid, aOutInputBlockId);
+  *aOutResult = mTreeManager->InputBridge()->ReceiveInputEvent(event);
   *aOutEvent = event;
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult APZInputBridgeParent::RecvReceiveMouseInputEvent(
-    const MouseInput& aEvent, nsEventStatus* aOutStatus, MouseInput* aOutEvent,
-    ScrollableLayerGuid* aOutTargetGuid, uint64_t* aOutInputBlockId) {
+    const MouseInput& aEvent, APZEventResult* aOutResult,
+    MouseInput* aOutEvent) {
   MouseInput event = aEvent;
 
-  *aOutStatus = mTreeManager->InputBridge()->ReceiveInputEvent(
-      event, aOutTargetGuid, aOutInputBlockId);
+  *aOutResult = mTreeManager->InputBridge()->ReceiveInputEvent(event);
   *aOutEvent = event;
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult APZInputBridgeParent::RecvReceivePanGestureInputEvent(
-    const PanGestureInput& aEvent, nsEventStatus* aOutStatus,
-    PanGestureInput* aOutEvent, ScrollableLayerGuid* aOutTargetGuid,
-    uint64_t* aOutInputBlockId) {
+    const PanGestureInput& aEvent, APZEventResult* aOutResult,
+    PanGestureInput* aOutEvent) {
   PanGestureInput event = aEvent;
 
-  *aOutStatus = mTreeManager->InputBridge()->ReceiveInputEvent(
-      event, aOutTargetGuid, aOutInputBlockId);
+  *aOutResult = mTreeManager->InputBridge()->ReceiveInputEvent(event);
   *aOutEvent = event;
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult APZInputBridgeParent::RecvReceivePinchGestureInputEvent(
-    const PinchGestureInput& aEvent, nsEventStatus* aOutStatus,
-    PinchGestureInput* aOutEvent, ScrollableLayerGuid* aOutTargetGuid,
-    uint64_t* aOutInputBlockId) {
+    const PinchGestureInput& aEvent, APZEventResult* aOutResult,
+    PinchGestureInput* aOutEvent) {
   PinchGestureInput event = aEvent;
 
-  *aOutStatus = mTreeManager->InputBridge()->ReceiveInputEvent(
-      event, aOutTargetGuid, aOutInputBlockId);
+  *aOutResult = mTreeManager->InputBridge()->ReceiveInputEvent(event);
   *aOutEvent = event;
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult APZInputBridgeParent::RecvReceiveTapGestureInputEvent(
-    const TapGestureInput& aEvent, nsEventStatus* aOutStatus,
-    TapGestureInput* aOutEvent, ScrollableLayerGuid* aOutTargetGuid,
-    uint64_t* aOutInputBlockId) {
+    const TapGestureInput& aEvent, APZEventResult* aOutResult,
+    TapGestureInput* aOutEvent) {
   TapGestureInput event = aEvent;
 
-  *aOutStatus = mTreeManager->InputBridge()->ReceiveInputEvent(
-      event, aOutTargetGuid, aOutInputBlockId);
+  *aOutResult = mTreeManager->InputBridge()->ReceiveInputEvent(event);
   *aOutEvent = event;
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult APZInputBridgeParent::RecvReceiveScrollWheelInputEvent(
-    const ScrollWheelInput& aEvent, nsEventStatus* aOutStatus,
-    ScrollWheelInput* aOutEvent, ScrollableLayerGuid* aOutTargetGuid,
-    uint64_t* aOutInputBlockId) {
+    const ScrollWheelInput& aEvent, APZEventResult* aOutResult,
+    ScrollWheelInput* aOutEvent) {
   ScrollWheelInput event = aEvent;
 
-  *aOutStatus = mTreeManager->InputBridge()->ReceiveInputEvent(
-      event, aOutTargetGuid, aOutInputBlockId);
+  *aOutResult = mTreeManager->InputBridge()->ReceiveInputEvent(event);
   *aOutEvent = event;
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult APZInputBridgeParent::RecvReceiveKeyboardInputEvent(
-    const KeyboardInput& aEvent, nsEventStatus* aOutStatus,
-    KeyboardInput* aOutEvent, ScrollableLayerGuid* aOutTargetGuid,
-    uint64_t* aOutInputBlockId) {
+    const KeyboardInput& aEvent, APZEventResult* aOutResult,
+    KeyboardInput* aOutEvent) {
   KeyboardInput event = aEvent;
 
-  *aOutStatus = mTreeManager->InputBridge()->ReceiveInputEvent(
-      event, aOutTargetGuid, aOutInputBlockId);
+  *aOutResult = mTreeManager->InputBridge()->ReceiveInputEvent(event);
   *aOutEvent = event;
 
   return IPC_OK();

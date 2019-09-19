@@ -14,6 +14,7 @@
 #include "ipc/IPCMessageUtils.h"
 #include "ipc/nsGUIEventIPC.h"
 #include "mozilla/GfxMessageUtils.h"
+#include "mozilla/layers/APZInputBridge.h"
 #include "mozilla/layers/APZTypes.h"
 #include "mozilla/layers/AsyncDragMetrics.h"
 #include "mozilla/layers/CompositorOptions.h"
@@ -515,6 +516,29 @@ struct ParamTraits<mozilla::layers::ScrollableLayerGuid> {
     return (ReadParam(aMsg, aIter, &aResult->mLayersId) &&
             ReadParam(aMsg, aIter, &aResult->mPresShellId) &&
             ReadParam(aMsg, aIter, &aResult->mScrollId));
+  }
+};
+
+template <>
+struct ParamTraits<nsEventStatus>
+    : public ContiguousEnumSerializer<nsEventStatus, nsEventStatus_eIgnore,
+                                      nsEventStatus_eSentinel> {};
+
+template <>
+struct ParamTraits<mozilla::layers::APZEventResult> {
+  typedef mozilla::layers::APZEventResult paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mStatus);
+    WriteParam(aMsg, aParam.mTargetGuid);
+    WriteParam(aMsg, aParam.mInputBlockId);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return (ReadParam(aMsg, aIter, &aResult->mStatus) &&
+            ReadParam(aMsg, aIter, &aResult->mTargetGuid) &&
+            ReadParam(aMsg, aIter, &aResult->mInputBlockId));
   }
 };
 

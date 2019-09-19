@@ -17,22 +17,21 @@ TEST_F(APZCTreeManagerTester, WheelInterruptedByMouseDrag) {
   UpdateHitTestingTree();
   RefPtr<TestAsyncPanZoomController> apzc = ApzcOf(root);
 
-  uint64_t dragBlockId = 0;
-  uint64_t wheelBlockId = 0;
-  uint64_t tmpBlockId = 0;
-
   // First start the mouse drag
-  MouseDown(apzc, ScreenIntPoint(5, 5), mcc->Time(), &dragBlockId);
-  MouseMove(apzc, ScreenIntPoint(6, 6), mcc->Time(), &tmpBlockId);
+  uint64_t dragBlockId =
+      MouseDown(apzc, ScreenIntPoint(5, 5), mcc->Time()).mInputBlockId;
+  uint64_t tmpBlockId =
+      MouseMove(apzc, ScreenIntPoint(6, 6), mcc->Time()).mInputBlockId;
   EXPECT_EQ(dragBlockId, tmpBlockId);
 
   // Insert the wheel event, check that it has a new block id
-  SmoothWheel(apzc, ScreenIntPoint(6, 6), ScreenPoint(0, 1), mcc->Time(),
-              &wheelBlockId);
+  uint64_t wheelBlockId =
+      SmoothWheel(apzc, ScreenIntPoint(6, 6), ScreenPoint(0, 1), mcc->Time())
+          .mInputBlockId;
   EXPECT_NE(dragBlockId, wheelBlockId);
 
   // Continue the drag, check that the block id is the same as before
-  MouseMove(apzc, ScreenIntPoint(7, 5), mcc->Time(), &tmpBlockId);
+  tmpBlockId = MouseMove(apzc, ScreenIntPoint(7, 5), mcc->Time()).mInputBlockId;
   EXPECT_EQ(dragBlockId, tmpBlockId);
 
   // Finish the wheel animation

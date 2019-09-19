@@ -60,6 +60,7 @@ class CompositorBridgeParent;
 class IAPZCTreeManager;
 class GeckoContentController;
 class APZEventState;
+struct APZEventResult;
 class CompositorSession;
 class ImageContainer;
 struct ScrollableLayerGuid;
@@ -483,10 +484,9 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   CreateRootContentController();
 
   // Dispatch an event that has already been routed through APZ.
-  nsEventStatus ProcessUntransformedAPZEvent(mozilla::WidgetInputEvent* aEvent,
-                                             const ScrollableLayerGuid& aGuid,
-                                             uint64_t aInputBlockId,
-                                             nsEventStatus aApzResponse);
+  nsEventStatus ProcessUntransformedAPZEvent(
+      mozilla::WidgetInputEvent* aEvent,
+      const mozilla::layers::APZEventResult& aApzResult);
 
   const LayoutDeviceIntRegion RegionFromArray(
       const nsTArray<LayoutDeviceIntRect>& aRects);
