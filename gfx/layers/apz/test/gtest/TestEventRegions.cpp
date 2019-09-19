@@ -311,3 +311,38 @@ TEST_F(APZEventRegionsTester, Bug1117712) {
   targets.AppendElement(apzc2->GetGuid());
   manager->SetTargetAPZC(inputBlockId, targets);
 }
+
+// Test that APZEventResult::mHitRegionWithApzAwareListeners is correctly
+// populated.
+TEST_F(APZEventRegionsTester, ApzAwareListenersFlag) {
+  // Create simple layer tree containing a dispatch-to-content region
+  // that covers part but not all of its area.
+  const char* layerTreeSyntax = "c";
+  nsIntRegion layerVisibleRegions[] = {
+      nsIntRegion(IntRect(0, 0, 100, 100)),
+  };
+  root = CreateLayerTree(layerTreeSyntax, layerVisibleRegions, nullptr, lm,
+                         layers);
+  SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID);
+  // away from the scrolling container layer.
+  EventRegions regions(nsIntRegion(IntRect(0, 0, 100, 100)));
+  // bottom half is dispatch-to-content
+  regions.mDispatchToContentHitRegion = nsIntRegion(IntRect(0, 50, 100, 50));
+  root->SetEventRegions(regions);
+  registration =
+      MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0}, root, mcc);
+  UpdateHitTestingTree();
+
+  // Tap the top half and check that we don't report hitting a region
+  // with APZ-aware listeners.
+  APZEventResult result =
+      TouchDown(manager, ScreenIntPoint(50, 25), mcc->Time());
+  TouchUp(manager, ScreenIntPoint(50, 25), mcc->Time());
+  EXPECT_FALSE(result.mHitRegionWithApzAwareListeners);
+
+  // Tap the bottom half and check we do report hitting a region with
+  // APZ-aware listeners.
+  result = TouchDown(manager, ScreenIntPoint(50, 75), mcc->Time());
+  TouchUp(manager, ScreenIntPoint(50, 75), mcc->Time());
+  EXPECT_TRUE(result.mHitRegionWithApzAwareListeners);
+}
