@@ -218,7 +218,6 @@ var gSync = {
           return;
         }
         this.onClientsSynced();
-        this.updateFxAPanel(UIState.get());
         break;
     }
   },
@@ -397,10 +396,6 @@ var gSync = {
     );
     const fxaMenuPanel = document.getElementById("PanelUI-fxa");
 
-    const fxaMenuAccountButtonEl = document.getElementById(
-      "fxa-manage-account-button"
-    );
-
     let headerTitle = menuHeaderTitleEl.getAttribute("defaultLabel");
     let headerDescription = menuHeaderDescriptionEl.getAttribute(
       "defaultLabel"
@@ -413,8 +408,6 @@ var gSync = {
     fxaMenuPanel.removeAttribute("title");
     cadButtonEl.setAttribute("disabled", true);
     syncNowButtonEl.setAttribute("disabled", true);
-    fxaMenuAccountButtonEl.classList.remove("subviewbutton-nav");
-    fxaMenuAccountButtonEl.removeAttribute("closemenu");
 
     if (state.status === UIState.STATUS_NOT_CONFIGURED) {
       mainWindowEl.style.removeProperty("--avatar-image-url");
@@ -454,8 +447,6 @@ var gSync = {
 
       cadButtonEl.removeAttribute("disabled");
       syncNowButtonEl.removeAttribute("disabled");
-      fxaMenuAccountButtonEl.classList.add("subviewbutton-nav");
-      fxaMenuAccountButtonEl.setAttribute("closemenu", "none");
 
       headerTitle = state.email;
       headerDescription = this.fxaStrings.GetStringFromName(
@@ -662,7 +653,7 @@ var gSync = {
         this.openPrefsFromFxaMenu("sync_settings", panel);
         break;
       case UIState.STATUS_SIGNED_IN:
-        PanelUI.showSubView("PanelUI-fxa-menu-account-panel", panel);
+        this.openFxAManagePageFromFxaMenu(panel);
     }
   },
 

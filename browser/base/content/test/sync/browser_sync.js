@@ -65,9 +65,6 @@ add_task(async function test_ui_state_signedin() {
       "PanelUI-fxa-menu-monitor-button",
       "PanelUI-fxa-menu-send-button",
       "PanelUI-fxa-menu-syncnow-button",
-      "PanelUI-fxa-menu-account-settings-button",
-      "PanelUI-fxa-menu-account-devices-button",
-      "PanelUI-fxa-menu-account-signout-button",
     ],
     disabledItems: [],
   });
