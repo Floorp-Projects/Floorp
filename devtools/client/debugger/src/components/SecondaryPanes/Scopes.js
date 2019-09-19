@@ -128,11 +128,11 @@ class Scopes extends PureComponent<Props, State> {
     }
 
     if (!item.contents || item.contents.watchpoint) {
-      const removeWatchpointLabel = L10N.getStr("watchpoints.removeWatchpoint");
-
       const removeWatchpointItem = {
         id: "node-menu-remove-watchpoint",
-        label: removeWatchpointLabel,
+        // NOTE: we're going to update the UI to add a "break on..."
+        // sub menu. At that point we'll translate the strings. bug 1580591
+        label: "Remove watchpoint",
         disabled: false,
         click: () => removeWatchpoint(item),
       };
@@ -141,33 +141,26 @@ class Scopes extends PureComponent<Props, State> {
       return showMenu(event, menuItems);
     }
 
-    const addSetWatchpointLabel = L10N.getStr("watchpoints.setWatchpoint");
-    const addGetWatchpointLabel = L10N.getStr("watchpoints.getWatchpoint");
-    const watchpointsSubmenuLabel = L10N.getStr("watchpoints.submenu");
+    // NOTE: we're going to update the UI to add a "break on..."
+    // sub menu. At that point we'll translate the strings. bug 1580591
+    const addSetWatchpointLabel = "Pause on set";
+    const addGetWatchpointLabel = "Pause on get";
 
-    const addSetWatchpointItem = {
+    const addSetWatchpoint = {
       id: "node-menu-add-set-watchpoint",
       label: addSetWatchpointLabel,
       disabled: false,
       click: () => addWatchpoint(item, "set"),
     };
 
-    const addGetWatchpointItem = {
+    const addGetWatchpoint = {
       id: "node-menu-add-get-watchpoint",
       label: addGetWatchpointLabel,
       disabled: false,
       click: () => addWatchpoint(item, "get"),
     };
 
-    const watchpointsSubmenuItem = {
-      id: "node-menu-watchpoints",
-      label: watchpointsSubmenuLabel,
-      disabled: false,
-      click: () => addWatchpoint(item, "set"),
-      submenu: [addSetWatchpointItem, addGetWatchpointItem],
-    };
-
-    const menuItems = [watchpointsSubmenuItem];
+    const menuItems = [addGetWatchpoint, addSetWatchpoint];
     showMenu(event, menuItems);
   };
 
