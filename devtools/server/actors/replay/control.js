@@ -219,6 +219,9 @@ ChildProcess.prototype = {
       if (response.memoryUsage) {
         this.lastMemoryUsage = response.memoryUsage;
       }
+      if (response.exception) {
+        ThrowError(response.exception);
+      }
     }
     this.paused = true;
     this.manifest.onFinished(response);
@@ -1546,7 +1549,16 @@ async function findEventFrameEntry(checkpoint, progress) {
     scanCheckpoint: savedCheckpoint,
   });
 
-  return gEventFrameEntryPoints.get(progress);
+  const enterFramePoint = gEventFrameEntryPoints.get(progress);
+  if (!enterFramePoint) {
+    return null;
+  }
+
+  // We want to stop at the first step in the frame, not at the EnterFrame.
+  const frameSteps = await findFrameSteps(enterFramePoint);
+  assert(pointEquals(frameSteps[0], enterFramePoint));
+
+  return frameSteps[1];
 }
 
 async function findEventLogpointHits(checkpoint, event, callback) {
@@ -1687,12 +1699,11 @@ let gLastFlushTime = Date.now();
 
 // If necessary, synchronously flush the recording to disk.
 function ensureFlushed() {
-  assert(gActiveChild == gMainChild);
   gMainChild.waitUntilPaused(true);
 
   gLastFlushTime = Date.now();
 
-  if (gLastFlushCheckpoint == gActiveChild.pauseCheckpoint()) {
+  if (gLastFlushCheckpoint == gMainChild.pauseCheckpoint()) {
     return;
   }
 
@@ -1884,6 +1895,7 @@ const gControl = {
 
   // Add a breakpoint where the active child should pause while resuming.
   addBreakpoint(position) {
+    dumpv(`AddBreakpoint ${JSON.stringify(position)}`);
     gBreakpoints.push(position);
 
     // Start searching for breakpoint hits in the recording immediately.
@@ -1904,7 +1916,9 @@ const gControl = {
 
   // Clear all installed breakpoints.
   clearBreakpoints() {
+    dumpv(`ClearBreakpoints\n`);
     gBreakpoints.length = 0;
+
     if (gActiveChild == gMainChild) {
       // As for addBreakpoint(), update the active breakpoints in the recording
       // child immediately.

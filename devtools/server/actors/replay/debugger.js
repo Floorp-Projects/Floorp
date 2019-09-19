@@ -268,9 +268,6 @@ ReplayDebugger.prototype = {
 
   _processResponse(request, response, divergeResponse) {
     dumpv(`SendRequest: ${stringify(request)} -> ${stringify(response)}`);
-    if (response.exception) {
-      ThrowError(response.exception);
-    }
     if (response.unhandledDivergence) {
       if (divergeResponse) {
         return divergeResponse;
