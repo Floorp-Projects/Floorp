@@ -134,6 +134,12 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
+  bool getReadableByteStreamsEnabled() const { return readableByteStreams_; }
+  RealmCreationOptions& setReadableByteStreamsEnabled(bool flag) {
+    readableByteStreams_ = flag;
+    return *this;
+  }
+
   bool getFieldsEnabled() const { return fields_; }
   RealmCreationOptions& setFieldsEnabled(bool flag) {
     fields_ = flag;
@@ -175,6 +181,7 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool cloneSingletons_ = false;
   bool sharedMemoryAndAtomics_ = false;
   bool streams_ = false;
+  bool readableByteStreams_ = false;
   bool fields_ = false;
   bool awaitFix_ = false;
   bool secureContext_ = false;
