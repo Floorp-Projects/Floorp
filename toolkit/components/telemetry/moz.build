@@ -158,6 +158,7 @@ histogram_files = [
     '/dom/base/UseCounters.conf',
     '/dom/base/nsDeprecatedOperationList.h',
     '!/layout/style/ServoCSSPropList.py',
+    '/servo/components/style/properties/counted_unknown_properties.py',
 ]
 
 data = GENERATED_FILES['TelemetryHistogramData.inc']
