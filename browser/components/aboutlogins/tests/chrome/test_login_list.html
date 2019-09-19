@@ -282,6 +282,7 @@ add_task(async function test_filtered_list() {
     detail: "user",
   }));
   is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 2, "Count should match result amount");
+  ok(!gLoginList._sortSelect.disabled, "The sort should be enabled when there are visible logins in the list");
   ok(isHidden(emptySearchText), "The empty search text should be hidden when there are results in the list");
   loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item[data-guid]");
   ok(!loginListItems[0].hidden, "user1 should be visible");
@@ -291,6 +292,7 @@ add_task(async function test_filtered_list() {
     detail: "foo",
   }));
   is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 0, "Count should match result amount");
+  ok(gLoginList._sortSelect.disabled, "The sort should be disabled when there are no visible logins in the list");
   ok(!isHidden(emptySearchText), "The empty search text should be visible when there are no results in the list");
   loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item[data-guid]");
   ok(loginListItems[0].hidden, "user1 should be hidden");
@@ -299,6 +301,7 @@ add_task(async function test_filtered_list() {
     bubbles: true,
     detail: "",
   }));
+  ok(!gLoginList._sortSelect.disabled, "The sort should be re-enabled when there are visible logins in the list");
   ok(isHidden(emptySearchText), "The empty search text should be hidden when there are results in the list");
   is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 2, "Count should be reset to full list length");
   loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item[data-guid]");
