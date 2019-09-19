@@ -89,7 +89,6 @@ py2commands="
     try
     uuid
     valgrind-test
-    vcs-setup
     vendor
     visualmetrics
     warnings-list
