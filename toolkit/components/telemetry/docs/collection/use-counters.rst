@@ -38,7 +38,7 @@ deprecated operation.
 
 The UseCounters registry
 ------------------------
-Use counters for WebIDL methods/attributes and CSS properties are registered in the `UseCounters.conf <https://dxr.mozilla.org/mozilla-central/source/dom/base/UseCounters.conf>`_ file.  The format of this file is very strict. Each line can be:
+Use counters for WebIDL methods/attributes are registered in the `UseCounters.conf <https://dxr.mozilla.org/mozilla-central/source/dom/base/UseCounters.conf>`_ file.  The format of this file is very strict. Each line can be:
 
 1. a blank line
 2. a comment, which is a line that begins with ``//``
@@ -46,12 +46,7 @@ Use counters for WebIDL methods/attributes and CSS properties are registered in 
 
   * ``method <IDL interface name>.<IDL operation name>``
   * ``attribute <IDL interface name>.<IDL attribute name>``
-  * ``property <CSS property method name>``
   * ``custom <any valid identifier> <description>``
-
-CSS properties
-~~~~~~~~~~~~~~
-The CSS property method name should be identical to the ``method`` argument of ``CSS_PROP()`` and related macros. The only differences are that all hyphens are removed and CamelCase naming is used.  See `ServoCSSPropList.h <https://searchfox.org/mozilla-central/source/__GENERATED__/layout/style/ServoCSSPropList.h>`_ for further details.
 
 Custom use counters
 ~~~~~~~~~~~~~~~~~~~
@@ -61,7 +56,7 @@ WebIDL methods and attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Additionally to having a new entry added to the `UseCounters.conf <https://dxr.mozilla.org/mozilla-central/source/dom/base/UseCounters.conf>`_ file, WebIDL methods and attributes must have a ``[UseCounter]`` extended attribute in the Web IDL file in order for the counters to be incremented.
 
-Both additions are required because generating things from bindings codegen and ensuring all the dependencies are correct would have been rather difficult, and annotating the WebIDL files does nothing for identifying CSS property usage, which we would also like to track.
+Both additions are required because generating things from bindings codegen and ensuring all the dependencies are correct would have been rather difficult.
 
 The processor script
 ====================
@@ -78,7 +73,6 @@ gen-usecounters.py
 ------------------
 This script is called by the build system to generate:
 
-- the ``PropertyUseCounterMap.inc`` C++ header for the CSS properties;
 - the ``UseCounterList.h`` header for the WebIDL, out of the definition files.
 
 Interpreting the data
