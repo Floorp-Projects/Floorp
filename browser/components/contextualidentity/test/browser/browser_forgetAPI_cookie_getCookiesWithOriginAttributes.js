@@ -83,7 +83,6 @@ add_task(async function test_cookie_getCookiesWithOriginAttributes() {
       cookie.host,
       cookie.name,
       cookie.path,
-      false,
       cookie.originAttributes
     );
   }
