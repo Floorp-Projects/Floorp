@@ -1,0 +1,12 @@
+{
+  "default": {
+    "visibleDefaultEngines": [
+      "multilocale-an"
+    ]
+  },
+  "FR": {
+    "visibleDefaultEngines": [
+      "multilocale-af"
+    ]
+  }
+}
