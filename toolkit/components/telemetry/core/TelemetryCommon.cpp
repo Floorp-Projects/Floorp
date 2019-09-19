@@ -78,7 +78,9 @@ bool CanRecordInProcess(RecordedProcessType processes, ProcessID processId) {
 }
 
 bool CanRecordProduct(SupportedProduct aProducts) {
-  return !!(aProducts & GetCurrentProduct());
+  return mozilla::StaticPrefs::
+             toolkit_telemetry_testing_overrideProductsCheck() ||
+         !!(aProducts & GetCurrentProduct());
 }
 
 nsresult MsSinceProcessStart(double* aResult) {
