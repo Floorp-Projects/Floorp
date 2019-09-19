@@ -1728,6 +1728,21 @@ APZCTreeManager::GetTouchInputBlockAPZC(
   return apzc.forget();
 }
 
+/**
+ * Returns whether |aHitResult| *may* indicate that we hit a region with
+ * APZ-aware listeners.
+ */
+bool MayHaveApzAwareListeners(CompositorHitTestInfo aHitResult) {
+  // With WebRender, we can answer this accurately.
+  if (gfx::gfxVars::UseWebRender()) {
+    return aHitResult.contains(CompositorHitTestFlags::eApzAwareListeners);
+  }
+  // With non-WebRender, several hit results including eApzAwareListeners
+  // get lumped together into the dispatch-to-content region. We err on
+  // the side of false positives.
+  return !((aHitResult & CompositorHitTestDispatchToContent).isEmpty());
+}
+
 APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
   APZEventResult result;  // mStatus == eIgnore
   aInput.mHandledByAPZ = true;
@@ -1819,6 +1834,8 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
           mApzcForInputBlock, TargetConfirmationFlags{mHitResultForInputBlock},
           aInput, &result.mInputBlockId,
           touchBehaviors.IsEmpty() ? Nothing() : Some(touchBehaviors));
+      result.mHitRegionWithApzAwareListeners =
+          MayHaveApzAwareListeners(mHitResultForInputBlock);
 
       // For computing the event to pass back to Gecko, use up-to-date
       // transforms (i.e. not anything cached in an input block). This ensures
