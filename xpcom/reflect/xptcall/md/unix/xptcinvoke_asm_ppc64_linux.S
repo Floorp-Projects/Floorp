@@ -151,10 +151,10 @@ NS_InvokeByIndex:
         ld      r2,STACK_TOC(r1)        # Load our own TOC pointer
         ld      r1,0(r1)                # Revert stack frame
         ld      0,16(r1)                # Reload lr
+        mtlr    0
         ld      29,-24(r1)              # Restore NVGPRS
         ld      30,-16(r1)
         ld      31,-8(r1)
-        mtlr    0
         blr
 
 #if _CALL_ELF == 2

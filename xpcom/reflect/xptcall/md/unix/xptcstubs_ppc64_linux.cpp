@@ -7,36 +7,64 @@
 
 #include "xptcprivate.h"
 
-// The Linux/PPC64 ABI passes the first 8 integral
-// parameters and the first 13 floating point parameters in registers
-// (r3-r10 and f1-f13), no stack space is allocated for these by the
-// caller.  The rest of the parameters are passed in the caller's stack
-// area. The stack pointer has to retain 16-byte alignment.
-
-// The PowerPC64 platform ABI can be found here:
-// http://www.freestandards.org/spec/ELF/ppc64/
+// Prior to POWER8, all 64-bit Power ISA systems used ELF v1 ABI, found
+// here:
+//   https://refspecs.linuxfoundation.org/ELF/ppc64/PPC-elf64abi.html
 // and in particular:
-// http://www.freestandards.org/spec/ELF/ppc64/PPC-elf64abi-1.9.html#FUNC-CALL
+//   https://refspecs.linuxfoundation.org/ELF/ppc64/PPC-elf64abi.html#FUNC-CALL
+// Little-endian ppc64le, however, uses ELF v2 ABI, which is here:
+//   http://openpowerfoundation.org/wp-content/uploads/resources/leabi/leabi-20170510.pdf
+// and in particular section 2.2, page 22. However, most big-endian ppc64
+// systems still use ELF v1, so this file should support both.
+//
+// Both ABIs pass the first 8 integral parameters and the first 13 floating
+// point parameters in registers r3-r10 and f1-f13. No stack space is
+// allocated for these by the caller. The rest of the parameters are passed
+// in the caller's stack area. The stack pointer must stay 16-byte aligned.
 
-#define PARAM_BUFFER_COUNT      16
-#define GPR_COUNT                7
-#define FPR_COUNT               13
+const uint32_t PARAM_BUFFER_COUNT   = 16;
+const uint32_t GPR_COUNT            = 7;
+const uint32_t FPR_COUNT            = 13;
 
 // PrepareAndDispatch() is called by SharedStub() and calls the actual method.
 //
 // - 'args[]' contains the arguments passed on stack
-// - 'gprData[]' contains the arguments passed in integer registers
-// - 'fprData[]' contains the arguments passed in floating point registers
+// - 'gpregs[]' contains the arguments passed in integer registers
+// - 'fpregs[]' contains the arguments passed in floating point registers
 //
 // The parameters are mapped into an array of type 'nsXPTCMiniVariant'
 // and then the method gets called.
-#include <stdio.h>
+//
+// Both ABIs use the same register assignment strategy, as per this
+// example from V1 ABI section 3.2.3 and V2 ABI section 2.2.3.2 [page 43]:
+//
+// typedef struct {
+//   int    a;
+//   double dd;
+// } sparm;
+// sparm   s, t;
+// int     c, d, e;
+// long double ld;
+// double  ff, gg, hh;
+//
+// x = func(c, ff, d, ld, s, gg, t, e, hh);
+//
+// Parameter     Register     Offset in parameter save area
+// c             r3           0-7    (not stored in parameter save area)
+// ff            f1           8-15   (not stored)
+// d             r5           16-23  (not stored)
+// ld            f2,f3        24-39  (not stored)
+// s             r8,r9        40-55  (not stored)
+// gg            f4           56-63  (not stored)
+// t             (none)       64-79  (stored in parameter save area)
+// e             (none)       80-87  (stored)
+// hh            f5           88-95  (not stored)
+//
+// i.e., each successive FPR usage skips a GPR, but not the other way around.
+
 extern "C" nsresult ATTRIBUTE_USED
-PrepareAndDispatch(nsXPTCStubBase* self,
-                   uint64_t methodIndex,
-                   uint64_t* args,
-                   uint64_t *gprData,
-                   double *fprData)
+PrepareAndDispatch(nsXPTCStubBase * self, uint32_t methodIndex,
+                   uint64_t * args, uint64_t * gpregs, double *fpregs)
 {
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
     nsXPTCMiniVariant* dispatchParams = nullptr;
@@ -48,7 +76,7 @@ PrepareAndDispatch(nsXPTCStubBase* self,
 
     self->mEntry->GetMethodInfo(uint16_t(methodIndex), &info);
     NS_ASSERTION(info,"no method info");
-    if (! info)
+    if (!info)
         return NS_ERROR_UNEXPECTED;
 
     paramCount = info->GetParamCount();
@@ -64,9 +92,11 @@ PrepareAndDispatch(nsXPTCStubBase* self,
     const uint8_t indexOfJSContext = info->IndexOfJSContext();
 
     uint64_t* ap = args;
-    uint32_t iCount = 0;
-    uint32_t fpCount = 0;
-    uint64_t tempu64;
+    // |that| is implicit in the calling convention; we really do start at the
+    // first GPR (as opposed to x86_64).
+    uint32_t nr_gpr = 0;
+    uint32_t nr_fpr = 0;
+    uint64_t value;
 
     for(i = 0; i < paramCount; i++) {
         const nsXPTParamInfo& param = info->GetParam(i);
@@ -74,67 +104,67 @@ PrepareAndDispatch(nsXPTCStubBase* self,
         nsXPTCMiniVariant* dp = &dispatchParams[i];
 
         if (i == indexOfJSContext) {
-            if (iCount < GPR_COUNT)
-                iCount++;
+            if (nr_gpr < GPR_COUNT)
+                nr_gpr++;
             else
                 ap++;
         }
 
         if (!param.IsOut() && type == nsXPTType::T_DOUBLE) {
-            if (fpCount < FPR_COUNT) {
-                dp->val.d = fprData[fpCount++];
+            if (nr_fpr < FPR_COUNT) {
+                dp->val.d = fpregs[nr_fpr++];
+                nr_gpr++;
+            } else {
+                dp->val.d = *(double*)ap++;
             }
-            else
-                dp->val.d = *(double*) ap;
-        } else if (!param.IsOut() && type == nsXPTType::T_FLOAT) {
-            if (fpCount < FPR_COUNT) {
-                dp->val.f = (float) fprData[fpCount++]; // in registers floats are passed as doubles
-            }
-            else {
-                float *p = (float *)ap;
-#ifndef __LITTLE_ENDIAN__
+            continue;
+        }
+        if (!param.IsOut() && type == nsXPTType::T_FLOAT) {
+            if (nr_fpr < FPR_COUNT) {
+                // Single-precision floats are passed in FPRs too.
+                dp->val.f = (float)fpregs[nr_fpr++];
+                nr_gpr++;
+            } else {
+#ifdef __LITTLE_ENDIAN__
+                dp->val.f = *(float*)ap++;
+#else
+                // Big endian needs adjustment to point to the least
+                // significant word.
+                float* p = (float*)ap;
                 p++;
-#endif
                 dp->val.f = *p;
+                ap++;
+#endif
             }
-        } else { /* integer type or pointer */
-            if (iCount < GPR_COUNT)
-                tempu64 = gprData[iCount];
-            else
-                tempu64 = *ap;
+            continue;
+        }
+        if (nr_gpr < GPR_COUNT)
+            value = gpregs[nr_gpr++];
+        else
+            value = *ap++;
 
-            if (param.IsOut() || !type.IsArithmetic())
-                dp->val.p = (void*) tempu64;
-            else if (type == nsXPTType::T_I8)
-                dp->val.i8  = (int8_t)   tempu64;
-            else if (type == nsXPTType::T_I16)
-                dp->val.i16 = (int16_t)  tempu64;
-            else if (type == nsXPTType::T_I32)
-                dp->val.i32 = (int32_t)  tempu64;
-            else if (type == nsXPTType::T_I64)
-                dp->val.i64 = (int64_t)  tempu64;
-            else if (type == nsXPTType::T_U8)
-                dp->val.u8  = (uint8_t)  tempu64;
-            else if (type == nsXPTType::T_U16)
-                dp->val.u16 = (uint16_t) tempu64;
-            else if (type == nsXPTType::T_U32)
-                dp->val.u32 = (uint32_t) tempu64;
-            else if (type == nsXPTType::T_U64)
-                dp->val.u64 = (uint64_t) tempu64;
-            else if (type == nsXPTType::T_BOOL)
-                dp->val.b   = (bool)   tempu64;
-            else if (type == nsXPTType::T_CHAR)
-                dp->val.c   = (char)     tempu64;
-            else if (type == nsXPTType::T_WCHAR)
-                dp->val.wc  = (wchar_t)  tempu64;
-            else
-                NS_ERROR("bad type");
+        if (param.IsOut() || !type.IsArithmetic()) {
+            dp->val.p = (void*) value;
+            continue;
         }
 
-        if (iCount < GPR_COUNT)
-            iCount++;  // gprs are skipped for fp args, so this always needs inc
-        else
-            ap++;
+        switch (type) {
+        case nsXPTType::T_I8:      dp->val.i8  = (int8_t)   value; break;
+        case nsXPTType::T_I16:     dp->val.i16 = (int16_t)  value; break;
+        case nsXPTType::T_I32:     dp->val.i32 = (int32_t)  value; break;
+        case nsXPTType::T_I64:     dp->val.i64 = (int64_t)  value; break;
+        case nsXPTType::T_U8:      dp->val.u8  = (uint8_t)  value; break;
+        case nsXPTType::T_U16:     dp->val.u16 = (uint16_t) value; break;
+        case nsXPTType::T_U32:     dp->val.u32 = (uint32_t) value; break;
+        case nsXPTType::T_U64:     dp->val.u64 = (uint64_t) value; break;
+        case nsXPTType::T_BOOL:    dp->val.b   = (bool)     value; break;
+        case nsXPTType::T_CHAR:    dp->val.c   = (char)     value; break;
+        case nsXPTType::T_WCHAR:   dp->val.wc  = (wchar_t)  value; break;
+
+        default:
+            NS_ERROR("bad type");
+            break;
+        }
     }
 
     nsresult result = self->mOuter->CallMethod((uint16_t) methodIndex, info,
@@ -148,23 +178,19 @@ PrepareAndDispatch(nsXPTCStubBase* self,
 
 // Load r11 with the constant 'n' and branch to SharedStub().
 //
-// XXX Yes, it's ugly that we're relying on gcc's name-mangling here;
-// however, it's quick, dirty, and'll break when the ABI changes on
-// us, which is what we want ;-).
-
-
-// gcc-3 version
-//
 // As G++3 ABI contains the length of the functionname in the mangled
 // name, it is difficult to get a generic assembler mechanism like
 // in the G++ 2.95 case.
+// XXX Yes, it's ugly that we're relying on gcc's name-mangling here;
+// however, it's quick, dirty, and'll break when the ABI changes on
+// us, which is what we want ;-).
 // Create names would be like:
 // _ZN14nsXPTCStubBase5Stub1Ev
 // _ZN14nsXPTCStubBase6Stub12Ev
 // _ZN14nsXPTCStubBase7Stub123Ev
 // _ZN14nsXPTCStubBase8Stub1234Ev
 // etc.
-// Use assembler directives to get the names right...
+// Use assembler directives to get the names right.
 
 #if _CALL_ELF == 2
 # define STUB_ENTRY(n)                                                  \
@@ -250,7 +276,7 @@ __asm__ (                                                               \
 #define SENTINEL_ENTRY(n)                                               \
 nsresult nsXPTCStubBase::Sentinel##n()                                  \
 {                                                                       \
-    NS_ERROR("nsXPTCStubBase::Sentinel called");                  \
+    NS_ERROR("nsXPTCStubBase::Sentinel called");                        \
     return NS_ERROR_NOT_IMPLEMENTED;                                    \
 }
 
