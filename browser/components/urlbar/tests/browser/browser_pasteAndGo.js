@@ -7,10 +7,6 @@
  * Tests for the paste and go functionality of the urlbar.
  */
 
-let clipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(
-  Ci.nsIClipboardHelper
-);
-
 add_task(async function() {
   const kURLs = [
     "http://example.com/1",
@@ -20,25 +16,11 @@ add_task(async function() {
   for (let url of kURLs) {
     await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
       gURLBar.focus();
-      await new Promise((resolve, reject) => {
-        waitForClipboard(
-          url,
-          function() {
-            clipboardHelper.copyString(url);
-          },
-          resolve,
-          () => reject(new Error(`Failed to copy string '${url}' to clipboard`))
-        );
+
+      await SimpleTest.promiseClipboardChange(url, () => {
+        clipboardHelper.copyString(url);
       });
-      let textBox = gURLBar.querySelector("moz-input-box");
-      let cxmenu = textBox.menupopup;
-      let cxmenuPromise = BrowserTestUtils.waitForEvent(cxmenu, "popupshown");
-      EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {
-        type: "contextmenu",
-        button: 2,
-      });
-      await cxmenuPromise;
-      let menuitem = textBox.getMenuItem("paste-and-go");
+      let menuitem = await promiseContextualMenuitem("paste-and-go");
       let browserLoadedPromise = BrowserTestUtils.browserLoaded(
         browser,
         false,
@@ -53,29 +35,14 @@ add_task(async function() {
   }
 });
 
-add_task(async function() {
+add_task(async function test_invisible_char() {
   const url = "http://example.com/4\u2028";
   await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
     gURLBar.focus();
-    await new Promise((resolve, reject) => {
-      waitForClipboard(
-        url,
-        function() {
-          clipboardHelper.copyString(url);
-        },
-        resolve,
-        () => reject(new Error(`Failed to copy string '${url}' to clipboard`))
-      );
+    await SimpleTest.promiseClipboardChange(url, () => {
+      clipboardHelper.copyString(url);
     });
-    let textBox = gURLBar.querySelector("moz-input-box");
-    let cxmenu = textBox.menupopup;
-    let cxmenuPromise = BrowserTestUtils.waitForEvent(cxmenu, "popupshown");
-    EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {
-      type: "contextmenu",
-      button: 2,
-    });
-    await cxmenuPromise;
-    let menuitem = textBox.getMenuItem("paste-and-go");
+    let menuitem = await promiseContextualMenuitem("paste-and-go");
     let browserLoadedPromise = BrowserTestUtils.browserLoaded(
       browser,
       false,
@@ -88,3 +55,35 @@ add_task(async function() {
     ok(true, "Successfully loaded " + url);
   });
 });
+
+add_task(async function test_with_input_and_results() {
+  // Test paste and go When there's some input and the results pane is open.
+  await promiseAutocompleteResultPopup("foo");
+  const url = "http://example.com/";
+  await SimpleTest.promiseClipboardChange(url, () => {
+    clipboardHelper.copyString(url);
+  });
+  let menuitem = await promiseContextualMenuitem("paste-and-go");
+  let browserLoadedPromise = BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    false,
+    url
+  );
+  EventUtils.synthesizeMouseAtCenter(menuitem, {});
+  // Using toSource in order to get the newlines escaped:
+  info("Paste and go, loading " + url.toSource());
+  await browserLoadedPromise;
+  ok(true, "Successfully loaded " + url);
+});
+
+async function promiseContextualMenuitem(anonid) {
+  let textBox = gURLBar.querySelector("moz-input-box");
+  let cxmenu = textBox.menupopup;
+  let cxmenuPromise = BrowserTestUtils.waitForEvent(cxmenu, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {
+    type: "contextmenu",
+    button: 2,
+  });
+  await cxmenuPromise;
+  return textBox.getMenuItem(anonid);
+}

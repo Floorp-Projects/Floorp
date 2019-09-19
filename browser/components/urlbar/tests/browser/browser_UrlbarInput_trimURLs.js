@@ -95,18 +95,10 @@ function testVal(originalValue, targetValue) {
 }
 
 function testCopy(originalValue, targetValue) {
-  return new Promise((resolve, reject) => {
-    waitForClipboard(
-      targetValue,
-      function() {
-        is(gURLBar.value, originalValue, "url bar copy value set");
-
-        gURLBar.focus();
-        gURLBar.select();
-        goDoCommand("cmd_copy");
-      },
-      resolve,
-      reject
-    );
+  return SimpleTest.promiseClipboardChange(targetValue, () => {
+    is(gURLBar.value, originalValue, "url bar copy value set");
+    gURLBar.focus();
+    gURLBar.select();
+    goDoCommand("cmd_copy");
   });
 }
