@@ -1,6 +1,9 @@
 const TEST_PAGE = `data:text/html,<html><body><a href="about:blank" target="_blank">Test</a></body></html>`;
-const CHROME_ALL = Ci.nsIWebBrowserChrome.CHROME_ALL;
-const CHROME_REMOTE_WINDOW = Ci.nsIWebBrowserChrome.CHROME_REMOTE_WINDOW;
+const {
+  CHROME_ALL,
+  CHROME_REMOTE_WINDOW,
+  CHROME_FISSION_WINDOW,
+} = Ci.nsIWebBrowserChrome;
 
 /**
  * Tests that when we open new browser windows from content they
@@ -32,15 +35,23 @@ add_task(async function() {
         .QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIXULWindow).chromeFlags;
 
-      // In the multi-process case, the new window will have the
+      let expected = CHROME_ALL;
+
+      // In the multi-process tab case, the new window will have the
       // CHROME_REMOTE_WINDOW flag set.
-      const EXPECTED = gMultiProcessBrowser
-        ? CHROME_ALL | CHROME_REMOTE_WINDOW
-        : CHROME_ALL;
+      if (gMultiProcessBrowser) {
+        expected |= CHROME_REMOTE_WINDOW;
+      }
 
-      is(chromeFlags, EXPECTED, "Window should have opened with all chrome");
+      // In the multi-process subframe case, the new window will have the
+      // CHROME_FISSION_WINDOW flag set.
+      if (gFissionBrowser) {
+        expected |= CHROME_FISSION_WINDOW;
+      }
 
-      BrowserTestUtils.closeWindow(win);
+      is(chromeFlags, expected, "Window should have opened with all chrome");
+
+      await BrowserTestUtils.closeWindow(win);
     }
   );
 });
