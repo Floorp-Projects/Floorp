@@ -229,17 +229,8 @@ async function checkMessageObjectContents(msg, expected, expandList = []) {
   });
 }
 
-const { PromiseTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromiseTestUtils.jsm"
-);
 PromiseTestUtils.whitelistRejectionsGlobally(/NS_ERROR_NOT_INITIALIZED/);
 PromiseTestUtils.whitelistRejectionsGlobally(/Error in asyncStorage/);
-
-// Many web replay tests can resume execution before the debugger has finished
-// all operations related to the pause.
-PromiseTestUtils.whitelistRejectionsGlobally(
-  /Current thread has paused or resumed/
-);
 
 // When running the full test suite, long delays can occur early on in tests,
 // before child processes have even been spawned. Allow a longer timeout to
