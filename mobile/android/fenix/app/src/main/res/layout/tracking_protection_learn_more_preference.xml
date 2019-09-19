@@ -6,7 +6,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp">
+    android:layout_marginBottom="12dp"
+    android:paddingTop="20dp"
+    android:background="#FF0250BB">
 
     <ImageView
         android:id="@+id/imageView"
@@ -23,7 +25,6 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
-        android:layout_marginBottom="20dp"
         android:ellipsize="none"
         android:letterSpacing="0.05"
         android:scrollHorizontally="false"
@@ -31,7 +32,7 @@
         android:text="@string/preference_enhanced_tracking_protection_explanation_title"
         android:textAppearance="@style/Header16TextStyle"
         android:textColor="@color/primary_text_dark_theme"
-        app:layout_constraintBottom_toTopOf="@android:id/summary"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toStartOf="@id/guideline"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -39,22 +40,24 @@
         android:id="@android:id/summary"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
         android:ellipsize="none"
         android:scrollHorizontally="false"
         android:text="@string/preference_enhanced_tracking_protection_explanation"
         android:textColor="@color/primary_text_dark_theme"
         android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/learn_more"
         app:layout_constraintEnd_toStartOf="@id/guideline"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="@android:id/title"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@android:id/title" />
 
     <TextView
         android:id="@+id/learn_more"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:paddingBottom="12dp"
         android:ellipsize="none"
         android:text="@string/preference_enhanced_tracking_protection_explanation_learn_more"
         android:textColor="@color/primary_text_dark_theme"
@@ -62,12 +65,14 @@
         app:layout_constraintEnd_toStartOf="@id/guideline"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@android:id/title"
-        app:layout_constraintTop_toBottomOf="@android:id/summary" />
+        app:layout_constraintTop_toBottomOf="@android:id/summary"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
     <ImageView
         android:layout_width="8dp"
         android:layout_height="0dp"
         android:layout_marginStart="12dp"
+        android:paddingBottom="12dp"
         android:importantForAccessibility="no"
         android:tint="@color/primary_text_dark_theme"
         app:layout_constraintBottom_toBottomOf="@id/learn_more"
@@ -80,5 +85,5 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintGuide_begin="210dp" />
+        app:layout_constraintGuide_percent="0.5" />
 </androidx.constraintlayout.widget.ConstraintLayout>
