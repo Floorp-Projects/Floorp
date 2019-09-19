@@ -442,9 +442,11 @@ bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
     }
   }
 
-#if !defined(ANDROID) && (defined(NIGHTLY_BUILD) || defined(DEBUG))
-  nsContentSecurityUtils::AssertEvalNotRestricted(cx, subjectPrincipal,
-                                                  scriptSample);
+#if !defined(ANDROID)
+  if (!nsContentSecurityUtils::IsEvalAllowed(cx, subjectPrincipal,
+                                             scriptSample)) {
+    return false;
+  }
 #endif
 
   if (NS_FAILED(rv)) {

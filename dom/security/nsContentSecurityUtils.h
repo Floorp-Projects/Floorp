@@ -20,9 +20,8 @@ typedef mozilla::Pair<nsCString, mozilla::Maybe<nsString>> FilenameType;
 class nsContentSecurityUtils {
  public:
   static FilenameType FilenameToEvalType(const nsString& fileName);
-  static void AssertEvalNotRestricted(JSContext* cx,
-                                      nsIPrincipal* aSubjectPrincipal,
-                                      const nsAString& aScript);
+  static bool IsEvalAllowed(JSContext* cx, nsIPrincipal* aSubjectPrincipal,
+                            const nsAString& aScript);
 
 #if defined(DEBUG)
   static void AssertAboutPageHasCSP(mozilla::dom::Document* aDocument);
