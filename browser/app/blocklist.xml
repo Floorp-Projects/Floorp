@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1568374273725">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1568816392824">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3414,6 +3414,18 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="13056233-543d-4c51-b89a-2a6b96ee324e" id="{23db2a76-49ca-4af2-af50-fccedd607e12}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="e22dbf2b-70c8-41ed-b17a-32f53a22055b" id="{91c43d32-3a20-40cb-933b-47fd7c4b5a4e}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="73cae2b8-f60e-47b3-afca-a1ff555f4ec5" id="/^((@yvd-addon)|(ydh@downloader\.youtube\.com)|(tomp3@youtube\.com))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="1e56fd0a-77b6-477d-bada-78a5c18a37dd" id="/^((\{d81c0c7d-7420-4737-a3b9-dd9edeb4412f\})|(\{2bc89af7-d0ff-4b22-b7f6-ec87d15d999e\})|(\{3ee12352-a9db-4370-aa27-7e1d9acb628a\}))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
