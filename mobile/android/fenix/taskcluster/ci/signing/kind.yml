@@ -71,4 +71,4 @@ jobs:
         dependencies:
             build: 'Build FenixNightlyLegacy task'  # comes from the old-decision task
         treeherder:
-            symbol: nightly-legacy(s)
+            symbol: nightlyLegacy(s)
