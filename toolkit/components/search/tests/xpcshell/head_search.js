@@ -349,6 +349,8 @@ async function withGeoServer(
   testFn,
   {
     visibleDefaultEngines = null,
+    geoLookupData = null,
+    preGeolookupPromise = Promise.resolve,
     cohort = null,
     intval200 = 86400 * 365,
     intval503 = 86400,
@@ -397,6 +399,15 @@ async function withGeoServer(
     }, delay);
   });
 
+  srv.registerPathHandler("/lookup_geoip", async (metadata, response) => {
+    response.processAsync();
+    await preGeolookupPromise;
+    response.setStatusLine("1.1", 200, "OK");
+    response.write(JSON.stringify(geoLookupData));
+    response.finish();
+    gRequests.push(metadata);
+  });
+
   srv.start(-1);
 
   let url = `http://localhost:${srv.identity.primaryPort}/${path}?`;
@@ -410,10 +421,11 @@ async function withGeoServer(
     SearchUtils.BROWSER_SEARCH_PREF + PREF_SEARCH_URL,
     "about:blank"
   );
-  Services.prefs.setCharPref(
-    "browser.search.geoip.url",
-    'data:application/json,{"country_code": "FR"}'
-  );
+
+  let geoLookupUrl = geoLookupData
+    ? `http://localhost:${srv.identity.primaryPort}/lookup_geoip`
+    : 'data:application/json,{"country_code": "FR"}';
+  Services.prefs.setCharPref("browser.search.geoip.url", geoLookupUrl);
 
   try {
     await testFn(gRequests);
