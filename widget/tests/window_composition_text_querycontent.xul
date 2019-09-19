@@ -8815,6 +8815,37 @@ async function runIMEContentObserverTest()
     checkSelectionChangeNotification(notifications[1], description, { offset: getNativeText("\n1\n2\n3").length + offsetAtStart, text: "" });
     checkPositionChangeNotification(notifications[2], description);
     dumpUnexpectedNotifications(description, 3);
+
+    // "<p>abc</p><p><br></p><p>{<br>}</p>" and removing second paragraph with DOM API
+    aElement.innerHTML = "<p>abc</p><p><br></p><p><br></p>";
+    sel.collapse(aElement.firstChild.nextSibling.nextSibling, 0);
+    await flushNotifications();
+    description = aDescription + "deleting previous paragraph with DOM API";
+    waitNotifications = promiseReceiveNotifications();
+    synthesizeKey("KEY_Unidentified", { code: "" }, win, callback);  // For setting the callback to recode notifications
+    aElement.firstChild.nextSibling.remove();
+    await waitNotifications;
+    ensureToRemovePrecedingPositionChangeNotification();
+    is(aElement.innerHTML, "<p>abc</p><p><br></p>", description + " the second paragraph should've been removed");
+    checkTextChangeNotification(notifications[0], description, { offset: getNativeText("\nabc").length + offsetAtStart, removedLength: getNativeText("\n\n").length, addedLength: 0 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: getNativeText("\nabc\n").length + offsetAtStart, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "<p>abc</p><p>{<br>}</p><p><br></p>" and removing last paragraph with DOM API
+    aElement.innerHTML = "<p>abc</p><p><br></p><p><br></p>";
+    sel.collapse(aElement.firstChild.nextSibling, 0);
+    await flushNotifications();
+    description = aDescription + "deleting next paragraph with DOM API";
+    waitNotifications = promiseReceiveNotifications();
+    synthesizeKey("KEY_Unidentified", { code: "" }, win, callback);  // For setting the callback to recode notifications
+    aElement.firstChild.nextSibling.nextSibling.remove();
+    await waitNotifications;
+    ensureToRemovePrecedingPositionChangeNotification();
+    is(aElement.innerHTML, "<p>abc</p><p><br></p>", description + " the last paragraph should've been removed");
+    checkTextChangeNotification(notifications[0], description, { offset: getNativeText("\nabc\n\n").length + offsetAtStart, removedLength: getNativeText("\n\n").length, addedLength: 0 });
+    checkPositionChangeNotification(notifications[1], description);
+    dumpUnexpectedNotifications(description, 2);
   }
 
   await testWithPlaintextEditor("runIMEContentObserverTest with input element: ", input, false);
@@ -8823,7 +8854,7 @@ async function runIMEContentObserverTest()
   await testWithHTMLEditor("runIMEContentObserverTest with contenteditable (defaultParagraphSeparator is p): ", contenteditable, "p");
   await testWithHTMLEditor("runIMEContentObserverTest with contenteditable (defaultParagraphSeparator is div): ", contenteditable, "div");
   // XXX Due to the difference of HTML editor behavior between designMode and contenteditable,
-  //     testWithHTMLEditor() gets some unexpected behavior.  However, IMEContentObserveri is
+  //     testWithHTMLEditor() gets some unexpected behavior.  However, IMEContentObserver is
   //     not depend on editor's detail.  So, we should investigate this issue later.  It's not
   //     so important for now.
   // await testWithHTMLEditor("runIMEContentObserverTest in designMode (defaultParagraphSeparator is br): ", iframe2.contentDocument.body, "br");
