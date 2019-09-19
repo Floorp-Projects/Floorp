@@ -250,7 +250,21 @@ already_AddRefed<Promise> ExecuteOpOnMainOrWorkerThread(
     // Storage Standard 7. API
     // If origin is an opaque origin, then reject promise with a TypeError.
     if (principal->GetIsNullPrincipal()) {
-      promise->MaybeReject(NS_ERROR_DOM_TYPE_ERR);
+      switch (aType) {
+        case RequestResolver::Type::Persisted:
+          promise->MaybeRejectWithTypeError(
+              u"persisted() called for opaque origin");
+          break;
+        case RequestResolver::Type::Persist:
+          promise->MaybeRejectWithTypeError(
+              u"persist() called for opaque origin");
+          break;
+        case RequestResolver::Type::Estimate:
+          promise->MaybeRejectWithTypeError(
+              u"estimate() called for opaque origin");
+          break;
+      }
+
       return promise.forget();
     }
 
@@ -381,7 +395,8 @@ void RequestResolver::ResolveOrReject() {
     if (NS_SUCCEEDED(mResultCode)) {
       promise->MaybeResolve(mStorageEstimate);
     } else {
-      promise->MaybeReject(NS_ERROR_DOM_TYPE_ERR);
+      promise->MaybeRejectWithTypeError(
+          u"Internal error while estimating storage usage");
     }
 
     return;
