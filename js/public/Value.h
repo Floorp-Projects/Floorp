@@ -511,6 +511,21 @@ class alignas(8) Value {
  private:
   JSValueTag toTag() const { return JSValueTag(asBits_ >> JSVAL_TAG_SHIFT); }
 
+  template <typename T, JSValueTag Tag>
+  T* unboxGCPointer() const {
+    MOZ_ASSERT((asBits_ & js::gc::CellAlignMask) == 0,
+               "GC pointer is not aligned. Is this memory corruption?");
+#if defined(JS_NUNBOX32)
+    uintptr_t payload = uint32_t(asBits_);
+    return reinterpret_cast<T*>(payload);
+#elif defined(JS_PUNBOX64)
+    // Note: the 'Spectre mitigations' comment at the top of this class
+    // explains why we use XOR here.
+    constexpr uint64_t shiftedTag = uint64_t(Tag) << JSVAL_TAG_SHIFT;
+    return reinterpret_cast<T*>(uintptr_t(asBits_ ^ shiftedTag));
+#endif
+  }
+
  public:
   /*** JIT-only interfaces to interact with and create raw Values ***/
 #if defined(JS_NUNBOX32)
@@ -684,43 +699,25 @@ class alignas(8) Value {
 
   JSString* toString() const {
     MOZ_ASSERT(isString());
-#if defined(JS_NUNBOX32)
-    return reinterpret_cast<JSString*>(uintptr_t(asBits_))
-#elif defined(JS_PUNBOX64)
-    // Note: the 'Spectre mitigations' comment at the top of this class
-    // explains why we use XOR here and in other to* methods.
-    return reinterpret_cast<JSString*>(asBits_ ^ JSVAL_SHIFTED_TAG_STRING);
-#endif
+    return unboxGCPointer<JSString, JSVAL_TAG_STRING>();
   }
 
   JS::Symbol* toSymbol() const {
     MOZ_ASSERT(isSymbol());
-#if defined(JS_NUNBOX32)
-    return reinterpret_cast<JS::Symbol*>(uintptr_t(asBits_));
-#elif defined(JS_PUNBOX64)
-    return reinterpret_cast<JS::Symbol*>(asBits_ ^ JSVAL_SHIFTED_TAG_SYMBOL);
-#endif
+    return unboxGCPointer<JS::Symbol, JSVAL_TAG_SYMBOL>();
   }
 
   JS::BigInt* toBigInt() const {
     MOZ_ASSERT(isBigInt());
-#if defined(JS_NUNBOX32)
-    return reinterpret_cast<JS::BigInt*>(uintptr_t(asBits_));
-#elif defined(JS_PUNBOX64)
-    return reinterpret_cast<JS::BigInt*>(asBits_ ^ JSVAL_SHIFTED_TAG_BIGINT);
-#endif
+    return unboxGCPointer<JS::BigInt, JSVAL_TAG_BIGINT>();
   }
 
   JSObject& toObject() const {
     MOZ_ASSERT(isObject());
-#if defined(JS_NUNBOX32)
-    return *reinterpret_cast<JSObject*>(uintptr_t(asBits_));
-#elif defined(JS_PUNBOX64)
-    uint64_t ptrBits = asBits_ ^ JSVAL_SHIFTED_TAG_OBJECT;
-    MOZ_ASSERT(ptrBits);
-    MOZ_ASSERT((ptrBits & 0x7) == 0);
-    return *reinterpret_cast<JSObject*>(ptrBits);
+#if defined(JS_PUNBOX64)
+    MOZ_ASSERT((asBits_ & detail::ValueGCThingPayloadMask) != 0);
 #endif
+    return *unboxGCPointer<JSObject, JSVAL_TAG_OBJECT>();
   }
 
   JSObject* toObjectOrNull() const {
