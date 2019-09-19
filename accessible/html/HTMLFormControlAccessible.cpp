@@ -410,9 +410,9 @@ HTMLFileInputAccessible::HTMLFileInputAccessible(nsIContent* aContent,
 }
 
 role HTMLFileInputAccessible::NativeRole() const {
-  // JAWS wants a text container, others don't mind. No specific role in
-  // AT APIs.
-  return roles::TEXT_CONTAINER;
+  // No specific role in AT APIs. We use GROUPING so that the label will be
+  // reported by screen readers when focus enters this control .
+  return roles::GROUPING;
 }
 
 nsresult HTMLFileInputAccessible::HandleAccEvent(AccEvent* aEvent) {
