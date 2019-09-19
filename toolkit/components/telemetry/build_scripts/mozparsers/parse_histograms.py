@@ -731,23 +731,31 @@ def from_nsDeprecatedOperationList(filename, strict_type_checks):
 
     return histograms
 
+
 def to_camel_case(property_name):
-    return re.sub("(^|_|-)([a-z0-9])", lambda m: m.group(2).upper(), property_name.strip("_").strip("-"))
+    return re.sub("(^|_|-)([a-z0-9])",
+                  lambda m: m.group(2).upper(),
+                  property_name.strip("_").strip("-"))
+
+
+def add_css_property_counters(histograms, property_name):
+    def add_counter(context):
+        name = 'USE_COUNTER2_CSS_PROPERTY_%s_%s' % (to_camel_case(property_name), context.upper())
+        histograms[name] = {
+            'expires_in_version': 'never',
+            'kind': 'boolean',
+            'description': 'Whether a %s used the CSS property %s' % (context, property_name)
+        }
+
+    add_counter('document')
+    add_counter('page')
 
 
 def from_ServoCSSPropList(filename, strict_type_checks):
     histograms = collections.OrderedDict()
     properties = runpy.run_path(filename)["data"]
     for prop in properties:
-        def add_counter(context):
-            name = 'USE_COUNTER2_CSS_PROPERTY_%s_%s' % (to_camel_case(prop.name), context.upper())
-            histograms[name] = {
-                'expires_in_version': 'never',
-                'kind': 'boolean',
-                'description': 'Whether a %s used the CSS property %s' % (context, prop.name)
-            }
-        add_counter('document')
-        add_counter('page')
+        add_css_property_counters(histograms, prop.name)
     return histograms
 
 
@@ -761,15 +769,7 @@ def from_counted_unknown_properties(filename, strict_type_checks):
     # We use the same naming as CSS properties so that we don't get
     # discontinuity when we implement or prototype them.
     for prop in properties:
-        def add_counter(context):
-            name = 'USE_COUNTER2_CSS_PROPERTY_%s_%s' % (to_camel_case(prop), context.upper())
-            histograms[name] = {
-                'expires_in_version': 'never',
-                'kind': 'boolean',
-                'description': 'Whether a %s used the CSS property %s' % (context, prop)
-            }
-        add_counter('document')
-        add_counter('page')
+        add_css_property_counters(histograms, prop)
     return histograms
 
 
