@@ -83,7 +83,8 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
   mozilla::ipc::IPCResult RecvSetEmbeddedDocAccessibleCOMProxy(
       const IDispatchHolder& aCOMProxy);
 
-  mozilla::ipc::IPCResult RecvFireFrameLoadEvent(bool aIsTrusted);
+  mozilla::ipc::IPCResult RecvMaybeFireEmbedderLoadEvents(
+      bool aIsTrusted, bool aFireLoadAtEmbeddingElement);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvScrollRectIntoView(
@@ -98,9 +99,12 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
  private:
   ~BrowserBridgeChild();
 
+  void UnblockOwnerDocsLoadEvent();
+
   TabId mId;
   LayersId mLayersId;
   bool mIPCOpen;
+  bool mHadInitialLoad = false;
   RefPtr<nsFrameLoader> mFrameLoader;
   RefPtr<BrowsingContext> mBrowsingContext;
 #if defined(ACCESSIBILITY) && defined(XP_WIN)

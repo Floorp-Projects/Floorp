@@ -1951,7 +1951,8 @@ void nsGlobalWindowInner::FireFrameLoadEvent(bool aIsTrusted) {
       return;
     }
 
-    mozilla::Unused << browserChild->SendFireFrameLoadEvent(aIsTrusted);
+    mozilla::Unused << browserChild->SendMaybeFireEmbedderLoadEvents(
+        aIsTrusted, /*aFireLoadAtEmbeddingElement*/ true);
   }
 }
 

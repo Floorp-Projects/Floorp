@@ -145,19 +145,22 @@ BrowserBridgeChild::RecvSetEmbeddedDocAccessibleCOMProxy(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserBridgeChild::RecvFireFrameLoadEvent(
-    bool aIsTrusted) {
+mozilla::ipc::IPCResult BrowserBridgeChild::RecvMaybeFireEmbedderLoadEvents(
+    bool aIsTrusted, bool aFireLoadAtEmbeddingElement) {
   RefPtr<Element> owner = mFrameLoader->GetOwnerContent();
   if (!owner) {
     return IPC_OK();
   }
 
-  // Fire the `load` event on our embedder element.
-  nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetEvent event(aIsTrusted, eLoad);
-  event.mFlags.mBubbles = false;
-  event.mFlags.mCancelable = false;
-  EventDispatcher::Dispatch(owner, nullptr, &event, nullptr, &status);
+  if (aFireLoadAtEmbeddingElement) {
+    nsEventStatus status = nsEventStatus_eIgnore;
+    WidgetEvent event(aIsTrusted, eLoad);
+    event.mFlags.mBubbles = false;
+    event.mFlags.mCancelable = false;
+    EventDispatcher::Dispatch(owner, nullptr, &event, nullptr, &status);
+  }
+
+  UnblockOwnerDocsLoadEvent();
 
   return IPC_OK();
 }
@@ -214,6 +217,20 @@ mozilla::ipc::IPCResult BrowserBridgeChild::RecvSubFrameCrashed(
 
 void BrowserBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCOpen = false;
+
+  // Ensure we unblock our document's 'load' event (in case the OOP-iframe has
+  // been removed before it finished loading, or its subprocess crashed):
+  UnblockOwnerDocsLoadEvent();
+}
+
+void BrowserBridgeChild::UnblockOwnerDocsLoadEvent() {
+  if (!mHadInitialLoad) {
+    mHadInitialLoad = true;
+    if (auto* docShell =
+            nsDocShell::Cast(mBrowsingContext->GetParent()->GetDocShell())) {
+      docShell->OOPChildLoadDone(this);
+    }
+  }
 }
 
 }  // namespace dom
