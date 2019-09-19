@@ -27,7 +27,7 @@
 #include "js/Utility.h"
 
 namespace JS {
-class Value;
+union Value;
 }
 
 /* JS::Value can store a full int32_t. */
@@ -35,9 +35,7 @@ class Value;
 #define JSVAL_INT_MIN ((int32_t)0x80000000)
 #define JSVAL_INT_MAX ((int32_t)0x7fffffff)
 
-#if defined(JS_NUNBOX32)
-#  define JSVAL_TAG_SHIFT 32
-#elif defined(JS_PUNBOX64)
+#if defined(JS_PUNBOX64)
 #  define JSVAL_TAG_SHIFT 47
 #endif
 
@@ -340,9 +338,41 @@ static inline double CanonicalizeNaN(double d) {
  *   conditional move (not speculated) to zero the payload register if the type
  *   doesn't match.
  */
-class alignas(8) Value {
+union alignas(8) Value {
  private:
   uint64_t asBits_;
+
+  struct {
+#if defined(JS_PUNBOX64)
+#  if MOZ_BIG_ENDIAN
+    uint32_t : 32;  // padding
+#  endif            // MOZ_BIG_ENDIAN
+    union {
+      int32_t i32_;
+      uint32_t u32_;
+      JSWhyMagic why_;
+    } payload_;
+#elif defined(JS_NUNBOX32)
+#  if MOZ_BIG_ENDIAN
+    JSValueTag tag_;
+#  endif  // MOZ_BIG_ENDIAN
+    union {
+      int32_t i32_;
+      uint32_t u32_;
+      uint32_t boo_;  // Don't use |bool| -- it must be four bytes.
+      JSString* str_;
+      JS::Symbol* sym_;
+      JS::BigInt* bi_;
+      JSObject* obj_;
+      js::gc::Cell* cell_;
+      void* ptr_;
+      JSWhyMagic why_;
+    } payload_;
+#  if MOZ_LITTLE_ENDIAN
+    JSValueTag tag_;
+#  endif  // MOZ_LITTLE_ENDIAN
+#endif    // defined(JS_PUNBOX64)
+  } s_;
 
  public:
   constexpr Value() : asBits_(bitsFromTagAndPayload(JSVAL_TAG_UNDEFINED, 0)) {}
@@ -376,7 +406,11 @@ class alignas(8) Value {
 
   static constexpr uint64_t bitsFromTagAndPayload(JSValueTag tag,
                                                   PayloadType payload) {
-    return (uint64_t(tag) << JSVAL_TAG_SHIFT) | payload;
+#if defined(JS_NUNBOX32)
+    return (uint64_t(uint32_t(tag)) << 32) | payload;
+#elif defined(JS_PUNBOX64)
+    return (uint64_t(uint32_t(tag)) << JSVAL_TAG_SHIFT) | payload;
+#endif
   }
 
   static constexpr Value fromTagAndPayload(JSValueTag tag,
@@ -467,8 +501,6 @@ class alignas(8) Value {
   }
 
   void setMagicUint32(uint32_t payload) {
-    MOZ_ASSERT(payload >= JS_WHY_MAGIC_COUNT,
-               "This should only be used for non-standard magic values");
     asBits_ = bitsFromTagAndPayload(JSVAL_TAG_MAGIC, payload);
     MOZ_ASSERT(magicUint32() == payload);
   }
@@ -509,29 +541,22 @@ class alignas(8) Value {
   }
 
  private:
-  JSValueTag toTag() const { return JSValueTag(asBits_ >> JSVAL_TAG_SHIFT); }
-
-  template <typename T, JSValueTag Tag>
-  T* unboxGCPointer() const {
-    MOZ_ASSERT((asBits_ & js::gc::CellAlignMask) == 0,
-               "GC pointer is not aligned. Is this memory corruption?");
+  JSValueTag toTag() const {
 #if defined(JS_NUNBOX32)
-    uintptr_t payload = uint32_t(asBits_);
-    return reinterpret_cast<T*>(payload);
+    return s_.tag_;
 #elif defined(JS_PUNBOX64)
-    // Note: the 'Spectre mitigations' comment at the top of this class
-    // explains why we use XOR here.
-    constexpr uint64_t shiftedTag = uint64_t(Tag) << JSVAL_TAG_SHIFT;
-    return reinterpret_cast<T*>(uintptr_t(asBits_ ^ shiftedTag));
+    return JSValueTag(asBits_ >> JSVAL_TAG_SHIFT);
 #endif
   }
 
  public:
   /*** JIT-only interfaces to interact with and create raw Values ***/
 #if defined(JS_NUNBOX32)
-  PayloadType toNunboxPayload() const { return uint32_t(asBits_); }
+  PayloadType toNunboxPayload() const {
+    return static_cast<PayloadType>(s_.payload_.i32_);
+  }
 
-  JSValueTag toNunboxTag() const { return toTag(); }
+  JSValueTag toNunboxTag() const { return s_.tag_; }
 #elif defined(JS_PUNBOX64)
   const void* bitsAsPunboxPointer() const {
     return reinterpret_cast<void*>(asBits_);
@@ -641,7 +666,7 @@ class alignas(8) Value {
     if (!isMagic()) {
       return false;
     }
-    MOZ_RELEASE_ASSERT(whyMagic() == why);
+    MOZ_RELEASE_ASSERT(s_.payload_.why_ == why);
     return true;
   }
 
@@ -663,13 +688,13 @@ class alignas(8) Value {
   }
 
   JSWhyMagic whyMagic() const {
-    MOZ_ASSERT(magicUint32() < JS_WHY_MAGIC_COUNT);
-    return static_cast<JSWhyMagic>(magicUint32());
+    MOZ_ASSERT(isMagic());
+    return s_.payload_.why_;
   }
 
   uint32_t magicUint32() const {
     MOZ_ASSERT(isMagic());
-    return uint32_t(asBits_);
+    return s_.payload_.u32_;
   }
 
   /*** Comparison ***/
@@ -684,7 +709,11 @@ class alignas(8) Value {
 
   int32_t toInt32() const {
     MOZ_ASSERT(isInt32());
+#if defined(JS_NUNBOX32)
+    return s_.payload_.i32_;
+#elif defined(JS_PUNBOX64)
     return int32_t(asBits_);
+#endif
   }
 
   double toDouble() const {
@@ -699,31 +728,49 @@ class alignas(8) Value {
 
   JSString* toString() const {
     MOZ_ASSERT(isString());
-    return unboxGCPointer<JSString, JSVAL_TAG_STRING>();
+#if defined(JS_NUNBOX32)
+    return s_.payload_.str_;
+#elif defined(JS_PUNBOX64)
+    // Note: the 'Spectre mitigations' comment at the top of this class
+    // explains why we use XOR here and in other to* methods.
+    return reinterpret_cast<JSString*>(asBits_ ^ JSVAL_SHIFTED_TAG_STRING);
+#endif
   }
 
   JS::Symbol* toSymbol() const {
     MOZ_ASSERT(isSymbol());
-    return unboxGCPointer<JS::Symbol, JSVAL_TAG_SYMBOL>();
+#if defined(JS_NUNBOX32)
+    return s_.payload_.sym_;
+#elif defined(JS_PUNBOX64)
+    return reinterpret_cast<JS::Symbol*>(asBits_ ^ JSVAL_SHIFTED_TAG_SYMBOL);
+#endif
   }
 
   JS::BigInt* toBigInt() const {
     MOZ_ASSERT(isBigInt());
-    return unboxGCPointer<JS::BigInt, JSVAL_TAG_BIGINT>();
+#if defined(JS_NUNBOX32)
+    return s_.payload_.bi_;
+#elif defined(JS_PUNBOX64)
+    return reinterpret_cast<JS::BigInt*>(asBits_ ^ JSVAL_SHIFTED_TAG_BIGINT);
+#endif
   }
 
   JSObject& toObject() const {
     MOZ_ASSERT(isObject());
-#if defined(JS_PUNBOX64)
-    MOZ_ASSERT((asBits_ & detail::ValueGCThingPayloadMask) != 0);
+#if defined(JS_NUNBOX32)
+    return *s_.payload_.obj_;
+#elif defined(JS_PUNBOX64)
+    uint64_t ptrBits = asBits_ ^ JSVAL_SHIFTED_TAG_OBJECT;
+    MOZ_ASSERT(ptrBits);
+    MOZ_ASSERT((ptrBits & 0x7) == 0);
+    return *reinterpret_cast<JSObject*>(ptrBits);
 #endif
-    return *unboxGCPointer<JSObject, JSVAL_TAG_OBJECT>();
   }
 
   JSObject* toObjectOrNull() const {
     MOZ_ASSERT(isObjectOrNull());
 #if defined(JS_NUNBOX32)
-    return reinterpret_cast<JSObject*>(uintptr_t(asBits_));
+    return s_.payload_.obj_;
 #elif defined(JS_PUNBOX64)
     // Note: the 'Spectre mitigations' comment at the top of this class
     // explains why we use XOR here and in other to* methods.
@@ -737,7 +784,7 @@ class alignas(8) Value {
   js::gc::Cell* toGCThing() const {
     MOZ_ASSERT(isGCThing());
 #if defined(JS_NUNBOX32)
-    return reinterpret_cast<js::gc::Cell*>(uintptr_t(asBits_));
+    return s_.payload_.cell_;
 #elif defined(JS_PUNBOX64)
     uint64_t ptrBits = asBits_ & detail::ValueGCThingPayloadMask;
     MOZ_ASSERT((ptrBits & 0x7) == 0);
@@ -750,7 +797,7 @@ class alignas(8) Value {
   bool toBoolean() const {
     MOZ_ASSERT(isBoolean());
 #if defined(JS_NUNBOX32)
-    return bool(toNunboxPayload());
+    return bool(s_.payload_.boo_);
 #elif defined(JS_PUNBOX64)
     return bool(asBits_ & 0x1);
 #endif
@@ -758,7 +805,7 @@ class alignas(8) Value {
 
   uint32_t payloadAsRawUint32() const {
     MOZ_ASSERT(!isDouble());
-    return uint32_t(asBits_);
+    return s_.payload_.u32_;
   }
 
   uint64_t asRawBits() const { return asBits_; }
@@ -790,19 +837,24 @@ class alignas(8) Value {
    */
 
   void setPrivate(void* ptr) {
-#if defined(JS_PUNBOX64)
+#if defined(JS_NUNBOX32)
+    s_.tag_ = JSValueTag(0);
+    s_.payload_.ptr_ = ptr;
+#elif defined(JS_PUNBOX64)
     MOZ_ASSERT(detail::IsValidUserModePointer(uintptr_t(ptr)));
-#endif
     asBits_ = uintptr_t(ptr);
+#endif
     MOZ_ASSERT(isDouble());
   }
 
   void* toPrivate() const {
     MOZ_ASSERT(isDouble());
-#if defined(JS_PUNBOX64)
+#if defined(JS_NUNBOX32)
+    return s_.payload_.ptr_;
+#elif defined(JS_PUNBOX64)
     MOZ_ASSERT(detail::IsValidUserModePointer(asBits_));
+    return reinterpret_cast<void*>(asBits_);
 #endif
-    return reinterpret_cast<void*>(uintptr_t(asBits_));
   }
 
   void setPrivateUint32(uint32_t ui) {
