@@ -651,31 +651,30 @@ nsresult PaymentRequestManager::RespondPayment(
     }
     case IPCPaymentActionResponse::TIPCPaymentShowActionResponse: {
       const IPCPaymentShowActionResponse& response = aResponse;
-      nsresult rejectedReason = NS_ERROR_DOM_ABORT_ERR;
+      ErrorResult rejectedReason;
       ResponseData responseData;
       ConvertResponseData(response.data(), responseData);
       switch (response.status()) {
         case nsIPaymentActionResponse::PAYMENT_ACCEPTED: {
-          rejectedReason = NS_OK;
           break;
         }
         case nsIPaymentActionResponse::PAYMENT_REJECTED: {
-          rejectedReason = NS_ERROR_DOM_ABORT_ERR;
+          rejectedReason.Throw(NS_ERROR_DOM_ABORT_ERR);
           break;
         }
         case nsIPaymentActionResponse::PAYMENT_NOTSUPPORTED: {
-          rejectedReason = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+          rejectedReason.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
           break;
         }
         default: {
-          rejectedReason = NS_ERROR_UNEXPECTED;
+          rejectedReason.Throw(NS_ERROR_UNEXPECTED);
           break;
         }
       }
       aRequest->RespondShowPayment(response.methodName(), responseData,
                                    response.payerName(), response.payerEmail(),
                                    response.payerPhone(), rejectedReason);
-      if (NS_FAILED(rejectedReason)) {
+      if (rejectedReason.Failed()) {
         NotifyRequestDone(aRequest);
       }
       break;

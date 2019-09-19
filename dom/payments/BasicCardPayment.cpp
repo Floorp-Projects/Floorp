@@ -111,14 +111,19 @@ bool BasicCardService::IsValidExpiryYear(const nsAString& aExpiryYear) {
   return true;
 }
 
-bool BasicCardService::IsValidBasicCardErrors(JSContext* aCx, JSObject* aData) {
-  if (!aData) {
-    return true;
-  }
+void BasicCardService::CheckForValidBasicCardErrors(JSContext* aCx, JSObject* aData,
+                                                    ErrorResult& aRv) {
+  MOZ_ASSERT(aData, "Don't pass null data");
   JS::RootedValue data(aCx, JS::ObjectValue(*aData));
 
+  // XXXbz Just because aData converts to BasicCardErrors right now doesn't mean
+  // it will if someone tries again!  Should we be replacing aData with a
+  // conversion of the BasicCardErrors dictionary to a JS object in a clean
+  // compartment or something?
   BasicCardErrors bcError;
-  return !bcError.Init(aCx, data);
+  if (!bcError.Init(aCx, data)) {
+    aRv.NoteJSContextException(aCx);
+  }
 }
 }  // end of namespace dom
 }  // end of namespace mozilla

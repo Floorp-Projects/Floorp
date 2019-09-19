@@ -55,8 +55,8 @@ class MerchantValidationEvent : public Event, public PromiseNativeHandler {
   void SetMethodName(const nsAString& aMethodName);
 
  protected:
-  Result<Ok, nsresult> init(const MerchantValidationEventInit& aEventInitDict,
-                            nsString& errMsg);
+  void init(const MerchantValidationEventInit& aEventInitDict,
+            ErrorResult& aRv);
   ~MerchantValidationEvent();
 
  private:
