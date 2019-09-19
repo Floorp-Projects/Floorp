@@ -76,18 +76,18 @@ add_task(async function() {
   // check for properties here.
   await check_use_counter_img(
     "file_use_counter_svg_getElementById.svg",
-    "PROPERTY_FILL"
+    "CSS_PROPERTY_Fill"
   );
   await check_use_counter_img(
     "file_use_counter_svg_currentScale.svg",
-    "PROPERTY_FILL"
+    "CSS_PROPERTY_Fill"
   );
 
   // Check that use counters are incremented by directly loading SVGs
   // that reference patterns defined in another SVG file.
   await check_use_counter_direct(
     "file_use_counter_svg_fill_pattern.svg",
-    "PROPERTY_FILLOPACITY",
+    "CSS_PROPERTY_FillOpacity",
     /*xfail=*/ true
   );
 
@@ -95,7 +95,7 @@ add_task(async function() {
   // that reference patterns defined in the same file or in data: URLs.
   await check_use_counter_direct(
     "file_use_counter_svg_fill_pattern_internal.svg",
-    "PROPERTY_FILLOPACITY"
+    "CSS_PROPERTY_FillOpacity",
   );
   // data: URLs don't correctly propagate to their referring document yet.
   //yield check_use_counter_direct("file_use_counter_svg_fill_pattern_data.svg",
