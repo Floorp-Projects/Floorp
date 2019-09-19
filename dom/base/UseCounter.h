@@ -27,6 +27,26 @@ enum UseCounter : int16_t {
 #include "nsDeprecatedOperationList.h"
 #undef DEPRECATED_OPERATION
 
+  eUseCounter_FirstCSSProperty,
+  __reset_hack = eUseCounter_FirstCSSProperty - 1,
+
+// Need an extra level of macro nesting to force expansion of method_
+// params before they get pasted.
+#define CSS_PROP_USE_COUNTER(method_) eUseCounter_property_##method_,
+#define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) privatename_
+#define CSS_PROP_LONGHAND(name_, id_, method_, ...) \
+  CSS_PROP_USE_COUNTER(method_)
+#define CSS_PROP_SHORTHAND(name_, id_, method_, ...) \
+  CSS_PROP_USE_COUNTER(method_)
+#define CSS_PROP_ALIAS(name_, aliasid_, id_, method_, ...) \
+  CSS_PROP_USE_COUNTER(method_)
+#include "mozilla/ServoCSSPropList.h"
+#undef CSS_PROP_ALIAS
+#undef CSS_PROP_SHORTHAND
+#undef CSS_PROP_LONGHAND
+#undef CSS_PROP_PUBLIC_OR_PRIVATE
+#undef CSS_PROP_USE_COUNTER
+
   eUseCounter_Count
 };
 
