@@ -15,14 +15,11 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/RootingAPI.h"  // JS::Handle, JS::MutableHandle
+#include "js/Value.h"       // JS::Value
 
 struct JSContext;
 class JSObject;
 class JSString;
-
-namespace JS {
-union Value;
-}
 
 using JSONWriteCallback = bool (*)(const char16_t* buf, uint32_t len,
                                    void* data);
