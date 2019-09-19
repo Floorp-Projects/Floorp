@@ -879,7 +879,7 @@ class SyncedBookmarksMirror {
     if (url) {
       // The query has a valid URL. Determine if we need to rewrite and reupload
       // it.
-      let params = new URLSearchParams(url.pathname);
+      let params = new URLSearchParams(url.href.slice(url.protocol.length));
       let type = +params.get("type");
       if (type == Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_CONTENTS) {
         // Legacy tag queries with this type use a `place:` URL with a `folder`
@@ -888,13 +888,20 @@ class SyncedBookmarksMirror {
         // query for reupload.
         let tagFolderName = validateTag(record.folderName);
         if (tagFolderName) {
-          url.href = `place:tag=${tagFolderName}`;
-          validity = Ci.mozISyncedBookmarksMerger.VALIDITY_REUPLOAD;
+          try {
+            url.href = `place:tag=${tagFolderName}`;
+            validity = Ci.mozISyncedBookmarksMerger.VALIDITY_REUPLOAD;
+          } catch (ex) {
+            // The tag folder name isn't URL-encoded (bug 1449939), so we might
+            // produce an invalid URL. However, invalid URLs are already likely
+            // to cause other issues, and it's better to replace or delete the
+            // query than break syncing or the Firefox UI.
+            url = null;
+          }
         } else {
           // The tag folder name is invalid, so replace or delete the remote
           // copy.
           url = null;
-          validity = Ci.mozISyncedBookmarksMerger.VALIDITY_REPLACE;
         }
       } else {
         let folder = params.get("folder");
@@ -904,14 +911,20 @@ class SyncedBookmarksMirror {
           // causes the query to return all items in the database, so we add
           // `excludeItems=1` to stop it from doing so. We also flag the
           // rewritten query for reupload.
-          url.href = `${url.href}&excludeItems=1`;
-          validity = Ci.mozISyncedBookmarksMerger.VALIDITY_REUPLOAD;
+          try {
+            url.href = `${url.href}&excludeItems=1`;
+            validity = Ci.mozISyncedBookmarksMerger.VALIDITY_REUPLOAD;
+          } catch (ex) {
+            url = null;
+          }
         }
       }
 
       // Other queries are implicitly valid, and don't need to be reuploaded
       // or replaced.
+    }
 
+    if (url) {
       await this.maybeStoreRemoteURL(url);
     } else {
       // If the query doesn't have a valid URL, we must replace the remote copy
