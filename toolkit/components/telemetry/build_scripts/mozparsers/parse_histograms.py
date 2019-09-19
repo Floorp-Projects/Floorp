@@ -773,11 +773,35 @@ def from_counted_unknown_properties(filename, strict_type_checks):
     return histograms
 
 
+# This is only used for probe-scraper.
+def from_properties_db(filename, strict_type_checks):
+    histograms = collections.OrderedDict()
+    with open(filename, 'r') as f:
+        in_css_properties = False
+
+        for line in f:
+            if not in_css_properties:
+                if line.startswith("exports.CSS_PROPERTIES = {"):
+                    in_css_properties = True
+                continue
+
+            if line.startswith("};"):
+                break
+
+            if not line.startswith("  \""):
+                continue
+
+            name = line.split("\"")[1]
+            add_css_property_counters(histograms, name)
+    return histograms
+
+
 FILENAME_PARSERS = {
     'Histograms.json': from_Histograms_json,
     'nsDeprecatedOperationList.h': from_nsDeprecatedOperationList,
     'ServoCSSPropList.py': from_ServoCSSPropList,
     'counted_unknown_properties.py': from_counted_unknown_properties,
+    'properties-db.js': from_properties_db,
 }
 
 # Similarly to the dance above with buildconfig, usecounters may not be
