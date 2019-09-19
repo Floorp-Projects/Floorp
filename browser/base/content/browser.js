@@ -480,7 +480,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "identity.fxaccounts.toolbar.enabled",
   false,
   (aPref, aOldVal, aNewVal) => {
-    showFxaToolbarMenu(aNewVal);
+    updateFxaToolbarMenu(aNewVal);
   }
 );
 
@@ -490,7 +490,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "identity.fxaccounts.toolbar.accessed",
   false,
   (aPref, aOldVal, aNewVal) => {
-    showFxaToolbarMenu(gFxaToolbarEnabled);
+    updateFxaToolbarMenu(gFxaToolbarEnabled);
   }
 );
 
@@ -500,7 +500,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "identity.fxaccounts.service.sendLoginUrl",
   false,
   (aPref, aOldVal, aNewVal) => {
-    showFxaToolbarMenu(gFxaToolbarEnabled);
+    updateFxaToolbarMenu(gFxaToolbarEnabled);
   }
 );
 
@@ -510,7 +510,17 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "identity.fxaccounts.service.monitorLoginUrl",
   false,
   (aPref, aOldVal, aNewVal) => {
-    showFxaToolbarMenu(gFxaToolbarEnabled);
+    updateFxaToolbarMenu(gFxaToolbarEnabled);
+  }
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gFxaDeviceName",
+  "identity.fxaccounts.account.device.name",
+  false,
+  (aPref, aOldVal, aNewVal) => {
+    updateFxaToolbarMenu(gFxaToolbarEnabled);
   }
 );
 
@@ -520,7 +530,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.messaging-system.fxatoolbarbadge.enabled",
   true,
   (aPref, aOldVal, aNewVal) => {
-    showFxaToolbarMenu(gFxaToolbarEnabled);
+    updateFxaToolbarMenu(gFxaToolbarEnabled);
   }
 );
 
@@ -639,7 +649,7 @@ var gNavigatorBundle = {
   },
 };
 
-function showFxaToolbarMenu(enable) {
+function updateFxaToolbarMenu(enable) {
   // We only show the Firefox Account toolbar menu if the feature is enabled and
   // if sync is enabled.
   const syncEnabled = Services.prefs.getBoolPref(
@@ -685,6 +695,10 @@ function showFxaToolbarMenu(enable) {
     ).hidden = !gFxaMonitorLoginUrl;
     document.getElementById("fxa-menu-service-separator").hidden =
       !gFxaSendLoginUrl && !gFxaMonitorLoginUrl;
+
+    document.getElementById(
+      "fxa-menu-device-name-label"
+    ).value = gFxaDeviceName;
   } else {
     mainWindowEl.removeAttribute("fxatoolbarmenu");
   }
@@ -1797,7 +1811,7 @@ var gBrowserInit = {
 
     this._setInitialFocus();
 
-    showFxaToolbarMenu(gFxaToolbarEnabled);
+    updateFxaToolbarMenu(gFxaToolbarEnabled);
   },
 
   onLoad() {
