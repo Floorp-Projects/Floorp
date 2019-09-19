@@ -7,7 +7,7 @@
 #include "nsIContentPolicy.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
-#include "nsIPermissionManager.h"
+#include "nsPermissionManager.h"
 #include "nsIPrefBranch.h"
 #include "mozilla/Attributes.h"
 
@@ -35,7 +35,7 @@ class nsContentBlocker final : public nsIContentPolicy,
                           int32_t aContentType, bool* aPermission,
                           bool* aFromPrefs);
 
-  nsCOMPtr<nsIPermissionManager> mPermissionManager;
+  RefPtr<nsPermissionManager> mPermissionManager;
   nsCOMPtr<nsIPrefBranch> mPrefBranchInternal;
   static uint8_t mBehaviorPref[];
 };
