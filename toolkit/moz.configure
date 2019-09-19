@@ -1810,6 +1810,27 @@ def wasm_sandboxing_config_defines():
 
 wasm_sandboxing_config_defines()
 
+option('--with-wasi-sysroot',
+       nargs=1,
+       help='Path to wasi sysroot for wasm sandboxing',
+       when=requires_wasm_sandboxing)
+
+@depends('--with-wasi-sysroot', when=requires_wasm_sandboxing)
+@imports('os')
+def wasi_sysroot(wasi_sysroot):
+    if not wasi_sysroot:
+        die('--with-wasi-sysroot must be specified when using wasm sandboxing')
+
+    wasi_sysroot = wasi_sysroot[0]
+    if not os.path.isdir(wasi_sysroot):
+        die('Argument to --with-wasi-sysroot must be a directory')
+    if not os.path.isabs(wasi_sysroot):
+        die('Argument to --with-wasi-sysroot must be an absolute path')
+
+    return wasi_sysroot
+
+set_config('WASI_SYSROOT', wasi_sysroot)
+
 
 # new XULStore implementation
 # ==============================================================
