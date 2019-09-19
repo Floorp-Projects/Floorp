@@ -50,10 +50,8 @@
       testRole("head5", ROLE_HEADING);
       testRole("head6", ROLE_HEADING);
 
-      // Test that an html:input @type="file" is exposed as ROLE_TEXT_CONTAINER.
-      // After fix for bug 471356, it was temporarily exposed as a paragraph,
-      // breaking JAWS compatibility.
-      testRole("data", ROLE_TEXT_CONTAINER);
+      // Test that an html:input @type="file" is exposed as ROLE_GROUPING.
+      testRole("data", ROLE_GROUPING);
 
       // Test that input type="checkbox" and type="radio" are
       // exposed as such regardless of appearance style.
