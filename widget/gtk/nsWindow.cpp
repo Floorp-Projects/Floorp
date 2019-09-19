@@ -1159,16 +1159,25 @@ bool IsPopupWithoutToplevelParent(nsMenuPopupFrame* aMenuPopupFrame) {
   // Check if the popup is autocomplete (like tags autocomplete
   // in the bookmark edit popup).
   nsAtom* popupId = aMenuPopupFrame->GetContent()->GetID();
-  if (popupId && popupId->Equals(NS_LITERAL_STRING("PopupAutoComplete"))) {
+  if (popupId &&
+      popupId->Equals(NS_LITERAL_STRING("editBMPanel_tagsAutocomplete"))) {
+    return true;
+  }
+
+  nsIFrame* parentFrame = aMenuPopupFrame->GetParent();
+  if (!parentFrame) {
+    return false;
+  }
+
+  // Check if the popup is in the folder menu list
+  nsAtom* parentId = parentFrame->GetContent()->GetID();
+  if (parentId &&
+      parentId->Equals(NS_LITERAL_STRING("editBMPanel_folderMenuList"))) {
     return true;
   }
 
   // Check if the popup is in popupnotificationcontent (like choosing capture
   // device when starting webrtc session).
-  nsIFrame* parentFrame = aMenuPopupFrame->GetParent();
-  if (!parentFrame) {
-    return false;
-  }
   parentFrame = parentFrame->GetParent();
   if (parentFrame && parentFrame->GetContent()->NodeName().EqualsLiteral(
                          "popupnotificationcontent")) {
