@@ -82,7 +82,6 @@ h2 {
 #sign-up-for-monitor-link {
   grid-area: 1 / 5 / 1 / -1;
   margin: 0;
-  height: 38px;
   font-size: 0.95em;
   cursor: pointer;
   padding: 10px;
@@ -658,6 +657,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 #get-proxy-extension-link {
   -moz-appearance: button;
   background-color: var(--blue-60);
+  border: 1px solid transparent;
   border-radius: 2px;
   text-decoration: none;
   color: #fff;
