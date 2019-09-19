@@ -2182,6 +2182,11 @@ void ReflowInput::InitConstraints(
     nsPresContext* aPresContext, const Maybe<LogicalSize>& aContainingBlockSize,
     const nsMargin* aBorder, const nsMargin* aPadding,
     LayoutFrameType aFrameType) {
+  MOZ_DIAGNOSTIC_ASSERT(
+      !IsFloating() || (mStyleDisplay->mDisplay != StyleDisplay::MozBox &&
+                        mStyleDisplay->mDisplay != StyleDisplay::MozInlineBox),
+      "Please don't try to float a -moz-box or a -moz-inline-box");
+
   WritingMode wm = GetWritingMode();
   LogicalSize cbSize = aContainingBlockSize.valueOr(
       LogicalSize(mWritingMode, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE));

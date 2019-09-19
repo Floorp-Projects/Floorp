@@ -4996,6 +4996,14 @@
   mirror: always
   rust: true
 
+# Pref to control whether display: -moz-box and display: -moz-inline-box are
+# "blockified" to "-moz-box" (rather than to "block")
+- name: layout.css.xul-box-display-values.survive-blockification.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Pref to control whether XUL ::-tree-* pseudo-elements are parsed in content
 # pages.
 - name: layout.css.xul-tree-pseudos.content.enabled
