@@ -135,6 +135,7 @@ pref("urlclassifier.downloadAllowTable", "");
 pref("urlclassifier.downloadBlockTable", "");
 
 /* these should help performance */
+pref("layout.reflow.synthMouseMove", false); // Keep false until bug 1582363 is fixed
 pref("layout.css.report_errors", false);
 
 /* download manager (don't show the window or alert) */
