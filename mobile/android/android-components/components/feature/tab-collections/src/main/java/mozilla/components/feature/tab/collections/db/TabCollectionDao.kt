@@ -32,7 +32,7 @@ internal interface TabCollectionDao {
         SELECT tab_collections.id, tab_collections.title, tab_collections.created_at, tab_collections.updated_at
         FROM tab_collections LEFT JOIN tabs ON tab_collections.id = tab_collection_id
         GROUP BY tab_collections.id
-        ORDER BY tab_collections.updated_at DESC
+        ORDER BY tab_collections.created_at DESC
     """)
     fun getTabCollectionsPaged(): DataSource.Factory<Int, TabCollectionWithTabs>
 
@@ -40,7 +40,7 @@ internal interface TabCollectionDao {
     @Query("""
         SELECT *
         FROM tab_collections
-        ORDER BY updated_at DESC
+        ORDER BY created_at DESC
         LIMIT :limit
     """)
     fun getTabCollections(limit: Int): LiveData<List<TabCollectionWithTabs>>
