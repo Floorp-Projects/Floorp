@@ -54,14 +54,12 @@ already_AddRefed<nsICookiePermission> nsCookiePermission::GetOrCreate() {
 }
 
 bool nsCookiePermission::Init() {
-  // Initialize nsIPermissionManager and fetch relevant prefs. This is only
+  // Initialize nsPermissionManager and fetch relevant prefs. This is only
   // required for some methods on nsICookiePermission, so it should be done
   // lazily.
-  nsresult rv;
-  mPermMgr = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return false;
 
-  return true;
+  mPermMgr = nsPermissionManager::GetInstance();
+  return mPermMgr != nullptr;
 }
 
 NS_IMETHODIMP
@@ -89,8 +87,10 @@ nsCookiePermission::CanSetCookie(nsIURI* aURI, nsIChannel* aChannel,
   // Lazily initialize ourselves
   if (!EnsureInitialized()) return NS_ERROR_UNEXPECTED;
 
+  nsCookie* cookie = static_cast<nsCookie*>(aCookie);
   uint32_t perm;
-  mPermMgr->TestPermission(aURI, kPermissionType, &perm);
+  mPermMgr->LegacyTestPermissionFromURI(aURI, &cookie->OriginAttributesRef(),
+                                        kPermissionType, &perm);
   switch (perm) {
     case nsICookiePermission::ACCESS_SESSION:
       *aIsSession = true;
