@@ -92,3 +92,4 @@ MSG_DEF(MSG_NOT_ARRAY_NOR_UNDEFINED, 1, JSEXN_TYPEERR, "{0} is neither an array 
 MSG_DEF(MSG_URL_NOT_LOADABLE, 1, JSEXN_TYPEERR, "Access to '{0}' from script denied.")
 MSG_DEF(MSG_ONE_OFF_TYPEERR, 1, JSEXN_TYPEERR, "{0}")
 MSG_DEF(MSG_ONE_OFF_RANGEERR, 1, JSEXN_RANGEERR, "{0}")
+MSG_DEF(MSG_NO_CODECS_PARAMETER, 1, JSEXN_TYPEERR, "The provided type '{0}' does not have a 'codecs' parameter.")
