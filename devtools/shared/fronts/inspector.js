@@ -577,6 +577,15 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
     }
   }
 
+  /**
+   * Get the list of InspectorFront instances that correspond to all of the inspectable
+   * targets in remote frames nested within the document inspected here.
+   *
+   * Note that this only returns a non-empty array if the used from the Browser Toolbox
+   * and with the FISSION_ENABLED pref on.
+   *
+   * @return {Array} The list of InspectorFront instances.
+   */
   async getChildInspectors() {
     const fissionEnabled = Services.prefs.getBoolPref(FISSION_ENABLED);
     const childInspectors = [];
@@ -594,6 +603,18 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
       }
     }
     return childInspectors;
+  }
+
+  /**
+   * Get the list of InspectorFront instances that correspond to all of the inspectable
+   * targets in remote frames nested within the document inspected here, as well as the
+   * current InspectorFront instance.
+   *
+   * @return {Array} The list of InspectorFront instances.
+   */
+  async getAllInspectorFronts() {
+    const remoteInspectors = await this.getChildInspectors();
+    return [this, ...remoteInspectors];
   }
 }
 
