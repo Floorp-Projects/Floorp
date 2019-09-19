@@ -503,11 +503,12 @@ pref("browser.tabs.delayHidingAudioPlayingIconMS", 3000);
   pref("browser.tabs.remote.enforceRemoteTypeRestrictions", true);
 #endif
 
+// allow_eval_* is enabled on Firefox Desktop only at this
+// point in time
+pref("security.allow_eval_with_system_principal", false);
+pref("security.allow_eval_in_parent_process", false);
+
 #ifdef NIGHTLY_BUILD
-  // allow_eval_* is enabled on Firefox Desktop only at this
-  // point in time
-  pref("security.allow_eval_with_system_principal", false);
-  pref("security.allow_eval_in_parent_process", false);
   pref("browser.tabs.remote.useHTTPResponseProcessSelection", true);
 #else
   // Disabled outside of nightly due to bug 1554217
