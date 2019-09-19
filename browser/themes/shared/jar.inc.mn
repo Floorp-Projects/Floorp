@@ -212,6 +212,7 @@
   skin/classic/browser/settings.svg                   (../shared/icons/settings.svg)
   skin/classic/browser/sidebars.svg                   (../shared/icons/sidebars.svg)
   skin/classic/browser/sidebars-right.svg             (../shared/icons/sidebars-right.svg)
+  skin/classic/browser/sign-out.svg                   (../shared/icons/sign-out.svg)
 #ifndef XP_LINUX
   skin/classic/browser/sort.svg                       (../shared/icons/sort.svg)
 #endif
