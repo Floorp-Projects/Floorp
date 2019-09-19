@@ -148,7 +148,7 @@ async function waitForMessageCount(hud, text, length, selector = ".message") {
   return messages;
 }
 
-async function warpToMessage(hud, dbg, text) {
+async function warpToMessage(hud, dbg, text, maybeLine) {
   let messages = await waitForMessages(hud, text);
   ok(messages.length == 1, "Found one message");
   const message = messages.pop();
@@ -167,6 +167,11 @@ async function warpToMessage(hud, dbg, text) {
 
   messages = findMessages(hud, "", ".paused");
   ok(messages.length == 1, "Found one paused message");
+
+  if (maybeLine) {
+    const pauseLine = getVisibleSelectedFrameLine(dbg);
+    ok(pauseLine == maybeLine, `Paused at line ${maybeLine} after warp`);
+  }
 
   return message;
 
