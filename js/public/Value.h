@@ -342,17 +342,8 @@ union alignas(8) Value {
  private:
   uint64_t asBits_;
 
+#if defined(JS_NUNBOX32)
   struct {
-#if defined(JS_PUNBOX64)
-#  if MOZ_BIG_ENDIAN
-    uint32_t : 32;  // padding
-#  endif            // MOZ_BIG_ENDIAN
-    union {
-      int32_t i32_;
-      uint32_t u32_;
-      JSWhyMagic why_;
-    } payload_;
-#elif defined(JS_NUNBOX32)
 #  if MOZ_BIG_ENDIAN
     JSValueTag tag_;
 #  endif  // MOZ_BIG_ENDIAN
@@ -371,8 +362,8 @@ union alignas(8) Value {
 #  if MOZ_LITTLE_ENDIAN
     JSValueTag tag_;
 #  endif  // MOZ_LITTLE_ENDIAN
-#endif    // defined(JS_PUNBOX64)
   } s_;
+#endif  // defined(JS_NUNBOX32)
 
  public:
   constexpr Value() : asBits_(bitsFromTagAndPayload(JSVAL_TAG_UNDEFINED, 0)) {}
@@ -501,6 +492,8 @@ union alignas(8) Value {
   }
 
   void setMagicUint32(uint32_t payload) {
+    MOZ_ASSERT(payload >= JS_WHY_MAGIC_COUNT,
+               "This should only be used for non-standard magic values");
     asBits_ = bitsFromTagAndPayload(JSVAL_TAG_MAGIC, payload);
     MOZ_ASSERT(magicUint32() == payload);
   }
@@ -666,7 +659,7 @@ union alignas(8) Value {
     if (!isMagic()) {
       return false;
     }
-    MOZ_RELEASE_ASSERT(s_.payload_.why_ == why);
+    MOZ_RELEASE_ASSERT(whyMagic() == why);
     return true;
   }
 
@@ -688,13 +681,13 @@ union alignas(8) Value {
   }
 
   JSWhyMagic whyMagic() const {
-    MOZ_ASSERT(isMagic());
-    return s_.payload_.why_;
+    MOZ_ASSERT(magicUint32() < JS_WHY_MAGIC_COUNT);
+    return static_cast<JSWhyMagic>(magicUint32());
   }
 
   uint32_t magicUint32() const {
     MOZ_ASSERT(isMagic());
-    return s_.payload_.u32_;
+    return uint32_t(asBits_);
   }
 
   /*** Comparison ***/
@@ -805,7 +798,7 @@ union alignas(8) Value {
 
   uint32_t payloadAsRawUint32() const {
     MOZ_ASSERT(!isDouble());
-    return s_.payload_.u32_;
+    return uint32_t(asBits_);
   }
 
   uint64_t asRawBits() const { return asBits_; }
