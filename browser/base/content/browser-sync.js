@@ -1169,6 +1169,30 @@ var gSync = {
     }
   },
 
+  // Disconnect from sync, and optionally disconnect from the FxA account.
+  // Returns true if the disconnection happened (ie, if the user didn't decline
+  // when asked to confirm)
+  async disconnect({ confirm = true, disconnectAccount = true } = {}) {
+    if (confirm) {
+      let args = { disconnectAccount, confirmed: false };
+      window.openDialog(
+        "chrome://browser/content/fxaDisconnect.xul",
+        "_blank",
+        "chrome,modal,centerscreen,resizable=no",
+        args
+      );
+      if (!args.confirmed) {
+        return false;
+      }
+    }
+    await Weave.Service.promiseInitialized;
+    await Weave.Service.startOver();
+    if (disconnectAccount) {
+      await fxAccounts.signOut();
+    }
+    return true;
+  },
+
   // doSync forces a sync - it *does not* return a promise as it is called
   // via the various UI components.
   doSync() {

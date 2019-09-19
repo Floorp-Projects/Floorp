@@ -15,7 +15,6 @@ XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  SyncDisconnect: "resource://services-sync/SyncDisconnect.jsm",
   UIState: "resource://services-sync/UIState.jsm",
 });
 
@@ -537,23 +536,7 @@ var gSyncPane = {
   },
 
   unlinkFirefoxAccount(confirm) {
-    if (confirm) {
-      gSubDialog.open(
-        "chrome://browser/content/preferences/in-content/syncDisconnect.xul",
-        "resizable=no" /* aFeatures */,
-        null /* aParams */,
-        event => {
-          /* aClosingCallback */
-          if (event.detail.button == "accept") {
-            this.updateWeavePrefs();
-          }
-        }
-      );
-    } else {
-      // no confirmation implies no data removal, so just disconnect - but
-      // we still disconnect via the SyncDisconnect module for consistency.
-      SyncDisconnect.disconnect().finally(() => this.updateWeavePrefs());
-    }
+    window.docShell.rootTreeItem.domWindow.gSync.disconnect({ confirm });
   },
 
   pairAnotherDevice() {
