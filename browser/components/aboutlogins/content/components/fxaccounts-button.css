@@ -10,13 +10,23 @@
 
 .fxaccounts-extra-text {
   color: var(--in-content-deemphasized-text);
-  font-size: smaller;
   text-align: end;
+}
+
+.fxaccounts-extra-text,
+.fxaccount-email,
+.fxaccounts-enable-button {
+  font-size: 13px;
 }
 
 .fxaccount-avatar,
 .fxaccounts-enable-button {
   margin-inline-start: 9px;
+}
+
+.fxaccounts-enable-button {
+  min-width: 120px;
+  padding-inline: 16px;
 }
 
 .fxaccounts-avatar-button {
@@ -27,7 +37,6 @@
 }
 
 .fxaccount-email {
-  font-size: .9em;
   vertical-align: middle;
 }
 
