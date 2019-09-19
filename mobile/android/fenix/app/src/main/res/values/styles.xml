@@ -308,17 +308,13 @@
 
     <style name="CreateCollectionDialogStyle" parent="DialogStyleBase"/>
     <style name="CreateShortcutDialogStyle" parent="DialogStyleBase"/>
-    <style name="CreateShortcutDialogButton" parent="Widget.AppCompat.Button.Borderless">
+    <style name="CreateShortcutDialogButton" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:textSize">12sp</item>
         <item name="android:minHeight">40dp</item>
-        <item name="android:minWidth">40dp</item>
-        <item name="android:paddingStart">16dp</item>
-        <item name="android:paddingEnd">16dp</item>
         <item name="android:layout_marginTop">32dp</item>
-        <item name="android:textColor">?accent</item>
+        <item name="android:textColor">?accentUsedOnDarkBackground</item>
 
     </style>
 
