@@ -223,7 +223,6 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     // original recording. If we try to fetch it now it may have changed or
     // may no longer exist.
     if (this.dbg.replaying) {
-      assert(!this._contentType);
       return this.dbg.replayingContent(this.url);
     }
 
