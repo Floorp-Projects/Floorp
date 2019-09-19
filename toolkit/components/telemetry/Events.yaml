@@ -577,6 +577,7 @@ pwmgr:
     extra_keys:
       breached: >
         Whether the login is marked as breached or not.
+      sort_key: The key that is used for sorting the login-list
     objects: [
       "existing_login",
       "list",
