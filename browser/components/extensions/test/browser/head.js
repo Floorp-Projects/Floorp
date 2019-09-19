@@ -4,7 +4,9 @@
 
 /* exported CustomizableUI makeWidgetId focusWindow forceGC
  *          getBrowserActionWidget
- *          clickBrowserAction clickPageAction
+ *          clickBrowserAction clickPageAction clickPageActionInPanel
+ *          triggerPageActionWithKeyboard triggerPageActionWithKeyboardInPanel
+ *          triggerBrowserActionWithKeyboard
  *          getBrowserActionPopup getPageActionPopup getPageActionButton
  *          openBrowserActionPanel
  *          closeBrowserAction closePageAction
@@ -285,10 +287,19 @@ function alterContent(browser, task, arg = null) {
 }
 
 function getPanelForNode(node) {
-  while (node.localName != "panel") {
-    node = node.parentNode;
-  }
-  return node;
+  return node.closest("panel");
+}
+
+async function focusButtonAndPressKey(key, elem, modifiers) {
+  let focused = BrowserTestUtils.waitForEvent(elem, "focus", true);
+
+  elem.setAttribute("tabindex", "-1");
+  elem.focus();
+  elem.removeAttribute("tabindex");
+  await focused;
+
+  EventUtils.synthesizeKey(key, modifiers);
+  elem.blur();
 }
 
 var awaitBrowserLoaded = browser =>
@@ -357,13 +368,31 @@ var showBrowserAction = async function(extension, win = window) {
   }
 };
 
-var clickBrowserAction = async function(extension, win = window) {
+async function clickBrowserAction(extension, win = window, modifiers) {
   await promiseAnimationFrame(win);
   await showBrowserAction(extension, win);
 
   let widget = getBrowserActionWidget(extension).forWindow(win);
-  widget.node.click();
-};
+
+  if (modifiers) {
+    EventUtils.synthesizeMouseAtCenter(widget.node, modifiers, win);
+  } else {
+    widget.node.click();
+  }
+}
+
+async function triggerBrowserActionWithKeyboard(
+  extension,
+  key = "KEY_Enter",
+  modifiers = {},
+  win = window
+) {
+  await promiseAnimationFrame(win);
+  await showBrowserAction(extension, win);
+
+  let node = getBrowserActionWidget(extension).forWindow(win).node;
+  await focusButtonAndPressKey(key, node, modifiers);
+}
 
 function closeBrowserAction(extension, win = window) {
   let group = getBrowserActionWidget(extension);
@@ -660,9 +689,79 @@ async function getPageActionButton(extension, win = window) {
   return win.document.getElementById(pageActionId);
 }
 
-async function clickPageAction(extension, win = window) {
+async function clickPageAction(extension, win = window, modifiers = {}) {
   let elem = await getPageActionButton(extension, win);
-  EventUtils.synthesizeMouseAtCenter(elem, {}, win);
+  EventUtils.synthesizeMouseAtCenter(elem, modifiers, win);
+  return new Promise(SimpleTest.executeSoon);
+}
+
+// Shows the popup for the page action which for lists
+// all available page actions
+async function showPageActionsPanel(win = window) {
+  // See the comment at getPageActionButton
+  SetPageProxyState("valid");
+  await promiseAnimationFrame(win);
+
+  let pageActionsPopup = win.document.getElementById("pageActionPanel");
+
+  let popupShownPromise = promisePopupShown(pageActionsPopup);
+  EventUtils.synthesizeMouseAtCenter(
+    win.document.getElementById("pageActionButton"),
+    {},
+    win
+  );
+  await popupShownPromise;
+
+  return pageActionsPopup;
+}
+
+async function clickPageActionInPanel(extension, win = window, modifiers = {}) {
+  let pageActionsPopup = await showPageActionsPanel(win);
+
+  let pageActionId = BrowserPageActions.panelButtonNodeIDForActionID(
+    makeWidgetId(extension.id)
+  );
+
+  let popupHiddenPromise = promisePopupHidden(pageActionsPopup);
+  let widgetButton = win.document.getElementById(pageActionId);
+  EventUtils.synthesizeMouseAtCenter(widgetButton, modifiers, win);
+  if (widgetButton.disabled) {
+    pageActionsPopup.hidePopup();
+  }
+  await popupHiddenPromise;
+
+  return new Promise(SimpleTest.executeSoon);
+}
+
+async function triggerPageActionWithKeyboard(
+  extension,
+  modifiers = {},
+  win = window
+) {
+  let elem = await getPageActionButton(extension, win);
+  await focusButtonAndPressKey("KEY_Enter", elem, modifiers);
+  return new Promise(SimpleTest.executeSoon);
+}
+
+async function triggerPageActionWithKeyboardInPanel(
+  extension,
+  modifiers = {},
+  win = window
+) {
+  let pageActionsPopup = await showPageActionsPanel(win);
+
+  let pageActionId = BrowserPageActions.panelButtonNodeIDForActionID(
+    makeWidgetId(extension.id)
+  );
+
+  let popupHiddenPromise = promisePopupHidden(pageActionsPopup);
+  let widgetButton = win.document.getElementById(pageActionId);
+  await focusButtonAndPressKey("KEY_Enter", widgetButton, modifiers);
+  if (widgetButton.disabled) {
+    pageActionsPopup.hidePopup();
+  }
+  await popupHiddenPromise;
+
   return new Promise(SimpleTest.executeSoon);
 }
 
