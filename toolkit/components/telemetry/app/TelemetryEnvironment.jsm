@@ -751,8 +751,8 @@ EnvironmentAddonBuilder.prototype = {
       changed:
         !this._environment._currentEnvironment.addons ||
         !ObjectUtils.deepEqual(
-          addons,
-          this._environment._currentEnvironment.addons
+          addons.activeAddons,
+          this._environment._currentEnvironment.addons.activeAddons
         ),
     };
 
@@ -762,8 +762,8 @@ EnvironmentAddonBuilder.prototype = {
         this._environment._currentEnvironment,
         myScope
       );
-      this._environment._currentEnvironment.addons = addons;
     }
+    this._environment._currentEnvironment.addons = addons;
 
     return result;
   },

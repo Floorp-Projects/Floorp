@@ -9,6 +9,7 @@ ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
 ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
+ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", this);
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://testing-common/MockRegistrar.jsm", this);
 const { FileUtils } = ChromeUtils.import(
@@ -1384,29 +1385,26 @@ add_task(async function test_pluginsWatch_Add() {
   );
   gInstalledPlugins.push(newPlugin);
 
-  let deferred = PromiseUtils.defer();
   let receivedNotifications = 0;
   let callback = (reason, data) => {
     receivedNotifications++;
-    Assert.equal(reason, "addons-changed");
-    deferred.resolve();
   };
   TelemetryEnvironment.registerChangeListener("testWatchPlugins_Add", callback);
 
   Services.obs.notifyObservers(null, PLUGIN_UPDATED_TOPIC);
-  await deferred.promise;
 
-  Assert.equal(
-    TelemetryEnvironment.currentEnvironment.addons.activePlugins.length,
-    2
-  );
+  await ContentTaskUtils.waitForCondition(() => {
+    return (
+      TelemetryEnvironment.currentEnvironment.addons.activePlugins.length == 2
+    );
+  });
 
   TelemetryEnvironment.unregisterChangeListener("testWatchPlugins_Add");
 
   Assert.equal(
     receivedNotifications,
-    1,
-    "We must only receive one notification."
+    0,
+    "We must not receive any notifications."
   );
 });
 
@@ -1416,6 +1414,11 @@ add_task(async function test_pluginsWatch_Remove() {
     return;
   }
 
+  Assert.equal(
+    TelemetryEnvironment.currentEnvironment.addons.activePlugins.length,
+    2
+  );
+
   // Find the test plugin.
   let plugin = gInstalledPlugins.find(p => p.name == PLUGIN2_NAME);
   Assert.ok(plugin, "The test plugin must exist.");
@@ -1423,11 +1426,9 @@ add_task(async function test_pluginsWatch_Remove() {
   // Remove it from the PluginHost.
   gInstalledPlugins = gInstalledPlugins.filter(p => p != plugin);
 
-  let deferred = PromiseUtils.defer();
   let receivedNotifications = 0;
   let callback = () => {
     receivedNotifications++;
-    deferred.resolve();
   };
   TelemetryEnvironment.registerChangeListener(
     "testWatchPlugins_Remove",
@@ -1435,14 +1436,19 @@ add_task(async function test_pluginsWatch_Remove() {
   );
 
   Services.obs.notifyObservers(null, PLUGIN_UPDATED_TOPIC);
-  await deferred.promise;
+
+  await ContentTaskUtils.waitForCondition(() => {
+    return (
+      TelemetryEnvironment.currentEnvironment.addons.activePlugins.length == 1
+    );
+  });
 
   TelemetryEnvironment.unregisterChangeListener("testWatchPlugins_Remove");
 
   Assert.equal(
     receivedNotifications,
-    1,
-    "We must only receive one notification."
+    0,
+    "We must not receive any notifications."
   );
 });
 
