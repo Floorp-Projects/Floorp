@@ -259,14 +259,9 @@ already_AddRefed<Promise> PaymentResponse::Retry(
 
   // Depending on the PMI, try to do IDL type conversion
   // (e.g., basic-card expects at BasicCardErrors dictionary)
-  nsAutoString errorMsg;
-  rv = ConvertPaymentMethodErrors(aCx, aErrors, errorMsg);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    MOZ_ASSERT(!errorMsg.IsEmpty());
-    ErrorResult error;
-    error.ThrowTypeError<MSG_NOT_DICTIONARY>(errorMsg);
-    promise->MaybeReject(error);
-    return promise.forget();
+  ConvertPaymentMethodErrors(aCx, aErrors, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
   }
 
   MOZ_ASSERT(mRequest);
@@ -308,28 +303,27 @@ void PaymentResponse::RespondRetry(const nsAString& aMethodName,
   mRetryPromise = nullptr;
 }
 
-void PaymentResponse::RejectRetry(nsresult aRejectReason) {
+void PaymentResponse::RejectRetry(ErrorResult& aRejectReason) {
   MOZ_ASSERT(mRetryPromise);
   mRetryPromise->MaybeReject(aRejectReason);
   mRetryPromise = nullptr;
 }
 
-nsresult PaymentResponse::ConvertPaymentMethodErrors(
+void PaymentResponse::ConvertPaymentMethodErrors(
     JSContext* aCx, const PaymentValidationErrors& aErrors,
-    nsAString& errorMsg) const {
+    ErrorResult& aRv) const {
   MOZ_ASSERT(aCx);
   if (!aErrors.mPaymentMethod.WasPassed()) {
-    return NS_OK;
+    return;
   }
   RefPtr<BasicCardService> service = BasicCardService::GetService();
   MOZ_ASSERT(service);
   if (service->IsBasicCardPayment(mMethodName)) {
-    if (service->IsValidBasicCardErrors(aCx, aErrors.mPaymentMethod.Value())) {
-      errorMsg.Assign(NS_LITERAL_STRING("paymentMethod"));
-      return NS_ERROR_TYPE_ERR;
-    }
+    MOZ_ASSERT(aErrors.mPaymentMethod.Value(),
+               "The IDL says this is not nullable!");
+    service->CheckForValidBasicCardErrors(aCx, aErrors.mPaymentMethod.Value(),
+                                          aRv);
   }
-  return NS_OK;
 }
 
 nsresult PaymentResponse::ValidatePaymentValidationErrors(

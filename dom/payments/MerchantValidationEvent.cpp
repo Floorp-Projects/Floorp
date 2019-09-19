@@ -45,21 +45,8 @@ already_AddRefed<MerchantValidationEvent> MerchantValidationEvent::Constructor(
   RefPtr<MerchantValidationEvent> e = new MerchantValidationEvent(aOwner);
   bool trusted = e->Init(aOwner);
   e->InitEvent(aType, aEventInitDict.mBubbles, aEventInitDict.mCancelable);
-  nsString errMsg;
-  Result<Ok, nsresult> rv = e->init(aEventInitDict, errMsg);
-  if (rv.isErr()) {
-    auto err = rv.unwrapErr();
-    switch (err) {
-      case NS_ERROR_TYPE_ERR:
-        aRv.ThrowRangeError<MSG_ILLEGAL_RANGE_PR_CONSTRUCTOR>(errMsg);
-        break;
-      case NS_ERROR_MALFORMED_URI:
-        aRv.ThrowTypeError<MSG_INVALID_URL>(aEventInitDict.mValidationURL);
-        break;
-      default:
-        aRv.Throw(err);
-        break;
-    }
+  e->init(aEventInitDict, aRv);
+  if (aRv.Failed()) {
     return nullptr;
   }
   e->SetTrusted(trusted);
@@ -67,26 +54,31 @@ already_AddRefed<MerchantValidationEvent> MerchantValidationEvent::Constructor(
   return e.forget();
 }
 
-Result<Ok, nsresult> MerchantValidationEvent::init(
-    const MerchantValidationEventInit& aEventInitDict, nsString& errMsg) {
+void MerchantValidationEvent::init(
+    const MerchantValidationEventInit& aEventInitDict, ErrorResult& aRv) {
   // Check methodName is valid
   if (!aEventInitDict.mMethodName.IsEmpty()) {
-    nsresult rv = PaymentRequest::IsValidPaymentMethodIdentifier(
-        aEventInitDict.mMethodName, errMsg);
-    if (NS_FAILED(rv)) {
-      return Err(rv);
+    PaymentRequest::IsValidPaymentMethodIdentifier(aEventInitDict.mMethodName,
+                                                   aRv);
+    if (aRv.Failed()) {
+      return;
     }
   }
   SetMethodName(aEventInitDict.mMethodName);
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetParentObject());
   auto doc = window->GetExtantDoc();
   if (!doc) {
-    return Err(NS_ERROR_UNEXPECTED);
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
   }
 
-  MOZ_TRY_VAR(mValidationURL,
-              doc->ResolveWithBaseURI(aEventInitDict.mValidationURL));
-  return Ok();
+  Result<nsCOMPtr<nsIURI>, nsresult> rv =
+      doc->ResolveWithBaseURI(aEventInitDict.mValidationURL);
+  if (rv.isErr()) {
+    aRv.Throw(rv.unwrapErr());
+    return;
+  }
+  mValidationURL = rv.unwrap();
 }
 
 MerchantValidationEvent::MerchantValidationEvent(EventTarget* aOwner)
