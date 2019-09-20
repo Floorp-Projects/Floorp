@@ -16,6 +16,7 @@ const {
   RESET_COLUMNS,
   RESPONSE_HEADERS,
   SELECT_DETAILS_PANEL_TAB,
+  SELECT_ACTION_BAR_TAB,
   SEND_CUSTOM_REQUEST,
   SELECT_REQUEST,
   TOGGLE_COLUMN,
@@ -81,6 +82,7 @@ function UI(initialState = {}) {
     browserCacheDisabled: Services.prefs.getBoolPref("devtools.cache.disabled"),
     statisticsOpen: false,
     waterfallWidth: null,
+    selectedActionBarTabId: null,
     ...initialState,
   };
 }
@@ -140,6 +142,13 @@ function setDetailsPanelTab(state, action) {
   return {
     ...state,
     detailsPanelSelectedTab: action.id,
+  };
+}
+
+function setActionBarTab(state, action) {
+  return {
+    ...state,
+    selectedActionBarTabId: action.id,
   };
 }
 
@@ -205,6 +214,8 @@ function ui(state = UI(), action) {
       return openNetworkDetails(state, { open: false });
     case SELECT_DETAILS_PANEL_TAB:
       return setDetailsPanelTab(state, action);
+    case SELECT_ACTION_BAR_TAB:
+      return setActionBarTab(state, action);
     case SELECT_REQUEST:
       return openNetworkDetails(state, { open: true });
     case TOGGLE_COLUMN:
