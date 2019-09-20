@@ -12,8 +12,6 @@
 
 <script src="chrome://mozapps/content/preferences/fontbuilder.js"/>
 
-<stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences.properties"/>
-
 <html:template id="template-paneGeneral">
 <hbox id="generalCategory"
       class="subcategory"
@@ -400,11 +398,6 @@
     <label id="playDRMContentLink" class="learnMore" data-l10n-id="play-drm-content-learn-more" is="text-link"/>
   </hbox>
 </groupbox>
-
-#ifdef HAVE_SHELL_SERVICE
-  <stringbundle id="bundleShell" src="chrome://browser/locale/shellservice.properties"/>
-  <stringbundle id="bundleBrand" src="chrome://branding/locale/brand.properties"/>
-#endif
 
 <hbox id="updatesCategory"
       class="subcategory"
