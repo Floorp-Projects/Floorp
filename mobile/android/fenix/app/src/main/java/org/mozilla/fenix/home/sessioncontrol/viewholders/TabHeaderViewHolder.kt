@@ -41,12 +41,6 @@ class TabHeaderViewHolder(
         }
 
         view.apply {
-            add_tab_button.run {
-                setOnClickListener {
-                    actionEmitter.onNext(TabAction.Add)
-                }
-            }
-
             share_tabs_button.run {
                 setOnClickListener {
                     actionEmitter.onNext(TabAction.ShareTabs)

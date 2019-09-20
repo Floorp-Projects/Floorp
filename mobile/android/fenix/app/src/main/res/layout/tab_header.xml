@@ -18,20 +18,8 @@
         android:text="@string/tab_header_label"
         android:textAppearance="@style/HeaderTextStyle"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/add_tab_button"
+        app:layout_constraintEnd_toStartOf="@id/share_tabs_button"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ImageButton
-        android:id="@+id/add_tab_button"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/add_tab"
-        android:src="@drawable/ic_new"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/share_tabs_button"
-        app:layout_constraintStart_toEndOf="@id/header_text"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageButton
@@ -43,7 +31,7 @@
         android:src="@drawable/ic_hollow_share"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/close_tabs_button"
-        app:layout_constraintStart_toEndOf="@+id/add_tab_button"
+        app:layout_constraintStart_toEndOf="@+id/header_text"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageButton

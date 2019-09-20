@@ -192,10 +192,10 @@ class HomeFragment : Fragment() {
         view.homeLayout.applyConstraintSet {
             sessionControlComponent.view {
                 connect(
-                    TOP to BOTTOM of view.wordmark,
+                    TOP to BOTTOM of view.wordmark_spacer,
                     START to START of PARENT_ID,
                     END to END of PARENT_ID,
-                    BOTTOM to BOTTOM of PARENT_ID
+                    BOTTOM to TOP of view.bottom_bar
                 )
             }
         }
@@ -235,33 +235,32 @@ class HomeFragment : Fragment() {
             searchIcon.setBounds(0, 0, iconSize, iconSize)
 
             withContext(Dispatchers.Main) {
-                // TODO: FIXME
-//                search_engine_icon?.setImageDrawable(searchIcon)
+                search_engine_icon?.setImageDrawable(searchIcon)
             }
         }
 
-//        view.menuButton.setOnClickListener {
-//            homeMenu?.menuBuilder?.build(requireContext())?.show(
-//                anchor = it,
-//                orientation = BrowserMenu.Orientation.DOWN
-//            )
-//        }
-//        view.toolbar.compoundDrawablePadding =
+        view.menuButton.setOnClickListener {
+            homeMenu?.menuBuilder?.build(requireContext())?.show(
+                anchor = it,
+                orientation = BrowserMenu.Orientation.DOWN
+            )
+        }
+        view.toolbar.compoundDrawablePadding =
             view.resources.getDimensionPixelSize(R.dimen.search_bar_search_engine_icon_padding)
-//        view.toolbar_wrapper.setOnClickListener {
-//            invokePendingDeleteJobs()
-//            onboarding.finish()
-//            val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(
-//                sessionId = null,
-//                showShortcutEnginePicker = true
-//            )
-//            val extras =
-//                FragmentNavigator.Extras.Builder()
-//                    .addSharedElement(toolbar_wrapper, "toolbar_wrapper_transition")
-//                    .build()
-//            nav(R.id.homeFragment, directions, extras)
-//            requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.HOME))
-//        }
+        view.toolbar_wrapper.setOnClickListener {
+            invokePendingDeleteJobs()
+            onboarding.finish()
+            val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(
+                sessionId = null,
+                showShortcutEnginePicker = true
+            )
+            val extras =
+                FragmentNavigator.Extras.Builder()
+                    .addSharedElement(toolbar_wrapper, "toolbar_wrapper_transition")
+                    .build()
+            nav(R.id.homeFragment, directions, extras)
+            requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.HOME))
+        }
 
         PrivateBrowsingButtonView(
             privateBrowsingButton,

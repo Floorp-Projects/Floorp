@@ -2,7 +2,8 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -33,6 +34,7 @@
             android:layout_height="80dp"
             android:layout_marginStart="16dp"
             android:layout_marginTop="60dp"
+            android:layout_marginBottom="32dp"
             android:adjustViewBounds="true"
             android:clickable="false"
             android:contentDescription="@string/app_name"
@@ -42,5 +44,93 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <FrameLayout
+            android:id="@+id/wordmark_spacer"
+            android:layout_marginTop="32dp"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toBottomOf="@id/wordmark"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="parent" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/bottom_bar"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:background="?homeBackground"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <org.mozilla.fenix.home.SearchView
+                android:id="@+id/toolbar_wrapper"
+                android:transitionName="toolbar_wrapper_transition"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/home_search_background_normal"
+                android:clickable="true"
+                android:contentDescription="@string/search_hint"
+                android:focusable="true"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/add_tab_button"
+                app:layout_constraintStart_toStartOf="parent">
+
+                <ImageView
+                    android:id="@+id/search_engine_icon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_margin="12dp"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:importantForAccessibility="no" />
+
+                <TextView
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="47dp"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:importantForAccessibility="no"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:text="@string/search_hint"
+                    android:textColor="?primaryText"
+                    android:textSize="15sp" />
+            </org.mozilla.fenix.home.SearchView>
+
+            <ImageButton
+                android:id="@+id/add_tab_button"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/add_tab"
+                android:src="@drawable/ic_new"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/menuButton"
+                app:layout_constraintStart_toEndOf="@id/toolbar_wrapper"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageButton
+                android:id="@+id/menuButton"
+                android:layout_width="@dimen/glyph_button_height"
+                android:layout_height="@dimen/glyph_button_height"
+                android:layout_marginEnd="16dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/content_description_menu"
+                android:src="@drawable/ic_menu"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
     </androidx.constraintlayout.motion.widget.MotionLayout>
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
