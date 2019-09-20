@@ -123,6 +123,14 @@
 # Temporary fix until we can use androidx
 -dontwarn mozilla.components.service.fretboard.scheduler.workmanager.**
 
+# Fix for ViewModels
+-keep class * extends androidx.lifecycle.ViewModel {
+    <init>();
+}
+-keep class * extends androidx.lifecycle.AndroidViewModel {
+    <init>(android.app.Application);
+}
+
 ####################################################################################################
 # Kotlinx
 ####################################################################################################
