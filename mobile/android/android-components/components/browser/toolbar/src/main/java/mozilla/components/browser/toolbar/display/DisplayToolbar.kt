@@ -19,7 +19,9 @@ import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.core.view.marginStart
 import androidx.core.view.setPadding
+import androidx.core.view.updatePadding
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
@@ -398,12 +400,13 @@ internal class DisplayToolbar(
                 .makeMeasureSpec(height / MEASURED_HEIGHT_DENOMINATOR, MeasureSpec.EXACTLY)
         setMeasuredDimension(width, height)
 
-        // The security indicator and menu fill the whole height and have a square shape
-        val squareSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
-        measureTrackingProtectionViewsIfNeeded(squareSpec)
+        val iconsSize = resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_icon_size)
 
-        siteSecurityIconView.measure(squareSpec, squareSpec)
-        menuView.measure(squareSpec, squareSpec)
+        removeStartPaddingFromViewsIfNeeded()
+
+        measureTrackingProtectionViewsIfNeeded(iconsSize)
+        siteSecurityIconView.measure(iconsSize, iconsSize)
+        menuView.measure(iconsSize, iconsSize)
 
         val iconsWidth = siteSecurityIconView.measuredWidth + getTrackingProtectionMeasuredWidth()
 
@@ -413,10 +416,10 @@ internal class DisplayToolbar(
         val pageActionsWidth = measureActions(pageActions, size = height)
 
         // The url uses whatever space is left. Subtract the icon and (optionally) the menu
-        val menuWidth = if (menuView.isVisible) height else 0
+        val menuWidth = if (menuView.isVisible) menuView.measuredWidth else 0
         val urlWidth = (width - iconsWidth - browserActionsWidth - pageActionsWidth -
             menuWidth - navigationActionsWidth - 2 * urlBoxMargin)
-        val urlWidthSpec = MeasureSpec.makeMeasureSpec(urlWidth, MeasureSpec.EXACTLY)
+        val urlWidthSpec = MeasureSpec.makeMeasureSpec(urlWidth - getUrlBoxTotalStartSpace(), MeasureSpec.EXACTLY)
 
         if (titleView.isVisible) {
             /* With a title view, the url and title split the rest of the space vertically. The
@@ -478,7 +481,7 @@ internal class DisplayToolbar(
         //   +-------------+-------+-----------------------------------------+
 
         val (leftSecurityIcon, rightSecurityIcon) = layoutTrackingProtectionViewIfNeeded(
-            navigationActionsWidth
+            navigationActionsWidth + getUrlBoxTotalStartSpace()
         )
 
         siteSecurityIconView.layout(
@@ -494,7 +497,7 @@ internal class DisplayToolbar(
         //   |   actions   |       |                                  |      |
         //   +-------------+-------+----------------------------------+------+
 
-        val menuWidth = if (menuView.isVisible) height else 0
+        val menuWidth = if (menuView.isVisible) menuView.measuredWidth else 0
         menuView.layout(measuredWidth - menuView.measuredWidth, 0, measuredWidth, measuredHeight)
 
         // Now we add browser actions from the left side of the menu to the right (in reversed order):
@@ -544,7 +547,7 @@ internal class DisplayToolbar(
             siteSecurityIconView.measuredWidth + getTrackingProtectionMeasuredWidth()
         } else 0
 
-        val urlLeft = navigationActionsWidth + iconsWidth + urlBoxMargin
+        val urlLeft = navigationActionsWidth + iconsWidth + urlBoxMargin + getUrlBoxTotalStartSpace()
 
         // If the titleView is visible, it will appear above the URL:
         //   +-------------+-----------+-----------------------+----------+------+
@@ -630,10 +633,9 @@ internal class DisplayToolbar(
         return if (displaySeparatorView) separatorView.measuredWidth else 0
     }
 
-    private fun measureTrackingProtectionViewsIfNeeded(squareSpec: Int) {
+    private fun measureTrackingProtectionViewsIfNeeded(size: Int) {
         if (shouldTrackingProtectionViewBeVisible()) {
-            trackingProtectionIconView.measure(squareSpec, squareSpec)
-
+            trackingProtectionIconView.measure(size, size)
             if (displaySeparatorView) {
                 val height =
                     resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_icons_separator_height)
@@ -642,6 +644,26 @@ internal class DisplayToolbar(
                 separatorView.measure(width, height)
             }
         }
+    }
+
+    private fun getUrlBoxTotalStartSpace() =
+        (urlBoxView?.paddingStart ?: 0) + (urlBoxView?.marginStart ?: 0)
+
+    // As We are adding padding uniformly (left,top,right,bottom), the same amount on each side.
+    // We run into some cases were we are doubling the padding, as an item is adding padding
+    // with the same amount as its neighbor, e.g the X button has a padding of(1,1,1,1) and the
+    // shield button has a of padding(1,1,1,1) and they are layout next to each other:
+    //   +---+--------+
+    //   | X | shield |
+    //   +------------+
+    // We expect the total padding between right X and left shield will be 1 but actually is 2.
+    // As X has right a padding of 1 + shield left a padding 1 = 2 instead of 1.
+    // This function aims to remove the double padding of neighbors
+    private fun removeStartPaddingFromViewsIfNeeded() {
+        val isACustomTab = navigationActions.isNotEmpty()
+        trackingProtectionIconView.removeLeftPaddingIfNeeded(isACustomTab)
+        siteSecurityIconView.removeLeftPaddingIfNeeded(isACustomTab && trackingProtectionIconView.isVisible)
+        menuView.menuIcon.removeLeftPaddingIfNeeded(browserActions.isNotEmpty())
     }
 
     private fun shouldTrackingProtectionViewBeVisible(): Boolean {
@@ -656,5 +678,11 @@ internal class DisplayToolbar(
 
         internal const val BOTTOM_PROGRESS_BAR = 0
         private const val TOP_PROGRESS_BAR = 1
+    }
+}
+
+internal fun View.removeLeftPaddingIfNeeded(condition: Boolean) {
+    if (condition) {
+        updatePadding(left = 0)
     }
 }

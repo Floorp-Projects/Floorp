@@ -104,8 +104,13 @@ class DisplayToolbarTest {
 
         val iconView = displayToolbar.trackingProtectionIconView
 
-        assertEquals(56, iconView.measuredWidth)
-        assertEquals(56, iconView.measuredHeight)
+        val resources = testContext.resources
+        val iconSize = resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_icon_size)
+        val iconPadding = resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_icon_padding)
+        val totalSize =
+            iconSize + (iconPadding * 2) // The padding is applied to both size left and right
+        assertEquals(totalSize, iconView.measuredWidth)
+        assertEquals(totalSize, iconView.measuredHeight)
     }
 
     @Test
@@ -801,8 +806,8 @@ class DisplayToolbarTest {
         assertFalse(viewRect.contains(browserActionViewRect))
         assertFalse(viewRect.contains(menuViewRect))
 
-        // 1024 (width) - 200 (browser action) - 200 (menu) = 624
-        assertEquals(624, viewRect.width())
+        // 1024 (width) -  (browser action) -  (menu)
+        assertEquals(1024 - browserActionViewRect.width() - menuViewRect.width(), viewRect.width())
     }
 
     @Test

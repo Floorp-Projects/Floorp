@@ -16,6 +16,7 @@ permalink: /changelog/
   * Now the color of the tracking protection icon adapts to color of the toolbar.
 
 * **browser-toolbar**
+  * Resized icons on the toolbar see [#4490](https://github.com/mozilla-mobile/android-components/issues/4490) for more information.
   * Added a way to customize the color of the tracking protection icon via BrowserToolbar.
   ```kotlin
   val toolbar = BrowserToolbar(context)
