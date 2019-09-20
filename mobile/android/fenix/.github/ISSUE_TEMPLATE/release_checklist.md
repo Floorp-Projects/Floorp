@@ -22,7 +22,10 @@ Soft code freeze for a release is the *second Wednesday of the sprint*, and most
 - [ ] Add either `eng:qa:needed` flags on each issue that still needs it.
 - [ ] Make sure the "Final string Import" has already happened.
 
-### Product Integrity
+### SUMO Verification [Thursday, 2nd week of sprint]
+- [ ] Verify with SUMO the contents of the whats new / other sumo pages are accurate with what is in this release.
+
+### Product Integrity [Thursday, 2nd week of sprint]
 
 - [ ] Tag first pre-release RC version in Github. For 1.0 the tag would be 1.0.0-rc.1. This will kick off a build of the branch. You can see it in the mouseover of the CI badge of the branch in the commits view.
 
