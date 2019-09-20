@@ -8,6 +8,7 @@
 #define mozilla_DeviceChangeCallback_h
 
 #include "mozilla/Mutex.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 
