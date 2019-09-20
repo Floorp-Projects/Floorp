@@ -1209,7 +1209,6 @@ class GeneratedFile(ContextDerived):
         suffixes = (
             '.h',
             '.inc',
-            context.config.substs['LIB_SUFFIX'],
             '.py',
             '.rs',
             # We need to compile Java to generate JNI wrappers for native code
