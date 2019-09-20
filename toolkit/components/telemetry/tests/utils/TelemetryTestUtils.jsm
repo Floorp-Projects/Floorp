@@ -175,8 +175,8 @@ var TelemetryTestUtils = {
 
     // Step 2: Match.
     Assert.equal(
-      expectedEvents.length,
       filtered.length,
+      expectedEvents.length,
       "After filtering we must have the expected number of events."
     );
     if (expectedEvents.length === 0) {
