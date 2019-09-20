@@ -80,8 +80,10 @@ nsresult ScriptLoadHandler::DecodeRawDataHelper(const uint8_t* aData,
     Accumulate(DOM_SCRIPT_LOAD_INCREMENTAL_RATIO, 100 * haveRead / (haveRead + written));
     // Compute the rate of transfer of the incremental data calls averaged
     // across the time needed to complete the request.
-    double ms = (TimeStamp::Now() - mFirstOnIncrementalData).ToMilliseconds();
+    auto streamingTime = TimeStamp::Now() - mFirstOnIncrementalData;
+    double ms = streamingTime.ToMilliseconds();
     Accumulate(DOM_SCRIPT_LOAD_INCREMENTAL_AVG_TRANSFER_RATE, haveRead / ms);
+    mRequest->mStreamingTime = streamingTime;
   }
   if (!aEndOfStream && !haveRead) {
     mFirstOnIncrementalData = TimeStamp::Now();

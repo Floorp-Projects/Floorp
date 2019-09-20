@@ -68,7 +68,7 @@ class GridInspector {
     this.inspector = inspector;
     this.store = inspector.store;
     this.telemetry = inspector.telemetry;
-    this.walker = this.inspector.walker;
+
     // Maximum number of grid highlighters that can be displayed.
     this.maxHighlighters = Services.prefs.getIntPref(
       "devtools.gridinspector.maxHighlighters"
@@ -112,7 +112,8 @@ class GridInspector {
     }
 
     try {
-      this.layoutInspector = await this.inspector.walker.getLayoutInspector();
+      // TODO: Call this again whenever targets are added or removed.
+      this.layoutFronts = await this.getLayoutFronts();
     } catch (e) {
       // This call might fail if called asynchrously after the toolbox is finished
       // closing.
@@ -147,6 +148,23 @@ class GridInspector {
   }
 
   /**
+   * Get the LayoutActor fronts for all interesting targets where we have inspectors.
+   *
+   * @return {Array} The list of LayoutActor fronts
+   */
+  async getLayoutFronts() {
+    const inspectorFronts = await this.inspector.inspectorFront.getAllInspectorFronts();
+
+    const layoutFronts = [];
+    for (const { walker } of inspectorFronts) {
+      const layoutFront = await walker.getLayoutInspector();
+      layoutFronts.push(layoutFront);
+    }
+
+    return layoutFronts;
+  }
+
+  /**
    * Destruction function called when the inspector is destroyed. Removes event listeners
    * and cleans up references.
    */
@@ -167,9 +185,8 @@ class GridInspector {
     this._highlighters = null;
     this.document = null;
     this.inspector = null;
-    this.layoutInspector = null;
+    this.layoutFronts = null;
     this.store = null;
-    this.walker = null;
   }
 
   getComponentProps() {
@@ -299,15 +316,7 @@ class GridInspector {
       return;
     }
 
-    // Get all the GridFront from the server if no gridFronts were provided.
-    let gridFronts;
-    try {
-      gridFronts = await this.layoutInspector.getGrids(this.walker.rootNode);
-    } catch (e) {
-      // This call might fail if called asynchrously after the toolbox is finished
-      // closing.
-      return;
-    }
+    const gridFronts = await this.getGrids();
 
     // Stop if the panel has been destroyed during the call to getGrids
     if (!this.inspector) {
@@ -353,7 +362,7 @@ class GridInspector {
       // particular DOM Node in the tree yet, or when we are connected to an older server.
       if (!nodeFront) {
         try {
-          nodeFront = await this.walker.getNodeFromActor(grid.actorID, [
+          nodeFront = await grid.walkerFront.getNodeFromActor(grid.actorID, [
             "containerEl",
           ]);
         } catch (e) {
@@ -407,7 +416,9 @@ class GridInspector {
         let parentGridNodeFront;
 
         try {
-          parentGridNodeFront = await this.walker.getParentGridNode(nodeFront);
+          parentGridNodeFront = await nodeFront.walkerFront.getParentGridNode(
+            nodeFront
+          );
         } catch (e) {
           // This call might fail if called asynchrously after the toolbox is finished
           // closing.
@@ -436,6 +447,26 @@ class GridInspector {
 
     this.store.dispatch(updateGrids(grids));
     this.inspector.emit("grid-panel-updated");
+  }
+
+  /**
+   * Get all GridFront instances from the server(s).
+   *
+   *
+   * @return {Array} The list of GridFronts
+   */
+  async getGrids() {
+    let gridFronts = [];
+
+    try {
+      for (const layoutFront of this.layoutFronts) {
+        gridFronts = gridFronts.concat(await layoutFront.getAllGrids());
+      }
+    } catch (e) {
+      // This call might fail if called asynchrously after the toolbox is finished closing
+    }
+
+    return gridFronts;
   }
 
   /**
@@ -521,14 +552,8 @@ class GridInspector {
     const { grids } = this.store.getState();
 
     // The new list of grids from the server.
-    let newGridFronts;
-    try {
-      newGridFronts = await this.layoutInspector.getGrids(this.walker.rootNode);
-    } catch (e) {
-      // This call might fail if called asynchrously after the toolbox is finished
-      // closing.
-      return;
-    }
+    const newGridFronts = await this.getGrids();
+
     // Stop if the panel has been destroyed during the call to getGrids
     if (!this.inspector) {
       return;

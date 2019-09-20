@@ -751,8 +751,8 @@ EnvironmentAddonBuilder.prototype = {
       changed:
         !this._environment._currentEnvironment.addons ||
         !ObjectUtils.deepEqual(
-          addons,
-          this._environment._currentEnvironment.addons
+          addons.activeAddons,
+          this._environment._currentEnvironment.addons.activeAddons
         ),
     };
 
@@ -762,8 +762,8 @@ EnvironmentAddonBuilder.prototype = {
         this._environment._currentEnvironment,
         myScope
       );
-      this._environment._currentEnvironment.addons = addons;
     }
+    this._environment._currentEnvironment.addons = addons;
 
     return result;
   },
@@ -1372,7 +1372,7 @@ EnvironmentCache.prototype = {
     this._log.trace("observe - aTopic: " + aTopic + ", aData: " + aData);
     switch (aTopic) {
       case SEARCH_ENGINE_MODIFIED_TOPIC:
-        if (aData != "engine-default") {
+        if (aData != "engine-default" && aData != "engine-default-private") {
           return;
         }
         // Record the new default search choice and send the change notification.
@@ -1426,31 +1426,6 @@ EnvironmentCache.prototype = {
   },
 
   /**
-   * Get the default search engine.
-   * @return {String} Returns the search engine identifier, "NONE" if no default search
-   *         engine is defined or "UNDEFINED" if no engine identifier or name can be found.
-   */
-  _getDefaultSearchEngine() {
-    let engine;
-    try {
-      engine = Services.search.defaultEngine;
-    } catch (e) {}
-
-    let name;
-    if (!engine) {
-      name = "NONE";
-    } else if (engine.identifier) {
-      name = engine.identifier;
-    } else if (engine.name) {
-      name = "other-" + engine.name;
-    } else {
-      name = "UNDEFINED";
-    }
-
-    return name;
-  },
-
-  /**
    * Update the default search engine value.
    */
   async _updateSearchEngine() {
@@ -1473,9 +1448,23 @@ EnvironmentCache.prototype = {
 
     // Make sure we have a settings section.
     this._currentEnvironment.settings = this._currentEnvironment.settings || {};
+
     // Update the search engine entry in the current environment.
-    this._currentEnvironment.settings.defaultSearchEngine = this._getDefaultSearchEngine();
-    this._currentEnvironment.settings.defaultSearchEngineData = await Services.search.getDefaultEngineInfo();
+    const defaultEngineInfo = await Services.search.getDefaultEngineInfo();
+    this._currentEnvironment.settings.defaultSearchEngine =
+      defaultEngineInfo.defaultSearchEngine;
+    this._currentEnvironment.settings.defaultSearchEngineData = {
+      ...defaultEngineInfo.defaultSearchEngineData,
+    };
+    if ("defaultPrivateSearchEngine" in defaultEngineInfo) {
+      this._currentEnvironment.settings.defaultPrivateSearchEngine =
+        defaultEngineInfo.defaultPrivateSearchEngine;
+    }
+    if ("defaultPrivateSearchEngineData" in defaultEngineInfo) {
+      this._currentEnvironment.settings.defaultPrivateSearchEngineData = {
+        ...defaultEngineInfo.defaultPrivateSearchEngineData,
+      };
+    }
 
     // Record the cohort identifier used for search defaults A/B testing.
     if (Services.prefs.prefHasUserValue(PREF_SEARCH_COHORT)) {

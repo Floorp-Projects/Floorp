@@ -73,6 +73,11 @@ nsFileStreamBase::Seek(int32_t whence, int64_t offset) {
 
 NS_IMETHODIMP
 nsFileStreamBase::Tell(int64_t* result) {
+  if (mState == eDeferredOpen && !(mOpenParams.ioFlags & PR_APPEND)) {
+    *result = 0;
+    return NS_OK;
+  }
+
   nsresult rv = DoPendingOpen();
   NS_ENSURE_SUCCESS(rv, rv);
 

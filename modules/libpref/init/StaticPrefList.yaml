@@ -5671,7 +5671,7 @@
 
 -   name: media.wmf.deblacklisting-for-telemetry-in-gpu-process
     type: RelaxedAtomicBool
-    value: false
+    value: true
     mirror: always
 
 -   name: media.wmf.amd.highres.enabled
@@ -6867,7 +6867,7 @@
 
 # Navigate-to CSP 3 directive
 - name: security.csp.enableNavigateTo
-  type: bool 
+  type: bool
   value: false
   mirror: always
 
@@ -7020,6 +7020,11 @@
   mirror: always
 
 - name: toolkit.telemetry.geckoview.streaming
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: toolkit.telemetry.testing.overrideProductsCheck
   type: RelaxedAtomicBool
   value: false
   mirror: always

@@ -203,7 +203,10 @@
   -moz-context-properties: fill, fill-opacity;
 }
 
-.urlbarView-tip-help[selected],
+.urlbarView-tip-help[selected] {
+  box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
+}
+
 .urlbarView-tip-help:hover {
   background-color: var(--in-content-button-background-hover);
 }
