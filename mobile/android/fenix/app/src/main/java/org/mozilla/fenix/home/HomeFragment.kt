@@ -532,7 +532,7 @@ class HomeFragment : Fragment(), AccountObserver {
                 val context = requireContext()
                 val components = context.components
 
-                action.collection.tabs.forEach {
+                action.collection.tabs.reversed().forEach {
                     val session = it.restore(
                         context = context,
                         engine = components.core.engine,

@@ -132,25 +132,28 @@ class CollectionItemMenu(
     private val menuItems by lazy {
         listOf(
             SimpleBrowserMenuItem(
-                context.getString(R.string.collection_delete),
-                textColorResource = ThemeManager.resolveAttribute(R.attr.destructive, context)
+                context.getString(R.string.collection_open_tabs)
             ) {
-                onItemTapped.invoke(Item.DeleteCollection)
+                onItemTapped.invoke(Item.OpenTabs)
             },
-            SimpleBrowserMenuItem(
-                context.getString(R.string.add_tab)
-            ) {
-                onItemTapped.invoke(Item.AddTab)
-            }.apply { visible = { sessionHasOpenTabs } },
+
             SimpleBrowserMenuItem(
                 context.getString(R.string.collection_rename)
             ) {
                 onItemTapped.invoke(Item.RenameCollection)
             },
+
             SimpleBrowserMenuItem(
-                context.getString(R.string.collection_open_tabs)
+                context.getString(R.string.add_tab)
             ) {
-                onItemTapped.invoke(Item.OpenTabs)
+                onItemTapped.invoke(Item.AddTab)
+            }.apply { visible = { sessionHasOpenTabs } },
+
+            SimpleBrowserMenuItem(
+                context.getString(R.string.collection_delete),
+                textColorResource = ThemeManager.resolveAttribute(R.attr.destructive, context)
+            ) {
+                onItemTapped.invoke(Item.DeleteCollection)
             }
         )
     }
