@@ -65,6 +65,9 @@ permalink: /changelog/
 
 * **feature-tabs**
   * ⚠️ **This is a breaking change**: Methods that have been accepting a parent `Session` parameter now expect the parent id (`String`).
+  
+* **browser-menu**
+   * Adds the ability to create a BrowserMenuImageSwitch, a BrowserMenuSwitch with icon
 
 * **feature-accounts**
   * Added ability to configure FxaWebChannelFeature with a set of `FxaCapability`. Currently there's just one: `CHOOSE_WHAT_TO_SYNC`. It defaults to `false`, so if you want "choose what to sync" selection during auth flows, please specify it.
