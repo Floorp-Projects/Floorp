@@ -728,6 +728,24 @@ bool BrowsingContext::HasValidTransientUserGestureActivation() {
          (TimeStamp::Now() - mUserGestureStart) <= timeout;
 }
 
+bool BrowsingContext::ConsumeTransientUserGestureActivation() {
+  MOZ_ASSERT(mIsInProcess);
+
+  if (!HasValidTransientUserGestureActivation()) {
+    return false;
+  }
+
+  BrowsingContext* top = Top();
+  top->PreOrderWalk([&](BrowsingContext* aContext) {
+    if (aContext->GetUserActivationState() ==
+        UserActivation::State::FullActivated) {
+      aContext->SetUserActivationState(UserActivation::State::HasBeenActivated);
+    }
+  });
+
+  return true;
+}
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(BrowsingContext)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowsingContext)

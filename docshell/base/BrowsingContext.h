@@ -289,6 +289,11 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   // out.
   bool HasValidTransientUserGestureActivation();
 
+  // Return true if the corresponding document has valid transient user gesture
+  // activation and the transient user gesture activation had been consumed
+  // successfully.
+  bool ConsumeTransientUserGestureActivation();
+
   // Return the window proxy object that corresponds to this browsing context.
   inline JSObject* GetWindowProxy() const { return mWindowProxy; }
   // Set the window proxy object that corresponds to this browsing context.

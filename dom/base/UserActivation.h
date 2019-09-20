@@ -17,6 +17,9 @@ class UserActivation final {
   enum class State : uint8_t {
     // Not activated.
     None,
+    // It is considered as has-been-activated, but not transient-activated given
+    // that it is being consumed.
+    HasBeenActivated,
     // It is considered as has-been-activated, and also transient-activated if
     // haven't timed out.
     FullActivated,
