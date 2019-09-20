@@ -220,9 +220,8 @@ void ParseContext::Scope::removeCatchParameters(ParseContext* pc,
 
 ParseContext::ParseContext(JSContext* cx, ParseContext*& parent,
                            SharedContext* sc, ErrorReporter& errorReporter,
-                           class UsedNameTracker& usedNames,
-                           FunctionTreeHolder& treeHolder,
-                           Directives* newDirectives, bool isFull)
+                           ParseInfo& parseInfo, Directives* newDirectives,
+                           bool isFull)
     : Nestable<ParseContext>(&parent),
       traceLog_(sc->cx_,
                 isFull ? TraceLogger_ParsingFull : TraceLogger_ParsingSyntax,
@@ -238,7 +237,7 @@ ParseContext::ParseContext(JSContext* cx, ParseContext*& parent,
       newDirectives(newDirectives),
       lastYieldOffset(NoYieldOffset),
       lastAwaitOffset(NoAwaitOffset),
-      scriptId_(usedNames.nextScriptId()),
+      scriptId_(parseInfo.usedNames.nextScriptId()),
       isStandaloneFunctionBody_(false),
       superScopeNeedsHomeObject_(false) {
   if (isFunctionBox()) {
@@ -249,15 +248,15 @@ ParseContext::ParseContext(JSContext* cx, ParseContext*& parent,
     //
     // We do this here, rather than in init below to avoid having to pass
     // the TreeHolder to all the init calls.
-    if (treeHolder.isDeferred() &&
+    if (parseInfo.treeHolder.isDeferred() &&
         !this->functionBox()->useAsmOrInsideUseAsm()) {
-      tree.emplace(treeHolder);
+      tree.emplace(parseInfo.treeHolder);
     }
 
     if (functionBox()->isNamedLambda()) {
-      namedLambdaScope_.emplace(cx, parent, usedNames);
+      namedLambdaScope_.emplace(cx, parent, parseInfo.usedNames);
     }
-    functionScope_.emplace(cx, parent, usedNames);
+    functionScope_.emplace(cx, parent, parseInfo.usedNames);
   }
 }
 
