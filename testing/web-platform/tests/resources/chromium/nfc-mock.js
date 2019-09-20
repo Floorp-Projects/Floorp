@@ -182,6 +182,10 @@ var WebNFCTest = (() => {
       let error = this.getHWError();
       if (error)
         return error;
+      // Cancel previous pending push operation
+      if (this.pending_promise_func_) {
+        this.cancelPendingPushOperation();
+      }
 
       this.pushed_message_ = message;
       this.push_options_ = options;
@@ -301,18 +305,18 @@ var WebNFCTest = (() => {
       this.push_options_ = null;
       this.pending_promise_func_ = null;
       this.push_should_timeout_ = false;
+      this.push_completed_ = true;
     }
 
     // Sets message that is used to deliver NFC reading updates.
     setReadingMessage(message) {
       this.reading_messages_.push(message);
       // Ignore reading if NFCPushOptions.ignoreRead is true
-      let ignoreRead = false;
       if(this.push_options_ && this.push_options_.ignoreRead)
-        ignoreRead = this.push_options_.ignoreRead;
+        return;
       // Triggers onWatch if the new message matches existing watchers
       for (let watcher of this.watchers_) {
-        if (!ignoreRead && matchesWatchOptions(message, watcher.options)) {
+        if (matchesWatchOptions(message, watcher.options)) {
           this.client_.onWatch(
               [watcher.id], fake_tag_serial_number,
               toMojoNDEFMessage(message));
