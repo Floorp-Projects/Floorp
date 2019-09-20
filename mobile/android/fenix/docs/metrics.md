@@ -138,6 +138,8 @@ The following metrics are added to the ping:
 | sync_auth.sign_in |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user pressed the sign in button on the sync authentication page and was successfully signed in to FxA  |[1](https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532)||2020-03-01 |
 | sync_auth.sign_out |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user pressed the sign out button on the sync account page and was successfully signed out of FxA  |[1](https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532)||2020-03-01 |
 | sync_auth.sign_up |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |User registered a new Firefox Account, and was signed into it  |[1](https://github.com/mozilla-mobile/fenix/pull/4931#issuecomment-529740300)||2020-03-01 |
+| tab.media_pause |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user pressed the pause icon on a tab from the home screen  |[1](https://github.com/mozilla-mobile/fenix/pull/5266)||2020-03-01 |
+| tab.media_play |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user pressed the play icon on a tab from the home screen  |[1](https://github.com/mozilla-mobile/fenix/pull/5266)||2020-03-01 |
 
 ## metrics
 This is a built-in ping that is assembled out of the box by the Glean SDK.

@@ -113,6 +113,8 @@ sealed class Event {
     object PrivateBrowsingPinnedShortcutPrivateTab : Event()
     object PrivateBrowsingStaticShortcutTab : Event()
     object PrivateBrowsingStaticShortcutPrivateTab : Event()
+    object TabMediaPlay : Event()
+    object TabMediaPause : Event()
 
     // Interaction events with extras
 

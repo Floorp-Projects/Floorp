@@ -36,6 +36,7 @@ import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.SearchWidget
 import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.GleanMetrics.SyncAuth
+import org.mozilla.fenix.GleanMetrics.Tab
 import org.mozilla.fenix.ext.components
 
 private class EventWrapper<T : Enum<T>>(
@@ -369,6 +370,12 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.WhatsNewTapped -> EventWrapper(
             { Events.whatsNewTapped.record(it) },
             { Events.whatsNewTappedKeys.valueOf(it) }
+        )
+        is Event.TabMediaPlay -> EventWrapper<NoExtraKeys>(
+            { Tab.mediaPlay.record(it) }
+        )
+        is Event.TabMediaPause -> EventWrapper<NoExtraKeys>(
+            { Tab.mediaPause.record(it) }
         )
 
         // Don't record other events in Glean:
