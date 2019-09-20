@@ -97,6 +97,7 @@ class WebrtcTCPSocket : public nsIHttpUpgradeListener,
   nsCOMPtr<nsIAsyncOutputStream> mSocketOut;
   nsCOMPtr<nsIEventTarget> mMainThread;
   nsCOMPtr<nsIEventTarget> mSocketThread;
+  nsCOMPtr<nsICancelable> mProxyRequest;
 };
 
 }  // namespace net
