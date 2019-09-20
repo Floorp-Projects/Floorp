@@ -515,6 +515,8 @@ class IntervalSet {
 
   IndexType Length() const { return mIntervals.Length(); }
 
+  bool IsEmpty() const { return mIntervals.IsEmpty(); }
+
   T Start(IndexType aIndex) const { return mIntervals[aIndex].mStart; }
 
   T Start(IndexType aIndex, bool& aExists) const {
