@@ -25,6 +25,11 @@ class CombinedStacks {
   explicit CombinedStacks();
   explicit CombinedStacks(size_t aMaxStacksCount);
 
+  CombinedStacks(CombinedStacks&&) = default;
+  CombinedStacks& operator=(CombinedStacks&&) = default;
+
+  void Swap(CombinedStacks& aOther);
+
   typedef std::vector<Telemetry::ProcessedStack::Frame> Stack;
   const Telemetry::ProcessedStack::Module& GetModule(unsigned aIndex) const;
   size_t GetModuleCount() const;
