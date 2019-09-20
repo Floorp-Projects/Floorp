@@ -1771,6 +1771,46 @@ set_config('MOZ_HAS_REMOTE', has_remote)
 set_define('MOZ_HAS_REMOTE', has_remote)
 
 
+# wasm sandboxing support
+# ==============================================================
+
+def wasm_sandboxing_libraries():
+    return ('graphite',)
+
+option('--with-wasm-sandboxed-libraries',
+       help='Enable wasm sandboxing for the selected libraries',
+       nargs='+',
+       choices=dependable(wasm_sandboxing_libraries))
+
+@depends('--with-wasm-sandboxed-libraries')
+def requires_wasm_sandboxing(libraries):
+    if libraries:
+        return True
+
+set_config('MOZ_USING_WASM_SANDBOXING', requires_wasm_sandboxing)
+
+@depends('--with-wasm-sandboxed-libraries', target)
+def wasm_sandboxing(libraries, target):
+    if not libraries:
+        return
+
+    # Wasm sandboxing is only enabled on specific targets.
+    if not (target.cpu in ('x86_64',) and \
+            target.kernel == 'Linux' and \
+            target.os != 'Android'):
+        die('wasm sandboxing is only enabled on x86-64 Linux')
+
+    return namespace(**{name: True for name in libraries})
+
+@template
+def wasm_sandboxing_config_defines():
+    for lib in wasm_sandboxing_libraries():
+        set_config('MOZ_WASM_SANDBOXING_%s' % lib.upper(), getattr(wasm_sandboxing, lib))
+        set_define('MOZ_WASM_SANDBOXING_%s' % lib.upper(), getattr(wasm_sandboxing, lib))
+
+wasm_sandboxing_config_defines()
+
+
 # new XULStore implementation
 # ==============================================================
 
