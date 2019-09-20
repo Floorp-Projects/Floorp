@@ -82,6 +82,7 @@
 #include "mozilla/dom/PluginCrashedEvent.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/widget/IMEData.h"
@@ -89,7 +90,6 @@
 #include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "mozilla/dom/HTMLEmbedElement.h"
 #include "mozilla/dom/HTMLObjectElement.h"
-#include "mozilla/dom/UserActivation.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/PresShell.h"
@@ -2330,7 +2330,7 @@ nsresult nsObjectLoadingContent::OpenChannel() {
     }
 
     nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(httpChan));
-    if (cos && UserActivation::IsHandlingUserInput()) {
+    if (cos && EventStateManager::IsHandlingUserInput()) {
       cos->AddClassFlags(nsIClassOfService::UrgentStart);
     }
   }

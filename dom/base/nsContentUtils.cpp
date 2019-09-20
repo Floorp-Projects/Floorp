@@ -78,7 +78,6 @@
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/XULCommandEvent.h"
-#include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/net/CookieSettings.h"
@@ -5074,7 +5073,7 @@ void nsContentUtils::TriggerLink(nsIContent* aContent, nsIURI* aLinkURI,
 
     nsDocShell::Cast(docShell)->OnLinkClick(
         aContent, aLinkURI, fileName.IsVoid() ? aTargetSpec : EmptyString(),
-        fileName, nullptr, nullptr, UserActivation::IsHandlingUserInput(),
+        fileName, nullptr, nullptr, EventStateManager::IsHandlingUserInput(),
         aIsTrusted, triggeringPrincipal, csp);
   }
 }
@@ -6394,7 +6393,7 @@ const char* nsContentUtils::CheckRequestFullscreenAllowed(
     return nullptr;
   }
 
-  if (!UserActivation::IsHandlingUserInput()) {
+  if (!EventStateManager::IsHandlingUserInput()) {
     return "FullscreenDeniedNotInputDriven";
   }
 
@@ -6403,7 +6402,8 @@ const char* nsContentUtils::CheckRequestFullscreenAllowed(
   // disallow fullscreen
   TimeDuration timeout = HandlingUserInputTimeout();
   if (timeout > TimeDuration(nullptr) &&
-      (TimeStamp::Now() - UserActivation::GetHandlingInputStart()) > timeout) {
+      (TimeStamp::Now() - EventStateManager::GetHandlingInputStart()) >
+          timeout) {
     return "FullscreenDeniedNotInputDriven";
   }
 
@@ -6421,7 +6421,7 @@ const char* nsContentUtils::CheckRequestFullscreenAllowed(
 /* static */
 bool nsContentUtils::IsCutCopyAllowed(nsIPrincipal* aSubjectPrincipal) {
   if (StaticPrefs::dom_allow_cut_copy() &&
-      UserActivation::IsHandlingUserInput()) {
+      EventStateManager::IsHandlingUserInput()) {
     return true;
   }
 

@@ -66,7 +66,6 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/dom/ToJSValue.h"
-#include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/ChildSHistory.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
@@ -13048,7 +13047,7 @@ nsresult nsDocShell::OnLeaveLink() {
 
 bool nsDocShell::ShouldBlockLoadingForBackButton() {
   if (!(mLoadType & LOAD_CMD_HISTORY) ||
-      UserActivation::IsHandlingUserInput() ||
+      EventStateManager::IsHandlingUserInput() ||
       !Preferences::GetBool("accessibility.blockjsredirection")) {
     return false;
   }

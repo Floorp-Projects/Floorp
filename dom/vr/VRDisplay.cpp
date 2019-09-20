@@ -9,11 +9,11 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/VRDisplay.h"
-#include "mozilla/dom/VRDisplayBinding.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/dom/VRDisplayBinding.h"
 #include "mozilla/Base64.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "Navigator.h"
@@ -461,7 +461,7 @@ already_AddRefed<Promise> VRDisplay::RequestPresent(
   uint32_t presentationGroup =
       isChromePresentation ? gfx::kVRGroupChrome : gfx::kVRGroupContent;
 
-  if (!UserActivation::IsHandlingUserInput() && !isChromePresentation &&
+  if (!EventStateManager::IsHandlingUserInput() && !isChromePresentation &&
       !IsHandlingVRNavigationEvent() && StaticPrefs::dom_vr_require_gesture() &&
       !IsPresenting()) {
     // The WebVR API states that if called outside of a user gesture, the

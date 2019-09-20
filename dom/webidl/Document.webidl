@@ -574,8 +574,6 @@ partial interface Document {
   readonly attribute boolean hasBeenUserGestureActivated;
   [ChromeOnly]
   readonly attribute boolean hasValidTransientUserGestureActivation;
-  [ChromeOnly]
-  boolean consumeTransientUserGestureActivation();
 };
 
 // Extension to give chrome JS the ability to set an event handler which is
