@@ -27,6 +27,11 @@ const ACTORS = {
       moduleURI: "resource:///actors/LoadURIDelegateChild.jsm",
     },
   },
+  WebBrowserChrome: {
+    child: {
+      moduleURI: "resource:///actors/WebBrowserChromeChild.jsm",
+    },
+  },
 };
 
 function GeckoViewStartup() {}
