@@ -573,7 +573,7 @@ class ModuleVersion final {
   bool operator<(const uint64_t& aOther) const { return mVersion < aOther; }
 
  private:
-  uint64_t mVersion;
+  const uint64_t mVersion;
 };
 
 inline LauncherResult<ModuleVersion> GetModuleVersion(

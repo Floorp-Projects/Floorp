@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 
+#include "mozilla/WindowsDllBlocklist.h"
 #include "mozilla/Bootstrap.h"
 
 #include "nsXULAppAPI.h"
@@ -15,8 +16,6 @@
 #  include "xpcshellMacUtils.h"
 #endif
 #ifdef XP_WIN
-#  include "mozilla/WindowsDllBlocklist.h"
-
 #  include <windows.h>
 #  include <shlobj.h>
 
