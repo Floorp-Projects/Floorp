@@ -26,6 +26,7 @@
 }
 
 #PanelUI-fxa-menu-sync-prefs-button,
+#PanelUI-fxa-menu-account-devices-button,
 #appMenu-preferences-button {
   list-style-image: url(chrome://browser/skin/settings.svg);
 }

@@ -559,11 +559,16 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   -moz-box-align: center;
 }
 
-#appMenu-fxa-avatar {
+#appMenu-fxa-avatar,
+#fxa-menu-account-fxa-avatar {
   pointer-events: none;
   list-style-image: var(--avatar-image-url);
   -moz-context-properties: fill;
   fill: currentColor;
+}
+
+#PanelUI-fxa-menu-account-signout-button {
+  list-style-image: url(chrome://browser/skin/sign-out.svg);
 }
 
 /* Handle different UI states. */
@@ -711,7 +716,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 #fxa-menu-avatar,
-#fxa-avatar-image {
+#fxa-avatar-image,
+#PanelUI-fxa-menu-account-settings-button {
   list-style-image: var(--avatar-image-url);
 }
 
@@ -1380,6 +1386,7 @@ menuitem.panel-subview-footer@menuStateActive@,
 }
 
 #appMenu-fxa-avatar,
+#fxa-menu-account-fxa-avatar,
 #appMenu-fxa-label > .toolbarbutton-icon,
 #PanelUI-containersItems > .subviewbutton > .toolbarbutton-icon,
 #PanelUI-remotetabs-tabslist > toolbarbutton[itemtype="tab"] > .toolbarbutton-icon,
@@ -1390,7 +1397,8 @@ menuitem.panel-subview-footer@menuStateActive@,
   height: 16px;
 }
 
-#appMenu-fxa-avatar {
+#appMenu-fxa-avatar,
+#PanelUI-fxa-menu-account-settings-button > .toolbarbutton-icon {
   border-radius: 50%;
 }
 
