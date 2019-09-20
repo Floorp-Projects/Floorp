@@ -527,7 +527,13 @@ class FunctionBox : public ObjectBox, public SharedContext {
 
   // Free non-LifoAlloc memory which would otherwise be leaked when
   // the FunctionBox is LifoAlloc destroyed (without calling destructor)
-  void cleanupMemory() { lazyScriptData().reset(); }
+  void cleanupMemory() { clearDeferredAllocationInfo(); }
+
+  // Clear any deferred allocation info which will no longer be used.
+  void clearDeferredAllocationInfo() {
+    lazyScriptData().reset();
+    functionCreationData().reset();
+  }
 
   JSFunction* function() const { return &object()->as<JSFunction>(); }
 
