@@ -248,40 +248,46 @@ class TErrorResult {
   void StealExceptionFromJSContext(JSContext* cx);
 
   template <dom::ErrNum errorNumber, typename... Ts>
-  void ThrowTypeError(Ts&&... messageArgs) {
+  void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
+  ThrowTypeError(Ts&&... messageArgs) {
     ThrowErrorWithMessage<errorNumber>(NS_ERROR_INTERNAL_ERRORRESULT_TYPEERROR,
                                        std::forward<Ts>(messageArgs)...);
   }
 
   // To be used when throwing a TypeError with a completely custom
   // message string that's only used in one spot.
-  inline void ThrowTypeError(const nsAString& aMessage) {
+  inline void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
+  ThrowTypeError(const nsAString& aMessage) {
     this->template ThrowTypeError<dom::MSG_ONE_OFF_TYPEERR>(aMessage);
   }
 
   // To be used when throwing a TypeError with a completely custom
   // message string that's a string literal that's only used in one spot.
   template <int N>
-  void ThrowTypeError(const char16_t (&aMessage)[N]) {
+  void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
+  ThrowTypeError(const char16_t (&aMessage)[N]) {
     ThrowTypeError(nsLiteralString(aMessage));
   }
 
   template <dom::ErrNum errorNumber, typename... Ts>
-  void ThrowRangeError(Ts&&... messageArgs) {
+  void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
+  ThrowRangeError(Ts&&... messageArgs) {
     ThrowErrorWithMessage<errorNumber>(NS_ERROR_INTERNAL_ERRORRESULT_RANGEERROR,
                                        std::forward<Ts>(messageArgs)...);
   }
 
   // To be used when throwing a RangeError with a completely custom
   // message string that's only used in one spot.
-  inline void ThrowRangeError(const nsAString& aMessage) {
+  inline void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
+  ThrowRangeError(const nsAString& aMessage) {
     this->template ThrowRangeError<dom::MSG_ONE_OFF_RANGEERR>(aMessage);
   }
 
   // To be used when throwing a RangeError with a completely custom
   // message string that's a string literal that's only used in one spot.
   template <int N>
-  void ThrowRangeError(const char16_t (&aMessage)[N]) {
+  void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
+  ThrowRangeError(const char16_t (&aMessage)[N]) {
     ThrowRangeError(nsLiteralString(aMessage));
   }
 
@@ -300,7 +306,8 @@ class TErrorResult {
   // The exn argument to ThrowJSException can be in any compartment.  It does
   // not have to be in the compartment of cx.  If someone later uses it, they
   // will wrap it into whatever compartment they're working in, as needed.
-  void ThrowJSException(JSContext* cx, JS::Handle<JS::Value> exn);
+  void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
+  ThrowJSException(JSContext* cx, JS::Handle<JS::Value> exn);
   bool IsJSException() const {
     return ErrorCode() == NS_ERROR_INTERNAL_ERRORRESULT_JS_EXCEPTION;
   }
@@ -310,8 +317,8 @@ class TErrorResult {
   // nsresult will be used.  The passed-in string must be UTF-8.  The nsresult
   // passed in must be one we create DOMExceptions for; otherwise you may get an
   // XPConnect Exception.
-  void ThrowDOMException(nsresult rv,
-                         const nsACString& message = EmptyCString());
+  void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
+  ThrowDOMException(nsresult rv, const nsACString& message = EmptyCString());
   bool IsDOMException() const {
     return ErrorCode() == NS_ERROR_INTERNAL_ERRORRESULT_DOMEXCEPTION;
   }
@@ -319,7 +326,8 @@ class TErrorResult {
   // Flag on the TErrorResult that whatever needs throwing has been
   // thrown on the JSContext already and we should not mess with it.
   // If nothing was thrown, this becomes an uncatchable exception.
-  void NoteJSContextException(JSContext* aCx);
+  void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
+  NoteJSContextException(JSContext* aCx);
 
   // Check whether the TErrorResult says to just throw whatever is on
   // the JSContext already.
@@ -701,7 +709,9 @@ class OOMReporterInstantiator;
 
 class OOMReporter : private dom::binding_detail::FastErrorResult {
  public:
-  void ReportOOM() { Throw(NS_ERROR_OUT_OF_MEMORY); }
+  void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG ReportOOM() {
+    Throw(NS_ERROR_OUT_OF_MEMORY);
+  }
 
  private:
   // OOMReporterInstantiator is a friend so it can call our constructor and
