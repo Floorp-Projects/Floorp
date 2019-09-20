@@ -1073,25 +1073,6 @@ description#identity-popup-content-verifier,
   color: #f9f9fa;
 }
 
-#protections-popup-tp-switch:not([enabled])[showdotindicator]::after {
-  background: #00B3F4;
-  border: 2px rgba(0,144,237,0.5) solid;
-  content: " ";
-  border-radius: 6px;
-  position: absolute;
-  margin: auto;
-  top: 0;
-  bottom: 12px;
-  left: 21px;
-  height: 6px;
-  width: 6px;
-}
-
-#protections-popup-tp-switch:not([enabled])[showdotindicator]:-moz-locale-dir(rtl)::after {
-  left: unset;
-  right: 21px;
-}
-
 .protections-popup-description {
   border-bottom: 1px solid var(--panel-separator-color);
 }
