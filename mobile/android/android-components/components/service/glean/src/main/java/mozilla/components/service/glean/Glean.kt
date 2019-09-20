@@ -88,6 +88,8 @@ open class GleanInternalAPI internal constructor () {
      * A LifecycleObserver will be added to send pings when the application goes
      * into the background.
      *
+     * This method must be called from the main thread.
+     *
      * @param applicationContext [Context] to access application features, such
      * as shared preferences
      * @param configuration A Glean [Configuration] object with global settings.
