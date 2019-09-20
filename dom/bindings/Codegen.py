@@ -10834,7 +10834,7 @@ class ClassMethod(ClassItem):
         if declaring:
             if self.static:
                 decorators.append('static')
-            if self.virtual:
+            if self.virtual and not self.override:
                 decorators.append('virtual')
         if decorators:
             return ' '.join(decorators) + ' '
