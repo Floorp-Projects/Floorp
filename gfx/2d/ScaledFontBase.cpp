@@ -237,58 +237,6 @@ void ScaledFontBase::CopyGlyphsToBuilder(const GlyphBuffer& aBuffer,
   MOZ_ASSERT(false, "Path not being copied");
 }
 
-void ScaledFontBase::GetGlyphDesignMetrics(const uint16_t* aGlyphs,
-                                           uint32_t aNumGlyphs,
-                                           GlyphMetrics* aGlyphMetrics) {
-#ifdef USE_CAIRO_SCALED_FONT
-  if (mScaledFont) {
-    for (uint32_t i = 0; i < aNumGlyphs; i++) {
-      cairo_glyph_t glyph;
-      cairo_text_extents_t extents;
-      glyph.index = aGlyphs[i];
-      glyph.x = 0;
-      glyph.y = 0;
-
-      cairo_scaled_font_glyph_extents(mScaledFont, &glyph, 1, &extents);
-
-      aGlyphMetrics[i].mXBearing = extents.x_bearing;
-      aGlyphMetrics[i].mXAdvance = extents.x_advance;
-      aGlyphMetrics[i].mYBearing = extents.y_bearing;
-      aGlyphMetrics[i].mYAdvance = extents.y_advance;
-      aGlyphMetrics[i].mWidth = extents.width;
-      aGlyphMetrics[i].mHeight = extents.height;
-
-      cairo_font_options_t* options = cairo_font_options_create();
-      cairo_scaled_font_get_font_options(mScaledFont, options);
-
-      if (cairo_font_options_get_antialias(options) != CAIRO_ANTIALIAS_NONE) {
-        if (cairo_scaled_font_get_type(mScaledFont) == CAIRO_FONT_TYPE_WIN32) {
-          if (aGlyphMetrics[i].mWidth > 0 && aGlyphMetrics[i].mHeight > 0) {
-            aGlyphMetrics[i].mWidth -= 3.0f;
-            aGlyphMetrics[i].mXBearing += 1.0f;
-          }
-        }
-#  if defined(MOZ2D_HAS_MOZ_CAIRO) && defined(CAIRO_HAS_DWRITE_FONT)
-        else if (cairo_scaled_font_get_type(mScaledFont) ==
-                 CAIRO_FONT_TYPE_DWRITE) {
-          if (aGlyphMetrics[i].mWidth > 0 && aGlyphMetrics[i].mHeight > 0) {
-            aGlyphMetrics[i].mWidth -= 2.0f;
-            aGlyphMetrics[i].mXBearing += 1.0f;
-          }
-        }
-#  endif
-      }
-      cairo_font_options_destroy(options);
-    }
-    return;
-  }
-#endif
-
-  // Don't know how to get the glyph metrics...
-  MOZ_CRASH(
-      "The specific backend type is not supported for GetGlyphDesignMetrics.");
-}
-
 #ifdef USE_CAIRO_SCALED_FONT
 void ScaledFontBase::SetCairoScaledFont(cairo_scaled_font_t* font) {
   MOZ_ASSERT(!mScaledFont);
