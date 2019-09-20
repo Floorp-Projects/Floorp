@@ -367,8 +367,8 @@ static void GetKeyframeListFromKeyframeSequence(JSContext* aCx,
   // Check that the keyframes are loosely sorted and with values all
   // between 0% and 100%.
   if (!HasValidOffsets(aResult)) {
-    aRv.ThrowTypeError<dom::MSG_INVALID_KEYFRAME_OFFSETS>();
     aResult.Clear();
+    aRv.ThrowTypeError<dom::MSG_INVALID_KEYFRAME_OFFSETS>();
     return;
   }
 }
@@ -1058,8 +1058,8 @@ static void GetKeyframeListFromPropertyIndexedKeyframe(
   // offsets are thrown before exceptions arising from invalid easings, we check
   // the offsets here.
   if (!HasValidOffsets(aResult)) {
-    aRv.ThrowTypeError<dom::MSG_INVALID_KEYFRAME_OFFSETS>();
     aResult.Clear();
+    aRv.ThrowTypeError<dom::MSG_INVALID_KEYFRAME_OFFSETS>();
     return;
   }
 

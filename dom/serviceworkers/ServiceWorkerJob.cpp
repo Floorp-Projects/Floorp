@@ -168,8 +168,12 @@ void ServiceWorkerJob::Finish(ErrorResult& aRv) {
     NS_ConvertUTF8toUTF16 scriptSpec(mScriptSpec);
     NS_ConvertUTF8toUTF16 scope(mScope);
 
-    // Throw the type error with a generic error message.
-    aRv.ThrowTypeError<MSG_SW_INSTALL_ERROR>(scriptSpec, scope);
+    // Throw the type error with a generic error message.  We use a stack
+    // reference to bypass the normal static analysis for "return right after
+    // throwing", since it's not the right check here: this ErrorResult came in
+    // pre-thrown.
+    ErrorResult& rv = aRv;
+    rv.ThrowTypeError<MSG_SW_INSTALL_ERROR>(scriptSpec, scope);
   }
 
   // The final callback may drop the last ref to this object.
