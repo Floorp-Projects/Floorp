@@ -736,15 +736,16 @@
  *   Sometimes derived classes override methods that need to be called by their
  *   overridden counterparts. This marker indicates that the marked method must
  *   be called by the method that it overrides.
- * MOZ_MUST_RETURN_FROM_CALLER: Applies to function or method declarations.
- *   Callers of the annotated function/method must return from that function
- *   within the calling block using an explicit `return` statement.
- *   Only calls to Constructors, references to local and member variables,
- *   and calls to functions or methods marked as MOZ_MAY_CALL_AFTER_MUST_RETURN
- *   may be made after the MUST_RETURN_FROM_CALLER call.
+ * MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG: Applies to method declarations.
+ *   Callers of the annotated method must return from that function within the
+ *   calling block using an explicit `return` statement if the "this" value for the
+ *   call is a parameter of the caller.  Only calls to Constructors, references to
+ *   local and member variables, and calls to functions or methods marked as
+ *   MOZ_MAY_CALL_AFTER_MUST_RETURN may be made after the
+ *   MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG call.
  * MOZ_MAY_CALL_AFTER_MUST_RETURN: Applies to function or method declarations.
  *   Calls to these methods may be made in functions after calls a
- *   MOZ_MUST_RETURN_FROM_CALLER function or method.
+ *   MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG method.
  */
 
 // gcc emits a nuisance warning -Wignored-attributes because attributes do not
@@ -824,8 +825,8 @@
 #    define MOZ_NON_PARAM __attribute__((annotate("moz_non_param")))
 #    define MOZ_REQUIRED_BASE_METHOD \
       __attribute__((annotate("moz_required_base_method")))
-#    define MOZ_MUST_RETURN_FROM_CALLER \
-      __attribute__((annotate("moz_must_return_from_caller")))
+#    define MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG \
+      __attribute__((annotate("moz_must_return_from_caller_if_this_is_arg")))
 #    define MOZ_MAY_CALL_AFTER_MUST_RETURN \
       __attribute__((annotate("moz_may_call_after_must_return")))
 /*
@@ -877,7 +878,7 @@
 #    define MOZ_NON_PARAM                                   /* nothing */
 #    define MOZ_NON_AUTOABLE                                /* nothing */
 #    define MOZ_REQUIRED_BASE_METHOD                        /* nothing */
-#    define MOZ_MUST_RETURN_FROM_CALLER                     /* nothing */
+#    define MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG      /* nothing */
 #    define MOZ_MAY_CALL_AFTER_MUST_RETURN                  /* nothing */
 #  endif /* defined(MOZ_CLANG_PLUGIN) || defined(XGILL_PLUGIN) */
 
