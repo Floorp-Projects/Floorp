@@ -25,7 +25,6 @@
 
 #ifdef XP_WIN
 #  include "LauncherProcessWin.h"
-#  include "mozilla/WindowsDllBlocklist.h"
 
 #  define XRE_WANT_ENVIRON
 #  define strcasecmp _stricmp
@@ -39,6 +38,7 @@
 
 #include "mozilla/Sprintf.h"
 #include "mozilla/StartupTimeline.h"
+#include "mozilla/WindowsDllBlocklist.h"
 #include "BaseProfiler.h"
 
 #ifdef LIBFUZZER
