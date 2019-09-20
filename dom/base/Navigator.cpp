@@ -853,7 +853,8 @@ void Navigator::CheckProtocolHandlerAllowed(const nsAString& aScheme,
   // If the uri doesn't contain '%s', it won't be a good handler - the %s
   // gets replaced with the handled URI.
   if (!FindInReadable(NS_LITERAL_CSTRING("%s"), spec)) {
-    aRv.ThrowDOMException(NS_ERROR_DOM_SYNTAX_ERR);
+    aRv.ThrowDOMException(NS_ERROR_DOM_SYNTAX_ERR,
+                          "Handler URI does not contain \"%s\".");
     return;
   }
 
