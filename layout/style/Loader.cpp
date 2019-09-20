@@ -1696,6 +1696,10 @@ void Loader::SheetComplete(SheetLoadData& aLoadData, nsresult aStatus) {
     MarkLoadTreeFailed(aLoadData);
   }
 
+  if (mDocument) {
+    mDocument->MaybeWarnAboutZoom();
+  }
+
   // 8 is probably big enough for all our common cases.  It's not likely that
   // imports will nest more than 8 deep, and multiple sheets with the same URI
   // are rare.

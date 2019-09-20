@@ -9,6 +9,8 @@ extern crate xpcom;
 
 mod bag;
 
+use std::borrow::Cow;
+
 use libc::c_double;
 use nserror::{nsresult, NS_OK};
 use nsstring::{nsACString, nsAString, nsCString, nsString};
@@ -70,6 +72,7 @@ impl GetDataType for nsIVariant {
 }
 
 pub trait VariantType {
+    fn type_name() -> Cow<'static, str>;
     fn into_variant(self) -> RefPtr<nsIVariant>;
     fn from_variant(variant: &nsIVariant) -> Result<Self, nsresult>
     where
@@ -80,6 +83,9 @@ pub trait VariantType {
 macro_rules! variant {
     ($typ:ident, $constructor:ident, $getter:ident) => {
         impl VariantType for $typ {
+            fn type_name() -> Cow<'static, str> {
+                stringify!($typ).into()
+            }
             fn into_variant(self) -> RefPtr<nsIVariant> {
                 // getter_addrefs returns a Result<RefPtr<T>, nsresult>,
                 // but we know that our $constructor is infallible, so we can
@@ -102,6 +108,9 @@ macro_rules! variant {
     };
     (* $typ:ident, $constructor:ident, $getter:ident) => {
         impl VariantType for $typ {
+            fn type_name() -> Cow<'static, str> {
+                stringify!($typ).into()
+            }
             fn into_variant(self) -> RefPtr<nsIVariant> {
                 // getter_addrefs returns a Result<RefPtr<T>, nsresult>,
                 // but we know that our $constructor is infallible, so we can
@@ -128,6 +137,9 @@ macro_rules! variant {
 // The macro can't produce its implementations of VariantType, however,
 // so we implement them concretely.
 impl VariantType for () {
+    fn type_name() -> Cow<'static, str> {
+        "()".into()
+    }
     fn into_variant(self) -> RefPtr<nsIVariant> {
         // getter_addrefs returns a Result<RefPtr<T>, nsresult>,
         // but we know that NS_NewStorageNullVariant is infallible, so we can
@@ -142,7 +154,13 @@ impl VariantType for () {
     }
 }
 
-impl<T> VariantType for Option<T> where T: VariantType {
+impl<T> VariantType for Option<T>
+where
+    T: VariantType,
+{
+    fn type_name() -> Cow<'static, str> {
+        format!("Option<{}>", T::type_name()).into()
+    }
     fn into_variant(self) -> RefPtr<nsIVariant> {
         match self {
             Some(v) => v.into_variant(),

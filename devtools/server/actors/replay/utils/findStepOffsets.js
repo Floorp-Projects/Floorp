@@ -16,7 +16,7 @@ function getNeighbors(frame, offset, rewinding) {
  * return an array of all the step targets
  * that could be reached next from startLocation.
  */
-function findStepOffsets(frame, rewinding) {
+function findStepOffsets(frame, rewinding, requireStepStart = true) {
   const seen = [];
   const result = [];
   let worklist = getNeighbors(frame, frame.offset, rewinding);
@@ -28,7 +28,7 @@ function findStepOffsets(frame, rewinding) {
     }
     seen.push(offset);
     const meta = frame.script.getOffsetMetadata(offset);
-    if (meta.isStepStart) {
+    if (requireStepStart ? meta.isStepStart : meta.isBreakpoint) {
       if (!result.includes(offset)) {
         result.push(offset);
       }

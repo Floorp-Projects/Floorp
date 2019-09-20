@@ -11,6 +11,14 @@
   --reveal-checkbox-opacity-hover: .6;
   --reveal-checkbox-opacity-active: 1;
   --success-color: #00c100;
+  --edit-delete-button-color: #4a4a4f;
+}
+
+/* Only overwrite the deemphasized text color in non-dark mode. */
+@media not all and (prefers-color-scheme: dark) {
+  :host {
+    --in-content-deemphasized-text: #737373;
+  }
 }
 
 form {
@@ -82,6 +90,7 @@ input[type="url"][readOnly] {
 
 .delete-button,
 .edit-button {
+  color: var(--edit-delete-button-color) !important;
   background-repeat: no-repeat;
   background-position: 8px;
   -moz-context-properties: fill;
@@ -190,7 +199,10 @@ input[type="url"][readOnly]:hover:active {
 
 .meta-info {
   font-size: smaller;
+  font-weight: 300;
   color: var(--in-content-deemphasized-text);
+  margin-top: 0;
+  margin-bottom: 8px;
 }
 
 .meta-info:first-of-type::before {
@@ -341,6 +353,7 @@ a.breach-alert-link {
       --reveal-checkbox-opacity-hover: 1;
       --reveal-checkbox-opacity-active: .6;
       --success-color: #86DE74;
+      --edit-delete-button-color: #cfcfd1;
     }
 
     .breach-alert {

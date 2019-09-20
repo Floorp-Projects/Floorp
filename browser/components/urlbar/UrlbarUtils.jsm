@@ -91,7 +91,7 @@ var UrlbarUtils = {
     // Payload: { url, icon, device, title }
     REMOTE_TAB: 6,
     // An actionable message to help the user with their query.
-    // Payload: { icon, text, buttonText, [buttonUrl], data, helpUrl }
+    // Payload: { text, buttonText, [buttonUrl], data, helpUrl }
     TIP: 7,
   },
 
