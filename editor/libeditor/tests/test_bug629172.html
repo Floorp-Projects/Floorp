@@ -1,0 +1,106 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=629172
+-->
+<head>
+  <title>Test for Bug 629172</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=629172">Mozilla Bug 629172</a>
+<p id="display"></p>
+<div id="content">
+<textarea id="ltr-ref" style="display: none">test.</textarea>
+<textarea id="rtl-ref" style="display: none; direction: rtl">test.</textarea>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 629172 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["test.events.async.enabled", true]],
+  });
+
+  let LTRRef = document.getElementById("ltr-ref");
+  let RTLRef = document.getElementById("rtl-ref");
+  let ReferenceScreenshots = {};
+
+  // generate the reference screenshots
+  LTRRef.style.display = "";
+  document.body.clientWidth;
+  ReferenceScreenshots.ltr = snapshotWindow(window);
+  LTRRef.remove();
+  RTLRef.style.display = "";
+  document.body.clientWidth;
+  ReferenceScreenshots.rtl = snapshotWindow(window);
+  RTLRef.remove();
+
+  async function testDirection(initialDir) {
+    function revertDir(aDir) {
+      return aDir == "rtl" ? "ltr" : "rtl";
+    }
+
+    function promiseFormatSetBlockTextDirectionInputEvent(aElement) {
+      return new Promise(resolve => {
+        function handler(aEvent) {
+          if (aEvent.inputType !== "formatSetBlockTextDirection") {
+            ok(false, `Unexpected input event received: inputType="${aEvent.inputType}"`);
+          } else {
+            aElement.removeEventListener("input", handler, true);
+            SimpleTest.executeSoon(resolve);
+          }
+        }
+        aElement.addEventListener("input", handler, true);
+      });
+    }
+
+    let textarea = document.createElement("textarea");
+    textarea.setAttribute("dir", initialDir);
+    textarea.value = "test.";
+    document.getElementById("content").appendChild(textarea);
+    document.body.clientWidth;
+    assertSnapshots(snapshotWindow(window), ReferenceScreenshots[initialDir],
+                    /* expectEqual = */ true, /* fuzz = */ null,
+                    `<textarea dir="${initialDir}"> before Accel+Shift+X`,
+                    `<textarea dir="${initialDir}">`);
+    textarea.focus();
+    let waitForInputEvent = promiseFormatSetBlockTextDirectionInputEvent(textarea);
+    synthesizeKey("X", {accelKey: true, shiftKey: true});
+    await waitForInputEvent;
+    is(textarea.getAttribute("dir"), revertDir(initialDir),
+       "The dir attribute must be correctly updated with first Accel+Shift+X");
+    textarea.blur();
+    assertSnapshots(snapshotWindow(window), ReferenceScreenshots[revertDir(initialDir)],
+                    /* expectEqual = */ true, /* fuzz = */ null,
+                    `<textarea dir="${initialDir}"> after first Accel+Shift+X`,
+                    `<textarea dir="${revertDir(initialDir)}">`);
+    textarea.focus();
+    waitForInputEvent = promiseFormatSetBlockTextDirectionInputEvent(textarea);
+    synthesizeKey("X", {accelKey: true, shiftKey: true});
+    await waitForInputEvent;
+    is(textarea.getAttribute("dir"), initialDir,
+       "The dir attribute must be correctly recovered with second Accel+Shift+X");
+    textarea.blur();
+    assertSnapshots(snapshotWindow(window), ReferenceScreenshots[initialDir],
+                    /* expectEqual = */ true, /* fuzz = */ null,
+                    `<textarea dir="${initialDir}"> after second Accel+Shift+X`,
+                    `<textarea dir="${initialDir}">`);
+    textarea.remove();
+  }
+
+  await testDirection("ltr");
+  await testDirection("rtl");
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>
