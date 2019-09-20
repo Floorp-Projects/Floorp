@@ -4134,21 +4134,6 @@ static bool ParseValueTypeList(WasmParseContext& c, AstValTypeVector* vec) {
   return true;
 }
 
-static bool ParseResult(WasmParseContext& c, AstExprType* result) {
-  if (!result->isVoid()) {
-    c.ts.generateError(c.ts.peek(), c.error);
-    return false;
-  }
-
-  AstValType type;
-  if (!ParseValType(c, &type)) {
-    return false;
-  }
-
-  *result = AstExprType(type);
-  return true;
-}
-
 static bool ParseLocalOrParam(WasmParseContext& c, AstNameVector* locals,
                               AstValTypeVector* localTypes) {
   if (c.ts.peek().kind() != WasmToken::Name) {
@@ -4195,7 +4180,7 @@ static bool MaybeParseTypeUse(WasmParseContext& c, AstRef* funcType) {
 
 static bool ParseFuncSig(WasmParseContext& c, AstFuncType* funcType) {
   AstValTypeVector args(c.lifo);
-  AstExprType result = AstExprType(ExprType::Void);
+  AstValTypeVector results(c.lifo);
 
   while (c.ts.getIf(WasmToken::OpenParen)) {
     WasmToken token = c.ts.get();
@@ -4206,7 +4191,11 @@ static bool ParseFuncSig(WasmParseContext& c, AstFuncType* funcType) {
         }
         break;
       case WasmToken::Result:
-        if (!ParseResult(c, &result)) {
+        if (!ParseValueTypeList(c, &results)) {
+          return false;
+        }
+        if (results.length() > 1) {
+          c.ts.generateError(token, "too many results", c.error);
           return false;
         }
         break;
@@ -4219,7 +4208,7 @@ static bool ParseFuncSig(WasmParseContext& c, AstFuncType* funcType) {
     }
   }
 
-  *funcType = AstFuncType(std::move(args), result);
+  *funcType = AstFuncType(std::move(args), std::move(results));
   return true;
 }
 
@@ -4246,6 +4235,7 @@ static bool ParseFuncType(WasmParseContext& c, AstRef* ref, AstModule* module) {
 static bool ParseFunc(WasmParseContext& c, AstModule* module) {
   AstValTypeVector vars(c.lifo);
   AstValTypeVector args(c.lifo);
+  AstValTypeVector results(c.lifo);
   AstNameVector locals(c.lifo);
 
   AstName funcName = c.ts.getIfName();
@@ -4301,7 +4291,6 @@ static bool ParseFunc(WasmParseContext& c, AstModule* module) {
 
   AstExprVector body(c.lifo);
 
-  AstExprType result = AstExprType(ExprType::Void);
   while (c.ts.getIf(WasmToken::OpenParen)) {
     WasmToken token = c.ts.get();
     switch (token.kind()) {
@@ -4320,7 +4309,11 @@ static bool ParseFunc(WasmParseContext& c, AstModule* module) {
         }
         break;
       case WasmToken::Result:
-        if (!ParseResult(c, &result)) {
+        if (!ParseValueTypeList(c, &results)) {
+          return false;
+        }
+        if (results.length() > 1) {
+          c.ts.generateError(token, "too many results", c.error);
           return false;
         }
         break;
@@ -4343,7 +4336,7 @@ static bool ParseFunc(WasmParseContext& c, AstModule* module) {
 
   if (funcTypeRef.isInvalid()) {
     uint32_t funcTypeIndex;
-    if (!module->declare(AstFuncType(std::move(args), result),
+    if (!module->declare(AstFuncType(std::move(args), std::move(results)),
                          &funcTypeIndex)) {
       return false;
     }
@@ -5931,7 +5924,12 @@ static bool ResolveSignature(Resolver& r, AstFuncType& ft) {
       return false;
     }
   }
-  return ResolveType(r, ft.ret());
+  for (AstValType& vt : ft.results()) {
+    if (!ResolveType(r, vt)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 static bool ResolveStruct(Resolver& r, AstStructType& s) {
@@ -6768,12 +6766,12 @@ static bool EncodeTypeSection(Encoder& e, AstModule& module) {
         }
       }
 
-      if (!e.writeVarU32(!IsVoid(funcType->ret().type()))) {
+      if (!e.writeVarU32(funcType->results().length())) {
         return false;
       }
 
-      if (!IsVoid(funcType->ret().type())) {
-        if (!e.writeValType(NonVoidToValType(funcType->ret().type()))) {
+      for (AstValType vt : funcType->results()) {
+        if (!e.writeValType(vt.type())) {
           return false;
         }
       }
