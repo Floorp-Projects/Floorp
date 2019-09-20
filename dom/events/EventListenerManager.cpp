@@ -30,7 +30,6 @@
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TouchEvent.h"
-#include "mozilla/dom/UserActivation.h"
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/EventTimelineMarker.h"
 #include "mozilla/TimeStamp.h"
@@ -1136,8 +1135,8 @@ void EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
   Maybe<AutoHandlingUserInputStatePusher> userInputStatePusher;
   Maybe<AutoPopupStatePusher> popupStatePusher;
   if (mIsMainThreadELM) {
-    userInputStatePusher.emplace(UserActivation::IsUserInteractionEvent(aEvent),
-                                 aEvent);
+    userInputStatePusher.emplace(
+        EventStateManager::IsUserInteractionEvent(aEvent), aEvent);
     popupStatePusher.emplace(
         PopupBlocker::GetEventPopupControlState(aEvent, *aDOMEvent));
   }

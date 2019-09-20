@@ -9,7 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/UserActivation.h"
+#include "mozilla/EventStateManager.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Encoding.h"
 #include "nsString.h"
@@ -124,7 +124,7 @@ class HTMLFormSubmission {
         mTarget(aTarget),
         mEncoding(aEncoding),
         mOriginatingElement(aOriginatingElement),
-        mInitiatedFromUserInput(UserActivation::IsHandlingUserInput()) {
+        mInitiatedFromUserInput(EventStateManager::IsHandlingUserInput()) {
     MOZ_COUNT_CTOR(HTMLFormSubmission);
   }
 

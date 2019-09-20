@@ -11,6 +11,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ResultExtensions.h"
@@ -22,7 +23,6 @@
 #include "mozilla/dom/MediaStreamError.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerRef.h"
@@ -103,7 +103,7 @@ already_AddRefed<Promise> Promise::Create(
 
 bool Promise::MaybePropagateUserInputEventHandling() {
   JS::PromiseUserInputEventHandlingState state =
-      UserActivation::IsHandlingUserInput()
+      EventStateManager::IsHandlingUserInput()
           ? JS::PromiseUserInputEventHandlingState::HadUserInteractionAtCreation
           : JS::PromiseUserInputEventHandlingState::
                 DidntHaveUserInteractionAtCreation;

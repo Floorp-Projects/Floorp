@@ -39,6 +39,7 @@
 #include "nsFocusManager.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/PresShell.h"
@@ -47,7 +48,6 @@
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/MutationEventBinding.h"
-#include "mozilla/dom/UserActivation.h"
 #include "HTMLElementAccessibles.h"
 
 using namespace mozilla;
@@ -287,7 +287,7 @@ void DocAccessible::TakeFocus() const {
   // Focus the document.
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   RefPtr<dom::Element> newFocus;
-  dom::AutoHandlingUserInputStatePusher inputStatePusher(true);
+  AutoHandlingUserInputStatePusher inputStatePusher(true);
   fm->MoveFocus(mDocumentNode->GetWindow(), nullptr,
                 nsFocusManager::MOVEFOCUS_ROOT, 0, getter_AddRefs(newFocus));
 }

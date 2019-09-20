@@ -36,6 +36,7 @@
 #include "nsILineInputStream.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsPIDOMWindow.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/Telemetry.h"
@@ -45,12 +46,11 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/MediaDevices.h"
 #include "mozilla/dom/MediaStreamBinding.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/dom/GetUserMediaRequestBinding.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/UserActivation.h"
+#include "mozilla/dom/MediaDevices.h"
 #include "mozilla/Base64.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/media/MediaChild.h"
@@ -196,7 +196,6 @@ using dom::OwningStringOrStringSequence;
 using dom::OwningStringOrStringSequenceOrConstrainDOMStringParameters;
 using dom::Promise;
 using dom::Sequence;
-using dom::UserActivation;
 using media::NewRunnableFrom;
 using media::NewTaskFrom;
 using media::Refcountable;
@@ -526,7 +525,7 @@ class GetUserMediaWindowListener {
       if (globalWindow) {
         auto req = MakeRefPtr<GetUserMediaRequest>(
             globalWindow, VoidString(), VoidString(),
-            UserActivation::IsHandlingUserInput());
+            EventStateManager::IsHandlingUserInput());
         obs->NotifyObservers(req, "recording-device-stopped", nullptr);
       }
       return;
@@ -588,7 +587,7 @@ class GetUserMediaWindowListener {
         auto* window = nsGlobalWindowInner::GetInnerWindowWithId(mWindowID);
         auto req = MakeRefPtr<GetUserMediaRequest>(
             window, removedRawId, removedSourceType,
-            UserActivation::IsHandlingUserInput());
+            EventStateManager::IsHandlingUserInput());
         obs->NotifyObservers(req, "recording-device-stopped", nullptr);
       }
     }
@@ -615,7 +614,7 @@ class GetUserMediaWindowListener {
         auto* window = nsGlobalWindowInner::GetInnerWindowWithId(mWindowID);
         auto req = MakeRefPtr<GetUserMediaRequest>(
             window, removedRawId, removedSourceType,
-            UserActivation::IsHandlingUserInput());
+            EventStateManager::IsHandlingUserInput());
         obs->NotifyObservers(req, "recording-device-stopped", nullptr);
       }
     }
@@ -2382,7 +2381,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
       isChrome ||
       Preferences::GetBool("media.navigator.permission.disabled", false);
   bool isSecure = aWindow->IsSecureContext();
-  bool isHandlingUserInput = UserActivation::IsHandlingUserInput();
+  bool isHandlingUserInput = EventStateManager::IsHandlingUserInput();
   nsCString host;
   nsresult rv = docURI->GetHost(host);
 

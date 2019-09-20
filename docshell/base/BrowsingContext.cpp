@@ -17,7 +17,6 @@
 #include "mozilla/dom/Location.h"
 #include "mozilla/dom/LocationBinding.h"
 #include "mozilla/dom/StructuredCloneTags.h"
-#include "mozilla/dom/UserActivationIPCUtils.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/WindowGlobalParent.h"
@@ -697,21 +696,17 @@ JSObject* BrowsingContext::ReadStructuredClone(JSContext* aCx,
 }
 
 void BrowsingContext::NotifyUserGestureActivation() {
-  SetUserActivationState(UserActivation::State::FullActivated);
+  SetIsActivatedByUserGesture(true);
 }
 
 void BrowsingContext::NotifyResetUserGestureActivation() {
-  SetUserActivationState(UserActivation::State::None);
-}
-
-bool BrowsingContext::HasBeenUserGestureActivated() {
-  return mUserActivationState != UserActivation::State::None;
+  SetIsActivatedByUserGesture(false);
 }
 
 bool BrowsingContext::HasValidTransientUserGestureActivation() {
   MOZ_ASSERT(mIsInProcess);
 
-  if (mUserActivationState != UserActivation::State::FullActivated) {
+  if (!mIsActivatedByUserGesture) {
     MOZ_ASSERT(mUserGestureStart.IsNull(),
                "mUserGestureStart should be null if the document hasn't ever "
                "been activated by user gesture");
@@ -726,24 +721,6 @@ bool BrowsingContext::HasValidTransientUserGestureActivation() {
 
   return timeout <= TimeDuration() ||
          (TimeStamp::Now() - mUserGestureStart) <= timeout;
-}
-
-bool BrowsingContext::ConsumeTransientUserGestureActivation() {
-  MOZ_ASSERT(mIsInProcess);
-
-  if (!HasValidTransientUserGestureActivation()) {
-    return false;
-  }
-
-  BrowsingContext* top = Top();
-  top->PreOrderWalk([&](BrowsingContext* aContext) {
-    if (aContext->GetUserActivationState() ==
-        UserActivation::State::FullActivated) {
-      aContext->SetUserActivationState(UserActivation::State::HasBeenActivated);
-    }
-  });
-
-  return true;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(BrowsingContext)
@@ -1091,20 +1068,18 @@ void BrowsingContext::StartDelayedAutoplayMediaComponents() {
   mDocShell->StartDelayedAutoplayMediaComponents();
 }
 
-void BrowsingContext::DidSetUserActivationState() {
+void BrowsingContext::DidSetIsActivatedByUserGesture() {
   MOZ_ASSERT_IF(!mIsInProcess, mUserGestureStart.IsNull());
-  USER_ACTIVATION_LOG("Set user gesture activation %" PRIu8
-                      " for %s browsing context 0x%08" PRIx64,
-                      static_cast<uint8_t>(mUserActivationState),
-                      XRE_IsParentProcess() ? "Parent" : "Child", Id());
+  USER_ACTIVATION_LOG(
+      "Set user gesture activation %d for %s browsing context 0x%08" PRIx64,
+      mIsActivatedByUserGesture, XRE_IsParentProcess() ? "Parent" : "Child",
+      Id());
   if (mIsInProcess) {
     USER_ACTIVATION_LOG(
         "Set user gesture start time for %s browsing context 0x%08" PRIx64,
         XRE_IsParentProcess() ? "Parent" : "Child", Id());
     mUserGestureStart =
-        (mUserActivationState == UserActivation::State::FullActivated)
-            ? TimeStamp::Now()
-            : TimeStamp();
+        mIsActivatedByUserGesture ? TimeStamp::Now() : TimeStamp();
   }
 }
 

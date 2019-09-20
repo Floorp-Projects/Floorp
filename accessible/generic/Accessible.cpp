@@ -69,6 +69,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MouseEvents.h"
@@ -82,7 +83,6 @@
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/dom/TreeWalker.h"
-#include "mozilla/dom/UserActivation.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -753,7 +753,7 @@ void Accessible::TakeFocus() const {
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    dom::AutoHandlingUserInputStatePusher inputStatePusher(true);
+    AutoHandlingUserInputStatePusher inputStatePusher(true);
     // XXXbz: Can we actually have a non-element content here?
     RefPtr<Element> element =
         focusContent->IsElement() ? focusContent->AsElement() : nullptr;
