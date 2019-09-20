@@ -3885,6 +3885,9 @@ class Document : public nsINode,
   // timed out.
   bool HasValidTransientUserGestureActivation();
 
+  // Return true.
+  bool ConsumeTransientUserGestureActivation();
+
   BrowsingContext* GetBrowsingContext() const;
 
   // This document is a WebExtension page, it might be a background page, a
