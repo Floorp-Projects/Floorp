@@ -7,13 +7,13 @@
 from __future__ import absolute_import
 
 import mozfile
-import mozhttpd
 import os
 import shutil
 import tempfile
 
 import mozunit
 import pytest
+from wptserve import server
 
 from mozprofile.cli import MozProfileCLI
 from mozprofile.prefs import Preferences, PreferencesReadError
@@ -383,13 +383,13 @@ def test_read_prefs_with_interpolation():
 
 
 def test_read_prefs_ttw():
-    """test reading preferences through the web via mozhttpd"""
+    """test reading preferences through the web via wptserve"""
 
-    # create a MozHttpd instance
+    # create a WebTestHttpd instance
     docroot = os.path.join(here, 'files')
     host = '127.0.0.1'
     port = 8888
-    httpd = mozhttpd.MozHttpd(host=host, port=port, docroot=docroot)
+    httpd = server.WebTestHttpd(host=host, port=port, doc_root=docroot)
 
     # create a preferences instance
     prefs = Preferences()

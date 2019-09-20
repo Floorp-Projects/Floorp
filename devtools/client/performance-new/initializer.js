@@ -27,6 +27,12 @@ const {
 } = require("devtools/client/performance-new/browser");
 
 /**
+ * This file initializes the DevTools Panel UI. It is in charge of initializing
+ * the DevTools specific environment, and then passing those requirements into
+ * the UI.
+ */
+
+/**
  * Initialize the panel by creating a redux store, and render the root component.
  *
  * @param perfFront - The Perf actor's front. Used to start and stop recordings.

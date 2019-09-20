@@ -71,6 +71,8 @@ using mozilla::PositiveInfinity;
 Atomic<size_t> JSRuntime::liveRuntimesCount;
 Atomic<JS::LargeAllocationFailureCallback> js::OnLargeAllocationFailure;
 
+JS::FilenameValidationCallback js::gFilenameValidationCallback = nullptr;
+
 namespace js {
 void (*HelperThreadTaskCallback)(js::RunnableTask*);
 

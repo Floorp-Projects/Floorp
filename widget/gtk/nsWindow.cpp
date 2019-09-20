@@ -4553,6 +4553,11 @@ void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) {
         cairo_region_union_rectangle(region, &rect);
       }
       (*sGdkWindowSetOpaqueRegion)(mGdkWindow, region);
+#ifdef MOZ_WAYLAND
+      if (!mIsX11Display) {
+        moz_container_set_opaque_region(MOZ_CONTAINER(mContainer), region);
+      }
+#endif
       cairo_region_destroy(region);
     }
   }

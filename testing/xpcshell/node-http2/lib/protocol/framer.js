@@ -81,7 +81,7 @@ Deserializer.prototype = Object.create(Transform.prototype, { constructor: { val
 // payload). The `_cursor` is used to track the progress.
 Deserializer.prototype._next = function(size) {
   this._cursor = 0;
-  this._buffer = new Buffer(size);
+  this._buffer = Buffer.alloc(size);
   this._waitingForHeader = !this._waitingForHeader;
   if (this._waitingForHeader) {
     this._frame = {};
@@ -204,7 +204,7 @@ var genericAttributes = ['type', 'flags', 'stream'];
 var typeSpecificAttributes = {};
 
 Serializer.commonHeader = function writeCommonHeader(frame, buffers) {
-  var headerBuffer = new Buffer(COMMON_HEADER_SIZE);
+  var headerBuffer = Buffer.alloc(COMMON_HEADER_SIZE);
 
   var size = 0;
   for (var i = 0; i < buffers.length; i++) {
@@ -363,7 +363,7 @@ typeSpecificAttributes.HEADERS = ['priorityDependency', 'priorityWeight', 'exclu
 
 Serializer.HEADERS = function writeHeadersPriority(frame, buffers) {
   if (frame.flags.PRIORITY) {
-    var buffer = new Buffer(5);
+    var buffer = Buffer.alloc(5);
     assert((0 <= frame.priorityDependency) && (frame.priorityDependency <= 0x7fffffff), frame.priorityDependency);
     buffer.writeUInt32BE(frame.priorityDependency, 0);
     if (frame.exclusiveDependency) {
@@ -397,7 +397,7 @@ Deserializer.HEADERS = function readHeadersPriority(buffer, frame) {
   }
 
   if (frame.flags.PRIORITY) {
-    var dependencyData = new Buffer(4);
+    var dependencyData = Buffer.alloc(4);
     buffer.copy(dependencyData, 0, dataOffset, dataOffset + 4);
     dataOffset += 4;
     frame.exclusiveDependency = !!(dependencyData[0] & 0x80);
@@ -442,7 +442,7 @@ typeSpecificAttributes.PRIORITY = ['priorityDependency', 'priorityWeight', 'excl
 // The payload of a PRIORITY frame contains an exclusive bit, a 31-bit dependency, and an 8-bit weight
 
 Serializer.PRIORITY = function writePriority(frame, buffers) {
-  var buffer = new Buffer(5);
+  var buffer = Buffer.alloc(5);
   assert((0 <= frame.priorityDependency) && (frame.priorityDependency <= 0x7fffffff), frame.priorityDependency);
   buffer.writeUInt32BE(frame.priorityDependency, 0);
   if (frame.exclusiveDependency) {
@@ -459,7 +459,7 @@ Deserializer.PRIORITY = function readPriority(buffer, frame) {
     // PRIORITY frames are 5 bytes long. Bad peer!
     return 'FRAME_SIZE_ERROR';
   }
-  var dependencyData = new Buffer(4);
+  var dependencyData = Buffer.alloc(4);
   buffer.copy(dependencyData, 0, 0, 4);
   frame.exclusiveDependency = !!(dependencyData[0] & 0x80);
   dependencyData[0] &= 0x7f;
@@ -490,7 +490,7 @@ typeSpecificAttributes.RST_STREAM = ['error'];
 // code (see Error Codes). The error code indicates why the stream is being terminated.
 
 Serializer.RST_STREAM = function writeRstStream(frame, buffers) {
-  var buffer = new Buffer(4);
+  var buffer = Buffer.alloc(4);
   var code = errorCodes.indexOf(frame.error);
   assert((0 <= code) && (code <= 0xffffffff), code);
   buffer.writeUInt32BE(code, 0);
@@ -555,7 +555,7 @@ Serializer.SETTINGS = function writeSettings(frame, buffers) {
   });
   assert(settingsLeft.length === 0, 'Unknown settings: ' + settingsLeft.join(', '));
 
-  var buffer = new Buffer(settings.length * 6);
+  var buffer = Buffer.alloc(settings.length * 6);
   for (var i = 0; i < settings.length; i++) {
     buffer.writeUInt16BE(settings[i].id & 0xffff, i*6);
     buffer.writeUInt32BE(settings[i].value, i*6 + 2);
@@ -651,7 +651,7 @@ typeSpecificAttributes.PUSH_PROMISE = ['promised_stream', 'headers', 'data'];
 // additional context for the stream.
 
 Serializer.PUSH_PROMISE = function writePushPromise(frame, buffers) {
-  var buffer = new Buffer(4);
+  var buffer = Buffer.alloc(4);
 
   var promised_stream = frame.promised_stream;
   assert((0 <= promised_stream) && (promised_stream <= 0x7fffffff), promised_stream);
@@ -745,7 +745,7 @@ typeSpecificAttributes.GOAWAY = ['last_stream', 'error'];
 // closing the connection.
 
 Serializer.GOAWAY = function writeGoaway(frame, buffers) {
-  var buffer = new Buffer(8);
+  var buffer = Buffer.alloc(8);
 
   var last_stream = frame.last_stream;
   assert((0 <= last_stream) && (last_stream <= 0x7fffffff), last_stream);
@@ -790,7 +790,7 @@ typeSpecificAttributes.WINDOW_UPDATE = ['window_size'];
 // reserved.
 
 Serializer.WINDOW_UPDATE = function writeWindowUpdate(frame, buffers) {
-  var buffer = new Buffer(4);
+  var buffer = Buffer.alloc(4);
 
   var window_size = frame.window_size;
   assert((0 < window_size) && (window_size <= 0x7fffffff), window_size);
@@ -880,7 +880,7 @@ function hexencode(s) {
   for (var i = 0; i < s.length; i++) {
     if (!istchar(s[i])) {
       t += '%';
-      t += new Buffer(s[i]).toString('hex');
+      t += Buffer.from(s[i]).toString('hex');
     } else {
       t += s[i];
     }
@@ -889,17 +889,17 @@ function hexencode(s) {
 }
 
 Serializer.ALTSVC = function writeAltSvc(frame, buffers) {
-  var buffer = new Buffer(2);
+  var buffer = Buffer.alloc(2);
   buffer.writeUInt16BE(frame.origin.length, 0);
   buffers.push(buffer);
-  buffers.push(new Buffer(frame.origin, 'ascii'));
+  buffers.push(Buffer.from(frame.origin, 'ascii'));
 
   var fieldValue = hexencode(frame.protocolID) + '="' + frame.host + ':' + frame.port + '"';
   if (frame.maxAge !== 86400) { // 86400 is the default
     fieldValue += "; ma=" + frame.maxAge;
   }
 
-  buffers.push(new Buffer(fieldValue, 'ascii'));
+  buffers.push(Buffer.from(fieldValue, 'ascii'));
 };
 
 function stripquotes(s) {
@@ -1023,7 +1023,7 @@ function unescape(s) {
         hexvalue += s[i];
       }
       if (hexvalue.length > 0) {
-        t += new Buffer(hexvalue, 'hex').toString();
+        t += Buffer.from(hexvalue, 'hex').toString();
       } else {
         t += '%';
       }
@@ -1078,10 +1078,10 @@ typeSpecificAttributes.ORIGIN = ['originList'];
 
 Serializer.ORIGIN = function writeOrigin(frame, buffers) {
   for (var i = 0; i < frame.originList.length; i++) {
-    var buffer = new Buffer(2);
+    var buffer = Buffer.alloc(2);
     buffer.writeUInt16BE(frame.originList[i].length, 0);
     buffers.push(buffer);
-    buffers.push(new Buffer(frame.originList[i], 'ascii'));
+    buffers.push(Buffer.from(frame.originList[i], 'ascii'));
   }
 };
 

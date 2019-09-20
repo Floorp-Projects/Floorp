@@ -620,6 +620,26 @@ gfxFloat gfxDWriteFont::MeasureGlyphWidth(uint16_t aGlyph) {
   return 0.0;
 }
 
+bool gfxDWriteFont::GetGlyphBounds(uint16_t aGID, gfxRect* aBounds,
+                                   bool aTight) {
+  DWRITE_GLYPH_METRICS m;
+  HRESULT hr = mFontFace->GetDesignGlyphMetrics(&aGID, 1, &m, FALSE);
+  if (FAILED(hr)) {
+    return false;
+  }
+  gfxRect bounds(m.leftSideBearing, m.topSideBearing - m.verticalOriginY,
+                 m.advanceWidth - m.leftSideBearing - m.rightSideBearing,
+                 m.advanceHeight - m.topSideBearing - m.bottomSideBearing);
+  bounds.Scale(mFUnitsConvFactor);
+  // GetDesignGlyphMetrics returns 'ideal' glyph metrics, we need to pad to
+  // account for antialiasing.
+  if (!aTight && !aBounds->IsEmpty()) {
+    bounds.Inflate(1.0, 0.0);
+  }
+  *aBounds = bounds;
+  return true;
+}
+
 void gfxDWriteFont::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                            FontCacheSizes* aSizes) const {
   gfxFont::AddSizeOfExcludingThis(aMallocSizeOf, aSizes);

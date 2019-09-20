@@ -167,6 +167,8 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
   mozilla::ipc::IPCResult RecvInitPCanvasParent(
       Endpoint<PCanvasParent>&& aEndpoint) final;
 
+  mozilla::ipc::IPCResult RecvReleasePCanvasParent() final;
+
   bool IsSameProcess() const override;
 
   PCompositorWidgetParent* AllocPCompositorWidgetParent(

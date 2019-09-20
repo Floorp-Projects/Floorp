@@ -1803,6 +1803,27 @@ static bool DisableTrackAllocations(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool SetTestFilenameValidationCallback(JSContext* cx, unsigned argc,
+                                              Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Accept all filenames that start with "safe". In system code also accept
+  // filenames starting with "system".
+  auto testCb = [](const char* filename, bool isSystemRealm) -> bool {
+    if (strstr(filename, "safe") == filename) {
+      return true;
+    }
+    if (isSystemRealm && strstr(filename, "system") == filename) {
+      return true;
+    }
+    return false;
+  };
+  JS::SetFilenameValidationCallback(testCb);
+
+  args.rval().setUndefined();
+  return true;
+}
+
 static void FinalizeExternalString(const JSStringFinalizer* fin,
                                    char16_t* chars);
 
@@ -6198,6 +6219,11 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("disableTrackAllocations", DisableTrackAllocations, 0, 0,
 "disableTrackAllocations()",
 "  Stop capturing the JS stack at every allocation."),
+
+    JS_FN_HELP("setTestFilenameValidationCallback", SetTestFilenameValidationCallback, 0, 0,
+"setTestFilenameValidationCallback()",
+"  Set the filename validation callback to a callback that accepts only\n"
+"  filenames starting with 'safe' or (only in system realms) 'system'."),
 
     JS_FN_HELP("newExternalString", NewExternalString, 1, 0,
 "newExternalString(str)",

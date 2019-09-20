@@ -34,6 +34,14 @@ pub unsafe trait Trace {
  * C/C++ stack must use Rooted/Handle/MutableHandle instead.
  *
  * Type T must be a public GC pointer type.
+ *
+ * Note that the rust version of Heap<T> implements different barriers to the
+ * C++ version, which also provides features to help integration with
+ * cycle-collected C++ objects. That version has a read barrier which performs
+ * gray unmarking and also marks the contents during an incremental GC. This
+ * version has a pre-write barrier instead, and this enforces the
+ * snapshot-at-the-beginning invariant which is necessary for incremental GC in
+ * the absence of the read barrier.
  */
 #[repr(C)]
 #[derive(Debug)]

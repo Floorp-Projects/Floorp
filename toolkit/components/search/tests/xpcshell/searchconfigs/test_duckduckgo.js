@@ -18,6 +18,7 @@ const test = new SearchConfigTest({
     {
       included: [{}],
       domain: "duckduckgo.com",
+      telemetryId: "ddg",
       codes: {
         searchbar: "t=ffsb",
         keyword: "t=ffab",

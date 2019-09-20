@@ -63,6 +63,7 @@ class NetlinkAddress {
   uint8_t Family() const { return mIfam.ifa_family; }
   uint32_t GetIndex() const { return mIfam.ifa_index; }
   uint8_t GetPrefixLen() const { return mIfam.ifa_prefixlen; }
+  bool ScopeIsUniverse() const { return mIfam.ifa_scope == RT_SCOPE_UNIVERSE; }
   const in_common_addr* GetAddrPtr() const { return &mAddr; }
 
   bool Equals(const NetlinkAddress* aOther) const {
@@ -684,12 +685,36 @@ void NetlinkService::CheckLinks() {
     return;
   }
 
+  LOG(("NetlinkService::CheckLinks"));
+
+  // Link is up when there is non-local address associated with it.
   bool newLinkUp = false;
-  for (auto iter = mLinks.ConstIter(); !iter.Done(); iter.Next()) {
-    if (iter.Data()->IsUp()) {
+  for (uint32_t i = 0; i < mAddresses.Length(); ++i) {
+#ifdef NL_DEBUG_LOG
+    nsAutoCString dbgStr;
+    GetAddrStr(mAddresses[i]->GetAddrPtr(), mAddresses[i]->Family(), dbgStr);
+    LOG(("checking address %s on iface %d", dbgStr.get(),
+         mAddresses[i]->GetIndex()));
+#else
+    LOG(("checking address on iface %d", mAddresses[i]->GetIndex()));
+#endif
+    if (!mAddresses[i]->ScopeIsUniverse()) {
+      LOG(("  is not global"));
+      continue;
+    }
+
+    NetlinkLink* link = nullptr;
+    if (!mLinks.Get(mAddresses[i]->GetIndex(), &link)) {
+      LOG(("  cannot get link"));
+      continue;
+    }
+
+    if (link->IsUp()) {
+      LOG(("  link is up"));
       newLinkUp = true;
       break;
     }
+    LOG(("  link is down"));
   }
 
   if (mLinkUp != newLinkUp) {
@@ -745,7 +770,9 @@ void NetlinkService::OnAddrMessage(struct nlmsghdr* aNlh) {
   NetlinkLink* link;
   if (mLinks.Get(ifIdx, &link)) {
     if (link->IsUp()) {
-      // Address changed on a link that is up. This might change network ID.
+      // Address change on a link that is up might change link status and
+      // network ID.
+      CheckLinks();
       TriggerNetworkIDCalculation();
     }
   }
@@ -1152,6 +1179,16 @@ class NeighborComparator {
   }
 };
 
+class LinknameComparator {
+ public:
+  bool LessThan(const nsCString& aA, const nsCString& aB) const {
+    return aA < aB;
+  }
+  bool Equals(const nsCString& aA, const nsCString& aB) const {
+    return aA == aB;
+  }
+};
+
 bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
   LOG(("NetlinkService::CalculateIDForFamily [family=%s]",
        aFamily == AF_INET ? "AF_INET" : "AF_INET6"));
@@ -1168,7 +1205,11 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
     routeCheckResultPtr = &mIPv6RouteCheckResult;
   }
 
-  // All known GW neighbors
+  // All GW neighbors for which we know MAC address. We'll probably have at
+  // most only one, but in case we have more default routes, we hash them all
+  // even though the routing rules sends the traffic only via one of them.
+  // If the system switches between them, we'll detect the change with
+  // mIPv4/6RouteCheckResult.
   nsTArray<NetlinkNeighbor*> gwNeighbors;
 
   // Check all default routes and try to get MAC of the gateway
@@ -1221,7 +1262,49 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
     retval = true;
   }
 
+  if (!gwNeighbors.Length() && mLinkUp) {
+    // If we don't know MAC of the gateway and link is up, it's probably not
+    // an ethernet link. If the name of the link begins with "rmnet_data" then
+    // the mobile data is used. We cannot easily differentiate when user
+    // switches sim cards so let's treat mobile data as a single network. We'll
+    // simply hash link name. If the traffic is redirected via some VPN, it'll
+    // still be detected below.
+
+    // TODO: maybe we could get operator name via AndroidBridge
+    nsTArray<nsCString> linkNames;
+    for (auto iter = mLinks.ConstIter(); !iter.Done(); iter.Next()) {
+      if (iter.Data()->IsUp()) {
+        nsAutoCString linkName;
+        iter.Data()->GetName(linkName);
+        if (StringBeginsWith(linkName, NS_LITERAL_CSTRING("rmnet_data"))) {
+          // Check whether there is some non-local address associated with this
+          // link.
+          for (uint32_t i = 0; i < mAddresses.Length(); ++i) {
+            if (mAddresses[i]->Family() == aFamily &&
+                mAddresses[i]->ScopeIsUniverse() &&
+                mAddresses[i]->GetIndex() == iter.Data()->GetIndex()) {
+              linkNames.AppendElement(linkName);
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    // Sort link names to ensure consistent results
+    linkNames.Sort(LinknameComparator());
+
+    for (uint32_t i = 0; i < linkNames.Length(); ++i) {
+      LOG(("Hashing name of adapter: %s", linkNames[i].get()));
+      aSHA1->update(linkNames[i].BeginReading(), linkNames[i].Length());
+      retval = true;
+    }
+  }
+
   if (!*routeCheckResultPtr) {
+    // If we don't have result for route check to mRouteCheckIPv4/6 host. The
+    // network is either unreachable or the checking was disabled by removing IP
+    // from the preferences. In any case, there is no more to do.
     LOG(("There is no route check result."));
     return retval;
   }
@@ -1368,6 +1451,8 @@ void NetlinkService::CalculateNetworkID() {
   mRecalculateNetworkId = false;
 
   SHA1Sum sha1;
+
+  CheckLinks();
 
   bool idChanged = false;
   bool found4 = CalculateIDForFamily(AF_INET, &sha1);

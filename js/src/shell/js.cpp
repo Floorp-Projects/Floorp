@@ -1810,6 +1810,13 @@ static bool ParseCompileOptions(JSContext* cx, CompileOptions& options,
     options.setFile(fileNameBytes.get());
   }
 
+  if (!JS_GetProperty(cx, opts, "skipFileNameValidation", &v)) {
+    return false;
+  }
+  if (!v.isUndefined()) {
+    options.setSkipFilenameValidation(ToBoolean(v));
+  }
+
   if (!JS_GetProperty(cx, opts, "element", &v)) {
     return false;
   }
@@ -8473,6 +8480,7 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "      isRunOnce: use the isRunOnce compiler option (default: false)\n"
 "      noScriptRval: use the no-script-rval compiler option (default: false)\n"
 "      fileName: filename for error messages and debug info\n"
+"      skipFileNameValidation: skip the filename-validation callback\n"
 "      lineNumber: starting line number for error messages and debug info\n"
 "      columnNumber: starting column number for error messages and debug info\n"
 "      global: global in which to execute the code\n"

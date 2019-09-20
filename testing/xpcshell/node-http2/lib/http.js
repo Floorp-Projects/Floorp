@@ -1104,7 +1104,7 @@ OutgoingRequest.prototype._start = function _start(stream, options) {
   delete headers.host;
 
   if (options.auth) {
-    headers.authorization = 'Basic ' + new Buffer(options.auth).toString('base64');
+    headers.authorization = 'Basic ' + Buffer.from(options.auth).toString('base64');
   }
 
   headers[':scheme'] = options.protocol.slice(0, -1);
