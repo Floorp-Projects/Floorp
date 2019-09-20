@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
+    'request-blocking',
     'search',
     'websockets',
 ]
@@ -21,7 +22,6 @@ DevToolsModules(
     'NetworkDetailsPanel.js',
     'ParamsPanel.js',
     'PropertiesView.js',
-    'RequestBlockingPanel.js',
     'RequestList.js',
     'RequestListColumnCause.js',
     'RequestListColumnContentSize.js',
