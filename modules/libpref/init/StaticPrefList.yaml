@@ -777,22 +777,6 @@
   mirror: always
   rust: true
 
-# This pref dictates whether or not backplates and background images
-# are to be drawn, when in high-contrast mode:
-#   false: do not draw backplates or render background images
-#   true: render background images and draw backplates
-# This condition is only considered when high-contrast mode is enabled
-# in Firefox, ie. when the user has:
-#   (1) mUseAccessibilityMode set to true (Widows high-contrast mode is on)
-#       AND browser.display.document_color_use set to 0
-#       (only with high-contrast themes) OR
-#   (2) browser.display.document_color_use set to 2 (always)
-- name: browser.display.permit_backplate
-  type: RelaxedAtomicBool
-  value: @EARLY_BETA_OR_EARLIER@
-  mirror: always
-  rust: true
-
 - name: browser.display.focus_ring_on_anything
   type: bool
   value: false
