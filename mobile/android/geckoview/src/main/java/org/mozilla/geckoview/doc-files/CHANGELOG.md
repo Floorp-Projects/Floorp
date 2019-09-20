@@ -36,6 +36,8 @@ exclude: true
   ([bug 1540065]({{bugzilla}}1540065))
 - Added [`GeckoSession.ContentDelegate.onFirstContentfulPaint`][71.13]
   ([bug 1578947]({{bugzilla}}1578947))
+- Added `setEnhancedTrackingProtectionLevel` to [`ContentBlocking.Settings`][71.14].
+  ([bug 1580854]({{bugzilla}}1580854))
 
 [71.1]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onBooleanScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
 [71.2]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onLongScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
@@ -372,4 +374,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 40441c6fcd77218d1d32b468894558141d8ccad9
+[api-version]: bc4c4b661a4dd390c2a10c1057a2ce2aa09e3483
