@@ -16,79 +16,14 @@
             motion:onTouchUp="stop"/>
 
         <KeyFrameSet>
-            <KeyPosition
-                motion:motionTarget="@id/wordmark"
-                motion:keyPositionType="pathRelative"
-                motion:framePosition="50"
-                motion:percentX="0.9" />
-
             <KeyAttribute
                 motion:motionTarget="@id/wordmark"
-                motion:framePosition="50"
-                android:translationY="0dp"
-                android:alpha="1" />
-            <KeyAttribute
-                motion:motionTarget="@id/wordmark"
-                motion:framePosition="90"
-                android:alpha="0" />
-
-            <KeyAttribute
-                motion:motionTarget="@id/menuButton"
-                motion:framePosition="50"
-                android:translationY="0dp"
-                android:alpha="1" />
-            <KeyAttribute
-                motion:motionTarget="@id/menuButton"
-                motion:framePosition="90"
-                android:alpha="0" />
-            <KeyAttribute
-                motion:motionTarget="@id/menuButton"
                 motion:framePosition="90"
                 android:alpha="0" />
             <KeyAttribute
                 motion:motionTarget="@id/privateBrowsingButton"
-                motion:framePosition="50"
-                android:translationY="0dp"
-                android:alpha="1" />
-            <KeyAttribute
-                motion:motionTarget="@id/privateBrowsingButton"
                 motion:framePosition="90"
                 android:alpha="0" />
-
-            <KeyAttribute
-                motion:motionTarget="@id/homeDivider"
-                motion:framePosition="92"
-                android:alpha="1" />
-            <KeyAttribute
-                motion:motionTarget="@id/homeDivider"
-                motion:framePosition="100"
-                android:alpha="0" />
-
-            <KeyAttribute
-                motion:motionTarget="@id/homeDividerShadow"
-                motion:framePosition="90"
-                android:alpha="0" />
-
-            <KeyAttribute
-                motion:motionTarget="@id/toolbar_wrapper"
-                motion:framePosition="0"
-                android:elevation="@dimen/toolbar_elevation" />
-            <KeyAttribute
-                motion:motionTarget="@id/toolbar_wrapper"
-                motion:framePosition="50"
-                android:elevation="0dp" />
-
-            <KeyTrigger
-                motion:motionTarget="@id/toolbar_wrapper"
-                motion:framePosition="55"
-                motion:onPositiveCross="transitionToDark"
-                motion:onNegativeCross="transitionToLight" />
-
-            <KeyTrigger
-                motion:motionTarget="@id/toolbar_wrapper"
-                motion:framePosition="90"
-                motion:onPositiveCross="transitionToDarkNoBorder"
-                motion:onNegativeCross="transitionToDarkFromNoBorder" />
         </KeyFrameSet>
     </Transition>
 
@@ -99,64 +34,22 @@
         <Constraint
             android:id="@+id/wordmark"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
             android:alpha="0"
             android:layout_width="wrap_content"
             android:layout_height="80dp"
             android:translationY="-10dp"
             motion:layout_constraintStart_toStartOf="parent"
-            motion:layout_constraintTop_toTopOf="parent" />
-
-        <Constraint
-            android:id="@+id/toolbar_wrapper"
-            android:layout_marginTop="16dp"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            motion:layout_constraintTop_toTopOf="parent"
-            motion:layout_constraintStart_toStartOf="parent"
-            motion:layout_constraintEnd_toEndOf="parent"
-            android:elevation="0dp" />
-
-        <Constraint
-            android:id="@+id/menuButton"
-            android:alpha="0"
-            android:visibility="invisible"
-            android:layout_marginTop="16dp"
-            android:translationY="-10dp"
-            android:layout_height="@dimen/glyph_button_height"
-            android:layout_width="@dimen/glyph_button_height"
-            motion:layout_constraintEnd_toEndOf="parent"
-            motion:layout_constraintTop_toTopOf="parent"/>
+            motion:layout_constraintBottom_toTopOf="parent" />
 
         <Constraint
             android:id="@+id/privateBrowsingButton"
             android:alpha="0"
             android:visibility="invisible"
-            android:translationY="-10dp"
-            android:layout_height="@dimen/glyph_button_height"
             android:layout_width="@dimen/glyph_button_height"
-            motion:layout_constraintEnd_toStartOf="@id/menuButton"
-            motion:layout_constraintTop_toTopOf="@id/menuButton"/>
-
-        <Constraint
-            android:id="@+id/homeDivider"
-            android:layout_height="1dp"
-            android:alpha="0"
-            android:layout_marginStart="0dp"
-            android:layout_marginEnd="0dp"
-            android:layout_marginTop="8dp"
-            motion:layout_constraintTop_toBottomOf="@id/toolbar_wrapper"
-            motion:layout_constraintStart_toStartOf="parent"
-            motion:layout_constraintEnd_toEndOf="parent" />
-
-        <Constraint
-            android:id="@+id/homeDividerShadow"
-            android:layout_height="3dp"
-            android:alpha="1"
-            motion:layout_constraintTop_toBottomOf="@id/homeDivider"
-            motion:layout_constraintStart_toStartOf="@+id/homeDivider"
-            motion:layout_constraintEnd_toEndOf="@+id/homeDivider" />
+            android:layout_height="@dimen/glyph_button_height"
+            android:layout_marginEnd="12dp"
+            android:translationY="-32dp"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintTop_toTopOf="parent"/>
     </ConstraintSet>
 </MotionScene>
