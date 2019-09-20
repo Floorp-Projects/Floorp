@@ -176,6 +176,13 @@ add_task(async function() {
 });
 
 async function setupPreferences() {
+  if (SpecialPowers.isDebugBuild) {
+    // On debug builds, reducing the timings might lead to skip the "warning"
+    // state and will block the test execution.
+    // Do not change the timings in debug builds.
+    return;
+  }
+
   await pushPref(
     "devtools.aboutdebugging.test-connection-timing-out-delay",
     CONNECTION_TIMING_OUT_DELAY
