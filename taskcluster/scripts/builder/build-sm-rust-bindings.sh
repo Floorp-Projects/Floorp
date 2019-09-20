@@ -6,6 +6,8 @@ source $(dirname $0)/sm-tooltool-config.sh
 
 cd "$SRCDIR/js/rust"
 
+cp $SRCDIR/.cargo/config.in $SRCDIR/.cargo/config
+
 export LD_LIBRARY_PATH="$MOZ_FETCHES_DIR/gcc/lib64"
 # Enable backtraces if we panic.
 export RUST_BACKTRACE=1
