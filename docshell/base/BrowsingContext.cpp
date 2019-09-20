@@ -123,6 +123,8 @@ already_AddRefed<BrowsingContext> BrowsingContext::Create(
   // using transactions to set them, as we haven't been attached yet.
   context->mName = aName;
   if (aOpener) {
+    MOZ_DIAGNOSTIC_ASSERT(aOpener->Group() == context->Group());
+    MOZ_DIAGNOSTIC_ASSERT(aOpener->mType == context->mType);
     context->mOpenerId = aOpener->Id();
     context->mHadOriginalOpener = true;
   }
