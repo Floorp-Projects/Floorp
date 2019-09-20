@@ -497,7 +497,7 @@ void TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
     // Buffer has been emptied while the eviction was queued, nothing to do.
     return;
   }
-  if (track.mBufferedRanges.Length() == 0) {
+  if (track.mBufferedRanges.IsEmpty()) {
     MSE_DEBUG(
         "DoEvictData running with no buffered ranges. 0 duration data likely "
         "present in our buffer(s). Evicting all data!");
@@ -738,9 +738,9 @@ void TrackBuffersManager::RemoveAllCodedFrames() {
   }
 
   UpdateBufferedRanges();
-  MOZ_ASSERT(mAudioBufferedRanges.Length() == 0,
+  MOZ_ASSERT(mAudioBufferedRanges.IsEmpty(),
              "Should have no buffered video ranges after evicting everything.");
-  MOZ_ASSERT(mVideoBufferedRanges.Length() == 0,
+  MOZ_ASSERT(mVideoBufferedRanges.IsEmpty(),
              "Should have no buffered video ranges after evicting everything.");
   mSizeSourceBuffer = mVideoTracks.mSizeBuffer + mAudioTracks.mSizeBuffer;
   MOZ_ASSERT(mSizeSourceBuffer == 0,
@@ -2069,7 +2069,7 @@ void TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
   TimeIntervals intersection = trackBuffer.mBufferedRanges;
   intersection.Intersection(aIntervals);
 
-  if (intersection.Length()) {
+  if (!intersection.IsEmpty()) {
     if (aSamples[0]->mKeyframe &&
         (mType.Type() == MEDIAMIMETYPE("video/webm") ||
          mType.Type() == MEDIAMIMETYPE("audio/webm"))) {
@@ -2127,7 +2127,7 @@ void TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
   // We allow a fuzz factor in our interval of half a frame length,
   // as fuzz is +/- value, giving an effective leeway of a full frame
   // length.
-  if (aIntervals.Length()) {
+  if (!aIntervals.IsEmpty()) {
     TimeIntervals range(aIntervals);
     range.SetFuzz(trackBuffer.mLongestFrameDuration / 2);
     trackBuffer.mSanitizedBufferedRanges += range;

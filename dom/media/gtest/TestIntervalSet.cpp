@@ -107,7 +107,7 @@ TEST(IntervalSet, TimeIntervalsConstructors)
 
   media::TimeIntervals i0{media::TimeInterval(media::TimeUnit::FromSeconds(0),
                                               media::TimeUnit::FromSeconds(0))};
-  EXPECT_EQ(0u, i0.Length());  // Constructing with an empty time interval.
+  EXPECT_TRUE(i0.IsEmpty());  // Constructing with an empty time interval.
 }
 
 TEST(IntervalSet, Length)
@@ -738,7 +738,7 @@ TEST(IntervalSet, Substraction)
   i0 += IntInterval(40, 60);
   i1 = IntInterval(0, 60);
   i0 -= i1;
-  EXPECT_EQ(0u, i0.Length());
+  EXPECT_TRUE(i0.IsEmpty());
 
   i0 = IntIntervals();
   i0 += IntInterval(5, 10);
