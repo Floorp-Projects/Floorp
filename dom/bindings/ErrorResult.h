@@ -318,7 +318,15 @@ class TErrorResult {
   // passed in must be one we create DOMExceptions for; otherwise you may get an
   // XPConnect Exception.
   void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
-  ThrowDOMException(nsresult rv, const nsACString& message = EmptyCString());
+  ThrowDOMException(nsresult rv, const nsACString& message);
+
+  // Same thing, but using a string literal.
+  template <int N>
+  void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
+  ThrowDOMException(nsresult rv, const char (&aMessage)[N]) {
+    ThrowDOMException(rv, nsLiteralCString(aMessage));
+  }
+
   bool IsDOMException() const {
     return ErrorCode() == NS_ERROR_INTERNAL_ERRORRESULT_DOMEXCEPTION;
   }

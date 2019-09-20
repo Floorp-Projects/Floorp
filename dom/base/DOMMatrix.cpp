@@ -505,8 +505,7 @@ void DOMMatrixReadOnly::Stringify(nsAString& aResult, ErrorResult& aRv) {
     if (!mozilla::IsFinite(d)) {
       aRv.ThrowDOMException(
           NS_ERROR_DOM_INVALID_STATE_ERR,
-          NS_LITERAL_CSTRING(
-              "Matrix with a non-finite element cannot be stringified."));
+          "Matrix with a non-finite element cannot be stringified.");
       return false;
     }
     JS::NumberToString(d, cbuf);

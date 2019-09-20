@@ -55,9 +55,8 @@ void AudioWorkletGlobalScope::RegisterProcessor(
   if (aName.IsEmpty()) {
     aRv.ThrowDOMException(
         NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-        NS_LITERAL_CSTRING(
-            "Argument 1 of AudioWorkletGlobalScope.registerProcessor "
-            "should not be an empty string."));
+        "Argument 1 of AudioWorkletGlobalScope.registerProcessor should not be "
+        "an empty string.");
     return;
   }
 
@@ -71,9 +70,8 @@ void AudioWorkletGlobalScope::RegisterProcessor(
     // Duplicate names are not allowed
     aRv.ThrowDOMException(
         NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-        NS_LITERAL_CSTRING(
-            "Argument 1 of AudioWorkletGlobalScope.registerProcessor "
-            "is invalid: a class with the same name is already registered."));
+        "Argument 1 of AudioWorkletGlobalScope.registerProcessor is invalid: a "
+        "class with the same name is already registered.");
     return;
   }
 

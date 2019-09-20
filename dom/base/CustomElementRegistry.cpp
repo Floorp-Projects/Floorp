@@ -776,8 +776,7 @@ void CustomElementRegistry::Define(
   if (mIsCustomDefinitionRunning) {
     aRv.ThrowDOMException(
         NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-        NS_LITERAL_CSTRING("Cannot define a custom element while defining "
-                           "another custom elment"));
+        "Cannot define a custom element while defining another custom element");
     return;
   }
 
