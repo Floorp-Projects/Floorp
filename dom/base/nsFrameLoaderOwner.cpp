@@ -14,6 +14,7 @@
 #include "mozilla/dom/FrameLoaderBinding.h"
 #include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/dom/MozFrameLoaderOwnerBinding.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/EventStateManager.h"
 
@@ -69,6 +70,23 @@ void nsFrameLoaderOwner::ChangeRemoteness(
   RefPtr<mozilla::dom::BrowsingContext> bc;
   bool networkCreated = false;
 
+  // In this case, we're not reparenting a frameloader, we're just destroying
+  // our current one and creating a new one, so we can use ourselves as the
+  // owner.
+  RefPtr<Element> owner = do_QueryObject(this);
+  MOZ_ASSERT(owner);
+
+  // When we destroy the original frameloader, it will stop blocking the parent
+  // document's load event, and immediately trigger the load event if there are
+  // no other blockers. Since we're going to be adding a new blocker as soon as
+  // we recreate the frame loader, this is not what we want, so add our own
+  // blocker until the process is complete.
+  Document* doc = owner->OwnerDoc();
+  doc->BlockOnload();
+  auto cleanup = MakeScopeExit([&]() {
+    doc->UnblockOnload(false);
+  });
+
   // If we already have a Frameloader, destroy it, possibly preserving its
   // browsing context.
   if (mFrameLoader) {
@@ -84,11 +102,6 @@ void nsFrameLoaderOwner::ChangeRemoteness(
     mFrameLoader = nullptr;
   }
 
-  // In this case, we're not reparenting a frameloader, we're just destroying
-  // our current one and creating a new one, so we can use ourselves as the
-  // owner.
-  RefPtr<Element> owner = do_QueryObject(this);
-  MOZ_ASSERT(owner);
   mFrameLoader =
       nsFrameLoader::Recreate(owner, bc, aOptions.mRemoteType, networkCreated);
 
