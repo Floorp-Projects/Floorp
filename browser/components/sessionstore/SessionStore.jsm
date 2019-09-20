@@ -2606,8 +2606,8 @@ var SessionStoreInternal = {
   },
 
   // Examine the channel response to see if we should change the process
-  // performing the given load. aRequestor implements nsIProcessSwitchRequestor
-  onMayChangeProcess(aRequestor) {
+  // performing the given load.
+  onMayChangeProcess(aChannel) {
     if (
       !E10SUtils.useHttpResponseProcessSelection() &&
       !E10SUtils.useCrossOriginOpenerPolicy()
@@ -2615,26 +2615,19 @@ var SessionStoreInternal = {
       return;
     }
 
-    let switchRequestor;
-    try {
-      switchRequestor = aRequestor.QueryInterface(Ci.nsIProcessSwitchRequestor);
-    } catch (e) {
-      debug(`[process-switch]: object not compatible with process switching `);
-      return;
-    }
+    aChannel.QueryInterface(Ci.nsIHttpChannel);
 
-    const channel = switchRequestor.channel;
-    if (!channel.isDocument || !channel.loadInfo) {
+    if (!aChannel.isDocument || !aChannel.loadInfo) {
       return; // Not a document load.
     }
 
     // Check that the document has a corresponding BrowsingContext.
     let browsingContext;
-    let cp = channel.loadInfo.externalContentPolicyType;
+    let cp = aChannel.loadInfo.externalContentPolicyType;
     if (cp == Ci.nsIContentPolicy.TYPE_DOCUMENT) {
-      browsingContext = channel.loadInfo.browsingContext;
+      browsingContext = aChannel.loadInfo.browsingContext;
     } else {
-      browsingContext = channel.loadInfo.frameBrowsingContext;
+      browsingContext = aChannel.loadInfo.frameBrowsingContext;
     }
 
     if (!browsingContext) {
@@ -2698,7 +2691,7 @@ var SessionStoreInternal = {
 
     // Determine the process type the load should be performed in.
     let resultPrincipal = Services.scriptSecurityManager.getChannelResultPrincipal(
-      channel
+      aChannel
     );
     let remoteType = E10SUtils.getRemoteTypeForPrincipal(
       resultPrincipal,
@@ -2710,7 +2703,7 @@ var SessionStoreInternal = {
     if (
       currentRemoteType == remoteType &&
       (!E10SUtils.useCrossOriginOpenerPolicy() ||
-        !switchRequestor.hasCrossOriginOpenerPolicyMismatch())
+        !aChannel.hasCrossOriginOpenerPolicyMismatch())
     ) {
       debug(`[process-switch]: type (${remoteType}) is compatible - ignoring`);
       return;
@@ -2726,7 +2719,7 @@ var SessionStoreInternal = {
 
     const isCOOPSwitch =
       E10SUtils.useCrossOriginOpenerPolicy() &&
-      switchRequestor.hasCrossOriginOpenerPolicyMismatch();
+      aChannel.hasCrossOriginOpenerPolicyMismatch();
 
     // ------------------------------------------------------------------------
     // DANGER ZONE: Perform a process switch into the new process. This is
@@ -2736,11 +2729,11 @@ var SessionStoreInternal = {
     let tabPromise = this._doProcessSwitch(
       browsingContext,
       remoteType,
-      channel,
+      aChannel,
       identifier,
       isCOOPSwitch
     );
-    switchRequestor.switchProcessTo(tabPromise, identifier);
+    aChannel.switchProcessTo(tabPromise, identifier);
   },
 
   /* ........ nsISessionStore API .............. */

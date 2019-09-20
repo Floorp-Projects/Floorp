@@ -9,8 +9,8 @@
 
 #  include "mozilla/Logging.h"
 #  include "mozilla/Maybe.h"
-#  include "mozilla/Monitor.h"
 #  include "mozilla/Mutex.h"
+#  include "mozilla/Monitor.h"
 #  include "mozilla/RefPtr.h"
 #  include "mozilla/Tuple.h"
 #  include "mozilla/TypeTraits.h"
@@ -37,10 +37,6 @@
 #  endif
 
 namespace mozilla {
-
-namespace dom {
-class Promise;
-}
 
 extern LazyLogModule gMozPromiseLog;
 
@@ -957,12 +953,6 @@ class MozPromise : public MozPromiseBase {
     return p;
   }
 #  endif
-
-  // Creates a C++ MozPromise from its JS counterpart, dom::Promise.
-  // FromDomPromise currently only supports primitive types (int8/16/32, float,
-  // double) And the reject value type must be a nsresult.
-  // To use, please include MozPromiseInlines.h
-  static RefPtr<MozPromise> FromDomPromise(dom::Promise* aDOMPromise);
 
   // Note we expose the function AssertIsDead() instead of IsDead() since
   // checking IsDead() is a data race in the situation where the request is not

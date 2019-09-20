@@ -791,9 +791,6 @@ child:
     // new HttpChannelChild that will be connected to the parent channel
     // represented by registrarId.
     // This is on PContent not PNecko, as PNecko may not be initialized yet.
-    // The returned loadInfo needs to be set on the channel - since the channel
-    // moved to a new process it now has different properties.
-
     async CrossProcessRedirect(uint32_t aRegistrarId,
                                nsIURI aURI,
                                ReplacementChannelConfigInit config,
@@ -801,8 +798,7 @@ child:
                                uint64_t aChannelId,
                                nsIURI aOriginalURI,
                                uint64_t aIdentifier,
-                               uint32_t aRedirectMode)
-        returns (nsresult rv, LoadInfoArgs? arg);
+                               uint32_t aRedirectMode);
 
     /**
     * This method is used to notifty content process to start delayed autoplay
