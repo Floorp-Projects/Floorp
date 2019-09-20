@@ -10420,7 +10420,6 @@ Maybe<MotionPathData> nsLayoutUtils::ResolveMotionPath(const nsIFrame* aFrame) {
       MotionPathData{point - anchorPoint.ToUnknownPoint(), angle, shift});
 }
 
-// NOTE: Returns Nothing() if |aFrame| is not in out-of-process.
 static Maybe<ScreenRect> GetFrameVisibleRectOnScreen(const nsIFrame* aFrame) {
   // We actually want the in-process top prescontext here.
   nsPresContext* topContextInProcess =
@@ -10444,7 +10443,7 @@ static Maybe<ScreenRect> GetFrameVisibleRectOnScreen(const nsIFrame* aFrame) {
 
   if (!browserChild->GetEffectsInfo().IsVisible()) {
     // There is no visible rect on this iframe at all.
-    return Some(ScreenRect());
+    return Nothing();
   }
 
   nsIFrame* rootFrame = topContextInProcess->PresShell()->GetRootFrame();
