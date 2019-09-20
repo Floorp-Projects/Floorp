@@ -287,10 +287,36 @@ class TErrorResult {
                                        std::forward<Ts>(messageArgs)...);
   }
 
+  // To be used when throwing a TypeError with a completely custom
+  // message string that's only used in one spot.
+  inline void ThrowTypeError(const nsAString& aMessage) {
+    this->template ThrowTypeError<dom::MSG_ONE_OFF_TYPEERR>(aMessage);
+  }
+
+  // To be used when throwing a TypeError with a completely custom
+  // message string that's a string literal that's only used in one spot.
+  template <int N>
+  void ThrowTypeError(const char16_t (&aMessage)[N]) {
+    ThrowTypeError(nsLiteralString(aMessage));
+  }
+
   template <dom::ErrNum errorNumber, typename... Ts>
   void ThrowRangeError(Ts&&... messageArgs) {
     ThrowErrorWithMessage<errorNumber>(NS_ERROR_INTERNAL_ERRORRESULT_RANGEERROR,
                                        std::forward<Ts>(messageArgs)...);
+  }
+
+  // To be used when throwing a RangeError with a completely custom
+  // message string that's only used in one spot.
+  inline void ThrowRangeError(const nsAString& aMessage) {
+    this->template ThrowRangeError<dom::MSG_ONE_OFF_RANGEERR>(aMessage);
+  }
+
+  // To be used when throwing a RangeError with a completely custom
+  // message string that's a string literal that's only used in one spot.
+  template <int N>
+  void ThrowRangeError(const char16_t (&aMessage)[N]) {
+    ThrowRangeError(nsLiteralString(aMessage));
   }
 
   bool IsErrorWithMessage() const {

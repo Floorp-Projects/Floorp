@@ -541,7 +541,7 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
     request->GetMethod(method);
     // method is guaranteed to be uppercase due to step 14.2 above.
     if (method.EqualsLiteral("HEAD") || method.EqualsLiteral("GET")) {
-      aRv.ThrowTypeError<MSG_NO_BODY_ALLOWED_FOR_GET_AND_HEAD>();
+      aRv.ThrowTypeError(u"HEAD or GET Request cannot have a body.");
       return nullptr;
     }
   }
