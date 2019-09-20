@@ -21,11 +21,6 @@ _CHANNEL_PER_TASK_NAME = {
     'production': 'production',
 }
 
-_GOOGLE_PLAY_TRACK_PER_TASK_NAME = {
-    'nightly': 'internal',
-    'nightly-legacy': 'nightly',
-}
-
 
 @transforms.add
 def build_name_and_attributes(config, tasks):
@@ -73,8 +68,8 @@ def build_worker_definition(config, tasks):
         worker_definition["certificate-alias"] = 'fenix' if task_name == 'production' else \
             "{}-{}".format(task["worker"]["product"], worker_definition["channel"])
 
-        if _GOOGLE_PLAY_TRACK_PER_TASK_NAME.get(task_name):
-            worker_definition["google-play-track"] = _GOOGLE_PLAY_TRACK_PER_TASK_NAME[task_name]
+        if task_name == 'nightly-legacy':
+            worker_definition["google-play-track"] = 'nightly'
 
         task["worker"].update(worker_definition)
         yield task
