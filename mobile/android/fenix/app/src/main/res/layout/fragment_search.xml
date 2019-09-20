@@ -47,6 +47,7 @@
         android:id="@+id/fill_link_from_clipboard"
         android:layout_width="match_parent"
         android:layout_height="56dp"
+        android:layout_marginTop="8dp"
         android:focusable="true"
         android:clickable="true"
         android:background="?selectableItemBackground"
@@ -99,10 +100,21 @@
             app:layout_constraintVertical_chainStyle="packed"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <View
+        android:id="@+id/divider_line"
+        android:layout_width="match_parent"
+        android:layout_height="1.5dp"
+        android:background="?neutralFaded"
+        android:layout_marginStart="8dp"
+        app:layout_constraintStart_toStartOf="@id/fill_link_from_clipboard"
+        app:layout_constraintEnd_toEndOf="@id/fill_link_from_clipboard"
+        app:layout_constraintTop_toBottomOf="@id/fill_link_from_clipboard" />
+
     <TextView
         android:id="@+id/search_with_shortcuts"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
         android:fontFamily="Inter UI"
         android:letterSpacing="0.15"
         android:text="@string/search_shortcuts_search_with"

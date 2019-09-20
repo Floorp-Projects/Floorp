@@ -280,10 +280,12 @@ class SearchFragment : Fragment(), BackHandler {
     }
 
     private fun updateClipboardSuggestion(searchState: SearchFragmentState, clipboardUrl: String?) {
-        fill_link_from_clipboard.visibility =
+        val shouldBeVisible =
             if (searchState.showClipboardSuggestions && searchState.query.isEmpty() && !clipboardUrl.isNullOrEmpty())
-                View.VISIBLE else View.GONE
+            View.VISIBLE else View.GONE
 
+        fill_link_from_clipboard.visibility = shouldBeVisible
+        divider_line.visibility = shouldBeVisible
         clipboard_url.text = clipboardUrl
     }
 
