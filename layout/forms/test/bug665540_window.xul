@@ -6,7 +6,7 @@
         sizemode="fullscreen">
 
   <script>
-    opener.SimpleTest.waitForFocus(opener.childFocused, window);
+    window.arguments[0].SimpleTest.waitForFocus(window.arguments[0].childFocused, window);
   </script>
 
   <body xmlns="http://www.w3.org/1999/xhtml">

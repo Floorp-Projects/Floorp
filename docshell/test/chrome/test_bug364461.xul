@@ -34,8 +34,8 @@ SpecialPowers.pushPrefEnv({
 }, runTests);
 
 function runTests() {
-  window.open("bug364461_window.xul", "bug364461",
-              "chrome,width=600,height=600");
+  window.openDialog("bug364461_window.xul", "bug364461",
+                    "chrome,width=600,height=600,noopener", window);
 }
 ]]>
 </script>

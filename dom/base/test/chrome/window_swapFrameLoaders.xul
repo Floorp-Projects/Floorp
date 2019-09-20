@@ -10,7 +10,7 @@ Test swapFrameLoaders with different frame types and remoteness
 
   <script type="application/javascript"><![CDATA[
   ["SimpleTest", "SpecialPowers", "info", "is", "ok", "add_task"].forEach(key => {
-    window[key] = window.opener[key];
+    window[key] = window.arguments[0][key];
   })
 
   const NS = {

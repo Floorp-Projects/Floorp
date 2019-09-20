@@ -8,8 +8,8 @@
   <script type="application/javascript">
   <![CDATA[
   /** Test for Bug 799299 **/
-  var SimpleTest = opener.wrappedJSObject.SimpleTest;
-  var ok = opener.wrappedJSObject.ok;
+  var SimpleTest = window.arguments[0].SimpleTest;
+  var ok = window.arguments[0].ok;
 
   // Note: We can't use frames[0] here because the type="content" attribute
   // isolates it into a separate browsing context hierarchy.
@@ -26,7 +26,7 @@
      "Should be instance of HTMLLabelElement");
 
   window.close();
-  opener.wrappedJSObject.SimpleTest.finish();
+  window.arguments[0].SimpleTest.finish();
   ]]>
   </script>
 </window>

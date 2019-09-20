@@ -25,8 +25,8 @@
 // Strangely, this doesn't occur with RDP on Windows.
 SimpleTest.expectAssertions(0, 3);
 SimpleTest.waitForExplicitFinish();
-window.open("window_composition_text_querycontent.xul", "_blank", 
-            "chrome,width=600,height=600");
+window.openDialog("window_composition_text_querycontent.xul", "_blank", 
+                  "chrome,width=600,height=600,noopener", window);
 
 ]]>
 </script>
