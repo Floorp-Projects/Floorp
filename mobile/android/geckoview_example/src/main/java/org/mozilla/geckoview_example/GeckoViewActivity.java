@@ -179,7 +179,6 @@ public class GeckoViewActivity extends AppCompatActivity {
                                       ContentBlocking.AntiTracking.STP)
                         .safeBrowsing(ContentBlocking.SafeBrowsing.DEFAULT)
                         .cookieBehavior(ContentBlocking.CookieBehavior.ACCEPT_NON_TRACKERS)
-                        .etpLevel(ContentBlocking.EtpLevel.DEFAULT)
                         .build())
                     .crashHandler(ExampleCrashHandler.class)
                     .telemetryDelegate(new ExampleTelemetryDelegate())
