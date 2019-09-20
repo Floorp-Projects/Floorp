@@ -93,6 +93,11 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+  if (RtlGetCurrentThreadId() != ::GetCurrentThreadId()) {
+    printf("TEST-FAILED | NativeNt | RtlGetCurrentThreadId() is broken\n");
+    return 1;
+  }
+
   const wchar_t kKernel32[] = L"kernel32.dll";
   DWORD verInfoSize = ::GetFileVersionInfoSizeW(kKernel32, nullptr);
   if (!verInfoSize) {
@@ -168,5 +173,6 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+  printf("TEST-PASS | NativeNt | All tests ran successfully\n");
   return 0;
 }
