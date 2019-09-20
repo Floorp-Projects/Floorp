@@ -493,6 +493,20 @@ void TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
   // Video is what takes the most space, only evict there if we have video.
   auto& track = HasVideo() ? mVideoTracks : mAudioTracks;
   const auto& buffer = track.GetTrackBuffer();
+  if (buffer.IsEmpty()) {
+    // Buffer has been emptied while the eviction was queued, nothing to do.
+    return;
+  }
+  if (track.mBufferedRanges.Length() == 0) {
+    MSE_DEBUG(
+        "DoEvictData running with no buffered ranges. 0 duration data likely "
+        "present in our buffer(s). Evicting all data!");
+    // We have no buffered ranges, but may still have data. This happens if the
+    // buffer is full of 0 duration data. Normal removal procedures don't clear
+    // 0 duration data, so blow away all our data.
+    RemoveAllCodedFrames();
+    return;
+  }
   // Remove any data we've already played, or before the next sample to be
   // demuxed whichever is lowest.
   TimeUnit lowerLimit = std::min(track.mNextSampleTime, aPlaybackTime);
@@ -660,6 +674,80 @@ bool TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval) {
   }
 
   return dataRemoved;
+}
+
+void TrackBuffersManager::RemoveAllCodedFrames() {
+  // This is similar to RemoveCodedFrames, but will attempt to remove ALL
+  // the frames. This is not to spec, as explained below at step 3.1. Steps
+  // below coincide with Remove Coded Frames algorithm from the spec.
+  MSE_DEBUG("RemoveAllCodedFrames called.");
+  MOZ_ASSERT(OnTaskQueue());
+
+  // 1. Let start be the starting presentation timestamp for the removal range.
+  TimeUnit start{};
+  // 2. Let end be the end presentation timestamp for the removal range.
+  TimeUnit end = TimeUnit::FromMicroseconds(1);
+  // Find an end time such that our range will include every frame in every
+  // track. We do this by setting the end of our interval to the largest end
+  // time seen + 1 microsecond.
+  for (TrackData* track : GetTracksList()) {
+    for (auto& frame : track->GetTrackBuffer()) {
+      MOZ_ASSERT(frame->mTime >= start,
+                 "Shouldn't have frame at negative time!");
+      TimeUnit frameEnd = frame->mTime + frame->mDuration;
+      if (frameEnd > end) {
+        end = frameEnd + TimeUnit::FromMicroseconds(1);
+      }
+    }
+  }
+
+  // 3. For each track buffer in this source buffer, run the following steps:
+  TimeIntervals removedInterval{TimeInterval(start, end)};
+  for (TrackData* track : GetTracksList()) {
+    // 1. Let remove end timestamp be the current value of duration
+    // ^ It's off spec, but we ignore this in order to clear 0 duration frames.
+    // If we don't ignore this rule and our buffer is full of 0 duration frames
+    // at timestamp n, we get an eviction range of [0, n). When we get to step
+    // 3.3 below, the 0 duration frames will not be evicted because their
+    // timestamp is not less than remove end timestamp -- it will in fact be
+    // equal to remove end timestamp.
+    //
+    // 2. If this track buffer has a random access point timestamp that is
+    // greater than or equal to end, then update remove end timestamp to that
+    // random access point timestamp.
+    // ^ We've made sure end > any sample's timestamp, so can skip this.
+    //
+    // 3. Remove all media data, from this track buffer, that contain starting
+    // timestamps greater than or equal to start and less than the remove end
+    // timestamp.
+    // 4. Remove decoding dependencies of the coded frames removed in the
+    // previous step: Remove all coded frames between the coded frames removed
+    // in the previous step and the next random access point after those removed
+    // frames.
+
+    // This should remove every frame in the track because removedInterval was
+    // constructed such that every frame in any track falls into that interval.
+    RemoveFrames(removedInterval, *track, 0, RemovalMode::kRemoveFrame);
+
+    // 5. If this object is in activeSourceBuffers, the current playback
+    // position is greater than or equal to start and less than the remove end
+    // timestamp, and HTMLMediaElement.readyState is greater than HAVE_METADATA,
+    // then set the HTMLMediaElement.readyState attribute to HAVE_METADATA and
+    // stall playback. This will be done by the MDSM during playback.
+    // TODO properly, so it works even if paused.
+  }
+
+  UpdateBufferedRanges();
+  MOZ_ASSERT(mAudioBufferedRanges.Length() == 0,
+             "Should have no buffered video ranges after evicting everything.");
+  MOZ_ASSERT(mVideoBufferedRanges.Length() == 0,
+             "Should have no buffered video ranges after evicting everything.");
+  mSizeSourceBuffer = mVideoTracks.mSizeBuffer + mAudioTracks.mSizeBuffer;
+  MOZ_ASSERT(mSizeSourceBuffer == 0,
+             "Buffer should be empty after evicting everything!");
+  if (mBufferFull && mSizeSourceBuffer < EvictionThreshold()) {
+    mBufferFull = false;
+  }
 }
 
 void TrackBuffersManager::UpdateBufferedRanges() {

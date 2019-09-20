@@ -169,11 +169,20 @@ add_task(async function test_telemetry_events() {
   await waitForTelemetryEventCount(12);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+    let loginSort = content.document
+      .querySelector("login-list")
+      .shadowRoot.querySelector("#login-sort");
+    loginSort.selectedIndex = 1;
+    loginSort.dispatchEvent(new content.Event("change", { bubbles: true }));
+  });
+  await waitForTelemetryEventCount(13);
+
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginFilter = content.document.querySelector("login-filter");
     let input = loginFilter.shadowRoot.querySelector("input");
     input.setUserInput("test");
   });
-  await waitForTelemetryEventCount(13);
+  await waitForTelemetryEventCount(14);
 
   let expectedEvents = [
     ["pwmgr", "select", "existing_login"],
@@ -188,6 +197,7 @@ add_task(async function test_telemetry_events() {
     ["pwmgr", "cancel", "new_login"],
     ["pwmgr", "select", "existing_login"],
     ["pwmgr", "delete", "existing_login"],
+    ["pwmgr", "sort", "list"],
     ["pwmgr", "filter", "list"],
   ];
 

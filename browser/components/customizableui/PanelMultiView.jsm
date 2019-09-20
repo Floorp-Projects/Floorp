@@ -434,7 +434,7 @@ var PanelMultiView = class extends AssociatedToNode {
     this._panel.removeEventListener("popuppositioned", this);
     this._panel.removeEventListener("popupshown", this);
     this._panel.removeEventListener("popuphidden", this);
-    this.window.removeEventListener("keydown", this, true);
+    this.document.documentElement.removeEventListener("keydown", this, true);
     this.node = this._openPopupPromise = this._openPopupCancelCallback = this._viewContainer = this._viewStack = this._transitionDetails = null;
   }
 
@@ -1199,14 +1199,14 @@ var PanelMultiView = class extends AssociatedToNode {
       case "popupshowing": {
         this._viewContainer.setAttribute("panelopen", "true");
         if (!this.node.hasAttribute("disablekeynav")) {
-          // We add the keydown handler on the window so that it handles key
+          // We add the keydown handler on the root so that it handles key
           // presses when a panel appears but doesn't get focus, as happens
           // when a button to open a panel is clicked with the mouse.
           // However, this means the listener is on an ancestor of the panel,
           // which means that handlers such as ToolbarKeyboardNavigator are
           // deeper in the tree. Therefore, this must be a capturing listener
           // so we get the event first.
-          this.window.addEventListener("keydown", this, true);
+          this.document.documentElement.addEventListener("keydown", this, true);
           this._panel.addEventListener("mousemove", this);
         }
         break;
@@ -1235,7 +1235,11 @@ var PanelMultiView = class extends AssociatedToNode {
         this._transitioning = false;
         this._viewContainer.removeAttribute("panelopen");
         this._cleanupTransitionPhase();
-        this.window.removeEventListener("keydown", this, true);
+        this.document.documentElement.removeEventListener(
+          "keydown",
+          this,
+          true
+        );
         this._panel.removeEventListener("mousemove", this);
         this.closeAllViews();
 
@@ -1731,8 +1735,8 @@ var PanelView = class extends AssociatedToNode {
     };
 
     // If a context menu is open, we must let it handle all keys.
-    // Normally, this just happens, but because we have a capturing window
-    // keydown listener, our listener takes precedence.
+    // Normally, this just happens, but because we have a capturing root
+    // element keydown listener, our listener takes precedence.
     // Again, we only want to do this check on demand for performance.
     let isContextMenuOpen = () => {
       if (!focus) {

@@ -33,6 +33,13 @@ class FlexboxFront extends FrontClassWithSpec(flexboxSpec) {
   }
 
   /**
+   * Get the WalkerFront instance that owns this FlexboxFront.
+   */
+  get walkerFront() {
+    return this.parentFront.walkerFront;
+  }
+
+  /**
    * Get the computed style properties for the flex container.
    */
   get properties() {
@@ -65,6 +72,13 @@ class FlexItemFront extends FrontClassWithSpec(flexItemSpec) {
   }
 
   /**
+   * Get the WalkerFront instance that owns this FlexItemFront.
+   */
+  get walkerFront() {
+    return this.parentFront.walkerFront;
+  }
+
+  /**
    * Get the computed style properties for the flex item.
    */
   get computedStyle() {
@@ -94,6 +108,13 @@ class GridFront extends FrontClassWithSpec(gridSpec) {
     }
 
     return this.conn.getFrontByID(this._form.containerNodeActorID);
+  }
+
+  /**
+   * Get the WalkerFront instance that owns this GridFront.
+   */
+  get walkerFront() {
+    return this.parentFront.walkerFront;
   }
 
   /**
@@ -135,7 +156,18 @@ class GridFront extends FrontClassWithSpec(gridSpec) {
   }
 }
 
-class LayoutFront extends FrontClassWithSpec(layoutSpec) {}
+class LayoutFront extends FrontClassWithSpec(layoutSpec) {
+  /**
+   * Get the WalkerFront instance that owns this LayoutFront.
+   */
+  get walkerFront() {
+    return this.parentFront;
+  }
+
+  getAllGrids() {
+    return this.getGrids(this.walkerFront.rootNode);
+  }
+}
 
 exports.FlexboxFront = FlexboxFront;
 registerFront(FlexboxFront);

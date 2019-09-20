@@ -8,6 +8,7 @@ import os
 
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
+from six import PY2
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -37,7 +38,7 @@ def load_valid_license():
     with open(license_list) as f:
         l = f.readlines()
         # Remove the empty lines
-        return filter(bool, [x.replace('\n', '') for x in l])
+        return list(filter(bool, [x.replace('\n', '') for x in l]))
 
 
 def is_valid_license(licenses, filename):
@@ -45,15 +46,15 @@ def is_valid_license(licenses, filename):
     From a given file, check if we can find the license patterns
     in the X first lines of the file
     """
-    nb_lines = 10
-    with open(filename) as myfile:
-        head = myfile.readlines(nb_lines)
+    kwargs = {} if PY2 else {'errors': 'replace'}
+    with open(filename, 'r', **kwargs) as myfile:
+        contents = myfile.read()
         # Empty files don't need a license.
-        if not head:
+        if not contents:
             return True
 
         for l in licenses:
-            if l.lower().strip() in ''.join(head).lower():
+            if l.lower().strip() in contents.lower():
                 return True
     return False
 
