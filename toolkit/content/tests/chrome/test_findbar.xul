@@ -38,7 +38,7 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({
   set: [["accessibility.typeaheadfind.prefillwithselection", true]]
 }, () => {
-  window.open("findbar_window.xul", "findbartest", "chrome,width=600,height=600");
+  window.openDialog("findbar_window.xul", "findbartest", "chrome,width=600,height=600,noopener", window);
 });
 
 ]]>

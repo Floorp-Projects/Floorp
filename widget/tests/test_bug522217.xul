@@ -24,8 +24,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=522217
 SimpleTest.waitForExplicitFinish();
 
 SimpleTest.waitForFocus(function () {
-  window.open("window_bug522217.xul", "_blank", 
-              "chrome,resizable,width=400,height=300");
+  window.openDialog("window_bug522217.xul", "_blank", 
+                    "chrome,resizable,width=400,height=300,noopener", window);
 });
 
 

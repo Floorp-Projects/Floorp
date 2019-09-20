@@ -3,8 +3,8 @@
         align="start">
 <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 <script><![CDATA[
-var is = window.opener.SimpleTest.is;
-window.onerror = window.opener.onerror;
+var is = window.arguments[0].SimpleTest.is;
+window.onerror = window.arguments[0].onerror;
 
 const anchorPositions =
   [ "before_start", "before_end", "after_start", "after_end",
@@ -103,7 +103,7 @@ function popupHidden()
 {
   if (anchorPositions.length == 0) {
     window.close();
-    window.opener.SimpleTest.finish();
+    window.arguments[0].SimpleTest.finish();
     return;
   }
 
@@ -147,7 +147,7 @@ function anchoredPopupShown(event)
   event.target.hidePopup();
 }
 
-window.opener.SimpleTest.waitForFocus(doTest, window);
+window.arguments[0].SimpleTest.waitForFocus(doTest, window);
 ]]></script>
 
 <resizer id="outside" dir="bottomend" element="outside-container"/>

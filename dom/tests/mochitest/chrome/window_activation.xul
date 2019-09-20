@@ -18,15 +18,15 @@
 
 <script type="application/javascript"><![CDATA[
 
-var ok = window.opener.wrappedJSObject.ok;
-var complete = window.opener.wrappedJSObject.complete;
-var openerDoc = window.opener.wrappedJSObject.document;
-var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
+var ok = window.arguments[0].ok;
+var complete = window.arguments[0].complete;
+var openerDoc = window.arguments[0].document;
+var SimpleTest = window.arguments[0].SimpleTest;
 
 SimpleTest.waitForFocus(function () {
   ok(getComputedStyle(document.getElementById("box"), "").backgroundColor, "rgb(0, 0, 255)");
   ok(getComputedStyle(openerDoc.getElementById("box"), "").backgroundColor, "rgb(0, 255, 255)");
-  window.opener.focus();
+  window.arguments[0].focus();
   ok(getComputedStyle(document.getElementById("box"), "").backgroundColor, "rgb(0, 255, 255)");
   ok(getComputedStyle(openerDoc.getElementById("box"), "").backgroundColor, "rgb(0, 0, 255)");
   complete();

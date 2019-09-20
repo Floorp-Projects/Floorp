@@ -1,3 +1,6 @@
+if (!window.opener && window.arguments) {
+  window.opener = window.arguments[0];
+}
 /**
  * Import common SimpleTest methods so that they're usable in this window.
  */

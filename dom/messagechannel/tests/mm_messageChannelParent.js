@@ -2,23 +2,23 @@ let port;
 let mm;
 
 function info(message) {
-  return opener.wrappedJSObject.info(message);
+  return window.arguments[0].info(message);
 }
 
 function ok(condition, message) {
-  return opener.wrappedJSObject.ok(condition, message);
+  return window.arguments[0].ok(condition, message);
 }
 
 function is(v1, v2, message) {
-  return opener.wrappedJSObject.is(v1, v2, message);
+  return window.arguments[0].is(v1, v2, message);
 }
 
 function todo_is(v1, v2, message) {
-  return opener.wrappedJSObject.todo_is(v1, v2, message);
+  return window.arguments[0].todo_is(v1, v2, message);
 }
 
 function cleanUp() {
-  opener.setTimeout(function() {
+  window.arguments[0].setTimeout(function() {
     this.done();
   }, 0);
   window.close();

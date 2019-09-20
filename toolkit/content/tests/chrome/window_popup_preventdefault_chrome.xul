@@ -19,8 +19,8 @@ var gHiddenNotAllowed = true;
 var fm = Components.classes["@mozilla.org/focus-manager;1"].
            getService(Components.interfaces.nsIFocusManager);
 
-var is = function(l, r, v) { window.opener.wrappedJSObject.SimpleTest.is(l, r, v); }
-var isnot = function(l, r, v) { window.opener.wrappedJSObject.SimpleTest.isnot(l, r, v); }
+var is = function(l, r, v) { window.arguments[0].SimpleTest.is(l, r, v); }
+var isnot = function(l, r, v) { window.arguments[0].SimpleTest.isnot(l, r, v); }
 
 function runTest()
 {
@@ -74,7 +74,7 @@ function popupShowing(event)
 
 function popupShown()
 {
-  window.opener.wrappedJSObject.SimpleTest.ok(!gShownNotAllowed, "popupshowing preventDefault");
+  window.arguments[0].SimpleTest.ok(!gShownNotAllowed, "popupshowing preventDefault");
   document.getElementById("menu").open = false;
 }
 
@@ -92,12 +92,12 @@ function popupHiding(event)
 
 function popupHidden()
 {
-  window.opener.wrappedJSObject.SimpleTest.ok(!gHiddenNotAllowed, "popuphiding preventDefault");
-  window.opener.wrappedJSObject.SimpleTest.finish();
+  window.arguments[0].SimpleTest.ok(!gHiddenNotAllowed, "popuphiding preventDefault");
+  window.arguments[0].SimpleTest.finish();
   window.close();
 }
 
-window.opener.wrappedJSObject.SimpleTest.waitForFocus(runTest, window);
+window.arguments[0].SimpleTest.waitForFocus(runTest, window);
 </script>
 
 <button id="menu" type="menu" label="Menu">

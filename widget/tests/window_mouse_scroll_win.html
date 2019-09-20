@@ -14,7 +14,7 @@
 </div>
 <script class="testbody" type="application/javascript">
 
-window.opener.wrappedJSObject.SimpleTest.waitForFocus(prepareTests, window);
+window.arguments[0].SimpleTest.waitForFocus(prepareTests, window);
 
 const nsIDOMWindowUtils = Ci.nsIDOMWindowUtils;
 
@@ -83,19 +83,19 @@ var gP2 = document.getElementById("p2");
 var gOtherWindow;
 
 function ok(aCondition, aMessage) {
-  window.opener.wrappedJSObject.SimpleTest.ok(aCondition, aMessage);
+  window.arguments[0].SimpleTest.ok(aCondition, aMessage);
 }
 
 function is(aLeft, aRight, aMessage) {
-  window.opener.wrappedJSObject.SimpleTest.is(aLeft, aRight, aMessage);
+  window.arguments[0].SimpleTest.is(aLeft, aRight, aMessage);
 }
 
 function isnot(aLeft, aRight, aMessage) {
-  window.opener.wrappedJSObject.SimpleTest.isnot(aLeft, aRight, aMessage);
+  window.arguments[0].SimpleTest.isnot(aLeft, aRight, aMessage);
 }
 
 function todo_is(aLeft, aRight, aMessage) {
-  window.opener.wrappedJSObject.SimpleTest.todo_is(aLeft, aRight, aMessage);
+  window.arguments[0].SimpleTest.todo_is(aLeft, aRight, aMessage);
 }
 
 function onUnload() {
@@ -118,7 +118,7 @@ function onUnload() {
   SpecialPowers.clearUserPref(kVAmountPref);
   SpecialPowers.clearUserPref(kHAmountPref);
   SpecialPowers.clearUserPref(kTimeoutPref);
-  window.opener.wrappedJSObject.SimpleTest.finish();
+  window.arguments[0].SimpleTest.finish();
 }
 
 function getWindowUtils(aWindow) {
@@ -1371,7 +1371,7 @@ function runDeactiveWindowTests() {
   gOtherWindow = window.open("data:text/html,", "_blank",
                              "chrome,width=100,height=100,top=700,left=700");
 
-  window.opener.wrappedJSObject.SimpleTest.waitForFocus(function() {
+  window.arguments[0].SimpleTest.waitForFocus(function() {
     runNextTest(gDeactiveWindowTests, 0);
   }, gOtherWindow);
 }

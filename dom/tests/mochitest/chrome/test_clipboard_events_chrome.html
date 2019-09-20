@@ -11,7 +11,7 @@ SimpleTest.waitForExplicitFinish();
 function runTest()
 {
   SpecialPowers.pushPrefEnv({"set": [['dom.event.clipboardevents.enabled', false]]}, function() {
-    window.open("file_clipboard_events_chrome.html", "_blank", "chrome,width=200,height=200");
+    window.openDialog("file_clipboard_events_chrome.html", "_blank", "chrome,width=200,height=200,noopener", window);
   });
 }
 

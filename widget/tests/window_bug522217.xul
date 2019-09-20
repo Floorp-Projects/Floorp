@@ -14,22 +14,22 @@
 
 function ok(aCondition, aMessage)
 {
-  window.opener.wrappedJSObject.SimpleTest.ok(aCondition, aMessage);
+  window.arguments[0].SimpleTest.ok(aCondition, aMessage);
 }
 
 function is(aLeft, aRight, aMessage)
 {
-  window.opener.wrappedJSObject.SimpleTest.is(aLeft, aRight, aMessage);
+  window.arguments[0].SimpleTest.is(aLeft, aRight, aMessage);
 }
 
 function isnot(aLeft, aRight, aMessage)
 {
-  window.opener.wrappedJSObject.SimpleTest.isnot(aLeft, aRight, aMessage);
+  window.arguments[0].SimpleTest.isnot(aLeft, aRight, aMessage);
 }
 
 function executeSoon(aFct)
 {
-  window.opener.wrappedJSObject.SimpleTest.executeSoon(aFct);
+  window.arguments[0].SimpleTest.executeSoon(aFct);
 }
 
 function start() {
@@ -57,7 +57,7 @@ function start() {
         is(window.outerHeight, oldOuterHeight, "wrong outerHeight after removing drawintitlebar");
         is(window.innerWidth, oldInnerWidth, "wrong innerWidth after removing drawintitlebar");
         is(window.innerHeight, oldInnerHeight, "wrong innerHeight after removing drawintitlebar");
-        window.opener.wrappedJSObject.SimpleTest.finish();
+        window.arguments[0].SimpleTest.finish();
         window.close();
       });
     });
