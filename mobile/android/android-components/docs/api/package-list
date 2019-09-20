@@ -246,6 +246,7 @@ mozilla.components.support.ktx.java.io
 mozilla.components.support.ktx.kotlin
 mozilla.components.support.ktx.kotlinx.coroutines.flow
 mozilla.components.support.locale
+mozilla.components.support.migration
 mozilla.components.support.rusthttp
 mozilla.components.support.rustlog
 mozilla.components.support.test
