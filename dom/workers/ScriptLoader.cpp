@@ -2157,10 +2157,10 @@ void ScriptExecutorRunnable::ShutdownScriptLoader(JSContext* aCx,
     if (mScriptLoader.mRv.Failed()) {
       if (aMutedError && mScriptLoader.mRv.IsJSException()) {
         LogExceptionToConsole(aCx, aWorkerPrivate);
-        mScriptLoader.mRv.ThrowWithCustomCleanup(NS_ERROR_DOM_NETWORK_ERR);
+        mScriptLoader.mRv.Throw(NS_ERROR_DOM_NETWORK_ERR);
       }
     } else {
-      mScriptLoader.mRv.ThrowWithCustomCleanup(NS_ERROR_DOM_INVALID_STATE_ERR);
+      mScriptLoader.mRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     }
   }
 

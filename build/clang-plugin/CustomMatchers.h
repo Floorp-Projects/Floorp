@@ -326,7 +326,7 @@ AST_MATCHER(CXXMethodDecl, isNonVirtual) {
 
 AST_MATCHER(FunctionDecl, isMozMustReturnFromCaller) {
   const FunctionDecl *Decl = Node.getCanonicalDecl();
-  return Decl && hasCustomAttribute<moz_must_return_from_caller>(Decl);
+  return Decl && hasCustomAttribute<moz_must_return_from_caller_if_this_is_arg>(Decl);
 }
 
 /// This matcher will select default args which have nullptr as the value.

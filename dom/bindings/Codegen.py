@@ -5654,7 +5654,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
               nsCOMPtr<nsIGlobalObject> global =
                 do_QueryInterface(promiseGlobal.GetAsSupports());
               if (!global) {
-                promiseRv.ThrowWithCustomCleanup(NS_ERROR_UNEXPECTED);
+                promiseRv.Throw(NS_ERROR_UNEXPECTED);
                 MOZ_ALWAYS_TRUE(promiseRv.MaybeSetPendingException(cx));
                 $*{exceptionCode}
               }
