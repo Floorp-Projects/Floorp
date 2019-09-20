@@ -30,8 +30,8 @@ function mouseMove(e) {
   var element = e.target;
   var el = document.getElementById("cap1");
   el.label = "client: (" + e.clientX + "," + e.clientY + ")";
-  parent.arguments[0].SimpleTest.is(e.clientX, 3, "mouse event clientX on sub frame 1");
-  parent.arguments[0].SimpleTest.is(e.clientY, 4, "mouse event clientY on sub frame 1");
+  parent.opener.wrappedJSObject.SimpleTest.is(e.clientX, 3, "mouse event clientX on sub frame 1");
+  parent.opener.wrappedJSObject.SimpleTest.is(e.clientY, 4, "mouse event clientY on sub frame 1");
   // fire the next test on the sub frame
   frames[0].runTests();
 }

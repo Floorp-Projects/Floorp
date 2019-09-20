@@ -180,8 +180,7 @@ add_task(async function sidebar_isOpen() {
   });
 
   info("Open a new window");
-  open("", "", "noopener");
-  let newWin = Services.wm.getMostRecentWindow("navigator:browser");
+  let newWin = open();
 
   info("The new window has no sidebar");
   await sendMessage(extension1, "isOpen", { result: false });

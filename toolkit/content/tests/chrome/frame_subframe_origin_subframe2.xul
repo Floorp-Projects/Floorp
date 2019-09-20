@@ -26,9 +26,9 @@ function mouseMove(e) {
   var element = e.target;
   var el = document.getElementById("cap2");
   el.label = "client: (" + e.clientX + "," + e.clientY + ")";
-  parent.parent.arguments[0].SimpleTest.is(e.clientX, 6, "mouse event clientX on sub frame 2");
-  parent.parent.arguments[0].SimpleTest.is(e.clientY, 5, "mouse event clientY on sub frame 2");
-  parent.parent.arguments[0].SimpleTest.finish();
+  parent.parent.opener.wrappedJSObject.SimpleTest.is(e.clientX, 6, "mouse event clientX on sub frame 2");
+  parent.parent.opener.wrappedJSObject.SimpleTest.is(e.clientY, 5, "mouse event clientY on sub frame 2");
+  parent.parent.opener.wrappedJSObject.SimpleTest.finish();
   parent.parent.close();
 }
 

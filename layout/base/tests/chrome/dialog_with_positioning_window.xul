@@ -9,10 +9,10 @@
     <button label="OK"/>
   </hbox>
 <script><![CDATA[
-var SimpleTest = window.arguments[0].SimpleTest;
-var SpecialPowers = window.arguments[0].SpecialPowers;
-var is = window.arguments[0].is;
-var ok = window.arguments[0].ok;
+var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
+var SpecialPowers = window.opener.wrappedJSObject.SpecialPowers;
+var is = window.opener.wrappedJSObject.is;
+var ok = window.opener.wrappedJSObject.ok;
 
 // We run this off a setTimeout from onload, because the XUL window
 // only does its intrinsic-height layout after the load event has

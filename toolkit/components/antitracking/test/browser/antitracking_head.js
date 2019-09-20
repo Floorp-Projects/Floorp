@@ -317,11 +317,7 @@ this.AntiTracking = {
     });
 
     info("Let's interact with the tracker");
-    window.open(
-      TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartyOpenUI.html",
-      "",
-      "noopener"
-    );
+    window.open(TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartyOpenUI.html");
     await windowClosed;
   },
 

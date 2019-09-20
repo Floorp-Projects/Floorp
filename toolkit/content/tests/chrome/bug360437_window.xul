@@ -19,14 +19,14 @@
   <script type="application/javascript"><![CDATA[
     const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-    ContentTask.setTestScope(window.arguments[0]);
+    ContentTask.setTestScope(window.opener.wrappedJSObject);
 
     var gFindBar = null;
     var gBrowser;
 
     var imports = ["SimpleTest", "ok", "is", "info"];
     for (var name of imports) {
-      window[name] = window.arguments[0][name];
+      window[name] = window.opener.wrappedJSObject[name];
     }
 
     function startTest() {

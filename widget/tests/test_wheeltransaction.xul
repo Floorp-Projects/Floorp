@@ -19,8 +19,8 @@
 <![CDATA[
 
 SimpleTest.waitForExplicitFinish();
-window.openDialog("window_wheeltransaction.xul", "_blank", 
-                  "chrome,width=600,height=600,noopener", window);
+window.open("window_wheeltransaction.xul", "_blank", 
+            "chrome,width=600,height=600");
 
 ]]>
 </script>
