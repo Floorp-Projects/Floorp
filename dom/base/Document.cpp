@@ -15014,7 +15014,7 @@ void Document::NotifyUserGestureActivation() {
 
 bool Document::HasBeenUserGestureActivated() {
   RefPtr<BrowsingContext> bc = GetBrowsingContext();
-  return bc ? bc->GetIsActivatedByUserGesture() : false;
+  return bc && bc->HasBeenUserGestureActivated();
 }
 
 void Document::ClearUserGestureActivation() {
