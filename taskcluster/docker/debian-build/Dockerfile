@@ -26,6 +26,9 @@ RUN dpkg --add-architecture $ARCH
 # pkg-config being valid on the host. On more recent versions of Debian, we can
 # use pkg-config, which is multiarch-aware, but we also need dpkg-dev because
 # of https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=916772.
+#
+# We also need libstdc++ development files, but the exact version of libstdc++
+# that we need varies between debian versions.
 RUN apt-get update && \
     apt-get dist-upgrade && \
     echo path-exclude=/usr/share/doc/*/changelog.Debian* > /etc/dpkg/dpkg.cfg.d/excludes && \
@@ -34,6 +37,14 @@ RUN apt-get update && \
       PKG_CONFIG=pkg-config:$ARCH; \
     else \
       PKG_CONFIG="pkg-config dpkg-dev"; \
+    fi && \
+    if grep -q ^7\\. /etc/debian_version; then \
+      LIBSTDCXX=libstdc++6-4.4-dev; \
+    elif grep -q ^9\\. /etc/debian_version; then \
+      LIBSTDCXX=libstdc++-6-dev; \
+    elif grep -q ^10\\. /etc/debian_version; then \
+      libstdcxx=libstdc++-8-dev; \
+      LIBSTDCXX="$libstdcxx $libstdcxx:$ARCH"; \
     fi && \
     apt-get install \
       autoconf2.13 \
@@ -66,6 +77,7 @@ RUN apt-get update && \
       linux-libc-dev$BACKPORT \
       linux-libc-dev:$ARCH$BACKPORT \
       $PKG_CONFIG \
+      $LIBSTDCXX \
       libdbus-glib-1-dev:$ARCH \
       libdrm-dev:$ARCH \
       libfontconfig1-dev:$ARCH \
