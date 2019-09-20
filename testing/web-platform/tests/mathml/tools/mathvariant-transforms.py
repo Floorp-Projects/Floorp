@@ -91,25 +91,26 @@ for mathvariant in mathvariantTransforms:
     CSSreftestReference.write(source % ("text-transform math-%s (reference)" % mathvariant))
     if mathvariant == "auto":
         mathAssert = "Verify that a single-char <mi> is equivalent to an <mi> with the transformed italic unicode character."
+        mapping = "italic"
     else:
         mathAssert = "Verify that a single-char <mtext> with a %s mathvariant is equivalent to an <mtext> with the transformed unicode character." % mathvariant
+        mapping = mathvariant
     source ='\
 <link rel="help" href="https://mathml-refresh.github.io/mathml-core/#css-styling">\n\
 <link rel="help" href="https://mathml-refresh.github.io/mathml-core/#the-mathvariant-attribute">\n\
 <link rel="help" href="https://mathml-refresh.github.io/mathml-core/#new-text-transform-values">\n\
+<link rel="help" href="https://mathml-refresh.github.io/mathml-core/#%s-mappings">\n\
 <link rel="match" href="mathvariant-%s-ref.html"/>\n\
 <meta name="assert" content="%s">\n'
-    reftest.write(source % (mathvariant, mathAssert))
+    reftest.write(source % (mapping, mathvariant, mathAssert))
     source = '\
 <link rel="help" href="https://github.com/w3c/csswg-drafts/issues/3745"/>\n\
 <link rel="help" href="https://mathml-refresh.github.io/mathml-core/#new-text-transform-values">\n\
+<link rel="help" href="https://mathml-refresh.github.io/mathml-core/#%s-mappings">\n\
 <link rel="match" href="text-transform-math-%s-001.tentative-ref.html"/>\n\
 <meta name="assert" content="Verify that a character with \'text-transform: math-%s\' renders the same as the transformed unicode character.">\n'
-    CSSreftest.write(source % (mathvariant, mathvariant))
-    if mathvariant == "auto":
-        WOFFfont = "mathvariant-italic.woff"
-    else:
-        WOFFfont = "mathvariant-%s.woff" % mathvariant
+    CSSreftest.write(source % (mapping, mathvariant, mathvariant))
+    WOFFfont = "mathvariant-%s.woff" % mapping
     source = '\
 <style>\n\
   @font-face {\n\
