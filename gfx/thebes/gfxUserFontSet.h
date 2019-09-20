@@ -298,6 +298,12 @@ class gfxUserFontSet {
   // rebuild if local rules have been used
   void RebuildLocalRules();
 
+  // Discard any font entries created for src:local(), so that they will
+  // be reloaded next time they're needed. This is called when the platform
+  // font list has changed, which means local font entries that were set up
+  // may no longer be valid.
+  void ForgetLocalFaces();
+
   class UserFontCache {
    public:
     // Record a loaded user-font in the cache. This requires that the

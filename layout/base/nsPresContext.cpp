@@ -138,6 +138,12 @@ void nsPresContext::ForceReflowForFontInfoUpdate() {
   // stale nsFontMetrics objects from it.
   DeviceContext()->FlushFontCache();
 
+  // If there's a user font set, discard any src:local() faces it may have
+  // loaded because their font entries may no longer be valid.
+  if (Document()->GetFonts()) {
+    Document()->GetFonts()->GetUserFontSet()->ForgetLocalFaces();
+  }
+
   // We can trigger reflow by pretending a font.* preference has changed;
   // this is the same mechanism as gfxPlatform::ForceGlobalReflow() uses
   // if new fonts are installed during the session, for example.
