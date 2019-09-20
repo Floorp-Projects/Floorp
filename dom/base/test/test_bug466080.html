@@ -5,10 +5,9 @@
   <script src="/tests/SimpleTest/SimpleTest.js"></script>        
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="onWindowLoad()">
+<body>
 <iframe id="frame1"
-        src="https://requireclientcert.example.com/tests/dom/base/test/bug466080.sjs"
-        onload="document.iframeWasLoaded = true">
+        src="https://requireclientcert.example.com/tests/dom/base/test/bug466080.sjs">
  
  This iframe should load the resource via the src-attribute from
  a secure server which requires a client-cert. Doing this is
@@ -21,9 +20,11 @@
 
 <script class="testbody" type="text/javascript">
 
-document.iframeWasLoaded = false;
+"use strict";
 
-var alltests = [
+onWindowLoad();
+
+let alltests = [
 
 // load resource from a relative url - this should work
   { url:"bug466080.sjs",
@@ -80,11 +81,12 @@ var alltests = [
     
 ];
 
-function onWindowLoad() {
+async function onWindowLoad() {
     // First, check that resource was loaded into the iframe
     // This check in fact depends on bug #444165... :)
-    ok(document.iframeWasLoaded, "Loading resource via src-attribute");
-
+    await new Promise(resolve => {
+        document.getElementById("frame1").onload = () => { resolve(); };
+    });
 
     function runTest(test) {
 
