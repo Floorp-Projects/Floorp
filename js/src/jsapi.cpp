@@ -1842,6 +1842,11 @@ JS_PUBLIC_API void SetHelperThreadTaskCallback(
   HelperThreadTaskCallback = callback;
 }
 
+JS_PUBLIC_API void JS::SetFilenameValidationCallback(
+    JS::FilenameValidationCallback cb) {
+  js::gFilenameValidationCallback = cb;
+}
+
 /*** Standard internal methods **********************************************/
 
 JS_PUBLIC_API bool JS_GetPrototype(JSContext* cx, HandleObject obj,
@@ -3551,6 +3556,7 @@ void JS::ReadOnlyCompileOptions::copyPODNonTransitiveOptions(
   isRunOnce = rhs.isRunOnce;
   noScriptRval = rhs.noScriptRval;
   nonSyntacticScope = rhs.nonSyntacticScope;
+  skipFilenameValidation_ = rhs.skipFilenameValidation_;
 }
 
 JS::OwningCompileOptions::OwningCompileOptions(JSContext* cx)
