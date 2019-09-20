@@ -130,16 +130,11 @@ class CustomizableUITestUtils {
     await this.window.promiseDocumentFlushed(() => {});
 
     // Check if the OverflowableToolbar is handling the overflow event.
-    // _lastOverflowCounter property is incremented synchronously at the top
-    // of the overflow event handler, and is set to 0 when it finishes.
     let navbar = this.window.document.getElementById(
       CustomizableUI.AREA_NAVBAR
     );
     await TestUtils.waitForCondition(() => {
-      // This test is using a private variable, that can be renamed or removed
-      // in the future.  Use === so that this won't silently skip if the value
-      // becomes undefined.
-      return navbar.overflowable._lastOverflowCounter === 0;
+      return !navbar.overflowable.isHandlingOverflow();
     });
 
     let searchbar = this.window.document.getElementById("searchbar");
