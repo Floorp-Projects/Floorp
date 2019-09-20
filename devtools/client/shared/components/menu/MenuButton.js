@@ -151,7 +151,6 @@ class MenuButton extends PureComponent {
     const tooltipProps = {
       type: "doorhanger",
       useXulWrapper: true,
-      isMenuTooltip: true,
     };
 
     if (this.props.menuId) {
