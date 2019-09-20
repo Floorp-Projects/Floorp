@@ -30,7 +30,8 @@ enum MediaSinkEnum {
 
 enum { kVideoTrack = 1, kAudioTrack = 2, kTrackCount };
 
-class MediaEngine : public DeviceChangeCallback {
+class MediaEngine : public DeviceChangeNotifier,
+                    public DeviceChangeCallback {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaEngine)
   NS_DECL_OWNINGTHREAD
@@ -48,6 +49,8 @@ class MediaEngine : public DeviceChangeCallback {
   virtual void Shutdown() = 0;
 
   virtual void SetFakeDeviceChangeEvents() {}
+
+  void OnDeviceChange() override { NotifyDeviceChange(); }
 
  protected:
   virtual ~MediaEngine() = default;

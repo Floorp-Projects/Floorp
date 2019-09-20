@@ -2176,7 +2176,7 @@ int MediaManager::AddDeviceChangeCallback(DeviceChangeCallback* aCallback) {
       manager->GetBackend()->SetFakeDeviceChangeEvents();
   }));
 
-  return DeviceChangeCallback::AddDeviceChangeCallback(aCallback);
+  return DeviceChangeNotifier::AddDeviceChangeCallback(aCallback);
 }
 
 void MediaManager::OnDeviceChange() {
@@ -2186,7 +2186,7 @@ void MediaManager::OnDeviceChange() {
         if (sHasShutdown) {
           return;
         }
-        self->DeviceChangeCallback::OnDeviceChange();
+        self->NotifyDeviceChange();
 
         // On some Windows machine, if we call EnumerateRawDevices immediately
         // after receiving devicechange event, sometimes we would get outdated
@@ -3410,7 +3410,7 @@ void MediaManager::RemoveMediaDevicesCallback(uint64_t aWindowID) {
       nsPIDOMWindowInner* window = mediadevices->GetOwner();
       MOZ_ASSERT(window);
       if (window && window->WindowID() == aWindowID) {
-        DeviceChangeCallback::RemoveDeviceChangeCallbackLocked(observer);
+        RemoveDeviceChangeCallbackLocked(observer);
         return;
       }
     }

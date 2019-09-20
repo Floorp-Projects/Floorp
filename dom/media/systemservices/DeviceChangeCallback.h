@@ -13,7 +13,17 @@ namespace mozilla {
 
 class DeviceChangeCallback {
  public:
-  virtual void OnDeviceChange() {
+  virtual ~DeviceChangeCallback() = default;
+  virtual void OnDeviceChange() = 0;
+};
+
+class DeviceChangeNotifier {
+ public:
+  DeviceChangeNotifier()
+      : mCallbackMutex("mozilla::DeviceChangeCallback::mCallbackMutex") {
+  }
+
+  void NotifyDeviceChange() {
     MutexAutoLock lock(mCallbackMutex);
     for (DeviceChangeCallback* observer : mDeviceChangeCallbackList) {
       observer->OnDeviceChange();
@@ -28,12 +38,12 @@ class DeviceChangeCallback {
     return 0;
   }
 
-  virtual int RemoveDeviceChangeCallback(DeviceChangeCallback* aCallback) {
+  int RemoveDeviceChangeCallback(DeviceChangeCallback* aCallback) {
     MutexAutoLock lock(mCallbackMutex);
     return RemoveDeviceChangeCallbackLocked(aCallback);
   }
 
-  virtual int RemoveDeviceChangeCallbackLocked(
+  int RemoveDeviceChangeCallbackLocked(
       DeviceChangeCallback* aCallback) {
     mCallbackMutex.AssertCurrentThreadOwns();
     if (mDeviceChangeCallbackList.IndexOf(aCallback) !=
@@ -42,11 +52,7 @@ class DeviceChangeCallback {
     return 0;
   }
 
-  DeviceChangeCallback()
-      : mCallbackMutex("mozilla::media::DeviceChangeCallback::mCallbackMutex") {
-  }
-
-  virtual ~DeviceChangeCallback() {}
+  virtual ~DeviceChangeNotifier() = default;
 
  protected:
   nsTArray<DeviceChangeCallback*> mDeviceChangeCallbackList;
