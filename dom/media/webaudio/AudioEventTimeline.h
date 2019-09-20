@@ -128,7 +128,9 @@ class AudioEventTimeline {
       return false;
     }
     if (!WebAudioUtils::IsTimeValid(aEvent.mTimeConstant)) {
-      aRv.ThrowRangeError<MSG_INVALID_AUDIOPARAM_EXPONENTIAL_CONSTANT_ERROR>();
+      aRv.ThrowRangeError(
+          u"The exponential constant passed to setTargetAtTime must be "
+          u"non-negative.");
       return false;
     }
 
@@ -138,7 +140,9 @@ class AudioEventTimeline {
         return false;
       }
       if (aEvent.mDuration <= 0) {
-        aRv.ThrowRangeError<MSG_INVALID_CURVE_DURATION_ERROR>();
+        aRv.ThrowRangeError(
+            u"The curve duration for setValueCurveAtTime must be strictly "
+            u"positive.");
         return false;
       }
     }
@@ -171,7 +175,9 @@ class AudioEventTimeline {
     // Make sure that invalid values are not used for exponential curves
     if (aEvent.mType == AudioTimelineEvent::ExponentialRamp) {
       if (aEvent.mValue <= 0.f) {
-        aRv.ThrowRangeError<MSG_INVALID_AUDIOPARAM_EXPONENTIAL_VALUE_ERROR>();
+        aRv.ThrowRangeError(
+            u"The value passed to exponentialRampToValueAtTime must be "
+            u"positive.");
         return false;
       }
       const AudioTimelineEvent* previousEvent =

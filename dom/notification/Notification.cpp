@@ -880,7 +880,9 @@ already_AddRefed<Notification> Notification::Constructor(
   RefPtr<ServiceWorkerGlobalScope> scope;
   UNWRAP_OBJECT(ServiceWorkerGlobalScope, aGlobal.Get(), scope);
   if (scope) {
-    aRv.ThrowTypeError<MSG_NOTIFICATION_NO_CONSTRUCTOR_IN_SERVICEWORKER>();
+    aRv.ThrowTypeError(
+        u"Notification constructor cannot be used in ServiceWorkerGlobalScope. "
+        u"Use registration.showNotification() instead.");
     return nullptr;
   }
 
@@ -2282,7 +2284,7 @@ already_AddRefed<Promise> Notification::ShowPersistentNotification(
   if (NS_WARN_IF(aRv.Failed()) ||
       permission == NotificationPermission::Denied) {
     ErrorResult result;
-    result.ThrowTypeError<MSG_NOTIFICATION_PERMISSION_DENIED>();
+    result.ThrowTypeError(u"Permission to show Notification denied.");
     p->MaybeReject(result);
     return p.forget();
   }

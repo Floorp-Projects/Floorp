@@ -631,7 +631,7 @@ already_AddRefed<IDBOpenDBRequest> IDBFactory::OpenInternal(
   uint64_t version = 0;
   if (!aDeleting && aVersion.WasPassed()) {
     if (aVersion.Value() < 1) {
-      aRv.ThrowTypeError<MSG_INVALID_VERSION>();
+      aRv.ThrowTypeError(u"0 (Zero) is not a valid database version.");
       return nullptr;
     }
     version = aVersion.Value();

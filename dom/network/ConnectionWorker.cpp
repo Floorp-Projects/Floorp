@@ -145,7 +145,7 @@ already_AddRefed<ConnectionWorker> ConnectionWorker::Create(
   RefPtr<ConnectionWorker> c = new ConnectionWorker();
   c->mProxy = ConnectionProxy::Create(aWorkerPrivate, c);
   if (!c->mProxy) {
-    aRv.ThrowTypeError<MSG_WORKER_THREAD_SHUTTING_DOWN>();
+    aRv.ThrowTypeError(u"The Worker thread is shutting down.");
     return nullptr;
   }
 
