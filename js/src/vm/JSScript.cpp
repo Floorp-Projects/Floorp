@@ -1721,6 +1721,32 @@ ScriptSourceObject* ScriptSourceObject::unwrappedCanonical() const {
   return &UncheckedUnwrap(obj)->as<ScriptSourceObject>();
 }
 
+static MOZ_MUST_USE bool MaybeValidateFilename(
+    JSContext* cx, HandleScriptSourceObject sso,
+    const ReadOnlyCompileOptions& options) {
+  // When parsing off-thread we want to do filename validation on the main
+  // thread. This makes off-thread parsing more pure and is simpler because we
+  // can't easily throw exceptions off-thread.
+  MOZ_ASSERT(!cx->isHelperThreadContext());
+
+  if (!gFilenameValidationCallback) {
+    return true;
+  }
+
+  const char* filename = sso->source()->filename();
+  if (!filename || options.skipFilenameValidation()) {
+    return true;
+  }
+
+  if (gFilenameValidationCallback(filename, cx->realm()->isSystem())) {
+    return true;
+  }
+
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_UNSAFE_FILENAME,
+                           filename);
+  return false;
+}
+
 /* static */
 bool ScriptSourceObject::initFromOptions(
     JSContext* cx, HandleScriptSourceObject source,
@@ -1732,6 +1758,10 @@ bool ScriptSourceObject::initFromOptions(
       source->getReservedSlot(ELEMENT_PROPERTY_SLOT).isMagic(JS_GENERIC_MAGIC));
   MOZ_ASSERT(source->getReservedSlot(INTRODUCTION_SCRIPT_SLOT)
                  .isMagic(JS_GENERIC_MAGIC));
+
+  if (!MaybeValidateFilename(cx, source, options)) {
+    return false;
+  }
 
   RootedObject element(cx, options.element());
   RootedString elementAttributeName(cx, options.elementAttributeName());
