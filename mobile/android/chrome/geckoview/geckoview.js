@@ -523,6 +523,7 @@ function startup() {
     {
       name: "GeckoViewContentBlocking",
       onEnable: {
+        resource: "resource://gre/modules/GeckoViewContentBlocking.jsm",
         frameScript:
           "chrome://geckoview/content/GeckoViewContentBlockingChild.js",
       },

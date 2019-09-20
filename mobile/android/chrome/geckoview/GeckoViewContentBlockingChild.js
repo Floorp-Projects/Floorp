@@ -20,6 +20,31 @@ class GeckoViewContentBlockingChild extends GeckoViewChildModule {
       .QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIWebProgress);
     webProgress.addProgressListener(this.progressFilter, flags);
+
+    this.messageManager.addMessageListener("ContentBlocking:RequestLog", this);
+  }
+
+  receiveMessage(aMsg) {
+    debug`receiveMessage: ${aMsg.name}`;
+
+    switch (aMsg.name) {
+      case "ContentBlocking:RequestLog": {
+        docShell.getContentBlockingLog().then(
+          val =>
+            sendAsyncMessage("ContentBlocking:ExportLog", {
+              log: JSON.parse(val),
+              id: aMsg.data.id,
+            }),
+          reason =>
+            sendAsyncMessage("ContentBlocking:ExportLog", {
+              error: reason,
+              id: aMsg.data.id,
+            })
+        );
+
+        break;
+      }
+    }
   }
 
   onContentBlockingEvent(aWebProgress, aRequest, aEvent) {

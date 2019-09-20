@@ -218,9 +218,31 @@ package org.mozilla.geckoview {
     method @UiThread public void addException(@NonNull GeckoSession);
     method @UiThread @NonNull public GeckoResult<Boolean> checkException(@NonNull GeckoSession);
     method @UiThread public void clearExceptionList();
+    method @UiThread @NonNull public GeckoResult<List<ContentBlockingController.LogEntry>> getLog(@NonNull GeckoSession);
     method @UiThread public void removeException(@NonNull GeckoSession);
     method @UiThread public void restoreExceptionList(@NonNull ContentBlockingController.ExceptionList);
     method @UiThread @NonNull public GeckoResult<ContentBlockingController.ExceptionList> saveExceptionList();
+  }
+
+  public static class ContentBlockingController.Event {
+    ctor protected Event();
+    field public static final int BLOCKED_CRYPTOMINING_CONTENT = 2048;
+    field public static final int BLOCKED_FINGERPRINTING_CONTENT = 64;
+    field public static final int BLOCKED_SOCIALTRACKING_CONTENT = 65536;
+    field public static final int BLOCKED_TRACKING_CONTENT = 4096;
+    field public static final int BLOCKED_UNSAFE_CONTENT = 16384;
+    field public static final int COOKIES_BLOCKED_ALL = 1073741824;
+    field public static final int COOKIES_BLOCKED_BY_PERMISSION = 268435456;
+    field public static final int COOKIES_BLOCKED_FOREIGN = 128;
+    field public static final int COOKIES_BLOCKED_TRACKER = 536870912;
+    field public static final int COOKIES_LOADED = 32768;
+    field public static final int COOKIES_LOADED_SOCIALTRACKER = 524288;
+    field public static final int COOKIES_LOADED_TRACKER = 262144;
+    field public static final int COOKIES_PARTITIONED_FOREIGN = -2147483648;
+    field public static final int LOADED_CRYPTOMINING_CONTENT = 2097152;
+    field public static final int LOADED_FINGERPRINTING_CONTENT = 1024;
+    field public static final int LOADED_SOCIALTRACKING_CONTENT = 131072;
+    field public static final int LOADED_TRACKING_CONTENT = 8192;
   }
 
   @AnyThread public class ContentBlockingController.ExceptionList {
@@ -228,6 +250,19 @@ package org.mozilla.geckoview {
     ctor public ExceptionList(@NonNull JSONObject);
     method @NonNull public String[] getUris();
     method @NonNull public JSONObject toJson();
+  }
+
+  @AnyThread public static class ContentBlockingController.LogEntry {
+    ctor protected LogEntry();
+    field @NonNull public final List<ContentBlockingController.LogEntry.BlockingData> blockingData;
+    field @NonNull public final String origin;
+  }
+
+  public static class ContentBlockingController.LogEntry.BlockingData {
+    ctor protected BlockingData();
+    field public final boolean blocked;
+    field public final int category;
+    field public final int count;
   }
 
   public class CrashReporter {
