@@ -8,33 +8,49 @@ Library('winlauncher')
 
 FORCE_STATIC_LIB = True
 
-EXPORTS.mozilla += [
-    'NtLoaderAPI.h',
-]
-
 UNIFIED_SOURCES += [
     '/ipc/mscom/ProcessRuntime.cpp',
     '/widget/windows/WindowsConsole.cpp',
-    'DllBlocklistInit.cpp',
     'ErrorHandler.cpp',
     'LauncherProcessWin.cpp',
     'LaunchUnelevated.cpp',
-    'NtLoaderAPI.cpp',
 ]
 
+SOURCES += [
+    'DllBlocklistWin.cpp',
+]
+# Our patched NtMapViewOfSection can be called before the process's import
+# table is populated.  Don't let the compiler insert any instrumentation
+# that might call an import.
+SOURCES['DllBlocklistWin.cpp'].no_pgo = True
+
+# DllBlocklistWin.cpp should be compiled in a freestanding environment, as
+# our patched NtMapViewOfSection must not assume that it has access to any
+# runtime libraries.
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    SOURCES['DllBlocklistWin.cpp'].flags += ['-Xclang', '-ffreestanding']
+else:
+    SOURCES['DllBlocklistWin.cpp'].flags += ['-ffreestanding']
+
+# Disable -ftrivial-auto-var-init=pattern for DllBlocklistWin.cpp because
+# the file's interceptions happen so early in the main process that the
+# loader hasn't yet resolved the import of memset (used by
+# -ftrivial-auto-var-init) from vcruntime140.dll.
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    SOURCES['DllBlocklistWin.cpp'].flags += [
+        '-Xclang', '-ftrivial-auto-var-init=uninitialized',
+    ]
+else:
+    SOURCES['DllBlocklistWin.cpp'].flags += [
+        '-ftrivial-auto-var-init=uninitialized',
+    ]
+
 OS_LIBS += [
+    'ntdll',
     'oleaut32',
     'ole32',
     'rpcrt4',
     'version',
-]
-
-DIRS += [
-    'freestanding',
-]
-
-USE_LIBS += [
-    'winlauncher-freestanding',
 ]
 
 TEST_DIRS += [
