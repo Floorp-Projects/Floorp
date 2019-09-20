@@ -80,7 +80,7 @@ class MachCommands(MachCommandBase):
             return os.path.basename(input).rsplit('-classes.txt', 1)[0]
 
         bindings_inputs = list(itertools.chain(*((input, stem(input)) for input in inputs)))
-        bindings_args = '-Pgenerate_sdk_bindings_args={}'.format(':'.join(bindings_inputs))
+        bindings_args = '-Pgenerate_sdk_bindings_args={}'.format(';'.join(bindings_inputs))
 
         ret = self.gradle(
             self.substs['GRADLE_ANDROID_GENERATE_SDK_BINDINGS_TASKS'] + [bindings_args] + args,

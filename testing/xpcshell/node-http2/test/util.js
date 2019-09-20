@@ -63,7 +63,7 @@ exports.concat = function concat(buffers) {
     size += buffers[i].length;
   }
 
-  var concatenated = new Buffer(size);
+  var concatenated = Buffer.alloc(size);
   for (var cursor = 0, j = 0; j < buffers.length; cursor += buffers[j].length, j++) {
     buffers[j].copy(concatenated, cursor);
   }

@@ -830,10 +830,9 @@ gfxFont::RoundingFlags gfxFont::GetRoundOffsetsToPixels(
     return RoundingFlags(0);
   }
 
-  cairo_t* cr = nullptr;
-  if (aDrawTarget->GetBackendType() == BackendType::CAIRO) {
-    cr = static_cast<cairo_t*>(
-        aDrawTarget->GetNativeSurface(NativeSurfaceType::CAIRO_CONTEXT));
+  cairo_t* cr = static_cast<cairo_t*>(
+      aDrawTarget->GetNativeSurface(NativeSurfaceType::CAIRO_CONTEXT));
+  if (cr) {
     cairo_surface_t* target = cairo_get_target(cr);
 
     // Check whether the cairo surface's font options hint metrics.
@@ -3375,22 +3374,15 @@ void gfxFont::SetupGlyphExtents(DrawTarget* aDrawTarget, uint32_t aGlyphID,
     return;
   }
 
-  RefPtr<ScaledFont> sf = GetScaledFont(aDrawTarget);
-  uint16_t glyphIndex = aGlyphID;
-  GlyphMetrics metrics;
-  if (mAntialiasOption == kAntialiasNone) {
-    sf->GetGlyphDesignMetrics(&glyphIndex, 1, &metrics);
-  } else {
-    aDrawTarget->GetGlyphRasterizationMetrics(sf, &glyphIndex, 1, &metrics);
-  }
+  gfxRect bounds;
+  GetGlyphBounds(aGlyphID, &bounds, mAntialiasOption == kAntialiasNone);
 
   const Metrics& fontMetrics = GetMetrics(nsFontMetrics::eHorizontal);
   int32_t appUnitsPerDevUnit = aExtents->GetAppUnitsPerDevUnit();
-  if (!aNeedTight && metrics.mXBearing >= 0.0 &&
-      metrics.mYBearing >= -fontMetrics.maxAscent &&
-      metrics.mHeight + metrics.mYBearing <= fontMetrics.maxDescent) {
-    uint32_t appUnitsWidth = uint32_t(
-        ceil((metrics.mXBearing + metrics.mWidth) * appUnitsPerDevUnit));
+  if (!aNeedTight && bounds.x >= 0.0 && bounds.y >= -fontMetrics.maxAscent &&
+      bounds.height + bounds.y <= fontMetrics.maxDescent) {
+    uint32_t appUnitsWidth =
+        uint32_t(ceil((bounds.x + bounds.width) * appUnitsPerDevUnit));
     if (appUnitsWidth < gfxGlyphExtents::INVALID_WIDTH) {
       aExtents->SetContainedGlyphWidthAppUnits(aGlyphID,
                                                uint16_t(appUnitsWidth));
@@ -3404,9 +3396,9 @@ void gfxFont::SetupGlyphExtents(DrawTarget* aDrawTarget, uint32_t aGlyphID,
 #endif
 
   gfxFloat d2a = appUnitsPerDevUnit;
-  gfxRect bounds(metrics.mXBearing * d2a, metrics.mYBearing * d2a,
-                 metrics.mWidth * d2a, metrics.mHeight * d2a);
-  aExtents->SetTightGlyphExtents(aGlyphID, bounds);
+  aExtents->SetTightGlyphExtents(
+      aGlyphID, gfxRect(bounds.x * d2a, bounds.y * d2a, bounds.width * d2a,
+                        bounds.height * d2a));
 }
 
 // Try to initialize font metrics by reading sfnt tables directly;

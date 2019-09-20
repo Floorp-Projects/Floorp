@@ -40,10 +40,6 @@ class ScaledFontBase : public ScaledFont {
                                    PathBuilder* aBuilder,
                                    const Matrix* aTransformHint) override;
 
-  virtual void GetGlyphDesignMetrics(const uint16_t* aGlyphIndices,
-                                     uint32_t aNumGlyphs,
-                                     GlyphMetrics* aGlyphMetrics) override;
-
   virtual Float GetSize() const override { return mSize; }
 
 #ifdef USE_SKIA

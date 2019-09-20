@@ -512,6 +512,27 @@ int32_t gfxMacFont::GetGlyphWidth(uint16_t aGID) {
   return advance.width * 0x10000;
 }
 
+bool gfxMacFont::GetGlyphBounds(uint16_t aGID, gfxRect* aBounds, bool aTight) {
+  CGRect bb;
+  if (!::CGFontGetGlyphBBoxes(mCGFont, &aGID, 1, &bb)) {
+    return false;
+  }
+
+  // broken fonts can return incorrect bounds for some null characters,
+  // see https://bugzilla.mozilla.org/show_bug.cgi?id=534260
+  if (bb.origin.x == -32767 && bb.origin.y == -32767 &&
+      bb.size.width == 65534 && bb.size.height == 65534) {
+    *aBounds = gfxRect(0, 0, 0, 0);
+    return true;
+  }
+
+  gfxRect bounds(bb.origin.x, -(bb.origin.y + bb.size.height), bb.size.width,
+                 bb.size.height);
+  bounds.Scale(mFUnitsConvFactor);
+  *aBounds = bounds;
+  return true;
+}
+
 // Try to initialize font metrics via platform APIs (CG/CT),
 // and set mIsValid = TRUE on success.
 // We ONLY call this for local (platform) fonts that are not sfnt format;

@@ -627,10 +627,18 @@ bool ContentCompositorBridgeParent::DeallocPTextureParent(
 mozilla::ipc::IPCResult ContentCompositorBridgeParent::RecvInitPCanvasParent(
     Endpoint<PCanvasParent>&& aEndpoint) {
   MOZ_RELEASE_ASSERT(!mCanvasParent,
-                     "Canvas Parent should only be created once per "
-                     "CrossProcessCompositorBridgeParent.");
+                     "Canvas Parent must be released before recreating.");
 
   mCanvasParent = CanvasParent::Create(std::move(aEndpoint));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentCompositorBridgeParent::RecvReleasePCanvasParent() {
+  MOZ_RELEASE_ASSERT(mCanvasParent,
+                     "Canvas Parent hasn't been created.");
+
+  mCanvasParent = nullptr;
   return IPC_OK();
 }
 

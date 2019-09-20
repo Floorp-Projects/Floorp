@@ -396,6 +396,20 @@ JS_PUBLIC_API bool InitSelfHostedCode(JSContext* cx);
  */
 JS_PUBLIC_API void AssertObjectBelongsToCurrentThread(JSObject* obj);
 
+/**
+ * Install a process-wide callback to validate script filenames. The JS engine
+ * will invoke this callback for each JS script it parses or XDR decodes.
+ *
+ * If the callback returns |false|, an exception is thrown and parsing/decoding
+ * will be aborted.
+ *
+ * See also CompileOptions::setSkipFilenameValidation to opt-out of the callback
+ * for specific parse jobs.
+ */
+using FilenameValidationCallback = bool (*)(const char* filename,
+                                            bool isSystemRealm);
+JS_PUBLIC_API void SetFilenameValidationCallback(FilenameValidationCallback cb);
+
 } /* namespace JS */
 
 /**

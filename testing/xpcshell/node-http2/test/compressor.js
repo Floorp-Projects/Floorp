@@ -12,27 +12,27 @@ var Decompressor = compressor.Decompressor;
 var test_integers = [{
   N: 5,
   I: 10,
-  buffer: new Buffer([10])
+  buffer: Buffer.from([10])
 }, {
   N: 0,
   I: 10,
-  buffer: new Buffer([10])
+  buffer: Buffer.from([10])
 }, {
   N: 5,
   I: 1337,
-  buffer: new Buffer([31, 128 + 26, 10])
+  buffer: Buffer.from([31, 128 + 26, 10])
 }, {
   N: 0,
   I: 1337,
-  buffer: new Buffer([128 + 57, 10])
+  buffer: Buffer.from([128 + 57, 10])
 }];
 
 var test_strings = [{
   string: 'www.foo.com',
-  buffer: new Buffer('89f1e3c2f29ceb90f4ff', 'hex')
+  buffer: Buffer.from('89f1e3c2f29ceb90f4ff', 'hex')
 }, {
   string: 'éáűőúöüó€',
-  buffer: new Buffer('13c3a9c3a1c5b1c591c3bac3b6c3bcc3b3e282ac', 'hex')
+  buffer: Buffer.from('13c3a9c3a1c5b1c591c3bac3b6c3bcc3b3e282ac', 'hex')
 }];
 
 test_huffman_request = {
@@ -85,7 +85,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('82', 'hex')
+  buffer: Buffer.from('82', 'hex')
 }, {
   // index
   header: {
@@ -96,7 +96,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('86', 'hex')
+  buffer: Buffer.from('86', 'hex')
 }, {
   // index
   header: {
@@ -107,7 +107,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('84', 'hex')
+  buffer: Buffer.from('84', 'hex')
 }, {
   // literal w/index, name index
   header: {
@@ -118,7 +118,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('41' + '89f1e3c2f29ceb90f4ff', 'hex')
+  buffer: Buffer.from('41' + '89f1e3c2f29ceb90f4ff', 'hex')
 }, {
   // indexed
   header: {
@@ -129,7 +129,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('82', 'hex')
+  buffer: Buffer.from('82', 'hex')
 }, {
   // indexed
   header: {
@@ -140,7 +140,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('87', 'hex')
+  buffer: Buffer.from('87', 'hex')
 }, {
   // indexed
   header: {
@@ -151,7 +151,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('84', 'hex')
+  buffer: Buffer.from('84', 'hex')
 }, {
   // literal w/index, name index
   header: {
@@ -162,7 +162,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('41' + '89f1e3c2f18ec5c87a7f', 'hex')
+  buffer: Buffer.from('41' + '89f1e3c2f18ec5c87a7f', 'hex')
 }, {
   // literal w/index, name index
   header: {
@@ -173,7 +173,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('58' + '86a8eb10649cbf', 'hex')
+  buffer: Buffer.from('58' + '86a8eb10649cbf', 'hex')
 }, {
   // index
   header: {
@@ -184,7 +184,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('82', 'hex')
+  buffer: Buffer.from('82', 'hex')
 }, {
   // index
   header: {
@@ -195,7 +195,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('87', 'hex')
+  buffer: Buffer.from('87', 'hex')
 }, {
   // literal w/index, name index
   header: {
@@ -206,7 +206,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('44' + '8b6096a127a56ac699d72211', 'hex')
+  buffer: Buffer.from('44' + '8b6096a127a56ac699d72211', 'hex')
 }, {
   // index
   header: {
@@ -217,7 +217,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('C0', 'hex')
+  buffer: Buffer.from('C0', 'hex')
 }, {
   // literal w/index, new name & value
   header: {
@@ -228,7 +228,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('40' + '8825a849e95ba97d7f' + '8925a849e95bb8e8b4bf', 'hex')
+  buffer: Buffer.from('40' + '8825a849e95ba97d7f' + '8925a849e95bb8e8b4bf', 'hex')
 }, {
   // index
   header: {
@@ -239,7 +239,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('82', 'hex')
+  buffer: Buffer.from('82', 'hex')
 }, {
   // index
   header: {
@@ -250,7 +250,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('87', 'hex')
+  buffer: Buffer.from('87', 'hex')
 }, {
   // index
   header: {
@@ -261,7 +261,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('BF', 'hex')
+  buffer: Buffer.from('BF', 'hex')
 }, {
   // index
   header: {
@@ -272,7 +272,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('C2', 'hex')
+  buffer: Buffer.from('C2', 'hex')
 }, {
   // index
   header: {
@@ -283,7 +283,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('C1', 'hex')
+  buffer: Buffer.from('C1', 'hex')
 }, {
   // index
   header: {
@@ -294,7 +294,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('BE', 'hex')
+  buffer: Buffer.from('BE', 'hex')
 }, {
   // Literal w/o index, name index
   header: {
@@ -305,7 +305,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('07' + '86f138d25ee5b3', 'hex')
+  buffer: Buffer.from('07' + '86f138d25ee5b3', 'hex')
 }, {
   // Literal w/o index, new name & value
   header: {
@@ -316,7 +316,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('00' + '8294e7' + '03626172', 'hex')
+  buffer: Buffer.from('00' + '8294e7' + '03626172', 'hex')
 }, {
   // Literal never indexed, name index
   header: {
@@ -327,7 +327,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('17' + '86f138d25ee5b3', 'hex')
+  buffer: Buffer.from('17' + '86f138d25ee5b3', 'hex')
 }, {
   // Literal never indexed, new name & value
   header: {
@@ -338,7 +338,7 @@ var test_headers = [{
     contextUpdate: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('10' + '8294e7' + '03626172', 'hex')
+  buffer: Buffer.from('10' + '8294e7' + '03626172', 'hex')
 }, {
   header: {
     name: -1,
@@ -348,7 +348,7 @@ var test_headers = [{
     contextUpdate: true,
     newMaxSize: 100
   },
-  buffer: new Buffer('3F45', 'hex')
+  buffer: Buffer.from('3F45', 'hex')
 }];
 
 var test_header_sets = [{
@@ -398,12 +398,12 @@ describe('compressor.js', function() {
         var table = HuffmanTable.huffmanTable;
         for (var decoded in test_huffman_request) {
           var encoded = test_huffman_request[decoded];
-          expect(table.encode(new Buffer(decoded)).toString('hex')).to.equal(encoded);
+          expect(table.encode(Buffer.from(decoded)).toString('hex')).to.equal(encoded);
         }
         table = HuffmanTable.huffmanTable;
         for (decoded in test_huffman_response) {
           encoded = test_huffman_response[decoded];
-          expect(table.encode(new Buffer(decoded)).toString('hex')).to.equal(encoded);
+          expect(table.encode(Buffer.from(decoded)).toString('hex')).to.equal(encoded);
         }
       });
     });
@@ -412,12 +412,12 @@ describe('compressor.js', function() {
         var table = HuffmanTable.huffmanTable;
         for (var decoded in test_huffman_request) {
           var encoded = test_huffman_request[decoded];
-          expect(table.decode(new Buffer(encoded, 'hex')).toString()).to.equal(decoded);
+          expect(table.decode(Buffer.from(encoded, 'hex')).toString()).to.equal(decoded);
         }
         table = HuffmanTable.huffmanTable;
         for (decoded in test_huffman_response) {
           encoded = test_huffman_response[decoded];
-          expect(table.decode(new Buffer(encoded, 'hex')).toString()).to.equal(decoded);
+          expect(table.decode(Buffer.from(encoded, 'hex')).toString()).to.equal(decoded);
         }
       });
     });
@@ -509,12 +509,12 @@ describe('compressor.js', function() {
           flags: {
             END_HEADERS: false
           },
-          data: new Buffer(5)
+          data: Buffer.alloc(5)
         });
         decompressor.write({
           type: 'DATA',
           flags: {},
-          data: new Buffer(5)
+          data: Buffer.alloc(5)
         });
         expect(error_occured).to.be.equal(true);
       });
@@ -564,7 +564,7 @@ describe('compressor.js', function() {
           while (Math.random() > 0.1) {
             buffer.push(Math.floor(Math.random() * 256))
           }
-          buffer = new Buffer(buffer);
+          buffer = Buffer.from(buffer);
           var table = HuffmanTable.huffmanTable;
           var result = table.decode(table.encode(buffer));
           expect(result).to.deep.equal(buffer);

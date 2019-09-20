@@ -4725,14 +4725,17 @@ const OVERFLOW_PANEL_HIDE_DELAY_MS = 500;
 
 function OverflowableToolbar(aToolbarNode) {
   this._toolbar = aToolbarNode;
+  this._target = CustomizableUI.getCustomizationTarget(this._toolbar);
+  if (this._target.parentNode != this._toolbar) {
+    throw new Error(
+      "Customization target must be a direct child of an overflowable toolbar."
+    );
+  }
   this._collapsed = new Map();
   this._enabled = true;
-  this._toolbar.addEventListener("overflow", this);
-  this._toolbar.addEventListener("underflow", this);
 
   this._toolbar.setAttribute("overflowable", "true");
   let doc = this._toolbar.ownerDocument;
-  this._target = CustomizableUI.getCustomizationTarget(this._toolbar);
   this._list = doc.getElementById(this._toolbar.getAttribute("overflowtarget"));
   this._list._customizationTarget = this._list;
 
@@ -4746,8 +4749,6 @@ function OverflowableToolbar(aToolbarNode) {
 
 OverflowableToolbar.prototype = {
   initialized: false,
-  _forceOnOverflow: false,
-  _addedListener: false,
 
   observe(aSubject, aTopic, aData) {
     if (
@@ -4779,21 +4780,13 @@ OverflowableToolbar.prototype = {
     CustomizableUIInternal.addPanelCloseListeners(this._panel);
 
     CustomizableUI.addListener(this);
-    this._addedListener = true;
 
-    // The 'overflow' event may have been fired before init was called.
-    if (this.overflowedDuringConstruction) {
-      log.debug("Overflowed when constructed, running overflow handler now.");
-      this.onOverflow(this.overflowedDuringConstruction);
-      this.overflowedDuringConstruction = null;
-    }
+    this._checkOverflow();
 
     this.initialized = true;
   },
 
   uninit() {
-    this._toolbar.removeEventListener("overflow", this._toolbar);
-    this._toolbar.removeEventListener("underflow", this._toolbar);
     this._toolbar.removeAttribute("overflowable");
 
     if (!this.initialized) {
@@ -4813,28 +4806,11 @@ OverflowableToolbar.prototype = {
     this._chevron.removeEventListener("dragend", this);
     this._panel.removeEventListener("popuphiding", this);
     CustomizableUI.removeListener(this);
-    this._addedListener = false;
     CustomizableUIInternal.removePanelCloseListeners(this._panel);
   },
 
   handleEvent(aEvent) {
     switch (aEvent.type) {
-      case "overflow":
-        // Ignore vertical overflow and events from from nodes inside the toolbar.
-        if (aEvent.detail > 0 && aEvent.target == this._target) {
-          if (this.initialized) {
-            this.onOverflow(aEvent);
-          } else {
-            this.overflowedDuringConstruction = aEvent;
-          }
-        }
-        break;
-      case "underflow":
-        // Ignore vertical underflow and events from from nodes inside the toolbar.
-        if (aEvent.detail > 0 && aEvent.target == this._target) {
-          this.overflowedDuringConstruction = null;
-        }
-        break;
       case "aftercustomization":
         this._enable();
         break;
@@ -4915,6 +4891,13 @@ OverflowableToolbar.prototype = {
     });
   },
 
+  /**
+   * Exposes whether _onOverflow is currently running.
+   */
+  isHandlingOverflow() {
+    return !!this._onOverflowHandle;
+  },
+
   _onClickChevron(aEvent) {
     if (this._chevron.open) {
       this._chevron.open = false;
@@ -4942,49 +4925,69 @@ OverflowableToolbar.prototype = {
   },
 
   /**
-   * Avoid re-entrancy in the overflow handling by keeping track of invocations:
+   * Returns an array with two elements, the first one a boolean representing
+   * whether we're overflowing, the second one a number representing the
+   * maximum width items may occupy so we don't overflow.
    */
-  _lastOverflowCounter: 0,
+  async _getOverflowInfo() {
+    let win = this._target.ownerGlobal;
+    let totalAvailWidth;
+    let targetWidth;
+    await win.promiseDocumentFlushed(() => {
+      let style = win.getComputedStyle(this._toolbar);
+      totalAvailWidth =
+        this._toolbar.clientWidth -
+        parseFloat(style.borderLeftWidth) -
+        parseFloat(style.borderRightWidth) -
+        parseFloat(style.paddingLeft) -
+        parseFloat(style.paddingRight);
+      for (let child of this._toolbar.children) {
+        if (child.nodeName == "panel") {
+          // Ugh. PanelUI.showSubView puts customizationui-widget-panel
+          // directly into the toolbar. (bug 1158583)
+          continue;
+        }
+        style = win.getComputedStyle(child);
+        if (style.display == "none") {
+          continue;
+        }
+        totalAvailWidth -=
+          parseFloat(style.marginLeft) + parseFloat(style.marginRight);
+        if (child != this._target) {
+          totalAvailWidth -= child.clientWidth;
+        }
+      }
+      targetWidth = this._target.clientWidth;
+    });
+    log.debug(
+      `Getting overflow info: target width: ${targetWidth}; available width: ${totalAvailWidth}`
+    );
+    return [targetWidth > totalAvailWidth, totalAvailWidth];
+  },
 
   /**
    * Handle overflow in the toolbar by moving items to the overflow menu.
-   * @param {Event} aEvent
-   *        The overflow event that triggered handling overflow. May be omitted
-   *        in some cases (e.g. when we run this method after overflow handling
-   *        is re-enabled from customize mode, to ensure correct handling of
-   *        initial overflow).
    */
-  async onOverflow(aEvent) {
+  async _onOverflow() {
     if (!this._enabled) {
       return;
     }
 
-    log.debug(`Got overflow event`);
-    let child = this._target.lastElementChild;
-
-    let thisOverflowResponse = ++this._lastOverflowCounter;
-
     let win = this._target.ownerGlobal;
-    let [scrollLeftMin, scrollLeftMax] = await win.promiseDocumentFlushed(
-      () => {
-        return [this._target.scrollLeftMin, this._target.scrollLeftMax];
-      }
-    );
-    log.debug(
-      `Overflow event layout: scrollLeft min: ${scrollLeftMin}; max: ${scrollLeftMax}`
-    );
-    if (win.closed || this._lastOverflowCounter != thisOverflowResponse) {
-      log.debug(
-        `Stop responding to overflow because we're ${thisOverflowResponse} ` +
-          `and ${this._lastOverflowCounter} is the last one.`
-      );
+    let onOverflowHandle = {};
+    this._onOverflowHandle = onOverflowHandle;
+
+    let [isOverflowing] = await this._getOverflowInfo();
+
+    // Stop if the window has closed or if we re-enter while waiting for
+    // layout.
+    if (win.closed || this._onOverflowHandle != onOverflowHandle) {
+      log.debug("Window closed or another overflow handler started.");
       return;
     }
 
-    while (child && scrollLeftMin != scrollLeftMax) {
-      log.debug(
-        `Try to overflow ${child.id} given ${scrollLeftMin} != ${scrollLeftMax}`
-      );
+    let child = this._target.lastElementChild;
+    while (child && isOverflowing) {
       let prevChild = child.previousElementSibling;
 
       if (child.getAttribute("overflows") != "false") {
@@ -5003,39 +5006,34 @@ OverflowableToolbar.prototype = {
         );
 
         this._list.insertBefore(child, this._list.firstElementChild);
-        if (!this._addedListener) {
-          CustomizableUI.addListener(this);
-        }
         if (!CustomizableUI.isSpecialWidget(child.id)) {
           this._toolbar.setAttribute("overflowing", "true");
         }
       }
       child = prevChild;
-      [scrollLeftMin, scrollLeftMax] = await win.promiseDocumentFlushed(() => {
-        return [this._target.scrollLeftMin, this._target.scrollLeftMax];
-      });
-      // If the window has closed or if we re-enter because we were waiting
-      // for layout, stop.
-      if (win.closed || this._lastOverflowCounter != thisOverflowResponse) {
-        log.debug(`Window closed or another overflow handler started.`);
+      [isOverflowing] = await this._getOverflowInfo();
+      // Stop if the window has closed or if we re-enter while waiting for
+      // layout.
+      if (win.closed || this._onOverflowHandle != onOverflowHandle) {
+        log.debug("Window closed or another overflow handler started.");
         return;
       }
     }
 
     win.UpdateUrlbarSearchSplitterState();
-    // Reset the counter because we finished handling overflow.
-    this._lastOverflowCounter = 0;
+
+    this._onOverflowHandle = null;
   },
 
   _onResize(aEvent) {
     // Ignore bubbled-up resize events.
-    if (aEvent.target != aEvent.target.ownerGlobal.top) {
+    if (aEvent.target != aEvent.currentTarget) {
       return;
     }
     log.debug("Got resize event");
     if (!this._lazyResizeHandler) {
       this._lazyResizeHandler = new DeferredTask(
-        this._onLazyResize.bind(this),
+        this._checkOverflow.bind(this),
         LAZY_RESIZE_INTERVAL_MS,
         0
       );
@@ -5047,34 +5045,49 @@ OverflowableToolbar.prototype = {
    * Try to move toolbar items back to the toolbar from the overflow menu.
    * @param {boolean} shouldMoveAllItems
    *        Whether we should move everything (e.g. because we're being disabled)
-   * @param {number} targetWidth
-   *        Optional; the width of the toolbar in which we can put things.
+   * @param {number} totalAvailWidth
+   *        Optional; the width of the area in which we can put things.
    *        Some consumers pass this to avoid reflows.
    *        While there are items in the list, this width won't change, and so
    *        we can avoid flushing layout by providing it and/or caching it.
    *        Note that if `shouldMoveAllItems` is true, we never need the width
    *        anyway.
    */
-  _moveItemsBackToTheirOrigin(shouldMoveAllItems, targetWidth) {
+  async _moveItemsBackToTheirOrigin(shouldMoveAllItems, totalAvailWidth) {
     log.debug(
       `Attempting to move ${shouldMoveAllItems ? "all" : "some"} items back`
     );
     let placements = gPlacements.get(this._toolbar.id);
     let win = this._target.ownerGlobal;
+    let moveItemsBackToTheirOriginHandle = {};
+    this._moveItemsBackToTheirOriginHandle = moveItemsBackToTheirOriginHandle;
+
     while (this._list.firstElementChild) {
       let child = this._list.firstElementChild;
       let minSize = this._collapsed.get(child.id);
       log.debug(`Considering moving ${child.id} back, minSize: ${minSize}`);
 
       if (!shouldMoveAllItems && minSize) {
-        if (!targetWidth) {
-          let dwu = win.windowUtils;
-          targetWidth = Math.floor(
-            dwu.getBoundsWithoutFlushing(this._target).width
-          );
+        if (!totalAvailWidth) {
+          [, totalAvailWidth] = await this._getOverflowInfo();
+
+          // If the window has closed or if we re-enter because we were waiting
+          // for layout, stop.
+          if (
+            win.closed ||
+            this._moveItemsBackToTheirOriginHandle !=
+              moveItemsBackToTheirOriginHandle
+          ) {
+            log.debug(
+              "Window closed or _moveItemsBackToTheirOrigin called again."
+            );
+            return;
+          }
         }
-        if (targetWidth <= minSize) {
-          log.debug(`Need ${minSize} but width is ${targetWidth} so bailing`);
+        if (totalAvailWidth <= minSize) {
+          log.debug(
+            `Need ${minSize} but width is ${totalAvailWidth} so bailing`
+          );
           break;
         }
       }
@@ -5122,54 +5135,47 @@ OverflowableToolbar.prototype = {
     if (collapsedWidgetIds.every(w => CustomizableUI.isSpecialWidget(w))) {
       this._toolbar.removeAttribute("overflowing");
     }
-    if (this._addedListener && !this._collapsed.size) {
-      CustomizableUI.removeListener(this);
-      this._addedListener = false;
-    }
+
+    this._moveItemsBackToTheirOriginHandle = null;
   },
 
-  async _onLazyResize() {
+  async _checkOverflow() {
     if (!this._enabled) {
       return;
     }
-    log.debug("Processing resize event");
+    log.debug("Checking overflow");
 
     let win = this._target.ownerGlobal;
-    let [min, max, targetWidth] = await win.promiseDocumentFlushed(() => {
-      return [
-        this._target.scrollLeftMin,
-        this._target.scrollLeftMax,
-        this._target.clientWidth,
-      ];
-    });
+    let [isOverflowing, totalAvailWidth] = await this._getOverflowInfo();
     if (win.closed) {
       return;
     }
-    log.debug(
-      `Got layout information after resize, scroll min: ${min}; max: ${max}`
-    );
-    if (min != max) {
-      this.onOverflow();
+
+    if (isOverflowing) {
+      this._onOverflow();
     } else {
-      this._moveItemsBackToTheirOrigin(false, targetWidth);
+      this._moveItemsBackToTheirOrigin(false, totalAvailWidth);
     }
   },
 
   _disable() {
-    this._enabled = false;
     this._moveItemsBackToTheirOrigin(true);
     if (this._lazyResizeHandler) {
       this._lazyResizeHandler.disarm();
     }
+    this._enabled = false;
   },
 
   _enable() {
     this._enabled = true;
-    this.onOverflow();
+    this._checkOverflow();
   },
 
   onWidgetBeforeDOMChange(aNode, aNextNode, aContainer) {
-    if (aContainer != this._target && aContainer != this._list) {
+    if (
+      !this._enabled ||
+      (aContainer != this._target && aContainer != this._list)
+    ) {
       return;
     }
     // When we (re)move an item, update all the items that come after it in the list
@@ -5192,11 +5198,13 @@ OverflowableToolbar.prototype = {
   },
 
   onWidgetAfterDOMChange(aNode, aNextNode, aContainer) {
-    if (aContainer != this._target && aContainer != this._list) {
+    if (
+      !this._enabled ||
+      (aContainer != this._target && aContainer != this._list)
+    ) {
       return;
     }
 
-    let nowInBar = aNode.parentNode == aContainer;
     let nowOverflowed = aNode.parentNode == this._list;
     let wasOverflowed = this._collapsed.has(aNode.id);
 
@@ -5222,14 +5230,7 @@ OverflowableToolbar.prototype = {
           aNode,
           this._target
         );
-      } else if (!nowInBar) {
-        // If it is not overflowed and not in the toolbar, and was not overflowed
-        // either, it moved out of the toolbar. That means there's now space in there!
-        // Let's try to move stuff back:
-        this._moveItemsBackToTheirOrigin(true);
       }
-      // If it's in the toolbar now, then we don't care. An overflow event may
-      // fire afterwards; that's ok!
     } else if (!nowOverflowed) {
       // If it used to be overflowed...
       // ... and isn't anymore, let's remove our bookkeeping:
@@ -5247,20 +5248,16 @@ OverflowableToolbar.prototype = {
       if (collapsedWidgetIds.every(w => CustomizableUI.isSpecialWidget(w))) {
         this._toolbar.removeAttribute("overflowing");
       }
-      if (this._addedListener && !this._collapsed.size) {
-        CustomizableUI.removeListener(this);
-        this._addedListener = false;
-      }
     } else if (aNode.previousElementSibling) {
       // but if it still is, it must have changed places. Bookkeep:
       let prevId = aNode.previousElementSibling.id;
       let minSize = this._collapsed.get(prevId);
       this._collapsed.set(aNode.id, minSize);
-    } else {
-      // If it's now the first item in the overflow list,
-      // maybe we can return it:
-      this._moveItemsBackToTheirOrigin(false);
     }
+
+    // We might overflow now if an item was added, or we may be able to move
+    // stuff back into the toolbar if an item was removed.
+    this._checkOverflow();
   },
 
   findOverflowedInsertionPoints(aNode) {

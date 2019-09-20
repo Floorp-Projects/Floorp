@@ -1104,6 +1104,8 @@ extern mozilla::Atomic<JS::LargeAllocationFailureCallback>
 // jsapi.h.
 extern mozilla::Atomic<JS::BuildIdOp> GetBuildId;
 
+extern JS::FilenameValidationCallback gFilenameValidationCallback;
+
 // This callback is set by js::SetHelperThreadTaskCallback and may be null.
 // See comment in jsapi.h.
 extern void (*HelperThreadTaskCallback)(js::RunnableTask*);

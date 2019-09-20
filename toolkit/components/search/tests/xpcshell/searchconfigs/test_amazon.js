@@ -94,6 +94,7 @@ const test = new SearchConfigTest({
       // Note: the order here is important. A region/locale match higher up in the
       // list will override a region/locale match lower down.
       domain: "amazon.com.au",
+      telemetryId: "amazon-au",
       aliases: ["@amazon"],
       included: [
         {
@@ -158,6 +159,7 @@ const test = new SearchConfigTest({
     },
     {
       domain: "amazon.ca",
+      telemetryId: "amazon-ca",
       aliases: ["@amazon"],
       included: [
         {
@@ -212,6 +214,7 @@ const test = new SearchConfigTest({
     },
     {
       domain: "amazon.fr",
+      telemetryId: "amazon-france",
       aliases: ["@amazon"],
       included: [
         {
@@ -262,6 +265,7 @@ const test = new SearchConfigTest({
     },
     {
       domain: "amazon.co.uk",
+      telemetryId: "amazon-en-GB",
       aliases: ["@amazon"],
       included: [
         {
@@ -327,6 +331,7 @@ const test = new SearchConfigTest({
     },
     {
       domain: "amazon.com",
+      telemetryId: "amazondotcom",
       aliases: ["@amazon"],
       included: [
         {
@@ -370,6 +375,7 @@ const test = new SearchConfigTest({
     },
     {
       domain: "amazon.cn",
+      telemetryId: "amazondotcn",
       included: [
         {
           locales: {
@@ -382,6 +388,7 @@ const test = new SearchConfigTest({
     },
     {
       domain: "amazon.co.jp",
+      telemetryId: "amazon-jp",
       aliases: ["@amazon"],
       included: [
         {
@@ -395,6 +402,7 @@ const test = new SearchConfigTest({
     },
     {
       domain: "amazon.de",
+      telemetryId: "amazon-de",
       aliases: ["@amazon"],
       included: [
         {
@@ -408,6 +416,7 @@ const test = new SearchConfigTest({
     },
     {
       domain: "amazon.in",
+      telemetryId: "amazon-in",
       aliases: ["@amazon"],
       included: [
         {
@@ -432,6 +441,7 @@ const test = new SearchConfigTest({
     },
     {
       domain: "amazon.it",
+      telemetryId: "amazon-it",
       aliases: ["@amazon"],
       included: [
         {
