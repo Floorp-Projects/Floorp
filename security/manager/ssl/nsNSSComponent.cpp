@@ -707,20 +707,11 @@ nsNSSComponent::HasUserCertsInstalled(bool* result) {
 
   BlockUntilLoadableRootsLoaded();
 
-  *result = false;
-  UniqueCERTCertList certList(CERT_FindUserCertsByUsage(
-      CERT_GetDefaultCertDB(), certUsageSSLClient, false, true, nullptr));
-  if (!certList) {
-    return NS_OK;
-  }
+  // FindNonCACertificatesWithPrivateKeys won't ever return an empty list, so
+  // all we need to do is check if this is null or not.
+  UniqueCERTCertList certList(FindNonCACertificatesWithPrivateKeys());
+  *result = !!certList;
 
-  // check if the list is empty
-  if (CERT_LIST_END(CERT_LIST_HEAD(certList), certList)) {
-    return NS_OK;
-  }
-
-  // The list is not empty, meaning at least one cert is installed
-  *result = true;
   return NS_OK;
 }
 
@@ -2174,6 +2165,74 @@ already_AddRefed<SharedCertVerifier> GetDefaultCertVerifier() {
     return nullptr;
   }
   return result.forget();
+}
+
+// Lists all private keys on all modules and returns a list of any corresponding
+// certificates. Returns null if no such certificates can be found. Also returns
+// null if an error is encountered, because this is called as part of the client
+// auth data callback, and NSS ignores any errors returned by the callback.
+UniqueCERTCertList FindNonCACertificatesWithPrivateKeys() {
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+          ("FindNonCACertificatesWithPrivateKeys"));
+  UniqueCERTCertList certsWithPrivateKeys(CERT_NewCertList());
+  if (!certsWithPrivateKeys) {
+    return nullptr;
+  }
+
+  AutoSECMODListReadLock secmodLock;
+  SECMODModuleList* list = SECMOD_GetDefaultModuleList();
+  while (list) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("  module '%s'", list->module->commonName));
+    for (int i = 0; i < list->module->slotCount; i++) {
+      PK11SlotInfo* slot = list->module->slots[i];
+      MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+              ("    slot '%s'", PK11_GetSlotName(slot)));
+      // We may need to log in to be able to find private keys.
+      if (PK11_Authenticate(slot, true, nullptr) != SECSuccess) {
+        MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("    (couldn't authenticate)"));
+        continue;
+      }
+      UniqueSECKEYPrivateKeyList privateKeys(
+          PK11_ListPrivKeysInSlot(slot, nullptr, nullptr));
+      if (!privateKeys) {
+        MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("      (no private keys)"));
+        continue;
+      }
+      for (SECKEYPrivateKeyListNode* node = PRIVKEY_LIST_HEAD(privateKeys);
+           !PRIVKEY_LIST_END(node, privateKeys);
+           node = PRIVKEY_LIST_NEXT(node)) {
+        UniqueCERTCertList certs(PK11_GetCertsMatchingPrivateKey(node->key));
+        if (!certs) {
+          MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+                  ("      PK11_GetCertsMatchingPrivateKey encountered an error "
+                   "- returning"));
+          return nullptr;
+        }
+        if (CERT_LIST_EMPTY(certs)) {
+          MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("      (no certs for key)"));
+          continue;
+        }
+        for (CERTCertListNode* n = CERT_LIST_HEAD(certs);
+             !CERT_LIST_END(n, certs); n = CERT_LIST_NEXT(n)) {
+          if (!CERT_IsCACert(n->cert, nullptr)) {
+            MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+                    ("      found '%s'", n->cert->subjectName));
+            UniqueCERTCertificate cert(CERT_DupCertificate(n->cert));
+            if (CERT_AddCertToListTail(certsWithPrivateKeys.get(),
+                                       cert.get()) == SECSuccess) {
+              Unused << cert.release();
+            }
+          }
+        }
+      }
+    }
+    list = list->next;
+  }
+  if (CERT_LIST_EMPTY(certsWithPrivateKeys)) {
+    return nullptr;
+  }
+  return certsWithPrivateKeys;
 }
 
 }  // namespace psm
