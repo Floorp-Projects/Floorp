@@ -1919,6 +1919,11 @@ class gfxFont {
   // point format.
   virtual int32_t GetGlyphWidth(uint16_t aGID) { return -1; }
 
+  virtual bool GetGlyphBounds(uint16_t aGID, gfxRect* aBounds,
+                              bool aTight = false) {
+    return false;
+  }
+
   bool IsSpaceGlyphInvisible(DrawTarget* aRefDrawTarget,
                              const gfxTextRun* aTextRun);
 
