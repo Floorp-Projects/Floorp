@@ -918,13 +918,9 @@ class UrlbarInput {
     return this._setValue(val, true);
   }
 
-  get openViewOnFocus() {
-    return this._openViewOnFocus;
-  }
-
   get openViewOnFocusForCurrentTab() {
     return (
-      this.openViewOnFocus &&
+      this._openViewOnFocus &&
       !["about:newtab", "about:home"].includes(
         this.window.gBrowser.currentURI.spec
       ) &&
@@ -952,11 +948,6 @@ class UrlbarInput {
       return;
     }
     this.setAttribute("breakout-extend", "true");
-
-    let customizationTarget = this.textbox.closest(".customization-target");
-    if (customizationTarget) {
-      customizationTarget.setAttribute("urlbar-breakout-extend", "true");
-    }
   }
 
   endLayoutExtend(force) {
@@ -969,11 +960,6 @@ class UrlbarInput {
       return;
     }
     this.removeAttribute("breakout-extend");
-
-    let customizationTarget = this.textbox.closest(".customization-target");
-    if (customizationTarget) {
-      customizationTarget.removeAttribute("urlbar-breakout-extend");
-    }
   }
 
   setPageProxyState(state) {

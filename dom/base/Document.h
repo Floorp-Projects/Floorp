@@ -2263,7 +2263,8 @@ class Document : public nsINode,
   OrientationType CurrentOrientationType() const {
     return mCurrentOrientationType;
   }
-  void SetOrientationPendingPromise(Promise* aPromise);
+  void ClearOrientationPendingPromise();
+  bool SetOrientationPendingPromise(Promise* aPromise);
   Promise* GetOrientationPendingPromise() const {
     return mOrientationPendingPromise;
   }

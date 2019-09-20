@@ -304,7 +304,13 @@ inline void JSContext::minorGC(JS::GCReason reason) {
 }
 
 inline bool JSContext::runningWithTrustedPrincipals() {
-  return !realm() || realm()->principals() == runtime()->trustedPrincipals();
+  if (!realm()) {
+    return true;
+  }
+  if (!runtime()->trustedPrincipals()) {
+    return false;
+  }
+  return realm()->principals() == runtime()->trustedPrincipals();
 }
 
 inline void JSContext::enterRealm(JS::Realm* realm) {

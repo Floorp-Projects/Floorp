@@ -8315,7 +8315,7 @@ class ObjectInspectorItem extends Component {
     const watchpoint = item.contents.watchpoint;
     return dom.button({
       className: `remove-${watchpoint}-watchpoint`,
-      title: L10N.getStr("watchpoints.removeWatchpoint"),
+      title: L10N.getStr("watchpoints.removeWatchpointTooltip"),
       onClick: () => removeWatchpoint(item)
     });
   }

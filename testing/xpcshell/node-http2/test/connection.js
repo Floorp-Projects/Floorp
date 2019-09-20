@@ -73,7 +73,7 @@ describe('connection.js', function() {
             flags: {
               'PONG': true
             },
-            data: new Buffer(8)
+            data: Buffer.alloc(8)
           });
         });
       });
@@ -102,11 +102,11 @@ describe('connection.js', function() {
           ':method': 'GET',
           ':path': '/'
         };
-        var request_data = new Buffer(0);
+        var request_data = Buffer.alloc(0);
         var response_headers = {
           ':status': '200'
         };
-        var response_data = new Buffer('12345678', 'hex');
+        var response_data = Buffer.from('12345678', 'hex');
 
         // Setting up server
         s.on('stream', function(server_stream) {
@@ -140,8 +140,8 @@ describe('connection.js', function() {
         var response_headers = { ':status': '200' };
         var push_request_headers = { ':method': 'get', ':path': '/x' };
         var push_response_headers = { ':status': '200' };
-        var response_content = new Buffer(10);
-        var push_content = new Buffer(10);
+        var response_content = Buffer.alloc(10);
+        var push_content = Buffer.alloc(10);
 
         done = util.callNTimes(5, done);
 

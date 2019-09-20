@@ -8619,7 +8619,7 @@
   },
   "TELEMETRY_TEST_EXPIRED": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview", "thunderbird"],
+    "products": ["firefox", "fennec", "geckoview", "thunderbird", "geckoview_streaming"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "4",
     "kind": "flag",

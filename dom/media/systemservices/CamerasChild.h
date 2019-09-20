@@ -143,7 +143,7 @@ int GetChildAndCall(MEM_FUN&& f, ARGS&&... args) {
   }
 }
 
-class CamerasChild final : public PCamerasChild, public DeviceChangeCallback {
+class CamerasChild final : public PCamerasChild, public DeviceChangeNotifier {
   friend class mozilla::ipc::BackgroundChildImpl;
   template <class T>
   friend class mozilla::camera::LockAndDispatch;

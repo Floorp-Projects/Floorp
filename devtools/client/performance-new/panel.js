@@ -5,6 +5,13 @@
 
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
+/**
+ * This file contains the PerformancePanel, which uses a common API for DevTools to
+ * start and load everything. This will call `gInit` from the initializer.js file,
+ * which does the important initialization for the panel. This code is more concerned
+ * with wiring this panel into the rest of DevTools and fetching the Actor's fronts.
+ */
+
 class PerformancePanel {
   constructor(iframeWindow, toolbox) {
     this.panelWin = iframeWindow;

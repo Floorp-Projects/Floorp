@@ -6,6 +6,7 @@ DevToolsModules(
     'batching.js',
     'filters.js',
     'index.js',
+    'request-blocking.js',
     'requests.js',
     'search.js',
     'selection.js',

@@ -43,7 +43,7 @@ VideoCaptureModule::DeviceInfo* VideoCaptureImpl::CreateDeviceInfo() {
 void DeviceInfoLinux::HandleEvent(inotify_event* event, int fd)
 {
     if (event->mask & IN_CREATE) {
-        if (fd == _fd_v4l || fd == _fd_snd) {
+        if (fd == _fd_v4l) {
             DeviceChange();
         } else if ((event->mask & IN_ISDIR) && (fd == _fd_dev)) {
             if (_wd_v4l < 0) {
@@ -55,25 +55,15 @@ void DeviceInfoLinux::HandleEvent(inotify_event* event, int fd)
                     DeviceChange();
                 }
             }
-            if (_wd_snd < 0) {
-                usleep(5*1000);
-                _wd_snd = inotify_add_watch(_fd_snd, "/dev/snd/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
-                if (_wd_snd >= 0) {
-                    DeviceChange();
-                }
-            }
         }
     } else if (event->mask & IN_DELETE) {
-        if (fd == _fd_v4l || fd == _fd_snd) {
+        if (fd == _fd_v4l) {
             DeviceChange();
         }
     } else if (event->mask & IN_DELETE_SELF) {
         if (fd == _fd_v4l) {
             inotify_rm_watch(_fd_v4l, _wd_v4l);
             _wd_v4l = -1;
-        } else if (fd == _fd_snd) {
-            inotify_rm_watch(_fd_snd, _wd_snd);
-            _wd_snd = -1;
         } else {
             assert(false);
         }
@@ -140,11 +130,6 @@ int DeviceInfoLinux::ProcessInotifyEvents()
                 break;
             }
         }
-        if (EventCheck(_fd_snd) > 0) {
-            if (HandleEvents(_fd_snd) < 0) {
-                break;
-            }
-        }
     }
     return 0;
 }
@@ -157,11 +142,9 @@ bool DeviceInfoLinux::InotifyEventThread(void* obj)
 bool DeviceInfoLinux::InotifyProcess()
 {
     _fd_v4l = inotify_init();
-    _fd_snd = inotify_init();
     _fd_dev = inotify_init();
-    if (_fd_v4l >= 0 && _fd_snd >= 0 && _fd_dev >= 0) {
+    if (_fd_v4l >= 0 && _fd_dev >= 0) {
         _wd_v4l = inotify_add_watch(_fd_v4l, "/dev/v4l/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
-        _wd_snd = inotify_add_watch(_fd_snd, "/dev/snd/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
         _wd_dev = inotify_add_watch(_fd_dev, "/dev/", IN_CREATE);
         ProcessInotifyEvents();
 
@@ -169,16 +152,11 @@ bool DeviceInfoLinux::InotifyProcess()
           inotify_rm_watch(_fd_v4l, _wd_v4l);
         }
 
-        if (_wd_snd >= 0) {
-          inotify_rm_watch(_fd_snd, _wd_snd);
-        }
-
         if (_wd_dev >= 0) {
           inotify_rm_watch(_fd_dev, _wd_dev);
         }
 
         close(_fd_v4l);
-        close(_fd_snd);
         close(_fd_dev);
         return true;
     } else {

@@ -233,7 +233,7 @@ public class SDKProcessor {
 
         System.out.println("Processing platform bindings...");
 
-        final String sdkJar = args[0];
+        final File sdkJar = new File(args[0]);
         sMaxSdkVersion = Integer.parseInt(args[1]);
         final String outdir = args[2];
 
@@ -276,7 +276,7 @@ public class SDKProcessor {
             // Used to track the calls to the various class-specific initialisation functions.
             ClassLoader loader = null;
             try {
-                loader = URLClassLoader.newInstance(new URL[]{new URL("file://" + sdkJar)},
+                loader = URLClassLoader.newInstance(new URL[]{sdkJar.toURI().toURL()},
                         SDKProcessor.class.getClassLoader());
             } catch (Exception e) {
                 throw new RuntimeException(e.toString());

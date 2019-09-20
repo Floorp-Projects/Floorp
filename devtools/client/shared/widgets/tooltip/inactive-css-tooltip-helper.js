@@ -44,7 +44,7 @@ class InactiveCssTooltipHelper {
     doc.l10n.resumeObserving();
 
     // Size the content.
-    tooltip.setContentSize({ width: 275, height: Infinity });
+    tooltip.setContentSize({ width: 267, height: Infinity });
   }
 
   /**
