@@ -33,16 +33,17 @@
 }
 
 #qrSpinner {
-	background-image: url("chrome://browser/skin/fxa/fxa-spinner.svg");
-	animation: 0.9s spin infinite linear;
-	background-size: 36px;
-	background-repeat: no-repeat;
-	background-position: center;
-	width: 100%;
-	position: absolute;
-	top: 0;
-	bottom: 0;
-	left: 0;
+  background-image: url("chrome://browser/skin/fxa/fxa-spinner.svg");
+  animation: 0.9s spin infinite linear;
+  background-size: 36px;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 100%;
+  display: block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
   transition: opacity 250ms cubic-bezier(.07,.95,0,1);
 }
 
