@@ -232,7 +232,7 @@ assertErrorMessage(() => wasmEval(moduleWithSections([
 
 // Diagnose nonstandard block signature types.
 for (var bad of [0xff, 0, 1, 0x3f])
-    assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([funcBody({locals:[], body:[BlockCode, bad, EndCode]})])])), CompileError, /invalid .*block type/);
+    assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([funcBody({locals:[], body:[BlockCode, bad, EndCode]})])])), CompileError, /invalid inline block type/);
 
 // Ensure all invalid opcodes rejected
 for (let op of undefinedOpcodes) {

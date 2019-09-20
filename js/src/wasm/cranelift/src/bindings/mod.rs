@@ -24,7 +24,7 @@ use cranelift_codegen::entity::EntityRef;
 use cranelift_codegen::ir::immediates::{Ieee32, Ieee64};
 use cranelift_codegen::ir::{self, InstBuilder, SourceLoc};
 use cranelift_codegen::isa;
-use cranelift_wasm::{FuncIndex, GlobalIndex, SignatureIndex, TableIndex, WasmError, WasmResult};
+use cranelift_wasm::{FuncIndex, GlobalIndex, SignatureIndex, TableIndex, WasmResult};
 
 use smallvec::SmallVec;
 
@@ -148,30 +148,9 @@ impl FuncTypeWithId {
         }
     }
 
-    pub fn results<'a>(self) -> WasmResult<Vec<ir::Type>> {
-        let num_results = unsafe { low_level::funcType_numResults(self.0) };
-        // The same comments as FuncTypeWithId::args apply here.
-        if num_results == 0 {
-            Ok(Vec::new())
-        } else {
-            let results = unsafe { slice::from_raw_parts(low_level::funcType_results(self.0), num_results) };
-            let mut ret = Vec::new();
-            for &result in results {
-                ret.push(valtype_to_type(result)?);
-            }
-            Ok(ret)
-        }
-    }
-
     pub fn ret_type(self) -> WasmResult<Option<ir::Type>> {
-        match self.results() {
-            Ok(v) => match v.as_slice() {
-                [] => Ok(None),
-                [t] => Ok(Some(*t)),
-                _ => Err(WasmError::Unsupported("multiple values".to_string())),
-            },
-            Err(e) => Err(e)
-        }
+        let type_code = unsafe { low_level::funcType_retType(self.0) };
+        typecode_to_type(type_code)
     }
 
     pub fn id_kind(self) -> FuncTypeIdDescKind {
