@@ -262,9 +262,7 @@ static bool WasmHandleDebugTrap() {
     return mode == ResumeMode::Continue;
   }
   if (site->kind() == CallSite::LeaveFrame) {
-    if (!debugFrame->updateReturnJSValue()) {
-      return false;
-    }
+    debugFrame->updateReturnJSValue();
     bool ok = DebugAPI::onLeaveFrame(cx, debugFrame, nullptr, true);
     debugFrame->leave(cx);
     return ok;
@@ -1252,16 +1250,14 @@ void* wasm::SymbolicAddressTarget(SymbolicAddress sym) {
 static Maybe<ABIFunctionType> ToBuiltinABIFunctionType(
     const FuncType& funcType) {
   const ValTypeVector& args = funcType.args();
-  if (!funcType.ret()) {
-    return Nothing();
-  }
+  ExprType ret = funcType.ret();
 
   uint32_t abiType;
-  switch (funcType.ret().ref().code()) {
-    case ValType::F32:
+  switch (ret.code()) {
+    case ExprType::F32:
       abiType = ArgType_Float32 << RetType_Shift;
       break;
-    case ValType::F64:
+    case ExprType::F64:
       abiType = ArgType_Double << RetType_Shift;
       break;
     default:

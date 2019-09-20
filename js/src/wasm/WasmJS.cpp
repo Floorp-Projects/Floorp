@@ -86,19 +86,6 @@ bool wasm::HasGcSupport(JSContext* cx) {
 #endif
 }
 
-bool wasm::HasMultiValueSupport(JSContext* cx) {
-#ifdef ENABLE_WASM_CRANELIFT
-  if (cx->options().wasmCranelift()) {
-    return false;
-  }
-#endif
-#ifdef ENABLE_WASM_MULTI_VALUE
-  return true;
-#else
-  return false;
-#endif
-}
-
 bool wasm::HasCompilerSupport(JSContext* cx) {
 #if !MOZ_LITTLE_ENDIAN || defined(JS_CODEGEN_NONE)
   return false;
@@ -814,18 +801,11 @@ static JSString* FuncTypeToString(JSContext* cx, const FuncType& funcType) {
     return nullptr;
   }
 
-  first = true;
-  for (ValType result : funcType.results()) {
-    if (!first && !buf.append(", ", strlen(", "))) {
+  if (funcType.ret() != ExprType::Void) {
+    const char* retStr = ToCString(funcType.ret());
+    if (!buf.append(retStr, strlen(retStr))) {
       return nullptr;
     }
-
-    const char* resultStr = ToCString(result);
-    if (!buf.append(resultStr, strlen(resultStr))) {
-      return nullptr;
-    }
-
-    first = false;
   }
 
   if (!buf.append(')')) {
