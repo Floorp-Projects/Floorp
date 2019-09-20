@@ -38,6 +38,7 @@ class ThreadEventQueue final : public SynchronizedEventQueue {
 
   already_AddRefed<nsIRunnable> GetEvent(bool aMayWait,
                                          EventQueuePriority* aPriority) final;
+  void DidRunEvent() final;
   bool HasPendingEvent() final;
   bool HasPendingHighPriorityEvents() final;
 
