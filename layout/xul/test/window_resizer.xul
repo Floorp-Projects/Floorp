@@ -90,7 +90,7 @@ function doTest() {
   });
 
   window.close();
-  window.opener.lastResizerTest();
+  window.arguments[0].lastResizerTest();
 }
 ]]></script>
 	<hbox id="container" flex="1">
