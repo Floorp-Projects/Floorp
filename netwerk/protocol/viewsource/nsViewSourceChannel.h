@@ -11,7 +11,6 @@
 #include "nsCOMPtr.h"
 #include "nsIApplicationCacheChannel.h"
 #include "nsICachingChannel.h"
-#include "nsICrossProcessSwitchChannel.h"
 #include "nsIFormPOSTActionChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
@@ -26,8 +25,7 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
                                   public nsIHttpChannelInternal,
                                   public nsICachingChannel,
                                   public nsIApplicationCacheChannel,
-                                  public nsIFormPOSTActionChannel,
-                                  public nsIProcessSwitchRequestor {
+                                  public nsIFormPOSTActionChannel {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUEST
@@ -37,7 +35,6 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSIHTTPCHANNEL
-  NS_DECL_NSIPROCESSSWITCHREQUESTOR
   NS_FORWARD_SAFE_NSICACHEINFOCHANNEL(mCacheInfoChannel)
   NS_FORWARD_SAFE_NSICACHINGCHANNEL(mCachingChannel)
   NS_FORWARD_SAFE_NSIAPPLICATIONCACHECHANNEL(mApplicationCacheChannel)
@@ -85,9 +82,6 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
   bool mIsDocument;  // keeps track of the LOAD_DOCUMENT_URI flag
   bool mOpened;
   bool mIsSrcdocChannel;
-
- private:
-  bool IsNsHttpChannel() const;
 };
 
 #endif /* nsViewSourceChannel_h___ */
