@@ -271,7 +271,7 @@ already_AddRefed<IDBFileRequest> IDBFileHandle::GetMetadata(
 
   // Argument checking for get metadata.
   if (!aParameters.mSize && !aParameters.mLastModified) {
-    aRv.ThrowTypeError<MSG_METADATA_NOT_CONFIGURED>();
+    aRv.ThrowTypeError(u"Either size or lastModified should be true.");
     return nullptr;
   }
 
@@ -392,7 +392,7 @@ bool IDBFileHandle::CheckStateAndArgumentsForRead(uint64_t aSize,
 
   // Argument checking for read
   if (!aSize) {
-    aRv.ThrowTypeError<MSG_INVALID_READ_SIZE>();
+    aRv.ThrowTypeError(u"0 (Zero) is not a valid read size.");
     return false;
   }
 

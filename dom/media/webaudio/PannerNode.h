@@ -94,7 +94,8 @@ class PannerNode final : public AudioNode {
     }
 
     if (aRefDistance < 0) {
-      aRv.template ThrowRangeError<MSG_INVALID_PANNERNODE_REFDISTANCE_ERROR>();
+      aRv.ThrowRangeError(
+          u"The refDistance value passed to PannerNode must not be negative.");
       return;
     }
 
@@ -109,7 +110,8 @@ class PannerNode final : public AudioNode {
     }
 
     if (aMaxDistance <= 0) {
-      aRv.template ThrowRangeError<MSG_INVALID_PANNERNODE_MAXDISTANCE_ERROR>();
+      aRv.ThrowRangeError(
+          u"The maxDistance value passed to PannerNode must be positive.");
       return;
     }
 
@@ -124,7 +126,9 @@ class PannerNode final : public AudioNode {
     }
 
     if (aRolloffFactor < 0) {
-      aRv.template ThrowRangeError<MSG_INVALID_PANNERNODE_ROLLOFF_ERROR>();
+      aRv.ThrowRangeError(
+          u"The rolloffFactor value passed to PannerNode must not be "
+          u"negative.");
     }
 
     mRolloffFactor = aRolloffFactor;

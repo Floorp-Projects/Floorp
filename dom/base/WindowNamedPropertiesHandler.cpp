@@ -148,7 +148,8 @@ bool WindowNamedPropertiesHandler::defineProperty(
     JS::Handle<JS::PropertyDescriptor> aDesc,
     JS::ObjectOpResult& result) const {
   ErrorResult rv;
-  rv.ThrowTypeError<MSG_DEFINEPROPERTY_ON_GSP>();
+  rv.ThrowTypeError(
+      u"Not allowed to define a property on the named properties object.");
   MOZ_ALWAYS_TRUE(rv.MaybeSetPendingException(aCx));
   return false;
 }

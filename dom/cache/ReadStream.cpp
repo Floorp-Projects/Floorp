@@ -208,7 +208,8 @@ void ReadStream::Inner::Serialize(
   MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut);
 
   if (mState != Open) {
-    aRv.ThrowTypeError<MSG_CACHE_STREAM_CLOSED>();
+    aRv.ThrowTypeError(
+        u"Response body is a cache file stream that has already been closed.");
     return;
   }
 
