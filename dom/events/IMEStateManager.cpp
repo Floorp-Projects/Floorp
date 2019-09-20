@@ -21,10 +21,11 @@
 #include "mozilla/ToString.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/MouseEventBinding.h"
-#include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/UserActivation.h"
 
 #include "HTMLInputElement.h"
 #include "IMEContentObserver.h"
@@ -1317,9 +1318,9 @@ void IMEStateManager::SetIMEState(const IMEState& aState,
 
   if ((aAction.mCause == InputContextAction::CAUSE_UNKNOWN ||
        aAction.mCause == InputContextAction::CAUSE_UNKNOWN_CHROME) &&
-      EventStateManager::IsHandlingUserInput()) {
+      UserActivation::IsHandlingUserInput()) {
     aAction.mCause =
-        EventStateManager::IsHandlingKeyboardInput()
+        UserActivation::IsHandlingKeyboardInput()
             ? InputContextAction::CAUSE_UNKNOWN_DURING_KEYBOARD_INPUT
             : InputContextAction::CAUSE_UNKNOWN_DURING_NON_KEYBOARD_INPUT;
   }
