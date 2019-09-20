@@ -7593,7 +7593,8 @@ nsresult nsTextFrame::GetCharacterRectsInRange(int32_t aInOffset,
       gfxSkipCharsIterator nextIter(iter);
       nextIter.AdvanceOriginal(1);
       if (!nextIter.IsOriginalCharSkipped() &&
-          !mTextRun->IsClusterStart(nextIter.GetSkippedOffset())) {
+          !mTextRun->IsClusterStart(nextIter.GetSkippedOffset()) &&
+          nextIter.GetOriginalOffset() < kContentEnd) {
         FindClusterEnd(mTextRun, kContentEnd, &nextIter);
       }
 

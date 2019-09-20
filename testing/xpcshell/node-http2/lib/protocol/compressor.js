@@ -66,7 +66,7 @@ function entryFromPair(pair) {
 var DEFAULT_HEADER_TABLE_LIMIT = 4096;
 
 function size(entry) {
-  return (new Buffer(entry[0] + entry[1], 'utf8')).length + 32;
+  return (Buffer.from(entry[0] + entry[1], 'utf8')).length + 32;
 }
 
 // The `add(index, entry)` can be used to [manage the header table][tablemgmt]:
@@ -396,7 +396,7 @@ HeaderSetCompressor.prototype._flush = function _flush(callback) {
 HeaderSetCompressor.integer = function writeInteger(I, N) {
   var limit = Math.pow(2,N) - 1;
   if (I < limit) {
-    return [new Buffer([I])];
+    return [Buffer.from([I])];
   }
 
   var bytes = [];
@@ -418,7 +418,7 @@ HeaderSetCompressor.integer = function writeInteger(I, N) {
     I = Q;
   }
 
-  return [new Buffer(bytes)];
+  return [Buffer.from(bytes)];
 };
 
 // The inverse algorithm:
@@ -530,7 +530,7 @@ HuffmanTable.prototype.encode = function encode(buffer) {
     add(this.codes[256] >> (this.lengths[256] - space));
   }
 
-  return new Buffer(result);
+  return Buffer.from(result);
 };
 
 HuffmanTable.prototype.decode = function decode(buffer) {
@@ -552,7 +552,7 @@ HuffmanTable.prototype.decode = function decode(buffer) {
     }
   }
 
-  return new Buffer(result);
+  return Buffer.from(result);
 };
 
 // The initializer arrays for the Huffman tables are generated with feeding the tables from the
@@ -852,7 +852,7 @@ HuffmanTable.huffmanTable = new HuffmanTable([
 //     +---+---+---+---+---+---+---+---+
 
 HeaderSetCompressor.string = function writeString(str) {
-  str = new Buffer(str, 'utf8');
+  str = Buffer.from(str, 'utf8');
 
   var huffman = HuffmanTable.huffmanTable.encode(str);
   if (huffman.length < str.length) {
@@ -1341,7 +1341,7 @@ function concat(buffers) {
     size += buffers[i].length;
   }
 
-  var concatenated = new Buffer(size);
+  var concatenated = Buffer.alloc(size);
   for (var cursor = 0, j = 0; j < buffers.length; cursor += buffers[j].length, j++) {
     buffers[j].copy(concatenated, cursor);
   }

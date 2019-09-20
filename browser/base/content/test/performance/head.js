@@ -276,7 +276,7 @@ function forceImmediateToolbarOverflowHandling(win) {
     // in the middle of a reflow test, we record the reflows deterministically.
     let dwu = win.windowUtils;
     dwu.ensureDirtyRootFrame();
-    overflowableToolbar._onLazyResize();
+    overflowableToolbar._checkOverflow();
   }
 }
 

@@ -1,3 +1,5 @@
+test-pref(layout.css.xul-box-display-values.content.enabled,true) test-pref(layout.css.xul-box-display-values.survive-blockification.enabled,true) == box-as-grid-or-flex-item-1.html box-as-grid-or-flex-item-1-ref.html
+
 == flexbox-abspos-container-1a.html flexbox-abspos-container-1-ref.html
 == flexbox-abspos-container-1b.html flexbox-abspos-container-1-ref.html
 == flexbox-abspos-container-1c.html flexbox-abspos-container-1-ref.html

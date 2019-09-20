@@ -345,7 +345,7 @@ Stream.prototype._send = function _send() {
 // flag on the last frame. If there's no frame in the queue, or if it doesn't support this flag,
 // then we create a 0 length DATA frame. We could do this all the time, but putting the flag on an
 // existing frame is a nice optimization.
-var emptyBuffer = new Buffer(0);
+var emptyBuffer = Buffer.alloc(0);
 Stream.prototype._finishing = function _finishing() {
   var endFrame = {
     type: 'DATA',

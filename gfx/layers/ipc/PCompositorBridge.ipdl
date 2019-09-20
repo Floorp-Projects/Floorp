@@ -258,6 +258,7 @@ parent:
   async PTexture(SurfaceDescriptor aSharedData, ReadLockDescriptor aReadLock, LayersBackend aBackend, TextureFlags aTextureFlags, LayersId id, uint64_t aSerial, MaybeExternalImageId aExternalImageId);
 
   async InitPCanvasParent(Endpoint<PCanvasParent> aEndpoint);
+  async ReleasePCanvasParent();
 
   sync SyncWithCompositor();
 

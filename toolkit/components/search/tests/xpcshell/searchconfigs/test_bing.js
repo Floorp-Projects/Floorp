@@ -98,6 +98,7 @@ const test = new SearchConfigTest({
     {
       included: [{}],
       domain: "bing.com",
+      telemetryId: "bing",
       codes: {
         searchbar: "form=MOZSBR",
         keyword: "form=MOZLBR",
