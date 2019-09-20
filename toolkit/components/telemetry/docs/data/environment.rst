@@ -44,6 +44,10 @@ Structure:
           origin: <string>, // 'default', 'verified', 'unverified', or 'invalid'; based on the presence and validity of the engine's loadPath verification hash.
           submissionURL: <string> // set for default engines or well known search domains
         },
+        defaultPrivateSearchEngine: <string>, // e.g. "duckduckgo"
+        defaultPrivateSearchEngine: {,
+          // data about the current default engine for private browsing mode. Same as defaultSearchEngineData.
+        },
         searchCohort: <string>, // optional, contains an identifier for any active search A/B experiments
         launcherProcessState: <integer>, // optional, values correspond to values of mozilla::LauncherRegistryInfo::EnabledState enum
         e10sEnabled: <bool>, // whether e10s is on, i.e. browser tabs open by default in a different process
@@ -340,6 +344,16 @@ The object contains:
 
 ``loadPath`` and ``submissionURL`` are not present if ``name`` is ``NONE``.
 
+defaultPrivateSearchEngineData
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This contains the data identifying the engine current set as the default for
+private browsing mode. This may be the same engine as set for normal browsing
+mode.
+
+This object contains the same information as ``defaultSearchEngineData``. It
+is only reported if the ``browser.search.separatePrivateDefault`` preference is
+set to ``true``.
+
 searchCohort
 ~~~~~~~~~~~~
 
@@ -491,4 +505,3 @@ Version History
 - Firefox 61:
 
   - Removed empty ``addons.activeExperiment`` (`bug 1452935 <https://bugzilla.mozilla.org/show_bug.cgi?id=1452935>`_).
-

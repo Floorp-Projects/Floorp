@@ -1,7 +1,9 @@
 import random
 import os
-from condprof.util import get_logger, TabSwitcher
 import asyncio
+
+from condprof.util import get_logger
+from condprof.helpers import TabSwitcher
 
 
 WORDS = os.path.join(os.path.dirname(__file__), "words.txt")

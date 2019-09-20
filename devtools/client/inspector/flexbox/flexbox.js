@@ -30,7 +30,6 @@ class FlexboxInspector {
     this.inspector = inspector;
     this.selection = inspector.selection;
     this.store = inspector.store;
-    this.walker = inspector.walker;
 
     this.onHighlighterShown = this.onHighlighterShown.bind(this);
     this.onHighlighterHidden = this.onHighlighterHidden.bind(this);
@@ -56,19 +55,8 @@ class FlexboxInspector {
     return this._highlighters;
   }
 
-  async init() {
+  init() {
     if (!this.inspector) {
-      return;
-    }
-    try {
-      this.hasGetCurrentFlexbox = await this.inspector.currentTarget.actorHasMethod(
-        "layout",
-        "getCurrentFlexbox"
-      );
-      this.layoutInspector = await this.walker.getLayoutInspector();
-    } catch (e) {
-      // These calls might fail if called asynchrously after the toolbox is finished
-      // closing.
       return;
     }
 
@@ -126,12 +114,9 @@ class FlexboxInspector {
     this._highlighters = null;
     this._overlayColor = null;
     this.document = null;
-    this.hasGetCurrentFlexbox = null;
     this.inspector = null;
-    this.layoutInspector = null;
     this.selection = null;
     this.store = null;
-    this.walker = null;
   }
 
   getComponentProps() {
@@ -168,7 +153,8 @@ class FlexboxInspector {
    * @return {Object} consisting of the given node's flex container's properties.
    */
   async getFlexContainerProps(nodeFront, onlyLookAtParents = false) {
-    const flexboxFront = await this.layoutInspector.getCurrentFlexbox(
+    const layoutFront = await nodeFront.walkerFront.getLayoutInspector();
+    const flexboxFront = await layoutFront.getCurrentFlexbox(
       nodeFront,
       onlyLookAtParents
     );
@@ -182,7 +168,7 @@ class FlexboxInspector {
     // particular DOM Node in the tree yet or when we are connected to an older server.
     let containerNodeFront = flexboxFront.containerNodeFront;
     if (!containerNodeFront) {
-      containerNodeFront = await this.walker.getNodeFromActor(
+      containerNodeFront = await flexboxFront.walkerFront.getNodeFromActor(
         flexboxFront.actorID,
         ["containerEl"]
       );
@@ -229,7 +215,7 @@ class FlexboxInspector {
       // Fetch the NodeFront of the flex items.
       let itemNodeFront = flexItemFront.nodeFront;
       if (!itemNodeFront) {
-        itemNodeFront = await this.walker.getNodeFromActor(
+        itemNodeFront = await flexItemFront.walkerFront.getNodeFromActor(
           flexItemFront.actorID,
           ["element"]
         );
@@ -352,7 +338,6 @@ class FlexboxInspector {
       !this.isPanelVisible() ||
       !this.store ||
       !this.selection.nodeFront ||
-      !this.hasGetCurrentFlexbox ||
       this._isUpdating
     ) {
       return;
@@ -507,12 +492,7 @@ class FlexboxInspector {
 
     // Stop refreshing if the inspector or store is already destroyed or no node is
     // selected.
-    if (
-      !this.inspector ||
-      !this.store ||
-      !this.selection.nodeFront ||
-      !this.hasGetCurrentFlexbox
-    ) {
+    if (!this.inspector || !this.store || !this.selection.nodeFront) {
       this._isUpdating = false;
       return;
     }

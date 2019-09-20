@@ -1697,7 +1697,7 @@ FxAccountsInternal.prototype = {
    * @param {Object} jwk
    */
   async createKeysJWE(clientId, scope, jwk) {
-    let scopedKeys = await this.getScopedKeys(scope, clientId);
+    let scopedKeys = await this.keys.getScopedKeys(scope, clientId);
     scopedKeys = new TextEncoder().encode(JSON.stringify(scopedKeys));
     return jwcrypto.generateJWE(jwk, scopedKeys);
   },

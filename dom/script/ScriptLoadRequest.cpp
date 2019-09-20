@@ -95,7 +95,8 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
       mLineNo(1),
       mIntegrity(aIntegrity),
       mReferrer(aReferrer),
-      mUnreportedPreloadError(NS_OK) {
+      mUnreportedPreloadError(NS_OK),
+      mStreamingTime() {
   MOZ_ASSERT(mFetchOptions);
 }
 

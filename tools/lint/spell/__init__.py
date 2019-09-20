@@ -18,6 +18,7 @@ from mozfile import which
 from mozlint import result
 from mozlint.util import pip
 from mozprocess import ProcessHandlerMixin
+from six import PY3
 
 here = os.path.abspath(os.path.dirname(__file__))
 CODESPELL_REQUIREMENTS_PATH = os.path.join(here, 'codespell_requirements.txt')
@@ -43,7 +44,10 @@ CODESPELL_FORMAT_REGEX = re.compile(r'(.*):(.*): (.*) ==> (.*)$')
 class CodespellProcess(ProcessHandlerMixin):
     def __init__(self, config, *args, **kwargs):
         self.config = config
-        kwargs['processOutputLine'] = [self.process_line]
+        kwargs = {
+            'processOutputLine': [self.process_line],
+            'universal_newlines': PY3,
+        }
         ProcessHandlerMixin.__init__(self, *args, **kwargs)
 
     def process_line(self, line):
@@ -93,14 +97,14 @@ def get_codespell_binary():
     return which('codespell')
 
 
-def lint(paths, config, fix=None, **lintargs):
-
+def setup(root, **lintargs):
     if not pip.reinstall_program(CODESPELL_REQUIREMENTS_PATH):
         print(CODESPELL_INSTALL_ERROR)
         return 1
 
-    binary = get_codespell_binary()
 
+def lint(paths, config, fix=None, **lintargs):
+    binary = get_codespell_binary()
     if not binary:
         print(CODESPELL_NOT_FOUND)
         if 'MOZ_AUTOMATION' in os.environ:

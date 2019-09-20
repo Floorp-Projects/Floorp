@@ -14,8 +14,19 @@ namespace mozilla {
 extern mozilla::LazyLogModule gDataChannelLog;
 }
 
-#undef LOG
-#define LOG(args) \
+#define DC_ERROR(args) \
+  MOZ_LOG(mozilla::gDataChannelLog, mozilla::LogLevel::Error, args)
+
+#define DC_WARN(args) \
+  MOZ_LOG(mozilla::gDataChannelLog, mozilla::LogLevel::Warning, args)
+
+#define DC_INFO(args) \
+  MOZ_LOG(mozilla::gDataChannelLog, mozilla::LogLevel::Info, args)
+
+#define DC_DEBUG(args) \
   MOZ_LOG(mozilla::gDataChannelLog, mozilla::LogLevel::Debug, args)
+
+#define DC_VERBOSE(args) \
+  MOZ_LOG(mozilla::gDataChannelLog, mozilla::LogLevel::Verbose, args)
 
 #endif

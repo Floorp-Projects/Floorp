@@ -105,19 +105,26 @@ add_task(async function() {
           // wish to confirm that targeting is able to find
           // appropriate browsing contexts.
 
-          function reachable(start, targets) {
-            for (let target of targets) {
-              is(
-                start.findWithName(target.name, start),
-                target,
-                [start.name, "can reach", target.name].join(" ")
-              );
-            }
+          // BrowsingContext.findWithName requires access checks, which
+          // can only be performed in the process of the accessor BC's
+          // docShell.
+          function findWithName(bc, name) {
+            return content.SpecialPowers.spawn(bc, [bc, name], (bc, name) => {
+              return bc.findWithName(name, bc);
+            });
           }
 
-          function unreachable(start, target) {
+          async function reachable(start, target) {
             is(
-              start.findWithName(target.name, start),
+              await findWithName(start, target.name),
+              target,
+              [start.name, "can reach", target.name].join(" ")
+            );
+          }
+
+          async function unreachable(start, target) {
+            is(
+              await findWithName(start, target.name),
               null,
               [start.name, "can't reach", target.name].join(" ")
             );
@@ -140,18 +147,29 @@ add_task(async function() {
           });
           info("seventh");
 
-          let frames = [
-            BrowsingContext.getFromWindow(top),
-            first,
-            second,
-            third,
-            fourth,
-            fifth,
-            sixth,
-          ];
-          for (let start of frames) {
-            reachable(start, frames);
-            unreachable(start, seventh);
+          let origin1 = [first, second, fifth, sixth];
+          let origin2 = [third, fourth];
+
+          let topBC = BrowsingContext.getFromWindow(top);
+          let frames = new Map([
+            [topBC, [topBC, first, second, third, fourth, fifth, sixth]],
+            [first, [topBC, ...origin1, third, fourth]],
+            [second, [topBC, ...origin1, third, fourth]],
+            [third, [topBC, ...origin2, fifth, sixth]],
+            [fourth, [topBC, ...origin2, fifth, sixth]],
+            [fifth, [topBC, ...origin1, third, fourth]],
+            [sixth, [...origin1, third, fourth]],
+          ]);
+
+          for (let [start, accessible] of frames) {
+            for (let frame of frames.keys()) {
+              if (accessible.includes(frame)) {
+                await reachable(start, frame);
+              } else {
+                await unreachable(start, frame);
+              }
+            }
+            await unreachable(start, seventh);
           }
         }
       );

@@ -5,9 +5,6 @@
 // This error shows up sometimes when running the test, and while this is a
 // strange problem that shouldn't be happening it doesn't prevent the test from
 // completing successfully.
-const { PromiseTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromiseTestUtils.jsm"
-);
 PromiseTestUtils.whitelistRejectionsGlobally(/Current state is running/);
 
 function findNode(dbg, text) {

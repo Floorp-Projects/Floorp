@@ -14,6 +14,7 @@ from mozfile import which
 from mozlint import result
 from mozlint.pathutils import get_ancestors_by_name
 from mozprocess import ProcessHandlerMixin
+from six import string_types
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -112,7 +113,7 @@ def run_process(config, cmd):
 
 def gen_yamllint_args(cmdargs, paths=None, conf_file=None):
     args = cmdargs[:]
-    if isinstance(paths, basestring):
+    if isinstance(paths, string_types):
         paths = [paths]
     if conf_file and conf_file != 'default':
         return args + ['-c', conf_file] + paths

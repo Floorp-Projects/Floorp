@@ -77,6 +77,7 @@ export default class LoginList extends HTMLElement {
       "empty-search",
       this._filter && !visibleLoginGuids.size
     );
+    this._sortSelect.disabled = !visibleLoginGuids.size;
 
     // Add all of the logins that are not in the DOM yet.
     let fragment = document.createDocumentFragment();
@@ -160,6 +161,9 @@ export default class LoginList extends HTMLElement {
       case "change": {
         this._applySort();
         this.render();
+        this._list.scrollTop = 0;
+        const extra = { sort_key: this._sortSelect.value };
+        recordTelemetryEvent({ object: "list", method: "sort", extra });
         break;
       }
       case "AboutLoginsClearSelection": {

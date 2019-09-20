@@ -2,15 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// Debugger operations may still be in progress when we switch threads.
-const { PromiseTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromiseTestUtils.jsm"
-);
-PromiseTestUtils.whitelistRejectionsGlobally(
-  /Current thread has paused or resumed/
-);
-PromiseTestUtils.whitelistRejectionsGlobally(/Current thread has changed/);
-
 function assertClass(dbg, selector, className, ...args) {
   ok(
     findElement(dbg, selector, ...args).classList.contains(className),
