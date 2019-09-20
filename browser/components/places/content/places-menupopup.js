@@ -30,23 +30,6 @@
       for (let event_name of event_names) {
         this.addEventListener(event_name, ev => this[`on_${event_name}`](ev));
       }
-
-      this.attachShadow({ mode: "open" });
-      this.shadowRoot.appendChild(this.fragment);
-
-      this._indicatorBar = this.shadowRoot.querySelector(
-        "[part=drop-indicator-bar]"
-      );
-      this._scrollBox = this.shadowRoot.querySelector(".popup-internal-box");
-    }
-
-    get fragment() {
-      if (!this.constructor.hasOwnProperty("_fragment")) {
-        this.constructor._fragment = MozXULElement.parseXULToFragment(
-          this.markup
-        );
-      }
-      return document.importNode(this.constructor._fragment, true);
     }
 
     get markup() {
@@ -218,6 +201,15 @@
           }
         },
       };
+    }
+
+    get _indicatorBar() {
+      if (!this.__indicatorBar) {
+        this.__indicatorBar = this.shadowRoot.querySelector(
+          "[part=drop-indicator-bar]"
+        );
+      }
+      return this.__indicatorBar;
     }
 
     /**
@@ -495,7 +487,7 @@
         scrollDir = 1;
       }
       if (scrollDir != 0) {
-        this._scrollBox.scrollByIndex(scrollDir, true);
+        this.scrollBox.scrollByIndex(scrollDir, true);
       }
 
       // Check if we should hide the drop indicator for this target.
@@ -507,7 +499,7 @@
       }
 
       // We should display the drop indicator relative to the arrowscrollbox.
-      let scrollRect = this._scrollBox.getBoundingClientRect();
+      let scrollRect = this.scrollBox.getBoundingClientRect();
       let newMarginTop = 0;
       if (scrollDir == 0) {
         let elt = this.firstElementChild;
@@ -518,14 +510,14 @@
           elt = elt.nextElementSibling;
         }
         newMarginTop = elt
-          ? elt.screenY - this._scrollBox.screenY
+          ? elt.screenY - this.scrollBox.screenY
           : scrollRect.height;
       } else if (scrollDir == 1) {
         newMarginTop = scrollRect.height;
       }
 
       // Set the new marginTop based on arrowscrollbox.
-      newMarginTop += scrollRect.y - this._scrollBox.getBoundingClientRect().y;
+      newMarginTop += scrollRect.y - this.scrollBox.getBoundingClientRect().y;
       this._indicatorBar.firstElementChild.style.marginTop =
         newMarginTop + "px";
       this._indicatorBar.hidden = false;

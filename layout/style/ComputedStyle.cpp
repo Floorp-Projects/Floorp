@@ -40,11 +40,54 @@
 
 namespace mozilla {
 
-//----------------------------------------------------------------------
-
 ComputedStyle::ComputedStyle(PseudoStyleType aPseudoType,
                              ServoComputedDataForgotten aComputedValues)
     : mSource(aComputedValues), mPseudoType(aPseudoType) {}
+
+// If a struct returned nsChangeHint_UpdateContainingBlock, that means that one
+// property's influence on whether we're a containing block for abs-pos or
+// fixed-pos elements has changed.
+//
+// However, we only need to return the hint if the overall computation of
+// whether we establish a containing block has really changed.
+static bool ContainingBlockMayHaveChanged(const ComputedStyle& aOldStyle,
+                                          const ComputedStyle& aNewStyle) {
+  auto* oldDisp = aOldStyle.StyleDisplay();
+  auto* newDisp = aNewStyle.StyleDisplay();
+
+  if (oldDisp->IsAbsPosContainingBlockForNonSVGTextFrames() !=
+        newDisp->IsAbsPosContainingBlockForNonSVGTextFrames()) {
+    return true;
+  }
+
+  bool fixedCB =
+      oldDisp->IsFixedPosContainingBlockForNonSVGTextFrames(aOldStyle);
+  if (fixedCB != newDisp->IsFixedPosContainingBlockForNonSVGTextFrames(aNewStyle)) {
+    return true;
+  }
+  // If we were both before and after a fixed-pos containing-block that means
+  // that everything else doesn't matter, since all the other conditions are a
+  // subset of this.
+  if (fixedCB) {
+    return false;
+  }
+  // Note that neither of these two following sets of frames
+  // (transform-supporting and layout-and-paint-supporting frames) is a subset
+  // of the other, because table frames support contain: layout/paint but not
+  // transforms (which are instead inherited to the table wrapper), and quite a
+  // few frame types support transforms but not contain: layout/paint (e.g.,
+  // table rows and row groups, many SVG frames).
+  if (oldDisp->IsFixedPosContainingBlockForTransformSupportingFrames() !=
+        newDisp->IsFixedPosContainingBlockForTransformSupportingFrames()) {
+    return true;
+  }
+  if (oldDisp->IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames() !=
+        newDisp
+        ->IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames()) {
+    return true;
+  }
+  return false;
+}
 
 nsChangeHint ComputedStyle::CalcStyleDifference(const ComputedStyle& aNewStyle,
                                                 uint32_t* aEqualStructs) const {
@@ -192,48 +235,7 @@ nsChangeHint ComputedStyle::CalcStyleDifference(const ComputedStyle& aNewStyle,
   }
 
   if (hint & nsChangeHint_UpdateContainingBlock) {
-    // If a struct returned nsChangeHint_UpdateContainingBlock, that
-    // means that one property's influence on whether we're a containing
-    // block for abs-pos or fixed-pos elements has changed.  However, we
-    // only need to return the hint if the overall computation of
-    // whether we establish a containing block has changed.
-
-    // This depends on data in nsStyleDisplay and nsStyleEffects, so we do it
-    // here
-
-    // Note that it's perhaps good for this test to be last because it
-    // doesn't use Peek* functions to get the structs on the old
-    // context.  But this isn't a big concern because these struct
-    // getters should be called during frame construction anyway.
-    const nsStyleDisplay* oldDisp = StyleDisplay();
-    const nsStyleDisplay* newDisp = aNewStyle.StyleDisplay();
-    bool isFixedCB;
-    if (oldDisp->IsAbsPosContainingBlockForNonSVGTextFrames() ==
-            newDisp->IsAbsPosContainingBlockForNonSVGTextFrames() &&
-        (isFixedCB =
-             oldDisp->IsFixedPosContainingBlockForNonSVGTextFrames(*this)) ==
-            newDisp->IsFixedPosContainingBlockForNonSVGTextFrames(aNewStyle) &&
-        // transform-supporting frames are a subcategory of non-SVG-text
-        // frames, so no need to test this if isFixedCB is true (both
-        // before and after the change)
-        (isFixedCB ||
-         oldDisp->IsFixedPosContainingBlockForTransformSupportingFrames() ==
-             newDisp
-                 ->IsFixedPosContainingBlockForTransformSupportingFrames()) &&
-        // contain-layout-and-paint-supporting frames are a subset of
-        // non-SVG-text frames, so no need to test this if isFixedCB is true
-        // (both before and after the change).
-        //
-        // Note, however, that neither of these last two sets is a
-        // subset of the other, because table frames support contain:
-        // layout/paint but not transforms (which are instead inherited
-        // to the table wrapper), and quite a few frame types support
-        // transforms but not contain: layout/paint (e.g., table rows
-        // and row groups, many SVG frames).
-        (isFixedCB ||
-         oldDisp->IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames() ==
-             newDisp
-                 ->IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames())) {
+    if (!ContainingBlockMayHaveChanged(*this, aNewStyle)) {
       // While some styles that cause the frame to be a containing block
       // has changed, the overall result cannot have changed (no matter
       // what the frame type is).

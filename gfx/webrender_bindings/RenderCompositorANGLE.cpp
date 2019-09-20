@@ -14,6 +14,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/HelpersD3D11.h"
 #include "mozilla/layers/SyncObject.h"
+#include "mozilla/webrender/DCLayerTree.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/widget/WinCompositorWidget.h"
@@ -257,44 +258,19 @@ void RenderCompositorANGLE::CreateSwapChainForDCompIfPossible(
     return;
   }
 
-  RefPtr<IDCompositionDevice> dCompDevice =
-      gfx::DeviceManagerDx::Get()->GetDirectCompositionDevice();
-  if (!dCompDevice) {
-    return;
-  }
-  MOZ_ASSERT(XRE_IsGPUProcess());
-
-  RefPtr<IDXGIDevice> dxgiDevice;
-  mDevice->QueryInterface((IDXGIDevice**)getter_AddRefs(dxgiDevice));
-
-  RefPtr<IDXGIFactory> dxgiFactory;
-  {
-    RefPtr<IDXGIAdapter> adapter;
-    dxgiDevice->GetAdapter(getter_AddRefs(adapter));
-    adapter->GetParent(
-        IID_PPV_ARGS((IDXGIFactory**)getter_AddRefs(dxgiFactory)));
-  }
-
   HWND hwnd = mWidget->AsWindows()->GetCompositorHwnd();
   if (!hwnd) {
     gfxCriticalNote << "Compositor window was not created ";
     return;
   }
 
-  HRESULT hr = dCompDevice->CreateTargetForHwnd(
-      hwnd, TRUE, getter_AddRefs(mCompositionTarget));
-  if (FAILED(hr)) {
-    gfxCriticalNote << "Could not create DCompositionTarget: " << gfx::hexa(hr);
+  mDCLayerTree = DCLayerTree::Create(hwnd);
+  if (!mDCLayerTree) {
     return;
   }
+  MOZ_ASSERT(XRE_IsGPUProcess());
 
-  hr = dCompDevice->CreateVisual(getter_AddRefs(mVisual));
-  if (FAILED(hr)) {
-    gfxCriticalNote << "Could not create DCompositionVisualt: "
-                    << gfx::hexa(hr);
-    return;
-  }
-
+  HRESULT hr;
   RefPtr<IDXGISwapChain1> swapChain1;
   bool useTripleBuffering = gfx::gfxVars::UseWebRenderTripleBufferingWin();
 
@@ -326,11 +302,11 @@ void RenderCompositorANGLE::CreateSwapChainForDCompIfPossible(
     DXGI_RGBA color = {1.0f, 1.0f, 1.0f, 1.0f};
     swapChain1->SetBackgroundColor(&color);
     mSwapChain = swapChain1;
-    mVisual->SetContent(swapChain1);
-    mCompositionTarget->SetRoot(mVisual);
-    mCompositionDevice = dCompDevice;
-    mCompositionDevice->Commit();
+    mDCLayerTree->SetDefaultSwapChain(swapChain1);
     mUseTripleBuffering = useTripleBuffering;
+  } else {
+    // Clear CLayerTree on falire
+    mDCLayerTree = nullptr;
   }
 }
 

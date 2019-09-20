@@ -6,8 +6,6 @@
 
 // Test event logpoints when replaying.
 add_task(async function() {
-  await pushPref("devtools.debugger.features.log-event-breakpoints", true);
-
   const dbg = await attachRecordingDebugger("doc_events.html", {
     waitForRecording: true,
   });

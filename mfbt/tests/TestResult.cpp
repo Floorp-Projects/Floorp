@@ -231,6 +231,16 @@ using UniqueResult = Result<UniquePtr<int>, const char*>;
 static UniqueResult UniqueTask() { return mozilla::MakeUnique<int>(3); }
 static UniqueResult UniqueTaskError() { return Err("bad"); }
 
+using UniqueErrorResult = Result<int, UniquePtr<int>>;
+static UniqueErrorResult UniqueError() {
+  return Err(mozilla::MakeUnique<int>(4));
+}
+
+static Result<Ok, UniquePtr<int>> TryUniqueErrorResult() {
+  MOZ_TRY(UniqueError());
+  return Ok();
+}
+
 static void UniquePtrTest() {
   {
     auto result = UniqueTask();
@@ -255,6 +265,28 @@ static void UniquePtrTest() {
     result = UniqueResult(mozilla::MakeUnique<int>(6));
     MOZ_RELEASE_ASSERT(result.isOk());
     MOZ_RELEASE_ASSERT(result.inspect() && *result.inspect() == 6);
+  }
+
+  {
+    auto result = UniqueError();
+    MOZ_RELEASE_ASSERT(result.isErr());
+    MOZ_RELEASE_ASSERT(result.inspectErr());
+    MOZ_RELEASE_ASSERT(*result.inspectErr() == 4);
+    auto err = result.unwrapErr();
+    MOZ_RELEASE_ASSERT(!result.inspectErr());
+    MOZ_RELEASE_ASSERT(err);
+    MOZ_RELEASE_ASSERT(*err == 4);
+
+    result = UniqueErrorResult(0);
+    MOZ_RELEASE_ASSERT(result.isOk() && result.unwrap() == 0);
+  }
+
+  {
+    auto result = TryUniqueErrorResult();
+    MOZ_RELEASE_ASSERT(result.isErr());
+    auto err = result.unwrapErr();
+    MOZ_RELEASE_ASSERT(err && *err == 4);
+    MOZ_RELEASE_ASSERT(!result.inspectErr());
   }
 }
 

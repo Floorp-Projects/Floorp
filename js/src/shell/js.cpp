@@ -486,6 +486,8 @@ static bool enableWasmVerbose = false;
 static bool enableTestWasmAwaitTier2 = false;
 static bool enableAsyncStacks = false;
 static bool enableStreams = false;
+static bool enableReadableByteStreams = false;
+static bool enableBYOBStreamReaders = false;
 static bool enableFields = false;
 static bool enableAwaitFix = false;
 #ifdef JS_GC_ZEAL
@@ -3797,6 +3799,8 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
   options.creationOptions()
       .setSharedMemoryAndAtomicsEnabled(enableSharedMemory)
       .setStreamsEnabled(enableStreams)
+      .setReadableByteStreamsEnabled(enableReadableByteStreams)
+      .setBYOBStreamReadersEnabled(enableBYOBStreamReaders)
       .setFieldsEnabled(enableFields)
       .setAwaitFixEnabled(enableAwaitFix);
 }
@@ -10272,6 +10276,8 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
   enableAsyncStacks = !op.getBoolOption("no-async-stacks");
   enableStreams = !op.getBoolOption("no-streams");
+  enableReadableByteStreams = op.getBoolOption("enable-readable-byte-streams");
+  enableBYOBStreamReaders = op.getBoolOption("enable-byob-stream-readers");
   enableFields = !op.getBoolOption("disable-experimental-fields");
   enableAwaitFix = op.getBoolOption("enable-experimental-await-fix");
 
@@ -11033,6 +11039,12 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "enable-streams",
                         "Enable WHATWG Streams (default)") ||
       !op.addBoolOption('\0', "no-streams", "Disable WHATWG Streams") ||
+      !op.addBoolOption('\0', "enable-readable-byte-streams",
+                        "Enable support for WHATWG ReadableStreams of type "
+                        "'bytes'") ||
+      !op.addBoolOption('\0', "enable-byob-stream-readers",
+                        "Enable support for getting BYOB readers for WHATWG "
+                        "ReadableStreams of type \"bytes\"") ||
       !op.addBoolOption('\0', "disable-experimental-fields",
                         "Disable public fields in classes") ||
       !op.addBoolOption('\0', "enable-experimental-await-fix",

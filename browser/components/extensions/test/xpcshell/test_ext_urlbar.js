@@ -210,6 +210,16 @@ add_task(async function test_onProviderResultsRequested() {
             },
           },
           {
+            type: "tip",
+            source: "local",
+            payload: {
+              text: "Test tip-local result text",
+              buttonText: "Test tip-local result button text",
+              buttonUrl: "http://example.com/tip-button",
+              helpUrl: "http://example.com/tip-help",
+            },
+          },
+          {
             type: "url",
             source: "history",
             payload: {
@@ -256,6 +266,14 @@ add_task(async function test_onProviderResultsRequested() {
       source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       title: "test",
       heuristic: true,
+      payload: {
+        query: "test",
+        engine: "Test engine",
+        suggestion: undefined,
+        keyword: undefined,
+        icon: "",
+        keywordOffer: false,
+      },
     },
     // The second result should be our search suggestion result since the
     // default muxer sorts search suggestion results before other types.
@@ -264,6 +282,10 @@ add_task(async function test_onProviderResultsRequested() {
       source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       title: "Test search-search result",
       heuristic: false,
+      payload: {
+        engine: "Test engine",
+        suggestion: "Test search-search result",
+      },
     },
     // The rest of the results should appear in the order we returned them
     // above.
@@ -272,18 +294,45 @@ add_task(async function test_onProviderResultsRequested() {
       source: UrlbarUtils.RESULT_SOURCE.TABS,
       title: "Test remote_tab-tabs result",
       heuristic: false,
+      payload: {
+        title: "Test remote_tab-tabs result",
+        url: "http://example.com/remote_tab-tabs",
+        displayUrl: "example.com/remote_tab-tabs",
+      },
     },
     {
       type: UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
       source: UrlbarUtils.RESULT_SOURCE.TABS,
       title: "Test tab-tabs result",
       heuristic: false,
+      payload: {
+        title: "Test tab-tabs result",
+        url: "http://example.com/tab-tabs",
+        displayUrl: "example.com/tab-tabs",
+      },
+    },
+    {
+      type: UrlbarUtils.RESULT_TYPE.TIP,
+      source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      title: "",
+      heuristic: false,
+      payload: {
+        text: "Test tip-local result text",
+        buttonText: "Test tip-local result button text",
+        buttonUrl: "http://example.com/tip-button",
+        helpUrl: "http://example.com/tip-help",
+      },
     },
     {
       type: UrlbarUtils.RESULT_TYPE.URL,
       source: UrlbarUtils.RESULT_SOURCE.HISTORY,
       title: "Test url-history result",
       heuristic: false,
+      payload: {
+        title: "Test url-history result",
+        url: "http://example.com/url-history",
+        displayUrl: "example.com/url-history",
+      },
     },
   ];
 
@@ -292,6 +341,7 @@ add_task(async function test_onProviderResultsRequested() {
     source: r.source,
     title: r.title,
     heuristic: r.heuristic,
+    payload: r.payload,
   }));
 
   Assert.deepEqual(actualResults, expectedResults);
