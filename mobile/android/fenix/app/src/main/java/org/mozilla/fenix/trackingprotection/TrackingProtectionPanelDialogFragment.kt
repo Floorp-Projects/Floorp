@@ -158,7 +158,9 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), BackHan
             lifecycleScope.launch {
                 ExceptionDomains(context).toggle(host)
             }
-            context.components.useCases.sessionUseCases.reload.invoke()
+            with(context.components) {
+                useCases.sessionUseCases.reload.invoke(core.sessionManager.findSessionById(sessionId))
+            }
         }
         trackingProtectionStore.dispatch(TrackingProtectionAction.TrackerBlockingChanged(isEnabled))
     }
