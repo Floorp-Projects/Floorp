@@ -1,0 +1,136 @@
+diff --git a/media/audioipc/client/src/context.rs b/media/audioipc/client/src/context.rs
+--- a/media/audioipc/client/src/context.rs
++++ b/media/audioipc/client/src/context.rs
+@@ -1,15 +1,14 @@
+ // Copyright © 2017 Mozilla Foundation
+ //
+ // This program is made available under an ISC-style license.  See the
+ // accompanying file LICENSE for details
+ 
+ use assert_not_in_callback;
+-use audio_thread_priority::promote_current_thread_to_real_time;
+ use audioipc::codec::LengthDelimitedCodec;
+ use audioipc::platformhandle_passing::{framed_with_platformhandles, FramedWithPlatformHandles};
+ use audioipc::{core, rpc};
+ use audioipc::{messages, ClientMessage, ServerMessage};
+ use cubeb_backend::{
+     ffi, Context, ContextOps, DeviceCollectionRef, DeviceId, DeviceType, Error, Ops, Result,
+     Stream, StreamParams, StreamParamsRef,
+ };
+@@ -81,24 +80,16 @@ fn open_server_stream() -> Result<audioi
+             return Ok(audioipc::MessageStream::from_raw_fd(fd.as_raw()));
+         }
+ 
+         Err(Error::default())
+     }
+ }
+ 
+ fn register_thread(callback: Option<extern "C" fn(*const ::std::os::raw::c_char)>) {
+-    match promote_current_thread_to_real_time(0, 48000) {
+-        Ok(_) => {
+-            info!("Audio thread promoted to real-time.");
+-        }
+-        Err(_) => {
+-            warn!("Could not promote thread to real-time.");
+-        }
+-    }
+     if let Some(func) = callback {
+         let thr = thread::current();
+         let name = CString::new(thr.name().unwrap()).unwrap();
+         func(name.as_ptr());
+     }
+ }
+ 
+ fn create_thread_pool(init_params: CpuPoolInitParams) -> CpuPool {
+diff --git a/media/audioipc/client/src/lib.rs b/media/audioipc/client/src/lib.rs
+--- a/media/audioipc/client/src/lib.rs
++++ b/media/audioipc/client/src/lib.rs
+@@ -33,17 +33,16 @@ use stream::ClientStream;
+ use std::sync::{Mutex};
+ use futures_cpupool::CpuPool;
+ use audio_thread_priority::RtPriorityHandle;
+ cfg_if! {
+     if #[cfg(target_os = "linux")] {
+         use std::sync::{Arc, Condvar};
+         use std::ffi::CString;
+         use std::thread;
+-        use audio_thread_priority::promote_current_thread_to_real_time;
+     }
+ }
+ 
+ type InitParamsTls = std::cell::RefCell<Option<CpuPoolInitParams>>;
+ 
+ thread_local!(static IN_CALLBACK: std::cell::RefCell<bool> = std::cell::RefCell::new(false));
+ thread_local!(static CPUPOOL_INIT_PARAMS: InitParamsTls = std::cell::RefCell::new(None));
+ thread_local!(static G_PRIORITY_HANDLES: std::cell::RefCell<Vec<RtPriorityHandle>> = std::cell::RefCell::new(vec![]));
+@@ -114,26 +113,16 @@ cfg_if! {
+             // It is critical that this function waits until the various threads are created, promoted to
+             // real-time, and _then_ return, because the sandbox lockdown happens right after returning
+             // from here.
+             let pair = Arc::new((Mutex::new((*init_params).pool_size), Condvar::new()));
+             let pair2 = pair.clone();
+ 
+             let register_thread = move || {
+                 if let Some(func) = thread_create_callback {
+-                    match promote_current_thread_to_real_time(0, 48000) {
+-                        Ok(handle) => {
+-                            G_PRIORITY_HANDLES.with(|handles| {
+-                                (handles.borrow_mut()).push(handle);
+-                            });
+-                        }
+-                        Err(_) => {
+-                            warn!("Could not promote audio threads to real-time during initialization.");
+-                        }
+-                    }
+                     let thr = thread::current();
+                     let name = CString::new(thr.name().unwrap()).unwrap();
+                     func(name.as_ptr());
+                     let &(ref lock, ref cvar) = &*pair2;
+                     let mut count = lock.lock().unwrap();
+                     *count -= 1;
+                     cvar.notify_one();
+                 }
+diff --git a/media/audioipc/server/src/lib.rs b/media/audioipc/server/src/lib.rs
+--- a/media/audioipc/server/src/lib.rs
++++ b/media/audioipc/server/src/lib.rs
+@@ -24,17 +24,16 @@ use audioipc::core;
+ use audioipc::platformhandle_passing::framed_with_platformhandles;
+ use audioipc::rpc;
+ use audioipc::{MessageStream, PlatformHandle, PlatformHandleType};
+ use futures::sync::oneshot;
+ use futures::Future;
+ use std::error::Error;
+ use std::os::raw::c_void;
+ use std::ptr;
+-use audio_thread_priority::promote_current_thread_to_real_time;
+ 
+ mod server;
+ 
+ #[allow(deprecated)]
+ pub mod errors {
+     error_chain! {
+         links {
+             AudioIPC(::audioipc::errors::Error, ::audioipc::errors::ErrorKind);
+@@ -54,22 +53,16 @@ struct ServerWrapper {
+     callback_thread: core::CoreThread,
+ }
+ 
+ fn run() -> Result<ServerWrapper> {
+     trace!("Starting up cubeb audio server event loop thread...");
+ 
+     let callback_thread = try!(
+         core::spawn_thread("AudioIPC Callback RPC", || {
+-            match promote_current_thread_to_real_time(0, 48000) {
+-                Ok(_) => { }
+-                Err(_) => {
+-                    debug!("Failed to promote audio callback thread to real-time.");
+-                }
+-            }
+             trace!("Starting up cubeb audio callback event loop thread...");
+             Ok(())
+         }).or_else(|e| {
+             debug!(
+                 "Failed to start cubeb audio callback event loop thread: {:?}",
+                 e.description()
+             );
+             Err(e)

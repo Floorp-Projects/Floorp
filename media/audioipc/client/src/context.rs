@@ -4,7 +4,6 @@
 // accompanying file LICENSE for details
 
 use assert_not_in_callback;
-use audio_thread_priority::promote_current_thread_to_real_time;
 use audioipc::codec::LengthDelimitedCodec;
 use audioipc::platformhandle_passing::{framed_with_platformhandles, FramedWithPlatformHandles};
 use audioipc::{core, rpc};
@@ -86,14 +85,6 @@ fn open_server_stream() -> Result<audioipc::MessageStream> {
 }
 
 fn register_thread(callback: Option<extern "C" fn(*const ::std::os::raw::c_char)>) {
-    match promote_current_thread_to_real_time(0, 48000) {
-        Ok(_) => {
-            info!("Audio thread promoted to real-time.");
-        }
-        Err(_) => {
-            warn!("Could not promote thread to real-time.");
-        }
-    }
     if let Some(func) = callback {
         let thr = thread::current();
         let name = CString::new(thr.name().unwrap()).unwrap();

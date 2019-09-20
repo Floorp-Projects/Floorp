@@ -38,7 +38,6 @@ cfg_if! {
         use std::sync::{Arc, Condvar};
         use std::ffi::CString;
         use std::thread;
-        use audio_thread_priority::promote_current_thread_to_real_time;
     }
 }
 
@@ -119,16 +118,6 @@ cfg_if! {
 
             let register_thread = move || {
                 if let Some(func) = thread_create_callback {
-                    match promote_current_thread_to_real_time(0, 48000) {
-                        Ok(handle) => {
-                            G_PRIORITY_HANDLES.with(|handles| {
-                                (handles.borrow_mut()).push(handle);
-                            });
-                        }
-                        Err(_) => {
-                            warn!("Could not promote audio threads to real-time during initialization.");
-                        }
-                    }
                     let thr = thread::current();
                     let name = CString::new(thr.name().unwrap()).unwrap();
                     func(name.as_ptr());
