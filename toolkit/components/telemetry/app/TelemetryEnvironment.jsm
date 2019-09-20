@@ -1101,6 +1101,8 @@ EnvironmentCache.prototype = {
   async delayedInit() {
     if (AppConstants.platform == "win") {
       this._hddData = await Services.sysinfo.diskInfo;
+      this._processData = await Services.sysinfo.processInfo;
+      let osData = await Services.sysinfo.osInfo;
       let oldEnv = null;
       if (!this._initTask) {
         // We've finished creating the initial env, so notify for the update
@@ -1111,9 +1113,19 @@ EnvironmentCache.prototype = {
         // instead of all the consumers.
         oldEnv = this.currentEnvironment;
       }
+
+      this._osData = this._getOSData();
+
+      // Augment the return values from the promises with cached values
+      this._osData = Object.assign(osData, this._osData);
+
+      this._currentEnvironment.system.os = this._getOSData();
       this._currentEnvironment.system.hdd = this._getHDDData();
+      this._currentEnvironment.system.isWow64 = this._getProcessData().isWow64;
+      this._currentEnvironment.system.isWowARM64 = this._getProcessData().isWowARM64;
+
       if (!this._initTask) {
-        this._onEnvironmentChange("hdd-info", oldEnv);
+        this._onEnvironmentChange("system-info", oldEnv);
       }
     }
   },
@@ -1785,12 +1797,17 @@ EnvironmentCache.prototype = {
     return partnerData;
   },
 
+  _cpuData: null,
   /**
    * Get the CPU information.
    * @return Object containing the CPU information data.
    */
-  _getCpuData() {
-    let cpuData = {
+  _getCPUData() {
+    if (this._cpuData) {
+      return this._cpuData;
+    }
+
+    this._cpuData = {
       count: getSysinfoProperty("cpucount", null),
       cores: getSysinfoProperty("cpucores", null),
       vendor: getSysinfoProperty("cpuvendor", null),
@@ -1828,9 +1845,21 @@ EnvironmentCache.prototype = {
       }
     }
 
-    cpuData.extensions = availableExts;
+    this._cpuData.extensions = availableExts;
 
-    return cpuData;
+    return this._cpuData;
+  },
+
+  _processData: null,
+  /**
+   * Get the process information.
+   * @return Object containing the process information data.
+   */
+  _getProcessData() {
+    if (this._processData) {
+      return this._processData;
+    }
+    return {};
   },
 
   /**
@@ -1851,19 +1880,23 @@ EnvironmentCache.prototype = {
     };
   },
 
+  _osData: null,
   /**
    * Get the OS information.
    * @return Object containing the OS data.
    */
   _getOSData() {
-    let data = {
+    if (this._osData) {
+      return this._osData;
+    }
+    this._osData = {
       name: forceToStringOrNull(getSysinfoProperty("name", null)),
       version: forceToStringOrNull(getSysinfoProperty("version", null)),
       locale: forceToStringOrNull(getSystemLocale()),
     };
 
     if (AppConstants.platform == "android") {
-      data.kernelVersion = forceToStringOrNull(
+      this._osData.kernelVersion = forceToStringOrNull(
         getSysinfoProperty("kernel_version", null)
       );
     } else if (AppConstants.platform === "win") {
@@ -1872,13 +1905,13 @@ EnvironmentCache.prototype = {
         "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
 
       let versionInfo = getWindowsVersionInfo();
-      data.servicePackMajor = versionInfo.servicePackMajor;
-      data.servicePackMinor = versionInfo.servicePackMinor;
-      data.windowsBuildNumber = versionInfo.buildNumber;
+      this._osData.servicePackMajor = versionInfo.servicePackMajor;
+      this._osData.servicePackMinor = versionInfo.servicePackMinor;
+      this._osData.windowsBuildNumber = versionInfo.buildNumber;
       // We only need the UBR if we're at or above Windows 10.
       if (
-        typeof data.version === "string" &&
-        Services.vc.compare(data.version, "10") >= 0
+        typeof this._osData.version === "string" &&
+        Services.vc.compare(this._osData.version, "10") >= 0
       ) {
         // Query the UBR key and only add it to the environment if it's available.
         // |readRegKey| doesn't throw, but rather returns 'undefined' on error.
@@ -1888,12 +1921,11 @@ EnvironmentCache.prototype = {
           "UBR",
           Ci.nsIWindowsRegKey.WOW64_64
         );
-        data.windowsUBR = ubr !== undefined ? ubr : null;
+        this._osData.windowsUBR = ubr !== undefined ? ubr : null;
       }
-      data.installYear = getSysinfoProperty("installYear", null);
     }
 
-    return data;
+    return this._osData;
   },
 
   _hddData: null,
@@ -2011,7 +2043,7 @@ EnvironmentCache.prototype = {
     let data = {
       memoryMB,
       virtualMaxMB: virtualMB,
-      cpu: this._getCpuData(),
+      cpu: this._getCPUData(),
       os: this._getOSData(),
       hdd: this._getHDDData(),
       gfx: this._getGFXData(),
@@ -2019,8 +2051,7 @@ EnvironmentCache.prototype = {
     };
 
     if (AppConstants.platform === "win") {
-      data.isWow64 = getSysinfoProperty("isWow64", null);
-      data.isWowARM64 = getSysinfoProperty("isWowARM64", null);
+      data = { ...this._getProcessData(), ...data };
     } else if (AppConstants.platform == "android") {
       data.device = this._getDeviceData();
     }
