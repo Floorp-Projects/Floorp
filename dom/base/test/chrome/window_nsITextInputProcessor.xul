@@ -25,7 +25,7 @@
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
+var SimpleTest = window.arguments[0].SimpleTest;
 
 SimpleTest.waitForFocus(runTests, window);
 
@@ -78,7 +78,7 @@ var iframe = document.getElementById("iframe");
 var childWindow = iframe.contentWindow;
 var textareaInFrame;
 var input = document.getElementById("input");
-var otherWindow = window.opener;
+var otherWindow = window.arguments[0];
 var otherDocument = otherWindow.document;
 var inputInChildWindow = otherDocument.getElementById("input");
 

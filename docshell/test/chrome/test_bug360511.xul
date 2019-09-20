@@ -30,8 +30,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=360511.xul
 /** Test for Bug 360511 **/
 
 SimpleTest.waitForExplicitFinish();
-window.open("bug360511_window.xul", "bug360511",
-            "chrome,scrollbars,width=600,height=600");
+window.openDialog("bug360511_window.xul", "bug360511",
+                  "chrome,scrollbars,width=600,height=600,noopener", window);
 
 ]]>
 </script>

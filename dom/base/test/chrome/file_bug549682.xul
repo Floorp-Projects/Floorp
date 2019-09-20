@@ -19,11 +19,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
   var cpm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService();
 
   function ok(cond, msg) {
-    opener.wrappedJSObject.ok(cond, msg);
+    window.arguments[0].ok(cond, msg);
   }
 
   function is(actual, expected, msg) {
-    opener.wrappedJSObject.is(actual, expected, msg);
+    window.arguments[0].is(actual, expected, msg);
   }
 
   var asyncPPML = false;
@@ -119,7 +119,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
   }
 
   function finish() {
-    opener.setTimeout(function() { this.done(); }, 0);
+    window.arguments[0].setTimeout(function() { this.done(); }, 0);
     var i = document.getElementById("ifr");
     i.remove(); // This is a crash test!
     window.close();

@@ -435,11 +435,11 @@
     {
       // test with instantApply
       InitTestPrefs(true);
-      openDialog("window_preferences.xul", "", "modal", RunInstantPrefTest, false);
+      window.docShell.rootTreeItem.domWindow.openDialog("window_preferences.xul", "", "modal", RunInstantPrefTest, false);
 
       // - test deferred reset in child window
       InitTestPrefs(true);
-      openDialog("window_preferences2.xul", "", "modal", RunResetPrefTest, false);
+      window.docShell.rootTreeItem.domWindow.openDialog("window_preferences2.xul", "", "modal", RunResetPrefTest, false);
       expected = kPrefValueSet1;
       found    = ReadPrefsFromSystem();
       ok(found.int          === expected.int,          "instant reset deferred int"    );
@@ -455,11 +455,11 @@
       // test without instantApply
       // - general tests, similar to instant apply
       InitTestPrefs(false);
-      openDialog("window_preferences.xul", "", "modal", RunNonInstantPrefTestGeneral, false);
+      window.docShell.rootTreeItem.domWindow.openDialog("window_preferences.xul", "", "modal", RunNonInstantPrefTestGeneral, false);
 
       // - test Cancel
       InitTestPrefs(false);
-      openDialog("window_preferences.xul", "", "modal", RunNonInstantPrefTestClose, false);
+      window.docShell.rootTreeItem.domWindow.openDialog("window_preferences.xul", "", "modal", RunNonInstantPrefTestClose, false);
       var expected = kPrefValueSet1;
       var found    = ReadPrefsFromSystem();
       ok(found.int          === expected.int,          "non-instant cancel system int"    );
@@ -471,7 +471,7 @@
       
       // - test Accept
       InitTestPrefs(false);
-      openDialog("window_preferences.xul", "", "modal", RunNonInstantPrefTestClose, true);
+      window.docShell.rootTreeItem.domWindow.openDialog("window_preferences.xul", "", "modal", RunNonInstantPrefTestClose, true);
       expected = kPrefValueSet2;
       found    = ReadPrefsFromSystem();
       ok(found.int          === expected.int,          "non-instant accept system int"    );
@@ -483,7 +483,7 @@
 
       // - test deferred reset in child window
       InitTestPrefs(false);
-      openDialog("window_preferences2.xul", "", "modal", RunResetPrefTest, true);
+      window.docShell.rootTreeItem.domWindow.openDialog("window_preferences2.xul", "", "modal", RunResetPrefTest, true);
       expected = CreateEmptyPrefValueSet();
       found    = ReadPrefsFromSystem();
       ok(found.int          === expected.int,          "non-instant reset deferred int"    );
@@ -496,7 +496,7 @@
 
     function RunTestCommandRedirect()
     {
-      openDialog("window_preferences_commandretarget.xul", "", "modal", RunCheckCommandRedirect, true);
+      window.docShell.rootTreeItem.domWindow.openDialog("window_preferences_commandretarget.xul", "", "modal", RunCheckCommandRedirect, true);
     }
 
     function RunTest()

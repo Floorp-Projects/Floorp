@@ -13,7 +13,7 @@ window.addEventListener("fullscreen", onFullScreen, true);
 
 function onFullScreen(event)
 {
-  window.opener.wrappedJSObject.done(window.fullScreen);
+  window.arguments[0].done(window.fullScreen);
 }
 
 </script>

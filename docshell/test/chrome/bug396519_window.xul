@@ -23,10 +23,10 @@
     var gExpected = [];
 
     function ok(condition, message) {
-      window.opener.wrappedJSObject.SimpleTest.ok(condition, message);
+      window.arguments[0].SimpleTest.ok(condition, message);
     }
     function is(a, b, message) {
-      window.opener.wrappedJSObject.SimpleTest.is(a, b, message);
+      window.arguments[0].SimpleTest.is(a, b, message);
     }
     function finish() {
       for (let eventType of LISTEN_EVENTS) {
@@ -34,7 +34,7 @@
       }
     
       window.close();
-      window.opener.wrappedJSObject.SimpleTest.finish();
+      window.arguments[0].SimpleTest.finish();
     }
 
     function onLoad() {
