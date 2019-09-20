@@ -5,6 +5,7 @@
 "use strict";
 
 const { openToolboxAndLog, reloadPageAndLog } = require("../head");
+const InspectorUtils = require("InspectorUtils");
 
 /*
  * These methods are used for working with debugger state changes in order
@@ -300,6 +301,10 @@ async function hoverOnToken(dbg, cx, textToWaitFor, textToHover) {
     ...dbg.win.document.querySelectorAll(".CodeMirror span"),
   ].find(el => el.textContent === "window");
 
+  // Set the :hover state on the token Element, otherwise the preview popup
+  // will not be displayed.
+  InspectorUtils.addPseudoClassLock(tokenElement, ":hover", true);
+
   const mouseOverEvent = new dbg.win.MouseEvent("mouseover", {
     bubbles: true,
     cancelable: true,
@@ -311,5 +316,8 @@ async function hoverOnToken(dbg, cx, textToWaitFor, textToHover) {
   const tokenPosition = { line: 21, column: 3 };
   dbg.actions.updatePreview(cx, tokenElement, tokenPosition, getCM(dbg));
   await setPreviewDispatch;
+
+  // Remove the :hover state.
+  InspectorUtils.removePseudoClassLock(tokenElement, ":hover");
 }
 exports.hoverOnToken = hoverOnToken;

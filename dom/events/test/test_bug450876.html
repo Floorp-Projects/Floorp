@@ -20,6 +20,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=450876
 
 /** Test for Bug 450876 **/
 
+function setTabFocus() {
+  // Override tab focus behavior on Mac */
+  SpecialPowers.pushPrefEnv({ set: [[ "accessibility.tabfocus", 7 ]] }, doTest);
+}
+
 function doTest() {
   is(document.activeElement, document.body, "body element should be focused");
   document.getElementById('a').focus();
@@ -33,7 +38,7 @@ function doTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(doTest);
+addLoadEvent(setTabFocus);
 
 </script>
 </pre>

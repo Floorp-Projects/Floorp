@@ -1302,6 +1302,7 @@ Document::Document(const char* aContentType)
       mTooDeepWriteRecursion(false),
       mPendingMaybeEditingStateChanged(false),
       mHasBeenEditable(false),
+      mHasWarnedAboutZoom(false),
       mPendingFullscreenRequests(0),
       mXMLDeclarationBits(0),
       mOnloadBlockCount(0),
@@ -11214,56 +11215,57 @@ void Document::NotifyLoading(const bool& aCurrentParentIsLoading,
   }
 }
 
-void Document::SetReadyStateInternal(ReadyState rs,
-                                     bool updateTimingInformation) {
-  if (rs == READYSTATE_UNINITIALIZED) {
+void Document::SetReadyStateInternal(ReadyState aReadyState,
+                                     bool aUpdateTimingInformation) {
+  if (aReadyState == READYSTATE_UNINITIALIZED) {
     // Transition back to uninitialized happens only to keep assertions happy
     // right before readyState transitions to something else. Make this
     // transition undetectable by Web content.
-    mReadyState = rs;
+    mReadyState = aReadyState;
     return;
   }
 
   if (IsTopLevelContentDocument()) {
-    if (rs == READYSTATE_LOADING) {
+    if (aReadyState == READYSTATE_LOADING) {
       AddToplevelLoadingDocument(this);
-    } else if (rs == READYSTATE_COMPLETE) {
+    } else if (aReadyState == READYSTATE_COMPLETE) {
       RemoveToplevelLoadingDocument(this);
     }
   }
 
-  if (updateTimingInformation && READYSTATE_LOADING == rs) {
-    mLoadingTimeStamp = mozilla::TimeStamp::Now();
+  if (aUpdateTimingInformation && READYSTATE_LOADING == aReadyState) {
+    mLoadingTimeStamp = TimeStamp::Now();
   }
-  NotifyLoading(mAncestorIsLoading, mAncestorIsLoading, mReadyState, rs);
-  mReadyState = rs;
-  if (updateTimingInformation && mTiming) {
-    switch (rs) {
+  NotifyLoading(mAncestorIsLoading, mAncestorIsLoading, mReadyState,
+                aReadyState);
+  mReadyState = aReadyState;
+  if (aUpdateTimingInformation && mTiming) {
+    switch (aReadyState) {
       case READYSTATE_LOADING:
-        mTiming->NotifyDOMLoading(Document::GetDocumentURI());
+        mTiming->NotifyDOMLoading(GetDocumentURI());
         break;
       case READYSTATE_INTERACTIVE:
-        mTiming->NotifyDOMInteractive(Document::GetDocumentURI());
+        mTiming->NotifyDOMInteractive(GetDocumentURI());
         break;
       case READYSTATE_COMPLETE:
-        mTiming->NotifyDOMComplete(Document::GetDocumentURI());
+        mTiming->NotifyDOMComplete(GetDocumentURI());
         break;
       default:
-        NS_WARNING("Unexpected ReadyState value");
+        MOZ_ASSERT_UNREACHABLE("Unexpected ReadyState value");
         break;
     }
   }
   // At the time of loading start, we don't have timing object, record time.
 
-  if (READYSTATE_INTERACTIVE == rs) {
+  if (READYSTATE_INTERACTIVE == aReadyState) {
     if (!mXULPersist && nsContentUtils::IsSystemPrincipal(NodePrincipal())) {
       mXULPersist = new XULPersist(this);
       mXULPersist->Init();
     }
   }
 
-  if (updateTimingInformation) {
-    RecordNavigationTiming(rs);
+  if (aUpdateTimingInformation) {
+    RecordNavigationTiming(aReadyState);
   }
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
@@ -12755,6 +12757,24 @@ already_AddRefed<nsINode> Document::GetTooltipNode() {
   }
 
   return nullptr;
+}
+
+void Document::MaybeWarnAboutZoom() {
+  if (mHasWarnedAboutZoom) {
+    return;
+  }
+  const bool usedZoom =
+      mStyleUseCounters &&
+      Servo_IsUnknownPropertyRecordedInUseCounter(mStyleUseCounters.get(),
+                                                  CountedUnknownProperty::Zoom);
+  if (!usedZoom) {
+    return;
+  }
+
+  mHasWarnedAboutZoom = true;
+  nsContentUtils::ReportToConsole(
+      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Layout"), this,
+      nsContentUtils::eLAYOUT_PROPERTIES, "ZoomPropertyWarning");
 }
 
 nsIHTMLCollection* Document::Children() {

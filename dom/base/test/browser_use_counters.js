@@ -16,10 +16,16 @@ add_task(async function test_initialize() {
   gOldParentCanRecord = Telemetry.canRecordExtended;
   Telemetry.canRecordExtended = true;
 
-  // Because canRecordExtended is a per-process variable, we need to make sure
-  // that all of the pages load in the same content process. Limit the number
-  // of content processes to at most 1 (or 0 if e10s is off entirely).
-  await SpecialPowers.pushPrefEnv({ set: [["dom.ipc.processCount", 1]] });
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // Because canRecordExtended is a per-process variable, we need to make sure
+      // that all of the pages load in the same content process. Limit the number
+      // of content processes to at most 1 (or 0 if e10s is off entirely).
+      ["dom.ipc.processCount", 1],
+      ["layout.css.use-counters.enabled", true],
+      ["layout.css.use-counters-unimplemented.enabled", true],
+    ],
+  });
 
   gOldContentCanRecord = await ContentTask.spawn(
     gBrowser.selectedBrowser,

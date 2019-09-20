@@ -230,8 +230,26 @@ static BrowsingContextOrigin SimilarOrigin(const Element& aTarget,
                                     : BrowsingContextOrigin::Different;
 }
 
+// NOTE: This returns nullptr if |aDocument| is in a cross process.
+static Document* GetTopLevelDocument(const Document& aDocument) {
+  BrowsingContext* browsingContext = aDocument.GetBrowsingContext();
+  if (!browsingContext) {
+    return nullptr;
+  }
+
+  nsPIDOMWindowOuter* topWindow = browsingContext->Top()->GetDOMWindow();
+  if (!topWindow) {
+    // If we don't have a DOMWindow, We are not in same origin.
+    return nullptr;
+  }
+
+  return topWindow->GetExtantDoc();
+}
+
 void DOMIntersectionObserver::Update(Document* aDocument,
                                      DOMHighResTimeStamp time) {
+  MOZ_ASSERT(aDocument);
+
   nsRect rootRect;
   nsIFrame* rootFrame = nullptr;
   Element* root = mRoot;
@@ -252,28 +270,14 @@ void DOMIntersectionObserver::Update(Document* aDocument,
       rootRect = nsLayoutUtils::TransformFrameRectToAncestor(
           rootFrame, rootRectRelativeToRootFrame, containingBlock);
     }
-  } else if (PresShell* presShell = aDocument->GetPresShell()) {
-    // FIXME(emilio): This shouldn't probably go through the presShell and just
-    // through the document tree.
-    rootFrame = presShell->GetRootScrollFrame();
-    if (rootFrame) {
-      nsPresContext* presContext = rootFrame->PresContext();
-      while (!presContext->IsRootContentDocument()) {
-        presContext = presContext->GetParentPresContext();
-        if (!presContext) {
-          break;
-        }
-        nsIFrame* rootScrollFrame =
-            presContext->PresShell()->GetRootScrollFrame();
-        if (rootScrollFrame) {
-          rootFrame = rootScrollFrame;
-        } else {
-          break;
-        }
+  } else if (Document* topLevelDocument = GetTopLevelDocument(*aDocument)) {
+    if (PresShell* presShell = topLevelDocument->GetPresShell()) {
+      rootFrame = presShell->GetRootScrollFrame();
+      if (rootFrame) {
+        root = rootFrame->GetContent()->AsElement();
+        nsIScrollableFrame* scrollFrame = do_QueryFrame(rootFrame);
+        rootRect = scrollFrame->GetScrollPortRect();
       }
-      root = rootFrame->GetContent()->AsElement();
-      nsIScrollableFrame* scrollFrame = do_QueryFrame(rootFrame);
-      rootRect = scrollFrame->GetScrollPortRect();
     }
   }
 
@@ -401,12 +405,11 @@ void DOMIntersectionObserver::Update(Document* aDocument,
     }
 
     if (target->UpdateIntersectionObservation(this, threshold)) {
-      QueueIntersectionObserverEntry(target, time,
-                                     origin == BrowsingContextOrigin::Different
-                                         ? Nothing()
-                                         : Some(rootIntersectionRect),
-                                     targetRect, intersectionRect,
-                                     intersectionRatio);
+      QueueIntersectionObserverEntry(
+          target, time,
+          origin == BrowsingContextOrigin::Similar ? Some(rootIntersectionRect)
+                                                   : Nothing(),
+          targetRect, intersectionRect, intersectionRatio);
     }
   }
 }

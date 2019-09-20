@@ -7,6 +7,10 @@
 // This is loaded into all XUL windows. Wrap in a block to prevent
 // leaking to window scope.
 {
+  const { AppConstants } = ChromeUtils.import(
+    "resource://gre/modules/AppConstants.jsm"
+  );
+
   class MozMenuPopup extends MozElements.MozElementMixin(XULPopupElement) {
     constructor() {
       super();
@@ -22,6 +26,9 @@
         if (event.target != this) {
           return;
         }
+
+        // Make sure we generated shadow DOM to place menuitems into.
+        this.shadowRoot;
 
         let array = [];
         let width = 0;
@@ -45,50 +52,110 @@
         }
         array.forEach(accel => (accel.width = width));
       });
+
+      this.attachShadow({ mode: "open" });
     }
 
     connectedCallback() {
       if (this.delayConnectedCallback() || this.hasConnected) {
         return;
       }
-      this.hasConnected = true;
-      this.appendChild(
-        MozXULElement.parseXULToFragment(`
-        <arrowscrollbox class="popup-internal-box"
-                        flex="1"
-                        orient="vertical"
-                        smoothscroll="false"/>
-      `)
-      );
-      this.scrollBox = this.querySelector(".popup-internal-box");
 
+      this.hasConnected = true;
       if (this.parentNode && this.parentNode.localName == "menulist") {
         this._setUpMenulistPopup();
       }
     }
 
-    /**
-     * When a custom element (CE) class extends this MozMenuPopup class,
-     * and child nodes are present inside that CE in the XUL files
-     * where it is used, then this method should be called in that CE's
-     * connectedCallback. It will slot those child nodes into place
-     * inside the CE's internal scroll box element.
-     *
-     * This "manual slotting" is done with this method, and not by default
-     * in the connectedCallback of this base class, to support cases where
-     * children are dynamically added, etc. (Which also requires "manual
-     * slotting".) See bug 1531870.
-     */
-    _setUpChildElements() {
-      while (this.childElementCount > 1) {
-        this.scrollBox.appendChild(this.firstElementChild);
+    get shadowRoot() {
+      // We generate shadow DOM lazily on popupshowing event to avoid extra load
+      // on the system during browser startup.
+      if (!super.shadowRoot.firstElementChild) {
+        super.shadowRoot.appendChild(this.fragment);
+
+        // Retarget events from shadow DOM scrolbox to the popup itself.
+        this.scrollBox.addEventListener("scroll", ev =>
+          this.dispatchEvent(new Event("scroll"))
+        );
+        this.scrollBox.addEventListener("overflow", ev =>
+          this.dispatchEvent(new Event("overflow"))
+        );
+        this.scrollBox.addEventListener("underflow", ev =>
+          this.dispatchEvent(new Event("underflow"))
+        );
       }
+      return super.shadowRoot;
+    }
+
+    get fragment() {
+      if (!this.constructor.hasOwnProperty("_fragment")) {
+        this.constructor._fragment = MozXULElement.parseXULToFragment(
+          this.markup
+        );
+      }
+      return document.importNode(this.constructor._fragment, true);
+    }
+
+    get markup() {
+      return `
+        <html:link rel="stylesheet" href="chrome://global/skin/global.css"/>
+        <html:style>${this.styles}</html:style>
+        <arrowscrollbox class="popup-internal-box"
+                        flex="1"
+                        orient="vertical"
+                        smoothscroll="false">
+          <html:slot></html:slot>
+        </arrowscrollbox>
+      `;
+    }
+
+    get styles() {
+      let s = `
+        :host(.in-menulist) .popup-internal-box > .scrollbutton-up,
+        :host(.in-menulist) .popup-internal-box > .arrowscrollbox-overflow-start-indicator,
+        :host(.in-menulist) .popup-internal-box > .arrowscrollbox-overflow-end-indicator,
+        :host(.in-menulist) .popup-internal-box > .scrollbutton-down {
+          display: none;
+        }
+        :host(.in-menulist) .popup-internal-box > .arrowscrollbox-scrollbox {
+          overflow: auto;
+        }
+      `;
+
+      switch (AppConstants.platform) {
+        case "macosx":
+          s += `
+            :host(.in-menulist) .popup-internal-box {
+              padding: 0;
+            }
+          `;
+          break;
+
+        default:
+          break;
+      }
+
+      return s;
+    }
+
+    get scrollBox() {
+      if (!this._scrollBox) {
+        this._scrollBox = this.shadowRoot.querySelector(".popup-internal-box");
+      }
+      return this._scrollBox;
     }
 
     /**
      * Adds event listeners for a MozMenuPopup inside a menulist element.
      */
     _setUpMenulistPopup() {
+      // Access shadow root to generate menupoup shadow DOMs. We do generate
+      // shadow DOM on popupshowing, but it doesn't work for HTML:selects,
+      // which are implemented via menulist elements living in the main process.
+      // So make them a special case then.
+      this.shadowRoot;
+      this.classList.add("in-menulist");
+
       this.addEventListener("popupshown", () => {
         // Enable drag scrolling even when the mouse wasn't used. The
         // mousemove handler will remove it if the mouse isn't down.
@@ -197,7 +264,7 @@
     }
   }
 
-  // Add this MozMenuPopup base class to MozElements, but don't define a custom
-  // element for it with `customElements.define` (for now, see bug 1531870).
+  customElements.define("menupopup", MozMenuPopup);
+
   MozElements.MozMenuPopup = MozMenuPopup;
 }

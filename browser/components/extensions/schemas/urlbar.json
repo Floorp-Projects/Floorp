@@ -74,14 +74,14 @@
       {
         "id": "ResultType",
         "type": "string",
-        "enum": ["remote_tab", "search", "tab", "url"],
-        "description": "Possible types of results. <code>remote_tab</code>: A synced tab from another device. <code>search</code>: A search suggestion from a search engine. <code>tab</code>: An open tab in the browser. <code>url</code>: A URL that's not one of the other types."
+        "enum": ["remote_tab", "search", "tab", "tip", "url"],
+        "description": "Possible types of results. <code>remote_tab</code>: A synced tab from another device. <code>search</code>: A search suggestion from a search engine. <code>tab</code>: An open tab in the browser. <code>tip</code>: An actionable message to help the user with their query. <code>url</code>: A URL that's not one of the other types."
       },
       {
         "id": "SourceType",
         "type": "string",
-        "enum": ["bookmarks", "history", "search", "tabs", "local", "network"],
-        "description": "Possible sources of results. <code>bookmarks</code>: The result comes from the user's bookmarks. <code>history</code>: The result comes from the user's history. <code>search</code>: The result comes from a search engine. <code>tabs</code>: The result is an open tab in the browser or a synced tab from another device. "
+        "enum": ["bookmarks", "history", "local", "network", "search", "tabs"],
+        "description": "Possible sources of results. <code>bookmarks</code>: The result comes from the user's bookmarks. <code>history</code>: The result comes from the user's history. <code>local</code>: The result comes from some local source not covered by another source type. <code>network</code>: The result comes from some network source not covered by another source type. <code>search</code>: The result comes from a search engine. <code>tabs</code>: The result is an open tab in the browser or a synced tab from another device."
       }
     ],
     "properties": {

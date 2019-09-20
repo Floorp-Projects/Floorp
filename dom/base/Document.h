@@ -2309,12 +2309,11 @@ class Document : public nsINode,
     READYSTATE_INTERACTIVE = 3,
     READYSTATE_COMPLETE = 4
   };
-  // Set the readystate of the document.  If updateTimingInformation is true,
+  // Set the readystate of the document.  If aUpdateTimingInformation is true,
   // this will record relevant timestamps in the document's performance timing.
   // Some consumers (document.open is the only one right now, actually) don't
   // want to do that, though.
-  void SetReadyStateInternal(ReadyState rs,
-                             bool updateTimingInformation = true);
+  void SetReadyStateInternal(ReadyState, bool aUpdateTimingInformation = true);
   ReadyState GetReadyStateEnum() { return mReadyState; }
 
   void SetAncestorLoading(bool aAncestorIsLoading);
@@ -3788,6 +3787,8 @@ class Document : public nsINode,
         aDontWarnAboutMutationEventsAndAllowSlowDOMMutations;
   }
 
+  void MaybeWarnAboutZoom();
+
   // ParentNode
   nsIHTMLCollection* Children();
   uint32_t ChildElementCount();
@@ -4886,6 +4887,12 @@ class Document : public nsINode,
   // mHasBeenEditable is set to true when mEditingState is firstly set to
   // eDesignMode or eContentEditable.
   bool mHasBeenEditable : 1;
+
+  // Whether we've warned about the CSS zoom property.
+  //
+  // We don't use the general deprecated operation mechanism for this because we
+  // also record this as a `CountedUnknownProperty`.
+  bool mHasWarnedAboutZoom : 1;
 
   uint8_t mPendingFullscreenRequests;
 

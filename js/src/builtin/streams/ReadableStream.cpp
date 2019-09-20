@@ -17,6 +17,7 @@
 #include "builtin/Array.h"                   // js::NewDenseFullyAllocatedArray
 #include "builtin/streams/ClassSpecMacro.h"  // JS_STREAMS_CLASS_SPEC
 #include "builtin/streams/MiscellaneousOperations.h"  // js::MakeSizeAlgorithmFromSizeFunction, js::ValidateAndNormalizeHighWaterMark, js::ReturnPromiseRejectedWithPendingError
+#include "builtin/streams/ReadableStreamController.h"  // js::ReadableStream{,Default}Controller, js::ReadableByteStreamController
 #include "builtin/streams/ReadableStreamDefaultControllerOperations.h"  // js::SetUpReadableStreamDefaultControllerFromUnderlyingSource
 #include "builtin/streams/ReadableStreamInternals.h"  // js::ReadableStreamCancel
 #include "builtin/streams/ReadableStreamOperations.h"  // js::ReadableStreamTee
@@ -25,7 +26,7 @@
 #include "js/Class.h"  // JSCLASS_PRIVATE_IS_NSISUPPORTS, JSCLASS_HAS_PRIVATE, JS_NULL_CLASS_OPS
 #include "js/PropertySpec.h"  // JS{Function,Property}Spec, JS_FN, JS_PSG, JS_{FS,PS}_END
 #include "js/RootingAPI.h"        // JS::Handle, JS::Rooted, js::CanGC
-#include "js/Stream.h"            // JS::ReadableStreamUnderlyingSource
+#include "js/Stream.h"            // JS::ReadableStream{Mode,UnderlyingSource}
 #include "js/Value.h"             // JS::Value
 #include "vm/JSContext.h"         // JSContext
 #include "vm/JSObject.h"          // js::GetPrototypeFromBuiltinConstructor
@@ -61,6 +62,16 @@ using JS::Rooted;
 using JS::Value;
 
 /*** 3.2. Class ReadableStream **********************************************/
+
+JS::ReadableStreamMode ReadableStream::mode() const {
+  ReadableStreamController* controller = this->controller();
+  if (controller->is<ReadableStreamDefaultController>()) {
+    return JS::ReadableStreamMode::Default;
+  }
+  return controller->as<ReadableByteStreamController>().hasExternalSource()
+             ? JS::ReadableStreamMode::ExternalSource
+             : JS::ReadableStreamMode::Byte;
+}
 
 ReadableStream* ReadableStream::createExternalSourceStream(
     JSContext* cx, JS::ReadableStreamUnderlyingSource* source,

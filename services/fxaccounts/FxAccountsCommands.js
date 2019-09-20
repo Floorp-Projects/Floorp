@@ -34,14 +34,9 @@ class FxAccountsCommands {
   }
 
   async invoke(command, device, payload) {
-    const userData = await this._fxai.currentAccountState.getSignedInUser();
-    if (!userData) {
-      throw new Error("No user.");
-    }
-    const { sessionToken } = userData;
-    if (!sessionToken) {
-      throw new Error("_send called without a session token.");
-    }
+    const { sessionToken } = await this._fxai.getUserAccountData([
+      "sessionToken",
+    ]);
     const client = this._fxai.fxAccountsClient;
     await client.invokeCommand(sessionToken, command, device.id, payload);
     log.info(`Payload sent to device ${device.id}.`);

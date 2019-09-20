@@ -316,6 +316,7 @@ UrlbarProviderExtension.RESULT_TYPES = {
   remote_tab: UrlbarUtils.RESULT_TYPE.REMOTE_TAB,
   search: UrlbarUtils.RESULT_TYPE.SEARCH,
   tab: UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+  tip: UrlbarUtils.RESULT_TYPE.TIP,
   url: UrlbarUtils.RESULT_TYPE.URL,
 };
 

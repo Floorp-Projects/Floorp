@@ -90,6 +90,7 @@ devtools/client/debugger/bin/
 devtools/client/debugger/packages/**/fixtures/
 devtools/client/debugger/node_modules
 devtools/client/debugger/out
+devtools/client/webreplay/mochitest/examples/
 
 # Ignore devtools debugger files which aren't intended for linting, and also
 # aren't included in any .eslintignore or .prettierignore file.
