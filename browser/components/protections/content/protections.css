@@ -19,6 +19,7 @@
   --tab-highlight: var(--social-color); /* start with social selected */
   --column-width: 16px;
   --graph-empty: #CECECF;
+  --graph-curve: cubic-bezier(.66,.75,.59,.91);
 
   /* Colors for the loading indicator */
   --protection-report-loader-color-stop: #AEAEAE3D;
@@ -247,6 +248,8 @@ a.hidden,
   align-self: flex-end;
   width: var(--column-width);
   position: relative;
+  height: 0;
+  transition: height 500ms var(--graph-curve);
 }
 
 .graph-wrapper-bar {
@@ -318,6 +321,12 @@ a.hidden,
   position: absolute;
   top: -21px;
   font-size: 0.8em;
+  opacity: 0;
+  transition: opacity 700ms;
+}
+
+.bar-count.animate {
+  opacity: 1;
 }
 
 /* Legend */
