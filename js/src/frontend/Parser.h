@@ -328,11 +328,11 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
  public:
   FunctionTreeHolder& getTreeHolder() { return treeHolder_; }
 
-  bool publishDeferredItems() {
+  MOZ_MUST_USE bool publishDeferredItems() {
     return publishDeferredItems(getTreeHolder().getFunctionTree());
   }
 
-  bool publishDeferredItems(FunctionTree* root) {
+  MOZ_MUST_USE bool publishDeferredItems(FunctionTree* root) {
     // Publish deferred functions before LazyScripts, as the
     // LazyScripts need the functions.
     if (!publishDeferredFunctions(root)) {
