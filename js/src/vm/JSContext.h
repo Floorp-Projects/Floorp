@@ -804,7 +804,7 @@ struct JSContext : public JS::RootingContext,
 
   /*
    * See JS_SetTrustedPrincipals in jsapi.h.
-   * Note: !cx->compartment is treated as trusted.
+   * Note: !cx->realm() is treated as trusted.
    */
   inline bool runningWithTrustedPrincipals();
 
