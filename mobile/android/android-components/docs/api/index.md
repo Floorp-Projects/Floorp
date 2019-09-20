@@ -192,6 +192,7 @@
 | [mozilla.components.support.ktx.kotlin](mozilla.components.support.ktx.kotlin/index.md) |  |
 | [mozilla.components.support.ktx.kotlinx.coroutines.flow](mozilla.components.support.ktx.kotlinx.coroutines.flow/index.md) |  |
 | [mozilla.components.support.locale](mozilla.components.support.locale/index.md) |  |
+| [mozilla.components.support.migration](mozilla.components.support.migration/index.md) |  |
 | [mozilla.components.support.rusthttp](mozilla.components.support.rusthttp/index.md) |  |
 | [mozilla.components.support.rustlog](mozilla.components.support.rustlog/index.md) |  |
 | [mozilla.components.support.test](mozilla.components.support.test/index.md) |  |
