@@ -2441,21 +2441,11 @@ class BaseCompiler final : public BaseCompilerInterface {
           deadThenBranch(false) {}
   };
 
-  class NothingVector {
-    Nothing unused_;
-
-   public:
-    bool resize(size_t length) { return true; }
-    Nothing& operator[](size_t) { return unused_; }
-    Nothing& back() { return unused_; }
-  };
-
   struct BaseCompilePolicy {
     // The baseline compiler tracks values on a stack of its own -- it
     // needs to scan that stack for spilling -- and thus has no need
     // for the values maintained by the iterator.
     using Value = Nothing;
-    using ValueVector = NothingVector;
 
     // The baseline compiler uses the iterator's control stack, attaching
     // its own control information.
@@ -2787,104 +2777,88 @@ class BaseCompiler final : public BaseCompilerInterface {
     }
   }
 
-  void maybeReserveJoinRegI(ResultType type) {
-    if (type.empty()) {
-      return;
-    }
-    MOZ_ASSERT(type.length() == 1, "multi-value joins unimplemented");
-    switch (type[0].code()) {
-      case ValType::I32:
+  void maybeReserveJoinRegI(ExprType type) {
+    switch (type.code()) {
+      case ExprType::I32:
         needI32(joinRegI32_);
         break;
-      case ValType::I64:
+      case ExprType::I64:
         needI64(joinRegI64_);
         break;
-      case ValType::F32:
-      case ValType::F64:
-        break;
-      case ValType::FuncRef:
-      case ValType::AnyRef:
-      case ValType::NullRef:
-      case ValType::Ref:
+      case ExprType::FuncRef:
+      case ExprType::AnyRef:
+      case ExprType::NullRef:
+      case ExprType::Ref:
         needRef(joinRegPtr_);
         break;
+      default:;
     }
   }
 
-  void maybeUnreserveJoinRegI(ResultType type) {
-    if (type.empty()) {
-      return;
-    }
-    MOZ_ASSERT(type.length() == 1, "multi-value joins unimplemented");
-    switch (type[0].code()) {
-      case ValType::I32:
+  void maybeUnreserveJoinRegI(ExprType type) {
+    switch (type.code()) {
+      case ExprType::I32:
         freeI32(joinRegI32_);
         break;
-      case ValType::I64:
+      case ExprType::I64:
         freeI64(joinRegI64_);
         break;
-      case ValType::F32:
-      case ValType::F64:
-        break;
-      case ValType::FuncRef:
-      case ValType::AnyRef:
-      case ValType::NullRef:
-      case ValType::Ref:
+      case ExprType::FuncRef:
+      case ExprType::AnyRef:
+      case ExprType::NullRef:
+      case ExprType::Ref:
         freeRef(joinRegPtr_);
         break;
+      default:;
     }
   }
 
-  void maybeReserveJoinReg(ResultType type) {
-    if (type.empty()) {
-      return;
-    }
-    MOZ_ASSERT(type.length() == 1, "multi-value joins unimplemented");
-    switch (type[0].code()) {
-      case ValType::I32:
+  void maybeReserveJoinReg(ExprType type) {
+    switch (type.code()) {
+      case ExprType::I32:
         needI32(joinRegI32_);
         break;
-      case ValType::I64:
+      case ExprType::I64:
         needI64(joinRegI64_);
         break;
-      case ValType::F32:
+      case ExprType::F32:
         needF32(joinRegF32_);
         break;
-      case ValType::F64:
+      case ExprType::F64:
         needF64(joinRegF64_);
         break;
-      case ValType::Ref:
-      case ValType::NullRef:
-      case ValType::FuncRef:
-      case ValType::AnyRef:
+      case ExprType::Ref:
+      case ExprType::NullRef:
+      case ExprType::FuncRef:
+      case ExprType::AnyRef:
         needRef(joinRegPtr_);
+        break;
+      default:
         break;
     }
   }
 
-  void maybeUnreserveJoinReg(ResultType type) {
-    if (type.empty()) {
-      return;
-    }
-    MOZ_ASSERT(type.length() == 1, "multi-value joins unimplemented");
-    switch (type[0].code()) {
-      case ValType::I32:
+  void maybeUnreserveJoinReg(ExprType type) {
+    switch (type.code()) {
+      case ExprType::I32:
         freeI32(joinRegI32_);
         break;
-      case ValType::I64:
+      case ExprType::I64:
         freeI64(joinRegI64_);
         break;
-      case ValType::F32:
+      case ExprType::F32:
         freeF32(joinRegF32_);
         break;
-      case ValType::F64:
+      case ExprType::F64:
         freeF64(joinRegF64_);
         break;
-      case ValType::Ref:
-      case ValType::NullRef:
-      case ValType::FuncRef:
-      case ValType::AnyRef:
+      case ExprType::Ref:
+      case ExprType::NullRef:
+      case ExprType::FuncRef:
+      case ExprType::AnyRef:
         freeRef(joinRegPtr_);
+        break;
+      default:
         break;
     }
   }
@@ -3779,47 +3753,48 @@ class BaseCompiler final : public BaseCompilerInterface {
   // popping of the stack we can just use the JoinReg as it will
   // become available in that process.
 
-  MOZ_MUST_USE Maybe<AnyReg> popJoinRegUnlessVoid(ResultType type) {
-    if (type.empty()) {
-      return Nothing();
-    }
-    MOZ_ASSERT(type.length() == 1, "multi-value return unimplemented");
-    switch (type[0].code()) {
-      case ValType::I32: {
+  MOZ_MUST_USE Maybe<AnyReg> popJoinRegUnlessVoid(ExprType type) {
+    switch (type.code()) {
+      case ExprType::Void: {
+        return Nothing();
+      }
+      case ExprType::I32: {
         DebugOnly<Stk::Kind> k(stk_.back().kind());
         MOZ_ASSERT(k == Stk::RegisterI32 || k == Stk::ConstI32 ||
                    k == Stk::MemI32 || k == Stk::LocalI32);
         return Some(AnyReg(popI32(joinRegI32_)));
       }
-      case ValType::I64: {
+      case ExprType::I64: {
         DebugOnly<Stk::Kind> k(stk_.back().kind());
         MOZ_ASSERT(k == Stk::RegisterI64 || k == Stk::ConstI64 ||
                    k == Stk::MemI64 || k == Stk::LocalI64);
         return Some(AnyReg(popI64(joinRegI64_)));
       }
-      case ValType::F64: {
+      case ExprType::F64: {
         DebugOnly<Stk::Kind> k(stk_.back().kind());
         MOZ_ASSERT(k == Stk::RegisterF64 || k == Stk::ConstF64 ||
                    k == Stk::MemF64 || k == Stk::LocalF64);
         return Some(AnyReg(popF64(joinRegF64_)));
       }
-      case ValType::F32: {
+      case ExprType::F32: {
         DebugOnly<Stk::Kind> k(stk_.back().kind());
         MOZ_ASSERT(k == Stk::RegisterF32 || k == Stk::ConstF32 ||
                    k == Stk::MemF32 || k == Stk::LocalF32);
         return Some(AnyReg(popF32(joinRegF32_)));
       }
-      case ValType::Ref:
-      case ValType::NullRef:
-      case ValType::FuncRef:
-      case ValType::AnyRef: {
+      case ExprType::Ref:
+      case ExprType::NullRef:
+      case ExprType::FuncRef:
+      case ExprType::AnyRef: {
         DebugOnly<Stk::Kind> k(stk_.back().kind());
         MOZ_ASSERT(k == Stk::RegisterRef || k == Stk::ConstRef ||
                    k == Stk::MemRef || k == Stk::LocalRef);
         return Some(AnyReg(popRef(joinRegPtr_)));
       }
+      default: {
+        MOZ_CRASH("Compiler bug: unexpected expression type");
+      }
     }
-    // MOZ_CRASH("Compiler bug: unexpected expression type");
   }
 
   // If we ever start not sync-ing on entry to Block (but instead try to sync
@@ -3828,37 +3803,36 @@ class BaseCompiler final : public BaseCompilerInterface {
   // joinreg in the contexts it's being used, so some other solution will need
   // to be found.
 
-  MOZ_MUST_USE Maybe<AnyReg> captureJoinRegUnlessVoid(ResultType type) {
-    if (type.empty()) {
-      return Nothing();
-    }
-    MOZ_ASSERT(type.length() == 1, "multi-value return unimplemented");
-    switch (type[0].code()) {
-      case ValType::I32:
+  MOZ_MUST_USE Maybe<AnyReg> captureJoinRegUnlessVoid(ExprType type) {
+    switch (type.code()) {
+      case ExprType::I32:
         MOZ_ASSERT(isAvailableI32(joinRegI32_));
         needI32(joinRegI32_);
         return Some(AnyReg(joinRegI32_));
-      case ValType::I64:
+      case ExprType::I64:
         MOZ_ASSERT(isAvailableI64(joinRegI64_));
         needI64(joinRegI64_);
         return Some(AnyReg(joinRegI64_));
-      case ValType::F32:
+      case ExprType::F32:
         MOZ_ASSERT(isAvailableF32(joinRegF32_));
         needF32(joinRegF32_);
         return Some(AnyReg(joinRegF32_));
-      case ValType::F64:
+      case ExprType::F64:
         MOZ_ASSERT(isAvailableF64(joinRegF64_));
         needF64(joinRegF64_);
         return Some(AnyReg(joinRegF64_));
-      case ValType::Ref:
-      case ValType::NullRef:
-      case ValType::FuncRef:
-      case ValType::AnyRef:
+      case ExprType::Ref:
+      case ExprType::NullRef:
+      case ExprType::FuncRef:
+      case ExprType::AnyRef:
         MOZ_ASSERT(isAvailableRef(joinRegPtr_));
         needRef(joinRegPtr_);
         return Some(AnyReg(joinRegPtr_));
+      case ExprType::Void:
+        return Nothing();
+      default:
+        MOZ_CRASH("Compiler bug: unexpected type");
     }
-    // MOZ_CRASH("Compiler bug: unexpected type");
   }
 
   void pushJoinRegUnlessVoid(const Maybe<AnyReg>& r) {
@@ -4257,29 +4231,27 @@ class BaseCompiler final : public BaseCompilerInterface {
     size_t debugFrameOffset = masm.framePushed() - DebugFrame::offsetOfFrame();
     Address resultsAddress(masm.getStackPointer(),
                            debugFrameOffset + DebugFrame::offsetOfResults());
-    Maybe<ValType> ret = funcType().ret();
-    if (!ret) {
-      return;
-    }
-    switch (ret.ref().code()) {
-      case ValType::I32:
+    switch (funcType().ret().code()) {
+      case ExprType::Void:
+        break;
+      case ExprType::I32:
         masm.store32(RegI32(ReturnReg), resultsAddress);
         break;
-      case ValType::I64:
+      case ExprType::I64:
         masm.store64(RegI64(ReturnReg64), resultsAddress);
         break;
-      case ValType::F64:
+      case ExprType::F64:
         masm.storeDouble(RegF64(ReturnDoubleReg), resultsAddress);
         break;
-      case ValType::F32:
+      case ExprType::F32:
         masm.storeFloat32(RegF32(ReturnFloat32Reg), resultsAddress);
         break;
-      case ValType::Ref:
-      case ValType::FuncRef:
-      case ValType::AnyRef:
+      case ExprType::Ref:
+      case ExprType::FuncRef:
+      case ExprType::AnyRef:
         masm.storePtr(RegPtr(ReturnReg), resultsAddress);
         break;
-      case ValType::NullRef:
+      case ExprType::NullRef:
       default:
         MOZ_CRASH("Function return type");
     }
@@ -4290,29 +4262,27 @@ class BaseCompiler final : public BaseCompilerInterface {
     size_t debugFrameOffset = masm.framePushed() - DebugFrame::offsetOfFrame();
     Address resultsAddress(masm.getStackPointer(),
                            debugFrameOffset + DebugFrame::offsetOfResults());
-    Maybe<ValType> ret = funcType().ret();
-    if (!ret) {
-      return;
-    }
-    switch (ret.ref().code()) {
-      case ValType::I32:
+    switch (funcType().ret().code()) {
+      case ExprType::Void:
+        break;
+      case ExprType::I32:
         masm.load32(resultsAddress, RegI32(ReturnReg));
         break;
-      case ValType::I64:
+      case ExprType::I64:
         masm.load64(resultsAddress, RegI64(ReturnReg64));
         break;
-      case ValType::F64:
+      case ExprType::F64:
         masm.loadDouble(resultsAddress, RegF64(ReturnDoubleReg));
         break;
-      case ValType::F32:
+      case ExprType::F32:
         masm.loadFloat32(resultsAddress, RegF32(ReturnFloat32Reg));
         break;
-      case ValType::Ref:
-      case ValType::FuncRef:
-      case ValType::AnyRef:
+      case ExprType::Ref:
+      case ExprType::FuncRef:
+      case ExprType::AnyRef:
         masm.loadPtr(resultsAddress, RegPtr(ReturnReg));
         break;
-      case ValType::NullRef:
+      case ExprType::NullRef:
       default:
         MOZ_CRASH("Function return type");
     }
@@ -4338,18 +4308,15 @@ class BaseCompiler final : public BaseCompilerInterface {
     masm.bind(&returnLabel_);
 
     if (env_.debugEnabled()) {
-      // If a return type is a ref, we need to note that in the stack maps
+      // If the return type is a ref, we need to note that in the stack maps
       // generated here.  Note that this assumes that DebugFrame::result* and
-      // DebugFrame::cachedReturnJSValue_ are either both ref-typed or they are
-      // both not ref-typed.  It can't represent the situation where one is and
-      // the other isn't.
-      HasRefTypedDebugFrame refDebugFrame = HasRefTypedDebugFrame::No;
-      for (ValType result : funcType().results()) {
-        if (result.isReference()) {
-          refDebugFrame = HasRefTypedDebugFrame::Yes;
-          break;
-        }
-      }
+      // DebugFrame::cachedReturnJSValue_ are either both ref-typed or they
+      // are both not ref-typed.  It can't represent the situation where one
+      // is and the other isn't.
+      HasRefTypedDebugFrame refDebugFrame = funcType().ret().isReference()
+                                                ? HasRefTypedDebugFrame::Yes
+                                                : HasRefTypedDebugFrame::No;
+
       // Store and reload the return value from DebugFrame::return so that
       // it can be clobbered, and/or modified by the debug trap.
       saveResult();
@@ -6597,22 +6564,23 @@ class BaseCompiler final : public BaseCompilerInterface {
     const StackHeight stackHeight;  // The value to pop to along the taken edge,
                                     // unless !hasPop()
     const bool invertBranch;        // If true, invert the sense of the branch
-    const ResultType resultType;    // The result propagated along the edges
+    const ExprType
+        resultType;  // The result propagated along the edges, or Void
 
     explicit BranchState(Label* label)
         : label(label),
           stackHeight(StackHeight::Invalid()),
           invertBranch(false),
-          resultType() {}
+          resultType(ExprType::Void) {}
 
     BranchState(Label* label, bool invertBranch)
         : label(label),
           stackHeight(StackHeight::Invalid()),
           invertBranch(invertBranch),
-          resultType() {}
+          resultType(ExprType::Void) {}
 
     BranchState(Label* label, StackHeight stackHeight, bool invertBranch,
-                ResultType resultType)
+                ExprType resultType)
         : label(label),
           stackHeight(stackHeight),
           invertBranch(invertBranch),
@@ -6744,13 +6712,12 @@ class BaseCompiler final : public BaseCompilerInterface {
   template <bool isSetLocal>
   MOZ_MUST_USE bool emitSetOrTeeLocal(uint32_t slot);
 
-  void endBlock(ResultType type);
-  void endLoop(ResultType type);
+  void endBlock(ExprType type);
   void endIfThen();
-  void endIfThenElse(ResultType type);
+  void endIfThenElse(ExprType type);
 
-  void doReturn(bool popStack);
-  void pushReturnValueOfCall(const FunctionCall& call, ValType type);
+  void doReturn(ExprType returnType, bool popStack);
+  void pushReturnValueOfCall(const FunctionCall& call, ExprType type);
   void pushReturnValueOfCall(const FunctionCall& call, MIRType type);
 
   void emitCompareI32(Assembler::Condition compareOp, ValType compareType);
@@ -8158,7 +8125,7 @@ bool BaseCompiler::emitBlock() {
   return true;
 }
 
-void BaseCompiler::endBlock(ResultType type) {
+void BaseCompiler::endBlock(ExprType type) {
   Control& block = controlItem();
 
   // Save the value.
@@ -8275,10 +8242,10 @@ void BaseCompiler::endIfThen() {
 }
 
 bool BaseCompiler::emitElse() {
-  ResultType thenType;
-  NothingVector unused_thenValues;
+  ExprType thenType;
+  Nothing unused_thenValue;
 
-  if (!iter_.readElse(&thenType, &unused_thenValues)) {
+  if (!iter_.readElse(&thenType, &unused_thenValue)) {
     return false;
   }
 
@@ -8319,7 +8286,7 @@ bool BaseCompiler::emitElse() {
   return true;
 }
 
-void BaseCompiler::endIfThenElse(ResultType type) {
+void BaseCompiler::endIfThenElse(ExprType type) {
   Control& ifThenElse = controlItem();
 
   // The expression type is not a reliable guide to what we'll find
@@ -8363,9 +8330,9 @@ void BaseCompiler::endIfThenElse(ResultType type) {
 
 bool BaseCompiler::emitEnd() {
   LabelKind kind;
-  ResultType type;
-  NothingVector unused_values;
-  if (!iter_.readEnd(&kind, &type, &unused_values)) {
+  ExprType type;
+  Nothing unused_value;
+  if (!iter_.readEnd(&kind, &type, &unused_value)) {
     return false;
   }
 
@@ -8374,7 +8341,7 @@ bool BaseCompiler::emitEnd() {
       endBlock(type);
       iter_.popEnd();
       MOZ_ASSERT(iter_.controlStackEmpty());
-      doReturn(PopStack(false));
+      doReturn(type, PopStack(false));
       return iter_.readFunctionEnd(iter_.end());
     case LabelKind::Block:
       endBlock(type);
@@ -8398,9 +8365,9 @@ bool BaseCompiler::emitEnd() {
 
 bool BaseCompiler::emitBr() {
   uint32_t relativeDepth;
-  ResultType type;
-  NothingVector unused_values;
-  if (!iter_.readBr(&relativeDepth, &type, &unused_values)) {
+  ExprType type;
+  Nothing unused_value;
+  if (!iter_.readBr(&relativeDepth, &type, &unused_value)) {
     return false;
   }
 
@@ -8431,10 +8398,9 @@ bool BaseCompiler::emitBr() {
 
 bool BaseCompiler::emitBrIf() {
   uint32_t relativeDepth;
-  ResultType type;
-  NothingVector unused_values;
-  Nothing unused_condition;
-  if (!iter_.readBrIf(&relativeDepth, &type, &unused_values,
+  ExprType type;
+  Nothing unused_value, unused_condition;
+  if (!iter_.readBrIf(&relativeDepth, &type, &unused_value,
                       &unused_condition)) {
     return false;
   }
@@ -8457,11 +8423,10 @@ bool BaseCompiler::emitBrIf() {
 bool BaseCompiler::emitBrTable() {
   Uint32Vector depths;
   uint32_t defaultDepth;
-  ResultType branchValueType;
-  NothingVector unused_values;
-  Nothing unused_index;
+  ExprType branchValueType;
+  Nothing unused_value, unused_index;
   if (!iter_.readBrTable(&depths, &defaultDepth, &branchValueType,
-                         &unused_values, &unused_index)) {
+                         &unused_value, &unused_index)) {
     return false;
   }
 
@@ -8541,44 +8506,43 @@ bool BaseCompiler::emitDrop() {
   return true;
 }
 
-void BaseCompiler::doReturn(bool popStack) {
+void BaseCompiler::doReturn(ExprType type, bool popStack) {
   if (deadCode_) {
     return;
   }
-  Maybe<ValType> type = funcType().ret();
-  if (!type) {
-    returnCleanup(popStack);
-    return;
-  }
-  switch (type.ref().code()) {
-    case ValType::I32: {
+  switch (type.code()) {
+    case ExprType::Void: {
+      returnCleanup(popStack);
+      break;
+    }
+    case ExprType::I32: {
       RegI32 rv = popI32(RegI32(ReturnReg));
       returnCleanup(popStack);
       freeI32(rv);
       break;
     }
-    case ValType::I64: {
+    case ExprType::I64: {
       RegI64 rv = popI64(RegI64(ReturnReg64));
       returnCleanup(popStack);
       freeI64(rv);
       break;
     }
-    case ValType::F64: {
+    case ExprType::F64: {
       RegF64 rv = popF64(RegF64(ReturnDoubleReg));
       returnCleanup(popStack);
       freeF64(rv);
       break;
     }
-    case ValType::F32: {
+    case ExprType::F32: {
       RegF32 rv = popF32(RegF32(ReturnFloat32Reg));
       returnCleanup(popStack);
       freeF32(rv);
       break;
     }
-    case ValType::Ref:
-    case ValType::NullRef:
-    case ValType::FuncRef:
-    case ValType::AnyRef: {
+    case ExprType::Ref:
+    case ExprType::NullRef:
+    case ExprType::FuncRef:
+    case ExprType::AnyRef: {
       RegPtr rv = popRef(RegPtr(ReturnReg));
       returnCleanup(popStack);
       freeRef(rv);
@@ -8591,8 +8555,8 @@ void BaseCompiler::doReturn(bool popStack) {
 }
 
 bool BaseCompiler::emitReturn() {
-  NothingVector unused_values;
-  if (!iter_.readReturn(&unused_values)) {
+  Nothing unused_value;
+  if (!iter_.readReturn(&unused_value)) {
     return false;
   }
 
@@ -8600,7 +8564,7 @@ bool BaseCompiler::emitReturn() {
     return true;
   }
 
-  doReturn(PopStack(true));
+  doReturn(funcType().ret(), PopStack(true));
   deadCode_ = true;
 
   return true;
@@ -8657,8 +8621,8 @@ void BaseCompiler::pushReturnValueOfCall(const FunctionCall& call,
 }
 
 void BaseCompiler::pushReturnValueOfCall(const FunctionCall& call,
-                                         ValType type) {
-  MOZ_ASSERT(type.code() != ValType::NullRef);
+                                         ExprType type) {
+  MOZ_ASSERT(type.code() != ExprType::NullRef);
   pushReturnValueOfCall(call, ToMIRType(type));
 }
 
@@ -8679,7 +8643,7 @@ bool BaseCompiler::emitCall() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
   uint32_t funcIndex;
-  NothingVector args_;
+  BaseOpIter::ValueVector args_;
   if (!iter_.readCall(&funcIndex, &args_)) {
     return false;
   }
@@ -8720,8 +8684,8 @@ bool BaseCompiler::emitCall() {
 
   popValueStackBy(numArgs);
 
-  if (funcType.ret()) {
-    pushReturnValueOfCall(baselineCall, funcType.ret().ref());
+  if (funcType.ret() != ExprType::Void) {
+    pushReturnValueOfCall(baselineCall, funcType.ret());
   }
 
   return true;
@@ -8733,7 +8697,7 @@ bool BaseCompiler::emitCallIndirect() {
   uint32_t funcTypeIndex;
   uint32_t tableIndex;
   Nothing callee_;
-  NothingVector args_;
+  BaseOpIter::ValueVector args_;
   if (!iter_.readCallIndirect(&funcTypeIndex, &tableIndex, &callee_, &args_)) {
     return false;
   }
@@ -8774,8 +8738,8 @@ bool BaseCompiler::emitCallIndirect() {
 
   popValueStackBy(numArgs);
 
-  if (funcType.ret()) {
-    pushReturnValueOfCall(baselineCall, funcType.ret().ref());
+  if (funcType.ret() != ExprType::Void) {
+    pushReturnValueOfCall(baselineCall, funcType.ret());
   }
 
   return true;
@@ -8818,7 +8782,8 @@ bool BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee,
   sync();
 
   ValTypeVector& signature = operandType == ValType::F32 ? SigF_ : SigD_;
-  ValType retType = operandType;
+  ExprType retType =
+      operandType == ValType::F32 ? ExprType::F32 : ExprType::F64;
   uint32_t numArgs = signature.length();
   size_t stackSpace = stackConsumed(numArgs);
 
@@ -8838,6 +8803,7 @@ bool BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee,
 
   popValueStackBy(numArgs);
 
+  // We know retType isn't ExprType::Void here, so there's no need to check it.
   pushReturnValueOfCall(baselineCall, retType);
 
   return true;
@@ -10466,7 +10432,7 @@ bool BaseCompiler::emitStructNew() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
   uint32_t typeIndex;
-  NothingVector args;
+  BaseOpIter::ValueVector args;
   if (!iter_.readStructNew(&typeIndex, &args)) {
     return false;
   }
@@ -10486,6 +10452,10 @@ bool BaseCompiler::emitStructNew() {
   if (!emitInstanceCall(lineOrBytecode, SASigStructNew)) {
     return false;
   }
+
+  // As many arguments as there are fields.
+
+  MOZ_ASSERT(args.length() == structType.fields_.length());
 
   // Optimization opportunity: Iterate backward to pop arguments off the
   // stack.  This will generate more instructions than we want, since we
@@ -10823,7 +10793,7 @@ bool BaseCompiler::emitStructNarrow() {
 bool BaseCompiler::emitBody() {
   MOZ_ASSERT(stackMapGenerator_.framePushedAtEntryToBody.isSome());
 
-  if (!iter_.readFunctionStart(func_.index)) {
+  if (!iter_.readFunctionStart(funcType().ret())) {
     return false;
   }
 

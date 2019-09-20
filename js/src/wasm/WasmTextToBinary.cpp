@@ -4134,6 +4134,21 @@ static bool ParseValueTypeList(WasmParseContext& c, AstValTypeVector* vec) {
   return true;
 }
 
+static bool ParseResult(WasmParseContext& c, AstExprType* result) {
+  if (!result->isVoid()) {
+    c.ts.generateError(c.ts.peek(), c.error);
+    return false;
+  }
+
+  AstValType type;
+  if (!ParseValType(c, &type)) {
+    return false;
+  }
+
+  *result = AstExprType(type);
+  return true;
+}
+
 static bool ParseLocalOrParam(WasmParseContext& c, AstNameVector* locals,
                               AstValTypeVector* localTypes) {
   if (c.ts.peek().kind() != WasmToken::Name) {
@@ -4180,7 +4195,7 @@ static bool MaybeParseTypeUse(WasmParseContext& c, AstRef* funcType) {
 
 static bool ParseFuncSig(WasmParseContext& c, AstFuncType* funcType) {
   AstValTypeVector args(c.lifo);
-  AstValTypeVector results(c.lifo);
+  AstExprType result = AstExprType(ExprType::Void);
 
   while (c.ts.getIf(WasmToken::OpenParen)) {
     WasmToken token = c.ts.get();
@@ -4191,11 +4206,7 @@ static bool ParseFuncSig(WasmParseContext& c, AstFuncType* funcType) {
         }
         break;
       case WasmToken::Result:
-        if (!ParseValueTypeList(c, &results)) {
-          return false;
-        }
-        if (results.length() > 1) {
-          c.ts.generateError(token, "too many results", c.error);
+        if (!ParseResult(c, &result)) {
           return false;
         }
         break;
@@ -4208,7 +4219,7 @@ static bool ParseFuncSig(WasmParseContext& c, AstFuncType* funcType) {
     }
   }
 
-  *funcType = AstFuncType(std::move(args), std::move(results));
+  *funcType = AstFuncType(std::move(args), result);
   return true;
 }
 
@@ -4235,7 +4246,6 @@ static bool ParseFuncType(WasmParseContext& c, AstRef* ref, AstModule* module) {
 static bool ParseFunc(WasmParseContext& c, AstModule* module) {
   AstValTypeVector vars(c.lifo);
   AstValTypeVector args(c.lifo);
-  AstValTypeVector results(c.lifo);
   AstNameVector locals(c.lifo);
 
   AstName funcName = c.ts.getIfName();
@@ -4291,6 +4301,7 @@ static bool ParseFunc(WasmParseContext& c, AstModule* module) {
 
   AstExprVector body(c.lifo);
 
+  AstExprType result = AstExprType(ExprType::Void);
   while (c.ts.getIf(WasmToken::OpenParen)) {
     WasmToken token = c.ts.get();
     switch (token.kind()) {
@@ -4309,11 +4320,7 @@ static bool ParseFunc(WasmParseContext& c, AstModule* module) {
         }
         break;
       case WasmToken::Result:
-        if (!ParseValueTypeList(c, &results)) {
-          return false;
-        }
-        if (results.length() > 1) {
-          c.ts.generateError(token, "too many results", c.error);
+        if (!ParseResult(c, &result)) {
           return false;
         }
         break;
@@ -4336,7 +4343,7 @@ static bool ParseFunc(WasmParseContext& c, AstModule* module) {
 
   if (funcTypeRef.isInvalid()) {
     uint32_t funcTypeIndex;
-    if (!module->declare(AstFuncType(std::move(args), std::move(results)),
+    if (!module->declare(AstFuncType(std::move(args), result),
                          &funcTypeIndex)) {
       return false;
     }
@@ -5924,12 +5931,7 @@ static bool ResolveSignature(Resolver& r, AstFuncType& ft) {
       return false;
     }
   }
-  for (AstValType& vt : ft.results()) {
-    if (!ResolveType(r, vt)) {
-      return false;
-    }
-  }
-  return true;
+  return ResolveType(r, ft.ret());
 }
 
 static bool ResolveStruct(Resolver& r, AstStructType& s) {
@@ -6152,23 +6154,12 @@ static bool EncodeExprList(Encoder& e, const AstExprVector& v) {
   return true;
 }
 
-static bool EncodeBlockType(Encoder& e, AstExprType& t) {
-  ExprType type = t.type();
-  static_assert(size_t(TypeCode::Limit) <= UINT8_MAX, "fits");
-  MOZ_ASSERT(size_t(type.code()) < size_t(TypeCode::Limit));
-  if (type.isRef()) {
-    return e.writeFixedU8(uint8_t(ExprType::Ref)) &&
-           e.writeVarU32(type.refTypeIndex());
-  }
-  return e.writeFixedU8(uint8_t(type.code()));
-}
-
 static bool EncodeBlock(Encoder& e, AstBlock& b) {
   if (!e.writeOp(b.op())) {
     return false;
   }
 
-  if (!EncodeBlockType(e, b.type())) {
+  if (!e.writeBlockType(b.type().type())) {
     return false;
   }
 
@@ -6335,7 +6326,7 @@ static bool EncodeIf(Encoder& e, AstIf& i) {
     return false;
   }
 
-  if (!EncodeBlockType(e, i.type())) {
+  if (!e.writeBlockType(i.type().type())) {
     return false;
   }
 
@@ -6777,12 +6768,12 @@ static bool EncodeTypeSection(Encoder& e, AstModule& module) {
         }
       }
 
-      if (!e.writeVarU32(funcType->results().length())) {
+      if (!e.writeVarU32(!IsVoid(funcType->ret().type()))) {
         return false;
       }
 
-      for (AstValType vt : funcType->results()) {
-        if (!e.writeValType(vt.type())) {
+      if (!IsVoid(funcType->ret().type())) {
+        if (!e.writeValType(NonVoidToValType(funcType->ret().type()))) {
           return false;
         }
       }
