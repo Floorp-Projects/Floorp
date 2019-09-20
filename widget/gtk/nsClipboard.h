@@ -13,7 +13,6 @@
 #include "nsIBinaryOutputStream.h"
 #include <gtk/gtk.h>
 
-#undef LOG
 #ifdef MOZ_LOGGING
 #  include "mozilla/Logging.h"
 #  include "nsTArray.h"
