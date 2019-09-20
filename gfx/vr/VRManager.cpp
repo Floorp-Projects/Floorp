@@ -560,6 +560,7 @@ void VRManager::EnumerateVRDisplays() {
       mFrameStarted = false;
       mBrowserState.Clear();
       mLastSensorState.Clear();
+      mEnumerationCompleted = false;
       mDisplayInfo.mGroupMask = kVRGroupContent;
       // We must block until enumeration has completed in order
       // to signal that the WebVR promise should be resolved at the
