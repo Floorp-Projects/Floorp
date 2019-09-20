@@ -212,12 +212,14 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   already_AddRefed<BrowsingContext> GetOpener() const {
     RefPtr<BrowsingContext> opener(Get(mOpenerId));
     if (!mIsDiscarded && opener && !opener->mIsDiscarded) {
+      MOZ_DIAGNOSTIC_ASSERT(opener->mType == mType);
       return opener.forget();
     }
     return nullptr;
   }
   void SetOpener(BrowsingContext* aOpener) {
     MOZ_DIAGNOSTIC_ASSERT(!aOpener || aOpener->Group() == Group());
+    MOZ_DIAGNOSTIC_ASSERT(!aOpener || aOpener->mType == mType);
     SetOpenerId(aOpener ? aOpener->Id() : 0);
   }
 
