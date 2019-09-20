@@ -22,7 +22,7 @@ var parentRunner = null;
 // In normal test runs, the window that has a TestRunner in its parent is
 // the primary window.  In single test runs, if there is no parent and there
 // is no opener then it is the primary window.
-var isSingleTestRun = (parent == window && !(opener || window.arguments && window.arguments[0].SimpleTest));
+var isSingleTestRun = (parent == window && !opener)
 try {
   var isPrimaryTestWindow = !!parent.TestRunner || isSingleTestRun;
 } catch(e) {
@@ -39,7 +39,7 @@ try {
 // includes SimpleTest.js.
 (function() {
     function ancestor(w) {
-        return w.parent != w ? w.parent : w.opener || w.arguments && w.arguments[0];
+        return w.parent != w ? w.parent : w.opener;
     }
 
     var w = ancestor(window);

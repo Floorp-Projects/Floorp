@@ -49,12 +49,12 @@
     }
 
     function ok(condition, message) {
-      window.arguments[0].SimpleTest.ok(condition, message);
+      window.opener.wrappedJSObject.SimpleTest.ok(condition, message);
     }
     function finish() {
       window.controllers.removeController(gShouldNotBeReachedController);
       window.close();
-      window.arguments[0].SimpleTest.finish();
+      window.opener.wrappedJSObject.SimpleTest.finish();
     }
 
     function onLoad() {

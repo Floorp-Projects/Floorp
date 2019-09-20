@@ -18,19 +18,19 @@
     var savedMM = null;
 
     function info(message) {
-      return window.arguments[0].info(message);
+      return opener.wrappedJSObject.info(message);
     }
 
     function ok(condition, message) {
-      return window.arguments[0].ok(condition, message);
+      return opener.wrappedJSObject.ok(condition, message);
     }
 
     function is(v1, v2, message) {
-      return window.arguments[0].is(v1, v2, message);
+      return opener.wrappedJSObject.is(v1, v2, message);
     }
 
     function todo_is(v1, v2, message) {
-      return window.arguments[0].todo_is(v1, v2, message);
+      return opener.wrappedJSObject.todo_is(v1, v2, message);
     }
 
     // Make sure that an error in this file actually causes the test to fail.
@@ -411,7 +411,7 @@
         }
         failed = true;
       }
-      window.arguments[0].SpecialPowers.clearUserPref(PREF_UNSAFE_FORBIDDEN);
+      opener.wrappedJSObject.SpecialPowers.clearUserPref(PREF_UNSAFE_FORBIDDEN);
       ok(failed, "CPOW should fail when unsafe");
       msg.target.messageManager.sendAsyncMessage("cpows:unsafe_done");
     }
@@ -427,7 +427,7 @@
         }
         ok(false, "cpow failed");
       }
-      window.arguments[0].SpecialPowers.clearUserPref(PREF_UNSAFE_FORBIDDEN);
+      opener.wrappedJSObject.SpecialPowers.clearUserPref(PREF_UNSAFE_FORBIDDEN);
       msg.target.messageManager.sendAsyncMessage("cpows:safe_done");
     }
 
@@ -512,7 +512,7 @@
 
     function finish() {
       ok(gReceivedErrorProbe, "Should have reported error probe");
-      window.arguments[0].setTimeout(function() { this.done(); }, 0);
+      opener.setTimeout(function() { this.done(); }, 0);
       window.close();
     }
   ]]></script>

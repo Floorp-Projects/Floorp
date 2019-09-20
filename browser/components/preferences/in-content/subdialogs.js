@@ -100,8 +100,7 @@ SubDialog.prototype = {
     this._addDialogEventListeners();
 
     let features =
-      (aFeatures ? aFeatures + "," : "") +
-      "resizable,dialog=no,centerscreen,chrome=no";
+      (aFeatures ? aFeatures + "," : "") + "resizable,dialog=no,centerscreen";
     let dialog = window.openDialog(
       aURL,
       `dialogFrame-${this._id}`,

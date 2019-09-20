@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=618176
   }
 
   addLoadEvent(function() {
-    window.openDialog("file_bug618176.xul", "", "chrome,noopener", window);
+    window.open("file_bug618176.xul", "", "chrome");
   });
   ]]></script>
 </window>

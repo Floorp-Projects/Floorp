@@ -15,10 +15,9 @@
   let win, x, y;
 
   function startTest() {
-    win = docShell.rootTreeItem.domWindow.openDialog(
-        "about:blank",
-        null,
-        "chrome,dialog=no,outerHeight=170,outerWidth=200");
+    win = window.openDialog("about:blank",
+                            null,
+                            "chrome,dialog=no,outerHeight=170,outerWidth=200");
     waitForSuccess(function() { return win.mozPaintCount },
                    "No paint received", checkInitialSize);
   }

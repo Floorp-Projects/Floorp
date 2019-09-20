@@ -38,8 +38,7 @@ function test() {
 
   function doTest() {
     uri = uris[iteration - 1];
-    window.open(uri, "_blank", "width=10,height=10,noopener");
-    w = Services.wm.getMostRecentWindow("navigator:browser").content;
+    w = window.open(uri, "_blank", "width=10,height=10");
     var prin = w.document.nodePrincipal;
     if (!uri) {
       uri = undefined;

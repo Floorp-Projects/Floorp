@@ -11,11 +11,11 @@
   <script>
     SimpleTest.waitForExplicitFinish();
     function runTest() {
-      window.openDialog("window_persistence.xul", "_blank", "chrome,noopener", true, window);
+      window.openDialog("window_persistence.xul", "_blank", "chrome", true);
     }
 
     function windowOpened() {
-      window.openDialog("window_persistence.xul", "_blank", "chrome,noopener", false, window);
+      window.openDialog("window_persistence.xul", "_blank", "chrome", false);
     }
 
     function testDone() {

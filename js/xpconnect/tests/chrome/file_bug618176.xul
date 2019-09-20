@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=618176
 
     function recvTest(m) {
       var a = m.json;
-      window.arguments[0].is(a.length, 3, "array was serialized and deserialized");
+      opener.wrappedJSObject.is(a.length, 3, "array was serialized and deserialized");
 
       messageManager.removeMessageListener("test", recvTest);
       finish();
@@ -38,7 +38,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=618176
     }
 
     function finish() {
-      window.arguments[0].setTimeout(function() { this.done(); }, 0);
+      opener.setTimeout(function() { this.done(); }, 0);
       window.close();
     }
 

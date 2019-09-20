@@ -20,7 +20,7 @@
 SimpleTest.waitForExplicitFinish();
 function runTest()
 {
-  window.openDialog("window_subframe_origin.xul", "_blank", "chrome,width=600,height=600,noopener", window);
+  window.open("window_subframe_origin.xul", "_blank", "chrome,width=600,height=600");
 }
 </script>
 

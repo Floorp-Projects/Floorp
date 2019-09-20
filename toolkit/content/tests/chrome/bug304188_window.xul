@@ -19,14 +19,14 @@ find-menu appears in editor element which has had makeEditable() called but desi
   <script type="application/javascript"><![CDATA[
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
     const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
-    ContentTask.setTestScope(window.arguments[0]);
+    ContentTask.setTestScope(window.opener.wrappedJSObject);
 
     var gFindBar = null;
     var gBrowser;
 
     var imports = ["SimpleTest", "ok", "info"];
     for (var name of imports) {
-      window[name] = window.arguments[0][name];
+      window[name] = window.opener.wrappedJSObject[name];
     }
 
     function onLoad() {
