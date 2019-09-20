@@ -80,6 +80,17 @@ class DisplayToolbarTest {
     }
 
     @Test
+    fun `trackingProtectionViewColor will change the color of the trackingProtectionIconView`() {
+        val displayToolbar = DisplayToolbar(testContext, BrowserToolbar(testContext))
+
+        assertNull(displayToolbar.trackingProtectionIconView.colorFilter)
+
+        displayToolbar.trackingProtectionViewColor = Color.BLUE
+
+        assertNotNull(displayToolbar.trackingProtectionIconView.colorFilter)
+    }
+
+    @Test
     fun `tracking protection indicator view will use square size`() {
         val toolbar = mock(BrowserToolbar::class.java)
         val displayToolbar = DisplayToolbar(testContext, toolbar)

@@ -149,10 +149,12 @@ class CustomTabsToolbarFeatureTest {
 
         verify(toolbar, never()).setBackgroundColor(anyInt())
         verify(toolbar, never()).textColor = anyInt()
+        verify(toolbar, never()).trackingProtectionColor = anyInt()
 
         feature.updateToolbarColor(123, 456)
 
         verify(toolbar).setBackgroundColor(anyInt())
+        verify(toolbar).trackingProtectionColor = anyInt()
         verify(toolbar).textColor = anyInt()
     }
 

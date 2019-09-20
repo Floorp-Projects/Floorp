@@ -100,6 +100,7 @@ class CustomTabsToolbarFeature(
             toolbar.textColor = readableColor
             toolbar.titleColor = readableColor
             toolbar.siteSecurityColor = readableColor to readableColor
+            toolbar.trackingProtectionColor = readableColor
             toolbar.menuViewColor = readableColor
 
             window?.setStatusBarTheme(color)

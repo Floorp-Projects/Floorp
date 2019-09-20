@@ -1011,6 +1011,16 @@ class BrowserToolbarTest {
     }
 
     @Test
+    fun `trackingProtectionColor changes will forward calls to display toolbar`() {
+        val toolbar = BrowserToolbar(testContext)
+        toolbar.displayToolbar = spy(toolbar.displayToolbar)
+
+        toolbar.trackingProtectionColor = Color.BLUE
+        verify(toolbar.displayToolbar).trackingProtectionViewColor = Color.BLUE
+        assertEquals(toolbar.trackingProtectionColor, Color.BLUE)
+    }
+
+    @Test
     fun `setOnTrackingProtectionClickedListener will forward events to display toolbar`() {
         val toolbar = BrowserToolbar(testContext)
         val displayToolbar = toolbar.displayToolbar

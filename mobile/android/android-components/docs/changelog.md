@@ -12,6 +12,16 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-customtabs**
+  * Now the color of the tracking protection icon adapts to color of the toolbar.
+
+* **browser-toolbar**
+  * Added a way to customize the color of the tracking protection icon via BrowserToolbar.
+  ```kotlin
+  val toolbar = BrowserToolbar(context)
+  toolbar.trackingProtectionColor = Color.BLUE
+  ``
+
 * **All components**
   * Increased `androidx.browser` version to `1.2.0-alpha07`.
 
