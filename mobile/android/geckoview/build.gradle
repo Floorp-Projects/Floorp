@@ -494,7 +494,7 @@ task("generateSDKBindings", type: JavaExec) {
         // From -Pgenerate_sdk_bindings_args=... on command line; missing in
         // `android-gradle-dependencies` toolchain task.
         if (project.hasProperty('generate_sdk_bindings_args')) {
-            args project.generate_sdk_bindings_args.split(':')
+            args project.generate_sdk_bindings_args.split(';')
         }
     }
 

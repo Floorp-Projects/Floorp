@@ -27,6 +27,10 @@ static mozilla::LazyLogModule sGetUserMediaLog("GetUserMedia");
 
 namespace mozilla {
 
+CubebDeviceEnumerator* GetEnumerator() {
+  return CubebDeviceEnumerator::GetInstance();
+}
+
 MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs& aPrefs)
     : mMutex("mozilla::MediaEngineWebRTC"),
       mDelayAgnostic(aPrefs.mDelayAgnostic),
@@ -40,6 +44,7 @@ MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs& aPrefs)
   }
 
   camera::GetChildAndCall(&camera::CamerasChild::AddDeviceChangeCallback, this);
+  GetEnumerator()->AddDeviceChangeCallback(this);
 }
 
 void MediaEngineWebRTC::SetFakeDeviceChangeEvents() {
@@ -149,10 +154,8 @@ void MediaEngineWebRTC::EnumerateMicrophoneDevices(
     uint64_t aWindowId, nsTArray<RefPtr<MediaDevice>>* aDevices) {
   mMutex.AssertCurrentThreadOwns();
 
-  mEnumerator = CubebDeviceEnumerator::GetInstance();
-
   nsTArray<RefPtr<AudioDeviceInfo>> devices;
-  mEnumerator->EnumerateAudioInputDevices(devices);
+  GetEnumerator()->EnumerateAudioInputDevices(devices);
 
   DebugOnly<bool> foundPreferredDevice = false;
 
@@ -200,11 +203,8 @@ void MediaEngineWebRTC::EnumerateMicrophoneDevices(
 
 void MediaEngineWebRTC::EnumerateSpeakerDevices(
     uint64_t aWindowId, nsTArray<RefPtr<MediaDevice>>* aDevices) {
-  if (!mEnumerator) {
-    mEnumerator = CubebDeviceEnumerator::GetInstance();
-  }
   nsTArray<RefPtr<AudioDeviceInfo>> devices;
-  mEnumerator->EnumerateAudioOutputDevices(devices);
+  GetEnumerator()->EnumerateAudioOutputDevices(devices);
 
 #ifndef XP_WIN
   DebugOnly<bool> preferredDeviceFound = false;
@@ -270,7 +270,6 @@ void MediaEngineWebRTC::EnumerateDevices(
         NS_ConvertUTF8toUTF16(audioCaptureSource->GetUUID()),
         audioCaptureSource->GetGroupId(), NS_LITERAL_STRING("")));
   } else if (aMediaSource == dom::MediaSourceEnum::Microphone) {
-    MOZ_ASSERT(aMediaSource == dom::MediaSourceEnum::Microphone);
     EnumerateMicrophoneDevices(aWindowId, aDevices);
   }
 
@@ -287,9 +286,9 @@ void MediaEngineWebRTC::Shutdown() {
     camera::GetChildAndCall(&camera::CamerasChild::RemoveDeviceChangeCallback,
                             this);
   }
+  GetEnumerator()->RemoveDeviceChangeCallback(this);
 
   LOG(("%s", __FUNCTION__));
-  mEnumerator = nullptr;
   mozilla::camera::Shutdown();
 }
 

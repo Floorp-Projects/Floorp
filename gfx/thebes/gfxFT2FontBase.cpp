@@ -141,33 +141,17 @@ static void SnapLineToPixels(gfxFloat& aOffset, gfxFloat& aSize) {
 /**
  * Get extents for a simple character representable by a single glyph.
  * The return value is the glyph id of that glyph or zero if no such glyph
- * exists.  aExtents is only set when this returns a non-zero glyph id.
- */
-uint32_t gfxFT2FontBase::GetCharExtents(char aChar, gfxFloat* aWidth,
-                                        gfxFloat* aHeight) {
-  FT_UInt gid = GetGlyph(aChar);
-  int32_t width;
-  int32_t height;
-  if (gid && GetFTGlyphExtents(gid, &width, &height)) {
-    *aWidth = FLOAT_FROM_16_16(width);
-    *aHeight = FLOAT_FROM_26_6(height);
-    return gid;
-  } else {
-    return 0;
-  }
-}
-
-/**
- * Get glyph id and width for a simple character.
- * The return value is the glyph id of that glyph or zero if no such glyph
- * exists.  aWidth is only set when this returns a non-zero glyph id.
+ * exists.  aWidth/aBounds is only set when this returns a non-zero glyph id.
  * This is just for use during initialization, and doesn't use the width cache.
  */
-uint32_t gfxFT2FontBase::GetCharWidth(char aChar, gfxFloat* aWidth) {
+uint32_t gfxFT2FontBase::GetCharExtents(char aChar, gfxFloat* aWidth,
+                                        gfxRect* aBounds) {
   FT_UInt gid = GetGlyph(aChar);
   int32_t width;
-  if (gid && GetFTGlyphExtents(gid, &width)) {
-    *aWidth = FLOAT_FROM_16_16(width);
+  if (gid && GetFTGlyphExtents(gid, &width, aBounds)) {
+    if (aWidth) {
+      *aWidth = FLOAT_FROM_16_16(width);
+    }
     return gid;
   } else {
     return 0;
@@ -402,14 +386,14 @@ void gfxFT2FontBase::InitMetrics() {
   UnlockFTFace();
 
   gfxFloat width;
-  mSpaceGlyph = GetCharWidth(' ', &width);
+  mSpaceGlyph = GetCharExtents(' ', &width);
   if (mSpaceGlyph) {
     mMetrics.spaceWidth = width;
   } else {
     mMetrics.spaceWidth = mMetrics.maxAdvance;  // guess
   }
 
-  if (GetCharWidth('0', &width)) {
+  if (GetCharExtents('0', &width)) {
     mMetrics.zeroWidth = width;
   } else {
     mMetrics.zeroWidth = -1.0;  // indicates not found
@@ -420,14 +404,14 @@ void gfxFT2FontBase::InitMetrics() {
   // script fonts.  CSS 2.1 suggests possibly using the height of an "o",
   // which would have a more consistent glyph across fonts.
   gfxFloat xWidth;
-  gfxFloat xHeight;
-  if (GetCharExtents('x', &xWidth, &xHeight) && xHeight < 0.0) {
-    mMetrics.xHeight = -xHeight;
+  gfxRect xBounds;
+  if (GetCharExtents('x', &xWidth, &xBounds) && xBounds.y < 0.0) {
+    mMetrics.xHeight = -xBounds.y;
     mMetrics.aveCharWidth = std::max(mMetrics.aveCharWidth, xWidth);
   }
 
-  if (GetCharExtents('H', &xWidth, &xHeight) && xHeight < 0.0) {
-    mMetrics.capHeight = -xHeight;
+  if (GetCharExtents('H', nullptr, &xBounds) && xBounds.y < 0.0) {
+    mMetrics.capHeight = -xBounds.y;
   }
 
   mMetrics.aveCharWidth = std::max(mMetrics.aveCharWidth, mMetrics.zeroWidth);
@@ -504,27 +488,27 @@ uint32_t gfxFT2FontBase::GetGlyph(uint32_t unicode,
   return GetGlyph(unicode);
 }
 
-FT_Fixed gfxFT2FontBase::GetEmboldenAdvance(FT_Face aFace, FT_Fixed aAdvance) {
-  // If freetype emboldening is being used, and it's not a zero-width glyph,
-  // adjust the advance to account for the increased width.
-  if (!mEmbolden || !aAdvance) {
-    return 0;
+FT_Vector gfxFT2FontBase::GetEmboldenStrength(FT_Face aFace) {
+  FT_Vector strength = { 0, 0 };
+  if (!mEmbolden) {
+    return strength;
   }
-  // This is the embolden "strength" used by FT_GlyphSlot_Embolden,
-  // converted from 26.6 to 16.16
-  FT_Fixed strength =
+  // This is the embolden "strength" used by FT_GlyphSlot_Embolden.
+  strength.x =
       FT_MulFix(aFace->units_per_EM, aFace->size->metrics.y_scale) / 24;
+  strength.y = strength.x;
   if (aFace->glyph->format == FT_GLYPH_FORMAT_BITMAP) {
-    strength &= -64;
-    if (!strength) {
-      strength = 64;
+    strength.x &= -64;
+    if (!strength.x) {
+      strength.x = 64;
     }
+    strength.y &= -64;
   }
-  return strength << 10;
+  return strength;
 }
 
 bool gfxFT2FontBase::GetFTGlyphExtents(uint16_t aGID, int32_t* aAdvance,
-                                       int32_t* aHeight) {
+                                       gfxRect* aBounds) {
   gfxFT2LockedFace face(this);
   MOZ_ASSERT(face.get());
   if (!face.get()) {
@@ -547,32 +531,51 @@ bool gfxFT2FontBase::GetFTGlyphExtents(uint16_t aGID, int32_t* aAdvance,
   // desired size, in case these two sizes differ.
   gfxFloat extentsScale = GetAdjustedSize() / mFTSize;
 
+  FT_Vector bold = GetEmboldenStrength(face.get());
+
   // Due to freetype bug 52683 we MUST use the linearHoriAdvance field when
   // dealing with a variation font; also use it for scalable fonts when not
   // applying hinting. Otherwise, prefer hinted width from glyph->advance.x.
-  FT_Fixed advance;
-  if (face.get()->glyph->format == FT_GLYPH_FORMAT_OUTLINE &&
-      (!hintMetrics || FT_HAS_MULTIPLE_MASTERS(face.get()))) {
-    advance = face.get()->glyph->linearHoriAdvance;
-  } else {
-    advance = face.get()->glyph->advance.x << 10;  // convert 26.6 to 16.16
-  }
-  advance += GetEmboldenAdvance(face.get(), advance);
-  // Hinting was requested, but FT did not apply any hinting to the metrics.
-  // Round the advance here to approximate hinting as Cairo does. This must
-  // happen BEFORE we apply the glyph extents scale, just like FT hinting
-  // would.
-  if (hintMetrics && (mFTLoadFlags & FT_LOAD_NO_HINTING)) {
-    advance = (advance + 0x8000) & 0xffff0000u;
-  }
-  *aAdvance = NS_lround(advance * extentsScale);
-
-  if (aHeight) {
-    FT_F26Dot6 height = -face.get()->glyph->metrics.horiBearingY;
-    if (hintMetrics && (mFTLoadFlags & FT_LOAD_NO_HINTING)) {
-      height &= -64;
+  if (aAdvance) {
+    FT_Fixed advance;
+    if (face.get()->glyph->format == FT_GLYPH_FORMAT_OUTLINE &&
+        (!hintMetrics || FT_HAS_MULTIPLE_MASTERS(face.get()))) {
+      advance = face.get()->glyph->linearHoriAdvance;
+    } else {
+      advance = face.get()->glyph->advance.x << 10;  // convert 26.6 to 16.16
     }
-    *aHeight = NS_lround(height * extentsScale);
+    if (advance) {
+      advance += bold.x << 10;  // convert 26.6 to 16.16
+    }
+    // Hinting was requested, but FT did not apply any hinting to the metrics.
+    // Round the advance here to approximate hinting as Cairo does. This must
+    // happen BEFORE we apply the glyph extents scale, just like FT hinting
+    // would.
+    if (hintMetrics && (mFTLoadFlags & FT_LOAD_NO_HINTING)) {
+      advance = (advance + 0x8000) & 0xffff0000u;
+    }
+    *aAdvance = NS_lround(advance * extentsScale);
+  }
+
+  if (aBounds) {
+    const FT_Glyph_Metrics& metrics = face.get()->glyph->metrics;
+    FT_F26Dot6 x = metrics.horiBearingX;
+    FT_F26Dot6 y = -metrics.horiBearingY;
+    FT_F26Dot6 x2 = x + metrics.width;
+    FT_F26Dot6 y2 = y + metrics.height;
+    // Synthetic bold moves the glyph top and right boundaries.
+    y -= bold.y;
+    x2 += bold.x;
+    if (hintMetrics && (mFTLoadFlags & FT_LOAD_NO_HINTING)) {
+      x &= -64;
+      y &= -64;
+      x2 = (x2 + 63) & -64;
+      y2 = (y2 + 63) & -64;
+    }
+    *aBounds = gfxRect(FLOAT_FROM_26_6(x) * extentsScale,
+                       FLOAT_FROM_26_6(y) * extentsScale,
+                       FLOAT_FROM_26_6(x2 - x) * extentsScale,
+                       FLOAT_FROM_26_6(y2 - y) * extentsScale);
   }
   return true;
 }
@@ -594,6 +597,11 @@ int32_t gfxFT2FontBase::GetGlyphWidth(uint16_t aGID) {
   mGlyphWidths->Put(aGID, width);
 
   return width;
+}
+
+bool gfxFT2FontBase::GetGlyphBounds(uint16_t aGID, gfxRect* aBounds,
+                                    bool aTight) {
+  return GetFTGlyphExtents(aGID, nullptr, aBounds);
 }
 
 // For variation fonts, figure out the variation coordinates to be applied

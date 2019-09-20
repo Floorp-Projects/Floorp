@@ -1137,7 +1137,8 @@ SearchService.prototype = {
       enginesFromURLs.forEach(this._addEngineToStore, this);
     } else {
       if (gModernConfig) {
-        await this._loadEnginesFromConfig(engines);
+        let newEngines = await this._loadEnginesFromConfig(engines, isReload);
+        newEngines.forEach(this._addEngineToStore, this);
       } else {
         let engineList = this._enginesToLocales(engines);
         for (let [id, locales] of engineList) {
@@ -1164,15 +1165,14 @@ SearchService.prototype = {
     SearchUtils.log("_loadEngines: done using rebuilt cache");
   },
 
-  async _loadEnginesFromConfig(engineConfigs) {
+  async _loadEnginesFromConfig(engineConfigs, isReload = false) {
+    SearchUtils.log("_loadEnginesFromConfig");
+    let engines = [];
     for (let config of engineConfigs) {
-      SearchUtils.log("_loadEnginesFromConfig: " + JSON.stringify(config));
-      let locales =
-        "webExtensionLocales" in config
-          ? config.webExtensionLocales
-          : [DEFAULT_TAG];
-      await this.ensureBuiltinExtension(config.webExtensionId, locales);
+      let newEngines = await this.makeEnginesFromConfig(config, isReload);
+      engines = engines.concat(newEngines);
     }
+    return engines;
   },
 
   /**
@@ -2338,6 +2338,79 @@ SearchService.prototype = {
     return this._installExtensionEngine(extension, [DEFAULT_TAG]);
   },
 
+  /**
+   * Create an engine object from the search configuration details.
+   *
+   * @param {object} config
+   *   The configuration object that defines the details of the engine
+   *   webExtensionId etc.
+   * @param {boolean} isReload (optional)
+   *   Is being called as part of maybeReloadEngines.
+   * @returns {Array}
+   *   Returns an array of nsISearchEngine objects.
+   */
+  async makeEnginesFromConfig(config, isReload = false) {
+    if (SearchUtils.loggingEnabled) {
+      SearchUtils.log("makeEnginesFromConfig: " + JSON.stringify(config));
+    }
+    let id = config.webExtensionId;
+    let policy = WebExtensionPolicy.getByID(id);
+    if (!policy) {
+      let idPrefix = id.split("@")[0];
+      let path = `resource://search-extensions/${idPrefix}/`;
+      await AddonManager.installBuiltinAddon(path);
+      policy = WebExtensionPolicy.getByID(id);
+    }
+    // On startup the extension may have not finished parsing the
+    // manifest, wait for that here.
+    await policy.readyPromise;
+
+    let params = {
+      code: config.searchUrlGetExtraCodes,
+      telemetryId: config.telemetryId,
+    };
+
+    if ("telemetryId" in config) {
+      params.telemetryId = config.telemetryId;
+    }
+
+    let locales =
+      "webExtensionLocales" in config
+        ? config.webExtensionLocales
+        : [DEFAULT_TAG];
+
+    let engines = [];
+    for (let locale of locales) {
+      let manifest = policy.extension.manifest;
+      if (locale != "default") {
+        manifest = await policy.extension.getLocalizedManifest(locale);
+      }
+
+      let engineParams = await Services.search.getEngineParams(
+        policy.extension,
+        manifest,
+        locale,
+        params
+      );
+
+      let engine = new SearchEngine({
+        name: engineParams.name,
+        readOnly: engineParams.isBuiltin,
+        sanitizeName: true,
+      });
+      engine._initFromMetadata(engineParams.name, engineParams);
+      engine._loadPath = "[other]addEngineWithDetails";
+      if (engineParams.extensionID) {
+        engine._loadPath += ":" + engineParams.extensionID;
+      }
+      if (isReload && this._engines.has(engine.name)) {
+        engine._engineToUpdate = this._engines.get(engine.name);
+      }
+      engines.push(engine);
+    }
+    return engines;
+  },
+
   async _installExtensionEngine(extension, locales, initEngine, isReload) {
     SearchUtils.log("installExtensionEngine: " + extension.id);
 
@@ -2413,6 +2486,9 @@ SearchService.prototype = {
     let shortName = extension.id.split("@")[0];
     if (locale != DEFAULT_TAG) {
       shortName += "-" + locale;
+    }
+    if ("telemetryId" in extraParams) {
+      shortName = extraParams.telemetryId;
     }
 
     let searchUrlGetParams = searchProvider.search_url_get_params;

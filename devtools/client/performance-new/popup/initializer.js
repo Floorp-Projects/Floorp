@@ -5,6 +5,14 @@
 "use strict";
 
 /**
+ * This file initializes the profiler popup UI. It is in charge of initializing
+ * the browser specific environment, and then passing those requirements into
+ * the UI. The popup is enabled by toggle the following in the browser menu:
+ *
+ * Tools -> Web Developer -> Enable Profiler Toolbar Icon
+ */
+
+/**
  * Initialize the require function through a BrowserLoader. This loader ensures
  * that the popup can use require and has access to the window object.
  */

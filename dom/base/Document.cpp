@@ -10581,6 +10581,10 @@ void Document::Destroy() {
   // leak-fixing if we fix nsDocumentViewer to do cycle-collection, but
   // tearing down all those frame trees right now is the right thing to do.
   mExternalResourceMap.Shutdown();
+
+  // Manually break cycles via promise's global object pointer.
+  mReadyForIdle = nullptr;
+  mOrientationPendingPromise = nullptr;
 }
 
 void Document::RemovedFromDocShell() {
@@ -12615,6 +12619,11 @@ already_AddRefed<nsIURI> Document::GetMozDocumentURIIfNotForErrorPages() {
 }
 
 Promise* Document::GetDocumentReadyForIdle(ErrorResult& aRv) {
+  if (mIsGoingAway) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return nullptr;
+  }
+
   if (!mReadyForIdle) {
     nsIGlobalObject* global = GetScopeObject();
     if (!global) {
@@ -13815,8 +13824,17 @@ bool Document::FullscreenEnabled(CallerType aCallerType) {
   return !GetFullscreenError(this, aCallerType);
 }
 
-void Document::SetOrientationPendingPromise(Promise* aPromise) {
+void Document::ClearOrientationPendingPromise() {
+  mOrientationPendingPromise = nullptr;
+}
+
+bool Document::SetOrientationPendingPromise(Promise* aPromise) {
+  if (mIsGoingAway) {
+    return false;
+  }
+
   mOrientationPendingPromise = aPromise;
+  return true;
 }
 
 static void DispatchPointerLockChange(Document* aTarget) {

@@ -184,6 +184,7 @@ MSG_DEF(JSMSG_TOO_BIG_TO_ENCODE,       0, JSEXN_INTERNALERR, "data are to big to
 MSG_DEF(JSMSG_TOO_DEEP,                1, JSEXN_INTERNALERR, "{0} nested too deeply")
 MSG_DEF(JSMSG_UNCAUGHT_EXCEPTION,      1, JSEXN_INTERNALERR, "uncaught exception: {0}")
 MSG_DEF(JSMSG_UNKNOWN_FORMAT,          1, JSEXN_INTERNALERR, "unknown bytecode format {0}")
+MSG_DEF(JSMSG_UNSAFE_FILENAME,         1, JSEXN_INTERNALERR, "unsafe filename: {0}")
 
 // Frontend
 MSG_DEF(JSMSG_ACCESSOR_WRONG_ARGS,     3, JSEXN_SYNTAXERR, "{0} functions must have {1} argument{2}")

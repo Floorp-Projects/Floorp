@@ -77,7 +77,6 @@ class MediaEngineWebRTC : public MediaEngine {
 
   // gUM runnables can e.g. Enumerate from multiple threads
   Mutex mMutex;
-  RefPtr<mozilla::CubebDeviceEnumerator> mEnumerator;
   const bool mDelayAgnostic;
   const bool mExtendedFilter;
   // This also is set in the ctor and then never changed, but we can't make it

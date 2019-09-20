@@ -125,7 +125,6 @@ toolbar[mode="text"] .toolbarbutton-icon,
 .toolbarbutton-multiline-text:not([wrap="true"]),
 .toolbarbutton-text[wrap="true"] {
   display: none;
-  -moz-binding: none;
 }
 
 /******** browser, editor, iframe ********/
@@ -362,7 +361,6 @@ treechildren {
 }
 
 tree {
-  -moz-binding: none;
   -moz-box-orient: vertical;
   width: 10px;
   height: 10px;

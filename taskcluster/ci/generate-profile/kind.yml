@@ -127,7 +127,7 @@ jobs:
             job-script: taskcluster/scripts/tester/test-linux.sh
             script: android_emulator_pgo.py
             tooltool-downloads: internal
-            options: [installer-path=/builds/worker/fetches/target.apk]
+            options: [installer-path=/builds/worker/fetches/geckoview-androidTest.apk]
             config:
                 - android/android_common.py
                 - android/androidarm_4_3.py

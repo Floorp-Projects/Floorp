@@ -11,7 +11,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     DIRS += ['mac']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    DIRS += ['android']
+    DIRS += [
+        'android',
+        'netlink'
+    ]
 
 elif CONFIG['OS_ARCH'] == 'Linux':
     DIRS += [

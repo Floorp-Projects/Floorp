@@ -131,7 +131,8 @@ bool DrawTargetD2D1::EnsureLuminanceEffect() {
     return false;
   }
 
-  mLuminanceEffect->SetValue(D2D1_COLORMATRIX_PROP_COLOR_MATRIX, kLuminanceMatrix);
+  mLuminanceEffect->SetValue(D2D1_COLORMATRIX_PROP_COLOR_MATRIX,
+                             kLuminanceMatrix);
   mLuminanceEffect->SetValue(D2D1_COLORMATRIX_PROP_ALPHA_MODE,
                              D2D1_COLORMATRIX_ALPHA_MODE_STRAIGHT);
   return true;
@@ -1206,24 +1207,6 @@ already_AddRefed<FilterNode> DrawTargetD2D1::CreateFilter(FilterType aType) {
     return nullptr;
   }
   return FilterNodeD2D1::Create(mDC, aType);
-}
-
-void DrawTargetD2D1::GetGlyphRasterizationMetrics(ScaledFont* aScaledFont,
-                                                  const uint16_t* aGlyphIndices,
-                                                  uint32_t aNumGlyphs,
-                                                  GlyphMetrics* aGlyphMetrics) {
-  MOZ_ASSERT(aScaledFont->GetType() == FontType::DWRITE);
-
-  aScaledFont->GetGlyphDesignMetrics(aGlyphIndices, aNumGlyphs, aGlyphMetrics);
-
-  // GetDesignGlyphMetrics returns 'ideal' glyph metrics, we need to pad to
-  // account for antialiasing.
-  for (uint32_t i = 0; i < aNumGlyphs; i++) {
-    if (aGlyphMetrics[i].mWidth > 0 && aGlyphMetrics[i].mHeight > 0) {
-      aGlyphMetrics[i].mWidth += 2.0f;
-      aGlyphMetrics[i].mXBearing -= 1.0f;
-    }
-  }
 }
 
 bool DrawTargetD2D1::Init(ID3D11Texture2D* aTexture, SurfaceFormat aFormat) {

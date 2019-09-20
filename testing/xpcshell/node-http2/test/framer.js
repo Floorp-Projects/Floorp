@@ -26,10 +26,10 @@ var test_frames = [{
              PADDED: false },
     stream: 10,
 
-    data: new Buffer('12345678', 'hex')
+    data: Buffer.from('12345678', 'hex')
   },
   // length + type + flags + stream +   content
-  buffer: new Buffer('000004' + '00' + '00' + '0000000A' +   '12345678', 'hex')
+  buffer: Buffer.from('000004' + '00' + '00' + '0000000A' +   '12345678', 'hex')
 
 }, {
   frame: {
@@ -38,9 +38,9 @@ var test_frames = [{
              PADDED: false, RESERVED5: false, PRIORITY: false },
     stream: 15,
 
-    data: new Buffer('12345678', 'hex')
+    data: Buffer.from('12345678', 'hex')
   },
-  buffer: new Buffer('000004' + '01' + '00' + '0000000F' +   '12345678', 'hex')
+  buffer: Buffer.from('000004' + '01' + '00' + '0000000F' +   '12345678', 'hex')
 
 }, {
   frame: {
@@ -52,9 +52,9 @@ var test_frames = [{
     priorityWeight: 5,
     exclusiveDependency: false,
 
-    data: new Buffer('12345678', 'hex')
+    data: Buffer.from('12345678', 'hex')
   },
-  buffer: new Buffer('000009' + '01' + '20' + '0000000F' + '0000000A' + '05' + '12345678', 'hex')
+  buffer: Buffer.from('000009' + '01' + '20' + '0000000F' + '0000000A' + '05' + '12345678', 'hex')
 
 
 }, {
@@ -67,9 +67,9 @@ var test_frames = [{
     priorityWeight: 5,
     exclusiveDependency: true,
 
-    data: new Buffer('12345678', 'hex')
+    data: Buffer.from('12345678', 'hex')
   },
-  buffer: new Buffer('000009' + '01' + '20' + '0000000F' + '8000000A' + '05' + '12345678', 'hex')
+  buffer: Buffer.from('000009' + '01' + '20' + '0000000F' + '8000000A' + '05' + '12345678', 'hex')
 
 }, {
   frame: {
@@ -81,7 +81,7 @@ var test_frames = [{
     priorityWeight: 5,
     exclusiveDependency: false
   },
-  buffer: new Buffer('000005' + '02' + '00' + '0000000A' + '00000009' + '05', 'hex')
+  buffer: Buffer.from('000005' + '02' + '00' + '0000000A' + '00000009' + '05', 'hex')
 
 }, {
   frame: {
@@ -93,7 +93,7 @@ var test_frames = [{
     priorityWeight: 5,
     exclusiveDependency: true
   },
-  buffer: new Buffer('000005' + '02' + '00' + '0000000A' + '80000009' + '05', 'hex')
+  buffer: Buffer.from('000005' + '02' + '00' + '0000000A' + '80000009' + '05', 'hex')
 
 }, {
   frame: {
@@ -103,7 +103,7 @@ var test_frames = [{
 
     error: 'INTERNAL_ERROR'
   },
-  buffer: new Buffer('000004' + '03' + '00' + '0000000A' +   '00000002', 'hex')
+  buffer: Buffer.from('000004' + '03' + '00' + '0000000A' +   '00000002', 'hex')
 
 }, {
   frame: {
@@ -119,7 +119,7 @@ var test_frames = [{
       SETTINGS_MAX_FRAME_SIZE:         0x00010000
     }
   },
-  buffer: new Buffer('00001E' + '04' + '00' + '0000000A' +   '0001' + '12345678' +
+  buffer: Buffer.from('00001E' + '04' + '00' + '0000000A' +   '0001' + '12345678' +
                                                              '0002' + '00000001' +
                                                              '0003' + '01234567' +
                                                              '0004' + '89ABCDEF' +
@@ -133,9 +133,9 @@ var test_frames = [{
     stream: 15,
 
     promised_stream: 3,
-    data: new Buffer('12345678', 'hex')
+    data: Buffer.from('12345678', 'hex')
   },
-  buffer: new Buffer('000008' + '05' + '00' + '0000000F' +   '00000003' + '12345678', 'hex')
+  buffer: Buffer.from('000008' + '05' + '00' + '0000000F' +   '00000003' + '12345678', 'hex')
 
 }, {
   frame: {
@@ -143,9 +143,9 @@ var test_frames = [{
     flags: { ACK: false },
     stream: 15,
 
-    data: new Buffer('1234567887654321', 'hex')
+    data: Buffer.from('1234567887654321', 'hex')
   },
-  buffer: new Buffer('000008' + '06' + '00' + '0000000F' +   '1234567887654321', 'hex')
+  buffer: Buffer.from('000008' + '06' + '00' + '0000000F' +   '1234567887654321', 'hex')
 
 }, {
   frame: {
@@ -156,7 +156,7 @@ var test_frames = [{
     last_stream: 0x12345678,
     error: 'PROTOCOL_ERROR'
   },
-  buffer: new Buffer('000008' + '07' + '00' + '0000000A' +   '12345678' + '00000001', 'hex')
+  buffer: Buffer.from('000008' + '07' + '00' + '0000000A' +   '12345678' + '00000001', 'hex')
 
 }, {
   frame: {
@@ -166,17 +166,17 @@ var test_frames = [{
 
     window_size: 0x12345678
   },
-  buffer: new Buffer('000004' + '08' + '00' + '0000000A' +   '12345678', 'hex')
+  buffer: Buffer.from('000004' + '08' + '00' + '0000000A' +   '12345678', 'hex')
 }, {
   frame: {
     type: 'CONTINUATION',
     flags: { RESERVED1: false, RESERVED2: false, END_HEADERS: true },
     stream: 10,
 
-    data: new Buffer('12345678', 'hex')
+    data: Buffer.from('12345678', 'hex')
   },
   // length + type + flags + stream +   content
-  buffer: new Buffer('000004' + '09' + '04' + '0000000A' +   '12345678', 'hex')
+  buffer: Buffer.from('000004' + '09' + '04' + '0000000A' +   '12345678', 'hex')
 }, {
   frame: {
     type: 'ALTSVC',
@@ -189,7 +189,7 @@ var test_frames = [{
     host: "altsvc.example.com",
     origin: ""
   },
-  buffer: new Buffer(new Buffer('00002B' + '0A' + '00' + '00000000' + '0000', 'hex') + new Buffer('h2="altsvc.example.com:4443"; ma=31536000', 'ascii'))
+  buffer: Buffer.from(Buffer.from('00002B' + '0A' + '00' + '00000000' + '0000', 'hex') + Buffer.from('h2="altsvc.example.com:4443"; ma=31536000', 'ascii'))
 }, {
   frame: {
     type: 'ALTSVC',
@@ -202,7 +202,7 @@ var test_frames = [{
     host: "altsvc.example.com",
     origin: "https://onlyme.example.com"
   },
-  buffer: new Buffer(new Buffer('000045' + '0A' + '00' + '00000000' + '001A', 'hex') + new Buffer('https://onlyme.example.comh2="altsvc.example.com:4443"; ma=31536000', 'ascii'))
+  buffer: Buffer.from(Buffer.from('000045' + '0A' + '00' + '00000000' + '001A', 'hex') + Buffer.from('https://onlyme.example.comh2="altsvc.example.com:4443"; ma=31536000', 'ascii'))
 
 }, {
   frame: {
@@ -210,7 +210,7 @@ var test_frames = [{
     flags: { },
     stream: 10
   },
-  buffer: new Buffer('000000' + '0B' + '00' + '0000000A', 'hex')
+  buffer: Buffer.from('000000' + '0B' + '00' + '0000000A', 'hex')
 }];
 
 var deserializer_test_frames = test_frames.slice(0);
@@ -220,10 +220,10 @@ var padded_test_frames = [{
     flags: { END_STREAM: false, RESERVED2: false, RESERVED4: false,
              PADDED: true },
     stream: 10,
-    data: new Buffer('12345678', 'hex')
+    data: Buffer.from('12345678', 'hex')
   },
   // length + type + flags + stream + pad length + content + padding
-  buffer: new Buffer('00000B' + '00' + '08' + '0000000A' + '06' + '12345678' + '000000000000', 'hex')
+  buffer: Buffer.from('00000B' + '00' + '08' + '0000000A' + '06' + '12345678' + '000000000000', 'hex')
 
 }, {
   frame: {
@@ -232,10 +232,10 @@ var padded_test_frames = [{
              PADDED: true, RESERVED5: false, PRIORITY: false },
     stream: 15,
 
-    data: new Buffer('12345678', 'hex')
+    data: Buffer.from('12345678', 'hex')
   },
   // length + type + flags + stream + pad length + data + padding
-  buffer: new Buffer('00000B' + '01' + '08' + '0000000F' + '06' + '12345678' + '000000000000', 'hex')
+  buffer: Buffer.from('00000B' + '01' + '08' + '0000000F' + '06' + '12345678' + '000000000000', 'hex')
 
 }, {
   frame: {
@@ -247,10 +247,10 @@ var padded_test_frames = [{
     priorityWeight: 5,
     exclusiveDependency: false,
 
-    data: new Buffer('12345678', 'hex')
+    data: Buffer.from('12345678', 'hex')
   },
   // length + type + flags + stream + pad length + priority dependency + priority weight + data + padding
-  buffer: new Buffer('000010' + '01' + '28' + '0000000F' + '06' + '0000000A' + '05' + '12345678' + '000000000000', 'hex')
+  buffer: Buffer.from('000010' + '01' + '28' + '0000000F' + '06' + '0000000A' + '05' + '12345678' + '000000000000', 'hex')
 
 }, {
   frame: {
@@ -262,10 +262,10 @@ var padded_test_frames = [{
     priorityWeight: 5,
     exclusiveDependency: true,
 
-    data: new Buffer('12345678', 'hex')
+    data: Buffer.from('12345678', 'hex')
   },
   // length + type + flags + stream + pad length + priority dependency + priority weight + data + padding
-  buffer: new Buffer('000010' + '01' + '28' + '0000000F' + '06' + '8000000A' + '05' + '12345678' + '000000000000', 'hex')
+  buffer: Buffer.from('000010' + '01' + '28' + '0000000F' + '06' + '8000000A' + '05' + '12345678' + '000000000000', 'hex')
 
 }, {
   frame: {
@@ -275,10 +275,10 @@ var padded_test_frames = [{
     stream: 15,
 
     promised_stream: 3,
-    data: new Buffer('12345678', 'hex')
+    data: Buffer.from('12345678', 'hex')
   },
   // length + type + flags + stream + pad length + promised stream + data + padding
-  buffer: new Buffer('00000F' + '05' + '08' + '0000000F' + '06' + '00000003' + '12345678' + '000000000000', 'hex')
+  buffer: Buffer.from('00000F' + '05' + '08' + '0000000F' + '06' + '00000003' + '12345678' + '000000000000', 'hex')
 
 }];
 for (var idx = 0; idx < padded_test_frames.length; idx++) {
@@ -322,7 +322,7 @@ describe('framer.js', function() {
         for (var i = 0; i < test_frames.length; i++) {
           var test = test_frames[i];
           stream.write(test.frame);
-          var chunk, buffer = new Buffer(0);
+          var chunk, buffer = Buffer.alloc(0);
           while (chunk = stream.read()) {
             buffer = util.concat([buffer, chunk]);
           }
@@ -384,7 +384,7 @@ describe('framer.js', function() {
     describe('`frame`', function() {
       var format = framer.serializers.frame;
       it('should assign a unique ID to each frame', function() {
-        var frame1 = { type: 'DATA', data: new Buffer(10) };
+        var frame1 = { type: 'DATA', data: Buffer.alloc(10) };
         var frame2 = { type: 'PRIORITY', priority: 1 };
         expect(format(frame1).id).to.be.equal(format(frame1));
         expect(format(frame2).id).to.be.equal(format(frame2));
