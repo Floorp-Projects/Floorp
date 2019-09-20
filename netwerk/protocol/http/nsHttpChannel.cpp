@@ -9,11 +9,9 @@
 
 #include <inttypes.h>
 
-#include "DocumentChannelParent.h"
-#include "mozilla/MozPromiseInlines.h"  // For MozPromise::FromDomPromise
+#include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/dom/nsCSPContext.h"
 
 #include "nsHttp.h"
 #include "nsHttpChannel.h"
@@ -125,6 +123,7 @@
 #include "../../cache2/CacheFileUtils.h"
 #include "../../cache2/CacheHashUtils.h"
 #include "nsINetworkLinkService.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/net/AsyncUrlChannelClassifier.h"
@@ -2580,26 +2579,18 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
       return NS_OK;
     }
 
-    nsCOMPtr<nsIParentChannel> parentChannel;
-    NS_QueryNotificationCallbacks(this, parentChannel);
+    // notify "http-on-may-change-process" observers
+    gHttpHandler->OnMayChangeProcess(this);
 
-    RefPtr<DocumentChannelParent> documentChannelParent =
-        do_QueryObject(parentChannel);
+    if (mRedirectContentProcessIdPromise) {
+      MOZ_ASSERT(!mOnStartRequestCalled);
 
-    if (!documentChannelParent) {
-      // notify "http-on-may-change-process" observers
-      gHttpHandler->OnMayChangeProcess(this);
-
-      if (mRedirectContentProcessIdPromise) {
-        MOZ_ASSERT(!mOnStartRequestCalled);
-
-        PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse2);
-        rv = StartCrossProcessRedirect();
-        if (NS_SUCCEEDED(rv)) {
-          return NS_OK;
-        }
-        PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse2);
+      PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse2);
+      rv = StartCrossProcessRedirect();
+      if (NS_SUCCEEDED(rv)) {
+        return NS_OK;
       }
+      PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse2);
     }
   }
 
@@ -6139,7 +6130,6 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsIChannelWithDivertableParentListener)
   NS_INTERFACE_MAP_ENTRY(nsIRequestTailUnblockCallback)
-  NS_INTERFACE_MAP_ENTRY(nsIProcessSwitchRequestor)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(nsHttpChannel)
 NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 
@@ -7242,13 +7232,49 @@ nsHttpChannel::GetRequestMethod(nsACString& aMethod) {
 }
 
 //-----------------------------------------------------------------------------
-// nsHttpChannel::nsIProcessSwitchRequestor
+// nsHttpChannel::nsIRequestObserver
 //-----------------------------------------------------------------------------
 
-NS_IMETHODIMP nsHttpChannel::GetChannel(nsIChannel** aChannel) {
-  *aChannel = do_AddRef(this).take();
-  return NS_OK;
-}
+// This class is used to convert from a DOM promise to a MozPromise.
+class DomPromiseListener final : dom::PromiseNativeHandler {
+  NS_DECL_ISUPPORTS
+
+  static RefPtr<nsHttpChannel::ContentProcessIdPromise> Create(
+      dom::Promise* aDOMPromise) {
+    MOZ_ASSERT(aDOMPromise);
+    RefPtr<DomPromiseListener> handler = new DomPromiseListener();
+    RefPtr<nsHttpChannel::ContentProcessIdPromise> promise =
+        handler->mPromiseHolder.Ensure(__func__);
+    aDOMPromise->AppendNativeHandler(handler);
+    return promise;
+  }
+
+  virtual void ResolvedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override {
+    uint64_t cpId;
+    if (!JS::ToUint64(aCx, aValue, &cpId)) {
+      mPromiseHolder.Reject(NS_ERROR_FAILURE, __func__);
+      return;
+    }
+    mPromiseHolder.Resolve(cpId, __func__);
+  }
+
+  virtual void RejectedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override {
+    if (!aValue.isInt32()) {
+      mPromiseHolder.Reject(NS_ERROR_DOM_NOT_NUMBER_ERR, __func__);
+      return;
+    }
+    mPromiseHolder.Reject((nsresult)aValue.toInt32(), __func__);
+  }
+
+ private:
+  DomPromiseListener() = default;
+  ~DomPromiseListener() = default;
+  MozPromiseHolder<nsHttpChannel::ContentProcessIdPromise> mPromiseHolder;
+};
+
+NS_IMPL_ISUPPORTS0(DomPromiseListener)
 
 NS_IMETHODIMP nsHttpChannel::SwitchProcessTo(
     dom::Promise* aContentProcessIdPromise, uint64_t aIdentifier) {
@@ -7258,33 +7284,12 @@ NS_IMETHODIMP nsHttpChannel::SwitchProcessTo(
   LOG(("nsHttpChannel::SwitchProcessTo [this=%p]", this));
   LogCallingScriptLocation(this);
 
-  nsCOMPtr<nsIParentChannel> parentChannel;
-  NS_QueryNotificationCallbacks(this, parentChannel);
-  RefPtr<DocumentChannelParent> documentChannelParent =
-      do_QueryObject(parentChannel);
-  // This is a temporary change as the DocumentChannelParent currently must go
-  // through the nsHttpChannel to perform a process switch via SessionStore.
-  if (!documentChannelParent) {
-    // We cannot do this after OnStartRequest of the listener has been called.
-    NS_ENSURE_FALSE(mOnStartRequestCalled, NS_ERROR_NOT_AVAILABLE);
-  }
+  // We cannot do this after OnStartRequest of the listener has been called.
+  NS_ENSURE_FALSE(mOnStartRequestCalled, NS_ERROR_NOT_AVAILABLE);
 
   mRedirectContentProcessIdPromise =
-      ContentProcessIdPromise::FromDomPromise(aContentProcessIdPromise);
+      DomPromiseListener::Create(aContentProcessIdPromise);
   mCrossProcessRedirectIdentifier = aIdentifier;
-  return NS_OK;
-}
-
-// This method returns the cached result of running the Cross-Origin-Opener
-// policy compare algorithm by calling ComputeCrossOriginOpenerPolicyMismatch
-NS_IMETHODIMP
-nsHttpChannel::HasCrossOriginOpenerPolicyMismatch(bool* aMismatch) {
-  MOZ_ASSERT(aMismatch);
-  if (!aMismatch) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  *aMismatch = mHasCrossOriginOpenerPolicyMismatch;
   return NS_OK;
 }
 
@@ -7298,7 +7303,8 @@ nsresult nsHttpChannel::StartCrossProcessRedirect() {
 
   nsCOMPtr<nsIParentChannel> parentChannel;
   NS_QueryNotificationCallbacks(this, parentChannel);
-  RefPtr<HttpChannelParent> httpParent = do_QueryObject(parentChannel);
+  nsCOMPtr<nsICrossProcessSwitchChannel> httpParent =
+      do_QueryInterface(parentChannel);
   MOZ_ASSERT(httpParent);
   NS_ENSURE_TRUE(httpParent, NS_ERROR_UNEXPECTED);
 
@@ -7348,6 +7354,19 @@ static bool CompareCrossOriginOpenerPolicies(
   }
 
   return false;
+}
+
+// This method returns the cached result of running the Cross-Origin-Opener
+// policy compare algorithm by calling ComputeCrossOriginOpenerPolicyMismatch
+NS_IMETHODIMP
+nsHttpChannel::HasCrossOriginOpenerPolicyMismatch(bool* aMismatch) {
+  MOZ_ASSERT(aMismatch);
+  if (!aMismatch) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  *aMismatch = mHasCrossOriginOpenerPolicyMismatch;
+  return NS_OK;
 }
 
 // This runs steps 1-5 of the algorithm when navigating a top level document.
@@ -7572,10 +7591,6 @@ nsresult nsHttpChannel::ProcessCrossOriginResourcePolicyHeader() {
   return NS_OK;
 }
 
-//-----------------------------------------------------------------------------
-// nsHttpChannel::nsIRequestObserver
-//-----------------------------------------------------------------------------
-
 NS_IMETHODIMP
 nsHttpChannel::OnStartRequest(nsIRequest* request) {
   nsresult rv;
@@ -7716,21 +7731,15 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
       return NS_OK;
     }
 
-    nsCOMPtr<nsIParentChannel> parentChannel;
-    NS_QueryNotificationCallbacks(this, parentChannel);
-    RefPtr<DocumentChannelParent> documentChannelParent =
-        do_QueryObject(parentChannel);
-    if (!documentChannelParent) {
-      gHttpHandler->OnMayChangeProcess(this);
+    gHttpHandler->OnMayChangeProcess(this);
 
-      if (mRedirectContentProcessIdPromise) {
-        PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest1);
-        rv = StartCrossProcessRedirect();
-        if (NS_SUCCEEDED(rv)) {
-          return NS_OK;
-        }
-        PopRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest1);
+    if (mRedirectContentProcessIdPromise) {
+      PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest1);
+      rv = StartCrossProcessRedirect();
+      if (NS_SUCCEEDED(rv)) {
+        return NS_OK;
       }
+      PopRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest1);
     }
   }
 

@@ -662,7 +662,7 @@ class ContentChild final : public PContentChild,
       const ReplacementChannelConfigInit& aConfig,
       const Maybe<LoadInfoArgs>& aLoadInfoForwarder, const uint64_t& aChannelId,
       nsIURI* aOriginalURI, const uint64_t& aIdentifier,
-      const uint32_t& aRedirectMode, CrossProcessRedirectResolver&& aResolve);
+      const uint32_t& aRedirectMode);
 
   mozilla::ipc::IPCResult RecvStartDelayedAutoplayMediaComponents(
       BrowsingContext* aContext);

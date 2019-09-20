@@ -6,18 +6,18 @@
 #ifndef nsViewSourceChannel_h___
 #define nsViewSourceChannel_h___
 
-#include "mozilla/Attributes.h"
-#include "mozilla/net/NeckoChannelParams.h"
+#include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsIApplicationCacheChannel.h"
-#include "nsICachingChannel.h"
-#include "nsIFormPOSTActionChannel.h"
+#include "nsIViewSourceChannel.h"
+#include "nsIURI.h"
+#include "nsIStreamListener.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
-#include "nsIStreamListener.h"
-#include "nsIURI.h"
-#include "nsIViewSourceChannel.h"
-#include "nsString.h"
+#include "nsICachingChannel.h"
+#include "nsIApplicationCacheChannel.h"
+#include "nsIFormPOSTActionChannel.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/net/NeckoChannelParams.h"
 
 class nsViewSourceChannel final : public nsIViewSourceChannel,
                                   public nsIStreamListener,
