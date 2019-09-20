@@ -24,11 +24,9 @@ android {
 }
 
 dependencies {
-    implementation project(':support-base')
-    implementation project(':support-utils')
+    implementation project(':concept-engine')
+    implementation project(':browser-session')
 
-    implementation Dependencies.androidx_core
-    implementation Dependencies.androidx_core_ktx
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
 
