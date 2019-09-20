@@ -23,9 +23,9 @@ MOZ_BC_FIELD(OnePermittedSandboxedNavigatorId, uint64_t)
 
 MOZ_BC_FIELD(HadOriginalOpener, bool)
 
-// Toplevel browsing contexts only. This field controls whether the browsing
-// context is currently considered to be activated by a gesture.
-MOZ_BC_FIELD(IsActivatedByUserGesture, bool)
+// This field controls whether the browsing context is currently considered to
+// be activated by a gesture.
+MOZ_BC_FIELD(UserActivationState, UserActivation::State)
 
 // Hold the audio muted state and should be used
 // on top level browsing contexts only.
