@@ -40,28 +40,26 @@ ProcessChooser.prototype = {
     Services.obs.removeObserver(this, "http-on-may-change-process");
   },
 
-  examine(aRequestor) {
-    const channel = aRequestor.channel;
-
-    if (this.channel && this.channel != channel) {
+  examine(aChannel) {
+    if (this.channel && this.channel != aChannel) {
       // Hack: this is just so we don't get redirected multiple times.
       info("same channel. give null");
       return;
     }
 
-    if (channel.URI.host != this.toDomain) {
-      info("wrong host for channel " + channel.URI.host);
+    if (aChannel.URI.host != this.toDomain) {
+      info("wrong host for channel " + aChannel.URI.host);
       return;
     }
 
-    let redirects = channel.loadInfo.redirectChain;
+    let redirects = aChannel.loadInfo.redirectChain;
     if (redirects[redirects.length - 1].principal.URI.host != this.fromDomain) {
       info("didn't find redirect");
       return;
     }
 
     info("setting channel");
-    this.channel = channel;
+    this.channel = aChannel;
     let self = this;
 
     info("unregistering");
@@ -81,13 +79,13 @@ ProcessChooser.prototype = {
     });
 
     info("calling switchprocessto");
-    aRequestor.switchProcessTo(tabPromise, identifier);
+    aChannel.switchProcessTo(tabPromise, identifier);
   },
 
   observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "http-on-may-change-process":
-        this.examine(aSubject.QueryInterface(Ci.nsIProcessSwitchRequestor));
+        this.examine(aSubject.QueryInterface(Ci.nsIHttpChannel));
         break;
       default:
         ok(false, "Unexpected topic observed!");

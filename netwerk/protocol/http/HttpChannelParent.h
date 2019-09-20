@@ -14,6 +14,7 @@
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/MozPromise.h"
+#include "nsICrossProcessSwitchChannel.h"
 #include "nsIObserver.h"
 #include "nsIParentRedirectingChannel.h"
 #include "nsIProgressEventSink.h"
@@ -60,7 +61,8 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
                                 public HttpChannelSecurityWarningReporter,
                                 public nsIAsyncVerifyRedirectReadyCallback,
                                 public nsIChannelEventSink,
-                                public nsIRedirectResultListener {
+                                public nsIRedirectResultListener,
+                                public nsICrossProcessSwitchChannel {
   virtual ~HttpChannelParent();
 
  public:
@@ -76,6 +78,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   NS_DECL_NSIASYNCVERIFYREDIRECTREADYCALLBACK
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIREDIRECTRESULTLISTENER
+  NS_DECL_NSICROSSPROCESSSWITCHCHANNEL
 
   NS_DECLARE_STATIC_IID_ACCESSOR(HTTP_CHANNEL_PARENT_IID)
 
@@ -128,13 +131,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   void OnBackgroundParentDestroyed();
 
   base::ProcessId OtherPid() const;
-
-  // Called by nsHttpChannel when a process switch is about to start.
-  // aChannel: nsIHttpChannel caller.
-  // aIdentifier: identifier from SessionStore to be passed to the childChannel
-  //              in order to identify it.
-  nsresult TriggerCrossProcessSwitch(nsIHttpChannel* aChannel,
-                                     uint64_t aIdentifier);
 
   // Calling this method will cancel the HttpChannelChild because the consumer
   // needs to be relocated to another process.
@@ -213,6 +209,9 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   virtual mozilla::ipc::IPCResult RecvDivertOnStopRequest(
       const nsresult& statusCode) override;
   virtual mozilla::ipc::IPCResult RecvDivertComplete() override;
+  virtual mozilla::ipc::IPCResult RecvCrossProcessRedirectDone(
+      const nsresult& aResult,
+      const mozilla::Maybe<LoadInfoArgs>& aLoadInfoArgs) override;
   virtual mozilla::ipc::IPCResult RecvRemoveCorsPreflightCacheEntry(
       const URIParams& uri,
       const mozilla::ipc::PrincipalInfo& requestingPrincipal) override;
@@ -255,11 +254,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   void DivertComplete();
   void MaybeFlushPendingDiversion();
   void ResponseSynthesized();
-
-  void CrossProcessRedirectDone(
-      const nsresult& aResult,
-      const mozilla::Maybe<LoadInfoArgs>& aLoadInfoArgs);
-  void FinishCrossProcessSwitch(nsHttpChannel* aChannel, nsresult aStatus);
 
   // final step for Redirect2Verify procedure, will be invoked while both
   // redirecting and redirected channel are ready or any error happened.

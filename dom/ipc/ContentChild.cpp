@@ -3633,7 +3633,7 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
     const ReplacementChannelConfigInit& aConfig,
     const Maybe<LoadInfoArgs>& aLoadInfo, const uint64_t& aChannelId,
     nsIURI* aOriginalURI, const uint64_t& aIdentifier,
-    const uint32_t& aRedirectMode, CrossProcessRedirectResolver&& aResolve) {
+    const uint32_t& aRedirectMode) {
   nsCOMPtr<nsILoadInfo> loadInfo;
   nsresult rv =
       mozilla::ipc::LoadInfoArgsToLoadInfo(aLoadInfo, getter_AddRefs(loadInfo));
@@ -3655,15 +3655,8 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
 
   // This is used to report any errors back to the parent by calling
   // CrossProcessRedirectFinished.
-  auto scopeExit = MakeScopeExit([&]() {
-    nsCOMPtr<nsILoadInfo> loadInfo;
-    MOZ_ALWAYS_SUCCEEDS(newChannel->GetLoadInfo(getter_AddRefs(loadInfo)));
-    Maybe<LoadInfoArgs> loadInfoArgs;
-    MOZ_ALWAYS_SUCCEEDS(
-        mozilla::ipc::LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs));
-    aResolve(
-        Tuple<const nsresult&, const Maybe<LoadInfoArgs>&>(rv, loadInfoArgs));
-  });
+  auto scopeExit =
+      MakeScopeExit([&]() { httpChild->CrossProcessRedirectFinished(rv); });
 
   rv = httpChild->SetChannelId(aChannelId);
   if (NS_FAILED(rv)) {

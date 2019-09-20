@@ -7,17 +7,16 @@
 #ifndef mozilla_net_DocumentChannelParent_h
 #define mozilla_net_DocumentChannelParent_h
 
-#include "mozilla/MozPromise.h"
 #include "mozilla/Variant.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/PDocumentChannelParent.h"
 #include "mozilla/net/ParentChannelListener.h"
+#include "nsICrossProcessSwitchChannel.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIObserver.h"
 #include "nsIParentChannel.h"
 #include "nsIParentRedirectingChannel.h"
-#include "nsIProcessSwitchRequestor.h"
 #include "nsIRedirectResultListener.h"
 
 #define DOCUMENT_CHANNEL_PARENT_IID                  \
@@ -37,8 +36,8 @@ class DocumentChannelParent : public nsIInterfaceRequestor,
                               public nsIAsyncVerifyRedirectReadyCallback,
                               public nsIParentChannel,
                               public nsIChannelEventSink,
-                              public HttpChannelSecurityWarningReporter,
-                              public nsIProcessSwitchRequestor {
+                              public nsICrossProcessSwitchChannel,
+                              public HttpChannelSecurityWarningReporter {
  public:
   explicit DocumentChannelParent(const dom::PBrowserOrId& iframeEmbedding,
                                  nsILoadContext* aLoadContext,
@@ -53,7 +52,7 @@ class DocumentChannelParent : public nsIInterfaceRequestor,
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIASYNCVERIFYREDIRECTREADYCALLBACK
   NS_DECL_NSICHANNELEVENTSINK
-  NS_DECL_NSIPROCESSSWITCHREQUESTOR
+  NS_DECL_NSICROSSPROCESSSWITCHCHANNEL
 
   NS_DECLARE_STATIC_IID_ACCESSOR(DOCUMENT_CHANNEL_PARENT_IID)
 
@@ -110,8 +109,6 @@ class DocumentChannelParent : public nsIInterfaceRequestor,
   void RedirectToRealChannelFinished(nsresult aRv);
 
   void FinishReplacementChannelSetup(bool aSucceeded);
-
-  void TriggerCrossProcessSwitch();
 
   // This defines a variant that describes all the attribute setters (and their
   // parameters) from nsIParentChannel
@@ -212,18 +209,6 @@ class DocumentChannelParent : public nsIInterfaceRequestor,
   // helper from being installed, but we need to restore the value
   // later.
   bool mOldApplyConversion = false;
-
-  typedef MozPromise<uint64_t, nsresult, true /* exclusive */>
-      ContentProcessIdPromise;
-  // This promise is set following a on-may-change-process observer
-  // notification when the associated channel is getting relocated to another
-  // process. It will be resolved when that process is set up.
-  RefPtr<ContentProcessIdPromise> mRedirectContentProcessIdPromise;
-  // This identifier is set at the same time as the
-  // mRedirectContentProcessIdPromise.
-  // This identifier is later passed to the childChannel in order to identify it
-  // once the promise is resolved.
-  uint64_t mCrossProcessRedirectIdentifier = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DocumentChannelParent,

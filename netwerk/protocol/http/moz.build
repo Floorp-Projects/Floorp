@@ -132,7 +132,6 @@ LOCAL_INCLUDES += [
     '/extensions/auth',
     '/netwerk/base',
     '/netwerk/cookie',
-    '/netwerk/ipc',
     '/netwerk/url-classifier',
 ]
 
