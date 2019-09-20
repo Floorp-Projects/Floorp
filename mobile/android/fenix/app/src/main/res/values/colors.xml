@@ -189,6 +189,7 @@
     <color name="text_scale_example_text_color">#232749</color>
     <color name="sync_error_background_color">#FFF36E</color>
     <color name="sync_error_text_color">#960E18</color>
+    <color name="bottom_bar_shadow">#1A000000</color>
 
     <!-- Reader View colors -->
     <color name="mozac_feature_readerview_text_color">@color/primary_text_light_theme</color>

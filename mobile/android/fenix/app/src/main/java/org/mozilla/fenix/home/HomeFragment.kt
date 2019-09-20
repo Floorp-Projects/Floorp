@@ -287,6 +287,9 @@ class HomeFragment : Fragment() {
                 )
             }
         }
+
+        // We need the shadow to be above the components.
+        bottomBarShadow.bringToFront()
     }
 
     override fun onDestroyView() {

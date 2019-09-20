@@ -53,11 +53,20 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintEnd_toStartOf="parent" />
 
+        <View
+            android:id="@+id/bottomBarShadow"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:background="@color/bottom_bar_shadow"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/bottom_bar"/>
+
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/bottom_bar"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:background="?homeBackground"
+            android:background="?bottomBarBackground"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -67,7 +76,7 @@
                 android:transitionName="toolbar_wrapper_transition"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
+                android:layout_marginStart="8dp"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="16dp"
                 android:layout_marginEnd="8dp"
