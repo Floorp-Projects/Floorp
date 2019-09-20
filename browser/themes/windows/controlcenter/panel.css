@@ -10,4 +10,5 @@
 
 .protections-popup-tp-switch:-moz-focusring {
   outline: 1px dotted;
+  outline-offset: unset;
 }
