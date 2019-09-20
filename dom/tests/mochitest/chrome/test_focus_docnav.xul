@@ -11,7 +11,7 @@
 SimpleTest.waitForExplicitFinish();
 function runTest()
 {
-  window.open("window_focus_docnav.xul", "_blank", "chrome,width=600,height=550");
+  window.openDialog("window_focus_docnav.xul", "_blank", "chrome,width=600,height=550,noopener", window);
 }
 </script>
 

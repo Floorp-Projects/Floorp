@@ -12,27 +12,27 @@
 
 function ok(aCondition, aMessage)
 {
-  window.opener.wrappedJSObject.SimpleTest.ok(aCondition, aMessage);
+  window.arguments[0].SimpleTest.ok(aCondition, aMessage);
 }
 
 function is(aLeft, aRight, aMessage)
 {
-  window.opener.wrappedJSObject.SimpleTest.is(aLeft, aRight, aMessage);
+  window.arguments[0].SimpleTest.is(aLeft, aRight, aMessage);
 }
 
 function isnot(aLeft, aRight, aMessage)
 {
-  window.opener.wrappedJSObject.SimpleTest.isnot(aLeft, aRight, aMessage);
+  window.arguments[0].SimpleTest.isnot(aLeft, aRight, aMessage);
 }
 
 function canRetryTest()
 {
-  return window.opener.wrappedJSObject.canRetryTest();
+  return window.arguments[0].canRetryTest();
 }
 
 function getTimeoutTime()
 {
-  return window.opener.wrappedJSObject.getTimeoutTime();
+  return window.arguments[0].getTimeoutTime();
 }
 
 var gTimer;
@@ -79,10 +79,10 @@ function onload()
   var button = document.getElementById("dialog").getButton("accept");
   button.addEventListener("mousemove", onMouseMove, false);
 
-  if (window.opener.wrappedJSObject.gDisable) {
+  if (window.arguments[0].gDisable) {
     button.disabled = true;
   }
-  if (window.opener.wrappedJSObject.gHidden) {
+  if (window.arguments[0].gHidden) {
     button.hidden = true;
   }
   gRetry = false;
@@ -92,9 +92,9 @@ function onload()
 function onunload()
 {
   if (gRetry) {
-    window.opener.wrappedJSObject.retryCurrentTest();
+    window.arguments[0].retryCurrentTest();
   } else {
-    window.opener.wrappedJSObject.runNextTest();
+    window.arguments[0].runNextTest();
   }
 }
 

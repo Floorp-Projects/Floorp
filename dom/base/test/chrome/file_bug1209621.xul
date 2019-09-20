@@ -12,11 +12,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1209621
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
   function ok(cond, msg) {
-    opener.wrappedJSObject.ok(cond, msg);
+    window.arguments[0].ok(cond, msg);
   }
 
   function is(actual, expected, msg) {
-    opener.wrappedJSObject.is(actual, expected, msg);
+    window.arguments[0].is(actual, expected, msg);
   }
 
   function run() {
@@ -64,7 +64,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1209621
     is(treeOwner.primaryContentShell, null,
        "There shouldn't be primaryContentShell because no browser has primary=true.");
 
-    opener.setTimeout(function() { this.done(); }, 0);
+    window.arguments[0].setTimeout(function() { this.done(); }, 0);
     window.close();
   }
 

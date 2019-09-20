@@ -9,12 +9,12 @@
 <body>
 <iframe style="width:700px; height:500px; margin-top:200px;" id="ourFrame"></iframe>
 <script>
-var SpecialPowers = window.opener.wrappedJSObject.SpecialPowers;
-var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
-var ok = window.opener.wrappedJSObject.ok;
-var info = window.opener.wrappedJSObject.info;
+var SpecialPowers = window.arguments[0].SpecialPowers;
+var SimpleTest = window.arguments[0].SimpleTest;
+var ok = window.arguments[0].ok;
+var info = window.arguments[0].info;
 
-var viewer = SpecialPowers.wrap(ourFrame).contentWindow.docShell.contentViewer;
+var viewer = ourFrame.contentWindow.docShell.contentViewer;
 viewer.fullZoom = 2;
 
 SimpleTest.waitForExplicitFinish();

@@ -32,9 +32,10 @@ SimpleTest.waitForFocus(function () {
   var maxWidth = win.outerWidth, maxHeight = win.outerHeight;
   win.restore();
 
-  window.open("window_bug429954.xul", "_blank", 
-              "chrome,resizable,width=" + maxWidth + ",height=" + maxHeight +
-              "screenX=" + maxX + "screenY=" + maxY);
+  window.openDialog("window_bug429954.xul", "_blank", 
+                    "chrome,noopener,resizable,width=" + maxWidth + ",height=" + maxHeight +
+                    ",screenX=" + maxX + "screenY=" + maxY,
+                    window);
 });
 
 ]]>

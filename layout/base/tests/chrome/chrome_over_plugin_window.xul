@@ -19,7 +19,7 @@
     <![CDATA[
     var imports = [ "SimpleTest", "is", "isnot", "ok", "todo" ];
     for (var name of imports) {
-      window[name] = window.opener.wrappedJSObject[name];
+      window[name] = window.arguments[0][name];
     }
 
     var plugin;

@@ -160,19 +160,19 @@ function runTests() {
     await popuphidden;
 
     window.close();
-    window.opener.wrappedJSObject.SimpleTest.finish();
+    window.arguments[0].SimpleTest.finish();
   })();
 }
 
 function ok(condition, message) {
-  window.opener.wrappedJSObject.SimpleTest.ok(condition, message);
+  window.arguments[0].SimpleTest.ok(condition, message);
 }
 
 function is(left, right, message) {
-  window.opener.wrappedJSObject.SimpleTest.is(left, right, message);
+  window.arguments[0].SimpleTest.is(left, right, message);
 }
 
-window.opener.wrappedJSObject.SimpleTest.waitForFocus(runTests, window);
+window.arguments[0].SimpleTest.waitForFocus(runTests, window);
 
 ]]>
 </script>

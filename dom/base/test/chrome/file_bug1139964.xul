@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1139964
   var ppm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService();
 
   function ok(cond, msg) {
-    opener.wrappedJSObject.ok(cond, msg);
+    window.arguments[0].ok(cond, msg);
   }
 
   var msgName = "TEST:Global_has_Promise";
@@ -44,7 +44,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1139964
     ok(m.data.hasTextEncoder, "BrowserChildGlobal should have TextEncoder object in the global scope!");
     ok(m.data.hasWindow, "BrowserChildGlobal should have Window object in the global scope!");
 
-    opener.setTimeout(function() { this.done(); }, 0);
+    window.arguments[0].setTimeout(function() { this.done(); }, 0);
     window.close();
   }
 

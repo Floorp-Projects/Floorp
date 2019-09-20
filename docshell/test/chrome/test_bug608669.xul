@@ -28,6 +28,8 @@ function nextTest() {
   gen.next();
 }
 
+let chromeWindow = docShell.rootTreeItem.domWindow;
+
 function* doTest() {
   var notificationCount = 0;
   var observer = {
@@ -48,23 +50,25 @@ function* doTest() {
   is(notificationCount, 0, "initial count");
 
   // create a new window
-  var testWin = window.open("", "bug 608669", "chrome,width=600,height=600");
+  var testWin = chromeWindow.open("", "bug 608669", "chrome,width=600,height=600");
   testWin.x = "y";
   is(notificationCount, 1, "after created window");
 
   // Try loading in the window
   testWin.location = "bug608669.xul";
-  window.onmessage = nextTest;
+  chromeWindow.onmessage = nextTest;
   yield undefined;
   is(notificationCount, 1, "after first load");
   is(testWin.x, "y", "reused window");
 
   // Try loading again in the window
   testWin.location = "bug608669.xul?x";
-  window.onmessage = nextTest;
+  chromeWindow.onmessage = nextTest;
   yield undefined;
   is(notificationCount, 2, "after second load");
   is("x" in testWin, false, "didn't reuse window");
+
+  chromeWindow.onmessage = null;
 
   testWin.close();
 

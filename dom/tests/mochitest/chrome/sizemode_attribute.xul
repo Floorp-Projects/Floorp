@@ -46,7 +46,7 @@ let tests = [
   },
 
   function test8() {
-    window.opener.wrappedJSObject.done();
+    window.arguments[0].done();
   }
 ];
 
@@ -77,7 +77,7 @@ function checkAndContinue(sizemode) {
   }, 0);
 }
 
-let is = window.opener.wrappedJSObject.is;
+let is = window.arguments[0].is;
 
 </script>
 
