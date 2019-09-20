@@ -192,13 +192,20 @@ class ReaderViewFeatureTest {
         val sessionManager = mock<SessionManager>()
         val view = mock<ReaderViewControlsView>()
         val controller = mock<WebExtensionController>()
-        whenever(controller.portConnected(any(), any())).thenReturn(true)
+        val selectedSession = mock<Session>()
 
         val readerViewFeature = spy(ReaderViewFeature(testContext, engine, sessionManager, view))
         readerViewFeature.extensionController = controller
         readerViewFeature.start()
+        verify(readerViewFeature, never()).updateReaderViewState(any())
 
-        verify(readerViewFeature).updateReaderViewState(any())
+        whenever(controller.portConnected(any(), any())).thenReturn(true)
+        readerViewFeature.start()
+        verify(readerViewFeature, never()).updateReaderViewState(any())
+
+        readerViewFeature.onSessionSelected(selectedSession)
+        readerViewFeature.start()
+        verify(readerViewFeature).updateReaderViewState(selectedSession)
     }
 
     @Test

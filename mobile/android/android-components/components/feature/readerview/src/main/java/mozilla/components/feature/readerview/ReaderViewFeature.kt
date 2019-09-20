@@ -101,8 +101,10 @@ class ReaderViewFeature(
         registerReaderViewContentMessageHandler()
 
         extensionController.install(engine)
-        if (extensionController.portConnected(sessionManager.getOrCreateEngineSession())) {
-            updateReaderViewState()
+        activeSession?.let {
+            if (extensionController.portConnected(sessionManager.getEngineSession(it))) {
+                updateReaderViewState(it)
+            }
         }
 
         controlsInteractor.start()
