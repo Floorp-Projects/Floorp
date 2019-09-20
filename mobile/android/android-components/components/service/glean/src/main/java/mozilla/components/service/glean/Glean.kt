@@ -8,6 +8,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.annotation.MainThread
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.Job
@@ -92,6 +93,7 @@ open class GleanInternalAPI internal constructor () {
      * @param configuration A Glean [Configuration] object with global settings.
      */
     @JvmOverloads
+    @MainThread
     fun initialize(
         applicationContext: Context,
         configuration: Configuration = Configuration()
@@ -146,6 +148,9 @@ open class GleanInternalAPI internal constructor () {
         Dispatchers.API.flushQueuedInitialTasks()
 
         // At this point, all metrics and events can be recorded.
+        // This should only be called from the main thread. This is enforced by
+        // the @MainThread decorator on this method.
+        // See https://bugzilla.mozilla.org/show_bug.cgi?id=1581556
         ProcessLifecycleOwner.get().lifecycle.addObserver(gleanLifecycleObserver)
     }
 

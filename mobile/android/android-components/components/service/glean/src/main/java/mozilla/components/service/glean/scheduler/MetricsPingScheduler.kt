@@ -61,6 +61,10 @@ internal class MetricsPingScheduler(val applicationContext: Context) : Lifecycle
     }
 
     init {
+        // This should only be called from the main thread. This is enforced by
+        // the @MainThread decorator on Glean.initialize. That decorator can not
+        // be applied to a constructor, so it is not applied here.
+        // See https://bugzilla.mozilla.org/show_bug.cgi?id=1581556
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
     }
 
