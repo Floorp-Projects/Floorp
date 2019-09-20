@@ -19,7 +19,7 @@
 SimpleTest.waitForExplicitFinish();
 function runTest()
 {
-  window.open("window_chromemargin.xul", "_blank", "chrome,width=600,height=600");
+  window.openDialog("window_chromemargin.xul", "_blank", "chrome,width=600,height=600,noopener", window);
 }
 </script>
 

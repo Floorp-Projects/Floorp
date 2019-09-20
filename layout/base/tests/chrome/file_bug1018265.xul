@@ -31,7 +31,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1018265
   function didGoBack(e) {
     testcontent.removeEventListener("pageshow", didGoBack, true);
     shouldHaveTwoNonHiddenContentViewers();
-    opener.done();
+    window.arguments[0].done();
     window.close();
   }
 
@@ -40,8 +40,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1018265
   }
 
   function shouldHaveTwoNonHiddenContentViewers() {
-    opener.is(getContentViewer(testcontent.contentWindow).isHidden, false, "Top level ContentViewer should not be hidden.");
-    opener.is(getContentViewer(testcontent.contentWindow.frames[0]).isHidden, false, " Iframe's ContentViewer should not be hidden.");
+    window.arguments[0].is(getContentViewer(testcontent.contentWindow).isHidden, false, "Top level ContentViewer should not be hidden.");
+    window.arguments[0].is(getContentViewer(testcontent.contentWindow.frames[0]).isHidden, false, " Iframe's ContentViewer should not be hidden.");
   }
   ]]>
   </script>

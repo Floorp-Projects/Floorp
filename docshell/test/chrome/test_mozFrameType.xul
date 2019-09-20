@@ -32,8 +32,8 @@ if (navigator.platform.startsWith("Win")) {
 SimpleTest.waitForExplicitFinish();
 
 addLoadEvent(function () {
-  window.open("mozFrameType_window.xul", "mozFrameType",
-              "chrome,width=600,height=600");
+  window.openDialog("mozFrameType_window.xul", "mozFrameType",
+                    "chrome,width=600,height=600,noopener", window);
 });
 
 ]]>

@@ -56,7 +56,8 @@ function startTest() {
 }
 
 function openWindow() {
-  gWindow = open('empty_window.xul', '_blank', 'chrome,screenX=50,screenY=50,width=200,height=200,resizable');
+  gWindow = window.docShell.rootTreeItem.domWindow
+                  .open('empty_window.xul', '_blank', 'chrome,screenX=50,screenY=50,width=200,height=200,resizable');
   SimpleTest.waitForFocus(runTest, gWindow);
 }
 

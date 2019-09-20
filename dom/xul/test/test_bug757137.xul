@@ -20,7 +20,7 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({"set":[["dom.ipc.tabs.disabled", true]]}, startTest);
 
 function startTest() {
-  var otherWindow = window.open("window_bug757137.xul", "", "chrome");
+  var otherWindow = docShell.rootTreeItem.domWindow.open("window_bug757137.xul", "", "chrome");
   ok(otherWindow.isChromeWindow, 'XUL window should be a ChromeWindow');
 
   otherWindow.onload = function () {

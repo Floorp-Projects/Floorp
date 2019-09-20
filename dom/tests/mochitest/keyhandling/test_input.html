@@ -54,9 +54,9 @@ if (IS_MAC) {
   VK.SPACE = WIN_VK_SPACE;
 }
 
-if (window.opener) {
-  ok = window.opener.ok;
-  is = window.opener.is;
+if (window.arguments && window.arguments[0]) {
+  ok = window.arguments[0].ok;
+  is = window.arguments[0].is;
 }
 
 function synthesizeKey(keyCode, modifiers, chars, event = "keyup") {
@@ -210,7 +210,7 @@ async function startTest() {
 async function runTest() {
   // When running in windowed mode the caller will start the test once we have
   // focus.
-  if (window.opener) {
+  if (window.arguments && window.arguments[0]) {
     return;
   }
 

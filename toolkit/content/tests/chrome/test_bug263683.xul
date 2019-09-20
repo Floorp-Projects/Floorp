@@ -30,8 +30,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=263683
 
       /** Test for Bug 263683 **/
       SimpleTest.waitForExplicitFinish();
-      window.open("bug263683_window.xul", "263683test", 
-                  "chrome,width=600,height=600");
+      window.openDialog("bug263683_window.xul", "263683test",
+                        "chrome,width=600,height=600,noopener", window);
 
     ]]>
   </script>

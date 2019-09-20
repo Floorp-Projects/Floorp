@@ -12,7 +12,7 @@
 SimpleTest.waitForExplicitFinish();
 function runTest()
 {
-  window.open("window_popup_preventdefault_chrome.xul", "_blank", "chrome,width=600,height=600");
+  window.openDialog("window_popup_preventdefault_chrome.xul", "_blank", "chrome,width=600,height=600,noopener", window);
 }
 </script>
 

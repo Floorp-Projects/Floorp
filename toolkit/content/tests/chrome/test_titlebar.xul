@@ -19,7 +19,7 @@ SimpleTest.waitForExplicitFinish();
 
 function test_titlebar()
 {
-  window.open("window_titlebar.xul", "_blank", "chrome,left=200,top=200");
+  window.openDialog("window_titlebar.xul", "_blank", "chrome,left=200,top=200,noopener", window);
 }
 
 function done(testWindow)

@@ -26,11 +26,11 @@
 <script type="application/javascript"><![CDATA[
 
 function ok(condition, msg) {
-  window.opener.wrappedJSObject.ok(condition, msg);
+  window.arguments[0].ok(condition, msg);
 }
 
 function is(a, b, msg) {
-  window.opener.wrappedJSObject.is(a, b, msg);
+  window.arguments[0].is(a, b, msg);
 }
 
 var gBrowser = null;
@@ -88,7 +88,7 @@ function earlyExit(event) {
 function lastExit(event) {
   is(event.target, gOuterDoc, "MozDOMFullscreen:Exited should be targeted at the last exited doc");
   ok(gOuterDoc.fullscreenElement == null, "Fullscreen should have been fully exited");
-  window.opener.wrappedJSObject.done();
+  window.arguments[0].done();
 }
 
 function start() {

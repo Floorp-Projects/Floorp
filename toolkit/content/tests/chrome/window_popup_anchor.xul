@@ -10,7 +10,7 @@ function runTests()
   frames[0].openPopup();
 }
 
-window.opener.wrappedJSObject.SimpleTest.waitForFocus(runTests, window);
+window.arguments[0].SimpleTest.waitForFocus(runTests, window);
 </script>
 
 <spacer height="13"/>

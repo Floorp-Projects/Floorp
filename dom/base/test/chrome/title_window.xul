@@ -22,7 +22,7 @@
     <![CDATA[
     var imports = [ "SimpleTest", "is", "isnot", "ok" ];
     for (var name of imports) {
-      window[name] = window.opener.wrappedJSObject[name];
+      window[name] = window.arguments[0][name];
     }
 
     function testStatics() {

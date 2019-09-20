@@ -28,7 +28,7 @@
   }
 
   addLoadEvent(function() {
-    window.open("cpows_parent.xul", "", "chrome");
+    window.openDialog("cpows_parent.xul", "", "chrome,noopener", window);
   });
   ]]></script>
 </window>
