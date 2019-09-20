@@ -260,6 +260,7 @@ class WebRenderCommandBuilder final {
   // Whether consecutive inactive display items should be grouped into one
   // blob image.
   bool mDoGrouping;
+  Maybe<nsRect> mClippedGroupBounds;
 
   // True if the most recently build display list contained an svg that
   // we did grouping for.
