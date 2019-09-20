@@ -11,9 +11,9 @@
 #include "mozilla/dom/PaymentRequestChild.h"
 #include "mozilla/dom/PaymentRequestManager.h"
 #include "mozilla/dom/RootedDictionary.h"
+#include "mozilla/dom/UserActivation.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/intl/MozLocale.h"
-#include "mozilla/EventStateManager.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"
@@ -701,7 +701,7 @@ already_AddRefed<Promise> PaymentRequest::Show(
   nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(global);
   Document* doc = win->GetExtantDoc();
 
-  if (!EventStateManager::IsHandlingUserInput()) {
+  if (!UserActivation::IsHandlingUserInput()) {
     nsString msg = NS_LITERAL_STRING(
         "User activation is now required to call PaymentRequest.show()");
     nsContentUtils::ReportToConsoleNonLocalized(

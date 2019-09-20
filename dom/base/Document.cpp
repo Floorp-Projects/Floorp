@@ -113,6 +113,7 @@
 #include "mozilla/dom/ShadowIncludingTreeIterator.h"
 #include "mozilla/dom/StyleSheetList.h"
 #include "mozilla/dom/SVGUseElement.h"
+#include "mozilla/dom/UserActivation.h"
 #include "mozilla/net/CookieSettings.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/CDATASection.h"
@@ -14023,7 +14024,7 @@ void Document::RequestPointerLock(Element* aElement, CallerType aCallerType) {
     return;
   }
 
-  bool userInputOrSystemCaller = EventStateManager::IsHandlingUserInput() ||
+  bool userInputOrSystemCaller = UserActivation::IsHandlingUserInput() ||
                                  aCallerType == CallerType::System;
   nsCOMPtr<nsIRunnable> request =
       new PointerLockRequest(aElement, userInputOrSystemCaller);
@@ -14536,12 +14537,11 @@ void Document::SetCssUseCounterBits() {
 
   for (size_t i = 0; i < size_t(CountedUnknownProperty::Count); ++i) {
     if (Servo_IsUnknownPropertyRecordedInUseCounter(
-          mStyleUseCounters.get(), CountedUnknownProperty(i))) {
+            mStyleUseCounters.get(), CountedUnknownProperty(i))) {
       SetUseCounter(UseCounter(eUseCounter_FirstCountedUnknownProperty + i));
     }
   }
 }
-
 
 void Document::PropagateUseCountersToPage() {
   if (mDisplayDocument) {
@@ -15626,7 +15626,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
   }
 
   // Step 8. If the browser is not processing a user gesture, reject.
-  if (!EventStateManager::IsHandlingUserInput()) {
+  if (!UserActivation::IsHandlingUserInput()) {
     promise->MaybeRejectWithUndefined();
     return promise.forget();
   }

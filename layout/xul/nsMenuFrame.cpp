@@ -34,7 +34,6 @@
 #include "nsIDOMXULMenuListElement.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/EventStateManager.h"
 #include "mozilla/Likely.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
@@ -44,6 +43,7 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/UserActivation.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -1115,7 +1115,7 @@ void nsMenuFrame::CreateMenuCommandEvent(WidgetGUIEvent* aEvent,
   // Because the command event is firing asynchronously, a flag is needed to
   // indicate whether user input is being handled. This ensures that a popup
   // window won't get blocked.
-  bool userinput = EventStateManager::IsHandlingUserInput();
+  bool userinput = UserActivation::IsHandlingUserInput();
 
   mDelayedMenuCommandEvent =
       new nsXULMenuCommandEvent(mContent->AsElement(), isTrusted, shift,

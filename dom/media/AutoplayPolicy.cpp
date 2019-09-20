@@ -6,13 +6,13 @@
 
 #include "AutoplayPolicy.h"
 
-#include "mozilla/EventStateManager.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/AudioContext.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLMediaElementBinding.h"
+#include "mozilla/dom/UserActivation.h"
 #include "nsGlobalWindowInner.h"
 #include "nsIAutoplay.h"
 #include "nsContentUtils.h"
@@ -175,7 +175,7 @@ bool AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(
 static bool IsAllowedToPlayByBlockingModel(const HTMLMediaElement& aElement) {
   if (!StaticPrefs::media_autoplay_enabled_user_gestures_needed()) {
     // If element is blessed, it would always be allowed to play().
-    return aElement.IsBlessed() || EventStateManager::IsHandlingUserInput();
+    return aElement.IsBlessed() || UserActivation::IsHandlingUserInput();
   }
   return IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow());
 }

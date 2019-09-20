@@ -15,6 +15,7 @@
 #include "mozilla/dom/HTMLFormSubmission.h"
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/GetFilesHelper.h"
+#include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/WheelEventBinding.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -1198,7 +1199,7 @@ nsresult HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
         if (aValue) {
           // Mark channel as urgent-start before load image if the image load is
           // initiated by a user interaction.
-          mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();
+          mUseUrgentStartForChannel = UserActivation::IsHandlingUserInput();
 
           LoadImage(aValue->GetStringValue(), true, aNotify,
                     eImageLoadType_Normal, mSrcTriggeringPrincipal);
@@ -4324,7 +4325,7 @@ nsresult HTMLInputElement::BindToTree(BindContext& aContext, nsINode& aParent) {
     if (HasAttr(kNameSpaceID_None, nsGkAtoms::src)) {
       // Mark channel as urgent-start before load image if the image load is
       // initaiated by a user interaction.
-      mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();
+      mUseUrgentStartForChannel = UserActivation::IsHandlingUserInput();
 
       nsContentUtils::AddScriptRunner(
           NewRunnableMethod("dom::HTMLInputElement::MaybeLoadImage", this,
@@ -4596,7 +4597,7 @@ void HTMLInputElement::HandleTypeChange(uint8_t aNewType, bool aNotify) {
       if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
         // Mark channel as urgent-start before load image if the image load is
         // initaiated by a user interaction.
-        mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();
+        mUseUrgentStartForChannel = UserActivation::IsHandlingUserInput();
 
         LoadImage(src, false, aNotify, eImageLoadType_Normal,
                   mSrcTriggeringPrincipal);
