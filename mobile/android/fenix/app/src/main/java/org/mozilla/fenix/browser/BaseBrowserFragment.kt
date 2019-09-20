@@ -344,15 +344,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                         toolbar.visibility = View.VISIBLE
                         nestedScrollQuickAction.visibility = View.VISIBLE
                     }
-                    view.swipeRefresh.apply {
-                        val (topMargin, bottomMargin) = if (inFullScreen) 0 to 0 else getEngineMargins()
-                        (layoutParams as CoordinatorLayout.LayoutParams).setMargins(
-                            0,
-                            topMargin,
-                            0,
-                            bottomMargin
-                        )
-                    }
+                    updateLayoutMargins(inFullScreen)
                 },
                 owner = this,
                 view = view
@@ -525,6 +517,13 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
      * Returns the layout [android.view.Gravity] for the quick settings dialog.
      */
     protected abstract fun getAppropriateLayoutGravity(): Int
+
+    protected fun updateLayoutMargins(inFullScreen: Boolean) {
+        view?.swipeRefresh?.apply {
+            val (topMargin, bottomMargin) = if (inFullScreen) 0 to 0 else getEngineMargins()
+            (layoutParams as CoordinatorLayout.LayoutParams).setMargins(0, topMargin, 0, bottomMargin)
+        }
+    }
 
     /**
      * Updates the site permissions rules based on user settings.

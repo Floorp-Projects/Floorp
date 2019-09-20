@@ -5,7 +5,6 @@
 package org.mozilla.fenix.customtabs
 
 import android.app.Activity
-import android.content.Context
 import android.view.Gravity
 import android.view.View
 import androidx.appcompat.content.res.AppCompatResources
@@ -25,11 +24,10 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.ThemeManager
 
 class CustomTabsIntegration(
-    context: Context,
     sessionManager: SessionManager,
     toolbar: BrowserToolbar,
     sessionId: String,
-    activity: Activity?,
+    activity: Activity,
     quickActionbar: NestedScrollView,
     engineLayout: View,
     onItemTapped: (ToolbarMenu.Item) -> Unit = {}
@@ -59,24 +57,24 @@ class CustomTabsIntegration(
 
         val task = LottieCompositionFactory
             .fromRawRes(
-                context,
-                ThemeManager.resolveAttribute(R.attr.shieldLottieFile, context)
+                activity,
+                ThemeManager.resolveAttribute(R.attr.shieldLottieFile, activity)
             )
         task.addListener { result ->
             val lottieDrawable = LottieDrawable()
             lottieDrawable.composition = result
             toolbar.displayTrackingProtectionIcon =
-                context.settings.shouldUseTrackingProtection && FeatureFlags.etpCategories
+                activity.settings.shouldUseTrackingProtection && FeatureFlags.etpCategories
             toolbar.displaySeparatorView = false
 
             toolbar.setTrackingProtectionIcons(
                 iconOnNoTrackersBlocked = AppCompatResources.getDrawable(
-                    context,
+                    activity,
                     R.drawable.ic_tracking_protection_enabled
                 )!!,
                 iconOnTrackersBlocked = lottieDrawable,
                 iconDisabledForSite = AppCompatResources.getDrawable(
-                    context,
+                    activity,
                     R.drawable.ic_tracking_protection_disabled
                 )!!
             )
@@ -85,7 +83,7 @@ class CustomTabsIntegration(
 
     private val customTabToolbarMenu by lazy {
         CustomTabToolbarMenu(
-            context,
+            activity,
             sessionManager,
             sessionId,
             onItemTapped = onItemTapped
@@ -98,8 +96,8 @@ class CustomTabsIntegration(
         sessionId,
         menuBuilder = customTabToolbarMenu.menuBuilder,
         menuItemIndex = START_OF_MENU_ITEMS_INDEX,
-        window = activity?.window,
-        closeListener = { activity?.finish() }
+        window = activity.window,
+        closeListener = { activity.finish() }
     )
 
     override fun start() {

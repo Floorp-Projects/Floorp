@@ -25,6 +25,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.fetch.Client
+import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
 import mozilla.components.feature.media.MediaFeature
 import mozilla.components.feature.media.RecordingDevicesNotificationFeature
 import mozilla.components.feature.media.state.MediaStateMachine
@@ -82,6 +83,11 @@ class Core(private val context: Context) {
     val store by lazy {
         BrowserStore()
     }
+
+    /**
+     * The [CustomTabsServiceStore] holds global custom tabs related data.
+     */
+    val customTabsStore by lazy { CustomTabsServiceStore() }
 
     /**
      * The session manager component provides access to a centralized registry of

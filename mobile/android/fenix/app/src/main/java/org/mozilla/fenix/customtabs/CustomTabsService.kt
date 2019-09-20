@@ -10,4 +10,5 @@ import org.mozilla.fenix.ext.components
 
 class CustomTabsService : AbstractCustomTabsService() {
     override val engine: Engine by lazy { applicationContext.components.core.engine }
+    override val customTabsServiceStore by lazy { applicationContext.components.core.customTabsStore }
 }
