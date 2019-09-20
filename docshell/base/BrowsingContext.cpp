@@ -17,6 +17,7 @@
 #include "mozilla/dom/Location.h"
 #include "mozilla/dom/LocationBinding.h"
 #include "mozilla/dom/StructuredCloneTags.h"
+#include "mozilla/dom/UserActivationIPCUtils.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/WindowGlobalParent.h"
@@ -696,17 +697,21 @@ JSObject* BrowsingContext::ReadStructuredClone(JSContext* aCx,
 }
 
 void BrowsingContext::NotifyUserGestureActivation() {
-  SetIsActivatedByUserGesture(true);
+  SetUserActivationState(UserActivation::State::FullActivated);
 }
 
 void BrowsingContext::NotifyResetUserGestureActivation() {
-  SetIsActivatedByUserGesture(false);
+  SetUserActivationState(UserActivation::State::None);
+}
+
+bool BrowsingContext::HasBeenUserGestureActivated() {
+  return mUserActivationState != UserActivation::State::None;
 }
 
 bool BrowsingContext::HasValidTransientUserGestureActivation() {
   MOZ_ASSERT(mIsInProcess);
 
-  if (!mIsActivatedByUserGesture) {
+  if (mUserActivationState != UserActivation::State::FullActivated) {
     MOZ_ASSERT(mUserGestureStart.IsNull(),
                "mUserGestureStart should be null if the document hasn't ever "
                "been activated by user gesture");
@@ -1068,18 +1073,20 @@ void BrowsingContext::StartDelayedAutoplayMediaComponents() {
   mDocShell->StartDelayedAutoplayMediaComponents();
 }
 
-void BrowsingContext::DidSetIsActivatedByUserGesture() {
+void BrowsingContext::DidSetUserActivationState() {
   MOZ_ASSERT_IF(!mIsInProcess, mUserGestureStart.IsNull());
-  USER_ACTIVATION_LOG(
-      "Set user gesture activation %d for %s browsing context 0x%08" PRIx64,
-      mIsActivatedByUserGesture, XRE_IsParentProcess() ? "Parent" : "Child",
-      Id());
+  USER_ACTIVATION_LOG("Set user gesture activation %" PRIu8
+                      " for %s browsing context 0x%08" PRIx64,
+                      static_cast<uint8_t>(mUserActivationState),
+                      XRE_IsParentProcess() ? "Parent" : "Child", Id());
   if (mIsInProcess) {
     USER_ACTIVATION_LOG(
         "Set user gesture start time for %s browsing context 0x%08" PRIx64,
         XRE_IsParentProcess() ? "Parent" : "Child", Id());
     mUserGestureStart =
-        mIsActivatedByUserGesture ? TimeStamp::Now() : TimeStamp();
+        (mUserActivationState == UserActivation::State::FullActivated)
+            ? TimeStamp::Now()
+            : TimeStamp();
   }
 }
 
