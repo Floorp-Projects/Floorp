@@ -391,7 +391,8 @@ add_task(async function test_context_menu_open_management() {
 
       TelemetryTestUtils.assertEvents(
         [["pwmgr", "open_management", "contextmenu"]],
-        { category: "pwmgr", method: "open_management" }
+        { category: "pwmgr", method: "open_management" },
+        { clear: true, process: "content" }
       );
 
       await passwordManager.close();
