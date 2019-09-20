@@ -9,6 +9,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Authenticode.h"
+#include "mozilla/LoaderAPIInterfaces.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
@@ -21,6 +22,7 @@
 #  include "nsISupportsImpl.h"
 #  include "nsString.h"
 #  include "nsThreadUtils.h"
+#  include "prthread.h"
 
 #endif  // defined(MOZILLA_INTERNAL_API)
 
@@ -29,44 +31,6 @@
 
 namespace mozilla {
 namespace glue {
-
-// Holds data about a top-level DLL load event, for the purposes of later
-// evaluating the DLLs for trustworthiness. DLLs are loaded recursively,
-// so we hold the top-level DLL and all child DLLs in mModules.
-class ModuleLoadEvent {
- public:
-  class ModuleInfo {
-   public:
-    ModuleInfo() = default;
-    ~ModuleInfo() = default;
-    ModuleInfo(const ModuleInfo& aOther) = delete;
-    ModuleInfo(ModuleInfo&& aOther) = default;
-
-    ModuleInfo operator=(const ModuleInfo& aOther) = delete;
-    ModuleInfo operator=(ModuleInfo&& aOther) = delete;
-
-    uintptr_t mBase;
-    UniquePtr<wchar_t[]> mLdrName;
-    UniquePtr<wchar_t[]> mFullPath;
-    double mLoadDurationMS;
-  };
-
-  ModuleLoadEvent() = default;
-  ~ModuleLoadEvent() = default;
-  ModuleLoadEvent(const ModuleLoadEvent& aOther) = delete;
-  ModuleLoadEvent(ModuleLoadEvent&& aOther) = default;
-
-  ModuleLoadEvent& operator=(const ModuleLoadEvent& aOther) = delete;
-  ModuleLoadEvent& operator=(ModuleLoadEvent&& aOther) = delete;
-
-  DWORD mThreadID;
-  uint64_t mProcessUptimeMS;
-  Vector<ModuleInfo, 0, InfallibleAllocPolicy> mModules;
-
-  // Stores instruction pointers, top-to-bottom.
-  Vector<uintptr_t, 0, InfallibleAllocPolicy> mStack;
-};
-
 namespace detail {
 
 class DllServicesBase : public Authenticode {
@@ -77,24 +41,23 @@ class DllServicesBase : public Authenticode {
    *          this function should be used for is dispatching the event to our
    *          event loop so that it may be handled in a safe context.
    */
-  virtual void DispatchDllLoadNotification(PCUNICODE_STRING aDllName) = 0;
+  virtual void DispatchDllLoadNotification(ModuleLoadInfo&& aModLoadInfo) = 0;
 
   /**
    * This function accepts module load events to be processed later for
    * the untrusted modules telemetry ping.
    *
    * WARNING: This method is run from within the Windows loader and should
-   *          only perform trivial, loader-friendly, operations.
+   *          only perform trivial, loader-friendly operations.
    */
-  virtual void NotifyUntrustedModuleLoads(
-      const Vector<glue::ModuleLoadEvent, 0, InfallibleAllocPolicy>&
-          aEvents) = 0;
+  virtual void DispatchModuleLoadBacklogNotification(
+      ModuleLoadInfoVec&& aEvents) = 0;
 
   void SetAuthenticodeImpl(Authenticode* aAuthenticode) {
     mAuthenticode = aAuthenticode;
   }
 
-  // In debug builds, we override GetBinaryOrgName to add a Gecko-specific
+  // In debug builds we override GetBinaryOrgName to add a Gecko-specific
   // assertion. OTOH, we normally do not want people overriding this function,
   // so we'll make it final in the release case, thus covering all bases.
 #if defined(DEBUG)
@@ -133,15 +96,49 @@ class DllServicesBase : public Authenticode {
 
 #if defined(MOZILLA_INTERNAL_API)
 
+struct EnhancedModuleLoadInfo final {
+  explicit EnhancedModuleLoadInfo(ModuleLoadInfo&& aModLoadInfo)
+      : mNtLoadInfo(std::move(aModLoadInfo)) {
+    // Only populate mThreadName when we're on the same thread as the event
+    if (mNtLoadInfo.mThreadId == ::GetCurrentThreadId()) {
+      mThreadName = PR_GetThreadName(PR_GetCurrentThread());
+    }
+    MOZ_ASSERT(!mNtLoadInfo.mSectionName.IsEmpty());
+  }
+
+  EnhancedModuleLoadInfo(EnhancedModuleLoadInfo&&) = default;
+  EnhancedModuleLoadInfo& operator=(EnhancedModuleLoadInfo&&) = default;
+
+  EnhancedModuleLoadInfo(const EnhancedModuleLoadInfo&) = delete;
+  EnhancedModuleLoadInfo& operator=(const EnhancedModuleLoadInfo&) = delete;
+
+  nsDependentString GetSectionName() const {
+    return mNtLoadInfo.mSectionName.AsString();
+  }
+
+  using BacktraceType = decltype(ModuleLoadInfo::mBacktrace);
+
+  ModuleLoadInfo mNtLoadInfo;
+  nsCString mThreadName;
+};
+
 class DllServices : public detail::DllServicesBase {
  public:
-  void DispatchDllLoadNotification(PCUNICODE_STRING aDllName) final {
-    nsDependentSubstring strDllName(aDllName->Buffer,
-                                    aDllName->Length / sizeof(wchar_t));
+  void DispatchDllLoadNotification(ModuleLoadInfo&& aModLoadInfo) final {
+    nsCOMPtr<nsIRunnable> runnable(
+        NewRunnableMethod<StoreCopyPassByRRef<EnhancedModuleLoadInfo>>(
+            "DllServices::NotifyDllLoad", this, &DllServices::NotifyDllLoad,
+            std::move(aModLoadInfo)));
 
-    nsCOMPtr<nsIRunnable> runnable(NewRunnableMethod<bool, nsString>(
-        "DllServices::NotifyDllLoad", this, &DllServices::NotifyDllLoad,
-        NS_IsMainThread(), strDllName));
+    SystemGroup::Dispatch(TaskCategory::Other, runnable.forget());
+  }
+
+  void DispatchModuleLoadBacklogNotification(
+      ModuleLoadInfoVec&& aEvents) final {
+    nsCOMPtr<nsIRunnable> runnable(
+        NewRunnableMethod<StoreCopyPassByRRef<ModuleLoadInfoVec>>(
+            "DllServices::NotifyModuleLoadBacklog", this,
+            &DllServices::NotifyModuleLoadBacklog, std::move(aEvents)));
 
     SystemGroup::Dispatch(TaskCategory::Other, runnable.forget());
   }
@@ -161,8 +158,8 @@ class DllServices : public detail::DllServicesBase {
   DllServices() = default;
   ~DllServices() = default;
 
-  virtual void NotifyDllLoad(const bool aIsMainThread,
-                             const nsString& aDllName) = 0;
+  virtual void NotifyDllLoad(EnhancedModuleLoadInfo&& aModLoadInfo) = 0;
+  virtual void NotifyModuleLoadBacklog(ModuleLoadInfoVec&& aEvents) = 0;
 };
 
 #else
@@ -174,12 +171,11 @@ class BasicDllServices final : public detail::DllServicesBase {
   ~BasicDllServices() = default;
 
   // Not useful in this class, so provide a default implementation
-  virtual void DispatchDllLoadNotification(PCUNICODE_STRING aDllName) override {
-  }
+  virtual void DispatchDllLoadNotification(
+      ModuleLoadInfo&& aModLoadInfo) override {}
 
-  virtual void NotifyUntrustedModuleLoads(
-      const Vector<glue::ModuleLoadEvent, 0, InfallibleAllocPolicy>& aEvents)
-      override {}
+  virtual void DispatchModuleLoadBacklogNotification(
+      ModuleLoadInfoVec&& aEvents) override {}
 };
 
 #endif  // defined(MOZILLA_INTERNAL_API)
