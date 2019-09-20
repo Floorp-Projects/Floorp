@@ -16,9 +16,14 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/WinHeaderOnlyUtils.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Span.h"
+#include "mozilla/WinHeaderOnlyUtils.h"
+
+#if defined(MOZILLA_INTERNAL_API)
+#  include "nsString.h"
+#endif  // defined(MOZILLA_INTERNAL_API)
 
 // The declarations within this #if block are intended to be used for initial
 // process initialization ONLY. You probably don't want to be using these in
@@ -34,6 +39,10 @@ extern "C" {
 #  if !defined(STATUS_DLL_NOT_FOUND)
 #    define STATUS_DLL_NOT_FOUND ((NTSTATUS)0xC0000135L)
 #  endif  // !defined(STATUS_DLL_NOT_FOUND)
+
+#  if !defined(STATUS_UNSUCCESSFUL)
+#    define STATUS_UNSUCCESSFUL ((NTSTATUS)0xC0000001L)
+#  endif  // !defined(STATUS_UNSUCCESSFUL)
 
 enum SECTION_INHERIT { ViewShare = 1, ViewUnmap = 2 };
 
@@ -70,6 +79,29 @@ BOOLEAN NTAPI RtlEqualUnicodeString(PCUNICODE_STRING aStr1,
 
 NTSTATUS NTAPI RtlGetVersion(PRTL_OSVERSIONINFOW aOutVersionInformation);
 
+VOID NTAPI RtlAcquireSRWLockExclusive(PSRWLOCK aLock);
+VOID NTAPI RtlAcquireSRWLockShared(PSRWLOCK aLock);
+
+VOID NTAPI RtlReleaseSRWLockExclusive(PSRWLOCK aLock);
+VOID NTAPI RtlReleaseSRWLockShared(PSRWLOCK aLock);
+
+NTSTATUS NTAPI NtReadVirtualMemory(HANDLE aProcessHandle, PVOID aBaseAddress,
+                                   PVOID aBuffer, SIZE_T aNumBytesToRead,
+                                   PSIZE_T aNumBytesRead);
+
+NTSTATUS NTAPI LdrLoadDll(PWCHAR aDllPath, PULONG aFlags,
+                          PUNICODE_STRING aDllName, PHANDLE aOutHandle);
+
+typedef ULONG(NTAPI* PRTL_RUN_ONCE_INIT_FN)(PRTL_RUN_ONCE, PVOID, PVOID*);
+NTSTATUS NTAPI RtlRunOnceExecuteOnce(PRTL_RUN_ONCE aRunOnce,
+                                     PRTL_RUN_ONCE_INIT_FN aInitFn,
+                                     PVOID aContext, PVOID* aParameter);
+
+}  // extern "C"
+
+#endif  // !defined(MOZILLA_INTERNAL_API)
+
+extern "C" {
 PVOID NTAPI RtlAllocateHeap(PVOID aHeapHandle, ULONG aFlags, SIZE_T aSize);
 
 PVOID NTAPI RtlReAllocateHeap(PVOID aHeapHandle, ULONG aFlags, LPVOID aMem,
@@ -77,20 +109,127 @@ PVOID NTAPI RtlReAllocateHeap(PVOID aHeapHandle, ULONG aFlags, LPVOID aMem,
 
 BOOLEAN NTAPI RtlFreeHeap(PVOID aHeapHandle, ULONG aFlags, PVOID aHeapBase);
 
-VOID NTAPI RtlAcquireSRWLockExclusive(PSRWLOCK aLock);
+BOOLEAN NTAPI RtlQueryPerformanceCounter(LARGE_INTEGER* aPerfCount);
 
-VOID NTAPI RtlReleaseSRWLockExclusive(PSRWLOCK aLock);
+#define RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE 1
+#define RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING 2
+NTSTATUS NTAPI RtlDuplicateUnicodeString(ULONG aFlags, PCUNICODE_STRING aSrc,
+                                         PUNICODE_STRING aDest);
 
-NTSTATUS NTAPI NtReadVirtualMemory(HANDLE aProcessHandle, PVOID aBaseAddress,
-                                   PVOID aBuffer, SIZE_T aNumBytesToRead,
-                                   PSIZE_T aNumBytesRead);
-
+VOID NTAPI RtlFreeUnicodeString(PUNICODE_STRING aUnicodeString);
 }  // extern "C"
-
-#endif  // !defined(MOZILLA_INTERNAL_API)
 
 namespace mozilla {
 namespace nt {
+
+/**
+ * This class encapsulates a UNICODE_STRING that owns its own buffer. The
+ * buffer is always NULL terminated, thus allowing us to cast to a wide C-string
+ * without requiring any mutation.
+ *
+ * We only allow creation of this owned buffer from outside XUL.
+ */
+class AllocatedUnicodeString final {
+ public:
+  AllocatedUnicodeString() : mUnicodeString() {}
+
+#if defined(MOZILLA_INTERNAL_API)
+  AllocatedUnicodeString(const AllocatedUnicodeString& aOther) = delete;
+
+  AllocatedUnicodeString& operator=(const AllocatedUnicodeString& aOther) =
+      delete;
+#else
+  explicit AllocatedUnicodeString(PCUNICODE_STRING aSrc) {
+    if (!aSrc) {
+      mUnicodeString = {};
+      return;
+    }
+
+    Duplicate(aSrc);
+  }
+
+  AllocatedUnicodeString(const AllocatedUnicodeString& aOther) {
+    Duplicate(&aOther.mUnicodeString);
+  }
+
+  AllocatedUnicodeString& operator=(const AllocatedUnicodeString& aOther) {
+    Clear();
+    Duplicate(&aOther.mUnicodeString);
+    return *this;
+  }
+
+  AllocatedUnicodeString& operator=(PCUNICODE_STRING aSrc) {
+    Clear();
+    Duplicate(aSrc);
+    return *this;
+  }
+#endif  // defined(MOZILLA_INTERNAL_API)
+
+  AllocatedUnicodeString(AllocatedUnicodeString&& aOther)
+      : mUnicodeString(aOther.mUnicodeString) {
+    aOther.mUnicodeString = {};
+  }
+
+  AllocatedUnicodeString& operator=(AllocatedUnicodeString&& aOther) {
+    Clear();
+    mUnicodeString = aOther.mUnicodeString;
+    aOther.mUnicodeString = {};
+    return *this;
+  }
+
+  ~AllocatedUnicodeString() { Clear(); }
+
+  bool IsEmpty() const {
+    return !mUnicodeString.Buffer || !mUnicodeString.Length;
+  }
+
+  operator PCUNICODE_STRING() const { return &mUnicodeString; }
+
+  operator const WCHAR*() const { return mUnicodeString.Buffer; }
+
+  USHORT CharLen() const { return mUnicodeString.Length / sizeof(WCHAR); }
+
+#if defined(MOZILLA_INTERNAL_API)
+  nsDependentString AsString() const {
+    if (!mUnicodeString.Buffer) {
+      return nsDependentString();
+    }
+
+    // We can use nsDependentString here as we guaranteed null termination
+    // when we allocated the string.
+    return nsDependentString(mUnicodeString.Buffer, CharLen());
+  }
+#endif  // defined(MOZILLA_INTERNAL_API)
+
+ private:
+#if !defined(MOZILLA_INTERNAL_API)
+  void Duplicate(PCUNICODE_STRING aSrc) {
+    MOZ_ASSERT(aSrc);
+
+    // We duplicate with null termination so that this string may be used
+    // as a wide C-string without any further manipulation.
+    NTSTATUS ntStatus = ::RtlDuplicateUnicodeString(
+        RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, aSrc, &mUnicodeString);
+    MOZ_ASSERT(NT_SUCCESS(ntStatus));
+    if (!NT_SUCCESS(ntStatus)) {
+      // Make sure that mUnicodeString does not contain bogus data
+      // (since not all callers zero it out before invoking)
+      mUnicodeString = {};
+    }
+  }
+#endif  // !defined(MOZILLA_INTERNAL_API)
+
+  void Clear() {
+    if (!mUnicodeString.Buffer) {
+      return;
+    }
+
+    ::RtlFreeUnicodeString(&mUnicodeString);
+    mUnicodeString = {};
+  }
+
+  UNICODE_STRING mUnicodeString;
+};
 
 #if !defined(MOZILLA_INTERNAL_API)
 
@@ -101,7 +240,8 @@ struct MemorySectionNameBuf : public _MEMORY_SECTION_NAME {
     mSectionFileName.Buffer = mBuf;
   }
 
-  WCHAR mBuf[MAX_PATH];
+  // Native NT paths, so we can't assume MAX_PATH. Use a larger buffer.
+  WCHAR mBuf[2 * MAX_PATH];
 };
 
 inline bool FindCharInUnicodeString(const UNICODE_STRING& aStr, WCHAR aChar,
@@ -642,6 +782,13 @@ inline HANDLE RtlGetProcessHeap() {
   return peb->Reserved4[1];
 }
 
+inline DWORD RtlGetCurrentThreadId() {
+  PTEB teb = ::NtCurrentTeb();
+  CLIENT_ID* cid = reinterpret_cast<CLIENT_ID*>(&teb->Reserved1[8]);
+  return static_cast<DWORD>(reinterpret_cast<uintptr_t>(cid->UniqueThread) &
+                            0xFFFFFFFFUL);
+}
+
 inline LauncherResult<DWORD> GetParentProcessId() {
   struct PROCESS_BASIC_INFORMATION {
     NTSTATUS ExitStatus;
@@ -741,6 +888,122 @@ inline LauncherResult<HMODULE> GetProcessExeModule(HANDLE aProcess) {
 
   return static_cast<HMODULE>(baseAddress);
 }
+
+#if !defined(MOZILLA_INTERNAL_API)
+
+class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS SRWLock final {
+ public:
+  constexpr SRWLock() : mLock(SRWLOCK_INIT) {}
+
+  void LockShared() { ::RtlAcquireSRWLockShared(&mLock); }
+
+  void LockExclusive() { ::RtlAcquireSRWLockExclusive(&mLock); }
+
+  void UnlockShared() { ::RtlReleaseSRWLockShared(&mLock); }
+
+  void UnlockExclusive() { ::RtlReleaseSRWLockExclusive(&mLock); }
+
+  SRWLock(const SRWLock&) = delete;
+  SRWLock(SRWLock&&) = delete;
+  SRWLock& operator=(const SRWLock&) = delete;
+  SRWLock& operator=(SRWLock&&) = delete;
+
+  SRWLOCK* operator&() { return &mLock; }
+
+ private:
+  SRWLOCK mLock;
+};
+
+class MOZ_RAII AutoExclusiveLock final {
+ public:
+  explicit AutoExclusiveLock(SRWLock& aLock) : mLock(aLock) {
+    aLock.LockExclusive();
+  }
+
+  ~AutoExclusiveLock() { mLock.UnlockExclusive(); }
+
+  AutoExclusiveLock(const AutoExclusiveLock&) = delete;
+  AutoExclusiveLock(AutoExclusiveLock&&) = delete;
+  AutoExclusiveLock& operator=(const AutoExclusiveLock&) = delete;
+  AutoExclusiveLock& operator=(AutoExclusiveLock&&) = delete;
+
+ private:
+  SRWLock& mLock;
+};
+
+class MOZ_RAII AutoSharedLock final {
+ public:
+  explicit AutoSharedLock(SRWLock& aLock) : mLock(aLock) { aLock.LockShared(); }
+
+  ~AutoSharedLock() { mLock.UnlockShared(); }
+
+  AutoSharedLock(const AutoSharedLock&) = delete;
+  AutoSharedLock(AutoSharedLock&&) = delete;
+  AutoSharedLock& operator=(const AutoSharedLock&) = delete;
+  AutoSharedLock& operator=(AutoSharedLock&&) = delete;
+
+ private:
+  SRWLock& mLock;
+};
+
+#endif  // !defined(MOZILLA_INTERNAL_API)
+
+class RtlAllocPolicy {
+ public:
+  template <typename T>
+  T* maybe_pod_malloc(size_t aNumElems) {
+    if (aNumElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value) {
+      return nullptr;
+    }
+
+    return static_cast<T*>(
+        ::RtlAllocateHeap(RtlGetProcessHeap(), 0, aNumElems * sizeof(T)));
+  }
+
+  template <typename T>
+  T* maybe_pod_calloc(size_t aNumElems) {
+    if (aNumElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value) {
+      return nullptr;
+    }
+
+    return static_cast<T*>(::RtlAllocateHeap(
+        RtlGetProcessHeap(), HEAP_ZERO_MEMORY, aNumElems * sizeof(T)));
+  }
+
+  template <typename T>
+  T* maybe_pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize) {
+    if (aNewSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value) {
+      return nullptr;
+    }
+
+    return static_cast<T*>(::RtlReAllocateHeap(RtlGetProcessHeap(), 0, aPtr,
+                                               aNewSize * sizeof(T)));
+  }
+
+  template <typename T>
+  T* pod_malloc(size_t aNumElems) {
+    return maybe_pod_malloc<T>(aNumElems);
+  }
+
+  template <typename T>
+  T* pod_calloc(size_t aNumElems) {
+    return maybe_pod_calloc<T>(aNumElems);
+  }
+
+  template <typename T>
+  T* pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize) {
+    return maybe_pod_realloc<T>(aPtr, aOldSize, aNewSize);
+  }
+
+  template <typename T>
+  void free_(T* aPtr, size_t aNumElems = 0) {
+    ::RtlFreeHeap(RtlGetProcessHeap(), 0, aPtr);
+  }
+
+  void reportAllocOverflow() const {}
+
+  MOZ_MUST_USE bool checkSimulatedOOM() const { return true; }
+};
 
 }  // namespace nt
 }  // namespace mozilla
