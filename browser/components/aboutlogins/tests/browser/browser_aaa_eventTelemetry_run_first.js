@@ -57,7 +57,7 @@ add_task(async function test_telemetry_events() {
     );
     loginListItem.click();
   });
-  await waitForTelemetryEventCount(1);
+  await waitForTelemetryEventCount(2);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
@@ -66,7 +66,7 @@ add_task(async function test_telemetry_events() {
     );
     copyButton.click();
   });
-  await waitForTelemetryEventCount(2);
+  await waitForTelemetryEventCount(3);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
@@ -75,7 +75,7 @@ add_task(async function test_telemetry_events() {
     );
     copyButton.click();
   });
-  await waitForTelemetryEventCount(3);
+  await waitForTelemetryEventCount(4);
 
   let promiseNewTab = BrowserTestUtils.waitForNewTab(
     gBrowser,
@@ -89,7 +89,7 @@ add_task(async function test_telemetry_events() {
   let newTab = await promiseNewTab;
   ok(true, "New tab opened to " + TEST_LOGIN2.origin);
   BrowserTestUtils.removeTab(newTab);
-  await waitForTelemetryEventCount(4);
+  await waitForTelemetryEventCount(5);
 
   // Show the password
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
@@ -99,7 +99,7 @@ add_task(async function test_telemetry_events() {
     );
     revealCheckbox.click();
   });
-  await waitForTelemetryEventCount(5);
+  await waitForTelemetryEventCount(6);
 
   // Hide the password
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
@@ -109,14 +109,14 @@ add_task(async function test_telemetry_events() {
     );
     revealCheckbox.click();
   });
-  await waitForTelemetryEventCount(6);
+  await waitForTelemetryEventCount(7);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
     let editButton = loginItem.shadowRoot.querySelector(".edit-button");
     editButton.click();
   });
-  await waitForTelemetryEventCount(7);
+  await waitForTelemetryEventCount(8);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
@@ -128,7 +128,7 @@ add_task(async function test_telemetry_events() {
     let saveButton = loginItem.shadowRoot.querySelector(".save-changes-button");
     saveButton.click();
   });
-  await waitForTelemetryEventCount(8);
+  await waitForTelemetryEventCount(9);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let newLoginButton = content.document
@@ -136,14 +136,14 @@ add_task(async function test_telemetry_events() {
       .shadowRoot.querySelector(".create-login-button");
     newLoginButton.click();
   });
-  await waitForTelemetryEventCount(9);
+  await waitForTelemetryEventCount(10);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
     let cancelButton = loginItem.shadowRoot.querySelector(".cancel-button");
     cancelButton.click();
   });
-  await waitForTelemetryEventCount(10);
+  await waitForTelemetryEventCount(11);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginList = content.document.querySelector("login-list");
@@ -152,7 +152,7 @@ add_task(async function test_telemetry_events() {
     );
     loginListItem.click();
   });
-  await waitForTelemetryEventCount(11);
+  await waitForTelemetryEventCount(12);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
@@ -166,7 +166,7 @@ add_task(async function test_telemetry_events() {
     );
     confirmDeleteButton.click();
   });
-  await waitForTelemetryEventCount(12);
+  await waitForTelemetryEventCount(13);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginSort = content.document
@@ -185,6 +185,7 @@ add_task(async function test_telemetry_events() {
   await waitForTelemetryEventCount(14);
 
   let expectedEvents = [
+    ["pwmgr", "open_management", "direct"],
     ["pwmgr", "select", "existing_login"],
     ["pwmgr", "copy", "username"],
     ["pwmgr", "copy", "password"],
@@ -204,6 +205,6 @@ add_task(async function test_telemetry_events() {
   TelemetryTestUtils.assertEvents(
     expectedEvents,
     { category: "pwmgr" },
-    { process: "content" }
+    { clear: true, process: "content" }
   );
 });
