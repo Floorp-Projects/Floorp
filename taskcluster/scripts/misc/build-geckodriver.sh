@@ -45,6 +45,8 @@ export PATH="$(cd $MOZ_FETCHES_DIR && pwd)/rustc/bin:$PATH"
 
 cd $GECKO_PATH/testing/geckodriver
 
+cp $GECKO_PATH/.cargo/config.in $GECKO_PATH/.cargo/config
+
 cargo build --frozen --verbose --release --target "$TARGET"
 
 cd $GECKO_PATH

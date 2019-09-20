@@ -31,13 +31,25 @@ CARGO_CONFIG_TEMPLATE = '''\
 {config}
 
 # Take advantage of the fact that cargo will treat lines starting with #
-# as comments to add preprocessing directives for when this file is included
-# from .cargo/config.in.
+# as comments to add preprocessing directives. This file can thus by copied
+# as-is to $topsrcdir/.cargo/config with no preprocessing to be used there
+# (for e.g. independent tasks building rust code), or be preprocessed by
+# the build system to produce a .cargo/config with the right content.
 #define REPLACE_NAME {replace_name}
 #define VENDORED_DIRECTORY {directory}
-#ifndef top_srcdir
-{replace}
+# We explicitly exclude the following section when preprocessing because
+# it would overlap with the preprocessed [source."@REPLACE_NAME@"], and
+# cargo would fail.
+#ifndef REPLACE_NAME
+[source.{replace_name}]
+directory = "{directory}"
 #endif
+
+# Thankfully, @REPLACE_NAME@ is unlikely to be a legitimate source, so
+# cargo will ignore it when it's here verbatim.
+#filter substitution
+[source."@REPLACE_NAME@"]
+directory = "@top_srcdir@/@VENDORED_DIRECTORY@"
 '''
 
 
@@ -338,13 +350,6 @@ license file's hash.
         relative_vendor_dir = 'third_party/rust'
         vendor_dir = mozpath.join(self.topsrcdir, relative_vendor_dir)
 
-        cargo_config = os.path.join(self.topsrcdir, '.cargo', 'config')
-        # First, remove .cargo/config
-        try:
-            os.remove(cargo_config)
-        except Exception:
-            pass
-
         # We use check_call instead of mozprocess to ensure errors are displayed.
         # We do an |update -p| here to regenerate the Cargo.lock file with minimal
         # changes. See bug 1324462
@@ -408,12 +413,12 @@ license file's hash.
                         dump = dump.replace('[%s]' % k, '')
             return dump.strip()
 
+        cargo_config = os.path.join(self.topsrcdir, '.cargo', 'config.in')
         with open(cargo_config, 'w') as fh:
             fh.write(CARGO_CONFIG_TEMPLATE.format(
                 config=toml_dump(config),
                 replace_name=replace_name,
                 directory=replace['directory'],
-                replace=toml_dump({'source': {replace_name: replace}}),
             ))
 
         if not self._check_licenses(vendor_dir):
