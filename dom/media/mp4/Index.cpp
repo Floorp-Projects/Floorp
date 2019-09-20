@@ -36,7 +36,7 @@ class MOZ_STACK_CLASS RangeFinder {
 };
 
 bool RangeFinder::Contains(MediaByteRange aByteRange) {
-  if (!mRanges.Length()) {
+  if (mRanges.IsEmpty()) {
     return false;
   }
 
