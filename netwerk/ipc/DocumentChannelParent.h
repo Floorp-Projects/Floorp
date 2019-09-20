@@ -38,7 +38,8 @@ class DocumentChannelParent : public nsIInterfaceRequestor,
                               public nsIParentChannel,
                               public nsIChannelEventSink,
                               public nsICrossProcessSwitchChannel,
-                              public HttpChannelSecurityWarningReporter {
+                              public HttpChannelSecurityWarningReporter,
+                              public nsIProcessSwitchRequestor {
  public:
   explicit DocumentChannelParent(const dom::PBrowserOrId& iframeEmbedding,
                                  nsILoadContext* aLoadContext,
@@ -54,6 +55,7 @@ class DocumentChannelParent : public nsIInterfaceRequestor,
   NS_DECL_NSIASYNCVERIFYREDIRECTREADYCALLBACK
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSICROSSPROCESSSWITCHCHANNEL
+  NS_DECL_NSIPROCESSSWITCHREQUESTOR
 
   NS_DECLARE_STATIC_IID_ACCESSOR(DOCUMENT_CHANNEL_PARENT_IID)
 
@@ -111,11 +113,7 @@ class DocumentChannelParent : public nsIInterfaceRequestor,
 
   void FinishReplacementChannelSetup(bool aSucceeded);
 
-  typedef MozPromise<uint64_t, nsresult, true /* exclusive */>
-      ContentProcessIdPromise;
-  void TriggerCrossProcessSwitch(
-      already_AddRefed<ContentProcessIdPromise> aPromise, uint64_t aIdentifier,
-      nsHttpChannel* aChannel);
+  void TriggerCrossProcessSwitch();
 
   // This defines a variant that describes all the attribute setters (and their
   // parameters) from nsIParentChannel
@@ -216,6 +214,18 @@ class DocumentChannelParent : public nsIInterfaceRequestor,
   // helper from being installed, but we need to restore the value
   // later.
   bool mOldApplyConversion = false;
+
+  typedef MozPromise<uint64_t, nsresult, true /* exclusive */>
+      ContentProcessIdPromise;
+  // This promise is set following a on-may-change-process observer
+  // notification when the associated channel is getting relocated to another
+  // process. It will be resolved when that process is set up.
+  RefPtr<ContentProcessIdPromise> mRedirectContentProcessIdPromise;
+  // This identifier is set at the same time as the
+  // mRedirectContentProcessIdPromise.
+  // This identifier is later passed to the childChannel in order to identify it
+  // once the promise is resolved.
+  uint64_t mCrossProcessRedirectIdentifier = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DocumentChannelParent,
