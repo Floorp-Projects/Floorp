@@ -6,7 +6,7 @@
  * This module periodically sends a Telemetry ping containing information
  * about untrusted module loads on Windows.
  *
- * https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/data/untrusted-modules-ping.html
+ * https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/data/third-party-modules-ping.html
  */
 
 "use strict";
@@ -35,7 +35,7 @@ const DEFAULT_INTERVAL_SECONDS = 24 * 60 * 60; // 1 day
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetryUntrustedModulesPing::";
 const TIMER_NAME = "telemetry_untrustedmodules_ping";
-const PING_SUBMISSION_NAME = "untrustedModules";
+const PING_SUBMISSION_NAME = "third-party-modules";
 
 var TelemetryUntrustedModulesPing = Object.freeze({
   _log: Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX),
