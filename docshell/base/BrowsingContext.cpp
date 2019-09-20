@@ -101,6 +101,8 @@ already_AddRefed<BrowsingContext> BrowsingContext::Create(
     Type aType) {
   MOZ_DIAGNOSTIC_ASSERT(!aParent || aParent->mType == aType);
 
+  MOZ_DIAGNOSTIC_ASSERT(aType != Type::Chrome || XRE_IsParentProcess());
+
   uint64_t id = nsContentUtils::GenerateBrowsingContextId();
 
   MOZ_LOG(GetLog(), LogLevel::Debug,
@@ -1031,7 +1033,7 @@ void BrowsingContext::Transaction::Apply(BrowsingContext* aBrowsingContext) {
 }
 
 BrowsingContext::IPCInitializer BrowsingContext::GetIPCInitializer() {
-  // FIXME: We should assert that we're loaded in-content here. (bug 1553804)
+  MOZ_DIAGNOSTIC_ASSERT(mType == Type::Content);
 
   IPCInitializer init;
   init.mId = Id();
