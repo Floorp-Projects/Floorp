@@ -44,27 +44,30 @@ class IntentReceiverActivity : Activity() {
             // assumes it is not. If it's null, then we make a new one and open
             // the HomeActivity.
             val intent = intent?.let { Intent(intent) } ?: Intent()
+            processIntent(intent)
+        }
+    }
 
-            val tabIntentProcessor = if (settings().alwaysOpenInPrivateMode) {
-                components.intentProcessors.privateIntentProcessor
-            } else {
-                components.intentProcessors.intentProcessor
-            }
+    suspend fun processIntent(intent: Intent) {
+        val tabIntentProcessor = if (settings().alwaysOpenInPrivateMode) {
+            components.intentProcessors.privateIntentProcessor
+        } else {
+            components.intentProcessors.intentProcessor
+        }
 
-            val intentProcessors =
-                components.intentProcessors.externalAppIntentProcessors + tabIntentProcessor
+        val intentProcessors =
+            components.intentProcessors.externalAppIntentProcessors + tabIntentProcessor
 
-            if (intent.getBooleanExtra(SPEECH_PROCESSING, false)) {
-                previousIntent = intent
-                displaySpeechRecognizer()
-            } else {
-                intentProcessors.any { it.process(intent) }
-                setIntentActivity(intent, tabIntentProcessor)
+        if (intent.getBooleanExtra(SPEECH_PROCESSING, false)) {
+            previousIntent = intent
+            displaySpeechRecognizer()
+        } else {
+            intentProcessors.any { it.process(intent) }
+            setIntentActivity(intent, tabIntentProcessor)
 
-                startActivity(intent)
+            startActivity(intent)
 
-                finish()
-            }
+            finish()
         }
     }
 
@@ -151,7 +154,7 @@ class IntentReceiverActivity : Activity() {
     }
 
     companion object {
-        private const val SPEECH_REQUEST_CODE = 0
+        const val SPEECH_REQUEST_CODE = 0
         const val SPEECH_PROCESSING = "speech_processing"
         const val PREVIOUS_INTENT = "previous_intent"
         const val ACTION_OPEN_TAB = "org.mozilla.fenix.OPEN_TAB"

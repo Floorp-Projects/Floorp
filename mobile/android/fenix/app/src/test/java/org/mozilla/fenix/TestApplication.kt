@@ -5,14 +5,12 @@
 package org.mozilla.fenix
 
 import kotlinx.coroutines.ObsoleteCoroutinesApi
-import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.TestComponents
 
 @ObsoleteCoroutinesApi
 class TestApplication : FenixApplication() {
 
-    override val components: Components
-        get() = TestComponents(this)
+    override val components = TestComponents(this)
 
     override fun setupApplication() {
     }

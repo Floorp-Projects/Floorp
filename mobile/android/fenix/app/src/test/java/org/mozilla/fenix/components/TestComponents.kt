@@ -7,6 +7,8 @@ package org.mozilla.fenix.components
 import android.content.Context
 import io.mockk.mockk
 import kotlinx.coroutines.ObsoleteCoroutinesApi
+import mozilla.components.support.test.mock
+import org.mockito.Mockito.`when`
 import org.mozilla.fenix.utils.ClipboardHandler
 
 @ObsoleteCoroutinesApi
@@ -27,12 +29,11 @@ class TestComponents(private val context: Context) : Components(context) {
         )
     }
     override val intentProcessors by lazy {
-        IntentProcessors(
-            context,
-            core.sessionManager,
-            useCases.sessionUseCases,
-            useCases.searchUseCases
-        )
+        val processors: IntentProcessors = mock()
+        `when`(processors.externalAppIntentProcessors).thenReturn(emptyList())
+        `when`(processors.privateIntentProcessor).thenReturn(mock())
+        `when`(processors.intentProcessor).thenReturn(mock())
+        processors
     }
     override val analytics by lazy { Analytics(context) }
 
