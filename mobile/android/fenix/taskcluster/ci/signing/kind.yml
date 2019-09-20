@@ -15,7 +15,7 @@ job-defaults:
     description: Sign Fenix
     worker-type:
         by-variant:
-            (nightly|nightly-legacy|production):
+            (fennec-production|nightly|nightly-legacy|production):
                 by-level:
                     '3': signing
                     default: dep-signing
