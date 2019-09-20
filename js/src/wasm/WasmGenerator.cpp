@@ -1094,10 +1094,7 @@ SharedMetadata ModuleGenerator::finishMetadata(const Bytes& bytecode) {
               env_->funcTypes[i]->args())) {
         return nullptr;
       }
-      if (!metadata_->debugFuncReturnTypes[i].appendAll(
-              env_->funcTypes[i]->results())) {
-        return nullptr;
-      }
+      metadata_->debugFuncReturnTypes[i] = env_->funcTypes[i]->ret();
     }
 
     static_assert(sizeof(ModuleHash) <= sizeof(mozilla::SHA1Sum::Hash),
