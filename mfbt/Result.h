@@ -344,6 +344,18 @@ class MOZ_MUST_USE_TYPE Result final {
    * Create an error result from another error result.
    */
   template <typename E2>
+  MOZ_IMPLICIT Result(GenericErrorResult<E2>&& aErrorResult)
+      : mImpl(std::forward<E2>(aErrorResult.mErrorValue)) {
+    static_assert(mozilla::IsConvertible<E2, E>::value,
+                  "E2 must be convertible to E");
+    MOZ_ASSERT(isErr());
+  }
+
+  /**
+   * Implementation detail of MOZ_TRY().
+   * Create an error result from another error result.
+   */
+  template <typename E2>
   MOZ_IMPLICIT Result(const GenericErrorResult<E2>& aErrorResult)
       : mImpl(aErrorResult.mErrorValue) {
     static_assert(mozilla::IsConvertible<E2, E>::value,
@@ -470,12 +482,13 @@ class MOZ_MUST_USE_TYPE GenericErrorResult {
   friend class Result;
 
  public:
-  explicit GenericErrorResult(E aErrorValue) : mErrorValue(aErrorValue) {}
+  explicit GenericErrorResult(E aErrorValue)
+      : mErrorValue(std::forward<E>(aErrorValue)) {}
 };
 
 template <typename E>
 inline GenericErrorResult<E> Err(E&& aErrorValue) {
-  return GenericErrorResult<E>(aErrorValue);
+  return GenericErrorResult<E>(std::forward<E>(aErrorValue));
 }
 
 }  // namespace mozilla
