@@ -186,6 +186,14 @@ var SysInfo = {
     return this._genuine.QueryInterface(Ci.nsISystemInfo).diskInfo;
   },
 
+  get osInfo() {
+    return this._genuine.QueryInterface(Ci.nsISystemInfo).osInfo;
+  },
+
+  get processInfo() {
+    return this._genuine.QueryInterface(Ci.nsISystemInfo).processInfo;
+  },
+
   QueryInterface: ChromeUtils.generateQI(["nsIPropertyBag2", "nsISystemInfo"]),
 };
 
@@ -595,7 +603,7 @@ function checkGfxAdapter(data) {
   }
 }
 
-function checkSystemSection(data) {
+function checkSystemSection(data, assertProcessData) {
   const EXPECTED_FIELDS = [
     "memoryMB",
     "cpu",
@@ -636,16 +644,18 @@ function checkSystemSection(data) {
     }
 
     if (gIsWindows) {
-      Assert.equal(
-        typeof data.system.isWow64,
-        "boolean",
-        "isWow64 must be available on Windows and have the correct type."
-      );
-      Assert.equal(
-        typeof data.system.isWowARM64,
-        "boolean",
-        "isWowARM64 must be available on Windows and have the correct type."
-      );
+      if (assertProcessData) {
+        Assert.equal(
+          typeof data.system.isWow64,
+          "boolean",
+          "isWow64 must be available on Windows and have the correct type."
+        );
+        Assert.equal(
+          typeof data.system.isWowARM64,
+          "boolean",
+          "isWowARM64 must be available on Windows and have the correct type."
+        );
+      }
       Assert.ok(
         "virtualMaxMB" in data.system,
         "virtualMaxMB must be available."
@@ -1011,13 +1021,17 @@ function checkExperimentsSection(data) {
 }
 
 function checkEnvironmentData(data, options = {}) {
-  const { isInitial = false, expectBrokenAddons = false } = options;
+  const {
+    isInitial = false,
+    expectBrokenAddons = false,
+    assertProcessData = false,
+  } = options;
 
   checkBuildSection(data);
   checkSettingsSection(data);
   checkProfileSection(data);
   checkPartnerSection(data, isInitial);
-  checkSystemSection(data);
+  checkSystemSection(data, assertProcessData);
   checkAddonsSection(data, expectBrokenAddons);
 }
 
@@ -1109,7 +1123,7 @@ add_task(async function test_checkEnvironment() {
   Services.obs.notifyObservers(null, DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC);
 
   environmentData = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(environmentData);
+  checkEnvironmentData(environmentData, { assertProcessData: true });
 });
 
 add_task(async function test_prefWatchPolicies() {
@@ -2484,6 +2498,40 @@ if (gIsWindows) {
       checkString(data.system.hdd[k].revision);
       checkString(data.system.hdd[k].type);
     }
+  });
+
+  add_task(async function test_environmentProcessInfo() {
+    await TelemetryEnvironment.testCleanRestart().onInitialized();
+    let data = TelemetryEnvironment.currentEnvironment;
+    Assert.deepEqual(data.system.isWow64, null, "Should have no data yet.");
+    await TelemetryEnvironment.delayedInit();
+    data = TelemetryEnvironment.currentEnvironment;
+    Assert.equal(
+      typeof data.system.isWow64,
+      "boolean",
+      "isWow64 must be a boolean."
+    );
+    Assert.equal(
+      typeof data.system.isWowARM64,
+      "boolean",
+      "isWowARM64 must be a boolean."
+    );
+  });
+
+  add_task(async function test_environmentOSInfo() {
+    await TelemetryEnvironment.testCleanRestart().onInitialized();
+    let data = TelemetryEnvironment.currentEnvironment;
+    Assert.deepEqual(
+      data.system.os.installYear,
+      null,
+      "Should have no data yet."
+    );
+    await TelemetryEnvironment.delayedInit();
+    data = TelemetryEnvironment.currentEnvironment;
+    Assert.ok(
+      Number.isFinite(data.system.os.installYear),
+      "Install year must be a number."
+    );
   });
 }
 
