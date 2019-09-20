@@ -83,10 +83,8 @@ already_AddRefed<DOMIntersectionObserver> DOMIntersectionObserver::Constructor(
   observer->mRoot = aOptions.mRoot;
 
   if (!observer->SetRootMargin(aOptions.mRootMargin)) {
-    aRv.ThrowDOMException(
-        NS_ERROR_DOM_SYNTAX_ERR,
-        NS_LITERAL_CSTRING(
-            "rootMargin must be specified in pixels or percent."));
+    aRv.ThrowDOMException(NS_ERROR_DOM_SYNTAX_ERR,
+                          "rootMargin must be specified in pixels or percent.");
     return nullptr;
   }
 
