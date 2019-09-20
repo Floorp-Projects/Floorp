@@ -14,6 +14,15 @@ namespace dom {
 
 class UserActivation final {
  public:
+  enum class State : uint8_t {
+    // Not activated.
+    None,
+    // It is considered as has-been-activated, and also transient-activated if
+    // haven't timed out.
+    FullActivated,
+    EndGuard_
+  };
+
   /**
    * Returns true if the current code is being executed as a result of
    * user input or keyboard input.  The former includes anything that is
