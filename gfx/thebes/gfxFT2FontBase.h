@@ -30,6 +30,7 @@ class gfxFT2FontBase : public gfxFont {
                             uint32_t variation_selector) override;
   bool ProvidesGlyphWidths() const override { return true; }
   int32_t GetGlyphWidth(uint16_t aGID) override;
+  bool GetGlyphBounds(uint16_t aGID, gfxRect* aBounds, bool aTight) override;
 
   FontType GetType() const override { return FONT_TYPE_FT2; }
 
@@ -41,18 +42,18 @@ class gfxFT2FontBase : public gfxFont {
   void UnlockFTFace();
 
  private:
-  uint32_t GetCharExtents(char aChar, gfxFloat* aWidth, gfxFloat* aHeight);
-  uint32_t GetCharWidth(char aChar, gfxFloat* aWidth);
+  uint32_t GetCharExtents(char aChar, gfxFloat* aWidth,
+                          gfxRect* aBounds = nullptr);
 
-  // Get advance (and optionally height) of a single glyph from FreeType,
+  // Get advance (and optionally bounds) of a single glyph from FreeType,
   // and return true, or return false if we failed.
   bool GetFTGlyphExtents(uint16_t aGID, int32_t* aWidth,
-                         int32_t* aHeight = nullptr);
+                         gfxRect* aBounds = nullptr);
 
  protected:
   void InitMetrics();
   const Metrics& GetHorizontalMetrics() override;
-  FT_Fixed GetEmboldenAdvance(FT_Face aFace, FT_Fixed aAdvance);
+  FT_Vector GetEmboldenStrength(FT_Face aFace);
 
   RefPtr<mozilla::gfx::SharedFTFace> mFTFace;
 

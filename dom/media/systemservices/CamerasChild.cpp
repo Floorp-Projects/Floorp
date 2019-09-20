@@ -52,7 +52,7 @@ class FakeOnDeviceChangeEventRunnable : public Runnable {
 
     CamerasChild* child = CamerasSingleton::Child();
     if (child) {
-      child->OnDeviceChange();
+      child->NotifyDeviceChange();
 
       if (mCounter++ < FAKE_ONDEVICECHANGE_EVENT_REPEAT_COUNT) {
         RefPtr<FakeOnDeviceChangeEventRunnable> evt =
@@ -154,7 +154,7 @@ int CamerasChild::AddDeviceChangeCallback(DeviceChangeCallback* aCallback) {
   // So here we setup camera engine via EnsureInitialized(aCapEngine)
 
   EnsureInitialized(CameraEngine);
-  return DeviceChangeCallback::AddDeviceChangeCallback(aCallback);
+  return DeviceChangeNotifier::AddDeviceChangeCallback(aCallback);
 }
 
 mozilla::ipc::IPCResult CamerasChild::RecvReplyFailure(void) {
@@ -580,7 +580,7 @@ mozilla::ipc::IPCResult CamerasChild::RecvDeliverFrame(
 }
 
 mozilla::ipc::IPCResult CamerasChild::RecvDeviceChange() {
-  this->OnDeviceChange();
+  this->NotifyDeviceChange();
   return IPC_OK();
 }
 

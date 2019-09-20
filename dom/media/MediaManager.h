@@ -132,6 +132,7 @@ typedef MozPromise<RefPtr<AudioDeviceInfo>, nsresult, true> SinkInfoPromise;
 
 class MediaManager final : public nsIMediaManagerService,
                            public nsIObserver,
+                           public DeviceChangeNotifier,
                            public DeviceChangeCallback {
   friend SourceListener;
 

@@ -515,7 +515,7 @@ Connection.prototype._generatePingId = function _generatePingId() {
 // Sending a ping and calling `callback` when the answer arrives
 Connection.prototype.ping = function ping(callback) {
   var id = this._generatePingId();
-  var data = new Buffer(id, 'hex');
+  var data = Buffer.from(id, 'hex');
   this._pings[id] = callback;
 
   this._log.debug({ data: data }, 'Sending PING.');

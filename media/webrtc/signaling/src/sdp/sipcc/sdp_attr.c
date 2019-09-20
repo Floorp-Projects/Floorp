@@ -1480,7 +1480,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
 
         for (i = low_val; i <= high_val; i++) {
             mapword = i/SDP_NE_BITS_PER_WORD;
-            bmap = SDP_NE_BIT_0 << (i%32);
+            bmap = ((unsigned)SDP_NE_BIT_0) << (i%32);
             fmtp_p->bmap[mapword] |= bmap;
         }
         if (high_val > fmtp_p->maxval) {

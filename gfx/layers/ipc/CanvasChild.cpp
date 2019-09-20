@@ -193,9 +193,17 @@ void CanvasChild::EndTransaction() {
   if (mIsInTransaction) {
     mRecorder->RecordEvent(RecordedCanvasEndTransaction());
     mIsInTransaction = false;
+    mLastNonEmptyTransaction = TimeStamp::NowLoRes();
   }
 
   ++mTransactionsSinceGetDataSurface;
+}
+
+bool CanvasChild::ShouldBeCleanedUp() const {
+  static const TimeDuration kCleanUpCanvasThreshold =
+      TimeDuration::FromSeconds(10);
+  return TimeStamp::NowLoRes() - mLastNonEmptyTransaction >
+         kCleanUpCanvasThreshold;
 }
 
 already_AddRefed<gfx::DrawTarget> CanvasChild::CreateDrawTarget(

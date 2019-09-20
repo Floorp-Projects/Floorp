@@ -167,61 +167,15 @@ class SearchConfigTest {
         region
       );
       for (let config of configs.engines) {
-        let engine = await this._getExtensionEngine(config);
-        engines.push(engine);
+        let engine = await Services.search.makeEnginesFromConfig(config);
+        // Currently wikipedia is the only engine that uses multiple
+        // locales and that isn't a tested engine so for now pick
+        // the first (only) locale.
+        engines.push(engine[0]);
       }
       return engines;
     }
     return Services.search.getVisibleEngines();
-  }
-
-  async _getExtensionEngine(config) {
-    let id = config.webExtensionId;
-    let policy = WebExtensionPolicy.getByID(id);
-    if (!policy) {
-      let idPrefix = id.split("@")[0];
-      let path = `resource://search-extensions/${idPrefix}/`;
-      await AddonManager.installBuiltinAddon(path);
-      policy = WebExtensionPolicy.getByID(id);
-    }
-    let params = {
-      code: config.searchUrlGetExtraCodes,
-    };
-
-    // Currently wikipedia is the only engine that uses multiple
-    // locales and that isn't a tested engine so for now pick
-    // the first (only) locale.
-    let locale =
-      "webExtensionLocales" in config
-        ? config.webExtensionLocales[0]
-        : "default";
-    // On startup the extension may have not finished parsing the
-    // manifest, wait for that here.
-    await policy.readyPromise;
-
-    let manifest = policy.extension.manifest;
-    if (locale != "default") {
-      manifest = await policy.extension.getLocalizedManifest(locale);
-    }
-
-    let engineParams = await Services.search.getEngineParams(
-      policy.extension,
-      manifest,
-      locale,
-      params
-    );
-
-    let engine = new SearchEngine({
-      name: engineParams.name,
-      readOnly: engineParams.isBuiltin,
-      sanitizeName: true,
-    });
-    engine._initFromMetadata(engineParams.name, engineParams);
-    engine._loadPath = "[other]addEngineWithDetails";
-    if (engineParams.extensionID) {
-      engine._loadPath += ":" + engineParams.extensionID;
-    }
-    return engine;
   }
 
   /**
@@ -489,6 +443,13 @@ class SearchConfigTest {
           engine._internalAliases,
           rule.aliases,
           "Should have the correct aliases for the engine"
+        );
+      }
+      if (rule.telemetryId) {
+        this.assertEqual(
+          engine._shortName,
+          rule.telemetryId,
+          `Should have the correct shortName ${location}.`
         );
       }
     }
