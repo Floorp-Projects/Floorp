@@ -164,11 +164,12 @@
 
     <TextView
         android:id="@+id/automatic_theme_summary"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/onboarding_theme_automatic_summary"
         android:textColor="?secondaryText"
         android:textSize="14sp"
         app:layout_constraintStart_toEndOf="@+id/theme_automatic_radio_button"
+        app:layout_constraintEnd_toEndOf="@id/clickable_region_automatic"
         app:layout_constraintTop_toBottomOf="@id/automatic_title" />
 </androidx.constraintlayout.widget.ConstraintLayout>
