@@ -48,9 +48,6 @@ class ScaledFontDWrite final : public ScaledFontBase {
   void CopyGlyphsToSink(const GlyphBuffer& aBuffer,
                         ID2D1SimplifiedGeometrySink* aSink);
 
-  void GetGlyphDesignMetrics(const uint16_t* aGlyphIndices, uint32_t aNumGlyphs,
-                             GlyphMetrics* aGlyphMetrics) override;
-
   bool CanSerialize() override { return true; }
 
   bool GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton) override;

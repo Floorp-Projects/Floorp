@@ -608,11 +608,6 @@ class TextDrawTarget : public DrawTarget {
     return nullptr;
   }
 
-  void* GetNativeSurface(NativeSurfaceType aType) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
-    return nullptr;
-  }
-
   void DetachAllSnapshots() override {
     MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
   }

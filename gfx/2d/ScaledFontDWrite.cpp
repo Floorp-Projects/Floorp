@@ -223,34 +223,6 @@ void ScaledFontDWrite::CopyGlyphsToBuilder(const GlyphBuffer& aBuffer,
   CopyGlyphsToSink(aBuffer, pathBuilderD2D->GetSink());
 }
 
-void ScaledFontDWrite::GetGlyphDesignMetrics(const uint16_t* aGlyphs,
-                                             uint32_t aNumGlyphs,
-                                             GlyphMetrics* aGlyphMetrics) {
-  DWRITE_FONT_METRICS fontMetrics;
-  mFontFace->GetMetrics(&fontMetrics);
-
-  std::vector<DWRITE_GLYPH_METRICS> metrics(aNumGlyphs);
-  mFontFace->GetDesignGlyphMetrics(aGlyphs, aNumGlyphs, &metrics.front());
-
-  Float scaleFactor = mSize / fontMetrics.designUnitsPerEm;
-
-  for (uint32_t i = 0; i < aNumGlyphs; i++) {
-    aGlyphMetrics[i].mXBearing = metrics[i].leftSideBearing * scaleFactor;
-    aGlyphMetrics[i].mXAdvance = metrics[i].advanceWidth * scaleFactor;
-    aGlyphMetrics[i].mYBearing =
-        (metrics[i].topSideBearing - metrics[i].verticalOriginY) * scaleFactor;
-    aGlyphMetrics[i].mYAdvance = metrics[i].advanceHeight * scaleFactor;
-    aGlyphMetrics[i].mWidth =
-        (metrics[i].advanceWidth - metrics[i].leftSideBearing -
-         metrics[i].rightSideBearing) *
-        scaleFactor;
-    aGlyphMetrics[i].mHeight =
-        (metrics[i].advanceHeight - metrics[i].topSideBearing -
-         metrics[i].bottomSideBearing) *
-        scaleFactor;
-  }
-}
-
 void ScaledFontDWrite::CopyGlyphsToSink(const GlyphBuffer& aBuffer,
                                         ID2D1SimplifiedGeometrySink* aSink) {
   std::vector<UINT16> indices;

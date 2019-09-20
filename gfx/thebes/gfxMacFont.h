@@ -41,6 +41,8 @@ class gfxMacFont : public gfxFont {
 
   int32_t GetGlyphWidth(uint16_t aGID) override;
 
+  bool GetGlyphBounds(uint16_t aGID, gfxRect* aBounds, bool aTight) override;
+
   already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(
       mozilla::gfx::DrawTarget* aTarget) override;
 

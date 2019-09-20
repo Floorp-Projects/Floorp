@@ -216,8 +216,10 @@ void gfxFT2Font::FillGlyphDataForChar(FT_Face face, uint32_t ch,
   gd->glyphIndex = gid;
   gd->lsbDelta = face->glyph->lsb_delta;
   gd->rsbDelta = face->glyph->rsb_delta;
-  gd->xAdvance =
-      face->glyph->advance.x + GetEmboldenAdvance(face, face->glyph->advance.x);
+  gd->xAdvance = face->glyph->advance.x;
+  if (gd->xAdvance) {
+    gd->xAdvance += GetEmboldenStrength(face).x;
+  }
 }
 
 void gfxFT2Font::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
