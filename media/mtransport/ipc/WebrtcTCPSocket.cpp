@@ -201,14 +201,10 @@ nsresult WebrtcTCPSocket::DoProxyConfigLookup() {
     return rv;
   }
 
-  nsCOMPtr<nsIEventTarget> target =
-      SystemGroup::EventTargetFor(TaskCategory::Network);
-  nsCOMPtr<nsICancelable> proxyRequest;
-
   rv = pps->AsyncResolve(channel,
                          nsIProtocolProxyService::RESOLVE_PREFER_HTTPS_PROXY |
                              nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL,
-                         this, target, getter_AddRefs(proxyRequest));
+                         this, nullptr, getter_AddRefs(mProxyRequest));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -222,6 +218,9 @@ NS_IMETHODIMP WebrtcTCPSocket::OnProxyAvailable(nsICancelable* aRequest,
                                                 nsIChannel* aChannel,
                                                 nsIProxyInfo* aProxyinfo,
                                                 nsresult aResult) {
+  MOZ_ASSERT(NS_IsMainThread());
+  mProxyRequest = nullptr;
+
   nsresult rv;
 
   if (NS_SUCCEEDED(aResult) && aProxyinfo) {
@@ -429,6 +428,11 @@ void WebrtcTCPSocket::InvokeOnClose(nsresult aReason) {
   }
 
   MOZ_ASSERT(mProxyCallbacks, "webrtc TCP callback should be non-null");
+
+  if (mProxyRequest) {
+    mProxyRequest->Cancel(aReason);
+    mProxyRequest = nullptr;
+  }
 
   mProxyCallbacks->OnClose(aReason);
   mProxyCallbacks = nullptr;
