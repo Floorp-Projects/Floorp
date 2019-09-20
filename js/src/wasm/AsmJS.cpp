@@ -6082,7 +6082,9 @@ static bool CheckFunction(ModuleValidator<Unit>& m) {
   // that would have been created as part of this subtree.
   FunctionTree* tree = m.parser().getTreeHolder().getCurrentParent();
   if (tree) {
-    m.parser().publishDeferredItems(tree);
+    if (!m.parser().publishDeferredItems(tree)) {
+      return false;
+    }
 
     tree->visitRecursively(m.cx(), &m.parser(),
                            [](ParserBase* parser, FunctionTree* tree) {
