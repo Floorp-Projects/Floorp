@@ -11,6 +11,7 @@
 #include "AudioWorkletImpl.h"
 #include "jsapi.h"
 #include "mozilla/dom/AudioWorkletGlobalScopeBinding.h"
+#include "mozilla/dom/AudioWorkletProcessor.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/WorkletPrincipals.h"
 #include "mozilla/dom/AudioParamDescriptorBinding.h"
