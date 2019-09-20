@@ -239,7 +239,7 @@ void DocumentChannelParent::FinishReplacementChannelSetup(bool aSucceeded) {
         newChannel->Cancel(NS_BINDING_ABORTED);
       }
     }
-    // Release all previously registered channels, they are no longer need to be
+    // Release all previously registered channels, they are no longer needed to be
     // kept in the registrar from this moment.
     registrar->DeregisterChannels(mRedirectChannelId);
 
@@ -360,43 +360,40 @@ void DocumentChannelParent::FinishReplacementChannelSetup(bool aSucceeded) {
 NS_IMETHODIMP
 DocumentChannelParent::FinishCrossProcessSwitch(
     nsIAsyncVerifyRedirectCallback* aCallback, nsresult aStatusCode) {
-  // We only manually Suspend mChannel when we initiate the redirect
-  // from OnStartRequest, which is currently only in the same-process
-  // case.
-  MOZ_ASSERT(!mSuspendedChannel);
+  // This updates ParentChannelListener to point to this parent and at
+  // the same time cancels the old channel.
+  FinishReplacementChannelSetup(NS_SUCCEEDED(aStatusCode));
 
-  if (NS_SUCCEEDED(aStatusCode)) {
-    // This updates ParentChannelListener to point to this parent and at
-    // the same time cancels the old channel.
-    FinishReplacementChannelSetup(true);
-  }
-
-  aCallback->OnRedirectVerifyCallback(aStatusCode);
   return NS_OK;
 }
 
 nsresult DocumentChannelParent::TriggerCrossProcessSwitch(
     nsIHttpChannel* aChannel, uint64_t aIdentifier) {
-  CancelChildForProcessSwitch();
-
   RefPtr<nsHttpChannel> httpChannel = do_QueryObject(aChannel);
   MOZ_DIAGNOSTIC_ASSERT(httpChannel,
                         "Must be called with nsHttpChannel object");
-  RefPtr<nsHttpChannel::ContentProcessIdPromise> p =
+  RefPtr<ContentProcessIdPromise> p =
       httpChannel->TakeRedirectContentProcessIdPromise();
+  TriggerCrossProcessSwitch(p.forget(), aIdentifier, httpChannel);
+  return NS_OK;
+}
 
+void DocumentChannelParent::TriggerCrossProcessSwitch(
+    already_AddRefed<ContentProcessIdPromise> aPromise, uint64_t aIdentifier,
+    nsHttpChannel* aChannel) {
+  CancelChildForProcessSwitch();
+  RefPtr<DocumentChannelParent> self = this;
+  RefPtr<nsHttpChannel> channel = aChannel;
+  RefPtr<ContentProcessIdPromise> p = aPromise;
   p->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [self = RefPtr<DocumentChannelParent>(this),
-       channel = nsCOMPtr<nsIChannel>(aChannel), aIdentifier](uint64_t aCpId) {
+      [self, aIdentifier, channel](uint64_t aCpId) {
         self->TriggerRedirectToRealChannel(channel, Some(aCpId), aIdentifier);
       },
-      [httpChannel](nsresult aStatusCode) {
+      [self](nsresult aStatusCode) {
         MOZ_ASSERT(NS_FAILED(aStatusCode), "Status should be error");
-        httpChannel->OnRedirectVerifyCallback(aStatusCode);
+        self->RedirectToRealChannelFinished(aStatusCode);
       });
-
-  return NS_OK;
 }
 
 void DocumentChannelParent::TriggerRedirectToRealChannel(
@@ -606,6 +603,19 @@ DocumentChannelParent::OnStartRequest(nsIRequest* aRequest) {
   if (channel) {
     Unused << channel->GetApplyConversion(&mOldApplyConversion);
     channel->SetApplyConversion(false);
+
+    // notify "http-on-may-change-process" observers which is typically
+    // SessionStore.jsm. This will determine if a new process needs to be
+    // spawned and if so channel->SwitchProcessTo() will be called which will
+    // set a ContentProcessIdPromise.
+    gHttpHandler->OnMayChangeProcess(channel);
+    RefPtr<ContentProcessIdPromise> promise =
+        channel->TakeRedirectContentProcessIdPromise();
+    if (promise) {
+      TriggerCrossProcessSwitch(
+          promise.forget(), channel->CrossProcessRedirectIdentifier(), channel);
+      return NS_OK;
+    }
   }
 
   TriggerRedirectToRealChannel(mChannel);

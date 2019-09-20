@@ -1261,7 +1261,11 @@ static void FinishCrossProcessSwitchHelper(nsHttpChannel* aChannel,
                                            nsresult aStatus) {
   nsCOMPtr<nsICrossProcessSwitchChannel> switchListener;
   NS_QueryNotificationCallbacks(aChannel, switchListener);
-  MOZ_ASSERT(switchListener);
+  if (!switchListener) {
+    // This can happen if the channel got aborted before the switch completed
+    // and OnStopRequest got called in between which cleared the callback.
+    return;
+  }
 
   switchListener->FinishCrossProcessSwitch(aChannel, aStatus);
 }
