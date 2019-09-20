@@ -1138,6 +1138,24 @@ gfxUserFontFamily* gfxUserFontSet::GetFamily(const nsACString& aFamilyName) {
   return family;
 }
 
+void gfxUserFontSet::ForgetLocalFaces() {
+  for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
+    const auto fam = iter.Data();
+    const auto& fonts = fam->GetFontList();
+    for (const auto& f : fonts) {
+      auto ufe = static_cast<gfxUserFontEntry*>(f.get());
+      // If the user font entry has loaded an entry using src:local(),
+      // discard it as no longer valid, and reset the load state so that
+      // the load will be re-done based on the updated font list.
+      if (ufe->GetPlatformFontEntry() &&
+          ufe->GetPlatformFontEntry()->IsLocalUserFont()) {
+        ufe->mPlatformFontEntry = nullptr;
+        ufe->LoadCanceled();
+      }
+    }
+  }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // gfxUserFontSet::UserFontCache - re-use platform font entries for user fonts
 // across pages/fontsets rather than instantiating new platform fonts.
