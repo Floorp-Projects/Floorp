@@ -76,6 +76,7 @@
 #  include "frontend/BinASTParser.h"
 #endif  // defined(JS_BUILD_BINAST)
 #include "frontend/ModuleSharedContext.h"
+#include "frontend/ParseInfo.h"
 #include "frontend/Parser.h"
 #include "gc/PublicIterators.h"
 #include "jit/arm/Simulator-arm.h"
@@ -470,6 +471,7 @@ struct MOZ_STACK_CLASS EnvironmentPreparer
 };
 
 // Shell state set once at startup.
+static bool enableDeferredMode = false;
 static bool enableCodeCoverage = false;
 static bool enableDisassemblyDumps = false;
 static bool offthreadCompilation = false;
@@ -3810,6 +3812,7 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
       .setBYOBStreamReadersEnabled(enableBYOBStreamReaders)
       .setFieldsEnabled(enableFields)
       .setAwaitFixEnabled(enableAwaitFix);
+  options.behaviors().setDeferredParserAlloc(enableDeferredMode);
 }
 
 static MOZ_MUST_USE bool CheckRealmOptions(JSContext* cx,
@@ -6247,6 +6250,13 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
     }
     if (v.isBoolean()) {
       principals.reset(&ShellPrincipals::fullyTrusted);
+    }
+
+    if (!JS_GetProperty(cx, opts, "deferredParserAlloc", &v)) {
+      return false;
+    }
+    if (v.isBoolean()) {
+      behaviors.setDeferredParserAlloc(v.toBoolean());
     }
 
     if (!JS_GetProperty(cx, opts, "principal", &v)) {
@@ -11002,6 +11012,8 @@ int main(int argc, char** argv, char** envp) {
                         "Print sub-ms runtime for each file that's run") ||
       !op.addBoolOption('\0', "code-coverage",
                         "Enable code coverage instrumentation.") ||
+      !op.addBoolOption('\0', "parser-deferred-alloc",
+                        "Defer allocation of GC objects until after parser") ||
 #ifdef DEBUG
       !op.addBoolOption('O', "print-alloc",
                         "Print the number of allocations at exit") ||
@@ -11308,6 +11320,9 @@ int main(int argc, char** argv, char** envp) {
   if (enableCodeCoverage) {
     coverage::EnableLCov();
   }
+
+  enableDeferredMode = op.getBoolOption("parser-deferred-alloc") ||
+                       getenv("PARSER_DEFERRED_ALLOC") != nullptr;
 
 #ifdef JS_WITHOUT_NSPR
   if (!op.getMultiStringOption("dll").empty()) {

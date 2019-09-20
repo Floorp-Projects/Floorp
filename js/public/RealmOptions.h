@@ -217,6 +217,12 @@ class JS_PUBLIC_API RealmBehaviors {
     return *this;
   }
 
+  bool deferredParserAlloc() const { return deferredParserAlloc_; }
+  RealmBehaviors& setDeferredParserAlloc(bool flag) {
+    deferredParserAlloc_ = flag;
+    return *this;
+  }
+
   class Override {
    public:
     Override() : mode_(Default) {}
@@ -268,6 +274,7 @@ class JS_PUBLIC_API RealmBehaviors {
   // singleton, instead of returning the value which is baked in the JSScript.
   bool singletonsAsTemplates_ = true;
   bool isNonLive_ = false;
+  bool deferredParserAlloc_ = false;
 };
 
 /**
