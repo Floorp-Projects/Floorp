@@ -5,7 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/mscom/ProcessRuntimeShared.h"
-#include "MozglueUtils.h"
+
+#include "mozilla/glue/WinUtils.h"
 
 // We allow multiple ProcessRuntime instances to exist simultaneously (even
 // on separate threads), but only one should be doing the process-wide
