@@ -452,12 +452,13 @@ struct ValidatingPolicy {
 typedef OpIter<ValidatingPolicy> ValidatingOpIter;
 
 static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
-                                    const FuncType& funcType,
+                                    // FIXME(1401675): Replace with BlockType.
+                                    uint32_t funcIndex,
                                     const ValTypeVector& locals,
                                     const uint8_t* bodyEnd, Decoder* d) {
   ValidatingOpIter iter(env, *d);
 
-  if (!iter.readFunctionStart(funcType.ret())) {
+  if (!iter.readFunctionStart(funcIndex)) {
     return false;
   }
 
@@ -1223,8 +1224,8 @@ bool wasm::ValidateFunctionBody(const ModuleEnvironment& env,
     return false;
   }
 
-  if (!DecodeFunctionBodyExprs(env, funcType, locals, bodyBegin + bodySize,
-                               &d)) {
+  if (!DecodeFunctionBodyExprs(env, funcIndex, locals,
+                               bodyBegin + bodySize, &d)) {
     return false;
   }
 
@@ -1285,61 +1286,57 @@ static bool FuncTypeIsJSCompatible(Decoder& d, const FuncType& ft) {
 }
 #endif
 
+static bool DecodeTypeVector(Decoder& d, ModuleEnvironment* env,
+                             TypeStateVector* typeState, uint32_t count,
+                             ValTypeVector* types) {
+  if (!types->resize(count)) {
+    return false;
+  }
+
+  for (uint32_t i = 0; i < count; i++) {
+    if (!d.readValType(env->types.length(), env->refTypesEnabled(),
+                       env->gcTypesEnabled(), &(*types)[i])) {
+      return false;
+    }
+    if (!ValidateTypeState(d, typeState, (*types)[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
 static bool DecodeFuncType(Decoder& d, ModuleEnvironment* env,
                            TypeStateVector* typeState, uint32_t typeIndex) {
   uint32_t numArgs;
   if (!d.readVarU32(&numArgs)) {
     return d.fail("bad number of function args");
   }
-
   if (numArgs > MaxParams) {
     return d.fail("too many arguments in signature");
   }
-
   ValTypeVector args;
-  if (!args.resize(numArgs)) {
+  if (!DecodeTypeVector(d, env, typeState, numArgs, &args)) {
     return false;
   }
 
-  for (uint32_t i = 0; i < numArgs; i++) {
-    if (!d.readValType(env->types.length(), env->refTypesEnabled(),
-                       env->gcTypesEnabled(), &args[i])) {
-      return false;
-    }
-    if (!ValidateTypeState(d, typeState, args[i])) {
-      return false;
-    }
-  }
-
-  uint32_t numRets;
-  if (!d.readVarU32(&numRets)) {
+  uint32_t numResults;
+  if (!d.readVarU32(&numResults)) {
     return d.fail("bad number of function returns");
   }
-
-  if (numRets > 1) {
+  if (numResults > 1) {
     return d.fail("too many returns in signature");
   }
-
-  ExprType result = ExprType::Void;
-
-  if (numRets == 1) {
-    ValType type;
-    if (!d.readValType(env->types.length(), env->refTypesEnabled(),
-                       env->gcTypesEnabled(), &type)) {
-      return false;
-    }
-    if (!ValidateTypeState(d, typeState, type)) {
-      return false;
-    }
-
-    result = ExprType(type);
+  ValTypeVector results;
+  if (!DecodeTypeVector(d, env, typeState, numResults, &results)) {
+    return false;
   }
 
   if ((*typeState)[typeIndex] != TypeState::None) {
     return d.fail("function type entry referenced as struct");
   }
 
-  env->types[typeIndex] = TypeDef(FuncType(std::move(args), result));
+  env->types[typeIndex] = TypeDef(FuncType(std::move(args),
+                                           std::move(results)));
   (*typeState)[typeIndex] = TypeState::Func;
 
   return true;
@@ -2278,7 +2275,7 @@ static bool DecodeStartSection(Decoder& d, ModuleEnvironment* env) {
   }
 
   const FuncType& funcType = *env->funcTypes[funcIndex];
-  if (!IsVoid(funcType.ret())) {
+  if (funcType.results().length() > 0) {
     return d.fail("start function must not return anything");
   }
 
