@@ -728,8 +728,24 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   // GetSubjectPrincipal()?
   dom::AutoJSAPI jsapiChromeGuard;
 
+  nsCOMPtr<nsIDOMChromeWindow> chromeWin = do_QueryInterface(aParent);
+
   bool windowTypeIsChrome =
       chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
+
+  if (!aForceNoOpener) {
+    if (chromeWin && !windowTypeIsChrome) {
+      NS_WARNING(
+          "Content windows may never have chrome windows as their openers.");
+      return NS_ERROR_INVALID_ARG;
+    }
+    if (aParent && !chromeWin && windowTypeIsChrome) {
+      NS_WARNING(
+          "Chrome windows may never have content windows as their openers.");
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
+
   if (isCallerChrome && !hasChromeParent && !windowTypeIsChrome) {
     // open() is called from chrome on a non-chrome window, initialize an
     // AutoJSAPI with the callee to prevent the caller's privileges from leaking
@@ -776,7 +792,6 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     // Now check whether it's ok to ask a window provider for a window.  Don't
     // do it if we're opening a dialog or if our parent is a chrome window or
     // if we're opening something that has modal, dialog, or chrome flags set.
-    nsCOMPtr<nsIDOMChromeWindow> chromeWin = do_QueryInterface(aParent);
     if (!aDialog && !chromeWin &&
         !(chromeFlags & (nsIWebBrowserChrome::CHROME_MODAL |
                          nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
