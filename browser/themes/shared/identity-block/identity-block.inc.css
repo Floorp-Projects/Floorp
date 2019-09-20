@@ -266,16 +266,6 @@
   -moz-context-properties: fill, fill-opacity;
 }
 
-#tracking-protection-icon-box[hasException]::before {
-  background: url(chrome://browser/skin/badge-blue.svg);
-  content: "";
-  position: absolute;
-  bottom: 15px;
-  right: 0;
-  height: 14px;
-  width: 14px;
-}
-
 #tracking-protection-icon-box[hasException]:-moz-locale-dir(rtl)::before {
   left: 0;
   right: unset;
