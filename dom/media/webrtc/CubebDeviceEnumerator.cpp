@@ -6,6 +6,7 @@
 
 #include "CubebDeviceEnumerator.h"
 #include "mozilla/StaticPtr.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 
@@ -15,13 +16,11 @@ using namespace CubebUtils;
 StaticRefPtr<CubebDeviceEnumerator> CubebDeviceEnumerator::sInstance;
 
 /* static */
-already_AddRefed<CubebDeviceEnumerator> CubebDeviceEnumerator::GetInstance() {
+CubebDeviceEnumerator* CubebDeviceEnumerator::GetInstance() {
   if (!sInstance) {
     sInstance = new CubebDeviceEnumerator();
   }
-  RefPtr<CubebDeviceEnumerator> instance = sInstance.get();
-  MOZ_ASSERT(instance);
-  return instance.forget();
+  return sInstance.get();
 }
 
 CubebDeviceEnumerator::CubebDeviceEnumerator()
@@ -305,14 +304,21 @@ void CubebDeviceEnumerator::OutputAudioDeviceListChanged_s(cubeb* aContext,
 }
 
 void CubebDeviceEnumerator::AudioDeviceListChanged(Side aSide) {
-  MutexAutoLock lock(mMutex);
-
-  if (aSide == Side::INPUT) {
-    mInputDevices.Clear();
-  } else {
-    MOZ_ASSERT(aSide == Side::OUTPUT);
-    mOutputDevices.Clear();
+  {
+    MutexAutoLock lock(mMutex);
+    if (aSide == Side::INPUT) {
+      mInputDevices.Clear();
+    } else {
+      MOZ_ASSERT(aSide == Side::OUTPUT);
+      mOutputDevices.Clear();
+    }
   }
+
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "CubebDeviceEnumerator::AudioDeviceListChanged",
+      [self = RefPtr<CubebDeviceEnumerator>(this)]() {
+        self->NotifyDeviceChange();
+      }));
 }
 
 }  // namespace mozilla
