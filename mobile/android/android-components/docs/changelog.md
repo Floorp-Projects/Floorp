@@ -48,6 +48,10 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/v13.0.0/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/v13.0.0/buildSrc/src/main/java/Config.kt)
 
+* **All components**
+  * Updated Kotlin version from `1.3.40` to `1.3.50`.
+  * Updated Kotlin Coroutine library version from `1.2.2` to `1.3.0`.
+
 * **browser-session**
   * Clear session icon only if URL host changes.
 
