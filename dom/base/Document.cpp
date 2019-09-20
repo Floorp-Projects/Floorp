@@ -15032,6 +15032,11 @@ bool Document::HasValidTransientUserGestureActivation() {
   return bc && bc->HasValidTransientUserGestureActivation();
 }
 
+bool Document::ConsumeTransientUserGestureActivation() {
+  RefPtr<BrowsingContext> bc = GetBrowsingContext();
+  return bc && bc->ConsumeTransientUserGestureActivation();
+}
+
 void Document::SetDocTreeHadAudibleMedia() {
   Document* topLevelDoc = GetTopLevelContentDocument();
   if (!topLevelDoc) {
