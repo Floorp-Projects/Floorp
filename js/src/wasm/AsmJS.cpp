@@ -6075,24 +6075,6 @@ static bool CheckFunction(ModuleValidator<Unit>& m) {
     return false;
   }
 
-  // Eagerly process the function tree, and null out all the functionbox
-  // pointers from this root of the tree.
-  //
-  // This is because the scope exit above frees all the function boxes
-  // that would have been created as part of this subtree.
-  FunctionTree* tree = m.parser().getTreeHolder().getCurrentParent();
-  if (tree) {
-    if (!m.parser().publishDeferredItems(tree)) {
-      return false;
-    }
-
-    tree->visitRecursively(m.cx(), &m.parser(),
-                           [](ParserBase* parser, FunctionTree* tree) {
-                             tree->setFunctionBox(nullptr);
-                             return true;
-                           });
-  }
-
   if (!CheckFunctionHead(m, funNode)) {
     return false;
   }
@@ -7135,6 +7117,11 @@ static bool DoCompileAsmJS(JSContext* cx, AsmJSParser<Unit>& parser,
   // function to be the finished result.
   MOZ_ASSERT(funbox->isInterpreted());
   funbox->clobberFunction(moduleFun);
+
+  // Clear any deferred allocation data. This is important in particular
+  // to avoid publishing a deferred function allocation on top of the
+  // module function set on the funbox above.
+  funbox->clearDeferredAllocationInfo();
 
   // Success! Write to the console with a "warning" message indicating
   // total compilation time.
