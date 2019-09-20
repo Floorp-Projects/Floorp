@@ -10,9 +10,10 @@
 #include <inttypes.h>
 
 #include "DocumentChannelParent.h"
-#include "mozilla/dom/nsCSPContext.h"
+#include "mozilla/MozPromiseInlines.h"  // For MozPromise::FromDomPromise
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/dom/nsCSPContext.h"
 
 #include "nsHttp.h"
 #include "nsHttpChannel.h"
@@ -124,7 +125,6 @@
 #include "../../cache2/CacheFileUtils.h"
 #include "../../cache2/CacheHashUtils.h"
 #include "nsINetworkLinkService.h"
-#include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/net/AsyncUrlChannelClassifier.h"
@@ -7242,51 +7242,6 @@ nsHttpChannel::GetRequestMethod(nsACString& aMethod) {
 }
 
 //-----------------------------------------------------------------------------
-// nsHttpChannel::nsIRequestObserver
-//-----------------------------------------------------------------------------
-
-// This class is used to convert from a DOM promise to a MozPromise.
-class DomPromiseListener final : dom::PromiseNativeHandler {
-  NS_DECL_ISUPPORTS
-
-  static RefPtr<nsHttpChannel::ContentProcessIdPromise> Create(
-      dom::Promise* aDOMPromise) {
-    MOZ_ASSERT(aDOMPromise);
-    RefPtr<DomPromiseListener> handler = new DomPromiseListener();
-    RefPtr<nsHttpChannel::ContentProcessIdPromise> promise =
-        handler->mPromiseHolder.Ensure(__func__);
-    aDOMPromise->AppendNativeHandler(handler);
-    return promise;
-  }
-
-  virtual void ResolvedCallback(JSContext* aCx,
-                                JS::Handle<JS::Value> aValue) override {
-    uint64_t cpId;
-    if (!JS::ToUint64(aCx, aValue, &cpId)) {
-      mPromiseHolder.Reject(NS_ERROR_FAILURE, __func__);
-      return;
-    }
-    mPromiseHolder.Resolve(cpId, __func__);
-  }
-
-  virtual void RejectedCallback(JSContext* aCx,
-                                JS::Handle<JS::Value> aValue) override {
-    if (!aValue.isInt32()) {
-      mPromiseHolder.Reject(NS_ERROR_DOM_NOT_NUMBER_ERR, __func__);
-      return;
-    }
-    mPromiseHolder.Reject((nsresult)aValue.toInt32(), __func__);
-  }
-
- private:
-  DomPromiseListener() = default;
-  ~DomPromiseListener() = default;
-  MozPromiseHolder<nsHttpChannel::ContentProcessIdPromise> mPromiseHolder;
-};
-
-NS_IMPL_ISUPPORTS0(DomPromiseListener)
-
-//-----------------------------------------------------------------------------
 // nsHttpChannel::nsIProcessSwitchRequestor
 //-----------------------------------------------------------------------------
 
@@ -7315,7 +7270,7 @@ NS_IMETHODIMP nsHttpChannel::SwitchProcessTo(
   }
 
   mRedirectContentProcessIdPromise =
-      DomPromiseListener::Create(aContentProcessIdPromise);
+      ContentProcessIdPromise::FromDomPromise(aContentProcessIdPromise);
   mCrossProcessRedirectIdentifier = aIdentifier;
   return NS_OK;
 }
@@ -7617,6 +7572,10 @@ nsresult nsHttpChannel::ProcessCrossOriginResourcePolicyHeader() {
 
   return NS_OK;
 }
+
+//-----------------------------------------------------------------------------
+// nsHttpChannel::nsIRequestObserver
+//-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
 nsHttpChannel::OnStartRequest(nsIRequest* request) {
