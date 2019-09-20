@@ -36,6 +36,7 @@ const test = new SearchConfigTest({
     {
       included: [{ locales: { matches: ["az"] } }],
       domain: "yandex.az",
+      telemetryId: "yandex-az",
       codes: {
         searchbar: "clid=2186618",
         keyword: "clid=2186621",
@@ -47,6 +48,7 @@ const test = new SearchConfigTest({
     {
       included: [{ locales: { startsWith: ["en"] } }],
       domain: "yandex.com",
+      telemetryId: "yandex-en",
       codes: {
         searchbar: "clid=2186618",
         keyword: "clid=2186621",
@@ -58,6 +60,7 @@ const test = new SearchConfigTest({
     {
       included: [{ locales: { matches: ["ru"] } }],
       domain: "yandex.ru",
+      telemetryId: "yandex-ru",
       codes: {
         searchbar: "clid=2186618",
         keyword: "clid=2186621",
@@ -69,6 +72,7 @@ const test = new SearchConfigTest({
     {
       included: [{ locales: { matches: ["be"] } }],
       domain: "yandex.by",
+      telemetryId: "yandex-by",
       codes: {
         searchbar: "clid=2186618",
         keyword: "clid=2186621",
@@ -80,6 +84,7 @@ const test = new SearchConfigTest({
     {
       included: [{ locales: { matches: ["kk"] } }],
       domain: "yandex.kz",
+      telemetryId: "yandex-kk",
       codes: {
         searchbar: "clid=2186618",
         keyword: "clid=2186621",
@@ -91,6 +96,7 @@ const test = new SearchConfigTest({
     {
       included: [{ locales: { matches: ["tr"] } }],
       domain: "yandex.com.tr",
+      telemetryId: "yandex-tr",
       codes: {
         searchbar: "clid=2186618",
         keyword: "clid=2186621",
