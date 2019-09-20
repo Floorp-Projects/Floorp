@@ -180,6 +180,24 @@ MFTDecoder::CreateInputSample(const uint8_t* aData, uint32_t aDataSize,
   hr = sample->SetSampleTime(UsecsToHNs(aTimestamp));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
+  if (aDuration == 0) {
+    // If the sample duration is 0, the decoder will try and estimate the
+    // duration. In practice this can lead to some wildly incorrect durations,
+    // as in bug 1560440. The Microsoft docs seem conflicting here with
+    // `IMFSample::SetSampleDuration` stating 'The duration can also be zero.
+    // This might be valid for some types of data.' However,
+    // `IMFSample::GetSampleDuration method` states 'If the retrieved duration
+    // is zero, or if the method returns MF_E_NO_SAMPLE_DURATION, the duration
+    // is unknown. In that case, it might be possible to calculate the duration
+    // from the media type--for example, by using the video frame rate or the
+    // audio sampling rate.' The latter of those seems to be how the decoder
+    // handles 0 duration, hence why it estimates.
+    //
+    // Since our demuxing pipeline can create 0 duration samples, and since the
+    // decoder will override them to something positive anyway, setting them to
+    // have a trivial duration seems like the lesser of evils.
+    aDuration = 1;
+  }
   hr = sample->SetSampleDuration(UsecsToHNs(aDuration));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
