@@ -780,7 +780,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 /* From the FxA menu -> remote tabs, we don't need to clutter the view with
    redundant buttons because these are accessible from the main menu */
-panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-view-sidebar,
 panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   display: none;
 }
