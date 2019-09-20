@@ -3787,6 +3787,8 @@ class Document : public nsINode,
         aDontWarnAboutMutationEventsAndAllowSlowDOMMutations;
   }
 
+  void MaybeWarnAboutZoom();
+
   // ParentNode
   nsIHTMLCollection* Children();
   uint32_t ChildElementCount();
@@ -4885,6 +4887,12 @@ class Document : public nsINode,
   // mHasBeenEditable is set to true when mEditingState is firstly set to
   // eDesignMode or eContentEditable.
   bool mHasBeenEditable : 1;
+
+  // Whether we've warned about the CSS zoom property.
+  //
+  // We don't use the general deprecated operation mechanism for this because we
+  // also record this as a `CountedUnknownProperty`.
+  bool mHasWarnedAboutZoom : 1;
 
   uint8_t mPendingFullscreenRequests;
 

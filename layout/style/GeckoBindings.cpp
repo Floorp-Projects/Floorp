@@ -1662,8 +1662,7 @@ void Gecko_StyleSheet_FinishAsyncParse(
         MOZ_ASSERT(NS_IsMainThread());
         SheetLoadData* data = d->get();
         if (Document* doc = data->mLoader->GetDocument()) {
-          if (const StyleUseCounters* docCounters =
-                  doc->GetStyleUseCounters()) {
+          if (const auto* docCounters = doc->GetStyleUseCounters()) {
             Servo_UseCounters_Merge(docCounters, counters.get());
           }
         }
