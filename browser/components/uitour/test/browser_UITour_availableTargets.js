@@ -20,6 +20,7 @@ function getExpectedTargets() {
     "help",
     "home",
     "library",
+    "logins",
     "pageActionButton",
     "pageAction-bookmark",
     "pageAction-copyURL",
