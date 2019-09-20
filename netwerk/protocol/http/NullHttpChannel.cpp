@@ -274,17 +274,6 @@ NullHttpChannel::RedirectTo(nsIURI* aNewURI) {
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SwitchProcessTo(mozilla::dom::Promise* aBrowserParent,
-                                 uint64_t aIdentifier) {
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
-NullHttpChannel::HasCrossOriginOpenerPolicyMismatch(bool* aMismatch) {
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
 NullHttpChannel::UpgradeToSecure() { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
