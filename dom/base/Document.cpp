@@ -1302,6 +1302,7 @@ Document::Document(const char* aContentType)
       mTooDeepWriteRecursion(false),
       mPendingMaybeEditingStateChanged(false),
       mHasBeenEditable(false),
+      mHasWarnedAboutZoom(false),
       mPendingFullscreenRequests(0),
       mXMLDeclarationBits(0),
       mOnloadBlockCount(0),
@@ -12756,6 +12757,24 @@ already_AddRefed<nsINode> Document::GetTooltipNode() {
   }
 
   return nullptr;
+}
+
+void Document::MaybeWarnAboutZoom() {
+  if (mHasWarnedAboutZoom) {
+    return;
+  }
+  const bool usedZoom =
+      mStyleUseCounters &&
+      Servo_IsUnknownPropertyRecordedInUseCounter(mStyleUseCounters.get(),
+                                                  CountedUnknownProperty::Zoom);
+  if (!usedZoom) {
+    return;
+  }
+
+  mHasWarnedAboutZoom = true;
+  nsContentUtils::ReportToConsole(
+      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Layout"), this,
+      nsContentUtils::eLAYOUT_PROPERTIES, "ZoomPropertyWarning");
 }
 
 nsIHTMLCollection* Document::Children() {
