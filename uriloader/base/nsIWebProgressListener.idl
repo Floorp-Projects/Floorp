@@ -260,7 +260,8 @@ interface nsIWebProgressListener : nsISupports
    * Content Blocking Event flags
    *
    * NOTE: IF YOU ARE ADDING MORE OF THESE FLAGS, MAKE SURE TO EDIT
-   * nsSecureBrowserUIImpl::CheckForBlockedContent().
+   * nsSecureBrowserUIImpl::CheckForBlockedContent() AND UPDATE THE
+   * CORRESPONDING LIST IN ContentBlockingController.java
    *
    * These flags describe the reason of cookie jar rejection.
    *
