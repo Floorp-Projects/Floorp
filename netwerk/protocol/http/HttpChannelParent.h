@@ -14,7 +14,6 @@
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/MozPromise.h"
-#include "nsICrossProcessSwitchChannel.h"
 #include "nsIObserver.h"
 #include "nsIParentRedirectingChannel.h"
 #include "nsIProgressEventSink.h"
@@ -61,8 +60,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
                                 public HttpChannelSecurityWarningReporter,
                                 public nsIAsyncVerifyRedirectReadyCallback,
                                 public nsIChannelEventSink,
-                                public nsIRedirectResultListener,
-                                public nsICrossProcessSwitchChannel {
+                                public nsIRedirectResultListener {
   virtual ~HttpChannelParent();
 
  public:
@@ -78,7 +76,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   NS_DECL_NSIASYNCVERIFYREDIRECTREADYCALLBACK
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIREDIRECTRESULTLISTENER
-  NS_DECL_NSICROSSPROCESSSWITCHCHANNEL
 
   NS_DECLARE_STATIC_IID_ACCESSOR(HTTP_CHANNEL_PARENT_IID)
 
@@ -131,6 +128,13 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   void OnBackgroundParentDestroyed();
 
   base::ProcessId OtherPid() const;
+
+  // Called by nsHttpChannel when a process switch is about to start.
+  // aChannel: nsIHttpChannel caller.
+  // aIdentifier: identifier from SessionStore to be passed to the childChannel
+  //              in order to identify it.
+  nsresult TriggerCrossProcessSwitch(nsIHttpChannel* aChannel,
+                                     uint64_t aIdentifier);
 
   // Calling this method will cancel the HttpChannelChild because the consumer
   // needs to be relocated to another process.
