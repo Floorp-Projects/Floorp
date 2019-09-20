@@ -16,6 +16,7 @@ const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 const kDllName = "modules-test.dll";
 
 let gDllHandle;
+let gCurrentPidStr;
 
 add_task(async function setup() {
   do_get_profile();
@@ -30,6 +31,9 @@ add_task(async function setup() {
     .observe(null, "utm-test-init", "");
   Preferences.set("toolkit.telemetry.untrustedModulesPing.frequency", 0);
   Preferences.set("app.update.url", "http://localhost");
+
+  let currentPid = Services.appinfo.processID;
+  gCurrentPidStr = "0x" + currentPid.toString(16);
 
   // Start the local ping server and setup Telemetry to use it during the tests.
   PingServer.start();
@@ -52,26 +56,16 @@ registerCleanupFunction(function() {
 add_task(async function test_send_ping() {
   let expectedModules = [
     // This checks that a DLL loaded during runtime is evaluated properly.
-    // This is hard-coded as untrusted in ModuleEvaluator for testing.
+    // This is hard-coded as untrusted in toolkit/xre/UntrustedModules.cpp for
+    // testing purposes.
     {
       nameMatch: new RegExp(kDllName, "i"),
       expectedTrusted: false,
-      isStartup: false,
-      wasFound: false,
-    },
-
-    // These check that a DLL loaded at startup is evaluated properly.
-    // This is hard-coded as untrusted in ModuleEvaluator for testing.
-    {
-      nameMatch: /untrusted-startup-test-dll.dll/i,
-      expectedTrusted: false,
-      isStartup: true,
       wasFound: false,
     },
     {
       nameMatch: /kernelbase.dll/i,
       expectedTrusted: true,
-      isStartup: true,
       wasFound: false,
     },
   ];
@@ -81,7 +75,7 @@ add_task(async function test_send_ping() {
   let found;
   while (true) {
     found = await PingServer.promiseNextPing();
-    if (found.type == "untrustedModules") {
+    if (found.type == "third-party-modules") {
       break;
     }
   }
@@ -92,43 +86,55 @@ add_task(async function test_send_ping() {
   Assert.ok(typeof found.clientId != "undefined", "Ping has a client ID");
 
   Assert.equal(found.payload.structVersion, 1, "Version is correct");
-  Assert.ok(found.payload.combinedStacks, "'combinedStacks' array exists");
-  Assert.ok(found.payload.events, "'events' array exists");
-  Assert.equal(
-    found.payload.combinedStacks.stacks.length,
-    found.payload.events.length,
-    "combinedStacks.length == events.length"
+  Assert.ok(found.payload.modules, "'modules' object exists");
+  Assert.ok(Array.isArray(found.payload.modules), "'modules' is an array");
+  Assert.ok(found.payload.processes, "'processes' object exists");
+  Assert.ok(
+    gCurrentPidStr in found.payload.processes,
+    `Current process "${gCurrentPidStr}" is included in payload`
   );
 
-  for (let event of found.payload.events) {
-    Assert.ok(event.modules, "'modules' array exists");
-    for (let mod of event.modules) {
-      Assert.ok(
-        typeof mod.moduleName != "undefined",
-        `Module contains moduleName: ${mod.moduleName}`
-      );
-      Assert.ok(
-        typeof mod.moduleTrustFlags != "undefined",
-        `Module contains moduleTrustFlags: ${mod.moduleTrustFlags}`
-      );
-      Assert.ok(
-        typeof mod.baseAddress != "undefined",
-        "Module contains baseAddress"
-      );
-      Assert.ok(
-        typeof mod.loaderName != "undefined",
-        "Module contains loaderName"
-      );
-      for (let x of expectedModules) {
-        if (x.nameMatch.test(mod.moduleName)) {
-          x.wasFound = true;
-          Assert.equal(
-            x.isStartup,
-            event.isStartup,
-            `isStartup == expected for module: ${x.nameMatch.source}`
-          );
-        }
-      }
+  let ourProcInfo = found.payload.processes[gCurrentPidStr];
+  Assert.equal(ourProcInfo.processType, "browser", "'processType' is correct");
+  Assert.ok(typeof ourProcInfo.elapsed == "number", "'elapsed' exists");
+  Assert.equal(
+    ourProcInfo.sanitizationFailures,
+    0,
+    "'sanitizationFailures' is 0"
+  );
+  Assert.equal(ourProcInfo.trustTestFailures, 0, "'trustTestFailures' is 0");
+
+  Assert.equal(
+    ourProcInfo.combinedStacks.stacks.length,
+    ourProcInfo.events.length,
+    "combinedStacks.stacks.length == events.length"
+  );
+
+  for (let event of ourProcInfo.events) {
+    Assert.ok(
+      typeof event.processUptimeMS == "number",
+      "'processUptimeMS' exists"
+    );
+    Assert.ok(typeof event.threadID == "number", "'threadID' exists");
+    Assert.ok(typeof event.baseAddress == "string", "'baseAddress' exists");
+
+    Assert.ok(typeof event.moduleIndex == "number", "'moduleIndex' exists");
+    Assert.ok(event.moduleIndex >= 0, "'moduleIndex' is non-negative");
+
+    let modRecord = found.payload.modules[event.moduleIndex];
+    Assert.ok(modRecord, "module record for this event exists");
+    Assert.ok(
+      typeof modRecord.resolvedDllName == "string",
+      "'resolvedDllName' exists"
+    );
+    Assert.ok(typeof modRecord.trustFlags == "number", "'trustFlags' exists");
+
+    let mod = expectedModules.find(function(elem) {
+      return elem.nameMatch.test(modRecord.resolvedDllName);
+    });
+
+    if (mod) {
+      mod.wasFound = true;
     }
   }
 
