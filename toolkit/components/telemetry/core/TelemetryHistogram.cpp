@@ -696,7 +696,8 @@ nsresult internal_HistogramAdd(const StaticMutexAutoLock& aLock,
     return NS_OK;
   }
 
-  if (GetCurrentProduct() == SupportedProduct::GeckoviewStreaming) {
+  if (&histogram != gExpiredHistogram &&
+      GetCurrentProduct() == SupportedProduct::GeckoviewStreaming) {
     const HistogramInfo& info = gHistogramInfos[id];
     GeckoViewStreamingTelemetry::HistogramAccumulate(
         nsDependentCString(info.name()),
