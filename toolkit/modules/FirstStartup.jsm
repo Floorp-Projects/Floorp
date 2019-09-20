@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 const PREF_TIMEOUT = "first-startup.timeout";
-const PROBE_NAME = "firstStartup.statusCode";
+const PROBE_NAME = "firstStartup";
 
 /**
  * Service for blocking application startup, to be used on the first install. The intended
@@ -45,8 +45,8 @@ var FirstStartup = {
    */
   init() {
     this._state = this.IN_PROGRESS;
-    const timeout = Services.prefs.getIntPref(PREF_TIMEOUT, 5000); // default to 5 seconds
-    let expiredTime = Date.now() + timeout;
+    const timeout = Services.prefs.getIntPref(PREF_TIMEOUT, 30000); // default to 30 seconds
+    let startingTime = Date.now();
 
     if (AppConstants.MOZ_NORMANDY) {
       let normandyInitialized = false;
@@ -55,8 +55,10 @@ var FirstStartup = {
         () => (normandyInitialized = true)
       );
 
+      this.elapsed = 0;
       Services.tm.spinEventLoopUntil(() => {
-        if (Date.now() >= expiredTime) {
+        this.elapsed = Date.now() - startingTime;
+        if (this.elapsed >= timeout) {
           this._state = this.TIMED_OUT;
           return true;
         } else if (normandyInitialized) {
@@ -69,7 +71,8 @@ var FirstStartup = {
       this._state = this.UNSUPPORTED;
     }
 
-    Services.telemetry.scalarSet(PROBE_NAME, this._state);
+    Services.telemetry.scalarSet(`${PROBE_NAME}.statusCode`, this._state);
+    Services.telemetry.scalarSet(`${PROBE_NAME}.elapsed`, this.elapsed);
   },
 
   get state() {
