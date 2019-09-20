@@ -26,6 +26,7 @@ gecko_profiler_parse_elf = ["gkrust-shared/gecko_profiler_parse_elf"]
 bitsdownload = ["gkrust-shared/bitsdownload"]
 new_xulstore = ["gkrust-shared/new_xulstore"]
 new_cert_storage = ["gkrust-shared/new_cert_storage"]
+fuzzing_interfaces = ["gkrust-shared/fuzzing_interfaces"]
 
 [dependencies]
 gkrust-shared = { path = "shared" }
