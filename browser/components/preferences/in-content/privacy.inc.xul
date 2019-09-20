@@ -5,7 +5,6 @@
 <!-- Privacy panel -->
 
 <script src="chrome://browser/content/preferences/in-content/privacy.js"/>
-<stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
 <stringbundle id="signonBundle" src="chrome://passwordmgr/locale/passwordmgr.properties"/>
 <html:template id="template-panePrivacy">
 <hbox id="browserPrivacyCategory"
@@ -500,6 +499,12 @@
               data-l10n-id="forms-master-pw-change"/>
     </hbox>
   </hbox>
+  <!--
+    Those two strings are meant to be invisible and will be used exclusively to provide
+    localization for an alert window.
+  -->
+  <label id="fips-title" hidden="true" data-l10n-id="forms-master-pw-fips-title"></label>
+  <label id="fips-desc" hidden="true" data-l10n-id="forms-master-pw-fips-desc"></label>
 </groupbox>
 
 <!-- The form autofill section is inserted in to this box
