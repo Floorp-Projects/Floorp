@@ -57,10 +57,6 @@ function startPopupTests(tests) {
   goNext();
 }
 
-if (!window.opener && window.arguments) {
-  window.opener = window.arguments[0];
-}
-
 function finish() {
   if (window.opener) {
     window.close();

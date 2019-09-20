@@ -12,7 +12,7 @@
           src="chrome://mochikit/content/chrome-harness.js"></script>
 
 <script type="application/javascript">
-var SimpleTest = window.arguments[0].SimpleTest;
+var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
 
 document.addEventListener("DOMWindowCreated", function(e) {
   var otherWindow = e.target.defaultView.wrappedJSObject;

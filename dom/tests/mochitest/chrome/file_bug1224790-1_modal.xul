@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1224790
 
   function nonModalClosed() {
     window.close();
-    window.arguments[0].modalClosed();
+    opener.wrappedJSObject.modalClosed();
   }
 
   SimpleTest.waitForFocus(runTests);

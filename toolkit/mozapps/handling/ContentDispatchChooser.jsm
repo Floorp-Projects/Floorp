@@ -23,9 +23,6 @@ nsContentDispatchChooser.prototype = {
     try {
       if (aWindowContext) {
         window = aWindowContext.getInterface(Ci.nsIDOMWindow);
-        if (window) {
-          window = window.docShell.rootTreeItem.domWindow;
-        }
       }
     } catch (e) {
       /* it's OK to not have a window */

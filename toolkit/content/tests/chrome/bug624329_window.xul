@@ -6,7 +6,7 @@
         context="menu">
 
   <script>
-    window.arguments[0].SimpleTest.waitForFocus(window.arguments[0].childFocused, window);
+    opener.SimpleTest.waitForFocus(opener.childFocused, window);
   </script>
 
   <menupopup id="menu">

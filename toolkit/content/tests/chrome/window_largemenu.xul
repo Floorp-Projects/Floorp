@@ -161,8 +161,8 @@ function popupShown()
   hidePopup();
 }
 
-function is(l, r, n) { window.arguments[0].SimpleTest.is(l,r,n); }
-function ok(v, n) { window.arguments[0].SimpleTest.ok(v,n); }
+function is(l, r, n) { window.opener.wrappedJSObject.SimpleTest.is(l,r,n); }
+function ok(v, n) { window.opener.wrappedJSObject.SimpleTest.ok(v,n); }
 
 var oldx, oldy, waitSteps = 0;
 function moveWindowTo(x, y, callback, arg)
@@ -180,7 +180,7 @@ function moveWindowTo(x, y, callback, arg)
   if (window.screenX == oldx && window.screenY == oldy) {
     if (waitSteps++ > 10) {
       ok(false, "Window never moved properly to " + x + "," + y);
-      window.arguments[0].SimpleTest.finish();
+      window.opener.wrappedJSObject.SimpleTest.finish();
       window.close();
     }
 
@@ -196,7 +196,7 @@ function popupHidden()
 {
   gTestIndex++;
   if (gTestIndex == gTests.length) {
-    window.arguments[0].SimpleTest.finish();
+    window.opener.wrappedJSObject.SimpleTest.finish();
     window.close();
   }
   else if (gTests[gTestIndex] == "context menu enough space below") {
@@ -392,7 +392,7 @@ function platformIsMac()
   return navigator.platform.indexOf("Mac") > -1;
 }
 
-window.arguments[0].SimpleTest.waitForFocus(runTests, window);
+window.opener.wrappedJSObject.SimpleTest.waitForFocus(runTests, window);
 
 ]]>
 </script>

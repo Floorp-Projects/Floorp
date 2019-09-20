@@ -112,6 +112,6 @@ async function continue_remove_tab(client, tab) {
 async function addWindow(url) {
   info("Adding window: " + url);
   const onNewWindow = BrowserTestUtils.waitForNewWindow({ url });
-  window.open(url, "_blank", "noopener");
+  window.open(url);
   return onNewWindow;
 }
