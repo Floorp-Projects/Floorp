@@ -214,22 +214,24 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FuncHookCrossProcess final {
 
   bool Set(HANDLE aProcess, InterceptorT& aInterceptor, const char* aName,
            FuncPtrT aHookDest) {
+    FuncPtrT origFunc;
     if (!aInterceptor.AddHook(aName, reinterpret_cast<intptr_t>(aHookDest),
-                              reinterpret_cast<void**>(&mOrigFunc))) {
+                              reinterpret_cast<void**>(&origFunc))) {
       return false;
     }
 
-    return CopyStubToChildProcess(aProcess);
+    return CopyStubToChildProcess(origFunc, aProcess);
   }
 
   bool SetDetour(HANDLE aProcess, InterceptorT& aInterceptor, const char* aName,
                  FuncPtrT aHookDest) {
+    FuncPtrT origFunc;
     if (!aInterceptor.AddDetour(aName, reinterpret_cast<intptr_t>(aHookDest),
-                                reinterpret_cast<void**>(&mOrigFunc))) {
+                                reinterpret_cast<void**>(&origFunc))) {
       return false;
     }
 
-    return CopyStubToChildProcess(aProcess);
+    return CopyStubToChildProcess(origFunc, aProcess);
   }
 
   explicit operator bool() const { return !!mOrigFunc; }
@@ -250,10 +252,11 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FuncHookCrossProcess final {
 #endif  // defined(DEBUG)
 
  private:
-  bool CopyStubToChildProcess(HANDLE aProcess) {
+  bool CopyStubToChildProcess(FuncPtrT aStub, HANDLE aProcess) {
     SIZE_T bytesWritten;
-    return !!::WriteProcessMemory(aProcess, &mOrigFunc, &mOrigFunc,
-                                  sizeof(mOrigFunc), &bytesWritten);
+    return ::WriteProcessMemory(aProcess, &mOrigFunc, &aStub,
+                                sizeof(FuncPtrT), &bytesWritten) &&
+           bytesWritten == sizeof(FuncPtrT);
   }
 
  private:
