@@ -56,10 +56,10 @@ add_task(async function() {
     .getBounds();
 
   const panelXMovement =
-    `panel right: ${originalPanelBounds.right}->` + updatedPanelBounds.right;
+    `panel left: ${originalPanelBounds.left}->` + updatedPanelBounds.left;
   ok(
-    Math.round(updatedPanelBounds.right - originalPanelBounds.right) === 100,
-    `Panel should have moved 100px to the right (actual: ${panelXMovement})`
+    Math.round(updatedPanelBounds.left - originalPanelBounds.left) === -100,
+    `Panel should have moved 100px to the left (actual: ${panelXMovement})`
   );
 
   const panelYMovement =
