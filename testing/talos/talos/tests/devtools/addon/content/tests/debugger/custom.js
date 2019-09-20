@@ -36,7 +36,6 @@ const EXPECTED_FUNCTION = "window.hitBreakpoint()";
 module.exports = async function() {
   const tab = await testSetup(PAGES_BASE_URL + "custom/debugger/index.html");
   Services.prefs.setBoolPref("devtools.debugger.features.map-scopes", false);
-  Services.prefs.setBoolPref("devtools.testing", true);
 
   const toolbox = await openDebuggerAndLog("custom", EXPECTED);
   await reloadDebuggerAndLog("custom", toolbox, EXPECTED);
@@ -51,7 +50,6 @@ module.exports = async function() {
   await closeToolboxAndLog("custom.jsdebugger", toolbox);
 
   Services.prefs.clearUserPref("devtools.debugger.features.map-scopes");
-  Services.prefs.clearUserPref("devtools.testing");
   await testTeardown();
 };
 
