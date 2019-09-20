@@ -6152,12 +6152,23 @@ static bool EncodeExprList(Encoder& e, const AstExprVector& v) {
   return true;
 }
 
+static bool EncodeBlockType(Encoder& e, AstExprType& t) {
+  ExprType type = t.type();
+  static_assert(size_t(TypeCode::Limit) <= UINT8_MAX, "fits");
+  MOZ_ASSERT(size_t(type.code()) < size_t(TypeCode::Limit));
+  if (type.isRef()) {
+    return e.writeFixedU8(uint8_t(ExprType::Ref)) &&
+           e.writeVarU32(type.refTypeIndex());
+  }
+  return e.writeFixedU8(uint8_t(type.code()));
+}
+
 static bool EncodeBlock(Encoder& e, AstBlock& b) {
   if (!e.writeOp(b.op())) {
     return false;
   }
 
-  if (!e.writeBlockType(b.type().type())) {
+  if (!EncodeBlockType(e, b.type())) {
     return false;
   }
 
@@ -6324,7 +6335,7 @@ static bool EncodeIf(Encoder& e, AstIf& i) {
     return false;
   }
 
-  if (!e.writeBlockType(i.type().type())) {
+  if (!EncodeBlockType(e, i.type())) {
     return false;
   }
 
