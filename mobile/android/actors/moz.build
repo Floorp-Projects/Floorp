@@ -7,4 +7,5 @@ with Files('**'):
 
 FINAL_TARGET_FILES.actors += [
     'LoadURIDelegateChild.jsm',
+    'WebBrowserChromeChild.jsm',
 ]
