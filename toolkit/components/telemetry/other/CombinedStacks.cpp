@@ -104,6 +104,19 @@ void CombinedStacks::RemoveStack(unsigned aIndex) {
   }
 }
 
+void CombinedStacks::Swap(CombinedStacks& aOther) {
+  mModules.swap(aOther.mModules);
+  mStacks.swap(aOther.mStacks);
+
+  size_t nextIndex = aOther.mNextIndex;
+  aOther.mNextIndex = mNextIndex;
+  mNextIndex = nextIndex;
+
+  size_t maxStacksCount = aOther.mMaxStacksCount;
+  aOther.mMaxStacksCount = mMaxStacksCount;
+  mMaxStacksCount = maxStacksCount;
+}
+
 #if defined(MOZ_GECKO_PROFILER)
 void CombinedStacks::Clear() {
   mNextIndex = 0;
