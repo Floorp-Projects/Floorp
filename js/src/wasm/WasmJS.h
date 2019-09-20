@@ -69,6 +69,11 @@ bool HasReftypesSupport(JSContext* cx);
 
 bool HasGcSupport(JSContext* cx);
 
+// Returns true if WebAssembly as configured by compile-time flags and run-time
+// options can support multi-value block and function returns (evolving).
+
+bool HasMultiValueSupport(JSContext* cx);
+
 // Compiles the given binary wasm module given the ArrayBufferObject
 // and links the module's imports with the given import object.
 
