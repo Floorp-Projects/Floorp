@@ -893,6 +893,3 @@ add_task(async function test_showPasswordOn1stOpenOfDismissedByDefault() {
     await cleanupDoorhanger(notif);
   });
 });
-
-// TODO:
-// * existing login test, form has different password --> change password, no save prompt
