@@ -133,6 +133,7 @@ class ShareFragment : AppCompatDialogFragment() {
             )
         )
 
+        view.shareWrapper.setOnClickListener { shareInteractor.onShareClosed() }
         shareToAccountDevicesView =
             ShareToAccountDevicesView(view.devicesShareLayout, shareInteractor)
         shareCloseView = ShareCloseView(view.closeSharingLayout, shareInteractor)
