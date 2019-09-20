@@ -6289,8 +6289,11 @@ bool jit::PropertyWriteNeedsTypeBarrier(TempAllocator& alloc,
 MIonToWasmCall* MIonToWasmCall::New(TempAllocator& alloc,
                                     WasmInstanceObject* instanceObj,
                                     const wasm::FuncExport& funcExport) {
-  Maybe<wasm::ValType> retType = funcExport.funcType().ret();
-  MIRType resultType = retType ? ToMIRType(retType.ref()) : MIRType::Value;
+  wasm::ExprType retType = funcExport.funcType().ret();
+
+  MIRType resultType = retType.code() == wasm::ExprType::Void
+                           ? MIRType::Value
+                           : ToMIRType(retType);
 
   auto* ins = new (alloc) MIonToWasmCall(instanceObj, resultType, funcExport);
   if (!ins->init(alloc, funcExport.funcType().args().length())) {
