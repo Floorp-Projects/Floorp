@@ -1126,6 +1126,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "gecko-fuzz-targets"
+version = "0.1.0"
+dependencies = [
+ "libc 0.2.60 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rkv 0.9.7 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "geckodriver"
 version = "0.26.0-alpha.0"
 dependencies = [
@@ -1191,6 +1199,7 @@ name = "gkrust-gtest"
 version = "0.1.0"
 dependencies = [
  "bench-collections-gtest 0.1.0",
+ "gecko-fuzz-targets 0.1.0",
  "gkrust-shared 0.1.0",
  "mp4parse-gtest 0.1.0",
  "nsstring-gtest 0.1.0",
