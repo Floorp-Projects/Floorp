@@ -80,10 +80,14 @@ class ColorManagementFilter final : public SurfaceFilter {
  protected:
   uint8_t* DoResetToFirstRow() override { return mNext.ResetToFirstRow(); }
 
-  uint8_t* DoAdvanceRow() override {
-    uint8_t* rowPtr = mNext.CurrentRowPointer();
-    qcms_transform_data(mTransform, rowPtr, rowPtr, mNext.InputSize().width);
+  uint8_t* DoAdvanceRowFromBuffer(const uint8_t* aInputRow) override {
+    qcms_transform_data(mTransform, aInputRow, mNext.CurrentRowPointer(),
+                        mNext.InputSize().width);
     return mNext.AdvanceRow();
+  }
+
+  uint8_t* DoAdvanceRow() override {
+    return DoAdvanceRowFromBuffer(mNext.CurrentRowPointer());
   }
 
   Next mNext;  /// The next SurfaceFilter in the chain.
@@ -180,6 +184,11 @@ class DeinterlacingFilter final : public SurfaceFilter {
     mInputRow = 0;
     mOutputRow = InterlaceOffset(mPass);
     return GetRowPointer(mOutputRow);
+  }
+
+  uint8_t* DoAdvanceRowFromBuffer(const uint8_t* aInputRow) override {
+    CopyInputRow(aInputRow);
+    return DoAdvanceRow();
   }
 
   uint8_t* DoAdvanceRow() override {
@@ -638,6 +647,11 @@ class BlendAnimationFilter final : public SurfaceFilter {
     return nullptr;  // We're done.
   }
 
+  uint8_t* DoAdvanceRowFromBuffer(const uint8_t* aInputRow) override {
+    CopyInputRow(aInputRow);
+    return DoAdvanceRow();
+  }
+
   uint8_t* DoAdvanceRow() override {
     uint8_t* rowPtr = nullptr;
 
@@ -912,6 +926,11 @@ class RemoveFrameRectFilter final : public SurfaceFilter {
     return nullptr;  // We're done.
   }
 
+  uint8_t* DoAdvanceRowFromBuffer(const uint8_t* aInputRow) override {
+    CopyInputRow(aInputRow);
+    return DoAdvanceRow();
+  }
+
   uint8_t* DoAdvanceRow() override {
     uint8_t* rowPtr = nullptr;
 
@@ -1095,6 +1114,11 @@ class ADAM7InterpolatingFilter final : public SurfaceFilter {
     }
 
     return mCurrentRow.get();
+  }
+
+  uint8_t* DoAdvanceRowFromBuffer(const uint8_t* aInputRow) override {
+    CopyInputRow(aInputRow);
+    return DoAdvanceRow();
   }
 
   uint8_t* DoAdvanceRow() override {
