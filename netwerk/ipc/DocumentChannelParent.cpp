@@ -39,7 +39,6 @@ NS_INTERFACE_MAP_BEGIN(DocumentChannelParent)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIParentChannel)
   NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectReadyCallback)
-  NS_INTERFACE_MAP_ENTRY(nsICrossProcessSwitchChannel)
   NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIProcessSwitchRequestor)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(DocumentChannelParent)
@@ -357,14 +356,6 @@ void DocumentChannelParent::FinishReplacementChannelSetup(bool aSucceeded) {
 
     mChannel->Resume();
   }
-}
-
-nsresult DocumentChannelParent::TriggerCrossProcessSwitch(
-    nsIHttpChannel* aChannel, uint64_t aIdentifier) {
-  MOZ_ASSERT_UNREACHABLE(
-      "We can no longer be called from nsHttpChannel, this interface will be "
-      "removed in a follow-up patch");
-  return NS_OK;
 }
 
 void DocumentChannelParent::TriggerCrossProcessSwitch() {
