@@ -517,9 +517,11 @@ public class GeckoSession implements Parcelable {
             "GeckoViewNavigation", this,
             new String[]{
                 "GeckoView:LocationChange",
+                "GeckoView:OnNewSession"
+            },
+            new String[] {
                 "GeckoView:OnLoadError",
                 "GeckoView:OnLoadRequest",
-                "GeckoView:OnNewSession"
             }
         ) {
             // This needs to match nsIBrowserDOMWindow.idl
@@ -530,6 +532,20 @@ public class GeckoSession implements Parcelable {
                         return NavigationDelegate.TARGET_WINDOW_CURRENT;
                     default: // OPEN_NEWWINDOW, OPEN_NEWTAB, OPEN_SWITCHTAB
                         return NavigationDelegate.TARGET_WINDOW_NEW;
+                }
+            }
+
+            @Override
+            public void handleDefaultMessage(final String event,
+                                             final GeckoBundle message,
+                                             final EventCallback callback) {
+
+                if ("GeckoView:OnLoadRequest".equals(event)) {
+                    callback.sendSuccess(false);
+                } else if ("GeckoView:OnLoadError".equals(event)) {
+                    callback.sendSuccess(null);
+                } else {
+                    super.handleDefaultMessage(event, message, callback);
                 }
             }
 
