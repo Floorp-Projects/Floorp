@@ -11,7 +11,7 @@
 
 #include "ds/LifoAlloc.h"
 #include "frontend/FunctionTree.h"
-#include "frontend/ParseContext.h"
+#include "frontend/UsedNameTracker.h"
 #include "js/RealmOptions.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
