@@ -948,11 +948,6 @@ class UrlbarInput {
       return;
     }
     this.setAttribute("breakout-extend", "true");
-
-    let customizationTarget = this.textbox.closest(".customization-target");
-    if (customizationTarget) {
-      customizationTarget.setAttribute("urlbar-breakout-extend", "true");
-    }
   }
 
   endLayoutExtend(force) {
@@ -965,11 +960,6 @@ class UrlbarInput {
       return;
     }
     this.removeAttribute("breakout-extend");
-
-    let customizationTarget = this.textbox.closest(".customization-target");
-    if (customizationTarget) {
-      customizationTarget.removeAttribute("urlbar-breakout-extend");
-    }
   }
 
   setPageProxyState(state) {
