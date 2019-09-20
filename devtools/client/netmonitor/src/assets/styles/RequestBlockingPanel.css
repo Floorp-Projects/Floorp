@@ -1,0 +1,91 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* The "Enable Blocking Requests" bar */
+.network-monitor .request-blocking-enable-bar {
+  background: var(--theme-tab-toolbar-background);
+  padding: 2px 10px;
+  display: flex;
+  overflow: hidden;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.network-monitor .request-blocking-enable-form {
+  flex-grow: 1;
+}
+
+.network-monitor .request-blocking-enable-form label {
+  display: inline-block;
+}
+
+.network-monitor .request-blocking-enable-bar .request-blocking-label {
+  -moz-user-select: none;
+}
+
+.network-monitor .request-blocking-enable-bar button::before {
+  background-image: url("chrome://devtools/skin/images/close.svg");
+  transform: rotate(45deg);
+}
+
+.network-monitor .request-blocking-label {
+  cursor: default;
+}
+
+/* Blocked request list */
+.network-monitor .request-blocking-list {
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.network-monitor .request-blocking-list li {
+  padding: 2px 10px;
+  display: flex;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.network-monitor .request-blocking-list li.request-blocking-edit-item {
+  padding: 1px 0;
+}
+
+.network-monitor .request-blocking-list label {
+  width: calc(100% - 26px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--monospace-font-family);
+}
+
+.network-monitor .request-blocking-enable-form label,
+.network-monitor .request-blocking-list label {
+  margin-top: 2px;
+}
+
+.network-monitor .request-blocking-list button {
+  visibility: hidden;
+}
+
+.network-monitor .request-blocking-list button::before {
+  background-image: url("chrome://devtools/skin/images/close.svg");
+}
+
+.network-monitor .request-blocking-list li:hover button,
+.network-monitor .request-blocking-list li:focus-within button {
+  visibility: visible;
+}
+
+/* Addition form */
+.request-blocking-edit-item form {
+  width: 100%;
+}
+
+.request-blocking-add-form input,
+.request-blocking-edit-item input {
+  width: calc(100% - 1px);
+  padding-top: 4px;
+  padding-bottom: 4px;
+  background-image: none;
+  padding-inline-start: 29px;
+}
