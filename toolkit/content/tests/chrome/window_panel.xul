@@ -36,11 +36,11 @@ SimpleTest.waitForExplicitFinish();
 var currentTest = null;
 
 function ok(condition, message) {
-  window.opener.wrappedJSObject.SimpleTest.ok(condition, message);
+  window.arguments[0].SimpleTest.ok(condition, message);
 }
 
 function is(left, right, message) {
-  window.opener.wrappedJSObject.SimpleTest.is(left, right, message);
+  window.arguments[0].SimpleTest.is(left, right, message);
 }
 
 function test_panels()
@@ -57,7 +57,7 @@ function nextTest()
 {
   if (!tests.length) {
     window.close();
-    window.opener.wrappedJSObject.SimpleTest.finish();
+    window.arguments[0].SimpleTest.finish();
     return;
   }
 
@@ -277,7 +277,7 @@ var tests = [
   },
 ];
 
-window.opener.wrappedJSObject.SimpleTest.waitForFocus(test_panels, window);
+window.arguments[0].SimpleTest.waitForFocus(test_panels, window);
 
 ]]>
 </script>

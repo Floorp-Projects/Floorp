@@ -28,8 +28,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=366992
 
 /** Test for Bug 366992 **/
 SimpleTest.waitForExplicitFinish();
-window.open("bug366992_window.xul", "findbartest", 
-            "chrome,width=600,height=600");
+window.openDialog("bug366992_window.xul", "findbartest", 
+                  "chrome,width=600,height=600,noopener", window);
 
 
 

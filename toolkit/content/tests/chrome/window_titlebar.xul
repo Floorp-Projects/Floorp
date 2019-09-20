@@ -52,7 +52,7 @@
 <script>
 <![CDATA[
 
-var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
+var SimpleTest = window.arguments[0].SimpleTest;
 
 SimpleTest.waitForFocus(test_titlebar, window);
 
@@ -74,7 +74,7 @@ function waitForWindowMove(element, x, y, callback, arg, panel, anchored)
     if (waitSteps++ > 10) {
       SimpleTest.is(window.screenX + "," + window.screenY, oldx + "," + oldy + " ",
                     "Window never moved properly to " + x + "," + y + (panel ? " " + panel.id : ""));
-      window.opener.wrappedJSObject.SimpleTest.finish();
+      window.arguments[0].SimpleTest.finish();
       window.close();
       return;
     }
@@ -213,7 +213,7 @@ function popuphidden(nextPopup)
     }
   }
   else
-    window.opener.wrappedJSObject.done(window);
+    window.arguments[0].done(window);
 }
 
 ]]>

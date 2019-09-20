@@ -12,8 +12,6 @@ Test that arguments can be passed to dialogs.
 
   <script type="application/javascript">
 
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
-
   const TEST_ITEM = Symbol("test-item");
 
   function done(returnedItem) {
@@ -24,7 +22,7 @@ Test that arguments can be passed to dialogs.
   }
 
   SimpleTest.waitForExplicitFinish();
-  let win = window.openDialog("file_test_dialog.html", "_blank", "width=100,height=100", TEST_ITEM);
+  let win = window.docShell.rootTreeItem.domWindow.openDialog("file_test_dialog.html", "_blank", "width=100,height=100", TEST_ITEM, window);
   </script>
 </head>
 <body>

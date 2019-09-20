@@ -23,14 +23,14 @@ function runTests()
   synthesizeMouse(document.getElementById("window"), 1, 2, { type: "mousemove" });
 }
 
-window.opener.wrappedJSObject.SimpleTest.waitForFocus(runTests, window);
+window.arguments[0].SimpleTest.waitForFocus(runTests, window);
 
 function mouseMove(e) {
   var element = e.target;
   var el = document.getElementById("parentcap");
   el.label = "client: (" + e.clientX + "," + e.clientY + ")";
-  window.opener.wrappedJSObject.SimpleTest.is(e.clientX, 1, "mouse event clientX");
-  window.opener.wrappedJSObject.SimpleTest.is(e.clientY, 2, "mouse event clientY");
+  window.arguments[0].SimpleTest.is(e.clientX, 1, "mouse event clientX");
+  window.arguments[0].SimpleTest.is(e.clientY, 2, "mouse event clientY");
   // fire the next test on the sub frame
   frames[0].runTests();
 }

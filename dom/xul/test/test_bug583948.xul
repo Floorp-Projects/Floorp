@@ -14,14 +14,17 @@
 <script>
 SimpleTest.waitForExplicitFinish();
 
+let chromeWindow = docShell.rootTreeItem.domWindow;
+
 var attempts = 0;
 
-function update() {
+chromeWindow.update = function () {
   // without the crash fix, this usually crashes after 2 to 4 reloads
   if (++attempts == 6) {
     ok(true, "didn't crash after 6 attempts");
     otherWindow.close();
     SimpleTest.waitForFocus(function() {
+      chromeWindow.update = null;
       SimpleTest.finish();
     });
   } else {
@@ -32,7 +35,7 @@ function update() {
   }
 }
 
-var otherWindow = window.open("window_bug583948.xul", "_new", "chrome");
+var otherWindow = chromeWindow.open("window_bug583948.xul", "_blank", "chrome");
 </script>
 
 </window>
