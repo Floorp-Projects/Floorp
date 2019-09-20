@@ -33,9 +33,9 @@
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/PerformanceStorage.h"
+#include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/net/NeckoChannelParams.h"
-#include "mozilla/EventStateManager.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -554,7 +554,7 @@ nsresult FetchDriver::HttpFetch(
   nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(chan));
   // Mark channel as urgent-start if the Fetch is triggered by user input
   // events.
-  if (cos && EventStateManager::IsHandlingUserInput()) {
+  if (cos && UserActivation::IsHandlingUserInput()) {
     cos->AddClassFlags(nsIClassOfService::UrgentStart);
   }
 
