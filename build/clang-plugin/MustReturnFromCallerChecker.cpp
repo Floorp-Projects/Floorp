@@ -6,11 +6,13 @@
 #include "CustomMatchers.h"
 
 void MustReturnFromCallerChecker::registerMatchers(MatchFinder *AstMatcher) {
-  // Look for a call to a MOZ_MUST_RETURN_FROM_CALLER function
+  // Look for a call to a MOZ_MUST_RETURN_FROM_CALLER member
   AstMatcher->addMatcher(
-      callExpr(callee(functionDecl(isMozMustReturnFromCaller())),
-               anyOf(hasAncestor(lambdaExpr().bind("containing-lambda")),
-                     hasAncestor(functionDecl().bind("containing-func"))))
+      cxxMemberCallExpr(
+              on(declRefExpr(to(parmVarDecl()))),
+              callee(functionDecl(isMozMustReturnFromCaller())),
+              anyOf(hasAncestor(lambdaExpr().bind("containing-lambda")),
+                    hasAncestor(functionDecl().bind("containing-func"))))
           .bind("call"),
       this);
 }
