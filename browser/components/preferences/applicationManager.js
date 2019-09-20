@@ -25,11 +25,11 @@ var gAppManagerDialog = {
     const appDescElem = document.getElementById("appDescription");
     if (this.handlerInfo.wrappedHandlerInfo instanceof Ci.nsIMIMEInfo) {
       document.l10n.setAttributes(appDescElem, "app-manager-handle-file", {
-        type: this.handlerInfo.typeDescription,
+        type: this.handlerInfo.typeDescription.raw,
       });
     } else {
       document.l10n.setAttributes(appDescElem, "app-manager-handle-protocol", {
-        type: this.handlerInfo.typeDescription,
+        type: this.handlerInfo.typeDescription.raw,
       });
     }
 
