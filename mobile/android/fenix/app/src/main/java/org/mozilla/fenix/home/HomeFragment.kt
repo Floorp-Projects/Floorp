@@ -262,6 +262,15 @@ class HomeFragment : Fragment() {
             requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.HOME))
         }
 
+        view.add_tab_button.setOnClickListener {
+            invokePendingDeleteJobs()
+            val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(
+                sessionId = null,
+                showShortcutEnginePicker = true
+            )
+            nav(R.id.homeFragment, directions)
+        }
+
         PrivateBrowsingButtonView(
             privateBrowsingButton,
             browsingModeManager
@@ -421,14 +430,7 @@ class HomeFragment : Fragment() {
                     from = BrowserDirection.FromHome
                 )
             }
-            is TabAction.Add -> {
-                invokePendingDeleteJobs()
-                val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(
-                    sessionId = null,
-                    showShortcutEnginePicker = true
-                )
-                nav(R.id.homeFragment, directions)
-            }
+
             is TabAction.ShareTabs -> {
                 invokePendingDeleteJobs()
                 val shareTabs = sessionManager

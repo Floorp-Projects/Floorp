@@ -74,7 +74,6 @@ typealias TabCollection = ACTabCollection
 
 sealed class TabAction : Action {
     data class SaveTabGroup(val selectedTabSessionId: String?) : TabAction()
-    object Add : TabAction()
     object ShareTabs : TabAction()
     data class CloseAll(val private: Boolean) : TabAction()
     data class Select(val tabView: View, val sessionId: String) : TabAction()
