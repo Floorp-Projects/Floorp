@@ -66,6 +66,7 @@ EXPORTS.mozilla.dom += [
     'TabMessageUtils.h',
     'URLClassifierChild.h',
     'URLClassifierParent.h',
+    'UserActivationIPCUtils.h',
     'WindowGlobalActor.h',
     'WindowGlobalChild.h',
     'WindowGlobalParent.h',
