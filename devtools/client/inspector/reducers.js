@@ -20,3 +20,9 @@ exports.grids = require("devtools/client/inspector/grids/reducers/grids");
 exports.highlighterSettings = require("devtools/client/inspector/grids/reducers/highlighter-settings");
 exports.pseudoClasses = require("devtools/client/inspector/rules/reducers/pseudo-classes");
 exports.rules = require("devtools/client/inspector/rules/reducers/rules");
+
+// This ObjectInspector reducer is needed for the Extension Sidebar.
+const {
+  objectInspector,
+} = require("devtools/client/shared/components/reps/reps");
+exports.objectInspector = objectInspector.reducer.default;
