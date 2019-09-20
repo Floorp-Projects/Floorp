@@ -113,7 +113,6 @@
 #include "mozilla/dom/ShadowIncludingTreeIterator.h"
 #include "mozilla/dom/StyleSheetList.h"
 #include "mozilla/dom/SVGUseElement.h"
-#include "mozilla/dom/UserActivation.h"
 #include "mozilla/net/CookieSettings.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/CDATASection.h"
@@ -14023,7 +14022,7 @@ void Document::RequestPointerLock(Element* aElement, CallerType aCallerType) {
     return;
   }
 
-  bool userInputOrSystemCaller = UserActivation::IsHandlingUserInput() ||
+  bool userInputOrSystemCaller = EventStateManager::IsHandlingUserInput() ||
                                  aCallerType == CallerType::System;
   nsCOMPtr<nsIRunnable> request =
       new PointerLockRequest(aElement, userInputOrSystemCaller);
@@ -14536,11 +14535,12 @@ void Document::SetCssUseCounterBits() {
 
   for (size_t i = 0; i < size_t(CountedUnknownProperty::Count); ++i) {
     if (Servo_IsUnknownPropertyRecordedInUseCounter(
-            mStyleUseCounters.get(), CountedUnknownProperty(i))) {
+          mStyleUseCounters.get(), CountedUnknownProperty(i))) {
       SetUseCounter(UseCounter(eUseCounter_FirstCountedUnknownProperty + i));
     }
   }
 }
+
 
 void Document::PropagateUseCountersToPage() {
   if (mDisplayDocument) {
@@ -15014,7 +15014,7 @@ void Document::NotifyUserGestureActivation() {
 
 bool Document::HasBeenUserGestureActivated() {
   RefPtr<BrowsingContext> bc = GetBrowsingContext();
-  return bc && bc->HasBeenUserGestureActivated();
+  return bc ? bc->GetIsActivatedByUserGesture() : false;
 }
 
 void Document::ClearUserGestureActivation() {
@@ -15029,11 +15029,6 @@ void Document::ClearUserGestureActivation() {
 bool Document::HasValidTransientUserGestureActivation() {
   RefPtr<BrowsingContext> bc = GetBrowsingContext();
   return bc && bc->HasValidTransientUserGestureActivation();
-}
-
-bool Document::ConsumeTransientUserGestureActivation() {
-  RefPtr<BrowsingContext> bc = GetBrowsingContext();
-  return bc && bc->ConsumeTransientUserGestureActivation();
 }
 
 void Document::SetDocTreeHadAudibleMedia() {
@@ -15630,7 +15625,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
   }
 
   // Step 8. If the browser is not processing a user gesture, reject.
-  if (!UserActivation::IsHandlingUserInput()) {
+  if (!EventStateManager::IsHandlingUserInput()) {
     promise->MaybeRejectWithUndefined();
     return promise.forget();
   }

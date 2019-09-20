@@ -252,6 +252,45 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    */
   void RecomputeMouseEnterStateForRemoteFrame(Element& aElement);
 
+  /**
+   * Returns true if the event is considered as user interaction event. I.e.,
+   * enough obvious input to allow to open popup, etc. Otherwise, returns false.
+   */
+  static bool IsUserInteractionEvent(const WidgetEvent* aEvent);
+
+  /**
+   * StartHandlingUserInput() is called when we start to handle a user input.
+   * StopHandlingUserInput() is called when we finish handling a user input.
+   * If the caller knows which input event caused that, it should set
+   * aMessage to the event message.  Otherwise, set eVoidEvent.
+   * Note that StopHandlingUserInput() caller should call it with exactly same
+   * event message as its corresponding StartHandlingUserInput() call because
+   * these methods may count the number of specific event message.
+   */
+  static void StartHandlingUserInput(EventMessage aMessage);
+  static void StopHandlingUserInput(EventMessage aMessage);
+
+  static TimeStamp GetHandlingInputStart() { return sHandlingInputStart; }
+
+  /**
+   * Returns true if the current code is being executed as a result of
+   * user input or keyboard input.  The former includes anything that is
+   * initiated by user, with the exception of page load events or mouse
+   * over events.  And the latter returns true when one of the user inputs
+   * is an input from keyboard.  If these methods are called from asynchronously
+   * executed code, such as during layout reflows, it will return false.
+   */
+  static bool IsHandlingUserInput();
+  static bool IsHandlingKeyboardInput();
+
+  /**
+   * Get the timestamp at which the latest user input was handled.
+   *
+   * Guaranteed to be monotonic. Until the first user input, return
+   * the epoch.
+   */
+  static TimeStamp LatestUserInputStart() { return sLatestUserInputStart; }
+
   nsPresContext* GetPresContext() { return mPresContext; }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(EventStateManager, nsIObserver)
@@ -1216,6 +1255,14 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
 
   bool m_haveShutdown;
 
+  // Time at which we began handling user input. Reset to the epoch
+  // once we have finished handling user input.
+  static TimeStamp sHandlingInputStart;
+
+  // Time at which we began handling the latest user input. Not reset
+  // at the end of the input.
+  static TimeStamp sLatestUserInputStart;
+
   RefPtr<OverOutElementsWrapper> mMouseEnterLeaveHelper;
   nsRefPtrHashtable<nsUint32HashKey, OverOutElementsWrapper>
       mPointersEnterLeaveHelper;
@@ -1224,6 +1271,15 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   static nsresult UpdateUserActivityTimer(void);
   // Array for accesskey support
   nsCOMArray<nsIContent> mAccessKeys;
+
+  // The current depth of user and keyboard inputs. sUserInputEventDepth
+  // is the number of any user input events, page load events and mouse over
+  // events.  sUserKeyboardEventDepth is the number of keyboard input events.
+  // Incremented whenever we start handling a user input, decremented when we
+  // have finished handling a user input. This depth is *not* reset in case
+  // of nested event loops.
+  static int32_t sUserInputEventDepth;
+  static int32_t sUserKeyboardEventDepth;
 
   static bool sNormalLMouseEventInProcess;
   static int16_t sCurrentMouseBtn;
@@ -1242,6 +1298,21 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   MOZ_CAN_RUN_SCRIPT static void SetPointerLock(nsIWidget* aWidget,
                                                 nsIContent* aElement);
   static void sClickHoldCallback(nsITimer* aTimer, void* aESM);
+};
+
+/**
+ * This class is used while processing real user input. During this time, popups
+ * are allowed. For mousedown events, mouse capturing is also permitted.
+ */
+class MOZ_RAII AutoHandlingUserInputStatePusher final {
+ public:
+  explicit AutoHandlingUserInputStatePusher(bool aIsHandlingUserInput,
+                                            WidgetEvent* aEvent = nullptr);
+  ~AutoHandlingUserInputStatePusher();
+
+ protected:
+  EventMessage mMessage;
+  bool mIsHandlingUserInput;
 };
 
 }  // namespace mozilla

@@ -50,6 +50,7 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/EMEUtils.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/NotNull.h"
@@ -73,7 +74,6 @@
 #include "mozilla/dom/PlayPromise.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/TextTrack.h"
-#include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/VideoPlaybackQuality.h"
 #include "mozilla/dom/VideoTrack.h"
 #include "mozilla/dom/VideoTrackList.h"
@@ -2174,7 +2174,7 @@ void HTMLMediaElement::Load() {
        "ownerDoc=%p (%s) ownerDocUserActivated=%d "
        "muted=%d volume=%f",
        this, !!mSrcAttrStream, HasAttr(kNameSpaceID_None, nsGkAtoms::src),
-       HasSourceChildren(this), UserActivation::IsHandlingUserInput(),
+       HasSourceChildren(this), EventStateManager::IsHandlingUserInput(),
        HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay),
        AutoplayPolicy::IsAllowedToPlay(*this), OwnerDoc(),
        DocumentOrigin(OwnerDoc()).get(),
@@ -2201,7 +2201,7 @@ void HTMLMediaElement::DoLoad() {
     return;
   }
 
-  if (UserActivation::IsHandlingUserInput()) {
+  if (EventStateManager::IsHandlingUserInput()) {
     // Detect if user has interacted with element so that play will not be
     // blocked when initiated by a script. This enables sites to capture user
     // intent to play by calling load() in the click handler of a "catalog
@@ -2911,7 +2911,7 @@ void HTMLMediaElement::Seek(double aTime, SeekTarget::Type aSeekType,
 
   // Detect if user has interacted with element by seeking so that
   // play will not be blocked when initiated by a script.
-  if (UserActivation::IsHandlingUserInput()) {
+  if (EventStateManager::IsHandlingUserInput()) {
     mIsBlessed = true;
   }
 
@@ -3880,7 +3880,7 @@ already_AddRefed<Promise> HTMLMediaElement::Play(ErrorResult& aRv) {
 
   UpdateHadAudibleAutoplayState();
 
-  const bool handlingUserInput = UserActivation::IsHandlingUserInput();
+  const bool handlingUserInput = EventStateManager::IsHandlingUserInput();
   mPendingPlayPromises.AppendElement(promise);
 
   if (AutoplayPolicy::IsAllowedToPlay(*this)) {

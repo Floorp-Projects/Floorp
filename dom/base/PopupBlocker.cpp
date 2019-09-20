@@ -5,8 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/PopupBlocker.h"
-#include "mozilla/dom/UserActivation.h"
-#include "mozilla/MouseEvents.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/TextEvents.h"
@@ -186,8 +185,8 @@ PopupBlocker::PopupControlState PopupBlocker::GetEventPopupControlState(
     case eBasicEventClass:
       // For these following events only allow popups if they're
       // triggered while handling user input. See
-      // UserActivation::IsUserInteractionEvent() for details.
-      if (UserActivation::IsHandlingUserInput()) {
+      // EventStateManager::IsUserInteractionEvent() for details.
+      if (EventStateManager::IsHandlingUserInput()) {
         abuse = PopupBlocker::openBlocked;
         switch (aEvent->mMessage) {
           case eFormSelect:
@@ -208,8 +207,8 @@ PopupBlocker::PopupControlState PopupBlocker::GetEventPopupControlState(
     case eEditorInputEventClass:
       // For this following event only allow popups if it's triggered
       // while handling user input. See
-      // UserActivation::IsUserInteractionEvent() for details.
-      if (UserActivation::IsHandlingUserInput()) {
+      // EventStateManager::IsUserInteractionEvent() for details.
+      if (EventStateManager::IsHandlingUserInput()) {
         abuse = PopupBlocker::openBlocked;
         switch (aEvent->mMessage) {
           case eEditorInput:
@@ -225,8 +224,8 @@ PopupBlocker::PopupControlState PopupBlocker::GetEventPopupControlState(
     case eInputEventClass:
       // For this following event only allow popups if it's triggered
       // while handling user input. See
-      // UserActivation::IsUserInteractionEvent() for details.
-      if (UserActivation::IsHandlingUserInput()) {
+      // EventStateManager::IsUserInteractionEvent() for details.
+      if (EventStateManager::IsHandlingUserInput()) {
         abuse = PopupBlocker::openBlocked;
         switch (aEvent->mMessage) {
           case eFormChange:
@@ -371,8 +370,8 @@ PopupBlocker::PopupControlState PopupBlocker::GetEventPopupControlState(
     case eFormEventClass:
       // For these following events only allow popups if they're
       // triggered while handling user input. See
-      // UserActivation::IsUserInteractionEvent() for details.
-      if (UserActivation::IsHandlingUserInput()) {
+      // EventStateManager::IsUserInteractionEvent() for details.
+      if (EventStateManager::IsHandlingUserInput()) {
         abuse = PopupBlocker::openBlocked;
         switch (aEvent->mMessage) {
           case eFormSubmit:
