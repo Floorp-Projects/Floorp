@@ -7,6 +7,8 @@
 #include <map>
 #include "nsCOMPtr.h"
 #include "nsIPrincipal.h"
+#include "mozilla/dom/BrowserChild.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Element.h"
@@ -16,10 +18,8 @@
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/PContentPermissionRequestParent.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/BrowserChild.h"
-#include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/UserActivation.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/EventStateManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
 #include "nsComponentManagerUtils.h"
@@ -551,7 +551,7 @@ ContentPermissionRequestBase::ContentPermissionRequestBase(
       mRequester(aWindow ? new nsContentPermissionRequester(aWindow) : nullptr),
       mPrefName(aPrefName),
       mType(aType),
-      mIsHandlingUserInput(EventStateManager::IsHandlingUserInput()),
+      mIsHandlingUserInput(UserActivation::IsHandlingUserInput()),
       mUserHadInteractedWithDocument(false),
       mDocumentDOMContentLoadedTimestamp(0) {
   if (!aWindow) {
