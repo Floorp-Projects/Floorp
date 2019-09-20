@@ -5,7 +5,7 @@
 
 add_task(async function() {
   const newWindowPromise = BrowserTestUtils.waitForNewWindow();
-  window.open("data:text/html;charset=utf-8,", "_blank");
+  window.open("data:text/html;charset=utf-8,", "_blank", "noopener,all");
   const newWindow = await newWindowPromise;
 
   newWindow.focus();
