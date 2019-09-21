@@ -119,7 +119,6 @@
 #include "mozilla/dom/CDATASection.h"
 #include "mozilla/dom/ProcessingInstruction.h"
 #include "mozilla/dom/PostMessageEvent.h"
-#include "mozilla/ipc/IdleSchedulerChild.h"
 #include "nsDOMString.h"
 #include "nsNodeUtils.h"
 #include "nsLayoutUtils.h"  // for GetFrameForPoint
@@ -16111,11 +16110,6 @@ void Document::AddToplevelLoadingDocument(Document* aDoc) {
 
   if (!sLoadingForegroundTopLevelContentDocument) {
     sLoadingForegroundTopLevelContentDocument = new AutoTArray<Document*, 8>();
-    mozilla::ipc::IdleSchedulerChild* idleScheduler =
-        mozilla::ipc::IdleSchedulerChild::GetMainThreadIdleScheduler();
-    if (idleScheduler) {
-      idleScheduler->SendRunningPrioritizedOperation();
-    }
   }
   if (!sLoadingForegroundTopLevelContentDocument->Contains(aDoc)) {
     sLoadingForegroundTopLevelContentDocument->AppendElement(aDoc);
@@ -16129,12 +16123,6 @@ void Document::RemoveToplevelLoadingDocument(Document* aDoc) {
     if (sLoadingForegroundTopLevelContentDocument->IsEmpty()) {
       delete sLoadingForegroundTopLevelContentDocument;
       sLoadingForegroundTopLevelContentDocument = nullptr;
-
-      mozilla::ipc::IdleSchedulerChild* idleScheduler =
-          mozilla::ipc::IdleSchedulerChild::GetMainThreadIdleScheduler();
-      if (idleScheduler) {
-        idleScheduler->SendPrioritizedOperationDone();
-      }
     }
   }
 }
@@ -16169,12 +16157,6 @@ bool Document::HasRecentlyStartedForegroundLoads() {
   // Didn't find any loading foreground documents, just clear the array.
   delete sLoadingForegroundTopLevelContentDocument;
   sLoadingForegroundTopLevelContentDocument = nullptr;
-
-  mozilla::ipc::IdleSchedulerChild* idleScheduler =
-      mozilla::ipc::IdleSchedulerChild::GetMainThreadIdleScheduler();
-  if (idleScheduler) {
-    idleScheduler->SendPrioritizedOperationDone();
-  }
   return false;
 }
 
