@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // @flow
-/* eslint complexity: ["error", 30]*/
+/* eslint complexity: ["error", 35]*/
 
 /**
  * Pause reducer
@@ -29,6 +29,7 @@ import type {
   Context,
   ThreadContext,
   Previews,
+  SourceLocation,
 } from "../types";
 
 export type Command =
@@ -96,6 +97,7 @@ export type PauseState = {
   mapScopes: boolean,
   shouldPauseOnExceptions: boolean,
   shouldPauseOnCaughtExceptions: boolean,
+  previewLocation: ?SourceLocation,
 };
 
 function createPauseState(thread: ThreadId = "UnknownThread") {
@@ -109,6 +111,7 @@ function createPauseState(thread: ThreadId = "UnknownThread") {
       isPaused: false,
       pauseCounter: 0,
     },
+    previewLocation: null,
     threads: {},
     canRewind: false,
     skipPausing: prefs.skipPausing,
@@ -191,6 +194,7 @@ function update(
 
       state = {
         ...state,
+        previewLocation: null,
         threadcx: {
           ...state.threadcx,
           pauseCounter: state.threadcx.pauseCounter + 1,
@@ -205,6 +209,14 @@ function update(
         frameScopes: { ...resumedPauseState.frameScopes },
         why,
       });
+    }
+
+    case "PREVIEW_PAUSED_LOCATION": {
+      return { ...state, previewLocation: action.location };
+    }
+
+    case "CLEAR_PREVIEW_PAUSED_LOCATION": {
+      return { ...state, previewLocation: null };
     }
 
     case "MAP_FRAMES": {
@@ -675,6 +687,10 @@ export function getChromeScopes(state: State, thread: ThreadId) {
 
 export function getLastExpandedScopes(state: State, thread: ThreadId) {
   return getThreadPauseState(state.pause, thread).lastExpandedScopes;
+}
+
+export function getPausePreviewLocation(state: State) {
+  return state.pause.previewLocation;
 }
 
 export default update;
