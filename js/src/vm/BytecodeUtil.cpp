@@ -2895,8 +2895,7 @@ static bool GenerateLcovInfo(JSContext* cx, JS::Realm* realm,
 
     JSScriptSet::AddPtr entry = scriptsDone.lookupForAdd(script);
     if (script->filename() && !entry) {
-      realm->lcovOutput.collectCodeCoverageInfo(realm, script,
-                                                script->filename());
+      realm->collectCodeCoverageInfo(script, script->filename());
       script->resetScriptCounts();
 
       if (!scriptsDone.add(entry, script)) {
@@ -2939,8 +2938,12 @@ static bool GenerateLcovInfo(JSContext* cx, JS::Realm* realm,
     }
   } while (!queue.empty());
 
+  if (!realm->lcovRealm) {
+    return false;
+  }
+
   bool isEmpty = true;
-  realm->lcovOutput.exportInto(out, &isEmpty);
+  realm->lcovRealm->exportInto(out, &isEmpty);
   if (out.hadOutOfMemory()) {
     return false;
   }

@@ -78,23 +78,22 @@ class LCovSource {
 
 class LCovRealm {
  public:
-  LCovRealm();
+  explicit LCovRealm(JS::Realm* realm);
   ~LCovRealm();
 
   // Collect code coverage information for the given source.
-  void collectCodeCoverageInfo(JS::Realm* realm, JSScript* topLevel,
-                               const char* name);
+  void collectCodeCoverageInfo(JSScript* script, const char* name);
 
   // Write the Lcov output in a buffer, such as the one associated with
   // the runtime code coverage trace file.
   void exportInto(GenericPrinter& out, bool* isEmpty) const;
 
  private:
-  // Write the script name in out.
-  bool writeRealmName(JS::Realm* realm);
+  // Write the realm name in outTN_.
+  void writeRealmName(JS::Realm* realm);
 
   // Return the LCovSource entry which matches the given ScriptSourceObject.
-  LCovSource* lookupOrAdd(JS::Realm* realm, const char* name);
+  LCovSource* lookupOrAdd(const char* name);
 
  private:
   typedef mozilla::Vector<LCovSource, 16, LifoAllocPolicy<Fallible>>
