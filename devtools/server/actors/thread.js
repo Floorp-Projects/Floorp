@@ -1737,7 +1737,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    *        The exception that was thrown in the debugger code.
    */
   uncaughtExceptionHook: function(exception) {
-    dumpn("Got an exception: " + exception.message + "\n" + exception.stack);
+    dump("Got an exception: " + exception.message + "\n" + exception.stack);
   },
 
   pauseForMutationBreakpoint: function(mutationType) {

@@ -66,6 +66,7 @@ EXPORTS.mozilla.dom += [
     'TabMessageUtils.h',
     'URLClassifierChild.h',
     'URLClassifierParent.h',
+    'UserActivationIPCUtils.h',
     'WindowGlobalActor.h',
     'WindowGlobalChild.h',
     'WindowGlobalParent.h',
@@ -76,6 +77,10 @@ EXPORTS.mozilla += [
     'ProcessHangMonitor.h',
     'ProcessHangMonitorIPC.h',
     'ProcessPriorityManager.h',
+]
+
+EXPORTS += [
+    'nsQueryActor.h',
 ]
 
 UNIFIED_SOURCES += [

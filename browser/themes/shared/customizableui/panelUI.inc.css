@@ -278,6 +278,7 @@ panelview {
 }
 
 #confirmation-hint-checkmark-animation-container[animate] > #confirmation-hint-checkmark-image {
+  display: block;
   position: absolute;
   background-image: url(chrome://browser/skin/check-animation.svg);
   background-repeat: no-repeat;

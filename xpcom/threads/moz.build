@@ -55,6 +55,7 @@ EXPORTS.mozilla += [
     'MozPromise.h',
     'Mutex.h',
     'PerformanceCounter.h',
+    'PrioritizedEventQueue.h',
     'Queue.h',
     'RecursiveMutex.h',
     'ReentrantMonitor.h',

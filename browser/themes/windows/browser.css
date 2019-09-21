@@ -229,7 +229,7 @@
     -moz-box-ordinal-group: 1001;
     box-shadow: 0 0 50px 8px ActiveCaption;
     content: "";
-    display: -moz-box;
+    display: block;
     height: 0;
     margin: 0 50px;
     position: absolute;

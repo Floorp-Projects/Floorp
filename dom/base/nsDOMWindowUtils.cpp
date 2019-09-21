@@ -22,6 +22,7 @@
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Touch.h"
+#include "mozilla/dom/UserActivation.h"
 #include "mozilla/PendingAnimationTracker.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsFrame.h"
@@ -42,7 +43,6 @@
 #include "nsJSUtils.h"
 
 #include "mozilla/ChaosMode.h"
-#include "mozilla/EventStateManager.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
@@ -3240,7 +3240,7 @@ nsDOMWindowUtils::RemoveSheetUsingURIString(const nsACString& aSheetURI,
 
 NS_IMETHODIMP
 nsDOMWindowUtils::GetIsHandlingUserInput(bool* aHandlingUserInput) {
-  *aHandlingUserInput = EventStateManager::IsHandlingUserInput();
+  *aHandlingUserInput = UserActivation::IsHandlingUserInput();
 
   return NS_OK;
 }
@@ -3248,7 +3248,7 @@ nsDOMWindowUtils::GetIsHandlingUserInput(bool* aHandlingUserInput) {
 NS_IMETHODIMP
 nsDOMWindowUtils::GetMillisSinceLastUserInput(
     double* aMillisSinceLastUserInput) {
-  TimeStamp lastInput = EventStateManager::LatestUserInputStart();
+  TimeStamp lastInput = UserActivation::LatestUserInputStart();
   if (lastInput.IsNull()) {
     *aMillisSinceLastUserInput = -1.0f;
     return NS_OK;
@@ -3559,7 +3559,7 @@ NS_IMPL_ISUPPORTS(HandlingUserInputHelper, nsIJSRAIIHelper)
 HandlingUserInputHelper::HandlingUserInputHelper(bool aHandlingUserInput)
     : mHandlingUserInput(aHandlingUserInput), mDestructCalled(false) {
   if (aHandlingUserInput) {
-    EventStateManager::StartHandlingUserInput(eVoidEvent);
+    UserActivation::StartHandlingUserInput(eVoidEvent);
   }
 }
 
@@ -3579,7 +3579,7 @@ HandlingUserInputHelper::Destruct() {
 
   mDestructCalled = true;
   if (mHandlingUserInput) {
-    EventStateManager::StopHandlingUserInput(eVoidEvent);
+    UserActivation::StopHandlingUserInput(eVoidEvent);
   }
 
   return NS_OK;

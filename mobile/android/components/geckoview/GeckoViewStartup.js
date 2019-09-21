@@ -21,6 +21,19 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const { debug, warn } = GeckoViewUtils.initLogging("Startup"); // eslint-disable-line no-unused-vars
 
+const ACTORS = {
+  LoadURIDelegate: {
+    child: {
+      moduleURI: "resource:///actors/LoadURIDelegateChild.jsm",
+    },
+  },
+  WebBrowserChrome: {
+    child: {
+      moduleURI: "resource:///actors/WebBrowserChromeChild.jsm",
+    },
+  },
+};
+
 function GeckoViewStartup() {}
 
 GeckoViewStartup.prototype = {
@@ -122,6 +135,7 @@ GeckoViewStartup.prototype = {
         if (
           Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT
         ) {
+          ActorManagerParent.addActors(ACTORS);
           ActorManagerParent.flush();
 
           Services.mm.loadFrameScript(

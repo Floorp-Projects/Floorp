@@ -207,8 +207,8 @@ class SourceParseContext : public ParseContext {
   template <typename ParseHandler, typename Unit>
   SourceParseContext(GeneralParser<ParseHandler, Unit>* prs, SharedContext* sc,
                      Directives* newDirectives)
-      : ParseContext(prs->cx_, prs->pc_, sc, prs->tokenStream, prs->usedNames_,
-                     prs->getTreeHolder(), newDirectives,
+      : ParseContext(prs->cx_, prs->pc_, sc, prs->tokenStream,
+                     prs->getParseInfo(), newDirectives,
                      mozilla::IsSame<ParseHandler, FullParseHandler>::value) {}
 };
 
@@ -255,7 +255,7 @@ class MOZ_STACK_CLASS ParserSharedBase : private JS::AutoGCRooter {
   LifoAlloc& alloc_;
 
   // Information for parsing with a lifetime longer than the parser itself.
-  ParseInfo& compileInfo_;
+  ParseInfo& parseInfo_;
 
   // list of parsed objects and BigInts for GC tracing
   TraceListNode* traceListHead_;
@@ -289,6 +289,8 @@ class MOZ_STACK_CLASS ParserSharedBase : private JS::AutoGCRooter {
   void cleanupTraceList();
 
  public:
+  ParseInfo& getParseInfo() { return parseInfo_; }
+
   // Create a new JSObject and store it into the trace list.
   ObjectBox* newObjectBox(JSObject* obj);
 
@@ -328,11 +330,11 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
  public:
   FunctionTreeHolder& getTreeHolder() { return treeHolder_; }
 
-  bool publishDeferredItems() {
+  MOZ_MUST_USE bool publishDeferredItems() {
     return publishDeferredItems(getTreeHolder().getFunctionTree());
   }
 
-  bool publishDeferredItems(FunctionTree* root) {
+  MOZ_MUST_USE bool publishDeferredItems(FunctionTree* root) {
     // Publish deferred functions before LazyScripts, as the
     // LazyScripts need the functions.
     if (!publishDeferredFunctions(root)) {

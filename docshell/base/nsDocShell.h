@@ -580,6 +580,8 @@ class nsDocShell final : public nsDocLoader,
                                nsIStreamListener** aContentHandler,
                                nsIContentViewer** aViewer);
 
+  already_AddRefed<nsILoadURIDelegate> GetLoadURIDelegate();
+
   nsresult SetupNewViewer(
       nsIContentViewer* aNewViewer,
       mozilla::dom::WindowGlobalChild* aWindowActor = nullptr);
@@ -1087,7 +1089,6 @@ class nsDocShell final : public nsDocLoader,
   RefPtr<nsDSURIContentListener> mContentListener;
   RefPtr<nsGlobalWindowOuter> mScriptGlobal;
   nsCOMPtr<nsIPrincipal> mParentCharsetPrincipal;
-  nsCOMPtr<nsILoadURIDelegate> mLoadURIDelegate;
   nsCOMPtr<nsIMutableArray> mRefreshURIList;
   nsCOMPtr<nsIMutableArray> mSavedRefreshURIList;
   nsCOMPtr<nsIDOMStorageManager> mSessionStorageManager;

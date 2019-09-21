@@ -66,9 +66,11 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/ChildSHistory.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
+#include "mozilla/dom/JSWindowActorChild.h"
 
 #include "mozilla/net/DocumentChannelChild.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
@@ -197,6 +199,7 @@
 #include "nsPingListener.h"
 #include "nsPoint.h"
 #include "nsQueryObject.h"
+#include "nsQueryActor.h"
 #include "nsRect.h"
 #include "nsRefreshTimer.h"
 #include "nsSandboxFlags.h"
@@ -2063,14 +2066,18 @@ nsDocShell::SetSecurityUI(nsISecureBrowserUI* aSecurityUI) {
 
 NS_IMETHODIMP
 nsDocShell::GetLoadURIDelegate(nsILoadURIDelegate** aLoadURIDelegate) {
-  NS_IF_ADDREF(*aLoadURIDelegate = mLoadURIDelegate);
+  nsCOMPtr<nsILoadURIDelegate> delegate = GetLoadURIDelegate();
+  delegate.forget(aLoadURIDelegate);
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShell::SetLoadURIDelegate(nsILoadURIDelegate* aLoadURIDelegate) {
-  mLoadURIDelegate = aLoadURIDelegate;
-  return NS_OK;
+already_AddRefed<nsILoadURIDelegate> nsDocShell::GetLoadURIDelegate() {
+  if (nsCOMPtr<nsILoadURIDelegate> result =
+          do_QueryActor(u"LoadURIDelegate", GetWindow())) {
+    return result.forget();
+  }
+
+  return nullptr;
 }
 
 NS_IMETHODIMP
@@ -4301,12 +4308,13 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
     }
   }
 
-  if (mLoadURIDelegate) {
+  if (nsCOMPtr<nsILoadURIDelegate> loadURIDelegate = GetLoadURIDelegate()) {
     nsCOMPtr<nsIURI> errorPageURI;
-    rv = mLoadURIDelegate->HandleLoadError(aURI, aError,
-                                           NS_ERROR_GET_MODULE(aError),
-                                           getter_AddRefs(errorPageURI));
-    if (NS_FAILED(rv)) {
+    rv = loadURIDelegate->HandleLoadError(aURI, aError,
+                                          NS_ERROR_GET_MODULE(aError),
+                                          getter_AddRefs(errorPageURI));
+    // If the docshell is going away there's no point in showing an error page.
+    if (NS_FAILED(rv) || mIsBeingDestroyed) {
       *aDisplayedErrorPage = false;
       return NS_OK;
     }
@@ -8639,9 +8647,11 @@ nsresult nsDocShell::MaybeHandleLoadDelegate(nsDocShellLoadState* aLoadState,
              aWindowType == nsIBrowserDOMWindow::OPEN_CURRENTWINDOW);
 
   *aDidHandleLoad = false;
+
+  nsCOMPtr<nsILoadURIDelegate> loadURIDelegate = GetLoadURIDelegate();
   // If we don't have a delegate or we're trying to load the error page, we
   // shouldn't be trying to do sandbox loads.
-  if (!mLoadURIDelegate || aLoadState->LoadType() == LOAD_ERROR_PAGE) {
+  if (!loadURIDelegate || aLoadState->LoadType() == LOAD_ERROR_PAGE) {
     return NS_OK;
   }
 
@@ -8660,7 +8670,7 @@ nsresult nsDocShell::MaybeHandleLoadDelegate(nsDocShellLoadState* aLoadState,
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
-  return mLoadURIDelegate->LoadURI(
+  return loadURIDelegate->LoadURI(
       aLoadState->URI(), aWindowType, aLoadState->LoadFlags(),
       aLoadState->TriggeringPrincipal(), aDidHandleLoad);
 }
@@ -13047,7 +13057,7 @@ nsresult nsDocShell::OnLeaveLink() {
 
 bool nsDocShell::ShouldBlockLoadingForBackButton() {
   if (!(mLoadType & LOAD_CMD_HISTORY) ||
-      EventStateManager::IsHandlingUserInput() ||
+      UserActivation::IsHandlingUserInput() ||
       !Preferences::GetBool("accessibility.blockjsredirection")) {
     return false;
   }

@@ -10,6 +10,7 @@ DevToolsModules(
     'log.js',
     'promise.js',
     'task.js',
+    'thunk-with-options.js',
     'thunk.js',
     'wait-service.js',
 )

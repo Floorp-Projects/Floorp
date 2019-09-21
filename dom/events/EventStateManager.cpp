@@ -28,6 +28,7 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/UIEvent.h"
 #include "mozilla/dom/UIEventBinding.h"
+#include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/WheelEventBinding.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_layout.h"
@@ -199,8 +200,6 @@ NS_INTERFACE_MAP_END
 
 static uint32_t sESMInstanceCount = 0;
 
-int32_t EventStateManager::sUserInputEventDepth = 0;
-int32_t EventStateManager::sUserKeyboardEventDepth = 0;
 bool EventStateManager::sNormalLMouseEventInProcess = false;
 int16_t EventStateManager::sCurrentMouseBtn = MouseButton::eNotPressed;
 EventStateManager* EventStateManager::sActiveESM = nullptr;
@@ -218,8 +217,6 @@ nsWeakPtr EventStateManager::sPointerLockedElement;
 // Reference to the document which requested pointer lock.
 nsWeakPtr EventStateManager::sPointerLockedDoc;
 nsCOMPtr<nsIContent> EventStateManager::sDragOverContent = nullptr;
-TimeStamp EventStateManager::sLatestUserInputStart;
-TimeStamp EventStateManager::sHandlingInputStart;
 
 EventStateManager::WheelPrefs* EventStateManager::WheelPrefs::sInstance =
     nullptr;
@@ -4089,71 +4086,6 @@ class MOZ_STACK_CLASS ESMEventCB : public EventDispatchingCallback {
   nsCOMPtr<nsIContent> mTarget;
 };
 
-/*static*/
-bool EventStateManager::IsUserInteractionEvent(const WidgetEvent* aEvent) {
-  if (!aEvent->IsTrusted()) {
-    return false;
-  }
-
-  switch (aEvent->mMessage) {
-    // eKeyboardEventClass
-    case eKeyPress:
-    case eKeyDown:
-    case eKeyUp:
-      // Not all keyboard events are treated as user input, so that popups
-      // can't be opened, fullscreen mode can't be started, etc at
-      // unexpected time.
-      return aEvent->AsKeyboardEvent()->CanTreatAsUserInput();
-    // eBasicEventClass
-    case eFormChange:
-    // eMouseEventClass
-    case eMouseClick:
-    case eMouseDown:
-    case eMouseUp:
-    // ePointerEventClass
-    case ePointerDown:
-    case ePointerUp:
-    // eTouchEventClass
-    case eTouchStart:
-    case eTouchEnd:
-      return true;
-    default:
-      return false;
-  }
-}
-
-/*static*/
-bool EventStateManager::IsHandlingUserInput() {
-  return sUserInputEventDepth > 0;
-}
-
-/*static*/
-bool EventStateManager::IsHandlingKeyboardInput() {
-  return sUserKeyboardEventDepth > 0;
-}
-
-/*static*/
-void EventStateManager::StartHandlingUserInput(EventMessage aMessage) {
-  ++sUserInputEventDepth;
-  if (sUserInputEventDepth == 1) {
-    sLatestUserInputStart = sHandlingInputStart = TimeStamp::Now();
-  }
-  if (WidgetEvent::IsKeyEventMessage(aMessage)) {
-    ++sUserKeyboardEventDepth;
-  }
-}
-
-/*static*/
-void EventStateManager::StopHandlingUserInput(EventMessage aMessage) {
-  --sUserInputEventDepth;
-  if (sUserInputEventDepth == 0) {
-    sHandlingInputStart = TimeStamp();
-  }
-  if (WidgetEvent::IsKeyEventMessage(aMessage)) {
-    --sUserKeyboardEventDepth;
-  }
-}
-
 static void CreateMouseOrPointerWidgetEvent(
     WidgetMouseEvent* aMouseEvent, EventMessage aMessage,
     nsIContent* aRelatedContent, nsAutoPtr<WidgetMouseEvent>& aNewEvent) {
@@ -6344,27 +6276,6 @@ void EventStateManager::Prefs::Init() {
                                "ui.click_hold_context_menus",
                                sClickHoldContextMenu);
   sPrefsAlreadyCached = true;
-}
-
-/******************************************************************/
-/* mozilla::AutoHandlingUserInputStatePusher                      */
-/******************************************************************/
-
-AutoHandlingUserInputStatePusher::AutoHandlingUserInputStatePusher(
-    bool aIsHandlingUserInput, WidgetEvent* aEvent)
-    : mMessage(aEvent ? aEvent->mMessage : eVoidEvent),
-      mIsHandlingUserInput(aIsHandlingUserInput) {
-  if (!aIsHandlingUserInput) {
-    return;
-  }
-  EventStateManager::StartHandlingUserInput(mMessage);
-}
-
-AutoHandlingUserInputStatePusher::~AutoHandlingUserInputStatePusher() {
-  if (!mIsHandlingUserInput) {
-    return;
-  }
-  EventStateManager::StopHandlingUserInput(mMessage);
 }
 
 }  // namespace mozilla

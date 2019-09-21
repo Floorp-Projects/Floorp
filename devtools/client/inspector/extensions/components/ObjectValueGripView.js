@@ -14,14 +14,15 @@ const Accordion = createFactory(
   require("devtools/client/inspector/layout/components/Accordion")
 );
 
-// TODO: Upgrade to the current version reps https://bugzilla.mozilla.org/show_bug.cgi?id=1494680
-const reps = require("devtools/client/shared/components/reps/reps-old");
 const Types = require("../types");
 
-const { REPS, MODE } = reps;
-const { Grip } = REPS;
+const {
+  REPS: { Grip },
+  MODE,
+  objectInspector: { ObjectInspector: ObjectInspectorClass },
+} = require("devtools/client/shared/components/reps/reps");
 
-const ObjectInspector = createFactory(reps.ObjectInspector);
+const ObjectInspector = createFactory(ObjectInspectorClass);
 
 class ObjectValueGripView extends PureComponent {
   static get propTypes() {
@@ -56,8 +57,6 @@ class ObjectValueGripView extends PureComponent {
           },
         },
       ],
-      createObjectClient: serviceContainer.createObjectClient,
-      releaseActor: serviceContainer.releaseActor,
       // TODO: evaluate if there should also be a serviceContainer.openLink.
     };
 
