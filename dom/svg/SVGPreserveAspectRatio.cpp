@@ -11,9 +11,10 @@
 #include "nsWhitespaceTokenizer.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 
-using namespace mozilla;
-using namespace dom;
-using namespace SVGPreserveAspectRatio_Binding;
+using namespace mozilla::dom;
+using namespace mozilla::dom::SVGPreserveAspectRatio_Binding;
+
+namespace mozilla {
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGPreserveAspectRatio,
                                                mSVGElement)
@@ -148,3 +149,5 @@ void DOMSVGPreserveAspectRatio::SetMeetOrSlice(uint16_t aMeetOrSlice,
   }
   rv = mVal->SetBaseMeetOrSlice(aMeetOrSlice, mSVGElement);
 }
+
+}  // namespace mozilla

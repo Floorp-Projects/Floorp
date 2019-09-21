@@ -18,8 +18,11 @@
 
 namespace mozilla {
 
-class DOMSVGPathSeg;
 class SVGAnimatedPathSegList;
+
+namespace dom {
+
+class DOMSVGPathSeg;
 
 /**
  * Class DOMSVGPathSegList
@@ -226,6 +229,7 @@ class DOMSVGPathSegList final : public nsISupports, public nsWrapperCache {
   bool mIsAnimValList;
 };
 
+}  // namespace dom
 }  // namespace mozilla
 
 #endif  // MOZILLA_DOMSVGPATHSEGLIST_H__
