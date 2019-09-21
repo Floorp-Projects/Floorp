@@ -179,9 +179,6 @@ class AudioChannelService final : public nsIObserver {
     bool mShouldSendActiveMediaBlockStopEvent;
 
    private:
-    void AudioCapturedChanged(AudioChannelAgent* aAgent,
-                              AudioCaptureState aCapture);
-
     void AppendAudibleAgentIfNotContained(AudioChannelAgent* aAgent,
                                           AudibleChangedReasons aReason);
     void RemoveAudibleAgentIfContained(AudioChannelAgent* aAgent,

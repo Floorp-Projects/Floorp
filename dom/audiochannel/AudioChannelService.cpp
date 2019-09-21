@@ -733,7 +733,6 @@ void AudioChannelService::AudioChannelWindow::RemoveAgent(
   MOZ_ASSERT(aAgent);
 
   RemoveAgentAndReduceAgentsNum(aAgent);
-  AudioCapturedChanged(aAgent, AudioCaptureState::eNotCapturing);
   AudioAudibleChanged(aAgent, AudibleState::eNotAudible,
                       AudibleChangedReasons::ePauseStateChanged);
 }
@@ -786,15 +785,6 @@ void AudioChannelService::AudioChannelWindow::RemoveAgentAndReduceAgentsNum(
 
   if (mConfig.mNumberOfAgents == 0) {
     NotifyChannelActive(aAgent->WindowID(), false);
-  }
-}
-
-void AudioChannelService::AudioChannelWindow::AudioCapturedChanged(
-    AudioChannelAgent* aAgent, AudioCaptureState aCapture) {
-  MOZ_ASSERT(aAgent);
-
-  if (mIsAudioCaptured) {
-    aAgent->WindowAudioCaptureChanged(aAgent->InnerWindowID(), aCapture);
   }
 }
 
