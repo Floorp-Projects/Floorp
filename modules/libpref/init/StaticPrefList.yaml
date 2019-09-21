@@ -4769,7 +4769,7 @@
   mirror: always
   rust: true
 
-# Are style system use counters enabled?
+# Are counters for implemented CSS properties enabled?
 - name: layout.css.use-counters.enabled
   type: bool
   value: @IS_NOT_RELEASE_OR_BETA@
