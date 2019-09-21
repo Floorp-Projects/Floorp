@@ -50,7 +50,6 @@
 #include "mozilla/dom/MIDIPlatformService.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
-#include "mozilla/ipc/IdleSchedulerParent.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ipc/PBackgroundTestParent.h"
@@ -469,13 +468,6 @@ bool BackgroundParentImpl::DeallocPBackgroundStorageParent(
   MOZ_ASSERT(aActor);
 
   return mozilla::dom::DeallocPBackgroundStorageParent(aActor);
-}
-
-already_AddRefed<PIdleSchedulerParent>
-BackgroundParentImpl::AllocPIdleSchedulerParent() {
-  AssertIsOnBackgroundThread();
-  RefPtr<IdleSchedulerParent> actor = new IdleSchedulerParent();
-  return actor.forget();
 }
 
 mozilla::dom::PPendingIPCBlobParent*
