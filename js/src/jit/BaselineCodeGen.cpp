@@ -477,14 +477,12 @@ void BaselineInterpreterCodeGen::emitInitializeLocals() {
   masm.load32(Address(scratch, ImmutableScriptData::offsetOfNfixed()), scratch);
 
   Label top, done;
-  masm.bind(&top);
   masm.branchTest32(Assembler::Zero, scratch, scratch, &done);
+  masm.bind(&top);
   {
     masm.pushValue(UndefinedValue());
-    masm.sub32(Imm32(1), scratch);
-    masm.jump(&top);
+    masm.branchSub32(Assembler::NonZero, Imm32(1), scratch, &top);
   }
-
   masm.bind(&done);
 }
 
@@ -1773,8 +1771,7 @@ bool BaselineInterpreterCodeGen::emit_JSOP_PICK() {
   // Move the other values down.
   Label top, done;
   masm.bind(&top);
-  masm.sub32(Imm32(1), scratch);
-  masm.branchTest32(Assembler::Signed, scratch, scratch, &done);
+  masm.branchSub32(Assembler::Signed, Imm32(1), scratch, &done);
   {
     masm.loadValue(frame.addressOfStackValue(scratch), R1);
     masm.storeValue(R1, frame.addressOfStackValue(scratch, sizeof(Value)));
@@ -1837,8 +1834,8 @@ bool BaselineInterpreterCodeGen::emit_JSOP_UNPICK() {
   // * Move R0 to R1.
 
 #ifdef DEBUG
-  // Assert the operand > 0 so the sub32 below doesn't "underflow" to negative
-  // values.
+  // Assert the operand > 0 so the branchSub32 below doesn't "underflow" to
+  // negative values.
   {
     Label ok;
     masm.branch32(Assembler::GreaterThan, scratch, Imm32(0), &ok);
@@ -1849,8 +1846,7 @@ bool BaselineInterpreterCodeGen::emit_JSOP_UNPICK() {
 
   Label top, done;
   masm.bind(&top);
-  masm.sub32(Imm32(1), scratch);
-  masm.branchTest32(Assembler::Zero, scratch, scratch, &done);
+  masm.branchSub32(Assembler::Zero, Imm32(1), scratch, &done);
   {
     // Overwrite stack slot x with slot x + 1, saving the old value in R1.
     masm.loadValue(frame.addressOfStackValue(scratch), R0);
@@ -3578,13 +3574,12 @@ static void LoadAliasedVarEnv(MacroAssembler& masm, Register env,
   LoadUint8Operand(masm, scratch);
 
   Label top, done;
-  masm.bind(&top);
   masm.branchTest32(Assembler::Zero, scratch, scratch, &done);
+  masm.bind(&top);
   {
     Address nextEnv(env, EnvironmentObject::offsetOfEnclosingEnvironment());
     masm.unboxObject(nextEnv, env);
-    masm.sub32(Imm32(1), scratch);
-    masm.jump(&top);
+    masm.branchSub32(Assembler::NonZero, Imm32(1), scratch, &top);
   }
   masm.bind(&done);
 }
@@ -5575,24 +5570,16 @@ bool BaselineCompilerCodeGen::emit_JSOP_ENVCALLEE() {
 
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_ENVCALLEE() {
-  Register numHops = R0.scratchReg();
-  LoadUint8Operand(masm, numHops);
-
+  Register scratch = R0.scratchReg();
   Register env = R1.scratchReg();
+
+  static_assert(JSOP_ENVCALLEE_LENGTH - sizeof(jsbytecode) == ENVCOORD_HOPS_LEN,
+                "op must have uint8 operand for LoadAliasedVarEnv");
+
+  // Load the right environment object.
   masm.loadPtr(frame.addressOfEnvironmentChain(), env);
+  LoadAliasedVarEnv(masm, env, scratch);
 
-  // Skip numHops environment objects.
-  Label top, done;
-  masm.bind(&top);
-  masm.branchTest32(Assembler::Zero, numHops, numHops, &done);
-  {
-    Address nextAddr(env, EnvironmentObject::offsetOfEnclosingEnvironment());
-    masm.unboxObject(nextAddr, env);
-    masm.sub32(Imm32(1), numHops);
-    masm.jump(&top);
-  }
-
-  masm.bind(&done);
   masm.pushValue(Address(env, CallObject::offsetOfCallee()));
   return true;
 }
@@ -6071,12 +6058,11 @@ bool BaselineCodeGen<Handler>::emitGeneratorResume(
   Register scratch2 = regs.takeAny();
   Label loop, loopDone;
   masm.load16ZeroExtend(Address(callee, JSFunction::offsetOfNargs()), scratch2);
-  masm.bind(&loop);
   masm.branchTest32(Assembler::Zero, scratch2, scratch2, &loopDone);
+  masm.bind(&loop);
   {
     masm.pushValue(UndefinedValue());
-    masm.sub32(Imm32(1), scratch2);
-    masm.jump(&loop);
+    masm.branchSub32(Assembler::NonZero, Imm32(1), scratch2, &loop);
   }
   masm.bind(&loopDone);
 
@@ -6180,15 +6166,14 @@ bool BaselineCodeGen<Handler>::emitGeneratorResume(
         Address(scratch2, ObjectElements::offsetOfInitializedLength()));
 
     Label loop, loopDone;
-    masm.bind(&loop);
     masm.branchTest32(Assembler::Zero, initLength, initLength, &loopDone);
+    masm.bind(&loop);
     {
       masm.pushValue(Address(scratch2, 0));
       masm.guardedCallPreBarrierAnyZone(Address(scratch2, 0), MIRType::Value,
                                         scratch1);
       masm.addPtr(Imm32(sizeof(Value)), scratch2);
-      masm.sub32(Imm32(1), initLength);
-      masm.jump(&loop);
+      masm.branchSub32(Assembler::NonZero, Imm32(1), initLength, &loop);
     }
     masm.bind(&loopDone);
     regs.add(initLength);
