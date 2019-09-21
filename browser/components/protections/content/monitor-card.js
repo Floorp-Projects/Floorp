@@ -43,10 +43,8 @@ export default class MonitorClass {
     });
 
     let openLockwise = this.doc.getElementById("lockwise-link");
-    openLockwise.addEventListener("click", evt => {
+    openLockwise.addEventListener("click", () => {
       this.doc.sendTelemetryEvent("click", "lw_open_breach_link");
-      RPMSendAsyncMessage("OpenAboutLogins");
-      evt.preventDefault();
     });
   }
 

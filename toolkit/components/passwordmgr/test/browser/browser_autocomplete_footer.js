@@ -84,8 +84,7 @@ add_task(async function test_autocomplete_footer_onclick() {
       // Check event telemetry recorded when opening management UI
       TelemetryTestUtils.assertEvents(
         [["pwmgr", "open_management", "autocomplete"]],
-        { category: "pwmgr", method: "open_management" },
-        { clear: true, process: "content" }
+        { category: "pwmgr", method: "open_management" }
       );
 
       await passwordManager.close();
@@ -131,8 +130,7 @@ add_task(async function test_autocomplete_footer_keydown() {
       // Check event telemetry recorded when opening management UI
       TelemetryTestUtils.assertEvents(
         [["pwmgr", "open_management", "autocomplete"]],
-        { category: "pwmgr", method: "open_management" },
-        { clear: true, process: "content" }
+        { category: "pwmgr", method: "open_management" }
       );
 
       await passwordManager.close();
