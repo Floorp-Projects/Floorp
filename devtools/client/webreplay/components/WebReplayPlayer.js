@@ -101,13 +101,6 @@ function sameLocation(m1, m2) {
   );
 }
 
-function getMessageLocation(message) {
-  const {
-    frame: { source, line, column },
-  } = message;
-  return { sourceUrl: source, line, column };
-}
-
 /*
  *
  * The player has 4 valid states
@@ -348,6 +341,11 @@ class WebReplayPlayer extends Component {
     }
   }
 
+  async clearPreviewLocation() {
+    const dbg = await this.toolbox.loadTool("jsdebugger");
+    dbg.clearPreviewPausedLocation();
+  }
+
   unhighlightConsoleMessage() {
     if (this.hoveredMessage) {
       this.hoveredMessage.classList.remove("highlight");
@@ -376,18 +374,7 @@ class WebReplayPlayer extends Component {
   }
 
   onMessageMouseEnter(message) {
-    this.previewLocation(message);
     this.showMessage(message);
-  }
-
-  async previewLocation(closestMessage) {
-    const dbg = await this.toolbox.loadTool("jsdebugger");
-    dbg.previewPausedLocation(getMessageLocation(closestMessage));
-  }
-
-  async clearPreviewLocation() {
-    const dbg = await this.toolbox.loadTool("jsdebugger");
-    dbg.clearPreviewPausedLocation();
   }
 
   onProgressBarClick(e) {
@@ -416,7 +403,6 @@ class WebReplayPlayer extends Component {
 
   onPlayerMouseLeave() {
     this.unhighlightConsoleMessage();
-    this.clearPreviewLocation();
     return this.threadFront.paintCurrentPoint();
   }
 
@@ -628,7 +614,7 @@ class WebReplayPlayer extends Component {
         e.stopPropagation();
         this.seek(message.executionPoint);
       },
-      onMouseEnter: () => this.onMessageMouseEnter(message),
+      onMouseEnter: () => this.onMessageMouseEnter(message.executionPoint),
     });
   }
 

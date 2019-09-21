@@ -5,13 +5,7 @@
 // @flow
 
 import typeof SourceMaps from "devtools-source-map";
-import type {
-  ThreadList,
-  Thread,
-  Context,
-  ThreadId,
-  SourceLocation,
-} from "../../types";
+import type { ThreadList, Thread, Context, ThreadId } from "../../types";
 import type { State } from "../../reducers/types";
 import type { MatchedLocations } from "../../reducers/file-search";
 import type { TreeNode } from "../../utils/sources-tree/types";
@@ -155,13 +149,6 @@ export type DebuggeeAction =
       +type: "SELECT_THREAD",
       +cx: Context,
       +thread: ThreadId,
-    |}
-  | {|
-      +type: "PREVIEW_PAUSED_LOCATION",
-      +location: SourceLocation,
-    |}
-  | {|
-      +type: "CLEAR_PREVIEW_PAUSED_LOCATION",
     |};
 
 export type {
