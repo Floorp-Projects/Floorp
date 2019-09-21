@@ -86,36 +86,6 @@ PremultiplyVector_NEON(const uint16x8_t& aSrc) {
 }
 
 template <bool aSwapRB, bool aOpaqueAlpha>
-static MOZ_ALWAYS_INLINE void PremultiplyChunk_NEON(const uint8_t*& aSrc,
-                                                    uint8_t*& aDst,
-                                                    int32_t aAlignedRow,
-                                                    int32_t aRemainder) {
-  // Process all 4-pixel chunks as one vector.
-  for (const uint8_t* end = aSrc + aAlignedRow; aSrc < end;) {
-    uint16x8_t px = vld1q_u16(reinterpret_cast<const uint16_t*>(aSrc));
-    px = PremultiplyVector_NEON<aSwapRB, aOpaqueAlpha>(px);
-    vst1q_u16(reinterpret_cast<uint16_t*>(aDst), px);
-    aSrc += 4 * 4;
-    aDst += 4 * 4;
-  }
-
-  // Handle any 1-3 remaining pixels.
-  if (aRemainder) {
-    uint16x8_t px = LoadRemainder_NEON(aSrc, aRemainder);
-    px = PremultiplyVector_NEON<aSwapRB, aOpaqueAlpha>(px);
-    StoreRemainder_NEON(aDst, aRemainder, px);
-  }
-}
-
-template <bool aSwapRB, bool aOpaqueAlpha>
-void PremultiplyRow_NEON(const uint8_t* aSrc, uint8_t* aDst, int32_t aLength) {
-  int32_t alignedRow = 4 * (aLength & ~3);
-  int32_t remainder = aLength & 3;
-  PremultiplyChunk_NEON<aSwapRB, aOpaqueAlpha>(aSrc, aDst, alignedRow,
-                                               remainder);
-}
-
-template <bool aSwapRB, bool aOpaqueAlpha>
 void Premultiply_NEON(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
                       int32_t aDstGap, IntSize aSize) {
   int32_t alignedRow = 4 * (aSize.width & ~3);
@@ -125,22 +95,28 @@ void Premultiply_NEON(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
   aDstGap += 4 * remainder;
 
   for (int32_t height = aSize.height; height > 0; height--) {
-    PremultiplyChunk_NEON<aSwapRB, aOpaqueAlpha>(aSrc, aDst, alignedRow,
-                                                 remainder);
+    // Process all 4-pixel chunks as one vector.
+    for (const uint8_t* end = aSrc + alignedRow; aSrc < end;) {
+      uint16x8_t px = vld1q_u16(reinterpret_cast<const uint16_t*>(aSrc));
+      px = PremultiplyVector_NEON<aSwapRB, aOpaqueAlpha>(px);
+      vst1q_u16(reinterpret_cast<uint16_t*>(aDst), px);
+      aSrc += 4 * 4;
+      aDst += 4 * 4;
+    }
+
+    // Handle any 1-3 remaining pixels.
+    if (remainder) {
+      uint16x8_t px = LoadRemainder_NEON(aSrc, remainder);
+      px = PremultiplyVector_NEON<aSwapRB, aOpaqueAlpha>(px);
+      StoreRemainder_NEON(aDst, remainder, px);
+    }
+
     aSrc += aSrcGap;
     aDst += aDstGap;
   }
 }
 
 // Force instantiation of premultiply variants here.
-template void PremultiplyRow_NEON<false, false>(const uint8_t*, uint8_t*,
-                                                int32_t);
-template void PremultiplyRow_NEON<false, true>(const uint8_t*, uint8_t*,
-                                               int32_t);
-template void PremultiplyRow_NEON<true, false>(const uint8_t*, uint8_t*,
-                                               int32_t);
-template void PremultiplyRow_NEON<true, true>(const uint8_t*, uint8_t*,
-                                              int32_t);
 template void Premultiply_NEON<false, false>(const uint8_t*, int32_t, uint8_t*,
                                              int32_t, IntSize);
 template void Premultiply_NEON<false, true>(const uint8_t*, int32_t, uint8_t*,
@@ -282,7 +258,7 @@ template void Unpremultiply_NEON<true>(const uint8_t*, int32_t, uint8_t*,
 
 // Swizzle a vector of 4 pixels providing swaps and opaquifying.
 template <bool aSwapRB, bool aOpaqueAlpha>
-static MOZ_ALWAYS_INLINE uint16x8_t SwizzleVector_NEON(const uint16x8_t& aSrc) {
+MOZ_ALWAYS_INLINE uint16x8_t SwizzleVector_NEON(const uint16x8_t& aSrc) {
   // Swap R and B, then add to G and A (forced to 255):
   // (((src>>16) | (src << 16)) & 0x00FF00FF) |
   //   ((src | 0xFF000000) & ~0x00FF00FF)
@@ -299,7 +275,7 @@ static MOZ_ALWAYS_INLINE uint16x8_t SwizzleVector_NEON(const uint16x8_t& aSrc) {
 
 // Optimized implementations for when there is no R and B swap.
 template<>
-static MOZ_ALWAYS_INLINE uint16x8_t
+MOZ_ALWAYS_INLINE uint16x8_t
 SwizzleVector_NEON<false, true>(const uint16x8_t& aSrc)
 {
   // Force alpha to 255.
@@ -307,41 +283,12 @@ SwizzleVector_NEON<false, true>(const uint16x8_t& aSrc)
 }
 
 template<>
-static MOZ_ALWAYS_INLINE uint16x8_t
+MOZ_ALWAYS_INLINE uint16x8_t
 SwizzleVector_NEON<false, false>(const uint16x8_t& aSrc)
 {
   return aSrc;
 }
 #endif
-
-template <bool aSwapRB, bool aOpaqueAlpha>
-static MOZ_ALWAYS_INLINE void SwizzleChunk_NEON(const uint8_t*& aSrc,
-                                                uint8_t*& aDst,
-                                                int32_t aAlignedRow,
-                                                int32_t aRemainder) {
-  // Process all 4-pixel chunks as one vector.
-  for (const uint8_t* end = aSrc + aAlignedRow; aSrc < end;) {
-    uint16x8_t px = vld1q_u16(reinterpret_cast<const uint16_t*>(aSrc));
-    px = SwizzleVector_NEON<aSwapRB, aOpaqueAlpha>(px);
-    vst1q_u16(reinterpret_cast<uint16_t*>(aDst), px);
-    aSrc += 4 * 4;
-    aDst += 4 * 4;
-  }
-
-  // Handle any 1-3 remaining pixels.
-  if (aRemainder) {
-    uint16x8_t px = LoadRemainder_NEON(aSrc, aRemainder);
-    px = SwizzleVector_NEON<aSwapRB, aOpaqueAlpha>(px);
-    StoreRemainder_NEON(aDst, aRemainder, px);
-  }
-}
-
-template <bool aSwapRB, bool aOpaqueAlpha>
-void SwizzleRow_NEON(const uint8_t* aSrc, uint8_t* aDst, int32_t aLength) {
-  int32_t alignedRow = 4 * (aLength & ~3);
-  int32_t remainder = aLength & 3;
-  SwizzleChunk_NEON<aSwapRB, aOpaqueAlpha>(aSrc, aDst, alignedRow, remainder);
-}
 
 template <bool aSwapRB, bool aOpaqueAlpha>
 void Swizzle_NEON(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
@@ -353,16 +300,28 @@ void Swizzle_NEON(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
   aDstGap += 4 * remainder;
 
   for (int32_t height = aSize.height; height > 0; height--) {
-    SwizzleChunk_NEON<aSwapRB, aOpaqueAlpha>(aSrc, aDst, alignedRow,
-                                             remainder);
+    // Process all 4-pixel chunks as one vector.
+    for (const uint8_t* end = aSrc + alignedRow; aSrc < end;) {
+      uint16x8_t px = vld1q_u16(reinterpret_cast<const uint16_t*>(aSrc));
+      px = SwizzleVector_NEON<aSwapRB, aOpaqueAlpha>(px);
+      vst1q_u16(reinterpret_cast<uint16_t*>(aDst), px);
+      aSrc += 4 * 4;
+      aDst += 4 * 4;
+    }
+
+    // Handle any 1-3 remaining pixels.
+    if (remainder) {
+      uint16x8_t px = LoadRemainder_NEON(aSrc, remainder);
+      px = SwizzleVector_NEON<aSwapRB, aOpaqueAlpha>(px);
+      StoreRemainder_NEON(aDst, remainder, px);
+    }
+
     aSrc += aSrcGap;
     aDst += aDstGap;
   }
 }
 
 // Force instantiation of swizzle variants here.
-template void SwizzleRow_NEON<true, false>(const uint8_t*, uint8_t*, int32_t);
-template void SwizzleRow_NEON<true, true>(const uint8_t*, uint8_t*, int32_t);
 template void Swizzle_NEON<true, false>(const uint8_t*, int32_t, uint8_t*,
                                         int32_t, IntSize);
 template void Swizzle_NEON<true, true>(const uint8_t*, int32_t, uint8_t*,
