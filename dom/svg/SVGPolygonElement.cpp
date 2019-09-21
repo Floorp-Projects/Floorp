@@ -9,7 +9,6 @@
 #include "mozilla/gfx/2D.h"
 #include "SVGContentUtils.h"
 
-using namespace mozilla;
 using namespace mozilla::gfx;
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Polygon)

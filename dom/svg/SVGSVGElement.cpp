@@ -55,7 +55,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGTranslatePoint)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   // We have to qualify nsISVGPoint because NS_GET_IID looks for a class in the
   // global namespace
-  NS_INTERFACE_MAP_ENTRY(mozilla::nsISVGPoint)
+  NS_INTERFACE_MAP_ENTRY(nsISVGPoint)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 

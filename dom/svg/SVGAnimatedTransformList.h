@@ -42,7 +42,7 @@ class DOMSVGTransform;
 class SVGAnimatedTransformList {
   // friends so that they can get write access to mBaseVal
   friend class dom::DOMSVGTransform;
-  friend class DOMSVGTransformList;
+  friend class dom::DOMSVGTransformList;
 
  public:
   SVGAnimatedTransformList()
