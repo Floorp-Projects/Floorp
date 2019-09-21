@@ -677,8 +677,6 @@
 
         BrowserSearch.searchBar._textbox.closePopup();
 
-        goUpdateGlobalEditMenuItems();
-
         let suggestEnabled = Services.prefs.getBoolPref(
           "browser.search.suggest.enabled"
         );
@@ -837,15 +835,15 @@
 
     _buildContextMenu() {
       const raw = `
-        <menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" command="cmd_undo"/>
+        <menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo"/>
         <menuseparator/>
-        <menuitem label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" command="cmd_cut"/>
-        <menuitem label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" command="cmd_copy"/>
-        <menuitem label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;" command="cmd_paste"/>
+        <menuitem label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" cmd="cmd_cut"/>
+        <menuitem label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" cmd="cmd_copy"/>
+        <menuitem label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;" cmd="cmd_paste"/>
         <menuitem class="searchbar-paste-and-search"/>
-        <menuitem label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" command="cmd_delete"/>
+        <menuitem label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" cmd="cmd_delete"/>
         <menuseparator/>
-        <menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" command="cmd_selectAll"/>
+        <menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" cmd="cmd_selectAll"/>
         <menuseparator/>
         <menuitem class="searchbar-clear-history"/>
         <menuitem class="searchbar-toggle-suggest" type="checkbox" autocheck="false"/>
@@ -909,6 +907,15 @@
               "browser.search.suggest.enabled",
               !enabled
             );
+            break;
+          default:
+            let cmd = event.originalTarget.getAttribute("cmd");
+            if (cmd) {
+              let controller = document.commandDispatcher.getControllerForCommand(
+                cmd
+              );
+              controller.doCommand(cmd);
+            }
             break;
         }
       });
