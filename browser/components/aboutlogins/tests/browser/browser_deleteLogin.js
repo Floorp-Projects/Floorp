@@ -61,6 +61,49 @@ add_task(async function test_login_item() {
     });
   }
 
+  function deleteFirstLoginAfterEdit() {
+    return ContentTask.spawn(browser, null, async () => {
+      let loginList = content.document.querySelector("login-list");
+      let loginListItem = loginList.shadowRoot.querySelector(
+        ".login-list-item[data-guid]:not([hidden])"
+      );
+      info("Clicking on the first login");
+      loginListItem.click();
+
+      let loginItem = Cu.waiveXrays(
+        content.document.querySelector("login-item")
+      );
+      let loginItemPopulated = await ContentTaskUtils.waitForCondition(() => {
+        return loginItem._login.guid == loginListItem.dataset.guid;
+      }, "Waiting for login item to get populated");
+      ok(loginItemPopulated, "The login item should get populated");
+
+      let usernameInput = loginItem.shadowRoot.querySelector(
+        "input[name='username']"
+      );
+      let passwordInput = loginItem.shadowRoot.querySelector(
+        "input[name='password']"
+      );
+
+      let editButton = loginItem.shadowRoot.querySelector(".edit-button");
+      editButton.click();
+
+      usernameInput.value += "-undone";
+      passwordInput.value += "-undone";
+
+      let deleteButton = loginItem.shadowRoot.querySelector(".delete-button");
+      deleteButton.click();
+
+      let confirmDeleteDialog = Cu.waiveXrays(
+        content.document.querySelector("confirmation-dialog")
+      );
+      let confirmButton = confirmDeleteDialog.shadowRoot.querySelector(
+        ".confirm-button"
+      );
+      confirmButton.click();
+    });
+  }
+
   function deleteFirstLogin() {
     return ContentTask.spawn(browser, null, async () => {
       let loginList = content.document.querySelector("login-list");
@@ -93,7 +136,7 @@ add_task(async function test_login_item() {
 
   let onDeletePromise = waitForDelete();
 
-  await deleteFirstLogin();
+  await deleteFirstLoginAfterEdit();
   await onDeletePromise;
 
   onDeletePromise = waitForDelete();
@@ -107,6 +150,14 @@ add_task(async function test_login_item() {
     ok(
       !loginList.classList.contains("no-logins"),
       "Should not be in no logins view as there is still one login"
+    );
+
+    let confirmDiscardDialog = Cu.waiveXrays(
+      content.document.querySelector("confirmation-dialog")
+    );
+    ok(
+      confirmDiscardDialog.hidden,
+      "Discard confirm dialog should not show up after delete an edited login"
     );
   });
 

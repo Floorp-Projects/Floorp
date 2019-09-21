@@ -61,8 +61,11 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
       break;
     }
     case "LoginRemoved": {
-      gElements.loginList.loginRemoved(event.detail.value);
+      // The loginRemoved function of loginItem needs to be called before
+      // the one in loginList since it will remove the editing. So that the
+      // discard dialog won't show up if we delete a login after edit it.
       gElements.loginItem.loginRemoved(event.detail.value);
+      gElements.loginList.loginRemoved(event.detail.value);
       numberOfLogins--;
       updateNoLogins();
       break;
