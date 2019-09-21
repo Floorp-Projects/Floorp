@@ -15,10 +15,11 @@
 
 namespace mozilla {
 
-class DOMSVGTransformList;
 class SVGAnimatedTransformList;
 
 namespace dom {
+
+class DOMSVGTransformList;
 
 /**
  * Class DOMSVGAnimatedTransformList
@@ -37,7 +38,7 @@ namespace dom {
  * true weak refs).
  */
 class DOMSVGAnimatedTransformList final : public nsWrapperCache {
-  friend class mozilla::DOMSVGTransformList;
+  friend class DOMSVGTransformList;
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(

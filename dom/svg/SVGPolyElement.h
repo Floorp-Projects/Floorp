@@ -12,9 +12,9 @@
 #include "SVGGeometryElement.h"
 
 namespace mozilla {
-class DOMSVGPointList;
-
 namespace dom {
+
+class DOMSVGPointList;
 
 typedef SVGGeometryElement SVGPolyElementBase;
 
@@ -52,8 +52,8 @@ class SVGPolyElement : public SVGPolyElementBase {
       const Matrix* aToNonScalingStrokeSpace = nullptr) override;
 
   // WebIDL
-  already_AddRefed<mozilla::DOMSVGPointList> Points();
-  already_AddRefed<mozilla::DOMSVGPointList> AnimatedPoints();
+  already_AddRefed<DOMSVGPointList> Points();
+  already_AddRefed<DOMSVGPointList> AnimatedPoints();
 
  protected:
   SVGAnimatedPointList mPoints;
