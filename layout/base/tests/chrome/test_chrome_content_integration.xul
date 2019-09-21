@@ -17,8 +17,8 @@
     // Run the test in a separate window so that the test runs as a chrome
     // window
     var root = getRootDirectory(window.location.href);
-    window.open(root + "chrome_content_integration_window.xul", "chrome_content_integration",
-                "chrome,width=200,height=300");
+    window.openDialog(root + "chrome_content_integration_window.xul", "chrome_content_integration",
+                      "chrome,width=200,height=300,noopener", window);
   ]]>
   </script>
 </window>

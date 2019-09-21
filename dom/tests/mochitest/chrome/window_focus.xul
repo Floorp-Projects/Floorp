@@ -39,8 +39,8 @@ var gChildWindow = null;
 var gOldExpectedWindow = null;
 var gNewExpectedWindow = null;
 
-function is(l, r, n) { window.opener.wrappedJSObject.SimpleTest.is(l,r,n); }
-function ok(v, n) { window.opener.wrappedJSObject.SimpleTest.ok(v,n); }
+function is(l, r, n) { window.arguments[0].SimpleTest.is(l,r,n); }
+function ok(v, n) { window.arguments[0].SimpleTest.ok(v,n); }
 
 function initEvents(target)
 {
@@ -322,9 +322,9 @@ function mouseOnElement(element, expectedElement, focusChanged, testid)
 
 function done()
 {
-  var opener = window.opener;
+  var opener = window.arguments[0];
   window.close();
-  opener.wrappedJSObject.SimpleTest.finish();
+  window.arguments[0].SimpleTest.finish();
 }
 
 var pressTab = () => synthesizeKey("KEY_Tab");
@@ -1164,7 +1164,8 @@ function modalWindowClosed()
   is(fm.activeWindow, window, "modal window closed activeWindow");
   is(fm.focusedElement, getById("n2"), "modal window closed focusedElement");
 
-  window.open("focus_frameset.html", "_blank", "width=400,height=400,toolbar=no");
+  window.arguments[0].framesetWindowLoaded = framesetWindowLoaded;
+  window.arguments[0].open("focus_frameset.html", "_blank", "width=400,height=400,toolbar=no");
 }
 
 function framesetWindowLoaded(framesetWindow)

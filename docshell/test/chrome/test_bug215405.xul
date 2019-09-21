@@ -28,8 +28,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=215405
 /** Test for Bug 215405 **/
 
 SimpleTest.waitForExplicitFinish();
-window.open("bug215405_window.xul", "bug215405",
-            "chrome,width=600,height=600");
+window.openDialog("bug215405_window.xul", "bug215405",
+                  "chrome,width=600,height=600,noopener", window);
 
 ]]>
 </script>

@@ -24,8 +24,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=478536
 <![CDATA[
 
 SimpleTest.waitForExplicitFinish();
-window.open("window_bug478536.xul", "_blank", 
-            "chrome,width=600,height=600");
+window.openDialog("window_bug478536.xul", "_blank", 
+                  "chrome,width=600,height=600,noopener", window);
 
 ]]>
 </script>

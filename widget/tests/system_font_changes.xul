@@ -16,10 +16,10 @@
 
 <script type="application/javascript"><![CDATA[
   function is(condition, message) {
-    window.opener.wrappedJSObject.SimpleTest.is(condition, message);
+    window.arguments[0].SimpleTest.is(condition, message);
   }
   function registerCleanupFunction(func) {
-    window.opener.wrappedJSObject.SimpleTest.registerCleanupFunction(func);
+    window.arguments[0].SimpleTest.registerCleanupFunction(func);
   }
 
   async function waitForFrame() {
@@ -56,7 +56,7 @@
     is(getComputedStyle(target).fontFamily, 'Serif');
 
     window.close();
-    window.opener.wrappedJSObject.SimpleTest.finish();
+    window.arguments[0].SimpleTest.finish();
   }
 ]]></script>
 </window>

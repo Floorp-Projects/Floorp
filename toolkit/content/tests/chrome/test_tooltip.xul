@@ -12,7 +12,7 @@
 SimpleTest.waitForExplicitFinish();
 function runTest()
 {
-  window.open("window_tooltip.xul", "_blank", "chrome,width=700,height=700");
+  window.openDialog("window_tooltip.xul", "_blank", "chrome,width=700,height=700,noopener", window);
 }
 </script>
 

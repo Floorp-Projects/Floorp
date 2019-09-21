@@ -68,7 +68,7 @@ XUL <resizer> tests
       }
 
       if (/Mac/.test(navigator.platform)) {
-        window.open("window_resizer.xul", "_blank", "left=200,top=200,outerWidth=300,outerHeight=300,chrome");
+        window.openDialog("window_resizer.xul", "_blank", "left=200,top=200,outerWidth=300,outerHeight=300,chrome,noopener", window);
       }
       else {
         // Skip window_resizer.xul tests.
@@ -80,7 +80,7 @@ XUL <resizer> tests
 
     function lastResizerTest()
     {
-      window.open("window_resizer_element.xul", "_blank", "left=200,top=200,outerWidth=300,outerHeight=300,chrome");
+      window.openDialog("window_resizer_element.xul", "_blank", "left=200,top=200,outerWidth=300,outerHeight=300,chrome,noopener", window);
     }
 
     SimpleTest.waitForFocus(openPopup);

@@ -14,17 +14,17 @@
 
 function ok(aCondition, aMessage)
 {
-  window.opener.wrappedJSObject.SimpleTest.ok(aCondition, aMessage);
+  docShell.rootTreeItem.domWindow.opener.wrappedJSObject.SimpleTest.ok(aCondition, aMessage);
 }
 
 function is(aLeft, aRight, aMessage)
 {
-  window.opener.wrappedJSObject.SimpleTest.is(aLeft, aRight, aMessage);
+  window.arguments[0].SimpleTest.is(aLeft, aRight, aMessage);
 }
 
 function isnot(aLeft, aRight, aMessage)
 {
-  window.opener.wrappedJSObject.SimpleTest.isnot(aLeft, aRight, aMessage);
+  window.arguments[0].SimpleTest.isnot(aLeft, aRight, aMessage);
 }
 
 function start() {
@@ -33,7 +33,7 @@ function start() {
   window.restore();
   is(window.outerWidth, oldWidth, "wrong window width after maximize+restore");
   is(window.outerHeight, oldHeight, "wrong window height after maximize+restore");
-  window.opener.wrappedJSObject.SimpleTest.finish();
+  window.arguments[0].SimpleTest.finish();
   window.close();
 }
 

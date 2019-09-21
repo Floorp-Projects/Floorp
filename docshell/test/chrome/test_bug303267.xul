@@ -30,8 +30,8 @@ SimpleTest.expectAssertions(0, 1);
 /** Test for Bug 303267 **/
 
 SimpleTest.waitForExplicitFinish();
-window.open("bug303267_window.xul", "bug303267",
-            "chrome,width=600,height=600");
+window.openDialog("bug303267_window.xul", "bug303267",
+                  "chrome,width=600,height=600,noopener", window);
 
 ]]>
 </script>

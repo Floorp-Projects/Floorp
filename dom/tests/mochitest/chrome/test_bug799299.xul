@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=799299
   /** Test for Bug 799299 **/
 
   function runTests() {
-    window.open("file_bug799299.xul", "_blank", "chrome,width=600,height=550");
+    window.openDialog("file_bug799299.xul", "_blank", "chrome,width=600,height=550,noopener", window);
   }
 
   SimpleTest.waitForExplicitFinish();

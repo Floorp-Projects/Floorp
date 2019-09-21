@@ -15,7 +15,7 @@
   <script type="text/javascript">
 
   Cu.import("resource://testing-common/ContentTask.jsm");
-  ContentTask.setTestScope(window.opener.wrappedJSObject);
+  ContentTask.setTestScope(window.arguments[0].wrappedJSObject);
 
   function expectUseGlobalHistory(id, expected) {
     let browser = document.getElementById(id);
@@ -31,7 +31,7 @@
 
     await expectUseGlobalHistory("remote_disabled", false);
     await expectUseGlobalHistory("remote_enabled", true);
-    window.opener.done();
+    window.arguments[0].done();
     ok(true);
   }
 

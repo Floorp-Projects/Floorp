@@ -12,11 +12,11 @@
 // attributes isolate the frames into their own BrowsingContext hierarchies.
 let frameElts = document.getElementsByTagName("iframe");
 
-var is = window.opener.wrappedJSObject.is;
-var isnot = window.opener.wrappedJSObject.isnot;
-var ok = window.opener.wrappedJSObject.ok;
-var todo = window.opener.wrappedJSObject.todo;
-var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
+var is = window.arguments[0].is;
+var isnot = window.arguments[0].isnot;
+var ok = window.arguments[0].ok;
+var todo = window.arguments[0].todo;
+var SimpleTest = window.arguments[0].SimpleTest;
 var gWbp;
 var ctx1;
 var ctx2;

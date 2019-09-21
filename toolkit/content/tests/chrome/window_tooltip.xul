@@ -336,7 +336,7 @@ function moveWindowTo(x, y, callback, arg)
   if (window.screenX == oldx && window.screenY == oldy) {
     if (waitSteps++ > 10) {
       ok(false, "Window never moved properly to " + x + "," + y);
-      window.opener.wrappedJSObject.SimpleTest.finish();
+      window.arguments[0].SimpleTest.finish();
       window.close();
     }
 
@@ -348,7 +348,7 @@ function moveWindowTo(x, y, callback, arg)
   }
 }
 
-window.opener.wrappedJSObject.SimpleTest.waitForFocus(runTest, window);
+window.arguments[0].SimpleTest.waitForFocus(runTest, window);
 ]]>
 </script>
 

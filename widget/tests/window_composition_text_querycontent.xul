@@ -49,32 +49,32 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function ok(aCondition, aMessage)
 {
-  window.opener.wrappedJSObject.SimpleTest.ok(aCondition, aMessage);
+  window.arguments[0].SimpleTest.ok(aCondition, aMessage);
 }
 
 function is(aLeft, aRight, aMessage)
 {
-  window.opener.wrappedJSObject.SimpleTest.is(aLeft, aRight, aMessage);
+  window.arguments[0].SimpleTest.is(aLeft, aRight, aMessage);
 }
 
 function isnot(aLeft, aRight, aMessage)
 {
-  window.opener.wrappedJSObject.SimpleTest.isnot(aLeft, aRight, aMessage);
+  window.arguments[0].SimpleTest.isnot(aLeft, aRight, aMessage);
 }
 
 function todo(aCondition, aMessage)
 {
-  window.opener.wrappedJSObject.SimpleTest.todo(aCondition, aMessage);
+  window.arguments[0].SimpleTest.todo(aCondition, aMessage);
 }
 
 function todo_is(aLeft, aRight, aMessage)
 {
-  window.opener.wrappedJSObject.SimpleTest.todo_is(aLeft, aRight, aMessage);
+  window.arguments[0].SimpleTest.todo_is(aLeft, aRight, aMessage);
 }
 
 function todo_isnot(aLeft, aRight, aMessage)
 {
-  window.opener.wrappedJSObject.SimpleTest.todo_isnot(aLeft, aRight, aMessage);
+  window.arguments[0].SimpleTest.todo_isnot(aLeft, aRight, aMessage);
 }
 
 function isSimilarTo(aLeft, aRight, aAllowedDifference, aMessage)
@@ -9162,7 +9162,7 @@ async function runPasswordMaskDelayTest() {
 
 async function runTest()
 {
-  window.addEventListener("unload", window.opener.wrappedJSObject.SimpleTest.finish, {once: true, capture: true});
+  window.addEventListener("unload", window.arguments[0].SimpleTest.finish, {once: true, capture: true});
 
   contenteditable = document.getElementById("iframe4").contentDocument.getElementById("contenteditable");
   windowOfContenteditable = document.getElementById("iframe4").contentWindow;
@@ -9208,7 +9208,7 @@ async function runTest()
   window.close();
 }
 
-window.opener.wrappedJSObject.SimpleTest.waitForFocus(runTest, window);
+window.arguments[0].SimpleTest.waitForFocus(runTest, window);
 
 ]]>
 </script>

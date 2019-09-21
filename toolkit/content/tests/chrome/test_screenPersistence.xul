@@ -16,8 +16,9 @@
   var upper = 60 + screen.availTop;
 
   function runTest() {
-    win = window.openDialog("window_screenPosSize.xul",
-                            null,
+    win = window.docShell.rootTreeItem.domWindow
+                .openDialog("window_screenPosSize.xul",
+                            "_blank",
                             "chrome,dialog=no,all,screenX=" + left + ",screenY=" + upper + ",outerHeight=200,outerWidth=200");
     SimpleTest.waitForFocus(checkTest, win);
   }
@@ -30,8 +31,9 @@
   }
   function runTest2() {
     win.close();
-    win = window.openDialog("window_screenPosSize.xul",
-                            null,
+    win = window.docShell.rootTreeItem.domWindow
+                .openDialog("window_screenPosSize.xul",
+                            "_blank",
                             "chrome,dialog=no,all");
     SimpleTest.waitForFocus(checkTest2, win);
   }
