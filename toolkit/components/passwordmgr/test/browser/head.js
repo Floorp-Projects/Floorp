@@ -9,12 +9,7 @@ ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", this);
 ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm", this);
 
 add_task(async function common_initialize() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["signon.rememberSignons", true],
-      ["toolkit.telemetry.ipcBatchTimeout", 0],
-    ],
-  });
+  await SpecialPowers.pushPrefEnv({ set: [["signon.rememberSignons", true]] });
 });
 
 registerCleanupFunction(
@@ -445,10 +440,7 @@ async function waitForPasswordManagerDialog(openingFunc) {
 
 async function waitForPasswordManagerTab(openingFunc, waitForFilter) {
   info("waiting for new tab to open");
-  let tabPromise = BrowserTestUtils.waitForNewTab(
-    gBrowser,
-    url => url.includes("about:logins") && !url.includes("entryPoint=")
-  );
+  let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, null);
   await openingFunc();
   let tab = await tabPromise;
   ok(tab, "got password management tab");

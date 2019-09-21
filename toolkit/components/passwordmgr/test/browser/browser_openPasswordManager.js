@@ -47,7 +47,10 @@ add_task(async function test_management_overrideURI_noFilter() {
     PREF_MANAGEMENT_URI,
     "about:logins?filter=%DOMAIN%"
   );
-  let tabOpenPromise = BrowserTestUtils.waitForNewTab(gBrowser, "about:logins");
+  let tabOpenPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    "about:logins?filter="
+  );
   LoginHelper.openPasswordManager(window, { entryPoint: "mainmenu" });
   let tab = await tabOpenPromise;
   ok(tab, "Got the new tab");

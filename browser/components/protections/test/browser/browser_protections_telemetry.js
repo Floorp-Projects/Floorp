@@ -136,13 +136,8 @@ function waitForTelemetryEventCount(count) {
       Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
       false
     ).content;
-    if (!events) {
-      return null;
-    }
-    // Ignore irrelevant events from other parts of the browser.
-    events = events.filter(e => e[1] == "security.ui.protections");
     info("got " + (events && events.length) + " events");
-    if (events.length == count) {
+    if (events && events.length == count) {
       return events;
     }
     return null;
