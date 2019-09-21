@@ -33,7 +33,6 @@ nsresult NS_NewSVGElement(mozilla::dom::Element** aResult,
 namespace mozilla {
 class DeclarationBlock;
 
-class DOMSVGStringList;
 class SVGAnimatedBoolean;
 class SVGAnimatedEnumeration;
 class SVGAnimatedInteger;
@@ -57,6 +56,7 @@ class SVGUserUnitList;
 struct SVGEnumMapping;
 
 namespace dom {
+class DOMSVGStringList;
 class SVGSVGElement;
 class SVGViewportElement;
 
@@ -544,7 +544,7 @@ class SVGElement : public SVGElementBase  // nsIContent
     void Reset(uint8_t aAttrEnum);
   };
 
-  friend class mozilla::DOMSVGStringList;
+  friend class DOMSVGStringList;
 
   struct StringListInfo {
     nsStaticAtom* const mName;

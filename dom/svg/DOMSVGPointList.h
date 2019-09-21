@@ -18,9 +18,12 @@
 
 namespace mozilla {
 
+class SVGAnimatedPointList;
+
+namespace dom {
+
 class DOMSVGPoint;
 class nsISVGPoint;
-class SVGAnimatedPointList;
 
 /**
  * Class DOMSVGPointList
@@ -50,7 +53,7 @@ class SVGAnimatedPointList;
 class DOMSVGPointList final : public nsISupports, public nsWrapperCache {
   friend class AutoChangePointListNotifier;
   friend class nsISVGPoint;
-  friend class mozilla::DOMSVGPoint;
+  friend class DOMSVGPoint;
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -199,6 +202,7 @@ class DOMSVGPointList final : public nsISupports, public nsWrapperCache {
   bool mIsAnimValList;
 };
 
+}  // namespace dom
 }  // namespace mozilla
 
 #endif  // MOZILLA_DOMSVGPOINTLIST_H__

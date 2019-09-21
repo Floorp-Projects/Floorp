@@ -15,6 +15,7 @@ namespace mozilla {
 
 namespace dom {
 class DOMSVGTransform;
+class DOMSVGTransformList;
 }  // namespace dom
 
 /**
@@ -28,8 +29,8 @@ class DOMSVGTransform;
  */
 class SVGTransformList {
   friend class SVGAnimatedTransformList;
-  friend class DOMSVGTransformList;
   friend class dom::DOMSVGTransform;
+  friend class dom::DOMSVGTransformList;
 
  public:
   SVGTransformList() = default;

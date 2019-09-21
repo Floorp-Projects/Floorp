@@ -22,9 +22,10 @@
 #include "SVGPathSegUtils.h"
 #include <algorithm>
 
-using namespace mozilla;
 using namespace mozilla::dom::SVGPathSeg_Binding;
 using namespace mozilla::gfx;
+
+namespace mozilla {
 
 static inline bool IsMoveto(uint16_t aSegType) {
   return aSegType == PATHSEG_MOVETO_ABS || aSegType == PATHSEG_MOVETO_REL;
@@ -1077,3 +1078,5 @@ size_t SVGPathData::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
 size_t SVGPathData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
+
+}  // namespace mozilla

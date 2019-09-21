@@ -3953,6 +3953,13 @@ uint32_t JSScript::vtuneMethodID() {
 bool JSScript::initScriptName(JSContext* cx) {
   MOZ_ASSERT(!hasScriptName());
 
+  // Don't allocate LCovSource if we on helper thread since we will have our
+  // realm migrated. The 'GCRunime::mergeRealms' code will do this
+  // initialization.
+  if (cx->isHelperThreadContext()) {
+    return true;
+  }
+
   if (!filename()) {
     return true;
   }
@@ -4234,7 +4241,7 @@ void JSScript::finalize(JSFreeOp* fop) {
   // scripts, and store the aggregated information on the realm.
   MOZ_ASSERT_IF(hasScriptName(), coverage::IsLCovEnabled());
   if (coverage::IsLCovEnabled() && hasScriptName()) {
-    realm()->lcovOutput.collectCodeCoverageInfo(realm(), this, getScriptName());
+    realm()->collectCodeCoverageInfo(this, getScriptName());
     destroyScriptName();
   }
 

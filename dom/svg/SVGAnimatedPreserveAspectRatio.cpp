@@ -13,8 +13,9 @@
 #include "SMILEnumType.h"
 #include "SVGAttrTearoffTable.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
+
+namespace mozilla {
 
 ////////////////////////////////////////////////////////////////////////
 // SVGAnimatedPreserveAspectRatio class
@@ -213,3 +214,5 @@ nsresult SMILPreserveAspectRatio::SetAnimValue(const SMILValue& aValue) {
   }
   return NS_OK;
 }
+
+}  // namespace mozilla

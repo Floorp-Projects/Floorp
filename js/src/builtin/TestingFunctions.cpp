@@ -4736,7 +4736,7 @@ static bool GetLcovInfo(JSContext* cx, unsigned argc, Value* vp) {
   UniqueChars content;
   {
     AutoRealm ar(cx, global);
-    content.reset(js::GetCodeCoverageSummary(cx, &length));
+    content = js::GetCodeCoverageSummary(cx, &length);
   }
 
   if (!content) {

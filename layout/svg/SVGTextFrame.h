@@ -27,7 +27,6 @@ class nsTextFrame;
 namespace mozilla {
 
 class CharIterator;
-class nsISVGPoint;
 class TextFrameIterator;
 class TextNodeCorrespondenceRecorder;
 struct TextRenderedRun;
@@ -35,6 +34,7 @@ class TextRenderedRunIterator;
 
 namespace dom {
 struct DOMPointInit;
+class nsISVGPoint;
 class SVGRect;
 class SVGGeometryElement;
 }  // namespace dom
@@ -243,9 +243,9 @@ class SVGTextFrame final : public nsSVGDisplayContainerFrame {
                                const mozilla::dom::DOMPointInit& aPoint);
 
   nsresult GetStartPositionOfChar(nsIContent* aContent, uint32_t aCharNum,
-                                  mozilla::nsISVGPoint** aResult);
+                                  mozilla::dom::nsISVGPoint** aResult);
   nsresult GetEndPositionOfChar(nsIContent* aContent, uint32_t aCharNum,
-                                mozilla::nsISVGPoint** aResult);
+                                mozilla::dom::nsISVGPoint** aResult);
   nsresult GetExtentOfChar(nsIContent* aContent, uint32_t aCharNum,
                            mozilla::dom::SVGRect** aResult);
   nsresult GetRotationOfChar(nsIContent* aContent, uint32_t aCharNum,

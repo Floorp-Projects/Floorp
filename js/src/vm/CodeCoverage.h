@@ -26,8 +26,6 @@ namespace coverage {
 class LCovSource {
  public:
   LCovSource(LifoAlloc* alloc, JS::UniqueChars name);
-  LCovSource(LCovSource&& src);
-  ~LCovSource() = default;
 
   // Whether the given script name matches this LCovSource.
   bool match(const char* name) const { return strcmp(name_.get(), name) == 0; }
@@ -78,26 +76,25 @@ class LCovSource {
 
 class LCovRealm {
  public:
-  LCovRealm();
+  explicit LCovRealm(JS::Realm* realm);
   ~LCovRealm();
 
   // Collect code coverage information for the given source.
-  void collectCodeCoverageInfo(JS::Realm* realm, JSScript* topLevel,
-                               const char* name);
+  void collectCodeCoverageInfo(JSScript* script, const char* name);
 
   // Write the Lcov output in a buffer, such as the one associated with
   // the runtime code coverage trace file.
   void exportInto(GenericPrinter& out, bool* isEmpty) const;
 
  private:
-  // Write the script name in out.
-  bool writeRealmName(JS::Realm* realm);
+  // Write the realm name in outTN_.
+  void writeRealmName(JS::Realm* realm);
 
   // Return the LCovSource entry which matches the given ScriptSourceObject.
-  LCovSource* lookupOrAdd(JS::Realm* realm, const char* name);
+  LCovSource* lookupOrAdd(const char* name);
 
  private:
-  typedef mozilla::Vector<LCovSource, 16, LifoAllocPolicy<Fallible>>
+  typedef mozilla::Vector<LCovSource*, 16, LifoAllocPolicy<Fallible>>
       LCovSourceVector;
 
   // LifoAlloc backend for all temporary allocations needed to stash the
@@ -107,8 +104,9 @@ class LCovRealm {
   // LifoAlloc string which hold the name of the realm.
   LSprinter outTN_;
 
-  // Vector of all sources which are used in this realm.
-  LCovSourceVector* sources_;
+  // Vector of all sources which are used in this realm. The entries are
+  // allocated within the LifoAlloc.
+  LCovSourceVector sources_;
 };
 
 class LCovRuntime {

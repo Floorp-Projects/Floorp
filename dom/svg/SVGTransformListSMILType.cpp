@@ -12,8 +12,9 @@
 #include "SVGTransform.h"
 #include <math.h>
 
-using namespace mozilla;
-using namespace dom::SVGTransform_Binding;
+using namespace mozilla::dom::SVGTransform_Binding;
+
+namespace mozilla {
 
 typedef FallibleTArray<SVGTransformSMILData> TransformArray;
 
@@ -337,3 +338,5 @@ bool SVGTransformListSMILType::GetTransforms(
   }
   return true;
 }
+
+}  // namespace mozilla
