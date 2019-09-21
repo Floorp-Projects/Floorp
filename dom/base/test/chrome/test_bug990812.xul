@@ -31,7 +31,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990812
     if (tests.length > 0) {
       var file = tests.shift();
       info("-- running " + file);
-      window.open(file, "", "chrome");
+      window.openDialog(file, "_blank", "chrome,noopener", window);
     } else {
       SimpleTest.finish();
     }

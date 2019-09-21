@@ -4,7 +4,7 @@
 	onload="setTimeout(doTest, 0)">
 <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 <script><![CDATA[
-var is = window.opener.SimpleTest.is;
+var is = window.arguments[0].SimpleTest.is;
 
 function doTest() {
   // from test_resizer.xul
@@ -90,7 +90,7 @@ function doTest() {
   });
 
   window.close();
-  window.opener.lastResizerTest();
+  window.arguments[0].lastResizerTest();
 }
 ]]></script>
 	<hbox id="container" flex="1">

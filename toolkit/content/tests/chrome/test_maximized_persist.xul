@@ -26,8 +26,9 @@
   }
 
   function openWindow(features = "") {
-    return window.openDialog("window_maximized_persist.xul",
-                             null, "chrome,dialog=no,all," + features);
+    return docShell.rootTreeItem.domWindow.openDialog(
+        "window_maximized_persist.xul",
+        "_blank", "chrome,dialog=no,all," + features, window);
   }
 
   function checkWindow(msg, win, sizemode, width, height) {

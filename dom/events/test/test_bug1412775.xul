@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1412775
   var win;
   function init() {
     SimpleTest.waitForExplicitFinish();
-    win = window.open("window_bug1412775.xul", "_new", "chrome");
+    win = docShell.rootTreeItem.domWindow.open("window_bug1412775.xul", "_new", "chrome");
     win.onload = function() {
       var b = win.document.getElementById("browser");
       var d = b.contentWindow.document;

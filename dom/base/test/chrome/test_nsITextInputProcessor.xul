@@ -21,8 +21,8 @@
 <![CDATA[
 
 SimpleTest.waitForExplicitFinish();
-window.open("window_nsITextInputProcessor.xul", "_blank", 
-            "chrome,width=600,height=600");
+window.openDialog("window_nsITextInputProcessor.xul", "_blank", 
+                  "chrome,width=600,height=600,noopener", window);
 
 ]]>
 </script>

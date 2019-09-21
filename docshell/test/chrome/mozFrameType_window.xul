@@ -12,8 +12,8 @@
   <script type="application/javascript" src="docshell_helpers.js" />
   <script type="application/javascript"><![CDATA[
     function runTests() {
-      let opener = window.opener;
-      let SimpleTest = opener.wrappedJSObject.SimpleTest;
+      let opener = window.arguments[0];
+      let SimpleTest = opener.SimpleTest;
 
       function getDocShellType(frame) {
         return frame.contentWindow.docShell.itemType;

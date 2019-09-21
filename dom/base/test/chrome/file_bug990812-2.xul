@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990812
     var globalMM = Cc["@mozilla.org/globalmessagemanager;1"].getService();
 
     function is(val, exp, msg) {
-      opener.wrappedJSObject.is(val, exp, msg);
+      window.arguments[0].is(val, exp, msg);
     }
 
     function promiseMessage(type, mm) {
@@ -44,7 +44,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990812
       browser.messageManager.loadFrameScript(FRAME_SCRIPT, true);
 
       Promise.all([global, window, group]).then(function () {
-        opener.setTimeout(function() { this.next(); });
+        self.arguments[0].setTimeout(function() { this.next(); });
         self.close();
       });
     }

@@ -21,8 +21,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=449780
     SimpleTest.waitForExplicitFinish();
 
     addLoadEvent(function() {
-      window.open("bug449780_window.xul", "bug449780",
-                  "chrome,width=800,height=800");
+      window.openDialog("bug449780_window.xul", "bug449780",
+                        "chrome,width=800,height=800,noopener", window);
     });
 
   ]]></script>

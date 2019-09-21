@@ -34,27 +34,27 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=830858
     b.addEventListener("foo", function() { ++iframeListenerCalled; }, true);
 
     doc.dispatchEvent(new Event("foo"));
-    opener.wrappedJSObject.is(docListenerCalled, 1, "Normal dispatch to Document");
-    opener.wrappedJSObject.is(winListenerCalled, 1, "Normal dispatch to Document");
-    opener.wrappedJSObject.is(iframeListenerCalled, 1, "Normal dispatch to Document");
+    window.arguments[0].is(docListenerCalled, 1, "Normal dispatch to Document");
+    window.arguments[0].is(winListenerCalled, 1, "Normal dispatch to Document");
+    window.arguments[0].is(iframeListenerCalled, 1, "Normal dispatch to Document");
 
     win.dispatchEvent(new Event("foo"));
-    opener.wrappedJSObject.is(docListenerCalled, 1, "Normal dispatch to Window");
-    opener.wrappedJSObject.is(winListenerCalled, 2, "Normal dispatch to Window");
-    opener.wrappedJSObject.is(iframeListenerCalled, 2, "Normal dispatch to Window");
+    window.arguments[0].is(docListenerCalled, 1, "Normal dispatch to Window");
+    window.arguments[0].is(winListenerCalled, 2, "Normal dispatch to Window");
+    window.arguments[0].is(iframeListenerCalled, 2, "Normal dispatch to Window");
 
     wu.dispatchEventToChromeOnly(doc, new Event("foo"));
-    opener.wrappedJSObject.is(docListenerCalled, 1, "Chrome-only dispatch to Document");
-    opener.wrappedJSObject.is(winListenerCalled, 2, "Chrome-only dispatch to Document");
-    opener.wrappedJSObject.is(iframeListenerCalled, 3, "Chrome-only dispatch to Document");
+    window.arguments[0].is(docListenerCalled, 1, "Chrome-only dispatch to Document");
+    window.arguments[0].is(winListenerCalled, 2, "Chrome-only dispatch to Document");
+    window.arguments[0].is(iframeListenerCalled, 3, "Chrome-only dispatch to Document");
 
     wu.dispatchEventToChromeOnly(win, new Event("foo"));
-    opener.wrappedJSObject.is(docListenerCalled, 1, "Chrome-only dispatch to Window");
-    opener.wrappedJSObject.is(winListenerCalled, 2, "Chrome-only dispatch to Window");
-    opener.wrappedJSObject.is(iframeListenerCalled, 4, "Chrome-only dispatch to Window");
+    window.arguments[0].is(docListenerCalled, 1, "Chrome-only dispatch to Window");
+    window.arguments[0].is(winListenerCalled, 2, "Chrome-only dispatch to Window");
+    window.arguments[0].is(iframeListenerCalled, 4, "Chrome-only dispatch to Window");
 
     window.close();
-    opener.wrappedJSObject.finishedTests();
+    window.arguments[0].finishedTests();
   }
 
   SimpleTest.waitForFocus(runTests);

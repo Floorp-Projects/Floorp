@@ -38,7 +38,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=616841
     function recvCmp(m) {
       var i = m.json.i, cmp = m.json.cmp;
       var pair = toCompare[i];
-      opener.wrappedJSObject.is(pair[0].localeCompare(pair[1]), cmp, "localeCompare returned same result in frame script");
+      window.arguments[0].is(pair[0].localeCompare(pair[1]), cmp, "localeCompare returned same result in frame script");
 
       if (toCompare.length == ++nCmps) {
          messageManager.removeMessageListener("cmp", recvCmp);
@@ -53,7 +53,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=616841
     }
 
     function finish() {
-      opener.setTimeout(function() { this.done(); }, 0);
+      window.arguments[0].setTimeout(function() { this.done(); }, 0);
       window.close();
     }
 
