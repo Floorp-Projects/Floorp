@@ -2,172 +2,35 @@
 <SmellBaseline>
   <Blacklist></Blacklist>
   <Whitelist>
-    <ID>AbsentOrWrongFileLicense:AbstractAmazonPushService.kt$mozilla.components.lib.push.amazon.AbstractAmazonPushService.kt</ID>
-    <ID>AbsentOrWrongFileLicense:AbstractAmazonPushServiceTest.kt$mozilla.components.lib.push.amazon.AbstractAmazonPushServiceTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:AbstractFirebasePushService.kt$mozilla.components.lib.push.firebase.AbstractFirebasePushService.kt</ID>
-    <ID>AbsentOrWrongFileLicense:AbstractFirebasePushServiceTest.kt$mozilla.components.lib.push.firebase.AbstractFirebasePushServiceTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:AccountObserverTest.kt$mozilla.components.feature.sendtab.AccountObserverTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ActionImageTest.kt$mozilla.components.concept.toolbar.ActionImageTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:Activity.kt$mozilla.components.support.ktx.android.view.Activity.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ActivityTest.kt$mozilla.components.support.ktx.android.view.ActivityTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:AppLinkRedirect.kt$mozilla.components.feature.app.links.AppLinkRedirect.kt</ID>
-    <ID>AbsentOrWrongFileLicense:AppLinksFeature.kt$mozilla.components.feature.app.links.AppLinksFeature.kt</ID>
-    <ID>AbsentOrWrongFileLicense:AppLinksFeatureTest.kt$mozilla.components.feature.app.links.AppLinksFeatureTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:AppLinksUseCases.kt$mozilla.components.feature.app.links.AppLinksUseCases.kt</ID>
-    <ID>AbsentOrWrongFileLicense:AppLinksUseCasesTest.kt$mozilla.components.feature.app.links.AppLinksUseCasesTest.kt</ID>
     <ID>AbsentOrWrongFileLicense:AutoFitTextureView.kt$mozilla.components.support.base.android.view.AutoFitTextureView.kt</ID>
-    <ID>AbsentOrWrongFileLicense:AutoPushFeature.kt$mozilla.components.feature.push.AutoPushFeature.kt</ID>
-    <ID>AbsentOrWrongFileLicense:AutoPushFeatureKtTest.kt$mozilla.components.feature.push.AutoPushFeatureKtTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:AutoPushFeatureTest.kt$mozilla.components.feature.push.AutoPushFeatureTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:AutoSave.kt$mozilla.components.browser.session.storage.AutoSave.kt</ID>
-    <ID>AbsentOrWrongFileLicense:Base64.kt$mozilla.components.support.ktx.android.util.Base64.kt</ID>
-    <ID>AbsentOrWrongFileLicense:Base64Test.kt$mozilla.components.support.ktx.android.util.Base64Test.kt</ID>
-    <ID>AbsentOrWrongFileLicense:BaseDomainAutocompleteProviderTest.kt$mozilla.components.browser.domains.BaseDomainAutocompleteProviderTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:BooleanMetricTypeTest.kt$mozilla.components.service.glean.private.BooleanMetricTypeTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:Basic.kt$org.mozilla.samples.glean.GleanMetrics.Basic.kt</ID>
+    <ID>AbsentOrWrongFileLicense:BookmarksSync.kt$mozilla.components.browser.storage.sync.GleanMetrics.BookmarksSync.kt</ID>
     <ID>AbsentOrWrongFileLicense:BooleansStorageEngineTest.kt$mozilla.components.service.glean.storages.BooleansStorageEngineTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:BreadcrumbPriorityQueue.kt$mozilla.components.lib.crash.BreadcrumbPriorityQueue.kt</ID>
-    <ID>AbsentOrWrongFileLicense:BrowserMenuCheckboxTest.kt$mozilla.components.browser.menu.item.BrowserMenuCheckboxTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:BrowserMenuCompoundButton.kt$mozilla.components.browser.menu.item.BrowserMenuCompoundButton.kt</ID>
-    <ID>AbsentOrWrongFileLicense:BrowserMenuCompoundButtonTest.kt$mozilla.components.browser.menu.item.BrowserMenuCompoundButtonTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:BrowserMenuDividerTest.kt$mozilla.components.browser.menu.item.BrowserMenuDividerTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:BrowserMenuHighlightableItemTest.kt$mozilla.components.browser.menu.item.BrowserMenuHighlightableItemTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:BrowserMenuImageSwitch.kt$mozilla.components.browser.menu.item.BrowserMenuImageSwitch.kt</ID>
-    <ID>AbsentOrWrongFileLicense:BrowserMenuImageTextTest.kt$mozilla.components.browser.menu.item.BrowserMenuImageTextTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:BrowserMenuSwitch.kt$mozilla.components.browser.menu.item.BrowserMenuSwitch.kt</ID>
-    <ID>AbsentOrWrongFileLicense:BrowserMenuSwitchTest.kt$mozilla.components.browser.menu.item.BrowserMenuSwitchTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:Bus.kt$mozilla.components.concept.push.Bus.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ChoiceAdapter.kt$mozilla.components.feature.prompts.ChoiceAdapter.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ChoiceDialogFragmentTest.kt$mozilla.components.feature.prompts.ChoiceDialogFragmentTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:Collection.kt$mozilla.components.support.ktx.kotlin.Collection.kt</ID>
-    <ID>AbsentOrWrongFileLicense:CollectionKtTest.kt$mozilla.components.support.ktx.kotlin.CollectionKtTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:CommonMetricData.kt$mozilla.components.service.glean.private.CommonMetricData.kt</ID>
-    <ID>AbsentOrWrongFileLicense:Connection.kt$mozilla.components.feature.push.Connection.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ConnectionKtTest.kt$mozilla.components.feature.push.ConnectionKtTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:CustomDistributionMetricTypeTest.kt$mozilla.components.service.glean.private.CustomDistributionMetricTypeTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:CustomTabsToolbarFeatureTest.kt$mozilla.components.feature.customtabs.CustomTabsToolbarFeatureTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:BrowserEngagement.kt$org.mozilla.samples.glean.GleanMetrics.BrowserEngagement.kt</ID>
+    <ID>AbsentOrWrongFileLicense:Component.kt$mozilla.components.support.base.Component.kt</ID>
+    <ID>AbsentOrWrongFileLicense:CrashMetrics.kt$mozilla.components.lib.crash.GleanMetrics.CrashMetrics.kt</ID>
+    <ID>AbsentOrWrongFileLicense:Custom.kt$org.mozilla.samples.glean.GleanMetrics.Custom.kt</ID>
     <ID>AbsentOrWrongFileLicense:DatePickerDialogFragmentTest.kt$.DatePickerDialogFragmentTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:DatetimeMetricTypeTest.kt$mozilla.components.service.glean.private.DatetimeMetricTypeTest.kt</ID>
     <ID>AbsentOrWrongFileLicense:DatetimesStorageEngineTest.kt$mozilla.components.service.glean.storages.DatetimesStorageEngineTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:DeliveryManagerTest.kt$mozilla.components.feature.push.DeliveryManagerTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:DeviceFragment.kt$org.mozilla.samples.sync.DeviceFragment.kt</ID>
-    <ID>AbsentOrWrongFileLicense:DeviceObserverTest.kt$mozilla.components.feature.sendtab.DeviceObserverTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:DeviceRecyclerViewAdapter.kt$org.mozilla.samples.sync.DeviceRecyclerViewAdapter.kt</ID>
-    <ID>AbsentOrWrongFileLicense:DisplayMetricsTest.kt$mozilla.components.support.ktx.android.util.DisplayMetricsTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:DownloadUtils.kt$mozilla.components.support.utils.DownloadUtils.kt</ID>
-    <ID>AbsentOrWrongFileLicense:EncryptedPushMessageTest.kt$mozilla.components.concept.push.EncryptedPushMessageTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:EngineState.kt$mozilla.components.browser.state.state.EngineState.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ErrorPages.kt$mozilla.components.browser.errorpages.ErrorPages.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ErrorPagesTest.kt$mozilla.components.browser.errorpages.ErrorPagesTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ErrorRecordingTest.kt$mozilla.components.service.glean.error.ErrorRecordingTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:EventMetricType.kt$mozilla.components.service.glean.private.EventMetricType.kt</ID>
-    <ID>AbsentOrWrongFileLicense:EventMetricTypeTest.kt$mozilla.components.service.glean.private.EventMetricTypeTest.kt</ID>
     <ID>AbsentOrWrongFileLicense:EventsStorageEngineTest.kt$mozilla.components.service.glean.storages.EventsStorageEngineTest.kt</ID>
     <ID>AbsentOrWrongFileLicense:ExperimentsStorageEngineTest.kt$mozilla.components.service.glean.storages.ExperimentsStorageEngineTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ExperimentsUpdaterTest.kt$mozilla.components.service.experiments.ExperimentsUpdaterTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:Extensions.kt$mozilla.components.support.test.robolectric.Extensions.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ExtensionsTest.kt$mozilla.components.support.test.robolectric.ExtensionsTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:FileUtils.kt$mozilla.components.service.glean.utils.FileUtils.kt</ID>
-    <ID>AbsentOrWrongFileLicense:FullScreenFeature.kt$mozilla.components.feature.session.FullScreenFeature.kt</ID>
-    <ID>AbsentOrWrongFileLicense:FullScreenFeatureTest.kt$mozilla.components.feature.session.FullScreenFeatureTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:GeckoMediaDelegateTest.kt$mozilla.components.browser.engine.gecko.media.GeckoMediaDelegateTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:GeckoWebExtension.kt$mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension.kt</ID>
-    <ID>AbsentOrWrongFileLicense:GeckoWindowRequestTest.kt$mozilla.components.browser.engine.gecko.window.GeckoWindowRequestTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:GleanDebugActivityTest.kt$mozilla.components.service.glean.debug.GleanDebugActivityTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:GleanLifecycleObserver.kt$mozilla.components.service.glean.scheduler.GleanLifecycleObserver.kt</ID>
-    <ID>AbsentOrWrongFileLicense:Helpers.kt$mozilla.components.lib.state.helpers.Helpers.kt</ID>
-    <ID>AbsentOrWrongFileLicense:HistogramMetricBase.kt$mozilla.components.service.glean.private.HistogramMetricBase.kt</ID>
-    <ID>AbsentOrWrongFileLicense:HitResultTest.kt$mozilla.components.concept.engine.HitResultTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:IconDirectoryEntry.kt$mozilla.components.browser.icons.decoder.ico.IconDirectoryEntry.kt</ID>
-    <ID>AbsentOrWrongFileLicense:JSONExperimentParserTest.kt$mozilla.components.service.experiments.JSONExperimentParserTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:JSONExperimentParserTest.kt$mozilla.components.service.fretboard.JSONExperimentParserTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:JSONObjectTest.kt$mozilla.components.support.ktx.android.org.json.JSONObjectTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:KArgumentCaptor.kt$mozilla.components.support.test.KArgumentCaptor.kt</ID>
-    <ID>AbsentOrWrongFileLicense:LexerTest.kt$mozilla.components.lib.jexl.lexer.LexerTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:Lifecycle.kt$mozilla.components.support.ktx.android.arch.lifecycle.Lifecycle.kt</ID>
-    <ID>AbsentOrWrongFileLicense:LifecycleAwareFeature.kt$mozilla.components.support.base.feature.LifecycleAwareFeature.kt</ID>
-    <ID>AbsentOrWrongFileLicense:LifecycleTest.kt$mozilla.components.support.ktx.android.arch.lifecycle.LifecycleTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:LoadRequestMetadata.kt$mozilla.components.browser.session.engine.request.LoadRequestMetadata.kt</ID>
-    <ID>AbsentOrWrongFileLicense:MemoryDistributionMetricTypeTest.kt$mozilla.components.service.glean.private.MemoryDistributionMetricTypeTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:MessageBus.kt$mozilla.components.feature.push.MessageBus.kt</ID>
-    <ID>AbsentOrWrongFileLicense:MessageBusTest.kt$mozilla.components.feature.push.MessageBusTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:MockMedia.kt$mozilla.components.feature.media.MockMedia.kt</ID>
-    <ID>AbsentOrWrongFileLicense:MonthAndYearPickerTest.kt$mozilla.components.feature.prompts.widget.MonthAndYearPickerTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:Observable.kt$mozilla.components.support.base.observer.Observable.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ObserverRegistry.kt$mozilla.components.support.base.observer.ObserverRegistry.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ObserverRegistryTest.kt$mozilla.components.support.base.observer.ObserverRegistryTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:PictureInPictureFeature.kt$mozilla.components.feature.session.PictureInPictureFeature.kt</ID>
-    <ID>AbsentOrWrongFileLicense:PictureInPictureFeatureTest.kt$mozilla.components.feature.session.PictureInPictureFeatureTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:PingType.kt$mozilla.components.service.glean.private.PingType.kt</ID>
-    <ID>AbsentOrWrongFileLicense:PingTypeTest.kt$mozilla.components.service.glean.private.PingTypeTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:PingUploadWorker.kt$mozilla.components.service.glean.scheduler.PingUploadWorker.kt</ID>
-    <ID>AbsentOrWrongFileLicense:PingUploadWorkerTest.kt$mozilla.components.service.glean.scheduler.PingUploadWorkerTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:PlacesBookmarksStorageTest.kt$mozilla.components.browser.storage.sync.PlacesBookmarksStorageTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:PreferredColorScheme.kt$mozilla.components.concept.engine.mediaquery.PreferredColorScheme.kt</ID>
-    <ID>AbsentOrWrongFileLicense:PublicSuffixListTest.kt$mozilla.components.lib.publicsuffixlist.PublicSuffixListTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:PushErrorTest.kt$mozilla.components.concept.push.PushErrorTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:PushObserverTest.kt$mozilla.components.feature.sendtab.PushObserverTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:PushProcessor.kt$mozilla.components.concept.push.PushProcessor.kt</ID>
-    <ID>AbsentOrWrongFileLicense:PushProcessorTest.kt$mozilla.components.concept.push.PushProcessorTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:PushService.kt$mozilla.components.concept.push.PushService.kt</ID>
-    <ID>AbsentOrWrongFileLicense:PushTypeTest.kt$mozilla.components.feature.push.PushTypeTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:GleanBaseline.kt$mozilla.components.service.glean.GleanMetrics.GleanBaseline.kt</ID>
+    <ID>AbsentOrWrongFileLicense:GleanError.kt$mozilla.components.service.glean.GleanMetrics.GleanError.kt</ID>
+    <ID>AbsentOrWrongFileLicense:GleanGeckoMetricsMapping.kt$mozilla.components.browser.engine.gecko.GleanMetrics.GleanGeckoMetricsMapping.kt</ID>
+    <ID>AbsentOrWrongFileLicense:GleanInternalMetrics.kt$mozilla.components.service.glean.GleanMetrics.GleanInternalMetrics.kt</ID>
+    <ID>AbsentOrWrongFileLicense:HistorySync.kt$mozilla.components.browser.storage.sync.GleanMetrics.HistorySync.kt</ID>
+    <ID>AbsentOrWrongFileLicense:Pings.kt$mozilla.components.browser.storage.sync.GleanMetrics.Pings.kt</ID>
+    <ID>AbsentOrWrongFileLicense:Pings.kt$mozilla.components.service.glean.GleanMetrics.Pings.kt</ID>
+    <ID>AbsentOrWrongFileLicense:Pings.kt$org.mozilla.samples.glean.GleanMetrics.Pings.kt</ID>
     <ID>AbsentOrWrongFileLicense:QrFragment.kt$mozilla.components.feature.qr.QrFragment.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ReaderViewControlsBar.kt$mozilla.components.feature.readerview.view.ReaderViewControlsBar.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ReaderViewControlsBarTest.kt$mozilla.components.feature.readerview.view.ReaderViewControlsBarTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ReaderViewControlsInteractor.kt$mozilla.components.feature.readerview.internal.ReaderViewControlsInteractor.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ReaderViewControlsInteractorTest.kt$mozilla.components.feature.readerview.internal.ReaderViewControlsInteractorTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ReaderViewControlsPresenter.kt$mozilla.components.feature.readerview.internal.ReaderViewControlsPresenter.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ReaderViewControlsPresenterTest.kt$mozilla.components.feature.readerview.internal.ReaderViewControlsPresenterTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ReaderViewControlsView.kt$mozilla.components.feature.readerview.view.ReaderViewControlsView.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ReaderViewIntegration.kt$org.mozilla.samples.browser.integration.ReaderViewIntegration.kt</ID>
-    <ID>AbsentOrWrongFileLicense:RedirectDialogFragment.kt$mozilla.components.feature.app.links.RedirectDialogFragment.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ResizingProcessorTest.kt$mozilla.components.browser.icons.processor.ResizingProcessorTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:RustPushConnectionTest.kt$mozilla.components.feature.push.RustPushConnectionTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:SafeBundle.kt$mozilla.components.support.utils.SafeBundle.kt</ID>
-    <ID>AbsentOrWrongFileLicense:SampleToolbarHelpers.kt$org.mozilla.samples.toolbar.SampleToolbarHelpers.kt</ID>
-    <ID>AbsentOrWrongFileLicense:SamplesGleanLibrary.kt$org.mozilla.samples.glean.library.SamplesGleanLibrary.kt</ID>
-    <ID>AbsentOrWrongFileLicense:SendTabFeature.kt$mozilla.components.feature.sendtab.SendTabFeature.kt</ID>
-    <ID>AbsentOrWrongFileLicense:SendTabFeatureKtTest.kt$mozilla.components.feature.sendtab.SendTabFeatureKtTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:SendTabUseCases.kt$mozilla.components.feature.sendtab.SendTabUseCases.kt</ID>
-    <ID>AbsentOrWrongFileLicense:SendTabUseCasesTest.kt$mozilla.components.feature.sendtab.SendTabUseCasesTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:SessionExtensionsTest.kt$mozilla.components.browser.session.ext.SessionExtensionsTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:SettingUpdater.kt$mozilla.components.browser.engine.gecko.integration.SettingUpdater.kt</ID>
-    <ID>AbsentOrWrongFileLicense:SettingUpdaterTest.kt$mozilla.components.browser.engine.gecko.integration.SettingUpdaterTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:SettingsUseCasesTest.kt$mozilla.components.feature.session.SettingsUseCasesTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:SimpleRedirectDialogFragment.kt$mozilla.components.feature.app.links.SimpleRedirectDialogFragment.kt</ID>
-    <ID>AbsentOrWrongFileLicense:StateMachine.kt$mozilla.components.lib.jexl.parser.StateMachine.kt</ID>
-    <ID>AbsentOrWrongFileLicense:StorageUtilsTest.kt$mozilla.components.support.utils.StorageUtilsTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:StringListMetricTypeTest.kt$mozilla.components.service.glean.private.StringListMetricTypeTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:StringListsStorageEngineTest.kt$mozilla.components.service.glean.storages.StringListsStorageEngineTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:StringMetricTypeTest.kt$mozilla.components.service.glean.private.StringMetricTypeTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:SampleMetrics.kt$mozilla.samples.glean.library.GleanMetrics.SampleMetrics.kt</ID>
     <ID>AbsentOrWrongFileLicense:StringsStorageEngineTest.kt$mozilla.components.service.glean.storages.StringsStorageEngineTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:SuggestionViewHolder.kt$mozilla.components.browser.awesomebar.layout.SuggestionViewHolder.kt</ID>
-    <ID>AbsentOrWrongFileLicense:SystemEngineSessionTest.kt$mozilla.components.browser.engine.system.SystemEngineSessionTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:TabThumbnailView.kt$mozilla.components.browser.tabstray.thumbnail.TabThumbnailView.kt</ID>
-    <ID>AbsentOrWrongFileLicense:TabThumbnailViewTest.kt$mozilla.components.browser.tabstray.thumbnail.TabThumbnailViewTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:TabTouchCallback.kt$mozilla.components.browser.tabstray.TabTouchCallback.kt</ID>
-    <ID>AbsentOrWrongFileLicense:TabTouchCallbackTest.kt$mozilla.components.browser.tabstray.TabTouchCallbackTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:TabsFeatureTest.kt$mozilla.components.feature.tabs.tabstray.TabsFeatureTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:TestUtil.kt$mozilla.components.service.experiments.TestUtil.kt</ID>
-    <ID>AbsentOrWrongFileLicense:TestUtil.kt$mozilla.components.service.glean.TestUtil.kt</ID>
-    <ID>AbsentOrWrongFileLicense:TextViewTest.kt$mozilla.components.support.ktx.android.widget.TextViewTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:TimeUtils.kt$mozilla.components.service.glean.utils.TimeUtils.kt</ID>
-    <ID>AbsentOrWrongFileLicense:TimespanMetricTypeTest.kt$mozilla.components.service.glean.private.TimespanMetricTypeTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:Test.kt$org.mozilla.samples.glean.GleanMetrics.Test.kt</ID>
+    <ID>AbsentOrWrongFileLicense:TestGleanGeckoview.kt$mozilla.components.browser.engine.gecko.GleanMetrics.TestGleanGeckoview.kt</ID>
     <ID>AbsentOrWrongFileLicense:TimespansStorageEngineTest.kt$mozilla.components.service.glean.storages.TimespansStorageEngineTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:TimingDistributionMetricTypeTest.kt$mozilla.components.service.glean.private.TimingDistributionMetricTypeTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ToolbarFeatureTest.kt$mozilla.components.feature.toolbar.ToolbarFeatureTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ToolbarInteractorTest.kt$mozilla.components.feature.toolbar.ToolbarInteractorTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ToolbarPresenterTest.kt$mozilla.components.feature.toolbar.ToolbarPresenterTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:UuidMetricTypeTest.kt$mozilla.components.service.glean.private.UuidMetricTypeTest.kt</ID>
     <ID>AbsentOrWrongFileLicense:UuidsStorageEngineTest.kt$mozilla.components.service.glean.storages.UuidsStorageEngineTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:VersionString.kt$mozilla.components.service.experiments.util.VersionString.kt</ID>
-    <ID>AbsentOrWrongFileLicense:VersionStringTest.kt$mozilla.components.service.experiments.util.VersionStringTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:WebExtensionTest.kt$mozilla.components.concept.engine.webextension.WebExtensionTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:Window.kt$mozilla.components.support.ktx.android.view.Window.kt</ID>
-    <ID>AbsentOrWrongFileLicense:WindowTest.kt$mozilla.components.support.ktx.android.view.WindowTest.kt</ID>
-    <ID>AbsentOrWrongFileLicense:context.kt$mozilla.ext.context.kt</ID>
-    <ID>AbsentOrWrongFileLicense:coroutines.kt$mozilla.utils.coroutines.kt</ID>
-    <ID>AbsentOrWrongFileLicense:intents.kt$mozilla.components.support.utils.intents.kt</ID>
     <ID>ClassNaming:BookmarksStorageSuggestionProviderTest.kt$BookmarksStorageSuggestionProviderTest$testableBookmarksStorage : BookmarksStorage</ID>
+    <ID>ClassNaming:BrowserEngagement.kt$BrowserEngagement$clickKeys</ID>
     <ID>ClassNaming:EventMetricTypeTest.kt$clickKeys</ID>
     <ID>ClassNaming:EventMetricTypeTest.kt$testNameKeys</ID>
     <ID>ComplexMethod:HistoryDelegateTest.kt$HistoryDelegateTest$@Test fun `history delegate passes through getVisited calls`()</ID>
@@ -181,6 +44,7 @@
     <ID>EmptyCatchBlock:SystemEngineTest.kt$SystemEngineTest${ }</ID>
     <ID>EmptyCatchBlock:WhiteListTest.kt$WhiteListTest${ }</ID>
     <ID>EmptyFunctionBlock:AbstractAmazonPushServiceTest.kt$ShadowADM${}</ID>
+    <ID>EmptyFunctionBlock:AbstractAmazonPushServiceTest.kt$ShadowADM2${}</ID>
     <ID>EmptyFunctionBlock:AbstractAmazonPushServiceTest.kt$ShadowADMMessageHandlerBase${}</ID>
     <ID>EmptyFunctionBlock:AutoPushFeatureTest.kt$AutoPushFeatureTest.TestPushConnection${}</ID>
     <ID>EmptyFunctionBlock:BrowserMenuAdapterTest.kt$BrowserMenuAdapterTest.&lt;no name provided&gt;${}</ID>
@@ -201,11 +65,14 @@
     <ID>EmptyFunctionBlock:WebExtensionTest.kt$WebExtensionTest.&lt;no name provided&gt;${}</ID>
     <ID>EmptyKtFile:DatePickerDialogFragmentTest.kt$.DatePickerDialogFragmentTest.kt</ID>
     <ID>EmptyWhileBlock:EngineSessionHolderTest.kt$EngineSessionHolderTest${ }</ID>
+    <ID>EnumNaming:BrowserEngagement.kt$BrowserEngagement.clickKeys$key1</ID>
+    <ID>EnumNaming:BrowserEngagement.kt$BrowserEngagement.clickKeys$key2</ID>
     <ID>EnumNaming:EventMetricTypeTest.kt$clickKeys$objectId</ID>
     <ID>EnumNaming:EventMetricTypeTest.kt$testNameKeys$testName</ID>
     <ID>ForbiddenComment:BaselinePingTest.kt$BaselinePingTest$// FIXME: for some reason, without this, WorkManager won't find the job</ID>
     <ID>ForbiddenComment:BitmapKtTest.kt$BitmapKtTest$// TODO: convert to integration test. Robolectric's shadows are incomplete and cause this to fail.</ID>
     <ID>FunctionNaming:AbstractAmazonPushServiceTest.kt$ShadowADM$@Implementation @Suppress("UNUSED_PARAMETER") fun __constructor__(context: Context)</ID>
+    <ID>FunctionNaming:AbstractAmazonPushServiceTest.kt$ShadowADM2$@Implementation @Suppress("UNUSED_PARAMETER") fun __constructor__(context: Context)</ID>
     <ID>FunctionNaming:AbstractAmazonPushServiceTest.kt$ShadowADMMessageHandlerBase$ @Implementation @Suppress("UNUSED_PARAMETER") fun __constructor__(name: String)</ID>
     <ID>FunctionNaming:DownloadUtilsTest.kt$DownloadUtilsTest$@Test fun guessFileName_contentDisposition()</ID>
     <ID>FunctionNaming:DownloadUtilsTest.kt$DownloadUtilsTest$@Test fun guessFileName_mimeType()</ID>
@@ -1475,6 +1342,7 @@
     <ID>MaxLineLength:BaseDomainAutocompleteProviderTest.kt$BaseDomainAutocompleteProviderTest$assertCompletion(provider, list, domainsCount, "www.facebook.com", "www.facebook.com", "www.facebook.com", "http://facebook.com")</ID>
     <ID>MaxLineLength:BaseDomainAutocompleteProviderTest.kt$private</ID>
     <ID>MaxLineLength:BitmapKtTest.kt$BitmapKtTest$@Ignore // TODO: convert to integration test. Robolectric's shadows are incomplete and cause this to fail. @Test fun `WHEN withRoundedCorners is called THEN returned bitmap's corners should be transparent and center with color`()</ID>
+    <ID>MaxLineLength:BookmarksSync.kt$BookmarksSync$labels = setOf("misparented_roots", "missing_children", "missing_parent_guids", "multiple_parents_by_children", "non_folder_parent_guids", "orphans", "parent_child_disagreements")</ID>
     <ID>MaxLineLength:BrowserAwesomeBarTest.kt$BrowserAwesomeBarTest$assertEquals(1, awesomeBar.getUniqueSuggestionId(AwesomeBar.Suggestion(id = "1", score = 0, provider = provider)))</ID>
     <ID>MaxLineLength:BrowserAwesomeBarTest.kt$BrowserAwesomeBarTest$assertEquals(PROVIDER_MAX_SUGGESTIONS * INITIAL_NUMBER_OF_PROVIDERS, awesomeBar.uniqueSuggestionIds.maxSize())</ID>
     <ID>MaxLineLength:BrowserIconsTest.kt$BrowserIconsTest$@Test fun `WHEN icon is loaded again and not in memory cache THEN second load is delivered from disk cache`()</ID>
@@ -1713,32 +1581,24 @@
     <ID>MaxLineLength:TimingDistributionsStorageEngineTest.kt$TimingDistributionsStorageEngineTest$"store1#telemetry.invalid_td_values" to "{\"log_base\":2.0,\"buckets_per_magnitude\":8.0,\"values\":{\"0\": \"nope\"},\"sum\":0}"</ID>
     <ID>MaxLineLength:ToolbarAutocompleteFeatureTest.kt$ToolbarAutocompleteFeatureTest$@Suppress("SameParameterValue") private</ID>
     <ID>MaxLineLength:ToolbarAutocompleteFeatureTest.kt$ToolbarAutocompleteFeatureTest$private</ID>
-    <ID>NewLineAtEndOfFile:AbstractFirebasePushServiceTest.kt$mozilla.components.lib.push.firebase.AbstractFirebasePushServiceTest.kt</ID>
-    <ID>NewLineAtEndOfFile:AccountObserverTest.kt$mozilla.components.feature.sendtab.AccountObserverTest.kt</ID>
     <ID>NewLineAtEndOfFile:AccountSharingTest.kt$mozilla.components.service.fxa.sharing.AccountSharingTest.kt</ID>
     <ID>NewLineAtEndOfFile:ActionButtonTest.kt$mozilla.components.concept.toolbar.ActionButtonTest.kt</ID>
     <ID>NewLineAtEndOfFile:ActionSpaceTest.kt$mozilla.components.concept.toolbar.ActionSpaceTest.kt</ID>
     <ID>NewLineAtEndOfFile:ActionToggleButtonTest.kt$mozilla.components.concept.toolbar.ActionToggleButtonTest.kt</ID>
-    <ID>NewLineAtEndOfFile:ActivityTest.kt$mozilla.components.support.ktx.android.view.ActivityTest.kt</ID>
     <ID>NewLineAtEndOfFile:AtomicFileKtTest.kt$mozilla.components.browser.session.ext.AtomicFileKtTest.kt</ID>
     <ID>NewLineAtEndOfFile:AudioFocusTest.kt$mozilla.components.feature.media.focus.AudioFocusTest.kt</ID>
     <ID>NewLineAtEndOfFile:AuthenticationDialogFragmentTest.kt$mozilla.components.feature.prompts.AuthenticationDialogFragmentTest.kt</ID>
     <ID>NewLineAtEndOfFile:AutoFitTextureViewTest.kt$mozilla.components.support.base.android.view.AutoFitTextureViewTest.kt</ID>
-    <ID>NewLineAtEndOfFile:Base64Test.kt$mozilla.components.support.ktx.android.util.Base64Test.kt</ID>
     <ID>NewLineAtEndOfFile:BrowserAwesomeBarTest.kt$mozilla.components.browser.awesomebar.BrowserAwesomeBarTest.kt</ID>
     <ID>NewLineAtEndOfFile:BrowserToolbarBottomBehaviorTest.kt$mozilla.components.browser.toolbar.behavior.BrowserToolbarBottomBehaviorTest.kt</ID>
     <ID>NewLineAtEndOfFile:BrowsersTest.kt$mozilla.components.support.utils.BrowsersTest.kt</ID>
     <ID>NewLineAtEndOfFile:BuildTest.kt$mozilla.components.BuildTest.kt</ID>
     <ID>NewLineAtEndOfFile:ByteArrayTest.kt$mozilla.components.support.ktx.kotlin.ByteArrayTest.kt</ID>
-    <ID>NewLineAtEndOfFile:ChoiceDialogFragmentTest.kt$mozilla.components.feature.prompts.ChoiceDialogFragmentTest.kt</ID>
     <ID>NewLineAtEndOfFile:ChoiceTest.kt$mozilla.components.concept.engine.prompt.ChoiceTest.kt</ID>
-    <ID>NewLineAtEndOfFile:CollectionKtTest.kt$mozilla.components.support.ktx.kotlin.CollectionKtTest.kt</ID>
-    <ID>NewLineAtEndOfFile:ConnectionKtTest.kt$mozilla.components.feature.push.ConnectionKtTest.kt</ID>
     <ID>NewLineAtEndOfFile:ContentActionTest.kt$mozilla.components.browser.state.action.ContentActionTest.kt</ID>
     <ID>NewLineAtEndOfFile:ContextMenuCandidateTest.kt$mozilla.components.feature.contextmenu.ContextMenuCandidateTest.kt</ID>
     <ID>NewLineAtEndOfFile:CoordinateScrollingFeatureTest.kt$mozilla.components.feature.session.CoordinateScrollingFeatureTest.kt</ID>
     <ID>NewLineAtEndOfFile:CustomDomainsTest.kt$mozilla.components.browser.domains.CustomDomainsTest.kt</ID>
-    <ID>NewLineAtEndOfFile:DeviceObserverTest.kt$mozilla.components.feature.sendtab.DeviceObserverTest.kt</ID>
     <ID>NewLineAtEndOfFile:DeviceUuidFactoryTest.kt$mozilla.components.service.experiments.DeviceUuidFactoryTest.kt</ID>
     <ID>NewLineAtEndOfFile:DeviceUuidFactoryTest.kt$mozilla.components.service.fretboard.DeviceUuidFactoryTest.kt</ID>
     <ID>NewLineAtEndOfFile:DiskIconLoaderTest.kt$mozilla.components.browser.icons.loader.DiskIconLoaderTest.kt</ID>
@@ -1746,10 +1606,8 @@
     <ID>NewLineAtEndOfFile:DomainsTest.kt$mozilla.components.browser.domains.DomainsTest.kt</ID>
     <ID>NewLineAtEndOfFile:DownloadDialogFragmentTest.kt$mozilla.components.feature.downloads.DownloadDialogFragmentTest.kt</ID>
     <ID>NewLineAtEndOfFile:DownloadsFeatureTest.kt$mozilla.components.feature.downloads.DownloadsFeatureTest.kt</ID>
-    <ID>NewLineAtEndOfFile:EncryptedPushMessageTest.kt$mozilla.components.concept.push.EncryptedPushMessageTest.kt</ID>
     <ID>NewLineAtEndOfFile:EngineSessionHolderTest.kt$mozilla.components.browser.session.engine.EngineSessionHolderTest.kt</ID>
     <ID>NewLineAtEndOfFile:EngineTest.kt$mozilla.components.concept.engine.EngineTest.kt</ID>
-    <ID>NewLineAtEndOfFile:ErrorPagesTest.kt$mozilla.components.browser.errorpages.ErrorPagesTest.kt</ID>
     <ID>NewLineAtEndOfFile:ExceptionHandlerTest.kt$mozilla.components.lib.crash.handler.ExceptionHandlerTest.kt</ID>
     <ID>NewLineAtEndOfFile:ExperimentEvaluatorTest.kt$mozilla.components.service.fretboard.ExperimentEvaluatorTest.kt</ID>
     <ID>NewLineAtEndOfFile:ExperimentPayloadTest.kt$mozilla.components.service.experiments.ExperimentPayloadTest.kt</ID>
@@ -1770,41 +1628,26 @@
     <ID>NewLineAtEndOfFile:GeckoEngineTest.kt$mozilla.components.browser.engine.gecko.GeckoEngineTest.kt</ID>
     <ID>NewLineAtEndOfFile:GeckoPromptDelegateTest.kt$mozilla.components.browser.engine.gecko.prompt.GeckoPromptDelegateTest.kt</ID>
     <ID>NewLineAtEndOfFile:GeckoWebExtensionTest.kt$mozilla.components.browser.engine.gecko.webextension.GeckoWebExtensionTest.kt</ID>
-    <ID>NewLineAtEndOfFile:GeckoWindowRequestTest.kt$mozilla.components.browser.engine.gecko.window.GeckoWindowRequestTest.kt</ID>
-    <ID>NewLineAtEndOfFile:HitResultTest.kt$mozilla.components.concept.engine.HitResultTest.kt</ID>
     <ID>NewLineAtEndOfFile:JexlExtensionsTest.kt$mozilla.components.lib.jexl.ext.JexlExtensionsTest.kt</ID>
     <ID>NewLineAtEndOfFile:JexlValueTest.kt$mozilla.components.lib.jexl.value.JexlValueTest.kt</ID>
     <ID>NewLineAtEndOfFile:KintoClientTest.kt$mozilla.components.service.experiments.KintoClientTest.kt</ID>
     <ID>NewLineAtEndOfFile:KintoClientTest.kt$mozilla.components.service.fretboard.source.kinto.KintoClientTest.kt</ID>
     <ID>NewLineAtEndOfFile:KintoExperimentSourceTest.kt$mozilla.components.service.experiments.KintoExperimentSourceTest.kt</ID>
     <ID>NewLineAtEndOfFile:KintoExperimentSourceTest.kt$mozilla.components.service.fretboard.source.kinto.KintoExperimentSourceTest.kt</ID>
-    <ID>NewLineAtEndOfFile:LexerTest.kt$mozilla.components.lib.jexl.lexer.LexerTest.kt</ID>
-    <ID>NewLineAtEndOfFile:LifecycleTest.kt$mozilla.components.support.ktx.android.arch.lifecycle.LifecycleTest.kt</ID>
     <ID>NewLineAtEndOfFile:LintLogChecksTest.kt$mozilla.components.tooling.lint.LintLogChecksTest.kt</ID>
     <ID>NewLineAtEndOfFile:LocaleManagerTest.kt$mozilla.components.support.locale.LocaleManagerTest.kt</ID>
     <ID>NewLineAtEndOfFile:MainActivityTest.kt$org.mozilla.samples.glean.MainActivityTest.kt</ID>
     <ID>NewLineAtEndOfFile:MediaNotificationTest.kt$mozilla.components.feature.media.notification.MediaNotificationTest.kt</ID>
     <ID>NewLineAtEndOfFile:MemoryIconLoaderTest.kt$mozilla.components.browser.icons.loader.MemoryIconLoaderTest.kt</ID>
-    <ID>NewLineAtEndOfFile:MessageBusTest.kt$mozilla.components.feature.push.MessageBusTest.kt</ID>
     <ID>NewLineAtEndOfFile:Mock.kt$mozilla.components.support.test.Mock.kt</ID>
-    <ID>NewLineAtEndOfFile:MockMedia.kt$mozilla.components.feature.media.MockMedia.kt</ID>
-    <ID>NewLineAtEndOfFile:MonthAndYearPickerTest.kt$mozilla.components.feature.prompts.widget.MonthAndYearPickerTest.kt</ID>
     <ID>NewLineAtEndOfFile:NestedGeckoViewTest.kt$mozilla.components.browser.engine.gecko.NestedGeckoViewTest.kt</ID>
     <ID>NewLineAtEndOfFile:NestedWebViewTest.kt$mozilla.components.browser.engine.system.NestedWebViewTest.kt</ID>
     <ID>NewLineAtEndOfFile:PaddingTest.kt$mozilla.components.support.base.android.PaddingTest.kt</ID>
     <ID>NewLineAtEndOfFile:PermissionRequestTest.kt$mozilla.components.concept.engine.permission.PermissionRequestTest.kt</ID>
     <ID>NewLineAtEndOfFile:Permissions.kt$mozilla.components.support.test.robolectric.Permissions.kt</ID>
-    <ID>NewLineAtEndOfFile:PlacesBookmarksStorageTest.kt$mozilla.components.browser.storage.sync.PlacesBookmarksStorageTest.kt</ID>
-    <ID>NewLineAtEndOfFile:PushErrorTest.kt$mozilla.components.concept.push.PushErrorTest.kt</ID>
-    <ID>NewLineAtEndOfFile:PushObserverTest.kt$mozilla.components.feature.sendtab.PushObserverTest.kt</ID>
-    <ID>NewLineAtEndOfFile:PushProcessorTest.kt$mozilla.components.concept.push.PushProcessorTest.kt</ID>
-    <ID>NewLineAtEndOfFile:PushTypeTest.kt$mozilla.components.feature.push.PushTypeTest.kt</ID>
     <ID>NewLineAtEndOfFile:QrFragmentTest.kt$mozilla.components.feature.qr.QrFragmentTest.kt</ID>
     <ID>NewLineAtEndOfFile:RequestInterceptorTest.kt$mozilla.components.concept.engine.request.RequestInterceptorTest.kt</ID>
     <ID>NewLineAtEndOfFile:ReversibleStringTest.kt$mozilla.components.browser.engine.system.matcher.ReversibleStringTest.kt</ID>
-    <ID>NewLineAtEndOfFile:SendTabFeatureKtTest.kt$mozilla.components.feature.sendtab.SendTabFeatureKtTest.kt</ID>
-    <ID>NewLineAtEndOfFile:SendTabUseCasesTest.kt$mozilla.components.feature.sendtab.SendTabUseCasesTest.kt</ID>
-    <ID>NewLineAtEndOfFile:SessionExtensionsTest.kt$mozilla.components.browser.session.ext.SessionExtensionsTest.kt</ID>
     <ID>NewLineAtEndOfFile:SessionFeatureTest.kt$mozilla.components.feature.session.SessionFeatureTest.kt</ID>
     <ID>NewLineAtEndOfFile:SessionStorageTest.kt$mozilla.components.browser.session.storage.SessionStorageTest.kt</ID>
     <ID>NewLineAtEndOfFile:SettingsTest.kt$mozilla.components.concept.engine.SettingsTest.kt</ID>
@@ -1813,25 +1656,14 @@
     <ID>NewLineAtEndOfFile:SitePermissionEntityTest.kt$mozilla.components.feature.sitepermissions.db.SitePermissionEntityTest.kt</ID>
     <ID>NewLineAtEndOfFile:SitePermissionsStorageTest.kt$mozilla.components.feature.sitepermissions.SitePermissionsStorageTest.kt</ID>
     <ID>NewLineAtEndOfFile:StatusConverterTest.kt$mozilla.components.feature.sitepermissions.db.StatusConverterTest.kt</ID>
-    <ID>NewLineAtEndOfFile:StorageUtilsTest.kt$mozilla.components.support.utils.StorageUtilsTest.kt</ID>
     <ID>NewLineAtEndOfFile:SyncAuthInfoCacheTest.kt$mozilla.components.service.fxa.SyncAuthInfoCacheTest.kt</ID>
-    <ID>NewLineAtEndOfFile:SystemEngineSessionTest.kt$mozilla.components.browser.engine.system.SystemEngineSessionTest.kt</ID>
     <ID>NewLineAtEndOfFile:SystemEngineTest.kt$mozilla.components.browser.engine.system.SystemEngineTest.kt</ID>
     <ID>NewLineAtEndOfFile:SystemWindowRequestTest.kt$mozilla.components.browser.engine.system.window.SystemWindowRequestTest.kt</ID>
-    <ID>NewLineAtEndOfFile:TabThumbnailViewTest.kt$mozilla.components.browser.tabstray.thumbnail.TabThumbnailViewTest.kt</ID>
-    <ID>NewLineAtEndOfFile:TabsFeatureTest.kt$mozilla.components.feature.tabs.tabstray.TabsFeatureTest.kt</ID>
-    <ID>NewLineAtEndOfFile:TestUtil.kt$mozilla.components.service.experiments.TestUtil.kt</ID>
-    <ID>NewLineAtEndOfFile:TextViewTest.kt$mozilla.components.support.ktx.android.widget.TextViewTest.kt</ID>
-    <ID>NewLineAtEndOfFile:ToolbarFeatureTest.kt$mozilla.components.feature.toolbar.ToolbarFeatureTest.kt</ID>
     <ID>NewLineAtEndOfFile:TrieTest.kt$mozilla.components.browser.engine.system.matcher.TrieTest.kt</ID>
     <ID>NewLineAtEndOfFile:UtilsKtTest.kt$mozilla.components.service.fxa.UtilsKtTest.kt</ID>
-    <ID>NewLineAtEndOfFile:VersionStringTest.kt$mozilla.components.service.experiments.util.VersionStringTest.kt</ID>
     <ID>NewLineAtEndOfFile:ViewKtTest.kt$mozilla.components.lib.state.ext.ViewKtTest.kt</ID>
-    <ID>NewLineAtEndOfFile:WebExtensionTest.kt$mozilla.components.concept.engine.webextension.WebExtensionTest.kt</ID>
     <ID>NewLineAtEndOfFile:WhiteListTest.kt$mozilla.components.browser.engine.system.matcher.WhiteListTest.kt</ID>
     <ID>NewLineAtEndOfFile:WindowFeatureTest.kt$mozilla.components.feature.session.WindowFeatureTest.kt</ID>
-    <ID>NewLineAtEndOfFile:context.kt$mozilla.ext.context.kt</ID>
-    <ID>NewLineAtEndOfFile:coroutines.kt$mozilla.utils.coroutines.kt</ID>
     <ID>SpacingBetweenPackageAndImports:GeckoEngineSessionTest.kt$ </ID>
     <ID>SpacingBetweenPackageAndImports:GeckoPromptDelegateTest.kt$ </ID>
     <ID>ThrowsCount:UtilsKtTest.kt$UtilsKtTest$@Test fun `handleFxaExceptions form 1 does not swallow non-panics`()</ID>

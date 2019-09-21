@@ -1,8 +1,6 @@
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public
- *  License, v. 2.0. If a copy of the MPL was not distributed with this
- *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package mozilla.components.feature.push
 
@@ -16,7 +14,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
-import mozilla.appservices.push.PushError as RustPushError
 import mozilla.appservices.push.SubscriptionResponse
 import mozilla.components.concept.push.Bus
 import mozilla.components.concept.push.EncryptedPushMessage
@@ -30,6 +27,7 @@ import java.io.File
 import java.util.UUID
 import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
+import mozilla.appservices.push.PushError as RustPushError
 
 /**
  * A implementation of a [PushProcessor] that should live as a singleton by being installed

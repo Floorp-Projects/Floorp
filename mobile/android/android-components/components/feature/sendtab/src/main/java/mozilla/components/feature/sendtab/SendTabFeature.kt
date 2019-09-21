@@ -1,8 +1,6 @@
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public
- *  License, v. 2.0. If a copy of the MPL was not distributed with this
- *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package mozilla.components.feature.sendtab
 
@@ -11,7 +9,6 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import mozilla.components.concept.push.Bus
 import mozilla.components.concept.push.PushService
 import mozilla.components.concept.sync.AuthType
-import mozilla.components.concept.sync.AccountObserver as SyncAccountObserver
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.DeviceEvent
@@ -25,6 +22,7 @@ import mozilla.components.feature.push.PushSubscriptionObserver
 import mozilla.components.feature.push.PushType
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.concept.sync.AccountObserver as SyncAccountObserver
 
 /**
  * A feature that uses the [FxaAccountManager] to send and receive tabs with optional push support
