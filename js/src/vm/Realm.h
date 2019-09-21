@@ -407,7 +407,7 @@ class JS::Realm : public JS::shadow::Realm {
 
   // Aggregated output used to collect JSScript hit counts when code coverage
   // is enabled.
-  js::coverage::LCovRealm lcovOutput;
+  js::UniquePtr<js::coverage::LCovRealm> lcovRealm = nullptr;
 
   js::RegExpRealm regExps;
 
@@ -755,6 +755,9 @@ class JS::Realm : public JS::shadow::Realm {
   // If we scheduled delazification for turning on debug mode, delazify all
   // scripts.
   bool ensureDelazifyScriptsForDebugger(JSContext* cx);
+
+  // Collect coverage info from a script and aggregate into this realm.
+  void collectCodeCoverageInfo(JSScript* script, const char* name);
 
   // Initializes randomNumberGenerator if needed.
   mozilla::non_crypto::XorShift128PlusRNG& getOrCreateRandomNumberGenerator();

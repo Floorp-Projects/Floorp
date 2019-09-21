@@ -65,8 +65,8 @@ Realm::~Realm() {
   MOZ_ASSERT(!isDebuggee());
 
   // Write the code coverage information in a file.
-  if (coverage::IsLCovEnabled()) {
-    runtime_->lcovOutput().writeLCovResult(lcovOutput);
+  if (lcovRealm) {
+    runtime_->lcovOutput().writeLCovResult(*lcovRealm);
   }
 
   MOZ_ASSERT(runtime_->numRealms > 0);
@@ -723,6 +723,19 @@ bool Realm::collectCoverageForDebug() const {
 void Realm::clearScriptCounts() { zone()->clearScriptCounts(this); }
 
 void Realm::clearScriptNames() { zone()->clearScriptNames(this); }
+
+void Realm::collectCodeCoverageInfo(JSScript* script, const char* name) {
+  // Try to create the LCovRealm if does not exist.
+  if (!lcovRealm) {
+    lcovRealm = js::MakeUnique<coverage::LCovRealm>(this);
+  }
+
+  if (!lcovRealm) {
+    return;
+  }
+
+  lcovRealm->collectCodeCoverageInfo(script, name);
+}
 
 void ObjectRealm::addSizeOfExcludingThis(
     mozilla::MallocSizeOf mallocSizeOf, size_t* innerViewsArg,

@@ -4241,7 +4241,7 @@ void JSScript::finalize(JSFreeOp* fop) {
   // scripts, and store the aggregated information on the realm.
   MOZ_ASSERT_IF(hasScriptName(), coverage::IsLCovEnabled());
   if (coverage::IsLCovEnabled() && hasScriptName()) {
-    realm()->lcovOutput.collectCodeCoverageInfo(realm(), this, getScriptName());
+    realm()->collectCodeCoverageInfo(this, getScriptName());
     destroyScriptName();
   }
 
