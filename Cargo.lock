@@ -11,7 +11,7 @@ dependencies = [
 
 [[package]]
 name = "adler32"
-version = "1.0.3"
+version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -846,7 +846,7 @@ name = "deflate"
 version = "0.7.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "adler32 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "adler32 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1444,7 +1444,7 @@ name = "inflate"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "adler32 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "adler32 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1754,7 +1754,7 @@ name = "miniz_oxide"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "adler32 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "adler32 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -3746,7 +3746,7 @@ dependencies = [
 
 [metadata]
 "checksum Inflector 0.11.4 (registry+https://github.com/rust-lang/crates.io-index)" = "fe438c63458706e03479442743baae6c88256498e6431708f6dfc520a26515d3"
-"checksum adler32 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)" = "7e522997b529f05601e05166c07ed17789691f562762c7f3b987263d2dedee5c"
+"checksum adler32 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)" = "5d2e7343e7fc9de883d1b0341e0b13970f764c14101234857d2ddafa1cb1cac2"
 "checksum aho-corasick 0.7.6 (registry+https://github.com/rust-lang/crates.io-index)" = "58fb5e95d83b38284460a5fda7d6470aa0b8844d283a0b614b8535e880800d2d"
 "checksum ansi_term 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ee49baf6cb617b853aa8d93bf420db2383fab46d314482ca2803b40d5fde979b"
 "checksum app_units 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "9dadc668390b373e73e4abbfc1f07238b09a25858f2f39c06cebc6d8e141d774"
