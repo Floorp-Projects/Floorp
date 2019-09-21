@@ -840,9 +840,6 @@ forms-master-pw-change =
     .label = Change Master Password…
     .accesskey = M
 
-forms-master-pw-fips-title = You are currently in FIPS mode. FIPS requires a non-empty Master Password.
-forms-master-pw-fips-desc = Password Change Failed
-
 ## Privacy Section - History
 
 history-header = History
