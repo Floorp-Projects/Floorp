@@ -89,7 +89,9 @@ add_task(async function test_set_login() {
   let usernameInput = gLoginItem.shadowRoot.querySelector("input[name='username']");
   is(usernameInput.value, TEST_LOGIN_1.username, "username should be populated");
   is(document.l10n.getAttributes(usernameInput).id, "about-logins-login-item-username", "username field should have default placeholder when not editing");
-  is(gLoginItem.shadowRoot.querySelector("input[name='password']").value.length, TEST_LOGIN_1.password.length, "password mask text should be populated");
+  let passwordInput = gLoginItem.shadowRoot.querySelector("input[name='password']");
+  is(passwordInput.value, TEST_LOGIN_1.password, "password should be populated");
+  ok(!passwordInput.hasAttribute("value"), "Password shouldn't be exposed in @value");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, TEST_LOGIN_1.timeCreated, "time-created should be populated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, TEST_LOGIN_1.timePasswordChanged, "time-changed should be populated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, TEST_LOGIN_1.timeLastUsed, "time-used should be populated");
@@ -258,6 +260,7 @@ add_task(async function test_set_login_empty() {
   is(gLoginItem.shadowRoot.querySelector("input[name='origin']").value, "", "origin should be empty");
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, "", "username should be empty");
   is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, "", "password should be empty");
+  ok(!gLoginItem.shadowRoot.querySelector("input[name='password']").hasAttribute("value"), "Password shouldn't be exposed in @value");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, "", "time-created should be blank when undefined");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, "", "time-changed should be blank when undefined");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, "", "time-used should be blank when undefined");
@@ -312,7 +315,8 @@ add_task(async function test_different_login_modified() {
 
   is(gLoginItem.shadowRoot.querySelector("input[name='origin']").value, TEST_LOGIN_1.origin, "origin should be unchanged");
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, TEST_LOGIN_1.username, "username should be unchanged");
-  is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, " ".repeat(TEST_LOGIN_1.password.length), "password length should be unchanged");
+  is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, TEST_LOGIN_1.password, "password should be unchanged");
+  ok(!gLoginItem.shadowRoot.querySelector("input[name='password']").hasAttribute("value"), "Password shouldn't be exposed in @value");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, TEST_LOGIN_1.timeCreated, "time-created should be unchanged");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, TEST_LOGIN_1.timePasswordChanged, "time-changed should be unchanged");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, TEST_LOGIN_1.timeLastUsed, "time-used should be unchanged");
@@ -326,7 +330,8 @@ add_task(async function test_different_login_removed() {
 
   is(gLoginItem.shadowRoot.querySelector("input[name='origin']").value, TEST_LOGIN_1.origin, "origin should be unchanged");
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, TEST_LOGIN_1.username, "username should be unchanged");
-  is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, " ".repeat(TEST_LOGIN_1.password.length), "password length should be unchanged");
+  is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, TEST_LOGIN_1.password, "password should be unchanged");
+  ok(!gLoginItem.shadowRoot.querySelector("input[name='password']").hasAttribute("value"), "Password shouldn't be exposed in @value");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, TEST_LOGIN_1.timeCreated, "time-created should be unchanged");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, TEST_LOGIN_1.timePasswordChanged, "time-changed should be unchanged");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, TEST_LOGIN_1.timeLastUsed, "time-used should be unchanged");
@@ -340,7 +345,8 @@ add_task(async function test_login_modified() {
 
   is(gLoginItem.shadowRoot.querySelector("input[name='origin']").value, modifiedLogin.origin, "origin should be updated");
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, modifiedLogin.username, "username should be updated");
-  is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, " ".repeat(modifiedLogin.password.length), "password length should be updated");
+  is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, modifiedLogin.password, "password should be updated");
+  ok(!gLoginItem.shadowRoot.querySelector("input[name='password']").hasAttribute("value"), "Password shouldn't be exposed in @value");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, modifiedLogin.timeCreated, "time-created should be updated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, modifiedLogin.timePasswordChanged, "time-changed should be updated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, modifiedLogin.timeLastUsed, "time-used should be updated");
@@ -354,6 +360,7 @@ add_task(async function test_login_removed() {
   is(gLoginItem.shadowRoot.querySelector("input[name='origin']").value, "", "origin should be cleared");
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, "", "username should be cleared");
   is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, "", "password should be cleared");
+  ok(!gLoginItem.shadowRoot.querySelector("input[name='password']").hasAttribute("value"), "Password shouldn't be exposed in @value");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, "", "time-created should be blank when undefined");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, "", "time-changed should be blank when undefined");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, "", "time-used should be blank when undefined");

@@ -106,8 +106,12 @@ add_task(async function test_login_item() {
         );
         is(
           passwordInput.value,
-          " ".repeat(login.password.length),
+          login.password,
           "Password change should be reverted"
+        );
+        ok(
+          !passwordInput.hasAttribute("value"),
+          "Password shouldn't be exposed in @value"
         );
         is(
           passwordInput.style.width,
@@ -140,8 +144,6 @@ add_task(async function test_login_item() {
       usernameInput.value += "-saveme";
       passwordInput.value += "-saveme";
 
-      // Cache the value since it will change upon leaving edit mode.
-      let passwordInputValue = passwordInput.value;
       ok(loginItem.dataset.editing, "LoginItem should be in 'edit' mode");
 
       let saveChangesButton = loginItem.shadowRoot.querySelector(
@@ -155,7 +157,7 @@ add_task(async function test_login_item() {
         return (
           updatedLogin &&
           updatedLogin.username == usernameInput.value &&
-          updatedLogin.password == passwordInputValue
+          updatedLogin.password == passwordInput.value
         );
       }, "Waiting for corresponding login in login list to update");
 
