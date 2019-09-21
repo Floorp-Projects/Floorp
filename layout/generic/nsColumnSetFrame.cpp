@@ -408,14 +408,14 @@ nsColumnSetFrame::ReflowConfig nsColumnSetFrame::ChooseColumnStrategy(
     // No balancing, so don't limit the column count
     numColumns = INT32_MAX;
 
-    // XXX_jwir3: If a page's height is set to 0, we could continually
-    //            create continuations, resulting in an infinite loop, since
-    //            no progress is ever made. This is an issue with the spec
-    //            (css3-multicol, css3-page, and css3-break) that is
-    //            unresolved as of 27 Feb 2013. For the time being, we set this
-    //            to have a minimum of 1 css px. Once a resolution is made
-    //            on what minimum to have for a page height, we may need to
-    //            change this value to match the appropriate spec(s).
+    // CSS Fragmentation spec says, "To guarantee progress, fragmentainers are
+    // assumed to have a minimum block size of 1px regardless of their used
+    // size." https://drafts.csswg.org/css-break/#breaking-rules
+    //
+    // Note: we don't enforce the minimum block-size during balancing because
+    // this affects the result. If a balancing column container or its
+    // next-in-flows has zero block-size, it eventually gives up balancing, and
+    // ends up here.
     colBSize = std::max(colBSize, nsPresContext::CSSPixelsToAppUnits(1));
   }
 
