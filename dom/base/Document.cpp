@@ -83,6 +83,7 @@
 #include "nsINSSErrorsService.h"
 #include "nsISocketProvider.h"
 #include "nsISiteSecurityService.h"
+#include "PermissionDelegateHandler.h"
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BasicEvents.h"
@@ -1904,6 +1905,10 @@ Document::~Document() {
 
   if (mXULPersist) {
     mXULPersist->DropDocumentReference();
+  }
+
+  if (mPermissionDelegateHandler) {
+    mPermissionDelegateHandler->DropDocumentReference();
   }
 
   delete mHeaderData;
@@ -15364,6 +15369,14 @@ void Document::AddResizeObserver(ResizeObserver* aResizeObserver) {
   }
 
   mResizeObserverController->AddResizeObserver(aResizeObserver);
+}
+
+PermissionDelegateHandler* Document::GetPermissionDelegateHandler() {
+  if (!mPermissionDelegateHandler) {
+    mPermissionDelegateHandler =
+        mozilla::MakeAndAddRef<PermissionDelegateHandler>(this);
+  }
+  return mPermissionDelegateHandler;
 }
 
 void Document::ScheduleResizeObserversNotification() const {
