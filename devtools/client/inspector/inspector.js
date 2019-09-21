@@ -66,6 +66,11 @@ loader.lazyRequireGetter(
   "saveScreenshot",
   "devtools/shared/screenshot/save"
 );
+loader.lazyRequireGetter(
+  this,
+  "ObjectClient",
+  "devtools/shared/client/object-client"
+);
 
 loader.lazyImporter(
   this,
@@ -145,7 +150,17 @@ function Inspector(toolbox) {
   this.panelWin = window;
   this.panelWin.inspector = this;
   this.telemetry = toolbox.telemetry;
-  this.store = Store();
+  this.store = Store({
+    createObjectClient: object => {
+      return new ObjectClient(toolbox.target.client, object);
+    },
+    releaseActor: actor => {
+      if (!actor) {
+        return;
+      }
+      toolbox.target.client.release(actor);
+    },
+  });
 
   // Map [panel id => panel instance]
   // Stores all the instances of sidebar panels like rule view, computed view, ...

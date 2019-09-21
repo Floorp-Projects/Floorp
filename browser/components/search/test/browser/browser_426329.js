@@ -308,16 +308,11 @@ add_task(async function testClearHistory() {
   // Close the context menu.
   EventUtils.synthesizeKey("KEY_Escape");
 
-  let controller = searchBar.textbox.controllers.getControllerForCommand(
-    "cmd_clearhistory"
-  );
-  ok(
-    controller.isCommandEnabled("cmd_clearhistory"),
-    "Clear history command enabled"
-  );
+  let menuitem = searchBar._menupopup.querySelector(".searchbar-clear-history");
+  ok(!menuitem.disabled, "Clear history menuitem enabled");
 
   let historyCleared = promiseObserver("satchel-storage-changed");
-  controller.doCommand("cmd_clearhistory");
+  menuitem.click();
   await historyCleared;
   let count = await countEntries();
   ok(count == 0, "History cleared");

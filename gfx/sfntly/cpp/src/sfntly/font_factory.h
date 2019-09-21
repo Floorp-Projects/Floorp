@@ -56,7 +56,7 @@ class FontFactory : public RefCounted<FontFactory> {
   // than one font and in this case multiple font objects will be returned. If
   // the data in the stream cannot be parsed or is invalid an array of size zero
   // will be returned.
-  void LoadFonts(ByteVector* b, FontArray* output);
+  void LoadFonts(std::vector<uint8_t>* b, FontArray* output);
 
   // Load the font(s) from the input stream into font builders. The current
   // settings on the factory are used during the loading process. One or more
@@ -72,7 +72,7 @@ class FontFactory : public RefCounted<FontFactory> {
   // font container formats may have more than one font and in this case
   // multiple font builder objects will be returned. If the data in the stream
   // cannot be parsed or is invalid an array of size zero will be returned.
-  void LoadFontsForBuilding(ByteVector* b, FontBuilderArray* output);
+  void LoadFontsForBuilding(std::vector<uint8_t>* b, FontBuilderArray* output);
 
   // Font serialization
   // Serialize the font to the output stream.
@@ -80,12 +80,6 @@ class FontFactory : public RefCounted<FontFactory> {
   //       with cross-platform I/O stream itself is big enough as a project.
   //       Byte buffer it is.
   void SerializeFont(Font* font, OutputStream* os);
-
-  // Set the table ordering to be used in serializing a font. The table ordering
-  // is an ordered list of table ids and tables will be serialized in the order
-  // given. Any tables whose id is not listed in the ordering will be placed in
-  // an unspecified order following those listed.
-  void SetSerializationTableOrdering(const IntegerList& table_ordering);
 
   // Get an empty font builder for creating a new font from scratch.
   CALLER_ATTACH Font::Builder* NewFontBuilder();
@@ -131,7 +125,6 @@ class FontFactory : public RefCounted<FontFactory> {
   static bool IsCollection(ReadableFontData* wfd);
 
   bool fingerprint_;
-  IntegerList table_ordering_;
 };
 typedef Ptr<FontFactory> FontFactoryPtr;
 

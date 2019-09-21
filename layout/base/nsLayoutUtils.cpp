@@ -1196,8 +1196,18 @@ bool nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
     return false;
   }
 
+  nsIFrame* scrollFrame = GetScrollFrameFromContent(aContent);
+
   nsRect oldDisplayPort;
-  bool hadDisplayPort = GetHighResolutionDisplayPort(aContent, &oldDisplayPort);
+  bool hadDisplayPort = false;
+  if (scrollFrame) {
+    // We only use the two return values from this function to call
+    // InvalidateForDisplayPortChange. InvalidateForDisplayPortChange does
+    // nothing if aContent does not have a frame. So getting the displayport is
+    // useless if the content has no frame, so we avoid calling this to avoid
+    // triggering a warning about not having a frame.
+    hadDisplayPort = GetHighResolutionDisplayPort(aContent, &oldDisplayPort);
+  }
 
   aContent->SetProperty(
       nsGkAtoms::DisplayPortMargins,
@@ -1209,13 +1219,14 @@ bool nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
       GetHighResolutionDisplayPort(aContent, &newDisplayPort);
   MOZ_ASSERT(hasDisplayPort);
 
-  InvalidateForDisplayPortChange(aContent, hadDisplayPort, oldDisplayPort,
-                                 newDisplayPort, aRepaintMode);
-
-  nsIScrollableFrame* scrollableFrame = FindScrollableFrameFor(aContent);
+  nsIScrollableFrame* scrollableFrame =
+      scrollFrame ? scrollFrame->GetScrollTargetFrame() : nullptr;
   if (!scrollableFrame) {
     return true;
   }
+
+  InvalidateForDisplayPortChange(aContent, hadDisplayPort, oldDisplayPort,
+                                 newDisplayPort, aRepaintMode);
 
   scrollableFrame->TriggerDisplayPortExpiration();
 

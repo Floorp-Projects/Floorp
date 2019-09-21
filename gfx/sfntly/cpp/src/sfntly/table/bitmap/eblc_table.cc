@@ -294,19 +294,23 @@ BitmapSizeTableBuilderList* EblcTable::Builder::GetSizeList() {
 void EblcTable::Builder::Initialize(ReadableFontData* data,
                                     BitmapSizeTableBuilderList* output) {
   assert(output);
-  if (data) {
-    int32_t num_sizes = data->ReadULongAsInt(Offset::kNumSizes);
-    for (int32_t i = 0; i < num_sizes; ++i) {
-      ReadableFontDataPtr new_data;
-      new_data.Attach(down_cast<ReadableFontData*>(
-          data->Slice(Offset::kBitmapSizeTableArrayStart +
-                      i * Offset::kBitmapSizeTableLength,
-                      Offset::kBitmapSizeTableLength)));
-      BitmapSizeTableBuilderPtr size_builder;
-      size_builder.Attach(BitmapSizeTable::Builder::CreateBuilder(
-          new_data, data));
-      output->push_back(size_builder);
-    }
+  if (!data)
+    return;
+
+  int32_t num_sizes = data->ReadULongAsInt(Offset::kNumSizes);
+  if (num_sizes > data->Size() / Offset::kBitmapSizeTableLength)
+    return;
+
+  for (int32_t i = 0; i < num_sizes; ++i) {
+    ReadableFontDataPtr new_data;
+    new_data.Attach(down_cast<ReadableFontData*>(
+        data->Slice(Offset::kBitmapSizeTableArrayStart +
+                    i * Offset::kBitmapSizeTableLength,
+                    Offset::kBitmapSizeTableLength)));
+    BitmapSizeTableBuilderPtr size_builder;
+    size_builder.Attach(BitmapSizeTable::Builder::CreateBuilder(
+        new_data, data));
+    output->push_back(size_builder);
   }
 }
 

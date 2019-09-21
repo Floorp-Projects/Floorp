@@ -784,6 +784,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
                                        nsIRequest* aRequest,
                                        Maybe<WebProgressData>& aWebProgressData,
                                        RequestData& aRequestData);
+  already_AddRefed<nsIWebBrowserChrome3> GetWebBrowserChromeActor();
 
   class DelayedDeleteRunnable;
 

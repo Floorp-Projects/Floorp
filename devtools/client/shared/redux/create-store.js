@@ -9,6 +9,7 @@ const {
   applyMiddleware,
 } = require("devtools/client/shared/vendor/redux");
 const { thunk } = require("./middleware/thunk");
+const { thunkWithOptions } = require("./middleware/thunk-with-options");
 const { waitUntilService } = require("./middleware/wait-service");
 const { task } = require("./middleware/task");
 const { promise } = require("./middleware/promise");
@@ -33,14 +34,20 @@ loader.lazyRequireGetter(
  * various ways, such as logging and recording.
  *
  * @param {object} opts:
+ *        - disableTask: if true, don't include the task middleware
  *        - log: log all dispatched actions to console
- *        - history: an array to store every action in. Should only be
- *                   used in tests.
+ *        - history: an array to store every action in. Should only be used in tests.
  *        - middleware: array of middleware to be included in the redux store
+ *        - thunkOptions: object that will be spread within a {dispatch, getState} object,
+ *                        that will be passed in each thunk action.
  */
 const createStoreWithMiddleware = (opts = {}) => {
-  const middleware = [
-    task,
+  const middleware = [];
+  if (!opts.disableTask) {
+    middleware.push(task);
+  }
+  middleware.push(
+    opts.thunkOptions ? thunkWithOptions.bind(null, opts.thunkOptions) : thunk,
     thunk,
     promise,
 
@@ -48,8 +55,8 @@ const createStoreWithMiddleware = (opts = {}) => {
     // operate on "already transformed" actions. Actions going through
     // them shouldn't have any special fields like promises, they
     // should just be normal JSON objects.
-    waitUntilService,
-  ];
+    waitUntilService
+  );
 
   if (opts.history) {
     middleware.push(history(opts.history));
@@ -68,7 +75,12 @@ const createStoreWithMiddleware = (opts = {}) => {
 
 module.exports = (
   reducers,
-  { shouldLog = false, initialState = undefined } = {}
+  {
+    shouldLog = false,
+    initialState = undefined,
+    thunkOptions,
+    disableTask = false,
+  } = {}
 ) => {
   const reducer =
     typeof reducers === "function" ? reducers : combineReducers(reducers);
@@ -82,8 +94,10 @@ module.exports = (
   }
 
   const store = createStoreWithMiddleware({
+    disableTask,
     log: flags.testing && shouldLog,
     history: historyEntries,
+    thunkOptions,
   })(reducer, initialState);
 
   if (history) {

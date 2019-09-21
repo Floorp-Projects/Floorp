@@ -636,6 +636,7 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
 #wp-player2,
 #wp-ball,
 #wp-score {
+  display: block;
   position: fixed;
 }
 

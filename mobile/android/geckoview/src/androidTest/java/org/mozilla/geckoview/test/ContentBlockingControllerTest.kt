@@ -84,9 +84,6 @@ class ContentBlockingControllerTest : BaseSessionTest() {
 
     @Test
     fun importExportExceptions() {
-        // May provide useful info for 1580375.
-        sessionRule.setPrefsUntilTestEnd(mapOf("browser.safebrowsing.debug" to true))
-
         val category = ContentBlocking.AntiTracking.TEST
         sessionRule.runtime.settings.contentBlocking.setAntiTracking(category)
         sessionRule.session.loadTestPath(TRACKERS_PATH)

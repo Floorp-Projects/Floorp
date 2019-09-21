@@ -388,7 +388,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * Currently only set for GeckoView to allow handling of load requests
    * at the application level.
    */
-  attribute nsILoadURIDelegate loadURIDelegate;
+  readonly attribute nsILoadURIDelegate loadURIDelegate;
 
   /**
    * Cancel the XPCOM timers for each meta-refresh URI in this docshell,

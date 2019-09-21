@@ -49,6 +49,7 @@ DIRS += [
 ]
 
 DIRS += [
+    'actors',
     'base',
     'chrome',
     'components',

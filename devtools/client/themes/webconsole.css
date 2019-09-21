@@ -64,7 +64,8 @@ a {
 
 /* Workaround for Bug 575675 - FindChildWithRules aRelevantLinkVisited
  * assertion when loading HTML page with links in XUL iframe */
-*:visited { }
+*:visited {
+}
 
 * {
   box-sizing: border-box;
@@ -144,7 +145,8 @@ a {
   width: 3px;
 }
 
-.message:hover::before {
+.message:hover::before,
+.message.highlight::before {
   background-color: var(--theme-highlight-blue);
 }
 
@@ -562,7 +564,7 @@ html #webconsole-notificationbox {
 }
 
 a.learn-more-link.webconsole-learn-more-link {
-    font-style: normal;
+  font-style: normal;
 }
 
 /*
@@ -835,14 +837,14 @@ a.learn-more-link.webconsole-learn-more-link {
   z-index: 1;
 }
 
-.new-consoletable > [role=gridcell] {
+.new-consoletable > [role="gridcell"] {
   background-color: var(--theme-body-background);
   padding: 3px 4px;
   min-width: 100px;
   color: var(--theme-body-color);
 }
 
-.new-consoletable > [role=gridcell].even {
+.new-consoletable > [role="gridcell"].even {
   background-color: var(--table-zebra-background);
 }
 
@@ -916,7 +918,9 @@ a.learn-more-link.webconsole-learn-more-link {
 /* Use a bigger arrow that is visually similar to other icons (10px) */
 .message.network > .collapse-button::before,
 .message.startGroup > .indent[data-indent="0"] ~ .collapse-button::before,
-.message.startGroupCollapsed > .indent[data-indent="0"] ~ .collapse-button::before {
+.message.startGroupCollapsed
+  > .indent[data-indent="0"]
+  ~ .collapse-button::before {
   width: 100%;
   background-image: url("chrome://devtools/skin/images/arrow-big.svg");
   fill: var(--theme-icon-dimmed-color);
@@ -943,7 +947,7 @@ a.learn-more-link.webconsole-learn-more-link {
 
 .webconsole-app .tree.focused .arrow,
 .webconsole-app .object-inspector .tree-node.focused .arrow {
-  fill: currentColor
+  fill: currentColor;
 }
 
 /** Utils **/

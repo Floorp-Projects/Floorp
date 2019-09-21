@@ -13,6 +13,7 @@
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/LocationBase.h"
+#include "mozilla/dom/UserActivation.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDocShell.h"
@@ -279,10 +280,19 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   // activation flag of the top level browsing context.
   void NotifyResetUserGestureActivation();
 
+  // Return true if its corresponding document has been activated by user
+  // gesture.
+  bool HasBeenUserGestureActivated();
+
   // Return true if its corresponding document has transient user gesture
   // activation and the transient user gesture activation haven't yet timed
   // out.
   bool HasValidTransientUserGestureActivation();
+
+  // Return true if the corresponding document has valid transient user gesture
+  // activation and the transient user gesture activation had been consumed
+  // successfully.
+  bool ConsumeTransientUserGestureActivation();
 
   // Return the window proxy object that corresponds to this browsing context.
   inline JSObject* GetWindowProxy() const { return mWindowProxy; }
@@ -503,8 +513,7 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
     return true;
   }
 
-  // Ensure that we only set the flag on the top level browsing context.
-  void DidSetIsActivatedByUserGesture();
+  void DidSetUserActivationState();
 
   // Ensure that we only set the flag on the top level browsingContext.
   // And then, we do a pre-order walk in the tree to refresh the

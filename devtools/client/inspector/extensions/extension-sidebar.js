@@ -10,7 +10,6 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
-const ObjectClient = require("devtools/shared/client/object-client");
 const ExtensionSidebarComponent = createFactory(
   require("./components/ExtensionSidebar")
 );
@@ -71,18 +70,6 @@ class ExtensionSidebar {
             this.emit("extension-page-unmount", containerEl);
           },
           serviceContainer: {
-            createObjectClient: object => {
-              return new ObjectClient(
-                this.inspector.toolbox.target.client,
-                object
-              );
-            },
-            releaseActor: actor => {
-              if (!actor) {
-                return;
-              }
-              this.inspector.toolbox.target.client.release(actor);
-            },
             highlightDomElement: async (grip, options = {}) => {
               // TODO: Bug1574506 - Use the contextual WalkerFront for gripToNodeFront.
               const nodeFront = await this.inspector.walker.gripToNodeFront(

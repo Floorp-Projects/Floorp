@@ -102,7 +102,7 @@ media::TimeIntervals MediaSourceDecoder::GetSeekable() {
       return seekable;
     }
 
-    if (buffered.Length()) {
+    if (!buffered.IsEmpty()) {
       seekable += media::TimeInterval(TimeUnit::Zero(), buffered.GetEnd());
     }
   } else {
@@ -143,7 +143,7 @@ media::TimeIntervals MediaSourceDecoder::GetBuffered() {
   buffered += media::TimeInterval(TimeUnit::Zero(), highestEndTime);
 
   for (auto& range : activeRanges) {
-    if (mEnded && range.Length()) {
+    if (mEnded && !range.IsEmpty()) {
       // Set the end time on the last range to highestEndTime by adding a
       // new range spanning the current end time to highestEndTime, which
       // Normalize() will then merge with the old last range.
