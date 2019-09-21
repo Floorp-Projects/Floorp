@@ -77,21 +77,6 @@ LCovSource::LCovSource(LifoAlloc* alloc, UniqueChars name)
       maxLineHit_(0),
       hasTopLevelScript_(false) {}
 
-LCovSource::LCovSource(LCovSource&& src)
-    : name_(std::move(src.name_)),
-      outFN_(src.outFN_),
-      outFNDA_(src.outFNDA_),
-      numFunctionsFound_(src.numFunctionsFound_),
-      numFunctionsHit_(src.numFunctionsHit_),
-      outBRDA_(src.outBRDA_),
-      numBranchesFound_(src.numBranchesFound_),
-      numBranchesHit_(src.numBranchesHit_),
-      linesHit_(std::move(src.linesHit_)),
-      numLinesInstrumented_(src.numLinesInstrumented_),
-      numLinesHit_(src.numLinesHit_),
-      maxLineHit_(src.maxLineHit_),
-      hasTopLevelScript_(src.hasTopLevelScript_) {}
-
 void LCovSource::exportInto(GenericPrinter& out) {
   out.printf("SF:%s\n", name_.get());
 
@@ -465,17 +450,18 @@ bool LCovSource::writeScript(JSScript* script) {
 }
 
 LCovRealm::LCovRealm(JS::Realm* realm)
-    : alloc_(4096), outTN_(&alloc_), sources_(nullptr) {
-  MOZ_ASSERT(alloc_.isEmpty());
-
+    : alloc_(4096), outTN_(&alloc_), sources_(alloc_) {
   // Record realm name. If we wait until finalization, the embedding may not be
   // able to provide us the name anymore.
   writeRealmName(realm);
 }
 
 LCovRealm::~LCovRealm() {
-  if (sources_) {
-    sources_->~LCovSourceVector();
+  // The LCovSource are in the LifoAlloc but we must still manually invoke
+  // destructors to avoid leaks.
+  while (!sources_.empty()) {
+    LCovSource* source = sources_.popCopy();
+    source->~LCovSource();
   }
 }
 
@@ -503,21 +489,10 @@ void LCovRealm::collectCodeCoverageInfo(JSScript* script, const char* name) {
 }
 
 LCovSource* LCovRealm::lookupOrAdd(const char* name) {
-  // On the first call, allocate a LCovSource vector in the LifoAlloc.
-  if (!sources_) {
-    LCovSourceVector* raw = alloc_.pod_malloc<LCovSourceVector>();
-    if (!raw) {
-      outTN_.reportOutOfMemory();
-      return nullptr;
-    }
-
-    sources_ = new (raw) LCovSourceVector(alloc_);
-  } else {
-    // Find the first matching source.
-    for (LCovSource& source : *sources_) {
-      if (source.match(name)) {
-        return &source;
-      }
+  // Find existing source if it exists.
+  for (LCovSource* source : sources_) {
+    if (source->match(name)) {
+      return source;
     }
   }
 
@@ -528,23 +503,29 @@ LCovSource* LCovRealm::lookupOrAdd(const char* name) {
   }
 
   // Allocate a new LCovSource for the current top-level.
-  if (!sources_->emplaceBack(&alloc_, std::move(source_name))) {
+  LCovSource* source = alloc_.new_<LCovSource>(&alloc_, std::move(source_name));
+  if (!source) {
     outTN_.reportOutOfMemory();
     return nullptr;
   }
 
-  return &sources_->back();
+  if (!sources_.emplaceBack(source)) {
+    outTN_.reportOutOfMemory();
+    return nullptr;
+  }
+
+  return source;
 }
 
 void LCovRealm::exportInto(GenericPrinter& out, bool* isEmpty) const {
-  if (!sources_ || outTN_.hadOutOfMemory()) {
+  if (outTN_.hadOutOfMemory()) {
     return;
   }
 
   // If we only have cloned function, then do not serialize anything.
   bool someComplete = false;
-  for (const LCovSource& sc : *sources_) {
-    if (sc.isComplete()) {
+  for (const LCovSource* sc : sources_) {
+    if (sc->isComplete()) {
       someComplete = true;
       break;
     };
@@ -556,10 +537,10 @@ void LCovRealm::exportInto(GenericPrinter& out, bool* isEmpty) const {
 
   *isEmpty = false;
   outTN_.exportInto(out);
-  for (LCovSource& sc : *sources_) {
+  for (LCovSource* sc : sources_) {
     // Only write if everything got recorded.
-    if (sc.isComplete()) {
-      sc.exportInto(out);
+    if (sc->isComplete()) {
+      sc->exportInto(out);
     }
   }
 }
