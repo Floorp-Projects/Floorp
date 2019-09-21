@@ -1,0 +1,17 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIST_INSTALL = False
+
+SharedLibrary('untrusted-startup-test-dll')
+
+UNIFIED_SOURCES = [
+    'untrusted-startup-test-dll.cpp',
+]
+
+NO_PGO = True
+
+if CONFIG['COMPILE_ENVIRONMENT']:
+    TEST_HARNESS_FILES.xpcshell.toolkit.components.telemetry.tests.unit += ['!untrusted-startup-test-dll.dll']
