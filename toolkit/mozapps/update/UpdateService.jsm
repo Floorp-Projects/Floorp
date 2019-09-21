@@ -1392,6 +1392,8 @@ function fixUpdateDirectoryPermissions() {
   if (!gUpdateDirPermissionFixAttempted) {
     // Never try to fix permissions more than one time during a session.
     gUpdateDirPermissionFixAttempted = true;
+    AUSTLMY.pingFixUpdateDirectoryPermissionsAttempted();
+
     LOG("Attempting to fix update directory permissions");
     try {
       Cc["@mozilla.org/updates/update-processor;1"]

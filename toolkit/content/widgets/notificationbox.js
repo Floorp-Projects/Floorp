@@ -205,6 +205,7 @@
       }
 
       if (!insertPos) {
+        newitem.style.display = "block";
         newitem.style.position = "fixed";
         newitem.style.top = "100%";
         newitem.style.marginTop = "-15px";
@@ -294,6 +295,7 @@
 
       if (aSlideIn) {
         this.currentNotification = aNotification;
+        aNotification.style.removeProperty("display");
         aNotification.style.removeProperty("position");
         aNotification.style.removeProperty("top");
         aNotification.style.removeProperty("margin-top");

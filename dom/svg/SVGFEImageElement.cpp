@@ -6,10 +6,10 @@
 
 #include "mozilla/dom/SVGFEImageElement.h"
 
-#include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/SVGFEImageElementBinding.h"
 #include "mozilla/dom/SVGFilterElement.h"
+#include "mozilla/dom/UserActivation.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
 #include "nsContentUtils.h"
@@ -84,7 +84,7 @@ nsresult SVGFEImageElement::LoadSVGImage(bool aForce, bool aNotify) {
 
   // Mark channel as urgent-start before load image if the image load is
   // initaiated by a user interaction.
-  mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();
+  mUseUrgentStartForChannel = UserActivation::IsHandlingUserInput();
   return LoadImage(href, aForce, aNotify, eImageLoadType_Normal);
 }
 

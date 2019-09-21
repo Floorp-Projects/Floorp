@@ -1,0 +1,61 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+using mozilla::TimeDuration from "mozilla/TimeStamp.h";
+using base::SharedMemoryHandle from "base/shared_memory.h";
+namespace mozilla {
+namespace ipc {
+
+/**
+ * PIdleScheduler is the protocol for cross-process idle scheduling.
+ * Only child processes participate in the scheduling and parent process
+ * can run its idle tasks whenever it needs to.
+ *
+ * The scheduler keeps track of the following things.
+ * - Activity of the main thread of each child process. A process is active
+ *   when it is running tasks. Because of performance cross-process
+ *   counters in shared memory are used for the activity tracking. There is
+ *   one counter counting the activity state of all the processes and one
+ *   counter for each process. This way if a child process crashes, the global
+ *   counter can be updated by decrementing the per process counter from it.
+ * - Child processes running prioritized operation. Top level page loads is an
+ *   example of a prioritized operation. When such is ongoing, idle tasks are
+ *   less likely to run.
+ * - Idle requests. When a child process locally has idle tasks to run, it
+ *   requests idle time from the scheduler. Initially requests go to a wait list
+ *   and the scheduler runs and if there are free logical cores for the child
+ *   processes, idle time is given to the child process, and the process goes to
+ *   the idle list. Once idle time has been consumed or there are no tasks to
+ *   process, child process informs the scheduler and the process is moved back
+ *   to the default queue.
+ */
+async refcounted protocol PIdleScheduler
+{
+  manager PBackground;
+
+child:
+  async IdleTime(uint64_t id, TimeDuration budget);
+
+parent:
+  async InitForIdleUse() returns (SharedMemoryHandle? state, uint32_t childId);
+  async RequestIdleTime(uint64_t id, TimeDuration budget);
+  async IdleTimeUsed(uint64_t id);
+
+  // Child can send explicit Schedule message to parent if it thinks parent process
+  // might be able to let some other process to use idle time.
+  async Schedule();
+
+  // Note, these two messages can be sent even before InitForIdleUse.
+  async RunningPrioritizedOperation();
+  async PrioritizedOperationDone();
+
+  // This message is never sent. Each PIdleScheduler actor will stay alive as long as
+  // its PBackground manager.
+  async __delete__();
+};
+
+} // namespace ipc
+} // namespace mozilla

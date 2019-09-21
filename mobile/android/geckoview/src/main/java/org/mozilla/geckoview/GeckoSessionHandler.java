@@ -27,10 +27,20 @@ import android.util.Log;
     /* package */ GeckoSessionHandler(final String module,
                                       final GeckoSession session,
                                       final String[] events) {
+        this(module, session, events, new String[]{});
+    }
+
+    /* package */ GeckoSessionHandler(final String module,
+                                      final GeckoSession session,
+                                      final String[] events,
+                                      final String[] defaultEvents) {
         session.handlersCount++;
 
         mModuleName = module;
         mEvents = events;
+
+        // Default events are always active
+        session.getEventDispatcher().registerUiThreadListener(this, defaultEvents);
     }
 
     public Delegate getDelegate() {
@@ -78,8 +88,8 @@ import android.util.Log;
 
         if (mDelegate != null) {
             handleMessage(mDelegate, event, message, callback);
-        } else if (callback != null) {
-            callback.sendError("No delegate registered");
+        } else {
+            handleDefaultMessage(event, message, callback);
         }
     }
 
@@ -87,4 +97,12 @@ import android.util.Log;
                                           final String event,
                                           final GeckoBundle message,
                                           final EventCallback callback);
+
+    protected void handleDefaultMessage(final String event,
+                                        final GeckoBundle message,
+                                        final EventCallback callback) {
+        if (callback != null) {
+            callback.sendError("No delegate registered");
+        }
+    }
 }

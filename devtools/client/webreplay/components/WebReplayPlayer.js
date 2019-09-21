@@ -101,6 +101,13 @@ function sameLocation(m1, m2) {
   );
 }
 
+function getMessageLocation(message) {
+  const {
+    frame: { source, line, column },
+  } = message;
+  return { sourceUrl: source, line, column };
+}
+
 /*
  *
  * The player has 4 valid states
@@ -134,6 +141,7 @@ class WebReplayPlayer extends Component {
     };
 
     this.lastPaint = null;
+    this.hoveredMessage = null;
     this.overlayWidth = 1;
 
     this.onProgressBarClick = this.onProgressBarClick.bind(this);
@@ -158,7 +166,7 @@ class WebReplayPlayer extends Component {
     this.overlayWidth = this.updateOverlayWidth();
 
     if (prevState.closestMessage != this.state.closestMessage) {
-      this.scrollToMessage();
+      this.scrollToMessage(this.state.closestMessage);
     }
   }
 
@@ -222,7 +230,7 @@ class WebReplayPlayer extends Component {
   }
 
   paint(point) {
-    if (this.lastPaint !== point) {
+    if (point && this.lastPaint !== point) {
       this.lastPaint = point;
       this.threadFront.paint(point);
     }
@@ -316,17 +324,20 @@ class WebReplayPlayer extends Component {
     this.setState({ [direction]: position });
   }
 
-  scrollToMessage() {
-    const { closestMessage } = this.state;
+  findMessage(message) {
+    const consoleOutput = this.console.hud.ui.outputNode;
+    return consoleOutput.querySelector(
+      `.message[data-message-id="${message.id}"]`
+    );
+  }
 
-    if (!closestMessage) {
+  scrollToMessage(message) {
+    if (!message) {
       return;
     }
 
+    const element = this.findMessage(message);
     const consoleOutput = this.console.hud.ui.outputNode;
-    const element = consoleOutput.querySelector(
-      `.message[data-message-id="${closestMessage.id}"]`
-    );
 
     if (element) {
       const consoleHeight = consoleOutput.getBoundingClientRect().height;
@@ -337,8 +348,46 @@ class WebReplayPlayer extends Component {
     }
   }
 
-  onMessageMouseEnter(executionPoint) {
-    return this.paint(executionPoint);
+  unhighlightConsoleMessage() {
+    if (this.hoveredMessage) {
+      this.hoveredMessage.classList.remove("highlight");
+    }
+  }
+
+  highlightConsoleMessage(message) {
+    if (!message) {
+      return;
+    }
+
+    const element = this.findMessage(message);
+    if (!element) {
+      return;
+    }
+
+    this.unhighlightConsoleMessage();
+    element.classList.add("highlight");
+    this.hoveredMessage = element;
+  }
+
+  showMessage(message) {
+    this.highlightConsoleMessage(message);
+    this.scrollToMessage(message);
+    this.paint(message.executionPoint);
+  }
+
+  onMessageMouseEnter(message) {
+    this.previewLocation(message);
+    this.showMessage(message);
+  }
+
+  async previewLocation(closestMessage) {
+    const dbg = await this.toolbox.loadTool("jsdebugger");
+    dbg.previewPausedLocation(getMessageLocation(closestMessage));
+  }
+
+  async clearPreviewLocation() {
+    const dbg = await this.toolbox.loadTool("jsdebugger");
+    dbg.clearPreviewPausedLocation();
   }
 
   onProgressBarClick(e) {
@@ -362,10 +411,12 @@ class WebReplayPlayer extends Component {
       return;
     }
 
-    this.paint(closestMessage.executionPoint);
+    this.showMessage(closestMessage);
   }
 
   onPlayerMouseLeave() {
+    this.unhighlightConsoleMessage();
+    this.clearPreviewLocation();
     return this.threadFront.paintCurrentPoint();
   }
 
@@ -569,13 +620,15 @@ class WebReplayPlayer extends Component {
         left: `${Math.max(offset - markerWidth / 2, 0)}px`,
         zIndex: `${index + 100}`,
       },
-      title: getFormatStr("jumpMessage2", frameLocation),
+      title: uncached
+        ? "Loading..."
+        : getFormatStr("jumpMessage2", frameLocation),
       onClick: e => {
         e.preventDefault();
         e.stopPropagation();
         this.seek(message.executionPoint);
       },
-      onMouseEnter: () => this.onMessageMouseEnter(message.executionPoint),
+      onMouseEnter: () => this.onMessageMouseEnter(message),
     });
   }
 

@@ -643,6 +643,18 @@ var AUSTLMY = {
   },
 
   /**
+   * Submit a telemetry ping for a boolean scalar when we attempt to fix
+   * the update directory permissions this session.
+   */
+  pingFixUpdateDirectoryPermissionsAttempted: function UT_PFUDPA() {
+    try {
+      Services.telemetry.scalarSet("update.fix_permissions_attempted", true);
+    } catch (e) {
+      Cu.reportError(e);
+    }
+  },
+
+  /**
    * Submit a telemetry ping for a count type histogram when the expected value
    * does not equal the boolean value of a pref or if the pref isn't present
    * when the expected value does not equal default value. This lessens the

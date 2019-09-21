@@ -4,10 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef INTERVALS_H
-#define INTERVALS_H
+#ifndef DOM_MEDIA_INTERVALS_H_
+#define DOM_MEDIA_INTERVALS_H_
 
 #include <algorithm>
+
 #include "mozilla/TypeTraits.h"
 #include "nsTArray.h"
 
@@ -515,6 +516,8 @@ class IntervalSet {
 
   IndexType Length() const { return mIntervals.Length(); }
 
+  bool IsEmpty() const { return mIntervals.IsEmpty(); }
+
   T Start(IndexType aIndex) const { return mIntervals[aIndex].mStart; }
 
   T Start(IndexType aIndex, bool& aExists) const {
@@ -736,4 +739,4 @@ IntervalSet<T> Intersection(const IntervalSet<T>& aIntervals1,
 }  // namespace media
 }  // namespace mozilla
 
-#endif  // INTERVALS_H
+#endif  // DOM_MEDIA_INTERVALS_H_

@@ -131,6 +131,9 @@ class BackgroundParentImpl : public PBackgroundParent {
   virtual bool DeallocPBackgroundStorageParent(
       PBackgroundStorageParent* aActor) override;
 
+  virtual already_AddRefed<PIdleSchedulerParent> AllocPIdleSchedulerParent()
+      override;
+
   virtual PPendingIPCBlobParent* AllocPPendingIPCBlobParent(
       const IPCBlob& aBlob) override;
 

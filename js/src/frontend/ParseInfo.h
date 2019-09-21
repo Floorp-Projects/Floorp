@@ -11,8 +11,10 @@
 
 #include "ds/LifoAlloc.h"
 #include "frontend/FunctionTree.h"
-#include "frontend/ParseContext.h"
+#include "frontend/UsedNameTracker.h"
+#include "js/RealmOptions.h"
 #include "vm/JSContext.h"
+#include "vm/Realm.h"
 
 namespace js {
 namespace frontend {
@@ -28,7 +30,9 @@ struct MOZ_RAII ParseInfo {
   ParseInfo(JSContext* cx, LifoAllocScope& alloc)
       : usedNames(cx),
         allocScope(alloc),
-        treeHolder(cx, FunctionTreeHolder::Mode::Eager) {}
+        treeHolder(cx, cx->realm()->behaviors().deferredParserAlloc()
+                           ? FunctionTreeHolder::Mode::Deferred
+                           : FunctionTreeHolder::Mode::Eager) {}
 };
 
 }  // namespace frontend
