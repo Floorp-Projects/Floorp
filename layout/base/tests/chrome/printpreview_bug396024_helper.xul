@@ -15,10 +15,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=396024
 // attributes isolate the frames into their own BrowsingContext hierarchies.
 let frameElts = document.getElementsByTagName("iframe");
 
-var is = window.opener.wrappedJSObject.is;
-var ok = window.opener.wrappedJSObject.ok;
-var todo = window.opener.wrappedJSObject.todo;
-var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
+var is = window.arguments[0].is;
+var ok = window.arguments[0].ok;
+var todo = window.arguments[0].todo;
+var SimpleTest = window.arguments[0].SimpleTest;
 var gWbp;
 function printpreview() {
   gWbp = frameElts[1].contentWindow.docShell.initOrReusePrintPreviewViewer();

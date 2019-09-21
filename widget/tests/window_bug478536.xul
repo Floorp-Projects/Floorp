@@ -39,17 +39,17 @@ Text. Text. Text. Text. Text. Text. Text. Text. Text. Text. Text.
 
 function ok(aCondition, aMessage)
 {
-  window.opener.wrappedJSObject.SimpleTest.ok(aCondition, aMessage);
+  window.arguments[0].SimpleTest.ok(aCondition, aMessage);
 }
 
 function is(aLeft, aRight, aMessage)
 {
-  window.opener.wrappedJSObject.SimpleTest.is(aLeft, aRight, aMessage);
+  window.arguments[0].SimpleTest.is(aLeft, aRight, aMessage);
 }
 
 function isnot(aLeft, aRight, aMessage)
 {
-  window.opener.wrappedJSObject.SimpleTest.isnot(aLeft, aRight, aMessage);
+  window.arguments[0].SimpleTest.isnot(aLeft, aRight, aMessage);
 }
 
 var gBody = document.getElementById("body");
@@ -123,7 +123,7 @@ function onunload()
   disableNonTestMouseEvents(false);
   gPrefSvc.clearUserPref(kPrefSmoothScroll);
   SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
-  window.opener.wrappedJSObject.SimpleTest.finish();
+  window.arguments[0].SimpleTest.finish();
 }
 
 function finish()

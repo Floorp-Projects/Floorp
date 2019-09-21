@@ -22,19 +22,19 @@
   <script type="application/javascript"><![CDATA[
 
     function ok(condition, message) {
-      window.opener.wrappedJSObject.SimpleTest.ok(condition, message);
+      window.arguments[0].SimpleTest.ok(condition, message);
     }
 
     function is(a, b, message) {
-      window.opener.wrappedJSObject.SimpleTest.is(a, b, message);
+      window.arguments[0].SimpleTest.is(a, b, message);
     }
 
     function todo(condition, message) {
-      window.opener.wrappedJSObject.SimpleTest.todo(condition, message);
+      window.arguments[0].SimpleTest.todo(condition, message);
     }
 
     function todo_is(a, b, message) {
-      window.opener.wrappedJSObject.SimpleTest.todo_is(a, b, message);
+      window.arguments[0].SimpleTest.todo_is(a, b, message);
     }
 
     function onTestsFinished() {
@@ -43,7 +43,7 @@
       observe(gRightWindow, eventMonitor, false);
       observe(gPopup, eventMonitor, false);
       gRightWindow.close();
-      var openerSimpleTest = window.opener.wrappedJSObject.SimpleTest;
+      var openerSimpleTest = window.arguments[0].SimpleTest;
       window.close();
       openerSimpleTest.finish();
     }

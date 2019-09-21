@@ -26,8 +26,8 @@ function openPopup()
 function popupShowing(event)
 {
   var buttonrect = document.getElementById("button").getBoundingClientRect();
-  parent.opener.wrappedJSObject.SimpleTest.is(event.clientX, buttonrect.left + 6, "popup clientX with mouse");
-  parent.opener.wrappedJSObject.SimpleTest.is(event.clientY, buttonrect.top + 6, "popup clientY with mouse");
+  parent.arguments[0].SimpleTest.is(event.clientX, buttonrect.left + 6, "popup clientX with mouse");
+  parent.arguments[0].SimpleTest.is(event.clientY, buttonrect.top + 6, "popup clientY with mouse");
 }
 
 function popupShown()
@@ -55,8 +55,8 @@ function popupShown()
   }
 
   var testid = isSecondTest ? "with mouse" : "anchored to parent frame";
-  parent.opener.wrappedJSObject.SimpleTest.is(Math.round(popuprect.left), left, "popup left " + testid);
-  parent.opener.wrappedJSObject.SimpleTest.is(Math.round(popuprect.top), top, "popup top " + testid);
+  parent.arguments[0].SimpleTest.is(Math.round(popuprect.left), left, "popup left " + testid);
+  parent.arguments[0].SimpleTest.is(Math.round(popuprect.top), top, "popup top " + testid);
 
   document.getElementById("popup").hidePopup();
 }
@@ -64,7 +64,7 @@ function popupShown()
 function nextTest()
 {
   if (isSecondTest) {
-    parent.opener.wrappedJSObject.SimpleTest.finish();
+    parent.arguments[0].SimpleTest.finish();
     parent.close();
   }
   else {

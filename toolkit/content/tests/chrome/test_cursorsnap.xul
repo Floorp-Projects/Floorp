@@ -65,38 +65,38 @@ function runCurrentTest()
     case 0:
       gDisable = false;
       gHidden = false;
-      window.open("window_cursorsnap_dialog.xul", "_blank",
-                  position + "chrome,width=100,height=100");
+      window.openDialog("window_cursorsnap_dialog.xul", "_blank",
+                        position + "chrome,width=100,height=100,noopener", window);
       break;
     case 1:
       gDisable = true;
       gHidden = false;
-      window.open("window_cursorsnap_dialog.xul", "_blank",
-                  position + "chrome,width=100,height=100");
+      window.openDialog("window_cursorsnap_dialog.xul", "_blank",
+                        position + "chrome,width=100,height=100,noopener", window);
       break;
     case 2:
       gDisable = false;
       gHidden = true;
-      window.open("window_cursorsnap_dialog.xul", "_blank",
-                  position + "chrome,width=100,height=100");
+      window.openDialog("window_cursorsnap_dialog.xul", "_blank",
+                        position + "chrome,width=100,height=100,noopener", window);
       break;
     case 3:
       gDisable = false;
       gHidden = false;
-      window.open("window_cursorsnap_wizard.xul", "_blank",
-                  position + "chrome,width=100,height=100");
+      window.openDialog("window_cursorsnap_wizard.xul", "_blank",
+                        position + "chrome,width=100,height=100,noopener", window);
       break;
     case 4:
       gDisable = true;
       gHidden = false;
-      window.open("window_cursorsnap_wizard.xul", "_blank",
-                  position + "chrome,width=100,height=100");
+      window.openDialog("window_cursorsnap_wizard.xul", "_blank",
+                        position + "chrome,width=100,height=100,noopener", window);
       break;
     case 5:
       gDisable = false;
       gHidden = true;
-      window.open("window_cursorsnap_wizard.xul", "_blank",
-                  position + "chrome,width=100,height=100");
+      window.openDialog("window_cursorsnap_wizard.xul", "_blank",
+                        position + "chrome,width=100,height=100,noopener", window);
       break;
     default:
       SetPrefs(false);

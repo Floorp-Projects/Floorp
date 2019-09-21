@@ -15,19 +15,17 @@
   let win, x, y;
 
   function startTest() {
-    win = window.openDialog("about:blank",
-                            null,
-                            "chrome,dialog=no,outerHeight=170,outerWidth=200");
+    win = docShell.rootTreeItem.domWindow.openDialog(
+        "about:blank",
+        null,
+        "chrome,dialog=no,outerHeight=170,outerWidth=200");
     waitForSuccess(function() { return win.mozPaintCount },
                    "No paint received", checkInitialSize);
   }
 
   function checkInitialSize() {
-    let runtime = Cc["@mozilla.org/xre/app-info;1"]
-                    .getService(Ci.nsIXULRuntime);
-    let test = runtime.widgetToolkit == "windows" ? todo_is : is; // bug 602745
-    test(win.outerHeight,170, "initial outerHeight");
-    test(win.outerWidth, 200, "initial outerWidth");
+    is(win.outerHeight,170, "initial outerHeight");
+    is(win.outerWidth, 200, "initial outerWidth");
     x = win.screenX;
     y = win.screenY;
     shrink();

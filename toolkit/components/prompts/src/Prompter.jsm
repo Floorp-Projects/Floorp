@@ -450,7 +450,7 @@ function openModalWindow(domWin, uri, args) {
   // will do that. Similarly for enterModalState / leaveModalState.
 
   Services.ww.openWindow(
-    domWin,
+    domWin && domWin.docShell.rootTreeItem.domWindow,
     uri,
     "_blank",
     "centerscreen,chrome,modal,titlebar",

@@ -38,7 +38,7 @@
 
       this.eventSeq = [ new invokerChecker(EVENT_REORDER, gRootAcc) ];
 
-      this.invoke = () => (gDialog = window.openDialog(aURL));
+      this.invoke = () => (gDialog = docShell.rootTreeItem.domWindow.openDialog(aURL));
 
       this.finalCheck = () => {
         const accTree = {

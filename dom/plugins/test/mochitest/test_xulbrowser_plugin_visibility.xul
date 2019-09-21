@@ -10,7 +10,7 @@
   SimpleTest.waitForExplicitFinish();
   setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
-  var w = window.open('xulbrowser_plugin_visibility.xul', '_blank', 'chrome,resizable=yes,width=400,height=600');
+  var w = docShell.rootTreeItem.domWindow.openDialog('xulbrowser_plugin_visibility.xul', '_blank', 'chrome,resizable=yes,width=400,height=600', window);
 
   function done()
   {

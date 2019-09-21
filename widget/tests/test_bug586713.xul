@@ -20,8 +20,8 @@
 <![CDATA[
 
 SimpleTest.waitForExplicitFinish();
-window.open("bug586713_window.xul", "bug586713_window", 
-            "chrome,width=600,height=600");
+window.openDialog("bug586713_window.xul", "bug586713_window", 
+                  "chrome,width=600,height=600,noopener", window);
 
 ]]>
 </script>

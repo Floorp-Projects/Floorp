@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=830858
   /** Test for Bug 830858 **/
 
   function runTests() {
-    window.open("file_bug830858.xul", "_blank", "chrome,width=600,height=550");
+    window.openDialog("file_bug830858.xul", "_blank", "chrome,width=600,height=550,noopener", window);
   }
 
   function finishedTests() {
