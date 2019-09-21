@@ -134,6 +134,7 @@ class nsIGlobalObject;
 class nsIXULWindow;
 class nsXULPrototypeDocument;
 class nsXULPrototypeElement;
+class PermissionDelegateHandler;
 struct nsFont;
 
 namespace mozilla {
@@ -3970,6 +3971,9 @@ class Document : public nsINode,
   void AddResizeObserver(ResizeObserver* aResizeObserver);
   void ScheduleResizeObserversNotification() const;
 
+  // Getter for PermissionDelegateHandler. Performs lazy initialization.
+  PermissionDelegateHandler* GetPermissionDelegateHandler();
+
   /**
    * Localization
    *
@@ -4595,6 +4599,10 @@ class Document : public nsINode,
   RefPtr<mozilla::dom::FeaturePolicy> mFeaturePolicy;
 
   UniquePtr<ResizeObserverController> mResizeObserverController;
+
+  // Permission Delegate Handler, lazily-initialized in
+  // PermissionDelegateHandler
+  RefPtr<PermissionDelegateHandler> mPermissionDelegateHandler;
 
   // True if BIDI is enabled.
   bool mBidiEnabled : 1;
