@@ -1885,6 +1885,43 @@ UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
     return nullptr;
   }
 
+  // Generate initial LCovSources for generated inner functions.
+  if (coverage::IsLCovEnabled()) {
+    Rooted<GCVector<JSScript*>> workList(cx, GCVector<JSScript*>(cx));
+
+    if (!workList.appendAll(parseTask->scripts)) {
+      return nullptr;
+    }
+
+    RootedScript elem(cx);
+    while (!workList.empty()) {
+      elem = workList.popCopy();
+
+      // Initialize LCov data for the script.
+      if (!elem->initScriptName(cx)) {
+        return nullptr;
+      }
+
+      // Add inner-function scripts to the work-list.
+      for (JS::GCCellPtr gcThing : elem->gcthings()) {
+        if (!gcThing.is<JSObject>()) {
+          continue;
+        }
+        JSObject* obj = &gcThing.as<JSObject>();
+        if (!obj->is<JSFunction>()) {
+          continue;
+        }
+        JSFunction* fun = &obj->as<JSFunction>();
+        if (!fun->hasScript()) {
+          continue;
+        }
+        if (!workList.append(fun->nonLazyScript())) {
+          return nullptr;
+        }
+      }
+    }
+  }
+
   return std::move(parseTask.get());
 }
 
