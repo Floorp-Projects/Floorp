@@ -46,7 +46,6 @@
 #  include "nsDirectoryServiceUtils.h"
 
 #  include "nsWindowsDllInterceptor.h"
-#  include "mozilla/WindowsDllBlocklist.h"
 #  include "mozilla/WindowsVersion.h"
 #  include "psapi.h"  // For PERFORMANCE_INFORAMTION
 #elif defined(XP_MACOSX)
@@ -97,6 +96,7 @@ using mozilla::InjectCrashRunnable;
 
 #include "mozilla/IOInterposer.h"
 #include "mozilla/mozalloc_oom.h"
+#include "mozilla/WindowsDllBlocklist.h"
 #include "mozilla/recordreplay/ParentIPC.h"
 
 #if defined(XP_MACOSX)
