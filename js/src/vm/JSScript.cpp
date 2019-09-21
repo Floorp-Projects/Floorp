@@ -3953,6 +3953,13 @@ uint32_t JSScript::vtuneMethodID() {
 bool JSScript::initScriptName(JSContext* cx) {
   MOZ_ASSERT(!hasScriptName());
 
+  // Don't allocate LCovSource if we on helper thread since we will have our
+  // realm migrated. The 'GCRunime::mergeRealms' code will do this
+  // initialization.
+  if (cx->isHelperThreadContext()) {
+    return true;
+  }
+
   if (!filename()) {
     return true;
   }
