@@ -46,17 +46,17 @@
 
       this.content = MozXULElement.parseXULToFragment(
         `
-        <stringbundle src="chrome://browser/locale/search.properties"></stringbundle>
-        <hbox class="searchbar-search-button" tooltiptext="&searchIcon.tooltip;">
-          <image class="searchbar-search-icon"></image>
-          <image class="searchbar-search-icon-overlay"></image>
-        </hbox>
-        <html:input class="searchbar-textbox" is="autocomplete-input" type="search" placeholder="&searchInput.placeholder;" autocompletepopup="PopupSearchAutoComplete" autocompletesearch="search-autocomplete" autocompletesearchparam="searchbar-history" maxrows="10" completeselectedindex="true" minresultsforpopup="0"/>
-        <menupopup class="textbox-contextmenu"></menupopup>
-        <hbox class="search-go-container">
-          <image class="search-go-button urlbar-icon" hidden="true" onclick="handleSearchCommand(event);" tooltiptext="&contentSearchSubmit.tooltip;"></image>
-        </hbox>
-        `,
+      <stringbundle src="chrome://browser/locale/search.properties"></stringbundle>
+      <hbox class="searchbar-search-button" tooltiptext="&searchIcon.tooltip;">
+        <image class="searchbar-search-icon"></image>
+        <image class="searchbar-search-icon-overlay"></image>
+      </hbox>
+      <html:input class="searchbar-textbox" is="autocomplete-input" type="search" placeholder="&searchInput.placeholder;" autocompletepopup="PopupSearchAutoComplete" autocompletesearch="search-autocomplete" autocompletesearchparam="searchbar-history" maxrows="10" completeselectedindex="true" minresultsforpopup="0"/>
+      <menupopup class="textbox-contextmenu"></menupopup>
+      <hbox class="search-go-container">
+        <image class="search-go-button urlbar-icon" hidden="true" onclick="handleSearchCommand(event);" tooltiptext="&contentSearchSubmit.tooltip;"></image>
+      </hbox>
+    `,
         ["chrome://browser/locale/browser.dtd"]
       );
 
@@ -472,6 +472,15 @@
         this.select();
       });
 
+      this.addEventListener("contextmenu", event => {
+        // Context menu opened via keyboard shortcut.
+        if (!event.button) {
+          return;
+        }
+
+        this._maybeSelectAll();
+      });
+
       this.addEventListener(
         "DOMMouseScroll",
         event => {
@@ -671,40 +680,73 @@
       });
 
       this.textbox.addEventListener("contextmenu", event => {
+        if (event.target != this.textbox) {
+          return;
+        }
+
         if (!this._menupopup) {
           this._buildContextMenu();
         }
 
         BrowserSearch.searchBar._textbox.closePopup();
-
-        goUpdateGlobalEditMenuItems();
-
-        let suggestEnabled = Services.prefs.getBoolPref(
+        let enabled = Services.prefs.getBoolPref(
           "browser.search.suggest.enabled"
         );
-        this._suggestMenuItem.setAttribute("checked", suggestEnabled);
+        this._suggestMenuItem.setAttribute("checked", enabled);
 
         let controller = document.commandDispatcher.getControllerForCommand(
           "cmd_paste"
         );
-        let pasteEnabled = controller.isCommandEnabled("cmd_paste");
-        if (pasteEnabled) {
+        enabled = controller.isCommandEnabled("cmd_paste");
+        if (enabled) {
           this._pasteAndSearchMenuItem.removeAttribute("disabled");
         } else {
           this._pasteAndSearchMenuItem.setAttribute("disabled", "true");
         }
 
         this._menupopup.openPopupAtScreen(event.screenX, event.screenY, true);
-
-        // Make sure the context menu isn't opened via keyboard shortcut.
-        if (event.button) {
-          this._maybeSelectAll();
-        }
         event.preventDefault();
       });
     }
 
     _initTextbox() {
+      // nsIController
+      let searchbarController = {
+        textbox: this.textbox,
+        supportsCommand(command) {
+          return (
+            command == "cmd_clearhistory" || command == "cmd_togglesuggest"
+          );
+        },
+        isCommandEnabled(command) {
+          return true;
+        },
+        doCommand(command) {
+          switch (command) {
+            case "cmd_clearhistory":
+              let param = this.textbox.getAttribute("autocompletesearchparam");
+              BrowserSearch.searchBar.FormHistory.update(
+                { op: "remove", fieldname: param },
+                null
+              );
+              this.textbox.value = "";
+              break;
+            case "cmd_togglesuggest":
+              let enabled = Services.prefs.getBoolPref(
+                "browser.search.suggest.enabled"
+              );
+              Services.prefs.setBoolPref(
+                "browser.search.suggest.enabled",
+                !enabled
+              );
+              break;
+            default:
+            // do nothing with unrecognized command
+          }
+        },
+      };
+      this.textbox.controllers.appendController(searchbarController);
+
       if (this.parentNode.parentNode.localName == "toolbarpaletteitem") {
         return;
       }
@@ -837,18 +879,18 @@
 
     _buildContextMenu() {
       const raw = `
-        <menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" command="cmd_undo"/>
-        <menuseparator/>
-        <menuitem label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" command="cmd_cut"/>
-        <menuitem label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" command="cmd_copy"/>
-        <menuitem label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;" command="cmd_paste"/>
-        <menuitem class="searchbar-paste-and-search"/>
-        <menuitem label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" command="cmd_delete"/>
-        <menuseparator/>
-        <menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" command="cmd_selectAll"/>
-        <menuseparator/>
-        <menuitem class="searchbar-clear-history"/>
-        <menuitem class="searchbar-toggle-suggest" type="checkbox" autocheck="false"/>
+          <menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo"/>
+          <menuseparator/>
+          <menuitem label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" cmd="cmd_cut"/>
+          <menuitem label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" cmd="cmd_copy"/>
+          <menuitem label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;" cmd="cmd_paste"/>
+          <menuitem anonid="paste-and-search" oncommand="BrowserSearch.pasteAndSearch(event)"/>
+          <menuitem label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" cmd="cmd_delete"/>
+          <menuseparator/>
+          <menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" cmd="cmd_selectAll"/>
+          <menuseparator/>
+          <menuitem cmd="cmd_clearHistory"/>
+          <menuitem cmd="cmd_togglesuggest" type="checkbox" autocheck="false"/>
       `;
 
       this._menupopup = this.querySelector(".textbox-contextmenu");
@@ -858,58 +900,50 @@
       ]);
 
       // Insert attributes that come from localized properties
-      this._pasteAndSearchMenuItem = frag.querySelector(
-        ".searchbar-paste-and-search"
-      );
-      this._pasteAndSearchMenuItem.setAttribute(
+      let el = frag.querySelector('[anonid="paste-and-search"]');
+      el.setAttribute(
         "label",
         this._stringBundle.getString("cmd_pasteAndSearch")
       );
 
-      let clearHistoryItem = frag.querySelector(".searchbar-clear-history");
-      clearHistoryItem.setAttribute(
+      el = frag.querySelector('[cmd="cmd_clearHistory"]');
+      el.setAttribute(
         "label",
         this._stringBundle.getString("cmd_clearHistory")
       );
-      clearHistoryItem.setAttribute(
+      el.setAttribute(
         "accesskey",
         this._stringBundle.getString("cmd_clearHistory_accesskey")
       );
 
-      this._suggestMenuItem = frag.querySelector(".searchbar-toggle-suggest");
-      this._suggestMenuItem.setAttribute(
+      el = frag.querySelector('[cmd="cmd_togglesuggest"]');
+      el.setAttribute(
         "label",
         this._stringBundle.getString("cmd_showSuggestions")
       );
-      this._suggestMenuItem.setAttribute(
+      el.setAttribute(
         "accesskey",
         this._stringBundle.getString("cmd_showSuggestions_accesskey")
       );
 
       this._menupopup.appendChild(frag);
 
-      this._menupopup.addEventListener("command", event => {
-        switch (event.originalTarget) {
-          case this._pasteAndSearchMenuItem:
-            BrowserSearch.pasteAndSearch(event);
-            break;
-          case clearHistoryItem:
-            let param = this.textbox.getAttribute("autocompletesearchparam");
-            BrowserSearch.searchBar.FormHistory.update(
-              { op: "remove", fieldname: param },
-              null
-            );
-            this.textbox.value = "";
-            break;
-          case this._suggestMenuItem:
-            let enabled = Services.prefs.getBoolPref(
-              "browser.search.suggest.enabled"
-            );
-            Services.prefs.setBoolPref(
-              "browser.search.suggest.enabled",
-              !enabled
-            );
-            break;
+      this._pasteAndSearchMenuItem = this._menupopup.querySelector(
+        '[anonid="paste-and-search"]'
+      );
+      this._suggestMenuItem = this._menupopup.querySelector(
+        '[cmd="cmd_togglesuggest"]'
+      );
+
+      this._menupopup.addEventListener("command", cmdEvt => {
+        let cmd = cmdEvt.originalTarget.getAttribute("cmd");
+        if (cmd) {
+          let controller = document.commandDispatcher.getControllerForCommand(
+            cmd
+          );
+          controller.doCommand(cmd);
+          cmdEvt.stopPropagation();
+          cmdEvt.preventDefault();
         }
       });
     }
