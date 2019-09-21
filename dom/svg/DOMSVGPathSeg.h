@@ -16,10 +16,9 @@
 #define MOZ_SVG_LIST_INDEX_BIT_COUNT 31
 
 namespace mozilla {
-
 namespace dom {
+
 class SVGElement;
-}
 
 #define CHECK_ARG_COUNT_IN_SYNC(segType)                                   \
   MOZ_ASSERT(                                                              \
@@ -643,6 +642,7 @@ class DOMSVGPathSegCurvetoQuadraticSmoothRel : public DOMSVGPathSeg {
   float mArgs[2];
 };
 
+}  // namespace dom
 }  // namespace mozilla
 
 #undef MOZ_SVG_LIST_INDEX_BIT_COUNT

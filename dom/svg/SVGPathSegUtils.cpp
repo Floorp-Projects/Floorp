@@ -11,9 +11,10 @@
 #include "SVGPathDataParser.h"
 #include "nsTextFormatter.h"
 
-using namespace mozilla;
 using namespace mozilla::dom::SVGPathSeg_Binding;
 using namespace mozilla::gfx;
+
+namespace mozilla {
 
 static const float PATH_SEG_LENGTH_TOLERANCE = 0.0000001f;
 static const uint32_t MAX_RECURSION = 10;
@@ -406,3 +407,5 @@ void SVGPathSegUtils::TraversePathSegment(const float* aData,
   uint32_t type = DecodeType(aData[0]);
   gTraverseFuncTable[type](aData + 1, aState);
 }
+
+}  // namespace mozilla

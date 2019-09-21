@@ -13,7 +13,8 @@
 
 // See the architecture comment in DOMSVGPointList.h.
 
-using namespace mozilla;
+namespace mozilla {
+namespace dom {
 
 // We could use NS_IMPL_CYCLE_COLLECTION(, except that in Unlink() we need to
 // clear our list's weak ref to us to be safe. (The other option would be to
@@ -75,3 +76,6 @@ bool nsISVGPoint::IndexIsValid() {
   return mListIndex < mList->InternalList().Length();
 }
 #endif
+
+}  // namespace dom
+}  // namespace mozilla

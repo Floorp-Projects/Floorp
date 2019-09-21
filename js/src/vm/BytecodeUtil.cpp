@@ -2895,8 +2895,7 @@ static bool GenerateLcovInfo(JSContext* cx, JS::Realm* realm,
 
     JSScriptSet::AddPtr entry = scriptsDone.lookupForAdd(script);
     if (script->filename() && !entry) {
-      realm->lcovOutput.collectCodeCoverageInfo(realm, script,
-                                                script->filename());
+      realm->collectCodeCoverageInfo(script, script->filename());
       script->resetScriptCounts();
 
       if (!scriptsDone.add(entry, script)) {
@@ -2939,8 +2938,12 @@ static bool GenerateLcovInfo(JSContext* cx, JS::Realm* realm,
     }
   } while (!queue.empty());
 
+  if (!realm->lcovRealm) {
+    return false;
+  }
+
   bool isEmpty = true;
-  realm->lcovOutput.exportInto(out, &isEmpty);
+  realm->lcovRealm->exportInto(out, &isEmpty);
   if (out.hadOutOfMemory()) {
     return false;
   }
@@ -2948,9 +2951,9 @@ static bool GenerateLcovInfo(JSContext* cx, JS::Realm* realm,
   return true;
 }
 
-JS_FRIEND_API char* js::GetCodeCoverageSummary(JSContext* cx, size_t* length) {
+JS_FRIEND_API UniqueChars js::GetCodeCoverageSummaryAll(JSContext* cx,
+                                                        size_t* length) {
   Sprinter out(cx);
-
   if (!out.init()) {
     return nullptr;
   }
@@ -2962,23 +2965,24 @@ JS_FRIEND_API char* js::GetCodeCoverageSummary(JSContext* cx, size_t* length) {
     }
   }
 
-  if (out.hadOutOfMemory()) {
+  *length = out.getOffset();
+  return js::DuplicateString(cx, out.string(), *length);
+}
+
+JS_FRIEND_API UniqueChars js::GetCodeCoverageSummary(JSContext* cx,
+                                                     size_t* length) {
+  Sprinter out(cx);
+  if (!out.init()) {
+    return nullptr;
+  }
+
+  if (!GenerateLcovInfo(cx, cx->realm(), out)) {
     JS_ReportOutOfMemory(cx);
     return nullptr;
   }
 
-  ptrdiff_t len = out.stringEnd() - out.string();
-  char* res = cx->pod_malloc<char>(len + 1);
-  if (!res) {
-    return nullptr;
-  }
-
-  js_memcpy(res, out.string(), len);
-  res[len] = 0;
-  if (length) {
-    *length = len;
-  }
-  return res;
+  *length = out.getOffset();
+  return js::DuplicateString(cx, out.string(), *length);
 }
 
 bool js::GetSuccessorBytecodes(JSScript* script, jsbytecode* pc,

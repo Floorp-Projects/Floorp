@@ -21,9 +21,10 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/SVGContentUtils.h"
 
-using namespace mozilla;
 using namespace mozilla::gfx;
-using namespace mozilla::dom;
+
+namespace mozilla {
+namespace dom {
 
 SVGElement::NumberInfo SVGGeometryElement::sNumberInfo = {nsGkAtoms::pathLength,
                                                           0, false};
@@ -263,3 +264,6 @@ float SVGGeometryElement::GetPathLengthScale(PathLengthScaleForType aFor) {
 already_AddRefed<DOMSVGAnimatedNumber> SVGGeometryElement::PathLength() {
   return mPathLength.ToDOMAnimatedNumber(this);
 }
+
+}  // namespace dom
+}  // namespace mozilla
