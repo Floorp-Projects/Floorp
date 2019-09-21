@@ -1353,9 +1353,9 @@ Document::Document(const char* aContentType)
   SetIsInDocument();
   SetIsConnected(true);
 
-  if (StaticPrefs::layout_css_use_counters_enabled()) {
-    mStyleUseCounters = Servo_UseCounters_Create().Consume();
-  }
+  // Create these unconditionally, they will be used to warn about the `zoom`
+  // property, even if use counters are disabled.
+  mStyleUseCounters = Servo_UseCounters_Create().Consume();
 
   SetContentTypeInternal(nsDependentCString(aContentType));
 
@@ -14394,21 +14394,26 @@ static_assert(size_t(eUseCounter_Count) * 2 ==
 #undef ASSERT_CSS_COUNTER
 
 void Document::SetCssUseCounterBits() {
-  if (!mStyleUseCounters) {
+  auto* docCounters = mStyleUseCounters.get();
+  if (!docCounters) {
     return;
   }
 
-  for (size_t i = 0; i < eCSSProperty_COUNT_with_aliases; ++i) {
-    auto id = nsCSSPropertyID(i);
-    if (Servo_IsPropertyIdRecordedInUseCounter(mStyleUseCounters.get(), id)) {
-      SetUseCounter(nsCSSProps::UseCounterFor(id));
+  if (StaticPrefs::layout_css_use_counters_enabled()) {
+    for (size_t i = 0; i < eCSSProperty_COUNT_with_aliases; ++i) {
+      auto id = nsCSSPropertyID(i);
+      if (Servo_IsPropertyIdRecordedInUseCounter(docCounters, id)) {
+        SetUseCounter(nsCSSProps::UseCounterFor(id));
+      }
     }
   }
 
-  for (size_t i = 0; i < size_t(CountedUnknownProperty::Count); ++i) {
-    if (Servo_IsUnknownPropertyRecordedInUseCounter(
-          mStyleUseCounters.get(), CountedUnknownProperty(i))) {
-      SetUseCounter(UseCounter(eUseCounter_FirstCountedUnknownProperty + i));
+  if (StaticPrefs::layout_css_use_counters_unimplemented_enabled()) {
+    for (size_t i = 0; i < size_t(CountedUnknownProperty::Count); ++i) {
+      auto id = CountedUnknownProperty(i);
+      if (Servo_IsUnknownPropertyRecordedInUseCounter(docCounters, id)) {
+        SetUseCounter(UseCounter(eUseCounter_FirstCountedUnknownProperty + i));
+      }
     }
   }
 }

@@ -22,6 +22,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/SMILAnimationController.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/Unused.h"
 
@@ -1129,8 +1130,8 @@ void MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
 
     // TODO(emilio): If we want to record these from CSSOM more generally, we
     // can pass the document use counters down the FFI call. For now manually
-    // count them for compat with the old code, which is used for testing.
-    if (changed) {
+    // count them.
+    if (changed && StaticPrefs::layout_css_use_counters_enabled()) {
       UseCounter useCounter = nsCSSProps::UseCounterFor(propertyID);
       MOZ_ASSERT(useCounter != eUseCounter_UNKNOWN);
       mElement->OwnerDoc()->SetUseCounter(useCounter);
