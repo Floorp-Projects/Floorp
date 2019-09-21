@@ -4085,16 +4085,7 @@ nsresult HttpChannelChild::CrossProcessRedirectFinished(nsresult aStatus) {
     mStatus = aStatus;
   }
 
-  // The loadInfo is updated in nsDocShell::OpenInitializedChannel to have the
-  // correct attributes (such as browsingContextID).
-  // We need to send it to the parent channel so the two match, which is done
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  MOZ_ALWAYS_SUCCEEDS(GetLoadInfo(getter_AddRefs(loadInfo)));
-  Maybe<LoadInfoArgs> loadInfoArgs;
-  MOZ_ALWAYS_SUCCEEDS(
-      mozilla::ipc::LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs));
-  Unused << SendCrossProcessRedirectDone(mStatus, loadInfoArgs);
-  return NS_OK;
+  return mStatus;
 }
 
 }  // namespace net
