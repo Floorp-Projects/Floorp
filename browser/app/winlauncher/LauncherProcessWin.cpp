@@ -24,7 +24,7 @@
 #include <windows.h>
 #include <processthreadsapi.h>
 
-#include "DllBlocklistInit.h"
+#include "DllBlocklistWin.h"
 #include "ErrorHandler.h"
 #include "LaunchUnelevated.h"
 #include "ProcThreadAttributes.h"

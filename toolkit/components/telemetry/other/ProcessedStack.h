@@ -8,8 +8,6 @@
 
 #include <string>
 #include <vector>
-
-#include "mozilla/Vector.h"
 #include "nsString.h"
 #if defined(MOZ_GECKO_PROFILER)
 #  include "shared-libraries.h"
@@ -66,16 +64,7 @@ class BatchProcessedStackGenerator {
   BatchProcessedStackGenerator();
   ProcessedStack GetStackAndModules(const std::vector<uintptr_t>& aPCs);
 
-  template <typename AllocatorPolicy>
-  ProcessedStack GetStackAndModules(
-      const Vector<void*, 0, AllocatorPolicy>& aPCs) {
-    return GetStackAndModules(reinterpret_cast<const uintptr_t*>(aPCs.begin()),
-                              reinterpret_cast<const uintptr_t*>(aPCs.end()));
-  }
-
  private:
-  ProcessedStack GetStackAndModules(const uintptr_t* aBegin,
-                                    const uintptr_t* aEnd);
 #if defined(MOZ_GECKO_PROFILER)
   SharedLibraryInfo mSortedRawModules;
 #endif
