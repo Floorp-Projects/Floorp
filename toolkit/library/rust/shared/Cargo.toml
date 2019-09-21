@@ -67,6 +67,7 @@ gecko_profiler = ["profiler_helper", "geckoservo/gecko_profiler"]
 gecko_profiler_parse_elf = ["profiler_helper/parse_elf"]
 new_xulstore = ["xulstore"]
 new_cert_storage = ["cert_storage"]
+fuzzing_interfaces = []
 
 [lib]
 path = "lib.rs"

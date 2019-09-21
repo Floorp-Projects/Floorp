@@ -51,7 +51,7 @@ const NMAX: usize = 5552;
 
 #[inline(always)]
 fn do1(adler: &mut u32, sum2: &mut u32, buf: &[u8]) {
-    *adler += buf[0] as u32;
+    *adler += u32::from(buf[0]);
     *sum2 += *adler;
 }
 
@@ -89,6 +89,12 @@ pub struct RollingAdler32 {
     b: u32,
 }
 
+impl Default for RollingAdler32 {
+    fn default() -> RollingAdler32 {
+        RollingAdler32::new()
+    }
+}
+
 impl RollingAdler32 {
     /// Creates an empty Adler32 context (with hash 1).
     pub fn new() -> RollingAdler32 {
@@ -99,7 +105,7 @@ impl RollingAdler32 {
     pub fn from_value(adler32: u32) -> RollingAdler32 {
         let a = adler32 & 0xFFFF;
         let b = adler32 >> 16;
-        RollingAdler32 { a: a, b: b }
+        RollingAdler32 { a, b }
     }
 
     /// Convenience function initializing a context from the hash of a buffer.
@@ -116,7 +122,7 @@ impl RollingAdler32 {
 
     /// Removes the given `byte` that was fed to the algorithm `size` bytes ago.
     pub fn remove(&mut self, size: usize, byte: u8) {
-        let byte = byte as u32;
+        let byte = u32::from(byte);
         self.a = (self.a + BASE - byte) % BASE;
         self.b = ((self.b + BASE - 1)
                       .wrapping_add(BASE.wrapping_sub(size as u32)
@@ -125,7 +131,7 @@ impl RollingAdler32 {
 
     /// Feeds a new `byte` to the algorithm to update the hash.
     pub fn update(&mut self, byte: u8) {
-        let byte = byte as u32;
+        let byte = u32::from(byte);
         self.a = (self.a + byte) % BASE;
         self.b = (self.b + self.a) % BASE;
     }
@@ -142,8 +148,8 @@ impl RollingAdler32 {
 
         // in case short lengths are provided, keep it somewhat fast
         if len < 16 {
-            for pos in 0..len {
-                self.a += buffer[pos] as u32;
+            for byte in buffer.iter().take(len) {
+                self.a += u32::from(*byte);
                 self.b += self.a;
             }
             if self.a >= BASE {
@@ -174,7 +180,7 @@ impl RollingAdler32 {
                 pos += 16;
             }
             while len - pos > 0 {
-                self.a += buffer[pos] as u32;
+                self.a += u32::from(buffer[pos]);
                 self.b += self.a;
                 pos += 1;
             }

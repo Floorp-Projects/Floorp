@@ -1,0 +1,8 @@
+[package]
+name = "gecko-fuzz-targets"
+version = "0.1.0"
+authors = ["fuzzing@mozilla.com"]
+
+[dependencies]
+libc = "0.2"
+rkv = "0.9.6"

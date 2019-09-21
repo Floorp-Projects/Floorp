@@ -27,6 +27,11 @@ struct SVGMark;
 
 class SVGPathDataParser;  // IWYU pragma: keep
 
+namespace dom {
+class DOMSVGPathSeg;
+class DOMSVGPathSegList;
+}  // namespace dom
+
 /**
  * ATTENTION! WARNING! WATCH OUT!!
  *
@@ -75,8 +80,8 @@ class SVGPathDataParser;  // IWYU pragma: keep
  */
 class SVGPathData {
   friend class SVGAnimatedPathSegList;
-  friend class DOMSVGPathSegList;
-  friend class DOMSVGPathSeg;
+  friend class dom::DOMSVGPathSeg;
+  friend class dom::DOMSVGPathSegList;
   friend class SVGPathDataParser;
   // SVGPathDataParser will not keep wrappers in sync, so consumers
   // are responsible for that!
