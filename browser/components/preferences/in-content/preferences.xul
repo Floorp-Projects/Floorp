@@ -63,6 +63,10 @@
   <script src="chrome://browser/content/preferences/in-content/findInPage.js"/>
   <script src="chrome://browser/content/preferences/in-content/subdialogs.js"/>
 
+  <stringbundle id="bundleBrand"
+                src="chrome://branding/locale/brand.properties"/>
+  <stringbundle id="bundlePreferences"
+                src="chrome://browser/locale/preferences/preferences.properties"/>
   <stringbundle id="pkiBundle"
                 src="chrome://pippki/locale/pippki.properties"/>
   <stringbundle id="browserBundle"
