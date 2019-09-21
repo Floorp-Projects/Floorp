@@ -224,9 +224,9 @@ async function dropLinksOnBrowser(browser, type) {
   }
 }
 
-function info(msg) { window.opener.wrappedJSObject.SimpleTest.info(msg); }
-function is(l, r, n) { window.opener.wrappedJSObject.SimpleTest.is(l,r,n); }
-function ok(v, n) { window.opener.wrappedJSObject.SimpleTest.ok(v,n); }
+function info(msg) { window.arguments[0].SimpleTest.info(msg); }
+function is(l, r, n) { window.arguments[0].SimpleTest.is(l,r,n); }
+function ok(v, n) { window.arguments[0].SimpleTest.ok(v,n); }
 
 ]]>
 </script>

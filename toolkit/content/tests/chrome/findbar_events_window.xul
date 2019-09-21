@@ -19,7 +19,7 @@
   <script type="application/javascript"><![CDATA[
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
     const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
-    ContentTask.setTestScope(window.opener.wrappedJSObject);
+    ContentTask.setTestScope(window.arguments[0]);
 
     var gFindBar = null;
     var gBrowser;
@@ -27,7 +27,7 @@
 
     var imports = ["SimpleTest", "ok", "is", "info"];
     for (var name of imports) {
-      window[name] = window.opener.wrappedJSObject[name];
+      window[name] = window.arguments[0][name];
     }
     SimpleTest.requestLongerTimeout(2);
 

@@ -33,8 +33,8 @@ if (navigator.platform.startsWith("Win")) {
 /** Test for Bug 311007 **/
 
 SimpleTest.waitForExplicitFinish();
-window.open("bug311007_window.xul", "bug311007",
-            "chrome,width=600,height=600");
+window.openDialog("bug311007_window.xul", "bug311007",
+                  "chrome,width=600,height=600,noopener", window);
 
 ]]>
 </script>

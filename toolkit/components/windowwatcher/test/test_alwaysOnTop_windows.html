@@ -55,7 +55,7 @@ Tests the alwaysOnTop window feature for the Windows OS.
     add_task(async function() {
       let normalWinOpened = BrowserTestUtils.domWindowOpened();
       window.openDialog("data:text/html,<p>This is a normal window. </p>",
-                        "_blank", "chrome,width=100,height=100", null);
+                        "_blank", "chrome,width=100,height=100,noopener", null);
       let normalWin = await normalWinOpened;
       ok(normalWin, "Normal window opened");
       assertAlwaysOnTop(normalWin, false);
@@ -63,7 +63,7 @@ Tests the alwaysOnTop window feature for the Windows OS.
 
       let alwaysOnTopWinOpened = BrowserTestUtils.domWindowOpened();
       window.openDialog("data:text/html,<p>This is an alwaysOnTop window. </p>",
-                        "_blank", "chrome,width=100,height=100,alwaysOnTop", null);
+                        "_blank", "chrome,width=100,height=100,alwaysOnTop,noopener", null);
       let alwaysOnTopWin = await alwaysOnTopWinOpened;
       ok(alwaysOnTopWin, "AlwaysOnTop window opened");
       assertAlwaysOnTop(alwaysOnTopWin, true);

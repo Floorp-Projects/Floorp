@@ -19,8 +19,8 @@
 <![CDATA[
 
 SimpleTest.waitForExplicitFinish();
-window.open("system_font_changes.xul", "system_font_changes_window",
-            "chrome,width=600,height=600");
+window.openDialog("system_font_changes.xul", "system_font_changes_window",
+                  "chrome,width=600,height=600,noopener", window);
 
 ]]>
 </script>

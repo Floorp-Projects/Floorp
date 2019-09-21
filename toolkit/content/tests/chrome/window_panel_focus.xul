@@ -81,11 +81,11 @@ function panelShown()
 }
 
 function ok(condition, message) {
-  window.opener.wrappedJSObject.SimpleTest.ok(condition, message);
+  window.arguments[0].SimpleTest.ok(condition, message);
 }
 
 function is(left, right, message) {
-  window.opener.wrappedJSObject.SimpleTest.is(left, right, message);
+  window.arguments[0].SimpleTest.is(left, right, message);
 }
 
 function panelHidden()
@@ -111,10 +111,10 @@ function noautofocusPanelShown()
 function noautofocusPanelHidden()
 {
   window.close();
-  window.opener.wrappedJSObject.SimpleTest.finish();
+  window.arguments[0].SimpleTest.finish();
 }
 
-window.opener.wrappedJSObject.SimpleTest.waitForFocus(showPanel, window);
+window.arguments[0].SimpleTest.waitForFocus(showPanel, window);
 
 ]]>
 </script>

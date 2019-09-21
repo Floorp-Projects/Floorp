@@ -35,18 +35,18 @@
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-window.opener.wrappedJSObject.SimpleTest.waitForFocus(runTests, window);
+window.opener.SimpleTest.waitForFocus(runTests, window);
 
 function ok(aCondition, aMessage) {
-  window.opener.wrappedJSObject.SimpleTest.ok(aCondition, aMessage);
+  window.opener.SimpleTest.ok(aCondition, aMessage);
 }
 
 function is(aLeft, aRight, aMessage) {
-  window.opener.wrappedJSObject.SimpleTest.is(aLeft, aRight, aMessage);
+  window.opener.SimpleTest.is(aLeft, aRight, aMessage);
 }
 
 function onUnload() {
-  window.opener.wrappedJSObject.onFinish();
+  window.opener.onFinish();
 }
 
 var gFocusObservingElement = null;

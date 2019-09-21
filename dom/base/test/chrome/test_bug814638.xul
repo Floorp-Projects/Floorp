@@ -23,8 +23,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=814638
 
   function startTest() {
     let hostURL = "chrome://mochitests/content/chrome/dom/base/test/chrome/host_bug814638.xul";
-    let host1 = window.open(hostURL, "_blank", "chrome");
-    let host2 = window.open(hostURL, "_blank", "chrome");
+    let host1 = docShell.rootTreeItem.domWindow.open(hostURL, "_blank", "chrome");
+    let host2 = docShell.rootTreeItem.domWindow.open(hostURL, "_blank", "chrome");
 
     let isHost1Loaded = isHost2Loaded = false
     host1.onload = function() {

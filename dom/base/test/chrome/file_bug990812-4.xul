@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990812
     var globalMM = Cc["@mozilla.org/globalmessagemanager;1"].getService();
 
     function is(val, exp, msg) {
-      opener.wrappedJSObject.is(val, exp, msg);
+      window.arguments[0].is(val, exp, msg);
     }
 
     function promiseMessage(type, mm) {
@@ -50,7 +50,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990812
       messageManager.broadcastAsyncMessage("test");
 
       Promise.all([promise1, promise2]).then(function () {
-        opener.setTimeout(function() { this.next(); });
+        window.arguments[0].setTimeout(function() { this.next(); });
         window.close();
       });
     }

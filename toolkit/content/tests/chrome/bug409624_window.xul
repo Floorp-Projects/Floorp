@@ -21,7 +21,7 @@
 
     var imports = ["SimpleTest", "ok", "is"];
     for (var name of imports) {
-      window[name] = window.opener.wrappedJSObject[name];
+      window[name] = window.arguments[0][name];
     }
 
     function finish() {

@@ -9,7 +9,7 @@
         persist="height width sizemode">
 <script type="application/javascript"><![CDATA[
   window.addEventListener("sizemodechange", evt => {
-    opener.postMessage("sizemodechange", "*");
+    window.arguments[0].postMessage("sizemodechange", "*");
   });
 ]]></script>
 </window>
