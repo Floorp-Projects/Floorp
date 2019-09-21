@@ -258,7 +258,7 @@ void AudioChannelAgent::WindowSuspendChanged(nsSuspendedTypes aSuspend) {
   callback->WindowSuspendChanged(aSuspend);
 }
 
-AudioPlaybackConfig AudioChannelAgent::GetMediaConfig() {
+AudioPlaybackConfig AudioChannelAgent::GetMediaConfig() const {
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   AudioPlaybackConfig config(1.0, false, nsISuspendedTypes::NONE_SUSPENDED);
   if (service) {
@@ -295,6 +295,10 @@ void AudioChannelAgent::WindowAudioCaptureChanged(uint64_t aInnerWindowID,
            this, aCapture));
 
   callback->WindowAudioCaptureChanged(aCapture);
+}
+
+bool AudioChannelAgent::IsWindowAudioCapturingEnabled() const {
+  return GetMediaConfig().mCapturedAudio;
 }
 
 bool AudioChannelAgent::IsPlayingStarted() const { return mIsRegToService; }

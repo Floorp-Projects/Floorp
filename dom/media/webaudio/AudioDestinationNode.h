@@ -77,6 +77,14 @@ class AudioDestinationNode final : public AudioNode,
   virtual ~AudioDestinationNode();
 
  private:
+  // These function are related to audio capturing. We would start capturing
+  // audio if we're starting capturing audio from whole window, and MUST stop
+  // capturing explicitly when we don't need to capture audio any more, because
+  // we have to release the resource we allocated before.
+  bool IsCapturingAudio() const;
+  void StartAudioCapturingStream();
+  void StopAudioCapturingStream();
+
   SelfReference<AudioDestinationNode> mOfflineRenderingRef;
   uint32_t mFramesToProduce;
 
@@ -88,7 +96,6 @@ class AudioDestinationNode final : public AudioNode,
   bool mIsOffline;
   bool mAudioChannelSuspended;
 
-  bool mCaptured;
   AudioChannelService::AudibleState mAudible;
 
   // These varaibles are used to know how long AudioContext would become audible
