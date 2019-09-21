@@ -47,12 +47,12 @@
   <script type="application/javascript"><![CDATA[
 
     function ok(condition, message) {
-      window.opener.wrappedJSObject.SimpleTest.ok(condition, message);
+      window.arguments[0].SimpleTest.ok(condition, message);
     }
 
     function onTestsFinished() {
       window.close();
-      window.opener.wrappedJSObject.SimpleTest.finish();
+      window.arguments[0].SimpleTest.finish();
     }
 
     // Force a menu to update itself. All of the menus parents will be updated

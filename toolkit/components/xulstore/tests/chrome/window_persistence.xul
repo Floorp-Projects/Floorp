@@ -39,7 +39,7 @@ function runTest()
     is(XULStore.hasValue(URI, "button2", "foo"), false, "attribute removed");
 
     window.close();
-    window.opener.windowOpened();
+    window.arguments[1].windowOpened();
   }
   else {
     is(button1.getAttribute("value"), "Pressed",
@@ -54,11 +54,11 @@ function runTest()
        "Attribute cleared");
 
     window.close();
-    window.opener.testDone();
+    window.arguments[1].testDone();
   }
 }
 
-function is(l, r, n) { window.opener.wrappedJSObject.SimpleTest.is(l,r,n); }
+function is(l, r, n) { window.arguments[1].SimpleTest.is(l,r,n); }
 
 ]]></script>
 

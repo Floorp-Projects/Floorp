@@ -42,7 +42,7 @@
 
   SpecialPowers.pushPrefEnv({"set": prefs}, function() {
     for (let i = 0; i < numRemotes; i++) {
-      let w = remotes[i] = window.open("remote.xul", "", "chrome");
+      let w = remotes[i] = docShell.rootTreeItem.domWindow.open("remote.xul", "", "chrome");
 
       w.addEventListener("load", function loadHandler() {
         w.removeEventListener("load", loadHandler);

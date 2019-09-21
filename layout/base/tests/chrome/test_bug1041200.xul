@@ -15,8 +15,8 @@
     SimpleTest.waitForExplicitFinish();
     // Run the test in a separate window so that the test runs as a chrome
     // window
-    window.open("bug1041200_window.html", "bug1041200",
-                "chrome,width=800,height=800");
+    window.openDialog("bug1041200_window.html", "bug1041200",
+                      "chrome,width=800,height=800,noopener", window);
   ]]>
   </script>
 </window>

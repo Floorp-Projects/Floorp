@@ -20,7 +20,7 @@
     //
     async function runTests() {
       // Disable rcwn to make cache behavior deterministic.
-      var {SpecialPowers} = opener;
+      var {SpecialPowers} = window.arguments[0];
       await SpecialPowers.pushPrefEnv({"set":[["network.http.rcwn.enabled", false]]});
 
       // Load a test page containing an image referring to the sjs that returns

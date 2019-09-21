@@ -29,8 +29,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=269442
 
       /** Test for Bug 269442 **/
       SimpleTest.waitForExplicitFinish();
-      window.open("findbar_entireword_window.xul", "269442test",
-                  "chrome,width=600,height=600");
+      window.openDialog("findbar_entireword_window.xul", "269442test",
+                        "chrome,width=600,height=600,noopener", window);
 
     ]]>
   </script>

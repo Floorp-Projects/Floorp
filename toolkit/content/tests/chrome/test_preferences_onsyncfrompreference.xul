@@ -24,7 +24,7 @@
     }
 
     let counter = 0;
-    let prefWindow = openDialog("window_preferences_onsyncfrompreference.xul", "", "", onSync);
+    let prefWindow = window.docShell.rootTreeItem.domWindow.openDialog("window_preferences_onsyncfrompreference.xul", "", "", onSync);
 
     SimpleTest.registerCleanupFunction(() => {
       for (let pref of PREFS) {

@@ -29,8 +29,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=294258.xul
 /** Test for Bug 294258 **/
 
 SimpleTest.waitForExplicitFinish();
-window.open("bug294258_window.xul", "bug294258",
-            "chrome,width=600,height=600");
+window.openDialog("bug294258_window.xul", "bug294258",
+                  "chrome,width=600,height=600,noopener", window);
 
 ]]>
 </script>

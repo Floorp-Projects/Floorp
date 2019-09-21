@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1224790
    */
 
   function startTest() {
-    window.openDialog('file_bug1224790-1_modal.xul', '', 'modal');
+    window.openDialog('file_bug1224790-1_modal.xul', '', 'modal,noopener', window);
   }
 
   function modalClosed() {
