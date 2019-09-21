@@ -21,7 +21,7 @@
   }
 
   addLoadEvent(function() {
-    window.open("mm_messageChannelParent.xul", "", "chrome");
+    window.openDialog("mm_messageChannelParent.xul", "", "chrome,noopener", window);
   });
   ]]></script>
 </window>

@@ -21,7 +21,7 @@
   }
 
   addLoadEvent(function() {
-    window.open("mm_messageChannelParentNotRemote.xul", "", "chrome");
+    window.openDialog("mm_messageChannelParentNotRemote.xul", "", "chrome,noopener", window);
   });
   ]]></script>
 </window>

@@ -12,12 +12,12 @@ const baseURL = "chrome://mochitests/content/chrome/layout/base/tests/chrome/";
 // Tests that iframe visibility is updated when it's swapped.
 add_task(async () => {
   // Open two new windows to swap iframes.
-  const window1 =
-      window.open(baseURL + "window_css_visibility_propagation-1.html",
-                  "_blank", "chrome");
-  const window2 =
-      window.open(baseURL + "window_css_visibility_propagation-2.html",
-                  "_blank", "chrome");
+  const window1 = docShell.rootTreeItem.domWindow.open(
+      baseURL + "window_css_visibility_propagation-1.html",
+      "_blank", "chrome");
+  const window2 = docShell.rootTreeItem.domWindow.open(
+      baseURL + "window_css_visibility_propagation-2.html",
+      "_blank", "chrome");
 
   const loadWindow1 =
       new Promise(resolve => window1.addEventListener("load", resolve));

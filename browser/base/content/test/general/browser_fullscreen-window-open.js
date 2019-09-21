@@ -181,6 +181,7 @@ function test_open_from_chrome() {
     message: {
       title: "test_open_from_chrome",
       param: "",
+      option: "noopener",
     },
     finalizeFn() {},
   });

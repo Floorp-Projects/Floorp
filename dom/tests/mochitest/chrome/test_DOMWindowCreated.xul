@@ -23,7 +23,7 @@
 <script>
 SimpleTest.waitForExplicitFinish();
 var root = getRootDirectory(window.location.href);
-window.open(root + "DOMWindowCreated_chrome.xul", "_blank", "chrome,width=600,height=550");
+window.openDialog(root + "DOMWindowCreated_chrome.xul", "_blank", "chrome,width=600,height=550,noopener", window);
 </script>
 
 </window>

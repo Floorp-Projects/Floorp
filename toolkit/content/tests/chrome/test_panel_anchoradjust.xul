@@ -13,7 +13,7 @@
 SimpleTest.waitForExplicitFinish();
 function runTest()
 {
-  window.open("window_panel_anchoradjust.xul", "_blank", "chrome,left=200,top=200,width=200,height=200");
+  window.openDialog("window_panel_anchoradjust.xul", "_blank", "chrome,left=200,top=200,width=200,height=200,noopener", window);
 }
 </script>
 

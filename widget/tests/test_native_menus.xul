@@ -20,8 +20,8 @@
 <![CDATA[
 
 SimpleTest.waitForExplicitFinish();
-window.open("native_menus_window.xul", "NativeMenuWindow", 
-            "chrome,width=600,height=600");
+window.openDialog("native_menus_window.xul", "NativeMenuWindow", 
+                  "chrome,width=600,height=600,noopener", window);
 
 ]]>
 </script>

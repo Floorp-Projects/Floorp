@@ -12,8 +12,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1016960
 
   /** Test for Bug 1016960 **/
 
-  var chromeWindow = window.open("chrome://mochitests/content/chrome/dom/base/test/file_empty.html", "1016960", "chrome");
-  ok(chromeWindow.isChromeWindow, "A chrome window should return true for |instanceof ChromeWindow|.");
+  var chromeWindow = docShell.rootTreeItem.domWindow.open("chrome://mochitests/content/chrome/dom/base/test/file_empty.html", "1016960", "chrome");
+  ok(chromeWindow.isChromeWindow, "A chrome window should return true for .isChromeWindow.");
   chromeWindow.close();
 
   </script>

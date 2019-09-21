@@ -10,6 +10,6 @@
 <script type="application/javascript">
 <![CDATA[
 SimpleTest.waitForExplicitFinish();
-window.open("printpreview_helper.xul", "printpreview", "chrome,width=100,height=100");
+window.openDialog("printpreview_helper.xul", "printpreview", "chrome,width=100,height=100,noopener", window);
 ]]></script>
 </window>

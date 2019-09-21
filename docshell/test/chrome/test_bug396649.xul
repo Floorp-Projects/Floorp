@@ -32,8 +32,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=396649.xul
 /** Test for Bug 396649 **/
 
 SimpleTest.waitForExplicitFinish();
-window.open("bug396649_window.xul", "bug396649",
-            "chrome,width=600,height=600,scrollbars");
+window.openDialog("bug396649_window.xul", "bug396649",
+                  "chrome,width=600,height=600,scrollbars,noopener", window);
 
 ]]>
 </script>
