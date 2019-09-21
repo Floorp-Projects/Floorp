@@ -168,14 +168,6 @@ DebuggerPanel.prototype = {
     return this._actions.selectSourceURL(cx, url, { line, column });
   },
 
-  previewPausedLocation(location) {
-    return this._actions.previewPausedLocation(location);
-  },
-
-  clearPreviewPausedLocation() {
-    return this._actions.clearPreviewPausedLocation();
-  },
-
   async selectSource(sourceId, line, column) {
     const cx = this._selectors.getContext(this._getState());
     const location = { sourceId, line, column };

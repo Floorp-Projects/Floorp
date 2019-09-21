@@ -41,11 +41,13 @@ function generateDefaults(editor, overrides) {
   };
 }
 
-function createLocation(line) {
+function createFrame(line) {
   return {
-    sourceId: "foo",
-    line,
-    column: 2,
+    location: {
+      sourceId: "foo",
+      line,
+      column: 2,
+    },
   };
 }
 
@@ -78,9 +80,9 @@ describe("DebugLine Component", () => {
         },
       });
       const line = 2;
-      const location = createLocation(line);
+      const frame = createFrame(line);
 
-      component.setProps({ ...props, location });
+      component.setProps({ ...props, frame });
 
       expect(doc.removeLineClass.mock.calls).toEqual([]);
       expect(doc.addLineClass.mock.calls).toEqual([
@@ -105,10 +107,10 @@ describe("DebugLine Component", () => {
         const firstLine = 2;
         const secondLine = 2;
 
-        component.setProps({ ...props, location: createLocation(firstLine) });
+        component.setProps({ ...props, frame: createFrame(firstLine) });
         component.setProps({
           ...props,
-          frame: createLocation(secondLine),
+          frame: createFrame(secondLine),
         });
 
         expect(doc.removeLineClass.mock.calls).toEqual([
@@ -141,9 +143,9 @@ describe("DebugLine Component", () => {
       it("should not set the debug line", () => {
         const { component, props, doc } = render({ frame: null });
         const line = 2;
-        const location = createLocation(line);
+        const frame = createFrame(line);
 
-        component.setProps({ ...props, location });
+        component.setProps({ ...props, frame });
         expect(doc.removeLineClass).not.toHaveBeenCalled();
       });
     });
