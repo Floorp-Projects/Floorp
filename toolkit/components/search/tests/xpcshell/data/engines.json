@@ -1,0 +1,58 @@
+{
+  "data": [
+    {
+      "engineName": "Test search engine",
+      "webExtensionId": "engine@search.mozilla.org",
+      "webExtensionVersion": "1.0",
+      "appliesTo": [{
+        "included": { "everywhere": true },
+        "default": "yes"
+      }]
+    },
+    {
+      "engineName": "engine-pref",
+      "webExtensionId": "engine-pref@search.mozilla.org",
+      "webExtensionVersion": "1.0",
+      "appliesTo": [{
+        "included": { "everywhere": true },
+        "default": "yes"
+      }]
+    },
+    {
+      "engineName": "engine-rel-searchform-purpose",
+      "webExtensionId": "engine-rel-searchform-purpose@search.mozilla.org",
+      "webExtensionVersion": "1.0",
+      "appliesTo": [{
+        "included": { "everywhere": true },
+        "default": "yes"
+      }]
+    },
+    {
+      "engineName": "engine-chromeicon",
+      "webExtensionId": "engine-chromeicon@search.mozilla.org",
+      "webExtensionVersion": "1.0",
+      "appliesTo": [{
+        "included": { "everywhere": true },
+        "default": "yes"
+      }]
+    },
+    {
+      "engineName": "engine-resourceicon",
+      "webExtensionId": "engine-resourceicon@search.mozilla.org",
+      "webExtensionVersion": "1.0",
+      "appliesTo": [{
+        "included": { "everywhere": true },
+        "default": "yes"
+      }]
+    },
+    {
+      "engineName": "engine-reordered",
+      "webExtensionId": "engine-reordered@search.mozilla.org",
+      "webExtensionVersion": "1.0",
+      "appliesTo": [{
+        "included": { "everywhere": true },
+        "default": "yes"
+      }]
+    }
+  ]
+}
