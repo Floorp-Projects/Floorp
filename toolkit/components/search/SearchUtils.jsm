@@ -144,6 +144,16 @@ var SearchUtils = {
 
     return null;
   },
+
+  /**
+   * Tests whether this a partner distribution.
+   *
+   * @returns {boolean}
+   *   Whether this is a partner distribution.
+   */
+  isPartnerBuild() {
+    return SearchUtils.distroID && !SearchUtils.distroID.startsWith("mozilla");
+  },
 };
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -152,3 +162,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
   BROWSER_SEARCH_PREF + "log",
   false
 );
+
+// Can't use defineLazyPreferenceGetter because we want the value
+// from the default branch
+XPCOMUtils.defineLazyGetter(SearchUtils, "distroID", () => {
+  return Services.prefs.getDefaultBranch("distribution.").getCharPref("id", "");
+});

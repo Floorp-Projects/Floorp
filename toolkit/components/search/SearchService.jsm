@@ -53,12 +53,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-// Can't use defineLazyPreferenceGetter because we want the value
-// from the default branch
-XPCOMUtils.defineLazyGetter(this, "distroID", () => {
-  return Services.prefs.getDefaultBranch("distribution.").getCharPref("id", "");
-});
-
 // A text encoder to UTF8, used whenever we commit the cache to disk.
 XPCOMUtils.defineLazyGetter(this, "gEncoder", function() {
   return new TextEncoder();
@@ -119,11 +113,6 @@ const MULTI_LOCALE_ENGINES = [
 
 // A tag to denote when we are using the "default_locale" of an engine
 const DEFAULT_TAG = "default";
-
-function isPartnerBuild() {
-  // Mozilla-provided builds (i.e. funnelcakes) are not partner builds
-  return distroID && !distroID.startsWith("mozilla");
-}
 
 // A method that tries to determine if this user is in a US geography.
 function isUSTimezone() {
@@ -924,7 +913,7 @@ SearchService.prototype = {
       // We only allow the old defaultenginename pref for distributions
       // We can't use isPartnerBuild because we need to allow reading
       // of the defaultengine name pref for funnelcakes.
-      if (distroID && !privateMode) {
+      if (SearchUtils.distroID && !privateMode) {
         let defaultPrefB = Services.prefs.getDefaultBranch(
           SearchUtils.BROWSER_SEARCH_PREF
         );
@@ -1840,7 +1829,7 @@ SearchService.prototype = {
       SearchUtils.BROWSER_SEARCH_PREF
     );
     if (
-      isPartnerBuild() &&
+      SearchUtils.isPartnerBuild() &&
       branch.getPrefType("ignoredJAREngines") == branch.PREF_STRING
     ) {
       let ignoredJAREngines = branch
@@ -2015,7 +2004,7 @@ SearchService.prototype = {
         addedEngines[originalPrivateDefault.name] = originalPrivateDefault;
       }
 
-      if (distroID) {
+      if (SearchUtils.distroID) {
         try {
           var extras = Services.prefs.getChildList(
             SearchUtils.BROWSER_SEARCH_PREF + "order.extra."
@@ -2169,7 +2158,7 @@ SearchService.prototype = {
     // We're rebuilding the list here because _sortedEngines contain the
     // current order, but we want the original order.
 
-    if (distroID) {
+    if (SearchUtils.distroID) {
       // First, look at the "browser.search.order.extra" branch.
       try {
         var extras = Services.prefs.getChildList(
