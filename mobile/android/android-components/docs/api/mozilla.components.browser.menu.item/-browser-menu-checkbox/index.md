@@ -24,6 +24,7 @@ A simple browser menu checkbox.
 
 | Name | Summary |
 |---|---|
+| [label](../-browser-menu-compound-button/label.md) | `val label: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The visible label of this menu item. |
 | [visible](../-browser-menu-compound-button/visible.md) | `open var visible: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Lambda expression that returns true if this item should be shown in the menu. Returns false if this item should be hidden. |
 
 ### Functions
