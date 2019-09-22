@@ -625,6 +625,19 @@ function findFrameSteps({ targetPoint, breakpointOffsets }) {
   return steps;
 }
 
+function findParentFrameEntryPoint(point) {
+  const hits = findChangeFrames(point.checkpoint, 0, "EnterFrame").filter(p => {
+    return p.position.frameIndex == point.position.frameIndex - 1;
+  });
+  const parentPoint = findClosestPoint(
+    hits,
+    point,
+    /* before */ true,
+    /* inclusive */ false
+  );
+  return { parentPoint };
+}
+
 function findEventFrameEntry({ checkpoint, progress }) {
   return findChangeFrames(checkpoint, 0, "EnterFrame").filter(point => {
     return point.progress == progress + 1;
@@ -971,6 +984,10 @@ const gManifestStartHandlers = {
 
   findFrameSteps(info) {
     RecordReplayControl.manifestFinished(findFrameSteps(info));
+  },
+
+  findParentFrameEntryPoint({ point }) {
+    RecordReplayControl.manifestFinished(findParentFrameEntryPoint(point));
   },
 
   findEventFrameEntry(progress) {
@@ -1761,8 +1778,20 @@ PreviewedObjects.prototype = {
 
     names.forEach(({ value }) => this.addValue(value, PropertyLevels.BASIC));
 
+    if (data.type != "declarative") {
+      this.addObject(data.object, PropertyLevels.BASIC);
+    }
+
     this.addObject(data.callee);
     this.addEnvironment(data.parent);
+  },
+
+  addCompletionValue(v) {
+    if (v.return) {
+      this.addValue(v.return);
+    } else if (v.throw) {
+      this.addValue(v.throw);
+    }
   },
 };
 
@@ -1820,6 +1849,11 @@ function getPauseData() {
     }
     rv.addObject(frame.callee, PropertyLevels.NONE);
     rv.addEnvironment(frame.environment, PropertyLevels.BASIC);
+  }
+
+  if (gPopFrameResult) {
+    rv.popFrameResult = convertCompletionValue(gPopFrameResult);
+    rv.addCompletionValue(gPopFrameResult);
   }
 
   return rv;
@@ -1976,10 +2010,6 @@ const gRequestHandlers = {
     const frame = scriptFrameForIndex(request.index);
     const rv = frame.eval(request.text, request.options);
     return convertCompletionValue(rv);
-  },
-
-  popFrameResult(request) {
-    return gPopFrameResult ? convertCompletionValue(gPopFrameResult) : {};
   },
 
   findConsoleMessages(request) {
