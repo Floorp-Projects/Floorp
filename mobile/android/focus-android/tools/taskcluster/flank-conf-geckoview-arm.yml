@@ -24,8 +24,8 @@ gcloud:
   #results-history-name: tmp_parallel 
 
   # test and app are the only required args
-  app: /opt/focus-android/app/build/outputs/apk/klarArm/debug/app-klar-armeabi-v7a-debug.apk
-  test: /opt/focus-android/app/build/outputs/apk/androidTest/klarArm/debug/app-klar-armeabi-v7a-debug-androidTest.apk
+  app: /opt/focus-android/app/build/outputs/apk/klarArm/debug/app-klar-arm-debug.apk
+  test: /opt/focus-android/app/build/outputs/apk/androidTest/klarArm/debug/app-klar-arm-debug-androidTest.apk
   auto-google-login: true
   use-orchestrator: true
   environment-variables:

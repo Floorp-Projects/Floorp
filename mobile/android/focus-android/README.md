@@ -49,12 +49,13 @@ Before you attempt to make a contribution please read the [Community Participati
 2. Import the project into Android Studio **or** build on the command line:
 
   ```shell
-  ./gradlew clean app:assembleFocusDebug
+  ./gradlew clean app:assembleFocusArmDebug
   ```
 
 3. Make sure to select the correct build variant in Android Studio:
-**focusDebug** for Focus
-**klarDebug** for Klar
+**focusArmDebug** for ARM
+**focusX86Debug** for X86
+**focusAarch64Debug** for ARM64
 
 ## Pre-push hooks
 To reduce review turn-around time, we'd like all pushes to run tests locally. We'd

@@ -18,8 +18,8 @@
         ktlint \
         pmd \
         detektCheck \
-        assembleFocusDebugAndroidTest \
-        testFocusDebugUnitTest
+        assembleFocusX86DebugAndroidTest \
+        testFocusX86DebugUnitTest
 
 # Tasks omitted because they take a long time to run:
 # - unit test on all variants

@@ -43,7 +43,7 @@ secrets = taskcluster.Secrets({'baseUrl': 'http://taskcluster/secrets/v1'})
 data = secrets.get('project/focus/nimbledroid')
 
 # disable focus webview upload until https://github.com/mozilla-mobile/focus-android/issues/3574 is resolved
-klar_file = {'apk': open('app/build/outputs/apk/klar/nightly/app-klar-armeabi-v7a-nightly-unsigned.apk')}
+klar_file = {'apk': open('app/build/outputs/apk/klar/nightly/app-klar-arm-nightly-unsigned.apk')}
 # focus_file = {'apk': open('app/build/outputs/apk/focusArm/release/app-focus-arm-release-unsigned.apk')}
 
 # also upload the latest geckoview example from:
