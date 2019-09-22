@@ -43,10 +43,14 @@ add_task(async function mainMenu_entryPoint() {
   let passwordManager = await openPasswordManager(openingFunc);
   info("mainMenu_entryPoint, password manager dialog shown");
 
-  TelemetryTestUtils.assertEvents([["pwmgr", "open_management", "mainmenu"]], {
-    category: "pwmgr",
-    method: "open_management",
-  });
+  TelemetryTestUtils.assertEvents(
+    [["pwmgr", "open_management", "mainmenu"]],
+    {
+      category: "pwmgr",
+      method: "open_management",
+    },
+    { clear: true, process: "content" }
+  );
 
   info("mainMenu_entryPoint, close dialog and main menu");
   await passwordManager.close();
@@ -84,7 +88,8 @@ add_task(async function pageInfo_entryPoint() {
 
       TelemetryTestUtils.assertEvents(
         [["pwmgr", "open_management", "pageinfo"]],
-        { category: "pwmgr", method: "open_management" }
+        { category: "pwmgr", method: "open_management" },
+        { clear: true, process: "content" }
       );
 
       info("pageInfo_entryPoint, close dialog and pageInfo");
