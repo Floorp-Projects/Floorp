@@ -557,7 +557,7 @@ normandy:
 
 pwmgr:
   open_management:
-    objects: ["autocomplete", "capturedoorhanger", "contextmenu", "direct", "fxamenu", "mainmenu", "pageinfo", "preferences"]
+    objects: ["aboutprotections", "autocomplete", "capturedoorhanger", "contextmenu", "direct", "fxamenu", "mainmenu", "pageinfo", "preferences"]
     methods: ["open_management"]
     description: >
       Sent when opening the password management UI.

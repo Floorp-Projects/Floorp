@@ -324,7 +324,9 @@ var AboutProtectionsHandler = {
     let win = aMessage.target.browser.ownerGlobal;
     switch (aMessage.name) {
       case "OpenAboutLogins":
-        win.openTrustedLinkIn("about:logins", "tab");
+        LoginHelper.openPasswordManager(win, {
+          entryPoint: "aboutprotections",
+        });
         break;
       case "OpenContentBlockingPreferences":
         win.openPreferences("privacy-trackingprotection", {
