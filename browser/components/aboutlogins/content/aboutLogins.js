@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { recordTelemetryEvent } from "./aboutLoginsUtils.js";
+
 // The init code isn't wrapped in a DOMContentLoaded/load event listener so the
 // page works properly when restored from session restore.
 const gElements = {
@@ -18,8 +20,42 @@ const gElements = {
 
 let numberOfLogins = 0;
 
-let { searchParams } = new URL(document.location);
-if (searchParams.get("filter")) {
+let searchParamsChanged = false;
+let { protocol, pathname, searchParams } = new URL(document.location);
+
+recordTelemetryEvent({
+  method: "open_management",
+  object: searchParams.get("entryPoint") || "direct",
+});
+
+if (searchParams.has("entryPoint")) {
+  // Remove this parameter from the URL (after recording above) to make it
+  // cleaner for bookmarking and switch-to-tab and so that bookmarked values
+  // don't skew telemetry.
+  searchParams.delete("entryPoint");
+  searchParamsChanged = true;
+}
+
+if (searchParams.has("filter")) {
+  let filter = searchParams.get("filter");
+  if (!filter) {
+    // Remove empty `filter` params to give a cleaner URL for bookmarking and
+    // switch-to-tab
+    searchParams.delete("filter");
+    searchParamsChanged = true;
+  }
+}
+
+if (searchParamsChanged) {
+  let newURL = protocol + pathname;
+  let params = searchParams.toString();
+  if (params) {
+    newURL += "?" + params;
+  }
+  window.location.replace(newURL);
+} else if (searchParams.has("filter")) {
+  // This must be after the `location.replace` so it doesn't cause telemetry to
+  // record a filter event before the navigation to clean the URL.
   gElements.loginFilter.value = searchParams.get("filter");
 }
 
