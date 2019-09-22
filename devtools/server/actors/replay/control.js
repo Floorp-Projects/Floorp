@@ -831,17 +831,6 @@ function canFindHits(position) {
   return position.kind == "Break" || position.kind == "OnStep";
 }
 
-function findExistingHits(checkpoint, position) {
-  const checkpointHits = gHitSearches.get(checkpoint);
-  if (!checkpointHits) {
-    return null;
-  }
-  const entry = checkpointHits.find(({ position: existingPosition, hits }) => {
-    return positionEquals(position, existingPosition);
-  });
-  return entry ? entry.hits : null;
-}
-
 // Find all hits on the specified position between a saved checkpoint and the
 // following saved checkpoint, using data from scanning the recording. This
 // returns a promise that resolves with the resulting hits.
@@ -854,7 +843,7 @@ async function findHits(checkpoint, position) {
   }
 
   // Check if we already have the hits.
-  let hits = findExistingHits(checkpoint, position);
+  let hits = findExisting();
   if (hits) {
     return hits;
   }
@@ -862,7 +851,7 @@ async function findHits(checkpoint, position) {
   await scanRecording(checkpoint);
   const endpoint = nextSavedCheckpoint(checkpoint);
   await sendAsyncManifest({
-    shouldSkip: () => !!findExistingHits(checkpoint, position),
+    shouldSkip: () => !!findExisting(),
     contents() {
       return {
         kind: "findHits",
@@ -881,18 +870,28 @@ async function findHits(checkpoint, position) {
     scanCheckpoint: checkpoint,
   });
 
-  hits = findExistingHits(checkpoint, position);
+  hits = findExisting();
   assert(hits);
   return hits;
+
+  function findExisting() {
+    const checkpointHits = gHitSearches.get(checkpoint);
+    if (!checkpointHits) {
+      return null;
+    }
+    const entry = checkpointHits.find(
+      ({ position: existingPosition, hits }) => {
+        return positionEquals(position, existingPosition);
+      }
+    );
+    return entry ? entry.hits : null;
+  }
 }
 
 // Asynchronously find all hits on a breakpoint's position.
 async function findBreakpointHits(checkpoint, position) {
   if (position.kind == "Break") {
-    const hits = await findHits(checkpoint, position);
-    if (hits.length) {
-      updateNearbyPoints();
-    }
+    findHits(checkpoint, position);
   }
 }
 
@@ -908,24 +907,11 @@ async function findBreakpointHits(checkpoint, position) {
 // initial EnterFrame to the final OnPop. The steps also include the EnterFrame
 // execution points for any direct callees of the frame.
 
-// All steps for frames which have been determined.
-const gFrameSteps = [];
+// Map from point strings to the steps which contain them.
+const gFrameSteps = new Map();
 
-// When there are stepping breakpoints installed, we need to know the steps in
-// the current frame in order to find the next or previous hit.
-function hasSteppingBreakpoint() {
-  return gBreakpoints.some(bp => bp.kind == "EnterFrame" || bp.kind == "OnPop");
-}
-
-function findExistingFrameSteps(point) {
-  // Frame steps will include EnterFrame for both the initial and callee
-  // frames, so the same point can appear in two sets of steps. In this case
-  // the EnterFrame needs to be the first step.
-  if (point.position.kind == "EnterFrame") {
-    return gFrameSteps.find(steps => pointEquals(point, steps[0]));
-  }
-  return gFrameSteps.find(steps => pointArrayIncludes(steps, point));
-}
+// Map from frame entry point strings to the parent frame's entry point.
+const gParentFrames = new Map();
 
 // Find all the steps in the frame which point is part of. This returns a
 // promise that resolves with the steps that were found.
@@ -940,7 +926,7 @@ async function findFrameSteps(point) {
       point.position.kind == "OnPop"
   );
 
-  let steps = findExistingFrameSteps(point);
+  let steps = findExisting();
   if (steps) {
     return steps;
   }
@@ -955,18 +941,57 @@ async function findFrameSteps(point) {
   const checkpoint = getSavedCheckpoint(point.checkpoint);
   await scanRecording(checkpoint);
   await sendAsyncManifest({
-    shouldSkip: () => !!findExistingFrameSteps(point),
+    shouldSkip: () => !!findExisting(),
     contents: () => ({ kind: "findFrameSteps", targetPoint: point, ...info }),
-    onFinished: (_, steps) => gFrameSteps.push(steps),
+    onFinished: (_, steps) => {
+      for (const p of steps) {
+        if (p.position.frameIndex == point.position.frameIndex) {
+          gFrameSteps.set(pointToString(p), steps);
+        } else {
+          assert(p.position.kind == "EnterFrame");
+          gParentFrames.set(pointToString(p), steps[0]);
+        }
+      }
+    },
     scanCheckpoint: checkpoint,
   });
 
-  steps = findExistingFrameSteps(point);
+  steps = findExisting();
   assert(steps);
-
-  updateNearbyPoints();
-
   return steps;
+
+  function findExisting() {
+    return gFrameSteps.get(pointToString(point));
+  }
+}
+
+async function findParentFrameEntryPoint(point) {
+  assert(point.position.kind == "EnterFrame");
+  assert(point.position.frameIndex > 0);
+
+  let parentPoint = findExisting();
+  if (parentPoint) {
+    return parentPoint;
+  }
+
+  const checkpoint = getSavedCheckpoint(point.checkpoint);
+  await scanRecording(checkpoint);
+  await sendAsyncManifest({
+    shouldSkip: () => !!findExisting(),
+    contents: () => ({ kind: "findParentFrameEntryPoint", point }),
+    onFinished: (_, { parentPoint }) => {
+      gParentFrames.set(pointToString(point), parentPoint);
+    },
+    scanCheckpoint: checkpoint,
+  });
+
+  parentPoint = findExisting();
+  assert(parentPoint);
+  return parentPoint;
+
+  function findExisting() {
+    return gParentFrames.get(pointToString(point));
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1105,7 +1130,7 @@ function setPauseState(mode, point, child) {
   gActiveChild = child;
 
   if (mode == PauseModes.ARRIVING) {
-    updateNearbyPoints();
+    simulateNearbyNavigation();
   }
 
   pokeChildrenSoon();
@@ -1182,39 +1207,24 @@ function pauseReplayingChild(child, point) {
   waitUntilPauseFinishes();
 }
 
-// After the debugger resumes, find the point where it should pause next.
-async function finishResume() {
-  assert(
-    gPauseMode == PauseModes.RESUMING_FORWARD ||
-      gPauseMode == PauseModes.RESUMING_BACKWARD
-  );
-  const forward = gPauseMode == PauseModes.RESUMING_FORWARD;
-
-  let startCheckpoint = gPausePoint.checkpoint;
-  if (!forward && !gPausePoint.position) {
+// Find the point where the debugger should pause when running forward or
+// backward from a point and using a given set of breakpoints. Returns null if
+// there is no point to pause at before hitting the beginning or end of the
+// recording.
+async function resumeTarget(point, forward, breakpoints) {
+  let startCheckpoint = point.checkpoint;
+  if (!forward && !point.position) {
     startCheckpoint--;
+    if (startCheckpoint == InvalidCheckpointId) {
+      return null;
+    }
   }
   startCheckpoint = getSavedCheckpoint(startCheckpoint);
 
   let checkpoint = startCheckpoint;
   for (; ; forward ? checkpoint++ : checkpoint--) {
-    if (checkpoint == gLastFlushCheckpoint) {
-      // We searched the entire space forward to the end of the recording and
-      // didn't find any breakpoint hits, so resume recording.
-      assert(forward);
-      RecordReplayControl.restoreMainGraphics();
-      setPauseState(PauseModes.RUNNING, gMainChild.pausePoint(), gMainChild);
-      gDebugger._callOnPositionChange();
-      maybeResumeRecording();
-      return;
-    }
-
-    if (checkpoint == InvalidCheckpointId) {
-      // We searched backward to the beginning of the recording, so restore the
-      // first checkpoint.
-      assert(!forward);
-      setReplayingPauseTarget(checkpointExecutionPoint(FirstCheckpointId));
-      return;
+    if ([InvalidCheckpointId, gLastFlushCheckpoint].includes(checkpoint)) {
+      return null;
     }
 
     if (!gCheckpoints[checkpoint].saved) {
@@ -1224,7 +1234,7 @@ async function finishResume() {
     const hits = [];
 
     // Find any breakpoint hits in this region of the recording.
-    for (const bp of gBreakpoints) {
+    for (const bp of breakpoints) {
       if (canFindHits(bp)) {
         const bphits = await findHits(checkpoint, bp);
         hits.push(...bphits);
@@ -1233,11 +1243,14 @@ async function finishResume() {
 
     // When there are stepping breakpoints, look for breakpoint hits in the
     // steps for the current frame.
-    if (checkpoint == startCheckpoint && hasSteppingBreakpoint()) {
-      const steps = await findFrameSteps(gPausePoint);
+    if (
+      checkpoint == startCheckpoint &&
+      gBreakpoints.some(bp => bp.kind == "EnterFrame" || bp.kind == "OnPop")
+    ) {
+      const steps = await findFrameSteps(point);
       hits.push(
-        ...steps.filter(point => {
-          return gBreakpoints.some(bp => positionSubsumes(bp, point.position));
+        ...steps.filter(p => {
+          return breakpoints.some(bp => positionSubsumes(bp, p.position));
         })
       );
     }
@@ -1252,10 +1265,35 @@ async function finishResume() {
       /* inclusive */ false
     );
     if (hit) {
-      // We've found the point where the search should end.
-      setReplayingPauseTarget(hit);
-      return;
+      return hit;
     }
+  }
+}
+
+async function finishResume() {
+  assert(
+    gPauseMode == PauseModes.RESUMING_FORWARD ||
+      gPauseMode == PauseModes.RESUMING_BACKWARD
+  );
+  const forward = gPauseMode == PauseModes.RESUMING_FORWARD;
+
+  const point = await resumeTarget(gPausePoint, forward, gBreakpoints);
+  if (point) {
+    // We found a point to pause at.
+    setReplayingPauseTarget(point);
+  } else if (forward) {
+    // We searched the entire space forward to the end of the recording and
+    // didn't find any breakpoint hits, so resume recording.
+    assert(forward);
+    RecordReplayControl.restoreMainGraphics();
+    setPauseState(PauseModes.RUNNING, gMainChild.pausePoint(), gMainChild);
+    gDebugger._callOnPositionChange();
+    maybeResumeRecording();
+  } else {
+    // We searched backward to the beginning of the recording, so restore the
+    // first checkpoint.
+    assert(!forward);
+    setReplayingPauseTarget(checkpointExecutionPoint(FirstCheckpointId));
   }
 }
 
@@ -1275,7 +1313,7 @@ function resume(forward) {
     !gPausePoint.position &&
     !forward
   ) {
-    gDebugger._onPause();
+    gDebugger._hitRecordingBoundary();
     return;
   }
   setPauseState(
@@ -1363,7 +1401,7 @@ function ChildCrashed(id) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Nearby Points
+// Simulated Navigation
 ////////////////////////////////////////////////////////////////////////////////
 
 // When the user is paused somewhere in the recording, we want to obtain pause
@@ -1372,98 +1410,142 @@ function ChildCrashed(id) {
 // reached by rewinding and resuming, and points that can be reached by
 // stepping. In the latter two cases, we only want to queue up the pause data
 // for points that are close to the current pause point, so that we don't waste
-// time and resources getting pause data that isn't immediately needed. These
-// are the nearby points, which are updated when necessary after user
-// interactions or when new steps or breakpoint hits are found.
+// time and resources getting pause data that isn't immediately needed.
+// We handle the latter by simulating the results of user interactions to
+// visit nearby breakpoints and steps, and queueing up the pause data for those
+// points. The simulation is approximate, as stepping behavior in particular
+// depends on information known to the thread actor which isn't available here.
 //
-// Ideally, as the user navigates through the recording, we will update the
-// nearby points and fetch their pause data quick enough to avoid loading
-// hiccups.
+// When the user navigates through the recording, these simulations are repeated
+// to queue up pause data at new points. Ideally, we will capture the pause data
+// quickly enough that it will be immediately available when the user pauses at
+// a new location, so that they don't experience loading hiccups.
 
-let gNearbyPoints = [];
+// Get the pause data for nearby breakpoint hits, ignoring steps.
+async function simulateBreakpointNavigation(point, forward, count) {
+  if (!count) {
+    return;
+  }
 
-// How many breakpoint hits are nearby points, on either side of the pause point.
-const NumNearbyBreakpointHits = 2;
+  const breakpoints = gBreakpoints.filter(bp => bp.kind == "Break");
+  const next = await resumeTarget(point, forward, breakpoints);
+  if (next) {
+    queuePauseData({ point: next });
+    simulateBreakpointNavigation(next, forward, count - 1);
+  }
+}
 
-// How many frame steps are nearby points, on either side of the pause point.
-const NumNearbySteps = 12;
+async function findFrameEntryPoint(point) {
+  // We never want the debugger to stop at EnterFrame points corresponding to
+  // when a frame was pushed on the stack. Instead, find the first point in the
+  // frame which is a breakpoint site.
+  assert(point.position.kind == "EnterFrame");
+  const steps = await findFrameSteps(point);
+  assert(pointEquals(steps[0], point));
+  return steps[1];
+}
 
-function nextKnownBreakpointHit(point, forward) {
-  let checkpoint = getSavedCheckpoint(point.checkpoint);
-  for (; ; forward ? checkpoint++ : checkpoint--) {
-    if (checkpoint == (forward ? gLastFlushCheckpoint : InvalidCheckpointId)) {
-      return null;
-    }
+async function simulateSteppingNavigation(point, count, frameCount, last) {
+  if (!count || !point.position) {
+    return;
+  }
+  const { script } = point.position;
+  const dbgScript = gDebugger._getScript(script);
 
-    if (!gCheckpoints[checkpoint].saved) {
-      continue;
-    }
+  const steps = await findFrameSteps(point);
+  const pointIndex = steps.findIndex(p => pointEquals(p, point));
 
-    let hits = [];
-
-    // Find any breakpoint hits in this region of the recording.
-    for (const bp of gBreakpoints) {
-      if (canFindHits(bp)) {
-        const bphits = findExistingHits(checkpoint, bp);
-        if (bphits) {
-          hits = hits.concat(bphits);
-        }
+  if (last != "reverseStepOver") {
+    for (let i = pointIndex + 1; i < steps.length; i++) {
+      const p = steps[i];
+      if (isStepOverTarget(p)) {
+        queuePauseData({ point: p, snapshot: steps[0] });
+        simulateSteppingNavigation(p, count - 1, frameCount, "stepOver");
+        break;
       }
     }
+  }
 
-    const hit = findClosestPoint(
-      hits,
-      gPausePoint,
-      /* before */ !forward,
-      /* inclusive */ false
+  if (last != "stepOver") {
+    for (let i = pointIndex - 1; i >= 1; i--) {
+      const p = steps[i];
+      if (isStepOverTarget(p)) {
+        queuePauseData({ point: p, snapshot: steps[0] });
+        simulateSteppingNavigation(p, count - 1, frameCount, "reverseStepOver");
+        break;
+      }
+    }
+  }
+
+  if (frameCount) {
+    for (let i = pointIndex + 1; i < steps.length; i++) {
+      const p = steps[i];
+      if (isStepOverTarget(p)) {
+        break;
+      }
+      if (p.position.script != script) {
+        // Currently, the debugger will stop at the EnterFrame site and then run
+        // forward to the first breakpoint site before pausing. We need pause
+        // data from both points, unfortunately.
+        queuePauseData({ point: p, snapshot: steps[0] });
+
+        const np = await findFrameEntryPoint(p);
+        queuePauseData({ point: np, snapshot: steps[0] });
+        findHits(getSavedCheckpoint(point.checkpoint), np.position);
+        simulateSteppingNavigation(np, count - 1, frameCount - 1, "stepIn");
+        break;
+      }
+    }
+  }
+
+  if (
+    frameCount &&
+    last != "stepOver" &&
+    last != "reverseStepOver" &&
+    point.position.frameIndex
+  ) {
+    // The debugger will stop at the OnPop for the frame before finding a place
+    // in the parent frame to pause at.
+    queuePauseData({ point: steps[steps.length - 1], snapshot: steps[0] });
+
+    const parentEntryPoint = await findParentFrameEntryPoint(steps[0]);
+    const parentSteps = await findFrameSteps(parentEntryPoint);
+    for (let i = 0; i < parentSteps.length; i++) {
+      const p = parentSteps[i];
+      if (pointPrecedes(point, p)) {
+        // When stepping out we will stop at the next breakpoint site,
+        // and do not need a point that is a stepping target.
+        queuePauseData({ point: p, snapshot: parentSteps[0] });
+        findHits(getSavedCheckpoint(point.checkpoint), p.position);
+        simulateSteppingNavigation(p, count - 1, frameCount - 1, "stepOut");
+        break;
+      }
+    }
+  }
+
+  function isStepOverTarget(p) {
+    const { kind, offset } = p.position;
+    return (
+      kind == "OnPop" ||
+      (kind == "OnStep" && dbgScript.getOffsetMetadata(offset).isStepStart)
     );
-    if (hit) {
-      return hit;
-    }
   }
 }
 
-function nextKnownBreakpointHits(point, forward, count) {
-  const rv = [];
-  for (let i = 0; i < count; i++) {
-    const next = nextKnownBreakpointHit(point, forward);
-    if (next) {
-      rv.push({ point: next, snapshot: null });
-      point = next;
-    } else {
-      break;
-    }
-  }
-  return rv;
-}
+function simulateNearbyNavigation() {
+  // How many breakpoint hit navigations are simulated on either side of the
+  // pause point.
+  const numBreakpointHits = 2;
 
-function updateNearbyPoints() {
-  const nearby = [
-    ...nextKnownBreakpointHits(gPausePoint, true, NumNearbyBreakpointHits),
-    ...nextKnownBreakpointHits(gPausePoint, false, NumNearbyBreakpointHits),
-  ];
+  // Maximum number of steps to take when simulating nearby steps.
+  const numSteps = 4;
 
-  const steps = gPausePoint.position && findExistingFrameSteps(gPausePoint);
-  if (steps) {
-    // Nearby steps are included in the nearby points. Do not include the first
-    // point in any frame steps we find --- these are EnterFrame points which
-    // will not be reverse-stepped to.
-    const index = steps.findIndex(point => pointEquals(point, gPausePoint));
-    const start = Math.max(index - NumNearbySteps, 1);
-    const nearbySteps = steps.slice(start, index + NumNearbySteps - start);
-    nearby.push(...nearbySteps.map(point => ({ point, snapshot: steps[0] })));
-  }
+  // Maximum number of times to change frames when simulating nearby steps.
+  const numChangeFrames = 2;
 
-  gNearbyPoints = nearby;
-
-  // Start gathering pause data for any new nearby points.
-  for (const { point, snapshot } of nearby) {
-    queuePauseData({
-      point,
-      snapshot,
-      shouldSkip: () => !pointArrayIncludes(gNearbyPoints, point),
-    });
-  }
+  simulateBreakpointNavigation(gPausePoint, true, numBreakpointHits);
+  simulateBreakpointNavigation(gPausePoint, false, numBreakpointHits);
+  simulateSteppingNavigation(gPausePoint, numSteps, numChangeFrames);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1549,16 +1631,12 @@ async function findEventFrameEntry(checkpoint, progress) {
     scanCheckpoint: savedCheckpoint,
   });
 
-  const enterFramePoint = gEventFrameEntryPoints.get(progress);
-  if (!enterFramePoint) {
+  const point = gEventFrameEntryPoints.get(progress);
+  if (!point) {
     return null;
   }
 
-  // We want to stop at the first step in the frame, not at the EnterFrame.
-  const frameSteps = await findFrameSteps(enterFramePoint);
-  assert(pointEquals(frameSteps[0], enterFramePoint));
-
-  return frameSteps[1];
+  return findFrameEntryPoint(point);
 }
 
 async function findEventLogpointHits(checkpoint, event, callback) {
@@ -1660,7 +1738,7 @@ function maybeResumeRecording() {
     ensureFlushed();
     Services.cpmm.sendAsyncMessage("HitRecordingEndpoint");
     if (gDebugger) {
-      gDebugger._onPause();
+      gDebugger._hitRecordingBoundary();
     }
     return;
   }
@@ -1911,12 +1989,12 @@ const gControl = {
       gActiveChild.waitUntilPaused(true);
     }
 
-    updateNearbyPoints();
+    simulateNearbyNavigation();
   },
 
   // Clear all installed breakpoints.
   clearBreakpoints() {
-    dumpv(`ClearBreakpoints\n`);
+    dumpv(`ClearBreakpoints`);
     gBreakpoints.length = 0;
 
     if (gActiveChild == gMainChild) {
@@ -1924,7 +2002,6 @@ const gControl = {
       // child immediately.
       gActiveChild.waitUntilPaused(true);
     }
-    updateNearbyPoints();
   },
 
   // Get the last known point in the recording.

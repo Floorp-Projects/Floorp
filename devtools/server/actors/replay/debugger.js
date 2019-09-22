@@ -142,6 +142,12 @@ ReplayPool.prototype = {
         this.frames[frame.index] = new ReplayDebuggerFrame(this, frame);
       }
     }
+
+    if (pauseData.popFrameResult) {
+      this.popFrameResult = this.convertCompletionValue(
+        pauseData.popFrameResult
+      );
+    }
   },
 
   convertValue(value) {
@@ -352,13 +358,13 @@ ReplayDebugger.prototype = {
       this._direction = forward ? Direction.FORWARD : Direction.BACKWARD;
       dumpv("Resuming " + this._direction);
       this._control.resume(forward);
-      if (this._paused) {
-        // If we resume and immediately pause, we are at an endpoint of the
-        // recording. Force the thread to pause.
-        this._capturePauseData();
-        this.replayingOnForcedPause(this.getNewestFrame());
-      }
     });
+  },
+
+  // Called when replaying and hitting the beginning or end of recording.
+  _hitRecordingBoundary() {
+    this._capturePauseData();
+    this.replayingOnForcedPause(this.getNewestFrame());
   },
 
   replayTimeWarp(target) {
@@ -1072,10 +1078,9 @@ ReplayDebuggerFrame.prototype = {
       this._dbg._setBreakpoint(
         () => {
           this._dbg._capturePauseData();
-          const result = this._dbg._sendRequest({ type: "popFrameResult" });
           handler.call(
             this._dbg.getNewestFrame(),
-            this._pool.convertCompletionValue(result)
+            this._dbg._pool.popFrameResult
           );
         },
         {
