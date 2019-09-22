@@ -1389,11 +1389,11 @@ gfxFcPlatformFontList::gfxFcPlatformFontList()
       mFcSubstituteCache(64),
       mLastConfig(nullptr),
       mAlwaysUseFontconfigGenerics(true) {
+  mLastConfig = FcConfigGetCurrent();
   if (XRE_IsParentProcess()) {
     // if the rescan interval is set, start the timer
     int rescanInterval = FcConfigGetRescanInterval(nullptr);
     if (rescanInterval) {
-      mLastConfig = FcConfigGetCurrent();
       NS_NewTimerWithFuncCallback(
           getter_AddRefs(mCheckFontUpdatesTimer), CheckFontUpdates, this,
           (rescanInterval + 1) * 1000, nsITimer::TYPE_REPEATING_SLACK,
@@ -1537,6 +1537,8 @@ nsresult gfxFcPlatformFontList::InitFontListForPlatform() {
   mAlwaysUseFontconfigGenerics = PrefFontListsUseOnlyGenerics();
   mOtherFamilyNamesInitialized = true;
 
+  mLastConfig = FcConfigGetCurrent();
+
   if (XRE_IsContentProcess()) {
     // Content process: use the font list passed from the chrome process,
     // because we can't rely on fontconfig in the presence of sandboxing;
@@ -1598,8 +1600,6 @@ nsresult gfxFcPlatformFontList::InitFontListForPlatform() {
 
     return NS_OK;
   }
-
-  mLastConfig = FcConfigGetCurrent();
 
   UniquePtr<SandboxPolicy> policy;
 
@@ -1667,6 +1667,8 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
   mAlwaysUseFontconfigGenerics = PrefFontListsUseOnlyGenerics();
   mOtherFamilyNamesInitialized = true;
 
+  mLastConfig = FcConfigGetCurrent();
+
   if (!XRE_IsParentProcess()) {
     // Content processes will access the shared-memory data created by the
     // parent, so they do not need to query fontconfig for the available
@@ -1677,8 +1679,6 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
 #ifdef MOZ_BUNDLED_FONTS
   ActivateBundledFonts();
 #endif
-
-  mLastConfig = FcConfigGetCurrent();
 
   UniquePtr<SandboxPolicy> policy;
 
