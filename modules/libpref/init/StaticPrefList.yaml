@@ -5314,6 +5314,12 @@
   value: true
   mirror: always
 
+# Whether to disable deprecated numalign/denomalign/align attributes
+- name: mathml.deprecated_alignment_attributes.disabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "media."
 #---------------------------------------------------------------------------

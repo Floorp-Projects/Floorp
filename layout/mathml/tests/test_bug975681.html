@@ -95,15 +95,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=975681
     ok(almostLessThanAbs(num.height + 30 + denom.height, mfrac.height) && 
       almostLessThanAbs(num.bottom + 30, denom.top), "numerator and denominator should be separated by linethickness");
     
-    num = document.getElementById("mfrac_numalign").firstElementChild.getBoundingClientRect();
-    mfrac = document.getElementById("mfrac_numalign").getBoundingClientRect();
+    if (!SpecialPowers.getBoolPref('mathml.deprecated_alignment_attributes.disabled')) {
+        num = document.getElementById("mfrac_numalign").firstElementChild.getBoundingClientRect();
+        mfrac = document.getElementById("mfrac_numalign").getBoundingClientRect();
     
-    ok(almostEqualAbs(num.left, mfrac.left), "numerator should be aligned left");
+        ok(almostEqualAbs(num.left, mfrac.left), "numerator should be aligned left");
       
-    mfrac = document.getElementById("mfrac_denomalign").getBoundingClientRect();
-    denom = document.getElementById("mfrac_denomalign").lastElementChild.getBoundingClientRect();
+        mfrac = document.getElementById("mfrac_denomalign").getBoundingClientRect();
+        denom = document.getElementById("mfrac_denomalign").lastElementChild.getBoundingClientRect();
     
-    ok(almostEqualAbs(mfrac.right, denom.right), "denominator should be aligned right");
+        ok(almostEqualAbs(mfrac.right, denom.right), "denominator should be aligned right");
+    }
       
     num = document.getElementById("mfrac_bevelled").firstElementChild.getBoundingClientRect();
     denom = document.getElementById("mfrac_bevelled").lastElementChild.getBoundingClientRect();
