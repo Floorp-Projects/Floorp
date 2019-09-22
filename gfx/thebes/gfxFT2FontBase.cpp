@@ -138,6 +138,14 @@ static void SnapLineToPixels(gfxFloat& aOffset, gfxFloat& aSize) {
   aSize = snappedSize;
 }
 
+static inline gfxRect ScaleGlyphBounds(const IntRect& aBounds,
+                                       gfxFloat aScale) {
+  return gfxRect(FLOAT_FROM_26_6(aBounds.x) * aScale,
+                 FLOAT_FROM_26_6(aBounds.y) * aScale,
+                 FLOAT_FROM_26_6(aBounds.width) * aScale,
+                 FLOAT_FROM_26_6(aBounds.height) * aScale);
+}
+
 /**
  * Get extents for a simple character representable by a single glyph.
  * The return value is the glyph id of that glyph or zero if no such glyph
@@ -148,9 +156,13 @@ uint32_t gfxFT2FontBase::GetCharExtents(char aChar, gfxFloat* aWidth,
                                         gfxRect* aBounds) {
   FT_UInt gid = GetGlyph(aChar);
   int32_t width;
-  if (gid && GetFTGlyphExtents(gid, &width, aBounds)) {
+  IntRect bounds;
+  if (gid && GetFTGlyphExtents(gid, &width, &bounds)) {
     if (aWidth) {
       *aWidth = FLOAT_FROM_16_16(width);
+    }
+    if (aBounds) {
+      *aBounds = ScaleGlyphBounds(bounds, GetAdjustedSize() / mFTSize);
     }
     return gid;
   } else {
@@ -489,7 +501,7 @@ uint32_t gfxFT2FontBase::GetGlyph(uint32_t unicode,
 }
 
 FT_Vector gfxFT2FontBase::GetEmboldenStrength(FT_Face aFace) {
-  FT_Vector strength = { 0, 0 };
+  FT_Vector strength = {0, 0};
   if (!mEmbolden) {
     return strength;
   }
@@ -508,7 +520,7 @@ FT_Vector gfxFT2FontBase::GetEmboldenStrength(FT_Face aFace) {
 }
 
 bool gfxFT2FontBase::GetFTGlyphExtents(uint16_t aGID, int32_t* aAdvance,
-                                       gfxRect* aBounds) {
+                                       IntRect* aBounds) {
   gfxFT2LockedFace face(this);
   MOZ_ASSERT(face.get());
   if (!face.get()) {
@@ -517,8 +529,7 @@ bool gfxFT2FontBase::GetFTGlyphExtents(uint16_t aGID, int32_t* aAdvance,
     return false;
   }
 
-  FT_Error ftError = Factory::LoadFTGlyph(face.get(), aGID, mFTLoadFlags);
-  if (ftError != FT_Err_Ok) {
+  if (Factory::LoadFTGlyph(face.get(), aGID, mFTLoadFlags) != FT_Err_Ok) {
     // FT_Face was somehow broken/invalid? Don't try to access glyph slot.
     // This probably shouldn't happen, but does: see bug 1440938.
     NS_WARNING("failed to load glyph!");
@@ -572,36 +583,56 @@ bool gfxFT2FontBase::GetFTGlyphExtents(uint16_t aGID, int32_t* aAdvance,
       x2 = (x2 + 63) & -64;
       y2 = (y2 + 63) & -64;
     }
-    *aBounds = gfxRect(FLOAT_FROM_26_6(x) * extentsScale,
-                       FLOAT_FROM_26_6(y) * extentsScale,
-                       FLOAT_FROM_26_6(x2 - x) * extentsScale,
-                       FLOAT_FROM_26_6(y2 - y) * extentsScale);
+    *aBounds = IntRect(x, y, x2 - x, y2 - y);
   }
   return true;
 }
 
+/**
+ * Get the cached glyph metrics for the glyph id if available. Otherwise, query
+ * FreeType for the glyph extents and initialize the glyph metrics.
+ */
+const gfxFT2FontBase::GlyphMetrics& gfxFT2FontBase::GetCachedGlyphMetrics(
+    uint16_t aGID) {
+  if (!mGlyphMetrics) {
+    mGlyphMetrics =
+        mozilla::MakeUnique<nsDataHashtable<nsUint32HashKey, GlyphMetrics>>(
+            128);
+  }
+
+  if (const GlyphMetrics* metrics = mGlyphMetrics->GetValue(aGID)) {
+    return *metrics;
+  }
+
+  GlyphMetrics& metrics = mGlyphMetrics->GetOrInsert(aGID);
+  IntRect bounds;
+  if (GetFTGlyphExtents(aGID, &metrics.mAdvance, &bounds)) {
+    metrics.SetBounds(bounds);
+  }
+  return metrics;
+}
+
 int32_t gfxFT2FontBase::GetGlyphWidth(uint16_t aGID) {
-  if (!mGlyphWidths) {
-    mGlyphWidths =
-        mozilla::MakeUnique<nsDataHashtable<nsUint32HashKey, int32_t>>(128);
-  }
-
-  int32_t width;
-  if (mGlyphWidths->Get(aGID, &width)) {
-    return width;
-  }
-
-  if (!GetFTGlyphExtents(aGID, &width)) {
-    width = 0;
-  }
-  mGlyphWidths->Put(aGID, width);
-
-  return width;
+  return GetCachedGlyphMetrics(aGID).mAdvance;
 }
 
 bool gfxFT2FontBase::GetGlyphBounds(uint16_t aGID, gfxRect* aBounds,
                                     bool aTight) {
-  return GetFTGlyphExtents(aGID, nullptr, aBounds);
+  const GlyphMetrics& metrics = GetCachedGlyphMetrics(aGID);
+  if (!metrics.HasValidBounds()) {
+    return false;
+  }
+  // Check if there are cached bounds and use those if available. Otherwise,
+  // fall back to directly querying the glyph extents.
+  IntRect bounds;
+  if (metrics.HasCachedBounds()) {
+    bounds = metrics.GetBounds();
+  } else if (!GetFTGlyphExtents(aGID, nullptr, &bounds)) {
+    return false;
+  }
+  // The bounds are stored unscaled, so must be scaled to the adjusted size.
+  *aBounds = ScaleGlyphBounds(bounds, GetAdjustedSize() / mFTSize);
+  return true;
 }
 
 // For variation fonts, figure out the variation coordinates to be applied
