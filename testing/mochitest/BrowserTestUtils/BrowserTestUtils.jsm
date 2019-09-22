@@ -365,13 +365,13 @@ var BrowserTestUtils = {
    *
    * @param {xul:browser} browser
    *        A xul:browser.
-   * @param {Boolean} includeSubFrames
+   * @param {Boolean} [includeSubFrames = false]
    *        A boolean indicating if loads from subframes should be included.
-   * @param {optional string or function} wantLoad
+   * @param {string|function} [wantLoad = null]
    *        If a function, takes a URL and returns true if that's the load we're
    *        interested in. If a string, gives the URL of the load we're interested
    *        in. If not present, the first load resolves the promise.
-   * @param {optional boolean} maybeErrorPage
+   * @param {boolean} [maybeErrorPage = false]
    *        If true, this uses DOMContentLoaded event instead of load event.
    *        Also wantLoad will be called with visible URL, instead of
    *        'about:neterror?...' for error page.
@@ -529,15 +529,17 @@ var BrowserTestUtils = {
   /**
    * Waits for a tab to open and load a given URL.
    *
-   * The method doesn't wait for the tab contents to load.
+   * By default, the method doesn't wait for the tab contents to load.
    *
    * @param {tabbrowser} tabbrowser
    *        The tabbrowser to look for the next new tab in.
-   * @param {string} url
-   *        A string URL to look for in the new tab. If null, allows any non-blank URL.
-   * @param {boolean} waitForLoad
+   * @param {string|function} [wantLoad = null]
+   *        If a function, takes a URL and returns true if that's the load we're
+   *        interested in. If a string, gives the URL of the load we're interested
+   *        in. If not present, the first non-about:blank load is used.
+   * @param {boolean} [waitForLoad = false]
    *        True to wait for the page in the new tab to load. Defaults to false.
-   * @param {boolean} waitForAnyTab
+   * @param {boolean} [waitForAnyTab = false]
    *        True to wait for the url to be loaded in any new tab, not just the next
    *        one opened.
    *
@@ -548,10 +550,20 @@ var BrowserTestUtils = {
    * NB: this method will not work if you open a new tab with e.g. BrowserOpenTab
    * and the tab does not load a URL, because no onLocationChange will fire.
    */
-  waitForNewTab(tabbrowser, url, waitForLoad = false, waitForAnyTab = false) {
-    let urlMatches = url
-      ? urlToMatch => urlToMatch == url
-      : urlToMatch => urlToMatch != "about:blank";
+  waitForNewTab(
+    tabbrowser,
+    wantLoad = null,
+    waitForLoad = false,
+    waitForAnyTab = false
+  ) {
+    let urlMatches;
+    if (wantLoad && typeof wantLoad == "function") {
+      urlMatches = wantLoad;
+    } else if (wantLoad) {
+      urlMatches = urlToMatch => urlToMatch == wantLoad;
+    } else {
+      urlMatches = urlToMatch => urlToMatch != "about:blank";
+    }
     return new Promise((resolve, reject) => {
       tabbrowser.tabContainer.addEventListener(
         "TabOpen",
