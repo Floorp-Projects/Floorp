@@ -83,10 +83,14 @@ add_task(async function test_autocomplete_footer_onclick() {
         "Search string should be set to filter logins"
       );
 
+      // open_management + filter
+      await LoginTestUtils.telemetry.waitForEventCount(2);
+
       // Check event telemetry recorded when opening management UI
       TelemetryTestUtils.assertEvents(
         [["pwmgr", "open_management", "autocomplete"]],
-        { category: "pwmgr", method: "open_management" }
+        { category: "pwmgr", method: "open_management" },
+        { clear: true, process: "content" }
       );
 
       await passwordManager.close();
@@ -132,7 +136,8 @@ add_task(async function test_autocomplete_footer_keydown() {
       // Check event telemetry recorded when opening management UI
       TelemetryTestUtils.assertEvents(
         [["pwmgr", "open_management", "autocomplete"]],
-        { category: "pwmgr", method: "open_management" }
+        { category: "pwmgr", method: "open_management" },
+        { clear: true, process: "content" }
       );
 
       await passwordManager.close();

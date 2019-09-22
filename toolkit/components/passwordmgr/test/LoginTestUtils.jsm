@@ -530,3 +530,22 @@ this.LoginTestUtils.generation = {
   LENGTH: 15,
   REGEX: /^[a-km-np-zA-HJ-NP-Z2-9]{15}$/,
 };
+
+this.LoginTestUtils.telemetry = {
+  async waitForEventCount(count, process = "content", category = "pwmgr") {
+    let events = await TestUtils.waitForCondition(() => {
+      let events = Services.telemetry.snapshotEvents(
+        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+        false
+      )[process];
+      dump(`events: ${JSON.stringify(events, null, 2)}\n`);
+      if (!events) {
+        return null;
+      }
+      events = events.filter(e => e[1] == category);
+      return events.length == count ? events : null;
+    }, "waiting for telemetry event count of: " + count);
+    Assert.equal(events.length, count, "waiting for telemetry event count");
+    return events;
+  },
+};
