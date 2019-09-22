@@ -149,6 +149,7 @@ class GeckoWebViewProvider : IWebViewProvider {
                 .registerOnSharedPreferenceChangeListener(this)
             geckoSession = createGeckoSession()
             applySettingsAndSetDelegates()
+            geckoSession.open(geckoRuntime!!)
             setSession(geckoSession)
         }
 
