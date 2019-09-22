@@ -2410,6 +2410,11 @@ void nsFrame::DisplayOutlineUnconditional(nsDisplayListBuilder* aBuilder,
     return;
   }
 
+  // Outlines are painted by the table wrapper frame.
+  if (IsTableFrame()) {
+    return;
+  }
+
   if (HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT) &&
       GetScrollableOverflowRect().IsEmpty()) {
     // Skip parts of IB-splits with an empty overflow rect, see bug 434301.
