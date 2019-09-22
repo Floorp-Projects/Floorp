@@ -48,7 +48,7 @@ class gfxFT2FontBase : public gfxFont {
   // Get advance (and optionally bounds) of a single glyph from FreeType,
   // and return true, or return false if we failed.
   bool GetFTGlyphExtents(uint16_t aGID, int32_t* aWidth,
-                         gfxRect* aBounds = nullptr);
+                         mozilla::gfx::IntRect* aBounds = nullptr);
 
  protected:
   void InitMetrics();
@@ -70,7 +70,51 @@ class gfxFT2FontBase : public gfxFont {
   // range reported by the face.
   nsTArray<FT_Fixed> mCoords;
 
-  mozilla::UniquePtr<nsDataHashtable<nsUint32HashKey, int32_t>> mGlyphWidths;
+  // Store cached glyph metrics for reasonably small glyph sizes. The bounds
+  // are stored unscaled to losslessly compress 26.6 fixed point to an int16_t.
+  // Larger glyphs are handled directly via GetFTGlyphExtents.
+  struct GlyphMetrics {
+    // Set the X coord to INT16_MIN to signal the bounds are invalid, or
+    // INT16_MAX to signal that the bounds would overflow an int16_t.
+    enum { INVALID = INT16_MIN, LARGE = INT16_MAX };
+
+    GlyphMetrics() : mAdvance(0), mX(INVALID), mY(0), mWidth(0), mHeight(0) {}
+
+    bool HasValidBounds() const { return mX != INVALID; }
+    bool HasCachedBounds() const { return mX != LARGE; }
+
+    // If the bounds can fit in an int16_t, set them. Otherwise, leave the
+    // bounds invalid to signal that GetFTGlyphExtents should be queried
+    // directly.
+    void SetBounds(const mozilla::gfx::IntRect& aBounds) {
+      if (aBounds.x > INT16_MIN && aBounds.x < INT16_MAX &&
+          aBounds.y > INT16_MIN && aBounds.y < INT16_MAX &&
+          aBounds.width <= UINT16_MAX && aBounds.height <= UINT16_MAX) {
+        mX = aBounds.x;
+        mY = aBounds.y;
+        mWidth = aBounds.width;
+        mHeight = aBounds.height;
+      } else {
+        mX = LARGE;
+      }
+    }
+
+    mozilla::gfx::IntRect GetBounds() const {
+      return mozilla::gfx::IntRect(mX, mY, mWidth, mHeight);
+    }
+
+    int32_t mAdvance;
+    int16_t mX;
+    int16_t mY;
+    uint16_t mWidth;
+    uint16_t mHeight;
+  };
+
+  const GlyphMetrics& GetCachedGlyphMetrics(
+      uint16_t aGID, mozilla::gfx::IntRect* aBounds = nullptr);
+
+  mozilla::UniquePtr<nsDataHashtable<nsUint32HashKey, GlyphMetrics>>
+      mGlyphMetrics;
 };
 
 // Helper classes used for clearing out user font data when FT font
