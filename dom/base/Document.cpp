@@ -1855,11 +1855,11 @@ Document::~Document() {
   delete mSubDocuments;
   mSubDocuments = nullptr;
 
+  nsAutoScriptBlocker scriptBlocker;
+
   // Destroy link map now so we don't waste time removing
   // links one by one
   DestroyElementMaps();
-
-  nsAutoScriptBlocker scriptBlocker;
 
   // Invalidate cached array of child nodes
   InvalidateChildNodes();
@@ -2379,14 +2379,14 @@ void Document::DisconnectNodeTree() {
   delete mSubDocuments;
   mSubDocuments = nullptr;
 
-  // Destroy link map now so we don't waste time removing
-  // links one by one
-  DestroyElementMaps();
-
   bool oldVal = mInUnlinkOrDeletion;
   mInUnlinkOrDeletion = true;
   {  // Scope for update
     MOZ_AUTO_DOC_UPDATE(this, true);
+
+    // Destroy link map now so we don't waste time removing
+    // links one by one
+    DestroyElementMaps();
 
     // Invalidate cached array of child nodes
     InvalidateChildNodes();
@@ -6365,7 +6365,9 @@ nsresult Document::InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
 }
 
 void Document::RemoveChildNode(nsIContent* aKid, bool aNotify) {
+  Maybe<mozAutoDocUpdate> updateBatch;
   if (aKid->IsElement()) {
+    updateBatch.emplace(this, aNotify);
     // Destroy the link map up front before we mess with the child list.
     DestroyElementMaps();
   }
