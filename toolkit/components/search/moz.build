@@ -11,6 +11,7 @@ XPCSHELL_TESTS_MANIFESTS += [
     'tests/xpcshell/searchconfigs/xpcshell-2.ini',
     'tests/xpcshell/searchconfigs/xpcshell-3.ini',
     'tests/xpcshell/searchconfigs/xpcshell-4.ini',
+    'tests/xpcshell/xpcshell-legacyconfig.ini',
     'tests/xpcshell/xpcshell.ini',
 ]
 
