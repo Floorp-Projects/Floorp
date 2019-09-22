@@ -247,6 +247,18 @@ tasks.withType(io.gitlab.arturbosch.detekt.Detekt) {
     exclude "**/tooling/fetch-tests/**"
 }
 
+// Apply same path exclusions as for the main task
+tasks.withType(io.gitlab.arturbosch.detekt.DetektCreateBaselineTask) {
+    exclude "**/src/androidTest/**"
+    exclude "**/src/test/**"
+    exclude "**/test/src/**"
+    exclude "**/build/**"
+    exclude "**/resources/**"
+    exclude "**/tmp/**"
+    exclude "**/tooling/fetch/tests/**"
+    exclude "**/tooling/fetch-tests/**"
+}
+
 configurations {
     ktlint
 }
