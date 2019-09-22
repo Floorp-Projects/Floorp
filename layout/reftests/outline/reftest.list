@@ -13,3 +13,5 @@ pref(layout.css.outline-style-auto.enabled,false) == outline-auto-001.html outli
 == outline-initial-1a.html outline-initial-1-ref.html
 == outline-initial-1b.html outline-initial-1-ref.html
 == outline-on-table.html outline-on-table-ref.html
+== outline-table-caption.html outline-table-caption-ref.html
+== outline-table-caption-invisible.html about:blank
