@@ -654,28 +654,58 @@ public class GeckoView extends FrameLayout {
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(final MotionEvent event) {
+        return onTouchEventForResult(event) != PanZoomController.INPUT_RESULT_UNHANDLED;
+    }
+
+    /**
+     * Dispatches a {@link MotionEvent} to the {@link PanZoomController}. This is the same as
+     * {@link #onTouchEvent(MotionEvent)}, but instead returns a {@link PanZoomController.InputResult}
+     * indicating how the event was handled.
+     *
+     * @param event A {@link MotionEvent}
+     * @return One of the {@link PanZoomController#INPUT_RESULT_UNHANDLED INPUT_RESULT_*}) indicating how the event was handled.
+     */
+    public @PanZoomController.InputResult int onTouchEventForResult(final @NonNull MotionEvent event) {
         if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
             requestFocus();
         }
 
+        if (mSession == null) {
+            return PanZoomController.INPUT_RESULT_UNHANDLED;
+        }
+
         // NOTE: Treat mouse events as "touch" rather than as "mouse", so mouse can be
         // used to pan/zoom. Call onMouseEvent() instead for behavior similar to desktop.
-        return mSession != null &&
-               mSession.getPanZoomController().onTouchEvent(event);
+        return mSession.getPanZoomController().onTouchEvent(event);
     }
 
     @Override
     public boolean onGenericMotionEvent(final MotionEvent event) {
+        return onGenericMotionEventForResult(event) != PanZoomController.INPUT_RESULT_HANDLED;
+    }
+
+    /**
+     * Dispatches a {@link MotionEvent} to the {@link PanZoomController}. This is the same as
+     * {@link #onGenericMotionEvent(MotionEvent)} (MotionEvent)}, but instead returns
+     * a {@link PanZoomController.InputResult} indicating how the event was handled.
+     *
+     * @param event A {@link MotionEvent}
+     * @return One of the {@link PanZoomController#INPUT_RESULT_UNHANDLED INPUT_RESULT_*}) indicating how the event was handled.
+     */
+    public @PanZoomController.InputResult int onGenericMotionEventForResult(final @NonNull MotionEvent event) {
         if (AndroidGamepadManager.handleMotionEvent(event)) {
-            return true;
+            return PanZoomController.INPUT_RESULT_HANDLED;
         }
 
         if (mSession == null) {
-            return false;
+            return PanZoomController.INPUT_RESULT_UNHANDLED;
         }
 
-        return mSession.getAccessibility().onMotionEvent(event) ||
-               mSession.getPanZoomController().onMotionEvent(event);
+        if (mSession.getAccessibility().onMotionEvent(event)) {
+            return PanZoomController.INPUT_RESULT_HANDLED;
+        }
+
+        return mSession.getPanZoomController().onMotionEvent(event);
     }
 
     @Override

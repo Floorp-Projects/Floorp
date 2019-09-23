@@ -58,6 +58,30 @@ public class PanZoomController {
      */
     public static final int SCROLL_BEHAVIOR_AUTO = 1;
 
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({INPUT_RESULT_UNHANDLED, INPUT_RESULT_HANDLED, INPUT_RESULT_HANDLED_CONTENT})
+    /* package */ @interface InputResult {}
+
+    /**
+     * Specifies that an input event was not handled by the PanZoomController.
+     */
+    @WrapForJNI
+    public static final int INPUT_RESULT_UNHANDLED = 0;
+
+    /**
+     * Specifies that an input event was handled by the PanZoomController, but likely
+     * not by any touch event listeners in Web content.
+     */
+    @WrapForJNI
+    public static final int INPUT_RESULT_HANDLED = 1;
+
+    /**
+     * Specifies that an input event was handled by the PanZoomController and passed on
+     * to touch event listeners in Web content.
+     */
+    @WrapForJNI
+    public static final int INPUT_RESULT_HANDLED_CONTENT = 2;
+
     private SynthesizedEventState mPointerState;
 
     private ArrayList<Pair<Integer, MotionEvent>> mQueuedEvents;
@@ -72,19 +96,19 @@ public class PanZoomController {
         }
 
         @WrapForJNI(calledFrom = "ui")
-        public native boolean handleMotionEvent(
+        private native @InputResult int handleMotionEvent(
                int action, int actionIndex, long time, int metaState,  float screenX, float screenY,
                int pointerId[], float x[], float y[], float orientation[], float pressure[],
                float toolMajor[], float toolMinor[]);
 
         @WrapForJNI(calledFrom = "ui")
-        private native boolean handleScrollEvent(
+        private native @InputResult int handleScrollEvent(
                 long time, int metaState,
                 float x, float y,
                 float hScroll, float vScroll);
 
         @WrapForJNI(calledFrom = "ui")
-        private native boolean handleMouseEvent(
+        private native @InputResult int handleMouseEvent(
                 int action, long time, int metaState,
                 float x, float y, int buttons);
 
@@ -124,10 +148,10 @@ public class PanZoomController {
 
     /* package */ final NativeProvider mNative = new NativeProvider();
 
-    private boolean handleMotionEvent(final MotionEvent event) {
+    private @InputResult int handleMotionEvent(final MotionEvent event) {
         if (!mAttached) {
             mQueuedEvents.add(new Pair<>(EVENT_SOURCE_MOTION, event));
-            return false;
+            return INPUT_RESULT_UNHANDLED;
         }
 
         final int action = event.getActionMasked();
@@ -136,7 +160,7 @@ public class PanZoomController {
         if (action == MotionEvent.ACTION_DOWN) {
             mLastDownTime = event.getDownTime();
         } else if (mLastDownTime != event.getDownTime()) {
-            return false;
+            return INPUT_RESULT_UNHANDLED;
         }
 
         final int[] pointerId = new int[count];
@@ -179,16 +203,16 @@ public class PanZoomController {
                                          orientation, pressure, toolMajor, toolMinor);
     }
 
-    private boolean handleScrollEvent(final MotionEvent event) {
+    private @InputResult int handleScrollEvent(final MotionEvent event) {
         if (!mAttached) {
             mQueuedEvents.add(new Pair<>(EVENT_SOURCE_SCROLL, event));
-            return false;
+            return INPUT_RESULT_UNHANDLED;
         }
 
         final int count = event.getPointerCount();
 
         if (count <= 0) {
-            return false;
+            return INPUT_RESULT_UNHANDLED;
         }
 
         final MotionEvent.PointerCoords coords = new MotionEvent.PointerCoords();
@@ -208,16 +232,16 @@ public class PanZoomController {
                                          hScroll, vScroll);
     }
 
-    private boolean handleMouseEvent(final MotionEvent event) {
+    private @InputResult int handleMouseEvent(final MotionEvent event) {
         if (!mAttached) {
             mQueuedEvents.add(new Pair<>(EVENT_SOURCE_MOUSE, event));
-            return false;
+            return INPUT_RESULT_UNHANDLED;
         }
 
         final int count = event.getPointerCount();
 
         if (count <= 0) {
-            return false;
+            return INPUT_RESULT_UNHANDLED;
         }
 
         final MotionEvent.PointerCoords coords = new MotionEvent.PointerCoords();
@@ -288,9 +312,9 @@ public class PanZoomController {
      * display surface.
      *
      * @param event MotionEvent to process.
-     * @return True if the event was handled.
+     * @return One of the {@link PanZoomController#INPUT_RESULT_UNHANDLED INPUT_RESULT_*}) constants indicating how the event was handled.
      */
-    public boolean onTouchEvent(final @NonNull MotionEvent event) {
+    public @InputResult int onTouchEvent(final @NonNull MotionEvent event) {
         ThreadUtils.assertOnUiThread();
 
         if (!sTreatMouseAsTouch && event.getToolType(0) == MotionEvent.TOOL_TYPE_MOUSE) {
@@ -305,9 +329,9 @@ public class PanZoomController {
      * display surface.
      *
      * @param event MotionEvent to process.
-     * @return True if the event was handled.
+     * @return One of the {@link PanZoomController#INPUT_RESULT_UNHANDLED INPUT_RESULT_*}) constants indicating how the event was handled.
      */
-    public boolean onMouseEvent(final @NonNull MotionEvent event) {
+    public @InputResult int onMouseEvent(final @NonNull MotionEvent event) {
         ThreadUtils.assertOnUiThread();
 
         if (event.getToolType(0) == MotionEvent.TOOL_TYPE_MOUSE) {
@@ -327,9 +351,9 @@ public class PanZoomController {
      * display surface.
      *
      * @param event MotionEvent to process.
-     * @return True if the event was handled.
+     * @return One of the {@link PanZoomController#INPUT_RESULT_UNHANDLED INPUT_RESULT_*}) indicating how the event was handled.
      */
-    public boolean onMotionEvent(final @NonNull MotionEvent event) {
+    public @InputResult int onMotionEvent(final @NonNull MotionEvent event) {
         ThreadUtils.assertOnUiThread();
 
         final int action = event.getActionMasked();
@@ -339,7 +363,7 @@ public class PanZoomController {
             } else if ((InputDevice.getDevice(event.getDeviceId()) != null) &&
                        (InputDevice.getDevice(event.getDeviceId()).getSources() &
                         InputDevice.SOURCE_TOUCHPAD) == InputDevice.SOURCE_TOUCHPAD) {
-                return false;
+                return INPUT_RESULT_UNHANDLED;
             }
             return handleScrollEvent(event);
         } else if ((action == MotionEvent.ACTION_HOVER_MOVE) ||
@@ -347,7 +371,7 @@ public class PanZoomController {
                    (action == MotionEvent.ACTION_HOVER_EXIT)) {
             return handleMouseEvent(event);
         } else {
-            return false;
+            return INPUT_RESULT_UNHANDLED;
         }
     }
 

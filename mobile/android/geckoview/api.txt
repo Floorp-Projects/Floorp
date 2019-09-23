@@ -1054,6 +1054,8 @@ package org.mozilla.geckoview {
     method @NonNull public DynamicToolbarAnimator getDynamicToolbarAnimator();
     method @NonNull public PanZoomController getPanZoomController();
     method @AnyThread @Nullable public GeckoSession getSession();
+    method public int onGenericMotionEventForResult(@NonNull MotionEvent);
+    method public int onTouchEventForResult(@NonNull MotionEvent);
     method @UiThread @Nullable public GeckoSession releaseSession();
     method @UiThread public void setSession(@NonNull GeckoSession);
     method public void setVerticalClipping(int);
@@ -1155,9 +1157,9 @@ package org.mozilla.geckoview {
   @UiThread public class PanZoomController {
     ctor protected PanZoomController(GeckoSession);
     method public float getScrollFactor();
-    method public boolean onMotionEvent(@NonNull MotionEvent);
-    method public boolean onMouseEvent(@NonNull MotionEvent);
-    method public boolean onTouchEvent(@NonNull MotionEvent);
+    method public int onMotionEvent(@NonNull MotionEvent);
+    method public int onMouseEvent(@NonNull MotionEvent);
+    method public int onTouchEvent(@NonNull MotionEvent);
     method @UiThread public void scrollBy(@NonNull ScreenLength, @NonNull ScreenLength);
     method @UiThread public void scrollBy(@NonNull ScreenLength, @NonNull ScreenLength, int);
     method @UiThread public void scrollTo(@NonNull ScreenLength, @NonNull ScreenLength);
@@ -1166,6 +1168,9 @@ package org.mozilla.geckoview {
     method @UiThread public void scrollToTop();
     method public void setIsLongpressEnabled(boolean);
     method public void setScrollFactor(float);
+    field public static final int INPUT_RESULT_HANDLED = 1;
+    field public static final int INPUT_RESULT_HANDLED_CONTENT = 2;
+    field public static final int INPUT_RESULT_UNHANDLED = 0;
     field public static final int SCROLL_BEHAVIOR_AUTO = 1;
     field public static final int SCROLL_BEHAVIOR_SMOOTH = 0;
   }
