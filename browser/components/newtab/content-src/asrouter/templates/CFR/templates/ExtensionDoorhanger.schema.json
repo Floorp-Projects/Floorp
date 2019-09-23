@@ -19,6 +19,11 @@
       "type": "string",
       "description": "Attribute used for different groups of messages from the same provider"
     },
+    "layout": {
+      "type": "string",
+      "description": "Attribute used for different groups of messages from the same provider",
+      "enum": ["message_and_animation", "icon_and_message", "addon_recommendation"]
+    },
     "bucket_id": {
       "type": "string",
       "description": "A bucket identifier for the addon. This is used in order to anonymize telemetry for history-sensitive targeting."
@@ -100,6 +105,13 @@
           "required": ["string_id"],
           "description": "Id of localized string for extension doorhanger title"
         }
+      ]
+    },
+    "icon": {
+      "description": "The icon displayed in the pop-over. Should be 64x64px and png/svg.",
+      "allOf": [
+        {"$ref": "#/definitions/linkUrl"},
+        {"description": "Icon associated with the message"}
       ]
     },
     "addon": {
