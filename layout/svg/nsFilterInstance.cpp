@@ -768,6 +768,11 @@ void nsFilterInstance::Render(gfxContext* aCtx, imgDrawingParams& aImgParams,
   Rect renderRect = IntRectToRect(filterRect);
   RefPtr<DrawTarget> dt = aCtx->GetDrawTarget();
 
+  MOZ_ASSERT(dt);
+  if (!dt->IsValid()) {
+    return;
+  }
+
   BuildSourcePaints(aImgParams);
   RefPtr<FilterNode> sourceGraphic, fillPaint, strokePaint;
   if (mFillPaint.mSourceSurface) {
@@ -791,7 +796,7 @@ void nsFilterInstance::Render(gfxContext* aCtx, imgDrawingParams& aImgParams,
   }
 
   RefPtr<FilterNode> resultFilter = FilterNodeGraphFromDescription(
-      aCtx->GetDrawTarget(), mFilterDescription, renderRect, sourceGraphic,
+      dt, mFilterDescription, renderRect, sourceGraphic,
       mSourceGraphic.mSurfaceRect, fillPaint, strokePaint, mInputImages);
 
   if (!resultFilter) {
@@ -799,8 +804,7 @@ void nsFilterInstance::Render(gfxContext* aCtx, imgDrawingParams& aImgParams,
     return;
   }
 
-  BuildSourceImage(aCtx->GetDrawTarget(), aImgParams, resultFilter,
-                   sourceGraphic, renderRect);
+  BuildSourceImage(dt, aImgParams, resultFilter, sourceGraphic, renderRect);
   if (sourceGraphic) {
     if (mSourceGraphic.mSourceSurface) {
       sourceGraphic->SetInput(IN_TRANSFORM_IN, mSourceGraphic.mSourceSurface);
@@ -810,8 +814,7 @@ void nsFilterInstance::Render(gfxContext* aCtx, imgDrawingParams& aImgParams,
     }
   }
 
-  aCtx->GetDrawTarget()->DrawFilter(resultFilter, renderRect, Point(0, 0),
-                                    DrawOptions(aOpacity));
+  dt->DrawFilter(resultFilter, renderRect, Point(0, 0), DrawOptions(aOpacity));
 }
 
 nsRegion nsFilterInstance::ComputePostFilterDirtyRegion() {
