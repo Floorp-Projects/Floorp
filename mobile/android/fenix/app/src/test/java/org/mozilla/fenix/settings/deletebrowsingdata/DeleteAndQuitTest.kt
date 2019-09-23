@@ -23,6 +23,7 @@ import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
@@ -101,6 +102,7 @@ class DeleteAndQuitTest {
         }
     }
 
+    @Ignore("Intermittently failing; will be fixed with #5406.")
     @Test
     fun `delete everything and quit`() = runBlockingTest {
         // When
