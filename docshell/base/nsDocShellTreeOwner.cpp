@@ -1305,10 +1305,8 @@ void ChromeTooltipListener::sTooltipCallback(nsITimer* aTimer,
                           self->mMouseScreenY - screenDot.y / scaleFactor,
                           tooltipText, directionText);
         self->mLastShownTooltipText = std::move(tooltipText);
-        if (self->mPossibleTooltipNode->OwnerDoc()) {
-          self->mLastDocshell = do_GetWeakReference(
-              self->mPossibleTooltipNode->OwnerDoc()->GetDocShell());
-        }
+        self->mLastDocshell = do_GetWeakReference(
+            self->mPossibleTooltipNode->OwnerDoc()->GetDocShell());
       }
     }
 

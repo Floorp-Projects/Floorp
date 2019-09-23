@@ -77,8 +77,7 @@ void ElementPropertyTransition::UpdateStartValueFromReplacedTransition() {
                                       CSSPropFlags::CanAnimateOnCompositor),
              "The transition property should be able to be run on the "
              "compositor");
-  MOZ_ASSERT(mTarget && mTarget->mElement->OwnerDoc(),
-             "We should have a valid document at this moment");
+  MOZ_ASSERT(mTarget, "We should have a valid target at this moment");
 
   dom::DocumentTimeline* timeline = mTarget->mElement->OwnerDoc()->Timeline();
   ComputedTiming computedTiming = GetComputedTimingAt(
