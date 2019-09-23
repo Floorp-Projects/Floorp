@@ -4,164 +4,116 @@
 
 package mozilla.components.feature.findinpage.internal
 
-import android.view.View
-import mozilla.components.browser.session.Session
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.state.content.FindResultState
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.findinpage.view.FindInPageView
+import mozilla.components.support.test.any
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
 class FindInPagePresenterTest {
 
-    @Test
-    fun `bind registers on session with view scope`() {
-        val actualView: View = mock()
+    private val testDispatcher = TestCoroutineDispatcher()
+    private lateinit var store: BrowserStore
 
-        val view: FindInPageView = mock()
-        `when`(view.asView()).thenReturn(actualView)
+    @Before
+    @ExperimentalCoroutinesApi
+    fun setUp() {
+        Dispatchers.setMain(testDispatcher)
+        store = BrowserStore(BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "test-tab")
+            ),
+            selectedTabId = "test-tab"
+        ))
+    }
 
-        val session: Session = mock()
-
-        val presenter = FindInPagePresenter(view)
-        presenter.start()
-        presenter.bind(session)
-
-        verify(session).register(presenter, actualView)
+    @After
+    @ExperimentalCoroutinesApi
+    fun tearDown() {
+        Dispatchers.resetMain()
+        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test
-    fun `bind does not register if presenter is not started`() {
-        val actualView: View = mock()
-
+    fun `view is updated to display latest find result`() {
         val view: FindInPageView = mock()
-        `when`(view.asView()).thenReturn(actualView)
+        val presenter = FindInPagePresenter(store, view)
+        presenter.start()
 
-        val session: Session = mock()
+        val result = FindResultState(0, 2, false)
+        store.dispatch(ContentAction.AddFindResultAction("test-tab", result)).joinBlocking()
+        testDispatcher.advanceUntilIdle()
+        verify(view, never()).displayResult(result)
 
-        val presenter = FindInPagePresenter(view)
-        presenter.bind(session)
+        presenter.bind(store.state.selectedTab!!)
+        store.dispatch(ContentAction.AddFindResultAction("test-tab", result)).joinBlocking()
+        testDispatcher.advanceUntilIdle()
+        verify(view).displayResult(result)
 
-        verify(session, never()).register(presenter, actualView)
+        val result2 = FindResultState(1, 2, true)
+        store.dispatch(ContentAction.AddFindResultAction("test-tab", result2)).joinBlocking()
+        testDispatcher.advanceUntilIdle()
+        verify(view).displayResult(result2)
     }
 
     @Test
-    fun `Start will register on previously bound session`() {
-        val actualView: View = mock()
-
+    fun `no find results are observed after stop has been called`() {
         val view: FindInPageView = mock()
-        `when`(view.asView()).thenReturn(actualView)
-
-        val session: Session = mock()
-
-        val presenter = FindInPagePresenter(view)
-        presenter.bind(session)
-
-        verify(session, never()).register(presenter, actualView)
-
+        val presenter = FindInPagePresenter(store, view)
         presenter.start()
 
-        verify(session).register(presenter, actualView)
-    }
-
-    @Test
-    fun `start re-registers on session with view scope`() {
-        val actualView: View = mock()
-
-        val view: FindInPageView = mock()
-        `when`(view.asView()).thenReturn(actualView)
-
-        val session: Session = mock()
-
-        val presenter = FindInPagePresenter(view)
-        presenter.bind(session)
-
-        presenter.start()
-
-        verify(session, times(1)).register(presenter, actualView)
+        presenter.bind(store.state.selectedTab!!)
+        store.dispatch(ContentAction.AddFindResultAction("test-tab", mock())).joinBlocking()
+        testDispatcher.advanceUntilIdle()
+        verify(view, times(1)).displayResult(any())
 
         presenter.stop()
-
-        verify(session, times(1)).register(presenter, actualView)
-
-        presenter.start() // Should register again
-
-        verify(session, times(2)).register(presenter, actualView)
+        store.dispatch(ContentAction.AddFindResultAction("test-tab", mock())).joinBlocking()
+        testDispatcher.advanceUntilIdle()
+        verify(view, times(1)).displayResult(any())
     }
 
     @Test
-    fun `stop unregisters session`() {
-        val actualView: View = mock()
-
+    fun `bind updates session and focuses view`() {
         val view: FindInPageView = mock()
-        `when`(view.asView()).thenReturn(actualView)
 
-        val session: Session = mock()
-
-        val presenter = FindInPagePresenter(view)
-        presenter.start()
+        val presenter = FindInPagePresenter(mock(), view)
+        val session: SessionState = mock()
         presenter.bind(session)
 
-        verify(session).register(presenter, actualView)
-        verify(session, never()).unregister(presenter)
-
-        presenter.stop()
-
-        verify(session).unregister(presenter)
-    }
-
-    @Test
-    fun `bind will focus view`() {
-        val view: FindInPageView = mock()
-
-        val presenter = FindInPagePresenter(view)
-        presenter.bind(mock())
-
+        assertEquals(presenter.session, session)
         verify(view).focus()
     }
 
     @Test
-    fun `Session-Observer-onFindResult will be forwarded to view`() {
+    fun `unbind clears session and view`() {
         val view: FindInPageView = mock()
 
-        val session: Session = mock()
-        val result: Session.FindResult = mock()
-
-        val presenter = FindInPagePresenter(view)
-        presenter.onFindResult(session, result)
-
-        verify(view).displayResult(result)
-    }
-
-    @Test
-    fun `unbind will clear view`() {
-        val view: FindInPageView = mock()
-
-        val presenter = FindInPagePresenter(view)
-        presenter.unbind()
-
-        verify(view).clear()
-    }
-
-    @Test
-    fun `unbind unregisters from session`() {
-        val actualView: View = mock()
-
-        val view: FindInPageView = mock()
-        `when`(view.asView()).thenReturn(actualView)
-        val session: Session = mock()
-
-        val presenter = FindInPagePresenter(view)
-        presenter.start()
+        val presenter = FindInPagePresenter(mock(), view)
+        val session: SessionState = mock()
         presenter.bind(session)
-
-        verify(session).register(presenter, actualView)
-        verify(session, never()).unregister(presenter)
-
         presenter.unbind()
 
-        verify(session).unregister(presenter)
+        assertNull(presenter.session)
+        verify(view).clear()
     }
 }

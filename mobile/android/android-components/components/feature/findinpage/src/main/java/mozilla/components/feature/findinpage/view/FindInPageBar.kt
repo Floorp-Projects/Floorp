@@ -15,7 +15,7 @@ import android.widget.TextView
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.constraintlayout.widget.ConstraintLayout
-import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.feature.findinpage.R
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.showKeyboard
@@ -82,7 +82,7 @@ class FindInPageBar @JvmOverloads constructor(
         resultsCountTextView.contentDescription = null
     }
 
-    override fun displayResult(result: Session.FindResult) {
+    override fun displayResult(result: FindResultState) {
         with(result) {
             val ordinal = if (numberOfMatches > 0) activeMatchOrdinal + 1 else activeMatchOrdinal
             resultsCountTextView.text = String.format(resultFormat, ordinal, numberOfMatches)

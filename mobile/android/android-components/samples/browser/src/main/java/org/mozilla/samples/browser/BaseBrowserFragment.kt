@@ -163,7 +163,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
         )
 
         findInPageIntegration.set(
-            feature = FindInPageIntegration(components.sessionManager, layout.findInPage, layout.engineView),
+            feature = FindInPageIntegration(components.store, layout.findInPage, layout.engineView),
             owner = this,
             view = layout)
 

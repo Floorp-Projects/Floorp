@@ -4,49 +4,54 @@
 
 package mozilla.components.feature.findinpage.internal
 
-import mozilla.components.browser.session.Session
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.mapNotNull
+import mozilla.components.browser.state.selector.findTabOrCustomTab
+import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.findinpage.view.FindInPageView
+import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
- * Presenter implementation that will subscribe to a [Session] and update the view whenever the [Session.FindResult]
- * changes.
+ * Presenter that will observe [SessionState] changes and update the view whenever
+ * a find result was added.
  */
 internal class FindInPagePresenter(
+    private val store: BrowserStore,
     private val view: FindInPageView
-) : Session.Observer {
-    private var started: Boolean = false
-    private var session: Session? = null
+) {
+    @Volatile
+    internal var session: SessionState? = null
+
+    private var scope: CoroutineScope? = null
 
     fun start() {
-        session?.register(this, view = view.asView())
-        started = true
+        scope = store.flowScoped { flow ->
+            flow.mapNotNull { state -> session?.let { state.findTabOrCustomTab(it.id) } }
+                .ifChanged { it.content.findResults }
+                .collect {
+                    val results = it.content.findResults
+                    if (results.isNotEmpty()) {
+                        view.displayResult(results.last())
+                    }
+                }
+        }
     }
 
     fun stop() {
-        session?.unregister(this)
-        started = false
+        scope?.cancel()
     }
 
-    fun bind(session: Session) {
-        this.session?.unregister(this)
+    fun bind(session: SessionState) {
         this.session = session
-
-        if (started) {
-            // Only register now if we are started already. Otherwise let start() handle that.
-            session.register(this, view = view.asView())
-        }
-
         view.focus()
-    }
-
-    override fun onFindResult(session: Session, result: Session.FindResult) {
-        view.displayResult(result)
     }
 
     fun unbind() {
         view.clear()
-
-        session?.unregister(this)
-        session = null
+        this.session = null
     }
 }
