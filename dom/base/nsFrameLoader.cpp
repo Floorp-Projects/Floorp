@@ -1333,35 +1333,20 @@ class MOZ_RAII AutoResetInFrameSwap final {
     // Fire pageshow events on still-loading pages, and then fire pagehide
     // events.  Note that we do NOT fire these in the normal way, but just fire
     // them on the chrome event handlers.
-    nsContentUtils::FirePageShowEventForFrameLoaderSwap(
-        mThisDocShell, mThisEventTarget, false);
-    nsContentUtils::FirePageShowEventForFrameLoaderSwap(
-        mOtherDocShell, mOtherEventTarget, false);
-    nsContentUtils::FirePageHideEventForFrameLoaderSwap(mThisDocShell,
-                                                        mThisEventTarget);
-    nsContentUtils::FirePageHideEventForFrameLoaderSwap(mOtherDocShell,
-                                                        mOtherEventTarget);
+    nsContentUtils::FirePageShowEvent(mThisDocShell, mThisEventTarget, false);
+    nsContentUtils::FirePageShowEvent(mOtherDocShell, mOtherEventTarget, false);
+    nsContentUtils::FirePageHideEvent(mThisDocShell, mThisEventTarget);
+    nsContentUtils::FirePageHideEvent(mOtherDocShell, mOtherEventTarget);
   }
 
   ~AutoResetInFrameSwap() {
-    nsContentUtils::FirePageShowEventForFrameLoaderSwap(mThisDocShell,
-                                                        mThisEventTarget, true);
-    nsContentUtils::FirePageShowEventForFrameLoaderSwap(
-        mOtherDocShell, mOtherEventTarget, true);
+    nsContentUtils::FirePageShowEvent(mThisDocShell, mThisEventTarget, true);
+    nsContentUtils::FirePageShowEvent(mOtherDocShell, mOtherEventTarget, true);
 
     mThisFrameLoader->mInSwap = false;
     mOtherFrameLoader->mInSwap = false;
     mThisDocShell->SetInFrameSwap(false);
     mOtherDocShell->SetInFrameSwap(false);
-
-    // This is needed to get visibility state right in cases when we swapped a
-    // visible tab (foreground in visible window) with a non-visible tab.
-    if (RefPtr<Document> doc = mThisDocShell->GetDocument()) {
-      doc->UpdateVisibilityState();
-    }
-    if (RefPtr<Document> doc = mOtherDocShell->GetDocument()) {
-      doc->UpdateVisibilityState();
-    }
   }
 
  private:

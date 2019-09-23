@@ -2816,15 +2816,14 @@ class nsContentUtils {
       bool* aPreventDefault, bool aIsDOMEventSynthesized,
       bool aIsWidgetEventSynthesized);
 
-  static void FirePageShowEventForFrameLoaderSwap(
-      nsIDocShellTreeItem* aItem,
-      mozilla::dom::EventTarget* aChromeEventHandler, bool aFireIfShowing,
-      bool aOnlySystemGroup = false);
+  static void FirePageShowEvent(nsIDocShellTreeItem* aItem,
+                                mozilla::dom::EventTarget* aChromeEventHandler,
+                                bool aFireIfShowing,
+                                bool aOnlySystemGroup = false);
 
-  static void FirePageHideEventForFrameLoaderSwap(
-      nsIDocShellTreeItem* aItem,
-      mozilla::dom::EventTarget* aChromeEventHandler,
-      bool aOnlySystemGroup = false);
+  static void FirePageHideEvent(nsIDocShellTreeItem* aItem,
+                                mozilla::dom::EventTarget* aChromeEventHandler,
+                                bool aOnlySystemGroup = false);
 
   static already_AddRefed<nsPIWindowRoot> GetWindowRoot(Document* aDoc);
 
