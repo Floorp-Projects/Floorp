@@ -225,37 +225,26 @@ const uint8_t /* enum InterPredMode */
     [NEARMV_NEWMV]        = { NEARMV,    NEWMV     },
 };
 
-const uint8_t dav1d_tx_type_count[N_TXTP_SETS] = {
-    [TXTP_SET_DCT] = 1,
-    [TXTP_SET_DCT_ID] = 2,
-    [TXTP_SET_DT4_ID] = 5,
-    [TXTP_SET_DT4_ID_1D] = 7,
-    [TXTP_SET_DT9_ID_1D] = 12,
-    [TXTP_SET_ALL] = 16,
-    [TXTP_SET_LOSSLESS] = 1,
+const uint8_t dav1d_partition_type_count[N_BL_LEVELS] = {
+    [BL_128X128] = N_PARTITIONS - 3,
+    [BL_64X64]   = N_PARTITIONS - 1,
+    [BL_32X32]   = N_PARTITIONS - 1,
+    [BL_16X16]   = N_PARTITIONS - 1,
+    [BL_8X8]     = N_SUB8X8_PARTITIONS - 1,
 };
 
-const uint8_t /* enum TxfmType */
-              dav1d_tx_types_per_set[N_TXTP_SETS][N_TX_TYPES] =
-{
-    [TXTP_SET_DCT]       = { DCT_DCT },
-    [TXTP_SET_DCT_ID]    = { IDTX, DCT_DCT },
-    [TXTP_SET_DT4_ID]    = { IDTX, DCT_DCT, ADST_ADST, ADST_DCT, DCT_ADST },
-    [TXTP_SET_DT4_ID_1D] = { IDTX, DCT_DCT, V_DCT, H_DCT, ADST_ADST, ADST_DCT,
-                             DCT_ADST },
-    [TXTP_SET_DT9_ID_1D] = { IDTX, V_DCT, H_DCT, DCT_DCT, ADST_DCT, DCT_ADST,
-                             FLIPADST_DCT, DCT_FLIPADST, ADST_ADST,
-                             FLIPADST_FLIPADST, ADST_FLIPADST, FLIPADST_ADST },
-    [TXTP_SET_ALL]       = { IDTX, V_DCT, H_DCT, V_ADST, H_ADST, V_FLIPADST,
-                             H_FLIPADST, DCT_DCT, ADST_DCT, DCT_ADST,
-                             FLIPADST_DCT, DCT_FLIPADST, ADST_ADST,
-                             FLIPADST_FLIPADST, ADST_FLIPADST, FLIPADST_ADST },
-    [TXTP_SET_LOSSLESS]  = { WHT_WHT },
-};
-
-const uint8_t dav1d_tx_type_set_index[2][N_TXTP_SETS] = {
-    { 0, -1,  2,  1, -1, -1, 3 },
-    { 0,  3, -1, -1,  2,  1, 4 },
+const uint8_t /* enum TxfmType */ dav1d_tx_types_per_set[40] = {
+    /* Intra2 */
+    IDTX, DCT_DCT, ADST_ADST, ADST_DCT, DCT_ADST,
+    /* Intra1 */
+    IDTX, DCT_DCT, V_DCT, H_DCT, ADST_ADST, ADST_DCT, DCT_ADST,
+    /* Inter2 */
+    IDTX, V_DCT, H_DCT, DCT_DCT, ADST_DCT, DCT_ADST, FLIPADST_DCT,
+    DCT_FLIPADST, ADST_ADST, FLIPADST_FLIPADST, ADST_FLIPADST, FLIPADST_ADST,
+    /* Inter1 */
+    IDTX, V_DCT, H_DCT, V_ADST, H_ADST, V_FLIPADST, H_FLIPADST,
+    DCT_DCT, ADST_DCT, DCT_ADST, FLIPADST_DCT, DCT_FLIPADST,
+    ADST_ADST, FLIPADST_FLIPADST, ADST_FLIPADST, FLIPADST_ADST,
 };
 
 const uint8_t dav1d_ymode_size_context[N_BS_SIZES] = {
@@ -283,119 +272,34 @@ const uint8_t dav1d_ymode_size_context[N_BS_SIZES] = {
     [BS_4x4  ]   = 0,
 };
 
-const uint8_t dav1d_nz_map_ctx_offset[N_RECT_TX_SIZES][5][5] = {
-    [TX_4X4] = {
-        { 0, 1, 6, 6 },
-        { 1, 6, 6, 21 },
-        { 6, 6, 21, 21 },
-        { 6, 21, 21, 21 },
-    }, [TX_8X8] = {
-        { 0, 1, 6, 6, 21 },
-        { 1, 6, 6, 21, 21 },
-        { 6, 6, 21, 21, 21 },
-        { 6, 21, 21, 21, 21 },
-        { 21, 21, 21, 21, 21 }
-    }, [TX_16X16] = {
-        { 0, 1, 6, 6, 21 },
-        { 1, 6, 6, 21, 21 },
-        { 6, 6, 21, 21, 21 },
-        { 6, 21, 21, 21, 21 },
-        { 21, 21, 21, 21, 21 }
-    }, [TX_32X32] = {
-        { 0, 1, 6, 6, 21 },
-        { 1, 6, 6, 21, 21 },
-        { 6, 6, 21, 21, 21 },
-        { 6, 21, 21, 21, 21 },
-        { 21, 21, 21, 21, 21 }
-    }, [TX_64X64] = {
-        { 0, 1, 6, 6, 21 },
-        { 1, 6, 6, 21, 21 },
-        { 6, 6, 21, 21, 21 },
-        { 6, 21, 21, 21, 21 },
-        { 21, 21, 21, 21, 21 }
-    }, [RTX_4X8] = {
-        { 0, 11, 11, 11 },
-        { 11, 11, 11, 11 },
-        { 6, 6, 21, 21 },
-        { 6, 21, 21, 21 },
-        { 21, 21, 21, 21 }
-    }, [RTX_8X4] = {
-        { 0, 16, 6, 6, 21 },
-        { 16, 16, 6, 21, 21 },
+const uint8_t dav1d_lo_ctx_offsets[3][5][5] = {
+    { /* w == h */
+        {  0,  1,  6,  6, 21 },
+        {  1,  6,  6, 21, 21 },
+        {  6,  6, 21, 21, 21 },
+        {  6, 21, 21, 21, 21 },
+        { 21, 21, 21, 21, 21 },
+    }, { /* w > h */
+        {  0, 16,  6,  6, 21 },
+        { 16, 16,  6, 21, 21 },
         { 16, 16, 21, 21, 21 },
         { 16, 16, 21, 21, 21 },
-    }, [RTX_8X16] = {
-        { 0, 11, 11, 11, 11 },
+        { 16, 16, 21, 21, 21 },
+    }, { /* w < h */
+        {  0, 11, 11, 11, 11 },
         { 11, 11, 11, 11, 11 },
-        { 6, 6, 21, 21, 21 },
-        { 6, 21, 21, 21, 21 },
-        { 21, 21, 21, 21, 21 }
-    }, [RTX_16X8] = {
-        { 0, 16, 6, 6, 21 },
-        { 16, 16, 6, 21, 21 },
-        { 16, 16, 21, 21, 21 },
-        { 16, 16, 21, 21, 21 },
-        { 16, 16, 21, 21, 21 }
-    }, [RTX_16X32] = {
-        { 0, 11, 11, 11, 11 },
-        { 11, 11, 11, 11, 11 },
-        { 6, 6, 21, 21, 21 },
-        { 6, 21, 21, 21, 21 },
-        { 21, 21, 21, 21, 21 }
-    }, [RTX_32X16] = {
-        { 0, 16, 6, 6, 21 },
-        { 16, 16, 6, 21, 21 },
-        { 16, 16, 21, 21, 21 },
-        { 16, 16, 21, 21, 21 },
-        { 16, 16, 21, 21, 21 }
-    }, [RTX_32X64] = {
-        { 0, 11, 11, 11, 11 },
-        { 11, 11, 11, 11, 11 },
-        { 6, 6, 21, 21, 21 },
-        { 6, 21, 21, 21, 21 },
-        { 21, 21, 21, 21, 21 }
-    }, [RTX_64X32] = {
-        { 0, 16, 6, 6, 21 },
-        { 16, 16, 6, 21, 21 },
-        { 16, 16, 21, 21, 21 },
-        { 16, 16, 21, 21, 21 },
-        { 16, 16, 21, 21, 21 }
-    }, [RTX_4X16] = {
-        { 0, 11, 11, 11 },
-        { 11, 11, 11, 11 },
-        { 6, 6, 21, 21 },
-        { 6, 21, 21, 21 },
-        { 21, 21, 21, 21 }
-    }, [RTX_16X4] = {
-        { 0, 16, 6, 6, 21 },
-        { 16, 16, 6, 21, 21 },
-        { 16, 16, 21, 21, 21 },
-        { 16, 16, 21, 21, 21 },
-    }, [RTX_8X32] = {
-        { 0, 11, 11, 11, 11 },
-        { 11, 11, 11, 11, 11 },
-        { 6, 6, 21, 21, 21 },
-        { 6, 21, 21, 21, 21 },
-        { 21, 21, 21, 21, 21 }
-    }, [RTX_32X8] = {
-        { 0, 16, 6, 6, 21 },
-        { 16, 16, 6, 21, 21 },
-        { 16, 16, 21, 21, 21 },
-        { 16, 16, 21, 21, 21 },
-        { 16, 16, 21, 21, 21 }
-    }, [RTX_16X64] = {
-        { 0, 11, 11, 11, 11 },
-        { 11, 11, 11, 11, 11 },
-        { 6, 6, 21, 21, 21 },
-        { 6, 21, 21, 21, 21 },
-        { 21, 21, 21, 21, 21 }
-    }, [RTX_64X16] = {
-        { 0, 16, 6, 6, 21 },
-        { 16, 16, 6, 21, 21 },
-        { 16, 16, 21, 21, 21 },
-        { 16, 16, 21, 21, 21 },
-        { 16, 16, 21, 21, 21 }
-    }
+        {  6,  6, 21, 21, 21 },
+        {  6, 21, 21, 21, 21 },
+        { 21, 21, 21, 21, 21 },
+    },
+};
+
+const uint8_t dav1d_skip_ctx[5][5] = {
+    { 1, 2, 2, 2, 3 },
+    { 2, 4, 4, 4, 5 },
+    { 2, 4, 4, 4, 5 },
+    { 2, 4, 4, 4, 5 },
+    { 3, 5, 5, 5, 6 },
 };
 
 const uint8_t /* enum TxClass */ dav1d_tx_type_class[N_TX_TYPES_PLUS_LL] = {
@@ -861,7 +765,7 @@ const int8_t ALIGN(dav1d_filter_intra_taps[5][64], 16) = {
     }
 };
 
-const uint8_t dav1d_obmc_masks[64] = {
+const uint8_t ALIGN(dav1d_obmc_masks[64], 16) = {
     /* Unused */
      0,  0,
     /* 2 */

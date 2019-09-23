@@ -6,6 +6,13 @@ Changes for 0.4.0 'Cheetah':
  - SSE2 and ARM64 optimizations for MSAC
  - Improve speed on 32bits systems
  - Optimization in obmc blend
+ - Reduce RAM usage significantly
+ - The initial PPC SIMD code, cdef_filter
+ - NEON optimizations for blend functions on ARM
+ - NEON optimizations for w_mask functions on ARM
+ - NEON optimizations for inverse transforms on ARM64
+ - Improve handling of malloc failures
+ - Simple Player example in tools
 
 
 Changes for 0.3.1 'Sailfish':

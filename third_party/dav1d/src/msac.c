@@ -116,42 +116,39 @@ int dav1d_msac_decode_subexp(MsacContext *const s, const int ref,
 
 /* Decodes a symbol given an inverse cumulative distribution function (CDF)
  * table in Q15. */
-static unsigned decode_symbol(MsacContext *const s, const uint16_t *const cdf,
-                              const size_t n_symbols)
+unsigned dav1d_msac_decode_symbol_adapt_c(MsacContext *const s,
+                                          uint16_t *const cdf,
+                                          const size_t n_symbols)
 {
-    const unsigned c = s->dif >> (EC_WIN_SIZE - 16);
-    unsigned u, v = s->rng, r = s->rng >> 8, ret = 0;
+    const unsigned c = s->dif >> (EC_WIN_SIZE - 16), r = s->rng >> 8;
+    unsigned u, v = s->rng, val = -1;
 
-    assert(!cdf[n_symbols - 1]);
+    assert(n_symbols <= 15);
+    assert(cdf[n_symbols] <= 32);
 
     do {
+        val++;
         u = v;
-        v = r * (cdf[ret++] >> EC_PROB_SHIFT);
+        v = r * (cdf[val] >> EC_PROB_SHIFT);
         v >>= 7 - EC_PROB_SHIFT;
-        v += EC_MIN_PROB * (int) (n_symbols - ret);
+        v += EC_MIN_PROB * ((unsigned)n_symbols - val);
     } while (c < v);
 
     assert(u <= s->rng);
 
     ctx_norm(s, s->dif - ((ec_win)v << (EC_WIN_SIZE - 16)), u - v);
-    return ret - 1;
-}
 
-unsigned dav1d_msac_decode_symbol_adapt_c(MsacContext *const s,
-                                          uint16_t *const cdf,
-                                          const size_t n_symbols)
-{
-    const unsigned val = decode_symbol(s, cdf, n_symbols);
     if (s->allow_update_cdf) {
         const unsigned count = cdf[n_symbols];
-        const int rate = ((count >> 4) | 4) + (n_symbols > 3);
+        const unsigned rate = 4 + (count >> 4) + (n_symbols > 2);
         unsigned i;
         for (i = 0; i < val; i++)
             cdf[i] += (32768 - cdf[i]) >> rate;
-        for (; i < n_symbols - 1; i++)
+        for (; i < n_symbols; i++)
             cdf[i] -= cdf[i] >> rate;
         cdf[n_symbols] = count + (count < 32);
     }
+
     return val;
 }
 
@@ -163,7 +160,7 @@ unsigned dav1d_msac_decode_bool_adapt_c(MsacContext *const s,
     if (s->allow_update_cdf) {
         // update_cdf() specialized for boolean CDFs
         const unsigned count = cdf[1];
-        const int rate = (count >> 4) | 4;
+        const int rate = 4 + (count >> 4);
         if (bit)
             cdf[0] += (32768 - cdf[0]) >> rate;
         else
@@ -172,6 +169,22 @@ unsigned dav1d_msac_decode_bool_adapt_c(MsacContext *const s,
     }
 
     return bit;
+}
+
+unsigned dav1d_msac_decode_hi_tok_c(MsacContext *const s, uint16_t *const cdf) {
+    unsigned tok_br = dav1d_msac_decode_symbol_adapt4(s, cdf, 3);
+    unsigned tok = 3 + tok_br;
+    if (tok_br == 3) {
+        tok_br = dav1d_msac_decode_symbol_adapt4(s, cdf, 3);
+        tok = 6 + tok_br;
+        if (tok_br == 3) {
+            tok_br = dav1d_msac_decode_symbol_adapt4(s, cdf, 3);
+            tok = 9 + tok_br;
+            if (tok_br == 3)
+                tok = 12 + dav1d_msac_decode_symbol_adapt4(s, cdf, 3);
+        }
+    }
+    return tok;
 }
 
 void dav1d_msac_init(MsacContext *const s, const uint8_t *const data,

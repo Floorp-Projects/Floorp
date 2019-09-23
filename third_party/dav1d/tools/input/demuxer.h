@@ -36,7 +36,7 @@ typedef struct Demuxer {
     const char *name;
     const char *extension;
     int (*open)(DemuxerPriv *ctx, const char *filename,
-                unsigned fps[2], unsigned *num_frames);
+                unsigned fps[2], unsigned *num_frames, unsigned timebase[2]);
     int (*read)(DemuxerPriv *ctx, Dav1dData *data);
     void (*close)(DemuxerPriv *ctx);
 } Demuxer;

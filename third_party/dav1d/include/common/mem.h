@@ -28,12 +28,13 @@
 #ifndef DAV1D_COMMON_MEM_H
 #define DAV1D_COMMON_MEM_H
 
-#include <assert.h>
 #include <stdlib.h>
 
 #if defined(HAVE_ALIGNED_MALLOC) || defined(HAVE_MEMALIGN)
 #include <malloc.h>
 #endif
+
+#include "common/attributes.h"
 
 /*
  * Allocate 32-byte aligned memory. The return value can be released

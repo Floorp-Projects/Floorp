@@ -82,6 +82,7 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
         # an error when it compiles empty files.
         SOURCES += [
             '../../../third_party/dav1d/src/x86/cdef.asm',
+            '../../../third_party/dav1d/src/x86/film_grain.asm',
             '../../../third_party/dav1d/src/x86/ipred.asm',
             '../../../third_party/dav1d/src/x86/itx.asm',
             '../../../third_party/dav1d/src/x86/loopfilter.asm',
@@ -94,6 +95,7 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
         '../../../third_party/dav1d/src/x86/cpuid.asm',
         '../../../third_party/dav1d/src/x86/ipred_ssse3.asm',
         '../../../third_party/dav1d/src/x86/itx_ssse3.asm',
+        '../../../third_party/dav1d/src/x86/loopfilter_ssse3.asm',
         '../../../third_party/dav1d/src/x86/looprestoration_ssse3.asm',
         '../../../third_party/dav1d/src/x86/mc_ssse3.asm',
         '../../../third_party/dav1d/src/x86/msac.asm',
@@ -103,6 +105,7 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
     relative_path = '../../../third_party/dav1d/src/x86/'
     bitdepth_basenames = [
         'cdef_init_tmpl.c',
+        'film_grain_init_tmpl.c',
         'ipred_init_tmpl.c',
         'itx_init_tmpl.c',
         'loopfilter_init_tmpl.c',

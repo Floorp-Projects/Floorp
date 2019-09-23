@@ -46,14 +46,276 @@
 #include "src/tables.h"
 #include "src/wedge.h"
 
-static unsigned read_golomb(MsacContext *const msac) {
+static inline unsigned read_golomb(MsacContext *const msac) {
     int len = 0;
     unsigned val = 1;
 
     while (!dav1d_msac_decode_bool_equi(msac) && len < 32) len++;
-    while (len--) val = (val << 1) | dav1d_msac_decode_bool_equi(msac);
+    while (len--) val = (val << 1) + dav1d_msac_decode_bool_equi(msac);
 
     return val - 1;
+}
+
+static inline unsigned get_skip_ctx(const TxfmInfo *const t_dim,
+                                    const enum BlockSize bs,
+                                    const uint8_t *const a,
+                                    const uint8_t *const l,
+                                    const int chroma,
+                                    const enum Dav1dPixelLayout layout)
+{
+    const uint8_t *const b_dim = dav1d_block_dimensions[bs];
+
+    if (chroma) {
+        const int ss_ver = layout == DAV1D_PIXEL_LAYOUT_I420;
+        const int ss_hor = layout != DAV1D_PIXEL_LAYOUT_I444;
+        const int not_one_blk = b_dim[2] - (!!b_dim[2] && ss_hor) > t_dim->lw ||
+                                b_dim[3] - (!!b_dim[3] && ss_ver) > t_dim->lh;
+        int ca, cl;
+
+#define MERGE_CTX(dir, type, mask) \
+        c##dir = !!((*(const type *) dir) & mask); \
+        break
+
+        switch (t_dim->lw) {
+        /* For some reason the MSVC CRT _wassert() function is not flagged as
+         * __declspec(noreturn), so when using those headers the compiler will
+         * expect execution to continue after an assertion has been triggered
+         * and will therefore complain about the use of uninitialized variables
+         * when compiled in debug mode if we put the default case at the end. */
+        default: assert(0); /* fall-through */
+        case TX_4X4:   MERGE_CTX(a, uint8_t,  0x3F);
+        case TX_8X8:   MERGE_CTX(a, uint16_t, 0x3F3F);
+        case TX_16X16: MERGE_CTX(a, uint32_t, 0x3F3F3F3FU);
+        case TX_32X32: MERGE_CTX(a, uint64_t, 0x3F3F3F3F3F3F3F3FULL);
+        }
+        switch (t_dim->lh) {
+        default: assert(0); /* fall-through */
+        case TX_4X4:   MERGE_CTX(l, uint8_t,  0x3F);
+        case TX_8X8:   MERGE_CTX(l, uint16_t, 0x3F3F);
+        case TX_16X16: MERGE_CTX(l, uint32_t, 0x3F3F3F3FU);
+        case TX_32X32: MERGE_CTX(l, uint64_t, 0x3F3F3F3F3F3F3F3FULL);
+        }
+#undef MERGE_CTX
+
+        return 7 + not_one_blk * 3 + ca + cl;
+    } else if (b_dim[2] == t_dim->lw && b_dim[3] == t_dim->lh) {
+        return 0;
+    } else {
+        unsigned la, ll;
+
+#define MERGE_CTX(dir, type, tx) \
+        if (tx == TX_64X64) { \
+            uint64_t tmp = *(const uint64_t *) dir; \
+            tmp |= *(const uint64_t *) &dir[8]; \
+            l##dir = (unsigned) (tmp >> 32) | (unsigned) tmp; \
+        } else \
+            l##dir = *(const type *) dir; \
+        if (tx == TX_32X32) l##dir |= *(const type *) &dir[sizeof(type)]; \
+        if (tx >= TX_16X16) l##dir |= l##dir >> 16; \
+        if (tx >= TX_8X8)   l##dir |= l##dir >> 8; \
+        break
+
+        switch (t_dim->lw) {
+        default: assert(0); /* fall-through */
+        case TX_4X4:   MERGE_CTX(a, uint8_t,  TX_4X4);
+        case TX_8X8:   MERGE_CTX(a, uint16_t, TX_8X8);
+        case TX_16X16: MERGE_CTX(a, uint32_t, TX_16X16);
+        case TX_32X32: MERGE_CTX(a, uint32_t, TX_32X32);
+        case TX_64X64: MERGE_CTX(a, uint32_t, TX_64X64);
+        }
+        switch (t_dim->lh) {
+        default: assert(0); /* fall-through */
+        case TX_4X4:   MERGE_CTX(l, uint8_t,  TX_4X4);
+        case TX_8X8:   MERGE_CTX(l, uint16_t, TX_8X8);
+        case TX_16X16: MERGE_CTX(l, uint32_t, TX_16X16);
+        case TX_32X32: MERGE_CTX(l, uint32_t, TX_32X32);
+        case TX_64X64: MERGE_CTX(l, uint32_t, TX_64X64);
+        }
+#undef MERGE_CTX
+
+        return dav1d_skip_ctx[umin(la & 0x3F, 4)][umin(ll & 0x3F, 4)];
+    }
+}
+
+static inline unsigned get_dc_sign_ctx(const int /*enum RectTxfmSize*/ tx,
+                                       const uint8_t *const a,
+                                       const uint8_t *const l)
+{
+    uint64_t mask = 0xC0C0C0C0C0C0C0C0ULL, mul = 0x0101010101010101ULL;
+    int s;
+
+#if ARCH_X86_64 && defined(__GNUC__)
+    /* Coerce compilers into producing better code. For some reason
+     * every x86-64 compiler is awful at handling 64-bit constants. */
+    __asm__("" : "+r"(mask), "+r"(mul));
+#endif
+
+    switch(tx) {
+    default: assert(0); /* fall-through */
+    case TX_4X4: {
+        int t = *(const uint8_t *) a >> 6;
+        t    += *(const uint8_t *) l >> 6;
+        s = t - 1 - 1;
+        break;
+    }
+    case TX_8X8: {
+        uint32_t t = *(const uint16_t *) a & (uint32_t) mask;
+        t         += *(const uint16_t *) l & (uint32_t) mask;
+        t *= 0x04040404U;
+        s = (int) (t >> 24) - 2 - 2;
+        break;
+    }
+    case TX_16X16: {
+        uint32_t t = (*(const uint32_t *) a & (uint32_t) mask) >> 6;
+        t         += (*(const uint32_t *) l & (uint32_t) mask) >> 6;
+        t *= (uint32_t) mul;
+        s = (int) (t >> 24) - 4 - 4;
+        break;
+    }
+    case TX_32X32: {
+        uint64_t t = (*(const uint64_t *) a & mask) >> 6;
+        t         += (*(const uint64_t *) l & mask) >> 6;
+        t *= mul;
+        s = (int) (t >> 56) - 8 - 8;
+        break;
+    }
+    case TX_64X64: {
+        uint64_t t = (*(const uint64_t *) &a[0] & mask) >> 6;
+        t         += (*(const uint64_t *) &a[8] & mask) >> 6;
+        t         += (*(const uint64_t *) &l[0] & mask) >> 6;
+        t         += (*(const uint64_t *) &l[8] & mask) >> 6;
+        t *= mul;
+        s = (int) (t >> 56) - 16 - 16;
+        break;
+    }
+    case RTX_4X8: {
+        uint32_t t = *(const uint8_t  *) a & (uint32_t) mask;
+        t         += *(const uint16_t *) l & (uint32_t) mask;
+        t *= 0x04040404U;
+        s = (int) (t >> 24) - 1 - 2;
+        break;
+    }
+    case RTX_8X4: {
+        uint32_t t = *(const uint16_t *) a & (uint32_t) mask;
+        t         += *(const uint8_t  *) l & (uint32_t) mask;
+        t *= 0x04040404U;
+        s = (int) (t >> 24) - 2 - 1;
+        break;
+    }
+    case RTX_8X16: {
+        uint32_t t = *(const uint16_t *) a & (uint32_t) mask;
+        t         += *(const uint32_t *) l & (uint32_t) mask;
+        t = (t >> 6) * (uint32_t) mul;
+        s = (int) (t >> 24) - 2 - 4;
+        break;
+    }
+    case RTX_16X8: {
+        uint32_t t = *(const uint32_t *) a & (uint32_t) mask;
+        t         += *(const uint16_t *) l & (uint32_t) mask;
+        t = (t >> 6) * (uint32_t) mul;
+        s = (int) (t >> 24) - 4 - 2;
+        break;
+    }
+    case RTX_16X32: {
+        uint64_t t = *(const uint32_t *) a & (uint32_t) mask;
+        t         += *(const uint64_t *) l & mask;
+        t = (t >> 6) * mul;
+        s = (int) (t >> 56) - 4 - 8;
+        break;
+    }
+    case RTX_32X16: {
+        uint64_t t = *(const uint64_t *) a & mask;
+        t         += *(const uint32_t *) l & (uint32_t) mask;
+        t = (t >> 6) * mul;
+        s = (int) (t >> 56) - 8 - 4;
+        break;
+    }
+    case RTX_32X64: {
+        uint64_t t = (*(const uint64_t *) &a[0] & mask) >> 6;
+        t         += (*(const uint64_t *) &l[0] & mask) >> 6;
+        t         += (*(const uint64_t *) &l[8] & mask) >> 6;
+        t *= mul;
+        s = (int) (t >> 56) - 8 - 16;
+        break;
+    }
+    case RTX_64X32: {
+        uint64_t t = (*(const uint64_t *) &a[0] & mask) >> 6;
+        t         += (*(const uint64_t *) &a[8] & mask) >> 6;
+        t         += (*(const uint64_t *) &l[0] & mask) >> 6;
+        t *= mul;
+        s = (int) (t >> 56) - 16 - 8;
+        break;
+    }
+    case RTX_4X16: {
+        uint32_t t = *(const uint8_t  *) a & (uint32_t) mask;
+        t         += *(const uint32_t *) l & (uint32_t) mask;
+        t = (t >> 6) * (uint32_t) mul;
+        s = (int) (t >> 24) - 1 - 4;
+        break;
+    }
+    case RTX_16X4: {
+        uint32_t t = *(const uint32_t *) a & (uint32_t) mask;
+        t         += *(const uint8_t  *) l & (uint32_t) mask;
+        t = (t >> 6) * (uint32_t) mul;
+        s = (int) (t >> 24) - 4 - 1;
+        break;
+    }
+    case RTX_8X32: {
+        uint64_t t = *(const uint16_t *) a & (uint32_t) mask;
+        t         += *(const uint64_t *) l & mask;
+        t = (t >> 6) * mul;
+        s = (int) (t >> 56) - 2 - 8;
+        break;
+    }
+    case RTX_32X8: {
+        uint64_t t = *(const uint64_t *) a & mask;
+        t         += *(const uint16_t *) l & (uint32_t) mask;
+        t = (t >> 6) * mul;
+        s = (int) (t >> 56) - 8 - 2;
+        break;
+    }
+    case RTX_16X64: {
+        uint64_t t = *(const uint32_t *) a & (uint32_t) mask;
+        t         += *(const uint64_t *) &l[0] & mask;
+        t = (t >> 6) + ((*(const uint64_t *) &l[8] & mask) >> 6);
+        t *= mul;
+        s = (int) (t >> 56) - 4 - 16;
+        break;
+    }
+    case RTX_64X16: {
+        uint64_t t = *(const uint64_t *) &a[0] & mask;
+        t         += *(const uint32_t *) l & (uint32_t) mask;
+        t = (t >> 6) + ((*(const uint64_t *) &a[8] & mask) >> 6);
+        t *= mul;
+        s = (int) (t >> 56) - 16 - 4;
+        break;
+    }
+    }
+
+    return (s != 0) + (s > 0);
+}
+
+static inline unsigned get_lo_ctx(const uint8_t *const levels,
+                                  const enum TxClass tx_class,
+                                  unsigned *const hi_mag,
+                                  const uint8_t (*const ctx_offsets)[5],
+                                  const unsigned x, const unsigned y,
+                                  const ptrdiff_t stride)
+{
+    unsigned mag = levels[0 * stride + 1] + levels[1 * stride + 0];
+    unsigned offset;
+    if (tx_class == TX_CLASS_2D) {
+        mag += levels[1 * stride + 1];
+        *hi_mag = mag;
+        mag += levels[0 * stride + 2] + levels[2 * stride + 0];
+        offset = ctx_offsets[umin(y, 4)][umin(x, 4)];
+    } else {
+        mag += levels[0 * stride + 2];
+        *hi_mag = mag;
+        mag += levels[0 * stride + 3] + levels[0 * stride + 4];
+        offset = 26 + (y > 1 ? 10 : y * 5);
+    }
+    return offset + (mag > 512 ? 4 : (mag + 64) >> 7);
 }
 
 static int decode_coefs(Dav1dTileContext *const t,
@@ -66,6 +328,7 @@ static int decode_coefs(Dav1dTileContext *const t,
     Dav1dTileState *const ts = t->ts;
     const int chroma = !!plane;
     const Dav1dFrameContext *const f = t->f;
+    const int lossless = f->frame_hdr->segmentation.lossless[b->seg_id];
     const TxfmInfo *const t_dim = &dav1d_txfm_dimensions[tx];
     const int dbg = DEBUG_BLOCK_INFO && plane && 0;
 
@@ -73,7 +336,7 @@ static int decode_coefs(Dav1dTileContext *const t,
         printf("Start: r=%d\n", ts->msac.rng);
 
     // does this block have any non-zero coefficients
-    const int sctx = get_coef_skip_ctx(t_dim, bs, a, l, chroma, f->cur.p.layout);
+    const int sctx = get_skip_ctx(t_dim, bs, a, l, chroma, f->cur.p.layout);
     const int all_skip = dav1d_msac_decode_bool_adapt(&ts->msac,
                              ts->cdf.coef.skip[t_dim->ctx][sctx]);
     if (dbg)
@@ -81,41 +344,56 @@ static int decode_coefs(Dav1dTileContext *const t,
                t_dim->ctx, sctx, all_skip, ts->msac.rng);
     if (all_skip) {
         *res_ctx = 0x40;
-        *txtp = f->frame_hdr->segmentation.lossless[b->seg_id] ? WHT_WHT : DCT_DCT;
+        *txtp = lossless * WHT_WHT; /* lossless ? WHT_WHT : DCT_DCT */
         return -1;
     }
 
     // transform type (chroma: derived, luma: explicitly coded)
-    if (chroma) {
-        if (intra) {
-            *txtp = get_uv_intra_txtp(b->uv_mode, tx, f->frame_hdr, b->seg_id);
-        } else {
-            const enum TxfmType y_txtp = *txtp;
-            *txtp = get_uv_inter_txtp(t_dim, y_txtp, f->frame_hdr, b->seg_id);
-        }
+    if (lossless) {
+        assert(t_dim->max == TX_4X4);
+        *txtp = WHT_WHT;
+    } else if (!f->frame_hdr->segmentation.qidx[b->seg_id] ||
+               t_dim->max + intra >= TX_64X64)
+    {
+        *txtp = DCT_DCT;
+    } else if (chroma) {
+        *txtp = intra ? dav1d_txtp_from_uvmode[b->uv_mode] :
+                        get_uv_inter_txtp(t_dim, *txtp);
     } else {
-        const enum TxfmTypeSet set = get_ext_txtp_set(tx, !intra,
-                                                      f->frame_hdr, b->seg_id);
-        const unsigned set_cnt = dav1d_tx_type_count[set];
         unsigned idx;
-        if (set_cnt == 1) {
-            idx = 0;
-        } else {
-            const int set_idx = dav1d_tx_type_set_index[!intra][set];
-            const enum IntraPredMode y_mode_nofilt = intra ? b->y_mode == FILTER_PRED ?
-                dav1d_filter_mode_to_y_mode[b->y_angle] : b->y_mode : 0;
-            uint16_t *const txtp_cdf = intra ?
-                       ts->cdf.m.txtp_intra[set_idx][t_dim->min][y_mode_nofilt] :
-                       ts->cdf.m.txtp_inter[set_idx][t_dim->min];
-            idx = (set_cnt <= 8 ? dav1d_msac_decode_symbol_adapt8 :
-                     dav1d_msac_decode_symbol_adapt16)(&ts->msac, txtp_cdf, set_cnt);
-
+        if (intra) {
+            const enum IntraPredMode y_mode_nofilt = b->y_mode == FILTER_PRED ?
+                dav1d_filter_mode_to_y_mode[b->y_angle] : b->y_mode;
+            if (f->frame_hdr->reduced_txtp_set || t_dim->min == TX_16X16) {
+                idx = dav1d_msac_decode_symbol_adapt4(&ts->msac,
+                          ts->cdf.m.txtp_intra2[t_dim->min][y_mode_nofilt], 4);
+                *txtp = dav1d_tx_types_per_set[idx + 0];
+            } else {
+                idx = dav1d_msac_decode_symbol_adapt8(&ts->msac,
+                          ts->cdf.m.txtp_intra1[t_dim->min][y_mode_nofilt], 6);
+                *txtp = dav1d_tx_types_per_set[idx + 5];
+            }
             if (dbg)
-                printf("Post-txtp[%d->%d][%d->%d][%d][%d->%d]: r=%d\n",
-                       set, set_idx, tx, t_dim->min, intra ? (int)y_mode_nofilt : -1,
-                       idx, dav1d_tx_types_per_set[set][idx], ts->msac.rng);
+                printf("Post-txtp-intra[%d->%d][%d][%d->%d]: r=%d\n",
+                       tx, t_dim->min, y_mode_nofilt, idx, *txtp, ts->msac.rng);
+        } else {
+            if (f->frame_hdr->reduced_txtp_set || t_dim->max == TX_32X32) {
+                idx = dav1d_msac_decode_bool_adapt(&ts->msac,
+                          ts->cdf.m.txtp_inter3[t_dim->min]);
+                *txtp = (idx - 1) & IDTX; /* idx ? DCT_DCT : IDTX */
+            } else if (t_dim->min == TX_16X16) {
+                idx = dav1d_msac_decode_symbol_adapt16(&ts->msac,
+                          ts->cdf.m.txtp_inter2, 11);
+                *txtp = dav1d_tx_types_per_set[idx + 12];
+            } else {
+                idx = dav1d_msac_decode_symbol_adapt16(&ts->msac,
+                          ts->cdf.m.txtp_inter1[t_dim->min], 15);
+                *txtp = dav1d_tx_types_per_set[idx + 24];
+            }
+            if (dbg)
+                printf("Post-txtp-inter[%d->%d][%d->%d]: r=%d\n",
+                       tx, t_dim->min, idx, *txtp, ts->msac.rng);
         }
-        *txtp = dav1d_tx_types_per_set[set][idx];
     }
 
     // find end-of-block (eob)
@@ -124,19 +402,19 @@ static int decode_coefs(Dav1dTileContext *const t,
     const enum TxClass tx_class = dav1d_tx_type_class[*txtp];
     const int is_1d = tx_class != TX_CLASS_2D;
     switch (tx2dszctx) {
-#define case_sz(sz, bin, ns) \
+#define case_sz(sz, bin, ns, is_1d) \
     case sz: { \
-        uint16_t *const eob_bin_cdf = ts->cdf.coef.eob_bin_##bin[chroma][is_1d]; \
-        eob_bin = dav1d_msac_decode_symbol_adapt##ns(&ts->msac, eob_bin_cdf, 5 + sz); \
+        uint16_t *const eob_bin_cdf = ts->cdf.coef.eob_bin_##bin[chroma]is_1d; \
+        eob_bin = dav1d_msac_decode_symbol_adapt##ns(&ts->msac, eob_bin_cdf, 4 + sz); \
         break; \
     }
-    case_sz(0,   16,  4);
-    case_sz(1,   32,  8);
-    case_sz(2,   64,  8);
-    case_sz(3,  128,  8);
-    case_sz(4,  256, 16);
-    case_sz(5,  512, 16);
-    case_sz(6, 1024, 16);
+    case_sz(0,   16,  4, [is_1d]);
+    case_sz(1,   32,  8, [is_1d]);
+    case_sz(2,   64,  8, [is_1d]);
+    case_sz(3,  128,  8, [is_1d]);
+    case_sz(4,  256, 16, [is_1d]);
+    case_sz(5,  512, 16,        );
+    case_sz(6, 1024, 16,        );
 #undef case_sz
     }
     if (dbg)
@@ -159,122 +437,134 @@ static int decode_coefs(Dav1dTileContext *const t,
     }
 
     // base tokens
-    uint16_t (*const br_cdf)[5] =
-        ts->cdf.coef.br_tok[imin(t_dim->ctx, 3)][chroma];
-    const int16_t *const scan = dav1d_scans[tx][tx_class];
+    uint16_t (*const eob_cdf)[4] = ts->cdf.coef.eob_base_tok[t_dim->ctx][chroma];
+    uint16_t (*const hi_cdf)[4] = ts->cdf.coef.br_tok[imin(t_dim->ctx, 3)][chroma];
+    const uint16_t *const scan = dav1d_scans[tx][tx_class];
     int dc_tok;
 
     if (eob) {
-        uint8_t *const levels = t->scratch.levels;
+        uint16_t (*const lo_cdf)[4] = ts->cdf.coef.base_tok[t_dim->ctx][chroma];
+        uint8_t *const levels = t->scratch.levels; // bits 0-5: tok, 6-7: lo_tok
         const int sw = imin(t_dim->w, 8), sh = imin(t_dim->h, 8);
-        const ptrdiff_t stride = 4 * (sh + 1);
-        memset(levels, 0, stride * 4 * (sw + 1));
-        const int shift = 2 + imin(t_dim->lh, 3), mask = 4 * sh - 1;
+        const unsigned shift = 2 + imin(t_dim->lh, 3), mask = 4 * sh - 1;
 
-        { // eob
-            const int rc = scan[eob], x = rc >> shift, y = rc & mask;
+        /* eob */
+        unsigned rc = scan[eob], x = rc >> shift, y = rc & mask;
+        unsigned ctx = 1 + (eob > sw * sh * 2) + (eob > sw * sh * 4);
+        int eob_tok = dav1d_msac_decode_symbol_adapt4(&ts->msac, eob_cdf[ctx], 2);
+        int tok = eob_tok + 1;
+        int level_tok = tok * 0x41;
+        unsigned mag;
+        if (dbg)
+            printf("Post-lo_tok[%d][%d][%d][%d=%d=%d]: r=%d\n",
+                   t_dim->ctx, chroma, ctx, eob, rc, tok, ts->msac.rng);
 
-            const int ctx = 1 + (eob > sw * sh * 2) + (eob > sw * sh * 4);
-            uint16_t *const lo_cdf = ts->cdf.coef.eob_base_tok[t_dim->ctx][chroma][ctx];
-            int tok = dav1d_msac_decode_symbol_adapt4(&ts->msac, lo_cdf, 3) + 1;
-            if (dbg)
-                printf("Post-lo_tok[%d][%d][%d][%d=%d=%d]: r=%d\n",
-                       t_dim->ctx, chroma, ctx, eob, rc, tok, ts->msac.rng);
+#define DECODE_COEFS_CLASS(tx_class) \
+        if (eob_tok == 2) { \
+            ctx = (tx_class == TX_CLASS_2D ? (x | y) > 1 : \
+                   tx_class == TX_CLASS_H ? x != 0 : y != 0) ? 14 : 7; \
+            tok = dav1d_msac_decode_hi_tok(&ts->msac, hi_cdf[ctx]); \
+            level_tok = tok + (3 << 6); \
+            if (dbg) \
+                printf("Post-hi_tok[%d][%d][%d][%d=%d=%d]: r=%d\n", \
+                       imin(t_dim->ctx, 3), chroma, ctx, eob, rc, tok, \
+                       ts->msac.rng); \
+        } \
+        cf[rc] = tok; \
+        if (tx_class == TX_CLASS_H) \
+            /* Transposing reduces the stride and padding requirements */ \
+            levels[y * stride + x] = (uint8_t) level_tok; \
+        else \
+            levels[x * stride + y] = (uint8_t) level_tok; \
+        for (int i = eob - 1; i > 0; i--) { /* ac */ \
+            if (tx_class == TX_CLASS_H) \
+                rc = i, x = rc & mask, y = rc >> shift; \
+            else \
+                rc = scan[i], x = rc >> shift, y = rc & mask; \
+            assert(x < 32 && y < 32); \
+            uint8_t *const level = levels + x * stride + y; \
+            ctx = get_lo_ctx(level, tx_class, &mag, lo_ctx_offsets, x, y, stride); \
+            if (tx_class == TX_CLASS_2D) \
+                y |= x; \
+            tok = dav1d_msac_decode_symbol_adapt4(&ts->msac, lo_cdf[ctx], 3); \
+            level_tok = tok * 0x41; \
+            if (dbg) \
+                printf("Post-lo_tok[%d][%d][%d][%d=%d=%d]: r=%d\n", \
+                       t_dim->ctx, chroma, ctx, i, rc, tok, ts->msac.rng); \
+            if (tok == 3) { \
+                mag &= 63; \
+                ctx = (y > (tx_class == TX_CLASS_2D) ? 14 : 7) + \
+                      (mag > 12 ? 6 : (mag + 1) >> 1); \
+                tok = dav1d_msac_decode_hi_tok(&ts->msac, hi_cdf[ctx]); \
+                level_tok = tok + (3 << 6); \
+                if (dbg) \
+                    printf("Post-hi_tok[%d][%d][%d][%d=%d=%d]: r=%d\n", \
+                           imin(t_dim->ctx, 3), chroma, ctx, i, rc, tok, \
+                           ts->msac.rng); \
+            } \
+            cf[rc] = tok; \
+            *level = (uint8_t) level_tok; \
+        } \
+        /* dc */ \
+        ctx = (tx_class == TX_CLASS_2D) ? 0 : \
+            get_lo_ctx(levels, tx_class, &mag, lo_ctx_offsets, 0, 0, stride); \
+        dc_tok = dav1d_msac_decode_symbol_adapt4(&ts->msac, lo_cdf[ctx], 3); \
+        if (dbg) \
+            printf("Post-dc_lo_tok[%d][%d][%d][%d]: r=%d\n", \
+                   t_dim->ctx, chroma, ctx, dc_tok, ts->msac.rng); \
+        if (dc_tok == 3) { \
+            if (tx_class == TX_CLASS_2D) \
+                mag = levels[0 * stride + 1] + levels[1 * stride + 0] + \
+                      levels[1 * stride + 1]; \
+            mag &= 63; \
+            ctx = mag > 12 ? 6 : (mag + 1) >> 1; \
+            dc_tok = dav1d_msac_decode_hi_tok(&ts->msac, hi_cdf[ctx]); \
+            if (dbg) \
+                printf("Post-dc_hi_tok[%d][%d][0][%d]: r=%d\n", \
+                       imin(t_dim->ctx, 3), chroma, dc_tok, ts->msac.rng); \
+        } \
+        break
 
-            if (tok == 3) {
-                const int br_ctx = get_br_ctx(levels, 1, tx_class, x, y, stride);
-                do {
-                    const int tok_br = dav1d_msac_decode_symbol_adapt4(&ts->msac,
-                                           br_cdf[br_ctx], 4);
-                    if (dbg)
-                        printf("Post-hi_tok[%d][%d][%d][%d=%d=%d->%d]: r=%d\n",
-                               imin(t_dim->ctx, 3), chroma, br_ctx,
-                               eob, rc, tok_br, tok, ts->msac.rng);
-                    tok += tok_br;
-                    if (tok_br < 3) break;
-                } while (tok < 15);
-            }
-
-            cf[rc] = tok;
-            levels[x * stride + y] = (uint8_t) tok;
+        switch (tx_class) {
+        case TX_CLASS_2D: {
+            const unsigned nonsquare_tx = tx >= RTX_4X8;
+            const uint8_t (*const lo_ctx_offsets)[5] =
+                dav1d_lo_ctx_offsets[nonsquare_tx + (tx & nonsquare_tx)];
+            const ptrdiff_t stride = 4 * sh;
+            memset(levels, 0, stride * (4 * sw + 2));
+            DECODE_COEFS_CLASS(TX_CLASS_2D);
         }
-        for (int i = eob - 1; i > 0; i--) { // ac
-            const int rc = scan[i], x = rc >> shift, y = rc & mask;
-
-            // lo tok
-            const int ctx = get_coef_nz_ctx(levels, tx, tx_class, x, y, stride);
-            uint16_t *const lo_cdf = ts->cdf.coef.base_tok[t_dim->ctx][chroma][ctx];
-            int tok = dav1d_msac_decode_symbol_adapt4(&ts->msac, lo_cdf, 4);
-            if (dbg)
-                printf("Post-lo_tok[%d][%d][%d][%d=%d=%d]: r=%d\n",
-                       t_dim->ctx, chroma, ctx, i, rc, tok, ts->msac.rng);
-
-            // hi tok
-            if (tok == 3) {
-                const int br_ctx = get_br_ctx(levels, 1, tx_class, x, y, stride);
-                do {
-                    const int tok_br = dav1d_msac_decode_symbol_adapt4(&ts->msac,
-                                           br_cdf[br_ctx], 4);
-                    if (dbg)
-                        printf("Post-hi_tok[%d][%d][%d][%d=%d=%d->%d]: r=%d\n",
-                               imin(t_dim->ctx, 3), chroma, br_ctx,
-                               i, rc, tok_br, tok, ts->msac.rng);
-                    tok += tok_br;
-                    if (tok_br < 3) break;
-                } while (tok < 15);
-            }
-
-            cf[rc] = tok;
-            levels[x * stride + y] = (uint8_t) tok;
+        case TX_CLASS_H: {
+#define lo_ctx_offsets NULL
+            const ptrdiff_t stride = 16;
+            memset(levels, 0, stride * (4 * sh + 2));
+            DECODE_COEFS_CLASS(TX_CLASS_H);
         }
-        { // dc
-            int ctx = 0;
-            if (tx_class != TX_CLASS_2D)
-                ctx = get_coef_nz_ctx(levels, tx, tx_class, 0, 0, stride);
-            uint16_t *const lo_cdf = ts->cdf.coef.base_tok[t_dim->ctx][chroma][ctx];
-            dc_tok = dav1d_msac_decode_symbol_adapt4(&ts->msac, lo_cdf, 4);
-            if (dbg)
-                printf("Post-dc_lo_tok[%d][%d][%d][%d]: r=%d\n",
-                       t_dim->ctx, chroma, ctx, dc_tok, ts->msac.rng);
-
-            if (dc_tok == 3) {
-                const int br_ctx = get_br_ctx(levels, 0, tx_class, 0, 0, stride);
-                do {
-                    const int tok_br = dav1d_msac_decode_symbol_adapt4(&ts->msac,
-                                           br_cdf[br_ctx], 4);
-                    if (dbg)
-                        printf("Post-dc_hi_tok[%d][%d][%d][%d->%d]: r=%d\n",
-                               imin(t_dim->ctx, 3), chroma, br_ctx,
-                               tok_br, dc_tok, ts->msac.rng);
-                    dc_tok += tok_br;
-                    if (tok_br < 3) break;
-                } while (dc_tok < 15);
-            }
+        case TX_CLASS_V: {
+            const ptrdiff_t stride = 16;
+            memset(levels, 0, stride * (4 * sw + 2));
+            DECODE_COEFS_CLASS(TX_CLASS_V);
+        }
+#undef lo_ctx_offsets
+#undef DECODE_COEFS_CLASS
+        default: assert(0);
         }
     } else { // dc-only
-        uint16_t *const lo_cdf = ts->cdf.coef.eob_base_tok[t_dim->ctx][chroma][0];
-        dc_tok = dav1d_msac_decode_symbol_adapt4(&ts->msac, lo_cdf, 3) + 1;
+        int tok_br = dav1d_msac_decode_symbol_adapt4(&ts->msac, eob_cdf[0], 2);
+        dc_tok = 1 + tok_br;
         if (dbg)
             printf("Post-dc_lo_tok[%d][%d][%d][%d]: r=%d\n",
                    t_dim->ctx, chroma, 0, dc_tok, ts->msac.rng);
-
-        if (dc_tok == 3) {
-            do {
-                const int tok_br = dav1d_msac_decode_symbol_adapt4(&ts->msac,
-                                       br_cdf[0], 4);
-                if (dbg)
-                    printf("Post-dc_hi_tok[%d][%d][%d][%d->%d]: r=%d\n",
-                           imin(t_dim->ctx, 3), chroma, 0,
-                           tok_br, dc_tok, ts->msac.rng);
-                dc_tok += tok_br;
-                if (tok_br < 3) break;
-            } while (dc_tok < 15);
+        if (tok_br == 2) {
+            dc_tok = dav1d_msac_decode_hi_tok(&ts->msac, hi_cdf[0]);
+            if (dbg)
+                printf("Post-dc_hi_tok[%d][%d][0][%d]: r=%d\n",
+                       imin(t_dim->ctx, 3), chroma, dc_tok, ts->msac.rng);
         }
     }
 
     // residual and sign
     int dc_sign = 1 << 6;
-    const int lossless = f->frame_hdr->segmentation.lossless[b->seg_id];
     const uint16_t *const dq_tbl = ts->dq[b->seg_id][plane];
     const uint8_t *const qm_tbl = f->qm[lossless || is_1d || *txtp == IDTX][tx][plane];
     const int dq_shift = imax(0, t_dim->ctx - 2);
@@ -283,7 +573,7 @@ static int decode_coefs(Dav1dTileContext *const t,
     unsigned cul_level = 0;
 
     if (dc_tok) { // dc
-        const int dc_sign_ctx = get_dc_sign_ctx(t_dim, a, l);
+        const int dc_sign_ctx = get_dc_sign_ctx(tx, a, l);
         uint16_t *const dc_sign_cdf =
             ts->cdf.coef.dc_sign[chroma][dc_sign_ctx];
         const int sign = dav1d_msac_decode_bool_adapt(&ts->msac, dc_sign_cdf);
@@ -335,7 +625,7 @@ static int decode_coefs(Dav1dTileContext *const t,
     }
 
     // context
-    *res_ctx = imin(cul_level, 63) | dc_sign;
+    *res_ctx = umin(cul_level, 63) | dc_sign;
 
     return eob;
 }
@@ -782,15 +1072,17 @@ static int warp_affine(Dav1dTileContext *const t,
             // luma pixel units
             const int src_x = t->bx * 4 + ((x + 4) << ss_hor);
             const int src_y = t->by * 4 + ((y + 4) << ss_ver);
-            const int mvx = (mat[2] * src_x + mat[3] * src_y + mat[0]) >> ss_hor;
-            const int mvy = (mat[4] * src_x + mat[5] * src_y + mat[1]) >> ss_ver;
+            const int64_t mvx = ((int64_t) mat[2] * src_x +
+                                 (int64_t) mat[3] * src_y + mat[0]) >> ss_hor;
+            const int64_t mvy = ((int64_t) mat[4] * src_x +
+                                 (int64_t) mat[5] * src_y + mat[1]) >> ss_ver;
 
-            const int dx = (mvx >> 16) - 4;
-            const int mx = ((mvx & 0xffff) - wmp->alpha * 4 -
-                                             wmp->beta  * 7) & ~0x3f;
-            const int dy = (mvy >> 16) - 4;
-            const int my = ((mvy & 0xffff) - wmp->gamma * 4 -
-                                             wmp->delta * 4) & ~0x3f;
+            const int dx = (int) (mvx >> 16) - 4;
+            const int mx = (((int) mvx & 0xffff) - wmp->alpha * 4 -
+                                                   wmp->beta  * 7) & ~0x3f;
+            const int dy = (int) (mvy >> 16) - 4;
+            const int my = (((int) mvy & 0xffff) - wmp->gamma * 4 -
+                                                   wmp->delta * 4) & ~0x3f;
 
             const pixel *ref_ptr;
             ptrdiff_t ref_stride = refp->p.stride[!!pl];

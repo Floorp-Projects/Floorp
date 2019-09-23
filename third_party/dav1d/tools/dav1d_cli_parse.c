@@ -27,7 +27,6 @@
 
 #include "config.h"
 
-#include <assert.h>
 #include <getopt.h>
 #include <limits.h>
 #include <math.h>

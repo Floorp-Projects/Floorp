@@ -27,7 +27,6 @@
 
 #include "config.h"
 
-#include <assert.h>
 #include <errno.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -35,6 +34,7 @@
 
 #include "dav1d/data.h"
 
+#include "common/attributes.h"
 #include "common/validate.h"
 
 #include "src/data.h"

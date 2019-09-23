@@ -23,14 +23,14 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 project('dav1d', ['c'],
-    version: '0.3.1',
+    version: '0.4.0',
     default_options: ['c_std=c99',
                       'warning_level=2',
                       'buildtype=release',
                       'b_ndebug=if-release'],
     meson_version: '>= 0.47.0')
 
-dav1d_soname_version       = '2.0.0'
+dav1d_soname_version       = '3.0.0'
 dav1d_api_version_array    = dav1d_soname_version.split('.')
 dav1d_api_version_major    = dav1d_api_version_array[0]
 dav1d_api_version_minor    = dav1d_api_version_array[1]
@@ -85,8 +85,13 @@ test_args = []
 optional_arguments = []
 
 # Define _POSIX_C_SOURCE to POSIX.1–2001 (IEEE Std 1003.1-2001)
-test_args  += '-D_POSIX_C_SOURCE=200112L'
+test_args += '-D_POSIX_C_SOURCE=200112L'
 add_project_arguments('-D_POSIX_C_SOURCE=200112L', language: 'c')
+
+if host_machine.system() == 'darwin'
+    test_args += '-D_DARWIN_C_SOURCE'
+    add_project_arguments('-D_DARWIN_C_SOURCE', language: 'c')
+endif
 
 if host_machine.system() == 'windows'
     cdata.set('_WIN32_WINNT',           '0x0601')
@@ -388,5 +393,7 @@ subdir('doc')
 subdir('src')
 
 subdir('tools')
+
+subdir('examples')
 
 subdir('tests')

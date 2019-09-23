@@ -28,13 +28,26 @@
 #include "src/cpu.h"
 #include "src/loopfilter.h"
 
-decl_loopfilter_sb_fn(dav1d_lpf_h_sb_y_avx2);
-decl_loopfilter_sb_fn(dav1d_lpf_v_sb_y_avx2);
-decl_loopfilter_sb_fn(dav1d_lpf_h_sb_uv_avx2);
-decl_loopfilter_sb_fn(dav1d_lpf_v_sb_uv_avx2);
+#define decl_loopfilter_sb_fns(ext) \
+decl_loopfilter_sb_fn(dav1d_lpf_h_sb_y_##ext); \
+decl_loopfilter_sb_fn(dav1d_lpf_v_sb_y_##ext); \
+decl_loopfilter_sb_fn(dav1d_lpf_h_sb_uv_##ext); \
+decl_loopfilter_sb_fn(dav1d_lpf_v_sb_uv_##ext)
+
+decl_loopfilter_sb_fns(ssse3);
+decl_loopfilter_sb_fns(avx2);
 
 COLD void bitfn(dav1d_loop_filter_dsp_init_x86)(Dav1dLoopFilterDSPContext *const c) {
     const unsigned flags = dav1d_get_cpu_flags();
+
+    if (!(flags & DAV1D_X86_CPU_FLAG_SSSE3)) return;
+
+#if BITDEPTH == 8
+    c->loop_filter_sb[0][0] = dav1d_lpf_h_sb_y_ssse3;
+    c->loop_filter_sb[0][1] = dav1d_lpf_v_sb_y_ssse3;
+    c->loop_filter_sb[1][0] = dav1d_lpf_h_sb_uv_ssse3;
+    c->loop_filter_sb[1][1] = dav1d_lpf_v_sb_uv_ssse3;
+#endif
 
     if (!(flags & DAV1D_X86_CPU_FLAG_AVX2)) return;
 
