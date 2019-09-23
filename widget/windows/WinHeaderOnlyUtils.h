@@ -403,7 +403,7 @@ class FileUniqueId final {
     return *this;
   }
 
-  FileUniqueId(FileUniqueId&& aOther) = delete;
+  FileUniqueId(FileUniqueId&& aOther) = default;
   FileUniqueId& operator=(FileUniqueId&& aOther) = delete;
 
   bool operator==(const FileUniqueId& aOther) const {
@@ -445,23 +445,6 @@ class FileUniqueId final {
  private:
   LauncherResult<FILE_ID_INFO> mId;
 };
-
-inline LauncherResult<bool> DoPathsPointToIdenticalFile(
-    const wchar_t* aPath1, const wchar_t* aPath2,
-    PathType aPathType1 = PathType::eDosPath,
-    PathType aPathType2 = PathType::eDosPath) {
-  FileUniqueId id1(aPath1, aPathType1);
-  if (id1.IsError()) {
-    return ::mozilla::Err(id1.GetError());
-  }
-
-  FileUniqueId id2(aPath2, aPathType2);
-  if (id2.IsError()) {
-    return ::mozilla::Err(id2.GetError());
-  }
-
-  return id1 == id2;
-}
 
 class MOZ_RAII AutoVirtualProtect final {
  public:
