@@ -763,8 +763,8 @@ void Zone::fixupScriptMapsAfterMovingGC(JSTracer* trc) {
     }
   }
 
-  if (scriptNameMap) {
-    for (ScriptNameMap::Enum e(*scriptNameMap); !e.empty(); e.popFront()) {
+  if (scriptLCovMap) {
+    for (ScriptLCovMap::Enum e(*scriptLCovMap); !e.empty(); e.popFront()) {
       JSScript* script = e.front().key();
       if (!IsAboutToBeFinalizedUnbarriered(&script) &&
           script != e.front().key()) {
@@ -809,12 +809,12 @@ void Zone::checkScriptMapsAfterMovingGC() {
     }
   }
 
-  if (scriptNameMap) {
-    for (auto r = scriptNameMap->all(); !r.empty(); r.popFront()) {
+  if (scriptLCovMap) {
+    for (auto r = scriptLCovMap->all(); !r.empty(); r.popFront()) {
       JSScript* script = r.front().key();
       MOZ_ASSERT(script->zone() == this);
       CheckGCThingAfterMovingGC(script);
-      auto ptr = scriptNameMap->lookup(script);
+      auto ptr = scriptLCovMap->lookup(script);
       MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
     }
   }
@@ -861,12 +861,12 @@ void Zone::clearScriptCounts(Realm* realm) {
   }
 }
 
-void Zone::clearScriptNames(Realm* realm) {
-  if (!scriptNameMap) {
+void Zone::clearScriptLCov(Realm* realm) {
+  if (!scriptLCovMap) {
     return;
   }
 
-  for (auto i = scriptNameMap->modIter(); !i.done(); i.next()) {
+  for (auto i = scriptLCovMap->modIter(); !i.done(); i.next()) {
     JSScript* script = i.get().key();
     if (script->realm() == realm) {
       i.remove();

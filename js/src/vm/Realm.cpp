@@ -350,7 +350,7 @@ void Realm::finishRoots() {
   objects_.finishRoots();
 
   clearScriptCounts();
-  clearScriptNames();
+  clearScriptLCov();
 }
 
 void ObjectRealm::sweepAfterMinorGC() {
@@ -705,7 +705,7 @@ void Realm::updateDebuggerObservesCoverage() {
   }
 
   clearScriptCounts();
-  clearScriptNames();
+  clearScriptLCov();
 }
 
 coverage::LCovRealm* Realm::lcovRealm() {
@@ -729,7 +729,7 @@ bool Realm::collectCoverageForDebug() const {
 
 void Realm::clearScriptCounts() { zone()->clearScriptCounts(this); }
 
-void Realm::clearScriptNames() { zone()->clearScriptNames(this); }
+void Realm::clearScriptLCov() { zone()->clearScriptLCov(this); }
 
 void Realm::collectCodeCoverageInfo(JSScript* script, const char* name) {
   coverage::LCovRealm* lcov = lcovRealm();

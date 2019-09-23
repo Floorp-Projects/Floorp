@@ -54,6 +54,10 @@ class SourceText;
 
 namespace js {
 
+namespace coverage {
+class LCovSource;
+}  // namespace coverage
+
 namespace jit {
 class AutoKeepJitScripts;
 struct BaselineScript;
@@ -256,7 +260,7 @@ using UniqueScriptCounts = js::UniquePtr<ScriptCounts>;
 using ScriptCountsMap = HashMap<JSScript*, UniqueScriptCounts,
                                 DefaultHasher<JSScript*>, SystemAllocPolicy>;
 
-using ScriptNameMap = HashMap<JSScript*, JS::UniqueChars,
+using ScriptLCovMap = HashMap<JSScript*, coverage::LCovSource*,
                               DefaultHasher<JSScript*>, SystemAllocPolicy>;
 
 #ifdef MOZ_VTUNE
