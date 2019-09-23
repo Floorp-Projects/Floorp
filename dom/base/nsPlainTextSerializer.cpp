@@ -684,8 +684,6 @@ nsresult nsPlainTextSerializer::DoOpenContainer(const nsAtom* aTag) {
     // Trigger on the presence of a "pre-wrap" in the
     // style attribute. That's a very simplistic way to do
     // it, but better than nothing.
-    // Also set mWrapColumn to the value given there
-    // (which arguably we should only do if told to do so).
     nsAutoString style;
     int32_t whitespace;
     if (NS_SUCCEEDED(GetAttributeValue(nsGkAtoms::style, style)) &&
@@ -695,28 +693,6 @@ nsresult nsPlainTextSerializer::DoOpenContainer(const nsAtom* aTag) {
         printf("Set mPreFormattedMail based on style pre-wrap\n");
 #endif
         mPreFormattedMail = true;
-        int32_t widthOffset = style.Find("width:");
-        if (widthOffset >= 0) {
-          // We have to search for the ch before the semicolon,
-          // not for the semicolon itself, because nsString::ToInteger()
-          // considers 'c' to be a valid numeric char (even if radix=10)
-          // but then gets confused if it sees it next to the number
-          // when the radix specified was 10, and returns an error code.
-          int32_t semiOffset = style.Find("ch", false, widthOffset + 6);
-          int32_t length = (semiOffset > 0 ? semiOffset - widthOffset - 6
-                                           : style.Length() - widthOffset);
-          nsAutoString widthstr;
-          style.Mid(widthstr, widthOffset + 6, length);
-          nsresult err;
-          int32_t col = widthstr.ToInteger(&err);
-
-          if (NS_SUCCEEDED(err)) {
-            mWrapColumn = (uint32_t)col;
-#ifdef DEBUG_preformatted
-            printf("Set wrap column to %d based on style\n", mWrapColumn);
-#endif
-          }
-        }
       } else if (kNotFound != style.Find("pre", true, whitespace)) {
 #ifdef DEBUG_preformatted
         printf("Set mPreFormattedMail based on style pre\n");
