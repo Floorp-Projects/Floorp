@@ -250,11 +250,6 @@ NS_IMETHODIMP SHEntryChildShared::RemoveFromBFCacheAsync() {
   return NS_OK;
 }
 
-NS_IMETHODIMP SHEntryChildShared::GetID(uint64_t* aID) {
-  *aID = mID;
-  return NS_OK;
-}
-
 void SHEntryChildShared::CharacterDataChanged(nsIContent* aContent,
                                               const CharacterDataChangeInfo&) {
   RemoveFromBFCacheAsync();
@@ -701,12 +696,6 @@ SHEntryChild::SetCsp(nsIContentSecurityPolicy* aCsp) {
   return SendSetCsp(aCsp) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-SHEntryChild::GetBFCacheEntry(nsIBFCacheEntry** aEntry) {
-  NS_IF_ADDREF(*aEntry = mShared);
-  return NS_OK;
-}
-
 bool SHEntryChild::HasBFCacheEntry(nsIBFCacheEntry* aEntry) {
   return mShared == aEntry;
 }
@@ -1002,6 +991,12 @@ SHEntryChild::CreateLoadInfo(nsDocShellLoadState** aLoadState) {
   // Avoid dealing with serializing the PSHEntry by setting it here
   loadState->SetSHEntry(this);
   loadState.forget(aLoadState);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SHEntryChild::GetBfcacheID(uint64_t* aBFCacheID) {
+  *aBFCacheID = mShared->GetID();
   return NS_OK;
 }
 

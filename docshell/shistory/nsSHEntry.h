@@ -95,7 +95,6 @@ class nsLegacySHEntry final : public nsSHEntry {
   using nsISHEntry::GetSaveLayoutStateFlag;
   NS_IMETHOD GetSaveLayoutStateFlag(bool* aSaveLayoutStateFlag) override;
   NS_IMETHOD SetSaveLayoutStateFlag(bool aSaveLayoutStateFlag) override;
-  NS_IMETHOD GetBFCacheEntry(nsIBFCacheEntry** aEntry) override;
   NS_IMETHOD_(void) AddChildShell(nsIDocShellTreeItem* aShell) override;
   NS_IMETHOD ChildShellAt(int32_t aIndex,
                           nsIDocShellTreeItem** aShell) override;
@@ -119,6 +118,7 @@ class nsLegacySHEntry final : public nsSHEntry {
   NS_IMETHOD_(bool) HasBFCacheEntry(nsIBFCacheEntry* aEntry) override;
   NS_IMETHOD AbandonBFCacheEntry() override;
   NS_IMETHOD CreateLoadInfo(nsDocShellLoadState** aLoadState) override;
+  NS_IMETHOD GetBfcacheID(uint64_t* aBFCacheID) override;
 
  private:
   nsSHEntryShared* GetState();

@@ -498,14 +498,6 @@ nsSHEntry::SetCsp(nsIContentSecurityPolicy* aCsp) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSHEntry::GetBFCacheEntry(nsIBFCacheEntry** aEntry) {
-  MOZ_CRASH(
-      "Classes inheriting from nsSHEntry should implement this. "
-      "Bug 1546344 will clean this up.");
-  return NS_OK;
-}
-
 bool nsSHEntry::HasBFCacheEntry(nsIBFCacheEntry* aEntry) {
   MOZ_CRASH(
       "Classes inheriting from nsSHEntry should implement this. "
@@ -1022,6 +1014,14 @@ nsSHEntry::CreateLoadInfo(nsDocShellLoadState** aLoadState) {
 }
 
 NS_IMETHODIMP
+nsSHEntry::GetBfcacheID(uint64_t* aBFCacheID) {
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsLegacySHEntry::CreateLoadInfo(nsDocShellLoadState** aLoadState) {
   RefPtr<nsDocShellLoadState> loadState;
   nsSHEntry::CreateLoadInfo(getter_AddRefs(loadState));
@@ -1199,12 +1199,6 @@ bool nsLegacySHEntry::HasDetachedEditor() {
   return GetState()->mEditorData != nullptr;
 }
 
-NS_IMETHODIMP
-nsLegacySHEntry::GetBFCacheEntry(nsIBFCacheEntry** aEntry) {
-  NS_IF_ADDREF(*aEntry = GetState());
-  return NS_OK;
-}
-
 bool nsLegacySHEntry::HasBFCacheEntry(nsIBFCacheEntry* aEntry) {
   return static_cast<nsIBFCacheEntry*>(GetState()) == aEntry;
 }
@@ -1213,6 +1207,12 @@ NS_IMETHODIMP
 nsLegacySHEntry::AbandonBFCacheEntry() {
   mShared = nsSHEntryShared::Duplicate(
       GetState(), mozilla::dom::SHEntryChildShared::CreateSharedID());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLegacySHEntry::GetBfcacheID(uint64_t* aBFCacheID) {
+  *aBFCacheID = mShared->GetID();
   return NS_OK;
 }
 
