@@ -20,6 +20,11 @@
     --in-content-deemphasized-text: #737373;
   }
 }
+@supports not (-moz-bool-pref("browser.in-content.dark-mode")) {
+  :host {
+    --in-content-deemphasized-text: #737373;
+  }
+}
 
 form {
   flex-grow: 1;
