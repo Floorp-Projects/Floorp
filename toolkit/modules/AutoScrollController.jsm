@@ -108,51 +108,11 @@ class AutoScrollController {
     return null;
   }
 
-  getXBLNodes(parent, array) {
-    let content = parent.ownerGlobal;
-    let anonNodes = content.document.getAnonymousNodes(parent);
-    let nodes = Array.from(anonNodes || parent.childNodes || []);
-    for (let node of nodes) {
-      if (node.nodeName == "children") {
-        return true;
-      }
-      if (this.getXBLNodes(node, array)) {
-        array.push(node);
-        return true;
-      }
-    }
-    return false;
-  }
-
-  *parentNodeIterator(aNode) {
-    let content = aNode.ownerGlobal;
-
-    while (aNode) {
-      yield aNode;
-
-      let parent = aNode.parentNode;
-      if (parent && parent instanceof content.XULElement) {
-        let anonNodes = content.document.getAnonymousNodes(parent);
-        if (anonNodes && !Array.from(anonNodes).includes(aNode)) {
-          // XBL elements are skipped by parentNode property.
-          // Yield elements between parent and <children> here.
-          let nodes = [];
-          this.getXBLNodes(parent, nodes);
-          for (let node of nodes) {
-            yield node;
-          }
-        }
-      }
-
-      aNode = parent;
-    }
-  }
-
   findNearestScrollableElement(aNode) {
     // go upward in the DOM and find any parent element that has a overflow
     // area and can therefore be scrolled
     this._scrollable = null;
-    for (let node of this.parentNodeIterator(aNode)) {
+    for (let node = aNode; node; node = node.flattenedTreeParentNode) {
       // do not use overflow based autoscroll for <html> and <body>
       // Elements or non-html/non-xul elements such as svg or Document nodes
       // also make sure to skip select elements that are not multiline
