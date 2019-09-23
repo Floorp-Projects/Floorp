@@ -591,8 +591,8 @@ Toolbox.prototype = {
       ignoreCaughtExceptions: Services.prefs.getBoolPref(
         "devtools.debugger.ignore-caught-exceptions"
       ),
-      showOverlayStepButtons: Services.prefs.getBoolPref(
-        "devtools.debugger.features.overlay-step-buttons"
+      shouldShowOverlay: Services.prefs.getBoolPref(
+        "devtools.debugger.features.overlay"
       ),
       skipBreakpoints: Services.prefs.getBoolPref(
         "devtools.debugger.skip-pausing"

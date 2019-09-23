@@ -426,7 +426,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     const env = new HighlighterEnvironment();
     env.initFromTargetActor(this._parent);
     const highlighter = new PausedDebuggerOverlay(env, {
-      showOverlayStepButtons: this._options.showOverlayStepButtons,
       resume: () => this.onResume({ resumeLimit: null }),
       stepOver: () => this.onResume({ resumeLimit: { type: "next" } }),
     });
@@ -436,6 +435,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
   showOverlay() {
     if (
+      this._options.shouldShowOverlay &&
       this.isPaused() &&
       this._parent.on &&
       this._parent.window.document &&
