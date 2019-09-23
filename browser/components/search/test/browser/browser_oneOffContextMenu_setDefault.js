@@ -43,7 +43,8 @@ add_task(async function test_searchBarChangeEngine() {
     true,
     searchPopup,
     searchOneOff,
-    SEARCHBAR_BASE_ID
+    SEARCHBAR_BASE_ID,
+    TEST_ENGINE_NAME
   );
 
   const setDefaultEngineMenuItem = searchOneOff.querySelector(
@@ -89,7 +90,8 @@ add_task(async function test_urlBarChangeEngine() {
     false,
     null,
     urlBarOneOff,
-    URLBAR_BASE_ID
+    URLBAR_BASE_ID,
+    TEST_ENGINE_NAME
   );
 
   const setDefaultEngineMenuItem = urlBarOneOff.querySelector(
@@ -128,6 +130,34 @@ add_task(async function test_urlBarChangeEngine() {
   await EventUtils.synthesizeNativeMouseMove(urlbar);
 });
 
+add_task(async function test_urlBarEngineDefaultDisabled() {
+  const originalDefault = await Services.search.getDefault();
+  const oneOffButton = await openPopupAndGetEngineButton(
+    false,
+    null,
+    urlBarOneOff,
+    URLBAR_BASE_ID,
+    originalDefault.name
+  );
+
+  Assert.equal(
+    oneOffButton.id,
+    URLBAR_BASE_ID + originalDefault.name,
+    "Should now have the original engine's id for the button"
+  );
+
+  const setDefaultEngineMenuItem = urlBarOneOff.querySelector(
+    ".search-one-offs-context-set-default"
+  );
+  Assert.equal(
+    setDefaultEngineMenuItem.disabled,
+    true,
+    "Should have disabled the setting as default for the default engine"
+  );
+
+  await UrlbarTestUtils.promisePopupClose(window);
+});
+
 /**
  * Promises that an engine change has happened for the current engine, which
  * has resulted in the test engine now being the current engine.
@@ -162,6 +192,7 @@ function promisedefaultEngineChanged() {
  * @param {object} oneOffInstance The expected one-off instance for the popup.
  * @param {string} baseId The expected string for the id of the current
  *                        engine button, without the engine name.
+ * @param {string} engineName The engine name for finding the one-off button.
  * @returns {object} Returns an object that represents the one off button for the
  *                          test engine.
  */
@@ -169,7 +200,8 @@ async function openPopupAndGetEngineButton(
   isSearch,
   popup,
   oneOffInstance,
-  baseId
+  baseId,
+  engineName
 ) {
   info("Opening panel");
 
@@ -200,7 +232,7 @@ async function openPopupAndGetEngineButton(
     if (
       oneOffButton.nodeType == Node.ELEMENT_NODE &&
       oneOffButton.engine &&
-      oneOffButton.engine.name == TEST_ENGINE_NAME
+      oneOffButton.engine.name == engineName
     ) {
       break;
     }
@@ -213,12 +245,12 @@ async function openPopupAndGetEngineButton(
   );
   Assert.equal(
     oneOffButton.getAttribute("tooltiptext"),
-    TEST_ENGINE_NAME,
+    engineName,
     "One-off should have the tooltip set to the engine name"
   );
   Assert.equal(
     oneOffButton.id,
-    baseId + TEST_ENGINE_NAME,
+    baseId + engineName,
     "Should have the correct id"
   );
 
