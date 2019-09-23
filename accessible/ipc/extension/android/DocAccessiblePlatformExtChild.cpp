@@ -15,18 +15,17 @@ namespace a11y {
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvPivot(
     uint64_t aID, int32_t aGranularity, bool aForward, bool aInclusive) {
   if (auto acc = IdToAccessibleWrap(aID)) {
-    acc->Pivot(aGranularity, aForward, aInclusive);
+    // XXX: Forward to appropriate wrapper method.
   }
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvNavigateText(
-    uint64_t aID, int32_t aGranularity, int32_t aStartOffset, int32_t aEndOffset,
+    int32_t aID, int32_t aGranularity, int32_t aStartOffset, int32_t aEndOffset,
     bool aForward, bool aSelect) {
   if (auto acc = IdToAccessibleWrap(aID)) {
-    acc->NavigateText(aGranularity, aStartOffset, aEndOffset, aForward,
-                      aSelect);
+    // XXX: Forward to appropriate wrapper method.
   }
 
   return IPC_OK();
@@ -35,7 +34,7 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvNavigateText(
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvSetSelection(
     uint64_t aID, int32_t aStart, int32_t aEnd) {
   if (auto acc = IdToAccessibleWrap(aID)) {
-    acc->SetSelection(aStart, aEnd);
+    // XXX: Forward to appropriate wrapper method.
   }
 
   return IPC_OK();
@@ -43,7 +42,7 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvSetSelection(
 
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvCut(uint64_t aID) {
   if (auto acc = IdToAccessibleWrap(aID)) {
-    acc->Cut();
+    // XXX: Forward to appropriate wrapper method.
   }
 
   return IPC_OK();
@@ -51,7 +50,7 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvCut(uint64_t aID) {
 
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvCopy(uint64_t aID) {
   if (auto acc = IdToAccessibleWrap(aID)) {
-    acc->Copy();
+    // XXX: Forward to appropriate wrapper method.
   }
 
   return IPC_OK();
@@ -59,7 +58,7 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvCopy(uint64_t aID) {
 
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvPaste(uint64_t aID) {
   if (auto acc = IdToAccessibleWrap(aID)) {
-    acc->Paste();
+    // XXX: Forward to appropriate wrapper method.
   }
 
   return IPC_OK();
@@ -67,9 +66,7 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvPaste(uint64_t aID) {
 
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvExploreByTouch(
     uint64_t aID, float aX, float aY) {
-  if (auto acc = IdToAccessibleWrap(aID)) {
-    acc->ExploreByTouch(aX, aY);
-  }
+  // XXX: Forward to appropriate wrapper method.
 
   return IPC_OK();
 }

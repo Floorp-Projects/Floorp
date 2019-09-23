@@ -17,17 +17,17 @@ child:
 
   async Pivot(uint64_t aID, int32_t aGranularity, bool aForward, bool aInclusive);
 
-  async NavigateText(uint64_t aID, int32_t aGranularity, int32_t aStartOffset, int32_t aEndOffset, bool aForward, bool aSelect);
+  async NavigateText(int32_t aID, int32_t aGranularity, int32_t aStartOffset, int32_t aEndOffset, bool aForward, bool aSelect);
 
-  async SetSelection(uint64_t aID, int32_t aStart, int32_t aEnd);
+  async SetSelection(int32_t aID, int32_t aStart, int32_t aEnd);
 
-  async Cut(uint64_t aID);
+  async Cut(int32_t aID);
 
-  async Copy(uint64_t aID);
+  async Copy(int32_t aID);
 
-  async Paste(uint64_t aID);
+  async Paste(int32_t aID);
 
-  async ExploreByTouch(uint64_t aID, float aX, float aY);
+  async ExploreByTouch(int32_t aID, float aX, float aY);
   };
 }
 }
