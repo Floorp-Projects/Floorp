@@ -318,17 +318,14 @@ class ZZAccessibilityTest : BaseSessionTest() {
         } while (fromIndex != eventFromIndex || toIndex != eventToIndex)
     }
 
-    private fun waitUntilTextTraversed(fromIndex: Int, toIndex: Int): Int {
-        var nodeId: Int = AccessibilityNodeProvider.HOST_VIEW_ID
+    private fun waitUntilTextTraversed(fromIndex: Int, toIndex: Int) {
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)
             override fun onTextTraversal(event: AccessibilityEvent) {
-              nodeId = getSourceId(event)
               assertThat("fromIndex matches", event.fromIndex, equalTo(fromIndex))
               assertThat("toIndex matches", event.toIndex, equalTo(toIndex))
             }
         })
-        return nodeId
     }
 
     private fun waitUntilClick(checked: Boolean) {
@@ -417,22 +414,6 @@ class ZZAccessibilityTest : BaseSessionTest() {
                 assertThat("text should be pasted", event.text[0].toString(), equalTo("hello cruel cruel cruel"))
             }
         })
-
-        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_SET_SELECTION, setSelectionArguments(0, 0))
-        waitUntilTextSelectionChanged(0, 0)
-
-        provider.performAction(nodeId,
-                AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
-                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD, true))
-        waitUntilTextSelectionChanged(0, 5)
-
-        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_CUT, null)
-        sessionRule.waitUntilCalled(object : EventDelegate {
-            @AssertCalled
-            override fun onTextChanged(event: AccessibilityEvent) {
-                assertThat("text should be cut", event.text[0].toString(), equalTo(" cruel cruel cruel"))
-            }
-        })
     }
 
     @Test fun testMoveByCharacter() {
@@ -452,17 +433,17 @@ class ZZAccessibilityTest : BaseSessionTest() {
         provider.performAction(nodeId,
                 AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
                 moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER))
-        nodeId = waitUntilTextTraversed(0, 1) // "L"
+        waitUntilTextTraversed(0, 1) // "L"
 
         provider.performAction(nodeId,
                 AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
                 moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER))
-        nodeId = waitUntilTextTraversed(1, 2) // "o"
+        waitUntilTextTraversed(1, 2) // "o"
 
         provider.performAction(nodeId,
                 AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
                 moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER))
-        nodeId = waitUntilTextTraversed(0, 1) // "L"
+        waitUntilTextTraversed(0, 1) // "L"
     }
 
     @Test fun testMoveByWord() {
@@ -482,12 +463,12 @@ class ZZAccessibilityTest : BaseSessionTest() {
         provider.performAction(nodeId,
                 AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
                 moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD))
-        nodeId = waitUntilTextTraversed(0, 5) // "Lorem"
+        waitUntilTextTraversed(0, 5) // "Lorem"
 
         provider.performAction(nodeId,
                 AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
                 moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD))
-        nodeId = waitUntilTextTraversed(6, 11) // "ipsum"
+        waitUntilTextTraversed(6, 11) // "ipsum"
 
         provider.performAction(nodeId,
                 AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
@@ -515,17 +496,17 @@ class ZZAccessibilityTest : BaseSessionTest() {
         provider.performAction(nodeId,
                 AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
                 moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE))
-        nodeId = waitUntilTextTraversed(0, 18) // "Lorem ipsum dolor "
+        waitUntilTextTraversed(0, 18) // "Lorem ipsum dolor "
 
         provider.performAction(nodeId,
                 AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
                 moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE))
-        nodeId = waitUntilTextTraversed(18, 28) // "sit amet, "
+        waitUntilTextTraversed(18, 28) // "sit amet, "
 
         provider.performAction(nodeId,
                 AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
                 moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE))
-        nodeId = waitUntilTextTraversed(0, 18) // "Lorem ipsum dolor "
+        waitUntilTextTraversed(0, 18) // "Lorem ipsum dolor "
     }
 
     @Test fun testHeadings() {

@@ -130,11 +130,13 @@ void a11y::ProxyVirtualCursorChangeEvent(
     return;
   }
 
-  if (aReason == nsIAccessiblePivot::REASON_POINT) {
-    sessionAcc->SendHoverEnterEvent(WrapperFor(aNewPosition));
-  } else {
-    RefPtr<AccessibleWrap> wrapperForNewPosition = WrapperFor(aNewPosition);
-    sessionAcc->SendAccessibilityFocusedEvent(wrapperForNewPosition);
+  if (aOldPosition != aNewPosition) {
+    if (aReason == nsIAccessiblePivot::REASON_POINT) {
+      sessionAcc->SendHoverEnterEvent(WrapperFor(aNewPosition));
+    } else {
+      RefPtr<AccessibleWrap> wrapperForNewPosition = WrapperFor(aNewPosition);
+      sessionAcc->SendAccessibilityFocusedEvent(wrapperForNewPosition);
+    }
   }
 
   if (aBoundaryType != nsIAccessiblePivot::NO_BOUNDARY) {
