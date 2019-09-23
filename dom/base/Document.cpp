@@ -10798,7 +10798,9 @@ nsIContent* Document::GetContentInThisDocument(nsIFrame* aFrame) const {
 }
 
 void Document::DispatchPageTransition(EventTarget* aDispatchTarget,
-                                      const nsAString& aType, bool aPersisted,
+                                      const nsAString& aType,
+                                      bool aInFrameSwap,
+                                      bool aPersisted,
                                       bool aOnlySystemGroup) {
   if (!aDispatchTarget) {
     return;
@@ -10808,9 +10810,7 @@ void Document::DispatchPageTransition(EventTarget* aDispatchTarget,
   init.mBubbles = true;
   init.mCancelable = true;
   init.mPersisted = aPersisted;
-
-  nsDocShell* docShell = mDocumentContainer.get();
-  init.mInFrameSwap = docShell && docShell->InFrameSwap();
+  init.mInFrameSwap = aInFrameSwap;
 
   RefPtr<PageTransitionEvent> event =
       PageTransitionEvent::Constructor(this, aType, init);
@@ -10832,10 +10832,10 @@ static bool NotifyPageShow(Document* aDocument, void* aData) {
 
 void Document::OnPageShow(bool aPersisted, EventTarget* aDispatchStartTarget,
                           bool aOnlySystemGroup) {
-  mVisible = true;
-
-  EnumerateActivityObservers(NotifyActivityChanged, nullptr);
-  EnumerateExternalResources(NotifyPageShow, &aPersisted);
+  const bool inFrameLoaderSwap = !!aDispatchStartTarget;
+  MOZ_DIAGNOSTIC_ASSERT(
+      inFrameLoaderSwap ==
+      (mDocumentContainer && mDocumentContainer->InFrameSwap()));
 
   Element* root = GetRootElement();
   if (aPersisted && root) {
@@ -10850,21 +10850,25 @@ void Document::OnPageShow(bool aPersisted, EventTarget* aDispatchStartTarget,
   }
 
   // See Document
-  if (!aDispatchStartTarget) {
+  if (!inFrameLoaderSwap) {
+    if (aPersisted) {
+      ImageTracker()->SetAnimatingState(true);
+    }
+
     // Set mIsShowing before firing events, in case those event handlers
     // move us around.
     mIsShowing = true;
+    mVisible = true;
+
+    UpdateVisibilityState();
   }
+
+  EnumerateActivityObservers(NotifyActivityChanged, nullptr);
+  EnumerateExternalResources(NotifyPageShow, &aPersisted);
 
   if (mAnimationController) {
     mAnimationController->OnPageShow();
   }
-
-  if (aPersisted) {
-    ImageTracker()->SetAnimatingState(true);
-  }
-
-  UpdateVisibilityState();
 
   if (!mIsBeingUsedAsImage) {
     // Dispatch observer notification to notify observers page is shown.
@@ -10882,8 +10886,8 @@ void Document::OnPageShow(bool aPersisted, EventTarget* aDispatchStartTarget,
     if (!target) {
       target = do_QueryInterface(GetWindow());
     }
-    DispatchPageTransition(target, NS_LITERAL_STRING("pageshow"), aPersisted,
-                           aOnlySystemGroup);
+    DispatchPageTransition(target, NS_LITERAL_STRING("pageshow"),
+                           inFrameLoaderSwap, aPersisted, aOnlySystemGroup);
   }
 }
 
@@ -10906,6 +10910,11 @@ static void ClearPendingFullscreenRequests(Document* aDoc);
 
 void Document::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget,
                           bool aOnlySystemGroup) {
+  const bool inFrameLoaderSwap = !!aDispatchStartTarget;
+  MOZ_DIAGNOSTIC_ASSERT(
+      inFrameLoaderSwap ==
+      (mDocumentContainer && mDocumentContainer->InFrameSwap()));
+
   if (IsTopLevelContentDocument() && GetDocGroup() &&
       Telemetry::CanRecordExtended()) {
     TabGroup* tabGroup = mDocGroup->GetTabGroup();
@@ -10936,22 +10945,21 @@ void Document::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget,
     }
   }
 
-  // See Document
-  if (!aDispatchStartTarget) {
-    // Set mIsShowing before firing events, in case those event handlers
-    // move us around.
-    mIsShowing = false;
-  }
-
   if (mAnimationController) {
     mAnimationController->OnPageHide();
   }
 
-  // We do not stop the animations (bug 1024343)
-  // when the page is refreshing while being dragged out
-  nsDocShell* docShell = mDocumentContainer.get();
-  if (aPersisted && !(docShell && docShell->InFrameSwap())) {
-    ImageTracker()->SetAnimatingState(false);
+  if (!inFrameLoaderSwap) {
+    if (aPersisted) {
+      // We do not stop the animations (bug 1024343) when the page is refreshing
+      // while being dragged out.
+      ImageTracker()->SetAnimatingState(false);
+    }
+
+    // Set mIsShowing before firing events, in case those event handlers
+    // move us around.
+    mIsShowing = false;
+    mVisible = false;
   }
 
   ExitPointerLock();
@@ -10975,14 +10983,14 @@ void Document::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget,
     }
     {
       PageUnloadingEventTimeStamp timeStamp(this);
-      DispatchPageTransition(target, NS_LITERAL_STRING("pagehide"), aPersisted,
-                             aOnlySystemGroup);
+      DispatchPageTransition(target, NS_LITERAL_STRING("pagehide"),
+                             inFrameLoaderSwap, aPersisted, aOnlySystemGroup);
     }
   }
 
-  mVisible = false;
-
-  UpdateVisibilityState();
+  if (!inFrameLoaderSwap) {
+    UpdateVisibilityState();
+  }
 
   EnumerateExternalResources(NotifyPageHide, &aPersisted);
   EnumerateActivityObservers(NotifyActivityChanged, nullptr);
