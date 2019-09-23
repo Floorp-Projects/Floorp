@@ -597,13 +597,15 @@ class nsINode : public mozilla::dom::EventTarget {
    *
    * For all other cases OwnerDoc and GetOwnerDocument behave identically.
    */
-  Document* OwnerDoc() const { return mNodeInfo->GetDocument(); }
+  Document* OwnerDoc() const MOZ_NONNULL_RETURN {
+    return mNodeInfo->GetDocument();
+  }
 
   /**
    * Return the "owner document" of this node as an nsINode*.  Implemented
    * in Document.h.
    */
-  inline nsINode* OwnerDocAsNode() const;
+  inline nsINode* OwnerDocAsNode() const MOZ_NONNULL_RETURN;
 
   /**
    * Returns true if the content has an ancestor that is a document.
