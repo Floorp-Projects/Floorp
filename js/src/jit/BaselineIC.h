@@ -921,7 +921,7 @@ class ICStubCompilerBase {
 
   void pushCallArguments(MacroAssembler& masm,
                          AllocatableGeneralRegisterSet regs, Register argcReg,
-                         bool isJitCall, bool isConstructing = false);
+                         bool isConstructing);
 
   // Push a payload specialized per compiler needed to execute stubs.
   void PushStubPayload(MacroAssembler& masm, Register scratch);

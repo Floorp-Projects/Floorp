@@ -3350,27 +3350,14 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
 
 void ICStubCompilerBase::pushCallArguments(MacroAssembler& masm,
                                            AllocatableGeneralRegisterSet regs,
-                                           Register argcReg, bool isJitCall,
+                                           Register argcReg,
                                            bool isConstructing) {
   MOZ_ASSERT(!regs.has(argcReg));
 
-  // Account for new.target
+  // Account for |this|, callee and new.target.
   Register count = regs.takeAny();
-
   masm.move32(argcReg, count);
-
-  // If we are setting up for a jitcall, we have to align the stack taking
-  // into account the args and newTarget. We could also count callee and |this|,
-  // but it's a waste of stack space. Because we want to keep argcReg unchanged,
-  // just account for newTarget initially, and add the other 2 after assuring
-  // allignment.
-  if (isJitCall) {
-    if (isConstructing) {
-      masm.add32(Imm32(1), count);
-    }
-  } else {
-    masm.add32(Imm32(2 + isConstructing), count);
-  }
+  masm.add32(Imm32(2 + isConstructing), count);
 
   // argPtr initially points to the last argument.
   Register argPtr = regs.takeAny();
@@ -3379,15 +3366,6 @@ void ICStubCompilerBase::pushCallArguments(MacroAssembler& masm,
   // Skip 4 pointers pushed on top of the arguments: the frame descriptor,
   // return address, old frame pointer and stub reg.
   masm.addPtr(Imm32(STUB_FRAME_SIZE), argPtr);
-
-  // Align the stack such that the JitFrameLayout is aligned on the
-  // JitStackAlignment.
-  if (isJitCall) {
-    masm.alignJitStackBasedOnNArgs(count, /*countIncludesThis =*/false);
-
-    // Account for callee and |this|, skipped earlier
-    masm.add32(Imm32(2), count);
-  }
 
   // Push all values, starting at the last one.
   Label loop, done;
@@ -3465,8 +3443,7 @@ bool FallbackICCodeCompiler::emitCall(bool isSpread, bool isConstructing) {
 
   regs.take(R0.scratchReg());  // argc.
 
-  pushCallArguments(masm, regs, R0.scratchReg(), /* isJitCall = */ false,
-                    isConstructing);
+  pushCallArguments(masm, regs, R0.scratchReg(), isConstructing);
 
   masm.push(masm.getStackPointer());
   masm.push(R0.scratchReg());
