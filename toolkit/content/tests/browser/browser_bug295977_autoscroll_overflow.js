@@ -130,6 +130,36 @@ body > div > div {width: 1000px;height: 1000px;}\
       testwindow: true,
       middlemousepastepref: true,
     },
+    {
+      dataUri:
+        "data:text/html," +
+        encodeURIComponent(`
+<!doctype html>
+<iframe id=i height=100 width=100 scrolling="no" srcdoc="<div style='height: 200px'>Auto-scrolling should never make me disappear"></iframe>
+<div style="height: 100vh"></div>
+      `),
+    },
+    {
+      elem: "i",
+      // We expect the outer window to scroll vertically, not the iframe's window.
+      expected: expectScrollVert,
+      testwindow: true,
+    },
+    {
+      dataUri:
+        "data:text/html," +
+        encodeURIComponent(`
+<!doctype html>
+<iframe id=i height=100 width=100 srcdoc="<div style='height: 200px'>Auto-scrolling should make me disappear"></iframe>
+<div style="height: 100vh"></div>
+      `),
+    },
+    {
+      elem: "i",
+      // We expect the iframe's window to scroll vertically, so the outer window should not scroll.
+      expected: expectScrollNone,
+      testwindow: true,
+    },
   ];
 
   for (let test of allTests) {
