@@ -154,24 +154,6 @@ add_task(async function() {
   );
 });
 
-function waitForDestroyedDocuments() {
-  return new Promise(resolve => {
-    SpecialPowers.exactGC(resolve);
-  });
-}
-
-function waitForPageLoad(browser) {
-  return ContentTask.spawn(browser, null, async function() {
-    await new Promise(resolve => {
-      let listener = () => {
-        removeEventListener("load", listener, true);
-        resolve();
-      };
-      addEventListener("load", listener, true);
-    });
-  });
-}
-
 function grabHistogramsFromContent(use_counter_middlefix, page_before = null) {
   let telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(
     Ci.nsITelemetry
@@ -222,7 +204,7 @@ var check_use_counter_iframe = async function(
     gBrowser.selectedBrowser,
     gHttpTestRoot + "file_use_counter_outer.html"
   );
-  await waitForPageLoad(gBrowser.selectedBrowser);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   // Inject our desired file into the iframe of the newly-loaded page.
   await ContentTask.spawn(gBrowser.selectedBrowser, { file }, function(opts) {
@@ -294,7 +276,7 @@ var check_use_counter_img = async function(file, use_counter_middlefix) {
     gBrowser.selectedBrowser,
     gHttpTestRoot + "file_use_counter_outer.html"
   );
-  await waitForPageLoad(gBrowser.selectedBrowser);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   // Inject our desired file into the img of the newly-loaded page.
   await ContentTask.spawn(gBrowser.selectedBrowser, { file }, async function(
@@ -370,15 +352,7 @@ var check_use_counter_direct = async function(
   ] = await grabHistogramsFromContent(use_counter_middlefix);
 
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, gHttpTestRoot + file);
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
-    await new Promise(resolve => {
-      let listener = () => {
-        removeEventListener("load", listener, true);
-        setTimeout(resolve, 0);
-      };
-      addEventListener("load", listener, true);
-    });
-  });
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   // Tear down the page.
   let tabClosed = BrowserTestUtils.waitForTabClosing(newTab);
