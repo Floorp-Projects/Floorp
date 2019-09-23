@@ -64,8 +64,8 @@ static void b2w(uint32_t* out, const uint8_t* in, uint32_t len) {
   bpend = in + len;
 
   for (; bp != bpend; bp += 4, ++wp) {
-    *wp = (uint32_t)(bp[0]) | (uint32_t)(bp[1] << 8) | (uint32_t)(bp[2] << 16) |
-          (uint32_t)(bp[3] << 24);
+    *wp = (uint32_t)bp[0] | ((uint32_t)bp[1] << 8) | ((uint32_t)bp[2] << 16) |
+          ((uint32_t)bp[3] << 24);
   }
 }
 
