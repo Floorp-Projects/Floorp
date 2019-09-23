@@ -39,6 +39,9 @@ class AccessibleWrap : public Accessible {
 
   virtual void ExploreByTouch(float aX, float aY);
 
+  virtual void NavigateText(int32_t aGranularity, int32_t aStartOffset,
+                            int32_t aEndOffset, bool aForward, bool aSelect);
+
   mozilla::java::GeckoBundle::LocalRef ToBundle(bool aSmall = false);
 
   mozilla::java::GeckoBundle::LocalRef ToBundle(
@@ -88,6 +91,8 @@ class AccessibleWrap : public Accessible {
   void GetTextEquiv(nsString& aText);
 
   bool HandleLiveRegionEvent(AccEvent* aEvent);
+
+  void GetSelectionOrCaret(int32_t* aStartOffset, int32_t* aEndOffset);
 
   static void GetRoleDescription(role aRole,
                                  nsIPersistentProperties* aAttributes,

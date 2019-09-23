@@ -271,11 +271,7 @@ public class SessionAccessibility {
                         mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityActivate", data);
                     } else if (granularity > 0) {
                         boolean extendSelection = arguments.getBoolean(AccessibilityNodeInfo.ACTION_ARGUMENT_EXTEND_SELECTION_BOOLEAN);
-                        data = new GeckoBundle(3);
-                        data.putString("direction", action == AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY ? "Next" : "Previous");
-                        data.putInt("granularity", granularity);
-                        data.putBoolean("select", extendSelection);
-                        mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityByGranularity", data);
+                        nativeProvider.navigateText(virtualViewId, granularity, mStartOffset, mEndOffset, action == AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY, extendSelection);
                     }
                     return true;
                 case AccessibilityNodeInfo.ACTION_SET_SELECTION:
@@ -548,6 +544,8 @@ public class SessionAccessibility {
     private int mAccessibilityFocusedNode = 0;
     // The current node with focus
     private int mFocusedNode = 0;
+    private int mStartOffset = -1;
+    private int mEndOffset = -1;
     // Viewport cache
     final SparseArray<GeckoBundle> mViewportCache = new SparseArray<>();
     // Focus cache
@@ -807,6 +805,8 @@ public class SessionAccessibility {
                 }
                 break;
             case AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED:
+                mStartOffset = -1;
+                mEndOffset = -1;
                 mAccessibilityFocusedNode = sourceId;
                 break;
             case AccessibilityEvent.TYPE_VIEW_FOCUSED:
@@ -815,6 +815,10 @@ public class SessionAccessibility {
                     // Don't dispatch a focus event if the parent view is not focused
                     return;
                 }
+                break;
+            case AccessibilityEvent.TYPE_VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY:
+                mStartOffset = event.getFromIndex();
+                mEndOffset = event.getToIndex();
                 break;
         }
 
@@ -863,6 +867,9 @@ public class SessionAccessibility {
 
         @WrapForJNI(dispatchTo = "gecko")
         public native void exploreByTouch(int id, float x, float y);
+
+        @WrapForJNI(dispatchTo = "gecko")
+        public native void navigateText(int id, int granularity, int startOffset, int endOffset, boolean forward, boolean select);
 
         @WrapForJNI(calledFrom = "gecko", stubName = "SendEvent")
         private void sendEventNative(final int eventType, final int sourceId, final int className, final GeckoBundle eventData) {
