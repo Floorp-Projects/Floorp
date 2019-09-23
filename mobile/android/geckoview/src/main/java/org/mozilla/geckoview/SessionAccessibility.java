@@ -22,6 +22,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
+import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.InputDevice;
@@ -200,24 +201,11 @@ public class SessionAccessibility {
 
             switch (action) {
                 case AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS:
-                    if (mAccessibilityFocusedNode == virtualViewId) {
-                        mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityClearCursor", null);
-                    }
                     sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED, virtualViewId, CLASSNAME_UNKNOWN, null);
                     return true;
                 case AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS:
-                    if (virtualViewId == View.NO_ID) {
-                        sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED, View.NO_ID, CLASSNAME_WEBVIEW, null);
-                    } else {
-                        if (mFocusedNode == virtualViewId && mHoveredOnNode != virtualViewId) {
-                            // If we are sending accessibility focus to the focused node, sync up the state with Gecko.
-                            // XXX: This is a stopgap for now until we remove the JS layer and manipulate the Gecko a11y virtual cursor directly
-                            // with the given virtualViewId
-                            mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityCursorToFocused", null);
-                        } else {
-                            sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED, virtualViewId, CLASSNAME_UNKNOWN, null);
-                        }
-                    }
+                    sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED, virtualViewId,
+                            virtualViewId == View.NO_ID ? CLASSNAME_WEBVIEW : CLASSNAME_UNKNOWN, null);
                     return true;
                 case AccessibilityNodeInfo.ACTION_CLICK:
                     nativeProvider.click(virtualViewId);
@@ -255,16 +243,16 @@ public class SessionAccessibility {
                     nativeProvider.click(virtualViewId);
                     return true;
                 case AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT:
+                    requestViewFocus();
+                    nativeProvider.pivot(virtualViewId, arguments != null ?
+                            arguments.getString(AccessibilityNodeInfo.ACTION_ARGUMENT_HTML_ELEMENT_STRING) : "",
+                            true, false);
+                    return true;
                 case AccessibilityNodeInfo.ACTION_PREVIOUS_HTML_ELEMENT:
                     requestViewFocus();
-                    if (arguments != null) {
-                        data = new GeckoBundle(1);
-                        data.putString("rule", arguments.getString(AccessibilityNodeInfo.ACTION_ARGUMENT_HTML_ELEMENT_STRING));
-                    } else {
-                        data = null;
-                    }
-                    mSession.getEventDispatcher().dispatch(action == AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT ?
-                                                           "GeckoView:AccessibilityNext" : "GeckoView:AccessibilityPrevious", data);
+                    nativeProvider.pivot(virtualViewId, arguments != null ?
+                            arguments.getString(AccessibilityNodeInfo.ACTION_ARGUMENT_HTML_ELEMENT_STRING) : "",
+                            false, false);
                     return true;
                 case AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY:
                 case AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY:
@@ -496,11 +484,7 @@ public class SessionAccessibility {
                     // This is mostly here to let TalkBack know we are a legit "WebView".
                     bundle.putCharSequence(
                             "ACTION_ARGUMENT_HTML_ELEMENT_STRING_VALUES",
-                            "ARTICLE,BUTTON,CHECKBOX,COMBOBOX,CONTROL," +
-                                    "FOCUSABLE,FRAME,GRAPHIC,H1,H2,H3,H4,H5,H6," +
-                                    "HEADING,LANDMARK,LINK,LIST,LIST_ITEM,MAIN," +
-                                    "MEDIA,RADIO,SECTION,TABLE,TEXT_FIELD," +
-                                    "UNVISITED_LINK,VISITED_LINK");
+                            TextUtils.join(",", sHtmlGranularities));
                 }
 
 
@@ -564,8 +548,6 @@ public class SessionAccessibility {
     private int mAccessibilityFocusedNode = 0;
     // The current node with focus
     private int mFocusedNode = 0;
-    // A node with no accessibility focus that is currently being hovered.
-    private int mHoveredOnNode = 0;
     // Viewport cache
     final SparseArray<GeckoBundle> mViewportCache = new SparseArray<>();
     // Focus cache
@@ -702,9 +684,6 @@ public class SessionAccessibility {
             final GeckoBundle ret = new GeckoBundle(2);
             ret.putBoolean("touchEnabled", isTouchExplorationEnabled());
             ret.putBoolean("enabled", isEnabled());
-            // "GeckoView:AccessibilitySettings" is dispatched to the Gecko thread.
-            EventDispatcher.getInstance().dispatch("GeckoView:AccessibilitySettings", ret);
-            // "GeckoView:AccessibilityEnabled" is dispatched to the UI thread.
             EventDispatcher.getInstance().dispatch("GeckoView:AccessibilityEnabled", ret);
 
             if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
@@ -740,9 +719,10 @@ public class SessionAccessibility {
 
         requestViewFocus();
 
-        final GeckoBundle data = new GeckoBundle(2);
-        data.putDoubleArray("coordinates", new double[] {event.getRawX(), event.getRawY()});
-        mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityExploreByTouch", data);
+        nativeProvider.exploreByTouch(
+                mAccessibilityFocusedNode != 0 ? mAccessibilityFocusedNode : View.NO_ID,
+                event.getRawX(), event.getRawY());
+
         return true;
     }
 
@@ -826,12 +806,8 @@ public class SessionAccessibility {
                     mAccessibilityFocusedNode = 0;
                 }
                 break;
-            case AccessibilityEvent.TYPE_VIEW_HOVER_ENTER:
-                mHoveredOnNode = sourceId;
-                break;
             case AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED:
                 mAccessibilityFocusedNode = sourceId;
-                mHoveredOnNode = 0;
                 break;
             case AccessibilityEvent.TYPE_VIEW_FOCUSED:
                 mFocusedNode = sourceId;
@@ -877,6 +853,16 @@ public class SessionAccessibility {
 
         @WrapForJNI(dispatchTo = "gecko")
         public native void click(int id);
+
+        public void pivot(final int id, final String granularity, final boolean forward, final boolean inclusive) {
+            pivotNative(id, java.util.Arrays.asList(sHtmlGranularities).indexOf(granularity), forward, inclusive);
+        }
+
+        @WrapForJNI(dispatchTo = "gecko", stubName = "Pivot")
+        public native void pivotNative(int id, int granularity, boolean forward, boolean inclusive);
+
+        @WrapForJNI(dispatchTo = "gecko")
+        public native void exploreByTouch(int id, float x, float y);
 
         @WrapForJNI(calledFrom = "gecko", stubName = "SendEvent")
         private void sendEventNative(final int eventType, final int sourceId, final int className, final GeckoBundle eventData) {

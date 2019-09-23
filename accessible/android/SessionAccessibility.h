@@ -54,6 +54,8 @@ class SessionAccessibility final
   jni::Object::LocalRef GetNodeInfo(int32_t aID);
   void SetText(int32_t aID, jni::String::Param aText);
   void Click(int32_t aID);
+  void Pivot(int32_t aID, int32_t aGranularity, bool aForward, bool aInclusive);
+  void ExploreByTouch(int32_t aID, float aX, float aY);
   void StartNativeAccessibility();
 
   // Event methods
