@@ -6057,9 +6057,8 @@ void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
       sourceBc, origin, this, providedPrincipal,
       callerInnerWindow ? callerInnerWindow->WindowID() : 0, callerDocumentURI);
 
-  MOZ_DIAGNOSTIC_ASSERT(GetDocGroup());
   JS::CloneDataPolicy clonePolicy;
-  if (callerInnerWindow &&
+  if (GetDocGroup() && callerInnerWindow &&
       callerInnerWindow->CanShareMemory(GetDocGroup()->AgentClusterId())) {
     clonePolicy.allowSharedMemory();
   }
