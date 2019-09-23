@@ -550,7 +550,7 @@ class JS::Realm : public JS::shadow::Realm {
   void sweepObjectGroups() { objectGroups_.sweep(); }
 
   void clearScriptCounts();
-  void clearScriptNames();
+  void clearScriptLCov();
 
   void purge();
 
