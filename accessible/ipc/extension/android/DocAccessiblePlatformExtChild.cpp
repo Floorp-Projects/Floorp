@@ -22,10 +22,11 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvPivot(
 }
 
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvNavigateText(
-    int32_t aID, int32_t aGranularity, int32_t aStartOffset, int32_t aEndOffset,
+    uint64_t aID, int32_t aGranularity, int32_t aStartOffset, int32_t aEndOffset,
     bool aForward, bool aSelect) {
   if (auto acc = IdToAccessibleWrap(aID)) {
-    // XXX: Forward to appropriate wrapper method.
+    acc->NavigateText(aGranularity, aStartOffset, aEndOffset, aForward,
+                      aSelect);
   }
 
   return IPC_OK();
