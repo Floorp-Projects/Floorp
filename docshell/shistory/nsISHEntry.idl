@@ -183,8 +183,6 @@ interface nsISHEntry : nsISupports
     // Would be [infallible], but we don't support that property for nsIDPtr.
     attribute nsIDRef docshellID;
 
-    [infallible] readonly attribute nsIBFCacheEntry BFCacheEntry;
-
     /**
      * True if this SHEntry corresponds to a document created by a srcdoc
      * iframe. Set when a value is assigned to srcdocData.
@@ -424,5 +422,7 @@ interface nsISHEntry : nsISupports
      * Don't set nsSHEntry here to avoid serializing it.
      */
     [noscript] nsDocShellLoadStatePtr CreateLoadInfo();
+
+    [infallible] readonly attribute unsigned long long bfcacheID;
 };
 

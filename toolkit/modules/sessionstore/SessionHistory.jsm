@@ -259,7 +259,7 @@ var SessionHistoryInternal = {
       entry.csp = E10SUtils.serializeCSP(shEntry.csp);
     }
 
-    entry.docIdentifier = shEntry.BFCacheEntry.ID;
+    entry.docIdentifier = shEntry.bfcacheID;
 
     if (shEntry.stateData != null) {
       let stateData = shEntry.stateData;

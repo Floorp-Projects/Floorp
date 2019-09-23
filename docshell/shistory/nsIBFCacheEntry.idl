@@ -13,6 +13,4 @@ interface nsIBFCacheEntry : nsISupports
 {
   void RemoveFromBFCacheSync();
   void RemoveFromBFCacheAsync();
-
-  [infallible] readonly attribute unsigned long long ID;
 };
