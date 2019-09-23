@@ -15,6 +15,11 @@ option('enable_tools',
     value: true,
     description: 'Build dav1d cli tools')
 
+option('enable_examples',
+    type: 'boolean',
+    value: false,
+    description: 'Build dav1d examples')
+
 option('enable_tests',
     type: 'boolean',
     value: true,

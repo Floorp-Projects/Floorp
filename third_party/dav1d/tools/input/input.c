@@ -27,11 +27,12 @@
 
 #include "config.h"
 
-#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "common/attributes.h"
 
 #include "input/input.h"
 #include "input/demuxer.h"
@@ -75,7 +76,7 @@ static const char *find_extension(const char *const f) {
 
 int input_open(DemuxerContext **const c_out,
                const char *const name, const char *const filename,
-               unsigned fps[2], unsigned *const num_frames)
+               unsigned fps[2], unsigned *const num_frames, unsigned timebase[2])
 {
     const Demuxer *impl;
     DemuxerContext *c;
@@ -120,7 +121,7 @@ int input_open(DemuxerContext **const c_out,
     memset(c, 0, sizeof(DemuxerContext) + impl->priv_data_size);
     c->impl = impl;
     c->data = (DemuxerPriv *) &c[1];
-    if ((res = impl->open(c->data, filename, fps, num_frames)) < 0) {
+    if ((res = impl->open(c->data, filename, fps, num_frames, timebase)) < 0) {
         free(c);
         return res;
     }

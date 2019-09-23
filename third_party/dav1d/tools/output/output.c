@@ -27,11 +27,12 @@
 
 #include "config.h"
 
-#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "common/attributes.h"
 
 #include "output/output.h"
 #include "output/muxer.h"

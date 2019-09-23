@@ -25,60 +25,21 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DAV1D_COMMON_INTOPS_H
-#define DAV1D_COMMON_INTOPS_H
+#include "src/cpu.h"
+#include "src/film_grain.h"
 
-#include <stdint.h>
+decl_generate_grain_y_fn(dav1d_generate_grain_y_avx2);
+decl_fgy_32x32xn_fn(dav1d_fgy_32x32xn_avx2);
+decl_fguv_32x32xn_fn(dav1d_fguv_32x32xn_i420_avx2);
 
-#include "common/attributes.h"
+COLD void bitfn(dav1d_film_grain_dsp_init_x86)(Dav1dFilmGrainDSPContext *const c) {
+    const unsigned flags = dav1d_get_cpu_flags();
 
-static inline int imax(const int a, const int b) {
-    return a > b ? a : b;
+    if (!(flags & DAV1D_X86_CPU_FLAG_AVX2)) return;
+
+#if BITDEPTH == 8 && ARCH_X86_64
+    c->generate_grain_y = dav1d_generate_grain_y_avx2;
+    c->fgy_32x32xn = dav1d_fgy_32x32xn_avx2;
+    c->fguv_32x32xn[DAV1D_PIXEL_LAYOUT_I420 - 1] = dav1d_fguv_32x32xn_i420_avx2;
+#endif
 }
-
-static inline int imin(const int a, const int b) {
-    return a < b ? a : b;
-}
-
-static inline unsigned umax(const unsigned a, const unsigned b) {
-    return a > b ? a : b;
-}
-
-static inline unsigned umin(const unsigned a, const unsigned b) {
-    return a < b ? a : b;
-}
-
-static inline int iclip(const int v, const int min, const int max) {
-    return v < min ? min : v > max ? max : v;
-}
-
-static inline int iclip_u8(const int v) {
-    return iclip(v, 0, 255);
-}
-
-static inline int apply_sign(const int v, const int s) {
-    return s < 0 ? -v : v;
-}
-
-static inline int apply_sign64(const int v, const int64_t s) {
-    return s < 0 ? -v : v;
-}
-
-static inline int ulog2(const unsigned v) {
-    return 31 - clz(v);
-}
-
-static inline int u64log2(const uint64_t v) {
-    return 63 - clzll(v);
-}
-
-static inline unsigned inv_recenter(const unsigned r, const unsigned v) {
-    if (v > (r << 1))
-        return v;
-    else if ((v & 1) == 0)
-        return (v >> 1) + r;
-    else
-        return r - ((v + 1) >> 1);
-}
-
-#endif /* DAV1D_COMMON_INTOPS_H */

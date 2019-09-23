@@ -27,8 +27,6 @@
 
 #include "tests/checkasm/checkasm.h"
 
-#include <assert.h>
-
 #include "src/levels.h"
 #include "src/mc.h"
 

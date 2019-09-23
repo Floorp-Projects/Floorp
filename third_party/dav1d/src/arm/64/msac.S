@@ -148,7 +148,7 @@ function msac_decode_symbol_adapt4_neon, export=1
         add             x8,  x0,  #RNG
         ld1_n           v0,  v1,  x1,  \sz, \n                    // cdf
         ld1r            {v4\sz},  [x8]                            // rng
-        movrel          x9,  coeffs, 32
+        movrel          x9,  coeffs, 30
         sub             x9,  x9,  x2, lsl #1
         ushr_n          v2,  v3,  v0,  v1,  #6, \sz, \n           // cdf >> EC_PROB_SHIFT
         str             h4,  [sp, #14]                            // store original u = s->rng
@@ -183,16 +183,24 @@ function msac_decode_symbol_adapt4_neon, export=1
         // update_cdf
         ldrh            w3,  [x1, x2, lsl #1]                     // count = cdf[n_symbols]
         movi            v5\szb, #0xff
-        cmp             x2,  #4                                   // set C if n_symbols >= 4 (n_symbols > 3)
-        mov             w14, #4
-        lsr             w4,  w3,  #4                              // count >> 4
+.if \n == 16
+        mov             w4,  #-5
+.else
+        mvn             w14, w2
+        mov             w4,  #-4
+        cmn             w14, #3                                   // set C if n_symbols <= 2
+.endif
         urhadd_n        v4,  v5,  v5,  v5,  v2,  v3,  \sz, \n     // i >= val ? -1 : 32768
-        adc             w4,  w4,  w14                             // (count >> 4) + (n_symbols > 3) + 4
-        neg             w4,  w4                                   // -rate
+.if \n == 16
+        sub             w4,  w4,  w3, lsr #4                      // -((count >> 4) + 5)
+.else
+        lsr             w14, w3,  #4                              // count >> 4
+        sbc             w4,  w4,  w14                             // -((count >> 4) + (n_symbols > 2) + 4)
+.endif
         sub_n           v4,  v5,  v4,  v5,  v0,  v1,  \sz, \n     // (32768 - cdf[i]) or (-1 - cdf[i])
         dup             v6.8h,    w4                              // -rate
 
-        sub             w3,  w3,  w3, lsr #5                      // count - (count >= 32)
+        sub             w3,  w3,  w3, lsr #5                      // count - (count == 32)
         sub_n           v0,  v1,  v0,  v1,  v2,  v3,  \sz, \n     // cdf + (i >= val ? 1 : 0)
         sshl_n          v4,  v5,  v4,  v5,  v6,  v6,  \sz, \n     // ({32768,-1} - cdf[i]) >> rate
         add             w3,  w3,  #1                              // count + (count < 32)
@@ -224,8 +232,7 @@ L(renorm2):
         b.ge            9f
 
         // refill
-        ldr             x3,  [x0, #BUF_POS]
-        ldr             x4,  [x0, #BUF_END]
+        ldp             x3,  x4,  [x0]         // BUF_POS, BUF_END
         add             x5,  x3,  #8
         cmp             x5,  x4
         b.gt            2f

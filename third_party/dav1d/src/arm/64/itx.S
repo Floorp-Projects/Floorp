@@ -98,7 +98,8 @@ const idct64_coeffs, align=4
 endconst
 
 const iadst4_coeffs, align=4
-        .short          1321, 3803, 2482, 3344, 3344*8
+        // .h[4-5] can be interpreted as .s[2]
+        .short          1321, 3803, 2482, 3344, 3344, 0
 endconst
 
 const iadst8_coeffs, align=4
@@ -144,6 +145,27 @@ endconst
         rshrn           \d0\().4h, \s0\().4s, \shift
 .ifc \sz, .8h
         rshrn2          \d0\().8h, \s1\().4s, \shift
+.endif
+.endm
+
+.macro saddl_sz d0, d1, s0, s1, sz
+        saddl           \d0\().4s,  \s0\().4h,  \s1\().4h
+.ifc \sz, .8h
+        saddl2          \d1\().4s,  \s0\().8h,  \s1\().8h
+.endif
+.endm
+
+.macro ssubl_sz d0, d1, s0, s1, sz
+        ssubl           \d0\().4s,  \s0\().4h,  \s1\().4h
+.ifc \sz, .8h
+        ssubl2          \d1\().4s,  \s0\().8h,  \s1\().8h
+.endif
+.endm
+
+.macro mul_4s_sz d0, d1, s0, s1, c, sz
+        mul             \d0\().4s,  \s0\().4s,  \c
+.ifc \sz, .8h
+        mul             \d1\().4s,  \s1\().4s,  \c
 .endif
 .endm
 
@@ -499,23 +521,24 @@ endfunc
         movrel          x16, iadst4_coeffs
         ld1             {v0.8h}, [x16]
 
-        sub             v3.4h,   v16.4h,  v18.4h
+        ssubl           v3.4s,   v16.4h,  v18.4h
         smull           v4.4s,   v16.4h,  v0.h[0]
         smlal           v4.4s,   v18.4h,  v0.h[1]
         smlal           v4.4s,   v19.4h,  v0.h[2]
         smull           v7.4s,   v17.4h,  v0.h[3]
-        add             v3.4h,   v3.4h,   v19.4h
+        saddw           v3.4s,   v3.4s,   v19.4h
         smull           v5.4s,   v16.4h,  v0.h[2]
         smlsl           v5.4s,   v18.4h,  v0.h[0]
         smlsl           v5.4s,   v19.4h,  v0.h[1]
 
         add             \o3\().4s, v4.4s,     v5.4s
-        sqrdmulh        \o2\().4h, v3.4h,     v0.h[4]
+        mul             \o2\().4s, v3.4s,     v0.s[2]
         add             \o0\().4s, v4.4s,     v7.4s
         add             \o1\().4s, v5.4s,     v7.4s
         sub             \o3\().4s, \o3\().4s, v7.4s
 
         rshrn           \o0\().4h, \o0\().4s, #12
+        rshrn           \o2\().4h, \o2\().4s, #12
         rshrn           \o1\().4h, \o1\().4s, #12
         rshrn           \o3\().4h, \o3\().4s, #12
 .endm
@@ -534,14 +557,16 @@ endfunc
         movrel          x16, iadst4_coeffs
         ld1             {v0.8h}, [x16]
 
-        sub             v3.8h,   v16.8h,  v18.8h
+        ssubl           v2.4s,   v16.4h,  v18.4h
+        ssubl2          v3.4s,   v16.8h,  v18.8h
         smull           v4.4s,   v16.4h,  v0.h[0]
         smlal           v4.4s,   v18.4h,  v0.h[1]
         smlal           v4.4s,   v19.4h,  v0.h[2]
         smull2          v5.4s,   v16.8h,  v0.h[0]
         smlal2          v5.4s,   v18.8h,  v0.h[1]
         smlal2          v5.4s,   v19.8h,  v0.h[2]
-        add             v3.8h,   v3.8h,   v19.8h
+        saddw           v2.4s,   v2.4s,   v19.4h
+        saddw2          v3.4s,   v3.4s,   v19.8h
         smull           v6.4s,   v16.4h,  v0.h[2]
         smlsl           v6.4s,   v18.4h,  v0.h[0]
         smlsl           v6.4s,   v19.4h,  v0.h[1]
@@ -549,7 +574,8 @@ endfunc
         smlsl2          v7.4s,   v18.8h,  v0.h[0]
         smlsl2          v7.4s,   v19.8h,  v0.h[1]
 
-        sqrdmulh        v18.8h,  v3.8h,   v0.h[4]
+        mul             v18.4s,  v2.4s,   v0.s[2]
+        mul             v19.4s,  v3.4s,   v0.s[2]
 
         smull           v2.4s,   v17.4h,  v0.h[3]
         smull2          v3.4s,   v17.8h,  v0.h[3]
@@ -565,6 +591,9 @@ endfunc
 
         sub             v4.4s,   v4.4s,   v2.4s // out3
         sub             v5.4s,   v5.4s,   v3.4s
+
+        rshrn           v18.4h,  v18.4s, #12
+        rshrn2          v18.8h,  v19.4s, #12
 
         rshrn           \o0\().4h, v16.4s, #12
         rshrn2          \o0\().8h, v17.4s, #12
@@ -836,16 +865,25 @@ endfunc
         sqsub           v5\sz,     v5\sz, v19\sz // t7
         sqneg           \o1\()\sz, \o1\()\sz     // out1
 
-        add             v6\sz,   v2\sz,   v4\sz
-        sub             v7\sz,   v2\sz,   v4\sz
-        add             v4\sz,   v3\sz,   v5\sz
-        sub             v5\sz,   v3\sz,   v5\sz
-        sqrdmulh        \o3\sz,  v6\sz,   v1.h[1] // out3
-        sqrdmulh        \o4\sz,  v7\sz,   v1.h[1] // out4
-        sqrdmulh        \o2\sz,  v4\sz,   v1.h[1] // out2
-        sqrdmulh        \o5\sz,  v5\sz,   v1.h[1] // out5
-        neg             \o3\()\sz, \o3\()\sz     // out3
-        neg             \o5\()\sz, \o5\()\sz     // out5
+        movi            v0.4s,  #2896>>4
+
+        saddl_sz        v18, v19, v2,  v4,  \sz // -> out3 (v19 or v20)
+        ssubl_sz        v6,  v7,  v2,  v4,  \sz // -> out4 (v20 or v19)
+        ssubl_sz        v20, v21, v3,  v5,  \sz // -> out5 (v21 or v18)
+        saddl_sz        v4,  v5,  v3,  v5,  \sz // -> out2 (v18 or v21)
+
+        mul_4s_sz       v18, v19, v18, v19, v0.s[0], \sz
+        mul_4s_sz       v6,  v7,  v6,  v7,  v0.s[0], \sz
+        mul_4s_sz       v20, v21, v20, v21, v0.s[0], \sz
+        mul_4s_sz       v4,  v5,  v4,  v5,  v0.s[0], \sz
+
+        rshrn_sz        v2,  v18, v19, #8,  \sz // out3
+        rshrn_sz        v3,  v20, v21, #8,  \sz // out5
+        rshrn_sz        \o2, v4,  v5,  #8,  \sz // out2 (v18 or v21)
+        rshrn_sz        \o4, v6,  v7,  #8,  \sz // out4 (v20 or v19)
+
+        sqneg           \o3\()\sz, v2\sz     // out3
+        sqneg           \o5\()\sz, v3\sz     // out5
 .endm
 
 function inv_adst_8x8_neon
@@ -1272,28 +1310,47 @@ endfunc
         sqsub           v23\sz,  v25\sz,  v23\sz // t7
         sqneg           \o3\sz,  \o3\sz          // out3
 
-        sqsub           v24\sz,  v2\sz,   v21\sz // -> out8
-        sqadd           v2\sz,   v2\sz,   v21\sz // -> out7
-        sqadd           v21\sz,  v26\sz,  v3\sz  // -> out5
-        sqsub           v26\sz,  v26\sz,  v3\sz  // -> out10
-        sqadd           v3\sz,   v27\sz,  v20\sz // -> out6
-        sqsub           v25\sz,  v27\sz,  v20\sz // -> out9
-        sqadd           v20\sz,  v22\sz,  v23\sz // -> out4
-        sqsub           v27\sz,  v22\sz,  v23\sz // -> out11
+        movi            v0.4s,  #2896>>4
 
-        sqrdmulh        v2\sz,   v2\sz,   v0.h[1] // out7
-        sqrdmulh        v4\sz,   v21\sz,  v0.h[1] // out5
-        sqrdmulh        v5\sz,   v25\sz,  v0.h[1] // out9
-        sqrdmulh        v6\sz,   v27\sz,  v0.h[1] // out11
-        sqrdmulh        \o6\sz,  v3\sz,   v0.h[1] // out6
-        sqrdmulh        \o8\sz,  v24\sz,  v0.h[1] // out8
-        sqrdmulh        \o10\sz, v26\sz,  v0.h[1] // out10
-        sqrdmulh        \o4\sz,  v20\sz,  v0.h[1] // out4
+        ssubl_sz        v24, v25, v2,  v21, \sz // -> out8 (v24 or v23)
+        saddl_sz        v4,  v5,  v2,  v21, \sz // -> out7 (v23 or v24)
+        saddl_sz        v6,  v7,  v26, v3,  \sz // -> out5 (v21 or v26)
+        ssubl_sz        v2,  v3,  v26, v3,  \sz // -> out10 (v26 or v21)
 
-        neg             \o7\sz,  v2\sz // out7
-        neg             \o5\sz,  v4\sz // out5
-        neg             \o9\sz,  v5\sz // out9
-        neg             \o11\sz, v6\sz // out11
+        mul_4s_sz       v24, v25, v24, v25, v0.s[0], \sz
+        mul_4s_sz       v4,  v5,  v4,  v5,  v0.s[0], \sz
+        mul_4s_sz       v6,  v7,  v6,  v7,  v0.s[0], \sz
+        mul_4s_sz       v2,  v3,  v2,  v3,  v0.s[0], \sz
+
+        rshrn_sz        v24, v24, v25, #8,  \sz // out8
+        rshrn_sz        v4,  v4,  v5,  #8,  \sz // out7
+        rshrn_sz        v5,  v6,  v7,  #8,  \sz // out5
+        rshrn_sz        v26, v2,  v3,  #8,  \sz // out10
+
+        saddl_sz        v2,  v3,  v22, v23, \sz // -> out4 (v20 or v27)
+        ssubl_sz        v6,  v7,  v22, v23, \sz // -> out11 (v27 or v20)
+        saddl_sz        v22, v23, v27, v20, \sz // -> out6 (v22 or v25)
+        ssubl_sz        v21, v25, v27, v20, \sz // -> out9 (v25 or v22)
+
+        mul_4s_sz       v2,  v3,  v2,  v3,  v0.s[0], \sz
+        mul_4s_sz       v6,  v7,  v6,  v7,  v0.s[0], \sz
+        mul_4s_sz       v22, v23, v22, v23, v0.s[0], \sz
+        mul_4s_sz       v21, v25, v21, v25, v0.s[0], \sz
+
+        rshrn_sz        \o4, v2,  v3,  #8,  \sz // out4
+        rshrn_sz        v6,  v6,  v7,  #8,  \sz // out11
+        rshrn_sz        v7,  v21, v25, #8,  \sz // out9
+        rshrn_sz        \o6, v22, v23, #8,  \sz // out6
+
+.ifc \o8, v23
+        mov             \o8\szb,  v24\szb
+        mov             \o10\szb, v26\szb
+.endif
+
+        sqneg           \o7\sz,  v4\sz // out7
+        sqneg           \o5\sz,  v5\sz // out5
+        sqneg           \o11\sz, v6\sz // out11
+        sqneg           \o9\sz,  v7\sz // out9
 .endm
 
 function inv_adst_8x16_neon

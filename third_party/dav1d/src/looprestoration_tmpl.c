@@ -172,8 +172,8 @@ static void wiener_c(pixel *p, const ptrdiff_t p_stride,
     const int round_bits_v = 11 - (bitdepth == 12) * 2;
     const int rounding_off_v = 1 << (round_bits_v - 1);
     const int round_offset = 1 << (bitdepth + (round_bits_v - 1));
-    for (int i = 0; i < w; i++) {
-        for (int j = 0; j < h; j++) {
+    for (int j = 0; j < h; j++) {
+        for (int i = 0; i < w; i++) {
             int sum = (hor[(j + 3) * REST_UNIT_STRIDE + i] << 7) - round_offset;
 
             for (int k = 0; k < 7; k++) {

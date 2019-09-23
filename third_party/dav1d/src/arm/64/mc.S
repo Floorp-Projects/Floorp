@@ -234,6 +234,635 @@ bidir_fn w_avg
 bidir_fn mask
 
 
+.macro w_mask_fn type
+function w_mask_\type\()_8bpc_neon, export=1
+        clz             w8,  w4
+        adr             x9,  L(w_mask_\type\()_tbl)
+        sub             w8,  w8,  #24
+        ldrh            w8,  [x9,  x8,  lsl #1]
+        sub             x9,  x9,  w8,  uxtw
+        mov             w10, #6903
+        dup             v0.8h,   w10
+.if \type == 444
+        movi            v1.16b,  #64
+.elseif \type == 422
+        dup             v2.8b,   w7
+        movi            v3.8b,   #129
+        sub             v3.8b,   v3.8b,   v2.8b
+.elseif \type == 420
+        dup             v2.8h,   w7
+        movi            v3.8h,   #1, lsl #8
+        sub             v3.8h,   v3.8h,   v2.8h
+.endif
+        add             x12,  x0,  x1
+        lsl             x1,   x1,  #1
+        br              x9
+4:
+        ld1             {v4.8h,   v5.8h},   [x2],  #32  // tmp1 (four rows at once)
+        ld1             {v6.8h,   v7.8h},   [x3],  #32  // tmp2 (four rows at once)
+        subs            w5,  w5,  #4
+        sub             v16.8h,  v6.8h,   v4.8h
+        sub             v17.8h,  v7.8h,   v5.8h
+        sabd            v18.8h,  v4.8h,   v6.8h
+        sabd            v19.8h,  v5.8h,   v7.8h
+        uqsub           v18.8h,  v0.8h,   v18.8h
+        uqsub           v19.8h,  v0.8h,   v19.8h
+        ushr            v18.8h,  v18.8h,  #8
+        ushr            v19.8h,  v19.8h,  #8
+        shl             v20.8h,  v18.8h,  #9
+        shl             v21.8h,  v19.8h,  #9
+        sqdmulh         v20.8h,  v20.8h,  v16.8h
+        sqdmulh         v21.8h,  v21.8h,  v17.8h
+        add             v20.8h,  v20.8h,  v4.8h
+        add             v21.8h,  v21.8h,  v5.8h
+        sqrshrun        v22.8b,  v20.8h,  #4
+        sqrshrun        v23.8b,  v21.8h,  #4
+.if \type == 444
+        xtn             v18.8b,   v18.8h
+        xtn2            v18.16b,  v19.8h
+        sub             v18.16b,  v1.16b,  v18.16b
+        st1             {v18.16b}, [x6],  #16
+.elseif \type == 422
+        addp            v18.8h,   v18.8h,  v19.8h
+        xtn             v18.8b,   v18.8h
+        uhsub           v18.8b,   v3.8b,   v18.8b
+        st1             {v18.8b},  [x6],  #8
+.elseif \type == 420
+        trn1            v24.2d,   v18.2d,  v19.2d
+        trn2            v25.2d,   v18.2d,  v19.2d
+        add             v24.8h,   v24.8h,  v25.8h
+        addp            v18.8h,   v24.8h,  v24.8h
+        sub             v18.4h,   v3.4h,   v18.4h
+        rshrn           v18.8b,   v18.8h,  #2
+        st1             {v18.s}[0],  [x6],  #4
+.endif
+        st1             {v22.s}[0],  [x0],  x1
+        st1             {v22.s}[1],  [x12], x1
+        st1             {v23.s}[0],  [x0],  x1
+        st1             {v23.s}[1],  [x12], x1
+        b.gt            4b
+        ret
+8:
+        ld1             {v4.8h,   v5.8h},   [x2],  #32
+        ld1             {v6.8h,   v7.8h},   [x3],  #32
+        subs            w5,  w5,  #2
+        sub             v16.8h,  v6.8h,   v4.8h
+        sub             v17.8h,  v7.8h,   v5.8h
+        sabd            v18.8h,  v4.8h,   v6.8h
+        sabd            v19.8h,  v5.8h,   v7.8h
+        uqsub           v18.8h,  v0.8h,   v18.8h
+        uqsub           v19.8h,  v0.8h,   v19.8h
+        ushr            v18.8h,  v18.8h,  #8
+        ushr            v19.8h,  v19.8h,  #8
+        shl             v20.8h,  v18.8h,  #9
+        shl             v21.8h,  v19.8h,  #9
+        sqdmulh         v20.8h,  v20.8h,  v16.8h
+        sqdmulh         v21.8h,  v21.8h,  v17.8h
+        add             v20.8h,  v20.8h,  v4.8h
+        add             v21.8h,  v21.8h,  v5.8h
+        sqrshrun        v22.8b,  v20.8h,  #4
+        sqrshrun        v23.8b,  v21.8h,  #4
+.if \type == 444
+        xtn             v18.8b,  v18.8h
+        xtn2            v18.16b, v19.8h
+        sub             v18.16b, v1.16b,  v18.16b
+        st1             {v18.16b}, [x6],  #16
+.elseif \type == 422
+        addp            v18.8h,  v18.8h,  v19.8h
+        xtn             v18.8b,  v18.8h
+        uhsub           v18.8b,  v3.8b,   v18.8b
+        st1             {v18.8b},  [x6],  #8
+.elseif \type == 420
+        add             v18.8h,  v18.8h,  v19.8h
+        addp            v18.8h,  v18.8h,  v18.8h
+        sub             v18.4h,  v3.4h,   v18.4h
+        rshrn           v18.8b,  v18.8h,  #2
+        st1             {v18.s}[0],  [x6],  #4
+.endif
+        st1             {v22.8b},  [x0],  x1
+        st1             {v23.8b},  [x12], x1
+        b.gt            8b
+        ret
+1280:
+640:
+320:
+160:
+        mov             w11, w4
+        sub             x1,  x1,  w4,  uxtw
+.if \type == 444
+        add             x10, x6,  w4,  uxtw
+.elseif \type == 422
+        add             x10, x6,  x11, lsr #1
+.endif
+        add             x9,  x3,  w4,  uxtw #1
+        add             x7,  x2,  w4,  uxtw #1
+161:
+        mov             w8,  w4
+16:
+        ld1             {v4.8h,   v5.8h},   [x2],  #32
+        ld1             {v6.8h,   v7.8h},   [x3],  #32
+        ld1             {v16.8h,  v17.8h},  [x7],  #32
+        ld1             {v18.8h,  v19.8h},  [x9],  #32
+        subs            w8,  w8,  #16
+        sub             v6.8h,   v6.8h,   v4.8h
+        sub             v7.8h,   v7.8h,   v5.8h
+        sub             v18.8h,  v18.8h,  v16.8h
+        sub             v19.8h,  v19.8h,  v17.8h
+        abs             v20.8h,  v6.8h
+        abs             v21.8h,  v7.8h
+        abs             v22.8h,  v18.8h
+        abs             v23.8h,  v19.8h
+        uqsub           v20.8h,  v0.8h,   v20.8h
+        uqsub           v21.8h,  v0.8h,   v21.8h
+        uqsub           v22.8h,  v0.8h,   v22.8h
+        uqsub           v23.8h,  v0.8h,   v23.8h
+        ushr            v20.8h,  v20.8h,  #8
+        ushr            v21.8h,  v21.8h,  #8
+        ushr            v22.8h,  v22.8h,  #8
+        ushr            v23.8h,  v23.8h,  #8
+        shl             v24.8h,  v20.8h,  #9
+        shl             v25.8h,  v21.8h,  #9
+        shl             v26.8h,  v22.8h,  #9
+        shl             v27.8h,  v23.8h,  #9
+        sqdmulh         v24.8h,  v24.8h,  v6.8h
+        sqdmulh         v25.8h,  v25.8h,  v7.8h
+        sqdmulh         v26.8h,  v26.8h,  v18.8h
+        sqdmulh         v27.8h,  v27.8h,  v19.8h
+        add             v24.8h,  v24.8h,  v4.8h
+        add             v25.8h,  v25.8h,  v5.8h
+        add             v26.8h,  v26.8h,  v16.8h
+        add             v27.8h,  v27.8h,  v17.8h
+        sqrshrun        v24.8b,  v24.8h,  #4
+        sqrshrun        v25.8b,  v25.8h,  #4
+        sqrshrun        v26.8b,  v26.8h,  #4
+        sqrshrun        v27.8b,  v27.8h,  #4
+.if \type == 444
+        xtn             v20.8b,  v20.8h
+        xtn2            v20.16b, v21.8h
+        xtn             v21.8b,  v22.8h
+        xtn2            v21.16b, v23.8h
+        sub             v20.16b, v1.16b,  v20.16b
+        sub             v21.16b, v1.16b,  v21.16b
+        st1             {v20.16b}, [x6],  #16
+        st1             {v21.16b}, [x10], #16
+.elseif \type == 422
+        addp            v20.8h,  v20.8h,  v21.8h
+        addp            v21.8h,  v22.8h,  v23.8h
+        xtn             v20.8b,  v20.8h
+        xtn             v21.8b,  v21.8h
+        uhsub           v20.8b,  v3.8b,   v20.8b
+        uhsub           v21.8b,  v3.8b,   v21.8b
+        st1             {v20.8b},  [x6],  #8
+        st1             {v21.8b},  [x10], #8
+.elseif \type == 420
+        add             v20.8h,  v20.8h,  v22.8h
+        add             v21.8h,  v21.8h,  v23.8h
+        addp            v20.8h,  v20.8h,  v21.8h
+        sub             v20.8h,  v3.8h,   v20.8h
+        rshrn           v20.8b,  v20.8h,  #2
+        st1             {v20.8b},  [x6],  #8
+.endif
+        st1             {v24.8b,  v25.8b},  [x0],  #16
+        st1             {v26.8b,  v27.8b},  [x12], #16
+        b.gt            16b
+        subs            w5,  w5,  #2
+        add             x2,  x2,  w4,  uxtw #1
+        add             x3,  x3,  w4,  uxtw #1
+        add             x7,  x7,  w4,  uxtw #1
+        add             x9,  x9,  w4,  uxtw #1
+.if \type == 444
+        add             x6,  x6,  w4,  uxtw
+        add             x10, x10, w4,  uxtw
+.elseif \type == 422
+        add             x6,  x6,  x11, lsr #1
+        add             x10, x10, x11, lsr #1
+.endif
+        add             x0,  x0,  x1
+        add             x12, x12, x1
+        b.gt            161b
+        ret
+L(w_mask_\type\()_tbl):
+        .hword L(w_mask_\type\()_tbl) - 1280b
+        .hword L(w_mask_\type\()_tbl) -  640b
+        .hword L(w_mask_\type\()_tbl) -  320b
+        .hword L(w_mask_\type\()_tbl) -  160b
+        .hword L(w_mask_\type\()_tbl) -    8b
+        .hword L(w_mask_\type\()_tbl) -    4b
+endfunc
+.endm
+
+w_mask_fn 444
+w_mask_fn 422
+w_mask_fn 420
+
+
+function blend_8bpc_neon, export=1
+        adr             x6,  L(blend_tbl)
+        clz             w3,  w3
+        sub             w3,  w3,  #26
+        ldrh            w3,  [x6,  x3,  lsl #1]
+        sub             x6,  x6,  w3,  uxtw
+        movi            v4.16b,  #64
+        add             x8,  x0,  x1
+        lsl             w1,  w1,  #1
+        br              x6
+4:
+        ld1             {v2.d}[0],   [x5],  #8
+        ld1             {v1.d}[0],   [x2],  #8
+        ld1             {v0.s}[0],   [x0]
+        subs            w4,  w4,  #2
+        ld1             {v0.s}[1],   [x8]
+        sub             v3.8b,   v4.8b,   v2.8b
+        umull           v5.8h,   v1.8b,   v2.8b
+        umlal           v5.8h,   v0.8b,   v3.8b
+        rshrn           v6.8b,   v5.8h,   #6
+        st1             {v6.s}[0],   [x0],  x1
+        st1             {v6.s}[1],   [x8],  x1
+        b.gt            4b
+        ret
+8:
+        ld1             {v2.2d},   [x5],  #16
+        ld1             {v1.2d},   [x2],  #16
+        ld1             {v0.d}[0],   [x0]
+        ld1             {v0.d}[1],   [x8]
+        sub             v3.16b,  v4.16b,  v2.16b
+        subs            w4,  w4,  #2
+        umull           v5.8h,   v1.8b,   v2.8b
+        umlal           v5.8h,   v0.8b,   v3.8b
+        umull2          v6.8h,   v1.16b,  v2.16b
+        umlal2          v6.8h,   v0.16b,  v3.16b
+        rshrn           v7.8b,   v5.8h,   #6
+        rshrn2          v7.16b,  v6.8h,   #6
+        st1             {v7.d}[0],   [x0],  x1
+        st1             {v7.d}[1],   [x8],  x1
+        b.gt            8b
+        ret
+16:
+        ld1             {v1.2d,   v2.2d},   [x5],  #32
+        ld1             {v5.2d,   v6.2d},   [x2],  #32
+        ld1             {v0.2d},   [x0]
+        subs            w4,  w4,  #2
+        sub             v7.16b,  v4.16b,  v1.16b
+        sub             v20.16b, v4.16b,  v2.16b
+        ld1             {v3.2d},   [x8]
+        umull           v16.8h,  v5.8b,   v1.8b
+        umlal           v16.8h,  v0.8b,   v7.8b
+        umull2          v17.8h,  v5.16b,  v1.16b
+        umlal2          v17.8h,  v0.16b,  v7.16b
+        umull           v21.8h,  v6.8b,   v2.8b
+        umlal           v21.8h,  v3.8b,   v20.8b
+        umull2          v22.8h,  v6.16b,  v2.16b
+        umlal2          v22.8h,  v3.16b,  v20.16b
+        rshrn           v18.8b,  v16.8h,  #6
+        rshrn2          v18.16b, v17.8h,  #6
+        rshrn           v19.8b,  v21.8h,  #6
+        rshrn2          v19.16b, v22.8h,  #6
+        st1             {v18.2d},  [x0],  x1
+        st1             {v19.2d},  [x8],  x1
+        b.gt            16b
+        ret
+32:
+        ld1             {v0.2d,   v1.2d,   v2.2d,   v3.2d},   [x5],  #64
+        ld1             {v16.2d,  v17.2d,  v18.2d,  v19.2d},  [x2],  #64
+        ld1             {v20.2d,  v21.2d},  [x0]
+        subs            w4,  w4,  #2
+        ld1             {v22.2d,  v23.2d},  [x8]
+        sub             v5.16b,  v4.16b,  v0.16b
+        sub             v6.16b,  v4.16b,  v1.16b
+        sub             v30.16b, v4.16b,  v2.16b
+        sub             v31.16b, v4.16b,  v3.16b
+        umull           v24.8h,  v16.8b,  v0.8b
+        umlal           v24.8h,  v20.8b,  v5.8b
+        umull2          v26.8h,  v16.16b, v0.16b
+        umlal2          v26.8h,  v20.16b, v5.16b
+        umull           v28.8h,  v17.8b,  v1.8b
+        umlal           v28.8h,  v21.8b,  v6.8b
+        umull2          v7.8h,   v17.16b, v1.16b
+        umlal2          v7.8h,   v21.16b, v6.16b
+        umull           v27.8h,  v18.8b,  v2.8b
+        umlal           v27.8h,  v22.8b,  v30.8b
+        umull2          v1.8h,   v18.16b, v2.16b
+        umlal2          v1.8h,   v22.16b, v30.16b
+        umull           v29.8h,  v19.8b,  v3.8b
+        umlal           v29.8h,  v23.8b,  v31.8b
+        umull2          v21.8h,  v19.16b, v3.16b
+        umlal2          v21.8h,  v23.16b, v31.16b
+        rshrn           v24.8b,  v24.8h,  #6
+        rshrn2          v24.16b, v26.8h,  #6
+        rshrn           v25.8b,  v28.8h,  #6
+        rshrn2          v25.16b, v7.8h,   #6
+        rshrn           v27.8b,  v27.8h,  #6
+        rshrn2          v27.16b, v1.8h,   #6
+        rshrn           v28.8b,  v29.8h,  #6
+        rshrn2          v28.16b, v21.8h,  #6
+        st1             {v24.2d, v25.2d}, [x0],  x1
+        st1             {v27.2d, v28.2d}, [x8],  x1
+        b.gt            32b
+        ret
+L(blend_tbl):
+        .hword L(blend_tbl) - 32b
+        .hword L(blend_tbl) - 16b
+        .hword L(blend_tbl) -  8b
+        .hword L(blend_tbl) -  4b
+endfunc
+
+function blend_h_8bpc_neon, export=1
+        adr             x6, L(blend_h_tbl)
+        movrel          x5,  X(obmc_masks)
+        add             x5,  x5,  w4,  uxtw
+        sub             w4,  w4,  w4,  lsr #2
+        clz             w7,  w3
+        movi            v4.16b,  #64
+        add             x8,  x0,  x1
+        lsl             x1,  x1,  #1
+        sub             w7,  w7,  #24
+        ldrh            w7,  [x6,  x7,  lsl #1]
+        sub             x6,  x6,  w7, uxtw
+        br              x6
+2:
+        ld1             {v0.h}[0],   [x5],  #2
+        ld1             {v1.s}[0],   [x2],  #4
+        subs            w4,  w4,  #2
+        ld1             {v2.h}[0],   [x0]
+        zip1            v0.8b,   v0.8b,   v0.8b
+        sub             v3.8b,   v4.8b,   v0.8b
+        ld1             {v2.h}[1],   [x8]
+        umull           v5.8h,   v1.8b,   v0.8b
+        umlal           v5.8h,   v2.8b,   v3.8b
+        rshrn           v5.8b,   v5.8h,   #6
+        st1             {v5.h}[0],   [x0],  x1
+        st1             {v5.h}[1],   [x8],  x1
+        b.gt            2b
+        ret
+4:
+        ld2r            {v0.8b,   v1.8b},   [x5],  #2
+        ld1             {v2.2s},   [x2],  #8
+        subs            w4,  w4,  #2
+        ext             v0.8b,   v0.8b,   v1.8b,   #4
+        ld1             {v3.s}[0],   [x0]
+        sub             v5.8b,   v4.8b,   v0.8b
+        ld1             {v3.s}[1],   [x8]
+        umull           v6.8h,   v2.8b,   v0.8b
+        umlal           v6.8h,   v3.8b,   v5.8b
+        rshrn           v6.8b,   v6.8h,   #6
+        st1             {v6.s}[0],   [x0],  x1
+        st1             {v6.s}[1],   [x8],  x1
+        b.gt            4b
+        ret
+8:
+        ld2r            {v0.16b,  v1.16b},  [x5],  #2
+        ld1             {v2.16b},  [x2],  #16
+        ld1             {v3.d}[0],   [x0]
+        ext             v0.16b,  v0.16b,  v1.16b,  #8
+        sub             v5.16b,  v4.16b,  v0.16b
+        ld1             {v3.d}[1],   [x8]
+        subs            w4,  w4,  #2
+        umull           v6.8h,   v0.8b,   v2.8b
+        umlal           v6.8h,   v3.8b,   v5.8b
+        umull2          v7.8h,   v0.16b,  v2.16b
+        umlal2          v7.8h,   v3.16b,  v5.16b
+        rshrn           v16.8b,  v6.8h,   #6
+        rshrn2          v16.16b, v7.8h,   #6
+        st1             {v16.d}[0],  [x0],  x1
+        st1             {v16.d}[1],  [x8],  x1
+        b.gt            8b
+        ret
+16:
+        ld2r            {v0.16b,  v1.16b},  [x5],  #2
+        ld1             {v2.16b,  v3.16b},  [x2],  #32
+        ld1             {v5.16b},  [x0]
+        sub             v7.16b,  v4.16b,  v0.16b
+        sub             v16.16b, v4.16b,  v1.16b
+        ld1             {v6.16b},  [x8]
+        subs            w4,  w4,  #2
+        umull           v17.8h,  v0.8b,   v2.8b
+        umlal           v17.8h,  v5.8b,   v7.8b
+        umull2          v18.8h,  v0.16b,  v2.16b
+        umlal2          v18.8h,  v5.16b,  v7.16b
+        umull           v19.8h,  v1.8b,   v3.8b
+        umlal           v19.8h,  v6.8b,   v16.8b
+        umull2          v20.8h,  v1.16b,  v3.16b
+        umlal2          v20.8h,  v6.16b,  v16.16b
+        rshrn           v21.8b,  v17.8h,  #6
+        rshrn2          v21.16b, v18.8h,  #6
+        rshrn           v22.8b,  v19.8h,  #6
+        rshrn2          v22.16b, v20.8h,  #6
+        st1             {v21.16b}, [x0],  x1
+        st1             {v22.16b}, [x8],  x1
+        b.gt            16b
+        ret
+1280:
+640:
+320:
+        sub             x1,  x1,  w3,  uxtw
+        add             x7,  x2,  w3,  uxtw
+321:
+        ld2r            {v0.16b,  v1.16b},  [x5],  #2
+        mov             w6,  w3
+        sub             v20.16b, v4.16b,  v0.16b
+        sub             v21.16b, v4.16b,  v1.16b
+32:
+        ld1             {v16.16b, v17.16b}, [x2],  #32
+        ld1             {v2.16b,  v3.16b},  [x0]
+        subs            w6,  w6,  #32
+        umull           v23.8h,  v0.8b,   v16.8b
+        umlal           v23.8h,  v2.8b,   v20.8b
+        ld1             {v18.16b, v19.16b}, [x7],  #32
+        umull2          v27.8h,  v0.16b,  v16.16b
+        umlal2          v27.8h,  v2.16b,  v20.16b
+        ld1             {v6.16b,  v7.16b},  [x8]
+        umull           v24.8h,  v0.8b,   v17.8b
+        umlal           v24.8h,  v3.8b,   v20.8b
+        umull2          v28.8h,  v0.16b,  v17.16b
+        umlal2          v28.8h,  v3.16b,  v20.16b
+        umull           v25.8h,  v1.8b,   v18.8b
+        umlal           v25.8h,  v6.8b,   v21.8b
+        umull2          v5.8h,   v1.16b,  v18.16b
+        umlal2          v5.8h,   v6.16b,  v21.16b
+        rshrn           v29.8b,  v23.8h,  #6
+        rshrn2          v29.16b, v27.8h,  #6
+        umull           v26.8h,  v1.8b,   v19.8b
+        umlal           v26.8h,  v7.8b,   v21.8b
+        umull2          v31.8h,  v1.16b,  v19.16b
+        umlal2          v31.8h,  v7.16b,  v21.16b
+        rshrn           v30.8b,  v24.8h,  #6
+        rshrn2          v30.16b, v28.8h,  #6
+        rshrn           v23.8b,  v25.8h,  #6
+        rshrn2          v23.16b, v5.8h,   #6
+        rshrn           v24.8b,  v26.8h,  #6
+        st1             {v29.16b, v30.16b}, [x0],  #32
+        rshrn2          v24.16b, v31.8h,  #6
+        st1             {v23.16b, v24.16b}, [x8],  #32
+        b.gt            32b
+        subs            w4,  w4,  #2
+        add             x0,  x0,  x1
+        add             x8,  x8,  x1
+        add             x2,  x2,  w3,  uxtw
+        add             x7,  x7,  w3,  uxtw
+        b.gt            321b
+        ret
+L(blend_h_tbl):
+        .hword L(blend_h_tbl) - 1280b
+        .hword L(blend_h_tbl) -  640b
+        .hword L(blend_h_tbl) -  320b
+        .hword L(blend_h_tbl) -   16b
+        .hword L(blend_h_tbl) -    8b
+        .hword L(blend_h_tbl) -    4b
+        .hword L(blend_h_tbl) -    2b
+endfunc
+
+function blend_v_8bpc_neon, export=1
+        adr             x6,  L(blend_v_tbl)
+        movrel          x5,  X(obmc_masks)
+        add             x5,  x5,  w3,  uxtw
+        clz             w3,  w3
+        movi            v4.16b,  #64
+        add             x8,  x0,  x1
+        lsl             x1,  x1,  #1
+        sub             w3,  w3,  #26
+        ldrh            w3,  [x6,  x3,  lsl #1]
+        sub             x6,  x6,  w3,  uxtw
+        br              x6
+20:
+        ld1r            {v0.8b},   [x5]
+        sub             v1.8b,   v4.8b,   v0.8b
+2:
+        ld1             {v2.h}[0],   [x2],  #2
+        ld1             {v3.b}[0],   [x0]
+        subs            w4,  w4,  #2
+        ld1             {v2.b}[1],   [x2]
+        ld1             {v3.b}[1],   [x8]
+        umull           v5.8h,   v2.8b,   v0.8b
+        umlal           v5.8h,   v3.8b,   v1.8b
+        rshrn           v5.8b,   v5.8h,   #6
+        add             x2,  x2,  #2
+        st1             {v5.b}[0],   [x0],  x1
+        st1             {v5.b}[1],   [x8],  x1
+        b.gt            2b
+        ret
+40:
+        ld1r            {v0.2s},   [x5]
+        sub             v1.8b,   v4.8b,   v0.8b
+        sub             x1,  x1,  #3
+4:
+        ld1             {v2.8b},   [x2],  #8
+        ld1             {v3.s}[0],   [x0]
+        ld1             {v3.s}[1],   [x8]
+        subs            w4,  w4,  #2
+        umull           v5.8h,   v2.8b,   v0.8b
+        umlal           v5.8h,   v3.8b,   v1.8b
+        rshrn           v5.8b,   v5.8h,   #6
+        st1             {v5.h}[0],   [x0],  #2
+        st1             {v5.h}[2],   [x8],  #2
+        st1             {v5.b}[2],   [x0],  #1
+        st1             {v5.b}[6],   [x8],  #1
+        add             x0,  x0,  x1
+        add             x8,  x8,  x1
+        b.gt            4b
+        ret
+80:
+        ld1r            {v0.2d},   [x5]
+        sub             v1.16b,  v4.16b,  v0.16b
+        sub             x1,  x1,  #6
+8:
+        ld1             {v2.16b},  [x2],  #16
+        ld1             {v3.d}[0],   [x0]
+        ld1             {v3.d}[1],   [x8]
+        subs            w4,  w4,  #2
+        umull           v5.8h,  v0.8b,  v2.8b
+        umlal           v5.8h,  v3.8b,  v1.8b
+        umull2          v6.8h,  v0.16b, v2.16b
+        umlal2          v6.8h,  v3.16b, v1.16b
+        rshrn           v7.8b,  v5.8h,  #6
+        rshrn2          v7.16b, v6.8h,  #6
+        st1             {v7.s}[0],   [x0],  #4
+        st1             {v7.s}[2],   [x8],  #4
+        st1             {v7.h}[2],   [x0],  #2
+        st1             {v7.h}[6],   [x8],  #2
+        add             x0,  x0,  x1
+        add             x8,  x8,  x1
+        b.gt            8b
+        ret
+160:
+        ld1             {v0.16b},  [x5]
+        sub             v2.16b,  v4.16b,  v0.16b
+        sub             x1,  x1,  #12
+16:
+        ld1             {v5.16b,  v6.16b},  [x2],  #32
+        ld1             {v7.16b},  [x0]
+        subs            w4,  w4,  #2
+        ld1             {v16.16b}, [x8]
+        umull           v17.8h,  v5.8b,   v0.8b
+        umlal           v17.8h,  v7.8b,   v2.8b
+        umull2          v18.8h,  v5.16b,  v0.16b
+        umlal2          v18.8h,  v7.16b,  v2.16b
+        umull           v20.8h,  v6.8b,   v0.8b
+        umlal           v20.8h,  v16.8b,  v2.8b
+        umull2          v21.8h,  v6.16b,  v0.16b
+        umlal2          v21.8h,  v16.16b, v2.16b
+        rshrn           v19.8b,  v17.8h,  #6
+        rshrn2          v19.16b, v18.8h,  #6
+        rshrn           v22.8b,  v20.8h,  #6
+        rshrn2          v22.16b, v21.8h,  #6
+        st1             {v19.8b},  [x0],  #8
+        st1             {v22.8b},  [x8],  #8
+        st1             {v19.s}[2],  [x0],  #4
+        st1             {v22.s}[2],  [x8],  #4
+        add             x0,  x0,  x1
+        add             x8,  x8,  x1
+        b.gt            16b
+        ret
+320:
+        ld1             {v0.16b,  v1.16b},  [x5]
+        sub             v2.16b,  v4.16b,  v0.16b
+        sub             v3.16b,  v4.16b,  v1.16b
+        sub             x1,  x1,  #24
+32:
+        ld1             {v16.16b, v17.16b, v18.16b, v19.16b}, [x2],  #64
+        ld1             {v5.16b,  v6.16b},  [x0]
+        subs            w4,  w4,  #2
+        ld1             {v20.16b, v21.16b}, [x8]
+        umull           v22.8h,  v16.8b,  v0.8b
+        umlal           v22.8h,  v5.8b,   v2.8b
+        umull2          v23.8h,  v16.16b, v0.16b
+        umlal2          v23.8h,  v5.16b,  v2.16b
+        umull           v28.8h,  v17.8b,  v1.8b
+        umlal           v28.8h,  v6.8b,   v3.8b
+        umull2          v29.8h,  v17.16b, v1.16b
+        umlal2          v29.8h,  v6.16b,  v3.16b
+        umull           v30.8h,  v18.8b,  v0.8b
+        umlal           v30.8h,  v20.8b,  v2.8b
+        umull2          v31.8h,  v18.16b, v0.16b
+        umlal2          v31.8h,  v20.16b, v2.16b
+        umull           v25.8h,  v19.8b,  v1.8b
+        umlal           v25.8h,  v21.8b,  v3.8b
+        umull2          v26.8h,  v19.16b, v1.16b
+        umlal2          v26.8h,  v21.16b, v3.16b
+        rshrn           v24.8b,  v22.8h,  #6
+        rshrn2          v24.16b, v23.8h,  #6
+        rshrn           v28.8b,  v28.8h,  #6
+        rshrn2          v28.16b, v29.8h,  #6
+        rshrn           v30.8b,  v30.8h,  #6
+        rshrn2          v30.16b, v31.8h,  #6
+        rshrn           v27.8b,  v25.8h,  #6
+        rshrn2          v27.16b, v26.8h,  #6
+        st1             {v24.16b}, [x0],  #16
+        st1             {v30.16b}, [x8],  #16
+        st1             {v28.8b},  [x0],  #8
+        st1             {v27.8b},  [x8],  #8
+        add             x0,  x0,  x1
+        add             x8,  x8,  x1
+        b.gt            32b
+        ret
+L(blend_v_tbl):
+        .hword L(blend_v_tbl) - 320b
+        .hword L(blend_v_tbl) - 160b
+        .hword L(blend_v_tbl) -  80b
+        .hword L(blend_v_tbl) -  40b
+        .hword L(blend_v_tbl) -  20b
+endfunc
+
+
 // This has got the same signature as the put_8tap functions,
 // and assumes that x8 is set to (clz(w)-24).
 function put_neon

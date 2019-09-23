@@ -27,7 +27,6 @@
 
 #include "config.h"
 
-#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -49,7 +48,7 @@ static int64_t rl64(const uint8_t *const p) {
 }
 
 static int ivf_open(IvfInputContext *const c, const char *const file,
-                    unsigned fps[2], unsigned *const num_frames)
+                    unsigned fps[2], unsigned *const num_frames, unsigned timebase[2])
 {
     size_t res;
     uint8_t hdr[32];
@@ -74,17 +73,18 @@ static int ivf_open(IvfInputContext *const c, const char *const file,
         return -1;
     }
 
-    fps[0] = rl32(&hdr[16]);
-    fps[1] = rl32(&hdr[20]);
+    timebase[0] = rl32(&hdr[16]);
+    timebase[1] = rl32(&hdr[20]);
     const unsigned duration = rl32(&hdr[24]);
+
     uint8_t data[4];
     for (*num_frames = 0;; (*num_frames)++) {
         if ((res = fread(data, 4, 1, c->f)) != 1)
             break; // EOF
         fseeko(c->f, rl32(data) + 8, SEEK_CUR);
     }
-    fps[0] *= *num_frames;
-    fps[1] *= duration;
+    fps[0] = timebase[0] * *num_frames;
+    fps[1] = timebase[1] * duration;
     fseeko(c->f, 32, SEEK_SET);
 
     return 0;

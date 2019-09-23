@@ -27,7 +27,6 @@
 
 #include "config.h"
 
-#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -60,7 +59,7 @@ static int leb128(AnnexbInputContext *const c, size_t *const len) {
 }
 
 static int annexb_open(AnnexbInputContext *const c, const char *const file,
-                       unsigned fps[2], unsigned *const num_frames)
+                       unsigned fps[2], unsigned *const num_frames, unsigned timebase[2])
 {
     int res;
     size_t len;
@@ -73,6 +72,8 @@ static int annexb_open(AnnexbInputContext *const c, const char *const file,
     // TODO: Parse sequence header and read timing info if any.
     fps[0] = 25;
     fps[1] = 1;
+    timebase[0] = 25;
+    timebase[1] = 1;
     for (*num_frames = 0;; (*num_frames)++) {
         res = leb128(c, &len);
         if (res < 0)

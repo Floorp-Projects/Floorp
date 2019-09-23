@@ -46,7 +46,7 @@
 /* x86-64 needs 32-byte alignment for AVX2. */
 #define ALIGN_32_VAL 32
 #define ALIGN_16_VAL 16
-#elif ARCH_X86_32 || ARCH_ARM || ARCH_AARCH64
+#elif ARCH_X86_32 || ARCH_ARM || ARCH_AARCH64 || ARCH_PPC64LE
 /* ARM doesn't benefit from anything more than 16-byte alignment. */
 #define ALIGN_32_VAL 16
 #define ALIGN_16_VAL 16
@@ -91,6 +91,14 @@
 #else /* !_MSC_VER */
 #define NOINLINE __attribute__((noinline))
 #endif /* !_MSC_VER */
+
+#if defined(NDEBUG) && (defined(__GNUC__) || defined(__clang__))
+#define assert(x) do { if (!(x)) __builtin_unreachable(); } while (0)
+#elif defined(NDEBUG) && defined(_MSC_VER)
+#define assert __assume
+#else
+#include <assert.h>
+#endif
 
 #if defined(__GNUC__) && !defined(__INTEL_COMPILER) && !defined(__clang__)
 #    define dav1d_uninit(x) x=x

@@ -27,7 +27,6 @@
 
 #include "config.h"
 
-#include <assert.h>
 #include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -104,6 +103,7 @@ static int picture_alloc_with_edges(Dav1dContext *const c, Dav1dPicture *const p
                                     Dav1dFrameHeader *frame_hdr,  Dav1dRef *frame_hdr_ref,
                                     Dav1dContentLightLevel *content_light, Dav1dRef *content_light_ref,
                                     Dav1dMasteringDisplay *mastering_display, Dav1dRef *mastering_display_ref,
+                                    Dav1dITUTT35 *itut_t35, Dav1dRef *itut_t35_ref,
                                     const int bpc, const Dav1dDataProps *props,
                                     Dav1dPicAllocator *const p_allocator,
                                     const size_t extra, void **const extra_ptr)
@@ -125,6 +125,7 @@ static int picture_alloc_with_edges(Dav1dContext *const c, Dav1dPicture *const p
     p->frame_hdr = frame_hdr;
     p->content_light = content_light;
     p->mastering_display = mastering_display;
+    p->itut_t35 = itut_t35;
     p->p.layout = seq_hdr->layout;
     p->p.bpc = bpc;
     dav1d_data_props_set_defaults(&p->m);
@@ -161,6 +162,9 @@ static int picture_alloc_with_edges(Dav1dContext *const c, Dav1dPicture *const p
     p->mastering_display_ref = mastering_display_ref;
     if (mastering_display_ref) dav1d_ref_inc(mastering_display_ref);
 
+    p->itut_t35_ref = itut_t35_ref;
+    if (itut_t35_ref) dav1d_ref_inc(itut_t35_ref);
+
     return 0;
 }
 
@@ -176,10 +180,15 @@ int dav1d_thread_picture_alloc(Dav1dContext *const c, Dav1dFrameContext *const f
                                  f->frame_hdr, f->frame_hdr_ref,
                                  c->content_light, c->content_light_ref,
                                  c->mastering_display, c->mastering_display_ref,
+                                 c->itut_t35, c->itut_t35_ref,
                                  bpc, &f->tile[0].data.m, &c->allocator,
                                  p->t != NULL ? sizeof(atomic_int) * 2 : 0,
                                  (void **) &p->progress);
     if (res) return res;
+
+    // Must be removed from the context after being attached to the frame
+    dav1d_ref_dec(&c->itut_t35_ref);
+    c->itut_t35 = NULL;
 
     p->visible = f->frame_hdr->show_frame;
     if (p->t) {
@@ -198,6 +207,7 @@ int dav1d_picture_alloc_copy(Dav1dContext *const c, Dav1dPicture *const dst, con
                                              src->frame_hdr, src->frame_hdr_ref,
                                              src->content_light, src->content_light_ref,
                                              src->mastering_display, src->mastering_display_ref,
+                                             src->itut_t35, src->itut_t35_ref,
                                              src->p.bpc, &src->m, &pic_ctx->allocator,
                                              0, NULL);
     return res;
@@ -216,6 +226,7 @@ void dav1d_picture_ref(Dav1dPicture *const dst, const Dav1dPicture *const src) {
         if (src->m.user_data.ref) dav1d_ref_inc(src->m.user_data.ref);
         if (src->content_light_ref) dav1d_ref_inc(src->content_light_ref);
         if (src->mastering_display_ref) dav1d_ref_inc(src->mastering_display_ref);
+        if (src->itut_t35_ref) dav1d_ref_inc(src->itut_t35_ref);
     }
     *dst = *src;
 }
@@ -252,6 +263,7 @@ void dav1d_picture_unref_internal(Dav1dPicture *const p) {
         dav1d_ref_dec(&p->m.user_data.ref);
         dav1d_ref_dec(&p->content_light_ref);
         dav1d_ref_dec(&p->mastering_display_ref);
+        dav1d_ref_dec(&p->itut_t35_ref);
     }
     memset(p, 0, sizeof(*p));
 }
