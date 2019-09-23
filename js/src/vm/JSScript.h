@@ -2335,7 +2335,7 @@ class JSScript : public js::BaseScript {
   js::PrivateScriptData* data_ = nullptr;
 
  public:
-  JS::Realm* realm_ = nullptr;
+  js::GCPtrObject global_ = {};
 
  private:
   // JIT and type inference data for this script. May be purged on GC.
@@ -2401,7 +2401,7 @@ class JSScript : public js::BaseScript {
       js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
 
  private:
-  JSScript(JS::Realm* realm, uint8_t* stubEntry,
+  JSScript(js::HandleObject global, uint8_t* stubEntry,
            js::HandleScriptSourceObject sourceObject, uint32_t sourceStart,
            uint32_t sourceEnd, uint32_t toStringStart, uint32_t toStringend);
 
@@ -2444,11 +2444,9 @@ class JSScript : public js::BaseScript {
  public:
   inline JSPrincipals* principals();
 
-  JS::Compartment* compartment() const {
-    return JS::GetCompartmentForRealm(realm_);
-  }
+  JS::Realm* realm() const { return global_->nonCCWRealm(); }
+  JS::Compartment* compartment() const { return global_->compartment(); }
   JS::Compartment* maybeCompartment() const { return compartment(); }
-  JS::Realm* realm() const { return realm_; }
 
   js::RuntimeScriptData* scriptData() { return scriptData_; }
   js::ImmutableScriptData* immutableScriptData() const {

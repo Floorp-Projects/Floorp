@@ -3806,14 +3806,14 @@ void PrivateScriptData::trace(JSTracer* trc) {
   }
 }
 
-JSScript::JSScript(JS::Realm* realm, uint8_t* stubEntry,
+JSScript::JSScript(HandleObject global, uint8_t* stubEntry,
                    HandleScriptSourceObject sourceObject, uint32_t sourceStart,
                    uint32_t sourceEnd, uint32_t toStringStart,
                    uint32_t toStringEnd)
     : js::BaseScript(stubEntry, sourceObject, sourceStart, sourceEnd,
                      toStringStart, toStringEnd),
-      realm_(realm) {
-  MOZ_ASSERT(JS::GetCompartmentForRealm(realm) == sourceObject->compartment());
+      global_(global) {
+  MOZ_ASSERT(global->compartment() == sourceObject->compartment());
 }
 
 /* static */
@@ -3832,7 +3832,7 @@ JSScript* JSScript::New(JSContext* cx, HandleScriptSourceObject sourceObject,
 #endif
 
   return new (script)
-      JSScript(cx->realm(), stubEntry, sourceObject, sourceStart, sourceEnd,
+      JSScript(cx->global(), stubEntry, sourceObject, sourceStart, sourceEnd,
                toStringStart, toStringEnd);
 }
 
@@ -4844,9 +4844,7 @@ void JSScript::traceChildren(JSTracer* trc) {
     TraceManuallyBarrieredEdge(trc, &lazyScript, "lazyScript");
   }
 
-  JSObject* global = realm()->unsafeUnbarrieredMaybeGlobal();
-  MOZ_ASSERT(global);
-  TraceManuallyBarrieredEdge(trc, &global, "script_global");
+  TraceEdge(trc, &global_, "global");
 
   if (trc->isMarkingTracer()) {
     GCMarker::fromTracer(trc)->markImplicitEdges(this);
