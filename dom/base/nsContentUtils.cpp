@@ -6908,6 +6908,16 @@ nsresult nsContentUtils::GenerateUUIDInPlace(nsID& aUUID) {
   return NS_OK;
 }
 
+nsID nsContentUtils::GenerateUUID() {
+  MOZ_DIAGNOSTIC_ASSERT(sUUIDGenerator);
+
+  nsID uuid;
+  nsresult rv = sUUIDGenerator->GenerateUUIDInPlace(&uuid);
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+
+  return uuid;
+}
+
 bool nsContentUtils::PrefetchPreloadEnabled(nsIDocShell* aDocShell) {
   //
   // SECURITY CHECK: disable prefetching and preloading from mailnews!

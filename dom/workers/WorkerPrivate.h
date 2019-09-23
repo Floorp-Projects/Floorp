@@ -896,7 +896,8 @@ class WorkerPrivate : public RelativeTimeline {
                 bool aIsChromeWorker, WorkerType aWorkerType,
                 const nsAString& aWorkerName,
                 const nsACString& aServiceWorkerScope,
-                WorkerLoadInfo& aLoadInfo, nsString&& aId);
+                WorkerLoadInfo& aLoadInfo, nsString&& aId,
+                const nsID& aAgentClusterId);
 
   ~WorkerPrivate();
 
@@ -984,6 +985,8 @@ class WorkerPrivate : public RelativeTimeline {
   // need this async operation to be sure that all the current JS code is
   // executed.
   void DispatchCancelingRunnable();
+
+  const nsID& AgentClusterId() const { return mAgentClusterId; }
 
   class EventTarget;
   friend class EventTarget;
@@ -1100,6 +1103,10 @@ class WorkerPrivate : public RelativeTimeline {
 
   TimeStamp mCreationTimeStamp;
   DOMHighResTimeStamp mCreationTimeHighRes;
+
+  // This is created while creating the WorkerPrivate, so it's safe to be
+  // touched on any thread.
+  const nsID mAgentClusterId;
 
   // Things touched on worker thread only.
   struct WorkerThreadAccessible {
