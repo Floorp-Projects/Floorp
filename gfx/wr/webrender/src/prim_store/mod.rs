@@ -1875,7 +1875,7 @@ impl PrimitiveStore {
         world_culling_rect: &WorldRect,
         frame_context: &FrameVisibilityContext,
         frame_state: &mut FrameVisibilityState,
-    ) {
+    ) -> Option<PictureRect> {
         let (mut prim_list, surface_index, apply_local_clip_rect, world_culling_rect, is_composite) = {
             let pic = &mut self.pictures[pic_index.0];
             let mut world_culling_rect = *world_culling_rect;
@@ -1895,7 +1895,7 @@ impl PrimitiveStore {
                     // relative transforms have changed, which means we need to
                     // re-map the dependencies of any child primitives.
                     world_culling_rect = tile_cache.pre_update(
-                        PictureRect::from_untyped(&pic.local_rect.to_untyped()),
+                        PictureRect::from_untyped(&pic.estimated_local_rect.to_untyped()),
                         surface_index,
                         frame_context,
                         frame_state,
@@ -1929,6 +1929,8 @@ impl PrimitiveStore {
             frame_context.clip_scroll_tree,
         );
 
+        let mut surface_rect = PictureRect::zero();
+
         for cluster in &mut prim_list.clusters {
             // Get the cluster and see if is visible
             if !cluster.flags.contains(ClusterFlags::IS_VISIBLE) {
@@ -1949,7 +1951,7 @@ impl PrimitiveStore {
                     println!("\t{:?}", prim_instance.kind);
                 }
 
-                let (is_passthrough, prim_local_rect, prim_shadow_rect) = match prim_instance.kind {
+                let (is_passthrough, prim_local_rect, prim_shadowed_rect) = match prim_instance.kind {
                     PrimitiveInstanceKind::PushClipChain => {
                         frame_state.clip_chain_stack.push_clip(
                             prim_instance.clip_chain_id,
@@ -1971,7 +1973,7 @@ impl PrimitiveStore {
                             frame_state.clip_store,
                         );
 
-                        self.update_visibility(
+                        let pic_surface_rect = self.update_visibility(
                             pic_index,
                             surface_index,
                             &world_culling_rect,
@@ -1991,21 +1993,37 @@ impl PrimitiveStore {
                         //           size in the picture primitive, to that there isn't
                         //           any duplicated data.
                         let pic = &self.pictures[pic_index.0];
-                        prim_instance.prim_origin = pic.local_rect.origin;
+                        prim_instance.prim_origin = pic.precise_local_rect.origin;
 
-                        let shadow_rect = if let Some(RasterConfig { composite_mode: PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)), .. }) = pic.raster_config {
-                            // If we have a drop shadow filter, we also need to include the shadow in
-                            // our local rect for the purpose of calculating the size of the picture.
-                            let mut rect = LayoutRect::zero();
-                            for shadow in shadows {
-                                rect = rect.union(&pic.local_rect.translate(shadow.offset));
+                        if prim_instance.is_chased() {
+                            if pic.estimated_local_rect != pic.precise_local_rect {
+                                println!("\testimate {:?} adjusted to {:?}", pic.estimated_local_rect, pic.precise_local_rect);
                             }
-                            rect
-                        } else {
-                            LayoutRect::zero()
-                        };
+                        }
 
-                        (pic.raster_config.is_none(), pic.local_rect, shadow_rect)
+                        let mut shadow_rect = pic.precise_local_rect;
+                        match pic.raster_config {
+                            Some(ref rc) => match rc.composite_mode {
+                                // If we have a drop shadow filter, we also need to include the shadow in
+                                // our shadowed local rect for the purpose of calculating the size of the
+                                // picture.
+                                PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)) => {
+                                    for shadow in shadows {
+                                        shadow_rect = shadow_rect.union(&pic.precise_local_rect.translate(shadow.offset));
+                                    }
+                                }
+                                _ => {}
+                            }
+                            None => {
+                                // If the primitive does not have its own raster config, we need to
+                                // propogate the surface rect calculation to the parent.
+                                if let Some(ref rect) = pic_surface_rect {
+                                    surface_rect = surface_rect.union(rect);
+                                }
+                            }
+                        }
+
+                        (pic.raster_config.is_none(), pic.precise_local_rect, shadow_rect)
                     }
                     _ => {
                         let prim_data = &frame_state.data_stores.as_common_data(&prim_instance);
@@ -2015,7 +2033,7 @@ impl PrimitiveStore {
                             prim_data.prim_size,
                         );
 
-                        (false, prim_rect, LayoutRect::zero())
+                        (false, prim_rect, prim_rect)
                     }
                 };
 
@@ -2046,9 +2064,8 @@ impl PrimitiveStore {
                     // even if the primitive itself is not visible, any effects from the
                     // blur radius or shadow will be correctly taken into account.
                     let inflation_factor = surface.inflation_factor;
-                    let local_rect = prim_local_rect
+                    let local_rect = prim_shadowed_rect
                         .inflate(inflation_factor, inflation_factor)
-                        .union(&prim_shadow_rect)
                         .intersection(&prim_instance.local_clip_rect);
                     let local_rect = match local_rect {
                         Some(local_rect) => local_rect,
@@ -2171,6 +2188,23 @@ impl PrimitiveStore {
                         continue;
                     }
 
+                    // Include the visible area for primitive, including any shadows, in
+                    // the area affected by the surface.
+                    match combined_local_clip_rect.intersection(&local_rect) {
+                        Some(visible_rect) => {
+                            if let Some(rect) = map_local_to_surface.map(&visible_rect) {
+                                surface_rect = surface_rect.union(&rect);
+                            }
+                        }
+                        None => {
+                            if prim_instance.is_chased() {
+                                println!("\tculled for zero visible rectangle");
+                            }
+                            prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
+                            continue;
+                        }
+                    }
+
                     // When the debug display is enabled, paint a colored rectangle around each
                     // primitive.
                     if frame_context.debug_flags.contains(::api::DebugFlags::PRIMITIVE_DBG) {
@@ -2239,18 +2273,55 @@ impl PrimitiveStore {
         // TODO(gw): In future, if we support specifying a flag which gets the
         //           stretch size from the segment rect in the shaders, we can
         //           remove this invalidation here completely.
-        if let Some(RasterConfig { composite_mode: PictureCompositeMode::TileCache { .. }, .. }) = pic.raster_config {
-            let mut tile_cache = frame_state.tile_cache.take().unwrap();
+        if let Some(ref rc) = pic.raster_config {
+            // Inflate the local bounding rect if required by the filter effect.
+            // This inflaction factor is to be applied to the surface itself.
+            if pic.options.inflate_if_required {
+                surface_rect = rc.composite_mode.inflate_picture_rect(surface_rect, surface.inflation_factor);
+            }
 
-            // Build the dirty region(s) for this tile cache.
-            tile_cache.post_update(
-                frame_state.resource_cache,
-                frame_state.gpu_cache,
-                frame_context,
-                frame_state.scratch,
+            // Layout space for the picture is picture space from the
+            // perspective of its child primitives.
+            let pic_local_rect = surface_rect * Scale::new(1.0);
+            if pic.precise_local_rect != pic_local_rect {
+                match rc.composite_mode {
+                    PictureCompositeMode::Filter(Filter::DropShadows(..)) => {
+                        for handle in &pic.extra_gpu_data_handles {
+                            frame_state.gpu_cache.invalidate(handle);
+                        }
+                    }
+                    _ => {}
+                }
+                // Invalidate any segments built for this picture, since the local
+                // rect has changed.
+                pic.segments_are_valid = false;
+                pic.precise_local_rect = pic_local_rect;
+            }
+
+            if let PictureCompositeMode::TileCache { .. } = rc.composite_mode {
+                let mut tile_cache = frame_state.tile_cache.take().unwrap();
+
+                // Build the dirty region(s) for this tile cache.
+                tile_cache.post_update(
+                    frame_state.resource_cache,
+                    frame_state.gpu_cache,
+                    frame_context,
+                    frame_state.scratch,
+                );
+
+                pic.tile_cache = Some(tile_cache);
+            }
+
+            None
+        } else {
+            let parent_surface = &frame_context.surfaces[parent_surface_index.0 as usize];
+            let map_surface_to_parent_surface = SpaceMapper::new_with_target(
+                parent_surface.surface_spatial_node_index,
+                surface.surface_spatial_node_index,
+                PictureRect::max_rect(),
+                frame_context.clip_scroll_tree,
             );
-
-            pic.tile_cache = Some(tile_cache);
+            map_surface_to_parent_surface.map(&surface_rect)
         }
     }
 
@@ -3242,7 +3313,7 @@ impl PrimitiveStore {
                             splitter,
                             frame_context.clip_scroll_tree,
                             prim_spatial_node_index,
-                            pic.local_rect,
+                            pic.precise_local_rect,
                             &prim_info.combined_local_clip_rect,
                             frame_state.current_dirty_region().combined,
                             plane_split_anchor,
@@ -3604,7 +3675,7 @@ impl PrimitiveInstance {
 
                     // Override the prim local rect with the dynamically calculated
                     // local rect for the picture.
-                    prim_local_rect = pic.local_rect;
+                    prim_local_rect = pic.precise_local_rect;
 
                     segment_instance_index
                 } else {
