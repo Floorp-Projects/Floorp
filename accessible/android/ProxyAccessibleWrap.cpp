@@ -120,6 +120,13 @@ void ProxyAccessibleWrap::ExploreByTouch(float aX, float aY) {
       Proxy()->ID(), aX, aY);
 }
 
+void ProxyAccessibleWrap::NavigateText(int32_t aGranularity,
+                                       int32_t aStartOffset, int32_t aEndOffset,
+                                       bool aForward, bool aSelect) {
+  Unused << Proxy()->Document()->GetPlatformExtension()->SendNavigateText(
+      Proxy()->ID(), aGranularity, aStartOffset, aEndOffset, aForward, aSelect);
+}
+
 role ProxyAccessibleWrap::WrapperRole() { return Proxy()->Role(); }
 
 AccessibleWrap* ProxyAccessibleWrap::WrapperParent() {

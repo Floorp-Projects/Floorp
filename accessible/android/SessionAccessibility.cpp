@@ -124,6 +124,14 @@ void SessionAccessibility::ExploreByTouch(int32_t aID, float aX, float aY) {
   FORWARD_ACTION_TO_ACCESSIBLE(ExploreByTouch, aX, aY);
 }
 
+void SessionAccessibility::NavigateText(int32_t aID, int32_t aGranularity,
+                                        int32_t aStartOffset,
+                                        int32_t aEndOffset, bool aForward,
+                                        bool aSelect) {
+  FORWARD_ACTION_TO_ACCESSIBLE(NavigateText, aGranularity, aStartOffset,
+                               aEndOffset, aForward, aSelect);
+}
+
 SessionAccessibility* SessionAccessibility::GetInstanceFor(
     ProxyAccessible* aAccessible) {
   auto tab =
