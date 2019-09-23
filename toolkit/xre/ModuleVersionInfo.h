@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_ModuleVersionInfo_windows_h
-#define mozilla_ModuleVersionInfo_windows_h
+#ifndef mozilla_ModuleVersionInfo_h
+#define mozilla_ModuleVersionInfo_h
 
 #include <windows.h>
 #include "nsString.h"
@@ -68,4 +68,4 @@ class ModuleVersionInfo {
 
 }  // namespace mozilla
 
-#endif  // mozilla_ModuleVersionInfo_windows_h
+#endif  // mozilla_ModuleVersionInfo_h
