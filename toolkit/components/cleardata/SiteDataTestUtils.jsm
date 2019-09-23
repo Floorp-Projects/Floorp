@@ -138,6 +138,40 @@ var SiteDataTestUtils = {
     });
   },
 
+  hasCookies(origin) {
+    let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      origin
+    );
+    for (let cookie of Services.cookies.enumerator) {
+      if (
+        ChromeUtils.isOriginAttributesEqual(
+          principal.originAttributes,
+          cookie.originAttributes
+        ) &&
+        cookie.host.includes(principal.URI.host)
+      ) {
+        return true;
+      }
+    }
+    return false;
+  },
+
+  hasIndexedDB(origin) {
+    let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      origin
+    );
+    return new Promise(resolve => {
+      let data = true;
+      let request = indexedDB.openForPrincipal(principal, "TestDatabase", 1);
+      request.onupgradeneeded = function(e) {
+        data = false;
+      };
+      request.onsuccess = function(e) {
+        resolve(data);
+      };
+    });
+  },
+
   _getCacheStorage(where, lci) {
     switch (where) {
       case "disk":

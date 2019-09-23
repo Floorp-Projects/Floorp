@@ -5,7 +5,7 @@ const { SiteDataTestUtils } = ChromeUtils.import(
 
 // 2 domains: www.mozilla.org (session-only) mozilla.org (allowed) - after the
 // cleanp, mozilla.org must have data.
-add_task(async function subDomains() {
+add_task(async function subDomains1() {
   info("Test subdomains and custom setting");
 
   // Let's clean up all the data.
@@ -21,81 +21,64 @@ add_task(async function subDomains() {
   });
 
   // Domains and data
-  let uriA = Services.io.newURI("https://www.mozilla.org");
+  let originA = "https://www.mozilla.org";
   PermissionTestUtils.add(
-    uriA,
+    originA,
     "cookie",
     Ci.nsICookiePermission.ACCESS_SESSION
   );
 
-  Services.cookies.add(
-    uriA.host,
-    "/test",
-    "a",
-    "b",
-    false,
-    false,
-    false,
-    Date.now() + 24000 * 60 * 60,
-    {},
-    Ci.nsICookie.SAMESITE_NONE
+  SiteDataTestUtils.addToCookies(originA);
+  await SiteDataTestUtils.addToIndexedDB(originA);
+
+  let originB = "https://mozilla.org";
+  PermissionTestUtils.add(
+    originB,
+    "cookie",
+    Ci.nsICookiePermission.ACCESS_ALLOW
   );
 
-  await createIndexedDB(uriA.host, {});
-
-  let uriB = Services.io.newURI("https://mozilla.org");
-  PermissionTestUtils.add(uriB, "cookie", Ci.nsICookiePermission.ACCESS_ALLOW);
-
-  Services.cookies.add(
-    uriB.host,
-    "/test",
-    "c",
-    "d",
-    false,
-    false,
-    false,
-    Date.now() + 24000 * 60 * 60,
-    {},
-    Ci.nsICookie.SAMESITE_NONE
-  );
-
-  await createIndexedDB(uriB.host, {});
+  SiteDataTestUtils.addToCookies(originB);
+  await SiteDataTestUtils.addToIndexedDB(originB);
 
   // Check
-  ok(await checkCookie(uriA.host, {}), "We have cookies for URI: " + uriA.host);
-  ok(await checkIndexedDB(uriA.host, {}), "We have IDB for URI: " + uriA.host);
-  ok(await checkCookie(uriB.host, {}), "We have cookies for URI: " + uriB.host);
-  ok(await checkIndexedDB(uriB.host, {}), "We have IDB for URI: " + uriB.host);
+  ok(SiteDataTestUtils.hasCookies(originA), "We have cookies for " + originA);
+  ok(
+    await SiteDataTestUtils.hasIndexedDB(originA),
+    "We have IDB for " + originA
+  );
+  ok(SiteDataTestUtils.hasCookies(originB), "We have cookies for " + originB);
+  ok(
+    await SiteDataTestUtils.hasIndexedDB(originB),
+    "We have IDB for " + originB
+  );
 
   // Cleaning up
   await Sanitizer.runSanitizeOnShutdown();
 
   // Check again
   ok(
-    !(await checkCookie(uriA.host, {})),
-    "We should not have cookies for URI: " + uriA.host
+    !SiteDataTestUtils.hasCookies(originA),
+    "We should not have cookies for " + originA
   );
   ok(
-    !(await checkIndexedDB(uriA.host, {})),
-    "We should not have IDB for URI: " + uriA.host
+    !(await SiteDataTestUtils.hasIndexedDB(originA)),
+    "We should not have IDB for " + originA
   );
+  ok(SiteDataTestUtils.hasCookies(originB), "We have cookies for " + originB);
   ok(
-    await checkCookie(uriB.host, {}),
-    "We should have cookies for URI: " + uriB.host
-  );
-  ok(
-    await checkIndexedDB(uriB.host, {}),
-    "We should have IDB for URI: " + uriB.host
+    await SiteDataTestUtils.hasIndexedDB(originB),
+    "We have IDB for " + originB
   );
 
   // Cleaning up permissions
-  PermissionTestUtils.remove(uriA, "cookie");
-  PermissionTestUtils.remove(uriB, "cookie");
+  PermissionTestUtils.remove(originA, "cookie");
+  PermissionTestUtils.remove(originB, "cookie");
 });
 
-// session only cookie life-time, 2 domains (mozilla.org, www.mozilla.org),
-// only the latter has a cookie permission.
-add_task(async function subDomains() {
+// session only cookie life-time, 2 domains (sub.mozilla.org, www.mozilla.org),
+// only the former has a cookie permission.
+add_task(async function subDomains2() {
   info("Test subdomains and custom setting with cookieBehavior == 2");
 
   // Let's clean up all the data.
@@ -111,68 +94,133 @@ add_task(async function subDomains() {
   });
 
   // Domains and data
-  let uriA = Services.io.newURI("https://sub.mozilla.org");
-  PermissionTestUtils.add(uriA, "cookie", Ci.nsICookiePermission.ACCESS_ALLOW);
-
-  Services.cookies.add(
-    uriA.host,
-    "/test",
-    "a",
-    "b",
-    false,
-    false,
-    false,
-    Date.now() + 24000 * 60 * 60,
-    {},
-    Ci.nsICookie.SAMESITE_NONE
+  let originA = "https://sub.mozilla.org";
+  PermissionTestUtils.add(
+    originA,
+    "cookie",
+    Ci.nsICookiePermission.ACCESS_ALLOW
   );
 
-  await createIndexedDB(uriA.host, {});
+  SiteDataTestUtils.addToCookies(originA);
+  await SiteDataTestUtils.addToIndexedDB(originA);
 
-  let uriB = Services.io.newURI("https://www.mozilla.org");
+  let originB = "https://www.mozilla.org";
 
-  Services.cookies.add(
-    uriB.host,
-    "/test",
-    "c",
-    "d",
-    false,
-    false,
-    false,
-    Date.now() + 24000 * 60 * 60,
-    {},
-    Ci.nsICookie.SAMESITE_NONE
-  );
-
-  await createIndexedDB(uriB.host, {});
+  SiteDataTestUtils.addToCookies(originB);
+  await SiteDataTestUtils.addToIndexedDB(originB);
 
   // Check
-  ok(await checkCookie(uriA.host, {}), "We have cookies for URI: " + uriA.host);
-  ok(await checkIndexedDB(uriA.host, {}), "We have IDB for URI: " + uriA.host);
-  ok(await checkCookie(uriB.host, {}), "We have cookies for URI: " + uriB.host);
-  ok(await checkIndexedDB(uriB.host, {}), "We have IDB for URI: " + uriB.host);
+  ok(SiteDataTestUtils.hasCookies(originA), "We have cookies for " + originA);
+  ok(
+    await SiteDataTestUtils.hasIndexedDB(originA),
+    "We have IDB for " + originA
+  );
+  ok(SiteDataTestUtils.hasCookies(originB), "We have cookies for " + originB);
+  ok(
+    await SiteDataTestUtils.hasIndexedDB(originB),
+    "We have IDB for " + originB
+  );
 
   // Cleaning up
   await Sanitizer.runSanitizeOnShutdown();
 
   // Check again
+  ok(SiteDataTestUtils.hasCookies(originA), "We have cookies for " + originA);
   ok(
-    await checkCookie(uriA.host, {}),
-    "We should have cookies for URI: " + uriA.host
+    await SiteDataTestUtils.hasIndexedDB(originA),
+    "We have IDB for " + originA
   );
   ok(
-    await checkIndexedDB(uriA.host, {}),
-    "We should have IDB for URI: " + uriA.host
+    !SiteDataTestUtils.hasCookies(originB),
+    "We should not have cookies for " + originB
   );
   ok(
-    !(await checkCookie(uriB.host, {})),
-    "We should not have cookies for URI: " + uriB.host
-  );
-  ok(
-    !(await checkIndexedDB(uriB.host, {})),
-    "We should not have IDB for URI: " + uriB.host
+    !(await SiteDataTestUtils.hasIndexedDB(originB)),
+    "We should not have IDB for " + originB
   );
 
   // Cleaning up permissions
-  PermissionTestUtils.remove(uriA, "cookie");
+  PermissionTestUtils.remove(originA, "cookie");
+});
+
+// session only cookie life-time, 3 domains (sub.mozilla.org, www.mozilla.org, mozilla.org),
+// only the former has a cookie permission. Both sub.mozilla.org and mozilla.org should
+// be sustained.
+add_task(async function subDomains3() {
+  info(
+    "Test base domain and subdomains and custom setting with cookieBehavior == 2"
+  );
+
+  // Let's clean up all the data.
+  await new Promise(resolve => {
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, resolve);
+  });
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["network.cookie.lifetimePolicy", Ci.nsICookieService.ACCEPT_SESSION],
+      ["browser.sanitizer.loglevel", "All"],
+    ],
+  });
+
+  // Domains and data
+  let originA = "https://sub.mozilla.org";
+  PermissionTestUtils.add(
+    originA,
+    "cookie",
+    Ci.nsICookiePermission.ACCESS_ALLOW
+  );
+  SiteDataTestUtils.addToCookies(originA);
+  await SiteDataTestUtils.addToIndexedDB(originA);
+
+  let originB = "https://mozilla.org";
+  SiteDataTestUtils.addToCookies(originB);
+  await SiteDataTestUtils.addToIndexedDB(originB);
+
+  let originC = "https://www.mozilla.org";
+  SiteDataTestUtils.addToCookies(originC);
+  await SiteDataTestUtils.addToIndexedDB(originC);
+
+  // Check
+  ok(SiteDataTestUtils.hasCookies(originA), "We have cookies for " + originA);
+  ok(
+    await SiteDataTestUtils.hasIndexedDB(originA),
+    "We have IDB for " + originA
+  );
+  ok(SiteDataTestUtils.hasCookies(originB), "We have cookies for " + originB);
+  ok(
+    await SiteDataTestUtils.hasIndexedDB(originB),
+    "We have IDB for " + originB
+  );
+  ok(SiteDataTestUtils.hasCookies(originC), "We have cookies for " + originC);
+  ok(
+    await SiteDataTestUtils.hasIndexedDB(originC),
+    "We have IDB for " + originC
+  );
+
+  // Cleaning up
+  await Sanitizer.runSanitizeOnShutdown();
+
+  // Check again
+  ok(SiteDataTestUtils.hasCookies(originA), "We have cookies for " + originA);
+  ok(
+    await SiteDataTestUtils.hasIndexedDB(originA),
+    "We have IDB for " + originA
+  );
+  ok(SiteDataTestUtils.hasCookies(originB), "We have cookies for " + originB);
+  ok(
+    await SiteDataTestUtils.hasIndexedDB(originB),
+    "We have IDB for " + originB
+  );
+  ok(
+    !SiteDataTestUtils.hasCookies(originC),
+    "We should not have cookies for " + originC
+  );
+  ok(
+    !(await SiteDataTestUtils.hasIndexedDB(originC)),
+    "We should not have IDB for " + originC
+  );
+
+  // Cleaning up permissions
+  PermissionTestUtils.remove(originA, "cookie");
 });
