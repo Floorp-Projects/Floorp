@@ -63,7 +63,7 @@ export async function prettyPrintSource(
 export function createPrettySource(cx: Context, sourceId: string) {
   return async ({ dispatch, getState, sourceMaps }: ThunkArgs) => {
     const source = getSourceFromId(getState(), sourceId);
-    const url = getPrettySourceURL(source.url);
+    const url = getPrettySourceURL(source.url || source.id);
     const id = generatedToOriginalId(sourceId, url);
 
     const prettySource = {
