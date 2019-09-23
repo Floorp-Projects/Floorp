@@ -19,7 +19,7 @@ class DocAccessiblePlatformExtChild : public PDocAccessiblePlatformExtChild {
   mozilla::ipc::IPCResult RecvPivot(uint64_t aID, int32_t aGranularity,
                                     bool aForward, bool aInclusive);
 
-  mozilla::ipc::IPCResult RecvNavigateText(int32_t aID, int32_t aGranularity,
+  mozilla::ipc::IPCResult RecvNavigateText(uint64_t aID, int32_t aGranularity,
                                            int32_t aStartOffset,
                                            int32_t aEndOffset, bool aForward,
                                            bool aSelect);
