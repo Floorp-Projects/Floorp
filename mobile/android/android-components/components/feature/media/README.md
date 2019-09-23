@@ -24,6 +24,18 @@ RecordingDevicesNotificationFeature(applicationContext, sessionManager)
     .enable()
 ```
 
+## Facts
+
+This component emits the following [Facts](../../support/base/README.md#Facts):
+
+| Action | Item            |  Description                              |
+|--------|-----------------|-------------------------------------------|
+| PLAY   | state           | Media started playing.                    |
+| PAUSE  | state           | Media playback was paused.                |
+| STOP   | state           | Media playback has ended.                 |
+| PLAY   | notification    | Play action of notification was invoked   |
+| PAUSE  | notification    | Pause action of notification was invoked  |
+
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public
