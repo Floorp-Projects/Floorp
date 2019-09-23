@@ -37,33 +37,6 @@ const getWaterfallScale = createSelector(
   }
 );
 
-function getVisibleColumns(columns) {
-  return Object.entries(columns).filter(([_, shown]) => shown);
-}
-
-const getColumns = createSelector(
-  state => state.ui,
-  ui => {
-    if (
-      (ui.networkDetailsOpen &&
-        getVisibleColumns(ui.columns).length === 1 &&
-        ui.columns.waterfall) ||
-      !ui.networkDetailsOpen
-    ) {
-      return ui.columns;
-    }
-
-    // Remove the Waterfall/Timeline column from the list of available
-    // columns if the details side-bar is opened and more than one column is
-    // visible.
-    const columns = { ...ui.columns };
-    delete columns.waterfall;
-    return columns;
-  }
-);
-
 module.exports = {
-  getColumns,
-  getVisibleColumns,
   getWaterfallScale,
 };
