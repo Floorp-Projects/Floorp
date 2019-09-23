@@ -231,7 +231,7 @@ StorageActivityService::GetActiveOrigins(PRTime aFrom, PRTime aTo,
                                          nsIArray** aRetval) {
   uint64_t now = PR_Now();
   if (((now - aFrom) / PR_USEC_PER_SEC) > TIME_MAX_SECS || aFrom >= aTo) {
-    return NS_ERROR_RANGE_ERR;
+    return NS_ERROR_INVALID_ARG;
   }
 
   nsresult rv = NS_OK;
