@@ -4,11 +4,12 @@
 
 package mozilla.components.feature.contextmenu
 
-import mozilla.components.browser.session.Download
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.HitResult
-import mozilla.components.support.base.observer.Consumable
 
 /**
  * Contains use cases related to the context menu feature.
@@ -16,7 +17,8 @@ import mozilla.components.support.base.observer.Consumable
  * @param sessionManager the application's [SessionManager].
  */
 class ContextMenuUseCases(
-    sessionManager: SessionManager
+    sessionManager: SessionManager,
+    store: BrowserStore
 ) {
     class ConsumeHitResultUseCase(
         private val sessionManager: SessionManager
@@ -32,7 +34,7 @@ class ContextMenuUseCases(
     }
 
     class InjectDownloadUseCase(
-        private val sessionManager: SessionManager
+        private val store: BrowserStore
     ) {
         /**
          * Adds a [Download] to the [Session] with the given [tabId].
@@ -40,13 +42,13 @@ class ContextMenuUseCases(
          * This is a hacky workaround. After we have migrated everything from browser-session to
          * browser-state we should revisits this and find a better solution.
          */
-        operator fun invoke(tabId: String, download: Download) {
-            sessionManager.findSessionById(tabId)?.let {
-                it.download = Consumable.from(download)
-            }
+        operator fun invoke(tabId: String, download: DownloadState) {
+            store.dispatch(ContentAction.UpdateDownloadAction(
+                tabId, download
+            ))
         }
     }
 
     val consumeHitResult = ConsumeHitResultUseCase(sessionManager)
-    val injectDownload = InjectDownloadUseCase(sessionManager)
+    val injectDownload = InjectDownloadUseCase(store)
 }

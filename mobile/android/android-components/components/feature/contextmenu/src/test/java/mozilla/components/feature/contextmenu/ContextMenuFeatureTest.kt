@@ -234,7 +234,7 @@ class ContextMenuFeatureTest {
             store,
             listOf(candidate),
             engineView,
-            ContextMenuUseCases(mock())
+            ContextMenuUseCases(mock(), mock())
         )
 
         feature.showContextMenu(
@@ -262,7 +262,7 @@ class ContextMenuFeatureTest {
             store,
             ContextMenuCandidate.defaultCandidates(testContext, mock(), mock(), mock()),
             engineView,
-            ContextMenuUseCases(sessionManager)
+            ContextMenuUseCases(sessionManager, store)
         )
 
         assertNotNull(store.state.findTab("test-tab")!!.content.hitResult)
@@ -298,7 +298,7 @@ class ContextMenuFeatureTest {
             store,
             listOf(candidate),
             engineView,
-            ContextMenuUseCases(sessionManager)
+            ContextMenuUseCases(sessionManager, store)
         )
 
         testDispatcher.advanceUntilIdle()
@@ -337,7 +337,7 @@ class ContextMenuFeatureTest {
             store,
             listOf(candidate),
             engineView,
-            ContextMenuUseCases(sessionManager)
+            ContextMenuUseCases(sessionManager, store)
         )
 
         CollectionProcessor.withFactCollection { facts ->

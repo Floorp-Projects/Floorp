@@ -225,6 +225,6 @@ open class DefaultComponents(private val applicationContext: Context) {
     }
 
     val tabsUseCases: TabsUseCases by lazy { TabsUseCases(sessionManager) }
-    val downloadsUseCases: DownloadsUseCases by lazy { DownloadsUseCases(sessionManager) }
-    val contextMenuUseCases: ContextMenuUseCases by lazy { ContextMenuUseCases(sessionManager) }
+    val downloadsUseCases: DownloadsUseCases by lazy { DownloadsUseCases(store) }
+    val contextMenuUseCases: ContextMenuUseCases by lazy { ContextMenuUseCases(sessionManager, store) }
 }

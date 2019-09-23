@@ -737,42 +737,6 @@ class SessionManagerMigrationTest {
     }
 
     @Test
-    fun `Adding a download`() {
-        val store = BrowserStore()
-        val manager = SessionManager(engine = mock(), store = store)
-
-        val session = Session(id = "session", initialUrl = "https://www.mozilla.org")
-        manager.add(session)
-
-        assertNull(session.download.peek())
-        assertNull(store.state.findTab("session")!!.content.download)
-
-        val download: Download = mock()
-        `when`(download.id).thenReturn("1")
-        `when`(download.url).thenReturn("https://www.mozilla.org")
-        `when`(download.destinationDirectory).thenReturn("test")
-        session.download = Consumable.from(download)
-
-        assertEquals(download, session.download.peek())
-        store.state.findTab("session")!!.also { tab ->
-            assertNotNull(tab.content.download)
-            assertEquals(download.id, tab.content.download!!.id)
-            assertEquals(download.contentLength, tab.content.download!!.contentLength)
-            assertEquals(download.contentType, tab.content.download!!.contentType)
-            assertEquals(download.destinationDirectory, tab.content.download!!.destinationDirectory)
-            assertEquals(download.fileName, tab.content.download!!.fileName)
-            assertEquals(download.referrerUrl, tab.content.download!!.referrerUrl)
-            assertEquals(download.url, tab.content.download!!.url)
-            assertEquals(download.userAgent, tab.content.download!!.userAgent)
-        }
-
-        session.download.consume { true }
-        store.state.findTab("session")!!.also { tab ->
-            assertNull(tab.content.download)
-        }
-    }
-
-    @Test
     fun `Linking session to engine session`() {
         val store = BrowserStore()
         val engine: Engine = mock()

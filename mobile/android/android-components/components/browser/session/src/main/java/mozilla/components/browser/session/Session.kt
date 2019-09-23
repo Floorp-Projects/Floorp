@@ -14,12 +14,10 @@ import mozilla.components.browser.session.ext.toSecurityInfoState
 import mozilla.components.browser.session.ext.toTabSessionState
 import mozilla.components.browser.state.action.ContentAction.AddFindResultAction
 import mozilla.components.browser.state.action.ContentAction.ClearFindResultsAction
-import mozilla.components.browser.state.action.ContentAction.ConsumeDownloadAction
 import mozilla.components.browser.state.action.ContentAction.ConsumeHitResultAction
 import mozilla.components.browser.state.action.ContentAction.ConsumePromptRequestAction
 import mozilla.components.browser.state.action.ContentAction.RemoveIconAction
 import mozilla.components.browser.state.action.ContentAction.RemoveThumbnailAction
-import mozilla.components.browser.state.action.ContentAction.UpdateDownloadAction
 import mozilla.components.browser.state.action.ContentAction.UpdateHitResultAction
 import mozilla.components.browser.state.action.ContentAction.UpdateIconAction
 import mozilla.components.browser.state.action.ContentAction.UpdateLoadingStateAction
@@ -95,7 +93,6 @@ class Session(
         fun onSecurityChanged(session: Session, securityInfo: SecurityInfo) = Unit
         fun onCustomTabConfigChanged(session: Session, customTabConfig: CustomTabConfig?) = Unit
         fun onWebAppManifestChanged(session: Session, manifest: WebAppManifest?) = Unit
-        fun onDownload(session: Session, download: Download): Boolean = false
         fun onTrackerBlockingEnabledChanged(session: Session, blockingEnabled: Boolean) = Unit
         fun onTrackerBlocked(session: Session, tracker: Tracker, all: List<Tracker>) = Unit
         fun onTrackerLoaded(session: Session, tracker: Tracker, all: List<Tracker>) = Unit
@@ -288,24 +285,6 @@ class Session(
      */
     var webAppManifest: WebAppManifest? by Delegates.observable<WebAppManifest?>(null) { _, _, new ->
         notifyObservers { onWebAppManifestChanged(this@Session, new) }
-    }
-
-    /**
-     * Last download request if it wasn't consumed by at least one observer.
-     */
-    var download: Consumable<Download> by Delegates.vetoable(Consumable.empty()) { _, _, download ->
-        store?.let {
-            val actualDownload = download.peek()
-            if (actualDownload == null) {
-                it.syncDispatch(ConsumeDownloadAction(id))
-            } else {
-                it.syncDispatch(UpdateDownloadAction(id, actualDownload.toDownloadState()))
-                download.onConsume { it.syncDispatch(ConsumeDownloadAction(id)) }
-            }
-        }
-
-        val consumers = wrapConsumers<Download> { onDownload(this@Session, it) }
-        !download.consumeBy(consumers)
     }
 
     /**

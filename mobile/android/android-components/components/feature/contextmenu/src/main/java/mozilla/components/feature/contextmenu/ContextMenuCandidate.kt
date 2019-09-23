@@ -10,8 +10,8 @@ import android.content.Context
 import android.content.Intent
 import android.view.View
 import com.google.android.material.snackbar.Snackbar
-import mozilla.components.browser.session.Download
 import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.feature.tabs.TabsUseCases
 
@@ -151,7 +151,7 @@ data class ContextMenuCandidate(
             action = { tab, hitResult ->
                 contextMenuUseCases.injectDownload(
                     tab.id,
-                    Download(hitResult.src)
+                    DownloadState(hitResult.src)
                 )
             }
         )

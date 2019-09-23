@@ -15,17 +15,14 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
-import mozilla.components.browser.session.Download
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.downloads.manager.DownloadManager
-import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.ext.joinBlocking
@@ -221,12 +218,16 @@ class DownloadsFeatureTest {
 
     @Test
     fun `onPermissionsResult will consume download if permissions were not granted`() {
-        val store = BrowserStore()
-        val sessionManager = SessionManager(engine = mock(), store = store)
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "test-tab")
+            ),
+            selectedTabId = "test-tab"
+        ))
 
-        val session = Session("https://www.mozilla.org", id = "test-tab")
-        sessionManager.add(session)
-        session.download = Consumable.from(Download("https://www.mozilla.org"))
+        store.dispatch(ContentAction.UpdateDownloadAction(
+            "test-tab", DownloadState("https://www.mozilla.org")
+        ))
 
         val downloadManager: DownloadManager = mock()
         doReturn(
@@ -236,7 +237,7 @@ class DownloadsFeatureTest {
         val feature = DownloadsFeature(
             testContext,
             store,
-            useCases = DownloadsUseCases(sessionManager),
+            useCases = DownloadsUseCases(store),
             downloadManager = downloadManager
         )
 
@@ -248,6 +249,10 @@ class DownloadsFeatureTest {
         feature.onPermissionsResult(
             arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE),
             arrayOf(PackageManager.PERMISSION_GRANTED, PackageManager.PERMISSION_DENIED).toIntArray())
+
+        // Dispatching a random unrelated action to block on it in order to wait for all other
+        // dispatched actions to have completed.
+        store.dispatch(SystemAction.LowMemoryAction).joinBlocking()
 
         assertNull(store.state.findTab("test-tab")!!.content.download)
 

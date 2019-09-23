@@ -7,10 +7,12 @@ package mozilla.components.browser.session.engine
 import android.graphics.Bitmap
 import android.os.Environment
 import androidx.core.net.toUri
-import mozilla.components.browser.session.Download
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.engine.request.LoadRequestMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestOption
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
@@ -28,7 +30,8 @@ import mozilla.components.support.base.observer.Consumable
  */
 @Suppress("TooManyFunctions")
 internal class EngineObserver(
-    val session: Session
+    private val session: Session,
+    private val store: BrowserStore? = null
 ) : EngineSession.Observer {
 
     override fun onLocationChange(url: String) {
@@ -135,8 +138,19 @@ internal class EngineObserver(
         cookie: String?,
         userAgent: String?
     ) {
-        val download = Download(url, fileName, contentType, contentLength, userAgent, Environment.DIRECTORY_DOWNLOADS)
-        session.download = Consumable.from(download)
+        val download = DownloadState(
+            url,
+            fileName,
+            contentType,
+            contentLength,
+            userAgent,
+            Environment.DIRECTORY_DOWNLOADS
+        )
+
+        store?.dispatch(ContentAction.UpdateDownloadAction(
+            session.id,
+            download
+        ))
     }
 
     override fun onDesktopModeChange(enabled: Boolean) {

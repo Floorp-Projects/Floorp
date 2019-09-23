@@ -394,45 +394,6 @@ class SessionTest {
     }
 
     @Test
-    fun `Download will be set on Session if no observer is registered`() {
-        val download: Download = mock()
-        `when`(download.url).thenReturn("https://download.mozilla.org/")
-
-        val session = Session("https://www.mozilla.org")
-        session.download = Consumable.from(download)
-
-        assertFalse(session.download.isConsumed())
-
-        var downloadIsSet = false
-
-        session.download.consume { consumable ->
-            downloadIsSet = consumable.url == "https://download.mozilla.org/"
-            true
-        }
-
-        assertTrue(downloadIsSet)
-    }
-
-    @Test
-    fun `Download will not be set on Session if consumed by observer`() {
-        var callbackExecuted = false
-
-        val session = Session("https://www.mozilla.org")
-        session.register(object : Session.Observer {
-            override fun onDownload(session: Session, download: Download): Boolean {
-                callbackExecuted = true
-                return true // Consume download
-            }
-        })
-
-        val download: Download = mock()
-        session.download = Consumable.from(download)
-
-        assertTrue(callbackExecuted)
-        assertTrue(session.download.isConsumed())
-    }
-
-    @Test
     fun `HitResult will be set on Session`() {
         val hitResult: HitResult = mock()
         `when`(hitResult.src).thenReturn("https://mozilla.org")
@@ -488,108 +449,6 @@ class SessionTest {
 
         session.hitResult.consume { true }
         verify(store, times(2)).dispatch(ContentAction.ConsumeHitResultAction(session.id))
-    }
-
-    @Test
-    fun `All observers will not be notified about a download`() {
-        var firstCallbackExecuted = false
-        var secondCallbackExecuted = false
-
-        val session = Session("https://www.mozilla.org")
-        session.register(object : Session.Observer {
-            override fun onDownload(session: Session, download: Download): Boolean {
-                firstCallbackExecuted = true
-                return true // Consume download
-            }
-        })
-        session.register(object : Session.Observer {
-            override fun onDownload(session: Session, download: Download): Boolean {
-                secondCallbackExecuted = true
-                return false // Do not consume download
-            }
-        })
-
-        val download: Download = mock()
-        session.download = Consumable.from(download)
-
-        assertTrue(firstCallbackExecuted)
-        assertTrue(secondCallbackExecuted)
-        assertTrue(session.download.isConsumed())
-    }
-
-    @Test
-    fun `Download will be set on Session if no observer consumes it`() {
-        var firstCallbackExecuted = false
-        var secondCallbackExecuted = false
-
-        val session = Session("https://www.mozilla.org")
-        session.register(object : Session.Observer {
-            override fun onDownload(session: Session, download: Download): Boolean {
-                firstCallbackExecuted = true
-                return false // Do not consume download
-            }
-        })
-        session.register(object : Session.Observer {
-            override fun onDownload(session: Session, download: Download): Boolean {
-                secondCallbackExecuted = true
-                return false // Do not consume download
-            }
-        })
-
-        val download: Download = mock()
-        session.download = Consumable.from(download)
-
-        assertTrue(firstCallbackExecuted)
-        assertTrue(secondCallbackExecuted)
-        assertFalse(session.download.isConsumed())
-    }
-
-    @Test
-    fun `Download can be consumed`() {
-        val session = Session("https://www.mozilla.org")
-        session.download = Consumable.from(mock())
-
-        assertFalse(session.download.isConsumed())
-
-        var consumerExecuted = false
-        session.download.consume {
-            consumerExecuted = true
-            false // Do not consume
-        }
-
-        assertTrue(consumerExecuted)
-        assertFalse(session.download.isConsumed())
-
-        consumerExecuted = false
-        session.download.consume {
-            consumerExecuted = true
-            true // Consume download
-        }
-
-        assertTrue(consumerExecuted)
-        assertTrue(session.download.isConsumed())
-    }
-
-    @Test
-    fun `action is dispatched when download changes`() {
-        val store: BrowserStore = mock()
-        `when`(store.dispatch(any())).thenReturn(mock())
-
-        val session = Session("https://www.mozilla.org")
-        session.store = store
-
-        session.download = Consumable.empty()
-        verify(store).dispatch(ContentAction.ConsumeDownloadAction(session.id))
-
-        val download: Download = mock()
-        `when`(download.id).thenReturn("1")
-        `when`(download.url).thenReturn("https://www.mozilla.org")
-        `when`(download.destinationDirectory).thenReturn("test")
-        session.download = Consumable.from(download)
-        verify(store).dispatch(ContentAction.UpdateDownloadAction(session.id, download.toDownloadState()))
-
-        session.download.consume { true }
-        verify(store, times(2)).dispatch(ContentAction.ConsumeDownloadAction(session.id))
     }
 
     @Test
@@ -837,7 +696,6 @@ class SessionTest {
         defaultObserver.onSearch(session, "")
         defaultObserver.onSecurityChanged(session, Session.SecurityInfo())
         defaultObserver.onCustomTabConfigChanged(session, null)
-        defaultObserver.onDownload(session, mock(Download::class.java))
         defaultObserver.onTrackerBlockingEnabledChanged(session, true)
         defaultObserver.onTrackerBlocked(session, mock(), emptyList())
         defaultObserver.onLongPress(session, mock(HitResult::class.java))

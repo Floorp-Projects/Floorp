@@ -13,6 +13,7 @@ internal object ContentStateReducer {
     /**
      * [ContentAction] Reducer function for modifying a specific [ContentState] of a [SessionState].
      */
+    @Suppress("LongMethod")
     fun reduce(state: BrowserState, action: ContentAction): BrowserState {
         return when (action) {
             is ContentAction.RemoveIconAction -> updateContentState(state, action.sessionId) {
@@ -49,7 +50,11 @@ internal object ContentStateReducer {
                 it.copy(download = action.download)
             }
             is ContentAction.ConsumeDownloadAction -> updateContentState(state, action.sessionId) {
-                it.copy(download = null)
+                if (it.download != null && it.download.id == action.downloadId) {
+                    it.copy(download = null)
+                } else {
+                    it
+                }
             }
             is ContentAction.UpdateHitResultAction -> updateContentState(state, action.sessionId) {
                 it.copy(hitResult = action.hitResult)
