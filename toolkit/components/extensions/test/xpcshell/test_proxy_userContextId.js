@@ -17,6 +17,9 @@ add_task(async function test_userContextId_proxy_onRequest() {
     background() {
       browser.proxy.onRequest.addListener(
         async details => {
+          if (details.url != "http://example.com/dummy") {
+            return;
+          }
           browser.test.assertEq(
             details.cookieStoreId,
             "firefox-container-2",
