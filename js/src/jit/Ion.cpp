@@ -1704,40 +1704,6 @@ void AttachFinishedCompilations(JSContext* cx) {
   MOZ_ASSERT(!rt->jitRuntime()->numFinishedBuilders());
 }
 
-static void TrackAllProperties(JSContext* cx, JSObject* obj) {
-  MOZ_ASSERT(obj->isSingleton());
-
-  for (Shape::Range<NoGC> range(obj->as<NativeObject>().lastProperty());
-       !range.empty(); range.popFront()) {
-    EnsureTrackPropertyTypes(cx, obj, range.front().propid());
-  }
-}
-
-static void TrackPropertiesForSingletonScopes(JSContext* cx, JSScript* script,
-                                              BaselineFrame* baselineFrame) {
-  // Ensure that all properties of singleton call objects which the script
-  // could access are tracked. These are generally accessed through
-  // ALIASEDVAR operations in baseline and will not be tracked even if they
-  // have been accessed in baseline code.
-  JSObject* environment = script->functionNonDelazifying()
-                              ? script->functionNonDelazifying()->environment()
-                              : nullptr;
-
-  while (environment && !environment->is<GlobalObject>()) {
-    if (environment->is<CallObject>() && environment->isSingleton()) {
-      TrackAllProperties(cx, environment);
-    }
-    environment = environment->enclosingEnvironment();
-  }
-
-  if (baselineFrame) {
-    JSObject* scope = baselineFrame->environmentChain();
-    if (scope->is<CallObject>() && scope->isSingleton()) {
-      TrackAllProperties(cx, scope);
-    }
-  }
-}
-
 static void TrackIonAbort(JSContext* cx, JSScript* script, jsbytecode* pc,
                           const char* message) {
   if (!cx->runtime()->jitRuntime()->isOptimizationTrackingEnabled(
@@ -1776,8 +1742,6 @@ static AbortReason IonCompile(JSContext* cx, JSScript* script,
   // Make sure the script's canonical function isn't lazy. We can't de-lazify
   // it in a helper thread.
   script->ensureNonLazyCanonicalFunction();
-
-  TrackPropertiesForSingletonScopes(cx, script, baselineFrame);
 
   auto alloc =
       cx->make_unique<LifoAlloc>(TempAllocator::PreferredLifoChunkSize);
