@@ -27,7 +27,7 @@ child:
 
   async Paste(int32_t aID);
 
-  async ExploreByTouch(int32_t aID, float aX, float aY);
+  async ExploreByTouch(uint64_t aID, float aX, float aY);
   };
 }
 }
