@@ -2355,9 +2355,22 @@ SearchService.prototype = {
     await policy.readyPromise;
 
     let params = {
-      code: config.searchUrlGetExtraCodes,
+      extraParams: config.extraParams,
       telemetryId: config.telemetryId,
     };
+
+    // Modern Config encodes params as objects whereas they are
+    // strings in webExtensions, stringify them here.
+    [
+      "searchUrlGetParams",
+      "searchUrlPostParams",
+      "suggestUrlGetParams",
+      "suggestUrlPostParams",
+    ].forEach(key => {
+      if (key in config) {
+        params[key] = new URLSearchParams(config[key]).toString();
+      }
+    });
 
     if ("telemetryId" in config) {
       params.telemetryId = config.telemetryId;
@@ -2443,7 +2456,7 @@ SearchService.prototype = {
     return this.addEngineWithDetails(params.name, params, isReload);
   },
 
-  getEngineParams(extension, manifest, locale, extraParams = {}) {
+  getEngineParams(extension, manifest, locale, engineParams = {}) {
     let { IconDetails } = ExtensionParent;
 
     // General set of icons for an engine.
@@ -2476,14 +2489,27 @@ SearchService.prototype = {
     if (locale != DEFAULT_TAG) {
       shortName += "-" + locale;
     }
-    if ("telemetryId" in extraParams) {
-      shortName = extraParams.telemetryId;
+    if ("telemetryId" in engineParams) {
+      shortName = engineParams.telemetryId;
     }
 
-    let searchUrlGetParams = searchProvider.search_url_get_params;
-    if (extraParams.code) {
-      searchUrlGetParams = "?" + extraParams.code;
-    }
+    let searchUrlGetParams =
+      engineParams.searchUrlGetParams ||
+      searchProvider.search_url_get_params ||
+      "";
+    let searchUrlPostParams =
+      engineParams.searchUrlPostParams ||
+      searchProvider.search_url_post_params ||
+      "";
+    let suggestUrlGetParams =
+      engineParams.suggestUrlGetParams ||
+      searchProvider.suggest_url_get_params ||
+      "";
+    let suggestUrlPostParams =
+      engineParams.suggestUrlPostParams ||
+      searchProvider.suggest_url_post_params ||
+      "";
+    let mozParams = engineParams.extraParams || searchProvider.params || [];
 
     let params = {
       name: searchProvider.name.trim(),
@@ -2494,7 +2520,7 @@ SearchService.prototype = {
       // to ensure we're always dealing with decoded urls.
       template: decodeURI(searchProvider.search_url),
       searchGetParams: searchUrlGetParams,
-      searchPostParams: searchProvider.search_url_post_params,
+      searchPostParams: searchUrlPostParams,
       iconURL: searchProvider.favicon_url || preferredIconUrl,
       icons: iconList,
       alias: searchProvider.keyword,
@@ -2502,11 +2528,11 @@ SearchService.prototype = {
       isBuiltin: extension.addonData.builtIn,
       // suggest_url doesn't currently get encoded.
       suggestURL: searchProvider.suggest_url,
-      suggestPostParams: searchProvider.suggest_url_post_params,
-      suggestGetParams: searchProvider.suggest_url_get_params,
+      suggestGetParams: suggestUrlGetParams,
+      suggestPostParams: suggestUrlPostParams,
       queryCharset: searchProvider.encoding || "UTF-8",
-      mozParams: searchProvider.params,
-      initEngine: extraParams.initEngine || false,
+      mozParams,
+      initEngine: engineParams.initEngine || false,
     };
 
     return params;
