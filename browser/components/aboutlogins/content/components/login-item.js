@@ -573,11 +573,6 @@ export default class LoginItem extends HTMLElement {
       return;
     }
 
-    // Add faviconDataURI to new login
-    if (this._login.faviconDataURI) {
-      login.faviconDataURI = this._login.faviconDataURI;
-    }
-
     this.setLogin(login);
     this.dispatchEvent(
       new CustomEvent("AboutLoginsLoginSelected", {
@@ -598,6 +593,11 @@ export default class LoginItem extends HTMLElement {
   loginModified(login) {
     if (this._login.guid != login.guid) {
       return;
+    }
+
+    // Restore faviconDataURI on modified login
+    if (this._login.faviconDataURI && this._login.origin == login.origin) {
+      login.faviconDataURI = this._login.faviconDataURI;
     }
 
     let valuesChanged =
