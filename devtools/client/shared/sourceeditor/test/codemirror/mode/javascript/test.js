@@ -127,6 +127,9 @@
      "[keyword let] [def f] [operator =] ([[ [def a], [def b] ]], [def c]) [operator =>] [variable-2 a] [operator +] [variable-2 c];",
      "[variable c];");
 
+  MT("fatArrow_stringDefault",
+     "([def a], [def b] [operator =] [string 'x\\'y']) [operator =>] [variable-2 a] [operator +] [variable-2 b]")
+
   MT("spread",
      "[keyword function] [def f]([def a], [meta ...][def b]) {",
      "  [variable something]([variable-2 a], [meta ...][variable-2 b]);",
@@ -226,6 +229,12 @@
      "  [keyword return] [variable-2 x];",
      "}");
 
+  MT(
+    "param_destructuring",
+    "[keyword function] [def foo]([def x] [operator =] [string-2 `foo${][number 10][string-2 }bar`]) {",
+    "  [keyword return] [variable-2 x];",
+    "}");
+
   MT("new_target",
      "[keyword function] [def F]([def target]) {",
      "  [keyword if] ([variable-2 target] [operator &&] [keyword new].[keyword target].[property name]) {",
@@ -291,6 +300,22 @@
   MT("return_eol",
      "[keyword return]",
      "{} [string-2 /5/]")
+
+  MT("numeric separator",
+     "[number 123_456];",
+     "[number 0xdead_c0de];",
+     "[number 0o123_456];",
+     "[number 0b1101_1101];",
+     "[number .123_456e0_1];",
+     "[number 1E+123_456];",
+     "[number 12_34_56n];")
+
+  MT("underscore property",
+     "[variable something].[property _property];",
+     "[variable something].[property _123];",
+     "[variable something].[property _for];",
+     "[variable _for];",
+     "[variable _123];")
 
   var ts_mode = CodeMirror.getMode({indentUnit: 2}, "application/typescript")
   function TS(name) {
@@ -441,6 +466,12 @@
 
   TS("abstract class",
      "[keyword export] [keyword abstract] [keyword class] [def Foo] {}")
+
+  TS("interface without semicolons",
+     "[keyword interface] [def Foo] {",
+     "  [property greet]([def x]: [type int]): [type blah]",
+     "  [property bar]: [type void]",
+     "}")
 
   var jsonld_mode = CodeMirror.getMode(
     {indentUnit: 2},
