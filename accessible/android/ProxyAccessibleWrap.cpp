@@ -4,10 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ProxyAccessibleWrap.h"
-
 #include "nsPersistentProperties.h"
-
-#include "mozilla/a11y/DocAccessiblePlatformExtParent.h"
 
 using namespace mozilla::a11y;
 
@@ -107,43 +104,6 @@ bool ProxyAccessibleWrap::GetSelectionBounds(int32_t* aStartOffset,
                                              int32_t* aEndOffset) {
   nsAutoString unused;
   return Proxy()->SelectionBoundsAt(0, unused, aStartOffset, aEndOffset);
-}
-
-void ProxyAccessibleWrap::Pivot(int32_t aGranularity, bool aForward,
-                                bool aInclusive) {
-  Unused << Proxy()->Document()->GetPlatformExtension()->SendPivot(
-      Proxy()->ID(), aGranularity, aForward, aInclusive);
-}
-
-void ProxyAccessibleWrap::ExploreByTouch(float aX, float aY) {
-  Unused << Proxy()->Document()->GetPlatformExtension()->SendExploreByTouch(
-      Proxy()->ID(), aX, aY);
-}
-
-void ProxyAccessibleWrap::NavigateText(int32_t aGranularity,
-                                       int32_t aStartOffset, int32_t aEndOffset,
-                                       bool aForward, bool aSelect) {
-  Unused << Proxy()->Document()->GetPlatformExtension()->SendNavigateText(
-      Proxy()->ID(), aGranularity, aStartOffset, aEndOffset, aForward, aSelect);
-}
-
-void ProxyAccessibleWrap::SetSelection(int32_t aStart, int32_t aEnd) {
-  Unused << Proxy()->Document()->GetPlatformExtension()->SendSetSelection(
-      Proxy()->ID(), aStart, aEnd);
-}
-
-void ProxyAccessibleWrap::Cut() {
-  Unused << Proxy()->Document()->GetPlatformExtension()->SendCut(Proxy()->ID());
-}
-
-void ProxyAccessibleWrap::Copy() {
-  Unused << Proxy()->Document()->GetPlatformExtension()->SendCopy(
-      Proxy()->ID());
-}
-
-void ProxyAccessibleWrap::Paste() {
-  Unused << Proxy()->Document()->GetPlatformExtension()->SendPaste(
-      Proxy()->ID());
 }
 
 role ProxyAccessibleWrap::WrapperRole() { return Proxy()->Role(); }

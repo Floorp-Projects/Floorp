@@ -6,22 +6,17 @@
 #include "AccessibleWrap.h"
 
 #include "Accessible-inl.h"
-#include "AccEvent.h"
 #include "AndroidInputType.h"
 #include "DocAccessibleWrap.h"
 #include "IDSet.h"
 #include "JavaBuiltins.h"
 #include "SessionAccessibility.h"
-#include "TraversalRule.h"
-#include "Pivot.h"
 #include "nsAccessibilityService.h"
-#include "nsEventShell.h"
 #include "nsPersistentProperties.h"
 #include "nsIAccessibleAnnouncementEvent.h"
 #include "nsIStringBundle.h"
 #include "nsAccUtils.h"
 #include "nsTextEquivUtils.h"
-#include "RootAccessible.h"
 
 #include "mozilla/a11y/PDocAccessibleChild.h"
 #include "mozilla/jni/GeckoBundleUtils.h"
@@ -84,27 +79,6 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
         }
         break;
       }
-      case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED: {
-        if (accessible != aEvent->Document() && !aEvent->IsFromUserInput()) {
-          AccCaretMoveEvent* caretEvent = downcast_accEvent(aEvent);
-          if (IsHyperText()) {
-            DOMPoint point =
-                AsHyperText()->OffsetToDOMPoint(caretEvent->GetCaretOffset());
-            if (Accessible* newPos =
-                    doc->GetAccessibleOrContainer(point.node)) {
-              static_cast<AccessibleWrap*>(newPos)->Pivot(
-                  java::SessionAccessibility::HTML_GRANULARITY_DEFAULT, true,
-                  true);
-            }
-          }
-        }
-        break;
-      }
-      case nsIAccessibleEvent::EVENT_SCROLLING_START: {
-        accessible->Pivot(java::SessionAccessibility::HTML_GRANULARITY_DEFAULT,
-                          true, true);
-        break;
-      }
       default:
         break;
     }
@@ -149,11 +123,15 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
 
       RefPtr<AccessibleWrap> newPosition =
           static_cast<AccessibleWrap*>(vcEvent->NewAccessible());
+      auto oldPosition = static_cast<AccessibleWrap*>(vcEvent->OldAccessible());
+
       if (sessionAcc && newPosition) {
-        if (vcEvent->Reason() == nsIAccessiblePivot::REASON_POINT) {
-          sessionAcc->SendHoverEnterEvent(newPosition);
-        } else {
-          sessionAcc->SendAccessibilityFocusedEvent(newPosition);
+        if (oldPosition != newPosition) {
+          if (vcEvent->Reason() == nsIAccessiblePivot::REASON_POINT) {
+            sessionAcc->SendHoverEnterEvent(newPosition);
+          } else {
+            sessionAcc->SendAccessibilityFocusedEvent(newPosition);
+          }
         }
 
         if (vcEvent->BoundaryType() != nsIAccessiblePivot::NO_BOUNDARY) {
@@ -268,155 +246,6 @@ bool AccessibleWrap::GetSelectionBounds(int32_t* aStartOffset,
   }
 
   return false;
-}
-
-void AccessibleWrap::Pivot(int32_t aGranularity, bool aForward,
-                           bool aInclusive) {
-  a11y::Pivot pivot(RootAccessible());
-  TraversalRule rule(aGranularity);
-  Accessible* result = aForward ? pivot.Next(this, rule, aInclusive)
-                                : pivot.Prev(this, rule, aInclusive);
-  if (result && (result != this || aInclusive)) {
-    PivotMoveReason reason = aForward ? nsIAccessiblePivot::REASON_NEXT
-                                      : nsIAccessiblePivot::REASON_PREV;
-    RefPtr<AccEvent> event = new AccVCChangeEvent(
-        result->Document(), this, -1, -1, result, -1, -1, reason,
-        nsIAccessiblePivot::NO_BOUNDARY, eFromUserInput);
-    nsEventShell::FireEvent(event);
-  }
-}
-
-void AccessibleWrap::ExploreByTouch(float aX, float aY) {
-  a11y::Pivot pivot(RootAccessible());
-  TraversalRule rule;
-
-  Accessible* result = pivot.AtPoint(aX, aY, rule);
-
-  if (result && result != this) {
-    RefPtr<AccEvent> event =
-        new AccVCChangeEvent(result->Document(), this, -1, -1, result, -1, -1,
-                             nsIAccessiblePivot::REASON_POINT,
-                             nsIAccessiblePivot::NO_BOUNDARY, eFromUserInput);
-    nsEventShell::FireEvent(event);
-  }
-}
-
-void AccessibleWrap::NavigateText(int32_t aGranularity, int32_t aStartOffset,
-                                  int32_t aEndOffset, bool aForward,
-                                  bool aSelect) {
-  a11y::Pivot pivot(RootAccessible());
-
-  HyperTextAccessible* editable =
-      (State() & states::EDITABLE) != 0 ? AsHyperText() : nullptr;
-
-  int32_t start = aStartOffset, end = aEndOffset;
-  // If the accessible is an editable, set the virtual cursor position
-  // to its caret offset. Otherwise use the document's virtual cursor
-  // position as a starting offset.
-  if (editable) {
-    start = end = editable->CaretOffset();
-  }
-
-  uint16_t pivotGranularity = nsIAccessiblePivot::LINE_BOUNDARY;
-  switch (aGranularity) {
-    case 1:  // MOVEMENT_GRANULARITY_CHARACTER
-      pivotGranularity = nsIAccessiblePivot::CHAR_BOUNDARY;
-      break;
-    case 2:  // MOVEMENT_GRANULARITY_WORD
-      pivotGranularity = nsIAccessiblePivot::WORD_BOUNDARY;
-      break;
-    default:
-      break;
-  }
-
-  int32_t newOffset;
-  Accessible* newAnchor = nullptr;
-  if (aForward) {
-    newAnchor = pivot.NextText(this, &start, &end, pivotGranularity);
-    newOffset = end;
-  } else {
-    newAnchor = pivot.PrevText(this, &start, &end, pivotGranularity);
-    newOffset = start;
-  }
-
-  if (newAnchor && (start != aStartOffset || end != aEndOffset)) {
-    RefPtr<AccEvent> event = new AccVCChangeEvent(
-        newAnchor->Document(), this, aStartOffset, aEndOffset, newAnchor, start,
-        end, nsIAccessiblePivot::REASON_NONE, pivotGranularity, eFromUserInput);
-    nsEventShell::FireEvent(event);
-  }
-
-  // If we are in an editable, move the caret to the new virtual cursor
-  // offset.
-  if (editable) {
-    if (aSelect) {
-      int32_t anchor = editable->CaretOffset();
-      if (editable->SelectionCount()) {
-        int32_t startSel, endSel;
-        GetSelectionOrCaret(&startSel, &endSel);
-        anchor = startSel == anchor ? endSel : startSel;
-      }
-      editable->SetSelectionBoundsAt(0, anchor, newOffset);
-    } else {
-      editable->SetCaretOffset(newOffset);
-    }
-  }
-}
-
-void AccessibleWrap::SetSelection(int32_t aStart, int32_t aEnd) {
-  if (HyperTextAccessible* textAcc = AsHyperText()) {
-    if (aStart == aEnd) {
-      textAcc->SetCaretOffset(aStart);
-    } else {
-      textAcc->SetSelectionBoundsAt(0, aStart, aEnd);
-    }
-  }
-}
-
-void AccessibleWrap::Cut() {
-  if ((State() & states::EDITABLE) == 0) {
-    return;
-  }
-
-  if (HyperTextAccessible* textAcc = AsHyperText()) {
-    int32_t startSel, endSel;
-    GetSelectionOrCaret(&startSel, &endSel);
-    textAcc->CutText(startSel, endSel);
-  }
-}
-
-void AccessibleWrap::Copy() {
-  if (HyperTextAccessible* textAcc = AsHyperText()) {
-    int32_t startSel, endSel;
-    GetSelectionOrCaret(&startSel, &endSel);
-    textAcc->CopyText(startSel, endSel);
-  }
-}
-
-void AccessibleWrap::Paste() {
-  if ((State() & states::EDITABLE) == 0) {
-    return;
-  }
-
-  if (IsHyperText()) {
-    RefPtr<HyperTextAccessible> textAcc = AsHyperText();
-    int32_t startSel, endSel;
-    GetSelectionOrCaret(&startSel, &endSel);
-    if (startSel != endSel) {
-      textAcc->DeleteText(startSel, endSel);
-    }
-    textAcc->PasteText(startSel);
-  }
-}
-
-void AccessibleWrap::GetSelectionOrCaret(int32_t* aStartOffset,
-                                         int32_t* aEndOffset) {
-  *aStartOffset = *aEndOffset = -1;
-  if (HyperTextAccessible* textAcc = AsHyperText()) {
-    if (!textAcc->SelectionBoundsAt(0, aStartOffset, aEndOffset)) {
-      *aStartOffset = *aEndOffset = textAcc->CaretOffset();
-    }
-  }
 }
 
 uint32_t AccessibleWrap::GetFlags(role aRole, uint64_t aState,

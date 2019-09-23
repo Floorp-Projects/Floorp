@@ -5,6 +5,7 @@ license:
         - .
     exclude:
         # These paths need to be triaged.
+        - accessible/jsat/Constants.jsm
         - build/pgo/js-input
         - build/workspace-hack/src/lib.rs
         - browser/app/blocklist.xml
