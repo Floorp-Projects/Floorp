@@ -720,11 +720,25 @@ this.ActivityStream = class ActivityStream {
 
     // Update the pref config of those with dynamic values
     for (const pref of PREFS_CONFIG.keys()) {
+      // Only need to process dynamic prefs
       const prefConfig = PREFS_CONFIG.get(pref);
       if (!prefConfig.getValue) {
         continue;
       }
 
+      // Have the dynamic pref just reuse using existing default, e.g., those
+      // set via Autoconfig or policy
+      try {
+        const existingDefault = this._defaultPrefs.get(pref);
+        if (existingDefault !== undefined && prefConfig.value === undefined) {
+          prefConfig.getValue = () => existingDefault;
+        }
+      } catch (ex) {
+        // We get NS_ERROR_UNEXPECTED for prefs that have a user value (causing
+        // default branch to believe there's a type) but no actual default value
+      }
+
+      // Compute the dynamic value (potentially generic based on dummy geo)
       const newValue = prefConfig.getValue({
         geo: this.geo,
         locale: this.locale,
