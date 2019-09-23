@@ -5,7 +5,10 @@
       "orderHint": 1000,
       "webExtensionId": "google@search.mozilla.org",
       "webExtensionVersion": "1.0",
-      "searchUrlGetExtraCodes": "client=firefox-b-d",
+      "searchUrlGetParams": {
+        "client": "firefox-b-d",
+        "q": "{searchTerms}"
+      },
       "telemetryId": "google-b-d",
       "appliesTo": [{
         "included": { "everywhere": true },
@@ -30,7 +33,10 @@
         "default": "no"
       }, {
         "included": { "regions": ["us"] },
-        "searchUrlGetExtraCodes": "client=firefox-b-1-d",
+        "searchUrlGetParams": {
+          "client": "firefox-b-1-d",
+          "q": "{searchTerms}"
+        },
         "telemetryId": "google-b-1-d"
       }],
       "aliases": ["@google"]
@@ -39,6 +45,36 @@
       "engineName": "Bing",
       "webExtensionId": "bing@search.mozilla.org",
       "webExtensionVersion": "1.0",
+      "searchUrlGetParams": {
+        "q": "{searchTerms}",
+        "pc": "MOZI"
+      },
+      "extraParams": [{
+        "name": "form",
+        "condition": "purpose",
+        "purpose": "searchbar",
+        "value": "MOZSBR"
+      }, {
+        "name": "form",
+        "condition": "purpose",
+        "purpose": "keyword",
+        "value": "MOZLBR"
+      }, {
+        "name": "form",
+        "condition": "purpose",
+        "purpose": "contextmenu",
+        "value": "MOZCON"
+      }, {
+        "name": "form",
+        "condition": "purpose",
+        "purpose": "homepage",
+        "value": "MOZSPG"
+      }, {
+        "name": "form",
+        "condition": "purpose",
+        "purpose": "newtab",
+        "value": "MOZTSB"
+      }],
       "appliesTo": [{
         "included": {
           "locales": {
@@ -66,6 +102,17 @@
       "webExtensionId": "baidu@search.mozilla.org",
       "webExtensionVersion": "1.0",
       "telemetryId": "baidu",
+      "searchUrlGetParams": {
+        "wd": "{searchTerms}",
+        "tn": "monline_7_dg",
+        "ie": "utf-8"
+      },
+      "suggestUrlGetParams": {
+        "wd": "{searchTerms}",
+        "tn": "monline_7_dg",
+        "ie": "utf-8",
+        "action": "opensearch"
+      },
       "appliesTo": [{
         "included": { "locales": { "matches": ["zh-CN"] } }
       }, {
@@ -83,6 +130,13 @@
       "webExtensionId": "amazondotcom@search.mozilla.org",
       "webExtensionVersion": "1.1",
       "telemetryId": "amazondotcom",
+      "suggestUrlGetParams": {
+        "field-keywords": "{searchTerms}",
+        "ie": "{inputEncoding}",
+        "mode": "blended",
+        "tag": "mozilla-20",
+        "sourceid": "Mozilla-search"
+      },
       "appliesTo": [{
         "included": { "regions": ["default"] }
       }, {
@@ -146,7 +200,14 @@
         "webExtensionVersion": "1.1",
         "webExtensionLocales": ["france"],
         "telemetryId": "amazon-france",
-        "engineName": "Amazon.fr"
+        "engineName": "Amazon.fr",
+        "searchUrlGetParams": {
+          "field-keywords": "{searchTerms}",
+          "ie": "{inputEncoding}",
+          "mode": "blended",
+          "tag": "firefox-fr-21",
+          "sourceid":"Mozilla-search"
+        }
       }, {
         "included": {
           "regions": ["gb"],
@@ -163,6 +224,13 @@
         "webExtensionVersion": "1.1",
         "webExtensionLocales": ["en-GB"],
         "telemetryId": "amazon-en-GB",
+        "searchUrlGetParams": {
+          "field-keywords": "{searchTerms}",
+          "ie": "{inputEncoding}",
+          "mode": "blended",
+          "tag": "firefox-uk-21",
+          "sourceid":"Mozilla-search"
+        },
         "engineName": "Amazon.co.uk"
       }],
       "aliases": ["amazon"]
@@ -172,6 +240,11 @@
       "orderHint": 500,
       "webExtensionId": "amazon@search.mozilla.org",
       "webExtensionVersion": "1.1",
+      "searchUrlGetParams": {
+        "field-keywords": "{searchTerms}",
+        "ie": "{inputEncoding}",
+        "mode": "blended"
+      },
       "appliesTo": [{
         "included": {
           "locales": { "matches": [
@@ -188,7 +261,14 @@
         },
         "webExtensionLocales": ["france"],
         "telemetryId": "amazon-france",
-        "engineName": "Amazon.fr"
+        "engineName": "Amazon.fr",
+        "searchUrlGetParams": {
+          "field-keywords": "{searchTerms}",
+          "ie": "{inputEncoding}",
+          "mode": "blended",
+          "tag": "firefox-fr-21",
+          "sourceid":"Mozilla-search"
+        }
       }, {
         "included": {
           "regions": ["ca"],
@@ -206,17 +286,38 @@
         "included": { "locales": { "matches": ["ja-JP-mac", "ja"] } },
         "webExtensionLocales": ["jp"],
         "telemetryId": "amazon-jp",
-        "engineName": "Amazon.jp"
+        "engineName": "Amazon.jp",
+        "searchUrlGetParams": {
+          "field-keywords": "{searchTerms}",
+          "ie": "{inputEncoding}",
+          "mode": "blended",
+          "tag": "mozillajapan-fx-22",
+          "sourceid":"Mozilla-search"
+        }
       }, {
         "included": { "locales": { "matches": ["it", "lij"] } },
         "webExtensionLocales": ["it"],
         "telemetryId": "amazon-it",
-        "engineName": "Amazon.it"
+        "engineName": "Amazon.it",
+        "searchUrlGetParams": {
+          "field-keywords": "{searchTerms}",
+          "ie": "{inputEncoding}",
+          "mode": "blended",
+          "tag": "firefoxit-21",
+          "sourceid":"Mozilla-search"
+        }
       }, {
         "included": { "locales": { "matches": ["de", "dsb", "hsb"] } },
         "webExtensionLocales": ["de"],
         "telemetryId": "amazon-de",
-        "engineName": "Amazon.de"
+        "engineName": "Amazon.de",
+        "searchUrlGetParams": {
+          "field-keywords": "{searchTerms}",
+          "ie": "{inputEncoding}",
+          "mode": "blended",
+          "tag": "firefox-de-21",
+          "sourceid":"Mozilla-search"
+        }
       }, {
         "included": {
           "locales": {
@@ -228,6 +329,13 @@
         },
         "webExtensionLocales": ["en-GB"],
         "telemetryId": "amazon-en-GB",
+        "searchUrlGetParams": {
+          "field-keywords": "{searchTerms}",
+          "ie": "{inputEncoding}",
+          "mode": "blended",
+          "tag": "firefox-uk-21",
+          "sourceid":"Mozilla-search"
+        },
         "engineName": "Amazon.co.uk"
       }, {
         "included": {
@@ -251,6 +359,15 @@
       "webExtensionId": "amazondotcn@search.mozilla.org",
       "webExtensionVersion": "1.0",
       "telemetryId": "amazondotcn",
+      "suggestUrlGetParams": {
+        "keywords": "{searchTerms}",
+        "ix": "sunray",
+        "pageletid": "headsearch",
+        "searchType": "",
+        "Go.x": "0",
+        "Go.y": "0",
+        "bestSaleNum": "0"
+      },
       "appliesTo": [{
         "included": { "locales": { "matches": ["zh-CN"] } }
       }],
@@ -261,6 +378,13 @@
       "orderHint": 500,
       "webExtensionId": "ebay@search.mozilla.org",
       "webExtensionVersion": "1.0",
+      "searchUrlGetParams": {
+        "ff3": "4",
+        "toolid": "20004",
+        "campid": "5338192028",
+        "customid": "",
+        "mpre": "https://www.ebay.com/sch/{searchTerms}"
+      },
       "appliesTo": [{
         "included": { "regions": ["default"] }
       }, {
@@ -272,63 +396,133 @@
           "regions": ["au"]
         },
         "webExtensionLocales": ["au"],
-        "telemetryId": "ebay-au"
+        "telemetryId": "ebay-au",
+        "searchUrlGetParams": {
+          "ff3": "4",
+          "toolid": "20004",
+          "campid": "5338192028",
+          "customid": "",
+          "mpre": "https://www.ebay.com.au/sch/{searchTerms}"
+        }
       }, {
         "included": {
           "locales": { "matches": ["en-US"] },
           "regions": ["ie"]
         },
         "webExtensionLocales": ["ie"],
-        "telemetryId": "ebay-ie"
+        "telemetryId": "ebay-ie",
+        "searchUrlGetParams": {
+          "ff3": "4",
+          "toolid": "20004",
+          "campid": "5338192028",
+          "customid": "",
+          "mpre": "https://www.ebay.ie/sch/{searchTerms}"
+        }
       }, {
         "included": {
           "locales": { "matches": ["en-US"] },
           "regions": ["be"]
         },
         "webExtensionLocales": ["be"],
-        "telemetryId": "ebay-be"
+        "telemetryId": "ebay-be",
+        "searchUrlGetParams": {
+          "ff3": "4",
+          "toolid": "20004",
+          "campid": "5338192028",
+          "customid": "",
+          "mpre": "https://www.befr.ebay.be/sch/{searchTerms}"
+        }
       }, {
         "included": { "locales": {
           "matches": ["an", "ast", "ca", "ca-valencia", "es-ES", "eu", "gl"]
         }},
         "webExtensionLocales": ["es"],
-        "telemetryId": "ebay-es"
+        "telemetryId": "ebay-es",
+        "searchUrlGetParams": {
+          "ff3": "4",
+          "toolid": "20004",
+          "campid": "5338192028",
+          "customid": "",
+          "mpre": "https://www.ebay.es/sch/{searchTerms}"
+        }
       }, {
         "included": { "locales": { "matches": ["br", "fr", "wo"] }},
         "webExtensionLocales": ["fr"],
-        "telemetryId": "ebay-fr"
+        "telemetryId": "ebay-fr",
+        "searchUrlGetParams": {
+          "ff3": "4",
+          "toolid": "20004",
+          "campid": "5338192028",
+          "customid": "",
+          "mpre": "https://www.ebay.fr/sch/{searchTerms}"
+        }
       }, {
         "included": {
           "locales": { "matches": ["br", "fr", "wo"] },
           "regions": ["be"]
         },
         "webExtensionLocales": ["be"],
-        "telemetryId": "ebay-be"
+        "telemetryId": "ebay-be",
+        "searchUrlGetParams": {
+          "ff3": "4",
+          "toolid": "20004",
+          "campid": "5338192028",
+          "customid": "",
+          "mpre": "https://www.befr.ebay.be/sch/{searchTerms}"
+        }
       }, {
         "included": {
           "locales": { "matches": ["br", "fr", "wo"] },
           "regions": ["ca"]
         },
         "webExtensionLocales": ["ca"],
-        "telemetryId": "ebay-ca"
+        "telemetryId": "ebay-ca",
+        "searchUrlGetParams": {
+          "ff3": "4",
+          "toolid": "20004",
+          "campid": "5338192028",
+          "customid": "",
+          "mpre": "https://www.ebay.ca/sch/{searchTerms}"
+        }
       }, {
         "included": {
           "locales": { "matches": ["br", "fr", "wo"] },
           "regions": ["ch"]
         },
         "webExtensionLocales": ["ch"],
-        "telemetryId": "ebay-ch"
+        "telemetryId": "ebay-ch",
+        "searchUrlGetParams": {
+          "ff3": "4",
+          "toolid": "20004",
+          "campid": "5338192028",
+          "customid": "",
+          "mpre": "https://www.ebay.ch/sch/{searchTerms}"
+        }
       }, {
         "included": { "locales": { "matches": ["cy", "en-GB", "gd"] }},
         "webExtensionLocales": ["uk"],
-        "telemetryId": "ebay-uk"
+        "telemetryId": "ebay-uk",
+        "searchUrlGetParams": {
+          "ff3": "4",
+          "toolid": "20004",
+          "campid": "5338192028",
+          "customid": "",
+          "mpre": "https://www.ebay.co.uk/sch/{searchTerms}"
+        }
       }, {
         "included": {
           "locales": { "matches": ["cy", "en-GB", "gd"] },
           "regions": ["au"]
         },
         "webExtensionLocales": ["au"],
-        "telemetryId": "ebay-au"
+        "telemetryId": "ebay-au",
+        "searchUrlGetParams": {
+          "ff3": "4",
+          "toolid": "20004",
+          "campid": "5338192028",
+          "customid": "",
+          "mpre": "https://www.ebay.com.au/sch/{searchTerms}"
+        }
       }, {
         "included": {
           "locales": { "matches": ["cy", "en-GB", "gd"] },
@@ -339,14 +533,28 @@
       }, {
         "included": { "locales": { "matches": ["de", "dsb", "hsb"] }},
         "webExtensionLocales": ["de"],
-        "telemetryId": "ebay-de"
+        "telemetryId": "ebay-de",
+        "searchUrlGetParams": {
+          "ff3": "4",
+          "toolid": "20004",
+          "campid": "5338192028",
+          "customid": "",
+          "mpre": "https://www.ebay.de/sch/{searchTerms}"
+        }
       }, {
         "included": {
           "locales": { "matches": ["de", "dsb", "hsb"] },
           "regions": ["at"]
         },
         "webExtensionLocales": ["at"],
-        "telemetryId": "ebay-at"
+        "telemetryId": "ebay-at",
+        "searchUrlGetParams": {
+          "ff3": "4",
+          "toolid": "20004",
+          "campid": "5338192028",
+          "customid": "",
+          "mpre": "https://www.ebay.at/sch/{searchTerms}"
+        }
       }, {
         "included": {
           "locales": { "matches": ["de", "dsb", "hsb"] },
@@ -357,30 +565,72 @@
       }, {
         "included": { "locales": { "matches": ["en-CA"] }},
         "webExtensionLocales": ["ca"],
-        "telemetryId": "ebay-ca"
+        "telemetryId": "ebay-ca",
+        "searchUrlGetParams": {
+          "ff3": "4",
+          "toolid": "20004",
+          "campid": "5338192028",
+          "customid": "",
+          "mpre": "https://www.ebay.ca/sch/{searchTerms}"
+        }
       }, {
         "included": { "locales": { "matches": ["fy-NL", "nl"] }},
         "webExtensionLocales": ["nl"],
-        "telemetryId": "ebay-nl"
+        "telemetryId": "ebay-nl",
+        "searchUrlGetParams": {
+          "ff3": "4",
+          "toolid": "20004",
+          "campid": "5338192028",
+          "customid": "",
+          "mpre": "https://www.ebay.nl/sch/{searchTerms}"
+        }
       }, {
         "included": {
           "locales": { "matches": ["fy-NL", "nl"] },
           "regions": ["be"]
         },
         "webExtensionLocales": ["be"],
-        "telemetryId": "ebay-be"
+        "telemetryId": "ebay-be",
+        "searchUrlGetParams": {
+          "ff3": "4",
+          "toolid": "20004",
+          "campid": "5338192028",
+          "customid": "",
+          "mpre": "https://www.befr.ebay.be/sch/{searchTerms}"
+        }
       }, {
         "included": { "locales": { "matches": ["ga-IE"] }},
         "webExtensionLocales": ["ie"],
-        "telemetryId": "ebay-ie"
+        "telemetryId": "ebay-ie",
+        "searchUrlGetParams": {
+          "ff3": "4",
+          "toolid": "20004",
+          "campid": "5338192028",
+          "customid": "",
+          "mpre": "https://www.ebay.ie/sch/{searchTerms}"
+        }
       }, {
         "included": { "locales": { "matches": ["it", "lij"] }},
         "webExtensionLocales": ["it"],
-        "telemetryId": "ebay-it"
+        "telemetryId": "ebay-it",
+        "searchUrlGetParams": {
+          "ff3": "4",
+          "toolid": "20004",
+          "campid": "5338192028",
+          "customid": "",
+          "mpre": "https://www.ebay.it/sch/{searchTerms}"
+        }
       }, {
         "included": { "locales": { "matches": ["rm"] }},
         "webExtensionLocales": ["ch"],
-        "telemetryId": "ebay-ch"
+        "telemetryId": "ebay-ch",
+        "searchUrlGetParams": {
+          "ff3": "4",
+          "toolid": "20004",
+          "campid": "5338192028",
+          "customid": "",
+          "mpre": "https://www.ebay.ch/sch/{searchTerms}"
+        }
       }],
       "aliases": ["@ebay"]
     },
@@ -390,6 +640,32 @@
       "webExtensionId": "ddg@search.mozilla.org",
       "webExtensionVersion": "1.0",
       "telemetryId": "ddg",
+      "extraParams": [{
+        "name": "t",
+        "condition": "purpose",
+        "purpose": "searchbar",
+        "value": "ffsb"
+      }, {
+        "name": "t",
+        "condition": "purpose",
+        "purpose": "keyword",
+        "value": "ffab"
+      }, {
+        "name": "t",
+        "condition": "purpose",
+        "purpose": "contextmenu",
+        "value": "ffcm"
+      }, {
+        "name": "t",
+        "condition": "purpose",
+        "purpose": "homepage",
+        "value": "ffhp"
+      }, {
+        "name": "t",
+        "condition": "purpose",
+        "purpose": "newtab",
+        "value": "ffnt"
+      }],
       "appliesTo": [{
         "included": { "everywhere": true }
       }],
@@ -399,6 +675,32 @@
       "engineName": "Yandex",
       "webExtensionId": "yandex@search.mozilla.org",
       "webExtensionVersion": "1.0",
+      "extraParams": [{
+        "name": "clid",
+        "condition": "purpose",
+        "purpose": "searchbar",
+        "value": "2186618"
+      }, {
+        "name": "clid",
+        "condition": "purpose",
+        "purpose": "keyword",
+        "value": "2186621"
+      }, {
+        "name": "clid",
+        "condition": "purpose",
+        "purpose": "contextmenu",
+        "value": "2186623"
+      }, {
+        "name": "clid",
+        "condition": "purpose",
+        "purpose": "homepage",
+        "value": "2186617"
+      }, {
+        "name": "clid",
+        "condition": "purpose",
+        "purpose": "newtab",
+        "value": "2186620"
+      }],
       "appliesTo": [{
         "default": "yes",
         "included": {
