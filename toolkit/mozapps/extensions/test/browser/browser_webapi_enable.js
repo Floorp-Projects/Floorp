@@ -15,7 +15,7 @@ async function getListenerEvents(browser) {
 
 const ID = "test@tests.mozilla.org";
 
-let provider = new MockProvider(false);
+let provider = new MockProvider();
 provider.createAddons([
   {
     id: ID,
