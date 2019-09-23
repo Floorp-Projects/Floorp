@@ -88,6 +88,8 @@ class LCovRealm {
   // the runtime code coverage trace file.
   void exportInto(GenericPrinter& out, bool* isEmpty) const;
 
+  friend bool InitScriptCoverage(JSContext* cx, JSScript* script);
+
  private:
   // Write the realm name in outTN_.
   void writeRealmName(JS::Realm* realm);
