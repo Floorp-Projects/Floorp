@@ -280,10 +280,7 @@ public class SessionAccessibility {
                     }
                     int selectionStart = arguments.getInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT);
                     int selectionEnd = arguments.getInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT);
-                    data = new GeckoBundle(2);
-                    data.putInt("start", selectionStart);
-                    data.putInt("end", selectionEnd);
-                    mSession.getEventDispatcher().dispatch("GeckoView:AccessibilitySetSelection", data);
+                    nativeProvider.setSelection(virtualViewId, selectionStart, selectionEnd);
                     return true;
                 case AccessibilityNodeInfo.ACTION_CUT:
                 case AccessibilityNodeInfo.ACTION_COPY:
@@ -870,6 +867,9 @@ public class SessionAccessibility {
 
         @WrapForJNI(dispatchTo = "gecko")
         public native void navigateText(int id, int granularity, int startOffset, int endOffset, boolean forward, boolean select);
+
+        @WrapForJNI(dispatchTo = "gecko")
+        public native void setSelection(int id, int start, int end);
 
         @WrapForJNI(calledFrom = "gecko", stubName = "SendEvent")
         private void sendEventNative(final int eventType, final int sourceId, final int className, final GeckoBundle eventData) {

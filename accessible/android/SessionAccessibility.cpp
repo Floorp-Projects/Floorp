@@ -132,6 +132,11 @@ void SessionAccessibility::NavigateText(int32_t aID, int32_t aGranularity,
                                aEndOffset, aForward, aSelect);
 }
 
+void SessionAccessibility::SetSelection(int32_t aID, int32_t aStart,
+                                        int32_t aEnd) {
+  FORWARD_ACTION_TO_ACCESSIBLE(SetSelection, aStart, aEnd);
+}
+
 SessionAccessibility* SessionAccessibility::GetInstanceFor(
     ProxyAccessible* aAccessible) {
   auto tab =
