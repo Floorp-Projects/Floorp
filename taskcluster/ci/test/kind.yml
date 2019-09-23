@@ -35,8 +35,6 @@ jobs-from:
     - raptor.yml
     - raptor-chromium.yml
     - raptor-fenix.yml
-    - raptor-fennec.yml
-    - raptor-fennec64.yml
     - raptor-fennec68.yml
     - raptor-gve.yml
     - raptor-refbrow.yml
