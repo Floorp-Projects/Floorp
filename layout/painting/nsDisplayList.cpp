@@ -6941,6 +6941,12 @@ bool nsDisplayOwnLayer::CreateWebRenderCommands(
   params.animation = prop.ptrOr(nullptr);
   params.clip =
       wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());
+  if (IsScrollbarContainer()) {
+    params.prim_flags |= wr::PrimitiveFlags_IS_SCROLLBAR_CONTAINER;
+  }
+  if (IsScrollThumbLayer()) {
+    params.prim_flags |= wr::PrimitiveFlags_IS_SCROLLBAR_THUMB;
+  }
   StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,
                            params);
 
@@ -8626,7 +8632,9 @@ bool nsDisplayTransform::CreateWebRenderCommands(
   params.mBoundTransform = &newTransformMatrix;
   params.animation = animationsId ? &prop : nullptr;
   params.mTransformPtr = transformForSC;
-  params.is_backface_visible = !BackfaceIsHidden();
+  params.prim_flags = !BackfaceIsHidden()
+                          ? wr::PrimitiveFlags_IS_BACKFACE_VISIBLE
+                          : wr::PrimitiveFlags{0};
   params.mDeferredTransformItem = deferredTransformItem;
   params.mAnimated = animated;
   // Determine if we would have to rasterize any items in local raster space
@@ -9329,7 +9337,9 @@ bool nsDisplayPerspective::CreateWebRenderCommands(
   wr::StackingContextParams params;
   params.mTransformPtr = &perspectiveMatrix;
   params.reference_frame_kind = wr::WrReferenceFrameKind::Perspective;
-  params.is_backface_visible = !BackfaceIsHidden();
+  params.prim_flags = !BackfaceIsHidden()
+                          ? wr::PrimitiveFlags_IS_BACKFACE_VISIBLE
+                          : wr::PrimitiveFlags{0};
   params.SetPreserve3D(preserve3D);
   params.clip =
       wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());
