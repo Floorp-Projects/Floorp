@@ -96,7 +96,7 @@ function run_test() {
     file.initWithPath(link.target);
     linkURI = ios.newFileURI(file);
   } else {
-    linkURI = ios.newFileURI(linkTarget);
+    linkURI = ios.newFileURI(link);
   }
 
   do_test_pending();
