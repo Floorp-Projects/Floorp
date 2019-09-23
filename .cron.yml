@@ -85,11 +85,11 @@ jobs:
                   - {weekday: 'Monday', hour: 10, minute: 0}
                   - {weekday: 'Thursday', hour: 10, minute: 0}
 
-    - name: tp6m-fennec-v64
+    - name: tp6m-fennec-v68
       job:
           type: decision-task
-          treeherder-symbol: f64
-          target-tasks-method: fennec_v64
+          treeherder-symbol: f68
+          target-tasks-method: fennec_v68
           include-push-tasks: true
       run-on-projects:
           - mozilla-central
