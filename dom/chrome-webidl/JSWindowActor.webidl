@@ -156,6 +156,8 @@ dictionary WindowActorChildOptions : WindowActorSidedOptions {
    * Events which this actor wants to be listening to. When these events fire,
    * it will trigger actor creation, and then forward the event to the actor.
    *
+   * NOTE: Listeners are not attached for windows loaded in chrome docshells.
+   *
    * NOTE: `once` option is not support due to we register listeners in a shared
    * location.
    */
