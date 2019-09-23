@@ -7,8 +7,8 @@
 #ifndef telemetry_UntrustedModules_h__
 #define telemetry_UntrustedModules_h__
 
-#include "nsCOMPtr.h"
 #include "jsapi.h"
+#include "mozilla/dom/Promise.h"
 
 namespace mozilla {
 namespace Telemetry {
