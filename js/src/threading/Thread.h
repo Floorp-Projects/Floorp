@@ -80,11 +80,10 @@ class Thread {
   MOZ_MUST_USE bool init(F&& f, Args&&... args) {
     MOZ_RELEASE_ASSERT(id_ == ThreadId());
     using Trampoline = detail::ThreadTrampoline<F, Args...>;
-    AutoEnterOOMUnsafeRegion oom;
     auto trampoline =
         js_new<Trampoline>(std::forward<F>(f), std::forward<Args>(args)...);
     if (!trampoline) {
-      oom.crash("js::Thread::init");
+      return false;
     }
 
     // We hold this lock while create() sets the thread id.
