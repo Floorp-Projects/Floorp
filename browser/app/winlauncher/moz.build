@@ -8,10 +8,6 @@ Library('winlauncher')
 
 FORCE_STATIC_LIB = True
 
-EXPORTS.mozilla += [
-    'NtLoaderAPI.h',
-]
-
 UNIFIED_SOURCES += [
     '/ipc/mscom/ProcessRuntime.cpp',
     '/widget/windows/WindowsConsole.cpp',

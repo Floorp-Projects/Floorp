@@ -10,10 +10,6 @@ EXPORTS.mozilla.mscom += [
     'ProcessRuntimeShared.h',
 ]
 
-LOCAL_INCLUDES += [
-    '/mozglue/build',
-]
-
 UNIFIED_SOURCES += [
     'ProcessRuntimeShared.cpp',
 ]
