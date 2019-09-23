@@ -62,6 +62,7 @@
         <tooltip id="protections-popup-not-blocking-why-etp-off-tooltip">&protections.notBlocking.why.etpOff.tooltip;</tooltip>
         <vbox id="protections-popup-content" flex="1">
           <vbox id="protections-popup-category-list">
+            <!-- wrap=true is needed for descriptionheightworkaround, see bug 1564077 -->
             <toolbarbutton id="protections-popup-category-tracking-protection"
                            oncommand="gProtectionsHandler.showTrackersSubview(event); gProtectionsHandler.recordClick('trackers');"
                            class="protections-popup-category" align="center"
@@ -69,13 +70,16 @@
               <image class="protections-popup-category-icon tracking-protection-icon"/>
               <label flex="1" class="protections-popup-category-label">&contentBlocking.trackingProtection4.label;</label>
             </toolbarbutton>
+            <!-- wrap=true is needed for descriptionheightworkaround, see bug 1564077 -->
             <toolbarbutton id="protections-popup-category-socialblock"
                            oncommand="gProtectionsHandler.showSocialblockerSubview(event); gProtectionsHandler.recordClick('social');"
-                           class="protections-popup-category" align="center">
+                           class="protections-popup-category" align="center"
+                           wrap="true">
               <image class="protections-popup-category-icon socialblock-icon"/>
               <label flex="1"
               class="protections-popup-category-label">&contentBlocking.socialblock.label;</label>
             </toolbarbutton>
+            <!-- wrap=true is needed for descriptionheightworkaround, see bug 1564077 -->
             <toolbarbutton id="protections-popup-category-cookies"
                            oncommand="gProtectionsHandler.showCookiesSubview(event); gProtectionsHandler.recordClick('cookies');"
                            class="protections-popup-category" align="center"
@@ -87,6 +91,7 @@
                      class="protections-popup-category-label"
                      hidden="true"></label>
             </toolbarbutton>
+            <!-- wrap=true is needed for descriptionheightworkaround, see bug 1564077 -->
             <toolbarbutton id="protections-popup-category-cryptominers"
                            oncommand="gProtectionsHandler.showCryptominersSubview(event); gProtectionsHandler.recordClick('cryptominers');"
                            class="protections-popup-category" align="center"
@@ -94,6 +99,7 @@
               <image class="protections-popup-category-icon cryptominers-icon"/>
               <label flex="1" class="protections-popup-category-label">&contentBlocking.cryptominers.label;</label>
             </toolbarbutton>
+            <!-- wrap=true is needed for descriptionheightworkaround, see bug 1564077 -->
             <toolbarbutton id="protections-popup-category-fingerprinters"
                            oncommand="gProtectionsHandler.showFingerprintersSubview(event); gProtectionsHandler.recordClick('fingerprinters');"
                            class="protections-popup-category" align="center"
@@ -121,15 +127,19 @@
       </vbox>
 
       <vbox id="protections-popup-footer" class="protections-popup-section">
+        <!-- wrap=true is needed for descriptionheightworkaround, see bug 1564077 -->
         <toolbarbutton id="protections-popup-settings-button"
                        class="protections-popup-footer-button"
+                       wrap="true"
                        oncommand="gProtectionsHandler.openPreferences(); gProtectionsHandler.recordClick('settings');">
           <image class="protections-popup-footer-icon protections-popup-settings-icon"/>
           <label class="protections-popup-footer-button-label" flex="1">&protections.settings.label;</label>
         </toolbarbutton>
         <stack id="protections-popup-show-report-stack">
+          <!-- wrap=true is needed for descriptionheightworkaround, see bug 1564077 -->
           <toolbarbutton id="protections-popup-show-report-button"
                          class="protections-popup-footer-button"
+                         wrap="true"
                          oncommand="gProtectionsHandler.openProtections(true); gProtectionsHandler.recordClick('full_report');">
             <image class="protections-popup-footer-icon protections-popup-show-report-icon"/>
             <label class="protections-popup-footer-button-label" flex="1">&protections.showreport.label;</label>
