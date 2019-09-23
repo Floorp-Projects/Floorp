@@ -3145,6 +3145,11 @@ class nsContentUtils {
   static bool HighPriorityEventPendingForTopLevelDocumentBeforeContentfulPaint(
       Document* aDocument);
 
+  /**
+   * We need a JSContext to get prototypes inside CallerInnerWindow.
+   */
+  static nsGlobalWindowInner* CallerInnerWindow(JSContext* aCx);
+
  private:
   static bool InitializeEventTable();
 

@@ -1859,6 +1859,12 @@
   value: true
   mirror: always
 
+# re-SAB; Whether allow postMessage a sharedArrayBuffer
+- name: dom.postMessage.sharedArrayBuffer.withCOOP_COEP
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Presentation API
 - name: dom.presentation.enabled
   type: bool
