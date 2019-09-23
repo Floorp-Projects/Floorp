@@ -204,9 +204,10 @@ class AutoPushFeatureTest {
         val service: PushService = mock()
         val feature = spy(AutoPushFeature(testContext, service, mock(), coroutineContext, mock()))
 
-        feature.forceRegistrationRenewal()
+        feature.renewRegistration()
 
         verify(service).deleteToken()
+        verify(service).start(testContext)
 
         val pref = preference(testContext).getString(PREF_TOKEN, null)
         assertNull(pref)
