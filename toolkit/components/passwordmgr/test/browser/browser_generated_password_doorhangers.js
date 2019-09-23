@@ -423,6 +423,99 @@ add_task(async function autocomplete_generated_password_saved_empty_username() {
   );
 });
 
+add_task(async function autocomplete_generated_password_saved_username() {
+  // confirm behavior when filling a generated password via autocomplete
+  // into a form with username matching an existing saved login
+  await setup_withOneLogin("user1", "xyzpassword");
+  await openFormInNewTab(
+    TEST_ORIGIN + FORM_PAGE_PATH,
+    {
+      password: {
+        selector: passwordInputSelector,
+        expectedValue: "xyzpassword",
+        setValue: "",
+      },
+      username: {
+        selector: usernameInputSelector,
+        expectedValue: "user1",
+      },
+    },
+    async function taskFn(browser) {
+      let storageChangedPromise = TestUtils.topicObserved(
+        "passwordmgr-storage-changed",
+        (_, data) => data == "addLogin"
+      );
+      let confirmationHint = document.getElementById("confirmation-hint");
+      let hintPromiseShown = BrowserTestUtils.waitForEvent(
+        confirmationHint,
+        "popupshown"
+      );
+      await fillGeneratedPasswordFromACPopup(browser, passwordInputSelector);
+      info("waiting for addLogin");
+      await storageChangedPromise;
+      await verifyGeneratedPasswordWasFilled(browser, passwordInputSelector);
+      // Make sure confirmation hint was shown
+      await hintPromiseShown;
+      await verifyConfirmationHint(confirmationHint);
+
+      // Check properties of the newly auto-saved login
+      let [user1LoginSnapshot, autoSavedLogin] = verifyLogins([
+        {
+          username: "user1",
+          password: "xyzpassword", // user1 is unchanged
+        },
+        {
+          timesUsed: 1,
+          username: "",
+          passwordLength: LoginTestUtils.generation.LENGTH,
+        },
+      ]);
+
+      let notif = await openAndVerifyDoorhanger(browser, "password-change", {
+        dismissed: true,
+        anchorExtraAttr: "attention",
+        usernameValue: "user1",
+        passwordLength: LoginTestUtils.generation.LENGTH,
+      });
+
+      let promiseHidden = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popuphidden"
+      );
+      clickDoorhangerButton(notif, DONT_CHANGE_BUTTON);
+      await promiseHidden;
+
+      // confirm the extraAttr attribute is removed after opening & dismissing the doorhanger
+      ok(
+        !notif.anchorElement.hasAttribute("extraAttr"),
+        "Check if the extraAttr attribute was removed"
+      );
+      await cleanupDoorhanger(notif);
+
+      storageChangedPromise = TestUtils.topicObserved(
+        "passwordmgr-storage-changed",
+        (_, data) => data == "modifyLogin"
+      );
+      info("waiting for submitForm");
+      await submitForm(browser);
+      promiseHidden = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popuphidden"
+      );
+      clickDoorhangerButton(notif, CHANGE_BUTTON);
+      await promiseHidden;
+      await storageChangedPromise;
+      verifyLogins([
+        {
+          timesUsed: user1LoginSnapshot.timesUsed + 1,
+          username: "user1",
+          password: autoSavedLogin.password,
+        },
+      ]);
+    }
+  );
+});
+
 add_task(async function ac_gen_pw_saved_empty_un_stored_non_empty_un_in_form() {
   // confirm behavior when when the form's username field has a non-empty value
   // and there is an existing saved login with a "" username
@@ -581,6 +674,9 @@ add_task(async function autocomplete_generated_password_edited_no_auto_save() {
         (_, data) => data == "modifyLogin"
       );
       await fillGeneratedPasswordFromACPopup(browser, passwordInputSelector);
+      info(
+        "Filled generated password, waiting for dismissed password-change doorhanger"
+      );
       await waitForDoorhanger(browser, "password-change");
       info("Waiting to openAndVerifyDoorhanger");
       let notif = await openAndVerifyDoorhanger(browser, "password-change", {
