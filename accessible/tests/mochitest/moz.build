@@ -18,7 +18,6 @@ A11Y_MANIFESTS += [
     'hittest/a11y.ini',
     'hyperlink/a11y.ini',
     'hypertext/a11y.ini',
-    'jsat/a11y.ini',
     'name/a11y.ini',
     'pivot/a11y.ini',
     'relations/a11y.ini',
