@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_DllBlocklistWin_h
-#define mozilla_DllBlocklistWin_h
+#ifndef mozilla_DllBlocklistInit_h
+#define mozilla_DllBlocklistInit_h
 
 #include <windows.h>
 
@@ -18,4 +18,4 @@ LauncherVoidResult InitializeDllBlocklistOOP(const wchar_t* aFullImagePath,
 
 }  // namespace mozilla
 
-#endif  // mozilla_DllBlocklistWin_h
+#endif  // mozilla_DllBlocklistInit_h
