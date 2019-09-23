@@ -42,6 +42,12 @@ export default class LoginItem extends HTMLElement {
     this._deleteButton = this.shadowRoot.querySelector(".delete-button");
     this._editButton = this.shadowRoot.querySelector(".edit-button");
     this._errorMessage = this.shadowRoot.querySelector(".error-message");
+    this._errorMessageLink = this._errorMessage.querySelector(
+      ".error-message-link"
+    );
+    this._errorMessageText = this._errorMessage.querySelector(
+      ".error-message-text"
+    );
     this._form = this.shadowRoot.querySelector("form");
     this._originInput = this.shadowRoot.querySelector("input[name='origin']");
     this._usernameInput = this.shadowRoot.querySelector(
@@ -81,6 +87,7 @@ export default class LoginItem extends HTMLElement {
     this._deleteButton.addEventListener("click", this);
     this._dismissBreachAlert.addEventListener("click", this);
     this._editButton.addEventListener("click", this);
+    this._errorMessageLink.addEventListener("click", this);
     this._form.addEventListener("submit", this);
     this._originInput.addEventListener("blur", this);
     this._originInput.addEventListener("click", this);
@@ -188,25 +195,20 @@ export default class LoginItem extends HTMLElement {
   }
 
   showLoginItemError(error) {
-    const errorMessageText = this._errorMessage.querySelector(
-      ".error-message-text"
-    );
-    if (!error.errorMessage) {
-      return;
-    }
     if (error.errorMessage.includes("This login already exists")) {
       document.l10n.setAttributes(
-        errorMessageText,
+        this._errorMessageLink,
         "about-logins-error-message-duplicate-login",
         {
           loginTitle: error.login.title,
         }
       );
+      this._errorMessageLink.dataset.errorGuid = error.existingLoginGuid;
+      this._errorMessageText.hidden = true;
+      this._errorMessageLink.hidden = false;
     } else {
-      document.l10n.setAttributes(
-        errorMessageText,
-        "about-logins-error-message-default"
-      );
+      this._errorMessageText.hidden = false;
+      this._errorMessageLink.hidden = true;
     }
     this._errorMessage.hidden = false;
   }
@@ -362,6 +364,21 @@ export default class LoginItem extends HTMLElement {
             object: "existing_login",
             method: "edit",
           });
+          return;
+        }
+        if (
+          classList.contains("error-message-link") &&
+          event.currentTarget.dataset.errorGuid
+        ) {
+          let existingDuplicateLogin = {
+            guid: event.currentTarget.dataset.errorGuid,
+          };
+          window.dispatchEvent(
+            new CustomEvent("AboutLoginsLoginSelected", {
+              detail: existingDuplicateLogin,
+              cancelable: true,
+            })
+          );
           return;
         }
         if (classList.contains("origin-input")) {

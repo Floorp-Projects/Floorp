@@ -1103,6 +1103,18 @@ this.LoginHelper = {
       throw e;
     }
   },
+
+  createLoginAlreadyExistsError(guid) {
+    // The GUID is stored in an nsISupportsString here because we cannot pass
+    // raw JS objects within Components.Exception due to bug 743121.
+    let guidSupportsString = Cc[
+      "@mozilla.org/supports-string;1"
+    ].createInstance(Ci.nsISupportsString);
+    guidSupportsString.data = guid;
+    return Components.Exception("This login already exists.", {
+      data: guidSupportsString,
+    });
+  },
 };
 
 LoginHelper.init();

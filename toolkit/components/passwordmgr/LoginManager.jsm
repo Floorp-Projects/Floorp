@@ -312,8 +312,9 @@ LoginManager.prototype = {
       login.httpRealm
     );
 
-    if (logins.some(l => login.matches(l, true))) {
-      throw new Error("This login already exists.");
+    let matchingLogin = logins.find(l => login.matches(l, true));
+    if (matchingLogin) {
+      throw LoginHelper.createLoginAlreadyExistsError(matchingLogin.guid);
     }
 
     log.debug("Adding login");
