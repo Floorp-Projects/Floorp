@@ -34,6 +34,10 @@ bool ThreadId::operator==(const ThreadId& aOther) const {
 bool Thread::create(unsigned int(__stdcall* aMain)(void*), void* aArg) {
   MOZ_RELEASE_ASSERT(!joinable());
 
+  if (oom::ShouldFailWithOOM()) {
+    return false;
+  }
+
   // Use _beginthreadex and not CreateThread, because threads that are
   // created with the latter leak a small amount of memory when they use
   // certain msvcrt functions and then exit.
