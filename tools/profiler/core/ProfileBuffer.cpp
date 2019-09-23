@@ -45,13 +45,9 @@ ProfileBuffer::~ProfileBuffer() {
 BlocksRingBuffer::BlockIndex ProfileBuffer::AddEntry(
     BlocksRingBuffer& aBlocksRingBuffer, const ProfileBufferEntry& aEntry) {
   switch (aEntry.GetKind()) {
-#define SWITCH_KIND(KIND, TYPE, SIZE)                                        \
-  case ProfileBufferEntry::Kind::KIND: {                                     \
-    /* Rooting analysis cannot get through `BlocksRingBuffer`'s heavy use of \
-     * lambdas and `std::function`s, which then trips it when used from      \
-     * `MergeStacks()` where unrooted js objects are manipulated. */         \
-    JS::AutoSuppressGCAnalysis nogc;                                         \
-    return aBlocksRingBuffer.PutFrom(&aEntry, 1 + (SIZE));                   \
+#define SWITCH_KIND(KIND, TYPE, SIZE)                      \
+  case ProfileBufferEntry::Kind::KIND: {                   \
+    return aBlocksRingBuffer.PutFrom(&aEntry, 1 + (SIZE)); \
   }
 
     FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(SWITCH_KIND)

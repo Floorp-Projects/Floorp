@@ -570,9 +570,6 @@ static uint64_t ExtractBlockIndex(const BlocksRingBuffer::BlockIndex bi) {
 void TestBlocksRingBufferAPI() {
   printf("TestBlocksRingBufferAPI...\n");
 
-  // Entry destructor will store about-to-be-cleared value in `lastDestroyed`.
-  uint32_t lastDestroyed = 0;
-
   // Create a 16-byte buffer, enough to store up to 3 entries (1 byte size + 4
   // bytes uint64_t).
   constexpr uint32_t MBSize = 16;
@@ -584,17 +581,15 @@ void TestBlocksRingBufferAPI() {
   // Start a temporary block to constrain buffer lifetime.
   {
     BlocksRingBuffer rb(BlocksRingBuffer::ThreadSafety::WithMutex,
-                        &buffer[MBSize], MakePowerOfTwo32<MBSize>(),
-                        [&](BlocksRingBuffer::EntryReader& aReader) {
-                          lastDestroyed = aReader.ReadObject<uint32_t>();
-                        });
+                        &buffer[MBSize], MakePowerOfTwo32<MBSize>());
 
-#  define VERIFY_START_END_DESTROYED(aStart, aEnd, aLastDestroyed)          \
+#  define VERIFY_START_END_PUSHED_CLEARED(aStart, aEnd, aPushed, aCleared)  \
     {                                                                       \
       BlocksRingBuffer::State state = rb.GetState();                        \
       MOZ_RELEASE_ASSERT(ExtractBlockIndex(state.mRangeStart) == (aStart)); \
       MOZ_RELEASE_ASSERT(ExtractBlockIndex(state.mRangeEnd) == (aEnd));     \
-      MOZ_RELEASE_ASSERT(lastDestroyed == (aLastDestroyed));                \
+      MOZ_RELEASE_ASSERT(state.mPushedBlockCount == (aPushed));             \
+      MOZ_RELEASE_ASSERT(state.mClearedBlockCount == (aCleared));           \
     }
 
     // All entries will contain one 32-bit number. The resulting blocks will
@@ -617,8 +612,8 @@ void TestBlocksRingBufferAPI() {
 
     // Empty buffer to start with.
     // Start&end indices still at 1 (0 is reserved for the default BlockIndex{}
-    // that cannot point at a valid entry), nothing destroyed.
-    VERIFY_START_END_DESTROYED(1, 1, 0);
+    // that cannot point at a valid entry), nothing cleared.
+    VERIFY_START_END_PUSHED_CLEARED(1, 1, 0, 0);
 
     // Default BlockIndex.
     BlocksRingBuffer::BlockIndex bi0;
@@ -646,7 +641,7 @@ void TestBlocksRingBufferAPI() {
     MOZ_RELEASE_ASSERT(ExtractBlockIndex(rb.PutObject(uint32_t(1))) == 1);
     //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
     //   - S[4 |    int(1)    ]E
-    VERIFY_START_END_DESTROYED(1, 6, 0);
+    VERIFY_START_END_PUSHED_CLEARED(1, 6, 1, 0);
 
     // Push `2` through ReserveAndPut, check output BlockIndex.
     auto bi2 = rb.ReserveAndPut([]() { return sizeof(uint32_t); },
@@ -662,7 +657,7 @@ void TestBlocksRingBufferAPI() {
     MOZ_RELEASE_ASSERT(ExtractBlockIndex(bi2) == 6);
     //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
     //   - S[4 |    int(1)    ] [4 |    int(2)    ]E
-    VERIFY_START_END_DESTROYED(1, 11, 0);
+    VERIFY_START_END_PUSHED_CLEARED(1, 11, 2, 0);
 
     // Check single entry at bi2, store next block index.
     auto bi2Next =
@@ -739,7 +734,7 @@ void TestBlocksRingBufferAPI() {
     MOZ_RELEASE_ASSERT(put3 == 11.0);
     //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15 (16)
     //   - S[4 |    int(1)    ] [4 |    int(2)    ] [4 |    int(3)    ]E
-    VERIFY_START_END_DESTROYED(1, 16, 0);
+    VERIFY_START_END_PUSHED_CLEARED(1, 16, 3, 0);
 
     // Re-Read single entry at bi2, should now have a next entry.
     rb.ReadAt(bi2, [&](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeReader) {
@@ -766,12 +761,12 @@ void TestBlocksRingBufferAPI() {
     MOZ_RELEASE_ASSERT(count == 3);
 
     // Push `4`, store its BlockIndex for later.
-    // This will wrap around, and destroy the first entry.
+    // This will wrap around, and clear the first entry.
     BlocksRingBuffer::BlockIndex bi4 = rb.PutObject(uint32_t(4));
     // Before:
     //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15 (16)
     //   - S[4 |    int(1)    ] [4 |    int(2)    ] [4 |    int(3)    ]E
-    // 1. First entry destroyed:
+    // 1. First entry cleared:
     //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15 (16)
     //   -   ?   ?   ?   ?   ? S[4 |    int(2)    ] [4 |    int(3)    ]E
     // 2. New entry starts at 15 and wraps around: (shown on separate line)
@@ -782,7 +777,7 @@ void TestBlocksRingBufferAPI() {
     // (collapsed)
     //  16  17  18  19  20  21   6   7   8   9  10  11  12  13  14  15 (16)
     //  [4 |    int(4)    ]E ? S[4 |    int(2)    ] [4 |    int(3)    ]
-    VERIFY_START_END_DESTROYED(6, 21, 1);
+    VERIFY_START_END_PUSHED_CLEARED(6, 21, 4, 1);
 
     // Check that we have `2` to `4`.
     count = 1;
@@ -792,7 +787,7 @@ void TestBlocksRingBufferAPI() {
     MOZ_RELEASE_ASSERT(count == 4);
 
     // Push 5 through Put, no returns.
-    // This will destroy the second entry.
+    // This will clear the second entry.
     // Check that the EntryWriter can access bi4 but not bi2.
     auto bi5_6 =
         rb.Put(sizeof(uint32_t), [&](BlocksRingBuffer::EntryWriter* aEW) {
@@ -808,7 +803,7 @@ void TestBlocksRingBufferAPI() {
     auto& bi6 = bi5_6.second();
     //  16  17  18  19  20  21  22  23  24  25  26  11  12  13  14  15 (16)
     //  [4 |    int(4)    ] [4 |    int(5)    ]E ? S[4 |    int(3)    ]
-    VERIFY_START_END_DESTROYED(11, 26, 2);
+    VERIFY_START_END_PUSHED_CLEARED(11, 26, 5, 2);
 
     // Read single entry at bi2, should now gracefully fail.
     rb.ReadAt(bi2, [](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeReader) {
@@ -854,11 +849,11 @@ void TestBlocksRingBufferAPI() {
     });
     MOZ_RELEASE_ASSERT(count == 5);
 
-    // Clear everything before `4`, this should destroy `3`.
+    // Clear everything before `4`, this should clear `3`.
     rb.ClearBefore(bi4);
     //  16  17  18  19  20  21  22  23  24  25  26  11  12  13  14  15
     // S[4 |    int(4)    ] [4 |    int(5)    ]E ?   ?   ?   ?   ?   ?
-    VERIFY_START_END_DESTROYED(16, 26, 3);
+    VERIFY_START_END_PUSHED_CLEARED(16, 26, 5, 3);
 
     // Check that we have `4` to `5`.
     count = 3;
@@ -867,17 +862,16 @@ void TestBlocksRingBufferAPI() {
     });
     MOZ_RELEASE_ASSERT(count == 5);
 
-    // Clear everything before `4` again, nothing to destroy.
-    lastDestroyed = 0;
+    // Clear everything before `4` again, nothing to clear.
     rb.ClearBefore(bi4);
-    VERIFY_START_END_DESTROYED(16, 26, 0);
+    VERIFY_START_END_PUSHED_CLEARED(16, 26, 5, 3);
 
-    // Clear everything, this should destroy `4` and `5`, and bring the start
+    // Clear everything, this should clear `4` and `5`, and bring the start
     // index where the end index currently is.
     rb.ClearBefore(bi6);
     //  16  17  18  19  20  21  22  23  24  25  26  11  12  13  14  15
     //   ?   ?   ?   ?   ?   ?   ?   ?   ?   ? SE?   ?   ?   ?   ?   ?
-    VERIFY_START_END_DESTROYED(26, 26, 5);
+    VERIFY_START_END_PUSHED_CLEARED(26, 26, 5, 5);
 
     // Check that we have nothing to read.
     rb.ReadEach([&](auto&&) { MOZ_RELEASE_ASSERT(false); });
@@ -887,16 +881,15 @@ void TestBlocksRingBufferAPI() {
       MOZ_RELEASE_ASSERT(aMaybeReader.isNothing());
     });
 
-    // Clear everything before now-cleared `4`, nothing to destroy.
-    lastDestroyed = 0;
+    // Clear everything before now-cleared `4`, nothing to clear.
     rb.ClearBefore(bi4);
-    VERIFY_START_END_DESTROYED(26, 26, 0);
+    VERIFY_START_END_PUSHED_CLEARED(26, 26, 5, 5);
 
     // Push `6` directly.
     MOZ_RELEASE_ASSERT(rb.PutObject(uint32_t(6)) == bi6);
     //  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30  31
     //   ?   ?   ?   ?   ?   ?   ?   ?   ?   ? S[4 |    int(6)    ]E ?
-    VERIFY_START_END_DESTROYED(26, 31, 0);
+    VERIFY_START_END_PUSHED_CLEARED(26, 31, 6, 5);
 
     {
       // Create a 2nd buffer and fill it with `7` and `8`.
@@ -906,26 +899,26 @@ void TestBlocksRingBufferAPI() {
       rb2.PutObject(uint32_t(7));
       rb2.PutObject(uint32_t(8));
       // Main buffer shouldn't have changed.
-      VERIFY_START_END_DESTROYED(26, 31, 0);
+      VERIFY_START_END_PUSHED_CLEARED(26, 31, 6, 5);
 
       // Append contents of rb2 to rb, this should end up being the same as
       // pushing the two numbers.
       rb.AppendContents(rb2);
       //  32  33  34  35  36  37  38  39  40  41  26  27  28  29  30  31
       //      int(7)    ] [4 |    int(8)    ]E ? S[4 |    int(6)    ] [4 |
-      VERIFY_START_END_DESTROYED(26, 41, 0);
+      VERIFY_START_END_PUSHED_CLEARED(26, 41, 8, 5);
 
       // Append contents of rb2 to rb again, to verify that rb2 was not modified
-      // above. This should destroy `6` and the first `7`.
+      // above. This should clear `6` and the first `7`.
       rb.AppendContents(rb2);
       //  48  49  50  51  36  37  38  39  40  41  42  43  44  45  46  47
       //  int(8)    ]E ? S[4 |    int(8)    ] [4 |    int(7)    ] [4 |
-      VERIFY_START_END_DESTROYED(36, 51, 7);
+      VERIFY_START_END_PUSHED_CLEARED(36, 51, 10, 7);
 
       // End of block where rb2 lives, to verify that it is not needed anymore
       // for its copied values to survive in rb.
     }
-    VERIFY_START_END_DESTROYED(36, 51, 7);
+    VERIFY_START_END_PUSHED_CLEARED(36, 51, 10, 7);
 
     // bi6 should now have been cleared.
     rb.ReadAt(bi6, [](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeReader) {
@@ -944,7 +937,6 @@ void TestBlocksRingBufferAPI() {
     // End of block where rb lives, BlocksRingBuffer destructor should call
     // entry destructor for remaining entries.
   }
-  MOZ_RELEASE_ASSERT(lastDestroyed == 8);
 
   // Check that only the provided stack-based sub-buffer was modified.
   uint32_t changed = 0;
@@ -1128,9 +1120,7 @@ void TestBlocksRingBufferUnderlyingBufferChanges() {
   testOutOfSession();
   testOutOfSession();
 
-  int cleared = 0;
-  rb.Set(&buffer[MBSize], MakePowerOfTwo<BlocksRingBuffer::Length, MBSize>(),
-         [&](auto&&) { ++cleared; });
+  rb.Set(&buffer[MBSize], MakePowerOfTwo<BlocksRingBuffer::Length, MBSize>());
   MOZ_RELEASE_ASSERT(rb.BufferLength().isSome());
   rb.ReadEach([](auto&&) { MOZ_RELEASE_ASSERT(false); });
 
@@ -1139,8 +1129,6 @@ void TestBlocksRingBufferUnderlyingBufferChanges() {
 
   // Remove the current underlying buffer, this should clear all entries.
   rb.Reset();
-  // The above should clear all entries (2 tests, three entries each).
-  MOZ_RELEASE_ASSERT(cleared == 2 * 3);
 
   // Check that only the provided stack-based sub-buffer was modified.
   uint32_t changed = 0;
@@ -1167,19 +1155,13 @@ void TestBlocksRingBufferUnderlyingBufferChanges() {
 void TestBlocksRingBufferThreading() {
   printf("TestBlocksRingBufferThreading...\n");
 
-  // Entry destructor will store about-to-be-cleared value in `lastDestroyed`.
-  std::atomic<int> lastDestroyed{0};
-
   constexpr uint32_t MBSize = 8192;
   uint8_t buffer[MBSize * 3];
   for (size_t i = 0; i < MBSize * 3; ++i) {
     buffer[i] = uint8_t('A' + i);
   }
   BlocksRingBuffer rb(BlocksRingBuffer::ThreadSafety::WithMutex,
-                      &buffer[MBSize], MakePowerOfTwo32<MBSize>(),
-                      [&](BlocksRingBuffer::EntryReader& aReader) {
-                        lastDestroyed = aReader.ReadObject<int>();
-                      });
+                      &buffer[MBSize], MakePowerOfTwo32<MBSize>());
 
   // Start reader thread.
   std::atomic<bool> stopReader{false};
@@ -1188,7 +1170,7 @@ void TestBlocksRingBufferThreading() {
       BlocksRingBuffer::State state = rb.GetState();
       printf(
           "Reader: range=%llu..%llu (%llu bytes) pushed=%llu cleared=%llu "
-          "(alive=%llu) lastDestroyed=%d\n",
+          "(alive=%llu)\n",
           static_cast<unsigned long long>(ExtractBlockIndex(state.mRangeStart)),
           static_cast<unsigned long long>(ExtractBlockIndex(state.mRangeEnd)),
           static_cast<unsigned long long>(ExtractBlockIndex(state.mRangeEnd)) -
@@ -1197,8 +1179,7 @@ void TestBlocksRingBufferThreading() {
           static_cast<unsigned long long>(state.mPushedBlockCount),
           static_cast<unsigned long long>(state.mClearedBlockCount),
           static_cast<unsigned long long>(state.mPushedBlockCount -
-                                          state.mClearedBlockCount),
-          int(lastDestroyed));
+                                          state.mClearedBlockCount));
       if (stopReader) {
         break;
       }
