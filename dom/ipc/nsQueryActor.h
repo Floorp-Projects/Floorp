@@ -17,7 +17,7 @@ class MOZ_STACK_CLASS nsQueryActor final : public nsCOMPtr_helper {
 
   virtual nsresult NS_FASTCALL operator()(const nsIID& aIID,
                                           void** aResult) const override {
-    if (NS_WARN_IF(!mWindow) || NS_WARN_IF(!mWindow->GetCurrentInnerWindow())) {
+    if (NS_WARN_IF(!mWindow) || !mWindow->GetCurrentInnerWindow()) {
       return NS_ERROR_NO_INTERFACE;
     }
 
