@@ -373,6 +373,42 @@ void AccessibleWrap::SetSelection(int32_t aStart, int32_t aEnd) {
   }
 }
 
+void AccessibleWrap::Cut() {
+  if ((State() & states::EDITABLE) == 0) {
+    return;
+  }
+
+  if (HyperTextAccessible* textAcc = AsHyperText()) {
+    int32_t startSel, endSel;
+    GetSelectionOrCaret(&startSel, &endSel);
+    textAcc->CutText(startSel, endSel);
+  }
+}
+
+void AccessibleWrap::Copy() {
+  if (HyperTextAccessible* textAcc = AsHyperText()) {
+    int32_t startSel, endSel;
+    GetSelectionOrCaret(&startSel, &endSel);
+    textAcc->CopyText(startSel, endSel);
+  }
+}
+
+void AccessibleWrap::Paste() {
+  if ((State() & states::EDITABLE) == 0) {
+    return;
+  }
+
+  if (IsHyperText()) {
+    RefPtr<HyperTextAccessible> textAcc = AsHyperText();
+    int32_t startSel, endSel;
+    GetSelectionOrCaret(&startSel, &endSel);
+    if (startSel != endSel) {
+      textAcc->DeleteText(startSel, endSel);
+    }
+    textAcc->PasteText(startSel);
+  }
+}
+
 void AccessibleWrap::GetSelectionOrCaret(int32_t* aStartOffset,
                                          int32_t* aEndOffset) {
   *aStartOffset = *aEndOffset = -1;
