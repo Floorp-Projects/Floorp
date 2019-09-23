@@ -107,7 +107,7 @@ config = {
         "mozmill": {
             "options": [
                 "--binary=%(binary_path)s",
-                "--testing-modules-dir=test/modules",
+                "--testing-modules-dir=tests/modules",
                 "--plugins-path=%(test_plugin_path)s",
                 "--symbols-path=%(symbols_path)s"
             ],
