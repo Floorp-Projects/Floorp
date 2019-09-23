@@ -3073,7 +3073,13 @@ impl PicturePrimitive {
                                 // picture cache task.
                                 let scissor_rect = tile.world_dirty_rect.translate(
                                     -tile.world_rect.origin.to_vector()
-                                ) * device_pixel_scale;
+                                );
+                                // The world rect is guaranteed to be device pixel aligned, by the tile
+                                // sizing code in tile::pre_update. However, there might be some
+                                // small floating point accuracy issues (these were observed on ARM
+                                // CPUs). Round the rect here before casting to integer device pixels
+                                // to ensure the scissor rect is correct.
+                                let scissor_rect = (scissor_rect * device_pixel_scale).round();
                                 let cache_item = frame_state.resource_cache.texture_cache.get(handle);
 
                                 let task = RenderTask::new_picture(
