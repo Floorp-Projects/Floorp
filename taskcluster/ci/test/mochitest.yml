@@ -109,7 +109,7 @@ mochitest-browser-chrome:
             default: 7
     max-run-time:
         by-test-platform:
-            linux64-ccov/debug: 7200
+            linux64-ccov/debug: 9000
             windows7-32/debug: 5400
             windows10-64/debug: 5400
             windows10-64-ccov/debug: 10800
