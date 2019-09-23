@@ -407,14 +407,6 @@ var gIdentityHandler = {
     openPreferences("privacy-permissions");
   },
 
-  recordClick(object) {
-    Services.telemetry.recordEvent(
-      "security.ui.identitypopup",
-      "click",
-      object
-    );
-  },
-
   /**
    * Handler for mouseclicks on the "More Information" button in the
    * "identity-popup" panel.
@@ -1240,12 +1232,6 @@ var gIdentityHandler = {
     if (event.target == this._identityPopup) {
       window.addEventListener("focus", this, true);
     }
-
-    Services.telemetry.recordEvent(
-      "security.ui.identitypopup",
-      "open",
-      "identity_popup"
-    );
   },
 
   onPopupHidden(event) {

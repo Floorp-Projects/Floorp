@@ -1563,50 +1563,6 @@ security.ui.protections:
     extra_keys:
       category: The category of protections the user is in, standard, strict or custom.
 
-security.ui.identitypopup:
-  open:
-    objects: ["identity_popup"]
-    bug_numbers:
-      - 1484251
-      - 1522256
-      - 1522919
-      - 1553181
-      - 1562575
-    description: >
-      How many times the control center was opened.
-    expiry_version: "72"
-    notification_emails:
-      - jhofmann@mozilla.com
-      - pdol@mozilla.com
-      - seceng-telemetry@mozilla.com
-    release_channel_collection: opt-in
-    record_in_processes:
-      - main
-    products:
-      - firefox
-  click:
-    objects: [
-      "permission_prefs_btn",
-      "clear_sitedata",
-      "security_subview_btn",
-    ]
-    bug_numbers:
-      - 1484251
-      - 1553181
-      - 1562575
-    description: >
-      User interaction by click events in the identity popup.
-    expiry_version: "72"
-    notification_emails:
-      - jhofmann@mozilla.com
-      - pdol@mozilla.com
-      - seceng-telemetry@mozilla.com
-    release_channel_collection: opt-in
-    record_in_processes:
-      - main
-    products:
-      - firefox
-
 security.ui.protectionspopup:
   open:
     objects: ["protections_popup"]
