@@ -47,3 +47,7 @@ flank:
   # repeat tests - the amount of times to run the tests.
   # 1 runs the tests once. 10 runs all the tests 10x
   repeat-tests: 1
+
+  # The number of times a TestExecution should be re-attempted if one or more\nof its test cases fail for any reason.
+  # The maximum number of reruns allowed is 10. Default is 0, which implies no reruns.
+  num-flaky-test-attempts: 3

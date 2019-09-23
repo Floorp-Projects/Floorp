@@ -18,7 +18,7 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import org.mozilla.fenix.R
-import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.click
 
 /**
@@ -33,18 +33,18 @@ class FindInPageRobot {
     fun verifyFindInPageCloseButton() = assertFindInPageCloseButton()!!
 
     fun enterFindInPageQuery(expectedText: String) {
-        mDevice.wait(Until.findObject(By.res("find_in_page_query_text")), waitingTimeShort)
+        mDevice.wait(Until.findObject(By.res("find_in_page_query_text")), waitingTime)
         findInPageQuery().perform(clearText(), typeText(expectedText))
     }
 
     fun verifyFindNextInPageResult(ratioCounter: String) {
-        mDevice.waitForIdle()
+        mDevice.wait(Until.findObject(By.text(ratioCounter)), waitingTime)
         findInPageResult().check(matches(withText((ratioCounter))))
         findInPageNextButton().click()
     }
 
     fun verifyFindPrevInPageResult(ratioCounter: String) {
-        mDevice.waitForIdle()
+        mDevice.wait(Until.findObject(By.text(ratioCounter)), waitingTime)
         findInPageResult().check(matches(withText((ratioCounter))))
         findInPagePrevButton().click()
     }

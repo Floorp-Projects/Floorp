@@ -82,6 +82,8 @@ else
 fi
 
 APK_TEST="./app/build/outputs/apk/androidTest/geckoNightly/debug/app-geckoNightly-debug-androidTest.apk"
+echo "APK_PATH: ${APK_PATH}"
+echo "APK_TEST: ${APK_TEST}"
 
 # function to exit script with exit code from test run.
 # (Only 0 if all test executions passed)

@@ -54,6 +54,7 @@ class HomeScreenTest {
     }
 
     @Test
+    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun firstRunHomeScreenItemsTest() {
         homeScreen {
             verifyHomeScreen()
