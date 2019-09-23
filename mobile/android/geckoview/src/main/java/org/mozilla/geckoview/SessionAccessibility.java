@@ -283,11 +283,13 @@ public class SessionAccessibility {
                     nativeProvider.setSelection(virtualViewId, selectionStart, selectionEnd);
                     return true;
                 case AccessibilityNodeInfo.ACTION_CUT:
+                    nativeProvider.cut(virtualViewId);
+                    return true;
                 case AccessibilityNodeInfo.ACTION_COPY:
+                    nativeProvider.copy(virtualViewId);
+                    return true;
                 case AccessibilityNodeInfo.ACTION_PASTE:
-                    data = new GeckoBundle(1);
-                    data.putInt("action", action);
-                    mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityClipboard", data);
+                    nativeProvider.paste(virtualViewId);
                     return true;
                 case AccessibilityNodeInfo.ACTION_SET_TEXT:
                     final String value = arguments.getString(Build.VERSION.SDK_INT >= 21
@@ -870,6 +872,15 @@ public class SessionAccessibility {
 
         @WrapForJNI(dispatchTo = "gecko")
         public native void setSelection(int id, int start, int end);
+
+        @WrapForJNI(dispatchTo = "gecko")
+        public native void cut(int id);
+
+        @WrapForJNI(dispatchTo = "gecko")
+        public native void copy(int id);
+
+        @WrapForJNI(dispatchTo = "gecko")
+        public native void paste(int id);
 
         @WrapForJNI(calledFrom = "gecko", stubName = "SendEvent")
         private void sendEventNative(final int eventType, final int sourceId, final int className, final GeckoBundle eventData) {

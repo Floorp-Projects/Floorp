@@ -137,6 +137,18 @@ void SessionAccessibility::SetSelection(int32_t aID, int32_t aStart,
   FORWARD_ACTION_TO_ACCESSIBLE(SetSelection, aStart, aEnd);
 }
 
+void SessionAccessibility::Cut(int32_t aID) {
+  FORWARD_ACTION_TO_ACCESSIBLE(Cut);
+}
+
+void SessionAccessibility::Copy(int32_t aID) {
+  FORWARD_ACTION_TO_ACCESSIBLE(Copy);
+}
+
+void SessionAccessibility::Paste(int32_t aID) {
+  FORWARD_ACTION_TO_ACCESSIBLE(Paste);
+}
+
 SessionAccessibility* SessionAccessibility::GetInstanceFor(
     ProxyAccessible* aAccessible) {
   auto tab =

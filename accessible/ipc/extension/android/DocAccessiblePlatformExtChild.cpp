@@ -43,7 +43,7 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvSetSelection(
 
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvCut(uint64_t aID) {
   if (auto acc = IdToAccessibleWrap(aID)) {
-    // XXX: Forward to appropriate wrapper method.
+    acc->Cut();
   }
 
   return IPC_OK();
@@ -51,7 +51,7 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvCut(uint64_t aID) {
 
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvCopy(uint64_t aID) {
   if (auto acc = IdToAccessibleWrap(aID)) {
-    // XXX: Forward to appropriate wrapper method.
+    acc->Copy();
   }
 
   return IPC_OK();
@@ -59,7 +59,7 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvCopy(uint64_t aID) {
 
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvPaste(uint64_t aID) {
   if (auto acc = IdToAccessibleWrap(aID)) {
-    // XXX: Forward to appropriate wrapper method.
+    acc->Paste();
   }
 
   return IPC_OK();
