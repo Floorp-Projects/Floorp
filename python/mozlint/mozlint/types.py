@@ -32,6 +32,8 @@ class BaseType(object):
                          the definition, but passed in by a consumer.
         :returns: A list of :class:`~result.Issue` objects.
         """
+        log = lintargs['log']
+
         if lintargs.get('use_filters', True):
             paths, exclude = filterpaths(
                 lintargs['root'],
@@ -45,12 +47,17 @@ class BaseType(object):
             del config['exclude']
 
         if not paths:
-            return
+            return []
+
+        log.debug("Passing the following paths:\n{paths}".format(
+            paths="  \n".join(paths),
+        ))
 
         if self.batch:
             return self._lint(paths, config, **lintargs)
 
         errors = []
+
         try:
             for p in paths:
                 result = self._lint(p, config, **lintargs)

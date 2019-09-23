@@ -121,6 +121,7 @@ def gen_yamllint_args(cmdargs, paths=None, conf_file=None):
 
 
 def lint(files, config, **lintargs):
+    log = lintargs['log']
     if not reinstall_yamllint():
         print(YAMLLINT_INSTALL_ERROR)
         return 1
@@ -131,6 +132,7 @@ def lint(files, config, **lintargs):
         binary,
         '-f', 'parsable'
     ]
+    log.debug("Command: {}".format(' '.join(cmdargs)))
 
     config = config.copy()
     config['root'] = lintargs['root']

@@ -4,9 +4,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
+import logging
 import os
 import signal
 import sys
+import time
 import traceback
 from concurrent.futures import ProcessPoolExecutor
 from itertools import chain
@@ -32,14 +34,27 @@ from .types import supported_types
 SHUTDOWN = False
 orig_sigint = signal.getsignal(signal.SIGINT)
 
+logger = logging.getLogger("mozlint")
+handler = logging.StreamHandler()
+formatter = logging.Formatter("%(asctime)s.%(msecs)d %(lintname)s (%(pid)s) | %(message)s",
+                              "%H:%M:%S")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
 
 def _run_worker(config, paths, **lintargs):
+    log = logging.LoggerAdapter(logger, {
+        "lintname": config.get("name"),
+        "pid": os.getpid()
+    })
+    lintargs['log'] = log
     result = ResultSummary(lintargs['root'])
 
     if SHUTDOWN:
         return result
 
     func = supported_types[config['type']]
+    start_time = time.time()
     try:
         res = func(paths, config, **lintargs) or []
     except Exception:
@@ -48,6 +63,8 @@ def _run_worker(config, paths, **lintargs):
     except (KeyboardInterrupt, SystemExit):
         return result
     finally:
+        end_time = time.time()
+        log.debug("Finished in {:.2f} seconds".format(end_time - start_time))
         sys.stdout.flush()
 
     if not isinstance(res, (list, tuple)):
@@ -60,6 +77,7 @@ def _run_worker(config, paths, **lintargs):
                 continue
 
             result.issues[r.path].append(r)
+
     return result
 
 
@@ -119,6 +137,11 @@ class LintRoller(object):
 
         self.root = root
         self.exclude = exclude or []
+
+        if lintargs.get('show_verbose'):
+            logger.setLevel(logging.DEBUG)
+        else:
+            logger.setLevel(logging.WARNING)
 
     def read(self, paths):
         """Parse one or more linters and add them to the registry.
