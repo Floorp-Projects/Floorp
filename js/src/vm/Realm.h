@@ -32,6 +32,10 @@
 
 namespace js {
 
+namespace coverage {
+class LCovRealm;
+}  // namespace coverage
+
 namespace jit {
 class JitRealm;
 }  // namespace jit
@@ -401,13 +405,11 @@ class JS::Realm : public JS::shadow::Realm {
   bool isSelfHostingRealm_ = false;
   bool isSystem_ = false;
 
+  js::UniquePtr<js::coverage::LCovRealm> lcovRealm_ = nullptr;
+
  public:
   // WebAssembly state for the realm.
   js::wasm::Realm wasm;
-
-  // Aggregated output used to collect JSScript hit counts when code coverage
-  // is enabled.
-  js::UniquePtr<js::coverage::LCovRealm> lcovRealm = nullptr;
 
   js::RegExpRealm regExps;
 
@@ -755,6 +757,9 @@ class JS::Realm : public JS::shadow::Realm {
   // If we scheduled delazification for turning on debug mode, delazify all
   // scripts.
   bool ensureDelazifyScriptsForDebugger(JSContext* cx);
+
+  // Get or allocate the associated LCovRealm.
+  js::coverage::LCovRealm* lcovRealm();
 
   // Collect coverage info from a script and aggregate into this realm.
   void collectCodeCoverageInfo(JSScript* script, const char* name);

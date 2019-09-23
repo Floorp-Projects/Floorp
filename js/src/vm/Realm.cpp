@@ -65,8 +65,8 @@ Realm::~Realm() {
   MOZ_ASSERT(!isDebuggee());
 
   // Write the code coverage information in a file.
-  if (lcovRealm) {
-    runtime_->lcovOutput().writeLCovResult(*lcovRealm);
+  if (lcovRealm_) {
+    runtime_->lcovOutput().writeLCovResult(*lcovRealm_);
   }
 
   MOZ_ASSERT(runtime_->numRealms > 0);
@@ -708,6 +708,13 @@ void Realm::updateDebuggerObservesCoverage() {
   clearScriptNames();
 }
 
+coverage::LCovRealm* Realm::lcovRealm() {
+  if (!lcovRealm_) {
+    lcovRealm_ = js::MakeUnique<coverage::LCovRealm>(this);
+  }
+  return lcovRealm_.get();
+}
+
 bool Realm::collectCoverage() const {
   return collectCoverageForPGO() || collectCoverageForDebug();
 }
@@ -725,16 +732,11 @@ void Realm::clearScriptCounts() { zone()->clearScriptCounts(this); }
 void Realm::clearScriptNames() { zone()->clearScriptNames(this); }
 
 void Realm::collectCodeCoverageInfo(JSScript* script, const char* name) {
-  // Try to create the LCovRealm if does not exist.
-  if (!lcovRealm) {
-    lcovRealm = js::MakeUnique<coverage::LCovRealm>(this);
-  }
-
-  if (!lcovRealm) {
+  coverage::LCovRealm* lcov = lcovRealm();
+  if (!lcov) {
     return;
   }
-
-  lcovRealm->collectCodeCoverageInfo(script, name);
+  lcov->collectCodeCoverageInfo(script, name);
 }
 
 void ObjectRealm::addSizeOfExcludingThis(

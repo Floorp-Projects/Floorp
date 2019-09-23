@@ -18,9 +18,6 @@
 #include "vm/Printer.h"
 
 namespace js {
-
-class ScriptSourceObject;
-
 namespace coverage {
 
 class LCovSource {
@@ -160,14 +157,21 @@ class LCovRuntime {
   bool isEmpty_;
 };
 
-extern void InitLCov();
+void InitLCov();
 
-extern void EnableLCov();
+void EnableLCov();
 
 inline bool IsLCovEnabled() {
   extern bool gLCovIsEnabled;
   return gLCovIsEnabled;
 }
+
+// Initialize coverage info to track code coverage for a JSScript.
+bool InitScriptCoverage(JSContext* cx, JSScript* script);
+
+// Collect the code-coverage data from a script into relevant LCovSource. This
+// operations is infalible as it is typically called from JSScript finalizer.
+void CollectScriptCoverage(JSScript* script);
 
 }  // namespace coverage
 }  // namespace js

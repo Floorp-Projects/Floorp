@@ -2574,8 +2574,6 @@ class JSScript : public js::BaseScript {
     clearFlag(MutableFlags::HasRunOnce);
   }
 
-  bool hasScriptName();
-
   void setArgumentsHasVarBinding();
   bool argumentsAliasesFormals() const {
     return argumentsHasVarBinding() && hasMappedArgsObj();
@@ -2878,9 +2876,7 @@ class JSScript : public js::BaseScript {
 
  public:
   bool initScriptCounts(JSContext* cx);
-  bool initScriptName(JSContext* cx);
   js::ScriptCounts& getScriptCounts();
-  const char* getScriptName();
   js::PCCounts* maybeGetPCCounts(jsbytecode* pc);
   const js::PCCounts* maybeGetThrowCounts(jsbytecode* pc);
   js::PCCounts* getThrowCounts(jsbytecode* pc);
@@ -2890,7 +2886,6 @@ class JSScript : public js::BaseScript {
   js::jit::IonScriptCounts* getIonCounts();
   void releaseScriptCounts(js::ScriptCounts* counts);
   void destroyScriptCounts();
-  void destroyScriptName();
   void clearHasScriptCounts();
   void resetScriptCounts();
 

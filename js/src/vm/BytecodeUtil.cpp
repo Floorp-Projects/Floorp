@@ -2888,6 +2888,12 @@ static bool GenerateLcovInfo(JSContext* cx, JS::Realm* realm,
     return true;
   }
 
+  // Ensure the LCovRealm exists to collect info into.
+  coverage::LCovRealm* lcovRealm = realm->lcovRealm();
+  if (!lcovRealm) {
+    return false;
+  }
+
   // Collect code coverage info for one realm.
   do {
     RootedScript script(cx, queue.popCopy());
@@ -2938,12 +2944,8 @@ static bool GenerateLcovInfo(JSContext* cx, JS::Realm* realm,
     }
   } while (!queue.empty());
 
-  if (!realm->lcovRealm) {
-    return false;
-  }
-
   bool isEmpty = true;
-  realm->lcovRealm->exportInto(out, &isEmpty);
+  lcovRealm->exportInto(out, &isEmpty);
   if (out.hadOutOfMemory()) {
     return false;
   }
