@@ -241,11 +241,6 @@ nsresult nsSHEntryShared::RemoveFromBFCacheAsync() {
   return NS_OK;
 }
 
-nsresult nsSHEntryShared::GetID(uint64_t* aID) {
-  *aID = mID;
-  return NS_OK;
-}
-
 void nsSHEntryShared::CharacterDataChanged(nsIContent* aContent,
                                            const CharacterDataChangeInfo&) {
   RemoveFromBFCacheAsync();
