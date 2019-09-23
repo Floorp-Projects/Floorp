@@ -1,0 +1,14 @@
+<script>
+function go() {
+  document.getSelection().setPosition(b);
+  a.addEventListener("DOMNodeInserted", eh);
+  document.execCommand("insertImage", false, "#");
+}
+function eh() {
+  document.execCommand("selectAll", false);
+  document.execCommand("insertText", false, "");
+}
+</script>
+<body onload=go()>
+<dd id="a" contenteditable="true">
+<template id="b"></template>
