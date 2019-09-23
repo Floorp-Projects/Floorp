@@ -19,26 +19,39 @@ job-defaults:
     run:
         use-caches: false
     run-on-tasks-for: [github-pull-request, github-push]
+    treeherder:
+        kind: test
+        platform: 'lint/opt'
+        tier: 1
 
 jobs:
-    detekt:
-        description: 'Running detekt over all modules'
-        run:
-            using: gradlew
-            gradlew: [detekt]
-    ktlint:
-        description: 'Running ktlint over all modules'
-        run:
-            using: gradlew
-            gradlew: [ktlint]
     compare-locales:
         description: 'Validate strings.xml with compare-locales'
         run:
             using: run-task
             cwd: '{checkout}'
             command: 'pip install --user "compare-locales>=5.0.2,<6.0" && compare-locales --validate l10n.toml .'
+        treeherder:
+            symbol: compare-locale
+            tier: 2
+    detekt:
+        description: 'Running detekt over all modules'
+        run:
+            using: gradlew
+            gradlew: [detekt]
+        treeherder:
+            symbol: detekt
+    ktlint:
+        description: 'Running ktlint over all modules'
+        run:
+            using: gradlew
+            gradlew: [ktlint]
+        treeherder:
+            symbol: ktlint
     lint:
         description: 'Running tlint over all modules'
         run:
             using: gradlew
             gradlew: [lintDebug]
+        treeherder:
+            symbol: lint
