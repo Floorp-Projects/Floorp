@@ -30,6 +30,13 @@ class AudioChannelAgent : public nsIAudioChannelAgent {
 
   AudioChannelAgent();
 
+  // nsIAudioChannelAgentCallback MUST call this function after calling
+  // NotifyStartedPlaying() to require the initial update for
+  // volume/suspend/audio-capturing which might set before starting the agent.
+  // Ex. starting the agent in a tab which has been muted before, so the agent
+  // should apply mute state to its callback.
+  void PullInitialUpdate();
+
   void WindowVolumeChanged();
   void WindowSuspendChanged(nsSuspendedTypes aSuspend);
   void WindowAudioCaptureChanged(uint64_t aInnerWindowID, bool aCapture);
