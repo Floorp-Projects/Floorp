@@ -217,7 +217,7 @@ public class SessionAccessibility {
                     }
                     return true;
                 case AccessibilityNodeInfo.ACTION_LONG_CLICK:
-                    mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityLongPress", null);
+                    // XXX: Implement long press.
                     return true;
                 case AccessibilityNodeInfo.ACTION_SCROLL_FORWARD:
                     if (virtualViewId == View.NO_ID) {
@@ -226,7 +226,8 @@ public class SessionAccessibility {
                                 ScreenLength.zero(), ScreenLength.fromViewportHeight(0.8),
                                 PanZoomController.SCROLL_BEHAVIOR_AUTO);
                     } else {
-                        mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityScrollForward", null);
+                        // XXX: It looks like we never call scroll on virtual views.
+                        // If we did, we should synthesize a wheel event on it's center coordinate.
                     }
                     return true;
                 case AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD:
@@ -236,7 +237,8 @@ public class SessionAccessibility {
                                 ScreenLength.zero(), ScreenLength.fromViewportHeight(-0.8),
                                 PanZoomController.SCROLL_BEHAVIOR_AUTO);
                     } else {
-                        mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityScrollBackward", null);
+                        // XXX: It looks like we never call scroll on virtual views.
+                        // If we did, we should synthesize a wheel event on it's center coordinate.
                     }
                     return true;
                 case AccessibilityNodeInfo.ACTION_SELECT:
@@ -265,10 +267,8 @@ public class SessionAccessibility {
                     // FAKE_GRANULARITY_CHANGE_SHIFTER = -4
                     int granularity = arguments.getInt(AccessibilityNodeInfo.ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT);
                     if (granularity <= BRAILLE_CLICK_BASE_INDEX) {
-                        int keyIndex = BRAILLE_CLICK_BASE_INDEX - granularity;
-                        data = new GeckoBundle(1);
-                        data.putInt("keyIndex", keyIndex);
-                        mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityActivate", data);
+                        // XXX: Use click offset to update caret position in editables (BRAILLE_CLICK_BASE_INDEX - granularity).
+                        nativeProvider.click(virtualViewId);
                     } else if (granularity > 0) {
                         boolean extendSelection = arguments.getBoolean(AccessibilityNodeInfo.ACTION_ARGUMENT_EXTEND_SELECTION_BOOLEAN);
                         nativeProvider.navigateText(virtualViewId, granularity, mStartOffset, mEndOffset, action == AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY, extendSelection);
