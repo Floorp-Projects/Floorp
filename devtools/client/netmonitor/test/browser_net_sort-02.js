@@ -247,37 +247,27 @@ add_task(async function() {
   await testContents([0, 1, 2, 3, 4]);
 
   info("Testing waterfall sort, ascending.");
-
-  // Because the waterfall column is hidden when the network details panel is
-  // opened, the waterfall button is not visible. Therefore we hide the network
-  // details panel
-  await store.dispatch(Actions.toggleNetworkDetails());
   EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-waterfall-button")
   );
-  await store.dispatch(Actions.toggleNetworkDetails());
   testHeaders("waterfall", "ascending");
   await testContents([0, 2, 4, 3, 1]);
 
   info("Testing waterfall sort, descending.");
-  await store.dispatch(Actions.toggleNetworkDetails());
   EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-waterfall-button")
   );
   testHeaders("waterfall", "descending");
-  await store.dispatch(Actions.toggleNetworkDetails());
-  await testContents([4, 2, 0, 1, 3], true);
+  await testContents([4, 2, 0, 1, 3]);
 
   info("Testing waterfall sort, ascending. Checking sort loops correctly.");
-  await store.dispatch(Actions.toggleNetworkDetails());
   EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-waterfall-button")
   );
   testHeaders("waterfall", "ascending");
-  await store.dispatch(Actions.toggleNetworkDetails());
   await testContents([0, 2, 4, 3, 1]);
 
   return teardown(monitor);
@@ -335,19 +325,17 @@ add_task(async function() {
     }
   }
 
-  async function testContents([a, b, c, d, e], waterfall = false) {
+  async function testContents([a, b, c, d, e]) {
     isnot(
       getSelectedRequest(store.getState()),
       undefined,
       "There should still be a selected item after sorting."
     );
-    if (!waterfall) {
-      is(
-        getSelectedIndex(store.getState()),
-        a,
-        "The first item should be still selected after sorting."
-      );
-    }
+    is(
+      getSelectedIndex(store.getState()),
+      a,
+      "The first item should be still selected after sorting."
+    );
     is(
       !!document.querySelector(".network-details-panel"),
       true,
@@ -392,6 +380,7 @@ add_task(async function() {
         fullMimeType: "text/1",
         transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 198),
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 0),
+        time: true,
       }
     );
     verifyRequestItemTarget(
@@ -408,6 +397,7 @@ add_task(async function() {
         fullMimeType: "text/2",
         transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 217),
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 19),
+        time: true,
       }
     );
     verifyRequestItemTarget(
@@ -424,6 +414,7 @@ add_task(async function() {
         fullMimeType: "text/3",
         transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 227),
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 29),
+        time: true,
       }
     );
     verifyRequestItemTarget(
@@ -440,6 +431,7 @@ add_task(async function() {
         fullMimeType: "text/4",
         transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 237),
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 39),
+        time: true,
       }
     );
     verifyRequestItemTarget(
@@ -456,6 +448,7 @@ add_task(async function() {
         fullMimeType: "text/5",
         transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 247),
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 49),
+        time: true,
       }
     );
   }
