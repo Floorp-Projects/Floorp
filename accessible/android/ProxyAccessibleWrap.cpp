@@ -132,6 +132,20 @@ void ProxyAccessibleWrap::SetSelection(int32_t aStart, int32_t aEnd) {
       Proxy()->ID(), aStart, aEnd);
 }
 
+void ProxyAccessibleWrap::Cut() {
+  Unused << Proxy()->Document()->GetPlatformExtension()->SendCut(Proxy()->ID());
+}
+
+void ProxyAccessibleWrap::Copy() {
+  Unused << Proxy()->Document()->GetPlatformExtension()->SendCopy(
+      Proxy()->ID());
+}
+
+void ProxyAccessibleWrap::Paste() {
+  Unused << Proxy()->Document()->GetPlatformExtension()->SendPaste(
+      Proxy()->ID());
+}
+
 role ProxyAccessibleWrap::WrapperRole() { return Proxy()->Role(); }
 
 AccessibleWrap* ProxyAccessibleWrap::WrapperParent() {
