@@ -83,6 +83,6 @@ pref("devtools.debugger.features.original-blackbox", true);
 pref("devtools.debugger.features.event-listeners-breakpoints", true);
 pref("devtools.debugger.features.dom-mutation-breakpoints", true);
 pref("devtools.debugger.features.log-points", true);
-pref("devtools.debugger.features.overlay-step-buttons", true);
+pref("devtools.debugger.features.overlay", true);
 pref("devtools.debugger.features.inline-preview", true);
 pref("devtools.debugger.features.watchpoints", false);
