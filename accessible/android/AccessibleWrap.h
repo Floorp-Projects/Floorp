@@ -35,6 +35,10 @@ class AccessibleWrap : public Accessible {
 
   virtual bool GetSelectionBounds(int32_t* aStartOffset, int32_t* aEndOffset);
 
+  virtual void Pivot(int32_t aGranularity, bool aForward, bool aInclusive);
+
+  virtual void ExploreByTouch(float aX, float aY);
+
   mozilla::java::GeckoBundle::LocalRef ToBundle(bool aSmall = false);
 
   mozilla::java::GeckoBundle::LocalRef ToBundle(

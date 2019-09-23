@@ -4,7 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ProxyAccessibleWrap.h"
+
 #include "nsPersistentProperties.h"
+
+#include "mozilla/a11y/DocAccessiblePlatformExtParent.h"
 
 using namespace mozilla::a11y;
 
@@ -104,6 +107,17 @@ bool ProxyAccessibleWrap::GetSelectionBounds(int32_t* aStartOffset,
                                              int32_t* aEndOffset) {
   nsAutoString unused;
   return Proxy()->SelectionBoundsAt(0, unused, aStartOffset, aEndOffset);
+}
+
+void ProxyAccessibleWrap::Pivot(int32_t aGranularity, bool aForward,
+                                bool aInclusive) {
+  Unused << Proxy()->Document()->GetPlatformExtension()->SendPivot(
+      Proxy()->ID(), aGranularity, aForward, aInclusive);
+}
+
+void ProxyAccessibleWrap::ExploreByTouch(float aX, float aY) {
+  Unused << Proxy()->Document()->GetPlatformExtension()->SendExploreByTouch(
+      Proxy()->ID(), aX, aY);
 }
 
 role ProxyAccessibleWrap::WrapperRole() { return Proxy()->Role(); }
