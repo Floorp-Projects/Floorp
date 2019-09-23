@@ -8301,6 +8301,32 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "offset": {
+    "isInherited": false,
+    "subproperties": [
+      "offset-path",
+      "offset-distance",
+      "offset-rotate",
+      "offset-anchor"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "bottom",
+      "center",
+      "inherit",
+      "initial",
+      "left",
+      "none",
+      "path",
+      "ray",
+      "reverse",
+      "revert",
+      "right",
+      "top",
+      "unset"
+    ]
+  },
   "offset-anchor": {
     "isInherited": false,
     "subproperties": [
@@ -10975,6 +11001,10 @@ exports.PREFERENCES = [
   [
     "overscroll-behavior",
     "layout.css.overscroll-behavior.enabled"
+  ],
+  [
+    "offset",
+    "layout.css.motion-path.enabled"
   ],
   [
     "scroll-margin",
