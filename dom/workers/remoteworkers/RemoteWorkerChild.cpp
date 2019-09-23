@@ -442,6 +442,8 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
     }
   }
 
+  info.mAgentClusterId = aData.agentClusterId();
+
   AutoJSAPI jsapi;
   jsapi.Init();
 

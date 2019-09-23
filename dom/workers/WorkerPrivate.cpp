@@ -2116,7 +2116,8 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
                              WorkerType aWorkerType,
                              const nsAString& aWorkerName,
                              const nsACString& aServiceWorkerScope,
-                             WorkerLoadInfo& aLoadInfo, nsString&& aId)
+                             WorkerLoadInfo& aLoadInfo, nsString&& aId,
+                             const nsID& aAgentClusterId)
     : mMutex("WorkerPrivate Mutex"),
       mCondVar(mMutex, "WorkerPrivate CondVar"),
       mParent(aParent),
@@ -2137,6 +2138,7 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
       mLoadingWorkerScript(false),
       mCreationTimeStamp(TimeStamp::Now()),
       mCreationTimeHighRes((double)PR_Now() / PR_USEC_PER_MSEC),
+      mAgentClusterId(aAgentClusterId),
       mWorkerThreadAccessible(aParent),
       mPostSyncLoopOperations(0),
       mParentWindowPaused(false),
@@ -2308,9 +2310,34 @@ already_AddRefed<WorkerPrivate> WorkerPrivate::Constructor(
 
   MOZ_ASSERT(runtimeService);
 
+  nsID agentClusterId;
+  if (parent) {
+    MOZ_ASSERT(aWorkerType == WorkerType::WorkerTypeDedicated);
+
+    agentClusterId = parent->AgentClusterId();
+  } else {
+    AssertIsOnMainThread();
+
+    if (aWorkerType == WorkerType::WorkerTypeService ||
+        aWorkerType == WorkerType::WorkerTypeShared) {
+      agentClusterId = aLoadInfo->mAgentClusterId;
+    } else if (aLoadInfo->mWindow) {
+      Document* doc = aLoadInfo->mWindow->GetExtantDoc();
+      MOZ_DIAGNOSTIC_ASSERT(doc);
+      RefPtr<DocGroup> docGroup = doc->GetDocGroup();
+
+      agentClusterId = docGroup ? docGroup->AgentClusterId()
+                                : nsContentUtils::GenerateUUID();
+    } else {
+      // If the window object was failed to be set into the WorkerLoadInfo, we
+      // make the worker into another agent cluster group instead of failures.
+      agentClusterId = nsContentUtils::GenerateUUID();
+    }
+  }
+
   RefPtr<WorkerPrivate> worker = new WorkerPrivate(
       parent, aScriptURL, aIsChromeWorker, aWorkerType, aWorkerName,
-      aServiceWorkerScope, *aLoadInfo, std::move(aId));
+      aServiceWorkerScope, *aLoadInfo, std::move(aId), agentClusterId);
 
   // Gecko contexts always have an explicitly-set default locale (set by
   // XPJSRuntime::Initialize for the main thread, set by
@@ -2956,6 +2983,8 @@ bool WorkerPrivate::EnsureClientSource() {
   data->mClientSource = ClientManager::CreateSource(
       type, mWorkerHybridEventTarget, GetPrincipalInfo());
   MOZ_DIAGNOSTIC_ASSERT(data->mClientSource);
+
+  data->mClientSource->SetAgentClusterId(mAgentClusterId);
 
   if (data->mFrozen) {
     data->mClientSource->Freeze();
