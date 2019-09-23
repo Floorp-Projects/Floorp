@@ -1309,10 +1309,8 @@ void IMEStateManager::SetIMEState(const IMEState& aState,
     GetActionHint(*aContent, context.mActionHint);
   }
 
-  // XXX I think that we should use nsContentUtils::IsCallerChrome() instead
-  //     of the process type.
   if (aAction.mCause == InputContextAction::CAUSE_UNKNOWN &&
-      !XRE_IsContentProcess()) {
+      nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
     aAction.mCause = InputContextAction::CAUSE_UNKNOWN_CHROME;
   }
 
