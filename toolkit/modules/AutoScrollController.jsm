@@ -71,6 +71,9 @@ class AutoScrollController {
   }
 
   computeWindowScrollDirection(global) {
+    if (!global.scrollbars.visible) {
+      return null;
+    }
     if (global.scrollMaxX != global.scrollMinX) {
       return global.scrollMaxY != global.scrollMinY ? "NSEW" : "EW";
     }
