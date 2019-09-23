@@ -70,6 +70,44 @@ class AutoScrollController {
     return aNode instanceof content.XULElement;
   }
 
+  computeNodeScrollDirection(node) {
+    if (!this.isScrollableElement(node)) {
+      return null;
+    }
+
+    let global = node.ownerGlobal;
+
+    // this is a list of overflow property values that allow scrolling
+    const scrollingAllowed = ["scroll", "auto"];
+
+    let cs = global.getComputedStyle(node);
+    let overflowx = cs.getPropertyValue("overflow-x");
+    let overflowy = cs.getPropertyValue("overflow-y");
+    // we already discarded non-multiline selects so allow vertical
+    // scroll for multiline ones directly without checking for a
+    // overflow property
+    let scrollVert =
+      node.scrollTopMax &&
+      (node instanceof global.HTMLSelectElement ||
+        scrollingAllowed.includes(overflowy));
+
+    // do not allow horizontal scrolling for select elements, it leads
+    // to visual artifacts and is not the expected behavior anyway
+    if (
+      !(node instanceof global.HTMLSelectElement) &&
+      node.scrollLeftMin != node.scrollLeftMax &&
+      scrollingAllowed.includes(overflowx)
+    ) {
+      return scrollVert ? "NSEW" : "EW";
+    }
+
+    if (scrollVert) {
+      return "NS";
+    }
+
+    return null;
+  }
+
   getXBLNodes(parent, array) {
     let content = parent.ownerGlobal;
     let anonNodes = content.document.getAnonymousNodes(parent);
@@ -111,11 +149,6 @@ class AutoScrollController {
   }
 
   findNearestScrollableElement(aNode) {
-    let content = aNode.ownerGlobal;
-
-    // this is a list of overflow property values that allow scrolling
-    const scrollingAllowed = ["scroll", "auto"];
-
     // go upward in the DOM and find any parent element that has a overflow
     // area and can therefore be scrolled
     this._scrollable = null;
@@ -123,36 +156,9 @@ class AutoScrollController {
       // do not use overflow based autoscroll for <html> and <body>
       // Elements or non-html/non-xul elements such as svg or Document nodes
       // also make sure to skip select elements that are not multiline
-      if (!this.isScrollableElement(node)) {
-        continue;
-      }
-
-      var overflowx = node.ownerGlobal
-        .getComputedStyle(node)
-        .getPropertyValue("overflow-x");
-      var overflowy = node.ownerGlobal
-        .getComputedStyle(node)
-        .getPropertyValue("overflow-y");
-      // we already discarded non-multiline selects so allow vertical
-      // scroll for multiline ones directly without checking for a
-      // overflow property
-      var scrollVert =
-        node.scrollTopMax &&
-        (node instanceof content.HTMLSelectElement ||
-          scrollingAllowed.includes(overflowy));
-
-      // do not allow horizontal scrolling for select elements, it leads
-      // to visual artifacts and is not the expected behavior anyway
-      if (
-        !(node instanceof content.HTMLSelectElement) &&
-        node.scrollLeftMin != node.scrollLeftMax &&
-        scrollingAllowed.includes(overflowx)
-      ) {
-        this._scrolldir = scrollVert ? "NSEW" : "EW";
-        this._scrollable = node;
-        break;
-      } else if (scrollVert) {
-        this._scrolldir = "NS";
+      let direction = this.computeNodeScrollDirection(node);
+      if (direction) {
+        this._scrolldir = direction;
         this._scrollable = node;
         break;
       }
