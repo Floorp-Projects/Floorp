@@ -25,14 +25,12 @@
 .accordion .accordion-header {
   background-color: var(--accordion-header-background);
   border-bottom: 1px solid var(--theme-splitter-color);
-  box-sizing: border-box;
   display: flex;
   font-size: 12px;
-  line-height: 16px;
   transition: all 0.25s ease;
-  /* Reserve 1px for the border */
-  min-height: calc(var(--theme-toolbar-height) + 1px);
-  padding: 2px 4px;
+  height: 24px;
+  width: calc(100% - 4px);
+  padding-inline-end: 4px;
   align-items: center;
   margin: 0px;
   font-weight: normal;
@@ -41,18 +39,8 @@
   cursor: default;
 }
 
-/*
-  Arrow should be a bit closer to the text than to the start edge:
-  - total distance between text and start edge = 20px
-  - arrow width = 10px
-  - distance between arrow and start edge = 6px
-  - distance between arrow and text = 4px
-*/
 .accordion .accordion-header .theme-twisty {
-  width: 10px;
-  height: 10px;
-  margin-inline-start: 2px;
-  margin-inline-end: 4px;
+  width: 20px;
 }
 
 .accordion .accordion-header:hover {
