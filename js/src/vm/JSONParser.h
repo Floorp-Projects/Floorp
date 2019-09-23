@@ -22,7 +22,14 @@ namespace js {
 // can be shared between the two encodings.
 class MOZ_STACK_CLASS JSONParserBase {
  public:
-  enum ErrorHandling { RaiseError, NoError };
+  enum class ParseType {
+    // Parsing a string as if by JSON.parse.
+    JSONParse,
+    // Parsing what may or may not be JSON in a string of eval code.
+    // In this case, a failure to parse indicates either syntax that isn't JSON,
+    // or syntax that has different semantics in eval code than in JSON.
+    AttemptForEval,
+  };
 
  private:
   /* Data members */
@@ -31,7 +38,7 @@ class MOZ_STACK_CLASS JSONParserBase {
  protected:
   JSContext* const cx;
 
-  const ErrorHandling errorHandling;
+  const ParseType parseType;
 
   enum Token {
     String,
@@ -114,9 +121,9 @@ class MOZ_STACK_CLASS JSONParserBase {
   Token lastToken;
 #endif
 
-  JSONParserBase(JSContext* cx, ErrorHandling errorHandling)
+  JSONParserBase(JSContext* cx, ParseType parseType)
       : cx(cx),
-        errorHandling(errorHandling),
+        parseType(parseType),
         stack(cx),
         freeElements(cx),
         freeProperties(cx)
@@ -132,7 +139,7 @@ class MOZ_STACK_CLASS JSONParserBase {
   JSONParserBase(JSONParserBase&& other)
       : v(other.v),
         cx(other.cx),
-        errorHandling(other.errorHandling),
+        parseType(other.parseType),
         stack(std::move(other.stack)),
         freeElements(std::move(other.freeElements)),
         freeProperties(std::move(other.freeProperties))
@@ -212,8 +219,8 @@ class MOZ_STACK_CLASS JSONParser : public JSONParserBase {
 
   /* Create a parser for the provided JSON data. */
   JSONParser(JSContext* cx, mozilla::Range<const CharT> data,
-             ErrorHandling errorHandling = RaiseError)
-      : JSONParserBase(cx, errorHandling),
+             ParseType parseType)
+      : JSONParserBase(cx, parseType),
         current(data.begin()),
         begin(current),
         end(data.end()) {
