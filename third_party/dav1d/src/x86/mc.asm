@@ -170,8 +170,6 @@ cglobal put_bilin, 4, 8, 0, dst, ds, src, ss, w, h, mxy
 .put:
     movzx                wd, word [t2+wq*2+table_offset(put,)]
     add                  wq, t2
-    lea                  t1, [ssq*3]
-    lea                  t2, [dsq*3]
     jmp                  wq
 .put_w2:
     movzx               t0d, word [srcq+ssq*0]
@@ -194,11 +192,11 @@ cglobal put_bilin, 4, 8, 0, dst, ds, src, ss, w, h, mxy
     jg .put_w4
     RET
 .put_w8:
-    movq                 m0, [srcq+ssq*0]
-    movq                 m1, [srcq+ssq*1]
+    mov                  t0, [srcq+ssq*0]
+    mov                  t1, [srcq+ssq*1]
     lea                srcq, [srcq+ssq*2]
-    movq       [dstq+dsq*0], m0
-    movq       [dstq+dsq*1], m1
+    mov        [dstq+dsq*0], t0
+    mov        [dstq+dsq*1], t1
     lea                dstq, [dstq+dsq*2]
     sub                  hd, 2
     jg .put_w8
@@ -206,30 +204,22 @@ cglobal put_bilin, 4, 8, 0, dst, ds, src, ss, w, h, mxy
 .put_w16:
     movu                 m0, [srcq+ssq*0]
     movu                 m1, [srcq+ssq*1]
-    movu                 m2, [srcq+ssq*2]
-    movu                 m3, [srcq+t1   ]
-    lea                srcq, [srcq+ssq*4]
+    lea                srcq, [srcq+ssq*2]
     mova       [dstq+dsq*0], m0
     mova       [dstq+dsq*1], m1
-    mova       [dstq+dsq*2], m2
-    mova       [dstq+t2   ], m3
-    lea                dstq, [dstq+dsq*4]
-    sub                  hd, 4
+    lea                dstq, [dstq+dsq*2]
+    sub                  hd, 2
     jg .put_w16
     RET
 INIT_YMM avx2
 .put_w32:
     movu                 m0, [srcq+ssq*0]
     movu                 m1, [srcq+ssq*1]
-    movu                 m2, [srcq+ssq*2]
-    movu                 m3, [srcq+t1   ]
-    lea                srcq, [srcq+ssq*4]
+    lea                srcq, [srcq+ssq*2]
     mova       [dstq+dsq*0], m0
     mova       [dstq+dsq*1], m1
-    mova       [dstq+dsq*2], m2
-    mova       [dstq+t2   ], m3
-    lea                dstq, [dstq+dsq*4]
-    sub                  hd, 4
+    lea                dstq, [dstq+dsq*2]
+    sub                  hd, 2
     jg .put_w32
     RET
 .put_w64:

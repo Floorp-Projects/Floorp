@@ -41,6 +41,7 @@ if is_asm_enabled
 
     checkasm_tmpl_sources = files(
         'checkasm/cdef.c',
+        'checkasm/filmgrain.c',
         'checkasm/ipred.c',
         'checkasm/itx.c',
         'checkasm/loopfilter.c',

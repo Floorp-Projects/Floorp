@@ -43,8 +43,11 @@ pw_1321_3803:   times 4 dw  1321,  3803
 pw_2482_m1321:  times 4 dw  2482, -1321
 pw_3344_2482:   times 4 dw  3344,  2482
 pw_3344_m3803:  times 4 dw  3344, -3803
+pw_3344_m3344:  times 4 dw  3344, -3344
+pw_0_3344       times 4 dw     0,  3344
 pw_m6688_m3803: times 4 dw -6688, -3803
 
+COEF_PAIR 2896, 2896
 COEF_PAIR 1567, 3784
 COEF_PAIR  799, 4017
 COEF_PAIR 3406, 2276
@@ -126,7 +129,6 @@ pw_2675x8:      times 8 dw  2675*8
 pw_4085x8:      times 8 dw  4085*8
 pw_m301x8:      times 8 dw  -301*8
 
-
 iadst4_dconly1a: times 2 dw 10568, 19856, 26752, 30424
 iadst4_dconly1b: times 2 dw 30424, 26752, 19856, 10568
 iadst4_dconly2a: dw 10568, 10568, 10568, 10568, 19856, 19856, 19856, 19856
@@ -200,7 +202,6 @@ SECTION .text
     ret
 %endmacro
 
-
 ; flags: 1 = swap, 2: coef_regs
 %macro ITX_MUL2X_PACK 5-6 0 ; dst/src, tmp[1], rnd, coef[1-2], flags
 %if %6 & 2
@@ -237,35 +238,6 @@ SECTION .text
 
     psubsw               m1, m0, m2            ;high: out2 ;low: out3
     paddsw               m0, m2                ;high: out1 ;low: out0
-%endmacro
-
-
-%macro IADST4_1D_PACKED 0
-    punpcklwd            m2, m0, m1                ;unpacked in0 in2
-    punpckhwd            m3, m0, m1                ;unpacked in1 in3
-    psubw                m0, m1
-    punpckhqdq           m1, m1                    ;
-    paddw                m1, m0                    ;low: in0 - in2 + in3
-
-    pmaddwd              m0, m2, [o(pw_1321_3803)] ;1321 * in0 + 3803 * in2
-    pmaddwd              m2, [o(pw_2482_m1321)]    ;2482 * in0 - 1321 * in2
-    pmaddwd              m4, m3, [o(pw_3344_2482)] ;3344 * in1 + 2482 * in3
-    pmaddwd              m5, m3, [o(pw_3344_m3803)];3344 * in1 - 3803 * in3
-    paddd                m4, m0                    ;t0 + t3
-    pmaddwd              m3, [o(pw_m6688_m3803)]   ;-2 * 3344 * in1 - 3803 * in3
-    pmulhrsw             m1, [o(pw_3344x8)]        ;low: out2
-    mova                 m0, [o(pd_2048)]
-    paddd                m2, m0
-    paddd                m0, m4                    ;t0 + t3 + 2048
-    paddd                m5, m2                    ;t1 + t3 + 2048
-    paddd                m2, m4
-    paddd                m2, m3                    ;t0 + t1 - t3 + 2048
-
-    psrad                m0, 12                    ;out0
-    psrad                m5, 12                    ;out1
-    psrad                m2, 12                    ;out3
-    packssdw             m0, m5                    ;high: out1 ;low: out0
-    packssdw             m2, m2                    ;high: out3 ;low: out3
 %endmacro
 
 %macro INV_TXFM_FN 5+ ; type1, type2, fast_thresh, size, xmm/stack
@@ -392,15 +364,14 @@ cglobal iadst_4x4_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     mova                 m0, [coeffq+16*0]
     mova                 m1, [coeffq+16*1]
     call .main
-    punpckhwd            m3, m0, m2
+    punpckhwd            m2, m0, m1
     punpcklwd            m0, m1
-    punpckhwd            m1, m0, m3       ;high: in3 ;low :in2
-    punpcklwd            m0, m3           ;high: in1 ;low: in0
+    punpckhwd            m1, m0, m2       ;high: in3 ;low :in2
+    punpcklwd            m0, m2           ;high: in1 ;low: in0
     jmp                tx2q
 
 .pass2:
     call .main
-    punpcklqdq            m1, m2          ;out2 out3
 
 .end:
     pxor                 m2, m2
@@ -412,7 +383,28 @@ cglobal iadst_4x4_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
 
 ALIGN function_align
 .main:
-    IADST4_1D_PACKED
+    punpcklwd            m2, m0, m1                ;unpacked in0 in2
+    punpckhwd            m0, m1                    ;unpacked in1 in3
+    mova                 m3, m0
+    pmaddwd              m1, m2, [o(pw_3344_m3344)];3344 * in0 - 3344 * in2
+    pmaddwd              m0, [o(pw_0_3344)]        ;3344 * in3
+    paddd                m1, m0                    ;t2
+    pmaddwd              m0, m2, [o(pw_1321_3803)] ;1321 * in0 + 3803 * in2
+    pmaddwd              m2, [o(pw_2482_m1321)]    ;2482 * in0 - 1321 * in2
+    pmaddwd              m4, m3, [o(pw_3344_2482)] ;3344 * in1 + 2482 * in3
+    pmaddwd              m5, m3, [o(pw_3344_m3803)];3344 * in1 - 3803 * in3
+    paddd                m4, m0                    ;t0 + t3
+    pmaddwd              m3, [o(pw_m6688_m3803)]   ;-2 * 3344 * in1 - 3803 * in3
+    mova                 m0, [o(pd_2048)]
+    paddd                m1, m0                    ;t2 + 2048
+    paddd                m2, m0
+    paddd                m0, m4                    ;t0 + t3 + 2048
+    paddd                m5, m2                    ;t1 + t3 + 2048
+    paddd                m2, m4
+    paddd                m2, m3                    ;t0 + t1 - t3 + 2048
+    REPX      {psrad x, 12}, m1, m0, m5, m2
+    packssdw             m0, m5                    ;high: out1 ;low: out0
+    packssdw             m1, m2                    ;high: out3 ;low: out3
     ret
 
 INV_TXFM_4X4_FN flipadst, dct,      0
@@ -424,16 +416,14 @@ cglobal iflipadst_4x4_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     mova                 m0, [coeffq+16*0]
     mova                 m1, [coeffq+16*1]
     call m(iadst_4x4_internal).main
-    punpcklwd            m1, m0
-    punpckhwd            m2, m0
-    punpcklwd            m0, m2, m1            ;high: in3 ;low :in2
-    punpckhwd            m2, m1                ;high: in1 ;low: in0
-    mova                 m1, m2
+    punpcklwd            m2, m1, m0
+    punpckhwd            m1, m0
+    punpcklwd            m0, m1, m2            ;high: in3 ;low :in2
+    punpckhwd            m1, m2                ;high: in1 ;low: in0
     jmp                tx2q
 
 .pass2:
     call m(iadst_4x4_internal).main
-    punpcklqdq            m1, m2               ;out2 out3
 
 .end:
     pxor                 m2, m2
@@ -582,99 +572,6 @@ cglobal inv_txfm_add_wht_wht_4x4, 3, 3, 4, dst, stride, coeff
     paddsw              m%1, m%5, m%4                     ;out0
     psubsw              m%5, m%4                          ;out3
     mova                m%4, m%5
-%endmacro
-
-%macro IADST4_1D 0
-    mova                 m4, m2
-    psubw                m2, m0, m4
-    paddw                m2, m3                        ;low: in0 - in2 + in3
-
-    punpckhwd            m6, m0, m4                    ;unpacked in0 in2
-    punpckhwd            m7, m1, m3                    ;unpacked in1 in3
-    punpcklwd            m0, m4                        ;unpacked in0 in2
-    punpcklwd            m1, m3                        ;unpacked in1 in3
-
-    pmaddwd              m4, m0, [o(pw_1321_3803)]     ;1321 * in0 + 3803 * in2
-    pmaddwd              m0, [o(pw_2482_m1321)]        ;2482 * in0 - 1321 * in2
-    pmaddwd              m3, m1, [o(pw_3344_2482)]     ;3344 * in1 + 2482 * in3
-    pmaddwd              m5, m1, [o(pw_3344_m3803)]    ;3344 * in1 - 3803 * in3
-    paddd                m3, m4                        ;t0 + t3
-
-    pmaddwd              m1, [o(pw_m6688_m3803)]       ;-2 * 3344 * in1 - 3803 * in3
-    pmulhrsw             m2, [o(pw_3344x8)]            ;out2
-    mova                 m4, [o(pd_2048)]
-    paddd                m0, m4
-    paddd                m4, m3                        ;t0 + t3 + 2048
-    paddd                m5, m0                        ;t1 + t3 + 2048
-    paddd                m3, m0
-    paddd                m3, m1                        ;t0 + t1 - t3 + 2048
-
-    psrad                m4, 12                        ;out0
-    psrad                m5, 12                        ;out1
-    psrad                m3, 12                        ;out3
-    packssdw             m0, m4, m5                    ;low: out0  high: out1
-
-    pmaddwd              m4, m6, [o(pw_1321_3803)]     ;1321 * in0 + 3803 * in2
-    pmaddwd              m6, [o(pw_2482_m1321)]        ;2482 * in0 - 1321 * in2
-    pmaddwd              m1, m7, [o(pw_3344_2482)]     ;3344 * in1 + 2482 * in3
-    pmaddwd              m5, m7, [o(pw_3344_m3803)]    ;3344 * in1 - 3803 * in3
-    paddd                m1, m4                        ;t0 + t3
-    pmaddwd              m7, [o(pw_m6688_m3803)]       ;-2 * 3344 * in1 - 3803 * in3
-
-    mova                 m4, [o(pd_2048)]
-    paddd                m6, m4
-    paddd                m4, m1                        ;t0 + t3 + 2048
-    paddd                m5, m6                        ;t1 + t3 + 2048
-    paddd                m1, m6
-    paddd                m1, m7                        ;t0 + t1 - t3 + 2048
-
-    psrad                m4, 12                        ;out0
-    psrad                m5, 12                        ;out1
-    psrad                m1, 12                        ;out3
-    packssdw             m3, m1                        ;out3
-    packssdw             m4, m5                        ;low: out0  high: out1
-
-    punpckhqdq           m1, m0, m4                    ;out1
-    punpcklqdq           m0, m4                        ;out0
-%endmacro
-
-%macro IADST8_1D_PACKED 0
-    mova                 m6, [o(pd_2048)]
-    punpckhwd            m4, m3, m0                ;unpacked in7 in0
-    punpckhwd            m5, m2, m1                ;unpacked in5 in2
-    punpcklwd            m1, m2                    ;unpacked in3 in4
-    punpcklwd            m0, m3                    ;unpacked in1 in6
-    ITX_MUL2X_PACK        4, 2, 6,  401, 4076      ;low:  t0a   high:  t1a
-    ITX_MUL2X_PACK        5, 2, 6, 1931, 3612      ;low:  t2a   high:  t3a
-    ITX_MUL2X_PACK        1, 2, 6, 3166, 2598      ;low:  t4a   high:  t5a
-    ITX_MUL2X_PACK        0, 2, 6, 3920, 1189      ;low:  t6a   high:  t7a
-
-    psubsw               m3, m4, m1                ;low:  t4    high:  t5
-    paddsw               m4, m1                    ;low:  t0    high:  t1
-    psubsw               m2, m5, m0                ;low:  t6    high:  t7
-    paddsw               m5, m0                    ;low:  t2    high:  t3
-
-    shufps               m1, m3, m2, q1032
-    punpckhwd            m2, m1
-    punpcklwd            m3, m1
-    ITX_MUL2X_PACK        3, 0, 6, 1567, 3784, 1   ;low:  t5a   high:  t4a
-    ITX_MUL2X_PACK        2, 0, 6, 3784, 1567      ;low:  t7a   high:  t6a
-
-    psubsw               m1, m4, m5                ;low:  t2    high:  t3
-    paddsw               m4, m5                    ;low:  out0  high: -out7
-    psubsw               m5, m3, m2                ;low:  t7    high:  t6
-    paddsw               m3, m2                    ;low:  out6  high: -out1
-    shufps               m0, m4, m3, q3210         ;low:  out0  high: -out1
-    shufps               m3, m4, q3210             ;low:  out6  high: -out7
-
-    shufps               m4, m1, m5, q1032         ;low:  t3    high:  t7
-    shufps               m1, m5, q3210             ;low:  t2    high:  t6
-    mova                 m5, [o(pw_2896x8)]
-    psubw                m2, m1, m4                ;low:  t2-t3 high:  t6-t7
-    paddw                m1, m4                    ;low:  t2+t3 high:  t6+t7
-    pmulhrsw             m2, m5                    ;low:  out4  high: -out5
-    shufps               m1, m1, q1032
-    pmulhrsw             m1, m5                    ;low:  out2  high: -out3
 %endmacro
 
 %macro WRITE_4X8 4 ;row[1-4]
@@ -838,7 +735,48 @@ cglobal iadst_4x8_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
 
 ALIGN function_align
 .main:
-    IADST8_1D_PACKED
+    mova                 m6, [o(pd_2048)]
+    punpckhwd            m4, m3, m0                ;unpacked in7 in0
+    punpckhwd            m5, m2, m1                ;unpacked in5 in2
+    punpcklwd            m1, m2                    ;unpacked in3 in4
+    punpcklwd            m0, m3                    ;unpacked in1 in6
+    ITX_MUL2X_PACK        4, 2, 6,  401, 4076      ;low:  t0a   high:  t1a
+    ITX_MUL2X_PACK        5, 2, 6, 1931, 3612      ;low:  t2a   high:  t3a
+    ITX_MUL2X_PACK        1, 2, 6, 3166, 2598      ;low:  t4a   high:  t5a
+    ITX_MUL2X_PACK        0, 2, 6, 3920, 1189      ;low:  t6a   high:  t7a
+
+    psubsw               m3, m4, m1                ;low:  t4    high:  t5
+    paddsw               m4, m1                    ;low:  t0    high:  t1
+    psubsw               m2, m5, m0                ;low:  t6    high:  t7
+    paddsw               m5, m0                    ;low:  t2    high:  t3
+
+    shufps               m1, m3, m2, q1032
+    punpckhwd            m2, m1
+    punpcklwd            m3, m1
+    ITX_MUL2X_PACK        3, 0, 6, 1567, 3784, 1   ;low:  t5a   high:  t4a
+    ITX_MUL2X_PACK        2, 0, 6, 3784, 1567      ;low:  t7a   high:  t6a
+
+    psubsw               m1, m4, m5                ;low:  t2    high:  t3
+    paddsw               m4, m5                    ;low:  out0  high: -out7
+    psubsw               m5, m3, m2                ;low:  t7    high:  t6
+    paddsw               m3, m2                    ;low:  out6  high: -out1
+    shufps               m0, m4, m3, q3210         ;low:  out0  high: -out1
+    shufps               m3, m4, q3210             ;low:  out6  high: -out7
+
+    mova                 m2, [o(pw_2896_m2896)]
+    mova                 m7, [o(pw_2896_2896)]
+    shufps               m4, m1, m5, q1032         ;low:  t3    high:  t7
+    shufps               m1, m5, q3210             ;low:  t2    high:  t6
+    punpcklwd            m5, m1, m4
+    punpckhwd            m1, m4
+    pmaddwd              m4, m2, m1                ;-out5
+    pmaddwd              m2, m5                    ; out4
+    pmaddwd              m1, m7                    ; out2
+    pmaddwd              m5, m7                    ;-out3
+    REPX      {paddd x, m6}, m4, m2, m1, m5
+    REPX      {psrad x, 12}, m4, m2, m1, m5
+    packssdw             m1, m5                    ;low:  out2  high: -out3
+    packssdw             m2, m4                    ;low:  out4  high: -out5
     ret
 
 INV_TXFM_4X8_FN flipadst, dct,      0
@@ -1109,7 +1047,67 @@ cglobal iadst_8x4_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
 
 ALIGN function_align
 .main:
-    IADST4_1D
+    punpckhwd            m6, m0, m2                    ;unpacked in0 in2
+    punpcklwd            m0, m2                        ;unpacked in0 in2
+    punpckhwd            m7, m1, m3                    ;unpacked in1 in3
+    punpcklwd            m1, m3                        ;unpacked in1 in3
+
+    mova                 m2, [o(pw_3344_m3344)]
+    mova                 m4, [o(pw_0_3344)]
+    pmaddwd              m3, m2, m6                    ;3344 * in0 - 3344 * in2
+    pmaddwd              m5, m4, m7                    ;3344 * in3
+    pmaddwd              m2, m0
+    pmaddwd              m4, m1
+    paddd                m3, m5
+    paddd                m2, m4
+    mova                 m4, [o(pd_2048)]
+    paddd                m3, m4                        ;t2 + 2048
+    paddd                m2, m4
+    psrad                m3, 12
+    psrad                m2, 12
+    packssdw             m2, m3                        ;out2
+
+    pmaddwd              m4, m0, [o(pw_1321_3803)]     ;1321 * in0 + 3803 * in2
+    pmaddwd              m0, [o(pw_2482_m1321)]        ;2482 * in0 - 1321 * in2
+    pmaddwd              m3, m1, [o(pw_3344_2482)]     ;3344 * in1 + 2482 * in3
+    pmaddwd              m5, m1, [o(pw_3344_m3803)]    ;3344 * in1 - 3803 * in3
+    paddd                m3, m4                        ;t0 + t3
+
+    pmaddwd              m1, [o(pw_m6688_m3803)]       ;-2 * 3344 * in1 - 3803 * in3
+    mova                 m4, [o(pd_2048)]
+    paddd                m0, m4
+    paddd                m4, m3                        ;t0 + t3 + 2048
+    paddd                m5, m0                        ;t1 + t3 + 2048
+    paddd                m3, m0
+    paddd                m3, m1                        ;t0 + t1 - t3 + 2048
+
+    psrad                m4, 12                        ;out0
+    psrad                m5, 12                        ;out1
+    psrad                m3, 12                        ;out3
+    packssdw             m0, m4, m5                    ;low: out0  high: out1
+
+    pmaddwd              m4, m6, [o(pw_1321_3803)]     ;1321 * in0 + 3803 * in2
+    pmaddwd              m6, [o(pw_2482_m1321)]        ;2482 * in0 - 1321 * in2
+    pmaddwd              m1, m7, [o(pw_3344_2482)]     ;3344 * in1 + 2482 * in3
+    pmaddwd              m5, m7, [o(pw_3344_m3803)]    ;3344 * in1 - 3803 * in3
+    paddd                m1, m4                        ;t0 + t3
+    pmaddwd              m7, [o(pw_m6688_m3803)]       ;-2 * 3344 * in1 - 3803 * in3
+
+    mova                 m4, [o(pd_2048)]
+    paddd                m6, m4
+    paddd                m4, m1                        ;t0 + t3 + 2048
+    paddd                m5, m6                        ;t1 + t3 + 2048
+    paddd                m1, m6
+    paddd                m1, m7                        ;t0 + t1 - t3 + 2048
+
+    psrad                m4, 12                        ;out0
+    psrad                m5, 12                        ;out1
+    psrad                m1, 12                        ;out3
+    packssdw             m3, m1                        ;out3
+    packssdw             m4, m5                        ;low: out0  high: out1
+
+    punpckhqdq           m1, m0, m4                    ;out1
+    punpcklqdq           m0, m4                        ;out0
     ret
 
 INV_TXFM_8X4_FN flipadst, dct
@@ -1423,6 +1421,7 @@ cglobal iadst_8x8_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
 
 .pass1:
     call .main
+    call .main_pass1_end
 
 .pass1_end:
     mova                    m7, [o(pw_16384)]
@@ -1441,6 +1440,7 @@ ALIGN function_align
 
 .pass2_main:
     call .main
+    call .main_pass2_end
 
 .end:
     mova                    m7, [o(pw_2048)]
@@ -1491,10 +1491,57 @@ ALIGN function_align
     psubsw                  m5, m6                        ;t6
     paddsw                  m6, m2, m7                    ;out6
     psubsw                  m2, m7                        ;t7
-    paddw                   m7, m4, m3                    ;t2 + t3
-    psubw                   m4, m3                        ;t2 - t3
-    paddw                   m3, m5, m2                    ;t6 + t7
-    psubw                   m5, m2                        ;t6 - t7
+    ret
+ALIGN function_align
+.main_pass1_end:
+    mova  [rsp+gprsize*2+16*1], m1
+    mova  [rsp+gprsize*2+16*2], m6
+    punpckhwd               m1, m4, m3
+    punpcklwd               m4, m3
+    punpckhwd               m7, m5, m2
+    punpcklwd               m5, m2
+    mova                    m2, [o(pw_2896_2896)]
+    mova                    m6, [o(pd_2048)]
+    pmaddwd                 m3, m2, m7
+    pmaddwd                 m2, m5
+    paddd                   m3, m6
+    paddd                   m2, m6
+    psrad                   m3, 12
+    psrad                   m2, 12
+    packssdw                m2, m3                        ;out2
+    mova                    m3, [o(pw_2896_m2896)]
+    pmaddwd                 m7, m3
+    pmaddwd                 m5, m3
+    paddd                   m7, m6
+    paddd                   m5, m6
+    psrad                   m7, 12
+    psrad                   m5, 12
+    packssdw                m5, m7                        ;-out5
+    mova                    m3, [o(pw_2896_2896)]
+    pmaddwd                 m7, m3, m1
+    pmaddwd                 m3, m4
+    paddd                   m7, m6
+    paddd                   m3, m6
+    psrad                   m7, 12
+    psrad                   m3, 12
+    packssdw                m3, m7                        ;-out3
+    mova                    m7, [o(pw_2896_m2896)]
+    pmaddwd                 m1, m7
+    pmaddwd                 m4, m7
+    paddd                   m1, m6
+    paddd                   m4, m6
+    psrad                   m1, 12
+    psrad                   m4, 12
+    packssdw                m4, m1                        ;-out5
+    mova                    m1, [rsp+gprsize*2+16*1]
+    mova                    m6, [rsp+gprsize*2+16*2]
+    ret
+ALIGN function_align
+.main_pass2_end:
+    paddsw                  m7, m4, m3                    ;t2 + t3
+    psubsw                  m4, m3                        ;t2 - t3
+    paddsw                  m3, m5, m2                    ;t6 + t7
+    psubsw                  m5, m2                        ;t6 - t7
     mova                    m2, [o(pw_2896x8)]
     pmulhrsw                m4, m2                        ;out4
     pmulhrsw                m5, m2                        ;-out5
@@ -1513,6 +1560,7 @@ cglobal iflipadst_8x8_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
 
 .pass1:
     call m(iadst_8x8_internal).main
+    call m(iadst_8x8_internal).main_pass1_end
 
 .pass1_end:
     mova                    m7, [o(pw_m16384)]
@@ -1542,6 +1590,7 @@ ALIGN function_align
 
 .pass2_main:
     call m(iadst_8x8_internal).main
+    call m(iadst_8x8_internal).main_pass2_end
 
 .end:
     mova                    m7, [o(pw_2048)]
@@ -1753,6 +1802,7 @@ cglobal iadst_4x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
 
 .pass2:
     call m(iadst_16x4_internal).main
+    call m(iadst_16x4_internal).main_pass2_end
 
     punpcklqdq            m6, m5, m4                ;low: -out5  high: -out7
     punpckhqdq            m4, m5                    ;low:  out8  high:  out10
@@ -1820,6 +1870,7 @@ cglobal iflipadst_4x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
 
 .pass2:
     call m(iadst_16x4_internal).main
+    call m(iadst_16x4_internal).main_pass2_end
 
     punpckhqdq            m6, m5, m4                ;low:  out5  high:  out7
     punpcklqdq            m4, m5                    ;low: -out8  high: -out10
@@ -2160,6 +2211,7 @@ INV_TXFM_16X4_FN adst, identity
 cglobal iadst_16x4_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     LOAD_7ROWS        coeffq, 16
     call .main
+    call .main_pass1_end
 
     punpckhwd             m6, m7, m0                 ;packed -out11, -out15
     punpcklwd             m0, m7                     ;packed   out0,   out4
@@ -2193,92 +2245,137 @@ cglobal iadst_16x4_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
 ALIGN function_align
 .main:
     mova       [coeffq+16*6], m0
-    pshufd                m1, m1, q1032
+    pshufd                m0, m1, q1032
     pshufd                m2, m2, q1032
-    punpckhwd             m0, m6, m1                 ;packed in13,  in2
-    punpcklwd             m1, m6                     ;packed  in3, in12
-    punpckhwd             m6, m5, m2                 ;packed in11,  in4
+    punpckhwd             m1, m6, m0                 ;packed in13,  in2
+    punpcklwd             m0, m6                     ;packed  in3, in12
+    punpckhwd             m7, m5, m2                 ;packed in11,  in4
     punpcklwd             m2, m5                     ;packed  in5, in10
-    mova                  m7, [o(pd_2048)]
-    ITX_MUL2X_PACK         0, 5, 7,  995, 3973       ;low:t2   high:t3
-    ITX_MUL2X_PACK         6, 5, 7, 1751, 3703       ;low:t4   high:t5
-    ITX_MUL2X_PACK         2, 5, 7, 3513, 2106       ;low:t10  high:t11
-    ITX_MUL2X_PACK         1, 5, 7, 3857, 1380       ;low:t12  high:t13
-    psubsw                m5, m0, m2                 ;low:t10a high:t11a
-    paddsw                m0, m2                     ;low:t2a  high:t3a
-    psubsw                m2, m6, m1                 ;low:t12a high:t13a
-    paddsw                m6, m1                     ;low:t4a  high:t5a
-    punpcklqdq            m1, m5
-    punpckhwd             m1, m5                     ;packed t10a, t11a
+    mova                  m6, [o(pd_2048)]
+    ITX_MUL2X_PACK         1, 5, 6,  995, 3973       ;low:t2   high:t3
+    ITX_MUL2X_PACK         7, 5, 6, 1751, 3703       ;low:t4   high:t5
+    ITX_MUL2X_PACK         2, 5, 6, 3513, 2106       ;low:t10  high:t11
+    ITX_MUL2X_PACK         0, 5, 6, 3857, 1380       ;low:t12  high:t13
+    psubsw                m5, m1, m2                 ;low:t10a high:t11a
+    paddsw                m1, m2                     ;low:t2a  high:t3a
+    psubsw                m2, m7, m0                 ;low:t12a high:t13a
+    paddsw                m7, m0                     ;low:t4a  high:t5a
+    punpcklqdq            m0, m5
+    punpckhwd             m0, m5                     ;packed t10a, t11a
     punpcklqdq            m5, m2
     punpckhwd             m2, m5                     ;packed t13a, t12a
-    ITX_MUL2X_PACK         1, 5, 7, 3406, 2276       ;low:t10  high:t11
-    ITX_MUL2X_PACK         2, 5, 7, 4017,  799, 1    ;low:t12  high:t13
-    mova       [coeffq+16*4], m0
-    mova       [coeffq+16*5], m6
-    mova                  m0, [coeffq+16*6]
-    mova                  m6, [coeffq+16*7]
-    pshufd                m0, m0, q1032
+    ITX_MUL2X_PACK         0, 5, 6, 3406, 2276       ;low:t10  high:t11
+    ITX_MUL2X_PACK         2, 5, 6, 4017,  799, 1    ;low:t12  high:t13
+    mova       [coeffq+16*4], m1
+    mova       [coeffq+16*5], m7
+    mova                  m1, [coeffq+16*6]
+    mova                  m7, [coeffq+16*7]
+    pshufd                m1, m1, q1032
     pshufd                m3, m3, q1032
-    punpckhwd             m5, m6, m0                 ;packed in15,  in0
-    punpcklwd             m0, m6                     ;packed  in1, in14
-    punpckhwd             m6, m4, m3                 ;packed  in9,  in6
+    punpckhwd             m5, m7, m1                 ;packed in15,  in0
+    punpcklwd             m1, m7                     ;packed  in1, in14
+    punpckhwd             m7, m4, m3                 ;packed  in9,  in6
     punpcklwd             m3, m4                     ;packed  in7,  in8
-    ITX_MUL2X_PACK         5, 4, 7,  201, 4091       ;low:t0    high:t1
-    ITX_MUL2X_PACK         6, 4, 7, 2440, 3290       ;low:t6    high:t7
-    ITX_MUL2X_PACK         3, 4, 7, 3035, 2751       ;low:t8    high:t9
-    ITX_MUL2X_PACK         0, 4, 7, 4052,  601       ;low:t14   high:t15
+    ITX_MUL2X_PACK         5, 4, 6,  201, 4091       ;low:t0    high:t1
+    ITX_MUL2X_PACK         7, 4, 6, 2440, 3290       ;low:t6    high:t7
+    ITX_MUL2X_PACK         3, 4, 6, 3035, 2751       ;low:t8    high:t9
+    ITX_MUL2X_PACK         1, 4, 6, 4052,  601       ;low:t14   high:t15
     psubsw                m4, m5, m3                 ;low:t8a   high:t9a
     paddsw                m5, m3                     ;low:t0a   high:t1a
-    psubsw                m3, m6, m0                 ;low:t14a  high:t15a
-    paddsw                m6, m0                     ;low:t6a   high:t7a
-    punpcklqdq            m0, m4
-    punpckhwd             m0, m4                     ;packed  t8a,  t9a
+    psubsw                m3, m7, m1                 ;low:t14a  high:t15a
+    paddsw                m7, m1                     ;low:t6a   high:t7a
+    punpcklqdq            m1, m4
+    punpckhwd             m1, m4                     ;packed  t8a,  t9a
     punpcklqdq            m4, m3
     punpckhwd             m3, m4                     ;packed t15a, t14a
-    ITX_MUL2X_PACK         0, 4, 7,  799, 4017       ;low:t8    high:t9
-    ITX_MUL2X_PACK         3, 4, 7, 2276, 3406, 1    ;low:t14   high:t15
-    psubsw                m4, m0, m2                 ;low:t12a  high:t13a
-    paddsw                m0, m2                     ;low:t8a   high:t9a
-    psubsw                m2, m1, m3                 ;low:t14a  high:t15a
-    paddsw                m1, m3                     ;low:t10a  high:t11a
-    punpcklqdq            m3, m4
-    punpckhwd             m3, m4                     ;packed t12a, t13a
-    punpcklqdq            m4, m2
-    punpckhwd             m2, m4                     ;packed t15a, t14a
-    ITX_MUL2X_PACK         3, 4, 7, 1567, 3784       ;low:t12   high:t13
-    ITX_MUL2X_PACK         2, 4, 7, 3784, 1567, 1    ;low:t14   high:t15
-    psubsw                m4, m0, m1                 ;low:t10   high:t11
-    paddsw                m0, m1                     ;low:-out1 high:out14
+    ITX_MUL2X_PACK         1, 4, 6,  799, 4017       ;low:t8    high:t9
+    ITX_MUL2X_PACK         3, 4, 6, 2276, 3406, 1    ;low:t14   high:t15
+    paddsw                m4, m1, m2                 ;low:t12a  high:t13a
+    psubsw                m1, m2                     ;low:t8a   high:t9a
+    psubsw                m2, m0, m3                 ;low:t14a  high:t15a
+    paddsw                m0, m3                     ;low:t10a  high:t11a
+    punpcklqdq            m3, m1
+    punpckhwd             m3, m1                     ;packed t12a, t13a
+    punpcklqdq            m1, m2
+    punpckhwd             m2, m1                     ;packed t15a, t14a
+    ITX_MUL2X_PACK         3, 1, 6, 1567, 3784       ;low:t12   high:t13
+    ITX_MUL2X_PACK         2, 1, 6, 3784, 1567, 1    ;low:t14   high:t15
     psubsw                m1, m3, m2                 ;low:t14a  high:t15a
     paddsw                m3, m2                     ;low:out2  high:-out13
-    punpckhqdq            m2, m4, m1                 ;low:t11   high:t15a
-    punpcklqdq            m4, m1                     ;low:t10   high:t14a
-    psubw                 m1, m4, m2
-    paddw                 m2, m4
+    psubsw                m2, m4, m0                 ;low:t10   high:t11
+    paddsw                m0, m4                     ;low:-out1 high:out14
     mova       [coeffq+16*6], m0
     mova       [coeffq+16*7], m3
     mova                  m0, [coeffq+16*4]
     mova                  m3, [coeffq+16*5]
     psubsw                m4, m5, m3                 ;low:t4    high:t5
     paddsw                m5, m3                     ;low:t0    high:t1
-    psubsw                m3, m0 ,m6                 ;low:t6    high:t7
-    paddsw                m0, m6                     ;low:t2    high:t3
-    punpcklqdq            m6, m4
-    punpckhwd             m6, m4                     ;packed t4, t5
+    psubsw                m3, m0, m7                 ;low:t6    high:t7
+    paddsw                m0, m7                     ;low:t2    high:t3
+    punpcklqdq            m7, m4
+    punpckhwd             m7, m4                     ;packed t4, t5
     punpcklqdq            m4, m3
     punpckhwd             m3, m4                     ;packed t7, t6
-    ITX_MUL2X_PACK         6, 4, 7, 1567, 3784       ;low:t4a   high:t5a
-    ITX_MUL2X_PACK         3, 4, 7, 3784, 1567, 1    ;low:t6a   high:t7a
+    ITX_MUL2X_PACK         7, 4, 6, 1567, 3784       ;low:t4a   high:t5a
+    ITX_MUL2X_PACK         3, 4, 6, 3784, 1567, 1    ;low:t6a   high:t7a
     psubsw                m4, m5, m0                 ;low:t2a   high:t3a
     paddsw                m0, m5                     ;low:out0  high:-out15
-    psubsw                m5, m6, m3                 ;low:t6    high:t7
-    paddsw                m3, m6                     ;low:-out3 high:out12
+    psubsw                m5, m7, m3                 ;low:t6    high:t7
+    paddsw                m3, m7                     ;low:-out3 high:out12
+    ret
+ALIGN function_align
+.main_pass1_end:
+    mova                  m7, [o(deint_shuf1)]
+    mova       [coeffq+16*4], m0
+    mova       [coeffq+16*5], m3
+    mova                  m0, [o(pw_2896_m2896)]
+    mova                  m3, [o(pw_2896_2896)]
+    pshufb                m1, m7                     ;t14a t15a
+    pshufb                m2, m7                     ;t10  t11
+    pshufb                m4, m7                     ;t2a  t3a
+    pshufb                m5, m7                     ;t6   t7
+    pmaddwd               m7, m0, m2
+    pmaddwd               m2, m3
+    paddd                 m7, m6
+    paddd                 m2, m6
+    psrad                 m7, 12
+    psrad                 m2, 12
+    packssdw              m2, m7                     ;low:out6  high:-out9
+    pmaddwd               m7, m0, m4
+    pmaddwd               m4, m3
+    paddd                 m7, m6
+    paddd                 m4, m6
+    psrad                 m7, 12
+    psrad                 m4, 12
+    packssdw              m4, m7                     ;low:-out7 high:out8
+    pmaddwd               m7, m3, m5
+    pmaddwd               m5, m0
+    paddd                 m7, m6
+    paddd                 m5, m6
+    psrad                 m7, 12
+    psrad                 m5, 12
+    packssdw              m7, m5                     ;low:out4  high:-out11
+    pmaddwd               m5, m3, m1
+    pmaddwd               m1, m0
+    paddd                 m5, m6
+    paddd                 m1, m6
+    psrad                 m5, 12
+    psrad                 m1, 12
+    packssdw              m5, m1                     ;low:-out5 high:out10
+    mova                  m0, [coeffq+16*4]
+    mova                  m3, [coeffq+16*5]
+    ret
+ALIGN function_align
+.main_pass2_end:
     mova                  m7, [o(pw_2896x8)]
+    punpckhqdq            m6, m2, m1                 ;low:t11   high:t15a
+    punpcklqdq            m2, m1                     ;low:t10   high:t14a
+    psubsw                m1, m2, m6
+    paddsw                m2, m6
     punpckhqdq            m6, m4, m5                 ;low:t3a   high:t7
     punpcklqdq            m4, m5                     ;low:t2a   high:t6
-    psubw                 m5, m4, m6
-    paddw                 m4, m6
+    psubsw                m5, m4, m6
+    paddsw                m4, m6
     pmulhrsw              m1, m7                     ;low:-out9 high:out10
     pmulhrsw              m2, m7                     ;low:out6  high:-out5
     pmulhrsw              m5, m7                     ;low:out8  high:-out11
@@ -2298,6 +2395,7 @@ INV_TXFM_16X4_FN flipadst, identity
 cglobal iflipadst_16x4_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     LOAD_7ROWS        coeffq, 16
     call m(iadst_16x4_internal).main
+    call m(iadst_16x4_internal).main_pass1_end
 
     punpcklwd             m6, m7, m0                 ;packed  out11,  out15
     punpckhwd             m0, m7                     ;packed  -out0,  -out4
@@ -2360,7 +2458,7 @@ cglobal iidentity_16x4_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
 %endmacro
 
 %macro INV_TXFM_8X16_FN 2-3 -1 ; type1, type2, fast_thresh
-    INV_TXFM_FN          %1, %2, %3, 8x16, 8, 16*12
+    INV_TXFM_FN          %1, %2, %3, 8x16, 8, 16*16
 %ifidn %1_%2, dct_dct
     pshuflw              m0, [coeffq], q0000
     punpcklwd            m0, m0
@@ -2548,6 +2646,7 @@ cglobal iadst_8x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     mova                    m7, [coeffq+16*11]
 
     call m(iadst_16x8_internal).main
+    call m(iadst_16x8_internal).main_pass2_end
 
     mov                    r3, dstq
     lea                  dstq, [dstq+strideq*8]
@@ -2599,6 +2698,7 @@ cglobal iflipadst_8x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     mova                    m7, [coeffq+16*11]
 
     call m(iadst_16x8_internal).main
+    call m(iadst_16x8_internal).main_pass2_end
     jmp  m(iflipadst_8x8_internal).end
 
 .end:
@@ -2652,7 +2752,7 @@ cglobal iidentity_8x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
 
 
 %macro INV_TXFM_16X8_FN 2-3 -1 ; type1, type2, fast_thresh
-    INV_TXFM_FN          %1, %2, %3, 16x8, 8, 16*12
+    INV_TXFM_FN          %1, %2, %3, 16x8, 8, 16*16
 %ifidn %1_%2, dct_dct
     movd                 m1, [o(pw_2896x8)]
     pmulhrsw             m0, m1, [coeffq]
@@ -2893,6 +2993,7 @@ cglobal iadst_16x8_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     pmulhrsw                m7,     [coeffq+16*13]
 
     call .main
+    call .main_pass1_end
     mov                    r3, tx2q
     lea                  tx2q, [o(m(iadst_16x8_internal).pass1_end)]
     jmp m(iadst_8x8_internal).pass1_end
@@ -2998,23 +3099,15 @@ ALIGN function_align
     mova  [rsp+gprsize*2+16*6], m3                       ;-out3
     psubsw                  m3, m0, m4                   ;t7
     paddsw                  m0, m4                       ;out12
-    mova                    m7, [o(pw_2896x8)]
-    psubw                   m4, m2, m3
-    paddw                   m2, m3
+    mova [rsp+gprsize*2+16*12], m3
     mova                    m3, [rsp+gprsize*2+16*7]     ;t3
-    pmulhrsw                m4, m7                       ;-out11
-    pmulhrsw                m2, m7                       ;out4
-    mova  [rsp+gprsize*2+16*7], m2                       ;out4
+    mova [rsp+gprsize*2+16* 7], m2                       ;out4
     psubsw                  m2, m5, m3                   ;t3a
     paddsw                  m5, m3                       ;-out15
-    psubw                   m3, m1, m2
-    paddw                   m1, m2
+    mova [rsp+gprsize*2+16*11], m2
     mova                    m2, [rsp+gprsize*2+32*5]     ;t15
-    pmulhrsw                m3, m7                       ;out8
-    pmulhrsw                m1, m7                       ;-out7
-    mova [rsp+gprsize*2+32*5 ], m1                       ;-out7
+    mova [rsp+gprsize*2+16*10], m1                       ;-out7
     mova                    m1, [rsp+gprsize*2+16*0]     ;t11
-    mova [rsp+gprsize*2+16*11], m3                       ;out8
     mova [rsp+gprsize*2+16*0 ], m5                       ;-out15
     mova                    m3, [rsp+gprsize*2+16*1]     ;t10
     mova [rsp+gprsize*2+16*1 ], m4                       ;-out11
@@ -3044,26 +3137,106 @@ ALIGN function_align
     paddsw                  m2, m6                       ;-out1
     paddsw                  m6, m4, m1                   ;out14
     psubsw                  m4, m1                       ;t11
-    psubw                   m1, m3, m4
-    paddw                   m3, m4
-    pmulhrsw                m1, m7                       ;-out9
-    pmulhrsw                m3, m7                       ;out6
-    mova  [rsp+gprsize*2+16*4], m2                       ;-out1
+    mova [rsp+gprsize*2+16*14], m4
+    mova [rsp+gprsize*2+16* 4], m2                       ;-out1
     mova                    m4, [rsp+gprsize*2+16*8]     ;t14
     mova                    m2, [rsp+gprsize*2+16*9]     ;t15
-    mova  [rsp+gprsize*2+16*9], m3                       ;out6
+    mova [rsp+gprsize*2+16* 9], m3                       ;out6
     psubsw                  m3, m0, m4                   ;t14a
     paddsw                  m0, m4                       ;out2
     psubsw                  m4, m5, m2                   ;t15a
     paddsw                  m5, m2                       ;-out13
-    psubw                   m2, m3, m4
-    paddw                   m3, m4
-    mova  [rsp+gprsize*2+16*5], m0                       ;out2
-    pmulhrsw                m3, m7                       ;-out5
+    mova [rsp+gprsize*2+16* 5], m0                       ;out2
+    ret
+ALIGN function_align
+.main_pass1_end:
+    mova                    m0, [rsp+gprsize*2+16*14]
+    mova [rsp+gprsize*2+16*14], m5
+    mova [rsp+gprsize*2+16*15], m6
+    mova                    m5, [o(pw_2896_2896)]
+    mova                    m6, [o(pw_2896_m2896)]
+    mova                    m7, [o(pd_2048)]
+    punpcklwd               m2, m3, m4
+    punpckhwd               m3, m4
+    pmaddwd                 m4, m5, m2
+    pmaddwd                 m2, m6
+    pmaddwd                 m1, m5, m3
+    pmaddwd                 m3, m6
+    REPX         {paddd x, m7}, m4, m2, m1, m3
+    REPX         {psrad x, 12}, m4, m1, m2, m3
+    packssdw                m4, m1                       ;-out5
+    packssdw                m2, m3                       ;out10
+    mova [rsp+gprsize*2+16* 8], m4
+    mova                    m3, [rsp+gprsize*2+16* 9]
+    punpcklwd               m1, m3, m0
+    punpckhwd               m3, m0
+    pmaddwd                 m0, m5, m1
+    pmaddwd                 m1, m6
+    pmaddwd                 m4, m5, m3
+    pmaddwd                 m3, m6
+    REPX         {paddd x, m7}, m0, m1, m4, m3
+    REPX         {psrad x, 12}, m0, m4, m1, m3
+    packssdw                m0, m4                       ;out6
+    packssdw                m1, m3                       ;-out9
+    mova [rsp+gprsize*2+16* 9], m0
+    mova                    m0, [rsp+gprsize*2+16* 7]
+    mova                    m4, [rsp+gprsize*2+16*12]
+    punpcklwd               m3, m0, m4
+    punpckhwd               m0, m4
+    pmaddwd                 m4, m5, m3
+    pmaddwd                 m3, m6
+    pmaddwd                 m5, m0
+    pmaddwd                 m0, m6
+    REPX         {paddd x, m7}, m4, m3, m5, m0
+    REPX         {psrad x, 12}, m4, m5, m3, m0
+    packssdw                m4, m5                       ;out4
+    packssdw                m3, m0                       ;-out11
+    mova [rsp+gprsize*2+16* 7], m4
+    mova                    m4, [rsp+gprsize*2+16*10]
+    mova                    m5, [rsp+gprsize*2+16*11]
+    punpcklwd               m0, m4, m5
+    punpckhwd               m4, m5
+    pmaddwd                 m5, m0, [o(pw_2896_2896)]
+    pmaddwd                 m0, m6
+    pmaddwd                 m6, m4
+    pmaddwd                 m4, [o(pw_2896_2896)]
+    REPX         {paddd x, m7}, m5, m0, m6, m4
+    REPX         {psrad x, 12}, m0, m6, m5, m4
+    packssdw                m0, m6                       ;out8
+    packssdw                m5, m4                       ;-out7
+    mova [rsp+gprsize*2+16*10], m5
+    mova                    m4, [rsp+gprsize*2+16* 2]    ;out12
+    mova                    m5, [rsp+gprsize*2+16*14]    ;-out13
+    mova                    m6, [rsp+gprsize*2+16*15]    ;out14
+    ret
+ALIGN function_align
+.main_pass2_end:
+    mova                    m7, [o(pw_2896x8)]
+    mova                    m1, [rsp+gprsize*2+16* 9]
+    mova                    m2, [rsp+gprsize*2+16*14]
+    paddsw                  m0, m1, m2
+    psubsw                  m1, m2
+    pmulhrsw                m0, m7                       ;out6
+    pmulhrsw                m1, m7                       ;-out9
+    mova [rsp+gprsize*2+16* 9], m0
+    psubsw                  m2, m3, m4
+    paddsw                  m3, m4
     pmulhrsw                m2, m7                       ;out10
-    mova  [rsp+gprsize*2+16*8], m3                       ;-out5
-    mova                    m0, [rsp+gprsize*2+16*11]    ;out8
-    mova                    m3, [rsp+gprsize*2+16*1 ]    ;-out11
+    pmulhrsw                m3, m7                       ;-out5
+    mova [rsp+gprsize*2+16* 8], m3
+    mova                    m3, [rsp+gprsize*2+16* 7]
+    mova                    m4, [rsp+gprsize*2+16*12]
+    paddsw                  m0, m3, m4
+    psubsw                  m3, m4
+    pmulhrsw                m0, m7                       ;out4
+    pmulhrsw                m3, m7                       ;-out11
+    mova [rsp+gprsize*2+16* 7], m0
+    mova                    m0, [rsp+gprsize*2+16*10]
+    paddsw                  m4, m0, [rsp+gprsize*2+16*11]
+    psubsw                  m0, [rsp+gprsize*2+16*11]
+    pmulhrsw                m4, m7                       ;-out7
+    pmulhrsw                m0, m7                       ;out8
+    mova [rsp+gprsize*2+16*10], m4
     mova                    m4, [rsp+gprsize*2+16*2 ]    ;out12
     ret
 
@@ -3100,6 +3273,7 @@ cglobal iflipadst_16x8_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     pmulhrsw                m7,     [coeffq+16*13]
 
     call m(iadst_16x8_internal).main
+    call m(iadst_16x8_internal).main_pass1_end
 
     mova                    m7, [rsp+gprsize+16*0]
     SAVE_8ROWS     coeffq+16*0, 32
@@ -3184,7 +3358,7 @@ cglobal iidentity_16x8_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
 
 
 %macro INV_TXFM_16X16_FN 2-3 -1 ; type1, type2, fast_thresh
-    INV_TXFM_FN          %1, %2, %3, 16x16, 8, 16*12
+    INV_TXFM_FN          %1, %2, %3, 16x16, 8, 16*16
 %ifidn %1_%2, dct_dct
     movd                   m1, [o(pw_2896x8)]
     pmulhrsw               m0, m1, [coeffq]
@@ -3423,6 +3597,7 @@ INV_TXFM_16X16_FN adst, flipadst
 cglobal iadst_16x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     ITX_16X16_ADST_LOAD_ODD_COEFS
     call m(iadst_16x8_internal).main
+    call m(iadst_16x8_internal).main_pass1_end
 
     mov                     r3, tx2q
     lea                   tx2q, [o(m(iadst_16x16_internal).pass1_end)]
@@ -3441,6 +3616,7 @@ cglobal iadst_16x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     SAVE_8ROWS     coeffq+16*1, 32
     ITX_16X16_ADST_LOAD_EVEN_COEFS
     call m(iadst_16x8_internal).main
+    call m(iadst_16x8_internal).main_pass1_end
 
     lea                   tx2q, [o(m(iadst_16x16_internal).pass1_end2)]
     mova                    m7, [o(pw_8192)]
@@ -3496,6 +3672,7 @@ INV_TXFM_16X16_FN flipadst, flipadst
 cglobal iflipadst_16x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     ITX_16X16_ADST_LOAD_ODD_COEFS
     call m(iadst_16x8_internal).main
+    call m(iadst_16x8_internal).main_pass1_end
 
     mov                     r3, tx2q
     lea                   tx2q, [o(m(iflipadst_16x16_internal).pass1_end)]
@@ -3514,6 +3691,7 @@ cglobal iflipadst_16x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     SAVE_8ROWS    coeffq+16*17, 32
     ITX_16X16_ADST_LOAD_EVEN_COEFS
     call m(iadst_16x8_internal).main
+    call m(iadst_16x8_internal).main_pass1_end
 
     mova                    m7, [rsp+gprsize+16*0]
     SAVE_8ROWS     coeffq+16*0, 32

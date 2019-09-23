@@ -269,6 +269,7 @@ build-debian-ppc64le:
 test-debian:
     image: registry.videolan.org:5000/dav1d-debian-unstable:20190215130514
     stage: test
+    needs: ["build-debian"]
     tags:
         - debian
         - amd64
@@ -289,6 +290,7 @@ test-debian:
 test-debian-unaligned-stack:
     image: registry.videolan.org:5000/dav1d-debian-unstable:20190215130514
     stage: test
+    needs: ["build-debian"]
     tags:
         - debian
         - amd64
@@ -309,6 +311,7 @@ test-debian-unaligned-stack:
 test-debian-asan:
     image: registry.videolan.org:5000/dav1d-debian-unstable:20190215130514
     stage: test
+    needs: ["build-debian"]
     tags:
         - debian
         - amd64
@@ -331,6 +334,7 @@ test-debian-asan:
 test-debian-msan:
     image: registry.videolan.org:5000/dav1d-debian-unstable:20190215130514
     stage: test
+    needs: ["build-debian"]
     tags:
         - debian
         - amd64
@@ -353,6 +357,7 @@ test-debian-msan:
 test-debian-ubsan:
     image: registry.videolan.org:5000/dav1d-debian-unstable:20190215130514
     stage: test
+    needs: ["build-debian"]
     tags:
         - debian
         - amd64
@@ -375,6 +380,7 @@ test-debian-ubsan:
 test-win64:
     image: registry.videolan.org:5000/dav1d-debian-unstable:20190215130514
     stage: test
+    needs: ["build-win64"]
     tags:
         - debian
         - amd64
@@ -399,6 +405,7 @@ test-win64:
 test-debian-aarch64:
     image: registry.videolan.org:5000/dav1d-debian-unstable-aarch64:20181122182457
     stage: test
+    needs: ["build-debian-aarch64"]
     tags:
         - aarch64
         - debian
@@ -421,6 +428,7 @@ test-debian-aarch64:
 test-debian-ppc64le:
     image: registry.videolan.org/dav1d-debian-unstable-ppc64le:20190606105121
     stage: test
+    needs: ["build-debian-ppc64le"]
     tags:
         - ppc64le
         - docker
@@ -443,6 +451,7 @@ test-debian-ppc64le:
 test-debian-armv7-clang-5:
     stage: test
     image: registry.videolan.org:5000/dav1d-debian-unstable-armv7:20190202101732
+    needs: ["build-debian-armv7-clang-5"]
     tags:
         - armv7
         - debian

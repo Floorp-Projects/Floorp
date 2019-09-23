@@ -124,6 +124,7 @@ relative_path = '../../third_party/dav1d/src/'
 bitdepth_basenames = [
     'cdef_apply_tmpl.c',
     'cdef_tmpl.c',
+    'fg_apply_tmpl.c',
     'film_grain_tmpl.c',
     'ipred_prepare_tmpl.c',
     'ipred_tmpl.c',
@@ -163,6 +164,7 @@ SOURCES += [
 EXPORTS.dav1d.src += [
     '../../third_party/dav1d/src/cdef.h',
     '../../third_party/dav1d/src/cdef_apply.h',
+    '../../third_party/dav1d/src/fg_apply.h',
     '../../third_party/dav1d/src/ipred.h',
     '../../third_party/dav1d/src/ipred_prepare.h',
     '../../third_party/dav1d/src/itx.h',

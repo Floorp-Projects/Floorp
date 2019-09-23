@@ -28,7 +28,6 @@
 #ifndef DAV1D_SRC_ENV_H
 #define DAV1D_SRC_ENV_H
 
-#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -90,95 +89,37 @@ static inline int get_partition_ctx(const BlockContext *const a,
           (((l->partition[yb8] >> (4 - bl)) & 1) << 1);
 }
 
-static inline unsigned cdf_element_prob(const uint16_t *const cdf, const int e) {
-    assert(e > 0);
-    return cdf[e - 1] - cdf[e];
-}
-
 static inline unsigned gather_left_partition_prob(const uint16_t *const in,
                                                   const enum BlockLevel bl)
 {
-    unsigned out = 0;
-    out += cdf_element_prob(in, PARTITION_H);
-    if (bl != BL_128X128)
-        out += cdf_element_prob(in, PARTITION_H4);
+    unsigned out = in[PARTITION_H - 1] - in[PARTITION_H];
     // Exploit the fact that cdfs for PARTITION_SPLIT, PARTITION_T_TOP_SPLIT,
-    //  PARTITION_T_BOTTOM_SPLIT and PARTITION_T_LEFT_SPLIT are neighbors.
+    // PARTITION_T_BOTTOM_SPLIT and PARTITION_T_LEFT_SPLIT are neighbors.
     out += in[PARTITION_SPLIT - 1] - in[PARTITION_T_LEFT_SPLIT];
+    if (bl != BL_128X128)
+        out += in[PARTITION_H4 - 1] - in[PARTITION_H4];
     return out;
 }
 
 static inline unsigned gather_top_partition_prob(const uint16_t *const in,
                                                  const enum BlockLevel bl)
 {
-    unsigned out = 0;
+    // Exploit the fact that cdfs for PARTITION_V, PARTITION_SPLIT and
+    // PARTITION_T_TOP_SPLIT are neighbors.
+    unsigned out = in[PARTITION_V - 1] - in[PARTITION_T_TOP_SPLIT];
+    // Exploit the facts that cdfs for PARTITION_T_LEFT_SPLIT and
+    // PARTITION_T_RIGHT_SPLIT are neighbors, the probability for
+    // PARTITION_V4 is always zero, and the probability for
+    // PARTITION_T_RIGHT_SPLIT is zero in 128x128 blocks.
+    out += in[PARTITION_T_LEFT_SPLIT - 1];
     if (bl != BL_128X128)
-        out += cdf_element_prob(in, PARTITION_V4);
-    // Exploit the fact that cdfs for PARTITION_T_LEFT_SPLIT and PARTITION_T_RIGHT_SPLIT,
-    //  and PARTITION_V, PARTITION_SPLIT and PARTITION_T_TOP_SPLIT are neighbors.
-    out += in[PARTITION_T_LEFT_SPLIT - 1] - in[PARTITION_T_RIGHT_SPLIT];
-    out += in[PARTITION_V - 1] - in[PARTITION_T_TOP_SPLIT];
+        out += in[PARTITION_V4 - 1] - in[PARTITION_T_RIGHT_SPLIT];
     return out;
 }
 
-static inline enum TxfmTypeSet get_ext_txtp_set(const enum RectTxfmSize tx,
-                                                const int inter,
-                                                const Dav1dFrameHeader *const hdr,
-                                                const int seg_id)
-{
-    if (!hdr->segmentation.qidx[seg_id]) {
-        if (hdr->segmentation.lossless[seg_id]) {
-            assert(tx == (int) TX_4X4);
-            return TXTP_SET_LOSSLESS;
-        } else {
-            return TXTP_SET_DCT;
-        }
-    }
-
-    const TxfmInfo *const t_dim = &dav1d_txfm_dimensions[tx];
-
-    if (t_dim->max >= TX_64X64)
-        return TXTP_SET_DCT;
-
-    if (t_dim->max == TX_32X32)
-        return inter ? TXTP_SET_DCT_ID : TXTP_SET_DCT;
-
-    if (hdr->reduced_txtp_set)
-        return inter ? TXTP_SET_DCT_ID : TXTP_SET_DT4_ID;
-
-    const enum TxfmSize txsqsz = t_dim->min;
-
-    if (inter)
-        return txsqsz == TX_16X16 ? TXTP_SET_DT9_ID_1D : TXTP_SET_ALL;
-    else
-        return txsqsz == TX_16X16 ? TXTP_SET_DT4_ID : TXTP_SET_DT4_ID_1D;
-}
-
-static inline enum TxfmType get_uv_intra_txtp(const enum IntraPredMode uv_mode,
-                                              const enum RectTxfmSize tx,
-                                              const Dav1dFrameHeader *const hdr,
-                                              const int seg_id)
-{
-    if (hdr->segmentation.lossless[seg_id]) {
-        assert(tx == (int) TX_4X4);
-        return WHT_WHT;
-    }
-
-    const TxfmInfo *const t_dim = &dav1d_txfm_dimensions[tx];
-
-    return t_dim->max == TX_32X32 ? DCT_DCT : dav1d_txtp_from_uvmode[uv_mode];
-}
-
 static inline enum TxfmType get_uv_inter_txtp(const TxfmInfo *const uvt_dim,
-                                              const enum TxfmType ytxtp,
-                                              const Dav1dFrameHeader *const hdr,
-                                              const int seg_id)
+                                              const enum TxfmType ytxtp)
 {
-    if (hdr->segmentation.lossless[seg_id]) {
-        assert(uvt_dim->max == TX_4X4);
-        return WHT_WHT;
-    }
-
     if (uvt_dim->max == TX_32X32)
         return ytxtp == IDTX ? IDTX : DCT_DCT;
     if (uvt_dim->min == TX_16X16 &&
@@ -526,180 +467,6 @@ static inline unsigned get_cur_frame_segid(const int by, const int bx,
         *seg_ctx = 0;
         return have_left ? cur_seg_map[-1] : have_top ? cur_seg_map[-stride] : 0;
     }
-}
-
-static inline int get_coef_skip_ctx(const TxfmInfo *const t_dim,
-                                    const enum BlockSize bs,
-                                    const uint8_t *const a,
-                                    const uint8_t *const l,
-                                    const int chroma,
-                                    const enum Dav1dPixelLayout layout)
-{
-    const uint8_t *const b_dim = dav1d_block_dimensions[bs];
-
-    if (chroma) {
-        const int ss_ver = layout == DAV1D_PIXEL_LAYOUT_I420;
-        const int ss_hor = layout != DAV1D_PIXEL_LAYOUT_I444;
-        const int not_one_blk = b_dim[2] - (!!b_dim[2] && ss_hor) > t_dim->lw ||
-                                b_dim[3] - (!!b_dim[3] && ss_ver) > t_dim->lh;
-        int ca, cl;
-
-#define MERGE_CTX(dir, type, mask) \
-        c##dir = !!((*(const type *) dir) & mask); \
-        break
-        switch (t_dim->lw) {
-        case TX_4X4:   MERGE_CTX(a, uint8_t,  0x3F);
-        case TX_8X8:   MERGE_CTX(a, uint16_t, 0x3F3F);
-        case TX_16X16: MERGE_CTX(a, uint32_t, 0x3F3F3F3FU);
-        case TX_32X32: MERGE_CTX(a, uint64_t, 0x3F3F3F3F3F3F3F3FULL);
-        default: abort();
-        }
-        switch (t_dim->lh) {
-        case TX_4X4:   MERGE_CTX(l, uint8_t,  0x3F);
-        case TX_8X8:   MERGE_CTX(l, uint16_t, 0x3F3F);
-        case TX_16X16: MERGE_CTX(l, uint32_t, 0x3F3F3F3FU);
-        case TX_32X32: MERGE_CTX(l, uint64_t, 0x3F3F3F3F3F3F3F3FULL);
-        default: abort();
-        }
-#undef MERGE_CTX
-
-        return 7 + not_one_blk * 3 + ca + cl;
-    } else if (b_dim[2] == t_dim->lw && b_dim[3] == t_dim->lh) {
-        return 0;
-    } else {
-        static const uint8_t skip_contexts[5][5] = {
-            { 1, 2, 2, 2, 3 },
-            { 1, 4, 4, 4, 5 },
-            { 1, 4, 4, 4, 5 },
-            { 1, 4, 4, 4, 5 },
-            { 1, 4, 4, 4, 6 }
-        };
-        uint64_t la, ll;
-
-#define MERGE_CTX(dir, type, tx) do { \
-            l##dir = *(const type *) dir; \
-            if (tx == TX_64X64) \
-                l##dir |= *(const type *) &dir[sizeof(type)]; \
-            if (tx >= TX_32X32) l##dir |= l##dir >> 32; \
-            if (tx >= TX_16X16) l##dir |= l##dir >> 16; \
-            if (tx >= TX_8X8)   l##dir |= l##dir >> 8; \
-            l##dir &= 0x3F; \
-        } while (0); \
-        break
-        switch (t_dim->lw) {
-        case TX_4X4:   MERGE_CTX(a, uint8_t,  TX_4X4);
-        case TX_8X8:   MERGE_CTX(a, uint16_t, TX_8X8);
-        case TX_16X16: MERGE_CTX(a, uint32_t, TX_16X16);
-        case TX_32X32: MERGE_CTX(a, uint64_t, TX_32X32);
-        case TX_64X64: MERGE_CTX(a, uint64_t, TX_64X64);
-        }
-        switch (t_dim->lh) {
-        case TX_4X4:   MERGE_CTX(l, uint8_t,  TX_4X4);
-        case TX_8X8:   MERGE_CTX(l, uint16_t, TX_8X8);
-        case TX_16X16: MERGE_CTX(l, uint32_t, TX_16X16);
-        case TX_32X32: MERGE_CTX(l, uint64_t, TX_32X32);
-        case TX_64X64: MERGE_CTX(l, uint64_t, TX_64X64);
-        }
-#undef MERGE_CTX
-
-        const int max = imin((int) (la | ll), 4);
-        const int min = imin(imin((int) la, (int) ll), 4);
-
-        return skip_contexts[min][max];
-    }
-}
-
-static inline int get_coef_nz_ctx(uint8_t *const levels,
-                                  const enum RectTxfmSize tx,
-                                  const enum TxClass tx_class,
-                                  const int x, const int y,
-                                  const ptrdiff_t stride)
-{
-    static const uint8_t offsets[3][5][2 /* x, y */] = {
-        [TX_CLASS_2D] = {
-            { 0, 1 }, { 1, 0 }, { 2, 0 }, { 0, 2 }, { 1, 1 }
-        }, [TX_CLASS_V] = {
-            { 0, 1 }, { 1, 0 }, { 0, 2 }, { 0, 3 }, { 0, 4 }
-        }, [TX_CLASS_H] = {
-            { 0, 1 }, { 1, 0 }, { 2, 0 }, { 3, 0 }, { 4, 0 }
-        }
-    };
-    const uint8_t (*const off)[2] = offsets[tx_class];
-    int mag = 0;
-    for (int i = 0; i < 5; i++)
-        mag += imin(levels[(x + off[i][0]) * stride + (y + off[i][1])], 3);
-    const int ctx = imin((mag + 1) >> 1, 4);
-    if (tx_class == TX_CLASS_2D) {
-        return dav1d_nz_map_ctx_offset[tx][imin(y, 4)][imin(x, 4)] + ctx;
-    } else {
-        return 26 + imin((tx_class == TX_CLASS_V) ? y : x, 2) * 5 + ctx;
-    }
-}
-
-static inline int get_dc_sign_ctx(const TxfmInfo *const t_dim,
-                                  const uint8_t *const a,
-                                  const uint8_t *const l)
-{
-    uint64_t sa, sl;
-
-#define MERGE_CTX(dir, type, tx, mask) do { \
-        s##dir = ((*(const type *) dir) >> 6) & mask; \
-        if (tx == TX_64X64) \
-            s##dir += ((*(const type *) &dir[sizeof(type)]) >> 6) & mask; \
-        if (tx >= TX_32X32) s##dir += s##dir >> 32; \
-        if (tx >= TX_16X16) s##dir += s##dir >> 16; \
-        if (tx >= TX_8X8)   s##dir += s##dir >> 8; \
-    } while (0); \
-    break
-    switch (t_dim->lw) {
-    case TX_4X4:   MERGE_CTX(a, uint8_t,  TX_4X4,   0x03);
-    case TX_8X8:   MERGE_CTX(a, uint16_t, TX_8X8,   0x0303);
-    case TX_16X16: MERGE_CTX(a, uint32_t, TX_16X16, 0x03030303U);
-    case TX_32X32: MERGE_CTX(a, uint64_t, TX_32X32, 0x0303030303030303ULL);
-    case TX_64X64: MERGE_CTX(a, uint64_t, TX_64X64, 0x0303030303030303ULL);
-    }
-    switch (t_dim->lh) {
-    case TX_4X4:   MERGE_CTX(l, uint8_t,  TX_4X4,   0x03);
-    case TX_8X8:   MERGE_CTX(l, uint16_t, TX_8X8,   0x0303);
-    case TX_16X16: MERGE_CTX(l, uint32_t, TX_16X16, 0x03030303U);
-    case TX_32X32: MERGE_CTX(l, uint64_t, TX_32X32, 0x0303030303030303ULL);
-    case TX_64X64: MERGE_CTX(l, uint64_t, TX_64X64, 0x0303030303030303ULL);
-    }
-#undef MERGE_CTX
-    const int s = ((int) ((sa + sl) & 0xFF)) - (t_dim->w + t_dim->h);
-
-    return s < 0 ? 1 : s > 0 ? 2 : 0;
-}
-
-static inline int get_br_ctx(const uint8_t *const levels,
-                             const int ac, const enum TxClass tx_class,
-                             const int x, const int y,
-                             const ptrdiff_t stride)
-{
-    int mag = 0;
-    static const uint8_t offsets_from_txclass[3][3][2] = {
-        [TX_CLASS_2D] = { { 0, 1 }, { 1, 0 }, { 1, 1 } },
-        [TX_CLASS_H]  = { { 0, 1 }, { 1, 0 }, { 0, 2 } },
-        [TX_CLASS_V]  = { { 0, 1 }, { 1, 0 }, { 2, 0 } }
-    };
-    const uint8_t (*const offsets)[2] = offsets_from_txclass[tx_class];
-    for (int i = 0; i < 3; i++)
-        mag += levels[(x + offsets[i][1]) * stride + y + offsets[i][0]];
-
-    mag = imin((mag + 1) >> 1, 6);
-    if (!ac) return mag;
-    switch (tx_class) {
-    case TX_CLASS_2D:
-        if (y < 2 && x < 2) return mag + 7;
-        break;
-    case TX_CLASS_H:
-        if (x == 0) return mag + 7;
-        break;
-    case TX_CLASS_V:
-        if (y == 0) return mag + 7;
-        break;
-    }
-    return mag + 14;
 }
 
 static inline mv get_gmv_2d(const Dav1dWarpedMotionParams *const gmv,

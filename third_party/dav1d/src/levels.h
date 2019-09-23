@@ -109,17 +109,6 @@ enum TxfmType {
     N_TX_TYPES_PLUS_LL,
 };
 
-enum TxfmTypeSet {
-    TXTP_SET_DCT,
-    TXTP_SET_DCT_ID,
-    TXTP_SET_DT4_ID,
-    TXTP_SET_DT4_ID_1D,
-    TXTP_SET_DT9_ID_1D,
-    TXTP_SET_ALL,
-    TXTP_SET_LOSSLESS,
-    N_TXTP_SETS
-};
-
 enum TxClass {
     TX_CLASS_2D,
     TX_CLASS_H,

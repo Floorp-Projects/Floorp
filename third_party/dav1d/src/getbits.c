@@ -27,8 +27,6 @@
 
 #include "config.h"
 
-#include <assert.h>
-
 #include "common/intops.h"
 
 #include "src/getbits.h"

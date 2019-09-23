@@ -27,7 +27,6 @@
 
 #include "config.h"
 
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -906,6 +905,7 @@ static void resize_c(pixel *dst, const ptrdiff_t dst_stride,
             src_x += mx >> 14;
             mx &= 0x3fff;
         }
+        if (dst_w & 1) dst[dst_w] = dst[dst_w - 1];
 
         dst += PXSTRIDE(dst_stride);
         src += PXSTRIDE(src_stride);

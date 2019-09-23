@@ -60,6 +60,7 @@ name##_16bpc(void)
 
 void checkasm_check_msac(void);
 decl_check_bitfns(void checkasm_check_cdef);
+decl_check_bitfns(void checkasm_check_filmgrain);
 decl_check_bitfns(void checkasm_check_ipred);
 decl_check_bitfns(void checkasm_check_itx);
 decl_check_bitfns(void checkasm_check_loopfilter);
@@ -279,7 +280,7 @@ void checkasm_stack_clobber(uint64_t clobber, ...);
         }\
     } while (0)
 #else
-#define bench_new(...) while (0)
+#define bench_new(...) do {} while (0)
 #endif
 
 #define DECL_CHECKASM_CHECK_FUNC(type) \

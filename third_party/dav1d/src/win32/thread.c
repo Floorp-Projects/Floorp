@@ -37,6 +37,20 @@
 
 #include "src/thread.h"
 
+static HRESULT (WINAPI *set_thread_description)(HANDLE, PCWSTR);
+
+COLD void dav1d_init_thread(void) {
+    set_thread_description =
+        (void*)GetProcAddress(GetModuleHandleW(L"kernel32.dll"),
+                              "SetThreadDescription");
+}
+
+#undef dav1d_set_thread_name
+COLD void dav1d_set_thread_name(const wchar_t *const name) {
+    if (set_thread_description) /* Only available since Windows 10 1607 */
+        set_thread_description(GetCurrentThread(), name);
+}
+
 static COLD unsigned __stdcall thread_entrypoint(void *const data) {
     pthread_t *const t = data;
     t->arg = t->func(t->arg);

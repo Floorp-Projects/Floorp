@@ -1,6 +1,6 @@
 /*
- * Copyright © 2018, VideoLAN and dav1d authors
- * Copyright © 2018, Two Orioles, LLC
+ * Copyright © 2019, VideoLAN and dav1d authors
+ * Copyright © 2019, Luca Barbato
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,60 +25,28 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DAV1D_COMMON_INTOPS_H
-#define DAV1D_COMMON_INTOPS_H
+#ifndef DAV1D_SRC_PPC_TYPES_H
+#define DAV1D_SRC_PPC_TYPES_H
 
-#include <stdint.h>
+#include <altivec.h>
+#undef pixel
 
-#include "common/attributes.h"
+#define u8x16 vector unsigned char
+#define i8x16 vector signed char
+#define b8x16 vector bool char
+#define u16x8 vector unsigned short
+#define i16x8 vector signed short
+#define b16x8 vector bool short
+#define u32x4 vector unsigned int
+#define i32x4 vector signed int
+#define b32x4 vector bool int
+#define u64x2 vector unsigned long long
+#define i64x2 vector signed long long
+#define b64x2 vector bool long long
 
-static inline int imax(const int a, const int b) {
-    return a > b ? a : b;
-}
+#define u8h_to_u16(v) ((u16x8) vec_mergeh((u8x16) v, vec_splat_u8(0)))
+#define u8l_to_u16(v) ((u16x8) vec_mergel((u8x16) v, vec_splat_u8(0)))
+#define u16h_to_i32(v) ((i32x4) vec_mergeh((u16x8) v, vec_splat_u16(0)))
+#define u16l_to_i32(v) ((i32x4) vec_mergel((u16x8) v, vec_splat_u16(0)))
 
-static inline int imin(const int a, const int b) {
-    return a < b ? a : b;
-}
-
-static inline unsigned umax(const unsigned a, const unsigned b) {
-    return a > b ? a : b;
-}
-
-static inline unsigned umin(const unsigned a, const unsigned b) {
-    return a < b ? a : b;
-}
-
-static inline int iclip(const int v, const int min, const int max) {
-    return v < min ? min : v > max ? max : v;
-}
-
-static inline int iclip_u8(const int v) {
-    return iclip(v, 0, 255);
-}
-
-static inline int apply_sign(const int v, const int s) {
-    return s < 0 ? -v : v;
-}
-
-static inline int apply_sign64(const int v, const int64_t s) {
-    return s < 0 ? -v : v;
-}
-
-static inline int ulog2(const unsigned v) {
-    return 31 - clz(v);
-}
-
-static inline int u64log2(const uint64_t v) {
-    return 63 - clzll(v);
-}
-
-static inline unsigned inv_recenter(const unsigned r, const unsigned v) {
-    if (v > (r << 1))
-        return v;
-    else if ((v & 1) == 0)
-        return (v >> 1) + r;
-    else
-        return r - ((v + 1) >> 1);
-}
-
-#endif /* DAV1D_COMMON_INTOPS_H */
+#endif /* DAV1D_SRC_PPC_TYPES_H */

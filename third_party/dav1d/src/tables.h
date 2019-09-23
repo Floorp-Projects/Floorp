@@ -52,14 +52,13 @@ extern const uint8_t /* enum TxfmType */
 extern const uint8_t /* enum InterPredMode */
                      dav1d_comp_inter_pred_modes[N_COMP_INTER_PRED_MODES][2];
 
-extern const uint8_t dav1d_tx_type_count[N_TXTP_SETS];
-extern const uint8_t /* enum TxfmType */
-                     dav1d_tx_types_per_set[N_TXTP_SETS][N_TX_TYPES];
-extern const uint8_t dav1d_tx_type_set_index[2][N_TXTP_SETS];
+extern const uint8_t dav1d_partition_type_count[N_BL_LEVELS];
+extern const uint8_t /* enum TxfmType */ dav1d_tx_types_per_set[40];
 
 extern const uint8_t dav1d_filter_mode_to_y_mode[5];
 extern const uint8_t dav1d_ymode_size_context[N_BS_SIZES];
-extern const uint8_t dav1d_nz_map_ctx_offset[N_RECT_TX_SIZES][5][5];
+extern const uint8_t dav1d_lo_ctx_offsets[3][5][5];
+extern const uint8_t dav1d_skip_ctx[5][5];
 extern const uint8_t /* enum TxClass */
                      dav1d_tx_type_class[N_TX_TYPES_PLUS_LL];
 extern const uint8_t /* enum Filter2d */
