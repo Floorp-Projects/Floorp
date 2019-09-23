@@ -79,6 +79,7 @@ def setup(root, **lintargs):
 def lint(paths, config, **lintargs):
     from flake8.main.application import Application
 
+    log = lintargs['log']
     root = lintargs['root']
     config_path = os.path.join(root, '.flake8')
 
@@ -105,6 +106,7 @@ def lint(paths, config, **lintargs):
                     '"column":%(col)s,"rule":"%(code)s","message":"%(text)s"}',
         '--filename', ','.join(['*.{}'.format(e) for e in config['extensions']]),
     ]
+    log.debug("Command: {}".format(' '.join(flake8_cmd)))
 
     orig_make_file_checker_manager = app.make_file_checker_manager
 
