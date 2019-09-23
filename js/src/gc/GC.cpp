@@ -7770,13 +7770,6 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
   // Fixup realm pointers in source to refer to target, and make sure
   // type information generations are in sync.
 
-  for (auto script = source->zone()->cellIterUnsafe<JSScript>(); !script.done();
-       script.next()) {
-    MOZ_ASSERT(script->realm() == source);
-    script->realm_ = target;
-    MOZ_ASSERT(!script->hasJitScript());
-  }
-
   GlobalObject* global = target->maybeGlobal();
   MOZ_ASSERT(global);
 
