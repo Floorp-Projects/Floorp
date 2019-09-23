@@ -11282,14 +11282,14 @@ class DownloadManager {
   }
 
   download(blob, url, filename) {
-    let blobUrl = _pdfjsLib.URL.createObjectURL(blob);
+    let blobUrl = URL.createObjectURL(blob);
 
     let onResponse = err => {
       if (err && this.onerror) {
         this.onerror(err);
       }
 
-      _pdfjsLib.URL.revokeObjectURL(blobUrl);
+      URL.revokeObjectURL(blobUrl);
     };
 
     FirefoxCom.request('download', {
