@@ -301,6 +301,78 @@ void AccessibleWrap::ExploreByTouch(float aX, float aY) {
   }
 }
 
+void AccessibleWrap::NavigateText(int32_t aGranularity, int32_t aStartOffset,
+                                  int32_t aEndOffset, bool aForward,
+                                  bool aSelect) {
+  a11y::Pivot pivot(RootAccessible());
+
+  HyperTextAccessible* editable =
+      (State() & states::EDITABLE) != 0 ? AsHyperText() : nullptr;
+
+  int32_t start = aStartOffset, end = aEndOffset;
+  // If the accessible is an editable, set the virtual cursor position
+  // to its caret offset. Otherwise use the document's virtual cursor
+  // position as a starting offset.
+  if (editable) {
+    start = end = editable->CaretOffset();
+  }
+
+  uint16_t pivotGranularity = nsIAccessiblePivot::LINE_BOUNDARY;
+  switch (aGranularity) {
+    case 1:  // MOVEMENT_GRANULARITY_CHARACTER
+      pivotGranularity = nsIAccessiblePivot::CHAR_BOUNDARY;
+      break;
+    case 2:  // MOVEMENT_GRANULARITY_WORD
+      pivotGranularity = nsIAccessiblePivot::WORD_BOUNDARY;
+      break;
+    default:
+      break;
+  }
+
+  int32_t newOffset;
+  Accessible* newAnchor = nullptr;
+  if (aForward) {
+    newAnchor = pivot.NextText(this, &start, &end, pivotGranularity);
+    newOffset = end;
+  } else {
+    newAnchor = pivot.PrevText(this, &start, &end, pivotGranularity);
+    newOffset = start;
+  }
+
+  if (newAnchor && (start != aStartOffset || end != aEndOffset)) {
+    RefPtr<AccEvent> event = new AccVCChangeEvent(
+        newAnchor->Document(), this, aStartOffset, aEndOffset, newAnchor, start,
+        end, nsIAccessiblePivot::REASON_NONE, pivotGranularity, eFromUserInput);
+    nsEventShell::FireEvent(event);
+  }
+
+  // If we are in an editable, move the caret to the new virtual cursor
+  // offset.
+  if (editable) {
+    if (aSelect) {
+      int32_t anchor = editable->CaretOffset();
+      if (editable->SelectionCount()) {
+        int32_t startSel, endSel;
+        GetSelectionOrCaret(&startSel, &endSel);
+        anchor = startSel == anchor ? endSel : startSel;
+      }
+      editable->SetSelectionBoundsAt(0, anchor, newOffset);
+    } else {
+      editable->SetCaretOffset(newOffset);
+    }
+  }
+}
+
+void AccessibleWrap::GetSelectionOrCaret(int32_t* aStartOffset,
+                                         int32_t* aEndOffset) {
+  *aStartOffset = *aEndOffset = -1;
+  if (HyperTextAccessible* textAcc = AsHyperText()) {
+    if (!textAcc->SelectionBoundsAt(0, aStartOffset, aEndOffset)) {
+      *aStartOffset = *aEndOffset = textAcc->CaretOffset();
+    }
+  }
+}
+
 uint32_t AccessibleWrap::GetFlags(role aRole, uint64_t aState,
                                   uint8_t aActionCount) {
   uint32_t flags = 0;
