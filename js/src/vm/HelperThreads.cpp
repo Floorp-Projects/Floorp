@@ -73,13 +73,17 @@ bool js::CreateHelperThreadsState() {
   gHelperThreadState = helperThreadState.release();
   if (!gHelperThreadState->ensureContextListForThreadCount()) {
     js_delete(gHelperThreadState);
+    gHelperThreadState = nullptr;
     return false;
   }
   return true;
 }
 
 void js::DestroyHelperThreadsState() {
-  MOZ_ASSERT(gHelperThreadState);
+  if (!gHelperThreadState) {
+    return;
+  }
+
   gHelperThreadState->finish();
   js_delete(gHelperThreadState);
   gHelperThreadState = nullptr;
@@ -1210,6 +1214,10 @@ bool GlobalHelperThreadState::ensureContextListForThreadCount() {
   while (helperContexts_.length() < threadCount) {
     UniquePtr<JSContext> cx =
         js::MakeUnique<JSContext>(nullptr, JS::ContextOptions());
+    if (!cx) {
+      return false;
+    }
+
     // To initialize context-specific protected data, the context must
     // temporarily set itself to the main thread. After initialization,
     // cx can clear itself from the thread.
