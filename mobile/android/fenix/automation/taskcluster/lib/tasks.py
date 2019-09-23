@@ -156,13 +156,35 @@ class TaskBuilder(object):
 
     def craft_test_pr_task(self, variant):
         # upload coverage only once, if the variant is arm64
-        test_gradle_command = \
-            '-Pcoverage jacocoGeckoNightlyDebugTestReport && automation/taskcluster/upload_coverage_report.sh'
+        secret_index = 'project/mobile/fenix/public-tokens'
+        pre_gradle_commands = (
+            'python automation/taskcluster/helper/get-secret.py -s {} -k {} -f {}'.format(
+                secret_index, key, target_file
+            )
+            for key, target_file in (
+                ('codecov', '.cc_token'),
+            )
+        )
 
-        return self._craft_clean_gradle_task(
+        gradle_commands = (
+            './gradlew --no-daemon clean -Pcoverage jacocoGeckoNightlyDebugTestReport',
+        )
+
+        post_gradle_commands = (
+            'automation/taskcluster/upload_coverage_report.sh',
+        )
+
+        command = ' && '.join(
+            cmd
+            for commands in (pre_gradle_commands, gradle_commands, post_gradle_commands)
+            for cmd in commands
+            if cmd
+        )
+
+        return self._craft_build_ish_task(
             name='test: {}'.format(variant.name),
             description='Building and testing variant {}'.format(variant.name),
-            gradle_task=test_gradle_command,
+            command=command,
             treeherder={
                 'groupSymbol': variant.build_type,
                 'jobKind': 'test',
@@ -173,104 +195,8 @@ class TaskBuilder(object):
                 'tier': 1,
             },
             scopes=[
-                'secrets:get:project/mobile/fenix/public-tokens'
+                'secrets:get:{}'.format(secret_index)
             ]
-        )
-
-    def craft_ui_tests_task(self):
-        artifacts = {
-            "public": {
-                "type": "directory",
-                "path": "/build/fenix/results",
-                "expires": taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN))
-            }
-        }
-
-        env_vars = {
-            "GOOGLE_PROJECT": "moz-fenix",
-            "GOOGLE_APPLICATION_CREDENTIALS": ".firebase_token.json"
-        }
-
-        gradle_commands = (
-            './gradlew --no-daemon clean assemble assembleAndroidTest',
-        )
-
-        test_commands = (
-            'automation/taskcluster/androidTest/ui-test.sh x86 -1',
-        )
-
-        command = ' && '.join(
-            cmd
-            for commands in (gradle_commands, test_commands)
-            for cmd in commands
-            if cmd
-        )
-
-        treeherder = {
-            'jobKind': 'test',
-            'machine': {
-                'platform': 'ui-test',
-            },
-            'symbol': 'ui-test',
-            'tier': 2,
-        }
-
-        return self._craft_build_ish_task(
-            name='Fenix - UI test',
-            description='Execute Gradle tasks for UI tests',
-            command=command,
-            scopes=[
-                'secrets:get:project/mobile/fenix/firebase'
-            ],
-            artifacts=artifacts,
-            env_vars=env_vars,
-            treeherder=treeherder,
-        )
-
-    def craft_detekt_task(self):
-        return self._craft_clean_gradle_task(
-            name='detekt',
-            description='Running detekt code quality checks',
-            gradle_task='detekt',
-            treeherder={
-                'jobKind': 'test',
-                'machine': {
-                  'platform': 'lint',
-                },
-                'symbol': 'detekt',
-                'tier': 1,
-            }
-
-        )
-
-    def craft_ktlint_task(self):
-        return self._craft_clean_gradle_task(
-            name='ktlint',
-            description='Running ktlint code quality checks',
-            gradle_task='ktlint',
-            treeherder={
-                'jobKind': 'test',
-                'machine': {
-                  'platform': 'lint',
-                },
-                'symbol': 'ktlint',
-                'tier': 1,
-            }
-        )
-
-    def craft_lint_task(self):
-        return self._craft_clean_gradle_task(
-            name='lint',
-            description='Running lint for aarch64 release variant',
-            gradle_task='lintDebug',
-            treeherder={
-                'jobKind': 'test',
-                'machine': {
-                  'platform': 'lint',
-                },
-                'symbol': 'lint',
-                'tier': 1,
-            },
         )
 
     def _craft_clean_gradle_task(
@@ -284,24 +210,6 @@ class TaskBuilder(object):
             routes=routes,
             treeherder=treeherder,
             scopes=scopes,
-        )
-
-    def craft_compare_locales_task(self):
-        return self._craft_build_ish_task(
-            name='compare-locales',
-            description='Validate strings.xml with compare-locales',
-            command=(
-                'pip install "compare-locales>=5.0.2,<6.0" && '
-                'compare-locales --validate l10n.toml .'
-            ),
-            treeherder={
-                'jobKind': 'test',
-                'machine': {
-                  'platform': 'lint',
-                },
-                'symbol': 'compare-locale',
-                'tier': 2,
-            }
         )
 
     def _craft_build_ish_task(

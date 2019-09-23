@@ -48,14 +48,7 @@ fi
 JAVA_BIN="/usr/bin/java"
 PATH_TEST="./automation/taskcluster/androidTest"
 PATH_APK="./app/build/outputs/apk/geckoNightly/debug"
-FLANK_BIN="/build/test-tools/flank.jar"
-
-echo
-echo "RETRIEVE SERVICE ACCT TOKEN"
-echo
-python automation/taskcluster/helper/get-secret.py --json -s project/mobile/fenix/firebase -k firebaseToken  -f $GOOGLE_APPLICATION_CREDENTIALS
-echo
-echo
+FLANK_BIN="/builds/worker/test-tools/flank.jar"
 
 echo
 echo "ACTIVATE SERVICE ACCT"

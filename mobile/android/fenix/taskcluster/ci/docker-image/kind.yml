@@ -16,3 +16,6 @@ jobs:
     nimbledroid:
         parent: base
         symbol: I(nimbledroid)
+    ui-tests:
+        parent: base
+        symbol: I(ui-tests)

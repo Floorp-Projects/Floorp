@@ -33,15 +33,6 @@ def pr(builder):
     tasks.append(builder.craft_assemble_pr_task(variant))
     tasks.append(builder.craft_test_pr_task(variant))
 
-    for craft_function in (
-        builder.craft_detekt_task,
-        builder.craft_ktlint_task,
-        builder.craft_lint_task,
-        builder.craft_compare_locales_task,
-        builder.craft_ui_tests_task,
-    ):
-        tasks.append(craft_function())
-
     for task in tasks:
         task['attributes']['code-review'] = True
 

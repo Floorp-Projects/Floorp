@@ -1,0 +1,44 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+job-defaults:
+    attributes:
+        code-review: true
+    worker-type: b-android
+    worker:
+        docker-image: {in-tree: base}
+        max-run-time: 7200
+    run:
+        use-caches: false
+    run-on-tasks-for: [github-pull-request, github-push]
+
+jobs:
+    detekt:
+        description: 'Running detekt over all modules'
+        run:
+            using: gradlew
+            gradlew: [detekt]
+    ktlint:
+        description: 'Running ktlint over all modules'
+        run:
+            using: gradlew
+            gradlew: [ktlint]
+    compare-locales:
+        description: 'Validate strings.xml with compare-locales'
+        run:
+            using: run-task
+            cwd: '{checkout}'
+            command: 'pip install --user "compare-locales>=5.0.2,<6.0" && compare-locales --validate l10n.toml .'
+    lint:
+        description: 'Running tlint over all modules'
+        run:
+            using: gradlew
+            gradlew: [lintDebug]

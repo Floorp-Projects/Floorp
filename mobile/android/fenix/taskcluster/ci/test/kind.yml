@@ -1,0 +1,50 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+job-defaults:
+    description: Test Reference Browser
+    treeherder:
+        kind: test
+        tier: 2
+    worker-type: b-android
+    worker:
+        max-run-time: 7200
+    run:
+        using: gradlew
+        use-caches: false
+
+jobs:
+    ui:
+        attributes:
+            build-type: debug
+            code-review: true
+        treeherder:
+            symbol: ui
+            platform: 'ui-test/opt'
+        run-on-tasks-for: [github-pull-request, github-push]
+        run:
+            # TODO Generate APKs in a build task instead
+            gradlew: ['clean', 'assembleDebug', 'assembleAndroidTest']
+            post-gradlew:
+                - ['automation/taskcluster/androidTest/ui-test.sh', 'x86', '-1']
+            secrets:
+                - name: project/mobile/fenix/firebase
+                  key: firebaseToken
+                  path: .firebase_token.json
+                  json: true
+        worker:
+            docker-image: {in-tree: ui-tests}
+            env:
+                GOOGLE_APPLICATION_CREDENTIALS: '.firebase_token.json'
+                GOOGLE_PROJECT: moz-fenix
+            artifacts:
+                - name: public
+                  path: /build/fenix/results
+                  type: directory

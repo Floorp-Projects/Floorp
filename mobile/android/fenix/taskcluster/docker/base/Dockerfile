@@ -48,6 +48,7 @@ RUN apt-get update -qq \
     && apt-get clean
 
 RUN pip install --upgrade pip
+RUN pip install taskcluster
 
 RUN locale-gen en_US.UTF-8
 
