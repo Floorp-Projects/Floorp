@@ -13,11 +13,6 @@ FORCE_STATIC_LIB = True
 # that might call an import.
 NO_PGO = True
 
-EXPORTS.mozilla += [
-    'LoaderAPIInterfaces.h',
-    'ModuleLoadInfo.h',
-]
-
 UNIFIED_SOURCES += [
     'DllBlocklist.cpp',
     'LoaderPrivateAPI.cpp',

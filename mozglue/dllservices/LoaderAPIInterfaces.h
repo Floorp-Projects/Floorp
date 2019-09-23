@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_LoaderAPIInternal_h
-#define mozilla_LoaderAPIInternal_h
+#ifndef mozilla_LoaderAPIInterfaces_h
+#define mozilla_LoaderAPIInterfaces_h
 
 #include "mozilla/ModuleLoadInfo.h"
 
@@ -97,4 +97,4 @@ class NS_NO_VTABLE LoaderAPI {
 }  // namespace nt
 }  // namespace mozilla
 
-#endif  // mozilla_LoaderAPIInternal_h
+#endif  // mozilla_LoaderAPIInterfaces_h
