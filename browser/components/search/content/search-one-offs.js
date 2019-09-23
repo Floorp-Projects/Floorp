@@ -1214,7 +1214,10 @@ class SearchOneOffs {
     }
     this.contextMenuPopup
       .querySelector(".search-one-offs-context-set-default")
-      .setAttribute("disabled", target.engine == Services.search.defaultEngine);
+      .setAttribute(
+        "disabled",
+        target.engine == Services.search.defaultEngine.wrappedJSObject
+      );
 
     this.contextMenuPopup.openPopupAtScreen(event.screenX, event.screenY, true);
     event.preventDefault();
