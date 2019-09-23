@@ -57,7 +57,7 @@ function onLoad() {
  * Handler for the "View Cert" button.
  */
 function viewCert() {
-  viewCertHelper(window, gCert);
+  viewCertHelper(window, gCert, "window");
 }
 
 /**
