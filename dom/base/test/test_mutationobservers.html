@@ -90,53 +90,9 @@ var m2;
 var m3;
 var m4;
 
-// Checks basic parameter validation and normal 'this' handling.
+// Checks normal 'this' handling.
 // Tests also basic attribute handling.
 function runTest() {
-  m = new M(function(){});
-  ok(m, "MutationObserver supported");
-
-  var e = null;
-  try {
-    m.observe(document, {});
-  } catch (ex) {
-    e = ex;
-  }
-  ok(e, "Should have thrown an exception");
-  is(e.name, "TypeError", "Should have thrown TypeError");
-
-  e = null;
-  try {
-    m.observe(document, { childList: true, attributeOldValue: true });
-  } catch (ex) {
-    e = ex;
-  }
-  ok(!e, "Shouldn't have thrown an exception");
-
-  e = null;
-  try {
-    m.observe(document, { childList: true, attributeFilter: ["foo"] });
-  } catch (ex) {
-    e = ex;
-  }
-  ok(!e, "Shouldn't have thrown an exception");
-
-  e = null;
-  try {
-    m.observe(document, { childList: true, characterDataOldValue: true });
-  } catch (ex) {
-    e = ex;
-  }
-  ok(!e, "Shouldn't have thrown an exception");
-
-  e = null;
-  try {
-    m.observe(document);
-  } catch (ex) {
-    e = ex;
-  }
-  ok(e, "Should have thrown an exception");
-
   m = new M(function(records, observer) {
       is(observer, m, "2nd parameter should be the mutation observer");
       is(observer, this, "2nd parameter should be 'this'");
