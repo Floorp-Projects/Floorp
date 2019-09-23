@@ -10,6 +10,7 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { getVisibleColumns } = require("../selectors/index");
 const {
   fetchNetworkUpdatePacket,
   propertiesEqual,
@@ -121,6 +122,7 @@ const UPDATED_REQ_ITEM_PROPS = [
 const UPDATED_REQ_PROPS = [
   "firstRequestStartedMs",
   "index",
+  "networkDetailsOpen",
   "isSelected",
   "requestFilterTypes",
   "waterfallWidth",
@@ -208,6 +210,7 @@ class RequestListItem extends Component {
       isSelected: PropTypes.bool.isRequired,
       firstRequestStartedMs: PropTypes.number.isRequired,
       fromCache: PropTypes.bool,
+      networkDetailsOpen: PropTypes.bool,
       onCauseBadgeMouseDown: PropTypes.func.isRequired,
       onDoubleClick: PropTypes.func.isRequired,
       onContextMenu: PropTypes.func.isRequired,
@@ -277,6 +280,7 @@ class RequestListItem extends Component {
       isSelected,
       firstRequestStartedMs,
       fromCache,
+      networkDetailsOpen,
       onDoubleClick,
       onContextMenu,
       onMouseDown,
@@ -323,7 +327,12 @@ class RequestListItem extends Component {
           header,
         })
       ),
-      columns.waterfall &&
+      // Display the column if waterfall is enabled and the side panel is closed, or if waterfall is
+      // enabled, the side panel is opened and only 1 cloumn is displayed.
+      ((columns.waterfall && !networkDetailsOpen) ||
+        (networkDetailsOpen &&
+          columns.waterfall &&
+          getVisibleColumns(columns).length === 1)) &&
         RequestListColumnWaterfall({
           connector,
           firstRequestStartedMs,
