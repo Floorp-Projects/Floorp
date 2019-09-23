@@ -23,10 +23,29 @@
 #include "mozilla/dom/SameProcessMessageQueue.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/WindowProxyHolder.h"
+#include "mozilla/dom/JSWindowActorService.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::ipc;
+
+/* static */
+already_AddRefed<InProcessBrowserChildMessageManager>
+InProcessBrowserChildMessageManager::Create(nsDocShell* aShell,
+                                            nsIContent* aOwner,
+                                            nsFrameMessageManager* aChrome) {
+  RefPtr<InProcessBrowserChildMessageManager> mm =
+      new InProcessBrowserChildMessageManager(aShell, aOwner, aChrome);
+
+  NS_ENSURE_TRUE(mm->Init(), nullptr);
+
+  if (XRE_IsParentProcess()) {
+    RefPtr<JSWindowActorService> wasvc = JSWindowActorService::GetSingleton();
+    wasvc->RegisterChromeEventTarget(mm);
+  }
+
+  return mm.forget();
+}
 
 bool InProcessBrowserChildMessageManager::DoSendBlockingMessage(
     JSContext* aCx, const nsAString& aMessage, StructuredCloneData& aData,
@@ -101,6 +120,10 @@ InProcessBrowserChildMessageManager::InProcessBrowserChildMessageManager(
 }
 
 InProcessBrowserChildMessageManager::~InProcessBrowserChildMessageManager() {
+  if (XRE_IsParentProcess()) {
+    JSWindowActorService::UnregisterChromeEventTarget(this);
+  }
+
   mAnonymousGlobalScopes.Clear();
   mozilla::DropJSObjects(this);
 }
