@@ -18,6 +18,7 @@ object Versions {
     const val android_gradle_plugin = "3.4.1"
     const val android_maven_publish_plugin = "3.6.2"
     const val lint = "26.3.2"
+    const val detekt = "1.0.1"
 
     const val sentry = "1.7.21"
     const val okhttp = "3.13.1"
@@ -113,6 +114,9 @@ object Dependencies {
     const val tools_lint = "com.android.tools.lint:lint:${Versions.lint}"
     const val tools_lintapi = "com.android.tools.lint:lint-api:${Versions.lint}"
     const val tools_linttests = "com.android.tools.lint:lint-tests:${Versions.lint}"
+
+    const val tools_detekt_api = "io.gitlab.arturbosch.detekt:detekt-api:${Versions.detekt}"
+    const val tools_detekt_test = "io.gitlab.arturbosch.detekt:detekt-test:${Versions.detekt}"
 
     const val mozilla_fxa = "org.mozilla.appservices:fxaclient:${Versions.mozilla_appservices}"
 

@@ -40,6 +40,9 @@ permalink: /changelog/
 * **lib-push-amazon**
   * Fixed usage of cache version of registration ID in situations when app data is deleted.
 
+* **tools-detekt**
+  * New (internal-only) component with custom detekt rules.
+
 # 13.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v12.0.0...v13.0.0)
