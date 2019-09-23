@@ -1806,10 +1806,8 @@ class Document : public nsINode,
   void DispatchContentLoadedEvents();
 
   void DispatchPageTransition(EventTarget* aDispatchTarget,
-                              const nsAString& aType,
-                              bool aInFrameSwap,
-                              bool aPersisted,
-                              bool aOnlySystemGroup);
+                              const nsAString& aType, bool aPersisted,
+                              bool aOnlySystemGroup = false);
 
   // Call this before the document does something that will unbind all content.
   // That will stop us from doing a lot of work as each element is removed.
@@ -3457,11 +3455,7 @@ class Document : public nsINode,
       DocumentWarnings aWarning, bool asError = false,
       const nsTArray<nsString>& aParams = nsTArray<nsString>()) const;
 
-  // This method may fire a DOM event; if it does so it will happen
-  // synchronously.
-  void UpdateVisibilityState();
-
-  // Posts an event to call UpdateVisibilityState.
+  // Posts an event to call UpdateVisibilityState
   void PostVisibilityUpdateEvent();
 
   bool IsSyntheticDocument() const { return mIsSyntheticDocument; }
@@ -4232,6 +4226,10 @@ class Document : public nsINode,
   Element* GetTitleElement();
 
   void RecordNavigationTiming(ReadyState aReadyState);
+
+  // This method may fire a DOM event; if it does so it will happen
+  // synchronously.
+  void UpdateVisibilityState();
 
   // Recomputes the visibility state but doesn't set the new value.
   dom::VisibilityState ComputeVisibilityState() const;

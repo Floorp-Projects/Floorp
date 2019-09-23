@@ -2251,10 +2251,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvSwappedWithOtherRemoteLoader(
 
   docShell->SetInFrameSwap(true);
 
-  nsContentUtils::FirePageShowEventForFrameLoaderSwap(
-      ourDocShell, ourEventTarget, false, true);
-  nsContentUtils::FirePageHideEventForFrameLoaderSwap(ourDocShell,
-                                                      ourEventTarget, true);
+  nsContentUtils::FirePageShowEvent(ourDocShell, ourEventTarget, false, true);
+  nsContentUtils::FirePageHideEvent(ourDocShell, ourEventTarget, true);
 
   // Owner content type may have changed, so store the possibly updated context
   // and notify others.
@@ -2283,16 +2281,9 @@ mozilla::ipc::IPCResult BrowserChild::RecvSwappedWithOtherRemoteLoader(
     RecvLoadRemoteScript(BROWSER_ELEMENT_CHILD_SCRIPT, true);
   }
 
-  nsContentUtils::FirePageShowEventForFrameLoaderSwap(
-      ourDocShell, ourEventTarget, true, true);
+  nsContentUtils::FirePageShowEvent(ourDocShell, ourEventTarget, true, true);
 
   docShell->SetInFrameSwap(false);
-
-  // This is needed to get visibility state right in cases when we swapped a
-  // visible tab (foreground in visible window) with a non-visible tab.
-  if (RefPtr<Document> doc = docShell->GetDocument()) {
-    doc->UpdateVisibilityState();
-  }
 
   return IPC_OK();
 }
