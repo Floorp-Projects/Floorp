@@ -30,8 +30,8 @@
         "math"
     );
     async_test(test => {
-      t.step(function() {
-        assert_true(MathMLElement.prototype.hasOwnProperty(name));
+      test.step(function() {
+        assert_true(MathMLElement.prototype.hasOwnProperty(`on${name}`));
       });
       mathEl[`on${name}`] = test.step_func_done(e => {
         assert_equals(e.currentTarget, mathEl,
