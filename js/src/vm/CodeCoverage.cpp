@@ -75,32 +75,37 @@ LCovSource::LCovSource(LifoAlloc* alloc, UniqueChars name)
       numLinesInstrumented_(0),
       numLinesHit_(0),
       maxLineHit_(0),
-      hasTopLevelScript_(false) {}
+      hasTopLevelScript_(false),
+      hadOOM_(false) {}
 
 void LCovSource::exportInto(GenericPrinter& out) {
-  out.printf("SF:%s\n", name_.get());
+  if (hadOutOfMemory()) {
+    out.reportOutOfMemory();
+  } else {
+    out.printf("SF:%s\n", name_.get());
 
-  outFN_.exportInto(out);
-  outFNDA_.exportInto(out);
-  out.printf("FNF:%zu\n", numFunctionsFound_);
-  out.printf("FNH:%zu\n", numFunctionsHit_);
+    outFN_.exportInto(out);
+    outFNDA_.exportInto(out);
+    out.printf("FNF:%zu\n", numFunctionsFound_);
+    out.printf("FNH:%zu\n", numFunctionsHit_);
 
-  outBRDA_.exportInto(out);
-  out.printf("BRF:%zu\n", numBranchesFound_);
-  out.printf("BRH:%zu\n", numBranchesHit_);
+    outBRDA_.exportInto(out);
+    out.printf("BRF:%zu\n", numBranchesFound_);
+    out.printf("BRH:%zu\n", numBranchesHit_);
 
-  if (!linesHit_.empty()) {
-    for (size_t lineno = 1; lineno <= maxLineHit_; ++lineno) {
-      if (auto p = linesHit_.lookup(lineno)) {
-        out.printf("DA:%zu,%" PRIu64 "\n", lineno, p->value());
+    if (!linesHit_.empty()) {
+      for (size_t lineno = 1; lineno <= maxLineHit_; ++lineno) {
+        if (auto p = linesHit_.lookup(lineno)) {
+          out.printf("DA:%zu,%" PRIu64 "\n", lineno, p->value());
+        }
       }
     }
+
+    out.printf("LF:%zu\n", numLinesInstrumented_);
+    out.printf("LH:%zu\n", numLinesHit_);
+
+    out.put("end_of_record\n");
   }
-
-  out.printf("LF:%zu\n", numLinesInstrumented_);
-  out.printf("LH:%zu\n", numLinesHit_);
-
-  out.put("end_of_record\n");
 
   outFN_.clear();
   outFNDA_.clear();
@@ -124,11 +129,16 @@ bool LCovSource::writeScriptName(LSprinter& out, JSScript* script) {
   return true;
 }
 
-bool LCovSource::writeScript(JSScript* script) {
+void LCovSource::writeScript(JSScript* script) {
+  if (hadOutOfMemory()) {
+    return;
+  }
+
   numFunctionsFound_++;
   outFN_.printf("FN:%u,", script->lineno());
   if (!writeScriptName(outFN_, script)) {
-    return false;
+    hadOOM_ = true;
+    return;
   }
   outFN_.put("\n", 1);
 
@@ -141,7 +151,8 @@ bool LCovSource::writeScript(JSScript* script) {
         sc->maybeGetPCCounts(script->pcToOffset(script->main()));
     outFNDA_.printf("FNDA:%" PRIu64 ",", counts->numExec());
     if (!writeScriptName(outFNDA_, script)) {
-      return false;
+      hadOOM_ = true;
+      return;
     }
     outFNDA_.put("\n", 1);
 
@@ -200,7 +211,8 @@ bool LCovSource::writeScript(JSScript* script) {
         auto p = linesHit_.lookupForAdd(lineno);
         if (!p) {
           if (!linesHit_.add(p, lineno, hits)) {
-            return false;
+            hadOOM_ = true;
+            return;
           }
           numLinesInstrumented_++;
           if (hits != 0) {
@@ -433,10 +445,10 @@ bool LCovSource::writeScript(JSScript* script) {
     }
   }
 
-  // Report any new OOM.
   if (outFN_.hadOutOfMemory() || outFNDA_.hadOutOfMemory() ||
       outBRDA_.hadOutOfMemory()) {
-    return false;
+    hadOOM_ = true;
+    return;
   }
 
   // If this script is the top-level script, then record it such that we can
@@ -445,8 +457,6 @@ bool LCovSource::writeScript(JSScript* script) {
   if (script->isTopLevel()) {
     hasTopLevelScript_ = true;
   }
-
-  return true;
 }
 
 LCovRealm::LCovRealm(JS::Realm* realm)
@@ -482,9 +492,11 @@ void LCovRealm::collectCodeCoverageInfo(JSScript* script, const char* name) {
   }
 
   // Write code coverage data into the LCovSource.
-  if (!source->writeScript(script)) {
+  source->writeScript(script);
+
+  // Propegate OOM from LCovSource.
+  if (source->hadOutOfMemory()) {
     outTN_.reportOutOfMemory();
-    return;
   }
 }
 

@@ -30,12 +30,16 @@ class LCovSource {
   // Whether the given script name matches this LCovSource.
   bool match(const char* name) const { return strcmp(name_.get(), name) == 0; }
 
+  // Whether an OOM was seen recording coverage information. This indicates
+  // that the resulting coverage information is incomplete.
+  bool hadOutOfMemory() const { return hadOOM_; }
+
   // Whether the current source is complete and if it can be flushed.
   bool isComplete() const { return hasTopLevelScript_; }
 
   // Iterate over the bytecode and collect the lcov output based on the
   // ScriptCounts counters.
-  bool writeScript(JSScript* script);
+  void writeScript(JSScript* script);
 
   // Write the Lcov output in a buffer, such as the one associated with
   // the runtime code coverage trace file.
@@ -72,6 +76,7 @@ class LCovSource {
 
   // Status flags.
   bool hasTopLevelScript_ : 1;
+  bool hadOOM_ : 1;
 };
 
 class LCovRealm {
