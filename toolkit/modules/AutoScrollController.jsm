@@ -70,6 +70,16 @@ class AutoScrollController {
     return aNode instanceof content.XULElement;
   }
 
+  computeWindowScrollDirection(global) {
+    if (global.scrollMaxX != global.scrollMinX) {
+      return global.scrollMaxY != global.scrollMinY ? "NSEW" : "EW";
+    }
+    if (global.scrollMaxY != global.scrollMinY) {
+      return "NS";
+    }
+    return null;
+  }
+
   computeNodeScrollDirection(node) {
     if (!this.isScrollableElement(node)) {
       return null;
@@ -125,18 +135,13 @@ class AutoScrollController {
     }
 
     if (!this._scrollable) {
-      this._scrollable = aNode.ownerGlobal;
-      if (this._scrollable.scrollMaxX != this._scrollable.scrollMinX) {
-        this._scrolldir =
-          this._scrollable.scrollMaxY != this._scrollable.scrollMinY
-            ? "NSEW"
-            : "EW";
-      } else if (this._scrollable.scrollMaxY != this._scrollable.scrollMinY) {
-        this._scrolldir = "NS";
-      } else if (this._scrollable.frameElement) {
-        this.findNearestScrollableElement(this._scrollable.frameElement);
-      } else {
-        this._scrollable = null; // abort scrolling
+      let direction = this.computeWindowScrollDirection(aNode.ownerGlobal);
+      if (direction) {
+        this._scrolldir = direction;
+        this._scrollable = aNode.ownerGlobal;
+      } else if (aNode.ownerGlobal.frameElement) {
+        // FIXME(emilio): This won't work with Fission.
+        this.findNearestScrollableElement(aNode.ownerGlobal.frameElement);
       }
     }
   }
