@@ -12792,6 +12792,50 @@ if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-width.enabled")) {
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
+  gCSSProperties["offset"] = {
+    domProp: "offset",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [
+      "offset-path",
+      "offset-distance",
+      "offset-rotate",
+      "offset-anchor",
+    ],
+    initial_values: ["none"],
+    other_values: [
+      "none 30deg reverse",
+      "none 50px reverse 30deg",
+      "none calc(10px + 20%) auto",
+      "none reverse",
+      "none / left center",
+      "path('M 0 0 H 1') -200% auto",
+      "path('M 0 0 H 1') -200%",
+      "path('M 0 0 H 1') 50px",
+      "path('M 0 0 H 1') auto",
+      "path('M 0 0 H 1') reverse 30deg 50px",
+      "path('M 0 0 H 1')",
+      "path('m 20 0 h 100') -7rad 8px / auto",
+      "path('m 0 30 v 100') -7rad 8px / left top",
+      "path('m 0 0 h 100') -7rad 8px",
+      "path('M 0 0 H 100') 100px 0deg",
+    ],
+    invalid_values: [
+      "100px 0deg path('m 0 0 h 100')",
+      "30deg",
+      "auto 30deg 100px",
+      "auto / none",
+      "none /",
+      "none / 100px 20px 30deg",
+      "path('M 20 30 A 60 70 80') bottom",
+      "path('M 20 30 A 60 70 80') bottom top",
+      "path('M 20 30 A 60 70 80') 100px 200px",
+      "path('M 20 30 A 60 70 80') reverse auto",
+      "path('M 20 30 A 60 70 80') reverse 10px 30deg",
+      "path('M 20 30 A 60 70 80') /",
+    ],
+  };
+
   gCSSProperties["offset-path"] = {
     domProp: "offsetPath",
     inherited: false,
