@@ -1046,7 +1046,6 @@ HTMLTextAreaElement::GetCols() { return Cols(); }
 
 NS_IMETHODIMP_(int32_t)
 HTMLTextAreaElement::GetWrapCols() {
-  // wrap=off means -1 for wrap width no matter what cols is
   nsHTMLTextWrap wrapProp;
   nsITextControlElement::GetWrapPropertyEnum(this, wrapProp);
   if (wrapProp == nsITextControlElement::eHTMLTextWrap_Off) {
