@@ -31,6 +31,16 @@
     } while (0)
 #endif
 
+#define FORWARD_ACTION_TO_ACCESSIBLE(funcname, ...)         \
+  if (RootAccessibleWrap* rootAcc = GetRoot()) {            \
+    AccessibleWrap* acc = rootAcc->FindAccessibleById(aID); \
+    if (!acc) {                                             \
+      return;                                               \
+    }                                                       \
+                                                            \
+    acc->funcname(__VA_ARGS__);                             \
+  }
+
 template <>
 const char nsWindow::NativePtr<mozilla::a11y::SessionAccessibility>::sName[] =
     "SessionAccessibility";
@@ -98,25 +108,11 @@ RootAccessibleWrap* SessionAccessibility::GetRoot() {
 }
 
 void SessionAccessibility::SetText(int32_t aID, jni::String::Param aText) {
-  if (RootAccessibleWrap* rootAcc = GetRoot()) {
-    AccessibleWrap* acc = rootAcc->FindAccessibleById(aID);
-    if (!acc) {
-      return;
-    }
-
-    acc->SetTextContents(aText->ToString());
-  }
+  FORWARD_ACTION_TO_ACCESSIBLE(SetTextContents, aText->ToString());
 }
 
 void SessionAccessibility::Click(int32_t aID) {
-  if (RootAccessibleWrap* rootAcc = GetRoot()) {
-    AccessibleWrap* acc = rootAcc->FindAccessibleById(aID);
-    if (!acc) {
-      return;
-    }
-
-    acc->DoAction(0);
-  }
+  FORWARD_ACTION_TO_ACCESSIBLE(DoAction, 0);
 }
 
 SessionAccessibility* SessionAccessibility::GetInstanceFor(
@@ -418,3 +414,5 @@ void SessionAccessibility::UpdateCachedBounds(
   mSessionAccessibility->UpdateCachedBounds(infos);
   SendWindowContentChangedEvent();
 }
+
+#undef FORWARD_ACTION_TO_ACCESSIBLE
