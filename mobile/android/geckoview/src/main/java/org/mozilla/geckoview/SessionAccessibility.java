@@ -103,6 +103,64 @@ public class SessionAccessibility {
         "android.webkit.WebView"
     };
 
+    @WrapForJNI static final int HTML_GRANULARITY_DEFAULT = -1;
+    @WrapForJNI static final int HTML_GRANULARITY_ARTICLE = 0;
+    @WrapForJNI static final int HTML_GRANULARITY_BUTTON = 1;
+    @WrapForJNI static final int HTML_GRANULARITY_CHECKBOX = 2;
+    @WrapForJNI static final int HTML_GRANULARITY_COMBOBOX = 3;
+    @WrapForJNI static final int HTML_GRANULARITY_CONTROL = 4;
+    @WrapForJNI static final int HTML_GRANULARITY_FOCUSABLE = 5;
+    @WrapForJNI static final int HTML_GRANULARITY_FRAME = 6;
+    @WrapForJNI static final int HTML_GRANULARITY_GRAPHIC = 7;
+    @WrapForJNI static final int HTML_GRANULARITY_H1 = 8;
+    @WrapForJNI static final int HTML_GRANULARITY_H2 = 9;
+    @WrapForJNI static final int HTML_GRANULARITY_H3 = 10;
+    @WrapForJNI static final int HTML_GRANULARITY_H4 = 11;
+    @WrapForJNI static final int HTML_GRANULARITY_H5 = 12;
+    @WrapForJNI static final int HTML_GRANULARITY_H6 = 13;
+    @WrapForJNI static final int HTML_GRANULARITY_HEADING = 14;
+    @WrapForJNI static final int HTML_GRANULARITY_LANDMARK = 15;
+    @WrapForJNI static final int HTML_GRANULARITY_LINK = 16;
+    @WrapForJNI static final int HTML_GRANULARITY_LIST = 17;
+    @WrapForJNI static final int HTML_GRANULARITY_LIST_ITEM = 18;
+    @WrapForJNI static final int HTML_GRANULARITY_MAIN = 19;
+    @WrapForJNI static final int HTML_GRANULARITY_MEDIA = 20;
+    @WrapForJNI static final int HTML_GRANULARITY_RADIO = 21;
+    @WrapForJNI static final int HTML_GRANULARITY_SECTION = 22;
+    @WrapForJNI static final int HTML_GRANULARITY_TABLE = 23;
+    @WrapForJNI static final int HTML_GRANULARITY_TEXT_FIELD = 24;
+    @WrapForJNI static final int HTML_GRANULARITY_UNVISITED_LINK = 25;
+    @WrapForJNI static final int HTML_GRANULARITY_VISITED_LINK = 26;
+
+    private static String[] sHtmlGranularities = {
+        "ARTICLE",
+        "BUTTON",
+        "CHECKBOX",
+        "COMBOBOX",
+        "CONTROL",
+        "FOCUSABLE",
+        "FRAME",
+        "GRAPHIC",
+        "H1",
+        "H2",
+        "H3",
+        "H4",
+        "H5",
+        "H6",
+        "HEADING",
+        "LANDMARK",
+        "LINK",
+        "LIST",
+        "LIST_ITEM",
+        "MAIN",
+        "MEDIA",
+        "RADIO",
+        "SECTION",
+        "TABLE",
+        "TEXT_FIELD",
+        "UNVISITED_LINK",
+        "VISITED_LINK" };
+
     static private String getClassName(final int index) {
         if (index >= 0 && index < CLASSNAMES.length) {
             return CLASSNAMES[index];
