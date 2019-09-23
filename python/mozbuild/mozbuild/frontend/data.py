@@ -1206,7 +1206,7 @@ class GeneratedFile(ContextDerived):
         self.localized = localized
         self.force = force
 
-        suffixes = (
+        suffixes = [
             '.h',
             '.inc',
             '.py',
@@ -1216,7 +1216,17 @@ class GeneratedFile(ContextDerived):
             'android_apks',
             '.profdata',
             '.webidl'
-        )
+        ]
+
+        try:
+            lib_suffix = context.config.substs['LIB_SUFFIX']
+            suffixes.append('.' + lib_suffix)
+        except KeyError:
+            # Tests may not define LIB_SUFFIX
+            pass
+
+        suffixes = tuple(suffixes)
+
         self.required_before_compile = [
             f for f in self.outputs if f.endswith(suffixes) or 'stl_wrappers/' in f]
 
