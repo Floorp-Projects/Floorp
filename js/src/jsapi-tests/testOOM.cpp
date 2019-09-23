@@ -6,6 +6,8 @@
 
 #include "jsapi-tests/tests.h"
 
+#include "vm/HelperThreads.h"
+
 BEGIN_TEST(testOOM) {
   JS::RootedValue v(cx, JS::Int32Value(9));
   JS::RootedString jsstr(cx, JS::ToString(cx, v));
@@ -50,6 +52,7 @@ const uint32_t maxAllocsPerTest = 100;
     js::oom::simulator.reset();                                              \
     CHECK(oomAfter != maxAllocsPerTest)
 
+#  define MARK_STAR printf("*");
 #  define MARK_PLUS printf("+");
 #  define MARK_DOT printf(".");
 
@@ -72,5 +75,37 @@ BEGIN_TEST(testNewContextOOM) {
   return true;
 }
 END_TEST(testNewContextOOM)
+
+BEGIN_TEST(testHelperThreadOOM) {
+  const char* testName;
+  uint64_t oomAfter;
+  START_OOM_TEST("helper thread state");
+
+  if (js::CreateHelperThreadsState()) {
+    if (js::EnsureHelperThreadsInitialized()) {
+      MARK_STAR;
+    } else {
+      MARK_PLUS;
+    }
+  } else {
+    MARK_DOT;
+  }
+
+  // Reset the helper threads to ensure they get re-initalised in following
+  // iterations
+  js::DestroyHelperThreadsState();
+
+  END_OOM_TEST;
+
+  return true;
+}
+
+bool init() override {
+  js::DestroyHelperThreadsState();
+  return true;
+}
+void uninit() override { js::CreateHelperThreadsState(); }
+
+END_TEST(testHelperThreadOOM)
 
 #endif
