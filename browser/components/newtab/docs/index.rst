@@ -11,7 +11,7 @@ follow the following steps if you need to make changes in this directory:
 For .jsm files
 ---------------
 
-No build step is necessary. Use `mach` and run mochi tests according to your regular Firefox workflow.
+No build step is necessary. Use `mach` and run mochitests according to your regular Firefox workflow.
 
 For .js, .jsx, .sass, or .css files
 -----------------------------------
@@ -50,15 +50,21 @@ To build assets and run Firefox, run the following from the root of the mozilla-
 
 Running tests
 `````````````
-
-Mochi tests and xpcshell tests can be run normally. To run our additional unit tests, you can run the following:
+The majority of New Tab / Messaging unit tests are written using
+`mocha <https://mochajs.org>`_, and other errors that may show up there are
+`SCSS <https://sass-lang.com/documentation/syntax>`_ issues flagged by
+`sasslint <https://github.com/sasstools/sass-lint/tree/master>`_.  These things
+are all run using `npm test` under the `newtab` slug in Treeherder/Try, so if
+that slug turns red, these tests are what is failing.  To execute them, do this:
 
 .. code-block:: shell
 
   npm test --prefix browser/components/newtab
 
-The Newtab team is currently responsible for fixing any test failures that result from changes
-until these tests are running in Try, so this is currently an optional step.
+These tests are not currently run by `mach test`, but there's a
+`task filed to fix that <https://bugzilla.mozilla.org/show_bug.cgi?id=1581165>`_.
+
+Mochitests and xpcshell tests run normally, using `mach test`.
 
 GitHub workflow
 ---------------
