@@ -39,6 +39,7 @@ import mozilla.components.service.glean.utils.getLocaleTag
 import mozilla.components.service.glean.utils.parseISOTimeString
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.isMainProcess
+import mozilla.components.support.utils.ThreadUtils
 
 @Suppress("TooManyFunctions", "LargeClass")
 open class GleanInternalAPI internal constructor () {
@@ -100,6 +101,12 @@ open class GleanInternalAPI internal constructor () {
         applicationContext: Context,
         configuration: Configuration = Configuration()
     ) {
+        // Glean initialization must be called on the main thread, or lifecycle
+        // registration may fail. This is also enforced at build time by the
+        // @MainThread decorator, but this run time check is also performed to
+        // be extra certain.
+        ThreadUtils.assertOnUiThread()
+
         // In certain situations Glean.initialize may be called from a process other than the main
         // process.  In this case we want initialize to be a no-op and just return.
         if (!applicationContext.isMainProcess()) {

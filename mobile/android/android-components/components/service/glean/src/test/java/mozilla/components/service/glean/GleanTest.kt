@@ -9,6 +9,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.test.core.app.ApplicationProvider
+import kotlinx.coroutines.Dispatchers as KotlinDispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -679,5 +680,14 @@ class GleanTest {
 
         `when`(gleanMock.onChangeUploadEnabled(anyBoolean())).thenThrow(AssertionError::class.java)
         gleanMock.setUploadEnabled(true)
+    }
+
+    @Test(expected = IllegalThreadStateException::class)
+    fun `Glean initialize must be called on the main thread`() {
+        runBlocking(KotlinDispatchers.IO) {
+            val context: Context = ApplicationProvider.getApplicationContext()
+
+            Glean.initialize(context)
+        }
     }
 }

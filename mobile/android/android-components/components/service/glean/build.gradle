@@ -46,6 +46,7 @@ dependencies {
     implementation project(':support-base')
     implementation project(':concept-fetch')
     implementation project(':lib-fetch-httpurlconnection')
+    implementation project(':support-utils')
 
     // We need a compileOnly dependency on the following block of testing
     // libraries in order to expose the GleanTestRule to applications/libraries
