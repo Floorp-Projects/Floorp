@@ -1,5 +1,8 @@
 # The following tests test the async positioning of the scrollbars.
 # Basic root-frame scrollbar with async scrolling
+# First make sure that we are actually drawing scrollbars
+skip-if(!asyncPan) pref(apz.allow_zooming,true) != async-scrollbar-1-v.html about:blank
+skip-if(!asyncPan) pref(apz.allow_zooming,true) != async-scrollbar-1-v-ref.html about:blank
 fuzzy-if(Android,0-1,0-2) fuzzy-if(webrender&&gtkWidget,14-14,24-24) fuzzy-if(webrender&&cocoaWidget,23-23,44-44) skip-if(!asyncPan) pref(apz.allow_zooming,true) == async-scrollbar-1-v.html async-scrollbar-1-v-ref.html
 fuzzy-if(Android,0-4,0-5) fuzzy-if(webrender&&gtkWidget,53-53,14-14) fuzzy-if(webrender&&cocoaWidget,22-22,44-44) skip-if(!asyncPan) pref(apz.allow_zooming,true) == async-scrollbar-1-h.html async-scrollbar-1-h-ref.html
 fuzzy-if(Android,0-6,0-6) fuzzy-if(webrender&&gtkWidget,15-15,38-38) fuzzy-if(webrender&&cocoaWidget,18-18,79-79) skip-if(!asyncPan) pref(apz.allow_zooming,true) == async-scrollbar-1-vh.html async-scrollbar-1-vh-ref.html
