@@ -34,41 +34,43 @@ const uint32_t maxAllocsPerTest = 100;
 
 #  define START_OOM_TEST(name)                                    \
     testName = name;                                              \
-    printf("Test %s: started\n", testName);                       \
+    printf("Test %s: started: ", testName);                       \
     for (oomAfter = 1; oomAfter < maxAllocsPerTest; ++oomAfter) { \
       js::oom::simulator.simulateFailureAfter(                    \
           js::oom::FailureSimulator::Kind::OOM, oomAfter,         \
           js::THREAD_TYPE_MAIN, true)
 
-#  define OOM_TEST_FINISHED                                                \
-    {                                                                      \
-      printf("Test %s: finished with %" PRIu64 " allocations\n", testName, \
-             oomAfter - 1);                                                \
-      break;                                                               \
-    }
-
-#  define END_OOM_TEST          \
-    }                           \
-    js::oom::simulator.reset(); \
+#  define END_OOM_TEST                                                       \
+    if (!js::oom::HadSimulatedOOM()) {                                       \
+      printf("\nTest %s: finished with %" PRIu64 " allocations\n", testName, \
+             oomAfter - 1);                                                  \
+      break;                                                                 \
+    }                                                                        \
+    }                                                                        \
+    js::oom::simulator.reset();                                              \
     CHECK(oomAfter != maxAllocsPerTest)
 
-BEGIN_TEST(testNewContext) {
+#  define MARK_PLUS printf("+");
+#  define MARK_DOT printf(".");
+
+BEGIN_TEST(testNewContextOOM) {
   uninit();  // Get rid of test harness' original JSContext.
 
+  const char* testName;
+  uint64_t oomAfter;
   JSContext* cx;
   START_OOM_TEST("new context");
   cx = JS_NewContext(8L * 1024 * 1024);
   if (cx) {
-    OOM_TEST_FINISHED;
+    MARK_PLUS;
+    JS_DestroyContext(cx);
+  } else {
+    MARK_DOT;
+    CHECK(!JSRuntime::hasLiveRuntimes());
   }
-  CHECK(!JSRuntime::hasLiveRuntimes());
   END_OOM_TEST;
-  JS_DestroyContext(cx);
   return true;
 }
-
-const char* testName;
-uint64_t oomAfter;
-END_TEST(testNewContext)
+END_TEST(testNewContextOOM)
 
 #endif
