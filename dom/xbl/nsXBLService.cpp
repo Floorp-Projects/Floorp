@@ -455,7 +455,7 @@ nsresult nsXBLService::LoadBindings(Element* aElement, nsIURI* aURL,
   // in AllowXULXBL() documents in content process in production without
   // knowing.
   if (XRE_IsContentProcess() &&
-      IsSystemOrChromeURLPrincipal(aOriginPrincipal) && aElement->OwnerDoc() &&
+      IsSystemOrChromeURLPrincipal(aOriginPrincipal) &&
       !aElement->OwnerDoc()->AllowXULXBL()) {
     MOZ_ASSERT(false, "Unexpected XBL binding used in the content process");
   }
