@@ -35,7 +35,6 @@ DOM4_MSG_DEF(NotAllowedError, "The request is not allowed by the user agent or t
 
 /* XXX Should be JavaScript native TypeError */
 DOM4_MSG_DEF(TypeError, "The method parameter is missing or invalid.", NS_ERROR_TYPE_ERR)
-DOM4_MSG_DEF(RangeError, "The method parameter is out of valid range.", NS_ERROR_RANGE_ERR)
 
 /* StringEncoding API errors from http://wiki.whatwg.org/wiki/StringEncoding */
 DOM4_MSG_DEF(EncodingError, "The given encoding is not supported.", NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR)
