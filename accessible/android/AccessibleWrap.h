@@ -44,6 +44,13 @@ class AccessibleWrap : public Accessible {
 
   virtual void SetSelection(int32_t aStart, int32_t aEnd);
 
+  virtual void Cut();
+
+  virtual void Copy();
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  virtual void Paste();
+
   mozilla::java::GeckoBundle::LocalRef ToBundle(bool aSmall = false);
 
   mozilla::java::GeckoBundle::LocalRef ToBundle(
