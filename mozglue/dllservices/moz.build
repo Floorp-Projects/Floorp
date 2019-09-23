@@ -1,0 +1,58 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if CONFIG['MOZ_WIDGET_TOOLKIT']:
+
+    SOURCES += [
+        # This file contains a |using namespace mozilla;| statement
+        'WindowsDllBlocklist.cpp',
+    ]
+
+    UNIFIED_SOURCES += [
+        'Authenticode.cpp',
+        'LoaderObserver.cpp',
+        'ModuleLoadFrame.cpp',
+        'WindowsFallbackLoaderAPI.cpp',
+    ]
+
+OS_LIBS += [
+    'crypt32',
+    'ntdll',
+    'version',
+    'wintrust',
+]
+
+DELAYLOAD_DLLS += [
+    'crypt32.dll',
+    'wintrust.dll',
+]
+
+EXPORTS.mozilla += [
+    'Authenticode.h',
+    'LoaderAPIInterfaces.h',
+    'ModuleLoadInfo.h',
+    'WindowsDllBlocklist.h',
+    'WindowsDllBlocklistCommon.h',
+]
+
+EXPORTS.mozilla.glue += [
+    'WindowsDllServices.h',
+]
+
+# Generate DLL Blocklists
+blocklist_header_types = ['A11y', 'Launcher', 'Legacy', 'Test']
+blocklist_file_leaf_tpl = 'WindowsDllBlocklist{0}Defs.h'
+blocklist_files = tuple([blocklist_file_leaf_tpl.format(type)
+                         for type in blocklist_header_types])
+GENERATED_FILES += [
+    blocklist_files
+]
+blocklist_defs = GENERATED_FILES[blocklist_files]
+blocklist_defs.script = 'gen_dll_blocklist_defs.py:gen_blocklists'
+blocklist_defs.inputs = ['WindowsDllBlocklistDefs.in']
+EXPORTS.mozilla += ['!' + hdr for hdr in blocklist_files]
+
+FINAL_LIBRARY = 'mozglue'

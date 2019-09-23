@@ -18,6 +18,7 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.glue += [
     'Debug.h',
+    'WinUtils.h',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
@@ -49,10 +50,14 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'WindowsMapRemoteView.h',
         'WindowsProcessMitigations.h',
     ]
+    EXPORTS.mozilla.glue += [
+        'WindowsUnicode.h',
+    ]
     SOURCES += [
         'TimeStamp_windows.cpp',
         'WindowsMapRemoteView.cpp',
         'WindowsProcessMitigations.cpp',
+        'WindowsUnicode.cpp',
     ]
     OS_LIBS += ['dbghelp']
 elif CONFIG['HAVE_CLOCK_MONOTONIC']:

@@ -82,8 +82,8 @@
 #include "mozilla/ipc/XPCShellEnvironment.h"
 #if defined(XP_WIN)
 #  include "mozilla/WindowsConsole.h"
+#  include "mozilla/WindowsDllBlocklist.h"
 #endif
-#include "mozilla/WindowsDllBlocklist.h"
 
 #include "GMPProcessChild.h"
 #include "mozilla/gfx/GPUProcessImpl.h"

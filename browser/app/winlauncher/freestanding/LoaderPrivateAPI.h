@@ -7,7 +7,7 @@
 #ifndef mozilla_freestanding_LoaderPrivateAPI_h
 #define mozilla_freestanding_LoaderPrivateAPI_h
 
-#include "LoaderAPIInterfaces.h"
+#include "mozilla/LoaderAPIInterfaces.h"
 
 namespace mozilla {
 namespace freestanding {
