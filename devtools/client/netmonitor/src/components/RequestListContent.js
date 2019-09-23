@@ -21,6 +21,7 @@ const Actions = require("../actions/index");
 const { formDataURI } = require("../utils/request-utils");
 const {
   getDisplayedRequests,
+  getColumns,
   getSelectedRequest,
   getWaterfallScale,
 } = require("../selectors/index");
@@ -374,6 +375,7 @@ class RequestListContent extends Component {
               blocked: !!item.blockedReason,
               firstRequestStartedMs,
               fromCache: item.status === "304" || item.fromCache,
+              networkDetailsOpen: this.props.networkDetailsOpen,
               connector,
               columns,
               item,
@@ -400,7 +402,7 @@ class RequestListContent extends Component {
 
 module.exports = connect(
   state => ({
-    columns: state.ui.columns,
+    columns: getColumns(state),
     networkDetailsOpen: state.ui.networkDetailsOpen,
     networkDetailsWidth: state.ui.networkDetailsWidth,
     networkDetailsHeight: state.ui.networkDetailsHeight,
