@@ -855,10 +855,7 @@ HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aRequest) {
       // array of blocked tracking nodes under its parent document.
       if (net::UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(
               status)) {
-        Document* ownerDoc = element->OwnerDoc();
-        if (ownerDoc) {
-          ownerDoc->AddBlockedNodeByClassifier(element);
-        }
+        element->OwnerDoc()->AddBlockedNodeByClassifier(element);
       }
       element->NotifyLoadError(
           nsPrintfCString("%u: %s", uint32_t(status), "Request failed"));
@@ -5814,7 +5811,7 @@ void HTMLMediaElement::CheckAutoplayDataReady() {
 
 bool HTMLMediaElement::IsActive() const {
   Document* ownerDoc = OwnerDoc();
-  return ownerDoc && ownerDoc->IsActive() && ownerDoc->IsVisible();
+  return ownerDoc->IsActive() && ownerDoc->IsVisible();
 }
 
 bool HTMLMediaElement::IsHidden() const {
@@ -6134,8 +6131,7 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement,
 }
 
 bool HTMLMediaElement::IsBeingDestroyed() {
-  Document* ownerDoc = OwnerDoc();
-  nsIDocShell* docShell = ownerDoc ? ownerDoc->GetDocShell() : nullptr;
+  nsIDocShell* docShell = OwnerDoc()->GetDocShell();
   bool isBeingDestroyed = false;
   if (docShell) {
     docShell->IsBeingDestroyed(&isBeingDestroyed);
