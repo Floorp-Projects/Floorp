@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function
 
+import logging
 import os
 import sys
 from collections import defaultdict
@@ -16,6 +17,7 @@ build = MozbuildObject.from_environment(cwd=here)
 
 lintdir = os.path.dirname(here)
 sys.path.insert(0, lintdir)
+logger = logging.getLogger("mozlint")
 
 
 @pytest.fixture(scope='module')
@@ -91,6 +93,10 @@ def lint(config, root):
     ResultSummary.root = root
 
     def wrapper(paths, config=config, root=root, collapse_results=False, **lintargs):
+        lintargs['log'] = logging.LoggerAdapter(logger, {
+            "lintname": config.get("name"),
+            "pid": os.getpid()
+        })
         results = func(paths, config, root=root, **lintargs)
         if not collapse_results:
             return results

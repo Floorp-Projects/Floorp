@@ -47,6 +47,7 @@ def setup(python):
 
 
 def run_linter(python, paths, config, **lintargs):
+    log = lintargs['log']
     binary = find_executable(python)
     if not binary:
         # If we're in automation, this is fatal. Otherwise, the warning in the
@@ -62,6 +63,7 @@ def run_linter(python, paths, config, **lintargs):
         fh.flush()
 
         cmd = [binary, os.path.join(here, 'check_compat.py'), fh.name]
+        log.debug("Command: {}".format(' '.join(cmd)))
 
         proc = PyCompatProcess(config, cmd)
         proc.run()

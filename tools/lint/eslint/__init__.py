@@ -49,6 +49,7 @@ def setup(root, **lintargs):
 
 def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
     """Run eslint."""
+    log = lintargs['log']
     setup_helper.set_project_root(lintargs['root'])
     module_path = setup_helper.get_project_root()
 
@@ -75,6 +76,7 @@ def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
                 '--ext', '[{}]'.format(','.join(config['extensions'])),
                 '--format', 'json',
                 ] + extra_args + exclude_args + paths
+    log.debug("Command: {}".format(' '.join(cmd_args)))
 
     # eslint requires that --fix be set before the --ext argument.
     if fix:

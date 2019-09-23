@@ -69,6 +69,7 @@ def parse_with_split(errors):
 
 def lint(files, config, **lintargs):
 
+    log = lintargs['log']
     config['root'] = lintargs['root']
     paths = expand_exclusions(files, config, config['root'])
     paths = list(paths)
@@ -79,6 +80,8 @@ def lint(files, config, **lintargs):
         cmdargs = [
             binary,
         ] + paths[:chunk_size]
+        log.debug("Command: {}".format(' '.join(cmdargs)))
+
         proc = subprocess.Popen(
             cmdargs, stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

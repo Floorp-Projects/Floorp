@@ -259,7 +259,7 @@ def expand_exclusions(paths, config, root):
     Returns:
         Generator which generates list of paths that weren't excluded.
     """
-    extensions = [e.lstrip('.') for e in config['extensions']]
+    extensions = [e.lstrip('.') for e in config.get('extensions', [])]
 
     def normalize(path):
         path = mozpath.normpath(path)

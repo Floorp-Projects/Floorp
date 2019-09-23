@@ -139,7 +139,7 @@ def get_shellcheck_binary():
 
 
 def lint(paths, config, **lintargs):
-
+    log = lintargs['log']
     binary = get_shellcheck_binary()
 
     if not binary:
@@ -159,5 +159,6 @@ def lint(paths, config, **lintargs):
     for f in files:
         cmd = list(base_command)
         cmd.extend(['-s', files[f], f])
+        log.debug("Command: {}".format(cmd))
         run_process(config, cmd)
     return results
