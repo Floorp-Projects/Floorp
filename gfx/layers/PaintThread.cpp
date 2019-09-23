@@ -79,7 +79,7 @@ static uint32_t GetPaintThreadStackSize() {
 #else
   // Workaround bug 1578075 by increasing the stack size of paint threads
   if (nsCocoaFeatures::OnCatalinaOrLater()) {
-    static const uint32_t kCatalinaPaintThreadStackSize = 512 * 1024;
+    static const uint32_t kCatalinaPaintThreadStackSize = 1024 * 1024;
     static_assert(kCatalinaPaintThreadStackSize >= nsIThreadManager::DEFAULT_STACK_SIZE,
                   "update default stack size of paint "
                   "workers");
