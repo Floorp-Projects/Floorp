@@ -58,7 +58,7 @@
         <button id="identity-popup-security-expander"
                 class="identity-popup-expander"
                 when-connection="not-secure secure secure-ev secure-cert-user-overridden cert-error-page"
-                oncommand="gIdentityHandler.showSecuritySubView(); gIdentityHandler.recordClick('security_subview_btn');"/>
+                oncommand="gIdentityHandler.showSecuritySubView();"/>
       </hbox>
 
       <!-- Permissions Section -->
@@ -83,7 +83,7 @@
             class="panel-footer">
         <button id="identity-popup-clear-sitedata-button"
                 label="&identity.clearSiteData;"
-                oncommand="gIdentityHandler.clearSiteData(event); gIdentityHandler.recordClick('clear_sitedata');"/>
+                oncommand="gIdentityHandler.clearSiteData(event);"/>
       </vbox>
     </panelview>
 
