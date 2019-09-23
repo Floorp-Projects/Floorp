@@ -620,27 +620,29 @@ void nsDOMMutationObserver::Observe(
 
   if (!(childList || attributes || characterData || animations ||
         nativeAnonymousChildList)) {
-    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+    aRv.ThrowTypeError(
+        u"One of 'childList', 'attributes', 'characterData' must not be false.");
     return;
   }
 
   if (aOptions.mAttributeOldValue.WasPassed() &&
-      aOptions.mAttributeOldValue.Value() && aOptions.mAttributes.WasPassed() &&
-      !aOptions.mAttributes.Value()) {
-    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+      aOptions.mAttributeOldValue.Value() && !attributes) {
+    aRv.ThrowTypeError(
+        u"If 'attributeOldValue' is true, 'attributes' must not be false.");
     return;
   }
 
-  if (aOptions.mAttributeFilter.WasPassed() &&
-      aOptions.mAttributes.WasPassed() && !aOptions.mAttributes.Value()) {
-    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+  if (aOptions.mAttributeFilter.WasPassed() && !attributes) {
+    aRv.ThrowTypeError(
+        u"If 'attributesFilter' is present, 'attributes' must not be false.");
     return;
   }
 
   if (aOptions.mCharacterDataOldValue.WasPassed() &&
-      aOptions.mCharacterDataOldValue.Value() &&
-      aOptions.mCharacterData.WasPassed() && !aOptions.mCharacterData.Value()) {
-    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+      aOptions.mCharacterDataOldValue.Value() && !characterData) {
+    aRv.ThrowTypeError(
+        u"If 'characterDataOldValue' is true, 'characterData' must not be "
+        u"false.");
     return;
   }
 
