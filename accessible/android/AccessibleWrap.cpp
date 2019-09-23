@@ -363,6 +363,16 @@ void AccessibleWrap::NavigateText(int32_t aGranularity, int32_t aStartOffset,
   }
 }
 
+void AccessibleWrap::SetSelection(int32_t aStart, int32_t aEnd) {
+  if (HyperTextAccessible* textAcc = AsHyperText()) {
+    if (aStart == aEnd) {
+      textAcc->SetCaretOffset(aStart);
+    } else {
+      textAcc->SetSelectionBoundsAt(0, aStart, aEnd);
+    }
+  }
+}
+
 void AccessibleWrap::GetSelectionOrCaret(int32_t* aStartOffset,
                                          int32_t* aEndOffset) {
   *aStartOffset = *aEndOffset = -1;
