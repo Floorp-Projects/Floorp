@@ -14,6 +14,7 @@ import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
 import mozilla.components.concept.engine.UnsupportedSettingException
+import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
@@ -21,6 +22,7 @@ import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.test.ReflectionUtils
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -34,6 +36,7 @@ import org.mockito.ArgumentMatchers.anyFloat
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.ContentBlocking
+import org.mozilla.geckoview.ContentBlockingController
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
@@ -42,6 +45,7 @@ import org.mozilla.geckoview.GeckoWebExecutor
 import org.mozilla.geckoview.StorageController
 import org.robolectric.Robolectric
 import java.io.IOException
+import java.lang.Exception
 import org.mozilla.geckoview.WebExtension as GeckoWebExtension
 
 @RunWith(AndroidJUnit4::class)
@@ -340,6 +344,63 @@ class GeckoEngineTest {
     }
 
     @Test
+    fun `fetch trackers logged successfully`() {
+        val runtime = mock<GeckoRuntime>()
+        val engine = GeckoEngine(context, runtime = runtime)
+        var onSuccessCalled = false
+        var onErrorCalled = false
+        val mockSession = mock<GeckoEngineSession>()
+        var trackersLog: List<TrackerLog>? = null
+
+        val mockContentBlockingController = mock<ContentBlockingController>()
+        var logEntriesResult = GeckoResult<List<ContentBlockingController.LogEntry>>()
+
+        whenever(runtime.contentBlockingController).thenReturn(mockContentBlockingController)
+        whenever(mockContentBlockingController.getLog(any())).thenReturn(logEntriesResult)
+
+        engine.getTrackersLog(
+            mockSession,
+            onSuccess = {
+                trackersLog = it
+                onSuccessCalled = true
+            },
+            onError = { onErrorCalled = true }
+        )
+
+        logEntriesResult.complete(createDummyLogEntryList())
+
+        val trackerLog = trackersLog!!.first()
+        assertTrue(trackerLog.cookiesHasBeenBlocked)
+        assertEquals("www.tracker.com", trackerLog.url)
+        assertTrue(trackerLog.blockedCategories.contains(TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES))
+        assertTrue(trackerLog.blockedCategories.contains(TrackingProtectionPolicy.TrackingCategory.FINGERPRINTING))
+        assertTrue(trackerLog.blockedCategories.contains(TrackingProtectionPolicy.TrackingCategory.CRYPTOMINING))
+        assertTrue(trackerLog.blockedCategories.contains(TrackingProtectionPolicy.TrackingCategory.MOZILLA_SOCIAL))
+
+        assertTrue(trackerLog.loadedCategories.contains(TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES))
+        assertTrue(trackerLog.loadedCategories.contains(TrackingProtectionPolicy.TrackingCategory.FINGERPRINTING))
+        assertTrue(trackerLog.loadedCategories.contains(TrackingProtectionPolicy.TrackingCategory.CRYPTOMINING))
+        assertTrue(trackerLog.loadedCategories.contains(TrackingProtectionPolicy.TrackingCategory.MOZILLA_SOCIAL))
+
+        assertTrue(onSuccessCalled)
+        assertFalse(onErrorCalled)
+
+        logEntriesResult = GeckoResult()
+        whenever(mockContentBlockingController.getLog(any())).thenReturn(logEntriesResult)
+        logEntriesResult.completeExceptionally(Exception())
+
+        engine.getTrackersLog(
+            mockSession,
+            onSuccess = {
+                trackersLog = it
+                onSuccessCalled = true
+            },
+            onError = { onErrorCalled = true }
+        )
+        assertTrue(onErrorCalled)
+    }
+
+    @Test
     fun `install web extension successfully`() {
         val runtime = mock<GeckoRuntime>()
         val engine = GeckoEngine(context, runtime = runtime)
@@ -522,5 +583,44 @@ class GeckoEngineTest {
 
         assertTrue(version.major >= 69)
         assertTrue(version.isAtLeast(69, 0, 0))
+    }
+
+    private fun createDummyLogEntryList(): List<ContentBlockingController.LogEntry> {
+        val addLogEntry = object : ContentBlockingController.LogEntry() {}
+
+        ReflectionUtils.setField(addLogEntry, "origin", "www.tracker.com")
+        val blockedCookiePermission = createBlockingData(ContentBlockingController.Event.COOKIES_BLOCKED_BY_PERMISSION)
+
+        val blockedTrackingContent = createBlockingData(ContentBlockingController.Event.BLOCKED_TRACKING_CONTENT)
+        val blockedFingerprintingContent = createBlockingData(ContentBlockingController.Event.BLOCKED_FINGERPRINTING_CONTENT)
+        val blockedCyptominingContent = createBlockingData(ContentBlockingController.Event.BLOCKED_CRYPTOMINING_CONTENT)
+        val blockedSocialContent = createBlockingData(ContentBlockingController.Event.BLOCKED_SOCIALTRACKING_CONTENT)
+
+        val loadedTrackingContent = createBlockingData(ContentBlockingController.Event.LOADED_TRACKING_CONTENT)
+        val loadedFingerprintingContent = createBlockingData(ContentBlockingController.Event.LOADED_FINGERPRINTING_CONTENT)
+        val loadedCyptominingContent = createBlockingData(ContentBlockingController.Event.LOADED_CRYPTOMINING_CONTENT)
+        val loadedSocialContent = createBlockingData(ContentBlockingController.Event.LOADED_SOCIALTRACKING_CONTENT)
+
+        val contentBlockingList = listOf(
+            blockedTrackingContent,
+            loadedTrackingContent,
+            blockedFingerprintingContent,
+            loadedFingerprintingContent,
+            blockedCyptominingContent,
+            loadedCyptominingContent,
+            blockedCookiePermission,
+            blockedSocialContent,
+            loadedSocialContent
+        )
+
+        ReflectionUtils.setField(addLogEntry, "blockingData", contentBlockingList)
+
+        return listOf(addLogEntry)
+    }
+
+    private fun createBlockingData(category: Int): ContentBlockingController.LogEntry.BlockingData {
+        val blockingData = object : ContentBlockingController.LogEntry.BlockingData() {}
+        ReflectionUtils.setField(blockingData, "category", category)
+        return blockingData
     }
 }
