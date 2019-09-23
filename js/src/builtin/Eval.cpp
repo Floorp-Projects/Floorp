@@ -175,7 +175,8 @@ static EvalJSONResult ParseEvalStringAsJSON(
                                            chars.begin().get() + 1U, len - 2);
 
   Rooted<JSONParser<CharT>> parser(
-      cx, JSONParser<CharT>(cx, jsonChars, JSONParserBase::NoError));
+      cx, JSONParser<CharT>(cx, jsonChars,
+                            JSONParserBase::ParseType::AttemptForEval));
   if (!parser.parse(rval)) {
     return EvalJSON_Failure;
   }

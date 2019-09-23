@@ -1008,7 +1008,8 @@ bool js::ParseJSONWithReviver(JSContext* cx,
                               const mozilla::Range<const CharT> chars,
                               HandleValue reviver, MutableHandleValue vp) {
   /* 15.12.2 steps 2-3. */
-  Rooted<JSONParser<CharT>> parser(cx, JSONParser<CharT>(cx, chars));
+  Rooted<JSONParser<CharT>> parser(
+      cx, JSONParser<CharT>(cx, chars, JSONParserBase::ParseType::JSONParse));
   if (!parser.parse(vp)) {
     return false;
   }
