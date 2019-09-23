@@ -139,7 +139,7 @@ export const features = new PrefsHelper("devtools.debugger.features", {
   eventListenersBreakpoints: ["Bool", "event-listeners-breakpoints"],
   domMutationBreakpoints: ["Bool", "dom-mutation-breakpoints"],
   logPoints: ["Bool", "log-points"],
-  showOverlayStepButtons: ["Bool", "overlay-step-buttons"],
+  showOverlay: ["Bool", "overlay"],
   inlinePreview: ["Bool", "inline-preview"],
   watchpoints: ["Bool", "watchpoints"],
 });
