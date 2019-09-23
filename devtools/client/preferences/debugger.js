@@ -83,9 +83,4 @@ pref("devtools.debugger.features.event-listeners-breakpoints", true);
 pref("devtools.debugger.features.dom-mutation-breakpoints", true);
 pref("devtools.debugger.features.log-points", true);
 pref("devtools.debugger.features.overlay-step-buttons", false);
-
-#ifdef EARLY_BETA_OR_EARLIER
-  pref("devtools.debugger.features.inline-preview", true);
-#else
-  pref("devtools.debugger.features.inline-preview", false);
-#endif
+pref("devtools.debugger.features.inline-preview", true);
