@@ -24,6 +24,7 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.service.glean.utils.getISOTimeString
 import mozilla.components.service.glean.utils.parseISOTimeString
 import mozilla.components.service.glean.private.TimeUnit
+import mozilla.components.support.utils.ThreadUtils
 import java.util.Calendar
 import java.util.Date
 import java.util.concurrent.TimeUnit as AndroidTimeUnit
@@ -61,6 +62,14 @@ internal class MetricsPingScheduler(val applicationContext: Context) : Lifecycle
     }
 
     init {
+        // This should only be called from the main thread.
+        // We can't enforce this at build time here, since the @MainThread
+        // decorator can not be applied to a contructor.  However, in practice
+        // this is only called from Glean.initialize which does have that
+        // decorator.  For good measure, we also perform this run time check
+        // here.
+        // See https://bugzilla.mozilla.org/show_bug.cgi?id=1581556
+        ThreadUtils.assertOnUiThread()
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
     }
 

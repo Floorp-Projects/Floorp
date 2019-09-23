@@ -43,6 +43,9 @@ permalink: /changelog/
 
 * **tools-detekt**
   * New (internal-only) component with custom detekt rules.
+  
+* **service-glean**
+  * ⚠ **This is a breaking change**: Glean.initialize() must be called on the main thread.
 
 # 13.0.0
 

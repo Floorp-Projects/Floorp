@@ -8,6 +8,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.annotation.MainThread
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.Job
@@ -38,6 +39,7 @@ import mozilla.components.service.glean.utils.getLocaleTag
 import mozilla.components.service.glean.utils.parseISOTimeString
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.isMainProcess
+import mozilla.components.support.utils.ThreadUtils
 
 @Suppress("TooManyFunctions", "LargeClass")
 open class GleanInternalAPI internal constructor () {
@@ -87,15 +89,24 @@ open class GleanInternalAPI internal constructor () {
      * A LifecycleObserver will be added to send pings when the application goes
      * into the background.
      *
+     * This method must be called from the main thread.
+     *
      * @param applicationContext [Context] to access application features, such
      * as shared preferences
      * @param configuration A Glean [Configuration] object with global settings.
      */
     @JvmOverloads
+    @MainThread
     fun initialize(
         applicationContext: Context,
         configuration: Configuration = Configuration()
     ) {
+        // Glean initialization must be called on the main thread, or lifecycle
+        // registration may fail. This is also enforced at build time by the
+        // @MainThread decorator, but this run time check is also performed to
+        // be extra certain.
+        ThreadUtils.assertOnUiThread()
+
         // In certain situations Glean.initialize may be called from a process other than the main
         // process.  In this case we want initialize to be a no-op and just return.
         if (!applicationContext.isMainProcess()) {
@@ -146,6 +157,9 @@ open class GleanInternalAPI internal constructor () {
         Dispatchers.API.flushQueuedInitialTasks()
 
         // At this point, all metrics and events can be recorded.
+        // This should only be called from the main thread. This is enforced by
+        // the @MainThread decorator on this method.
+        // See https://bugzilla.mozilla.org/show_bug.cgi?id=1581556
         ProcessLifecycleOwner.get().lifecycle.addObserver(gleanLifecycleObserver)
     }
 
