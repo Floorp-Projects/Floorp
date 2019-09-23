@@ -9,6 +9,7 @@
   --animation-item-selected-color: rgba(215, 215, 219, 0.9);
   --cssanimation-color: var(--purple-50);
   --csstransition-color: var(--blue-55);
+  --devtools-toolbar-height: 24px;
   --fast-track-image: url("images/animation-fast-track.svg");
   --graph-height: 30px;
   --graph-right-offset: 10px;
@@ -109,12 +110,11 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 .current-time-scrubber-area::before {
   content: "";
   cursor: col-resize;
-  height: var(--theme-toolbar-height);
+  height: var(--devtools-toolbar-height);
   pointer-events: auto;
   position: absolute;
   /* In order to click on edge of current-time-scrubber-controller element */
   width: calc(100% + 1px);
-  background: #f004;
 }
 
 .current-time-scrubber-area:dir(rtl)::before {
