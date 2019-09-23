@@ -26,9 +26,11 @@ add_task(async function oneTip() {
   let provider = new TipTestProvider(tipMatches);
   UrlbarProvidersManager.registerProvider(provider);
 
-  gURLBar.search("test");
-  await promiseSearchComplete();
-
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    value: "test",
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+  });
   Assert.equal(
     UrlbarTestUtils.getResultCount(window),
     8,
@@ -68,8 +70,11 @@ add_task(async function threeTips() {
   let provider = new TipTestProvider(tipMatches);
   UrlbarProvidersManager.registerProvider(provider);
 
-  gURLBar.search("test");
-  await promiseSearchComplete();
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    value: "test",
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+  });
   Assert.equal(
     UrlbarTestUtils.getResultCount(window),
     4,
