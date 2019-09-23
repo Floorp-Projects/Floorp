@@ -1568,6 +1568,73 @@ add_test(function test_getOAuthToken_unknown_error() {
   });
 });
 
+add_task(async function test_listAttachedOAuthClients() {
+  let fxa = new MockFxAccounts();
+  let alice = getTestUser("alice");
+  alice.verified = true;
+
+  let client = fxa._internal.fxAccountsClient;
+  client.attachedClients = async () => {
+    return [
+      {
+        clientId: null,
+        deviceId: "deadbeef",
+        sessionTokenId: "deadbeef",
+        name: "Good ol' desktop device",
+        scope: null,
+        lastAccessTime: 1569263031001,
+      },
+      {
+        clientId: null,
+        deviceId: null,
+        sessionTokenId: "deadbeef",
+        name: "Mobile device w/ no device record",
+        scope: null,
+        lastAccessTime: 1569263031001,
+      },
+      {
+        clientId: "a2270f727f45f648",
+        deviceId: "deadbeef",
+        sessionTokenId: null,
+        name: "Firefox Preview (no session token)",
+        scope: ["profile", "https://identity.mozilla.com/apps/oldsync"],
+        lastAccessTime: 1569263031001,
+      },
+      {
+        clientId: "802d56ef2a9af9fa",
+        deviceId: null,
+        sessionTokenId: null,
+        name: "Firefox Monitor",
+        scope: ["profile"],
+        lastAccessTime: 1569263031000,
+      },
+      {
+        clientId: "1f30e32975ae5112",
+        deviceId: null,
+        sessionTokenId: null,
+        name: "Firefox Send",
+        scope: ["profile", "https://identity.mozilla.com/apps/send"],
+        lastAccessTime: 1569263013000,
+      },
+    ];
+  };
+
+  await fxa.setSignedInUser(alice);
+  const clients = await fxa.listAttachedOAuthClients();
+  Assert.deepEqual(clients, [
+    {
+      id: "802d56ef2a9af9fa",
+      name: "Firefox Monitor",
+      lastAccessTime: 1569263031000,
+    },
+    {
+      id: "1f30e32975ae5112",
+      name: "Firefox Send",
+      lastAccessTime: 1569263013000,
+    },
+  ]);
+});
+
 add_test(function test_getSignedInUserProfile() {
   let alice = getTestUser("alice");
   alice.verified = true;
