@@ -8,6 +8,7 @@
 
 #include "builtin/streams/WritableStreamOperations.h"
 
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
 #include "jsapi.h"  // JS_SetPrivate
@@ -41,6 +42,13 @@ MOZ_MUST_USE /* static */
   }
 
   JS_SetPrivate(stream, nsISupportsObject_alreadyAddreffed);
+
+  stream->initWritableState();
+
+  // Step 1: Set stream.[[state]] to "writable".
+  // Step 4: Set stream.[[backpressure]] to false.
+  MOZ_ASSERT(stream->writable());
+  MOZ_ASSERT(!stream->backpressure());
 
   // XXX jwalden need to keep fleshin' out here
   return stream;
