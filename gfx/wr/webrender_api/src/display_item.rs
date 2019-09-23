@@ -34,12 +34,15 @@ pub const MAX_BLUR_RADIUS: f32 = 300.;
 pub type ItemTag = (u64, u16);
 
 bitflags! {
+    #[repr(C)]
     #[derive(Deserialize, MallocSizeOf, Serialize, PeekPoke)]
     pub struct PrimitiveFlags: u8 {
         /// The CSS backface-visibility property (yes, it can be really granular)
         const IS_BACKFACE_VISIBLE = 1 << 0;
-        /// If set, this primitive represents part of a scroll bar
-        const IS_SCROLL_BAR = 1 << 1;
+        /// If set, this primitive represents a scroll bar container
+        const IS_SCROLLBAR_CONTAINER = 1 << 1;
+        /// If set, this primitive represents a scroll bar thumb
+        const IS_SCROLLBAR_THUMB = 1 << 2;
     }
 }
 
@@ -670,7 +673,7 @@ pub struct ReferenceFrame {
 pub struct PushStackingContextDisplayItem {
     pub origin: LayoutPoint,
     pub spatial_id: SpatialId,
-    pub is_backface_visible: bool,
+    pub prim_flags: PrimitiveFlags,
     pub stacking_context: StackingContext,
 }
 
