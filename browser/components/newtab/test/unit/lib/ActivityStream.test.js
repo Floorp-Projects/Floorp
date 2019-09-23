@@ -271,6 +271,18 @@ describe("ActivityStream", () => {
 
       assert.isTrue(PREFS_CONFIG.get("feeds.section.topstories").value);
     });
+    it("should not change default even with expected geo and locale", () => {
+      as._defaultPrefs.set("feeds.section.topstories", false);
+      sandbox.stub(global.Services.prefs, "getStringPref").returns("US");
+      sandbox
+        .stub(global.Services.locale, "appLocaleAsLangTag")
+        .get(() => "en-US");
+
+      as._updateDynamicPrefs();
+      clock.tick(1);
+
+      assert.isFalse(PREFS_CONFIG.get("feeds.section.topstories").value);
+    });
   });
   describe("telemetry reporting on init failure", () => {
     it("should send a ping on init error", () => {
