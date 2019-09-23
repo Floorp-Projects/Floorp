@@ -8,13 +8,11 @@ job-defaults:
     run-on-projects:
         - try
     platform: linux64/opt
-    attributes:
-        code-review: true
     worker-type:
         by-platform:
             linux64.*: t-linux-xlarge
     worker:
-        docker-image: {in-tree: debian7-amd64-build}
+        docker-image: {in-tree: debian9-amd64-build}
         max-run-time: 5400
     treeherder:
         kind: other
@@ -45,6 +43,8 @@ job-defaults:
 
 coverity:
     description: Run static-analysis (Coverity) on C/C++ patches
+    attributes:
+        code-review: true
     treeherder:
         symbol: cpp(coverity)
     run:
@@ -59,3 +59,36 @@ coverity:
             - type: file
               name: public/code-review/coverity.json
               path: /builds/worker/coverity.json
+
+coverity-full-analysis:
+    description: Run Coverity based static-analysis on on the entire Gecko repo
+    treeherder:
+        symbol: Static-Analysis(coverity-full-analysis)
+    worker-type:
+        by-platform:
+            linux64.*: b-linux-xlarge
+    run-on-projects:
+        - mozilla-central
+    run:
+        cwd: '{checkout}'
+        command: >-
+            source taskcluster/scripts/misc/source-test-clang-setup.sh &&
+            ./mach --log-no-times static-analysis check-coverity --full-build
+    scopes:
+        - secrets:get:project/relman/coverity
+    worker:
+        max-run-time: 21600
+    when:
+        files-changed:
+            - '**/*.c'
+            - '**/*.cpp'
+            - '**/*.cc'
+            - '**/*.cxx'
+            - '**/*.m'
+            - '**/*.mm'
+            - '**/*.h'
+            - '**/*.hh'
+            - '**/*.hpp'
+            - '**/*.hxx'
+            - '**/*.py'
+            - '**/*.js'
