@@ -5,6 +5,8 @@
 
 #include "mozilla/TextEditor.h"
 
+#include <algorithm>
+
 #include "EditAggregateTransaction.h"
 #include "InternetCiter.h"
 #include "gfxFontUtils.h"
@@ -1815,10 +1817,8 @@ already_AddRefed<nsIDocumentEncoder> TextEditor::GetAndInitDocEncoder(
     docEncoder->SetCharset(aCharset);
   }
 
-  int32_t wrapWidth = WrapWidth();
-  if (wrapWidth >= 0) {
-    Unused << docEncoder->SetWrapColumn(wrapWidth);
-  }
+  const int32_t wrapWidth = std::max(WrapWidth(), 0);
+  Unused << docEncoder->SetWrapColumn(wrapWidth);
 
   // Set the selection, if appropriate.
   // We do this either if the OutputSelectionOnly flag is set,
