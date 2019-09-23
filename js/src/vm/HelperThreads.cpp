@@ -1911,7 +1911,7 @@ UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
       elem = workList.popCopy();
 
       // Initialize LCov data for the script.
-      if (!elem->initScriptName(cx)) {
+      if (!coverage::InitScriptCoverage(cx, elem)) {
         return nullptr;
       }
 

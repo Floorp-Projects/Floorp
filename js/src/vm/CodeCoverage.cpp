@@ -18,6 +18,7 @@
 #  include <unistd.h>
 #endif
 
+#include "gc/Zone.h"
 #include "util/Text.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/JSScript.h"
@@ -481,7 +482,7 @@ void LCovRealm::collectCodeCoverageInfo(JSScript* script, const char* name) {
     return;
   }
 
-  if (!script->code()) {
+  if (script->isUncompleted()) {
     return;
   }
 
@@ -681,6 +682,62 @@ void LCovRuntime::writeLCovResult(LCovRealm& realm) {
   realm.exportInto(out_, &isEmpty_);
   out_.flush();
   finishFile();
+}
+
+bool InitScriptCoverage(JSContext* cx, JSScript* script) {
+  MOZ_ASSERT(IsLCovEnabled());
+
+  // Don't allocate LCovSource if we on helper thread since we will have our
+  // realm migrated. The 'GCRunime::mergeRealms' code will do this
+  // initialization.
+  if (cx->isHelperThreadContext()) {
+    return true;
+  }
+
+  const char* filename = script->filename();
+  if (!filename) {
+    return true;
+  }
+
+  UniqueChars name = DuplicateString(filename);
+  if (!name) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  // Create Zone::scriptNameMap if necessary.
+  JS::Zone* zone = script->zone();
+  if (!zone->scriptNameMap) {
+    zone->scriptNameMap = cx->make_unique<ScriptNameMap>();
+  }
+  if (!zone->scriptNameMap) {
+    return false;
+  }
+
+  // Save name in map for when we collect coverage.
+  if (!zone->scriptNameMap->putNew(script, std::move(name))) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  return true;
+}
+
+void CollectScriptCoverage(JSScript* script) {
+  MOZ_ASSERT(IsLCovEnabled());
+
+  ScriptNameMap* map = script->zone()->scriptNameMap.get();
+  if (!map) {
+    return;
+  }
+
+  auto p = map->lookup(script);
+  if (!p.found()) {
+    return;
+  }
+
+  script->realm()->collectCodeCoverageInfo(script, p->value().get());
+  map->remove(p);
 }
 
 }  // namespace coverage

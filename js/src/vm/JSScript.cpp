@@ -1413,20 +1413,9 @@ static inline ScriptCountsMap::Ptr GetScriptCountsMapEntry(JSScript* script) {
   return p;
 }
 
-static inline ScriptNameMap::Ptr GetScriptNameMapEntry(JSScript* script) {
-  auto p = script->zone()->scriptNameMap->lookup(script);
-  MOZ_ASSERT(p);
-  return p;
-}
-
 ScriptCounts& JSScript::getScriptCounts() {
   ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
   return *p->value();
-}
-
-const char* JSScript::getScriptName() {
-  auto p = GetScriptNameMapEntry(this);
-  return p->value().get();
 }
 
 js::PCCounts* ScriptCounts::maybeGetPCCounts(size_t offset) {
@@ -1602,11 +1591,6 @@ void JSScript::destroyScriptCounts() {
   }
 }
 
-void JSScript::destroyScriptName() {
-  auto p = GetScriptNameMapEntry(this);
-  zone()->scriptNameMap->remove(p);
-}
-
 void JSScript::resetScriptCounts() {
   if (!hasScriptCounts()) {
     return;
@@ -1621,15 +1605,6 @@ void JSScript::resetScriptCounts() {
   for (PCCounts& elem : sc.throwCounts_) {
     elem.numExec() = 0;
   }
-}
-
-bool JSScript::hasScriptName() {
-  if (!zone()->scriptNameMap) {
-    return false;
-  }
-
-  auto p = zone()->scriptNameMap->lookup(this);
-  return p.found();
 }
 
 void ScriptSourceObject::finalize(JSFreeOp* fop, JSObject* obj) {
@@ -3894,7 +3869,7 @@ JSScript* JSScript::Create(JSContext* cx, const ReadOnlyCompileOptions& options,
                   ShouldTrackRecordReplayProgress(script));
 
   if (coverage::IsLCovEnabled()) {
-    if (!script->initScriptName(cx)) {
+    if (!coverage::InitScriptCoverage(cx, script)) {
       return nullptr;
     }
   }
@@ -3917,7 +3892,7 @@ JSScript* JSScript::Create(JSContext* cx, const ReadOnlyCompileOptions& options,
                   ShouldTrackRecordReplayProgress(script));
 
   if (coverage::IsLCovEnabled()) {
-    if (!script->initScriptName(cx)) {
+    if (!coverage::InitScriptCoverage(cx, script)) {
       return nullptr;
     }
   }
@@ -3949,45 +3924,6 @@ uint32_t JSScript::vtuneMethodID() {
   return id;
 }
 #endif
-
-bool JSScript::initScriptName(JSContext* cx) {
-  MOZ_ASSERT(!hasScriptName());
-
-  // Don't allocate LCovSource if we on helper thread since we will have our
-  // realm migrated. The 'GCRunime::mergeRealms' code will do this
-  // initialization.
-  if (cx->isHelperThreadContext()) {
-    return true;
-  }
-
-  if (!filename()) {
-    return true;
-  }
-
-  // Create zone's scriptNameMap if necessary.
-  if (!zone()->scriptNameMap) {
-    auto map = cx->make_unique<ScriptNameMap>();
-    if (!map) {
-      return false;
-    }
-
-    zone()->scriptNameMap = std::move(map);
-  }
-
-  UniqueChars name = DuplicateString(filename());
-  if (!name) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  // Register the script name in the zone's map.
-  if (!zone()->scriptNameMap->putNew(this, std::move(name))) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  return true;
-}
 
 /* static */
 bool JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
@@ -4237,12 +4173,8 @@ void JSScript::finalize(JSFreeOp* fop) {
   // JSScript::Create(), but not yet finished initializing it with
   // fullyInitFromEmitter().
 
-  // Collect code coverage information for this script and all its inner
-  // scripts, and store the aggregated information on the realm.
-  MOZ_ASSERT_IF(hasScriptName(), coverage::IsLCovEnabled());
-  if (coverage::IsLCovEnabled() && hasScriptName()) {
-    realm()->collectCodeCoverageInfo(this, getScriptName());
-    destroyScriptName();
+  if (coverage::IsLCovEnabled()) {
+    coverage::CollectScriptCoverage(this);
   }
 
   fop->runtime()->geckoProfiler().onScriptFinalized(this);
