@@ -44,9 +44,6 @@ user_pref("browser.safebrowsing.provider.google4.gethashURL", "http://{server}/s
 user_pref("browser.safebrowsing.provider.google4.updateURL", "http://{server}/safebrowsing4-dummy/update");
 user_pref("browser.safebrowsing.provider.mozilla.gethashURL", "http://{server}/safebrowsing-dummy/gethash");
 user_pref("browser.safebrowsing.provider.mozilla.updateURL", "http://{server}/safebrowsing-dummy/update");
-// Add safebrowsing debug logging to see why JUnit tests are sometimes ignoring above prefs
-// See: 1564920
-user_pref("browser.safebrowsing.debug", true);
 user_pref("browser.search.suggest.timeout", 10000); // use a 10s suggestion timeout in tests
 user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("browser.startup.page", 0); // use about:blank, not browser.startup.homepage
