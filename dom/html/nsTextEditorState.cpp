@@ -1401,8 +1401,9 @@ nsresult nsTextEditorState::PrepareEditor(const nsAString* aValue) {
 
   // Initialize the plaintext editor
   if (shouldInitializeEditor) {
-    // Set up wrapping
-    newTextEditor->SetWrapColumn(GetWrapCols());
+    const int32_t wrapCols = GetWrapCols();
+    MOZ_ASSERT(wrapCols >= 0);
+    newTextEditor->SetWrapColumn(wrapCols);
   }
 
   // Set max text field length
