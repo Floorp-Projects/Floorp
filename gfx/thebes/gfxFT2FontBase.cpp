@@ -157,7 +157,8 @@ uint32_t gfxFT2FontBase::GetCharExtents(char aChar, gfxFloat* aWidth,
   FT_UInt gid = GetGlyph(aChar);
   int32_t width;
   IntRect bounds;
-  if (gid && GetFTGlyphExtents(gid, &width, &bounds)) {
+  if (gid && GetFTGlyphExtents(gid, aWidth ? &width : nullptr,
+                               aBounds ? &bounds : nullptr)) {
     if (aWidth) {
       *aWidth = FLOAT_FROM_16_16(width);
     }
@@ -529,7 +530,11 @@ bool gfxFT2FontBase::GetFTGlyphExtents(uint16_t aGID, int32_t* aAdvance,
     return false;
   }
 
-  if (Factory::LoadFTGlyph(face.get(), aGID, mFTLoadFlags) != FT_Err_Ok) {
+  FT_Int32 flags = mFTLoadFlags;
+  if (!aBounds) {
+    flags |= FT_LOAD_ADVANCE_ONLY;
+  }
+  if (Factory::LoadFTGlyph(face.get(), aGID, flags) != FT_Err_Ok) {
     // FT_Face was somehow broken/invalid? Don't try to access glyph slot.
     // This probably shouldn't happen, but does: see bug 1440938.
     NS_WARNING("failed to load glyph!");
