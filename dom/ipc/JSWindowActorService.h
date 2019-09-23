@@ -70,8 +70,8 @@ class JSWindowActorProtocol final : public nsIObserver,
   const ParentSide& Parent() const { return mParent; }
   const ChildSide& Child() const { return mChild; }
 
-  void RegisterListenersFor(EventTarget* aRoot);
-  void UnregisterListenersFor(EventTarget* aRoot);
+  void RegisterListenersFor(EventTarget* aTarget);
+  void UnregisterListenersFor(EventTarget* aTarget);
   void AddObservers();
   void RemoveObservers();
   bool Matches(BrowsingContext* aBrowsingContext, nsIURI* aURI,
@@ -114,11 +114,11 @@ class JSWindowActorService final {
   // from mDescriptors to JSWindowActorInfos.
   void GetJSWindowActorInfos(nsTArray<JSWindowActorInfo>& aInfos);
 
-  // Register or unregister a WindowRoot object from this JSWindowActorService.
-  void RegisterWindowRoot(EventTarget* aRoot);
+  // Register or unregister a chrome event target.
+  void RegisterChromeEventTarget(EventTarget* aTarget);
 
   // NOTE: This method is static, as it may be called during shutdown.
-  static void UnregisterWindowRoot(EventTarget* aRoot);
+  static void UnregisterChromeEventTarget(EventTarget* aTarget);
 
   already_AddRefed<JSWindowActorProtocol> GetProtocol(const nsAString& aName);
 
@@ -126,7 +126,7 @@ class JSWindowActorService final {
   JSWindowActorService();
   ~JSWindowActorService();
 
-  nsTArray<EventTarget*> mRoots;
+  nsTArray<EventTarget*> mChromeEventTargets;
   nsRefPtrHashtable<nsStringHashKey, JSWindowActorProtocol> mDescriptors;
 };
 
