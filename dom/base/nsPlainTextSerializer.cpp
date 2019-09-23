@@ -698,7 +698,6 @@ nsresult nsPlainTextSerializer::DoOpenContainer(const nsAtom* aTag) {
         printf("Set mPreFormattedMail based on style pre\n");
 #endif
         mPreFormattedMail = true;
-        mWrapColumn = 0;
       }
     } else {
       /* See comment at end of function. */
