@@ -91,13 +91,7 @@ function run_test() {
   }
 
   link = getLinkFile();
-  if (link.isSymlink) {
-    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-    file.initWithPath(link.target);
-    linkURI = ios.newFileURI(file);
-  } else {
-    linkURI = ios.newFileURI(linkTarget);
-  }
+  linkURI = ios.newFileURI(link);
 
   do_test_pending();
   var chan = NetUtil.newChannel({
