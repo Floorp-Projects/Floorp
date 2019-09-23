@@ -127,6 +127,11 @@ void ProxyAccessibleWrap::NavigateText(int32_t aGranularity,
       Proxy()->ID(), aGranularity, aStartOffset, aEndOffset, aForward, aSelect);
 }
 
+void ProxyAccessibleWrap::SetSelection(int32_t aStart, int32_t aEnd) {
+  Unused << Proxy()->Document()->GetPlatformExtension()->SendSetSelection(
+      Proxy()->ID(), aStart, aEnd);
+}
+
 role ProxyAccessibleWrap::WrapperRole() { return Proxy()->Role(); }
 
 AccessibleWrap* ProxyAccessibleWrap::WrapperParent() {

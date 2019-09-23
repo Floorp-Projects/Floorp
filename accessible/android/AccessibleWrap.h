@@ -42,6 +42,8 @@ class AccessibleWrap : public Accessible {
   virtual void NavigateText(int32_t aGranularity, int32_t aStartOffset,
                             int32_t aEndOffset, bool aForward, bool aSelect);
 
+  virtual void SetSelection(int32_t aStart, int32_t aEnd);
+
   mozilla::java::GeckoBundle::LocalRef ToBundle(bool aSmall = false);
 
   mozilla::java::GeckoBundle::LocalRef ToBundle(
