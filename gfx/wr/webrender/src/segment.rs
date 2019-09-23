@@ -2,6 +2,53 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+//!  Primitive segmentation
+//!
+//! # Overview
+//!
+//! Segmenting is the process of breaking rectangular primitives into smaller rectangular
+//! primitives in order to extract parts that could benefit from a fast paths.
+//!
+//! Typically this is used to allow fully opaque segments to be rendered in the opaque
+//! pass. For example when an opaque rectangle has a non-axis-aligned transform applied,
+//! we usually have to apply some anti-aliasing around the edges which requires alpha
+//! blending. By segmenting the edges out of the center of the primitive, we can keep a
+//! large amount of pixels in the opaque pass.
+//! Segmenting also lets us avoids rasterizing parts of clip masks that we know to have
+//! no effect or to be fully masking. For example by segmenting the corners of a rounded
+//! rectangle clip, we can optimize both rendering the mask and the primitive by only
+//! rasterize the corners in the mask and not applying any clipping to the segments of
+//! the primitive that don't overlap the borders. 
+//!
+//! It is a flexible system in the sense that different sources of segmentation (for
+//! example two rounded rectangle clips) can affect the segmentation, and the possibility
+//! to segment some effects such as specific clip kinds does not necessarily mean the
+//! primitive will actually be segmented.
+//!
+//! ## Segments and clipping
+//!
+//! Segments of a primitive can be either not clipped, fully clipped, or partially clipped.
+//! In the first two case we don't need a clip mask. For each partially masked segments, a
+//! mask is rasterized using a render task. All of the interesting steps happen during frame
+//! building.
+//!
+//! - The first step is to determine the segmentation and write the associated GPU data.
+//!   See `PrimitiveInstance::build_segments_if_needed` and `write_brush_segment_description`
+//!   in `prim_store/mod.rs` which uses the segment builder of this module.
+//! - The second step is to generate the mask render tasks.
+//!   See `BrushSegment::update_clip_task` and `RenderTask::new_mask`. For each segment that
+//!   needs a mask, the contribution of all clips that affect the segment is added to the
+//!   mask's render task.
+//! - Segments are assigned to batches (See `batch.rs`). Segments of a given primitive can
+//!   be assigned to different batches.
+//!
+//! See also the [`clip` module documentation][clip.rs] for details about how clipping
+//! information is represented.
+//!
+//!
+//! [clip.rs]: ../clip/index.html
+//!
+
 use api::{BorderRadius, ClipMode};
 use api::units::*;
 use crate::prim_store::EdgeAaSegmentMask;
