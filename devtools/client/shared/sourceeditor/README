@@ -5,7 +5,7 @@ code, and optionally help with indentation.
 
 # Upgrade
 
-Currently used version is 5.40.0. To upgrade: download a new version of
+Currently used version is 5.49.0. To upgrade: download a new version of
 CodeMirror from the project's page [1] and replace all JavaScript and
 CSS files inside the codemirror directory [2].
 
@@ -225,28 +225,6 @@ diff --git a/devtools/client/shared/sourceeditor/codemirror/addon/search/search.
                             text.replace(/\$(\d)/g, function(_, i) {return match[i];}));
              advance();
            };
-
-# Middle-click pasting patch
-
-See Bug 1482875. Not needed anymore when https://github.com/codemirror/CodeMirror/pull/5751 lands.
-
-```diff
-diff --git a/devtools/client/shared/sourceeditor/codemirror/lib/codemirror.js b/devtools/client/shared/sourceeditor/codemirror/lib/codemirror.js
---- a/devtools/client/shared/sourceeditor/codemirror/lib/codemirror.js
-+++ b/devtools/client/shared/sourceeditor/codemirror/lib/codemirror.js
-@@ -9256,8 +9256,9 @@ TextareaInput.prototype.init = function
-
-   on(display.scroller, "paste", function (e) {
-     if (eventInWidget(display, e) || signalDOMEvent(cm, e)) { return }
--    cm.state.pasteIncoming = true
--    input.focus()
-+    const event = new Event("paste");
-+    event.clipboardData = e.clipboardData;
-+    te.dispatchEvent(event);
-   })
-
-   // Prevent normal selection in the editor (we handle our own)
-```
 
 # Footnotes
 

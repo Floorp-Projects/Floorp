@@ -1,5 +1,5 @@
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
-// Distributed under an MIT license: http://codemirror.net/LICENSE
+// Distributed under an MIT license: https://codemirror.net/LICENSE
 
 // Define search commands. Depends on dialog.js or another
 // implementation of the openDialog method.
@@ -78,10 +78,12 @@
   }
 
   function parseString(string) {
-    return string.replace(/\\(.)/g, function(_, ch) {
+    return string.replace(/\\([nrt\\])/g, function(match, ch) {
       if (ch == "n") return "\n"
       if (ch == "r") return "\r"
-      return ch
+      if (ch == "t") return "\t"
+      if (ch == "\\") return "\\"
+      return match
     })
   }
 
