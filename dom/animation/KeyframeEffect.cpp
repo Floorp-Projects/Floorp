@@ -1187,7 +1187,25 @@ void KeyframeEffect::GetKeyframes(JSContext*& aCx, nsTArray<JSObject*>& aResult,
         }
       }
 
-      const char* name = nsCSSProps::PropertyIDLName(propertyValue.mProperty);
+      // Basically, we need to do the mapping:
+      // * eCSSProperty_offset => "cssOffset"
+      // * eCSSProperty_float => "cssFloat"
+      // This means if property refers to the CSS "offset"/"float" property,
+      // return the string "cssOffset"/"cssFloat". (So avoid overlapping
+      // "offset" property in BaseKeyframe.)
+      // https://drafts.csswg.org/web-animations/#property-name-conversion
+      const char* name = nullptr;
+      switch (propertyValue.mProperty) {
+        case nsCSSPropertyID::eCSSProperty_offset:
+          name = "cssOffset";
+          break;
+        case nsCSSPropertyID::eCSSProperty_float:
+          // FIXME: Bug 1582314: Should handle cssFloat manually if we remove it
+          // from nsCSSProps::PropertyIDLName().
+        default:
+          name = nsCSSProps::PropertyIDLName(propertyValue.mProperty);
+      }
+
       JS::Rooted<JS::Value> value(aCx);
       if (!ToJSValue(aCx, stringValue, &value) ||
           !JS_DefineProperty(aCx, keyframeObject, name, value,
