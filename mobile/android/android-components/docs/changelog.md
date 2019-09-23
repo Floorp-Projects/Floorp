@@ -15,6 +15,21 @@ permalink: /changelog/
 * **feature-customtabs**
   * Now the color of the tracking protection icon adapts to color of the toolbar.
 
+* **feature-session**, **engine-gecko-nightly** and **engine-gecko-beta**
+  * Added a way to exposes the same amount of trackers as Firefox desktop has in it tracking protection panel via TrackingProtectionUseCases.
+  ```kotlin
+    val useCase = TrackingProtectionUseCases(sessionManager,engine)
+    useCase.fetchTrackingLogs(
+        session,
+        onSuccess = { trackersLog ->
+            // A list of all the tracker logger for this session
+        },
+        onError = { throwable ->
+            //A throwable indication what went wrong
+        }
+    )
+  ``
+
 * **browser-toolbar**
   * Resized icons on the toolbar see [#4490](https://github.com/mozilla-mobile/android-components/issues/4490) for more information.
   * Added a way to customize the color of the tracking protection icon via BrowserToolbar.

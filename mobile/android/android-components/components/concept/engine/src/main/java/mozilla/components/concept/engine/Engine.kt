@@ -7,6 +7,7 @@ package mozilla.components.concept.engine
 import android.content.Context
 import android.util.AttributeSet
 import androidx.annotation.MainThread
+import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.WebExtension
 import org.json.JSONObject
@@ -143,6 +144,23 @@ interface Engine {
         onError: ((Throwable) -> Unit) = { }
     ): Unit = onError(UnsupportedOperationException("Clearing browsing data is not supported by this engine. " +
             "Check both the engine and engine session implementation."))
+
+    /**
+     * Fetch a list of trackers logged for a given [session] .
+     *
+     * @param session the session where the trackers were logged.
+     * @param onSuccess callback invoked if the data was fetched successfully.
+     * @param onError (optional) callback invoked if fetching the data caused an exception.
+     */
+    fun getTrackersLog(
+        session: EngineSession,
+        onSuccess: (List<TrackerLog>) -> Unit,
+        onError: (Throwable) -> Unit = { }
+    ): Unit = onError(
+        UnsupportedOperationException(
+            "getTrackersLog is not supported by this engine."
+        )
+    )
 
     /**
      * Provides access to the settings of this engine.
