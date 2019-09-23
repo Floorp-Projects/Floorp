@@ -892,6 +892,14 @@ var ExtensionTestUtils = {
       "services.settings.server",
       "http://localhost:7777/remote-settings-dummy/v1"
     );
+    // Make sure that loading the default settings for url-classifier-skip-urls
+    // doesn't interfere with running our tests while IDB operations are in
+    // flight by overriding the default remote settings bucket pref name to
+    // ensure that the IDB database isn't created in the first place.
+    Services.prefs.setStringPref(
+      "services.settings.default_bucket",
+      "nonexistent-bucket-foo"
+    );
   },
 
   addonManagerStarted: false,
