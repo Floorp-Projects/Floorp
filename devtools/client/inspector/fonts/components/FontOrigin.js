@@ -29,6 +29,13 @@ class FontOrigin extends PureComponent {
     this.onCopyURL = this.onCopyURL.bind(this);
   }
 
+  clipTitle(title, maxLength = 512) {
+    if (title.length > maxLength) {
+      return title.substring(0, maxLength - 2) + "…";
+    }
+    return title;
+  }
+
   onCopyURL() {
     clipboardHelper.copyString(this.props.font.URI);
   }
@@ -52,7 +59,7 @@ class FontOrigin extends PureComponent {
       dom.span(
         {
           className: "url",
-          title: url,
+          title: this.clipTitle(url),
         },
         url
       ),
