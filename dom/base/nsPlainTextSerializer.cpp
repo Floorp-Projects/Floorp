@@ -366,7 +366,7 @@ nsPlainTextSerializer::Init(const uint32_t aFlags, uint32_t aWrapColumn,
   mSettings.Init(aFlags, aWrapColumn);
   mOutputManager.emplace(mSettings.GetFlags(), aOutput);
 
-  if (MayWrap() && MayBreakLines()) {
+  if (mSettings.MayWrap() && mSettings.MayBreakLines()) {
     mLineBreaker = nsContentUtils::LineBreaker();
   }
 
@@ -1249,7 +1249,7 @@ static bool IsSpaceStuffable(const char16_t* s) {
 }
 
 void nsPlainTextSerializer::MaybeWrapAndOutputCompleteLines() {
-  if (!MayWrap()) {
+  if (!mSettings.MayWrap()) {
     return;
   }
 
