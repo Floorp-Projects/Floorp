@@ -11,9 +11,8 @@ import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.media.state.MediaState
-import mozilla.components.service.fxa.sharing.ShareableAccount
-import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.Change
@@ -62,31 +61,6 @@ fun List<Tab>.toSessionBundle(context: Context): MutableList<Session> {
         }
     }
     return sessionBundle
-}
-
-/**
- * Describes various onboarding states.
- */
-sealed class OnboardingState {
-    // Signed out, without an option to auto-login using a shared FxA account.
-    object SignedOutNoAutoSignIn : OnboardingState()
-    // Signed out, with an option to auto-login into a shared FxA account.
-    data class SignedOutCanAutoSignIn(val withAccount: ShareableAccount) : OnboardingState()
-    // Signed in.
-    object SignedIn : OnboardingState()
-}
-
-sealed class Mode {
-    object Normal : Mode()
-    object Private : Mode()
-    data class Onboarding(val state: OnboardingState) : Mode()
-
-    companion object {
-        fun fromBrowsingMode(browsingMode: BrowsingMode) = when (browsingMode) {
-            BrowsingMode.Normal -> Normal
-            BrowsingMode.Private -> Private
-        }
-    }
 }
 
 data class SessionControlState(

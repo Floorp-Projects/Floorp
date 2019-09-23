@@ -5,7 +5,6 @@
 package org.mozilla.fenix.home
 
 import android.animation.Animator
-import android.content.Context
 import android.content.DialogInterface
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
@@ -49,7 +48,6 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
-import mozilla.components.concept.sync.Profile
 import mozilla.components.feature.media.ext.getSession
 import mozilla.components.feature.media.ext.pauseIfPlaying
 import mozilla.components.feature.media.ext.playIfPaused
@@ -72,17 +70,15 @@ import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.toTab
 import org.mozilla.fenix.home.sessioncontrol.CollectionAction
-import org.mozilla.fenix.home.sessioncontrol.Mode
 import org.mozilla.fenix.home.sessioncontrol.OnboardingAction
-import org.mozilla.fenix.home.sessioncontrol.OnboardingState
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
 import org.mozilla.fenix.home.sessioncontrol.SessionControlChange
 import org.mozilla.fenix.home.sessioncontrol.SessionControlComponent
@@ -103,7 +99,7 @@ import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.whatsnew.WhatsNew
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
-class HomeFragment : Fragment(), AccountObserver {
+class HomeFragment : Fragment() {
 
     private val bus = ActionBusFactory.get(this)
 
@@ -141,6 +137,7 @@ class HomeFragment : Fragment(), AccountObserver {
 
     private val onboarding by lazy { FenixOnboarding(requireContext()) }
     private lateinit var sessionControlComponent: SessionControlComponent
+    private lateinit var currentMode: CurrentMode
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -167,7 +164,12 @@ class HomeFragment : Fragment(), AccountObserver {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
 
-        val mode = currentMode(view.context)
+        currentMode = CurrentMode(
+            view.context,
+            onboarding,
+            browsingModeManager,
+            getManagedEmitter()
+        )
 
         sessionControlComponent = SessionControlComponent(
             view.homeLayout,
@@ -178,10 +180,10 @@ class HomeFragment : Fragment(), AccountObserver {
             ) {
                 SessionControlViewModel(
                     SessionControlState(
-                        listOf(),
-                        setOf(),
+                        emptyList(),
+                        emptySet(),
                         requireComponents.core.tabCollectionStorage.cachedTabCollections,
-                        mode
+                        currentMode.getCurrentMode()
                     )
                 )
             }
@@ -304,17 +306,28 @@ class HomeFragment : Fragment(), AccountObserver {
         getManagedEmitter<SessionControlChange>().onNext(
             SessionControlChange.Change(
                 tabs = getListOfSessions().toTabs(),
-                mode = currentMode(context),
+                mode = currentMode.getCurrentMode(),
                 collections = components.core.tabCollectionStorage.cachedTabCollections
             )
         )
 
         (activity as AppCompatActivity).supportActionBar?.hide()
-        components.backgroundServices.accountManager.register(this, owner = this)
 
-        if (context.settings.showPrivateModeContextualFeatureRecommender &&
-            browsingModeManager.mode.isPrivate
-        ) {
+        requireComponents.backgroundServices.accountManager.register(currentMode, owner = this)
+        requireComponents.backgroundServices.accountManager.register(object : AccountObserver {
+            override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
+                if (authType != AuthType.Existing) {
+                    view?.let {
+                        FenixSnackbar.make(it, Snackbar.LENGTH_SHORT).setText(
+                            it.context.getString(R.string.onboarding_firefox_account_sync_is_on)
+                        ).show()
+                    }
+                }
+            }
+        }, owner = this)
+
+        if (context.settings().showPrivateModeContextualFeatureRecommender &&
+            browsingModeManager.mode.isPrivate) {
             recommendPrivateBrowsingShortcut()
         }
     }
@@ -330,14 +343,8 @@ class HomeFragment : Fragment(), AccountObserver {
     private fun handleOnboardingAction(action: OnboardingAction) {
         Do exhaustive when (action) {
             is OnboardingAction.Finish -> {
-                onboarding.finish()
                 homeLayout?.progress = 0F
-                val mode = currentMode(requireContext())
-                getManagedEmitter<SessionControlChange>().onNext(
-                    SessionControlChange.ModeChange(
-                        mode
-                    )
-                )
+                hideOnboarding()
             }
         }
     }
@@ -346,7 +353,7 @@ class HomeFragment : Fragment(), AccountObserver {
     private fun handleTabAction(action: TabAction) {
         Do exhaustive when (action) {
             is TabAction.SaveTabGroup -> {
-                if ((activity as HomeActivity).browsingModeManager.mode.isPrivate) return
+                if (browsingModeManager.mode.isPrivate) return
                 invokePendingDeleteJobs()
                 saveTabToCollection(action.selectedTabSessionId)
             }
@@ -429,7 +436,7 @@ class HomeFragment : Fragment(), AccountObserver {
             is TabAction.ShareTabs -> {
                 invokePendingDeleteJobs()
                 val shareTabs = sessionManager
-                    .sessionsOfType(private = (activity as HomeActivity).browsingModeManager.mode.isPrivate)
+                    .sessionsOfType(private = browsingModeManager.mode.isPrivate)
                     .map { ShareTab(it.url, it.title) }
                     .toList()
                 share(tabs = shareTabs)
@@ -616,10 +623,12 @@ class HomeFragment : Fragment(), AccountObserver {
     }
 
     private fun hideOnboardingIfNeeded() {
-        if (!onboarding.userHasBeenOnboarded()) {
-            onboarding.finish()
-            emitModeChanges()
-        }
+        if (!onboarding.userHasBeenOnboarded()) hideOnboarding()
+    }
+
+    private fun hideOnboarding() {
+        onboarding.finish()
+        currentMode.emitModeChanges()
     }
 
     private fun setupHomeMenu() {
@@ -810,45 +819,6 @@ class HomeFragment : Fragment(), AccountObserver {
             )
         nav(R.id.homeFragment, directions)
     }
-
-    private fun currentMode(context: Context): Mode = if (!onboarding.userHasBeenOnboarded()) {
-        val accountManager = requireComponents.backgroundServices.accountManager
-        val account = accountManager.authenticatedAccount()
-        if (account != null) {
-            Mode.Onboarding(OnboardingState.SignedIn)
-        } else {
-            val availableAccounts = accountManager.shareableAccounts(context)
-            if (availableAccounts.isEmpty()) {
-                Mode.Onboarding(OnboardingState.SignedOutNoAutoSignIn)
-            } else {
-                Mode.Onboarding(OnboardingState.SignedOutCanAutoSignIn(availableAccounts[0]))
-            }
-        }
-    } else {
-        Mode.fromBrowsingMode(browsingModeManager.mode)
-    }
-
-    private fun emitModeChanges() {
-        context?.let {
-            val mode = currentMode(it)
-            getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.ModeChange(mode))
-        }
-    }
-
-    override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
-        if (authType != AuthType.Existing) {
-            view?.let {
-                FenixSnackbar.make(it, Snackbar.LENGTH_SHORT).setText(
-                    it.context.getString(R.string.onboarding_firefox_account_sync_is_on)
-                ).show()
-            }
-        }
-        emitModeChanges()
-    }
-
-    override fun onAuthenticationProblems() = emitModeChanges()
-    override fun onLoggedOut() = emitModeChanges()
-    override fun onProfileUpdated(profile: Profile) = emitModeChanges()
 
     private fun scrollAndAnimateCollection(
         tabsAddedToCollectionSize: Int,

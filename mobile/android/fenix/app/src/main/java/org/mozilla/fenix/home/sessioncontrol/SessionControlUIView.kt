@@ -13,6 +13,8 @@ import io.reactivex.Observable
 import io.reactivex.Observer
 import io.reactivex.functions.Consumer
 import org.mozilla.fenix.R
+import org.mozilla.fenix.home.Mode
+import org.mozilla.fenix.home.OnboardingState
 import org.mozilla.fenix.mvi.UIView
 
 val noTabMessage = AdapterItem.NoContentMessage(
