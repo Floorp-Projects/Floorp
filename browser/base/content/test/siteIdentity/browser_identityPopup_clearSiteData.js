@@ -18,15 +18,6 @@ ChromeUtils.defineModuleGetter(
   "resource://testing-common/SiteDataTestUtils.jsm"
 );
 
-add_task(async function setup() {
-  let oldCanRecord = Services.telemetry.canRecordExtended;
-  Services.telemetry.canRecordExtended = true;
-
-  registerCleanupFunction(() => {
-    Services.telemetry.canRecordExtended = oldCanRecord;
-  });
-});
-
 async function testClearing(
   testQuota,
   testCookies,
@@ -95,8 +86,6 @@ async function testClearing(
       ]);
     }
 
-    Services.telemetry.clearEvents();
-
     // Click the "Clear data" button.
     let siteDataUpdated = TestUtils.topicObserved(
       "sitedatamanager:sites-updated"
@@ -112,17 +101,6 @@ async function testClearing(
     clearButton.click();
     await hideEvent;
     await removeDialogPromise;
-
-    let events = Services.telemetry.snapshotEvents(
-      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
-    ).parent;
-    let buttonEvents = events.filter(
-      e =>
-        e[1] == "security.ui.identitypopup" &&
-        e[2] == "click" &&
-        e[3] == "clear_sitedata"
-    );
-    is(buttonEvents.length, 1, "recorded telemetry for the button click");
 
     await siteDataUpdated;
 
