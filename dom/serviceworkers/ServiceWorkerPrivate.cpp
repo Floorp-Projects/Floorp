@@ -1746,6 +1746,8 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
     return rv;
   }
 
+  info.mAgentClusterId = reg->AgentClusterId();
+
   AutoJSAPI jsapi;
   jsapi.Init();
   ErrorResult error;
