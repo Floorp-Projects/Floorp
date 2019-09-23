@@ -9,16 +9,15 @@ If you built JS, you already built the tests.
 
 The tests are built by default when you build JS. All the tests are compiled
 into a single binary named jsapi-tests. They all run in a single process.
+They must be run from the js/src directory.
 
 To run the tests:
 
-    cd $OBJDIR/dist/bin
-    ./jsapi-tests
+    $OBJDIR/dist/bin/jsapi-tests
 
 To run the tests in a debugger:
 
-    cd $OBJDIR/dist/bin
-    gdb ./jsapi-tests
+    gdb $OBJDIR/dist/bin/jsapi-tests
 
 
 ## Creating new tests
@@ -35,7 +34,7 @@ To run the tests in a debugger:
 
 Here is a sample test:
 
-    #include "tests.h"
+    #include "jsapi-tests/tests.h"
 
     BEGIN_TEST(testIntString_bug515273)
     {
@@ -143,7 +142,7 @@ Before executing each test, the test framework calls the tests' init() member
 function, which populates the rt, cx, and global member variables.
 
 A test can customize the test setup process by overloading virtual member
-functions, like this:
+functions from the JSAPITest class, like this:
 
     const JSClass globalClassWithResolve = { ... };
 
