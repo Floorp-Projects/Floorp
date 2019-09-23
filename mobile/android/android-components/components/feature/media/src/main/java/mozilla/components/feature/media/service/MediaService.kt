@@ -18,6 +18,8 @@ import mozilla.components.feature.media.ext.isForCustomTabSession
 import mozilla.components.feature.media.ext.pauseIfPlaying
 import mozilla.components.feature.media.ext.playIfPaused
 import mozilla.components.feature.media.ext.toPlaybackState
+import mozilla.components.feature.media.facts.emitNotificationPauseFact
+import mozilla.components.feature.media.facts.emitNotificationPlayFact
 import mozilla.components.feature.media.focus.AudioFocus
 import mozilla.components.feature.media.notification.MediaNotification
 import mozilla.components.feature.media.session.MediaSessionCallback
@@ -54,8 +56,14 @@ internal class MediaService : Service() {
 
         when (intent?.action) {
             ACTION_UPDATE_STATE -> processCurrentState()
-            ACTION_PLAY -> MediaStateMachine.state.playIfPaused()
-            ACTION_PAUSE -> MediaStateMachine.state.pauseIfPlaying()
+            ACTION_PLAY -> {
+                MediaStateMachine.state.playIfPaused()
+                emitNotificationPlayFact()
+            }
+            ACTION_PAUSE -> {
+                MediaStateMachine.state.pauseIfPlaying()
+                emitNotificationPauseFact()
+            }
             else -> logger.debug("Can't process action: ${intent?.action}")
         }
 

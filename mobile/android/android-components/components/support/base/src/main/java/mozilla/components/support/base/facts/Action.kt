@@ -27,6 +27,21 @@ enum class Action {
     COMMIT,
 
     /**
+     * The user has started playing something.
+     */
+    PLAY,
+
+    /**
+     * The user has paused something.
+     */
+    PAUSE,
+
+    /**
+     * The user has stopped something.
+     */
+    STOP,
+
+    /**
      * A generic interaction that can be caused by a previous action (e.g. the user clicks on a button which causes a
      * [Fact] with [CLICK] action to be emitted. This click may causes something to load which emits a follow-up a
      * [Fact] with [INTERACTION] action.
