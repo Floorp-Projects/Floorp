@@ -7,6 +7,7 @@ package mozilla.components.support.migration
 import android.content.Context
 import mozilla.components.support.base.log.logger.Logger
 import java.io.File
+import java.io.IOException
 import java.util.regex.Pattern
 
 private val logger = Logger("FennecProfile")
@@ -49,7 +50,12 @@ private fun findDefaultProfile(
     mozillaDirectory: File,
     fileName: String
 ): FennecProfile? {
-    val profiles = findProfiles(mozillaDirectory, fileName)
+    val profiles = try {
+        findProfiles(mozillaDirectory, fileName)
+    } catch (e: IOException) {
+        logger.debug("IOException when reading profile")
+        return null
+    }
 
     if (profiles.isEmpty()) {
         logger.debug("No profiles found")
@@ -74,6 +80,7 @@ private fun findDefaultProfile(
 }
 
 @Suppress("ComplexMethod")
+@Throws(IOException::class)
 private fun findProfiles(
     mozillaDirectory: File,
     fileName: String = "profiles.ini"
