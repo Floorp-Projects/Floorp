@@ -351,6 +351,11 @@ a.breach-alert-link {
   background-position-x: right 10px;
 }
 
+.error-message-link {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 @supports -moz-bool-pref("browser.in-content.dark-mode") {
   @media (prefers-color-scheme: dark) {
     :host {

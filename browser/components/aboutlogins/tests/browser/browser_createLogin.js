@@ -394,3 +394,77 @@ add_task(async function test_cancel_create_login_with_logins_filtered_out() {
     );
   });
 });
+
+add_task(async function test_create_duplicate_login() {
+  let browser = gBrowser.selectedBrowser;
+  await ContentTask.spawn(browser, null, async () => {
+    let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
+    let createButton = loginList._createLoginButton;
+    createButton.click();
+
+    let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
+    let originInput = loginItem.shadowRoot.querySelector(
+      "input[name='origin']"
+    );
+    let usernameInput = loginItem.shadowRoot.querySelector(
+      "input[name='username']"
+    );
+    let passwordInput = loginItem.shadowRoot.querySelector(
+      "input[name='password']"
+    );
+    const EXISTING_ORIGIN = "https://example.com";
+    const EXISTING_USERNAME = "testuser2";
+    originInput.value = EXISTING_ORIGIN;
+    usernameInput.value = EXISTING_USERNAME;
+    passwordInput.value = "different password value";
+
+    let saveChangesButton = loginItem.shadowRoot.querySelector(
+      ".save-changes-button"
+    );
+    saveChangesButton.click();
+
+    await ContentTaskUtils.waitForCondition(
+      () => !loginItem._errorMessage.hidden,
+      "waiting until the error message is visible"
+    );
+    let duplicatedGuid = Object.values(loginList._logins).find(
+      v =>
+        v.login.origin == EXISTING_ORIGIN &&
+        v.login.username == EXISTING_USERNAME
+    ).login.guid;
+    is(
+      loginItem._errorMessageLink.dataset.errorGuid,
+      duplicatedGuid,
+      "Error message has GUID of existing duplicated login set on it"
+    );
+
+    let confirmationDialog = Cu.waiveXrays(
+      content.document.querySelector("confirmation-dialog")
+    );
+    ok(
+      confirmationDialog.hidden,
+      "the discard-changes dialog should be hidden before clicking the error-message-text"
+    );
+    loginItem._errorMessageLink.click();
+    ok(
+      !confirmationDialog.hidden,
+      "the discard-changes dialog should be visible"
+    );
+    let discardChangesButton = confirmationDialog.shadowRoot.querySelector(
+      ".confirm-button"
+    );
+    discardChangesButton.click();
+
+    await ContentTaskUtils.waitForCondition(
+      () =>
+        Object.keys(loginItem._login).length > 1 &&
+        loginItem._login.guid == duplicatedGuid,
+      "waiting until the existing duplicated login is selected"
+    );
+    is(
+      loginList._selectedGuid,
+      duplicatedGuid,
+      "the duplicated login should be selected in the list"
+    );
+  });
+});
