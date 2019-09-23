@@ -1658,12 +1658,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // MediaStream.
   nsCOMPtr<nsIPrincipal> mSrcStreamVideoPrincipal;
 
-  // True if we've dispatched a task in UnbindFromTree() which runs in a
-  // stable state and attempts to pause playback if we're not in a composed
-  // document. The flag stops us dispatching multiple tasks if the element
-  // is involved in a series of append/remove cycles.
-  bool mDispatchedTaskToPauseIfNotInDocument = false;
-
   // True if the autoplay media was blocked because it hadn't loaded metadata
   // yet.
   bool mBlockedAsWithoutMetadata = false;
