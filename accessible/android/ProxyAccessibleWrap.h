@@ -59,6 +59,11 @@ class ProxyAccessibleWrap : public AccessibleWrap {
   virtual bool GetSelectionBounds(int32_t* aStartOffset,
                                   int32_t* aEndOffset) override;
 
+  virtual void Pivot(int32_t aGranularity, bool aForward,
+                     bool aInclusive) override;
+
+  virtual void ExploreByTouch(float aX, float aY) override;
+
   virtual void WrapperDOMNodeID(nsString& aDOMNodeID) override;
 
  private:
