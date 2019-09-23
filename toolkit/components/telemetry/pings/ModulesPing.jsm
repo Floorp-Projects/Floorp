@@ -69,8 +69,7 @@ var TelemetryModules = Object.freeze({
       Preferences.get(
         MODULES_PING_INTERVAL_PREFERENCE,
         MODULES_PING_INTERVAL_SECONDS
-      ),
-      true /* skipFirst */
+      )
     );
   },
 
