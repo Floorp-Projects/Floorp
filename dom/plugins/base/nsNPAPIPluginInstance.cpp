@@ -1112,16 +1112,8 @@ void nsNPAPIPluginInstance::NotifyStartedPlaying() {
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
-
-  rv = WindowVolumeChanged(config.mVolume, config.mMuted);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  rv = WindowSuspendChanged(config.mSuspend);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
+  
+  mAudioChannelAgent->PullInitialUpdate();
 }
 
 void nsNPAPIPluginInstance::NotifyStoppedPlaying() {
