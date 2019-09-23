@@ -1,0 +1,51 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Library('winlauncher-freestanding')
+
+FORCE_STATIC_LIB = True
+
+# Our patched NtMapViewOfSection can be called before the process's import
+# table is populated.  Don't let the compiler insert any instrumentation
+# that might call an import.
+NO_PGO = True
+
+EXPORTS.mozilla += [
+    'LoaderAPIInterfaces.h',
+    'ModuleLoadInfo.h',
+]
+
+UNIFIED_SOURCES += [
+    'DllBlocklist.cpp',
+    'LoaderPrivateAPI.cpp',
+    'ModuleLoadFrame.cpp',
+]
+
+# This library must be compiled in a freestanding environment, as its code must
+# not assume that it has access to any runtime libraries.
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    CXXFLAGS += ['-Xclang']
+
+CXXFLAGS += [
+    '-ffreestanding',
+]
+
+# Forcibly include Freestanding.h into all source files in this library.
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    CXXFLAGS += ['-FI']
+else:
+    CXXFLAGS += ['-include']
+
+CXXFLAGS += [ SRCDIR + '/Freestanding.h' ]
+
+OS_LIBS += [
+    'ntdll',
+]
+
+DisableStlWrapping()
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Launcher Process')
