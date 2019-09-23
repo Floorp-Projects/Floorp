@@ -2394,6 +2394,27 @@ void nsGlobalWindowInner::UpdateTopInnerWindow() {
   mTopInnerWindow->UpdateWebSocketCount(-(int32_t)mNumOfOpenWebSockets);
 }
 
+bool nsGlobalWindowInner::CanShareMemory(const nsID& aAgentClusterId) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!StaticPrefs::dom_postMessage_sharedArrayBuffer_withCOOP_COEP()) {
+    return false;
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT(GetDocGroup());
+  // Ensure they are on the same agent cluster
+  if (!GetDocGroup()->AgentClusterId().Equals(aAgentClusterId)) {
+    return false;
+  }
+
+  // Ensure the both the coop and coep are set
+  RefPtr<BrowsingContext> bc = GetBrowsingContext();
+  MOZ_DIAGNOSTIC_ASSERT(bc);
+  // XXX Also check remoteType once Bug 1579992 is implemented.
+  return bc->Top()->GetOpenerPolicy() ==
+         nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP;
+}
+
 void nsPIDOMWindowInner::AddPeerConnection() {
   MOZ_ASSERT(NS_IsMainThread());
   mTopInnerWindow ? mTopInnerWindow->mActivePeerConnections++
