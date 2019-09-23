@@ -490,6 +490,7 @@ static bool enableAsyncStacks = false;
 static bool enableStreams = false;
 static bool enableReadableByteStreams = false;
 static bool enableBYOBStreamReaders = false;
+static bool enableWritableStreams = false;
 static bool enableFields = false;
 static bool enableAwaitFix = false;
 #ifdef JS_GC_ZEAL
@@ -3810,6 +3811,7 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
       .setStreamsEnabled(enableStreams)
       .setReadableByteStreamsEnabled(enableReadableByteStreams)
       .setBYOBStreamReadersEnabled(enableBYOBStreamReaders)
+      .setWritableStreamsEnabled(enableWritableStreams)
       .setFieldsEnabled(enableFields)
       .setAwaitFixEnabled(enableAwaitFix);
   options.behaviors().setDeferredParserAlloc(enableDeferredMode);
@@ -6243,6 +6245,13 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
     if (v.isBoolean()) {
       kind = v.toBoolean() ? ShellGlobalKind::WindowProxy
                            : ShellGlobalKind::GlobalObject;
+    }
+
+    if (!JS_GetProperty(cx, opts, "enableWritableStreams", &v)) {
+      return false;
+    }
+    if (v.isBoolean()) {
+      creationOptions.setWritableStreamsEnabled(v.toBoolean());
     }
 
     if (!JS_GetProperty(cx, opts, "systemPrincipal", &v)) {
@@ -10296,6 +10305,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableStreams = !op.getBoolOption("no-streams");
   enableReadableByteStreams = op.getBoolOption("enable-readable-byte-streams");
   enableBYOBStreamReaders = op.getBoolOption("enable-byob-stream-readers");
+  enableWritableStreams = op.getBoolOption("enable-writable-streams");
   enableFields = !op.getBoolOption("disable-experimental-fields");
   enableAwaitFix = op.getBoolOption("enable-experimental-await-fix");
 
@@ -11065,6 +11075,8 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "enable-byob-stream-readers",
                         "Enable support for getting BYOB readers for WHATWG "
                         "ReadableStreams of type \"bytes\"") ||
+      !op.addBoolOption('\0', "enable-writable-streams",
+                        "Enable support for WHATWG WritableStreams") ||
       !op.addBoolOption('\0', "disable-experimental-fields",
                         "Disable public fields in classes") ||
       !op.addBoolOption('\0', "enable-experimental-await-fix",
