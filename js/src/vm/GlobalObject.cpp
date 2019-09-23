@@ -25,6 +25,7 @@
 #include "builtin/streams/ReadableStream.h"      // js::ReadableStream
 #include "builtin/streams/ReadableStreamController.h"  // js::Readable{StreamDefault,ByteStream}Controller
 #include "builtin/streams/ReadableStreamReader.h"  // js::ReadableStreamDefaultReader
+#include "builtin/streams/WritableStream.h"        // js::WritableStream
 #include "builtin/Symbol.h"
 #include "builtin/TypedObject.h"
 #include "builtin/WeakMapObject.h"
@@ -107,6 +108,12 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
     case JSProto_ByteLengthQueuingStrategy:
     case JSProto_CountQueuingStrategy:
       return !cx->realm()->creationOptions().getStreamsEnabled();
+
+    case JSProto_WritableStream: {
+      const auto& realmOptions = cx->realm()->creationOptions();
+      return !realmOptions.getStreamsEnabled() ||
+             !realmOptions.getWritableStreamsEnabled();
+    }
 
     // Return true if the given constructor has been disabled at run-time.
     case JSProto_Atomics:
