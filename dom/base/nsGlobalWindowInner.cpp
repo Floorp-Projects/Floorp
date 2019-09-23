@@ -1778,12 +1778,16 @@ nsresult nsGlobalWindowInner::EnsureClientSource() {
     }
   }
 
-  // Generally the CSP is stored within the Client and cached on the document.
-  // At the time of CSP parsing however, the Client has not been created yet,
-  // hence we store the CSP on the document and propagate/sync the CSP with
-  // Client here when we create the Client.
   if (mClientSource) {
+    // Generally the CSP is stored within the Client and cached on the document.
+    // At the time of CSP parsing however, the Client has not been created yet,
+    // hence we store the CSP on the document and propagate/sync the CSP with
+    // Client here when we create the Client.
     mClientSource->SetCsp(mDoc->GetCsp());
+
+    DocGroup* docGroup = GetDocGroup();
+    MOZ_DIAGNOSTIC_ASSERT(docGroup);
+    mClientSource->SetAgentClusterId(docGroup->AgentClusterId());
   }
 
   // Its possible that we got a client just after being frozen in
