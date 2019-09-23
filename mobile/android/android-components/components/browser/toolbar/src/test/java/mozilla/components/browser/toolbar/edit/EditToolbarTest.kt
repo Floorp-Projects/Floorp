@@ -249,7 +249,7 @@ class EditToolbarTest {
 
         assertEquals(56, qrView.measuredWidth)
         assertEquals(56, qrView.measuredHeight)
-        assertEquals(16, qrView.paddingLeft)
+        assertEquals(0, qrView.paddingLeft)
         assertEquals(16, qrView.paddingRight)
         assertEquals(16, qrView.paddingTop)
         assertEquals(16, qrView.paddingBottom)

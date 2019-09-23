@@ -28,7 +28,7 @@ internal class MenuButton(
 
     @VisibleForTesting internal var menu: BrowserMenu? = null
 
-    private val menuIcon = AppCompatImageView(context).apply {
+    internal val menuIcon = AppCompatImageView(context).apply {
         setPadding(resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_menu_padding))
         setImageResource(mozilla.components.ui.icons.R.drawable.mozac_ic_menu)
         contentDescription = context.getString(R.string.mozac_browser_toolbar_menu_button)

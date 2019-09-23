@@ -7,6 +7,7 @@ package mozilla.components.browser.toolbar.internal
 import android.transition.TransitionManager
 import android.view.View
 import android.view.ViewGroup
+import mozilla.components.browser.toolbar.display.removeLeftPaddingIfNeeded
 import mozilla.components.concept.toolbar.Toolbar
 
 internal fun ViewGroup.wrapAction(action: Toolbar.Action): ActionWrapper {
@@ -31,13 +32,13 @@ internal fun measureActions(actions: List<ActionWrapper>, size: Int): Int {
     return actions
         .asSequence()
         .mapNotNull { it.view }
-        .map { view ->
+        .mapIndexed { index, view ->
             val widthSpec = if (view.minimumWidth > size) {
                 View.MeasureSpec.makeMeasureSpec(view.minimumWidth, View.MeasureSpec.EXACTLY)
             } else {
                 sizeSpec
             }
-
+            view.removeLeftPaddingIfNeeded(index != 0)
             view.measure(widthSpec, sizeSpec)
             size
         }
