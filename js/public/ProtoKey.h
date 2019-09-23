@@ -117,7 +117,7 @@
        &js::ReadableStreamDefaultController::class_)                         \
   REAL(ReadableByteStreamController, InitViaClassSpec,                       \
        &js::ReadableByteStreamController::class_)                            \
-  IMAGINARY(WritableStream, dummy, dummy)                                    \
+  REAL(WritableStream, InitViaClassSpec, &js::WritableStream::class_)        \
   IMAGINARY(WritableStreamDefaultWriter, dummy, dummy)                       \
   IMAGINARY(WritableStreamDefaultController, dummy, dummy)                   \
   REAL(ByteLengthQueuingStrategy, InitViaClassSpec,                          \
