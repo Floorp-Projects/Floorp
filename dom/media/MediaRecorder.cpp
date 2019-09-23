@@ -1604,11 +1604,17 @@ void MediaRecorder::NotifyOwnerDocumentActivityChanged() {
   Document* doc = window->GetExtantDoc();
   NS_ENSURE_TRUE_VOID(doc);
 
+  bool inFrameSwap = false;
+  if (nsDocShell* docShell = static_cast<nsDocShell*>(doc->GetDocShell())) {
+    inFrameSwap = docShell->InFrameSwap();
+  }
+
   LOG(LogLevel::Debug, ("MediaRecorder %p NotifyOwnerDocumentActivityChanged "
                         "IsActive=%d, "
-                        "IsVisible=%d, ",
-                        this, doc->IsActive(), doc->IsVisible()));
-  if (!doc->IsActive() || !doc->IsVisible()) {
+                        "IsVisible=%d, "
+                        "InFrameSwap=%d",
+                        this, doc->IsActive(), doc->IsVisible(), inFrameSwap));
+  if (!doc->IsActive() || !(inFrameSwap || doc->IsVisible())) {
     // Stop the session.
     ErrorResult result;
     Stop(result);

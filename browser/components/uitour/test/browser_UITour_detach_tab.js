@@ -21,7 +21,7 @@ function test() {
 
 /**
  * When tab is changed we're tearing the tour down. So the UITour client has to always be aware of this
- * fact and therefore listens to pageshow events.
+ * fact and therefore listens to visibilitychange events.
  * In particular this scenario happens for detaching the tab (ie. moving it to a new window).
  */
 var tests = [
@@ -54,30 +54,31 @@ var tests = [
       gBrowser.selectedBrowser,
       myDocIdentifier,
       contentMyDocIdentifier => {
-        let onPageShow = () => {
+        let onVisibilityChange = () => {
           if (!content.document.hidden) {
             let win = Cu.waiveXrays(content);
             win.Mozilla.UITour.showHighlight("appMenu");
           }
         };
-        content.window.addEventListener("pageshow", onPageShow, {
-          mozSystemGroup: true,
-        });
+        content.document.addEventListener(
+          "visibilitychange",
+          onVisibilityChange
+        );
         content.document.myExpando = contentMyDocIdentifier;
       }
     );
     gContentAPI.showHighlight("appMenu");
 
-    await elementVisiblePromise(highlight, "old window highlight");
+    await elementVisiblePromise(highlight);
 
     gContentWindow = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
     await browserStartupDeferred.promise;
 
-    // This highlight should be shown thanks to the pageshow listener.
+    // This highlight should be shown thanks to the visibilitychange listener.
     let newWindowHighlight = gContentWindow.document.getElementById(
       "UITourHighlight"
     );
-    await elementVisiblePromise(newWindowHighlight, "new window highlight");
+    await elementVisiblePromise(newWindowHighlight);
 
     let selectedTab = gContentWindow.gBrowser.selectedTab;
     await ContentTask.spawn(

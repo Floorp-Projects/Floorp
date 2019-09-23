@@ -7784,12 +7784,9 @@ nsresult nsContentUtils::SendMouseEvent(
 }
 
 /* static */
-void nsContentUtils::FirePageHideEventForFrameLoaderSwap(
-    nsIDocShellTreeItem* aItem, EventTarget* aChromeEventHandler,
-    bool aOnlySystemGroup) {
-  MOZ_DIAGNOSTIC_ASSERT(aItem);
-  MOZ_DIAGNOSTIC_ASSERT(aChromeEventHandler);
-
+void nsContentUtils::FirePageHideEvent(nsIDocShellTreeItem* aItem,
+                                       EventTarget* aChromeEventHandler,
+                                       bool aOnlySystemGroup) {
   RefPtr<Document> doc = aItem->GetDocument();
   NS_ASSERTION(doc, "What happened here?");
   doc->OnPageHide(true, aChromeEventHandler, aOnlySystemGroup);
@@ -7804,8 +7801,7 @@ void nsContentUtils::FirePageHideEventForFrameLoaderSwap(
 
   for (uint32_t i = 0; i < kids.Length(); ++i) {
     if (kids[i]) {
-      FirePageHideEventForFrameLoaderSwap(kids[i], aChromeEventHandler,
-                                          aOnlySystemGroup);
+      FirePageHideEvent(kids[i], aChromeEventHandler, aOnlySystemGroup);
     }
   }
 }
@@ -7815,9 +7811,10 @@ void nsContentUtils::FirePageHideEventForFrameLoaderSwap(
 // on documents that are still loading or only on documents that are already
 // loaded.
 /* static */
-void nsContentUtils::FirePageShowEventForFrameLoaderSwap(
-    nsIDocShellTreeItem* aItem, EventTarget* aChromeEventHandler,
-    bool aFireIfShowing, bool aOnlySystemGroup) {
+void nsContentUtils::FirePageShowEvent(nsIDocShellTreeItem* aItem,
+                                       EventTarget* aChromeEventHandler,
+                                       bool aFireIfShowing,
+                                       bool aOnlySystemGroup) {
   int32_t childCount = 0;
   aItem->GetInProcessChildCount(&childCount);
   AutoTArray<nsCOMPtr<nsIDocShellTreeItem>, 8> kids;
@@ -7828,8 +7825,8 @@ void nsContentUtils::FirePageShowEventForFrameLoaderSwap(
 
   for (uint32_t i = 0; i < kids.Length(); ++i) {
     if (kids[i]) {
-      FirePageShowEventForFrameLoaderSwap(kids[i], aChromeEventHandler,
-                                          aFireIfShowing, aOnlySystemGroup);
+      FirePageShowEvent(kids[i], aChromeEventHandler, aFireIfShowing,
+                        aOnlySystemGroup);
     }
   }
 
