@@ -177,7 +177,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "10aa369745cc"
+        "revision": "213f4745c6a6"
     },
     "fy-NL": {
         "platforms": [
@@ -333,7 +333,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "b822a32a2396"
+        "revision": "3a6c0762216c"
     },
     "mr": {
         "platforms": [
@@ -543,6 +543,6 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "6b0f7af2a18f"
+        "revision": "1d1e1da7fdca"
     }
 }
