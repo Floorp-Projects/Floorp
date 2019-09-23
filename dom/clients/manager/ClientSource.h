@@ -154,6 +154,10 @@ class ClientSource final : public ClientThing<ClientSourceChild> {
   void SetCspInfo(const mozilla::ipc::CSPInfo& aCSPInfo);
   const Maybe<mozilla::ipc::CSPInfo>& GetCspInfo();
 
+  void SetAgentClusterId(const nsID& aId) {
+    mClientInfo.SetAgentClusterId(aId);
+  }
+
   void Traverse(nsCycleCollectionTraversalCallback& aCallback,
                 const char* aName, uint32_t aFlags);
 
