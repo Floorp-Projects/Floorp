@@ -81,11 +81,11 @@ add_task(async function test_showLoginItemErrors() {
       );
 
       const loginItemErrorMessageText = loginItemErrorMessage.querySelector(
-        "span"
+        "span:not([hidden])"
       );
-      ok(
-        loginItemErrorMessageText.dataset.l10nId ===
-          "about-logins-error-message-duplicate-login",
+      is(
+        loginItemErrorMessageText.dataset.l10nId,
+        "about-logins-error-message-duplicate-login",
         "The correct error message is displayed."
       );
 
