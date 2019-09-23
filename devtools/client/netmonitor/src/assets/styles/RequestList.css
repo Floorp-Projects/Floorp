@@ -96,6 +96,7 @@
 
 .requests-list-headers,
 .ws-frames-list-headers {
+  height: 24px;
   padding: 0;
   color: var(--theme-body-color);
   background-color: var(--theme-toolbar-background);
@@ -103,7 +104,6 @@
 
 .requests-list-headers th,
 .ws-frames-list-headers th {
-  height: calc(var(--theme-toolbar-height) + 1px);
   border-bottom: 1px solid var(--theme-splitter-color);
 }
 
@@ -122,7 +122,7 @@
   border-width: 0;
   border-inline-start-width: 1px;
   width: 100%;
-  min-height: var(--theme-toolbar-height);
+  min-height: 23px;
   text-align: start;
   color: inherit;
   padding: 1px 4px;

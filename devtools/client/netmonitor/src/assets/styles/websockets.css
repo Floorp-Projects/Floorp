@@ -74,6 +74,11 @@
   text-align: left;
 }
 
+#messages-panel #ws-frame-rawData-header,
+#messages-panel #ws-frame-formattedData-header {
+  width: 100%
+}
+
 /* Styles related to JSONPreview */
 
 #messages-panel .treeTable .objectBox {

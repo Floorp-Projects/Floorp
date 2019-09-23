@@ -16,9 +16,6 @@
   --theme-body-font-size: 11px;
   --theme-code-font-size: 11px;
 
-  /* Toolbar size (excluding borders) */
-  --theme-toolbar-height: 24px;
-
   /* For accessibility purposes we want to enhance the focus styling. This
    * should improve keyboard navigation usability. */
   --theme-focus-outline: 1px dotted var(--theme-focus-outline-color);

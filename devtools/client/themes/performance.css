@@ -144,10 +144,6 @@
   line-height: 0;
 }
 
-#recordings-pane .devtools-toolbar .devtools-button {
-  height: calc(var(--theme-toolbar-height) - 2px);
-}
-
 .theme-sidebar {
   position: relative;
 }
