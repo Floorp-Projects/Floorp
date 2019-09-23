@@ -35,7 +35,7 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvNavigateText(
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvSetSelection(
     uint64_t aID, int32_t aStart, int32_t aEnd) {
   if (auto acc = IdToAccessibleWrap(aID)) {
-    // XXX: Forward to appropriate wrapper method.
+    acc->SetSelection(aStart, aEnd);
   }
 
   return IPC_OK();
