@@ -124,16 +124,6 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   // @param aText Ignored if aIsLineBreak is true.
   void DoAddText(bool aIsLineBreak, const nsAString& aText);
 
-  // Inlined functions
-  inline bool MayWrap() const {
-    return mSettings.GetWrapColumn() &&
-           mSettings.HasFlag(nsIDocumentEncoder::OutputFormatted |
-                             nsIDocumentEncoder::OutputWrap);
-  }
-  inline bool MayBreakLines() const {
-    return !mSettings.HasFlag(nsIDocumentEncoder::OutputDisallowLineBreaking);
-  }
-
   inline bool DoOutput() const { return mHeadLevel == 0; }
 
   static inline bool IsQuotedLine(const nsAString& aLine) {
@@ -189,6 +179,15 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
     bool GetWithRubyAnnotation() const { return mWithRubyAnnotation; }
 
     uint32_t GetWrapColumn() const { return mWrapColumn; }
+
+    bool MayWrap() const {
+      return GetWrapColumn() && HasFlag(nsIDocumentEncoder::OutputFormatted |
+                                        nsIDocumentEncoder::OutputWrap);
+    }
+
+    bool MayBreakLines() const {
+      return !HasFlag(nsIDocumentEncoder::OutputDisallowLineBreaking);
+    }
 
    private:
     // @param aPrefHeaderStrategy Pref: converter.html2txt.header_strategy.
