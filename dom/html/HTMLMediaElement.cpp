@@ -2175,7 +2175,7 @@ void HTMLMediaElement::Load() {
        HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay),
        AutoplayPolicy::IsAllowedToPlay(*this), OwnerDoc(),
        DocumentOrigin(OwnerDoc()).get(),
-       OwnerDoc() ? OwnerDoc()->HasBeenUserGestureActivated() : 0, mMuted,
+       OwnerDoc()->HasBeenUserGestureActivated(), mMuted,
        mVolume));
 
   if (mIsRunningLoadMethod) {
