@@ -432,6 +432,44 @@ class FxAccounts {
   }
 
   /**
+   * Returns an array listing all the OAuth clients
+   * connected to the authenticated user's account.
+   * Devices and web sessions are not included.
+   *
+   * @typedef {Object} AttachedClient
+   * @property {String} id - OAuth `client_id` of the client.
+   * @property {String} name - Client name. e.g. Firefox Monitor.
+   * @property {Number} lastAccessTime - Last access time in milliseconds.
+   *
+   * @returns {Array.<AttachedClient>} A list of attached clients.
+   */
+  async listAttachedOAuthClients() {
+    return this._withVerifiedAccountState(async state => {
+      const { sessionToken } = await state.getUserAccountData(["sessionToken"]);
+      const attachedClients = await this._internal.fxAccountsClient.attachedClients(
+        sessionToken
+      );
+      return attachedClients.reduce((oauthClients, client) => {
+        // This heuristic aims to keep tokens for "associated services"
+        // while throwing away the "browser" ones.
+        if (
+          client.clientId &&
+          !client.deviceId &&
+          !client.sessionTokenId &&
+          client.scope
+        ) {
+          oauthClients.push({
+            id: client.clientId,
+            name: client.name,
+            lastAccessTime: client.lastAccessTime,
+          });
+        }
+        return oauthClients;
+      }, []);
+    });
+  }
+
+  /**
    * Retrieves an OAuth authorization code
    *
    * @param {Object} options

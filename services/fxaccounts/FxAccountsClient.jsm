@@ -235,6 +235,22 @@ this.FxAccountsClient.prototype = {
   },
 
   /**
+   * List all the clients connected to the authenticated user's account,
+   * including devices, OAuth clients, and web sessions.
+   *
+   * @param sessionTokenHex
+   *        The session token encoded in hex
+   * @return Promise
+   */
+  async attachedClients(sessionTokenHex) {
+    const credentials = await deriveHawkCredentials(
+      sessionTokenHex,
+      "sessionToken"
+    );
+    return this._request("/account/attached_clients", "GET", credentials);
+  },
+
+  /**
    * Query for the information required to derive
    * scoped encryption keys requested by the specified OAuth client.
    *
