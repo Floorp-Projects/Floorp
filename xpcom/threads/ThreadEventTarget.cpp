@@ -92,7 +92,9 @@ ThreadEventTarget::ThreadEventTarget(ThreadTargetSink* aSink,
   mThread = PR_GetCurrentThread();
 }
 
-void ThreadEventTarget::SetCurrentThread() { mThread = PR_GetCurrentThread(); }
+void ThreadEventTarget::SetCurrentThread(PRThread* aThread) {
+  mThread = aThread;
+}
 
 NS_IMPL_ISUPPORTS(ThreadEventTarget, nsIEventTarget, nsISerialEventTarget)
 

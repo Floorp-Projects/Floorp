@@ -9,6 +9,7 @@
 %{C++
 #include "nsCOMPtr.h"
 #include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Atomics.h"
 %}
 
 native alreadyAddRefed_nsIRunnable(already_AddRefed<nsIRunnable>);
@@ -85,7 +86,10 @@ public:
   bool IsOnCurrentThread();
 
 protected:
-  PRThread* mThread;
+  // This can be written from multiple threads on thread creation, which would
+  // technically be UB even though they are writing the same value if it's not
+  // marked as atomic.
+  mozilla::Atomic<PRThread*> mThread;
 
   nsIEventTarget() : mThread(nullptr) {}
   %}
