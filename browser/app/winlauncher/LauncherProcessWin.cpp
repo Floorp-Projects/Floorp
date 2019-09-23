@@ -139,6 +139,10 @@ static bool DoLauncherProcessChecks(int& argc, wchar_t** argv) {
   bool result = false;
 
 #if defined(MOZ_LAUNCHER_PROCESS)
+  // We still prefer to compare file ids.  Comparing NT paths i.e. passing
+  // CompareNtPathsOnly to IsSameBinaryAsParentProcess is much faster, but
+  // we're not 100% sure that NT path comparison perfectly prevents the
+  // launching loop of the launcher process.
   mozilla::LauncherResult<bool> isSame = mozilla::IsSameBinaryAsParentProcess();
   if (isSame.isOk()) {
     result = !isSame.unwrap();
