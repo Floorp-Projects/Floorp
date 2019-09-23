@@ -219,6 +219,12 @@ ALL_PROCESSES += [
 
     # 360 Safeguard/360 Total Security causes a11y crashes, bug 1536227.
     DllBlocklistEntry("safemon64.dll", ALL_VERSIONS),
+
+    # FYunZip and PuddingZip cause crashes, bug 1576728
+    DllBlocklistEntry("oly64.dll", ALL_VERSIONS, condition='NIGHTLY_BUILD'),
+    DllBlocklistEntry("oly.dll", ALL_VERSIONS, condition='NIGHTLY_BUILD'),
+    DllBlocklistEntry("pdzipmenu64.dll", ALL_VERSIONS, condition='NIGHTLY_BUILD'),
+    DllBlocklistEntry("pdzipmenu32.dll", ALL_VERSIONS, condition='NIGHTLY_BUILD'),
 ]
 
 ALL_PROCESSES_TESTS += [
