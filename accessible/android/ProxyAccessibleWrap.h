@@ -68,6 +68,12 @@ class ProxyAccessibleWrap : public AccessibleWrap {
 
   virtual void SetSelection(int32_t aStart, int32_t aEnd) override;
 
+  virtual void Cut() override;
+
+  virtual void Copy() override;
+
+  virtual void Paste() override;
+
   virtual void ExploreByTouch(float aX, float aY) override;
 
   virtual void WrapperDOMNodeID(nsString& aDOMNodeID) override;
