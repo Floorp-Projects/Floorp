@@ -3163,7 +3163,7 @@ void nsPluginInstanceOwner::SetFrame(nsPluginFrame* aFrame) {
 
   // If we already have a frame that is changing or going away...
   if (mPluginFrame) {
-    if (content && content->OwnerDoc() && content->OwnerDoc()->GetWindow()) {
+    if (content && content->OwnerDoc()->GetWindow()) {
       nsCOMPtr<EventTarget> windowRoot =
           content->OwnerDoc()->GetWindow()->GetTopWindowRoot();
       if (windowRoot) {
