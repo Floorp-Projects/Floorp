@@ -84,7 +84,7 @@ If you would like to use a different directory, hit CTRL+c and set the
 MOZBUILD_STATE_PATH environment variable to the directory you'd like to
 use and re-run the bootstrapper.
 
-Would you like to create this directory? (Yn):'''
+Would you like to create this directory?'''
 
 STYLO_NODEJS_DIRECTORY_MESSAGE = '''
 Stylo and NodeJS packages require a directory to store shared, persistent
