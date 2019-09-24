@@ -1,0 +1,11 @@
+---
+lintpref:
+    description: Linter for static prefs.
+    include:
+        - 'modules/libpref/init'
+    exclude: []
+    extensions: ['js', 'yaml']
+    type: external
+    payload: libpref:checkdupes
+    support-files:
+        - 'tools/lint/libpref/**'
