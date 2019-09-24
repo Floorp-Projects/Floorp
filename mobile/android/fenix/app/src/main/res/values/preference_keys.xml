@@ -25,6 +25,7 @@
     <string name="pref_key_delete_permissions_on_quit" translatable="false">pref_key_delete_permissions_on_quit</string>
     <string name="pref_key_delete_browsing_data_on_quit_categories" translatable="false">pref_key_delete_browsing_data_on_quit_categories</string>
 
+    <string name="pref_key_last_maintenance" translatable="false">pref_key_last_maintenance</string>
     <string name="pref_key_help" translatable="false">pref_key_help</string>
     <string name="pref_key_rate" translatable="false">pref_key_rate</string>
     <string name="pref_key_feedback" translatable="false">pref_key_feedback</string>

@@ -16,6 +16,7 @@ import mozilla.components.support.ktx.android.content.PreferencesHolder
 import mozilla.components.support.ktx.android.content.booleanPreference
 import mozilla.components.support.ktx.android.content.floatPreference
 import mozilla.components.support.ktx.android.content.intPreference
+import mozilla.components.support.ktx.android.content.longPreference
 import mozilla.components.support.ktx.android.content.stringPreference
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
@@ -266,6 +267,11 @@ class Settings private constructor(
     var fxaHasSyncedItems by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_fxa_has_synced_items),
         default = true
+    )
+
+    var lastPlacesStorageMaintenance by longPreference(
+        appContext.getPreferenceKey(R.string.pref_key_last_maintenance),
+        default = 0
     )
 
     fun addSearchWidgetInstalled(count: Int) {

@@ -16,6 +16,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mozilla.appservices.Megazord
 import mozilla.components.concept.push.PushProcessor
@@ -110,6 +111,19 @@ open class FenixApplication : Application() {
         registerActivityLifecycleCallbacks(visibilityLifecycleCallback)
 
         components.core.sessionManager.register(NotificationSessionObserver(this))
+
+        if ((System.currentTimeMillis() - this.settings.lastPlacesStorageMaintenance) > ONE_DAY_MILLIS) {
+            runStorageMaintenance()
+        }
+    }
+
+    private fun runStorageMaintenance() {
+        GlobalScope.launch(Dispatchers.IO) {
+            // Bookmarks and history storage sit on top of the same db file so we only need to
+            // run maintenance on one - arbitrarily using bookmarks.
+            components.core.bookmarksStorage.runMaintenance()
+        }
+        this.settings.lastPlacesStorageMaintenance = System.currentTimeMillis()
     }
 
     private fun registerRxExceptionHandling() {
@@ -288,9 +302,14 @@ open class FenixApplication : Application() {
                 .detectActivityLeaks()
                 .detectFileUriExposure()
                 .penaltyLog()
-            if (SDK_INT >= Build.VERSION_CODES.O) builder = builder.detectContentUriWithoutPermission()
+            if (SDK_INT >= Build.VERSION_CODES.O) builder =
+                builder.detectContentUriWithoutPermission()
             if (SDK_INT >= Build.VERSION_CODES.P) builder = builder.detectNonSdkApiUsage()
             StrictMode.setVmPolicy(builder.build())
         }
+    }
+
+    companion object {
+        private const val ONE_DAY_MILLIS = 24 * 60 * 60 * 1000
     }
 }
