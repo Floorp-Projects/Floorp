@@ -784,9 +784,12 @@
           document.popupNode = null;
 
           let { width } = this.getBoundingClientRect();
-          popup.setAttribute("width", width > 100 ? width : 100);
+          // Ensure the panel is wide enough to fit at least 3 engines.
+          if (this.oneOffButtons) {
+            width = Math.max(width, this.oneOffButtons.buttonWidth * 3);
+          }
+          popup.style.minWidth = width + "px";
 
-          // invalidate() depends on the width attribute
           popup._invalidate();
 
           popup.openPopup(this, "after_start");

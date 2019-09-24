@@ -15,18 +15,6 @@
       super();
 
       this.addEventListener("popupshowing", event => {
-        // Force the panel to have the width of the searchbar rather than
-        // the width of the textfield.
-        let DOMUtils = window.windowUtils;
-        let textboxRect = DOMUtils.getBoundsWithoutFlushing(this.mInput);
-
-        // Ensure the panel is wide enough to fit at least 3 engines.
-        let minWidth = Math.max(
-          textboxRect.width,
-          this.oneOffButtons.buttonWidth * 3
-        );
-        this.style.minWidth = Math.round(minWidth) + "px";
-
         // First handle deciding if we are showing the reduced version of the
         // popup containing only the preferences button. We do this if the
         // glass icon has been clicked if the text field is empty.
