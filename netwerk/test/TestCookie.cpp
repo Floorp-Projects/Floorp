@@ -922,32 +922,6 @@ TEST(TestCookie, TestCookieMain)
       NS_LITERAL_CSTRING("test3"), &attrs, &found)));
   EXPECT_TRUE(found);
 
-  // remove the cookie, block it, and ensure it can't be added again
-  EXPECT_TRUE(NS_SUCCEEDED(
-      cookieMgr->RemoveNative(NS_LITERAL_CSTRING("new.domain"),  // domain
-                              NS_LITERAL_CSTRING("test3"),       // name
-                              NS_LITERAL_CSTRING("/rabbit"),     // path
-                              true,                              // is blocked
-                              &attrs)));  // originAttributes
-  EXPECT_TRUE(NS_SUCCEEDED(cookieMgr2->CookieExistsNative(
-      NS_LITERAL_CSTRING("new.domain"), NS_LITERAL_CSTRING("/rabbit"),
-      NS_LITERAL_CSTRING("test3"), &attrs, &found)));
-  EXPECT_FALSE(found);
-  EXPECT_TRUE(NS_SUCCEEDED(
-      cookieMgr2->AddNative(NS_LITERAL_CSTRING("new.domain"),  // domain
-                            NS_LITERAL_CSTRING("/rabbit"),     // path
-                            NS_LITERAL_CSTRING("test3"),       // name
-                            NS_LITERAL_CSTRING("yes"),         // value
-                            false,                             // is secure
-                            false,                             // is httponly
-                            true,                              // is session
-                            INT64_MIN,                         // expiry time
-                            &attrs,  // originAttributes
-                            nsICookie::SAMESITE_NONE)));
-  EXPECT_TRUE(NS_SUCCEEDED(cookieMgr2->CookieExistsNative(
-      NS_LITERAL_CSTRING("new.domain"), NS_LITERAL_CSTRING("/rabbit"),
-      NS_LITERAL_CSTRING("test3"), &attrs, &found)));
-  EXPECT_FALSE(found);
   // sleep four seconds, to make sure the second cookie has expired
   PR_Sleep(4 * PR_TicksPerSecond());
   // check that both CountCookiesFromHost() and CookieExistsNative() count the
