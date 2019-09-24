@@ -152,6 +152,8 @@ _Combined components to implement feature-specific use cases._
 
 * 🔴 [**Web Notifications**](components/feature/webnotifications/README.md) - A component for displaying web notifications.
 
+* 🔵 [**WebCompat**](components/feature/webcompat/README.md) - A feature to enable website-hotfixing via the Web Compatibility System-Addon.
+
 ## UI
 
 _Generic low-level UI components for building apps._
