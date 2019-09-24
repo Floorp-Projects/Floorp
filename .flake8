@@ -13,6 +13,7 @@ exclude =
     dom/security,
     dom/websocket,
     gfx/tests,
+    ipc/ipdl/ipdl,
     layout/base/tests/marionette,
     layout/reftests/border-image,
     layout/reftests/fonts,
@@ -25,6 +26,7 @@ exclude =
     python/devtools/migrate-l10n/migrate/main.py,
     python/l10n/fluent_migrations,
     python/mozbuild/dumbmake,
+    security/manager/ssl/tests/unit,
     servo/components/style,
     testing/condprofile/condprof/android.py,
     testing/condprofile/condprof/creator.py,
@@ -104,3 +106,24 @@ per-file-ignores =
     testing/firefox-ui/**/__init__.py: F401
     testing/marionette/**/__init__.py: F401
     testing/mozharness/configs/*: E124, E127, E128, E131, E231, E261, E265, E266, E501, W391
+
+    # These paths contain Python-2 only syntax which cause errors since flake8
+    # is run with Python 3.
+    build/**: F821
+    config/**: F821
+    js/**: F821
+    memory/**: F821
+    mozglue/**: F821
+    python/mozbuild/**: F821
+    python/mozversioncontrol/**: F821
+    taskcluster/**: F821
+    testing/mozharness/**: F821
+    testing/raptor/**: F821
+    testing/talos/**: F821
+    toolkit/components/telemetry/**: F821
+    tools/tryselect/**: F821
+    testing/firefox-ui/tests/functional/safebrowsing/test_initial_download.py: F821
+    testing/marionette/**: F821
+    testing/mochitest/**: F821
+    testing/xpcshell/**: F821
+    xpcom/idl-parser/xpidl/**: F821

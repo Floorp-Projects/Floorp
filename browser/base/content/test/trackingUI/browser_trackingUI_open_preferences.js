@@ -56,38 +56,40 @@ add_task(async function setup() {
 add_task(async function testOpenPreferencesFromTrackersSubview() {
   Services.prefs.setBoolPref(TP_PREF, true);
 
-  await BrowserTestUtils.withNewTab(TRACKING_PAGE, async function() {
-    await openProtectionsPopup();
-
-    let categoryItem = document.getElementById(
-      "protections-popup-category-tracking-protection"
-    );
-    ok(
-      BrowserTestUtils.is_visible(categoryItem),
-      "TP category item is visible"
-    );
-    let trackersView = document.getElementById(
-      "protections-popup-trackersView"
-    );
-    let viewShown = BrowserTestUtils.waitForEvent(trackersView, "ViewShown");
-    categoryItem.click();
-    await viewShown;
-
-    ok(true, "Trackers view was shown");
-
-    let preferencesButton = document.getElementById(
-      "protections-popup-trackersView-settings-button"
-    );
-
-    ok(
-      BrowserTestUtils.is_visible(preferencesButton),
-      "The preferences button is shown."
-    );
-
-    let shown = waitAndAssertPreferencesShown("trackingprotection");
-    preferencesButton.click();
-    await shown;
+  let promise = BrowserTestUtils.openNewForegroundTab({
+    url: TRACKING_PAGE,
+    gBrowser,
   });
+
+  // Wait for 2 content blocking events - one for the load and one for the tracker.
+  let [tab] = await Promise.all([promise, waitForContentBlockingEvent(2)]);
+
+  await openProtectionsPopup();
+
+  let categoryItem = document.getElementById(
+    "protections-popup-category-tracking-protection"
+  );
+  ok(BrowserTestUtils.is_visible(categoryItem), "TP category item is visible");
+  let trackersView = document.getElementById("protections-popup-trackersView");
+  let viewShown = BrowserTestUtils.waitForEvent(trackersView, "ViewShown");
+  categoryItem.click();
+  await viewShown;
+
+  ok(true, "Trackers view was shown");
+
+  let preferencesButton = document.getElementById(
+    "protections-popup-trackersView-settings-button"
+  );
+
+  ok(
+    BrowserTestUtils.is_visible(preferencesButton),
+    "The preferences button is shown."
+  );
+
+  let shown = waitAndAssertPreferencesShown("trackingprotection");
+  preferencesButton.click();
+  await shown;
+  BrowserTestUtils.removeTab(tab);
 
   Services.prefs.clearUserPref(TP_PREF);
 });
@@ -100,36 +102,40 @@ add_task(async function testOpenPreferencesFromCookiesSubview() {
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
   );
 
-  await BrowserTestUtils.withNewTab(TRACKING_PAGE, async function() {
-    await openProtectionsPopup();
-
-    let categoryItem = document.getElementById(
-      "protections-popup-category-cookies"
-    );
-    ok(
-      BrowserTestUtils.is_visible(categoryItem),
-      "TP category item is visible"
-    );
-    let cookiesView = document.getElementById("protections-popup-cookiesView");
-    let viewShown = BrowserTestUtils.waitForEvent(cookiesView, "ViewShown");
-    categoryItem.click();
-    await viewShown;
-
-    ok(true, "Cookies view was shown");
-
-    let preferencesButton = document.getElementById(
-      "protections-popup-cookiesView-settings-button"
-    );
-
-    ok(
-      BrowserTestUtils.is_visible(preferencesButton),
-      "The preferences button is shown."
-    );
-
-    let shown = waitAndAssertPreferencesShown("trackingprotection");
-    preferencesButton.click();
-    await shown;
+  let promise = BrowserTestUtils.openNewForegroundTab({
+    url: TRACKING_PAGE,
+    gBrowser,
   });
+
+  // Wait for 2 content blocking events - one for the load and one for the tracker.
+  let [tab] = await Promise.all([promise, waitForContentBlockingEvent(2)]);
+
+  await openProtectionsPopup();
+
+  let categoryItem = document.getElementById(
+    "protections-popup-category-cookies"
+  );
+  ok(BrowserTestUtils.is_visible(categoryItem), "TP category item is visible");
+  let cookiesView = document.getElementById("protections-popup-cookiesView");
+  let viewShown = BrowserTestUtils.waitForEvent(cookiesView, "ViewShown");
+  categoryItem.click();
+  await viewShown;
+
+  ok(true, "Cookies view was shown");
+
+  let preferencesButton = document.getElementById(
+    "protections-popup-cookiesView-settings-button"
+  );
+
+  ok(
+    BrowserTestUtils.is_visible(preferencesButton),
+    "The preferences button is shown."
+  );
+
+  let shown = waitAndAssertPreferencesShown("trackingprotection");
+  preferencesButton.click();
+  await shown;
+  BrowserTestUtils.removeTab(tab);
 
   Services.prefs.clearUserPref(TPC_PREF);
 });

@@ -70,9 +70,6 @@ class GeckoInstance(object):
         "extensions.getAddons.cache.enabled": False,
         # Disable intalling any distribution add-ons
         "extensions.installDistroAddons": False,
-        # Make sure Shield doesn't hit the network.
-        # Removed in Firefox 60.
-        "extensions.shield-recipe-client.api_url": "",
         # Disable extensions compatibility dialogue.
         # Removed in Firefox 61.
         "extensions.showMismatchUI": False,

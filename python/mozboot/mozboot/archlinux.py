@@ -22,7 +22,7 @@ from mozboot.linux_common import (
 # have to rely on the standard library instead of Python 2+3 helpers like
 # the six module.
 if sys.version_info < (3,):
-    input = raw_input
+    input = raw_input  # noqa
 
 
 class ArchlinuxBootstrapper(NodeInstall, StyloInstall, SccacheInstall,

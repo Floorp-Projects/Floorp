@@ -499,7 +499,6 @@ this.cookies = class extends ExtensionAPI {
               cookie.host,
               cookie.name,
               cookie.path,
-              false,
               cookie.originAttributes
             );
 

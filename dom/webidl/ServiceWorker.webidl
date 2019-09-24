@@ -25,7 +25,7 @@ interface ServiceWorker : EventTarget {
   void postMessage(any message, optional PostMessageOptions options = {});
 };
 
-ServiceWorker implements AbstractWorker;
+ServiceWorker includes AbstractWorker;
 
 enum ServiceWorkerState {
   // https://github.com/w3c/ServiceWorker/issues/1162

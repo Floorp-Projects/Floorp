@@ -604,8 +604,6 @@ with modules["DOM"]:
     errors["NS_ERROR_DOM_TIMEOUT_ERR"] = FAILURE(23)
     errors["NS_ERROR_DOM_INVALID_NODE_TYPE_ERR"] = FAILURE(24)
     errors["NS_ERROR_DOM_DATA_CLONE_ERR"] = FAILURE(25)
-    # XXX Should be JavaScript native error
-    errors["NS_ERROR_TYPE_ERR"] = FAILURE(26)
     # StringEncoding API errors from http://wiki.whatwg.org/wiki/StringEncoding
     errors["NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR"] = FAILURE(28)
     errors["NS_ERROR_DOM_INVALID_POINTER_ERR"] = FAILURE(29)

@@ -39,4 +39,4 @@ interface AudioBufferSourceNode : AudioScheduledSourceNode {
 };
 
 // Mozilla extensions
-AudioBufferSourceNode implements AudioNodePassThrough;
+AudioBufferSourceNode includes AudioNodePassThrough;

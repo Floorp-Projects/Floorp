@@ -202,7 +202,6 @@ cookie.remove = function(toDelete) {
     toDelete.domain,
     toDelete.name,
     toDelete.path,
-    false,
     {} /* originAttributes */
   );
 };

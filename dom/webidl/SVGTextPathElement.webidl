@@ -30,5 +30,5 @@ interface SVGTextPathElement : SVGTextContentElement {
   readonly attribute SVGAnimatedEnumeration spacing;
 };
 
-SVGTextPathElement implements SVGURIReference;
+SVGTextPathElement includes SVGURIReference;
 

@@ -25,5 +25,5 @@ interface DelayNode : AudioNode {
 };
 
 // Mozilla extension
-DelayNode implements AudioNodePassThrough;
+DelayNode includes AudioNodePassThrough;
 

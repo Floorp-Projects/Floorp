@@ -9,7 +9,7 @@ void MustOverrideChecker::registerMatchers(MatchFinder *AstMatcher) {
   AstMatcher->addMatcher(cxxRecordDecl(isDefinition()).bind("class"), this);
 }
 
-void MustOverrideChecker::registerPPCallbacks(CompilerInstance &CI) {
+void MustOverrideChecker::registerCompilerInstance(CompilerInstance &CI) {
   this->CI = &CI;
 }
 

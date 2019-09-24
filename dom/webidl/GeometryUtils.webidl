@@ -23,8 +23,7 @@ dictionary ConvertCoordinateOptions {
   CSSBoxType toBox = "border";
 };
 
-[NoInterfaceObject]
-interface GeometryUtils {
+interface mixin GeometryUtils {
   [Throws, Func="nsINode::HasBoxQuadsSupport", NeedsCallerType]
   sequence<DOMQuad> getBoxQuads(optional BoxQuadOptions options = {});
   [Throws, Pref="layout.css.convertFromNode.enabled", NeedsCallerType]
@@ -35,6 +34,6 @@ interface GeometryUtils {
   DOMPoint convertPointFromNode(DOMPointInit point, GeometryNode from, optional ConvertCoordinateOptions options = {});
 };
 
-// PseudoElement implements GeometryUtils;
+// PseudoElement includes GeometryUtils;
 
 typedef (Text or Element /* or PseudoElement */ or Document) GeometryNode;

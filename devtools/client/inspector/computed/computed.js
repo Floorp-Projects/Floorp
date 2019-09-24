@@ -522,18 +522,20 @@ CssComputedView.prototype = {
     return this._createViewsPromise;
   },
 
-  isSidebarActive: function() {
-    return this.inspector.sidebar.getCurrentTabID() == "computedview";
+  isPanelVisible: function() {
+    return (
+      this.inspector.toolbox &&
+      this.inspector.sidebar &&
+      this.inspector.toolbox.currentToolId === "inspector" &&
+      this.inspector.sidebar.getCurrentTabID() == "computedview"
+    );
   },
 
   /**
    * Refresh the panel content.
    */
   refreshPanel: function() {
-    if (!this._viewedElement) {
-      return promise.resolve();
-    }
-    if (!this.isSidebarActive()) {
+    if (!this._viewedElement || !this.isPanelVisible()) {
       return promise.resolve();
     }
 
@@ -1543,11 +1545,11 @@ function ComputedViewTool(inspector, window) {
 }
 
 ComputedViewTool.prototype = {
-  isSidebarActive: function() {
+  isPanelVisible: function() {
     if (!this.computedView) {
       return false;
     }
-    return this.inspector.sidebar.getCurrentTabID() == "computedview";
+    return this.computedView.isPanelVisible();
   },
 
   onDetachedFront: function() {
@@ -1564,7 +1566,7 @@ ComputedViewTool.prototype = {
     }
 
     const isInactive =
-      !this.isSidebarActive() && this.inspector.selection.nodeFront;
+      !this.isPanelVisible() && this.inspector.selection.nodeFront;
     if (isInactive) {
       return;
     }
@@ -1585,7 +1587,7 @@ ComputedViewTool.prototype = {
   },
 
   refresh: function() {
-    if (this.isSidebarActive()) {
+    if (this.isPanelVisible()) {
       this.computedView.refreshPanel();
     }
   },

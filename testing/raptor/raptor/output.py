@@ -6,7 +6,7 @@
 # some parts of this originally taken from /testing/talos/talos/output.py
 
 """output raptor test results"""
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import filters
 
@@ -810,7 +810,7 @@ class RaptorOutput(PerftestOutput):
         '''
         _subtests = {}
         data = test.measurements['wasm-godot']
-        print (data)
+        print(data)
         for page_cycle in data:
             for item in page_cycle[0]:
                 # for each pagecycle, build a list of subtests and append all related replicates

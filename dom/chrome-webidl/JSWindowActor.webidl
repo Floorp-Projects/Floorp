@@ -6,8 +6,7 @@
 
 interface nsISupports;
 
-[NoInterfaceObject]
-interface JSWindowActor {
+interface mixin JSWindowActor {
   [Throws]
   void sendAsyncMessage(DOMString messageName,
                         optional any obj);
@@ -32,7 +31,7 @@ interface JSWindowActorParent {
   [Throws]
   readonly attribute CanonicalBrowsingContext? browsingContext;
 };
-JSWindowActorParent implements JSWindowActor;
+JSWindowActorParent includes JSWindowActor;
 
 [ChromeOnly]
 interface JSWindowActorChild {
@@ -63,7 +62,7 @@ interface JSWindowActorChild {
   [Throws]
   readonly attribute WindowProxy? contentWindow;
 };
-JSWindowActorChild implements JSWindowActor;
+JSWindowActorChild includes JSWindowActor;
 
 /**
  * WebIDL callback interface version of the nsIObserver interface for use when

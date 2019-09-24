@@ -8,6 +8,8 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "nsAutoPtr.h"
 #include "nsCookie.h"
+#include "nsIURLParser.h"
+#include "nsURLHelper.h"
 #include <stdlib.h>
 
 /******************************************************************************
@@ -87,7 +89,8 @@ size_t nsCookie::SizeOfIncludingThis(
          mData.name().SizeOfExcludingThisIfUnshared(MallocSizeOf) +
          mData.value().SizeOfExcludingThisIfUnshared(MallocSizeOf) +
          mData.host().SizeOfExcludingThisIfUnshared(MallocSizeOf) +
-         mData.path().SizeOfExcludingThisIfUnshared(MallocSizeOf);
+         mData.path().SizeOfExcludingThisIfUnshared(MallocSizeOf) +
+         mFilePathCache.SizeOfExcludingThisIfUnshared(MallocSizeOf);
 }
 
 bool nsCookie::IsStale() const {
@@ -168,6 +171,35 @@ nsCookie::GetOriginAttributes(JSContext* aCx,
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
+}
+
+const nsCString& nsCookie::GetFilePath() {
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+
+  if (Path().IsEmpty()) {
+    // If we don't have a path, just return the (empty) file path cache.
+    return mFilePathCache;
+  }
+  if (!mFilePathCache.IsEmpty()) {
+    // If we've computed the answer before, just return it.
+    return mFilePathCache;
+  }
+
+  nsIURLParser* parser = net_GetStdURLParser();
+  NS_ENSURE_TRUE(parser, mFilePathCache);
+
+  int32_t pathLen = Path().Length(), filepathLen = 0;
+  uint32_t filepathPos = 0;
+
+  nsresult rv = parser->ParsePath(PromiseFlatCString(Path()).get(), pathLen,
+                                  &filepathPos, &filepathLen, nullptr,
+                                  nullptr,            // don't care about query
+                                  nullptr, nullptr);  // don't care about ref
+  NS_ENSURE_SUCCESS(rv, mFilePathCache);
+
+  mFilePathCache = Substring(Path(), filepathPos, filepathLen);
+
+  return mFilePathCache;
 }
 
 // compatibility method, for use with the legacy nsICookie interface.

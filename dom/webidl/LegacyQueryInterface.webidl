@@ -6,14 +6,11 @@
 
 interface nsISupports;
 
-[NoInterfaceObject,
- // Need Exposed here, because this is a mixin onto things like Event
- // that are exposed in workers.
- Exposed=(Window,Worker)]
-interface LegacyQueryInterface {
+[Exposed=Window]
+interface mixin LegacyQueryInterface {
   // Legacy QueryInterface, only exposed to chrome code on the main thread.
   [Exposed=Window, ChromeOnly]
   nsISupports QueryInterface(any iid);
 };
 
-Element implements LegacyQueryInterface;
+Element includes LegacyQueryInterface;

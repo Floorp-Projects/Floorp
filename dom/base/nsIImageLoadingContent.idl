@@ -36,7 +36,7 @@ native Visibility(mozilla::Visibility);
  * observers to check which request they are getting notifications for.
  *
  * Please make sure to update the MozImageLoadingContent WebIDL
- * interface to mirror this interface when changing it.
+ * mixin to mirror this interface when changing it.
  */
 
 // We can't make this interface noscript yet, because there is JS code doing

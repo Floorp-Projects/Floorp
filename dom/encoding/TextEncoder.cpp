@@ -15,12 +15,12 @@ namespace dom {
 void TextEncoder::Encode(JSContext* aCx, JS::Handle<JSObject*> aObj,
                          JS::Handle<JSString*> aString,
                          JS::MutableHandle<JSObject*> aRetval,
-                         ErrorResult& aRv) {
+                         OOMReporter& aRv) {
   CheckedInt<size_t> bufLen(JS::GetStringLength(aString));
   bufLen *= 3;  // from the contract for JS_EncodeStringToUTF8BufferPartial
   // Uint8Array::Create takes uint32_t as the length.
   if (!bufLen.isValid() || bufLen.value() > UINT32_MAX) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    aRv.ReportOOM();
     return;
   }
 
@@ -28,7 +28,7 @@ void TextEncoder::Encode(JSContext* aCx, JS::Handle<JSObject*> aObj,
   // is small.
   auto data = mozilla::MakeUniqueFallible<uint8_t[]>(bufLen.value());
   if (!data) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    aRv.ReportOOM();
     return;
   }
 
@@ -37,7 +37,7 @@ void TextEncoder::Encode(JSContext* aCx, JS::Handle<JSObject*> aObj,
   auto maybe = JS_EncodeStringToUTF8BufferPartial(
       aCx, aString, AsWritableChars(MakeSpan(data.get(), bufLen.value())));
   if (!maybe) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    aRv.ReportOOM();
     return;
   }
   Tie(read, written) = *maybe;
@@ -47,7 +47,7 @@ void TextEncoder::Encode(JSContext* aCx, JS::Handle<JSObject*> aObj,
   JSAutoRealm ar(aCx, aObj);
   JSObject* outView = Uint8Array::Create(aCx, written, data.get());
   if (!outView) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    aRv.ReportOOM();
     return;
   }
 
