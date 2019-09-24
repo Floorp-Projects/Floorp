@@ -659,11 +659,14 @@ var E10SUtils = {
     // to change processes, we want to load into a new process so that we can throw
     // this one out. We don't want to move into a new process if we have post data,
     // because we would accidentally throw out that data.
+    let isOnlyToplevelBrowsingContext =
+        !aDocShell.browsingContext.parent &&
+        (aDocShell.browsingContext.group.getToplevels().length == 1);
     if (
       !aHasPostData &&
       Services.appinfo.remoteType == LARGE_ALLOCATION_REMOTE_TYPE &&
       !aDocShell.awaitingLargeAlloc &&
-      aDocShell.isOnlyToplevelInTabGroup
+      isOnlyToplevelBrowsingContext
     ) {
       return false;
     }
