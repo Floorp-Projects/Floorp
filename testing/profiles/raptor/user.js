@@ -15,3 +15,6 @@ user_pref("dom.push.connection.enabled", false);
 user_pref("browser.dom.window.dump.enabled", true);
 user_pref("devtools.console.stdout.chrome", true);
 user_pref("devtools.console.stdout.content", true);
+
+// prevent pages from opening after a crash
+user_pref("browser.sessionstore.resume_from_crash", false);
