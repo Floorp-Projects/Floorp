@@ -62,6 +62,8 @@ class BrowserToolbarView(
                 true
             )
 
+            val selectedSession = container.context.components.core.sessionManager.selectedSession
+
             popupWindow.elevation = view.context.dimen(R.dimen.mozac_browser_menu_elevation).toFloat()
 
             customView.paste.isVisible = !clipboard.text.isNullOrEmpty() && !isCustomTabSession
@@ -69,7 +71,11 @@ class BrowserToolbarView(
 
             customView.copy.setOnClickListener {
                 popupWindow.dismiss()
-                clipboard.text = view.url.toString()
+                if (isCustomTabSession) {
+                    clipboard.text = customTabSession?.url
+                } else {
+                    clipboard.text = selectedSession?.url
+                }
             }
 
             customView.paste.setOnClickListener {
