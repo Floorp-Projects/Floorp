@@ -57,6 +57,7 @@ linux64-shippable/opt:
         - mochitest-headless
         - marionette-headless
         - linux-talos-flex
+        - raptor-chrome
         - raptor-chromium
         - raptor-fetch-chromium
         - raptor-firefox
@@ -154,6 +155,7 @@ windows7-32-shippable/opt:
         - windows-tests
         - web-platform-tests
         - web-platform-tests-wdspec-headless
+        - raptor-chrome
         - raptor-chromium
         - raptor-firefox
 
@@ -224,8 +226,9 @@ windows10-64-shippable/opt:
         - windows-tests
         - web-platform-tests
         - web-platform-tests-wdspec-headless
-        - raptor-firefox
+        - raptor-chrome
         - raptor-chromium
+        - raptor-firefox
         - raptor-profiling
 
 windows10-64-devedition/opt:
@@ -296,6 +299,7 @@ macosx1014-64-shippable/opt:
         - macosx64-talos
         - desktop-screenshot-capture
         - awsy
+        - raptor-chrome
         - raptor-chromium
         - raptor-firefox
         - raptor-profiling

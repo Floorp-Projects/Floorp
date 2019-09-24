@@ -33,6 +33,7 @@ jobs-from:
     - misc.yml
     - mochitest.yml
     - raptor.yml
+    - raptor-chrome.yml
     - raptor-chromium.yml
     - raptor-fenix.yml
     - raptor-fennec68.yml
