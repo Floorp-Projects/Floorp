@@ -851,60 +851,58 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
       NS_ASSERTION(!kidNextInFlow, "next in flow should have been deleted");
       child = nullptr;
       break;
-    } else {
-      // Make sure that the column has a next-in-flow. If not, we must
-      // create one to hold the overflowing stuff, even if we're just
-      // going to put it on our overflow list and let *our*
-      // next in flow handle it.
-      if (!kidNextInFlow) {
-        NS_ASSERTION(aStatus.NextInFlowNeedsReflow(),
-                     "We have to create a continuation, but the block doesn't "
-                     "want us to reflow it?");
+    }
 
-        // We need to create a continuing column
-        kidNextInFlow = CreateNextInFlow(child);
-      }
+    // Make sure that the column has a next-in-flow. If not, we must
+    // create one to hold the overflowing stuff, even if we're just
+    // going to put it on our overflow list and let *our*
+    // next in flow handle it.
+    if (!kidNextInFlow) {
+      NS_ASSERTION(aStatus.NextInFlowNeedsReflow(),
+                   "We have to create a continuation, but the block doesn't "
+                   "want us to reflow it?");
 
-      // Make sure we reflow a next-in-flow when it switches between being
-      // normal or overflow container
-      if (aStatus.IsOverflowIncomplete()) {
-        if (!(kidNextInFlow->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
-          aStatus.SetNextInFlowNeedsReflow();
-          reflowNext = true;
-          kidNextInFlow->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
-        }
-      } else if (kidNextInFlow->GetStateBits() &
-                 NS_FRAME_IS_OVERFLOW_CONTAINER) {
+      // We need to create a continuing column
+      kidNextInFlow = CreateNextInFlow(child);
+    }
+
+    // Make sure we reflow a next-in-flow when it switches between being
+    // normal or overflow container
+    if (aStatus.IsOverflowIncomplete()) {
+      if (!(kidNextInFlow->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
         aStatus.SetNextInFlowNeedsReflow();
         reflowNext = true;
-        kidNextInFlow->RemoveStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
+        kidNextInFlow->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
       }
+    } else if (kidNextInFlow->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) {
+      aStatus.SetNextInFlowNeedsReflow();
+      reflowNext = true;
+      kidNextInFlow->RemoveStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
+    }
 
-      if ((contentBEnd > aReflowInput.ComputedMaxBSize() ||
-           contentBEnd > aReflowInput.ComputedBSize() ||
-           (StaticPrefs::layout_css_column_span_enabled() &&
-            contentBEnd > aReflowInput.mCBReflowInput->ComputedMaxBSize())) &&
-          aConfig.mIsBalancing) {
-        // We overflowed vertically, but have not exceeded the number of
-        // columns. We're going to go into overflow columns now, so balancing
-        // no longer applies.
-        colData.mHasExcessBSize = true;
-      }
+    if ((contentBEnd > aReflowInput.ComputedMaxBSize() ||
+         contentBEnd > aReflowInput.ComputedBSize() ||
+         (StaticPrefs::layout_css_column_span_enabled() &&
+          contentBEnd > aReflowInput.mCBReflowInput->ComputedMaxBSize())) &&
+        aConfig.mIsBalancing) {
+      // We overflowed vertically, but have not exceeded the number of
+      // columns. We're going to go into overflow columns now, so balancing
+      // no longer applies.
+      colData.mHasExcessBSize = true;
+    }
 
-      if (columnCount >= aConfig.mBalanceColCount - 1) {
-        // No more columns allowed here. Stop.
-        aStatus.SetNextInFlowNeedsReflow();
-        kidNextInFlow->MarkSubtreeDirty();
-        // Move any of our leftover columns to our overflow list. Our
-        // next-in-flow will eventually pick them up.
-        const nsFrameList& continuationColumns =
-            mFrames.RemoveFramesAfter(child);
-        if (continuationColumns.NotEmpty()) {
-          SetOverflowFrames(continuationColumns);
-        }
-        child = nullptr;
-        break;
+    if (columnCount >= aConfig.mBalanceColCount - 1) {
+      // No more columns allowed here. Stop.
+      aStatus.SetNextInFlowNeedsReflow();
+      kidNextInFlow->MarkSubtreeDirty();
+      // Move any of our leftover columns to our overflow list. Our
+      // next-in-flow will eventually pick them up.
+      const nsFrameList& continuationColumns = mFrames.RemoveFramesAfter(child);
+      if (continuationColumns.NotEmpty()) {
+        SetOverflowFrames(continuationColumns);
       }
+      child = nullptr;
+      break;
     }
 
     if (PresContext()->HasPendingInterrupt()) {
