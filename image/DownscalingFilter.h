@@ -78,6 +78,10 @@ class DownscalingFilter final : public SurfaceFilter {
     MOZ_CRASH();
     return nullptr;
   }
+  uint8_t* DoAdvanceRowFromBuffer(const uint8_t* aInputRow) override {
+    MOZ_CRASH();
+    return nullptr;
+  }
   uint8_t* DoAdvanceRow() override {
     MOZ_CRASH();
     return nullptr;
@@ -206,7 +210,7 @@ class DownscalingFilter final : public SurfaceFilter {
     return GetRowPointer();
   }
 
-  uint8_t* DoAdvanceRow() override {
+  uint8_t* DoAdvanceRowFromBuffer(const uint8_t* aInputRow) override {
     if (mInputRow >= mInputSize.height) {
       NS_WARNING("Advancing DownscalingFilter past the end of the input");
       return nullptr;
@@ -226,7 +230,7 @@ class DownscalingFilter final : public SurfaceFilter {
     if (mInputRow == inputRowToRead) {
       MOZ_RELEASE_ASSERT(mRowsInWindow < mWindowCapacity,
                          "Need more rows than capacity!");
-      mXFilter.ConvolveHorizontally(mRowBuffer.get(), mWindow[mRowsInWindow++],
+      mXFilter.ConvolveHorizontally(aInputRow, mWindow[mRowsInWindow++],
                                     mHasAlpha);
     }
 
@@ -247,6 +251,10 @@ class DownscalingFilter final : public SurfaceFilter {
     mInputRow++;
 
     return mInputRow < mInputSize.height ? GetRowPointer() : nullptr;
+  }
+
+  uint8_t* DoAdvanceRow() override {
+    return DoAdvanceRowFromBuffer(mRowBuffer.get());
   }
 
  private:
