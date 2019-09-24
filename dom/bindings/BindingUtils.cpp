@@ -133,8 +133,8 @@ void binding_detail::ThrowErrorMessage(JSContext* aCx,
   va_end(ap);
 }
 
-bool ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
-                      bool aSecurityError, const char* aInterfaceName) {
+static bool ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
+                             bool aSecurityError, const char* aInterfaceName) {
   NS_ConvertASCIItoUTF16 ifaceName(aInterfaceName);
   // This should only be called for DOM methods/getters/setters, which
   // are JSNative-backed functions, so we can assume that
@@ -148,18 +148,22 @@ bool ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
   if (!funcNameStr.init(aCx, funcName)) {
     return false;
   }
-  const ErrNum errorNumber = aSecurityError
-                                 ? MSG_METHOD_THIS_UNWRAPPING_DENIED
-                                 : MSG_METHOD_THIS_DOES_NOT_IMPLEMENT_INTERFACE;
-  MOZ_RELEASE_ASSERT(GetErrorArgCount(errorNumber) <= 2);
+  if (aSecurityError) {
+    return Throw(aCx, NS_ERROR_DOM_SECURITY_ERR,
+                 nsPrintfCString("Permission to call '%s' denied.",
+                                 NS_ConvertUTF16toUTF8(funcNameStr).get()));
+  }
+
+  const ErrNum errorNumber = MSG_METHOD_THIS_DOES_NOT_IMPLEMENT_INTERFACE;
+  MOZ_RELEASE_ASSERT(GetErrorArgCount(errorNumber) == 2);
   JS_ReportErrorNumberUC(aCx, GetErrorMessage, nullptr,
                          static_cast<unsigned>(errorNumber), funcNameStr.get(),
                          ifaceName.get());
   return false;
 }
 
-bool ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
-                      bool aSecurityError, prototypes::ID aProtoId) {
+static bool ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
+                             bool aSecurityError, prototypes::ID aProtoId) {
   return ThrowInvalidThis(aCx, aArgs, aSecurityError,
                           NamesOfInterfacesWithProtos(aProtoId));
 }
