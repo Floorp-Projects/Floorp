@@ -155,7 +155,11 @@ AudioChannelAgent::NotifyStartedPlaying(AudioPlaybackConfig* aConfig,
            config.mMuted ? "true" : "false", config.mVolume,
            SuspendTypeToStr(config.mSuspend)));
 
-  aConfig->SetConfig(config.mVolume, config.mMuted, config.mSuspend);
+  aConfig->mVolume = config.mVolume;
+  aConfig->mMuted = config.mMuted;
+  aConfig->mSuspend = config.mSuspend;
+  aConfig->mCapturedAudio = config.mCapturedAudio;
+
   mIsRegToService = true;
   return NS_OK;
 }
