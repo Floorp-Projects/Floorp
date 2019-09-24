@@ -84,20 +84,15 @@ already_AddRefed<ContentClient> ContentClient::CreateContentClient(
     useDoubleBuffering = gfxWindowsPlatform::GetPlatform()->IsDirect2DBackend();
   } else
 #endif
-  {
 #ifdef MOZ_WIDGET_GTK
-    if (gfxPlatformGtk::GetPlatform()->UseWaylandDMABufSurfaces()) {
-      useDoubleBuffering = true;
-    } else
-        // We can't use double buffering when using image content with
-        // Xrender support on Linux, as ContentHostDoubleBuffered is not
-        // suited for direct uploads to the server.
-        if (!gfxPlatformGtk::GetPlatform()->UseImageOffscreenSurfaces() ||
-            !gfxVars::UseXRender())
+      // We can't use double buffering when using image content with
+      // Xrender support on Linux, as ContentHostDoubleBuffered is not
+      // suited for direct uploads to the server.
+      if (!gfxPlatformGtk::GetPlatform()->UseImageOffscreenSurfaces() ||
+          !gfxVars::UseXRender())
 #endif
-    {
-      useDoubleBuffering = backend == LayersBackend::LAYERS_BASIC;
-    }
+  {
+    useDoubleBuffering = backend == LayersBackend::LAYERS_BASIC;
   }
 
   if (useDoubleBuffering || gfxEnv::ForceDoubleBuffering()) {

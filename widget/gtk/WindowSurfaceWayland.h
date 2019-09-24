@@ -147,7 +147,7 @@ class WindowBackBufferDMABuf : public WindowBackBuffer {
   bool Resize(int aWidth, int aHeight);
 
  private:
-  RefPtr<WaylandDMABufSurface> mDMAbufSurface;
+  WaylandDMABufSurface mDMAbufSurface;
 };
 
 class WindowImageSurface {

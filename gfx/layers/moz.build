@@ -292,16 +292,6 @@ if CONFIG['MOZ_X11']:
         'opengl/X11TextureSourceOGL.cpp',
     ]
 
-if CONFIG['MOZ_WAYLAND']:
-    EXPORTS.mozilla.layers += [
-        'opengl/WaylandDMABUFTextureClientOGL.h',
-        'opengl/WaylandDMABUFTextureHostOGL.h',
-    ]
-    SOURCES += [
-        'opengl/WaylandDMABUFTextureClientOGL.cpp',
-        'opengl/WaylandDMABUFTextureHostOGL.cpp',
-    ]
-
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS.mozilla.layers += [
         'NativeLayerCA.h',
