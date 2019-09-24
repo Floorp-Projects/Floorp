@@ -339,9 +339,8 @@ void nsSpeechTask::CreateAudioChannelAgent() {
   mAudioChannelAgent = new AudioChannelAgent();
   mAudioChannelAgent->InitWithWeakCallback(mUtterance->GetOwner(), this);
 
-  AudioPlaybackConfig config;
   nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(
-      &config, AudioChannelService::AudibleState::eAudible);
+      AudioChannelService::AudibleState::eAudible);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
