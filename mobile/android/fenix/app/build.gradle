@@ -549,21 +549,20 @@ if (project.hasProperty("coverage")) {
 
 // -------------------------------------------------------------------------------------------------
 // Task for printing APK information for the requested variant
-// Usage: "./gradlew printVariant -PvariantBuildType=nightly -PvariantEngine=geckoNightly"
+// Usage: "./gradlew printVariants
 // -------------------------------------------------------------------------------------------------
-task printVariant {
+task printVariants {
     doLast {
-        def rawVariant = android.applicationVariants.find {
-            it.buildType.name == variantBuildType &&
-                    it.productFlavors.find { it.dimension == 'engine' }.name == variantEngine
-        }
-        println 'variant: ' + groovy.json.JsonOutput.toJson([
-            name: rawVariant.name,
-            apks: rawVariant.variantData.outputScope.apkDatas.collect { [
-                    abi: it.filters.find { it.filterType == 'ABI' }.identifier,
-                    fileName: it.outputFileName,
-            ]}
-        ])
+        def variants = android.applicationVariants.collect {[
+            apks: it.variantData.outputScope.apkDatas.collect {[
+                abi: it.filters.find { it.filterType == 'ABI' }.identifier,
+                fileName: it.outputFileName,
+            ]},
+            build_type: it.buildType.name,
+            engine: it.productFlavors.find { it.dimension == 'engine' }.name,
+            name: it.name,
+        ]}
+        println 'variants: ' + groovy.json.JsonOutput.toJson(variants)
     }
 }
 

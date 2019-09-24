@@ -10,10 +10,30 @@ import subprocess
 from taskgraph.util.memoize import memoize
 
 
-@memoize
+
 def get_variant(build_type, engine):
-    output = _run_gradle_process('printVariant', variantBuildType=build_type, variantEngine=engine)
-    content = _extract_content_from_command_output(output, prefix='variant: ')
+    all_variants = _fetch_all_variants()
+    matching_variants = [
+        variant for variant in all_variants
+        if variant["build_type"] == build_type and variant["engine"] == engine
+    ]
+    number_of_matching_variants = len(matching_variants)
+    if number_of_matching_variants == 0:
+        raise ValueError('No variant found for build type "{}" and engine "{}"'.format(
+            build_type, engine
+        ))
+    elif number_of_matching_variants > 1:
+        raise ValueError('Too many variants found for build type "{}" and engine "{}": {}'.format(
+            build_type, engine, matching_variants
+        ))
+
+    return matching_variants.pop()
+
+
+@memoize
+def _fetch_all_variants():
+    output = _run_gradle_process('printVariants')
+    content = _extract_content_from_command_output(output, prefix='variants: ')
     return json.loads(content)
 
 
