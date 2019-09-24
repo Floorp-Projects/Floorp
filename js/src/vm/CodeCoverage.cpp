@@ -745,7 +745,9 @@ void CollectScriptCoverage(JSScript* script) {
   }
 
   LCovSource* source = p->value();
-  source->writeScript(script);
+  if (!script->isUncompleted()) {
+    source->writeScript(script);
+  }
   map->remove(p);
 }
 
