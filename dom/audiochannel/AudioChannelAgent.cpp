@@ -132,18 +132,19 @@ void AudioChannelAgent::PullInitialUpdate() {
   MOZ_ASSERT(mIsRegToService);
 
   AudioPlaybackConfig config = service->GetMediaConfig(mWindow);
+  MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
+          ("AudioChannelAgent, PullInitialUpdate, this=%p, "
+           "mute=%s, volume=%f, suspend=%s, audioCapturing=%s\n",
+           this, config.mMuted ? "true" : "false", config.mVolume,
+           SuspendTypeToStr(config.mSuspend),
+           config.mCapturedAudio ? "true" : "false"));
   WindowVolumeChanged();
   WindowSuspendChanged(config.mSuspend);
   WindowAudioCaptureChanged(InnerWindowID(), config.mCapturedAudio);
 }
 
 NS_IMETHODIMP
-AudioChannelAgent::NotifyStartedPlaying(AudioPlaybackConfig* aConfig,
-                                        uint8_t aAudible) {
-  if (NS_WARN_IF(!aConfig)) {
-    return NS_ERROR_FAILURE;
-  }
-
+AudioChannelAgent::NotifyStartedPlaying(uint8_t aAudible) {
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   if (service == nullptr || mIsRegToService) {
     return NS_ERROR_FAILURE;
@@ -155,21 +156,11 @@ AudioChannelAgent::NotifyStartedPlaying(AudioPlaybackConfig* aConfig,
   service->RegisterAudioChannelAgent(
       this, static_cast<AudioChannelService::AudibleState>(aAudible));
 
-  AudioPlaybackConfig config = service->GetMediaConfig(mWindow);
-
   MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
-          ("AudioChannelAgent, NotifyStartedPlaying, this = %p, "
-           "audible = %s, mute = %s, volume = %f, suspend = %s\n",
+          ("AudioChannelAgent, NotifyStartedPlaying, this = %p, audible = %s\n",
            this,
            AudibleStateToStr(
-               static_cast<AudioChannelService::AudibleState>(aAudible)),
-           config.mMuted ? "true" : "false", config.mVolume,
-           SuspendTypeToStr(config.mSuspend)));
-
-  aConfig->mVolume = config.mVolume;
-  aConfig->mMuted = config.mMuted;
-  aConfig->mSuspend = config.mSuspend;
-  aConfig->mCapturedAudio = config.mCapturedAudio;
+               static_cast<AudioChannelService::AudibleState>(aAudible))));
 
   mIsRegToService = true;
   return NS_OK;
