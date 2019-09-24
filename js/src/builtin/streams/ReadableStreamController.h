@@ -231,10 +231,12 @@ extern JSObject* ReadableStreamDefaultControllerPullSteps(
     JSContext* cx,
     JS::Handle<ReadableStreamDefaultController*> unwrappedController);
 
-extern bool ControllerStartHandler(JSContext* cx, unsigned argc, JS::Value* vp);
+extern bool ReadableStreamControllerStartHandler(JSContext* cx, unsigned argc,
+                                                 JS::Value* vp);
 
-extern bool ControllerStartFailedHandler(JSContext* cx, unsigned argc,
-                                         JS::Value* vp);
+extern bool ReadableStreamControllerStartFailedHandler(JSContext* cx,
+                                                       unsigned argc,
+                                                       JS::Value* vp);
 
 }  // namespace js
 
