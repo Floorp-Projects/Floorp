@@ -2035,7 +2035,7 @@ impl YamlFrameReader {
         dl.push_stacking_context(
             bounds.origin,
             *self.spatial_id_stack.last().unwrap(),
-            info.flags,
+            info.flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE),
             clip_node_id,
             transform_style,
             mix_blend_mode,

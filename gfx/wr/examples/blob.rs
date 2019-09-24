@@ -16,7 +16,7 @@ use rayon::{ThreadPool, ThreadPoolBuilder};
 use rayon::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
-use webrender::api::{self, DisplayListBuilder, DocumentId, PipelineId, PrimitiveFlags, RenderApi, Transaction};
+use webrender::api::{self, DisplayListBuilder, DocumentId, PipelineId, RenderApi, Transaction};
 use webrender::api::{ColorF, CommonItemProperties, SpaceAndClipInfo};
 use webrender::api::units::*;
 use webrender::euclid::{size2, rect};
@@ -229,7 +229,7 @@ impl Example for App {
         builder.push_simple_stacking_context(
             LayoutPoint::zero(),
             space_and_clip.spatial_id,
-            PrimitiveFlags::IS_BACKFACE_VISIBLE,
+            true,
         );
 
         let bounds = (30, 30).by(500, 500);

@@ -361,7 +361,7 @@ impl<'a> SceneBuilder<'a> {
             root_pipeline.pipeline_id,
             CompositeOps::default(),
             TransformStyle::Flat,
-            /* prim_flags = */ PrimitiveFlags::IS_BACKFACE_VISIBLE,
+            /* is_backface_visible = */ true,
             /* create_tile_cache = */ false,
             ROOT_SPATIAL_NODE_INDEX,
             ClipChainId::NONE,
@@ -912,7 +912,7 @@ impl<'a> SceneBuilder<'a> {
         filters: ItemRange<FilterOp>,
         filter_datas: &[TempFilterData],
         filter_primitives: ItemRange<FilterPrimitive>,
-        prim_flags: PrimitiveFlags,
+        is_backface_visible: bool,
         apply_pipeline_clip: bool,
     ) {
         // Avoid doing unnecessary work for empty stacking contexts.
@@ -939,7 +939,7 @@ impl<'a> SceneBuilder<'a> {
             pipeline_id,
             composition_operations,
             stacking_context.transform_style,
-            prim_flags,
+            is_backface_visible,
             stacking_context.cache_tiles,
             spatial_node_index,
             clip_chain_id,
@@ -1373,7 +1373,7 @@ impl<'a> SceneBuilder<'a> {
                     item.filters(),
                     item.filter_datas(),
                     item.filter_primitives(),
-                    info.prim_flags,
+                    info.is_backface_visible,
                     apply_pipeline_clip,
                 );
                 return Some(subtraversal);
@@ -1771,7 +1771,7 @@ impl<'a> SceneBuilder<'a> {
         pipeline_id: PipelineId,
         composite_ops: CompositeOps,
         transform_style: TransformStyle,
-        prim_flags: PrimitiveFlags,
+        is_backface_visible: bool,
         create_tile_cache: bool,
         spatial_node_index: SpatialNodeIndex,
         clip_chain_id: ClipChainId,
@@ -1894,6 +1894,12 @@ impl<'a> SceneBuilder<'a> {
             ),
             |sc| sc.snap_to_device.clone(),
         );
+
+        let prim_flags = if is_backface_visible {
+            PrimitiveFlags::IS_BACKFACE_VISIBLE
+        } else {
+            PrimitiveFlags::empty()
+        };
 
         // Push the SC onto the stack, so we know how to handle things in
         // pop_stacking_context.

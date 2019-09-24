@@ -68,7 +68,7 @@ impl App {
         builder.push_simple_stacking_context_with_filters(
             LayoutPoint::zero(),
             spatial_id,
-            PrimitiveFlags::IS_BACKFACE_VISIBLE,
+            true,
             &filters,
             &[],
             &[]
