@@ -10,6 +10,19 @@ import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.facts.collect
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 
+/**
+ * Facts emitted for telemetry related to [ToolbarFeature]
+ */
+class ToolbarFacts {
+    /**
+     * Items that specify which portion of the [ToolbarFeature] was interacted with
+     */
+    object Items {
+        const val TOOLBAR = "toolbar"
+        const val MENU = "menu"
+    }
+}
+
 private fun emitToolbarFact(
     action: Action,
     item: String,
@@ -25,13 +38,8 @@ private fun emitToolbarFact(
     ).collect()
 }
 
-private object ToolbarItems {
-    const val TOOLBAR = "toolbar"
-    const val MENU = "menu"
-}
-
 internal fun emitOpenMenuFact(extras: Map<String, Any>?) {
-    emitToolbarFact(Action.CLICK, ToolbarItems.MENU, metadata = extras)
+    emitToolbarFact(Action.CLICK, ToolbarFacts.Items.MENU, metadata = extras)
 }
 
 internal fun emitCommitFact(
@@ -48,5 +56,5 @@ internal fun emitCommitFact(
         )
     }
 
-    emitToolbarFact(Action.COMMIT, ToolbarItems.TOOLBAR, metadata = metadata)
+    emitToolbarFact(Action.COMMIT, ToolbarFacts.Items.TOOLBAR, metadata = metadata)
 }

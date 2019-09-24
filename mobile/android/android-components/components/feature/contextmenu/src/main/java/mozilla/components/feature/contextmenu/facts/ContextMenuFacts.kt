@@ -10,6 +10,18 @@ import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.facts.collect
 
+/**
+ * Facts emitted for telemetry related to [ContextMenuFeature]
+ */
+class ContextMenuFacts {
+    /**
+     * Items that specify which portion of the [ContextMenuFeature] was interacted with
+     */
+    object Items {
+        const val ITEM = "item"
+    }
+}
+
 private fun emitContextMenuFact(
     action: Action,
     item: String,
@@ -25,11 +37,7 @@ private fun emitContextMenuFact(
     ).collect()
 }
 
-private object ContextMenuItems {
-    const val ITEM = "item"
-}
-
 internal fun emitClickFact(candidate: ContextMenuCandidate) {
     val metadata = mapOf("item" to candidate.id)
-    emitContextMenuFact(Action.CLICK, ContextMenuItems.ITEM, metadata = metadata)
+    emitContextMenuFact(Action.CLICK, ContextMenuFacts.Items.ITEM, metadata = metadata)
 }
