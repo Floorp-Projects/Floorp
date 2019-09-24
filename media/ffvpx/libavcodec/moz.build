@@ -38,7 +38,7 @@ SOURCES += [
     'xiph.c'
 ]
 
-if not CONFIG['MOZ_FFVPX_FLACONLY']:
+if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
     SOURCES += [
         'avpicture.c',
         'bitstream.c',
