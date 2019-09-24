@@ -5,9 +5,9 @@
 "use strict";
 
 /* globals AVAILABLE_INJECTIONS, AVAILABLE_UA_OVERRIDES, AboutCompatBroker,
-           Injections, UAOverrides */
+           Injections, UAOverrides, CUSTOM_FUNCTIONS */
 
-const injections = new Injections(AVAILABLE_INJECTIONS);
+const injections = new Injections(AVAILABLE_INJECTIONS, CUSTOM_FUNCTIONS);
 const uaOverrides = new UAOverrides(AVAILABLE_UA_OVERRIDES);
 
 const aboutCompatBroker = new AboutCompatBroker({
