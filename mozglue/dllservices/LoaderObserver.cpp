@@ -61,7 +61,6 @@ void LoaderObserver::OnEndDllLoad(void* aContext, NTSTATUS aNtStatus,
   DesuppressStackWalking();
 #endif
 
-  MOZ_ASSERT_IF(IsProfilerPresent(), aContext);
   UniquePtr<LoadContext> loadContext(static_cast<LoadContext*>(aContext));
   if (loadContext && IsValidProfilerLabel(loadContext->mProfilerLabel)) {
     ProfilerLabelEnd(loadContext->mProfilerLabel);
