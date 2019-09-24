@@ -597,12 +597,7 @@ this.LoginManagerParent = {
       formActionOrigin,
     });
 
-    let { browsingContext } = browser;
-    let framePrincipalOrigin =
-      browsingContext.currentWindowGlobal.documentPrincipal.origin;
-    let generatedPW = this._generatedPasswordsByPrincipalOrigin.get(
-      framePrincipalOrigin
-    );
+    let generatedPW = this._generatedPasswordsByPrincipalOrigin.get(origin);
     let autoSavedStorageGUID = "";
     if (generatedPW && generatedPW.storageGUID) {
       autoSavedStorageGUID = generatedPW.storageGUID;
