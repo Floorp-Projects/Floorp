@@ -1075,7 +1075,7 @@ impl BatchBuilder {
                 let prim_cache_address = gpu_cache.get_address(&ctx.globals.default_image_handle);
 
                 let prim_header = PrimitiveHeader {
-                    local_rect: picture.local_rect,
+                    local_rect: picture.precise_local_rect,
                     local_clip_rect: prim_info.combined_local_clip_rect,
                     specific_prim_address: prim_cache_address,
                     transform_id,
@@ -1102,7 +1102,7 @@ impl BatchBuilder {
                             );
 
                             let prim_header = PrimitiveHeader {
-                                local_rect: pic.local_rect,
+                                local_rect: pic.precise_local_rect,
                                 local_clip_rect: child_prim_info.combined_local_clip_rect,
                                 specific_prim_address: GpuCacheAddress::INVALID,
                                 transform_id: transforms
@@ -1699,7 +1699,7 @@ impl BatchBuilder {
                                 };
 
                                 let prim_header = PrimitiveHeader {
-                                    local_rect: picture.local_rect,
+                                    local_rect: picture.precise_local_rect,
                                     local_clip_rect: prim_info.combined_local_clip_rect,
                                     specific_prim_address: prim_cache_address,
                                     transform_id,
@@ -2430,7 +2430,7 @@ impl BatchBuilder {
                 let prim_cache_address = gpu_cache.get_address(&ctx.globals.default_image_handle);
                 let backdrop_picture = &ctx.prim_store.pictures[backdrop_pic_index.0];
                 let prim_header = PrimitiveHeader {
-                    local_rect: backdrop_picture.local_rect,
+                    local_rect: backdrop_picture.precise_local_rect,
                     local_clip_rect: prim_info.combined_local_clip_rect,
                     transform_id,
                     specific_prim_address: prim_cache_address,
