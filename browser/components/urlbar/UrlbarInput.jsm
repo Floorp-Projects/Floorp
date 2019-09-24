@@ -402,16 +402,18 @@ class UrlbarInput {
       }
     }
 
-    // Use the selected result if we have one; this is usually the case
+    // Use the selected element if we have one; this is usually the case
     // when the view is open.
-    let result = this.view.selectedResult;
-    if (!selectedOneOff && result) {
-      this.pickResult(result, event);
+    let element = this.view.selectedElement;
+    if (!selectedOneOff && element) {
+      this.pickElement(element, event);
       return;
     }
 
+    let result = this.view.getResultFromElement(element);
+
     let url;
-    let selType = this.controller.engagementEvent.typeFromResult(result);
+    let selType = this.controller.engagementEvent.typeFromElement(element);
     let numChars = this.value.length;
     if (selectedOneOff) {
       selType = "oneoff";
@@ -484,13 +486,17 @@ class UrlbarInput {
   }
 
   /**
-   * Called by the view when a result is picked.
+   * Called by the view when an element is picked.
    *
-   * @param {UrlbarResult} result The result that was picked.
-   * @param {Event} event The event that picked the result.
+   * @param {Element} element The element that was picked.
+   * @param {Event} event The event that picked the element.
    */
-  pickResult(result, event) {
+  pickElement(element, event) {
     let originalUntrimmedValue = this.untrimmedValue;
+    let result = this.view.getResultFromElement(element);
+    if (!result) {
+      return;
+    }
     let isCanonized = this.setValueFromResult(result, event);
     let where = this._whereToOpen(event);
     let openParams = {
@@ -641,6 +647,25 @@ class UrlbarInput {
         this._recordSearch(engine, event, actionDetails);
         break;
       }
+      case UrlbarUtils.RESULT_TYPE.TIP: {
+        if (element.classList.contains("urlbarView-tip-help")) {
+          url = result.payload.helpUrl;
+        }
+
+        if (!url) {
+          this.handleRevert();
+          this.controller.engagementEvent.record(event, {
+            numChars: this._lastSearchString.length,
+            selIndex,
+            selType: "tip",
+          });
+
+          // TODO: Call out to UrlbarProvider.pickElement as part of bug 1578584.
+          return;
+        }
+
+        break;
+      }
       case UrlbarUtils.RESULT_TYPE.OMNIBOX: {
         this.controller.engagementEvent.record(event, {
           numChars: this._lastSearchString.length,
@@ -680,7 +705,7 @@ class UrlbarInput {
     this.controller.engagementEvent.record(event, {
       numChars: this._lastSearchString.length,
       selIndex,
-      selType: this.controller.engagementEvent.typeFromResult(result),
+      selType: this.controller.engagementEvent.typeFromElement(element),
     });
 
     this._loadURL(url, where, openParams, {
