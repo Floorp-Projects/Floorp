@@ -37,7 +37,7 @@ impl Example for App {
         builder.push_simple_stacking_context(
             bounds.origin,
             space_and_clip.spatial_id,
-            PrimitiveFlags::IS_BACKFACE_VISIBLE,
+            true,
         );
 
         for _ in 0 .. self.rect_count {

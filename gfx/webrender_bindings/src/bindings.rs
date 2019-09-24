@@ -2065,7 +2065,7 @@ pub struct WrStackingContextParams {
     pub transform_style: TransformStyle,
     pub reference_frame_kind: WrReferenceFrameKind,
     pub scrolling_relative_to: *const u64,
-    pub prim_flags: PrimitiveFlags,
+    pub is_backface_visible: bool,
     /// True if picture caching should be enabled for this stacking context.
     pub cache_tiles: bool,
     pub mix_blend_mode: MixBlendMode,
@@ -2185,7 +2185,7 @@ pub extern "C" fn wr_dp_push_stacking_context(
          .dl_builder
          .push_stacking_context(bounds.origin,
                                 wr_spatial_id,
-                                params.prim_flags,
+                                params.is_backface_visible,
                                 wr_clip_id,
                                 params.transform_style,
                                 params.mix_blend_mode,
