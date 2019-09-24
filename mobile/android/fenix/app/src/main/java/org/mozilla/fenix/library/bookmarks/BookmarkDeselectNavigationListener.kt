@@ -23,7 +23,7 @@ class BookmarkDeselectNavigationListener(
         navController.addOnDestinationChangedListener(this)
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     fun onDestroy() {
         navController.removeOnDestinationChangedListener(this)
     }
