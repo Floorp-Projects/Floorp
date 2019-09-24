@@ -138,7 +138,7 @@ fn make_shared_flags(
         Some(env_flags) => env_flags.opt_level,
         None => None,
     }
-    .unwrap_or("best");
+    .unwrap_or("speed");
     sb.set("opt_level", opt_level)?;
 
     // Enable jump tables by default.
