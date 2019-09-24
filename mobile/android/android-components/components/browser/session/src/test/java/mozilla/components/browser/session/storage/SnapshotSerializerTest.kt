@@ -10,6 +10,7 @@ import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,7 +29,7 @@ class SnapshotSerializerTest {
         }
 
         val json = serializeSession(originalSession)
-        val restoredSession = deserializeSession(json, restoreId = true)
+        val restoredSession = deserializeSession(json, restoreId = true, restoreParentId = false)
 
         assertEquals("https://www.mozilla.org", restoredSession.url)
         assertEquals(Session.Source.ACTION_VIEW, restoredSession.source)
@@ -46,7 +47,7 @@ class SnapshotSerializerTest {
             put("parentUuid", "")
         }
 
-        val restoredSession = deserializeSession(json, restoreId = true)
+        val restoredSession = deserializeSession(json, restoreId = true, restoreParentId = false)
 
         assertEquals("https://www.mozilla.org", restoredSession.url)
         assertEquals(Session.Source.ACTION_VIEW, restoredSession.source)
@@ -65,7 +66,7 @@ class SnapshotSerializerTest {
         }
 
         val json = serializeSession(originalSession)
-        val restoredSession = deserializeSession(json, restoreId = false)
+        val restoredSession = deserializeSession(json, restoreId = false, restoreParentId = false)
 
         assertEquals("https://www.mozilla.org", restoredSession.url)
         assertEquals(Session.Source.ACTION_VIEW, restoredSession.source)
@@ -74,9 +75,35 @@ class SnapshotSerializerTest {
         assertEquals("Hello World", restoredSession.title)
         assertTrue(restoredSession.readerMode)
 
-        val restoredSessionAgain = deserializeSession(json, restoreId = false)
+        val restoredSessionAgain = deserializeSession(json, restoreId = false, restoreParentId = false)
         assertNotEquals("test-id", restoredSessionAgain.id)
         assertNotEquals(restoredSession.id, restoredSessionAgain.id)
         assertTrue(restoredSessionAgain.id.isNotBlank())
+    }
+
+    @Test
+    fun `Deserialize session without restoring parent id`() {
+        val originalSession = Session(
+                "https://www.mozilla.org",
+                source = Session.Source.ACTION_VIEW,
+                id = "test-id").apply {
+            parentId = "test-parent-id"
+            title = "Hello World"
+            readerMode = true
+        }
+
+        val json = serializeSession(originalSession)
+        val restoredSession = deserializeSession(json, restoreId = true, restoreParentId = true)
+        assertEquals("https://www.mozilla.org", restoredSession.url)
+        assertEquals(Session.Source.ACTION_VIEW, restoredSession.source)
+        assertEquals("test-id", restoredSession.id)
+        assertEquals("test-parent-id", restoredSession.parentId)
+        assertTrue(restoredSession.id.isNotBlank())
+        assertEquals("Hello World", restoredSession.title)
+        assertTrue(restoredSession.readerMode)
+
+        val restoredSessionAgain = deserializeSession(json, restoreId = true, restoreParentId = false)
+        assertEquals("test-id", restoredSessionAgain.id)
+        assertNull(restoredSessionAgain.parentId)
     }
 }

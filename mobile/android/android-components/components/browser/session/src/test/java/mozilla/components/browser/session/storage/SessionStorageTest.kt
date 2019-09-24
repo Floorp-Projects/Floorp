@@ -445,14 +445,14 @@ class SessionStorageTest {
         json.put("url", "testUrl")
         json.put("source", Source.NEW_TAB.name)
         json.put("parentUuid", "")
-        assertEquals(Source.NEW_TAB, deserializeSession(json, restoreId = true).source)
+        assertEquals(Source.NEW_TAB, deserializeSession(json, restoreId = true, restoreParentId = true).source)
 
         val jsonInvalid = JSONObject()
         jsonInvalid.put("uuid", "testId")
         jsonInvalid.put("url", "testUrl")
         jsonInvalid.put("source", "invalidSource")
         jsonInvalid.put("parentUuid", "")
-        assertEquals(Source.NONE, deserializeSession(jsonInvalid, restoreId = true).source)
+        assertEquals(Source.NONE, deserializeSession(jsonInvalid, restoreId = true, restoreParentId = true).source)
     }
 
     @Suppress("UNCHECKED_CAST")

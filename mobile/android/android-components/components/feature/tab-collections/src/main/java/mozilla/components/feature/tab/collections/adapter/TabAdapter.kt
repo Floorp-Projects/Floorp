@@ -34,7 +34,7 @@ internal class TabAdapter(
         restoreSessionId: Boolean
     ): Session? {
         return entity.getStateFile(context.filesDir)
-            .readSnapshotItem(engine, restoreSessionId)
+            .readSnapshotItem(engine, restoreSessionId, false)
             ?.session
     }
 
