@@ -3,27 +3,6 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
-  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
-});
-
-function copyToClipboard(str) {
-  return new Promise((resolve, reject) => {
-    waitForClipboard(
-      str,
-      () => {
-        Cc["@mozilla.org/widget/clipboardhelper;1"]
-          .getService(Ci.nsIClipboardHelper)
-          .copyString(str);
-      },
-      resolve,
-      reject
-    );
-  });
-}
-
 // Each test is a function that executes an urlbar action and returns the
 // expected event object, or null if no event is expected.
 const tests = [
@@ -162,55 +141,6 @@ const tests = [
         numChars: "7",
         selIndex: "0",
         selType: "keyword",
-      },
-    };
-  },
-
-  async function() {
-    let tipProvider = registerTipProvider();
-    info("Selecting a tip's main button, enter.");
-    gURLBar.search("x");
-    await promiseSearchComplete();
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    EventUtils.synthesizeKey("VK_RETURN");
-    unregisterTipProvider(tipProvider);
-    return {
-      category: "urlbar",
-      method: "engagement",
-      object: "enter",
-      value: "typed",
-      extra: {
-        elapsed: val => parseInt(val) > 0,
-        numChars: "1",
-        selIndex: "1",
-        selType: "tip",
-      },
-    };
-  },
-
-  async function() {
-    let tipProvider = registerTipProvider();
-    info("Selecting a tip's help button, enter.");
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    gURLBar.search("x");
-    await promiseSearchComplete();
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    EventUtils.synthesizeKey("VK_RETURN");
-    await promise;
-    unregisterTipProvider(tipProvider);
-    return {
-      category: "urlbar",
-      method: "engagement",
-      object: "enter",
-      value: "typed",
-      extra: {
-        elapsed: val => parseInt(val) > 0,
-        numChars: "1",
-        selIndex: "1",
-        selType: "tiphelp",
       },
     };
   },
@@ -806,70 +736,3 @@ add_task(async function test() {
     TelemetryTestUtils.assertEvents(expectedEvents, { category: "urlbar" });
   }
 });
-
-function registerTipProvider() {
-  let provider = new TipTestProvider(tipMatches);
-  UrlbarProvidersManager.registerProvider(provider);
-  return provider;
-}
-
-function unregisterTipProvider(provider) {
-  UrlbarProvidersManager.unregisterProvider(provider);
-}
-
-/**
- * A test tip provider. See browser_tip_selection.js.
- */
-class TipTestProvider extends UrlbarProvider {
-  constructor(matches) {
-    super();
-    this._matches = matches;
-  }
-  get name() {
-    return "TipTestProvider";
-  }
-  get type() {
-    return UrlbarUtils.PROVIDER_TYPE.PROFILE;
-  }
-  isActive(context) {
-    return true;
-  }
-  isRestricting(context) {
-    return true;
-  }
-  async startQuery(context, addCallback) {
-    this._context = context;
-    for (const match of this._matches) {
-      addCallback(this, match);
-    }
-  }
-  cancelQuery(context) {}
-}
-
-let tipMatches = [
-  new UrlbarResult(
-    UrlbarUtils.RESULT_TYPE.URL,
-    UrlbarUtils.RESULT_SOURCE.HISTORY,
-    { url: "http://mozilla.org/a" }
-  ),
-  new UrlbarResult(
-    UrlbarUtils.RESULT_TYPE.TIP,
-    UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-    {
-      text: "This is a test intervention.",
-      buttonText: "Done",
-      data: "test",
-      helpUrl: "about:about",
-    }
-  ),
-  new UrlbarResult(
-    UrlbarUtils.RESULT_TYPE.URL,
-    UrlbarUtils.RESULT_SOURCE.HISTORY,
-    { url: "http://mozilla.org/b" }
-  ),
-  new UrlbarResult(
-    UrlbarUtils.RESULT_TYPE.URL,
-    UrlbarUtils.RESULT_SOURCE.HISTORY,
-    { url: "http://mozilla.org/c" }
-  ),
-];
