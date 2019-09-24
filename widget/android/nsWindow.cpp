@@ -428,6 +428,7 @@ class nsWindow::NPZCSupport final
   using Base::DisposeNative;
 
   void OnDetach(already_AddRefed<Runnable> aDisposer) {
+    RefPtr<Runnable> disposer = aDisposer;
     // There are several considerations when shutting down NPZC. 1) The
     // Gecko thread may destroy NPZC at any time when nsWindow closes. 2)
     // There may be pending events on the Gecko thread when NPZC is
@@ -468,7 +469,7 @@ class nsWindow::NPZCSupport final
 
       uiThread->Dispatch(NS_NewRunnableFunction(
           "NPZCSupport::OnDetach",
-          [npzc, disposer = RefPtr<Runnable>(aDisposer)] {
+          [npzc, disposer = std::move(disposer)] {
             npzc->SetAttached(false);
             disposer->Run();
           }));
@@ -852,6 +853,7 @@ class nsWindow::LayerViewSupport final
   using Base::DisposeNative;
 
   void OnDetach(already_AddRefed<Runnable> aDisposer) {
+    RefPtr<Runnable> disposer = aDisposer;
     if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
       GeckoSession::Compositor::GlobalRef compositor(mCompositor);
       if (!compositor) {
@@ -860,7 +862,7 @@ class nsWindow::LayerViewSupport final
 
       uiThread->Dispatch(NS_NewRunnableFunction(
           "LayerViewSupport::OnDetach",
-          [compositor, disposer = RefPtr<Runnable>(aDisposer),
+          [compositor, disposer = std::move(disposer),
            results = &mCapturePixelsResults, window = &mWindow] {
             if (LockedWindowPtr lock{*window}) {
               while (!results->empty()) {
