@@ -1,0 +1,17 @@
+/**
+ * developer.apple.com - content of the page is shifted to the left
+ * Bug #1570328 - https://bugzilla.mozilla.org/show_bug.cgi?id=1570328
+ * WebCompat issue #4070 - https://webcompat.com/issues/4070
+ *
+ * The site is relying on zoom property which is not supported by Mozilla,
+ * see https://bugzilla.mozilla.org/show_bug.cgi?id=390936. Adding a combination
+ * of transform: scale(1.4), transform-origin and width fixes the issue
+ */
+@media only screen and (min-device-width: 320px) and (max-device-width: 980px),
+  (min-device-width: 1024px) and (max-device-width: 1024px) and (min-device-height: 1366px) and (max-device-height: 1366px) and (min-width: 320px) and (max-width: 980px) {
+  #tocContainer {
+    transform-origin: 0 0;
+    transform: scale(1.4);
+    width: 71.4%;
+  }
+}
