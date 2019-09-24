@@ -15,7 +15,7 @@
 #include "builtin/streams/PullIntoDescriptor.h"       // js::PullIntoDescriptor
 #include "builtin/streams/QueueWithSizes.h"  // js::{EnqueueValueWithSize,ResetQueue}
 #include "builtin/streams/ReadableStream.h"  // js::ReadableStream, js::SetUpExternalReadableByteStreamController
-#include "builtin/streams/ReadableStreamController.h"  // js::ReadableStream{,Default}Controller, js::ReadableStreamDefaultControllerPullSteps, js::ControllerStart{,Failed}Handler
+#include "builtin/streams/ReadableStreamController.h"  // js::ReadableStream{,Default}Controller, js::ReadableStreamDefaultControllerPullSteps, js::ReadableStreamControllerStart{,Failed}Handler
 #include "builtin/streams/ReadableStreamDefaultControllerOperations.h"  // js::ReadableStreamControllerClearAlgorithms
 #include "builtin/streams/ReadableStreamInternals.h"  // js::ReadableStream{AddReadOrReadIntoRequest,CloseInternal,CreateReadResult,ErrorInternal,FulfillReadOrReadIntoRequest,GetNumReadRequests,HasDefaultReader}
 #include "builtin/streams/ReadableStreamReader.h"  // js::ReadableStream{,Default}Reader, js::CreateReadableStreamDefaultReader, js::ReadableStreamReaderGeneric{Cancel,Initialize,Release}, js::ReadableStreamDefaultReaderRead
@@ -194,7 +194,7 @@ CreateReadableByteStreamController(JSContext* cx,
         return nullptr;
     }
 
-    RootedObject onStartFulfilled(cx, NewHandler(cx, ControllerStartHandler, controller));
+    RootedObject onStartFulfilled(cx, NewHandler(cx, ReadableStreamControllerStartHandler, controller));
     if (!onStartFulfilled) {
         return nullptr;
     }
@@ -325,12 +325,13 @@ MOZ_MUST_USE bool js::SetUpExternalReadableByteStreamController(
   // Step 16: Upon fulfillment of startPromise, [...]
   // Step 17: Upon rejection of startPromise with reason r, [...]
   RootedObject onStartFulfilled(
-      cx, NewHandler(cx, ControllerStartHandler, controller));
+      cx, NewHandler(cx, ReadableStreamControllerStartHandler, controller));
   if (!onStartFulfilled) {
     return false;
   }
   RootedObject onStartRejected(
-      cx, NewHandler(cx, ControllerStartFailedHandler, controller));
+      cx,
+      NewHandler(cx, ReadableStreamControllerStartFailedHandler, controller));
   if (!onStartRejected) {
     return false;
   }
