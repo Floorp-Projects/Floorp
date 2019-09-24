@@ -1,5 +1,5 @@
 {
-    "configure-args": "--enable-debug-symbols='-gline-tables-only' --disable-jemalloc --enable-memory-sanitizer --without-system-zlib",
+    "configure-args": "--enable-debug-symbols='-gline-tables-only' --disable-jemalloc --enable-memory-sanitizer --without-system-zlib --enable-rust-simd",
     "optimize": true,
     "debug": false,
     "compiler": "clang",
