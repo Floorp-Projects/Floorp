@@ -970,6 +970,7 @@ var cookieHelpers = {
           origHost,
           origName,
           origPath,
+          false,
           cookie.originAttributes
         );
         break;
@@ -1036,6 +1037,7 @@ var cookieHelpers = {
           cookie.host,
           cookie.name,
           cookie.path,
+          false,
           cookie.originAttributes
         );
       }
