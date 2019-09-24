@@ -182,7 +182,6 @@ already_AddRefed<TextureHost> TextureHost::Create(
     case SurfaceDescriptor::TEGLImageDescriptor:
     case SurfaceDescriptor::TSurfaceTextureDescriptor:
     case SurfaceDescriptor::TSurfaceDescriptorSharedGLTexture:
-    case SurfaceDescriptor::TSurfaceDescriptorDMABuf:
       result = CreateTextureHostOGL(aDesc, aDeallocator, aBackend, aFlags);
       break;
 
