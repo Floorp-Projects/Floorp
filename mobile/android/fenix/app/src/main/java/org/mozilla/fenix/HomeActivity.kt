@@ -31,6 +31,7 @@ import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.toSafeIntent
+import org.mozilla.fenix.browser.UriOpenedObserver
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.browser.browsingmode.DefaultBrowsingModeManager
@@ -220,7 +221,7 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
 
     fun openToBrowser(from: BrowserDirection, customTabSessionId: String? = null) {
         if (sessionObserver == null)
-            sessionObserver = subscribeToSessions()
+            sessionObserver = UriOpenedObserver(this)
 
         if (navHost.navController.alreadyOnDestination(R.id.browserFragment)) return
         @IdRes val fragmentId = if (from.fragmentId != 0) from.fragmentId else null
@@ -307,43 +308,6 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
 
     protected open fun createThemeManager(): ThemeManager {
         return DefaultThemeManager(browsingModeManager.mode, this)
-    }
-
-    @Suppress("ComplexMethod")
-    private fun subscribeToSessions(): SessionManager.Observer {
-        val singleSessionObserver = object : Session.Observer {
-            var urlLoading: String? = null
-
-            override fun onLoadingStateChanged(session: Session, loading: Boolean) {
-                if (loading) {
-                    urlLoading = session.url
-                } else if (urlLoading != null && !session.private) {
-                    components.analytics.metrics.track(Event.UriOpened)
-                }
-            }
-        }
-
-        return object : SessionManager.Observer {
-            override fun onAllSessionsRemoved() {
-                components.core.sessionManager.sessions.forEach {
-                    it.unregister(singleSessionObserver)
-                }
-            }
-
-            override fun onSessionAdded(session: Session) {
-                session.register(singleSessionObserver, this@HomeActivity)
-            }
-
-            override fun onSessionRemoved(session: Session) {
-                session.unregister(singleSessionObserver)
-            }
-
-            override fun onSessionsRestored() {
-                components.core.sessionManager.sessions.forEach {
-                    it.register(singleSessionObserver, this@HomeActivity)
-                }
-            }
-        }.also { components.core.sessionManager.register(it, this) }
     }
 
     override fun onTabsShared(tabsSize: Int) {
