@@ -41,6 +41,22 @@ GFX2D_API bool SwizzleData(const uint8_t* aSrc, int32_t aSrcStride,
                            int32_t aDstStride, SurfaceFormat aDstFormat,
                            const IntSize& aSize);
 
+/**
+ * Swizzles source and writes it to destination. Source and destination may be
+ * the same to swizzle in-place.
+ */
+typedef void (*SwizzleRowFn)(const uint8_t* aSrc, uint8_t* aDst, int32_t aLength);
+
+/**
+ * Get a function pointer to perform premultiplication between two formats.
+ */
+GFX2D_API SwizzleRowFn PremultiplyRow(SurfaceFormat aSrcFormat, SurfaceFormat aDstFormat);
+
+/**
+ * Get a function pointer to perform swizzling between two formats.
+ */
+GFX2D_API SwizzleRowFn SwizzleRow(SurfaceFormat aSrcFormat, SurfaceFormat aDstFormat);
+
 }  // namespace gfx
 }  // namespace mozilla
 
