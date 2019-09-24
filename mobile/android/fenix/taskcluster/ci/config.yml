@@ -2,6 +2,8 @@
 trust-domain: mobile
 treeherder:
     group-names:
+        'beta': 'Nightly-related tasks'
+        'debug': 'Builds made for testing'
         'forPerformanceTest': 'Builds made for Raptor and other performance tests'
         'I': 'Docker Image Builds'
         'nightly': 'Nightly-related tasks'

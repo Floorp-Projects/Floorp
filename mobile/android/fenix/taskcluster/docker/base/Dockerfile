@@ -19,12 +19,12 @@ WORKDIR /builds/worker/
 #-- Configuration -----------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------------------
 
-ENV LANG en_US.UTF-8
-
-# Do not use fancy output on taskcluster
-ENV TERM dumb
-
-ENV GRADLE_OPTS -Xmx4096m -Dorg.gradle.daemon=false
+ENV ANDROID_SDK_VERSION='3859397' \
+    ANDROID_SDK_ROOT='/builds/worker/android-sdk-linux' \
+    GRADLE_OPTS='-Xmx4096m -Dorg.gradle.daemon=false' \
+    LANG='en_US.UTF-8' \
+    TERM='dumb' \
+    SDK_ZIP_LOCATION="$HOME/sdk-tools-linux.zip"
 
 #----------------------------------------------------------------------------------------------------------------------
 #-- System ------------------------------------------------------------------------------------------------------------
@@ -50,7 +50,14 @@ RUN apt-get update -qq \
 RUN pip install --upgrade pip
 RUN pip install taskcluster
 
-RUN locale-gen en_US.UTF-8
+RUN locale-gen "$LANG"
+
+RUN curl -o "$SDK_ZIP_LOCATION" "https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_SDK_VERSION}.zip" \
+    && unzip -d "$ANDROID_SDK_ROOT" "$SDK_ZIP_LOCATION" \
+    && rm "$SDK_ZIP_LOCATION" \
+    && yes | "${ANDROID_SDK_ROOT}/tools/bin/sdkmanager" --licenses \
+    && chown -R worker:worker "$ANDROID_SDK_ROOT"
+
 
 # %include-run-task
 

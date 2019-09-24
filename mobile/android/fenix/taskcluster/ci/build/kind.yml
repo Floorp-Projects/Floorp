@@ -1,0 +1,108 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - fenix_taskgraph.transforms.build:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+job-defaults:
+    description: Build Fenix from source code.
+    treeherder:
+        kind: build
+        symbol: B
+        platform: android-all/opt
+        tier: 1
+    worker-type: b-android
+    worker:
+        docker-image: {in-tree: base}
+        max-run-time: 7200
+        chain-of-trust: true
+    run:
+        using: gradlew
+        use-caches: false
+    run-on-tasks-for: []
+    # Builds generate multiple APKs with different ABIs. For each APK described
+    # by `gradlew printVariant`, an artifact will be generated. `variant` and
+    # the per-apk config from `printVariant` can be used as substitutions in
+    # `name` and `path`.
+    apk-artifact-template:
+        type: file
+        name: public/build/{abi}/{geckoview_engine}/target.apk
+        path: '/builds/worker/checkouts/src/app/build/outputs/apk/{geckoview_engine}/{gradle_build_type}/{fileName}'
+
+jobs:
+    debug:
+        attributes:
+            code-review: true
+        run-on-tasks-for: [github-pull-request, github-push]
+        run:
+            geckoview-engine: geckoNightly
+            gradle-build-type: debug
+        treeherder:
+            symbol: debug(B)
+
+    performance-test:
+        run:
+            geckoview-engine: geckoNightly
+            gradle-build-type: forPerformanceTest
+        treeherder:
+            symbol: forPerformanceTest(B)
+
+    nightly:
+        attributes:
+            nightly: true
+        include-nightly-version: true
+        include-shippable-secrets: true
+        run:
+            geckoview-engine: geckoNightly
+            gradle-build-type: fenixNightly
+        treeherder:
+            symbol: nightly(B)
+
+    nightly-legacy:
+        attributes:
+            nightly: true
+        include-nightly-version: true
+        include-shippable-secrets: true
+        run:
+            geckoview-engine: geckoNightly
+            gradle-build-type: fenixNightlyLegacy
+        treeherder:
+            symbol: nightlyLegacy(B)
+
+    fennec-production:
+        attributes:
+            nightly: true
+        include-shippable-secrets: true
+        run:
+            geckoview-engine: geckoBeta
+            gradle-build-type: fennecProduction
+        treeherder:
+            symbol: nightlyFennec(B)
+
+    beta:
+        attributes:
+            build-type: production
+            release-type: beta
+        include-shippable-secrets: true
+        run:
+            geckoview-engine: geckoBeta
+            gradle-build-type: fenixBeta
+        run-on-tasks-for: [github-release]
+        treeherder:
+            symbol: beta(B)
+
+    production:
+        attributes:
+            release-type: production
+        include-shippable-secrets: true
+        run:
+            geckoview-engine: geckoBeta
+            gradle-build-type: fenixProduction
+        run-on-tasks-for: [github-release]
+        treeherder:
+            symbol: production(B)

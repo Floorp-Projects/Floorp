@@ -8,7 +8,6 @@ jobs:
       job:
           type: decision-task
           treeherder-symbol: Nd
-          # TODO change target method once first tasks are migrated off "old-decision"
           target-tasks-method: nightly
       when: [{hour: 6, minute: 0}]
       when: [{hour: 18, minute: 0}]
@@ -16,6 +15,5 @@ jobs:
       job:
           type: decision-task
           treeherder-symbol: raptor-D
-          # TODO change target method once first tasks are migrated off "old-decision"
           target-tasks-method: raptor
       when: [{hour: 1, minute: 0}]

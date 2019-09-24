@@ -2,23 +2,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function, unicode_literals
+
 import json
 import subprocess
 
-from ..lib.variant import Variant, VariantApk
+from taskgraph.util.memoize import memoize
 
 
+@memoize
 def get_variant(build_type, engine):
-    print("Fetching variant information for build_type='{}', engine='{}'".format(build_type, engine))
     output = _run_gradle_process('printVariant', variantBuildType=build_type, variantEngine=engine)
     content = _extract_content_from_command_output(output, prefix='variant: ')
-    raw_variant = json.loads(content)
-    return Variant(
-        raw_variant['name'],
-        build_type,
-        [VariantApk(build_type, raw_apk['abi'], engine, raw_apk['fileName']) for raw_apk in raw_variant['apks']]
-    )
+    return json.loads(content)
 
 
 def _run_gradle_process(gradle_command, **kwargs):
@@ -32,7 +28,7 @@ def _run_gradle_process(gradle_command, **kwargs):
     exit_code = process.wait()
 
     if exit_code is not 0:
-        print("Gradle command returned error: {}".format(exit_code))
+        raise RuntimeError("Gradle command returned error: {}".format(exit_code))
 
     return output
 

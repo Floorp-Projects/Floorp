@@ -4,22 +4,38 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from taskgraph.target_tasks import _target_task, standard_filter
+import os
+import re
+
+from taskgraph.target_tasks import _target_task, filter_for_tasks_for
 
 
-# XXX We're overwritting the default target_task while all tasks are ported to taskgraph
+BETA_SEMVER = re.compile(r'^v\d+\.\d+\.\d+-beta\.\d+$')
+PRODUCTION_SEMVER = re.compile(r'^v\d+\.\d+\.\d+(-rc\.\d+)?$')
+
+
 @_target_task('default')
 def target_tasks_default(full_task_graph, parameters, graph_config):
     """Target the tasks which have indicated they should be run on this project
     via the `run_on_projects` attributes."""
-    return [l for l, t in full_task_graph.tasks.iteritems() if _old_decision_filter(t, parameters)]
 
+    filter = filter_for_tasks_for
+    if parameters["tasks_for"] == 'github-release':
+        # TODO Move GIT_TAG as to a parameter
+        git_tag = os.environ['GIT_TAG']
+        version = git_tag[1:]  # remove prefixed "v"
 
-def _old_decision_filter(task, parameters):
-    if task.kind == 'old-decision':
-        return True
+        if BETA_SEMVER.match(git_tag):
+            def filter(task, params):
+                return task.attributes.get("release-type", "") == "beta"
+        elif PRODUCTION_SEMVER.match(git_tag):
+            def filter(task, params):
+                return task.attributes.get("release-type", "") == "production"
+        else:
+            raise ValueError('Github tag must be in semver format and prefixed with a "v", '
+                             'e.g.: "v1.0.0-beta.0" (beta), "v1.0.0-rc.0" (production) or "v1.0.0" (production)')
 
-    return standard_filter(task, parameters)
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
 
 
 @_target_task("nightly")
@@ -27,20 +43,14 @@ def target_tasks_nightly(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build."""
 
     def filter(task, parameters):
-        if task.attributes.get("nightly", False):
-            return True
-
-        return _old_decision_filter(task, parameters)
+        return task.attributes.get("nightly", False)
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
 
 
 @_target_task('raptor')
 def target_tasks_raptor(full_task_graph, parameters, graph_config):
-    def filter(t, params):
-        if t.kind == 'raptor':
-            return True
-
-        return _old_decision_filter(t, params)
+    def filter(task, params):
+        return task.kind == 'raptor'
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]

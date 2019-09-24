@@ -2,101 +2,54 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: taskgraph.loader.transform:loader
+loader: fenix_taskgraph.loader.single_dep:loader
 
 transforms:
-    - fenix_taskgraph.signing:transforms
+    - fenix_taskgraph.transforms.single_dep:transforms
+    - fenix_taskgraph.transforms.signing:transforms
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - old-decision
+    - build
 
-job-defaults:
+job-template:
     description: Sign Fenix
     worker-type:
-        by-variant:
+        by-build-type:
             (fennec-production|nightly|nightly-legacy|production):
                 by-level:
                     '3': signing
                     default: dep-signing
             default: dep-signing
+    worker:
+        signing-type:
+            by-build-type:
+                fennec-production:
+                    by-level:
+                        '3': fennec-production-signing
+                        default: dep-signing
+                nightly:
+                    by-level:
+                        '3': nightly-signing
+                        default: dep-signing
+                nightly-legacy:
+                    by-level:
+                        '3': production-signing
+                        default: dep-signing
+                performance-test: dep-signing
+                production:
+                    by-level:
+                        '3': production-signing
+                        default: dep-signing
+                default: dep-signing
+    index:
+        by-build-type:
+            (fennec-production|nightly|performance-test|production):
+                type: signing
+            default: {}
     run-on-tasks-for: []
     treeherder:
+        job-symbol: Bs
         kind: build
-        tier: 2
         platform: android-all/opt
-
-jobs:
-    performance-test:
-        attributes:
-            build-type: performance-test
-        index:
-            type: signing
-        worker:
-            signing-type: dep-signing
-        dependencies:
-            build: 'assemble: geckoNightlyForPerformanceTest'   # comes from the old-decision task
-        treeherder:
-            symbol: forPerformanceTest(s)
-
-    production:
-        attributes:
-            build-type: production
-        index:
-            type: signing
-        worker:
-            signing-type:
-                by-level:
-                    '3': production-signing
-                    default: dep-signing
-        dependencies:
-            build: 'Build FenixProduction task'  # comes from the old-decision task
-        run-on-tasks-for: [github-release]
-        treeherder:
-            symbol: production(s)
-
-    fennec-production:
-        attributes:
-            build-type: fennec-production
-            nightly: true
-        index:
-            type: signing
-        worker:
-            signing-type:
-                by-level:
-                    '3': fennec-production-signing
-                    default: dep-signing
-        dependencies:
-            build: 'Build FennecProduction task' # comes from the old-decision task
-        treeherder:
-            symbol: nightlyFennec(s)
-
-    nightly:
-        attributes:
-            build-type: nightly
-            nightly: true
-        index:
-            type: signing
-        worker:
-            signing-type:
-                by-level:
-                    '3': nightly-signing
-                    default: dep-signing
-        dependencies:
-            build: 'Build FenixNightly task' # comes from the old-decision task
-        treeherder:
-            symbol: nightly(s)
-
-    nightly-legacy:
-        attributes:
-            build-type: nightly-legacy
-            nightly: true
-        worker:
-            signing-type:
-                by-level:
-                    '3': production-signing
-                    default: dep-signing
-        dependencies:
-            build: 'Build FenixNightlyLegacy task'  # comes from the old-decision task
-        treeherder:
-            symbol: nightlyLegacy(s)
+        tier: 2

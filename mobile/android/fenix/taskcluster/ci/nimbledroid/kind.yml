@@ -5,12 +5,11 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
-    - fenix_taskgraph.nimbledroid:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - old-decision
+    - build
 
 job-defaults:
     description: Upload APKs to Nimbledroid for performance measurement and tracking
@@ -37,7 +36,7 @@ jobs:
     nightly:
         attributes:
             nightly: true
-        dependencies:
-            build: Build FenixNightlyLegacy task   # Comes from the old decision task
         treeherder:
             symbol: nimbledroid
+        dependencies:
+            build: build-nightly-legacy

@@ -5,7 +5,8 @@
 loader: fenix_taskgraph.loader.single_dep:loader
 
 transforms:
-    - fenix_taskgraph.pushapk:transforms
+    - fenix_taskgraph.transforms.single_dep:transforms
+    - fenix_taskgraph.transforms.push_apk:transforms
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
@@ -21,6 +22,21 @@ job-template:
     worker-type: push-apk
     worker:
         commit: true
+        channel:
+            by-build-type:
+                nightly: nightly
+                nightly-legacy: production
+                production: production
+        dep:
+            by-level:
+                '3': false
+                default: true
+        google-play-track:
+            by-build-type:
+                nightly-legacy: nightly
+                default: ''
         product: fenix
+
     treeherder:
+        job-symbol: gp
         kind: build

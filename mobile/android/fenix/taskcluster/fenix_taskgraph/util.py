@@ -1,9 +1,11 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
----
-loader: fenix_taskgraph.loader.old_decision:loader
 
-transforms: []
+from __future__ import absolute_import, print_function, unicode_literals
 
-# XXX Everything is done in the loader until everything is migrated
+import re
+
+
+def upper_case_first_letter(string):
+    return string[0].upper() + string[1:]

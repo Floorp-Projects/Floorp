@@ -1,14 +1,16 @@
 ---
 loader: taskgraph.loader.transform:loader
 transforms:
-    - fenix_taskgraph.raptor:transforms
+    - fenix_taskgraph.transforms.raptor:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
     - signing
+
 only-for-build-types:
     - performance-test
+
 only-for-abis:
     - armeabi-v7a
     - arm64-v8a
@@ -49,8 +51,6 @@ job-defaults:
             - name: public/test_info/
               path: workspace/build/blobber_upload_dir
               type: directory
-
-
     run:
         using: run-task
         checkout: false

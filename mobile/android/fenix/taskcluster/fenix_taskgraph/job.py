@@ -15,6 +15,7 @@ from pipes import quote as shell_quote
 gradlew_schema = Schema(
     {
         Required("using"): "gradlew",
+        Optional("pre-gradlew"): [[text_type]],
         Required("gradlew"): [text_type],
         Optional("post-gradlew"): [[text_type]],
         # Base work directory used to set up the task.
@@ -53,7 +54,7 @@ def configure_gradlew(config, job, taskdesc):
 
 
 def _extract_command(run):
-    pre_gradle_commands = [["taskcluster/scripts/install-sdk.sh"]]
+    pre_gradle_commands = run.pop("pre-gradlew", [])
     pre_gradle_commands += [
         _generate_secret_command(secret) for secret in run.get("secrets", [])
     ]

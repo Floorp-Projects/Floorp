@@ -15,12 +15,30 @@ job-defaults:
         tier: 2
     worker-type: b-android
     worker:
+        docker-image: {in-tree: base}
         max-run-time: 7200
     run:
         using: gradlew
         use-caches: false
 
 jobs:
+    debug:
+        attributes:
+            build-type: debug
+            geckoview-engine: geckoNightly
+            code-review: true
+        treeherder:
+            platform: 'android-all/opt'
+            symbol: debug(T)
+            tier: 1
+        run:
+            gradlew: ['clean', '-Pcoverage', 'jacocoGeckoNightlyDebugTestReport']
+            post-gradlew:
+                - ['automation/taskcluster/upload_coverage_report.sh']
+            secrets:
+                - name: project/mobile/fenix/public-tokens
+                  key: codecov
+                  path: .cc_token
     ui:
         attributes:
             build-type: debug
