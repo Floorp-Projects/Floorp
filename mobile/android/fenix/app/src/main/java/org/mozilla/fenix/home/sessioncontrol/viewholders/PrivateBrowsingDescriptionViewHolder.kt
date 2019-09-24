@@ -6,8 +6,7 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders
 
 import android.text.SpannableString
 import android.text.method.LinkMovementMethod
-import android.text.style.ClickableSpan
-import android.text.style.ForegroundColorSpan
+import android.text.style.UnderlineSpan
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
@@ -24,26 +23,21 @@ class PrivateBrowsingDescriptionViewHolder(
 
     init {
         val resources = view.context.resources
-        // Format the description text to include a hyperlink
         val appName = resources.getString(R.string.app_name)
-        view.private_session_description.text = resources.getString(R.string.private_browsing_placeholder, appName)
-        val descriptionText = String
-            .format(view.private_session_description.text.toString(), System.getProperty("line.separator"))
-        val linkStartIndex = descriptionText.indexOf("\n\n") + 2
-        val linkAction = object : ClickableSpan() {
-            override fun onClick(widget: View?) {
+        view.private_session_description.text = resources.getString(
+            R.string.private_browsing_placeholder_description, appName
+        )
+        val commonMythsText = view.private_session_common_myths.text.toString()
+        val textWithLink = SpannableString(commonMythsText).apply {
+            setSpan(UnderlineSpan(), 0, commonMythsText.length, 0)
+        }
+        with(view.private_session_common_myths) {
+            movementMethod = LinkMovementMethod.getInstance()
+            text = textWithLink
+            setOnClickListener {
                 actionEmitter.onNext(TabAction.PrivateBrowsingLearnMore)
             }
         }
-        val textWithLink = SpannableString(descriptionText).apply {
-            setSpan(linkAction, linkStartIndex, descriptionText.length, 0)
-
-            val colorSpan = ForegroundColorSpan(view.private_session_description.currentTextColor)
-            setSpan(colorSpan, linkStartIndex, descriptionText.length, 0)
-        }
-
-        view.private_session_description.movementMethod = LinkMovementMethod.getInstance()
-        view.private_session_description.text = textWithLink
     }
 
     companion object {

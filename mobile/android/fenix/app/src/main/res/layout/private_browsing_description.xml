@@ -7,16 +7,29 @@
         android:id="@+id/private_session_description_wrapper"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
+        android:layout_margin="12dp"
+        android:importantForAccessibility="no"
         android:orientation="vertical">
     <TextView
             android:id="@+id/private_session_description"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ellipsize="none"
+            android:padding="4dp"
             android:gravity="center_vertical"
             android:scrollHorizontally="false"
-            tools:text="@string/private_browsing_placeholder"
+            tools:text="@string/private_browsing_placeholder_description"
+            android:textColor="?primaryText"
+            android:textSize="14sp" />
+    <TextView
+            android:id="@+id/private_session_common_myths"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="4dp"
+            android:ellipsize="none"
+            android:gravity="center_vertical"
+            android:scrollHorizontally="false"
+            android:text="@string/private_browsing_common_myths"
             android:textColor="?primaryText"
             android:textSize="14sp" />
 </LinearLayout>
