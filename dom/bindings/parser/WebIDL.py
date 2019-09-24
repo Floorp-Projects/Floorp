@@ -5624,7 +5624,11 @@ class IDLIncludesStatement(IDLObject):
             raise WebIDLError("Right-hand side of 'includes' is not an "
                               "interface mixin",
                               [self.mixin.location])
-        mixin.actualExposureGlobalNames.update(interface._exposureGlobalNames)
+        if len(interface._exposureGlobalNames) != 0:
+            mixin.actualExposureGlobalNames.update(interface._exposureGlobalNames)
+        else:
+            mixin.actualExposureGlobalNames.add(scope.primaryGlobalName);
+
         interface.addIncludedMixin(mixin)
         self.interface = interface
         self.mixin = mixin
