@@ -332,7 +332,7 @@ TEST(TestCookie, TestCookieMain)
   EXPECT_TRUE(CheckResult(cookie.get(), MUST_EQUAL, "test=path"));
   GetACookie(cookieService, "http://path.net/path?hithere/foo", nullptr,
              cookie);
-  EXPECT_TRUE(CheckResult(cookie.get(), MUST_BE_NULL));
+  EXPECT_TRUE(CheckResult(cookie.get(), MUST_EQUAL, "test=path"));
   GetACookie(cookieService, "http://path.net/path2", nullptr, cookie);
   EXPECT_TRUE(CheckResult(cookie.get(), MUST_BE_NULL));
   GetACookie(cookieService, "http://path.net/path2/", nullptr, cookie);
