@@ -1107,11 +1107,6 @@ class HTMLMediaElement::AudioChannelAgentCallback final
     if (!IsPlayingStarted()) {
       return;
     }
-
-    if (!mOwner->HasAudio()) {
-      return;
-    }
-
     mOwner->AudioCaptureStreamChange(mAudioCapturedByWindow);
   }
 
