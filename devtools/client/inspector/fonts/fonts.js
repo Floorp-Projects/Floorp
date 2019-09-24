@@ -932,7 +932,7 @@ class FontInspector {
     // If the Rule panel is not visible, the selected element's rule models may not have
     // been created yet. For example, in 2-pane mode when Fonts is opened as the default
     // panel. Select the current node to force the Rule view to create the rule models.
-    if (!this.ruleViewTool.isSidebarActive()) {
+    if (!this.ruleViewTool.isPanelVisible()) {
       await this.ruleView.selectElement(this.node, false);
     }
 

@@ -93,5 +93,5 @@ interface XULElement : Element {
 XULElement includes GlobalEventHandlers;
 XULElement includes HTMLOrForeignElement;
 XULElement includes ElementCSSInlineStyle;
-XULElement implements TouchEventHandlers;
-XULElement implements OnErrorEventHandlerForNodes;
+XULElement includes TouchEventHandlers;
+XULElement includes OnErrorEventHandlerForNodes;

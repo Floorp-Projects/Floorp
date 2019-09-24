@@ -74,7 +74,7 @@ try:
         "/Checks", "WXCheck"
     ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-except WindowsError, (errno, strerror):
+except WindowsError, (errno, strerror):  # noqa
     if errno != 2 and errno != 3:
         print("TEST-UNEXPECTED-FAIL | autobinscope.py | Unexpected error %d : %s" (
             errno, strerror))

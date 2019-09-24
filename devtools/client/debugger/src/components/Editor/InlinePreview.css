@@ -3,8 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .inline-preview {
-  position: relative;
-  margin-top: calc(var(--theme-code-line-height) * -11px);
+  display: inline-block;
   margin-inline-start: 8px;
 }
 

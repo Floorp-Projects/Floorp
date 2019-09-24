@@ -91,10 +91,6 @@ lazy_static! {
         // Disable intalling any distribution extensions or add-ons
         ("extensions.installDistroAddons", Pref::new(false)),
 
-        // Make sure Shield doesn't hit the network.
-        // TODO: Remove once minimum supported Firefox release is 60.
-        ("extensions.shield-recipe-client.api_url", Pref::new("")),
-
         // Disable extensions compatibility dialogue.
         // TODO: Remove once minimum supported Firefox release is 61.
         ("extensions.showMismatchUI", Pref::new(false)),

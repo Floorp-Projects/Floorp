@@ -2867,7 +2867,7 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName, int64_t aId,
   IDBOpenDBOptions options;
   JS::Rooted<JS::Value> optionsVal(aCx, aOptions);
   if (!options.Init(aCx, optionsVal)) {
-    return NS_ERROR_TYPE_ERR;
+    return NS_ERROR_UNEXPECTED;
   }
 
   quota::PersistenceType persistenceType =

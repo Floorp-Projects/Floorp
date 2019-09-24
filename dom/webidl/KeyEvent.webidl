@@ -7,6 +7,11 @@
 // http://www.w3.org/TR/1999/WD-DOM-Level-2-19990923/events.html#Events-KeyEvent
 interface KeyEvent
 {
+  // It's all mixed in.
+};
+KeyEvent includes KeyEventMixin;
+
+interface mixin KeyEventMixin {
   const unsigned long DOM_VK_CANCEL         = 0x03;
   const unsigned long DOM_VK_HELP           = 0x06;
   const unsigned long DOM_VK_BACK_SPACE     = 0x08;

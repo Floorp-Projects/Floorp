@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from WebIDL import IDLImplementsStatement
+from WebIDL import IDLImplementsStatement, IDLIncludesStatement
 import os
 from collections import defaultdict
 
@@ -70,6 +70,27 @@ class Configuration(DescriptorProvider):
                         "%s\n"
                         "%s" %
                         (thing.location, thing.implementor.location))
+
+            if isinstance(thing, IDLIncludesStatement):
+                # Our build system doesn't support dep build involving
+                # addition/removal of "includes" statements that appear in a
+                # different .webidl file than their LHS interface.  Make sure we
+                # don't have any of those.  See similar block below for partial
+                # interfaces!
+                #
+                # But whitelist a RHS that is LegacyQueryInterface,
+                # since people shouldn't be adding any of those.
+                if (thing.interface.filename() != thing.filename() and
+                    thing.mixin.identifier.name != "LegacyQueryInterface"):
+                    raise TypeError(
+                        "The binding build system doesn't really support "
+                        "'includes' statements which don't appear in the "
+                        "file in which the left-hand side of the statement is "
+                        "defined.  Don't do this unless your right-hand side "
+                        "is LegacyQueryInterface.\n"
+                        "%s\n"
+                        "%s" %
+                        (thing.location, thing.interface.location))
 
             assert not thing.isType()
 
@@ -286,8 +307,6 @@ class NoSuchDescriptorError(TypeError):
 
 def methodReturnsJSObject(method):
     assert method.isMethod()
-    if method.returnsPromise():
-        return True
 
     for signature in method.signatures():
         returnType = signature[0]
@@ -656,9 +675,11 @@ class Descriptor(DescriptorProvider):
         if member.isMethod():
             # JSObject-returning [NewObject] methods must be fallible,
             # since they have to (fallibly) allocate the new JSObject.
-            if (member.getExtendedAttribute("NewObject") and
-                methodReturnsJSObject(member)):
-                throws = True
+            if member.getExtendedAttribute("NewObject"):
+                if member.returnsPromise():
+                    throws = True
+                elif methodReturnsJSObject(member):
+                    canOOM = True
             attrs = self.extendedAttributes['all'].get(name, [])
             maybeAppendInfallibleToAttrs(attrs, throws)
             maybeAppendCanOOMToAttrs(attrs, canOOM)

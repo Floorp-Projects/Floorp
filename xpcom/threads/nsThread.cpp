@@ -1223,6 +1223,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
       currentPerformanceCounter = mCurrentPerformanceCounter;
 
       event->Run();
+      mEvents->DidRunEvent();
 
       mozilla::TimeDuration duration;
       // Remember the last 50ms+ task on mainthread for Long Task.

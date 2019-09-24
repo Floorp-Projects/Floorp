@@ -199,7 +199,7 @@ async function testCookies(options) {
         {},
         Ci.nsICookie.SAMESITE_NONE
       );
-      Services.cookies.remove(domain, "x", "/", false, {});
+      Services.cookies.remove(domain, "x", "/", {});
       sendAsyncMessage("done");
     });
   });
@@ -259,7 +259,7 @@ async function testCookies(options) {
       }
 
       for (let cookie of cookies) {
-        cookieSvc.remove(cookie.host, cookie.name, "/", false, {});
+        cookieSvc.remove(cookie.host, cookie.name, "/", {});
       }
       // Make sure we don't silently poison subsequent tests if something goes wrong.
       assert.equal(getCookies(options.domain).length, 0, "cookies cleared");

@@ -3597,6 +3597,11 @@
   value: 12
   mirror: always
 
+- name: idle_period.cross_process_scheduling
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "image."
 #---------------------------------------------------------------------------
@@ -6490,7 +6495,7 @@
 # Time in milliseconds during which certain tasks are deprioritized during
 # page load.
 - name: page_load.deprioritization_period
-  type: uint32_t
+  type: RelaxedAtomicUint32
   value: 5000
   mirror: always
 

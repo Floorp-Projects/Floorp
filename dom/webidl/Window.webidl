@@ -91,7 +91,7 @@ typedef OfflineResourceList ApplicationCache;
   // also has obsolete members
 };
 Window includes GlobalEventHandlers;
-Window implements WindowEventHandlers;
+Window includes WindowEventHandlers;
 
 // https://www.w3.org/TR/appmanifest/#onappinstalled-attribute
 partial interface Window {
@@ -100,19 +100,17 @@ partial interface Window {
 };
 
 // http://www.whatwg.org/specs/web-apps/current-work/
-[NoInterfaceObject]
-interface WindowSessionStorage {
+interface mixin WindowSessionStorage {
   //[Throws] readonly attribute Storage sessionStorage;
   [Throws] readonly attribute Storage? sessionStorage;
 };
-Window implements WindowSessionStorage;
+Window includes WindowSessionStorage;
 
 // http://www.whatwg.org/specs/web-apps/current-work/
-[NoInterfaceObject]
-interface WindowLocalStorage {
+interface mixin WindowLocalStorage {
   [Throws] readonly attribute Storage? localStorage;
 };
-Window implements WindowLocalStorage;
+Window includes WindowLocalStorage;
 
 // http://www.whatwg.org/specs/web-apps/current-work/
 partial interface Window {
@@ -221,19 +219,18 @@ partial interface Window {
 };
 
 // https://dvcs.w3.org/hg/webcrypto-api/raw-file/tip/spec/Overview.html
-Window implements GlobalCrypto;
+Window includes GlobalCrypto;
 
 // https://fidoalliance.org/specifications/download/
-Window implements GlobalU2F;
+Window includes GlobalU2F;
 
 #ifdef MOZ_WEBSPEECH
 // http://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi.html
-[NoInterfaceObject]
-interface SpeechSynthesisGetter {
+interface mixin SpeechSynthesisGetter {
   [Throws, Pref="media.webspeech.synth.enabled"] readonly attribute SpeechSynthesis speechSynthesis;
 };
 
-Window implements SpeechSynthesisGetter;
+Window includes SpeechSynthesisGetter;
 #endif
 
 // Mozilla-specific stuff
@@ -377,9 +374,9 @@ partial interface Window {
   WindowGlobalChild getWindowGlobalChild();
 };
 
-Window implements TouchEventHandlers;
+Window includes TouchEventHandlers;
 
-Window implements OnErrorEventHandlerForWindow;
+Window includes OnErrorEventHandlerForWindow;
 
 #if defined(MOZ_WIDGET_ANDROID)
 // https://compat.spec.whatwg.org/#windoworientation-interface
@@ -544,7 +541,7 @@ partial interface Window {
     readonly attribute Worklet paintWorklet;
 };
 
-Window implements WindowOrWorkerGlobalScope;
+Window includes WindowOrWorkerGlobalScope;
 
 partial interface Window {
   [Throws, Func="nsGlobalWindowInner::IsRequestIdleCallbackEnabled"]
@@ -604,7 +601,7 @@ partial interface Window {
   readonly attribute IntlUtils intlUtils;
 };
 
-Window implements WebGPUProvider;
+Window includes WebGPUProvider;
 
 partial interface Window {
   [SameObject, Pref="dom.visualviewport.enabled", Replaceable]

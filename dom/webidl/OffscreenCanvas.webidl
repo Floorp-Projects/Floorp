@@ -28,4 +28,3 @@ interface OffscreenCanvas : EventTarget {
                        optional any encoderOptions);
 };
 
-// OffscreenCanvas implements Transferable;

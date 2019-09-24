@@ -18,8 +18,7 @@ dictionary GetAnimationsOptions {
   boolean subtree = false;
 };
 
-[NoInterfaceObject]
-interface Animatable {
+interface mixin Animatable {
   [Throws]
   Animation animate(object? keyframes,
                     optional UnrestrictedDoubleOrKeyframeAnimationOptions options = {});

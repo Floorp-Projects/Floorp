@@ -18,7 +18,7 @@ from mozboot import rust
 # the six module.
 if sys.version_info < (3,):
     from urllib2 import urlopen
-    input = raw_input
+    input = raw_input  # noqa
 else:
     from urllib.request import urlopen
 
