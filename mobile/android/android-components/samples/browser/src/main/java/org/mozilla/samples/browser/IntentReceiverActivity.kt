@@ -15,6 +15,7 @@ class IntentReceiverActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         MainScope().launch {
             val intent = intent?.let { Intent(it) } ?: Intent()
             val intentProcessors = components.externalAppIntentProcessors + components.tabIntentProcessor
@@ -23,8 +24,8 @@ class IntentReceiverActivity : Activity() {
 
             setBrowserActivity(intent)
 
-            startActivity(intent)
             finish()
+            startActivity(intent)
         }
     }
 
