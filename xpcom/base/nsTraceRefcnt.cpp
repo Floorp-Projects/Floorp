@@ -762,6 +762,13 @@ void nsTraceRefcnt::WalkTheStack(FILE* aStream) {
   MozStackWalk(PrintStackFrame, /* skipFrames */ 2, /* maxFrames */ 0, aStream);
 }
 
+#ifdef ANDROID
+void nsTraceRefcnt::WalkTheStack(void (*aWriter)(uint32_t, void*, void*,
+                                                 void*)) {
+  MozStackWalk(aWriter, /* skipFrames */ 2, /* maxFrames */ 0, nullptr);
+}
+#endif
+
 /**
  * This is a variant of |WalkTheStack| that uses |CodeAddressService| to cache
  * the results of |NS_DescribeCodeAddress|. If |WalkTheStackCached| is being
