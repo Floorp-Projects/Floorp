@@ -75,7 +75,7 @@ child:
                               uint32_t? aContentDisposition,
                               nsString? aContentDispositionFilename) returns(nsresult rv);
 
-  async ConfirmRedirect(nsIURI aNewURI) returns(nsresult rv);
+  async ConfirmRedirect(nsIURI aNewURI) returns(nsresult rv, nsresult? cancelCode);
 
   // Tell child to delete channel (all IPDL deletes must be done from child to
   // avoid races: see bug 591708).
