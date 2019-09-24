@@ -455,12 +455,6 @@ function startup() {
   const browser = createBrowser();
   ModuleManager.init(browser, [
     {
-      name: "GeckoViewAccessibility",
-      onInit: {
-        resource: "resource://gre/modules/GeckoViewAccessibility.jsm",
-      },
-    },
-    {
       name: "GeckoViewContent",
       onInit: {
         resource: "resource://gre/modules/GeckoViewContent.jsm",
