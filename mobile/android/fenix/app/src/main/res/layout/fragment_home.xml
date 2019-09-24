@@ -65,8 +65,9 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/bottom_bar"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="wrap_content"
             android:background="?bottomBarBackground"
+            android:paddingBottom="2dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -75,11 +76,8 @@
                 android:id="@+id/toolbar_wrapper"
                 android:transitionName="toolbar_wrapper_transition"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="16dp"
-                android:layout_marginEnd="8dp"
+                android:layout_height="40dp"
+                android:layout_margin="8dp"
                 android:background="@drawable/home_search_background_normal"
                 android:clickable="true"
                 android:contentDescription="@string/search_hint"
@@ -93,7 +91,8 @@
                     android:id="@+id/search_engine_icon"
                     android:layout_width="24dp"
                     android:layout_height="24dp"
-                    android:layout_margin="12dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_gravity="center_vertical"
                     android:clickable="false"
                     android:focusable="false"
                     android:importantForAccessibility="no" />
@@ -103,12 +102,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginStart="47dp"
+                    android:layout_marginStart="40dp"
                     android:clickable="false"
                     android:focusable="false"
                     android:importantForAccessibility="no"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp"
                     android:text="@string/search_hint"
                     android:textColor="?primaryText"
                     android:textSize="15sp" />
@@ -116,8 +113,8 @@
 
             <ImageButton
                 android:id="@+id/add_tab_button"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/add_tab"
                 android:src="@drawable/ic_new"
@@ -128,9 +125,9 @@
 
             <ImageButton
                 android:id="@+id/menuButton"
-                android:layout_width="@dimen/glyph_button_height"
-                android:layout_height="@dimen/glyph_button_height"
-                android:layout_marginEnd="16dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="6dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/content_description_menu"
                 android:src="@drawable/ic_menu"
