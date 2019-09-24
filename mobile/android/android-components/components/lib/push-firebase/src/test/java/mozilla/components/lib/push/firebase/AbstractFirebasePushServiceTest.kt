@@ -1,12 +1,11 @@
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public
- *  License, v. 2.0. If a copy of the MPL was not distributed with this
- *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package mozilla.components.lib.push.firebase
 
 import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.Dispatchers
 import mozilla.components.concept.push.EncryptedPushMessage
@@ -27,9 +26,8 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import org.robolectric.shadows.gms.common.ShadowGoogleApiAvailability
-import com.google.android.gms.common.GoogleApiAvailability
 import org.robolectric.shadows.gms.Shadows
+import org.robolectric.shadows.gms.common.ShadowGoogleApiAvailability
 
 @RunWith(RobolectricTestRunner::class)
 @Config(shadows = [ShadowGoogleApiAvailability::class])

@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package mozilla.components.service.glean.private
 
 import androidx.test.core.app.ApplicationProvider
@@ -6,14 +10,13 @@ import mozilla.components.service.glean.error.ErrorRecording.testGetNumRecordedE
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.service.glean.timing.TimingManager
 import org.junit.Assert.assertEquals
-import org.junit.Test
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.lang.NullPointerException
 
 @RunWith(RobolectricTestRunner::class)
 class TimespanMetricTypeTest {

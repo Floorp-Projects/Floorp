@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package mozilla.components.feature.prompts
 
 import android.content.DialogInterface.BUTTON_NEGATIVE
@@ -9,7 +13,6 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.ext.appCompatContext
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.feature.prompts.ChoiceAdapter.Companion.TYPE_GROUP
 import mozilla.components.feature.prompts.ChoiceAdapter.Companion.TYPE_MENU
@@ -26,6 +29,7 @@ import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.SINGLE_
 import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.newInstance
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.ext.appCompatContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
