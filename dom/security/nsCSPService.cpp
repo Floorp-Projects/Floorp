@@ -316,11 +316,11 @@ nsresult CSPService::ConsultCSPForRedirect(nsIURI* aOriginalURI,
   nsCOMPtr<nsICSPEventListener> cspEventListener;
   nsresult rv =
       aLoadInfo->GetCspEventListener(getter_AddRefs(cspEventListener));
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  MOZ_ALWAYS_SUCCEEDS(rv);
 
   nsAutoString cspNonce;
   rv = aLoadInfo->GetCspNonce(cspNonce);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  MOZ_ALWAYS_SUCCEEDS(rv);
 
   nsContentPolicyType policyType = aLoadInfo->InternalContentPolicyType();
   bool isPreload = nsContentUtils::IsPreloadType(policyType);
