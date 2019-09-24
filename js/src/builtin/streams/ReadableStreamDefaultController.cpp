@@ -18,7 +18,7 @@
 #include "builtin/streams/PullIntoDescriptor.h"       // js::PullIntoDescriptor
 #include "builtin/streams/QueueWithSizes.h"  // js::{DequeueValue,ResetQueue}
 #include "builtin/streams/ReadableStream.h"  // js::ReadableStream, js::SetUpExternalReadableByteStreamController
-#include "builtin/streams/ReadableStreamController.h"  // js::ReadableStream{,Default}Controller, js::ReadableByteStreamController, js::CheckReadableStreamControllerCanCloseOrEnqueue, js::ReadableStreamControllerCancelSteps, js::ReadableStreamDefaultControllerPullSteps, js::ControllerStart{,Failed}Handler
+#include "builtin/streams/ReadableStreamController.h"  // js::ReadableStream{,Default}Controller, js::ReadableByteStreamController, js::CheckReadableStreamControllerCanCloseOrEnqueue, js::ReadableStreamControllerCancelSteps, js::ReadableStreamDefaultControllerPullSteps, js::ReadableStreamControllerStart{,Failed}Handler
 #include "builtin/streams/ReadableStreamDefaultControllerOperations.h"  // js::ReadableStreamController{CallPullIfNeeded,ClearAlgorithms,Error,GetDesiredSizeUnchecked}, js::ReadableStreamDefaultController{Close,Enqueue}
 #include "builtin/streams/ReadableStreamInternals.h"  // js::ReadableStream{AddReadOrReadIntoRequest,CloseInternal,CreateReadResult}
 #include "builtin/streams/ReadableStreamOperations.h"  // js::ReadableStreamTee_Cancel
@@ -67,7 +67,8 @@ using JS::Value;
  * Streams spec, 3.13.26. SetUpReadableByteStreamController, step 16:
  *      Upon fulfillment of startPromise, [...]
  */
-bool js::ControllerStartHandler(JSContext* cx, unsigned argc, Value* vp) {
+bool js::ReadableStreamControllerStartHandler(JSContext* cx, unsigned argc,
+                                              Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   Rooted<ReadableStreamController*> controller(
       cx, TargetFromHandler<ReadableStreamController>(args));
@@ -97,8 +98,8 @@ bool js::ControllerStartHandler(JSContext* cx, unsigned argc, Value* vp) {
  * Streams spec, 3.13.26. SetUpReadableByteStreamController, step 17:
  *      Upon rejection of startPromise with reason r, [...]
  */
-bool js::ControllerStartFailedHandler(JSContext* cx, unsigned argc,
-                                      JS::Value* vp) {
+bool js::ReadableStreamControllerStartFailedHandler(JSContext* cx,
+                                                    unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   Rooted<ReadableStreamController*> controller(
       cx, TargetFromHandler<ReadableStreamController>(args));
