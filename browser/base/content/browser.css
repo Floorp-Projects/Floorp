@@ -247,6 +247,10 @@ toolbar[customizing] > .overflow-button {
   display: none;
 }
 
+toolbar[customizing] #whats-new-menu-button {
+  display: none;
+}
+
 window:not([chromehidden~="toolbar"]) #nav-bar[nonemptyoverflow] > .overflow-button,
 #nav-bar[customizing] > .overflow-button {
   display: -moz-box;
