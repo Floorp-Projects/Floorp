@@ -31,9 +31,16 @@ class RenderDXGITextureHostOGL final : public RenderTextureHostOGL {
   virtual gfx::IntSize GetSize(uint8_t aChannelIndex) const;
   virtual GLuint GetGLHandle(uint8_t aChannelIndex) const;
 
+  virtual RenderDXGITextureHostOGL* AsRenderDXGITextureHostOGL() {
+    return this;
+  }
+
+  ID3D11Texture2D* GetD3D11Texture2D();
+
  private:
   virtual ~RenderDXGITextureHostOGL();
 
+  bool EnsureD3D11Texture2D();
   bool EnsureLockable(wr::ImageRendering aRendering);
 
   void DeleteTextureHandle();

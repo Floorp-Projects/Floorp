@@ -22,6 +22,7 @@ class GLContext;
 
 namespace wr {
 
+class RenderDXGITextureHostOGL;
 class RenderBufferTextureHost;
 class RenderTextureHostOGL;
 
@@ -43,6 +44,10 @@ class RenderTextureHost {
   virtual void PrepareForUse() {}
   virtual void NofityForUse() {}
   virtual void NotifyNotUsed() {}
+
+  virtual RenderDXGITextureHostOGL* AsRenderDXGITextureHostOGL() {
+    return nullptr;
+  }
 
  protected:
   virtual ~RenderTextureHost();
