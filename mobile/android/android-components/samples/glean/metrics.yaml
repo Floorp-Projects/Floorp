@@ -8,6 +8,9 @@
 
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
 
+no_lint:
+  - COMMON_PREFIX
+
 browser.engagement:
   click:
     type: event
