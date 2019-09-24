@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from WebIDL import IDLImplementsStatement
+from WebIDL import IDLImplementsStatement, IDLIncludesStatement
 import os
 from collections import defaultdict
 
@@ -70,6 +70,27 @@ class Configuration(DescriptorProvider):
                         "%s\n"
                         "%s" %
                         (thing.location, thing.implementor.location))
+
+            if isinstance(thing, IDLIncludesStatement):
+                # Our build system doesn't support dep build involving
+                # addition/removal of "includes" statements that appear in a
+                # different .webidl file than their LHS interface.  Make sure we
+                # don't have any of those.  See similar block below for partial
+                # interfaces!
+                #
+                # But whitelist a RHS that is LegacyQueryInterface,
+                # since people shouldn't be adding any of those.
+                if (thing.interface.filename() != thing.filename() and
+                    thing.mixin.identifier.name != "LegacyQueryInterface"):
+                    raise TypeError(
+                        "The binding build system doesn't really support "
+                        "'includes' statements which don't appear in the "
+                        "file in which the left-hand side of the statement is "
+                        "defined.  Don't do this unless your right-hand side "
+                        "is LegacyQueryInterface.\n"
+                        "%s\n"
+                        "%s" %
+                        (thing.location, thing.interface.location))
 
             assert not thing.isType()
 

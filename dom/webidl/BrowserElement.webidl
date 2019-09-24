@@ -4,14 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[NoInterfaceObject]
-interface BrowserElement {
-};
-
-BrowserElement implements BrowserElementPrivileged;
-
-[NoInterfaceObject]
-interface BrowserElementPrivileged {
+interface mixin BrowserElement {
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
    ChromeOnly]

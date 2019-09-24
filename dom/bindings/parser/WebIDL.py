@@ -770,7 +770,7 @@ class IDLInterfaceOrInterfaceMixinOrNamespace(IDLObjectWithScope, IDLExposureMix
         # sets, make sure they aren't exposed in places where we are not.
         for member in self.members:
             if not member.exposureSet.issubset(self.exposureSet):
-                raise WebIDLError("Interface or interface mixin member has"
+                raise WebIDLError("Interface or interface mixin member has "
                                   "larger exposure set than its container",
                                   [member.location, self.location])
 
@@ -5615,15 +5615,15 @@ class IDLIncludesStatement(IDLObject):
         if not isinstance(interface, IDLInterface):
             raise WebIDLError("Left-hand side of 'includes' is not an "
                               "interface",
-                              [self.interface.location])
+                              [self.interface.location, interface.location])
         if interface.isCallback():
             raise WebIDLError("Left-hand side of 'includes' is a callback "
                               "interface",
-                              [self.interface.location])
+                              [self.interface.location, interface.location])
         if not isinstance(mixin, IDLInterfaceMixin):
             raise WebIDLError("Right-hand side of 'includes' is not an "
                               "interface mixin",
-                              [self.mixin.location])
+                              [self.mixin.location, mixin.location])
         if len(interface._exposureGlobalNames) != 0:
             mixin.actualExposureGlobalNames.update(interface._exposureGlobalNames)
         else:

@@ -27,5 +27,5 @@ interface SVGFilterElement : SVGElement {
   // ImageData apply(ImageData source);
 };
 
-SVGFilterElement implements SVGURIReference;
+SVGFilterElement includes SVGURIReference;
 

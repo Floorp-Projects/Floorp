@@ -21,4 +21,4 @@ interface MediaStreamTrackAudioSourceNode : AudioNode {
 };
 
 // Mozilla extensions
-MediaStreamTrackAudioSourceNode implements AudioNodePassThrough;
+MediaStreamTrackAudioSourceNode includes AudioNodePassThrough;

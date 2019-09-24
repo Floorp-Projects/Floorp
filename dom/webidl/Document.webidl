@@ -621,12 +621,12 @@ partial interface Document {
 Document includes XPathEvaluatorMixin;
 Document includes GlobalEventHandlers;
 Document includes DocumentAndElementEventHandlers;
-Document implements TouchEventHandlers;
-Document implements ParentNode;
-Document implements OnErrorEventHandlerForNodes;
-Document implements GeometryUtils;
-Document implements FontFaceSource;
-Document implements DocumentOrShadowRoot;
+Document includes TouchEventHandlers;
+Document includes ParentNode;
+Document includes OnErrorEventHandlerForNodes;
+Document includes GeometryUtils;
+Document includes  FontFaceSource;
+Document includes DocumentOrShadowRoot;
 
 // https://w3c.github.io/webappsec-feature-policy/#idl-index
 partial interface Document {

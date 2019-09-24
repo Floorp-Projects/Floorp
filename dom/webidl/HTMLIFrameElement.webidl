@@ -67,8 +67,8 @@ partial interface HTMLIFrameElement {
            attribute boolean mozbrowser;
 };
 
-HTMLIFrameElement implements MozFrameLoaderOwner;
-HTMLIFrameElement implements BrowserElement;
+HTMLIFrameElement includes MozFrameLoaderOwner;
+HTMLIFrameElement includes BrowserElement;
 
 // https://w3c.github.io/webappsec-feature-policy/#idl-index
 partial interface HTMLIFrameElement {
