@@ -787,6 +787,45 @@ typedef PRTime(PR_CALLBACK *SSLTimeFunc)(void *arg);
                          (cert, certPriv, dcPub, dcCertVerifyAlg, dcValidFor, \
                           now, out))
 
+/* New functions created to permit get/set the CipherSuites Order for the
+ * handshake (Client Hello).
+ *
+ * The *Get function puts the current set of active (enabled and policy set as
+ * PR_TRUE) cipher suites in the cipherOrder outparam. Cipher suites that 
+ * aren't active aren't included. The paramenters are:
+ *   - PRFileDesc *fd = FileDescriptor to get information.
+ *   - PRUint16 *cipherOrder = The memory allocated for cipherOrder needs to be
+ *     SSL_GetNumImplementedCiphers() * sizeof(PRUint16) or more.
+ *   - PRUint16 numCiphers = The number of active ciphersuites listed in 
+ *     *cipherOrder is written here.
+ *
+ * The *Set function permits reorder the CipherSuites list for the Handshake
+ * (Client Hello). The default ordering defined in ssl3con.c is enough in
+ * almost all cases. But, if the client needs some hardening or performance
+ * adjusts related to CipherSuites, this can be done with this function.
+ * The caller has to be aware about the risk of call this function while a
+ * handshake are being processed in this fd/socket. For example, if you disable
+ * a cipher after the handshake and this cipher was choosen for that
+ * connection, something bad will happen.
+ * The parameters are:
+ *   - PRFileDesc *fd = FileDescriptor to change.
+ *   - const PRUint16 *cipherOrder = Must receive all ciphers to be ordered, in
+ *     the desired order. They will be set in the begin of the list. Only
+ *     suites listed by SSL_ImplementedCiphers() can be included.
+ *   - PRUint16 numCiphers = Must receive the number of items in *cipherOrder. 
+ * */
+#define SSL_CipherSuiteOrderGet(fd, cipherOrder, numCiphers)         \
+    SSL_EXPERIMENTAL_API("SSL_CipherSuiteOrderGet",                  \
+                         (PRFileDesc * _fd, PRUint16 * _cipherOrder, \
+                          unsigned int *_numCiphers),                \
+                         (fd, cipherOrder, numCiphers))
+
+#define SSL_CipherSuiteOrderSet(fd, cipherOrder, numCiphers)              \
+    SSL_EXPERIMENTAL_API("SSL_CipherSuiteOrderSet",                       \
+                         (PRFileDesc * _fd, const PRUint16 *_cipherOrder, \
+                          PRUint16 _numCiphers),                          \
+                         (fd, cipherOrder, numCiphers))
+
 /* Deprecated experimental APIs */
 #define SSL_UseAltServerHelloType(fd, enable) SSL_DEPRECATED_EXPERIMENTAL_API
 #define SSL_SetupAntiReplay(a, b, c) SSL_DEPRECATED_EXPERIMENTAL_API

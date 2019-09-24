@@ -18,6 +18,7 @@
         'ssl_agent_unittest.cc',
         'ssl_auth_unittest.cc',
         'ssl_cert_ext_unittest.cc',
+        'ssl_cipherorder_unittest.cc',
         'ssl_ciphersuite_unittest.cc',
         'ssl_custext_unittest.cc',
         'ssl_damage_unittest.cc',

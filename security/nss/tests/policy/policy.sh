@@ -14,7 +14,7 @@
 
 ignore_blank_lines()
 {
-  LC_ALL=C grep -v '^[[:space:]]*\(#\|$\)' "$1"
+  LC_ALL=C egrep -v '^[[:space:]]*(#|$)' "$1"
 }
 
 policy_run_tests()

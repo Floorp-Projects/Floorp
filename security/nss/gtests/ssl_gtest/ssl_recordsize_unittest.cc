@@ -230,14 +230,15 @@ TEST_P(TlsConnectTls13, RecordSizePlaintextExceed) {
 
 // Tweak the ciphertext of server records so that they greatly exceed the limit.
 // This requires a much larger expansion than for plaintext to trigger the
-// guard, which runs before decryption (current allowance is 304 octets).
+// guard, which runs before decryption (current allowance is 320 octets,
+// see MAX_EXPANSION in ssl3con.c).
 TEST_P(TlsConnectTls13, RecordSizeCiphertextExceed) {
   EnsureTlsSetup();
 
   client_->SetOption(SSL_RECORD_SIZE_LIMIT, 64);
   Connect();
 
-  auto server_expand = MakeTlsFilter<TlsRecordExpander>(server_, 320);
+  auto server_expand = MakeTlsFilter<TlsRecordExpander>(server_, 336);
   server_->SendData(100);
 
   client_->ExpectReadWriteError();
