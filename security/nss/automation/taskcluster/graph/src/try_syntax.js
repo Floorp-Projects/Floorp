@@ -183,6 +183,17 @@ export async function initFilter() {
 
   // Add try syntax filter.
   if (match) {
-    queue.filter(filter(parseOptions(match[1])));
+    let match1 = match[1];
+    queue.filter(filter(parseOptions(match1)));
+
+    if (match1.includes("--nspr-patch")) {
+      queue.map(task => {
+        if (!task.env) {
+          task.env = {};
+        }
+        task.env.ALLOW_NSPR_PATCH = "1";
+        return task;
+      });
+    }
   }
 }

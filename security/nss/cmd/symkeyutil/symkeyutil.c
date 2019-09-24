@@ -254,7 +254,7 @@ HexToBuf(char *inString, SECItem *outbuf)
     int trueLen = 0;
 
     outbuf->data = PORT_Alloc(outlen);
-    if (outbuf->data) {
+    if (!outbuf->data) {
         return -1;
     }
 
