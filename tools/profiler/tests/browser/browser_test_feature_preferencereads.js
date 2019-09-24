@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+requestLongerTimeout(10);
+
 function countDpiPrefReadsInThread(thread) {
   let count = 0;
   for (let payload of getPayloadsOfType(thread, "PreferenceRead")) {
@@ -10,6 +12,23 @@ function countDpiPrefReadsInThread(thread) {
     }
   }
   return count;
+}
+
+async function waitForPaintAfterLoad() {
+  return ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+    return new Promise(function(resolve) {
+      function listener() {
+        if (content.document.readyState == "complete") {
+          content.requestAnimationFrame(() => setTimeout(resolve, 0));
+        }
+      }
+      if (content.document.readyState != "complete") {
+        content.document.addEventListener("readystatechange", listener);
+      } else {
+        listener();
+      }
+    });
+  });
 }
 
 /**
@@ -34,8 +53,7 @@ add_task(async function test_profile_feature_preferencereads() {
       () => Services.appinfo.processID
     );
 
-    // Wait 100ms so that the tab finishes executing.
-    await wait(100);
+    await waitForPaintAfterLoad();
 
     // Check that some PreferenceRead profile markers were generated when the
     // feature is enabled.
@@ -54,8 +72,17 @@ add_task(async function test_profile_feature_preferencereads() {
 
     startProfiler({ features: ["threads"] });
     // Now reload the tab with a clean run.
-    gBrowser.reload();
-    await wait(100);
+    await ContentTask.spawn(contentBrowser, null, () => {
+      return new Promise(resolve => {
+        addEventListener("pageshow", () => resolve(), {
+          capturing: true,
+          once: true,
+        });
+        content.location.reload();
+      });
+    });
+
+    await waitForPaintAfterLoad();
 
     // Check that no PreferenceRead markers were recorded when the feature
     // is turned off.
