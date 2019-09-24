@@ -101,7 +101,10 @@ class gfxPlatformGtk : public gfxPlatform {
     mWaylandFrameDelay = aFrameDelay;
   }
   int64_t GetWaylandFrameDelay() { return mWaylandFrameDelay; }
+  bool UseWaylandDMABufSurfaces();
 #endif
+
+  bool IsX11Display() { return mIsX11Display; }
 
  protected:
   void InitPlatformGPUProcessPrefs() override;
@@ -112,6 +115,7 @@ class gfxPlatformGtk : public gfxPlatform {
  private:
   void GetPlatformCMSOutputProfile(void*& mem, size_t& size) override;
 
+  bool mIsX11Display;
 #ifdef MOZ_X11
   Display* mCompositorDisplay;
 #endif
