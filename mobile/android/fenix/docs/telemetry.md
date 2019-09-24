@@ -20,3 +20,6 @@ Fenix sends an activation ping once, at startup. Further documentation can be fo
 
 ## Leanplum
 See [here](https://github.com/mozilla-mobile/fenix/blob/master/docs/mma.md) for details on Leanplum usage in Firefox Preview.
+
+## Crash reporting
+See [here](https://github.com/mozilla-mobile/fenix/blob/master/docs/crash-reporting.md) for details on crash reporting in Firefox Preview.
