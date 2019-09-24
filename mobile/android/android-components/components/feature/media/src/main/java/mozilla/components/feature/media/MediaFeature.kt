@@ -5,7 +5,6 @@
 package mozilla.components.feature.media
 
 import android.content.Context
-import mozilla.components.feature.media.ext.hasMediaWithSufficientLongDuration
 import mozilla.components.feature.media.facts.emitStatePauseFact
 import mozilla.components.feature.media.facts.emitStatePlayFact
 import mozilla.components.feature.media.facts.emitStateStopFact
@@ -48,11 +47,9 @@ class MediaFeature(
     private fun notifyService(state: MediaState) {
         when (state) {
             is MediaState.Playing -> {
-                if (state.hasMediaWithSufficientLongDuration()) {
-                    MediaService.updateState(context)
-                    serviceStarted = true
-                    emitStatePlayFact()
-                }
+                MediaService.updateState(context)
+                serviceStarted = true
+                emitStatePlayFact()
             }
 
             is MediaState.Paused -> {
