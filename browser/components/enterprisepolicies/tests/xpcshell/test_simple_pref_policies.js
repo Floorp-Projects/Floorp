@@ -132,6 +132,29 @@ const POLICIES_TESTS = [
     },
   },
 
+  // POLICY: Authentication (unlocked)
+  {
+    policies: {
+      Authentication: {
+        SPNEGO: ["a.com", "b.com"],
+        Delegated: ["a.com", "b.com"],
+        NTLM: ["a.com", "b.com"],
+        AllowNonFQDN: {
+          SPNEGO: true,
+          NTLM: true,
+        },
+        Locked: false,
+      },
+    },
+    unlockedPrefs: {
+      "network.negotiate-auth.trusted-uris": "a.com, b.com",
+      "network.negotiate-auth.delegation-uris": "a.com, b.com",
+      "network.automatic-ntlm-auth.trusted-uris": "a.com, b.com",
+      "network.automatic-ntlm-auth.allow-non-fqdn": true,
+      "network.negotiate-auth.allow-non-fqdn": true,
+    },
+  },
+
   // POLICY: Certificates (true)
   {
     policies: {

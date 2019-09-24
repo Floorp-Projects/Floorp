@@ -53,6 +53,9 @@
               "type": "boolean"
             }
           }
+        },
+        "Locked": {
+          "type": "boolean"
         }
       }
     },

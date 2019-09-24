@@ -85,35 +85,45 @@ var Policies = {
 
   Authentication: {
     onBeforeAddons(manager, param) {
+      let locked = true;
+      if ("Locked" in param) {
+        locked = param.Locked;
+      }
+
       if ("SPNEGO" in param) {
-        setAndLockPref(
+        setDefaultPref(
           "network.negotiate-auth.trusted-uris",
-          param.SPNEGO.join(", ")
+          param.SPNEGO.join(", "),
+          locked
         );
       }
       if ("Delegated" in param) {
-        setAndLockPref(
+        setDefaultPref(
           "network.negotiate-auth.delegation-uris",
-          param.Delegated.join(", ")
+          param.Delegated.join(", "),
+          locked
         );
       }
       if ("NTLM" in param) {
-        setAndLockPref(
+        setDefaultPref(
           "network.automatic-ntlm-auth.trusted-uris",
-          param.NTLM.join(", ")
+          param.NTLM.join(", "),
+          locked
         );
       }
       if ("AllowNonFQDN" in param) {
         if (param.AllowNonFQDN.NTLM) {
-          setAndLockPref(
+          setDefaultPref(
             "network.automatic-ntlm-auth.allow-non-fqdn",
-            param.AllowNonFQDN.NTLM
+            param.AllowNonFQDN.NTLM,
+            locked
           );
         }
         if (param.AllowNonFQDN.SPNEGO) {
-          setAndLockPref(
+          setDefaultPref(
             "network.negotiate-auth.allow-non-fqdn",
-            param.AllowNonFQDN.SPNEGO
+            param.AllowNonFQDN.SPNEGO,
+            locked
           );
         }
       }
