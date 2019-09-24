@@ -1106,10 +1106,9 @@ void nsNPAPIPluginInstance::NotifyStartedPlaying() {
   }
 
   MOZ_ASSERT(mAudioChannelAgent);
-  dom::AudioPlaybackConfig config;
   rv = mAudioChannelAgent->NotifyStartedPlaying(
-      &config, mIsMuted ? AudioChannelService::AudibleState::eNotAudible
-                        : AudioChannelService::AudibleState::eAudible);
+      mIsMuted ? AudioChannelService::AudibleState::eNotAudible
+               : AudioChannelService::AudibleState::eAudible);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }

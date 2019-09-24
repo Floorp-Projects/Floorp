@@ -642,8 +642,7 @@ void AudioDestinationNode::NotifyAudibleStateChanged(bool aAudible) {
                           mDurationBeforeFirstTimeAudible.ToSeconds());
   }
 
-  AudioPlaybackConfig config;
-  nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(&config, mAudible);
+  nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(mAudible);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
