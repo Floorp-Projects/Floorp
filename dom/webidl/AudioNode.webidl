@@ -68,8 +68,7 @@ partial interface AudioNode {
   [ChromeOnly]
   readonly attribute unsigned long id;
 };
-[NoInterfaceObject]
-interface AudioNodePassThrough {
+interface mixin AudioNodePassThrough {
   [ChromeOnly]
   attribute boolean passThrough;
 };

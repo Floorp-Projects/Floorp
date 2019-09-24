@@ -427,7 +427,6 @@ var SiteDataManager = {
         cookie.host,
         cookie.name,
         cookie.path,
-        false,
         cookie.originAttributes
       );
     }

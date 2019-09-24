@@ -1,9 +1,0 @@
-<!DOCTYPE html>
-<audio id="testAudio" src="audio.ogg" loop></audio>
-<script type="text/javascript">
-var audio = document.getElementById("testAudio");
-audio.oncanplay = function() {
-  audio.oncanplay = null;
-  audio.play();
-};
-</script>

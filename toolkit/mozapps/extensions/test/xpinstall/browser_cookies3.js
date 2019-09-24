@@ -52,7 +52,6 @@ function finish_test(count) {
     "example.com",
     "xpinstall",
     "/browser/" + RELATIVE_DIR,
-    false,
     {}
   );
 

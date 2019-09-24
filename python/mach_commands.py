@@ -61,7 +61,7 @@ class MachCommands(MachCommandBase):
             python_path = self.virtualenv_manager.python_path
 
         if exec_file:
-            execfile(exec_file)
+            exec(open(exec_file).read())
             return 0
 
         return self.run_process([python_path] + args,

@@ -249,6 +249,8 @@ nsFtpChannel::MessageDiversionStop() {
 NS_IMETHODIMP
 nsFtpChannel::SuspendInternal() {
   LOG(("nsFtpChannel::SuspendInternal [this=%p]\n", this));
+  NS_ENSURE_TRUE(Pending(), NS_ERROR_NOT_AVAILABLE);
+
   ++mSuspendCount;
   return nsBaseChannel::Suspend();
 }

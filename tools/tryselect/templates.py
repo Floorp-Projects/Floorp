@@ -291,7 +291,7 @@ class VisualMetricsJobs(TryConfig):
                 visual_metrics_jobs = json.load(f)
 
             visual_metrics_jobs_schema(visual_metrics_jobs)
-        except (IOError, OSError) as e:
+        except (IOError, OSError):
             print('Failed to read file %s: %s' % (file_path, f))
             sys.exit(1)
         except TypeError:

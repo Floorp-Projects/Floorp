@@ -40,7 +40,9 @@ static nsresult SchemeIsHTTPS(const nsACString& originScheme,
   outIsHTTPS = originScheme.EqualsLiteral("https");
 
   if (!outIsHTTPS && !originScheme.EqualsLiteral("http")) {
-    MOZ_ASSERT(false, "unexpected scheme");
+    MOZ_ASSERT(!originScheme.LowerCaseEqualsLiteral("https") &&
+                   !originScheme.LowerCaseEqualsLiteral("http"),
+               "The scheme should already be lowercase");
     return NS_ERROR_UNEXPECTED;
   }
   return NS_OK;

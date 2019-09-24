@@ -53,7 +53,7 @@ class TextEncoder final : public NonRefcountedDOMObject {
    */
   void Encode(JSContext* aCx, JS::Handle<JSObject*> aObj,
               JS::Handle<JSString*> aString,
-              JS::MutableHandle<JSObject*> aRetval, ErrorResult& aRv);
+              JS::MutableHandle<JSObject*> aRetval, OOMReporter& aRv);
 
   void EncodeInto(JSContext* aCx, JS::Handle<JSString*> aSrc,
                   const Uint8Array& aDst, TextEncoderEncodeIntoResult& aResult,

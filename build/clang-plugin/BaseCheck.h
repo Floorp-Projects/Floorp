@@ -12,7 +12,6 @@ class BaseCheck : public MatchFinder::MatchCallback {
 public:
   BaseCheck(StringRef CheckName, ContextType *Context) {}
   virtual void registerMatchers(MatchFinder *Finder) {}
-  virtual void registerPPCallbacks(CompilerInstance &CI) {}
   virtual void check(const MatchFinder::MatchResult &Result) {}
   DiagnosticBuilder diag(SourceLocation Loc, StringRef Description,
                          DiagnosticIDs::Level Level = DiagnosticIDs::Warning) {
@@ -20,6 +19,8 @@ public:
     unsigned ID = Diag.getDiagnosticIDs()->getCustomDiagID(Level, Description);
     return Diag.Report(Loc, ID);
   }
+
+  virtual void registerCompilerInstance(CompilerInstance &CI) {}
 
 private:
   void run(const MatchFinder::MatchResult &Result) override {

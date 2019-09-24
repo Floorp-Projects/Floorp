@@ -27,8 +27,6 @@ module.exports = {
       "components/extensions/**",
       // Bug 1425034.
       "modules/WebsiteMetadata.jsm",
-      // Bug 1425051.
-      "tests/browser/robocop/**",
     ],
     rules: {
       "no-unused-vars": "off",

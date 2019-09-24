@@ -86,7 +86,7 @@ partial interface HTMLTextAreaElement {
   readonly attribute XULControllers controllers;
 };
 
-HTMLTextAreaElement implements MozEditableElement;
+HTMLTextAreaElement includes MozEditableElement;
 
 partial interface HTMLTextAreaElement {
   [ChromeOnly]

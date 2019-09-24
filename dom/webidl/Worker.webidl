@@ -28,7 +28,7 @@ interface Worker : EventTarget {
   attribute EventHandler onmessageerror;
 };
 
-Worker implements AbstractWorker;
+Worker includes AbstractWorker;
 
 dictionary WorkerOptions {
   // WorkerType type = "classic"; TODO: Bug 1247687

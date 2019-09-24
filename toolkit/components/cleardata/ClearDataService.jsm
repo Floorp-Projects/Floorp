@@ -84,7 +84,6 @@ const CookieCleaner = {
             cookie.host,
             cookie.name,
             cookie.path,
-            false,
             cookie.originAttributes
           );
           // We don't want to block the main-thread.

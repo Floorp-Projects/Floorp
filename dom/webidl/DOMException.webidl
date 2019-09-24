@@ -15,9 +15,7 @@
 
 interface StackFrame;
 
-[NoInterfaceObject,
- Exposed=(Window,Worker)]
-interface ExceptionMembers
+interface mixin ExceptionMembers
 {
   // The nsresult associated with this exception.
   readonly attribute unsigned long           result;
@@ -62,7 +60,7 @@ interface Exception {
   stringifier;
 };
 
-Exception implements ExceptionMembers;
+Exception includes ExceptionMembers;
 
 // XXXkhuey this is an 'exception', not an interface, but we don't have any
 // parser or codegen mechanisms for dealing with exceptions.
@@ -107,4 +105,4 @@ interface DOMException {
 
 // XXXkhuey copy all of Gecko's non-standard stuff onto DOMException, but leave
 // the prototype chain sane.
-DOMException implements ExceptionMembers;
+DOMException includes ExceptionMembers;

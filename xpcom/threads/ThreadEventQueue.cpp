@@ -157,6 +157,16 @@ already_AddRefed<nsIRunnable> ThreadEventQueue<InnerQueueT>::GetEvent(
 }
 
 template <class InnerQueueT>
+void ThreadEventQueue<InnerQueueT>::DidRunEvent() {
+  MutexAutoLock lock(mLock);
+  if (mNestedQueues.IsEmpty()) {
+    mBaseQueue->DidRunEvent(lock);
+  } else {
+    mNestedQueues.LastElement().mQueue->DidRunEvent(lock);
+  }
+}
+
+template <class InnerQueueT>
 bool ThreadEventQueue<InnerQueueT>::HasPendingEvent() {
   MutexAutoLock lock(mLock);
 
