@@ -7,7 +7,7 @@
 DiagnosticsMatcher::DiagnosticsMatcher(CompilerInstance &CI) {
 #define CHECK(cls, name)                                                       \
   cls##_.registerMatchers(&AstMatcher);                                        \
-  cls##_.registerPPCallbacks(CI);
+  cls##_.registerCompilerInstance(CI);
 #include "Checks.inc"
 #undef CHECK
 }
