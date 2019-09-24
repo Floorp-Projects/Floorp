@@ -478,8 +478,8 @@ load 700031.xhtml
 load 718516.html
 load 723108.html
 load 724235.html
-skip-if(Android&&isDebugBuild) load 724978.xhtml # bug 1263300 - slow
-skip-if(Android&&isDebugBuild) load 730559.html # bug 1245634 - slow
+load 724978.xhtml
+load 730559.html
 load 734777.html
 load 737313-1.html
 load 737313-2.html
@@ -613,7 +613,7 @@ load 1169420-2.html
 load 1178783-1.html
 load 1183431.html
 load 1186147-1.html
-skip-if(Android) load 1209952.html # test is slow - times out on Android
+load 1209952.html
 load 1221112-1.html
 load 1221112-2.html
 load 1221874-1.html
