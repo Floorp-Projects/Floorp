@@ -951,7 +951,10 @@ var ThirdPartyCookies = {
 };
 
 var SocialTracking = {
-  PREF_ENABLED: "privacy.socialtracking.block_cookies.enabled",
+  PREF_STP_TP_ENABLED: "privacy.trackingprotection.socialtracking.enabled",
+  PREF_STP_COOKIE_ENABLED: "privacy.socialtracking.block_cookies.enabled",
+  PREF_COOKIE_BEHAVIOR: "network.cookie.cookieBehavior",
+  reportBreakageLabel: "socialtracking",
 
   strings: {
     get subViewBlocked() {
@@ -979,16 +982,43 @@ var SocialTracking = {
   init() {
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
-      "enabled",
-      this.PREF_ENABLED,
+      "socialTrackingProtectionEnabled",
+      this.PREF_STP_TP_ENABLED,
+      false,
+      this.updateCategoryItem.bind(this)
+    );
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "rejectTrackingCookies",
+      this.PREF_COOKIE_BEHAVIOR,
+      false,
+      this.updateCategoryItem.bind(this),
+      val => val == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
+    );
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "blockSocialTrackingCookies",
+      this.PREF_STP_COOKIE_ENABLED,
       false,
       this.updateCategoryItem.bind(this)
     );
     this.updateCategoryItem();
   },
 
+  get enabled() {
+    return this.blockSocialTrackingCookies;
+  },
+
+  get blockingEnabled() {
+    return (
+      (this.socialTrackingProtectionEnabled || this.rejectTrackingCookies) &&
+      this.blockSocialTrackingCookies
+    );
+  },
+
   updateCategoryItem() {
-    this.categoryItem.classList.toggle("blocked", this.enabled);
+    this.categoryItem.hidden = !this.enabled;
+    this.categoryItem.classList.toggle("blocked", this.blockingEnabled);
   },
 
   isBlocking(state) {
@@ -1002,17 +1032,15 @@ var SocialTracking = {
       (state & Ci.nsIWebProgressListener.STATE_LOADED_SOCIALTRACKING_CONTENT) !=
       0;
     return (
-      this.enabled &&
-      ((socialtrackingContentLoaded && cookieTrackerBlocked) ||
-        socialtrackingContentBlocked)
+      (socialtrackingContentLoaded && cookieTrackerBlocked) ||
+      socialtrackingContentBlocked
     );
   },
 
   isAllowing(state) {
     return (
-      this.enabled &&
       (state & Ci.nsIWebProgressListener.STATE_LOADED_SOCIALTRACKING_CONTENT) !=
-        0
+      0
     );
   },
 
@@ -1057,7 +1085,7 @@ var SocialTracking = {
     this.subViewList.append(fragment);
     this.subView.setAttribute(
       "title",
-      this.enabled && !gProtectionsHandler.hasException
+      this.blockingEnabled && !gProtectionsHandler.hasException
         ? this.strings.subViewTitleBlocking
         : this.strings.subViewTitleNotBlocking
     );
@@ -1076,6 +1104,7 @@ var SocialTracking = {
 
     let listItem = document.createXULElement("hbox");
     listItem.className = "protections-popup-list-item";
+    listItem.classList.toggle("allowed", isAllowed);
     // Repeat the host in the tooltip in case it's too long
     // and overflows in our panel.
     listItem.tooltipText = uri.host;
