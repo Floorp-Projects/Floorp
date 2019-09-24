@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
+    <string name="app_name_private">Firefox Preview (súkromné prehliadanie)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Ďalšie možnosti</string>
@@ -27,6 +31,17 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Vymazať reláciu</string>
 
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">Pridať skratku</string>
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">Nie, ďakujem</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab">Otvoriť novú kartu</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab">Otvoriť novú súkromnú kartu</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">Otvorené karty</string>
@@ -40,12 +55,16 @@
     <string name="browser_menu_stop">Zastaviť</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Pomocník</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">Čo je nové</string>
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Nastavenia</string>
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_your_library">Vaša knižnica</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Verzia stránky pre stolné počítače</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">Pridať na úvodnú obrazovku</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Hľadať na stránke</string>
     <!-- Browser menu button that creates a private tab -->
@@ -95,8 +114,6 @@
     <string name="preferences_category_about">O aplikácii</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_search_engine">Vyhľadávací modul</string>
-    <!-- Preference for showing visited sites and bookmarks in awesomebar -->
-    <string name="preference_show_visited_sites_bookmarks">Zobraziť navštívené stránky a záložky</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Pomocník</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -574,7 +591,8 @@
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Rozumiem</string>
 
-    <!-- Notifications -->
+    <!-- Notification action to open Fenix and resume the current browsing session. -->
+    <string name="notification_pbm_action_open">Otvoriť</string>
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Kolekcia bola odstránená</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -660,8 +678,6 @@
 
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message">Vaše údaje o prehliadaní budú odstránené.</string>
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message_2">Naozaj chcete odstrániť tieto údaje o prehliadaní?</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s odstráni vybrané údaje.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -783,6 +799,8 @@
     <string name="about_your_rights">Vaše práva</string>
     <!-- About page link text to open open source licenses screen -->
     <string name="about_open_source_licenses">Open source knižnice, ktoré používame</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">Novinky v aplikácii %s</string>
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS knižnice</string>
@@ -791,4 +809,21 @@
     <string name="tab_counter_content_description_one_tab">1 karta</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
     <string name="tab_counter_content_description_multi_tab">Počet kariet: %d</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">Kopírovať</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Prilepiť a prejsť</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">Prilepiť</string>
+  
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Pridať na úvodnú obrazovku</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">Zrušiť</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Pridať</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Názov skratky</string>
 </resources>

@@ -2,6 +2,9 @@
 <resources>
 
 
+    <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
+    <string name="app_name_private">Firefox Preview (приватная сессия)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Другие настройки</string>
@@ -29,6 +32,20 @@
     </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Удалить сессию</string>
+
+    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Добавьте ярлык, чтобы открывать приватные вкладки с главного экрана.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">Добавить ярлык</string>
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">Нет, спасибо</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab">Открыть новую вкладку</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab">Открыть новую приватную вкладку</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -104,8 +121,6 @@
     <string name="preferences_category_about">О приложении</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_search_engine">Поисковая система</string>
-    <!-- Preference for showing visited sites and bookmarks in awesomebar -->
-    <string name="preference_show_visited_sites_bookmarks">Показывать посещённые сайты и закладки</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Справка</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -129,6 +144,8 @@
     <string name="preferences_category_privacy">Приватность</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Разрешения для сайтов</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">Добавить ярлык приватного просмотра</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Специальные возможности</string>
     <!-- Preference category for account information -->
@@ -157,6 +174,12 @@
     <string name="preferences_remote_debugging">Удалённая отладка по USB</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Поисковые предложения</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Предложения из буфера обмена</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Поиск по истории сёрфинга</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Поиск закладок</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Настройки Аккаунта</string>
 
@@ -360,7 +383,7 @@
     <!-- Text for the menu button to rename a collection -->
     <string name="collection_rename">Переименовать коллекцию</string>
     <!-- Text for the button to open tabs of the selected collection -->
-    <string name="collection_open_tabs">Открытые вкладки</string>
+    <string name="collection_open_tabs">Открыть вкладки</string>
 
 
     <!-- History -->
@@ -594,6 +617,9 @@
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Понятно</string>
 
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Не удалось отправить в это приложение</string>
+
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
     <string name="notification_pbm_channel_name">Приватная сессия</string>
@@ -688,13 +714,15 @@
     <string name="preferences_delete_browsing_data_on_quit">Удалять данные веб-сёрфинга при выходе</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit">Автоматически удаляет данные веб-сёрфинга, когда вы выбираете «Выйти» в главном меню</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Автоматически удаляет данные веб-сёрфинга, когда вы выбираете  \&quot;Выйти\&quot; в главном меню</string>
+    <!-- Category for history items to delete on quit in delete browsing data on quit -->
+    <string name="preferences_delete_browsing_data_on_quit_browsing_history">История веб-сёрфинга</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Выйти</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message">Это действие удалит все данные вашего веб-сёрфинга.</string>
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message_2">Вы уверены, что хотите удалить выбранные данные веб-сёрфинга?</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s удалит выбранные данные веб-сёрфинга.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -807,11 +835,15 @@
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Узнать больше</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">Стандартная (рекомендуемая)</string>
+    <string name="preference_enhanced_tracking_protection_standard_option">Стандартная</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard">Стандартная (рекомендуется)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">Обеспечивает наилучший баланс защиты и производительности.</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Строгая</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_recommended">Строгая (рекомендуется)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">Усиленная защита может вызывать проблемы с некоторыми веб-сайтами и их содержимым.</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -860,4 +892,21 @@
     <string name="tab_counter_content_description_one_tab">1 вкладка</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
     <string name="tab_counter_content_description_multi_tab">%d вкладки(ок)</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">Копировать</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Вставить и перейти</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">Вставить</string>
+  
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Добавить на домашний экран</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">Отмена</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Добавить</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Название ярлыка</string>
 </resources>

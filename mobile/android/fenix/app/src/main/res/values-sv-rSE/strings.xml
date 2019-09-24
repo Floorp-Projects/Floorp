@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
+    <string name="app_name_private">Firefox Preview (Privat)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Fler alternativ</string>
@@ -27,6 +30,20 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Ta bort session</string>
 
+    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Lägg till en genväg för att öppna privata flikar från din startsida.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">Lägg till genväg</string>
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">Nej tack</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab">Öppna en ny flik</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab">Öppna en ny privat flik</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">Öppna flikar</string>
@@ -49,7 +66,7 @@
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Webbplats för datorer</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
-    <string name="browser_menu_add_to_homescreen">Lägg till på startskärmen</string>
+    <string name="browser_menu_add_to_homescreen">Lägg till på startsidan</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Hitta på sidan</string>
     <!-- Browser menu button that creates a private tab -->
@@ -100,8 +117,6 @@
     <string name="preferences_category_about">Om</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_search_engine">Sökmotor</string>
-    <!-- Preference for showing visited sites and bookmarks in awesomebar -->
-    <string name="preference_show_visited_sites_bookmarks">Visa besökta webbplatser och bokmärken</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Hjälp</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -125,6 +140,8 @@
     <string name="preferences_category_privacy">Sekretess</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Webbplatsbehörigheter</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">Lägg till genväg för privat surfning</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Hjälpmedel</string>
     <!-- Preference category for account information -->
@@ -153,6 +170,12 @@
     <string name="preferences_remote_debugging">Fjärrfelsökning via USB</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Visa sökförslag</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Visa förslag från urklipp</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Sök webbläsarhistorik</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Sök bokmärken</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Kontoinställningar</string>
 
@@ -580,6 +603,9 @@
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Jag förstår</string>
 
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Kan inte dela med den här appen</string>
+
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
     <string name="notification_pbm_channel_name">Privat surfsession</string>
@@ -669,13 +695,15 @@
     <string name="preferences_delete_browsing_data_on_quit">Ta bort surfdata vid avslut</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit">Tar automatiskt bort surfdata när du väljer &quot;Avsluta&quot; från huvudmenyn</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Tar automatiskt bort surfdata när du väljer \&quot;Avsluta\&quot; från huvudmenyn</string>
+    <!-- Category for history items to delete on quit in delete browsing data on quit -->
+    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Webbläsarhistorik</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Avsluta</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message">Detta kommer att ta bort all dina surfdata.</string>
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message_2">Är du säker på att du vill ta bort vald surfdata?</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s kommer att ta bort vald surfdata.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -790,11 +818,15 @@
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Läs mer</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_option">Standard</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard">Standard (rekommenderas)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">Balanserad för skydd och prestanda.</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Strikt</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_recommended">Strikt (rekommenderas)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">Starkare skydd, men kan leda till att vissa webbplatser eller innehåll inte fungerar.</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -843,4 +875,21 @@
     <string name="tab_counter_content_description_one_tab">1 flik</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
     <string name="tab_counter_content_description_multi_tab">%d flikar</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">Kopiera</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Klistra in och kör</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">Klistra in</string>
+  
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Lägg till på startsidan</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">Avbryt</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Lägg till</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Genvägens namn</string>
 </resources>

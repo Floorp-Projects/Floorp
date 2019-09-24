@@ -2,6 +2,9 @@
 <resources>
 
 
+    <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
+    <string name="app_name_private">Firefox Preview（隱私瀏覽）</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">更多選項</string>
@@ -26,6 +29,20 @@
     <string name="private_browsing_placeholder">%1$s 會在關閉程式或所有隱私分頁時，清除您的搜尋與上網紀錄。雖然這樣做不會讓您對網站或電信業者匿名，但還是可以更簡單就讓使用此裝置的人，無法得知您在線上做了什麼事。\n\n關於隱私瀏覽的常見迷思</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">清除瀏覽階段</string>
+
+    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">加入捷徑，從裝置主畫面直接開啟隱私瀏覽分頁。</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">新增捷徑</string>
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">不要，謝謝</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab">開啟新分頁</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab">用新隱私分頁開啟</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -100,8 +117,6 @@
     <string name="preferences_category_about">關於</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_search_engine">搜尋引擎</string>
-    <!-- Preference for showing visited sites and bookmarks in awesomebar -->
-    <string name="preference_show_visited_sites_bookmarks">顯示造訪過的網站與書籤</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">說明</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -125,6 +140,8 @@
     <string name="preferences_category_privacy">隱私權</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">網站權限</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">新增隱私瀏覽模式捷徑</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">輔助功能</string>
     <!-- Preference category for account information -->
@@ -154,6 +171,12 @@
     <string name="preferences_remote_debugging">透過 USB 進行遠端除錯</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">顯示搜尋建議</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">顯示剪貼簿內容建議</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">搜尋瀏覽紀錄</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">搜尋書籤</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">帳號設定</string>
 
@@ -464,7 +487,7 @@
     <string name="bookmarks_empty_message">這裡沒有書籤</string>
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
-    <string name="bookmark_deletion_snackbar_message">已刪除 %1$s 筆書籤</string>
+    <string name="bookmark_deletion_snackbar_message">已刪除書籤 %1$s</string>
     <!-- Bookmark snackbar message on deleting multiple bookmarks -->
     <string name="bookmark_deletion_multiple_snackbar_message">正在刪除選擇的書籤</string>
     <!-- Bookmark undo button for deletion snackbar action -->
@@ -592,6 +615,9 @@
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">知道了</string>
 
+    <!-- Share error message -->
+    <string name="share_error_snackbar">無法分享到此應用程式</string>
+
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
     <string name="notification_pbm_channel_name">隱私瀏覽階段</string>
@@ -688,13 +714,15 @@
     <string name="preferences_delete_browsing_data_on_quit">離開時刪除瀏覽資料</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit">當您點擊主選單當中的「離開」時，自動刪除瀏覽資料</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">點擊主選單中的「離開」時，自動清除上網資料</string>
+    <!-- Category for history items to delete on quit in delete browsing data on quit -->
+    <string name="preferences_delete_browsing_data_on_quit_browsing_history">瀏覽紀錄</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">離開</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message">將刪除您的所有瀏覽資料。</string>
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message_2">您確定要刪除選擇的瀏覽資料嗎？</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s 將刪除選擇的瀏覽資料。</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -803,11 +831,15 @@
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">了解更多</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_option">標準</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard">標準（推薦）</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">在保護與效能間取得平衡。</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">嚴格</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_recommended">嚴格（建議）</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">保護更強大，但可能會導致某些網站或內容故障。</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -856,4 +888,21 @@
     <string name="tab_counter_content_description_one_tab">1 個分頁</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
     <string name="tab_counter_content_description_multi_tab">%d 個分頁</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">複製</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">貼上並瀏覽</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">貼上</string>
+  
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">新增至裝置主畫面</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">取消</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">新增</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">捷徑名稱</string>
 </resources>

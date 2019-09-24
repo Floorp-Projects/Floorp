@@ -2,6 +2,9 @@
 <resources>
 
 
+    <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
+    <string name="app_name_private">Firefox Preview（隐私模式）</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">更多选项</string>
@@ -26,6 +29,20 @@
     <string name="private_browsing_placeholder">%1$s 在您退出应用或关闭所有隐私标签页后，将清除您的搜索记录与浏览历史。虽然这样做不会使您对网站或电信运营商匿名，但还是可以更简单地让使用此设备的人无法得知您在网上的活动。\n\n隐私浏览功能的常见误解</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">删除浏览会话</string>
+
+    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">添加快捷方式，即可由主屏幕直接进入隐私标签页。</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">添加快捷方式</string>
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">不了，谢谢</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab">新建标签页打开</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab">新建隐私标签页打开</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -103,8 +120,6 @@
     <string name="preferences_category_about">关于</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_search_engine">搜索引擎</string>
-    <!-- Preference for showing visited sites and bookmarks in awesomebar -->
-    <string name="preference_show_visited_sites_bookmarks">显示访问过的网站和书签</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">帮助</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -128,6 +143,8 @@
     <string name="preferences_category_privacy">隐私</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">站点权限</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">添加隐私浏览快捷方式</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">无障碍环境</string>
     <!-- Preference category for account information -->
@@ -156,6 +173,12 @@
     <string name="preferences_remote_debugging">通过 USB 远程调试</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">显示搜索建议</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">显示剪贴板建议</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">搜索浏览历史</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">搜索书签</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">账户设置</string>
 
@@ -600,6 +623,9 @@
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">明白了</string>
 
+    <!-- Share error message -->
+    <string name="share_error_snackbar">无法分享至该应用</string>
+
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
     <string name="notification_pbm_channel_name">隐私浏览会话</string>
@@ -696,13 +722,15 @@
 
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit">从主菜单中选择“退出”时，自动删除浏览数据</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">从主菜单中选择“退出”时，自动删除浏览数据</string>
+    <!-- Category for history items to delete on quit in delete browsing data on quit -->
+    <string name="preferences_delete_browsing_data_on_quit_browsing_history">浏览历史</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">退出</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message">这将删除所有浏览数据。</string>
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message_2">您确定要删除选定的浏览数据吗？</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s 将删除选定的浏览数据。</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -811,11 +839,15 @@
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">详细了解</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_option">标准</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard">标准（推荐）</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">平衡保护和性能。</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">严格</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_recommended">严格（推荐）</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">更强大的保护，但可能导致某些网站异常。</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -864,4 +896,21 @@
     <string name="tab_counter_content_description_one_tab">1 个标签页</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
     <string name="tab_counter_content_description_multi_tab">%d 个标签页</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">复制</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">粘贴并前往</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">粘贴</string>
+  
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">添加到主屏幕</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">取消</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">添加</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">快捷方式名称</string>
 </resources>

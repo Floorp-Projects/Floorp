@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
+    <string name="app_name_private">Firefox Preview (privát)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">További beállítások</string>
@@ -22,6 +25,20 @@
     <string name="private_browsing_placeholder">A %1$s törli a keresési és böngészési előzményeit, ha kilép az alkalmazásból, vagy bezárja az összes privát böngészési lapot. Ugyan ez nem teszi névtelenné a weboldalak vagy a szolgáltatója felé, könnyebbé teszi, hogy bizalmasan kezelje az online tevékenységét, és más ne tudjon róla, aki ezt az eszközt használja.\n\nGyakori mítoszok a privát böngészésről</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Munkamenet törlése</string>
+
+    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Parancsikon hozzáadása, amely privát lapokat nyit meg a Kezdőképernyőről.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">Parancsikon hozzáadása</string>
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">Köszönöm, nem</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab">Új lap megnyitása</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab">Új privát lap megnyitása</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -94,8 +111,6 @@
     <string name="preferences_category_about">Névjegy</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_search_engine">Keresőszolgáltatás</string>
-    <!-- Preference for showing visited sites and bookmarks in awesomebar -->
-    <string name="preference_show_visited_sites_bookmarks">Felkeresett webhelyek és könyvjelzők megjelenítése</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Súgó</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -119,6 +134,8 @@
     <string name="preferences_category_privacy">Adatvédelem</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Webhely engedélyek</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">Privát böngészési parancsikon hozzáadása</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Akadálymentesítés</string>
     <!-- Preference category for account information -->
@@ -147,6 +164,12 @@
     <string name="preferences_remote_debugging">Távoli hibakeresés USB-n</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Keresési javaslatok</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Vágólap javaslatok megjelenítése</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Böngészési előzmények keresése</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Könyvjelzők keresése</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Fiókbeállítások</string>
 
@@ -570,6 +593,9 @@
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Megértettem</string>
 
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Nem lehet megosztani ezzel az alkalmazással</string>
+
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
     <string name="notification_pbm_channel_name">Privát böngészési munkamenet</string>
@@ -658,13 +684,15 @@
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit">Automatikusan törli a böngészési adatokat, ha a főmenüben a „Kilépés” lehetőséget választja</string>
 
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Automatikusan törli a böngészési adatokat, ha a főmenüben a „Kilépés” lehetőséget választja</string>
+    <!-- Category for history items to delete on quit in delete browsing data on quit -->
+    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Böngészési előzmények</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Kilépés</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message">Ez törli az összes böngészési adatot.</string>
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message_2">Biztos benne, hogy törölni akarja a kijelölt böngészési adatokat?</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">A %s törölni fogja a kiválasztott böngészési adatokat.</string>
 
@@ -778,11 +806,15 @@
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">További tudnivalók</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_option">Szokásos</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard">Szokásos (ajánlott)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">Kiegyensúlyozott védelem és teljesítmény.</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Szigorú</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_recommended">Szigorú (ajánlott)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">Erősebb védelem, de egyes webhelyek és tartalmak hibásan működhetnek.</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -832,4 +864,21 @@
     <string name="tab_counter_content_description_one_tab">1 lap</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
     <string name="tab_counter_content_description_multi_tab">%d lap</string>
+  
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">Másolás</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Beillesztés és ugrás</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">Beillesztés</string>
+  
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Kezdőképernyőhöz adás</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">Mégse</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Hozzáadás</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Parancsikon neve</string>
 </resources>

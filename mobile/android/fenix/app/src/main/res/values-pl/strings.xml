@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
+    <string name="app_name_private">Firefox Preview (tryb prywatny)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Więcej opcji</string>
@@ -26,6 +29,20 @@
     </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Usuń sesję</string>
+
+    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Dodaj skrót, aby otwierać prywatne karty z ekranu głównego.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">Dodaj skrót</string>
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">Nie, dziękuję</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab">Otwórz nową kartę</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab">Otwórz nową kartę prywatną</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -98,8 +115,6 @@
     <string name="preferences_category_about">O programie</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_search_engine">Wyszukiwarka</string>
-    <!-- Preference for showing visited sites and bookmarks in awesomebar -->
-    <string name="preference_show_visited_sites_bookmarks">Odwiedzone witryny i zakładki</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Pomoc</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -123,6 +138,8 @@
     <string name="preferences_category_privacy">Prywatność</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Uprawnienia witryn</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">Dodaj skrót do trybu prywatnego</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Ułatwienia dostępu</string>
     <!-- Preference category for account information -->
@@ -151,6 +168,12 @@
     <string name="preferences_remote_debugging">Zdalne debugowanie przez USB</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Podpowiedzi wyszukiwania</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Schowek</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Historia</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Zakładki</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Ustawienia konta</string>
 
@@ -197,7 +220,7 @@
     <!-- When multiple tabs have been received -->
     <string name="fxa_tabs_received_notification_name">Odebrano karty</string>
     <!-- %s is the device name -->
-    <string name="fxa_tab_received_from_notification_name">Karty z urządzenia %s</string>
+    <string name="fxa_tab_received_from_notification_name">Karta z urządzenia %s</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection settings -->
@@ -573,6 +596,9 @@
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">OK</string>
 
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Nie można udostępnić tej aplikacji</string>
+
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
     <string name="notification_pbm_channel_name">Sesja przeglądania prywatnego</string>
@@ -662,13 +688,15 @@
     <string name="preferences_delete_browsing_data_on_quit">Usuwanie historii przeglądania podczas wyłączania programu</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit">Automatycznie usuwa historię przeglądania po wybraniu „Zakończ” z głównego menu</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Automatycznie usuwa historię przeglądania po wybraniu „Zakończ” z głównego menu</string>
+    <!-- Category for history items to delete on quit in delete browsing data on quit -->
+    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Historia przeglądania</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Zakończ</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message">Spowoduje to usunięcie całej historii przeglądania.</string>
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message_2">Czy na pewno usunąć wybraną historię przeglądania?</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s usunie wybraną historię przeglądania.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -781,11 +809,15 @@
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Więcej informacji</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">Standardowa (zalecane)</string>
+    <string name="preference_enhanced_tracking_protection_standard_option">Standardowa</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard">Standardowa (zalecana)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">Równowaga między bezpieczeństwem a szybkością wczytywania stron.</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Ścisła</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_recommended">Ścisła (zalecana)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">Silniejsza ochrona, ale może powodować niepoprawne działanie niektórych stron.</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -834,4 +866,21 @@
     <string name="tab_counter_content_description_one_tab">Karty: 1</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
     <string name="tab_counter_content_description_multi_tab">Karty: %d</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">Kopiuj</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Wklej i przejdź</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">Wklej</string>
+  
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Dodaj do ekranu głównego</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">Anuluj</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Dodaj</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Nazwa skrótu</string>
 </resources>
