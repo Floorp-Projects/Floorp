@@ -58,7 +58,7 @@ def build_raptor_task(config, tasks):
         task["name"] = "{}-{}-{}".format(task["name"], build_type, abi)
         task["description"] = "{}-{}".format(build_type, abi)
 
-        for key in ("worker-type", "treeherder.platform"):
+        for key in ("args", "treeherder.platform", "worker-type"):
             resolve_keyed_by(task, key, item_name=task["name"], **{"abi": abi})
 
         task["treeherder"] = inherit_treeherder_from_dep(task, signing)
