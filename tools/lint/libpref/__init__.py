@@ -15,7 +15,12 @@ from mozlint import result
 
 # If for any reason a pref needs to appear in both files, add it to this set.
 IGNORE_PREFS = {
+    'devtools.console.stdout.chrome',   # Uses the 'sticky' attribute.
+    'devtools.console.stdout.content',  # Uses the 'sticky' attribute.
+    'fission.autostart',                # Uses the 'locked' attribute.
+    'browser.dom.window.dump.enabled',  # Uses the 'sticky' attribute.
 }
+
 
 def get_names(pref_list_filename):
     pref_names = set()
