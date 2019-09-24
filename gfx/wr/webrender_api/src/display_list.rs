@@ -1254,7 +1254,7 @@ impl DisplayListBuilder {
         &mut self,
         origin: LayoutPoint,
         spatial_id: di::SpatialId,
-        prim_flags: di::PrimitiveFlags,
+        is_backface_visible: bool,
         clip_id: Option<di::ClipId>,
         transform_style: di::TransformStyle,
         mix_blend_mode: di::MixBlendMode,
@@ -1270,7 +1270,7 @@ impl DisplayListBuilder {
         let item = di::DisplayItem::PushStackingContext(di::PushStackingContextDisplayItem {
             origin,
             spatial_id,
-            prim_flags,
+            is_backface_visible,
             stacking_context: di::StackingContext {
                 transform_style,
                 mix_blend_mode,
@@ -1289,12 +1289,12 @@ impl DisplayListBuilder {
         &mut self,
         origin: LayoutPoint,
         spatial_id: di::SpatialId,
-        prim_flags: di::PrimitiveFlags,
+        is_backface_visible: bool,
     ) {
         self.push_simple_stacking_context_with_filters(
             origin,
             spatial_id,
-            prim_flags,
+            is_backface_visible,
             &[],
             &[],
             &[],
@@ -1306,7 +1306,7 @@ impl DisplayListBuilder {
         &mut self,
         origin: LayoutPoint,
         spatial_id: di::SpatialId,
-        prim_flags: di::PrimitiveFlags,
+        is_backface_visible: bool,
         filters: &[di::FilterOp],
         filter_datas: &[di::FilterData],
         filter_primitives: &[di::FilterPrimitive],
@@ -1314,7 +1314,7 @@ impl DisplayListBuilder {
         self.push_stacking_context(
             origin,
             spatial_id,
-            prim_flags,
+            is_backface_visible,
             None,
             di::TransformStyle::Flat,
             di::MixBlendMode::Normal,

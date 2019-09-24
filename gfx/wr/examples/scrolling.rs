@@ -36,7 +36,7 @@ impl Example for App {
         builder.push_simple_stacking_context(
             LayoutPoint::zero(),
             root_space_and_clip.spatial_id,
-            PrimitiveFlags::IS_BACKFACE_VISIBLE,
+            true,
         );
 
         if true {
@@ -46,7 +46,7 @@ impl Example for App {
             builder.push_simple_stacking_context(
                 LayoutPoint::new(10., 10.),
                 root_space_and_clip.spatial_id,
-                PrimitiveFlags::IS_BACKFACE_VISIBLE,
+                true,
             );
             // set the scrolling clip
             let space_and_clip1 = builder.define_scroll_frame(

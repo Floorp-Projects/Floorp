@@ -119,7 +119,7 @@ impl App {
         builder.push_simple_stacking_context(
             document.content_rect.origin,
             space_and_clip.spatial_id,
-            PrimitiveFlags::IS_BACKFACE_VISIBLE,
+            true,
         );
 
         builder.push_rect(
@@ -164,7 +164,7 @@ impl Example for App {
         builder.push_simple_stacking_context(
             bounds.origin,
             space_and_clip.spatial_id,
-            PrimitiveFlags::IS_BACKFACE_VISIBLE,
+            true,
         );
 
         builder.push_image(
