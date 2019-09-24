@@ -296,12 +296,13 @@ CSPService::AsyncOnChannelRedirect(nsIChannel* oldChannel,
     return rv;
   }
 
-  int16_t decision = nsIContentPolicy::ACCEPT;
-  rv = ConsultCSPForRedirect(originalUri, newUri, loadInfo, &decision);
-  if (NS_CP_REJECTED(decision)) {
+  Maybe<nsresult> cancelCode;
+  rv = ConsultCSPForRedirect(originalUri, newUri, loadInfo, cancelCode);
+  if (cancelCode) {
+    oldChannel->Cancel(*cancelCode);
+  }
+  if (NS_FAILED(rv)) {
     autoCallback.DontCallback();
-    oldChannel->Cancel(NS_ERROR_DOM_BAD_URI);
-    return NS_BINDING_FAILED;
   }
 
   return rv;
@@ -310,15 +311,15 @@ CSPService::AsyncOnChannelRedirect(nsIChannel* oldChannel,
 nsresult CSPService::ConsultCSPForRedirect(nsIURI* aOriginalURI,
                                            nsIURI* aNewURI,
                                            nsILoadInfo* aLoadInfo,
-                                           int16_t* aDecision) {
+                                           Maybe<nsresult>& aCancelCode) {
   nsCOMPtr<nsICSPEventListener> cspEventListener;
   nsresult rv =
       aLoadInfo->GetCspEventListener(getter_AddRefs(cspEventListener));
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   nsAutoString cspNonce;
   rv = aLoadInfo->GetCspNonce(cspNonce);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   nsContentPolicyType policyType = aLoadInfo->InternalContentPolicyType();
   bool isPreload = nsContentUtils::IsPreloadType(policyType);
@@ -330,6 +331,7 @@ nsresult CSPService::ConsultCSPForRedirect(nsIURI* aOriginalURI,
   policyType =
       nsContentUtils::InternalContentPolicyTypeToExternalOrWorker(policyType);
 
+  int16_t decision = nsIContentPolicy::ACCEPT;
   nsCOMPtr<nsISupports> requestContext = aLoadInfo->GetLoadingContext();
   // 1) Apply speculative CSP for preloads
   if (isPreload) {
@@ -346,12 +348,13 @@ nsresult CSPService::ConsultCSPForRedirect(nsIURI* aOriginalURI,
           aOriginalURI,    // Original nsIURI
           true,            // aSendViolationReports
           cspNonce,        // nonce
-          aDecision);
+          &decision);
 
       // if the preload policy already denied the load, then there
       // is no point in checking the real policy
-      if (NS_CP_REJECTED(*aDecision)) {
-        return NS_OK;
+      if (NS_CP_REJECTED(decision)) {
+        aCancelCode = Some(NS_ERROR_DOM_BAD_URI);
+        return NS_BINDING_FAILED;
       }
     }
   }
@@ -369,7 +372,11 @@ nsresult CSPService::ConsultCSPForRedirect(nsIURI* aOriginalURI,
                     aOriginalURI,    // Original nsIURI
                     true,            // aSendViolationReports
                     cspNonce,        // nonce
-                    aDecision);
+                    &decision);
+    if (NS_CP_REJECTED(decision)) {
+      aCancelCode = Some(NS_ERROR_DOM_BAD_URI);
+      return NS_BINDING_FAILED;
+    }
   }
 
   return NS_OK;

@@ -809,11 +809,11 @@ DocumentChannelParent::AsyncOnChannelRedirect(
   nsCOMPtr<nsIChannel> oldChannel(aOldChannel);
   SendConfirmRedirect(newUri)->Then(
       GetCurrentThreadSerialEventTarget(), __func__,
-      [callback, oldChannel](nsresult aRv) {
-        if (NS_FAILED(aRv)) {
-          oldChannel->Cancel(NS_ERROR_DOM_BAD_URI);
+      [callback, oldChannel](const Tuple<nsresult, Maybe<nsresult>>& aResult) {
+        if (Get<1>(aResult)) {
+          oldChannel->Cancel(*Get<1>(aResult));
         }
-        callback->OnRedirectVerifyCallback(aRv);
+        callback->OnRedirectVerifyCallback(Get<0>(aResult));
       },
       [callback, oldChannel](const mozilla::ipc::ResponseRejectReason) {
         oldChannel->Cancel(NS_ERROR_DOM_BAD_URI);
