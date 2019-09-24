@@ -2949,23 +2949,25 @@ bool nsCookieService::DomainMatches(nsCookie* aCookie,
 }
 
 bool nsCookieService::PathMatches(nsCookie* aCookie, const nsACString& aPath) {
+  nsCString cookiePath(aCookie->GetFilePath());
+
   // if our cookie path is empty we can't really perform our prefix check, and
   // also we can't check the last character of the cookie path, so we would
   // never return a successful match.
-  if (aCookie->Path().IsEmpty()) return false;
+  if (cookiePath.IsEmpty()) return false;
 
   // if the cookie path and the request path are identical, they match.
-  if (aCookie->Path().Equals(aPath)) return true;
+  if (cookiePath.Equals(aPath)) return true;
 
   // if the cookie path is a prefix of the request path, and the last character
   // of the cookie path is %x2F ("/"), they match.
-  bool isPrefix = StringBeginsWith(aPath, aCookie->Path());
-  if (isPrefix && aCookie->Path().Last() == '/') return true;
+  bool isPrefix = StringBeginsWith(aPath, cookiePath);
+  if (isPrefix && cookiePath.Last() == '/') return true;
 
   // if the cookie path is a prefix of the request path, and the first character
   // of the request path that is not included in the cookie path is a %x2F ("/")
   // character, they match.
-  uint32_t cookiePathLen = aCookie->Path().Length();
+  uint32_t cookiePathLen = cookiePath.Length();
   if (isPrefix && aPath[cookiePathLen] == '/') return true;
 
   return false;
@@ -3000,7 +3002,7 @@ void nsCookieService::GetCookiesForURI(
   nsresult rv =
       GetBaseDomain(mTLDService, aHostURI, baseDomain, requireHostMatch);
   if (NS_SUCCEEDED(rv)) rv = aHostURI->GetAsciiHost(hostFromURI);
-  if (NS_SUCCEEDED(rv)) rv = aHostURI->GetPathQueryRef(pathFromURI);
+  if (NS_SUCCEEDED(rv)) rv = aHostURI->GetFilePath(pathFromURI);
   if (NS_FAILED(rv)) {
     COOKIE_LOGFAILURE(GET_COOKIE, aHostURI, VoidCString(),
                       "invalid host/path from URI");
@@ -4877,7 +4879,7 @@ bool nsCookieService::FindSecureCookie(const nsCookieKey& aKey,
       // aren't "/", then this situation needs to compare paths to
       // ensure only that a newly-created non-secure cookie does not
       // overlay an existing secure cookie.
-      if (PathMatches(cookie, aCookie->Path())) {
+      if (PathMatches(cookie, aCookie->GetFilePath())) {
         return true;
       }
     }
