@@ -2527,7 +2527,7 @@ nsCookieService::AddNative(const nsACString& aHost, const nsACString& aPath,
 nsresult nsCookieService::Remove(const nsACString& aHost,
                                  const OriginAttributes& aAttrs,
                                  const nsACString& aName,
-                                 const nsACString& aPath, bool aBlocked) {
+                                 const nsACString& aPath) {
   if (!mDBState) {
     NS_WARNING("No DBState! Profile already closed?");
     return NS_ERROR_NOT_AVAILABLE;
@@ -2557,20 +2557,6 @@ nsresult nsCookieService::Remove(const nsACString& aHost,
     RemoveCookieFromList(matchIter);
   }
 
-  // check if we need to add the host to the permissions blacklist.
-  if (aBlocked && mPermissionService) {
-    // strip off the domain dot, if necessary
-    if (!host.IsEmpty() && host.First() == '.') host.Cut(0, 1);
-
-    host.InsertLiteral("http://", 0);
-
-    nsCOMPtr<nsIURI> uri;
-    NS_NewURI(getter_AddRefs(uri), host);
-
-    if (uri)
-      mPermissionService->SetAccess(uri, nsICookiePermission::ACCESS_DENY);
-  }
-
   if (cookie) {
     // Everything's done. Notify observers.
     NotifyChanged(cookie, u"deleted");
@@ -2581,7 +2567,7 @@ nsresult nsCookieService::Remove(const nsACString& aHost,
 
 NS_IMETHODIMP
 nsCookieService::Remove(const nsACString& aHost, const nsACString& aName,
-                        const nsACString& aPath, bool aBlocked,
+                        const nsACString& aPath,
                         JS::HandleValue aOriginAttributes, JSContext* aCx) {
   OriginAttributes attrs;
 
@@ -2589,18 +2575,18 @@ nsCookieService::Remove(const nsACString& aHost, const nsACString& aName,
     return NS_ERROR_INVALID_ARG;
   }
 
-  return RemoveNative(aHost, aName, aPath, aBlocked, &attrs);
+  return RemoveNative(aHost, aName, aPath, &attrs);
 }
 
 NS_IMETHODIMP_(nsresult)
 nsCookieService::RemoveNative(const nsACString& aHost, const nsACString& aName,
-                              const nsACString& aPath, bool aBlocked,
+                              const nsACString& aPath,
                               OriginAttributes* aOriginAttributes) {
   if (NS_WARN_IF(!aOriginAttributes)) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = Remove(aHost, *aOriginAttributes, aName, aPath, aBlocked);
+  nsresult rv = Remove(aHost, *aOriginAttributes, aName, aPath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

@@ -39,21 +39,6 @@ interface nsICookiePermission : nsISupports
    */
 
   /**
-   * setAccess
-   *
-   * this method is called to block cookie access for the given URI.  this
-   * may result in other URIs being blocked as well (e.g., URIs which share
-   * the same host name).
-   *
-   * @param aURI
-   *        the URI to block
-   * @param aAccess
-   *        the new cookie access for the URI.
-   */
-  void setAccess(in nsIURI         aURI,
-                 in nsCookieAccess aAccess);
-
-  /**
    * canSetCookie
    *
    * this method is called to test whether or not the given URI/channel may
