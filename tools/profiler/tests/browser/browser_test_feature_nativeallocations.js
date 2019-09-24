@@ -19,7 +19,7 @@ add_task(async function test_profile_feature_nativeallocations() {
 
   info("Start the profiler to test the native allocations.");
   startProfiler({
-    features: ["threads", "nativeallocations"],
+    features: ["threads", "leaf", "nativeallocations"],
   });
 
   const env = Cc["@mozilla.org/process/environment;1"].getService(
@@ -72,13 +72,13 @@ add_task(async function test_profile_feature_nativeallocations() {
       "Flush out any straggling allocation markers that may have not been " +
         "collected yet by starting and stopping the profiler once."
     );
-    startProfiler({ features: ["threads"] });
+    startProfiler({ features: ["threads", "leaf"] });
     await stopProfilerAndGetThreads(contentPid);
 
     info("Now reload the tab with a clean run.");
     gBrowser.reload();
     await wait(100);
-    startProfiler({ features: ["threads"] });
+    startProfiler({ features: ["threads", "leaf"] });
 
     info(
       "Check that no allocations were recorded, and allocation tracking was " +

@@ -72,8 +72,7 @@
       markerName, text, categoryPair, docShell, cause)
 
 using UniqueProfilerBacktrace = mozilla::UniquePtr<int>;
-static inline UniqueProfilerBacktrace profiler_get_backtrace()
-{
+static inline UniqueProfilerBacktrace profiler_get_backtrace() {
   return nullptr;
 }
 
@@ -285,8 +284,9 @@ static constexpr mozilla::PowerOfTwo32 PROFILER_DEFAULT_STARTUP_ENTRIES =
     mozilla::MakePowerOfTwo32<1u << 17>();  // 131'072 entries = 1MB
 #  endif
 
-#  define PROFILER_DEFAULT_DURATION 20
-#  define PROFILER_DEFAULT_INTERVAL 1
+#  define PROFILER_DEFAULT_DURATION 20 /* seconds, for tests only */
+#  define PROFILER_DEFAULT_INTERVAL 1  /* millisecond */
+#  define PROFILER_MAX_INTERVAL 5000   /* milliseconds */
 
 // Initialize the profiler. If MOZ_PROFILER_STARTUP is set the profiler will
 // also be started. This call must happen before any other profiler calls
