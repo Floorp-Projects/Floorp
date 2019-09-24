@@ -26,4 +26,4 @@ partial interface DocumentFragment {
   NodeList  querySelectorAll(DOMString selectors);
 };
 
-DocumentFragment implements ParentNode;
+DocumentFragment includes ParentNode;

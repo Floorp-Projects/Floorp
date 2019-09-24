@@ -24,5 +24,5 @@ interface StereoPannerNode : AudioNode {
 };
 
 // Mozilla extension
-StereoPannerNode implements AudioNodePassThrough;
+StereoPannerNode includes AudioNodePassThrough;
 

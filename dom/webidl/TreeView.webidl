@@ -5,8 +5,7 @@
 
 interface nsITreeSelection;
 
-[NoInterfaceObject]
-interface TreeView
+interface mixin TreeView
 {
   /**
    * The total number of rows in the tree (including the offscreen rows).

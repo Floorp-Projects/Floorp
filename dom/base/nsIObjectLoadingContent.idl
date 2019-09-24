@@ -20,7 +20,7 @@ class nsNPAPIPluginInstance;
  * This interface represents a content node that loads objects.
  *
  * Please make sure to update the MozObjectLoadingContent WebIDL
- * interface to mirror this interface when changing it.
+ * mixin to mirror this interface when changing it.
  */
 
 [scriptable, builtinclass, uuid(2eb3195e-3eea-4083-bb1d-d2d70fa35ccb)]

@@ -21,7 +21,6 @@ interface MessagePort : EventTarget {
   attribute EventHandler onmessage;
   attribute EventHandler onmessageerror;
 };
-// MessagePort implements Transferable;
 
 dictionary PostMessageOptions {
   sequence<object> transfer = [];

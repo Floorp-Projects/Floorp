@@ -48,4 +48,4 @@ interface ShadowRoot : DocumentFragment
   boolean isUAWidget();
 };
 
-ShadowRoot implements DocumentOrShadowRoot;
+ShadowRoot includes DocumentOrShadowRoot;

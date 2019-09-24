@@ -68,8 +68,7 @@ partial interface HTMLElement {
   readonly attribute long offsetHeight;
 };
 
-[NoInterfaceObject]
-interface TouchEventHandlers {
+interface mixin TouchEventHandlers {
   [Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
            attribute EventHandler ontouchstart;
   [Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
@@ -84,7 +83,7 @@ HTMLElement includes GlobalEventHandlers;
 HTMLElement includes HTMLOrForeignElement;
 HTMLElement includes DocumentAndElementEventHandlers;
 HTMLElement includes ElementCSSInlineStyle;
-HTMLElement implements TouchEventHandlers;
-HTMLElement implements OnErrorEventHandlerForNodes;
+HTMLElement includes TouchEventHandlers;
+HTMLElement includes OnErrorEventHandlerForNodes;
 
 interface HTMLUnknownElement : HTMLElement {};

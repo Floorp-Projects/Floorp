@@ -27,6 +27,6 @@ interface SVGImageElement : SVGGraphicsElement {
   Promise<void> decode();
 };
 
-SVGImageElement implements MozImageLoadingContent;
-SVGImageElement implements SVGURIReference;
+SVGImageElement includes MozImageLoadingContent;
+SVGImageElement includes SVGURIReference;
 
