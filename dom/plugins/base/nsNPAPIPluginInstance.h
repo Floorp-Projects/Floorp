@@ -17,7 +17,7 @@
 #include "nsHashKeys.h"
 #include <prinrval.h>
 #include "js/TypeDecls.h"
-#include "AudioChannelAgent.h"
+#include "nsIAudioChannelAgent.h"
 
 #include "mozilla/EventForwards.h"
 #include "mozilla/TimeStamp.h"
@@ -244,10 +244,6 @@ class nsNPAPIPluginInstance final
 
   nsresult CreateAudioChannelAgentIfNeeded();
 
-  void NotifyAudibleStateChanged() const;
-
-  nsresult UpdateMutedIfNeeded();
-
   // The structure used to communicate between the plugin instance and
   // the browser.
   NPP_t mNPP;
@@ -301,10 +297,8 @@ class nsNPAPIPluginInstance final
   char** mCachedParamNames;
   char** mCachedParamValues;
 
-  RefPtr<mozilla::dom::AudioChannelAgent> mAudioChannelAgent;
-  bool mIsMuted = false;
-  bool mWindowMuted = false;
-  bool mWindowSuspended = false;
+  nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;
+  bool mMuted;
 };
 
 void NS_NotifyBeginPluginCall(NSPluginCallReentry aReentryState);

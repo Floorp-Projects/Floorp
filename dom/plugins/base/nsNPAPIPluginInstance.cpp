@@ -34,6 +34,7 @@
 #include "nsILoadContext.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
+#include "AudioChannelAgent.h"
 #include "AudioChannelService.h"
 
 using namespace mozilla;
@@ -63,7 +64,8 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance()
       ,
       mCachedParamLength(0),
       mCachedParamNames(nullptr),
-      mCachedParamValues(nullptr) {
+      mCachedParamValues(nullptr),
+      mMuted(false) {
   mNPP.pdata = nullptr;
   mNPP.ndata = this;
 
@@ -1106,17 +1108,36 @@ void nsNPAPIPluginInstance::NotifyStartedPlaying() {
   }
 
   MOZ_ASSERT(mAudioChannelAgent);
+  dom::AudioPlaybackConfig config;
   rv = mAudioChannelAgent->NotifyStartedPlaying(
-      dom::AudioChannelService::AudibleState::eAudible);
+      &config, dom::AudioChannelService::AudibleState::eAudible);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
-  
-  mAudioChannelAgent->PullInitialUpdate();
+
+  rv = WindowVolumeChanged(config.mVolume, config.mMuted);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  // Since we only support muting for now, the implementation of suspend
+  // is equal to muting. Therefore, if we have already muted the plugin,
+  // then we don't need to call WindowSuspendChanged() again.
+  if (config.mMuted) {
+    return;
+  }
+
+  rv = WindowSuspendChanged(config.mSuspend);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
 }
 
 void nsNPAPIPluginInstance::NotifyStoppedPlaying() {
   MOZ_ASSERT(mAudioChannelAgent);
+
+  // Reset the attribute.
+  mMuted = false;
   nsresult rv = mAudioChannelAgent->NotifyStoppedPlaying();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
@@ -1129,12 +1150,21 @@ nsNPAPIPluginInstance::WindowVolumeChanged(float aVolume, bool aMuted) {
           ("nsNPAPIPluginInstance, WindowVolumeChanged, "
            "this = %p, aVolume = %f, aMuted = %s\n",
            this, aVolume, aMuted ? "true" : "false"));
+
   // We just support mute/unmute
-  if (mWindowMuted != aMuted) {
-    mWindowMuted = aMuted;
-    return UpdateMutedIfNeeded();
+  nsresult rv = SetMuted(aMuted);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetMuted failed");
+  if (mMuted != aMuted) {
+    mMuted = aMuted;
+    if (mAudioChannelAgent) {
+      AudioChannelService::AudibleState audible =
+          aMuted ? AudioChannelService::AudibleState::eNotAudible
+                 : AudioChannelService::AudibleState::eAudible;
+      mAudioChannelAgent->NotifyStartedAudible(
+          audible, AudioChannelService::AudibleChangedReasons::eVolumeChanged);
+    }
   }
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1143,46 +1173,16 @@ nsNPAPIPluginInstance::WindowSuspendChanged(nsSuspendedTypes aSuspend) {
           ("nsNPAPIPluginInstance, WindowSuspendChanged, "
            "this = %p, aSuspend = %s\n",
            this, SuspendTypeToStr(aSuspend)));
-  const bool isSuspended = aSuspend != nsISuspendedTypes::NONE_SUSPENDED;
-  if (mWindowSuspended != isSuspended) {
-    mWindowSuspended = isSuspended;
-    // It doesn't support suspending, so we just do something like mute/unmute.
-    return UpdateMutedIfNeeded();
-  }
+
+  // It doesn't support suspended, so we just do something like mute/unmute.
+  WindowVolumeChanged(1.0, /* useless */
+                      aSuspend != nsISuspendedTypes::NONE_SUSPENDED);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNPAPIPluginInstance::WindowAudioCaptureChanged(bool aCapture) {
   return NS_OK;
-}
-
-void nsNPAPIPluginInstance::NotifyAudibleStateChanged() const {
-  // This happens when global window destroyed, we would notify agent's callback
-  // to mute its volume, but the nsNSNPAPI had released the agent before that.
-  if (!mAudioChannelAgent) {
-    return;
-  }
-  AudioChannelService::AudibleState audibleState =
-      mIsMuted ? AudioChannelService::AudibleState::eNotAudible
-               : AudioChannelService::AudibleState::eAudible;
-  // Because we don't really support suspending nsNPAPI, so all audible changes
-  // come from changing its volume.
-  mAudioChannelAgent->NotifyStartedAudible(
-      audibleState, AudioChannelService::AudibleChangedReasons::eVolumeChanged);
-}
-
-nsresult nsNPAPIPluginInstance::UpdateMutedIfNeeded() {
-  const bool shouldMute = mWindowSuspended || mWindowMuted;
-  if (mIsMuted == shouldMute) {
-    return NS_OK;
-  }
-
-  mIsMuted = shouldMute;
-  NotifyAudibleStateChanged();
-  nsresult rv = SetMuted(mIsMuted);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetMuted failed");
-  return rv;
 }
 
 nsresult nsNPAPIPluginInstance::SetMuted(bool aIsMuted) {
