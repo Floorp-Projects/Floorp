@@ -2888,6 +2888,65 @@ static bool ItemIsActive(nsIDocShellTreeItem* aItem) {
   return false;
 }
 
+NS_IMETHODIMP
+nsDocShell::FindItemWithName(const nsAString& aName,
+                             nsIDocShellTreeItem* aRequestor,
+                             nsIDocShellTreeItem* aOriginalRequestor,
+                             bool aSkipTabGroup,
+                             nsIDocShellTreeItem** aResult) {
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  // If we don't find one, we return NS_OK and a null result
+  *aResult = nullptr;
+
+  if (aName.IsEmpty()) {
+    return NS_OK;
+  }
+
+  if (aRequestor) {
+    // If aRequestor is not null we don't need to check special names, so
+    // just hand straight off to the search by actual name function.
+    return DoFindItemWithName(aName, aRequestor, aOriginalRequestor,
+                              aSkipTabGroup, aResult);
+  } else {
+    // This is the entry point into the target-finding algorithm.  Check
+    // for special names.  This should only be done once, hence the check
+    // for a null aRequestor.
+
+    nsCOMPtr<nsIDocShellTreeItem> foundItem;
+    if (aName.LowerCaseEqualsLiteral("_self")) {
+      foundItem = this;
+    } else if (aName.LowerCaseEqualsLiteral("_blank")) {
+      // Just return null.  Caller must handle creating a new window with
+      // a blank name himself.
+      return NS_OK;
+    } else if (aName.LowerCaseEqualsLiteral("_parent")) {
+      GetInProcessSameTypeParent(getter_AddRefs(foundItem));
+      if (!foundItem) {
+        foundItem = this;
+      }
+    } else if (aName.LowerCaseEqualsLiteral("_top")) {
+      GetInProcessSameTypeRootTreeItem(getter_AddRefs(foundItem));
+      NS_ASSERTION(foundItem, "Must have this; worst case it's us!");
+    } else {
+      // Do the search for item by an actual name.
+      DoFindItemWithName(aName, aRequestor, aOriginalRequestor, aSkipTabGroup,
+                         getter_AddRefs(foundItem));
+    }
+
+    if (foundItem && !CanAccessItem(foundItem, aOriginalRequestor)) {
+      foundItem = nullptr;
+    }
+
+    // DoFindItemWithName only returns active items and we don't check if
+    // the item is active for the special cases.
+    if (foundItem) {
+      foundItem.swap(*aResult);
+    }
+    return NS_OK;
+  }
+}
+
 void nsDocShell::AssertOriginAttributesMatchPrivateBrowsing() {
   // Chrome docshells must not have a private browsing OriginAttribute
   // Content docshells must maintain the equality:
@@ -2898,6 +2957,64 @@ void nsDocShell::AssertOriginAttributesMatchPrivateBrowsing() {
     MOZ_DIAGNOSTIC_ASSERT(mOriginAttributes.mPrivateBrowsingId ==
                           mPrivateBrowsingId);
   }
+}
+
+nsresult nsDocShell::DoFindItemWithName(const nsAString& aName,
+                                        nsIDocShellTreeItem* aRequestor,
+                                        nsIDocShellTreeItem* aOriginalRequestor,
+                                        bool aSkipTabGroup,
+                                        nsIDocShellTreeItem** aResult) {
+  // First we check our name.
+  if (mBrowsingContext->NameEquals(aName) && ItemIsActive(this) &&
+      CanAccessItem(this, aOriginalRequestor)) {
+    NS_ADDREF(*aResult = this);
+    return NS_OK;
+  }
+
+  // Second we check our children making sure not to ask a child if
+  // it is the aRequestor.
+#ifdef DEBUG
+  nsresult rv =
+#endif
+      FindChildWithName(aName, true, true, aRequestor, aOriginalRequestor,
+                        aResult);
+  NS_ASSERTION(NS_SUCCEEDED(rv),
+               "FindChildWithName should not be failing here.");
+  if (*aResult) {
+    return NS_OK;
+  }
+
+  // Third if we have a parent and it isn't the requestor then we
+  // should ask it to do the search.  If it is the requestor we
+  // should just stop here and let the parent do the rest.  If we
+  // don't have a parent, then we should ask the
+  // docShellTreeOwner to do the search.
+  nsCOMPtr<nsIDocShellTreeItem> parentAsTreeItem =
+      do_QueryInterface(GetAsSupports(mParent));
+  if (parentAsTreeItem) {
+    if (parentAsTreeItem == aRequestor) {
+      return NS_OK;
+    }
+
+    // If we have a same-type parent, respecting browser and app boundaries.
+    // NOTE: Could use GetInProcessSameTypeParent if the issues described in
+    // bug 1310344 are fixed.
+    if (!GetIsMozBrowser() && parentAsTreeItem->ItemType() == mItemType) {
+      return parentAsTreeItem->FindItemWithName(aName, this, aOriginalRequestor,
+                                                /* aSkipTabGroup = */ false,
+                                                aResult);
+    }
+  }
+
+  // If we have a null parent or the parent is not of the same type, we need to
+  // give up on finding it in our tree, and start looking in our TabGroup.
+  nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
+  if (window && !aSkipTabGroup) {
+    RefPtr<mozilla::dom::TabGroup> tabGroup = window->TabGroup();
+    tabGroup->FindItemWithName(aName, this, aOriginalRequestor, aResult);
+  }
+
+  return NS_OK;
 }
 
 bool nsDocShell::IsSandboxedFrom(BrowsingContext* aTargetBC) {
@@ -8587,9 +8704,11 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
   MOZ_ASSERT(aLoadState, "need a load state!");
   MOZ_ASSERT(!aLoadState->Target().IsEmpty(), "should have a target here!");
 
-  nsresult rv = NS_OK;
+  nsresult rv;
   nsCOMPtr<nsIDocShell> targetDocShell;
 
+  // Locate the target DocShell.
+  nsCOMPtr<nsIDocShellTreeItem> targetItem;
   // Only _self, _parent, and _top are supported in noopener case.  But we
   // have to be careful to not apply that to the noreferrer case.  See bug
   // 1358469.
@@ -8600,12 +8719,12 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
       aLoadState->Target().LowerCaseEqualsLiteral("_self") ||
       aLoadState->Target().LowerCaseEqualsLiteral("_parent") ||
       aLoadState->Target().LowerCaseEqualsLiteral("_top")) {
-    if (BrowsingContext* context =
-            mBrowsingContext->FindWithName(aLoadState->Target())) {
-      targetDocShell = context->GetDocShell();
-    }
+    rv = FindItemWithName(aLoadState->Target(), nullptr, this, false,
+                          getter_AddRefs(targetItem));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  targetDocShell = do_QueryInterface(targetItem);
   if (!targetDocShell) {
     // If the targetDocShell doesn't exist, then this is a new docShell
     // and we should consider this a TYPE_DOCUMENT load
@@ -13462,6 +13581,35 @@ already_AddRefed<nsIBrowserChild> nsDocShell::GetBrowserChild() {
 nsCommandManager* nsDocShell::GetCommandManager() {
   NS_ENSURE_SUCCESS(EnsureCommandHandler(), nullptr);
   return mCommandManager;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetIsOnlyToplevelInTabGroup(bool* aResult) {
+  MOZ_ASSERT(aResult);
+
+  nsPIDOMWindowOuter* outer = GetWindow();
+  MOZ_ASSERT(outer);
+
+  // If we are not toplevel then we are not the only toplevel window in the
+  // tab group.
+  if (outer->GetInProcessScriptableParentOrNull()) {
+    *aResult = false;
+    return NS_OK;
+  }
+
+  // If we have any other toplevel windows in our tab group, then we are not
+  // the only toplevel window in the tab group.
+  nsTArray<nsPIDOMWindowOuter*> toplevelWindows =
+      outer->TabGroup()->GetTopLevelWindows();
+  if (toplevelWindows.Length() > 1) {
+    *aResult = false;
+    return NS_OK;
+  }
+  MOZ_ASSERT(toplevelWindows.Length() == 1);
+  MOZ_ASSERT(toplevelWindows[0] == outer);
+
+  *aResult = true;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
