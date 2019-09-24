@@ -346,8 +346,7 @@ void nsSpeechTask::CreateAudioChannelAgent() {
     return;
   }
 
-  WindowVolumeChanged(config.mVolume, config.mMuted);
-  WindowSuspendChanged(config.mSuspend);
+  mAudioChannelAgent->PullInitialUpdate();
 }
 
 void nsSpeechTask::DestroyAudioChannelAgent() {

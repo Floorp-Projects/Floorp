@@ -126,6 +126,17 @@ nsresult AudioChannelAgent::InitInternal(
   return NS_OK;
 }
 
+void AudioChannelAgent::PullInitialUpdate() {
+  RefPtr<AudioChannelService> service = AudioChannelService::Get();
+  MOZ_ASSERT(service);
+  MOZ_ASSERT(mIsRegToService);
+
+  AudioPlaybackConfig config = service->GetMediaConfig(mWindow);
+  WindowVolumeChanged();
+  WindowSuspendChanged(config.mSuspend);
+  WindowAudioCaptureChanged(InnerWindowID(), config.mCapturedAudio);
+}
+
 NS_IMETHODIMP
 AudioChannelAgent::NotifyStartedPlaying(AudioPlaybackConfig* aConfig,
                                         uint8_t aAudible) {

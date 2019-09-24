@@ -1196,9 +1196,7 @@ class HTMLMediaElement::AudioChannelAgentCallback final
     }
 
     NotifyMediaStarted(mAudioChannelAgent->WindowID());
-    WindowVolumeChanged(config.mVolume, config.mMuted);
-    WindowSuspendChanged(config.mSuspend);
-    WindowAudioCaptureChanged(config.mCapturedAudio);
+    mAudioChannelAgent->PullInitialUpdate();
   }
 
   void StopAudioChanelAgent() {
