@@ -37,14 +37,7 @@ class AudioChannelAgent : public nsIAudioChannelAgent {
   // should apply mute state to its callback.
   void PullInitialUpdate();
 
-  void WindowVolumeChanged(float aVolume, bool aMuted);
-  void WindowSuspendChanged(nsSuspendedTypes aSuspend);
-  void WindowAudioCaptureChanged(uint64_t aInnerWindowID, bool aCapture);
-
-  nsPIDOMWindowOuter* Window() const { return mWindow; }
-
   uint64_t WindowID() const;
-  uint64_t InnerWindowID() const;
 
   bool IsWindowAudioCapturingEnabled() const;
   bool IsPlayingStarted() const;
@@ -53,6 +46,13 @@ class AudioChannelAgent : public nsIAudioChannelAgent {
  private:
   virtual ~AudioChannelAgent();
 
+  friend class AudioChannelService;
+  void WindowVolumeChanged(float aVolume, bool aMuted);
+  void WindowSuspendChanged(nsSuspendedTypes aSuspend);
+  void WindowAudioCaptureChanged(uint64_t aInnerWindowID, bool aCapture);
+
+  nsPIDOMWindowOuter* Window() const { return mWindow; }
+  uint64_t InnerWindowID() const;
   AudioPlaybackConfig GetMediaConfig() const;
   bool IsDisposableSuspend(nsSuspendedTypes aSuspend) const;
 
