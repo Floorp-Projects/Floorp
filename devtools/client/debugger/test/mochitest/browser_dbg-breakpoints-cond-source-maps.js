@@ -27,7 +27,7 @@ add_task(async function() {
   await selectSource(dbg, "bundle.js");
   getCM(dbg).scrollIntoView({ line: 55, ch: 0 });
 
-  setLogPoint(dbg, 55);
+  await setLogPoint(dbg, 55);
   await waitForConditionalPanelFocus(dbg);
   ok(
     !!getConditionalPanel(dbg, 55),
