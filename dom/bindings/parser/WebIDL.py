@@ -896,6 +896,10 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
         # If this is an iterator interface, we need to know what iterable
         # interface we're iterating for in order to get its nativeType.
         self.iterableInterface = None
+        # True if we have cross-origin members.
+        self.hasCrossOriginMembers = False
+        # True if some descendant (including ourselves) has cross-origin members
+        self.hasDescendantWithCrossOriginMembers = False
 
         self.toStringTag = toStringTag
 
@@ -1171,6 +1175,21 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
                 member.isUnforgeable() and
                 not hasattr(member, "originatingInterface")):
                 member.originatingInterface = self
+
+        for member in self.members:
+            if ((member.isMethod() and
+                 member.getExtendedAttribute("CrossOriginCallable")) or
+                (member.isAttr() and
+                 (member.getExtendedAttribute("CrossOriginReadable") or
+                  member.getExtendedAttribute("CrossOriginWritable")))):
+                self.hasCrossOriginMembers = True
+                break
+
+        if self.hasCrossOriginMembers:
+            parent = self
+            while parent:
+                parent.hasDescendantWithCrossOriginMembers = True
+                parent = parent.parent
 
         # Compute slot indices for our members before we pull in unforgeable
         # members from our parent. Also, maplike/setlike declarations get a

@@ -2961,6 +2961,15 @@ struct LenientThisPolicy;
 // A this-extraction policy for cross-origin getters/setters/methods.
 struct CrossOriginThisPolicy;
 
+// A this-extraction policy for getters/setters/methods that should
+// not be allowed to be called cross-origin but expect objects that
+// _can_ be cross-origin.
+struct MaybeCrossOriginObjectThisPolicy;
+
+// A this-extraction policy which is just like
+// MaybeCrossOriginObjectThisPolicy but has lenient-this behavior.
+struct MaybeCrossOriginObjectLenientThisPolicy;
+
 // An exception-reporting policy for normal getters/setters/methods.
 struct ThrowExceptions;
 
