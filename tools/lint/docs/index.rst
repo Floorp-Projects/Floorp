@@ -29,4 +29,5 @@ like mach, phabricator and taskcluster.
   linters/eslint
   linters/flake8
   linters/l10n
+  linters/lintpref
   linters/rstlinter
