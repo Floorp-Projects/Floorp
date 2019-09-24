@@ -7,6 +7,6 @@
  * CSS served to Fennec does not permit scrolling horizontally. To prevent
  * this UX frustration, we enable horizontal scrolling.
  */
-body > #views > div {
+body > #views {
   overflow: auto;
 }
