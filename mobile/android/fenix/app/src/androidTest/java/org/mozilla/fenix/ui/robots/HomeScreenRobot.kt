@@ -298,7 +298,7 @@ private fun assertPrivateSessionHeader() =
 const val PRIVATE_SESSION_MESSAGE = "Firefox Preview clears your search and browsing history " +
         "when you quit the app or close all private tabs. While this doesn’t make you anonymous to websites or " +
         "your internet service provider, it makes it easier to keep what you do online private from anyone else " +
-        "who uses this device.\n\nCommon myths about private browsing"
+        "who uses this device."
 
 private fun assertPrivateSessionMessage(visible: Boolean) =
     onView(CoreMatchers.allOf(ViewMatchers.withText(PRIVATE_SESSION_MESSAGE)))

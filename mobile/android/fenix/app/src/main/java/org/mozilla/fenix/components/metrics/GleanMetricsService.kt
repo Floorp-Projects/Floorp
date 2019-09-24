@@ -430,10 +430,6 @@ class GleanMetricsService(private val context: Context) : MetricsService {
         }
     }
 
-    /**
-     * Sets some basic Glean metrics required by Fenix.
-     * This is a separate function to simplify testing.
-     */
     internal fun setStartupMetrics() {
         Metrics.apply {
             defaultBrowser.set(Browsers.all(context).isDefaultBrowser)

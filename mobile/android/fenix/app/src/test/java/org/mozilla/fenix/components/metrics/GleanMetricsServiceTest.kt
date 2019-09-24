@@ -10,6 +10,7 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,10 +28,15 @@ class GleanMetricsServiceTest {
     @get:Rule
     val gleanRule = GleanTestRule(testContext)
 
+    private lateinit var gleanService: GleanMetricsService
+
+    @Before
+    fun setup() {
+        gleanService = GleanMetricsService(testContext)
+    }
+
     @Test
     fun `setStartupMetrics sets some base metrics`() {
-        val gleanService = GleanMetricsService(testContext)
-
         // Set the metrics.
         gleanService.setStartupMetrics()
 
@@ -48,8 +54,6 @@ class GleanMetricsServiceTest {
 
     @Test
     fun `the app_opened event is correctly recorded`() {
-        val gleanService = GleanMetricsService(testContext)
-
         // Build the event wrapper used by Fenix.
         val event = Event.OpenedApp(Event.OpenedApp.Source.APP_ICON)
 
