@@ -16,6 +16,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.utils.AllSessionsObserver
 import mozilla.components.concept.engine.media.Media
+import mozilla.components.feature.media.ext.hasMediaWithSufficientLongDuration
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
@@ -162,7 +163,7 @@ private class MediaSessionObserver(
         }
     }
 
-    @Suppress("ReturnCount")
+    @Suppress("ReturnCount", "ComplexMethod")
     private fun determineNewState(): MediaState {
         val currentState = stateMachine.state
 
@@ -178,10 +179,15 @@ private class MediaSessionObserver(
         // Check if there's a session that has playing media and emit a "playing" state for it.
         val playingSession = mediaMap.findPlayingSession()
         if (playingSession != null) {
-            return MediaState.Playing(
-                playingSession.first,
-                playingSession.second
-            )
+            val (session, media) = playingSession
+            // We only switch to playing state if there's media playing that has a sufficient long
+            // duration. Otherwise we let just Gecko play it and do not request audio focus or show
+            // a media notification. This will let us ignore short audio effects (Beeep!).
+            return if (media.hasMediaWithSufficientLongDuration()) {
+                return MediaState.Playing(session, media)
+            } else {
+                MediaState.None
+            }
         }
 
         // If we were in "playing" state and the media for this session is now paused then emit a "paused" state.

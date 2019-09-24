@@ -6,16 +6,19 @@ package mozilla.components.feature.media
 
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.support.test.mock
+import org.mockito.Mockito.doReturn
 
 internal class MockMedia(
-    initialState: PlaybackState
+    initialState: PlaybackState,
+    duration: Double = 10.0
 ) : Media() {
-    init {
-        playbackState = initialState
-    }
-
     override val controller: Controller =
         mock()
     override val metadata: Metadata =
         mock()
+
+    init {
+        playbackState = initialState
+        doReturn(duration).`when`(metadata).duration
+    }
 }

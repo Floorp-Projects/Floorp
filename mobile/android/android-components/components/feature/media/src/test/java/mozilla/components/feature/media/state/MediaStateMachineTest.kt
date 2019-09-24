@@ -229,4 +229,34 @@ class MediaStateMachineTest {
             assertEquals(media1, it.getMedia()[0])
         }
     }
+
+    @Test
+    fun `Does not switch to playing state if media has short duration`() {
+        val media1 = MockMedia(Media.PlaybackState.PLAYING, duration = 2.0)
+        val media2 = MockMedia(Media.PlaybackState.PLAYING, duration = 4.0)
+        val media3 = MockMedia(Media.PlaybackState.PLAYING, duration = 30.0)
+
+        val sessionManager = SessionManager(mock())
+
+        val session = Session("https://www.mozilla.org").also {
+            sessionManager.add(it)
+
+            it.media = listOf(media1)
+        }
+
+        MediaStateMachine.start(sessionManager)
+
+        MediaStateMachine.waitForStateChange()
+        assertEquals(MediaState.None, MediaStateMachine.state)
+
+        session.media = listOf(media1, media2)
+
+        MediaStateMachine.waitForStateChange()
+        assertEquals(MediaState.None, MediaStateMachine.state)
+
+        session.media = listOf(media1, media2, media3)
+
+        MediaStateMachine.waitForStateChange()
+        assertTrue(MediaStateMachine.state is MediaState.Playing)
+    }
 }
