@@ -359,14 +359,14 @@ class SearchOneOffs {
     if (!this.compact) {
       return this.popup.selectedIndex;
     }
-    return this._view.selectedRowIndex;
+    return this._view.selectedElementIndex;
   }
 
   set selectedAutocompleteIndex(val) {
     if (!this.compact) {
       return (this.popup.selectedIndex = val);
     }
-    return (this._view.selectedRowIndex = val);
+    return (this._view.selectedElementIndex = val);
   }
 
   get compact() {

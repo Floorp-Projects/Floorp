@@ -68,28 +68,21 @@ add_task(async function tipIsSecondResult() {
           "https://support.mozilla.org/en-US/kb/delete-browsing-search-download-history-firefox",
       }
     ),
-    new UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.URL,
-      UrlbarUtils.RESULT_SOURCE.HISTORY,
-      { url: "http://mozilla.org/b" }
-    ),
-    new UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.URL,
-      UrlbarUtils.RESULT_SOURCE.HISTORY,
-      { url: "http://mozilla.org/c" }
-    ),
   ];
 
   let provider = new TipTestProvider(matches);
   UrlbarProvidersManager.registerProvider(provider);
 
-  gURLBar.search("test");
-  await promiseSearchComplete();
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    value: "test",
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+  });
 
   Assert.equal(
     UrlbarTestUtils.getResultCount(window),
-    4,
-    "There should be four results in the view."
+    2,
+    "There should be two results in the view."
   );
   let secondResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
   Assert.equal(
@@ -100,9 +93,9 @@ add_task(async function tipIsSecondResult() {
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
   Assert.equal(
-    UrlbarTestUtils.getSelectedRowIndex(window),
+    UrlbarTestUtils.getSelectedElementIndex(window),
     0,
-    "The first result should be selected."
+    "The first element should be selected."
   );
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
@@ -113,9 +106,9 @@ add_task(async function tipIsSecondResult() {
     "The selected element should be the tip button."
   );
   Assert.equal(
-    UrlbarTestUtils.getSelectedRowIndex(window),
+    UrlbarTestUtils.getSelectedElementIndex(window),
     1,
-    "getSelectedIndex should return 1 even though the tip button is selected."
+    "The first element should be selected."
   );
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
@@ -128,14 +121,26 @@ add_task(async function tipIsSecondResult() {
   Assert.equal(
     UrlbarTestUtils.getSelectedRowIndex(window),
     1,
-    "getSelectedIndex should return 1 even though the help button is selected."
+    "getSelectedRowIndex should return 1 even though the help button is selected."
+  );
+  Assert.equal(
+    UrlbarTestUtils.getSelectedElementIndex(window),
+    2,
+    "The third element should be selected."
   );
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
+  await BrowserTestUtils.waitForCondition(() => {
+    info("Waiting for one-off to become selected.");
+    let oneOff = document.querySelector(
+      ".urlbarView .search-panel-one-offs .searchbar-engine-one-off-item:first-child"
+    );
+    return oneOff.hasAttribute("selected");
+  });
   Assert.equal(
-    UrlbarTestUtils.getSelectedRowIndex(window),
-    2,
-    "The third result should be selected."
+    UrlbarTestUtils.getSelectedElementIndex(window),
+    -1,
+    "No results should be selected."
   );
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
@@ -146,6 +151,7 @@ add_task(async function tipIsSecondResult() {
     "The selected element should be the tip help button."
   );
 
+  gURLBar.view.close();
   UrlbarProvidersManager.unregisterProvider(provider);
 });
 
@@ -165,14 +171,14 @@ add_task(async function tipIsOnlyResult() {
     ),
   ];
 
-  // The previous test can interfere with this one if it's in the same window.
-  let newWin = await BrowserTestUtils.openNewBrowserWindow();
-
   let provider = new TipTestProvider(matches);
   UrlbarProvidersManager.registerProvider(provider);
 
-  gURLBar.search("test");
-  await promiseSearchComplete();
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    value: "test",
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+  });
 
   Assert.equal(
     UrlbarTestUtils.getResultCount(window),
@@ -194,9 +200,9 @@ add_task(async function tipIsOnlyResult() {
     "The selected element should be the tip button."
   );
   Assert.equal(
-    UrlbarTestUtils.getSelectedRowIndex(window),
+    UrlbarTestUtils.getSelectedElementIndex(window),
     0,
-    "getSelectedIndex should return 0."
+    "The first element should be selected."
   );
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
@@ -207,14 +213,14 @@ add_task(async function tipIsOnlyResult() {
     "The selected element should be the tip help button."
   );
   Assert.equal(
-    UrlbarTestUtils.getSelectedRowIndex(window),
-    0,
-    "getSelectedIndex should return 0."
+    UrlbarTestUtils.getSelectedElementIndex(window),
+    1,
+    "The second element should be selected."
   );
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
   Assert.equal(
-    UrlbarTestUtils.getSelectedRowIndex(window),
+    UrlbarTestUtils.getSelectedElementIndex(window),
     -1,
     "There should be no selection."
   );
@@ -227,6 +233,6 @@ add_task(async function tipIsOnlyResult() {
     "The selected element should be the tip help button."
   );
 
+  gURLBar.view.close();
   UrlbarProvidersManager.unregisterProvider(provider);
-  await BrowserTestUtils.closeWindow(newWin);
 });
