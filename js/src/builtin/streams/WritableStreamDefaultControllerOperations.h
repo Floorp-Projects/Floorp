@@ -20,6 +20,24 @@ namespace js {
 
 class WritableStream;
 
+/**
+ * Characterizes the family of algorithms, (startAlgorithm, writeAlgorithm,
+ * closeAlgorithm, abortAlgorithm), associated with a writable stream.
+ *
+ * See the comment on SetUpWritableStreamDefaultController().
+ */
+enum class SinkAlgorithms {
+  Script,
+  Transform,
+};
+
+extern MOZ_MUST_USE bool SetUpWritableStreamDefaultController(
+    JSContext* cx, JS::Handle<WritableStream*> stream,
+    SinkAlgorithms algorithms, JS::Handle<JS::Value> underlyingSink,
+    JS::Handle<JS::Value> writeMethod, JS::Handle<JS::Value> closeMethod,
+    JS::Handle<JS::Value> abortMethod, double highWaterMark,
+    JS::Handle<JS::Value> size);
+
 extern MOZ_MUST_USE bool SetUpWritableStreamDefaultControllerFromUnderlyingSink(
     JSContext* cx, JS::Handle<WritableStream*> stream,
     JS::Handle<JS::Value> underlyingSink, double highWaterMark,
