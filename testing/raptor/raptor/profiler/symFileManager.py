@@ -169,7 +169,7 @@ class SymFileManager:
                         symbol = line[addressLength + 1:].rstrip()
                     symbolMap[address] = symbol
                     publicCount += 1
-        except Exception as e:
+        except Exception:
             LogError("Error parsing SYM file " + path)
             return None
 
