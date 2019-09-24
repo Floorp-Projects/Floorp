@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* globals module */
+/* globals getMatchPatternsForGoogleURL, module */
 
 /**
  * For detailed information on our policies, and a documention on this format
@@ -18,14 +18,40 @@ const AVAILABLE_UA_OVERRIDES = [
     platform: "all",
     domain: "webcompat-addon-testbed.herokuapp.com",
     bug: "0000000",
-    hidden: true,
     config: {
+      hidden: true,
       matches: ["*://webcompat-addon-testbed.herokuapp.com/*"],
       uaTransformer: originalUA => {
         return (
           UAHelpers.getPrefix(originalUA) +
           " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36 for WebCompat"
         );
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1564594 - Create UA override for Enhanced Search on Firefox Android
+     *
+     * Enables the Chrome Google Search experience for Fennec users.
+     */
+    id: "bug1564594",
+    platform: "android",
+    domain: "Enhanced Search",
+    bug: "1567945",
+    config: {
+      matches: [
+        ...getMatchPatternsForGoogleURL("images.google"),
+        ...getMatchPatternsForGoogleURL("maps.google"),
+        ...getMatchPatternsForGoogleURL("news.google"),
+        ...getMatchPatternsForGoogleURL("www.google"),
+      ],
+      blocks: [...getMatchPatternsForGoogleURL("www.google", "serviceworker")],
+      permanentPref: "enable_enhanced_search",
+      telemetryKey: "enhancedSearch",
+      experiment: "enhanced-search",
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
       },
     },
   },
@@ -50,6 +76,72 @@ const AVAILABLE_UA_OVERRIDES = [
       ],
       uaTransformer: originalUA => {
         return originalUA.replace("Gecko", "like Gecko");
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1577179 - UA override for supportforms.embarcadero.com
+     * WebCompat issue #34682 - https://webcompat.com/issues/34682
+     *
+     * supportforms.embarcadero.com has a constant onchange event on a product selector
+     * which makes it unusable. Spoofing as Chrome allows to stop event from firing
+     */
+    id: "bug1577179",
+    platform: "all",
+    domain: "supportforms.embarcadero.com",
+    bug: "1577179",
+    config: {
+      matches: ["*://supportforms.embarcadero.com/*"],
+      uaTransformer: originalUA => {
+        return (
+          UAHelpers.getPrefix(originalUA) +
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36"
+        );
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1577519 - att.tv - Create a UA override for att.tv for playback on desktop
+     * WebCompat issue #3846 - https://webcompat.com/issues/3846
+     *
+     * att.tv (atttvnow.com) is blocking Firefox via UA sniffing. Spoofing as Chrome allows
+     * to access the site and playback works fine. This is former directvnow.com
+     */
+    id: "bug1577519",
+    platform: "desktop",
+    domain: "att.tv",
+    bug: "1577519",
+    config: {
+      matches: ["*://*.att.tv/*"],
+      uaTransformer: originalUA => {
+        return (
+          UAHelpers.getPrefix(originalUA) +
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36"
+        );
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1570108 - steamcommunity.com - UA override for steamcommunity.com
+     * WebCompat issue #34171 - https://webcompat.com/issues/34171
+     *
+     * steamcommunity.com blocks chat feature for Firefox users showing unsupported browser message.
+     * When spoofing as Chrome the chat works fine
+     */
+    id: "bug1570108",
+    platform: "desktop",
+    domain: "steamcommunity.com",
+    bug: "1570108",
+    config: {
+      matches: ["*://steamcommunity.com/chat*"],
+      uaTransformer: originalUA => {
+        return (
+          UAHelpers.getPrefix(originalUA) +
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36"
+        );
       },
     },
   },
@@ -90,7 +182,11 @@ const AVAILABLE_UA_OVERRIDES = [
     domain: "tieba.baidu.com",
     bug: "945963",
     config: {
-      matches: ["*://tieba.baidu.com/*", "*://tiebac.baidu.com/*"],
+      matches: [
+        "*://tieba.baidu.com/*",
+        "*://tiebac.baidu.com/*",
+        "*://zhidao.baidu.com/*",
+      ],
       uaTransformer: originalUA => {
         return originalUA + " AppleWebKit/537.36 (KHTML, like Gecko)";
       },
@@ -316,9 +412,136 @@ const AVAILABLE_UA_OVERRIDES = [
       },
     },
   },
+  {
+    /*
+     * Bug 1574522 - UA override for enuri.com on Firefox for Android
+     * WebCompat issue #37139 - https://webcompat.com/issues/37139
+     *
+     * enuri.com returns a different template for Firefox on Android
+     * based on server side UA detection. This results in page content cut offs.
+     * Spoofing as Chrome fixes the issue
+     */
+    id: "bug1574522",
+    platform: "android",
+    domain: "enuri.com",
+    bug: "1574522",
+    config: {
+      matches: ["*://enuri.com/*"],
+      uaTransformer: _ => {
+        return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G900M) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.111 Mobile Safari/537.36";
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1574564 - UA override for ceskatelevize.cz on Firefox for Android
+     * WebCompat issue #15467 - https://webcompat.com/issues/15467
+     *
+     * ceskatelevize sets streamingProtocol depending on the User-Agent it sees
+     * in the request headers, returning DASH for Chrome, HLS for iOS,
+     * and Flash for Fennec. Since Fennec has no Flash, the video doesn't work.
+     * Spoofing as Chrome makes the video play
+     */
+    id: "bug1574564",
+    platform: "android",
+    domain: "ceskatelevize.cz",
+    bug: "1574564",
+    config: {
+      matches: ["*://*.ceskatelevize.cz/*"],
+      uaTransformer: originalUA => {
+        return (
+          UAHelpers.getPrefix(originalUA) +
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.111 Mobile Safari/537.36"
+        );
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1577240 - UA override for heb.com on Firefox for Android
+     * WebCompat issue #33613 - https://webcompat.com/issues/33613
+     *
+     * heb.com shows desktop site on Firefox for Android for some pages based on
+     * UA detection. Spoofing as Chrome allows to get mobile site.
+     */
+    id: "bug1577240",
+    platform: "android",
+    domain: "heb.com",
+    bug: "1577240",
+    config: {
+      matches: ["*://*.heb.com/*"],
+      uaTransformer: originalUA => {
+        return (
+          UAHelpers.getPrefix(originalUA) +
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.111 Mobile Safari/537.36"
+        );
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1577250 - UA override for homebook.pl on Firefox for Android
+     * WebCompat issue #24044 - https://webcompat.com/issues/24044
+     *
+     * homebook.pl shows desktop site on Firefox for Android based on
+     * UA detection. Spoofing as Chrome allows to get mobile site.
+     */
+    id: "bug1577250",
+    platform: "android",
+    domain: "homebook.pl",
+    bug: "1577250",
+    config: {
+      matches: ["*://*.homebook.pl/*"],
+      uaTransformer: originalUA => {
+        return (
+          UAHelpers.getPrefix(originalUA) +
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.111 Mobile Safari/537.36"
+        );
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1577267 - UA override for metfone.com.kh on Firefox for Android
+     * WebCompat issue #16363 - https://webcompat.com/issues/16363
+     *
+     * metfone.com.kh has a server side UA detection which returns desktop site
+     * for Firefox for Android. Spoofing as Chrome allows to receive mobile version
+     */
+    id: "bug1577267",
+    platform: "android",
+    domain: "metfone.com.kh",
+    bug: "1577267",
+    config: {
+      matches: ["*://*.metfone.com.kh/*"],
+      uaTransformer: originalUA => {
+        return (
+          UAHelpers.getPrefix(originalUA) +
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.111 Mobile Safari/537.36"
+        );
+      },
+    },
+  },
 ];
 
 const UAHelpers = {
+  getDeviceAppropriateChromeUA() {
+    if (!UAHelpers._deviceAppropriateChromeUA) {
+      const RunningFirefoxVersion = (navigator.userAgent.match(
+        /Firefox\/([0-9.]+)/
+      ) || ["", "58.0"])[1];
+      const RunningAndroidVersion =
+        navigator.userAgent.match(/Android\/[0-9.]+/) || "Android 6.0";
+      const ChromeVersionToMimic = "76.0.3809.111";
+      const ChromePhoneUA = `Mozilla/5.0 (Linux; ${RunningAndroidVersion}; Nexus 5 Build/MRA58N) FxQuantum/${RunningFirefoxVersion} AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${ChromeVersionToMimic} Mobile Safari/537.36`;
+      const ChromeTabletUA = `Mozilla/5.0 (Linux; ${RunningAndroidVersion}; Nexus 7 Build/JSS15Q) FxQuantum/${RunningFirefoxVersion} AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${ChromeVersionToMimic} Safari/537.36`;
+      const IsPhone = navigator.userAgent.includes("Mobile");
+      UAHelpers._deviceAppropriateChromeUA = IsPhone
+        ? ChromePhoneUA
+        : ChromeTabletUA;
+    }
+    return UAHelpers._deviceAppropriateChromeUA;
+  },
   getPrefix(originalUA) {
     return originalUA.substr(0, originalUA.indexOf(")") + 1);
   },
