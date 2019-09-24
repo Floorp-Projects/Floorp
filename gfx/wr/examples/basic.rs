@@ -197,7 +197,7 @@ impl Example for App {
         builder.push_simple_stacking_context(
             content_bounds.origin,
             spatial_id,
-            true,
+            PrimitiveFlags::IS_BACKFACE_VISIBLE,
         );
 
         let image_mask_key = api.generate_image_key();

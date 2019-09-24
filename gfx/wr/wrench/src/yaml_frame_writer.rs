@@ -204,6 +204,8 @@ fn maybe_radius_yaml(radius: &BorderRadius) -> Option<Yaml> {
 fn common_node(v: &mut Table, clip_id_mapper: &mut ClipIdMapper, info: &CommonItemProperties) {
     rect_node(v, "clip-rect", &info.clip_rect);
     bool_node(v, "backface-visible", info.flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE));
+    bool_node(v, "scrollbar-container", info.flags.contains(PrimitiveFlags::IS_SCROLLBAR_CONTAINER));
+    bool_node(v, "scrollbar-thumb", info.flags.contains(PrimitiveFlags::IS_SCROLLBAR_THUMB));
 
     clip_and_scroll_node(v, clip_id_mapper, info.clip_id, info.spatial_id);
 
@@ -1293,7 +1295,18 @@ impl YamlFrameWriter {
                         item.spatial_id
                     );
                     point_node(&mut v, "origin", &item.origin);
-                    bool_node(&mut v, "backface-visible", item.is_backface_visible);
+                    bool_node(
+                        &mut v,
+                        "backface-visible",
+                        item.prim_flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE));
+                    bool_node(
+                        &mut v,
+                        "scrollbar-container",
+                        item.prim_flags.contains(PrimitiveFlags::IS_SCROLLBAR_CONTAINER));
+                    bool_node(
+                        &mut v,
+                        "scrollbar-thumb",
+                        item.prim_flags.contains(PrimitiveFlags::IS_SCROLLBAR_THUMB));
                     write_stacking_context(
                         &mut v,
                         &item.stacking_context,

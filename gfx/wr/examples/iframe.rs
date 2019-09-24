@@ -41,7 +41,7 @@ impl Example for App {
         sub_builder.push_simple_stacking_context(
             sub_bounds.origin,
             space_and_clip.spatial_id,
-            true,
+            PrimitiveFlags::IS_BACKFACE_VISIBLE,
         );
 
         // green rect visible == success
@@ -73,7 +73,7 @@ impl Example for App {
         builder.push_simple_stacking_context(
             sub_bounds.origin,
             space_and_clip.spatial_id,
-            true,
+            PrimitiveFlags::IS_BACKFACE_VISIBLE,
         );
 
         // red rect under the iframe: if this is visible, things have gone wrong
