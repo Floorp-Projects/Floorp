@@ -698,7 +698,7 @@ Cookies.prototype = {
       // a domain cookie.  See bug 222343.
       if (host.length) {
         // Fist delete any possible extant matching host cookie.
-        Services.cookies.remove(host, name, path, {});
+        Services.cookies.remove(host, name, path, false, {});
         // Now make it a domain cookie.
         if (host[0] != "." && !hostIsIPAddress(host)) {
           host = "." + host;

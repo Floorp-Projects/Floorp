@@ -39,9 +39,9 @@ function run_test() {
   do_check_throws(function() {
     cm.countCookiesFromHost("..baz.com");
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
-  cm.remove("BAZ.com.", "foo", "/", {});
+  cm.remove("BAZ.com.", "foo", "/", false, {});
   Assert.equal(cm.countCookiesFromHost("baz.com"), 1);
-  cm.remove("baz.com", "foo", "/", {});
+  cm.remove("baz.com", "foo", "/", false, {});
   Assert.equal(cm.countCookiesFromHost("baz.com"), 0);
 
   // Test that 'baz.com' and 'baz.com.' are treated differently
@@ -62,9 +62,9 @@ function run_test() {
   Assert.equal(cm.countCookiesFromHost(".baz.com"), 0);
   Assert.equal(cm.countCookiesFromHost("baz.com."), 1);
   Assert.equal(cm.countCookiesFromHost(".baz.com."), 1);
-  cm.remove("baz.com", "foo", "/", {});
+  cm.remove("baz.com", "foo", "/", false, {});
   Assert.equal(cm.countCookiesFromHost("baz.com."), 1);
-  cm.remove("baz.com.", "foo", "/", {});
+  cm.remove("baz.com.", "foo", "/", false, {});
   Assert.equal(cm.countCookiesFromHost("baz.com."), 0);
 
   // test that domain cookies are illegal for IP addresses, aliases such as
@@ -238,10 +238,10 @@ function run_test() {
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
   Assert.equal(getCookieCount(), 1);
 
-  cm.remove("", "foo2", "/", {});
+  cm.remove("", "foo2", "/", false, {});
   Assert.equal(getCookieCount(), 0);
   do_check_throws(function() {
-    cm.remove(".", "foo3", "/", {});
+    cm.remove(".", "foo3", "/", false, {});
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
 
   // test that the 'domain' attribute accepts a leading dot for IP addresses,

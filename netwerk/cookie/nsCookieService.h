@@ -342,7 +342,8 @@ class nsCookieService final : public nsICookieService,
    * NOTE: this could be added to a public interface if we happen to need it.
    */
   nsresult Remove(const nsACString& aHost, const OriginAttributes& aAttrs,
-                  const nsACString& aName, const nsACString& aPath);
+                  const nsACString& aName, const nsACString& aPath,
+                  bool aBlocked);
 
  protected:
   nsresult RemoveCookiesFromExactHost(
