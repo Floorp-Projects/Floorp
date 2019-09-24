@@ -38,10 +38,15 @@ class AudioPlaybackConfig {
         mSuspend(aSuspended),
         mNumberOfAgents(0) {}
 
+  void SetConfig(float aVolume, bool aMuted, uint32_t aSuspended) {
+    mVolume = aVolume;
+    mMuted = aMuted;
+    mSuspend = aSuspended;
+  }
+
   float mVolume;
   bool mMuted;
   uint32_t mSuspend;
-  bool mCapturedAudio = false;
   uint32_t mNumberOfAgents;
 };
 
@@ -115,8 +120,7 @@ class AudioChannelService final : public nsIObserver {
 
   bool IsWindowActive(nsPIDOMWindowOuter* aWindow);
 
-  void RefreshAgentsVolume(nsPIDOMWindowOuter* aWindow, float aVolume,
-                           bool aMuted);
+  void RefreshAgentsVolume(nsPIDOMWindowOuter* aWindow);
   void RefreshAgentsSuspend(nsPIDOMWindowOuter* aWindow,
                             nsSuspendedTypes aSuspend);
 
@@ -180,6 +184,9 @@ class AudioChannelService final : public nsIObserver {
     bool mShouldSendActiveMediaBlockStopEvent;
 
    private:
+    void AudioCapturedChanged(AudioChannelAgent* aAgent,
+                              AudioCaptureState aCapture);
+
     void AppendAudibleAgentIfNotContained(AudioChannelAgent* aAgent,
                                           AudibleChangedReasons aReason);
     void RemoveAudibleAgentIfContained(AudioChannelAgent* aAgent,
