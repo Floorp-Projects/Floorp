@@ -117,6 +117,17 @@ license:
             - '**/*.xml'
             - '**/*.xul'
 
+lintpref:
+    description: Check for duplicates between all.js and StaticPrefList.yaml.
+    treeherder:
+        symbol: misc(pref)
+    run:
+        mach: lint -l lintpref -f treeherder -f json:/builds/worker/mozlint.json
+    when:
+        files-changed:
+            - modules/libpref/init/all.js
+            - modules/libpref/init/StaticPrefList.yaml
+
 mingw-cap:
     description: lint for MinGW Capitalization issues
     treeherder:
