@@ -69,8 +69,6 @@ class AudioBufferSourceNode final : public AudioScheduledSourceNode,
     mLoopEnd = aEnd;
     SendLoopParametersToStream();
   }
-  void SendDopplerShiftToStream(double aDopplerShift);
-
   void NotifyMainThreadStreamFinished() override;
 
   const char* NodeType() const override { return "AudioBufferSourceNode"; }
@@ -101,8 +99,7 @@ class AudioBufferSourceNode final : public AudioScheduledSourceNode,
     LOOPSTART,
     LOOPEND,
     PLAYBACKRATE,
-    DETUNE,
-    DOPPLERSHIFT
+    DETUNE
   };
 
   void SendLoopParametersToStream();
