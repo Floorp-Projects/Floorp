@@ -151,6 +151,20 @@ void SwizzleRow_SSE2(const uint8_t*, uint8_t*, int32_t);
         SwizzleRow_SSE2<ShouldSwapRB(aSrcFormat, aDstFormat), \
                         ShouldForceOpaque(aSrcFormat, aDstFormat)>)
 
+template <bool aSwapRB>
+void UnpackRowRGB24_SSSE3(const uint8_t*, uint8_t*, int32_t);
+
+#define UNPACK_ROW_RGB_SSSE3(aDstFormat)             \
+  FORMAT_CASE_ROW(SurfaceFormat::R8G8B8, aDstFormat, \
+                  UnpackRowRGB24_SSSE3<ShouldSwapRB(SurfaceFormat::R8G8B8, aDstFormat)>)
+
+template <bool aSwapRB>
+void UnpackRowRGB24_AVX2(const uint8_t*, uint8_t*, int32_t);
+
+#define UNPACK_ROW_RGB_AVX2(aDstFormat)              \
+  FORMAT_CASE_ROW(SurfaceFormat::R8G8B8, aDstFormat, \
+                  UnpackRowRGB24_AVX2<ShouldSwapRB(SurfaceFormat::R8G8B8, aDstFormat)>)
+
 #endif
 
 #ifdef USE_NEON
@@ -991,6 +1005,24 @@ bool SwizzleData(const uint8_t* aSrc, int32_t aSrcStride,
 
 SwizzleRowFn SwizzleRow(SurfaceFormat aSrcFormat, SurfaceFormat aDstFormat) {
 #ifdef USE_SSE2
+  if (mozilla::supports_avx2()) switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
+      UNPACK_ROW_RGB_AVX2(SurfaceFormat::R8G8B8X8)
+      UNPACK_ROW_RGB_AVX2(SurfaceFormat::R8G8B8A8)
+      UNPACK_ROW_RGB_AVX2(SurfaceFormat::B8G8R8X8)
+      UNPACK_ROW_RGB_AVX2(SurfaceFormat::B8G8R8A8)
+      default:
+        break;
+    }
+
+  if (mozilla::supports_ssse3()) switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
+      UNPACK_ROW_RGB_SSSE3(SurfaceFormat::R8G8B8X8)
+      UNPACK_ROW_RGB_SSSE3(SurfaceFormat::R8G8B8A8)
+      UNPACK_ROW_RGB_SSSE3(SurfaceFormat::B8G8R8X8)
+      UNPACK_ROW_RGB_SSSE3(SurfaceFormat::B8G8R8A8)
+      default:
+        break;
+    }
+
   if (mozilla::supports_sse2()) switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
       SWIZZLE_ROW_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
       SWIZZLE_ROW_SSE2(SurfaceFormat::B8G8R8X8, SurfaceFormat::R8G8B8X8)
