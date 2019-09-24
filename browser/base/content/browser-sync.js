@@ -117,11 +117,6 @@ var gSync = {
     );
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
-      "PRODUCT_INFO_BASE_URL",
-      "app.productInfo.baseURL"
-    );
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
       "FXA_ENABLED",
       "identity.fxaccounts.enabled"
     );
@@ -632,8 +627,9 @@ var gSync = {
   },
 
   openSendToDevicePromo() {
-    let url = this.PRODUCT_INFO_BASE_URL;
-    url += "send-tabs/?utm_source=" + Services.appinfo.name.toLowerCase();
+    const url = Services.urlFormatter.formatURLPref(
+      "identity.sendtabpromo.url"
+    );
     switchToTabHavingURI(url, true, { replaceQueryString: true });
   },
 
