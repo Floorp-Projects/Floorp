@@ -2,4 +2,4 @@
 
 # MAX_BITS_PER_PIXEL
 
-`const val MAX_BITS_PER_PIXEL: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/decoder/ico/IconDirectoryEntry.kt#L11)
+`const val MAX_BITS_PER_PIXEL: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/decoder/ico/IconDirectoryEntry.kt#L15)

@@ -2,7 +2,7 @@
 
 # Observer
 
-`interface Observer<T, M>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/push/src/main/java/mozilla/components/concept/push/Bus.kt#L67)
+`interface Observer<T, M>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/push/src/main/java/mozilla/components/concept/push/Bus.kt#L65)
 
 An observer interface that all listeners have to implement in order to register and receive events.
 

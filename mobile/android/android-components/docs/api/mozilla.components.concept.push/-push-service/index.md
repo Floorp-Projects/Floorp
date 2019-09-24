@@ -2,7 +2,7 @@
 
 # PushService
 
-`interface PushService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/push/src/main/java/mozilla/components/concept/push/PushService.kt#L15)
+`interface PushService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/push/src/main/java/mozilla/components/concept/push/PushService.kt#L13)
 
 Implemented by push services like Firebase Cloud Messaging and Amazon Device Messaging SDKs to allow
 the [PushProcessor](../-push-processor/index.md) to manage their lifecycle.

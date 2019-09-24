@@ -2,4 +2,4 @@
 
 # blank
 
-`val blank: `[`LoadRequestMetadata`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/engine/request/LoadRequestMetadata.kt#L23)
+`val blank: `[`LoadRequestMetadata`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/engine/request/LoadRequestMetadata.kt#L21)

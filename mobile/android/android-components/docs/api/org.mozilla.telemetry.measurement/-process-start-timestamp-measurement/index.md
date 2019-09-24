@@ -2,7 +2,7 @@
 
 # ProcessStartTimestampMeasurement
 
-`open class ProcessStartTimestampMeasurement : `[`TelemetryMeasurement`](../-telemetry-measurement/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/measurement/ProcessStartTimestampMeasurement.java#L6)
+`open class ProcessStartTimestampMeasurement : `[`TelemetryMeasurement`](../-telemetry-measurement/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/measurement/ProcessStartTimestampMeasurement.java#L9)
 
 ### Constructors
 

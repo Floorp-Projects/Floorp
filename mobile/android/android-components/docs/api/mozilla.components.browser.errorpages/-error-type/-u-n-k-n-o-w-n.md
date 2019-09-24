@@ -2,7 +2,7 @@
 
 # UNKNOWN
 
-`UNKNOWN` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L46)
+`UNKNOWN` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L50)
 
 ### Inherited Properties
 

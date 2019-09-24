@@ -2,7 +2,7 @@
 
 # Bus
 
-`interface Bus<T, M>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/push/src/main/java/mozilla/components/concept/push/Bus.kt#L33)
+`interface Bus<T, M>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/push/src/main/java/mozilla/components/concept/push/Bus.kt#L31)
 
 Interface for a basic bus that is implemented by MessageBus so that classes can observe particular event types.
 

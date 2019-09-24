@@ -2,7 +2,7 @@
 
 # Registration
 
-`data class Registration : `[`PushError`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/push/src/main/java/mozilla/components/concept/push/PushProcessor.kt#L96)
+`data class Registration : `[`PushError`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/push/src/main/java/mozilla/components/concept/push/PushProcessor.kt#L94)
 
 ### Constructors
 

@@ -2,7 +2,7 @@
 
 # ERROR_NET_INTERRUPT
 
-`ERROR_NET_INTERRUPT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L58)
+`ERROR_NET_INTERRUPT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L62)
 
 ### Inherited Properties
 

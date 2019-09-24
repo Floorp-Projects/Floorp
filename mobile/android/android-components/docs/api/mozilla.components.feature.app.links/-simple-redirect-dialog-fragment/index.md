@@ -2,7 +2,7 @@
 
 # SimpleRedirectDialogFragment
 
-`class SimpleRedirectDialogFragment : `[`RedirectDialogFragment`](../-redirect-dialog-fragment/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/SimpleRedirectDialogFragment.kt#L25)
+`class SimpleRedirectDialogFragment : `[`RedirectDialogFragment`](../-redirect-dialog-fragment/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/SimpleRedirectDialogFragment.kt#L23)
 
 This is the default implementation of the [RedirectDialogFragment](../-redirect-dialog-fragment/index.md).
 

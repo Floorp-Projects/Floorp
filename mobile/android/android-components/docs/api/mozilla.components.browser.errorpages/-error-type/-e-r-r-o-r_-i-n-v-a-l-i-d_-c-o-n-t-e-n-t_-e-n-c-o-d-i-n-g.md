@@ -2,7 +2,7 @@
 
 # ERROR_INVALID_CONTENT_ENCODING
 
-`ERROR_INVALID_CONTENT_ENCODING` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L102)
+`ERROR_INVALID_CONTENT_ENCODING` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L106)
 
 ### Inherited Properties
 

@@ -2,7 +2,7 @@
 
 # RedirectDialogFragment
 
-`abstract class RedirectDialogFragment : DialogFragment` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/RedirectDialogFragment.kt#L18)
+`abstract class RedirectDialogFragment : DialogFragment` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/RedirectDialogFragment.kt#L16)
 
 This is a general representation of a dialog meant to be used in collaboration with [AppLinksFeature](../-app-links-feature/index.md)
 to show a dialog before an external link is opened.

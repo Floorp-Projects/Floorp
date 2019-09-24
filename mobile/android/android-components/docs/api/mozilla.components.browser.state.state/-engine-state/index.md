@@ -2,7 +2,7 @@
 
 # EngineState
 
-`data class EngineState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/EngineState.kt#L13)
+`data class EngineState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/EngineState.kt#L17)
 
 Value type that holds the browser engine state of a session.
 

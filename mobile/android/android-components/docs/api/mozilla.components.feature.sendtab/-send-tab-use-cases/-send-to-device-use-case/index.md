@@ -2,7 +2,7 @@
 
 # SendToDeviceUseCase
 
-`class SendToDeviceUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sendtab/src/main/java/mozilla/components/feature/sendtab/SendTabUseCases.kt#L41)
+`class SendToDeviceUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sendtab/src/main/java/mozilla/components/feature/sendtab/SendTabUseCases.kt#L39)
 
 ### Functions
 

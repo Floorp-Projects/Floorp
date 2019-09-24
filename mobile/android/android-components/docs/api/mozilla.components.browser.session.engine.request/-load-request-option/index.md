@@ -2,7 +2,7 @@
 
 # LoadRequestOption
 
-`enum class LoadRequestOption` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/engine/request/LoadRequestMetadata.kt#L34)
+`enum class LoadRequestOption` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/engine/request/LoadRequestMetadata.kt#L32)
 
 Simple enum class for defining the set of characteristics of a [LoadRequest](#).
 

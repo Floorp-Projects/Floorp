@@ -2,7 +2,7 @@
 
 # invoke
 
-`operator fun invoke(tab: `[`TabData`](../../../mozilla.components.concept.sync/-tab-data/index.md)`): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sendtab/src/main/java/mozilla/components/feature/sendtab/SendTabUseCases.kt#L100)
+`operator fun invoke(tab: `[`TabData`](../../../mozilla.components.concept.sync/-tab-data/index.md)`): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sendtab/src/main/java/mozilla/components/feature/sendtab/SendTabUseCases.kt#L98)
 
 Sends the tab to all send-tab compatible devices.
 
@@ -13,7 +13,7 @@ Sends the tab to all send-tab compatible devices.
 **Return**
 a deferred boolean as true if the combined result was successful or not.
 
-`operator fun invoke(tabs: `[`Collection`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-collection/index.html)`<`[`TabData`](../../../mozilla.components.concept.sync/-tab-data/index.md)`>): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sendtab/src/main/java/mozilla/components/feature/sendtab/SendTabUseCases.kt#L116)
+`operator fun invoke(tabs: `[`Collection`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-collection/index.html)`<`[`TabData`](../../../mozilla.components.concept.sync/-tab-data/index.md)`>): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sendtab/src/main/java/mozilla/components/feature/sendtab/SendTabUseCases.kt#L114)
 
 Sends the tabs to all the send-tab compatible devices.
 
