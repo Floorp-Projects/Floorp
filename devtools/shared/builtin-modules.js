@@ -41,9 +41,7 @@ const debuggerSandbox = Cu.Sandbox(systemPrincipal, {
   // This sandbox is also reused for ChromeDebugger implementation.
   // As we want to load the `Debugger` API for debugging chrome contexts,
   // we have to ensure loading it in a distinct compartment from its debuggee.
-  // invisibleToDebugger does that and helps the Debugger API identify the boundaries
-  // between debuggee and debugger code.
-  invisibleToDebugger: true,
+  freshCompartment: true,
 
   wantGlobalProperties: [
     "atob",
