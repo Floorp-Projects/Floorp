@@ -127,6 +127,19 @@ class SurfaceFilter {
     return mRowPointer;
   }
 
+  /**
+   * Called by WriteBuffer() to advance this filter to the next row, if the
+   * supplied row is a full row.
+   *
+   * @return a pointer to the buffer for the next row, or nullptr to indicate
+   *         that we've finished the entire surface.
+   */
+  uint8_t* AdvanceRow(const uint8_t* aInputRow) {
+    mCol = 0;
+    mRowPointer = DoAdvanceRowFromBuffer(aInputRow);
+    return mRowPointer;
+  }
+
   /// @return a pointer to the buffer for the current row.
   uint8_t* CurrentRowPointer() const { return mRowPointer; }
 
@@ -269,7 +282,22 @@ class SurfaceFilter {
    */
   template <typename PixelType>
   WriteState WriteBuffer(const PixelType* aSource) {
-    return WriteBuffer(aSource, 0, mInputSize.width);
+    MOZ_ASSERT(mPixelSize == 1 || mPixelSize == 4);
+    MOZ_ASSERT_IF(mPixelSize == 1, sizeof(PixelType) == sizeof(uint8_t));
+    MOZ_ASSERT_IF(mPixelSize == 4, sizeof(PixelType) == sizeof(uint32_t));
+
+    if (IsSurfaceFinished()) {
+      return WriteState::FINISHED;  // Already done.
+    }
+
+    if (MOZ_UNLIKELY(!aSource)) {
+      NS_WARNING("Passed a null pointer to WriteBuffer");
+      return WriteState::FAILURE;
+    }
+
+    AdvanceRow(reinterpret_cast<const uint8_t*>(aSource));
+    return IsSurfaceFinished() ? WriteState::FINISHED
+                               : WriteState::NEED_MORE_DATA;
   }
 
   /**
@@ -443,6 +471,16 @@ class SurfaceFilter {
   /**
    * Called by AdvanceRow() to actually advance this filter to the next row.
    *
+   * @param aInputRow The input row supplied by the decoder.
+   *
+   * @return a pointer to the buffer for the next row, or nullptr to indicate
+   *         that we've finished the entire surface.
+   */
+  virtual uint8_t* DoAdvanceRowFromBuffer(const uint8_t* aInputRow) = 0;
+
+  /**
+   * Called by AdvanceRow() to actually advance this filter to the next row.
+   *
    * @return a pointer to the buffer for the next row, or nullptr to indicate
    *         that we've finished the entire surface.
    */
@@ -468,6 +506,20 @@ class SurfaceFilter {
     mPixelSize = aPixelSize;
 
     ResetToFirstRow();
+  }
+
+  /**
+   * Called by subclasses' DoAdvanceRowFromBuffer() methods to copy a decoder
+   * supplied row buffer into its internal row pointer. Ideally filters at the
+   * top of the filter pipeline are able to consume the decoder row buffer
+   * directly without the extra copy prior to performing its transformation.
+   *
+   * @param aInputRow The input row supplied by the decoder.
+   */
+  void CopyInputRow(const uint8_t* aInputRow) {
+    MOZ_ASSERT(aInputRow);
+    MOZ_ASSERT(mCol == 0);
+    memcpy(mRowPointer, aInputRow, mPixelSize * mInputSize.width);
   }
 
  private:
@@ -719,6 +771,7 @@ class AbstractSurfaceSink : public SurfaceFilter {
 
  protected:
   uint8_t* DoResetToFirstRow() final;
+  uint8_t* DoAdvanceRowFromBuffer(const uint8_t* aInputRow) final;
   uint8_t* DoAdvanceRow() final;
   virtual uint8_t* GetRowPointer() const = 0;
 
