@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compat",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "6.0.3",
+  "version": "6.1.0",
 
   "applications": {
     "gecko": {
@@ -61,6 +61,7 @@
       "data/injections.js",
       "data/ua_overrides.js",
       "lib/about_compat_broker.js",
+      "lib/custom_functions.js",
       "lib/injections.js",
       "lib/ua_overrides.js",
       "run.js"
