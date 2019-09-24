@@ -2564,6 +2564,9 @@ class MethodDefiner(PropertyDefiner):
                 if m.get("allowCrossOriginThis", False):
                     accessor = ("(GenericMethod<CrossOriginThisPolicy, %s>)" %
                                 exceptionPolicy)
+                elif descriptor.interface.hasDescendantWithCrossOriginMembers:
+                    accessor = ("(GenericMethod<MaybeCrossOriginObjectThisPolicy, %s>)" %
+                                exceptionPolicy)
                 elif descriptor.interface.isOnGlobalProtoChain():
                     accessor = ("(GenericMethod<MaybeGlobalThisPolicy, %s>)" %
                                 exceptionPolicy)
@@ -2665,10 +2668,17 @@ class AttrDefiner(PropertyDefiner):
                                         "readable attribute %s.%s" %
                                         (self.descriptor.name,
                                          attr.identifier.name))
-                    accessor = ("GenericGetter<LenientThisPolicy, %s>" %
-                                exceptionPolicy)
+                    if descriptor.interface.hasDescendantWithCrossOriginMembers:
+                        accessor = ("GenericGetter<MaybeCrossOriginObjectLenientThisPolicy, %s>" %
+                                    exceptionPolicy)
+                    else:
+                        accessor = ("GenericGetter<LenientThisPolicy, %s>" %
+                                    exceptionPolicy)
                 elif attr.getExtendedAttribute("CrossOriginReadable"):
                     accessor = ("GenericGetter<CrossOriginThisPolicy, %s>" %
+                                exceptionPolicy)
+                elif descriptor.interface.hasDescendantWithCrossOriginMembers:
+                    accessor = ("GenericGetter<MaybeCrossOriginObjectThisPolicy, %s>" %
                                 exceptionPolicy)
                 elif descriptor.interface.isOnGlobalProtoChain():
                     accessor = ("GenericGetter<MaybeGlobalThisPolicy, %s>" %
@@ -2699,9 +2709,14 @@ class AttrDefiner(PropertyDefiner):
                                         "writable attribute %s.%s" %
                                         (descriptor.name,
                                          attr.identifier.name))
-                    accessor = "GenericSetter<LenientThisPolicy>"
+                    if descriptor.interface.hasDescendantWithCrossOriginMembers:
+                        accessor = "GenericSetter<MaybeCrossOriginObjectLenientThisPolicy>"
+                    else:
+                        accessor = "GenericSetter<LenientThisPolicy>"
                 elif attr.getExtendedAttribute("CrossOriginWritable"):
                     accessor = "GenericSetter<CrossOriginThisPolicy>"
+                elif descriptor.interface.hasDescendantWithCrossOriginMembers:
+                    accessor = "GenericSetter<MaybeCrossOriginObjectThisPolicy>"
                 elif descriptor.interface.isOnGlobalProtoChain():
                     accessor = "GenericSetter<MaybeGlobalThisPolicy>"
                 else:
