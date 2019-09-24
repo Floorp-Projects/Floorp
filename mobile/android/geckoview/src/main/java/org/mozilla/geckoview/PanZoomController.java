@@ -151,7 +151,7 @@ public class PanZoomController {
     private @InputResult int handleMotionEvent(final MotionEvent event) {
         if (!mAttached) {
             mQueuedEvents.add(new Pair<>(EVENT_SOURCE_MOTION, event));
-            return INPUT_RESULT_UNHANDLED;
+            return INPUT_RESULT_HANDLED;
         }
 
         final int action = event.getActionMasked();
@@ -206,7 +206,7 @@ public class PanZoomController {
     private @InputResult int handleScrollEvent(final MotionEvent event) {
         if (!mAttached) {
             mQueuedEvents.add(new Pair<>(EVENT_SOURCE_SCROLL, event));
-            return INPUT_RESULT_UNHANDLED;
+            return INPUT_RESULT_HANDLED;
         }
 
         final int count = event.getPointerCount();
