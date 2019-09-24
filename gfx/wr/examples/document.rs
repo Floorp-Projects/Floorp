@@ -118,7 +118,7 @@ impl Example for App {
             builder.push_simple_stacking_context(
                 doc.content_rect.origin,
                 space_and_clip.spatial_id,
-                true,
+                PrimitiveFlags::IS_BACKFACE_VISIBLE,
             );
             builder.push_rect(
                 &CommonItemProperties::new(local_rect, space_and_clip),
