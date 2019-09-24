@@ -95,7 +95,6 @@ class ScriptErrorRunnable final : public mozilla::Runnable {
 
     nsCOMPtr<nsIConsoleService> consoleService =
         do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-    MOZ_ASSERT(consoleService);
 
     nsCOMPtr<nsIScriptError> scriptError =
         do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
@@ -115,7 +114,11 @@ class ScriptErrorRunnable final : public mozilla::Runnable {
           /* from chrome context */ aIsChrome));
     }
 
-    MOZ_ALWAYS_SUCCEEDS(consoleService->LogMessage(scriptError));
+    // We may not be able to obtain the console service when we're shutting
+    // down.
+    if (consoleService) {
+      MOZ_ALWAYS_SUCCEEDS(consoleService->LogMessage(scriptError));
+    }
   }
 
   NS_IMETHOD
