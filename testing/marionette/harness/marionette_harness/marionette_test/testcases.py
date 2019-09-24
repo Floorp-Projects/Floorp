@@ -140,7 +140,7 @@ class CommonTestCase(unittest.TestCase):
                     self.setUp()
             except SkipTest as e:
                 self._addSkip(result, str(e))
-            except (KeyboardInterrupt, UnresponsiveInstanceException) as e:
+            except (KeyboardInterrupt, UnresponsiveInstanceException):
                 raise
             except _ExpectedFailure as e:
                 expected_failure(result, e.exc_info)
@@ -160,7 +160,7 @@ class CommonTestCase(unittest.TestCase):
                 except self.failureException:
                     self._enter_pm()
                     result.addFailure(self, sys.exc_info())
-                except (KeyboardInterrupt, UnresponsiveInstanceException) as e:
+                except (KeyboardInterrupt, UnresponsiveInstanceException):
                     raise
                 except _ExpectedFailure as e:
                     expected_failure(result, e.exc_info)
@@ -188,7 +188,7 @@ class CommonTestCase(unittest.TestCase):
                             raise _ExpectedFailure(sys.exc_info())
                     else:
                         self.tearDown()
-                except (KeyboardInterrupt, UnresponsiveInstanceException) as e:
+                except (KeyboardInterrupt, UnresponsiveInstanceException):
                     raise
                 except _ExpectedFailure as e:
                     expected_failure(result, e.exc_info)

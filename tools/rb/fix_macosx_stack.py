@@ -8,6 +8,8 @@
 # NS_FormatCodeAddress(), which on Mac often lack a file name and a line
 # number.
 
+from __future__ import print_function
+
 import json
 import os
 import pty
@@ -45,7 +47,7 @@ class unbufferedLineConverter:
     def test():
         assert unbufferedLineConverter("rev").convert("123") == "321"
         assert unbufferedLineConverter("cut", ["-c3"]).convert("abcde") == "c"
-        print "Pass"
+        print("Pass")
 
 
 def separate_debug_file_for(file):
@@ -66,13 +68,13 @@ def address_adjustment(file):
             if line == "  segname __TEXT\n":
                 line = otool.stdout.readline()
                 if not line.startswith("   vmaddr "):
-                    raise StandardError("unexpected otool output")
+                    raise Exception("unexpected otool output")
                 result = int(line[10:], 16)
                 break
         otool.stdout.close()
 
         if result is None:
-            raise StandardError("unexpected otool output")
+            raise Exception("unexpected otool output")
 
         address_adjustments[file] = result
 

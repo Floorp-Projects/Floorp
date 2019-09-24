@@ -8,6 +8,8 @@ from __future__ import absolute_import, print_function
 import os
 import re
 
+from six import string_types
+
 from .chunking import getChunk
 
 
@@ -128,9 +130,9 @@ class UpdateVerifyConfig(object):
             raise UpdateVerifyError(
                 "Couldn't add release identified by build_id '%s' and from_path '%s': "
                 "already exists in config" % (build_id, from_path))
-        if isinstance(locales, basestring):
+        if isinstance(locales, string_types):
             locales = sorted(list(locales.split()))
-        if isinstance(patch_types, basestring):
+        if isinstance(patch_types, string_types):
             patch_types = list(patch_types.split())
         self.releases.append({
             "release": release,

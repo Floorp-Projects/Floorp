@@ -9,6 +9,8 @@ mac_register_font.py
 Mac-specific utility command to register a font file with the OS.
 """
 
+from __future__ import print_function
+
 import CoreText
 import Cocoa
 import argparse
@@ -41,13 +43,13 @@ def main():
         (result, error) = register_or_unregister_font(fontURL,
                                                       args.unregister, scope)
         if result:
-            print ("%sregistered font %s with %s scope" %
-                   (("un" if args.unregister else ""), fontPath, scopeDesc))
+            print("%sregistered font %s with %s scope" %
+                  (("un" if args.unregister else ""), fontPath, scopeDesc))
         else:
-            print ("Failed to %sregister font %s with %s scope" %
-                   (("un" if args.unregister else ""), fontPath, scopeDesc))
+            print("Failed to %sregister font %s with %s scope" %
+                  (("un" if args.unregister else ""), fontPath, scopeDesc))
             if args.verbose:
-                print (error)
+                print(error)
             failureCount += 1
 
     sys.exit(failureCount)

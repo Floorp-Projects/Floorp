@@ -82,6 +82,12 @@ CATEGORIES = {
 
 
 IS_WIN = sys.platform in ('win32', 'cygwin')
+PY3 = sys.version_info[0] == 3
+
+if PY3:
+    text_type = str
+else:
+    text_type = unicode  # noqa
 
 
 def ancestors(path, depth=0):
@@ -108,9 +114,9 @@ def activate_mozharness_venv(context):
     venv_bin = os.path.join(venv, 'Scripts' if IS_WIN else 'bin')
     activate_path = os.path.join(venv_bin, 'activate_this.py')
 
-    execfile(activate_path, dict(__file__=activate_path))
+    exec(open(activate_path).read(), dict(__file__=activate_path))
 
-    if isinstance(os.environ['PATH'], unicode):
+    if isinstance(os.environ['PATH'], text_type):
         os.environ['PATH'] = os.environ['PATH'].encode('utf-8')
 
     # sys.executable is used by mochitest-media to start the websocketprocessbridge,

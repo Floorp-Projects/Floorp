@@ -15,9 +15,7 @@ import logging
 import os
 import shutil
 import tempfile
-import time
 import requests
-import sh
 from distutils.util import strtobool
 
 import redo
