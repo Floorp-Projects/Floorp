@@ -14,11 +14,6 @@
 
 #include <string.h>
 
-#if defined(ANDROID) && defined(MOZ_LINKER)
-#  include "ElfLoader.h"
-#  include <android/log.h>
-#endif
-
 using namespace mozilla;
 
 // for _Unwind_Backtrace from libcxxrt or libunwind
@@ -804,13 +799,7 @@ bool MFBT_API MozDescribeCodeAddress(void* aPC,
   aDetails->foffset = 0;
 
   Dl_info info;
-
-#  if defined(ANDROID) && defined(MOZ_LINKER)
-  int ok = __wrap_dladdr(aPC, &info);
-#  else
   int ok = dladdr(aPC, &info);
-#  endif
-
   if (!ok) {
     return true;
   }
