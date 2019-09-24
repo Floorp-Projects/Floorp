@@ -85,10 +85,6 @@ var gSync = {
       );
   },
 
-  get offline() {
-    return Weave.Service.scheduler.offline;
-  },
-
   _generateNodeGetters() {
     for (let k of ["Status", "Avatar", "Label"]) {
       let prop = "appMenu" + k;
@@ -310,13 +306,6 @@ var gSync = {
         item.addEventListener("command", event => {
           if (panelNode) {
             PanelMultiView.hidePopup(panelNode);
-          }
-          // There are items in the subview that don't represent devices: "Sign
-          // in", "Learn about Sync", etc.  Device items will be .sendtab-target.
-          if (event.target.classList.contains("sendtab-target")) {
-            let action = PageActions.actionForID("sendToDevice");
-            let messageId = gSync.offline && "sendToDeviceOffline";
-            showBrowserPageActionFeedback(action, event, messageId);
           }
         });
         return item;
@@ -735,6 +724,7 @@ var gSync = {
         console.error(`Target ${target.id} unsuitable for send tab.`);
       }
     }
+    let numFailed = 0;
     if (fxaCommandsDevices.length) {
       console.log(
         `Sending a tab to ${fxaCommandsDevices
@@ -755,6 +745,7 @@ var gSync = {
           console.error(
             `Could not find associated Sync device for ${device.name}`
           );
+          numFailed++;
           continue;
         }
         oldSendTabClients.push(device.clientRecord);
@@ -769,9 +760,11 @@ var gSync = {
           title
         );
       } catch (e) {
+        numFailed++;
         console.error("Could not send tab to device.", e);
       }
     }
+    return numFailed < targets.length; // Good enough.
   },
 
   populateSendTabToDevicesMenu(
@@ -849,17 +842,26 @@ var gSync = {
         })
       : [{ url, title }];
 
+    const send = to => {
+      Promise.all(
+        tabsToSend.map(t =>
+          // sendTabToDevice does not reject.
+          this.sendTabToDevice(t.url, to, t.title)
+        )
+      ).then(results => {
+        if (results.includes(true)) {
+          let action = PageActions.actionForID("sendToDevice");
+          showBrowserPageActionFeedback(action);
+        }
+      });
+    };
     const onSendAllCommand = event => {
-      for (let t of tabsToSend) {
-        this.sendTabToDevice(t.url, targets, t.title);
-      }
+      send(targets);
     };
     const onTargetDeviceCommand = event => {
       const targetId = event.target.getAttribute("clientId");
       const target = targets.find(t => t.id == targetId);
-      for (let t of tabsToSend) {
-        this.sendTabToDevice(t.url, [target], t.title);
-      }
+      send([target]);
     };
 
     function addTargetDevice(targetId, name, targetType, lastModified) {
