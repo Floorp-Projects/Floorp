@@ -26,6 +26,8 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocumentLoader.h"
+#include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "nsIDOMWindow.h"
@@ -1610,34 +1612,17 @@ nsWindowWatcher::GetWindowByName(const nsAString& aTargetName,
 
   *aResult = nullptr;
 
-  nsPIDOMWindowOuter* currentWindow =
-      aCurrentWindow ? nsPIDOMWindowOuter::From(aCurrentWindow) : nullptr;
+  BrowsingContext* currentContext =
+      aCurrentWindow
+          ? nsPIDOMWindowOuter::From(aCurrentWindow)->GetBrowsingContext()
+          : nullptr;
 
-  nsCOMPtr<nsIDocShellTreeItem> treeItem;
+  RefPtr<BrowsingContext> context =
+      GetBrowsingContextByName(aTargetName, false, currentContext);
 
-  nsCOMPtr<nsIDocShellTreeItem> startItem;
-  GetWindowTreeItem(currentWindow, getter_AddRefs(startItem));
-  if (startItem) {
-    // Note: original requestor is null here, per idl comments
-    startItem->FindItemWithName(aTargetName, nullptr, nullptr,
-                                /* aSkipTabGroup = */ false,
-                                getter_AddRefs(treeItem));
-  } else {
-    if (aTargetName.LowerCaseEqualsLiteral("_blank") ||
-        aTargetName.LowerCaseEqualsLiteral("_top") ||
-        aTargetName.LowerCaseEqualsLiteral("_parent") ||
-        aTargetName.LowerCaseEqualsLiteral("_self")) {
-      return NS_OK;
-    }
-
-    // Note: original requestor is null here, per idl comments
-    Unused << TabGroup::GetChromeTabGroup()->FindItemWithName(
-        aTargetName, nullptr, nullptr, getter_AddRefs(treeItem));
-  }
-
-  if (treeItem) {
-    nsCOMPtr<nsPIDOMWindowOuter> domWindow = treeItem->GetWindow();
-    domWindow.forget(aResult);
+  if (context) {
+    *aResult = context->GetDOMWindow();
+    MOZ_ASSERT(*aResult);
   }
 
   return NS_OK;
@@ -2028,25 +2013,6 @@ int32_t nsWindowWatcher::WinHasOption(const nsACString& aOptions,
   return found;
 }
 
-already_AddRefed<nsIDocShellTreeItem> nsWindowWatcher::GetCallerTreeItem(
-    nsIDocShellTreeItem* aParentItem) {
-  nsCOMPtr<nsIWebNavigation> callerWebNav = do_GetInterface(GetEntryGlobal());
-  nsCOMPtr<nsIDocShellTreeItem> callerItem = do_QueryInterface(callerWebNav);
-  if (!callerItem) {
-    callerItem = aParentItem;
-  }
-
-  return callerItem.forget();
-}
-
-BrowsingContext* nsWindowWatcher::GetCallerBrowsingContext(
-    BrowsingContext* aParentItem) {
-  if (nsCOMPtr<nsIDocShell> caller = do_GetInterface(GetEntryGlobal())) {
-    return caller->GetBrowsingContext();
-  }
-  return aParentItem;
-}
-
 already_AddRefed<BrowsingContext> nsWindowWatcher::GetBrowsingContextByName(
     const nsAString& aName, bool aForceNoOpener,
     BrowsingContext* aCurrentContext) {
@@ -2063,12 +2029,8 @@ already_AddRefed<BrowsingContext> nsWindowWatcher::GetBrowsingContextByName(
     }
   }
 
-  RefPtr<BrowsingContext> caller = GetCallerBrowsingContext(aCurrentContext);
-
-  RefPtr<BrowsingContext> foundContext;
-  if (aCurrentContext) {
-    foundContext = aCurrentContext->FindWithName(aName, *caller);
-  } else {
+  RefPtr<BrowsingContext> currentContext(aCurrentContext);
+  if (!currentContext) {
     if (aName.LowerCaseEqualsLiteral("_blank") ||
         aName.LowerCaseEqualsLiteral("_top") ||
         aName.LowerCaseEqualsLiteral("_parent") ||
@@ -2078,15 +2040,14 @@ already_AddRefed<BrowsingContext> nsWindowWatcher::GetBrowsingContextByName(
 
     // If we are looking for an item and we don't have a docshell we are
     // checking on, let's just look in the chrome tab group!
-    nsCOMPtr<nsIDocShellTreeItem> foundItem;
-    Unused << TabGroup::GetChromeTabGroup()->FindItemWithName(
-        aName, nullptr, caller ? caller->GetDocShell() : nullptr,
-        getter_AddRefs(foundItem));
-    if (foundItem) {
-      foundContext = foundItem->GetBrowsingContext();
-    }
+    currentContext =
+        BrowsingContextGroup::GetChromeGroup()->Toplevels().SafeElementAt(0);
   }
 
+  RefPtr<BrowsingContext> foundContext;
+  if (currentContext) {
+    foundContext = currentContext->FindWithName(aName);
+  }
   return foundContext.forget();
 }
 
