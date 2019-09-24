@@ -17,4 +17,4 @@ interface TreeContentView
    */
   long getIndexOfItem(Element? item);
 };
-TreeContentView implements TreeView;
+TreeContentView includes TreeView;

@@ -10,8 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[NoInterfaceObject]
-interface SVGAnimatedPathData {
+interface mixin SVGAnimatedPathData {
   readonly attribute SVGPathSegList pathSegList;
   //readonly attribute SVGPathSegList normalizedPathSegList;
   readonly attribute SVGPathSegList animatedPathSegList;

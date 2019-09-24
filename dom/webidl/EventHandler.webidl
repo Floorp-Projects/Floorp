@@ -142,8 +142,7 @@ interface mixin GlobalEventHandlers {
            attribute EventHandler onwebkittransitionend;
 };
 
-[NoInterfaceObject]
-interface WindowEventHandlers {
+interface mixin WindowEventHandlers {
            attribute EventHandler onafterprint;
            attribute EventHandler onbeforeprint;
            attribute OnBeforeUnloadEventHandler onbeforeunload;
@@ -175,12 +174,10 @@ interface mixin DocumentAndElementEventHandlers {
 // whether an ErrorEvent was fired. We don't do that, and until we do we'll
 // need to distinguish between onerror on Window or on nodes.
 
-[NoInterfaceObject]
-interface OnErrorEventHandlerForNodes {
+interface mixin OnErrorEventHandlerForNodes {
            attribute EventHandler onerror;
 };
 
-[NoInterfaceObject]
-interface OnErrorEventHandlerForWindow {
+interface mixin OnErrorEventHandlerForWindow {
            attribute OnErrorEventHandler onerror;
 };

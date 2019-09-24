@@ -10,8 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[NoInterfaceObject]
-interface SVGFitToViewBox {
+interface mixin SVGFitToViewBox {
   [Constant]
   readonly attribute SVGAnimatedRect viewBox;
   [Constant]

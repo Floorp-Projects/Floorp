@@ -28,5 +28,5 @@ interface ConvolverNode : AudioNode {
 };
 
 // Mozilla extension
-ConvolverNode implements AudioNodePassThrough;
+ConvolverNode includes AudioNodePassThrough;
 
