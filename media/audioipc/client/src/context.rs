@@ -8,7 +8,6 @@ use crate::stream;
 #[cfg(target_os = "linux")]
 use crate::G_THREAD_POOL;
 use crate::{ClientStream, CpuPoolInitParams, CPUPOOL_INIT_PARAMS, G_SERVER_FD};
-use audio_thread_priority::promote_current_thread_to_real_time;
 use audioipc::codec::LengthDelimitedCodec;
 use audioipc::frame::{framed, Framed};
 use audioipc::platformhandle_passing::{framed_with_platformhandles, FramedWithPlatformHandles};
@@ -91,14 +90,6 @@ fn open_server_stream() -> io::Result<audioipc::MessageStream> {
 }
 
 fn register_thread(callback: Option<extern "C" fn(*const ::std::os::raw::c_char)>) {
-    match promote_current_thread_to_real_time(0, 48000) {
-        Ok(_) => {
-            info!("Audio thread promoted to real-time.");
-        }
-        Err(_) => {
-            warn!("Could not promote thread to real-time.");
-        }
-    }
     if let Some(func) = callback {
         let thr = thread::current();
         let name = CString::new(thr.name().unwrap()).unwrap();
