@@ -1540,6 +1540,119 @@ SSL_CipherPrefGet(PRFileDesc *fd, PRInt32 which, PRBool *enabled)
     return rv;
 }
 
+/* The client can call this function to be aware of the current
+ * CipherSuites order. */
+SECStatus
+SSLExp_CipherSuiteOrderGet(PRFileDesc *fd, PRUint16 *cipherOrder,
+                           unsigned int *numCiphers)
+{
+    if (!fd) {
+        SSL_DBG(("%d: SSL: file descriptor in CipherSuiteOrderGet is null",
+                 SSL_GETPID()));
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+    if (!cipherOrder || !numCiphers) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+    sslSocket *ss = ssl_FindSocket(fd);
+    if (!ss) {
+        SSL_DBG(("%d: SSL[%d]: bad socket in CipherSuiteOrderGet", SSL_GETPID(),
+                 fd));
+        return SECFailure; /* Error code already set. */
+    }
+
+    unsigned int enabled = 0;
+    ssl_Get1stHandshakeLock(ss);
+    ssl_GetSSL3HandshakeLock(ss);
+    for (unsigned int i = 0; i < ssl_V3_SUITES_IMPLEMENTED; i++) {
+        const ssl3CipherSuiteCfg *suiteCfg = &ss->cipherSuites[i];
+        if (suiteCfg && suiteCfg->enabled &&
+            suiteCfg->policy != SSL_NOT_ALLOWED) {
+            cipherOrder[enabled++] = suiteCfg->cipher_suite;
+        }
+    }
+    ssl_ReleaseSSL3HandshakeLock(ss);
+    ssl_Release1stHandshakeLock(ss);
+    *numCiphers = enabled;
+    return SECSuccess;
+}
+
+/* This function permits reorder the CipherSuites List for the Handshake
+ * (Client Hello). */
+SECStatus
+SSLExp_CipherSuiteOrderSet(PRFileDesc *fd, const PRUint16 *cipherOrder,
+                           unsigned int numCiphers)
+{
+    if (!fd) {
+        SSL_DBG(("%d: SSL: file descriptor in CipherSuiteOrderGet is null",
+                 SSL_GETPID()));
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+    if (!cipherOrder || !numCiphers || numCiphers > ssl_V3_SUITES_IMPLEMENTED) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+    sslSocket *ss = ssl_FindSocket(fd);
+    if (!ss) {
+        SSL_DBG(("%d: SSL[%d]: bad socket in CipherSuiteOrderSet", SSL_GETPID(),
+                 fd));
+        return SECFailure; /* Error code already set. */
+    }
+    ssl3CipherSuiteCfg tmpSuiteCfg[ssl_V3_SUITES_IMPLEMENTED];
+    ssl_Get1stHandshakeLock(ss);
+    ssl_GetSSL3HandshakeLock(ss);
+    /* For each cipherSuite given as input, verify that it is
+     * known to NSS and only present in the list once. */
+    for (unsigned int i = 0; i < numCiphers; i++) {
+        const ssl3CipherSuiteCfg *suiteCfg =
+            ssl_LookupCipherSuiteCfg(cipherOrder[i], ss->cipherSuites);
+        if (!suiteCfg) {
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+            ssl_ReleaseSSL3HandshakeLock(ss);
+            ssl_Release1stHandshakeLock(ss);
+            return SECFailure;
+        }
+        for (unsigned int j = i + 1; j < numCiphers; j++) {
+            /* This is a duplicate entry. */
+            if (cipherOrder[i] == cipherOrder[j]) {
+                PORT_SetError(SEC_ERROR_INVALID_ARGS);
+                ssl_ReleaseSSL3HandshakeLock(ss);
+                ssl_Release1stHandshakeLock(ss);
+                return SECFailure;
+            }
+        }
+        tmpSuiteCfg[i] = *suiteCfg;
+        tmpSuiteCfg[i].enabled = PR_TRUE;
+    }
+    /* Find all defined ciphersuites not present in the input list and append
+     * them after the preferred. This guarantees that the socket will always
+     * have a complete list of size ssl_V3_SUITES_IMPLEMENTED */
+    unsigned int cfgIdx = numCiphers;
+    for (unsigned int i = 0; i < ssl_V3_SUITES_IMPLEMENTED; i++) {
+        PRBool received = PR_FALSE;
+        for (unsigned int j = 0; j < numCiphers; j++) {
+            if (ss->cipherSuites[i].cipher_suite ==
+                tmpSuiteCfg[j].cipher_suite) {
+                received = PR_TRUE;
+                break;
+            }
+        }
+        if (!received) {
+            tmpSuiteCfg[cfgIdx] = ss->cipherSuites[i];
+            tmpSuiteCfg[cfgIdx++].enabled = PR_FALSE;
+        }
+    }
+    PORT_Assert(cfgIdx == ssl_V3_SUITES_IMPLEMENTED);
+    /* now we can rewrite the socket with the desired order */
+    PORT_Memcpy(ss->cipherSuites, tmpSuiteCfg, sizeof(tmpSuiteCfg));
+    ssl_ReleaseSSL3HandshakeLock(ss);
+    ssl_Release1stHandshakeLock(ss);
+    return SECSuccess;
+}
+
 SECStatus
 NSS_SetDomesticPolicy(void)
 {
@@ -4104,6 +4217,8 @@ struct {
 #ifndef SSL_DISABLE_EXPERIMENTAL_API
     EXP(AeadDecrypt),
     EXP(AeadEncrypt),
+    EXP(CipherSuiteOrderGet),
+    EXP(CipherSuiteOrderSet),
     EXP(CreateAntiReplayContext),
     EXP(DelegateCredential),
     EXP(DestroyAead),

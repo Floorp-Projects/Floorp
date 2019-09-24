@@ -19,6 +19,27 @@
 #
 ########################################################################
 
+# parameter: MIME part boundary
+make_multipart()
+{
+  mp_start="Content-Type: multipart/signed; protocol=\"application/pkcs7-signature\"; micalg=sha-HASHHASH; boundary=\"$1\"
+
+This is a cryptographically signed message in MIME format.
+
+--$1"
+
+  mp_middle="
+--$1
+Content-Type: application/pkcs7-signature; name=smime.p7s
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename=smime.p7s
+Content-Description: S/MIME Cryptographic Signature
+"
+
+  mp_end="--$1--
+"
+}
+
 ############################## smime_init ##############################
 # local shell function to initialize this script
 ########################################################################
@@ -53,6 +74,16 @@ smime_init()
   cp ${QADIR}/smime/alice.txt ${SMIMEDIR}
 
   mkdir tb
+
+  make_multipart "------------ms030903020902020502030404"
+  multipart_start="$mp_start"
+  multipart_middle="$mp_middle"
+  multipart_end="$mp_end"
+
+  make_multipart "------------ms010205070902020502030809"
+  multipart_start_b2="$mp_start"
+  multipart_middle_b2="$mp_middle"
+  multipart_end_b2="$mp_end"
 }
 
 cms_sign()
@@ -111,6 +142,11 @@ From: Alice@example.com
 To: Bob@example.com
 Subject: "
 
+header_dave_mime_from_to_subject="MIME-Version: 1.0
+From: Dave@example.com
+To: Bob@example.com
+Subject: "
+
 header_opaque_signed="Content-Type: application/pkcs7-mime; name=smime.p7m;
     smime-type=signed-data
 Content-Transfer-Encoding: base64
@@ -128,23 +164,6 @@ Content-Description: S/MIME Encrypted Message
 header_clearsigned="Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: quoted-printable
 Content-Language: en-US
-"
-
-multipart_start="Content-Type: multipart/signed; protocol=\"application/pkcs7-signature\"; micalg=sha-HASHHASH; boundary=\"------------ms030903020902020502030404\"
-
-This is a cryptographically signed message in MIME format.
-
---------------ms030903020902020502030404"
-
-multipart_middle="
---------------ms030903020902020502030404
-Content-Type: application/pkcs7-signature; name=smime.p7s
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename=smime.p7s
-Content-Description: S/MIME Cryptographic Signature
-"
-
-multipart_end="--------------ms030903020902020502030404--
 "
 
 header_plaintext="Content-Type: text/plain
@@ -169,12 +188,15 @@ smime_enveloped()
 {
   ${PROFTOOL} ${BINDIR}/cmsutil -E -r bob@example.com -i tb/alice.mime -d ${P_R_ALICEDIR} -p nss -o tb/alice.mime.env
 
-  OUT="tb/alice.env.eml"
-  echo -n "${header_mime_from_to_subject}" >>${OUT}
-  echo "enveloped ${SIG}" >>${OUT}
+  OUT="tb/alice.env"
   echo "${header_enveloped}" >>${OUT}
   cat "tb/alice.mime.env" | ${BINDIR}/btoa | sed 's/\r$//' >>${OUT}
   echo >>${OUT}
+
+  OUT="tb/alice.env.eml"
+  echo -n "${header_mime_from_to_subject}" >>${OUT}
+  echo "enveloped ${SIG}" >>${OUT}
+  cat "tb/alice.env" >>${OUT}
   sed -i"" "s/\$/${CR}/" ${OUT}
 }
 
@@ -201,7 +223,7 @@ smime_signed_enveloped()
 
   OUT="tb/alice.d${SIG}.multipart.env.eml"
   echo -n "${header_mime_from_to_subject}" >>${OUT}
-  echo "enveloped clear-signed $SIG" >>${OUT}
+  echo "clear-signed then enveloped $SIG" >>${OUT}
   echo "$header_enveloped" >>${OUT}
   cat "tb/alice.d${SIG}.multipart.env" | ${BINDIR}/btoa | sed 's/\r$//' >>${OUT}
   echo >>${OUT}
@@ -224,7 +246,7 @@ smime_signed_enveloped()
 
   OUT="tb/alice.${SIG}.opaque.env.eml"
   echo -n "${header_mime_from_to_subject}" >>${OUT}
-  echo "enveloped opaque-signed $SIG" >>${OUT}
+  echo "opaque-signed then enveloped $SIG" >>${OUT}
   echo "$header_enveloped" >>$OUT
   cat "tb/alice.${SIG}.opaque.env" | ${BINDIR}/btoa | sed 's/\r$//' >>${OUT}
   echo >>${OUT}
@@ -250,6 +272,167 @@ smime_signed_enveloped()
   echo "BAD mismatch-econtent $SIG" >>${OUT}
   cat "tb/alice.d${SIG}.multipart.mismatch-econtent" >>${OUT}
   sed -i"" "s/\$/$CR/" ${OUT}
+}
+
+smime_plain_signed()
+{
+  SIG=sig.SHA${HASH}
+
+  ${PROFTOOL} ${BINDIR}/cmsutil -S -T -N Alice ${HASH_CMD} -i tb/alice.textplain -d ${P_R_ALICEDIR} -p nss -o tb/alice.plain.d${SIG}
+
+  OUT="tb/alice.plain.d${SIG}.multipart"
+  echo "${multipart_start}" | sed "s/HASHHASH/${HASH}/" >>${OUT}
+  cat tb/alice.textplain | sed 's/\r$//' >>${OUT}
+  echo "${multipart_middle}" >>${OUT}
+  cat tb/alice.plain.d${SIG} | ${BINDIR}/btoa | sed 's/\r$//' >>${OUT}
+  echo "${multipart_end}" >>${OUT}
+
+  ${PROFTOOL} ${BINDIR}/cmsutil -S -N Alice ${HASH_CMD} -i tb/alice.textplain -d ${P_R_ALICEDIR} -p nss -o tb/alice.plain.${SIG}
+
+  OUT="tb/alice.plain.${SIG}.opaque"
+  echo "$header_opaque_signed" >>${OUT}
+  cat tb/alice.plain.${SIG} | ${BINDIR}/btoa | sed 's/\r$//' >>${OUT}
+
+  # Second outer, opaque signature layer.
+
+  INPUT="tb/alice.plain.d${SIG}.multipart"
+  OUT_SIG="${INPUT}.dave.${SIG}"
+  ${PROFTOOL} ${BINDIR}/cmsutil -S -N Dave ${HASH_CMD} -i "$INPUT" -d ${P_R_DAVEDIR} -p nss -o "$OUT_SIG"
+
+  OUT_MIME="${OUT_SIG}.opaque"
+  echo "$header_opaque_signed" >>${OUT_MIME}
+  cat "$OUT_SIG" | ${BINDIR}/btoa | sed 's/\r$//' >>${OUT_MIME}
+
+  OUT_EML="${OUT_MIME}.eml"
+  echo -n "${header_dave_mime_from_to_subject}" >>${OUT_EML}
+  echo "clear-signed $SIG then opaque signed by dave" >>${OUT_EML}
+  cat "${OUT_MIME}" >>${OUT_EML}
+  echo >>${OUT_EML}
+  sed -i"" "s/\$/$CR/" ${OUT_EML}
+
+  INPUT="tb/alice.plain.${SIG}.opaque"
+  OUT_SIG="${INPUT}.dave.${SIG}"
+  ${PROFTOOL} ${BINDIR}/cmsutil -S -N Dave ${HASH_CMD} -i "$INPUT" -d ${P_R_DAVEDIR} -p nss -o "$OUT_SIG"
+
+  OUT_MIME="${OUT_SIG}.opaque"
+  echo "$header_opaque_signed" >>${OUT_MIME}
+  cat "$OUT_SIG" | ${BINDIR}/btoa | sed 's/\r$//' >>${OUT_MIME}
+
+  OUT_EML="${OUT_MIME}.eml"
+  echo -n "${header_dave_mime_from_to_subject}" >>${OUT_EML}
+  echo "opaque-signed $SIG then opaque signed by dave" >>${OUT_EML}
+  cat "${OUT_MIME}" >>${OUT_EML}
+  echo >>${OUT_EML}
+  sed -i"" "s/\$/$CR/" ${OUT_EML}
+
+  # Alternatively, second outer, multipart signature layer.
+
+  INPUT="tb/alice.plain.d${SIG}.multipart"
+  OUT_SIG="${INPUT}.dave.d${SIG}"
+  cat "$INPUT" | sed "s/\$/$CR/" > "${INPUT}.cr"
+  ${PROFTOOL} ${BINDIR}/cmsutil -S -T -N Dave ${HASH_CMD} -i "${INPUT}.cr" -d ${P_R_DAVEDIR} -p nss -o "$OUT_SIG"
+
+  OUT_MIME="${OUT_SIG}.multipart"
+  echo "${multipart_start_b2}" | sed "s/HASHHASH/${HASH}/" >>${OUT_MIME}
+  cat "${INPUT}.cr" | sed 's/\r$//' >>${OUT_MIME}
+  rm "${INPUT}.cr"
+  echo "${multipart_middle_b2}" >>${OUT_MIME}
+  echo >>${OUT_MIME}
+  cat "$OUT_SIG" | ${BINDIR}/btoa | sed 's/\r$//' >>${OUT_MIME}
+  echo "${multipart_end_b2}" >>${OUT_MIME}
+
+  OUT_EML="${OUT_MIME}.eml"
+  echo -n "${header_dave_mime_from_to_subject}" >>${OUT_EML}
+  echo "clear-signed $SIG then clear-signed signed by dave" >>${OUT_EML}
+  cat "${OUT_MIME}" >>${OUT_EML}
+  echo >>${OUT_EML}
+  sed -i"" "s/\$/$CR/" ${OUT_EML}
+
+  INPUT="tb/alice.plain.${SIG}.opaque"
+  OUT_SIG="${INPUT}.dave.d${SIG}"
+  cat "$INPUT" | sed "s/\$/$CR/" > "${INPUT}.cr"
+  ${PROFTOOL} ${BINDIR}/cmsutil -S -T -N Dave ${HASH_CMD} -i "${INPUT}.cr" -d ${P_R_DAVEDIR} -p nss -o "$OUT_SIG"
+
+  OUT_MIME="${OUT_SIG}.multipart"
+  echo "${multipart_start_b2}" | sed "s/HASHHASH/${HASH}/" >>${OUT_MIME}
+  cat "${INPUT}.cr" | sed 's/\r$//' >>${OUT_MIME}
+  rm "${INPUT}.cr"
+  echo "${multipart_middle_b2}" >>${OUT_MIME}
+  echo >>${OUT_MIME}
+  cat "$OUT_SIG" | ${BINDIR}/btoa | sed 's/\r$//' >>${OUT_MIME}
+  echo "${multipart_end_b2}" >>${OUT_MIME}
+
+  OUT_EML="${OUT_MIME}.eml"
+  echo -n "${header_dave_mime_from_to_subject}" >>${OUT_EML}
+  echo "opaque-signed $SIG then clear-signed signed by dave" >>${OUT_EML}
+  cat "${OUT_MIME}" >>${OUT_EML}
+  echo >>${OUT_EML}
+  sed -i"" "s/\$/$CR/" ${OUT_EML}
+}
+
+smime_enveloped_signed()
+{
+  SIG=sig.SHA${HASH}
+
+  ${PROFTOOL} ${BINDIR}/cmsutil -S -T -N Alice ${HASH_CMD} -i tb/alice.env -d ${P_R_ALICEDIR} -p nss -o tb/alice.env.d${SIG}
+
+  OUT="tb/alice.env.d${SIG}.multipart"
+  echo "${multipart_start}" | sed "s/HASHHASH/${HASH}/" >>${OUT}
+  cat tb/alice.env | sed 's/\r$//' >>${OUT}
+  echo "${multipart_middle}" >>${OUT}
+  cat tb/alice.env.d${SIG} | ${BINDIR}/btoa | sed 's/\r$//' >>${OUT}
+  echo "${multipart_end}" >>${OUT}
+
+  OUT="tb/alice.env.d${SIG}.multipart.eml"
+  echo -n "${header_mime_from_to_subject}" >>${OUT}
+  echo "enveloped then clear-signed ${SIG}" >>${OUT}
+  cat "tb/alice.env.d${SIG}.multipart" >>${OUT}
+  sed -i"" "s/\$/$CR/" ${OUT}
+
+  ${PROFTOOL} ${BINDIR}/cmsutil -S -N Alice ${HASH_CMD} -i tb/alice.env -d ${P_R_ALICEDIR} -p nss -o tb/alice.env.${SIG}
+
+  OUT="tb/alice.env.${SIG}.opaque"
+  echo "$header_opaque_signed" >>${OUT}
+  cat tb/alice.env.${SIG} | ${BINDIR}/btoa | sed 's/\r$//' >>${OUT}
+
+  OUT="tb/alice.env.${SIG}.opaque.eml"
+  echo -n "${header_mime_from_to_subject}" >>${OUT}
+  echo "enveloped then opaque-signed $SIG" >>${OUT}
+  cat "tb/alice.env.${SIG}.opaque" >>${OUT}
+  echo >>${OUT}
+  sed -i"" "s/\$/$CR/" ${OUT}
+
+  # Second outer, opaque signature layer.
+
+  INPUT="tb/alice.env.d${SIG}.multipart"
+  OUT_SIG="${INPUT}.dave.${SIG}"
+  ${PROFTOOL} ${BINDIR}/cmsutil -S -N Dave ${HASH_CMD} -i "$INPUT" -d ${P_R_DAVEDIR} -p nss -o "$OUT_SIG"
+
+  OUT_MIME="${OUT_SIG}.opaque"
+  echo "$header_opaque_signed" >>${OUT_MIME}
+  cat "$OUT_SIG" | ${BINDIR}/btoa | sed 's/\r$//' >>${OUT_MIME}
+
+  OUT_EML="${OUT_MIME}.eml"
+  echo -n "${header_dave_mime_from_to_subject}" >>${OUT_EML}
+  echo "enveloped then clear-signed $SIG then opaque signed by dave" >>${OUT_EML}
+  cat "${OUT_MIME}" >>${OUT_EML}
+  echo >>${OUT_EML}
+  sed -i"" "s/\$/$CR/" ${OUT_EML}
+
+  INPUT="tb/alice.env.${SIG}.opaque"
+  OUT_SIG="${INPUT}.dave.${SIG}"
+  ${PROFTOOL} ${BINDIR}/cmsutil -S -N Dave ${HASH_CMD} -i "$INPUT" -d ${P_R_DAVEDIR} -p nss -o "$OUT_SIG"
+
+  OUT_MIME="${OUT_SIG}.opaque"
+  echo "$header_opaque_signed" >>${OUT_MIME}
+  cat "$OUT_SIG" | ${BINDIR}/btoa | sed 's/\r$//' >>${OUT_MIME}
+
+  OUT_EML="${OUT_MIME}.eml"
+  echo -n "${header_dave_mime_from_to_subject}" >>${OUT_EML}
+  echo "enveloped then opaque-signed $SIG then opaque signed by dave" >>${OUT_EML}
+  cat "${OUT_MIME}" >>${OUT_EML}
+  echo >>${OUT_EML}
+  sed -i"" "s/\$/$CR/" ${OUT_EML}
 }
 
 smime_p7()
@@ -290,15 +473,23 @@ smime_main()
   HASH="1"
   cms_sign
   smime_signed_enveloped
+  smime_plain_signed
+  smime_enveloped_signed
   HASH="256"
   cms_sign
   smime_signed_enveloped
+  smime_plain_signed
+  smime_enveloped_signed
   HASH="384"
   cms_sign
   smime_signed_enveloped
+  smime_plain_signed
+  smime_enveloped_signed
   HASH="512"
   cms_sign
   smime_signed_enveloped
+  smime_plain_signed
+  smime_enveloped_signed
 
   echo "$SCRIPTNAME: Enveloped Data Tests ------------------------------"
   echo "cmsutil -E -r bob@example.com -i alice.txt -d ${P_R_ALICEDIR} -p nss \\"

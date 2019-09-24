@@ -160,5 +160,25 @@
                 ]
             }
         ]
+    },
+    {
+        "server_command": [
+            "@SELFSERV@", "-w", "nss", "-d", "@SERVERDIR@",
+            "-V", "tls1.0:", "-H", "1",
+            "-n", "rsa",
+            "-c", ":C028",
+            "-p", "@PORT@"
+        ],
+        "server_hostname": "@HOSTADDR@",
+        "server_port": @PORT@,
+        "tests" : [
+            {
+                "name" : "test-atypical-padding.py",
+                "arguments": [
+                    "-p", "@PORT@",
+                    "2^14 bytes of AppData with 256 bytes of padding (SHA384)"
+                ]
+            }
+        ]
     }
 ]

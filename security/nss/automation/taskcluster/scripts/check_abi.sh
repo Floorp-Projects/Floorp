@@ -20,6 +20,12 @@ set_env()
     done
   fi
 
+  if [[ -f nss/nspr.patch && "$ALLOW_NSPR_PATCH" == "1" ]]; then
+    pushd nspr
+    cat ../nss/nspr.patch | patch -p1
+    popd
+  fi
+
   cd nss
   ./build.sh -v -c
   cd ..

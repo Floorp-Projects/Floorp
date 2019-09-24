@@ -905,8 +905,9 @@ count_cipher_suites(sslSocket *ss, PRUint8 policy)
         return 0;
     }
     for (i = 0; i < ssl_V3_SUITES_IMPLEMENTED; i++) {
-        if (ssl3_config_match(&ss->cipherSuites[i], policy, &ss->vrange, ss))
+        if (ssl3_config_match(&ss->cipherSuites[i], policy, &ss->vrange, ss)) {
             count++;
+        }
     }
     if (count == 0) {
         PORT_SetError(SSL_ERROR_SSL_DISABLED);
@@ -5220,6 +5221,7 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
         }
         actual_count++;
     }
+    /* CipherSuites are appended to Hello message here */
     for (i = 0; i < ssl_V3_SUITES_IMPLEMENTED; i++) {
         ssl3CipherSuiteCfg *suite = &ss->cipherSuites[i];
         if (ssl3_config_match(suite, ss->ssl3.policy, &ss->vrange, ss)) {
@@ -12656,8 +12658,9 @@ ssl3_GetCipherSpec(sslSocket *ss, SSL3Ciphertext *cText)
 
 /* MAX_EXPANSION is the amount by which a record might plausibly be expanded
  * when protected.  It's the worst case estimate, so the sum of block cipher
- * padding (up to 256 octets) and HMAC (48 octets for SHA-384). */
-#define MAX_EXPANSION (256 + 48)
+ * padding (up to 256 octets), HMAC (48 octets for SHA-384), and IV (16
+ * octets for AES). */
+#define MAX_EXPANSION (256 + 48 + 16)
 
 /* if cText is non-null, then decipher and check the MAC of the
  * SSL record from cText->buf (typically gs->inbuf)
