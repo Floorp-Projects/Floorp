@@ -40,7 +40,7 @@ function waterfall(first, second) {
 }
 
 function status(first, second) {
-  const result = compareValues(first.status, second.status);
+  const result = compareValues(getStatusValue(first), getStatusValue(second));
   return result || waterfall(first, second);
 }
 
@@ -195,6 +195,18 @@ function type(first, second) {
   const secondType = getAbbreviatedMimeType(second.mimeType).toLowerCase();
   const result = compareValues(firstType, secondType);
   return result || waterfall(first, second);
+}
+
+function getStatusValue(item) {
+  let value;
+  if (item.blockedReason) {
+    value = typeof item.blockedReason == "number" ? -item.blockedReason : -1000;
+  } else if (item.status == null) {
+    value = -2;
+  } else {
+    value = item.status;
+  }
+  return value;
 }
 
 function getTransferedSizeValue(item) {
