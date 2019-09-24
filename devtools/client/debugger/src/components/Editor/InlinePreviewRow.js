@@ -17,9 +17,6 @@ type Props = {
   editor: Object,
   line: number,
   previews: Array<Preview>,
-  // Represents the number of column breakpoints to help with preview
-  // positioning
-  numColumnBreakpoints: number,
   openElementInInspector: typeof actions.openElementInInspectorCommand,
   highlightDomElement: typeof actions.highlightDomElement,
   unHighlightDomElement: typeof actions.unHighlightDomElement,
@@ -31,8 +28,8 @@ import "./InlinePreview.css";
 // * Renders single widget for each line in codemirror
 // * Renders InlinePreview for each preview inside the widget
 class InlinePreviewRow extends PureComponent<Props> {
-  IPWidget: Object;
-  lastLeft: number;
+  bookmark: Object;
+  widgetNode: Object;
 
   componentDidMount() {
     this.updatePreviewWidget(this.props, null);
@@ -46,37 +43,22 @@ class InlinePreviewRow extends PureComponent<Props> {
     this.updatePreviewWidget(null, this.props);
   }
 
-  getPreviewPosition(editor: Object, line: number) {
-    const lineStartPos = editor.codeMirror.cursorCoords({ line, ch: 0 });
-    const lineEndPos = editor.codeMirror.cursorCoords({
-      line,
-      ch: editor.getLine(line).length,
-    });
-    return lineEndPos.left - lineStartPos.left;
-  }
-
-  setPreviewPosition(node, left) {
-    if (this.lastLeft !== left) {
-      this.lastLeft = left;
-      node.style.left = `${left}px`;
-    }
-  }
-
   updatePreviewWidget(props: Props | null, prevProps: Props | null) {
     if (
-      this.IPWidget &&
+      this.bookmark &&
       prevProps &&
       (!props ||
         prevProps.editor !== props.editor ||
         prevProps.line !== props.line)
     ) {
-      this.IPWidget.clear();
-      this.IPWidget = null;
+      this.bookmark.clear();
+      this.bookmark = null;
+      this.widgetNode = null;
     }
 
     if (!props) {
       return assert(
-        !this.IPWidget,
+        !this.bookmark,
         "Inline Preview widget shouldn't be present."
       );
     }
@@ -90,14 +72,9 @@ class InlinePreviewRow extends PureComponent<Props> {
       unHighlightDomElement,
     } = props;
 
-    const left = this.getPreviewPosition(editor, line);
-    if (!this.IPWidget) {
-      const widget = document.createElement("div");
-      widget.classList.add("inline-preview");
-      this.setPreviewPosition(widget, left);
-      this.IPWidget = editor.codeMirror.addLineWidget(line, widget);
-    } else if (!prevProps || this.lastLeft !== left) {
-      this.setPreviewPosition(this.IPWidget.node, left);
+    if (!this.bookmark) {
+      this.widgetNode = document.createElement("div");
+      this.widgetNode.classList.add("inline-preview");
     }
 
     ReactDOM.render(
@@ -113,7 +90,15 @@ class InlinePreviewRow extends PureComponent<Props> {
           />
         ))}
       </React.Fragment>,
-      this.IPWidget.node
+      this.widgetNode
+    );
+
+    this.bookmark = editor.codeMirror.setBookmark(
+      {
+        line,
+        ch: Infinity,
+      },
+      this.widgetNode
     );
   }
 
