@@ -366,6 +366,27 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             self.info("Google Chrome or Chromium distributions are not required.")
             return
 
+        if self.app == 'chrome':
+            self.info("Chrome should be preinstalled.")
+            if win in self.platform_name():
+                self.chromium_dist_path = "C:\\Progra~2\\Google\\Chrome\\Application\\chrome.exe"
+            elif linux in self.platform_name():
+                self.chromium_dist_path = "/usr/bin/google-chrome"
+            elif mac in self.platform_name():
+                self.chromium_dist_path = "/Applications/Google Chrome.app/" \
+                    "Contents/MacOS/Google Chrome"
+            else:
+                self.error(
+                    "Chrome is not installed on the platform %s yet." % self.platform_name()
+                )
+
+            if os.path.exists(self.chromium_dist_path):
+                self.info("Google Chrome found in expected location %s" % self.chromium_dist_path)
+            else:
+                self.error("Cannot find Google Chrome at %s" % self.chromium_dist_path)
+
+            return
+
         chromium_dist = self.app
 
         if self.config.get("run_local"):
