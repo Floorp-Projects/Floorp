@@ -5,6 +5,7 @@
 package mozilla.components.feature.pwa.intent
 
 import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_DOCUMENT
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
@@ -50,6 +51,7 @@ class WebAppIntentProcessor(
 
             sessionManager.add(session)
             loadUrlUseCase(url, session, EngineSession.LoadUrlFlags.external())
+            intent.flags = FLAG_ACTIVITY_NEW_DOCUMENT
             intent.putSessionId(session.id)
             intent.putWebAppManifest(webAppManifest)
 

@@ -6,6 +6,7 @@ package mozilla.components.feature.pwa
 
 import android.content.Context
 import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_DOCUMENT
 import android.content.pm.ShortcutManager
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES
@@ -130,7 +131,7 @@ class WebAppShortcutManager(
         val shortcutIntent = Intent(context, WebAppLauncherActivity::class.java).apply {
             action = ACTION_PWA_LAUNCHER
             data = manifest.startUrl.toUri()
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+            flags = FLAG_ACTIVITY_NEW_DOCUMENT
             `package` = context.packageName
         }
 
