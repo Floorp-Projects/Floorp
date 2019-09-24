@@ -36,6 +36,11 @@ uint8_t* AbstractSurfaceSink::DoResetToFirstRow() {
   return GetRowPointer();
 }
 
+uint8_t* AbstractSurfaceSink::DoAdvanceRowFromBuffer(const uint8_t* aInputRow) {
+  CopyInputRow(aInputRow);
+  return DoAdvanceRow();
+}
+
 uint8_t* AbstractSurfaceSink::DoAdvanceRow() {
   if (mRow >= uint32_t(InputSize().height)) {
     return nullptr;
