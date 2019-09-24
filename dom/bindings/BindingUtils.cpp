@@ -54,6 +54,7 @@
 #include "mozilla/dom/HTMLEmbedElement.h"
 #include "mozilla/dom/HTMLElementBinding.h"
 #include "mozilla/dom/HTMLEmbedElementBinding.h"
+#include "mozilla/dom/MaybeCrossOriginObject.h"
 #include "mozilla/dom/ReportingUtils.h"
 #include "mozilla/dom/XULElementBinding.h"
 #include "mozilla/dom/XULFrameElementBinding.h"
@@ -2910,15 +2911,8 @@ struct MaybeGlobalThisPolicy : public NormalThisPolicy {
   // We want the HandleInvalidThis of NormalThisPolicy.
 };
 
-// There are some LenientThis things on globals, so we inherit from
-// MaybeGlobalThisPolicy.
-struct LenientThisPolicy : public MaybeGlobalThisPolicy {
-  // We want the HasValidThisValue of MaybeGlobalThisPolicy.
-
-  // We want the ExtractThisObject of MaybeGlobalThisPolicy.
-
-  // We want the MaybeUnwrapThisObject of MaybeGlobalThisPolicy.
-
+// Shared LenientThis behavior for our two different LenientThis policies.
+struct LenientThisPolicyMixin {
   static bool HandleInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
                                 bool aSecurityError, prototypes::ID aProtoId) {
     MOZ_ASSERT(!JS_IsExceptionPending(aCx));
@@ -2928,6 +2922,20 @@ struct LenientThisPolicy : public MaybeGlobalThisPolicy {
     aArgs.rval().set(JS::UndefinedValue());
     return true;
   }
+};
+
+// There are some LenientThis things on globals, so we inherit from
+// MaybeGlobalThisPolicy.
+struct LenientThisPolicy : public MaybeGlobalThisPolicy,
+                           public LenientThisPolicyMixin {
+  // We want the HasValidThisValue of MaybeGlobalThisPolicy.
+
+  // We want the ExtractThisObject of MaybeGlobalThisPolicy.
+
+  // We want the MaybeUnwrapThisObject of MaybeGlobalThisPolicy.
+
+  // We want HandleInvalidThis from LenientThisPolicyMixin
+  using LenientThisPolicyMixin::HandleInvalidThis;
 };
 
 // There are some cross-origin things on globals, so we inherit from
@@ -2991,6 +2999,57 @@ struct CrossOriginThisPolicy : public MaybeGlobalThisPolicy {
   }
 
   // We want the HandleInvalidThis of MaybeGlobalThisPolicy.
+};
+
+// Some objects that can be cross-origin objects are globals, so we inherit
+// from MaybeGlobalThisPolicy.
+struct MaybeCrossOriginObjectThisPolicy : public MaybeGlobalThisPolicy {
+  // We want the HasValidThisValue of MaybeGlobalThisPolicy.
+
+  // We want the ExtractThisObject of MaybeGlobalThisPolicy.
+
+  // We want the MaybeUnwrapThisObject of MaybeGlobalThisPolicy
+
+  static MOZ_ALWAYS_INLINE nsresult UnwrapThisObject(
+      JS::MutableHandle<JSObject*> aObj, JSContext* aCx, void*& aSelf,
+      prototypes::ID aProtoID, uint32_t aProtoDepth) {
+    // There are two cases at this point: either aObj is a cross-compartment
+    // wrapper (CCW) or it's not.  If it is, we don't need to do anything
+    // special compared to MaybeGlobalThisPolicy: the CCW will do the relevant
+    // security checks.  Which is good, because if we tried to do the
+    // cross-origin object check _before_ unwrapping it would always come back
+    // as "same-origin" and if we tried to do it after unwrapping it would be
+    // completely wrong: the checks rely on the two sides of the comparison
+    // being symmetric (can access each other or cannot access each other), but
+    // if we have a CCW we could have an Xray, which is asymmetric.  And then
+    // we'd think we should deny access, whereas we should actually allow
+    // access.
+    //
+    // If we do _not_ have a CCW here, then we need to check whether it's a
+    // cross-origin-accessible object, and if it is check whether it's
+    // same-origin-domain with our current callee.
+    if (!js::IsCrossCompartmentWrapper(aObj) &&
+        xpc::IsCrossOriginAccessibleObject(aObj) &&
+        !MaybeCrossOriginObjectMixins::IsPlatformObjectSameOrigin(aCx, aObj)) {
+      return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
+    }
+
+    return MaybeGlobalThisPolicy::UnwrapThisObject(aObj, aCx, aSelf, aProtoID,
+                                                   aProtoDepth);
+  }
+
+  // We want the HandleInvalidThis of MaybeGlobalThisPolicy.
+};
+
+// And in some cases we are dealing with a maybe-cross-origin object _and_ need
+// [LenientThis] behavior.
+struct MaybeCrossOriginObjectLenientThisPolicy
+    : public MaybeCrossOriginObjectThisPolicy,
+      public LenientThisPolicyMixin {
+  // We want to get all of our behavior from
+  // MaybeCrossOriginObjectLenientThisPolicy, except for HandleInvalidThis,
+  // which should come from LenientThisPolicyMixin.
+  using LenientThisPolicyMixin::HandleInvalidThis;
 };
 
 /**
@@ -3084,6 +3143,15 @@ template bool GenericGetter<CrossOriginThisPolicy, ThrowExceptions>(
     JSContext* cx, unsigned argc, JS::Value* vp);
 // There aren't any cross-origin Promise-returning getters, so don't
 // bother instantiating that specialization.
+template bool GenericGetter<MaybeCrossOriginObjectThisPolicy, ThrowExceptions>(
+    JSContext* cx, unsigned argc, JS::Value* vp);
+// There aren't any maybe-cross-origin-object Promise-returning getters, so
+// don't bother instantiating that specialization.
+template bool GenericGetter<MaybeCrossOriginObjectLenientThisPolicy,
+                            ThrowExceptions>(JSContext* cx, unsigned argc,
+                                             JS::Value* vp);
+// There aren't any maybe-cross-origin-object Promise-returning lenient-this
+// getters, so don't bother instantiating that specialization.
 
 template <typename ThisPolicy>
 bool GenericSetter(JSContext* cx, unsigned argc, JS::Value* vp) {
@@ -3132,6 +3200,11 @@ template bool GenericSetter<LenientThisPolicy>(JSContext* cx, unsigned argc,
                                                JS::Value* vp);
 template bool GenericSetter<CrossOriginThisPolicy>(JSContext* cx, unsigned argc,
                                                    JS::Value* vp);
+template bool GenericSetter<MaybeCrossOriginObjectThisPolicy>(JSContext* cx,
+                                                              unsigned argc,
+                                                              JS::Value* vp);
+template bool GenericSetter<MaybeCrossOriginObjectLenientThisPolicy>(
+    JSContext* cx, unsigned argc, JS::Value* vp);
 
 template <typename ThisPolicy, typename ExceptionPolicy>
 bool GenericMethod(JSContext* cx, unsigned argc, JS::Value* vp) {
@@ -3183,6 +3256,12 @@ template bool GenericMethod<CrossOriginThisPolicy, ThrowExceptions>(
     JSContext* cx, unsigned argc, JS::Value* vp);
 // There aren't any cross-origin Promise-returning methods, so don't
 // bother instantiating that specialization.
+template bool GenericMethod<MaybeCrossOriginObjectThisPolicy, ThrowExceptions>(
+    JSContext* cx, unsigned argc, JS::Value* vp);
+template bool GenericMethod<MaybeCrossOriginObjectThisPolicy,
+                            ConvertExceptionsToPromises>(JSContext* cx,
+                                                         unsigned argc,
+                                                         JS::Value* vp);
 
 }  // namespace binding_detail
 
