@@ -125,7 +125,7 @@ WaylandDMABufSurface::WaylandDMABufSurface()
   }
 }
 
-WaylandDMABufSurface::~WaylandDMABufSurface() { Release(); }
+WaylandDMABufSurface::~WaylandDMABufSurface() { ReleaseDMABufSurface(); }
 
 bool WaylandDMABufSurface::Create(int aWidth, int aHeight,
                                   int aWaylandDMABufSurfaceFlags) {
@@ -355,10 +355,13 @@ bool WaylandDMABufSurface::CreateEGLImage(mozilla::gl::GLContext* aGLContext) {
   }
 
   aGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, savedFb);
+
+  mGL = aGLContext;
+
   return ret;
 }
 
-void WaylandDMABufSurface::ReleaseEGLImage(mozilla::gl::GLContext* aGLContext) {
+void WaylandDMABufSurface::ReleaseEGLImage() {
   if (mEGLImage) {
     auto* egl = gl::GLLibraryEGL::Get();
     egl->fDestroyImage(egl->Display(), mEGLImage);
@@ -366,15 +369,19 @@ void WaylandDMABufSurface::ReleaseEGLImage(mozilla::gl::GLContext* aGLContext) {
   }
 
   if (mGLFbo) {
-    aGLContext->MakeCurrent();
-    aGLContext->fDeleteFramebuffers(1, &mGLFbo);
+    if (mGL->MakeCurrent()) {
+      mGL->fDeleteFramebuffers(1, &mGLFbo);
+    }
     mGLFbo = 0;
   }
+
+  mGL = nullptr;
 }
 
-void WaylandDMABufSurface::Release() {
+void WaylandDMABufSurface::ReleaseDMABufSurface() {
   MOZ_ASSERT(!IsMapped(), "We can't release mapped buffer!");
-  MOZ_ASSERT(!mEGLImage && !mGLFbo, "Relase EGL image first!");
+
+  ReleaseEGLImage();
 
   if (mWLBuffer) {
     wl_buffer_destroy(mWLBuffer);
@@ -480,4 +487,20 @@ bool WaylandDMABufSurface::HasAlpha() {
 gfx::SurfaceFormat WaylandDMABufSurface::GetFormat() {
   return HasAlpha() ? gfx::SurfaceFormat::B8G8R8A8
                     : gfx::SurfaceFormat::B8G8R8X8;
+}
+
+already_AddRefed<WaylandDMABufSurface>
+WaylandDMABufSurface::CreateDMABufSurface(int aWidth, int aHeight,
+                                          int aWaylandDMABufSurfaceFlags) {
+  RefPtr<WaylandDMABufSurface> surf = new WaylandDMABufSurface();
+  surf->Create(aWidth, aHeight, aWaylandDMABufSurfaceFlags);
+  return surf.forget();
+}
+
+already_AddRefed<WaylandDMABufSurface>
+WaylandDMABufSurface::CreateDMABufSurface(
+    const mozilla::layers::SurfaceDescriptor& aDesc) {
+  RefPtr<WaylandDMABufSurface> surf = new WaylandDMABufSurface();
+  surf->Create(aDesc);
+  return surf.forget();
 }
