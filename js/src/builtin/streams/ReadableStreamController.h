@@ -14,6 +14,7 @@
 #include <stdint.h>  // uint32_t
 
 #include "builtin/streams/ReadableStream.h"  // js::ReadableStream
+#include "builtin/streams/StreamController.h"  // js::StreamController
 #include "js/Class.h"                        // JSClass, js::ClassSpec
 #include "js/RootingAPI.h"                   // JS::Handle
 #include "js/Stream.h"  // JS::ReadableStreamUnderlyingSource
@@ -22,33 +23,6 @@
 #include "vm/NativeObject.h"  // js::NativeObject
 
 namespace js {
-
-/**
- * Common base class of both readable and writable stream controllers.
- */
-class StreamController : public NativeObject {
- public:
-  /**
-   * Memory layout for stream controllers.
-   *
-   * Both ReadableStreamDefaultController and ReadableByteStreamController
-   * are queue containers and must have these slots at identical offsets.
-   *
-   * The queue is guaranteed to be in the same compartment as the container,
-   * but might contain wrappers for objects from other compartments.
-   */
-  enum Slots { Slot_Queue, Slot_TotalSize, SlotCount };
-
-  ListObject* queue() const {
-    return &getFixedSlot(Slot_Queue).toObject().as<ListObject>();
-  }
-  double queueTotalSize() const {
-    return getFixedSlot(Slot_TotalSize).toNumber();
-  }
-  void setQueueTotalSize(double size) {
-    setFixedSlot(Slot_TotalSize, JS::NumberValue(size));
-  }
-};
 
 class ReadableStreamController : public StreamController {
  public:
@@ -263,12 +237,6 @@ extern bool ControllerStartFailedHandler(JSContext* cx, unsigned argc,
                                          JS::Value* vp);
 
 }  // namespace js
-
-template <>
-inline bool JSObject::is<js::StreamController>() const {
-  return is<js::ReadableStreamDefaultController>() ||
-         is<js::ReadableByteStreamController>();
-}
 
 template <>
 inline bool JSObject::is<js::ReadableStreamController>() const {
