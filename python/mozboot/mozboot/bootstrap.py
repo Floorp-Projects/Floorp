@@ -17,7 +17,7 @@ if sys.version_info < (3,):
         Error as ConfigParserError,
         RawConfigParser,
     )
-    input = raw_input
+    input = raw_input  # noqa
 else:
     from configparser import (
         Error as ConfigParserError,
