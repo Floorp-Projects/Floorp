@@ -6,6 +6,14 @@ This page documents the types of crash reporting, how the various parts interact
 
 Documentation for the specific libraries is included in the [https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/README.md](Android Components Crash Reporting README).
 
+## Socorro
+
+[Socorro](https://wiki.mozilla.org/Socorro) is a Mozilla open source project for [crash statistics](https://crash-stats.mozilla.org/). Firefox Preview uses Socorro to track native GeckoView crashes. Crash reports contain a signature, classifications, and a number of improved fields (e.g. OS, product, version) - you can read more about what is sent in these fields in the [Socorro report documentation](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/Crash_reporting/Understanding_crash_reports).
+
+These crashes contain hardware information and some app metadata, but no personally identifiable information is visible in the report. A few privacy-sensitive parts are only available to users who have "minidump access", which is a relatively small number of users with specific rules they must follow.
+
+A sample Firefox Preview crash report can be found [here](https://crash-stats.mozilla.org/report/index/bbbcc019-f30c-4fbb-8cbd-543940190923).
+
 ## Sentry
 
 [Sentry](https://sentry.io) is an open source crash reporting and aggregation platform. Both the client SDK, [github.com/getsentry/sentry-java](https://github.com/getsentry/sentry-java), and the server, [github.com/getsentry/sentry](https://github.com/getsentry/sentry), are open source.
