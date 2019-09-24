@@ -47,8 +47,9 @@ fun AtomicFile.writeSnapshot(
  */
 fun AtomicFile.readSnapshotItem(
     engine: Engine,
-    restoreSessionId: Boolean,
-    serializer: SnapshotSerializer = SnapshotSerializer(restoreSessionId)
+    restoreSessionId: Boolean = true,
+    restoreParentId: Boolean = true,
+    serializer: SnapshotSerializer = SnapshotSerializer(restoreSessionId, restoreParentId)
 ): SessionManager.Snapshot.Item? {
     return readAndDeserialize { json ->
         serializer.itemFromJSON(engine, JSONObject(json))

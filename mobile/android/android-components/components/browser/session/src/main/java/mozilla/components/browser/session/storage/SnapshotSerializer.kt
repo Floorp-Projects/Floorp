@@ -22,9 +22,13 @@ private const val VERSION = 1
  * @param restoreSessionIds If true the original [Session.id] of [Session]s will be restored. Otherwise a new ID will be
  * generated. An app may prefer to use new IDs if it expects sessions to get restored multiple times - otherwise
  * breaking the promise of a unique ID.
+ * @param restoreParentIds If true the [Session.parentId] will be restored, otherwise it will remain null. Setting
+ * this to false is useful for features that do not have or rely on a parent/child relationship between tabs, esp.
+ * if it can't be guaranteed that the parent tab is still available when the child tabs are restored.
  */
 class SnapshotSerializer(
-    private val restoreSessionIds: Boolean = true
+    private val restoreSessionIds: Boolean = true,
+    private val restoreParentIds: Boolean = true
 ) {
     fun toJSON(snapshot: SessionManager.Snapshot): String {
         val json = JSONObject()
@@ -73,7 +77,7 @@ class SnapshotSerializer(
     }
 
     fun itemFromJSON(engine: Engine, json: JSONObject): SessionManager.Snapshot.Item {
-        val session = deserializeSession(json.getJSONObject(Keys.SESSION_KEY), restoreSessionIds)
+        val session = deserializeSession(json.getJSONObject(Keys.SESSION_KEY), restoreSessionIds, restoreParentIds)
         val state = engine.createSessionState(json.getJSONObject(Keys.ENGINE_SESSION_KEY))
 
         return SessionManager.Snapshot.Item(session, engineSession = null, engineSessionState = state)
@@ -95,7 +99,7 @@ internal fun serializeSession(session: Session): JSONObject {
 
 @Throws(JSONException::class)
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-internal fun deserializeSession(json: JSONObject, restoreId: Boolean): Session {
+internal fun deserializeSession(json: JSONObject, restoreId: Boolean, restoreParentId: Boolean): Session {
     val source = try {
         Session.Source.valueOf(json.getString(Keys.SESSION_SOURCE_KEY))
     } catch (e: IllegalArgumentException) {
@@ -112,7 +116,9 @@ internal fun deserializeSession(json: JSONObject, restoreId: Boolean): Session {
             UUID.randomUUID().toString()
         }
     )
-    session.parentId = json.getString(Keys.SESSION_PARENT_UUID_KEY).takeIf { it != "" }
+    if (restoreParentId) {
+        session.parentId = json.getString(Keys.SESSION_PARENT_UUID_KEY).takeIf { it != "" }
+    }
     session.title = if (json.has(Keys.SESSION_TITLE)) json.getString(Keys.SESSION_TITLE) else ""
     session.readerMode = json.optBoolean(Keys.SESSION_READER_MODE_KEY, false)
     return session

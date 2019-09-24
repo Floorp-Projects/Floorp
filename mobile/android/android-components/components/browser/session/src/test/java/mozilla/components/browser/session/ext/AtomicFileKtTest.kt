@@ -18,11 +18,15 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
+import org.mockito.Mockito.doThrow
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -34,7 +38,7 @@ class AtomicFileKtTest {
     @Test
     fun `writeSnapshot - Fails write on IOException`() {
         val file: AtomicFile = mock()
-        Mockito.doThrow(IOException::class.java).`when`(file).startWrite()
+        doThrow(IOException::class.java).`when`(file).startWrite()
 
         val snapshot = SessionManager.Snapshot(
             sessions = listOf(
@@ -45,13 +49,13 @@ class AtomicFileKtTest {
 
         file.writeSnapshot(snapshot, SnapshotSerializer())
 
-        Mockito.verify(file).failWrite(any())
+        verify(file).failWrite(any())
     }
 
     @Test
     fun `readSnapshot - Returns null on FileNotFoundException`() {
         val file: AtomicFile = mock()
-        Mockito.doThrow(FileNotFoundException::class.java).`when`(file).openRead()
+        doThrow(FileNotFoundException::class.java).`when`(file).openRead()
 
         val snapshot = file.readSnapshot(engine = mock(), serializer = SnapshotSerializer())
         assertNull(snapshot)
@@ -80,13 +84,13 @@ class AtomicFileKtTest {
             override fun toJSON() = JSONObject()
         }
 
-        val engineSession = Mockito.mock(EngineSession::class.java)
-        Mockito.`when`(engineSession.saveState()).thenReturn(engineSessionState)
+        val engineSession = mock(EngineSession::class.java)
+        `when`(engineSession.saveState()).thenReturn(engineSessionState)
 
-        val engine = Mockito.mock(Engine::class.java)
-        Mockito.`when`(engine.name()).thenReturn("gecko")
-        Mockito.`when`(engine.createSession()).thenReturn(Mockito.mock(EngineSession::class.java))
-        Mockito.`when`(engine.createSessionState(any())).thenReturn(engineSessionState)
+        val engine = mock(Engine::class.java)
+        `when`(engine.name()).thenReturn("gecko")
+        `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
+        `when`(engine.createSessionState(any())).thenReturn(engineSessionState)
 
         // Engine session just for one of the sessions for simplicity.
         val sessionsSnapshot = SessionManager.Snapshot(
@@ -132,32 +136,71 @@ class AtomicFileKtTest {
     @Test
     fun `Read snapshot item should contain session of written snapshot item`() {
         val session = Session("https://www.mozilla.org", id = "session")
+        session.parentId = "parent-session"
 
-        val engineSessionState = object : EngineSessionState {
-            override fun toJSON() = JSONObject()
-        }
+        val engine = mock(Engine::class.java)
+        val file = writeSnapshotItem(engine, session)
 
-        val engineSession = Mockito.mock(EngineSession::class.java)
-        Mockito.`when`(engineSession.saveState()).thenReturn(engineSessionState)
-
-        val engine = Mockito.mock(Engine::class.java)
-        Mockito.`when`(engine.name()).thenReturn("gecko")
-        Mockito.`when`(engine.createSession()).thenReturn(Mockito.mock(EngineSession::class.java))
-        Mockito.`when`(engine.createSessionState(any())).thenReturn(engineSessionState)
-
-        val item = SessionManager.Snapshot.Item(session, engineSession)
-
-        val file = AtomicFile(File.createTempFile(
-            UUID.randomUUID().toString(),
-            UUID.randomUUID().toString()))
-
-        file.writeSnapshotItem(item)
-
-        val restoredItem = file.readSnapshotItem(engine, restoreSessionId = true)
+        val restoredItem = file.readSnapshotItem(engine)
         assertNotNull(restoredItem!!)
         assertNotNull(restoredItem.engineSessionState!!)
 
         assertEquals("session", restoredItem.session.id)
+        assertEquals("parent-session", restoredItem.session.parentId)
         assertEquals("https://www.mozilla.org", restoredItem.session.url)
+    }
+
+    @Test
+    fun `Read snapshot item without restoring session ID`() {
+        val session = Session("https://www.mozilla.org", id = "session")
+
+        val engine = mock(Engine::class.java)
+        val file = writeSnapshotItem(engine, session)
+
+        val restoredItem = file.readSnapshotItem(engine, restoreSessionId = false)
+        assertNotNull(restoredItem!!)
+        assertNotNull(restoredItem.engineSessionState!!)
+
+        assertNotEquals("session", restoredItem.session.id)
+        assertEquals("https://www.mozilla.org", restoredItem.session.url)
+    }
+
+    @Test
+    fun `Read snapshot item without restoring parent ID`() {
+        val session = Session("https://www.mozilla.org", id = "session")
+        session.parentId = "parent-session"
+
+        val engine = mock(Engine::class.java)
+        val file = writeSnapshotItem(engine, session)
+
+        val restoredItem = file.readSnapshotItem(engine, restoreSessionId = true, restoreParentId = false)
+        assertNotNull(restoredItem!!)
+        assertNotNull(restoredItem.engineSessionState!!)
+
+        assertEquals("session", restoredItem.session.id)
+        assertNull(restoredItem.session.parentId)
+        assertEquals("https://www.mozilla.org", restoredItem.session.url)
+    }
+
+    private fun writeSnapshotItem(engine: Engine, session: Session): AtomicFile {
+        val engineSessionState = object : EngineSessionState {
+            override fun toJSON() = JSONObject()
+        }
+
+        val engineSession = mock(EngineSession::class.java)
+        `when`(engineSession.saveState()).thenReturn(engineSessionState)
+
+        `when`(engine.name()).thenReturn("gecko")
+        `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
+        `when`(engine.createSessionState(any())).thenReturn(engineSessionState)
+
+        val item = SessionManager.Snapshot.Item(session, engineSession)
+
+        val file = AtomicFile(File.createTempFile(
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString()))
+
+        file.writeSnapshotItem(item)
+        return file
     }
 }
