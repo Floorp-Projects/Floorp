@@ -25,5 +25,5 @@
 == wrapper.html?xcrn0g04.ico about:blank
 
 # Test ICO PNG transparency
-== transparent-png.ico transparent-png.png
+fuzzy(1-1,29-29) == transparent-png.ico transparent-png.png
 
