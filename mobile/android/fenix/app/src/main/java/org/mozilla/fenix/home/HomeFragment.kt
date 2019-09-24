@@ -239,6 +239,10 @@ class HomeFragment : Fragment() {
             }
         }
 
+        view.wordmark.setOnClickListener {
+            showSavedSnackbar(2)
+        }
+
         view.menuButton.setOnClickListener {
             homeMenu?.menuBuilder?.build(requireContext())?.show(
                 anchor = it,
@@ -327,9 +331,10 @@ class HomeFragment : Fragment() {
             override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
                 if (authType != AuthType.Existing) {
                     view?.let {
-                        FenixSnackbar.make(it, Snackbar.LENGTH_SHORT).setText(
-                            it.context.getString(R.string.onboarding_firefox_account_sync_is_on)
-                        ).show()
+                        FenixSnackbar.make(it, Snackbar.LENGTH_SHORT)
+                            .setText(it.context.getString(R.string.onboarding_firefox_account_sync_is_on))
+                            .setAnchorView(bottom_bar)
+                            .show()
                     }
                 }
             }
@@ -723,7 +728,8 @@ class HomeFragment : Fragment() {
                 deleteAllSessionsJob = null
                 emitSessionChanges()
             },
-            operation = deleteOperation
+            operation = deleteOperation,
+            anchorView = bottom_bar
         )
     }
 
@@ -746,7 +752,8 @@ class HomeFragment : Fragment() {
                 pendingSessionDeletion = null
                 emitSessionChanges()
             },
-            operation = deleteOperation
+            operation = deleteOperation,
+            anchorView = bottom_bar
         )
 
         // Update the UI with the tab removed, but don't remove it from storage yet
@@ -905,7 +912,9 @@ class HomeFragment : Fragment() {
                     R.string.create_collection_tab_saved
                 }
                 FenixSnackbar.make(view, Snackbar.LENGTH_LONG)
-                    .setText(view.context.getString(stringRes)).show()
+                    .setText(view.context.getString(stringRes))
+                    .setAnchorView(bottom_bar)
+                    .show()
             }
         }
     }
@@ -913,7 +922,10 @@ class HomeFragment : Fragment() {
     private fun showRenamedSnackbar() {
         view?.let { view ->
             val string = view.context.getString(R.string.snackbar_collection_renamed)
-            FenixSnackbar.make(view, Snackbar.LENGTH_LONG).setText(string).show()
+            FenixSnackbar.make(view, Snackbar.LENGTH_LONG)
+                .setText(string)
+                .setAnchorView(bottom_bar)
+                .show()
         }
     }
 

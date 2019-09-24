@@ -31,7 +31,8 @@ fun CoroutineScope.allowUndo(
     message: String,
     undoActionTitle: String,
     onCancel: suspend () -> Unit = {},
-    operation: suspend () -> Unit
+    operation: suspend () -> Unit,
+    anchorView: View? = null
 ) {
     // By using an AtomicBoolean, we achieve memory effects of reading and
     // writing a volatile variable.
@@ -41,6 +42,7 @@ fun CoroutineScope.allowUndo(
     val snackbar = FenixSnackbar
         .make(view, FenixSnackbar.LENGTH_INDEFINITE)
         .setText(message)
+        .setAnchorView(anchorView)
         .setAction(undoActionTitle) {
             requestedUndo.set(true)
             launch {
