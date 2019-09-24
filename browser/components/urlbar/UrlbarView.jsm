@@ -159,7 +159,7 @@ class UrlbarView {
       return -1;
     }
 
-    return selectedRow.result.uiIndex;
+    return selectedRow.result.rowIndex;
   }
 
   set selectedRowIndex(val) {
@@ -181,6 +181,39 @@ class UrlbarView {
       throw new Error(`UrlbarView: Index ${val} is out of bounds.`);
     }
     this._selectElement(items[val]);
+    return val;
+  }
+
+  get selectedElementIndex() {
+    if (!this.isOpen || !this._selectedElement) {
+      return -1;
+    }
+
+    return this._selectedElement.elementIndex;
+  }
+
+  set selectedElementIndex(val) {
+    if (!this.isOpen) {
+      throw new Error(
+        "UrlbarView: Cannot select an item if the view isn't open."
+      );
+    }
+
+    if (val < 0) {
+      this._selectElement(null);
+      return val;
+    }
+
+    let selectableElement = this._getFirstSelectableElement();
+    while (selectableElement && selectableElement.elementIndex != val) {
+      selectableElement = this._getNextSelectableElement(selectableElement);
+    }
+
+    if (!selectableElement) {
+      throw new Error(`UrlbarView: Index ${val} is out of bounds.`);
+    }
+
+    this._selectElement(selectableElement);
     return val;
   }
 
@@ -212,6 +245,22 @@ class UrlbarView {
     let sum = 0;
     for (let row of this._rows.children) {
       sum += Number(this._isElementVisible(row));
+    }
+    return sum;
+  }
+
+  /**
+   * @returns {number}
+   *   The number of selectable elements in the view.
+   */
+  get visibleElementCount() {
+    let sum = 0;
+    let element = this._getFirstSelectableElement();
+    while (element) {
+      if (this._isElementVisible(element)) {
+        sum++;
+      }
+      element = this._getNextSelectableElement(element);
     }
     return sum;
   }
@@ -839,8 +888,14 @@ class UrlbarView {
   _updateIndices() {
     for (let i = 0; i < this._rows.children.length; i++) {
       let item = this._rows.children[i];
-      item.result.uiIndex = i;
+      item.result.rowIndex = i;
       item.id = "urlbarView-row-" + i;
+    }
+    let selectableElement = this._getFirstSelectableElement();
+    let uiIndex = 0;
+    while (selectableElement) {
+      selectableElement.elementIndex = uiIndex++;
+      selectableElement = this._getNextSelectableElement(selectableElement);
     }
   }
 

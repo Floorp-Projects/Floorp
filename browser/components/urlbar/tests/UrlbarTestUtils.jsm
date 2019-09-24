@@ -177,6 +177,15 @@ var UrlbarTestUtils = {
   },
 
   /**
+   * Gets the index of the currently selected element.
+   * @param {object} win The window containing the urlbar.
+   * @returns {number} The selected index.
+   */
+  getSelectedElementIndex(win) {
+    return win.gURLBar.view.selectedElementIndex;
+  },
+
+  /**
    * Gets the currently selected row. If the selected element is a descendant of
    * a row, this will return the ancestor row.
    * @param {object} win The window containing the urlbar.
@@ -189,7 +198,7 @@ var UrlbarTestUtils = {
   /**
    * Gets the index of the currently selected element.
    * @param {object} win The window containing the urlbar.
-   * @returns {number} The selected index.
+   * @returns {number} The selected row index.
    */
   getSelectedRowIndex(win) {
     return win.gURLBar.view.selectedRowIndex;
