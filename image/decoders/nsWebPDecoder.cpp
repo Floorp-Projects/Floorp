@@ -210,7 +210,7 @@ nsresult nsWebPDecoder::CreateFrame(const nsIntRect& aFrameRect) {
   }
 
   WebPInitDecBuffer(&mBuffer);
-  mBuffer.colorspace = MODE_BGRA;
+  mBuffer.colorspace = MODE_RGBA;
 
   mDecoder = WebPINewDecoder(&mBuffer);
   if (!mDecoder) {
@@ -220,16 +220,7 @@ nsresult nsWebPDecoder::CreateFrame(const nsIntRect& aFrameRect) {
     return NS_ERROR_FAILURE;
   }
 
-  // WebP doesn't guarantee that the alpha generated matches the hint in the
-  // header, so we always need to claim the input is BGRA. If the output is
-  // BGRX, swizzling will mask off the alpha channel.
-  SurfaceFormat inFormat = SurfaceFormat::B8G8R8A8;
-
   SurfacePipeFlags pipeFlags = SurfacePipeFlags();
-  if (mFormat == SurfaceFormat::B8G8R8A8 &&
-      !(GetSurfaceFlags() & SurfaceFlags::NO_PREMULTIPLY_ALPHA)) {
-    pipeFlags |= SurfacePipeFlags::PREMULTIPLY_ALPHA;
-  }
 
   Maybe<AnimationParams> animParams;
   if (!IsFirstFrameDecode()) {
@@ -237,8 +228,8 @@ nsresult nsWebPDecoder::CreateFrame(const nsIntRect& aFrameRect) {
   }
 
   Maybe<SurfacePipe> pipe = SurfacePipeFactory::CreateSurfacePipe(
-      this, Size(), OutputSize(), aFrameRect, inFormat, mFormat, animParams,
-      mTransform, pipeFlags);
+      this, Size(), OutputSize(), aFrameRect, mFormat, animParams,
+      /*aTransform*/ nullptr, pipeFlags);
   if (!pipe) {
     MOZ_LOG(sWebPLog, LogLevel::Error,
             ("[this=%p] nsWebPDecoder::CreateFrame -- no pipe\n", this));
@@ -290,7 +281,7 @@ void nsWebPDecoder::ApplyColorProfile(const char* aProfile, size_t aLength) {
             ("[this=%p] nsWebPDecoder::ApplyColorProfile -- not tagged, use "
              "sRGB transform\n",
              this));
-    mTransform = gfxPlatform::GetCMSBGRATransform();
+    mTransform = gfxPlatform::GetCMSRGBATransform();
     return;
   }
 
@@ -320,9 +311,9 @@ void nsWebPDecoder::ApplyColorProfile(const char* aProfile, size_t aLength) {
   }
 
   // Create the color management transform.
-  mTransform = qcms_transform_create(mInProfile, QCMS_DATA_BGRA_8,
+  mTransform = qcms_transform_create(mInProfile, QCMS_DATA_RGBA_8,
                                      gfxPlatform::GetCMSOutputProfile(),
-                                     QCMS_DATA_BGRA_8, (qcms_intent)intent);
+                                     QCMS_DATA_RGBA_8, (qcms_intent)intent);
   MOZ_LOG(sWebPLog, LogLevel::Debug,
           ("[this=%p] nsWebPDecoder::ApplyColorProfile -- use tagged "
            "transform\n",
@@ -467,9 +458,43 @@ LexerResult nsWebPDecoder::ReadSingle(const uint8_t* aData, size_t aLength,
       return LexerResult(TerminalState::FAILURE);
     }
 
+    const bool noPremultiply =
+        bool(GetSurfaceFlags() & SurfaceFlags::NO_PREMULTIPLY_ALPHA);
+
     for (int row = mLastRow; row < lastRow; row++) {
-      uint32_t* src = reinterpret_cast<uint32_t*>(rowStart + row * stride);
-      WriteState result = mPipe.WriteBuffer(src);
+      uint8_t* src = rowStart + row * stride;
+      if (mTransform) {
+        qcms_transform_data(mTransform, src, src, width);
+      }
+
+      WriteState result;
+      if (mFormat == SurfaceFormat::B8G8R8A8) {
+        if (noPremultiply) {
+          result =
+              mPipe.WritePixelsToRow<uint32_t>([&]() -> NextPixel<uint32_t> {
+                const uint32_t pixel =
+                    gfxPackedPixelNoPreMultiply(src[3], src[0], src[1], src[2]);
+                src += 4;
+                return AsVariant(pixel);
+              });
+        } else {
+          result =
+              mPipe.WritePixelsToRow<uint32_t>([&]() -> NextPixel<uint32_t> {
+                const uint32_t pixel =
+                    gfxPackedPixel(src[3], src[0], src[1], src[2]);
+                src += 4;
+                return AsVariant(pixel);
+              });
+        }
+      } else {
+        // We are producing a surface without transparency. Ignore the alpha
+        // channel provided to us by the library.
+        result = mPipe.WritePixelsToRow<uint32_t>([&]() -> NextPixel<uint32_t> {
+          const uint32_t pixel = gfxPackedPixel(0xFF, src[0], src[1], src[2]);
+          src += 4;
+          return AsVariant(pixel);
+        });
+      }
 
       Maybe<SurfaceInvalidRect> invalidRect = mPipe.TakeInvalidRect();
       if (invalidRect) {
