@@ -558,6 +558,13 @@ var ThirdPartyCookies = {
       ));
     },
 
+    get subViewBlocked() {
+      delete this.subViewAllowed;
+      return (this.subViewAllowed = gNavigatorBundle.getString(
+        "contentBlocking.cookiesView.blocked.label"
+      ));
+    },
+
     get subViewTitleNotBlocking() {
       delete this.subViewTitleNotBlocking;
       return (this.subViewTitleNotBlocking = gNavigatorBundle.getString(
@@ -689,18 +696,17 @@ var ThirdPartyCookies = {
 
     this.subViewList.textContent = "";
 
-    for (let category of ["firstParty", "trackers", "thirdParty"]) {
-      let itemsToShow;
-      if (
-        category == "trackers" &&
-        (gProtectionsHandler.hasException || !this.enabled)
-      ) {
-        itemsToShow = categories[category];
-      } else {
-        itemsToShow = categories[category].filter(
-          info => !info.isAllowed || info.hasException
-        );
-      }
+    let categoryNames = ["trackers"];
+    switch (this.behaviorPref) {
+      case Ci.nsICookieService.BEHAVIOR_REJECT:
+        categoryNames.push("firstParty");
+      // eslint-disable-next-line no-fallthrough
+      case Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN:
+        categoryNames.push("thirdParty");
+    }
+
+    for (let category of categoryNames) {
+      let itemsToShow = categories[category];
 
       if (!itemsToShow.length) {
         continue;
@@ -759,7 +765,7 @@ var ThirdPartyCookies = {
     this.subView.setAttribute("title", gNavigatorBundle.getString(title));
   },
 
-  _hasException(origin) {
+  _getExceptionState(origin) {
     for (let perm of Services.perms.getAllForPrincipal(
       gBrowser.contentPrincipal
     )) {
@@ -767,7 +773,7 @@ var ThirdPartyCookies = {
         perm.type == "3rdPartyStorage^" + origin ||
         perm.type.startsWith("3rdPartyStorage^" + origin + "^")
       ) {
-        return true;
+        return perm.capability;
       }
     }
 
@@ -775,11 +781,8 @@ var ThirdPartyCookies = {
       origin
     );
     // Cookie exceptions get "inherited" from parent- to sub-domain, so we need to
-    // make sure to include parent domains in the permission check for "cookies".
-    return (
-      Services.perms.testPermissionFromPrincipal(principal, "cookie") !=
-      Services.perms.UNKNOWN_ACTION
-    );
+    // make sure to include parent domains in the permission check for "cookie".
+    return Services.perms.testPermissionFromPrincipal(principal, "cookie");
   },
 
   _clearException(origin) {
@@ -840,7 +843,7 @@ var ThirdPartyCookies = {
       let info = {
         origin,
         isAllowed: true,
-        hasException: this._hasException(origin),
+        exceptionState: this._getExceptionState(origin),
       };
       let hasCookie = false;
       let isTracker = false;
@@ -893,7 +896,7 @@ var ThirdPartyCookies = {
     return newLog;
   },
 
-  _createListItem({ origin, isAllowed, hasException }) {
+  _createListItem({ origin, isAllowed, exceptionState }) {
     let listItem = document.createXULElement("hbox");
     listItem.className = "protections-popup-list-item";
     // Repeat the origin in the tooltip in case it's too long
@@ -906,7 +909,10 @@ var ThirdPartyCookies = {
     label.setAttribute("crop", "end");
     listItem.append(label);
 
-    if (hasException) {
+    if (
+      (isAllowed && exceptionState == Services.perms.ALLOW_ACTION) ||
+      (!isAllowed && exceptionState == Services.perms.DENY_ACTION)
+    ) {
       let stateLabel;
       if (isAllowed) {
         stateLabel = document.createXULElement("label");
@@ -927,15 +933,16 @@ var ThirdPartyCookies = {
         "contentBlocking.cookiesView.removeButton.tooltip",
         [origin]
       );
-      removeException.addEventListener("click", () => {
-        this._clearException(origin);
-        // Just flip the display based on what state we had previously.
-        stateLabel.value = isAllowed
-          ? this.strings.subViewBlocked
-          : this.strings.subViewAllowed;
-        listItem.classList.toggle("allowed", !isAllowed);
-        removeException.hidden = true;
-      });
+      removeException.addEventListener(
+        "click",
+        () => {
+          this._clearException(origin);
+          stateLabel.remove();
+          removeException.remove();
+          listItem.classList.toggle("allowed", !isAllowed);
+        },
+        { once: true }
+      );
       listItem.append(removeException);
     }
 
