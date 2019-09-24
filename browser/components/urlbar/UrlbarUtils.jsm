@@ -352,6 +352,11 @@ var UrlbarUtils = {
         );
         return { url, postData };
       }
+      case UrlbarUtils.RESULT_TYPE.TIP: {
+        // Return the button URL. Consumers must check payload.helpUrl
+        // themselves if they need the tip's help link.
+        return { url: result.payload.buttonUrl, postData: null };
+      }
     }
     return { url: null, postData: null };
   },

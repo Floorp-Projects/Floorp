@@ -16,6 +16,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 const MEGABAR_PREF = "browser.urlbar.megabar";
+const HELP_URL = "about:mozilla";
+const TIP_URL = "about:about";
 
 // Tests keyboard selection within UrlbarUtils.RESULT_TYPE.TIP results.
 
@@ -149,6 +151,71 @@ add_task(async function tipIsSecondResult() {
   UrlbarProvidersManager.unregisterProvider(provider);
 });
 
+add_task(async function mouseSelection() {
+  let matches = [
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.TIP,
+      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      {
+        icon: "",
+        text: "This is a test intervention.",
+        buttonText: "Done",
+        data: "test",
+        helpUrl: HELP_URL,
+        buttonUrl: TIP_URL,
+      }
+    ),
+  ];
+
+  let provider = new TipTestProvider(matches);
+  UrlbarProvidersManager.registerProvider(provider);
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    value: "test",
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+  });
+  let element = document.querySelector(".urlbarView-row .urlbarView-tip-help");
+  let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  let closePromise = UrlbarTestUtils.promisePopupClose(window, () => {});
+  EventUtils.synthesizeMouseAtCenter(element, {}, element.ownerGlobal);
+  await Promise.all([loadPromise, closePromise]);
+  Assert.equal(
+    gURLBar.value,
+    HELP_URL,
+    "Should have navigated to the tip's help page."
+  );
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    value: "test",
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+  });
+  element = document.querySelector(".urlbarView-row .urlbarView-tip-button");
+  let view = gURLBar.view.panel;
+
+  await BrowserTestUtils.waitForCondition(() => {
+    info("Waiting for for UrlbarView to become visible.");
+    let bounds = window.windowUtils.getBoundsWithoutFlushing(view);
+    return bounds.width > 0 && bounds.height > 0;
+  });
+
+  await BrowserTestUtils.waitForCondition(() => {
+    info("Waiting for for tip button to become visible.");
+    let bounds = window.windowUtils.getBoundsWithoutFlushing(element);
+    return bounds.width > 0 && bounds.height > 0;
+  });
+  Assert.ok(gURLBar.view.isOpen, "UrlbarView is open.");
+
+  loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  closePromise = UrlbarTestUtils.promisePopupClose(window, () => {});
+  EventUtils.synthesizeMouseAtCenter(element, {}, element.ownerGlobal);
+  await Promise.all([loadPromise, closePromise]);
+  Assert.equal(gURLBar.value, TIP_URL, "Should have navigated to the tip URL.");
+
+  UrlbarProvidersManager.unregisterProvider(provider);
+});
+
 add_task(async function tipIsOnlyResult() {
   let matches = [
     new UrlbarResult(
@@ -159,8 +226,8 @@ add_task(async function tipIsOnlyResult() {
         text: "This is a test intervention.",
         buttonText: "Done",
         data: "test",
-        helpUrl:
-          "https://support.mozilla.org/en-US/kb/delete-browsing-search-download-history-firefox",
+        helpUrl: HELP_URL,
+        buttonUrl: TIP_URL,
       }
     ),
   ];
