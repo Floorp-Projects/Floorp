@@ -6,43 +6,68 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         title="Tooltip test">
 
-<vbox flex="1" style="position: relative">
-  <!-- Left edge -->
-  <html:div class="anchor"
-    style="width:10px; height: 10px; position: absolute; background: red;
-           top: 0; left: 0;">
-  </html:div>
+  <vbox flex="1" style="position: relative">
+    <!-- LTR on left edge -->
+    <html:div
+      id="anchor1"
+      class="anchor"
+      data-hang="right"
+      style="width:10px; height: 10px; position: absolute; background: red;
+            top: 0; left: 0;">
+    </html:div>
 
-  <!-- Not left edge but still left of center plus RTL direction (which should
-       no affect the hang direction) -->
-  <html:div class="anchor"
-    style="width:10px; height: 10px; position: absolute; background: red;
-    top: 0; left: 25px; direction: rtl">
-  </html:div>
+    <!-- RTL but too close to the left edge for the doorhanger to hang left -->
+    <html:div
+      id="anchor2"
+      class="anchor"
+      data-hang="right"
+      style="width:10px; height: 10px; position: absolute; background: red;
+      top: 0; left: 25px; direction: rtl">
+    </html:div>
 
-  <!-- Wide but still left of center -->
-  <html:div class="anchor"
-    style="width:80%; height: 10px; position: absolute; background: red;
-    top: 0; left: 50px;">
-  </html:div>
+    <!-- RTL -->
+    <html:div
+      id="anchor3"
+      class="anchor"
+      data-hang="left"
+      style="width:10px; height: 10px; position: absolute; background: red;
+      top: 0; left: 250px; direction: rtl">
+    </html:div>
 
-  <!-- Right edge -->
-  <html:div class="anchor"
-    style="width:10px; height: 10px; position: absolute; background: red;
-    bottom: 0; right: 0;">
-  </html:div>
+   <!-- LTR -->
+   <html:div
+      id="anchor4"
+      class="anchor"
+      data-hang="right"
+      style="width:80%; height: 10px; position: absolute; background: red;
+      top: 0; left: 50px;">
+    </html:div>
 
-  <!-- Not right edge but still right of center plus RTL direction (which should
-       no affect the hang direction) -->
-  <html:div class="anchor"
-    style="width:10px; height: 10px; position: absolute; background: red;
-    bottom: 0; right: 25px; direction: rtl">
-  </html:div>
+    <!-- LTR on right edge -->
+    <html:div
+      id="anchor5"
+      class="anchor"
+      data-hang="left"
+      style="width:10px; height: 10px; position: absolute; background: red;
+      bottom: 0; right: 0;">
+    </html:div>
 
-  <!-- Wide but still right of center -->
-  <html:div class="anchor"
-    style="width:80%; height: 10px; position: absolute; background: red;
-    bottom: 0; right: 50px;">
-  </html:div>
+    <!-- RTL near right edge -->
+    <html:div
+      id="anchor6"
+      class="anchor"
+      data-hang="left"
+      style="width:10px; height: 10px; position: absolute; background: red;
+      bottom: 0; right: 25px; direction: rtl">
+    </html:div>
+
+    <!-- LTR near left edge due to wide anchor -->
+    <html:div
+      id="anchor7"
+      class="anchor"
+      data-hang="right"
+      style="width:80%; height: 10px; position: absolute; background: red;
+      bottom: 0; right: 50px;">
+    </html:div>
   </vbox>
 </window>
