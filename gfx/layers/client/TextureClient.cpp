@@ -50,6 +50,11 @@
 #  include "mozilla/layers/TextureClientX11.h"
 #  include "GLXLibrary.h"
 #endif
+#ifdef MOZ_WAYLAND
+#  include <gtk/gtkx.h>
+#  include "mozilla/widget/nsWaylandDisplay.h"
+#  include "mozilla/layers/WaylandDMABUFTextureClientOGL.h"
+#endif
 
 #ifdef XP_MACOSX
 #  include "mozilla/layers/MacIOSurfaceTextureClientOGL.h"
@@ -276,6 +281,15 @@ static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
   }
 #endif
 
+#ifdef MOZ_WAYLAND
+  if (aLayersBackend == LayersBackend::LAYERS_OPENGL &&
+      !GDK_IS_X11_DISPLAY(gdk_display_get_default()) &&
+      widget::nsWaylandDisplay::IsDMABufEnabled() &&
+      aFormat != SurfaceFormat::A8) {
+    return TextureType::WaylandDMABUF;
+  }
+#endif
+
 #ifdef MOZ_X11
   gfxSurfaceType type =
       gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType();
@@ -354,6 +368,12 @@ TextureData* TextureData::Create(TextureForwarder* aAllocator,
     case TextureType::DIB:
       return DIBTextureData::Create(aSize, aFormat, aAllocator);
 #endif
+
+#ifdef MOZ_WAYLAND
+    case TextureType::WaylandDMABUF:
+      return WaylandDMABUFTextureData::Create(aSize, aFormat, moz2DBackend);
+#endif
+
 #ifdef MOZ_X11
     case TextureType::X11:
       return X11TextureData::Create(aSize, aFormat, aTextureFlags, aAllocator);
