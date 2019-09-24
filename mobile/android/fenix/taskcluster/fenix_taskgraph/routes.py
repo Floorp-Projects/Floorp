@@ -8,6 +8,9 @@ import time
 
 from taskgraph.transforms.task import index_builder
 
+# Please ping the performance testing team (whawkins at the moment) if these routes change.
+# In the future, notifying consumers may be easier (https://bugzilla.mozilla.org/show_bug.cgi?id=1548810), but
+# we need to remember to tell users for the time being
 SIGNING_ROUTE_TEMPLATES = [
     "index.project.{trust-domain}.{project}.v2.{variant}.{build_date}.revision.{head_rev}",
     "index.project.{trust-domain}.{project}.v2.{variant}.{build_date}.latest",
