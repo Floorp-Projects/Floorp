@@ -33,7 +33,7 @@ class Search(private val context: Context) {
             GlobalScope.launch {
                 defaultSearchEngine = getDefaultSearchEngineAsync(
                     context,
-                    context.settings.defaultSearchEngineName
+                    context.settings().defaultSearchEngineName
                 )
             }
         }

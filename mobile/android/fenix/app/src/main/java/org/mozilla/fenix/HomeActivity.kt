@@ -95,7 +95,7 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
 
         setupToolbarAndNavigation()
 
-        if (settings.isTelemetryEnabled) {
+        if (settings().isTelemetryEnabled) {
             lifecycle.addObserver(BreadcrumbsRecorder(components.analytics.crashReporter,
                 navHost.navController, ::getBreadcrumbMessage))
 
@@ -178,7 +178,7 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
         intent?.toSafeIntent()?.let {
             if (it.hasExtra(PRIVATE_BROWSING_MODE)) {
                 val startPrivateMode = it.getBooleanExtra(PRIVATE_BROWSING_MODE, false)
-                settings.usePrivateMode = startPrivateMode
+                settings().usePrivateMode = startPrivateMode
                 intent.removeExtra(PRIVATE_BROWSING_MODE)
             }
         }
@@ -301,7 +301,7 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
     }
 
     protected open fun createBrowsingModeManager(): BrowsingModeManager {
-        return DefaultBrowsingModeManager(settings) { mode ->
+        return DefaultBrowsingModeManager(settings()) { mode ->
             themeManager.currentTheme = mode
         }
     }

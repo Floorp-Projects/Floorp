@@ -64,7 +64,7 @@ class CustomTabsIntegration(
             val lottieDrawable = LottieDrawable()
             lottieDrawable.composition = result
             toolbar.displayTrackingProtectionIcon =
-                activity.settings.shouldUseTrackingProtection && FeatureFlags.etpCategories
+                activity.settings().shouldUseTrackingProtection && FeatureFlags.etpCategories
             toolbar.displaySeparatorView = false
 
             toolbar.setTrackingProtectionIcons(

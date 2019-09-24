@@ -29,7 +29,7 @@ class AccessibilityFragment : PreferenceFragmentCompat() {
             getPreferenceKey(R.string.pref_key_accessibility_font_scale)
         )
         textSizePreference?.setOnPreferenceChangeListener<Int> { preference, newTextSize ->
-            val settings = preference.context.settings
+            val settings = preference.context.settings()
             val components = preference.context.components
 
             // Value is mapped from 0->30 in steps of 1 so let's convert to float in range 0.5->2.0
@@ -43,12 +43,12 @@ class AccessibilityFragment : PreferenceFragmentCompat() {
             components.useCases.sessionUseCases.reload()
             true
         }
-        textSizePreference?.isVisible = !requireContext().settings.shouldUseAutoSize
+        textSizePreference?.isVisible = !requireContext().settings().shouldUseAutoSize
 
         val useAutoSizePreference =
             findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_accessibility_auto_size))
         useAutoSizePreference?.setOnPreferenceChangeListener<Boolean> { preference, useAutoSize ->
-            val settings = preference.context.settings
+            val settings = preference.context.settings()
             val components = preference.context.components
 
             // Save the new setting value

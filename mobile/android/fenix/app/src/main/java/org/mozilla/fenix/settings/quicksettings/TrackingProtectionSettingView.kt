@@ -39,7 +39,7 @@ class TrackingProtectionSettingView(
     fun bind(isTrackingProtectionOn: Boolean) {
         trackingProtectionSettingView.visibility =
             if (FeatureFlags.etpCategories) View.GONE else View.VISIBLE
-        val globalTPSetting = trackingProtectionSwitch.context.settings.shouldUseTrackingProtection
+        val globalTPSetting = trackingProtectionSwitch.context.settings().shouldUseTrackingProtection
 
         trackingProtectionAction.isVisible = !globalTPSetting
         trackingProtectionAction.setOnClickListener(this)

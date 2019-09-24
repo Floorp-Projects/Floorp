@@ -64,7 +64,7 @@ class QuickActionSheet @JvmOverloads constructor(
     }
 
     fun bounceSheet() {
-        context.settings.incrementAutomaticBounceQuickActionSheetCount()
+        context.settings().incrementAutomaticBounceQuickActionSheetCount()
         scope.launch(Dispatchers.Main) {
             delay(BOUNCE_ANIMATION_DELAY_LENGTH)
             quickActionSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED

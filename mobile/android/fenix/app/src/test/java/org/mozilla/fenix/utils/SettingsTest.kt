@@ -32,8 +32,7 @@ class SettingsTest {
 
     @Before
     fun setUp() {
-        settings = testContext.settings
-            .apply(Settings::clear)
+        settings = testContext.settings().apply(Settings::clear)
     }
 
     @Test

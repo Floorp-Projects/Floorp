@@ -80,7 +80,7 @@ open class FenixApplication : Application() {
         experimentLoader = loadExperiments()
 
         // Enable the service-experiments component
-        if (this.settings.isExperimentationEnabled) {
+        if (settings().isExperimentationEnabled) {
             Experiments.initialize(
                 applicationContext,
                 mozilla.components.service.experiments.Configuration(
@@ -100,7 +100,7 @@ open class FenixApplication : Application() {
         }
 
         setupLeakCanary()
-        if (this.settings.isTelemetryEnabled) {
+        if (settings().isTelemetryEnabled) {
             components.analytics.metrics.start()
         }
 
@@ -234,7 +234,7 @@ open class FenixApplication : Application() {
     @SuppressLint("WrongConstant")
     // Suppressing erroneous lint warning about using MODE_NIGHT_AUTO_BATTERY, a likely library bug
     private fun setDayNightTheme() {
-        val settings = this.settings
+        val settings = this.settings()
         when {
             settings.shouldUseLightTheme -> {
                 AppCompatDelegate.setDefaultNightMode(

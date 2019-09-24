@@ -12,7 +12,7 @@ open class SharedPreferenceUpdater : Preference.OnPreferenceChangeListener {
 
     override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
         val newBooleanValue = newValue as? Boolean ?: return false
-        preference.context.settings.preferences.edit {
+        preference.context.settings().preferences.edit {
             putBoolean(preference.key, newBooleanValue)
         }
         return true

@@ -55,7 +55,7 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
 
     private fun initPhoneFeature(phoneFeature: PhoneFeature) {
         val context = requireContext()
-        val settings = context.settings
+        val settings = context.settings()
 
         val summary = phoneFeature.getActionLabel(context, settings = settings)
         val preferenceKey = phoneFeature.getPreferenceKey(context)

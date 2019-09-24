@@ -23,7 +23,7 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
         )
 
         view.tracking_protection_toggle.apply {
-            isChecked = view.context.settings.shouldUseTrackingProtection
+            isChecked = view.context.settings().shouldUseTrackingProtection
             setOnCheckedChangeListener { _, isChecked ->
                 updateTrackingProtectionSetting(isChecked)
             }
@@ -31,7 +31,7 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
     }
 
     private fun updateTrackingProtectionSetting(enabled: Boolean) {
-        itemView.context.settings.shouldUseTrackingProtection = enabled
+        itemView.context.settings().shouldUseTrackingProtection = enabled
         with(itemView.context.components) {
             val policy = core.createTrackingProtectionPolicy(enabled)
             useCases.settingsUseCases.updateTrackingProtection.invoke(policy)

@@ -26,24 +26,24 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
 
         val searchSuggestionsPreference =
             findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_show_search_suggestions))?.apply {
-                isChecked = context.settings.shouldShowSearchSuggestions
+                isChecked = context.settings().shouldShowSearchSuggestions
             }
 
         searchSuggestionsPreference?.onPreferenceChangeListener = SharedPreferenceUpdater()
 
         val showHistorySuggestions =
             findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_search_browsing_history))?.apply {
-                isChecked = context.settings.shouldShowHistorySuggestions
+                isChecked = context.settings().shouldShowHistorySuggestions
             }
 
         val showBookmarkSuggestions =
             findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_search_bookmarks))?.apply {
-                isChecked = context.settings.shouldShowBookmarkSuggestions
+                isChecked = context.settings().shouldShowBookmarkSuggestions
             }
 
         val showClipboardSuggestions =
             findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_show_clipboard_suggestions))?.apply {
-                isChecked = context.settings.shouldShowClipboardSuggestions
+                isChecked = context.settings().shouldShowClipboardSuggestions
             }
 
         showHistorySuggestions?.onPreferenceChangeListener = SharedPreferenceUpdater()

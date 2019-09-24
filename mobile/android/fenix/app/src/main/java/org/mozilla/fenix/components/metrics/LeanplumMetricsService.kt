@@ -77,9 +77,9 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
             "fennec_installed" to installedApps.contains(MozillaProductDetector.MozillaProducts.FIREFOX.productName),
             "focus_installed" to installedApps.contains(MozillaProductDetector.MozillaProducts.FOCUS.productName),
             "klar_installed" to installedApps.contains(MozillaProductDetector.MozillaProducts.KLAR.productName),
-            "fxa_signed_in" to application.settings.fxaSignedIn,
-            "fxa_has_synced_items" to application.settings.fxaHasSyncedItems,
-            "search_widget_installed" to application.settings.searchWidgetInstalled
+            "fxa_signed_in" to application.settings().fxaSignedIn,
+            "fxa_has_synced_items" to application.settings().fxaHasSyncedItems,
+            "search_widget_installed" to application.settings().searchWidgetInstalled
         ))
     }
 
@@ -108,7 +108,7 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
     }
 
     override fun shouldTrack(event: Event): Boolean {
-        return application.settings.isTelemetryEnabled &&
+        return application.settings().isTelemetryEnabled &&
                 token.type != Token.Type.Invalid && !event.name.isNullOrEmpty()
     }
 

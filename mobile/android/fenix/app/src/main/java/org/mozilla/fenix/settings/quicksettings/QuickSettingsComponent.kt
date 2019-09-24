@@ -46,7 +46,7 @@ class QuickSettingsComponent(
     ): SitePermissions {
 
         return if (sitePermissions == null) {
-            val settings = context.settings
+            val settings = context.settings()
             val origin = requireNotNull(url.toUri().host)
             var location =
                 settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.LOCATION).toStatus()

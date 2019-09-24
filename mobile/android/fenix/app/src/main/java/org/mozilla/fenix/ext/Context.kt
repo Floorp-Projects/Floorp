@@ -27,9 +27,9 @@ import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.R
-import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -111,6 +111,3 @@ fun Context.getColorFromAttr(@AttrRes attr: Int) =
 
 fun Context.settings(isCrashReportEnabledInBuild: Boolean = BuildConfig.CRASH_REPORTING && Config.channel.isReleased) =
     Settings.getInstance(this, isCrashReportEnabledInBuild)
-
-val Context.settings: Settings
-    get() = Settings.getInstance(this)

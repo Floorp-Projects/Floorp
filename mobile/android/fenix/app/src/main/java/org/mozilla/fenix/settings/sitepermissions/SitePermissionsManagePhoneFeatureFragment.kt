@@ -47,7 +47,7 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
 
         (activity as AppCompatActivity).title = phoneFeature.getLabel(requireContext())
         (activity as AppCompatActivity).supportActionBar?.show()
-        settings = requireContext().settings
+        settings = requireContext().settings()
     }
 
     override fun onCreateView(

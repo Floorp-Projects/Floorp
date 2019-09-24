@@ -131,7 +131,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         val trackingProtectionPreference =
             findPreference<Preference>(getPreferenceKey(R.string.pref_key_tracking_protection_settings))
         trackingProtectionPreference?.summary = context?.let {
-            if (it.settings.shouldUseTrackingProtection) {
+            if (it.settings().shouldUseTrackingProtection) {
                 getString(R.string.tracking_protection_on)
             } else {
                 getString(R.string.tracking_protection_off)
@@ -140,9 +140,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
 
         val themesPreference =
             findPreference<Preference>(getPreferenceKey(R.string.pref_key_theme))
-        themesPreference?.summary = context?.let {
-            it.settings.themeSettingString
-        }
+        themesPreference?.summary = context?.settings()?.themeSettingString
 
         val aboutPreference = findPreference<Preference>(getPreferenceKey(R.string.pref_key_about))
         val appName = getString(R.string.app_name)
@@ -263,7 +261,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         val preferenceAlwaysOpenInPrivateMode = findPreference<SwitchPreference>(preferenceAlwaysOpenInPrivateModeKey)
 
         preferenceAlwaysOpenInPrivateMode?.setOnPreferenceClickListener {
-            requireContext().settings.alwaysOpenInPrivateMode = !requireContext().settings.alwaysOpenInPrivateMode
+            requireContext().settings().alwaysOpenInPrivateMode = !requireContext().settings().alwaysOpenInPrivateMode
             true
         }
 
@@ -278,7 +276,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         }
 
         preferenceRemoteDebugging?.setOnPreferenceChangeListener { preference, newValue ->
-        preference.context.settings.preferences.edit()
+        preference.context.settings().preferences.edit()
                 .putBoolean(preference.key, newValue as Boolean).apply()
             requireComponents.core.engine.settings.remoteDebuggingEnabled = newValue
             true

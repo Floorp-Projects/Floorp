@@ -29,11 +29,11 @@ import androidx.core.graphics.drawable.toBitmap
 class SearchWidgetProvider : AppWidgetProvider() {
 
     override fun onEnabled(context: Context) {
-        context.settings.addSearchWidgetInstalled(1)
+        context.settings().addSearchWidgetInstalled(1)
     }
 
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
-        context.settings.addSearchWidgetInstalled(-appWidgetIds.size)
+        context.settings().addSearchWidgetInstalled(-appWidgetIds.size)
     }
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {

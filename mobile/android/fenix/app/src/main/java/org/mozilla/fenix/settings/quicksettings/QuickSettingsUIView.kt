@@ -46,7 +46,7 @@ class QuickSettingsUIView(
 ) {
     private val blockedByAndroidPhoneFeatures = mutableListOf<PhoneFeature>()
     private inline val context get() = view.context
-    private val settings: Settings = context.settings
+    private val settings: Settings = context.settings()
     private val trackingProtectionSettingView = TrackingProtectionSettingView(view, actionEmitter)
     private val labelAndActions = mapOf(
         CAMERA to findLabelActionPair(R.id.camera_icon, R.id.camera_action_label),

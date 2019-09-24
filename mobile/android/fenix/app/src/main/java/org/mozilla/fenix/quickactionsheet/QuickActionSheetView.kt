@@ -130,7 +130,7 @@ class QuickActionSheetView(
             }
         )
 
-        if (quickActionSheetState.bounceNeeded && view.context.settings.shouldAutoBounceQuickActionSheet) {
+        if (quickActionSheetState.bounceNeeded && view.context.settings().shouldAutoBounceQuickActionSheet) {
             quickActionSheet.bounceSheet()
         }
 
@@ -140,7 +140,7 @@ class QuickActionSheetView(
     }
 
     private fun notifyReaderModeButton(readable: Boolean) {
-        val settings = view.context.settings.preferences
+        val settings = view.context.settings().preferences
         val shouldNotifyKey = view.context.getString(R.string.pref_key_reader_mode_notification)
 
         @DrawableRes

@@ -42,7 +42,7 @@ class CrashReporterFragment : Fragment() {
             session = requireComponents.core.sessionManager.selectedSession,
             navController = findNavController(),
             components = requireComponents,
-            settings = requireContext().settings
+            settings = requireContext().settings()
         )
 
         restoreTabButton.setOnClickListener {

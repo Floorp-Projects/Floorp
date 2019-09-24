@@ -96,10 +96,10 @@ class SearchFragment : Fragment(), BackHandler {
                     showShortcutEnginePicker = displayShortcutEnginePicker,
                     searchEngineSource = currentSearchEngine,
                     defaultEngineSource = currentSearchEngine,
-                    showSearchSuggestions = requireContext().settings.shouldShowSearchSuggestions,
-                    showClipboardSuggestions = requireContext().settings.shouldShowClipboardSuggestions,
-                    showHistorySuggestions = requireContext().settings.shouldShowHistorySuggestions,
-                    showBookmarkSuggestions = requireContext().settings.shouldShowBookmarkSuggestions,
+                    showSearchSuggestions = requireContext().settings().shouldShowSearchSuggestions,
+                    showClipboardSuggestions = requireContext().settings().shouldShowClipboardSuggestions,
+                    showHistorySuggestions = requireContext().settings().shouldShowHistorySuggestions,
+                    showBookmarkSuggestions = requireContext().settings().shouldShowBookmarkSuggestions,
                     session = session,
                     pastedText = pastedText
                 )
@@ -230,7 +230,7 @@ class SearchFragment : Fragment(), BackHandler {
         val currentDefaultEngine =
             requireComponents.search.searchEngineManager.getDefaultSearchEngine(
                 requireContext(),
-                requireContext().settings.defaultSearchEngineName
+                requireContext().settings().defaultSearchEngineName
             )
 
         if (searchStore.state.defaultEngineSource.searchEngine != currentDefaultEngine) {
@@ -322,7 +322,7 @@ class SearchFragment : Fragment(), BackHandler {
     }
 
     private fun historyStorageProvider(): HistoryStorage? {
-        return if (requireContext().settings.shouldShowHistorySuggestions) {
+        return if (requireContext().settings().shouldShowHistorySuggestions) {
             requireComponents.core.historyStorage
         } else null
     }

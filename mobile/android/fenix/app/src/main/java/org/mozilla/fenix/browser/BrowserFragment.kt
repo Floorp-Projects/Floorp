@@ -395,12 +395,12 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
             val yOffset = -containerHeight - (browserToolbarView.view.height / THREE * 2)
 
             trackingOnboarding.showAsDropDown(tpIcon, xOffset, yOffset)
-            it.settings.incrementTrackingProtectionOnboardingCount()
+            it.settings().incrementTrackingProtectionOnboardingCount()
         }
     }
 
     private fun shouldShowTrackingProtectionOnboarding(session: Session) =
-        context?.settings?.shouldShowTrackingProtectionOnboarding ?: false &&
+        context?.settings()?.shouldShowTrackingProtectionOnboarding ?: false &&
                 session.trackerBlockingEnabled && session.trackersBlocked.isNotEmpty()
 
     companion object {

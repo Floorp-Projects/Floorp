@@ -23,7 +23,7 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
         SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
             when (key) {
                 getPreferenceKey(R.string.pref_key_telemetry) -> {
-                    if (sharedPreferences.getBoolean(key, requireContext().settings.isTelemetryEnabled)) {
+                    if (sharedPreferences.getBoolean(key, requireContext().settings().isTelemetryEnabled)) {
                         context?.components?.analytics?.metrics?.start()
                     } else {
                         context?.components?.analytics?.metrics?.stop()
@@ -56,7 +56,7 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
         setPreferencesFromResource(R.xml.data_choices_preferences, rootKey)
 
         findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_telemetry))?.apply {
-            isChecked = context.settings.isTelemetryEnabled
+            isChecked = context.settings().isTelemetryEnabled
 
             val appName = context.getString(R.string.app_name)
             summary = context.getString(R.string.preferences_usage_data_description, appName)
@@ -65,7 +65,7 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
         }
 
         findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_experimentation))?.apply {
-            isChecked = context.settings.isExperimentationEnabled
+            isChecked = context.settings().isExperimentationEnabled
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
     }

@@ -66,9 +66,9 @@ class ToolbarIntegration(
                     val lottieDrawable = LottieDrawable()
                     lottieDrawable.composition = result
                     toolbar.displayTrackingProtectionIcon =
-                        context.settings.shouldUseTrackingProtection && FeatureFlags.etpCategories
+                        context.settings().shouldUseTrackingProtection && FeatureFlags.etpCategories
                     toolbar.displaySeparatorView =
-                        context.settings.shouldUseTrackingProtection && FeatureFlags.etpCategories
+                        context.settings().shouldUseTrackingProtection && FeatureFlags.etpCategories
 
                     toolbar.setTrackingProtectionIcons(
                         iconOnNoTrackersBlocked = AppCompatResources.getDrawable(
@@ -120,7 +120,7 @@ class ToolbarIntegration(
 
         ToolbarAutocompleteFeature(toolbar).apply {
             addDomainProvider(domainAutocompleteProvider)
-            if (context.settings.shouldShowHistorySuggestions) {
+            if (context.settings().shouldShowHistorySuggestions) {
                 addHistoryStorageProvider(historyStorage)
             }
         }

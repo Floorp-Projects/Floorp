@@ -81,7 +81,7 @@ class Analytics(
                 LeanplumMetricsService(context as Application),
                 AdjustMetricsService(context)
             ),
-            isTelemetryEnabled = { context.settings.isTelemetryEnabled }
+            isTelemetryEnabled = { context.settings().isTelemetryEnabled }
         )
     }
 }

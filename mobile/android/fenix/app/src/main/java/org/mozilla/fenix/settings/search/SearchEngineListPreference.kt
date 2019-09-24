@@ -69,7 +69,7 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
         val selectedSearchEngine =
             context.components.search.searchEngineManager.getDefaultSearchEngine(
                 context,
-                context.settings.defaultSearchEngineName
+                context.settings().defaultSearchEngineName
             ).identifier
 
         searchEngineGroup!!.removeAllViews()

@@ -229,7 +229,7 @@ class HomeFragment : Fragment() {
 
             val searchEngine = requireComponents.search.searchEngineManager.getDefaultSearchEngineAsync(
                 requireContext(),
-                requireContext().settings.defaultSearchEngineName
+                requireContext().settings().defaultSearchEngineName
             )
             val searchIcon = BitmapDrawable(resources, searchEngine.icon)
             searchIcon.setBounds(0, 0, iconSize, iconSize)
@@ -269,7 +269,7 @@ class HomeFragment : Fragment() {
             invokePendingDeleteJobs()
 
             if (newMode == BrowsingMode.Private) {
-                requireContext().settings.incrementNumTimesPrivateModeOpened()
+                requireContext().settings().incrementNumTimesPrivateModeOpened()
             }
 
             if (onboarding.userHasBeenOnboarded()) {
@@ -325,7 +325,6 @@ class HomeFragment : Fragment() {
                 }
             }
         }, owner = this)
-
         if (context.settings().showPrivateModeContextualFeatureRecommender &&
             browsingModeManager.mode.isPrivate) {
             recommendPrivateBrowsingShortcut()

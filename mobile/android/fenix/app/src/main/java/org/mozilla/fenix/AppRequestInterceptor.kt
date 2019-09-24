@@ -31,7 +31,7 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
 
     private fun adjustTrackingProtection(host: String, context: Context, session: EngineSession) {
         val trackingProtectionException = ExceptionDomains(context).load().contains(host)
-        val trackingProtectionEnabled = context.settings.shouldUseTrackingProtection
+        val trackingProtectionEnabled = context.settings().shouldUseTrackingProtection
         if (trackingProtectionException || !trackingProtectionEnabled) {
             session.disableTrackingProtection()
         } else {

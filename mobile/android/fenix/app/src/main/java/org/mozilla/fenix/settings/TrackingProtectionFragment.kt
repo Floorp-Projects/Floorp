@@ -49,9 +49,9 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         val trackingProtectionKey = getPreferenceKey(R.string.pref_key_tracking_protection)
         val preferenceTP = findPreference<SwitchPreference>(trackingProtectionKey)
 
-        preferenceTP?.isChecked = context!!.settings.shouldUseTrackingProtection
+        preferenceTP?.isChecked = requireContext().settings().shouldUseTrackingProtection
         preferenceTP?.setOnPreferenceChangeListener<Boolean> { preference, trackingProtectionOn ->
-            preference.context.settings.shouldUseTrackingProtection =
+            preference.context.settings().shouldUseTrackingProtection =
                 trackingProtectionOn
             with(preference.context.components) {
                 val policy = core.createTrackingProtectionPolicy(trackingProtectionOn)

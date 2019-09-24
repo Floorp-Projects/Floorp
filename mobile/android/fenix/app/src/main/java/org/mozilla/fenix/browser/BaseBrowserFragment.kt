@@ -532,7 +532,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
      * Updates the site permissions rules based on user settings.
      */
     private fun assignSitePermissionsRules() {
-        val settings = requireContext().settings
+        val settings = requireContext().settings()
 
         val rules: SitePermissionsRules = settings.getSitePermissionsCustomSettingsRules()
 

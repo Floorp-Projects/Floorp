@@ -38,7 +38,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {
     private lateinit var radioAllow: RadioButton
     private lateinit var radioBlock: RadioButton
     private lateinit var blockedByAndroidView: View
-    val settings by lazy { requireContext().settings }
+    val settings by lazy { requireContext().settings() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

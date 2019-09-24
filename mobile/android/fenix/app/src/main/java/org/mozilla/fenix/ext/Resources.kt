@@ -26,11 +26,11 @@ fun Resources.getSpannable(@StringRes id: Int, spanParts: List<Pair<Any, Iterabl
     return resultCreator.toSpannableString()
 }
 
-@Suppress("Deprecation")
 private fun getLocale(configuration: Configuration) =
     if (SDK_INT >= Build.VERSION_CODES.N) {
         configuration.locales[0]
     } else {
+        @Suppress("Deprecation")
         configuration.locale
     }
 
@@ -51,11 +51,11 @@ class SpannableStringCreator {
         length += newText.length
     }
 
-    fun toSpannableString() = SpannableString((parts.joinToString(""))).apply {
+    fun toSpannableString() = SpannableString(parts.joinToString("")).apply {
         spanMap.forEach { entry ->
             val range = entry.key
             entry.value.forEach {
-                setSpan(it, range.start, range.endInclusive, SPAN_EXCLUSIVE_EXCLUSIVE)
+                setSpan(it, range.first, range.last, SPAN_EXCLUSIVE_EXCLUSIVE)
             }
         }
     }

@@ -158,7 +158,7 @@ class BackgroundServices(
         setOf("https://identity.mozilla.com/apps/oldsync")
     ).also { accountManager ->
         // TODO this needs to change once we have a SyncManager
-        context.settings.fxaHasSyncedItems = syncConfig?.supportedEngines?.isNotEmpty() ?: false
+        context.settings().fxaHasSyncedItems = syncConfig?.supportedEngines?.isNotEmpty() ?: false
         accountManager.registerForDeviceEvents(deviceEventObserver, ProcessLifecycleOwner.get(), false)
 
         // Register a telemetry account observer to keep track of FxA auth metrics.
@@ -244,13 +244,13 @@ class TelemetryAccountObserver(
                 metricController.track(Event.SyncAuthOtherExternal)
         }
         // Used by Leanplum as a context variable.
-        context.settings.fxaSignedIn = true
+        context.settings().fxaSignedIn = true
     }
 
     override fun onLoggedOut() {
         metricController.track(Event.SyncAuthSignOut)
         // Used by Leanplum as a context variable.
-        context.settings.fxaSignedIn = false
+        context.settings().fxaSignedIn = false
     }
 }
 

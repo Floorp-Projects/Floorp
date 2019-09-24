@@ -50,15 +50,15 @@ class Core(private val context: Context) {
     val engine: Engine by lazy {
         val defaultSettings = DefaultSettings(
             requestInterceptor = AppRequestInterceptor(context),
-            remoteDebuggingEnabled = context.settings.isRemoteDebuggingEnabled,
+            remoteDebuggingEnabled = context.settings().isRemoteDebuggingEnabled,
             testingModeEnabled = false,
             trackingProtectionPolicy = createTrackingProtectionPolicy(),
             historyTrackingDelegate = HistoryDelegate(historyStorage),
             preferredColorScheme = getPreferredColorScheme(),
-            automaticFontSizeAdjustment = context.settings.shouldUseAutoSize,
-            fontInflationEnabled = context.settings.shouldUseAutoSize,
+            automaticFontSizeAdjustment = context.settings().shouldUseAutoSize,
+            fontInflationEnabled = context.settings().shouldUseAutoSize,
             suspendMediaWhenInactive = !FeatureFlags.mediaIntegration,
-            allowAutoplayMedia = context.settings.isAutoPlayEnabled
+            allowAutoplayMedia = context.settings().isAutoPlayEnabled
         )
 
         GeckoEngine(context, defaultSettings, GeckoProvider.getOrCreateRuntime(context)).also {
@@ -162,11 +162,11 @@ class Core(private val context: Context) {
      * @return the constructed tracking protection policy based on preferences.
      */
     fun createTrackingProtectionPolicy(
-        normalMode: Boolean = context.settings.shouldUseTrackingProtection,
+        normalMode: Boolean = context.settings().shouldUseTrackingProtection,
         privateMode: Boolean = true
     ): TrackingProtectionPolicy {
         val trackingProtectionPolicy =
-            if (context.settings.useStrictTrackingProtection) TrackingProtectionPolicy.strict() else
+            if (context.settings().useStrictTrackingProtection) TrackingProtectionPolicy.strict() else
                 TrackingProtectionPolicy.recommended()
 
         return when {
@@ -185,8 +185,8 @@ class Core(private val context: Context) {
             (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
                     Configuration.UI_MODE_NIGHT_YES
         return when {
-            context.settings.shouldUseDarkTheme -> PreferredColorScheme.Dark
-            context.settings.shouldUseLightTheme -> PreferredColorScheme.Light
+            context.settings().shouldUseDarkTheme -> PreferredColorScheme.Dark
+            context.settings().shouldUseLightTheme -> PreferredColorScheme.Light
             inDark -> PreferredColorScheme.Dark
             else -> PreferredColorScheme.Light
         }

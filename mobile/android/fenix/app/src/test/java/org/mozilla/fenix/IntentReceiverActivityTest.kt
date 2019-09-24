@@ -35,7 +35,7 @@ class IntentReceiverActivityTest {
     @Test
     fun `process intent with alwaysOpenInPrivateMode set to true`() {
         runBlockingTest {
-            testContext.settings.alwaysOpenInPrivateMode = true
+            testContext.settings().alwaysOpenInPrivateMode = true
 
             val intent = Intent()
             `when`(testContext.components.intentProcessors.privateIntentProcessor.process(intent)).thenReturn(true)
@@ -52,7 +52,7 @@ class IntentReceiverActivityTest {
     @Test
     fun `process intent with alwaysOpenInPrivateMode set to false`() {
         runBlockingTest {
-            testContext.settings.alwaysOpenInPrivateMode = false
+            testContext.settings().alwaysOpenInPrivateMode = false
 
             val intent = Intent()
             `when`(testContext.components.intentProcessors.intentProcessor.process(intent)).thenReturn(true)

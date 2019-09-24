@@ -68,7 +68,7 @@ class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view
             }
         }
 
-        with(view.context.settings) {
+        with(view.context.settings()) {
             val radio = when {
                 this.shouldUseLightTheme -> radioLightTheme
                 this.shouldUseDarkTheme -> radioDarkTheme

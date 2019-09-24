@@ -45,7 +45,7 @@ class OnboardingRadioButton(context: Context, attrs: AttributeSet) : AppCompatRa
 
     private fun updateRadioValue(isChecked: Boolean) {
         this.isChecked = isChecked
-        context.settings.preferences.edit {
+        context.settings().preferences.edit {
             putBoolean(context.getString(key), isChecked)
         }
     }
