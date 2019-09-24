@@ -13,19 +13,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 this.sharedPreferences = class extends ExtensionAPI {
   getAPI(context) {
-    const extensionIDBase = context.extension.id.split("@")[0];
-    const extensionBaseKey = `extensions.${extensionIDBase}`;
-
     return {
       sharedPreferences: {
         async setBoolPref(name, value) {
           if (!Services.androidBridge || !Services.androidBridge.isFennec) {
             return;
           }
-          SharedPreferences.forApp().setBoolPref(
-            `${extensionBaseKey}.${value}`,
-            value
-          );
+          SharedPreferences.forApp().setBoolPref(name, value);
         },
       },
     };
