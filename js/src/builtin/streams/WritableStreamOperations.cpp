@@ -15,6 +15,7 @@
 
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
 #include "vm/JSObject-inl.h"                 // js::NewObjectWithClassProto
+#include "vm/List-inl.h"                     // js::StoreNewListInFixedSlot
 
 using js::WritableStream;
 
@@ -46,10 +47,41 @@ MOZ_MUST_USE /* static */
   stream->initWritableState();
 
   // Step 1: Set stream.[[state]] to "writable".
-  // Step 4: Set stream.[[backpressure]] to false.
   MOZ_ASSERT(stream->writable());
+
+  // Step 2: Set stream.[[storedError]], stream.[[writer]],
+  //         stream.[[writableStreamController]],
+  //         stream.[[inFlightWriteRequest]], stream.[[closeRequest]],
+  //         stream.[[inFlightCloseRequest]] and stream.[[pendingAbortRequest]]
+  //         to undefined.
+  MOZ_ASSERT(stream->storedError().isUndefined());
+  MOZ_ASSERT(!stream->hasWriter());
+  MOZ_ASSERT(!stream->hasController());
+  MOZ_ASSERT(!stream->haveInFlightWriteRequest());
+  MOZ_ASSERT(stream->inFlightWriteRequest().isUndefined());
+  MOZ_ASSERT(stream->closeRequest().isUndefined());
+  MOZ_ASSERT(stream->inFlightCloseRequest().isUndefined());
+  MOZ_ASSERT(!stream->hasPendingAbortRequest());
+
+  // Step 3: Set stream.[[writeRequests]] to a new empty List.
+  if (!StoreNewListInFixedSlot(cx, stream,
+                               WritableStream::Slot_WriteRequests)) {
+    return nullptr;
+  }
+
+  // Step 4: Set stream.[[backpressure]] to false.
   MOZ_ASSERT(!stream->backpressure());
 
-  // XXX jwalden need to keep fleshin' out here
   return stream;
+}
+
+void WritableStream::clearInFlightWriteRequest(JSContext* cx) {
+  MOZ_ASSERT(stateIsInitialized());
+  MOZ_ASSERT(haveInFlightWriteRequest());
+
+  writeRequests()->popFirst(cx);
+  setFlag(HaveInFlightWriteRequest, false);
+
+  MOZ_ASSERT(!haveInFlightWriteRequest());
+  MOZ_ASSERT(inFlightWriteRequest().isUndefined());
 }
