@@ -46,7 +46,7 @@ SOURCES += [
     'utils.c'
 ]
 
-if not CONFIG['MOZ_FFVPX_FLACONLY']:
+if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
     SOURCES += [
         'adler32.c',
         'base64.c',
