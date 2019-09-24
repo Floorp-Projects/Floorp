@@ -12,7 +12,7 @@ public:
   MustOverrideChecker(StringRef CheckName, ContextType *Context = nullptr)
       : BaseCheck(CheckName, Context), CI(nullptr) {}
   void registerMatchers(MatchFinder *AstMatcher) override;
-  void registerPPCallbacks(CompilerInstance &CI) override;
+  void registerCompilerInstance(CompilerInstance &CI) override;
   void check(const MatchFinder::MatchResult &Result) override;
 
 private:
