@@ -738,8 +738,7 @@ nsresult LoadInfoArgsToLoadInfo(
   Maybe<mozilla::ipc::CSPInfo> cspToInheritInfo =
       loadInfoArgs.cspToInheritInfo();
   if (cspToInheritInfo.isSome()) {
-    nsCOMPtr<Document> doc = do_QueryInterface(aLoadingContext);
-    cspToInherit = CSPInfoToCSP(cspToInheritInfo.ref(), doc);
+    cspToInherit = CSPInfoToCSP(cspToInheritInfo.ref(), nullptr);
   }
 
   RefPtr<mozilla::LoadInfo> loadInfo = new mozilla::LoadInfo(
