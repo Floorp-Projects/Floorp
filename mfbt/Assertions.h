@@ -21,6 +21,10 @@
 #include "mozilla/Types.h"
 #ifdef MOZ_DUMP_ASSERTION_STACK
 #  include "nsTraceRefcnt.h"
+#  ifdef ANDROID
+#    include "mozilla/StackWalk.h"
+#    include <algorithm>
+#  endif
 #endif
 
 /*
@@ -161,6 +165,21 @@ MOZ_ReportAssertionFailure(const char* aStr, const char* aFilename,
   __android_log_print(ANDROID_LOG_FATAL, "MOZ_Assert",
                       "Assertion failure: %s, at %s:%d\n", aStr, aFilename,
                       aLine);
+#  if defined(MOZ_DUMP_ASSERTION_STACK)
+  nsTraceRefcnt::WalkTheStack(
+      [](uint32_t aFrameNumber, void* aPC, void* aSP, void* aClosure) {
+        MozCodeAddressDetails details;
+        static const size_t buflen = 1024;
+        char buf[buflen + 1];  // 1 for trailing '\n'
+
+        MozDescribeCodeAddress(aPC, &details);
+        MozFormatCodeAddressDetails(buf, buflen, aFrameNumber, aPC, &details);
+        size_t len = std::min(strlen(buf), buflen + 1 - 2);
+        buf[len++] = '\n';
+        buf[len] = '\0';
+        __android_log_print(ANDROID_LOG_FATAL, "MOZ_Assert", "%s", buf);
+      });
+#  endif
 #else
   fprintf(stderr, "Assertion failure: %s, at %s:%d\n", aStr, aFilename, aLine);
 #  if defined(MOZ_DUMP_ASSERTION_STACK)
