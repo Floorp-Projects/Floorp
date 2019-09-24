@@ -235,6 +235,17 @@ static uint32_t StartupExtraDefaultFeatures() {
   return ProfilerFeature::MainThreadIO;
 }
 
+// Does `aFeatures` include any feature that requires stack sampling to run?
+static constexpr bool FeaturesImplyStackSampling(uint32_t aFeatures) {
+  // Currently, StackWalk (or just Leaf) and JS require the sampler to record
+  // stack traces.
+  // Previously, turning off all these still recorded stacks with only labels.
+  // TODO: Evaluate whether label-only stacks are useful, and whether there
+  // should be a separate feature to turn off stack samples. See bug 1583430.
+  return aFeatures & (ProfilerFeature::JS | ProfilerFeature::Leaf |
+                      ProfilerFeature::StackWalk);
+}
+
 // The class is a thin shell around mozglue PlatformMutex. It does not preserve
 // behavior in JS record/replay. It provides a mechanism to determine if it is
 // locked or not in order for memory hooks to avoid re-entering the profiler
@@ -566,9 +577,7 @@ class ActivePS {
         mSamplerThread(NewSamplerThread(aLock, mGeneration, aInterval)),
         mInterposeObserver(ProfilerFeature::HasMainThreadIO(aFeatures)
                                ? new ProfilerIOInterposeObserver()
-                               : nullptr)
-#undef HAS_FEATURE
-        ,
+                               : nullptr),
         mIsPaused(false)
 #if defined(GP_OS_linux)
         ,
@@ -2389,7 +2398,7 @@ static void PrintUsageThenExit(int aExitCode) {
       "  MOZ_PROFILER_STARTUP_ENTRIES (or its default value), and no\n"
       "  additional time duration restriction will be applied.\n"
       "\n"
-      "  MOZ_PROFILER_STARTUP_INTERVAL=<1..1000>\n"
+      "  MOZ_PROFILER_STARTUP_INTERVAL=<1..%d>\n"
       "  If MOZ_PROFILER_STARTUP is set, specifies the sample interval,\n"
       "  measured in milliseconds, when the profiler is first started.\n"
       "  If unset, the platform default is used.\n"
@@ -2410,7 +2419,8 @@ static void PrintUsageThenExit(int aExitCode) {
       unsigned(PROFILER_DEFAULT_ENTRIES.Value()),
       unsigned(PROFILER_DEFAULT_STARTUP_ENTRIES.Value()),
       unsigned(PROFILER_DEFAULT_ENTRIES.Value() * 8),
-      unsigned(PROFILER_DEFAULT_STARTUP_ENTRIES.Value() * 8));
+      unsigned(PROFILER_DEFAULT_STARTUP_ENTRIES.Value() * 8),
+      PROFILER_MAX_INTERVAL);
 
 #define PRINT_FEATURE(n_, str_, Name_, desc_)                                  \
   printf("    %c %5u: \"%s\" (%s)\n", FeatureCategory(ProfilerFeature::Name_), \
@@ -2573,6 +2583,16 @@ static SamplerThread* NewSamplerThread(PSLockRef aLock, uint32_t aGeneration,
 void SamplerThread::Run() {
   PR_SetCurrentThreadName("SamplerThread");
 
+  // Features won't change during this SamplerThread's lifetime, so we can
+  // determine now whether stack sampling is required.
+  const bool stackSamplingRequired = []() {
+    PSAutoLock lock(gPSMutex);
+    if (!ActivePS::Exists(lock)) {
+      return false;
+    }
+    return FeaturesImplyStackSampling(ActivePS::Features(lock));
+  }();
+
   // Use local BlocksRingBuffer&ProfileBuffer to capture the stack.
   // (This is to avoid touching the CorePS::BlocksRingBuffer lock while
   // a thread is suspended, because that thread could be working with
@@ -2612,9 +2632,6 @@ void SamplerThread::Run() {
       TimeStamp expiredMarkersCleaned = TimeStamp::NowUnfuzzed();
 
       if (!ActivePS::IsPaused(lock)) {
-        const Vector<LiveProfiledThreadData>& liveThreads =
-            ActivePS::LiveProfiledThreads(lock);
-
         TimeDuration delta = sampleStart - CorePS::ProcessStartTime();
         ProfileBuffer& buffer = ActivePS::Buffer(lock);
 
@@ -2639,91 +2656,98 @@ void SamplerThread::Run() {
         }
         TimeStamp countersSampled = TimeStamp::NowUnfuzzed();
 
-        for (auto& thread : liveThreads) {
-          RegisteredThread* registeredThread = thread.mRegisteredThread;
-          ProfiledThreadData* profiledThreadData =
-              thread.mProfiledThreadData.get();
-          RefPtr<ThreadInfo> info = registeredThread->Info();
+        if (stackSamplingRequired) {
+          const Vector<LiveProfiledThreadData>& liveThreads =
+              ActivePS::LiveProfiledThreads(lock);
 
-          // If the thread is asleep and has been sampled before in the same
-          // sleep episode, find and copy the previous sample, as that's
-          // cheaper than taking a new sample.
-          if (registeredThread->RacyRegisteredThread()
-                  .CanDuplicateLastSampleDueToSleep()) {
-            bool dup_ok = ActivePS::Buffer(lock).DuplicateLastSample(
-                info->ThreadId(), CorePS::ProcessStartTime(),
-                profiledThreadData->LastSample());
-            if (dup_ok) {
-              continue;
+          for (auto& thread : liveThreads) {
+            RegisteredThread* registeredThread = thread.mRegisteredThread;
+            ProfiledThreadData* profiledThreadData =
+                thread.mProfiledThreadData.get();
+            RefPtr<ThreadInfo> info = registeredThread->Info();
+
+            // If the thread is asleep and has been sampled before in the same
+            // sleep episode, find and copy the previous sample, as that's
+            // cheaper than taking a new sample.
+            if (registeredThread->RacyRegisteredThread()
+                    .CanDuplicateLastSampleDueToSleep()) {
+              bool dup_ok = ActivePS::Buffer(lock).DuplicateLastSample(
+                  info->ThreadId(), CorePS::ProcessStartTime(),
+                  profiledThreadData->LastSample());
+              if (dup_ok) {
+                continue;
+              }
             }
+
+            ThreadResponsiveness* resp =
+                profiledThreadData->GetThreadResponsiveness();
+            if (resp) {
+              resp->Update();
+            }
+
+            AUTO_PROFILER_STATS(gecko_SamplerThread_Run_DoPeriodicSample);
+
+            TimeStamp now = TimeStamp::NowUnfuzzed();
+
+            // Add the thread ID now, so we know its position in the main
+            // buffer, which is used by some JS data.
+            // (DoPeriodicSample only knows about the temporary local buffer.)
+            uint64_t samplePos =
+                buffer.AddThreadIdEntry(registeredThread->Info()->ThreadId());
+            profiledThreadData->LastSample() = Some(samplePos);
+
+            // Also add the time, so it's always there after the thread ID, as
+            // expected by the parser. (Other stack data is optional.)
+            TimeDuration delta = now - CorePS::ProcessStartTime();
+            buffer.AddEntry(ProfileBufferEntry::TimeBeforeCompactStack(
+                delta.ToMilliseconds()));
+
+            // Suspend the thread and collect its stack data in the local
+            // buffer.
+            mSampler.SuspendAndSampleAndResumeThread(
+                lock, *registeredThread, [&](const Registers& aRegs) {
+                  DoPeriodicSample(lock, *registeredThread, *profiledThreadData,
+                                   now, aRegs, samplePos, localProfileBuffer);
+                });
+
+            // There *must* be a CompactStack after a TimeBeforeCompactStack;
+            // but note that other entries may have been concurrently inserted
+            // between the TimeBeforeCompactStack above and now. If the captured
+            // sample from `DoPeriodicSample` is complete, copy it into the
+            // global buffer, otherwise add an empty one to satisfy the parser
+            // that expects one.
+            auto state = localBlocksRingBuffer.GetState();
+            if (NS_WARN_IF(state.mClearedBlockCount !=
+                           previousState.mClearedBlockCount)) {
+              LOG("Stack sample too big for local storage, needed %u bytes",
+                  unsigned(state.mRangeEnd.ConvertToU64() -
+                           previousState.mRangeEnd.ConvertToU64()));
+              // There *must* be a CompactStack after a TimeBeforeCompactStack,
+              // even an empty one.
+              CorePS::CoreBlocksRingBuffer().PutObjects(
+                  ProfileBufferEntry::Kind::CompactStack,
+                  UniquePtr<BlocksRingBuffer>(nullptr));
+            } else if (state.mRangeEnd.ConvertToU64() -
+                           previousState.mRangeEnd.ConvertToU64() >=
+                       CorePS::CoreBlocksRingBuffer().BufferLength()->Value()) {
+              LOG("Stack sample too big for profiler storage, needed %u bytes",
+                  unsigned(state.mRangeEnd.ConvertToU64() -
+                           previousState.mRangeEnd.ConvertToU64()));
+              // There *must* be a CompactStack after a TimeBeforeCompactStack,
+              // even an empty one.
+              CorePS::CoreBlocksRingBuffer().PutObjects(
+                  ProfileBufferEntry::Kind::CompactStack,
+                  UniquePtr<BlocksRingBuffer>(nullptr));
+            } else {
+              CorePS::CoreBlocksRingBuffer().PutObjects(
+                  ProfileBufferEntry::Kind::CompactStack,
+                  localBlocksRingBuffer);
+            }
+
+            // Clean up for the next run.
+            localBlocksRingBuffer.Clear();
+            previousState = localBlocksRingBuffer.GetState();
           }
-
-          ThreadResponsiveness* resp =
-              profiledThreadData->GetThreadResponsiveness();
-          if (resp) {
-            resp->Update();
-          }
-
-          AUTO_PROFILER_STATS(gecko_SamplerThread_Run_DoPeriodicSample);
-
-          TimeStamp now = TimeStamp::NowUnfuzzed();
-
-          // Add the thread ID now, so we know its position in the main buffer,
-          // which is used by some JS data.
-          // (DoPeriodicSample only knows about the temporary local buffer.)
-          uint64_t samplePos =
-              buffer.AddThreadIdEntry(registeredThread->Info()->ThreadId());
-          profiledThreadData->LastSample() = Some(samplePos);
-
-          // Also add the time, so it's always there after the thread ID, as
-          // expected by the parser. (Other stack data is optional.)
-          TimeDuration delta = now - CorePS::ProcessStartTime();
-          buffer.AddEntry(ProfileBufferEntry::TimeBeforeCompactStack(
-              delta.ToMilliseconds()));
-
-          // Suspend the thread and collect its stack data in the local buffer.
-          mSampler.SuspendAndSampleAndResumeThread(
-              lock, *registeredThread, [&](const Registers& aRegs) {
-                DoPeriodicSample(lock, *registeredThread, *profiledThreadData,
-                                 now, aRegs, samplePos, localProfileBuffer);
-              });
-
-          // There *must* be a CompactStack after a TimeBeforeCompactStack; but
-          // note that other entries may have been concurrently inserted between
-          // the TimeBeforeCompactStack above and now. If the captured sample
-          // from `DoPeriodicSample` is complete, copy it into the global
-          // buffer, otherwise add an empty one to satisfy the parser that
-          // expects one.
-          auto state = localBlocksRingBuffer.GetState();
-          if (NS_WARN_IF(state.mClearedBlockCount !=
-                         previousState.mClearedBlockCount)) {
-            LOG("Stack sample too big for local storage, needed %u bytes",
-                unsigned(state.mRangeEnd.ConvertToU64() -
-                         previousState.mRangeEnd.ConvertToU64()));
-            // There *must* be a CompactStack after a TimeBeforeCompactStack,
-            // even an empty one.
-            CorePS::CoreBlocksRingBuffer().PutObjects(
-                ProfileBufferEntry::Kind::CompactStack,
-                UniquePtr<BlocksRingBuffer>(nullptr));
-          } else if (state.mRangeEnd.ConvertToU64() -
-                         previousState.mRangeEnd.ConvertToU64() >=
-                     CorePS::CoreBlocksRingBuffer().BufferLength()->Value()) {
-            LOG("Stack sample too big for profiler storage, needed %u bytes",
-                unsigned(state.mRangeEnd.ConvertToU64() -
-                         previousState.mRangeEnd.ConvertToU64()));
-            // There *must* be a CompactStack after a TimeBeforeCompactStack,
-            // even an empty one.
-            CorePS::CoreBlocksRingBuffer().PutObjects(
-                ProfileBufferEntry::Kind::CompactStack,
-                UniquePtr<BlocksRingBuffer>(nullptr));
-          } else {
-            CorePS::CoreBlocksRingBuffer().PutObjects(
-                ProfileBufferEntry::Kind::CompactStack, localBlocksRingBuffer);
-          }
-
-          // Clean up for the next run.
-          localBlocksRingBuffer.Clear();
-          previousState = localBlocksRingBuffer.GetState();
         }
 
 #if defined(USE_LUL_STACKWALK)
@@ -3109,7 +3133,7 @@ void profiler_init(void* aStackTop) {
     if (startupInterval && startupInterval[0] != '\0') {
       errno = 0;
       interval = PR_strtod(startupInterval, nullptr);
-      if (errno == 0 && interval > 0.0 && interval <= 1000.0) {
+      if (errno == 0 && interval > 0.0 && interval <= PROFILER_MAX_INTERVAL) {
         LOG("- MOZ_PROFILER_STARTUP_INTERVAL = %f", interval);
       } else {
         LOG("- MOZ_PROFILER_STARTUP_INTERVAL not a valid float: %s",
