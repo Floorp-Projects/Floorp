@@ -19,8 +19,8 @@ job-defaults:
     description: mark release as shipped in Ship-It
     worker-type:
         by-release-level:
-            production: scriptworker-prov-v1/shipit-v1
-            staging: scriptworker-prov-v1/shipit-dev
+            production: scriptworker-k8s/gecko-3-shipit
+            staging: scriptworker-k8s/gecko-1-shipit
     worker:
         implementation: shipit-shipped
     scopes:
