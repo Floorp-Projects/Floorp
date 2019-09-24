@@ -12,6 +12,19 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+# 14.0.1
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v14.0.0...v14.0.1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v14.0.1/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v14.0.1/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v14.0.1/buildSrc/src/main/java/Config.kt)
+
+* **feature-collections**
+  * Fixed [#4514](https://github.com/mozilla-mobile/android-components/issues/4514): Do not restore parent tab ID for collections.
+
+* **service-glean**
+  *  PR [#4511](https://github.com/mozilla-mobile/android-components/pull/4511/): Always set 'wasMigrated' to false in the Glean SDK.
+
 # 14.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v13.0.0...v14.0.0)
@@ -36,7 +49,7 @@ permalink: /changelog/
             //A throwable indication what went wrong
         }
     )
-  ``
+  ```
 
 * **browser-toolbar**
   * Resized icons on the toolbar see [#4490](https://github.com/mozilla-mobile/android-components/issues/4490) for more information.
@@ -44,7 +57,7 @@ permalink: /changelog/
   ```kotlin
   val toolbar = BrowserToolbar(context)
   toolbar.trackingProtectionColor = Color.BLUE
-  ``
+  ```
 
 * **All components**
   * Increased `androidx.browser` version to `1.2.0-alpha07`.
@@ -105,6 +118,16 @@ permalink: /changelog/
 
 * **feature-accounts**
   * Added ability to configure FxaWebChannelFeature with a set of `FxaCapability`. Currently there's just one: `CHOOSE_WHAT_TO_SYNC`. It defaults to `false`, so if you want "choose what to sync" selection during auth flows, please specify it.
+
+# 12.0.1
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v12.0.0...v12.0.1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v12.0.1/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v12.0.1/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v12.0.1/buildSrc/src/main/java/Config.kt)
+
+* **lib-push-amazon**
+  * Fixed [#4448](https://github.com/mozilla-mobile/android-components/issues/4458): Clearing app data does not reset the registration ID.
 
 # 12.0.0
 
