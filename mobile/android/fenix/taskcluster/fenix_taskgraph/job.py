@@ -46,7 +46,9 @@ def configure_gradlew(config, job, taskdesc):
     run["command"] = _extract_command(run)
     secrets = run.pop("secrets", [])
     scopes = taskdesc.setdefault("scopes", [])
-    scopes.extend(["secrets:get:{}".format(secret["name"]) for secret in secrets])
+    new_secret_scopes = ["secrets:get:{}".format(secret["name"]) for secret in secrets]
+    new_secret_scopes = list(set(new_secret_scopes))  # Scopes must not have any duplicates
+    scopes.extend(new_secret_scopes)
 
     run["cwd"] = "{checkout}"
     run["using"] = "run-task"
