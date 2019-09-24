@@ -12,6 +12,7 @@
 struct JSPrincipals;
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
+#include "nsString.h"
 #include "mozilla/DebugOnly.h"
 namespace mozilla {
 class OriginAttributes;
@@ -283,6 +284,17 @@ interface nsIPrincipal : nsISerializable
      * an expanded principal, which contains at least one addon principal.
      */
     [infallible] readonly attribute boolean isAddonOrExpandedAddonPrincipal;
+
+    %{C++
+    // MOZ_DBG support
+    friend std::ostream& operator<<(std::ostream& aOut, const nsIPrincipal& aPrincipal) {
+      nsIPrincipal* principal = const_cast<nsIPrincipal*>(&aPrincipal);
+      nsAutoCString origin;
+      mozilla::DebugOnly<nsresult> rv = principal->GetOrigin(origin);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+      return aOut << "nsIPrincipal { " << origin << " }";
+    }
+    %}
 };
 
 /**
