@@ -425,6 +425,7 @@ var gSync = {
         [this.brandStrings.GetStringFromName("syncBrandShortName")]
       );
       headerDescription = state.email;
+      mainWindowEl.style.removeProperty("--avatar-image-url");
     } else if (state.status === UIState.STATUS_NOT_VERIFIED) {
       stateValue = "unverified";
       headerTitle = this.fxaStrings.GetStringFromName(
