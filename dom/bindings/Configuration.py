@@ -286,8 +286,6 @@ class NoSuchDescriptorError(TypeError):
 
 def methodReturnsJSObject(method):
     assert method.isMethod()
-    if method.returnsPromise():
-        return True
 
     for signature in method.signatures():
         returnType = signature[0]
@@ -656,9 +654,11 @@ class Descriptor(DescriptorProvider):
         if member.isMethod():
             # JSObject-returning [NewObject] methods must be fallible,
             # since they have to (fallibly) allocate the new JSObject.
-            if (member.getExtendedAttribute("NewObject") and
-                methodReturnsJSObject(member)):
-                throws = True
+            if member.getExtendedAttribute("NewObject"):
+                if member.returnsPromise():
+                    throws = True
+                elif methodReturnsJSObject(member):
+                    canOOM = True
             attrs = self.extendedAttributes['all'].get(name, [])
             maybeAppendInfallibleToAttrs(attrs, throws)
             maybeAppendCanOOMToAttrs(attrs, canOOM)
