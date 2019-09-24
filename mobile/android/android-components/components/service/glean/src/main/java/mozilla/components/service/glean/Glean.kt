@@ -77,6 +77,10 @@ open class GleanInternalAPI internal constructor () {
         internal val KNOWN_CLIENT_ID = UUID.fromString(
             "c0ffeec0-ffee-c0ff-eec0-ffeec0ffeec0"
         )
+
+        // The SharedPreferences file containing migration settings used for upgrading
+        // from glean-ac to glean-core.
+        internal const val MIGRATION_PREFS_FILE = "mozilla.components.service.glean.GleanACDataMigrator"
     }
 
     /**
@@ -161,6 +165,9 @@ open class GleanInternalAPI internal constructor () {
         // the @MainThread decorator on this method.
         // See https://bugzilla.mozilla.org/show_bug.cgi?id=1581556
         ProcessLifecycleOwner.get().lifecycle.addObserver(gleanLifecycleObserver)
+
+        // Reset the migration status.
+        resetMigration()
     }
 
     /**
@@ -212,6 +219,26 @@ open class GleanInternalAPI internal constructor () {
      */
     fun getUploadEnabled(): Boolean {
         return uploadEnabled
+    }
+
+    /**
+     * Set the data migration flag to 'was not migrated'.
+     *
+     * This is only useful as a safety measure in case the data migration plan goes
+     * wrong and we're forced to downgrade the version Glean SDK consumers are using
+     * from glean-core to glean-ac. In that case, this code will run and will reset
+     * the status of the migration. When attempting the upgrade again, glean-core
+     * will perform the migration one more time.
+     */
+    private fun resetMigration() {
+        val migrationPrefs = applicationContext?.getSharedPreferences(
+            MIGRATION_PREFS_FILE,
+            Context.MODE_PRIVATE
+        )
+
+        // Just set this to 'false'. Once substituted, the glean-ac implementation
+        // will read the same file and perform the migration.
+        migrationPrefs?.edit()?.putBoolean("wasMigrated", false)?.apply()
     }
 
     /**
