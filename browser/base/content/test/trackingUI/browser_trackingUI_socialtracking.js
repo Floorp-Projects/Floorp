@@ -6,11 +6,14 @@
 const TRACKING_PAGE =
   "http://example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 
+const ST_PROTECTION_PREF = "privacy.trackingprotection.socialtracking.enabled";
+const ST_BLOCK_COOKIES_PREF = "privacy.socialtracking.block_cookies.enabled";
+
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["privacy.socialtracking.block_cookies.enabled", true],
-      ["privacy.trackingprotection.socialtracking.enabled", true],
+      [ST_PROTECTION_PREF, true],
+      [ST_BLOCK_COOKIES_PREF, true],
       [
         "urlclassifier.features.socialtracking.blacklistHosts",
         "socialtracking.example.com",
@@ -162,6 +165,78 @@ async function testSubview(hasException) {
   BrowserTestUtils.removeTab(tab);
 }
 
+async function testCategoryItem() {
+  Services.prefs.setBoolPref(ST_BLOCK_COOKIES_PREF, false);
+
+  let promise = BrowserTestUtils.openNewForegroundTab({
+    url: TRACKING_PAGE,
+    gBrowser,
+  });
+  let [tab] = await Promise.all([promise, waitForContentBlockingEvent()]);
+
+  let categoryItem = document.getElementById(
+    "protections-popup-category-socialblock"
+  );
+
+  ok(
+    !categoryItem.classList.contains("blocked"),
+    "Category not marked as blocked"
+  );
+  ok(
+    categoryItem.classList.contains("notFound"),
+    "Category marked as not found"
+  );
+  Services.prefs.setBoolPref(ST_BLOCK_COOKIES_PREF, true);
+  ok(categoryItem.classList.contains("blocked"), "Category marked as blocked");
+  ok(
+    categoryItem.classList.contains("notFound"),
+    "Category marked as not found"
+  );
+  Services.prefs.setBoolPref(ST_BLOCK_COOKIES_PREF, false);
+  ok(
+    !categoryItem.classList.contains("blocked"),
+    "Category not marked as blocked"
+  );
+  ok(
+    categoryItem.classList.contains("notFound"),
+    "Category marked as not found"
+  );
+
+  promise = waitForContentBlockingEvent();
+
+  await ContentTask.spawn(tab.linkedBrowser, {}, function() {
+    content.postMessage("socialtracking", "*");
+  });
+
+  await promise;
+
+  ok(
+    !categoryItem.classList.contains("blocked"),
+    "Category not marked as blocked"
+  );
+  ok(
+    !categoryItem.classList.contains("notFound"),
+    "Category not marked as not found"
+  );
+  Services.prefs.setBoolPref(ST_BLOCK_COOKIES_PREF, true);
+  ok(categoryItem.classList.contains("blocked"), "Category marked as blocked");
+  ok(
+    !categoryItem.classList.contains("notFound"),
+    "Category not marked as not found"
+  );
+  Services.prefs.setBoolPref(ST_BLOCK_COOKIES_PREF, false);
+  ok(
+    !categoryItem.classList.contains("blocked"),
+    "Category not marked as blocked"
+  );
+  ok(
+    !categoryItem.classList.contains("notFound"),
+    "Category not marked as not found"
+  );
+
+  BrowserTestUtils.removeTab(tab);
+}
+
 add_task(async function testIdentityUI() {
   requestLongerTimeout(2);
 
@@ -170,4 +245,6 @@ add_task(async function testIdentityUI() {
 
   await testSubview(false);
   await testSubview(true);
+
+  await testCategoryItem();
 });

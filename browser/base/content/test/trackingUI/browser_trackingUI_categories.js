@@ -4,7 +4,8 @@ const TP_PB_PREF = "privacy.trackingprotection.pbmode.enabled";
 const TPC_PREF = "network.cookie.cookieBehavior";
 const CM_PREF = "privacy.trackingprotection.cryptomining.enabled";
 const FP_PREF = "privacy.trackingprotection.fingerprinting.enabled";
-const ST_PREF = "privacy.socialtracking.block_cookies.enabled";
+const ST_PREF = "privacy.trackingprotection.socialtracking.enabled";
+const STC_PREF = "privacy.socialtracking.block_cookies.enabled";
 
 ChromeUtils.import(
   "resource://testing-common/CustomizableUITestUtils.jsm",
@@ -12,13 +13,14 @@ ChromeUtils.import(
 );
 
 registerCleanupFunction(function() {
+  Services.prefs.clearUserPref(CAT_PREF);
   Services.prefs.clearUserPref(TP_PREF);
   Services.prefs.clearUserPref(TP_PB_PREF);
   Services.prefs.clearUserPref(TPC_PREF);
-  Services.prefs.clearUserPref(CAT_PREF);
   Services.prefs.clearUserPref(CM_PREF);
   Services.prefs.clearUserPref(FP_PREF);
   Services.prefs.clearUserPref(ST_PREF);
+  Services.prefs.clearUserPref(STC_PREF);
 });
 
 add_task(async function testCookieCategoryLabels() {
@@ -162,7 +164,7 @@ let categoryItems = [
   "protections-popup-category-fingerprinters",
 ].map(id => document.getElementById(id));
 
-let categoryEnabledPrefs = [TP_PREF, ST_PREF, TPC_PREF, CM_PREF, FP_PREF];
+let categoryEnabledPrefs = [TP_PREF, STC_PREF, TPC_PREF, CM_PREF, FP_PREF];
 
 let detectedStateFlags = [
   Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT,
@@ -184,6 +186,8 @@ async function waitForClass(item, className, shouldBePresent = true) {
 }
 
 add_task(async function testCategorySections() {
+  Services.prefs.setBoolPref(ST_PREF, true);
+
   for (let pref of categoryEnabledPrefs) {
     if (pref == TPC_PREF) {
       Services.prefs.setIntPref(TPC_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT);
