@@ -6,7 +6,10 @@
 
 interface XPathEvaluator {
   constructor();
+};
+XPathEvaluator includes XPathEvaluatorMixin;
 
+interface mixin XPathEvaluatorMixin {
   [NewObject, Throws]
   XPathExpression createExpression(DOMString expression,
                                    optional XPathNSResolver? resolver = null);

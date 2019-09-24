@@ -618,7 +618,7 @@ partial interface Document {
   [Func="Document::DocumentSupportsL10n"] readonly attribute DocumentL10n? l10n;
 };
 
-Document implements XPathEvaluator;
+Document includes XPathEvaluatorMixin;
 Document includes GlobalEventHandlers;
 Document includes DocumentAndElementEventHandlers;
 Document implements TouchEventHandlers;
