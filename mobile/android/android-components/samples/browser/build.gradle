@@ -94,6 +94,7 @@ dependencies {
     implementation project(':feature-pwa')
     implementation project(':feature-findinpage')
     implementation project(':feature-sitepermissions')
+    implementation project(':feature-webcompat')
 
     implementation project(':ui-autocomplete')
 

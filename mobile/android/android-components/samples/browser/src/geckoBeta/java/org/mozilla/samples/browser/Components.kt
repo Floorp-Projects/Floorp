@@ -7,12 +7,15 @@ package org.mozilla.samples.browser
 import android.content.Context
 import mozilla.components.browser.engine.gecko.GeckoEngine
 import mozilla.components.concept.engine.Engine
+import mozilla.components.feature.webcompat.WebCompatFeature
 
 /**
  * Helper class for lazily instantiating components needed by the application.
  */
 class Components(applicationContext: Context) : DefaultComponents(applicationContext) {
     override val engine: Engine by lazy {
-        GeckoEngine(applicationContext, engineSettings)
+        GeckoEngine(applicationContext, engineSettings).also {
+            WebCompatFeature.install(it)
+        }
     }
 }
