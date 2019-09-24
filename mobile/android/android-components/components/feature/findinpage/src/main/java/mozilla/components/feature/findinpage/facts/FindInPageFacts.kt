@@ -9,6 +9,21 @@ import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.facts.collect
 
+/**
+ * Facts emitted for telemetry related to [FindInPageFeature]
+ */
+class FindInPageFacts {
+    /**
+     * Items that specify which portion of the [FindInPageFeature] was interacted with
+     */
+    object Items {
+        const val PREVIOUS = "previous"
+        const val NEXT = "next"
+        const val CLOSE = "close"
+        const val INPUT = "input"
+    }
+}
+
 private fun emitFindInPageFact(
     action: Action,
     item: String,
@@ -24,15 +39,8 @@ private fun emitFindInPageFact(
     ).collect()
 }
 
-private object FindInPageItems {
-    const val PREVIOUS = "previous"
-    const val NEXT = "next"
-    const val CLOSE = "close"
-    const val INPUT = "input"
-}
-
-internal fun emitCloseFact() = emitFindInPageFact(Action.CLICK, FindInPageItems.CLOSE)
-internal fun emitNextFact() = emitFindInPageFact(Action.CLICK, FindInPageItems.NEXT)
-internal fun emitPreviousFact() = emitFindInPageFact(Action.CLICK, FindInPageItems.PREVIOUS)
+internal fun emitCloseFact() = emitFindInPageFact(Action.CLICK, FindInPageFacts.Items.CLOSE)
+internal fun emitNextFact() = emitFindInPageFact(Action.CLICK, FindInPageFacts.Items.NEXT)
+internal fun emitPreviousFact() = emitFindInPageFact(Action.CLICK, FindInPageFacts.Items.PREVIOUS)
 internal fun emitCommitFact(value: String) =
-        emitFindInPageFact(Action.COMMIT, FindInPageItems.INPUT, value)
+        emitFindInPageFact(Action.COMMIT, FindInPageFacts.Items.INPUT, value)

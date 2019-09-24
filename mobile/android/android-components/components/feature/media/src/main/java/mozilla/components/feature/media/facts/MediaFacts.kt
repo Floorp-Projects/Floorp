@@ -9,9 +9,17 @@ import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.facts.collect
 
-private object MediaItems {
-    const val NOTIFICATION = "notification"
-    const val STATE = "state"
+/**
+ * Facts emitted for telemetry related to [MediaFeature]
+ */
+class MediaFacts {
+    /**
+     * Items that specify which portion of the [MediaFeature] was interacted with
+     */
+    object Items {
+        const val NOTIFICATION = "notification"
+        const val STATE = "state"
+    }
 }
 
 internal fun emitNotificationPlayFact() = emitNotificationFact(Action.PLAY)
@@ -27,7 +35,7 @@ private fun emitStateFact(
     Fact(
         Component.FEATURE_MEDIA,
         action,
-        MediaItems.STATE
+        MediaFacts.Items.STATE
     ).collect()
 }
 
@@ -37,6 +45,6 @@ private fun emitNotificationFact(
     Fact(
         Component.FEATURE_MEDIA,
         action,
-        MediaItems.NOTIFICATION
+        MediaFacts.Items.NOTIFICATION
     ).collect()
 }
