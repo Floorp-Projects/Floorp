@@ -31,13 +31,13 @@ function viewCertHelper(parent, cert) {
   }
 
   if (Services.prefs.getBoolPref("security.aboutcertificate.enabled")) {
-    let ownerGlobal = window.docShell.chromeEventHandler.ownerGlobal;
+    let rootWindow = window.docShell.rootTreeItem.domWindow;
     let derb64 = encodeURIComponent(cert.getBase64DERString());
     let url = `about:certificate?cert=${derb64}`;
-    ownerGlobal.openTrustedLinkIn(url, "tab");
+    rootWindow.openTrustedLinkIn(url, "tab");
   } else {
     Services.ww.openWindow(
-      parent,
+      parent && parent.docShell.rootTreeItem.domWindow,
       "chrome://pippki/content/certViewer.xul",
       "_blank",
       "centerscreen,chrome",
