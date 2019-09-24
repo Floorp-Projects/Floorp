@@ -752,6 +752,7 @@ add_task(async function sendToDevice_inUrlbar() {
     sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
     sandbox.stub(gSync, "isSendableURI").returns(true);
     sandbox.stub(gSync, "sendTabTargets").get(() => mockTargets);
+    sandbox.stub(gSync, "sendTabToDevice").resolves(true);
     sandbox
       .stub(Weave.Service.clientsEngine, "getClientType")
       .callsFake(
