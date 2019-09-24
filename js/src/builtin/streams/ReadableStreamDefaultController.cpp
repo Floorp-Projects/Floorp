@@ -23,6 +23,7 @@
 #include "builtin/streams/ReadableStreamInternals.h"  // js::ReadableStream{AddReadOrReadIntoRequest,CloseInternal,CreateReadResult}
 #include "builtin/streams/ReadableStreamOperations.h"  // js::ReadableStreamTee_Cancel
 #include "builtin/streams/ReadableStreamReader.h"  // js::ReadableStream{,Default}Reader
+#include "builtin/streams/StreamController.h"      // js::StreamController
 #include "builtin/streams/TeeState.h"              // js::TeeState
 #include "gc/Heap.h"
 #include "js/ArrayBuffer.h"  // JS::NewArrayBuffer
