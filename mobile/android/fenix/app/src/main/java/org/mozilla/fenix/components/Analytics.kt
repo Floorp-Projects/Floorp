@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
+import mozilla.components.lib.crash.service.GleanCrashReporterService
 import mozilla.components.lib.crash.service.MozillaSocorroService
 import mozilla.components.lib.crash.service.SentryService
 import org.mozilla.fenix.BuildConfig
@@ -45,6 +46,8 @@ class Analytics(
 
             services.add(sentryService)
         }
+
+        services.add(GleanCrashReporterService(context))
 
         // The name "Fenix" here matches the product name on Socorro and is unrelated to the actual app name:
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1523284

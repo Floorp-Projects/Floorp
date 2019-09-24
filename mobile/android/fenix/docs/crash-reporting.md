@@ -6,6 +6,12 @@ This page documents the types of crash reporting, how the various parts interact
 
 Documentation for the specific libraries is included in the [https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/README.md](Android Components Crash Reporting README).
 
+## Glean crash ping
+
+[Glean SDK](https://mozilla.github.io/glean/book/index.html) is a Mozilla open source telemetry library, which Firefox Preview uses to collect app telemetry. It can also collect crash counts as a labeled counter with each label corresponding to a specific type of crash (such as `native_code_crash`, `unhandled_exception`).
+
+The Glean crash ping format is documented [here](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/docs/metrics.md).
+
 ## Socorro
 
 [Socorro](https://wiki.mozilla.org/Socorro) is a Mozilla open source project for [crash statistics](https://crash-stats.mozilla.org/). Firefox Preview uses Socorro to track native GeckoView crashes. Crash reports contain a signature, classifications, and a number of improved fields (e.g. OS, product, version) - you can read more about what is sent in these fields in the [Socorro report documentation](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/Crash_reporting/Understanding_crash_reports).
