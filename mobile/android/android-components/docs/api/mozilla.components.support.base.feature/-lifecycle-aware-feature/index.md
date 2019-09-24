@@ -2,7 +2,7 @@
 
 # LifecycleAwareFeature
 
-`interface LifecycleAwareFeature : LifecycleObserver` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/feature/LifecycleAwareFeature.kt#L16)
+`interface LifecycleAwareFeature : LifecycleObserver` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/feature/LifecycleAwareFeature.kt#L14)
 
 An interface for all entry points to feature components to implement in order to make them lifecycle aware.
 

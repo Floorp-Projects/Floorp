@@ -2,7 +2,7 @@
 
 # PictureInPictureFeature
 
-`class PictureInPictureFeature` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/PictureInPictureFeature.kt#L24)
+`class PictureInPictureFeature` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/PictureInPictureFeature.kt#L22)
 
 A simple implementation of Picture-in-picture mode if on a supported platform.
 

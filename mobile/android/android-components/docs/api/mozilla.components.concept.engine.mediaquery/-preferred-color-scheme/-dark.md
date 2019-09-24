@@ -2,4 +2,4 @@
 
 # Dark
 
-`object Dark : `[`PreferredColorScheme`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/mediaquery/PreferredColorScheme.kt#L11)
+`object Dark : `[`PreferredColorScheme`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/mediaquery/PreferredColorScheme.kt#L15)

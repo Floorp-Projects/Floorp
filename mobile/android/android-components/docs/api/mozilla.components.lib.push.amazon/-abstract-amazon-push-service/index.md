@@ -2,7 +2,7 @@
 
 # AbstractAmazonPushService
 
-`abstract class AbstractAmazonPushService : ADMMessageHandlerBase, `[`PushService`](../../mozilla.components.concept.push/-push-service/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/push-amazon/src/main/java/mozilla/components/lib/push/amazon/AbstractAmazonPushService.kt#L25)
+`abstract class AbstractAmazonPushService : ADMMessageHandlerBase, `[`PushService`](../../mozilla.components.concept.push/-push-service/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/push-amazon/src/main/java/mozilla/components/lib/push/amazon/AbstractAmazonPushService.kt#L23)
 
 An Amazon Cloud Messaging implementation of the [PushService](../../mozilla.components.concept.push/-push-service/index.md) for Android devices that support Google Play Services.
 [ADMMessageHandlerBase](#) requires a redundant constructor parameter.

@@ -2,7 +2,7 @@
 
 # Observable
 
-`interface Observable<T>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/Observable.kt#L18)
+`interface Observable<T>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/Observable.kt#L22)
 
 Interface for observables. This interface is implemented by ObserverRegistry so that classes that
 want to be observable can implement the interface by delegation:

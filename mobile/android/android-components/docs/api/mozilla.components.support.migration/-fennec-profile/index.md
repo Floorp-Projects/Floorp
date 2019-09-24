@@ -2,7 +2,7 @@
 
 # FennecProfile
 
-`data class FennecProfile` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecProfile.kt#L18)
+`data class FennecProfile` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecProfile.kt#L19)
 
 A profile of "Fennec" (Firefox for Android).
 

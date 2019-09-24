@@ -2,7 +2,7 @@
 
 # start
 
-`fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/AppLinksFeature.kt#L74)
+`fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/AppLinksFeature.kt#L72)
 
 Overrides [LifecycleAwareFeature.start](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/start.md)
 

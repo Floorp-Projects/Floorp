@@ -2,7 +2,7 @@
 
 # AppLinkRedirect
 
-`data class AppLinkRedirect` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/AppLinkRedirect.kt#L14)
+`data class AppLinkRedirect` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/AppLinkRedirect.kt#L12)
 
 Data class for the external Intent or fallback URL a given URL encodes for.
 

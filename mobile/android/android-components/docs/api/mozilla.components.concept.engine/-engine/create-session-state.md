@@ -2,7 +2,7 @@
 
 # createSessionState
 
-`abstract fun createSessionState(json: <ERROR CLASS>): `[`EngineSessionState`](../-engine-session-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Engine.kt#L87)
+`abstract fun createSessionState(json: <ERROR CLASS>): `[`EngineSessionState`](../-engine-session-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Engine.kt#L88)
 
 Create a new [EngineSessionState](../-engine-session-state/index.md) instance from the serialized JSON representation.
 

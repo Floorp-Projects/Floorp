@@ -2,7 +2,7 @@
 
 # KArgumentCaptor
 
-`class KArgumentCaptor<out T>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/test/src/main/java/mozilla/components/support/test/KArgumentCaptor.kt#L18)
+`class KArgumentCaptor<out T>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/test/src/main/java/mozilla/components/support/test/KArgumentCaptor.kt#L16)
 
 ### Constructors
 

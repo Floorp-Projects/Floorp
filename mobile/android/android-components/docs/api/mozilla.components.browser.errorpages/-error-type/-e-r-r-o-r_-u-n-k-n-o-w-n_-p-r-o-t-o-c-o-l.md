@@ -2,7 +2,7 @@
 
 # ERROR_UNKNOWN_PROTOCOL
 
-`ERROR_UNKNOWN_PROTOCOL` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L114)
+`ERROR_UNKNOWN_PROTOCOL` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L118)
 
 ### Inherited Properties
 

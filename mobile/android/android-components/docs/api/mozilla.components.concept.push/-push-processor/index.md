@@ -2,7 +2,7 @@
 
 # PushProcessor
 
-`interface PushProcessor` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/push/src/main/java/mozilla/components/concept/push/PushProcessor.kt#L15)
+`interface PushProcessor` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/push/src/main/java/mozilla/components/concept/push/PushProcessor.kt#L13)
 
 A push notification processor that handles registration and new messages from the [PushService](../-push-service/index.md) provided.
 Starting Push in the Application's onCreate is recommended.

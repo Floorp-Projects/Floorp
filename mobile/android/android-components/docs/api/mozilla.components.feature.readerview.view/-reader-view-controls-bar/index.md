@@ -2,7 +2,7 @@
 
 # ReaderViewControlsBar
 
-`class ReaderViewControlsBar : ConstraintLayout, `[`ReaderViewControlsView`](../-reader-view-controls-view/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/readerview/src/main/java/mozilla/components/feature/readerview/view/ReaderViewControlsBar.kt#L27)
+`class ReaderViewControlsBar : ConstraintLayout, `[`ReaderViewControlsView`](../-reader-view-controls-view/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/readerview/src/main/java/mozilla/components/feature/readerview/view/ReaderViewControlsBar.kt#L25)
 
 A customizable ReaderView control bar implementing [ReaderViewControlsView](../-reader-view-controls-view/index.md).
 

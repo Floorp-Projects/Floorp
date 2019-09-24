@@ -2,7 +2,7 @@
 
 # BrowserMenuCompoundButton
 
-`abstract class BrowserMenuCompoundButton : `[`BrowserMenuItem`](../../mozilla.components.browser.menu/-browser-menu-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuCompoundButton.kt#L24)
+`abstract class BrowserMenuCompoundButton : `[`BrowserMenuItem`](../../mozilla.components.browser.menu/-browser-menu-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuCompoundButton.kt#L22)
 
 A browser menu compound button. A basic sub-class would only have to provide a layout resource to
 satisfy [BrowserMenuItem.getLayoutResource](../../mozilla.components.browser.menu/-browser-menu-item/get-layout-resource.md) which contains a [View](#) that inherits from [CompoundButton](#).

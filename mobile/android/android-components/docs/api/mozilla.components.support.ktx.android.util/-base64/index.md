@@ -2,7 +2,7 @@
 
 # Base64
 
-`object Base64` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/android/util/Base64.kt#L11)
+`object Base64` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/android/util/Base64.kt#L9)
 
 ### Functions
 

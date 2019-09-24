@@ -2,7 +2,7 @@
 
 # BrowserMenuSwitch
 
-`class BrowserMenuSwitch : `[`BrowserMenuCompoundButton`](../-browser-menu-compound-button/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuSwitch.kt#L18)
+`class BrowserMenuSwitch : `[`BrowserMenuCompoundButton`](../-browser-menu-compound-button/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuSwitch.kt#L16)
 
 A simple browser menu switch.
 

@@ -2,7 +2,7 @@
 
 # SendTabUseCases
 
-`class SendTabUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sendtab/src/main/java/mozilla/components/feature/sendtab/SendTabUseCases.kt#L34)
+`class SendTabUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sendtab/src/main/java/mozilla/components/feature/sendtab/SendTabUseCases.kt#L32)
 
 Contains use cases for sending tabs to devices related to the firefox-accounts.
 

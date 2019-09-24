@@ -2,7 +2,7 @@
 
 # AppLinksFeature
 
-`class AppLinksFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/AppLinksFeature.kt#L47)
+`class AppLinksFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/AppLinksFeature.kt#L45)
 
 This feature implements use cases for detecting and handling redirects to external apps. The user
 is asked to confirm her intention before leaving the app. These include the Android Intents,

@@ -2,7 +2,7 @@
 
 # AutoSave
 
-`class AutoSave` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/storage/AutoSave.kt#L23)
+`class AutoSave` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/storage/AutoSave.kt#L27)
 
 ### Types
 

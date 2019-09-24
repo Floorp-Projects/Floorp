@@ -2,7 +2,7 @@
 
 # MessageBus
 
-`class MessageBus<T : `[`Enum`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-enum/index.html)`<`[`T`](index.md#T)`>, M> : `[`Bus`](../../mozilla.components.concept.push/-bus/index.md)`<`[`T`](index.md#T)`, `[`M`](index.md#M)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/MessageBus.kt#L18)
+`class MessageBus<T : `[`Enum`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-enum/index.html)`<`[`T`](index.md#T)`>, M> : `[`Bus`](../../mozilla.components.concept.push/-bus/index.md)`<`[`T`](index.md#T)`, `[`M`](index.md#M)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/MessageBus.kt#L16)
 
 An implementation of [Bus](../../mozilla.components.concept.push/-bus/index.md) where the event type is restricted to an enum.
 

@@ -2,7 +2,7 @@
 
 # findValue
 
-`abstract fun findValue(): `[`T`](index.md#T) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/integration/SettingUpdater.kt#L40)
+`abstract fun findValue(): `[`T`](index.md#T) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/integration/SettingUpdater.kt#L44)
 
 Find the value of the setting from the device state. This is setting specific.
 

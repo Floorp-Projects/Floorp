@@ -2,7 +2,7 @@
 
 # TabTouchCallback
 
-`open class TabTouchCallback : SimpleCallback` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/TabTouchCallback.kt#L18)
+`open class TabTouchCallback : SimpleCallback` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/TabTouchCallback.kt#L16)
 
 An [ItemTouchHelper.Callback](#) for support gestures on tabs in the tray.
 

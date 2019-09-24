@@ -2,7 +2,7 @@
 
 # ErrorType
 
-`enum class ErrorType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L42)
+`enum class ErrorType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L46)
 
 Enum containing all supported error types that we can display an error page for.
 

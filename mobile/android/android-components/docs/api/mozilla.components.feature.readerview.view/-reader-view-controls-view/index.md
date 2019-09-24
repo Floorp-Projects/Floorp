@@ -2,7 +2,7 @@
 
 # ReaderViewControlsView
 
-`interface ReaderViewControlsView` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/readerview/src/main/java/mozilla/components/feature/readerview/view/ReaderViewControlsView.kt#L16)
+`interface ReaderViewControlsView` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/readerview/src/main/java/mozilla/components/feature/readerview/view/ReaderViewControlsView.kt#L14)
 
 An interface for views that can display ReaderView appearance controls (e.g. font size, font type).
 

@@ -2,7 +2,7 @@
 
 # initialize
 
-`@JvmOverloads fun initialize(applicationContext: <ERROR CLASS>, configuration: `[`Configuration`](../../mozilla.components.service.glean.config/-configuration/index.md)` = Configuration()): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/Glean.kt#L95)
+`@JvmOverloads @MainThread fun initialize(applicationContext: <ERROR CLASS>, configuration: `[`Configuration`](../../mozilla.components.service.glean.config/-configuration/index.md)` = Configuration()): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/Glean.kt#L100)
 
 Initialize Glean.
 
@@ -12,6 +12,8 @@ to the state if initialize is called a more than once.
 
 A LifecycleObserver will be added to send pings when the application goes
 into the background.
+
+This method must be called from the main thread.
 
 ### Parameters
 
