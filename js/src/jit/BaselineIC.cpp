@@ -3354,22 +3354,32 @@ void ICStubCompilerBase::pushCallArguments(MacroAssembler& masm,
                                            bool isConstructing) {
   MOZ_ASSERT(!regs.has(argcReg));
 
-  // Account for |this|, callee and new.target.
-  Register count = regs.takeAny();
-  masm.move32(argcReg, count);
-  masm.add32(Imm32(2 + isConstructing), count);
-
   // argPtr initially points to the last argument.
   Register argPtr = regs.takeAny();
   masm.moveStackPtrTo(argPtr);
 
   // Skip 4 pointers pushed on top of the arguments: the frame descriptor,
   // return address, old frame pointer and stub reg.
-  masm.addPtr(Imm32(STUB_FRAME_SIZE), argPtr);
+  size_t valueOffset = STUB_FRAME_SIZE;
 
-  // Push all values, starting at the last one.
-  Label loop, done;
-  masm.branchTest32(Assembler::Zero, count, count, &done);
+  // We have to push |this|, callee, new.target (if constructing) and argc
+  // arguments. Handle the number of Values we know statically first.
+
+  size_t numNonArgValues = 2 + isConstructing;
+  for (size_t i = 0; i < numNonArgValues; i++) {
+    masm.pushValue(Address(argPtr, valueOffset));
+    valueOffset += sizeof(Value);
+  }
+
+  // If there are no arguments we're done.
+  Label done;
+  masm.branchTest32(Assembler::Zero, argcReg, argcReg, &done);
+
+  // Push argc Values.
+  Label loop;
+  Register count = regs.takeAny();
+  masm.addPtr(Imm32(valueOffset), argPtr);
+  masm.move32(argcReg, count);
   masm.bind(&loop);
   {
     masm.pushValue(Address(argPtr, 0));
