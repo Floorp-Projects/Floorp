@@ -1208,10 +1208,13 @@ inline HeapTypeSet* ObjectGroup::getProperty(const AutoSweepObjectGroup& sweep,
   MOZ_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id) ||
              JSID_IS_SYMBOL(id));
   MOZ_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));
-  MOZ_ASSERT(!unknownProperties(sweep));
   MOZ_ASSERT_IF(obj, obj->group() == this);
   MOZ_ASSERT_IF(singleton(), obj);
   MOZ_ASSERT(cx->compartment() == compartment());
+
+  if (unknownProperties(sweep)) {
+    return nullptr;
+  }
 
   if (HeapTypeSet* types = maybeGetProperty(sweep, id)) {
     return types;
