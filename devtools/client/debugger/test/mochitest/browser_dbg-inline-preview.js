@@ -5,9 +5,9 @@
 async function checkInlinePreview(dbg, fnName, inlinePreviews) {
   invokeInTab(fnName);
 
-  await waitForAllElements(dbg, "inlinePreviewLables", inlinePreviews.length);
+  await waitForAllElements(dbg, "inlinePreviewLabels", inlinePreviews.length);
 
-  const labels = findAllElements(dbg, "inlinePreviewLables");
+  const labels = findAllElements(dbg, "inlinePreviewLabels");
   const values = findAllElements(dbg, "inlinePreviewValues");
 
   inlinePreviews.forEach((inlinePreview, index) => {
