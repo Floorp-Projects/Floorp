@@ -9,6 +9,8 @@
  */
 
 add_task(async function() {
+  await pushPref("devtools.netmonitor.features.search", true);
+
   const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
   info("Starting test... ");
 
