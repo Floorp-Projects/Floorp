@@ -12,6 +12,7 @@
 #include "js/ProtoKey.h"
 
 #define FOR_EACH_COMMON_PROPERTYNAME(MACRO)                                    \
+  MACRO(abort, abort, "abort")                                                 \
   MACRO(add, add, "add")                                                       \
   MACRO(allowContentIter, allowContentIter, "allowContentIter")                \
   MACRO(anonymous, anonymous, "anonymous")                                     \
@@ -75,6 +76,7 @@
   MACRO(caseFirst, caseFirst, "caseFirst")                                     \
   MACRO(catch, catch_, "catch")                                                \
   MACRO(class, class_, "class")                                                \
+  MACRO(close, close, "close")                                                 \
   MACRO(Collator, Collator, "Collator")                                        \
   MACRO(collections, collections, "collections")                               \
   MACRO(columnNumber, columnNumber, "columnNumber")                            \
@@ -477,6 +479,7 @@
   MACRO(while, while_, "while")                                                \
   MACRO(with, with, "with")                                                    \
   MACRO(writable, writable, "writable")                                        \
+  MACRO(write, write, "write")                                                 \
   MACRO(year, year, "year")                                                    \
   MACRO(yield, yield, "yield")                                                 \
   /* Type names must be contiguous and ordered; see js::TypeName. */           \
