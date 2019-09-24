@@ -429,16 +429,15 @@ already_AddRefed<gfx::DrawTarget> WindowBackBufferShm::Lock() {
 WindowBackBufferDMABuf::WindowBackBufferDMABuf(
     WindowSurfaceWayland* aWindowSurfaceWayland, int aWidth, int aHeight)
     : WindowBackBuffer(aWindowSurfaceWayland) {
-  mDMAbufSurface.Create(aWidth, aHeight,
-                        DMABUF_ALPHA | DMABUF_CREATE_WL_BUFFER);
-
+  mDMAbufSurface = WaylandDMABufSurface::CreateDMABufSurface(
+      aWidth, aHeight, DMABUF_ALPHA | DMABUF_CREATE_WL_BUFFER);
   LOGWAYLAND(
       ("WindowBackBufferDMABuf::WindowBackBufferDMABuf [%p] Created DMABuf "
        "buffer [%d x %d]\n",
        (void*)this, aWidth, aHeight));
 }
 
-WindowBackBufferDMABuf::~WindowBackBufferDMABuf() { mDMAbufSurface.Release(); }
+WindowBackBufferDMABuf::~WindowBackBufferDMABuf() {}
 
 already_AddRefed<gfx::DrawTarget> WindowBackBufferDMABuf::Lock() {
   LOGWAYLAND(
@@ -447,53 +446,51 @@ already_AddRefed<gfx::DrawTarget> WindowBackBufferDMABuf::Lock() {
        GetWlBuffer() ? wl_proxy_get_id((struct wl_proxy*)GetWlBuffer()) : -1));
 
   uint32_t stride;
-  void* pixels = mDMAbufSurface.Map(&stride);
+  void* pixels = mDMAbufSurface->Map(&stride);
   gfx::IntSize lockSize(GetWidth(), GetHeight());
   return gfxPlatform::CreateDrawTargetForData(
       static_cast<unsigned char*>(pixels), lockSize, stride,
       GetSurfaceFormat());
 }
 
-void WindowBackBufferDMABuf::Unlock() { mDMAbufSurface.Unmap(); }
+void WindowBackBufferDMABuf::Unlock() { mDMAbufSurface->Unmap(); }
 
 bool WindowBackBufferDMABuf::IsAttached() {
-  return mDMAbufSurface.WLBufferIsAttached();
+  return mDMAbufSurface->WLBufferIsAttached();
 }
 
 void WindowBackBufferDMABuf::SetAttached() {
-  return mDMAbufSurface.WLBufferSetAttached();
+  return mDMAbufSurface->WLBufferSetAttached();
 }
 
-int WindowBackBufferDMABuf::GetWidth() { return mDMAbufSurface.GetWidth(); }
+int WindowBackBufferDMABuf::GetWidth() { return mDMAbufSurface->GetWidth(); }
 
-int WindowBackBufferDMABuf::GetHeight() { return mDMAbufSurface.GetHeight(); }
+int WindowBackBufferDMABuf::GetHeight() { return mDMAbufSurface->GetHeight(); }
 
 wl_buffer* WindowBackBufferDMABuf::GetWlBuffer() {
-  return mDMAbufSurface.GetWLBuffer();
+  return mDMAbufSurface->GetWLBuffer();
 }
 
-bool WindowBackBufferDMABuf::IsLocked() { return mDMAbufSurface.IsMapped(); }
+bool WindowBackBufferDMABuf::IsLocked() { return mDMAbufSurface->IsMapped(); }
 
 bool WindowBackBufferDMABuf::Resize(int aWidth, int aHeight) {
-  return mDMAbufSurface.Resize(aWidth, aHeight);
+  return mDMAbufSurface->Resize(aWidth, aHeight);
 }
 
 bool WindowBackBufferDMABuf::SetImageDataFromBuffer(
     class WindowBackBuffer* aSourceBuffer) {
-  WindowBackBufferDMABuf* source =
-      static_cast<WindowBackBufferDMABuf*>(aSourceBuffer);
-  mDMAbufSurface.CopyFrom(&source->mDMAbufSurface);
+  NS_WARNING("WindowBackBufferDMABuf copy is not implemented!");
   return true;
 }
 
 void WindowBackBufferDMABuf::Detach(wl_buffer* aBuffer) {
-  mDMAbufSurface.WLBufferDetach();
+  mDMAbufSurface->WLBufferDetach();
 
   // Commit any potential cached drawings from latest Lock()/Commit() cycle.
   mWindowSurfaceWayland->CommitWaylandBuffer();
 }
 
-void WindowBackBufferDMABuf::Clear() { mDMAbufSurface.Clear(); }
+void WindowBackBufferDMABuf::Clear() { mDMAbufSurface->Clear(); }
 
 static void frame_callback_handler(void* data, struct wl_callback* callback,
                                    uint32_t time) {
