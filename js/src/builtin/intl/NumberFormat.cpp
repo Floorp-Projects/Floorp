@@ -379,7 +379,7 @@ struct MeasureUnit {
  *
  * The list must be kept in alphabetical order of the |subtype|.
  */
-const MeasureUnit simpleMeasureUnits[] = {
+static constexpr MeasureUnit simpleMeasureUnits[] = {
     // clang-format off
     {"area", "acre"},
     {"digital", "bit"},
