@@ -319,15 +319,15 @@
   },
   "COMPOSITE_TIME" : {
     "record_in_processes": ["main", "content", "gpu"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
+    "products": ["firefox", "fennec", "geckoview", "geckoview_streaming"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "jnicol@mozilla.com"],
     "expires_in_version": "never",
     "description": "Composite times in milliseconds",
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 50,
     "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1080160, 1529352]
+    "bug_numbers": [1080160, 1529352, 1580129]
   },
   "COMPOSITE_FRAME_ROUNDTRIP_TIME" : {
     "record_in_processes": ["main", "content", "gpu"],
