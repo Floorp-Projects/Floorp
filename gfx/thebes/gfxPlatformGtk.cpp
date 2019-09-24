@@ -54,7 +54,6 @@
 
 #  ifdef MOZ_WAYLAND
 #    include <gdk/gdkwayland.h>
-#    include "mozilla/widget/nsWaylandDisplay.h"
 #  endif
 
 #endif /* MOZ_X11 */
@@ -81,11 +80,11 @@ gfxPlatformGtk::gfxPlatformGtk() {
   }
 
   mMaxGenericSubstitutions = UNINITIALIZED_VALUE;
-  mIsX11Display = GDK_IS_X11_DISPLAY(gdk_display_get_default());
 
 #ifdef MOZ_X11
   if (!gfxPlatform::IsHeadless() && XRE_IsParentProcess()) {
-    if (mIsX11Display && mozilla::Preferences::GetBool("gfx.xrender.enabled")) {
+    if (GDK_IS_X11_DISPLAY(gdk_display_get_default()) &&
+        mozilla::Preferences::GetBool("gfx.xrender.enabled")) {
       gfxVars::SetUseXRender(true);
     }
   }
@@ -94,7 +93,8 @@ gfxPlatformGtk::gfxPlatformGtk() {
   InitBackendPrefs(GetBackendPrefs());
 
 #ifdef MOZ_X11
-  if (gfxPlatform::IsHeadless() && mIsX11Display) {
+  if (gfxPlatform::IsHeadless() &&
+      GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     mCompositorDisplay = XOpenDisplay(nullptr);
     MOZ_ASSERT(mCompositorDisplay, "Failed to create compositor display!");
   } else {
@@ -132,7 +132,7 @@ void gfxPlatformGtk::FlushContentDrawing() {
 
 void gfxPlatformGtk::InitPlatformGPUProcessPrefs() {
 #ifdef MOZ_WAYLAND
-  if (!mIsX11Display) {
+  if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     FeatureState& gpuProc = gfxConfig::GetFeature(Feature::GPU_PROCESS);
     gpuProc.ForceDisable(FeatureStatus::Blocked,
                          "Wayland does not work in the GPU process",
@@ -353,7 +353,7 @@ void gfxPlatformGtk::GetPlatformCMSOutputProfile(void*& mem, size_t& size) {
 
 #ifdef MOZ_X11
   GdkDisplay* display = gdk_display_get_default();
-  if (!mIsX11Display) return;
+  if (!GDK_IS_X11_DISPLAY(display)) return;
 
   const char EDID1_ATOM_NAME[] = "XFree86_DDC_EDID1_RAWDATA";
   const char ICC_PROFILE_ATOM_NAME[] = "_ICC_PROFILE";
@@ -745,7 +745,7 @@ class GtkVsyncSource final : public VsyncSource {
 
 already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
 #  ifdef MOZ_WAYLAND
-  if (!mIsX11Display) {
+  if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     RefPtr<VsyncSource> vsyncSource = new GtkVsyncSource();
     VsyncSource::Display& display = vsyncSource->GetGlobalDisplay();
     static_cast<GtkVsyncSource::GLXDisplay&>(display).SetupWayland();
@@ -772,13 +772,4 @@ already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
   return gfxPlatform::CreateHardwareVsyncSource();
 }
 
-#endif
-
-#ifdef MOZ_WAYLAND
-bool gfxPlatformGtk::UseWaylandDMABufSurfaces() {
-  if (mIsX11Display) {
-    return false;
-  }
-  return widget::nsWaylandDisplay::IsDMABufEnabled();
-}
 #endif
