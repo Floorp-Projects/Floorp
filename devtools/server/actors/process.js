@@ -17,7 +17,7 @@ function ProcessActorList() {
 
   this._onMessage = this._onMessage.bind(this);
   this._processScript =
-    "data:text/javascript,sendAsyncMessage('debug:new-process');";
+    "resource://devtools/server/startup/debug-new-process.js";
 }
 
 ProcessActorList.prototype = {
