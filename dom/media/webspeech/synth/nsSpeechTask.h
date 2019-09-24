@@ -8,7 +8,7 @@
 #define mozilla_dom_nsSpeechTask_h
 
 #include "SpeechSynthesisUtterance.h"
-#include "AudioChannelAgent.h"
+#include "nsIAudioChannelAgent.h"
 #include "nsISpeechService.h"
 
 namespace mozilla {
@@ -109,7 +109,7 @@ class nsSpeechTask : public nsISpeechTask,
 
   nsCOMPtr<nsISpeechTaskCallback> mCallback;
 
-  RefPtr<mozilla::dom::AudioChannelAgent> mAudioChannelAgent;
+  nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;
 
   RefPtr<SpeechSynthesis> mSpeechSynthesis;
 
