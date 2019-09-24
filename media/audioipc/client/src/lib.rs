@@ -18,8 +18,6 @@ mod stream;
 
 use crate::context::ClientContext;
 use crate::stream::ClientStream;
-#[cfg(target_os = "linux")]
-use audio_thread_priority::promote_current_thread_to_real_time;
 use audio_thread_priority::RtPriorityHandle;
 use audioipc::{PlatformHandle, PlatformHandleType};
 use cubeb_backend::{capi, ffi};
@@ -109,16 +107,6 @@ pub unsafe extern "C" fn audioipc_init_threads(init_params: *const AudioIpcInitP
 
     let register_thread = move || {
         if let Some(func) = thread_create_callback {
-            match promote_current_thread_to_real_time(0, 48000) {
-                Ok(handle) => {
-                    G_PRIORITY_HANDLES.with(|handles| {
-                        (handles.borrow_mut()).push(handle);
-                    });
-                }
-                Err(_) => {
-                    warn!("Could not promote audio threads to real-time during initialization.");
-                }
-            }
             let thr = thread::current();
             let name = CString::new(thr.name().unwrap()).unwrap();
             func(name.as_ptr());
