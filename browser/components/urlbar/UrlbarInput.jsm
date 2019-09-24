@@ -904,7 +904,7 @@ class UrlbarInput {
   }
 
   get focused() {
-    return this.getAttribute("focused") == "true";
+    return this.document.activeElement == this.inputField;
   }
 
   get goButton() {
