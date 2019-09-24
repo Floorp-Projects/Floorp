@@ -9,7 +9,6 @@ EXTRA_JS_MODULES += [
     'BrowserUsageTelemetry.jsm',
     'ContentCrashHandler.jsm',
     'DelayedInit.jsm',
-    'GeckoViewAccessibility.jsm',
     'GeckoViewActorChild.jsm',
     'GeckoViewAutoFill.jsm',
     'GeckoViewChildModule.jsm',

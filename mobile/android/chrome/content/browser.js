@@ -24,14 +24,6 @@ var { TelemetryController } = ChromeUtils.import(
   "resource://gre/modules/TelemetryController.jsm"
 );
 
-if (AppConstants.ACCESSIBILITY) {
-  ChromeUtils.defineModuleGetter(
-    this,
-    "AccessFu",
-    "resource://gre/modules/accessibility/AccessFu.jsm"
-  );
-}
-
 ChromeUtils.defineModuleGetter(
   this,
   "AsyncPrefs",
@@ -726,19 +718,6 @@ var BrowserApp = {
       NativeWindow,
       "contextmenus"
     );
-
-    if (AppConstants.ACCESSIBILITY) {
-      InitLater(() =>
-        GlobalEventDispatcher.dispatch("GeckoView:AccessibilityReady")
-      );
-      GlobalEventDispatcher.registerListener((aEvent, aData, aCallback) => {
-        if (aData.touchEnabled) {
-          AccessFu.enable();
-        } else {
-          AccessFu.disable();
-        }
-      }, "GeckoView:AccessibilitySettings");
-    }
 
     InitLater(() => {
       (async () => {
