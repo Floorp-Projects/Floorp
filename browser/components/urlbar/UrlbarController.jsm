@@ -782,29 +782,25 @@ class TelemetryEvent {
   }
 
   /**
-   * Extracts a type from an element, to be used in the telemetry event.
-   * @param {Element} element The element to analyze.
+   * Extracts a type from a result, to be used in the telemetry event.
+   * @param {UrlbarResult} result The result to analyze.
    * @returns {string} a string type for the telemetry event.
    */
-  typeFromElement(element) {
-    if (!element) {
-      return "none";
-    }
-    let row = element.closest(".urlbarView-row");
-    if (row.result) {
-      switch (row.result.type) {
+  typeFromResult(result) {
+    if (result) {
+      switch (result.type) {
         case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
           return "switchtab";
         case UrlbarUtils.RESULT_TYPE.SEARCH:
-          return row.result.payload.suggestion ? "searchsuggestion" : "search";
+          return result.payload.suggestion ? "searchsuggestion" : "search";
         case UrlbarUtils.RESULT_TYPE.URL:
-          if (row.result.autofill) {
+          if (result.autofill) {
             return "autofill";
           }
-          if (row.result.heuristic) {
+          if (result.heuristic) {
             return "visit";
           }
-          return row.result.source == UrlbarUtils.RESULT_SOURCE.BOOKMARKS
+          return result.source == UrlbarUtils.RESULT_SOURCE.BOOKMARKS
             ? "bookmark"
             : "history";
         case UrlbarUtils.RESULT_TYPE.KEYWORD:
@@ -814,9 +810,6 @@ class TelemetryEvent {
         case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
           return "remotetab";
         case UrlbarUtils.RESULT_TYPE.TIP:
-          if (element.classList.contains("urlbarView-tip-help")) {
-            return "tiphelp";
-          }
           return "tip";
       }
     }
