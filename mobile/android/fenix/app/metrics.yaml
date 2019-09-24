@@ -5,6 +5,9 @@
 
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
 
+no_lint:
+  - CATEGORY_GENERIC
+
 events:
   app_opened:
     type: event
@@ -1435,6 +1438,9 @@ tab:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-03-01"
+    no_lint:
+      - COMMON_PREFIX
+
   media_pause:
     type: event
     description: >
