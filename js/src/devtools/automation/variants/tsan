@@ -1,5 +1,5 @@
 {
-    "configure-args": "--enable-debug-symbols='-gline-tables-only' --disable-jemalloc --enable-thread-sanitizer",
+    "configure-args": "--enable-debug-symbols='-gline-tables-only' --disable-jemalloc --enable-thread-sanitizer --enable-rust-simd",
     "optimize": true,
     "debug": false,
     "compiler": "clang",

@@ -16,6 +16,9 @@ if CONFIG['ENABLE_WASM_CRANELIFT']:
     else:
         features += ['cranelift_none']
 
+if CONFIG['MOZ_RUST_SIMD']:
+    features += ['simd-accel']
+
 RustLibrary('jsrust', features)
 
 if CONFIG['JS_SHARED_LIBRARY']:
