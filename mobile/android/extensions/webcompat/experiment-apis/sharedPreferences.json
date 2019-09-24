@@ -1,0 +1,26 @@
+[
+  {
+    "namespace": "sharedPreferences",
+    "description": "experimental API extension to allow setting SharedPreferences on Fennec",
+    "functions": [
+      {
+        "name": "setBoolPref",
+        "type": "function",
+        "description": "Set the value of a boolean Fennec SharedPreference",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The key name"
+          },
+          {
+            "name": "value",
+            "type": "boolean",
+            "description": "The new value"
+          }
+        ],
+        "async": true
+      }
+    ]
+  }
+]
