@@ -4937,8 +4937,6 @@ OverflowableToolbar.prototype = {
       let style = win.getComputedStyle(this._toolbar);
       totalAvailWidth =
         this._toolbar.clientWidth -
-        parseFloat(style.borderLeftWidth) -
-        parseFloat(style.borderRightWidth) -
         parseFloat(style.paddingLeft) -
         parseFloat(style.paddingRight);
       for (let child of this._toolbar.children) {
