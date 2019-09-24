@@ -7,3 +7,23 @@
 # `glean_parser` PyPI package.
 
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
+
+gfx:
+  composite_time:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: COMPOSITE_TIME
+    description: |
+      The time taken to composite a frame.
+      On non-webrender this is the time taken in `CompositorBridgeParent::CompositeToTarget()`.
+      On webrender, this is the time taken from the start of `WebRenderBridgeParent::CompositeToTarget()`, until the render thread has rendered the frame (in `RenderThread::HandleFrameOneDoc()`).
+    bugs:
+      - 1080160
+      - 1529352
+      - 1580129
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580129#c7
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - jnicol@mozilla.com
+    expires: never
