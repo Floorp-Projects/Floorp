@@ -29,8 +29,6 @@ android {
         manifestPlaceholders = project.ext.manifestPlaceholders
 
         applicationId mozconfig.substs.ANDROID_PACKAGE_NAME
-        testApplicationId 'org.mozilla.roboexample.test'
-        testInstrumentationRunner 'org.mozilla.gecko.FennecInstrumentationTestRunner'
         // Used by Robolectric based tests; see TestRunner.
         buildConfigField 'String', 'BUILD_DIR', "\"${project.buildDir}\"".tr(File.separator, "/")
 
@@ -80,7 +78,6 @@ android {
             // shrinkResources true
             minifyEnabled true
             proguardFile "${topsrcdir}/mobile/android/config/proguard/proguard.cfg"
-            testProguardFile "${topsrcdir}/mobile/android/config/proguard/proguard-robocop.cfg"
         }
         release configureMinifyClosure
         if (mozconfig.substs.MOZILLA_OFFICIAL) {
@@ -90,7 +87,6 @@ android {
         def isDebuggable = (!mozconfig.substs.MOZILLA_OFFICIAL) || (mozconfig.substs.NIGHTLY_BUILD && mozconfig.substs.MOZ_DEBUG)
         debug {
             debuggable isDebuggable 
-            multiDexKeepProguard file("${topsrcdir}/mobile/android/config/proguard/debug-robocop-keeps.cfg")
         }
         release {
             debuggable isDebuggable
@@ -189,16 +185,9 @@ android {
 
         androidTest {
             java {
-                srcDir "${topsrcdir}/mobile/android/tests/browser/robocop/src"
                 // Bug 1229149 tracks pushing this into a :services Gradle project.
                 srcDir "${topsrcdir}/mobile/android/services/src/androidTest/java"
                 srcDir "${topsrcdir}/mobile/android/tests/browser/junit3/src"
-            }
-            res {
-                srcDir "${topsrcdir}/mobile/android/tests/browser/robocop/res"
-            }
-            assets {
-                srcDir "${topsrcdir}/mobile/android/tests/browser/robocop/assets"
             }
         }
     }
@@ -269,9 +258,6 @@ dependencies {
     testImplementation 'org.robolectric:robolectric:4.3'
     testImplementation 'org.simpleframework:simple-http:6.0.1'
     testImplementation 'org.mockito:mockito-core:1.10.19'
-
-    // Including the Robotium JAR directly can cause issues with dexing.
-    androidTestImplementation 'com.jayway.android.robotium:robotium-solo:5.5.4'
 }
 
 // TODO: (bug 1261486): This impl is not robust -

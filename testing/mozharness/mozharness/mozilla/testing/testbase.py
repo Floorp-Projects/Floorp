@@ -309,7 +309,6 @@ You can set this by specifying --test-url URL
         # This is a difference in the convention of the configs more than
         # to how these tests are run, so we pave over these differences here.
         aliases = {
-            'robocop': 'mochitest',
             'mochitest-chrome': 'mochitest',
             'mochitest-media': 'mochitest',
             'mochitest-plain': 'mochitest',

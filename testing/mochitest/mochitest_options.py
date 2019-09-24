@@ -896,11 +896,6 @@ class AndroidArguments(ArgumentContainer):
           "help": "ssl port of the remote web server.",
           "suppress": True,
           }],
-        [["--robocop-apk"],
-         {"dest": "robocopApk",
-          "default": "",
-          "help": "Name of the robocop APK to use.",
-          }],
         [["--remoteTestRoot"],
          {"dest": "remoteTestRoot",
           "default": None,
@@ -912,7 +907,7 @@ class AndroidArguments(ArgumentContainer):
          {"action": "store_true",
           "default": False,
           "help": "Enable collecting code coverage information when running "
-                  "robocop tests.",
+                  "junit tests.",
           }],
         [["--coverage-output-dir"],
          {"action": "store",
@@ -971,18 +966,6 @@ class AndroidArguments(ArgumentContainer):
             f.write("%s" % os.getpid())
             f.close()
 
-        if not options.robocopApk and build_obj:
-            apk = build_obj.substs.get('GRADLE_ANDROID_APP_ANDROIDTEST_APK')
-            if apk and os.path.exists(apk):
-                options.robocopApk = apk
-
-        if options.robocopApk != "":
-            if not os.path.exists(options.robocopApk):
-                parser.error(
-                    "Unable to find robocop APK '%s'" %
-                    options.robocopApk)
-            options.robocopApk = os.path.abspath(options.robocopApk)
-
         if options.coverage_output_dir and not options.enable_coverage:
             parser.error("--coverage-output-dir must be used with --enable-coverage")
         if options.enable_coverage:
@@ -999,7 +982,7 @@ class AndroidArguments(ArgumentContainer):
                     parent_dir)
 
         # allow us to keep original application around for cleanup while
-        # running robocop via 'am'
+        # running tests
         options.remoteappname = options.app
         return options
 
