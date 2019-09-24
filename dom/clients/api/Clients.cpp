@@ -240,7 +240,7 @@ already_AddRefed<Promise> Clients::OpenWindow(const nsAString& aURL,
       [outerPromise](nsresult aResult) {
         // TODO: Improve this error in bug 1412856.  Ideally we should throw
         //       the TypeError in the child process and pass it back to here.
-        outerPromise->MaybeReject(NS_ERROR_TYPE_ERR);
+        outerPromise->MaybeReject(NS_ERROR_DOM_TYPE_ERR);
       });
 
   return outerPromise.forget();

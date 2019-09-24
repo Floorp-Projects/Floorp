@@ -33,9 +33,6 @@ DOM4_MSG_DEF(DataCloneError, "The object could not be cloned.", NS_ERROR_DOM_DAT
 DOM4_MSG_DEF(InvalidPointerId, "Invalid pointer id.", NS_ERROR_DOM_INVALID_POINTER_ERR)
 DOM4_MSG_DEF(NotAllowedError, "The request is not allowed by the user agent or the platform in the current context, possibly because the user denied permission.", NS_ERROR_DOM_NOT_ALLOWED_ERR)
 
-/* XXX Should be JavaScript native TypeError */
-DOM4_MSG_DEF(TypeError, "The method parameter is missing or invalid.", NS_ERROR_TYPE_ERR)
-
 /* StringEncoding API errors from http://wiki.whatwg.org/wiki/StringEncoding */
 DOM4_MSG_DEF(EncodingError, "The given encoding is not supported.", NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR)
 

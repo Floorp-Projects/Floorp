@@ -160,12 +160,14 @@ nsresult OpenWindow(const ClientOpenWindowArgs& aArgs, BrowsingContext** aBC) {
   nsCOMPtr<nsIURI> baseURI;
   nsresult rv = NS_NewURI(getter_AddRefs(baseURI), aArgs.baseURL());
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_TYPE_ERR;
+    // TODO: Improve this error in bug 1412856.
+    return NS_ERROR_DOM_TYPE_ERR;
   }
 
   rv = NS_NewURI(getter_AddRefs(uri), aArgs.url(), nullptr, baseURI);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_TYPE_ERR;
+    // TODO: Improve this error in bug 1412856.
+    return NS_ERROR_DOM_TYPE_ERR;
   }
 
   nsCOMPtr<nsIPrincipal> principal =
@@ -192,7 +194,8 @@ nsresult OpenWindow(const ClientOpenWindowArgs& aArgs, BrowsingContext** aBC) {
     JS::Rooted<JSObject*> sandbox(cx);
     rv = xpc->CreateSandbox(cx, principal, sandbox.address());
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return NS_ERROR_TYPE_ERR;
+      // TODO: Improve this error in bug 1412856.
+      return NS_ERROR_DOM_TYPE_ERR;
     }
 
     JSAutoRealm ar(cx, sandbox);
