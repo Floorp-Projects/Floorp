@@ -82,11 +82,6 @@ else:
         'Mutex_posix.cpp',
     ]
 
-if CONFIG['MOZ_LINKER']:
-    LOCAL_INCLUDES += [
-        '/mozglue/linker',
-    ]
-
 SOURCES += [
     'decimal/Decimal.cpp',
 ]

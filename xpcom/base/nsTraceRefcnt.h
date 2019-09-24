@@ -18,9 +18,6 @@ class nsTraceRefcnt {
   static void ResetStatistics();
 
   static void WalkTheStack(FILE* aStream);
-#ifdef ANDROID
-  static void WalkTheStack(void (*aWriter)(uint32_t, void*, void*, void*));
-#endif
 
   /**
    * Tell nsTraceRefcnt whether refcounting, allocation, and destruction
