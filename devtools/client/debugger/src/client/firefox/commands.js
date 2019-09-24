@@ -6,6 +6,7 @@
 
 import { prepareSourcePayload, createThread } from "./create";
 import { updateTargets } from "./targets";
+import { clientEvents } from "./events";
 
 import Reps from "devtools-reps";
 import type { Node } from "devtools-reps";
@@ -425,8 +426,35 @@ async function toggleEventLogging(logEventBreakpoints: boolean) {
   );
 }
 
+function getAllThreadFronts() {
+  const fronts = [currentThreadFront];
+  for (const targetsForType of Object.values(targets)) {
+    for (const { threadFront } of Object.values(targetsForType)) {
+      fronts.push(threadFront);
+    }
+  }
+  return fronts;
+}
+
+// Fetch the sources for all the targets
 async function fetchSources(): Promise<Array<GeneratedSourceData>> {
-  return getSources(currentThreadFront);
+  let sources = [];
+  for (const threadFront of getAllThreadFronts()) {
+    sources = sources.concat(await getSources(threadFront));
+  }
+  return sources;
+}
+
+// Check if any of the targets were paused before we opened
+// the debugger. If one is paused. Fake a `pause` RDP event
+// by directly calling the client event listener.
+async function checkIfAlreadyPaused() {
+  for (const threadFront of getAllThreadFronts()) {
+    const pausedPacket = threadFront.getLastPausePacket();
+    if (pausedPacket) {
+      clientEvents.paused(threadFront, pausedPacket);
+    }
+  }
 }
 
 function getSourceForActor(actor: ActorId) {
@@ -552,6 +580,7 @@ const clientCommands = {
   pauseOnExceptions,
   toggleEventLogging,
   fetchSources,
+  checkIfAlreadyPaused,
   registerSourceActor,
   fetchThreads,
   getMainThread,

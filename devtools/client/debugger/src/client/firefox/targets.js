@@ -27,14 +27,22 @@ async function attachTargets(type, targetLists, args) {
       if (targets[threadActorID]) {
         newTargets[threadActorID] = targets[threadActorID];
       } else {
-        const [, threadFront] = await targetFront.attachThread(args.options);
-        // NOTE: resume is not necessary for ProcessDescriptors and can be removed
-        // once we switch to WorkerDescriptors
-        threadFront.resume();
+        // Content process targets have already been attached by the toolbox.
+        // And the thread front has been initialized from there.
+        // So we only need to retrieve it here.
+        let threadFront = targetFront.threadFront;
+
+        // But workers targets are still only managed by the debugger codebase
+        // and so we have to attach their thread actor
+        if (!threadFront) {
+          [, threadFront] = await targetFront.attachThread(args.options);
+          // NOTE: resume is not necessary for ProcessDescriptors and can be removed
+          // once we switch to WorkerDescriptors
+          threadFront.resume();
+        }
 
         addThreadEventListeners(threadFront);
 
-        await targetFront.attachConsole();
         newTargets[threadFront.actor] = targetFront;
       }
     } catch (e) {
