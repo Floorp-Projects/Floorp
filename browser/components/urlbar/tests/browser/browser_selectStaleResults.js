@@ -106,7 +106,7 @@ add_task(async function viewContainsStaleRows() {
   for (let i = 1; i < maxResults; i++) {
     Assert.equal(UrlbarTestUtils.getSelectedRowIndex(window), i);
     let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
-    Assert.equal(result.element.row.result.uiIndex, i);
+    Assert.equal(result.element.row.result.rowIndex, i);
     EventUtils.synthesizeKey("KEY_ArrowDown");
   }
 
@@ -259,12 +259,12 @@ add_task(async function staleReplacedWithFresh() {
   Assert.equal(count, maxResults);
   result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   Assert.ok(result.heuristic);
-  Assert.equal(result.element.row.result.uiIndex, 0);
+  Assert.equal(result.element.row.result.rowIndex, 0);
   for (let i = 1; i < maxResults; i++) {
     result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
     Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.URL);
     Assert.equal(result.title, "test" + (maxResults - i));
-    Assert.equal(result.element.row.result.uiIndex, i);
+    Assert.equal(result.element.row.result.rowIndex, i);
   }
 
   // Arrow down through all the results.  After arrowing down from "test3", we
