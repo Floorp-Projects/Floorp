@@ -17,7 +17,7 @@
 #include "nsHashKeys.h"
 #include <prinrval.h>
 #include "js/TypeDecls.h"
-#include "nsIAudioChannelAgent.h"
+#include "AudioChannelAgent.h"
 
 #include "mozilla/EventForwards.h"
 #include "mozilla/TimeStamp.h"
@@ -297,7 +297,7 @@ class nsNPAPIPluginInstance final
   char** mCachedParamNames;
   char** mCachedParamValues;
 
-  nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;
+  RefPtr<mozilla::dom::AudioChannelAgent> mAudioChannelAgent;
   bool mMuted;
 };
 
