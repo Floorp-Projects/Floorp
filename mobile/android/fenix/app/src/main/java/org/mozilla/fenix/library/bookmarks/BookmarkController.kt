@@ -4,20 +4,22 @@
 
 package org.mozilla.fenix.library.bookmarks
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.res.Resources
+import androidx.core.content.getSystemService
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import mozilla.components.concept.storage.BookmarkNode
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.FenixSnackbarPresenter
 import org.mozilla.fenix.components.Services
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.copyUrl
 import org.mozilla.fenix.ext.nav
 
 /**
@@ -73,7 +75,8 @@ class DefaultBookmarkController(
     }
 
     override fun handleCopyUrl(item: BookmarkNode) {
-        item.copyUrl(context)
+        val urlClipData = ClipData.newPlainText(item.url, item.url)
+        context.getSystemService<ClipboardManager>()?.primaryClip = urlClipData
         snackbarPresenter.present(resources.getString(R.string.url_copied))
     }
 

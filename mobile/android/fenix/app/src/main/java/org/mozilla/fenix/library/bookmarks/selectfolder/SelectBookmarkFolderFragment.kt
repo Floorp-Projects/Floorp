@@ -31,11 +31,11 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.setRootTitles
-import org.mozilla.fenix.ext.withOptionalDesktopFolders
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
+import org.mozilla.fenix.library.bookmarks.DesktopFolders
 import org.mozilla.fenix.library.bookmarks.SignInView
 
 @SuppressWarnings("TooManyFunctions")
@@ -76,7 +76,6 @@ class SelectBookmarkFolderFragment : Fragment(), AccountObserver {
 
     override fun onResume() {
         super.onResume()
-        context?.let { setRootTitles(it, showMobileRoot = true) }
         activity?.title = getString(R.string.bookmark_select_folder_fragment_label)
         (activity as? AppCompatActivity)?.supportActionBar?.show()
 
@@ -85,8 +84,10 @@ class SelectBookmarkFolderFragment : Fragment(), AccountObserver {
 
         lifecycleScope.launch(Main) {
             bookmarkNode = withContext(IO) {
-                requireComponents.core.bookmarksStorage.getTree(BookmarkRoot.Root.id, true)
-                    .withOptionalDesktopFolders(context, showMobileRoot = true)
+                val context = requireContext()
+                context.components.core.bookmarksStorage
+                    .getTree(BookmarkRoot.Root.id, recursive = true)
+                    ?.let { DesktopFolders(context, showMobileRoot = true).withOptionalDesktopFolders(it) }
             }
             activity?.title = bookmarkNode?.title ?: getString(R.string.library_bookmarks)
             val adapter = SelectBookmarkFolderAdapter(sharedViewModel)

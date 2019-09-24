@@ -42,9 +42,7 @@ import org.mozilla.fenix.ext.bookmarkStorage
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.minus
 import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.ext.setRootTitles
 import org.mozilla.fenix.ext.urlToTrimmedHost
-import org.mozilla.fenix.ext.withOptionalDesktopFolders
 import org.mozilla.fenix.library.LibraryPageFragment
 import org.mozilla.fenix.utils.allowUndo
 
@@ -59,6 +57,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
     private val sharedViewModel: BookmarksSharedViewModel by activityViewModels {
         ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
     }
+    private val desktopFolders by lazy { DesktopFolders(context!!, showMobileRoot = false) }
 
     var currentRoot: BookmarkNode? = null
     lateinit var initialJob: Job
@@ -125,7 +124,6 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
 
     override fun onResume() {
         super.onResume()
-        context?.let { setRootTitles(it) }
 
         (activity as? AppCompatActivity)?.supportActionBar?.show()
         checkIfSignedIn()
@@ -137,8 +135,8 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
 
     private fun loadInitialBookmarkFolder(currentGuid: String): Job {
         return viewLifecycleOwner.lifecycleScope.launch(IO) {
-            currentRoot =
-                context?.bookmarkStorage()?.getTree(currentGuid).withOptionalDesktopFolders(context) as BookmarkNode
+            currentRoot = requireContext().bookmarkStorage
+                    .getTree(currentGuid)?.let { desktopFolders.withOptionalDesktopFolders(it) }!!
 
             if (!isActive) return@launch
             launch(Main) {
@@ -244,12 +242,11 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
         // If that's the case, we don't know what node to refresh, and so we bail out.
         // See https://github.com/mozilla-mobile/fenix/issues/4671
         val currentGuid = bookmarkStore.state.tree?.guid ?: return
-        context?.bookmarkStorage()?.getTree(currentGuid, false).withOptionalDesktopFolders(context)
+        context?.bookmarkStorage
+            ?.getTree(currentGuid, false)
+            ?.let { desktopFolders.withOptionalDesktopFolders(it) }
             ?.let { node ->
-                var rootNode = node
-                pendingBookmarksToDelete.forEach {
-                    rootNode -= it.guid
-                }
+                val rootNode = node - pendingBookmarksToDelete
                 bookmarkInteractor.onBookmarksChanged(rootNode)
             }
     }
@@ -261,18 +258,15 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
 
     private suspend fun deleteSelectedBookmarks(selected: Set<BookmarkNode>) {
         selected.forEach {
-            context?.bookmarkStorage()?.deleteNode(it.guid)
+            context?.bookmarkStorage?.deleteNode(it.guid)
         }
     }
 
     private fun deleteMulti(selected: Set<BookmarkNode>, eventType: Event = Event.RemoveBookmarks) {
         pendingBookmarksToDelete.addAll(selected)
 
-        var bookmarkTree = currentRoot
-        pendingBookmarksToDelete.forEach {
-            bookmarkTree -= it.guid
-        }
-        bookmarkInteractor.onBookmarksChanged(bookmarkTree!!)
+        val bookmarkTree = currentRoot!! - pendingBookmarksToDelete
+        bookmarkInteractor.onBookmarksChanged(bookmarkTree)
 
         val deleteOperation: (suspend () -> Unit) = {
             deleteSelectedBookmarks(selected)

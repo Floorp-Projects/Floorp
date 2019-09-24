@@ -44,6 +44,9 @@ class BookmarkFragmentInteractor(
         bookmarkStore.dispatch(BookmarkFragmentAction.DeselectAll)
     }
 
+    /**
+     * Copies the URL of the given BookmarkNode into the copy and paste buffer.
+     */
     override fun onCopyPressed(item: BookmarkNode) {
         require(item.type == BookmarkNodeType.ITEM)
         item.url?.let {

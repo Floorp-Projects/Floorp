@@ -40,14 +40,14 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.setRootTitles
 import org.mozilla.fenix.ext.urlToTrimmedHost
-import org.mozilla.fenix.ext.withRootTitle
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
+import org.mozilla.fenix.library.bookmarks.DesktopFolders
 import java.util.concurrent.TimeUnit
 
 class EditBookmarkFragment : Fragment() {
@@ -70,20 +70,18 @@ class EditBookmarkFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        context?.let {
-            setRootTitles(it, showMobileRoot = true)
-        }
 
         val activity = activity as? AppCompatActivity
         activity?.supportActionBar?.show()
 
         guidToEdit = EditBookmarkFragmentArgs.fromBundle(arguments!!).guidToEdit
         lifecycleScope.launch(IO) {
-            bookmarkNode = requireComponents.core.bookmarksStorage.getTree(guidToEdit)
+            val context = requireContext()
+            bookmarkNode = context.components.core.bookmarksStorage.getTree(guidToEdit)
             bookmarkParent = sharedViewModel.selectedFolder
-                ?: bookmarkNode?.parentGuid?.let {
-                    requireComponents.core.bookmarksStorage.getTree(it)
-                }.withRootTitle()
+                ?: bookmarkNode?.parentGuid
+                    ?.let { context.components.core.bookmarksStorage.getTree(it) }
+                    ?.let { DesktopFolders(context, showMobileRoot = true).withRootTitle(it) }
 
             launch(Main) {
                 when (bookmarkNode?.type) {
