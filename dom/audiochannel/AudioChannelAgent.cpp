@@ -138,7 +138,7 @@ void AudioChannelAgent::PullInitialUpdate() {
            this, config.mMuted ? "true" : "false", config.mVolume,
            SuspendTypeToStr(config.mSuspend),
            config.mCapturedAudio ? "true" : "false"));
-  WindowVolumeChanged();
+  WindowVolumeChanged(config.mVolume, config.mMuted);
   WindowSuspendChanged(config.mSuspend);
   WindowAudioCaptureChanged(InnerWindowID(), config.mCapturedAudio);
 }
@@ -216,19 +216,17 @@ AudioChannelAgent::GetCallback() {
   return callback.forget();
 }
 
-void AudioChannelAgent::WindowVolumeChanged() {
+void AudioChannelAgent::WindowVolumeChanged(float aVolume, bool aMuted) {
   nsCOMPtr<nsIAudioChannelAgentCallback> callback = GetCallback();
   if (!callback) {
     return;
   }
 
-  AudioPlaybackConfig config = GetMediaConfig();
   MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
           ("AudioChannelAgent, WindowVolumeChanged, this = %p, mute = %s, "
            "volume = %f\n",
-           this, config.mMuted ? "true" : "false", config.mVolume));
-
-  callback->WindowVolumeChanged(config.mVolume, config.mMuted);
+           this, aMuted ? "true" : "false", aVolume));
+  callback->WindowVolumeChanged(aVolume, aMuted);
 }
 
 void AudioChannelAgent::WindowSuspendChanged(nsSuspendedTypes aSuspend) {

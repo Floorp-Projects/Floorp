@@ -115,7 +115,8 @@ class AudioChannelService final : public nsIObserver {
 
   bool IsWindowActive(nsPIDOMWindowOuter* aWindow);
 
-  void RefreshAgentsVolume(nsPIDOMWindowOuter* aWindow);
+  void RefreshAgentsVolume(nsPIDOMWindowOuter* aWindow, float aVolume,
+                           bool aMuted);
   void RefreshAgentsSuspend(nsPIDOMWindowOuter* aWindow,
                             nsSuspendedTypes aSuspend);
 
