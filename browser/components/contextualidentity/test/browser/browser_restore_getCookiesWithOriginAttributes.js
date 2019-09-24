@@ -73,6 +73,7 @@ function deleteCookies(onlyContext = null) {
         cookie.host,
         cookie.name,
         cookie.path,
+        false,
         cookie.originAttributes
       );
     }

@@ -39,6 +39,7 @@ const clearCookies = async function(options) {
           cookie.host,
           cookie.name,
           cookie.path,
+          false,
           cookie.originAttributes
         );
 

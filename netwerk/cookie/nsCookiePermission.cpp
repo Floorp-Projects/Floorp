@@ -36,6 +36,8 @@ using namespace mozilla;
 
 static const bool kDefaultPolicy = true;
 
+static const nsLiteralCString kPermissionType(NS_LITERAL_CSTRING("cookie"));
+
 namespace {
 mozilla::StaticRefPtr<nsCookiePermission> gSingleton;
 }
@@ -61,6 +63,20 @@ bool nsCookiePermission::Init() {
 }
 
 NS_IMETHODIMP
+nsCookiePermission::SetAccess(nsIURI* aURI, nsCookieAccess aAccess) {
+  // Lazily initialize ourselves
+  if (!EnsureInitialized()) return NS_ERROR_UNEXPECTED;
+
+  //
+  // NOTE: nsCookieAccess values conveniently match up with
+  //       the permission codes used by nsIPermissionManager.
+  //       this is nice because it avoids conversion code.
+  //
+  return mPermMgr->Add(aURI, kPermissionType, aAccess,
+                       nsIPermissionManager::EXPIRE_NEVER, 0);
+}
+
+NS_IMETHODIMP
 nsCookiePermission::CanSetCookie(nsIURI* aURI, nsIChannel* aChannel,
                                  nsICookie* aCookie, bool* aIsSession,
                                  int64_t* aExpiry, bool* aResult) {
@@ -74,7 +90,7 @@ nsCookiePermission::CanSetCookie(nsIURI* aURI, nsIChannel* aChannel,
   nsCookie* cookie = static_cast<nsCookie*>(aCookie);
   uint32_t perm;
   mPermMgr->LegacyTestPermissionFromURI(aURI, &cookie->OriginAttributesRef(),
-                                        NS_LITERAL_CSTRING("cookie"), &perm);
+                                        kPermissionType, &perm);
   switch (perm) {
     case nsICookiePermission::ACCESS_SESSION:
       *aIsSession = true;
