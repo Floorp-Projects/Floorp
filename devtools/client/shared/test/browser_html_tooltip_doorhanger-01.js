@@ -6,7 +6,8 @@
 
 /**
  * Test the HTMLTooltip "doorhanger" type's hang direction. It should hang
- * towards the middle of the screen.
+ * along the flow of text e.g. in RTL mode it should hang left and in LTR mode
+ * it should hang right.
  */
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
@@ -29,10 +30,6 @@ add_task(async function() {
   info("Run tests for a Tooltip without using a XUL panel");
   useXulWrapper = false;
   await runTests(doc);
-
-  info("Run tests for a Tooltip with a XUL panel");
-  useXulWrapper = true;
-  await runTests(doc);
 });
 
 async function runTests(doc) {
@@ -43,48 +40,35 @@ async function runTests(doc) {
   div.style.height = "35px";
   tooltip.panel.appendChild(div);
 
-  const docBounds = doc.documentElement.getBoundingClientRect();
+  const anchors = [...doc.querySelectorAll(".anchor")];
+  for (const anchor of anchors) {
+    const hangDirection = anchor.getAttribute("data-hang");
 
-  const elements = [...doc.querySelectorAll(".anchor")];
-  for (const el of elements) {
     info("Display the tooltip on an anchor.");
-    await showTooltip(tooltip, el);
+    await showTooltip(tooltip, anchor);
 
     const arrow = tooltip.arrow;
     ok(arrow, "Tooltip has an arrow");
 
-    // Get the geometry of the anchor, the tooltip panel & arrow.
-    const anchorBounds = el.getBoxQuads({ relativeTo: doc })[0].getBounds();
+    // Get the geometry of the the tooltip panel & arrow.
     const panelBounds = tooltip.panel
       .getBoxQuads({ relativeTo: doc })[0]
       .getBounds();
     const arrowBounds = arrow.getBoxQuads({ relativeTo: doc })[0].getBounds();
+    const panelBoundsCentre = (panelBounds.left + panelBounds.right) / 2;
+    const arrowCentre = (arrowBounds.left + arrowBounds.right) / 2;
 
-    // Work out which side of the view the anchor is on.
-    const center = bounds => bounds.left + bounds.width / 2;
-    const anchorSide =
-      center(anchorBounds) < center(docBounds) ? "left" : "right";
-
-    // Work out which direction the doorhanger hangs.
-    //
-    // We can do that just by checking which edge of the panel the center of the
-    // arrow is closer to.
-    const panelDirection =
-      center(arrowBounds) - panelBounds.left <
-      panelBounds.right - center(arrowBounds)
-        ? "right"
-        : "left";
-
-    const params =
-      `document: ${docBounds.left}<->${docBounds.right}, ` +
-      `anchor: ${anchorBounds.left}<->${anchorBounds.right}, ` +
-      `panel: ${panelBounds.left}<->${panelBounds.right}, ` +
-      `anchor side: ${anchorSide}, ` +
-      `panel direction: ${panelDirection}`;
-    ok(
-      anchorSide !== panelDirection,
-      `Doorhanger hangs towards center (${params})`
-    );
+    if (hangDirection === "left") {
+      ok(
+        arrowCentre > panelBoundsCentre,
+        `tooltip hangs to the left for ${anchor.id}`
+      );
+    } else {
+      ok(
+        arrowCentre < panelBoundsCentre,
+        `tooltip hangs to the right for ${anchor.id}`
+      );
+    }
 
     await hideTooltip(tooltip);
   }

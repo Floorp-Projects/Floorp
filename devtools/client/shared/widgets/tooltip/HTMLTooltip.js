@@ -204,12 +204,14 @@ const calculateHorizontalPosition = (
   offset,
   borderRadius,
   isRtl,
+  isMenuTooltip,
   doc = null
 ) => {
-  // Which direction should the tooltip go?
+  // All tooltips from content should follow the writing direction.
   //
-  // For tooltips we follow the writing direction but for doorhangers the
-  // guidelines[1] say that,
+  // For tooltips (including doorhanger tooltips) we follow the writing
+  // direction but for menus created using doorhangers the guidelines[1] say
+  // that:
   //
   //   "Doorhangers opening on the right side of the view show the directional
   //   arrow on the right.
@@ -223,7 +225,7 @@ const calculateHorizontalPosition = (
   //
   // So for those we need to check if the anchor is more right or left.
   let hangDirection;
-  if (type === TYPE.DOORHANGER) {
+  if (type === TYPE.DOORHANGER && isMenuTooltip) {
     const anchorCenter = anchorRect.left + anchorRect.width / 2;
     const viewCenter = windowRect.left + windowRect.width / 2;
     hangDirection = anchorCenter >= viewCenter ? "left" : "right";
@@ -334,20 +336,23 @@ const getRelativeRect = function(node, relativeTo) {
  * @param {Document} toolboxDoc
  *        The toolbox document to attach the HTMLTooltip popup.
  * @param {Object}
- *        - {String} id
- *          The ID to assign to the tooltip container elment.
  *        - {String} className
  *          A string separated list of classes to add to the tooltip container
  *          element.
- *        - {String} type
- *          Display type of the tooltip. Possible values: "normal", "arrow", and
- *          "doorhanger".
  *        - {Boolean} consumeOutsideClicks
  *          Defaults to true. The tooltip is closed when clicking outside.
  *          Should this event be stopped and consumed or not.
+ *        - {String} id
+ *          The ID to assign to the tooltip container element.
+ *        - {Boolean} isMenuTooltip
+ *          Defaults to false. If the tooltip is a menu then this should be set
+ *          to true.
+ *        - {String} type
+ *          Display type of the tooltip. Possible values: "normal", "arrow", and
+ *          "doorhanger".
  *        - {Boolean} useXulWrapper
- *          Defaults to false. If the tooltip is hosted in a XUL document, use a XUL panel
- *          in order to use all the screen viewport available.
+ *          Defaults to false. If the tooltip is hosted in a XUL document, use a
+ *          XUL panel in order to use all the screen viewport available.
  *        - {Boolean} noAutoHide
  *          Defaults to false. If this property is set to false or omitted, the
  *          tooltip will automatically disappear after a few seconds. If this
@@ -357,10 +362,11 @@ const getRelativeRect = function(node, relativeTo) {
 function HTMLTooltip(
   toolboxDoc,
   {
-    id = "",
     className = "",
-    type = "normal",
     consumeOutsideClicks = true,
+    id = "",
+    isMenuTooltip = false,
+    type = "normal",
     useXulWrapper = false,
     noAutoHide = false,
   } = {}
@@ -374,6 +380,7 @@ function HTMLTooltip(
   this.noAutoHide = noAutoHide;
   // consumeOutsideClicks cannot be used if the tooltip is not closed on click
   this.consumeOutsideClicks = this.noAutoHide ? false : consumeOutsideClicks;
+  this.isMenuTooltip = isMenuTooltip;
   this.useXulWrapper = this._isXUL() && useXulWrapper;
   this.preferredWidth = "auto";
   this.preferredHeight = "auto";
@@ -594,6 +601,7 @@ HTMLTooltip.prototype = {
       x,
       borderRadius,
       isRtl,
+      this.isMenuTooltip,
       this.doc
     );
 
