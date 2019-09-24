@@ -1,0 +1,588 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ConditionalPanel it should render at location of selected breakpoint 1`] = `
+<ConditionalPanel
+  breakpoint={
+    Object {
+      "astLocation": null,
+      "disabled": false,
+      "generatedLocation": Object {
+        "column": 2,
+        "line": 2,
+        "sourceId": "source",
+      },
+      "id": "breakpoint",
+      "location": Object {
+        "column": 2,
+        "line": 2,
+        "sourceId": "source",
+      },
+      "options": Object {
+        "condition": undefined,
+        "logValue": undefined,
+      },
+      "originalText": "text",
+      "text": "text",
+    }
+  }
+  closeConditionalPanel={[MockFunction]}
+  editor={
+    Object {
+      "CodeMirror": Object {
+        "fromTextArea": [MockFunction] {
+          "calls": Array [
+            Array [
+              <textarea />,
+              Object {
+                "mode": "javascript",
+                "placeholder": "Breakpoint condition, e.g. items.length > 0",
+                "theme": "mozilla",
+              },
+            ],
+          ],
+          "results": Array [
+            Object {
+              "isThrow": false,
+              "value": Object {
+                "focus": [MockFunction] {
+                  "calls": Array [
+                    Array [],
+                  ],
+                  "results": Array [
+                    Object {
+                      "isThrow": false,
+                      "value": undefined,
+                    },
+                  ],
+                },
+                "getWrapperElement": [MockFunction] {
+                  "calls": Array [
+                    Array [],
+                  ],
+                  "results": Array [
+                    Object {
+                      "isThrow": false,
+                      "value": Object {
+                        "addEventListener": [MockFunction] {
+                          "calls": Array [
+                            Array [
+                              "keydown",
+                              [Function],
+                            ],
+                          ],
+                          "results": Array [
+                            Object {
+                              "isThrow": false,
+                              "value": undefined,
+                            },
+                          ],
+                        },
+                      },
+                    },
+                  ],
+                },
+                "lineCount": [MockFunction] {
+                  "calls": Array [
+                    Array [],
+                  ],
+                  "results": Array [
+                    Object {
+                      "isThrow": false,
+                      "value": undefined,
+                    },
+                  ],
+                },
+                "on": [MockFunction] {
+                  "calls": Array [
+                    Array [
+                      "keydown",
+                      [Function],
+                    ],
+                    Array [
+                      "blur",
+                      [Function],
+                    ],
+                  ],
+                  "results": Array [
+                    Object {
+                      "isThrow": false,
+                      "value": undefined,
+                    },
+                    Object {
+                      "isThrow": false,
+                      "value": undefined,
+                    },
+                  ],
+                },
+                "setCursor": [MockFunction] {
+                  "calls": Array [
+                    Array [
+                      undefined,
+                      0,
+                    ],
+                  ],
+                  "results": Array [
+                    Object {
+                      "isThrow": false,
+                      "value": undefined,
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+        },
+      },
+      "codeMirror": Object {
+        "addLineWidget": [MockFunction] {
+          "calls": Array [
+            Array [
+              1,
+              <div>
+                <div
+                  class="conditional-breakpoint-panel"
+                >
+                  <div
+                    class="prompt"
+                  >
+                    »
+                  </div>
+                  <textarea />
+                </div>
+              </div>,
+              Object {
+                "coverGutter": true,
+                "noHScroll": true,
+              },
+            ],
+          ],
+          "results": Array [
+            Object {
+              "isThrow": false,
+              "value": undefined,
+            },
+          ],
+        },
+      },
+    }
+  }
+  getDefaultValue={[MockFunction]}
+  location={
+    Object {
+      "column": 2,
+      "line": 2,
+      "sourceId": "source",
+    }
+  }
+  log={false}
+  openConditionalPanel={[MockFunction]}
+  source={
+    Object {
+      "extensionName": null,
+      "id": "source",
+      "introductionType": undefined,
+      "introductionUrl": null,
+      "isBlackBoxed": false,
+      "isExtension": false,
+      "isPrettyPrinted": false,
+      "isWasm": false,
+      "relativeUrl": "url",
+      "url": "url",
+    }
+  }
+/>
+`;
+
+exports[`ConditionalPanel it should render with condition at selected breakpoint location 1`] = `
+<ConditionalPanel
+  breakpoint={
+    Object {
+      "astLocation": null,
+      "disabled": false,
+      "generatedLocation": Object {
+        "column": 3,
+        "line": 3,
+        "sourceId": "source",
+      },
+      "id": "breakpoint",
+      "location": Object {
+        "column": 3,
+        "line": 3,
+        "sourceId": "source",
+      },
+      "options": Object {
+        "condition": "I'm a condition",
+        "logValue": "not a log",
+      },
+      "originalText": "text",
+      "text": "text",
+    }
+  }
+  closeConditionalPanel={[MockFunction]}
+  editor={
+    Object {
+      "CodeMirror": Object {
+        "fromTextArea": [MockFunction] {
+          "calls": Array [
+            Array [
+              <textarea>
+                I'm a condition
+              </textarea>,
+              Object {
+                "mode": "javascript",
+                "placeholder": "Breakpoint condition, e.g. items.length > 0",
+                "theme": "mozilla",
+              },
+            ],
+          ],
+          "results": Array [
+            Object {
+              "isThrow": false,
+              "value": Object {
+                "focus": [MockFunction] {
+                  "calls": Array [
+                    Array [],
+                  ],
+                  "results": Array [
+                    Object {
+                      "isThrow": false,
+                      "value": undefined,
+                    },
+                  ],
+                },
+                "getWrapperElement": [MockFunction] {
+                  "calls": Array [
+                    Array [],
+                  ],
+                  "results": Array [
+                    Object {
+                      "isThrow": false,
+                      "value": Object {
+                        "addEventListener": [MockFunction] {
+                          "calls": Array [
+                            Array [
+                              "keydown",
+                              [Function],
+                            ],
+                          ],
+                          "results": Array [
+                            Object {
+                              "isThrow": false,
+                              "value": undefined,
+                            },
+                          ],
+                        },
+                      },
+                    },
+                  ],
+                },
+                "lineCount": [MockFunction] {
+                  "calls": Array [
+                    Array [],
+                  ],
+                  "results": Array [
+                    Object {
+                      "isThrow": false,
+                      "value": undefined,
+                    },
+                  ],
+                },
+                "on": [MockFunction] {
+                  "calls": Array [
+                    Array [
+                      "keydown",
+                      [Function],
+                    ],
+                    Array [
+                      "blur",
+                      [Function],
+                    ],
+                  ],
+                  "results": Array [
+                    Object {
+                      "isThrow": false,
+                      "value": undefined,
+                    },
+                    Object {
+                      "isThrow": false,
+                      "value": undefined,
+                    },
+                  ],
+                },
+                "setCursor": [MockFunction] {
+                  "calls": Array [
+                    Array [
+                      undefined,
+                      0,
+                    ],
+                  ],
+                  "results": Array [
+                    Object {
+                      "isThrow": false,
+                      "value": undefined,
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+        },
+      },
+      "codeMirror": Object {
+        "addLineWidget": [MockFunction] {
+          "calls": Array [
+            Array [
+              2,
+              <div>
+                <div
+                  class="conditional-breakpoint-panel"
+                >
+                  <div
+                    class="prompt"
+                  >
+                    »
+                  </div>
+                  <textarea>
+                    I'm a condition
+                  </textarea>
+                </div>
+              </div>,
+              Object {
+                "coverGutter": true,
+                "noHScroll": true,
+              },
+            ],
+          ],
+          "results": Array [
+            Object {
+              "isThrow": false,
+              "value": undefined,
+            },
+          ],
+        },
+      },
+    }
+  }
+  getDefaultValue={[MockFunction]}
+  location={
+    Object {
+      "column": 3,
+      "line": 3,
+      "sourceId": "source",
+    }
+  }
+  log={false}
+  openConditionalPanel={[MockFunction]}
+  source={
+    Object {
+      "extensionName": null,
+      "id": "source",
+      "introductionType": undefined,
+      "introductionUrl": null,
+      "isBlackBoxed": false,
+      "isExtension": false,
+      "isPrettyPrinted": false,
+      "isWasm": false,
+      "relativeUrl": "url",
+      "url": "url",
+    }
+  }
+/>
+`;
+
+exports[`ConditionalPanel it should render with logpoint at selected breakpoint location 1`] = `
+<ConditionalPanel
+  breakpoint={
+    Object {
+      "astLocation": null,
+      "disabled": false,
+      "generatedLocation": Object {
+        "column": 4,
+        "line": 4,
+        "sourceId": "source",
+      },
+      "id": "breakpoint",
+      "location": Object {
+        "column": 4,
+        "line": 4,
+        "sourceId": "source",
+      },
+      "options": Object {
+        "condition": "not a condition",
+        "logValue": "I'm a log",
+      },
+      "originalText": "text",
+      "text": "text",
+    }
+  }
+  closeConditionalPanel={[MockFunction]}
+  editor={
+    Object {
+      "CodeMirror": Object {
+        "fromTextArea": [MockFunction] {
+          "calls": Array [
+            Array [
+              <textarea>
+                I'm a log
+              </textarea>,
+              Object {
+                "mode": "javascript",
+                "placeholder": "Log message, e.g. displayName",
+                "theme": "mozilla",
+              },
+            ],
+          ],
+          "results": Array [
+            Object {
+              "isThrow": false,
+              "value": Object {
+                "focus": [MockFunction] {
+                  "calls": Array [
+                    Array [],
+                  ],
+                  "results": Array [
+                    Object {
+                      "isThrow": false,
+                      "value": undefined,
+                    },
+                  ],
+                },
+                "getWrapperElement": [MockFunction] {
+                  "calls": Array [
+                    Array [],
+                  ],
+                  "results": Array [
+                    Object {
+                      "isThrow": false,
+                      "value": Object {
+                        "addEventListener": [MockFunction] {
+                          "calls": Array [
+                            Array [
+                              "keydown",
+                              [Function],
+                            ],
+                          ],
+                          "results": Array [
+                            Object {
+                              "isThrow": false,
+                              "value": undefined,
+                            },
+                          ],
+                        },
+                      },
+                    },
+                  ],
+                },
+                "lineCount": [MockFunction] {
+                  "calls": Array [
+                    Array [],
+                  ],
+                  "results": Array [
+                    Object {
+                      "isThrow": false,
+                      "value": undefined,
+                    },
+                  ],
+                },
+                "on": [MockFunction] {
+                  "calls": Array [
+                    Array [
+                      "keydown",
+                      [Function],
+                    ],
+                    Array [
+                      "blur",
+                      [Function],
+                    ],
+                  ],
+                  "results": Array [
+                    Object {
+                      "isThrow": false,
+                      "value": undefined,
+                    },
+                    Object {
+                      "isThrow": false,
+                      "value": undefined,
+                    },
+                  ],
+                },
+                "setCursor": [MockFunction] {
+                  "calls": Array [
+                    Array [
+                      undefined,
+                      0,
+                    ],
+                  ],
+                  "results": Array [
+                    Object {
+                      "isThrow": false,
+                      "value": undefined,
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+        },
+      },
+      "codeMirror": Object {
+        "addLineWidget": [MockFunction] {
+          "calls": Array [
+            Array [
+              3,
+              <div>
+                <div
+                  class="conditional-breakpoint-panel log-point"
+                >
+                  <div
+                    class="prompt"
+                  >
+                    »
+                  </div>
+                  <textarea>
+                    I'm a log
+                  </textarea>
+                </div>
+              </div>,
+              Object {
+                "coverGutter": true,
+                "noHScroll": true,
+              },
+            ],
+          ],
+          "results": Array [
+            Object {
+              "isThrow": false,
+              "value": undefined,
+            },
+          ],
+        },
+      },
+    }
+  }
+  getDefaultValue={[MockFunction]}
+  location={
+    Object {
+      "column": 4,
+      "line": 4,
+      "sourceId": "source",
+    }
+  }
+  log={true}
+  openConditionalPanel={[MockFunction]}
+  source={
+    Object {
+      "extensionName": null,
+      "id": "source",
+      "introductionType": undefined,
+      "introductionUrl": null,
+      "isBlackBoxed": false,
+      "isExtension": false,
+      "isPrettyPrinted": false,
+      "isWasm": false,
+      "relativeUrl": "url",
+      "url": "url",
+    }
+  }
+/>
+`;

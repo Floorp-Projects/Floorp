@@ -12,13 +12,13 @@ import { toEditorLine } from "../../utils/editor";
 import actions from "../../actions";
 
 import {
-  getBreakpoint,
+  getClosestBreakpoint,
   getConditionalPanelLocation,
   getLogPointStatus,
   getContext,
 } from "../../selectors";
 
-import type { SourceLocation, Context } from "../../types";
+import type { SourceLocation, Context, Breakpoint } from "../../types";
 
 function addNewLine(doc: Object) {
   const cursor = doc.getCursor();
@@ -76,7 +76,13 @@ export class ConditionalPanel extends PureComponent<Props> {
   };
 
   setBreakpoint(value: string) {
-    const { cx, location, log, breakpoint } = this.props;
+    const { cx, log, breakpoint } = this.props;
+    // If breakpoint is `pending`, props will not contain a breakpoint.
+    // If source is a URL without location, breakpoint will contain no generatedLocation.
+    const location =
+      breakpoint && breakpoint.generatedLocation
+        ? breakpoint.generatedLocation
+        : this.props.location;
     const options = breakpoint ? breakpoint.options : {};
     const type = log ? "logValue" : "condition";
     return this.props.setBreakpointOptions(cx, location, {
@@ -125,7 +131,6 @@ export class ConditionalPanel extends PureComponent<Props> {
     if (this.cbPanel) {
       this.clearConditionalPanel();
     }
-
     const { location, editor } = props;
 
     const editorLine = toEditorLine(location.sourceId, location.line || 0);
@@ -160,7 +165,6 @@ export class ConditionalPanel extends PureComponent<Props> {
 
   createEditor = (input: ?HTMLTextAreaElement) => {
     const { log, editor, closeConditionalPanel } = this.props;
-
     const codeMirror = editor.CodeMirror.fromTextArea(input, {
       mode: "javascript",
       theme: "mozilla",
@@ -229,9 +233,15 @@ export class ConditionalPanel extends PureComponent<Props> {
 
 const mapStateToProps = state => {
   const location = getConditionalPanelLocation(state);
+
+  // location type could be null.
+  const breakpoint: ?Breakpoint = location
+    ? getClosestBreakpoint(state, location)
+    : undefined;
+
   return {
     cx: getContext(state),
-    breakpoint: getBreakpoint(state, location),
+    breakpoint,
     location,
     log: getLogPointStatus(state),
   };
