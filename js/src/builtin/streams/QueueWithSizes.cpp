@@ -14,7 +14,7 @@
 
 #include "jsapi.h"  // JS_ReportErrorNumberASCII
 
-#include "builtin/streams/ReadableStreamController.h"  // js::ReadableStreamController
+#include "builtin/streams/StreamController.h"  // js::StreamController
 #include "js/Class.h"         // JSClass, JSCLASS_HAS_RESERVED_SLOTS
 #include "js/Conversions.h"   // JS::ToNumber
 #include "js/RootingAPI.h"    // JS::Rooted
@@ -69,9 +69,9 @@ const JSClass QueueEntry::class_ = {"QueueEntry",
 /**
  * Streams spec, 6.2.1. DequeueValue ( container ) nothrow
  */
-MOZ_MUST_USE bool js::DequeueValue(
-    JSContext* cx, Handle<ReadableStreamController*> unwrappedContainer,
-    MutableHandle<Value> chunk) {
+MOZ_MUST_USE bool js::DequeueValue(JSContext* cx,
+                                   Handle<StreamController*> unwrappedContainer,
+                                   MutableHandle<Value> chunk) {
   // Step 1: Assert: container has [[queue]] and [[queueTotalSize]] internal
   //         slots (implicit).
   // Step 2: Assert: queue is not empty.
@@ -111,7 +111,7 @@ MOZ_MUST_USE bool js::DequeueValue(
  * Streams spec, 6.2.2. EnqueueValueWithSize ( container, value, size ) throws
  */
 MOZ_MUST_USE bool js::EnqueueValueWithSize(
-    JSContext* cx, Handle<ReadableStreamController*> unwrappedContainer,
+    JSContext* cx, Handle<StreamController*> unwrappedContainer,
     Handle<Value> value, Handle<Value> sizeVal) {
   cx->check(value, sizeVal);
 
@@ -162,8 +162,8 @@ MOZ_MUST_USE bool js::EnqueueValueWithSize(
 /**
  * Streams spec, 6.2.4. ResetQueue ( container ) nothrow
  */
-MOZ_MUST_USE bool js::ResetQueue(
-    JSContext* cx, Handle<ReadableStreamController*> unwrappedContainer) {
+MOZ_MUST_USE bool js::ResetQueue(JSContext* cx,
+                                 Handle<StreamController*> unwrappedContainer) {
   // Step 1: Assert: container has [[queue]] and [[queueTotalSize]] internal
   //         slots (implicit).
   // Step 2: Set container.[[queue]] to a new empty List.
