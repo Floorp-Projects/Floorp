@@ -200,7 +200,7 @@ already_AddRefed<Promise> Client::Navigate(const nsAString& aURL,
       [self, outerPromise](nsresult aResult) {
         // TODO: Improve this error in bug 1412856.  Ideally we should throw
         //       the TypeError in the child process and pass it back to here.
-        outerPromise->MaybeReject(NS_ERROR_TYPE_ERR);
+        outerPromise->MaybeReject(NS_ERROR_DOM_TYPE_ERR);
       });
 
   return outerPromise.forget();
