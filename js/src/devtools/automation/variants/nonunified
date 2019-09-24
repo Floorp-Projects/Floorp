@@ -1,5 +1,5 @@
 {
-    "configure-args": "--enable-warnings-as-errors",
+    "configure-args": "--enable-warnings-as-errors --enable-rust-simd",
     "debug": true,
     "skip-tests": {
         "all": ["jstests", "jittest", "checks"]

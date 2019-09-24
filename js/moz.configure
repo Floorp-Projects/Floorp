@@ -435,6 +435,23 @@ set_config('JS_BUILD_BINAST', depends_if('--enable-binast')(lambda x: True))
 set_define('JS_BUILD_BINAST', depends_if('--enable-binast')(lambda x: True))
 
 
+# SIMD acceleration for encoding_rs
+# ==============================================================
+
+js_option('--enable-rust-simd', env='MOZ_RUST_SIMD',
+          help='Enable explicit SIMD in Rust code.')
+
+@depends('--enable-rust-simd', target)
+def rust_simd(value, target):
+    # As of 2019-09-17, the simd-accel feature of encoding_rs has not
+    # been properly set up outside aarch64, armv7, x86 and x86_64.
+    if target.cpu in ('aarch64', 'arm', 'x86', 'x86_64') and value:
+        return True
+
+set_config('MOZ_RUST_SIMD', rust_simd)
+set_define('MOZ_RUST_SIMD', rust_simd)
+
+
 # Experimental support for wasm code generation with Cranelift
 # ==============================================================
 
