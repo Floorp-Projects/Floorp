@@ -20,6 +20,10 @@ const TEST_URL = `
 `;
 
 add_task(async function() {
+  // Make the toolbox tall enough to show the full markup without the need
+  // to manage scrolling event badges into view.
+  await pushPref("devtools.toolbox.footer.height", 400);
+
   const { inspector } = await openInspectorForURL(
     "data:text/html;charset=utf-8," + encodeURI(TEST_URL)
   );
