@@ -31,6 +31,10 @@
 #  include "mozilla/webrender/RenderAndroidSurfaceTextureHostOGL.h"
 #endif
 
+#ifdef MOZ_WAYLAND
+#  include "mozilla/layers/WaylandDMABUFTextureHostOGL.h"
+#endif
+
 using namespace mozilla::gl;
 using namespace mozilla::gfx;
 
@@ -76,6 +80,13 @@ already_AddRefed<TextureHost> CreateTextureHostOGL(
                                        desc.hasAlpha());
       break;
     }
+
+#ifdef MOZ_WAYLAND
+    case SurfaceDescriptor::TSurfaceDescriptorDMABuf: {
+      result = new WaylandDMABUFTextureHostOGL(aFlags, aDesc);
+      break;
+    }
+#endif
 
 #ifdef XP_MACOSX
     case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface: {
