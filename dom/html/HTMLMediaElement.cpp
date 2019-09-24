@@ -984,7 +984,6 @@ class HTMLMediaElement::AudioChannelAgentCallback final
       : mOwner(aOwner),
         mAudioChannelVolume(1.0),
         mPlayingThroughTheAudioChannel(false),
-        mAudioCapturedByWindow(false),
         mSuspended(nsISuspendedTypes::NONE_SUSPENDED),
         mIsOwnerAudible(IsOwnerAudible()),
         mIsShutDown(false) {
@@ -1094,11 +1093,7 @@ class HTMLMediaElement::AudioChannelAgentCallback final
 
   NS_IMETHODIMP WindowAudioCaptureChanged(bool aCapture) override {
     MOZ_ASSERT(mAudioChannelAgent);
-
-    if (mAudioCapturedByWindow != aCapture) {
-      mAudioCapturedByWindow = aCapture;
-      AudioCaptureStreamChangeIfNeeded();
-    }
+    AudioCaptureStreamChangeIfNeeded();
     return NS_OK;
   }
 
@@ -1107,7 +1102,10 @@ class HTMLMediaElement::AudioChannelAgentCallback final
     if (!IsPlayingStarted()) {
       return;
     }
-    mOwner->AudioCaptureStreamChange(mAudioCapturedByWindow);
+
+    MOZ_ASSERT(mAudioChannelAgent);
+    bool isCapturing = mAudioChannelAgent->IsWindowAudioCapturingEnabled();
+    mOwner->AudioCaptureStreamChange(isCapturing);
   }
 
   void NotifyAudioPlaybackChanged(AudibleChangedReasons aReason) {
@@ -1204,6 +1202,9 @@ class HTMLMediaElement::AudioChannelAgentCallback final
     MOZ_ASSERT(mAudioChannelAgent->IsPlayingStarted());
     mAudioChannelAgent->NotifyStoppedPlaying();
     NotifyMediaStopped(mAudioChannelAgent->WindowID());
+    // If we have started audio capturing before, we have to tell media element
+    // to clear the output capturing stream.
+    mOwner->AudioCaptureStreamChange(false);
   }
 
   void SetSuspended(SuspendTypes aSuspend) {
@@ -1399,8 +1400,6 @@ class HTMLMediaElement::AudioChannelAgentCallback final
   float mAudioChannelVolume;
   // Is this media element playing?
   bool mPlayingThroughTheAudioChannel;
-  // True if the sound is being captured by the window.
-  bool mAudioCapturedByWindow;
   // We have different kinds of suspended cases,
   // - SUSPENDED_PAUSE
   // It's used when we temporary lost platform audio focus. MediaElement can

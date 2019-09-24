@@ -326,7 +326,6 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
       mFramesToProduce(aLength),
       mIsOffline(aIsOffline),
       mAudioChannelSuspended(false),
-      mCaptured(false),
       mAudible(AudioChannelService::AudibleState::eAudible),
       mCreatedTime(TimeStamp::Now()) {
   if (aIsOffline) {
@@ -396,6 +395,9 @@ void AudioDestinationNode::DestroyAudioChannelAgent() {
     mAudioChannelAgent = nullptr;
     // Reset the state, and it would always be regard as audible.
     mAudible = AudioChannelService::AudibleState::eAudible;
+    if (IsCapturingAudio()) {
+      StopAudioCapturingStream();
+    }
   }
 }
 
@@ -565,19 +567,34 @@ AudioDestinationNode::WindowAudioCaptureChanged(bool aCapture) {
     return NS_OK;
   }
 
-  if (aCapture != mCaptured) {
-    if (aCapture) {
-      nsCOMPtr<nsPIDOMWindowInner> window = Context()->GetParentObject();
-      uint64_t id = window->WindowID();
-      mCaptureStreamPort =
-          mStream->Graph()->ConnectToCaptureStream(id, mStream);
-    } else {
-      mCaptureStreamPort->Destroy();
-    }
-    mCaptured = aCapture;
+  if (aCapture == IsCapturingAudio()) {
+    return NS_OK;
+  }
+
+  if (aCapture) {
+    StartAudioCapturingStream();
+  } else {
+    StopAudioCapturingStream();
   }
 
   return NS_OK;
+}
+
+bool AudioDestinationNode::IsCapturingAudio() const {
+  return mCaptureStreamPort != nullptr;
+}
+
+void AudioDestinationNode::StartAudioCapturingStream() {
+  MOZ_ASSERT(!IsCapturingAudio());
+  nsCOMPtr<nsPIDOMWindowInner> window = Context()->GetParentObject();
+  uint64_t id = window->WindowID();
+  mCaptureStreamPort = mStream->Graph()->ConnectToCaptureStream(id, mStream);
+}
+
+void AudioDestinationNode::StopAudioCapturingStream() {
+  MOZ_ASSERT(IsCapturingAudio());
+  mCaptureStreamPort->Destroy();
+  mCaptureStreamPort = nullptr;
 }
 
 nsresult AudioDestinationNode::CreateAudioChannelAgent() {
@@ -612,6 +629,9 @@ void AudioDestinationNode::NotifyAudibleStateChanged(bool aAudible) {
     mAudioChannelAgent->NotifyStoppedPlaying();
     // Reset the state, and it would always be regard as audible.
     mAudible = AudioChannelService::AudibleState::eAudible;
+    if (IsCapturingAudio()) {
+      StopAudioCapturingStream();
+    }
     return;
   }
 
