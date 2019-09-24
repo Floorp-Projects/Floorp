@@ -223,6 +223,12 @@ callback interface MessageListener
 [ChromeOnly]
 interface MessageListenerManager
 {
+  // All the methods are pulled in via mixin.
+};
+MessageListenerManager includes MessageListenerManagerMixin;
+
+interface mixin MessageListenerManagerMixin
+{
   /**
    * Register |listener| to receive |messageName|.  All listener
    * callbacks for a particular message are invoked when that message
@@ -283,6 +289,14 @@ interface MessageListenerManager
 [ChromeOnly]
 interface MessageSender : MessageListenerManager
 {
+  // All the methods are pulled in via mixin.
+};
+MessageSender includes MessageSenderMixin;
+
+/**
+ * Anyone including this MUST also incude MessageListenerManagerMixin.
+ */
+interface mixin MessageSenderMixin {
   /**
    * Send |messageName| and |obj| to the "other side" of this message
    * manager.  This invokes listeners who registered for
@@ -325,6 +339,15 @@ interface MessageSender : MessageListenerManager
 [ChromeOnly]
 interface SyncMessageSender : MessageSender
 {
+  // All the methods are pulled in via mixin.
+};
+SyncMessageSender includes SyncMessageSenderMixin;
+
+/**
+ * Anyone including this MUST also incude MessageSenderMixin.
+ */
+interface mixin SyncMessageSenderMixin
+{
   /**
    * Like |sendAsyncMessage()|, except blocks the sender until all
    * listeners of the message have been invoked.  Returns an array
@@ -361,8 +384,11 @@ interface ChildProcessMessageManager : SyncMessageSender
 {
 };
 
-[NoInterfaceObject]
-interface MessageManagerGlobal : SyncMessageSender
+/**
+ * Mixin for message manager globals.  Anyone including this MUST also
+ * include SyncMessageSenderMixin.
+ */
+interface mixin MessageManagerGlobal
 {
   /**
    * Print a string to stdout.
@@ -385,8 +411,7 @@ interface MessageManagerGlobal : SyncMessageSender
   DOMString btoa(DOMString base64Data);
 };
 
-[NoInterfaceObject]
-interface FrameScriptLoader
+interface mixin FrameScriptLoader
 {
   /**
    * Load a script in the (remote) frame. |url| must be the absolute URL.
@@ -413,8 +438,7 @@ interface FrameScriptLoader
   sequence<sequence<any>> getDelayedFrameScripts();
 };
 
-[NoInterfaceObject]
-interface ProcessScriptLoader
+interface mixin ProcessScriptLoader
 {
   /**
    * Load a script in the (possibly remote) process. |url| must be the absolute
@@ -440,8 +464,10 @@ interface ProcessScriptLoader
   sequence<sequence<any>> getDelayedProcessScripts();
 };
 
-[NoInterfaceObject]
-interface GlobalProcessScriptLoader : ProcessScriptLoader
+/**
+ * Anyone including GlobalProcessScriptLoader MUST also include ProcessScriptLoader.
+ */
+interface mixin GlobalProcessScriptLoader
 {
   /**
    * Allows the parent process to set the initial process data for
@@ -490,10 +516,10 @@ interface ContentFrameMessageManager : EventTarget
   readonly attribute long long chromeOuterWindowID;
 
 };
-// MessageManagerGlobal inherits from SyncMessageSender, which is a real interface, not a
-// mixin. This will need to change when we implement mixins according to the current
-// WebIDL spec.
-ContentFrameMessageManager implements MessageManagerGlobal;
+ContentFrameMessageManager includes MessageManagerGlobal;
+ContentFrameMessageManager includes SyncMessageSenderMixin;
+ContentFrameMessageManager includes MessageSenderMixin;
+ContentFrameMessageManager includes MessageListenerManagerMixin;
 
 [ChromeOnly]
 interface ContentProcessMessageManager
@@ -507,10 +533,10 @@ interface ContentProcessMessageManager
 
   readonly attribute MozSharedMap sharedData;
 };
-// MessageManagerGlobal inherits from SyncMessageSender, which is a real interface, not a
-// mixin. This will need to change when we implement mixins according to the current
-// WebIDL spec.
-ContentProcessMessageManager implements MessageManagerGlobal;
+ContentProcessMessageManager includes MessageManagerGlobal;
+ContentProcessMessageManager includes SyncMessageSenderMixin;
+ContentProcessMessageManager includes MessageSenderMixin;
+ContentProcessMessageManager includes MessageListenerManagerMixin;
 
 /**
  * Message "broadcasters" don't have a single "other side" that they send messages to, but
@@ -558,7 +584,7 @@ interface MessageBroadcaster : MessageListenerManager
 interface ChromeMessageBroadcaster : MessageBroadcaster
 {
 };
-ChromeMessageBroadcaster implements FrameScriptLoader;
+ChromeMessageBroadcaster includes FrameScriptLoader;
 
 /**
  * ParentProcessMessageManager is used in a parent process to communicate with all the
@@ -568,13 +594,14 @@ ChromeMessageBroadcaster implements FrameScriptLoader;
 interface ParentProcessMessageManager : MessageBroadcaster
 {
 };
-ParentProcessMessageManager implements GlobalProcessScriptLoader;
+ParentProcessMessageManager includes ProcessScriptLoader;
+ParentProcessMessageManager includes GlobalProcessScriptLoader;
 
 [ChromeOnly]
 interface ChromeMessageSender : MessageSender
 {
 };
-ChromeMessageSender implements FrameScriptLoader;
+ChromeMessageSender includes FrameScriptLoader;
 
 /**
  * ProcessMessageManager is used in a parent process to communicate with a child process
@@ -584,4 +611,4 @@ ChromeMessageSender implements FrameScriptLoader;
 interface ProcessMessageManager : MessageSender
 {
 };
-ProcessMessageManager implements ProcessScriptLoader;
+ProcessMessageManager includes ProcessScriptLoader;
