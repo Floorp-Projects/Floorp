@@ -7,6 +7,7 @@
 #include "RemoteObjectProxy.h"
 #include "AccessCheck.h"
 #include "jsfriendapi.h"
+#include "xpcprivate.h"
 
 namespace mozilla {
 namespace dom {
@@ -140,21 +141,6 @@ bool RemoteObjectProxyBase::set(JSContext* aCx, JS::Handle<JSObject*> aProxy,
                                 JS::Handle<JS::Value> aReceiver,
                                 JS::ObjectOpResult& aResult) const {
   return CrossOriginSet(aCx, aProxy, aId, aValue, aReceiver, aResult);
-}
-
-bool RemoteObjectProxyBase::hasOwn(JSContext* aCx, JS::Handle<JSObject*> aProxy,
-                                   JS::Handle<jsid> aId, bool* aBp) const {
-  JS::Rooted<JSObject*> holder(aCx);
-  if (!EnsureHolder(aCx, aProxy, &holder) ||
-      !JS_AlreadyHasOwnPropertyById(aCx, holder, aId, aBp)) {
-    return false;
-  }
-
-  if (!*aBp) {
-    *aBp = xpc::IsCrossOriginWhitelistedProp(aCx, aId);
-  }
-
-  return true;
 }
 
 bool RemoteObjectProxyBase::getOwnEnumerablePropertyKeys(
