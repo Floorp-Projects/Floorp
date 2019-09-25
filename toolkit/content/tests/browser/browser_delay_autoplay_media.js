@@ -1,5 +1,7 @@
 const PAGE =
   "https://example.com/browser/toolkit/content/tests/browser/file_multipleAudio.html";
+const PAGE_NO_AUTOPLAY =
+  "https://example.com/browser/toolkit/content/tests/browser/file_nonAutoplayAudio.html";
 
 function check_audio_paused(browser, shouldBePaused) {
   return ContentTask.spawn(browser, shouldBePaused, shouldBePaused => {
@@ -22,6 +24,37 @@ add_task(async function setup_test_preference() {
       ["media.block-autoplay-until-in-foreground", true],
     ],
   });
+});
+
+function set_media_autoplay() {
+  let audio = content.document.getElementById("testAudio");
+  if (!audio) {
+    ok(false, "Can't get the audio element!");
+    return;
+  }
+  audio.autoplay = true;
+}
+
+add_task(async function delay_media_with_autoplay_keyword() {
+  info("- open new background tab -");
+  const tab = BrowserTestUtils.addTab(window.gBrowser, PAGE_NO_AUTOPLAY);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+
+  info("- set media's autoplay property -");
+  await ContentTask.spawn(tab.linkedBrowser, null, set_media_autoplay);
+
+  info("- should delay autoplay media -");
+  await waitForTabBlockEvent(tab, true);
+
+  info("- switch tab to foreground -");
+  await BrowserTestUtils.switchTab(window.gBrowser, tab);
+
+  info("- media should be resumed because tab has been visited -");
+  await waitForTabPlayingEvent(tab, true);
+  await waitForTabBlockEvent(tab, false);
+
+  info("- remove tab -");
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function block_autoplay_media() {
