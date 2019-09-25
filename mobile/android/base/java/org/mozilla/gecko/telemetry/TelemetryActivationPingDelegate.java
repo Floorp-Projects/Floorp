@@ -90,6 +90,8 @@ public class TelemetryActivationPingDelegate extends BrowserAppDelegate {
                 pingBuilder.setClientID(clientID);
             }
 
+            pingBuilder.setProfileCreationDate(TelemetryActivationPingBuilder.getProfileCreationDate(activity, profile));
+
             getTelemetryDispatcher().queuePingForUpload(activity, pingBuilder);
         });
     }
