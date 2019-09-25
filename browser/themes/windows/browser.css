@@ -572,11 +572,12 @@ menuitem.bookmark-item {
 /* autocomplete */
 
 %include ../shared/autocomplete.inc.css
-%include ../shared/urlbar-autocomplete.inc.css
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype~="datalist-first"] {
   border-top: 1px solid ThreeDShadow;
 }
+
+%include ../shared/urlbar-autocomplete.inc.css
 
 @media (-moz-windows-default-theme) {
   :root {
