@@ -63,8 +63,7 @@ class MVMContext {
     IfNecessary,  // resize events will be fired if necessary.
     Suppress,     // resize events will never be fired.
   };
-  virtual void Reflow(const CSSSize& aNewSize, const CSSSize& aOldSize,
-                      ResizeEventFlag aResizeEventFlag) = 0;
+  virtual void Reflow(const CSSSize& aNewSize, ResizeEventFlag) = 0;
 };
 
 }  // namespace mozilla

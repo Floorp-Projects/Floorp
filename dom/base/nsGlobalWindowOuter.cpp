@@ -3852,6 +3852,11 @@ void nsGlobalWindowOuter::SetCSSViewportWidthAndHeight(nscoord aInnerWidth,
   shellArea.SetHeight(aInnerHeight);
   shellArea.SetWidth(aInnerWidth);
 
+  // FIXME(emilio): This doesn't seem to be ok, this doesn't reflow or
+  // anything... Should go through PresShell::ResizeReflow.
+  //
+  // But I don't think this can be reached by content, as we don't allow to set
+  // inner{Width,Height}.
   presContext->SetVisibleArea(shellArea);
 }
 

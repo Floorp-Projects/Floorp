@@ -344,20 +344,17 @@ class PresShell final : public nsStubDocumentObserver,
    * coordinates for aWidth and aHeight must be in standard nscoord's.
    */
   MOZ_CAN_RUN_SCRIPT nsresult
-  ResizeReflow(nscoord aWidth, nscoord aHeight, nscoord aOldWidth = 0,
-               nscoord aOldHeight = 0,
-               ResizeReflowOptions aOptions = ResizeReflowOptions::NoOption);
+  ResizeReflow(nscoord aWidth, nscoord aHeight,
+               ResizeReflowOptions = ResizeReflowOptions::NoOption);
   MOZ_CAN_RUN_SCRIPT nsresult ResizeReflowIgnoreOverride(
-      nscoord aWidth, nscoord aHeight, nscoord aOldWidth, nscoord aOldHeight,
-      ResizeReflowOptions aOptions = ResizeReflowOptions::NoOption);
+      nscoord aWidth, nscoord aHeight, ResizeReflowOptions);
 
  private:
   /**
    * This is what ResizeReflowIgnoreOverride does when not shrink-wrapping (that
    * is, when ResizeReflowOptions::BSizeLimit is not specified).
    */
-  void SimpleResizeReflow(nscoord aWidth, nscoord aHeight, nscoord aOldWidth,
-                          nscoord aOldHeight);
+  void SimpleResizeReflow(nscoord aWidth, nscoord aHeight, ResizeReflowOptions);
 
  public:
   /**
