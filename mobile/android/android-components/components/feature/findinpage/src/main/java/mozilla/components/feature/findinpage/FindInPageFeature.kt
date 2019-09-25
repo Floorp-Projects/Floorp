@@ -5,8 +5,8 @@
 package mozilla.components.feature.findinpage
 
 import androidx.annotation.VisibleForTesting
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.findinpage.internal.FindInPageInteractor
 import mozilla.components.feature.findinpage.internal.FindInPagePresenter
@@ -15,18 +15,18 @@ import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 
 /**
- * Feature implementation that will keep a [FindInPageView] in sync with a bound [Session].
+ * Feature implementation that will keep a [FindInPageView] in sync with a bound [SessionState].
  */
 class FindInPageFeature(
-    sessionManager: SessionManager,
+    store: BrowserStore,
     view: FindInPageView,
     engineView: EngineView,
     private val onClose: (() -> Unit)? = null
 ) : LifecycleAwareFeature, BackHandler {
-    @VisibleForTesting internal var presenter = FindInPagePresenter(view)
-    @VisibleForTesting internal var interactor = FindInPageInteractor(this, sessionManager, view, engineView)
+    @VisibleForTesting internal var presenter = FindInPagePresenter(store, view)
+    @VisibleForTesting internal var interactor = FindInPageInteractor(this, view, engineView)
 
-    private var session: Session? = null
+    private var session: SessionState? = null
 
     override fun start() {
         presenter.start()
@@ -39,10 +39,10 @@ class FindInPageFeature(
     }
 
     /**
-     * Binds this feature to the given [Session]. Until unbound the [FindInPageView] will be updated presenting the
-     * current "Find in Page" state.
+     * Binds this feature to the given [SessionState]. Until unbound the [FindInPageView] will be
+     * updated presenting the current "Find in Page" state.
      */
-    fun bind(session: Session) {
+    fun bind(session: SessionState) {
         this.session = session
 
         presenter.bind(session)
@@ -62,8 +62,8 @@ class FindInPageFeature(
     }
 
     /**
-     * Unbinds the feature from a previously bound [Session]. The [FindInPageView] will be cleared and not be updated
-     * to present the "Find in Page" state anymore.
+     * Unbinds the feature from a previously bound [SessionState]. The [FindInPageView] will be
+     * cleared and not be updated to present the "Find in Page" state anymore.
      */
     fun unbind() {
         session = null

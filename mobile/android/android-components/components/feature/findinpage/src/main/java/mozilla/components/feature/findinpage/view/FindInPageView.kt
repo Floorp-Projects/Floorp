@@ -5,7 +5,7 @@
 package mozilla.components.feature.findinpage.view
 
 import android.view.View
-import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.state.content.FindResultState
 
 /**
  * An interface for views that can display "find in page" results and related UI controls.
@@ -17,9 +17,9 @@ interface FindInPageView {
     var listener: Listener?
 
     /**
-     * Displays the given [Session.FindResult] state in the view.
+     * Displays the given [FindResultState] state in the view.
      */
-    fun displayResult(result: Session.FindResult)
+    fun displayResult(result: FindResultState)
 
     /**
      * Requests focus for the input element the user can type their query into.

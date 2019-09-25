@@ -4,7 +4,7 @@
 
 package mozilla.components.feature.findinpage
 
-import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.feature.findinpage.internal.FindInPageInteractor
 import mozilla.components.feature.findinpage.internal.FindInPagePresenter
 import mozilla.components.support.test.mock
@@ -56,7 +56,7 @@ class FindInPageFeatureTest {
         feature.presenter = presenter
         feature.interactor = interactor
 
-        val session: Session = mock()
+        val session: SessionState = mock()
         feature.bind(session)
 
         verify(presenter).bind(session)
@@ -72,7 +72,7 @@ class FindInPageFeatureTest {
         feature.presenter = presenter
         feature.interactor = interactor
 
-        val session: Session = mock()
+        val session: SessionState = mock()
         feature.bind(session)
 
         assertTrue(feature.onBackPressed())

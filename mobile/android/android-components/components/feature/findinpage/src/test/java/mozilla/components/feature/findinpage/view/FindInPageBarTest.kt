@@ -7,7 +7,7 @@ package mozilla.components.feature.findinpage.view
 import android.widget.EditText
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.feature.findinpage.R
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -89,7 +89,7 @@ class FindInPageBarTest {
     fun `displayResult with matches will update views`() {
         val view = spy(FindInPageBar(testContext))
 
-        view.displayResult(Session.FindResult(0, 100, false))
+        view.displayResult(FindResultState(0, 100, false))
 
         val textCorrectValue = view.resultFormat.format(1, 100)
         val contentDesCorrectValue = view.accessibilityFormat.format(1, 100)
@@ -103,7 +103,7 @@ class FindInPageBarTest {
     fun `displayResult with no matches will update views`() {
         val view = spy(FindInPageBar(testContext))
 
-        view.displayResult(Session.FindResult(0, 0, false))
+        view.displayResult(FindResultState(0, 0, false))
 
         val textCorrectValue = view.resultFormat.format(0, 0)
         val contentDesCorrectValue = view.accessibilityFormat.format(0, 0)

@@ -4,8 +4,7 @@
 
 package mozilla.components.feature.findinpage.internal
 
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.findinpage.FindInPageFeature
@@ -22,7 +21,6 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
  */
 internal class FindInPageInteractor(
     private val feature: FindInPageFeature,
-    private val sessionManager: SessionManager,
     private val view: FindInPageView,
     private val engineView: EngineView?
 ) : FindInPageView.Listener {
@@ -36,8 +34,8 @@ internal class FindInPageInteractor(
         view.listener = null
     }
 
-    fun bind(session: Session) {
-        engineSession = sessionManager.getEngineSession(session)
+    fun bind(session: SessionState) {
+        engineSession = session.engineState.engineSession
     }
 
     override fun onPreviousResult() {
