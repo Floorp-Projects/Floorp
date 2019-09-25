@@ -2714,10 +2714,14 @@ nsresult HttpChannelParent::TriggerCrossProcessSwitch(nsIHttpChannel* aChannel,
                   MOZ_ASSERT(redirectReg);
 
                   nsCOMPtr<nsIParentChannel> redirectParentChannel;
-                  redirectReg->GetParentChannel(
-                      self->mRedirectChannelId,
-                      getter_AddRefs(redirectParentChannel));
-                  MOZ_ASSERT(redirectParentChannel);
+                  if (NS_FAILED(redirectReg->GetParentChannel(
+                          self->mRedirectChannelId,
+                          getter_AddRefs(redirectParentChannel))) ||
+                      !redirectParentChannel) {
+                    // Redirect might got canceled.
+                    self->CrossProcessRedirectDone(NS_ERROR_FAILURE, Nothing());
+                    return;
+                  }
                   RefPtr<HttpChannelParent> newParent =
                       do_QueryObject(redirectParentChannel);
                   MOZ_ASSERT(newParent);
