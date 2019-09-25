@@ -211,6 +211,16 @@ if CONFIG["CPU_ARCH"] == "arm":
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
+if CONFIG["CPU_ARCH"] == "mips64":
+
+    SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+    ]
+
 if CONFIG["CPU_ARCH"] == "ppc64":
 
     SOURCES += [
