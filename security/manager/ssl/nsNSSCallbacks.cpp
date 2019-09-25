@@ -594,7 +594,7 @@ char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool /*retry*/, void* arg) {
   return runnable->mResult;
 }
 
-nsCString getKeaGroupName(uint32_t aKeaGroup) {
+static nsCString getKeaGroupName(uint32_t aKeaGroup) {
   nsCString groupName;
   switch (aKeaGroup) {
     case ssl_grp_ec_secp256r1:
@@ -631,7 +631,7 @@ nsCString getKeaGroupName(uint32_t aKeaGroup) {
   return groupName;
 }
 
-nsCString getSignatureName(uint32_t aSignatureScheme) {
+static nsCString getSignatureName(uint32_t aSignatureScheme) {
   nsCString signatureName;
   switch (aSignatureScheme) {
     case ssl_sig_none:
@@ -1107,8 +1107,8 @@ static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
   }
 }
 
-nsresult IsCertificateDistrustImminent(nsIX509CertList* aCertList,
-                                       /* out */ bool& isDistrusted) {
+static nsresult IsCertificateDistrustImminent(nsIX509CertList* aCertList,
+                                              /* out */ bool& isDistrusted) {
   if (!aCertList) {
     return NS_ERROR_INVALID_POINTER;
   }
