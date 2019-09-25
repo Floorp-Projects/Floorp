@@ -94,21 +94,12 @@ class ChromeConnector {
   }
 
   /**
-   * Block future requests matching a filter.
+   * Updates the list of block requests
    *
-   * @param {object} filter request filter specifying what to block
+   * @param {array} urls An array of URLS which are blocked
    */
-  blockRequest(filter) {
-    // TODO: Implement for Chrome as well.
-  }
-
-  /**
-   * Unblock future requests matching a filter.
-   *
-   * @param {object} filter request filter specifying what to unblock
-   */
-  unblockRequest(filter) {
-    // TODO: Implement for Chrome as well.
+  setBlockedUrls(urls) {
+    // TODO : implement.
   }
 
   setPreferences() {

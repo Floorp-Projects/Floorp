@@ -4,31 +4,28 @@
 
 "use strict";
 
+const Services = require("Services");
+
 const {
   ADD_BLOCKED_URL,
   TOGGLE_BLOCKING_ENABLED,
   TOGGLE_BLOCKED_URL,
   UPDATE_BLOCKED_URL,
   REMOVE_BLOCKED_URL,
+  DISABLE_MATCHING_URLS,
+  OPEN_SEARCH,
+  SELECT_ACTION_BAR_TAB,
+  PANELS,
 } = require("../constants");
 
-/**
- * Toggle blocking enabled
- */
-function toggleBlockingEnabled(isChecked) {
-  /*
-    TODO:  Send a signal to server to toggle blocking
-  */
+function toggleBlockingEnabled(enabled) {
   return {
     type: TOGGLE_BLOCKING_ENABLED,
-    enabled: isChecked,
+    enabled,
   };
 }
 
 function removeBlockedUrl(url) {
-  /*
-    TODO:  Sync blocked URL list
-  */
   return {
     type: REMOVE_BLOCKED_URL,
     url,
@@ -36,9 +33,6 @@ function removeBlockedUrl(url) {
 }
 
 function addBlockedUrl(url) {
-  /*
-    TODO:  Sync blocked URL list
-  */
   return {
     type: ADD_BLOCKED_URL,
     url,
@@ -46,9 +40,6 @@ function addBlockedUrl(url) {
 }
 
 function toggleBlockedUrl(url) {
-  /*
-    TODO:  Sync blocked URL list
-  */
   return {
     type: TOGGLE_BLOCKED_URL,
     url,
@@ -56,13 +47,45 @@ function toggleBlockedUrl(url) {
 }
 
 function updateBlockedUrl(oldUrl, newUrl) {
-  /*
-    TODO:  Sync blocked URL list
-  */
   return {
     type: UPDATE_BLOCKED_URL,
     oldUrl,
     newUrl,
+  };
+}
+
+function openRequestBlockingAndAddUrl(url) {
+  return (dispatch, getState) => {
+    const showBlockingPanel = Services.prefs.getBoolPref(
+      "devtools.netmonitor.features.requestBlocking"
+    );
+
+    if (showBlockingPanel) {
+      dispatch({ type: OPEN_SEARCH });
+      dispatch({
+        type: SELECT_ACTION_BAR_TAB,
+        id: PANELS.BLOCKING,
+      });
+    }
+    dispatch({ type: ADD_BLOCKED_URL, url });
+  };
+}
+
+function openRequestBlockingAndDisableUrls(url) {
+  return (dispatch, getState) => {
+    const showBlockingPanel = Services.prefs.getBoolPref(
+      "devtools.netmonitor.features.requestBlocking"
+    );
+
+    if (showBlockingPanel) {
+      dispatch({ type: OPEN_SEARCH });
+      dispatch({
+        type: SELECT_ACTION_BAR_TAB,
+        id: PANELS.BLOCKING,
+      });
+    }
+
+    dispatch({ type: DISABLE_MATCHING_URLS, url });
   };
 }
 
@@ -72,4 +95,6 @@ module.exports = {
   toggleBlockedUrl,
   removeBlockedUrl,
   updateBlockedUrl,
+  openRequestBlockingAndAddUrl,
+  openRequestBlockingAndDisableUrls,
 };

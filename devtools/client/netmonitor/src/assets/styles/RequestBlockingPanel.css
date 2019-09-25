@@ -12,6 +12,11 @@
   border-bottom: 1px solid var(--theme-splitter-color);
 }
 
+.network-monitor .request-blocking-list.disabled {
+  background-color: var(--theme-toolbar-hover);
+  opacity: 0.6;
+}
+
 .network-monitor .request-blocking-enable-form {
   flex-grow: 1;
 }

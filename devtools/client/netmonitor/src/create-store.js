@@ -23,6 +23,7 @@ const thunk = require("./middleware/thunk");
 const recording = require("./middleware/recording");
 const throttling = require("./middleware/throttling");
 const eventTelemetry = require("./middleware/event-telemetry");
+const requestBlocking = require("./middleware/request-blocking");
 
 // Reducers
 const rootReducer = require("./reducers/index");
@@ -61,6 +62,7 @@ function configureStore(connector, telemetry) {
 
   // Prepare middleware.
   const middleware = applyMiddleware(
+    requestBlocking(connector),
     thunk,
     prefs,
     batching,

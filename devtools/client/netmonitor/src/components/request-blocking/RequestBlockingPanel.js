@@ -40,6 +40,7 @@ class RequestBlockingPanel extends Component {
       toggleBlockingEnabled: PropTypes.func.isRequired,
       toggleBlockedUrl: PropTypes.func.isRequired,
       updateBlockedUrl: PropTypes.func.isRequired,
+      blockingEnabled: PropTypes.bool.isRequired,
     };
   }
 
@@ -68,6 +69,7 @@ class RequestBlockingPanel extends Component {
           input({
             type: "checkbox",
             className: "devtools-checkbox",
+            checked: this.props.blockingEnabled,
             ref: "enabledCheckbox",
             onChange: () =>
               this.props.toggleBlockingEnabled(
@@ -145,6 +147,13 @@ class RequestBlockingPanel extends Component {
           className: "devtools-searchinput",
           placeholder: ADD_URL_PLACEHOLDER,
           onBlur: () => this.setState({ editingUrl: null }),
+          onKeyDown: e => {
+            if (e.key === "Escape") {
+              e.stopPropagation();
+              e.preventDefault();
+              this.setState({ editingUrl: null });
+            }
+          },
         }),
 
         input({ type: "submit", style: { display: "none" } })
@@ -153,7 +162,7 @@ class RequestBlockingPanel extends Component {
   }
 
   renderBlockedList() {
-    const { blockedUrls } = this.props;
+    const { blockedUrls, blockingEnabled } = this.props;
 
     if (blockedUrls.length === 0) {
       return null;
@@ -165,7 +174,12 @@ class RequestBlockingPanel extends Component {
         : this.renderItemContent(item)
     );
 
-    return ul({ className: "request-blocking-list" }, ...listItems);
+    return ul(
+      {
+        className: `request-blocking-list ${blockingEnabled ? "" : "disabled"}`,
+      },
+      ...listItems
+    );
   }
 
   renderAddForm() {
@@ -187,6 +201,16 @@ class RequestBlockingPanel extends Component {
           ref: "addInput",
           className: "devtools-searchinput",
           placeholder: ADD_URL_PLACEHOLDER,
+          onKeyDown: e => {
+            if (e.key === "Escape") {
+              e.stopPropagation();
+              e.preventDefault();
+
+              const { addInput } = this.refs;
+              addInput.value = "";
+              addInput.focus();
+            }
+          },
         }),
         input({ type: "submit", style: { display: "none" } })
       )
@@ -206,6 +230,7 @@ class RequestBlockingPanel extends Component {
 module.exports = connect(
   state => ({
     blockedUrls: state.requestBlocking.blockedUrls,
+    blockingEnabled: state.requestBlocking.blockingEnabled,
   }),
   dispatch => ({
     toggleBlockingEnabled: checked =>
