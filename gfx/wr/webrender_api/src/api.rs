@@ -1087,6 +1087,7 @@ bitflags! {
         const DISABLE_CLIP_MASKS = 1 << 21;
         const DISABLE_TEXT_PRIMS = 1 << 22;
         const DISABLE_GRADIENT_PRIMS = 1 << 23;
+        const OBSCURE_IMAGES = 1 << 24;
     }
 }
 
