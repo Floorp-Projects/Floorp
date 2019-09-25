@@ -32,18 +32,18 @@ export class InfoItem extends HTMLElement {
 
   render() {
     let label = this.shadowRoot.querySelector("label");
-    let labelText = normalizeToKebabCase(this.item.label);
+    let labelId = this.item.labelId;
 
     // Map specific elements to a different message ID, to allow updates to
     // existing labels and avoid duplicates.
     let stringMapping = {
       signaturealgorithm: "signature-algorithm",
     };
-    let fluentID = stringMapping[labelText] || labelText;
+    let fluentID = stringMapping[labelId] || labelId;
 
     label.setAttribute("data-l10n-id", "certificate-viewer-" + fluentID);
 
-    this.classList.add(labelText);
+    this.classList.add(labelId);
 
     let info = this.shadowRoot.querySelector(".info");
     if (this.item.info.hasOwnProperty("utc")) {
@@ -60,10 +60,9 @@ export class InfoItem extends HTMLElement {
         : this.item.info;
     }
 
-    this.classList.add(labelText);
+    this.classList.add(labelId);
 
-    // TODO: Use Fluent-friendly condition.
-    if (this.item.label === "Modulus") {
+    if (this.item.label === "modulus") {
       info.classList.add("long-hex");
       this.addEventListener("click", () => {
         info.classList.toggle("long-hex-open");
@@ -91,7 +90,7 @@ export class InfoItem extends HTMLElement {
       info.appendChild(link);
     }
 
-    if (labelText === "download") {
+    if (labelId === "download") {
       this.setDownloadLinkInformation(info);
     }
   }

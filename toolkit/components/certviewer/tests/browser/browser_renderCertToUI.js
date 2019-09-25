@@ -51,6 +51,9 @@ add_task(async function test() {
       }
 
       function checkBooleans(got, expected) {
+        info(
+          "If adjustedCertElments returned true, this value should be Yes, otherwise it should be No"
+        );
         let gotBool;
         if (got === "Yes") {
           gotBool = true;
@@ -59,22 +62,19 @@ add_task(async function test() {
         } else {
           gotBool = null;
         }
-        Assert.equal(
-          gotBool,
-          expected,
-          "If adjustedCertElments returned a true, this value should be Yes, otherwise it should be No"
-        );
+        Assert.equal(gotBool, expected, `Expected ${expected}, got ${gotBool}`);
       }
 
       for (let infoGroup of infoGroups) {
-        let sectionTitle = infoGroup.shadowRoot.querySelector(
-          ".info-group-title"
-        ).textContent;
+        let sectionId = infoGroup.shadowRoot
+          .querySelector(".info-group-title")
+          .getAttribute("data-l10n-id")
+          .replace("certificate-viewer-", "");
 
         let adjustedCertsElem = getElementByAttribute(
           adjustedCerts,
-          "sectionTitle",
-          sectionTitle
+          "sectionId",
+          sectionId
         );
         Assert.ok(adjustedCertsElem, "The element exists in adjustedCerts");
 
@@ -96,7 +96,8 @@ add_task(async function test() {
             .getAttribute("data-l10n-id");
           let infoElem = infoItem.shadowRoot.querySelector(".info");
           let infoItemInfo = infoElem.textContent;
-          let adjustedCertsElemLabel = adjustedCertsElem.sectionItems[i].label;
+          let adjustedCertsElemLabel =
+            adjustedCertsElem.sectionItems[i].labelId;
           let adjustedCertsElemInfo = adjustedCertsElem.sectionItems[i].info;
 
           if (adjustedCertsElemLabel == null) {
@@ -114,7 +115,6 @@ add_task(async function test() {
           if (adjustedCertsElemInfo == null) {
             adjustedCertsElemInfo = "";
           }
-
           if (typeof adjustedCertsElemInfo === "boolean") {
             checkBooleans(infoItemInfo, adjustedCertsElemInfo);
             continue;

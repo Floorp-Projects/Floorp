@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { InfoItem } from "./info-item.js";
-import { normalizeToKebabCase } from "../utils.js";
 
 export class InfoGroup extends HTMLElement {
   constructor(item) {
@@ -21,11 +20,14 @@ export class InfoGroup extends HTMLElement {
 
   render() {
     let title = this.shadowRoot.querySelector(".info-group-title");
-    title.textContent = this.item.sectionTitle;
+    title.setAttribute(
+      "data-l10n-id",
+      "certificate-viewer-" + this.item.sectionId
+    );
 
     // Adds a class with the section title's name, to make
     // it easier to find when highlighting errors.
-    this.classList.add(normalizeToKebabCase(this.item.sectionTitle));
+    this.classList.add(this.item.sectionId);
     for (let i = 0; i < this.item.sectionItems.length; i++) {
       this.shadowRoot.append(new InfoItem(this.item.sectionItems[i]));
     }
