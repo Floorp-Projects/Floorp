@@ -114,15 +114,6 @@ async function postFrom(start, target) {
   );
 }
 
-// This is a wrapper around E10SUtils.isWebRemoteType that shims up the fields
-// of a browser object that are needed, from result objects.
-function isWebRemoteType(aResult) {
-  return E10SUtils.isWebRemoteType({
-    ownerGlobal: gBrowser.ownerGlobal,
-    remoteType: aResult.remoteType,
-  });
-}
-
 add_task(async function test_disabled() {
   await SpecialPowers.pushPrefEnv({ set: [[PREF_NAME, false]] });
 
@@ -145,13 +136,13 @@ add_task(async function test_disabled() {
   await withExtensionDummy(async dummy => {
     info("DISABLED -- EXTENSION -- raw URI load");
     let respExt = await postFrom(dummy, PRINT_POSTDATA);
-    ok(isWebRemoteType(respExt), "process switch");
+    ok(E10SUtils.isWebRemoteType(respExt), "process switch");
     is(respExt.location, PRINT_POSTDATA, "correct location");
     is(respExt.body, "", "no POST body");
 
     info("DISABLED -- EXTENSION -- 307-redirect URI load");
     let respExt307 = await postFrom(dummy, add307(PRINT_POSTDATA));
-    ok(isWebRemoteType(respExt307), "process switch");
+    ok(E10SUtils.isWebRemoteType(respExt307), "process switch");
     is(respExt307.location, PRINT_POSTDATA, "correct location");
     is(respExt307.body, "", "no POST body");
   });
@@ -164,13 +155,13 @@ add_task(async function test_enabled() {
   // should succeed.
   info("ENABLED -- FILE -- raw URI load");
   let resp = await postFrom(FILE_DUMMY, PRINT_POSTDATA);
-  ok(isWebRemoteType(resp), "process switch");
+  ok(E10SUtils.isWebRemoteType(resp), "process switch");
   is(resp.location, PRINT_POSTDATA, "correct location");
   is(resp.body, "initialRemoteType=file", "correct POST body");
 
   info("ENABLED -- FILE -- 307-redirect URI load");
   let resp307 = await postFrom(FILE_DUMMY, add307(PRINT_POSTDATA));
-  ok(isWebRemoteType(resp307), "process switch");
+  ok(E10SUtils.isWebRemoteType(resp307), "process switch");
   is(resp307.location, PRINT_POSTDATA, "correct location");
   is(resp307.body, "initialRemoteType=file", "correct POST body");
 
@@ -178,13 +169,13 @@ add_task(async function test_enabled() {
   await withExtensionDummy(async dummy => {
     info("ENABLED -- EXTENSION -- raw URI load");
     let respExt = await postFrom(dummy, PRINT_POSTDATA);
-    ok(isWebRemoteType(respExt), "process switch");
+    ok(E10SUtils.isWebRemoteType(respExt), "process switch");
     is(respExt.location, PRINT_POSTDATA, "correct location");
     is(respExt.body, "initialRemoteType=extension", "correct POST body");
 
     info("ENABLED -- EXTENSION -- 307-redirect URI load");
     let respExt307 = await postFrom(dummy, add307(PRINT_POSTDATA));
-    ok(isWebRemoteType(respExt307), "process switch");
+    ok(E10SUtils.isWebRemoteType(respExt307), "process switch");
     is(respExt307.location, PRINT_POSTDATA, "correct location");
     is(respExt307.body, "initialRemoteType=extension", "correct POST body");
   });
