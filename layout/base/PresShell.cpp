@@ -1899,9 +1899,8 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
   const bool initialized = mDidInitialize;
   RefPtr<PresShell> kungFuDeathGrip(this);
 
-  auto postResizeEventIfNeeded = [this, initialized, aOptions]() {
-    if (initialized && !mIsDestroying && !mResizeEventPending &&
-        !(aOptions & ResizeReflowOptions::SuppressResizeEvent)) {
+  auto postResizeEventIfNeeded = [this, initialized]() {
+    if (initialized && !mIsDestroying && !mResizeEventPending) {
       mResizeEventPending = true;
       if (MOZ_LIKELY(!mDocument->GetBFCacheEntry())) {
         mPresContext->RefreshDriver()->AddResizeEventFlushObserver(this);

@@ -82,7 +82,7 @@ class MockMVMContext : public MVMContext {
     mResolution = aResolution;
     mMVM->ResolutionUpdated(aOrigin);
   }
-  void Reflow(const CSSSize& aNewSize, ResizeEventFlag) {
+  void Reflow(const CSSSize& aNewSize) {
     mICBSize = aNewSize;
     mContentSize = mLayoutFunction(mICBSize);
   }
