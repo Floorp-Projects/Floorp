@@ -7,21 +7,6 @@
 // Test inspector markup view handling DOM mutation breakpoints icons
 // The icon should display when a breakpoint exists for a given node
 
-async function waitFor(
-  condition,
-  message = "waitFor",
-  interval = 10,
-  maxTries = 500
-) {
-  await BrowserTestUtils.waitForCondition(
-    condition,
-    message,
-    interval,
-    maxTries
-  );
-  return condition();
-}
-
 function toggleMutationBreakpoint(inspector) {
   const allMenuItems = openContextMenuAndGetAllItems(inspector);
   const attributeMenuItem = allMenuItems.find(

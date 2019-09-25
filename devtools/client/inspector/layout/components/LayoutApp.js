@@ -40,9 +40,11 @@ const BOXMODEL_L10N = new LocalizationHelper(BOXMODEL_STRINGS_URI);
 const LAYOUT_STRINGS_URI = "devtools/client/locales/layout.properties";
 const LAYOUT_L10N = new LocalizationHelper(LAYOUT_STRINGS_URI);
 
-const BOXMODEL_OPENED_PREF = "devtools.layout.boxmodel.opened";
 const FLEXBOX_OPENED_PREF = "devtools.layout.flexbox.opened";
+const FLEX_CONTAINER_OPENED_PREF = "devtools.layout.flex-container.opened";
+const FLEX_ITEM_OPENED_PREF = "devtools.layout.flex-item.opened";
 const GRID_OPENED_PREF = "devtools.layout.grid.opened";
+const BOXMODEL_OPENED_PREF = "devtools.layout.boxmodel.opened";
 
 class LayoutApp extends PureComponent {
   static get propTypes() {
@@ -78,24 +80,80 @@ class LayoutApp extends PureComponent {
     this.scrollToTop = this.scrollToTop.bind(this);
   }
 
-  getFlexboxHeader(flexContainer) {
+  getBoxModelSection() {
+    return {
+      component: BoxModel,
+      componentProps: this.props,
+      header: BOXMODEL_L10N.getStr("boxmodel.title"),
+      opened: Services.prefs.getBoolPref(BOXMODEL_OPENED_PREF),
+      onToggled: opened => {
+        Services.prefs.setBoolPref(BOXMODEL_OPENED_PREF, opened);
+      },
+    };
+  }
+
+  getFlexAccordionData(flexContainer) {
     if (!flexContainer.actorID) {
       // No flex container or flex item selected.
-      return LAYOUT_L10N.getStr("flexbox.header");
+      return {
+        pref: FLEXBOX_OPENED_PREF,
+        className: "flex-accordion flex-accordion-none",
+        header: LAYOUT_L10N.getStr("flexbox.header"),
+      };
     } else if (!flexContainer.flexItemShown) {
       // No flex item selected.
-      return LAYOUT_L10N.getStr("flexbox.flexContainer");
+      return {
+        pref: FLEX_CONTAINER_OPENED_PREF,
+        className: "flex-accordion flex-accordion-container",
+        header: LAYOUT_L10N.getStr("flexbox.flexContainer"),
+      };
     }
 
-    const grip = translateNodeFrontToGrip(flexContainer.nodeFront);
-    return LAYOUT_L10N.getFormatStr(
-      "flexbox.flexItemOf",
-      getSelectorFromGrip(grip)
+    return {
+      pref: FLEX_ITEM_OPENED_PREF,
+      className: "flex-accordion flex-accordion-item",
+      header: LAYOUT_L10N.getFormatStr(
+        "flexbox.flexItemOf",
+        getSelectorFromGrip(translateNodeFrontToGrip(flexContainer.nodeFront))
+      ),
+    };
+  }
+
+  getFlexSection(flexContainer) {
+    const { pref, className, header } = this.getFlexAccordionData(
+      flexContainer
     );
+
+    return {
+      className,
+      component: Flexbox,
+      componentProps: {
+        ...this.props,
+        flexContainer,
+        scrollToTop: this.scrollToTop,
+      },
+      header,
+      opened: Services.prefs.getBoolPref(pref),
+      onToggled: opened => {
+        Services.prefs.setBoolPref(pref, opened);
+      },
+    };
+  }
+
+  getGridSection() {
+    return {
+      component: Grid,
+      componentProps: this.props,
+      header: LAYOUT_L10N.getStr("layout.header"),
+      opened: Services.prefs.getBoolPref(GRID_OPENED_PREF),
+      onToggled: opened => {
+        Services.prefs.setBoolPref(GRID_OPENED_PREF, opened);
+      },
+    };
   }
 
   /**
-   * Scrolls to top of the layout container.
+   * Scrolls to the top of the layout container.
    */
   scrollToTop() {
     this.containerRef.current.scrollTop = 0;
@@ -105,45 +163,9 @@ class LayoutApp extends PureComponent {
     const { flexContainer, flexItemContainer } = this.props.flexbox;
 
     const items = [
-      {
-        className: `flex-accordion ${
-          flexContainer.flexItemShown ? "item" : "container"
-        }`,
-        component: Flexbox,
-        componentProps: {
-          ...this.props,
-          flexContainer,
-          scrollToTop: this.scrollToTop,
-        },
-        header: this.getFlexboxHeader(flexContainer),
-        opened: Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF),
-        onToggled: () => {
-          Services.prefs.setBoolPref(
-            FLEXBOX_OPENED_PREF,
-            !Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF)
-          );
-        },
-      },
-      {
-        component: Grid,
-        componentProps: this.props,
-        header: LAYOUT_L10N.getStr("layout.header"),
-        opened: Services.prefs.getBoolPref(GRID_OPENED_PREF),
-        onToggled: () => {
-          const opened = Services.prefs.getBoolPref(GRID_OPENED_PREF);
-          Services.prefs.setBoolPref(GRID_OPENED_PREF, !opened);
-        },
-      },
-      {
-        component: BoxModel,
-        componentProps: this.props,
-        header: BOXMODEL_L10N.getStr("boxmodel.title"),
-        opened: Services.prefs.getBoolPref(BOXMODEL_OPENED_PREF),
-        onToggled: () => {
-          const opened = Services.prefs.getBoolPref(BOXMODEL_OPENED_PREF);
-          Services.prefs.setBoolPref(BOXMODEL_OPENED_PREF, !opened);
-        },
-      },
+      this.getFlexSection(flexContainer),
+      this.getGridSection(),
+      this.getBoxModelSection(),
     ];
 
     // If the current selected node is both a flex container and flex item. Render
@@ -158,23 +180,7 @@ class LayoutApp extends PureComponent {
       items.splice(
         this.props.flexbox.initiatedByMarkupViewSelection ? 1 : 0,
         0,
-        {
-          className: "flex-accordion item",
-          component: Flexbox,
-          componentProps: {
-            ...this.props,
-            flexContainer: flexItemContainer,
-            scrollToTop: this.scrollToTop,
-          },
-          header: this.getFlexboxHeader(flexItemContainer),
-          opened: Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF),
-          onToggled: () => {
-            Services.prefs.setBoolPref(
-              FLEXBOX_OPENED_PREF,
-              !Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF)
-            );
-          },
-        }
+        this.getFlexSection(flexItemContainer)
       );
     }
 
