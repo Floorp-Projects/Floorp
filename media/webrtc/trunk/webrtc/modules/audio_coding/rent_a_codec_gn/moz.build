@@ -178,6 +178,18 @@ if CONFIG["CPU_ARCH"] == "arm":
     DEFINES["WEBRTC_CODEC_ISACFX"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
+if CONFIG["CPU_ARCH"] == "mips64":
+
+    DEFINES["WEBRTC_CODEC_ISAC"] = True
+
+    LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
+    ]
+
+    OS_LIBS += [
+        "m"
+    ]
+
 if CONFIG["CPU_ARCH"] == "ppc64":
 
     DEFINES["WEBRTC_CODEC_ISAC"] = True

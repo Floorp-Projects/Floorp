@@ -341,6 +341,13 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
         "/media/webrtc/trunk/webrtc/modules/video_processing/video_processing_neon_gn"
     ]
 
+if CONFIG["CPU_ARCH"] == "mips64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DIRS += [
+        "/media/webrtc/trunk/webrtc/api/audio_codecs/isac/audio_decoder_isac_float_gn",
+        "/media/webrtc/trunk/webrtc/api/audio_codecs/isac/audio_encoder_isac_float_gn"
+    ]
+
 if CONFIG["CPU_ARCH"] == "ppc64" and CONFIG["OS_TARGET"] == "Linux":
 
     DIRS += [
