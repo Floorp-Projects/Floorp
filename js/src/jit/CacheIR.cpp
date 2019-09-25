@@ -5619,9 +5619,9 @@ AttachDecision CompareIRGenerator::tryAttachNumber(ValOperandId lhsId,
     return AttachDecision::NoAction;
   }
 
-  writer.guardIsNumber(lhsId);
-  writer.guardIsNumber(rhsId);
-  writer.compareDoubleResult(op_, lhsId, rhsId);
+  NumberOperandId lhs = writer.guardIsNumber(lhsId);
+  NumberOperandId rhs = writer.guardIsNumber(rhsId);
+  writer.compareDoubleResult(op_, lhs, rhs);
   writer.returnFromIC();
 
   trackAttached("Number");
@@ -5658,10 +5658,17 @@ AttachDecision CompareIRGenerator::tryAttachNumberUndefined(
     return AttachDecision::NoAction;
   }
 
-  lhsVal_.isNumber() ? writer.guardIsNumber(lhsId)
-                     : writer.guardIsUndefined(lhsId);
-  rhsVal_.isNumber() ? writer.guardIsNumber(rhsId)
-                     : writer.guardIsUndefined(rhsId);
+  if (lhsVal_.isNumber()) {
+    writer.guardIsNumber(lhsId);
+  } else {
+    writer.guardIsUndefined(lhsId);
+  }
+
+  if (rhsVal_.isNumber()) {
+    writer.guardIsNumber(rhsId);
+  } else {
+    writer.guardIsUndefined(rhsId);
+  }
 
   // Comparing a number with undefined will always be true for NE/STRICTNE,
   // and always be false for other compare ops.
@@ -5774,12 +5781,12 @@ AttachDecision CompareIRGenerator::tryAttachStringNumber(ValOperandId lhsId,
       return writer.guardAndGetNumberFromString(strId);
     }
     MOZ_ASSERT(v.isNumber());
-    writer.guardIsNumber(vId);
-    return vId;
+    NumberOperandId numId = writer.guardIsNumber(vId);
+    return numId;
   };
 
-  ValOperandId lhsGuardedId = createGuards(lhsVal_, lhsId);
-  ValOperandId rhsGuardedId = createGuards(rhsVal_, rhsId);
+  NumberOperandId lhsGuardedId = createGuards(lhsVal_, lhsId);
+  NumberOperandId rhsGuardedId = createGuards(rhsVal_, rhsId);
   writer.compareDoubleResult(op_, lhsGuardedId, rhsGuardedId);
   writer.returnFromIC();
 
@@ -6048,24 +6055,24 @@ AttachDecision UnaryArithIRGenerator::tryAttachNumber() {
   }
 
   ValOperandId valId(writer.setInputOperandId(0));
-  writer.guardIsNumber(valId);
+  NumberOperandId numId = writer.guardIsNumber(valId);
   Int32OperandId truncatedId;
   switch (op_) {
     case JSOP_BITNOT:
-      truncatedId = writer.truncateDoubleToUInt32(valId);
+      truncatedId = writer.truncateDoubleToUInt32(numId);
       writer.int32NotResult(truncatedId);
       trackAttached("UnaryArith.DoubleNot");
       break;
     case JSOP_NEG:
-      writer.doubleNegationResult(valId);
+      writer.doubleNegationResult(numId);
       trackAttached("UnaryArith.DoubleNeg");
       break;
     case JSOP_INC:
-      writer.doubleIncResult(valId);
+      writer.doubleIncResult(numId);
       trackAttached("UnaryArith.DoubleInc");
       break;
     case JSOP_DEC:
-      writer.doubleDecResult(valId);
+      writer.doubleDecResult(numId);
       trackAttached("UnaryArith.DoubleDec");
       break;
     default:
@@ -6206,28 +6213,28 @@ AttachDecision BinaryArithIRGenerator::tryAttachDouble() {
   ValOperandId lhsId(writer.setInputOperandId(0));
   ValOperandId rhsId(writer.setInputOperandId(1));
 
-  writer.guardIsNumber(lhsId);
-  writer.guardIsNumber(rhsId);
+  NumberOperandId lhs = writer.guardIsNumber(lhsId);
+  NumberOperandId rhs = writer.guardIsNumber(rhsId);
 
   switch (op_) {
     case JSOP_ADD:
-      writer.doubleAddResult(lhsId, rhsId);
+      writer.doubleAddResult(lhs, rhs);
       trackAttached("BinaryArith.Double.Add");
       break;
     case JSOP_SUB:
-      writer.doubleSubResult(lhsId, rhsId);
+      writer.doubleSubResult(lhs, rhs);
       trackAttached("BinaryArith.Double.Sub");
       break;
     case JSOP_MUL:
-      writer.doubleMulResult(lhsId, rhsId);
+      writer.doubleMulResult(lhs, rhs);
       trackAttached("BinaryArith.Double.Mul");
       break;
     case JSOP_DIV:
-      writer.doubleDivResult(lhsId, rhsId);
+      writer.doubleDivResult(lhs, rhs);
       trackAttached("BinaryArith.Double.Div");
       break;
     case JSOP_MOD:
-      writer.doubleModResult(lhsId, rhsId);
+      writer.doubleModResult(lhs, rhs);
       trackAttached("BinaryArith.Double.Mod");
       break;
     default:
@@ -6323,8 +6330,8 @@ AttachDecision BinaryArithIRGenerator::tryAttachStringNumberConcat() {
     // At this point we are creating an IC that will handle
     // both Int32 and Double cases.
     MOZ_ASSERT(v.isNumber());
-    writer.guardIsNumber(id);
-    return writer.callNumberToString(id);
+    NumberOperandId numId = writer.guardIsNumber(id);
+    return writer.callNumberToString(numId);
   };
 
   StringOperandId lhsStrId = guardToString(lhsId, lhs_);
