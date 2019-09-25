@@ -234,7 +234,6 @@ EXTRA_JS_MODULES += [
     'Troubleshoot.jsm',
     'UpdateUtils.jsm',
     'WebChannel.jsm',
-    'ZipUtils.jsm',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
