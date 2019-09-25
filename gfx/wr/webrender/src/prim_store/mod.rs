@@ -2230,6 +2230,16 @@ impl PrimitiveStore {
                             let debug_rect = clipped_world_rect * frame_context.global_device_pixel_scale;
                             frame_state.scratch.push_debug_rect(debug_rect, debug_color, debug_color.scale_alpha(0.5));
                         }
+                    } else if frame_context.debug_flags.contains(::api::DebugFlags::OBSCURE_IMAGES) {
+                        if matches!(prim_instance.kind, PrimitiveInstanceKind::Image { .. } |
+                                                        PrimitiveInstanceKind::YuvImage { .. })
+                        {
+                            // We allow "small" images, since they're generally UI elements.
+                            let rect = clipped_world_rect * frame_context.global_device_pixel_scale;
+                            if rect.size.width > 70.0 && rect.size.height > 70.0 {
+                                frame_state.scratch.push_debug_rect(rect, debug_colors::PURPLE, debug_colors::PURPLE);
+                            }
+                        }
                     }
 
                     let vis_index = PrimitiveVisibilityIndex(frame_state.scratch.prim_info.len() as u32);
