@@ -437,7 +437,7 @@ enum class AstExprKind {
 #endif
   TeeLocal,
   Store,
-  TernaryOperator,
+  Select,
   UnaryOperator,
   Unreachable,
   Wait,
@@ -486,6 +486,24 @@ class AstDrop : public AstExpr {
   explicit AstDrop(AstExpr& value)
       : AstExpr(AstExprKind::Drop, ExprType::Void), value_(value) {}
   AstExpr& value() const { return value_; }
+};
+
+class AstSelect : public AstExpr {
+  AstExpr* condition_;
+  AstExpr* op1_;
+  AstExpr* op2_;
+
+ public:
+  static const AstExprKind Kind = AstExprKind::Select;
+  AstSelect(AstExpr* condition, AstExpr* op1, AstExpr* op2)
+      : AstExpr(Kind, ExprType::Limit),
+        condition_(condition),
+        op1_(op1),
+        op2_(op2) {}
+
+  AstExpr* condition() const { return condition_; }
+  AstExpr* op1() const { return op1_; }
+  AstExpr* op2() const { return op2_; }
 };
 
 class AstConst : public AstExpr {
@@ -1512,27 +1530,6 @@ class AstBinaryOperator final : public AstExpr {
   Op op() const { return op_; }
   AstExpr* lhs() const { return lhs_; }
   AstExpr* rhs() const { return rhs_; }
-};
-
-class AstTernaryOperator : public AstExpr {
-  Op op_;
-  AstExpr* op0_;
-  AstExpr* op1_;
-  AstExpr* op2_;
-
- public:
-  static const AstExprKind Kind = AstExprKind::TernaryOperator;
-  AstTernaryOperator(Op op, AstExpr* op0, AstExpr* op1, AstExpr* op2)
-      : AstExpr(Kind, ExprType::Limit),
-        op_(op),
-        op0_(op0),
-        op1_(op1),
-        op2_(op2) {}
-
-  Op op() const { return op_; }
-  AstExpr* op0() const { return op0_; }
-  AstExpr* op1() const { return op1_; }
-  AstExpr* op2() const { return op2_; }
 };
 
 class AstComparisonOperator final : public AstExpr {
