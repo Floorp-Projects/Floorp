@@ -30,7 +30,7 @@ class ThreadEventTarget final : public nsISerialEventTarget {
 
   // Sets the thread for which IsOnCurrentThread returns true to the current
   // thread.
-  void SetCurrentThread(PRThread* aThread);
+  void SetCurrentThread();
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
     size_t n = 0;

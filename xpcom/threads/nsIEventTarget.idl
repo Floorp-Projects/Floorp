@@ -9,7 +9,6 @@
 %{C++
 #include "nsCOMPtr.h"
 #include "mozilla/AlreadyAddRefed.h"
-#include "mozilla/Atomics.h"
 %}
 
 native alreadyAddRefed_nsIRunnable(already_AddRefed<nsIRunnable>);
@@ -70,8 +69,8 @@ interface nsIEventTarget : nsISupports
    *
    * The infallible version of IsOnCurrentThread() is optimized to avoid a
    * virtual call for non-thread event targets. Thread targets should set
-   * mThread to their virtual PRThread. Non-thread targets should leave
-   * mThread null and implement IsOnCurrentThreadInfallible() to
+   * mVirtualThread to their virtual PRThread. Non-thread targets should leave
+   * mVirtualThread null and implement IsOnCurrentThreadInfallible() to
    * return the correct answer.
    *
    * The fallible version of IsOnCurrentThread may return errors, such as during
@@ -82,16 +81,13 @@ interface nsIEventTarget : nsISupports
   %{C++
 public:
   // Infallible. Defined in nsThreadUtils.cpp. Delegates to
-  // IsOnCurrentThreadInfallible when mThread is null.
+  // IsOnCurrentThreadInfallible when mVirtualThread is null.
   bool IsOnCurrentThread();
 
 protected:
-  // This can be written from multiple threads on thread creation, which would
-  // technically be UB even though they are writing the same value if it's not
-  // marked as atomic.
-  mozilla::Atomic<PRThread*> mThread;
+  PRThread* mVirtualThread;
 
-  nsIEventTarget() : mThread(nullptr) {}
+  nsIEventTarget() : mVirtualThread(nullptr) {}
   %}
   // Note that this method is protected.  We define it through IDL, rather than
   // in a %{C++ block, to ensure that the correct method indices are recorded
