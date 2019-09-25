@@ -16,6 +16,8 @@ SOURCES += [
     'hpeldsp_neon.S',
     'idctdsp_init_aarch64.c',
     'mdct_neon.S',
+    'mpegaudiodsp_init.c',
+    'mpegaudiodsp_neon.S',
     'neon.S',
     'simple_idct_neon.S',
     'videodsp.S',

@@ -18,7 +18,7 @@ const { clearTimeout, setTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );
 
-const { PushCrypto, concatArray } = ChromeUtils.import(
+const { PushCrypto } = ChromeUtils.import(
   "resource://gre/modules/PushCrypto.jsm"
 );
 
@@ -157,7 +157,7 @@ PushChannelListener.prototype = {
         encryption: getHeaderField(aRequest, "Encryption"),
         encoding: getHeaderField(aRequest, "Content-Encoding"),
       };
-      let msg = concatArray(this._message);
+      let msg = PushCrypto.concatArray(this._message);
 
       this._mainListener._pushService._pushChannelOnStop(
         this._mainListener.uri,
@@ -423,13 +423,6 @@ var PushServiceHttp2 = {
 
   hasmainPushService() {
     return this._mainPushService !== null;
-  },
-
-  validServerURI(serverURI) {
-    if (serverURI.scheme == "http") {
-      return !!prefs.getBoolPref("testing.allowInsecureServerURL", false);
-    }
-    return serverURI.scheme == "https";
   },
 
   async connect(broadcastListeners) {

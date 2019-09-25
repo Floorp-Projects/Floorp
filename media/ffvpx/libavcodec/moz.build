@@ -17,31 +17,57 @@ if CONFIG['FFVPX_ASFLAGS']:
 SharedLibrary('mozavcodec')
 SOURCES += [
     'allcodecs.c',
+    'avdct.c',
     'avpacket.c',
+    'bitstream.c',
     'bitstream_filters.c',
     'bsf.c',
     'codec_desc.c',
+    'dct.c',
+    'dct32_fixed.c',
+    'dct32_float.c',
     'decode.c',
+    'faandct.c',
+    'faanidct.c',
+    'fdctdsp.c',
+    'fft_fixed.c',
+    'fft_fixed_32.c',
+    'fft_float.c',
+    'fft_init_table.c',
     'flac.c',
     'flacdata.c',
     'flacdec.c',
     'flacdsp.c',
+    'idctdsp.c',
+    'jfdctfst.c',
+    'jfdctint.c',
+    'jrevdct.c',
     'log2_tab.c',
+    'mpegaudio.c',
+    'mpegaudiodata.c',
+    'mpegaudiodec_fixed.c',
+    'mpegaudiodecheader.c',
+    'mpegaudiodsp.c',
+    'mpegaudiodsp_data.c',
+    'mpegaudiodsp_fixed.c',
+    'mpegaudiodsp_float.c',
     'null_bsf.c',
     'options.c',
     'parser.c',
     'pthread.c',
     'pthread_frame.c',
     'pthread_slice.c',
+    'rdft.c',
+    'reverse.c',
+    'simple_idct.c',
     'utils.c',
     'vorbis_parser.c',
     'xiph.c'
 ]
 
-if not CONFIG['MOZ_FFVPX_FLACONLY']:
+if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
     SOURCES += [
         'avpicture.c',
-        'bitstream.c',
         'bitstream_filter.c',
         'golomb.c',
         'h264pred.c',
@@ -50,7 +76,6 @@ if not CONFIG['MOZ_FFVPX_FLACONLY']:
         'profiles.c',
         'qsv_api.c',
         'raw.c',
-        'reverse.c',
         'videodsp.c',
         'vp56rac.c',
         'vp8.c',
@@ -74,8 +99,6 @@ if not CONFIG['MOZ_FFVPX_FLACONLY']:
 if CONFIG['MOZ_LIBAV_FFT']:
     SOURCES += [
         'avfft.c',
-        'fft_float.c',
-        'rdft.c',
     ]
 
 SYMBOLS_FILE = 'avcodec.symbols'

@@ -63,24 +63,26 @@ class PerftestOutput(object):
                                'proportional': proportional}}
 
         We want to treat each value as a 'subtest'; and for the overall aggregated
-        test result, we'll sum together all subtest values.
+        test result we will add all of these subtest values together.
         '''
         if self.supporting_data is None:
             return
 
         self.summarized_supporting_data = []
+        support_data_by_type = {}
 
         for data_set in self.supporting_data:
-            suites = []
-            test_results = {
-                'framework': {
-                    'name': 'raptor',
-                },
-                'suites': suites,
-            }
 
             data_type = data_set['type']
             LOG.info("summarizing %s data" % data_type)
+
+            if data_type not in support_data_by_type:
+                support_data_by_type[data_type] = {
+                    'framework': {
+                        'name': 'raptor',
+                    },
+                    'suites': [],
+                }
 
             # suite name will be name of the actual raptor test that ran, plus the type of
             # supporting data i.e. 'raptor-speedometer-geckoview-power'
@@ -95,14 +97,16 @@ class PerftestOutput(object):
                 'alertThreshold': 2.0
             }
 
-            suites.append(suite)
+            support_data_by_type[data_type]['suites'].append(suite)
 
             # each supporting data measurement becomes a subtest, with the measurement type
-            # used for the subtest name. i.e. 'raptor-speedometer-geckoview-power-cpu'
-            # the overall 'suite' value for supporting data will be the sum of all measurements
+            # used for the subtest name. i.e. 'power-cpu'
+            # the overall 'suite' value for supporting data is dependent on
+            # the unit of the values, by default the sum of all measurements
+            # is taken.
             for measurement_name, value in data_set['values'].iteritems():
                 new_subtest = {}
-                new_subtest['name'] = data_set['test'] + "-" + data_type + "-" + measurement_name
+                new_subtest['name'] = data_type + "-" + measurement_name
                 new_subtest['value'] = value
                 new_subtest['lowerIsBetter'] = True
                 new_subtest['alertThreshold'] = 2.0
@@ -110,13 +114,17 @@ class PerftestOutput(object):
                 subtests.append(new_subtest)
                 vals.append([new_subtest['value'], new_subtest['name']])
 
-            if len(subtests) > 1:
-                suite['value'] = self.construct_summary(vals, testname="supporting_data")
+            if len(subtests) >= 1:
+                suite['value'] = self.construct_summary(
+                    vals,
+                    testname="supporting_data",
+                    unit=data_set['unit']
+                )
 
-            subtests.sort(key=lambda subtest: subtest['name'])
-            suites.sort(key=lambda suite: suite['name'])
-
-            self.summarized_supporting_data.append(test_results)
+        # split the supporting data by type, there will be one
+        # perfherder output per type
+        for data_type in support_data_by_type:
+            self.summarized_supporting_data.append(support_data_by_type[data_type])
 
         return
 
@@ -224,7 +232,7 @@ class PerftestOutput(object):
 
         return True, total_perfdata
 
-    def construct_summary(self, vals, testname):
+    def construct_summary(self, vals, testname, unit=None):
 
         def _filter(vals, value=None):
             if value is None:
@@ -309,6 +317,12 @@ class PerftestOutput(object):
 
         if testname.startswith('raptor-youtube-playback'):
             return round(filters.mean(_filter(vals)), 2)
+
+        if testname.startswith('supporting_data'):
+            if unit and unit in ('%',):
+                return filters.mean(_filter(vals))
+            else:
+                return sum(_filter(vals))
 
         if len(vals) > 1:
             return round(filters.geometric_mean(_filter(vals)), 2)
