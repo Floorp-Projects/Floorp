@@ -10,3 +10,4 @@ browser.jar:
 *       content/browser/downloads/contentAreaDownloadsView.xul (content/contentAreaDownloadsView.xul)
         content/browser/downloads/contentAreaDownloadsView.js  (content/contentAreaDownloadsView.js)
         content/browser/downloads/contentAreaDownloadsView.css (content/contentAreaDownloadsView.css)
+        content/browser/downloads/downloadsCommands.js         (content/downloadsCommands.js)
