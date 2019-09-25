@@ -36,8 +36,6 @@ const startupPhases = {
         "resource://gre/modules/MainProcessSingleton.jsm",
         "resource://gre/modules/XPCOMUtils.jsm",
         "resource://gre/modules/Services.jsm",
-        // Bugs to fix: The following components shouldn't be initialized that early.
-        "resource://gre/modules/PushComponents.jsm", // bug 1369436
       ]),
     },
   },
@@ -95,6 +93,7 @@ const startupPhases = {
         "resource://gre/modules/FxAccountsStorage.jsm",
         "resource://gre/modules/PlacesBackups.jsm",
         "resource://gre/modules/PlacesSyncUtils.jsm",
+        "resource://gre/modules/PushComponents.jsm",
         "resource://gre/modules/Sqlite.jsm",
       ]),
       services: new Set([
