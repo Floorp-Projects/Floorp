@@ -722,11 +722,10 @@ void AudioChannelService::AudioChannelWindow::AppendAgent(
 
   RequestAudioFocus(aAgent);
   AppendAgentAndIncreaseAgentsNum(aAgent);
-  if (aAudible == AudibleState::eAudible) {
-    AudioAudibleChanged(aAgent, AudibleState::eAudible,
-                        AudibleChangedReasons::eDataAudibleChanged);
-  } else if (IsEnableAudioCompetingForAllAgents() &&
-             aAudible != AudibleState::eAudible) {
+  AudioAudibleChanged(aAgent, aAudible,
+                      AudibleChangedReasons::eDataAudibleChanged);
+  if (IsEnableAudioCompetingForAllAgents() &&
+      aAudible != AudibleState::eAudible) {
     NotifyAudioCompetingChanged(aAgent);
   }
 }
