@@ -390,6 +390,9 @@ interface nsIHttpChannelInternal : nsISupports
     [noscript, notxpcom, nostdcall]
     void setIPv6Disabled();
 
+    /**
+     * Get the Cross-Origin-Opener-Policy of the top-level document channel.
+     */
     [noscript]
     nsILoadInfo_CrossOriginOpenerPolicy getCrossOriginOpenerPolicy(
         in nsILoadInfo_CrossOriginOpenerPolicy aInitiatorPolicy);
