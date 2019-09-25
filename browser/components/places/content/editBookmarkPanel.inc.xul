@@ -13,8 +13,8 @@
       <label value="&editBookmarkOverlay.name.label;"
              accesskey="&editBookmarkOverlay.name.accesskey;"
              control="editBMPanel_namePicker"/>
-      <textbox id="editBMPanel_namePicker"
-               onchange="gEditItemOverlay.onNamePickerChange().catch(Cu.reportError);"/>
+      <html:input id="editBMPanel_namePicker"
+                  onchange="gEditItemOverlay.onNamePickerChange().catch(Cu.reportError);"/>
     </vbox>
 
     <vbox id="editBMPanel_locationRow"
@@ -22,9 +22,9 @@
       <label value="&editBookmarkOverlay.location.label;"
              accesskey="&editBookmarkOverlay.location.accesskey;"
              control="editBMPanel_locationField"/>
-      <textbox id="editBMPanel_locationField"
-               class="uri-element"
-               onchange="gEditItemOverlay.onLocationFieldChange();"/>
+      <html:input id="editBMPanel_locationField"
+                  class="uri-element"
+                  onchange="gEditItemOverlay.onLocationFieldChange();"/>
     </vbox>
 
     <vbox id="editBMPanel_folderRow"
@@ -119,8 +119,8 @@
       <label value="&editBookmarkOverlay.keyword.label;"
              accesskey="&editBookmarkOverlay.keyword.accesskey;"
              control="editBMPanel_keywordField"/>
-      <textbox id="editBMPanel_keywordField"
-               onchange="gEditItemOverlay.onKeywordFieldChange();"/>
+      <html:input id="editBMPanel_keywordField"
+                  onchange="gEditItemOverlay.onKeywordFieldChange();"/>
     </vbox>
   </vbox>
 </vbox>
