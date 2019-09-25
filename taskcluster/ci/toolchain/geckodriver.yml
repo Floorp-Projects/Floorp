@@ -19,6 +19,15 @@ job-defaults:
             # Changes to 'third_party/rust' should be captured by
             # 'testing/geckodriver/Cargo.toml'.
 
+linux32-geckodriver:
+    treeherder:
+        symbol: TL32(geckodriver)
+    run:
+        arguments: ['i686-unknown-linux-gnu']
+    fetches:
+        toolchain:
+            - linux64-rust
+
 linux64-geckodriver:
     treeherder:
         symbol: TL(geckodriver)
