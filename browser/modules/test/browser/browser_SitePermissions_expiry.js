@@ -16,26 +16,30 @@ add_task(async function testTemporaryPermissionExpiry() {
     set: [["privacy.temporary_permission_expire_time_ms", EXPIRE_TIME_MS]],
   });
 
-  let uri = Services.io.newURI("https://example.com");
+  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+    "https://example.com"
+  );
   let id = "camera";
 
-  await BrowserTestUtils.withNewTab(uri.spec, async function(browser) {
-    SitePermissions.set(
-      uri,
+  await BrowserTestUtils.withNewTab(principal.URI.spec, async function(
+    browser
+  ) {
+    SitePermissions.setForPrincipal(
+      principal,
       id,
       SitePermissions.BLOCK,
       SitePermissions.SCOPE_TEMPORARY,
       browser
     );
 
-    Assert.deepEqual(SitePermissions.get(uri, id, browser), {
+    Assert.deepEqual(SitePermissions.getForPrincipal(principal, id, browser), {
       state: SitePermissions.BLOCK,
       scope: SitePermissions.SCOPE_TEMPORARY,
     });
 
     await new Promise(c => setTimeout(c, TIMEOUT_MS));
 
-    Assert.deepEqual(SitePermissions.get(uri, id, browser), {
+    Assert.deepEqual(SitePermissions.getForPrincipal(principal, id, browser), {
       state: SitePermissions.UNKNOWN,
       scope: SitePermissions.SCOPE_PERSISTENT,
     });
