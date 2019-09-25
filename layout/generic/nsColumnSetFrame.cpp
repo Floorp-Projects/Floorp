@@ -422,6 +422,7 @@ nsColumnSetFrame::ReflowConfig nsColumnSetFrame::ChooseColumnStrategy(
   config.mColGap = colGap;
   config.mColMaxBSize = colBSize;
   config.mIsBalancing = isBalancing;
+  config.mForceAuto = aForceAuto;
   config.mKnownFeasibleBSize = NS_UNCONSTRAINEDSIZE;
   config.mKnownInfeasibleBSize = 0;
   config.mComputedBSize = computedBSize;
@@ -888,7 +889,52 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
       colData.mHasExcessBSize = true;
     }
 
-    if (columnCount >= aConfig.mUsedColCount - 1 && aConfig.mIsBalancing) {
+    // We have reached the maximum number of columns. If we are balancing, stop
+    // this reflow and continue finding the optimal balancing block-size.
+    //
+    // Otherwise, i.e. we are not balancing, stop this reflow and let the parent
+    // of our multicol container create a next-in-flow if all of the following
+    // conditions are met.
+    //
+    // 1) We fill columns sequentially by the request of the style, not by our
+    // internal needs, i.e. aConfig.mForceAuto is false.
+    //
+    // We don't want to stop this reflow when we force fill the columns
+    // sequentially. We usually go into this mode when giving up balancing, and
+    // this is the last resort to fit all our children by creating overflow
+    // columns.
+    //
+    // 2) In a fragmented context, our multicol container still has block-size
+    // left for its next-in-flow, i.e.
+    // aReflowInput.mFlags.mColumnSetWrapperHasNoBSizeLeft is false.
+    //
+    // Note that in a continuous context, i.e. our multicol container's
+    // available block-size is unconstrained, if it has a fixed block-size
+    // mColumnSetWrapperHasNoBSizeLeft is always true because nothing stops it
+    // from applying all its block-size in the first-in-flow. Otherwise, i.e.
+    // our multicol container has an unconstrained block-size, we shouldn't be
+    // here because all our children should fit in the very first column even if
+    // mColumnSetWrapperHasNoBSizeLeft is false.
+    //
+    // According to the definition of mColumnSetWrapperHasNoBSizeLeft, if the
+    // bit is *not* set, either our multicol container has unconstrained
+    // block-size, or it has a constrained block-size and has block-size left
+    // for its next-in-flow. In either cases, the parent of our multicol
+    // container can create a next-in-flow for the container that guaranteed to
+    // have non-zero block-size for the container's children.
+    //
+    // Put simply, if either one of the above conditions is not met, we are
+    // going to create more overflow columns until all our children are fit.
+    if (columnCount >= aConfig.mUsedColCount - 1 &&
+        (aConfig.mIsBalancing ||
+         (StaticPrefs::layout_css_column_span_enabled() &&
+          !aConfig.mForceAuto &&
+          !aReflowInput.mFlags.mColumnSetWrapperHasNoBSizeLeft))) {
+      NS_ASSERTION(aConfig.mIsBalancing ||
+                       aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE,
+                   "Why are we here if we have unlimited block-size to fill "
+                   "columns sequentially.");
+
       // No more columns allowed here. Stop.
       aStatus.SetNextInFlowNeedsReflow();
       kidNextInFlow->MarkSubtreeDirty();
@@ -899,6 +945,9 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
         SetOverflowFrames(continuationColumns);
       }
       child = nullptr;
+
+      COLUMN_SET_LOG("%s: We are not going to create overflow columns.",
+                     __func__);
       break;
     }
 
