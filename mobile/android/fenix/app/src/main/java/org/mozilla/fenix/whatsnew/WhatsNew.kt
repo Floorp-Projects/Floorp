@@ -26,12 +26,11 @@ class WhatsNew private constructor(private val storage: WhatsNewStorage) {
         val lastKnownAppVersion = storage.getVersion()
 
         // Update the version and date if *just* updated
-        lastKnownAppVersion?.let {
-            if (currentVersion.majorVersionNumber > it.majorVersionNumber) {
-                storage.setVersion(currentVersion)
-                storage.setDateOfUpdate(System.currentTimeMillis())
-                return true
-            }
+        if (lastKnownAppVersion == null ||
+            currentVersion.majorVersionNumber > lastKnownAppVersion.majorVersionNumber) {
+            storage.setVersion(currentVersion)
+            storage.setDateOfUpdate(System.currentTimeMillis())
+            return true
         }
 
         return (!storage.getWhatsNewHasBeenCleared() && storage.getDaysSinceUpdate() < DAYS_PER_UPDATE)

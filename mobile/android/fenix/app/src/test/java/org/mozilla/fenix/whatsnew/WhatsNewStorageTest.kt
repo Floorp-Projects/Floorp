@@ -1,5 +1,9 @@
 package org.mozilla.fenix.whatsnew
 
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.support.test.robolectric.testContext
@@ -59,6 +63,6 @@ class WhatsNewStorageTest {
     }
 }
 
-private fun Settings.clear() {
+fun Settings.clear() {
     preferences.clearAndCommit()
 }

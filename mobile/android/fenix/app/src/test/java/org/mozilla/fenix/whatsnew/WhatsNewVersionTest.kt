@@ -7,7 +7,6 @@ package org.mozilla.fenix.whatsnew
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.TestApplication
@@ -22,7 +21,7 @@ class WhatsNewVersionTest {
         val versionOne = WhatsNewVersion("1.2.0")
         assertEquals(1, versionOne.majorVersionNumber)
 
-        val versionTwo = WhatsNewVersion("2.4.0")
-        assertNotEquals(1, versionTwo.majorVersionNumber)
+        val versionTwo = WhatsNewVersion("2.4.1")
+        assertEquals(2, versionTwo.majorVersionNumber)
     }
 }
