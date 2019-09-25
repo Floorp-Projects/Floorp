@@ -84,6 +84,19 @@ class StackType {
 
   Code code() const { return Code(UnpackTypeCodeType(tc_)); }
 
+  bool isNumeric() const {
+    switch (code()) {
+      case Code::TVar:
+      case Code::I32:
+      case Code::I64:
+      case Code::F32:
+      case Code::F64:
+        return true;
+      default:
+        return false;
+    }
+  }
+
   uint32_t refTypeIndex() const { return UnpackTypeCodeIndex(tc_); }
   bool isRef() const { return UnpackTypeCodeType(tc_) == TypeCode::Ref; }
 
@@ -326,7 +339,6 @@ class MOZ_STACK_CLASS OpIter : private Policy {
     controlStack_.back().setPolymorphicBase();
   }
 
-  inline bool Join(StackType one, StackType two, StackType* result) const;
   inline bool checkIsSubtypeOf(ValType lhs, ValType rhs);
 
  public:
@@ -512,43 +524,6 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   // end of the function body.
   bool controlStackEmpty() const { return controlStack_.empty(); }
 };
-
-template <typename Policy>
-inline bool OpIter<Policy>::Join(StackType one, StackType two,
-                                 StackType* result) const {
-  if (MOZ_LIKELY(one == two)) {
-    *result = one;
-    return true;
-  }
-
-  if (one == StackType::TVar) {
-    *result = two;
-    return true;
-  }
-
-  if (two == StackType::TVar) {
-    *result = one;
-    return true;
-  }
-
-  if (one.isReference() && two.isReference()) {
-    if (env_.isRefSubtypeOf(NonTVarToValType(two), NonTVarToValType(one))) {
-      *result = one;
-      return true;
-    }
-
-    if (env_.isRefSubtypeOf(NonTVarToValType(one), NonTVarToValType(two))) {
-      *result = two;
-      return true;
-    }
-
-    // No subtyping relations between the two types.
-    *result = StackType::AnyRef;
-    return true;
-  }
-
-  return false;
-}
 
 template <typename Policy>
 inline bool OpIter<Policy>::checkIsSubtypeOf(ValType actual, ValType expected) {
@@ -1336,7 +1311,15 @@ inline bool OpIter<Policy>::readSelect(StackType* type, Value* trueValue,
     return false;
   }
 
-  if (!Join(falseType, trueType, type)) {
+  if (!falseType.isNumeric() || !trueType.isNumeric()) {
+    return fail("select operand types must be numeric");
+  }
+
+  if (falseType.code() == StackType::TVar) {
+    *type = trueType;
+  } else if (trueType.code() == StackType::TVar || falseType == trueType) {
+    *type = falseType;
+  } else {
     return fail("select operand types must match");
   }
 
