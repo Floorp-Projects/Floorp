@@ -7911,10 +7911,9 @@ nsPIDOMWindowOuter::nsPIDOMWindowOuter(uint64_t aWindowID)
       mModalStateDepth(0),
       mIsActive(false),
       mIsBackground(false),
-      mMediaSuspend(
-          Preferences::GetBool("media.block-autoplay-until-in-foreground", true)
-              ? nsISuspendedTypes::SUSPENDED_BLOCK
-              : nsISuspendedTypes::NONE_SUSPENDED),
+      mMediaSuspend(StaticPrefs::media_block_autoplay_until_in_foreground()
+                        ? nsISuspendedTypes::SUSPENDED_BLOCK
+                        : nsISuspendedTypes::NONE_SUSPENDED),
       mAudioVolume(1.0),
       mDesktopModeViewport(false),
       mIsRootOuterWindow(false),
