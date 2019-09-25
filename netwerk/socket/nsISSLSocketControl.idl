@@ -166,10 +166,5 @@ interface nsISSLSocketControl : nsISupports {
      * True iff the connection was resumed using the resumption token.
      */
     readonly attribute boolean resumed;
-
-    /**
-     * The id used to uniquely identify the connection to the peer.
-     */
-    readonly attribute ACString peerId;
 };
 

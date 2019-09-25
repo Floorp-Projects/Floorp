@@ -23,12 +23,12 @@ static LazyLogModule gSSLTokensCacheLog("SSLTokensCache");
 
 class ExpirationComparator {
  public:
-  bool Equals(SSLTokensCache::TokenCacheRecord* a,
-              SSLTokensCache::TokenCacheRecord* b) const {
+  bool Equals(SSLTokensCache::HostRecord* a,
+              SSLTokensCache::HostRecord* b) const {
     return a->mExpirationTime == b->mExpirationTime;
   }
-  bool LessThan(SSLTokensCache::TokenCacheRecord* a,
-                SSLTokensCache::TokenCacheRecord* b) const {
+  bool LessThan(SSLTokensCache::HostRecord* a,
+                SSLTokensCache::HostRecord* b) const {
     return a->mExpirationTime < b->mExpirationTime;
   }
 };
@@ -78,12 +78,12 @@ SSLTokensCache::SSLTokensCache() : mCacheSize(0) {
 SSLTokensCache::~SSLTokensCache() { LOG(("SSLTokensCache::~SSLTokensCache")); }
 
 // static
-nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
+nsresult SSLTokensCache::Put(const nsACString& aHost, const uint8_t* aToken,
                              uint32_t aTokenLen) {
   StaticMutexAutoLock lock(sLock);
 
-  LOG(("SSLTokensCache::Put [key=%s, tokenLen=%u]",
-       PromiseFlatCString(aKey).get(), aTokenLen));
+  LOG(("SSLTokensCache::Put [host=%s, tokenLen=%u]",
+       PromiseFlatCString(aHost).get(), aTokenLen));
 
   if (!gInstance) {
     LOG(("  service not initialized"));
@@ -101,12 +101,12 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
   expirationTime = tokenInfo.expirationTime;
   SSL_DestroyResumptionTokenInfo(&tokenInfo);
 
-  TokenCacheRecord* rec = nullptr;
+  HostRecord* rec = nullptr;
 
-  if (!gInstance->mTokenCacheRecords.Get(aKey, &rec)) {
-    rec = new TokenCacheRecord();
-    rec->mKey = aKey;
-    gInstance->mTokenCacheRecords.Put(aKey, rec);
+  if (!gInstance->mHostRecs.Get(aHost, &rec)) {
+    rec = new HostRecord();
+    rec->mHost = aHost;
+    gInstance->mHostRecs.Put(aHost, rec);
     gInstance->mExpirationArray.AppendElement(rec);
   } else {
     gInstance->mCacheSize -= rec->mToken.Length();
@@ -126,20 +126,20 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
 }
 
 // static
-nsresult SSLTokensCache::Get(const nsACString& aKey,
+nsresult SSLTokensCache::Get(const nsACString& aHost,
                              nsTArray<uint8_t>& aToken) {
   StaticMutexAutoLock lock(sLock);
 
-  LOG(("SSLTokensCache::Get [key=%s]", PromiseFlatCString(aKey).get()));
+  LOG(("SSLTokensCache::Get [host=%s]", PromiseFlatCString(aHost).get()));
 
   if (!gInstance) {
     LOG(("  service not initialized"));
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  TokenCacheRecord* rec = nullptr;
+  HostRecord* rec = nullptr;
 
-  if (gInstance->mTokenCacheRecords.Get(aKey, &rec)) {
+  if (gInstance->mHostRecs.Get(aHost, &rec)) {
     if (rec->mToken.Length()) {
       aToken = rec->mToken;
       return NS_OK;
@@ -151,28 +151,28 @@ nsresult SSLTokensCache::Get(const nsACString& aKey,
 }
 
 // static
-nsresult SSLTokensCache::Remove(const nsACString& aKey) {
+nsresult SSLTokensCache::Remove(const nsACString& aHost) {
   StaticMutexAutoLock lock(sLock);
 
-  LOG(("SSLTokensCache::Remove [key=%s]", PromiseFlatCString(aKey).get()));
+  LOG(("SSLTokensCache::Remove [host=%s]", PromiseFlatCString(aHost).get()));
 
   if (!gInstance) {
     LOG(("  service not initialized"));
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  return gInstance->RemoveLocked(aKey);
+  return gInstance->RemoveLocked(aHost);
 }
 
-nsresult SSLTokensCache::RemoveLocked(const nsACString& aKey) {
+nsresult SSLTokensCache::RemoveLocked(const nsACString& aHost) {
   sLock.AssertCurrentThreadOwns();
 
-  LOG(("SSLTokensCache::RemoveLocked [key=%s]",
-       PromiseFlatCString(aKey).get()));
+  LOG(("SSLTokensCache::RemoveLocked [host=%s]",
+       PromiseFlatCString(aHost).get()));
 
-  nsAutoPtr<TokenCacheRecord> rec;
+  nsAutoPtr<HostRecord> rec;
 
-  if (!mTokenCacheRecords.Remove(aKey, &rec)) {
+  if (!mHostRecs.Remove(aHost, &rec)) {
     LOG(("  token not found"));
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -206,9 +206,8 @@ void SSLTokensCache::EvictIfNecessary() {
   mExpirationArray.Sort(ExpirationComparator());
 
   while (mCacheSize > capacity && mExpirationArray.Length() > 0) {
-    if (NS_FAILED(RemoveLocked(mExpirationArray[0]->mKey))) {
-      MOZ_ASSERT(false,
-                 "mExpirationArray and mTokenCacheRecords are out of sync!");
+    if (NS_FAILED(RemoveLocked(mExpirationArray[0]->mHost))) {
+      MOZ_ASSERT(false, "mExpirationArray and mHostRecs are out of sync!");
       mExpirationArray.RemoveElementAt(0);
     }
   }
@@ -223,12 +222,12 @@ size_t SSLTokensCache::SizeOfIncludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
   size_t n = mallocSizeOf(this);
 
-  n += mTokenCacheRecords.ShallowSizeOfExcludingThis(mallocSizeOf);
+  n += mHostRecs.ShallowSizeOfExcludingThis(mallocSizeOf);
   n += mExpirationArray.ShallowSizeOfExcludingThis(mallocSizeOf);
 
   for (uint32_t i = 0; i < mExpirationArray.Length(); ++i) {
     n += mallocSizeOf(mExpirationArray[i]);
-    n += mExpirationArray[i]->mKey.SizeOfExcludingThisIfUnshared(mallocSizeOf);
+    n += mExpirationArray[i]->mHost.SizeOfExcludingThisIfUnshared(mallocSizeOf);
     n += mExpirationArray[i]->mToken.ShallowSizeOfExcludingThis(mallocSizeOf);
   }
 
