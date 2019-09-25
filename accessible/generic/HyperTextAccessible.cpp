@@ -295,10 +295,21 @@ uint32_t HyperTextAccessible::TransformOffset(Accessible* aDescendant,
     // If the end offset is not supposed to be inclusive and the original point
     // is not at 0 offset then the returned offset should be after an embedded
     // character the original point belongs to.
-    if (aIsEndOffset)
-      offset = (offset > 0 || descendant->IndexInParent() > 0) ? 1 : 0;
-    else
+    if (aIsEndOffset) {
+      // Similar to our special casing in FindOffset, we add handling for
+      // bulleted lists here because PeekOffset returns the inner text node
+      // for a list when it should return the list bullet.
+      // We manually set the offset so the error doesn't propagate up.
+      if (offset == 0 && descendant->Parent()->IsHTMLListItem() &&
+          descendant->PrevSibling() && descendant->PrevSibling()->GetFrame() &&
+          descendant->PrevSibling()->GetFrame()->IsBulletFrame()) {
+        offset = 0;
+      } else {
+        offset = (offset > 0 || descendant->IndexInParent() > 0) ? 1 : 0;
+      }
+    } else {
       offset = 0;
+    }
 
     descendant = parent;
   }

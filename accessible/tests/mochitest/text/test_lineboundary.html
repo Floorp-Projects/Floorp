@@ -164,6 +164,13 @@
       testTextAtOffset(["ht_5" ], BOUNDARY_LINE_START,
                        [ [ 0, 0, kEmbedChar, 0, 1 ] ]);
 
+      // ////////////////////////////////////////////////////////////////////////
+      // Block followed by list
+
+      testTextAtOffset([ "block_then_ul" ], BOUNDARY_LINE_START,
+                       [ [ 0, 0, kEmbedChar, 0, 1 ],
+                         [ 1, 1, kEmbedChar, 1, 2 ] ]);
+
       SimpleTest.finish();
     }
 
@@ -257,6 +264,11 @@ two words
     Line 1
     <center><input type="TEXT"><input value="Button" type="SUBMIT"></center>
     Line 3
+  </div>
+
+  <div id="block_then_ul">
+    <p>Block</p>
+    <ul><li>Li</li></ul>
   </div>
   </body>
 </body>
