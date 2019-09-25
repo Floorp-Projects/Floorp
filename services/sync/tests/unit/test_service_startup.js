@@ -13,7 +13,7 @@ add_task(async function run_test() {
 
   // Test fixtures
   let { Service } = ChromeUtils.import("resource://services-sync/service.js");
-  Service.identity.username = "johndoe";
+  Services.prefs.setStringPref("services.sync.username", "johndoe");
   Assert.ok(xps.enabled);
 
   _("Service is enabled.");

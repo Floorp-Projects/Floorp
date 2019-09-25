@@ -389,6 +389,14 @@ add_task(async function test_helpers_login_without_customize_sync() {
         },
       },
     },
+    weaveXPCOM: {
+      whenLoaded() {},
+      Weave: {
+        Service: {
+          configure() {},
+        },
+      },
+    },
   });
 
   // ensure the previous account pref is overwritten.
@@ -415,6 +423,14 @@ add_task(async function test_helpers_login_with_customize_sync() {
 
             resolve();
           });
+        },
+      },
+    },
+    weaveXPCOM: {
+      whenLoaded() {},
+      Weave: {
+        Service: {
+          configure() {},
         },
       },
     },
@@ -469,6 +485,14 @@ add_task(
           },
         },
       },
+      weaveXPCOM: {
+        whenLoaded() {},
+        Weave: {
+          Service: {
+            configure() {},
+          },
+        },
+      },
     });
 
     Assert.equal(
@@ -509,6 +533,14 @@ add_task(async function test_helpers_login_with_offered_sync_engines() {
         _internal: {
           async setSignedInUser(accountData) {
             resolve(accountData);
+          },
+        },
+      },
+      weaveXPCOM: {
+        whenLoaded() {},
+        Weave: {
+          Service: {
+            configure() {},
           },
         },
       },

@@ -1316,7 +1316,7 @@ add_task(async function test_uploadOutgoing_failed() {
 });
 
 async function createRecordFailTelemetry(allowSkippedRecord) {
-  Service.identity.username = "foo";
+  Services.prefs.setStringPref("services.sync.username", "foo");
   let collection = new ServerCollection();
   collection._wbos.flying = new ServerWBO("flying");
   collection._wbos.scotsman = new ServerWBO("scotsman");
