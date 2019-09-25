@@ -43,6 +43,7 @@ add_task(async function mainMenu_entryPoint() {
   let passwordManager = await openPasswordManager(openingFunc);
   info("mainMenu_entryPoint, password manager dialog shown");
 
+  await LoginTestUtils.telemetry.waitForEventCount(1);
   TelemetryTestUtils.assertEvents(
     [["pwmgr", "open_management", "mainmenu"]],
     {
