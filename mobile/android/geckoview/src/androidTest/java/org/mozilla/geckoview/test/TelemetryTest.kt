@@ -6,7 +6,6 @@ package org.mozilla.geckoview.test
 
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
-import android.util.Log
 import org.hamcrest.CoreMatchers.equalTo
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -19,13 +18,6 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 class TelemetryTest : BaseSessionTest() {
     @Test
     fun testOnTelemetryReceived() {
-        sessionRule.addExternalDelegateUntilTestEnd(
-            RuntimeTelemetry.Delegate::class,
-                sessionRule::setTelemetryDelegate,
-                { sessionRule.setTelemetryDelegate(null) },
-                object : RuntimeTelemetry.Delegate {}
-        )
-
         // Let's make sure we batch the two telemetry calls
         sessionRule.setPrefsUntilTestEnd(
                 mapOf("toolkit.telemetry.geckoview.batchDurationMS" to 100000))
@@ -39,44 +31,70 @@ class TelemetryTest : BaseSessionTest() {
         sessionRule.setScalar("telemetry.test.unsigned_int_kind", 1234)
         sessionRule.setScalar("telemetry.test.string_kind", "test scalar")
 
-        // Forces flushing telemetry data at next histogram
-        sessionRule.setPrefsUntilTestEnd(mapOf("toolkit.telemetry.geckoview.batchDurationMS" to 0))
-        sessionRule.addHistogram("TELEMETRY_TEST_STREAMING", 2000)
+        val histogram = GeckoResult<Void>()
+        val stringScalar = GeckoResult<Void>()
+        val booleanScalar = GeckoResult<Void>()
+        val longScalar = GeckoResult<Void>()
 
-        sessionRule.waitUntilCalled(object : RuntimeTelemetry.Delegate {
+        sessionRule.addExternalDelegateUntilTestEnd(
+                RuntimeTelemetry.Delegate::class,
+                sessionRule::setTelemetryDelegate,
+                { sessionRule.setTelemetryDelegate(null) },
+                object : RuntimeTelemetry.Delegate {
             @AssertCalled
             override fun onHistogram(metric: RuntimeTelemetry.Histogram) {
-                assertThat("Metric name should be correct", metric.name,
-                        equalTo("TELEMETRY_TEST_STREAMING"))
+                if (metric.name != "TELEMETRY_TEST_STREAMING") {
+                    return
+                }
+
                 assertThat("Metric name should be correct", metric.value,
                         equalTo(longArrayOf(401, 12, 1, 109, 2000)))
                 assertThat("The histogram should not be categorical", metric.isCategorical,
                         equalTo(false))
+                histogram.complete(null)
             }
 
             @AssertCalled
             override fun onStringScalar(metric: RuntimeTelemetry.Metric<String>) {
-                assertThat("Metric name should be correct", metric.name,
-                        equalTo("telemetry.test.string_kind"))
+                if (metric.name != "telemetry.test.string_kind") {
+                    return
+                }
+
                 assertThat("Metric name should be correct", metric.value,
                         equalTo("test scalar"))
+                stringScalar.complete(null)
             }
 
             @AssertCalled
             override fun onBooleanScalar(metric: RuntimeTelemetry.Metric<Boolean>) {
-                assertThat("Metric name should be correct", metric.name,
-                        equalTo("telemetry.test.boolean_kind"))
+                if (metric.name != "telemetry.test.boolean_kind") {
+                    return
+                }
+
                 assertThat("Metric name should be correct", metric.value,
                         equalTo(true))
+                booleanScalar.complete(null)
             }
 
             @AssertCalled
             override fun onLongScalar(metric: RuntimeTelemetry.Metric<Long>) {
-                assertThat("Metric name should be correct", metric.name,
-                        equalTo("telemetry.test.unsigned_int_kind"))
+                if (metric.name != "telemetry.test.unsigned_int_kind") {
+                    return
+                }
+
                 assertThat("Metric name should be correct", metric.value,
                         equalTo(1234L))
+                longScalar.complete(null)
             }
         })
+
+        // Forces flushing telemetry data at next histogram
+        sessionRule.setPrefsUntilTestEnd(mapOf("toolkit.telemetry.geckoview.batchDurationMS" to 0))
+        sessionRule.addHistogram("TELEMETRY_TEST_STREAMING", 2000)
+
+        sessionRule.waitForResult(histogram)
+        sessionRule.waitForResult(stringScalar)
+        sessionRule.waitForResult(booleanScalar)
+        sessionRule.waitForResult(longScalar)
     }
 }
