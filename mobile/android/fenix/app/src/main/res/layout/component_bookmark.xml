@@ -30,4 +30,10 @@
             android:textSize="16sp"
             android:visibility="gone" />
 
+    <ProgressBar
+        android:id="@+id/bookmarks_progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center" />
+
 </FrameLayout>
