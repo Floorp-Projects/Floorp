@@ -1174,7 +1174,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   void Seek(double aTime, SeekTarget::Type aSeekType, ErrorResult& aRv);
 
   // Update the audio channel playing state
-  void UpdateAudioChannelPlayingState(bool aForcePlaying = false);
+  void UpdateAudioChannelPlayingState();
 
   // Adds to the element's list of pending text tracks each text track
   // in the element's list of text tracks whose text track mode is not disabled
