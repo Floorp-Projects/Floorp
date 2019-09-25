@@ -21,7 +21,7 @@ use crate::image::simplify_repeated_primitive;
 use crate::intern::Interner;
 use crate::internal_types::{FastHashMap, FastHashSet, LayoutPrimitiveInfo, Filter};
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureOptions};
-use crate::picture::{BlitReason, OrderedPictureChild, PrimitiveList, TileCacheInstance};
+use crate::picture::{BlitReason, OrderedPictureChild, PrimitiveList, TileCacheInstance, ClusterFlags};
 use crate::prim_store::{PrimitiveInstance, PrimitiveSceneData};
 use crate::prim_store::{PrimitiveInstanceKind, NinePatchDescriptor, PrimitiveStore};
 use crate::prim_store::{ScrollNodeAndClipChain, PictureIndex};
@@ -238,6 +238,63 @@ impl CompositeOps {
     }
 }
 
+/// Information about unpaired Push/Pop clip chain instances that need to be fixed up.
+struct ClipChainPairInfo {
+    spatial_node_index: SpatialNodeIndex,
+    clip_chain_id: ClipChainId,
+}
+
+/// Information about a set of primitive clusters that will form a picture cache slice.
+struct Slice {
+    /// The spatial node root of the picture cache. If this is None, the slice
+    /// will not be cached and instead drawn directly to the parent surface. This
+    /// is a temporary measure until we enable caching all slices.
+    cache_scroll_root: Option<SpatialNodeIndex>,
+    /// List of primitive clusters that make up this slice
+    prim_list: PrimitiveList,
+    /// A list of clips that are shared by all primitives in the slice. These can be
+    /// filtered out and applied when the tile cache is composited rather than per-item.
+    shared_clips: Option<Vec<ClipDataHandle>>,
+}
+
+impl Slice {
+    // Open clip chain instances at the start of a slice
+    fn push_clip_instances(
+        &mut self,
+        stack: &[ClipChainPairInfo],
+    ) {
+        for clip_chain_instance in stack.iter().rev() {
+            self.prim_list.add_prim_to_start(
+                create_clip_prim_instance(
+                    clip_chain_instance.clip_chain_id,
+                    PrimitiveInstanceKind::PushClipChain,
+                ),
+                LayoutSize::zero(),
+                clip_chain_instance.spatial_node_index,
+                PrimitiveFlags::IS_BACKFACE_VISIBLE,
+            );
+        }
+    }
+
+    // Close clip chain instances at the end of a slice
+    fn pop_clip_instances(
+        &mut self,
+        stack: &[ClipChainPairInfo],
+    ) {
+        for clip_chain_instance in stack {
+            self.prim_list.add_prim(
+                create_clip_prim_instance(
+                    clip_chain_instance.clip_chain_id,
+                    PrimitiveInstanceKind::PopClipChain,
+                ),
+                LayoutSize::zero(),
+                clip_chain_instance.spatial_node_index,
+                PrimitiveFlags::IS_BACKFACE_VISIBLE,
+            );
+        }
+    }
+}
+
 /// A structure that converts a serialized display list into a form that WebRender
 /// can use to later build a frame. This structure produces a BuiltScene. Public
 /// members are typically those that are destructured into the BuiltScene.
@@ -415,6 +472,8 @@ impl<'a> SceneBuilder<'a> {
         rf_offset + scroll_offset
     }
 
+    /// Figure out the shape of the display list, and wrap various primitive clusters
+    /// into tile cache primitive instances.
     fn setup_picture_caching(
         &mut self,
         main_prim_list: &mut PrimitiveList,
@@ -423,71 +482,21 @@ impl<'a> SceneBuilder<'a> {
             return;
         }
 
-        // This method is basically a hack to set up picture caching in a minimal
-        // way without having to check the public API (yet). The intent is to
-        // work out a good API for this and switch to using it. In the mean
-        // time, this allows basic picture caching to be enabled and used for
-        // ironing out remaining bugs, fixing performance issues and profiling.
+        // If no explicit tile cache was enabled, insert a marker that will result in the
+        // entire display list being cached.
+        if !self.found_explicit_tile_cache {
+            if let Some(cluster) = main_prim_list.clusters.first_mut() {
+                cluster.flags.insert(ClusterFlags::CREATE_PICTURE_CACHE_PRE);
+                cluster.cache_scroll_root = Some(ROOT_SPATIAL_NODE_INDEX);
+            }
+        }
 
-        //
-        // We know that the display list will contain something like the following:
-        //  [Some number of primitives attached to root scroll now]
-        //  [IFrame for the content]
-        //  [A scroll root for the content (what we're interested in)]
-        //  [Primitives attached to the scroll root, possibly with sub-scroll roots]
-        //  [Some number of trailing primitives attached to root scroll frame]
-        //
-        // So we want to slice that stacking context up into:
-        //  [root primitives]
-        //  [tile cache picture]
-        //     [primitives attached to cached scroll root]
-        //  [trailing root primitives]
-        //
-        // This step is typically very quick, because there are only
-        // a small number of items in the root stacking context, since
-        // most of the content is embedded in its own picture.
-        //
-
-        // Find the first primitive which has the desired scroll root.
-        let mut first_index = None;
-        let mut main_scroll_root = None;
-
-        // If the main primitive list that we split for picture caching has
-        // clip chain instances at the top level, it's possible that we will
-        // create a split resulting in one list having unmatched PushClipChain
-        // or PopClipChain instances. This causes panics in pop_surface(),
-        // which asserts that the clip chain instances are matched.
-
-        // The code below is a (very inelegant) solution to that. It records
-        // clip chain instances found during the initial scan for scroll roots.
-        // Later, it uses this information to fix up unopened or unclosed clip
-        // instances on the split primitive lists.
-
-        // This is far from ideal - but it fixes the crash for now. In future
-        // we will be simplifying and/or removing how clip chain instances
-        // and picture cache splitting works, so we can tidy this up as
-        // part of those future changes.
-
-        let mut clip_chain_instances = Vec::new();
+        // List of slices that have been found
+        let mut slices: Vec<Slice> = Vec::new();
+        // Current stack of open clip chain instances that need to be fixed up
         let mut clip_chain_instance_stack = Vec::new();
-
-        // Maintain a list of clip node handles that are shared by every primitive
-        // in this list. These are often root / fixed position clips. We collect these
-        // and handle them when compositing the picture cache tiles. This saves per-item
-        // clip work, but more importantly, it avoids lots of invalidations due to
-        // content being clipped by fixed iframe/scrollframe rects.
-
-        // TODO(gw): The logic to build the shared clips list is quite complicated, because:
-        //           (a) We want to cache result and not do a heap of extra work per primitive,
-        //               since stress tests like dl_mutate have 50000+ primitives. Since each
-        //               primitive often shares the same clip chain as the previous primitive,
-        //               caching the last set of prim clips is generally sufficient.
-        //           (b) The general logic to set up picture caching is still complicated due to
-        //               not caching multiple slices (e.g. scroll bars). Once we enable
-        //               multiple picture cache slices, this logic becomes much simpler.
-
-        // The clips we have found that exist on every primitive we are going to cache.
-        let mut shared_clips = Vec::new();
+        // Tracker for whether a new slice should be created
+        let mut create_slice = true;
         // The clips found the last time we traversed a set of clip chains. Stored and cleared
         // here to avoid constant allocations.
         let mut prim_clips = Vec::new();
@@ -496,58 +505,44 @@ impl<'a> SceneBuilder<'a> {
         // The last prim clip chain we build prim_clips for.
         let mut last_prim_clip_chain_id = ClipChainId::NONE;
 
-        /// Records the indices in the list of a push/pop clip chain instance pair.
-        #[derive(Debug)]
-        struct ClipChainPairInfo {
-            push_index: usize,
-            pop_index: usize,
-            spatial_node_index: SpatialNodeIndex,
-            clip_chain_id: ClipChainId,
-        }
+        // Walk the supplied top level of clusters, slicing into slices as appropriate
+        for cluster in main_prim_list.clusters.drain(..) {
+            // Check if this cluster requires a new slice
+            create_slice |= cluster.flags.contains(ClusterFlags::CREATE_PICTURE_CACHE_PRE);
 
-        // Helper fn to collect clip handles from a given clip chain.
-        fn add_clips(
-            clip_chain_id: ClipChainId,
-            prim_clips: &mut Vec<ClipDataHandle>,
-            clip_store: &ClipStore,
-        ) {
-            let mut current_clip_chain_id = clip_chain_id;
+            if create_slice {
+                // When creating a slice, close off any open clip chains on prev slice.
+                if let Some(prev_slice) = slices.last_mut() {
+                    prev_slice.pop_clip_instances(&clip_chain_instance_stack);
+                }
 
-            while current_clip_chain_id != ClipChainId::NONE {
-                let clip_chain_node = &clip_store
-                    .clip_chain_nodes[current_clip_chain_id.0 as usize];
+                let mut slice = Slice {
+                    cache_scroll_root: cluster.cache_scroll_root,
+                    prim_list: PrimitiveList::empty(),
+                    shared_clips: None,
+                };
 
-                prim_clips.push(clip_chain_node.handle);
-
-                current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
+                // Open up clip chains on the stack on the new slice
+                slice.push_clip_instances(&clip_chain_instance_stack);
+                slices.push(slice);
+                create_slice = false;
             }
-        }
 
-        for (cluster_index, cluster) in main_prim_list.clusters.iter().enumerate() {
-            let scroll_root = self.clip_scroll_tree.find_scroll_root(
-                cluster.spatial_node_index,
-            );
-
+            // Step through each prim instance, in order to collect shared clips for the slice.
             for instance in &cluster.prim_instances {
-                // If we encounter a push/pop clip, record where they occurred in the
-                // primitive list for later processing.
+                // If a Push/Pop clip chain, record that in the clip stack stack.
                 match instance.kind {
                     PrimitiveInstanceKind::PushClipChain => {
-                        clip_chain_instance_stack.push(clip_chain_instances.len());
-                        clip_chain_instances.push(ClipChainPairInfo {
-                            push_index: cluster_index,
-                            pop_index: usize::MAX,
+                        clip_chain_instance_stack.push(ClipChainPairInfo {
                             spatial_node_index: cluster.spatial_node_index,
                             clip_chain_id: instance.clip_chain_id,
                         });
-                        // Invalidate the prim_clips cache - there is a new clip chain.
+                        // Invalidate the prim_clips cache - a clip chain was removed.
                         update_shared_clips = true;
                         continue;
                     }
                     PrimitiveInstanceKind::PopClipChain => {
-                        let index = clip_chain_instance_stack.pop().unwrap();
-                        let clip_chain_instance = &mut clip_chain_instances[index];
-                        debug_assert_eq!(clip_chain_instance.pop_index, usize::MAX);
+                        let clip_chain_instance = clip_chain_instance_stack.pop().unwrap();
                         debug_assert_eq!(
                             clip_chain_instance.clip_chain_id,
                             instance.clip_chain_id,
@@ -556,7 +551,6 @@ impl<'a> SceneBuilder<'a> {
                             clip_chain_instance.spatial_node_index,
                             cluster.spatial_node_index,
                         );
-                        clip_chain_instance.pop_index = cluster_index;
                         // Invalidate the prim_clips cache - a clip chain was removed.
                         update_shared_clips = true;
                         continue;
@@ -568,141 +562,93 @@ impl<'a> SceneBuilder<'a> {
                 update_shared_clips |= last_prim_clip_chain_id != instance.clip_chain_id;
                 last_prim_clip_chain_id = instance.clip_chain_id;
 
-                if update_shared_clips {
+                // TODO(gw): This is a hack for wrench, to not share clips for implicit
+                //           picture caches. It's needed until we properly exclude
+                //           shared clips that are not simple.
+                if update_shared_clips && self.found_explicit_tile_cache {
                     prim_clips.clear();
-                    // Collect any clips from the clip chain stack that will affect this prim.
-                    for clip_instance_index in &clip_chain_instance_stack {
-                        let clip_instance = &clip_chain_instances[*clip_instance_index];
+                    // Update the list of clips that apply to this primitive instance
+                    for clip_instance in &clip_chain_instance_stack {
                         add_clips(
                             clip_instance.clip_chain_id,
                             &mut prim_clips,
                             &self.clip_store,
                         );
                     }
-                    // Collect any clips from the primitive's specific clip chain.
                     add_clips(
                         instance.clip_chain_id,
                         &mut prim_clips,
                         &self.clip_store,
                     );
-
-                    // We want to only retain clips that are shared across all primitives.
-                    // TODO(gw): We could consider using a HashSet here, but:
-                    //           (a) The sizes of these arrays are typically very small (<< 10).
-                    //           (b) We would have to impl Ord/Eq on interner handles, which we
-                    //               otherwise don't need / want.
-                    shared_clips.retain(|h1: &ClipDataHandle| {
-                        let uid = h1.uid();
-                        prim_clips.iter().any(|h2| {
-                            uid == h2.uid()
-                        })
-                    });
-
-                    update_shared_clips = false;
                 }
 
-                if scroll_root != ROOT_SPATIAL_NODE_INDEX {
-                    // If we find multiple scroll roots in this page, then skip
-                    // picture caching for now. In future, we can handle picture
-                    // caching on these sites by creating a tile cache per
-                    // scroll root, or (more likely) selecting the common parent
-                    // scroll root between the detected scroll roots.
-                    match main_scroll_root {
-                        Some(main_scroll_root) => {
-                            if main_scroll_root != scroll_root {
-                                return;
-                            }
-                        }
-                        None => {
-                            main_scroll_root = Some(scroll_root);
+                // If there are no shared clips set for this slice, the shared clips are just
+                // the current clips set. Otherwise, the shared clips are those that are
+                // in both the current shared list and the clips list for this primitive.
+                match slices.last_mut().unwrap().shared_clips {
+                    Some(ref mut shared_clips) => {
+                        if update_shared_clips {
+                            shared_clips.retain(|h1: &ClipDataHandle| {
+                                let uid = h1.uid();
+                                prim_clips.iter().any(|h2| {
+                                    uid == h2.uid()
+                                })
+                            });
                         }
                     }
+                    ref mut shared_clips @ None => {
+                        *shared_clips = Some(prim_clips.clone());
+                    }
+                }
 
-                    if first_index.is_none() {
-                        // The first time we identify a prim that will be cached, set the prim_clips
-                        // array to this, such that the retain() logic above works.
-                        shared_clips = prim_clips.clone();
-                        first_index = Some(cluster_index);
-                    }
+                update_shared_clips = false;
+            }
+
+            // If this cluster creates a slice after, then note that for next cluster
+            create_slice |= cluster.flags.contains(ClusterFlags::CREATE_PICTURE_CACHE_POST);
+
+            // Finally, add this cluster to the current slice
+            slices.last_mut().unwrap().prim_list.add_cluster(cluster);
+        }
+
+        // Close off any open clip chains on prev slice.
+        if let Some(prev_slice) = slices.last_mut() {
+            prev_slice.pop_clip_instances(&clip_chain_instance_stack);
+        }
+
+        // Step through the slices, creating picture cache wrapper instances.
+        for (slice_index, slice) in slices.drain(..).enumerate() {
+            match slice.cache_scroll_root {
+                Some(scroll_root) => {
+                    let background_color = if slice_index == 0 {
+                        self.config.background_color
+                    } else {
+                        None
+                    };
+
+                    let instance = create_tile_cache(
+                        slice_index,
+                        scroll_root,
+                        slice.prim_list,
+                        background_color,
+                        slice.shared_clips.unwrap_or(Vec::new()),
+                        &mut self.interners,
+                        &mut self.prim_store,
+                        &mut self.clip_store,
+                    );
+
+                    main_prim_list.add_prim(
+                        instance,
+                        LayoutSize::zero(),
+                        scroll_root,
+                        PrimitiveFlags::IS_BACKFACE_VISIBLE,
+                    );
+                }
+                None => {
+                    main_prim_list.extend(slice.prim_list);
                 }
             }
         }
-
-        let main_scroll_root = match main_scroll_root {
-            Some(main_scroll_root) => main_scroll_root,
-            None => ROOT_SPATIAL_NODE_INDEX,
-        };
-
-        // Get the list of existing primitives in the main stacking context.
-        let mut old_prim_list = mem::replace(main_prim_list, PrimitiveList::empty());
-
-        // In the simple case, there are no preceding or trailing primitives,
-        // because everything is anchored to the root scroll node. Handle
-        // this case specially to avoid underflow error in the Some(..)
-        // path below.
-
-        let mut preceding_prims;
-        let mut remaining_prims;
-
-        match first_index {
-            Some(first_index) => {
-                // Split off the preceding primtives.
-                remaining_prims = old_prim_list.split_off(first_index);
-                preceding_prims = old_prim_list;
-            }
-            None => {
-                preceding_prims = PrimitiveList::empty();
-                remaining_prims = old_prim_list;
-            }
-        }
-
-        let mid_index = preceding_prims.len();
-
-        // Step through each clip chain pair, and see if it crosses a slice boundary.
-        for clip_chain_instance in clip_chain_instances {
-            if clip_chain_instance.push_index < mid_index && clip_chain_instance.pop_index >= mid_index {
-                preceding_prims.add_prim(
-                    create_clip_prim_instance(
-                        clip_chain_instance.clip_chain_id,
-                        PrimitiveInstanceKind::PopClipChain,
-                    ),
-                    LayoutSize::zero(),
-                    clip_chain_instance.spatial_node_index,
-                    PrimitiveFlags::IS_BACKFACE_VISIBLE,
-                );
-
-                remaining_prims.add_prim_to_start(
-                    create_clip_prim_instance(
-                        clip_chain_instance.clip_chain_id,
-                        PrimitiveInstanceKind::PushClipChain,
-                    ),
-                    LayoutSize::zero(),
-                    clip_chain_instance.spatial_node_index,
-                    PrimitiveFlags::IS_BACKFACE_VISIBLE,
-                );
-            }
-        }
-
-        let instance = create_tile_cache(
-            0,
-            main_scroll_root,
-            remaining_prims,
-            self.config.background_color,
-            shared_clips,
-            &mut self.interners,
-            &mut self.prim_store,
-            &mut self.clip_store,
-        );
-
-        // This contains the tile caching picture, with preceding and
-        // trailing primitives outside the main scroll root.
-        main_prim_list.extend(preceding_prims);
-        main_prim_list.add_prim(
-            instance,
-            LayoutSize::zero(),
-            main_scroll_root,
-            PrimitiveFlags::IS_BACKFACE_VISIBLE,
-        );
     }
 
     fn build_items(
@@ -1732,9 +1678,6 @@ impl<'a> SceneBuilder<'a> {
             None
         };
 
-        // Mark if a user supplied tile cache was specified.
-        self.found_explicit_tile_cache |= create_tile_cache;
-
         if is_pipeline_root && create_tile_cache && self.config.enable_picture_caching {
             // we don't expect any nested tile-cache-enabled stacking contexts
             debug_assert!(!self.sc_stack.iter().any(|sc| sc.create_tile_cache));
@@ -1873,39 +1816,55 @@ impl<'a> SceneBuilder<'a> {
         let parent_is_empty = match self.sc_stack.last_mut() {
             Some(parent_sc) => {
                 if stacking_context.is_redundant(parent_sc) {
-                    if stacking_context.clip_chain_id != ClipChainId::NONE {
-                        let prim = create_clip_prim_instance(
-                            stacking_context.clip_chain_id,
-                            PrimitiveInstanceKind::PushClipChain,
-                        );
-                        parent_sc.prim_list.add_prim(
-                            prim,
-                            LayoutSize::zero(),
-                            stacking_context.spatial_node_index,
-                            PrimitiveFlags::IS_BACKFACE_VISIBLE,
-                        );
-                    }
+                    if !stacking_context.prim_list.is_empty() {
+                        if stacking_context.clip_chain_id != ClipChainId::NONE {
+                            let prim = create_clip_prim_instance(
+                                stacking_context.clip_chain_id,
+                                PrimitiveInstanceKind::PushClipChain,
+                            );
+                            stacking_context.prim_list.add_prim_to_start(
+                                prim,
+                                LayoutSize::zero(),
+                                stacking_context.spatial_node_index,
+                                PrimitiveFlags::IS_BACKFACE_VISIBLE,
+                            );
 
-                    // If the parent context primitives list is empty, it's faster
-                    // to assign the storage of the popped context instead of paying
-                    // the copying cost for extend.
-                    if parent_sc.prim_list.is_empty() {
-                        parent_sc.prim_list = stacking_context.prim_list;
-                    } else {
-                        parent_sc.prim_list.extend(stacking_context.prim_list);
-                    }
+                            let prim = create_clip_prim_instance(
+                                stacking_context.clip_chain_id,
+                                PrimitiveInstanceKind::PopClipChain,
+                            );
+                            stacking_context.prim_list.add_prim(
+                                prim,
+                                LayoutSize::zero(),
+                                stacking_context.spatial_node_index,
+                                PrimitiveFlags::IS_BACKFACE_VISIBLE,
+                            );
+                        }
 
-                    if stacking_context.clip_chain_id != ClipChainId::NONE {
-                        let prim = create_clip_prim_instance(
-                            stacking_context.clip_chain_id,
-                            PrimitiveInstanceKind::PopClipChain,
-                        );
-                        parent_sc.prim_list.add_prim(
-                            prim,
-                            LayoutSize::zero(),
-                            stacking_context.spatial_node_index,
-                            PrimitiveFlags::IS_BACKFACE_VISIBLE,
-                        );
+                        // If popping a redundant stacking context that is from a different pipeline,
+                        // we want to insert flags where the picture cache slices should be created
+                        // for this iframe. For now, we want to match existing behavior, that is:
+                        // - Only cache content that is within the main scroll root, and:
+                        // - Skip caching fixed position content before / after the scroll root.
+                        // This means that we don't add scrollbars, which cause lots of extra
+                        // invalidations. There is ongoing work to add tags to primitives that
+                        // are scrollbars. Once this lands, we can simplify this logic considerably
+                        // (and add a separate picture cache slice / OS layer for scroll bars).
+                        if parent_sc.pipeline_id != stacking_context.pipeline_id {
+                            stacking_context.init_picture_caching(&self.clip_scroll_tree);
+
+                            // Mark that a user supplied tile cache was specified.
+                            self.found_explicit_tile_cache = true;
+                        }
+
+                        // If the parent context primitives list is empty, it's faster
+                        // to assign the storage of the popped context instead of paying
+                        // the copying cost for extend.
+                        if parent_sc.prim_list.is_empty() {
+                            parent_sc.prim_list = stacking_context.prim_list;
+                        } else {
+                            parent_sc.prim_list.extend(stacking_context.prim_list);
+                        }
                     }
 
                     return;
@@ -1915,7 +1874,7 @@ impl<'a> SceneBuilder<'a> {
             None => true,
         };
 
-        if stacking_context.create_tile_cache {
+        if self.sc_stack.is_empty() {
             self.setup_picture_caching(
                 &mut stacking_context.prim_list,
             );
@@ -1947,35 +1906,6 @@ impl<'a> SceneBuilder<'a> {
                 stacking_context.frame_output_pipeline_id
             ),
         };
-
-        // If no user supplied tile cache was specified, and picture caching is enabled,
-        // create an implicit tile cache for the whole frame builder.
-        // TODO(gw): This is only needed temporarily - once we support multiple slices
-        //           correctly, this will be handled by setup_picture_caching.
-        if self.sc_stack.is_empty() &&
-            !self.found_explicit_tile_cache &&
-            self.config.enable_picture_caching {
-
-            let instance = create_tile_cache(
-                0,
-                ROOT_SPATIAL_NODE_INDEX,
-                stacking_context.prim_list,
-                self.config.background_color,
-                Vec::new(),
-                &mut self.interners,
-                &mut self.prim_store,
-                &mut self.clip_store,
-            );
-
-            let mut prim_list = PrimitiveList::empty();
-            prim_list.add_prim(
-                instance,
-                LayoutSize::zero(),
-                ROOT_SPATIAL_NODE_INDEX,
-                PrimitiveFlags::IS_BACKFACE_VISIBLE,
-            );
-            stacking_context.prim_list = prim_list;
-        }
 
         // Add picture for this actual stacking context contents to render into.
         let leaf_pic_index = PictureIndex(self.prim_store.pictures
@@ -3579,6 +3509,61 @@ impl FlattenedStackingContext {
         self.transform_style == TransformStyle::Preserve3D && self.composite_ops.is_empty()
     }
 
+    /// Set up appropriate cluster flags for picture caching on this stacking context.
+    fn init_picture_caching(
+        &mut self,
+        clip_scroll_tree: &ClipScrollTree,
+    ) {
+        let mut selected_cluster_and_scroll_root = None;
+
+        // There's probably a tidier way to express the logic below, but we will be
+        // removing this shortly anyway, as we create slices for more than just the
+        // main scroll root.
+        for (cluster_index, cluster) in self.prim_list.clusters.iter().enumerate() {
+            let scroll_root = clip_scroll_tree.find_scroll_root(
+                cluster.spatial_node_index,
+            );
+            if scroll_root != ROOT_SPATIAL_NODE_INDEX {
+                match selected_cluster_and_scroll_root {
+                    Some((_, selected_scroll_root)) => {
+                        if selected_scroll_root != scroll_root {
+                            // Found multiple scroll roots - bail out and just cache fixed position
+                            selected_cluster_and_scroll_root = None;
+                            break;
+                        }
+                    }
+                    None => {
+                        selected_cluster_and_scroll_root = Some((cluster_index, scroll_root));
+                    }
+                }
+            }
+        }
+
+        // Either set up a fixed root cache, or a scrolling one if there was only
+        // a single scroll root found (the common case).
+        match selected_cluster_and_scroll_root {
+            Some((cluster_index, scroll_root)) => {
+                let cluster = &mut self.prim_list.clusters[cluster_index];
+                cluster.flags.insert(ClusterFlags::CREATE_PICTURE_CACHE_PRE);
+                cluster.cache_scroll_root = Some(scroll_root);
+            }
+            None => {
+                if let Some(cluster) = self.prim_list.clusters.first_mut() {
+                    cluster.flags.insert(ClusterFlags::CREATE_PICTURE_CACHE_PRE);
+                    cluster.cache_scroll_root = Some(ROOT_SPATIAL_NODE_INDEX);
+                }
+            }
+        }
+
+        // For now, always end the cache slice at the end of the stacking context.
+        // This preserves existing behavior, but breaks in some cases on platforms
+        // that use overlay scroll bars. We can fix this as a follow up once this
+        // patch lands.
+        if let Some(cluster) = self.prim_list.clusters.last_mut() {
+            cluster.flags.insert(ClusterFlags::CREATE_PICTURE_CACHE_POST);
+        }
+    }
+
     /// Return true if the stacking context isn't needed.
     pub fn is_redundant(
         &self,
@@ -3618,11 +3603,6 @@ impl FlattenedStackingContext {
 
         // If need to isolate in surface due to clipping / mix-blend-mode
         if !self.blit_reason.is_empty() {
-            return false;
-        }
-
-        // If this stacking context gets picture caching, we need it.
-        if self.create_tile_cache {
             return false;
         }
 
@@ -3913,4 +3893,22 @@ fn create_tile_cache(
         },
         parent_clip_chain_id,
     )
+}
+
+// Helper fn to collect clip handles from a given clip chain.
+fn add_clips(
+    clip_chain_id: ClipChainId,
+    prim_clips: &mut Vec<ClipDataHandle>,
+    clip_store: &ClipStore,
+) {
+    let mut current_clip_chain_id = clip_chain_id;
+
+    while current_clip_chain_id != ClipChainId::NONE {
+        let clip_chain_node = &clip_store
+            .clip_chain_nodes[current_clip_chain_id.0 as usize];
+
+        prim_clips.push(clip_chain_node.handle);
+
+        current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
+    }
 }
