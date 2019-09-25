@@ -2,10 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.storage.sync
+package mozilla.components.support.sync.telemetry
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
 import mozilla.appservices.sync15.EngineInfo
 import mozilla.appservices.sync15.FailureName
 import mozilla.appservices.sync15.FailureReason
@@ -15,10 +14,10 @@ import mozilla.appservices.sync15.ProblemInfo
 import mozilla.appservices.sync15.SyncInfo
 import mozilla.appservices.sync15.SyncTelemetryPing
 import mozilla.appservices.sync15.ValidationInfo
-import mozilla.components.browser.storage.sync.GleanMetrics.BookmarksSync
-import mozilla.components.browser.storage.sync.GleanMetrics.HistorySync
-import mozilla.components.browser.storage.sync.GleanMetrics.Pings
 import mozilla.components.service.glean.testing.GleanTestRule
+import mozilla.components.support.sync.telemetry.GleanMetrics.BookmarksSync
+import mozilla.components.support.sync.telemetry.GleanMetrics.HistorySync
+import mozilla.components.support.sync.telemetry.GleanMetrics.Pings
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -29,6 +28,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.Date
+
+private fun Date.asSeconds() = time / BaseGleanSyncPing.MILLIS_PER_SEC
 
 @RunWith(AndroidJUnit4::class)
 class SyncTelemetryTest {
@@ -45,7 +46,7 @@ class SyncTelemetryTest {
     }
 
     @Test
-    fun `sends history telemetry pings on success`() = runBlocking {
+    fun `sends history telemetry pings on success`() {
         SyncTelemetry.processHistoryPing(SyncTelemetryPing(
             version = 1,
             uid = "abc123",
@@ -149,7 +150,7 @@ class SyncTelemetryTest {
     }
 
     @Test
-    fun `sends history telemetry pings on engine failure`() = runBlocking {
+    fun `sends history telemetry pings on engine failure`() {
         SyncTelemetry.processHistoryPing(SyncTelemetryPing(
             version = 1,
             uid = "abc123",
@@ -289,7 +290,7 @@ class SyncTelemetryTest {
     }
 
     @Test
-    fun `sends history telemetry pings on sync failure`() = runBlocking {
+    fun `sends history telemetry pings on sync failure`() {
         SyncTelemetry.processHistoryPing(SyncTelemetryPing(
             version = 1,
             uid = "abc123",
@@ -321,7 +322,7 @@ class SyncTelemetryTest {
     }
 
     @Test
-    fun `sends bookmarks telemetry pings on success`() = runBlocking {
+    fun `sends bookmarks telemetry pings on success`() {
         SyncTelemetry.processBookmarksPing(SyncTelemetryPing(
             version = 1,
             uid = "xyz789",
@@ -387,7 +388,7 @@ class SyncTelemetryTest {
     }
 
     @Test
-    fun `sends bookmarks telemetry pings on engine failure`() = runBlocking {
+    fun `sends bookmarks telemetry pings on engine failure`() {
         SyncTelemetry.processBookmarksPing(SyncTelemetryPing(
             version = 1,
             uid = "abc123",
@@ -518,7 +519,7 @@ class SyncTelemetryTest {
     }
 
     @Test
-    fun `sends bookmarks telemetry pings on sync failure`() = runBlocking {
+    fun `sends bookmarks telemetry pings on sync failure`() {
         SyncTelemetry.processBookmarksPing(SyncTelemetryPing(
             version = 1,
             uid = "abc123",

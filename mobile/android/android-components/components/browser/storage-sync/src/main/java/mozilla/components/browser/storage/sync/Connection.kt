@@ -8,13 +8,12 @@ import androidx.annotation.GuardedBy
 import mozilla.appservices.places.PlacesApi
 import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.PlacesWriterConnection
-import mozilla.components.browser.storage.sync.GleanMetrics.Pings
 import mozilla.components.concept.sync.SyncAuthInfo
+import mozilla.components.support.sync.telemetry.SyncTelemetry
 import java.io.Closeable
 import java.io.File
 
 const val DB_NAME = "places.sqlite"
-const val MAX_FAILURE_REASON_LENGTH = 100
 
 /**
  * A slight abstraction over [PlacesApi].
@@ -33,12 +32,6 @@ internal interface Connection : Closeable {
     // strange split that doesn't quite map all that well to our internal storage model.
     fun syncHistory(syncInfo: SyncAuthInfo)
     fun syncBookmarks(syncInfo: SyncAuthInfo)
-
-    @Suppress("EmptyFunctionBlock")
-    fun sendHistoryPing() {}
-
-    @Suppress("EmptyFunctionBlock")
-    fun sendBookmarksPing() {}
 }
 
 /**
@@ -77,25 +70,13 @@ internal object RustPlacesConnection : Connection {
     override fun syncHistory(syncInfo: SyncAuthInfo) {
         check(api != null) { "must call init first" }
         val ping = api!!.syncHistory(syncInfo.into())
-        SyncTelemetry.processHistoryPing(ping) {
-            Pings.historySync.send()
-        }
-    }
-
-    override fun sendHistoryPing() {
-        Pings.historySync.send()
+        SyncTelemetry.processHistoryPing(ping)
     }
 
     override fun syncBookmarks(syncInfo: SyncAuthInfo) {
         check(api != null) { "must call init first" }
         val ping = api!!.syncBookmarks(syncInfo.into())
-        SyncTelemetry.processBookmarksPing(ping) {
-            Pings.bookmarksSync.send()
-        }
-    }
-
-    override fun sendBookmarksPing() {
-        Pings.bookmarksSync.send()
+        SyncTelemetry.processBookmarksPing(ping)
     }
 
     override fun close() = synchronized(this) {

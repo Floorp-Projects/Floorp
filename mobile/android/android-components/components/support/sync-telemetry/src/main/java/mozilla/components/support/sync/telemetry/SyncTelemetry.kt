@@ -2,33 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.storage.sync
+package mozilla.components.support.sync.telemetry
 
 import mozilla.appservices.sync15.FailureName
 import mozilla.appservices.sync15.FailureReason
 import mozilla.appservices.sync15.SyncTelemetryPing
-import mozilla.components.browser.storage.sync.GleanMetrics.BookmarksSync
-import mozilla.components.browser.storage.sync.GleanMetrics.HistorySync
 import mozilla.components.service.glean.private.LabeledMetricType
 import mozilla.components.service.glean.private.StringMetricType
+import mozilla.components.support.sync.telemetry.GleanMetrics.BookmarksSync
+import mozilla.components.support.sync.telemetry.GleanMetrics.HistorySync
+import mozilla.components.support.sync.telemetry.GleanMetrics.Pings
+
+const val MAX_FAILURE_REASON_LENGTH = 100
 
 /**
  * Contains functionality necessary to process instances of [SyncTelemetryPing].
  */
 object SyncTelemetry {
-    private fun recordFailureReason(reason: FailureReason, failureReasonMetric: LabeledMetricType<StringMetricType>) {
-        val metric = when (reason.name) {
-            FailureName.Other, FailureName.Unknown -> failureReasonMetric["other"]
-            FailureName.Unexpected, FailureName.Http -> failureReasonMetric["unexpected"]
-            FailureName.Auth -> failureReasonMetric["auth"]
-            FailureName.Shutdown -> return
-        }
-        val message = reason.message ?: "Unexpected error: ${reason.code}"
-        metric.set(message.take(MAX_FAILURE_REASON_LENGTH))
-    }
-
     @Suppress("ComplexMethod", "NestedBlockDepth")
-    fun processHistoryPing(ping: SyncTelemetryPing, sendPing: () -> Unit) {
+    fun processHistoryPing(ping: SyncTelemetryPing, sendPing: () -> Unit = { Pings.historySync.send() }) {
         ping.syncs.forEach eachSync@{ sync ->
             sync.failureReason?.let {
                 recordFailureReason(it, HistorySync.failureReason)
@@ -79,7 +71,7 @@ object SyncTelemetry {
     // `BookmarksSync` and `HistorySync` metrics are two separate objects, we
     // can't factor this out into a generic function.
     @Suppress("ComplexMethod", "NestedBlockDepth")
-    fun processBookmarksPing(ping: SyncTelemetryPing, sendPing: () -> Unit) {
+    fun processBookmarksPing(ping: SyncTelemetryPing, sendPing: () -> Unit = { Pings.bookmarksSync.send() }) {
         ping.syncs.forEach eachSync@{ sync ->
             sync.failureReason?.let {
                 // If the entire sync fails, don't try to unpack the ping; just
@@ -127,5 +119,16 @@ object SyncTelemetry {
                 sendPing()
             }
         }
+    }
+
+    private fun recordFailureReason(reason: FailureReason, failureReasonMetric: LabeledMetricType<StringMetricType>) {
+        val metric = when (reason.name) {
+            FailureName.Other, FailureName.Unknown -> failureReasonMetric["other"]
+            FailureName.Unexpected, FailureName.Http -> failureReasonMetric["unexpected"]
+            FailureName.Auth -> failureReasonMetric["auth"]
+            FailureName.Shutdown -> return
+        }
+        val message = reason.message ?: "Unexpected error: ${reason.code}"
+        metric.set(message.take(MAX_FAILURE_REASON_LENGTH))
     }
 }

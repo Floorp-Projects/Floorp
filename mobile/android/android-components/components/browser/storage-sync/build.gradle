@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-plugins {
-    id "com.jetbrains.python.envs" version "0.0.26"
-}
-
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
@@ -50,9 +46,8 @@ dependencies {
     api project(':concept-storage')
     api project(':concept-sync')
 
-    implementation project(':service-glean')
     implementation project(':support-utils')
-    implementation Dependencies.mozilla_sync15
+    implementation project(':support-sync-telemetry')
 
     implementation Dependencies.kotlin_stdlib
 
@@ -75,6 +70,3 @@ dependencies {
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)
-
-ext.gleanGenerateMarkdownDocs = true
-apply from: '../../service/glean/scripts/sdk_generator.gradle'
