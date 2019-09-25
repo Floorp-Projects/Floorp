@@ -88,8 +88,7 @@ class nsColumnSetFrame final : public nsContainerFrame {
    */
   struct ReflowConfig {
     // The optimal number of columns that we want to use. This is computed from
-    // column-count, column-width, available inline-size, etc. If we're not
-    // balancing, this will be set to INT32_MAX.
+    // column-count, column-width, available inline-size, etc.
     int32_t mUsedColCount = INT32_MAX;
 
     // The inline-size of each individual column.
@@ -107,8 +106,7 @@ class nsColumnSetFrame final : public nsContainerFrame {
     // the best column block-size.
     nscoord mColMaxBSize = NS_UNCONSTRAINEDSIZE;
 
-    // A boolean controlling whether or not we are balancing. This should be
-    // equivalent to mBalanceColCount != INT32_MAX.
+    // A boolean controlling whether or not we are balancing.
     bool mIsBalancing = false;
 
     // The last known column block-size that was 'feasible'. A column bSize is
