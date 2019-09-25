@@ -139,7 +139,7 @@ callback constructor TestSequenceConstruction = sequence<boolean>();
 // If you add a new test callback, add it to the forceCallbackGeneration
 // method on TestInterface so it actually gets tested.
 
-TestInterface implements ImplementedInterface;
+TestInterface includes InterfaceMixin;
 
 // This interface is only for use in the constructor below
 interface OnlyForUseInConstructor {
@@ -160,7 +160,7 @@ interface TestInterface {
   constructor(DOMString str);
   constructor(unsigned long num, boolean? boolArg);
   constructor(TestInterface? iface);
-  constructor(unsigned long arg1, IndirectlyImplementedInterface iface);
+  constructor(unsigned long arg1, TestInterface iface);
   constructor(Date arg1);
   constructor(ArrayBuffer arrayBuf);
   constructor(Uint8Array typedArr);
@@ -325,20 +325,6 @@ interface TestInterface {
   [NewObject]
   sequence<TestNonWrapperCacheInterface?>? receiveNullableNonWrapperCacheInterfaceNullableSequence();
 
-  // Non-castable interface types
-  IndirectlyImplementedInterface receiveOther();
-  IndirectlyImplementedInterface? receiveNullableOther();
-  IndirectlyImplementedInterface receiveWeakOther();
-  IndirectlyImplementedInterface? receiveWeakNullableOther();
-  void passOther(IndirectlyImplementedInterface arg);
-  void passNullableOther(IndirectlyImplementedInterface? arg);
-  attribute IndirectlyImplementedInterface nonNullOther;
-  attribute IndirectlyImplementedInterface? nullableOther;
-  // Optional arguments
-  void passOptionalOther(optional IndirectlyImplementedInterface? arg);
-  void passOptionalNonNullOther(optional IndirectlyImplementedInterface arg);
-  void passOptionalOtherWithDefault(optional IndirectlyImplementedInterface? arg = null);
-
   // External interface types
   TestExternalInterface receiveExternal();
   TestExternalInterface? receiveNullableExternal();
@@ -366,10 +352,6 @@ interface TestInterface {
   void passOptionalCallbackInterface(optional TestCallbackInterface? arg);
   void passOptionalNonNullCallbackInterface(optional TestCallbackInterface arg);
   void passOptionalCallbackInterfaceWithDefault(optional TestCallbackInterface? arg = null);
-
-  // Miscellaneous interface tests
-  IndirectlyImplementedInterface receiveConsequentialInterface();
-  void passConsequentialInterface(IndirectlyImplementedInterface arg);
 
   // Sequence types
   [Cached, Pure]
@@ -1046,54 +1028,12 @@ interface TestChildInterface : TestParentInterface {
 interface TestNonWrapperCacheInterface {
 };
 
-[NoInterfaceObject]
-interface ImplementedInterfaceParent {
-  void implementedParentMethod();
-  attribute boolean implementedParentProperty;
+interface mixin InterfaceMixin {
+  void mixedInMethod();
+  attribute boolean mixedInProperty;
 
-  const long implementedParentConstant = 8;
+  const long mixedInConstant = 5;
 };
-
-ImplementedInterfaceParent implements IndirectlyImplementedInterface;
-
-[NoInterfaceObject]
-interface IndirectlyImplementedInterface {
-  void indirectlyImplementedMethod();
-  attribute boolean indirectlyImplementedProperty;
-
-  const long indirectlyImplementedConstant = 9;
-};
-
-[NoInterfaceObject]
-interface ImplementedInterface : ImplementedInterfaceParent {
-  void implementedMethod();
-  attribute boolean implementedProperty;
-
-  const long implementedConstant = 5;
-};
-
-[NoInterfaceObject]
-interface DiamondImplements {
-  readonly attribute long diamondImplementedProperty;
-};
-[NoInterfaceObject]
-interface DiamondBranch1A {
-};
-[NoInterfaceObject]
-interface DiamondBranch1B {
-};
-[NoInterfaceObject]
-interface DiamondBranch2A : DiamondImplements {
-};
-[NoInterfaceObject]
-interface DiamondBranch2B : DiamondImplements {
-};
-TestInterface implements DiamondBranch1A;
-TestInterface implements DiamondBranch1B;
-TestInterface implements DiamondBranch2A;
-TestInterface implements DiamondBranch2B;
-DiamondBranch1A implements DiamondImplements;
-DiamondBranch1B implements DiamondImplements;
 
 dictionary Dict : ParentDict {
   TestEnum someEnum;
@@ -1376,7 +1316,7 @@ interface TestThrowingConstructorInterface {
   [Throws]
   constructor(TestInterface? iface);
   [Throws]
-  constructor(unsigned long arg1, IndirectlyImplementedInterface iface);
+  constructor(unsigned long arg1, TestInterface iface);
   [Throws]
   constructor(Date arg1);
   [Throws]

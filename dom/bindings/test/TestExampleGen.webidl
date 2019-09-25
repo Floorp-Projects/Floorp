@@ -15,7 +15,7 @@ interface TestExampleInterface {
   constructor(DOMString str);
   constructor(unsigned long num, boolean? boolArg);
   constructor(TestInterface? iface);
-  constructor(unsigned long arg1, IndirectlyImplementedInterface iface);
+  constructor(unsigned long arg1, TestInterface iface);
   constructor(Date arg1);
   constructor(ArrayBuffer arrayBuf);
   constructor(Uint8Array typedArr);
@@ -171,20 +171,6 @@ interface TestExampleInterface {
   [NewObject]
   sequence<TestNonWrapperCacheInterface?>? receiveNullableNonWrapperCacheInterfaceNullableSequence();
 
-  // Non-castable interface types
-  IndirectlyImplementedInterface receiveOther();
-  IndirectlyImplementedInterface? receiveNullableOther();
-  IndirectlyImplementedInterface receiveWeakOther();
-  IndirectlyImplementedInterface? receiveWeakNullableOther();
-  void passOther(IndirectlyImplementedInterface arg);
-  void passNullableOther(IndirectlyImplementedInterface? arg);
-  attribute IndirectlyImplementedInterface nonNullOther;
-  attribute IndirectlyImplementedInterface? nullableOther;
-  // Optional arguments
-  void passOptionalOther(optional IndirectlyImplementedInterface? arg);
-  void passOptionalNonNullOther(optional IndirectlyImplementedInterface arg);
-  void passOptionalOtherWithDefault(optional IndirectlyImplementedInterface? arg = null);
-
   // External interface types
   TestExternalInterface receiveExternal();
   TestExternalInterface? receiveNullableExternal();
@@ -212,10 +198,6 @@ interface TestExampleInterface {
   void passOptionalCallbackInterface(optional TestCallbackInterface? arg);
   void passOptionalNonNullCallbackInterface(optional TestCallbackInterface arg);
   void passOptionalCallbackInterfaceWithDefault(optional TestCallbackInterface? arg = null);
-
-  // Miscellaneous interface tests
-  IndirectlyImplementedInterface receiveConsequentialInterface();
-  void passConsequentialInterface(IndirectlyImplementedInterface arg);
 
   // Sequence types
   [Cached, Pure]
@@ -868,7 +850,7 @@ interface TestExampleThrowingConstructorInterface {
   [Throws]
   constructor(TestInterface? iface);
   [Throws]
-  constructor(unsigned long arg1, IndirectlyImplementedInterface iface);
+  constructor(unsigned long arg1, TestInterface iface);
   [Throws]
   constructor(Date arg1);
   [Throws]

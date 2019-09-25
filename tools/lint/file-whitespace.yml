@@ -17,7 +17,6 @@ file-whitespace:
         - dom/bindings/parser/WebIDL.py
         - dom/bindings/parser/tests/test_attributes_on_types.py
         - dom/bindings/parser/tests/test_extended_attributes.py
-        - dom/bindings/parser/tests/test_implements.py
         - dom/bindings/parser/tests/test_interface.py
         - dom/bindings/parser/tests/test_record.py
         - dom/bindings/parser/tests/test_securecontext_extended_attribute.py

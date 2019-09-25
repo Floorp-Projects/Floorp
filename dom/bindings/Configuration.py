@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from WebIDL import IDLImplementsStatement, IDLIncludesStatement
+from WebIDL import IDLIncludesStatement
 import os
 from collections import defaultdict
 
@@ -46,31 +46,9 @@ class Configuration(DescriptorProvider):
         self.descriptors = []
         self.interfaces = {}
         self.descriptorsByName = {}
-        self.optimizedOutDescriptorNames = set()
         self.generatedEvents = generatedEvents
         self.maxProtoChainLength = 0
         for thing in parseData:
-            if isinstance(thing, IDLImplementsStatement):
-                # Our build system doesn't support dep build involving
-                # addition/removal of "implements" statements that appear in a
-                # different .webidl file than their LHS interface.  Make sure we
-                # don't have any of those.  See similar block below for partial
-                # interfaces!
-                #
-                # But whitelist a RHS that is LegacyQueryInterface,
-                # since people shouldn't be adding any of those.
-                if (thing.implementor.filename() != thing.filename() and
-                    thing.implementee.identifier.name != "LegacyQueryInterface"):
-                    raise TypeError(
-                        "The binding build system doesn't really support "
-                        "'implements' statements which don't appear in the "
-                        "file in which the left-hand side of the statement is "
-                        "defined.  Don't do this unless your right-hand side "
-                        "is LegacyQueryInterface.\n"
-                        "%s\n"
-                        "%s" %
-                        (thing.location, thing.implementor.location))
-
             if isinstance(thing, IDLIncludesStatement):
                 # Our build system doesn't support dep build involving
                 # addition/removal of "includes" statements that appear in a
@@ -126,17 +104,10 @@ class Configuration(DescriptorProvider):
                         "%s" %
                         (webRoots, iface.location))
             self.interfaces[iface.identifier.name] = iface
-            if iface.identifier.name not in config:
-                # Completely skip consequential interfaces with no descriptor
-                # if they have no interface object because chances are we
-                # don't need to do anything interesting with them.
-                if iface.isConsequential() and not iface.hasInterfaceObject():
-                    self.optimizedOutDescriptorNames.add(iface.identifier.name)
-                    continue
-                entry = {}
-            else:
-                entry = config[iface.identifier.name]
+
+            entry = config.get(iface.identifier.name, {})
             assert not isinstance(entry, list)
+
             desc = Descriptor(self, iface, entry)
             self.descriptors.append(desc)
             # Setting up descriptorsByName while iterating through interfaces
@@ -291,12 +262,6 @@ class Configuration(DescriptorProvider):
         if d:
             return d
 
-        if interfaceName in self.optimizedOutDescriptorNames:
-            raise NoSuchDescriptorError(
-                "No descriptor for '%s', which is a mixin ([NoInterfaceObject] "
-                "and a consequential interface) without an explicit "
-                "Bindings.conf annotation." % interfaceName)
-
         raise NoSuchDescriptorError("For " + interfaceName + " found no matches")
 
 
@@ -410,10 +375,6 @@ class Descriptor(DescriptorProvider):
         # them as having a concrete descendant.
         concreteDefault = (not self.interface.isExternal() and
                            not self.interface.isCallback() and
-                           # Exclude interfaces that are used as the RHS of
-                           # "implements", because those would typically not be
-                           # concrete.
-                           not self.interface.isConsequential() and
                            not self.interface.isNamespace() and
                            # We're going to assume that leaf interfaces are
                            # concrete; otherwise what's the point?  Also
