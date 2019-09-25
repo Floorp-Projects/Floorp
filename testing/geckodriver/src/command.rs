@@ -227,7 +227,7 @@ pub struct XblLocatorParameters {
     pub value: String,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, PartialEq)]
 pub struct LogOptions {
     pub level: Option<logging::Level>,
 }

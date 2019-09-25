@@ -87,7 +87,6 @@ Clients
 Other clients that follow the [W3C WebDriver specification][WebDriver]
 are also supported.
 
-
 Firefoxen
 ---------
 
@@ -105,6 +104,18 @@ in the most recent Firefox versions, and we strongly advise using the
 latest [Firefox Nightly] with geckodriver.  Since Windows XP support
 in Firefox was dropped with Firefox 53, we do not support this platform.
 
+Android
+-------
+
+Starting with the 0.26.0 release geckodriver is able to connect
+to Android devices, and to control packages which are based on [GeckoView]
+(eg. [Firefox Preview] aka Fenix, or [Firefox Reality]). But it also still
+supports versions of Fennec up to 68 ESR, which is the last officially
+supported release from Mozilla.
+
+To run tests on Android specific capabilities under `moz:firefoxOptions`
+have to be set when requesting a new session. See the Android section under
+[Firefox Capabilties](Capabilities.html#android) for more details.
 
 [geckodriver releases]: https://github.com/mozilla/geckodriver/releases
 [Selenium]: https://github.com/seleniumhq/selenium
@@ -115,3 +126,6 @@ in Firefox was dropped with Firefox 53, we do not support this platform.
 [specification]: https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Aspec
 [issue tracker]: https://github.com/mozilla/geckodriver/issues
 [Firefox Nightly]: https://nightly.mozilla.org/
+[GeckoView]: https://wiki.mozilla.org/Mobile/GeckoView
+[Firefox Preview]: https://play.google.com/store/apps/details?id=org.mozilla.fenix
+[Firefox Reality]: https://play.google.com/store/apps/details?id=org.mozilla.vrbrowser
