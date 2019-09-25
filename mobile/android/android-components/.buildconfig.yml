@@ -96,6 +96,10 @@ projects:
     path: components/feature/downloads
     description: 'Feature implementation for apps that want to use Android downloads manager.'
     publish: true
+  feature-privatemode:
+    path: components/feature/privatemode
+    description: 'Features used to enhance private browsing mode.'
+    publish: true
   feature-prompts:
     path: components/feature/prompts
     description: 'Feature that will subscribe to the selected session and will handle all the common prompt dialogs from web content.'
