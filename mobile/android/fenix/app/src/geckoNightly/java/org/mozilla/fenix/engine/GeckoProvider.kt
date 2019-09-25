@@ -37,6 +37,7 @@ object GeckoProvider {
             .useContentProcessHint(true)
             .telemetryDelegate(GeckoAdapter())
             .debugLogging(BuildConfig.DEBUG)
+            .aboutConfigEnabled(true)
             .build()
 
         if (!Settings.getInstance(context).shouldUseAutoSize) {
