@@ -12,6 +12,7 @@
 #include "MediaEventSource.h"
 #include "SeekTarget.h"
 #include "MediaDecoderOwner.h"
+#include "MediaPlaybackDelayPolicy.h"
 #include "MediaPromiseDefs.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIObserver.h"
@@ -1264,11 +1265,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   WatchManager<HTMLMediaElement> mWatchManager;
 
-  // If the media element's tab has never been in the foreground, this
-  // registers as with the AudioChannelAgent to notify us when the tab
-  // is put in the foreground, whereupon we will begin playback.
-  bool AudioChannelAgentDelayingPlayback();
-
   // Update the silence range of the audio track when the audible status of
   // silent audio track changes or seeking to the new position where the audio
   // track is silent.
@@ -1839,6 +1835,16 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // for a video element instead of showing the video contents.
   // https://html.spec.whatwg.org/multipage/media.html#show-poster-flag
   bool mShowPoster;
+
+  // We may delay starting playback of a media for an unvisited tab until it's
+  // going to foreground. We would create ResumeDelayedMediaPlaybackAgent to
+  // handle related operations at the time whenever delaying media playback is
+  // needed.
+  void CreateResumeDelayedMediaPlaybackAgentIfNeeded();
+  void ClearResumeDelayedMediaPlaybackAgentIfNeeded();
+  RefPtr<ResumeDelayedPlaybackAgent> mResumeDelayedPlaybackAgent;
+  MozPromiseRequestHolder<ResumeDelayedPlaybackAgent::ResumePromise>
+      mResumePlaybackRequest;
 };
 
 // Check if the context is chrome or has the debugger or tabs permission

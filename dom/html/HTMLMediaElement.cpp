@@ -2027,6 +2027,10 @@ void HTMLMediaElement::AbortExistingLoads() {
     Invalidate(true, size, false);
   }
 
+  // As aborting current load would stop current playback, so we have no need to
+  // resume a paused media element.
+  ClearResumeDelayedMediaPlaybackAgentIfNeeded();
+
   // We may have changed mPaused, mAutoplaying, and other
   // things which can affect AddRemoveSelfReference
   AddRemoveSelfReference();
@@ -3060,6 +3064,9 @@ void HTMLMediaElement::Pause(ErrorResult& aRv) {
     mAudioChannelWrapper->NotifyPlayStateChanged();
   }
 
+  // We don't need to resume media which is paused explicitly by user.
+  ClearResumeDelayedMediaPlaybackAgentIfNeeded();
+
   if (!oldPaused) {
     FireTimeUpdate(false);
     DispatchAsyncEvent(NS_LITERAL_STRING("pause"));
@@ -3745,6 +3752,11 @@ HTMLMediaElement::~HTMLMediaElement() {
     mAudioChannelWrapper = nullptr;
   }
 
+  if (mResumeDelayedPlaybackAgent) {
+    mResumePlaybackRequest.DisconnectIfExists();
+    mResumeDelayedPlaybackAgent = nullptr;
+  }
+
   WakeLockRelease();
   ReportPlayedTimeAfterBlockedTelemetry();
 
@@ -3777,10 +3789,6 @@ void HTMLMediaElement::SetPlayedOrSeeked(bool aValue) {
 }
 
 void HTMLMediaElement::NotifyXPCOMShutdown() { ShutdownDecoder(); }
-
-bool HTMLMediaElement::AudioChannelAgentDelayingPlayback() {
-  return mAudioChannelWrapper && mAudioChannelWrapper->IsPlaybackBlocked();
-}
 
 void HTMLMediaElement::UpdateHadAudibleAutoplayState() {
   // If we're audible, and autoplaying...
@@ -3831,15 +3839,15 @@ already_AddRefed<Promise> HTMLMediaElement::Play(ErrorResult& aRv) {
   // play promises.
   // Note: Promise appended to list of pending promises as needed below.
 
-  if (AudioChannelAgentDelayingPlayback()) {
-    // The audio channel agent may delay starting playback of a media resource
-    // until the tab the media element is in has been in the foreground.
-    // Save a reference to the promise, and return it. The AudioChannelAgent
-    // will call Play() again if the tab is brought to the foreground, or the
-    // audio tab indicator is clicked, which will resolve the promise if we end
-    // up playing.
-    LOG(LogLevel::Debug, ("%p Play() call delayed by AudioChannelAgent", this));
+  // We may delay starting playback of a media resource for an unvisited tab
+  // until it's going to foreground or being resumed by the play tab icon.
+  if (MediaPlaybackDelayPolicy::ShouldDelayPlayback(this)) {
+    CreateResumeDelayedMediaPlaybackAgentIfNeeded();
+    LOG(LogLevel::Debug, ("%p delay Play() call", this));
     MaybeDoLoad();
+    // When play is delayed, save a reference to the promise, and return it.
+    // The promise will be resolved when we resume play by either the tab is
+    // brought to the foreground, or the audio tab indicator is clicked.
     mPendingPlayPromises.AppendElement(promise);
     return promise.forget();
   }
@@ -5801,6 +5809,12 @@ bool HTMLMediaElement::CanActivateAutoplay() {
     return false;
   }
 
+  if (MediaPlaybackDelayPolicy::ShouldDelayPlayback(this)) {
+    CreateResumeDelayedMediaPlaybackAgentIfNeeded();
+    LOG(LogLevel::Debug, ("%p delay playing from autoplay", this));
+    return false;
+  }
+
   if (mAudioChannelWrapper) {
     // Note: SUSPENDED_PAUSE and SUSPENDED_BLOCK will be merged into one single
     // state.
@@ -6154,6 +6168,8 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement,
         mDecoder->Suspend();
       }
       mEventDeliveryPaused = aSuspendEvents;
+      // We won't want to resume media element from the bfcache.
+      ClearResumeDelayedMediaPlaybackAgentIfNeeded();
     } else {
       if (!mPaused) {
         mCurrentLoadPlayTime.Start();
@@ -7054,10 +7070,8 @@ bool HTMLMediaElement::ShouldElementBePaused() {
 void HTMLMediaElement::SetMediaInfo(const MediaInfo& aInfo) {
   const bool oldHasAudio = mMediaInfo.HasAudio();
   mMediaInfo = aInfo;
-  if (aInfo.HasAudio() != oldHasAudio) {
-    UpdateAudioChannelPlayingState();
-    NotifyAudioPlaybackChanged(
-        AudioChannelService::AudibleChangedReasons::eDataAudibleChanged);
+  if ((aInfo.HasAudio() != oldHasAudio) && mResumeDelayedPlaybackAgent) {
+    mResumeDelayedPlaybackAgent->UpdateAudibleState(GetAudibleState());
   }
   if (mAudioChannelWrapper) {
     mAudioChannelWrapper->AudioCaptureStreamChangeIfNeeded();
@@ -7447,6 +7461,44 @@ void HTMLMediaElement::NotifyTextTrackModeChanged() {
                                  mTextTrackManager->TimeMarchesOn();
                                }
                              }));
+}
+
+void HTMLMediaElement::CreateResumeDelayedMediaPlaybackAgentIfNeeded() {
+  if (mResumeDelayedPlaybackAgent) {
+    return;
+  }
+  mResumeDelayedPlaybackAgent =
+      MediaPlaybackDelayPolicy::CreateResumeDelayedPlaybackAgent(
+          this, GetAudibleState());
+  if (!mResumeDelayedPlaybackAgent) {
+    LOG(LogLevel::Debug,
+        ("%p Failed to create a delayed playback agant", this));
+    return;
+  }
+  mResumeDelayedPlaybackAgent->GetResumePromise()
+      ->Then(
+          mAbstractMainThread, __func__,
+          [self = RefPtr<HTMLMediaElement>(this)]() {
+            LOG(LogLevel::Debug, ("%p Resume delayed Play() call", self.get()));
+            IgnoredErrorResult dummy;
+            RefPtr<Promise> toBeIgnored = self->Play(dummy);
+            self->mResumePlaybackRequest.Complete();
+            self->mResumeDelayedPlaybackAgent = nullptr;
+          },
+          [self = RefPtr<HTMLMediaElement>(this)]() {
+            LOG(LogLevel::Debug,
+                ("%p Can not resume delayed Play() call", self.get()));
+            self->mResumePlaybackRequest.Complete();
+            self->mResumeDelayedPlaybackAgent = nullptr;
+          })
+      ->Track(mResumePlaybackRequest);
+}
+
+void HTMLMediaElement::ClearResumeDelayedMediaPlaybackAgentIfNeeded() {
+  if (mResumeDelayedPlaybackAgent) {
+    mResumePlaybackRequest.DisconnectIfExists();
+    mResumeDelayedPlaybackAgent = nullptr;
+  }
 }
 
 }  // namespace dom
