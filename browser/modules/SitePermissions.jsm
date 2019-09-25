@@ -276,28 +276,6 @@ var SitePermissions = {
   _defaultPrefBranch: Services.prefs.getBranch("permissions.default."),
 
   /**
-   * Deprecated! Please use getAllByPrincipal(principal) instead.
-   * Gets all custom permissions for a given URI.
-   * Install addon permission is excluded, check bug 1303108.
-   *
-   * @return {Array} a list of objects with the keys:
-   *          - id: the permissionId of the permission
-   *          - scope: the scope of the permission (e.g. SitePermissions.SCOPE_TEMPORARY)
-   *          - state: a constant representing the current permission state
-   *            (e.g. SitePermissions.ALLOW)
-   */
-  getAllByURI(uri) {
-    if (!(uri instanceof Ci.nsIURI)) {
-      throw new Error("uri parameter should be an nsIURI");
-    }
-
-    let principal = uri
-      ? Services.scriptSecurityManager.createContentPrincipal(uri, {})
-      : null;
-    return this.getAllByPrincipal(principal);
-  },
-
-  /**
    * Gets all custom permissions for a given principal.
    * Install addon permission is excluded, check bug 1303108.
    *
@@ -399,21 +377,6 @@ var SitePermissions = {
       state,
       label: this.getPermissionLabel(id),
     }));
-  },
-
-  /**
-   * Deprecated! Please use isSupportedPrincipal(principal) instead.
-   * Checks whether a UI for managing permissions should be exposed for a given
-   * URI. This excludes file URIs, for instance, as they don't have a host,
-   * even though nsIPermissionManager can still handle them.
-   *
-   * @param {nsIURI} uri
-   *        The URI to check.
-   *
-   * @return {boolean} if the URI is supported.
-   */
-  isSupportedURI(uri) {
-    return uri && ["http", "https", "moz-extension"].includes(uri.scheme);
   },
 
   /**
@@ -545,37 +508,6 @@ var SitePermissions = {
     let key = "permissions.default." + permissionID;
     return Services.prefs.setIntPref(key, state);
   },
-  /**
-   * Returns the state and scope of a particular permission for a given URI.
-   *
-   * This method will NOT dispatch a "PermissionStateChange" event on the specified
-   * browser if a temporary permission was removed because it has expired.
-   *
-   * @param {nsIURI} uri
-   *        The URI to check.
-   * @param {String} permissionID
-   *        The id of the permission.
-   * @param {Browser} browser (optional)
-   *        The browser object to check for temporary permissions.
-   *
-   * @return {Object} an object with the keys:
-   *           - state: The current state of the permission
-   *             (e.g. SitePermissions.ALLOW)
-   *           - scope: The scope of the permission
-   *             (e.g. SitePermissions.SCOPE_PERSISTENT)
-   */
-  get(uri, permissionID, browser) {
-    if ((!uri && !browser) || (uri && !(uri instanceof Ci.nsIURI))) {
-      throw new Error(
-        "uri parameter should be an nsIURI or a browser parameter is needed"
-      );
-    }
-
-    let principal = uri
-      ? Services.scriptSecurityManager.createContentPrincipal(uri, {})
-      : null;
-    return this.getForPrincipal(principal, permissionID, browser);
-  },
 
   /**
    * Returns the state and scope of a particular permission for a given principal.
@@ -640,38 +572,6 @@ var SitePermissions = {
     }
 
     return result;
-  },
-
-  /**
-   * Deprecated! Use setForPrincipal(...) instead.
-   * Sets the state of a particular permission for a given URI or browser.
-   * This method will dispatch a "PermissionStateChange" event on the specified
-   * browser if a temporary permission was set
-   *
-   * @param {nsIURI} uri
-   *        The URI to set the permission for.
-   *        Note that this will be ignored if the scope is set to SCOPE_TEMPORARY
-   * @param {String} permissionID
-   *        The id of the permission.
-   * @param {SitePermissions state} state
-   *        The state of the permission.
-   * @param {SitePermissions scope} scope (optional)
-   *        The scope of the permission. Defaults to SCOPE_PERSISTENT.
-   * @param {Browser} browser (optional)
-   *        The browser object to set temporary permissions on.
-   *        This needs to be provided if the scope is SCOPE_TEMPORARY!
-   */
-  set(uri, permissionID, state, scope = this.SCOPE_PERSISTENT, browser = null) {
-    if ((!uri && !browser) || (uri && !(uri instanceof Ci.nsIURI))) {
-      throw new Error(
-        "uri parameter should be an nsIURI or a browser parameter is needed"
-      );
-    }
-
-    let principal = uri
-      ? Services.scriptSecurityManager.createContentPrincipal(uri, {})
-      : null;
-    return this.setForPrincipal(principal, permissionID, state, scope, browser);
   },
 
   /**
@@ -765,32 +665,6 @@ var SitePermissions = {
         perms_scope
       );
     }
-  },
-
-  /**
-   * Deprecated! Please use removeFromPrincipal(principal, permissionID, browser).
-   * Removes the saved state of a particular permission for a given URI and/or browser.
-   * This method will dispatch a "PermissionStateChange" event on the specified
-   * browser if a temporary permission was removed.
-   *
-   * @param {nsIURI} uri
-   *        The URI to remove the permission for.
-   * @param {String} permissionID
-   *        The id of the permission.
-   * @param {Browser} browser (optional)
-   *        The browser object to remove temporary permissions on.
-   */
-  remove(uri, permissionID, browser) {
-    if ((!uri && !browser) || (uri && !(uri instanceof Ci.nsIURI))) {
-      throw new Error(
-        "uri parameter should be an nsIURI or a browser parameter is needed"
-      );
-    }
-
-    let principal = uri
-      ? Services.scriptSecurityManager.createContentPrincipal(uri, {})
-      : null;
-    return this.removeFromPrincipal(principal, permissionID, browser);
   },
 
   /**
