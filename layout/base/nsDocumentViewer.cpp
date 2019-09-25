@@ -3176,7 +3176,7 @@ nsresult nsDocumentViewer::GetContentSizeInternal(int32_t* aWidth,
     prefWidth = aMaxWidth;
   }
 
-  nsresult rv = presShell->ResizeReflow(prefWidth, aMaxHeight, 0, 0,
+  nsresult rv = presShell->ResizeReflow(prefWidth, aMaxHeight,
                                         ResizeReflowOptions::BSizeLimit);
   NS_ENSURE_SUCCESS(rv, rv);
 
