@@ -404,10 +404,6 @@ nsColumnSetFrame::ReflowConfig nsColumnSetFrame::ChooseColumnStrategy(
     }
     colBSize = std::min(mLastBalanceBSize, colBSize);
   } else {
-    // This is the case when the column-fill property is set to 'auto'.
-    // No balancing, so don't limit the column count
-    numColumns = INT32_MAX;
-
     // CSS Fragmentation spec says, "To guarantee progress, fragmentainers are
     // assumed to have a minimum block size of 1px regardless of their used
     // size." https://drafts.csswg.org/css-break/#breaking-rules
@@ -650,7 +646,8 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
 
   while (child) {
     const bool isMeasuringFeasibleContentBSize =
-        aUnboundedLastColumn && columnCount == aConfig.mUsedColCount - 1;
+        aUnboundedLastColumn && columnCount == aConfig.mUsedColCount - 1 &&
+        aConfig.mIsBalancing;
 
     // Try to skip reflowing the child. We can't skip if the child is dirty. We
     // also can't skip if the next column is dirty, because the next column's
@@ -891,7 +888,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
       colData.mHasExcessBSize = true;
     }
 
-    if (columnCount >= aConfig.mUsedColCount - 1) {
+    if (columnCount >= aConfig.mUsedColCount - 1 && aConfig.mIsBalancing) {
       // No more columns allowed here. Stop.
       aStatus.SetNextInFlowNeedsReflow();
       kidNextInFlow->MarkSubtreeDirty();
