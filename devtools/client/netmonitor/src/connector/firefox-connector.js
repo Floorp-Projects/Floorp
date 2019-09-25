@@ -307,6 +307,15 @@ class FirefoxConnector {
   }
 
   /**
+   * Updates the list of blocked URLs
+   *
+   * @param {object} urls An array of URL strings
+   */
+  setBlockedUrls(urls) {
+    return this.webConsoleClient.setBlockedUrls(urls);
+  }
+
+  /**
    * Set network preferences to control network flow
    *
    * @param {object} request request payload would like to sent to backend

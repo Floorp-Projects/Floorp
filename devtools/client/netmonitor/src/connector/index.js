@@ -96,12 +96,8 @@ class Connector {
     return this.connector.sendHTTPRequest(...arguments);
   }
 
-  blockRequest() {
-    return this.connector.blockRequest(...arguments);
-  }
-
-  unblockRequest() {
-    return this.connector.unblockRequest(...arguments);
+  setBlockedUrls() {
+    return this.connector.setBlockedUrls(...arguments);
   }
 
   setPreferences() {

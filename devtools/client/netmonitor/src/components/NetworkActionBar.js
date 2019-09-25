@@ -15,6 +15,7 @@ const {
 const { div } = require("devtools/client/shared/vendor/react-dom-factories");
 const { L10N } = require("../utils/l10n");
 const Actions = require("../actions/index");
+const { PANELS } = require("../constants");
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -76,7 +77,7 @@ class NetworkActionBar extends Component {
         showBlockingPanel &&
           TabPanel(
             {
-              id: "network-action-bar-blocked",
+              id: PANELS.BLOCKING,
               title: L10N.getStr("netmonitor.actionbar.requestBlocking"),
               className: "network-action-bar-blocked",
             },

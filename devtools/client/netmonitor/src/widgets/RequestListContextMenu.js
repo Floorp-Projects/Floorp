@@ -13,6 +13,9 @@ const {
   getUrlBaseName,
   parseQueryString,
 } = require("../utils/request-utils");
+const {
+  hasMatchingBlockingRequestPattern,
+} = require("../utils/request-blocking");
 
 loader.lazyRequireGetter(this, "Curl", "devtools/client/shared/curl", true);
 loader.lazyRequireGetter(this, "saveAs", "devtools/shared/DevToolsUtils", true);
@@ -43,10 +46,9 @@ class RequestListContextMenu {
   }
 
   /* eslint-disable complexity */
-  open(event, clickedRequest, requests) {
+  open(event, clickedRequest, requests, blockedUrls) {
     const {
       id,
-      blockedReason,
       isCustom,
       formDataSections,
       method,
@@ -63,14 +65,15 @@ class RequestListContextMenu {
       url,
     } = clickedRequest;
     const {
-      blockSelectedRequestURL,
       connector,
       cloneRequest,
       openDetailsPanelTab,
       sendCustomRequest,
       openStatistics,
       openRequestInTab,
-      unblockSelectedRequestURL,
+      openRequestBlockingAndAddUrl,
+      openRequestBlockingAndDisableUrls,
+      removeBlockedUrl,
     } = this.props;
     const menu = [];
     const copySubmenu = [];
@@ -309,18 +312,28 @@ class RequestListContextMenu {
     menu.push({
       id: "request-list-context-block-url",
       label: L10N.getStr("netmonitor.context.blockURL"),
-      visible: !!(clickedRequest && !blockedReason),
+      visible: !hasMatchingBlockingRequestPattern(
+        blockedUrls,
+        clickedRequest.url
+      ),
       click: () => {
-        blockSelectedRequestURL(clickedRequest);
+        openRequestBlockingAndAddUrl(clickedRequest.url);
       },
     });
 
     menu.push({
       id: "request-list-context-unblock-url",
       label: L10N.getStr("netmonitor.context.unblockURL"),
-      visible: !!(clickedRequest && blockedReason),
+      visible: hasMatchingBlockingRequestPattern(
+        blockedUrls,
+        clickedRequest.url
+      ),
       click: () => {
-        unblockSelectedRequestURL(clickedRequest);
+        if (blockedUrls.find(blockedUrl => blockedUrl === clickedRequest.url)) {
+          removeBlockedUrl(clickedRequest.url);
+        } else {
+          openRequestBlockingAndDisableUrls(clickedRequest.url);
+        }
       },
     });
 

@@ -63,7 +63,7 @@ const RIGHT_MOUSE_BUTTON = 2;
 class RequestListContent extends Component {
   static get propTypes() {
     return {
-      blockSelectedRequestURL: PropTypes.func.isRequired,
+      blockedUrls: PropTypes.array.isRequired,
       connector: PropTypes.object.isRequired,
       columns: PropTypes.object.isRequired,
       networkDetailsOpen: PropTypes.bool.isRequired,
@@ -83,10 +83,12 @@ class RequestListContent extends Component {
       onSelectDelta: PropTypes.func.isRequired,
       onWaterfallMouseDown: PropTypes.func.isRequired,
       openStatistics: PropTypes.func.isRequired,
+      openRequestBlockingAndAddUrl: PropTypes.func.isRequired,
+      openRequestBlockingAndDisableUrls: PropTypes.func.isRequired,
+      removeBlockedUrl: PropTypes.func.isRequired,
       scale: PropTypes.number,
       selectRequest: PropTypes.func.isRequired,
       selectedRequest: PropTypes.object,
-      unblockSelectedRequestURL: PropTypes.func.isRequired,
       requestFilterTypes: PropTypes.object.isRequired,
     };
   }
@@ -299,31 +301,33 @@ class RequestListContent extends Component {
 
   onContextMenu(evt) {
     evt.preventDefault();
-    const { clickedRequest, displayedRequests } = this.props;
+    const { clickedRequest, displayedRequests, blockedUrls } = this.props;
 
     if (!this.contextMenu) {
       const {
-        blockSelectedRequestURL,
         connector,
         cloneRequest,
         openDetailsPanelTab,
         sendCustomRequest,
         openStatistics,
-        unblockSelectedRequestURL,
+        openRequestBlockingAndAddUrl,
+        openRequestBlockingAndDisableUrls,
+        removeBlockedUrl,
       } = this.props;
       this.contextMenu = new RequestListContextMenu({
-        blockSelectedRequestURL,
         connector,
         cloneRequest,
         openDetailsPanelTab,
         sendCustomRequest,
         openStatistics,
+        openRequestBlockingAndAddUrl,
+        openRequestBlockingAndDisableUrls,
+        removeBlockedUrl,
         openRequestInTab: this.openRequestInTab,
-        unblockSelectedRequestURL,
       });
     }
 
-    this.contextMenu.open(evt, clickedRequest, displayedRequests);
+    this.contextMenu.open(evt, clickedRequest, displayedRequests, blockedUrls);
   }
 
   /**
@@ -346,6 +350,8 @@ class RequestListContent extends Component {
       requestFilterTypes,
       scale,
       selectedRequest,
+      openRequestBlockingAndAddUrl,
+      openRequestBlockingAndDisableUrls,
     } = this.props;
 
     return div(
@@ -390,6 +396,10 @@ class RequestListContent extends Component {
                 onSecurityIconMouseDown(item.securityState),
               onWaterfallMouseDown: () => onWaterfallMouseDown(),
               requestFilterTypes,
+              openRequestBlockingAndAddUrl: url =>
+                openRequestBlockingAndAddUrl(url),
+              openRequestBlockingAndDisableUrls: url =>
+                openRequestBlockingAndDisableUrls(url),
             })
           )
         ) // end of requests-list-row-group">
@@ -400,6 +410,7 @@ class RequestListContent extends Component {
 
 module.exports = connect(
   state => ({
+    blockedUrls: state.requestBlocking.blockedUrls.map(({ url }) => url),
     columns: state.ui.columns,
     networkDetailsOpen: state.ui.networkDetailsOpen,
     networkDetailsWidth: state.ui.networkDetailsWidth,
@@ -412,22 +423,17 @@ module.exports = connect(
     requestFilterTypes: state.filters.requestFilterTypes,
   }),
   (dispatch, props) => ({
-    blockSelectedRequestURL: clickedRequest => {
-      dispatch(
-        Actions.blockSelectedRequestURL(props.connector, clickedRequest)
-      );
-    },
     cloneRequest: id => dispatch(Actions.cloneRequest(id)),
     openDetailsPanelTab: () => dispatch(Actions.openNetworkDetails(true)),
     sendCustomRequest: () =>
       dispatch(Actions.sendCustomRequest(props.connector)),
     openStatistics: open =>
       dispatch(Actions.openStatistics(props.connector, open)),
-    unblockSelectedRequestURL: clickedRequest => {
-      dispatch(
-        Actions.unblockSelectedRequestURL(props.connector, clickedRequest)
-      );
-    },
+    openRequestBlockingAndAddUrl: url =>
+      dispatch(Actions.openRequestBlockingAndAddUrl(url)),
+    removeBlockedUrl: url => dispatch(Actions.removeBlockedUrl(url)),
+    openRequestBlockingAndDisableUrls: url =>
+      dispatch(Actions.openRequestBlockingAndDisableUrls(url)),
     /**
      * A handler that opens the stack trace tab when a stack trace is available
      */
