@@ -2828,10 +2828,12 @@ nsresult WebSocketChannel::ApplyForAdmission() {
   MOZ_ASSERT(!mCancelable);
 
   nsresult rv;
-  rv = pps->AsyncResolve(mHttpChannel,
-                         nsIProtocolProxyService::RESOLVE_PREFER_HTTPS_PROXY |
-                             nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL,
-                         this, nullptr, getter_AddRefs(mCancelable));
+  rv = pps->AsyncResolve(
+      mHttpChannel,
+      nsIProtocolProxyService::RESOLVE_PREFER_SOCKS_PROXY |
+          nsIProtocolProxyService::RESOLVE_PREFER_HTTPS_PROXY |
+          nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL,
+      this, nullptr, getter_AddRefs(mCancelable));
   NS_ASSERTION(NS_FAILED(rv) || mCancelable,
                "nsIProtocolProxyService::AsyncResolve succeeded but didn't "
                "return a cancelable object!");
@@ -3389,7 +3391,8 @@ WebSocketChannel::AsyncOpen(nsIURI* aURI, const nsACString& aOrigin,
   // allow setting proxy uri/flags
   rv = ioService->NewChannelFromURIWithProxyFlags(
       localURI, mURI,
-      nsIProtocolProxyService::RESOLVE_PREFER_HTTPS_PROXY |
+      nsIProtocolProxyService::RESOLVE_PREFER_SOCKS_PROXY |
+          nsIProtocolProxyService::RESOLVE_PREFER_HTTPS_PROXY |
           nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL,
       mLoadInfo->LoadingNode(), mLoadInfo->LoadingPrincipal(),
       mLoadInfo->TriggeringPrincipal(), mLoadInfo->GetSecurityFlags(),
