@@ -73,7 +73,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
         val view = inflater.inflate(R.layout.fragment_bookmark, container, false)
 
         bookmarkStore = StoreProvider.get(this) {
-            BookmarkFragmentStore(BookmarkFragmentState(null, isLoading = true))
+            BookmarkFragmentStore(BookmarkFragmentState(null))
         }
         bookmarkInteractor = BookmarkFragmentInteractor(
             bookmarkStore = bookmarkStore,

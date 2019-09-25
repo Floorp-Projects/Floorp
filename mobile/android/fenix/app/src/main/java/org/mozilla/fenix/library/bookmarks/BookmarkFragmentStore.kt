@@ -23,7 +23,7 @@ class BookmarkFragmentStore(
 data class BookmarkFragmentState(
     val tree: BookmarkNode?,
     val mode: Mode = Mode.Normal,
-    val isLoading: Boolean
+    val isLoading: Boolean = true
 ) : State {
     sealed class Mode {
         open val selectedItems = emptySet<BookmarkNode>()

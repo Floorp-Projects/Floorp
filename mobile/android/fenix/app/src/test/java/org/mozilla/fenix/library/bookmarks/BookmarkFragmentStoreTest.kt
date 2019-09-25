@@ -9,7 +9,9 @@ import assertk.assertions.isEqualTo
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class BookmarkFragmentStoreTest {
@@ -132,6 +134,30 @@ class BookmarkFragmentStoreTest {
         store.dispatch(BookmarkFragmentAction.Change(newTree)).join()
 
         assertThat(initialState.copy(tree = newTree, mode = BookmarkFragmentState.Mode.Normal)).isEqualTo(store.state)
+    }
+
+    @Test
+    fun `selecting and deselecting bookmarks does not affect loading state`() = runBlocking {
+        val initialState = BookmarkFragmentState(tree, isLoading = true)
+        val store = BookmarkFragmentStore(initialState)
+
+        store.dispatch(BookmarkFragmentAction.Select(newTree)).join()
+        assertTrue(store.state.isLoading)
+
+        store.dispatch(BookmarkFragmentAction.Deselect(newTree)).join()
+        assertTrue(store.state.isLoading)
+
+        store.dispatch(BookmarkFragmentAction.DeselectAll).join()
+        assertTrue(store.state.isLoading)
+    }
+
+    @Test
+    fun `changing bookmarks disables loading state`() = runBlocking {
+        val initialState = BookmarkFragmentState(tree, isLoading = true)
+        val store = BookmarkFragmentStore(initialState)
+
+        store.dispatch(BookmarkFragmentAction.Change(newTree)).join()
+        assertFalse(store.state.isLoading)
     }
 
     private val item = BookmarkNode(BookmarkNodeType.ITEM, "456", "123", 0, "Mozilla", "http://mozilla.org", null)
