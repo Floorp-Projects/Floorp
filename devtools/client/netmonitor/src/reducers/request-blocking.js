@@ -6,6 +6,7 @@
 
 const {
   ADD_BLOCKED_URL,
+  DISABLE_MATCHING_URLS,
   TOGGLE_BLOCKED_URL,
   UPDATE_BLOCKED_URL,
   REMOVE_BLOCKED_URL,
@@ -31,6 +32,8 @@ function requestBlockingReducer(state = RequestBlocking(), action) {
       return toggleBlockedUrl(state, action);
     case TOGGLE_BLOCKING_ENABLED:
       return toggleBlockingEnabled(state, action);
+    case DISABLE_MATCHING_URLS:
+      return disableOrRemoveMatchingUrls(state, action);
     default:
       return state;
   }
@@ -90,6 +93,27 @@ function toggleBlockedUrl(state, action) {
     }
     return item;
   });
+
+  return {
+    ...state,
+    blockedUrls,
+  };
+}
+
+function disableOrRemoveMatchingUrls(state, action) {
+  const blockedUrls = state.blockedUrls
+    .map(item => {
+      // If the url matches exactly, remove the entry
+      if (action.url === item.url) {
+        return null;
+      }
+      // If just a partial match, disable the entry
+      if (action.url.includes(item.url)) {
+        return { ...item, enabled: false };
+      }
+      return item;
+    })
+    .filter(Boolean);
 
   return {
     ...state,

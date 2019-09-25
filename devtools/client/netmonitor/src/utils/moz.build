@@ -17,6 +17,7 @@ DevToolsModules(
     'mdn-utils.js',
     'open-request-in-tab.js',
     'prefs.js',
+    'request-blocking.js',
     'request-utils.js',
     'sort-predicates.js',
     'sort-utils.js'

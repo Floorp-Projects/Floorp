@@ -246,6 +246,12 @@ const webconsoleSpecPrototype = {
         filter: Arg(0, "json"),
       },
     },
+
+    setBlockedUrls: {
+      request: {
+        url: Arg(0, "json"),
+      },
+    },
   },
 };
 

@@ -64,6 +64,7 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
     this.onSetPreference = this.onSetPreference.bind(this);
     this.onBlockRequest = this.onBlockRequest.bind(this);
     this.onUnblockRequest = this.onUnblockRequest.bind(this);
+    this.onSetBlockedUrls = this.onSetBlockedUrls.bind(this);
     this.onGetNetworkEventActor = this.onGetNetworkEventActor.bind(this);
     this.onDestroyMessage = this.onDestroyMessage.bind(this);
 
@@ -98,6 +99,10 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
       this.onUnblockRequest
     );
     this.messageManager.addMessageListener(
+      "debug:set-blocked-urls",
+      this.onSetBlockedUrls
+    );
+    this.messageManager.addMessageListener(
       "debug:get-network-event-actor:request",
       this.onGetNetworkEventActor
     );
@@ -127,6 +132,10 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
     this.messageManager.removeMessageListener(
       "debug:unblock-request",
       this.onUnblockRequest
+    );
+    this.messageManager.removeMessageListener(
+      "debug:set-blocked-urls",
+      this.onSetBlockedUrls
     );
     this.messageManager.removeMessageListener(
       "debug:get-network-event-actor:request",
@@ -236,6 +245,12 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
     const { filter } = data;
     this.observer.unblockRequest(filter);
     this.messageManager.sendAsyncMessage("debug:unblock-request:response");
+  },
+
+  onSetBlockedUrls({ data }) {
+    const { urls } = data;
+    this.observer.setBlockedUrls(urls);
+    this.messageManager.sendAsyncMessage("debug:set-blocked-urls:response");
   },
 
   onGetNetworkEventActor({ data }) {

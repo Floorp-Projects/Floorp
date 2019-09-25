@@ -1979,6 +1979,24 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
   },
 
   /**
+   * Sets the list of blocked request URLs as provided by the netmonitor frontend
+   *
+   * This match will be a (String).includes match, not an exact URL match
+   *
+   * @param object filter
+   *   An object containing a `url` key with a URL to unblock.
+   */
+  async setBlockedUrls(urls) {
+    await this._sendMessageToNetmonitors(
+      "debug:set-blocked-urls",
+      "debug:set-blocked-urls:response",
+      { urls }
+    );
+
+    return {};
+  },
+
+  /**
    * Handler for file activity. This method sends the file request information
    * to the remote Web Console client.
    *

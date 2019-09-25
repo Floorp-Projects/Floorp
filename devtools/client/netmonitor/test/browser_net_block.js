@@ -43,9 +43,10 @@ add_task(async function() {
       monitor,
       "request-list-context-block-url"
     );
+
     const onRequestBlocked = waitForDispatch(
       store,
-      "BLOCK_SELECTED_REQUEST_DONE"
+      "REQUEST_BLOCKING_UPDATE_COMPLETE"
     );
     contextBlock.click();
     info("Wait for selected request to be blocked");
@@ -80,7 +81,7 @@ add_task(async function() {
     );
     const onRequestUnblocked = waitForDispatch(
       store,
-      "UNBLOCK_SELECTED_REQUEST_DONE"
+      "REQUEST_BLOCKING_UPDATE_COMPLETE"
     );
     contextUnblock.click();
 

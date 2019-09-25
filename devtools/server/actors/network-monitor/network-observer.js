@@ -144,7 +144,7 @@ function NetworkObserver(filters, owner) {
   this.openRequests = new Map();
   this.openResponses = new Map();
 
-  this.blockedURLs = new Set();
+  this.blockedURLs = [];
 
   this._httpResponseExaminer = DevToolsUtils.makeInfallible(
     this._httpResponseExaminer
@@ -681,7 +681,7 @@ NetworkObserver.prototype = {
     // Check the request URL with ones manually blocked by the user in DevTools.
     // If it's meant to be blocked, we cancel the request and annotate the event.
     if (!blockedReason) {
-      if (this.blockedURLs.has(httpActivity.url)) {
+      if (this.blockedURLs.some(url => httpActivity.url.includes(url))) {
         channel.cancel(Cr.NS_BINDING_ABORTED);
         event.blockedReason = "devtools";
       }
@@ -791,7 +791,7 @@ NetworkObserver.prototype = {
       return;
     }
 
-    this.blockedURLs.add(filter.url);
+    this.blockedURLs.push(filter.url);
   },
 
   /**
@@ -806,7 +806,16 @@ NetworkObserver.prototype = {
       return;
     }
 
-    this.blockedURLs.delete(filter.url);
+    this.blockedURLs = this.blockedURLs.filter(url => url != filter.url);
+  },
+
+  /**
+   * Updates the list of blocked request strings
+   *
+   * This match will be a (String).includes match, not an exact URL match
+   */
+  setBlockedUrls(urls) {
+    this.blockedURLs = urls || [];
   },
 
   /**
