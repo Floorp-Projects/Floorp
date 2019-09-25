@@ -11,6 +11,7 @@
 #include "GIF2.h"
 #include "StreamingLexer.h"
 #include "SurfacePipe.h"
+#include "mozilla/gfx/Swizzle.h"
 
 namespace mozilla {
 namespace image {
@@ -155,6 +156,7 @@ class nsGIFDecoder2 : public Decoder {
 
   gif_struct mGIFStruct;
 
+  SwizzleRowFn mSwizzleFn;  /// Method to unpack color tables from RGB.
   SurfacePipe mPipe;  /// The SurfacePipe used to write to the output surface.
 };
 
