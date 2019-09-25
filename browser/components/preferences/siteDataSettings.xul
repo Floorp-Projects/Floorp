@@ -31,8 +31,9 @@
     <separator class="thin"/>
 
     <hbox id="searchBoxContainer">
-      <textbox id="searchBox" is="search-textbox" flex="1"
-        data-l10n-id="site-data-search-textbox"/>
+      <search-textbox id="searchBox" flex="1"
+        data-l10n-id="site-data-search-textbox"
+        data-l10n-attrs="placeholder"/>
     </hbox>
     <separator class="thin"/>
 

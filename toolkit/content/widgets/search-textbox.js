@@ -131,9 +131,6 @@
       // Ensure the button state is up to date:
       this.searchButton = this.searchButton;
 
-      // Set is attribute for styling
-      this.setAttribute("is", "search-textbox");
-
       this.initializeAttributeInheritance();
     }
 
@@ -251,7 +248,5 @@
     }
   }
 
-  customElements.define("search-textbox", MozSearchTextbox, {
-    extends: "textbox",
-  });
+  customElements.define("search-textbox", MozSearchTextbox);
 }

@@ -176,9 +176,9 @@
           <hbox id="header">
             <hbox id="header-inner" align="center" pack="end">
               <label id="search-label" control="header-search"/>
-              <textbox id="header-search" is="search-textbox" searchbutton="true"
+              <search-textbox id="header-search" searchbutton="true"
                        data-l10n-id="search-header"
-                       data-l10n-attrs="searchbuttonlabel" maxlength="100"/>
+                       data-l10n-attrs="placeholder, searchbuttonlabel" maxlength="100"/>
             </hbox>
           </hbox>
 

@@ -11,7 +11,8 @@
 
 /* ::::: textbox ::::: */
 
-textbox {
+textbox,
+search-textbox {
   -moz-appearance: textfield;
   cursor: text;
   margin: 2px 4px;
@@ -41,14 +42,16 @@ html|*.textbox-input {
 
 /* ..... readonly state ..... */
 
-textbox[readonly="true"] {
+textbox[readonly="true"],
+search-textbox[readonly="true"] {
   background-color: -moz-Dialog;
   color: -moz-DialogText;
 }
 
 /* ..... disabled state ..... */
 
-textbox[disabled="true"] {
+textbox[disabled="true"],
+search-textbox[disabled="true"] {
   cursor: default;
   background-color: -moz-Dialog;
   color: GrayText;
@@ -70,7 +73,7 @@ textbox.plain html|*.textbox-input {
 
 /* ::::: search textbox ::::: */
 
-textbox:not([searchbutton]) > .textbox-search-sign {
+search-textbox:not([searchbutton]) > .textbox-search-sign {
   list-style-image: url(chrome://global/skin/icons/search-textbox.svg);
   margin-inline-end: 5px;
 }

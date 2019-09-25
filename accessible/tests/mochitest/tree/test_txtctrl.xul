@@ -40,25 +40,25 @@
       //////////////////////////////////////////////////////////////////////////
       // search textbox
       accTree =
-        { SECTION: [
-          { ENTRY: [ { TEXT_LEAF: [] } ] },
-        ] };
+         { GROUPING: [
+           { ENTRY: [ { TEXT_LEAF: [] } ] },
+         ] };
       testAccessibleTree("txc_search", accTree);
 
       //////////////////////////////////////////////////////////////////////////
       // search textbox with search button
 
       if (MAC) {
-        accTree =
-          { SECTION: [
-            { ENTRY: [ { TEXT_LEAF: [] } ] },
-          ] };
+         accTree =
+           { GROUPING: [
+             { ENTRY: [ { TEXT_LEAF: [] } ] },
+           ] };
       } else {
-        accTree =
-          { SECTION: [
-            { ENTRY: [ { TEXT_LEAF: [] } ] },
-            { PUSHBUTTON: [] },
-          ] };
+         accTree =
+           { GROUPING: [
+             { ENTRY: [ { TEXT_LEAF: [] } ] },
+             { PUSHBUTTON: [] },
+           ] };
       }
 
       testAccessibleTree("txc_search_searchbutton", accTree);
@@ -113,8 +113,12 @@
 
     <vbox flex="1">
       <textbox id="txc" value="hello"/>
-      <textbox id="txc_search" is="search-textbox" value="hello"/>
-      <textbox id="txc_search_searchbutton" searchbutton="true" is="search-textbox" value="hello"/>
+      <box role="group" id="txc_search">
+        <search-textbox value="hello"/>
+      </box>
+      <box role="group" id="txc_search_searchbutton">
+        <search-textbox searchbutton="true" value="hello"/>
+      </box>
       <textbox id="txc_number" type="number" value="44"/>
       <textbox id="txc_password" type="password" value="hello"/>
     </vbox>

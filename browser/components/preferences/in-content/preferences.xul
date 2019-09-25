@@ -181,10 +181,10 @@
                      data-l10n-id="managed-notice"/>
             </hbox>
           </hbox>
-          <textbox
-            is="search-textbox" id="searchInput"
+          <search-textbox
+            id="searchInput"
             data-l10n-id="search-input-box"
-            data-l10n-attrs="style"
+            data-l10n-attrs="placeholder, style"
             hidden="true"/>
         </hbox>
         <vbox id="mainPrefPane">

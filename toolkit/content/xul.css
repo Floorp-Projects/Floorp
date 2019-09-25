@@ -446,10 +446,6 @@ textbox {
   text-shadow: none;
 }
 
-textbox[is="search-textbox"] {
-  -moz-binding: none;
-}
-
 /* Prefix with (xul|*):root to workaround HTML tests loading xul.css */
 :root html|textarea:not([resizable="true"]) {
   resize: none;
