@@ -110,8 +110,8 @@
   transition-property: width, padding-inline;
 }
 
-:root[sessionrestored] #urlbar[breakout],
-:root[sessionrestored] #urlbar[breakout] > #urlbar-input-container {
+#urlbar[breakout][breakout-extend-animate],
+#urlbar[breakout][breakout-extend-animate] > #urlbar-input-container {
   transition-duration: 250ms;
   transition-timing-function: var(--animation-easing-function);
 }
