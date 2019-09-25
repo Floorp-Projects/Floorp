@@ -123,7 +123,8 @@ add_task(async function test() {
           if (
             adjustedCertsElemLabel === "timestamp" ||
             adjustedCertsElemLabel === "not-after" ||
-            adjustedCertsElemLabel === "not-before"
+            adjustedCertsElemLabel === "not-before" ||
+            adjustedCertsElemLabel === "download"
           ) {
             Assert.equal(
               infoElem.getAttribute("title"),
