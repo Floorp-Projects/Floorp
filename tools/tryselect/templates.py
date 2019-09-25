@@ -193,7 +193,7 @@ class ChemspillPrio(Template):
             }
 
 
-class GeckoProfile(Template):
+class GeckoProfile(TryConfig):
     arguments = [
         [['--gecko-profile'],
          {'dest': 'profile',
@@ -217,10 +217,11 @@ class GeckoProfile(Template):
           }],
     ]
 
-    def context(self, profile, **kwargs):
-        if not profile:
-            return
-        return {'gecko-profile': profile}
+    def try_config(self, profile, **kwargs):
+        if profile:
+            return {
+                'gecko-profile': True,
+            }
 
 
 class Browsertime(TryConfig):

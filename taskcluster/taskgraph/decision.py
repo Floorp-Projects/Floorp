@@ -131,6 +131,7 @@ try_task_config_schema = Schema({
     Optional('templates'): {basestring: object},
     Optional('disable-pgo'): bool,
     Optional('browsertime'): bool,
+    Optional('gecko-profile'): bool,
     # Keep in sync with JOB_SCHEMA in taskcluster/docker/visual-metrics/run-visual-metrics.py.
     Optional('visual-metrics-jobs'): visual_metrics_jobs_schema,
     Optional(
