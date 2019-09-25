@@ -207,7 +207,7 @@ LightweightThemeConsumer.prototype = {
       return;
     }
 
-    let data = aSubject.wrappedJSObject;
+    let data = aSubject ? aSubject.wrappedJSObject : this._lastData;
     if (data.window && data.window !== this._winId) {
       return;
     }
@@ -217,7 +217,7 @@ LightweightThemeConsumer.prototype = {
 
   handleEvent(aEvent) {
     if (aEvent.media == "(-moz-system-dark-theme)") {
-      this._update(this._lastData);
+      Services.obs.notifyObservers(null, "lightweight-theme-styling-update");
       return;
     }
 
