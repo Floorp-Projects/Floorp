@@ -97,6 +97,7 @@ open class RadioButtonPreference @JvmOverloads constructor(
         radioButton?.isChecked = isChecked
         context.settings().preferences.edit().putBoolean(key, isChecked)
             .apply()
+        onPreferenceChangeListener.onPreferenceChange(this, isChecked)
     }
 
     private fun bindRadioButton(holder: PreferenceViewHolder) {

@@ -90,15 +90,17 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
     private fun bindStrict() {
         val keyStrict = getString(R.string.pref_key_tracking_protection_strict)
         radioStrict = requireNotNull(findPreference(keyStrict))
-        radioStrict.onPreferenceChangeListener = SharedPreferenceUpdater()
         radioStrict.isVisible = FeatureFlags.etpCategories
         radioStrict.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
             override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
-                context?.metrics?.track(
-                    Event.TrackingProtectionSettingChanged(
-                        Event.TrackingProtectionSettingChanged.Setting.STRICT
+                if (newValue == true) {
+                    updateTrackingProtectionPolicy()
+                    context?.metrics?.track(
+                        Event.TrackingProtectionSettingChanged(
+                            Event.TrackingProtectionSettingChanged.Setting.STRICT
+                        )
                     )
-                )
+                }
                 return super.onPreferenceChange(preference, newValue)
             }
         }
@@ -109,9 +111,6 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
                     .actionTrackingProtectionFragmentToTrackingProtectionBlockingFragment(true)
             )
         }
-        radioStrict.onClickListener {
-            updateTrackingProtectionPolicy()
-        }
     }
 
     private fun bindStandard() {
@@ -120,11 +119,14 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         radioStandard.isVisible = FeatureFlags.etpCategories
         radioStandard.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
             override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
-                context?.metrics?.track(
-                    Event.TrackingProtectionSettingChanged(
-                        Event.TrackingProtectionSettingChanged.Setting.STANDARD
+                if (newValue == true) {
+                    updateTrackingProtectionPolicy()
+                    context?.metrics?.track(
+                        Event.TrackingProtectionSettingChanged(
+                            Event.TrackingProtectionSettingChanged.Setting.STANDARD
+                        )
                     )
-                )
+                }
                 return super.onPreferenceChange(preference, newValue)
             }
         }
@@ -134,9 +136,6 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
                 TrackingProtectionFragmentDirections
                     .actionTrackingProtectionFragmentToTrackingProtectionBlockingFragment(false)
             )
-        }
-        radioStandard.onClickListener {
-            updateTrackingProtectionPolicy()
         }
     }
 
