@@ -33,6 +33,7 @@ class BookmarkDeselectNavigationListener(
      */
     override fun onDestinationChanged(controller: NavController, destination: NavDestination, arguments: Bundle?) {
         if (destination.id != R.id.bookmarkFragment || differentFromSelectedFolder(arguments)) {
+            // TODO this is currently called when opening the bookmark menu. Fix this if possible
             bookmarkInteractor.onAllBookmarksDeselected()
         }
     }
