@@ -1,7 +1,5 @@
 "use strict";
 
-/* eslint no-unused-vars: ["error", {"args": "none", "varsIgnorePattern": "^(FindProxyForURL)$"}] */
-
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "gProxyService",
@@ -16,52 +14,40 @@ let extension;
 add_task(async function setup() {
   let extensionData = {
     manifest: {
-      permissions: ["proxy"],
+      permissions: ["proxy", "<all_urls>"],
     },
     background() {
-      browser.proxy.onProxyError.addListener(error => {
+      let settings = { proxy: null };
+
+      browser.proxy.onError.addListener(error => {
         browser.test.sendMessage("proxy-error-received", error);
       });
       browser.test.onMessage.addListener((message, data) => {
         if (message === "set-proxy") {
-          browser.runtime
-            .sendMessage(data, { toProxyScript: true })
-            .then(response => {
-              browser.test.sendMessage("proxy-set", response);
-            });
+          settings.proxy = data.proxy;
+          browser.test.sendMessage("proxy-set", settings.proxy);
         }
       });
-      browser.proxy.register("proxy.js").then(() => {
-        browser.test.sendMessage("ready");
-      });
-    },
-    files: {
-      "proxy.js": `"use strict";
-        let settings = {proxy: null};
-        function FindProxyForURL(url, host) {
+      browser.proxy.onRequest.addListener(
+        () => {
           return settings.proxy;
-        }
-        browser.runtime.onMessage.addListener((msg, sender, respond) => {
-          if (msg.proxy) {
-            settings.proxy = msg.proxy;
-            return Promise.resolve(settings.proxy);
-          }
-        });
-      `,
+        },
+        { urls: ["<all_urls>"] }
+      );
     },
   };
   extension = ExtensionTestUtils.loadExtension(extensionData);
-  // proxy.register and proxy.onProxyError are deprecated - bug 1443259.
-  ExtensionTestUtils.failOnSchemaWarnings(false);
   await extension.startup();
-  await extension.awaitMessage("ready");
-  ExtensionTestUtils.failOnSchemaWarnings(true);
 });
 
-async function setupProxyScript(proxy) {
+async function setupProxyResult(proxy) {
   extension.sendMessage("set-proxy", { proxy });
   let proxyInfoSent = await extension.awaitMessage("proxy-set");
-  deepEqual(proxyInfoSent, proxy, "got back proxy data from proxy script");
+  deepEqual(
+    proxyInfoSent,
+    proxy,
+    "got back proxy data from the proxy listener"
+  );
 }
 
 async function testProxyResolution(test) {
@@ -134,91 +120,26 @@ async function testProxyResolution(test) {
   }
 }
 
-add_task(async function test_pac_results() {
+add_task(async function test_proxyInfo_results() {
   let tests = [
-    {
-      proxy: undefined,
-      expected: {
-        error: "ProxyInfoData: proxyData must be a string or array of objects",
-      },
-    },
     {
       proxy: 5,
       expected: {
-        error: "ProxyInfoData: proxyData must be a string or array of objects",
+        error: "ProxyInfoData: proxyData must be an object or array of objects",
       },
     },
     {
       proxy: "INVALID",
       expected: {
-        error: 'ProxyInfoData: Unrecognized proxy type: "invalid"',
-      },
-    },
-    {
-      proxy: "SOCKS",
-      expected: {
-        error: 'ProxyInfoData: Invalid host or port from proxy rule: "SOCKS"',
-      },
-    },
-    {
-      proxy: "PROXY 1.2.3.4:8080 EXTRA",
-      expected: {
-        error:
-          'ProxyInfoData: Invalid arguments passed for proxy rule: "PROXY 1.2.3.4:8080 EXTRA"',
-      },
-    },
-    {
-      proxy: "PROXY :",
-      expected: {
-        error: 'ProxyInfoData: Invalid host or port from proxy rule: "PROXY :"',
-      },
-    },
-    {
-      proxy: "PROXY :8080",
-      expected: {
-        error:
-          'ProxyInfoData: Invalid host or port from proxy rule: "PROXY :8080"',
-      },
-    },
-    {
-      proxy: "PROXY ::",
-      expected: {
-        error:
-          'ProxyInfoData: Invalid host or port from proxy rule: "PROXY ::"',
-      },
-    },
-    {
-      proxy: "PROXY 1.2.3.4:",
-      expected: {
-        error:
-          'ProxyInfoData: Invalid host or port from proxy rule: "PROXY 1.2.3.4:"',
-      },
-    },
-    {
-      proxy: "DIRECT 1.2.3.4:8080",
-      expected: {
-        error: 'ProxyInfoData: Invalid argument for proxy type: "direct"',
-      },
-    },
-    {
-      proxy: [
-        "SOCKS foo.bar:1080",
-        { type: "http", host: "foo.bar", port: 3128 },
-      ],
-      expected: {
-        error: 'ProxyInfoData: Invalid proxy server type: "undefined"',
+        error: "ProxyInfoData: proxyData must be an object or array of objects",
       },
     },
     {
       proxy: {
         type: "socks",
-        host: "foo.bar",
-        port: 1080,
-        username: "mungosantamaria",
-        password: "pass123",
       },
       expected: {
-        error: "ProxyInfoData: proxyData must be a string or array of objects",
+        error: 'ProxyInfoData: Invalid proxy server host: "undefined"',
       },
     },
     {
@@ -275,7 +196,12 @@ add_task(async function test_pac_results() {
       },
     },
     {
-      proxy: "PROXY 1.2.3.4:8080",
+      proxy: {
+        host: "1.2.3.4",
+        port: "8080",
+        type: "http",
+        failoverProxy: null,
+      },
       expected: {
         proxyInfo: {
           host: "1.2.3.4",
@@ -287,29 +213,53 @@ add_task(async function test_pac_results() {
     },
     {
       uri: "ftp://mozilla.org",
-      proxy: "PROXY 1.2.3.4:8080",
+      proxy: {
+        host: "1.2.3.4",
+        port: "8180",
+        type: "http",
+        failoverProxy: null,
+      },
       expected: {
         proxyInfo: {
           host: "1.2.3.4",
-          port: "8080",
+          port: "8180",
           type: "http",
           failoverProxy: null,
         },
       },
     },
     {
-      proxy: "   PROXY    2.3.4.5:8080      ",
+      proxy: {
+        host: "2.3.4.5",
+        port: "8181",
+        type: "http",
+        failoverProxy: null,
+      },
       expected: {
         proxyInfo: {
           host: "2.3.4.5",
-          port: "8080",
+          port: "8181",
           type: "http",
           failoverProxy: null,
         },
       },
     },
     {
-      proxy: "PROXY 1.2.3.4:8080; SOCKS 4.4.4.4:9000; DIRECT",
+      proxy: {
+        host: "1.2.3.4",
+        port: "8080",
+        type: "http",
+        failoverProxy: {
+          host: "4.4.4.4",
+          port: "9000",
+          type: "socks",
+          failoverProxy: {
+            type: "direct",
+            host: null,
+            port: -1,
+          },
+        },
+      },
       expected: {
         proxyInfo: {
           host: "1.2.3.4",
@@ -339,7 +289,11 @@ add_task(async function test_pac_results() {
       },
     },
     {
-      proxy: "SOCKS foo.bar:1080",
+      proxy: {
+        host: "foo.bar",
+        port: "1080",
+        type: "socks",
+      },
       expected: {
         proxyInfo: {
           host: "foo.bar",
@@ -349,7 +303,11 @@ add_task(async function test_pac_results() {
       },
     },
     {
-      proxy: "SOCKS4 foo.bar:1080",
+      proxy: {
+        host: "foo.bar",
+        port: "1080",
+        type: "socks4",
+      },
       expected: {
         proxyInfo: {
           host: "foo.bar",
@@ -451,13 +409,10 @@ add_task(async function test_pac_results() {
     },
   ];
   for (let test of tests) {
-    await setupProxyScript(test.proxy);
+    await setupProxyResult(test.proxy);
     if (!test.uri) {
       test.uri = "http://www.mozilla.org/";
     }
-    await testProxyResolution(test);
-    // Our proxy script for testing is stateless, so repeating the test should
-    // yield exactly the same results.
     await testProxyResolution(test);
   }
 });

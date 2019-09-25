@@ -519,9 +519,20 @@ add_task(async function test_webRequest_socks_proxy() {
       },
       { urls: ["<all_urls>"] }
     );
-
-    await browser.proxy.register("proxy.js");
-    browser.test.sendMessage("pac-ready");
+    browser.proxy.onRequest.addListener(
+      () => {
+        return [
+          {
+            type: "socks",
+            host: "127.0.0.1",
+            port,
+            username: "foo",
+            password: "bar",
+          },
+        ];
+      },
+      { urls: ["<all_urls>"] }
+    );
   }
 
   let handlingExt = ExtensionTestUtils.loadExtension({
@@ -529,24 +540,11 @@ add_task(async function test_webRequest_socks_proxy() {
       permissions: ["proxy", "webRequest", "webRequestBlocking", "<all_urls>"],
     },
     background: `(${background})(${socksServer.listener.localPort})`,
-    files: {
-      "proxy.js": `
-        function FindProxyForURL(url, host) {
-          return [{
-            type: "socks",
-            host: "127.0.0.1",
-            port: ${socksServer.listener.localPort},
-            username: "foo",
-            password: "bar",
-          }];
-        }`,
-    },
   });
 
   // proxy.register is deprecated - bug 1443259.
   ExtensionTestUtils.failOnSchemaWarnings(false);
   await handlingExt.startup();
-  await handlingExt.awaitMessage("pac-ready");
   ExtensionTestUtils.failOnSchemaWarnings(true);
 
   let contentPage = await ExtensionTestUtils.loadContentPage(
