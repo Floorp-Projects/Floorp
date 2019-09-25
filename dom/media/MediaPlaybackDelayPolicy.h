@@ -40,14 +40,13 @@ class ResumeDelayedPlaybackAgent {
 
   using ResumePromise = MozPromise<bool, bool, true /* IsExclusive */>;
   RefPtr<ResumePromise> GetResumePromise();
-  void UpdateAudibleState(AudioChannelService::AudibleState aAudibleState);
+  void UpdateAudibleState(const HTMLMediaElement* aElement, bool aIsAudible);
 
  private:
   friend class MediaPlaybackDelayPolicy;
 
   ~ResumeDelayedPlaybackAgent();
-  bool InitDelegate(const HTMLMediaElement* aElement,
-                    AudioChannelService::AudibleState aAudibleState);
+  bool InitDelegate(const HTMLMediaElement* aElement, bool aIsAudible);
 
   class ResumePlayDelegate final : public nsIAudioChannelAgentCallback {
    public:
@@ -55,9 +54,8 @@ class ResumeDelayedPlaybackAgent {
 
     ResumePlayDelegate() = default;
 
-    bool Init(const HTMLMediaElement* aElement,
-              AudioChannelService::AudibleState aAudibleState);
-    void UpdateAudibleState(AudioChannelService::AudibleState aAudibleState);
+    bool Init(const HTMLMediaElement* aElement, bool aIsAudible);
+    void UpdateAudibleState(const HTMLMediaElement* aElement, bool aIsAudible);
     RefPtr<ResumePromise> GetResumePromise();
     void Clear();
 
@@ -79,8 +77,7 @@ class MediaPlaybackDelayPolicy {
  public:
   static bool ShouldDelayPlayback(const HTMLMediaElement* aElement);
   static RefPtr<ResumeDelayedPlaybackAgent> CreateResumeDelayedPlaybackAgent(
-      const HTMLMediaElement* aElement,
-      AudioChannelService::AudibleState aAudibleState);
+      const HTMLMediaElement* aElement, bool aIsAudible);
 };
 
 }  // namespace dom

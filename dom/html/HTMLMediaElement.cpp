@@ -1293,7 +1293,8 @@ class HTMLMediaElement::AudioChannelAgentCallback final
     if (mSuspended != nsISuspendedTypes::NONE_SUSPENDED || mOwner->mPaused) {
       return AudibleState::eNotAudible;
     }
-    return mOwner->GetAudibleState();
+    return mOwner->IsAudible() ? AudibleState::eAudible
+                               : AudibleState::eNotAudible;
   }
 
   bool IsPlayingThroughTheAudioChannel() const {
@@ -7022,7 +7023,7 @@ void HTMLMediaElement::SetMediaInfo(const MediaInfo& aInfo) {
   const bool oldHasAudio = mMediaInfo.HasAudio();
   mMediaInfo = aInfo;
   if ((aInfo.HasAudio() != oldHasAudio) && mResumeDelayedPlaybackAgent) {
-    mResumeDelayedPlaybackAgent->UpdateAudibleState(GetAudibleState());
+    mResumeDelayedPlaybackAgent->UpdateAudibleState(this, IsAudible());
   }
   if (mAudioChannelWrapper) {
     mAudioChannelWrapper->AudioCaptureStreamChangeIfNeeded();
@@ -7184,19 +7185,18 @@ void HTMLMediaElement::NotifyDecoderActivityChanges() const {
 
 Document* HTMLMediaElement::GetDocument() const { return OwnerDoc(); }
 
-AudibleState HTMLMediaElement::GetAudibleState() const {
+bool HTMLMediaElement::IsAudible() const {
   // No audio track.
   if (!HasAudio()) {
-    return AudibleState::eNotAudible;
+    return false;
   }
 
   // Muted or the volume should not be ~0
   if (mMuted || (std::fabs(Volume()) <= 1e-7)) {
-    return AudibleState::eMaybeAudible;
+    return false;
   }
 
-  return mIsAudioTrackAudible ? AudibleState::eAudible
-                              : AudibleState::eMaybeAudible;
+  return mIsAudioTrackAudible;
 }
 
 void HTMLMediaElement::ConstructMediaTracks(const MediaInfo* aInfo) {
@@ -7419,8 +7419,8 @@ void HTMLMediaElement::CreateResumeDelayedMediaPlaybackAgentIfNeeded() {
     return;
   }
   mResumeDelayedPlaybackAgent =
-      MediaPlaybackDelayPolicy::CreateResumeDelayedPlaybackAgent(
-          this, GetAudibleState());
+      MediaPlaybackDelayPolicy::CreateResumeDelayedPlaybackAgent(this,
+                                                                 IsAudible());
   if (!mResumeDelayedPlaybackAgent) {
     LOG(LogLevel::Debug,
         ("%p Failed to create a delayed playback agant", this));
