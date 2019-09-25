@@ -111,7 +111,7 @@ class NetlinkService : public nsIRunnable {
 
   // All IPv4 and IPv6 addresses received via netlink
   nsTArray<nsAutoPtr<NetlinkAddress> > mAddresses;
-  // All neighbors, key is an address
+  // All neighbors, key is a string containing "address,ifidx"
   nsClassHashtable<nsCStringHashKey, NetlinkNeighbor> mNeighbors;
   // All interfaces keyed by interface index
   nsClassHashtable<nsUint32HashKey, NetlinkLink> mLinks;
