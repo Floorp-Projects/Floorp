@@ -595,8 +595,22 @@ this.Proxy = Proxy;
 this.Timeouts = Timeouts;
 this.UnhandledPromptBehavior = UnhandledPromptBehavior;
 
+function getWebDriverBrowserName() {
+  // Similar to chromedriver which reports "chrome" as browser name for all
+  // WebView apps, we will report "firefox" for all GeckoView apps.
+  if (Services.androidBridge) {
+    return "firefox";
+  }
+
+  return appinfo.name;
+}
+
 function getWebDriverPlatformName() {
   let name = Services.sysinfo.getProperty("name");
+
+  if (Services.androidBridge) {
+    return "android";
+  }
 
   switch (name) {
     case "Windows_NT":
