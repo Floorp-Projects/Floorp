@@ -29,7 +29,7 @@ You can run your freshly built geckodriver this way:
 
 	% ./mach geckodriver -- --other --flags
 
-See <Testing.md> for how to run tests.
+See [Testing](Testing.html) for how to run tests.
 
 [Rust]: https://www.rust-lang.org/
 [webdriver crate]: https://crates.io/crates/webdriver

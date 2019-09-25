@@ -1143,6 +1143,7 @@ dependencies = [
  "lazy_static 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "marionette 0.1.0",
+ "mozdevice 0.1.0",
  "mozprofile 0.6.0",
  "mozrunner 0.10.0",
  "mozversion 0.2.1",
@@ -1838,6 +1839,16 @@ dependencies = [
  "nserror 0.1.0",
  "nsstring 0.1.0",
  "xpcom 0.1.0",
+]
+
+[[package]]
+name = "mozdevice"
+version = "0.1.0"
+dependencies = [
+ "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "regex 1.1.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tempfile 3.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "walkdir 2.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
