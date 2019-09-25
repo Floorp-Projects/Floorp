@@ -3017,20 +3017,21 @@ js::UniquePtr<EdgeRange> ReflectorNode::edges(JSContext* cx,
   if (!range) {
     return nullptr;
   }
-  // UNWRAP_OBJECT assumes the object is completely initialized, but ours
-  // may not be.  Luckily, UnwrapDOMObjectToISupports checks for the
-  // uninitialized case (and returns null if uninitialized), so we can use
-  // that to guard against uninitialized objects.
+  // UNWRAP_NON_WRAPPER_OBJECT assumes the object is completely initialized,
+  // but ours may not be. Luckily, UnwrapDOMObjectToISupports checks for the
+  // uninitialized case (and returns null if uninitialized), so we can use that
+  // to guard against uninitialized objects.
   nsISupports* supp = UnwrapDOMObjectToISupports(&get());
   if (supp) {
-    nsCOMPtr<nsINode> node;
-    UNWRAP_OBJECT(Node, &get(), node);
-    if (node) {
+    nsINode* node;
+    // UnwrapDOMObjectToISupports can only return non-null if its argument is
+    // an actual DOM object, not a cross-compartment wrapper.
+    if (NS_SUCCEEDED(UNWRAP_NON_WRAPPER_OBJECT(Node, &get(), node))) {
       char16_t* edgeName = nullptr;
       if (wantNames) {
         edgeName = NS_xstrdup(u"Reflected Node");
       }
-      if (!range->addEdge(Edge(edgeName, node.get()))) {
+      if (!range->addEdge(Edge(edgeName, node))) {
         return nullptr;
       }
     }
