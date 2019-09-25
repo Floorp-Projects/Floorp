@@ -255,8 +255,12 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
     const uint32_t& aRedirectFlags, const Maybe<uint32_t>& aContentDisposition,
     const Maybe<nsString>& aContentDispositionFilename,
     RedirectToRealChannelResolver&& aResolve) {
+  nsCOMPtr<nsILoadInfo> originalLoadInfo;
   RefPtr<dom::Document> loadingDocument;
-  mLoadInfo->GetLoadingDocument(getter_AddRefs(loadingDocument));
+  GetLoadInfo(getter_AddRefs(originalLoadInfo));
+  if (originalLoadInfo) {
+    originalLoadInfo->GetLoadingDocument(getter_AddRefs(loadingDocument));
+  }
 
   nsCOMPtr<nsILoadInfo> loadInfo;
   nsresult rv = LoadInfoArgsToLoadInfo(aLoadInfo, loadingDocument,
@@ -400,30 +404,30 @@ DocumentChannelChild::OnRedirectVerifyCallback(nsresult aStatusCode) {
 }
 
 IPCResult DocumentChannelChild::RecvConfirmRedirect(
-    const LoadInfoArgs& aLoadInfo, nsIURI* aNewUri,
-    ConfirmRedirectResolver&& aResolve) {
+    nsIURI* aNewUri, ConfirmRedirectResolver&& aResolve) {
   // This is effectively the same as AsyncOnChannelRedirect, except since we're
   // not propagating the redirect into this process, we don't have an nsIChannel
   // for the redirection and we have to do the checks manually.
   // This just checks CSP thus far, hopefully there's not much else needed.
-  RefPtr<dom::Document> loadingDocument;
-  mLoadInfo->GetLoadingDocument(getter_AddRefs(loadingDocument));
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  MOZ_ALWAYS_SUCCEEDS(LoadInfoArgsToLoadInfo(Some(aLoadInfo), loadingDocument,
-                                             getter_AddRefs(loadInfo)));
-
   nsCOMPtr<nsIURI> originalUri;
   nsresult rv = GetOriginalURI(getter_AddRefs(originalUri));
   if (NS_FAILED(rv)) {
-    aResolve(Tuple<const nsresult&, const Maybe<nsresult>&>(NS_BINDING_FAILED,
-                                                            Some(rv)));
+    aResolve(rv);
     return IPC_OK();
   }
 
-  Maybe<nsresult> cancelCode;
-  rv = CSPService::ConsultCSPForRedirect(originalUri, aNewUri, loadInfo,
-                                         cancelCode);
-  aResolve(Tuple<const nsresult&, const Maybe<nsresult>&>(rv, cancelCode));
+  int16_t decision = nsIContentPolicy::ACCEPT;
+  rv = CSPService::ConsultCSPForRedirect(originalUri, aNewUri, mLoadInfo,
+                                         &decision);
+  if (NS_FAILED(rv)) {
+    aResolve(rv);
+    return IPC_OK();
+  }
+  if (NS_CP_REJECTED(decision)) {
+    aResolve(NS_BINDING_FAILED);
+  } else {
+    aResolve(NS_OK);
+  }
   return IPC_OK();
 }
 

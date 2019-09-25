@@ -82,8 +82,7 @@ class DocumentChannelChild final : public PDocumentChannelChild,
       const nsCString& aLists, const nsCString& aFullHash);
 
   mozilla::ipc::IPCResult RecvConfirmRedirect(
-      const LoadInfoArgs& aLoadInfo, nsIURI* aNewUri,
-      ConfirmRedirectResolver&& aResolve);
+      nsIURI* aNewUri, ConfirmRedirectResolver&& aResolve);
 
   void DoFailedAsyncOpen(const nsresult& aStatusCode);
 
