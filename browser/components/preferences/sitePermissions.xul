@@ -39,8 +39,10 @@
     <description id="permissionsText" control="url"/>
     <separator class="thin"/>
     <hbox align="start">
-      <textbox id="searchBox" flex="1" data-l10n-id="permissions-searchbox"
-               is="search-textbox" oncommand="gSitePermissionsManager.buildPermissionsList();"/>
+      <search-textbox id="searchBox" flex="1"
+                      data-l10n-id="permissions-searchbox"
+                      data-l10n-attrs="placeholder"
+                      oncommand="gSitePermissionsManager.buildPermissionsList();"/>
     </hbox>
     <separator class="thin"/>
     <listheader>

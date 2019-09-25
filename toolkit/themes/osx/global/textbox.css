@@ -5,7 +5,8 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-textbox {
+textbox,
+search-textbox {
   -moz-appearance: textfield;
   cursor: text;
   margin: 4px;
@@ -35,12 +36,14 @@ html|*.textbox-input {
   cursor: default;
 }
 
-textbox[readonly="true"] {
+textbox[readonly="true"],
+search-textbox[readonly="true"] {
   background-color: -moz-Dialog;
   color: -moz-DialogText;
 }
 
-textbox[disabled="true"] {
+textbox[disabled="true"],
+search-textbox[disabled="true"] {
   cursor: default;
   background-color: -moz-Dialog;
   color: GrayText;
@@ -60,7 +63,7 @@ textbox.plain html|*.textbox-input {
 
 /* ::::: search box ::::: */
 
-textbox[is="search-textbox"] {
+search-textbox {
   -moz-appearance: searchfield;
   padding: 1px;
   font-size: 12px;

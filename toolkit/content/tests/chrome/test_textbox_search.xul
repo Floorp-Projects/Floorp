@@ -10,11 +10,10 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
   <hbox>
-    <textbox id="searchbox"
-             is="search-textbox"
-             oncommand="doSearch(this.value);"
-             placeholder="random placeholder"
-             timeout="1"/>
+    <search-textbox id="searchbox"
+                    oncommand="doSearch(this.value);"
+                    placeholder="random placeholder"
+                    timeout="1"/>
   </hbox>
 
   <!-- test results are displayed in the html:body -->
