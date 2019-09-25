@@ -79,6 +79,13 @@
 }
 
 /**
+ * Override global.css input styles
+ */
+html|input {
+  margin: revert;
+}
+
+/**
  * Override wrong system font from forms.css
  * Bug 1458224: buttons use a wrong default font-size on Linux
  */

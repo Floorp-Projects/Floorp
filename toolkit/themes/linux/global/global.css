@@ -222,6 +222,10 @@ label[disabled="true"] {
   outline: 1px dotted;
 }
 
+html|input {
+  margin: 2px 4px; /* matches xul <textbox> default margin */
+}
+
 notification > hbox > button {
   margin-top: 0;
   margin-bottom: 0;
