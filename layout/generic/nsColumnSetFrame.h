@@ -87,9 +87,10 @@ class nsColumnSetFrame final : public nsContainerFrame {
    * These are the parameters that control the layout of columns.
    */
   struct ReflowConfig {
-    // The number of columns that we want to balance across. If we're not
+    // The optimal number of columns that we want to use. This is computed from
+    // column-count, column-width, available inline-size, etc. If we're not
     // balancing, this will be set to INT32_MAX.
-    int32_t mBalanceColCount = INT32_MAX;
+    int32_t mUsedColCount = INT32_MAX;
 
     // The inline-size of each individual column.
     nscoord mColISize = NS_UNCONSTRAINEDSIZE;
