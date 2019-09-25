@@ -18,7 +18,6 @@ use mozrunner::runner::{FirefoxProcess, FirefoxRunner, Runner, RunnerProcess};
 use serde::de::{self, Deserialize, Deserializer};
 use serde::ser::{Serialize, Serializer};
 use serde_json::{self, Map, Value};
-use std::error::Error;
 use std::io::prelude::*;
 use std::io::Error as IoError;
 use std::io::ErrorKind;
@@ -1183,6 +1182,7 @@ impl MarionetteConnection {
             self.host,
             self.port
         );
+
         loop {
             // immediately abort connection attempts if process disappears
             if let Some(ref mut runner) = *browser {
@@ -1204,9 +1204,23 @@ impl MarionetteConnection {
                 }
             }
 
-            match TcpStream::connect((&self.host[..], self.port)) {
-                Ok(stream) => {
+            let try_connect = || -> WebDriverResult<(TcpStream, MarionetteHandshake)> {
+                let mut stream = TcpStream::connect((&self.host[..], self.port))?;
+                let data = MarionetteConnection::handshake(&mut stream)?;
+
+                Ok((stream, data))
+            };
+
+            match try_connect() {
+                Ok((stream, data)) => {
+                    debug!(
+                        "Connection to Marionette established on {}:{}.",
+                        self.host, self.port,
+                    );
+
                     self.stream = Some(stream);
+                    self.session.application_type = Some(data.application_type);
+                    self.session.protocol = Some(data.protocol);
                     break;
                 }
                 Err(e) => {
@@ -1214,50 +1228,36 @@ impl MarionetteConnection {
                         thread::sleep(poll_interval);
                     } else {
                         return Err(WebDriverError::new(
-                            ErrorStatus::UnknownError,
-                            e.description().to_owned(),
+                            ErrorStatus::Timeout,
+                            e.to_string(),
                         ));
                     }
                 }
             }
         }
 
-        debug!(
-            "Connection established on {}:{}. Waiting for Marionette handshake",
-            self.host, self.port,
-        );
-
-        let data = self.handshake()?;
-        self.session.application_type = Some(data.application_type);
-        self.session.protocol = Some(data.protocol);
-
-        debug!("Connected to Marionette");
         Ok(())
     }
 
-    fn handshake(&mut self) -> WebDriverResult<MarionetteHandshake> {
-        let resp = (match self.stream.as_mut().unwrap().read_timeout() {
+    fn handshake(stream: &mut TcpStream) -> WebDriverResult<MarionetteHandshake> {
+        let resp = (match stream.read_timeout() {
             Ok(timeout) => {
                 // If platform supports changing the read timeout of the stream,
                 // use a short one only for the handshake with Marionette.
-                self.stream
-                    .as_mut()
-                    .unwrap()
-                    .set_read_timeout(Some(time::Duration::from_secs(10)))
+                stream
+                    .set_read_timeout(Some(time::Duration::from_millis(100)))
                     .ok();
-                let data = self.read_resp();
-                self.stream.as_mut().unwrap().set_read_timeout(timeout).ok();
+                let data = MarionetteConnection::read_resp(stream);
+                stream.set_read_timeout(timeout).ok();
 
                 data
             }
-            _ => self.read_resp(),
+            _ => MarionetteConnection::read_resp(stream),
         })
-        .or_else(|e| {
-            Err(WebDriverError::new(
-                ErrorStatus::UnknownError,
-                format!("Socket timeout reading Marionette handshake data: {}", e),
-            ))
-        })?;
+        .map_err(|e| WebDriverError::new(
+            ErrorStatus::UnknownError,
+            format!("Socket timeout reading Marionette handshake data: {}", e),
+        ))?;
 
         let data = serde_json::from_str::<MarionetteHandshake>(&resp)?;
 
@@ -1297,16 +1297,18 @@ impl MarionetteConnection {
     }
 
     fn send(&mut self, data: String) -> WebDriverResult<String> {
-        match self.stream {
+        let stream = match self.stream {
             Some(ref mut stream) => {
                 if stream.write(&*data.as_bytes()).is_err() {
                     let mut err = WebDriverError::new(
                         ErrorStatus::UnknownError,
-                        "Failed to write response to stream",
+                        "Failed to write request to stream",
                     );
                     err.delete_session = true;
                     return Err(err);
                 }
+
+                stream
             }
             None => {
                 let mut err = WebDriverError::new(
@@ -1316,9 +1318,9 @@ impl MarionetteConnection {
                 err.delete_session = true;
                 return Err(err);
             }
-        }
+        };
 
-        match self.read_resp() {
+        match MarionetteConnection::read_resp(stream) {
             Ok(resp) => Ok(resp),
             Err(_) => {
                 let mut err = WebDriverError::new(
@@ -1331,11 +1333,9 @@ impl MarionetteConnection {
         }
     }
 
-    fn read_resp(&mut self) -> IoResult<String> {
+    fn read_resp(stream: &mut TcpStream) -> IoResult<String> {
         let mut bytes = 0usize;
 
-        // TODO(jgraham): Check before we unwrap?
-        let stream = self.stream.as_mut().unwrap();
         loop {
             let buf = &mut [0 as u8];
             let num_read = stream.read(buf)?;
