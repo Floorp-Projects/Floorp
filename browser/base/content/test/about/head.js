@@ -34,17 +34,20 @@ function getPEMString(cert) {
   );
 }
 
-function injectErrorPageFrame(tab, src) {
+function injectErrorPageFrame(tab, src, sandboxed) {
   return ContentTask.spawn(
     tab.linkedBrowser,
-    { frameSrc: src },
-    async function({ frameSrc }) {
+    { frameSrc: src, frameSandboxed: sandboxed },
+    async function({ frameSrc, frameSandboxed }) {
       let loaded = ContentTaskUtils.waitForEvent(
         content.wrappedJSObject,
         "DOMFrameContentLoaded"
       );
       let iframe = content.document.createElement("iframe");
       iframe.src = frameSrc;
+      if (frameSandboxed) {
+        iframe.setAttribute("sandbox", "allow-scripts");
+      }
       content.document.body.appendChild(iframe);
       await loaded;
       // We will have race conditions when accessing the frame content after setting a src,
@@ -57,7 +60,7 @@ function injectErrorPageFrame(tab, src) {
   );
 }
 
-async function openErrorPage(src, useFrame) {
+async function openErrorPage(src, useFrame, sandboxed) {
   let dummyPage =
     getRootDirectory(gTestPath).replace(
       "chrome://mochitests/content",
@@ -68,7 +71,7 @@ async function openErrorPage(src, useFrame) {
   if (useFrame) {
     info("Loading cert error page in an iframe");
     tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, dummyPage);
-    await injectErrorPageFrame(tab, src);
+    await injectErrorPageFrame(tab, src, sandboxed);
   } else {
     let certErrorLoaded;
     tab = await BrowserTestUtils.openNewForegroundTab(
