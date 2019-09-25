@@ -87,7 +87,7 @@ static bool ShouldUseHeap(const IntSize& aSize, int32_t aStride,
 
   // Lets us avoid too many small images consuming all of the handles. The
   // actual allocation checks for overflow.
-  int32_t bufferSize = (aStride * aSize.width) / 1024;
+  int32_t bufferSize = (aStride * aSize.height) / 1024;
   if (bufferSize < StaticPrefs::image_mem_volatile_min_threshold_kb()) {
     return true;
   }
