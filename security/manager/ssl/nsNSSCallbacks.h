@@ -22,6 +22,7 @@ using mozilla::TimeDuration;
 using mozilla::Vector;
 
 class nsILoadGroup;
+class nsIX509CertList;
 
 char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg);
 
@@ -34,5 +35,10 @@ mozilla::pkix::Result DoOCSPRequest(
     uint8_t (&ocspRequest)[mozilla::pkix::OCSP_REQUEST_MAX_LENGTH],
     size_t ocspRequestLength, TimeDuration timeout,
     /*out*/ Vector<uint8_t>& result);
+
+nsCString getKeaGroupName(uint32_t aKeaGroup);
+nsCString getSignatureName(uint32_t aSignatureScheme);
+nsresult IsCertificateDistrustImminent(nsIX509CertList* aCertList,
+                                       /* out */ bool& isDistrusted);
 
 #endif  // nsNSSCallbacks_h
