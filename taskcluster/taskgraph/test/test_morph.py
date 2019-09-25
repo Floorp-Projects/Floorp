@@ -117,7 +117,7 @@ TASKS = [
         'attributes': {},
         'task': {
             'extra': {
-                'suite': {'name': 'talos'},
+                'suite': 'talos',
                 'treeherder': {
                     'group': 'tc',
                     'symbol': 't'
@@ -197,35 +197,6 @@ def test_template_rebuild(get_morphed):
         elif t.label == 'b':
             assert 'task_duplicates' in t.attributes
             assert t.attributes['task_duplicates'] == 4
-
-
-@pytest.mark.parametrize('command', (
-    ['foo --bar'],
-    ['foo', '--bar'],
-    [['foo']],
-    [['foo', '--bar']],
-))
-def test_template_gecko_profile(get_morphed, command):
-    tasks = TASKS[:]
-    for t in tasks:
-        t['task']['payload']['command'] = command
-
-    morphed = get_morphed({
-        'templates': {
-            'gecko-profile': True,
-        }
-    }, tasks)
-
-    for t in morphed.tasks.values():
-        command = t.task['payload']['command']
-        if isinstance(command[0], list):
-            command = command[0]
-        command = ' '.join(command)
-
-        if t.label == 'a':
-            assert not command.endswith('--gecko-profile')
-        elif t.label == 'b':
-            assert command.endswith('--gecko-profile')
 
 
 if __name__ == '__main__':

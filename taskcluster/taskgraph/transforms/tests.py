@@ -1321,6 +1321,9 @@ def set_profile(config, tests):
     profile = None
     if config.params['try_mode'] == 'try_option_syntax':
         profile = config.params['try_options']['profile']
+    else:
+        profile = config.params['try_task_config'].get('gecko-profile', False)
+
     for test in tests:
         if profile and test['suite'] in ['talos', 'raptor']:
             test['mozharness']['extra-options'].append('--geckoProfile')

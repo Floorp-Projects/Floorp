@@ -40,12 +40,6 @@ TEMPLATE_TESTS = {
         (['--rebuild', '1'], SystemExit),
         (['--rebuild', '21'], SystemExit),
     ],
-    'gecko-profile': [
-        ([], None),
-        (['--talos-profile'], {'gecko-profile': True}),
-        (['--geckoProfile'], {'gecko-profile': True}),
-        (['--gecko-profile'], {'gecko-profile': True}),
-    ],
 }
 
 
