@@ -74,18 +74,6 @@ let whitelist = [
     errorMessage: /Property contained reference to invalid variable.*color/i,
     isFromDevTools: true,
   },
-  {
-    sourceName: /webide\/skin\/logs\.css$/i,
-    intermittent: true,
-    errorMessage: /Property contained reference to invalid variable.*color/i,
-    isFromDevTools: true,
-  },
-  {
-    sourceName: /webide\/skin\/logs\.css$/i,
-    intermittent: true,
-    errorMessage: /Property contained reference to invalid variable.*background/i,
-    isFromDevTools: true,
-  },
 ];
 
 if (
@@ -429,7 +417,7 @@ add_task(async function checkAllTheCSS() {
 
   // filter out either the devtools paths or the non-devtools paths:
   let isDevtools = SimpleTest.harnessParameters.subsuite == "devtools";
-  let devtoolsPathBits = ["webide", "devtools"];
+  let devtoolsPathBits = ["devtools"];
   uris = uris.filter(
     uri => isDevtools == devtoolsPathBits.some(path => uri.spec.includes(path))
   );

@@ -81,7 +81,7 @@ class ToolboxToolbar extends Component {
       // |hostTypes| but this is not always the case (e.g. when it is "custom").
       currentHostType: PropTypes.string,
       // Are docking options enabled? They are not enabled in certain situations
-      // like when they are in the WebIDE.
+      // like when the toolbox is opened in a tab.
       areDockOptionsEnabled: PropTypes.bool,
       // Do we need to add UI for closing the toolbox? We don't when the
       // toolbox is undocked, for example.
@@ -352,8 +352,8 @@ class ToolboxToolbar extends Component {
    * @param {string} props.currentHostType
    *        The current docking configuration.
    * @param {boolean} props.areDockOptionsEnabled
-   *        They are not enabled in certain situations like when they are in the
-   *        WebIDE.
+   *        They are not enabled in certain situations like when the toolbox is
+   *        in a tab.
    * @param {boolean} props.canCloseToolbox
    *        Do we need to add UI for closing the toolbox? We don't when the
    *        toolbox is undocked, for example.
