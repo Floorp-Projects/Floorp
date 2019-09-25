@@ -20,7 +20,8 @@ pub enum DebugItem {
         position: DevicePoint,
     },
     Rect {
-        color: ColorF,
+        outer_color: ColorF,
+        inner_color: ColorF,
         rect: DeviceRect,
     },
 }

@@ -4856,22 +4856,19 @@ impl Renderer {
 
         for item in items {
             match item {
-                DebugItem::Rect { rect, color } => {
-                    let inner_color = color.scale_alpha(0.5).into();
-                    let outer_color = (*color).into();
-
+                DebugItem::Rect { rect, outer_color, inner_color } => {
                     debug_renderer.add_quad(
                         rect.origin.x,
                         rect.origin.y,
                         rect.origin.x + rect.size.width,
                         rect.origin.y + rect.size.height,
-                        inner_color,
-                        inner_color,
+                        (*inner_color).into(),
+                        (*inner_color).into(),
                     );
 
                     debug_renderer.add_rect(
                         &rect.to_i32(),
-                        outer_color,
+                        (*outer_color).into(),
                     );
                 }
                 DebugItem::Text { ref msg, position, color } => {

@@ -1753,11 +1753,13 @@ impl PrimitiveScratchBuffer {
     pub fn push_debug_rect(
         &mut self,
         rect: DeviceRect,
-        color: ColorF,
+        outer_color: ColorF,
+        inner_color: ColorF,
     ) {
         self.debug_items.push(DebugItem::Rect {
             rect,
-            color,
+            outer_color,
+            inner_color,
         });
     }
 
@@ -2226,7 +2228,7 @@ impl PrimitiveStore {
                         };
                         if debug_color.a != 0.0 {
                             let debug_rect = clipped_world_rect * frame_context.global_device_pixel_scale;
-                            frame_state.scratch.push_debug_rect(debug_rect, debug_color);
+                            frame_state.scratch.push_debug_rect(debug_rect, debug_color, debug_color.scale_alpha(0.5));
                         }
                     }
 
