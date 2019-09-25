@@ -1,11 +1,9 @@
-Firefox capabilities
-====================
+# Firefox capabilities
 
 geckodriver has a few capabilities that are specific to Firefox.
 
 
-`moz:firefoxOptions`
---------------------
+## `moz:firefoxOptions`
 
 A dictionary used to define options which control how Firefox gets
 started and run. It may contain any of the following fields:
@@ -16,7 +14,7 @@ started and run. It may contain any of the following fields:
   td, th { padding: 5px 10px; }
 </style>
 
-<table>
+<table id="capabilities-common">
  <thead>
   <tr>
    <th>Name
@@ -24,6 +22,17 @@ started and run. It may contain any of the following fields:
    <th>Description
   </tr>
  </thead>
+
+ <tr id=capability-args>
+  <td><code>args</code>
+  <td align="center">array&nbsp;of&nbsp;strings
+  <td><p>Command line arguments to pass to the Firefox binary.
+   These must include the leading dash (<code>-</code>) where required,
+   e.g. <code>["-devtools"]</code>.
+
+   <p>To have geckodriver pick up an existing profile on the filesystem,
+    you may pass <code>["-profile", "/path/to/profile"]</code>.
+ </tr>
 
  <tr id=capability-binary>
   <td><code>binary</code>
@@ -44,15 +53,20 @@ started and run. It may contain any of the following fields:
   or <code>/Applications/Firefox Nightly.app/Contents/MacOS/firefox</code>.
  </tr>
 
- <tr id=capability-args>
-  <td><code>args</code>
-  <td align="center">array&nbsp;of&nbsp;strings
-  <td><p>Command line arguments to pass to the Firefox binary.
-   These must include the leading dash (<code>-</code>) where required,
-   e.g. <code>["-devtools"]</code>.
+ <tr id=capability-log>
+  <td><code>log</code>
+  <td align="center"><a href=#log-object><code>log</code></a>&nbsp;object
+  <td>To increase the logging verbosity of geckodriver and Firefox,
+   you may pass a <a href=#log-object><code>log</code> object</a>
+   that may look like <code>{"log": {"level": "trace"}}</code>
+   to include all trace-level logs and above.
+ </tr>
 
-   <p>To have geckodriver pick up an existing profile on the filesystem,
-    you may pass <code>["-profile", "/path/to/profile"]</code>.
+ <tr id=capability-prefs>
+  <td><code>prefs</code>
+  <td align="center"><a href=#prefs-object><code>prefs</code></a>&nbsp;object
+  <td>Map of preference name to preference value, which can be a
+   string, a boolean or an integer.
  </tr>
 
  <tr id=capability-profile>
@@ -77,27 +91,55 @@ started and run. It may contain any of the following fields:
     please set the <a href=#capability-args><code>args</code></a> field
     to <code>{"args": ["-profile", "/path/to/your/profile"]}</code>.
  </tr>
+</table>
 
- <tr id=capability-log>
-  <td><code>log</code>
-  <td align="center"><a href=#log-object><code>log</code></a>&nbsp;object
-  <td>To increase the logging verbosity of geckodriver and Firefox,
-   you may pass a <a href=#log-object><code>log</code> object</a>
-   that may look like <code>{"log": {"level": "trace"}}</code>
-   to include all trace-level logs and above.
+### Android
+
+Starting with geckodriver 0.26.0 additional capabilities exist if Firefox
+or an application embedding [GeckoView] has to be controlled on Android:
+
+<table id="capabilities-android">
+ <thead>
+  <tr>
+   <th>Name
+   <th>Type
+   <th>Optional
+   <th>Description
+  </tr>
+ </thead>
+
+ <tr id=capability-androidPackage>
+  <td><code>androidPackage</code>
+  <td align="center">string
+  <td align="center">no
+  <td><p>
+    The package name of the application embedding GeckoView, eg.
+    <code>org.mozilla.geckoview_example</code>.
  </tr>
 
- <tr id=capability-prefs>
-  <td><code>prefs</code>
-  <td align="center"><a href=#prefs-object><code>prefs</code></a>&nbsp;object
-  <td>Map of preference name to preference value, which can be a
-   string, a boolean or an integer.
+ <tr id=capability-androidActivity>
+  <td><code>androidActivity</code>
+  <td align="center">string
+  <td align="center">yes
+  <td><p>
+    The fully qualified class name of the activity to be launched, eg.
+    <code>.GeckoViewActivity</code>.
+    If not specified the package's default activity will be used.
+ </tr>
+
+ <tr id=capability-androidDeviceSerial>
+  <td><code>androidDeviceSerial</code>
+  <td align="center">string
+  <td align="center">yes
+  <td><p>
+    The serial number of the device on which to launch the application.
+    If not specified and multiple devices are attached, an error will be raised.
  </tr>
 </table>
 
+[GeckoView]: https://wiki.mozilla.org/Mobile/GeckoView
 
-`moz:useNonSpecCompliantPointerOrigin`
---------------------------------------
+## `moz:useNonSpecCompliantPointerOrigin`
 
 A boolean value to indicate how the pointer origin for an action
 command will be calculated.
@@ -114,8 +156,7 @@ Please note that this capability exists only temporarily, and that
 it will be removed once all Selenium bindings can handle the new behavior.
 
 
-`moz:webdriverClick`
---------------------
+## `moz:webdriverClick`
 
 A boolean value to indicate which kind of interactability checks
 to run when performing a click or sending keys to an elements. For
@@ -140,8 +181,7 @@ Please note that this capability exists only temporarily, and that
 it will be removed once the interactability checks have been stabilized.
 
 
-`log` object
-------------
+## `log` object
 
 <table>
  <thead>
@@ -166,8 +206,7 @@ it will be removed once the interactability checks have been stabilized.
 </table>
 
 
-`prefs` object
---------------
+## `prefs` object
 
 <table>
  <thead>
@@ -186,13 +225,13 @@ it will be removed once the interactability checks have been stabilized.
 </table>
 
 
-Capabilities example
-====================
+## Capabilities examples
 
-The following example selects a specific Firefox binary to run with
-a prepared profile from the filesystem in headless mode (available on
-certain systems and recent Firefoxen).  It also increases the number
-of IPC processes through a preference and enables more verbose logging.
+### Custom profile, and headless mode
+
+This runs a specific Firefox binary with a prepared profile from the filesystem
+in headless mode.  It also increases the number of IPC processes through a
+preference and enables more verbose logging.
 
 	{
 		"capabilities": {
@@ -210,3 +249,24 @@ of IPC processes through a preference and enables more verbose logging.
 			}
 		}
 	}
+
+### Android
+
+This runs the GeckoView example application as installed on the first Android
+emulator running on the host machine.
+
+	{
+		"capabilities": {
+			"alwaysMatch": {
+				"moz:firefoxOptions": {
+					"androidPackage": "org.mozilla.geckoview_example",
+					"androidActivity": "org.mozilla.geckoview_example.GeckoViewActivity",
+					"androidDeviceSerial": "emulator-5554",
+          "androidIntentArguments": [
+            "-d", "http://example.org"
+          ]
+				}
+			}
+		}
+	}
+

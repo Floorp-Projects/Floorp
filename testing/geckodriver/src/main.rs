@@ -8,6 +8,7 @@ extern crate clap;
 extern crate lazy_static;
 extern crate hyper;
 extern crate marionette as marionette_rs;
+extern crate mozdevice;
 extern crate mozprofile;
 extern crate mozrunner;
 extern crate mozversion;
@@ -42,6 +43,7 @@ macro_rules! try_opt {
     }};
 }
 
+mod android;
 mod build;
 mod capabilities;
 mod command;

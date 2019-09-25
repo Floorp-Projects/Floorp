@@ -40,6 +40,7 @@ use mozprofile::preferences::Pref;
 static MAX_LOG_LEVEL: AtomicUsize = AtomicUsize::new(0);
 const LOGGED_TARGETS: &[&str] = &[
     "geckodriver",
+    "mozdevice",
     "mozprofile",
     "mozrunner",
     "mozversion",
