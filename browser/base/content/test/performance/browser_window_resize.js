@@ -57,11 +57,9 @@ async function resizeWindow(win, width, height) {
     "BookmarksToolbarVisibilityUpdated"
   );
   let resizeEvent = BrowserTestUtils.waitForEvent(win, "resize");
-  let dwu = win.windowUtils;
-  dwu.ensureDirtyRootFrame();
+  win.windowUtils.ensureDirtyRootFrame();
   win.resizeTo(width, height);
   await resizeEvent;
-  forceImmediateToolbarOverflowHandling(win);
   await toolbarEvent;
 }
 
