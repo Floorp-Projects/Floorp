@@ -41,7 +41,7 @@
 mod template_params;
 pub use self::template_params::UsedTemplateParameters;
 mod derive;
-pub use self::derive::{CannotDerive, DeriveTrait, as_cannot_derive_set};
+pub use self::derive::{as_cannot_derive_set, CannotDerive, DeriveTrait};
 mod has_vtable;
 pub use self::has_vtable::{HasVtable, HasVtableAnalysis, HasVtableResult};
 mod has_destructor;
@@ -56,9 +56,9 @@ pub use self::sizedness::{Sizedness, SizednessAnalysis, SizednessResult};
 use ir::context::{BindgenContext, ItemId};
 
 use ir::traversal::{EdgeKind, Trace};
-use HashMap;
 use std::fmt;
 use std::ops;
+use HashMap;
 
 /// An analysis in the monotone framework.
 ///
@@ -164,10 +164,9 @@ where
 
     while let Some(node) = worklist.pop() {
         if let ConstrainResult::Changed = analysis.constrain(node) {
-            analysis.each_depending_on(
-                node,
-                |needs_work| { worklist.push(needs_work); },
-            );
+            analysis.each_depending_on(node, |needs_work| {
+                worklist.push(needs_work);
+            });
         }
     }
 
@@ -196,9 +195,10 @@ where
                     if ctx.whitelisted_items().contains(&sub_item) &&
                         consider_edge(edge_kind)
                     {
-                        dependencies.entry(sub_item).or_insert(vec![]).push(
-                            item,
-                        );
+                        dependencies
+                            .entry(sub_item)
+                            .or_insert(vec![])
+                            .push(item);
                     }
                 },
                 &(),
@@ -325,13 +325,17 @@ mod tests {
             // Yes, what follows is a **terribly** inefficient set union
             // implementation. Don't copy this code outside of this test!
 
-            let original_size =
-                self.reachable.entry(node).or_insert(HashSet::default()).len();
+            let original_size = self
+                .reachable
+                .entry(node)
+                .or_insert(HashSet::default())
+                .len();
 
             for sub_node in self.graph.0[&node].iter() {
                 self.reachable.get_mut(&node).unwrap().insert(*sub_node);
 
-                let sub_reachable = self.reachable
+                let sub_reachable = self
+                    .reachable
                     .entry(*sub_node)
                     .or_insert(HashSet::default())
                     .clone();

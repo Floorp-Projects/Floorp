@@ -12,7 +12,7 @@ use clang_sys::CXCursor_ObjCClassRef;
 use clang_sys::CXCursor_ObjCInstanceMethodDecl;
 use clang_sys::CXCursor_ObjCProtocolDecl;
 use clang_sys::CXCursor_ObjCProtocolRef;
-use proc_macro2::{TokenStream, Ident, Span};
+use proc_macro2::{Ident, Span, TokenStream};
 
 /// Objective C interface as used in TypeKind
 ///
@@ -212,7 +212,8 @@ impl ObjCMethod {
 
     /// Formats the method call
     pub fn format_method_call(&self, args: &[TokenStream]) -> TokenStream {
-        let split_name: Vec<_> = self.name
+        let split_name: Vec<_> = self
+            .name
             .split(':')
             .filter(|p| !p.is_empty())
             .map(|name| Ident::new(name, Span::call_site()))
@@ -242,7 +243,7 @@ impl ObjCMethod {
             let name_and_sig: Vec<&str> = arg.split(' ').collect();
             let name = name_and_sig[0];
             args_without_types.push(Ident::new(name, Span::call_site()))
-        };
+        }
 
         let args = split_name
             .into_iter()

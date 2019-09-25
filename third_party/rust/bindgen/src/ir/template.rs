@@ -99,7 +99,7 @@ use parse::ClangItemParser;
 /// ... |Wtf   | ... | [T]                  |
 /// ... |Qux   | ... | []                   |
 /// ----+------+-----+----------------------+
-pub trait TemplateParameters : Sized {
+pub trait TemplateParameters: Sized {
     /// Get the set of `ItemId`s that make up this template declaration's free
     /// template parameters.
     ///
@@ -135,9 +135,11 @@ pub trait TemplateParameters : Sized {
         Self: ItemAncestors,
     {
         let ancestors: Vec<_> = self.ancestors(ctx).collect();
-        ancestors.into_iter().rev().flat_map(|id| {
-            id.self_template_params(ctx).into_iter()
-        }).collect()
+        ancestors
+            .into_iter()
+            .rev()
+            .flat_map(|id| id.self_template_params(ctx).into_iter())
+            .collect()
     }
 
     /// Get only the set of template parameters that this item uses. This is a
@@ -153,10 +155,11 @@ pub trait TemplateParameters : Sized {
         );
 
         let id = *self.as_ref();
-        ctx.resolve_item(id).all_template_params(ctx)
-                    .into_iter()
-                    .filter(|p| ctx.uses_template_parameter(id, *p))
-                    .collect()
+        ctx.resolve_item(id)
+            .all_template_params(ctx)
+            .into_iter()
+            .filter(|p| ctx.uses_template_parameter(id, *p))
+            .collect()
     }
 }
 
@@ -221,34 +224,33 @@ impl TemplateInstantiation {
     ) -> Option<TemplateInstantiation> {
         use clang_sys::*;
 
-        let template_args = ty.template_args()
-            .map_or(vec![], |args| {
-                match ty.canonical_type().template_args() {
-                    Some(canonical_args) => {
-                        let arg_count = args.len();
-                        args.chain(canonical_args.skip(arg_count))
-                            .filter(|t| t.kind() != CXType_Invalid)
-                            .map(|t| {
-                                Item::from_ty_or_ref(t, t.declaration(), None, ctx)
-                            }).collect()
-                    }
-                    None => {
-                        args.filter(|t| t.kind() != CXType_Invalid)
-                            .map(|t| {
-                                Item::from_ty_or_ref(t, t.declaration(), None, ctx)
-                            }).collect()
-                    }
-                }
-            });
+        let template_args = ty.template_args().map_or(vec![], |args| match ty
+            .canonical_type()
+            .template_args()
+        {
+            Some(canonical_args) => {
+                let arg_count = args.len();
+                args.chain(canonical_args.skip(arg_count))
+                    .filter(|t| t.kind() != CXType_Invalid)
+                    .map(|t| {
+                        Item::from_ty_or_ref(t, t.declaration(), None, ctx)
+                    })
+                    .collect()
+            }
+            None => args
+                .filter(|t| t.kind() != CXType_Invalid)
+                .map(|t| Item::from_ty_or_ref(t, t.declaration(), None, ctx))
+                .collect(),
+        });
 
         let declaration = ty.declaration();
-        let definition =
-            if declaration.kind() == CXCursor_TypeAliasTemplateDecl {
-                Some(declaration)
-            } else {
-                declaration.specialized().or_else(|| {
-                    let mut template_ref = None;
-                    ty.declaration().visit(|child| {
+        let definition = if declaration.kind() == CXCursor_TypeAliasTemplateDecl
+        {
+            Some(declaration)
+        } else {
+            declaration.specialized().or_else(|| {
+                let mut template_ref = None;
+                ty.declaration().visit(|child| {
                     if child.kind() == CXCursor_TemplateRef {
                         template_ref = Some(child);
                         return CXVisit_Break;
@@ -261,9 +263,9 @@ impl TemplateInstantiation {
                     CXChildVisit_Recurse
                 });
 
-                    template_ref.and_then(|cur| cur.referenced())
-                })
-            };
+                template_ref.and_then(|cur| cur.referenced())
+            })
+        };
 
         let definition = match definition {
             Some(def) => def,
@@ -271,7 +273,7 @@ impl TemplateInstantiation {
                 if !ty.declaration().is_builtin() {
                     warn!(
                         "Could not find template definition for template \
-                           instantiation"
+                         instantiation"
                     );
                 }
                 return None;
@@ -305,7 +307,8 @@ impl IsOpaque for TemplateInstantiation {
         // arguments properly.
 
         let mut path = item.canonical_path(ctx);
-        let args: Vec<_> = self.template_arguments()
+        let args: Vec<_> = self
+            .template_arguments()
             .iter()
             .map(|arg| {
                 let arg_path = arg.canonical_path(ctx);
@@ -330,7 +333,8 @@ impl Trace for TemplateInstantiation {
     where
         T: Tracer,
     {
-        tracer.visit_kind(self.definition.into(), EdgeKind::TemplateDeclaration);
+        tracer
+            .visit_kind(self.definition.into(), EdgeKind::TemplateDeclaration);
         for arg in self.template_arguments() {
             tracer.visit_kind(arg.into(), EdgeKind::TemplateArgument);
         }

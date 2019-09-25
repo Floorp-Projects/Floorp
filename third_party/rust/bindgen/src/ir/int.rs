@@ -101,9 +101,7 @@ impl IntKind {
 
             Char { is_signed } => is_signed,
 
-            Custom {
-                is_signed, ..
-            } => is_signed,
+            Custom { is_signed, .. } => is_signed,
         }
     }
 
@@ -113,14 +111,7 @@ impl IntKind {
     pub fn known_size(&self) -> Option<usize> {
         use self::IntKind::*;
         Some(match *self {
-            Bool |
-            UChar |
-            SChar |
-            U8 |
-            I8 |
-            Char {
-                ..
-            } => 1,
+            Bool | UChar | SChar | U8 | I8 | Char { .. } => 1,
             U16 | I16 => 2,
             U32 | I32 => 4,
             U64 | I64 => 8,
