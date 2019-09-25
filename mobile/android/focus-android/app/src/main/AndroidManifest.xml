@@ -112,6 +112,17 @@
 
         <activity android:name=".activity.EraseAndOpenShortcutActivity"
             android:theme="@android:style/Theme.Translucent" />
+
+        <provider
+            android:authorities="${applicationId}.fileprovider"
+            android:name="androidx.core.content.FileProvider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths"/>
+        </provider>
+
         <service
             android:name=".customtabs.CustomTabsService"
             android:exported="true"
