@@ -8,10 +8,6 @@ var gItemsToTest = {
     "devtools.chrome.enabled",
     "devtools.debugger.remote-enabled",
   ],
-  menu_devtools_connect: [
-    "devtools.connectpage.enabled",
-    "devtools.debugger.remote-enabled",
-  ],
 };
 
 function expectedAttributeValueFromPrefs(prefs) {

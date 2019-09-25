@@ -1935,9 +1935,6 @@ pref("identity.fxaccounts.service.monitorLoginUrl", "https://monitor.firefox.com
   pref("corroborator.enabled", true);
 #endif
 
-// Disable ConnectPage by default (Bug 1539451)
-pref("devtools.connectpage.enabled", false);
-
 // Toolbox preferences
 pref("devtools.toolbox.footer.height", 250);
 pref("devtools.toolbox.sidebar.width", 500);

@@ -182,14 +182,6 @@ exports.menuitems = [
     },
     keyId: "scratchpad",
   },
-  {
-    id: "menu_devtools_connect",
-    l10nKey: "devtoolsConnect",
-    oncommand(event) {
-      const window = event.target.ownerDocument.defaultView;
-      gDevToolsBrowser.openConnectScreen(window.gBrowser);
-    },
-  },
   { separator: true, id: "devToolsEndSeparator" },
   {
     id: "getMoreDevtools",
