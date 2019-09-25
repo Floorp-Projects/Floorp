@@ -203,6 +203,39 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CI_INTERFACE_GETTER(nsThread, nsIThread, nsIThreadInternal,
                             nsIEventTarget, nsISupportsPriority)
 
+//-----------------------------------------------------------------------------
+
+class nsThreadStartupEvent final : public Runnable {
+ public:
+  nsThreadStartupEvent()
+      : Runnable("nsThreadStartupEvent"),
+        mMon("nsThreadStartupEvent.mMon"),
+        mInitialized(false) {}
+
+  // This method does not return until the thread startup object is in the
+  // completion state.
+  void Wait() {
+    ReentrantMonitorAutoEnter mon(mMon);
+    while (!mInitialized) {
+      mon.Wait();
+    }
+  }
+
+ private:
+  ~nsThreadStartupEvent() = default;
+
+  NS_IMETHOD Run() override {
+    ReentrantMonitorAutoEnter mon(mMon);
+    mInitialized = true;
+    mon.Notify();
+    return NS_OK;
+  }
+
+  ReentrantMonitor mMon;
+  bool mInitialized;
+};
+//-----------------------------------------------------------------------------
+
 struct nsThreadShutdownContext {
   nsThreadShutdownContext(NotNull<nsThread*> aTerminatingThread,
                           NotNull<nsThread*> aJoiningThread,
@@ -325,7 +358,7 @@ namespace {
 
 struct ThreadInitData {
   nsThread* thread;
-  nsCString name;
+  const nsACString& name;
 };
 
 }  // namespace
@@ -378,16 +411,15 @@ void nsThread::MaybeRemoveFromThreadList() {
 void nsThread::ThreadFunc(void* aArg) {
   using mozilla::ipc::BackgroundChild;
 
-  UniquePtr<ThreadInitData> initData(static_cast<ThreadInitData*>(aArg));
+  ThreadInitData* initData = static_cast<ThreadInitData*>(aArg);
   nsThread* self = initData->thread;  // strong reference
 
   MOZ_ASSERT(self->mEventTarget);
   MOZ_ASSERT(self->mEvents);
 
-  // Note: see the comment in nsThread::Init, where we set these same values.
-  MOZ_ASSERT(!self->mThread || (self->mThread == PR_GetCurrentThread()));
   self->mThread = PR_GetCurrentThread();
-  self->mEventTarget->SetCurrentThread(self->mThread);
+  self->mVirtualThread = GetCurrentVirtualThread();
+  self->mEventTarget->SetCurrentThread();
   SetupCurrentThreadForChaosMode();
 
   if (!initData->name.IsEmpty()) {
@@ -407,6 +439,15 @@ void nsThread::ThreadFunc(void* aArg) {
   if (!initData->name.IsEmpty()) {
     PROFILER_REGISTER_THREAD(initData->name.BeginReading());
   }
+
+  // Wait for and process startup event
+  nsCOMPtr<nsIRunnable> event = self->mEvents->GetEvent(true, nullptr);
+  MOZ_ASSERT(event);
+
+  initData = nullptr;  // clear before unblocking nsThread::Init
+
+  event->Run();  // unblocks nsThread::Init
+  event = nullptr;
 
   {
     // Scope for MessageLoop.
@@ -449,9 +490,7 @@ void nsThread::ThreadFunc(void* aArg) {
   NotNull<nsThreadShutdownContext*> context =
       WrapNotNull(self->mShutdownContext);
   MOZ_ASSERT(context->mTerminatingThread == self);
-
-  nsCOMPtr<nsIRunnable> event =
-      do_QueryObject(new nsThreadShutdownAckEvent(context));
+  event = do_QueryObject(new nsThreadShutdownAckEvent(context));
   if (context->mIsMainThreadJoining) {
     SystemGroup::Dispatch(TaskCategory::Other, event.forget());
   } else {
@@ -555,6 +594,7 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
           new ThreadEventTarget(mEvents.get(), aMainThread == MAIN_THREAD)),
       mShutdownContext(nullptr),
       mScriptObserver(nullptr),
+      mThread(nullptr),
       mStackSize(aStackSize),
       mNestedEventLoopDepth(0),
       mCurrentEventLoopDepth(MaxValue<uint32_t>::value),
@@ -577,6 +617,7 @@ nsThread::nsThread()
       mEventTarget(nullptr),
       mShutdownContext(nullptr),
       mScriptObserver(nullptr),
+      mThread(nullptr),
       mStackSize(0),
       mNestedEventLoopDepth(0),
       mCurrentEventLoopDepth(MaxValue<uint32_t>::value),
@@ -617,36 +658,41 @@ nsThread::~nsThread() {
 nsresult nsThread::Init(const nsACString& aName) {
   MOZ_ASSERT(mEvents);
   MOZ_ASSERT(mEventTarget);
-  MOZ_ASSERT(!mThread);
+
+  // spawn thread and wait until it is fully setup
+  RefPtr<nsThreadStartupEvent> startup = new nsThreadStartupEvent();
 
   NS_ADDREF_THIS();
 
   mShutdownRequired = true;
 
-  ThreadInitData* initData = new ThreadInitData{this, nsCString(aName)};
+  ThreadInitData initData = {this, aName};
 
-  PRThread* thread = nullptr;
   // ThreadFunc is responsible for setting mThread
-  if (!(thread = PR_CreateThread(PR_USER_THREAD, ThreadFunc, initData,
-                                 PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
-                                 PR_JOINABLE_THREAD, mStackSize))) {
-    delete initData;
+  if (!PR_CreateThread(PR_USER_THREAD, ThreadFunc, &initData,
+                       PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD,
+                       mStackSize)) {
     NS_RELEASE_THIS();
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // Note: we set these both here and inside ThreadFunc, to what should be
-  // the same value. This is because calls within ThreadFunc need these values
-  // to be set, and our callers need these values to be set.
-  MOZ_ASSERT(!mThread || (mThread == thread));
-  mThread = thread;
-  mEventTarget->SetCurrentThread(thread);
+  // ThreadFunc will wait for this event to be run before it tries to access
+  // mThread.  By delaying insertion of this event into the queue, we ensure
+  // that mThread is set properly.
+  {
+    mEvents->PutEvent(do_AddRef(startup),
+                      EventQueuePriority::Normal);  // retain a reference
+  }
 
+  // Wait for thread to call ThreadManager::SetupCurrentThread, which completes
+  // initialization of ThreadFunc.
+  startup->Wait();
   return NS_OK;
 }
 
 nsresult nsThread::InitCurrentThread() {
   mThread = PR_GetCurrentThread();
+  mVirtualThread = GetCurrentVirtualThread();
   SetupCurrentThreadForChaosMode();
   InitCommon();
 
@@ -690,13 +736,13 @@ nsThread::IsOnCurrentThread(bool* aResult) {
   if (mEventTarget) {
     return mEventTarget->IsOnCurrentThread(aResult);
   }
-  *aResult = PR_GetCurrentThread() == mThread;
+  *aResult = GetCurrentVirtualThread() == mVirtualThread;
   return NS_OK;
 }
 
 NS_IMETHODIMP_(bool)
 nsThread::IsOnCurrentThreadInfallible() {
-  // Rely on mThread being correct.
+  // Rely on mVirtualThread being correct.
   MOZ_CRASH("IsOnCurrentThreadInfallible should never be called on nsIThread");
 }
 
@@ -813,6 +859,7 @@ void nsThread::ShutdownComplete(NotNull<nsThreadShutdownContext*> aContext) {
   // Now, it should be safe to join without fear of dead-locking.
 
   PR_JoinThread(mThread);
+  mThread = nullptr;
 
 #ifdef DEBUG
   nsCOMPtr<nsIThreadObserver> obs = mEvents->GetObserver();

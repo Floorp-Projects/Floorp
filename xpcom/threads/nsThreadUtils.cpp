@@ -601,8 +601,8 @@ size_t GetNumberOfProcessors() {
 }  // namespace mozilla
 
 bool nsIEventTarget::IsOnCurrentThread() {
-  if (mThread) {
-    return mThread == PR_GetCurrentThread();
+  if (mVirtualThread) {
+    return mVirtualThread == GetCurrentVirtualThread();
   }
   return IsOnCurrentThreadInfallible();
 }
