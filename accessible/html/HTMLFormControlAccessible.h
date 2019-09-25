@@ -106,9 +106,9 @@ class HTMLTextFieldAccessible final : public HyperTextAccessibleWrap {
     if (el) {
       return el;
     }
-    // XUL textboxes custom elements implementation.
+    // XUL search-textbox custom element
     ErrorResult rv;
-    return Elm()->Closest(NS_LITERAL_STRING("textbox"), rv);
+    return Elm()->Closest(NS_LITERAL_STRING("search-textbox"), rv);
   }
 };
 

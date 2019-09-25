@@ -31,7 +31,7 @@
 <hbox context="outer-context-menu">
 <html:textarea />
 <html:input />
-<textbox is="search-textbox"/>
+<search-textbox />
 </hbox>
 
 </window>

@@ -331,13 +331,11 @@
 
       <spacer id="libraryToolbarSpacer" flex="1"/>
 
-      <textbox id="searchFilter"
-               flex="1"
-               is="search-textbox"
-               aria-controls="placeContent"
-               oncommand="PlacesSearchBox.search(this.value);"
-               collection="bookmarks">
-      </textbox>
+      <search-textbox id="searchFilter"
+                      flex="1"
+                      aria-controls="placeContent"
+                      oncommand="PlacesSearchBox.search(this.value);"
+                      collection="bookmarks"/>
       <toolbarbutton id="clearDownloadsButton"
                      class="tabbable"
                      insertbefore="libraryToolbarSpacer"
