@@ -377,6 +377,13 @@ function denyRequestNoPermission(aBrowser, aRequest) {
 // the permission state has not yet been determined.
 //
 async function checkOSPermission(camNeeded, micNeeded) {
+  // Don't trigger OS permission requests for fake devices. Fake devices don't
+  // require OS permission and the dialogs are problematic in automated testing
+  // (where fake devices are used) because they require user interaction.
+  if (Services.prefs.getBoolPref("media.navigator.streams.fake", false)) {
+    return true;
+  }
+
   let camStatus = {},
     micStatus = {};
   OSPermissions.getMediaCapturePermissionState(camStatus, micStatus);
