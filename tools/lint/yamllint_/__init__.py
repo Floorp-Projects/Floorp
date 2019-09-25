@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function
+
 import re
 import os
 import signal
@@ -12,6 +14,8 @@ from mozfile import which
 from mozlint import result
 from mozlint.pathutils import get_ancestors_by_name
 from mozprocess import ProcessHandlerMixin
+from six import string_types
+
 
 here = os.path.abspath(os.path.dirname(__file__))
 YAMLLINT_REQUIREMENTS_PATH = os.path.join(here, 'yamllint_requirements.txt')
@@ -109,7 +113,7 @@ def run_process(config, cmd):
 
 def gen_yamllint_args(cmdargs, paths=None, conf_file=None):
     args = cmdargs[:]
-    if isinstance(paths, str):
+    if isinstance(paths, string_types):
         paths = [paths]
     if conf_file and conf_file != 'default':
         return args + ['-c', conf_file] + paths

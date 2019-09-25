@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, unicode_literals
+
 import os
 import re
 import sys
@@ -10,6 +12,7 @@ from abc import ABCMeta, abstractmethod
 from mozlog import get_default_logger, commandline, structuredlog
 from mozlog.reader import LogHandler
 from mozpack.files import FileFinder
+from six import PY2
 
 from . import result
 from .pathutils import expand_exclusions, filterpaths, findobject
@@ -101,7 +104,8 @@ class LineType(BaseType):
             return self._lint_dir(path, config, **lintargs)
 
         payload = config['payload']
-        with open(path, 'r', errors='replace') as fh:
+        kwargs = {} if PY2 else {'errors': 'replace'}
+        with open(path, 'r', **kwargs) as fh:
             lines = fh.readlines()
 
         errors = []
