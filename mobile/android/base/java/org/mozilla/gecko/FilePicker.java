@@ -38,7 +38,7 @@ public class FilePicker implements BundleEventListener {
     private final Context context;
 
     public interface ResultHandler {
-        void gotFiles(List<String> filenames);
+        void gotFile(String filename);
     }
 
     public static void init(Context context) {
@@ -94,8 +94,8 @@ public class FilePicker implements BundleEventListener {
                         Toast.makeText(context, context.getString(R.string.filepicker_permission_denied), Toast.LENGTH_LONG).show();
                         showFilePickerAsync(title, "*/*", new String[0], isModeOpenMultiple, new ResultHandler() {
                             @Override
-                            public void gotFiles(final List<String> filenames) {
-                                callback.sendSuccess(filenames.toArray(new String[filenames.size()]));
+                            public void gotFile(final String filename) {
+                                callback.sendSuccess(filename);
                             }
                         }, tabId);
                     }
@@ -105,8 +105,8 @@ public class FilePicker implements BundleEventListener {
                     public void run() {
                         showFilePickerAsync(title, finalMimeType, requiredPermission, isModeOpenMultiple, new ResultHandler() {
                             @Override
-                            public void gotFiles(final List<String> filenames) {
-                                callback.sendSuccess(filenames.toArray(new String[filenames.size()]));
+                            public void gotFile(final String filename) {
+                                callback.sendSuccess(filename);
                             }
                         }, tabId);
                     }
@@ -290,7 +290,7 @@ public class FilePicker implements BundleEventListener {
                 GeckoActivityMonitor.getInstance().getCurrentActivity();
 
         if (intent == null || currentActivity == null) {
-            handler.gotFiles(new ArrayList<String>());
+            handler.gotFile("");
             return;
         }
 

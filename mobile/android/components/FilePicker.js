@@ -22,15 +22,15 @@ FilePicker.prototype = {
   _extensionsFilter: "",
   _defaultString: "",
   _domWin: null,
+  _domFile: null,
   _defaultExtension: null,
   _displayDirectory: null,
   _displaySpecialDirectory: null,
-  _filePaths: [],
+  _filePath: null,
   _promptActive: false,
   _filterIndex: 0,
   _addToRecentDocs: false,
   _title: "",
-  _domFiles: [],
 
   init: function(aParent, aTitle, aMode) {
     this._domWin = aParent;
@@ -137,9 +137,11 @@ FilePicker.prototype = {
   },
 
   get file() {
-    return this._filePaths.length
-      ? new FileUtils.File(this._filePaths[0])
-      : null;
+    if (!this._filePath) {
+      return null;
+    }
+
+    return new FileUtils.File(this._filePath);
   },
 
   get fileURL() {
@@ -148,20 +150,16 @@ FilePicker.prototype = {
   },
 
   get files() {
-    let files = [];
-    for (var i in this._filePaths) {
-      files.push(new FileUtils.File(this._filePaths[i]));
-    }
-    return files.values();
+    return [this.file].values();
   },
 
   // We don't support directory selection yet.
   get domFileOrDirectory() {
-    return this._domFiles.length ? this._domFiles[0] : null;
+    return this._domFile;
   },
 
   get domFileOrDirectoryEnumerator() {
-    return this._domFiles.values();
+    return [this._domFile].values();
   },
 
   get addToRecentDocs() {
@@ -195,7 +193,7 @@ FilePicker.prototype = {
       this.fireDialogEvent(this._domWin, "DOMModalDialogClosed");
     }
 
-    if (this._filePaths.length) {
+    if (this._filePath) {
       return Ci.nsIFilePicker.returnOK;
     }
 
@@ -238,49 +236,40 @@ FilePicker.prototype = {
       msg.modeOpenAttribute = this._mode;
     }
 
-    EventDispatcher.instance.sendRequestForResult(msg).then(files => {
-      this._filePaths = files || [];
-      this._promptActive = false;
+    EventDispatcher.instance
+      .sendRequestForResult(msg)
+      .then(file => {
+        this._filePath = file || null;
+        this._promptActive = false;
 
-      var result = [];
-      for (var i in this._filePaths) {
-        if (this._filePaths[i]) {
-          if (this._domWin) {
-            result.push(
-              this._domWin.File.createFromNsIFile(
-                new FileUtils.File(this._filePaths[i]),
-                { existenceCheck: false }
-              )
-            );
-          } else {
-            result.push(
-              File.createFromNsIFile(new FileUtils.File(this._filePaths[i]), {
-                existenceCheck: false,
-              })
-            );
-          }
+        if (!file) {
+          return;
         }
-      }
 
-      //return result;
-      Promise.all(result)
-        .then(
-          domFiles => {
-            this._domFiles = domFiles;
-          },
-          () => {}
-        )
-        .then(() => {
-          if (this._callback) {
-            this._callback.done(
-              this._filePaths.length
-                ? Ci.nsIFilePicker.returnOK
-                : Ci.nsIFilePicker.returnCancel
-            );
-          }
-          delete this._callback;
-        });
-    });
+        if (this._domWin) {
+          return this._domWin.File.createFromNsIFile(this.file, {
+            existenceCheck: false,
+          });
+        }
+
+        return File.createFromNsIFile(this.file, { existenceCheck: false });
+      })
+      .then(
+        domFile => {
+          this._domFile = domFile;
+        },
+        () => {}
+      )
+      .then(() => {
+        if (this._callback) {
+          this._callback.done(
+            this._filePath
+              ? Ci.nsIFilePicker.returnOK
+              : Ci.nsIFilePicker.returnCancel
+          );
+        }
+        delete this._callback;
+      });
   },
 
   fireDialogEvent: function(aDomWin, aEventName) {
