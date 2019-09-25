@@ -10,7 +10,7 @@ import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
-import mozilla.components.browser.menu.item.BrowserMenuSwitch
+import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -134,7 +134,8 @@ class DefaultToolbarMenu(
                 onItemTapped.invoke(ToolbarMenu.Item.Library)
             },
 
-            BrowserMenuSwitch(
+            BrowserMenuImageSwitch(
+                R.drawable.ic_desktop,
                 context.getString(R.string.browser_menu_desktop_site),
                 requestDesktopStateProvider
             ) { checked ->
