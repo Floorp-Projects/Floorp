@@ -5,11 +5,11 @@
 package org.mozilla.fenix.trackingprotection
 
 import io.mockk.mockk
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotSame
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
-import mozilla.components.concept.engine.content.blocking.Tracker
+import mozilla.components.concept.engine.content.blocking.TrackerLog
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotSame
 import org.junit.Test
 
 class TrackingProtectionStoreTest {
@@ -69,27 +69,13 @@ class TrackingProtectionStoreTest {
     fun trackerListChanged() = runBlocking {
         val initialState = defaultState()
         val store = TrackingProtectionStore(initialState)
-        val tracker = Tracker("url", listOf())
+        val tracker = TrackerLog("url", listOf())
 
-        store.dispatch(TrackingProtectionAction.TrackerListChange(listOf(tracker))).join()
+        store.dispatch(TrackingProtectionAction.TrackerLogChange(listOf(tracker))).join()
         assertNotSame(initialState, store.state)
         assertEquals(
             listOf(tracker),
             store.state.listTrackers
-        )
-    }
-
-    @Test
-    fun trackerLoadedListChanged() = runBlocking {
-        val initialState = defaultState()
-        val store = TrackingProtectionStore(initialState)
-        val tracker = Tracker("url", listOf())
-
-        store.dispatch(TrackingProtectionAction.TrackerLoadedListChange(listOf(tracker))).join()
-        assertNotSame(initialState, store.state)
-        assertEquals(
-            listOf(tracker),
-            store.state.listTrackersLoaded
         )
     }
 
@@ -110,14 +96,13 @@ class TrackingProtectionStoreTest {
     fun onChange() = runBlocking {
         val initialState = defaultState()
         val store = TrackingProtectionStore(initialState)
-        val tracker = Tracker("url", listOf())
+        val tracker = TrackerLog("url", listOf(), listOf(), cookiesHasBeenBlocked = false)
 
         store.dispatch(
             TrackingProtectionAction.Change(
                 "newURL",
                 false,
                 listOf(tracker),
-                listOf(),
                 TrackingProtectionState.Mode.Details(
                     TrackingProtectionCategory.FINGERPRINTERS,
                     true
@@ -134,10 +119,6 @@ class TrackingProtectionStoreTest {
             store.state.isTrackingProtectionEnabled
         )
         assertEquals(
-            listOf<Tracker>(),
-            store.state.listTrackersLoaded
-        )
-        assertEquals(
             listOf(tracker),
             store.state.listTrackers
         )
@@ -152,7 +133,6 @@ class TrackingProtectionStoreTest {
         url = "www.mozilla.org",
         isTrackingProtectionEnabled = true,
         listTrackers = listOf(),
-        listTrackersLoaded = listOf(),
         mode = TrackingProtectionState.Mode.Normal
     )
 
@@ -161,7 +141,6 @@ class TrackingProtectionStoreTest {
         url = "www.mozilla.org",
         isTrackingProtectionEnabled = true,
         listTrackers = listOf(),
-        listTrackersLoaded = listOf(),
         mode = TrackingProtectionState.Mode.Details(TrackingProtectionCategory.CRYPTOMINERS, true)
     )
 }

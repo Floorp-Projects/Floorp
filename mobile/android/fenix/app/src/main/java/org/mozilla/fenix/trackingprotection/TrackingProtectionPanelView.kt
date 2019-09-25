@@ -68,7 +68,6 @@ class TrackingProtectionPanelView(
     private var mode: TrackingProtectionState.Mode = TrackingProtectionState.Mode.Normal
 
     private var bucketedTrackers = TrackerBuckets()
-    private var bucketedLoadedTrackers = TrackerBuckets()
 
     fun update(state: TrackingProtectionState) {
         if (state.mode != mode) {
@@ -76,7 +75,6 @@ class TrackingProtectionPanelView(
         }
 
         bucketedTrackers.updateIfNeeded(state.listTrackers)
-        bucketedLoadedTrackers.updateIfNeeded(state.listTrackersLoaded)
 
         when (val mode = state.mode) {
             is TrackingProtectionState.Mode.Normal -> setUIForNormalMode(state)
@@ -92,32 +90,31 @@ class TrackingProtectionPanelView(
         normal_mode.visibility = View.VISIBLE
         protection_settings.isGone = state.session?.customTabConfig != null
 
-        not_blocking_header.isGone = bucketedLoadedTrackers.isEmpty()
+        not_blocking_header.isGone = bucketedTrackers.loadedIsEmpty()
         bindUrl(state.url)
         bindTrackingProtectionInfo(state.isTrackingProtectionEnabled)
         protection_settings.setOnClickListener {
             interactor.selectTrackingProtectionSettings()
         }
 
-        blocking_header.isGone = bucketedTrackers.isEmpty()
+        blocking_header.isGone = bucketedTrackers.blockedIsEmpty()
         updateCategoryVisibility()
         setCategoryClickListeners()
     }
 
     private fun updateCategoryVisibility() {
-        cross_site_tracking.isGone = bucketedTrackers[CROSS_SITE_TRACKING_COOKIES].isEmpty()
-        social_media_trackers.isGone = bucketedTrackers[SOCIAL_MEDIA_TRACKERS].isEmpty()
-        fingerprinters.isGone = bucketedTrackers[FINGERPRINTERS].isEmpty()
-        tracking_content.isGone = bucketedTrackers[TRACKING_CONTENT].isEmpty()
-        cryptominers.isGone = bucketedTrackers[CRYPTOMINERS].isEmpty()
+        cross_site_tracking.isGone =
+            bucketedTrackers.get(CROSS_SITE_TRACKING_COOKIES, true).isEmpty()
+        social_media_trackers.isGone = bucketedTrackers.get(SOCIAL_MEDIA_TRACKERS, true).isEmpty()
+        fingerprinters.isGone = bucketedTrackers.get(FINGERPRINTERS, true).isEmpty()
+        tracking_content.isGone = bucketedTrackers.get(TRACKING_CONTENT, true).isEmpty()
+        cryptominers.isGone = bucketedTrackers.get(CRYPTOMINERS, true).isEmpty()
 
-        cross_site_tracking_loaded.isGone =
-            bucketedLoadedTrackers[CROSS_SITE_TRACKING_COOKIES].isEmpty()
         social_media_trackers_loaded.isGone =
-            bucketedLoadedTrackers[SOCIAL_MEDIA_TRACKERS].isEmpty()
-        fingerprinters_loaded.isGone = bucketedLoadedTrackers[FINGERPRINTERS].isEmpty()
-        tracking_content_loaded.isGone = bucketedLoadedTrackers[TRACKING_CONTENT].isEmpty()
-        cryptominers_loaded.isGone = bucketedLoadedTrackers[CRYPTOMINERS].isEmpty()
+            bucketedTrackers.get(SOCIAL_MEDIA_TRACKERS, false).isEmpty()
+        fingerprinters_loaded.isGone = bucketedTrackers.get(FINGERPRINTERS, false).isEmpty()
+        tracking_content_loaded.isGone = bucketedTrackers.get(TRACKING_CONTENT, false).isEmpty()
+        cryptominers_loaded.isGone = bucketedTrackers.get(CRYPTOMINERS, false).isEmpty()
     }
 
     private fun setCategoryClickListeners() {
@@ -128,7 +125,6 @@ class TrackingProtectionPanelView(
         cryptominers.setOnClickListener(this)
         social_media_trackers_loaded.setOnClickListener(this)
         fingerprinters_loaded.setOnClickListener(this)
-        cross_site_tracking_loaded.setOnClickListener(this)
         tracking_content_loaded.setOnClickListener(this)
         cryptominers_loaded.setOnClickListener(this)
     }
@@ -148,7 +144,7 @@ class TrackingProtectionPanelView(
         normal_mode.visibility = View.GONE
         details_mode.visibility = View.VISIBLE
         category_title.text = context.getString(category.title)
-        blocking_text_list.text = bucketedTrackers[category].joinToString("\n")
+        blocking_text_list.text = bucketedTrackers.get(category, categoryBlocked).joinToString("\n")
         category_description.text = context.getString(category.description)
         details_blocking_header.text = context.getString(
             if (categoryBlocked) {
@@ -195,7 +191,7 @@ class TrackingProtectionPanelView(
         private fun getCategory(v: View) = when (v.id) {
             R.id.social_media_trackers, R.id.social_media_trackers_loaded -> SOCIAL_MEDIA_TRACKERS
             R.id.fingerprinters, R.id.fingerprinters_loaded -> FINGERPRINTERS
-            R.id.cross_site_tracking, R.id.cross_site_tracking_loaded -> CROSS_SITE_TRACKING_COOKIES
+            R.id.cross_site_tracking -> CROSS_SITE_TRACKING_COOKIES
             R.id.tracking_content, R.id.tracking_content_loaded -> TRACKING_CONTENT
             R.id.cryptominers, R.id.cryptominers_loaded -> CRYPTOMINERS
             else -> null
@@ -207,7 +203,6 @@ class TrackingProtectionPanelView(
         private fun isLoaded(v: View) = when (v.id) {
             R.id.social_media_trackers_loaded,
             R.id.fingerprinters_loaded,
-            R.id.cross_site_tracking_loaded,
             R.id.tracking_content_loaded,
             R.id.cryptominers_loaded -> true
 

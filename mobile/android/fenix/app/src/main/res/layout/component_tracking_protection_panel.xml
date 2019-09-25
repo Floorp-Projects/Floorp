@@ -112,16 +112,6 @@
             app:layout_constraintTop_toBottomOf="@id/tracking_content" />
 
         <TextView
-            android:id="@+id/cross_site_tracking_loaded"
-            style="@style/QuickSettingsText.Icon"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/tracking_protection_item_height"
-            android:drawableStart="@drawable/ic_cookies"
-            android:text="@string/etp_cookies_title"
-            android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@id/not_blocking_header" />
-
-        <TextView
             android:id="@+id/fingerprinters_loaded"
             style="@style/QuickSettingsText.Icon"
             android:layout_width="match_parent"
@@ -129,7 +119,7 @@
             android:drawableStart="@drawable/ic_fingerprinters"
             android:text="@string/etp_fingerprinters_title"
             android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@id/cross_site_tracking_loaded" />
+            app:layout_constraintTop_toBottomOf="@id/not_blocking_header" />
 
         <TextView
             android:id="@+id/cryptominers_loaded"

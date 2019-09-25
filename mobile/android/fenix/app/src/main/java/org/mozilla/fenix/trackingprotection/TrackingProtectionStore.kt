@@ -5,7 +5,7 @@
 package org.mozilla.fenix.trackingprotection
 
 import mozilla.components.browser.session.Session
-import mozilla.components.concept.engine.content.blocking.Tracker
+import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
@@ -27,16 +27,12 @@ sealed class TrackingProtectionAction : Action {
     data class Change(
         val url: String,
         val isTrackingProtectionEnabled: Boolean,
-        val listTrackers: List<Tracker>,
-        val listTrackersLoaded: List<Tracker>,
+        val listTrackers: List<TrackerLog>,
         val mode: TrackingProtectionState.Mode
     ) : TrackingProtectionAction()
 
     data class UrlChange(val url: String) : TrackingProtectionAction()
-    data class TrackerListChange(val listTrackers: List<Tracker>) : TrackingProtectionAction()
-    data class TrackerLoadedListChange(val listTrackersLoaded: List<Tracker>) :
-        TrackingProtectionAction()
-
+    data class TrackerLogChange(val listTrackers: List<TrackerLog>) : TrackingProtectionAction()
     data class TrackerBlockingChanged(val isTrackingProtectionEnabled: Boolean) :
         TrackingProtectionAction()
 
@@ -52,16 +48,14 @@ sealed class TrackingProtectionAction : Action {
  * The state for the Tracking Protection Panel
  * @property url Current URL to display
  * @property isTrackingProtectionEnabled Current status of tracking protection for this session (ie is an exception)
- * @property listTrackers List of currently blocked Trackers
- * @property listTrackersLoaded List of currently not blocked Trackers
+ * @property listTrackers Current Tracker Log list of blocked and loaded tracker categories
  * @property mode Current Mode of TrackingProtection
  */
 data class TrackingProtectionState(
     val session: Session?,
     val url: String,
     val isTrackingProtectionEnabled: Boolean,
-    val listTrackers: List<Tracker>,
-    val listTrackersLoaded: List<Tracker>,
+    val listTrackers: List<TrackerLog>,
     val mode: Mode
 ) : State {
     sealed class Mode {
@@ -110,12 +104,7 @@ fun trackingProtectionStateReducer(
         is TrackingProtectionAction.UrlChange -> state.copy(
             url = action.url
         )
-        is TrackingProtectionAction.TrackerListChange -> state.copy(
-            listTrackers = action.listTrackers
-        )
-        is TrackingProtectionAction.TrackerLoadedListChange -> state.copy(
-            listTrackersLoaded = action.listTrackersLoaded
-        )
+        is TrackingProtectionAction.TrackerLogChange -> state.copy(listTrackers = action.listTrackers)
         TrackingProtectionAction.ExitDetailsMode -> state.copy(
             mode = TrackingProtectionState.Mode.Normal
         )

@@ -24,8 +24,10 @@ import kotlinx.android.synthetic.main.fragment_tracking_protection.view.*
 import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.content.blocking.Tracker
+import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.lib.state.ext.observe
 import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
@@ -92,8 +94,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), BackHan
                     session,
                     url,
                     trackingProtectionEnabled,
-                    session?.trackersBlocked ?: listOf(),
-                    session?.trackersLoaded ?: listOf(),
+                    listOf(),
                     TrackingProtectionState.Mode.Normal
                 )
             )
@@ -105,6 +106,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), BackHan
         )
         trackingProtectionView =
             TrackingProtectionPanelView(view.fragment_tp, trackingProtectionInteractor)
+        updateTrackers()
         return view
     }
 
@@ -116,20 +118,33 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), BackHan
         }
 
         override fun onTrackerBlocked(session: Session, tracker: Tracker, all: List<Tracker>) {
-            trackingProtectionStore.dispatch(
-                TrackingProtectionAction.TrackerListChange(all)
-            )
-            trackingProtectionStore.dispatch(
-                TrackingProtectionAction.TrackerLoadedListChange(session.trackersLoaded)
-            )
+            updateTrackers()
         }
 
         override fun onTrackerLoaded(session: Session, tracker: Tracker, all: List<Tracker>) {
-            trackingProtectionStore.dispatch(
-                TrackingProtectionAction.TrackerListChange(session.trackersBlocked)
+            updateTrackers()
+        }
+    }
+
+    private fun updateTrackers() {
+        context?.let { context ->
+            val session =
+                context.components.core.sessionManager.findSessionById(sessionId) ?: return
+            val useCase = TrackingProtectionUseCases(
+                sessionManager = context.components.core.sessionManager,
+                engine = context.components.core.engine
             )
-            trackingProtectionStore.dispatch(
-                TrackingProtectionAction.TrackerLoadedListChange(all)
+
+            useCase.fetchTrackingLogs(
+                session,
+                onSuccess = {
+                    trackingProtectionStore.dispatch(
+                        TrackingProtectionAction.TrackerLogChange(it)
+                    )
+                },
+                onError = {
+                    Logger.error("TrackingProtectionUseCases - fetchTrackingLogs onError", it)
+                }
             )
         }
     }
