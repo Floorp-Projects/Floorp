@@ -41,6 +41,12 @@ enum class ResizeReflowOptions : uint32_t {
   // additional reflow to zoom the content by the initial-scale or auto scaling
   // and we don't want any resize events during the initial paint.
   SuppressResizeEvent = 1 << 1,
+  // Invalidate layout, but don't reflow.
+  //
+  // TODO(emilio): Ideally this should just become the default, or we should
+  // unconditionally not reflow and rely on the caller to do so, having a
+  // separate API for shrink-to-fit.
+  SuppressReflow = 1 << 2,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ResizeReflowOptions)

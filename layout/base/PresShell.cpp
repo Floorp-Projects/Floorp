@@ -1838,7 +1838,6 @@ void PresShell::sPaintSuppressionCallback(nsITimer* aTimer, void* aPresShell) {
 }
 
 nsresult PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight,
-                                 nscoord aOldWidth, nscoord aOldHeight,
                                  ResizeReflowOptions aOptions) {
   if (mZoomConstraintsClient) {
     // If we have a ZoomConstraintsClient and the available screen area
@@ -1856,14 +1855,14 @@ nsresult PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight,
     return NS_OK;
   }
 
-  return ResizeReflowIgnoreOverride(aWidth, aHeight, aOldWidth, aOldHeight,
-                                    aOptions);
+  return ResizeReflowIgnoreOverride(aWidth, aHeight, aOptions);
 }
 
 void PresShell::SimpleResizeReflow(nscoord aWidth, nscoord aHeight,
-                                   nscoord aOldWidth, nscoord aOldHeight) {
+                                   ResizeReflowOptions aOptions) {
   MOZ_ASSERT(aWidth != NS_UNCONSTRAINEDSIZE);
   MOZ_ASSERT(aHeight != NS_UNCONSTRAINEDSIZE);
+  nsSize oldSize = mPresContext->GetVisibleArea().Size();
   mPresContext->SetVisibleArea(nsRect(0, 0, aWidth, aHeight));
   nsIFrame* rootFrame = GetRootFrame();
   if (!rootFrame) {
@@ -1871,7 +1870,7 @@ void PresShell::SimpleResizeReflow(nscoord aWidth, nscoord aHeight,
   }
   WritingMode wm = rootFrame->GetWritingMode();
   bool isBSizeChanging =
-      wm.IsVertical() ? aOldWidth != aWidth : aOldHeight != aHeight;
+      wm.IsVertical() ? oldSize.width != aWidth : oldSize.height != aHeight;
   if (isBSizeChanging) {
     nsLayoutUtils::MarkIntrinsicISizesDirtyIfDependentOnBSize(rootFrame);
   }
@@ -1880,18 +1879,18 @@ void PresShell::SimpleResizeReflow(nscoord aWidth, nscoord aHeight,
 
   // For compat with the old code path which always reflowed as long as there
   // was a root frame.
-  if (!mPresContext->SuppressingResizeReflow()) {
+  bool suppressReflow = (aOptions & ResizeReflowOptions::SuppressReflow) ||
+                        mPresContext->SuppressingResizeReflow();
+  if (!suppressReflow) {
     mDocument->FlushPendingNotifications(FlushType::InterruptibleLayout);
   }
 }
 
 nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
-                                               nscoord aOldWidth,
-                                               nscoord aOldHeight,
                                                ResizeReflowOptions aOptions) {
   MOZ_ASSERT(!mIsReflowing, "Shouldn't be in reflow here!");
-
-  if (aWidth == aOldWidth && aHeight == aOldHeight) {
+  nsSize oldSize = mPresContext->GetVisibleArea().Size();
+  if (oldSize == nsSize(aWidth, aHeight)) {
     return NS_OK;
   }
 
@@ -1911,12 +1910,13 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
   };
 
   if (!(aOptions & ResizeReflowOptions::BSizeLimit)) {
-    SimpleResizeReflow(aWidth, aHeight, aOldWidth, aOldHeight);
+    SimpleResizeReflow(aWidth, aHeight, aOptions);
     postResizeEventIfNeeded();
     return NS_OK;
   }
 
-  MOZ_ASSERT(!mPresContext->SuppressingResizeReflow(),
+  MOZ_ASSERT(!mPresContext->SuppressingResizeReflow() &&
+             !(aOptions & ResizeReflowOptions::SuppressReflow),
              "Can't suppress resize reflow and shrink-wrap at the same time");
 
   // Make sure that style is flushed before setting the pres context

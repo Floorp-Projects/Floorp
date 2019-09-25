@@ -589,15 +589,13 @@ void MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution) {
     UpdateDisplayPortMargins();
   }
 
-  CSSSize oldSize = mMobileViewportSize;
-
   // Update internal state.
   mMobileViewportSize = viewport;
 
   RefPtr<MobileViewportManager> strongThis(this);
 
   // Kick off a reflow.
-  mContext->Reflow(viewport, oldSize,
+  mContext->Reflow(viewport,
                    mIsFirstPaint ? MVMContext::ResizeEventFlag::Suppress
                                  : MVMContext::ResizeEventFlag::IfNecessary);
 

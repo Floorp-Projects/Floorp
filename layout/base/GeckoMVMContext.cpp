@@ -176,7 +176,7 @@ void GeckoMVMContext::UpdateDisplayPortMargins() {
   }
 }
 
-void GeckoMVMContext::Reflow(const CSSSize& aNewSize, const CSSSize& aOldSize,
+void GeckoMVMContext::Reflow(const CSSSize& aNewSize,
                              ResizeEventFlag aResizeEventFlag) {
   MOZ_ASSERT(mPresShell);
 
@@ -189,8 +189,7 @@ void GeckoMVMContext::Reflow(const CSSSize& aNewSize, const CSSSize& aOldSize,
   presShell->ResizeReflowIgnoreOverride(
       nsPresContext::CSSPixelsToAppUnits(aNewSize.width),
       nsPresContext::CSSPixelsToAppUnits(aNewSize.height),
-      nsPresContext::CSSPixelsToAppUnits(aOldSize.width),
-      nsPresContext::CSSPixelsToAppUnits(aOldSize.height), reflowOptions);
+      reflowOptions);
 }
 
 }  // namespace mozilla
