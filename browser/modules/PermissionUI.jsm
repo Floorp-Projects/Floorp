@@ -818,9 +818,15 @@ GeolocationPermissionPrompt.prototype = {
       return;
     }
     gBrowser.updateBrowserSharing(this.browser, { geo: state });
+
+    let devicePermOrigins = this.browser.getDevicePermissionOrigins("geo");
     if (!state) {
+      devicePermOrigins.delete(this.principal.origin);
       return;
     }
+    devicePermOrigins.add(this.principal.origin);
+
+    // Update last access timestamp
     let host;
     try {
       host = this.browser.currentURI.host;
