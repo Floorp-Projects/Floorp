@@ -296,9 +296,6 @@ class MachCommands(MachCommandBase):
         wpt_setup._mach_context = self._mach_context
         wpt_runner = WebPlatformTestsRunner(wpt_setup)
 
-        if params["log_mach_screenshot"] is None:
-            params["log_mach_screenshot"] = True
-
         logger = wpt_runner.setup_logging(**params)
 
         if conditions.is_android(self) and params["product"] != "firefox_android":

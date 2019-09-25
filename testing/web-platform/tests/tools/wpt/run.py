@@ -627,7 +627,7 @@ product_setup = {
 }
 
 
-def setup_logging(kwargs, default_config=None):
+def setup_logging(kwargs, default_config=None, formatter_defaults=None):
     import mozlog
     from wptrunner import wptrunner
 
@@ -640,7 +640,7 @@ def setup_logging(kwargs, default_config=None):
         else:
             default_formatter = "mach"
         default_config = {default_formatter: sys.stdout}
-    wptrunner.setup_logging(kwargs, default_config)
+    wptrunner.setup_logging(kwargs, default_config, formatter_defaults=formatter_defaults)
     logger = wptrunner.logger
     return logger
 
