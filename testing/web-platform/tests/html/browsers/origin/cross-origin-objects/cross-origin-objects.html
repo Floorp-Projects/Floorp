@@ -159,6 +159,7 @@ addTest(function(win) {
 var whitelistedSymbols = [Symbol.toStringTag, Symbol.hasInstance,
                           Symbol.isConcatSpreadable];
 var windowWhitelists = {
+  namedFrames: ['donotleakme'],
   indices: ['0', '1'],
   getters: ['location', 'window', 'frames', 'self', 'top', 'parent',
             'opener', 'closed', 'length'],
@@ -225,6 +226,11 @@ addTest(function(win) {
     }
     if (prop != 'location')
       assert_throws("SecurityError", function() { win[prop] = undefined; }, "Should throw when writing to " + prop + " on Window");
+  }
+  for (var prop of windowWhitelists.namedFrames) {
+    win[prop]; // Shouldn't throw.
+    Object.getOwnPropertyDescriptor(win, prop); // Shouldn't throw.
+    assert_true(Object.prototype.hasOwnProperty.call(win, prop), "hasOwnProperty for " + String(prop));
   }
   for (var prop in location) {
     if (prop == 'replace') {
