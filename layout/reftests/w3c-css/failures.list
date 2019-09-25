@@ -157,18 +157,6 @@ random css-writing-modes/line-box-direction-srl-055.xht
 random css-writing-modes/line-box-direction-vlr-016.xht
 random css-writing-modes/line-box-direction-vrl-015.xht
 
-# Bug 1220352
-fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/line-box-height-vlr-003.xht
-fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/line-box-height-vlr-005.xht
-fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/line-box-height-vlr-011.xht
-fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/line-box-height-vlr-013.xht
-fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/line-box-height-vlr-021.xht
-fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/line-box-height-vlr-023.xht
-fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/line-box-height-vrl-002.xht
-fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/line-box-height-vrl-004.xht
-fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/line-box-height-vrl-010.xht
-fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/line-box-height-vrl-012.xht
-
 # Bug 1258635 - text-combine-upright: digits
 skip css-writing-modes/full-width-003.html
 skip css-writing-modes/text-combine-upright-value-digits?-001.html

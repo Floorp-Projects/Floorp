@@ -841,20 +841,20 @@ fuzzy-if(OSX||winWidget,0-213,0-1540) random-if(/^Windows\x20NT\x206\.1/.test(ht
 random == css-writing-modes/line-box-direction-vrl-015.xht css-writing-modes/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,0-213,0-1540) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/line-box-direction-vrl-017.xht css-writing-modes/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,0-213,0-1540) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/line-box-direction-vrl-019.xht css-writing-modes/block-flow-direction-001-ref.xht
-fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/line-box-height-vlr-003.xht css-writing-modes/line-box-height-vlr-003-ref.xht
-fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/line-box-height-vlr-005.xht css-writing-modes/line-box-height-vlr-003-ref.xht
+== css-writing-modes/line-box-height-vlr-003.xht css-writing-modes/line-box-height-vlr-003-ref.xht
+== css-writing-modes/line-box-height-vlr-005.xht css-writing-modes/line-box-height-vlr-003-ref.xht
 == css-writing-modes/line-box-height-vlr-007.xht css-writing-modes/line-box-height-vlr-007-ref.xht
 == css-writing-modes/line-box-height-vlr-009.xht css-writing-modes/line-box-height-vlr-007-ref.xht
-fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/line-box-height-vlr-011.xht css-writing-modes/line-box-height-vlr-011-ref.xht
-fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/line-box-height-vlr-013.xht css-writing-modes/line-box-height-vlr-011-ref.xht
-fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/line-box-height-vlr-021.xht css-writing-modes/line-box-height-vlr-021-ref.xht
-fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/line-box-height-vlr-023.xht css-writing-modes/line-box-height-vlr-023-ref.xht
-fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/line-box-height-vrl-002.xht css-writing-modes/line-box-height-vrl-002-ref.xht
-fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/line-box-height-vrl-004.xht css-writing-modes/line-box-height-vrl-002-ref.xht
+== css-writing-modes/line-box-height-vlr-011.xht css-writing-modes/line-box-height-vlr-011-ref.xht
+== css-writing-modes/line-box-height-vlr-013.xht css-writing-modes/line-box-height-vlr-011-ref.xht
+== css-writing-modes/line-box-height-vlr-021.xht css-writing-modes/line-box-height-vlr-021-ref.xht
+== css-writing-modes/line-box-height-vlr-023.xht css-writing-modes/line-box-height-vlr-023-ref.xht
+== css-writing-modes/line-box-height-vrl-002.xht css-writing-modes/line-box-height-vrl-002-ref.xht
+== css-writing-modes/line-box-height-vrl-004.xht css-writing-modes/line-box-height-vrl-002-ref.xht
 == css-writing-modes/line-box-height-vrl-006.xht css-writing-modes/line-box-height-vrl-006-ref.xht
 == css-writing-modes/line-box-height-vrl-008.xht css-writing-modes/line-box-height-vrl-006-ref.xht
-fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/line-box-height-vrl-010.xht css-writing-modes/line-box-height-vrl-010-ref.xht
-fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/line-box-height-vrl-012.xht css-writing-modes/line-box-height-vrl-010-ref.xht
+== css-writing-modes/line-box-height-vrl-010.xht css-writing-modes/line-box-height-vrl-010-ref.xht
+== css-writing-modes/line-box-height-vrl-012.xht css-writing-modes/line-box-height-vrl-010-ref.xht
 == css-writing-modes/margin-collapse-vlr-003.xht reference/ref-filled-green-100px-square.xht
 == css-writing-modes/margin-collapse-vlr-009.xht reference/ref-filled-green-100px-square.xht
 == css-writing-modes/margin-collapse-vlr-011.xht reference/ref-filled-green-100px-square.xht
