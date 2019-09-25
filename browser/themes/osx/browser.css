@@ -320,7 +320,7 @@
 
 %include ../shared/places/editBookmarkPanel.inc.css
 
-#editBookmarkPanelRows > vbox > textbox,
+#editBookmarkPanelRows > vbox > html|input,
 #editBookmarkPanelRows > vbox > hbox > html|input {
   -moz-appearance: none;
   background-color: var(--arrowpanel-field-background);
@@ -331,7 +331,7 @@
   padding: 3px 6px;
 }
 
-#editBookmarkPanelRows > vbox > textbox[focused="true"],
+#editBookmarkPanelRows > vbox > html|input:focus,
 #editBookmarkPanelRows > vbox > hbox > html|input:focus {
   border-color: -moz-mac-focusring !important;
   box-shadow: var(--focus-ring-box-shadow);
