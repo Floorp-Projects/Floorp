@@ -25,6 +25,7 @@
 #include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/PrototypeList.h"
+#include "mozilla/dom/RemoteObjectProxy.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/SegmentedVector.h"
@@ -221,6 +222,12 @@ MOZ_ALWAYS_INLINE nsresult UnwrapObjectInternal(V& obj, U& value,
 
   /* Maybe we have a security wrapper or outer window? */
   if (!mayBeWrapper || !js::IsWrapper(obj)) {
+    // For non-cross-origin-accessible methods and properties, remote object
+    // proxies should behave the same as opaque wrappers.
+    if (IsRemoteObjectProxy(obj)) {
+      return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
+    }
+
     /* Not a DOM object, not a wrapper, just bail */
     return NS_ERROR_XPC_BAD_CONVERT_JS;
   }
