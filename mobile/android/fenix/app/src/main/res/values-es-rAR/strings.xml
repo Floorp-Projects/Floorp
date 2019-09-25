@@ -117,7 +117,9 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Acerca de</string>
     <!-- Preference for settings related to changing the default search engine -->
-    <string name="preferences_search_engine">Buscador</string>
+    <string name="preferences_default_search_engine">Motor de búsqueda predeterminado</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Buscar</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Ayuda</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -141,6 +143,8 @@
     <string name="preferences_category_privacy">Privacidad</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Permisos del sitio</string>
+    <!-- Preference for launching links in a private tab-->
+    <string name="preferences_launch_links_in_private_mode">Abrir enlaces en una pestaña privada</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Agregar atajo de navegación privada</string>
     <!-- Preference for accessibility -->
@@ -239,8 +243,11 @@
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Habilitar para todos los sitios</string>
 
 
-    <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
-    <string name="exceptions_empty_message">Las excepciones te permiten deshabilitar la protección contra rastreo para los sitios seleccionados. \n\nConocer más</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Las excepciones te permiten deshabilitar la protección de rastreo para los sitios seleccionados.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Conocer más</string>
+
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
     <string name="preferences_tracking_protection_turned_off_globally">Deshabilitado globalmente, ir a Ajustes para habilitarlo.</string>
 
@@ -519,6 +526,8 @@
     <string name="clear_permission">Eliminar permiso</string>
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">Eliminar permisos en todos los sitios</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">Reproducción automática</string>
     <!-- Preference for altering the camera access for all websites -->
     <string name="preference_phone_feature_camera">Cámara</string>
     <!-- Preference for altering the microphone access for all websites -->
@@ -541,6 +550,11 @@
     <string name="tracking_protection_on">Activado</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Desactivado</string>
+
+    <!-- Label that indicates video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked">Video y audio bloqueados</string>
+    <!-- Label that indicates video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed">Video y audio permitidos</string>
 
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
@@ -613,6 +627,15 @@
 
     <!-- Share error message -->
     <string name="share_error_snackbar">No se puede compartir con esta aplicación</string>
+
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Enviar al dispositivo</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">No hay dispositivos conectados</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Conocer sobre enviar pestañas…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Conectar otro dispositivo…</string>
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
@@ -830,8 +853,14 @@
     <string name="preference_enhanced_tracking_protection_standard">Estándar (recomendado)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">Equilibrado para protección y rendimiento.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_2">Las páginas se van a cargar normalmente, pero bloquean menos rastreadores.</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Estricta</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
+    <string name="preference_enhanced_tracking_protection_strict_default">Estricta (predeterminada)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">Mayor protección de rastreo y rendimiento más rápido, pero algunos sitios pueden no funcionar correctamente.</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_recommended">Estricto (recomendada)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
@@ -899,4 +928,60 @@
     <string name="add_to_homescreen_add">Agregar</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Nombre de acceso directo</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Inicios de sesión y contraseñas</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Guardar inicios de sesión y contraseñas</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Solicitar guardar</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Nunca guardar</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">Autocompletar</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Sincronizar inicios de sesión</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">Habilitado</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">Deshabilitado</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">Reconectar</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Iniciar sesión en Sync</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Inicios de sesión guardados</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Excepciones</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Los inicios de sesión y las contraseñas que no se guardan se mostrarán aquí.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Los inicios de sesión y las contraseñas no se van a guardar para estos sitios.</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Buscar inicios de sesión</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">Alfabéticamente</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">Usado recientemente</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Sitio</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Nombre de usuario</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Contraseña</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Reingresá tu PIN</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Desbloqueá para ver tus inicios de sesión guardados</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Esta conexión no es segura. Los ingresos de sesión en este sitio pueden estar comprometidos.</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">Conocer más</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">¿Querés que %s guarde este inicio de sesión?</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">Guardar</string>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">No guardar</string>
+
 </resources>

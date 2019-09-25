@@ -119,7 +119,9 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">关于</string>
     <!-- Preference for settings related to changing the default search engine -->
-    <string name="preferences_search_engine">搜索引擎</string>
+    <string name="preferences_default_search_engine">默认搜索引擎</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">搜索</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">帮助</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -143,6 +145,8 @@
     <string name="preferences_category_privacy">隐私</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">站点权限</string>
+    <!-- Preference for launching links in a private tab-->
+    <string name="preferences_launch_links_in_private_mode">在隐私标签页中打开链接</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">添加隐私浏览快捷方式</string>
     <!-- Preference for accessibility -->
@@ -242,8 +246,11 @@
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">为所有网站启用</string>
 
-    <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
-    <string name="exceptions_empty_message">您可以对某些网站设置例外，禁用其跟踪保护。\n\n详细了解</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">您可以对某些网站设置例外，禁用其跟踪保护。</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">详细了解</string>
+
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
     <string name="preferences_tracking_protection_turned_off_globally">已全局关闭，请前往“设置”开启。</string>
 
@@ -520,6 +527,8 @@
     <string name="clear_permission">清除权限</string>
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">清除所有网站的权限</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">自动播放</string>
     <!-- Preference for altering the camera access for all websites -->
     <string name="preference_phone_feature_camera">相机</string>
     <!-- Preference for altering the microphone access for all websites -->
@@ -542,6 +551,11 @@
     <string name="tracking_protection_on">开</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">关</string>
+
+    <!-- Label that indicates video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked">已阻止视频和音频</string>
+    <!-- Label that indicates video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed">已允许视频和音频</string>
 
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
@@ -625,6 +639,15 @@
 
     <!-- Share error message -->
     <string name="share_error_snackbar">无法分享至该应用</string>
+
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">发送到设备</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">尚未连上其他设备</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">了解发送标签页…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">连接其他设备…</string>
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
@@ -844,8 +867,12 @@
     <string name="preference_enhanced_tracking_protection_standard">标准（推荐）</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">平衡保护和性能。</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_2">页面将正常加载，但拦截的跟踪器会减少。</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">严格</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
+    <string name="preference_enhanced_tracking_protection_strict_default">严格（默认）</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_recommended">严格（推荐）</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
@@ -913,4 +940,52 @@
     <string name="add_to_homescreen_add">添加</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">快捷方式名称</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">我的密码</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">保存登录名和密码</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">总不保存</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">自动填写</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">同步登录信息</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">开</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">关</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">重新连接</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">登录同步服务</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">存放的登录信息</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">例外</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">搜索登录信息</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">字母顺序</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">最近使用</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">网站</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">用户名</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">密码</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">重新输入您的 PIN 码</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">解锁以查看您存放的登录信息</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">此连接不安全。输入的登录信息可能被窃取。</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">详细了解</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">保存</string>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">不保存</string>
+
 </resources>

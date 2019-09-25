@@ -25,7 +25,7 @@
     <string name="private_browsing_title">Estás en una sesión privada</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder">%$s limpia tu historial de búsqueda y navegación cuando cierras una sesión privada
+    <string name="private_browsing_placeholder">%1$s limpia tu historial de búsqueda y navegación cuando cierras una sesión privada
         Aunque no te hace anónimo para los sitios web o proveedor de servicios de Internet, 
         te ayuda a mantener en privado lo que haces en línea frente a cualquier otra persona que use este dispositivo. \n\nMitos comunes sobre la navegación privada
         
@@ -210,7 +210,7 @@
     <!-- Text for displaying the default device name.
         The first parameter is the application name, the second is the device manufacturer name
         and the third is the device model. -->
-    <string name="default_device_name">%s en % s%s</string>
+    <string name="default_device_name">%s en %s %s</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->

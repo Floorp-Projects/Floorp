@@ -120,7 +120,9 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">О приложении</string>
     <!-- Preference for settings related to changing the default search engine -->
-    <string name="preferences_search_engine">Поисковая система</string>
+    <string name="preferences_default_search_engine">Поисковая система по умолчанию</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Поиск</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Справка</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -144,6 +146,8 @@
     <string name="preferences_category_privacy">Приватность</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Разрешения для сайтов</string>
+    <!-- Preference for launching links in a private tab-->
+    <string name="preferences_launch_links_in_private_mode">Открыть ссылки в приватной вкладке</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Добавить ярлык приватного просмотра</string>
     <!-- Preference for accessibility -->
@@ -241,8 +245,11 @@
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Включить для всех сайтов</string>
 
-    <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
-    <string name="exceptions_empty_message">Исключения позволяют вам отключить защиту от отслеживания на выбранных сайтах.\n\nУзнать больше</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Исключения позволяют вам отключить защиту от отслеживания на выбранных сайтах.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Узнать больше</string>
+
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
     <string name="preferences_tracking_protection_turned_off_globally">Выключено глобально. Можно включить в настройках.</string>
 
@@ -515,6 +522,8 @@
     <string name="clear_permission">Удалить разрешение</string>
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">Удалить разрешения для всех сайтов</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">Автовоспроизведение</string>
     <!-- Preference for altering the camera access for all websites -->
     <string name="preference_phone_feature_camera">Камера</string>
     <!-- Preference for altering the microphone access for all websites -->
@@ -537,6 +546,11 @@
     <string name="tracking_protection_on">Включена</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Отключена</string>
+
+    <!-- Label that indicates video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked">Видео и аудио заблокированы</string>
+    <!-- Label that indicates video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed">Видео и аудио разрешены</string>
 
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
@@ -619,6 +633,15 @@
 
     <!-- Share error message -->
     <string name="share_error_snackbar">Не удалось отправить в это приложение</string>
+
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Отправить на устройство</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">Ни одного устройства не подключено</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Узнать больше об отправке вкладок…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Подключить другое устройство…</string>
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
@@ -840,8 +863,14 @@
     <string name="preference_enhanced_tracking_protection_standard">Стандартная (рекомендуется)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">Обеспечивает наилучший баланс защиты и производительности.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_2">Страницы будут загружаться нормально, но будет блокироваться меньше трекеров.</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Строгая</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
+    <string name="preference_enhanced_tracking_protection_strict_default">Строгая (по умолчанию)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">Строгая защита от отслеживания с увеличенной производительностью, некоторые сайты могут работать некорректно.</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_recommended">Строгая (рекомендуется)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
@@ -909,4 +938,60 @@
     <string name="add_to_homescreen_add">Добавить</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Название ярлыка</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Логины и пароли</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Сохранение логинов и паролей</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Предлагать сохранить</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Никогда не сохранять</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">Автозаполнение</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Синхронизация логинов</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">Включена</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">Отключена</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">Переподключиться</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Войти в Синхронизацию</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Сохранённые логины</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Исключения</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Здесь будут показаны не сохраняемые логины и пароли.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Логины и пароли для этих сайтов сохраняться не будут.</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Поиск логинов</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">В алфавитном порядке</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">Недавно использованные</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Сайт</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Имя пользователя</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Пароль</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Введите ваш PIN-код ещё раз</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Разблокируйте, чтобы просмотреть сохранённые логины</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Это соединение не защищено. Учётные данные, вводимые здесь, могут быть скомпрометированы.</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">Узнать больше</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">Вы хотите, чтобы %s сохранил ваш логин?</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">Сохранить</string>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">Не сохранять</string>
+
 </resources>
