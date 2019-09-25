@@ -11,7 +11,6 @@
 #include "png.h"
 #include "StreamingLexer.h"
 #include "SurfacePipe.h"
-#include "mozilla/gfx/Swizzle.h"
 
 namespace mozilla {
 namespace image {
@@ -102,7 +101,6 @@ class nsPNGDecoder : public Decoder {
   bool mFrameIsHidden;
   bool mDisablePremultipliedAlpha;
   bool mGotInfoCallback;
-  bool mUsePipeTransform;
 
   struct AnimFrameInfo {
     AnimFrameInfo();
