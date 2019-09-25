@@ -59,6 +59,10 @@ class UrlbarResult {
     // UrlbarView is responsible for updating this.
     this.rowIndex = -1;
 
+    // This is an optional hint to the Muxer that can be set by a provider to
+    // suggest a specific position among the results.
+    this.suggestedIndex = -1;
+
     // May be used to indicate an heuristic result. Heuristic results can bypass
     // source filters in the ProvidersManager, that otherwise may skip them.
     this.heuristic = false;
