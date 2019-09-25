@@ -2132,6 +2132,21 @@
     leaveModalState() {
       this.sendMessageToActor("LeaveModalState", {}, "BrowserElement", true);
     }
+
+    getDevicePermissionOrigins(key) {
+      if (typeof key !== "string" || key.length === 0) {
+        throw new Error("Key must be non empty string.");
+      }
+      if (!this._devicePermissionOrigins) {
+        this._devicePermissionOrigins = new Map();
+      }
+      let origins = this._devicePermissionOrigins.get(key);
+      if (!origins) {
+        origins = new Set();
+        this._devicePermissionOrigins.set(key, origins);
+      }
+      return origins;
+    }
   }
 
   MozXULElement.implementCustomInterface(MozBrowser, [Ci.nsIBrowser]);

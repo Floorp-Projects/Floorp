@@ -552,9 +552,7 @@ function checkRequestAllowed(aRequest, aPrincipal, aBrowser) {
     // other way for the stop sharing code to know the hostnames of frames
     // using devices until bug 1066082 is fixed.
     let browser = aBrowser;
-    browser._devicePermissionPrincipals =
-      browser._devicePermissionPrincipals || [];
-    browser._devicePermissionPrincipals.push(aPrincipal);
+    browser.getDevicePermissionOrigins("webrtc").add(aPrincipal.origin);
 
     let camNeeded = !!videoDevices.length;
     let micNeeded = !!audioDevices.length;
@@ -1108,9 +1106,7 @@ function prompt(aBrowser, aRequest) {
         if (remember) {
           // Remember on which URIs we set persistent permissions so that we
           // can remove them if the user clicks 'Stop Sharing'.
-          aBrowser._devicePermissionPrincipals =
-            aBrowser._devicePermissionPrincipals || [];
-          aBrowser._devicePermissionPrincipals.push(principal);
+          aBrowser.getDevicePermissionOrigins("webrtc").add(principal.origin);
         }
 
         let camNeeded = !!videoDevices.length;
