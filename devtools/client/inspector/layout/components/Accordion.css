@@ -29,6 +29,7 @@
   color: var(--theme-toolbar-color);
   cursor: pointer;
   font-size: 12px;
+  line-height: 16px;
   padding: 4px;
   width: 100%;
   align-items: center;
