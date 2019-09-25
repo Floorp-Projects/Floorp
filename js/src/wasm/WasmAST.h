@@ -492,18 +492,23 @@ class AstSelect : public AstExpr {
   AstExpr* condition_;
   AstExpr* op1_;
   AstExpr* op2_;
+  AstValTypeVector result_;
 
  public:
   static const AstExprKind Kind = AstExprKind::Select;
-  AstSelect(AstExpr* condition, AstExpr* op1, AstExpr* op2)
+  AstSelect(AstExpr* condition, AstExpr* op1, AstExpr* op2,
+            AstValTypeVector&& result)
       : AstExpr(Kind, ExprType::Limit),
         condition_(condition),
         op1_(op1),
-        op2_(op2) {}
+        op2_(op2),
+        result_(std::move(result)) {}
 
   AstExpr* condition() const { return condition_; }
   AstExpr* op1() const { return op1_; }
   AstExpr* op2() const { return op2_; }
+  AstValTypeVector& result() { return result_; }
+  const AstValTypeVector& result() const { return result_; }
 };
 
 class AstConst : public AstExpr {

@@ -553,9 +553,18 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         CHECK(iter.readTableSet(&unusedTableIndex, &nothing, &nothing));
       }
 #endif
-      case uint16_t(Op::Select): {
+      case uint16_t(Op::SelectNumeric): {
         StackType unused;
-        CHECK(iter.readSelect(&unused, &nothing, &nothing, &nothing));
+        CHECK(iter.readSelect(/*typed*/ false, &unused, &nothing, &nothing,
+                              &nothing));
+      }
+      case uint16_t(Op::SelectTyped): {
+        if (!env.refTypesEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
+        StackType unused;
+        CHECK(iter.readSelect(/*typed*/ true, &unused, &nothing, &nothing,
+                              &nothing));
       }
       case uint16_t(Op::Block):
         CHECK(iter.readBlock());

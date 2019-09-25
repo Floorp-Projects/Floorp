@@ -174,7 +174,8 @@ enum class Op {
 
   // Parametric operators
   Drop = 0x1a,
-  Select = 0x1b,
+  SelectNumeric = 0x1b,
+  SelectTyped = 0x1c,
 
   // Variable access
   GetLocal = 0x20,

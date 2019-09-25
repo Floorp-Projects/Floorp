@@ -6707,7 +6707,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   MOZ_MUST_USE bool loadCommon(MemoryAccessDesc* access, ValType type);
   MOZ_MUST_USE bool emitStore(ValType resultType, Scalar::Type viewType);
   MOZ_MUST_USE bool storeCommon(MemoryAccessDesc* access, ValType resultType);
-  MOZ_MUST_USE bool emitSelect();
+  MOZ_MUST_USE bool emitSelect(bool typed);
 
   template <bool isSetLocal>
   MOZ_MUST_USE bool emitSetOrTeeLocal(uint32_t slot);
@@ -7959,7 +7959,8 @@ bool BaseCompiler::sniffConditionalControlCmp(Cond compareOp,
   switch (op.b0) {
     case uint16_t(Op::BrIf):
     case uint16_t(Op::If):
-    case uint16_t(Op::Select):
+    case uint16_t(Op::SelectNumeric):
+    case uint16_t(Op::SelectTyped):
       setLatentCompare(compareOp, operandType);
       return true;
     default:
@@ -7975,7 +7976,8 @@ bool BaseCompiler::sniffConditionalControlEqz(ValType operandType) {
   iter_.peekOp(&op);
   switch (op.b0) {
     case uint16_t(Op::BrIf):
-    case uint16_t(Op::Select):
+    case uint16_t(Op::SelectNumeric):
+    case uint16_t(Op::SelectTyped):
     case uint16_t(Op::If):
       setLatentEqz(operandType);
       return true;
@@ -9535,12 +9537,12 @@ bool BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType) {
   return storeCommon(&access, resultType);
 }
 
-bool BaseCompiler::emitSelect() {
+bool BaseCompiler::emitSelect(bool typed) {
   StackType type;
   Nothing unused_trueValue;
   Nothing unused_falseValue;
   Nothing unused_condition;
-  if (!iter_.readSelect(&type, &unused_trueValue, &unused_falseValue,
+  if (!iter_.readSelect(typed, &type, &unused_trueValue, &unused_falseValue,
                         &unused_condition)) {
     return false;
   }
@@ -10972,8 +10974,13 @@ bool BaseCompiler::emitBody() {
 #endif
 
       // Select
-      case uint16_t(Op::Select):
-        CHECK_NEXT(emitSelect());
+      case uint16_t(Op::SelectNumeric):
+        CHECK_NEXT(emitSelect(/*typed*/ false));
+      case uint16_t(Op::SelectTyped):
+        if (!env_.refTypesEnabled()) {
+          return iter_.unrecognizedOpcode(&op);
+        }
+        CHECK_NEXT(emitSelect(/*typed*/ true));
 
       // I32
       case uint16_t(Op::I32Const): {
