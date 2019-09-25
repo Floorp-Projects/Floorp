@@ -10,7 +10,7 @@ job-defaults:
     platform: linux64/opt
     worker-type:
         by-platform:
-            linux64.*: t-linux-xlarge
+            linux64.*: b-linux
     worker:
         docker-image: {in-tree: debian9-amd64-build}
         max-run-time: 5400
