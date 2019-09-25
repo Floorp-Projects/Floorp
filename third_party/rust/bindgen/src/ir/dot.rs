@@ -60,11 +60,7 @@ where
                     id.as_usize(),
                     sub_id.as_usize(),
                     edge_kind,
-                    if is_whitelisted {
-                        "black"
-                    } else {
-                        "gray"
-                    }
+                    if is_whitelisted { "black" } else { "gray" }
                 ) {
                     Ok(_) => {}
                     Err(e) => err = Some(Err(e)),

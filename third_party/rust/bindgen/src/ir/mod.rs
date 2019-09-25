@@ -3,10 +3,10 @@
 //! Parsing C/C++ generates the IR, while code generation outputs Rust code from
 //! the IR.
 
-pub mod annotations;
 pub mod analysis;
-pub mod comp;
+pub mod annotations;
 pub mod comment;
+pub mod comp;
 pub mod context;
 pub mod derive;
 pub mod dot;
@@ -17,8 +17,8 @@ pub mod item;
 pub mod item_kind;
 pub mod layout;
 pub mod module;
+pub mod objc;
 pub mod template;
 pub mod traversal;
 pub mod ty;
 pub mod var;
-pub mod objc;

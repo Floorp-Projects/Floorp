@@ -1,4 +1,3 @@
-
 use ir::comp::{CompInfo, CompKind, Field, FieldMethods};
 use ir::context::BindgenContext;
 use ir::item::{IsOpaque, Item};
@@ -50,15 +49,17 @@ pub fn gen_partialeq_impl(
                     let name = fd.name().unwrap();
                     tokens.push(gen_field(ctx, ty_item, name));
                 }
-                Field::Bitfields(ref bu) => for bitfield in bu.bitfields() {
-                    if let Some(_) = bitfield.name() {
-                        let getter_name = bitfield.getter_name();
-                        let name_ident = ctx.rust_ident_raw(getter_name);
-                        tokens.push(quote! {
-                            self.#name_ident () == other.#name_ident ()
-                        });
+                Field::Bitfields(ref bu) => {
+                    for bitfield in bu.bitfields() {
+                        if let Some(_) = bitfield.name() {
+                            let getter_name = bitfield.getter_name();
+                            let name_ident = ctx.rust_ident_raw(getter_name);
+                            tokens.push(quote! {
+                                self.#name_ident () == other.#name_ident ()
+                            });
+                        }
                     }
-                },
+                }
             }
         }
     }
@@ -70,8 +71,14 @@ pub fn gen_partialeq_impl(
     })
 }
 
-fn gen_field(ctx: &BindgenContext, ty_item: &Item, name: &str) -> proc_macro2::TokenStream {
-    fn quote_equals(name_ident: proc_macro2::Ident) -> proc_macro2::TokenStream {
+fn gen_field(
+    ctx: &BindgenContext,
+    ty_item: &Item,
+    name: &str,
+) -> proc_macro2::TokenStream {
+    fn quote_equals(
+        name_ident: proc_macro2::Ident,
+    ) -> proc_macro2::TokenStream {
         quote! { self.#name_ident == other.#name_ident }
     }
 
@@ -106,20 +113,22 @@ fn gen_field(ctx: &BindgenContext, ty_item: &Item, name: &str) -> proc_macro2::T
             }
         }
 
-        TypeKind::Array(_, len) => if len <= RUST_DERIVE_IN_ARRAY_LIMIT {
-            quote_equals(name_ident)
-        } else {
-            quote! {
-                &self. #name_ident [..] == &other. #name_ident [..]
+        TypeKind::Array(_, len) => {
+            if len <= RUST_DERIVE_IN_ARRAY_LIMIT {
+                quote_equals(name_ident)
+            } else {
+                quote! {
+                    &self. #name_ident [..] == &other. #name_ident [..]
+                }
             }
-        },
+        }
         TypeKind::Vector(_, len) => {
             let self_ids = 0..len;
             let other_ids = 0..len;
             quote! {
                 #(self.#self_ids == other.#other_ids &&)* true
             }
-        },
+        }
 
         TypeKind::ResolvedTypeRef(t) |
         TypeKind::TemplateAlias(t, _) |
