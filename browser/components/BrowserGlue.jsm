@@ -20,6 +20,13 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/ActorManagerParent.jsm"
 );
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "PushService",
+  "@mozilla.org/push/Service;1",
+  "nsIPushService"
+);
+
 const PREF_PDFJS_ENABLED_CACHE_STATE = "pdfjs.enabledCache.state";
 
 let ACTORS = {
@@ -1996,6 +2003,11 @@ BrowserGlue.prototype = {
         this._togglePermissionPromptTelemetry
       );
       this._togglePermissionPromptTelemetry();
+    });
+
+    // Begin listening for incoming push messages.
+    Services.tm.idleDispatchToMainThread(() => {
+      PushService.ensureReady();
     });
 
     Services.tm.idleDispatchToMainThread(() => {
