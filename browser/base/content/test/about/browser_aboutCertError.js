@@ -508,3 +508,26 @@ add_task(async function checkBadStsCertHeadline() {
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 });
+
+add_task(async function checkSandboxedIframe() {
+  info(
+    "Loading a bad sts cert error in a sandboxed iframe and check that the correct headline is shown"
+  );
+  let useFrame = true;
+  let sandboxed = true;
+  let tab = await openErrorPage(BAD_CERT, useFrame, sandboxed);
+  let browser = tab.linkedBrowser;
+
+  let titleContent = await ContentTask.spawn(browser, {}, async function() {
+    // Cannot test for error in the Advanced section since it's currently not present
+    // in a sandboxed iframe.
+    let doc = content.document.querySelector("iframe").contentDocument;
+    let titleText = doc.querySelector(".title-text");
+    return titleText.textContent;
+  });
+  ok(
+    titleContent.endsWith("Security Issue"),
+    "Did Not Connect: Potential Security Issue"
+  );
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
