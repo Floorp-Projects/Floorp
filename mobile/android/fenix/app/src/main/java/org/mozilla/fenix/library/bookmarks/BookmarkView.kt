@@ -7,6 +7,7 @@ package org.mozilla.fenix.library.bookmarks
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import kotlinx.android.synthetic.main.component_bookmark.view.*
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
@@ -130,6 +131,7 @@ class BookmarkView(
                     view.bookmark_list
                 )
         }
+        view.bookmarks_progress_bar.isVisible = state.isLoading
     }
 
     override fun onBackPressed(): Boolean {
