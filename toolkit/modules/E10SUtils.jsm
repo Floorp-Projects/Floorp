@@ -810,14 +810,10 @@ var E10SUtils = {
   },
 
   /**
-   * If Fission is enabled, the remote type for a standard content process will
-   * start with webIsolated=.
+   * There are various types of web content processes, but they all start with "web".
    */
   isWebRemoteType(aBrowser) {
-    if (aBrowser.ownerGlobal.docShell.nsILoadContext.useRemoteSubframes) {
-      return aBrowser.remoteType.startsWith(FISSION_WEB_REMOTE_TYPE_PREFIX);
-    }
-    return aBrowser.remoteType == WEB_REMOTE_TYPE;
+    return aBrowser.remoteType.startsWith(WEB_REMOTE_TYPE);
   },
 };
 

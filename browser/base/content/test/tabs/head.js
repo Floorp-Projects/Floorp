@@ -279,14 +279,8 @@ function checkBrowserRemoteType(
   // Check both parent and child to ensure that they have the correct remoteType.
   if (expectedRemoteType == E10SUtils.WEB_REMOTE_TYPE) {
     ok(E10SUtils.isWebRemoteType(browser), message);
-    // E10sUtils.isWebRemoteType expects a browser, but we're trying to call this
-    // on a message manager, so fake up an object that looks like what
-    // isWebRemoteType expects.
     ok(
-      E10SUtils.isWebRemoteType({
-        ownerGlobal: browser.ownerGlobal,
-        remoteType: browser.messageManager.remoteType,
-      }),
+      E10SUtils.isWebRemoteType(browser.messageManager),
       "Parent and child process should agree on the remote type."
     );
   } else {
