@@ -4173,9 +4173,12 @@ impl TileNode {
                 let world_rect = pic_to_world_mapper.map(&self.rect).unwrap();
                 let device_rect = world_rect * global_device_pixel_scale;
 
+                let outer_color = color.scale_alpha(0.6);
+                let inner_color = outer_color.scale_alpha(0.5);
                 scratch.push_debug_rect(
                     device_rect.inflate(-3.0, -3.0),
-                    color.scale_alpha(0.6),
+                    outer_color,
+                    inner_color
                 );
             }
             TileNodeKind::Node { ref children, .. } => {
