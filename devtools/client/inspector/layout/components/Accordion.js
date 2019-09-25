@@ -48,7 +48,7 @@ class Accordion extends PureComponent {
     }
 
     if (item.onToggled) {
-      item.onToggled();
+      item.onToggled(isOpened);
     }
 
     this.setState({
@@ -87,15 +87,15 @@ class Accordion extends PureComponent {
         span({ className: "truncate" }, item.header)
       ),
 
-      isCreated || isOpened
-        ? div(
-            {
-              className: "_content",
-              style: { display: isOpened ? "block" : "none" },
-            },
-            createElement(item.component, item.componentProps || {})
-          )
-        : null
+      div(
+        {
+          className: "_content",
+          style: { display: isOpened ? "block" : "none" },
+        },
+        isCreated || isOpened
+          ? createElement(item.component, item.componentProps || {})
+          : null
+      )
     );
   }
 
