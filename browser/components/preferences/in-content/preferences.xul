@@ -24,7 +24,7 @@
      Additionally we should remove 'unsafe-inline' from style-src, see Bug 1579160 -->
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:html="http://www.w3.org/1999/xhtml"
-      csp="default-src chrome:; script-src chrome: 'sha512-X8+p/CqXeMdssOoFOf5RV+RpkvnN9pukQ20acGc7LqMgfYLW+lR0WAYT66OtSTpFHE/Qgx/ZCBs2RMc4QrA8FQ=='; img-src chrome: moz-icon:; style-src chrome: data: 'unsafe-inline'"
+      csp="default-src chrome:; script-src chrome: 'sha512-X8+p/CqXeMdssOoFOf5RV+RpkvnN9pukQ20acGc7LqMgfYLW+lR0WAYT66OtSTpFHE/Qgx/ZCBs2RMc4QrA8FQ=='; img-src chrome: moz-icon: https:; style-src chrome: data: 'unsafe-inline'"
       role="document"
       data-l10n-id="pref-page"
       data-l10n-attrs="title">
