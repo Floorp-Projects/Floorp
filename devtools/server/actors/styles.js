@@ -101,6 +101,8 @@ const BOLD_FONT_WEIGHT = 700;
 // Offset (in px) to avoid cutting off text edges of italic fonts.
 const FONT_PREVIEW_OFFSET = 4;
 
+const NS_EVENT_STATE_VISITED = 1 << 24;
+
 /**
  * The PageStyle actor lets the client look at the styles on a page, as
  * they are applied to a given node.
@@ -723,7 +725,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     const domRules = InspectorUtils.getCSSStyleRules(
       node,
       pseudo,
-      CssLogic.hasVisitedState(node)
+      _hasVisitedState(node)
     );
 
     if (!domRules) {
@@ -841,7 +843,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
         const { bindingElement, pseudo } = CssLogic.getBindingElementAndPseudo(
           element
         );
-        const relevantLinkVisited = CssLogic.hasVisitedState(bindingElement);
+        const relevantLinkVisited = _hasVisitedState(bindingElement);
         entry.matchedSelectors = [];
 
         for (let i = 0; i < selectors.length; i++) {
@@ -2247,3 +2249,10 @@ function getTextAtLineColumn(text, line, column) {
 }
 
 exports.getTextAtLineColumn = getTextAtLineColumn;
+
+function _hasVisitedState(node) {
+  return (
+    !!(InspectorUtils.getContentState(node) & NS_EVENT_STATE_VISITED) ||
+    InspectorUtils.hasPseudoClassLock(node, ":visited")
+  );
+}

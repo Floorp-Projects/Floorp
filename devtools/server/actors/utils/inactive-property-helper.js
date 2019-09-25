@@ -5,32 +5,11 @@
 "use strict";
 
 const Services = require("Services");
-const InspectorUtils = require("InspectorUtils");
-
-loader.lazyRequireGetter(
-  this,
-  "CssLogic",
-  "devtools/server/actors/inspector/css-logic",
-  true
-);
 
 const INACTIVE_CSS_ENABLED = Services.prefs.getBoolPref(
   "devtools.inspector.inactive.css.enabled",
   false
 );
-
-const VISITED_MDN_LINK = "https://developer.mozilla.org/docs/Web/CSS/:visited";
-const VISITED_INVALID_PROPERTIES = allCssPropertiesExcept([
-  "color",
-  "background-color",
-  "border-color",
-  "border-bottom-color",
-  "border-left-color",
-  "border-right-color",
-  "border-top-color",
-  "column-rule-color",
-  "outline-color",
-]);
 
 class InactivePropertyHelper {
   /**
@@ -216,15 +195,6 @@ class InactivePropertyHelper {
         msgId: "inactive-css-not-display-block-on-floated",
         numFixProps: 2,
       },
-      // The property is impossible to override due to :visited restriction.
-      {
-        invalidProperties: VISITED_INVALID_PROPERTIES,
-        when: () => this.isVisitedRule(),
-        fixId: "learn-more",
-        msgId: "inactive-css-property-is-impossible-to-override-in-visited",
-        numFixProps: 1,
-        learnMoreURL: VISITED_MDN_LINK,
-      },
     ];
   }
 
@@ -269,9 +239,6 @@ class InactivePropertyHelper {
    *         The number of properties we suggest in the fixId string.
    * @return {String} object.property
    *         The inactive property name.
-   * @return {String} object.learnMoreURL
-   *         An optional link if we need to open an other link than
-   *         the default MDN property one.
    * @return {Boolean} object.used
    *         true if the property is used.
    */
@@ -286,7 +253,6 @@ class InactivePropertyHelper {
     let fixId = "";
     let msgId = "";
     let numFixProps = 0;
-    let learnMoreURL = null;
     let used = true;
 
     this.VALIDATORS.some(validator => {
@@ -294,7 +260,9 @@ class InactivePropertyHelper {
       let isRuleConcerned = false;
 
       if (validator.invalidProperties) {
-        isRuleConcerned = validator.invalidProperties.includes(property);
+        isRuleConcerned =
+          validator.invalidProperties === "*" ||
+          validator.invalidProperties.includes(property);
       }
 
       if (!isRuleConcerned) {
@@ -309,7 +277,6 @@ class InactivePropertyHelper {
         fixId = validator.fixId;
         msgId = validator.msgId;
         numFixProps = validator.numFixProps;
-        learnMoreURL = validator.learnMoreURL;
         used = false;
 
         return true;
@@ -333,7 +300,6 @@ class InactivePropertyHelper {
       msgId,
       numFixProps,
       property,
-      learnMoreURL,
       used,
     };
   }
@@ -661,39 +627,6 @@ class InactivePropertyHelper {
     return !!this.getParentGridElement(this.node);
   }
 
-  isVisitedRule() {
-    if (!CssLogic.hasVisitedState(this.node)) {
-      return false;
-    }
-
-    const selectors = CssLogic.getSelectors(this.cssRule);
-    if (!selectors.some(s => s.endsWith(":visited"))) {
-      return false;
-    }
-
-    const { bindingElement, pseudo } = CssLogic.getBindingElementAndPseudo(
-      this.node
-    );
-
-    for (let i = 0; i < selectors.length; i++) {
-      if (
-        !selectors[i].endsWith(":visited") &&
-        InspectorUtils.selectorMatchesElement(
-          bindingElement,
-          this.cssRule,
-          i,
-          pseudo,
-          true
-        )
-      ) {
-        // Match non :visited selector.
-        return false;
-      }
-    }
-
-    return true;
-  }
-
   getParentGridElement(node) {
     // The documentElement can't be a grid item, only a container, so bail out.
     if (node.flattenedTreeParentNode === node.ownerDocument) {
@@ -743,23 +676,3 @@ class InactivePropertyHelper {
 }
 
 exports.inactivePropertyHelper = new InactivePropertyHelper();
-
-/**
- * Returns all CSS property names except given properties.
- *
- * @param {Array} - propertiesToIgnore
- *        Array of property ignored.
- * @return {Array}
- *        Array of all CSS property name except propertiesToIgnore.
- */
-function allCssPropertiesExcept(propertiesToIgnore) {
-  const properties = new Set(
-    InspectorUtils.getCSSPropertyNames({ includeAliases: true })
-  );
-
-  for (const name of propertiesToIgnore) {
-    properties.delete(name);
-  }
-
-  return [...properties];
-}
