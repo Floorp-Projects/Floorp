@@ -25,7 +25,7 @@ internal const val UNDO_DELAY = 3000L
  * @param undoActionTitle Label for the action associated with the [FenixSnackbar].
  * @param onCancel A suspend block to execute in case of cancellation.
  * @param operation A suspend block to execute if user doesn't cancel via the displayed [FenixSnackbar].
- * @param anchorView A view to anchor the undo [FenixSnackbar] to
+ * @param anchorView A [View] to which [FenixSnackbar] should be anchored.
  */
 @Suppress("LongParameterList")
 fun CoroutineScope.allowUndo(
