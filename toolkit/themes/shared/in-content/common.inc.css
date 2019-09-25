@@ -847,7 +847,9 @@ xul|tree {
 
 xul|tree:-moz-focusring,
 xul|richlistbox:-moz-focusring {
-  border: 1px dotted var(--in-content-border-focus);
+  border-color: var(--in-content-border-active);
+  box-shadow: 0 0 0 1px var(--in-content-border-active),
+    0 0 0 4px var(--in-content-border-active-shadow);
 }
 
 xul|treecols {
