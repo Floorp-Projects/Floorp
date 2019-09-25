@@ -10,15 +10,6 @@ pyflakes==2.1.0 \
 pycodestyle==2.5.0 \
     --hash=sha256:95a2219d12372f05704562a14ec30bc76b05a5b297b21a5dfe3f6fac3491ae56 \
     --hash=sha256:e40a936c9a450ad81df37f549d676d127b1b66000a6c500caa2b085bc0ca976c
-enum34==1.1.6; python_version < '3.0' \
-    --hash=sha256:6bd0f6ad48ec2aa117d3d141940d484deccda84d4fcd884f5c3d93c23ecd8c79 \
-    --hash=sha256:644837f692e5f550741432dd3f223bbb9852018674981b1664e5dc339387588a \
-    --hash=sha256:8ad8c4783bf61ded74527bffb48ed9b54166685e4230386a9ed9b1279e2df5b1 \
-    --hash=sha256:2d81cbbe0e73112bdfe6ef8576f2238f2ba27dd0d55752a776c41d38b7da2850
-configparser==3.7.1; python_version < '3.0' \
-    --hash=sha256:c114ff90ee2e762db972fa205f02491b1f5cf3ff950decd8542c62970c9bedac \
-    --hash=sha256:df28e045fbff307a28795b18df6ac8662be3219435560ddb068c283afab1ea7a \
-    --hash=sha256:5bd5fa2a491dc3cfe920a3f2a107510d65eceae10e9c6e547b90261a4710df32
 setuptools==40.7.1 \
     --hash=sha256:252520b7969fb4f2fcaf08c014b2891041d56f31180ec0d581297a28597205ff \
     --hash=sha256:5926bbea397d0fcec2f7946f1691f5820ef0234247b2d5fa83d30cc216d613ec
@@ -27,10 +18,3 @@ autopep8==1.4.3 \
 entrypoints==0.3 \
     --hash=sha256:589f874b313739ad35be6e0cd7efde2a4e9b6fea91edcc34e58ecbb8dbe56d19 \
     --hash=sha256:c70dd71abe5a8c85e55e12c19bd91ccfeec11a6e99044204511f9ed547d48451
-typing==3.6.6; python_version < '3.0' \
-    --hash=sha256:a4c8473ce11a65999c8f59cb093e70686b6c84c98df58c1dae9b3b196089858a \
-    --hash=sha256:57dcf675a99b74d64dacf6fba08fb17cf7e3d5fdff53d4a30ea2a5e7e52543d4 \
-    --hash=sha256:4027c5f6127a6267a435201981ba156de91ad0d1d98e9ddc2aa173453453492d
-functools32==3.2.3-2; python_version < '3.0' \
-    --hash=sha256:f6253dfbe0538ad2e387bd8fdfd9293c925d63553f5813c4e587745416501e6d \
-    --hash=sha256:89d824aa6c358c421a234d7f9ee0bd75933a67c29588ce50aaa3acdf4d403fa0
