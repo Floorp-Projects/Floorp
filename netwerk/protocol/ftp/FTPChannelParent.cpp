@@ -658,7 +658,7 @@ nsresult FTPChannelParent::ResumeForDiversion() {
   if (mSuspendedForDiversion) {
     nsresult rv = ResumeChannelInternalIfPossible();
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      FailDiversion(NS_ERROR_UNEXPECTED, true);
+      FailDiversion(NS_ERROR_UNEXPECTED);
       return rv;
     }
     mSuspendedForDiversion = false;
@@ -753,38 +753,33 @@ void FTPChannelParent::StartDiversion() {
 
 class FTPFailDiversionEvent : public Runnable {
  public:
-  FTPFailDiversionEvent(FTPChannelParent* aChannelParent, nsresult aErrorCode,
-                        bool aSkipResume)
+  FTPFailDiversionEvent(FTPChannelParent* aChannelParent, nsresult aErrorCode)
       : Runnable("net::FTPFailDiversionEvent"),
         mChannelParent(aChannelParent),
-        mErrorCode(aErrorCode),
-        mSkipResume(aSkipResume) {
+        mErrorCode(aErrorCode) {
     MOZ_RELEASE_ASSERT(aChannelParent);
     MOZ_RELEASE_ASSERT(NS_FAILED(aErrorCode));
   }
   NS_IMETHOD Run() override {
-    mChannelParent->NotifyDiversionFailed(mErrorCode, mSkipResume);
+    mChannelParent->NotifyDiversionFailed(mErrorCode);
     return NS_OK;
   }
 
  private:
   RefPtr<FTPChannelParent> mChannelParent;
   nsresult mErrorCode;
-  bool mSkipResume;
 };
 
-void FTPChannelParent::FailDiversion(nsresult aErrorCode, bool aSkipResume) {
+void FTPChannelParent::FailDiversion(nsresult aErrorCode) {
   MOZ_RELEASE_ASSERT(NS_FAILED(aErrorCode));
   MOZ_RELEASE_ASSERT(mDivertingFromChild);
   MOZ_RELEASE_ASSERT(mDivertToListener);
   MOZ_RELEASE_ASSERT(mChannel);
 
-  NS_DispatchToCurrentThread(
-      new FTPFailDiversionEvent(this, aErrorCode, aSkipResume));
+  NS_DispatchToCurrentThread(new FTPFailDiversionEvent(this, aErrorCode));
 }
 
-void FTPChannelParent::NotifyDiversionFailed(nsresult aErrorCode,
-                                             bool aSkipResume) {
+void FTPChannelParent::NotifyDiversionFailed(nsresult aErrorCode) {
   MOZ_RELEASE_ASSERT(NS_FAILED(aErrorCode));
   MOZ_RELEASE_ASSERT(mDivertingFromChild);
   MOZ_RELEASE_ASSERT(mDivertToListener);
