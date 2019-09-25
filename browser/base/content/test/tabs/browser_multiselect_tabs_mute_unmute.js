@@ -1,4 +1,5 @@
 const PREF_MULTISELECT_TABS = "browser.tabs.multiselect";
+const PREF_DELAY_AUTOPLAY = "media.block-autoplay-until-in-foreground";
 const PAGE =
   "https://example.com/browser/browser/base/content/test/tabs/file_mediaPlayback.html";
 
@@ -19,7 +20,7 @@ async function addMediaTab() {
 
 add_task(async function setPref() {
   await SpecialPowers.pushPrefEnv({
-    set: [[PREF_MULTISELECT_TABS, true]],
+    set: [[PREF_MULTISELECT_TABS, true], [PREF_DELAY_AUTOPLAY, true]],
   });
 });
 

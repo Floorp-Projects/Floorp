@@ -62,5 +62,7 @@ user_pref("media.autoplay.enabled.user-gestures-needed", true);
 user_pref("media.autoplay.ask-permission", false);
 user_pref("media.autoplay.block-webaudio", false);
 user_pref("media.allowed-to-play.enabled", true);
+// Ensure media can always play without delay
+user_pref("media.block-autoplay-until-in-foreground", false);
 user_pref("toolkit.telemetry.coverage.endpoint.base", "http://localhost");
 user_pref("layout.css.moz-binding.content.enabled", true); // Le sad
