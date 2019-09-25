@@ -493,21 +493,23 @@ def git_checkout_archive(dest_path: pathlib.Path, repo: str, commit: str,
     with tempfile.TemporaryDirectory() as td:
         temp_dir = pathlib.Path(td)
 
-        git_dir = temp_dir / 'git_dir'
         if not prefix:
             prefix = repo.rstrip('/').rsplit('/', 1)[-1]
+        git_dir = temp_dir / prefix
 
         # This could be faster with a shallow clone. However, Git requires a ref
         # to initiate a clone. Since the commit-ish may not refer to a ref, we
         # simply perform a full clone followed by a checkout.
         print('cloning %s to %s' % (repo, git_dir))
-        subprocess.run(['git', 'clone', '--bare', repo, str(git_dir)],
+        subprocess.run(['git', 'clone', '--recurse-submodules', repo, str(git_dir)],
                        check=True)
+
+        subprocess.run(['git', 'checkout', '--recurse-submodules', commit],
+                       cwd=str(git_dir), check=True)
 
         print('creating archive %s of commit %s' % (dest_path, commit))
         proc = subprocess.Popen([
-            'git', '--git-dir={}'.format(git_dir), 'archive',
-            '--format=tar', '--prefix=%s/' % prefix, commit
+            'tar', 'cf', '-', '--exclude=.git', '-C', str(temp_dir), prefix,
         ], stdout=subprocess.PIPE)
 
         with rename_after_close(dest_path, 'wb') as out:
