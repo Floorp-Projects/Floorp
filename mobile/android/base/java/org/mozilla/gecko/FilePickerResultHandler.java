@@ -9,21 +9,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
-import android.content.ClipData;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Process;
@@ -45,9 +40,6 @@ class FilePickerResultHandler implements ActivityResultHandler {
     private final int tabId;
     private final File cacheDir;
 
-    private int filesToToWaitFor = 0;
-    private final List<String> filesLoaded = new ArrayList<>();
-
     // this code is really hacky and doesn't belong anywhere so I'm putting it here for now
     // until I can come up with a better solution.
     private String mImageName = "";
@@ -60,14 +52,8 @@ class FilePickerResultHandler implements ActivityResultHandler {
     }
 
     void sendResult(String res) {
-        List<String> files = new ArrayList<String>();
-        files.add(res);
-        sendResults(files);
-    }
-
-    void sendResults(List<String> res) {
         if (handler != null) {
-            handler.gotFiles(res);
+            handler.gotFile(res);
         }
     }
 
@@ -88,22 +74,6 @@ class FilePickerResultHandler implements ActivityResultHandler {
         if (resultCode != Activity.RESULT_OK) {
             sendResult("");
             return;
-        }
-
-        // Since JELLY_BEAN_MR2 multiple files are returned via intent.getClipData.
-        if (intent != null) {
-            if ((android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) && (null == intent.getData())) {
-                ClipData clipdata = intent.getClipData();
-
-                filesToToWaitFor = clipdata.getItemCount();
-                for (int i = 0; i < clipdata.getItemCount(); i++) {
-                    ClipData.Item item = clipdata.getItemAt(i);
-                    Uri uri = item.getUri();
-                    String uristr = uri.toString();
-                    initLoader(new FileLoaderCallbacks(uri, cacheDir, tabId));
-                }
-                return;
-            }
         }
 
         // Camera results won't return an Intent. Use the file name we passed to the original intent.
@@ -253,7 +223,6 @@ class FilePickerResultHandler implements ActivityResultHandler {
                         fileName += fileExt;
                     }
                 }
-
                 final String tempFileName = fileName;
                 ThreadUtils.postToBackgroundThread(() -> {
                     // Now write the data to the temp file
@@ -273,16 +242,7 @@ class FilePickerResultHandler implements ActivityResultHandler {
                         fos.close();
                         is.close();
                         String tempFile = file.getAbsolutePath();
-
-                        if (filesToToWaitFor > 0) {
-                            // multiple items?
-                            filesLoaded.add(tempFile);
-                            if (filesLoaded.size() >= filesToToWaitFor) {
-                                sendResults(filesLoaded);
-                            }
-                        } else {
-                            sendResult(tempFile);
-                        }
+                        sendResult(tempFile);
 
                         if (tabId > -1 && tempDir != null) {
                             Tabs.registerOnTabsChangedListener(this);
