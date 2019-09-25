@@ -45,6 +45,47 @@
 #define u_int64_t uint64_t
 #endif
 
+/* A union which permits us to convert between a long double and
+   four 32 bit ints.  */
+
+#if MOZ_BIG_ENDIAN
+
+typedef union
+{
+  long double value;
+  struct {
+    u_int32_t mswhi;
+    u_int32_t mswlo;
+    u_int32_t lswhi;
+    u_int32_t lswlo;
+  } parts32;
+  struct {
+    u_int64_t msw;
+    u_int64_t lsw;
+  } parts64;
+} ieee_quad_shape_type;
+
+#endif
+
+#if MOZ_LITTLE_ENDIAN
+
+typedef union
+{
+  long double value;
+  struct {
+    u_int32_t lswlo;
+    u_int32_t lswhi;
+    u_int32_t mswlo;
+    u_int32_t mswhi;
+  } parts32;
+  struct {
+    u_int64_t lsw;
+    u_int64_t msw;
+  } parts64;
+} ieee_quad_shape_type;
+
+#endif
+
 /*
  * A union which permits us to convert between a double and two 32 bit
  * ints.
@@ -307,8 +348,9 @@ do {								\
 
 /* Support switching the mode to FP_PE if necessary. */
 #if defined(__i386__) && !defined(NO_FPSETPREC)
-#define	ENTERI()				\
-	long double __retval;			\
+#define	ENTERI() ENTERIT(long double)
+#define	ENTERIT(returntype)			\
+	returntype __retval;			\
 	fp_prec_t __oprec;			\
 						\
 	if ((__oprec = fpgetprec()) != FP_PE)	\
@@ -331,6 +373,7 @@ do {								\
 } while (0)
 #else
 #define	ENTERI()
+#define	ENTERIT(x)
 #define	RETURNI(x)	RETURNF(x)
 #define	ENTERV()
 #define	RETURNV()	return
@@ -448,6 +491,31 @@ do {								\
  */
 void _scan_nan(uint32_t *__words, int __num_words, const char *__s);
 
+/*
+ * Mix 0, 1 or 2 NaNs.  First add 0 to each arg.  This normally just turns
+ * signaling NaNs into quiet NaNs by setting a quiet bit.  We do this
+ * because we want to never return a signaling NaN, and also because we
+ * don't want the quiet bit to affect the result.  Then mix the converted
+ * args using the specified operation.
+ *
+ * When one arg is NaN, the result is typically that arg quieted.  When both
+ * args are NaNs, the result is typically the quietening of the arg whose
+ * mantissa is largest after quietening.  When neither arg is NaN, the
+ * result may be NaN because it is indeterminate, or finite for subsequent
+ * construction of a NaN as the indeterminate 0.0L/0.0L.
+ *
+ * Technical complications: the result in bits after rounding to the final
+ * precision might depend on the runtime precision and/or on compiler
+ * optimizations, especially when different register sets are used for
+ * different precisions.  Try to make the result not depend on at least the
+ * runtime precision by always doing the main mixing step in long double
+ * precision.  Try to reduce dependencies on optimizations by adding the
+ * the 0's in different precisions (unless everything is in long double
+ * precision).
+ */
+#define	nan_mix(x, y)		(nan_mix_op((x), (y), +))
+#define	nan_mix_op(x, y, op)	(((x) + 0.0L) op ((y) + 0))
+
 #ifdef _COMPLEX_H
 
 /*
@@ -523,48 +591,6 @@ CMPLXL(long double x, long double y)
 
 #endif /* _COMPLEX_H */
  
-#ifdef __GNUCLIKE_ASM
-
-/* Asm versions of some functions. */
-
-#ifdef __amd64__
-static __inline int
-irint(double x)
-{
-	int n;
-
-	asm("cvtsd2si %1,%0" : "=r" (n) : "x" (x));
-	return (n);
-}
-#define	HAVE_EFFICIENT_IRINT
-#endif
-
-#ifdef __i386__
-static __inline int
-irint(double x)
-{
-	int n;
-
-	asm("fistl %0" : "=m" (n) : "t" (x));
-	return (n);
-}
-#define	HAVE_EFFICIENT_IRINT
-#endif
-
-#if defined(__amd64__) || defined(__i386__)
-static __inline int
-irintl(long double x)
-{
-	int n;
-
-	asm("fistl %0" : "=m" (n) : "t" (x));
-	return (n);
-}
-#define	HAVE_EFFICIENT_IRINTL
-#endif
-
-#endif /* __GNUCLIKE_ASM */
-
 #ifdef DEBUG
 #if defined(__amd64__) || defined(__i386__)
 #define	breakpoint()	asm("int $3")
