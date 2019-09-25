@@ -166,7 +166,8 @@ impl<'a> StructLayoutTracker<'a> {
             // This means that the structs in the array are super-unsafe to
             // access, since they won't be properly aligned, but there's not too
             // much we can do about it.
-            if let Some(layout) = self.ctx.resolve_type(inner).layout(self.ctx) {
+            if let Some(layout) = self.ctx.resolve_type(inner).layout(self.ctx)
+            {
                 if layout.align > self.ctx.target_pointer_size() {
                     field_layout.size =
                         align_to(layout.size, layout.align) * len;
@@ -212,7 +213,10 @@ impl<'a> StructLayoutTracker<'a> {
             if need_padding && padding_bytes != 0 {
                 Some(Layout::new(
                     padding_bytes,
-                    cmp::min(field_layout.align, self.ctx.target_pointer_size())
+                    cmp::min(
+                        field_layout.align,
+                        self.ctx.target_pointer_size(),
+                    ),
                 ))
             } else {
                 None
@@ -235,11 +239,13 @@ impl<'a> StructLayoutTracker<'a> {
         padding_layout.map(|layout| self.padding_field(layout))
     }
 
-    pub fn pad_struct(&mut self, layout: Layout) -> Option<proc_macro2::TokenStream> {
+    pub fn pad_struct(
+        &mut self,
+        layout: Layout,
+    ) -> Option<proc_macro2::TokenStream> {
         debug!(
             "pad_struct:\n\tself = {:#?}\n\tlayout = {:#?}",
-            self,
-            layout
+            self, layout
         );
 
         if layout.size < self.latest_offset {
@@ -261,15 +267,15 @@ impl<'a> StructLayoutTracker<'a> {
         // other fields.
         if padding_bytes > 0 &&
             (padding_bytes >= layout.align ||
-                 (self.last_field_was_bitfield &&
-                      padding_bytes >=
-                          self.latest_field_layout.unwrap().align) ||
-                 layout.align > self.ctx.target_pointer_size())
+                (self.last_field_was_bitfield &&
+                    padding_bytes >=
+                        self.latest_field_layout.unwrap().align) ||
+                layout.align > self.ctx.target_pointer_size())
         {
             let layout = if self.is_packed {
                 Layout::new(padding_bytes, 1)
             } else if self.last_field_was_bitfield ||
-                       layout.align > self.ctx.target_pointer_size()
+                layout.align > self.ctx.target_pointer_size()
             {
                 // We've already given up on alignment here.
                 Layout::for_size(self.ctx, padding_bytes)
@@ -315,7 +321,10 @@ impl<'a> StructLayoutTracker<'a> {
 
         self.padding_count += 1;
 
-        let padding_field_name = Ident::new(&format!("__bindgen_padding_{}", padding_count), Span::call_site());
+        let padding_field_name = Ident::new(
+            &format!("__bindgen_padding_{}", padding_count),
+            Span::call_site(),
+        );
 
         self.max_field_align = cmp::max(self.max_field_align, layout.align);
 
@@ -342,9 +351,7 @@ impl<'a> StructLayoutTracker<'a> {
         // current field alignment and the bitfield size and alignment are.
         debug!(
             "align_to_bitfield? {}: {:?} {:?}",
-            self.last_field_was_bitfield,
-            layout,
-            new_field_layout
+            self.last_field_was_bitfield, layout, new_field_layout
         );
 
         // Avoid divide-by-zero errors if align is 0.

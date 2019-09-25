@@ -7,8 +7,8 @@ mod target {
     pub fn main() {
         let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
 
-        let mut dst = File::create(Path::new(&out_dir).join("host-target.txt"))
-            .unwrap();
+        let mut dst =
+            File::create(Path::new(&out_dir).join("host-target.txt")).unwrap();
         dst.write_all(env::var("TARGET").unwrap().as_bytes())
             .unwrap();
     }
@@ -24,8 +24,8 @@ mod testgen {
 
     pub fn main() {
         let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
-        let mut dst = File::create(Path::new(&out_dir).join("tests.rs"))
-            .unwrap();
+        let mut dst =
+            File::create(Path::new(&out_dir).join("tests.rs")).unwrap();
 
         let manifest_dir =
             PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
@@ -57,7 +57,8 @@ mod testgen {
                         "test_header!(header_{}, {:?});",
                         func,
                         entry.path(),
-                    ).unwrap();
+                    )
+                    .unwrap();
                 }
                 _ => {}
             }

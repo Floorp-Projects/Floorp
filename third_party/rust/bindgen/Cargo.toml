@@ -12,7 +12,7 @@
 
 [package]
 name = "bindgen"
-version = "0.51.0"
+version = "0.51.1"
 authors = ["Jyun-Yan You <jyyou.tw@gmail.com>", "Emilio Cobos Álvarez <emilio@crisal.io>", "Nick Fitzgerald <fitzgen@gmail.com>", "The Servo project developers"]
 build = "build.rs"
 include = ["LICENSE", "README.md", "Cargo.toml", "build.rs", "src/*.rs", "src/**/*.rs"]
@@ -54,9 +54,6 @@ optional = true
 version = "0.6"
 optional = true
 
-[dependencies.fxhash]
-version = "0.2"
-
 [dependencies.lazy_static]
 version = "1"
 
@@ -68,21 +65,26 @@ optional = true
 version = "0.1.2"
 
 [dependencies.proc-macro2]
-version = "0.4"
+version = "1"
 default-features = false
 
 [dependencies.quote]
-version = "0.6"
+version = "1"
 default-features = false
 
 [dependencies.regex]
 version = "1.0"
 
+[dependencies.rustc-hash]
+version = "1.0.1"
+
 [dependencies.shlex]
 version = "0.1"
 
 [dependencies.which]
-version = ">=1.0, <3.0"
+version = "3.0"
+optional = true
+default-features = false
 [dev-dependencies.clap]
 version = "2"
 
@@ -93,7 +95,7 @@ version = "0.1"
 version = "0.1"
 
 [features]
-default = ["logging", "clap"]
+default = ["logging", "clap", "which-rustfmt"]
 logging = ["env_logger", "log"]
 static = []
 testing_only_docs = []
@@ -102,5 +104,6 @@ testing_only_libclang_3_8 = []
 testing_only_libclang_3_9 = []
 testing_only_libclang_4 = []
 testing_only_libclang_5 = []
+which-rustfmt = ["which"]
 [badges.travis-ci]
 repository = "rust-lang/rust-bindgen"

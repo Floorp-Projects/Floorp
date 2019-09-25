@@ -1,12 +1,12 @@
 //! Intermediate representation of variables.
 
-use callbacks::MacroParsingBehavior;
 use super::context::{BindgenContext, TypeId};
 use super::dot::DotAttributes;
 use super::function::cursor_mangling;
 use super::int::IntKind;
 use super::item::Item;
 use super::ty::{FloatKind, TypeKind};
+use callbacks::MacroParsingBehavior;
 use cexpr;
 use clang;
 use parse::{ClangItemParser, ClangSubItemParser, ParseError, ParseResult};
@@ -133,9 +133,9 @@ impl ClangSubItemParser for Var {
         cursor: clang::Cursor,
         ctx: &mut BindgenContext,
     ) -> Result<ParseResult<Self>, ParseError> {
-        use clang_sys::*;
         use cexpr::expr::EvalResult;
         use cexpr::literal::CChar;
+        use clang_sys::*;
         match cursor.kind() {
             CXCursor_MacroDefinition => {
                 if let Some(callbacks) = ctx.parse_callbacks() {
@@ -205,9 +205,12 @@ impl ClangSubItemParser for Var {
                         (TypeKind::Pointer(char_ty), VarType::String(val))
                     }
                     EvalResult::Int(Wrapping(value)) => {
-                        let kind = ctx.parse_callbacks()
+                        let kind = ctx
+                            .parse_callbacks()
                             .and_then(|c| c.int_macro(&name, value))
-                            .unwrap_or_else(|| default_macro_constant_type(value));
+                            .unwrap_or_else(|| {
+                                default_macro_constant_type(value)
+                            });
 
                         (TypeKind::Int(kind), VarType::Int(value))
                     }
@@ -239,7 +242,7 @@ impl ClangSubItemParser for Var {
                             ty.kind(),
                             CXType_Auto,
                             "Couldn't resolve constant type, and it \
-                                   wasn't an nondeductible auto type!"
+                             wasn't an nondeductible auto type!"
                         );
                         return Err(e);
                     }
@@ -249,9 +252,9 @@ impl ClangSubItemParser for Var {
                 // tests/headers/inner_const.hpp
                 //
                 // That's fine because in that case we know it's not a literal.
-                let canonical_ty = ctx.safe_resolve_type(ty).and_then(|t| {
-                    t.safe_canonical_type(ctx)
-                });
+                let canonical_ty = ctx
+                    .safe_resolve_type(ty)
+                    .and_then(|t| t.safe_canonical_type(ctx));
 
                 let is_integer = canonical_ty.map_or(false, |t| t.is_integer());
                 let is_float = canonical_ty.map_or(false, |t| t.is_float());
@@ -266,27 +269,29 @@ impl ClangSubItemParser for Var {
                         _ => unreachable!(),
                     };
 
-                    let mut val = cursor
-                        .evaluate()
-                        .and_then(|v| v.as_int());
+                    let mut val = cursor.evaluate().and_then(|v| v.as_int());
                     if val.is_none() || !kind.signedness_matches(val.unwrap()) {
                         let tu = ctx.translation_unit();
                         val = get_integer_literal_from_cursor(&cursor, tu);
                     }
 
-                    val.map(|val| if kind == IntKind::Bool {
-                        VarType::Bool(val != 0)
-                    } else {
-                        VarType::Int(val)
+                    val.map(|val| {
+                        if kind == IntKind::Bool {
+                            VarType::Bool(val != 0)
+                        } else {
+                            VarType::Int(val)
+                        }
                     })
                 } else if is_float {
-                    cursor.evaluate().and_then(|v| v.as_double()).map(
-                        VarType::Float,
-                    )
+                    cursor
+                        .evaluate()
+                        .and_then(|v| v.as_double())
+                        .map(VarType::Float)
                 } else {
-                    cursor.evaluate().and_then(|v| v.as_literal_string()).map(
-                        VarType::String,
-                    )
+                    cursor
+                        .evaluate()
+                        .and_then(|v| v.as_literal_string())
+                        .map(VarType::String)
                 };
 
                 let mangling = cursor_mangling(ctx, &cursor);
@@ -355,8 +360,7 @@ fn get_integer_literal_from_cursor(
     let mut value = None;
     cursor.visit(|c| {
         match c.kind() {
-            CXCursor_IntegerLiteral |
-            CXCursor_UnaryOperator => {
+            CXCursor_IntegerLiteral | CXCursor_UnaryOperator => {
                 value = parse_int_literal_tokens(&c);
             }
             CXCursor_UnexposedExpr => {

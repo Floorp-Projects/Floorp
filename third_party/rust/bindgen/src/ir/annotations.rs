@@ -94,7 +94,11 @@ impl Annotations {
         let mut matched_one = false;
         anno.parse(&cursor.comment(), &mut matched_one);
 
-        if matched_one { Some(anno) } else { None }
+        if matched_one {
+            Some(anno)
+        } else {
+            None
+        }
     }
 
     /// Should this type be hidden?
@@ -157,9 +161,10 @@ impl Annotations {
         use clang_sys::CXComment_HTMLStartTag;
         if comment.kind() == CXComment_HTMLStartTag &&
             comment.get_tag_name() == "div" &&
-            comment.get_tag_attrs().next().map_or(false, |attr| {
-                attr.name == "rustbindgen"
-            })
+            comment
+                .get_tag_attrs()
+                .next()
+                .map_or(false, |attr| attr.name == "rustbindgen")
         {
             *matched = true;
             for attr in comment.get_tag_attrs() {
@@ -168,14 +173,11 @@ impl Annotations {
                     "hide" => self.hide = true,
                     "nocopy" => self.disallow_copy = true,
                     "replaces" => {
-                        self.use_instead_of =
-                            Some(
-                                attr.value.split("::").map(Into::into).collect(),
-                            )
+                        self.use_instead_of = Some(
+                            attr.value.split("::").map(Into::into).collect(),
+                        )
                     }
-                    "derive" => {
-                        self.derives.push(attr.value)
-                    }
+                    "derive" => self.derives.push(attr.value),
                     "private" => {
                         self.private_fields = Some(attr.value != "false")
                     }

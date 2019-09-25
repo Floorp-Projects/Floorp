@@ -5,7 +5,7 @@
 [![Rust Documentation](https://img.shields.io/badge/api-rustdoc-blue.svg)](https://docs.rs/proc-macro2)
 
 A wrapper around the procedural macro API of the compiler's `proc_macro` crate.
-This library serves three purposes:
+This library serves two purposes:
 
 - **Bring proc-macro-like functionality to other contexts like build.rs and
   main.rs.** Types from `proc_macro` are entirely specific to procedural macros
@@ -21,13 +21,6 @@ This library serves three purposes:
   unit test. In order for helper libraries or components of a macro to be
   testable in isolation, they must be implemented using `proc_macro2`.
 
-- **Provide the latest and greatest APIs across all compiler versions.**
-  Procedural macros were first introduced to Rust in 1.15.0 with an extremely
-  minimal interface. Since then, many improvements have landed to make macros
-  more flexible and easier to write. This library tracks the procedural macro
-  API of the most recent stable compiler but employs a polyfill to provide that
-  API consistently across any compiler since 1.15.0.
-
 [syn]: https://github.com/dtolnay/syn
 [quote]: https://github.com/dtolnay/quote
 
@@ -35,7 +28,7 @@ This library serves three purposes:
 
 ```toml
 [dependencies]
-proc-macro2 = "0.4"
+proc-macro2 = "1.0"
 ```
 
 The skeleton of a typical procedural macro typically looks like this:
@@ -58,7 +51,7 @@ pub fn my_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 If parsing with [Syn], you'll use [`parse_macro_input!`] instead to propagate
 parse errors correctly back to the compiler when parsing fails.
 
-[`parse_macro_input!`]: https://docs.rs/syn/0.15/syn/macro.parse_macro_input.html
+[`parse_macro_input!`]: https://docs.rs/syn/1.0/syn/macro.parse_macro_input.html
 
 ## Unstable features
 
@@ -67,10 +60,10 @@ API. Functionality in `proc_macro` that is not yet stable is not exposed by
 proc-macro2 by default.
 
 To opt into the additional APIs available in the most recent nightly compiler,
-the `procmacro2_semver_exempt` config flag must be passed to rustc. As usual, we
-will polyfill those nightly-only APIs all the way back to Rust 1.15.0. As these
-are unstable APIs that track the nightly compiler, minor versions of proc-macro2
-may make breaking changes to them at any time.
+the `procmacro2_semver_exempt` config flag must be passed to rustc. We will
+polyfill those nightly-only APIs back to Rust 1.31.0. As these are unstable APIs
+that track the nightly compiler, minor versions of proc-macro2 may make breaking
+changes to them at any time.
 
 ```
 RUSTFLAGS='--cfg procmacro2_semver_exempt' cargo build
@@ -82,19 +75,19 @@ reminder that you are outside of the normal semver guarantees.
 
 Semver exempt methods are marked as such in the proc-macro2 documentation.
 
-# License
+<br>
 
-This project is licensed under either of
+#### License
 
- * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or
-   http://www.apache.org/licenses/LICENSE-2.0)
- * MIT license ([LICENSE-MIT](LICENSE-MIT) or
-   http://opensource.org/licenses/MIT)
+<sup>
+Licensed under either of <a href="LICENSE-APACHE">Apache License, Version
+2.0</a> or <a href="LICENSE-MIT">MIT license</a> at your option.
+</sup>
 
-at your option.
+<br>
 
-### Contribution
-
+<sub>
 Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in Serde by you, as defined in the Apache-2.0 license, shall be
-dual licensed as above, without any additional terms or conditions.
+for inclusion in this crate by you, as defined in the Apache-2.0 license, shall
+be dual licensed as above, without any additional terms or conditions.
+</sub>
