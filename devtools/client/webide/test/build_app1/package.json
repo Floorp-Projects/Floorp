@@ -1,5 +1,0 @@
-{
-  "webide": {
-    "prepackage": "echo \"{\\\"name\\\":\\\"hello\\\"}\" > manifest.webapp"
-  }
-}

@@ -815,7 +815,6 @@ add_task(async function checkAllTheFiles() {
   // Keep only chrome:// files, and filter out either the devtools paths or
   // the non-devtools paths:
   let devtoolsPrefixes = [
-    "chrome://webide/",
     "chrome://devtools",
     "resource://devtools/",
     "resource://devtools-client-jsonview/",

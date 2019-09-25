@@ -97,14 +97,6 @@ exports.menuitems = [
     },
   },
   {
-    id: "menu_webide",
-    l10nKey: "webide",
-    oncommand() {
-      gDevToolsBrowser.openWebIDE();
-    },
-    keyId: "webide",
-  },
-  {
     id: "menu_browserToolbox",
     l10nKey: "browserToolboxMenu",
     oncommand() {

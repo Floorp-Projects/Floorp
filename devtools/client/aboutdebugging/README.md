@@ -1,7 +1,7 @@
 # about:debugging-new
 
 ## What is about:debugging-new
-The purpose of about:debugging is to be a debugging hub to start inspecting your addons, processes, tabs and workers. This new version of about:debugging will also allow you to debug remote devices (Firefox for Android on a smartphone). The user should be able to connect either via USB or WiFi. This solution is supposed to replace the various existing remote debugging solutions available in Firefox DevTools, WebIDE and the Connect page.
+The purpose of about:debugging is to be a debugging hub to start inspecting your addons, processes, tabs and workers. This new version of about:debugging will also allow you to debug remote devices (Firefox for Android on a smartphone). The user should be able to connect either via USB or WiFi.
 
 To try out about:debugging, type `about:debugging` in the Firefox URL bar.
 

@@ -16,8 +16,6 @@ const ADB_HELPER_ADDON_ID = "adbhelper@mozilla.org";
 // Extension ID for Valence extension that is no longer supported.
 const VALENCE_ADDON_ID = "fxdevtools-adapters@mozilla.org";
 
-// Possible values for ADBAddon::state. WebIDE relies on the exact values for localization
-// and styles, so they should not be updated until WebIDE is removed.
 const ADB_ADDON_STATES = {
   DOWNLOADING: "downloading",
   INSTALLED: "installed",

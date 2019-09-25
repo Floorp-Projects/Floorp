@@ -28,9 +28,9 @@ requestLongerTimeout(2);
  * client is destroyed when the toolbox is closed, which removes the client
  * actor pools, and avoids this issue.
  *
- * In WebIDE, we do not destroy the DebuggerClient on toolbox close because it
- * is still used for other purposes like managing apps, etc. that aren't part of
- * a toolbox.  Thus, the same client gets reused across multiple toolboxes,
+ * In remote debugging, we do not destroy the DebuggerClient on toolbox close
+ * because it can still used for other targets.
+ * Thus, the same client gets reused across multiple toolboxes,
  * which leads to the tools failing if they don't destroy their fronts.
  */
 
