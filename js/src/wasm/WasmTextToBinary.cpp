@@ -127,6 +127,7 @@ class WasmToken {
     RefNull,
     Result,
     Return,
+    Select,
     SetGlobal,
     SetLocal,
     Shared,
@@ -146,7 +147,6 @@ class WasmToken {
     TableSize,
 #endif
     TeeLocal,
-    TernaryOpcode,
     Text,
     Then,
     Type,
@@ -215,8 +215,8 @@ class WasmToken {
       : kind_(kind), begin_(begin), end_(end) {
     MOZ_ASSERT(begin != end);
     MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode ||
-               kind_ == TernaryOpcode || kind_ == ComparisonOpcode ||
-               kind_ == ConversionOpcode || kind_ == Load || kind_ == Store);
+               kind_ == ComparisonOpcode || kind_ == ConversionOpcode ||
+               kind_ == Load || kind_ == Store);
     u.op_ = op;
   }
   explicit WasmToken(Kind kind, MiscOp op, const char16_t* begin,
@@ -273,8 +273,8 @@ class WasmToken {
   }
   Op op() const {
     MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode ||
-               kind_ == TernaryOpcode || kind_ == ComparisonOpcode ||
-               kind_ == ConversionOpcode || kind_ == Load || kind_ == Store);
+               kind_ == ComparisonOpcode || kind_ == ConversionOpcode ||
+               kind_ == Load || kind_ == Store);
     return u.op_;
   }
   MiscOp miscOp() const {
@@ -318,6 +318,7 @@ class WasmToken {
       case MemInit:
       case MemoryGrow:
       case MemorySize:
+      case Select:
 #ifdef ENABLE_WASM_GC
       case StructNew:
       case StructGet:
@@ -341,7 +342,6 @@ class WasmToken {
       case TableSize:
 #endif
       case TeeLocal:
-      case TernaryOpcode:
       case UnaryOpcode:
       case Unreachable:
       case Wait:
@@ -2202,7 +2202,7 @@ WasmToken WasmTokenStream::next() {
 
     case 's':
       if (consume(u"select")) {
-        return WasmToken(WasmToken::TernaryOpcode, Op::Select, begin, cur_);
+        return WasmToken(WasmToken::Select, begin, cur_);
       }
       if (consume(u"set_global")) {
         return WasmToken(WasmToken::SetGlobal, begin, cur_);
@@ -3095,26 +3095,6 @@ static AstComparisonOperator* ParseComparisonOperator(WasmParseContext& c,
   return new (c.lifo) AstComparisonOperator(op, lhs, rhs);
 }
 
-static AstTernaryOperator* ParseTernaryOperator(WasmParseContext& c, Op op,
-                                                bool inParens) {
-  AstExpr* op0 = ParseExpr(c, inParens);
-  if (!op0) {
-    return nullptr;
-  }
-
-  AstExpr* op1 = ParseExpr(c, inParens);
-  if (!op1) {
-    return nullptr;
-  }
-
-  AstExpr* op2 = ParseExpr(c, inParens);
-  if (!op2) {
-    return nullptr;
-  }
-
-  return new (c.lifo) AstTernaryOperator(op, op0, op1, op2);
-}
-
 static AstConversionOperator* ParseConversionOperator(WasmParseContext& c,
                                                       Op op, bool inParens) {
   AstExpr* operand = ParseExpr(c, inParens);
@@ -3142,6 +3122,25 @@ static AstDrop* ParseDrop(WasmParseContext& c, bool inParens) {
   }
 
   return new (c.lifo) AstDrop(*value);
+}
+
+static AstSelect* ParseSelect(WasmParseContext& c, bool inParens) {
+  AstExpr* condition = ParseExpr(c, inParens);
+  if (!condition) {
+    return nullptr;
+  }
+
+  AstExpr* op1 = ParseExpr(c, inParens);
+  if (!op1) {
+    return nullptr;
+  }
+
+  AstExpr* op2 = ParseExpr(c, inParens);
+  if (!op2) {
+    return nullptr;
+  }
+
+  return new (c.lifo) AstSelect(condition, op1, op2);
 }
 
 static AstIf* ParseIf(WasmParseContext& c, bool inParens) {
@@ -4048,6 +4047,8 @@ static AstExpr* ParseExprBody(WasmParseContext& c, WasmToken token,
       return ParseBlock(c, Op::Loop, inParens);
     case WasmToken::Return:
       return ParseReturn(c, inParens);
+    case WasmToken::Select:
+      return ParseSelect(c, inParens);
     case WasmToken::SetGlobal:
       return ParseSetGlobal(c, inParens);
     case WasmToken::SetLocal:
@@ -4056,8 +4057,6 @@ static AstExpr* ParseExprBody(WasmParseContext& c, WasmToken token,
       return ParseStore(c, token.op(), inParens);
     case WasmToken::TeeLocal:
       return ParseTeeLocal(c, inParens);
-    case WasmToken::TernaryOpcode:
-      return ParseTernaryOperator(c, token.op(), inParens);
     case WasmToken::UnaryOpcode:
       return ParseUnaryOperator(c, token.op(), inParens);
     case WasmToken::Nop:
@@ -5474,6 +5473,11 @@ static bool ResolveDropOperator(Resolver& r, AstDrop& drop) {
   return ResolveExpr(r, drop.value());
 }
 
+static bool ResolveSelect(Resolver& r, AstSelect& b) {
+  return ResolveExpr(r, *b.condition()) && ResolveExpr(r, *b.op1()) &&
+         ResolveExpr(r, *b.op2());
+}
+
 static bool ResolveBranch(Resolver& r, AstBranch& br) {
   if (!r.resolveBranchTarget(br.target())) {
     return false;
@@ -5594,11 +5598,6 @@ static bool ResolveMemoryGrow(Resolver& r, AstMemoryGrow& gm) {
 
 static bool ResolveBinaryOperator(Resolver& r, AstBinaryOperator& b) {
   return ResolveExpr(r, *b.lhs()) && ResolveExpr(r, *b.rhs());
-}
-
-static bool ResolveTernaryOperator(Resolver& r, AstTernaryOperator& b) {
-  return ResolveExpr(r, *b.op0()) && ResolveExpr(r, *b.op1()) &&
-         ResolveExpr(r, *b.op2());
 }
 
 static bool ResolveComparisonOperator(Resolver& r, AstComparisonOperator& b) {
@@ -5848,8 +5847,8 @@ static bool ResolveExpr(Resolver& r, AstExpr& expr) {
       return ResolveBranchTable(r, expr.as<AstBranchTable>());
     case AstExprKind::TeeLocal:
       return ResolveTeeLocal(r, expr.as<AstTeeLocal>());
-    case AstExprKind::TernaryOperator:
-      return ResolveTernaryOperator(r, expr.as<AstTernaryOperator>());
+    case AstExprKind::Select:
+      return ResolveSelect(r, expr.as<AstSelect>());
     case AstExprKind::UnaryOperator:
       return ResolveUnaryOperator(r, expr.as<AstUnaryOperator>());
     case AstExprKind::MemoryGrow:
@@ -6270,6 +6269,11 @@ static bool EncodeDrop(Encoder& e, AstDrop& drop) {
   return EncodeExpr(e, drop.value()) && e.writeOp(Op::Drop);
 }
 
+static bool EncodeSelect(Encoder& e, AstSelect& b) {
+  return EncodeExpr(e, *b.condition()) && EncodeExpr(e, *b.op1()) &&
+         EncodeExpr(e, *b.op2()) && e.writeOp(Op::Select);
+}
+
 static bool EncodeGetLocal(Encoder& e, AstGetLocal& gl) {
   return e.writeOp(Op::GetLocal) && e.writeVarU32(gl.local().index());
 }
@@ -6300,11 +6304,6 @@ static bool EncodeUnaryOperator(Encoder& e, AstUnaryOperator& b) {
 static bool EncodeBinaryOperator(Encoder& e, AstBinaryOperator& b) {
   return EncodeExpr(e, *b.lhs()) && EncodeExpr(e, *b.rhs()) &&
          e.writeOp(b.op());
-}
-
-static bool EncodeTernaryOperator(Encoder& e, AstTernaryOperator& b) {
-  return EncodeExpr(e, *b.op0()) && EncodeExpr(e, *b.op1()) &&
-         EncodeExpr(e, *b.op2()) && e.writeOp(b.op());
 }
 
 static bool EncodeComparisonOperator(Encoder& e, AstComparisonOperator& b) {
@@ -6657,8 +6656,8 @@ static bool EncodeExpr(Encoder& e, AstExpr& expr) {
       return EncodeStore(e, expr.as<AstStore>());
     case AstExprKind::BranchTable:
       return EncodeBranchTable(e, expr.as<AstBranchTable>());
-    case AstExprKind::TernaryOperator:
-      return EncodeTernaryOperator(e, expr.as<AstTernaryOperator>());
+    case AstExprKind::Select:
+      return EncodeSelect(e, expr.as<AstSelect>());
     case AstExprKind::UnaryOperator:
       return EncodeUnaryOperator(e, expr.as<AstUnaryOperator>());
     case AstExprKind::MemorySize:
