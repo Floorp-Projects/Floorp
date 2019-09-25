@@ -27,16 +27,16 @@ class SSLTokensCache : public nsIMemoryReporter {
 
   static bool IsEnabled() { return sEnabled; }
 
-  static nsresult Put(const nsACString& aHost, const uint8_t* aToken,
+  static nsresult Put(const nsACString& aKey, const uint8_t* aToken,
                       uint32_t aTokenLen);
-  static nsresult Get(const nsACString& aHost, nsTArray<uint8_t>& aToken);
-  static nsresult Remove(const nsACString& aHost);
+  static nsresult Get(const nsACString& aKey, nsTArray<uint8_t>& aToken);
+  static nsresult Remove(const nsACString& aKey);
 
  private:
   SSLTokensCache();
   virtual ~SSLTokensCache();
 
-  nsresult RemoveLocked(const nsACString& aHost);
+  nsresult RemoveLocked(const nsACString& aKey);
 
   void InitPrefs();
   void EvictIfNecessary();
@@ -53,15 +53,15 @@ class SSLTokensCache : public nsIMemoryReporter {
 
   uint32_t mCacheSize;  // Actual cache size in bytes
 
-  class HostRecord {
+  class TokenCacheRecord {
    public:
-    nsCString mHost;
+    nsCString mKey;
     PRUint32 mExpirationTime;
     nsTArray<uint8_t> mToken;
   };
 
-  nsClassHashtable<nsCStringHashKey, HostRecord> mHostRecs;
-  nsTArray<HostRecord*> mExpirationArray;
+  nsClassHashtable<nsCStringHashKey, TokenCacheRecord> mTokenCacheRecords;
+  nsTArray<TokenCacheRecord*> mExpirationArray;
 };
 
 }  // namespace net
