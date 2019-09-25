@@ -5,10 +5,6 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-html|input[is="autocomplete-input"] {
-  margin: 4px; /* matches xul <textbox> default margin */
-}
-
 html|input[nomatch="true"][highlightnonmatches="true"] {
   color: red;
 }

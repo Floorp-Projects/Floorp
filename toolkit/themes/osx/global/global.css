@@ -179,6 +179,10 @@ label[disabled="true"] {
   box-shadow: var(--focus-ring-box-shadow);
 }
 
+html|input {
+  margin: 4px; /* matches xul <textbox> default margin */
+}
+
 notification > hbox > button {
   margin: 0 3px;
   padding: 1px 10px;
