@@ -406,7 +406,10 @@
           </treecols>
           <treechildren flex="1" onclick="ContentTree.onClick(event);"/>
         </tree>
-#include ../../downloads/content/downloadsRichListBox.inc.xul
+        <richlistbox flex="1"
+                     seltype="multiple"
+                     id="downloadsRichListBox"
+                     context="downloadsContextMenu"/>
       </deck>
       <deck id="detailsDeck" style="height: 11em;">
         <vbox id="itemsCountBox" align="center">

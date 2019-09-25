@@ -2,30 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+<script src="chrome://browser/content/downloads/downloadsCommands.js"/>
+
 <commandset id="downloadCommands"
             commandupdater="true"
-            events="focus,select,contextmenu"
-            oncommandupdate="goUpdateDownloadCommands();">
-  <command id="downloadsCmd_pauseResume"
-           oncommand="goDoCommand('downloadsCmd_pauseResume')"/>
-  <command id="downloadsCmd_cancel"
-           oncommand="goDoCommand('downloadsCmd_cancel')"/>
-  <command id="downloadsCmd_unblock"
-           oncommand="goDoCommand('downloadsCmd_unblock')"/>
-  <command id="downloadsCmd_chooseUnblock"
-           oncommand="goDoCommand('downloadsCmd_chooseUnblock')"/>
-  <command id="downloadsCmd_chooseOpen"
-           oncommand="goDoCommand('downloadsCmd_chooseOpen')"/>
-  <command id="downloadsCmd_confirmBlock"
-           oncommand="goDoCommand('downloadsCmd_confirmBlock')"/>
-  <command id="downloadsCmd_open"
-           oncommand="goDoCommand('downloadsCmd_open')"/>
-  <command id="downloadsCmd_show"
-           oncommand="goDoCommand('downloadsCmd_show')"/>
-  <command id="downloadsCmd_retry"
-           oncommand="goDoCommand('downloadsCmd_retry')"/>
-  <command id="downloadsCmd_openReferrer"
-           oncommand="goDoCommand('downloadsCmd_openReferrer')"/>
-  <command id="downloadsCmd_clearDownloads"
-           oncommand="goDoCommand('downloadsCmd_clearDownloads')"/>
+            events="focus,select,contextmenu">
+  <command id="downloadsCmd_pauseResume"/>
+  <command id="downloadsCmd_cancel"/>
+  <command id="downloadsCmd_unblock"/>
+  <command id="downloadsCmd_chooseUnblock"/>
+  <command id="downloadsCmd_chooseOpen"/>
+  <command id="downloadsCmd_confirmBlock"/>
+  <command id="downloadsCmd_open"/>
+  <command id="downloadsCmd_show"/>
+  <command id="downloadsCmd_retry"/>
+  <command id="downloadsCmd_openReferrer"/>
+  <command id="downloadsCmd_clearDownloads"/>
 </commandset>
