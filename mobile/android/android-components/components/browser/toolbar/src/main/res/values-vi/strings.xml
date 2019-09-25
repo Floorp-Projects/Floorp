@@ -6,9 +6,9 @@
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, but none trackers have been blocked or detected. -->
     <string name="mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked">Chống theo dõi đang bật</string>
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, and trackers have been blocked or detected.-->
-    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_trackers_blocked">Chống theo dõi đã kích hoạt chặn trình theo dõi</string>
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_trackers_blocked1">Trình chống theo dõi đã chặn trình theo dõi</string>
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection disabled.-->
-    <string name="mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site">Chống theo dõi đã bị tắt cho trang này</string>
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site1">Trình chống theo dõi đã bị tắt cho trang web này.</string>
     <!-- Announcement made by the screen reader when the progress bar is shown and a page is loading -->
     <string name="mozac_browser_toolbar_progress_loading">Đang tải</string>
 </resources>

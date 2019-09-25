@@ -283,6 +283,6 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Masalah situs tipuan</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
-      <p>Laman web di %1$ telah dilaporkan sebagai situs tipuan dan telah diblokir sesuai dengan pengaturan keamanan Anda.</p>
+      <p>Laman web di %1$s telah dilaporkan sebagai situs tipuan dan telah diblokir sesuai dengan pengaturan keamanan Anda.</p>
     ]]></string>
 </resources>
