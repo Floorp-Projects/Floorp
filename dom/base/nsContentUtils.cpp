@@ -8858,6 +8858,44 @@ bool nsContentUtils::HttpsStateIsModern(Document* aDocument) {
 }
 
 /* static */
+bool nsContentUtils::ComputeIsSecureContext(nsIChannel* aChannel) {
+  MOZ_ASSERT(aChannel);
+
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  // The assertion would be relaxed due to COEP support.
+  MOZ_ASSERT(loadInfo->GetExternalContentPolicyType() ==
+             nsIContentPolicy::TYPE_DOCUMENT);
+
+  nsCOMPtr<nsIScriptSecurityManager> ssm = nsContentUtils::GetSecurityManager();
+  nsCOMPtr<nsIPrincipal> principal;
+  nsresult rv = ssm->GetChannelResultPrincipalIfNotSandboxed(
+      aChannel, getter_AddRefs(principal));
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  if (principal->IsSystemPrincipal()) {
+    // If the load would've been sandboxed, treat this load as an untrusted
+    // load, as system code considers sandboxed resources insecure.
+    return !loadInfo->GetLoadingSandboxed();
+  }
+
+  if (principal->GetIsNullPrincipal()) {
+    return false;
+  }
+
+  nsCOMPtr<nsIContentSecurityManager> csm =
+      do_GetService(NS_CONTENTSECURITYMANAGER_CONTRACTID);
+  NS_WARNING_ASSERTION(csm, "csm is null");
+  if (csm) {
+    bool isTrustworthyOrigin = false;
+    csm->IsOriginPotentiallyTrustworthy(principal, &isTrustworthyOrigin);
+    return isTrustworthyOrigin;
+  }
+  return true;
+}
+
+/* static */
 void nsContentUtils::TryToUpgradeElement(Element* aElement) {
   NodeInfo* nodeInfo = aElement->NodeInfo();
   RefPtr<nsAtom> typeAtom =

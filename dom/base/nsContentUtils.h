@@ -2899,6 +2899,13 @@ class nsContentUtils {
   static bool HttpsStateIsModern(Document* aDocument);
 
   /**
+   * Returns true if the channel is for top-level window and is over secure
+   * context.
+   * https://github.com/whatwg/html/issues/4930 tracks the spec side of this.
+   */
+  static bool ComputeIsSecureContext(nsIChannel* aChannel);
+
+  /**
    * Try to upgrade an element.
    * https://html.spec.whatwg.org/multipage/custom-elements.html#concept-try-upgrade
    */
