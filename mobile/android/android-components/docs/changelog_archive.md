@@ -533,12 +533,12 @@ permalink: /changelog/archive
           }
 
           override fun onPortMessage(message: Any, port: Port) {
-            // Called when a messsage was received on the provided port as a
+            // Called when a message was received on the provided port as a
             // result of a call to port.postMessage in JavaScript.
           }
 
           override fun onMessage(message: Any, source: EngineSession?): Any {
-            // Called when a message was recieved as a result of a
+            // Called when a message was received as a result of a
             // browser.runtime.sendNativeMessage call in JavaScript.
           }
       }
@@ -1298,7 +1298,7 @@ permalink: /changelog/archive
       }
   }
 
-  // Create a custom SuggestionLayout for controling view inflation
+  // Create a custom SuggestionLayout for controlling view inflation
   class CustomSuggestionLayout : SuggestionLayout {
       override fun getLayoutResource(suggestion: AwesomeBar.Suggestion): Int {
           return android.R.layout.simple_list_item_1
