@@ -225,7 +225,7 @@ diff --git a/modules/fdlibm/src/s_atan.cpp b/modules/fdlibm/src/s_atan.cpp
 diff --git a/modules/fdlibm/src/s_cbrt.cpp b/modules/fdlibm/src/s_cbrt.cpp
 --- a/modules/fdlibm/src/s_cbrt.cpp
 +++ b/modules/fdlibm/src/s_cbrt.cpp
-@@ -105,12 +105,8 @@ cbrt(double x)
+@@ -106,12 +106,8 @@ cbrt(double x)
  	s=t*t;				/* t*t is exact */
  	r=x/s;				/* error <= 0.5 ulps; |r| < |t| */
  	w=t+t;				/* t+t is exact */

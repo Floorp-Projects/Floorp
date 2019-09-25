@@ -1,7 +1,7 @@
 diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private.h
 --- a/modules/fdlibm/src/math_private.h
 +++ b/modules/fdlibm/src/math_private.h
-@@ -14,20 +14,21 @@
+@@ -14,52 +14,38 @@
   * $FreeBSD$
   */
  
@@ -24,15 +24,16 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
   * to dig two 32 bit words out of the 64 bit IEEE floating point
   * value.  That is non-ANSI, and, moreover, the gcc instruction
   * scheduler gets it wrong.  We instead use the following macros.
-@@ -36,27 +37,17 @@
+  * Unlike the original code, we determine the endianness at compile
+  * time, not at run time; I don't see much benefit to selecting
   * endianness at run time.
   */
  
- /*
-  * A union which permits us to convert between a double and two 32 bit
-  * ints.
-  */
- 
+-/*
+- * A union which permits us to convert between a double and two 32 bit
+- * ints.
+- */
+-
 -#ifdef __arm__
 -#if defined(__VFP_FP__) || defined(__ARM_EABI__)
 -#define	IEEE_WORD_ORDER	BYTE_ORDER
@@ -43,7 +44,53 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
 -#define	IEEE_WORD_ORDER	BYTE_ORDER
 -#endif
 -
+ /* A union which permits us to convert between a long double and
+    four 32 bit ints.  */
+ 
 -#if IEEE_WORD_ORDER == BIG_ENDIAN
++#if MOZ_BIG_ENDIAN
+ 
+ typedef union
+ {
+   long double value;
+   struct {
+     u_int32_t mswhi;
+     u_int32_t mswlo;
+     u_int32_t lswhi;
+@@ -68,17 +54,17 @@ typedef union
+   struct {
+     u_int64_t msw;
+     u_int64_t lsw;
+   } parts64;
+ } ieee_quad_shape_type;
+ 
+ #endif
+ 
+-#if IEEE_WORD_ORDER == LITTLE_ENDIAN
++#if MOZ_LITTLE_ENDIAN
+ 
+ typedef union
+ {
+   long double value;
+   struct {
+     u_int32_t lswlo;
+     u_int32_t lswhi;
+     u_int32_t mswlo;
+@@ -87,17 +73,22 @@ typedef union
+   struct {
+     u_int64_t lsw;
+     u_int64_t msw;
+   } parts64;
+ } ieee_quad_shape_type;
+ 
+ #endif
+ 
+-#if IEEE_WORD_ORDER == BIG_ENDIAN
++/*
++ * A union which permits us to convert between a double and two 32 bit
++ * ints.
++ */
++
 +#if MOZ_BIG_ENDIAN
  
  typedef union
@@ -53,7 +100,7 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
    {
      u_int32_t msw;
      u_int32_t lsw;
-@@ -64,17 +55,17 @@ typedef union
+@@ -105,17 +96,17 @@ typedef union
    struct
    {
      u_int64_t w;
