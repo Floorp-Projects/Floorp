@@ -19,7 +19,7 @@ color_dict = {
     'log_process_output': 'blue',
     'log_test_status_pass': 'green',
     'log_test_status_unexpected_fail': 'red',
-    'log_test_status_known_intermittent': 'orange',
+    'log_test_status_known_intermittent': 'yellow',
     'time': 'cyan',
     'action': 'yellow',
     'pid': 'cyan',
