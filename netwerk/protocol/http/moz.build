@@ -108,7 +108,6 @@ UNIFIED_SOURCES += [
     'NullHttpChannel.cpp',
     'NullHttpTransaction.cpp',
     'ParentChannelListener.cpp',
-    'QuicSocketControl.cpp',
     'TunnelUtils.cpp',
 ]
 

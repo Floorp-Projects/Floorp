@@ -59,7 +59,6 @@ EXTRA_JS_MODULES.psm += [
 ]
 
 EXPORTS += [
-    'CommonSocketControl.h',
     'CryptoTask.h',
     'EnterpriseRoots.h',
     'nsClientAuthRemember.h',
@@ -75,7 +74,6 @@ EXPORTS += [
     'RootCertificateTelemetryUtils.h',
     'ScopedNSSTypes.h',
     'SharedCertVerifier.h',
-    'TransportSecurityInfo.h',
 ]
 
 EXPORTS.mozilla += [
@@ -94,7 +92,6 @@ EXPORTS.ipc += [
 ]
 
 UNIFIED_SOURCES += [
-    'CommonSocketControl.cpp',
     'ContentSignatureVerifier.cpp',
     'CryptoTask.cpp',
     'CSTrustDomain.cpp',
