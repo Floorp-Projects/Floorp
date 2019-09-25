@@ -38,6 +38,7 @@ add_task(async function() {
 
   await addBreakpoint(dbg, "doc_inspector_styles.html", 11);
   await rewindToLine(dbg, 11);
+  await dbg.toolbox.selectTool("inspector");
   await checkBackgroundColor("#maindiv", "rgb(255, 0, 0)");
 
   await shutdownDebugger(dbg);
