@@ -538,10 +538,11 @@ this.LoginTestUtils.telemetry = {
         Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
         false
       )[process];
-      dump(`events: ${JSON.stringify(events, null, 2)}\n`);
+
       if (!events) {
         return null;
       }
+
       events = events.filter(e => e[1] == category);
       return events.length == count ? events : null;
     }, "waiting for telemetry event count of: " + count);
