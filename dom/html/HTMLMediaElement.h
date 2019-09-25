@@ -726,7 +726,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   bool GetShowPosterFlag() const { return mShowPoster; }
 
-  AudioChannelService::AudibleState GetAudibleState() const;
+  bool IsAudible() const;
 
  protected:
   virtual ~HTMLMediaElement();
