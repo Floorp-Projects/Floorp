@@ -40,28 +40,54 @@ function goUpdatePasteMenuItems() {
 window.addEventListener(
   "DOMContentLoaded",
   () => {
+    // Bug 371900: Remove useless oncommand attribute once bug 371900 is fixed
+    // If you remove/update the oncommand attribute for any of the cmd_*, please
+    // also remove/update the sha512 hash in the CSP within about:downloads
     let container =
       document.querySelector("commandset") || document.documentElement;
-    container.appendChild(
-      MozXULElement.parseXULToFragment(`
-    <commandset id="editMenuCommands">
-      <commandset id="editMenuCommandSetAll" commandupdater="true" events="focus,select"
-                  oncommandupdate="goUpdateGlobalEditMenuItems()"/>
-      <commandset id="editMenuCommandSetUndo" commandupdater="true" events="undo"
-                  oncommandupdate="goUpdateUndoEditMenuItems()"/>
-      <commandset id="editMenuCommandSetPaste" commandupdater="true" events="clipboard"
-                  oncommandupdate="goUpdatePasteMenuItems()"/>
-      <command id="cmd_undo" oncommand="goDoCommand('cmd_undo')"/>
-      <command id="cmd_redo" oncommand="goDoCommand('cmd_redo')"/>
-      <command id="cmd_cut" oncommand="goDoCommand('cmd_cut')"/>
-      <command id="cmd_copy" oncommand="goDoCommand('cmd_copy')"/>
-      <command id="cmd_paste" oncommand="goDoCommand('cmd_paste')"/>
-      <command id="cmd_delete" oncommand="goDoCommand('cmd_delete')"/>
-      <command id="cmd_selectAll" oncommand="goDoCommand('cmd_selectAll')"/>
-      <command id="cmd_switchTextDirection" oncommand="goDoCommand('cmd_switchTextDirection');"/>
-    </commandset>
-  `)
+    let fragment = MozXULElement.parseXULToFragment(`
+      <commandset id="editMenuCommands">
+        <commandset id="editMenuCommandSetAll" commandupdater="true" events="focus,select" />
+        <commandset id="editMenuCommandSetUndo" commandupdater="true" events="undo" />
+        <commandset id="editMenuCommandSetPaste" commandupdater="true" events="clipboard" />
+        <command id="cmd_undo" oncommand=";" />
+        <command id="cmd_redo" oncommand=";" />
+        <command id="cmd_cut" oncommand=";" />
+        <command id="cmd_copy" oncommand=";" />
+        <command id="cmd_paste" oncommand=";" />
+        <command id="cmd_delete" oncommand=";" />
+        <command id="cmd_selectAll" oncommand=";" />
+        <command id="cmd_switchTextDirection" oncommand=";" />
+      </commandset>
+    `);
+
+    let editMenuCommandSetAll = fragment.querySelector(
+      "#editMenuCommandSetAll"
     );
+    editMenuCommandSetAll.addEventListener("commandupdate", function() {
+      goUpdateGlobalEditMenuItems();
+    });
+
+    let editMenuCommandSetUndo = fragment.querySelector(
+      "#editMenuCommandSetUndo"
+    );
+    editMenuCommandSetUndo.addEventListener("commandupdate", function() {
+      goUpdateUndoEditMenuItems();
+    });
+
+    let editMenuCommandSetPaste = fragment.querySelector(
+      "#editMenuCommandSetPaste"
+    );
+    editMenuCommandSetPaste.addEventListener("commandupdate", function() {
+      goUpdatePasteMenuItems();
+    });
+
+    fragment.firstElementChild.addEventListener("command", event => {
+      let commandID = event.target.id;
+      goDoCommand(commandID);
+    });
+
+    container.appendChild(fragment);
   },
   { once: true }
 );

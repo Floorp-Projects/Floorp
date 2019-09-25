@@ -1693,6 +1693,19 @@ void NS_UnsetMainThread();
 extern mozilla::TimeStamp NS_GetTimerDeadlineHintOnCurrentThread(
     mozilla::TimeStamp aDefault, uint32_t aSearchBound);
 
+/**
+ * Dispatches the given event to a background thread.  The primary benefit of
+ * this API is that you do not have to manage the lifetime of your own thread
+ * for running your own events; the thread manager will take care of the
+ * background thread's lifetime.  Not having to manage your own thread also
+ * means less resource usage, as the underlying implementation here can manage
+ * spinning up and shutting down threads appropriately.
+ */
+extern nsresult NS_DispatchToBackgroundThread(already_AddRefed<nsIRunnable> aEvent,
+                                              uint32_t aDispatchFlags = NS_DISPATCH_NORMAL);
+extern nsresult NS_DispatchToBackgroundThread(nsIRunnable* aEvent,
+                                              uint32_t aDispatchFlags = NS_DISPATCH_NORMAL);
+
 namespace mozilla {
 
 /**

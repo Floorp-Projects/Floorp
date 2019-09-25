@@ -266,6 +266,11 @@ function validateAndParseSimpleParam(param, type) {
         parsedParam = new URL(param);
         valid = true;
       } catch (ex) {
+        if (!param.startsWith("http")) {
+          log.error(
+            `Ignoring parameter "${param}" - scheme (http or https) must be specified.`
+          );
+        }
         valid = false;
       }
       break;

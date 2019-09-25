@@ -21,3 +21,7 @@ var ContentAreaDownloadsView = {
     document.getElementById("downloadsRichListBox").focus();
   },
 };
+
+window.onload = function() {
+  ContentAreaDownloadsView.init();
+};

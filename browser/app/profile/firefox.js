@@ -497,7 +497,7 @@ pref("browser.tabs.delayHidingAudioPlayingIconMS", 3000);
   // Pref to control whether we use a separate privileged content process
   // for certain mozilla webpages (which are listed in the pref
   // browser.tabs.remote.separatedMozillaDomains).
-  pref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", false);
+  pref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", true);
   // This pref will cause assertions when a remoteType triggers a process switch
   // to a new remoteType it should not be able to trigger.
   pref("browser.tabs.remote.enforceRemoteTypeRestrictions", true);
