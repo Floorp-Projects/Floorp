@@ -249,13 +249,8 @@ RefPtr<ShutdownPromise> RemoteDecoderChild::Shutdown() {
   AssertOnManagerThread();
   mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   mInitialized = false;
-  if (mNeedNewDecoder) {
-    MediaResult error(NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER);
-    error.SetGPUCrashTimeStamp(mRemoteProcessCrashTime);
-    return ShutdownPromise::CreateAndResolve(true, __func__);
-  }
-  if (!mCanSend) {
-    return ShutdownPromise::CreateAndResolve(true, __func__);
+  if (mNeedNewDecoder || !mCanSend) {
+    return mozilla::ShutdownPromise::CreateAndResolve(true, __func__);
   }
   SendShutdown();
   MOZ_ASSERT(!mShutdownSelfRef);
