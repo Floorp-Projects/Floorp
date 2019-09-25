@@ -4575,8 +4575,6 @@ pref("dom.maxHardwareConcurrency", 16);
   pref("osfile.reset_worker_delay", 30000);
 #endif
 
-pref("media.block-autoplay-until-in-foreground", true);
-
 // TODO: Bug 1324406: Treat 'data:' documents as unique, opaque origins
 // If true, data: URIs will be treated as unique opaque origins, hence will use
 // a NullPrincipal as the security context.
