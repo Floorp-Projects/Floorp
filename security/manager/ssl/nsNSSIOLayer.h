@@ -163,7 +163,6 @@ class nsNSSSocketInfo final : public mozilla::psm::TransportSecurityInfo,
 
   nsCString mNegotiatedNPN;
   nsCString mEsniTxt;
-  nsCString mPeerId;
   bool mNPNCompleted;
   bool mEarlyDataAccepted;
   bool mDenyClientCert;
