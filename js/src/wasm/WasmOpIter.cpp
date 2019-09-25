@@ -224,7 +224,8 @@ OpKind wasm::Classify(OpBytes op) {
     case Op::F32Store:
     case Op::F64Store:
       return OpKind::Store;
-    case Op::Select:
+    case Op::SelectNumeric:
+    case Op::SelectTyped:
       return OpKind::Select;
     case Op::GetLocal:
       return OpKind::GetLocal;

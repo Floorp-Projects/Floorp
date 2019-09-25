@@ -435,7 +435,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   MOZ_MUST_USE bool readNop();
   MOZ_MUST_USE bool readMemorySize();
   MOZ_MUST_USE bool readMemoryGrow(Value* input);
-  MOZ_MUST_USE bool readSelect(StackType* type, Value* trueValue,
+  MOZ_MUST_USE bool readSelect(bool typed, StackType* type, Value* trueValue,
                                Value* falseValue, Value* condition);
   MOZ_MUST_USE bool readGetLocal(const ValTypeVector& locals, uint32_t* id);
   MOZ_MUST_USE bool readSetLocal(const ValTypeVector& locals, uint32_t* id,
@@ -1395,9 +1395,38 @@ inline bool OpIter<Policy>::readMemoryGrow(Value* input) {
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readSelect(StackType* type, Value* trueValue,
-                                       Value* falseValue, Value* condition) {
+inline bool OpIter<Policy>::readSelect(bool typed, StackType* type,
+                                       Value* trueValue, Value* falseValue,
+                                       Value* condition) {
   MOZ_ASSERT(Classify(op_) == OpKind::Select);
+
+  if (typed) {
+    uint32_t length;
+    if (!readVarU32(&length)) {
+      return fail("unable to read select result length");
+    }
+    if (length != 1) {
+      return fail("bad number of results");
+    }
+    ValType result;
+    if (!readValType(&result)) {
+      return fail("invalid result type for select");
+    }
+
+    if (!popWithType(ValType::I32, condition)) {
+      return false;
+    }
+    if (!popWithType(result, falseValue)) {
+      return false;
+    }
+    if (!popWithType(result, trueValue)) {
+      return false;
+    }
+
+    *type = StackType(result);
+    infalliblePush(*type);
+    return true;
+  }
 
   if (!popWithType(ValType::I32, condition)) {
     return false;

@@ -2426,6 +2426,22 @@ static bool ParseValType(WasmParseContext& c, AstValType* type) {
   return true;
 }
 
+static bool ParseValueTypeList(WasmParseContext& c, AstValTypeVector* vec) {
+  for (;;) {
+    AstValType vt;
+    if (!MaybeParseValType(c, &vt)) {
+      return false;
+    }
+    if (!vt.isValid()) {
+      break;
+    }
+    if (!vec->append(vt)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 static bool ParseBlockSignature(WasmParseContext& c, AstExprType* type) {
   WasmToken token;
   AstValType vt;
@@ -3125,9 +3141,36 @@ static AstDrop* ParseDrop(WasmParseContext& c, bool inParens) {
 }
 
 static AstSelect* ParseSelect(WasmParseContext& c, bool inParens) {
-  AstExpr* condition = ParseExpr(c, inParens);
+  AstValTypeVector result(c.lifo);
+  AstExpr* condition = nullptr;
+
+  while (!condition && c.ts.getIf(WasmToken::OpenParen)) {
+    WasmToken token = c.ts.get();
+    switch (token.kind()) {
+      case WasmToken::Result:
+        if (!ParseValueTypeList(c, &result)) {
+          return nullptr;
+        }
+        break;
+      default:
+        c.ts.unget(token);
+        AstExpr* expr = ParseExprInsideParens(c);
+        if (!expr) {
+          return nullptr;
+        }
+        condition = expr;
+        break;
+    }
+    if (!c.ts.match(WasmToken::CloseParen, c.error)) {
+      return nullptr;
+    }
+  }
+
   if (!condition) {
-    return nullptr;
+    condition = ParseExpr(c, inParens);
+    if (!condition) {
+      return nullptr;
+    }
   }
 
   AstExpr* op1 = ParseExpr(c, inParens);
@@ -3140,7 +3183,7 @@ static AstSelect* ParseSelect(WasmParseContext& c, bool inParens) {
     return nullptr;
   }
 
-  return new (c.lifo) AstSelect(condition, op1, op2);
+  return new (c.lifo) AstSelect(condition, op1, op2, std::move(result));
 }
 
 static AstIf* ParseIf(WasmParseContext& c, bool inParens) {
@@ -4115,22 +4158,6 @@ static AstExpr* ParseExprInsideParens(WasmParseContext& c) {
   WasmToken token = c.ts.get();
 
   return ParseExprBody(c, token, true);
-}
-
-static bool ParseValueTypeList(WasmParseContext& c, AstValTypeVector* vec) {
-  for (;;) {
-    AstValType vt;
-    if (!MaybeParseValType(c, &vt)) {
-      return false;
-    }
-    if (!vt.isValid()) {
-      break;
-    }
-    if (!vec->append(vt)) {
-      return false;
-    }
-  }
-  return true;
 }
 
 static bool ParseResult(WasmParseContext& c, AstExprType* result) {
@@ -6270,8 +6297,26 @@ static bool EncodeDrop(Encoder& e, AstDrop& drop) {
 }
 
 static bool EncodeSelect(Encoder& e, AstSelect& b) {
-  return EncodeExpr(e, *b.condition()) && EncodeExpr(e, *b.op1()) &&
-         EncodeExpr(e, *b.op2()) && e.writeOp(Op::Select);
+  if (!EncodeExpr(e, *b.condition()) || !EncodeExpr(e, *b.op1()) ||
+      !EncodeExpr(e, *b.op2())) {
+    return false;
+  }
+
+  if (b.result().empty()) {
+    return e.writeOp(Op::SelectNumeric);
+  }
+
+  if (!e.writeOp(Op::SelectTyped) || !e.writeVarU32(b.result().length())) {
+    return false;
+  }
+
+  for (AstValType vt : b.result()) {
+    if (!e.writeValType(vt.type())) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 static bool EncodeGetLocal(Encoder& e, AstGetLocal& gl) {
