@@ -20,47 +20,6 @@ const gElements = {
 
 let numberOfLogins = 0;
 
-let searchParamsChanged = false;
-let { protocol, pathname, searchParams } = new URL(document.location);
-
-recordTelemetryEvent({
-  method: "open_management",
-  object: searchParams.get("entryPoint") || "direct",
-});
-
-if (searchParams.has("entryPoint")) {
-  // Remove this parameter from the URL (after recording above) to make it
-  // cleaner for bookmarking and switch-to-tab and so that bookmarked values
-  // don't skew telemetry.
-  searchParams.delete("entryPoint");
-  searchParamsChanged = true;
-}
-
-if (searchParams.has("filter")) {
-  let filter = searchParams.get("filter");
-  if (!filter) {
-    // Remove empty `filter` params to give a cleaner URL for bookmarking and
-    // switch-to-tab
-    searchParams.delete("filter");
-    searchParamsChanged = true;
-  }
-}
-
-if (searchParamsChanged) {
-  let newURL = protocol + pathname;
-  let params = searchParams.toString();
-  if (params) {
-    newURL += "?" + params;
-  }
-  window.location.replace(newURL);
-} else if (searchParams.has("filter")) {
-  // This must be after the `location.replace` so it doesn't cause telemetry to
-  // record a filter event before the navigation to clean the URL.
-  gElements.loginFilter.value = searchParams.get("filter");
-}
-
-gElements.loginFilter.focus();
-
 function updateNoLogins() {
   document.documentElement.classList.toggle("no-logins", numberOfLogins == 0);
   gElements.loginList.classList.toggle("no-logins", numberOfLogins == 0);
@@ -135,4 +94,50 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
   }
 });
 
-document.dispatchEvent(new CustomEvent("AboutLoginsInit", { bubbles: true }));
+// Begin code that executes on page load.
+
+let searchParamsChanged = false;
+let { protocol, pathname, searchParams } = new URL(document.location);
+
+recordTelemetryEvent({
+  method: "open_management",
+  object: searchParams.get("entryPoint") || "direct",
+});
+
+if (searchParams.has("entryPoint")) {
+  // Remove this parameter from the URL (after recording above) to make it
+  // cleaner for bookmarking and switch-to-tab and so that bookmarked values
+  // don't skew telemetry.
+  searchParams.delete("entryPoint");
+  searchParamsChanged = true;
+}
+
+if (searchParams.has("filter")) {
+  let filter = searchParams.get("filter");
+  if (!filter) {
+    // Remove empty `filter` params to give a cleaner URL for bookmarking and
+    // switch-to-tab
+    searchParams.delete("filter");
+    searchParamsChanged = true;
+  }
+}
+
+if (searchParamsChanged) {
+  let newURL = protocol + pathname;
+  let params = searchParams.toString();
+  if (params) {
+    newURL += "?" + params;
+  }
+  // This redirect doesn't stop this script from running so ensure you guard
+  // later code if it shouldn't run before and after the redirect.
+  window.location.replace(newURL);
+} else if (searchParams.has("filter")) {
+  // This must be after the `location.replace` so it doesn't cause telemetry to
+  // record a filter event before the navigation to clean the URL.
+  gElements.loginFilter.value = searchParams.get("filter");
+}
+
+if (!searchParamsChanged) {
+  gElements.loginFilter.focus();
+  document.dispatchEvent(new CustomEvent("AboutLoginsInit", { bubbles: true }));
+}
