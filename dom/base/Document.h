@@ -888,8 +888,8 @@ class Document : public nsINode,
    * Return the referrer from document URI as defined in the Referrer Policy
    * specification.
    * https://w3c.github.io/webappsec-referrer-policy/#determine-requests-referrer
-   * While document is an iframe srcdoc document, let document be document???s
-   * browsing context???s browsing context container???s node document.
+   * While document is an iframe srcdoc document, let document be document's
+   * browsing context's browsing context container's node document.
    * Then referrer should be document's URL
    */
 
