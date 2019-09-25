@@ -31,6 +31,10 @@ label:dir(rtl) {
   white-space: nowrap;
 }
 
+.download-link-chain {
+  margin: 0 5px;
+}
+
 .long-hex:hover {
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
