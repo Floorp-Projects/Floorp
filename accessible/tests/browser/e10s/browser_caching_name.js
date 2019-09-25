@@ -515,11 +515,19 @@ async function testNameRule(browser, target, ruleset, expected) {
 
 markupTests.forEach(({ id, ruleset, markup, expected }) =>
   addAccessibleTask(markup, async function(browser, accDoc) {
+    const observer = {
+      observe(subject, topic, data) {
+        const event = subject.QueryInterface(nsIAccessibleEvent);
+        console.log(eventToString(event));
+      },
+    };
+    Services.obs.addObserver(observer, "accessible-event");
     // Find a target accessible from an accessible subtree.
     let acc = findAccessibleChildByID(accDoc, id);
     // Find target's parent accessible from an accessible subtree.
     let parent = getAccessibleDOMNodeID(acc.parent);
     let target = { id, parent, acc };
     await testNameRule(browser, target, rules[ruleset], expected);
+    Services.obs.removeObserver(observer, "accessible-event");
   })
 );
