@@ -11,6 +11,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.app.links.AppLinksUseCases
 import org.junit.Before
 import org.junit.Test
@@ -26,6 +27,7 @@ import org.mozilla.fenix.utils.ItsNotBrokenSnack
 class DefaultQuickActionSheetControllerTest {
     private val context: HomeActivity = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
+    private val sessionManager: SessionManager = mockk(relaxed = true)
     private val currentSession: Session = mockk(relaxed = true)
     private val appLinksUseCases: AppLinksUseCases = mockk(relaxed = true)
     private val bookmarkTapped: (Session) -> Unit = mockk(relaxed = true)
@@ -38,10 +40,12 @@ class DefaultQuickActionSheetControllerTest {
         controller = DefaultQuickActionSheetController(
             context,
             navController,
-            currentSession,
+            sessionManager,
             appLinksUseCases,
             bookmarkTapped
         )
+
+        every { sessionManager.selectedSession } returns currentSession
 
         every { context.metrics } returns metrics
     }
@@ -51,7 +55,12 @@ class DefaultQuickActionSheetControllerTest {
         controller.handleShare()
 
         verify { metrics.track(Event.QuickActionSheetShareTapped) }
-        verify { navController.nav(R.id.browserFragment, BrowserFragmentDirections.actionBrowserFragmentToShareFragment(currentSession.url)) }
+        verify {
+            navController.nav(
+                R.id.browserFragment,
+                BrowserFragmentDirections.actionBrowserFragmentToShareFragment(currentSession.url)
+            )
+        }
     }
 
     @Test

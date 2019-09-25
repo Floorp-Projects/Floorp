@@ -193,8 +193,7 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
             quickActionSheetController = DefaultQuickActionSheetController(
                 context = context,
                 navController = findNavController(),
-                currentSession = getSessionById()
-                    ?: context.components.core.sessionManager.selectedSessionOrThrow,
+                sessionManager = context.components.core.sessionManager,
                 appLinksUseCases = context.components.useCases.appLinksUseCases,
                 bookmarkTapped = {
                     lifecycleScope.launch { bookmarkTapped(it) }
