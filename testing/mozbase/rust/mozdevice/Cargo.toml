@@ -1,0 +1,15 @@
+[package]
+name = "mozdevice"
+version = "0.1.0"
+authors = ["Nick Alexander <nalexander@mozilla.com>", "Henrik Skupin <mail@hskupin.info>"]
+description = "Client library for the Android Debug Bridge (adb)"
+keywords = ["mozilla", "firefox", "geckoview", "android", "adb"]
+repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/rust/mozdevice"
+license = "MPL-2.0"
+
+[dependencies]
+log = { version = "0.4", features = ["std"] }
+regex = "1"
+tempfile = "3"
+walkdir = "2"
+
