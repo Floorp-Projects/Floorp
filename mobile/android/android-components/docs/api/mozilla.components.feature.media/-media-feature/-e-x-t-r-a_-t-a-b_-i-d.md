@@ -2,4 +2,4 @@
 
 # EXTRA_TAB_ID
 
-`const val EXTRA_TAB_ID: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/media/src/main/java/mozilla/components/feature/media/MediaFeature.kt#L77)
+`const val EXTRA_TAB_ID: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/media/src/main/java/mozilla/components/feature/media/MediaFeature.kt#L74)

@@ -109,6 +109,7 @@ mozilla.components.browser.tabstray
 mozilla.components.browser.tabstray.thumbnail
 mozilla.components.browser.toolbar
 mozilla.components.browser.toolbar.behavior
+mozilla.components.browser.toolbar.facts
 mozilla.components.concept.awesomebar
 mozilla.components.concept.engine
 mozilla.components.concept.engine.content.blocking
@@ -135,6 +136,7 @@ mozilla.components.feature.app.links
 mozilla.components.feature.awesomebar
 mozilla.components.feature.awesomebar.provider
 mozilla.components.feature.contextmenu
+mozilla.components.feature.contextmenu.facts
 mozilla.components.feature.customtabs
 mozilla.components.feature.customtabs.feature
 mozilla.components.feature.customtabs.store
@@ -143,11 +145,13 @@ mozilla.components.feature.downloads
 mozilla.components.feature.downloads.ext
 mozilla.components.feature.downloads.manager
 mozilla.components.feature.findinpage
+mozilla.components.feature.findinpage.facts
 mozilla.components.feature.findinpage.view
 mozilla.components.feature.intent.ext
 mozilla.components.feature.intent.processing
 mozilla.components.feature.media
 mozilla.components.feature.media.ext
+mozilla.components.feature.media.facts
 mozilla.components.feature.media.state
 mozilla.components.feature.prompts
 mozilla.components.feature.push
