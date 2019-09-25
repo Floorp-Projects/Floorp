@@ -168,9 +168,6 @@ RootActor.prototype = {
     // Whether or not the timeline actor can emit DOMContentLoaded and Load
     // markers, currently in use by the network monitor. Fx45+
     documentLoadingMarkers: true,
-    // Whether or not the webextension addon actor have to be connected
-    // to retrieve the extension child process target actors.
-    webExtensionAddonConnect: true,
     // Version of perf actor. Fx65+
     // Version 1 - Firefox 65: Introduces a duration-based buffer. It can be controlled
     // by adding a `duration` property (in seconds) to the options passed to
