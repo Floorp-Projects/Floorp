@@ -76,6 +76,9 @@ const { DeclinedEngines } = ChromeUtils.import(
 const { Status } = ChromeUtils.import("resource://services-sync/status.js");
 ChromeUtils.import("resource://services-sync/telemetry.js");
 const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
+const { fxAccounts } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
+);
 
 function getEngineModules() {
   let result = {
@@ -909,6 +912,22 @@ Sync11Service.prototype = {
     }
   },
 
+  // configures/enabled/turns-on sync. There must be an FxA user signed in.
+  async configure() {
+    // We don't, and must not, throw if sync is already configured, because we
+    // might end up being called as part of a "reconnect" flow. We also want to
+    // avoid checking the FxA user is the same as the pref because the email
+    // address for the FxA account can change - we'd need to use the uid.
+    let user = await fxAccounts.getSignedInUser();
+    if (!user) {
+      throw new Error("No FxA user is signed in");
+    }
+    this._log.info("Configuring sync with current FxA user");
+    Svc.Prefs.set("username", user.email);
+    Svc.Obs.notify("weave:connected");
+  },
+
+  // resets/turns-off sync.
   async startOver() {
     this._log.trace("Invoking Service.startOver.");
     await this._stopTracking();
@@ -930,10 +949,6 @@ Sync11Service.prototype = {
       this._log.debug("Skipping client data removal: no cluster URL.");
     }
 
-    // We want let UI consumers of the following notification know as soon as
-    // possible, so let's fake for the CLIENT_NOT_CONFIGURED status for now
-    // by emptying the passphrase (we still need the password).
-    this._log.info("Service.startOver dropping sync key and logging out.");
     this.identity.resetCredentials();
     this.status.login = LOGIN_FAILED_NO_USERNAME;
     this.logout();
@@ -951,8 +966,6 @@ Sync11Service.prototype = {
     this.clusterURL = null;
 
     Svc.Prefs.set("lastversion", WEAVE_VERSION);
-
-    this.identity.deleteSyncCredentials();
 
     try {
       this.identity.finalize();

@@ -74,13 +74,14 @@ const UIStateInternal = {
 
   init() {
     this._initialized = true;
-    if (!Services.prefs.prefHasUserValue("services.sync.username")) {
-      return;
-    }
-    // Refresh the state in the background.
-    this.refreshState().catch(e => {
-      Cu.reportError(e);
-    });
+    // Because the FxA toolbar is usually visible, this module gets loaded at
+    // browser startup, and we want to avoid pulling in all of FxA or Sync at
+    // that time, so we refresh the state after the browser has settled.
+    Services.tm.idleDispatchToMainThread(() => {
+      this.refreshState().catch(e => {
+        Cu.reportError(e);
+      });
+    }, 2000);
   },
 
   // Used for testing.
@@ -111,6 +112,12 @@ const UIStateInternal = {
   async refreshState() {
     const newState = {};
     await this._refreshFxAState(newState);
+    // Optimize the "not signed in" case to avoid refreshing twice just after
+    // startup - if there's currently no _state, and we still aren't configured,
+    // just early exit.
+    if (this._state == null && newState.status == DEFAULT_STATE.status) {
+      return this.state;
+    }
     if (newState.syncEnabled) {
       this._setLastSyncTime(newState); // We want this in case we change accounts.
     }

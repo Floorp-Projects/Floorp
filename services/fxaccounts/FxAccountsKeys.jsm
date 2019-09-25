@@ -33,6 +33,10 @@ class FxAccountsKeys {
       if (!userData) {
         throw new Error("Can't possibly get keys; User is not signed in");
       }
+      if (!userData.verified) {
+        log.info("Can't get keys; user is not verified");
+        return false;
+      }
       // - keyFetchToken means we can almost certainly grab them.
       // - kSync, kXCS, kExtSync and kExtKbHash means we already have them.
       // - kB is deprecated but |getKeys| will help us migrate to kSync and friends.

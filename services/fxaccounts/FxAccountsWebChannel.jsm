@@ -398,6 +398,7 @@ this.FxAccountsWebChannelHelpers = function(options) {
   options = options || {};
 
   this._fxAccounts = options.fxAccounts || fxAccounts;
+  this._weaveXPCOM = options.weaveXPCOM || null;
   this._privateBrowsingUtils =
     options.privateBrowsingUtils || PrivateBrowsingUtils;
 };
@@ -419,9 +420,10 @@ this.FxAccountsWebChannelHelpers.prototype = {
    *
    * @param accountData the user's account data and credentials
    */
-  login(accountData) {
+  async login(accountData) {
     // We don't act on customizeSync anymore, it used to open a dialog inside
     // the browser to selecte the engines to sync but we do it on the web now.
+    log.debug("Webchannel is logging a user in.");
     delete accountData.customizeSync;
 
     if (accountData.offeredSyncEngines) {
@@ -456,11 +458,19 @@ this.FxAccountsWebChannelHelpers.prototype = {
 
     // A sync-specific hack - we want to ensure sync has been initialized
     // before we set the signed-in user.
-    let xps = Cc["@mozilla.org/weave/service;1"].getService(Ci.nsISupports)
-      .wrappedJSObject;
-    return xps.whenLoaded().then(() => {
-      return this._fxAccounts._internal.setSignedInUser(accountData);
-    });
+    // XXX - probably not true any more, especially now we have observerPreloads
+    // in FxAccounts.jsm?
+    let xps =
+      this._weaveXPCOM ||
+      Cc["@mozilla.org/weave/service;1"].getService(Ci.nsISupports)
+        .wrappedJSObject;
+    await xps.whenLoaded();
+    await this._fxAccounts._internal.setSignedInUser(accountData);
+    // Configure sync itself if necessary, but after signing in the user.
+    // (Soon we'll have a way of making the sync configuration optional, based
+    // on the content of the message, but for now, sync is unconditionally
+    // configured)
+    await xps.Weave.Service.configure();
   },
 
   /**

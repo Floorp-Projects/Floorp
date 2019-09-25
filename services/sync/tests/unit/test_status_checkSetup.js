@@ -5,9 +5,6 @@ const { Status } = ChromeUtils.import("resource://services-sync/status.js");
 
 add_task(async function test_status_checkSetup() {
   try {
-    _("Ensure fresh config.");
-    Status._authManager.deleteSyncCredentials();
-
     _("Fresh setup, we're not configured.");
     Assert.equal(Status.checkSetup(), CLIENT_NOT_CONFIGURED);
     Assert.equal(Status.login, LOGIN_FAILED_NO_USERNAME);
