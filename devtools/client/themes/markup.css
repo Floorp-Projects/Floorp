@@ -6,7 +6,7 @@
   --markup-hidden-attr-name-color: var(--grey-43);
   --markup-hidden-attr-value-color: var(--grey-55);
   --markup-hidden-punctuation-color: var(--grey-43);
-  --markup-pseudoclass-disk-color: var(--yellow-60);
+  --markup-pseudoclass-disk-color: #e9c600;
   --markup-hidden-tag-color: var(--grey-50);
   --markup-outline: var(--theme-splitter-color);
   --markup-text-color-contrast: black;
