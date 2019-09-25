@@ -597,6 +597,8 @@ static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
   GFX_WEBRENDER_DEBUG(".disable-text-prims", wr::DebugFlags_DISABLE_TEXT_PRIMS)
   GFX_WEBRENDER_DEBUG(".disable-gradient-prims",
                       wr::DebugFlags_DISABLE_GRADIENT_PRIMS)
+  GFX_WEBRENDER_DEBUG(".obscure-images",
+                      wr::DebugFlags_OBSCURE_IMAGES)
 #undef GFX_WEBRENDER_DEBUG
 
   gfx::gfxVars::SetWebRenderDebugFlags(flags.bits);
