@@ -1118,13 +1118,6 @@ class CGHeaders(CGWrapper):
         # Grab all the implementation declaration files we need.
         implementationIncludes = set(d.headerFile for d in descriptors if d.needsHeaderInclude())
 
-        # Grab the includes for checking hasInstance
-        interfacesImplementingSelf = set()
-        for d in descriptors:
-            interfacesImplementingSelf |= d.interface.interfacesImplementingSelf
-        implementationIncludes |= set(self.getDeclarationFilename(i) for i in
-                                      interfacesImplementingSelf)
-
         # Now find all the things we'll need as arguments because we
         # need to wrap or unwrap them.
         bindingHeaders = set()
@@ -5780,8 +5773,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 """,
                 typeName=typeName)
 
-        if (not descriptor.interface.isConsequential() and
-            not descriptor.interface.isExternal()):
+        if (not descriptor.interface.isExternal()):
             if failureCode is not None:
                 templateBody += str(CastableObjectUnwrapper(
                     descriptor,
@@ -5799,11 +5791,10 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                     isCallbackReturnValue,
                     firstCap(sourceDescription)))
         else:
-            # Either external, or new-binding non-castable.  We always have a
-            # holder for these, because we don't actually know whether we have
-            # to addref when unwrapping or not.  So we just pass an
-            # getter_AddRefs(RefPtr) to XPConnect and if we'll need a release
-            # it'll put a non-null pointer in there.
+            # External interface.  We always have a holder for these, because we
+            # don't actually know whether we have to addref when unwrapping or not.
+            # So we just pass an getter_AddRefs(RefPtr) to XPConnect and if we'll
+            # need a release it'll put a non-null pointer in there.
             if forceOwningType:
                 # Don't return a holderType in this case; our declName
                 # will just own stuff.
@@ -8866,10 +8857,6 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
             JS::Rooted<JS::Value> rootSelf(cx, JS::ObjectValue(*obj));
             """)
 
-        # Our descriptor might claim that we're not castable, simply because
-        # we're someone's consequential interface.  But for this-unwrapping, we
-        # know that we're the real deal.  So fake a descriptor here for
-        # consumption by CastableObjectUnwrapper.
         body += str(CastableObjectUnwrapper(
             self.descriptor,
             "rootSelf",
