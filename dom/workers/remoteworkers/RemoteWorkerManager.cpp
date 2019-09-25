@@ -226,7 +226,7 @@ RemoteWorkerManager::SelectTargetActorForServiceWorker() const {
     auto scopeExit = MakeScopeExit(
         [&] { contentParents.AppendElement(std::move(contentParent)); });
 
-    if (contentParent->GetRemoteType().EqualsLiteral(DEFAULT_REMOTE_TYPE)) {
+    if (IsWebRemoteType(contentParent->GetRemoteType())) {
       auto lock = contentParent->mRemoteWorkerActorData.Lock();
 
       if (lock->mCount || !lock->mShutdownStarted) {
