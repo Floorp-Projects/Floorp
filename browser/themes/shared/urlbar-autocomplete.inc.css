@@ -262,14 +262,15 @@
 /* The tip button is a Photon default button when unfocused and a
    primary button in all other states. */
 .urlbarView-tip-button {
-  min-height: 32px;
+  min-height: 16px;
   padding: 8px;
   border: none;
   border-radius: 2px;
   font-size: 0.93em;
   color: inherit;
   background-color: var(--in-content-button-background);
-  min-width: 10em;
+  min-width: 8.75em;
+  text-align: center;
   flex-shrink: 0;
 }
 
