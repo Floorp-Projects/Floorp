@@ -15,7 +15,6 @@
 //#include <sys/cdefs.h>
 //__FBSDID("$FreeBSD$");
 
-#include <float.h>
 #include "math_private.h"
 
 /* cbrt(x)
