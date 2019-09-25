@@ -2,10 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function
+
 import os
 
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
+from six import PY2
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -43,7 +46,8 @@ def is_valid_license(licenses, filename):
     From a given file, check if we can find the license patterns
     in the X first lines of the file
     """
-    with open(filename, 'r', errors='replace') as myfile:
+    kwargs = {} if PY2 else {'errors': 'replace'}
+    with open(filename, 'r', **kwargs) as myfile:
         contents = myfile.read()
         # Empty files don't need a license.
         if not contents:

@@ -37,6 +37,7 @@ py2commands="
     doctor
     empty-makefiles
     environment
+    eslint
     file-info
     firefox-ui-functional
     fluent-migration-test
@@ -54,6 +55,7 @@ py2commands="
     jsshell-bench
     jstestbrowser
     jstests
+    lint
     marionette-test
     mochitest
     mozbuild-reference
