@@ -1107,7 +1107,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "284c61f9b152"
+        "revision": "0a2b5ecdfe36"
     },
     "nn-NO": {
         "platforms": [
@@ -1311,7 +1311,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "dd0145e54a93"
+        "revision": "9ef06403585b"
     },
     "son": {
         "platforms": [
