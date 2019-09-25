@@ -109,6 +109,10 @@ class nsColumnSetFrame final : public nsContainerFrame {
     // A boolean controlling whether or not we are balancing.
     bool mIsBalancing = false;
 
+    // A boolean controlling whether or not we are forced to fill columns
+    // sequentially.
+    bool mForceAuto = false;
+
     // The last known column block-size that was 'feasible'. A column bSize is
     // feasible if all child content fits within the specified bSize.
     nscoord mKnownFeasibleBSize = NS_UNCONSTRAINEDSIZE;
