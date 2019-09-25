@@ -150,13 +150,6 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
       remoteEnabled && win.gMultiProcessBrowser
     );
 
-    // Enable DevTools connection screen, if the preference allows this.
-    const connectPageEnabled = Services.prefs.getBoolPref(
-      "devtools.connectpage.enabled"
-    );
-    const connectEnabled = devtoolsRemoteEnabled && connectPageEnabled;
-    toggleMenuItem("menu_devtools_connect", connectEnabled);
-
     // Enable record/replay menu items?
     try {
       const recordReplayEnabled = Services.prefs.getBoolPref(
@@ -381,16 +374,6 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
   openAboutDebugging(gBrowser, hash) {
     const url = "about:debugging" + (hash ? "#" + hash : "");
     gBrowser.selectedTab = gBrowser.addTrustedTab(url);
-  },
-
-  /**
-   * Open a tab to allow connects to a remote browser
-   */
-  // Used by browser-sets.inc, command
-  openConnectScreen(gBrowser) {
-    gBrowser.selectedTab = gBrowser.addTrustedTab(
-      "chrome://devtools/content/framework/connect/connect.xhtml"
-    );
   },
 
   async _getContentProcessTarget(processId) {
