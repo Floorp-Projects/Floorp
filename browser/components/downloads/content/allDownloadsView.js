@@ -170,7 +170,7 @@ HistoryDownloadElementShell.prototype = {
 /**
  * Relays commands from the download.xml binding to the selected items.
  */
-const DownloadsView = {
+var DownloadsView = {
   onDownloadButton(event) {
     event.target.closest("richlistitem")._shell.onButton();
   },
@@ -808,3 +808,33 @@ function goUpdateDownloadCommands() {
   updateCommandsForObject(DownloadsPlacesView.prototype);
   updateCommandsForObject(HistoryDownloadElementShell.prototype);
 }
+
+document.addEventListener("DOMContentLoaded", function() {
+  let richtListBox = document.getElementById("downloadsRichListBox");
+  richtListBox.addEventListener("scroll", function(event) {
+    return this._placesView.onScroll();
+  });
+  richtListBox.addEventListener("keypress", function(event) {
+    return this._placesView.onKeyPress(event);
+  });
+  richtListBox.addEventListener("dblclick", function(event) {
+    return this._placesView.onDoubleClick(event);
+  });
+  richtListBox.addEventListener("contextmenu", function(event) {
+    return this._placesView.onContextMenu(event);
+  });
+  richtListBox.addEventListener("dragstart", function(event) {
+    this._placesView.onDragStart(event);
+  });
+  richtListBox.addEventListener("dragover", function(event) {
+    this._placesView.onDragOver(event);
+  });
+  richtListBox.addEventListener("drop", function(event) {
+    this._placesView.onDrop(event);
+  });
+  richtListBox.addEventListener("select", function(event) {
+    this._placesView.onSelect();
+  });
+  richtListBox.addEventListener("focus", goUpdateDownloadCommands);
+  richtListBox.addEventListener("blur", goUpdateDownloadCommands);
+});

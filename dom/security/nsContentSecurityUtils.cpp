@@ -466,8 +466,6 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
     NS_LITERAL_CSTRING("about:sync-log"),
     // about:printpreview displays plain text only -> no CSP
     NS_LITERAL_CSTRING("about:printpreview"),
-    // Bug 1497200: Apply Meta CSP to about:downloads
-    NS_LITERAL_CSTRING("about:downloads"),
 #  if defined(ANDROID)
     NS_LITERAL_CSTRING("about:config"),
 #  endif
