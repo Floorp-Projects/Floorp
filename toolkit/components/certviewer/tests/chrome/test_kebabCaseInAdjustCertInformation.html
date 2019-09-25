@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>certviewer adjustCertInformation test</title>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="chrome://global/content/certviewer/pvutils_bundle.js"></script>
+    <script src="chrome://global/content/certviewer/asn1js_bundle.js"></script>
+    <script src="chrome://global/content/certviewer/pkijs_bundle.js"></script>
+
+    <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  </head>
+<body>
+  <script type="module">
+    import { adjustCertInformation } from "chrome://global/content/certviewer/certviewer.js";
+    import { parseOutput } from "./parseOutput.js";
+
+    function isKebabCase(str) {
+      if (str === "") return true;
+      return /^([a-z][a-z0-9]*)(-[a-z0-9]+)*$/.test(str);
+    }
+
+    function validateIsKebabCase() {
+      let tests = [
+        {
+          input: "",
+          expected: true
+        },
+        {
+          input: "A",
+          expected: false
+        },
+        {
+          input: "Ab",
+          expected: false
+        },
+        {
+          input: "Ab-ad",
+          expected: false
+        },
+        {
+          input: "ad-Az",
+          expected: false
+        },
+        {
+          input: "ad- z",
+          expected: false
+        },
+        {
+          input: "ad-z ",
+          expected: false
+        },
+        {
+          input: "ad z",
+          expected: false
+        },
+        {
+          input: "ad--fz",
+          expected: false
+        },
+        {
+          input: "-a-b-c",
+          expected: false
+        },
+        {
+          input: "ad-fz",
+          expected: true
+        },
+        {
+          input: "ad",
+          expected: true
+        },
+        {
+          input: "a-b-c",
+          expected: true
+        },
+      ];
+
+      for (let test of tests) {
+        let result = isKebabCase(test.input);
+        is(result, test.expected, `${test.input} should${test.expected === false ? "n't" : ""} be a kebab-case string`);
+      }
+    }
+
+    async function doTest() {
+      ok(adjustCertInformation, "adjustCertInformation should be available in this context");
+      ok(parseOutput, "parseOutput should be available in this context");
+      is(typeof(parseOutput), 'object', "parseOutput must be an object");
+
+      validateIsKebabCase();
+
+      for (let cert of parseOutput) {
+        let adjustedCerts = adjustCertInformation(cert);
+        adjustedCerts.certItems.forEach(item => {
+          ok(isKebabCase(item.sectionId), `${item.sectionId} should be a valid kebab-case string`);
+          item.sectionItems.forEach(element => {
+            ok(isKebabCase(element.label), `${element.label} should be a valid kebab-case string`);
+          });
+        });
+      }
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    doTest();
+
+  </script>
+</body>
+</html>
