@@ -13,14 +13,30 @@ const TEST_URL =
   "data:text/html;charset=UTF-8,<div>Inspector modules load test</div>";
 
 add_task(async function() {
-  await openNewTabAndToolbox(TEST_URL, "inspector");
+  const toolbox = await openNewTabAndToolbox(TEST_URL, "inspector");
+  const toolboxBrowserLoader = toolbox.win.getBrowserLoaderForWindow();
 
-  // The inspector does not use a dedicated browser loader.
-  const loaders = [loader.loader];
+  // Most panels involve three loaders:
+  // - the global devtools loader
+  // - the browser loader used by the toolbox
+  // - a specific browser loader created for the panel
+  // But the inspector is a specific case, because it reuses the BrowserLoader
+  // of the toolbox to load its react components. This is why we only list
+  // two loaders here.
+  const loaders = [loader.loader, toolboxBrowserLoader.loader];
 
-  // Duplicated modules whitelist for the inspector is empty because the
-  // inspector is only using the DevTools loader.
-  runDuplicatedModulesTest(loaders, []);
+  runDuplicatedModulesTest(loaders, [
+    "@loader/unload.js",
+    "@loader/options.js",
+    "chrome.js",
+    "resource://devtools/client/shared/vendor/react.js",
+    "resource://devtools/client/shared/vendor/react-dom-factories.js",
+    "resource://devtools/client/shared/vendor/react-prop-types.js",
+    "resource://devtools/client/shared/vendor/react-redux.js",
+    "resource://devtools/client/shared/vendor/redux.js",
+    "resource://devtools/client/inspector/flexbox/actions/index.js",
+    "resource://devtools/client/inspector/grids/actions/index.js",
+  ]);
 
   runMetricsTest({
     filterString: "devtools/client/inspector",

@@ -102,7 +102,7 @@ async function testAccordionStateAfterReopeningLayoutView(toolbox) {
   const gContent = doc.querySelector(".grid-pane ._content");
 
   info("Checking the state of the grid panel.");
-  ok(!gContent, "The grid panel content is not rendered.");
+  is(gContent.children.length, 0, "The grid panel content is not rendered.");
   ok(
     !Services.prefs.getBoolPref(GRID_OPENED_PREF),
     `${GRID_OPENED_PREF} is pref off.`

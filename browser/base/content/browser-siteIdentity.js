@@ -1588,6 +1588,16 @@ var gIdentityHandler = {
     return container;
   },
 
+  _removePermPersistentAllow(principal, id) {
+    let perm = SitePermissions.getForPrincipal(principal, id);
+    if (
+      perm.state == SitePermissions.ALLOW &&
+      perm.scope == SitePermissions.SCOPE_PERSISTENT
+    ) {
+      SitePermissions.removeFromPrincipal(principal, id);
+    }
+  },
+
   _createPermissionClearButton(aPermission, container) {
     let button = document.createXULElement("button");
     button.setAttribute("class", "identity-popup-permission-remove-button");
@@ -1596,36 +1606,49 @@ var gIdentityHandler = {
     button.addEventListener("command", () => {
       let browser = gBrowser.selectedBrowser;
       this._permissionList.removeChild(container);
-      if (
-        aPermission.sharingState &&
-        ["camera", "microphone", "screen"].includes(aPermission.id)
-      ) {
-        let windowId = this._sharingState.webRTC.windowId;
-        if (aPermission.id == "screen") {
-          windowId = "screen:" + windowId;
-        } else {
-          // If we set persistent permissions or the sharing has
-          // started due to existing persistent permissions, we need
-          // to handle removing these even for frames with different hostnames.
-          let principals = browser._devicePermissionPrincipals || [];
-          for (let principal of principals) {
-            // It's not possible to stop sharing one of camera/microphone
-            // without the other.
-            for (let id of ["camera", "microphone"]) {
-              if (this._sharingState.webRTC[id]) {
-                let perm = SitePermissions.getForPrincipal(principal, id);
-                if (
-                  perm.state == SitePermissions.ALLOW &&
-                  perm.scope == SitePermissions.SCOPE_PERSISTENT
-                ) {
-                  SitePermissions.removeFromPrincipal(principal, id);
+      if (aPermission.sharingState) {
+        if (aPermission.id === "geo") {
+          let origins = browser.getDevicePermissionOrigins("geo");
+          for (let origin of origins) {
+            let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+              origin
+            );
+            this._removePermPersistentAllow(principal, aPermission.id);
+          }
+          origins.clear();
+        } else if (
+          ["camera", "microphone", "screen"].includes(aPermission.id)
+        ) {
+          let windowId = this._sharingState.webRTC.windowId;
+          if (aPermission.id == "screen") {
+            windowId = "screen:" + windowId;
+          } else {
+            // If we set persistent permissions or the sharing has
+            // started due to existing persistent permissions, we need
+            // to handle removing these even for frames with different hostnames.
+            let origins = browser.getDevicePermissionOrigins("webrtc");
+            for (let origin of origins) {
+              // It's not possible to stop sharing one of camera/microphone
+              // without the other.
+              let principal;
+              for (let id of ["camera", "microphone"]) {
+                if (this._sharingState.webRTC[id]) {
+                  if (!principal) {
+                    principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+                      origin
+                    );
+                  }
+                  this._removePermPersistentAllow(principal, id);
                 }
               }
             }
           }
+          browser.messageManager.sendAsyncMessage(
+            "webrtc:StopSharing",
+            windowId
+          );
+          webrtcUI.forgetActivePermissionsFromBrowser(gBrowser.selectedBrowser);
         }
-        browser.messageManager.sendAsyncMessage("webrtc:StopSharing", windowId);
-        webrtcUI.forgetActivePermissionsFromBrowser(gBrowser.selectedBrowser);
       }
       SitePermissions.removeFromPrincipal(
         gBrowser.contentPrincipal,

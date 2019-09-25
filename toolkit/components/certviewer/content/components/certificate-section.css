@@ -40,6 +40,9 @@ h1 {
 
 .tab.selected {
   border-bottom: 2px solid var(--in-content-link-color);
+  /* The bottom border is 1px more than before, so we need to
+   * compensate the padding to prevent the text from jumping */
+  padding-bottom: 11px;
   color: var(--in-content-link-color);
   text-overflow: unset;
   overflow: visible;

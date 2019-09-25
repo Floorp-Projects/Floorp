@@ -533,15 +533,15 @@ function checkContextMenu(aContextMenu, aExpectedEntries, aWindow = window) {
 }
 
 function waitForOverflowButtonShown(win = window) {
+  info("Waiting for overflow button to show");
   let ov = win.document.getElementById("nav-bar-overflow-button");
   return waitForElementShown(ov.icon);
 }
 function waitForElementShown(element) {
-  let win = element.ownerGlobal;
-  let dwu = win.windowUtils;
   return BrowserTestUtils.waitForCondition(() => {
-    info("Waiting for overflow button to have non-0 size");
-    let bounds = dwu.getBoundsWithoutFlushing(element);
-    return bounds.width > 0 && bounds.height > 0;
+    info("Checking if element has non-0 size");
+    // We intentionally flush layout to ensure the element is actually shown.
+    let rect = element.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
   });
 }
