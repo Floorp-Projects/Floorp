@@ -203,18 +203,21 @@ impl<'ctx> UsedTemplateParameters<'ctx> {
         }
     }
 
-    fn take_this_id_usage_set<Id: Into<ItemId>>(&mut self, this_id: Id) -> ItemSet {
+    fn take_this_id_usage_set<Id: Into<ItemId>>(
+        &mut self,
+        this_id: Id,
+    ) -> ItemSet {
         let this_id = this_id.into();
         self.used
             .get_mut(&this_id)
             .expect(
                 "Should have a set of used template params for every item \
-                     id",
+                 id",
             )
             .take()
             .expect(
                 "Should maintain the invariant that all used template param \
-                     sets are `Some` upon entry of `constrain`",
+                 sets are `Some` upon entry of `constrain`",
             )
     }
 
@@ -231,7 +234,7 @@ impl<'ctx> UsedTemplateParameters<'ctx> {
     ) {
         trace!(
             "    instantiation of blacklisted template, uses all template \
-                arguments"
+             arguments"
         );
 
         let args = instantiation
@@ -252,8 +255,8 @@ impl<'ctx> UsedTemplateParameters<'ctx> {
                     .as_ref()
                     .expect(
                         "Because a != this_id, and all used template \
-                             param sets other than this_id's are `Some`, \
-                             a's used template param set should be `Some`",
+                         param sets other than this_id's are `Some`, \
+                         a's used template param set should be `Some`",
                     )
                     .iter()
                     .cloned()
@@ -289,7 +292,7 @@ impl<'ctx> UsedTemplateParameters<'ctx> {
         for (arg, param) in args.iter().zip(params.iter()) {
             trace!(
                 "      instantiation's argument {:?} is used if definition's \
-                    parameter {:?} is used",
+                 parameter {:?} is used",
                 arg,
                 param
             );
@@ -297,7 +300,8 @@ impl<'ctx> UsedTemplateParameters<'ctx> {
             if used_by_def.contains(&param.into()) {
                 trace!("        param is used by template definition");
 
-                let arg = arg.into_resolver()
+                let arg = arg
+                    .into_resolver()
                     .through_type_refs()
                     .through_type_aliases()
                     .resolve(self.ctx)
@@ -307,15 +311,16 @@ impl<'ctx> UsedTemplateParameters<'ctx> {
                     continue;
                 }
 
-                let used_by_arg = self.used
+                let used_by_arg = self
+                    .used
                     .get(&arg)
                     .expect("Should have a used entry for the template arg")
                     .as_ref()
                     .expect(
                         "Because arg != this_id, and all used template \
-                             param sets other than this_id's are `Some`, \
-                             arg's used template param set should be \
-                             `Some`",
+                         param sets other than this_id's are `Some`, \
+                         arg's used template param set should be \
+                         `Some`",
                     )
                     .iter()
                     .cloned();
@@ -339,7 +344,8 @@ impl<'ctx> UsedTemplateParameters<'ctx> {
                     return;
                 }
 
-                let used_by_sub_id = self.used
+                let used_by_sub_id = self
+                    .used
                     .get(&sub_id)
                     .expect("Should have a used set for the sub_id successor")
                     .as_ref()
@@ -370,9 +376,7 @@ impl<'ctx> MonotoneFramework for UsedTemplateParameters<'ctx> {
     type Extra = &'ctx BindgenContext;
     type Output = HashMap<ItemId, ItemSet>;
 
-    fn new(
-        ctx: &'ctx BindgenContext,
-    ) -> UsedTemplateParameters<'ctx> {
+    fn new(ctx: &'ctx BindgenContext) -> UsedTemplateParameters<'ctx> {
         let mut used = HashMap::default();
         let mut dependencies = HashMap::default();
         let whitelisted_items: HashSet<_> =
@@ -383,7 +387,13 @@ impl<'ctx> MonotoneFramework for UsedTemplateParameters<'ctx> {
             .cloned()
             .flat_map(|i| {
                 let mut reachable = vec![i];
-                i.trace(ctx, &mut |s, _| { reachable.push(s); }, &());
+                i.trace(
+                    ctx,
+                    &mut |s, _| {
+                        reachable.push(s);
+                    },
+                    &(),
+                );
                 reachable
             })
             .collect();
@@ -399,9 +409,10 @@ impl<'ctx> MonotoneFramework for UsedTemplateParameters<'ctx> {
                     ctx,
                     &mut |sub_item: ItemId, _| {
                         used.entry(sub_item).or_insert(Some(ItemSet::new()));
-                        dependencies.entry(sub_item).or_insert(vec![]).push(
-                            item,
-                        );
+                        dependencies
+                            .entry(sub_item)
+                            .or_insert(vec![])
+                            .push(item);
                     },
                     &(),
                 );
@@ -418,11 +429,11 @@ impl<'ctx> MonotoneFramework for UsedTemplateParameters<'ctx> {
                     // Although template definitions should always have
                     // template parameters, there is a single exception:
                     // opaque templates. Hence the unwrap_or.
-                    let params =
-                        decl.self_template_params(ctx);
+                    let params = decl.self_template_params(ctx);
 
                     for (arg, param) in args.iter().zip(params.iter()) {
-                        let arg = arg.into_resolver()
+                        let arg = arg
+                            .into_resolver()
                             .through_type_aliases()
                             .through_type_refs()
                             .resolve(ctx)
@@ -487,7 +498,13 @@ impl<'ctx> MonotoneFramework for UsedTemplateParameters<'ctx> {
             .cloned()
             .flat_map(|i| {
                 let mut reachable = vec![i];
-                i.trace(self.ctx, &mut |s, _| { reachable.push(s); }, &());
+                i.trace(
+                    self.ctx,
+                    &mut |s, _| {
+                        reachable.push(s);
+                    },
+                    &(),
+                );
                 reachable
             })
             .collect()
@@ -520,9 +537,9 @@ impl<'ctx> MonotoneFramework for UsedTemplateParameters<'ctx> {
             // Template instantiations only use their template arguments if the
             // template definition uses the corresponding template parameter.
             Some(&TypeKind::TemplateInstantiation(ref inst)) => {
-                if self.whitelisted_items.contains(
-                    &inst.template_definition().into(),
-                )
+                if self
+                    .whitelisted_items
+                    .contains(&inst.template_definition().into())
                 {
                     self.constrain_instantiation(
                         id,
@@ -548,7 +565,7 @@ impl<'ctx> MonotoneFramework for UsedTemplateParameters<'ctx> {
         assert!(
             new_len >= original_len,
             "This is the property that ensures this function is monotone -- \
-                 if it doesn't hold, the analysis might never terminate!"
+             if it doesn't hold, the analysis might never terminate!"
         );
 
         // Put the set back in the hash map and restore our invariant.
@@ -576,8 +593,7 @@ impl<'ctx> MonotoneFramework for UsedTemplateParameters<'ctx> {
     }
 }
 
-impl<'ctx> From<UsedTemplateParameters<'ctx>>
-    for HashMap<ItemId, ItemSet> {
+impl<'ctx> From<UsedTemplateParameters<'ctx>> for HashMap<ItemId, ItemSet> {
     fn from(used_templ_params: UsedTemplateParameters<'ctx>) -> Self {
         used_templ_params
             .used

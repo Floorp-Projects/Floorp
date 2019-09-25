@@ -1,8 +1,8 @@
 //! Intermediate representation for C/C++ enumerations.
 
+use super::super::codegen::EnumVariation;
 use super::context::{BindgenContext, TypeId};
 use super::item::Item;
-use super::super::codegen::EnumVariation;
 use super::ty::TypeKind;
 use clang;
 use ir::annotations::Annotations;
@@ -38,10 +38,7 @@ pub struct Enum {
 impl Enum {
     /// Construct a new `Enum` with the given representation and variants.
     pub fn new(repr: Option<TypeId>, variants: Vec<EnumVariant>) -> Self {
-        Enum {
-            repr,
-            variants,
-        }
+        Enum { repr, variants }
     }
 
     /// Get this enumeration's representation.
@@ -67,15 +64,15 @@ impl Enum {
         }
 
         let declaration = ty.declaration().canonical();
-        let repr = declaration.enum_type().and_then(|et| {
-            Item::from_ty(&et, declaration, None, ctx).ok()
-        });
+        let repr = declaration
+            .enum_type()
+            .and_then(|et| Item::from_ty(&et, declaration, None, ctx).ok());
         let mut variants = vec![];
 
         // Assume signedness since the default type by the C standard is an int.
-        let is_signed = repr.and_then(
-            |r| ctx.resolve_type(r).safe_canonical_type(ctx),
-        ).map_or(true, |ty| match *ty.kind() {
+        let is_signed = repr
+            .and_then(|r| ctx.resolve_type(r).safe_canonical_type(ctx))
+            .map_or(true, |ty| match *ty.kind() {
                 TypeKind::Int(ref int_kind) => int_kind.is_signed(),
                 ref other => {
                     panic!("Since when enums can be non-integers? {:?}", other)
@@ -101,9 +98,11 @@ impl Enum {
                 if let Some(val) = value {
                     let name = cursor.spelling();
                     let annotations = Annotations::new(&cursor);
-                    let custom_behavior = ctx.parse_callbacks()
+                    let custom_behavior = ctx
+                        .parse_callbacks()
                         .and_then(|callbacks| {
-                            callbacks.enum_variant_behavior(type_name, &name, val)
+                            callbacks
+                                .enum_variant_behavior(type_name, &name, val)
                         })
                         .or_else(|| {
                             let annotations = annotations.as_ref()?;
@@ -116,12 +115,17 @@ impl Enum {
                             }
                         });
 
-                    let name = ctx.parse_callbacks()
+                    let name = ctx
+                        .parse_callbacks()
                         .and_then(|callbacks| {
                             callbacks.enum_variant_name(type_name, &name, val)
                         })
                         .or_else(|| {
-                            annotations.as_ref()?.use_instead_of()?.last().cloned()
+                            annotations
+                                .as_ref()?
+                                .use_instead_of()?
+                                .last()
+                                .cloned()
                         })
                         .unwrap_or(name);
 
@@ -139,7 +143,12 @@ impl Enum {
         Ok(Enum::new(repr, variants))
     }
 
-    fn is_matching_enum(&self, ctx: &BindgenContext, enums: &RegexSet, item: &Item) -> bool {
+    fn is_matching_enum(
+        &self,
+        ctx: &BindgenContext,
+        enums: &RegexSet,
+        item: &Item,
+    ) -> bool {
         let path = item.canonical_path(ctx);
         let enum_ty = item.expect_type();
 
@@ -156,18 +165,46 @@ impl Enum {
     }
 
     /// Returns the final representation of the enum.
-    pub fn computed_enum_variation(&self, ctx: &BindgenContext, item: &Item) -> EnumVariation {
+    pub fn computed_enum_variation(
+        &self,
+        ctx: &BindgenContext,
+        item: &Item,
+    ) -> EnumVariation {
         // ModuleConsts has higher precedence before Rust in order to avoid
         // problems with overlapping match patterns.
-        if self.is_matching_enum(ctx, &ctx.options().constified_enum_modules, item) {
+        if self.is_matching_enum(
+            ctx,
+            &ctx.options().constified_enum_modules,
+            item,
+        ) {
             EnumVariation::ModuleConsts
-        } else if self.is_matching_enum(ctx, &ctx.options().bitfield_enums, item) {
+        } else if self.is_matching_enum(
+            ctx,
+            &ctx.options().bitfield_enums,
+            item,
+        ) {
             EnumVariation::Bitfield
-        } else if self.is_matching_enum(ctx, &ctx.options().rustified_enums, item) {
-            EnumVariation::Rust { non_exhaustive: false }
-        } else if self.is_matching_enum(ctx, &ctx.options().rustified_non_exhaustive_enums, item) {
-            EnumVariation::Rust { non_exhaustive: true }
-        } else if self.is_matching_enum(ctx, &ctx.options().constified_enums, item) {
+        } else if self.is_matching_enum(
+            ctx,
+            &ctx.options().rustified_enums,
+            item,
+        ) {
+            EnumVariation::Rust {
+                non_exhaustive: false,
+            }
+        } else if self.is_matching_enum(
+            ctx,
+            &ctx.options().rustified_non_exhaustive_enums,
+            item,
+        ) {
+            EnumVariation::Rust {
+                non_exhaustive: true,
+            }
+        } else if self.is_matching_enum(
+            ctx,
+            &ctx.options().constified_enums,
+            item,
+        ) {
             EnumVariation::Consts
         } else {
             ctx.options().default_enum_style
@@ -235,16 +272,14 @@ impl EnumVariant {
     /// Returns whether this variant should be enforced to be a constant by code
     /// generation.
     pub fn force_constification(&self) -> bool {
-        self.custom_behavior.map_or(false, |b| {
-            b == EnumVariantCustomBehavior::Constify
-        })
+        self.custom_behavior
+            .map_or(false, |b| b == EnumVariantCustomBehavior::Constify)
     }
 
     /// Returns whether the current variant should be hidden completely from the
     /// resulting rust enum.
     pub fn hidden(&self) -> bool {
-        self.custom_behavior.map_or(false, |b| {
-            b == EnumVariantCustomBehavior::Hide
-        })
+        self.custom_behavior
+            .map_or(false, |b| b == EnumVariantCustomBehavior::Hide)
     }
 }

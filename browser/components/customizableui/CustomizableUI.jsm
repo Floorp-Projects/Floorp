@@ -18,7 +18,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
   SearchWidgetTracker: "resource:///modules/SearchWidgetTracker.jsm",
   CustomizableWidgets: "resource:///modules/CustomizableWidgets.jsm",
-  DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   PanelMultiView: "resource:///modules/PanelMultiView.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",
@@ -4720,7 +4719,6 @@ function XULWidgetSingleWrapper(aWidgetId, aNode, aDocument) {
   Object.freeze(this);
 }
 
-const LAZY_RESIZE_INTERVAL_MS = 200;
 const OVERFLOW_PANEL_HIDE_DELAY_MS = 500;
 
 function OverflowableToolbar(aToolbarNode) {
@@ -4864,21 +4862,12 @@ OverflowableToolbar.prototype = {
       let contextMenu = doc.getElementById(mainView.getAttribute("context"));
       gELS.addSystemEventListener(contextMenu, "command", this, true);
       let anchor = this._chevron.icon;
-      // Ensure we update the gEditUIVisible flag when opening the popup, in
-      // case the edit controls are in it.
-      this._panel.addEventListener(
-        "popupshowing",
-        () => doc.defaultView.updateEditUIVisibility(),
-        { once: true }
-      );
-      PanelMultiView.openPopup(this._panel, anchor || this._chevron, {
-        triggerEvent: aEvent,
-      }).catch(Cu.reportError);
-      this._chevron.open = true;
 
+      let popupshown = false;
       this._panel.addEventListener(
         "popupshown",
         () => {
+          popupshown = true;
           this._panel.addEventListener("dragover", this);
           this._panel.addEventListener("dragend", this);
           // Wait until the next tick to resolve so all popupshown
@@ -4888,6 +4877,37 @@ OverflowableToolbar.prototype = {
         },
         { once: true }
       );
+
+      let openPanel = () => {
+        // Ensure we update the gEditUIVisible flag when opening the popup, in
+        // case the edit controls are in it.
+        this._panel.addEventListener(
+          "popupshowing",
+          () => {
+            doc.defaultView.updateEditUIVisibility();
+          },
+          { once: true }
+        );
+
+        this._panel.addEventListener(
+          "popuphidden",
+          () => {
+            if (!popupshown) {
+              // The panel was hidden again before it was shown. This can break
+              // consumers waiting for the panel to show. So we try again.
+              openPanel();
+            }
+          },
+          { once: true }
+        );
+
+        PanelMultiView.openPopup(this._panel, anchor || this._chevron, {
+          triggerEvent: aEvent,
+        });
+        this._chevron.open = true;
+      };
+
+      openPanel();
     });
   },
 
@@ -5028,15 +5048,7 @@ OverflowableToolbar.prototype = {
     if (aEvent.target != aEvent.currentTarget) {
       return;
     }
-    log.debug("Got resize event");
-    if (!this._lazyResizeHandler) {
-      this._lazyResizeHandler = new DeferredTask(
-        this._checkOverflow.bind(this),
-        LAZY_RESIZE_INTERVAL_MS,
-        0
-      );
-    }
-    this._lazyResizeHandler.arm();
+    this._checkOverflow();
   },
 
   /**
@@ -5158,9 +5170,6 @@ OverflowableToolbar.prototype = {
 
   _disable() {
     this._moveItemsBackToTheirOrigin(true);
-    if (this._lazyResizeHandler) {
-      this._lazyResizeHandler.disarm();
-    }
     this._enabled = false;
   },
 

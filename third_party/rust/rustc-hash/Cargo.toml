@@ -11,16 +11,13 @@
 # will likely look very different (and much more reasonable)
 
 [package]
-name = "which"
-version = "1.0.3"
-authors = ["fangyuanziti <tiziyuanfang@gmail.com>"]
-description = "A Rust equivalent of Unix command \"which\". Locate installed execuable in cross platforms."
+name = "rustc-hash"
+version = "1.0.1"
+authors = ["The Rust Project Developers"]
+description = "speed, non-cryptographic hash used in rustc"
 readme = "README.md"
-keywords = ["which", "which-rs", "unix", "command"]
-categories = ["os", "filesystem"]
-license = "MIT"
-repository = "https://github.com/fangyuanziti/which-rs.git"
-[dependencies.libc]
-version = "0.2.10"
-[dev-dependencies.tempdir]
-version = "0.3.4"
+keywords = ["hash", "fxhash", "rustc"]
+license = "Apache-2.0/MIT"
+repository = "https://github.com/rust-lang-nursery/rustc-hash"
+[dependencies.byteorder]
+version = "1.1"

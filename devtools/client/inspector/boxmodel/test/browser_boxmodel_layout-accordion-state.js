@@ -108,7 +108,11 @@ async function testAccordionStateAfterReopeningLayoutView(toolbox) {
   );
 
   info("Checking the state of the box model panel.");
-  ok(!bContent, "The box model panel content is not rendered.");
+  is(
+    bContent.children.length,
+    0,
+    "The box model panel content is not rendered."
+  );
   ok(
     !Services.prefs.getBoolPref(BOXMODEL_OPENED_PREF),
     `${BOXMODEL_OPENED_PREF} is pref off.`

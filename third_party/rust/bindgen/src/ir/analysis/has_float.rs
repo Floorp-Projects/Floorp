@@ -1,12 +1,12 @@
 //! Determining which types has float.
 
-use super::{ConstrainResult, MonotoneFramework, generate_dependencies};
-use {HashSet, HashMap};
+use super::{generate_dependencies, ConstrainResult, MonotoneFramework};
+use ir::comp::Field;
+use ir::comp::FieldMethods;
 use ir::context::{BindgenContext, ItemId};
 use ir::traversal::EdgeKind;
 use ir::ty::TypeKind;
-use ir::comp::Field;
-use ir::comp::FieldMethods;
+use {HashMap, HashSet};
 
 /// An analysis that finds for each IR item whether it has float or not.
 ///
@@ -132,24 +132,27 @@ impl<'ctx> MonotoneFramework for HasFloat<'ctx> {
                 ConstrainResult::Same
             }
 
-            TypeKind::Float(..) |
-            TypeKind::Complex(..) => {
+            TypeKind::Float(..) | TypeKind::Complex(..) => {
                 trace!("    float type has float");
                 self.insert(id)
             }
 
             TypeKind::Array(t, _) => {
                 if self.has_float.contains(&t.into()) {
-                    trace!("    Array with type T that has float also has float");
-                    return self.insert(id)
+                    trace!(
+                        "    Array with type T that has float also has float"
+                    );
+                    return self.insert(id);
                 }
                 trace!("    Array with type T that do not have float also do not have float");
                 ConstrainResult::Same
             }
             TypeKind::Vector(t, _) => {
                 if self.has_float.contains(&t.into()) {
-                    trace!("    Vector with type T that has float also has float");
-                    return self.insert(id)
+                    trace!(
+                        "    Vector with type T that has float also has float"
+                    );
+                    return self.insert(id);
                 }
                 trace!("    Vector with type T that do not have float also do not have float");
                 ConstrainResult::Same
@@ -160,8 +163,10 @@ impl<'ctx> MonotoneFramework for HasFloat<'ctx> {
             TypeKind::Alias(t) |
             TypeKind::BlockPointer(t) => {
                 if self.has_float.contains(&t.into()) {
-                    trace!("    aliases and type refs to T which have float \
-                            also have float");
+                    trace!(
+                        "    aliases and type refs to T which have float \
+                         also have float"
+                    );
                     self.insert(id)
                 } else {
                     trace!("    aliases and type refs to T which do not have float \
@@ -171,28 +176,23 @@ impl<'ctx> MonotoneFramework for HasFloat<'ctx> {
             }
 
             TypeKind::Comp(ref info) => {
-                let bases_have = info.base_members()
+                let bases_have = info
+                    .base_members()
                     .iter()
                     .any(|base| self.has_float.contains(&base.ty.into()));
                 if bases_have {
                     trace!("    bases have float, so we also have");
                     return self.insert(id);
                 }
-                let fields_have = info.fields()
-                    .iter()
-                    .any(|f| {
-                        match *f {
-                            Field::DataMember(ref data) => {
-                                self.has_float.contains(&data.ty().into())
-                            }
-                            Field::Bitfields(ref bfu) => {
-                                bfu.bitfields()
-                                    .iter().any(|b| {
-                                        self.has_float.contains(&b.ty().into())
-                                    })
-                            },
-                        }
-                    });
+                let fields_have = info.fields().iter().any(|f| match *f {
+                    Field::DataMember(ref data) => {
+                        self.has_float.contains(&data.ty().into())
+                    }
+                    Field::Bitfields(ref bfu) => bfu
+                        .bitfields()
+                        .iter()
+                        .any(|b| self.has_float.contains(&b.ty().into())),
+                });
                 if fields_have {
                     trace!("    fields have float, so we also have");
                     return self.insert(id);
@@ -203,20 +203,26 @@ impl<'ctx> MonotoneFramework for HasFloat<'ctx> {
             }
 
             TypeKind::TemplateInstantiation(ref template) => {
-                let args_have = template.template_arguments()
+                let args_have = template
+                    .template_arguments()
                     .iter()
                     .any(|arg| self.has_float.contains(&arg.into()));
                 if args_have {
-                    trace!("    template args have float, so \
-                            insantiation also has float");
+                    trace!(
+                        "    template args have float, so \
+                         insantiation also has float"
+                    );
                     return self.insert(id);
                 }
 
-                let def_has = self.has_float
+                let def_has = self
+                    .has_float
                     .contains(&template.template_definition().into());
                 if def_has {
-                    trace!("    template definition has float, so \
-                            insantiation also has");
+                    trace!(
+                        "    template definition has float, so \
+                         insantiation also has"
+                    );
                     return self.insert(id);
                 }
 
@@ -227,7 +233,8 @@ impl<'ctx> MonotoneFramework for HasFloat<'ctx> {
     }
 
     fn each_depending_on<F>(&self, id: ItemId, mut f: F)
-        where F: FnMut(ItemId),
+    where
+        F: FnMut(ItemId),
     {
         if let Some(edges) = self.dependencies.get(&id) {
             for item in edges {

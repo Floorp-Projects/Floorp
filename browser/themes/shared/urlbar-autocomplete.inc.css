@@ -383,7 +383,8 @@
 }
 
 .urlbarView.megabar .search-one-offs {
-  padding-inline: calc(@urlbarBreakoutHorizontalExtend@ - @urlbarViewHorizontalMargin@);
+  padding-inline-start: @urlbarBreakoutHorizontalExtend@;
+  padding-inline-end: calc(@urlbarBreakoutHorizontalExtend@ - @urlbarViewHorizontalMargin@);
 }
 
 #urlbar:not(.megabar) .search-one-offs {

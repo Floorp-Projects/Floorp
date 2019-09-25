@@ -90,6 +90,59 @@ export class InfoItem extends HTMLElement {
       info.textContent = "";
       info.appendChild(link);
     }
+
+    if (labelText === "download") {
+      this.setDownloadLinkInformation(info);
+    }
+  }
+
+  setDownloadLinkInformation(info) {
+    let link = document.createElement("a");
+    link.setAttribute("href", "data:," + this.item.info);
+    link.classList.add("download-link");
+
+    let url = new URL(document.URL);
+    let certArray = url.searchParams.getAll("cert");
+    let encodedCertArray = [];
+    for (let i = 0; i < certArray.length; i++) {
+      encodedCertArray.push(
+        encodeURI(
+          `-----BEGIN CERTIFICATE-----\r\n${
+            certArray[i]
+          }\r\n-----END CERTIFICATE-----\r\n`
+        )
+      );
+    }
+    encodedCertArray = encodedCertArray.join("");
+
+    let chainLink = document.createElement("a");
+    chainLink.setAttribute("href", "data:," + encodedCertArray);
+    chainLink.classList.add("download-link");
+    chainLink.classList.add("download-link-chain");
+
+    info.textContent = "";
+    info.appendChild(link);
+    info.appendChild(chainLink);
+
+    let commonName = document
+      .querySelector("certificate-section")
+      .shadowRoot.querySelector(".subject-name")
+      .shadowRoot.querySelector(".common-name")
+      .shadowRoot.querySelector(".info");
+
+    let fileName = normalizeToKebabCase(commonName.textContent);
+
+    document.l10n.setAttributes(link, "certificate-viewer-download-pem", {
+      fileName,
+    });
+
+    document.l10n.setAttributes(
+      chainLink,
+      "certificate-viewer-download-pem-chain",
+      {
+        fileName,
+      }
+    );
   }
 }
 

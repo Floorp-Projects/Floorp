@@ -19,6 +19,7 @@ add_task(async function() {
   await waitForOverflowButtonShown();
   registerCleanupFunction(() => CustomizableUI.reset());
 
+  info("Waiting for the overflow panel to open");
   await document.getElementById("nav-bar").overflowable.show();
 
   let charEncodingButton = document.getElementById("characterencoding-button");

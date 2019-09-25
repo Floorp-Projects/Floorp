@@ -2006,6 +2006,10 @@ pref("devtools.gridinspector.maxHighlighters", 3);
 pref("devtools.layout.boxmodel.opened", true);
 // Whether or not the flexbox panel is opened in the layout view
 pref("devtools.layout.flexbox.opened", true);
+// Whether or not the flexbox container panel is opened in the layout view
+pref("devtools.layout.flex-container.opened", true);
+// Whether or not the flexbox item panel is opened in the layout view
+pref("devtools.layout.flex-item.opened", true);
 // Whether or not the grid inspector panel is opened in the layout view
 pref("devtools.layout.grid.opened", true);
 
