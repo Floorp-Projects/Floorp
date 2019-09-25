@@ -311,8 +311,8 @@ add_task(async function test_page_contextmenu_login_failed() {
 });
 
 add_task(async function test_page_contextmenu_fxa_disabled() {
-  const getter = sinon.stub(gSync, "SYNC_ENABLED").get(() => false);
-  gSync.onSyncDisabled(); // Would have been called on gSync initialization if SYNC_ENABLED had been set.
+  const getter = sinon.stub(gSync, "FXA_ENABLED").get(() => false);
+  gSync.onFxaDisabled(); // Would have been called on gSync initialization if FXA_ENABLED had been set.
   await openContentContextMenu("#moztext");
   is(
     document.getElementById("context-sendpagetodevice").hidden,

@@ -117,7 +117,7 @@ var gSync = {
     );
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
-      "SYNC_ENABLED",
+      "FXA_ENABLED",
       "identity.fxaccounts.enabled"
     );
   },
@@ -141,8 +141,8 @@ var gSync = {
 
     this._definePrefGetters();
 
-    if (!this.SYNC_ENABLED) {
-      this.onSyncDisabled();
+    if (!this.FXA_ENABLED) {
+      this.onFxaDisabled();
       return;
     }
 
@@ -313,7 +313,7 @@ var gSync = {
     if (gSync.sendTabConfiguredAndLoading) {
       bodyNode.setAttribute("state", "notready");
     }
-    if (reloadDevices) {
+    if (reloadDevices && UIState.get().syncEnabled) {
       // Force a background Sync
       Services.tm.dispatchToMainThread(async () => {
         // `engines: []` = clients engine only + refresh FxA Devices.
@@ -1032,8 +1032,8 @@ var gSync = {
     // can lead to a empty label for 'Send To Device' Menu.
     this.init();
 
-    if (!this.SYNC_ENABLED) {
-      // These items are hidden in onSyncDisabled(). No need to do anything.
+    if (!this.FXA_ENABLED) {
+      // These items are hidden in onFxaDisabled(). No need to do anything.
       return;
     }
     let hasASendableURI = false;
@@ -1064,7 +1064,7 @@ var gSync = {
 
   // "Send Page to Device" and "Send Link to Device" menu items
   updateContentContextMenu(contextMenu) {
-    if (!this.SYNC_ENABLED) {
+    if (!this.FXA_ENABLED) {
       // These items are hidden by default. No need to do anything.
       return;
     }
@@ -1205,6 +1205,8 @@ var gSync = {
     if (!UIState.isReady()) {
       return;
     }
+    // Note we don't bother checking if sync is actually enabled - none of the
+    // UI which calls this function should be visible in that case.
     const state = UIState.get();
     if (state.status == UIState.STATUS_SIGNED_IN) {
       this.updateSyncStatus({ syncing: true });
@@ -1338,7 +1340,7 @@ var gSync = {
     }
   },
 
-  onSyncDisabled() {
+  onFxaDisabled() {
     const toHide = [...document.querySelectorAll(".sync-ui-item")];
     for (const item of toHide) {
       item.hidden = true;

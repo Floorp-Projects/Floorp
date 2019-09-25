@@ -177,9 +177,9 @@ add_task(async function test_tab_contextmenu_sync_not_ready_other_state() {
 });
 
 add_task(async function test_tab_contextmenu_fxa_disabled() {
-  const getter = sinon.stub(gSync, "SYNC_ENABLED").get(() => false);
-  // Simulate onSyncDisabled() being called on window open.
-  gSync.onSyncDisabled();
+  const getter = sinon.stub(gSync, "FXA_ENABLED").get(() => false);
+  // Simulate onFxaDisabled() being called on window open.
+  gSync.onFxaDisabled();
 
   updateTabContextMenu(testTab);
   is(
