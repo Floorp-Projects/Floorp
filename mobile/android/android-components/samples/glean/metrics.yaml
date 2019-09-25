@@ -8,9 +8,6 @@
 
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
 
-no_lint:
-  - COMMON_PREFIX
-
 browser.engagement:
   click:
     type: event
@@ -55,7 +52,7 @@ basic:
     expires: 2100-01-01
 
 test:
-  test_string_list:
+  string_list:
     type: string_list
     description: >
       Testing StringList ping
@@ -70,7 +67,7 @@ test:
       - CHANGE-ME@example.com
     expires: 2100-01-01
 
-  test_counter:
+  counter:
     type: counter
     description: >
       Testing counter
@@ -85,7 +82,7 @@ test:
       - CHANGE-ME@example.com
     expires: 2100-01-01
 
-  test_timespan:
+  timespan:
     type: timespan
     description: >
       Testing a timespan
