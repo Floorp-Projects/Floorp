@@ -26,6 +26,9 @@ if CONFIG['OS_TARGET'] == 'WINNT':
         ]
 
     OS_LIBS += ['wininet']
+elif CONFIG['OS_TARGET'] == 'Linux':
+    USE_LIBS += ['curl']
+    DIRS += ['curl-compat']
 else:
     OS_LIBS += ['curl']
 
