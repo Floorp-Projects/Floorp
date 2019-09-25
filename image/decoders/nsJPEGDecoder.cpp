@@ -357,8 +357,7 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
 
       Maybe<SurfacePipe> pipe = SurfacePipeFactory::CreateSurfacePipe(
           this, Size(), OutputSize(), FullFrame(), SurfaceFormat::B8G8R8X8,
-          SurfaceFormat::B8G8R8X8, Nothing(), pipeTransform,
-          SurfacePipeFlags());
+          Nothing(), pipeTransform, SurfacePipeFlags());
       if (!pipe) {
         mState = JPEG_ERROR;
         MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
