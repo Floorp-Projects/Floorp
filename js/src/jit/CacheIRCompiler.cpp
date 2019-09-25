@@ -103,7 +103,7 @@ ValueOperand CacheRegisterAllocator::useValueRegister(MacroAssembler& masm,
 // Load a value operand directly into a float register. Caller must have
 // guarded isNumber on the provided val.
 void CacheRegisterAllocator::ensureDoubleRegister(MacroAssembler& masm,
-                                                  ValOperandId op,
+                                                  NumberOperandId op,
                                                   FloatRegister dest) {
   OperandLocation& loc = operandLocations_[op.id()];
 
@@ -2115,8 +2115,8 @@ bool CacheIRCompiler::emitDoubleAddResult() {
   // Float register must be preserved. The BinaryArith ICs use
   // the fact that baseline has them available, as well as fixed temps on
   // LBinaryCache.
-  allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg0);
-  allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg1);
+  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
+  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg1);
 
   masm.addDouble(FloatReg1, FloatReg0);
   masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
@@ -2127,8 +2127,8 @@ bool CacheIRCompiler::emitDoubleSubResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   AutoOutputRegister output(*this);
 
-  allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg0);
-  allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg1);
+  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
+  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg1);
 
   masm.subDouble(FloatReg1, FloatReg0);
   masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
@@ -2139,8 +2139,8 @@ bool CacheIRCompiler::emitDoubleMulResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   AutoOutputRegister output(*this);
 
-  allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg0);
-  allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg1);
+  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
+  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg1);
 
   masm.mulDouble(FloatReg1, FloatReg0);
   masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
@@ -2151,8 +2151,8 @@ bool CacheIRCompiler::emitDoubleDivResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   AutoOutputRegister output(*this);
 
-  allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg0);
-  allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg1);
+  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
+  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg1);
 
   masm.divDouble(FloatReg1, FloatReg0);
   masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
@@ -2164,8 +2164,8 @@ bool CacheIRCompiler::emitDoubleModResult() {
   AutoOutputRegister output(*this);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
-  allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg0);
-  allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg1);
+  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
+  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg1);
 
   LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
   masm.PushRegsInMask(save);
@@ -3634,8 +3634,8 @@ bool CacheIRCompiler::emitCompareDoubleResult() {
     return false;
   }
 
-  allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg0);
-  allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg1);
+  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
+  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg1);
   JSOp op = reader.jsop();
 
   Label done, ifTrue;
@@ -4267,7 +4267,7 @@ bool CacheIRCompiler::emitCallNumberToString() {
   // Float register must be preserved. The BinaryArith ICs use
   // the fact that baseline has them available, as well as fixed temps on
   // LBinaryCache.
-  allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg0);
+  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
   Register result = allocator.defineRegister(masm, reader.stringOperandId());
 
   FailurePath* failure;

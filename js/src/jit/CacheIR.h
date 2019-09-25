@@ -98,6 +98,12 @@ class ObjOperandId : public OperandId {
   bool operator!=(const ObjOperandId& other) const { return id_ != other.id_; }
 };
 
+class NumberOperandId : public ValOperandId {
+ public:
+  NumberOperandId() = default;
+  explicit NumberOperandId(uint16_t id) : ValOperandId(id) {}
+};
+
 class StringOperandId : public OperandId {
  public:
   StringOperandId() = default;
@@ -127,6 +133,8 @@ class TypedOperandId : public OperandId {
 
  public:
   MOZ_IMPLICIT TypedOperandId(ObjOperandId id)
+      : OperandId(id.id()), type_(JSVAL_TYPE_OBJECT) {}
+  MOZ_IMPLICIT TypedOperandId(NumberOperandId id)
       : OperandId(id.id()), type_(JSVAL_TYPE_OBJECT) {}
   MOZ_IMPLICIT TypedOperandId(StringOperandId id)
       : OperandId(id.id()), type_(JSVAL_TYPE_STRING) {}
@@ -844,8 +852,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     return res;
   }
 
-  void guardIsNumber(ValOperandId val) {
+  NumberOperandId guardIsNumber(ValOperandId val) {
     writeOpWithOperandId(CacheOp::GuardIsNumber, val);
+    return NumberOperandId(val.id());
   }
 
   void guardType(ValOperandId val, ValueType type) {
@@ -1067,8 +1076,8 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     return res;
   }
 
-  ValOperandId guardAndGetNumberFromString(StringOperandId str) {
-    ValOperandId res(nextOperandId_++);
+  NumberOperandId guardAndGetNumberFromString(StringOperandId str) {
+    NumberOperandId res(nextOperandId_++);
     writeOpWithOperandId(CacheOp::GuardAndGetNumberFromString, str);
     writeOperandId(res);
     return res;
@@ -1406,7 +1415,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     return res;
   }
 
-  StringOperandId callNumberToString(ValOperandId id) {
+  StringOperandId callNumberToString(NumberOperandId id) {
     StringOperandId res(nextOperandId_++);
     writeOpWithOperandId(CacheOp::CallNumberToString, id);
     writeOperandId(res);
@@ -1561,27 +1570,27 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     buffer_.writeByte(uint32_t(hasOwn));
   }
 
-  void doubleAddResult(ValOperandId lhsId, ValOperandId rhsId) {
+  void doubleAddResult(NumberOperandId lhsId, NumberOperandId rhsId) {
     writeOpWithOperandId(CacheOp::DoubleAddResult, lhsId);
     writeOperandId(rhsId);
   }
 
-  void doubleSubResult(ValOperandId lhsId, ValOperandId rhsId) {
+  void doubleSubResult(NumberOperandId lhsId, NumberOperandId rhsId) {
     writeOpWithOperandId(CacheOp::DoubleSubResult, lhsId);
     writeOperandId(rhsId);
   }
 
-  void doubleMulResult(ValOperandId lhsId, ValOperandId rhsId) {
+  void doubleMulResult(NumberOperandId lhsId, NumberOperandId rhsId) {
     writeOpWithOperandId(CacheOp::DoubleMulResult, lhsId);
     writeOperandId(rhsId);
   }
 
-  void doubleDivResult(ValOperandId lhsId, ValOperandId rhsId) {
+  void doubleDivResult(NumberOperandId lhsId, NumberOperandId rhsId) {
     writeOpWithOperandId(CacheOp::DoubleDivResult, lhsId);
     writeOperandId(rhsId);
   }
 
-  void doubleModResult(ValOperandId lhsId, ValOperandId rhsId) {
+  void doubleModResult(NumberOperandId lhsId, NumberOperandId rhsId) {
     writeOpWithOperandId(CacheOp::DoubleModResult, lhsId);
     writeOperandId(rhsId);
   }
@@ -1659,15 +1668,15 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOpWithOperandId(CacheOp::Int32DecResult, id);
   }
 
-  void doubleNegationResult(ValOperandId val) {
+  void doubleNegationResult(NumberOperandId val) {
     writeOpWithOperandId(CacheOp::DoubleNegationResult, val);
   }
 
-  void doubleIncResult(ValOperandId val) {
+  void doubleIncResult(NumberOperandId val) {
     writeOpWithOperandId(CacheOp::DoubleIncResult, val);
   }
 
-  void doubleDecResult(ValOperandId val) {
+  void doubleDecResult(NumberOperandId val) {
     writeOpWithOperandId(CacheOp::DoubleDecResult, val);
   }
 
@@ -1921,7 +1930,8 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     buffer_.writeByte(uint32_t(op));
   }
 
-  void compareDoubleResult(uint32_t op, ValOperandId lhs, ValOperandId rhs) {
+  void compareDoubleResult(uint32_t op, NumberOperandId lhs,
+                           NumberOperandId rhs) {
     writeOpWithOperandId(CacheOp::CompareDoubleResult, lhs);
     writeOperandId(rhs);
     buffer_.writeByte(uint32_t(op));
@@ -1972,6 +1982,9 @@ class MOZ_RAII CacheIRReader {
   }
 
   ObjOperandId objOperandId() { return ObjOperandId(buffer_.readByte()); }
+  NumberOperandId numberOperandId() {
+    return NumberOperandId(buffer_.readByte());
+  }
   StringOperandId stringOperandId() {
     return StringOperandId(buffer_.readByte());
   }
