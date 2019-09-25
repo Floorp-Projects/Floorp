@@ -763,7 +763,7 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
                       // Converting the Content Type into a ProcType
                       nsAutoString processType;
                       processType.Assign(contentParent->GetRemoteType());
-                      if (processType.EqualsLiteral(DEFAULT_REMOTE_TYPE)) {
+                      if (IsWebRemoteType(processType)) {
                         type = mozilla::ProcType::Web;
                       } else if (processType.EqualsLiteral(FILE_REMOTE_TYPE)) {
                         type = mozilla::ProcType::File;
