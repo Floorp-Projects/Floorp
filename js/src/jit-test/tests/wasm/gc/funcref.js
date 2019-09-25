@@ -21,11 +21,11 @@ wasmFailValidateText(`(module (func (param funcref)) (func (param anyref) (call 
 wasmEvalText(`(module (func (param funcref) (result funcref) (block funcref (local.get 0) (br 0))))`);
 wasmEvalText(`(module (func (param funcref) (result anyref) (block anyref (local.get 0) (br 0))))`);
 wasmFailValidateText(`(module (func (param anyref) (result anyref) (block funcref (local.get 0) (br 0))))`, typeErr);
-wasmEvalText(`(module (func (param funcref funcref) (result funcref) (select (local.get 0) (local.get 1) (i32.const 0))))`);
-wasmEvalText(`(module (func (param anyref funcref) (result anyref) (select (local.get 0) (local.get 1) (i32.const 0))))`);
-wasmEvalText(`(module (func (param funcref anyref) (result anyref) (select (local.get 0) (local.get 1) (i32.const 0))))`);
-wasmFailValidateText(`(module (func (param anyref funcref) (result funcref) (select (local.get 0) (local.get 1) (i32.const 0))))`, typeErr);
-wasmFailValidateText(`(module (func (param funcref anyref) (result funcref) (select (local.get 0) (local.get 1) (i32.const 0))))`, typeErr);
+wasmEvalText(`(module (func (param funcref funcref) (result funcref) (select (result funcref) (local.get 0) (local.get 1) (i32.const 0))))`);
+wasmEvalText(`(module (func (param anyref funcref) (result anyref) (select (result anyref) (local.get 0) (local.get 1) (i32.const 0))))`);
+wasmEvalText(`(module (func (param funcref anyref) (result anyref) (select (result anyref)(local.get 0) (local.get 1) (i32.const 0))))`);
+wasmFailValidateText(`(module (func (param anyref funcref) (result funcref) (select (result funcref) (local.get 0) (local.get 1) (i32.const 0))))`, typeErr);
+wasmFailValidateText(`(module (func (param funcref anyref) (result funcref) (select (result funcref) (local.get 0) (local.get 1) (i32.const 0))))`, typeErr);
 
 
 // Runtime:
@@ -41,7 +41,7 @@ var run = wasmEvalText(`(module
       local.get $x
       global.get 0
       local.get $test
-      select
+      select (result funcref)
     )
     (func (export "run") (param $a funcref) (param $b funcref) (param $c funcref) (param $test1 i32) (param $test2 i32) (result funcref)
       local.get $a

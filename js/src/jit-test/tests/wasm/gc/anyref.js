@@ -20,9 +20,9 @@ assertErrorMessage(() => wasmEvalText(`(module
         i32.const 0
         ref.null
         i32.const 42
-        select
+        select (result anyref)
     )
-)`), CompileError, /select operand types/);
+)`), CompileError, /type mismatch/);
 
 assertErrorMessage(() => wasmEvalText(`(module
     (func (result i32)
@@ -103,7 +103,7 @@ exports = wasmEvalText(`(module
         local.get $ref
         ref.null
         local.get $selector
-        select
+        select (result anyref)
     )
 
     (func $recursive (export "nested") (result anyref) (param $ref anyref) (param $i i32)
@@ -236,7 +236,7 @@ exports = wasmEvalText(`(module
         local.get $lhs
         local.get $rhs
         local.get $i
-        select
+        select (result anyref)
     )
 )`).exports;
 

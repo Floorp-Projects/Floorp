@@ -2448,12 +2448,12 @@ static bool EmitComparison(FunctionCompiler& f, ValType operandType,
   return true;
 }
 
-static bool EmitSelect(FunctionCompiler& f) {
+static bool EmitSelect(FunctionCompiler& f, bool typed) {
   StackType type;
   MDefinition* trueValue;
   MDefinition* falseValue;
   MDefinition* condition;
-  if (!f.iter().readSelect(&type, &trueValue, &falseValue, &condition)) {
+  if (!f.iter().readSelect(typed, &type, &trueValue, &falseValue, &condition)) {
     return false;
   }
 
@@ -3446,8 +3446,13 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
       // Parametric operators
       case uint16_t(Op::Drop):
         CHECK(f.iter().readDrop());
-      case uint16_t(Op::Select):
-        CHECK(EmitSelect(f));
+      case uint16_t(Op::SelectNumeric):
+        CHECK(EmitSelect(f, /*typed*/ false));
+      case uint16_t(Op::SelectTyped):
+        if (!f.env().refTypesEnabled()) {
+          return f.iter().unrecognizedOpcode(&op);
+        }
+        CHECK(EmitSelect(f, /*typed*/ true));
 
       // Locals and globals
       case uint16_t(Op::GetLocal):
