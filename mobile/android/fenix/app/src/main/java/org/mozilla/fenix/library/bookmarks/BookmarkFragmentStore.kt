@@ -20,7 +20,11 @@ class BookmarkFragmentStore(
  * @property tree The current tree of bookmarks, if one is loaded
  * @property mode The current bookmark multi-selection mode
  */
-data class BookmarkFragmentState(val tree: BookmarkNode?, val mode: Mode = Mode.Normal) : State {
+data class BookmarkFragmentState(
+    val tree: BookmarkNode?,
+    val mode: Mode = Mode.Normal,
+    val isLoading: Boolean
+) : State {
     sealed class Mode {
         open val selectedItems = emptySet<BookmarkNode>()
 
@@ -58,7 +62,8 @@ private fun bookmarkFragmentStateReducer(
                     BookmarkFragmentState.Mode.Normal
                 } else {
                     BookmarkFragmentState.Mode.Selecting(items.toSet())
-                }
+                },
+                isLoading = false
             )
         }
         is BookmarkFragmentAction.Select ->
