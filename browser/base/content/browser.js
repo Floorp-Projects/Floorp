@@ -649,7 +649,7 @@ var gNavigatorBundle = {
   },
 };
 
-function updateFxaToolbarMenu(enable) {
+function updateFxaToolbarMenu(enable, isInitialUpdate = false) {
   // We only show the Firefox Account toolbar menu if the feature is enabled and
   // if sync is enabled.
   const syncEnabled = Services.prefs.getBoolPref(
@@ -670,7 +670,9 @@ function updateFxaToolbarMenu(enable) {
     // We have to manually update the sync state UI when toggling the FxA toolbar
     // because it could show an invalid icon if the user is logged in and no sync
     // event was performed yet.
-    gSync.maybeUpdateUIState();
+    if (!isInitialUpdate) {
+      gSync.maybeUpdateUIState();
+    }
 
     Services.telemetry.setEventRecordingEnabled("fxa_avatar_menu", true);
 
@@ -1811,7 +1813,7 @@ var gBrowserInit = {
 
     this._setInitialFocus();
 
-    updateFxaToolbarMenu(gFxaToolbarEnabled);
+    updateFxaToolbarMenu(gFxaToolbarEnabled, true);
   },
 
   onLoad() {

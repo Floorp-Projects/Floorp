@@ -295,13 +295,13 @@ add_task(async function test_ensureLoggedIn() {
   fxa._internal.currentAccountState.storageManager.accountData = null;
   await Assert.rejects(
     globalBrowseridManager._ensureValidToken(true),
-    /Can't possibly get keys; User is not signed in/,
+    /no user is logged in/,
     "expecting rejection due to no user"
   );
   // Restore the logged in user to what it was.
   fxa._internal.currentAccountState.storageManager.accountData = signedInUser;
   Status.login = LOGIN_FAILED_LOGIN_REJECTED;
-  await globalBrowseridManager._ensureValidToken();
+  await globalBrowseridManager._ensureValidToken(true);
   Assert.equal(Status.login, LOGIN_SUCCEEDED, "final ensureLoggedIn worked");
 });
 
@@ -323,10 +323,11 @@ add_task(async function test_syncState() {
   fxa._internal.currentAccountState.storageManager.accountData = null;
   await Assert.rejects(
     globalBrowseridManager._ensureValidToken(true),
-    /Can't possibly get keys; User is not signed in/,
+    /no user is logged in/,
     "expecting rejection due to no user"
   );
   // Restore to an unverified user.
+  Services.prefs.setStringPref("services.sync.username", signedInUser.email);
   signedInUser.verified = false;
   fxa._internal.currentAccountState.storageManager.accountData = signedInUser;
   Status.login = LOGIN_FAILED_LOGIN_REJECTED;
@@ -806,7 +807,6 @@ add_task(async function test_signedInUserMissing() {
   });
 
   browseridManager._fxaService = fxa;
-  browseridManager._signedInUser = await fxa.getSignedInUser();
 
   let status = await browseridManager.unlockAndVerifyAuthState();
   Assert.equal(status, LOGIN_FAILED_LOGIN_REJECTED);
@@ -899,7 +899,6 @@ async function initializeIdentityWithHAWKResponseFactory(
   let fxa = new FxAccounts(internal);
 
   globalBrowseridManager._fxaService = fxa;
-  globalBrowseridManager._signedInUser = await fxa.getSignedInUser();
   await Assert.rejects(
     globalBrowseridManager._ensureValidToken(true),
     // TODO: Ideally this should have a specific check for an error.
