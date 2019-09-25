@@ -3,12 +3,6 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
-  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
-});
-
 // Tests that displaying results with resultSpan > 1 limits other results in
 // the view.
 add_task(async function oneTip() {

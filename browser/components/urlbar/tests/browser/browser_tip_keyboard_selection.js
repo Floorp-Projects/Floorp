@@ -3,18 +3,6 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "UrlbarTestUtils",
-  "resource://testing-common/UrlbarTestUtils.jsm"
-);
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
-  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
-});
-
 const MEGABAR_PREF = "browser.urlbar.megabar";
 
 // Tests keyboard selection within UrlbarUtils.RESULT_TYPE.TIP results.
