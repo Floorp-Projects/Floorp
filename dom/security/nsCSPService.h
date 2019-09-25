@@ -34,9 +34,13 @@ class CSPService : public nsIContentPolicy, public nsIChannelEventSink {
                              const nsACString& aMimeTypeGuess,
                              int16_t* aDecision);
 
+  // Static helper to check CSP when doing a channel redirect.
+  // Returns the results to returns from
+  // AsyncOnChannelRedirect/nsIAsyncVerifyRedirectCallback. Optionally returns
+  // an nsresult to Cancel the old channel with.
   static nsresult ConsultCSPForRedirect(nsIURI* aOriginalURI, nsIURI* aNewURI,
                                         nsILoadInfo* aLoadInfo,
-                                        int16_t* aDecision);
+                                        Maybe<nsresult>& aCancelCode);
 
  protected:
   virtual ~CSPService();

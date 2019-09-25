@@ -412,22 +412,15 @@ IPCResult DocumentChannelChild::RecvConfirmRedirect(
   nsCOMPtr<nsIURI> originalUri;
   nsresult rv = GetOriginalURI(getter_AddRefs(originalUri));
   if (NS_FAILED(rv)) {
-    aResolve(rv);
+    aResolve(Tuple<const nsresult&, const Maybe<nsresult>&>(NS_BINDING_FAILED,
+                                                            Some(rv)));
     return IPC_OK();
   }
 
-  int16_t decision = nsIContentPolicy::ACCEPT;
+  Maybe<nsresult> cancelCode;
   rv = CSPService::ConsultCSPForRedirect(originalUri, aNewUri, mLoadInfo,
-                                         &decision);
-  if (NS_FAILED(rv)) {
-    aResolve(rv);
-    return IPC_OK();
-  }
-  if (NS_CP_REJECTED(decision)) {
-    aResolve(NS_BINDING_FAILED);
-  } else {
-    aResolve(NS_OK);
-  }
+                                         cancelCode);
+  aResolve(Tuple<const nsresult&, const Maybe<nsresult>&>(rv, cancelCode));
   return IPC_OK();
 }
 
