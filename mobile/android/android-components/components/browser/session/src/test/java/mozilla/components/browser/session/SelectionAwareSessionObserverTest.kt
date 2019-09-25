@@ -146,7 +146,6 @@ class SelectionAwareSessionObserverTest {
         observer.onSearch(session, "")
         observer.onSecurityChanged(session, Session.SecurityInfo())
         observer.onCustomTabConfigChanged(session, null)
-        observer.onDownload(session, Mockito.mock(Download::class.java))
         observer.onTrackerBlockingEnabledChanged(session, true)
         observer.onTrackerBlocked(session, Tracker(""), emptyList())
         observer.onLongPress(session, Mockito.mock(HitResult::class.java))

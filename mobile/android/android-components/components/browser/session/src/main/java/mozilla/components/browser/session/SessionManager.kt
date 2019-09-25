@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.session
 
+import mozilla.components.browser.session.engine.EngineObserver
 import mozilla.components.browser.session.ext.syncDispatch
 import mozilla.components.browser.session.ext.toCustomTabSessionState
 import mozilla.components.browser.session.ext.toTabSessionState
@@ -37,10 +38,30 @@ class SessionManager(
      */
     class EngineSessionLinker(private val store: BrowserStore?) {
         fun link(session: Session, engineSession: EngineSession) {
+            unlink(session)
+
+            session.engineSessionHolder.apply {
+                this.engineSession = engineSession
+                this.engineObserver = EngineObserver(session, store).also { observer ->
+                    engineSession.register(observer)
+                    engineSession.loadUrl(session.url)
+                }
+            }
+
             store?.syncDispatch(LinkEngineSessionAction(session.id, engineSession))
         }
 
         fun unlink(session: Session) {
+            session.engineSessionHolder.engineObserver?.let { observer ->
+                session.engineSessionHolder.apply {
+                    engineSession?.unregister(observer)
+                    engineSession?.close()
+                    engineSession = null
+                    engineSessionState = null
+                    engineObserver = null
+                }
+            }
+
             store?.syncDispatch(UnlinkEngineSessionAction(session.id))
         }
     }

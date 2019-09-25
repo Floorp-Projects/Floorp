@@ -4,33 +4,31 @@
 
 package mozilla.components.feature.downloads
 
-import mozilla.components.browser.session.Download
 import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.store.BrowserStore
 
 /**
  * Contains use cases related to the downloads feature.
  *
- * @param sessionManager the application's [SessionManager].
+ * @param store the application's [BrowserStore].
  */
 class DownloadsUseCases(
-    sessionManager: SessionManager
+    store: BrowserStore
 ) {
     class ConsumeDownloadUseCase(
-        private val sessionManager: SessionManager
+        private val store: BrowserStore
     ) {
         /**
          * Consumes the [Download] with the given [downloadId] from the [Session] with the given
          * [tabId].
          */
         operator fun invoke(tabId: String, downloadId: String) {
-            sessionManager.findSessionById(tabId)?.let { session ->
-                session.download.consume {
-                    it.id == downloadId
-                }
-            }
+            store.dispatch(ContentAction.ConsumeDownloadAction(
+                tabId, downloadId
+            ))
         }
     }
 
-    val consumeDownload = ConsumeDownloadUseCase(sessionManager)
+    val consumeDownload = ConsumeDownloadUseCase(store)
 }

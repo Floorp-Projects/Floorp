@@ -5,7 +5,6 @@
 package mozilla.components.browser.session
 
 import androidx.annotation.GuardedBy
-import mozilla.components.browser.session.engine.EngineObserver
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
@@ -291,28 +290,10 @@ class LegacySessionManager(
     }
 
     fun link(session: Session, engineSession: EngineSession) {
-        unlink(session)
-
-        session.engineSessionHolder.apply {
-            this.engineSession = engineSession
-            this.engineObserver = EngineObserver(session).also { observer ->
-                engineSession.register(observer)
-                engineSession.loadUrl(session.url)
-            }
-        }
         engineSessionLinker.link(session, engineSession)
     }
 
     private fun unlink(session: Session) {
-        session.engineSessionHolder.engineObserver?.let { observer ->
-            session.engineSessionHolder.apply {
-                engineSession?.unregister(observer)
-                engineSession?.close()
-                engineSession = null
-                engineSessionState = null
-                engineObserver = null
-            }
-        }
         engineSessionLinker.unlink(session)
     }
 

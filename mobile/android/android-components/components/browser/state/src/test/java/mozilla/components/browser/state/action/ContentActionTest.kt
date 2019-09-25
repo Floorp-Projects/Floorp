@@ -21,10 +21,12 @@ import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 
 class ContentActionTest {
@@ -281,6 +283,7 @@ class ContentActionTest {
     @Test
     fun `ConsumeDownloadAction removes download`() {
         val download: DownloadState = mock()
+        doReturn("1337").`when`(download).id
 
         store.dispatch(
             ContentAction.UpdateDownloadAction(tab.id, download)
@@ -289,10 +292,28 @@ class ContentActionTest {
         assertEquals(download, tab.content.download)
 
         store.dispatch(
-            ContentAction.ConsumeDownloadAction(tab.id)
+            ContentAction.ConsumeDownloadAction(tab.id, downloadId = "1337")
         ).joinBlocking()
 
         assertNull(tab.content.download)
+    }
+
+    @Test
+    fun `ConsumeDownloadAction does not remove download with different id`() {
+        val download: DownloadState = mock()
+        doReturn("1337").`when`(download).id
+
+        store.dispatch(
+            ContentAction.UpdateDownloadAction(tab.id, download)
+        ).joinBlocking()
+
+        assertEquals(download, tab.content.download)
+
+        store.dispatch(
+            ContentAction.ConsumeDownloadAction(tab.id, downloadId = "4223")
+        ).joinBlocking()
+
+        assertNotNull(tab.content.download)
     }
 
     @Test

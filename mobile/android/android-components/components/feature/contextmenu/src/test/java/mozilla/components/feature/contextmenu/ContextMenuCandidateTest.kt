@@ -11,6 +11,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -18,6 +19,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.any
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -339,7 +341,7 @@ class ContextMenuCandidateTest {
 
         val saveImage = ContextMenuCandidate.createSaveImageCandidate(
             testContext,
-            ContextMenuUseCases(sessionManager))
+            ContextMenuUseCases(sessionManager, store))
 
         // showFor
 
@@ -371,6 +373,10 @@ class ContextMenuCandidateTest {
             store.state.tabs.first(),
             HitResult.IMAGE_SRC("https://www.mozilla.org/media/img/logos/firefox/logo-quantum.9c5e96634f92.png",
                 "https://firefox.com"))
+
+        // Dispatching a random unrelated action to block on it in order to wait for all other
+        // dispatched actions to have completed.
+        store.dispatch(SystemAction.LowMemoryAction).joinBlocking()
 
         assertNotNull(store.state.tabs.first().content.download)
         assertEquals(
