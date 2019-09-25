@@ -4,6 +4,10 @@
 
 "use strict";
 
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
+
 const DIRPATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content/",
   ""
@@ -17,6 +21,15 @@ const parentURL = `http://example.com/${parentPATH}`;
 const iframeURL = `http://example.org/${iframePATH}`;
 
 add_task(async function() {
+  if (Preferences.locked("fission.autostart")) {
+    ok(
+      true,
+      "fission.autostart pref is locked on this channel which means " +
+        "we don't need to run the following tests"
+    );
+    return;
+  }
+
   const win = await BrowserTestUtils.openNewBrowserWindow({
     fission: true,
   });
