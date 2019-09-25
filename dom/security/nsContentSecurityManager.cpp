@@ -644,7 +644,11 @@ static nsresult DoCheckLoadURIChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo) {
   // same principal check as Fluent.
   if (aLoadInfo->InternalContentPolicyType() ==
       nsIContentPolicy::TYPE_INTERNAL_DTD) {
-    return nsContentUtils::PrincipalAllowsL10n(aLoadInfo->TriggeringPrincipal())
+    RefPtr<Document> doc;
+    aLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
+    return nsContentUtils::PrincipalAllowsL10n(
+               aLoadInfo->TriggeringPrincipal(),
+               doc ? doc->GetDocumentURI() : nullptr)
                ? NS_OK
                : NS_ERROR_DOM_BAD_URI;
   }

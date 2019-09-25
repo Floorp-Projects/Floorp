@@ -638,33 +638,37 @@ nsresult nsExpatDriver::OpenInputStreamFromExternalDTD(const char16_t* aFPIStr,
                        nsContentUtils::GetSystemPrincipal(),
                        nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                        nsIContentPolicy::TYPE_DTD);
+    NS_ENSURE_SUCCESS(rv, rv);
   } else {
     NS_ASSERTION(
         mSink == nsCOMPtr<nsIExpatSink>(do_QueryInterface(mOriginalSink)),
         "In nsExpatDriver::OpenInputStreamFromExternalDTD: "
         "mOriginalSink not the same object as mSink?");
     nsContentPolicyType policyType = nsIContentPolicy::TYPE_INTERNAL_DTD;
-    nsCOMPtr<nsIPrincipal> loadingPrincipal;
     if (mOriginalSink) {
       nsCOMPtr<Document> doc;
       doc = do_QueryInterface(mOriginalSink->GetTarget());
       if (doc) {
-        loadingPrincipal = doc->NodePrincipal();
         if (doc->SkipDTDSecurityChecks()) {
           policyType = nsIContentPolicy::TYPE_INTERNAL_FORCE_ALLOWED_DTD;
         }
+        rv = NS_NewChannel(getter_AddRefs(channel), uri, doc,
+                           nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
+                               nsILoadInfo::SEC_ALLOW_CHROME,
+                           policyType);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
     }
-    if (!loadingPrincipal) {
-      loadingPrincipal =
+    if (!channel) {
+      nsCOMPtr<nsIPrincipal> nullPrincipal =
           mozilla::NullPrincipal::CreateWithoutOriginAttributes();
+      rv = NS_NewChannel(getter_AddRefs(channel), uri, nullPrincipal,
+                         nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
+                             nsILoadInfo::SEC_ALLOW_CHROME,
+                         policyType);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
-    rv = NS_NewChannel(getter_AddRefs(channel), uri, loadingPrincipal,
-                       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
-                           nsILoadInfo::SEC_ALLOW_CHROME,
-                       policyType);
   }
-  NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString absURL;
   rv = uri->GetSpec(absURL);
