@@ -42,7 +42,6 @@ this.runtime = class extends ExtensionAPI {
           }
 
           function checkOptions(options) {
-            let toProxyScript = false;
             if (typeof options !== "object") {
               return [
                 false,
@@ -51,21 +50,10 @@ this.runtime = class extends ExtensionAPI {
             }
 
             for (let key of Object.keys(options)) {
-              if (key === "toProxyScript") {
-                let value = options[key];
-                if (typeof value !== "boolean") {
-                  return [
-                    false,
-                    "runtime.sendMessage's options.toProxyScript argument is invalid",
-                  ];
-                }
-                toProxyScript = value;
-              } else {
-                return [false, `Unexpected property ${key}`];
-              }
+              return [false, `Unexpected property ${key}`];
             }
 
-            return [true, { toProxyScript }];
+            return [true, {}];
           }
 
           if (!args.length) {

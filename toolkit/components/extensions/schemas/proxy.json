@@ -15,7 +15,7 @@
   },
   {
     "namespace": "proxy",
-    "description": "Use the browser.proxy API to register proxy scripts in Firefox. Proxy scripts in Firefox are proxy auto-config files with extra contextual information and support for additional return types.",
+    "description": "Provides access to global proxy settings for Firefox and proxy event listeners to handle dynamic proxy implementations.",
     "permissions": ["proxy"],
     "types": [
       {
@@ -96,44 +96,6 @@
         "description": "Configures proxy settings. This setting's value is an object of type ProxyConfig."
       }
     },
-    "functions": [
-      {
-        "name": "register",
-        "type": "function",
-        "deprecated": "proxy.register has been deprecated and will be removed in Firefox 71.",
-        "description": "Registers the proxy script for the extension.",
-        "async": true,
-        "parameters": [
-          {
-            "name": "url",
-            "type": "string",
-            "format": "strictRelativeUrl"
-          }
-        ]
-      },
-      {
-        "name": "unregister",
-        "type": "function",
-        "deprecated": "proxy.unregister has been deprecated and will be removed in Firefox 71.",
-        "description": "Unregisters the proxy script for the extension.",
-        "async": true,
-        "parameters": []
-      },
-      {
-        "name": "registerProxyScript",
-        "type": "function",
-        "deprecated": "proxy.registerProxyScript has been deprecated and will be removed in Firefox 71.",
-        "description": "Registers the proxy script for the extension. This is an alias for proxy.register.",
-        "async": true,
-        "parameters": [
-          {
-            "name": "url",
-            "type": "string",
-            "format": "strictRelativeUrl"
-          }
-        ]
-      }
-    ],
     "events": [
       {
         "name": "onRequest",

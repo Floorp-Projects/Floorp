@@ -1353,7 +1353,6 @@ class SchemaAPIManager extends EventEmitter {
    *     "addon" - An addon process.
    *     "content" - A content process.
    *     "devtools" - A devtools process.
-   *     "proxy" - A proxy script process.
    * @param {SchemaRoot} schema
    */
   constructor(processType, schema) {
