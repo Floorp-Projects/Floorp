@@ -122,7 +122,6 @@ if (typeof Mozilla == "undefined") {
    * <li>searchPrefsLink
    * <li>selectedTabIcon
    * <li>urlbar
-   * <li>webide
    * </ul>
    *
    * Generate using the following in the Browser Console:

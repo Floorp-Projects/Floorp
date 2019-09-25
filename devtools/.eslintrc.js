@@ -35,7 +35,6 @@ module.exports = {
       "client/scratchpad/**",
       "client/shared/*.jsm",
       "client/shared/widgets/*.jsm",
-      "client/webide/**",
     ],
     "rules": {
       "consistent-return": "off",
@@ -44,7 +43,6 @@ module.exports = {
     "files": [
       "client/framework/**",
       "client/scratchpad/**",
-      "client/webide/**",
     ],
     "rules": {
       "max-nested-callbacks": "off",
@@ -63,7 +61,6 @@ module.exports = {
       "client/scratchpad/**",
       "client/shared/*.jsm",
       "client/shared/widgets/*.jsm",
-      "client/webide/**",
     ],
     "rules": {
       "mozilla/no-aArgs": "off",
@@ -81,7 +78,6 @@ module.exports = {
       "client/framework/**",
       "client/scratchpad/**",
       "client/shared/widgets/*.jsm",
-      "client/webide/**",
     ],
     "rules": {
       "no-shadow": "off",
@@ -90,7 +86,6 @@ module.exports = {
     "files": [
       "client/framework/**",
       "client/scratchpad/**",
-      "client/webide/**",
     ],
     "rules": {
       "strict": "off",

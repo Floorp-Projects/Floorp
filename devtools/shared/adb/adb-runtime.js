@@ -4,16 +4,11 @@
 
 "use strict";
 
-const {
-  RuntimeTypes,
-} = require("devtools/client/webide/modules/runtime-types");
 const { prepareTCPConnection } = require("devtools/shared/adb/commands/index");
 const { shell } = require("devtools/shared/adb/commands/index");
 
 class AdbRuntime {
   constructor(adbDevice, socketPath) {
-    this.type = RuntimeTypes.USB;
-
     this._adbDevice = adbDevice;
     this._socketPath = socketPath;
   }

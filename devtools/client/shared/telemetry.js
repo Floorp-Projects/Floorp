@@ -753,7 +753,6 @@ function getChartsFromToolId(id) {
     case "STYLEEDITOR":
     case "TOOLBOX":
     case "WEBCONSOLE":
-    case "WEBIDE":
       timerHist = `DEVTOOLS_${id}_TIME_ACTIVE_SECONDS`;
       countHist = `DEVTOOLS_${id}_OPENED_COUNT`;
       break;
