@@ -49,9 +49,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1580012
   <div class="float moz-box" id="floatMozBox"></div>
   <div class="float moz-inline-box" id="floatMozInlineBox"></div>
   -->
+  <!-- XXXdholbert commenting these out -- see notes below about assertion
+       failures for positioned -moz-box.
   <div class="abs moz-box" id="absMozBox"></div>
   <div class="abs moz-inline-box" id="absMozInlineBox"></div>
-
+  -->
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -100,15 +102,14 @@ function runTest() {
   //  checkDisp("floatMozInlineBox",          "-moz-box");
 
 
-  // XXXdholbert Similarly, these ones end up with a weird state that I'd like
-  // to forbid, but can't yet because we do actually have some XUL boxes that
-  // are abs/fixed-pos (and depend on being blockified) right now. For now I'm
-  // leaving these uncommented, but as we purge abspos -moz-box content from
-  // the codebase, we can make these trigger a fatal assertion as well, at
-  // which point these lines/elements will need to be removed from this test to
-  // avoid tripping the fatal assertion.
-  checkDisp("absMozBox",                  "-moz-box");
-  checkDisp("absMozInlineBox",            "-moz-box");
+  // XXXdholbert These abspos boxes trigger a diagnostic assertion added in
+  // bug 1582819 which is intended to flush out XUL content that is positioned
+  // and hence was previously blockified to 'block' but will now be '-moz-box'.
+  // The diagnostic assertion doesn't need to stay around forever, but while
+  // it exists, we can't test this scenario without triggering it.
+  //
+  // checkDisp("absMozBox",                  "-moz-box");
+  // checkDisp("absMozInlineBox",            "-moz-box");
 
   SimpleTest.finish();
 }
