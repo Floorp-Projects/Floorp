@@ -8,6 +8,7 @@
 
 #include "nsAutoPtr.h"
 #include "nsGenericHTMLElement.h"
+#include "AudioChannelService.h"
 #include "MediaEventSource.h"
 #include "SeekTarget.h"
 #include "MediaDecoderOwner.h"
@@ -41,7 +42,6 @@ typedef uint16_t nsMediaNetworkState;
 typedef uint16_t nsMediaReadyState;
 typedef uint32_t SuspendTypes;
 typedef uint32_t AudibleChangedReasons;
-typedef uint8_t AudibleState;
 
 namespace mozilla {
 class AbstractThread;
@@ -724,6 +724,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   RefPtr<GenericNonExclusivePromise> GetAllowedToPlayPromise();
 
   bool GetShowPosterFlag() const { return mShowPoster; }
+
+  AudioChannelService::AudibleState GetAudibleState() const;
 
  protected:
   virtual ~HTMLMediaElement();

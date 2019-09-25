@@ -9,7 +9,6 @@
 #endif
 
 #include "mozilla/dom/HTMLMediaElement.h"
-#include "AudioChannelService.h"
 #include "AudioDeviceInfo.h"
 #include "AudioStreamTrack.h"
 #include "AutoplayPolicy.h"
@@ -147,6 +146,8 @@ namespace dom {
 extern void NotifyMediaStarted(uint64_t aWindowID);
 extern void NotifyMediaStopped(uint64_t aWindowID);
 extern void NotifyMediaAudibleChanged(uint64_t aWindowID, bool aAudible);
+
+using AudibleState = AudioChannelService::AudibleState;
 
 // Number of milliseconds between progress events as defined by spec
 static const uint32_t PROGRESS_MS = 350;
@@ -1323,25 +1324,11 @@ class HTMLMediaElement::AudioChannelAgentCallback final
   }
 
   AudibleState IsOwnerAudible() const {
-    // No audio track.
-    if (!mOwner->HasAudio()) {
-      return AudioChannelService::AudibleState::eNotAudible;
-    }
-
-    // Muted or the volume should not be ~0
-    if (mOwner->mMuted || (std::fabs(mOwner->Volume()) <= 1e-7)) {
-      return AudioChannelService::AudibleState::eMaybeAudible;
-    }
-
     // Suspended or paused media doesn't produce any sound.
     if (mSuspended != nsISuspendedTypes::NONE_SUSPENDED || mOwner->mPaused) {
-      return AudioChannelService::AudibleState::eNotAudible;
+      return AudibleState::eNotAudible;
     }
-
-    // Might be audible but not yet.
-    return mOwner->mIsAudioTrackAudible
-               ? AudioChannelService::AudibleState::eAudible
-               : AudioChannelService::AudibleState::eMaybeAudible;
+    return mOwner->GetAudibleState();
   }
 
   bool IsPlayingThroughTheAudioChannel() const {
@@ -7231,6 +7218,21 @@ void HTMLMediaElement::NotifyDecoderActivityChanges() const {
 }
 
 Document* HTMLMediaElement::GetDocument() const { return OwnerDoc(); }
+
+AudibleState HTMLMediaElement::GetAudibleState() const {
+  // No audio track.
+  if (!HasAudio()) {
+    return AudibleState::eNotAudible;
+  }
+
+  // Muted or the volume should not be ~0
+  if (mMuted || (std::fabs(Volume()) <= 1e-7)) {
+    return AudibleState::eMaybeAudible;
+  }
+
+  return mIsAudioTrackAudible ? AudibleState::eAudible
+                              : AudibleState::eMaybeAudible;
+}
 
 void HTMLMediaElement::ConstructMediaTracks(const MediaInfo* aInfo) {
   if (mMediaTracksConstructed || !aInfo) {
