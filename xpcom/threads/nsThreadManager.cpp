@@ -6,6 +6,7 @@
 
 #include "nsThreadManager.h"
 #include "nsThread.h"
+#include "nsThreadPool.h"
 #include "nsThreadUtils.h"
 #include "nsIClassInfoImpl.h"
 #include "nsTArray.h"
@@ -194,6 +195,12 @@ void nsThreadManager::InitializeShutdownObserver() {
   ClearOnShutdown(&gShutdownObserveHelper);
 }
 
+nsThreadManager::nsThreadManager()
+  : mCurThreadIndex(0),
+    mMainPRThread(nullptr),
+    mInitialized(false)
+{}
+
 nsresult nsThreadManager::Init() {
   // Child processes need to initialize the thread manager before they
   // initialize XPCOM in order to set up the crash reporter. This leads to
@@ -239,6 +246,27 @@ nsresult nsThreadManager::Init() {
   AbstractThread::InitTLS();
   AbstractThread::InitMainThread();
 
+  // Initialize the background event target.
+  nsCOMPtr<nsIThreadPool> pool(new nsThreadPool());
+  NS_ENSURE_TRUE(pool, NS_ERROR_FAILURE);
+
+  rv = pool->SetName(NS_LITERAL_CSTRING("BackgroundThreadPool"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Use potentially more conservative stack size.
+  rv = pool->SetThreadStackSize(nsIThreadManager::kThreadPoolStackSize);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // For now just one thread. Can increase easily later if we want.
+  rv = pool->SetThreadLimit(1);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Leave threads alive for up to 5 minutes
+  rv = pool->SetIdleThreadTimeout(300000);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  pool.swap(mBackgroundEventTarget);
+
   mInitialized = true;
 
   return NS_OK;
@@ -258,6 +286,8 @@ void nsThreadManager::Shutdown() {
 
   // Empty the main thread event queue before we begin shutting down threads.
   NS_ProcessPendingEvents(mMainThread);
+
+  mBackgroundEventTarget->Shutdown();
 
   {
     // We gather the threads from the hashtable into a list, so that we avoid
@@ -299,6 +329,8 @@ void nsThreadManager::Shutdown() {
   // main thread is special we do it manually here after we're sure all events
   // have been processed.
   mMainThread->SetObserver(nullptr);
+
+  mBackgroundEventTarget = nullptr;
 
   // Release main thread object.
   mMainThread = nullptr;
@@ -355,6 +387,16 @@ nsThread* nsThreadManager::CreateCurrentThread(
   }
 
   return thread.get();  // reference held in TLS
+}
+
+nsresult nsThreadManager::DispatchToBackgroundThread(nsIRunnable* aEvent,
+                                                     uint32_t aDispatchFlags) {
+  if (!mInitialized) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIThreadPool> backgroundTarget(mBackgroundEventTarget);
+  return backgroundTarget->Dispatch(aEvent, aDispatchFlags);
 }
 
 nsThread* nsThreadManager::GetCurrentThread() {
