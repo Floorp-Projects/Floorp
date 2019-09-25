@@ -181,13 +181,6 @@ package org.mozilla.geckoview {
     method @UiThread default public void onContentLoaded(@NonNull GeckoSession, @NonNull ContentBlocking.BlockEvent);
   }
 
-  public static class ContentBlocking.EtpLevel {
-    ctor public EtpLevel();
-    field public static final int DEFAULT = 1;
-    field public static final int NONE = 0;
-    field public static final int STRICT = 2;
-  }
-
   public static class ContentBlocking.SafeBrowsing {
     ctor protected SafeBrowsing();
     field public static final int DEFAULT = 15360;
@@ -202,12 +195,10 @@ package org.mozilla.geckoview {
     method public int getAntiTrackingCategories();
     method public int getCookieBehavior();
     method public int getCookieLifetime();
-    method public int getEnhancedTrackingProtectionLevel();
     method public int getSafeBrowsingCategories();
     method @NonNull public ContentBlocking.Settings setAntiTracking(int);
     method @NonNull public ContentBlocking.Settings setCookieBehavior(int);
     method @NonNull public ContentBlocking.Settings setCookieLifetime(int);
-    method @NonNull public ContentBlocking.Settings setEnhancedTrackingProtectionLevel(int);
     method @NonNull public ContentBlocking.Settings setSafeBrowsing(int);
     method @NonNull public ContentBlocking.Settings setStrictSocialTrackingProtection(boolean);
     field public static final Parcelable.Creator<ContentBlocking.Settings> CREATOR;
@@ -218,7 +209,6 @@ package org.mozilla.geckoview {
     method @NonNull public ContentBlocking.Settings.Builder antiTracking(int);
     method @NonNull public ContentBlocking.Settings.Builder cookieBehavior(int);
     method @NonNull public ContentBlocking.Settings.Builder cookieLifetime(int);
-    method @NonNull public ContentBlocking.Settings.Builder enhancedTrackingProtectionLevel(int);
     method @NonNull public ContentBlocking.Settings.Builder safeBrowsing(int);
     method @NonNull protected ContentBlocking.Settings newSettings(@Nullable ContentBlocking.Settings);
   }

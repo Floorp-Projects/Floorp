@@ -85,19 +85,6 @@ public class ContentBlocking {
                 getSettings().setCookieLifetime(lifetime);
                 return this;
             }
-
-            /**
-             * Set the ETP behavior level.
-             *
-             * @param level The level of ETP blocking to use. Only takes effect if
-             *              cookie behavior is set to {@link ContentBlocking.CookieBehavior#ACCEPT_NON_TRACKERS}.
-             *
-             * @return The Builder instance.
-             */
-            public @NonNull Builder enhancedTrackingProtectionLevel(final @CBEtpLevel int level) {
-                getSettings().setEnhancedTrackingProtectionLevel(level);
-                return this;
-            }
         }
 
         /* package */ final Pref<String> mAt = new Pref<String>(
@@ -129,11 +116,6 @@ public class ContentBlocking {
             "network.cookie.cookieBehavior", CookieBehavior.ACCEPT_NON_TRACKERS);
         /* package */ final Pref<Integer> mCookieLifetime = new Pref<Integer>(
             "network.cookie.lifetimePolicy", CookieLifetime.NORMAL);
-
-        /* package */ final Pref<Boolean> mEtpEnabled = new Pref<Boolean>(
-            "privacy.trackingprotection.annotate_channels", false);
-        /* package */ final Pref<Boolean> mEtpStrict = new Pref<Boolean>(
-            "privacy.annotate_channels.strict_list.enabled", false);
 
         /**
          * Construct default settings.
@@ -194,21 +176,6 @@ public class ContentBlocking {
         }
 
         /**
-         * Set the ETP behavior level.
-         *
-         * @param level The level of ETP blocking to use; must be one of {@link ContentBlocking.EtpLevel}
-         *              flags. Only takes effect if the cookie behavior is
-         *              {@link ContentBlocking.CookieBehavior#ACCEPT_NON_TRACKERS}.
-         *
-         * @return This Settings instance.
-         */
-        public @NonNull Settings setEnhancedTrackingProtectionLevel(final @CBEtpLevel int level) {
-            mEtpEnabled.commit(level == ContentBlocking.EtpLevel.DEFAULT || level == ContentBlocking.EtpLevel.STRICT);
-            mEtpStrict.commit(level == ContentBlocking.EtpLevel.STRICT);
-            return this;
-        }
-
-        /**
          * Set whether or not strict social tracking protection is enabled
          * (ie, whether to block content or just cookies). Will only block
          * if social tracking protection lists are supplied to
@@ -247,20 +214,6 @@ public class ContentBlocking {
                    ContentBlocking.cmListToAtCat(mCmList.get()) |
                    ContentBlocking.fpListToAtCat(mFpList.get()) |
                    ContentBlocking.stListToAtCat(mStList.get());
-        }
-
-        /**
-         * Get the set ETP behavior level.
-         *
-         * @return The current ETP level; one of {@link ContentBlocking.EtpLevel}.
-         */
-        public @CBEtpLevel int getEnhancedTrackingProtectionLevel() {
-            if (mEtpStrict.get()) {
-                return ContentBlocking.EtpLevel.STRICT;
-            } else if (mEtpEnabled.get()) {
-                return ContentBlocking.EtpLevel.DEFAULT;
-            }
-            return ContentBlocking.EtpLevel.NONE;
         }
 
         /**
@@ -507,31 +460,6 @@ public class ContentBlocking {
     @IntDef({ CookieLifetime.NORMAL, CookieLifetime.RUNTIME,
               CookieLifetime.DAYS })
     /* package */ @interface CBCookieLifetime {}
-
-    @Retention(RetentionPolicy.SOURCE)
-    @IntDef({ EtpLevel.NONE, EtpLevel.DEFAULT, EtpLevel.STRICT })
-    /* package */ @interface CBEtpLevel {}
-
-    /**
-     * Possible settings for ETP.
-     */
-    public static class EtpLevel {
-        /**
-         * Do not enable ETP at all.
-         */
-        public static final int NONE = 0;
-
-        /**
-         * Enable ETP for ads, analytic, and social tracking lists.
-         */
-        public static final int DEFAULT = 1;
-
-        /**
-         * Enable ETP for all of the default lists as well as the content list.
-         * May break many sites!
-         */
-        public static final int STRICT = 2;
-    }
 
     /**
      * Holds content block event details.
