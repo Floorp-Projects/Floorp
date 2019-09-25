@@ -26,7 +26,8 @@ use std::mem;
 
 #[test]
 fn bitfield_unit_get_bit() {
-    let unit = __BindgenBitfieldUnit::<[u8; 2], u64>::new([0b10011101, 0b00011101]);
+    let unit =
+        __BindgenBitfieldUnit::<[u8; 2], u64>::new([0b10011101, 0b00011101]);
 
     let mut bits = vec![];
     for i in 0..16 {
@@ -35,32 +36,21 @@ fn bitfield_unit_get_bit() {
 
     println!();
     println!("bits = {:?}", bits);
-    assert_eq!(bits, &[
-        // 0b10011101
-        true,
-        false,
-        true,
-        true,
-        true,
-        false,
-        false,
-        true ,
-
-        // 0b00011101
-        true,
-        false,
-        true,
-        true,
-        true,
-        false,
-        false,
-        false
-    ]);
+    assert_eq!(
+        bits,
+        &[
+            // 0b10011101
+            true, false, true, true, true, false, false, true,
+            // 0b00011101
+            true, false, true, true, true, false, false, false
+        ]
+    );
 }
 
 #[test]
 fn bitfield_unit_set_bit() {
-    let mut unit = __BindgenBitfieldUnit::<[u8; 2], u64>::new([0b00000000, 0b00000000]);
+    let mut unit =
+        __BindgenBitfieldUnit::<[u8; 2], u64>::new([0b00000000, 0b00000000]);
 
     for i in 0..16 {
         if i % 3 == 0 {
@@ -72,7 +62,8 @@ fn bitfield_unit_set_bit() {
         assert_eq!(unit.get_bit(i), i % 3 == 0);
     }
 
-    let mut unit = __BindgenBitfieldUnit::<[u8; 2], u64>::new([0b11111111, 0b11111111]);
+    let mut unit =
+        __BindgenBitfieldUnit::<[u8; 2], u64>::new([0b11111111, 0b11111111]);
 
     for i in 0..16 {
         if i % 3 == 0 {
@@ -87,15 +78,39 @@ fn bitfield_unit_set_bit() {
 
 #[test]
 fn bitfield_unit_align() {
-    assert_eq!(mem::align_of::<__BindgenBitfieldUnit<[u8; 1], u8>>(),  mem::align_of::<u8>());
-    assert_eq!(mem::align_of::<__BindgenBitfieldUnit<[u8; 1], u16>>(), mem::align_of::<u16>());
-    assert_eq!(mem::align_of::<__BindgenBitfieldUnit<[u8; 1], u32>>(), mem::align_of::<u32>());
-    assert_eq!(mem::align_of::<__BindgenBitfieldUnit<[u8; 1], u64>>(), mem::align_of::<u64>());
+    assert_eq!(
+        mem::align_of::<__BindgenBitfieldUnit<[u8; 1], u8>>(),
+        mem::align_of::<u8>()
+    );
+    assert_eq!(
+        mem::align_of::<__BindgenBitfieldUnit<[u8; 1], u16>>(),
+        mem::align_of::<u16>()
+    );
+    assert_eq!(
+        mem::align_of::<__BindgenBitfieldUnit<[u8; 1], u32>>(),
+        mem::align_of::<u32>()
+    );
+    assert_eq!(
+        mem::align_of::<__BindgenBitfieldUnit<[u8; 1], u64>>(),
+        mem::align_of::<u64>()
+    );
 
-    assert_eq!(mem::align_of::<__BindgenBitfieldUnit<[u8; 8], u8>>(),  mem::align_of::<u8>());
-    assert_eq!(mem::align_of::<__BindgenBitfieldUnit<[u8; 8], u16>>(), mem::align_of::<u16>());
-    assert_eq!(mem::align_of::<__BindgenBitfieldUnit<[u8; 8], u32>>(), mem::align_of::<u32>());
-    assert_eq!(mem::align_of::<__BindgenBitfieldUnit<[u8; 8], u64>>(), mem::align_of::<u64>());
+    assert_eq!(
+        mem::align_of::<__BindgenBitfieldUnit<[u8; 8], u8>>(),
+        mem::align_of::<u8>()
+    );
+    assert_eq!(
+        mem::align_of::<__BindgenBitfieldUnit<[u8; 8], u16>>(),
+        mem::align_of::<u16>()
+    );
+    assert_eq!(
+        mem::align_of::<__BindgenBitfieldUnit<[u8; 8], u32>>(),
+        mem::align_of::<u32>()
+    );
+    assert_eq!(
+        mem::align_of::<__BindgenBitfieldUnit<[u8; 8], u64>>(),
+        mem::align_of::<u64>()
+    );
 }
 
 macro_rules! bitfield_unit_get {

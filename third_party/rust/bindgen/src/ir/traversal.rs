@@ -20,10 +20,7 @@ pub struct Edge {
 impl Edge {
     /// Construct a new edge whose referent is `to` and is of the given `kind`.
     pub fn new(to: ItemId, kind: EdgeKind) -> Edge {
-        Edge {
-            to,
-            kind,
-        }
+        Edge { to, kind }
     }
 }
 
@@ -236,7 +233,7 @@ pub fn codegen_edges(ctx: &BindgenContext, edge: Edge) -> bool {
         EdgeKind::InnerVar => cc.vars(),
         EdgeKind::Method => cc.methods(),
         EdgeKind::Constructor => cc.constructors(),
-        EdgeKind::Destructor => cc.destructors()
+        EdgeKind::Destructor => cc.destructors(),
     }
 }
 
@@ -269,10 +266,7 @@ impl<'ctx> TraversalStorage<'ctx> for ItemSet {
 /// each item. This is useful for providing debug assertions with meaningful
 /// diagnostic messages about dangling items.
 #[derive(Debug)]
-pub struct Paths<'ctx>(
-    BTreeMap<ItemId, ItemId>,
-    &'ctx BindgenContext
-);
+pub struct Paths<'ctx>(BTreeMap<ItemId, ItemId>, &'ctx BindgenContext);
 
 impl<'ctx> TraversalStorage<'ctx> for Paths<'ctx> {
     fn new(ctx: &'ctx BindgenContext) -> Self {
@@ -289,7 +283,7 @@ impl<'ctx> TraversalStorage<'ctx> for Paths<'ctx> {
             loop {
                 let predecessor = *self.0.get(&current).expect(
                     "We know we found this item id, so it must have a \
-                            predecessor",
+                     predecessor",
                 );
                 if predecessor == current {
                     break;
@@ -300,8 +294,7 @@ impl<'ctx> TraversalStorage<'ctx> for Paths<'ctx> {
             path.reverse();
             panic!(
                 "Found reference to dangling id = {:?}\nvia path = {:?}",
-                item,
-                path
+                item, path
             );
         }
 
@@ -495,13 +488,12 @@ where
 ///
 /// See `BindgenContext::assert_no_dangling_item_traversal` for more
 /// information.
-pub type AssertNoDanglingItemsTraversal<'ctx> =
-    ItemTraversal<
-        'ctx,
-        Paths<'ctx>,
-        VecDeque<ItemId>,
-        for<'a> fn(&'a BindgenContext, Edge) -> bool,
-    >;
+pub type AssertNoDanglingItemsTraversal<'ctx> = ItemTraversal<
+    'ctx,
+    Paths<'ctx>,
+    VecDeque<ItemId>,
+    for<'a> fn(&'a BindgenContext, Edge) -> bool,
+>;
 
 #[cfg(test)]
 mod tests {

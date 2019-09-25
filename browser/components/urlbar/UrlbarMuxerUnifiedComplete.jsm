@@ -5,7 +5,7 @@
 "use strict";
 
 /**
- * This module exports a component used to sort matches in a UrlbarQueryContext.
+ * This module exports a component used to sort results in a UrlbarQueryContext.
  */
 
 var EXPORTED_SYMBOLS = ["UrlbarMuxerUnifiedComplete"];
@@ -36,7 +36,7 @@ const RESULT_TYPE_TO_GROUP = new Map([
 
 /**
  * Class used to create a muxer.
- * The muxer receives and sorts matches in a UrlbarQueryContext.
+ * The muxer receives and sorts results in a UrlbarQueryContext.
  */
 class MuxerUnifiedComplete extends UrlbarMuxer {
   constructor() {
@@ -48,62 +48,80 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
   }
 
   /**
-   * Sorts matches in the given UrlbarQueryContext.
+   * Sorts results in the given UrlbarQueryContext.
    * @param {UrlbarQueryContext} context The query context.
    */
   sort(context) {
     if (!context.results.length) {
       return;
     }
-    // Check the heuristic match.  If it's a preselected search match, use
-    // search buckets.
-    let heuristicMatch = context.results.find(r => r.heuristic);
+    // Look for an heuristic result.  If it's a preselected search result, use
+    // search buckets, otherwise use normal buckets.
+    let heuristicResult = context.results.find(r => r.heuristic);
     let buckets =
       context.preselected &&
-      heuristicMatch &&
-      heuristicMatch.type == UrlbarUtils.RESULT_TYPE.SEARCH
+      heuristicResult &&
+      heuristicResult.type == UrlbarUtils.RESULT_TYPE.SEARCH
         ? UrlbarPrefs.get("matchBucketsSearch")
         : UrlbarPrefs.get("matchBuckets");
     logger.debug(`Buckets: ${buckets}`);
-    let sortedMatches = [];
+    // These results have a suggested index and should be moved if possible.
+    // The sorting is important, to avoid messing up indices later when we'll
+    // insert these results.
+    let reshuffleResults = context.results
+      .filter(r => r.suggestedIndex != -1)
+      .sort((a, b) => a.suggestedIndex - b.suggestedIndex);
+    let sortedResults = [];
+    // Track which results have been inserted already.
     let handled = new Set();
-    for (let [group, count] of buckets) {
-      // Search all the available matches and fill this bucket.
-      for (let match of context.results) {
-        if (count == 0) {
+    for (let [group, slots] of buckets) {
+      // Search all the available results to fill this bucket.
+      for (let result of context.results) {
+        if (slots == 0) {
           // There's no more space in this bucket.
           break;
         }
-        if (handled.has(match)) {
+        if (handled.has(result)) {
           // Already handled.
           continue;
         }
 
-        // Handle the heuristic result.
         if (
           group == UrlbarUtils.RESULT_GROUP.HEURISTIC &&
-          match == heuristicMatch &&
+          result == heuristicResult &&
           context.preselected
         ) {
-          sortedMatches.unshift(match);
-          handled.add(match);
-          context.maxResults -= UrlbarUtils.getSpanForResult(match) - 1;
-          count--;
-        } else if (group == RESULT_TYPE_TO_GROUP.get(match.type)) {
-          sortedMatches.push(match);
-          handled.add(match);
-          context.maxResults -= UrlbarUtils.getSpanForResult(match) - 1;
-          count--;
-        } else if (!RESULT_TYPE_TO_GROUP.has(match.type)) {
+          // Handle the heuristic result.
+          sortedResults.unshift(result);
+          handled.add(result);
+          context.maxResults -= UrlbarUtils.getSpanForResult(result) - 1;
+          slots--;
+        } else if (group == RESULT_TYPE_TO_GROUP.get(result.type)) {
+          // If there's no suggestedIndex, insert the result now, otherwise
+          // we'll handle it later.
+          if (result.suggestedIndex == -1) {
+            sortedResults.push(result);
+          }
+          handled.add(result);
+          context.maxResults -= UrlbarUtils.getSpanForResult(result) - 1;
+          slots--;
+        } else if (!RESULT_TYPE_TO_GROUP.has(result.type)) {
           let errorMsg = `Result type ${
-            match.type
+            result.type
           } is not mapped to a match group.`;
           logger.error(errorMsg);
           Cu.reportError(errorMsg);
         }
       }
     }
-    context.results = sortedMatches;
+    for (let result of reshuffleResults) {
+      if (sortedResults.length >= result.suggestedIndex) {
+        sortedResults.splice(result.suggestedIndex, 0, result);
+      } else {
+        sortedResults.push(result);
+      }
+    }
+    context.results = sortedResults;
   }
 }
 

@@ -55,7 +55,6 @@ class AudioBufferSourceNodeEngine final : public AudioNodeEngine {
         mBufferSampleRate(0),
         // mResamplerOutRate is initialized in UpdateResampler().
         mChannels(0),
-        mDopplerShift(1.0f),
         mDestination(aDestination->Stream()),
         mPlaybackRateTimeline(1.0f),
         mDetuneTimeline(0.0f),
@@ -101,9 +100,6 @@ class AudioBufferSourceNodeEngine final : public AudioNodeEngine {
         mStart = aParam * mDestination->SampleRate();
         // Round to nearest
         mBeginProcessing = mStart + 0.5;
-        break;
-      case AudioBufferSourceNode::DOPPLERSHIFT:
-        mDopplerShift = (aParam <= 0 || mozilla::IsNaN(aParam)) ? 1.0 : aParam;
         break;
       default:
         NS_ERROR("Bad AudioBufferSourceNodeEngine double parameter.");
@@ -441,10 +437,9 @@ class AudioBufferSourceNodeEngine final : public AudioNodeEngine {
 
   int32_t ComputeFinalOutSampleRate(float aPlaybackRate, float aDetune) {
     float computedPlaybackRate = aPlaybackRate * exp2(aDetune / 1200.f);
-    // Make sure the playback rate and the doppler shift are something
-    // our resampler can work with.
+    // Make sure the playback rate is something our resampler can work with.
     int32_t rate = WebAudioUtils::TruncateFloatToInt<int32_t>(
-        mSource->SampleRate() / (computedPlaybackRate * mDopplerShift));
+        mSource->SampleRate() / computedPlaybackRate);
     return rate ? rate : mBufferSampleRate;
   }
 
@@ -574,7 +569,6 @@ class AudioBufferSourceNodeEngine final : public AudioNodeEngine {
   int32_t mBufferSampleRate;
   int32_t mResamplerOutRate;
   uint32_t mChannels;
-  float mDopplerShift;
   RefPtr<AudioNodeStream> mDestination;
 
   // mSource deletes the engine in its destructor.
@@ -812,11 +806,6 @@ void AudioBufferSourceNode::NotifyMainThreadStreamFinished() {
   // Drop the playing reference
   // Warning: The below line might delete this.
   MarkInactive();
-}
-
-void AudioBufferSourceNode::SendDopplerShiftToStream(double aDopplerShift) {
-  MOZ_ASSERT(mStream, "Should have disconnected panner if no stream");
-  SendDoubleParameterToStream(DOPPLERSHIFT, aDopplerShift);
 }
 
 void AudioBufferSourceNode::SendLoopParametersToStream() {

@@ -256,35 +256,9 @@ async function ensureNoPreloadedBrowser(win = window) {
   });
 }
 
-/**
- * The navigation toolbar is overflowable, meaning that some items
- * will be moved and held within a sub-panel if the window gets too
- * small to show their icons. The calculation for hiding those items
- * occurs after resize events, and is debounced using a DeferredTask.
- * This utility function allows us to fast-forward to just running
- * that function for that DeferredTask instead of waiting for the
- * debounce timeout to occur.
- */
-function forceImmediateToolbarOverflowHandling(win) {
-  let overflowableToolbar = win.document.getElementById("nav-bar").overflowable;
-  if (
-    overflowableToolbar._lazyResizeHandler &&
-    overflowableToolbar._lazyResizeHandler.isArmed
-  ) {
-    overflowableToolbar._lazyResizeHandler.disarm();
-    // Ensure the root frame is dirty before resize so that, if we're
-    // in the middle of a reflow test, we record the reflows deterministically.
-    let dwu = win.windowUtils;
-    dwu.ensureDirtyRootFrame();
-    overflowableToolbar._checkOverflow();
-  }
-}
-
 async function prepareSettledWindow() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
-
   await ensureNoPreloadedBrowser(win);
-  forceImmediateToolbarOverflowHandling(win);
   return win;
 }
 

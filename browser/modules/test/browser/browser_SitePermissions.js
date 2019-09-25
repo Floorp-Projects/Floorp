@@ -9,13 +9,15 @@ ChromeUtils.import("resource:///modules/SitePermissions.jsm", this);
 // This asserts that SitePermissions.set can not save ALLOW permissions
 // temporarily on a tab.
 add_task(async function testTempAllowThrows() {
-  let uri = Services.io.newURI("https://example.com");
+  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+    "https://example.com"
+  );
   let id = "notifications";
 
-  await BrowserTestUtils.withNewTab(uri.spec, function(browser) {
+  await BrowserTestUtils.withNewTab(principal.URI.spec, function(browser) {
     Assert.throws(function() {
-      SitePermissions.set(
-        uri,
+      SitePermissions.setForPrincipal(
+        principal,
         id,
         SitePermissions.ALLOW,
         SitePermissions.SCOPE_TEMPORARY,
@@ -27,22 +29,35 @@ add_task(async function testTempAllowThrows() {
 
 // This tests the SitePermissions.getAllPermissionDetailsForBrowser function.
 add_task(async function testGetAllPermissionDetailsForBrowser() {
-  let uri = Services.io.newURI("https://example.com");
+  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+    "https://example.com"
+  );
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri.spec);
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    principal.URI.spec
+  );
 
   Services.prefs.setIntPref("permissions.default.shortcuts", 2);
 
-  SitePermissions.set(uri, "camera", SitePermissions.ALLOW);
-  SitePermissions.set(uri, "cookie", SitePermissions.ALLOW_COOKIES_FOR_SESSION);
-  SitePermissions.set(uri, "popup", SitePermissions.BLOCK);
-  SitePermissions.set(
-    uri,
+  SitePermissions.setForPrincipal(principal, "camera", SitePermissions.ALLOW);
+  SitePermissions.setForPrincipal(
+    principal,
+    "cookie",
+    SitePermissions.ALLOW_COOKIES_FOR_SESSION
+  );
+  SitePermissions.setForPrincipal(principal, "popup", SitePermissions.BLOCK);
+  SitePermissions.setForPrincipal(
+    principal,
     "geo",
     SitePermissions.ALLOW,
     SitePermissions.SCOPE_SESSION
   );
-  SitePermissions.set(uri, "shortcuts", SitePermissions.ALLOW);
+  SitePermissions.setForPrincipal(
+    principal,
+    "shortcuts",
+    SitePermissions.ALLOW
+  );
 
   let permissions = SitePermissions.getAllPermissionDetailsForBrowser(
     tab.linkedBrowser
@@ -57,7 +72,7 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
   });
 
   // Check that removed permissions (State.UNKNOWN) are skipped.
-  SitePermissions.remove(uri, "camera");
+  SitePermissions.removeFromPrincipal(principal, "camera");
   permissions = SitePermissions.getAllPermissionDetailsForBrowser(
     tab.linkedBrowser
   );
@@ -97,10 +112,10 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
     scope: SitePermissions.SCOPE_PERSISTENT,
   });
 
-  SitePermissions.remove(uri, "cookie");
-  SitePermissions.remove(uri, "popup");
-  SitePermissions.remove(uri, "geo");
-  SitePermissions.remove(uri, "shortcuts");
+  SitePermissions.removeFromPrincipal(principal, "cookie");
+  SitePermissions.removeFromPrincipal(principal, "popup");
+  SitePermissions.removeFromPrincipal(principal, "geo");
+  SitePermissions.removeFromPrincipal(principal, "shortcuts");
 
   Services.prefs.clearUserPref("permissions.default.shortcuts");
 

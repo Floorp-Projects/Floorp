@@ -282,6 +282,11 @@
 /* ----- AUTOCOMPLETE ----- */
 
 %include ../shared/autocomplete.inc.css
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype~="datalist-first"] {
+  border-top: 1px solid #C7C7C7;
+}
+
 %include ../shared/urlbar-autocomplete.inc.css
 
 :root {
@@ -289,8 +294,10 @@
   --urlbar-popup-action-color: hsl(178, 100%, 28%);
 }
 
-#PopupAutoComplete > richlistbox > richlistitem[originaltype~="datalist-first"] {
-  border-top: 1px solid #C7C7C7;
+.urlbarView:not(:-moz-lwtheme),
+#PopupSearchAutoComplete:not(:-moz-lwtheme) {
+  /* Set custom disabled text color since native graytext is too faint on macOS 10.14+. */
+  --panel-disabled-color: #737373;
 }
 
 .urlbarView {

@@ -9,9 +9,9 @@ use super::ty::TypeKind;
 use clang;
 use clang_sys::{self, CXCallingConv};
 use parse::{ClangItemParser, ClangSubItemParser, ParseError, ParseResult};
+use proc_macro2;
 use quote;
 use quote::TokenStreamExt;
-use proc_macro2;
 use std::io;
 
 const RUST_DERIVE_FUNPTR_LIMIT: usize = 12;
@@ -30,18 +30,18 @@ impl FunctionKind {
         // FIXME(emilio): Deduplicate logic with `ir::comp`.
         Some(match cursor.kind() {
             clang_sys::CXCursor_FunctionDecl => FunctionKind::Function,
-            clang_sys::CXCursor_Constructor => FunctionKind::Method(
-                MethodKind::Constructor,
-            ),
-            clang_sys::CXCursor_Destructor => FunctionKind::Method(
-                if cursor.method_is_virtual() {
+            clang_sys::CXCursor_Constructor => {
+                FunctionKind::Method(MethodKind::Constructor)
+            }
+            clang_sys::CXCursor_Destructor => {
+                FunctionKind::Method(if cursor.method_is_virtual() {
                     MethodKind::VirtualDestructor {
                         pure_virtual: cursor.method_is_pure_virtual(),
                     }
                 } else {
                     MethodKind::Destructor
-                }
-            ),
+                })
+            }
             clang_sys::CXCursor_CXXMethod => {
                 if cursor.method_is_virtual() {
                     FunctionKind::Method(MethodKind::Virtual {
@@ -64,7 +64,7 @@ pub enum Linkage {
     /// Externally visible and can be linked against
     External,
     /// Not exposed externally. 'static inline' functions will have this kind of linkage
-    Internal
+    Internal,
 }
 
 /// A function declaration, with a signature, arguments, and argument names.
@@ -100,7 +100,7 @@ impl Function {
         signature: TypeId,
         comment: Option<String>,
         kind: FunctionKind,
-        linkage: Linkage
+        linkage: Linkage,
     ) -> Self {
         Function {
             name,
@@ -136,7 +136,6 @@ impl Function {
     pub fn linkage(&self) -> Linkage {
         self.linkage
     }
-
 }
 
 impl DotAttributes for Function {
@@ -325,16 +324,16 @@ fn args_from_ty_and_cursor(
     cursor_args
         .map(Some)
         .chain(std::iter::repeat(None))
-        .zip(
-            type_args
-            .map(Some)
-            .chain(std::iter::repeat(None))
-        )
+        .zip(type_args.map(Some).chain(std::iter::repeat(None)))
         .take_while(|(cur, ty)| cur.is_some() || ty.is_some())
         .map(|(arg_cur, arg_ty)| {
-            let name = arg_cur
-                .map(|a| a.spelling())
-                .and_then(|name| if name.is_empty() { None} else { Some(name) });
+            let name = arg_cur.map(|a| a.spelling()).and_then(|name| {
+                if name.is_empty() {
+                    None
+                } else {
+                    Some(name)
+                }
+            });
 
             let cursor = arg_cur.unwrap_or(*cursor);
             let ty = arg_ty.unwrap_or(cursor.cur_type());
@@ -404,7 +403,7 @@ impl FunctionSig {
             CXCursor_ObjCInstanceMethodDecl |
             CXCursor_ObjCClassMethodDecl => {
                 args_from_ty_and_cursor(&ty, &cursor, ctx)
-            },
+            }
             _ => {
                 // For non-CXCursor_FunctionDecl, visiting the cursor's children
                 // is the only reliable way to get parameter names.
@@ -424,8 +423,7 @@ impl FunctionSig {
             }
         };
 
-        let must_use =
-            ctx.options().enable_function_attribute_detection &&
+        let must_use = ctx.options().enable_function_attribute_detection &&
             cursor.has_simple_attr("warn_unused_result");
         let is_method = kind == CXCursor_CXXMethod;
         let is_constructor = kind == CXCursor_Constructor;
@@ -475,9 +473,9 @@ impl FunctionSig {
         let ty_ret_type = if kind == CXCursor_ObjCInstanceMethodDecl ||
             kind == CXCursor_ObjCClassMethodDecl
         {
-            ty.ret_type().or_else(|| cursor.ret_type()).ok_or(
-                ParseError::Continue,
-            )?
+            ty.ret_type()
+                .or_else(|| cursor.ret_type())
+                .ok_or(ParseError::Continue)?
         } else {
             ty.ret_type().ok_or(ParseError::Continue)?
         };
@@ -583,12 +581,11 @@ impl ClangSubItemParser for Function {
         let linkage = match linkage {
             CXLinkage_External | CXLinkage_UniqueExternal => Linkage::External,
             CXLinkage_Internal => Linkage::Internal,
-            _ => return Err(ParseError::Continue)
+            _ => return Err(ParseError::Continue),
         };
 
         // Grab the signature using Item::from_ty.
-        let sig =
-            Item::from_ty(&cursor.cur_type(), cursor, None, context)?;
+        let sig = Item::from_ty(&cursor.cur_type(), cursor, None, context)?;
 
         let mut name = cursor.spelling();
         assert!(!name.is_empty(), "Empty function name?");
@@ -610,7 +607,8 @@ impl ClangSubItemParser for Function {
         let mangled_name = cursor_mangling(context, &cursor);
         let comment = cursor.raw_comment();
 
-        let function = Self::new(name, mangled_name, sig, comment, kind, linkage);
+        let function =
+            Self::new(name, mangled_name, sig, comment, kind, linkage);
         Ok(ParseResult::New(function, Some(cursor)))
     }
 }
