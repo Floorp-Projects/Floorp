@@ -106,6 +106,9 @@ WebGLExtensionMultiview::~WebGLExtensionMultiview() = default;
 
 bool WebGLExtensionMultiview::IsSupported(const WebGLContext* const webgl) {
   if (!webgl->IsWebGL2()) return false;
+  if (!StaticPrefs::webgl_enable_draft_extensions()) {
+    return false;
+  }
 
   const auto& gl = webgl->gl;
   return gl->IsSupported(gl::GLFeature::multiview);
