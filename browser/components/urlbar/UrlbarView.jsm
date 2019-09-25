@@ -236,6 +236,18 @@ class UrlbarView {
   }
 
   /**
+   * @returns {Element}
+   *   The currently selected element.
+   */
+  get selectedElement() {
+    if (!this.isOpen) {
+      return null;
+    }
+
+    return this._selectedElement;
+  }
+
+  /**
    * @returns {number}
    *   The number of visible results in the view.  Note that this may be larger
    *   than the number of results in the current query context since the view
@@ -263,6 +275,27 @@ class UrlbarView {
       element = this._getNextSelectableElement(element);
     }
     return sum;
+  }
+
+  /**
+   * @param {Element} element
+   *   An element in the view.
+   * @returns {UrlbarResult}
+   *   The result attached to parameter `element`, if `element` is a row or a
+   *   decendant of a row.
+   */
+  getResultFromElement(element) {
+    if (!this.isOpen) {
+      return null;
+    }
+
+    let row = this._getRowFromElement(element);
+
+    if (!row) {
+      return null;
+    }
+
+    return row.result;
   }
 
   /**
@@ -557,7 +590,6 @@ class UrlbarView {
 
       this._mainContainer.style.maxWidth = px(width);
     }
-
     this.panel.removeAttribute("hidden");
     this.input.inputField.setAttribute("aria-expanded", "true");
     this.input.dropmarker.setAttribute("open", "true");
@@ -719,7 +751,7 @@ class UrlbarView {
       buttonSpacer.className = "urlbarView-tip-button-spacer";
       content.appendChild(buttonSpacer);
 
-      let tipButton = this._createElement("button");
+      let tipButton = this._createElement("span");
       tipButton.className = "urlbarView-tip-button";
       content.appendChild(tipButton);
       item._elements.set("tipButton", tipButton);
@@ -1097,6 +1129,24 @@ class UrlbarView {
     return selected;
   }
 
+  /**
+   * @param {Element} element
+   *   An element that is potentially a row or descendant of a row.
+   * @returns {Element}
+   *   The row containing `element`, or `element` itself if it is a row.
+   */
+  _getRowFromElement(element) {
+    if (!this.isOpen || !element) {
+      return null;
+    }
+
+    if (!element.classList.contains("urlbarView-row")) {
+      element = element.closest(".urlbarView-row");
+    }
+
+    return element;
+  }
+
   _setAccessibleFocus(item) {
     if (item) {
       this.input.inputField.setAttribute("aria-activedescendant", item.id);
@@ -1259,12 +1309,7 @@ class UrlbarView {
       // Ignore right clicks.
       return;
     }
-
-    let row = event.target;
-    while (!row.classList.contains("urlbarView-row")) {
-      row = row.parentNode;
-    }
-    this.input.pickResult(row.result, event);
+    this.input.pickElement(event.target, event);
   }
 
   _on_overflow(event) {

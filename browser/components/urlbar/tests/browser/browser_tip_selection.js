@@ -4,6 +4,8 @@
 "use strict";
 
 const MEGABAR_PREF = "browser.urlbar.megabar";
+const HELP_URL = "about:mozilla";
+const TIP_URL = "about:about";
 
 // Tests keyboard selection within UrlbarUtils.RESULT_TYPE.TIP results.
 
@@ -52,8 +54,8 @@ add_task(async function tipIsSecondResult() {
         text: "This is a test intervention.",
         buttonText: "Done",
         data: "test",
-        helpUrl:
-          "https://support.mozilla.org/en-US/kb/delete-browsing-search-download-history-firefox",
+        helpUrl: HELP_URL,
+        buttonUrl: TIP_URL,
       }
     ),
   ];
@@ -222,5 +224,58 @@ add_task(async function tipIsOnlyResult() {
   );
 
   gURLBar.view.close();
+  UrlbarProvidersManager.unregisterProvider(provider);
+});
+
+add_task(async function mouseSelection() {
+  window.windowUtils.disableNonTestMouseEvents(true);
+  registerCleanupFunction(() => {
+    window.windowUtils.disableNonTestMouseEvents(false);
+  });
+
+  let matches = [
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.TIP,
+      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      {
+        icon: "",
+        text: "This is a test intervention.",
+        buttonText: "Done",
+        data: "test",
+        helpUrl: HELP_URL,
+        buttonUrl: TIP_URL,
+      }
+    ),
+  ];
+
+  let provider = new TipTestProvider(matches);
+  UrlbarProvidersManager.registerProvider(provider);
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    value: "test",
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+  });
+  let element = document.querySelector(".urlbarView-row .urlbarView-tip-help");
+  let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  EventUtils.synthesizeMouseAtCenter(element, {}, element.ownerGlobal);
+  await loadPromise;
+  Assert.equal(
+    gURLBar.value,
+    HELP_URL,
+    "Should have navigated to the tip's help page."
+  );
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    value: "test",
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+  });
+  element = document.querySelector(".urlbarView-row .urlbarView-tip-button");
+  loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  EventUtils.synthesizeMouseAtCenter(element, {}, element.ownerGlobal);
+  await loadPromise;
+  Assert.equal(gURLBar.value, TIP_URL, "Should have navigated to the tip URL.");
+
   UrlbarProvidersManager.unregisterProvider(provider);
 });
