@@ -53,18 +53,7 @@ async function compareImages(window, expected, test) {
     "The test and expected images must be the same size"
   );
 
-  var maxDifference = {};
-  var differences = window.windowUtils.compareCanvases(
-    expectedCanvas,
-    testCanvas,
-    maxDifference
-  );
-
-  // Fuzz for minor differences that can be caused by the encoder.
-  if (maxDifference.value > 1) {
-    return differences;
-  }
-  return 0;
+  return window.windowUtils.compareCanvases(expectedCanvas, testCanvas, {});
 }
 
 async function cropAndCompare(window, src, expected, test, region, subregions) {
