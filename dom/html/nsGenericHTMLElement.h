@@ -482,15 +482,16 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
    */
   static void MapImageMarginAttributeInto(const nsMappedAttributes* aAttributes,
                                           mozilla::MappedDeclarations&);
+
+  // Whether to map the width and height attributes to aspect-ratio.
+  enum class MapAspectRatio { No, Yes };
+
   /**
    * Helper to map the image position attribute into a style struct.
-   *
-   * @param aAttributes the list of attributes to map
-   * @param aData the returned rule data [INOUT]
-   * @see GetAttributeMappingFunction
    */
-  static void MapImageSizeAttributesInto(const nsMappedAttributes* aAttributes,
-                                         mozilla::MappedDeclarations&);
+  static void MapImageSizeAttributesInto(const nsMappedAttributes*,
+                                         mozilla::MappedDeclarations&,
+                                         MapAspectRatio = MapAspectRatio::No);
 
   /**
    * Helper to map `width` attribute into a style struct.
