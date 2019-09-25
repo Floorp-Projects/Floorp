@@ -57,28 +57,27 @@ add_task(async function delay_media_with_autoplay_keyword() {
   BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function block_autoplay_media() {
+add_task(async function delay_media_with_play_invocation() {
   info("- open new background tab1 -");
-  let tab1 = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
-  BrowserTestUtils.loadURI(tab1.linkedBrowser, PAGE);
-  await BrowserTestUtils.browserLoaded(tab1.linkedBrowser, false, PAGE);
+  let tab1 = BrowserTestUtils.addTab(window.gBrowser, PAGE);
+  await BrowserTestUtils.browserLoaded(tab1.linkedBrowser);
 
-  info("- should block autoplay media for non-visited tab1 -");
+  info("- should delay autoplay media for non-visited tab1 -");
   await waitForTabBlockEvent(tab1, true);
 
   info("- open new background tab2 -");
-  let tab2 = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
-  BrowserTestUtils.loadURI(tab2.linkedBrowser, PAGE);
-  await BrowserTestUtils.browserLoaded(tab2.linkedBrowser, false, PAGE);
+  let tab2 = BrowserTestUtils.addTab(window.gBrowser, PAGE);
+  await BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
 
-  info("- should block autoplay for non-visited tab2 -");
+  info("- should delay autoplay for non-visited tab2 -");
   await waitForTabBlockEvent(tab2, true);
 
-  info("- select tab1 as foreground tab -");
+  info("- switch to tab1 -");
   await BrowserTestUtils.switchTab(window.gBrowser, tab1);
 
-  info("- media should be unblocked because the tab was visited -");
+  info("- media in tab1 should be unblocked because the tab was visited -");
   await waitForTabPlayingEvent(tab1, true);
+  await waitForTabBlockEvent(tab1, false);
 
   info("- open another new foreground tab3 -");
   let tab3 = await BrowserTestUtils.openNewForegroundTab(
@@ -92,7 +91,14 @@ add_task(async function block_autoplay_media() {
   await waitForTabPlayingEvent(tab2, false);
   await waitForTabBlockEvent(tab2, true);
 
-  // Test 4: Disable autoplay and verify that when a tab is opened in the
+  info("- remove tabs -");
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab3);
+});
+
+add_task(async function resume_delayed_media_when_enable_blocking_autoplay() {
+  // Disable autoplay and verify that when a tab is opened in the
   // background and has had its playback start delayed, resuming via the audio
   // tab indicator overrides the autoplay blocking logic.
   //
@@ -109,31 +115,31 @@ add_task(async function block_autoplay_media() {
     ],
   });
 
-  info("- open new background tab4 -");
-  let tab4 = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
-  BrowserTestUtils.loadURI(tab4.linkedBrowser, PAGE);
-  await BrowserTestUtils.browserLoaded(tab4.linkedBrowser, false, PAGE);
+  info("- open new background tab -");
+  let tab = BrowserTestUtils.addTab(window.gBrowser, PAGE);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  info("- should block autoplay for non-visited tab4 -");
-  await waitForTabBlockEvent(tab4, true);
-  await check_audio_paused(tab4.linkedBrowser, true);
-  tab4.linkedBrowser.resumeMedia();
-  info("- should not block media from tab4 -");
-  await waitForTabPlayingEvent(tab4, true);
-  await check_audio_paused(tab4.linkedBrowser, false);
+  info("- should block autoplay for non-visited tab -");
+  await waitForTabBlockEvent(tab, true);
+  await check_audio_paused(tab.linkedBrowser, true);
+  tab.linkedBrowser.resumeMedia();
+
+  info("- should not block media from tab -");
+  await waitForTabPlayingEvent(tab, true);
+  await check_audio_paused(tab.linkedBrowser, false);
 
   info(
     "- check that loading a new URI in page clears gesture activation status -"
   );
-  BrowserTestUtils.loadURI(tab4.linkedBrowser, PAGE);
-  await BrowserTestUtils.browserLoaded(tab4.linkedBrowser, false, PAGE);
+  BrowserTestUtils.loadURI(tab.linkedBrowser, PAGE);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("- should block autoplay again as gesture activation status cleared -");
-  await check_audio_paused(tab4.linkedBrowser, true);
+  await check_audio_paused(tab.linkedBrowser, true);
 
-  info("- remove tabs -");
-  BrowserTestUtils.removeTab(tab1);
-  BrowserTestUtils.removeTab(tab2);
-  BrowserTestUtils.removeTab(tab3);
-  BrowserTestUtils.removeTab(tab4);
+  info("- remove tab -");
+  BrowserTestUtils.removeTab(tab);
+
+  // Clear the block-autoplay pref.
+  await SpecialPowers.popPrefEnv();
 });
