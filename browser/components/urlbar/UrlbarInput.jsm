@@ -953,6 +953,16 @@ class UrlbarInput {
       return;
     }
     this.setAttribute("breakout-extend", "true");
+
+    // Enable the animation only after the first extend call to ensure it
+    // doesn't run when opening a new window.
+    if (!this.hasAttribute("breakout-extend-animate")) {
+      this.window.promiseDocumentFlushed(() => {
+        this.window.requestAnimationFrame(() => {
+          this.setAttribute("breakout-extend-animate", "true");
+        });
+      });
+    }
   }
 
   endLayoutExtend(force) {

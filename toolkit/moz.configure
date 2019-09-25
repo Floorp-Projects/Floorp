@@ -1664,8 +1664,8 @@ with only_when(compile_environment | artifact_builds):
 
     set_config('MOZ_FFVPX', True, when=ffvpx.enable)
     set_define('MOZ_FFVPX', True, when=ffvpx.enable)
-    set_config('MOZ_FFVPX_FLACONLY', True, when=ffvpx.flac_only)
-    set_define('MOZ_FFVPX_FLACONLY', True, when=ffvpx.flac_only)
+    set_config('MOZ_FFVPX_AUDIOONLY', True, when=ffvpx.flac_only)
+    set_define('MOZ_FFVPX_AUDIOONLY', True, when=ffvpx.flac_only)
     set_config('FFVPX_ASFLAGS', ffvpx.flags)
     set_config('FFVPX_USE_YASM', True, when=ffvpx.use_yasm)
 

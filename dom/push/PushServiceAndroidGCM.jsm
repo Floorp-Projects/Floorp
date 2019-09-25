@@ -79,25 +79,6 @@ var PushServiceAndroidGCM = {
     );
   },
 
-  validServerURI(serverURI) {
-    if (!serverURI) {
-      return false;
-    }
-
-    if (serverURI.scheme == "https") {
-      return true;
-    }
-    if (serverURI.scheme == "http") {
-      // Allow insecure server URLs for development and testing.
-      return !!prefs.get("testing.allowInsecureServerURL");
-    }
-    console.info(
-      "Unsupported Android GCM dom.push.serverURL scheme",
-      serverURI.scheme
-    );
-    return false;
-  },
-
   observe(subject, topic, data) {
     switch (topic) {
       case "nsPref:changed":

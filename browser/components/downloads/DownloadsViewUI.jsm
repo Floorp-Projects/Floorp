@@ -188,20 +188,22 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
           </vbox>
         </hbox>
         <toolbarseparator />
-        <button class="downloadButton"
-                oncommand="DownloadsView.onDownloadButton(event);"/>
+        <button class="downloadButton"/>
       `);
       gDownloadListItemFragments.set(document, downloadListItemFragment);
     }
     this.element.setAttribute("active", true);
     this.element.setAttribute("orient", "horizontal");
-    this.element.setAttribute(
-      "onclick",
-      "DownloadsView.onDownloadClick(event);"
-    );
+    this.element.addEventListener("click", ev => {
+      ev.target.ownerGlobal.DownloadsView.onDownloadClick(ev);
+    });
     this.element.appendChild(
       document.importNode(downloadListItemFragment, true)
     );
+    let downloadButton = this.element.querySelector(".downloadButton");
+    downloadButton.addEventListener("command", function(event) {
+      event.target.ownerGlobal.DownloadsView.onDownloadButton(event);
+    });
     for (let [propertyName, selector] of [
       ["_downloadTypeIcon", ".downloadTypeIcon"],
       ["_downloadTarget", ".downloadTarget"],
