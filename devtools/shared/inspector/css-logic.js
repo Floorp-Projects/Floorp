@@ -553,3 +553,20 @@ function getCSSStyleRules(node) {
   return rules;
 }
 exports.getCSSStyleRules = getCSSStyleRules;
+
+/**
+ * Returns true if the given node has visited state.
+ */
+function hasVisitedState(node) {
+  if (!node) {
+    return false;
+  }
+
+  const NS_EVENT_STATE_VISITED = 1 << 24;
+
+  return (
+    !!(InspectorUtils.getContentState(node) & NS_EVENT_STATE_VISITED) ||
+    InspectorUtils.hasPseudoClassLock(node, ":visited")
+  );
+}
+exports.hasVisitedState = hasVisitedState;

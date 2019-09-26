@@ -33,6 +33,7 @@ const {
   getBindingElementAndPseudo,
   getCSSStyleRules,
   l10n,
+  hasVisitedState,
   isAgentStylesheet,
   isAuthorStylesheet,
   isUserStylesheet,
@@ -723,6 +724,11 @@ CssLogic.href = function(sheet) {
 
   return href;
 };
+
+/**
+ * Returns true if the given node has visited state.
+ */
+CssLogic.hasVisitedState = hasVisitedState;
 
 /**
  * A safe way to access cached bits of information about a stylesheet.
