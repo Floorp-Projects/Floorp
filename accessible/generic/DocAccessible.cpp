@@ -1176,6 +1176,16 @@ Accessible* DocAccessible::GetAccessibleOrContainer(
       }
     }
 
+    // Check if node is in zero-sized map
+    if (aNoContainerIfPruned && currNode->IsHTMLElement(nsGkAtoms::map)) {
+      if (nsIFrame* frame = currNode->AsContent()->GetPrimaryFrame()) {
+        if (nsLayoutUtils::GetAllInFlowRectsUnion(frame, frame->GetParent())
+                .IsEmpty()) {
+          return nullptr;
+        }
+      }
+    }
+
     if (Accessible* accessible = GetAccessible(currNode)) {
       return accessible;
     }
