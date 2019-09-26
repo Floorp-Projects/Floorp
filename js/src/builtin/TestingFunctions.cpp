@@ -2955,7 +2955,13 @@ static bool testingFunc_inJit(JSContext* cx, unsigned argc, Value* vp) {
 
   // Use frame iterator to inspect caller.
   FrameIter iter(cx);
-  MOZ_ASSERT(!iter.done());
+
+  // We may be invoked directly, not in a JS context, e.g. if inJit is added as
+  // a callback on the event queue.
+  if (iter.done()) {
+    args.rval().setBoolean(false);
+    return true;
+  }
 
   if (iter.hasScript()) {
     // Detect repeated attempts to compile, resetting the counter if inJit
