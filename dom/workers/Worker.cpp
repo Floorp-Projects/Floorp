@@ -100,7 +100,8 @@ void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
         MarkerTracingType::START);
   }
 
-  runnable->Write(aCx, aMessage, transferable, JS::CloneDataPolicy(), aRv);
+  JS::CloneDataPolicy clonePolicy;
+  runnable->Write(aCx, aMessage, transferable, clonePolicy, aRv);
 
   if (isTimelineRecording) {
     end = MakeUnique<WorkerTimelineMarker>(

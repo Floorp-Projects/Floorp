@@ -173,8 +173,7 @@ bool TestTransferObject() {
 
   JSAutoStructuredCloneBuffer cloned_buffer(
       JS::StructuredCloneScope::SameProcessSameThread, nullptr, nullptr);
-  CHECK(cloned_buffer.write(cx, v1, transferable,
-                            JS::CloneDataPolicy().denySharedArrayBuffer(),
+  CHECK(cloned_buffer.write(cx, v1, transferable, JS::CloneDataPolicy(),
                             nullptr, nullptr));
   JS::RootedValue v2(cx);
   CHECK(cloned_buffer.read(cx, &v2, nullptr, nullptr));

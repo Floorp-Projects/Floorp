@@ -166,8 +166,7 @@ void StructuredCloneHolderBase::Clear() {
 
 bool StructuredCloneHolderBase::Write(JSContext* aCx,
                                       JS::Handle<JS::Value> aValue) {
-  return Write(aCx, aValue, JS::UndefinedHandleValue,
-               JS::CloneDataPolicy().denySharedArrayBuffer());
+  return Write(aCx, aValue, JS::UndefinedHandleValue, JS::CloneDataPolicy());
 }
 
 bool StructuredCloneHolderBase::Write(JSContext* aCx,
@@ -249,8 +248,7 @@ StructuredCloneHolder::~StructuredCloneHolder() {
 
 void StructuredCloneHolder::Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
                                   ErrorResult& aRv) {
-  Write(aCx, aValue, JS::UndefinedHandleValue,
-        JS::CloneDataPolicy().denySharedArrayBuffer(), aRv);
+  Write(aCx, aValue, JS::UndefinedHandleValue, JS::CloneDataPolicy(), aRv);
 }
 
 void StructuredCloneHolder::Write(JSContext* aCx, JS::Handle<JS::Value> aValue,

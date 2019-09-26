@@ -210,7 +210,7 @@ class CloneDataPolicy {
  public:
   // The default is to allow all policy-controlled aspects.
 
-  CloneDataPolicy() : sharedArrayBuffer_(true) {}
+  CloneDataPolicy() : sharedArrayBuffer_(false) {}
 
   // In the JS engine, SharedArrayBuffers can only be cloned intra-process
   // because the shared memory areas are allocated in process-private memory.
@@ -220,10 +220,7 @@ class CloneDataPolicy {
   // Clients should also deny SharedArrayBuffers when cloning data that are to
   // be transmitted intra-process if policy needs dictate such denial.
 
-  CloneDataPolicy& denySharedArrayBuffer() {
-    sharedArrayBuffer_ = false;
-    return *this;
-  }
+  void allowSharedMemory() { sharedArrayBuffer_ = true; }
 
   bool isSharedArrayBufferAllowed() const { return sharedArrayBuffer_; }
 };
