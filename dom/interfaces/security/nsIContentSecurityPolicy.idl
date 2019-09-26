@@ -329,6 +329,7 @@ interface nsIContentSecurityPolicy : nsISerializable
   short shouldLoad(in nsContentPolicyType aContentType,
                    in nsICSPEventListener aCSPEventListener,
                    in nsIURI          aContentLocation,
+                   in nsIURI          aRequestOrigin,
                    in nsISupports     aContext,
                    in ACString        aMimeTypeGuess,
                    in nsIURI          aOriginalURIIfRedirect,
