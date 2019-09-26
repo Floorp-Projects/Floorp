@@ -7,6 +7,10 @@ package org.mozilla.fenix.components.metrics
 import android.content.Context
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.browser.search.SearchEngine
+import mozilla.components.browser.toolbar.facts.ToolbarFacts
+import mozilla.components.feature.contextmenu.facts.ContextMenuFacts
+import mozilla.components.feature.customtabs.CustomTabsFacts
+import mozilla.components.feature.findinpage.facts.FindInPageFacts
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.facts.FactProcessor
@@ -298,19 +302,19 @@ sealed class Event {
 }
 
 private fun Fact.toEvent(): Event? = when (Pair(component, item)) {
-    Component.FEATURE_FINDINPAGE to "previous" -> Event.FindInPagePrevious
-    Component.FEATURE_FINDINPAGE to "next" -> Event.FindInPageNext
-    Component.FEATURE_FINDINPAGE to "close" -> Event.FindInPageClosed
-    Component.FEATURE_FINDINPAGE to "input" -> Event.FindInPageSearchCommitted
-    Component.FEATURE_CONTEXTMENU to "item" -> {
+    Component.FEATURE_FINDINPAGE to FindInPageFacts.Items.PREVIOUS -> Event.FindInPagePrevious
+    Component.FEATURE_FINDINPAGE to FindInPageFacts.Items.NEXT -> Event.FindInPageNext
+    Component.FEATURE_FINDINPAGE to FindInPageFacts.Items.CLOSE -> Event.FindInPageClosed
+    Component.FEATURE_FINDINPAGE to FindInPageFacts.Items.INPUT -> Event.FindInPageSearchCommitted
+    Component.FEATURE_CONTEXTMENU to ContextMenuFacts.Items.ITEM -> {
         metadata?.get("item")?.let { Event.ContextMenuItemTapped.create(it.toString()) }
     }
 
-    Component.BROWSER_TOOLBAR to "menu" -> {
+    Component.BROWSER_TOOLBAR to ToolbarFacts.Items.MENU -> {
         metadata?.get("customTab")?.let { Event.CustomTabsMenuOpened }
     }
-    Component.FEATURE_CUSTOMTABS to "close" -> Event.CustomTabsClosed
-    Component.FEATURE_CUSTOMTABS to "action_button" -> Event.CustomTabsActionTapped
+    Component.FEATURE_CUSTOMTABS to CustomTabsFacts.Items.CLOSE -> Event.CustomTabsClosed
+    Component.FEATURE_CUSTOMTABS to CustomTabsFacts.Items.ACTION_BUTTON -> Event.CustomTabsActionTapped
 
     else -> null
 }
