@@ -599,6 +599,7 @@ static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
                       wr::DebugFlags_DISABLE_GRADIENT_PRIMS)
   GFX_WEBRENDER_DEBUG(".obscure-images",
                       wr::DebugFlags_OBSCURE_IMAGES)
+  GFX_WEBRENDER_DEBUG(".log-transactions", wr::DebugFlags_LOG_TRANSACTIONS)
 #undef GFX_WEBRENDER_DEBUG
 
   gfx::gfxVars::SetWebRenderDebugFlags(flags.bits);

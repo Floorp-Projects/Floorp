@@ -10,6 +10,7 @@
  */
 var gGfxUtils = {
   _isRecording: false,
+  _isTransactionLogging: false,
   /**
    * Toggle composition recording for the current window.
    */
@@ -22,5 +23,13 @@ var gGfxUtils = {
    */
   webrenderCapture() {
     window.windowUtils.wrCapture();
+  },
+
+  /**
+   * Toggle transaction logging to text file.
+   */
+  toggleTransactionLogging() {
+    window.windowUtils.setTransactionLogging(!this._isTransactionLogging);
+    this._isTransactionLogging = !this._isTransactionLogging;
   },
 };

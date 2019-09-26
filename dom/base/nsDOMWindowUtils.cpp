@@ -4069,6 +4069,12 @@ nsDOMWindowUtils::SetCompositionRecording(bool aValue) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::SetTransactionLogging(bool aValue) {
+  Preferences::SetBool("gfx.webrender.debug.log-transactions", aValue);
+  return NS_OK;
+}
+
 void nsDOMWindowUtils::ReportErrorMessageForWindow(
     const nsAString& aErrorMessage, const char* aClassification,
     bool aFromChrome) {

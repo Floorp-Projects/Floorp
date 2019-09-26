@@ -39,6 +39,35 @@ pub enum ResourceUpdate {
     DeleteFontInstance(font::FontInstanceKey),
 }
 
+impl fmt::Debug for ResourceUpdate {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ResourceUpdate::AddImage(ref i) => f.write_fmt(format_args!(
+                "ResourceUpdate::AddImage size({:?})",
+                &i.descriptor.size
+            )),
+            ResourceUpdate::UpdateImage(ref i) => f.write_fmt(format_args!(
+                "ResourceUpdate::UpdateImage size({:?})",
+                &i.descriptor.size
+            )),
+            ResourceUpdate::AddBlobImage(ref i) => f.write_fmt(format_args!(
+                "ResourceUpdate::AddBlobImage size({:?})",
+                &i.descriptor.size
+            )),
+            ResourceUpdate::UpdateBlobImage(i) => f.write_fmt(format_args!(
+                "ResourceUpdate::UpdateBlobImage size({:?})",
+                &i.descriptor.size
+            )),
+            ResourceUpdate::DeleteImage(..) => f.write_str("ResourceUpdate::DeleteImage"),
+            ResourceUpdate::SetBlobImageVisibleArea(..) => f.write_str("ResourceUpdate::SetBlobImageVisibleArea"),
+            ResourceUpdate::AddFont(..) => f.write_str("ResourceUpdate::AddFont"),
+            ResourceUpdate::DeleteFont(..) => f.write_str("ResourceUpdate::DeleteFont"),
+            ResourceUpdate::AddFontInstance(..) => f.write_str("ResourceUpdate::AddFontInstance"),
+            ResourceUpdate::DeleteFontInstance(..) => f.write_str("ResourceUpdate::DeleteFontInstance"),
+        }
+    }
+}
+
 /// A Transaction is a group of commands to apply atomically to a document.
 ///
 /// This mechanism ensures that:
@@ -466,6 +495,29 @@ pub struct TransactionMsg {
 
     #[serde(skip)]
     pub notifications: Vec<NotificationRequest>,
+}
+
+impl fmt::Debug for TransactionMsg {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "threaded={}, genframe={}, invalidate={}, low_priority={}",
+                        self.use_scene_builder_thread,
+                        self.generate_frame,
+                        self.invalidate_rendered_frame,
+                        self.low_priority,
+                    ).unwrap();
+        for scene_op in &self.scene_ops {
+            writeln!(f, "\t\t{:?}", scene_op).unwrap();
+        }
+
+        for frame_op in &self.frame_ops {
+            writeln!(f, "\t\t{:?}", frame_op).unwrap();
+        }
+
+        for resource_update in &self.resource_updates {
+            writeln!(f, "\t\t{:?}", resource_update).unwrap();
+        }
+        Ok(())
+    }
 }
 
 impl TransactionMsg {
@@ -1088,6 +1140,7 @@ bitflags! {
         const DISABLE_TEXT_PRIMS = 1 << 22;
         const DISABLE_GRADIENT_PRIMS = 1 << 23;
         const OBSCURE_IMAGES = 1 << 24;
+        const LOG_TRANSACTIONS = 1 << 25;
     }
 }
 

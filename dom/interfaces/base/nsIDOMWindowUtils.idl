@@ -1918,6 +1918,11 @@ interface nsIDOMWindowUtils : nsISupports {
   void setCompositionRecording(in boolean aValue);
 
   /**
+   * Toggle transaction logging on and off.
+   */
+  void setTransactionLogging(in boolean aValue);
+
+  /**
    * Returns whether the document we're associated to has recorded a given CSS
    * property via the use counter mechanism.
    *
