@@ -411,6 +411,18 @@ BasePrincipal::GetIsAddonOrExpandedAddonPrincipal(bool* aResult) {
 }
 
 NS_IMETHODIMP
+BasePrincipal::SchemeIs(const char* aScheme, bool* aResult) {
+  *aResult = false;
+  nsCOMPtr<nsIURI> prinURI;
+  nsresult rv = GetURI(getter_AddRefs(prinURI));
+  if (NS_FAILED(rv) || !prinURI) {
+    return NS_OK;
+  }
+  *aResult = prinURI->SchemeIs(aScheme);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 BasePrincipal::GetOriginAttributes(JSContext* aCx,
                                    JS::MutableHandle<JS::Value> aVal) {
   if (NS_WARN_IF(!ToJSValue(aCx, mOriginAttributes, aVal))) {

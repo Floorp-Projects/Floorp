@@ -412,8 +412,31 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* aRequest) {
   if (channel) {
     nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
     if (loadInfo->GetSkipContentSniffing()) {
-      MutexAutoLock lock(mMutex);
-      mContentType = UNKNOWN_CONTENT_TYPE;
+      /*
+       * If we did not get a useful Content-Type from the server
+       * but also have sniffing disabled, just determine whether
+       * to use text/plain or octetstream and log an error to the Console
+       */
+      LastDitchSniff(aRequest);
+
+      nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
+      if (httpChannel) {
+        nsAutoCString type;
+        httpChannel->GetContentType(type);
+        nsCOMPtr<nsIURI> requestUri;
+        httpChannel->GetURI(getter_AddRefs(requestUri));
+        nsAutoCString spec;
+        requestUri->GetSpec(spec);
+        if (spec.Length() > 50) {
+          spec.Truncate(50);
+          spec.AppendLiteral("...");
+        }
+        httpChannel->LogMimeTypeMismatch(
+            NS_LITERAL_CSTRING("XTCOWithMIMEValueMissing"), false,
+            NS_ConvertUTF8toUTF16(spec),
+            // Type is not used in the Error Message but required
+            NS_ConvertUTF8toUTF16(type));
+      }
       return;
     }
   }
@@ -626,12 +649,6 @@ bool nsUnknownDecoder::SniffURI(nsIRequest* aRequest) {
 bool nsUnknownDecoder::LastDitchSniff(nsIRequest* aRequest) {
   // All we can do now is try to guess whether this is text/plain or
   // application/octet-stream
-
-  nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
-  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-  if (loadInfo->GetSkipContentSniffing()) {
-    return false;
-  }
 
   MutexAutoLock lock(mMutex);
 
@@ -856,6 +873,7 @@ void nsBinaryDetector::DetermineContentType(nsIRequest* aRequest) {
 
   nsCOMPtr<nsILoadInfo> loadInfo = httpChannel->LoadInfo();
   if (loadInfo->GetSkipContentSniffing()) {
+    LastDitchSniff(aRequest);
     return;
   }
   // It's an HTTP channel.  Check for the text/plain mess

@@ -2747,35 +2747,6 @@ void NS_SniffContent(const char* aSnifferType, nsIRequest* aRequest,
   }
 
   aSniffedType.Truncate();
-
-  // If the Sniffers did not hit and NoSniff is set
-  // Check if we have any MIME Type at all or report an
-  // Error to the Console
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
-  if (httpChannel) {
-    nsCOMPtr<nsILoadInfo> loadInfo = httpChannel->LoadInfo();
-
-    if (loadInfo->GetSkipContentSniffing()) {
-      nsAutoCString type;
-      httpChannel->GetContentType(type);
-
-      if (type.Equals(nsCString("application/x-unknown-content-type"))) {
-        nsCOMPtr<nsIURI> requestUri;
-        httpChannel->GetURI(getter_AddRefs(requestUri));
-        nsAutoCString spec;
-        requestUri->GetSpec(spec);
-        if (spec.Length() > 50) {
-          spec.Truncate(50);
-          spec.AppendLiteral("...");
-        }
-        httpChannel->LogMimeTypeMismatch(
-            nsCString("XTCOWithMIMEValueMissing"), false,
-            NS_ConvertUTF8toUTF16(spec),
-            // Type is not used in the Error Message but required
-            NS_ConvertUTF8toUTF16(type));
-      }
-    }
-  }
 }
 
 bool NS_IsSrcdocChannel(nsIChannel* aChannel) {

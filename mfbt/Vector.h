@@ -21,6 +21,7 @@
 #include "mozilla/ReentrancyGuard.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/TypeTraits.h"
+#include "mozilla/Span.h"
 
 #include <new>  // for placement new
 
@@ -523,6 +524,12 @@ class MOZ_NON_PARAM Vector final : private AllocPolicy {
     MOZ_ASSERT(!empty());
     return *(end() - 1);
   }
+
+  operator mozilla::Span<const T>() const {
+    return mozilla::MakeSpan(mBegin, mLength);
+  }
+
+  operator mozilla::Span<T>() { return mozilla::MakeSpan(mBegin, mLength); }
 
   class Range {
     friend class Vector;

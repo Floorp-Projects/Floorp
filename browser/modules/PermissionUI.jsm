@@ -755,7 +755,7 @@ GeolocationPermissionPrompt.prototype = {
       name: this.principalName,
     };
 
-    if (this.principal.URI.schemeIs("file")) {
+    if (this.principal.schemeIs("file")) {
       options.checkbox = { show: false };
     } else {
       // Don't offer "always remember" action in PB mode
@@ -782,7 +782,7 @@ GeolocationPermissionPrompt.prototype = {
   },
 
   get message() {
-    if (this.principal.URI.schemeIs("file")) {
+    if (this.principal.schemeIs("file")) {
       return gBrowserBundle.GetStringFromName("geolocation.shareWithFile3");
     }
 
@@ -1090,7 +1090,7 @@ MIDIPermissionPrompt.prototype = {
       name: this.principalName,
     };
 
-    if (this.principal.URI.schemeIs("file")) {
+    if (this.principal.schemeIs("file")) {
       options.checkbox = { show: false };
     } else {
       // Don't offer "always remember" action in PB mode
@@ -1118,7 +1118,7 @@ MIDIPermissionPrompt.prototype = {
 
   get message() {
     let message;
-    if (this.principal.URI.schemeIs("file")) {
+    if (this.principal.schemeIs("file")) {
       if (this.isSysexPerm) {
         message = gBrowserBundle.formatStringFromName(
           "midi.shareSysexWithFile.message"

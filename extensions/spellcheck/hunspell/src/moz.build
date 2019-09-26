@@ -15,6 +15,8 @@ UNIFIED_SOURCES += [
     'suggestmgr.cxx',
 ]
 
+DEFINES['HUNSPELL_STATIC'] = True
+
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [

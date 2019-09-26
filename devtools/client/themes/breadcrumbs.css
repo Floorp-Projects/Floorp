@@ -91,7 +91,7 @@
   border: none;
   margin-inline-start: 10px;
   margin-inline-end: 1px;
-  padding: 0 0 2px 0;
+  padding: 0;
 }
 
 .breadcrumbs-widget-item > .button-box {

@@ -49,13 +49,15 @@ window.onload = function() {
   addCookie("c1", "1.2.3.4.5.6.7", "/browser");
   addCookie("c2", "foobar", "/browser");
 
-  localStorage.setItem("ls1", "testing");
-  localStorage.setItem("ls2", "testing");
-  localStorage.setItem("ls3", "testing");
-  localStorage.setItem("ls4", "testing");
-  localStorage.setItem("ls5", "testing");
-  localStorage.setItem("ls6", "testing");
-  localStorage.setItem("ls7", "testing");
+  // Some keys have to be set to strings that JSON.parse can parse successfully
+  // instead of throwings (to verify the issue fixed by Bug 1578447 doesn't regress).
+  localStorage.setItem("1", "testing");
+  localStorage.setItem("2", "testing");
+  localStorage.setItem("3", "testing");
+  localStorage.setItem("4", "testing");
+  localStorage.setItem("5", "testing");
+  localStorage.setItem("null", "testing");
+  localStorage.setItem("non-json-parsable", "testing");
 
   sessionStorage.setItem("ss1", "foobar");
   sessionStorage.setItem("ss2", "foobar");

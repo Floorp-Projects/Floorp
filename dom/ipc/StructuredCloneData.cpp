@@ -114,8 +114,7 @@ void StructuredCloneData::Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
                                 ErrorResult& aRv) {
   MOZ_ASSERT(!mInitialized);
 
-  StructuredCloneHolder::Write(aCx, aValue, aTransfer,
-                               JS::CloneDataPolicy().denySharedArrayBuffer(),
+  StructuredCloneHolder::Write(aCx, aValue, aTransfer, JS::CloneDataPolicy(),
                                aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;

@@ -45,6 +45,7 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
     let selectif = insts.by_name("selectif");
     let smulhi = insts.by_name("smulhi");
     let splat = insts.by_name("splat");
+    let shuffle = insts.by_name("shuffle");
     let srem = insts.by_name("srem");
     let udiv = insts.by_name("udiv");
     let umulhi = insts.by_name("umulhi");
@@ -328,6 +329,7 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
             def!(y = splat_any8x16(x)),
             vec![
                 def!(a = scalar_to_vector(x)), // move into the lowest 8 bits of an XMM register
+                // TODO replace the following two instructions with `vconst(0)` when this is possible; see https://github.com/CraneStation/cranelift/issues/1052
                 def!(b = f64const(ieee64_zero)), // zero out a different XMM register; the shuffle mask for moving the lowest byte to all other byte lanes is 0x0
                 def!(c = bitcast_f64_to_any8x16(b)), // no instruction emitted; informs the SSA that the 0 in b can be used as a vector of this type
                 def!(y = x86_pshufb(a, c)), // PSHUFB takes two XMM operands, one of which is a shuffle mask (i.e. b)
@@ -380,6 +382,7 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
         );
     }
 
+    narrow.custom_legalize(shuffle, "convert_shuffle");
     narrow.custom_legalize(extractlane, "convert_extractlane");
     narrow.custom_legalize(insertlane, "convert_insertlane");
 

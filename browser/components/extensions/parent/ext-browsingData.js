@@ -119,8 +119,11 @@ const clearIndexedDB = async function(options) {
         let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
           item.origin
         );
-        let scheme = principal.URI.scheme;
-        if (scheme == "http" || scheme == "https" || scheme == "file") {
+        if (
+          principal.schemeIs("http") ||
+          principal.schemeIs("https") ||
+          principal.schemeIs("file")
+        ) {
           promises.push(
             new Promise((resolve, reject) => {
               let clearRequest = quotaManagerService.clearStoragesForPrincipal(

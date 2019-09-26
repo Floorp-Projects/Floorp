@@ -191,11 +191,13 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
     ipcClientInfo.emplace(clientInfo.value().ToIPC());
   }
 
+  nsID agentClusterId = nsContentUtils::GenerateUUID();
+
   RemoteWorkerData remoteWorkerData(
       nsString(aScriptURL), baseURL, resolvedScriptURL, name,
       loadingPrincipalInfo, principalInfo, storagePrincipalInfo,
       loadInfo.mDomain, isSecureContext, ipcClientInfo, loadInfo.mReferrerInfo,
-      storageAllowed, void_t() /* OptionalServiceWorkerData */);
+      storageAllowed, void_t() /* OptionalServiceWorkerData */, agentClusterId);
 
   PSharedWorkerChild* pActor = actorChild->SendPSharedWorkerConstructor(
       remoteWorkerData, loadInfo.mWindowID, portIdentifier);

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<p id="display">
+  <input id="input">
+  <textarea id="textarea" cols="10" rows="2"></textarea>
+  <div id="editable" contenteditable style="width: 200px;"></div>
+</p>
+<div id="content" style="display: none;"></div>
+<pre id="test">
+</pre>
+<script>
+const SimpleTest = parent.SimpleTest;
+const is = parent.is;
+const isnot = parent.isnot;
+const ok = parent.ok;
+
+window.addEventListener("load", runTest);
+
+function runTest() {
+  let target = document.getElementById("input");
+  target.focus();
+
+  // <input>
+  target.value = "  ";
+  synthesizeTouchAtCenter(target, { type: "touchstart" });
+  synthesizeMouseAtCenter(target, { type: "mouselongtap" });
+  synthesizeTouchAtCenter(target, { type: "touchend" });
+  is(target.selectionStart, target.value.length, "Don't select whitespace");
+  is(target.selectionEnd, target.value.length, "Don't select whitespace");
+
+  target.value = "abc";
+  synthesizeTouchAtCenter(target, { type: "touchstart" });
+  synthesizeMouseAtCenter(target, { type: "mouselongtap" });
+  synthesizeTouchAtCenter(target, { type: "touchend" });
+  is(target.selectionStart, target.value.length, "Don't select word");
+  is(target.selectionEnd, target.value.length, "Don't select word");
+
+  target.value = " ".repeat(100);
+  synthesizeTouchAtCenter(target, { type: "touchstart" });
+  synthesizeMouseAtCenter(target, { type: "mouselongtap" });
+  synthesizeTouchAtCenter(target, { type: "touchend" });
+  is(target.selectionStart, 0, "Select whitespace");
+
+  // <textarea>
+  target = document.getElementById("textarea");
+  target.value = "  ";
+  synthesizeTouchAtCenter(target, { type: "touchstart" });
+  synthesizeMouseAtCenter(target, { type: "mouselongtap" });
+  synthesizeTouchAtCenter(target, { type: "touchend" });
+  is(target.selectionStart, 2, "Don't select whitespace");
+  is(target.selectionEnd, 2, "Don't select whitespace");
+
+  target.value = "abc";
+  synthesizeTouchAtCenter(target, { type: "touchstart" });
+  synthesizeMouseAtCenter(target, { type: "mouselongtap" });
+  synthesizeTouchAtCenter(target, { type: "touchend" });
+  is(target.selectionStart, target.value.length, "Don't select word");
+  is(target.selectionEnd, target.value.length, "Don't select word");
+
+  target.value = " ".repeat(10) + "\n" + " ".repeat(10) + "\n" + " ".repeat(10);
+  synthesizeTouchAtCenter(target, { type: "touchstart" });
+  synthesizeMouseAtCenter(target, { type: "mouselongtap" });
+  synthesizeTouchAtCenter(target, { type: "touchend" });
+  isnot(target.selectionStart, target.selectionEnd, "Select whitespace");
+
+  // contenteditable
+  target = document.getElementById("editable");
+  target.innerHTML = "test";
+  target.focus();
+  let range = document.createRange();
+  range.setStart(target.firstChild, target.firstChild.length);
+  range.setEnd(target.firstChild, target.firstChild.length);
+  let selection = window.getSelection();
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  synthesizeTouchAtCenter(target, { type: "touchstart" });
+  synthesizeMouseAtCenter(target, { type: "mouselongtap" });
+  synthesizeTouchAtCenter(target, { type: "touchend" });
+  ok(selection.getRangeAt(0).collapsed, "Don't select word");
+
+  target.innerHTML = "t".repeat(50);
+  target.focus();
+  range = document.createRange();
+  range.setStart(target.firstChild, target.firstChild.length);
+  range.setEnd(target.firstChild, target.firstChild.length);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  synthesizeTouchAtCenter(target, { type: "touchstart" });
+  synthesizeMouseAtCenter(target, { type: "mouselongtap" });
+  synthesizeTouchAtCenter(target, { type: "touchend" });
+  ok(!selection.getRangeAt(0).collapsed, "Select word");
+
+  SimpleTest.finish();
+}
+</script>
+</body>
+</html>

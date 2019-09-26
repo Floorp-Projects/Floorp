@@ -138,4 +138,5 @@ class TestProvider extends UrlbarProvider {
     }
   }
   cancelQuery(context) {}
+  pickResult(result, details) {}
 }

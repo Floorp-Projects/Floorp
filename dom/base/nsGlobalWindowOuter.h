@@ -746,9 +746,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   inline void MaybeClearInnerWindow(nsGlobalWindowInner* aExpectedInner);
 
-  // We need a JSContext to get prototypes inside CallerInnerWindow.
-  static nsGlobalWindowInner* CallerInnerWindow(JSContext* aCx);
-
   // Get the parent, returns null if this is a toplevel window
   nsPIDOMWindowOuter* GetInProcessParentInternal();
 

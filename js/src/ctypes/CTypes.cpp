@@ -3350,9 +3350,8 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
               return false;
             }
 
-            JS::DeflateStringToUTF8Buffer(
-                sourceFlat, mozilla::RangedPtr<char>(*charBuffer, nbytes),
-                &nbytes);
+            nbytes = JS::DeflateStringToUTF8Buffer(
+                sourceFlat, mozilla::MakeSpan(*charBuffer, nbytes));
             (*charBuffer)[nbytes] = 0;
             *freePointer = true;
             break;
@@ -3479,9 +3478,8 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
             }
 
             char* charBuffer = static_cast<char*>(buffer);
-            JS::DeflateStringToUTF8Buffer(
-                sourceFlat, mozilla::RangedPtr<char>(charBuffer, nbytes),
-                &nbytes);
+            nbytes = JS::DeflateStringToUTF8Buffer(
+                sourceFlat, mozilla::MakeSpan(charBuffer, nbytes));
 
             if (targetLength > nbytes) {
               charBuffer[nbytes] = 0;

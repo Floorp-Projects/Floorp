@@ -5,6 +5,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin/"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/in-content/preferences.css" type="text/css"?>
 
 <dialog id="fxaDisconnectDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

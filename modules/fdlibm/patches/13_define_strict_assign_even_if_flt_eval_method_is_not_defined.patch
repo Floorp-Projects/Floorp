@@ -1,7 +1,7 @@
 diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private.h
 --- a/modules/fdlibm/src/math_private.h
 +++ b/modules/fdlibm/src/math_private.h
-@@ -287,16 +287,27 @@ do {								\
+@@ -328,16 +328,27 @@ do {								\
  	if (sizeof(type) >= sizeof(long double))	\
  		(lval) = (rval);		\
  	else {					\
@@ -25,7 +25,7 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
  
  /* Support switching the mode to FP_PE if necessary. */
  #if defined(__i386__) && !defined(NO_FPSETPREC)
- #define	ENTERI()				\
- 	long double __retval;			\
+ #define	ENTERI() ENTERIT(long double)
+ #define	ENTERIT(returntype)			\
+ 	returntype __retval;			\
  	fp_prec_t __oprec;			\
- 						\

@@ -12,7 +12,7 @@
 
 [package]
 name = "bindgen"
-version = "0.51.1-oldsyn"
+version = "0.51.1"
 authors = ["Jyun-Yan You <jyyou.tw@gmail.com>", "Emilio Cobos Álvarez <emilio@crisal.io>", "Nick Fitzgerald <fitzgen@gmail.com>", "The Servo project developers"]
 build = "build.rs"
 include = ["LICENSE", "README.md", "Cargo.toml", "build.rs", "src/*.rs", "src/**/*.rs"]
@@ -65,11 +65,11 @@ optional = true
 version = "0.1.2"
 
 [dependencies.proc-macro2]
-version = "0.4"
+version = "1"
 default-features = false
 
 [dependencies.quote]
-version = "0.6"
+version = "1"
 default-features = false
 
 [dependencies.regex]

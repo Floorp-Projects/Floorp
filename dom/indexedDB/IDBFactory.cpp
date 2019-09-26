@@ -375,7 +375,7 @@ nsresult IDBFactory::AllowedForWindowInternal(nsPIDOMWindowInner* aWindow,
   MOZ_ALWAYS_SUCCEEDS(principal->GetURI(getter_AddRefs(uri)));
   MOZ_ASSERT(uri);
 
-  if (uri->SchemeIs("about")) {
+  if (principal->SchemeIs("about")) {
     nsCOMPtr<nsIAboutModule> module;
     if (NS_SUCCEEDED(NS_GetAboutModule(uri, getter_AddRefs(module)))) {
       uint32_t flags;

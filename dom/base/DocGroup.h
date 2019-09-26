@@ -112,8 +112,11 @@ class DocGroup final {
 
   static bool TryToLoadIframesInBackground();
 
+  const nsID& AgentClusterId() const { return mAgentClusterId; }
+
  private:
-  DocGroup(TabGroup* aTabGroup, const nsACString& aKey);
+  DocGroup(TabGroup* aTabGroup, const nsACString& aKey,
+           const nsID& aAgentClusterId);
   ~DocGroup();
 
   void FlushIframePostMessageQueue();
@@ -126,6 +129,9 @@ class DocGroup final {
 
   RefPtr<mozilla::ThrottledEventQueue> mIframePostMessageQueue;
   nsTHashtable<nsUint64HashKey> mIframesUsedPostMessageQueue;
+
+  // Each DocGroup has a persisted agent cluster ID.
+  const nsID mAgentClusterId;
 };
 
 }  // namespace dom

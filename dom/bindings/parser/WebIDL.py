@@ -1101,6 +1101,13 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
 
         for mixin in sorted(self.includedMixins,
                             key=lambda x: x.identifier.name):
+            for mixinMember in mixin.members:
+                for member in self.members:
+                    if mixinMember.identifier.name == member.identifier.name:
+                        raise WebIDLError(
+                            "Multiple definitions of %s on %s coming from 'includes' statements" %
+                            (member.identifier.name, self),
+                            [mixinMember.location, member.location])
             self.members.extend(mixin.members)
 
         for ancestor in self.getInheritedInterfaces():

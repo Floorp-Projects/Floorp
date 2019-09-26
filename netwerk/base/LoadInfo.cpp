@@ -265,17 +265,11 @@ LoadInfo::LoadInfo(
          aLoadingContext->OwnerDoc()->GetUpgradeInsecureRequests(true));
 
     if (nsContentUtils::IsUpgradableDisplayType(externalType)) {
-      nsCOMPtr<nsIURI> uri;
-      mLoadingPrincipal->GetURI(getter_AddRefs(uri));
-      if (uri) {
-        // Checking https not secure context as http://localhost can't be
-        // upgraded
-        if (uri->SchemeIs("https")) {
-          if (nsMixedContentBlocker::ShouldUpgradeMixedDisplayContent()) {
-            mBrowserUpgradeInsecureRequests = true;
-          } else {
-            mBrowserWouldUpgradeInsecureRequests = true;
-          }
+      if (mLoadingPrincipal->SchemeIs("https")) {
+        if (nsMixedContentBlocker::ShouldUpgradeMixedDisplayContent()) {
+          mBrowserUpgradeInsecureRequests = true;
+        } else {
+          mBrowserWouldUpgradeInsecureRequests = true;
         }
       }
     }

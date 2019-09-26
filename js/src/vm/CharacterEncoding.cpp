@@ -6,6 +6,7 @@
 
 #include "js/CharacterEncoding.h"
 
+#include "mozilla/Latin1.h"
 #include "mozilla/Range.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TextUtils.h"
@@ -18,7 +19,19 @@
 #include "util/Unicode.h"  // unicode::REPLACEMENT_CHARACTER
 #include "vm/JSContext.h"
 
+using mozilla::AsChars;
+using mozilla::AsciiValidUpTo;
+using mozilla::AsWritableChars;
+using mozilla::ConvertLatin1toUtf8Partial;
+using mozilla::ConvertUtf16toUtf8Partial;
 using mozilla::IsAscii;
+using mozilla::IsUtf8Latin1;
+using mozilla::LossyConvertUtf16toLatin1;
+using mozilla::MakeSpan;
+using mozilla::Span;
+using mozilla::Tie;
+using mozilla::Tuple;
+using mozilla::Unused;
 using mozilla::Utf8Unit;
 
 using namespace js;
@@ -32,9 +45,7 @@ Latin1CharsZ JS::LossyTwoByteCharsToNewLatin1CharsZ(
   if (!latin1) {
     return Latin1CharsZ();
   }
-  for (size_t i = 0; i < len; ++i) {
-    latin1[i] = static_cast<unsigned char>(tbchars[i]);
-  }
+  LossyConvertUtf16toLatin1(tbchars, AsWritableChars(MakeSpan(latin1, len)));
   latin1[len] = '\0';
   return Latin1CharsZ(latin1, len);
 }
@@ -83,84 +94,38 @@ JS_PUBLIC_API size_t JS::GetDeflatedUTF8StringLength(JSFlatString* s) {
                                              s->length());
 }
 
-template <typename CharT>
-static void DeflateStringToUTF8Buffer(const CharT* src, size_t srclen,
-                                      mozilla::RangedPtr<char> dst,
-                                      size_t* dstlenp = nullptr,
-                                      size_t* numcharsp = nullptr) {
-  size_t capacity = 0;
-  if (dstlenp) {
-    capacity = *dstlenp;
-    *dstlenp = 0;
+JS_PUBLIC_API size_t JS::DeflateStringToUTF8Buffer(JSFlatString* src,
+                                                   mozilla::Span<char> dst) {
+  JS::AutoCheckCannotGC nogc;
+  if (src->hasLatin1Chars()) {
+    auto source = AsChars(MakeSpan(src->latin1Chars(nogc), src->length()));
+    size_t read;
+    size_t written;
+    Tie(read, written) = ConvertLatin1toUtf8Partial(source, dst);
+    Unused << read;
+    return written;
   }
-  if (numcharsp) {
-    *numcharsp = 0;
-  }
-
-  while (srclen) {
-    uint32_t v;
-    char16_t c = *src++;
-    srclen--;
-    if (c >= TrailSurrogateMin && c <= TrailSurrogateMax) {
-      v = REPLACEMENT_CHARACTER;
-    } else if (c < LeadSurrogateMin || c > LeadSurrogateMax) {
-      v = c;
-    } else {
-      if (srclen < 1) {
-        v = REPLACEMENT_CHARACTER;
-      } else {
-        char16_t c2 = *src;
-        if (c2 < TrailSurrogateMin || c2 > TrailSurrogateMax) {
-          v = REPLACEMENT_CHARACTER;
-        } else {
-          src++;
-          srclen--;
-          v = ((c - LeadSurrogateMin) << 10) + (c2 - TrailSurrogateMin) +
-              NonBMPMin;
-        }
-      }
-    }
-
-    size_t utf8Len;
-    if (v < 0x0080) {
-      /* no encoding necessary - performance hack */
-      if (dstlenp && *dstlenp + 1 > capacity) {
-        return;
-      }
-      *dst++ = char(v);
-      utf8Len = 1;
-    } else {
-      uint8_t utf8buf[4];
-      utf8Len = OneUcs4ToUtf8Char(utf8buf, v);
-      if (dstlenp && *dstlenp + utf8Len > capacity) {
-        return;
-      }
-      for (size_t i = 0; i < utf8Len; i++) {
-        *dst++ = char(utf8buf[i]);
-      }
-    }
-
-    if (dstlenp) {
-      *dstlenp += utf8Len;
-    }
-    if (numcharsp) {
-      (*numcharsp)++;
-    }
-  }
+  auto source = MakeSpan(src->twoByteChars(nogc), src->length());
+  size_t read;
+  size_t written;
+  Tie(read, written) = ConvertUtf16toUtf8Partial(source, dst);
+  Unused << read;
+  return written;
 }
 
-JS_PUBLIC_API void JS::DeflateStringToUTF8Buffer(JSFlatString* src,
-                                                 mozilla::RangedPtr<char> dst,
-                                                 size_t* dstlenp,
-                                                 size_t* numcharsp) {
-  JS::AutoCheckCannotGC nogc;
-  return src->hasLatin1Chars()
-             ? ::DeflateStringToUTF8Buffer(src->latin1Chars(nogc),
-                                           src->length(), dst, dstlenp,
-                                           numcharsp)
-             : ::DeflateStringToUTF8Buffer(src->twoByteChars(nogc),
-                                           src->length(), dst, dstlenp,
-                                           numcharsp);
+template <typename CharT>
+void ConvertToUTF8(mozilla::Span<CharT> src, mozilla::Span<char> dst);
+
+template <>
+void ConvertToUTF8<const char16_t>(mozilla::Span<const char16_t> src,
+                                   mozilla::Span<char> dst) {
+  Unused << ConvertUtf16toUtf8Partial(src, dst);
+}
+
+template <>
+void ConvertToUTF8<const Latin1Char>(mozilla::Span<const Latin1Char> src,
+                                     mozilla::Span<char> dst) {
+  Unused << ConvertLatin1toUtf8Partial(AsChars(src), dst);
 }
 
 template <typename CharT>
@@ -182,8 +147,7 @@ UTF8CharsZ JS::CharsToNewUTF8CharsZ(JSContext* maybeCx,
   }
 
   /* Encode to UTF8. */
-  ::DeflateStringToUTF8Buffer(str, chars.length(),
-                              mozilla::RangedPtr<char>(utf8, len));
+  ::ConvertToUTF8(MakeSpan(str, chars.length()), MakeSpan(utf8, len));
   utf8[len] = '\0';
 
   return UTF8CharsZ(utf8, len);
@@ -517,15 +481,16 @@ static void UpdateSmallestEncodingForChar(char16_t c,
 }
 
 JS::SmallestEncoding JS::FindSmallestEncoding(UTF8Chars utf8) {
-  JS::SmallestEncoding encoding = JS::SmallestEncoding::ASCII;
-  auto onChar = [&encoding](char16_t c) -> LoopDisposition {
-    UpdateSmallestEncodingForChar(c, &encoding);
-    return encoding == JS::SmallestEncoding::UTF16 ? LoopDisposition::Break
-                                                   : LoopDisposition::Continue;
-  };
-  MOZ_ALWAYS_TRUE((InflateUTF8ToUTF16<OnUTF8Error::InsertReplacementCharacter>(
-      /* cx = */ nullptr, utf8, onChar)));
-  return encoding;
+  Span<unsigned char> unsignedSpan = utf8;
+  auto charSpan = AsChars(unsignedSpan);
+  size_t upTo = AsciiValidUpTo(charSpan);
+  if (upTo == charSpan.Length()) {
+    return SmallestEncoding::ASCII;
+  }
+  if (IsUtf8Latin1(charSpan.From(upTo))) {
+    return SmallestEncoding::Latin1;
+  }
+  return SmallestEncoding::UTF16;
 }
 
 Latin1CharsZ JS::UTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8,

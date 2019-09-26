@@ -281,6 +281,14 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
     return;
   }
 
+  if (IsDestroyed(aWindowId)) {
+    return;
+  }
+
+  if (mHandlingDeviceReset) {
+    return;
+  }
+
   bool render = false;
   PendingFrameInfo frame;
   bool hadSlowFrame;
@@ -302,18 +310,9 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
 
     MOZ_ASSERT(frameInfo.mDocFramesSeen == frameInfo.mDocFramesTotal);
     render = frameInfo.mFrameNeedsRender;
-    info->mIsRendering = true;
 
     frame = frameInfo;
     hadSlowFrame = info->mHadSlowFrame;
-  }
-
-  if (IsDestroyed(aWindowId)) {
-    return;
-  }
-
-  if (mHandlingDeviceReset) {
-    return;
   }
 
   UpdateAndRender(aWindowId, frame.mStartId, frame.mStartTime, render,
@@ -330,7 +329,6 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
     }
     WindowInfo* info = it->second;
     info->mPendingFrames.pop();
-    info->mIsRendering = false;
   }
 
   // The start time is from WebRenderBridgeParent::CompositeToTarget. From that
@@ -525,8 +523,8 @@ bool RenderThread::TooManyPendingFrames(wr::WindowId aWindowId) {
   if (info->PendingCount() > maxFrameCount) {
     return true;
   }
-  MOZ_ASSERT(info->PendingCount() >= info->RenderingCount());
-  return info->PendingCount() > info->RenderingCount();
+  // If there is no ongoing frame build, we accept a new frame.
+  return info->mPendingFrameBuild > 0;
 }
 
 bool RenderThread::IsDestroyed(wr::WindowId aWindowId) {
@@ -559,8 +557,21 @@ void RenderThread::IncPendingFrameCount(wr::WindowId aWindowId,
     MOZ_ASSERT(false);
     return;
   }
+  it->second->mPendingFrameBuild += aDocFrameCount;
   it->second->mPendingFrames.push(
       PendingFrameInfo{aStartTime, aStartId, 0, aDocFrameCount, false});
+}
+
+void RenderThread::DecPendingFrameBuildCount(wr::WindowId aWindowId) {
+  auto windows = mWindowInfos.Lock();
+  auto it = windows->find(AsUint64(aWindowId));
+  if (it == windows->end()) {
+    MOZ_ASSERT(false);
+    return;
+  }
+  WindowInfo* info = it->second;
+  MOZ_RELEASE_ASSERT(info->mPendingFrameBuild >= 1);
+  info->mPendingFrameBuild--;
 }
 
 void RenderThread::NotifySlowFrame(wr::WindowId aWindowId) {
@@ -944,11 +955,13 @@ void wr_notifier_wake_up(mozilla::wr::WrWindowId aWindowId) {
 }
 
 void wr_notifier_new_frame_ready(mozilla::wr::WrWindowId aWindowId) {
+  mozilla::wr::RenderThread::Get()->DecPendingFrameBuildCount(aWindowId);
   mozilla::wr::RenderThread::Get()->HandleFrameOneDoc(aWindowId,
                                                       /* aRender */ true);
 }
 
 void wr_notifier_nop_frame_done(mozilla::wr::WrWindowId aWindowId) {
+  mozilla::wr::RenderThread::Get()->DecPendingFrameBuildCount(aWindowId);
   mozilla::wr::RenderThread::Get()->HandleFrameOneDoc(aWindowId,
                                                       /* aRender */ false);
 }

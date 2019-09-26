@@ -139,4 +139,5 @@ class TipProvider extends UrlbarProvider {
     }
   }
   cancelQuery(context) {}
+  pickResult(result, details) {}
 }

@@ -23,6 +23,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SearchTelemetry: "resource:///modules/SearchTelemetry.jsm",
   Services: "resource://gre/modules/Services.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
+  clearTimeout: "resource://gre/modules/Timer.jsm",
 });
 
 // This pref is in seconds!
@@ -167,6 +168,8 @@ let URICountListener = {
   _domain24hrSet: new Set(),
   // A map to keep track of the URIs loaded from the restored tabs.
   _restoredURIsMap: new WeakMap(),
+  // Ongoing expiration timeouts.
+  _timeouts: new Set(),
 
   isHttpURI(uri) {
     // Only consider http(s) schemas.
@@ -293,9 +296,11 @@ let URICountListener = {
 
     this._domain24hrSet.add(baseDomain);
     if (gRecentVisitedOriginsExpiry) {
-      setTimeout(() => {
+      let timeoutId = setTimeout(() => {
         this._domain24hrSet.delete(baseDomain);
+        this._timeouts.remove(timeoutId);
       }, gRecentVisitedOriginsExpiry * 1000);
+      this._timeouts.add(timeoutId);
     }
   },
 
@@ -318,6 +323,8 @@ let URICountListener = {
    * Resets the number of unique domains visited in this session.
    */
   resetUniqueDomainsVisitedInPast24Hours() {
+    this._timeouts.forEach(timeoutId => clearTimeout(timeoutId));
+    this._timeouts.clear();
     this._domain24hrSet.clear();
   },
 

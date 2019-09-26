@@ -16,12 +16,12 @@ add_task(async function() {
     set: [["security.allow_unsafe_parent_loads", true]],
   });
 
-  // Run DevTools in a chrome frame temporarily, otherwise this test is intermittent.
-  // See Bug 1571421.
-  await pushPref("devtools.toolbox.content-frame", false);
-
   await addTab("about:blank");
   const [host, , doc] = await createHost("bottom", TEST_URI);
+
+  // Creating a host is not correctly waiting when DevTools run in content frame
+  // See Bug 1571421.
+  await wait(1000);
 
   const tree = new TreeWidget(doc.querySelector("div"), {
     defaultType: "store",

@@ -8,6 +8,7 @@
 #define js_CharacterEncoding_h
 
 #include "mozilla/Range.h"
+#include "mozilla/Span.h"
 
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
@@ -285,25 +286,23 @@ LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const ConstUTF8CharsZ& utf8,
 JS_PUBLIC_API size_t GetDeflatedUTF8StringLength(JSFlatString* s);
 
 /*
- * Note: Unlike this function, JS_EncodeStringToUTF8BufferPartial in jsapi.h
- * does not require flattening the string first. Consider using that function
- * instead of this one.
+ * Encode whole scalar values of |src| into |dst| as UTF-8 until |src| is
+ * exhausted or too little space is available in |dst| to fit the scalar
+ * value. Lone surrogates are converted to REPLACEMENT CHARACTER. Return
+ * the number of bytes of |dst| that were filled.
  *
- * Encode |src| as UTF8. The caller must either ensure |dst| has enough space
- * to encode the entire string or pass the length of the buffer as |dstlenp|,
- * in which case the function will encode characters from the string until
- * the buffer is exhausted. Does not write the null terminator.
+ * Use |JS_EncodeStringToUTF8BufferPartial| if your string isn't already
+ * flat.
  *
- * If |dstlenp| is provided, it will be updated to hold the number of bytes
- * written to the buffer. If |numcharsp| is provided, it will be updated to hold
- * the number of Unicode characters written to the buffer (which can be less
- * than the length of the string, if the buffer is exhausted before the string
- * is fully encoded).
+ * Given |JSString* str = JS_FORGET_STRING_FLATNESS(src)|,
+ * if |JS_StringHasLatin1Chars(str)|, then |src| is always fully converted
+ * if |dst.Length() >= JS_GetStringLength(str) * 2|. Otherwise |src| is
+ * always fully converted if |dst.Length() >= JS_GetStringLength(str) * 3|.
+ *
+ * The exact space required is always |GetDeflatedUTF8StringLength(str)|.
  */
-JS_PUBLIC_API void DeflateStringToUTF8Buffer(JSFlatString* src,
-                                             mozilla::RangedPtr<char> dst,
-                                             size_t* dstlenp = nullptr,
-                                             size_t* numcharsp = nullptr);
+JS_PUBLIC_API size_t DeflateStringToUTF8Buffer(JSFlatString* src,
+                                               mozilla::Span<char> dst);
 
 /*
  * The smallest character encoding capable of fully representing a particular

@@ -3293,13 +3293,8 @@ void nsPermissionManager::GetKeyForOrigin(const nsACString& aOrigin,
   nsCOMPtr<nsIPrincipal> dbgPrincipal;
   MOZ_ALWAYS_SUCCEEDS(
       GetPrincipalFromOrigin(aOrigin, getter_AddRefs(dbgPrincipal)));
-  nsCOMPtr<nsIURI> dbgUri;
-  MOZ_ALWAYS_SUCCEEDS(dbgPrincipal->GetURI(getter_AddRefs(dbgUri)));
-  nsAutoCString dbgScheme;
-  MOZ_ALWAYS_SUCCEEDS(dbgUri->GetScheme(dbgScheme));
-  MOZ_ASSERT(dbgScheme.EqualsLiteral("http") ||
-             dbgScheme.EqualsLiteral("https") ||
-             dbgScheme.EqualsLiteral("ftp"));
+  MOZ_ASSERT(dbgPrincipal->SchemeIs("http") ||
+             dbgPrincipal->SchemeIs("https") || dbgPrincipal->SchemeIs("ftp"));
   MOZ_ASSERT(dbgPrincipal->OriginAttributesRef() == attrs);
 #endif
 

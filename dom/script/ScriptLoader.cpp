@@ -351,16 +351,14 @@ bool ScriptLoader::IsAboutPageLoadingChromeURI(ScriptLoadRequest* aRequest) {
   if (!aRequest->TriggeringPrincipal()->GetIsContentPrincipal()) {
     return false;
   }
-
+  if (!aRequest->TriggeringPrincipal()->SchemeIs("about")) {
+    return false;
+  }
   // if the triggering uri is not of scheme about:, there is nothing to do
   nsCOMPtr<nsIURI> triggeringURI;
   nsresult rv =
       aRequest->TriggeringPrincipal()->GetURI(getter_AddRefs(triggeringURI));
   NS_ENSURE_SUCCESS(rv, false);
-
-  if (!triggeringURI->SchemeIs("about")) {
-    return false;
-  }
 
   // if the about: page is linkable from content, there is nothing to do
   nsCOMPtr<nsIAboutModule> aboutMod;

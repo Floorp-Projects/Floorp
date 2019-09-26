@@ -4,7 +4,10 @@ use std::ptr;
 
 use ffi;
 
-use error::{Result, lmdb_result};
+use error::{
+    lmdb_result,
+    Result,
+};
 
 /// A handle to an individual database in an environment.
 ///
@@ -15,20 +18,22 @@ pub struct Database {
 }
 
 impl Database {
-
     /// Opens a new database handle in the given transaction.
     ///
     /// Prefer using `Environment::open_db`, `Environment::create_db`, `TransactionExt::open_db`,
     /// or `RwTransaction::create_db`.
-    pub(crate) unsafe fn new(txn: *mut ffi::MDB_txn,
-                             name: Option<&str>,
-                             flags: c_uint)
-                             -> Result<Database> {
+    pub(crate) unsafe fn new(txn: *mut ffi::MDB_txn, name: Option<&str>, flags: c_uint) -> Result<Database> {
         let c_name = name.map(|n| CString::new(n).unwrap());
-        let name_ptr = if let Some(ref c_name) = c_name { c_name.as_ptr() } else { ptr::null() };
+        let name_ptr = if let Some(ref c_name) = c_name {
+            c_name.as_ptr()
+        } else {
+            ptr::null()
+        };
         let mut dbi: ffi::MDB_dbi = 0;
         lmdb_result(ffi::mdb_dbi_open(txn, name_ptr, flags, &mut dbi))?;
-        Ok(Database { dbi: dbi })
+        Ok(Database {
+            dbi,
+        })
     }
 
     pub(crate) fn freelist_db() -> Database {
@@ -41,6 +46,7 @@ impl Database {
     ///
     /// The caller **must** ensure that the handle is not used after the lifetime of the
     /// environment, or after the database has been closed.
+    #[allow(clippy::trivially_copy_pass_by_ref)]
     pub fn dbi(&self) -> ffi::MDB_dbi {
         self.dbi
     }

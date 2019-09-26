@@ -438,7 +438,10 @@ class JSONPoliciesProvider {
   }
 
   get hasPolicies() {
-    return this._policies !== null || this._failed;
+    return (
+      this._failed ||
+      (this._policies !== null && Object.keys(this._policies).length)
+    );
   }
 
   get policies() {
@@ -543,7 +546,7 @@ class WindowsGPOPoliciesProvider {
   }
 
   get hasPolicies() {
-    return this._policies !== null;
+    return this._policies !== null && Object.keys(this._policies).length;
   }
 
   get policies() {
@@ -576,7 +579,7 @@ class macOSPoliciesProvider {
   }
 
   get hasPolicies() {
-    return this._policies !== null;
+    return this._policies !== null && Object.keys(this._policies).length;
   }
 
   get policies() {

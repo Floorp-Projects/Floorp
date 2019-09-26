@@ -11,3 +11,5 @@ BROWSER_CHROME_MANIFESTS += [
 TESTING_JS_MODULES += [
     'EnterprisePolicyTesting.jsm',
 ]
+
+XPCSHELL_TESTS_MANIFESTS += ['xpcshell/xpcshell.ini']
