@@ -1145,12 +1145,6 @@ function handleRequest(req, res) {
     return;
   }
 
-  else if (u.pathname === "/proxy-session-counter") {
-    // Incremented with every newly created session on the proxy
-    res.end(proxy_session_count.toString());
-    return;
-  }
-
   res.setHeader('Content-Type', 'text/html');
   if (req.httpVersionMajor != 2) {
     res.setHeader('Connection', 'close');
@@ -1181,20 +1175,87 @@ server.on('connection', function(socket) {
   });
 });
 
+function makeid(length) {
+   var result           = '';
+   var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+   var charactersLength = characters.length;
+   for ( var i = 0; i < length; i++ ) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+   }
+   return result;
+}
 
-var proxy = http2_internal ? http2_internal.createSecureServer(options) : null;
-var proxy_session_count = 0;
-
-if (http2_internal) {
-  proxy.on('session', () => {
-    // Can be queried directly on the h2 server under "/proxy-session-counter"
-    ++proxy_session_count;
+let globalObjects = {}
+function startNewProxy() {
+  if (!http2_internal) {
+    throw new Error("http2_internal is null");
+  }
+  let myProxy = http2_internal ? http2_internal.createSecureServer(options) : null;
+  if (!myProxy) {
+    throw new Error("proxy creation failed");
+  }
+  setupProxy(myProxy);
+  return listen(myProxy).then(port => {
+    let serverId = makeid(6);
+    globalObjects[serverId] = myProxy;
+    return {name: serverId, port: port, success: true};
   });
+}
+
+function closeProxy(id) {
+  let proxy = globalObjects[id];
+  if (!proxy) {
+    return;
+  }
+  delete globalObjects[id];
+  proxy.closeSockets();
+  return new Promise(resolve => {
+    proxy.close(resolve);
+  });
+}
+
+function proxySessionCount(id) {
+  let proxy = globalObjects[id];
+  if (!proxy) {
+    return 0;
+  }
+  return proxy.proxy_session_count;
+}
+
+function setupProxy(proxy) {
+  if (!http2_internal) {
+    throw new Error("http2_internal is null");
+  }
+  if (!proxy) {
+    throw new Error("proxy is null");
+  }
+  proxy.proxy_session_count = 0;
+  proxy.on('session', () => {
+    ++proxy.proxy_session_count;
+  });
+
+  // We need to track active connections so we can forcefully close keep-alive
+  // connections when shutting down the proxy.
+  proxy.socketIndex = 0;
+  proxy.socketMap = {};
+  proxy.on('connection', function(socket) {
+    let index = proxy.socketIndex++;
+    proxy.socketMap[index] = socket;
+    socket.on('close', function() {
+        delete proxy.socketMap[index];
+    });
+  });
+  proxy.closeSockets = function() {
+    for (let i in proxy.socketMap) {
+      proxy.socketMap[i].destroy();
+    }
+  }
 
   proxy.on('stream', (stream, headers) => {
     if (headers[':method'] !== 'CONNECT') {
       // Only accept CONNECT requests
-      stream.close(http2.constants.NGHTTP2_REFUSED_STREAM);
+      stream.respond({ ':status': 405 });
+      stream.end();
       return;
     }
 
@@ -1238,7 +1299,8 @@ if (http2_internal) {
         socket.pipe(stream);
         stream.pipe(socket);
       } catch (exception) {
-        stream.close(http2.constants.NGHTTP2_STREAM_CLOSED);
+        console.log(exception);
+        stream.close(http2_internal.constants.NGHTTP2_STREAM_CLOSED);
       }
     });
     socket.on('error', (error) => {
@@ -1263,15 +1325,66 @@ const listen = (server, envport) => {
     }
   }
   return new Promise(resolve => {
-    server.listen(portSelection, "0.0.0.0", 200, () => {
+    server.listen(portSelection, "0.0.0.0", 2000, () => {
       resolve(server.address().port);
     });
   });
 }
 
+const http = require("http");
+let httpServer = http.createServer((req, res) => {
+  if (req.method != "POST") {
+    res.writeHead(405);
+    res.end('Unexpected method: ' + req.method);
+    return;
+  }
+
+  let code = "";
+  req.on('data', function receivePostData(chunk) {
+    code += chunk;
+  });
+  req.on('end', function finishPost() {
+    let output =  "";
+    let evalResult = null;
+    try {
+      evalResult = eval(code);
+
+      if (evalResult instanceof Promise) {
+        evalResult
+          .then(x => sendBackResponse(x))
+          .catch(e => sendBackResponse(undefined, e));
+        return;
+      }
+    } catch (e) {
+      sendBackResponse(undefined, e);
+      return;
+    }
+
+
+    function sendBackResponse(evalResult, e) {
+      let output = { result: evalResult, error: "", errorStack: ""};
+      if (e) {
+        output.error = e.toString();
+        output.errorStack = e.stack;
+      }
+      output = JSON.stringify(output);
+
+      res.setHeader('Content-Length', output.length);
+      res.setHeader('Content-Type', 'application/json');
+      res.writeHead(200);
+      res.write(output);
+      res.end("");
+    }
+
+    sendBackResponse(evalResult);
+  });
+
+  return;
+});
+
 Promise.all([
   listen(server, process.env.MOZHTTP2_PORT).then(port => serverPort = port),
-  listen(proxy, process.env.MOZHTTP2_PROXY_PORT)
-]).then(([serverPort, proxyPort]) => {
-  console.log(`HTTP2 server listening on ports ${serverPort},${proxyPort}`);
+  listen(httpServer, process.env.MOZNODE_EXEC_PORT)
+]).then(([serverPort, nodeExecPort]) => {
+  console.log(`HTTP2 server listening on ports ${serverPort},${nodeExecPort}`);
 });
