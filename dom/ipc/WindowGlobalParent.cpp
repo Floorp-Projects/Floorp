@@ -89,7 +89,7 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
 
   MOZ_DIAGNOSTIC_ASSERT(
       !mBrowsingContext->GetParent() ||
-          mBrowsingContext->GetEmbedderWindowGlobal(),
+          mBrowsingContext->GetEmbedderInnerWindowId(),
       "When creating a non-root WindowGlobalParent, the WindowGlobalParent "
       "for our embedder should've already been created.");
 
@@ -165,7 +165,8 @@ bool WindowGlobalParent::IsProcessRoot() {
     return true;
   }
 
-  auto* embedder = BrowsingContext()->GetEmbedderWindowGlobal();
+  RefPtr<WindowGlobalParent> embedder =
+      BrowsingContext()->GetEmbedderWindowGlobal();
   if (NS_WARN_IF(!embedder)) {
     return false;
   }
@@ -174,8 +175,7 @@ bool WindowGlobalParent::IsProcessRoot() {
 }
 
 mozilla::ipc::IPCResult WindowGlobalParent::RecvLoadURI(
-    dom::BrowsingContext* aTargetBC,
-    nsDocShellLoadState* aLoadState) {
+    dom::BrowsingContext* aTargetBC, nsDocShellLoadState* aLoadState) {
   if (!aTargetBC || aTargetBC->IsDiscarded()) {
     MOZ_LOG(
         BrowsingContext::GetLog(), LogLevel::Debug,
@@ -195,9 +195,8 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvLoadURI(
 
   WindowGlobalParent* wgp = aTargetBC->Canonical()->GetCurrentWindowGlobal();
   if (!wgp) {
-    MOZ_LOG(
-        BrowsingContext::GetLog(), LogLevel::Debug,
-        ("ParentIPC: Target BrowsingContext has no WindowGlobalParent"));
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
+            ("ParentIPC: Target BrowsingContext has no WindowGlobalParent"));
     return IPC_OK();
   }
 
@@ -301,13 +300,6 @@ already_AddRefed<JSWindowActorParent> WindowGlobalParent::GetActor(
 
 bool WindowGlobalParent::IsCurrentGlobal() {
   return CanSend() && mBrowsingContext->GetCurrentWindowGlobal() == this;
-}
-
-IPCResult WindowGlobalParent::RecvDidEmbedBrowsingContext(
-    dom::BrowsingContext* aContext) {
-  MOZ_ASSERT(aContext);
-  aContext->Canonical()->SetEmbedderWindowGlobal(this);
-  return IPC_OK();
 }
 
 already_AddRefed<Promise> WindowGlobalParent::ChangeFrameRemoteness(

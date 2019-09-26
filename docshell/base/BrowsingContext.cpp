@@ -259,9 +259,6 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
   // Notify the parent process of the embedding status. We don't need to do
   // this when clearing our embedder, as we're being destroyed either way.
   if (aEmbedder) {
-    nsCOMPtr<nsIDocShell> container =
-        do_QueryInterface(aEmbedder->OwnerDoc()->GetContainer());
-
     // If our embedder element is being mutated to a different embedder, and we
     // have a parent edge, bad things might be happening!
     //
@@ -276,7 +273,8 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
                             "cannot be in bfcache");
 
       RefPtr<BrowsingContext> kungFuDeathGrip(this);
-      RefPtr<BrowsingContext> newParent(container->GetBrowsingContext());
+      RefPtr<BrowsingContext> newParent(
+          aEmbedder->OwnerDoc()->GetBrowsingContext());
       mParent->mChildren.RemoveElement(this);
       if (newParent) {
         newParent->mChildren.AppendElement(this);
@@ -286,18 +284,9 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
 
     nsCOMPtr<nsPIDOMWindowInner> inner =
         do_QueryInterface(aEmbedder->GetOwnerGlobal());
-    if (inner) {
-      RefPtr<WindowGlobalChild> wgc = inner->GetWindowGlobalChild();
-
-      // If we're in-process, synchronously perform the update to ensure we
-      // don't get out of sync.
-      // XXX(nika): This is super gross, and I don't like it one bit.
-      if (RefPtr<WindowGlobalParent> wgp = wgc->GetParentActor()) {
-        Canonical()->SetEmbedderWindowGlobal(wgp);
-      } else {
-        wgc->SendDidEmbedBrowsingContext(this);
-      }
-    }
+    SetEmbedderInnerWindowId(inner ? inner->WindowID() : 0);
+  } else {
+    SetEmbedderInnerWindowId(0);
   }
 
   mEmbedderElement = aEmbedder;
@@ -1026,9 +1015,8 @@ bool BrowsingContext::Transaction::Validate(BrowsingContext* aBrowsingContext,
   return true;
 }
 
-bool BrowsingContext::Transaction::Validate(BrowsingContext* aBrowsingContext,
-                                            ContentParent* aSource,
-                                            uint64_t aEpoch) {
+bool BrowsingContext::Transaction::ValidateEpochs(
+    BrowsingContext* aBrowsingContext, uint64_t aEpoch) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsContentProcess(),
                         "Should only be called in content process");
 
@@ -1039,7 +1027,11 @@ bool BrowsingContext::Transaction::Validate(BrowsingContext* aBrowsingContext,
   }
 #include "mozilla/dom/BrowsingContextFieldList.h"
 
-  return Validate(aBrowsingContext, aSource);
+  // NOTE: We don't call MaySet in a content process for messages sent from over
+  // IPC. The message has already been validated in both the original sending
+  // process (to get good errors), and in the parent process (to enforce trust).
+  mValidated = true;
+  return true;
 }
 
 void BrowsingContext::Transaction::Apply(BrowsingContext* aBrowsingContext) {
@@ -1122,6 +1114,60 @@ void BrowsingContext::DidSetMuted() {
       win->RefreshMediaElementsVolume();
     }
   });
+}
+
+bool BrowsingContext::MaySetEmbedderInnerWindowId(const uint64_t& aValue,
+                                                  ContentParent* aSource) {
+  // Generally allow clearing this. We may want to be more precise about this
+  // check in the future.
+  if (aValue == 0) {
+    return true;
+  }
+
+  // If we don't have a specified source, we're the setting process. The window
+  // which we're setting this to must be in-process.
+  RefPtr<BrowsingContext> impliedParent;
+  if (!aSource) {
+    nsGlobalWindowInner* innerWindow =
+        nsGlobalWindowInner::GetInnerWindowWithId(aValue);
+    if (NS_WARN_IF(!innerWindow)) {
+      return false;
+    }
+
+    impliedParent = innerWindow->GetBrowsingContext();
+  }
+
+  // If in the parent process, double-check ownership and WindowGlobalParent as
+  // well.
+  if (XRE_IsParentProcess()) {
+    RefPtr<WindowGlobalParent> wgp =
+        WindowGlobalParent::GetByInnerWindowId(aValue);
+    if (NS_WARN_IF(!wgp)) {
+      return false;
+    }
+
+    // Deduce the implied parent from the WindowGlobalParent actor.
+    if (impliedParent) {
+      MOZ_ASSERT(impliedParent == wgp->BrowsingContext());
+    }
+    impliedParent = wgp->BrowsingContext();
+
+    // Double-check ownership if we aren't the setter.
+    if (aSource &&
+        !impliedParent->Canonical()->IsOwnedByProcess(aSource->ChildID()) &&
+        aSource->ChildID() !=
+            impliedParent->Canonical()->GetInFlightProcessId()) {
+      return false;
+    }
+  }
+
+  // If we would have an invalid implied parent, something has gone wrong.
+  MOZ_ASSERT(impliedParent);
+  if (NS_WARN_IF(mParent && mParent != impliedParent)) {
+    return false;
+  }
+
+  return true;
 }
 
 }  // namespace dom
