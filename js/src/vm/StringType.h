@@ -1316,6 +1316,8 @@ class LittleEndianChars {
     return (current[offset + 1] << 8) | current[offset];
   }
 
+  constexpr const uint8_t* get() { return current; }
+
  private:
   const uint8_t* current;
 };

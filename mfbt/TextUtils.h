@@ -13,6 +13,14 @@
 #include "mozilla/Latin1.h"
 #include "mozilla/TypeTraits.h"
 
+#ifdef MOZ_HAS_JSRUST
+// Can't include mozilla/Encoding.h here.
+extern "C" {
+// Declared as uint8_t instead of char to match declaration in another header.
+size_t encoding_ascii_valid_up_to(uint8_t const* buffer, size_t buffer_len);
+}
+#endif
+
 namespace mozilla {
 
 // See Utf8.h for IsUtf8() and conversions between UTF-8 and UTF-16.
@@ -107,6 +115,15 @@ constexpr bool IsAsciiNullTerminated(const Char* aChar) {
 }
 
 #if MOZ_HAS_JSRUST()
+/**
+ * Returns the index of the first non-ASCII byte or
+ * the length of the string if there are none.
+ */
+inline size_t AsciiValidUpTo(mozilla::Span<const char> aString) {
+  return encoding_ascii_valid_up_to(
+      reinterpret_cast<const uint8_t*>(aString.Elements()), aString.Length());
+}
+
 /**
  * Returns the index of the first unpaired surrogate or
  * the length of the string if there are none.
