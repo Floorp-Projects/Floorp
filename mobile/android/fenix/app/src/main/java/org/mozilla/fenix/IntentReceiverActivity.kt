@@ -13,8 +13,6 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mozilla.components.feature.intent.processing.TabIntentProcessor
 import mozilla.components.support.utils.Browsers
-import org.mozilla.fenix.customtabs.AuthCustomTabActivity
-import org.mozilla.fenix.customtabs.AuthCustomTabActivity.Companion.EXTRA_AUTH_CUSTOM_TAB
 import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
@@ -77,13 +75,7 @@ class IntentReceiverActivity : Activity() {
     private fun setIntentActivity(intent: Intent, tabIntentProcessor: TabIntentProcessor) {
         val openToBrowser = when {
             components.intentProcessors.externalAppIntentProcessors.any { it.matches(intent) } -> {
-                // TODO this needs to change: https://github.com/mozilla-mobile/fenix/issues/5225
-                val activityClass = if (intent.hasExtra(EXTRA_AUTH_CUSTOM_TAB)) {
-                    AuthCustomTabActivity::class
-                } else {
-                    ExternalAppBrowserActivity::class
-                }
-                intent.setClassName(applicationContext, activityClass.java.name)
+                intent.setClassName(applicationContext, ExternalAppBrowserActivity::class.java.name)
                 true
             }
             tabIntentProcessor.matches(intent) -> {

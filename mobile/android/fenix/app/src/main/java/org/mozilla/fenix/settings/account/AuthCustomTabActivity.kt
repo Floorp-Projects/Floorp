@@ -2,11 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.customtabs
+package org.mozilla.fenix.settings.account
 
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
+import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.ext.components
 
 /**
@@ -27,9 +28,5 @@ class AuthCustomTabActivity : ExternalAppBrowserActivity() {
         super.onResume()
         val accountManager = components.backgroundServices.accountManager
         accountManager.register(accountStateObserver, this, true)
-    }
-
-    companion object {
-        const val EXTRA_AUTH_CUSTOM_TAB = "support.customtabs.extra.AUTH"
     }
 }
