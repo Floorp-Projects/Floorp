@@ -154,6 +154,9 @@ class IDLObject(object):
     def isNamespace(self):
         return False
 
+    def isInterfaceMixin(self):
+        return False
+
     def isEnum(self):
         return False
 
@@ -715,6 +718,7 @@ class IDLInterfaceOrInterfaceMixinOrNamespace(IDLObjectWithScope, IDLExposureMix
             return "interface"
         if self.isNamespace():
             return "namespace"
+        assert self.isInterfaceMixin()
         return "interface mixin"
 
     def getExtendedAttribute(self, name):
@@ -771,6 +775,9 @@ class IDLInterfaceOrInterfaceMixinOrNamespace(IDLObjectWithScope, IDLExposureMix
                                   "larger exposure set than its container",
                                   [member.location, self.location])
 
+    def isExternal(self):
+        return False
+
 
 class IDLInterfaceMixin(IDLInterfaceOrInterfaceMixinOrNamespace):
     def __init__(self, location, parentScope, name, members, isKnownNonPartial):
@@ -784,6 +791,9 @@ class IDLInterfaceMixin(IDLInterfaceOrInterfaceMixinOrNamespace):
 
     def __str__(self):
         return "Interface mixin '%s'" % self.identifier.name
+
+    def isInterfaceMixin(self):
+        return True
 
     def finish(self, scope):
         if self._finished:
@@ -1486,9 +1496,6 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
             raise WebIDLError('Interface with an indexed getter does not have '
                               'an integer-typed "length" attribute',
                               [self.location, indexedGetter.location])
-
-    def isExternal(self):
-        return False
 
     def setCallback(self, value):
         self._callback = value
