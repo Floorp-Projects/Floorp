@@ -327,29 +327,3 @@ class TaskBuilder(object):
                 "source": self.source,
             },
         }
-
-
-def schedule_task(queue, taskId, task):
-    print("TASK", taskId)
-    print(json.dumps(task, indent=4, separators=(',', ': ')))
-
-    result = queue.createTask(taskId, task)
-    print("RESULT", taskId)
-    print(json.dumps(result))
-
-
-def schedule_task_graph(ordered_groups_of_tasks):
-    queue = taskcluster.Queue({'baseUrl': 'http://taskcluster/queue/v1'})
-    full_task_graph = {}
-
-    # TODO: Switch to async python to speed up submission
-    for group_of_tasks in ordered_groups_of_tasks:
-        for task_id, task_definition in group_of_tasks.items():
-            schedule_task(queue, task_id, task_definition)
-
-            full_task_graph[task_id] = {
-                # Some values of the task definition are automatically filled. Querying the task
-                # allows to have the full definition. This is needed to make Chain of Trust happy
-                'task': queue.task(task_id),
-            }
-    return full_task_graph

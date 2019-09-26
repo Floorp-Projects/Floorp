@@ -15,11 +15,7 @@ import taskcluster
 import sys
 
 from lib.build_config import components_version, components, generate_snapshot_timestamp
-from lib.tasks import TaskBuilder, schedule_task_graph
-from lib.util import (
-    populate_chain_of_trust_task_graph,
-    populate_chain_of_trust_required_but_unused_files
-)
+from lib.tasks import TaskBuilder
 
 
 REPO_URL = os.environ.get('MOBILE_HEAD_REPOSITORY')
@@ -297,51 +293,3 @@ def release(components, is_snapshot, is_staging):
             other_tasks[taskcluster.slugId()] = craft_function()
 
     return (build_tasks, wait_on_builds_tasks, sign_tasks, beetmover_tasks, other_tasks)
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Creates and submit a graph of tasks on Taskcluster.')
-
-    subparsers = parser.add_subparsers(dest='command')
-
-    subparsers.add_parser('pr')
-    subparsers.add_parser('push')
-    release_parser = subparsers.add_parser('release')
-
-    release_parser.add_argument(
-        '--snapshot', action='store_true', dest='is_snapshot',
-        help='Create snapshot artifacts and upload them onto the snapshot repository'
-    )
-    release_parser.add_argument(
-        '--staging', action='store_true', dest='is_staging',
-        help='Perform a staging build. Artifacts are uploaded on either '
-             'https://maven-default.stage.mozaws.net/ or https://maven-snapshots.stage.mozaws.net/'
-    )
-
-    result = parser.parse_args()
-
-    command = result.command
-
-    components = components()
-    if command == 'release':
-        components = [info for info in components if info['shouldPublish']]
-
-    if len(components) == 0:
-        print("Could not get module names from gradle")
-        sys.exit(2)
-
-    if command == 'pr':
-        ordered_groups_of_tasks = pr(components)
-    elif command == 'push':
-        ordered_groups_of_tasks = push(components)
-    elif command == 'release':
-        ordered_groups_of_tasks = release(
-            components, result.is_snapshot, result.is_staging
-        )
-    else:
-        raise Exception('Unsupported command "{}"'.format(command))
-
-    full_task_graph = schedule_task_graph(ordered_groups_of_tasks)
-
-    populate_chain_of_trust_task_graph(full_task_graph)
-    populate_chain_of_trust_required_but_unused_files()
