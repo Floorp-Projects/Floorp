@@ -422,7 +422,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
 // call for RequesetFxrOutput as soon as the compositor for this widget is
 // available.
 void nsWindow::CreateCompositor() {
-  // there's no super??
   nsWindowBase::CreateCompositor();
 
   if (mRequestFxrOutputPending) {

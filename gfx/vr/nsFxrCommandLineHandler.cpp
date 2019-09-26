@@ -9,6 +9,7 @@
 #endif
 
 #include "nsFxrCommandLineHandler.h"
+#include "FxRWindowManager.h"
 
 #include "nsICommandLine.h"
 #include "nsIWindowWatcher.h"
@@ -51,9 +52,12 @@ NS_IMPL_ISUPPORTS(nsFxrCommandLineHandler, nsICommandLineHandler)
 //       |                         |                  share texture handle to
 //       |                         |                  VRShMem and set signal
 //  CreateVRWindow returns         |                       |
-//  to host                        |                       |
+//  to host with relevant          |                       |
+//  return data from VRShMem       |                       |
+//       |                   Fx continues to run           |
+//       |                         |                  Fx continues to render
 //       |                         |                       |
-//
+//      ...                       ...                     ...
 
 NS_IMETHODIMP
 nsFxrCommandLineHandler::Handle(nsICommandLine* aCmdLine) {
@@ -77,6 +81,9 @@ nsFxrCommandLineHandler::Handle(nsICommandLine* aCmdLine) {
 
     MOZ_ASSERT(result == NS_OK);
 
+    nsPIDOMWindowOuter* newWindowOuter = nsPIDOMWindowOuter::From(newWindow);
+    FxRWindowManager::GetInstance()->AddWindow(newWindowOuter);
+
     // Send the window's HWND to vrhost through VRShMem
     mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
     if (shmem.JoinShMem()) {
@@ -84,8 +91,7 @@ nsFxrCommandLineHandler::Handle(nsICommandLine* aCmdLine) {
       shmem.PullWindowState(windowState);
 
       nsCOMPtr<nsIWidget> newWidget =
-          mozilla::widget::WidgetUtils::DOMWindowToWidget(
-              nsPIDOMWindowOuter::From(newWindow));
+          mozilla::widget::WidgetUtils::DOMWindowToWidget(newWindowOuter);
       HWND hwndWidget = (HWND)newWidget->GetNativeData(NS_NATIVE_WINDOW);
 
       // The CLH should populate these members first
@@ -100,7 +106,9 @@ nsFxrCommandLineHandler::Handle(nsICommandLine* aCmdLine) {
       // after output data is set in VRShMem
       newWidget->RequestFxrOutput();
     } else {
+#ifndef NIGHTLY_BUILD
       MOZ_CRASH("failed to start with --fxr");
+#endif
     }
   }
 

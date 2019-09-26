@@ -12,6 +12,7 @@
 #include "mozilla/gfx/Point.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/widget/WinCompositorWindowThread.h"
+#include "FxROutputHandler.h"
 #include "nsIWidget.h"
 
 class nsWindow;
@@ -105,6 +106,8 @@ class WinCompositorWidget : public CompositorWidget,
   }
 
   void RequestFxrOutput();
+  bool HasFxrOutputHandler() const { return mFxrHandler != nullptr; }
+  FxROutputHandler* GetFxrOutputHandler() const { return mFxrHandler.get(); }
 
  protected:
  private:
@@ -133,6 +136,8 @@ class WinCompositorWidget : public CompositorWidget,
   uint8_t* mLockedBackBufferData;
 
   bool mNotDeferEndRemoteDrawing;
+
+  UniquePtr<FxROutputHandler> mFxrHandler;
 };
 
 }  // namespace widget
