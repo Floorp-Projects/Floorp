@@ -398,6 +398,27 @@ ObjectBox::ObjectBox(JSObject* obj, TraceListNode* traceLink,
                      TraceListNode::NodeType type)
     : TraceListNode(obj, traceLink, type), emitLink(nullptr) {}
 
+bool BigIntLiteral::isZero() {
+  if (data_.is<BigIntBox*>()) {
+    return box()->value()->isZero();
+  }
+  return data_.as<BigIntCreationData>().isZero();
+}
+
+// Allocate an actual GC'd BigInt
+bool BigIntLiteral::publish(JSContext* cx, ParserSharedBase* parser) {
+  BigInt* bi = data_.as<BigIntCreationData>().createBigInt(cx);
+  if (!bi) {
+    return false;
+  }
+  BigIntBox* bigIntBox = parser->newBigIntBox(bi);
+  if (!bigIntBox) {
+    return false;
+  }
+  data_ = mozilla::AsVariant(bigIntBox);
+  return true;
+}
+
 FunctionBox* ObjectBox::asFunctionBox() {
   MOZ_ASSERT(isFunctionBox());
 
