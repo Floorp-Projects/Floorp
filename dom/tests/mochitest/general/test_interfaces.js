@@ -180,8 +180,6 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "BaseAudioContext", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "BatteryManager", insecureContext: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "BeforeUnloadEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "BiquadFilterNode", insecureContext: true },
