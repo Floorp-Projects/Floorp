@@ -19,6 +19,7 @@
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSetInlines.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/Unused.h"
 #include "mozilla/ViewportFrame.h"
 #include "mozilla/dom/ChildIterator.h"
@@ -2750,7 +2751,8 @@ bool RestyleManager::ProcessPostTraversal(Element* aElement,
   // XXXbholley: We should teach the frame constructor how to clear the dirty
   // descendants bit to avoid the traversal here.
   if (changeHint & nsChangeHint_ReconstructFrame) {
-    if (wasRestyled) {
+    if (wasRestyled &&
+        StaticPrefs::layout_css_scroll_anchoring_suppressions_enabled()) {
       const bool wasAbsPos =
           styleFrame &&
           styleFrame->StyleDisplay()->IsAbsolutelyPositionedStyle();
