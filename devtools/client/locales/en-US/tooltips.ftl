@@ -43,13 +43,13 @@ inactive-css-not-grid-or-flex-container-fix = Try adding <strong>display:grid</s
 
 inactive-css-not-grid-or-flex-container-or-multicol-container-fix = Try adding either <strong>display:grid</strong>, <strong>display:flex</strong>, or <strong>columns:2</strong>. { learn-more }
 
-inactive-css-not-grid-or-flex-item-fix = Try adding <strong>display:grid</strong>, <strong>display:flex</strong>, <strong>display:inline-grid</strong> or <strong>display:inline-flex</strong>. { learn-more }
+inactive-css-not-grid-or-flex-item-fix-2 = Try adding <strong>display:grid</strong>, <strong>display:flex</strong>, <strong>display:inline-grid</strong>, or <strong>display:inline-flex</strong>. { learn-more }
 
-inactive-css-not-grid-item-fix =Try adding <strong>display:grid</strong> or <strong>display:inline-grid</strong> to the item’s parent. { learn-more }
+inactive-css-not-grid-item-fix-2 =Try adding <strong>display:grid</strong> or <strong>display:inline-grid</strong> to the element’s parent. { learn-more }
 
 inactive-css-not-grid-container-fix = Try adding <strong>display:grid</strong> or <strong>display:inline-grid</strong>. { learn-more }
 
-inactive-css-not-flex-item-fix = Try adding <strong>display:flex</strong> or <strong>display:inline-flex</strong> to the item’s parent. { learn-more }
+inactive-css-not-flex-item-fix-2 = Try adding <strong>display:flex</strong> or <strong>display:inline-flex</strong> to the element’s parent. { learn-more }
 
 inactive-css-not-flex-container-fix = Try adding <strong>display:flex</strong> or <strong>display:inline-flex</strong>. { learn-more }
 
