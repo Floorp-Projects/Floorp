@@ -1338,6 +1338,11 @@ bool ImageBitmap::WriteStructuredClone(
   MOZ_ASSERT(aWriter);
   MOZ_ASSERT(aImageBitmap);
 
+  if (!aImageBitmap->mData) {
+    // A closed image cannot be cloned.
+    return false;
+  }
+
   const uint32_t picRectX = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.x);
   const uint32_t picRectY = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.y);
   const uint32_t picRectWidth =
