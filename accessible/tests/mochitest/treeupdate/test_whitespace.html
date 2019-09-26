@@ -135,6 +135,18 @@
       };
     }
 
+  function dontCreateMapWhiteSpace() {
+    const tree = { SECTION: [ { role: ROLE_TEXT_LEAF, name: "x" }, { TABLE: [ { ROW: [] }] } ] };
+    testAccessibleTree("container3", tree);
+
+    getNode("b").align = "Right";
+    document.body.offsetTop; // Flush layout.
+    window.windowUtils.advanceTimeAndRefresh(100);
+
+    testAccessibleTree("container3", tree);
+    window.windowUtils.restoreNormalRefresh();
+  }
+
     // //////////////////////////////////////////////////////////////////////////
     // Test
 
@@ -144,6 +156,8 @@
     var gQueue = null;
 
     function doTest() {
+      dontCreateMapWhiteSpace();
+
       gQueue = new eventQueue();
 
       gQueue.push(new removeImg());
@@ -174,6 +188,12 @@
        apply. -->
   <div id="container1"><img src="../moz.png">  <img id="img1" src="../moz.png">  <img src="../moz.png"></div>
   <div><a id="container2"></a> <a><img src="../moz.png"></a></div>
+
+  <div id="container3">
+    <div id="c3_inner" role="presentation">
+      x<map> </map><table id="b"><tr></tr></table>
+    </div>
+  </div>
 
   <div id="eventdump"></div>
 </body>
