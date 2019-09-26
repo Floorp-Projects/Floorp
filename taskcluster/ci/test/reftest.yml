@@ -50,10 +50,7 @@ crashtest:
             android-em-7.*: 1
             default: 1
     e10s: true
-    max-run-time:
-        by-test-platform:
-            android-em.*: 7200
-            default: 3600
+    max-run-time: 3600
     tier:
         by-test-platform:
             windows10-aarch64.*: 2
@@ -81,7 +78,6 @@ jsreftest:
             default: 3
     max-run-time:
         by-test-platform:
-            android-em.*: 7200
             windows10-64-ccov/debug: 7200
             macosx.*64-ccov/debug: 7200
             linux.*64-ccov/debug: 7200
@@ -115,7 +111,6 @@ reftest:
     e10s: true
     max-run-time:
         by-test-platform:
-            android-em.*: 7200
             windows7-32-mingwclang/debug: 5400
             windows10-64-ccov/debug: 5400
             windows10-64-asan/opt: 5400

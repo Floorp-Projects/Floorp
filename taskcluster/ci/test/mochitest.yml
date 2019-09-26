@@ -60,10 +60,7 @@ mochitest:
             macosx.*64-ccov/debug: 10
             default: 5
     e10s: true
-    max-run-time:
-        by-test-platform:
-            android-em.*: 7200
-            default: 5400
+    max-run-time: 5400
     allow-software-gl-layers: false
     mozharness:
         mochitest-flavor: plain
@@ -170,29 +167,17 @@ mochitest-chrome:
             default: default
     chunks:
         by-test-platform:
-            android-em-7.*: 1
             .*-ccov/.*: 3
             .*-qr/.*: 3
             .*-asan/opt: 3
             (linux64|windows.*-..|macosx10..)/debug: 3
             windows10-aarch64/.*: 3
             default: 2
-    max-run-time:
-        by-test-platform:
-            android-em.*: 7200
-            default: 3600
+    max-run-time: 3600
     e10s: false
     mozharness:
         mochitest-flavor: chrome
-        extra-options:
-            by-test-platform:
-                android-em.*:
-                    - --test-suite=mochitest-chrome
-                default: []
-        chunked:
-            by-test-platform:
-                android-em.*: false
-                default: true
+        chunked: true
 
 mochitest-devtools-chrome:
     description: "Mochitest devtools-chrome run"
