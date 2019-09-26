@@ -312,7 +312,7 @@ void ReportingHeader::ReportingFromChannel(nsIHttpChannel* aChannel) {
         return nullptr;
       }
 
-      ReportingEndpoint endpoint;
+      RootedDictionary<ReportingEndpoint> endpoint(cx);
       if (!endpoint.Init(cx, element)) {
         LogToConsoleIncompleteEndpoint(aChannel, aURI, groupName);
         continue;
