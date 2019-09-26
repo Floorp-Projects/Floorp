@@ -63,13 +63,6 @@ types.addDictType("netevent.timings", {
   timings: "netevent.timings.data",
   totalTime: "number",
   offsets: "netevent.timings.data",
-  serverTimings: "array:netevent.timings.serverTiming",
-});
-
-types.addDictType("netevent.timings.serverTiming", {
-  name: "string",
-  description: "string",
-  duration: "number",
 });
 
 // See NetworkHelper.parseCertificateInfo for more details
