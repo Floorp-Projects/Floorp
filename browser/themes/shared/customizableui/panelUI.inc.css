@@ -1804,7 +1804,6 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 
 /* What's New panel */
 #customizationui-widget-multiview #PanelUI-whatsNew {
-  min-width: @menuPanelWidth@;
   max-width: @menuPanelWidth@;
 }
 
@@ -1845,28 +1844,12 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   color: white;
 }
 
-#customizationui-widget-multiview #PanelUI-whatsNew-content {
-  height: 586px;
+panelview[mainview] #PanelUI-whatsNew-content {
+  height: 43em;
 }
 
-#PanelUI-whatsNew-title {
-  display: none;
-}
-
-/**
- * The Applications Menu container has some extra padding that does not
- * exist when the What's New dropdown is shown directly from the toolbar
- */
-#PanelUI-whatsNew-content {
-  margin-top: -6px;
-}
-
-#customizationui-widget-multiview #PanelUI-whatsNew-content {
-  margin: 0;
-}
-
-#customizationui-widget-multiview #PanelUI-whatsNew-title {
-  display: flex;
+#PanelUI-whatsNew .panel-subview-body {
+  padding-top: 0;
 }
 
 #PanelUI-whatsNew .whatsNew-message {
