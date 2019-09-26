@@ -5,4 +5,4 @@ authors = ["fuzzing@mozilla.com"]
 
 [dependencies]
 libc = "0.2"
-rkv = "0.9.6"
+rkv = "0.10.2"

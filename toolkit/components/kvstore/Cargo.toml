@@ -8,12 +8,12 @@ atomic_refcell = "0.1"
 crossbeam-utils = "0.6.3"
 lazy_static = "1"
 libc = "0.2"
-lmdb-rkv = "0.11.2"
+lmdb-rkv = "0.12.3"
 log = "0.4"
 moz_task = { path = "../../../xpcom/rust/moz_task" }
 nserror = { path = "../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../xpcom/rust/nsstring" }
-rkv = "0.9.6"
+rkv = "0.10.2"
 storage_variant = { path = "../../../storage/variant" }
 xpcom = { path = "../../../xpcom/rust/xpcom" }
 tempfile = "3"
