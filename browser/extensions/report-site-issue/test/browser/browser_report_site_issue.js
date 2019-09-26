@@ -4,27 +4,48 @@ async function clickToReportAndAwaitReportTabLoad() {
   await openPageActions();
   await isPanelItemEnabled();
 
-  let screenshotPromise;
-  let newTabPromise = new Promise(resolve => {
+  // click on "report site issue" and wait for the new tab to open
+  const tab = await new Promise(resolve => {
     gBrowser.tabContainer.addEventListener(
       "TabOpen",
       event => {
-        let tab = event.target;
-        screenshotPromise = BrowserTestUtils.waitForContentEvent(
-          tab.linkedBrowser,
-          "ScreenshotReceived",
-          false,
-          null,
-          true
-        );
-        resolve(tab);
+        resolve(event.target);
       },
       { once: true }
     );
+    document.getElementById(WC_PAGE_ACTION_PANEL_ID).click();
   });
-  document.getElementById(WC_PAGE_ACTION_PANEL_ID).click();
-  const tab = await newTabPromise;
-  await screenshotPromise;
+
+  // wait for the new tab to switch to its final location
+  await new Promise(resolve => {
+    const progressListener = {
+      onLocationChange(browser) {
+        // Only interested in location changes on our browser.
+        if (browser != tab.linkedBrowser) {
+          return;
+        }
+
+        // Check that new location is the URL we want.
+        if (browser.currentURI.spec === "about:blank") {
+          return;
+        }
+
+        gBrowser.removeTabsProgressListener(progressListener);
+        TestUtils.executeSoon(() => resolve());
+      },
+    };
+    gBrowser.addTabsProgressListener(progressListener);
+  });
+
+  // wait for the new tab to acknowledge that it received a screenshot
+  await BrowserTestUtils.waitForContentEvent(
+    gBrowser.selectedBrowser,
+    "ScreenshotReceived",
+    false,
+    null,
+    true
+  );
+
   return tab;
 }
 

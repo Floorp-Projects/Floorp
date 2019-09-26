@@ -14,10 +14,6 @@ const TEST_URI =
 const dpr = "--dpr 1";
 
 add_task(async function() {
-  // Run DevTools in a chrome frame temporarily, otherwise this test is intermittent.
-  // See Bug 1571421.
-  await pushPref("devtools.toolbox.content-frame", false);
-
   const hud = await openNewTabAndConsole(TEST_URI);
   ok(hud, "web console opened");
 
@@ -207,36 +203,54 @@ async function getImageSizeFromClipboard() {
       .encodeImage(image, flavor);
   }
 
-  let url;
-  if (image instanceof Ci.nsIInputStream) {
-    const binaryStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
-      Ci.nsIBinaryInputStream
-    );
-    binaryStream.setInputStream(image);
-    const available = binaryStream.available();
-    const buffer = new ArrayBuffer(available);
-    is(
-      binaryStream.readArrayBuffer(available, buffer),
-      available,
-      "Read expected amount of data"
-    );
-    url = URL.createObjectURL(new Blob([buffer], { type: flavor }));
-  } else {
+  if (!(image instanceof Ci.nsIInputStream)) {
     throw new Error("Unable to read image data");
   }
 
-  const img = document.createElementNS("http://www.w3.org/1999/xhtml", "img");
+  const binaryStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
+    Ci.nsIBinaryInputStream
+  );
+  binaryStream.setInputStream(image);
+  const available = binaryStream.available();
+  const buffer = new ArrayBuffer(available);
+  is(
+    binaryStream.readArrayBuffer(available, buffer),
+    available,
+    "Read expected amount of data"
+  );
 
-  const loaded = once(img, "load");
+  // We are going to load the image in the content page to measure its size.
+  // We don't want to insert the image directly in the browser's document
+  // (which is value of the global `document` here). Doing so might push the
+  // toolbox upwards, shrink the content page and fail the fullpage screenshot
+  // test.
+  return ContentTask.spawn(gBrowser.selectedBrowser, buffer, async function(
+    _buffer
+  ) {
+    const img = content.document.createElement("img");
+    const loaded = new Promise(r => {
+      img.addEventListener("load", r, { once: true });
+    });
 
-  img.src = url;
-  document.documentElement.appendChild(img);
-  await loaded;
-  img.remove();
-  URL.revokeObjectURL(url);
+    // Build a URL from the buffer passed to the ContentTask
+    const url = content.URL.createObjectURL(
+      new Blob([_buffer], { type: "image/png" })
+    );
 
-  return {
-    width: img.width,
-    height: img.height,
-  };
+    // Load the image
+    img.src = url;
+    content.document.documentElement.appendChild(img);
+
+    info("Waiting for the clipboard image to load in the content page");
+    await loaded;
+
+    // Remove the image and revoke the URL.
+    img.remove();
+    content.URL.revokeObjectURL(url);
+
+    return {
+      width: img.width,
+      height: img.height,
+    };
+  });
 }

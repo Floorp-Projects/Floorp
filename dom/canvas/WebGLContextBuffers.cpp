@@ -266,6 +266,13 @@ void WebGLContext::BufferData(GLenum target, WebGLsizeiptr size, GLenum usage) {
   if (!checkedSize.isValid())
     return ErrorOutOfMemory("size too large for platform.");
 
+#if defined(XP_MACOSX)
+  // bug 1573048
+  if (gl->WorkAroundDriverBugs() && size > 1200000000) {
+    return ErrorOutOfMemory("Allocations larger than 1200000000 fail on macOS.");
+  }
+#endif
+
   const UniqueBuffer zeroBuffer(calloc(checkedSize.value(), 1u));
   if (!zeroBuffer) return ErrorOutOfMemory("Failed to allocate zeros.");
 

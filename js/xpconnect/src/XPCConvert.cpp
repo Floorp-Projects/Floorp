@@ -714,8 +714,9 @@ bool XPCConvert::JSData2Native(JSContext* cx, void* d, HandleValue s,
       size_t utf8Length = JS::GetDeflatedUTF8StringLength(flat);
       rs->SetLength(utf8Length);
 
-      JS::DeflateStringToUTF8Buffer(
-          flat, mozilla::RangedPtr<char>(rs->BeginWriting(), utf8Length));
+      mozilla::DebugOnly<size_t> written = JS::DeflateStringToUTF8Buffer(
+          flat, mozilla::MakeSpan(rs->BeginWriting(), utf8Length));
+      MOZ_ASSERT(written == utf8Length);
 
       return true;
     }

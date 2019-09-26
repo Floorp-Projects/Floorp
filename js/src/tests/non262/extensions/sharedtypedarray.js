@@ -169,7 +169,7 @@ function testSharedTypedArrayMethods() {
 
 function testClone1() {
     var sab1 = b;
-    var blob = serialize(sab1, []);
+    var blob = serialize(sab1, [], {SharedArrayBuffer: 'allow'});
     var sab2 = deserialize(blob);
     if (typeof sharedAddress != "undefined")
 	assertEq(sharedAddress(sab1), sharedAddress(sab2));
@@ -178,7 +178,7 @@ function testClone1() {
 function testClone2() {
     var sab = b;
     var ia1 = new Int32Array(sab);
-    var blob = serialize(ia1, []);
+    var blob = serialize(ia1, [], {SharedArrayBuffer: 'allow'});
     var ia2 = deserialize(blob);
     assertEq(ia1.length, ia2.length);
     assertEq(ia1.buffer instanceof SharedArrayBuffer, true);
@@ -189,7 +189,7 @@ function testClone2() {
 }
 
 // Serializing a SharedArrayBuffer should fail if we've set its flag to 'deny' or if
-// the flag is bogus.
+// the flag is bogus or if the flag is not set to 'allow' explicitly
 
 function testNoClone() {
     // This just tests the API in serialize()
@@ -197,6 +197,9 @@ function testNoClone() {
 
     // This tests the actual cloning functionality - should fail
     assertThrowsInstanceOf(() => serialize(b, [], {SharedArrayBuffer: 'deny'}), TypeError);
+
+    // This tests that cloning a SharedArrayBuffer is not allowed by default
+    assertThrowsInstanceOf(() => serialize(b), TypeError);
 
     // Ditto - should succeed
     assertEq(typeof serialize(b, [], {SharedArrayBuffer: 'allow'}), "object");
@@ -206,7 +209,7 @@ function testRedundantTransfer() {
     // Throws TypeError in the shell, DataCloneError in the browser.
     assertThrowsInstanceOf(() => {
 	var sab1 = b;
-	var blob = serialize(sab1, [sab1]);
+	var blob = serialize(sab1, [sab1], {SharedArrayBuffer: 'allow'});
     }, TypeError);
 }
 

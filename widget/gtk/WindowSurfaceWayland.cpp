@@ -982,9 +982,6 @@ static void WaylandBufferDelayCommitHandler(WindowSurfaceWayland** aSurface) {
 }
 
 void WindowSurfaceWayland::CommitWaylandBuffer() {
-  MOZ_ASSERT(!mWaylandBuffer->IsAttached(),
-             "We can't draw to attached wayland buffer!");
-
   LOGWAYLAND(("WindowSurfaceWayland::CommitWaylandBuffer [%p]\n", (void*)this));
   LOGWAYLAND(
       ("   mDrawToWaylandBufferDirectly = %d\n", mDrawToWaylandBufferDirectly));
@@ -1007,6 +1004,9 @@ void WindowSurfaceWayland::CommitWaylandBuffer() {
   if (!mBufferPendingCommit) {
     return;
   }
+
+  MOZ_ASSERT(!mWaylandBuffer->IsAttached(),
+             "We can't draw to attached wayland buffer!");
 
   wl_surface* waylandSurface = mWindow->GetWaylandSurface();
   if (!waylandSurface) {

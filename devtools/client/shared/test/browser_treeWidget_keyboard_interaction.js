@@ -16,18 +16,19 @@ add_task(async function() {
     set: [["security.allow_unsafe_parent_loads", true]],
   });
 
-  // Run DevTools in a chrome frame temporarily, otherwise this test is intermittent.
-  // See Bug 1571421.
-  await pushPref("devtools.toolbox.content-frame", false);
-
   await addTab("about:blank");
   const [host, win, doc] = await createHost("bottom", TEST_URI);
+
+  // Creating a host is not correctly waiting when DevTools run in content frame
+  // See Bug 1571421.
+  await wait(1000);
 
   const tree = new TreeWidget(doc.querySelector("div"), {
     defaultType: "store",
   });
 
   populateTree(tree, doc);
+
   await testKeyboardInteraction(tree, win);
 
   tree.destroy();
@@ -126,7 +127,13 @@ async function testKeyboardInteraction(tree, win) {
   const clicked = once(node, "click");
   tree.once("select", pass);
   click(node);
-  await Promise.all([event.promise, clicked]);
+
+  info("Wait for the click event");
+  await clicked;
+
+  info("Wait for the select event on tree");
+  await event.promise;
+
   node = tree.root.children.firstChild.nextSibling.firstChild;
   // node should not have selected class
   ok(

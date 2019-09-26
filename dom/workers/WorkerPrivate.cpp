@@ -2111,12 +2111,12 @@ bool IsNewWorkerSecureContext(const WorkerPrivate* const aParent,
 
 }  // namespace
 
-WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
-                             const nsAString& aScriptURL, bool aIsChromeWorker,
-                             WorkerType aWorkerType,
-                             const nsAString& aWorkerName,
-                             const nsACString& aServiceWorkerScope,
-                             WorkerLoadInfo& aLoadInfo, nsString&& aId)
+WorkerPrivate::WorkerPrivate(
+    WorkerPrivate* aParent, const nsAString& aScriptURL, bool aIsChromeWorker,
+    WorkerType aWorkerType, const nsAString& aWorkerName,
+    const nsACString& aServiceWorkerScope, WorkerLoadInfo& aLoadInfo,
+    nsString&& aId, const nsID& aAgentClusterId,
+    const nsILoadInfo::CrossOriginOpenerPolicy aAgentClusterOpenerPolicy)
     : mMutex("WorkerPrivate Mutex"),
       mCondVar(mMutex, "WorkerPrivate CondVar"),
       mParent(aParent),
@@ -2137,6 +2137,7 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
       mLoadingWorkerScript(false),
       mCreationTimeStamp(TimeStamp::Now()),
       mCreationTimeHighRes((double)PR_Now() / PR_USEC_PER_MSEC),
+      mAgentClusterId(aAgentClusterId),
       mWorkerThreadAccessible(aParent),
       mPostSyncLoopOperations(0),
       mParentWindowPaused(false),
@@ -2152,7 +2153,8 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
       mDebuggerReady(true),
       mIsInAutomation(false),
       mPerformanceCounter(nullptr),
-      mId(std::move(aId)) {
+      mId(std::move(aId)),
+      mAgentClusterOpenerPolicy(aAgentClusterOpenerPolicy) {
   MOZ_ASSERT_IF(!IsDedicatedWorker(), NS_IsMainThread());
 
   if (aParent) {
@@ -2308,9 +2310,42 @@ already_AddRefed<WorkerPrivate> WorkerPrivate::Constructor(
 
   MOZ_ASSERT(runtimeService);
 
-  RefPtr<WorkerPrivate> worker = new WorkerPrivate(
-      parent, aScriptURL, aIsChromeWorker, aWorkerType, aWorkerName,
-      aServiceWorkerScope, *aLoadInfo, std::move(aId));
+  nsILoadInfo::CrossOriginOpenerPolicy agentClusterCoop =
+      nsILoadInfo::OPENER_POLICY_NULL;
+  nsID agentClusterId;
+  if (parent) {
+    MOZ_ASSERT(aWorkerType == WorkerType::WorkerTypeDedicated);
+
+    agentClusterId = parent->AgentClusterId();
+    agentClusterCoop = parent->AgentClusterOpenerPolicy();
+  } else {
+    AssertIsOnMainThread();
+
+    if (aWorkerType == WorkerType::WorkerTypeService ||
+        aWorkerType == WorkerType::WorkerTypeShared) {
+      agentClusterId = aLoadInfo->mAgentClusterId;
+    } else if (aLoadInfo->mWindow) {
+      Document* doc = aLoadInfo->mWindow->GetExtantDoc();
+      MOZ_DIAGNOSTIC_ASSERT(doc);
+      RefPtr<DocGroup> docGroup = doc->GetDocGroup();
+
+      agentClusterId = docGroup ? docGroup->AgentClusterId()
+                                : nsContentUtils::GenerateUUID();
+
+      BrowsingContext* bc = aLoadInfo->mWindow->GetBrowsingContext();
+      MOZ_DIAGNOSTIC_ASSERT(bc);
+      agentClusterCoop = bc->Top()->GetOpenerPolicy();
+    } else {
+      // If the window object was failed to be set into the WorkerLoadInfo, we
+      // make the worker into another agent cluster group instead of failures.
+      agentClusterId = nsContentUtils::GenerateUUID();
+    }
+  }
+
+  RefPtr<WorkerPrivate> worker =
+      new WorkerPrivate(parent, aScriptURL, aIsChromeWorker, aWorkerType,
+                        aWorkerName, aServiceWorkerScope, *aLoadInfo,
+                        std::move(aId), agentClusterId, agentClusterCoop);
 
   // Gecko contexts always have an explicitly-set default locale (set by
   // XPJSRuntime::Initialize for the main thread, set by
@@ -2956,6 +2991,8 @@ bool WorkerPrivate::EnsureClientSource() {
   data->mClientSource = ClientManager::CreateSource(
       type, mWorkerHybridEventTarget, GetPrincipalInfo());
   MOZ_DIAGNOSTIC_ASSERT(data->mClientSource);
+
+  data->mClientSource->SetAgentClusterId(mAgentClusterId);
 
   if (data->mFrozen) {
     data->mClientSource->Freeze();
@@ -3905,7 +3942,11 @@ void WorkerPrivate::PostMessageToParent(
         MarkerTracingType::START);
   }
 
-  runnable->Write(aCx, aMessage, transferable, JS::CloneDataPolicy(), aRv);
+  JS::CloneDataPolicy clonePolicy;
+  if (CanShareMemory(AgentClusterId())) {
+    clonePolicy.allowSharedMemory();
+  }
+  runnable->Write(aCx, aMessage, transferable, clonePolicy, aRv);
 
   if (isTimelineRecording) {
     end = MakeUnique<WorkerTimelineMarker>(
@@ -4924,6 +4965,26 @@ const nsAString& WorkerPrivate::Id() {
   MOZ_ASSERT(!mId.IsEmpty());
 
   return mId;
+}
+
+bool WorkerPrivate::CanShareMemory(const nsID& aAgentClusterId) {
+  AssertIsOnWorkerThread();
+
+  if (!StaticPrefs::dom_postMessage_sharedArrayBuffer_withCOOP_COEP()) {
+    return false;
+  }
+
+  Maybe<ClientInfo> clientInfo = GetClientInfo();
+  MOZ_DIAGNOSTIC_ASSERT(clientInfo.isSome());
+
+  // Ensure they are on the same agent cluster
+  if (clientInfo->AgentClusterId().isNothing() ||
+      !clientInfo->AgentClusterId()->Equals(aAgentClusterId)) {
+    return false;
+  }
+
+  return AgentClusterOpenerPolicy() ==
+         nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP;
 }
 
 NS_IMPL_ADDREF(WorkerPrivate::EventTarget)

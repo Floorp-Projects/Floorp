@@ -1758,14 +1758,21 @@ var Scratchpad = {
 
         // Display the deprecation warning for Scratchpad.
         const deprecationWarning = document.createElement("a");
+        deprecationWarning.append(
+          this.strings.GetStringFromName("scratchpad.deprecated.label")
+        );
         deprecationWarning.setAttribute(
           "href",
           "https://developer.mozilla.org/docs/Tools/Deprecated_tools#Scratchpad"
         );
-        deprecationWarning.setAttribute("target", "_blank");
-        deprecationWarning.append(
-          this.strings.GetStringFromName("scratchpad.deprecated.label")
-        );
+        // We can't link to a content page from Chrome (See Bug 1553804), so we're
+        // handling the link opening with openDocLink.
+        deprecationWarning.addEventListener("click", e => {
+          e.preventDefault();
+          openDocLink(e.target.getAttribute("href"), {
+            relatedToCurrent: true,
+          });
+        });
 
         const deprecationFragment = document.createDocumentFragment();
         deprecationFragment.append(deprecationWarning);

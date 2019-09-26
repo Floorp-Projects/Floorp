@@ -10,8 +10,11 @@
   border-width: 0;
   border-bottom-width: 1px;
   border-style: solid;
-  height: 24px;
-  line-height: 24px;
+  /* Reserve 1px for the border */
+  height: calc(var(--theme-toolbar-height) + 1px);
+  /* Line-height based vertical centering technique used in panels
+     which don't use Flexbox (mostly XUL panels). */
+  line-height: var(--theme-toolbar-height);
   box-sizing: border-box;
 }
 

@@ -572,6 +572,40 @@ nsresult AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint) {
     return NS_ERROR_FAILURE;
   }
 
+  // If long tap point isn't selectable frame for caret and frame selection
+  // can find a better frame for caret, we don't select a word.
+  // See https://webcompat.com/issues/15953
+  nsIFrame::ContentOffsets offsets =
+      ptFrame->GetContentOffsetsFromPoint(ptInFrame, nsIFrame::SKIP_HIDDEN);
+  if (offsets.content) {
+    RefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
+    if (frameSelection) {
+      int32_t offset;
+      nsIFrame* theFrame = frameSelection->GetFrameForNodeOffset(
+          offsets.content, offsets.offset, offsets.associate, &offset);
+      if (theFrame && theFrame != ptFrame) {
+        SetSelectionDragState(true);
+        frameSelection->HandleClick(offsets.content, offsets.StartOffset(),
+                                    offsets.EndOffset(), false, false,
+                                    offsets.associate);
+        SetSelectionDragState(false);
+        ClearMaintainedSelection();
+
+        if (StaticPrefs::
+                layout_accessiblecaret_caret_shown_when_long_tapping_on_empty_content()) {
+          mFirstCaret->SetAppearance(Appearance::Normal);
+        }
+
+        UpdateCarets();
+        ProvideHapticFeedback();
+        DispatchCaretStateChangedEvent(
+            CaretChangedReason::Longpressonemptycontent);
+
+        return NS_OK;
+      }
+    }
+  }
+
   // Then try select a word under point.
   nsresult rv = SelectWord(ptFrame, ptInFrame);
   UpdateCarets();

@@ -811,14 +811,18 @@ void MacroAssembler::cmp32Move32(Condition cond, Register lhs,
 void MacroAssembler::cmp32Load32(Condition cond, Register lhs,
                                  const Address& rhs, const Address& src,
                                  Register dest) {
-  // This is never used, but must be present to facilitate linking on mips(64).
-  MOZ_CRASH("No known use cases");
+  Label skip;
+  branch32(cond, rhs, lhs, &skip);
+  load32(src, dest);
+  bind(&skip);
 }
 
 void MacroAssembler::cmp32Load32(Condition cond, Register lhs, Register rhs,
                                  const Address& src, Register dest) {
-  // This is never used, but must be present to facilitate linking on mips(64).
-  MOZ_CRASH("No known use cases");
+  Label skip;
+  branch32(cond, rhs, lhs, &skip);
+  load32(src, dest);
+  bind(&skip);
 }
 
 void MacroAssembler::test32LoadPtr(Condition cond, const Address& addr,

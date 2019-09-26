@@ -68,7 +68,7 @@ var HybridContentTelemetryListener = {
     }
 
     const allowedSchemes = ["https", "about"];
-    if (!allowedSchemes.includes(principal.URI.scheme)) {
+    if (!allowedSchemes.some(s => principal.schemeIs(s))) {
       return false;
     }
 

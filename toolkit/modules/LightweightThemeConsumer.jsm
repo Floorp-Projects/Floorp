@@ -207,7 +207,7 @@ LightweightThemeConsumer.prototype = {
       return;
     }
 
-    let data = aSubject ? aSubject.wrappedJSObject : this._lastData;
+    let data = aSubject.wrappedJSObject;
     if (data.window && data.window !== this._winId) {
       return;
     }
@@ -216,8 +216,8 @@ LightweightThemeConsumer.prototype = {
   },
 
   handleEvent(aEvent) {
-    if (aEvent.media == "(-moz-system-dark-theme)") {
-      Services.obs.notifyObservers(null, "lightweight-theme-styling-update");
+    if (aEvent.target == this.darkThemeMediaQuery) {
+      this._update(this._lastData);
       return;
     }
 
@@ -287,6 +287,8 @@ LightweightThemeConsumer.prototype = {
 
     let contentThemeData = _getContentProperties(this._doc, active, theme);
     Services.ppmm.sharedData.set(`theme/${this._winId}`, contentThemeData);
+
+    this._win.dispatchEvent(new CustomEvent("windowlwthemeupdate"));
   },
 
   _setExperiment(active, experiment, properties) {

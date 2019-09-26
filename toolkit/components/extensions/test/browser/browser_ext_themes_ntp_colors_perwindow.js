@@ -102,17 +102,6 @@ add_task(async function test_per_window_ntp_theme() {
         });
       }
 
-      function createWindow() {
-        return new Promise(resolve => {
-          let listener = win => {
-            browser.windows.onCreated.removeListener(listener);
-            resolve(win);
-          };
-          browser.windows.onCreated.addListener(listener);
-          browser.windows.create();
-        });
-      }
-
       function removeWindow(winId) {
         return new Promise(resolve => {
           let listener = removedWinId => {
@@ -155,7 +144,7 @@ add_task(async function test_per_window_ntp_theme() {
       };
 
       let { id: winId } = await browser.windows.getCurrent();
-      let { id: secondWinId } = await createWindow();
+      let { id: secondWinId } = await browser.windows.create();
 
       browser.test.log("Test that single window update works");
       await browser.theme.update(winId, darkTextTheme);

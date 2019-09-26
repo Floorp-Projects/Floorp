@@ -232,8 +232,7 @@ diff --git a/modules/fdlibm/src/e_log2.cpp b/modules/fdlibm/src/e_log2.cpp
 diff --git a/modules/fdlibm/src/e_pow.cpp b/modules/fdlibm/src/e_pow.cpp
 --- a/modules/fdlibm/src/e_pow.cpp
 +++ b/modules/fdlibm/src/e_pow.cpp
-@@ -52,17 +52,16 @@
-  *
+@@ -53,17 +53,16 @@
   * Constants :
   * The hexadecimal values are the intended ones for the following
   * constants. The decimal values may be used, provided that the
@@ -241,6 +240,7 @@ diff --git a/modules/fdlibm/src/e_pow.cpp b/modules/fdlibm/src/e_pow.cpp
   * to produce the hexadecimal values shown.
   */
  
+ #include <float.h>
 -#include "math.h"
  #include "math_private.h"
  
@@ -249,7 +249,7 @@ diff --git a/modules/fdlibm/src/e_pow.cpp b/modules/fdlibm/src/e_pow.cpp
  dp_h[] = { 0.0, 5.84962487220764160156e-01,}, /* 0x3FE2B803, 0x40000000 */
  dp_l[] = { 0.0, 1.35003920212974897128e-08,}, /* 0x3E4CFDEB, 0x43CFD006 */
  zero    =  0.0,
- one	=  1.0,
+ half    =  0.5,
 diff --git a/modules/fdlibm/src/e_sinh.cpp b/modules/fdlibm/src/e_sinh.cpp
 --- a/modules/fdlibm/src/e_sinh.cpp
 +++ b/modules/fdlibm/src/e_sinh.cpp
@@ -359,8 +359,7 @@ diff --git a/modules/fdlibm/src/s_atan.cpp b/modules/fdlibm/src/s_atan.cpp
 diff --git a/modules/fdlibm/src/s_cbrt.cpp b/modules/fdlibm/src/s_cbrt.cpp
 --- a/modules/fdlibm/src/s_cbrt.cpp
 +++ b/modules/fdlibm/src/s_cbrt.cpp
-@@ -10,17 +10,16 @@
-  * ====================================================
+@@ -11,17 +11,16 @@
   *
   * Optimized by Bruce D. Evans.
   */
@@ -368,6 +367,7 @@ diff --git a/modules/fdlibm/src/s_cbrt.cpp b/modules/fdlibm/src/s_cbrt.cpp
  #include <sys/cdefs.h>
  __FBSDID("$FreeBSD$");
  
+ #include <float.h>
 -#include "math.h"
  #include "math_private.h"
  

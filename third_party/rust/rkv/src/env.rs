@@ -397,6 +397,22 @@ mod tests {
     }
 
     #[test]
+    #[should_panic(expected = "wrote: LmdbError(BadValSize)")]
+    fn test_exceed_key_size_limit() {
+        let root = Builder::new().prefix("test_exceed_key_size_limit").tempdir().expect("tempdir");
+        println!("Root path: {:?}", root.path());
+        fs::create_dir_all(root.path()).expect("dir created");
+        assert!(root.path().is_dir());
+
+        let k = Rkv::new(root.path()).expect("new succeeded");
+        let sk: SingleStore = k.open_single("test", StoreOptions::create()).expect("opened");
+
+        let key = "k".repeat(512);
+        let mut writer = k.write().expect("writer");
+        sk.put(&mut writer, key, &Value::Str("val")).expect("wrote");
+    }
+
+    #[test]
     fn test_increase_map_size() {
         let root = Builder::new().prefix("test_open_with_map_size").tempdir().expect("tempdir");
         println!("Root path: {:?}", root.path());

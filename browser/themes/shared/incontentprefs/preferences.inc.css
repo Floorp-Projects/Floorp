@@ -478,7 +478,8 @@ button > hbox > label {
 #historyPane:not([selectedIndex="2"]) > #historyCustomPane,
 #weavePrefsDeck:not([selectedIndex="1"]) > #hasFxaAccount,
 #fxaLoginStatus:not([selectedIndex="1"]) > #fxaLoginUnverified,
-#fxaLoginStatus:not([selectedIndex="2"]) > #fxaLoginRejected {
+#fxaLoginStatus:not([selectedIndex="2"]) > #fxaLoginRejected,
+#syncStatus:not([selectedIndex="1"]) > #syncConfigured {
   visibility: collapse;
 }
 
@@ -625,14 +626,6 @@ button > hbox > label {
   margin-bottom: 4px;
 }
 
-#tosPP-small {
-  margin-top: 32px;
-}
-
-#tosPP-small-ToS {
-  margin-bottom: 14px;
-}
-
 #noFxaCaption {
   line-height: 30px;
   margin-top: 0;
@@ -680,8 +673,79 @@ button > hbox > label {
   margin-inline-end: 8px;
 }
 
-#fxaSyncEngines > vbox > checkbox {
+#syncStatus {
+  margin-top: 32px;
+}
+
+.sync-group {
+  border-radius: 4px;
+  padding: 16px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  background-color: var(--in-content-box-info-background);
+  border: 1px solid var(--in-content-border-color);
+}
+
+.sync-configured {
+  display: block;
+}
+
+.sync-engines-list > div,
+.sync-engines-list + hbox {
+  margin-top: 0px;
+  padding-top: 16px;
   max-width: 224px;
+  height: auto;
+}
+
+.sync-engines-list checkbox .checkbox-icon,
+.sync-engine-image {
+  margin-inline-start: 4px;
+  margin-inline-end: 8px;
+  width: 16px;
+  height: 16px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.sync-engines-list {
+  column-count: 2;
+  column-fill: balance;
+}
+
+.sync-engine-bookmarks .checkbox-icon,
+.sync-engine-bookmarks.sync-engine-image {
+  list-style-image: url("chrome://browser/skin/preferences/in-content/bookmark.svg");
+}
+
+.sync-engine-history .checkbox-icon,
+.sync-engine-history.sync-engine-image {
+  list-style-image: url("chrome://browser/skin/preferences/in-content/history.svg");
+}
+
+.sync-engine-tabs .checkbox-icon,
+.sync-engine-tabs.sync-engine-image {
+  list-style-image: url("chrome://browser/skin/preferences/in-content/tab.svg");
+}
+
+.sync-engine-passwords .checkbox-icon,
+.sync-engine-passwords.sync-engine-image {
+  list-style-image: url("chrome://browser/skin/login.svg");
+}
+
+.sync-engine-addons .checkbox-icon,
+.sync-engine-addons.sync-engine-image {
+  list-style-image: url("chrome://browser/skin/preferences/in-content/extensions.svg");
+}
+
+.sync-engine-prefs .checkbox-icon,
+.sync-engine-prefs.sync-engine-image {
+  list-style-image: url("chrome://browser/skin/preferences/in-content/preferences.svg");
+}
+
+.sync-engine-addresses .checkbox-icon,
+.sync-engine-addresses.sync-engine-image {
+  list-style-image: url("chrome://browser/skin/preferences/in-content/formfill.svg");
 }
 
 .fxaMobilePromo {

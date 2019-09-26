@@ -14,6 +14,8 @@ browser.jar:
    content/browser/preferences/in-content/privacy.js
    content/browser/preferences/in-content/containers.js
    content/browser/preferences/in-content/sync.js
+   content/browser/preferences/in-content/syncChooseWhatToSync.xul
+   content/browser/preferences/in-content/syncChooseWhatToSync.js
    content/browser/preferences/in-content/fxaPairDevice.xul
    content/browser/preferences/in-content/fxaPairDevice.js
    content/browser/preferences/in-content/findInPage.js

@@ -150,8 +150,8 @@ JSObject* Library::Create(JSContext* cx, HandleValue path,
       return nullptr;
     }
 
-    JS::DeflateStringToUTF8Buffer(
-        pathStr, mozilla::RangedPtr<char>(pathBytes.get(), nbytes), &nbytes);
+    nbytes = JS::DeflateStringToUTF8Buffer(
+        pathStr, mozilla::MakeSpan(pathBytes.get(), nbytes));
     pathBytes[nbytes] = 0;
   }
 

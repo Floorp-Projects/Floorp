@@ -503,6 +503,6 @@ mod tests {
     #[allow(dead_code)]
     fn traversal_predicate_is_object_safe() {
         // This should compile only if TraversalPredicate is object safe.
-        fn takes_by_trait_object(_: &TraversalPredicate) {}
+        fn takes_by_trait_object(_: &dyn TraversalPredicate) {}
     }
 }

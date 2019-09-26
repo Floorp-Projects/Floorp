@@ -41,8 +41,7 @@
 /* Rule View Toolbar */
 
 #ruleview-toolbar-container {
-  /* @TODO: Bug 1535956 - Use the right CSS variable for this */
-  line-height: calc(24px - 2px);
+  line-height: var(--theme-toolbar-height);
 }
 
 #ruleview-command-toolbar {
@@ -58,6 +57,11 @@
 
 .ruleview-reveal-panel[hidden] {
   display: none;
+}
+
+.ruleview-reveal-panel .add-class {
+  height: var(--theme-toolbar-height);
+  line-height: normal;
 }
 
 .ruleview-reveal-panel label {
@@ -223,6 +227,7 @@
   border-bottom: 1px solid var(--theme-splitter-color);
   color: var(--theme-toolbar-color);
   font-size: 12px;
+  line-height: 16px;
   padding: 4px;
   width: 100%;
   align-items: center;

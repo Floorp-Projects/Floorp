@@ -27,6 +27,7 @@ struct ClientSourceConstructorArgs
 struct IPCClientInfo
 {
   nsID id;
+  nsID? agentClusterId;
   ClientType type;
   PrincipalInfo principalInfo;
   TimeStamp creationTime;

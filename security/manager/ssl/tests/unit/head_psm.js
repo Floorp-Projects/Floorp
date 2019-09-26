@@ -530,10 +530,6 @@ function add_connection_test(
       if (aAfterStreamOpen) {
         aAfterStreamOpen(this.transport);
       }
-      let sslSocketControl = this.transport.securityInfo.QueryInterface(
-        Ci.nsISSLSocketControl
-      );
-      sslSocketControl.proxyStartSSL();
       this.outputStream.write("0", 1);
       let inStream = this.transport
         .openInputStream(0, 0, 0)

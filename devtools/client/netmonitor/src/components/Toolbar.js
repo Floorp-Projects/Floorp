@@ -176,6 +176,7 @@ class Toolbar extends Component {
     });
 
     this.shortcuts.on(SEARCH_KEY_SHORTCUT, event => {
+      event.preventDefault();
       this.props.toggleSearchPanel();
     });
   }

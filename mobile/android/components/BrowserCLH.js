@@ -215,9 +215,7 @@ BrowserCLH.prototype = {
       let nodePrincipal = event.target.nodePrincipal;
       // If we have a null principal then prevent any more password manager code from running and
       // incorrectly using the document `location`. Also skip password manager for about: pages.
-      return (
-        nodePrincipal.isNullPrincipal || nodePrincipal.URI.schemeIs("about")
-      );
+      return nodePrincipal.isNullPrincipal || nodePrincipal.schemeIs("about");
     }
 
     let options = {

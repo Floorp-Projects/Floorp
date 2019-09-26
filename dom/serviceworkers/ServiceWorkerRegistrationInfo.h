@@ -37,6 +37,8 @@ class ServiceWorkerRegistrationInfo final
   };
   nsTArray<UniquePtr<VersionEntry>> mVersionList;
 
+  const nsID mAgentClusterId = nsContentUtils::GenerateUUID();
+
   uint32_t mControlledClientsCounter;
   uint32_t mDelayMultiplier;
 
@@ -208,6 +210,8 @@ class ServiceWorkerRegistrationInfo final
   void NotifyCleared();
 
   void ClearWhenIdle();
+
+  const nsID& AgentClusterId() const;
 
  private:
   // Roughly equivalent to [[Update Registration State algorithm]]. Make sure

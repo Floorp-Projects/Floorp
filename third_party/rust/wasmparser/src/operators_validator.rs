@@ -24,9 +24,12 @@ use crate::primitives::{
 };
 
 /// Test if `subtype` is a subtype of `supertype`.
-fn is_subtype_supertype(subtype: Type, supertype: Type) -> bool {
+pub(crate) fn is_subtype_supertype(subtype: Type, supertype: Type) -> bool {
     match supertype {
-        Type::AnyRef => subtype == Type::AnyRef || subtype == Type::AnyFunc,
+        Type::AnyRef => {
+            subtype == Type::AnyRef || subtype == Type::AnyFunc || subtype == Type::Null
+        }
+        Type::AnyFunc => subtype == Type::AnyFunc || subtype == Type::Null,
         _ => subtype == supertype,
     }
 }
@@ -135,7 +138,13 @@ impl FuncState {
             }
         };
         if block_type == BlockType::If {
-            self.stack_types.pop();
+            let last_block = self.blocks.last().unwrap();
+            if !last_block.is_stack_polymorphic()
+                || self.stack_types.len() > last_block.stack_starts_at
+            {
+                self.stack_types.pop();
+            }
+            assert!(self.stack_types.len() >= last_block.stack_starts_at);
         }
         for (i, ty) in start_types.iter().rev().enumerate() {
             if !self.assert_stack_type_at(i, *ty) {
@@ -563,6 +572,7 @@ impl OperatorValidator {
             | TypeOrFuncType::Type(Type::I64)
             | TypeOrFuncType::Type(Type::F32)
             | TypeOrFuncType::Type(Type::F64) => Ok(()),
+            TypeOrFuncType::Type(Type::V128) => self.check_simd_enabled(),
             TypeOrFuncType::FuncType(idx) => {
                 let idx = idx as usize;
                 let types = resources.types();
@@ -1312,12 +1322,12 @@ impl OperatorValidator {
             }
             Operator::RefNull => {
                 self.check_reference_types_enabled()?;
-                self.func_state.change_frame_with_type(0, Type::AnyRef)?;
+                self.func_state.change_frame_with_type(0, Type::Null)?;
             }
             Operator::RefIsNull => {
                 self.check_reference_types_enabled()?;
                 self.check_operands(&[Type::AnyRef])?;
-                self.func_state.change_frame_with_type(0, Type::I32)?;
+                self.func_state.change_frame_with_type(1, Type::I32)?;
             }
             Operator::V128Load { ref memarg } => {
                 self.check_simd_enabled()?;
