@@ -15,8 +15,8 @@ const { TargetMixin } = require("./target-mixin");
 class BrowsingContextTargetFront extends TargetMixin(
   FrontClassWithSpec(browsingContextTargetSpec)
 ) {
-  constructor(client) {
-    super(client);
+  constructor(client, targetFront, parentFront) {
+    super(client, targetFront, parentFront);
 
     // Cache the value of some target properties that are being returned by `attach`
     // request and then keep them up-to-date in `reconfigure` request.
