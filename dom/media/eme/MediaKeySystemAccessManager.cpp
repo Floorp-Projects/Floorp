@@ -22,6 +22,7 @@
 #include "nsIScriptError.h"
 #include "mozilla/Unused.h"
 #include "nsDataHashtable.h"
+#include "mozilla/dom/BrowserChild.h"
 
 namespace mozilla {
 namespace dom {
@@ -71,6 +72,51 @@ void MediaKeySystemAccessManager::Request(
     const Sequence<MediaKeySystemConfiguration>& aConfigs, RequestType aType) {
   EME_LOG("MediaKeySystemAccessManager::Request %s",
           NS_ConvertUTF16toUTF8(aKeySystem).get());
+
+  bool isSupported = true;
+#ifdef XP_WIN
+  // In Windows OS, some Firefox windows that host content cannot support
+  // protected content, so check the status of support for this window.
+  RefPtr<BrowserChild> browser(BrowserChild::GetFrom(mWindow));
+  if (browser->RequiresIsWindowSupportingProtectedMediaCheck(isSupported)) {
+    int browserID = browser->ChromeOuterWindowID();
+
+    RefPtr<MediaKeySystemAccessManager> self(this);
+    nsString keySystem(aKeySystem);
+    RefPtr<DetailedPromise> promise(aPromise);
+    Sequence<MediaKeySystemConfiguration> configs(aConfigs);
+
+    browser->SendIsWindowSupportingProtectedMedia(browserID)->Then(
+        GetCurrentThreadSerialEventTarget(), __func__,
+        [self, browser, promise, keySystem, configs,
+         aType](bool isSupportedLambda) {
+          browser->UpdateIsWindowSupportingProtectedMedia(isSupportedLambda);
+          self->RequestCallback(isSupportedLambda, promise, keySystem, configs,
+                                aType);
+        },
+        [](const mozilla::ipc::ResponseRejectReason) {
+          MOZ_CRASH(
+              "Failed to make IPC call to IsWindowSupportingProtectedMedia");
+        });
+  } else {
+#endif
+    RequestCallback(isSupported, aPromise, aKeySystem, aConfigs, aType);
+#ifdef XP_WIN
+  }
+#endif
+}
+
+void MediaKeySystemAccessManager::RequestCallback(
+    bool aIsSupportedInWindow, DetailedPromise* aPromise,
+    const nsAString& aKeySystem,
+    const Sequence<MediaKeySystemConfiguration>& aConfigs, RequestType aType) {
+  if (!aIsSupportedInWindow) {
+    aPromise->MaybeReject(
+        NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+        NS_LITERAL_CSTRING("EME is not supported in this window"));
+
+    return;
+  }
 
   if (aKeySystem.IsEmpty()) {
     aPromise->MaybeRejectWithTypeError(u"Key system string is empty");
