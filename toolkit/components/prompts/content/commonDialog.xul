@@ -12,12 +12,14 @@
 
 <dialog id="commonDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         aria-describedby="infoBody"
         onunload="commonDialogOnUnload();"
         buttonpack="center">
 
   <script src="chrome://global/content/commonDialog.js"/>
   <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
   <script src="chrome://global/content/customElements.js"/>
   <script>
     document.addEventListener("DOMContentLoaded", function() {
@@ -78,11 +80,11 @@
       </row>
       <row id="loginContainer" hidden="true" align="center">
         <label id="loginLabel" value="&editfield0.label;" control="loginTextbox"/>
-        <textbox id="loginTextbox"/>
+        <html:input id="loginTextbox"/>
       </row>
       <row id ="password1Container" hidden="true" align="center">
         <label id="password1Label" value="&editfield1.label;" control="password1Textbox"/>
-        <textbox type="password" id="password1Textbox"/>
+        <html:input type="password" id="password1Textbox"/>
       </row>
       <row id="checkboxContainer" hidden="true">
         <spacer/>
