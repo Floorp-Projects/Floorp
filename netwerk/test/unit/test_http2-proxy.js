@@ -22,9 +22,12 @@
  */
 
 const pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
+const { NodeServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 let proxy_port;
 let server_port;
+let proxy_id;
+let filter;
 
 // See moz-http2
 const proxy_auth = "authorization-token";
@@ -39,7 +42,8 @@ class ProxyFilter {
     this.QueryInterface = ChromeUtils.generateQI([Ci.nsIProtocolProxyFilter]);
   }
   applyFilter(pps, uri, pi, cb) {
-    if (uri.spec.match(/(\/proxy-session-counter)/)) {
+    if (uri.pathQueryRef == "/execute") {
+      // So we allow NodeServer.execute to work
       cb.onProxyFilterResult(pi);
       return;
     }
@@ -113,25 +117,31 @@ let initial_session_count = 0;
 
 function proxy_session_counter() {
   return new Promise(async resolve => {
-    const channel = make_channel(
-      `https://localhost:${server_port}/proxy-session-counter`
-    );
-    const { data } = await get_response(channel);
+    let data = await NodeServer.execute(`proxySessionCount("${proxy_id}")`);
     resolve(parseInt(data) - initial_session_count);
   });
 }
 
 add_task(async function setup() {
+  // Set to allow the cert presented by our H2 server
+  do_get_profile();
+
+  // The moz-http2 cert is for foo.example.com and is signed by http2-ca.pem
+  // so add that cert to the trust list as a signing cert.
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
+  addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
+
   const env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
   );
   server_port = env.get("MOZHTTP2_PORT");
   Assert.notEqual(server_port, null);
-  proxy_port = env.get("MOZHTTP2_PROXY_PORT");
+  let proxy = await NodeServer.execute(`startNewProxy()`);
+  proxy_port = proxy.port;
+  proxy_id = proxy.name;
   Assert.notEqual(proxy_port, null);
-
-  // Set to allow the cert presented by our H2 server
-  do_get_profile();
 
   Services.prefs.setStringPref(
     "services.settings.server",
@@ -144,24 +154,22 @@ add_task(async function setup() {
   // make all native resolve calls "secretly" resolve localhost instead
   Services.prefs.setBoolPref("network.dns.native-is-localhost", true);
 
-  // The moz-http2 cert is for foo.example.com and is signed by http2-ca.pem
-  // so add that cert to the trust list as a signing cert.
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
-    Ci.nsIX509CertDB
-  );
-  addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
-
-  pps.registerFilter(new ProxyFilter("https", "localhost", proxy_port, 0), 10);
+  filter = new ProxyFilter("https", "localhost", proxy_port, 0);
+  pps.registerFilter(filter, 10);
 
   initial_session_count = await proxy_session_counter();
   info(`Initial proxy session count = ${initial_session_count}`);
 });
 
-registerCleanupFunction(() => {
+registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("services.settings.server");
   Services.prefs.clearUserPref("network.http.spdy.enabled");
   Services.prefs.clearUserPref("network.http.spdy.enabled.http2");
   Services.prefs.clearUserPref("network.dns.native-is-localhost");
+
+  pps.unregisterFilter(filter);
+
+  await NodeServer.execute(`closeProxy("${proxy_id}")`);
 });
 
 /**

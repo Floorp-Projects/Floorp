@@ -36,6 +36,7 @@ var EXPORTED_SYMBOLS = [
   "HTTP_505",
   "HttpError",
   "HttpServer",
+  "NodeServer",
 ];
 
 const CC = Components.Constructor;
@@ -877,6 +878,76 @@ nsHttpServer.prototype = {
 };
 
 var HttpServer = nsHttpServer;
+
+class NodeServer {
+  // Executes command on the already running node server
+  // See handler in moz-http2.js
+  //
+  // Example use:
+  // await NodeServer.execute(`"hello"`)
+  // > "hello"
+  // await NodeServer.execute(`(() => "hello")()`)
+  // > "hello"
+  // await NodeServer.execute(`(() => var_defined_on_server)()`)
+  // > "0"
+  // await NodeServer.execute(`var_defined_on_server`)
+  // > "0"
+  // function f(param) { if (param) return param; return "bla"; }
+  // await NodeServer.execute(f); // Defines the function on the server
+  // await NodeServer.execute(`f()`) // executes defined function
+  // > "bla"
+  // let result = await NodeServer.execute(`f("test")`);
+  // > "test"
+  static execute(command) {
+    let env = Cc["@mozilla.org/process/environment;1"].getService(
+      Ci.nsIEnvironment
+    );
+    let h2Port = env.get("MOZNODE_EXEC_PORT");
+    let req = new XMLHttpRequest();
+    req.open("POST", `http://127.0.0.1:${h2Port}/execute`);
+
+    // Passing a function to NodeServer.execute will define that function
+    // in node. It can be called in a later execute command.
+    let isFunction = function(obj) {
+      return !!(obj && obj.constructor && obj.call && obj.apply);
+    };
+    let payload = command;
+    if (isFunction(command)) {
+      payload = `${command.name} = ${command.toString()};`;
+    }
+
+    return new Promise((resolve, reject) => {
+      req.onload = () => {
+        let x = null;
+
+        if (req.statusText != "OK") {
+          reject(`XHR request failed: ${req.statusText}`);
+          return;
+        }
+
+        try {
+          x = JSON.parse(req.responseText);
+        } catch (e) {
+          reject(`Failed to parse ${req.responseText} - ${e}`);
+          return;
+        }
+
+        if (x.error) {
+          let e = new Error(x.error, "", 0);
+          e.stack = x.errorStack;
+          reject(e);
+          return;
+        }
+        resolve(x.result);
+      };
+      req.onerror = e => {
+        reject(e);
+      };
+
+      req.send(payload.toString());
+    });
+  }
+}
 
 //
 // RFC 2396 section 3.2.2:
