@@ -3319,8 +3319,41 @@ CORSMode Element::AttrValueToCORSMode(const nsAttrValue* aValue) {
   return CORSMode(aValue->GetEnumValue());
 }
 
+/**
+ * Returns nullptr if requests for fullscreen are allowed in the current
+ * context. Requests are only allowed if the user initiated them (like with
+ * a mouse-click or key press), unless this check has been disabled by
+ * setting the pref "full-screen-api.allow-trusted-requests-only" to false.
+ * If fullscreen is not allowed, a key for the error message is returned.
+ */
 static const char* GetFullscreenError(CallerType aCallerType) {
-  return nsContentUtils::CheckRequestFullscreenAllowed(aCallerType);
+  if (!StaticPrefs::full_screen_api_allow_trusted_requests_only() ||
+      aCallerType == CallerType::System) {
+    return nullptr;
+  }
+
+  if (!UserActivation::IsHandlingUserInput()) {
+    return "FullscreenDeniedNotInputDriven";
+  }
+
+  // If more time has elapsed since the user input than is specified by the
+  // dom.event.handling-user-input-time-limit pref (default 1 second),
+  // disallow fullscreen
+  TimeDuration timeout = nsContentUtils::HandlingUserInputTimeout();
+  if (timeout > TimeDuration(nullptr) &&
+      (TimeStamp::Now() - UserActivation::GetHandlingInputStart()) > timeout) {
+    return "FullscreenDeniedNotInputDriven";
+  }
+
+  // Entering full-screen on mouse mouse event is only allowed with left mouse
+  // button
+  if (StaticPrefs::full_screen_api_mouse_event_allow_left_button_only() &&
+      (EventStateManager::sCurrentMouseBtn == MouseButton::eMiddle ||
+       EventStateManager::sCurrentMouseBtn == MouseButton::eRight)) {
+    return "FullscreenDeniedMouseEventOnlyLeftBtn";
+  }
+
+  return nullptr;
 }
 
 already_AddRefed<Promise> Element::RequestFullscreen(CallerType aCallerType,
