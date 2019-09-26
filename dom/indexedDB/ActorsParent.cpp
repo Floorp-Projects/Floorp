@@ -7,6 +7,7 @@
 #include "ActorsParent.h"
 
 #include <algorithm>
+#include <numeric>
 #include <stdint.h>  // UINTPTR_MAX, uintptr_t
 #include "FileInfo.h"
 #include "FileManager.h"
@@ -24918,17 +24919,13 @@ void ObjectStoreGetKeyRequestOp::GetResponse(RequestResponse& aResponse,
 
   if (mGetAll) {
     aResponse = ObjectStoreGetAllKeysResponse();
-    *aResponseSize = 0;
+    *aResponseSize = std::accumulate(mResponse.begin(), mResponse.end(), 0u,
+                                     [](size_t old, const auto& entry) {
+                                       return old + entry.GetBuffer().Length();
+                                     });
 
-    if (!mResponse.IsEmpty()) {
-      nsTArray<Key>& response =
-          aResponse.get_ObjectStoreGetAllKeysResponse().keys();
-
-      mResponse.SwapElements(response);
-      for (uint32_t i = 0; i < mResponse.Length(); ++i) {
-        *aResponseSize += mResponse[i].GetBuffer().Length();
-      }
-    }
+    mResponse.SwapElements(
+        aResponse.get_ObjectStoreGetAllKeysResponse().keys());
 
     return;
   }
@@ -25492,14 +25489,12 @@ void IndexGetKeyRequestOp::GetResponse(RequestResponse& aResponse,
 
   if (mGetAll) {
     aResponse = IndexGetAllKeysResponse();
-    *aResponseSize = 0;
+    *aResponseSize = std::accumulate(mResponse.begin(), mResponse.end(), 0u,
+                                     [](size_t old, const auto& entry) {
+                                       return old + entry.GetBuffer().Length();
+                                     });
 
-    if (!mResponse.IsEmpty()) {
-      mResponse.SwapElements(aResponse.get_IndexGetAllKeysResponse().keys());
-      for (uint32_t i = 0; i < mResponse.Length(); ++i) {
-        *aResponseSize += mResponse[i].GetBuffer().Length();
-      }
-    }
+    mResponse.SwapElements(aResponse.get_IndexGetAllKeysResponse().keys());
 
     return;
   }
