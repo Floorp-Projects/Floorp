@@ -425,7 +425,10 @@ void PrioritizedEventQueue::RequestIdleToken(TimeStamp aLocalIdlePeriodHint) {
   if (!mIdleSchedulerInitialized) {
     mIdleSchedulerInitialized = true;
     if (StaticPrefs::idle_period_cross_process_scheduling() &&
-        XRE_IsContentProcess() && NS_IsMainThread()) {
+        XRE_IsContentProcess() && NS_IsMainThread() &&
+        // Disable when recording/replaying, as IdleSchedulerChild uses mutable
+        // shared memory which needs special handling.
+        !recordreplay::IsRecordingOrReplaying()) {
       // For now cross-process idle scheduler is supported only on the main
       // threads of the child processes.
       mIdleScheduler = ipc::IdleSchedulerChild::GetMainThreadIdleScheduler();
