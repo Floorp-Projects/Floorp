@@ -40,7 +40,6 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     };
 
     this._timings = {};
-    this._serverTimings = {};
     this._stackTrace = {};
 
     this._discardRequestBody = false;
@@ -50,7 +49,6 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
   _request: null,
   _response: null,
   _timings: null,
-  _serverTimings: null,
 
   /**
    * Returns a grip for this actor for returning in a protocol message.
@@ -252,7 +250,6 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
       timings: this._timings,
       totalTime: this._totalTime,
       offsets: this._offsets,
-      serverTimings: this._serverTimings,
     };
   },
 
@@ -527,11 +524,8 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
    *        The total time of the network event.
    * @param object timings
    *        Timing details about the network event.
-   * @param object offsets
-   * @param object serverTimings
-   *        Timing details extracted from the Server-Timing header.
    */
-  addEventTimings(total, timings, offsets, serverTimings) {
+  addEventTimings(total, timings, offsets) {
     // Ignore calls when this actor is already destroyed
     if (!this.actorID) {
       return;
@@ -541,28 +535,9 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     this._timings = timings;
     this._offsets = offsets;
 
-    if (serverTimings) {
-      this._serverTimings = serverTimings;
-    }
-
     this.emit("network-event-update:event-timings", "eventTimings", {
       totalTime: total,
     });
-  },
-
-  /**
-   * Store server timing information. They will be merged together
-   * with network event timing data when they are available and
-   * notification sent to the client.
-   * See `addEventTimnings`` above for more information.
-   *
-   * @param object serverTimings
-   *        Timing details extracted from the Server-Timing header.
-   */
-  addSeverTimings(serverTimings) {
-    if (serverTimings) {
-      this._serverTimings = serverTimings;
-    }
   },
 
   /**
