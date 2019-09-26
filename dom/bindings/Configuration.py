@@ -209,7 +209,7 @@ class Configuration(DescriptorProvider):
         curr = self.descriptors
         # Collect up our filters, because we may have a webIDLFile filter that
         # we always want to apply first.
-        tofilter = []
+        tofilter = [ (lambda x: x.interface.isExternal(), False) ]
         for key, val in filters.iteritems():
             if key == 'webIDLFile':
                 # Special-case this part to make it fast, since most of our
@@ -219,17 +219,13 @@ class Configuration(DescriptorProvider):
                 curr = self.descriptorsByFile.get(val, [])
                 continue
             elif key == 'hasInterfaceObject':
-                getter = lambda x: (not x.interface.isExternal() and
-                                    x.interface.hasInterfaceObject())
+                getter = lambda x: x.interface.hasInterfaceObject()
             elif key == 'hasInterfacePrototypeObject':
-                getter = lambda x: (not x.interface.isExternal() and
-                                    x.interface.hasInterfacePrototypeObject())
+                getter = lambda x: x.interface.hasInterfacePrototypeObject()
             elif key == 'hasInterfaceOrInterfacePrototypeObject':
                 getter = lambda x: x.hasInterfaceOrInterfacePrototypeObject()
             elif key == 'isCallback':
                 getter = lambda x: x.interface.isCallback()
-            elif key == 'isExternal':
-                getter = lambda x: x.interface.isExternal()
             elif key == 'isJSImplemented':
                 getter = lambda x: x.interface.isJSImplemented()
             elif key == 'isExposedInAnyWorker':
@@ -588,19 +584,11 @@ class Descriptor(DescriptorProvider):
         return self.getDescriptor(self.prototypeChain[-2]).name
 
     def hasInterfaceOrInterfacePrototypeObject(self):
-
-        # Forward-declared interfaces don't need either interface object or
-        # interface prototype object as they're going to use QI.
-        if self.interface.isExternal():
-            return False
-
-        return self.interface.hasInterfaceObject() or self.interface.hasInterfacePrototypeObject()
+        return (self.interface.hasInterfaceObject() or
+                self.interface.hasInterfacePrototypeObject())
 
     @property
     def hasNamedPropertiesObject(self):
-        if self.interface.isExternal():
-            return False
-
         return self.isGlobal() and self.supportsNamedProperties()
 
     def getExtendedAttributes(self, member, getter=False, setter=False):
@@ -779,8 +767,7 @@ class Descriptor(DescriptorProvider):
 
     @property
     def registersGlobalNamesOnWindow(self):
-        return (not self.interface.isExternal() and
-                self.interface.hasInterfaceObject() and
+        return (self.interface.hasInterfaceObject() and
                 self.interface.isExposedInWindow() and
                 self.register)
 

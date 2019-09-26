@@ -1238,7 +1238,7 @@ class CGHeaders(CGWrapper):
             # If this is an iterator interface generated for a separate
             # iterable interface, skip generating type includes, as we have
             # what we need in IterableIterator.h
-            if desc.interface.isExternal() or desc.interface.isIteratorInterface():
+            if desc.interface.isIteratorInterface():
                 continue
 
             for m in desc.interface.members:
