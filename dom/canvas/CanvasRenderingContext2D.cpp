@@ -4375,6 +4375,7 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
     srcSurf = imageBitmap.PrepareForDrawTarget(mTarget);
 
     if (!srcSurf) {
+      aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
       return;
     }
 
