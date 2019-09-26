@@ -16,7 +16,6 @@ import urllib2
 from contextlib import closing
 
 from mozdevice import ADBDevice, ADBTimeoutError
-import mozinfo
 from automation import Automation
 from remoteautomation import RemoteAutomation, fennecLogcatFilters
 
@@ -396,11 +395,6 @@ def run_test_harness(parser, options):
     reftest = RemoteReftest(options, SCRIPT_DIRECTORY)
     parser.validate_remote(options, reftest.automation)
     parser.validate(options, reftest)
-
-    if mozinfo.info['debug']:
-        print("changing timeout for remote debug reftests from %s to 600 seconds"
-              % options.timeout)
-        options.timeout = 600
 
     # Hack in a symbolic link for jsreftest
     os.system("ln -s ../jsreftest " + str(os.path.join(SCRIPT_DIRECTORY, "jsreftest")))
