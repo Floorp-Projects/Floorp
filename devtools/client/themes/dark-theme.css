@@ -181,7 +181,9 @@ body {
   background: transparent;
 }
 
-.CodeMirror.cm-s-mozilla  pre {
+.CodeMirror.cm-s-mozilla  pre,
+.CodeMirror.cm-s-mozilla  pre.CodeMirror-line,
+.CodeMirror.cm-s-mozilla  pre.CodeMirror-line-like {
   color: var(--theme-text-color-strong);
 }
 
