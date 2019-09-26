@@ -2601,18 +2601,13 @@ addAsyncAnimTest(async function() {
 
   advance_clock(5000);
 
-  if (isGeckoView()) {
-    todo(false,
-         "Bug 1536392: GeckoView with e10s: cannot get correct OMTA style");
-  } else {
-    omta_is("transform",
-            // The order is: translate, scale, transform.
-            // So the translate() in transform should be multiplied by 1.5.
-            { compositorValue: [ 1.5, 0, 0, 1.5, (150 + 150*1.5), 0 ],
-              usesMultipleProperties: true },
-            RunningOn.Compositor,
-            "transform-like properties on compositor at 5s");
-  }
+  omta_is("transform",
+          // The order is: translate, scale, transform.
+          // So the translate() in transform should be multiplied by 1.5.
+          { compositorValue: [ 1.5, 0, 0, 1.5, (150 + 150*1.5), 0 ],
+            usesMultipleProperties: true },
+          RunningOn.Compositor,
+          "transform-like properties on compositor at 5s");
 
   done_div();
 });
@@ -2638,18 +2633,13 @@ addAsyncAnimTest(async function() {
 
   advance_clock(5000);
 
-  if (isGeckoView()) {
-    todo(false,
-         "Bug 1536392: GeckoView with e10s: cannot get correct OMTA style");
-  } else {
-    omta_is("transform",
-            // The order is: translate, scale, transform.
-            // So the translate() in transform should be multiplied by 1.5.
-            { compositorValue: [ 1.5, 0, 0, 1.5, (150 + 200*1.5), 0 ],
-              usesMultipleProperties: true },
-            RunningOn.Compositor,
-            "transform-like properties on compositor at 5s");
-  }
+  omta_is("transform",
+          // The order is: translate, scale, transform.
+          // So the translate() in transform should be multiplied by 1.5.
+          { compositorValue: [ 1.5, 0, 0, 1.5, (150 + 200*1.5), 0 ],
+            usesMultipleProperties: true },
+          RunningOn.Compositor,
+          "transform-like properties on compositor at 5s");
 
   done_div();
 });
@@ -2689,28 +2679,18 @@ addAsyncAnimTest(async function() {
 
   advance_clock(2500);
 
-  if (isGeckoView()) {
-    todo(false,
-         "Bug 1536392: GeckoView with e10s: cannot get correct OMTA style");
-  } else {
-    omta_is("transform", { compositorValue: [ 1.25, 0, 0, 1.25, 100, 0 ],
-                           usesMultipleProperties: true },
-            RunningOn.Compositor,
-            "transform-like properties on compositor at 2.5s");
-  }
+  omta_is("transform", { compositorValue: [ 1.25, 0, 0, 1.25, 100, 0 ],
+                         usesMultipleProperties: true },
+          RunningOn.Compositor,
+          "transform-like properties on compositor at 2.5s");
 
   advance_clock(5000);
 
-  if (isGeckoView()) {
-    todo(false,
-         "Bug 1536392: GeckoView with e10s: cannot get correct OMTA style");
-  } else {
-    omta_is("transform",
-            { compositorValue: [ 1.75, 0, 0, 1.75, 100, 0 ],
-              usesMultipleProperties: true },
-            RunningOn.Compositor,
-            "transform-like properties on compositor at 7.5s");
-  }
+  omta_is("transform",
+          { compositorValue: [ 1.75, 0, 0, 1.75, 100, 0 ],
+            usesMultipleProperties: true },
+          RunningOn.Compositor,
+          "transform-like properties on compositor at 7.5s");
 
   done_div();
 });
