@@ -616,12 +616,20 @@ EditorSpellCheck::UpdateCurrentDictionary(
   nsresult rv;
 
   RefPtr<EditorSpellCheck> kungFuDeathGrip = this;
+  uint32_t flags = 0;
+  mEditor->GetFlags(&flags);
 
   // Get language with html5 algorithm
   nsCOMPtr<nsIContent> rootContent;
   HTMLEditor* htmlEditor = mEditor->AsHTMLEditor();
   if (htmlEditor) {
-    rootContent = htmlEditor->GetFocusedContent();
+    if (flags & nsIPlaintextEditor::eEditorMailMask) {
+      // Always determine the root content for a mail editor,
+      // even if not focused, to enable further processing below.
+      rootContent = htmlEditor->GetActiveEditingHost();
+    } else {
+      rootContent = htmlEditor->GetFocusedContent();
+    }
   } else {
     rootContent = mEditor->GetRoot();
   }
@@ -631,8 +639,6 @@ EditorSpellCheck::UpdateCurrentDictionary(
   }
 
   // Try to get topmost document's document element for embedded mail editor.
-  uint32_t flags = 0;
-  mEditor->GetFlags(&flags);
   if (flags & nsIPlaintextEditor::eEditorMailMask) {
     RefPtr<Document> ownerDoc = rootContent->OwnerDoc();
     Document* parentDoc = ownerDoc->GetInProcessParentDocument();
