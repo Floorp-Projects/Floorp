@@ -5,7 +5,9 @@
 
 add_task(async function test_notice_in_aboutprefences() {
   await setupPolicyEngineWithJson({
-    policies: {},
+    policies: {
+      DummyPolicy: true,
+    },
   });
 
   await BrowserTestUtils.withNewTab("about:preferences", async browser => {
