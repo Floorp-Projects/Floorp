@@ -17,22 +17,32 @@
     <html:link rel="localization" href="security/certificates/deviceManager.ftl"/>
   </linkset>
 
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
+
   <script src="chrome://pippki/content/pippki.js"/>
   <script src="chrome://pippki/content/load_device.js"/>
+
+  <html:style>
+    #device_name,
+    #device_path {
+      -moz-box-flex: 1;
+    }
+  </html:style>
 
   <description data-l10n-id="load-device-info"></description>
   <hbox align="center">
     <label data-l10n-id="load-device-modname"
            control="device_name"/>
-    <textbox id="device_name" flex="1"
-             data-l10n-id="load-device-modname-default"
-             data-l10n-attrs="value"
-             onchange="validateModuleName();"/>
+    <html:input id="device_name"
+                data-l10n-id="load-device-modname-default"
+                data-l10n-attrs="value"
+                onchange="validateModuleName();"/>
   </hbox>
   <hbox align="center">
     <label data-l10n-id="load-device-filename"
            control="device_path"/>
-    <textbox id="device_path" flex="1"/>
+    <html:input id="device_path" />
     <button id="browse" flex="1"
             data-l10n-id="load-device-browse"
             oncommand="onBrowseBtnPress();"/>
