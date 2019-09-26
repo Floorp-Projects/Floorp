@@ -475,7 +475,7 @@ class nsWindow final : public nsBaseWidget {
 
   void SetCompositorHint(WindowComposeRequest aState);
 #endif
-  nsCString mGtkWindowTypeName;
+  nsCString mGtkWindowAppName;
   nsCString mGtkWindowRoleName;
   void RefreshWindowClass();
 

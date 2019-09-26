@@ -21,6 +21,7 @@
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WidgetUtils.h"
 #include "mozilla/dom/WheelEventBinding.h"
+#include "nsAppRunner.h"
 #include <algorithm>
 
 #include "GeckoProfiler.h"
@@ -3773,15 +3774,14 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       NativeResize();
 
       if (mWindowType == eWindowType_dialog) {
+        mGtkWindowRoleName = "Dialog";
+
         SetDefaultIcon();
-        gtk_window_set_wmclass(GTK_WINDOW(mShell), "Dialog",
-                               gdk_get_program_class());
         gtk_window_set_type_hint(GTK_WINDOW(mShell),
                                  GDK_WINDOW_TYPE_HINT_DIALOG);
         gtk_window_set_transient_for(GTK_WINDOW(mShell), mToplevelParentWindow);
       } else if (mWindowType == eWindowType_popup) {
-        gtk_window_set_wmclass(GTK_WINDOW(mShell), "Popup",
-                               gdk_get_program_class());
+        mGtkWindowRoleName = "Popup";
 
         if (aInitData->mNoAutoHide) {
           // ... but the window manager does not decorate this window,
@@ -3846,9 +3846,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
         // happen with override-redirect windows anyway).
         NativeMove();
       } else {  // must be eWindowType_toplevel
+        mGtkWindowRoleName = "Toplevel";
         SetDefaultIcon();
-        gtk_window_set_wmclass(GTK_WINDOW(mShell), "Toplevel",
-                               gdk_get_program_class());
 
         // each toplevel window gets its own window group
         GtkWindowGroup* group = gtk_window_group_new();
@@ -4156,17 +4155,28 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   }
 #  endif
 #endif
+
+  // Set default application name when it's empty.
+  if (mGtkWindowAppName.IsEmpty()) {
+    mGtkWindowAppName = gAppData->name;
+  }
+  RefreshWindowClass();
+
   return NS_OK;
 }
 
 void nsWindow::RefreshWindowClass(void) {
-  if (mGtkWindowTypeName.IsEmpty() || mGtkWindowRoleName.IsEmpty()) return;
-
   GdkWindow* gdkWindow = gtk_widget_get_window(mShell);
-  gdk_window_set_role(gdkWindow, mGtkWindowRoleName.get());
+  if (!gdkWindow) {
+    return;
+  }
+
+  if (!mGtkWindowRoleName.IsEmpty()) {
+    gdk_window_set_role(gdkWindow, mGtkWindowRoleName.get());
+  }
 
 #ifdef MOZ_X11
-  if (mIsX11Display) {
+  if (!mGtkWindowAppName.IsEmpty() && mIsX11Display) {
     XClassHint* class_hint = XAllocClassHint();
     if (!class_hint) {
       return;
@@ -4174,7 +4184,7 @@ void nsWindow::RefreshWindowClass(void) {
     const char* res_class = gdk_get_program_class();
     if (!res_class) return;
 
-    class_hint->res_name = const_cast<char*>(mGtkWindowTypeName.get());
+    class_hint->res_name = const_cast<char*>(mGtkWindowAppName.get());
     class_hint->res_class = const_cast<char*>(res_class);
 
     // Can't use gtk_window_set_wmclass() for this; it prints
@@ -4209,7 +4219,7 @@ void nsWindow::SetWindowClass(const nsAString& xulWinType) {
   res_name[0] = toupper(res_name[0]);
   if (!role) role = res_name;
 
-  mGtkWindowTypeName = res_name;
+  mGtkWindowAppName = res_name;
   mGtkWindowRoleName = role;
   free(res_name);
 
