@@ -5,7 +5,6 @@
 package mozilla.components.concept.toolbar
 
 import android.graphics.drawable.Drawable
-import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
@@ -13,6 +12,7 @@ import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.appcompat.widget.AppCompatImageView
 import mozilla.components.support.base.android.Padding
+import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.android.view.setPadding
 import java.lang.ref.WeakReference
 
@@ -197,17 +197,14 @@ interface Toolbar {
             imageButton.contentDescription = contentDescription
             imageButton.setOnClickListener { listener.invoke() }
 
-            if (background == 0) {
-                val outValue = TypedValue()
-                parent.context.theme.resolveAttribute(
-                    android.R.attr.selectableItemBackgroundBorderless,
-                    outValue,
-                    true
-                )
-                imageButton.setBackgroundResource(outValue.resourceId)
+            @DrawableRes
+            val backgroundResource = if (background == 0) {
+                parent.context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless)
             } else {
-                imageButton.setBackgroundResource(background)
+                background
             }
+
+            imageButton.setBackgroundResource(backgroundResource)
             padding?.let { imageButton.setPadding(it) }
         }
 
@@ -248,17 +245,14 @@ interface Toolbar {
 
             updateViewState()
 
-            if (background == 0) {
-                val outValue = TypedValue()
-                parent.context.theme.resolveAttribute(
-                    android.R.attr.selectableItemBackgroundBorderless,
-                    outValue,
-                    true)
-
-                imageButton.setBackgroundResource(outValue.resourceId)
+            @DrawableRes
+            val backgroundResource = if (background == 0) {
+                parent.context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless)
             } else {
-                imageButton.setBackgroundResource(background)
+                background
             }
+
+            imageButton.setBackgroundResource(backgroundResource)
             padding?.let { imageButton.setPadding(it) }
         }
 

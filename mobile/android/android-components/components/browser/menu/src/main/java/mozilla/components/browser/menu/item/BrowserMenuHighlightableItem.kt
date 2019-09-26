@@ -4,13 +4,13 @@
 
 package mozilla.components.browser.menu.item
 
-import android.util.TypedValue
 import android.view.View
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatImageView
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.R
+import mozilla.components.support.ktx.android.content.res.resolveAttribute
 
 private val defaultHighlight = BrowserMenuHighlightableItem.Highlight(0, 0, 0, 0)
 
@@ -109,14 +109,10 @@ class BrowserMenuHighlightableItem(
                 }
             }
         } else {
-            val selectableItemBackground = TypedValue()
-            view.context.theme.resolveAttribute(
-                    android.R.attr.selectableItemBackground,
-                    selectableItemBackground,
-                    true
-            )
+            val selectableItemBackground =
+                view.context.theme.resolveAttribute(android.R.attr.selectableItemBackground)
 
-            view.setBackgroundResource(selectableItemBackground.resourceId)
+            view.setBackgroundResource(selectableItemBackground)
             with(endImageView) {
                 setImageResource(0)
                 visibility = View.GONE

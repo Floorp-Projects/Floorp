@@ -15,6 +15,10 @@ permalink: /changelog/
 * **browser-session**, **browser-state**, **feature-contextmenu**, **feature-downloads**
   * * ⚠️ **This is a breaking change**: Removed the `download` property from `Session`. Downloads can now only be observed on a `BrowserState` from the `browser-state` component. Therefore `ContextMenuUseCases` and `DownloadsUseCases` now require a `BrowserStore` instance.
 
+* **support-ktx**
+  * Adds `Resources.Theme.resolveAttribute(Int)` to quickly get a resource ID from a theme.
+  * Adds `Context.getColorFromAttr` to get a color int from an attribute.
+
 # 14.0.1
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v14.0.0...v14.0.1)
@@ -82,7 +86,7 @@ permalink: /changelog/
 
 * **tools-detekt**
   * New (internal-only) component with custom detekt rules.
-  
+
 * **service-glean**
   * ⚠ **This is a breaking change**: Glean.initialize() must be called on the main thread.
 
@@ -115,7 +119,7 @@ permalink: /changelog/
 
 * **feature-tabs**
   * ⚠️ **This is a breaking change**: Methods that have been accepting a parent `Session` parameter now expect the parent id (`String`).
-  
+
 * **browser-menu**
    * Adds the ability to create a BrowserMenuImageSwitch, a BrowserMenuSwitch with icon
 
