@@ -199,8 +199,8 @@ def _to_release_artifact(extension, version, component, timestamp=None):
 
     return {
         'taskcluster_path': 'public/build/{}'.format(artifact_filename),
-        'build_fs_path': '{}/build/maven/org/mozilla/components/{}/{}/{}'.format(
-            os.path.abspath(component['path']),
+        'build_fs_path': '/build/android-components/{}/build/maven/org/mozilla/components/{}/{}/{}'.format(
+            component['path'],
             component['name'],
             version if not timestamp else version + '-SNAPSHOT',
             artifact_filename),
@@ -215,21 +215,17 @@ def _to_release_artifact(extension, version, component, timestamp=None):
 def release(builder, components, is_snapshot, is_staging):
     version = components_version()
 
-    build_tasks = {}
-    wait_on_builds_tasks = {}
-    sign_tasks = {}
-    beetmover_tasks = {}
-    other_tasks = {}
-    wait_on_builds_task_id = taskcluster.slugId()
+    tasks = []
+    build_tasks_labels = {}
+    wait_on_builds_label = 'Android Components - Barrier task to wait on other tasks to complete'
 
     timestamp = None
     if is_snapshot:
         timestamp = generate_snapshot_timestamp()
 
     for component in components:
-        build_task_id = taskcluster.slugId()
         module_name = _get_gradle_module_name(component)
-        build_tasks[build_task_id] = builder.craft_build_task(
+        build_task = builder.craft_build_task(
             module_name=module_name,
             gradle_tasks=_get_release_gradle_tasks(module_name, is_snapshot),
             subtitle='({}{})'.format(version, '-SNAPSHOT' if is_snapshot else ''),
@@ -241,28 +237,31 @@ def release(builder, components, is_snapshot, is_staging):
                        itertools.product(AAR_EXTENSIONS, HASH_EXTENSIONS)],
             timestamp=timestamp,
         )
+        tasks.append(build_task)
+        # XXX Temporary hack to keep taskgraph happy about how dependencies are represented
+        build_tasks_labels[build_task['label']] = build_task['label']
 
-        sign_task_id = taskcluster.slugId()
-        sign_tasks[sign_task_id] = builder.craft_sign_task(
-            build_task_id, wait_on_builds_task_id, [_to_release_artifact(extension, version, component, timestamp)
+        sign_task = builder.craft_sign_task(
+            build_task['label'], wait_on_builds_label, [_to_release_artifact(extension, version, component, timestamp)
                             for extension in AAR_EXTENSIONS],
             component['name'], is_staging,
         )
+        tasks.append(sign_task)
 
         beetmover_build_artifacts = [_to_release_artifact(extension + hash_extension, version, component, timestamp)
                                      for extension, hash_extension in
                                      itertools.product(AAR_EXTENSIONS, HASH_EXTENSIONS)]
         beetmover_sign_artifacts = [_to_release_artifact(extension + '.asc', version, component, timestamp)
                                     for extension in AAR_EXTENSIONS]
-        beetmover_tasks[taskcluster.slugId()] = builder.craft_beetmover_task(
-            build_task_id, sign_task_id, beetmover_build_artifacts, beetmover_sign_artifacts,
+        tasks.append(builder.craft_beetmover_task(
+            build_task['label'], sign_task['label'], beetmover_build_artifacts, beetmover_sign_artifacts,
             component['name'], is_snapshot, is_staging
-        )
+        ))
 
-    wait_on_builds_tasks[wait_on_builds_task_id] = builder.craft_barrier_task(build_tasks.keys())
+    tasks.append(builder.craft_barrier_task(wait_on_builds_label, build_tasks_labels))
 
     if is_snapshot:     # XXX These jobs perma-fail on release
         for craft_function in (builder.craft_detekt_task, builder.craft_ktlint_task, builder.craft_compare_locales_task):
-            other_tasks[taskcluster.slugId()] = craft_function()
+            tasks.append(craft_function())
 
-    return (build_tasks, wait_on_builds_tasks, sign_tasks, beetmover_tasks, other_tasks)
+    return tasks
