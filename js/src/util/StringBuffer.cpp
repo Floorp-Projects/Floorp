@@ -6,6 +6,7 @@
 
 #include "util/StringBuffer.h"
 
+#include "mozilla/Latin1.h"
 #include "mozilla/Range.h"
 #include "mozilla/Unused.h"
 
@@ -62,7 +63,9 @@ bool StringBuffer::inflateChars() {
     return false;
   }
 
-  twoByte.infallibleAppend(latin1Chars().begin(), latin1Chars().length());
+  twoByte.infallibleGrowByUninitialized(latin1Chars().length());
+
+  mozilla::ConvertLatin1toUtf16(mozilla::AsChars(latin1Chars()), twoByte);
 
   cb.destroy();
   cb.construct<TwoByteCharBuffer>(std::move(twoByte));

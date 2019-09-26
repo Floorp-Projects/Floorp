@@ -8,8 +8,10 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/Latin1.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
@@ -46,9 +48,14 @@ using namespace js;
 
 using mozilla::ArrayEqual;
 using mozilla::AssertedCast;
+using mozilla::AsWritableChars;
+using mozilla::ConvertLatin1toUtf16;
 using mozilla::IsAsciiDigit;
 using mozilla::IsNegativeZero;
 using mozilla::IsSame;
+using mozilla::IsUtf16Latin1;
+using mozilla::LossyConvertUtf16toLatin1;
+using mozilla::MakeSpan;
 using mozilla::PodCopy;
 using mozilla::RangedPtr;
 using mozilla::RoundUpPow2;
@@ -579,10 +586,9 @@ void CopyChars(Latin1Char* dest, const JSLinearString& str) {
      */
     size_t len = str.length();
     const char16_t* chars = str.twoByteChars(nogc);
-    for (size_t i = 0; i < len; i++) {
-      MOZ_ASSERT(chars[i] <= JSString::MAX_LATIN1_CHAR);
-      dest[i] = chars[i];
-    }
+    auto src = MakeSpan(chars, len);
+    MOZ_ASSERT(IsUtf16Latin1(src));
+    LossyConvertUtf16toLatin1(src, AsWritableChars(MakeSpan(dest, len)));
   }
 }
 
@@ -951,26 +957,37 @@ template JSString* js::ConcatStrings<NoGC>(JSContext* cx, JSString* const& left,
  * Copy |src[0..length]| to |dest[0..length]| when copying doesn't narrow and
  * therefore can't lose information.
  */
-template <typename Dest, typename Source>
-static void FillAndTerminate(Dest* dest, Source src, size_t length) {
-  static_assert(sizeof(src[length]) <= sizeof(dest[length]),
-                "source → destination conversion must not narrow");
+static inline void FillAndTerminate(char16_t* dest, const unsigned char* src,
+                                    size_t length) {
+  ConvertLatin1toUtf16(AsChars(MakeSpan(src, length)), MakeSpan(dest, length));
 
-  for (size_t i = 0; i < length; i++) {
-    auto srcChar = src[i];
-    static_assert(std::is_unsigned<decltype(srcChar)>::value &&
-                      std::is_unsigned<Dest>::value,
-                  "source/destination characters are unsigned for simplicity");
-    *dest++ = srcChar;
-  }
-
-  *dest = '\0';
+  dest[length] = '\0';
 }
 
-template <typename Dest, typename Src,
-          typename = typename std::enable_if<!std::is_const<Src>::value>::type>
-static void FillAndTerminate(Dest* dest, Src* src, size_t length) {
-  FillAndTerminate(dest, const_cast<const Src*>(src), length);
+static inline void FillAndTerminate(char16_t* dest, const char16_t* src,
+                                    size_t length) {
+  PodCopy(dest, src, length);
+
+  dest[length] = '\0';
+}
+
+static inline void FillAndTerminate(unsigned char* dest,
+                                    const unsigned char* src, size_t length) {
+  PodCopy(dest, src, length);
+
+  dest[length] = '\0';
+}
+
+static inline void FillAndTerminate(char16_t* dest, LittleEndianChars src,
+                                    size_t length) {
+#ifdef MOZ_LITTLE_ENDIAN
+  memcpy(dest, src.get(), length * sizeof(char16_t));
+#else
+  for (size_t i = 0; i < length; ++i) {
+    dest[i] = src[i];
+  }
+#endif
+  dest[length] = '\0';
 }
 
 /**
@@ -978,28 +995,34 @@ static void FillAndTerminate(Dest* dest, Src* src, size_t length) {
  * the user guarantees every runtime |src[i]| value can be stored without change
  * of value in |dest[i]|.
  */
-template <typename Dest, typename Source>
-static void FillFromCompatibleAndTerminate(Dest* dest, Source src,
-                                           size_t length) {
-  static_assert(sizeof(src[length]) > sizeof(dest[length]),
-                "source → destination conversion must be narrowing");
+static inline void FillFromCompatibleAndTerminate(unsigned char* dest,
+                                                  const char16_t* src,
+                                                  size_t length) {
+  LossyConvertUtf16toLatin1(MakeSpan(src, length),
+                            AsWritableChars(MakeSpan(dest, length)));
 
-  for (size_t i = 0; i < length; i++) {
-    auto srcChar = src[i];
-    static_assert(std::is_unsigned<decltype(srcChar)>::value &&
-                      std::is_unsigned<Dest>::value,
-                  "source/destination characters are unsigned for simplicity");
-    *dest++ = AssertedCast<Dest>(src[i]);
-  }
-
-  *dest = '\0';
+  dest[length] = '\0';
 }
 
-template <typename Dest, typename Src,
-          typename = typename std::enable_if<!std::is_const<Src>::value>::type>
-static void FillFromCompatibleAndTerminate(Dest* dest, Src* src,
-                                           size_t length) {
-  FillFromCompatibleAndTerminate(dest, const_cast<const Src*>(src), length);
+static inline void FillFromCompatibleAndTerminate(char16_t* dest,
+                                                  const char16_t* src,
+                                                  size_t length) {
+  FillAndTerminate(dest, src, length);
+}
+
+static inline void FillFromCompatibleAndTerminate(char16_t* dest,
+                                                  LittleEndianChars src,
+                                                  size_t length) {
+  FillAndTerminate(dest, src, length);
+}
+
+static inline void FillFromCompatibleAndTerminate(unsigned char* dest,
+                                                  LittleEndianChars src,
+                                                  size_t length) {
+  for (size_t i = 0; i < length; ++i) {
+    dest[i] = AssertedCast<unsigned char>(src[i]);
+  }
+  dest[length] = '\0';
 }
 
 template <typename CharT>
@@ -1196,16 +1219,12 @@ int32_t js::CompareAtoms(JSAtom* atom1, JSAtom* atom2) {
 }
 
 bool js::StringIsAscii(JSLinearString* str) {
-  auto containsOnlyAsciiCharacters = [](const auto* chars, size_t length) {
-    return std::all_of(chars, chars + length,
-                       [](auto c) { return mozilla::IsAscii(c); });
-  };
-
   JS::AutoCheckCannotGC nogc;
-  return str->hasLatin1Chars() ? containsOnlyAsciiCharacters(
-                                     str->latin1Chars(nogc), str->length())
-                               : containsOnlyAsciiCharacters(
-                                     str->twoByteChars(nogc), str->length());
+  if (str->hasLatin1Chars()) {
+    return mozilla::IsAscii(
+        AsChars(MakeSpan(str->latin1Chars(nogc), str->length())));
+  }
+  return mozilla::IsAscii(MakeSpan(str->twoByteChars(nogc), str->length()));
 }
 
 bool js::StringEqualsAscii(JSLinearString* str, const char* asciiBytes) {
@@ -1671,14 +1690,8 @@ JSLinearString* js::NewDependentString(JSContext* cx, JSString* baseArg,
   return JSDependentString::new_(cx, base, start, length);
 }
 
-static bool CanStoreCharsAsLatin1(const char16_t* s, size_t length) {
-  for (const char16_t* end = s + length; s < end; ++s) {
-    if (*s > JSString::MAX_LATIN1_CHAR) {
-      return false;
-    }
-  }
-
-  return true;
+static inline bool CanStoreCharsAsLatin1(const char16_t* s, size_t length) {
+  return IsUtf16Latin1(MakeSpan(s, length));
 }
 
 static bool CanStoreCharsAsLatin1(const Latin1Char* s, size_t length) {
@@ -1706,7 +1719,7 @@ static MOZ_ALWAYS_INLINE JSInlineString* NewInlineStringDeflated(
   }
 
   MOZ_ASSERT(CanStoreCharsAsLatin1(chars.begin().get(), len));
-  FillFromCompatibleAndTerminate(storage, chars, len);
+  FillFromCompatibleAndTerminate(storage, chars.begin().get(), len);
   return str;
 }
 
