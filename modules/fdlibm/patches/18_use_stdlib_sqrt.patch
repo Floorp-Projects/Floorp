@@ -187,6 +187,7 @@ diff --git a/modules/fdlibm/src/e_pow.cpp b/modules/fdlibm/src/e_pow.cpp
  
 +#include <cmath>
 +
+ #include <float.h>
  #include "math_private.h"
  
  static const double
@@ -194,8 +195,7 @@ diff --git a/modules/fdlibm/src/e_pow.cpp b/modules/fdlibm/src/e_pow.cpp
  dp_h[] = { 0.0, 5.84962487220764160156e-01,}, /* 0x3FE2B803, 0x40000000 */
  dp_l[] = { 0.0, 1.35003920212974897128e-08,}, /* 0x3E4CFDEB, 0x43CFD006 */
  zero    =  0.0,
- one	=  1.0,
-@@ -147,17 +149,17 @@ double
+@@ -151,17 +153,17 @@ double
  		    return (hy<0)?-y: zero;
  	    }
  	    if(iy==0x3ff00000) {	/* y is  +-1 */
