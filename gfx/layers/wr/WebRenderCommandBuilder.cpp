@@ -1217,35 +1217,16 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
   nsDisplayItem* startOfCurrentGroup = item;
   while (item) {
     if (IsItemProbablyActive(item, mDisplayListBuilder)) {
-      currentGroup->EndGroup(aCommandBuilder->mManager, aDisplayListBuilder,
-                             aBuilder, aResources, this, startOfCurrentGroup,
-                             item);
-
-      {
-        MOZ_ASSERT(item->GetType() != DisplayItemType::TYPE_RENDER_ROOT);
-        auto spaceAndClipChain = mClipManager.SwitchItem(item);
-        wr::SpaceAndClipChainHelper saccHelper(aBuilder, spaceAndClipChain);
-
-        sIndent++;
-        // Note: this call to CreateWebRenderCommands can recurse back into
-        // this function.
-        RenderRootStateManager* manager =
-            aCommandBuilder->mManager->GetRenderRootStateManager(
-                aBuilder.GetRenderRoot());
-        bool createdWRCommands = item->CreateWebRenderCommands(
-            aBuilder, aResources, aSc, manager, mDisplayListBuilder);
-        sIndent--;
-        MOZ_RELEASE_ASSERT(
-            createdWRCommands,
-            "active transforms should always succeed at creating "
-            "WebRender commands");
-      }
-
+      // We're going to be starting a new group.
       RefPtr<WebRenderGroupData> groupData =
           aCommandBuilder->CreateOrRecycleWebRenderUserData<WebRenderGroupData>(
               item, aBuilder.GetRenderRoot());
 
-      // Initialize groupData->mFollowingGroup
+      // Initialize groupData->mFollowingGroup with data from currentGroup.
+      // We want to copy out this information before calling EndGroup because
+      // EndGroup will set mLastVisibleRect depending on whether
+      // we send something to WebRender.
+
       // TODO: compute the group bounds post-grouping, so that they can be
       // tighter for just the sublist that made it into this group.
       // We want to ensure the tight bounds are still clipped by area
@@ -1281,6 +1262,30 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
       groupData->mFollowingGroup.mVisibleRect = currentGroup->mVisibleRect;
       groupData->mFollowingGroup.mLastVisibleRect = currentGroup->mLastVisibleRect;
       groupData->mFollowingGroup.mPreservedRect = currentGroup->mPreservedRect;
+
+      currentGroup->EndGroup(aCommandBuilder->mManager, aDisplayListBuilder,
+                             aBuilder, aResources, this, startOfCurrentGroup,
+                             item);
+
+      {
+        MOZ_ASSERT(item->GetType() != DisplayItemType::TYPE_RENDER_ROOT);
+        auto spaceAndClipChain = mClipManager.SwitchItem(item);
+        wr::SpaceAndClipChainHelper saccHelper(aBuilder, spaceAndClipChain);
+
+        sIndent++;
+        // Note: this call to CreateWebRenderCommands can recurse back into
+        // this function.
+        RenderRootStateManager* manager =
+            aCommandBuilder->mManager->GetRenderRootStateManager(
+                aBuilder.GetRenderRoot());
+        bool createdWRCommands = item->CreateWebRenderCommands(
+            aBuilder, aResources, aSc, manager, mDisplayListBuilder);
+        sIndent--;
+        MOZ_RELEASE_ASSERT(
+            createdWRCommands,
+            "active transforms should always succeed at creating "
+            "WebRender commands");
+      }
 
       currentGroup = &groupData->mFollowingGroup;
 
