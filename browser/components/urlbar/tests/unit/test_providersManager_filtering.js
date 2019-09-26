@@ -189,6 +189,7 @@ add_task(async function test_filter_isActive() {
       }
     }
     cancelQuery(context) {}
+    pickResult(result, details) {}
   }
   UrlbarProvidersManager.registerProvider(new NoInvokeProvider());
 
@@ -235,6 +236,7 @@ add_task(async function test_filter_queryContext() {
       Assert.ok(false, "Provider should no be invoked");
     }
     cancelQuery(context) {}
+    pickResult(result, details) {}
   }
   UrlbarProvidersManager.registerProvider(new NoInvokeProvider());
 
@@ -346,6 +348,7 @@ add_task(async function test_nofilter_restrict() {
       }
     }
     cancelQuery(context) {}
+    pickResult(result, details) {}
   }
   let provider = new TestProvider();
   UrlbarProvidersManager.registerProvider(provider);
@@ -403,6 +406,7 @@ add_task(async function test_filter_isRestricting() {
       Assert.ok(true, "expected provider was invoked");
     }
     cancelQuery(context) {}
+    pickResult(result, details) {}
   }
   UrlbarProvidersManager.registerProvider(new TestProvider());
 
@@ -426,6 +430,7 @@ add_task(async function test_filter_isRestricting() {
       Assert.ok(false, "Provider should no be invoked");
     }
     cancelQuery(context) {}
+    pickResult(result, details) {}
   }
   UrlbarProvidersManager.registerProvider(new NoInvokeProvider());
 

@@ -37,6 +37,7 @@ class TipTestProvider extends UrlbarProvider {
     }
   }
   cancelQuery(context) {}
+  pickResult(result, details) {}
 }
 
 add_task(async function tipIsSecondResult() {
