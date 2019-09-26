@@ -54,13 +54,14 @@ class PostMessageEvent final : public Runnable {
                          aIsFromPrivateWindow) {}
 
   void Write(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-             JS::Handle<JS::Value> aTransfer, ErrorResult& aError) {
+             JS::Handle<JS::Value> aTransfer, JS::CloneDataPolicy aClonePolicy,
+             ErrorResult& aError) {
     mHolder.construct<StructuredCloneHolder>(
         StructuredCloneHolder::CloningSupported,
         StructuredCloneHolder::TransferringSupported,
         JS::StructuredCloneScope::SameProcessSameThread);
     mHolder.ref<StructuredCloneHolder>().Write(aCx, aMessage, aTransfer,
-                                               JS::CloneDataPolicy(), aError);
+                                               aClonePolicy, aError);
   }
   void UnpackFrom(const ClonedMessageData& aMessageData) {
     mHolder.construct<ipc::StructuredCloneData>();
