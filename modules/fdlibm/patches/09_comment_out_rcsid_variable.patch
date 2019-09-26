@@ -443,13 +443,13 @@ diff --git a/modules/fdlibm/src/s_cbrt.cpp b/modules/fdlibm/src/s_cbrt.cpp
 +//#include <sys/cdefs.h>
 +//__FBSDID("$FreeBSD$");
  
+ #include <float.h>
  #include "math_private.h"
  
  /* cbrt(x)
   * Return cube root of x
   */
  static const u_int32_t
- 	B1 = 715094163, /* B1 = (1023-1023/3-0.03306235651)*2**20 */
 diff --git a/modules/fdlibm/src/s_ceil.cpp b/modules/fdlibm/src/s_ceil.cpp
 --- a/modules/fdlibm/src/s_ceil.cpp
 +++ b/modules/fdlibm/src/s_ceil.cpp
