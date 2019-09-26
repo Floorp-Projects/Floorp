@@ -134,11 +134,7 @@ static StorageAccess InternalStorageAllowedCheck(
   // be affected, which is desireable due to the lack of automated testing for
   // about: URIs with these preferences set, and the importance of the correct
   // functioning of these URIs even with custom preferences.
-  nsCOMPtr<nsIURI> uri = aURI;
-  if (!uri) {
-    Unused << aPrincipal->GetURI(getter_AddRefs(uri));
-  }
-  if (uri && uri->SchemeIs("about")) {
+  if ((aURI && aURI->SchemeIs("about")) || aPrincipal->SchemeIs("about")) {
     return access;
   }
 
