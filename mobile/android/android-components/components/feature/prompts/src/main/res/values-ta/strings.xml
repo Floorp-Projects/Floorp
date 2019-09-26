@@ -26,4 +26,10 @@
     <string name="mozac_feature_prompts_jan">ஜன</string>
     <!-- February month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_feb">பிப்</string>
+    <!-- May month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_may">மே</string>
+    <!-- June month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jun">யூன்</string>
+    <!-- July month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jul">யூலை</string>
     </resources>

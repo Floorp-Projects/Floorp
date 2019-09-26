@@ -28,8 +28,7 @@
     <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">已新建隐私标签页</string>
 
     <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
-    <string name="mozac_feature_contextmenu_snackbar_link_copied">文本已复制到剪贴板</string>
-
+    <string name="mozac_feature_contextmenu_snackbar_link_copied">链接已复制到剪贴板</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">切换</string>
 </resources>

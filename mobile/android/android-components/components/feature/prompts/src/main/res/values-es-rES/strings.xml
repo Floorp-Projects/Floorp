@@ -43,4 +43,12 @@
     <string name="mozac_feature_prompts_jul">Julio</string>
     <!-- August month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_aug">Agosto</string>
-    </resources>
+    <!-- September month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_sep">Sept</string>
+    <!-- October month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_oct">Oct</string>
+    <!-- November month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_nov">Nov</string>
+    <!-- December month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_dec">Dic</string>
+</resources>

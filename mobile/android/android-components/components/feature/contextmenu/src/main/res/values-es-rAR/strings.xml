@@ -19,7 +19,7 @@
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Se abrió una nueva pestaña privada</string>
     <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
-    <string name="mozac_feature_contextmenu_snackbar_link_copied">Texto copiado al portapapeles</string>
+    <string name="mozac_feature_contextmenu_snackbar_link_copied">Enlace copiado al portapapeles</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Intercambiar</string>
 </resources>
