@@ -44,9 +44,9 @@
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
-    <string name="home_screen_shortcut_open_new_tab">Open new tab</string>
+    <string name="home_screen_shortcut_open_new_tab_2">New tab</string>
     <!-- Shortcut action to open new private tab -->
-    <string name="home_screen_shortcut_open_new_private_tab">Open new private tab</string>
+    <string name="home_screen_shortcut_open_new_private_tab_2">New private tab</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
