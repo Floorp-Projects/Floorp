@@ -3981,16 +3981,10 @@ ContentPermissionPrompt.prototype = {
     );
     let scheme = 0;
     try {
-      // URI is null for system principals.
-      if (request.principal.URI) {
-        switch (request.principal.URI.scheme) {
-          case "http":
-            scheme = 1;
-            break;
-          case "https":
-            scheme = 2;
-            break;
-        }
+      if (request.principal.schemeIs("http")) {
+        scheme = 1;
+      } else if (request.principal.schemeIs("https")) {
+        scheme = 2;
       }
     } catch (ex) {
       // If the request principal is not available at this point,

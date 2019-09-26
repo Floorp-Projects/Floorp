@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=206691
     xhr.onload = function() {
       ok(xhr.responseXML, "We should have response content!");
       var principal = xhr.responseXML.nodePrincipal;
-      ok(principal.URI.schemeIs("moz-nullprincipal"), "The response document should have a null principal");
+      ok(principal.schemeIs("moz-nullprincipal"), "The response document should have a null principal");
       SimpleTest.finish();
     }
     xhr.send();

@@ -46,7 +46,7 @@ function shouldIgnoreLoginManagerEvent(event) {
   return (
     nodePrincipal.isSystemPrincipal ||
     nodePrincipal.isNullPrincipal ||
-    nodePrincipal.URI.schemeIs("about")
+    nodePrincipal.schemeIs("about")
   );
 }
 
