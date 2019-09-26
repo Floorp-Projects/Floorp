@@ -20,8 +20,8 @@ const {
 } = require("devtools/shared/protocol");
 
 class FrameDescriptorFront extends FrontClassWithSpec(frameDescriptorSpec) {
-  constructor(client) {
-    super(client);
+  constructor(client, targetFront, parentFront) {
+    super(client, targetFront, parentFront);
     this._frameDescriptorFront = null;
     this._targetFrontPromise = null;
     this._client = client;
@@ -35,7 +35,7 @@ class FrameDescriptorFront extends FrontClassWithSpec(frameDescriptorSpec) {
 
   async _createFrameTarget(form) {
     let front = null;
-    front = new BrowsingContextTargetFront(this._client);
+    front = new BrowsingContextTargetFront(this._client, null, this);
     front.actorID = form.actor;
     front.form(form);
     this.manage(front);

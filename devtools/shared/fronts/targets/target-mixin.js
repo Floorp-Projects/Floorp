@@ -35,8 +35,8 @@ loader.lazyRequireGetter(this, "getFront", "devtools/shared/protocol", true);
  */
 function TargetMixin(parentClass) {
   class Target extends parentClass {
-    constructor(client, form) {
-      super(client, form);
+    constructor(client, targetFront, parentFront) {
+      super(client, targetFront, parentFront);
 
       this._forceChrome = false;
 
@@ -53,6 +53,10 @@ function TargetMixin(parentClass) {
       this.fronts = new Map();
 
       this._setupRemoteListeners();
+    }
+
+    get descriptorFront() {
+      return this.parentFront;
     }
 
     /**
