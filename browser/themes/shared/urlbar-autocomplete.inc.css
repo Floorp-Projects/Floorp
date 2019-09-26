@@ -288,7 +288,10 @@
 }
 
 #urlbar .search-panel-one-offs {
-  padding-inline: 12px;
+  padding-inline-start: 12px;
+  /* Make sure we can fit at least three buttons horizontally. */
+  min-width: 120px;
+  box-sizing: content-box;
 }
 
 #urlbar .search-panel-header {
