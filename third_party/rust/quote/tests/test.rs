@@ -1,18 +1,10 @@
 #![cfg_attr(feature = "cargo-clippy", allow(blacklisted_name))]
 
 use std::borrow::Cow;
-
-extern crate proc_macro2;
-#[macro_use]
-extern crate quote;
+use std::collections::BTreeSet;
 
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::TokenStreamExt;
-
-mod conditional {
-    #[cfg(integer128)]
-    mod integer128;
-}
+use quote::{format_ident, quote, TokenStreamExt};
 
 struct X;
 
@@ -125,18 +117,20 @@ fn test_integer() {
     let ii16 = -1i16;
     let ii32 = -1i32;
     let ii64 = -1i64;
+    let ii128 = -1i128;
     let iisize = -1isize;
     let uu8 = 1u8;
     let uu16 = 1u16;
     let uu32 = 1u32;
     let uu64 = 1u64;
+    let uu128 = 1u128;
     let uusize = 1usize;
 
     let tokens = quote! {
-        #ii8 #ii16 #ii32 #ii64 #iisize
-        #uu8 #uu16 #uu32 #uu64 #uusize
+        #ii8 #ii16 #ii32 #ii64 #ii128 #iisize
+        #uu8 #uu16 #uu32 #uu64 #uu128 #uusize
     };
-    let expected = "-1i8 -1i16 -1i32 -1i64 -1isize 1u8 1u16 1u32 1u64 1usize";
+    let expected = "-1i8 -1i16 -1i32 -1i64 -1i128 -1isize 1u8 1u16 1u32 1u64 1u128 1usize";
     assert_eq!(expected, tokens.to_string());
 }
 
@@ -166,7 +160,7 @@ fn test_char() {
     let tokens = quote! {
         #zero #pound #quote #apost #newline #heart
     };
-    let expected = "'\\u{0}' '#' '\\\"' '\\'' '\\n' '\\u{2764}'";
+    let expected = "'\\u{0}' '#' '\"' '\\'' '\\n' '\\u{2764}'";
     assert_eq!(expected, tokens.to_string());
 }
 
@@ -174,7 +168,7 @@ fn test_char() {
 fn test_str() {
     let s = "\0 a 'b \" c";
     let tokens = quote!(#s);
-    let expected = "\"\\u{0} a \\'b \\\" c\"";
+    let expected = "\"\\u{0} a 'b \\\" c\"";
     assert_eq!(expected, tokens.to_string());
 }
 
@@ -182,7 +176,7 @@ fn test_str() {
 fn test_string() {
     let s = "\0 a 'b \" c".to_string();
     let tokens = quote!(#s);
-    let expected = "\"\\u{0} a \\'b \\\" c\"";
+    let expected = "\"\\u{0} a 'b \\\" c\"";
     assert_eq!(expected, tokens.to_string());
 }
 
@@ -233,9 +227,42 @@ fn test_nested_fancy_repetition() {
 }
 
 #[test]
-fn test_empty_repetition() {
-    let tokens = quote!(#(a b)* #(c d),*);
-    assert_eq!("", tokens.to_string());
+fn test_duplicate_name_repetition() {
+    let foo = &["a", "b"];
+
+    let tokens = quote! {
+        #(#foo: #foo),*
+        #(#foo: #foo),*
+    };
+
+    let expected = r#""a" : "a" , "b" : "b" "a" : "a" , "b" : "b""#;
+    assert_eq!(expected, tokens.to_string());
+}
+
+#[test]
+fn test_duplicate_name_repetition_no_copy() {
+    let foo = vec!["a".to_owned(), "b".to_owned()];
+
+    let tokens = quote! {
+        #(#foo: #foo),*
+    };
+
+    let expected = r#""a" : "a" , "b" : "b""#;
+    assert_eq!(expected, tokens.to_string());
+}
+
+#[test]
+fn test_btreeset_repetition() {
+    let mut set = BTreeSet::new();
+    set.insert("a".to_owned());
+    set.insert("b".to_owned());
+
+    let tokens = quote! {
+        #(#set: #set),*
+    };
+
+    let expected = r#""a" : "a" , "b" : "b""#;
+    assert_eq!(expected, tokens.to_string());
 }
 
 #[test]
@@ -245,6 +272,19 @@ fn test_variable_name_conflict() {
     let _i = vec!['a', 'b'];
     let tokens = quote! { #(#_i),* };
     let expected = "'a' , 'b'";
+    assert_eq!(expected, tokens.to_string());
+}
+
+#[test]
+fn test_nonrep_in_repetition() {
+    let rep = vec!["a", "b"];
+    let nonrep = "c";
+
+    let tokens = quote! {
+        #(#rep #rep : #nonrep #nonrep),*
+    };
+
+    let expected = r#""a" "a" : "c" "c" , "b" "b" : "c" "c""#;
     assert_eq!(expected, tokens.to_string());
 }
 
@@ -275,7 +315,7 @@ fn test_cow() {
 #[test]
 fn test_closure() {
     fn field_i(i: usize) -> Ident {
-        Ident::new(&format!("__field{}", i), Span::call_site())
+        format_ident!("__field{}", i)
     }
 
     let fields = (0usize..3)
@@ -292,4 +332,98 @@ fn test_append_tokens() {
     let b = quote!(b);
     a.append_all(b);
     assert_eq!("a b", a.to_string());
+}
+
+#[test]
+fn test_format_ident() {
+    let id0 = format_ident!("Aa");
+    let id1 = format_ident!("Hello{x}", x = id0);
+    let id2 = format_ident!("Hello{x}", x = 5usize);
+    let id3 = format_ident!("Hello{}_{x}", id0, x = 10usize);
+    let id4 = format_ident!("Aa", span = Span::call_site());
+
+    assert_eq!(id0, "Aa");
+    assert_eq!(id1, "HelloAa");
+    assert_eq!(id2, "Hello5");
+    assert_eq!(id3, "HelloAa_10");
+    assert_eq!(id4, "Aa");
+}
+
+#[test]
+fn test_format_ident_strip_raw() {
+    let id = format_ident!("r#struct");
+    let my_id = format_ident!("MyId{}", id);
+    let raw_my_id = format_ident!("r#MyId{}", id);
+
+    assert_eq!(id, "r#struct");
+    assert_eq!(my_id, "MyIdstruct");
+    assert_eq!(raw_my_id, "r#MyIdstruct");
+}
+
+#[test]
+fn test_outer_line_comment() {
+    let tokens = quote! {
+        /// doc
+    };
+    let expected = "# [ doc = r\" doc\" ]";
+    assert_eq!(expected, tokens.to_string());
+}
+
+#[test]
+fn test_inner_line_comment() {
+    let tokens = quote! {
+        //! doc
+    };
+    let expected = "# ! [ doc = r\" doc\" ]";
+    assert_eq!(expected, tokens.to_string());
+}
+
+#[test]
+fn test_outer_block_comment() {
+    let tokens = quote! {
+        /** doc */
+    };
+    let expected = "# [ doc = r\" doc \" ]";
+    assert_eq!(expected, tokens.to_string());
+}
+
+#[test]
+fn test_inner_block_comment() {
+    let tokens = quote! {
+        /*! doc */
+    };
+    let expected = "# ! [ doc = r\" doc \" ]";
+    assert_eq!(expected, tokens.to_string());
+}
+
+#[test]
+fn test_outer_attr() {
+    let tokens = quote! {
+        #[inline]
+    };
+    let expected = "# [ inline ]";
+    assert_eq!(expected, tokens.to_string());
+}
+
+#[test]
+fn test_inner_attr() {
+    let tokens = quote! {
+        #![no_std]
+    };
+    let expected = "# ! [ no_std ]";
+    assert_eq!(expected, tokens.to_string());
+}
+
+// https://github.com/dtolnay/quote/issues/130
+#[test]
+fn test_star_after_repetition() {
+    let c = vec!['0', '1'];
+    let tokens = quote! {
+        #(
+            f(#c);
+        )*
+        *out = None;
+    };
+    let expected = "f ( '0' ) ; f ( '1' ) ; * out = None ;";
+    assert_eq!(expected, tokens.to_string());
 }

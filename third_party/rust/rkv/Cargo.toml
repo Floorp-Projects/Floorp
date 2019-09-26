@@ -13,11 +13,12 @@
 [package]
 edition = "2018"
 name = "rkv"
-version = "0.9.7"
-authors = ["Richard Newman <rnewman@twinql.com>", "Nan Jiang <najiang@mozilla.com>", "Myk Melez <myk@mykzilla.org>"]
+version = "0.10.2"
+authors = ["Richard Newman <rnewman@twinql.com>", "Nan Jiang <najiang@mozilla.com>", "Myk Melez <myk@mykzilla.org>", "Victor Porof <vporof@mozilla.com>"]
 exclude = ["/tests/envs/*"]
 description = "a simple, humane, typed Rust interface to LMDB"
 homepage = "https://github.com/mozilla/rkv"
+documentation = "https://docs.rs/rkv"
 readme = "README.md"
 keywords = ["lmdb", "database", "storage"]
 categories = ["database"]
@@ -36,15 +37,15 @@ version = "1"
 version = "1"
 
 [dependencies.failure]
-version = "0.1.2"
+version = "0.1"
 features = ["derive"]
 default_features = false
 
 [dependencies.lazy_static]
-version = "1.0.2"
+version = "1.0"
 
 [dependencies.lmdb-rkv]
-version = "0.11.4"
+version = "0.12.3"
 
 [dependencies.ordered-float]
 version = "1.0"
@@ -69,3 +70,6 @@ version = "3"
 [features]
 backtrace = ["failure/backtrace", "failure/std"]
 default = []
+with-asan = ["lmdb-rkv/with-asan"]
+with-fuzzer = ["lmdb-rkv/with-fuzzer"]
+with-fuzzer-no-link = ["lmdb-rkv/with-fuzzer-no-link"]

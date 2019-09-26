@@ -1,5 +1,10 @@
 LMDB 0.9 Change Log
 
+LMDB 0.9.24 Release (2019/07/24)
+	ITS#8969 Tweak mdb_page_split
+	ITS#8975 WIN32 fix writemap set_mapsize crash
+	ITS#9007 Fix loose pages in WRITEMAP
+
 LMDB 0.9.23 Release (2018/12/19)
 	ITS#8756 Fix loose pages in dirty list
 	ITS#8831 Fix mdb_load flag init
