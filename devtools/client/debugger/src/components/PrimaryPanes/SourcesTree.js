@@ -94,7 +94,9 @@ function findSource({ threads, sources }, itemPath, source) {
   const targetThread = threads.find(thread => itemPath.includes(thread.actor));
   if (targetThread && source) {
     const actor = targetThread.actor;
-    return sources[actor][source.id];
+    if (sources[actor]) {
+      return sources[actor][source.id];
+    }
   }
   return source;
 }
