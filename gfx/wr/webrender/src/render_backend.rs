@@ -38,6 +38,7 @@ use crate::prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData};
 use crate::prim_store::interned::*;
 use crate::profiler::{BackendProfileCounters, IpcProfileCounters, ResourceProfileCounters};
 use crate::record::ApiRecordingReceiver;
+use crate::record::LogRecorder;
 use crate::render_task_graph::RenderTaskGraphCounters;
 use crate::renderer::{AsyncPropertySampler, PipelineInfo};
 use crate::resource_cache::ResourceCache;
@@ -51,7 +52,6 @@ use crate::scene_builder_thread::*;
 use serde::{Serialize, Deserialize};
 #[cfg(feature = "debugger")]
 use serde_json;
-#[cfg(any(feature = "capture", feature = "replay"))]
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -701,6 +701,7 @@ pub struct RenderBackend {
 
     notifier: Box<dyn RenderNotifier>,
     recorder: Option<Box<dyn ApiRecordingReceiver>>,
+    logrecorder: Option<Box<dyn ApiRecordingReceiver>>,
     sampler: Option<Box<dyn AsyncPropertySampler + Send>>,
     size_of_ops: Option<MallocSizeOfOps>,
     debug_flags: DebugFlags,
@@ -742,6 +743,7 @@ impl RenderBackend {
             documents: FastHashMap::default(),
             notifier,
             recorder,
+            logrecorder: None,
             sampler,
             size_of_ops,
             debug_flags,
@@ -954,6 +956,23 @@ impl RenderBackend {
 
             status = match self.api_rx.recv() {
                 Ok(msg) => {
+                    if self.debug_flags.contains(DebugFlags::LOG_TRANSACTIONS) {
+                        if let None = self.logrecorder {
+                            let current_time = time::now_utc().to_local();
+                            let name = format!("wr-log-{}.log",
+                                current_time.strftime("%Y%m%d_%H%M%S").unwrap()
+                            );
+                            self.logrecorder = Some(Box::new(LogRecorder::new(&PathBuf::from(name))))
+                        }
+                    } else {
+                        self.logrecorder = None;
+                    }
+
+                    if let Some(ref mut r) = self.logrecorder {
+                        r.write_msg(frame_counter, &msg);
+                    }
+
+
                     if let Some(ref mut r) = self.recorder {
                         r.write_msg(frame_counter, &msg);
                     }

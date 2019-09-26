@@ -61,6 +61,36 @@ impl ApiRecordingReceiver for BinaryRecorder {
     }
 }
 
+#[derive(Debug)]
+pub struct LogRecorder {
+    file: File,
+}
+
+impl LogRecorder {
+    pub fn new(dest: &PathBuf) -> LogRecorder {
+        let file = File::create(dest).unwrap();
+        LogRecorder { file }
+    }
+}
+
+impl ApiRecordingReceiver for LogRecorder {
+    fn write_msg(&mut self, _: u32, msg: &ApiMsg) {
+        let current_time = time::now_utc();
+        writeln!(self.file, "{}:{}ms - {:?}", current_time.rfc3339(), current_time.tm_nsec / 1000000, msg).unwrap();
+        match *msg {
+            ApiMsg::UpdateDocuments(_, ref msgs) => {
+                for msg in msgs {
+                    writeln!(self.file, "\tTransaction: {:?}", msg).unwrap();
+                }
+            }
+            _ => {},
+        }
+    }
+
+    fn write_payload(&mut self, _: u32, _data: &[u8]) {
+    }
+}
+
 fn should_record_transaction_msg(msgs: &TransactionMsg) -> bool {
     if msgs.generate_frame {
         return true;
