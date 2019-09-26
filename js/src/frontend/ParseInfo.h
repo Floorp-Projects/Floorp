@@ -8,20 +8,16 @@
 #define frontend_ParseInfo_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Variant.h"
 
 #include "ds/LifoAlloc.h"
 #include "frontend/FunctionTree.h"
 #include "frontend/UsedNameTracker.h"
 #include "js/RealmOptions.h"
-#include "js/Vector.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
 
 namespace js {
 namespace frontend {
-
-class BigIntLiteral;
 
 // ParseInfo owns a number of pieces of information about a parse,
 // as well as controls the lifetime of parse nodes and other data
@@ -31,21 +27,12 @@ struct MOZ_RAII ParseInfo {
   LifoAllocScope& allocScope;
   FunctionTreeHolder treeHolder;
 
-  using DeferredAllocationType = mozilla::Variant<BigIntLiteral*>;
-  using DeferredAllocationVector = js::Vector<DeferredAllocationType>;
-
-  // In Deferred mode, BigInts aren't allocated till after the parser has
-  // completely parsed the parse tree; this is the list of BigIntLiteralNodes
-  // that need to be published before those nodes can be inspected.
-  DeferredAllocationVector deferredAllocations;
-
   ParseInfo(JSContext* cx, LifoAllocScope& alloc)
       : usedNames(cx),
         allocScope(alloc),
         treeHolder(cx, cx->realm()->behaviors().deferredParserAlloc()
                            ? FunctionTreeHolder::Mode::Deferred
-                           : FunctionTreeHolder::Mode::Eager),
-        deferredAllocations(cx) {}
+                           : FunctionTreeHolder::Mode::Eager) {}
 };
 
 }  // namespace frontend
