@@ -5,7 +5,7 @@ The DevTools toolbox is loaded in an iframe pointing to about:devtools-toolbox. 
 
 The current policy for about:devtools-toolbox is:
 ```
-default-src chrome: resource:; img-src chrome: resource: data:;
+default-src chrome: resource:; img-src chrome: resource: data:; object-src 'none'
 ```
 
 This means:

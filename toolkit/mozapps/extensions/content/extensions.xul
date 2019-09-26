@@ -21,7 +21,7 @@
    -->
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:xhtml="http://www.w3.org/1999/xhtml"
-      csp="default-src chrome:; frame-src chrome: data: http: https:; script-src chrome: 'sha512-4o5Uf4E4EG+90Mb820FH2YFDf4IuX4bfUwQC7reK1ZhgcXWJBKMK2330XIELaFJJ8HiPffS9mP60MPjuXMIrHA==' 'sha512-kSDNX67wegjpcf8CSj/L6h46a0QUKm2CyijGxC5PhSWVvPU9gdd28QVBBFq9t8N5UGKUFdDcZsjYbGSlYG0y3g==';"
+      csp="default-src chrome:; frame-src chrome: data: http: https:; script-src chrome: 'sha512-4o5Uf4E4EG+90Mb820FH2YFDf4IuX4bfUwQC7reK1ZhgcXWJBKMK2330XIELaFJJ8HiPffS9mP60MPjuXMIrHA==' 'sha512-kSDNX67wegjpcf8CSj/L6h46a0QUKm2CyijGxC5PhSWVvPU9gdd28QVBBFq9t8N5UGKUFdDcZsjYbGSlYG0y3g=='; object-src 'none'"
       id="addons-page" data-l10n-id="addons-window"
       role="application" windowtype="Addons:Manager">
 
