@@ -875,67 +875,93 @@ nsresult PeerConnectionImpl::GetDatachannelParameters(
     uint32_t* channels, uint16_t* localport, uint16_t* remoteport,
     uint32_t* remotemaxmessagesize, bool* mmsset, std::string* transportId,
     bool* client) const {
-  for (const auto& transceiver : mJsepSession->GetTransceivers()) {
-    bool dataChannel =
-        transceiver->GetMediaType() == SdpMediaSection::kApplication;
-
-    if (dataChannel && transceiver->mSendTrack.GetNegotiatedDetails()) {
-      // This will release assert if there is no such index, and that's ok
-      const JsepTrackEncoding& encoding =
-          transceiver->mSendTrack.GetNegotiatedDetails()->GetEncoding(0);
-
-      if (encoding.GetCodecs().empty()) {
-        CSFLogError(LOGTAG,
-                    "%s: Negotiated m=application with no codec. "
-                    "This is likely to be broken.",
-                    __FUNCTION__);
-        return NS_ERROR_FAILURE;
-      }
-
-      for (const auto& codec : encoding.GetCodecs()) {
-        if (codec->mType != SdpMediaSection::kApplication) {
-          CSFLogError(LOGTAG,
-                      "%s: Codec type for m=application was %u, this "
-                      "is a bug.",
-                      __FUNCTION__, static_cast<unsigned>(codec->mType));
-          MOZ_ASSERT(false, "Codec for m=application was not \"application\"");
-          return NS_ERROR_FAILURE;
-        }
-
-        if (codec->mName != "webrtc-datachannel") {
-          CSFLogWarn(LOGTAG,
-                     "%s: Codec for m=application was not "
-                     "webrtc-datachannel (was instead %s). ",
-                     __FUNCTION__, codec->mName.c_str());
-          continue;
-        }
-
-        if (codec->mChannels) {
-          *channels = codec->mChannels;
-        } else {
-          *channels = WEBRTC_DATACHANNEL_STREAMS_DEFAULT;
-        }
-        const JsepApplicationCodecDescription* appCodec =
-            static_cast<const JsepApplicationCodecDescription*>(codec.get());
-        *localport = appCodec->mLocalPort;
-        *remoteport = appCodec->mRemotePort;
-        *remotemaxmessagesize = appCodec->mRemoteMaxMessageSize;
-        *mmsset = appCodec->mRemoteMMSSet;
-        MOZ_ASSERT(!transceiver->mTransport.mTransportId.empty());
-        *transportId = transceiver->mTransport.mTransportId;
-        *client = transceiver->mTransport.mDtls->GetRole() ==
-                  JsepDtlsTransport::kJsepDtlsClient;
-        return NS_OK;
-      }
-    }
-  }
-
+  // Clear, just in case we fail.
   *channels = 0;
   *localport = 0;
   *remoteport = 0;
   *remotemaxmessagesize = 0;
   *mmsset = false;
   transportId->clear();
+
+  RefPtr<JsepTransceiver> datachannelTransceiver;
+  for (const auto& transceiver : mJsepSession->GetTransceivers()) {
+    if ((transceiver->GetMediaType() == SdpMediaSection::kApplication) &&
+        transceiver->mSendTrack.GetNegotiatedDetails()) {
+      datachannelTransceiver = transceiver;
+      break;
+    }
+  }
+
+  if (!datachannelTransceiver) {
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<JsepTransceiver> transportTransceiver;
+  if (datachannelTransceiver->HasOwnTransport()) {
+    transportTransceiver = datachannelTransceiver;
+  } else if (datachannelTransceiver->HasBundleLevel()) {
+    // Find the actual transport.
+    for (const auto& transceiver : mJsepSession->GetTransceivers()) {
+      if (transceiver->HasLevel() &&
+          transceiver->GetLevel() == datachannelTransceiver->BundleLevel() &&
+          transceiver->HasOwnTransport()) {
+        transportTransceiver = transceiver;
+        break;
+      }
+    }
+  }
+
+  if (!transportTransceiver) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // This will release assert if there is no such index, and that's ok
+  const JsepTrackEncoding& encoding =
+      datachannelTransceiver->mSendTrack.GetNegotiatedDetails()->GetEncoding(0);
+
+  if (NS_WARN_IF(encoding.GetCodecs().empty())) {
+    CSFLogError(LOGTAG,
+                "%s: Negotiated m=application with no codec. "
+                "This is likely to be broken.",
+                __FUNCTION__);
+    return NS_ERROR_FAILURE;
+  }
+
+  for (const auto& codec : encoding.GetCodecs()) {
+    if (codec->mType != SdpMediaSection::kApplication) {
+      CSFLogError(LOGTAG,
+                  "%s: Codec type for m=application was %u, this "
+                  "is a bug.",
+                  __FUNCTION__, static_cast<unsigned>(codec->mType));
+      MOZ_ASSERT(false, "Codec for m=application was not \"application\"");
+      return NS_ERROR_FAILURE;
+    }
+
+    if (codec->mName != "webrtc-datachannel") {
+      CSFLogWarn(LOGTAG,
+                 "%s: Codec for m=application was not "
+                 "webrtc-datachannel (was instead %s). ",
+                 __FUNCTION__, codec->mName.c_str());
+      continue;
+    }
+
+    if (codec->mChannels) {
+      *channels = codec->mChannels;
+    } else {
+      *channels = WEBRTC_DATACHANNEL_STREAMS_DEFAULT;
+    }
+    const JsepApplicationCodecDescription* appCodec =
+        static_cast<const JsepApplicationCodecDescription*>(codec.get());
+    *localport = appCodec->mLocalPort;
+    *remoteport = appCodec->mRemotePort;
+    *remotemaxmessagesize = appCodec->mRemoteMaxMessageSize;
+    *mmsset = appCodec->mRemoteMMSSet;
+    MOZ_ASSERT(!transportTransceiver->mTransport.mTransportId.empty());
+    *transportId = transportTransceiver->mTransport.mTransportId;
+    *client = transportTransceiver->mTransport.mDtls->GetRole() ==
+              JsepDtlsTransport::kJsepDtlsClient;
+    return NS_OK;
+  }
   return NS_ERROR_FAILURE;
 }
 
