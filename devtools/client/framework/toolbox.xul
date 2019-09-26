@@ -16,7 +16,7 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
-        csp="default-src chrome: resource:; img-src chrome: resource: data:;">
+        csp="default-src chrome: resource:; img-src chrome: resource: data:; object-src 'none'">
   <linkset>
     <html:link rel="localization" href="devtools/tooltips.ftl"/>
   </linkset>
