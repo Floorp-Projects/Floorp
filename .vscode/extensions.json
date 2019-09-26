@@ -14,6 +14,8 @@
     "rust-lang.rust",
     // CSS support for HTML documents.
     "ecmel.vscode-html-css",
+    // Web app and extension debugging.
+    "firefox-devtools.vscode-firefox-debug",
     // IDL language support
     "mythmon.idl"
   ]
