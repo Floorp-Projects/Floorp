@@ -11,6 +11,7 @@ import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.ThemeManager
+import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.whatsnew.WhatsNew
 
 class HomeMenu(
@@ -22,12 +23,13 @@ class HomeMenu(
         object Help : Item()
         object Settings : Item()
         object Library : Item()
+        object Quit : Item()
     }
 
     val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
 
     private val menuItems by lazy {
-        listOf(
+        val items = mutableListOf(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_settings),
                 R.drawable.ic_settings,
@@ -58,7 +60,10 @@ class HomeMenu(
                 R.drawable.ic_whats_new,
                 highlight = BrowserMenuHighlightableItem.Highlight(
                     startImageResource = R.drawable.ic_whats_new_notification,
-                    backgroundResource = ThemeManager.resolveAttribute(R.attr.selectableItemBackground, context),
+                    backgroundResource = ThemeManager.resolveAttribute(
+                        R.attr.selectableItemBackground,
+                        context
+                    ),
                     colorResource = R.color.whats_new_notification_color
                 ),
                 isHighlighted = { WhatsNew.shouldHighlightWhatsNew(context) }
@@ -66,5 +71,19 @@ class HomeMenu(
                 onItemTapped.invoke(Item.WhatsNew)
             }
         )
+
+        if (Settings.getInstance(context).shouldDeleteBrowsingDataOnQuit) {
+            items.add(
+                BrowserMenuImageText(
+                    context.getString(R.string.delete_browsing_data_on_quit_action),
+                    R.drawable.ic_exit,
+                    ThemeManager.resolveAttribute(R.attr.primaryText, context)
+                ) {
+                    onItemTapped.invoke(Item.Quit)
+                }
+            )
+        }
+
+        items
     }
 }

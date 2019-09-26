@@ -93,6 +93,7 @@ import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.settings.SupportUtils
+import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 import org.mozilla.fenix.share.ShareTab
 import org.mozilla.fenix.utils.FragmentPreDrawManager
 import org.mozilla.fenix.utils.allowUndo
@@ -675,6 +676,12 @@ class HomeFragment : Fragment() {
                         ),
                         newTab = true,
                         from = BrowserDirection.FromHome
+                    )
+                }
+                HomeMenu.Item.Quit -> activity?.let { activity ->
+                    deleteAndQuit(
+                        activity,
+                        lifecycleScope
                     )
                 }
             }
