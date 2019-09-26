@@ -20,7 +20,7 @@ diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
  double	cosh(double);
  double	sinh(double);
  double	tanh(double);
-@@ -53,9 +55,11 @@ double	scalbn(double, int);
+@@ -52,9 +54,11 @@ double	scalbn(double, int);
  
  float	ceilf(float);
  float	floorf(float);
