@@ -7431,10 +7431,10 @@ void HTMLMediaElement::CreateResumeDelayedMediaPlaybackAgentIfNeeded() {
           mAbstractMainThread, __func__,
           [self = RefPtr<HTMLMediaElement>(this)]() {
             LOG(LogLevel::Debug, ("%p Resume delayed Play() call", self.get()));
-            IgnoredErrorResult dummy;
-            RefPtr<Promise> toBeIgnored = self->Play(dummy);
             self->mResumePlaybackRequest.Complete();
             self->mResumeDelayedPlaybackAgent = nullptr;
+            IgnoredErrorResult dummy;
+            RefPtr<Promise> toBeIgnored = self->Play(dummy);
           },
           [self = RefPtr<HTMLMediaElement>(this)]() {
             LOG(LogLevel::Debug,
