@@ -40,6 +40,7 @@ fun WebAppManifest.toCustomTabConfig(): CustomTabConfig {
         closeButtonIcon = null,
         enableUrlbarHiding = true,
         actionButtonConfig = null,
+        showCloseButton = false,
         showShareMenuItem = true,
         menuItems = emptyList()
     )
