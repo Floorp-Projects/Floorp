@@ -70,7 +70,6 @@
 
 #include "AudioChannelService.h"
 #include "mozilla/dom/PromiseDebugging.h"
-#include "mozilla/dom/WebCryptoThreadPool.h"
 
 #ifdef MOZ_XUL
 #  include "nsXULPopupManager.h"
@@ -277,8 +276,6 @@ nsresult nsLayoutStatics::Initialize() {
   MediaDecoder::InitStatics();
 
   PromiseDebugging::Init();
-
-  mozilla::dom::WebCryptoThreadPool::Initialize();
 
   if (XRE_IsParentProcess() || XRE_IsContentProcess()) {
     InitializeServo();
