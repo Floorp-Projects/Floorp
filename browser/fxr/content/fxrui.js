@@ -17,6 +17,8 @@ let forwardButton = null;
 let refreshButton = null;
 let stopButton = null;
 
+let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 window.addEventListener(
   "DOMContentLoaded",
   () => {
@@ -128,9 +130,20 @@ function setupNavButtons() {
 
 function setupUrlBar() {
   // Navigate to new value when the user presses "Enter"
-  urlInput.addEventListener("keypress", function(e) {
+  urlInput.addEventListener("keypress", async function(e) {
     if (e.key == "Enter") {
-      browser.loadURI(urlInput.value);
+      // Use the URL Fixup Service in case the user wants to search instead
+      // of directly navigating to a location.
+      await Services.search.init();
+
+      let valueToFixUp = urlInput.value;
+      let flags =
+        Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
+        Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+
+      let uriToLoad = Services.uriFixup.createFixupURI(valueToFixUp, flags);
+
+      browser.loadURI(uriToLoad.spec);
       browser.focus();
     }
   });
