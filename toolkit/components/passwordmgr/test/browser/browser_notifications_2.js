@@ -43,7 +43,7 @@ add_task(async function test_toggle_password() {
       Assert.ok(toggleCheckbox.checked);
       Assert.equal(
         passwordTextbox.type,
-        "",
+        "text",
         "Password textbox changed to plain text"
       );
 
