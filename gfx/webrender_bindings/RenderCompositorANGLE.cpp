@@ -19,7 +19,6 @@
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/widget/WinCompositorWidget.h"
 #include "mozilla/WindowsVersion.h"
-#include "FxROutputHandler.h"
 
 #undef NTDDI_VERSION
 #define NTDDI_VERSION NTDDI_WIN8
@@ -336,15 +335,6 @@ bool RenderCompositorANGLE::BeginFrame(layers::NativeLayer* aNativeLayer) {
 
 void RenderCompositorANGLE::EndFrame() {
   InsertPresentWaitQuery();
-
-  if (mWidget->AsWindows()->HasFxrOutputHandler()) {
-    // There is a Firefox Reality handler for this swapchain. Update this
-    // window's contents to the VR window.
-    FxROutputHandler* fxrHandler = mWidget->AsWindows()->GetFxrOutputHandler();
-    if (fxrHandler->TryInitialize(mSwapChain, mDevice)) {
-      fxrHandler->UpdateOutput(mCtx);
-    }
-  }
 
   mSwapChain->Present(0, 0);
 }
