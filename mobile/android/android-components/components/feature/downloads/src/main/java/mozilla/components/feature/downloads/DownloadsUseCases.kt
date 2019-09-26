@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.downloads
 
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.store.BrowserStore
 
@@ -20,7 +19,7 @@ class DownloadsUseCases(
         private val store: BrowserStore
     ) {
         /**
-         * Consumes the [Download] with the given [downloadId] from the [Session] with the given
+         * Consumes the download with the given [downloadId] from the session with the given
          * [tabId].
          */
         operator fun invoke(tabId: String, downloadId: String) {
