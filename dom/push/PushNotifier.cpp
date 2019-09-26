@@ -100,7 +100,9 @@ nsresult PushNotifier::Dispatch(PushDispatcher& aDispatcher) {
       // Broadcast a message to notify observers and service workers.
       for (uint32_t i = 0; i < contentActors.Length(); ++i) {
         // We need to filter based on process type, only "web" AKA the default
-        // remote type is acceptable.
+        // remote type is acceptable. This should not run when Fission is
+        // enabled, and we specifically don't want this for
+        // LARGE_ALLOCATION_REMOTE_TYPE, so don't use IsWebRemoteType().
         if (!contentActors[i]->GetRemoteType().EqualsLiteral(
                 DEFAULT_REMOTE_TYPE)) {
           continue;
