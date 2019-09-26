@@ -810,10 +810,11 @@ var E10SUtils = {
   },
 
   /**
-   * There are various types of web content processes, but they all start with "web".
+   * There are various types of remote types that are for web content processes, but
+   * they all start with "web".
    */
-  isWebRemoteType(aBrowser) {
-    return aBrowser.remoteType.startsWith(WEB_REMOTE_TYPE);
+  isWebRemoteType(aRemoteType) {
+    return aRemoteType.startsWith(WEB_REMOTE_TYPE);
   },
 };
 
