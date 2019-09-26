@@ -17,6 +17,7 @@
 /** Test for Battery API **/
 ok(!("getBattery" in navigator), "navigator.getBattery should not exist for unprivileged web content");
 ok(!("battery" in navigator), "navigator.battery should not exist");
+ok(!("BatteryManager" in window), "BatteryManager should not exist");
 
 </script>
 </pre>
