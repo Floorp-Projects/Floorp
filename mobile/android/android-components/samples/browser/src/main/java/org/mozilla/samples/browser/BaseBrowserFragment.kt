@@ -23,7 +23,6 @@ import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.session.CoordinateScrollingFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SwipeRefreshFeature
-import mozilla.components.feature.session.WindowFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
 import mozilla.components.support.base.feature.BackHandler
@@ -147,8 +146,6 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
             owner = this,
             view = layout)
 
-        val windowFeature = WindowFeature(components.sessionManager)
-
         sitePermissionsFeature.set(
             feature = SitePermissionsFeature(
                 context = requireContext(),
@@ -171,7 +168,6 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
         lifecycle.addObservers(
             scrollFeature,
             contextMenuFeature,
-            windowFeature,
             menuUpdaterFeature
         )
 

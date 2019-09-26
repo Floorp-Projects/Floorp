@@ -12,6 +12,7 @@ import kotlinx.android.synthetic.main.fragment_browser.view.*
 import mozilla.components.feature.awesomebar.AwesomeBarFeature
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.session.ThumbnailsFeature
+import mozilla.components.feature.session.WindowFeature
 import mozilla.components.feature.tabs.toolbar.TabsToolbarFeature
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.support.base.feature.BackHandler
@@ -67,6 +68,9 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
             owner = this,
             view = layout
         )
+
+        val windowFeature = WindowFeature(components.sessionManager)
+        lifecycle.addObserver(windowFeature)
 
         return layout
     }

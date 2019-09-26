@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.session
 
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -15,6 +16,7 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
  */
 class WindowFeature(private val sessionManager: SessionManager) : LifecycleAwareFeature {
 
+    @VisibleForTesting
     internal val windowObserver = object : SelectionAwareSessionObserver(sessionManager) {
         override fun onOpenWindowRequested(session: Session, windowRequest: WindowRequest): Boolean {
             val newSession = Session(windowRequest.url, session.private)
