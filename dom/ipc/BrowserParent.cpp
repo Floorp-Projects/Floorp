@@ -3315,18 +3315,6 @@ void BrowserParent::PreserveLayers(bool aPreserveLayers) {
   mPreserveLayers = aPreserveLayers;
 }
 
-void BrowserParent::ForceRepaint() {
-  if (!mActiveInPriorityManager) {
-    // If a tab is left and then returned to very rapidly, it can be
-    // deprioritized without losing its loaded status. In this case we won't
-    // go through SetRenderLayers.
-    mActiveInPriorityManager = true;
-    ProcessPriorityManager::TabActivityChanged(this, true);
-  }
-
-  SetRenderLayersInternal(true /* aEnabled */);
-}
-
 void BrowserParent::NotifyResolutionChanged() {
   if (!mIsDestroyed) {
     // TryCacheDPIAndScale()'s cache is keyed off of

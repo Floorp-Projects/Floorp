@@ -1100,9 +1100,6 @@ class AsyncTabSwitcher {
     this.requestedTab = tab;
     if (tabState == this.STATE_LOADED) {
       this.maybeVisibleTabs.clear();
-      if (tab.linkedBrowser.isRemoteBrowser) {
-        tab.linkedBrowser.forceRepaint();
-      }
     }
 
     tab.linkedBrowser.setAttribute("primary", "true");
