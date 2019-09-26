@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.home.sessioncontrol
 
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -151,6 +152,10 @@ class SessionControlUIView(
     }
 
     override fun updateView() = Consumer<SessionControlState> {
+        // Workaround for list not updating until scroll on Android 5 + 6
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            sessionControlAdapter.submitList(null)
+        }
         sessionControlAdapter.submitList(it.toAdapterList())
     }
 }
