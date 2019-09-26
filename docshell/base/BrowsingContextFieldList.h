@@ -21,6 +21,9 @@ MOZ_BC_FIELD(OpenerId, uint64_t)
 
 MOZ_BC_FIELD(OnePermittedSandboxedNavigatorId, uint64_t)
 
+// Window ID of the inner window which embeds this BrowsingContext.
+MOZ_BC_FIELD(EmbedderInnerWindowId, uint64_t)
+
 MOZ_BC_FIELD(HadOriginalOpener, bool)
 
 // This field controls whether the browsing context is currently considered to
