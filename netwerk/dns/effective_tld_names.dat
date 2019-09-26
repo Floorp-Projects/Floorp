@@ -6047,6 +6047,16 @@ org.so
 // sr : https://en.wikipedia.org/wiki/.sr
 sr
 
+// ss : https://registry.nic.ss/
+// Submitted by registry <technical@nic.ss>
+ss
+biz.ss
+com.ss
+edu.ss
+gov.ss
+net.ss
+org.ss
+
 // st : http://www.nic.st/html/policyrules/
 st
 co.st
@@ -7065,7 +7075,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2019-09-10T15:21:14Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2019-09-25T16:43:12Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -9829,6 +9839,9 @@ sony
 
 // soy : 2014-01-23 Charleston Road Registry Inc.
 soy
+
+// spa : 2019-09-19 Asia Spa and Wellness Promotion Council Limited
+spa
 
 // space : 2014-04-03 DotSpace Inc.
 space
