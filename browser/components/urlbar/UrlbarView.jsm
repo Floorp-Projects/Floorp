@@ -388,10 +388,6 @@ class UrlbarView {
 
     this.window.removeEventListener("resize", this);
 
-    this.window.removeEventListener("mousedown", this);
-    this.panel.removeEventListener("mousedown", this);
-    this.input.textbox.removeEventListener("mousedown", this);
-
     this.controller.notify(this.controller.NOTIFICATIONS.VIEW_CLOSE);
     if (this.contextualTip) {
       this.contextualTip.hide();
@@ -596,10 +592,6 @@ class UrlbarView {
 
     this.input.setAttribute("open", "true");
     this.input.startLayoutExtend();
-
-    this.window.addEventListener("mousedown", this);
-    this.panel.addEventListener("mousedown", this);
-    this.input.textbox.addEventListener("mousedown", this);
 
     this.window.addEventListener("resize", this);
     this._windowOuterWidth = this.window.outerWidth;
@@ -1267,41 +1259,20 @@ class UrlbarView {
   }
 
   _on_mousedown(event) {
-    switch (event.currentTarget) {
-      case this.panel:
-      case this.input.textbox:
-        this._mousedownOnViewOrInput = true;
-        break;
-      case this.window:
-        // Close the view when clicking on toolbars and other UI pieces that might
-        // not automatically remove focus from the input.
-        if (this._mousedownOnViewOrInput) {
-          this._mousedownOnViewOrInput = false;
-          break;
-        }
-        // Respect the autohide preference for easier inspecting/debugging via
-        // the browser toolbox.
-        if (!UrlbarPrefs.get("ui.popup.disable_autohide")) {
-          this.close();
-        }
-        break;
-      case this._rows:
-        if (event.button == 2) {
-          // Ignore right clicks.
-          break;
-        }
-        let row = event.target;
-        while (!row.classList.contains("urlbarView-row")) {
-          row = row.parentNode;
-        }
-        this._selectElement(row, { updateInput: false });
-        this.controller.speculativeConnect(
-          this.selectedResult,
-          this._queryContext,
-          "mousedown"
-        );
-        break;
+    if (event.button == 2) {
+      // Ignore right clicks.
+      return;
     }
+    let row = event.target;
+    while (!row.classList.contains("urlbarView-row")) {
+      row = row.parentNode;
+    }
+    this._selectElement(row, { updateInput: false });
+    this.controller.speculativeConnect(
+      this.selectedResult,
+      this._queryContext,
+      "mousedown"
+    );
   }
 
   _on_mouseup(event) {
