@@ -30,6 +30,7 @@
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/Unused.h"
 #include "RetainedDisplayListBuilder.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsCSSPseudoElements.h"
@@ -5710,6 +5711,7 @@ void nsCSSFrameConstructor::ConstructFramesFromItem(
                         "This may be a frame that was previously blockified "
                         "but isn't any longer! It probably needs explicit "
                         "'display:block' to preserve behavior");
+  Unused << disp; // (unused in configs that define the assertion away)
 
   if (item.mIsText) {
     // If this is collapsible whitespace next to a line boundary,
