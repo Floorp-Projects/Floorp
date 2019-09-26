@@ -14,6 +14,8 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import mozilla.components.feature.media.ext.getSession
+import mozilla.components.feature.media.ext.getTitleOrUrl
 import mozilla.components.feature.media.ext.isForCustomTabSession
 import mozilla.components.feature.media.ext.pauseIfPlaying
 import mozilla.components.feature.media.ext.playIfPaused
@@ -107,6 +109,9 @@ internal class MediaService : Service() {
         mediaSession.setPlaybackState(state.toPlaybackState())
         mediaSession.isActive = true
         mediaSession.setMetadata(MediaMetadataCompat.Builder()
+            .putString(
+                MediaMetadataCompat.METADATA_KEY_TITLE,
+                state.getSession().getTitleOrUrl(this))
             .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, -1)
             .build())
     }

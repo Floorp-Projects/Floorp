@@ -11,9 +11,11 @@ import android.graphics.Bitmap
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.annotation.DrawableRes
 import androidx.core.app.NotificationCompat
-import mozilla.components.browser.session.Session
 import mozilla.components.feature.media.MediaFeature
 import mozilla.components.feature.media.R
+import mozilla.components.feature.media.ext.getTitleOrUrl
+import mozilla.components.feature.media.ext.nonPrivateIcon
+import mozilla.components.feature.media.ext.nonPrivateUrl
 import mozilla.components.feature.media.service.MediaService
 import mozilla.components.feature.media.state.MediaState
 
@@ -109,18 +111,6 @@ private fun MediaState.toNotificationData(context: Context): NotificationData {
         else -> NotificationData()
     }
 }
-
-private fun Session.getTitleOrUrl(context: Context): String = when {
-    private -> context.getString(R.string.mozac_feature_media_notification_private_mode)
-    title.isNotEmpty() -> title
-    else -> url
-}
-
-private val Session.nonPrivateUrl
-    get() = if (private) "" else url
-
-private val Session.nonPrivateIcon: Bitmap?
-    get() = if (private) null else icon
 
 private data class NotificationData(
     val title: String = "",
