@@ -84,6 +84,9 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   void SetCertificateTransparencyInfo(
       const mozilla::psm::CertificateTransparencyInfo& info);
 
+  // Use errorCode == 0 to indicate success;
+  virtual void SetCertVerificationResult(PRErrorCode errorCode){};
+
   uint16_t mCipherSuite;
   uint16_t mProtocolVersion;
   uint16_t mCertificateTransparencyStatus;
