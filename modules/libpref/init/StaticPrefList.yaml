@@ -1399,13 +1399,6 @@
   value: true
   mirror: always
 
-# Time limit, in milliseconds, for EventStateManager::IsHandlingUserInput().
-# Used to detect long running handlers of user-generated events.
-- name: dom.event.handling-user-input-time-limit
-  type: uint32_t
-  value: 1000
-  mirror: always
-
 # Enable clipboard readText() and writeText() by default
 - name: dom.events.asyncClipboard
   type: bool
