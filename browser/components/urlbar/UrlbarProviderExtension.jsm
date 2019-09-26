@@ -214,23 +214,37 @@ class UrlbarProviderExtension extends UrlbarProvider {
   }
 
   /**
+   * This method is called when a result from the provider without a URL is
+   * picked, but currently only for tip results.  The provider should handle the
+   * pick.
+   *
+   * @param {UrlbarResult} result
+   *   The result that was picked.
+   * @param {object} details
+   *   Details about the pick, depending on the result type.
+   */
+  pickResult(result, details) {
+    this._notifyListener("resultPicked", result.payload, details);
+  }
+
+  /**
    * Calls a listener function set by the extension API implementation, if any.
    *
    * @param {string} eventName
    *   The name of the listener to call (i.e., the name of the event to fire).
-   * @param {UrlbarQueryContext} context
-   *   The query context relevant to the event.
+   * @param {arguments} args
+   *   The arguments to pass to the listener.
    * @returns {*}
    *   The value returned by the listener function, if any.
    */
-  async _notifyListener(eventName, context) {
+  async _notifyListener(eventName, ...args) {
     let listener = this._eventListeners.get(eventName);
     if (!listener) {
       return undefined;
     }
     let result;
     try {
-      result = listener(context);
+      result = listener(...args);
     } catch (error) {
       Cu.reportError(error);
       return undefined;

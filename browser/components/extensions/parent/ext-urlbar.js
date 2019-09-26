@@ -192,6 +192,23 @@ this.urlbar = class extends ExtensionAPI {
           },
         }).api(),
 
+        onResultPicked: new EventManager({
+          context,
+          name: "urlbar.onResultPicked",
+          register: (fire, providerName) => {
+            let provider = UrlbarProviderExtension.getOrCreate(providerName);
+            provider.setEventListener(
+              "resultPicked",
+              async (resultPayload, details) => {
+                return fire.async(resultPayload, details).catch(error => {
+                  throw context.normalizeError(error);
+                });
+              }
+            );
+            return () => provider.setEventListener("resultPicked", null);
+          },
+        }).api(),
+
         openViewOnFocus: getSettingsAPI(
           context.extension.id,
           "openViewOnFocus",

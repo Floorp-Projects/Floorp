@@ -367,6 +367,7 @@ class Query {
       return;
     }
 
+    match.providerName = provider.name;
     this.context.results.push(match);
 
     let notifyResults = () => {
