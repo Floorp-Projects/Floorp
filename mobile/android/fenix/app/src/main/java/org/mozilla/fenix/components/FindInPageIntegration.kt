@@ -6,8 +6,9 @@ package org.mozilla.fenix.components
 
 import android.view.View
 import android.view.ViewStub
-import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.runWithSessionIdOrSelected
+import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
+import mozilla.components.browser.state.state.CustomTabSessionState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.findinpage.FindInPageFeature
@@ -17,22 +18,22 @@ import org.mozilla.fenix.test.Mockable
 
 @Mockable
 class FindInPageIntegration(
-    private val sessionManager: SessionManager,
+    private val store: BrowserStore,
     private val sessionId: String? = null,
     stub: ViewStub,
     private val engineView: EngineView,
     private val toolbar: BrowserToolbar
 ) : InflationAwareFeature(stub) {
     override fun onViewInflated(view: View): LifecycleAwareFeature {
-        return FindInPageFeature(sessionManager, view as FindInPageView, engineView) {
+        return FindInPageFeature(store, view as FindInPageView, engineView) {
             toolbar.visibility = View.VISIBLE
             view.visibility = View.GONE
         }
     }
 
     override fun onLaunch(view: View, feature: LifecycleAwareFeature) {
-        sessionManager.runWithSessionIdOrSelected(sessionId) { session ->
-            if (!session.isCustomTabSession()) {
+        store.state.findCustomTabOrSelectedTab(sessionId)?.let { session ->
+            if (session !is CustomTabSessionState) {
                 toolbar.visibility = View.GONE
             }
             view.visibility = View.VISIBLE

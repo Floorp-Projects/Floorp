@@ -201,7 +201,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
 
             findInPageIntegration.set(
                 feature = FindInPageIntegration(
-                    sessionManager = sessionManager,
+                    store = store,
                     sessionId = customTabSessionId,
                     stub = view.stubFindInPage,
                     engineView = view.engineView,

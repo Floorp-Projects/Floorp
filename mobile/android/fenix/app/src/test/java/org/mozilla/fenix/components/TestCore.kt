@@ -9,6 +9,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.browser.engine.gecko.GeckoEngine
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.fetch.Client
 
 @ObsoleteCoroutinesApi
@@ -17,4 +18,5 @@ class TestCore(private val context: Context) : Core(context) {
     override val engine = mockk<GeckoEngine>(relaxed = true)
     override val sessionManager = SessionManager(engine)
     override val client = mockk<Client>()
+    override val store = mockk<BrowserStore>()
 }

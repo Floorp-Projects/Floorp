@@ -21,7 +21,14 @@ class Components(private val context: Context) {
     val core by lazy { Core(context) }
     val search by lazy { Search(context) }
     val useCases by lazy {
-        UseCases(context, core.sessionManager, core.engine.settings, search.searchEngineManager, core.client)
+        UseCases(
+            context,
+            core.sessionManager,
+            core.store,
+            core.engine.settings,
+            search.searchEngineManager,
+            core.client
+        )
     }
     val intentProcessors by lazy {
         IntentProcessors(context, core.sessionManager, useCases.sessionUseCases, useCases.searchUseCases)

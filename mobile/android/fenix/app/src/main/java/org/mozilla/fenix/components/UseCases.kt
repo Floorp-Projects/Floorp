@@ -7,6 +7,7 @@ package org.mozilla.fenix.components
 import android.content.Context
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.app.links.AppLinksUseCases
@@ -27,6 +28,7 @@ import org.mozilla.fenix.test.Mockable
 class UseCases(
     private val context: Context,
     private val sessionManager: SessionManager,
+    private val store: BrowserStore,
     private val engineSettings: Settings,
     private val searchEngineManager: SearchEngineManager,
     private val httpClient: Client
@@ -55,7 +57,7 @@ class UseCases(
 
     val webAppUseCases by lazy { WebAppUseCases(context, sessionManager, httpClient, supportWebApps = false) }
 
-    val downloadUseCases by lazy { DownloadsUseCases(sessionManager) }
+    val downloadUseCases by lazy { DownloadsUseCases(store) }
 
-    val contextMenuUseCases by lazy { ContextMenuUseCases(sessionManager) }
+    val contextMenuUseCases by lazy { ContextMenuUseCases(sessionManager, store) }
 }
