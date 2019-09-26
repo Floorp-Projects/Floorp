@@ -11,22 +11,28 @@
     }
   </style>
 
-  <iframe src="file_nosniff_navigation.sjs?xml"> </iframe>
-  <iframe src="file_nosniff_navigation.sjs?html"></iframe>
-  <iframe src="file_nosniff_navigation.sjs?css" ></iframe>
-  <iframe src="file_nosniff_navigation.sjs?json"></iframe>
-  <iframe src="file_nosniff_navigation.sjs?img"></iframe>
+  <iframe class="no-mime" src="file_nosniff_navigation.sjs?xml"> </iframe>
+  <iframe class="no-mime" src="file_nosniff_navigation.sjs?html"></iframe>
+  <iframe class="no-mime" src="file_nosniff_navigation.sjs?css" ></iframe>
+  <iframe class="no-mime" src="file_nosniff_navigation.sjs?json"></iframe>
+  <iframe class="no-mime" src="file_nosniff_navigation.sjs?img"></iframe>
+  <iframe class="no-mime" src="file_nosniff_navigation.sjs"></iframe>
  
   <hr>
-  <iframe src="file_nosniff_navigation_mismatch.sjs?html"></iframe>
-  <iframe src="file_nosniff_navigation_mismatch.sjs?xml"></iframe>
-  <iframe src="file_nosniff_navigation_mismatch.sjs"></iframe>
+  <iframe class="mismatch-mime" src="file_nosniff_navigation_mismatch.sjs?html"></iframe>
+  <iframe class="mismatch-mime" src="file_nosniff_navigation_mismatch.sjs?xml"></iframe>
+  <iframe class="mismatch-mime" src="file_nosniff_navigation_mismatch.sjs?css"></iframe>
+  <iframe class="mismatch-mime" src="file_nosniff_navigation_mismatch.sjs?json"></iframe>
+  <iframe class="mismatch-mime" src="file_nosniff_navigation_mismatch.sjs?img"></iframe>
+  <iframe class="mismatch-mime" src="file_nosniff_navigation_mismatch.sjs"></iframe>
+  <hr>
 
-  <iframe src="file_nosniff_navigation_garbage.sjs?xml"> </iframe>
-  <iframe src="file_nosniff_navigation_garbage.sjs?html"></iframe>
-  <iframe src="file_nosniff_navigation_garbage.sjs?css" ></iframe>
-  <iframe src="file_nosniff_navigation_garbage.sjs?json"></iframe>
-  <iframe src="file_nosniff_navigation_garbage.sjs?img"></iframe>
+  <iframe class="garbage-mime" src="file_nosniff_navigation_garbage.sjs?xml"> </iframe>
+  <iframe class="garbage-mime" src="file_nosniff_navigation_garbage.sjs?html"></iframe>
+  <iframe class="garbage-mime" src="file_nosniff_navigation_garbage.sjs?css" ></iframe>
+  <iframe class="garbage-mime" src="file_nosniff_navigation_garbage.sjs?json"></iframe>
+  <iframe class="garbage-mime" src="file_nosniff_navigation_garbage.sjs?img"></iframe>
+  <iframe class="garbage-mime" src="file_nosniff_navigation_garbage.sjs"></iframe>
  
 
 </head>
@@ -50,12 +56,33 @@
 SimpleTest.waitForExplicitFinish();
 
 window.addEventListener("load", ()=>{
-  let iframes = Array.from(document.querySelectorAll("iframe"));
+  let noMimeFrames = Array.from(document.querySelectorAll(".no-mime"));
 
-  iframes.forEach( frame => {
+  noMimeFrames.forEach( frame => {
+    // In case of no Provided Content Type, not rendering or assuming text/plain is valid
+    let result = frame.contentWindow.document.URL == "about:blank" || frame.contentWindow.document.contentType == "text/plain";
+    let sniffTarget = (new URL(frame.src)).search;
+    ok(result, `${sniffTarget} without MIME - was not Sniffed`);
+  });
+
+  let mismatchedMimes = Array.from(document.querySelectorAll(".mismatch-mime"));
+  mismatchedMimes.forEach(frame => {
+    // In case the Server mismatches the Mime Type (sends content X as image/png)
+    // assert that we do not sniff and correct this.
+    let result = frame.contentWindow.document.contentType == "image/png";
+    let sniffTarget = (new URL(frame.src)).search;
+    ok(result, `${sniffTarget} send as image/png - was not Sniffed`);
+  });
+
+  let badMimeFrames = Array.from(document.querySelectorAll(".garbage-mime"));
+
+  badMimeFrames.forEach( frame => {
+    // In the case we got a bogous mime, assert that we dont sniff. 
+    // We must not default here to text/plain
+    // as the Server at least provided a mime type. 
     let result = frame.contentWindow.document.URL == "about:blank";
     let sniffTarget = (new URL(frame.src)).search;
-    ok(result, `${sniffTarget} - was not Sniffed`);
+    ok(result, `${sniffTarget} send as garbage/garbage - was not Sniffed`);
   });
   
   SimpleTest.finish();
