@@ -314,8 +314,6 @@ pref("ui.android.mouse_as_touch", 1);
 
 // Duration of timeout of incremental search in menus (ms).  0 means infinite.
 pref("ui.menu.incremental_search.timeout", 1000);
-// If true, all popups won't hide automatically on blur
-pref("ui.popup.disable_autohide", false);
 
 pref("browser.display.force_inline_alttext", false); // true = force ALT text for missing images to be layed out inline
 // 0 = no external leading,

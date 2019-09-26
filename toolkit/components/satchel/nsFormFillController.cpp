@@ -19,6 +19,7 @@
 #include "mozilla/dom/PageTransitionEvent.h"
 #include "mozilla/Logging.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_ui.h"
 #include "nsIFormAutoComplete.h"
 #include "nsIInputListAutoComplete.h"
 #include "nsIAutoCompleteSimpleResult.h"
@@ -862,7 +863,7 @@ nsFormFillController::HandleEvent(Event* aEvent) {
       return NS_OK;
     }
     case eBlur:
-      if (mFocusedInput) {
+      if (mFocusedInput && !StaticPrefs::ui_popup_disable_autohide()) {
         StopControllingInput();
       }
       return NS_OK;
