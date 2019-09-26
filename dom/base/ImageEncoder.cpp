@@ -14,7 +14,7 @@
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Unused.h"
 #include "gfxUtils.h"
-#include "nsThreadPool.h"
+#include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 #include "nsXPCOMCIDInternal.h"
 #include "YCbCrUtils.h"
@@ -215,8 +215,6 @@ class EncodingRunnable : public Runnable {
   bool mUsingCustomOptions;
 };
 
-StaticRefPtr<nsIThreadPool> ImageEncoder::sThreadPool;
-
 /* static */
 nsresult ImageEncoder::ExtractData(nsAString& aType, const nsAString& aOptions,
                                    const nsIntSize aSize, bool aUsePlaceholder,
@@ -243,11 +241,6 @@ nsresult ImageEncoder::ExtractDataFromLayersImageAsync(
     return NS_IMAGELIB_ERROR_NO_ENCODER;
   }
 
-  nsresult rv = EnsureThreadPool();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   RefPtr<EncodingCompleteEvent> completeEvent =
       new EncodingCompleteEvent(aEncodeCallback);
 
@@ -256,7 +249,7 @@ nsresult ImageEncoder::ExtractDataFromLayersImageAsync(
       new EncodingRunnable(aType, aOptions, nullptr, aImage, encoder,
                            completeEvent, imgIEncoder::INPUT_FORMAT_HOSTARGB,
                            size, aUsePlaceholder, aUsingCustomOptions);
-  return sThreadPool->Dispatch(event, NS_DISPATCH_NORMAL);
+  return NS_DispatchToBackgroundThread(event.forget());
 }
 
 /* static */
@@ -269,18 +262,13 @@ nsresult ImageEncoder::ExtractDataAsync(
     return NS_IMAGELIB_ERROR_NO_ENCODER;
   }
 
-  nsresult rv = EnsureThreadPool();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   RefPtr<EncodingCompleteEvent> completeEvent =
       new EncodingCompleteEvent(aEncodeCallback);
 
   nsCOMPtr<nsIRunnable> event = new EncodingRunnable(
       aType, aOptions, std::move(aImageBuffer), nullptr, encoder, completeEvent,
       aFormat, aSize, aUsePlaceholder, aUsingCustomOptions);
-  return sThreadPool->Dispatch(event, NS_DISPATCH_NORMAL);
+  return NS_DispatchToBackgroundThread(event.forget());
 }
 
 /*static*/
@@ -432,76 +420,6 @@ already_AddRefed<imgIEncoder> ImageEncoder::GetImageEncoder(nsAString& aType) {
   }
 
   return encoder.forget();
-}
-
-class EncoderThreadPoolTerminator final : public nsIObserver {
- public:
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Observe(nsISupports*, const char* topic,
-                     const char16_t*) override {
-    NS_ASSERTION(!strcmp(topic, "xpcom-shutdown-threads"), "Unexpected topic");
-    if (ImageEncoder::sThreadPool) {
-      ImageEncoder::sThreadPool->Shutdown();
-      ImageEncoder::sThreadPool = nullptr;
-    }
-    return NS_OK;
-  }
-
- private:
-  ~EncoderThreadPoolTerminator() {}
-};
-
-NS_IMPL_ISUPPORTS(EncoderThreadPoolTerminator, nsIObserver)
-
-static void RegisterEncoderThreadPoolTerminatorObserver() {
-  MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  NS_ASSERTION(os, "do_GetService failed");
-  os->AddObserver(new EncoderThreadPoolTerminator(), "xpcom-shutdown-threads",
-                  false);
-}
-
-/* static */
-nsresult ImageEncoder::EnsureThreadPool() {
-  if (!sThreadPool) {
-    nsCOMPtr<nsIThreadPool> threadPool = new nsThreadPool();
-    sThreadPool = threadPool;
-
-    if (!NS_IsMainThread()) {
-      NS_DispatchToMainThread(NS_NewRunnableFunction(
-          "dom::ImageEncoder::EnsureThreadPool",
-          []() -> void { RegisterEncoderThreadPoolTerminatorObserver(); }));
-    } else {
-      RegisterEncoderThreadPoolTerminatorObserver();
-    }
-
-    const uint32_t kThreadLimit = 2;
-    const uint32_t kIdleThreadLimit = 1;
-    const uint32_t kIdleThreadTimeoutMs = 30000;
-
-    nsresult rv = sThreadPool->SetName(NS_LITERAL_CSTRING("EncodingRunnable"));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = sThreadPool->SetThreadLimit(kThreadLimit);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = sThreadPool->SetIdleThreadLimit(kIdleThreadLimit);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = sThreadPool->SetIdleThreadTimeout(kIdleThreadTimeoutMs);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  return NS_OK;
 }
 
 }  // namespace dom
