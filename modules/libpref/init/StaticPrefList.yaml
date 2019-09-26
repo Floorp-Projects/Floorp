@@ -136,9 +136,11 @@
 #endif
 
 #ifdef NIGHTLY_BUILD
-#define IS_NIGHTLY_BUILD  true
+#define IS_NIGHTLY_BUILD      true
+#define IS_NOT_NIGHTLY_BUILD  false
 #else
-#define IS_NIGHTLY_BUILD  false
+#define IS_NIGHTLY_BUILD      false
+#define IS_NOT_NIGHTLY_BUILD  true
 #endif
 
 #ifdef MOZILLA_OFFICIAL
@@ -5182,6 +5184,16 @@
 - name: layout.css.scroll-anchoring.enabled
   type: bool
   value: true
+  mirror: always
+
+# Pref to control disabling scroll anchoring suppression triggers, see
+#
+# https://drafts.csswg.org/css-scroll-anchoring/#suppression-triggers
+#
+# Those triggers should be unnecessary after bug 1561450.
+- name: layout.css.scroll-anchoring.suppressions.enabled
+  type: bool
+  value: @IS_NOT_NIGHTLY_BUILD@
   mirror: always
 
 - name: layout.css.scroll-anchoring.highlight
