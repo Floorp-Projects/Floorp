@@ -165,9 +165,8 @@ IPCResult BrowserBridgeParent::RecvUpdateEffects(const EffectsInfo& aEffects) {
 }
 
 IPCResult BrowserBridgeParent::RecvRenderLayers(
-    const bool& aEnabled, const bool& aForceRepaint,
-    const layers::LayersObserverEpoch& aEpoch) {
-  Unused << mBrowserParent->SendRenderLayers(aEnabled, aForceRepaint, aEpoch);
+    const bool& aEnabled, const layers::LayersObserverEpoch& aEpoch) {
+  Unused << mBrowserParent->SendRenderLayers(aEnabled, aEpoch);
   return IPC_OK();
 }
 

@@ -70,7 +70,6 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
       const DimensionInfo& aDimensions);
   mozilla::ipc::IPCResult RecvUpdateEffects(const EffectsInfo& aEffects);
   mozilla::ipc::IPCResult RecvRenderLayers(const bool& aEnabled,
-                                           const bool& aForceRepaint,
                                            const LayersObserverEpoch& aEpoch);
 
   mozilla::ipc::IPCResult RecvNavigateByKey(const bool& aForward,
