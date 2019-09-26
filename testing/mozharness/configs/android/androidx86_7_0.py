@@ -10,10 +10,10 @@ config = {
         {
             "algorithm": "sha512",
             "visibility": "internal",
-            "filename": "android-sdk_r29.0.11.0-linux-x86emu.tar.gz",
+            "filename": "android-sdk_r29.2.1.0-linux-x86emu.tar.gz",
             "unpack": true,
-            "digest": "954d6c7ecf3e10468ae0ca8d97f930eb1e1665ddf5d9317dd4bb8fbc13271cf12c4e343170aee782c33f1b6e15e5915f62c9e4a2a66eb32cc0b919cd6fb9659b",
-            "size": 330652164
+            "digest": "4014389d2e0c6889edf89a714e4defbd42c2bced79eee1cce726a9b2c921c6d857723f918a9f1b7dca35b9f8d6cbfdf6b47d2934d800bdd396bf5c17ada3b827",
+            "size": 299610245
         }
         ] """,
     "emulator_avd_name": "test-1",
