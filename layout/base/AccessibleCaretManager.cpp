@@ -620,6 +620,11 @@ void AccessibleCaretManager::OnScrollStart() {
   AutoRestore<bool> saveAllowFlushingLayout(mAllowFlushingLayout);
   mAllowFlushingLayout = false;
 
+  Maybe<PresShell::AutoAssertNoFlush> assert;
+  if (mPresShell) {
+    assert.emplace(*mPresShell);
+  }
+
   mIsScrollStarted = true;
 
   if (mFirstCaret->IsLogicallyVisible() || mSecondCaret->IsLogicallyVisible()) {
@@ -636,6 +641,11 @@ void AccessibleCaretManager::OnScrollEnd() {
 
   AutoRestore<bool> saveAllowFlushingLayout(mAllowFlushingLayout);
   mAllowFlushingLayout = false;
+
+  Maybe<PresShell::AutoAssertNoFlush> assert;
+  if (mPresShell) {
+    assert.emplace(*mPresShell);
+  }
 
   mIsScrollStarted = false;
 
@@ -667,6 +677,11 @@ void AccessibleCaretManager::OnScrollPositionChanged() {
   AutoRestore<bool> saveAllowFlushingLayout(mAllowFlushingLayout);
   mAllowFlushingLayout = false;
 
+  Maybe<PresShell::AutoAssertNoFlush> assert;
+  if (mPresShell) {
+    assert.emplace(*mPresShell);
+  }
+
   if (mFirstCaret->IsLogicallyVisible() || mSecondCaret->IsLogicallyVisible()) {
     if (mIsScrollStarted) {
       // We don't want extra CaretStateChangedEvents dispatched when user is
@@ -689,6 +704,11 @@ void AccessibleCaretManager::OnReflow() {
 
   AutoRestore<bool> saveAllowFlushingLayout(mAllowFlushingLayout);
   mAllowFlushingLayout = false;
+
+  Maybe<PresShell::AutoAssertNoFlush> assert;
+  if (mPresShell) {
+    assert.emplace(*mPresShell);
+  }
 
   if (mFirstCaret->IsLogicallyVisible() || mSecondCaret->IsLogicallyVisible()) {
     AC_LOG("%s: UpdateCarets(RespectOldAppearance)", __FUNCTION__);
