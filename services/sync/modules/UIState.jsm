@@ -24,6 +24,7 @@ ChromeUtils.defineModuleGetter(
 );
 
 const TOPICS = [
+  "weave:connected",
   "weave:service:login:change",
   "weave:service:login:error",
   "weave:service:ready",
