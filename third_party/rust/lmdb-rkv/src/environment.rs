@@ -1,22 +1,44 @@
-use libc::{c_uint, size_t};
-use std::{fmt, ptr, result, mem};
+use libc::{
+    c_uint,
+    size_t,
+};
 use std::ffi::CString;
-#[cfg(unix)]
-use std::os::unix::ffi::OsStrExt;
 #[cfg(windows)]
 use std::ffi::OsStr;
+#[cfg(unix)]
+use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
 use std::sync::Mutex;
+use std::{
+    fmt,
+    mem,
+    ptr,
+    result,
+};
 
 use ffi;
 
-use byteorder::{ByteOrder, NativeEndian};
+use byteorder::{
+    ByteOrder,
+    NativeEndian,
+};
 
 use cursor::Cursor;
-use error::{Error, Result, lmdb_result};
 use database::Database;
-use transaction::{RoTransaction, RwTransaction, Transaction};
-use flags::{DatabaseFlags, EnvironmentFlags};
+use error::{
+    lmdb_result,
+    Error,
+    Result,
+};
+use flags::{
+    DatabaseFlags,
+    EnvironmentFlags,
+};
+use transaction::{
+    RoTransaction,
+    RwTransaction,
+    Transaction,
+};
 
 #[cfg(windows)]
 /// Adding a 'missing' trait from windows OsStrExt
@@ -39,14 +61,14 @@ pub struct Environment {
 }
 
 impl Environment {
-
     /// Creates a new builder for specifying options for opening an LMDB environment.
+    #[allow(clippy::new_ret_no_self)]
     pub fn new() -> EnvironmentBuilder {
         EnvironmentBuilder {
             flags: EnvironmentFlags::empty(),
             max_readers: None,
             max_dbs: None,
-            map_size: None
+            map_size: None,
         }
     }
 
@@ -95,10 +117,7 @@ impl Environment {
     ///
     /// This function will fail with `Error::BadRslot` if called by a thread with an open
     /// transaction.
-    pub fn create_db<'env>(&'env self,
-                           name: Option<&str>,
-                           flags: DatabaseFlags)
-                           -> Result<Database> {
+    pub fn create_db<'env>(&'env self, name: Option<&str>, flags: DatabaseFlags) -> Result<Database> {
         let mutex = self.dbi_open_mutex.lock();
         let txn = self.begin_rw_txn()?;
         let db = unsafe { txn.create_db(name, flags)? };
@@ -110,7 +129,7 @@ impl Environment {
     /// Retrieves the set of flags which the database is opened with.
     ///
     /// The database must belong to to this environment.
-    pub fn get_db_flags<'env>(&'env self, db: Database) -> Result<DatabaseFlags> {
+    pub fn get_db_flags(&self, db: Database) -> Result<DatabaseFlags> {
         let txn = self.begin_ro_txn()?;
         let mut flags: c_uint = 0;
         unsafe {
@@ -137,7 +156,14 @@ impl Environment {
     /// the environment was opened with `MDB_NOSYNC` or in part `MDB_NOMETASYNC`.
     pub fn sync(&self, force: bool) -> Result<()> {
         unsafe {
-            lmdb_result(ffi::mdb_env_sync(self.env(), if force { 1 } else { 0 }))
+            lmdb_result(ffi::mdb_env_sync(
+                self.env(),
+                if force {
+                    1
+                } else {
+                    0
+                },
+            ))
         }
     }
 
@@ -239,9 +265,7 @@ impl Environment {
     ///   with size 0 to update the environment. Otherwise, new transaction creation
     ///   will fail with `Error::MapResized`.
     pub fn set_map_size(&self, size: size_t) -> Result<()> {
-        unsafe {
-            lmdb_result(ffi::mdb_env_set_mapsize(self.env(), size))
-        }
+        unsafe { lmdb_result(ffi::mdb_env_set_mapsize(self.env(), size)) }
     }
 }
 
@@ -253,9 +277,7 @@ pub struct Stat(ffi::MDB_stat);
 impl Stat {
     /// Create a new Stat with zero'd inner struct `ffi::MDB_stat`.
     pub(crate) fn new() -> Stat {
-        unsafe {
-            Stat(mem::zeroed())
-        }
+        unsafe { Stat(mem::zeroed()) }
     }
 
     /// Returns a mut pointer to `ffi::MDB_stat`.
@@ -368,7 +390,6 @@ pub struct EnvironmentBuilder {
 }
 
 impl EnvironmentBuilder {
-
     /// Open an environment.
     ///
     /// On UNIX, the database files will be opened with 644 permissions.
@@ -390,26 +411,27 @@ impl EnvironmentBuilder {
         unsafe {
             lmdb_try!(ffi::mdb_env_create(&mut env));
             if let Some(max_readers) = self.max_readers {
-                lmdb_try_with_cleanup!(ffi::mdb_env_set_maxreaders(env, max_readers),
-                                       ffi::mdb_env_close(env))
+                lmdb_try_with_cleanup!(ffi::mdb_env_set_maxreaders(env, max_readers), ffi::mdb_env_close(env))
             }
             if let Some(max_dbs) = self.max_dbs {
-                lmdb_try_with_cleanup!(ffi::mdb_env_set_maxdbs(env, max_dbs),
-                                       ffi::mdb_env_close(env))
+                lmdb_try_with_cleanup!(ffi::mdb_env_set_maxdbs(env, max_dbs), ffi::mdb_env_close(env))
             }
             if let Some(map_size) = self.map_size {
-                lmdb_try_with_cleanup!(ffi::mdb_env_set_mapsize(env, map_size),
-                                       ffi::mdb_env_close(env))
+                lmdb_try_with_cleanup!(ffi::mdb_env_set_mapsize(env, map_size), ffi::mdb_env_close(env))
             }
             let path = match CString::new(path.as_os_str().as_bytes()) {
                 Ok(path) => path,
                 Err(..) => return Err(::Error::Invalid),
             };
-            lmdb_try_with_cleanup!(ffi::mdb_env_open(env, path.as_ptr(), self.flags.bits(), mode),
-                                   ffi::mdb_env_close(env));
+            lmdb_try_with_cleanup!(
+                ffi::mdb_env_open(env, path.as_ptr(), self.flags.bits(), mode),
+                ffi::mdb_env_close(env)
+            );
         }
-        Ok(Environment { env: env, dbi_open_mutex: Mutex::new(()) })
-
+        Ok(Environment {
+            env,
+            dbi_open_mutex: Mutex::new(()),
+        })
     }
 
     /// Sets the provided options in the environment.
@@ -439,8 +461,8 @@ impl EnvironmentBuilder {
     /// Currently a moderate number of slots are cheap but a huge number gets
     /// expensive: 7-120 words per transaction, and every `Transaction::open_db`
     /// does a linear search of the opened slots.
-    pub fn set_max_dbs(&mut self, max_readers: c_uint) -> &mut EnvironmentBuilder {
-        self.max_dbs = Some(max_readers);
+    pub fn set_max_dbs(&mut self, max_dbs: c_uint) -> &mut EnvironmentBuilder {
+        self.max_dbs = Some(max_dbs);
         self
     }
 
@@ -465,8 +487,11 @@ mod test {
 
     extern crate byteorder;
 
+    use self::byteorder::{
+        ByteOrder,
+        LittleEndian,
+    };
     use tempdir::TempDir;
-    use self::byteorder::{ByteOrder, LittleEndian};
 
     use flags::*;
 
@@ -477,34 +502,30 @@ mod test {
         let dir = TempDir::new("test").unwrap();
 
         // opening non-existent env with read-only should fail
-        assert!(Environment::new().set_flags(EnvironmentFlags::READ_ONLY)
-                                  .open(dir.path())
-                                  .is_err());
+        assert!(Environment::new().set_flags(EnvironmentFlags::READ_ONLY).open(dir.path()).is_err());
 
         // opening non-existent env should succeed
         assert!(Environment::new().open(dir.path()).is_ok());
 
         // opening env with read-only should succeed
-        assert!(Environment::new().set_flags(EnvironmentFlags::READ_ONLY)
-                                  .open(dir.path())
-                                  .is_ok());
+        assert!(Environment::new().set_flags(EnvironmentFlags::READ_ONLY).open(dir.path()).is_ok());
     }
 
     #[test]
     fn test_begin_txn() {
         let dir = TempDir::new("test").unwrap();
 
-        { // writable environment
+        {
+            // writable environment
             let env = Environment::new().open(dir.path()).unwrap();
 
             assert!(env.begin_rw_txn().is_ok());
             assert!(env.begin_ro_txn().is_ok());
         }
 
-        { // read-only environment
-            let env = Environment::new().set_flags(EnvironmentFlags::READ_ONLY)
-                                        .open(dir.path())
-                                        .unwrap();
+        {
+            // read-only environment
+            let env = Environment::new().set_flags(EnvironmentFlags::READ_ONLY).open(dir.path()).unwrap();
 
             assert!(env.begin_rw_txn().is_err());
             assert!(env.begin_ro_txn().is_ok());
@@ -514,9 +535,7 @@ mod test {
     #[test]
     fn test_open_db() {
         let dir = TempDir::new("test").unwrap();
-        let env = Environment::new().set_max_dbs(1)
-                                    .open(dir.path())
-                                    .unwrap();
+        let env = Environment::new().set_max_dbs(1).open(dir.path()).unwrap();
 
         assert!(env.open_db(None).is_ok());
         assert!(env.open_db(Some("testdb")).is_err());
@@ -525,9 +544,7 @@ mod test {
     #[test]
     fn test_create_db() {
         let dir = TempDir::new("test").unwrap();
-        let env = Environment::new().set_max_dbs(11)
-                                    .open(dir.path())
-                                    .unwrap();
+        let env = Environment::new().set_max_dbs(11).open(dir.path()).unwrap();
         assert!(env.open_db(Some("testdb")).is_err());
         assert!(env.create_db(Some("testdb"), DatabaseFlags::empty()).is_ok());
         assert!(env.open_db(Some("testdb")).is_ok())
@@ -536,12 +553,12 @@ mod test {
     #[test]
     fn test_close_database() {
         let dir = TempDir::new("test").unwrap();
-        let mut env = Environment::new().set_max_dbs(10)
-                                        .open(dir.path())
-                                        .unwrap();
+        let mut env = Environment::new().set_max_dbs(10).open(dir.path()).unwrap();
 
         let db = env.create_db(Some("db"), DatabaseFlags::empty()).unwrap();
-        unsafe { env.close_db(db); }
+        unsafe {
+            env.close_db(db);
+        }
         assert!(env.open_db(Some("db")).is_ok());
     }
 
@@ -551,10 +568,9 @@ mod test {
         {
             let env = Environment::new().open(dir.path()).unwrap();
             assert!(env.sync(true).is_ok());
-        } {
-            let env = Environment::new().set_flags(EnvironmentFlags::READ_ONLY)
-                                        .open(dir.path())
-                                        .unwrap();
+        }
+        {
+            let env = Environment::new().set_flags(EnvironmentFlags::READ_ONLY).open(dir.path()).unwrap();
             assert!(env.sync(true).is_err());
         }
     }
@@ -598,10 +614,7 @@ mod test {
     fn test_info() {
         let map_size = 1024 * 1024;
         let dir = TempDir::new("test").unwrap();
-        let env = Environment::new()
-            .set_map_size(map_size)
-            .open(dir.path())
-            .unwrap();
+        let env = Environment::new().set_map_size(map_size).open(dir.path()).unwrap();
 
         let info = env.info().unwrap();
         assert_eq!(info.map_size(), map_size);
