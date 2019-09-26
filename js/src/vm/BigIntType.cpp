@@ -1520,6 +1520,45 @@ BigInt* BigInt::parseLiteral(JSContext* cx, const Range<const CharT> chars,
                             haveParseError);
 }
 
+template <typename CharT>
+bool BigInt::literalIsZeroNoRadix(const Range<const CharT> chars) {
+  MOZ_ASSERT(chars.length());
+
+  RangedPtr<const CharT> start = chars.begin();
+  RangedPtr<const CharT> end = chars.end();
+
+  // Skipping leading zeroes.
+  while (start[0] == '0') {
+    start++;
+    if (start == end) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+// trim and remove radix selection prefix.
+template <typename CharT>
+bool BigInt::literalIsZero(const Range<const CharT> chars) {
+  RangedPtr<const CharT> start = chars.begin();
+  const RangedPtr<const CharT> end = chars.end();
+
+  MOZ_ASSERT(chars.length());
+
+  // Skip over radix selector.
+  if (end - start > 2 && start[0] == '0') {
+    if (start[1] == 'b' || start[1] == 'B' || start[1] == 'x' ||
+        start[1] == 'X' || start[1] == 'o' || start[1] == 'O') {
+      return literalIsZeroNoRadix(Range<const CharT>(start + 2, end));
+    }
+  }
+
+  return literalIsZeroNoRadix(Range<const CharT>(start, end));
+}
+
+template bool BigInt::literalIsZero(const Range<const char16_t> chars);
+
 // BigInt proposal section 5.1.1
 static bool IsInteger(double d) {
   // Step 1 is an assertion checked by the caller.
@@ -3379,6 +3418,12 @@ BigInt* js::ParseBigIntLiteral(JSContext* cx,
   }
   MOZ_RELEASE_ASSERT(!parseError);
   return res;
+}
+
+// Check a already validated numeric literal for a non-zero value. Used by
+// the parsers node folder in deferred mode.
+bool js::BigIntLiteralIsZero(const mozilla::Range<const char16_t>& chars) {
+  return BigInt::literalIsZero(chars);
 }
 
 template <js::AllowGC allowGC>
