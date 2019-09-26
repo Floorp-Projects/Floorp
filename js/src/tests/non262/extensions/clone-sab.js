@@ -15,7 +15,7 @@ if (!this.SharedArrayBuffer) {
 }
 
 let x = new SharedArrayBuffer(1);
-let y = serialize(x);
+let y = serialize(x, [], {SharedArrayBuffer: 'allow'});
 x = null;
 
 // If the bug is present this loop usually crashes quickly during
