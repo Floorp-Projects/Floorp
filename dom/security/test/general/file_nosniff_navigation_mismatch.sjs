@@ -27,7 +27,7 @@ function handleRequest(request, response)
 {
   // avoid confusing cache behaviors
   response.setHeader('X-Content-Type-Options', 'nosniff'); // Disable Sniffing
-  response.setHeader("Content-Type","picture/png");  // Try Browser to force sniffing. 
+  response.setHeader("Content-Type","image/png");  // Send a wrong mime type
   response.write(getSniffableContent(request.queryString));
   return;
 }
