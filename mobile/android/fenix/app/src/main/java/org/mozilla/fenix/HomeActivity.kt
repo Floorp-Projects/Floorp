@@ -20,7 +20,6 @@ import androidx.navigation.NavDestination
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
-import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
@@ -35,13 +34,11 @@ import org.mozilla.fenix.browser.UriOpenedObserver
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.browser.browsingmode.DefaultBrowsingModeManager
-import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.BreadcrumbsRecorder
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.exceptions.ExceptionsFragmentDirections
 import org.mozilla.fenix.ext.alreadyOnDestination
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeFragmentDirections
@@ -57,12 +54,11 @@ import org.mozilla.fenix.search.SearchFragmentDirections
 import org.mozilla.fenix.settings.AboutFragmentDirections
 import org.mozilla.fenix.settings.SettingsFragmentDirections
 import org.mozilla.fenix.settings.TrackingProtectionFragmentDirections
-import org.mozilla.fenix.share.ShareFragment
 import org.mozilla.fenix.theme.DefaultThemeManager
 import org.mozilla.fenix.theme.ThemeManager
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
-open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback {
+open class HomeActivity : AppCompatActivity() {
 
     lateinit var themeManager: ThemeManager
     lateinit var browsingModeManager: BrowsingModeManager
@@ -308,17 +304,6 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
 
     protected open fun createThemeManager(): ThemeManager {
         return DefaultThemeManager(browsingModeManager.mode, this)
-    }
-
-    override fun onTabsShared(tabsSize: Int) {
-        getRootView()?.let {
-            FenixSnackbar.make(it, Snackbar.LENGTH_SHORT).setText(
-                getString(
-                    if (tabsSize == 1) R.string.sync_sent_tab_snackbar else
-                        R.string.sync_sent_tabs_snackbar
-                )
-            ).show()
-        }
     }
 
     companion object {

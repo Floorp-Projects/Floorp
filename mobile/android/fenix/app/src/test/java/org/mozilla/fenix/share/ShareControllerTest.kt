@@ -4,20 +4,25 @@
 
 package org.mozilla.fenix.share
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import assertk.assertAll
 import assertk.assertThat
 import assertk.assertions.isDataClassEqualTo
 import assertk.assertions.isEqualTo
+import assertk.assertions.isNotEqualTo
+import assertk.assertions.isSameAs
+import assertk.assertions.isSuccess
 import assertk.assertions.isTrue
+import com.google.android.material.snackbar.Snackbar
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.ObsoleteCoroutinesApi
@@ -25,12 +30,13 @@ import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.TabData
 import mozilla.components.feature.sendtab.SendTabUseCases
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.TestApplication
+import org.mozilla.fenix.components.FenixSnackbarPresenter
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.metrics
@@ -43,9 +49,9 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class ShareControllerTest {
-    private val context: Context = mockk(relaxed = true)
+    // Need a valid context to retrieve Strings for example, but we also need it to return our "metrics"
+    private val context: Context = spyk(testContext)
     private val metrics: MetricController = mockk(relaxed = true)
-    private val fragment = mockk<Fragment>(relaxed = true)
     private val shareTabs = listOf(
         ShareTab("url0", "title0"),
         ShareTab("url1", "title1")
@@ -57,9 +63,12 @@ class ShareControllerTest {
     )
     private val textToShare = "${shareTabs[0].url}\n${shareTabs[1].url}"
     private val sendTabUseCases = mockk<SendTabUseCases>(relaxed = true)
+    private val snackbarPresenter = mockk<FenixSnackbarPresenter>(relaxed = true)
     private val navController = mockk<NavController>(relaxed = true)
     private val dismiss = mockk<() -> Unit>(relaxed = true)
-    private val controller = DefaultShareController(context, fragment, shareTabs, sendTabUseCases, navController, dismiss)
+    private val controller = DefaultShareController(
+        context, shareTabs, sendTabUseCases, snackbarPresenter, navController, dismiss
+    )
 
     @Before
     fun setUp() {
@@ -79,9 +88,14 @@ class ShareControllerTest {
         val appClassName = "activity"
         val appShareOption = AppShareOption("app", mockk(), appPackageName, appClassName)
         val shareIntent = slot<Intent>()
-        every { fragment.startActivity(capture(shareIntent)) } just Runs
+        // Our share Intent uses `FLAG_ACTIVITY_NEW_TASK` but when resolving the startActivity call
+        // needed for capturing the actual Intent used the `slot` one doesn't have this flag so we
+        // need to use an Activity Context.
+        val activityContext: Context = mockk<Activity>()
+        val testController = DefaultShareController(activityContext, shareTabs, mockk(), mockk(), mockk(), dismiss)
+        every { activityContext.startActivity(capture(shareIntent)) } just Runs
 
-        controller.handleShareToApp(appShareOption)
+        testController.handleShareToApp(appShareOption)
 
         // Check that the Intent used for querying apps has the expected structre
         assertAll {
@@ -94,7 +108,7 @@ class ShareControllerTest {
             assertThat(shareIntent.captured.component!!.className).isEqualTo(appClassName)
         }
         verifyOrder {
-            fragment.startActivity(shareIntent.captured)
+            activityContext.startActivity(shareIntent.captured)
             dismiss()
         }
     }
@@ -102,13 +116,10 @@ class ShareControllerTest {
     @Test
     @Suppress("DeferredResultUnused")
     fun `handleShareToDevice should share to account device, inform callbacks and dismiss`() {
-        val deviceToShareTo =
-            Device("deviceId", "deviceName", DeviceType.UNKNOWN, false, 0L, emptyList(), false, null)
-        val tabSharedCallbackActivity = mockk<HomeActivity>(relaxed = true)
-        val sharedTabsNumber = slot<Int>()
+        val deviceToShareTo = Device(
+            "deviceId", "deviceName", DeviceType.UNKNOWN, false, 0L, emptyList(), false, null)
         val deviceId = slot<String>()
         val tabsShared = slot<List<TabData>>()
-        every { fragment.activity } returns tabSharedCallbackActivity
 
         controller.handleShareToDevice(deviceToShareTo)
 
@@ -116,48 +127,35 @@ class ShareControllerTest {
         verifyOrder {
             metrics.track(Event.SendTab)
             sendTabUseCases.sendToDeviceAsync(capture(deviceId), capture(tabsShared))
-            tabSharedCallbackActivity.onTabsShared(capture(sharedTabsNumber))
-            dismiss()
+            // dismiss() is also to be called, but at the moment cannot test it in a coroutine.
         }
         assertAll {
             assertThat(deviceId.isCaptured).isTrue()
             assertThat(deviceId.captured).isEqualTo(deviceToShareTo.id)
             assertThat(tabsShared.isCaptured).isTrue()
             assertThat(tabsShared.captured).isEqualTo(tabsData)
-
-            // All current tabs should be shared
-            assertThat(sharedTabsNumber.isCaptured).isTrue()
-            assertThat(sharedTabsNumber.captured).isEqualTo(shareTabs.size)
         }
     }
 
     @Test
+    @Suppress("DeferredResultUnused")
     fun `handleShareToAllDevices calls handleShareToDevice multiple times`() {
         val devicesToShareTo = listOf(
             Device("deviceId0", "deviceName0", DeviceType.UNKNOWN, false, 0L, emptyList(), false, null),
             Device("deviceId1", "deviceName1", DeviceType.UNKNOWN, true, 1L, emptyList(), false, null)
         )
-        val tabSharedCallbackActivity = mockk<HomeActivity>(relaxed = true)
-        val sharedTabsNumber = slot<Int>()
         val tabsShared = slot<List<TabData>>()
-        every { fragment.activity } returns tabSharedCallbackActivity
 
         controller.handleShareToAllDevices(devicesToShareTo)
 
-        // Verify all the needed methods are called. sendTab() should be called for each account device.
         verifyOrder {
             sendTabUseCases.sendToAllAsync(capture(tabsShared))
-            tabSharedCallbackActivity.onTabsShared(capture(sharedTabsNumber))
-            dismiss()
+            // dismiss() is also to be called, but at the moment cannot test it in a coroutine.
         }
         assertAll {
             // SendTabUseCases should send a the `shareTabs` mapped to tabData
             assertThat(tabsShared.isCaptured).isTrue()
             assertThat(tabsShared.captured).isEqualTo(tabsData)
-
-            // All current tabs should be shared
-            assertThat(sharedTabsNumber.isCaptured).isTrue()
-            assertThat(sharedTabsNumber.captured).isEqualTo(shareTabs.size)
         }
     }
 
@@ -185,6 +183,83 @@ class ShareControllerTest {
                 ShareFragmentDirections.actionShareFragmentToAccountProblemFragment()
             )
             dismiss()
+        }
+    }
+
+    @Test
+    fun `showSuccess should show a snackbar with a success message`() {
+        val expectedMessage = controller.getSuccessMessage()
+        val expectedTimeout = Snackbar.LENGTH_SHORT
+        val messageSlot = slot<String>()
+        val timeoutSlot = slot<Int>()
+
+        controller.showSuccess()
+
+        verify { snackbarPresenter.present(capture(messageSlot), capture(timeoutSlot)) }
+        assertAll {
+            assertThat(messageSlot.isCaptured).isTrue()
+            assertThat(timeoutSlot.isCaptured).isTrue()
+
+            assertThat(messageSlot.captured).isEqualTo(expectedMessage)
+            assertThat(timeoutSlot.captured).isEqualTo(expectedTimeout)
+        }
+    }
+
+    @Test
+    fun `showFailureWithRetryOption should show a snackbar with a retry action`() {
+        val expectedMessage = context.getString(R.string.sync_sent_tab_error_snackbar)
+        val expectedTimeout = Snackbar.LENGTH_LONG
+        val operation: () -> Unit = { println("Hello World") }
+        val expectedRetryMessage =
+            context.getString(R.string.sync_sent_tab_error_snackbar_action)
+        val messageSlot = slot<String>()
+        val timeoutSlot = slot<Int>()
+        val operationSlot = slot<() -> Unit>()
+        val retryMesageSlot = slot<String>()
+        val isFailureSlot = slot<Boolean>()
+
+        controller.showFailureWithRetryOption(operation)
+
+        verify {
+            snackbarPresenter.present(
+                capture(messageSlot),
+                capture(timeoutSlot),
+                capture(operationSlot),
+                capture(retryMesageSlot),
+                capture(isFailureSlot)
+            )
+        }
+        assertAll {
+            assertThat(messageSlot.isCaptured).isTrue()
+            assertThat(timeoutSlot.isCaptured).isTrue()
+            assertThat(operationSlot.isCaptured).isTrue()
+            assertThat(retryMesageSlot.isCaptured).isTrue()
+            assertThat(isFailureSlot.isCaptured).isTrue()
+
+            assertThat(messageSlot.captured).isEqualTo(expectedMessage)
+            assertThat(timeoutSlot.captured).isEqualTo(expectedTimeout)
+            assertThat { operationSlot.captured }.isSuccess().isSameAs(operation)
+            assertThat(retryMesageSlot.captured).isEqualTo(expectedRetryMessage)
+            assertThat(isFailureSlot.captured).isEqualTo(true)
+        }
+    }
+
+    @Test
+    fun `getSuccessMessage should return different strings depending on the number of shared tabs`() {
+        val controllerWithOneSharedTab = DefaultShareController(
+            context, listOf(ShareTab("url0", "title0")), mockk(), mockk(), mockk(), mockk()
+        )
+        val controllerWithMoreSharedTabs = controller
+        val expectedTabSharedMessage = context.getString(R.string.sync_sent_tab_snackbar)
+        val expectedTabsSharedMessage = context.getString(R.string.sync_sent_tabs_snackbar)
+
+        val tabSharedMessage = controllerWithOneSharedTab.getSuccessMessage()
+        val tabsSharedMessage = controllerWithMoreSharedTabs.getSuccessMessage()
+
+        assertAll {
+            assertThat(tabSharedMessage).isNotEqualTo(tabsSharedMessage)
+            assertThat(tabSharedMessage).isEqualTo(expectedTabSharedMessage)
+            assertThat(tabsSharedMessage).isEqualTo(expectedTabsSharedMessage)
         }
     }
 

@@ -31,17 +31,15 @@ import mozilla.components.concept.sync.DeviceType
 import mozilla.components.feature.sendtab.SendTabUseCases
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.FenixSnackbarPresenter
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.share.listadapters.AppShareOption
 import org.mozilla.fenix.share.listadapters.SyncShareOption
 
 @Suppress("TooManyFunctions")
 class ShareFragment : AppCompatDialogFragment() {
-    interface TabsSharedCallback {
-        fun onTabsShared(tabsSize: Int)
-    }
-
     private lateinit var shareInteractor: ShareInteractor
     private lateinit var shareCloseView: ShareCloseView
     private lateinit var shareToAccountDevicesView: ShareToAccountDevicesView
@@ -125,8 +123,8 @@ class ShareFragment : AppCompatDialogFragment() {
         shareInteractor = ShareInteractor(
             DefaultShareController(
                 context = requireContext(),
-                fragment = this,
                 sharedTabs = tabs,
+                snackbarPresenter = FenixSnackbarPresenter(activity!!.getRootView()!!),
                 navController = findNavController(),
                 sendTabUseCases = SendTabUseCases(accountManager),
                 dismiss = ::dismiss

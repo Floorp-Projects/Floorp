@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.content.ContextCompat
 import androidx.core.widget.TextViewCompat
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.ContentViewCallback
@@ -23,11 +24,19 @@ import org.mozilla.fenix.test.Mockable
 class FenixSnackbar private constructor(
     parent: ViewGroup,
     content: View,
-    contentViewCallback: FenixSnackbarCallback
+    contentViewCallback: FenixSnackbarCallback,
+    isError: Boolean
 ) : BaseTransientBottomBar<FenixSnackbar>(parent, content, contentViewCallback) {
 
     init {
         view.background = null
+
+        view.snackbar_layout.background = if (isError) {
+            ContextCompat.getDrawable(context, R.drawable.fenix_snackbar_error_background)
+        } else {
+            ContextCompat.getDrawable(context, R.drawable.fenix_snackbar_background)
+        }
+
         content.snackbar_btn.increaseTapArea(actionButtonIncreaseDps)
 
         TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(
@@ -64,7 +73,7 @@ class FenixSnackbar private constructor(
         private const val actionButtonIncreaseDps = 16
         private const val stepGranularity = 1
 
-        fun make(view: View, duration: Int): FenixSnackbar {
+        fun make(view: View, duration: Int, isError: Boolean = false): FenixSnackbar {
             val parent = findSuitableParent(view) ?: run {
                 throw IllegalArgumentException(
                     "No suitable parent found from the given view. Please provide a valid view."
@@ -75,7 +84,7 @@ class FenixSnackbar private constructor(
             val content = inflater.inflate(R.layout.fenix_snackbar, parent, false)
 
             val callback = FenixSnackbarCallback(content)
-            return FenixSnackbar(parent, content, callback).also {
+            return FenixSnackbar(parent, content, callback, isError).also {
                 it.duration = duration
             }
         }
@@ -145,9 +154,10 @@ class FenixSnackbarPresenter(
         text: String,
         length: Int = FenixSnackbar.LENGTH_LONG,
         action: (() -> Unit)? = null,
-        actionName: String? = null
+        actionName: String? = null,
+        isError: Boolean = false
     ) {
-        FenixSnackbar.make(view, length).setText(text).let {
+        FenixSnackbar.make(view, length, isError).setText(text).let {
             if (action != null && actionName != null) it.setAction(actionName, action) else it
         }.show()
     }
