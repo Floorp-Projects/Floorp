@@ -53,11 +53,6 @@ class MediaKeySystemAccessManager final : public nsIObserver {
                const Sequence<MediaKeySystemConfiguration>& aConfig,
                RequestType aType);
 
-  void RequestCallback(bool aIsSupportedInWindow, DetailedPromise* aPromise,
-                       const nsAString& aKeySystem,
-                       const Sequence<MediaKeySystemConfiguration>& aConfigs,
-                       RequestType aType);
-
   ~MediaKeySystemAccessManager();
 
   bool EnsureObserversAdded();

@@ -118,7 +118,6 @@
 
 #ifdef XP_WIN
 #  include "mozilla/plugins/PluginWidgetParent.h"
-#  include "FxRWindowManager.h"
 #endif
 
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
@@ -3978,20 +3977,6 @@ void BrowserParent::OnSubFrameCrashed() {
   if (GetBrowserBridgeParent()) {
     Unused << GetBrowserBridgeParent()->SendSubFrameCrashed(mBrowsingContext);
   }
-}
-
-mozilla::ipc::IPCResult BrowserParent::RecvIsWindowSupportingProtectedMedia(
-    const uint64_t& aOuterWindowID,
-    IsWindowSupportingProtectedMediaResolver&& aResolve) {
-#ifdef XP_WIN
-  bool isFxrWindow =
-      FxRWindowManager::GetInstance()->IsFxRWindow(aOuterWindowID);
-  aResolve(!isFxrWindow);
-#else
-  MOZ_CRASH("Should only be called on Windows");
-#endif
-
-  return IPC_OK();
 }
 
 }  // namespace dom
