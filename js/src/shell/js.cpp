@@ -6519,9 +6519,8 @@ class ShellSourceHook : public SourceHook {
         return false;
       }
 
-      size_t dstLen = *length;
-      JS::DeflateStringToUTF8Buffer(
-          flat, mozilla::RangedPtr<char>(*utf8Source, *length), &dstLen);
+      mozilla::DebugOnly<size_t> dstLen = JS::DeflateStringToUTF8Buffer(
+          flat, mozilla::MakeSpan(*utf8Source, *length));
       MOZ_ASSERT(dstLen == *length);
     }
 
