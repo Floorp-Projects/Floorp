@@ -923,9 +923,6 @@ void IDBObjectStore::AppendIndexUpdateInfo(
     const int64_t aIndexID, const KeyPath& aKeyPath, const bool aMultiEntry,
     const nsCString& aLocale, JSContext* const aCx, JS::Handle<JS::Value> aVal,
     nsTArray<IndexUpdateInfo>* const aUpdateInfoArray, ErrorResult* const aRv) {
-  // This precondition holds when `aVal` is the result of a structured clone.
-  js::AutoAssertNoContentJS noContentJS(aCx);
-
   if (!aMultiEntry) {
     Key key;
     *aRv = aKeyPath.ExtractKey(aCx, aVal, key);
@@ -951,7 +948,7 @@ void IDBObjectStore::AppendIndexUpdateInfo(
   }
 
   bool isArray;
-  if (NS_WARN_IF(!JS_IsArrayObject(aCx, val, &isArray))) {
+  if (!JS_IsArrayObject(aCx, val, &isArray)) {
     IDB_REPORT_INTERNAL_ERR();
     aRv->Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     return;
@@ -966,27 +963,8 @@ void IDBObjectStore::AppendIndexUpdateInfo(
     }
 
     for (uint32_t arrayIndex = 0; arrayIndex < arrayLength; arrayIndex++) {
-      JS::RootedId indexId(aCx);
-      if (NS_WARN_IF(!JS_IndexToId(aCx, arrayIndex, &indexId))) {
-        IDB_REPORT_INTERNAL_ERR();
-        aRv->Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-        return;
-      }
-
-      bool hasOwnProperty;
-      if (NS_WARN_IF(
-              !JS_HasOwnPropertyById(aCx, array, indexId, &hasOwnProperty))) {
-        IDB_REPORT_INTERNAL_ERR();
-        aRv->Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-        return;
-      }
-
-      if (!hasOwnProperty) {
-        continue;
-      }
-
-      JS::RootedValue arrayItem(aCx);
-      if (NS_WARN_IF(!JS_GetPropertyById(aCx, array, indexId, &arrayItem))) {
+      JS::Rooted<JS::Value> arrayItem(aCx);
+      if (NS_WARN_IF(!JS_GetElement(aCx, array, arrayIndex, &arrayItem))) {
         IDB_REPORT_INTERNAL_ERR();
         aRv->Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
         return;
@@ -1440,8 +1418,6 @@ void IDBObjectStore::GetAddInfo(JSContext* aCx, ValueWrapper& aValueWrapper,
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
     return;
   }
-
-  js::AutoAssertNoContentJS noContentJS(aCx);
 
   {
     const nsTArray<IndexMetadata>& indexes = mSpec->indexes();
