@@ -148,12 +148,6 @@ class FullParseHandler {
     return new_<BigIntLiteral>(box, pos);
   }
 
-  // This variant requires two phase initializaton to ensure ownership is clear
-  // in an OOM situation.
-  BigIntLiteralType newBigInt(const TokenPos& pos) {
-    return new_<BigIntLiteral>(pos);
-  }
-
   BooleanLiteralType newBooleanLiteral(bool cond, const TokenPos& pos) {
     return new_<BooleanLiteral>(cond, pos);
   }

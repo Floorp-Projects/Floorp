@@ -986,9 +986,6 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<LazyScript*> lazy,
   if (!pn) {
     return false;
   }
-  if (!parser.publishDeferredItems()) {
-    return false;
-  }
 
   Rooted<JSScript*> script(cx, JSScript::CreateFromLazy(cx, lazy));
   if (!script) {
