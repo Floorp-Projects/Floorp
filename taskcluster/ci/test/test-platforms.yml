@@ -302,6 +302,7 @@ macosx1014-64-shippable/opt:
         - raptor-chrome
         - raptor-chromium
         - raptor-firefox
+        - raptor-firefox-power
         - raptor-profiling
         - marionette-media-tests
         - web-platform-tests-wdspec-headless
