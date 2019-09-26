@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/yurydelendik/wasmparser.rs.svg?branch=master)](https://travis-ci.org/yurydelendik/wasmparser.rs)
 [![crates.io link](https://img.shields.io/crates/v/wasmparser.svg)](https://crates.io/crates/wasmparser)
 
-The decoder library provides lightwight and fast decoding/parsing of WebAssembly binary files.
+The decoder library provides lightweight and fast decoding/parsing of WebAssembly binary files.
 
 The other goal is minimal memory footprint. For this reason, there is no AST or IR of WebAssembly data.
 

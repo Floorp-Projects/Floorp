@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "wasmparser"
-version = "0.37.0"
+version = "0.39.1"
 authors = ["Yury Delendik <ydelendik@mozilla.com>"]
 exclude = ["fuzz/**/*", "tests/**/*", "testsuite/**/*"]
 description = "A simple event-driven library for parsing WebAssembly binary files.\n"
@@ -31,7 +31,7 @@ optional = true
 version = "0.2"
 
 [dev-dependencies.wabt]
-version = "0.9.1"
+version = "0.9.2"
 
 [features]
 core = ["hashbrown"]

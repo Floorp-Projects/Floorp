@@ -6,7 +6,7 @@
 
 use crate::code_translator::translate_operator;
 use crate::environ::{FuncEnvironment, ReturnMode, WasmResult};
-use crate::state::{TranslationState, VisibleTranslationState};
+use crate::state::TranslationState;
 use crate::translation_utils::get_vmctx_value_label;
 use crate::wasm_unsupported;
 use cranelift_codegen::entity::EntityRef;
@@ -179,8 +179,12 @@ fn declare_locals<FE: FuncEnvironment + ?Sized>(
         I64 => builder.ins().iconst(ir::types::I64, 0),
         F32 => builder.ins().f32const(ir::immediates::Ieee32::with_bits(0)),
         F64 => builder.ins().f64const(ir::immediates::Ieee64::with_bits(0)),
+        V128 => {
+            let constant_handle = builder.func.dfg.constants.insert([0; 16].to_vec());
+            builder.ins().vconst(ir::types::I8X16, constant_handle)
+        }
         AnyRef => builder.ins().null(environ.reference_type()),
-        ty => wasm_unsupported!("unsupported local type {:?}", ty),
+        ty => return Err(wasm_unsupported!("unsupported local type {:?}", ty)),
     };
 
     let ty = builder.func.dfg.value_type(zeroval);
@@ -211,9 +215,9 @@ fn parse_function_body<FE: FuncEnvironment + ?Sized>(
     while !state.control_stack.is_empty() {
         builder.set_srcloc(cur_srcloc(&reader));
         let op = reader.read_operator()?;
-        environ.before_translate_operator(&op, builder, &VisibleTranslationState::new(state))?;
+        environ.before_translate_operator(&op, builder, state)?;
         translate_operator(&op, builder, state, environ)?;
-        environ.after_translate_operator(&op, builder, &VisibleTranslationState::new(state))?;
+        environ.after_translate_operator(&op, builder, state)?;
     }
 
     // The final `End` operator left us in the exit block where we need to manually add a return
