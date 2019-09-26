@@ -1781,12 +1781,20 @@ class UrlbarInput {
         this._mousedownOnUrlbarDescendant = true;
         break;
       case this.window:
-        // We collapse the Urlbar for any mousedowns outside of it.
         if (this._mousedownOnUrlbarDescendant) {
           this._mousedownOnUrlbarDescendant = false;
           break;
         }
 
+        // Close the view when clicking on toolbars and other UI pieces that might
+        // not automatically remove focus from the input.
+        // Respect the autohide preference for easier inspecting/debugging via
+        // the browser toolbox.
+        if (!UrlbarPrefs.get("ui.popup.disable_autohide")) {
+          this.view.close();
+        }
+
+        // We collapse the urlbar for any clicks outside of it.
         this.endLayoutExtend(true);
     }
   }
