@@ -66,37 +66,13 @@ struct ScrollThumbData;
 /**
  * ****************** NOTE ON LOCK ORDERING IN APZ **************************
  *
- * There are two main kinds of locks used by APZ: APZCTreeManager::mTreeLock
- * ("the tree lock") and AsyncPanZoomController::mRecursiveMutex ("APZC locks").
- * There is also the APZCTreeManager::mTestDataLock ("test lock") and
- * APZCTreeManager::mMapLock ("map lock").
+ * To avoid deadlock, APZ imposes and respects a global ordering on threads
+ * and locks relevant to APZ.
  *
- * To avoid deadlock, we impose a lock ordering between these locks, which is:
- *
- *      tree lock -> map lock -> APZC locks -> test lock
- *
- * The interpretation of the lock ordering is that if lock A precedes lock B
- * in the ordering sequence, then you must NOT wait on A while holding B.
- *
- * In addition, the WR hit-testing codepath acquires the tree lock and then
- * blocks on the render backend thread to do the hit-test. Similar operations
- * elsewhere mean that we need to be careful with which threads are allowed
- * to acquire which locks and the order they do so. At the time of this writing,
- * https://bug1391318.bmoattachments.org/attachment.cgi?id=8965040 contains
- * the most complete description we have of the situation. The total dependency
- * ordering including both threads and locks is as follows:
- *
- * UI main thread
- *  -> GPU main thread          // only if GPU enabled
- *  -> Compositor thread
- *  -> SceneBuilder thread      // only if WR enabled
- *  -> APZ tree lock
- *  -> RenderBackend thread     // only if WR enabled
- *  -> APZC map lock
- *  -> APZC instance lock
- *  -> APZC test lock
- *
- * where the -> annotation means the same as described above.
+ * Please see the "Threading / Locking Overview" section of
+ * gfx/docs/AsyncPanZoom.rst (hosted in rendered form at
+ * https://firefox-source-docs.mozilla.org/gfx/gfx/AsyncPanZoom.html#threading-locking-overview)
+ * for what the ordering is, and what are the rules for respecting it.
  * **************************************************************************
  */
 
