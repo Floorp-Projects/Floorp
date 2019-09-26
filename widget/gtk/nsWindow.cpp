@@ -1049,6 +1049,8 @@ void nsWindow::Show(bool aState) {
 }
 
 void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
+  LOG(("nsWindow::Resize [%p] %f %f\n", (void*)this, aWidth, aHeight));
+
   double scale =
       BoundsUseDesktopPixels() ? GetDesktopToDeviceScale().scale : 1.0;
   int32_t width = NSToIntRound(scale * aWidth);
@@ -5191,6 +5193,9 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen) {
 }
 
 void nsWindow::SetWindowDecoration(nsBorderStyle aStyle) {
+  LOG(("nsWindow::SetWindowDecoration() [%p] Border style %x\n", (void*)this,
+       aStyle));
+
   if (!mShell) {
     // Pass the request to the toplevel window
     GtkWidget* topWidget = GetToplevelWidget();
@@ -6534,6 +6539,9 @@ nsresult nsWindow::SetNonClientMargins(LayoutDeviceIntMargin& aMargins) {
 }
 
 void nsWindow::SetDrawsInTitlebar(bool aState) {
+  LOG(("nsWindow::SetDrawsInTitlebar() [%p] State %d mCSDSupportLevel %d\n",
+       (void*)this, aState, (int)mCSDSupportLevel));
+
   if (!mShell || mCSDSupportLevel == CSD_SUPPORT_NONE ||
       aState == mDrawInTitlebar) {
     return;
@@ -6542,6 +6550,8 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
   if (mCSDSupportLevel == CSD_SUPPORT_SYSTEM) {
     SetWindowDecoration(aState ? eBorderStyle_border : mBorderStyle);
   } else if (mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
+    LOG(("    Using CSD mode\n"));
+
     /* Window manager does not support GDK_DECOR_BORDER,
      * emulate it by CSD.
      *
