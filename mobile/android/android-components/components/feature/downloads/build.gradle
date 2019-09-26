@@ -30,9 +30,10 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 
 dependencies {
 
-    implementation project(':browser-session')
+    implementation project(':browser-state')
     implementation project(':concept-fetch')
     implementation project(':support-ktx')
+    implementation project(':support-base')
     implementation project(':support-utils')
 
     implementation Dependencies.androidx_core_ktx
