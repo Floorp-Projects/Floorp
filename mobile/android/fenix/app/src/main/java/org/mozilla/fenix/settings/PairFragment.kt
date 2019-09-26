@@ -40,7 +40,7 @@ class PairFragment : Fragment(), BackHandler {
         qrFeature.set(
             QrFeature(
                 requireContext(),
-                fragmentManager = requireFragmentManager(),
+                fragmentManager = parentFragmentManager,
                 onNeedToRequestPermissions = { permissions ->
                     requestPermissions(permissions, REQUEST_CODE_CAMERA_PERMISSIONS)
                 },

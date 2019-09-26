@@ -222,7 +222,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
 
             contextMenuFeature.set(
                 feature = ContextMenuFeature(
-                    fragmentManager = requireFragmentManager(),
+                    fragmentManager = parentFragmentManager,
                     store = store,
                     candidates = FenixContextMenuCandidate.defaultCandidates(
                         context,
@@ -271,7 +271,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                     sessionManager = sessionManager,
                     sessionId = customTabSessionId,
                     interceptLinkClicks = true,
-                    fragmentManager = requireFragmentManager()
+                    fragmentManager = parentFragmentManager
                 ),
                 owner = this,
                 view = view
@@ -282,7 +282,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                     fragment = this,
                     sessionManager = sessionManager,
                     sessionId = customTabSessionId,
-                    fragmentManager = requireFragmentManager(),
+                    fragmentManager = parentFragmentManager,
                     onNeedToRequestPermissions = { permissions ->
                         requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
                     }),
@@ -308,7 +308,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                 feature = SitePermissionsFeature(
                     context = context,
                     sessionManager = sessionManager,
-                    fragmentManager = requireFragmentManager(),
+                    fragmentManager = parentFragmentManager,
                     promptsStyling = SitePermissionsFeature.PromptsStyling(
                         gravity = getAppropriateLayoutGravity(),
                         shouldWidthMatchParent = true,
