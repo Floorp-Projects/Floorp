@@ -179,6 +179,8 @@ body {
 }
 
 .CodeMirror.cm-s-mozilla  pre,
+.CodeMirror.cm-s-mozilla  pre.CodeMirror-line,
+.CodeMirror.cm-s-mozilla  pre.CodeMirror-line-like,
 .cm-s-mozilla .cm-variable-3,
 .cm-s-mozilla .cm-operator,
 .cm-s-mozilla .cm-special {
