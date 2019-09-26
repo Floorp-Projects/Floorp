@@ -2266,6 +2266,8 @@ pub struct PrimitiveCluster {
     pub prim_instances: Vec<PrimitiveInstance>,
     /// Various flags / state for this cluster.
     pub flags: ClusterFlags,
+    /// An optional scroll root to use if this cluster establishes a picture cache slice.
+    pub cache_scroll_root: Option<SpatialNodeIndex>,
 }
 
 /// Where to insert a prim instance in a primitive list.
@@ -2286,6 +2288,7 @@ impl PrimitiveCluster {
             spatial_node_index,
             flags,
             prim_instances: Vec::new(),
+            cache_scroll_root: None,
         }
     }
 
@@ -2432,22 +2435,14 @@ impl PrimitiveList {
         self.clusters.is_empty()
     }
 
+    /// Add an existing cluster to this prim list
+    pub fn add_cluster(&mut self, cluster: PrimitiveCluster) {
+        self.clusters.push(cluster);
+    }
+
     /// Merge another primitive list into this one
     pub fn extend(&mut self, prim_list: PrimitiveList) {
         self.clusters.extend(prim_list.clusters);
-    }
-
-    /// Return the number of clusters in this prim list
-    pub fn len(&self) -> usize {
-        self.clusters.len()
-    }
-
-    /// Split this primitive list at the given cluster index
-    pub fn split_off(&mut self, index: usize) -> PrimitiveList {
-        let clusters = self.clusters.split_off(index);
-        PrimitiveList {
-            clusters
-        }
     }
 }
 
