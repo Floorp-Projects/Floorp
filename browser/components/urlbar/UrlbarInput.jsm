@@ -1779,6 +1779,9 @@ class UrlbarInput {
         break;
       case this.textbox:
         this._mousedownOnUrlbarDescendant = true;
+        if (event.target == this._inputContainer) {
+          this.focus();
+        }
         break;
       case this.window:
         if (this._mousedownOnUrlbarDescendant) {
