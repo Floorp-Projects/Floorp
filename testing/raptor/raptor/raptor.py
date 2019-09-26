@@ -720,8 +720,9 @@ class RaptorDesktop(Raptor):
         # unless otheriwse specified in the test INI by using 'cold = true'
         mozpower_measurer = None
         if self.config.get('power_test', False):
-            output_dir = os.path.join(self.artifact_dir, 'power-measurements')
-            test_dir = os.path.join(output_dir, test['name'].replace('/', '-').replace('\\', '-'))
+            powertest_name = test['name'].replace('/', '-').replace('\\', '-')
+            output_dir = os.path.join(self.artifact_dir, 'power-measurements-%s' % powertest_name)
+            test_dir = os.path.join(output_dir, powertest_name)
 
             try:
                 if not os.path.exists(output_dir):
@@ -754,8 +755,12 @@ class RaptorDesktop(Raptor):
             if not self.config.get('run_local', False):
                 # when not running locally, zip the data and delete the folder which
                 # was placed in the zip
-                power_data_path = os.path.join(self.artifact_dir, 'power-measurements')
-                shutil.make_archive(power_data_path + '.zip', 'zip', power_data_path)
+                powertest_name = test['name'].replace('/', '-').replace('\\', '-')
+                power_data_path = os.path.join(
+                    self.artifact_dir,
+                    'power-measurements-%s' % powertest_name
+                )
+                shutil.make_archive(power_data_path, 'zip', power_data_path)
                 shutil.rmtree(power_data_path)
 
             self.control_server.submit_supporting_data(perfherder_data['utilization'])

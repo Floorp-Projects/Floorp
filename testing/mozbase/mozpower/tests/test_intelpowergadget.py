@@ -225,7 +225,9 @@ def test_ipg_rh_format_to_perfherder_without_cutoff(ipg_rh_obj):
     # Check that the expected entries exist
     assert len(formatted_data.keys()) == 2
     assert 'utilization' in formatted_data and 'power-usage' in formatted_data
-    assert formatted_data['utilization']['test'] == ipg_rh_obj._output_file_prefix
+    assert formatted_data['power-usage']['test'] == ipg_rh_obj._output_file_prefix + '-cumulative'
+    assert formatted_data['utilization']['test'] == \
+        ipg_rh_obj._output_file_prefix + '-utilization'
 
     # Check that gpu utilization doesn't exist but cpu does
     utilization_vals = formatted_data['utilization']['values']
