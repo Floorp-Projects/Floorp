@@ -7111,6 +7111,12 @@
 #endif
   mirror: always
 
+# If true, all popups won't hide automatically on blur
+- name: ui.popup.disable_autohide
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Negate scroll, true will make the mouse scroll wheel move the screen the
 # same direction as with most desktops or laptops.
 - name: ui.scrolling.negate_wheel_scroll

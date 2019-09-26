@@ -47,6 +47,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/StaticPrefs_xul.h"
 #include "mozilla/widget/nsAutoRollup.h"
 
@@ -128,10 +129,6 @@ void nsMenuChainItem::CheckForAnchorChange() {
   }
 }
 
-bool nsXULPopupManager::sDevtoolsDisableAutoHide = false;
-
-const char kPrefDevtoolsDisableAutoHide[] = "ui.popup.disable_autohide";
-
 NS_IMPL_ISUPPORTS(nsXULPopupManager, nsIDOMEventListener, nsIObserver)
 
 nsXULPopupManager::nsXULPopupManager()
@@ -145,8 +142,6 @@ nsXULPopupManager::nsXULPopupManager()
   if (obs) {
     obs->AddObserver(this, "xpcom-shutdown", false);
   }
-  Preferences::AddBoolVarCache(&sDevtoolsDisableAutoHide,
-                               kPrefDevtoolsDisableAutoHide, false);
 }
 
 nsXULPopupManager::~nsXULPopupManager() {
@@ -198,7 +193,7 @@ bool nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
   }
 
   // We can disable the autohide behavior via a pref to ease debugging.
-  if (nsXULPopupManager::sDevtoolsDisableAutoHide) {
+  if (StaticPrefs::ui_popup_disable_autohide()) {
     // Required on linux to allow events to work on other targets.
     if (mWidget) {
       mWidget->CaptureRollupEvents(nullptr, false);

@@ -85,6 +85,13 @@ this.SelectContentHelper.prototype = {
       subtree: true,
       attributes: true,
     });
+
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "disablePopupAutohide",
+      "ui.popup.disable_autohide",
+      false
+    );
   },
 
   uninit() {
@@ -305,7 +312,7 @@ this.SelectContentHelper.prototype = {
         }
         break;
       case "blur": {
-        if (this.element !== event.target) {
+        if (this.element !== event.target || this.disablePopupAutohide) {
           break;
         }
         this._closeAfterBlur = true;
