@@ -30,5 +30,6 @@
 /components/service/experiments/ @mozilla-mobile/telemetry
 
 # Release Engineering pipeline
+/.cron.yml /@mozilla-mobile/releng @mozilla-mobile/act
 /automation/ @mozilla-mobile/releng @mozilla-mobile/act
 /CODEOWNERS @mozilla-mobile/releng @mozilla-mobile/act
