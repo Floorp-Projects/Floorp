@@ -7244,9 +7244,19 @@ GtkTextDirection nsWindow::GetTextDirection() {
 
 void nsWindow::LockAspectRatio(bool aShouldLock) {
   if (aShouldLock) {
-    mAspectRatio = (float)mBounds.Width() / (float)mBounds.Height();
-    LOG(("nsWindow::LockAspectRatio() [%p] width %d height %d aspect %f\n",
-         (void*)this, mBounds.Height(), mBounds.Width(), mAspectRatio));
+    float width = (float)mBounds.Width();
+    float height = (float)mBounds.Height();
+
+    if (mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
+      GtkBorder decorationSize;
+      GetCSDDecorationSize(GTK_WINDOW(mShell), &decorationSize);
+      width += decorationSize.left + decorationSize.right;
+      height += decorationSize.top + decorationSize.bottom;
+    }
+
+    mAspectRatio = width / height;
+    LOG(("nsWindow::LockAspectRatio() [%p] width %f height %f aspect %f\n",
+         (void*)this, width, height, mAspectRatio));
   } else {
     mAspectRatio = 0.0;
     LOG(("nsWindow::LockAspectRatio() [%p] removed aspect ratio\n",
