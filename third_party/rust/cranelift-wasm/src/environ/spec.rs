@@ -6,7 +6,7 @@
 //!
 //! [Wasmtime]: https://github.com/CraneStation/wasmtime
 
-use crate::state::VisibleTranslationState;
+use crate::state::TranslationState;
 use crate::translation_utils::{
     FuncIndex, Global, GlobalIndex, Memory, MemoryIndex, SignatureIndex, Table, TableIndex,
 };
@@ -80,7 +80,7 @@ pub enum WasmError {
 /// on the arguments to this macro.
 #[macro_export]
 macro_rules! wasm_unsupported {
-    ($($arg:tt)*) => { return Err($crate::environ::WasmError::Unsupported(format!($($arg)*))) }
+    ($($arg:tt)*) => { $crate::environ::WasmError::Unsupported(format!($($arg)*)) }
 }
 
 impl From<BinaryReaderError> for WasmError {
@@ -281,7 +281,7 @@ pub trait FuncEnvironment {
         &mut self,
         _op: &Operator,
         _builder: &mut FunctionBuilder,
-        _state: &VisibleTranslationState,
+        _state: &TranslationState,
     ) -> WasmResult<()> {
         Ok(())
     }
@@ -292,7 +292,7 @@ pub trait FuncEnvironment {
         &mut self,
         _op: &Operator,
         _builder: &mut FunctionBuilder,
-        _state: &VisibleTranslationState,
+        _state: &TranslationState,
     ) -> WasmResult<()> {
         Ok(())
     }
