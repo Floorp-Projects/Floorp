@@ -81,8 +81,8 @@ class WebrtcTCPSocket : public nsIHttpUpgradeListener,
 
   nsresult DoProxyConfigLookup();
   nsresult OpenWithHttpProxy();
-  nsresult OpenWithoutHttpProxy(nsIProxyInfo* aSocksProxyInfo);
-  nsresult FinishOpen();
+  void OpenWithoutHttpProxy(nsIProxyInfo* aSocksProxyInfo);
+  void FinishOpen();
   void EnqueueWrite_s(nsTArray<uint8_t>&& aWriteData);
 
   void CloseWithReason(nsresult aReason);

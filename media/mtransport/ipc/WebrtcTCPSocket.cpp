@@ -72,6 +72,7 @@ WebrtcTCPSocket::~WebrtcTCPSocket() {
 }
 
 void WebrtcTCPSocket::SetTabId(dom::TabId aTabId) {
+  MOZ_ASSERT(NS_IsMainThread());
   dom::ContentProcessManager* cpm = dom::ContentProcessManager::GetSingleton();
   dom::ContentParentId cpId = cpm->GetTabProcessId(aTabId);
   mAuthProvider = cpm->GetBrowserParentByProcessAndTabId(cpId, aTabId);
@@ -79,6 +80,7 @@ void WebrtcTCPSocket::SetTabId(dom::TabId aTabId) {
 
 nsresult WebrtcTCPSocket::Write(nsTArray<uint8_t>&& aWriteData) {
   LOG(("WebrtcTCPSocket::Write %p\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ALWAYS_SUCCEEDS(
       mSocketThread->Dispatch(NewRunnableMethod<nsTArray<uint8_t>&&>(
           "WebrtcTCPSocket::Write", this, &WebrtcTCPSocket::EnqueueWrite_s,
@@ -142,6 +144,7 @@ nsresult WebrtcTCPSocket::Open(
     const int& aLocalPort, bool aUseTls,
     const Maybe<net::WebrtcProxyConfig>& aProxyConfig) {
   LOG(("WebrtcTCPSocket::Open %p\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (NS_WARN_IF(mOpened)) {
     LOG(("WebrtcTCPSocket %p: TCP socket already open\n", this));
@@ -169,22 +172,24 @@ nsresult WebrtcTCPSocket::Open(
   mLocalPort = aLocalPort;
   mProxyConfig = aProxyConfig;
 
-  if (mProxyConfig.isSome()) {
-    // We need to figure out whether a proxy needs to be used for mURI before
-    // we can start on establishing a connection.
-    rv = DoProxyConfigLookup();
-  } else {
-    rv = OpenWithoutHttpProxy(nullptr);
+  if (!mProxyConfig.isSome()) {
+    OpenWithoutHttpProxy(nullptr);
+    return NS_OK;
   }
 
+  // We need to figure out whether a proxy needs to be used for mURI before
+  // we can start on establishing a connection.
+  rv = DoProxyConfigLookup();
+
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    CloseWithReason(NS_ERROR_FAILURE);
+    CloseWithReason(rv);
   }
 
   return rv;
 }
 
 nsresult WebrtcTCPSocket::DoProxyConfigLookup() {
+  MOZ_ASSERT(NS_IsMainThread());
   nsresult rv;
   nsCOMPtr<nsIProtocolProxyService> pps =
       do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
@@ -221,10 +226,8 @@ NS_IMETHODIMP WebrtcTCPSocket::OnProxyAvailable(nsICancelable* aRequest,
   MOZ_ASSERT(NS_IsMainThread());
   mProxyRequest = nullptr;
 
-  nsresult rv;
-
   if (NS_SUCCEEDED(aResult) && aProxyinfo) {
-    rv = aProxyinfo->GetType(mProxyType);
+    nsresult rv = aProxyinfo->GetType(mProxyType);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       CloseWithReason(rv);
       return rv;
@@ -232,25 +235,41 @@ NS_IMETHODIMP WebrtcTCPSocket::OnProxyAvailable(nsICancelable* aRequest,
 
     if (mProxyType == "http" || mProxyType == "https") {
       rv = OpenWithHttpProxy();
-    } else if (mProxyType == "socks" || mProxyType == "socks4" ||
-               mProxyType == "direct") {
-      rv = OpenWithoutHttpProxy(aProxyinfo);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        CloseWithReason(rv);
+      }
+      return rv;
     }
-  } else {
-    rv = OpenWithoutHttpProxy(nullptr);
+
+    if (mProxyType == "socks" || mProxyType == "socks4" ||
+        mProxyType == "direct") {
+      OpenWithoutHttpProxy(aProxyinfo);
+      return NS_OK;
+    }
   }
 
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    CloseWithReason(rv);
-  }
+  OpenWithoutHttpProxy(nullptr);
 
-  return rv;
+  return NS_OK;
 }
 
-nsresult WebrtcTCPSocket::OpenWithoutHttpProxy(nsIProxyInfo* aSocksProxyInfo) {
+void WebrtcTCPSocket::OpenWithoutHttpProxy(nsIProxyInfo* aSocksProxyInfo) {
+  if (!OnSocketThread()) {
+    MOZ_ALWAYS_SUCCEEDS(
+        mSocketThread->Dispatch(NewRunnableMethod<nsCOMPtr<nsIProxyInfo>>(
+            "WebrtcTCPSocket::OpenWithoutHttpProxy", this,
+            &WebrtcTCPSocket::OpenWithoutHttpProxy, aSocksProxyInfo)));
+    return;
+  }
+
+  if (mClosed) {
+    return;
+  }
+
   if (NS_WARN_IF(mProxyConfig.isSome() && mProxyConfig->forceProxy() &&
                  !aSocksProxyInfo)) {
-    return NS_ERROR_FAILURE;
+    CloseWithReason(NS_ERROR_FAILURE);
+    return;
   }
 
   nsCString host;
@@ -258,12 +277,14 @@ nsresult WebrtcTCPSocket::OpenWithoutHttpProxy(nsIProxyInfo* aSocksProxyInfo) {
 
   nsresult rv = mURI->GetHost(host);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    CloseWithReason(rv);
+    return;
   }
 
   rv = mURI->GetPort(&port);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    CloseWithReason(rv);
+    return;
   }
 
   AutoTArray<nsCString, 1> socketTypes;
@@ -276,7 +297,8 @@ nsresult WebrtcTCPSocket::OpenWithoutHttpProxy(nsIProxyInfo* aSocksProxyInfo) {
   rv = sts->CreateTransport(socketTypes, host, port, aSocksProxyInfo,
                             getter_AddRefs(mTransport));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    CloseWithReason(rv);
+    return;
   }
 
   mTransport->SetReuseAddrPort(true);
@@ -284,46 +306,54 @@ nsresult WebrtcTCPSocket::OpenWithoutHttpProxy(nsIProxyInfo* aSocksProxyInfo) {
   PRNetAddr prAddr;
   if (NS_WARN_IF(PR_SUCCESS !=
                  PR_InitializeNetAddr(PR_IpAddrAny, mLocalPort, &prAddr))) {
-    return NS_ERROR_FAILURE;
+    CloseWithReason(NS_ERROR_FAILURE);
+    return;
   }
 
   if (NS_WARN_IF(PR_SUCCESS !=
                  PR_StringToNetAddr(mLocalAddress.BeginReading(), &prAddr))) {
-    return NS_ERROR_FAILURE;
+    CloseWithReason(NS_ERROR_FAILURE);
+    return;
   }
 
   mozilla::net::NetAddr addr;
   PRNetAddrToNetAddr(&prAddr, &addr);
   rv = mTransport->Bind(&addr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    CloseWithReason(rv);
+    return;
   }
 
   nsCOMPtr<nsIInputStream> socketIn;
   rv = mTransport->OpenInputStream(0, 0, 0, getter_AddRefs(socketIn));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    CloseWithReason(rv);
+    return;
   }
   mSocketIn = do_QueryInterface(socketIn);
   if (NS_WARN_IF(!mSocketIn)) {
-    return NS_ERROR_NULL_POINTER;
+    CloseWithReason(NS_ERROR_NULL_POINTER);
+    return;
   }
 
   nsCOMPtr<nsIOutputStream> socketOut;
   rv = mTransport->OpenOutputStream(nsITransport::OPEN_UNBUFFERED, 0, 0,
                                     getter_AddRefs(socketOut));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    CloseWithReason(rv);
+    return;
   }
   mSocketOut = do_QueryInterface(socketOut);
   if (NS_WARN_IF(!mSocketOut)) {
-    return NS_ERROR_NULL_POINTER;
+    CloseWithReason(NS_ERROR_NULL_POINTER);
+    return;
   }
 
-  return FinishOpen();
+  FinishOpen();
 }
 
 nsresult WebrtcTCPSocket::OpenWithHttpProxy() {
+  MOZ_ASSERT(NS_IsMainThread(), "not on main thread");
   nsresult rv;
   nsCOMPtr<nsIIOService> ioService;
   ioService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
@@ -408,7 +438,10 @@ nsresult WebrtcTCPSocket::OpenWithHttpProxy() {
 void WebrtcTCPSocket::EnqueueWrite_s(nsTArray<uint8_t>&& aWriteData) {
   LOG(("WebrtcTCPSocket::EnqueueWrite %p\n", this));
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  MOZ_ASSERT(!mClosed, "webrtc TCP socket closed");
+
+  if (mClosed) {
+    return;
+  }
 
   mWriteQueue.emplace_back(std::move(aWriteData));
 
@@ -512,10 +545,12 @@ WebrtcTCPSocket::OnTransportAvailable(nsISocketTransport* aTransport,
     return rv;
   }
 
-  return FinishOpen();
+  FinishOpen();
+  return NS_OK;
 }
 
-nsresult WebrtcTCPSocket::FinishOpen() {
+void WebrtcTCPSocket::FinishOpen() {
+  MOZ_ASSERT(OnSocketThread());
   // mTransport, mSocketIn, and mSocketOut are all set. We may have set them in
   // OnTransportAvailable (in the http/https proxy case), or in
   // OpenWithoutHttpProxy. From here on out, this class functions the same for
@@ -524,8 +559,6 @@ nsresult WebrtcTCPSocket::FinishOpen() {
   mSocketIn->AsyncWait(this, 0, 0, nullptr);
 
   InvokeOnConnected();
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
