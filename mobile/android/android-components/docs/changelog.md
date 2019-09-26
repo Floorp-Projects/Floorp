@@ -22,6 +22,26 @@ permalink: /changelog/
 * **feature-customtabs**
   * Added `CustomTabWindowFeature` to handle windows inside custom tabs, PWAs, and TWAs.
 
+* **feature-session**, **engine-gecko-nightly** and **engine-gecko-beta**
+  * Added api to manage the tracking protection exception list, any session added to the list will be ignored and the the current tracking policy will not be applied.
+  ```kotlin
+    val useCase = TrackingProtectionUseCases(sessionManager,engine)
+
+    useCase.addException(session)
+
+    useCase.removeException(session)
+
+    useCase.removeAllExceptions()
+
+    useCase.containsException(session){ contains ->
+        // contains indicates if this session is on the exception list.
+    }
+
+    useCase.fetchExceptions { exceptions ->
+        // exceptions is a list of all the origins that are in the exception list.
+    }
+  ```
+
 # 14.0.1
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v14.0.0...v14.0.1)
