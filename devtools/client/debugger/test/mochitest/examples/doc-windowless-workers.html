@@ -17,6 +17,11 @@ window.sayHello = () => {
   worker1.postMessage({yo: 'yo'})
   worker2.postMessage({yo: 'yo'})
 }
+
+window.sayGoodbye = () => {
+  worker1.terminate();
+  worker2.terminate();
+};
 </script>
 
 <body>
