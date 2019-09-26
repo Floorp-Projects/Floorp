@@ -45,6 +45,7 @@ mod simple_tests {
         data
     }
 
+    #[allow(dead_code)]
     fn scan_tests_files(prefix: &str) -> Vec<PathBuf> {
         let mut files = Vec::new();
 
@@ -325,11 +326,12 @@ mod wast_tests {
     use crate::BinaryReaderError;
     use std::fs::{read, read_dir};
     use wabt::script::{Command, CommandKind, ModuleBinary, ScriptParser};
+    use wabt::Features;
 
     const SPEC_TESTS_PATH: &str = "testsuite";
 
-    fn validate_module(module: ModuleBinary) -> Result<(), BinaryReaderError> {
-        let config = ValidatingParserConfig {
+    fn default_config() -> ValidatingParserConfig {
+        ValidatingParserConfig {
             operator_config: OperatorValidatorConfig {
                 enable_threads: false,
                 enable_reference_types: false,
@@ -340,8 +342,13 @@ mod wast_tests {
                 #[cfg(feature = "deterministic")]
                 deterministic_only: true,
             },
-        };
+        }
+    }
 
+    fn validate_module(
+        module: ModuleBinary,
+        config: ValidatingParserConfig,
+    ) -> Result<(), BinaryReaderError> {
         let data = &module.into_vec();
         let mut parser = ValidatingParser::new(data.as_slice(), Some(config));
         let mut max_iteration = 100000000;
@@ -360,16 +367,35 @@ mod wast_tests {
         Ok(())
     }
 
-    fn skip_test(filename: &str, line: u64) -> bool {
-        match (filename, line) {
-            _ => false,
+    fn to_features(config: &ValidatingParserConfig) -> Features {
+        let mut features = Features::new();
+        if config.operator_config.enable_simd {
+            features.enable_simd();
         }
+        if config.operator_config.enable_reference_types {
+            features.enable_reference_types();
+        }
+        features
     }
 
-    fn run_wabt_scripts(filename: &str, wast: &[u8]) {
+    fn run_wabt_scripts<F>(
+        filename: &str,
+        wast: &[u8],
+        config: ValidatingParserConfig,
+        skip_test: F,
+    ) where
+        F: Fn(&str, u64) -> bool,
+    {
         println!("Parsing {:?}", filename);
+        // Check if we need to skip entire wast file test/parsing.
+        if skip_test(filename, /* line = */ 0) {
+            println!("{}: skipping", filename);
+            return;
+        }
+
+        let features = to_features(&config);
         let mut parser: ScriptParser<f32, f64> =
-            ScriptParser::from_str(std::str::from_utf8(wast).expect("valid utf8 wast"))
+            ScriptParser::from_source_and_name_with_features(wast, filename, features)
                 .expect("script parser");
 
         while let Some(Command { kind, line }) = parser.next().expect("parser") {
@@ -382,14 +408,14 @@ mod wast_tests {
                 CommandKind::Module { module, .. }
                 | CommandKind::AssertUninstantiable { module, .. }
                 | CommandKind::AssertUnlinkable { module, .. } => {
-                    if let Err(err) = validate_module(module) {
+                    if let Err(err) = validate_module(module, config.clone()) {
                         panic!("{}:{}: invalid module: {}", filename, line, err.message);
                     }
                 }
                 CommandKind::AssertInvalid { module, .. }
                 | CommandKind::AssertMalformed { module, .. } => {
                     // TODO diffentiate between assert_invalid and assert_malformed
-                    if let Ok(_) = validate_module(module) {
+                    if let Ok(_) = validate_module(module, config.clone()) {
                         panic!(
                             "{}:{}: invalid module was successfully parsed",
                             filename, line
@@ -408,6 +434,76 @@ mod wast_tests {
         }
     }
 
+    fn run_proposal_tests<F>(name: &str, config: ValidatingParserConfig, skip_test: F)
+    where
+        F: Fn(&str, u64) -> bool,
+    {
+        let proposal_dir = format!("{}/proposals/{}", SPEC_TESTS_PATH, name);
+        for entry in read_dir(&proposal_dir).unwrap() {
+            let dir = entry.unwrap();
+            if !dir.file_type().unwrap().is_file()
+                || dir.path().extension().map(|s| s.to_str().unwrap()) != Some("wast")
+            {
+                continue;
+            }
+
+            let data = read(&dir.path()).expect("wast data");
+            run_wabt_scripts(
+                dir.file_name().to_str().expect("name"),
+                &data,
+                config,
+                |name, line| skip_test(name, line),
+            );
+        }
+    }
+
+    #[test]
+    fn run_proposals_tests() {
+        run_proposal_tests(
+            "simd",
+            {
+                let mut config: ValidatingParserConfig = default_config();
+                config.operator_config.enable_simd = true;
+                config
+            },
+            |name, line| match (name, line) {
+                ("simd_address.wast", _)
+                | ("simd_const.wast", _)
+                | ("simd_f32x4_cmp.wast", _)
+                | ("simd_store.wast", _)
+                | ("simd_lane.wast", _)
+                | ("simd_load.wast", _) => true,
+                _ => false,
+            },
+        );
+
+        run_proposal_tests(
+            "reference-types",
+            {
+                let mut config: ValidatingParserConfig = default_config();
+                config.operator_config.enable_reference_types = true;
+                config
+            },
+            |name, line| match (name, line) {
+                ("ref_null.wast", _)
+                | ("ref_is_null.wast", _)
+                | ("ref_func.wast", _)
+                | ("linking.wast", _)
+                | ("globals.wast", _)
+                | ("imports.wast", _)
+                | ("br_table.wast", _)
+                | ("select.wast", _)
+                | ("table_get.wast", _)
+                | ("table_set.wast", _)
+                | ("table_size.wast", _)
+                | ("table_fill.wast", _)
+                | ("table_grow.wast", _)
+                | ("exports.wast", _) => true,
+                _ => false,
+            },
+        );
+    }
+
     #[test]
     fn run_spec_tests() {
         for entry in read_dir(SPEC_TESTS_PATH).unwrap() {
@@ -419,7 +515,12 @@ mod wast_tests {
             }
 
             let data = read(&dir.path()).expect("wast data");
-            run_wabt_scripts(dir.file_name().to_str().expect("name"), &data);
+            run_wabt_scripts(
+                dir.file_name().to_str().expect("name"),
+                &data,
+                default_config(),
+                |_, _| false,
+            );
         }
     }
 }

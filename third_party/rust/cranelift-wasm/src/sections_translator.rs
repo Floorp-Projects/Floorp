@@ -14,6 +14,7 @@ use crate::translation_utils::{
 };
 use crate::{wasm_unsupported, HashMap};
 use core::convert::TryFrom;
+use cranelift_codegen::ir::immediates::V128Imm;
 use cranelift_codegen::ir::{self, AbiParam, Signature};
 use cranelift_entity::EntityRef;
 use std::vec::Vec;
@@ -52,7 +53,12 @@ pub fn parse_type_section(
                 }));
                 environ.declare_signature(sig)?;
             }
-            ty => wasm_unsupported!("unsupported type in type section: {:?}", ty),
+            ty => {
+                return Err(wasm_unsupported!(
+                    "unsupported type in type section: {:?}",
+                    ty
+                ))
+            }
         }
     }
     Ok(())
@@ -201,11 +207,17 @@ pub fn parse_global_section(
             Operator::I64Const { value } => GlobalInit::I64Const(value),
             Operator::F32Const { value } => GlobalInit::F32Const(value.bits()),
             Operator::F64Const { value } => GlobalInit::F64Const(value.bits()),
+            Operator::V128Const { value } => {
+                GlobalInit::V128Const(V128Imm::from(value.bytes().to_vec().as_slice()))
+            }
             Operator::GetGlobal { global_index } => {
                 GlobalInit::GetGlobal(GlobalIndex::from_u32(global_index))
             }
             ref s => {
-                wasm_unsupported!("unsupported init expr in global section: {:?}", s);
+                return Err(wasm_unsupported!(
+                    "unsupported init expr in global section: {:?}",
+                    s
+                ));
             }
         };
         let global = Global {
@@ -280,7 +292,10 @@ pub fn parse_element_section<'data>(
                     (Some(GlobalIndex::from_u32(global_index)), 0)
                 }
                 ref s => {
-                    wasm_unsupported!("unsupported init expr in element section: {:?}", s);
+                    return Err(wasm_unsupported!(
+                        "unsupported init expr in element section: {:?}",
+                        s
+                    ));
                 }
             };
             let items_reader = items.get_items_reader()?;
@@ -296,7 +311,10 @@ pub fn parse_element_section<'data>(
                 elems.into_boxed_slice(),
             )?
         } else {
-            wasm_unsupported!("unsupported passive elements section: {:?}", kind);
+            return Err(wasm_unsupported!(
+                "unsupported passive elements section: {:?}",
+                kind
+            ));
         }
     }
     Ok(())
@@ -336,7 +354,12 @@ pub fn parse_data_section<'data>(
                 Operator::GetGlobal { global_index } => {
                     (Some(GlobalIndex::from_u32(global_index)), 0)
                 }
-                ref s => wasm_unsupported!("unsupported init expr in data section: {:?}", s),
+                ref s => {
+                    return Err(wasm_unsupported!(
+                        "unsupported init expr in data section: {:?}",
+                        s
+                    ))
+                }
             };
             environ.declare_data_initialization(
                 MemoryIndex::from_u32(memory_index),
@@ -345,7 +368,10 @@ pub fn parse_data_section<'data>(
                 data,
             )?;
         } else {
-            wasm_unsupported!("unsupported passive data section: {:?}", kind);
+            return Err(wasm_unsupported!(
+                "unsupported passive data section: {:?}",
+                kind
+            ));
         }
     }
 

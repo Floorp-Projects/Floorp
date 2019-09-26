@@ -907,7 +907,7 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         | Operator::I64AtomicRmw16UCmpxchg { .. }
         | Operator::I64AtomicRmw32UCmpxchg { .. }
         | Operator::Fence { .. } => {
-            wasm_unsupported!("proposed thread operator {:?}", op);
+            return Err(wasm_unsupported!("proposed thread operator {:?}", op));
         }
         Operator::MemoryInit { .. }
         | Operator::DataDrop { .. }
@@ -920,7 +920,7 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         | Operator::TableSet { .. }
         | Operator::TableGrow { .. }
         | Operator::TableSize { .. } => {
-            wasm_unsupported!("proposed bulk memory operator {:?}", op);
+            return Err(wasm_unsupported!("proposed bulk memory operator {:?}", op));
         }
         Operator::V128Const { value } => {
             let handle = builder.func.dfg.constants.insert(value.bytes().to_vec());
@@ -974,9 +974,24 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
                 builder,
             ))
         }
+        Operator::V8x16Shuffle { lanes, .. } => {
+            let (vector_a, vector_b) = state.pop2();
+            let a = optionally_bitcast_vector(vector_a, I8X16, builder);
+            let b = optionally_bitcast_vector(vector_b, I8X16, builder);
+            let mask = builder.func.dfg.immediates.push(lanes.to_vec());
+            let shuffled = builder.ins().shuffle(a, b, mask);
+            state.push1(shuffled)
+            // At this point the original types of a and b are lost; users of this value (i.e. this
+            // WASM-to-CLIF translator) may need to raw_bitcast for type-correctness. This is due
+            // to WASM using the less specific v128 type for certain operations and more specific
+            // types (e.g. i8x16) for others.
+        }
+        Operator::I8x16Add | Operator::I16x8Add | Operator::I32x4Add | Operator::I64x2Add => {
+            let (a, b) = state.pop2();
+            state.push1(builder.ins().iadd(a, b))
+        }
         Operator::V128Load { .. }
         | Operator::V128Store { .. }
-        | Operator::V8x16Shuffle { .. }
         | Operator::I8x16Eq
         | Operator::I8x16Ne
         | Operator::I8x16LtS
@@ -1030,7 +1045,6 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         | Operator::I8x16Shl
         | Operator::I8x16ShrS
         | Operator::I8x16ShrU
-        | Operator::I8x16Add
         | Operator::I8x16AddSaturateS
         | Operator::I8x16AddSaturateU
         | Operator::I8x16Sub
@@ -1043,7 +1057,6 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         | Operator::I16x8Shl
         | Operator::I16x8ShrS
         | Operator::I16x8ShrU
-        | Operator::I16x8Add
         | Operator::I16x8AddSaturateS
         | Operator::I16x8AddSaturateU
         | Operator::I16x8Sub
@@ -1056,7 +1069,6 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         | Operator::I32x4Shl
         | Operator::I32x4ShrS
         | Operator::I32x4ShrU
-        | Operator::I32x4Add
         | Operator::I32x4Sub
         | Operator::I32x4Mul
         | Operator::I64x2Neg
@@ -1065,7 +1077,6 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         | Operator::I64x2Shl
         | Operator::I64x2ShrS
         | Operator::I64x2ShrU
-        | Operator::I64x2Add
         | Operator::I64x2Sub
         | Operator::F32x4Abs
         | Operator::F32x4Neg
@@ -1098,7 +1109,7 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         | Operator::I16x8LoadSplat { .. }
         | Operator::I32x4LoadSplat { .. }
         | Operator::I64x2LoadSplat { .. } => {
-            wasm_unsupported!("proposed SIMD operator {:?}", op);
+            return Err(wasm_unsupported!("proposed SIMD operator {:?}", op));
         }
     };
     Ok(())

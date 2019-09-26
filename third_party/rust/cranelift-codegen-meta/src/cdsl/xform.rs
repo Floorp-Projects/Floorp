@@ -1,5 +1,6 @@
 use crate::cdsl::ast::{
-    Apply, DefIndex, DefPool, DummyDef, DummyExpr, Expr, PatternPosition, VarIndex, VarPool,
+    Apply, BlockPool, DefIndex, DefPool, DummyDef, DummyExpr, Expr, PatternPosition, VarIndex,
+    VarPool,
 };
 use crate::cdsl::instructions::Instruction;
 use crate::cdsl::type_inference::{infer_transform, TypeEnvironment};
@@ -17,11 +18,12 @@ use std::iter::FromIterator;
 /// cases when it applies.
 ///
 /// The source pattern can contain only a single instruction.
-pub struct Transform {
+pub(crate) struct Transform {
     pub src: DefIndex,
     pub dst: Vec<DefIndex>,
     pub var_pool: VarPool,
     pub def_pool: DefPool,
+    pub block_pool: BlockPool,
     pub type_env: TypeEnvironment,
 }
 
@@ -31,6 +33,7 @@ impl Transform {
     fn new(src: DummyDef, dst: Vec<DummyDef>) -> Self {
         let mut var_pool = VarPool::new();
         let mut def_pool = DefPool::new();
+        let mut block_pool = BlockPool::new();
 
         let mut input_vars: Vec<VarIndex> = Vec::new();
         let mut defined_vars: Vec<VarIndex> = Vec::new();
@@ -47,6 +50,7 @@ impl Transform {
             &mut defined_vars,
             &mut var_pool,
             &mut def_pool,
+            &mut block_pool,
         )[0];
 
         let num_src_inputs = input_vars.len();
@@ -59,6 +63,7 @@ impl Transform {
             &mut defined_vars,
             &mut var_pool,
             &mut def_pool,
+            &mut block_pool,
         );
 
         // Sanity checks.
@@ -122,6 +127,7 @@ impl Transform {
             dst,
             var_pool,
             def_pool,
+            block_pool,
             type_env,
         }
     }
@@ -138,6 +144,27 @@ impl Transform {
     }
 }
 
+/// Inserts, if not present, a name in the `symbol_table`. Then returns its index in the variable
+/// pool `var_pool`. If the variable was not present in the symbol table, then add it to the list of
+/// `defined_vars`.
+fn var_index(
+    name: &'static str,
+    symbol_table: &mut SymbolTable,
+    defined_vars: &mut Vec<VarIndex>,
+    var_pool: &mut VarPool,
+) -> VarIndex {
+    match symbol_table.get(name) {
+        Some(&existing_var) => existing_var,
+        None => {
+            // Materialize the variable.
+            let new_var = var_pool.create(name);
+            symbol_table.insert(name, new_var);
+            defined_vars.push(new_var);
+            new_var
+        }
+    }
+}
+
 /// Given a list of symbols defined in a Def, rewrite them to local symbols. Yield the new locals.
 fn rewrite_defined_vars(
     position: PatternPosition,
@@ -149,16 +176,7 @@ fn rewrite_defined_vars(
 ) -> Vec<VarIndex> {
     let mut new_defined_vars = Vec::new();
     for var in &dummy_def.defined_vars {
-        let own_var = match symbol_table.get(var.name) {
-            Some(&existing_var) => existing_var,
-            None => {
-                // Materialize the variable.
-                let new_var = var_pool.create(var.name);
-                symbol_table.insert(var.name, new_var);
-                defined_vars.push(new_var);
-                new_var
-            }
-        };
+        let own_var = var_index(var.name, symbol_table, defined_vars, var_pool);
         var_pool.get_mut(own_var).set_def(position, def_index);
         new_defined_vars.push(own_var);
     }
@@ -197,23 +215,12 @@ fn rewrite_expr(
     for (i, arg) in dummy_args.into_iter().enumerate() {
         match arg {
             DummyExpr::Var(var) => {
-                let own_var = match symbol_table.get(var.name) {
-                    Some(&own_var) => {
-                        let var = var_pool.get(own_var);
-                        assert!(
-                            var.is_input() || var.get_def(position).is_some(),
-                            format!("{:?} used as both input and def", var)
-                        );
-                        own_var
-                    }
-                    None => {
-                        // First time we're using this variable.
-                        let own_var = var_pool.create(var.name);
-                        symbol_table.insert(var.name, own_var);
-                        input_vars.push(own_var);
-                        own_var
-                    }
-                };
+                let own_var = var_index(var.name, symbol_table, input_vars, var_pool);
+                let var = var_pool.get(own_var);
+                assert!(
+                    var.is_input() || var.get_def(position).is_some(),
+                    format!("{:?} used as both input and def", var)
+                );
                 args.push(Expr::Var(own_var));
             }
             DummyExpr::Literal(literal) => {
@@ -222,6 +229,9 @@ fn rewrite_expr(
             }
             DummyExpr::Apply(..) => {
                 panic!("Recursive apply is not allowed.");
+            }
+            DummyExpr::Block(_block) => {
+                panic!("Blocks are not valid arguments.");
             }
         }
     }
@@ -237,8 +247,18 @@ fn rewrite_def_list(
     defined_vars: &mut Vec<VarIndex>,
     var_pool: &mut VarPool,
     def_pool: &mut DefPool,
+    block_pool: &mut BlockPool,
 ) -> Vec<DefIndex> {
     let mut new_defs = Vec::new();
+    // Register variable names of new blocks first as a block name can be used to jump forward. Thus
+    // the name has to be registered first to avoid misinterpreting it as an input-var.
+    for dummy_def in dummy_defs.iter() {
+        if let DummyExpr::Block(ref var) = dummy_def.expr {
+            var_index(var.name, symbol_table, defined_vars, var_pool);
+        }
+    }
+
+    // Iterate over the definitions and blocks, to map variables names to inputs or outputs.
     for dummy_def in dummy_defs {
         let def_index = def_pool.next_index();
 
@@ -250,25 +270,40 @@ fn rewrite_def_list(
             defined_vars,
             var_pool,
         );
-        let new_apply = rewrite_expr(position, dummy_def.expr, symbol_table, input_vars, var_pool);
+        if let DummyExpr::Block(var) = dummy_def.expr {
+            let var_index = *symbol_table
+                .get(var.name)
+                .or_else(|| {
+                    panic!(
+                        "Block {} was not registered during the first visit",
+                        var.name
+                    )
+                })
+                .unwrap();
+            var_pool.get_mut(var_index).set_def(position, def_index);
+            block_pool.create_block(var_index, def_index);
+        } else {
+            let new_apply =
+                rewrite_expr(position, dummy_def.expr, symbol_table, input_vars, var_pool);
 
-        assert!(
-            def_pool.next_index() == def_index,
-            "shouldn't have created new defs in the meanwhile"
-        );
-        assert_eq!(
-            new_apply.inst.value_results.len(),
-            new_defined_vars.len(),
-            "number of Var results in instruction is incorrect"
-        );
+            assert!(
+                def_pool.next_index() == def_index,
+                "shouldn't have created new defs in the meanwhile"
+            );
+            assert_eq!(
+                new_apply.inst.value_results.len(),
+                new_defined_vars.len(),
+                "number of Var results in instruction is incorrect"
+            );
 
-        new_defs.push(def_pool.create(new_apply, new_defined_vars));
+            new_defs.push(def_pool.create_inst(new_apply, new_defined_vars));
+        }
     }
     new_defs
 }
 
 /// A group of related transformations.
-pub struct TransformGroup {
+pub(crate) struct TransformGroup {
     pub name: &'static str,
     pub doc: &'static str,
     pub chain_with: Option<TransformGroupIndex>,
@@ -294,10 +329,10 @@ impl TransformGroup {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct TransformGroupIndex(u32);
+pub(crate) struct TransformGroupIndex(u32);
 entity_impl!(TransformGroupIndex);
 
-pub struct TransformGroupBuilder {
+pub(crate) struct TransformGroupBuilder {
     name: &'static str,
     doc: &'static str,
     chain_with: Option<TransformGroupIndex>,
@@ -369,7 +404,7 @@ impl TransformGroupBuilder {
     }
 }
 
-pub struct TransformGroups {
+pub(crate) struct TransformGroups {
     groups: PrimaryMap<TransformGroupIndex, TransformGroup>,
 }
 

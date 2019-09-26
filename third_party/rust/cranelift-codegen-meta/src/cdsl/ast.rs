@@ -4,12 +4,12 @@ use crate::cdsl::operands::{OperandKind, OperandKindFields};
 use crate::cdsl::types::ValueType;
 use crate::cdsl::typevar::{TypeSetBuilder, TypeVar};
 
-use cranelift_entity::{entity_impl, PrimaryMap};
+use cranelift_entity::{entity_impl, PrimaryMap, SparseMap, SparseMapValue};
 
 use std::fmt;
+use std::iter::IntoIterator;
 
-#[derive(Debug)]
-pub enum Expr {
+pub(crate) enum Expr {
     Var(VarIndex),
     Literal(Literal),
 }
@@ -44,7 +44,7 @@ impl Expr {
 }
 
 /// An AST definition associates a set of variables with the values produced by an expression.
-pub struct Def {
+pub(crate) struct Def {
     pub apply: Apply,
     pub defined_vars: Vec<VarIndex>,
 }
@@ -67,7 +67,7 @@ impl Def {
     }
 }
 
-pub struct DefPool {
+pub(crate) struct DefPool {
     pool: PrimaryMap<DefIndex, Def>,
 }
 
@@ -83,7 +83,7 @@ impl DefPool {
     pub fn next_index(&self) -> DefIndex {
         self.pool.next_key()
     }
-    pub fn create(&mut self, apply: Apply, defined_vars: Vec<VarIndex>) -> DefIndex {
+    pub fn create_inst(&mut self, apply: Apply, defined_vars: Vec<VarIndex>) -> DefIndex {
         self.pool.push(Def {
             apply,
             defined_vars,
@@ -92,57 +92,92 @@ impl DefPool {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct DefIndex(u32);
+pub(crate) struct DefIndex(u32);
 entity_impl!(DefIndex);
 
-#[derive(Debug, Clone)]
-enum LiteralValue {
+/// A definition which would lead to generate a block creation.
+#[derive(Clone)]
+pub(crate) struct Block {
+    /// Instruction index after which the block entry is set.
+    pub location: DefIndex,
+    /// Variable holding the new created block.
+    pub name: VarIndex,
+}
+
+pub(crate) struct BlockPool {
+    pool: SparseMap<DefIndex, Block>,
+}
+
+impl SparseMapValue<DefIndex> for Block {
+    fn key(&self) -> DefIndex {
+        self.location
+    }
+}
+
+impl BlockPool {
+    pub fn new() -> Self {
+        Self {
+            pool: SparseMap::new(),
+        }
+    }
+    pub fn get(&self, index: DefIndex) -> Option<&Block> {
+        self.pool.get(index)
+    }
+    pub fn create_block(&mut self, name: VarIndex, location: DefIndex) {
+        if self.pool.contains_key(location) {
+            panic!("Attempt to insert 2 blocks after the same instruction")
+        }
+        self.pool.insert(Block { location, name });
+    }
+    pub fn is_empty(&self) -> bool {
+        self.pool.is_empty()
+    }
+}
+
+// Implement IntoIterator such that we can iterate over blocks which are in the block pool.
+impl<'a> IntoIterator for &'a BlockPool {
+    type Item = <&'a SparseMap<DefIndex, Block> as IntoIterator>::Item;
+    type IntoIter = <&'a SparseMap<DefIndex, Block> as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.pool.into_iter()
+    }
+}
+
+#[derive(Clone, Debug)]
+pub(crate) enum Literal {
     /// A value of an enumerated immediate operand.
     ///
     /// Some immediate operand kinds like `intcc` and `floatcc` have an enumerated range of values
     /// corresponding to a Rust enum type. An `Enumerator` object is an AST leaf node representing one
     /// of the values.
-    Enumerator(&'static str),
+    Enumerator {
+        rust_type: String,
+        value: &'static str,
+    },
 
     /// A bitwise value of an immediate operand, used for bitwise exact floating point constants.
-    Bits(u64),
+    Bits { rust_type: String, value: u64 },
 
     /// A value of an integer immediate operand.
     Int(i64),
-}
 
-#[derive(Clone)]
-pub struct Literal {
-    kind: OperandKind,
-    value: LiteralValue,
-}
-
-impl fmt::Debug for Literal {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(
-            fmt,
-            "Literal(kind={}, value={:?})",
-            self.kind.name, self.value
-        )
-    }
+    /// A empty list of variable set of arguments.
+    EmptyVarArgs,
 }
 
 impl Literal {
     pub fn enumerator_for(kind: &OperandKind, value: &'static str) -> Self {
-        if let OperandKindFields::ImmEnum(values) = &kind.fields {
-            assert!(
-                values.get(value).is_some(),
-                format!(
-                    "nonexistent value '{}' in enumeration '{}'",
-                    value, kind.name
-                )
-            );
-        } else {
-            panic!("enumerator is for enum values");
-        }
-        Self {
-            kind: kind.clone(),
-            value: LiteralValue::Enumerator(value),
+        let value = match &kind.fields {
+            OperandKindFields::ImmEnum(values) => values.get(value).expect(&format!(
+                "nonexistent value '{}' in enumeration '{}'",
+                value, kind.name
+            )),
+            _ => panic!("enumerator is for enum values"),
+        };
+        Literal::Enumerator {
+            rust_type: kind.rust_type.clone(),
+            value,
         }
     }
 
@@ -151,42 +186,36 @@ impl Literal {
             OperandKindFields::ImmValue => {}
             _ => panic!("bits_of is for immediate scalar types"),
         }
-        Self {
-            kind: kind.clone(),
-            value: LiteralValue::Bits(bits),
+        Literal::Bits {
+            rust_type: kind.rust_type.clone(),
+            value: bits,
         }
     }
 
     pub fn constant(kind: &OperandKind, value: i64) -> Self {
         match kind.fields {
             OperandKindFields::ImmValue => {}
-            _ => panic!("bits_of is for immediate scalar types"),
+            _ => panic!("constant is for immediate scalar types"),
         }
-        Self {
-            kind: kind.clone(),
-            value: LiteralValue::Int(value),
-        }
+        Literal::Int(value)
+    }
+
+    pub fn empty_vararg() -> Self {
+        Literal::EmptyVarArgs
     }
 
     pub fn to_rust_code(&self) -> String {
-        let maybe_values = match &self.kind.fields {
-            OperandKindFields::ImmEnum(values) => Some(values),
-            OperandKindFields::ImmValue => None,
-            _ => panic!("impossible per construction"),
-        };
-
-        match self.value {
-            LiteralValue::Enumerator(value) => {
-                format!("{}::{}", self.kind.rust_type, maybe_values.unwrap()[value])
-            }
-            LiteralValue::Bits(bits) => format!("{}::with_bits({:#x})", self.kind.rust_type, bits),
-            LiteralValue::Int(val) => val.to_string(),
+        match self {
+            Literal::Enumerator { rust_type, value } => format!("{}::{}", rust_type, value),
+            Literal::Bits { rust_type, value } => format!("{}::with_bits({:#x})", rust_type, value),
+            Literal::Int(val) => val.to_string(),
+            Literal::EmptyVarArgs => "&[]".into(),
         }
     }
 }
 
 #[derive(Clone, Copy, Debug)]
-pub enum PatternPosition {
+pub(crate) enum PatternPosition {
     Source,
     Destination,
 }
@@ -208,7 +237,7 @@ pub enum PatternPosition {
 /// deleted immediately.
 ///
 /// Temporary values are defined only in the destination pattern.
-pub struct Var {
+pub(crate) struct Var {
     pub name: &'static str,
 
     /// The `Def` defining this variable in a source pattern.
@@ -336,10 +365,10 @@ impl fmt::Debug for Var {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct VarIndex(u32);
+pub(crate) struct VarIndex(u32);
 entity_impl!(VarIndex);
 
-pub struct VarPool {
+pub(crate) struct VarPool {
     pool: PrimaryMap<VarIndex, Var>,
 }
 
@@ -364,8 +393,7 @@ impl VarPool {
 ///
 /// An `Apply` AST expression is created by using function call syntax on instructions. This
 /// applies to both bound and unbound polymorphic instructions.
-#[derive(Debug)]
-pub struct Apply {
+pub(crate) struct Apply {
     pub inst: Instruction,
     pub args: Vec<Expr>,
     pub value_types: Vec<ValueType>,
@@ -395,13 +423,38 @@ impl Apply {
             let arg = &args[imm_index];
             if let Some(literal) = arg.maybe_literal() {
                 let op = &inst.operands_in[imm_index];
-                assert!(
-                    op.kind.name == literal.kind.name,
-                    format!(
-                        "Passing literal of kind {} to field of wrong kind {}",
-                        literal.kind.name, op.kind.name
-                    )
-                );
+                match &op.kind.fields {
+                    OperandKindFields::ImmEnum(values) => {
+                        if let Literal::Enumerator { value, .. } = literal {
+                            assert!(
+                                values.iter().any(|(_key, v)| v == value),
+                                "Nonexistent enum value '{}' passed to field of kind '{}' -- \
+                                 did you use the right enum?",
+                                value,
+                                op.kind.name
+                            );
+                        } else {
+                            panic!(
+                                "Passed non-enum field value {:?} to field of kind {}",
+                                literal, op.kind.name
+                            );
+                        }
+                    }
+                    OperandKindFields::ImmValue => match &literal {
+                        Literal::Enumerator { value, .. } => panic!(
+                            "Expected immediate value in immediate field of kind '{}', \
+                             obtained enum value '{}'",
+                            op.kind.name, value
+                        ),
+                        Literal::Bits { .. } | Literal::Int(_) | Literal::EmptyVarArgs => {}
+                    },
+                    _ => {
+                        panic!(
+                            "Literal passed to non-literal field of kind {}",
+                            op.kind.name
+                        );
+                    }
+                }
             }
         }
 
@@ -511,14 +564,15 @@ impl Apply {
 
 // Simple helpers for legalize actions construction.
 
-pub enum DummyExpr {
+pub(crate) enum DummyExpr {
     Var(DummyVar),
     Literal(Literal),
     Apply(InstSpec, Vec<DummyExpr>),
+    Block(DummyVar),
 }
 
 #[derive(Clone)]
-pub struct DummyVar {
+pub(crate) struct DummyVar {
     pub name: &'static str,
 }
 
@@ -533,16 +587,16 @@ impl Into<DummyExpr> for Literal {
     }
 }
 
-pub fn var(name: &'static str) -> DummyVar {
+pub(crate) fn var(name: &'static str) -> DummyVar {
     DummyVar { name }
 }
 
-pub struct DummyDef {
+pub(crate) struct DummyDef {
     pub expr: DummyExpr,
     pub defined_vars: Vec<DummyVar>,
 }
 
-pub struct ExprBuilder {
+pub(crate) struct ExprBuilder {
     expr: DummyExpr,
 }
 
@@ -557,6 +611,11 @@ impl ExprBuilder {
             expr: self.expr,
             defined_vars,
         }
+    }
+
+    pub fn block(name: DummyVar) -> Self {
+        let expr = DummyExpr::Block(name);
+        Self { expr }
     }
 }
 
@@ -588,4 +647,12 @@ macro_rules! def {
     ($($tt:tt)*) => {
         def_rhs!($($tt)*).assign_to(Vec::new())
     }
+}
+
+// Helper macro to define legalization recipes.
+macro_rules! ebb {
+    // An basic block definition, splitting the current block in 2.
+    ($block: ident) => {
+        ExprBuilder::block($block).assign_to(Vec::new())
+    };
 }

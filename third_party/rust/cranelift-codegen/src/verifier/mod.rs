@@ -696,10 +696,16 @@ impl<'a> Verifier<'a> {
                 }
             }
 
+            Unary {
+                opcode: Opcode::Bitcast,
+                arg,
+            } => {
+                self.verify_bitcast(inst, arg, errors)?;
+            }
+
             // Exhaustive list so we can't forget to add new formats
             Unary { .. }
             | UnaryImm { .. }
-            | UnaryImm128 { .. }
             | UnaryIeee32 { .. }
             | UnaryIeee64 { .. }
             | UnaryBool { .. }
@@ -708,6 +714,8 @@ impl<'a> Verifier<'a> {
             | Ternary { .. }
             | InsertLane { .. }
             | ExtractLane { .. }
+            | UnaryConst { .. }
+            | Shuffle { .. }
             | IntCompare { .. }
             | IntCompareImm { .. }
             | IntCond { .. }
@@ -978,6 +986,28 @@ impl<'a> Verifier<'a> {
                 "instruction result {} is not defined by the instruction",
                 v
             ),
+        }
+    }
+
+    fn verify_bitcast(
+        &self,
+        inst: Inst,
+        arg: Value,
+        errors: &mut VerifierErrors,
+    ) -> VerifierStepResult<()> {
+        let typ = self.func.dfg.ctrl_typevar(inst);
+        let value_type = self.func.dfg.value_type(arg);
+
+        if typ.lane_bits() < value_type.lane_bits() {
+            fatal!(
+                errors,
+                inst,
+                "The bitcast argument {} doesn't fit in a type of {} bits",
+                arg,
+                typ.lane_bits()
+            )
+        } else {
+            Ok(())
         }
     }
 
@@ -1746,21 +1776,47 @@ impl<'a> Verifier<'a> {
     ) -> VerifierStepResult<()> {
         let inst_data = &self.func.dfg[inst];
 
-        // If this is some sort of a store instruction, get the memflags, else, just return.
-        let memflags = match *inst_data {
+        match *inst_data {
             ir::InstructionData::Store { flags, .. }
-            | ir::InstructionData::StoreComplex { flags, .. } => flags,
-            _ => return Ok(()),
-        };
-
-        if memflags.readonly() {
-            fatal!(
-                errors,
-                inst,
-                "A store instruction cannot have the `readonly` MemFlag"
-            )
-        } else {
-            Ok(())
+            | ir::InstructionData::StoreComplex { flags, .. } => {
+                if flags.readonly() {
+                    fatal!(
+                        errors,
+                        inst,
+                        "A store instruction cannot have the `readonly` MemFlag"
+                    )
+                } else {
+                    Ok(())
+                }
+            }
+            ir::InstructionData::ExtractLane {
+                opcode: ir::instructions::Opcode::Extractlane,
+                lane,
+                arg,
+                ..
+            }
+            | ir::InstructionData::InsertLane {
+                opcode: ir::instructions::Opcode::Insertlane,
+                lane,
+                args: [arg, _],
+                ..
+            } => {
+                // We must be specific about the opcodes above because other instructions are using
+                // the ExtractLane/InsertLane formats.
+                let ty = self.func.dfg.value_type(arg);
+                if u16::from(lane) >= ty.lane_count() {
+                    fatal!(
+                        errors,
+                        inst,
+                        "The lane {} does not index into the type {}",
+                        lane,
+                        ty
+                    )
+                } else {
+                    Ok(())
+                }
+            }
+            _ => Ok(()),
         }
     }
 
@@ -1782,12 +1838,51 @@ impl<'a> Verifier<'a> {
         Ok(())
     }
 
+    fn typecheck_function_signature(&self, errors: &mut VerifierErrors) -> VerifierStepResult<()> {
+        self.func
+            .signature
+            .params
+            .iter()
+            .enumerate()
+            .filter(|(_, &param)| param.value_type == types::INVALID)
+            .for_each(|(i, _)| {
+                report!(
+                    errors,
+                    AnyEntity::Function,
+                    "Parameter at position {} has an invalid type",
+                    i
+                );
+            });
+
+        self.func
+            .signature
+            .returns
+            .iter()
+            .enumerate()
+            .filter(|(_, &ret)| ret.value_type == types::INVALID)
+            .for_each(|(i, _)| {
+                report!(
+                    errors,
+                    AnyEntity::Function,
+                    "Return value at position {} has an invalid type",
+                    i
+                )
+            });
+
+        if errors.has_error() {
+            Err(())
+        } else {
+            Ok(())
+        }
+    }
+
     pub fn run(&self, errors: &mut VerifierErrors) -> VerifierStepResult<()> {
         self.verify_global_values(errors)?;
         self.verify_heaps(errors)?;
         self.verify_tables(errors)?;
         self.verify_jump_tables(errors)?;
         self.typecheck_entry_block_params(errors)?;
+        self.typecheck_function_signature(errors)?;
 
         for ebb in self.func.layout.ebbs() {
             for inst in self.func.layout.ebb_insts(ebb) {
@@ -1814,7 +1909,7 @@ mod tests {
     use super::{Verifier, VerifierError, VerifierErrors};
     use crate::entity::EntityList;
     use crate::ir::instructions::{InstructionData, Opcode};
-    use crate::ir::Function;
+    use crate::ir::{types, AbiParam, Function};
     use crate::settings;
 
     macro_rules! assert_err_with_msg {
@@ -1872,5 +1967,31 @@ mod tests {
         let _ = verifier.run(&mut errors);
 
         assert_err_with_msg!(errors, "instruction format");
+    }
+
+    #[test]
+    fn test_function_invalid_param() {
+        let mut func = Function::new();
+        func.signature.params.push(AbiParam::new(types::INVALID));
+
+        let mut errors = VerifierErrors::default();
+        let flags = &settings::Flags::new(settings::builder());
+        let verifier = Verifier::new(&func, flags.into());
+
+        let _ = verifier.typecheck_function_signature(&mut errors);
+        assert_err_with_msg!(errors, "Parameter at position 0 has an invalid type");
+    }
+
+    #[test]
+    fn test_function_invalid_return_value() {
+        let mut func = Function::new();
+        func.signature.returns.push(AbiParam::new(types::INVALID));
+
+        let mut errors = VerifierErrors::default();
+        let flags = &settings::Flags::new(settings::builder());
+        let verifier = Verifier::new(&func, flags.into());
+
+        let _ = verifier.typecheck_function_signature(&mut errors);
+        assert_err_with_msg!(errors, "Return value at position 0 has an invalid type");
     }
 }

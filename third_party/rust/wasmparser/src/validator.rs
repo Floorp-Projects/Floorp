@@ -34,8 +34,8 @@ use crate::primitives::{
 use crate::parser::{Parser, ParserInput, ParserState, WasmDecoder};
 
 use crate::operators_validator::{
-    FunctionEnd, OperatorValidator, OperatorValidatorConfig, WasmModuleResources,
-    DEFAULT_OPERATOR_VALIDATOR_CONFIG,
+    is_subtype_supertype, FunctionEnd, OperatorValidator, OperatorValidatorConfig,
+    WasmModuleResources, DEFAULT_OPERATOR_VALIDATOR_CONFIG,
 };
 
 use crate::readers::FunctionBody;
@@ -196,6 +196,12 @@ impl<'a> ValidatingParser<'a> {
     fn check_value_type(&self, ty: Type) -> ValidatorResult<'a, ()> {
         match ty {
             Type::I32 | Type::I64 | Type::F32 | Type::F64 => Ok(()),
+            Type::Null | Type::AnyFunc | Type::AnyRef => {
+                if !self.config.operator_config.enable_reference_types {
+                    return self.create_error("reference types support is not enabled");
+                }
+                Ok(())
+            }
             Type::V128 => {
                 if !self.config.operator_config.enable_simd {
                     return self.create_error("SIMD support is not enabled");
@@ -301,6 +307,12 @@ impl<'a> ValidatingParser<'a> {
             Operator::I64Const { .. } => Type::I64,
             Operator::F32Const { .. } => Type::F32,
             Operator::F64Const { .. } => Type::F64,
+            Operator::RefNull => {
+                if !self.config.operator_config.enable_reference_types {
+                    return self.create_error("reference types support is not enabled");
+                }
+                Type::Null
+            }
             Operator::V128Const { .. } => {
                 if !self.config.operator_config.enable_simd {
                     return self.create_error("SIMD support is not enabled");
@@ -315,7 +327,7 @@ impl<'a> ValidatingParser<'a> {
             }
             _ => return self.create_error("invalid init_expr operator"),
         };
-        if ty != state.ty {
+        if !is_subtype_supertype(ty, state.ty) {
             return self.create_error("invalid init_expr type");
         }
         Ok(())
@@ -781,67 +793,72 @@ impl<'b> ValidatingOperatorParser<'b> {
 /// The resources parameter contains all needed data to validate the operators.
 pub fn validate_function_body(
     bytes: &[u8],
+    offset: usize,
     func_index: u32,
     resources: &dyn WasmModuleResources,
     operator_config: Option<OperatorValidatorConfig>,
-) -> bool {
+) -> Result<()> {
     let operator_config = operator_config.unwrap_or(DEFAULT_OPERATOR_VALIDATOR_CONFIG);
-    let function_body = FunctionBody::new(0, bytes);
-    let mut locals_reader = if let Ok(r) = function_body.get_locals_reader() {
-        r
-    } else {
-        return false;
-    };
+    let function_body = FunctionBody::new(offset, bytes);
+    let mut locals_reader = function_body.get_locals_reader()?;
     let local_count = locals_reader.get_count() as usize;
     if local_count > MAX_WASM_FUNCTION_LOCALS {
-        return false;
+        Err(BinaryReaderError {
+            message: "locals exceed maximum",
+            offset: locals_reader.original_position(),
+        })?;
     }
     let mut locals: Vec<(u32, Type)> = Vec::with_capacity(local_count);
     let mut locals_total: usize = 0;
     for _ in 0..local_count {
-        let (count, ty) = if let Ok(r) = locals_reader.read() {
-            r
-        } else {
-            return false;
-        };
-        locals_total = if let Some(r) = locals_total.checked_add(count as usize) {
-            r
-        } else {
-            return false;
-        };
+        let (count, ty) = locals_reader.read()?;
+        locals_total =
+            locals_total
+                .checked_add(count as usize)
+                .ok_or_else(|| BinaryReaderError {
+                    message: "locals overflow",
+                    offset: locals_reader.original_position(),
+                })?;
         if locals_total > MAX_WASM_FUNCTION_LOCALS {
-            return false;
+            Err(BinaryReaderError {
+                message: "locals exceed maximum",
+                offset: locals_reader.original_position(),
+            })?;
         }
         locals.push((count, ty));
     }
-    let operators_reader = if let Ok(r) = function_body.get_operators_reader() {
-        r
-    } else {
-        return false;
-    };
+    let operators_reader = function_body.get_operators_reader()?;
     let func_type_index = resources.func_type_indices()[func_index as usize];
     let func_type = &resources.types()[func_type_index as usize];
     let mut operator_validator = OperatorValidator::new(func_type, &locals, operator_config);
     let mut eof_found = false;
-    for op in operators_reader.into_iter() {
-        let op = match op {
-            Err(_) => return false,
-            Ok(ref op) => op,
-        };
-        match operator_validator.process_operator(op, resources) {
-            Err(_) => return false,
-            Ok(FunctionEnd::Yes) => {
+    let mut last_op = 0;
+    for item in operators_reader.into_iter_with_offsets() {
+        let (ref op, offset) = item?;
+        match operator_validator
+            .process_operator(op, resources)
+            .map_err(|message| BinaryReaderError { message, offset })?
+        {
+            FunctionEnd::Yes => {
                 eof_found = true;
             }
-            Ok(FunctionEnd::No) => (),
+            FunctionEnd::No => {
+                last_op = offset;
+            }
         }
     }
-    eof_found
+    if !eof_found {
+        Err(BinaryReaderError {
+            message: "end of function not found",
+            offset: last_op,
+        })?;
+    }
+    Ok(())
 }
 
 /// Test whether the given buffer contains a valid WebAssembly module,
 /// analogous to WebAssembly.validate in the JS API.
-pub fn validate(bytes: &[u8], config: Option<ValidatingParserConfig>) -> bool {
+pub fn validate(bytes: &[u8], config: Option<ValidatingParserConfig>) -> Result<()> {
     let mut parser = ValidatingParser::new(bytes, config);
     let mut parser_input = None;
     let mut func_ranges = Vec::new();
@@ -850,7 +867,7 @@ pub fn validate(bytes: &[u8], config: Option<ValidatingParserConfig>) -> bool {
         let state = parser.read_with_input(next_input);
         match *state {
             ParserState::EndWasm => break,
-            ParserState::Error(_) => return false,
+            ParserState::Error(e) => Err(e)?,
             ParserState::BeginFunctionBody { range } => {
                 parser_input = Some(ParserInput::SkipFunctionBody);
                 func_ranges.push(range);
@@ -862,23 +879,19 @@ pub fn validate(bytes: &[u8], config: Option<ValidatingParserConfig>) -> bool {
     for (i, range) in func_ranges.into_iter().enumerate() {
         let function_body = range.slice(bytes);
         let function_index = i as u32 + parser.func_imports_count;
-        if !validate_function_body(
+        validate_function_body(
             function_body,
+            range.start,
             function_index,
             &parser.resources,
             operator_config,
-        ) {
-            return false;
-        }
+        )?;
     }
-    true
+    Ok(())
 }
 
 #[test]
 fn test_validate() {
-    assert!(validate(&[0x0, 0x61, 0x73, 0x6d, 0x1, 0x0, 0x0, 0x0], None));
-    assert!(!validate(
-        &[0x0, 0x61, 0x73, 0x6d, 0x2, 0x0, 0x0, 0x0],
-        None
-    ));
+    assert!(validate(&[0x0, 0x61, 0x73, 0x6d, 0x1, 0x0, 0x0, 0x0], None).is_ok());
+    assert!(validate(&[0x0, 0x61, 0x73, 0x6d, 0x2, 0x0, 0x0, 0x0], None).is_err());
 }
