@@ -240,10 +240,7 @@ NetworkObserver.prototype = {
         this._httpModifyExaminer,
         "http-on-modify-request"
       );
-      Services.obs.addObserver(
-        this._httpStopRequest,
-        "http-on-stop-request"
-      );
+      Services.obs.addObserver(this._httpStopRequest, "http-on-stop-request");
     } else {
       Services.obs.addObserver(
         this._httpFailedOpening,
@@ -1004,7 +1001,7 @@ NetworkObserver.prototype = {
       httpActivity.owner.addEventTimings(
         result.total,
         result.timings,
-        result.offsets,
+        result.offsets
       );
     }
     this.openRequests.delete(httpActivity.channel);
