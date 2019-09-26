@@ -552,12 +552,6 @@ class nsContentUtils::UserInteractionObserver final
   ~UserInteractionObserver() {}
 };
 
-/* static */
-TimeDuration nsContentUtils::HandlingUserInputTimeout() {
-  return TimeDuration::FromMilliseconds(
-      StaticPrefs::dom_event_handling_user_input_time_limit());
-}
-
 // static
 nsresult nsContentUtils::Init() {
   if (sInitialized) {
