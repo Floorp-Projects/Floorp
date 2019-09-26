@@ -24,7 +24,6 @@ const PROTECTIONS_PANEL_INFOMSG_PREF =
 
 const TOOLBAR_BUTTON_ID = "whats-new-menu-button";
 const APPMENU_BUTTON_ID = "appMenu-whatsnew-button";
-const PANEL_HEADER_SELECTOR = "#PanelUI-whatsNew-title > label";
 
 const BUTTON_STRING_ID = "cfr-whatsnew-button";
 const WHATS_NEW_PANEL_SELECTOR = "PanelUI-whatsNew-message-container";
@@ -428,13 +427,6 @@ class _ToolbarPanelHub {
     const document = win.browser.ownerDocument;
     this.maybeInsertFTL(win);
     this._showElement(document, TOOLBAR_BUTTON_ID, BUTTON_STRING_ID);
-    // The toolbar dropdown panel uses this extra header element that is hidden
-    // in the appmenu subview version of the panel. We only need to set it
-    // when showing the toolbar button.
-    document.l10n.setAttributes(
-      document.querySelector(PANEL_HEADER_SELECTOR),
-      "cfr-whatsnew-panel-header"
-    );
   }
 
   _hideToolbarButton(win) {
