@@ -191,6 +191,7 @@
 #include "nsMemoryInfoDumper.h"
 #include "nsMemoryReporterManager.h"
 #include "nsQueryObject.h"
+#include "nsReadableUtils.h"
 #include "nsScriptError.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStyleSheetService.h"
@@ -715,6 +716,11 @@ const nsDependentSubstring RemoteTypePrefix(
     equalIdx = aContentProcessType.Length();
   }
   return StringHead(aContentProcessType, equalIdx);
+}
+
+bool IsWebRemoteType(const nsAString& aContentProcessType) {
+  return StringBeginsWith(aContentProcessType,
+                          NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
 }
 
 /*static*/

@@ -811,7 +811,8 @@ var E10SUtils = {
 
   /**
    * There are various types of remote types that are for web content processes, but
-   * they all start with "web".
+   * they all start with "web". The C++ version of this method is
+   * mozilla::dom::IsWebRemoteType().
    */
   isWebRemoteType(aRemoteType) {
     return aRemoteType.startsWith(WEB_REMOTE_TYPE);
