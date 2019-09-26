@@ -92,8 +92,8 @@ function getPromptState(ui) {
   state.checked = state.checkHidden ? false : ui.checkbox.checked;
   // tab-modal prompts don't have an infoIcon
   state.iconClass = ui.infoIcon ? ui.infoIcon.className : null;
-  state.textValue = ui.loginTextbox.getAttribute("value");
-  state.passValue = ui.password1Textbox.getAttribute("value");
+  state.textValue = ui.loginTextbox.value;
+  state.passValue = ui.password1Textbox.value;
 
   state.butt0Label = ui.button0.label;
   state.butt1Label = ui.button1.label;
@@ -120,9 +120,9 @@ function getPromptState(ui) {
     state.focused = "button1";
   } else if (ui.button2.isSameNode(e)) {
     state.focused = "button2";
-  } else if (e.isSameNode(ui.loginTextbox.inputField)) {
+  } else if (e.isSameNode(ui.loginTextbox)) {
     state.focused = "textField";
-  } else if (e.isSameNode(ui.password1Textbox.inputField)) {
+  } else if (e.isSameNode(ui.password1Textbox)) {
     state.focused = "passField";
   } else if (ui.infoBody.isSameNode(e)) {
     state.focused = "infoBody";
