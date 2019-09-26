@@ -796,7 +796,7 @@ class BrowserParent final : public PBrowserParent,
 
   void DestroyInternal();
 
-  void SetRenderLayersInternal(bool aEnabled, bool aForceRepaint);
+  void SetRenderLayersInternal(bool aEnabled);
 
   already_AddRefed<nsFrameLoader> GetFrameLoader(
       bool aUseCachedFrameLoaderAfterDestroy = false) const;

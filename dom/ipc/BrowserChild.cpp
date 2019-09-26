@@ -2439,8 +2439,7 @@ void BrowserChild::RemovePendingDocShellBlocker() {
   }
   if (!mPendingDocShellBlockers && mPendingRenderLayersReceivedMessage) {
     mPendingRenderLayersReceivedMessage = false;
-    RecvRenderLayers(mPendingRenderLayers, false /* aForceRepaint */,
-                     mPendingLayersObserverEpoch);
+    RecvRenderLayers(mPendingRenderLayers, mPendingLayersObserverEpoch);
   }
 }
 
@@ -2466,8 +2465,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvSetDocShellIsActive(
 }
 
 mozilla::ipc::IPCResult BrowserChild::RecvRenderLayers(
-    const bool& aEnabled, const bool& aForceRepaint,
-    const layers::LayersObserverEpoch& aEpoch) {
+    const bool& aEnabled, const layers::LayersObserverEpoch& aEpoch) {
   if (mPendingDocShellBlockers > 0) {
     mPendingRenderLayersReceivedMessage = true;
     mPendingRenderLayers = aEnabled;
@@ -2514,17 +2512,11 @@ mozilla::ipc::IPCResult BrowserChild::RecvRenderLayers(
 
   if (aEnabled && IsVisible()) {
     // This request is a no-op.
-    if (!aForceRepaint) {
-      // In this case, we still want a MozLayerTreeReady notification to fire
-      // in the parent (so that it knows that the child has updated its epoch).
-      // PaintWhileInterruptingJSNoOp does that.
-      //
-      // FIXME(emilio): Why only when aForceRepaint is false? It seems it's
-      // just what the tab switcher uses, but we could remove the argument
-      // if we do this unconditionally.
-      if (IPCOpen()) {
-        Unused << SendPaintWhileInterruptingJSNoOp(mLayersObserverEpoch);
-      }
+    // In this case, we still want a MozLayerTreeReady notification to fire
+    // in the parent (so that it knows that the child has updated its epoch).
+    // PaintWhileInterruptingJSNoOp does that.
+    if (IPCOpen()) {
+      Unused << SendPaintWhileInterruptingJSNoOp(mLayersObserverEpoch);
     }
     return IPC_OK();
   }
@@ -2537,13 +2529,6 @@ mozilla::ipc::IPCResult BrowserChild::RecvRenderLayers(
     return IPC_OK();
   }
 
-  // FIXME(emilio): We force a repaint if visible even if aForceRepaint, why?
-  //
-  // This is artifact of a refacting, but respecting aForceRepaint breaks
-  // tab-switching in WR+Windows, because well, we don't repaint and thus never
-  // send the MozLayerTreeReady notification to the parent.
-  //
-  // At this point aForceRepaint seems pretty useless.
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
   if (!docShell) {
     return IPC_OK();
@@ -3395,7 +3380,7 @@ ScreenIntRect BrowserChild::GetOuterRect() {
 }
 
 void BrowserChild::PaintWhileInterruptingJS(
-    const layers::LayersObserverEpoch& aEpoch, bool aForceRepaint) {
+    const layers::LayersObserverEpoch& aEpoch) {
   if (!IPCOpen() || !mPuppetWidget || !mPuppetWidget->HasLayerManager()) {
     // Don't bother doing anything now. Better to wait until we receive the
     // message on the PContent channel.
@@ -3404,7 +3389,7 @@ void BrowserChild::PaintWhileInterruptingJS(
 
   MOZ_DIAGNOSTIC_ASSERT(nsContentUtils::IsSafeToRunScript());
   nsAutoScriptBlocker scriptBlocker;
-  RecvRenderLayers(true /* aEnabled */, aForceRepaint, aEpoch);
+  RecvRenderLayers(true /* aEnabled */, aEpoch);
 }
 
 nsresult BrowserChild::CanCancelContentJS(

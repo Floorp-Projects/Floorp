@@ -585,7 +585,6 @@ class ContentParent final : public PContentParent,
 
   // Use the PHangMonitor channel to ask the child to repaint a tab.
   void PaintTabWhileInterruptingJS(BrowserParent* aBrowserParent,
-                                   bool aForceRepaint,
                                    const layers::LayersObserverEpoch& aEpoch);
 
   void CancelContentJSExecutionIfRunning(

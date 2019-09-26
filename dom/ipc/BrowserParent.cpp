@@ -3294,21 +3294,20 @@ void BrowserParent::SetRenderLayers(bool aEnabled) {
 
   mRenderLayers = aEnabled;
 
-  SetRenderLayersInternal(aEnabled, false /* aForceRepaint */);
+  SetRenderLayersInternal(aEnabled);
 }
 
-void BrowserParent::SetRenderLayersInternal(bool aEnabled, bool aForceRepaint) {
+void BrowserParent::SetRenderLayersInternal(bool aEnabled) {
   // Increment the epoch so that layer tree updates from previous
   // RenderLayers requests are ignored.
   mLayerTreeEpoch = mLayerTreeEpoch.Next();
 
-  Unused << SendRenderLayers(aEnabled, aForceRepaint, mLayerTreeEpoch);
+  Unused << SendRenderLayers(aEnabled, mLayerTreeEpoch);
 
   // Ask the child to repaint using the PHangMonitor channel/thread (which may
   // be less congested).
   if (aEnabled) {
-    Manager()->PaintTabWhileInterruptingJS(this, aForceRepaint,
-                                           mLayerTreeEpoch);
+    Manager()->PaintTabWhileInterruptingJS(this, mLayerTreeEpoch);
   }
 }
 
@@ -3325,7 +3324,7 @@ void BrowserParent::ForceRepaint() {
     ProcessPriorityManager::TabActivityChanged(this, true);
   }
 
-  SetRenderLayersInternal(true /* aEnabled */, true /* aForceRepaint */);
+  SetRenderLayersInternal(true /* aEnabled */);
 }
 
 void BrowserParent::NotifyResolutionChanged() {
