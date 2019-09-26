@@ -583,15 +583,11 @@
 
 /* Pinned tab separators need position: absolute when positioned (during overflow). */
 #tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned]::after {
+  display: block;
   position: absolute;
   top: 0;
   bottom: 0;
-  right: 0;
-}
-
-#tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned]:-moz-locale-dir(rtl)::after {
-  right: unset;
-  left: 0;
+  inset-inline-end: 0;
 }
 
 #tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned] > .tab-stack {
