@@ -42,12 +42,12 @@ var TabModalPrompt = class {
 
                 <row class="tabmodalprompt-loginContainer" hidden="true" align="center">
                   <label class="tabmodalprompt-loginLabel" value="&editfield0.label;" control="loginTextbox-${randomIdSuffix}"/>
-                  <textbox class="tabmodalprompt-loginTextbox" id="loginTextbox-${randomIdSuffix}"/>
+                  <html:input class="tabmodalprompt-loginTextbox" id="loginTextbox-${randomIdSuffix}"/>
                 </row>
 
                 <row class="tabmodalprompt-password1Container" hidden="true" align="center">
                   <label class="tabmodalprompt-password1Label" value="&editfield1.label;" control="password1Textbox-${randomIdSuffix}"/>
-                  <textbox class="tabmodalprompt-password1Textbox" type="password" id="password1Textbox-${randomIdSuffix}"/>
+                  <html:input class="tabmodalprompt-password1Textbox" type="password" id="password1Textbox-${randomIdSuffix}"/>
                 </row>
 
                 <row class="tabmodalprompt-checkboxContainer" hidden="true">
