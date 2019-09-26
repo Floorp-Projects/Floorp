@@ -21,6 +21,7 @@ namespace mozilla {
 
 class MediaResult {
  public:
+  MediaResult() : mCode(NS_OK) {}
   MOZ_IMPLICIT MediaResult(nsresult aResult) : mCode(aResult) {}
   MediaResult(nsresult aResult, const nsACString& aMessage)
       : mCode(aResult), mMessage(aMessage) {}
