@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef GMP_LOG_h_
-#define GMP_LOG_h_
+#ifndef DOM_MEDIA_GMPLOG_H_
+#define DOM_MEDIA_GMPLOG_H_
 
 #include "mozilla/Logging.h"
 
@@ -17,4 +17,4 @@ extern LogModule* GetGMPLog();
 
 }  // namespace mozilla
 
-#endif  // GMP_LOG_h_
+#endif  // DOM_MEDIA_GMPLOG_H_
