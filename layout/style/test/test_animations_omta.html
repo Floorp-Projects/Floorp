@@ -2591,7 +2591,7 @@ addAsyncAnimTest(async function() {
 
   gDiv.style.translate = "200px";
   gDiv.style.scale = "2 2";
-  gDiv.style.transform = "translate(300px)";
+  gDiv.style.transform = "translate(100px)";
   await waitForPaintsFlushed();
 
   omta_is("transform", { compositorValue: { tx: 300 },
@@ -2608,7 +2608,7 @@ addAsyncAnimTest(async function() {
     omta_is("transform",
             // The order is: translate, scale, transform.
             // So the translate() in transform should be multiplied by 1.5.
-            { compositorValue: [ 1.5, 0, 0, 1.5, (150 + 250*1.5), 0 ],
+            { compositorValue: [ 1.5, 0, 0, 1.5, (150 + 150*1.5), 0 ],
               usesMultipleProperties: true },
             RunningOn.Compositor,
             "transform-like properties on compositor at 5s");
