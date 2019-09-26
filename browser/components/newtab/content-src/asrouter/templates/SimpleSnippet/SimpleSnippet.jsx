@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { Button } from "../../components/Button/Button";
-import { ConditionalWrapper } from "../../components/ConditionalWrapper/ConditionalWrapper";
+import ConditionalWrapper from "../../components/ConditionalWrapper/ConditionalWrapper";
 import React from "react";
 import { RichText } from "../../components/RichText/RichText";
 import { safeURI } from "../../template-utils";

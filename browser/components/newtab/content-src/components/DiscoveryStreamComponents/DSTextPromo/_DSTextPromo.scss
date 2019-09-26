@@ -16,8 +16,11 @@
     width: 40px;
     height: 40px;
     margin: 4px 12px 0 0;
-    border-radius: 4px;
     flex-shrink: 0;
+
+    img {
+      border-radius: 4px;
+    }
   }
 
   .text {

@@ -1,7 +1,7 @@
 {
   "title": "FXASignupSnippet",
   "description": "A snippet template for FxA sign up/sign in",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "object",
   "definitions": {
     "plainText": {
@@ -29,6 +29,24 @@
       "allOf": [
         {"$ref": "#/definitions/richText"},
         {"description": "Main body text of snippet. HTML subset allowed: i, b, u, strong, em, br"}
+      ]
+    },
+    "scene1_section_title_icon": {
+      "type": "string",
+      "description": "Section title icon for scene 1. 16x16px. SVG or PNG preferred. scene1_section_title_text must also be specified to display."
+    },
+    "scene1_section_title_icon_dark_theme": {
+      "type": "string",
+      "description": "Section title icon for scene 1, dark theme variant. 16x16px. SVG or PNG preferred. scene1_section_title_text must also be specified to display."
+    },
+    "scene1_section_title_text": {
+      "type": "string",
+      "description": "Section title text for scene 1. scene1_section_title_icon must also be specified to display."
+    },
+    "scene1_section_title_url": {
+      "allOf": [
+        {"$ref": "#/definitions/link_url"},
+        {"description": "A url, scene1_section_title_text links to this"}
       ]
     },
     "scene2_title": {

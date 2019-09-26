@@ -606,7 +606,7 @@ export class ASRouterAdminInner extends React.PureComponent {
     }
 
     return (
-      <tr className={itemClassName} key={msg.id}>
+      <tr className={itemClassName} key={`${msg.id}-${msg.provider}`}>
         <td className="message-id">
           <span>
             {msg.id} <br />
