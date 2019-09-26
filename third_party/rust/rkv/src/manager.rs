@@ -145,6 +145,39 @@ mod tests {
         assert!(Arc::ptr_eq(&created_arc, &fetched_arc));
     }
 
+    /// Test that one can mutate managed Rkv instances in surprising ways.
+    #[test]
+    fn test_mutate_managed_rkv() {
+        let mut manager = Manager::new();
+
+        let root1 = Builder::new().prefix("test_mutate_managed_rkv_1").tempdir().expect("tempdir");
+        fs::create_dir_all(root1.path()).expect("dir created");
+        let path1 = root1.path();
+        let arc = manager.get_or_create(path1, Rkv::new).expect("created");
+
+        // Arc<RwLock<>> has interior mutability, so we can replace arc's Rkv
+        // instance with a new instance that has a different path.
+        let root2 = Builder::new().prefix("test_mutate_managed_rkv_2").tempdir().expect("tempdir");
+        fs::create_dir_all(root2.path()).expect("dir created");
+        let path2 = root2.path();
+        {
+            let mut rkv = arc.write().expect("guard");
+            let rkv2 = Rkv::new(path2).expect("Rkv");
+            *rkv = rkv2;
+        }
+
+        // arc now has a different internal Rkv with path2, but it's still
+        // mapped to path1 in manager, so its pointer is equal to a new Arc
+        // for path1.
+        let path1_arc = manager.get(path1).expect("success").expect("existed");
+        assert!(Arc::ptr_eq(&path1_arc, &arc));
+
+        // Meanwhile, a new Arc for path2 has a different pointer, even though
+        // its Rkv's path is the same as arc's current path.
+        let path2_arc = manager.get_or_create(path2, Rkv::new).expect("success");
+        assert!(!Arc::ptr_eq(&path2_arc, &arc));
+    }
+
     /// Test that the manager will return the same Rkv instance each time for each path.
     #[test]
     fn test_same_with_capacity() {
