@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1569244094631">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1569441800696">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3442,6 +3442,18 @@
       <versionRange minVersion="0" maxVersion="3.5.0" severity="3"/>
     </emItem>
     <emItem blockID="72464ab8-9b51-420f-8e54-bc0f8bb01cf1" id="/^((ehfiibbkgllccnbifchmillffgdlmidi@chrome-store-foxified-3843796584)|(ehfiibbkgllccnbifchmillffgdlmidi@chrome-store-foxified-3264908934))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="dd1261a3-6944-4f51-8118-b0a8f2055d69" id="{381f21b1-95bf-4042-bc5c-3a40b2a03f10}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="70655a4b-064d-44ab-8d0e-3bec419343ee" id="addon@shoppingguru.info">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="4c3153a8-7551-48f3-a4fa-8ad6cb28faa8" id="{f39b7905-00d5-4391-9a4b-751ca08dd6b2}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
