@@ -42,10 +42,26 @@ add_task(async function() {
 
   // Check the UI contains server side timings and correct values
   const timings = document.querySelectorAll(timingsSelector, 4);
-  is(timings[0].textContent, "time1123 ms", "The first server-timing must be correct");
-  is(timings[1].textContent, "time20 ms", "The second server-timing must be correct");
-  is(timings[2].textContent, "time31.66 min", "The third server-timing must be correct");
-  is(timings[3].textContent, "time41.11 s", "The fourth server-timing must be correct");
+  is(
+    timings[0].textContent,
+    "time1123 ms",
+    "The first server-timing must be correct"
+  );
+  is(
+    timings[1].textContent,
+    "time20 ms",
+    "The second server-timing must be correct"
+  );
+  is(
+    timings[2].textContent,
+    "time31.66 min",
+    "The third server-timing must be correct"
+  );
+  is(
+    timings[3].textContent,
+    "time41.11 s",
+    "The fourth server-timing must be correct"
+  );
 
   await teardown(monitor);
 });
