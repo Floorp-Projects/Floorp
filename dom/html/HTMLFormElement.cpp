@@ -776,15 +776,10 @@ nsresult HTMLFormElement::DoSecureToInsecureSubmitCheck(nsIURI* aActionURL,
     *aCancelSubmit = true;
     return NS_OK;
   }
-  nsCOMPtr<nsIURI> principalURI;
-  nsresult rv = principal->GetURI(getter_AddRefs(principalURI));
-  if (NS_FAILED(rv)) {
-    return rv;
+  bool formIsHTTPS = principal->SchemeIs("https");
+  if (principal->IsSystemPrincipal() || principal->GetIsExpandedPrincipal()) {
+    formIsHTTPS = OwnerDoc()->GetDocumentURI()->SchemeIs("https");
   }
-  if (!principalURI) {
-    principalURI = OwnerDoc()->GetDocumentURI();
-  }
-  bool formIsHTTPS = principalURI->SchemeIs("https");
   if (!formIsHTTPS) {
     return NS_OK;
   }
@@ -819,7 +814,7 @@ nsresult HTMLFormElement::DoSecureToInsecureSubmitCheck(nsIURI* aActionURL,
   if (!stringBundleService) {
     return NS_ERROR_FAILURE;
   }
-  rv = stringBundleService->CreateBundle(
+  nsresult rv = stringBundleService->CreateBundle(
       "chrome://global/locale/browser.properties",
       getter_AddRefs(stringBundle));
   if (NS_FAILED(rv)) {

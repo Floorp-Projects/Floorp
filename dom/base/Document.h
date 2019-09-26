@@ -1806,10 +1806,8 @@ class Document : public nsINode,
   void DispatchContentLoadedEvents();
 
   void DispatchPageTransition(EventTarget* aDispatchTarget,
-                              const nsAString& aType,
-                              bool aInFrameSwap,
-                              bool aPersisted,
-                              bool aOnlySystemGroup);
+                              const nsAString& aType, bool aInFrameSwap,
+                              bool aPersisted, bool aOnlySystemGroup);
 
   // Call this before the document does something that will unbind all content.
   // That will stop us from doing a lot of work as each element is removed.
@@ -2779,17 +2777,11 @@ class Document : public nsINode,
 
     // If we are a document "whose URL's scheme is not a network scheme."
     // NB: Explicitly allow file: URIs to store cookies.
-    nsCOMPtr<nsIURI> contentURI;
-    NodePrincipal()->GetURI(getter_AddRefs(contentURI));
 
-    if (!contentURI) {
-      return true;
-    }
-
-    nsAutoCString scheme;
-    contentURI->GetScheme(scheme);
-    return !scheme.EqualsLiteral("http") && !scheme.EqualsLiteral("https") &&
-           !scheme.EqualsLiteral("ftp") && !scheme.EqualsLiteral("file");
+    return !NodePrincipal()->SchemeIs("http") &&
+           !NodePrincipal()->SchemeIs("https") &&
+           !NodePrincipal()->SchemeIs("ftp") &&
+           !NodePrincipal()->SchemeIs("file");
   }
 
   bool IsLoadedAsData() { return mLoadedAsData; }
