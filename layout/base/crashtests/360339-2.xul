@@ -5,8 +5,8 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <html:style>
-* { float: right; display: block; }
-#ping { float: none; display: -moz-box; }
+* { float: right; }
+#ping { float: none; }
 </html:style>
 
 <hbox>
