@@ -21,6 +21,7 @@ import org.hamcrest.Matchers.allOf
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.click
+import org.mozilla.fenix.share.ShareFragment
 
 /**
  * Implementation of Robot Pattern for the three dot (main) menu.
@@ -39,10 +40,11 @@ class ThreeDotMenuRobot {
         shareButton().click()
         mDevice.wait(Until.findObject(By.text("SHARE A LINK")), waitingTime)
     }
+
     fun verifyShareTabButton() = assertShareTabButton()
     fun verifySaveCollection() = assertSaveCollectionButton()
     fun verifyFindInPageButton() = assertFindInPageButton()
-    fun verifyShareDialogTitle() = assertShareDialogTitle()
+    fun verifyShareScrim() = assertShareScrim()
     fun verifySendToDeviceTitle() = assertSendToDeviceTitle()
     fun verifyShareALinkTitle() = assertShareALinkTitle()
     fun verifyWhatsNewButton() = assertWhatsNewButton()
@@ -128,6 +130,7 @@ class ThreeDotMenuRobot {
 private fun threeDotMenuRecyclerViewExists() {
     onView(withId(R.id.mozac_browser_menu_recyclerView)).check(matches(isDisplayed()))
 }
+
 private fun settingsButton() = onView(allOf(withText(R.string.settings)))
 private fun assertSettingsButton() = settingsButton()
     .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
@@ -159,6 +162,7 @@ private fun assertCloseAllTabsButton() = closeAllTabsButton()
 private fun shareTabButton() = onView(allOf(withText("Share tabs")))
 private fun assertShareTabButton() = shareTabButton()
     .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
 private fun shareButton() = onView(allOf(withText("Share")))
 private fun assertShareButton() = shareButton()
     .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
@@ -169,15 +173,20 @@ private fun assertSaveCollectionButton() = saveCollectionButton()
 
 private fun findInPageButton() = onView(allOf(withText("Find in page")))
 private fun assertFindInPageButton() = findInPageButton()
-private fun ShareDialogTitle() = onView(allOf(withText("Send and Share"), withResourceName("closeButton")))
-private fun assertShareDialogTitle() = ShareDialogTitle()
-    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
-private fun SendToDeviceTitle() = onView(allOf(withText("SEND TO DEVICE"), withResourceName("accountHeaderText")))
+private fun shareScrim() = onView(withResourceName("closeSharingScrim"))
+private fun assertShareScrim() =
+    shareScrim().check(matches(ViewMatchers.withAlpha(ShareFragment.SHOW_PAGE_ALPHA)))
+
+private fun SendToDeviceTitle() =
+    onView(allOf(withText("SEND TO DEVICE"), withResourceName("accountHeaderText")))
+
 private fun assertSendToDeviceTitle() = SendToDeviceTitle()
     .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
-private fun ShareALinkTitle() = onView(allOf(withText("SHARE A LINK"), withResourceName("link_header")))
+private fun ShareALinkTitle() =
+    onView(allOf(withText("SHARE A LINK"), withResourceName("link_header")))
+
 private fun assertShareALinkTitle() = ShareALinkTitle()
 
 private fun whatsNewButton() = onView(allOf(withText("What's New")))

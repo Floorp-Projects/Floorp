@@ -58,7 +58,7 @@ class ShareButtonTest {
         }.openThreeDotMenu {
             verifyShareButton()
             clickShareButton()
-            verifyShareDialogTitle()
+            verifyShareScrim()
             verifySendToDeviceTitle()
             verifyShareALinkTitle()
         }

@@ -21,6 +21,7 @@ import org.mozilla.fenix.components.Services
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.share.ShareTab
 
 /**
  * [BookmarkFragment] controller.
@@ -84,7 +85,8 @@ class DefaultBookmarkController(
         navigate(
             BookmarkFragmentDirections.actionBookmarkFragmentToShareFragment(
                 url = item.url!!,
-                title = item.title
+                title = item.title,
+                tabs = arrayOf(ShareTab(item.url!!, item.title!!))
             )
         )
     }

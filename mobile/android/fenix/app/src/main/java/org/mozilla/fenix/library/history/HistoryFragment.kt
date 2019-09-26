@@ -154,11 +154,15 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), BackHandler {
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.share_history_multi_select -> {
             val selectedHistory = historyStore.state.mode.selectedItems
+            val shareTabs = selectedHistory.map { ShareTab(it.url, it.title) }
             when {
                 selectedHistory.size == 1 ->
-                    share(url = selectedHistory.first().url)
+                    share(
+                        url = selectedHistory.first().url,
+                        title = selectedHistory.first().title,
+                        tabs = shareTabs
+                    )
                 selectedHistory.size > 1 -> {
-                    val shareTabs = selectedHistory.map { ShareTab(it.url, it.title) }
                     share(tabs = shareTabs)
                 }
             }
@@ -256,11 +260,12 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), BackHandler {
         }
     }
 
-    private fun share(url: String? = null, tabs: List<ShareTab>? = null) {
+    private fun share(url: String? = null, title: String? = null, tabs: List<ShareTab>? = null) {
         requireComponents.analytics.metrics.track(Event.HistoryItemShared)
         val directions =
             HistoryFragmentDirections.actionHistoryFragmentToShareFragment(
                 url = url,
+                title = title,
                 tabs = tabs?.toTypedArray()
             )
         nav(R.id.historyFragment, directions)

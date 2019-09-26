@@ -586,6 +586,8 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">Send and Share</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">Share</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Share</string>

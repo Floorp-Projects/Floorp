@@ -10,22 +10,28 @@
     android:id="@+id/shareWrapper"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/scrim_background"
     android:clipToPadding="false"
     android:fitsSystemWindows="true"
     tools:context="org.mozilla.fenix.share.ShareFragment">
 
     <FrameLayout
-        android:id="@+id/closeSharingLayout"
+        android:id="@+id/closeSharingScrim"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_height="match_parent"
+        android:background="@drawable/scrim_background"/>
+
+    <FrameLayout
+        android:id="@+id/closeSharingContent"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/sharingLayout"/>
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/sharingLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/bottom_sheet_dialog_fragment_background"
-        android:backgroundTint="?above"
         app:layout_constraintBottom_toBottomOf="parent">
 
         <FrameLayout

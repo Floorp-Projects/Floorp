@@ -10,9 +10,13 @@ import android.content.Context
 import androidx.core.content.getSystemService
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
+import androidx.navigation.NavDirections
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.verify
 import io.mockk.verifyOrder
 import mozilla.appservices.places.BookmarkRoot
@@ -21,9 +25,9 @@ import mozilla.components.concept.storage.BookmarkNodeType
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.FenixSnackbarPresenter
 import org.mozilla.fenix.components.Services
 import org.mozilla.fenix.components.metrics.Event
@@ -43,13 +47,27 @@ class BookmarkControllerTest {
     private val homeActivity: HomeActivity = mockk(relaxed = true)
     private val services: Services = mockk(relaxed = true)
 
-    private val item = BookmarkNode(BookmarkNodeType.ITEM, "456", "123", 0, "Mozilla", "http://mozilla.org", null)
-    private val subfolder = BookmarkNode(BookmarkNodeType.FOLDER, "987", "123", 0, "Subfolder", null, listOf())
+    private val item =
+        BookmarkNode(BookmarkNodeType.ITEM, "456", "123", 0, "Mozilla", "http://mozilla.org", null)
+    private val subfolder =
+        BookmarkNode(BookmarkNodeType.FOLDER, "987", "123", 0, "Subfolder", null, listOf())
     private val childItem = BookmarkNode(
-        BookmarkNodeType.ITEM, "987", "123", 2, "Firefox", "https://www.mozilla.org/en-US/firefox/", null
+        BookmarkNodeType.ITEM,
+        "987",
+        "123",
+        2,
+        "Firefox",
+        "https://www.mozilla.org/en-US/firefox/",
+        null
     )
     private val tree = BookmarkNode(
-        BookmarkNodeType.FOLDER, "123", null, 0, "Mobile", null, listOf(item, item, childItem, subfolder)
+        BookmarkNodeType.FOLDER,
+        "123",
+        null,
+        0,
+        "Mobile",
+        null,
+        listOf(item, item, childItem, subfolder)
     )
     private val root = BookmarkNode(
         BookmarkNodeType.FOLDER, BookmarkRoot.Root.id, null, 0, BookmarkRoot.Root.name, null, null
@@ -113,7 +131,11 @@ class BookmarkControllerTest {
 
         verify {
             invokePendingDeletion.invoke()
-            navController.navigate(BookmarkFragmentDirections.actionBookmarkFragmentToBookmarkEditFragment(item.guid))
+            navController.navigate(
+                BookmarkFragmentDirections.actionBookmarkFragmentToBookmarkEditFragment(
+                    item.guid
+                )
+            )
         }
     }
 
@@ -145,16 +167,13 @@ class BookmarkControllerTest {
 
     @Test
     fun `handleBookmarkSharing should navigate to the 'Share' fragment`() {
+        val navDirectionsSlot = slot<NavDirections>()
+        every { navController.navigate(capture(navDirectionsSlot)) } just Runs
+
         controller.handleBookmarkSharing(item)
 
         verify {
-            invokePendingDeletion.invoke()
-            navController.navigate(
-                BookmarkFragmentDirections.actionBookmarkFragmentToShareFragment(
-                    item.url,
-                    item.title
-                )
-            )
+            navController.navigate(navDirectionsSlot.captured)
         }
     }
 
