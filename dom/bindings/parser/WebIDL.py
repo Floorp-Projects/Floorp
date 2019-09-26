@@ -5598,7 +5598,6 @@ class Tokenizer(object):
         return t
 
     keywords = {
-        "module": "MODULE",
         "interface": "INTERFACE",
         "partial": "PARTIAL",
         "mixin": "MIXIN",
@@ -6892,7 +6891,6 @@ class Parser(Tokenizer):
                   | INHERIT
                   | INTERFACE
                   | LONG
-                  | MODULE
                   | NULL
                   | OBJECT
                   | OCTET
