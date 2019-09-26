@@ -1335,4 +1335,56 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
         })
     }
+
+    @Test fun purgeHistory() {
+        sessionRule.session.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
+        sessionRule.waitUntilCalled(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 1)
+            override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
+                assertThat("Session should not be null", session, notNullValue())
+                assertThat("Cannot go back", canGoBack, equalTo(false))
+            }
+
+            @AssertCalled(count = 1)
+            override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {
+                assertThat("Session should not be null", session, notNullValue())
+                assertThat("Cannot go forward", canGoForward, equalTo(false))
+            }
+        })
+        sessionRule.session.loadUri("$TEST_ENDPOINT$HELLO2_HTML_PATH")
+        sessionRule.waitUntilCalled(object : Callbacks.All {
+            @AssertCalled(count = 1)
+            override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
+                assertThat("Session should not be null", session, notNullValue())
+                assertThat("Cannot go back", canGoBack, equalTo(true))
+            }
+            @AssertCalled(count = 1)
+            override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {
+                assertThat("Session should not be null", session, notNullValue())
+                assertThat("Cannot go forward", canGoForward, equalTo(false))
+            }
+            @AssertCalled(count = 1)
+            override fun onHistoryStateChange(session: GeckoSession, state: GeckoSession.HistoryDelegate.HistoryList) {
+                assertThat("History should have two entries", state.size, equalTo(2))
+            }
+        })
+        sessionRule.session.purgeHistory()
+        sessionRule.waitUntilCalled(object : Callbacks.All {
+            @AssertCalled(count = 1)
+            override fun onHistoryStateChange(session: GeckoSession, state: GeckoSession.HistoryDelegate.HistoryList) {
+                assertThat("History should have one entry", state.size, equalTo(1))
+            }
+            @AssertCalled(count = 1)
+            override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
+                assertThat("Session should not be null", session, notNullValue())
+                assertThat("Cannot go back", canGoBack, equalTo(false))
+            }
+
+            @AssertCalled(count = 1)
+            override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {
+                assertThat("Session should not be null", session, notNullValue())
+                assertThat("Cannot go forward", canGoForward, equalTo(false))
+            }
+        })
+    }
 }
