@@ -1,6 +1,7 @@
 "use strict";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  UrlbarProviderExtension: "resource:///modules/UrlbarProviderExtension.jsm",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
 });
 
@@ -45,6 +46,16 @@ async function loadExtension(options = {}) {
   await Promise.all([ext.sendMessage(options), ext.awaitMessage("ready")]);
   return ext;
 }
+
+add_task(async function setUp() {
+  // Set the notification timeout to a really high value to avoid intermittent
+  // failures due to the mock extensions not responding in time.
+  let originalTimeout = UrlbarProviderExtension.notificationTimeout;
+  UrlbarProviderExtension.notificationTimeout = 5000;
+  registerCleanupFunction(() => {
+    UrlbarProviderExtension.notificationTimeout = originalTimeout;
+  });
+});
 
 // Loads an extension without a main button URL and presses enter on the main
 // button.
