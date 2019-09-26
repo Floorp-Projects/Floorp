@@ -1,28 +1,34 @@
-version: 0
+version: 1
+policy:
+  pullRequests: public
 tasks:
-  - provisionerId: '{{ taskcluster.docker.provisionerId }}'
-    workerType: '{{ taskcluster.docker.workerType }}'
-    extra:
-      github:
-        events:
-          - pull_request.opened
-          - pull_request.reopened
-          - pull_request.synchronize
-          - push
-    payload:
-      maxRunTime: 7200
-      image: piatra/asmochitests
-      command:
-        - /bin/bash
-        - '--login'
-        - '-c'
-        - >-
-          git clone {{event.head.repo.url}} /activity-stream && cd /activity-stream &&
-          git checkout {{event.head.sha}} && bash ./mochitest.sh
-    metadata:
-      name: activitystream
-      description: run mochitests for PRs
-      owner: '{{ event.head.user.email }}'
-      source: '{{ event.head.repo.url }}'
-allowPullRequests: public
-
+  $if: 'tasks_for in ["github-push", "github-pull-request"]'
+  then:
+    $let:
+      repo_url:
+        $if: 'tasks_for == "github-push"'
+        then: ${event.repository.clone_url}
+        else: ${event.pull_request.head.repo.clone_url}
+      ref:
+        $if: 'tasks_for == "github-push"'
+        then: ${event.after}
+        else: ${event.pull_request.head.sha}
+    in:
+    - provisionerId: aws-provisioner-v1
+      workerType: github-worker
+      deadline: ${fromNow('1 day')}
+      payload:
+        maxRunTime: 7200
+        image: piatra/asmochitests
+        command:
+          - /bin/bash
+          - '--login'
+          - '-c'
+          - >-
+            git clone ${repo_url} /activity-stream && cd /activity-stream &&
+            git checkout ${ref} && bash ./mochitest.sh
+      metadata:
+        name: activitystream
+        description: run mochitests for PRs
+        owner: noreply@mozilla.com
+        source: ${repo_url}

@@ -3,11 +3,15 @@
   overflow: hidden;
   border-radius: 8px;
   transition-delay: 100ms;
-  transition-duration: 100ms;
+  transition-duration: 200ms;
   transition-property: background;
 
   &.hovering {
-    background: var(--newtab-element-hover-color);
+    @include dark-theme-only {
+      background: $grey-90-30;
+    }
+
+    background: $grey-90-10;
   }
 
   &:hover {
@@ -17,6 +21,10 @@
   }
 
   .ds-dismiss-button {
+    @include dark-theme-only {
+      background: $grey-90-30;
+    }
+
     border: 0;
     cursor: pointer;
     height: 32px;
@@ -29,10 +37,31 @@
     right: 0;
     top: 0;
     border-radius: 50%;
-    margin: 16px 24px 0 0;
-    transition-duration: 200ms;
-    transition-property: opacity;
-    opacity: 0;
-    background: var(--newtab-element-active-color);
+    margin: 18px 18px 0 0;
+    background: $grey-90-10;
+
+    &:hover {
+      @include dark-theme-only {
+        background: $grey-90-50;
+      }
+
+      background: $grey-90-20;
+    }
+
+    &:active {
+      @include dark-theme-only {
+        background: $grey-90-70;
+      }
+
+      background: $grey-90-30;
+    }
+
+    &:focus {
+      @include dark-theme-only {
+        box-shadow: 0 0 0 2px $grey-80, 0 0 0 5px $blue-50-50;
+      }
+
+      box-shadow: 0 0 0 2px $white, 0 0 0 5px $blue-50-50;
+    }
   }
 }
