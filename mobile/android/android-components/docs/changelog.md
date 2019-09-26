@@ -14,7 +14,7 @@ permalink: /changelog/
 
 * **browser-toolbar**
   * ⚠️ **This is a breaking change**: Refactored the internals to use `ConstraintLayout`. As part of this change the public API was simplified and unused methods/properties have been removed.
-  
+
 * **feature-accounts**
   * Add new `FxaPushSupportFeature` for some underlying support when connecting push and fxa accounts together.
 
@@ -24,6 +24,10 @@ permalink: /changelog/
 * **service-glean**
    * The Rust implementation of the Glean SDK is now being used.
    * ⚠️ **This is a breaking change**: the `GleanDebugActivity` is no longer exposed from service-glean. Users need to use the one in `mozilla.telemetry.glean.debug.GleanDebugActivity` from the `adb` command line.
+
+* **feature-privatemode**
+  * Added new feature for private browsing mode.
+  * Added `SecureWindowFeature` to prevent screenshots in private browsing mode.
 
 # 18.0.0
 
@@ -158,7 +162,7 @@ permalink: /changelog/
   * Behavior change: In a collection List<TabEntity> is now ordered descending by creation date (newest tab in a collection on top)
 * **feature-session**, **engine-gecko-nightly** and **engine-gecko-beta**
   * Added api to manage the tracking protection exception list, any session added to the list will be ignored and the the current tracking policy will not be applied.
-  
+
   ```kotlin
     val useCase = TrackingProtectionUseCases(sessionManager,engine)
 
@@ -215,7 +219,7 @@ permalink: /changelog/
 
 * **feature-session**, **engine-gecko-nightly** and **engine-gecko-beta**
   * Added a way to exposes the same amount of trackers as Firefox desktop has in it tracking protection panel via TrackingProtectionUseCases.
-  
+
   ```kotlin
     val useCase = TrackingProtectionUseCases(sessionManager,engine)
     useCase.fetchTrackingLogs(

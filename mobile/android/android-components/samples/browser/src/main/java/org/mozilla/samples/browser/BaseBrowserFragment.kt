@@ -19,6 +19,7 @@ import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.downloads.manager.FetchDownloadManager
+import mozilla.components.feature.privatemode.feature.SecureWindowFeature
 import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.session.CoordinateScrollingFeature
 import mozilla.components.feature.session.SessionFeature
@@ -164,11 +165,18 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
             owner = this,
             view = layout)
 
+        val secureWindowFeature = SecureWindowFeature(
+            window = requireActivity().window,
+            store = components.store,
+            customTabId = sessionId
+        )
+
         // Observe the lifecycle for supported features
         lifecycle.addObservers(
             scrollFeature,
             contextMenuFeature,
-            menuUpdaterFeature
+            menuUpdaterFeature,
+            secureWindowFeature
         )
 
         appLinksFeature.set(
