@@ -450,3 +450,82 @@ APZC.) Only after the round-trip to the gecko thread is complete is
 there a layer for async scrolling to actually occur on the scrollframe
 itself. At that point the scrollframe will start receiving new input
 blocks and will scroll normally.
+
+Threading / Locking Overview
+----------------------------
+
+Threads
+~~~~~~~
+
+There are three threads relevant to APZ: the **controller thread**,
+the **updater thread**, and the **sampler thread**. This table lists
+which threads play these roles on each platform / configuration:
+
+===================== ========== =========== ============= ============== ========== =============
+APZ Thread Name       Desktop    Desktop+GPU Desktop+WR    Desktop+WR+GPU Android    Android+WR
+===================== ========== =========== ============= ============== ========== =============
+**controller thread** UI main    GPU main    UI main       GPU main       Java UI    Java UI
+**updater thread**    Compositor Compositor  SceneBuilder  SceneBuilder   Compositor SceneBuilder
+**sampler thread**    Compositor Compositor  RenderBackend RenderBackend  Compositor RenderBackend
+===================== ========== =========== ============= ============== ========== =============
+
+Locks
+~~~~~
+
+There are also a number of locks used in APZ code:
+
+================== ==============================
+Lock type          How many instances
+================== ==============================
+APZ tree lock      one per APZCTreeManager
+APZC map lock      one per APZCTreeManager
+APZC instance lock one per AsyncPanZoomController
+APZ test lock      one per APZCTreeManager
+================== ==============================
+
+Thread / Lock Ordering
+~~~~~~~~~~~~~~~~~~~~~~
+
+To avoid deadlocks, the threads and locks have a global **ordering**
+which must be respected.
+
+Respecting the ordering means the following:
+
+- Let "A < B" denote that A occurs earlier than B in the ordering
+- Thread T may only acquire lock L, if T < L
+- A thread may only acquire lock L2 while holding lock L1, if L1 < L2
+- A thread may only block on a response from another thread T while holding a lock L, if L < T
+
+**The lock ordering is as follows**:
+
+1. UI main
+2. GPU main              (only if GPU enabled)
+3. Compositor thread
+4. SceneBuilder thread   (only if WR enabled)
+5. **APZ tree lock**
+6. RenderBackend thread  (only if WR enabled)
+7. **APZC map lock**
+8. **APZC instance lock**
+9. **APZ test lock**
+
+Example workflows
+^^^^^^^^^^^^^^^^^
+
+Here are some example APZ workflows. Observe how they all obey
+the global thread/lock ordering. Feel free to add others:
+
+- **Input handling** (in WR+GPU) case: UI main -> GPU main -> APZ tree lock -> RenderBackend thread
+- **Sync messages** in ``PComposiorBridge.ipdl``: UI main thread -> Compositor thread
+- **GetAPZTestData**: Compositor thread -> SceneBuilder thread -> test lock
+- **Scene swap**: SceneBuilder thread -> APZ tree lock -> RenderBackend thread
+- **Updating hit-testing tree**: SceneBuilder thread -> APZ tree lock -> APZC instance lock
+- **Updating APZC map**: SceneBuilder thread -> APZ tree lock -> APZC map lock
+- **Sampling and animation deferred tasks** [1]_: RenderBackend thread -> APZC map lock -> APZC instance lock
+- **Advancing animations**: RenderBackend thread -> APZC instance lock
+
+.. [1] It looks like there are two deferred tasks that actually need the tree lock,
+   ``AsyncPanZoomController::HandleSmoothScrollOverscroll`` and
+   ``AsyncPanZoomController::HandleFlingOverscroll``. We should be able to rewrite
+   these to use the map lock instead of the tree lock.
+   This will allow us to continue running the deferred tasks on the sampler
+   thread rather than having to bounce them to another thread.
