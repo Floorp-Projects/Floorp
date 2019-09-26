@@ -235,11 +235,6 @@ const Types = (exports.__TypesForTests = [
     front: null,
   },
   {
-    types: ["addonTarget"],
-    spec: "devtools/shared/specs/targets/addon",
-    front: "devtools/shared/fronts/targets/addon",
-  },
-  {
     types: ["browsingContextTarget"],
     spec: "devtools/shared/specs/targets/browsing-context",
     front: "devtools/shared/fronts/targets/browsing-context",
