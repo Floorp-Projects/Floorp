@@ -323,13 +323,14 @@ nsColumnSetFrame::ReflowConfig nsColumnSetFrame::ChooseColumnStrategy(
   int32_t numColumns = colStyle->mColumnCount;
 
   // If column-fill is set to 'balance', then we want to balance the columns.
-  const bool isBalancing =
+  bool isBalancing =
       colStyle->mColumnFill == StyleColumnFill::Balance && !aForceAuto;
   if (isBalancing) {
     const uint32_t kMaxNestedColumnBalancingDepth = 2;
     const uint32_t balancingDepth =
         ColumnBalancingDepth(aReflowInput, kMaxNestedColumnBalancingDepth);
     if (balancingDepth == kMaxNestedColumnBalancingDepth) {
+      isBalancing = false;
       numColumns = 1;
     }
   }
