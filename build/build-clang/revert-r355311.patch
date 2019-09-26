@@ -1,0 +1,117 @@
+We need to revert LLVM's r355311 because it breaks exception handling in
+Windows/AArch64 builds
+
+diff --git a/llvm/lib/Target/AArch64/AArch64AsmPrinter.cpp b/llvm/lib/Target/AArch64/AArch64AsmPrinter.cpp
+index ac5bdae9f1f..09e0706e284 100644
+--- a/llvm/lib/Target/AArch64/AArch64AsmPrinter.cpp
++++ b/llvm/lib/Target/AArch64/AArch64AsmPrinter.cpp
+@@ -605,28 +605,19 @@ void AArch64AsmPrinter::PrintDebugValueComment(const MachineInstr *MI,
+ 
+ void AArch64AsmPrinter::EmitJumpTableInfo() {
+   const MachineJumpTableInfo *MJTI = MF->getJumpTableInfo();
+   if (!MJTI) return;
+ 
+   const std::vector<MachineJumpTableEntry> &JT = MJTI->getJumpTables();
+   if (JT.empty()) return;
+ 
+-  const Function &F = MF->getFunction();
+   const TargetLoweringObjectFile &TLOF = getObjFileLowering();
+-  bool JTInDiffSection =
+-      !STI->isTargetCOFF() ||
+-      !TLOF.shouldPutJumpTableInFunctionSection(
+-          MJTI->getEntryKind() == MachineJumpTableInfo::EK_LabelDifference32,
+-          F);
+-  if (JTInDiffSection) {
+-      // Drop it in the readonly section.
+-      MCSection *ReadOnlySec = TLOF.getSectionForJumpTable(F, TM);
+-      OutStreamer->SwitchSection(ReadOnlySec);
+-  }
++  MCSection *ReadOnlySec = TLOF.getSectionForJumpTable(MF->getFunction(), TM);
++  OutStreamer->SwitchSection(ReadOnlySec);
+ 
+   auto AFI = MF->getInfo<AArch64FunctionInfo>();
+   for (unsigned JTI = 0, e = JT.size(); JTI != e; ++JTI) {
+     const std::vector<MachineBasicBlock*> &JTBBs = JT[JTI].MBBs;
+ 
+     // If this jump table was deleted, ignore it.
+     if (JTBBs.empty()) continue;
+ 
+diff --git a/llvm/lib/Target/AArch64/AArch64TargetMachine.cpp b/llvm/lib/Target/AArch64/AArch64TargetMachine.cpp
+index d657fd414f3..d32f5a0ab29 100644
+--- a/llvm/lib/Target/AArch64/AArch64TargetMachine.cpp
++++ b/llvm/lib/Target/AArch64/AArch64TargetMachine.cpp
+@@ -204,18 +204,18 @@ static std::string computeDataLayout(const Triple &TT,
+     return "e-m:w-p:64:64-i32:32-i64:64-i128:128-n32:64-S128";
+   if (LittleEndian)
+     return "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128";
+   return "E-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128";
+ }
+ 
+ static Reloc::Model getEffectiveRelocModel(const Triple &TT,
+                                            Optional<Reloc::Model> RM) {
+-  // AArch64 Darwin and Windows are always PIC.
+-  if (TT.isOSDarwin() || TT.isOSWindows())
++  // AArch64 Darwin is always PIC.
++  if (TT.isOSDarwin())
+     return Reloc::PIC_;
+   // On ELF platforms the default static relocation model has a smart enough
+   // linker to cope with referencing external symbols defined in a shared
+   // library. Hence DynamicNoPIC doesn't need to be promoted to PIC.
+   if (!RM.hasValue() || *RM == Reloc::DynamicNoPIC)
+     return Reloc::Static;
+   return *RM;
+ }
+diff --git a/llvm/test/CodeGen/AArch64/win64-jumptable.ll b/llvm/test/CodeGen/AArch64/win64-jumptable.ll
+deleted file mode 100644
+index 8148a593c91..00000000000
+--- a/llvm/test/CodeGen/AArch64/win64-jumptable.ll
++++ /dev/null
+@@ -1,48 +0,0 @@
+-; RUN: llc -o - %s -mtriple=aarch64-windows -aarch64-enable-compress-jump-tables=0 | FileCheck %s
+-
+-define void @f(i32 %x) {
+-entry:
+-  switch i32 %x, label %sw.epilog [
+-    i32 0, label %sw.bb
+-    i32 1, label %sw.bb1
+-    i32 2, label %sw.bb2
+-    i32 3, label %sw.bb3
+-  ]
+-
+-sw.bb:                                            ; preds = %entry
+-  tail call void @g(i32 0) #2
+-  br label %sw.epilog
+-
+-sw.bb1:                                           ; preds = %entry
+-  tail call void @g(i32 1) #2
+-  br label %sw.epilog
+-
+-sw.bb2:                                           ; preds = %entry
+-  tail call void @g(i32 2) #2
+-  br label %sw.epilog
+-
+-sw.bb3:                                           ; preds = %entry
+-  tail call void @g(i32 3) #2
+-  br label %sw.epilog
+-
+-sw.epilog:                                        ; preds = %entry, %sw.bb3, %sw.bb2, %sw.bb1, %sw.bb
+-  tail call void @g(i32 10) #2
+-  ret void
+-}
+-
+-declare void @g(i32)
+-
+-; CHECK:		.text
+-; CHECK:		f:
+-; CHECK:		.seh_proc f
+-; CHECK:		b	g
+-; CHECK-NEXT:	.p2align	2
+-; CHECK-NEXT:	.LJTI0_0:
+-; CHECK:		.word	.LBB0_2-.LJTI0_0
+-; CHECK:		.word	.LBB0_3-.LJTI0_0
+-; CHECK:		.word	.LBB0_4-.LJTI0_0
+-; CHECK:		.word	.LBB0_5-.LJTI0_0
+-; CHECK:		.section	.xdata,"dr"
+-; CHECK:		.seh_handlerdata
+-; CHECK:		.text
+-; CHECK:		.seh_endproc

@@ -1,0 +1,31 @@
+diff --git a/compiler-rt/CMakeLists.txt b/compiler-rt/CMakeLists.txt
+index 86ca2b3ef..f6ddd24eb 100644
+--- a/compiler-rt/CMakeLists.txt
++++ b/compiler-rt/CMakeLists.txt
+@@ -284,6 +284,26 @@ if(MSVC)
+   # warning from the MS linker complaining that it can't find the 'vc140.pdb'
+   # file used by our object library compilations.
+   list(APPEND SANITIZER_COMMON_CFLAGS /Z7)
++
++# Copied from llvm/cmake/modules/LLVMProcessSources.cmake
++function(llvm_replace_compiler_option var old new)
++  # Replaces a compiler option or switch `old' in `var' by `new'.
++  # If `old' is not in `var', appends `new' to `var'.
++  # Example: llvm_replace_compiler_option(CMAKE_CXX_FLAGS_RELEASE "-O3" "-O2")
++  # If the option already is on the variable, don't add it:
++  if( "${${var}}" MATCHES "(^| )${new}($| )" )
++    set(n "")
++  else()
++    set(n "${new}")
++  endif()
++  if( "${${var}}" MATCHES "(^| )${old}($| )" )
++    string( REGEX REPLACE "(^| )${old}($| )" " ${n} " ${var} "${${var}}" )
++  else()
++    set( ${var} "${${var}} ${n}" )
++  endif()
++  set( ${var} "${${var}}" PARENT_SCOPE )
++endfunction(llvm_replace_compiler_option)
++
+   llvm_replace_compiler_option(CMAKE_CXX_FLAGS "/Z[i7I]" "/Z7")
+   llvm_replace_compiler_option(CMAKE_CXX_FLAGS_DEBUG "/Z[i7I]" "/Z7")
+   llvm_replace_compiler_option(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/Z[i7I]" "/Z7")
