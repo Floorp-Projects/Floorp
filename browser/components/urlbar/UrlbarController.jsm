@@ -80,6 +80,13 @@ class UrlbarController {
     this.engagementEvent = new TelemetryEvent(options.eventTelemetryCategory);
   }
 
+  uninit() {
+    this.browserWindow = null;
+    this.input = null;
+    this.view = null;
+    this._listeners.clear();
+  }
+
   get NOTIFICATIONS() {
     return NOTIFICATIONS;
   }

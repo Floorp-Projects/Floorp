@@ -314,6 +314,9 @@ class Query {
     // Nothing should be failing above, since we catch all the promises, thus
     // this is not in a finally for now.
     this.complete = true;
+
+    // Break cycles with the controller to avoid leaks.
+    this.controller = null;
   }
 
   /**
