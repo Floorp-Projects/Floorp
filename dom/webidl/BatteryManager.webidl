@@ -10,7 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-[ChromeOnly]
 interface BatteryManager : EventTarget {
     readonly attribute boolean             charging;
     readonly attribute unrestricted double chargingTime;
