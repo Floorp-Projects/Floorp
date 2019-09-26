@@ -1031,13 +1031,7 @@ child:
     async GetContentBlockingLog() returns(IPCStream ipcStream, bool success);
 
     async SkipBrowsingContextDetach() returns (bool success);
-
 parent:
-    /**
-     * Fetches whether this window supports protected media, which is sent back in response.
-     */
-    async IsWindowSupportingProtectedMedia(uint64_t aOuterWindowID) returns(bool isSupported);
-
     /** Records a history visit. */
     async VisitURI(URIParams aURI, URIParams? aLastVisitedURI,
                    uint32_t aFlags);

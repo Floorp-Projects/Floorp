@@ -663,11 +663,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   bool UpdateSessionStore(uint32_t aFlushId, bool aIsFinal = false);
 
-#ifdef XP_WIN
-  void UpdateIsWindowSupportingProtectedMedia(bool aIsSupported);
-  bool RequiresIsWindowSupportingProtectedMediaCheck(bool& aIsSupported);
-#endif
-
  protected:
   virtual ~BrowserChild();
 
@@ -914,11 +909,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   Maybe<LayoutDeviceToLayoutDeviceMatrix4x4> mChildToParentConversionMatrix;
   ScreenRect mRemoteDocumentRect;
-
-#ifdef XP_WIN
-  bool mWindowSupportsProtectedMedia;
-  bool mWindowSupportsProtectedMediaChecked;
-#endif
 
   // This state is used to keep track of the current visible tabs (the ones
   // rendering layers). There may be more than one if there are multiple browser

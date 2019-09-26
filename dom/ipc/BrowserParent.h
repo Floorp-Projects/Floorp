@@ -500,10 +500,6 @@ class BrowserParent final : public PBrowserParent,
       const nsString& aRemoteType, BrowsingContext* aBrowsingContext,
       const uint32_t& aChromeFlags, const TabId& aTabId) override;
 
-  mozilla::ipc::IPCResult RecvIsWindowSupportingProtectedMedia(
-      const uint64_t& aOuterWindowID,
-      IsWindowSupportingProtectedMediaResolver&& aResolve);
-
   void LoadURL(nsIURI* aURI);
 
   void ResumeLoad(uint64_t aPendingSwitchID);
