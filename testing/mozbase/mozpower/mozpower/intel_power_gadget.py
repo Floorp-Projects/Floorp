@@ -808,13 +808,13 @@ class IPGResultsHandler(object):
         summarized_results = {
             "utilization": {
                 "type": "power",
-                "test": str(test_name),
+                "test": str(test_name) + '-utilization',
                 "unit": "%",
                 "values": average_utilization
             },
             "power-usage": {
                 "type": "power",
-                "test": str(test_name),
+                "test": str(test_name) + '-cumulative',
                 "unit": "mWh",
                 "values": cumulative_mwh
             }

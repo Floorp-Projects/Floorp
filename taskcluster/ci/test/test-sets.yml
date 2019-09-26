@@ -211,6 +211,12 @@ raptor-fetch-chromium:
     - raptor-assorted-dom-chromium
     - raptor-jetstream2-chromium
 
+# Raptor desktop power tests
+# (requires Intel Power Gadget to be pre-installed)
+raptor-firefox-power:
+    - raptor-youtube-playback-v9-power-firefox
+    - raptor-youtube-playback-h264-power-firefox
+
 awsy:
     - awsy
     - awsy-base

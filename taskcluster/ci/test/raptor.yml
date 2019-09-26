@@ -659,6 +659,30 @@ raptor-youtube-playback-firefox:
         extra-options:
             - --test=raptor-youtube-playback
 
+raptor-youtube-playback-v9-power-firefox:
+    description: "Raptor V9 YouTube Playback on Firefox with Power Testing"
+    try-name: raptor-youtube-playback-v9-power-firefox
+    treeherder-symbol: Rap(ytp-v9-p)
+    run-on-projects: ['mozilla-central']
+    max-run-time: 2700
+    tier: 3
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-v9
+            - --power-test
+
+raptor-youtube-playback-h264-power-firefox:
+    description: "Raptor H264 YouTube Playback on Firefox with Power Testing"
+    try-name: raptor-youtube-playback-h264-power-firefox
+    treeherder-symbol: Rap(ytp-h264-p)
+    run-on-projects: ['mozilla-central']
+    max-run-time: 2700
+    tier: 3
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-h264
+            - --power-test
+
 raptor-tp6-1-firefox-cold:
     description: "Raptor tp6-1 cold page-load on Firefox"
     try-name: raptor-tp6-1-firefox-cold
