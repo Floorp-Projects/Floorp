@@ -270,6 +270,8 @@ class UrlbarInput {
 
     Services.prefs.removeObserver("browser.urlbar.openViewOnFocus", this);
 
+    this.controller.uninit();
+
     delete this.document;
     delete this.window;
     delete this.eventBufferer;
@@ -956,11 +958,12 @@ class UrlbarInput {
 
   get openViewOnFocusForCurrentTab() {
     return (
-      this._openViewOnFocus &&
-      !["about:newtab", "about:home"].includes(
-        this.window.gBrowser.currentURI.spec
-      ) &&
-      !this.isPrivate
+      this._openViewOnFocusAndSearchString ||
+      (this._openViewOnFocus &&
+        !["about:newtab", "about:home"].includes(
+          this.window.gBrowser.currentURI.spec
+        ) &&
+        !this.isPrivate)
     );
   }
 
@@ -1015,6 +1018,14 @@ class UrlbarInput {
   }
 
   // Private methods below.
+
+  get _openViewOnFocusAndSearchString() {
+    return (
+      this.megabar &&
+      this.value &&
+      this.getAttribute("pageproxystate") != "valid"
+    );
+  }
 
   async _updateLayoutBreakoutDimensions() {
     // When this method gets called a second time before the first call
