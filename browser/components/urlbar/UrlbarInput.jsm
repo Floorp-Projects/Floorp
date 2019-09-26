@@ -20,7 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarController: "resource:///modules/UrlbarController.jsm",
   UrlbarEventBufferer: "resource:///modules/UrlbarEventBufferer.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarQueryContext: "resource:///modules/UrlbarUtils.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
@@ -654,10 +653,10 @@ class UrlbarInput {
         break;
       }
       case UrlbarUtils.RESULT_TYPE.TIP: {
-        let helpPicked = element.classList.contains("urlbarView-tip-help");
-        if (helpPicked) {
+        if (element.classList.contains("urlbarView-tip-help")) {
           url = result.payload.helpUrl;
         }
+
         if (!url) {
           this.handleRevert();
           this.controller.engagementEvent.record(event, {
@@ -665,16 +664,11 @@ class UrlbarInput {
             selIndex,
             selType: "tip",
           });
-          let provider = UrlbarProvidersManager.getProvider(
-            result.providerName
-          );
-          if (!provider) {
-            Cu.reportError(`Provider not found: ${result.providerName}`);
-            return;
-          }
-          provider.pickResult(result, { helpPicked });
+
+          // TODO: Call out to UrlbarProvider.pickElement as part of bug 1578584.
           return;
         }
+
         break;
       }
       case UrlbarUtils.RESULT_TYPE.OMNIBOX: {
