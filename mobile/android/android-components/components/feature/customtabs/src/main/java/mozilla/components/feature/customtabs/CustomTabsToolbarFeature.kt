@@ -73,7 +73,9 @@ class CustomTabsToolbarFeature(
             updateToolbarColor(config.toolbarColor, config.navigationBarColor)
 
             // Add navigation close action
-            addCloseButton(session, config.closeButtonIcon)
+            if (config.showCloseButton) {
+                addCloseButton(session, config.closeButtonIcon)
+            }
 
             // Add action button
             addActionButton(session, config.actionButtonConfig)

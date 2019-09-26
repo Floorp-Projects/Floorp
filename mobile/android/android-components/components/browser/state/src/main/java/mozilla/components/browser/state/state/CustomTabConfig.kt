@@ -20,6 +20,7 @@ import java.util.UUID
  * @property closeButtonIcon Custom icon of the back button on the toolbar.
  * @property enableUrlbarHiding Enables the toolbar to hide as the user scrolls down on the page.
  * @property actionButtonConfig Custom action button on the toolbar.
+ * @property showCloseButton Specifies whether the close button will be shown on the toolbar.
  * @property showShareMenuItem Specifies whether a default share button will be shown in the menu.
  * @property menuItems Custom overflow menu items.
  * @property exitAnimations Bundle containing custom exit animations for the tab.
@@ -33,6 +34,7 @@ data class CustomTabConfig(
     val closeButtonIcon: Bitmap? = null,
     val enableUrlbarHiding: Boolean = false,
     val actionButtonConfig: CustomTabActionButtonConfig? = null,
+    val showCloseButton: Boolean = true,
     val showShareMenuItem: Boolean = false,
     val menuItems: List<CustomTabMenuItem> = emptyList(),
     val exitAnimations: Bundle? = null,

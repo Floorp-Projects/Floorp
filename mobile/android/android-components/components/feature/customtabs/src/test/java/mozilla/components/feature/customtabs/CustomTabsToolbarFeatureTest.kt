@@ -181,13 +181,26 @@ class CustomTabsToolbarFeatureTest {
     fun `initialize calls addCloseButton`() {
         val session: Session = mock()
         val toolbar = BrowserToolbar(testContext)
-        `when`(session.customTabConfig).thenReturn(mock())
+        `when`(session.customTabConfig).thenReturn(CustomTabConfig())
 
         val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "") {})
 
         feature.initialize(session)
 
         verify(feature).addCloseButton(session, null)
+    }
+
+    @Test
+    fun `initialize doesn't call addCloseButton if the button should be hidden`() {
+        val session: Session = mock()
+        val toolbar = BrowserToolbar(testContext)
+        `when`(session.customTabConfig).thenReturn(CustomTabConfig(showCloseButton = false))
+
+        val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "") {})
+
+        feature.initialize(session)
+
+        verify(feature, never()).addCloseButton(session, null)
     }
 
     @Test
@@ -198,7 +211,7 @@ class CustomTabsToolbarFeatureTest {
         var closeClicked = false
         val feature = spy(CustomTabsToolbarFeature(sessionManager, toolbar, "") { closeClicked = true })
 
-        `when`(session.customTabConfig).thenReturn(mock())
+        `when`(session.customTabConfig).thenReturn(CustomTabConfig())
 
         feature.initialize(session)
 
