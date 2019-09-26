@@ -11,7 +11,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 project_dir = os.path.realpath(os.path.join(current_dir, '..', '..', '..'))
 sys.path.append(project_dir)
 
-from automation.taskcluster.decision_task import pr
+from automation.taskcluster.decision_task import pr, push
 from automation.taskcluster.lib.tasks import TaskBuilder
 from automation.taskcluster.lib.build_config import components
 
@@ -46,6 +46,8 @@ def loader(kind, path, config, params, loaded_tasks):
     tasks_for = params['tasks_for']
     if tasks_for == 'github-pull-request':
         ordered_groups_of_tasks = pr(builder, artifacts_info)
+    elif tasks_for == 'github-push':
+        ordered_groups_of_tasks = push(builder, artifacts_info)
     else:
         raise NotImplementedError('Unsupported tasks_for "{}"'.format(tasks_for))
 

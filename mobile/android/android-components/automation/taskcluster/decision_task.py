@@ -169,8 +169,7 @@ def pr(builder, artifacts_info):
 
 def push(builder, artifacts_info):
     all_tasks = pr(builder, artifacts_info)
-    other_tasks = all_tasks[1]
-    other_tasks[taskcluster.slugId()] = builder.craft_ui_tests_task()
+    all_tasks.append(builder.craft_ui_tests_task())
     return all_tasks
 
 
