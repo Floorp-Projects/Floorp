@@ -8,18 +8,14 @@ const { Ci } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
 
 /**
- * A WebProgressListener that listens for location changes.
- *
- * This progress listener is used to track file loads and other kinds of
- * location changes.
+ * A WebProgressListener that listens for file loads.
  *
  * @constructor
  * @param object window
- *        The window for which we need to track location changes.
+ *        The window for which we need to track file loads.
  * @param object owner
- *        The listener owner which needs to implement two methods:
+ *        The listener owner which needs to implement:
  *        - onFileActivity(aFileURI)
- *        - onLocationChange(aState, aTabURI, aPageTitle)
  */
 function ConsoleProgressListener(window, owner) {
   this.window = window;
@@ -28,32 +24,6 @@ function ConsoleProgressListener(window, owner) {
 exports.ConsoleProgressListener = ConsoleProgressListener;
 
 ConsoleProgressListener.prototype = {
-  /**
-   * Constant used for startMonitor()/stopMonitor() that tells you want to
-   * monitor file loads.
-   */
-  MONITOR_FILE_ACTIVITY: 1,
-
-  /**
-   * Constant used for startMonitor()/stopMonitor() that tells you want to
-   * monitor page location changes.
-   */
-  MONITOR_LOCATION_CHANGE: 2,
-
-  /**
-   * Tells if you want to monitor file activity.
-   * @private
-   * @type boolean
-   */
-  _fileActivity: false,
-
-  /**
-   * Tells if you want to monitor location changes.
-   * @private
-   * @type boolean
-   */
-  _locationChange: false,
-
   /**
    * Tells if the console progress listener is initialized or not.
    * @private
@@ -89,54 +59,16 @@ ConsoleProgressListener.prototype = {
   /**
    * Start a monitor/tracker related to the current nsIWebProgressListener
    * instance.
-   *
-   * @param number monitor
-   *        Tells what you want to track. Available constants:
-   *        - this.MONITOR_FILE_ACTIVITY
-   *          Track file loads.
-   *        - this.MONITOR_LOCATION_CHANGE
-   *          Track location changes for the top window.
    */
-  startMonitor: function(monitor) {
-    switch (monitor) {
-      case this.MONITOR_FILE_ACTIVITY:
-        this._fileActivity = true;
-        break;
-      case this.MONITOR_LOCATION_CHANGE:
-        this._locationChange = true;
-        break;
-      default:
-        throw new Error(
-          "ConsoleProgressListener: unknown monitor type " + monitor + "!"
-        );
-    }
+  startMonitor: function() {
     this._init();
   },
 
   /**
-   * Stop a monitor.
-   *
-   * @param number monitor
-   *        Tells what you want to stop tracking. See this.startMonitor() for
-   *        the list of constants.
+   * Stop monitoring.
    */
-  stopMonitor: function(monitor) {
-    switch (monitor) {
-      case this.MONITOR_FILE_ACTIVITY:
-        this._fileActivity = false;
-        break;
-      case this.MONITOR_LOCATION_CHANGE:
-        this._locationChange = false;
-        break;
-      default:
-        throw new Error(
-          "ConsoleProgressListener: unknown monitor type " + monitor + "!"
-        );
-    }
-
-    if (!this._fileActivity && !this._locationChange) {
-      this.destroy();
-    }
+  stopMonitor: function() {
+    this.destroy();
   },
 
   onStateChange: function(progress, request, state, status) {
@@ -144,13 +76,7 @@ ConsoleProgressListener.prototype = {
       return;
     }
 
-    if (this._fileActivity) {
-      this._checkFileActivity(progress, request, state, status);
-    }
-
-    if (this._locationChange) {
-      this._checkLocationChange(progress, request, state, status);
-    }
+    this._checkFileActivity(progress, request, state, status);
   },
 
   /**
@@ -181,34 +107,6 @@ ConsoleProgressListener.prototype = {
   },
 
   /**
-   * Check if the current window.top location is changing, given the arguments
-   * of nsIWebProgressListener.onStateChange. If that is the case, the remote
-   * Web Console instance is notified.
-   * @private
-   */
-  _checkLocationChange: function(progress, request, state) {
-    const isStart = state & Ci.nsIWebProgressListener.STATE_START;
-    const isStop = state & Ci.nsIWebProgressListener.STATE_STOP;
-    const isNetwork = state & Ci.nsIWebProgressListener.STATE_IS_NETWORK;
-    const isWindow = state & Ci.nsIWebProgressListener.STATE_IS_WINDOW;
-
-    // Skip non-interesting states.
-    if (!isNetwork || !isWindow || progress.DOMWindow != this.window) {
-      return;
-    }
-
-    if (isStart && request instanceof Ci.nsIChannel) {
-      this.owner.onLocationChange("start", request.URI.spec, "");
-    } else if (isStop) {
-      this.owner.onLocationChange(
-        "stop",
-        this.window.location.href,
-        this.window.document.title
-      );
-    }
-  },
-
-  /**
    * Destroy the ConsoleProgressListener.
    */
   destroy: function() {
@@ -217,8 +115,6 @@ ConsoleProgressListener.prototype = {
     }
 
     this._initialized = false;
-    this._fileActivity = false;
-    this._locationChange = false;
 
     try {
       this._webProgress.removeProgressListener(this);
