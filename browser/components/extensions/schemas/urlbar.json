@@ -166,6 +166,31 @@
           },
           "description": "The results that the provider fetched for the query."
         }
+      },
+      {
+        "name": "onResultPicked",
+        "type": "function",
+        "description": "Typically, a provider includes a <code>url</code> property in its results' payloads. When the user picks a result with a URL, Firefox automatically loads the URL. URLs don't make sense for every result type, however. When the user picks a result without a URL, this event is fired. The provider should take an appropriate action in response. Currently the only applicable <code>ResultType</code> is <code>tip</code>.",
+        "parameters": [
+          {
+            "name": "payload",
+            "type": "object",
+            "description": "The payload of the result that was picked."
+          },
+          {
+            "name": "details",
+            "type": "object",
+            "description": "Details about the pick. The specific properties depend on the result type."
+          }
+        ],
+        "extraParameters": [
+          {
+            "name": "providerName",
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "description": "The listener will be called for the results of the provider with this name."
+          }
+        ]
       }
     ]
   },
