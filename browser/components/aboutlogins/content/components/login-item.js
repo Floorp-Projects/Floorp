@@ -118,10 +118,6 @@ export default class LoginItem extends HTMLElement {
     if (this._breachesMap && this._breachesMap.has(this._login.guid)) {
       const breachDetails = this._breachesMap.get(this._login.guid);
       this._breachAlertLink.href = breachDetails.breachAlertURL;
-      document.l10n.setAttributes(
-        this._dismissBreachAlert,
-        "breach-alert-dismiss"
-      );
       this._breachAlert.hidden = false;
     }
     document.l10n.setAttributes(this._timeCreated, "login-item-time-created", {
