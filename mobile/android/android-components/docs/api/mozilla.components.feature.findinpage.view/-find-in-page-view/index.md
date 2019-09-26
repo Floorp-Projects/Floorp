@@ -24,7 +24,7 @@ An interface for views that can display "find in page" results and related UI co
 |---|---|
 | [asView](as-view.md) | `open fun asView(): <ERROR CLASS>`<br>Casts this [FindInPageView](./index.md) interface to an actual Android [View](#) object. |
 | [clear](clear.md) | `abstract fun clear(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Clears the UI state. |
-| [displayResult](display-result.md) | `abstract fun displayResult(result: `[`FindResult`](../../mozilla.components.browser.session/-session/-find-result/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Displays the given [Session.FindResult](../../mozilla.components.browser.session/-session/-find-result/index.md) state in the view. |
+| [displayResult](display-result.md) | `abstract fun displayResult(result: `[`FindResultState`](../../mozilla.components.browser.state.state.content/-find-result-state/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Displays the given [FindResultState](../../mozilla.components.browser.state.state.content/-find-result-state/index.md) state in the view. |
 | [focus](focus.md) | `abstract fun focus(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Requests focus for the input element the user can type their query into. |
 
 ### Inheritors

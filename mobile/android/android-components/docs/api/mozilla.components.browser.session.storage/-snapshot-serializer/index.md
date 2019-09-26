@@ -2,7 +2,7 @@
 
 # SnapshotSerializer
 
-`class SnapshotSerializer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/storage/SnapshotSerializer.kt#L26)
+`class SnapshotSerializer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/storage/SnapshotSerializer.kt#L29)
 
 Helper to transform [SessionManager.Snapshot](../../mozilla.components.browser.session/-session-manager/-snapshot/index.md) instances to JSON and back.
 
@@ -12,11 +12,15 @@ Helper to transform [SessionManager.Snapshot](../../mozilla.components.browser.s
 generated. An app may prefer to use new IDs if it expects sessions to get restored multiple times - otherwise
 breaking the promise of a unique ID.
 
+`restoreParentIds` - If true the [Session.parentId](#) will be restored, otherwise it will remain null. Setting
+this to false is useful for features that do not have or rely on a parent/child relationship between tabs, esp.
+if it can't be guaranteed that the parent tab is still available when the child tabs are restored.
+
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SnapshotSerializer(restoreSessionIds: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true)`<br>Helper to transform [SessionManager.Snapshot](../../mozilla.components.browser.session/-session-manager/-snapshot/index.md) instances to JSON and back. |
+| [&lt;init&gt;](-init-.md) | `SnapshotSerializer(restoreSessionIds: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true, restoreParentIds: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true)`<br>Helper to transform [SessionManager.Snapshot](../../mozilla.components.browser.session/-session-manager/-snapshot/index.md) instances to JSON and back. |
 
 ### Functions
 
