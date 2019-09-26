@@ -18,31 +18,11 @@ from lib.build_config import components_version, components, generate_snapshot_t
 from lib.tasks import TaskBuilder
 
 
-REPO_URL = os.environ.get('MOBILE_HEAD_REPOSITORY')
-COMMIT = os.environ.get('MOBILE_HEAD_REV')
-PR_TITLE = os.environ.get('GITHUB_PULL_TITLE', '')
-
-# If we see this text inside a pull request title then we will not execute any tasks for this PR.
-SKIP_TASKS_TRIGGER = '[ci skip]'
-
 AAR_EXTENSIONS = ('.aar', '.pom', '-sources.jar')
 HASH_EXTENSIONS = ('', '.sha1', '.md5')
 
-BUILDER = TaskBuilder(
-    task_id=os.environ.get('TASK_ID'),
-    repo_url=os.environ.get('MOBILE_HEAD_REPOSITORY'),
-    branch=os.environ.get('MOBILE_HEAD_BRANCH'),
-    commit=COMMIT,
-    owner="skaspari@mozilla.com",
-    source='{}/raw/{}/.taskcluster.yml'.format(REPO_URL, COMMIT),
-    scheduler_id=os.environ.get('SCHEDULER_ID', 'taskcluster-github'),
-    build_worker_type=os.environ.get('BUILD_WORKER_TYPE'),
-    beetmover_worker_type=os.environ.get('BEETMOVER_WORKER_TYPE'),
-    tasks_priority=os.environ.get('TASKS_PRIORITY'),
-)
 
-
-def create_module_tasks(module):
+def create_module_tasks(builder, module):
     def gradle_module_task_name(module, gradle_task_name):
         return "%s:%s" % (module, gradle_task_name)
 
@@ -60,7 +40,7 @@ def create_module_tasks(module):
             subtitle = "%sAndLintDebug" % subtitle
             scheduled_lint = True
 
-        return BUILDER.craft_build_task(
+        return builder.craft_build_task(
             module_name=module,
             gradle_tasks=module_task,
             subtitle=subtitle + variant,
@@ -129,7 +109,7 @@ def create_module_tasks(module):
         # Overhead of a separate task just for linting is quite significant, but this should be a rare case.
         if not scheduled_lint_with_assemble and not scheduled_lint_with_test:
             task_definitions.append(
-                BUILDER.craft_build_task(
+                builder.craft_build_task(
                     module_name=module,
                     gradle_tasks=gradle_module_task_name(module, lint_task),
                     subtitle="onlyLintRelease",
@@ -144,7 +124,7 @@ def create_module_tasks(module):
             for gradle_task in ['assemble', 'assembleAndroidTest', 'test', override["lintTask"]]
         ])
         task_definitions.append(
-            BUILDER.craft_build_task(
+            builder.craft_build_task(
                 module_name=module,
                 gradle_tasks=gradle_tasks,
                 subtitle="assembleAndTestAndCustomLintAll",
@@ -160,7 +140,7 @@ def create_module_tasks(module):
             for gradle_task in ['assemble', 'assembleAndroidTest', 'test', 'lintRelease']
         ])
         task_definitions.append(
-            BUILDER.craft_build_task(
+            builder.craft_build_task(
                 module_name=module,
                 gradle_tasks=gradle_tasks,
                 subtitle="assembleAndTestAndLintReleaseAll",
@@ -171,32 +151,26 @@ def create_module_tasks(module):
     return task_definitions
 
 
-def pr(artifacts_info):
-    if SKIP_TASKS_TRIGGER in PR_TITLE:
-        print("Pull request title contains", SKIP_TASKS_TRIGGER)
-        print("Exit")
-        exit(0)
-
+def pr(builder, artifacts_info):
     modules = [_get_gradle_module_name(artifact_info) for artifact_info in artifacts_info]
+    build_tasks = [
+        task_def
+        for module in modules
+        for task_def in create_module_tasks(builder, module)
+    ]
+    other_tasks = [
+        craft_function()
+        for craft_function in
+        (builder.craft_detekt_task, builder.craft_ktlint_task, builder.craft_compare_locales_task)
+    ]
 
-    build_tasks = {}
-    other_tasks = {}
-
-    for module in modules:
-        tasks = create_module_tasks(module)
-        for task in tasks:
-            build_tasks[taskcluster.slugId()] = task
-
-    for craft_function in (BUILDER.craft_detekt_task, BUILDER.craft_ktlint_task, BUILDER.craft_compare_locales_task):
-        other_tasks[taskcluster.slugId()] = craft_function()
-
-    return (build_tasks, other_tasks)
+    return build_tasks + other_tasks
 
 
-def push(artifacts_info):
-    all_tasks = pr(artifacts_info)
+def push(builder, artifacts_info):
+    all_tasks = pr(builder, artifacts_info)
     other_tasks = all_tasks[1]
-    other_tasks[taskcluster.slugId()] = BUILDER.craft_ui_tests_task()
+    other_tasks[taskcluster.slugId()] = builder.craft_ui_tests_task()
     return all_tasks
 
 
@@ -239,7 +213,7 @@ def _to_release_artifact(extension, version, component, timestamp=None):
     }
 
 
-def release(components, is_snapshot, is_staging):
+def release(builder, components, is_snapshot, is_staging):
     version = components_version()
 
     build_tasks = {}
@@ -256,7 +230,7 @@ def release(components, is_snapshot, is_staging):
     for component in components:
         build_task_id = taskcluster.slugId()
         module_name = _get_gradle_module_name(component)
-        build_tasks[build_task_id] = BUILDER.craft_build_task(
+        build_tasks[build_task_id] = builder.craft_build_task(
             module_name=module_name,
             gradle_tasks=_get_release_gradle_tasks(module_name, is_snapshot),
             subtitle='({}{})'.format(version, '-SNAPSHOT' if is_snapshot else ''),
@@ -270,7 +244,7 @@ def release(components, is_snapshot, is_staging):
         )
 
         sign_task_id = taskcluster.slugId()
-        sign_tasks[sign_task_id] = BUILDER.craft_sign_task(
+        sign_tasks[sign_task_id] = builder.craft_sign_task(
             build_task_id, wait_on_builds_task_id, [_to_release_artifact(extension, version, component, timestamp)
                             for extension in AAR_EXTENSIONS],
             component['name'], is_staging,
@@ -281,15 +255,15 @@ def release(components, is_snapshot, is_staging):
                                      itertools.product(AAR_EXTENSIONS, HASH_EXTENSIONS)]
         beetmover_sign_artifacts = [_to_release_artifact(extension + '.asc', version, component, timestamp)
                                     for extension in AAR_EXTENSIONS]
-        beetmover_tasks[taskcluster.slugId()] = BUILDER.craft_beetmover_task(
+        beetmover_tasks[taskcluster.slugId()] = builder.craft_beetmover_task(
             build_task_id, sign_task_id, beetmover_build_artifacts, beetmover_sign_artifacts,
             component['name'], is_snapshot, is_staging
         )
 
-    wait_on_builds_tasks[wait_on_builds_task_id] = BUILDER.craft_barrier_task(build_tasks.keys())
+    wait_on_builds_tasks[wait_on_builds_task_id] = builder.craft_barrier_task(build_tasks.keys())
 
     if is_snapshot:     # XXX These jobs perma-fail on release
-        for craft_function in (BUILDER.craft_detekt_task, BUILDER.craft_ktlint_task, BUILDER.craft_compare_locales_task):
+        for craft_function in (builder.craft_detekt_task, builder.craft_ktlint_task, builder.craft_compare_locales_task):
             other_tasks[taskcluster.slugId()] = craft_function()
 
     return (build_tasks, wait_on_builds_tasks, sign_tasks, beetmover_tasks, other_tasks)

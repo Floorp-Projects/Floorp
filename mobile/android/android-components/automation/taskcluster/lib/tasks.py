@@ -223,7 +223,7 @@ class TaskBuilder(object):
         self, name, description, command, dependencies=None, artifacts=None, scopes=None,
         routes=None, features=None, env_vars=None
     ):
-        dependencies = [] if dependencies is None else dependencies
+        dependencies = {} if dependencies is None else dependencies
         artifacts = {} if artifacts is None else artifacts
         scopes = [] if scopes is None else scopes
         routes = [] if routes is None else routes
@@ -305,25 +305,29 @@ class TaskBuilder(object):
         expires = taskcluster.fromNow(DEFAULT_EXPIRES_IN)
 
         return {
-            "provisionerId": provisioner_id,
-            "workerType": worker_type,
-            "taskGroupId": self.task_id,
-            "schedulerId": self.scheduler_id,
-            "created": taskcluster.stringDate(created),
-            "deadline": taskcluster.stringDate(deadline),
-            "expires": taskcluster.stringDate(expires),
-            "retries": 5,
-            "tags": {},
-            "priority": self.tasks_priority,
-            "dependencies": [self.task_id] + dependencies,
-            "requires": "all-completed",
-            "routes": routes,
-            "scopes": scopes,
-            "payload": payload,
-            "metadata": {
-                "name": name,
-                "description": description,
-                "owner": self.owner,
-                "source": self.source,
-            },
+            "attributes": {},
+            "dependencies": dependencies,
+            "label": name,
+            "task": {
+                "provisionerId": provisioner_id,
+                "workerType": worker_type,
+                "taskGroupId": self.task_id,
+                "schedulerId": self.scheduler_id,
+                "created": taskcluster.stringDate(created),
+                "deadline": taskcluster.stringDate(deadline),
+                "expires": taskcluster.stringDate(expires),
+                "retries": 5,
+                "tags": {},
+                "priority": self.tasks_priority,
+                "requires": "all-completed",
+                "routes": routes,
+                "scopes": scopes,
+                "payload": payload,
+                "metadata": {
+                    "name": name,
+                    "description": description,
+                    "owner": self.owner,
+                    "source": self.source,
+                },
+            }
         }

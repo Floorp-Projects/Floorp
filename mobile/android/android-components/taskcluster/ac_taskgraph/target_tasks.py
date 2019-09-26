@@ -11,7 +11,13 @@ from taskgraph.target_tasks import _target_task, filter_for_tasks_for
 def target_tasks_default(full_task_graph, parameters, graph_config):
     """Target the tasks which have indicated they should be run on this project
     via the `run_on_projects` attributes."""
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter_for_tasks_for(t, parameters)]
+    def filter(t, params):
+        if t.kind == 'old-decision':
+            return True
+
+        return filter_for_tasks_for(t, params)
+
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
 
 
 @_target_task("snapshot")
