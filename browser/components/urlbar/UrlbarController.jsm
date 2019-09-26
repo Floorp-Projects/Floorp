@@ -302,6 +302,7 @@ class UrlbarController {
             this.view.close();
           } else {
             this.input.handleRevert();
+            this.input.endLayoutExtend(true);
           }
         }
         event.preventDefault();
