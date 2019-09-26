@@ -607,7 +607,6 @@ class UrlbarMuxer {
   get name() {
     return "UrlbarMuxerBase";
   }
-
   /**
    * Sorts queryContext results in-place.
    * @param {UrlbarQueryContext} queryContext the context to sort results for.
@@ -631,7 +630,6 @@ class UrlbarProvider {
   get name() {
     return "UrlbarProviderBase";
   }
-
   /**
    * The type of the provider, must be one of UrlbarUtils.PROVIDER_TYPE.
    * @abstract
@@ -639,7 +637,6 @@ class UrlbarProvider {
   get type() {
     throw new Error("Trying to access the base class, must be overridden");
   }
-
   /**
    * Whether this provider should be invoked for the given context.
    * If this method returns false, the providers manager won't start a query
@@ -651,7 +648,6 @@ class UrlbarProvider {
   isActive(queryContext) {
     throw new Error("Trying to access the base class, must be overridden");
   }
-
   /**
    * Whether this provider wants to restrict results to just itself.
    * Other providers won't be invoked, unless this provider doesn't
@@ -663,7 +659,6 @@ class UrlbarProvider {
   isRestricting(queryContext) {
     throw new Error("Trying to access the base class, must be overridden");
   }
-
   /**
    * Starts querying.
    * @param {UrlbarQueryContext} queryContext The query context object
@@ -676,7 +671,6 @@ class UrlbarProvider {
   startQuery(queryContext, addCallback) {
     throw new Error("Trying to access the base class, must be overridden");
   }
-
   /**
    * Cancels a running query,
    * @param {UrlbarQueryContext} queryContext the query context object to cancel
@@ -684,19 +678,6 @@ class UrlbarProvider {
    * @abstract
    */
   cancelQuery(queryContext) {
-    throw new Error("Trying to access the base class, must be overridden");
-  }
-
-  /**
-   * Called when a result from the provider without a URL is picked, but
-   * currently only for tip results.  The provider should handle the pick.
-   * @param {UrlbarResult} result
-   *   The result that was picked.
-   * @param {object} details
-   *   Details about the pick, depending on the result type.
-   * @abstract
-   */
-  pickResult(result, details) {
     throw new Error("Trying to access the base class, must be overridden");
   }
 }
