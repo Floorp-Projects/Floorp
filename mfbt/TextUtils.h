@@ -62,7 +62,7 @@ inline bool IsAscii(mozilla::Span<const char> aString) {
   const char* ptr = aString.Elements();
   // For short strings, avoid the function call, since, the SIMD
   // code won't have a chance to kick in anyway.
-  if (length < 16) {
+  if (length < mozilla::detail::kShortStringLimitForInlinePaths) {
     const uint8_t* uptr = reinterpret_cast<const uint8_t*>(ptr);
     uint8_t accu = 0;
     for (size_t i = 0; i < length; i++) {
@@ -89,7 +89,21 @@ inline bool IsAscii(mozilla::Span<const char> aString) {
  */
 inline bool IsAscii(mozilla::Span<const char16_t> aString) {
 #if MOZ_HAS_JSRUST()
-  return encoding_mem_is_basic_latin(aString.Elements(), aString.Length());
+  size_t length = aString.Length();
+  const char16_t* ptr = aString.Elements();
+  // For short strings, calling into Rust is a pessimization, and the SIMD
+  // code won't have a chance to kick in anyway.
+  // 16 is a bit larger than logically necessary for this function alone,
+  // but it's important that the limit here matches the limit used in
+  // LossyConvertUtf16toLatin1!
+  if (length < mozilla::detail::kShortStringLimitForInlinePaths) {
+    char16_t accu = 0;
+    for (size_t i = 0; i < length; i++) {
+      accu |= ptr[i];
+    }
+    return accu < 0x80;
+  }
+  return encoding_mem_is_basic_latin(ptr, length);
 #else
   for (char16_t c : aString) {
     if (!IsAscii(c)) {
