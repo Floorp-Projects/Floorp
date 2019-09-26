@@ -181,6 +181,22 @@ interface nsIPrincipal : nsISerializable
     readonly attribute ACString origin;
 
     /**
+    * Checks if the Principal's URI Scheme matches with the parameter
+    *
+    * @param scheme    The scheme to be checked
+    */
+    boolean schemeIs(in string scheme);
+
+    // Nicer, C++ Callable Version of SchemeIs
+    %{C++
+      inline bool SchemeIs(const char* aScheme) {
+        bool ret;
+        SchemeIs(aScheme, &ret);
+        return ret;
+      }
+    %}
+
+    /**
      * The base part of |origin| without the concatenation with |originSuffix|.
      * This doesn't have the important invariants described above with |origin|,
      * and as such should only be used for legacy situations.
