@@ -46,12 +46,10 @@ ChromeUtils.defineModuleGetter(
   "UpdateUtils",
   "resource://gre/modules/UpdateUtils.jsm"
 );
-
-XPCOMUtils.defineLazyServiceGetter(
+ChromeUtils.defineModuleGetter(
   this,
-  "uuidGenerator",
-  "@mozilla.org/uuid-generator;1",
-  "nsIUUIDGenerator"
+  "NormandyUtils",
+  "resource://normandy/lib/NormandyUtils.jsm"
 );
 
 var EXPORTED_SYMBOLS = ["ShowHeartbeatAction"];
@@ -100,7 +98,7 @@ class ShowHeartbeatAction extends BaseAction {
       learnMoreMessage,
       learnMoreUrl,
       postAnswerUrl: await this.generatePostAnswerURL(recipe),
-      flowId: this.uuid(),
+      flowId: NormandyUtils.generateUuid(),
       surveyVersion: recipe.revision_id,
     });
 
@@ -201,15 +199,6 @@ class ShowHeartbeatAction extends BaseAction {
       return `${surveyId}::${ClientEnvironment.userId}`;
     }
     return surveyId;
-  }
-
-  /*
-   * Generate a UUID without surrounding brackets, as expected by Heartbeat
-   * telemetry.
-   */
-  uuid() {
-    let rv = uuidGenerator.generateUUID().toString();
-    return rv.slice(1, rv.length - 1);
   }
 
   /**

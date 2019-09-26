@@ -463,6 +463,7 @@ decorate_task(
         experimentType: "exp",
         userFacingName: "userFacingName",
         userFacingDescription: "userFacingDescription",
+        enrollmentId: activeExperiments[0].enrollmentId,
       },
     ]);
 

@@ -312,18 +312,24 @@ decorate_task(
         extensionApiId: recipe.arguments.extensionApiId,
         extensionHash: extensionDetails.hash,
         extensionHashAlgorithm: extensionDetails.hash_algorithm,
+        enrollmentId: study.enrollmentId,
       },
       "study data should be stored"
     );
     ok(study.studyStartDate, "a start date should be assigned");
     is(study.studyEndDate, null, "an end date should not be assigned");
+    ok(NormandyTestUtils.isUuid(study.enrollmentId));
 
     sendEventStub.assertEvents([
       [
         "enroll",
         "addon_study",
         recipe.arguments.name,
-        { addonId: FIXTURE_ADDON_ID, addonVersion: "1.0" },
+        {
+          addonId: FIXTURE_ADDON_ID,
+          addonVersion: "1.0",
+          enrollmentId: study.enrollmentId,
+        },
       ],
     ]);
 
@@ -395,6 +401,7 @@ decorate_task(
           addonId: FIXTURE_ADDON_ID,
           addonVersion: "2.0",
           branch: AddonStudies.NO_BRANCHES_MARKER,
+          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -467,6 +474,7 @@ decorate_task(
         recipe.arguments.name,
         {
           reason: "addon-id-mismatch",
+          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -528,6 +536,7 @@ decorate_task(
         recipe.arguments.name,
         {
           reason: "addon-does-not-exist",
+          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -594,6 +603,7 @@ decorate_task(
         {
           reason: "download-failure",
           detail: "ERROR_NETWORK_FAILURE",
+          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -658,6 +668,7 @@ decorate_task(
         {
           reason: "download-failure",
           detail: "ERROR_INCORRECT_HASH",
+          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -721,6 +732,7 @@ decorate_task(
         recipe.arguments.name,
         {
           reason: "no-downgrade",
+          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -787,6 +799,7 @@ decorate_task(
         recipe.arguments.name,
         {
           reason: "metadata-mismatch",
+          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -878,6 +891,7 @@ decorate_task(
           addonId,
           addonVersion: study.addonVersion,
           reason: "test-reason",
+          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -910,6 +924,7 @@ decorate_task(
           addonId: study.addonId,
           addonVersion: study.addonVersion,
           reason: "unknown",
+          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -1043,6 +1058,7 @@ decorate_task(
         {
           addonId: FIXTURE_ADDON_ID,
           addonVersion: "2.0",
+          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -1116,6 +1132,7 @@ decorate_task(
         {
           addonId: "normandydriver-a@example.com",
           addonVersion: "2.0",
+          enrollmentId: study.enrollmentId,
         },
       ],
     ]);

@@ -9,6 +9,7 @@ ChromeUtils.import(
 );
 ChromeUtils.import("resource://normandy/lib/PreferenceRollouts.jsm", this);
 ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm", this);
+ChromeUtils.import("resource://testing-common/NormandyTestUtils.jsm", this);
 
 // Test that a simple recipe enrolls as expected
 decorate_task(
@@ -71,8 +72,9 @@ decorate_task(
     );
 
     // rollout was stored
+    let rollouts = await PreferenceRollouts.getAll();
     Assert.deepEqual(
-      await PreferenceRollouts.getAll(),
+      rollouts,
       [
         {
           slug: "test-rollout",
@@ -86,17 +88,36 @@ decorate_task(
               previousValue: null,
             },
           ],
+          enrollmentId: rollouts[0].enrollmentId,
         },
       ],
       "Rollout should be stored in db"
     );
+    ok(
+      NormandyTestUtils.isUuid(rollouts[0].enrollmentId),
+      "Rollout should have a UUID enrollmentId"
+    );
 
     sendEventStub.assertEvents([
-      ["enroll", "preference_rollout", recipe.arguments.slug],
+      [
+        "enroll",
+        "preference_rollout",
+        recipe.arguments.slug,
+        { enrollmentId: rollouts[0].enrollmentId },
+      ],
     ]);
     Assert.deepEqual(
       setExperimentActiveStub.args,
-      [["test-rollout", "active", { type: "normandy-prefrollout" }]],
+      [
+        [
+          "test-rollout",
+          "active",
+          {
+            type: "normandy-prefrollout",
+            enrollmentId: rollouts[0].enrollmentId,
+          },
+        ],
+      ],
       "a telemetry experiment should be activated"
     );
 
@@ -182,8 +203,9 @@ decorate_task(
     );
 
     // rollout in the DB has been updated
+    const rollouts = await PreferenceRollouts.getAll();
     Assert.deepEqual(
-      await PreferenceRollouts.getAll(),
+      rollouts,
       [
         {
           slug: "test-rollout",
@@ -198,12 +220,17 @@ decorate_task(
     );
 
     sendEventStub.assertEvents([
-      ["enroll", "preference_rollout", "test-rollout"],
+      [
+        "enroll",
+        "preference_rollout",
+        "test-rollout",
+        { enrollmentId: rollouts[0].enrollmentId },
+      ],
       [
         "update",
         "preference_rollout",
         "test-rollout",
-        { previousState: "active" },
+        { previousState: "active", enrollmentId: rollouts[0].enrollmentId },
       ],
     ]);
 
@@ -226,6 +253,7 @@ decorate_task(
       preferences: [
         { preferenceName: "test.pref", value: 1, previousValue: 1 },
       ],
+      enrollmentId: "test-enrollment-id",
     });
 
     let recipe = {
@@ -249,8 +277,9 @@ decorate_task(
     );
 
     // rollout in the DB has been ungraduated
+    const rollouts = await PreferenceRollouts.getAll();
     Assert.deepEqual(
-      await PreferenceRollouts.getAll(),
+      rollouts,
       [
         {
           slug: "test-rollout",
@@ -268,7 +297,7 @@ decorate_task(
         "update",
         "preference_rollout",
         "test-rollout",
-        { previousState: "graduated" },
+        { previousState: "graduated", enrollmentId: "test-enrollment-id" },
       ],
     ]);
 
@@ -350,8 +379,9 @@ decorate_task(
     );
 
     // only successful rollout was stored
+    const rollouts = await PreferenceRollouts.getAll();
     Assert.deepEqual(
-      await PreferenceRollouts.getAll(),
+      rollouts,
       [
         {
           slug: "test-rollout-1",
@@ -360,6 +390,7 @@ decorate_task(
             { preferenceName: "test.pref1", value: 1, previousValue: null },
             { preferenceName: "test.pref2", value: 1, previousValue: null },
           ],
+          enrollmentId: rollouts[0].enrollmentId,
         },
       ],
       "Only recipe1's rollout should be stored in db"
@@ -469,8 +500,9 @@ decorate_task(
       "default branch value should change"
     );
 
+    const rollouts = await PreferenceRollouts.getAll();
     Assert.deepEqual(
-      await PreferenceRollouts.getAll(),
+      rollouts,
       [
         {
           slug: "test-rollout",
@@ -482,6 +514,7 @@ decorate_task(
               previousValue: "builtin value",
             },
           ],
+          enrollmentId: rollouts[0].enrollmentId,
         },
       ],
       "the rollout is added to the db with the correct previous value"
@@ -560,12 +593,10 @@ decorate_task(
     await action.finalize();
     is(action.lastError, null, "lastError should be null");
 
-    sendEventStub.assertEvents([
-      ["enroll", "preference_rollout", "test-rollout"],
-    ]);
+    const rollouts = await PreferenceRollouts.getAll();
 
     Assert.deepEqual(
-      await PreferenceRollouts.getAll(),
+      rollouts,
       [
         {
           slug: "test-rollout",
@@ -573,10 +604,20 @@ decorate_task(
           preferences: [
             { preferenceName: "test.pref", value: 1, previousValue: null },
           ],
+          enrollmentId: rollouts[0].enrollmentId,
         },
       ],
       "the DB should have the correct value stored for previousValue"
     );
+
+    sendEventStub.assertEvents([
+      [
+        "enroll",
+        "preference_rollout",
+        "test-rollout",
+        { enrollmentId: rollouts[0].enrollmentId },
+      ],
+    ]);
   }
 );
 
