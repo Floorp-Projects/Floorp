@@ -136,7 +136,7 @@ linux64-clang-8-aarch64-cross:
         symbol: TL(clang8-aarch64)
     worker-type: b-linux
     worker:
-        max-run-time: 3600
+        max-run-time: 5400
         docker-image: {in-tree: toolchain-arm64-build}
     run:
         using: toolchain-script
