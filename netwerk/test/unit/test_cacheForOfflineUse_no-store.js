@@ -86,6 +86,12 @@ add_test(function test_noStore() {
 function run_test() {
   do_get_profile();
 
+  var ps = Cc["@mozilla.org/preferences-service;1"].getService(
+    Ci.nsIPrefBranch
+  );
+  ps.setBoolPref("browser.cache.offline.enable", true);
+  ps.setBoolPref("browser.cache.offline.storage.enable", true);
+
   httpServer = new HttpServer();
   httpServer.registerPathHandler(basePath + normalEntry, normalHandler);
   httpServer.registerPathHandler(basePath + noStoreEntry, noStoreHandler);
