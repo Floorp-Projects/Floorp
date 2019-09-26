@@ -413,6 +413,7 @@ nsWindow::nsWindow() {
   mRetryPointerGrab = false;
   mWindowType = eWindowType_child;
   mSizeState = nsSizeMode_Normal;
+  mAspectRatio = 0.0f;
   mLastSizeMode = nsSizeMode_Normal;
   mSizeConstraints.mMaxSize = GetSafeWindowSize(mSizeConstraints.mMaxSize);
 
@@ -998,6 +999,13 @@ void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints) {
     if (aConstraints.mMaxSize != LayoutDeviceIntSize(NS_MAXSIZE, NS_MAXSIZE)) {
       hints |= GDK_HINT_MAX_SIZE;
     }
+
+    if (mAspectRatio != 0.0f) {
+      geometry.min_aspect = mAspectRatio;
+      geometry.max_aspect = mAspectRatio;
+      hints |= GDK_HINT_ASPECT;
+    }
+
     gtk_window_set_geometry_hints(GTK_WINDOW(mShell), nullptr, &geometry,
                                   GdkWindowHints(hints));
   }
@@ -7222,4 +7230,16 @@ GtkTextDirection nsWindow::GetTextDirection() {
   WritingMode wm = frame->GetWritingMode();
   bool isFrameRTL = !(wm.IsVertical() ? wm.IsVerticalLR() : wm.IsBidiLTR());
   return isFrameRTL ? GTK_TEXT_DIR_RTL : GTK_TEXT_DIR_LTR;
+}
+
+void nsWindow::LockAspectRatio(bool aShouldLock) {
+  if (aShouldLock) {
+    mAspectRatio = (float)mBounds.Width() / (float)mBounds.Height();
+    LOG(("nsWindow::LockAspectRatio() [%p] width %d height %d aspect %f\n",
+         (void*)this, mBounds.Height(), mBounds.Width(), mAspectRatio));
+  } else {
+    mAspectRatio = 0.0;
+    LOG(("nsWindow::LockAspectRatio() [%p] removed aspect ratio\n",
+         (void*)this));
+  }
 }

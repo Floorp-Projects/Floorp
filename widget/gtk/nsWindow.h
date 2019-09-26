@@ -129,6 +129,7 @@ class nsWindow final : public nsBaseWidget {
   virtual void ConstrainPosition(bool aAllowSlop, int32_t* aX,
                                  int32_t* aY) override;
   virtual void SetSizeConstraints(const SizeConstraints& aConstraints) override;
+  virtual void LockAspectRatio(bool aShouldLock) override;
   virtual void Move(double aX, double aY) override;
   virtual void Show(bool aState) override;
   virtual void Resize(double aWidth, double aHeight, bool aRepaint) override;
@@ -487,7 +488,7 @@ class nsWindow final : public nsBaseWidget {
 
   uint32_t mHasMappedToplevel : 1, mIsFullyObscured : 1, mRetryPointerGrab : 1;
   nsSizeMode mSizeState;
-
+  float mAspectRatio;
   nsIntPoint mClientOffset;
 
 #if GTK_CHECK_VERSION(3, 4, 0)
@@ -614,6 +615,8 @@ class nsWindow final : public nsBaseWidget {
   virtual int32_t RoundsWidgetCoordinatesTo() override;
 
   void ForceTitlebarRedraw();
+
+  void SetPopupWindowDecoration(bool aShowOnTaskbar);
 
   GtkWidget* ConfigureWaylandPopupWindows();
   void HideWaylandWindow();
