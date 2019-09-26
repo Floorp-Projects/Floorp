@@ -3002,6 +3002,8 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
 
   ScheduleSyntheticMouseMove();
 
+  PresShell::AutoAssertNoFlush noFlush(*mOuter->PresShell());
+
   {  // scope the AutoScrollbarRepaintSuppression
     AutoScrollbarRepaintSuppression repaintSuppression(this, !schedulePaint);
     AutoWeakFrame weakFrame(mOuter);
@@ -3031,8 +3033,7 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
     mListeners[i]->ScrollPositionDidChange(pt.x, pt.y);
   }
 
-  nsCOMPtr<nsIDocShell> docShell = presContext->GetDocShell();
-  if (docShell) {
+  if (nsCOMPtr<nsIDocShell> docShell = presContext->GetDocShell()) {
     docShell->NotifyScrollObservers();
   }
 }
