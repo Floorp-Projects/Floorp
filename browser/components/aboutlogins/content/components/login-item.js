@@ -74,7 +74,7 @@ export default class LoginItem extends HTMLElement {
 
     this.render();
 
-    this._originInput.addEventListener("blur", this);
+    this._breachAlertLink.addEventListener("click", this);
     this._cancelButton.addEventListener("click", this);
     this._copyPasswordButton.addEventListener("click", this);
     this._copyUsernameButton.addEventListener("click", this);
@@ -82,10 +82,10 @@ export default class LoginItem extends HTMLElement {
     this._dismissBreachAlert.addEventListener("click", this);
     this._editButton.addEventListener("click", this);
     this._form.addEventListener("submit", this);
+    this._originInput.addEventListener("blur", this);
     this._originInput.addEventListener("click", this);
-    this._revealCheckbox.addEventListener("click", this);
     this._originInput.addEventListener("auxclick", this);
-    this._breachAlertLink.addEventListener("click", this);
+    this._revealCheckbox.addEventListener("click", this);
     window.addEventListener("AboutLoginsInitialLoginSelected", this);
     window.addEventListener("AboutLoginsLoadInitialFavicon", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
@@ -94,31 +94,23 @@ export default class LoginItem extends HTMLElement {
 
   focus() {
     if (!this._breachAlert.hidden) {
-      const breachAlertLink = this._breachAlert.querySelector(
-        ".breach-alert-link"
-      );
-      breachAlertLink.focus();
-      return;
-    }
-    if (!this._editButton.disabled) {
+      this._breachAlertLink.focus();
+    } else if (!this._editButton.disabled) {
       this._editButton.focus();
-      return;
-    }
-    if (!this._deleteButton.disabled) {
+    } else if (!this._deleteButton.disabled) {
       this._deleteButton.focus();
-      return;
+    } else {
+      this._originInput.focus();
     }
-    this._originInput.focus();
   }
 
   async render() {
-    [this._errorMessage, this._breachAlert].forEach(el => {
-      el.hidden = true;
-    });
-    if (this._breachesMap && this._breachesMap.has(this._login.guid)) {
+    this._errorMessage.hidden = true;
+    this._breachAlert.hidden =
+      !this._breachesMap || !this._breachesMap.has(this._login.guid);
+    if (!this._breachAlert.hidden) {
       const breachDetails = this._breachesMap.get(this._login.guid);
       this._breachAlertLink.href = breachDetails.breachAlertURL;
-      this._breachAlert.hidden = false;
     }
     document.l10n.setAttributes(this._timeCreated, "login-item-time-created", {
       timeCreated: this._login.timeCreated || "",
