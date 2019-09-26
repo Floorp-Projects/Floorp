@@ -25,16 +25,16 @@ function setText(id, value) {
   element.appendChild(document.createTextNode(value));
 }
 
-function viewCertHelper(parent, cert) {
+function viewCertHelper(parent, cert, openingOption = "tab") {
   if (!cert) {
     return;
   }
 
   if (Services.prefs.getBoolPref("security.aboutcertificate.enabled")) {
-    let rootWindow = window.docShell.rootTreeItem.domWindow;
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
     let derb64 = encodeURIComponent(cert.getBase64DERString());
     let url = `about:certificate?cert=${derb64}`;
-    rootWindow.openTrustedLinkIn(url, "tab");
+    win.openTrustedLinkIn(url, openingOption);
   } else {
     Services.ww.openWindow(
       parent && parent.docShell.rootTreeItem.domWindow,
