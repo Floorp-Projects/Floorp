@@ -37,8 +37,8 @@ class MainActivityTest {
         onView(withId(R.id.buttonGenerateData)).perform(click())
 
         // Use the Glean testing API to check if the expected data was recorded.
-        assertTrue(GleanTestMetrics.testCounter.testHasValue())
-        assertEquals(1, GleanTestMetrics.testCounter.testGetValue())
+        assertTrue(GleanTestMetrics.counter.testHasValue())
+        assertEquals(1, GleanTestMetrics.counter.testGetValue())
     }
 
     @Test

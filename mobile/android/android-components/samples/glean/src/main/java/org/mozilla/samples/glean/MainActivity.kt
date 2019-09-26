@@ -26,12 +26,12 @@ open class MainActivity : AppCompatActivity() {
 
             // Adds the EditText's text content as a new string in the string list metric from the
             // metrics.yaml file.
-            Test.testStringList.add(etStringListInput.text.toString())
+            Test.stringList.add(etStringListInput.text.toString())
             // Clear current text to help indicate something happened
             etStringListInput.setText("")
 
             // Increments the test_counter metric from the metrics.yaml file.
-            Test.testCounter.add()
+            Test.counter.add()
 
             // This is referencing the event ping named 'click' from the metrics.yaml file. In
             // order to illustrate adding extra information to the event, it is also adding to the
@@ -45,7 +45,7 @@ open class MainActivity : AppCompatActivity() {
             )
         }
 
-        Test.testTimespan.stop()
+        Test.timespan.stop()
 
         // Update some metrics from a third-party library
         SamplesGleanLibrary.recordMetric()

@@ -221,6 +221,8 @@ glean.error:
     notification_emails:
       - telemetry-client-dev@mozilla.com
     expires: never
+    no_lint:
+      - COMMON_PREFIX
 
   invalid_label:
     type: labeled_counter
@@ -236,3 +238,5 @@ glean.error:
     notification_emails:
       - telemetry-client-dev@mozilla.com
     expires: never
+    no_lint:
+      - COMMON_PREFIX
