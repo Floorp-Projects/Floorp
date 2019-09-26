@@ -62,6 +62,10 @@ const log = LogManager.getLogger("recipe-runner");
  * @property {string|integer|boolean} previousValue
  *   The value the preference would have on the default branch if this rollout
  *   were not active.
+ * @property {string} enrollmentId
+ *   A random ID generated at time of enrollment. It should be included on all
+ *   telemetry related to this rollout. It should not be re-used by other
+ *   studies, or any other purpose. May be null on old rollouts.
  */
 
 var EXPORTED_SYMBOLS = ["PreferenceRollouts"];
@@ -151,7 +155,9 @@ var PreferenceRollouts = {
           "graduate",
           "preference_rollout",
           rollout.slug,
-          {}
+          {
+            enrollmentId: rollout.enrollmentId,
+          }
         );
       }
 
@@ -166,6 +172,7 @@ var PreferenceRollouts = {
     for (const rollout of await this.getAllActive()) {
       TelemetryEnvironment.setExperimentActive(rollout.slug, rollout.state, {
         type: "normandy-prefrollout",
+        enrollmentId: rollout.enrollmentId,
       });
     }
   },
@@ -199,6 +206,9 @@ var PreferenceRollouts = {
    * @param {PreferenceRollout} rollout
    */
   async add(rollout) {
+    if (!rollout.enrollmentId) {
+      throw new Error("Rollout must have an enrollment ID");
+    }
     const db = await getDatabase();
     return getStore(db, "readwrite").add(rollout);
   },

@@ -161,6 +161,10 @@ Enrollment
          The type of preference experiment. Currently this can take
          values "exp" and "exp-highpop", the latter being for
          experiments targeting large numbers of users.
+      enrollmentId
+         A UUID that is unique to this users enrollment in this study. It
+         will be included in all future telemetry for this user in this
+         study.
 
 Unenrollment
    method
@@ -192,6 +196,9 @@ Unenrollment
            changed in a profile while Firefox was not running.
          * ``"unknown"``: A reason was not specified. This should be
            considered a bug.
+      enrollmentId
+         The ID that was generated at enrollment.
+
 
 Add-on Studies
 ^^^^^^^^^^^^^^
@@ -207,6 +214,10 @@ Enrollment
          The add-on's ID (example: ``"feature-study@shield.mozilla.com"``).
       addonVersion
          The add-on's version (example: ``"1.2.3"``).
+      enrollmentId
+         A UUID that is unique to this users enrollment in this study. It
+         will be included in all future telemetry for this user in this
+         study.
 
 Enroll Failure
    method
@@ -233,6 +244,8 @@ Update
          The add-on's ID (example: ``"feature-study@shield.mozilla.com"``).
       addonVersion
          The add-on's version (example: ``"1.2.3"``).
+      enrollmentId
+         The ID that was generated at enrollment.
 
 Update Failure
    method
@@ -241,11 +254,14 @@ Update Failure
       The string ``"addon_study"``
    value
       The name of the study (``recipe.arguments.name``).
-   reason
-      A string containing the filename and line number of the code
-      that failed, and the name of the error thrown. This information
-      is purposely limited to avoid leaking personally identifiable
-      information. This should be considered a bug.
+   extra
+      reason
+         A string containing the filename and line number of the code
+         that failed, and the name of the error thrown. This information
+         is purposely limited to avoid leaking personally identifiable
+         information. This should be considered a bug.
+      enrollmentId
+         The ID that was generated at enrollment.
 
 Unenrollment
    method
@@ -280,3 +296,5 @@ Unenrollment
            from a profile.
          * ``"unknown"``: A reason was not specified. This should be
            considered a bug.
+      enrollmentId
+         The ID that was generated at enrollment.

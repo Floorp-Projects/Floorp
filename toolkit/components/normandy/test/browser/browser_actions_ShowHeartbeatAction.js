@@ -5,6 +5,7 @@ ChromeUtils.import("resource://normandy/lib/ClientEnvironment.jsm", this);
 ChromeUtils.import("resource://normandy/lib/Heartbeat.jsm", this);
 ChromeUtils.import("resource://normandy/lib/Storage.jsm", this);
 ChromeUtils.import("resource://normandy/lib/Uptake.jsm", this);
+ChromeUtils.import("resource://testing-common/NormandyTestUtils.jsm", this);
 
 const HOUR_IN_MS = 60 * 60 * 1000;
 
@@ -117,8 +118,7 @@ decorate_task(
       "expected arguments were passed"
     );
 
-    const uuidRegex = /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i;
-    ok(options.flowId.match(uuidRegex), "flowId should be a uuid");
+    ok(NormandyTestUtils.isUuid(options.flowId, "flowId should be a uuid"));
 
     // postAnswerUrl gains several query string parameters. Check that the prefix is right
     ok(options.postAnswerUrl.startsWith(recipe.arguments.postAnswerUrl));

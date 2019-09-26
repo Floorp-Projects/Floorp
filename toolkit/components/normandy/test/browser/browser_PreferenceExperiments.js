@@ -5,6 +5,8 @@ ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
 ChromeUtils.import("resource://normandy/lib/PreferenceExperiments.jsm", this);
 ChromeUtils.import("resource://normandy/lib/CleanupManager.jsm", this);
 ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm", this);
+ChromeUtils.import("resource://normandy/lib/NormandyUtils.jsm", this);
+ChromeUtils.import("resource://testing-common/NormandyTestUtils.jsm", this);
 
 // Save ourselves some typing
 const { withMockExperiments } = PreferenceExperiments;
@@ -35,6 +37,7 @@ function experimentFactory(attrs) {
       expired: false,
       lastSeen: NOW.toJSON(),
       experimentType: "exp",
+      enrollmentId: NormandyUtils.generateUuid(),
     },
     attrs,
     {
@@ -1216,7 +1219,10 @@ decorate_task(
     mockPreferences.set("fake.pref", "experiment value");
     await PreferenceExperiments.init();
     ok(
-      setActiveStub.calledWith("test", "branch", { type: "normandy-exp" }),
+      setActiveStub.calledWith("test", "branch", {
+        type: "normandy-exp",
+        enrollmentId: experiments[0].enrollmentId,
+      }),
       "Experiment is registered by init"
     );
   }
@@ -1250,6 +1256,7 @@ decorate_task(
     ok(
       setActiveStub.calledWith("test", "branch", {
         type: "normandy-pref-test",
+        enrollmentId: sinon.match(NormandyTestUtils.isUuid),
       }),
       "init should use the provided experiment type"
     );
@@ -1268,7 +1275,7 @@ decorate_task(
     setInactiveStub,
     sendEventStub
   ) {
-    await PreferenceExperiments.start({
+    let { enrollmentId } = await PreferenceExperiments.start({
       slug: "test",
       actionName: "SomeAction",
       branch: "branch",
@@ -1281,9 +1288,14 @@ decorate_task(
       },
     });
 
+    ok(
+      NormandyTestUtils.isUuid(enrollmentId),
+      "Experiment should have a UUID enrollmentId"
+    );
+
     Assert.deepEqual(
       setActiveStub.getCall(0).args,
-      ["test", "branch", { type: "normandy-exp" }],
+      ["test", "branch", { type: "normandy-exp", enrollmentId }],
       "Experiment is registered by start()"
     );
     await PreferenceExperiments.stop("test", { reason: "test-reason" });
@@ -1301,6 +1313,7 @@ decorate_task(
         {
           experimentType: "exp",
           branch: "branch",
+          enrollmentId,
         },
       ],
       [
@@ -1311,6 +1324,7 @@ decorate_task(
           reason: "test-reason",
           didResetValue: "true",
           branch: "branch",
+          enrollmentId,
         },
       ],
     ]);
@@ -1329,7 +1343,7 @@ decorate_task(
     setInactiveStub,
     sendEventStub
   ) {
-    await PreferenceExperiments.start({
+    const { enrollmentId } = await PreferenceExperiments.start({
       slug: "test",
       actionName: "SomeAction",
       branch: "branch",
@@ -1345,7 +1359,7 @@ decorate_task(
 
     Assert.deepEqual(
       setActiveStub.getCall(0).args,
-      ["test", "branch", { type: "normandy-pref-test" }],
+      ["test", "branch", { type: "normandy-pref-test", enrollmentId }],
       "start() should register the experiment with the provided type"
     );
 
@@ -1357,6 +1371,7 @@ decorate_task(
         {
           experimentType: "pref-test",
           branch: "branch",
+          enrollmentId,
         },
       ],
     ]);
@@ -1820,6 +1835,7 @@ decorate_task(
           didResetValue: "false",
           reason: "user-preference-changed",
           branch: "fakebranch",
+          enrollmentId: mockExperiments[0].enrollmentId,
         },
       ],
     ]);
