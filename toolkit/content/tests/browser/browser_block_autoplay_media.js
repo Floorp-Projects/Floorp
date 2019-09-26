@@ -1,27 +1,6 @@
 const PAGE =
   "https://example.com/browser/toolkit/content/tests/browser/file_multipleAudio.html";
 
-var SuspendedType = {
-  NONE_SUSPENDED: 0,
-  SUSPENDED_PAUSE: 1,
-  SUSPENDED_BLOCK: 2,
-  SUSPENDED_PAUSE_DISPOSABLE: 3,
-};
-
-function check_audio_suspended(browser, suspendedType) {
-  return ContentTask.spawn(browser, suspendedType, suspendedType => {
-    var autoPlay = content.document.getElementById("autoplay");
-    if (!autoPlay) {
-      ok(false, "Can't get the audio element!");
-    }
-    is(
-      autoPlay.computedSuspended,
-      suspendedType,
-      "The suspeded state of autoplay audio is correct."
-    );
-  });
-}
-
 function check_audio_paused(browser, shouldBePaused) {
   return ContentTask.spawn(browser, shouldBePaused, shouldBePaused => {
     var autoPlay = content.document.getElementById("autoplay");
@@ -52,10 +31,7 @@ add_task(async function block_autoplay_media() {
   await BrowserTestUtils.browserLoaded(tab1.linkedBrowser, false, PAGE);
 
   info("- should block autoplay media for non-visited tab1 -");
-  await check_audio_suspended(
-    tab1.linkedBrowser,
-    SuspendedType.SUSPENDED_BLOCK
-  );
+  await waitForTabBlockEvent(tab1, true);
 
   info("- open new background tab2 -");
   let tab2 = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
@@ -63,17 +39,13 @@ add_task(async function block_autoplay_media() {
   await BrowserTestUtils.browserLoaded(tab2.linkedBrowser, false, PAGE);
 
   info("- should block autoplay for non-visited tab2 -");
-  await check_audio_suspended(
-    tab2.linkedBrowser,
-    SuspendedType.SUSPENDED_BLOCK
-  );
+  await waitForTabBlockEvent(tab2, true);
 
   info("- select tab1 as foreground tab -");
   await BrowserTestUtils.switchTab(window.gBrowser, tab1);
 
   info("- media should be unblocked because the tab was visited -");
   await waitForTabPlayingEvent(tab1, true);
-  await check_audio_suspended(tab1.linkedBrowser, SuspendedType.NONE_SUSPENDED);
 
   info("- open another new foreground tab3 -");
   let tab3 = await BrowserTestUtils.openNewForegroundTab(
@@ -82,14 +54,10 @@ add_task(async function block_autoplay_media() {
   );
   info("- should still play media from tab1 -");
   await waitForTabPlayingEvent(tab1, true);
-  await check_audio_suspended(tab1.linkedBrowser, SuspendedType.NONE_SUSPENDED);
 
   info("- should still block media from tab2 -");
   await waitForTabPlayingEvent(tab2, false);
-  await check_audio_suspended(
-    tab2.linkedBrowser,
-    SuspendedType.SUSPENDED_BLOCK
-  );
+  await waitForTabBlockEvent(tab2, true);
 
   // Test 4: Disable autoplay and verify that when a tab is opened in the
   // background and has had its playback start delayed, resuming via the audio
@@ -114,10 +82,7 @@ add_task(async function block_autoplay_media() {
   await BrowserTestUtils.browserLoaded(tab4.linkedBrowser, false, PAGE);
 
   info("- should block autoplay for non-visited tab4 -");
-  await check_audio_suspended(
-    tab4.linkedBrowser,
-    SuspendedType.SUSPENDED_BLOCK
-  );
+  await waitForTabBlockEvent(tab4, true);
   await check_audio_paused(tab4.linkedBrowser, true);
   tab4.linkedBrowser.resumeMedia();
   info("- should not block media from tab4 -");
