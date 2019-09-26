@@ -269,6 +269,7 @@ this.ASRouterTriggerListeners = new Map([
       _initialized: false,
       _triggerHandler: null,
       _hosts: null,
+      _matchPatternSet: null,
 
       /*
        * If the listener is already initialised, `init` will replace the trigger
@@ -296,6 +297,19 @@ this.ASRouterTriggerListeners = new Map([
           this._initialized = true;
         }
         this._triggerHandler = triggerHandler;
+        if (patterns) {
+          if (this._matchPatternSet) {
+            this._matchPatternSet = new MatchPatternSet(
+              new Set([...this._matchPatternSet.patterns, ...patterns]),
+              MATCH_PATTERN_OPTIONS
+            );
+          } else {
+            this._matchPatternSet = new MatchPatternSet(
+              patterns,
+              MATCH_PATTERN_OPTIONS
+            );
+          }
+        }
         if (this._hosts) {
           hosts.forEach(h => this._hosts.add(h));
         } else {
@@ -323,7 +337,7 @@ this.ASRouterTriggerListeners = new Map([
         if (aWebProgress.isTopLevel && !isSameDocument) {
           const match = checkURLMatch(
             aLocationURI,
-            { hosts: this._hosts },
+            { hosts: this._hosts, matchPatternSet: this._matchPatternSet },
             aRequest
           );
           if (match) {

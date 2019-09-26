@@ -283,7 +283,7 @@ describe("ToolbarPanelHub", () => {
         assert.ok(createdElements.find(el => el.tagName === "p"));
       }
       // Call the click handler to make coverage happy.
-      eventListeners.click();
+      eventListeners.mouseup();
       assert.calledOnce(handleUserActionStub);
     });
     it("should sort based on order field value", async () => {
@@ -405,6 +405,24 @@ describe("ToolbarPanelHub", () => {
 
       assert.notCalled(fakeElementById.addEventListener);
     });
+    it("should attach doCommand cbs that handle user actions", async () => {
+      const messages = (await PanelTestProvider.getMessages()).filter(
+        m => m.template === "whatsnew_panel_message"
+      );
+      getMessagesStub.returns(messages);
+
+      await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
+
+      const buttonEl = createdElements.find(el => el.tagName === "button");
+      const anchorEl = createdElements.find(el => el.tagName === "a");
+
+      assert.notCalled(handleUserActionStub);
+
+      buttonEl.doCommand();
+      anchorEl.doCommand();
+
+      assert.calledTwice(handleUserActionStub);
+    });
     it("should listen for panelhidden and remove the toolbar button", async () => {
       getMessagesStub.returns([]);
 
@@ -473,7 +491,7 @@ describe("ToolbarPanelHub", () => {
         spy.resetHistory();
 
         // Message click event listener cb
-        eventListeners.click();
+        eventListeners.mouseup();
 
         assert.calledOnce(spy);
         assert.calledWithExactly(spy, fakeWindow, "CLICK", messages[0]);
@@ -661,7 +679,7 @@ describe("ToolbarPanelHub", () => {
     it("should open link on click", async () => {
       await fakeInsert();
 
-      eventListeners.click();
+      eventListeners.mouseup();
 
       assert.calledOnce(handleUserActionStub);
       assert.calledWithExactly(handleUserActionStub, {

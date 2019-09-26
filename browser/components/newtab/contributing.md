@@ -52,7 +52,7 @@ Check out [this guide](docs/v2-system-addon/1.GETTING_STARTED.md) on how to inst
 You have identified the bug, written code and now want to get it into the main repo using a [Pull Request](https://help.github.com/articles/about-pull-requests/).
 
 All code is added using a pull request against the `master` branch of our repo.  Before submitting a PR, please go through this checklist:
-- all [unit tests](#unit-tests) must pass
+- all [unit tests](docs/v2-system-addon/unit_testing_guide.md) must pass
 - if you haven't written unit tests for your patch, eyebrows will be curmudgeonly furrowed (write unit tests!)
 - if your pull request fixes a particular ticket (it does, right?), please use the `fixes #nnn` github annotation to indicate this
 - please add a `PR / Needs review` tag to your PR (if you have permission).  This starts the code review process.  If you cannot add a tag, don't worry, we will add it during triage.

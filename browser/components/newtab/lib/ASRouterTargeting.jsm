@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const SEARCH_REGION_PREF = "browser.search.region";
+const FXA_ENABLED_PREF = "identity.fxaccounts.enabled";
+
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -26,6 +29,85 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/updates/update-manager;1",
   "nsIUpdateManager"
 );
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "cfrFeaturesUserPref",
+  "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
+  true
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "cfrAddonsUserPref",
+  "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons",
+  true
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "isWhatsNewPanelEnabled",
+  "browser.messaging-system.whatsNewPanel.enabled",
+  false
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "isFxABadgeEnabled",
+  "browser.messaging-system.fxatoolbarbadge.enabled",
+  true
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "hasAccessedFxAPanel",
+  "identity.fxaccounts.toolbar.accessed",
+  false
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "clientsDevicesDesktop",
+  "services.sync.clients.devices.desktop",
+  0
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "clientsDevicesMobile",
+  "services.sync.clients.devices.mobile",
+  0
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "syncNumClients",
+  "services.sync.numClients",
+  0
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "devtoolsSelfXSSCount",
+  "devtools.selfxss.count",
+  0
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "browserSearchRegion",
+  SEARCH_REGION_PREF,
+  ""
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "isFxAEnabled",
+  FXA_ENABLED_PREF,
+  true
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "isXPIInstallEnabled",
+  "xpinstall.enabled",
+  true
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "snippetsUserPref",
+  "browser.newtabpage.activity-stream.feeds.snippets",
+  true
+);
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "TrackingDBService",
@@ -34,8 +116,6 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 const FXA_USERNAME_PREF = "services.sync.username";
-const FXA_ENABLED_PREF = "identity.fxaccounts.enabled";
-const SEARCH_REGION_PREF = "browser.search.region";
 const MOZ_JEXL_FILEPATH = "mozjexl";
 
 const { activityStreamProvider: asProvider } = NewTabUtils;
@@ -253,24 +333,18 @@ const TargetingGetters = {
     return Services.prefs.prefHasUserValue(FXA_USERNAME_PREF);
   },
   get isFxAEnabled() {
-    return Services.prefs.getBoolPref(FXA_ENABLED_PREF, true);
+    return isFxAEnabled;
   },
   get sync() {
     return {
-      desktopDevices: Services.prefs.getIntPref(
-        "services.sync.clients.devices.desktop",
-        0
-      ),
-      mobileDevices: Services.prefs.getIntPref(
-        "services.sync.clients.devices.mobile",
-        0
-      ),
-      totalDevices: Services.prefs.getIntPref("services.sync.numClients", 0),
+      desktopDevices: clientsDevicesDesktop,
+      mobileDevices: clientsDevicesMobile,
+      totalDevices: syncNumClients,
     };
   },
   get xpinstallEnabled() {
     // This is needed for all add-on recommendations, to know if we allow xpi installs in the first place
-    return Services.prefs.getBoolPref("xpinstall.enabled", true);
+    return isXPIInstallEnabled;
   },
   get addonsInfo() {
     return AddonManager.getActiveAddons(["extension", "service"]).then(
@@ -318,7 +392,7 @@ const TargetingGetters = {
     return null;
   },
   get devToolsOpenedCount() {
-    return Services.prefs.getIntPref("devtools.selfxss.count");
+    return devtoolsSelfXSSCount;
   },
   get topFrecentSites() {
     return QueryCache.queries.TopFrecentSites.get().then(sites =>
@@ -357,7 +431,7 @@ const TargetingGetters = {
     return parseInt(AppConstants.MOZ_APP_VERSION.match(/\d+/), 10);
   },
   get region() {
-    return Services.prefs.getStringPref(SEARCH_REGION_PREF, "");
+    return browserSearchRegion;
   },
   get needsUpdate() {
     return QueryCache.queries.CheckBrowserNeedsUpdate.get();
@@ -375,16 +449,10 @@ const TargetingGetters = {
     return false;
   },
   get hasAccessedFxAPanel() {
-    return Services.prefs.getBoolPref(
-      "identity.fxaccounts.toolbar.accessed",
-      true
-    );
+    return hasAccessedFxAPanel;
   },
   get isWhatsNewPanelEnabled() {
-    return Services.prefs.getBoolPref(
-      "browser.messaging-system.whatsNewPanel.enabled",
-      false
-    );
+    return isWhatsNewPanelEnabled;
   },
   get earliestFirefoxVersion() {
     if (UpdateManager.updateCount) {
@@ -397,10 +465,14 @@ const TargetingGetters = {
     return null;
   },
   get isFxABadgeEnabled() {
-    return Services.prefs.getBoolPref(
-      "browser.messaging-system.fxatoolbarbadge.enabled",
-      false
-    );
+    return isFxABadgeEnabled;
+  },
+  get userPrefs() {
+    return {
+      cfrFeatures: cfrFeaturesUserPref,
+      cfrAddons: cfrAddonsUserPref,
+      snippets: snippetsUserPref,
+    };
   },
   get totalBlockedCount() {
     return TrackingDBService.sumAllEvents();

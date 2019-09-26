@@ -28,6 +28,10 @@
       "description": "Different message layouts",
      "enum": ["tracking-protections"]
     },
+    "bucket_id": {
+      "type": "string",
+      "description": "A bucket identifier for the addon. This is used in order to anonymize telemetry for history-sensitive targeting."
+    },
     "published_date": {
       "type": "integer",
       "description": "The date/time (number of milliseconds elapsed since January 1, 1970 00:00:00 UTC) the message was published."
@@ -76,5 +80,5 @@
     }
   },
   "additionalProperties": false,
-  "required": ["published_date", "title", "body", "cta_url"]
+  "required": ["published_date", "title", "body", "cta_url", "bucket_id"]
 }

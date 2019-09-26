@@ -2890,10 +2890,12 @@ main {
   overflow: hidden;
   border-radius: 8px;
   transition-delay: 100ms;
-  transition-duration: 100ms;
+  transition-duration: 200ms;
   transition-property: background; }
   .ds-dismiss.hovering {
-    background: var(--newtab-element-hover-color); }
+    background: rgba(12, 12, 13, 0.1); }
+    [lwt-newtab-brighttext] .ds-dismiss.hovering {
+      background: rgba(12, 12, 13, 0.3); }
   .ds-dismiss:hover .ds-dismiss-button {
     opacity: 1; }
   .ds-dismiss .ds-dismiss-button {
@@ -2909,11 +2911,22 @@ main {
     right: 0;
     top: 0;
     border-radius: 50%;
-    margin: 16px 24px 0 0;
-    transition-duration: 200ms;
-    transition-property: opacity;
-    opacity: 0;
-    background: var(--newtab-element-active-color); }
+    margin: 18px 18px 0 0;
+    background: rgba(12, 12, 13, 0.1); }
+    [lwt-newtab-brighttext] .ds-dismiss .ds-dismiss-button {
+      background: rgba(12, 12, 13, 0.3); }
+    .ds-dismiss .ds-dismiss-button:hover {
+      background: rgba(12, 12, 13, 0.2); }
+      [lwt-newtab-brighttext] .ds-dismiss .ds-dismiss-button:hover {
+        background: rgba(12, 12, 13, 0.5); }
+    .ds-dismiss .ds-dismiss-button:active {
+      background: rgba(12, 12, 13, 0.3); }
+      [lwt-newtab-brighttext] .ds-dismiss .ds-dismiss-button:active {
+        background: rgba(12, 12, 13, 0.7); }
+    .ds-dismiss .ds-dismiss-button:focus {
+      box-shadow: 0 0 0 2px #FFF, 0 0 0 5px rgba(10, 132, 255, 0.5); }
+      [lwt-newtab-brighttext] .ds-dismiss .ds-dismiss-button:focus {
+        box-shadow: 0 0 0 2px #2A2A2E, 0 0 0 5px rgba(10, 132, 255, 0.5); }
 
 .ds-message {
   margin: 8px 0 0; }
@@ -3041,8 +3054,9 @@ main {
     width: 40px;
     height: 40px;
     margin: 4px 12px 0 0;
-    border-radius: 4px;
     flex-shrink: 0; }
+    .ds-text-promo .ds-image img {
+      border-radius: 4px; }
   .ds-text-promo .text {
     line-height: 24px; }
   .ds-text-promo h3 {

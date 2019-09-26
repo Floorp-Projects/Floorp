@@ -114,6 +114,16 @@ const TEST_GLOBAL = {
       },
     },
     "@mozilla.org/updates/update-checker;1": { createInstance() {} },
+    "@mozilla.org/streamConverters;1": {
+      getService() {
+        return this;
+      },
+    },
+    "@mozilla.org/network/stream-loader;1": {
+      createInstance() {
+        return {};
+      },
+    },
   },
   Ci: {
     nsICryptoHash: {},
@@ -307,6 +317,7 @@ const TEST_GLOBAL = {
     defineLazyModuleGetters() {},
     defineLazyServiceGetter() {},
     defineLazyServiceGetters() {},
+    defineLazyPreferenceGetter() {},
     generateQI() {
       return {};
     },

@@ -40,6 +40,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [isFxABadgeEnabled](#isfxabadgeenabled)
 * [totalBlockedCount](#totalblockedcount)
 * [recentBookmarks](#recentbookmarks)
+* [userPrefs](#userprefs)
 
 ## Detailed usage
 
@@ -545,4 +546,23 @@ interface Bookmark {
   ...
 }
 declare const recentBookmarks: Array<Bookmark>
+```
+
+### `userPrefs`
+
+Information about user facing prefs configurable from `about:preferences`.
+
+#### Examples
+```java
+userPrefs.cfrFeatures == false
+```
+
+#### Definition
+
+```ts
+declare const userPrefs: {
+  cfrFeatures: boolean;
+  cfrAddons: boolean;
+  snippets: boolean;
+}
 ```
