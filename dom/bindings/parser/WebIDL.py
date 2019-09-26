@@ -554,9 +554,6 @@ class IDLExternalInterface(IDLObjectWithIdentifier, IDLExposureMixins):
     def hasProbablyShortLivingWrapper(self):
         return False
 
-    def isSerializable(self):
-        return False
-
     def _getDependentObjects(self):
         return set()
 
