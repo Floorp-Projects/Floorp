@@ -18,7 +18,7 @@ let x = new SharedArrayBuffer(1);
 // Initially the reference count is 1.
 assertEq(sharedArrayRawBufferRefcount(x), 1);
 
-let y = serialize(x);
+let y = serialize(x, [], {SharedArrayBuffer: 'allow'});
 
 // Serializing it successfully increments the reference count.
 assertEq(sharedArrayRawBufferRefcount(x), 2);

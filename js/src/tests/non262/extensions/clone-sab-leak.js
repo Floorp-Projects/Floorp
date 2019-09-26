@@ -28,7 +28,7 @@ if (sharedArrayRawBufferCount() == 0) {
 assertEq(sharedArrayRawBufferCount(), 1+k);
 
 // Capture the buffer in a serialization object.
-var y = serialize(sab)
+var y = serialize(sab, [], {SharedArrayBuffer: 'allow'})
 
 // Serializing it did not increase the number of buffers.
 assertEq(sharedArrayRawBufferCount(), 1+k);

@@ -24,7 +24,7 @@
 
     // Serialization and deserialization of shared memories work:
 
-    let mem2 = deserialize(serialize(mem1));
+    let mem2 = deserialize(serialize(mem1, [], {SharedArrayBuffer: 'allow'}));
     assertEq(mem2 instanceof WebAssembly.Memory, true);
     let buf2 = mem2.buffer;
     assertEq(buf2 instanceof SharedArrayBuffer, true);
@@ -79,7 +79,7 @@
 {
     let mem = new WebAssembly.Memory({initial: 2, maximum: 4, shared: true});
     let buf = mem.buffer;
-    let clonedbuf = serialize(buf);
+    let clonedbuf = serialize(buf, [], {SharedArrayBuffer: 'allow'});
     mem.grow(1);
     let buf2 = deserialize(clonedbuf);
     assertEq(buf.byteLength, buf2.byteLength);
