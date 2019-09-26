@@ -61,7 +61,7 @@ class PreferenceRollbackAction extends BaseAction {
           "unenroll",
           "preference_rollback",
           rolloutSlug,
-          { reason: "rollback" }
+          { reason: "rollback", enrollmentId: rollout.enrollmentId }
         );
         TelemetryEnvironment.setExperimentInactive(rolloutSlug);
         break;
@@ -76,7 +76,7 @@ class PreferenceRollbackAction extends BaseAction {
           "unenrollFailed",
           "preference_rollback",
           rolloutSlug,
-          { reason: "graduated" }
+          { reason: "graduated", enrollmentId: rollout.enrollmentId }
         );
         throw new Error(
           `Cannot rollback already graduated rollout ${rolloutSlug}`

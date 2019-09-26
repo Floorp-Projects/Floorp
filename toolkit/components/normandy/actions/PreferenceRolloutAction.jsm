@@ -33,6 +33,11 @@ ChromeUtils.defineModuleGetter(
   "TelemetryEvents",
   "resource://normandy/lib/TelemetryEvents.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "NormandyUtils",
+  "resource://normandy/lib/NormandyUtils.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["PreferenceRolloutAction"];
 
@@ -76,6 +81,7 @@ class PreferenceRolloutAction extends BaseAction {
         await PreferenceRollouts.update(newRollout);
         TelemetryEvents.sendEvent("update", "preference_rollout", args.slug, {
           previousState: existingRollout.state,
+          enrollmentId: existingRollout.enrollmentId,
         });
 
         switch (existingRollout.state) {
@@ -125,6 +131,9 @@ class PreferenceRolloutAction extends BaseAction {
         );
       }
 
+      let enrollmentId = NormandyUtils.generateUuid();
+      newRollout.enrollmentId = enrollmentId;
+
       await PreferenceRollouts.add(newRollout);
 
       for (const { preferenceName, value } of args.preferences) {
@@ -134,8 +143,11 @@ class PreferenceRolloutAction extends BaseAction {
       this.log.debug(`Enrolled in preference rollout ${args.slug}`);
       TelemetryEnvironment.setExperimentActive(args.slug, newRollout.state, {
         type: "normandy-prefrollout",
+        enrollmentId,
       });
-      TelemetryEvents.sendEvent("enroll", "preference_rollout", args.slug, {});
+      TelemetryEvents.sendEvent("enroll", "preference_rollout", args.slug, {
+        enrollmentId,
+      });
     }
   }
 

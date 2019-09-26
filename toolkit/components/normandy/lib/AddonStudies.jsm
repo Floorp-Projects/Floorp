@@ -34,6 +34,10 @@
  *   Date when the study was started.
  * @property {Date} studyEndDate
  *   Date when the study was ended.
+ * @property {string} enrollmentId
+ *   A random ID generated at time of enrollment. It should be included on all
+ *   telemetry related to this study. It should not be re-used by other studies,
+ *   or any other purpose. May be null on old study.
  */
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -348,6 +352,7 @@ var AddonStudies = {
       addonVersion: study.addonVersion || AddonStudies.NO_ADDON_MARKER,
       reason,
       branch: study.branch,
+      enrollmentId: study.enrollmentId,
     });
     TelemetryEnvironment.setExperimentInactive(study.slug);
 

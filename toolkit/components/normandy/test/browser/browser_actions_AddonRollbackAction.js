@@ -6,6 +6,7 @@ ChromeUtils.import("resource://normandy/actions/AddonRollbackAction.jsm", this);
 ChromeUtils.import("resource://normandy/actions/AddonRolloutAction.jsm", this);
 ChromeUtils.import("resource://normandy/lib/AddonRollouts.jsm", this);
 ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm", this);
+ChromeUtils.import("resource://testing-common/NormandyTestUtils.jsm", this);
 
 // Test that a simple recipe unenrolls as expected
 decorate_task(
@@ -55,8 +56,9 @@ decorate_task(
     const addon = await AddonManager.getAddonByID(FIXTURE_ADDON_ID);
     is(addon, undefined, "add-on is uninstalled");
 
+    const rollouts = await AddonRollouts.getAll();
     Assert.deepEqual(
-      await AddonRollouts.getAll(),
+      rollouts,
       [
         {
           recipeId: rolloutRecipe.id,
@@ -68,9 +70,14 @@ decorate_task(
           xpiUrl: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url,
           xpiHash: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].hash,
           xpiHashAlgorithm: "sha256",
+          enrollmentId: rollouts[0].enrollmentId,
         },
       ],
       "Rollback should be stored in db"
+    );
+    ok(
+      NormandyTestUtils.isUuid(rollouts[0].enrollmentId),
+      "enrollmentId should be a UUID"
     );
 
     sendEventStub.assertEvents([
@@ -132,8 +139,9 @@ decorate_task(
     addon = await AddonManager.getAddonByID(FIXTURE_ADDON_ID);
     is(addon, undefined, "add-on is uninstalled");
 
+    const rollouts = await AddonRollouts.getAll();
     Assert.deepEqual(
-      await AddonRollouts.getAll(),
+      rollouts,
       [
         {
           recipeId: rolloutRecipe.id,
@@ -145,9 +153,14 @@ decorate_task(
           xpiUrl: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url,
           xpiHash: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].hash,
           xpiHashAlgorithm: "sha256",
+          enrollmentId: rollouts[0].enrollmentId,
         },
       ],
       "Rollback should be stored in db"
+    );
+    ok(
+      NormandyTestUtils.isUuid(rollouts[0].enrollmentId),
+      "enrollment ID should be a UUID"
     );
 
     sendEventStub.assertEvents([

@@ -16,6 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonRollouts: "resource://normandy/lib/AddonRollouts.jsm",
   NormandyAddonManager: "resource://normandy/lib/NormandyAddonManager.jsm",
   NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
+  NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
@@ -80,6 +81,9 @@ class AddonRolloutAction extends BaseAction {
     const extensionDetails = await NormandyApi.fetchExtensionDetails(
       extensionApiId
     );
+    let enrollmentId = existingRollout
+      ? existingRollout.enrollmentId
+      : undefined;
 
     // Check if the existing rollout matches the current rollout
     if (
@@ -114,6 +118,7 @@ class AddonRolloutAction extends BaseAction {
       const conflictError = createError("conflict", {
         addonId: conflictingRollout.addonId,
         conflictingSlug: conflictingRollout.slug,
+        enrollmentId: conflictingRollout.enrollmentId,
       });
       this.reportError(conflictError, "enrollFailed");
       throw conflictError;
@@ -123,7 +128,9 @@ class AddonRolloutAction extends BaseAction {
       const existingAddon = install.existingAddon;
 
       if (existingRollout && existingRollout.addonId !== install.addon.id) {
-        installDeferred.reject(createError("addon-id-changed"));
+        installDeferred.reject(
+          createError("addon-id-changed", { enrollmentId })
+        );
         return false; // cancel the upgrade, the add-on ID has changed
       }
 
@@ -131,7 +138,9 @@ class AddonRolloutAction extends BaseAction {
         existingAddon &&
         Services.vc.compare(existingAddon.version, install.addon.version) > 0
       ) {
-        installDeferred.reject(createError("upgrade-required"));
+        installDeferred.reject(
+          createError("upgrade-required", { enrollmentId })
+        );
         return false; // cancel the installation, must be an upgrade
       }
 
@@ -154,10 +163,12 @@ class AddonRolloutAction extends BaseAction {
           ...details,
         });
       } else {
+        enrollmentId = NormandyUtils.generateUuid();
         await AddonRollouts.add({
           recipeId: recipe.id,
           state: AddonRollouts.STATE_ACTIVE,
           slug,
+          enrollmentId,
           ...details,
         });
       }
@@ -200,6 +211,7 @@ class AddonRolloutAction extends BaseAction {
     TelemetryEvents.sendEvent(eventName, "addon_rollout", slug, {
       addonId: installedId,
       addonVersion: installedVersion,
+      enrollmentId,
     });
   }
 

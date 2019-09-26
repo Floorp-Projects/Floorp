@@ -145,9 +145,14 @@ decorate_task(
           addonVersion: activeUninstalledStudy.addonVersion,
           reason: "uninstalled-sideload",
           branch: AddonStudies.NO_BRANCHES_MARKER,
+          enrollmentId: events[0][5].enrollmentId,
         },
       ],
       "AddonStudies.init() should send the correct telemetry event"
+    );
+    ok(
+      NormandyTestUtils.isUuid(events[0][5].enrollmentId),
+      "enrollment ID should be a UUID"
     );
 
     const newInactiveStudy = await AddonStudies.get(inactiveStudy.recipeId);
