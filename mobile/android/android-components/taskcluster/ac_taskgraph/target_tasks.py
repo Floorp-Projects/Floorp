@@ -23,5 +23,4 @@ def target_tasks_default(full_task_graph, parameters, graph_config):
 @_target_task("snapshot")
 def target_tasks_snapshot(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for snapshot builds."""
-    # TODO
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter_for_tasks_for(t, parameters)]
+    return target_tasks_default(full_task_graph, parameters, graph_config)

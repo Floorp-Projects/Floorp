@@ -55,6 +55,11 @@ def loader(kind, path, config, params, loaded_tasks):
         ordered_groups_of_tasks = push(builder, artifacts_info)
     elif tasks_for == 'github-release':
         ordered_groups_of_tasks = release(builder, artifacts_info, is_snapshot=False, is_staging=is_staging)
+    elif tasks_for == 'cron':
+        if params['target_tasks_method'] == 'snapshot':
+            ordered_groups_of_tasks = release(builder, artifacts_info, is_snapshot=True, is_staging=is_staging)
+        else:
+            raise NotImplementedError('Unsupported target_tasks_method "{}"'.format(params['target_tasks_method']))
     else:
         raise NotImplementedError('Unsupported tasks_for "{}"'.format(tasks_for))
 
