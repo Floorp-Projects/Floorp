@@ -233,7 +233,11 @@ AboutReader.prototype = {
 
   FONT_SIZE_MIN: 1,
 
-  FONT_SIZE_MAX: 24,
+  FONT_SIZE_LEGACY_MAX: 9,
+
+  FONT_SIZE_MAX: 15,
+
+  FONT_SIZE_EXTENDED_VALUES: [32, 40, 56, 72, 96, 128],
 
   get _doc() {
     return this._docRef.get();
@@ -500,10 +504,21 @@ AboutReader.prototype = {
   },
 
   _setFontSize(newFontSize) {
-    this._fontSize = newFontSize;
-    let size = 10 + 2 * this._fontSize + "px";
+    this._fontSize = Math.min(
+      this.FONT_SIZE_MAX,
+      Math.max(this.FONT_SIZE_MIN, newFontSize)
+    );
+    let size;
+    if (this._fontSize > this.FONT_SIZE_LEGACY_MAX) {
+      // -1 because we're indexing into a 0-indexed array, so the first value
+      // over the legacy max should be 0, the next 1, etc.
+      let index = this._fontSize - this.FONT_SIZE_LEGACY_MAX - 1;
+      size = this.FONT_SIZE_EXTENDED_VALUES[index];
+    } else {
+      size = 10 + 2 * this._fontSize;
+    }
 
-    this._containerElement.style.setProperty("--font-size", size);
+    this._containerElement.style.setProperty("--font-size", size + "px");
     return AsyncPrefs.set("reader.font_size", this._fontSize);
   },
 
@@ -514,15 +529,10 @@ AboutReader.prototype = {
       "aboutReader.fontTypeSample"
     );
 
-    let currentSize = Services.prefs.getIntPref("reader.font_size");
-    currentSize = Math.max(
-      this.FONT_SIZE_MIN,
-      Math.min(this.FONT_SIZE_MAX, currentSize)
-    );
-
     let plusButton = this._doc.querySelector(".plus-button");
     let minusButton = this._doc.querySelector(".minus-button");
 
+    let currentSize = Services.prefs.getIntPref("reader.font_size");
     this._setFontSize(currentSize);
     this._updateFontSizeButtonControls();
 
@@ -570,12 +580,8 @@ AboutReader.prototype = {
   },
 
   _changeFontSize(changeAmount) {
-    let currentSize = Services.prefs.getIntPref("reader.font_size");
-    currentSize = Math.max(
-      this.FONT_SIZE_MIN,
-      Math.min(this.FONT_SIZE_MAX, currentSize + changeAmount)
-    );
-
+    let currentSize =
+      Services.prefs.getIntPref("reader.font_size") + changeAmount;
     this._setFontSize(currentSize);
     this._updateFontSizeButtonControls();
   },
