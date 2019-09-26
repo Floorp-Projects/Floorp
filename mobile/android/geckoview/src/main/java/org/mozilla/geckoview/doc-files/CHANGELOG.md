@@ -41,6 +41,8 @@ exclude: true
 - ⚠️ Added [`GeckoView.onTouchEventForResult`][71.15] and modified
   [`PanZoomController.onTouchEvent`][71.16] to return how the touch event was handled. This
   allows apps to know if an event is handled by touch event listeners in web content. The methods in `PanZoomController` now return `int` instead of `boolean`.
+- Added [`GeckoSession.purgeHistory`][71.17] allowing apps to clear a session's history.
+  ([bug 1583265]({{bugzilla}}1583265))
 
 [71.1]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onBooleanScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
 [71.2]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onLongScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
@@ -57,6 +59,7 @@ exclude: true
 [71.13]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onFirstContentfulPaint-org.mozilla.geckoview.GeckoSession-
 [71.15]: {{javadoc_uri}}/GeckoView.html#onTouchEventForResult-android.view.MotionEvent-
 [71.16]: {{javadoc_uri}}/PanZoomController.html#onTouchEvent-android.view.MotionEvent-
+[71.17]: {{javadoc_uri}}/GeckoSession.html#purgeHistory--
 
 ## v70
 - Added API for session context assignment
@@ -379,4 +382,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 68710f52723909eea09a02b94b618a527cc9dfc8
+[api-version]: c588ee34768a61847786ba32b4cefdbe60eed774

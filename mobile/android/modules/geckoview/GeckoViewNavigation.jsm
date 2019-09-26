@@ -64,6 +64,7 @@ class GeckoViewNavigation extends GeckoViewModule {
       "GeckoView:LoadUri",
       "GeckoView:Reload",
       "GeckoView:Stop",
+      "GeckoView:PurgeHistory",
     ]);
 
     this.messageManager.addMessageListener("Browser:LoadURI", this);
@@ -242,6 +243,9 @@ class GeckoViewNavigation extends GeckoViewModule {
         break;
       case "GeckoView:Stop":
         this.browser.stop();
+        break;
+      case "GeckoView:PurgeHistory":
+        this.browser.purgeSessionHistory();
         break;
     }
   }
