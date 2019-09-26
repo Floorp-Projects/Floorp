@@ -585,10 +585,8 @@ var View = {
     row.appendChild(elt);
 
     elt = document.createElement("td");
-    if (type == "system-addon") {
-      type = "addon";
-    }
-    document.l10n.setAttributes(elt, "type-" + type);
+    let typeLabelType = type == "system-addon" ? "addon" : type;
+    document.l10n.setAttributes(elt, "type-" + typeLabelType);
     row.appendChild(elt);
 
     elt = document.createElement("td");
