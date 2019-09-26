@@ -2363,13 +2363,6 @@ class nsContentUtils {
    */
   static bool IsInPointerLockContext(nsPIDOMWindowOuter* aWin);
 
-  /**
-   * Returns the time limit on handling user input before
-   * EventStateManager::IsHandlingUserInput() stops returning true.
-   * This enables us to detect long running user-generated event handlers.
-   */
-  static TimeDuration HandlingUserInputTimeout();
-
   static void GetShiftText(nsAString& text);
   static void GetControlText(nsAString& text);
   static void GetMetaText(nsAString& text);
