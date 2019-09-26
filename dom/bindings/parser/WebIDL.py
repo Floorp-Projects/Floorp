@@ -511,17 +511,15 @@ class IDLExposureMixins():
         return workerDebuggerScopes.intersection(self.exposureSet)
 
 
-class IDLExternalInterface(IDLObjectWithIdentifier, IDLExposureMixins):
+class IDLExternalInterface(IDLObjectWithIdentifier):
     def __init__(self, location, parentScope, identifier):
         assert isinstance(identifier, IDLUnresolvedIdentifier)
         assert isinstance(parentScope, IDLScope)
         self.parent = None
         IDLObjectWithIdentifier.__init__(self, location, parentScope, identifier)
-        IDLExposureMixins.__init__(self, location)
         IDLObjectWithIdentifier.resolve(self, parentScope)
 
     def finish(self, scope):
-        IDLExposureMixins.finish(self, scope)
         pass
 
     def validate(self):
@@ -2997,8 +2995,9 @@ class IDLWrapperType(IDLType):
             return True
         iface = self.inner
         if iface.isExternal():
-            # Let's say true, though ideally we'd only do this when
-            # exposureSet contains the primary global's name.
+            # Let's say true, so we don't have to implement exposure mixins on
+            # external interfaces and sprinkle [Exposed=Window] on every single
+            # external interface declaration.
             return True
         return iface.exposureSet.issuperset(exposureSet)
 
