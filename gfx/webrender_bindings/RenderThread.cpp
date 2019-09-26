@@ -281,6 +281,14 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
     return;
   }
 
+  if (IsDestroyed(aWindowId)) {
+    return;
+  }
+
+  if (mHandlingDeviceReset) {
+    return;
+  }
+
   bool render = false;
   PendingFrameInfo frame;
   bool hadSlowFrame;
@@ -306,14 +314,6 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
 
     frame = frameInfo;
     hadSlowFrame = info->mHadSlowFrame;
-  }
-
-  if (IsDestroyed(aWindowId)) {
-    return;
-  }
-
-  if (mHandlingDeviceReset) {
-    return;
   }
 
   UpdateAndRender(aWindowId, frame.mStartId, frame.mStartTime, render,
