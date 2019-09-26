@@ -173,7 +173,7 @@ add_task(async function() {
       "Check that http tab not in file content process after cross origin load."
     );
     ok(
-      E10SUtils.isWebRemoteType(httpBrowser),
+      E10SUtils.isWebRemoteType(httpBrowser.remoteType),
       "Check that tab now has web remote type."
     );
 

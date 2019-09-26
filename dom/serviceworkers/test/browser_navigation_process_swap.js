@@ -114,7 +114,7 @@ async function runTest() {
   await BrowserTestUtils.browserStopped(tab.linkedBrowser);
 
   Assert.ok(
-    E10SUtils.isWebRemoteType(tab.linkedBrowser),
+    E10SUtils.isWebRemoteType(tab.linkedBrowser.remoteType),
     `${CROSS_ORIGIN_URL} should load in a web-content process`
   );
 
