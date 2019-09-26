@@ -2007,7 +2007,7 @@ BrowserGlue.prototype = {
 
     // Begin listening for incoming push messages.
     Services.tm.idleDispatchToMainThread(() => {
-      PushService.ensureReady();
+      PushService.wrappedJSObject.ensureReady();
     });
 
     Services.tm.idleDispatchToMainThread(() => {
