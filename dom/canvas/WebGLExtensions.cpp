@@ -83,9 +83,6 @@ WebGLExtensionFBORenderMipmap::~WebGLExtensionFBORenderMipmap() = default;
 bool WebGLExtensionFBORenderMipmap::IsSupported(
     const WebGLContext* const webgl) {
   if (webgl->IsWebGL2()) return false;
-  if (!StaticPrefs::webgl_enable_draft_extensions()) {
-    return false;
-  }
 
   const auto& gl = webgl->gl;
   if (!gl->IsGLES()) return true;
