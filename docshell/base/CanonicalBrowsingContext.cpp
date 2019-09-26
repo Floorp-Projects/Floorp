@@ -132,15 +132,14 @@ void CanonicalBrowsingContext::SetCurrentWindowGlobal(
   mCurrentWindowGlobal = aGlobal;
 }
 
-void CanonicalBrowsingContext::SetEmbedderWindowGlobal(
-    WindowGlobalParent* aGlobal) {
-  MOZ_RELEASE_ASSERT(aGlobal, "null embedder");
-  if (RefPtr<BrowsingContext> parent = GetParent()) {
-    MOZ_RELEASE_ASSERT(aGlobal->BrowsingContext() == parent,
-                       "Embedder has incorrect browsing context");
+already_AddRefed<WindowGlobalParent>
+CanonicalBrowsingContext::GetEmbedderWindowGlobal() const {
+  uint64_t windowId = GetEmbedderInnerWindowId();
+  if (windowId == 0) {
+    return nullptr;
   }
 
-  mEmbedderWindowGlobal = aGlobal;
+  return WindowGlobalParent::GetByInnerWindowId(windowId);
 }
 
 JSObject* CanonicalBrowsingContext::WrapObject(
@@ -151,14 +150,12 @@ JSObject* CanonicalBrowsingContext::WrapObject(
 void CanonicalBrowsingContext::Traverse(
     nsCycleCollectionTraversalCallback& cb) {
   CanonicalBrowsingContext* tmp = this;
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindowGlobals, mCurrentWindowGlobal,
-                                    mEmbedderWindowGlobal);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindowGlobals, mCurrentWindowGlobal);
 }
 
 void CanonicalBrowsingContext::Unlink() {
   CanonicalBrowsingContext* tmp = this;
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindowGlobals, mCurrentWindowGlobal,
-                                  mEmbedderWindowGlobal);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindowGlobals, mCurrentWindowGlobal);
 }
 
 void CanonicalBrowsingContext::NotifyStartDelayedAutoplayMedia() {

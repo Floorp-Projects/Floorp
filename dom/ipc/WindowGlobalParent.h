@@ -151,8 +151,6 @@ class WindowGlobalParent final : public WindowGlobalActor,
   mozilla::ipc::IPCResult RecvDestroy();
   mozilla::ipc::IPCResult RecvRawMessage(const JSWindowActorMessageMeta& aMeta,
                                          const ClonedMessageData& aData);
-  mozilla::ipc::IPCResult RecvDidEmbedBrowsingContext(
-      dom::BrowsingContext* aContext);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

@@ -375,13 +375,16 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
     nsresult Commit(BrowsingContext* aOwner);
 
     // This method should be called before invoking `Apply` on this transaction
-    // object.
+    // object in the original process, and the parent process.
     //
     // |aSource| is the ContentParent which is performing the mutation in the
     // parent process.
-    MOZ_MUST_USE bool Validate(BrowsingContext* aOwner, ContentParent* aSource,
-                               uint64_t aEpoch);
     MOZ_MUST_USE bool Validate(BrowsingContext* aOwner, ContentParent* aSource);
+
+    // This method shold be called before invoking `Apply` on this transaction
+    // object in child processes messaged by the parent process. It clears out
+    // out-of-date sets resolving epoch conflicts.
+    MOZ_MUST_USE bool ValidateEpochs(BrowsingContext* aOwner, uint64_t aEpoch);
 
     // You probably don't want to directly call this method - instead call
     // `Commit`, which will perform the necessary synchronization.
@@ -521,6 +524,9 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   // And then, we do a pre-order walk in the tree to refresh the
   // volume of all media elements.
   void DidSetMuted();
+
+  bool MaySetEmbedderInnerWindowId(const uint64_t& aValue,
+                                   ContentParent* aSource);
 
   // Type of BrowsingContent
   const Type mType;
