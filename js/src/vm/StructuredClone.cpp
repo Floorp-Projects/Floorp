@@ -3150,9 +3150,8 @@ bool JSAutoStructuredCloneBuffer::write(
     JSContext* cx, HandleValue value,
     const JSStructuredCloneCallbacks* optionalCallbacks, void* closure) {
   HandleValue transferable = UndefinedHandleValue;
-  return write(cx, value, transferable,
-               JS::CloneDataPolicy().denySharedArrayBuffer(), optionalCallbacks,
-               closure);
+  return write(cx, value, transferable, JS::CloneDataPolicy(),
+               optionalCallbacks, closure);
 }
 
 bool JSAutoStructuredCloneBuffer::write(
