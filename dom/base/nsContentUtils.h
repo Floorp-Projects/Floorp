@@ -1152,6 +1152,11 @@ class nsContentUtils {
    */
   static nsresult GenerateUUIDInPlace(nsID& aUUID);
 
+  /**
+   * Infallable (with an assertion) helper function that generates a UUID.
+   */
+  static nsID GenerateUUID();
+
   static bool PrefetchPreloadEnabled(nsIDocShell* aDocShell);
 
   static void ExtractErrorValues(JSContext* aCx, JS::Handle<JS::Value> aValue,
@@ -3139,6 +3144,11 @@ class nsContentUtils {
    */
   static bool HighPriorityEventPendingForTopLevelDocumentBeforeContentfulPaint(
       Document* aDocument);
+
+  /**
+   * We need a JSContext to get prototypes inside CallerInnerWindow.
+   */
+  static nsGlobalWindowInner* CallerInnerWindow(JSContext* aCx);
 
  private:
   static bool InitializeEventTable();

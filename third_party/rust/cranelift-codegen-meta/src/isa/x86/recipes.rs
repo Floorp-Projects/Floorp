@@ -10,10 +10,12 @@ use crate::cdsl::regs::IsaRegs;
 use crate::cdsl::settings::SettingGroup;
 use crate::shared::Definitions as SharedDefinitions;
 
+use crate::isa::x86::opcodes;
+
 /// Helper data structure to create recipes and template recipes.
 /// It contains all the recipes and recipe templates that might be used in the encodings crate of
 /// this same directory.
-pub struct RecipeGroup<'builder> {
+pub(crate) struct RecipeGroup<'builder> {
     /// Memoized format pointer, to pass it to builders later.
     formats: &'builder FormatRegistry,
 
@@ -186,7 +188,7 @@ pub struct Template<'builder> {
     /// Value of the RRR bits (between 0 and 0b111).
     rrr_bits: u16,
     /// Opcode bytes.
-    op_bytes: Vec<u8>,
+    op_bytes: &'static [u8],
 }
 
 impl<'builder> Template<'builder> {
@@ -204,7 +206,7 @@ impl<'builder> Template<'builder> {
             rex: false,
             w_bit: 0,
             rrr_bits: 0,
-            op_bytes: Vec::new(),
+            op_bytes: &opcodes::EMPTY,
         }
     }
 
@@ -226,7 +228,7 @@ impl<'builder> Template<'builder> {
     }
 
     // Copy setters.
-    pub fn opcodes(&self, op_bytes: Vec<u8>) -> Self {
+    pub fn opcodes(&self, op_bytes: &'static [u8]) -> Self {
         assert!(!op_bytes.is_empty());
         let mut copy = self.clone();
         copy.op_bytes = op_bytes;
@@ -396,11 +398,11 @@ pub(crate) fn define<'shared>(
     let f_trap = formats.by_name("Trap");
     let f_unary = formats.by_name("Unary");
     let f_unary_bool = formats.by_name("UnaryBool");
+    let f_unary_const = formats.by_name("UnaryConst");
     let f_unary_global_value = formats.by_name("UnaryGlobalValue");
     let f_unary_ieee32 = formats.by_name("UnaryIeee32");
     let f_unary_ieee64 = formats.by_name("UnaryIeee64");
     let f_unary_imm = formats.by_name("UnaryImm");
-    let f_unary_imm128 = formats.by_name("UnaryImm128");
 
     // Predicates shorthands.
     let use_sse41 = settings.predicate_by_name("use_sse41");
@@ -2437,14 +2439,26 @@ pub(crate) fn define<'shared>(
     );
 
     recipes.add_template_recipe(
-        EncodingRecipeBuilder::new("vconst", f_unary_imm128, 5)
+        EncodingRecipeBuilder::new("vconst", f_unary_const, 5)
             .operands_out(vec![fpr])
             .clobbers_flags(false)
             .emit(
                 r#"
                     {{PUT_OP}}(bits, rex2(0, out_reg0), sink);
                     modrm_riprel(out_reg0, sink);
-                    const_disp4(imm, func, sink);
+                    const_disp4(constant_handle, func, sink);
+                "#,
+            ),
+    );
+
+    recipes.add_template_recipe(
+        EncodingRecipeBuilder::new("vconst_optimized", f_unary_const, 1)
+            .operands_out(vec![fpr])
+            .clobbers_flags(false)
+            .emit(
+                r#"
+                    {{PUT_OP}}(bits, rex2(out_reg0, out_reg0), sink);
+                    modrm_rr(out_reg0, out_reg0, sink);
                 "#,
             ),
     );
@@ -2908,22 +2922,23 @@ pub(crate) fn define<'shared>(
                     {{PUT_OP}}(bits, rex2(in_reg0, in_reg1), sink);
                     modrm_rr(in_reg0, in_reg1, sink);
                     // `setCC` instruction, no REX.
-                    use crate::ir::condcodes::IntCC::*;
-                    let setcc = match cond {
-                        Equal => 0x94,
-                        NotEqual => 0x95,
-                        SignedLessThan => 0x9c,
-                        SignedGreaterThanOrEqual => 0x9d,
-                        SignedGreaterThan => 0x9f,
-                        SignedLessThanOrEqual => 0x9e,
-                        UnsignedLessThan => 0x92,
-                        UnsignedGreaterThanOrEqual => 0x93,
-                        UnsignedGreaterThan => 0x97,
-                        UnsignedLessThanOrEqual => 0x96,
-                    };
+                    let setcc = 0x90 | icc2opc(cond);
                     sink.put1(0x0f);
-                    sink.put1(setcc);
+                    sink.put1(setcc as u8);
                     modrm_rr(out_reg0, 0, sink);
+                "#,
+            ),
+    );
+
+    recipes.add_template_recipe(
+        EncodingRecipeBuilder::new("icscc_fpr", f_int_compare, 1)
+            .operands_in(vec![fpr, fpr])
+            .operands_out(vec![0])
+            .emit(
+                r#"
+                    // Comparison instruction.
+                    {{PUT_OP}}(bits, rex2(in_reg1, in_reg0), sink);
+                    modrm_rr(in_reg1, in_reg0, sink);
                 "#,
             ),
     );
@@ -2946,21 +2961,9 @@ pub(crate) fn define<'shared>(
                         let imm: i64 = imm.into();
                         sink.put1(imm as u8);
                         // `setCC` instruction, no REX.
-                        use crate::ir::condcodes::IntCC::*;
-                        let setcc = match cond {
-                            Equal => 0x94,
-                            NotEqual => 0x95,
-                            SignedLessThan => 0x9c,
-                            SignedGreaterThanOrEqual => 0x9d,
-                            SignedGreaterThan => 0x9f,
-                            SignedLessThanOrEqual => 0x9e,
-                            UnsignedLessThan => 0x92,
-                            UnsignedGreaterThanOrEqual => 0x93,
-                            UnsignedGreaterThan => 0x97,
-                            UnsignedLessThanOrEqual => 0x96,
-                        };
+                        let setcc = 0x90 | icc2opc(cond);
                         sink.put1(0x0f);
-                        sink.put1(setcc);
+                        sink.put1(setcc as u8);
                         modrm_rr(out_reg0, 0, sink);
                     "#,
                 ),
@@ -2981,21 +2984,9 @@ pub(crate) fn define<'shared>(
                         let imm: i64 = imm.into();
                         sink.put4(imm as u32);
                         // `setCC` instruction, no REX.
-                        use crate::ir::condcodes::IntCC::*;
-                        let setcc = match cond {
-                            Equal => 0x94,
-                            NotEqual => 0x95,
-                            SignedLessThan => 0x9c,
-                            SignedGreaterThanOrEqual => 0x9d,
-                            SignedGreaterThan => 0x9f,
-                            SignedLessThanOrEqual => 0x9e,
-                            UnsignedLessThan => 0x92,
-                            UnsignedGreaterThanOrEqual => 0x93,
-                            UnsignedGreaterThan => 0x97,
-                            UnsignedLessThanOrEqual => 0x96,
-                        };
+                        let setcc = 0x90 | icc2opc(cond);
                         sink.put1(0x0f);
-                        sink.put1(setcc);
+                        sink.put1(setcc as u8);
                         modrm_rr(out_reg0, 0, sink);
                     "#,
                 ),

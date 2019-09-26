@@ -8,8 +8,21 @@ var EXPORTED_SYMBOLS = ["PictureInPicture"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+});
+
 const PLAYER_URI = "chrome://global/content/pictureinpicture/player.xhtml";
-const PLAYER_FEATURES = `chrome,titlebar=no,alwaysontop,lockaspectratio,resizable,dialog`;
+var PLAYER_FEATURES =
+  "chrome,titlebar=no,alwaysontop,lockaspectratio,resizable";
+/* Don't use dialog on Gtk as it adds extra border and titlebar to PIP window */
+if (!AppConstants.MOZ_WIDGET_GTK) {
+  PLAYER_FEATURES += ",dialog";
+}
 const WINDOW_TYPE = "Toolkit:PictureInPicture";
 const TOGGLE_ENABLED_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.enabled";

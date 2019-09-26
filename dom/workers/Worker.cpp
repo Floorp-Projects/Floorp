@@ -11,6 +11,7 @@
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/WorkerTimelineMarker.h"
 #include "nsContentUtils.h"
+#include "nsGlobalWindowOuter.h"
 #include "WorkerPrivate.h"
 
 #ifdef XP_WIN
@@ -100,7 +101,20 @@ void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
         MarkerTracingType::START);
   }
 
-  runnable->Write(aCx, aMessage, transferable, JS::CloneDataPolicy(), aRv);
+  JS::CloneDataPolicy clonePolicy;
+  if (NS_IsMainThread()) {
+    nsGlobalWindowInner* win = nsContentUtils::CallerInnerWindow(aCx);
+    if (win && win->CanShareMemory(mWorkerPrivate->AgentClusterId())) {
+      clonePolicy.allowSharedMemory();
+    }
+  } else {
+    WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+    if (worker && worker->CanShareMemory(mWorkerPrivate->AgentClusterId())) {
+      clonePolicy.allowSharedMemory();
+    }
+  }
+
+  runnable->Write(aCx, aMessage, transferable, clonePolicy, aRv);
 
   if (isTimelineRecording) {
     end = MakeUnique<WorkerTimelineMarker>(

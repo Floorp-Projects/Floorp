@@ -17,11 +17,11 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
 +#define u_int64_t uint64_t
 +#endif
 +
- /*
-  * A union which permits us to convert between a double and two 32 bit
-  * ints.
-  */
+ /* A union which permits us to convert between a long double and
+    four 32 bit ints.  */
  
  #if MOZ_BIG_ENDIAN
  
  typedef union
+ {
+   long double value;

@@ -17,6 +17,8 @@
 #include "mozilla/SystemGroup.h"
 #include "nsThreadSyncDispatch.h"
 
+#include <mutex>
+
 using namespace mozilla;
 
 static LazyLogModule sThreadPoolLog("nsThreadPool");
@@ -24,6 +26,8 @@ static LazyLogModule sThreadPoolLog("nsThreadPool");
 #  undef LOG
 #endif
 #define LOG(args) MOZ_LOG(sThreadPoolLog, mozilla::LogLevel::Debug, args)
+
+static MOZ_THREAD_LOCAL(nsThreadPool*) gCurrentThreadPool;
 
 // DESIGN:
 //  o  Allocate anonymous threads.
@@ -53,6 +57,9 @@ nsThreadPool::nsThreadPool()
       mStackSize(nsIThreadManager::DEFAULT_STACK_SIZE),
       mShutdown(false),
       mRegressiveMaxIdleTime(false) {
+  static std::once_flag flag;
+  std::call_once(flag, [] { gCurrentThreadPool.infallibleInit(); });
+
   LOG(("THRD-P(%p) constructor!!!\n", this));
 }
 
@@ -177,6 +184,9 @@ nsThreadPool::Run() {
     listener->OnThreadCreated();
   }
 
+  MOZ_ASSERT(!gCurrentThreadPool.get());
+  gCurrentThreadPool.set(this);
+
   do {
     nsCOMPtr<nsIRunnable> event;
     {
@@ -251,6 +261,9 @@ nsThreadPool::Run() {
     listener->OnThreadShuttingDown();
   }
 
+  MOZ_ASSERT(gCurrentThreadPool.get() == this);
+  gCurrentThreadPool.set(nullptr);
+
   if (shutdownThreadOnExit) {
     ShutdownThread(current);
   }
@@ -301,15 +314,7 @@ nsThreadPool::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) {
 
 NS_IMETHODIMP_(bool)
 nsThreadPool::IsOnCurrentThreadInfallible() {
-  MutexAutoLock lock(mMutex);
-
-  nsIThread* thread = NS_GetCurrentThread();
-  for (uint32_t i = 0; i < static_cast<uint32_t>(mThreads.Count()); ++i) {
-    if (mThreads[i] == thread) {
-      return true;
-    }
-  }
-  return false;
+  return gCurrentThreadPool.get() == this;
 }
 
 NS_IMETHODIMP
@@ -319,14 +324,7 @@ nsThreadPool::IsOnCurrentThread(bool* aResult) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsIThread* thread = NS_GetCurrentThread();
-  for (uint32_t i = 0; i < static_cast<uint32_t>(mThreads.Count()); ++i) {
-    if (mThreads[i] == thread) {
-      *aResult = true;
-      return NS_OK;
-    }
-  }
-  *aResult = false;
+  *aResult = IsOnCurrentThreadInfallible();
   return NS_OK;
 }
 

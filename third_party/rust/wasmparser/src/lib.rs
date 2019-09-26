@@ -83,6 +83,7 @@ pub use crate::operators_validator::OperatorValidatorConfig;
 pub use crate::operators_validator::WasmModuleResources;
 
 pub use crate::readers::CodeSectionReader;
+pub use crate::readers::CustomSectionContent;
 pub use crate::readers::Data;
 pub use crate::readers::DataKind;
 pub use crate::readers::DataSectionReader;
@@ -114,6 +115,7 @@ pub use crate::readers::ProducersSectionReader;
 pub use crate::readers::Reloc;
 pub use crate::readers::RelocSectionReader;
 pub use crate::readers::Section;
+pub use crate::readers::SectionContent;
 pub use crate::readers::SectionIterator;
 pub use crate::readers::SectionIteratorLimited;
 pub use crate::readers::SectionReader;

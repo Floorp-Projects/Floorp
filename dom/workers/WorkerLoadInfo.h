@@ -113,6 +113,8 @@ struct WorkerLoadInfoData {
 
   Maybe<ServiceWorkerDescriptor> mParentController;
 
+  nsID mAgentClusterId;
+
   ChannelInfo mChannelInfo;
   nsLoadFlags mLoadFlags;
 

@@ -392,8 +392,9 @@ var SitePermissions = {
   isSupportedPrincipal(principal) {
     return (
       principal &&
-      principal.URI &&
-      ["http", "https", "moz-extension"].includes(principal.URI.scheme)
+      ["http", "https", "moz-extension"].some(scheme =>
+        principal.schemeIs(scheme)
+      )
     );
   },
 

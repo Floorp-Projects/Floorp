@@ -1448,21 +1448,14 @@ bool Document::CallerIsTrustedAboutCertError(JSContext* aCx,
   if (NS_WARN_IF(!principal)) {
     return false;
   }
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_OK;
-  rv = principal->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, false);
-
-  if (!uri) {
-    return false;
-  }
-
   // getSpec is an expensive operation, hence we first check the scheme
   // to see if the caller is actually an about: page.
-  if (!uri->SchemeIs("about")) {
+  if (!principal->SchemeIs("about")) {
     return false;
   }
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = principal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, false);
 
   nsAutoCString aboutSpec;
   rv = uri->GetSpec(aboutSpec);
@@ -1723,9 +1716,7 @@ void Document::GetFailedCertSecurityInfo(
 
 bool Document::IsAboutPage() const {
   nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
-  nsCOMPtr<nsIURI> uri;
-  principal->GetURI(getter_AddRefs(uri));
-  return !uri || uri->SchemeIs("about");
+  return principal->SchemeIs("about");
 }
 
 void Document::ConstructUbiNode(void* storage) {
@@ -3593,9 +3584,7 @@ void Document::SetPrincipals(nsIPrincipal* aNewPrincipal,
   MOZ_ASSERT(!!aNewPrincipal == !!aNewStoragePrincipal);
   if (aNewPrincipal && mAllowDNSPrefetch &&
       StaticPrefs::network_dns_disablePrefetchFromHTTPS()) {
-    nsCOMPtr<nsIURI> uri;
-    aNewPrincipal->GetURI(getter_AddRefs(uri));
-    if (!uri || uri->SchemeIs("https")) {
+    if (aNewPrincipal->SchemeIs("https")) {
       mAllowDNSPrefetch = false;
     }
   }
@@ -10801,10 +10790,8 @@ nsIContent* Document::GetContentInThisDocument(nsIFrame* aFrame) const {
 }
 
 void Document::DispatchPageTransition(EventTarget* aDispatchTarget,
-                                      const nsAString& aType,
-                                      bool aInFrameSwap,
-                                      bool aPersisted,
-                                      bool aOnlySystemGroup) {
+                                      const nsAString& aType, bool aInFrameSwap,
+                                      bool aPersisted, bool aOnlySystemGroup) {
   if (!aDispatchTarget) {
     return;
   }
@@ -14461,9 +14448,7 @@ void Document::PropagateUseCounters(Document* aParentDocument) {
   MOZ_ASSERT(this != aParentDocument);
 
   // Don't count chrome resources, even in the web content.
-  nsCOMPtr<nsIURI> uri;
-  NodePrincipal()->GetURI(getter_AddRefs(uri));
-  if (!uri || uri->SchemeIs("chrome")) {
+  if (NodePrincipal()->SchemeIs("chrome")) {
     return;
   }
 
@@ -15343,13 +15328,7 @@ FlashClassification Document::DocumentFlashClassification() {
     return FlashClassification::Unknown;
   }
 
-  if (NodePrincipal()->GetIsNullPrincipal()) {
-    return FlashClassification::Denied;
-  }
-
-  nsCOMPtr<nsIURI> classificationURI;
-  nsresult rv = NodePrincipal()->GetURI(getter_AddRefs(classificationURI));
-  if (NS_FAILED(rv) || !classificationURI) {
+  if (!NodePrincipal()->GetIsContentPrincipal()) {
     return FlashClassification::Denied;
   }
 
@@ -15359,10 +15338,9 @@ FlashClassification Document::DocumentFlashClassification() {
     // * chrome documents
     // * "bare" data: loads
     // * FTP/gopher/file
-    nsAutoCString scheme;
-    rv = classificationURI->GetScheme(scheme);
-    if (NS_WARN_IF(NS_FAILED(rv)) ||
-        !(scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https"))) {
+
+    if (!(NodePrincipal()->SchemeIs("http") ||
+          NodePrincipal()->SchemeIs("https"))) {
       return FlashClassification::Denied;
     }
   }

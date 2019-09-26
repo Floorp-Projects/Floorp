@@ -891,12 +891,21 @@ class WorkerPrivate : public RelativeTimeline {
 
   const nsAString& Id();
 
+  const nsID& AgentClusterId() const { return mAgentClusterId; }
+
+  bool CanShareMemory(const nsID& aAgentClusterId);
+
+  nsILoadInfo::CrossOriginOpenerPolicy AgentClusterOpenerPolicy() {
+    return mAgentClusterOpenerPolicy;
+  }
+
  private:
-  WorkerPrivate(WorkerPrivate* aParent, const nsAString& aScriptURL,
-                bool aIsChromeWorker, WorkerType aWorkerType,
-                const nsAString& aWorkerName,
-                const nsACString& aServiceWorkerScope,
-                WorkerLoadInfo& aLoadInfo, nsString&& aId);
+  WorkerPrivate(
+      WorkerPrivate* aParent, const nsAString& aScriptURL, bool aIsChromeWorker,
+      WorkerType aWorkerType, const nsAString& aWorkerName,
+      const nsACString& aServiceWorkerScope, WorkerLoadInfo& aLoadInfo,
+      nsString&& aId, const nsID& aAgentClusterId,
+      const nsILoadInfo::CrossOriginOpenerPolicy aAgentClusterOpenerPolicy);
 
   ~WorkerPrivate();
 
@@ -1101,6 +1110,10 @@ class WorkerPrivate : public RelativeTimeline {
   TimeStamp mCreationTimeStamp;
   DOMHighResTimeStamp mCreationTimeHighRes;
 
+  // This is created while creating the WorkerPrivate, so it's safe to be
+  // touched on any thread.
+  const nsID mAgentClusterId;
+
   // Things touched on worker thread only.
   struct WorkerThreadAccessible {
     explicit WorkerThreadAccessible(WorkerPrivate* aParent);
@@ -1200,6 +1213,10 @@ class WorkerPrivate : public RelativeTimeline {
   RefPtr<mozilla::PerformanceCounter> mPerformanceCounter;
 
   nsString mId;
+
+  // This is used to check if it's allowed to share the memory across the agent
+  // cluster.
+  const nsILoadInfo::CrossOriginOpenerPolicy mAgentClusterOpenerPolicy;
 };
 
 class AutoSyncLoopHolder {

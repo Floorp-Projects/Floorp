@@ -28,8 +28,8 @@ loader.lazyRequireGetter(
 // * being able to hookup into Firefox UI (see Hosts and event listeners of
 //   this class)
 class LocalTabTargetFront extends BrowsingContextTargetFront {
-  constructor(client, tab) {
-    super(client);
+  constructor(client, targetFront, parentFront, tab) {
+    super(client, targetFront, parentFront);
 
     this._teardownTabListeners = this._teardownTabListeners.bind(this);
     this._handleTabEvent = this._handleTabEvent.bind(this);

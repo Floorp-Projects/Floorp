@@ -397,11 +397,10 @@ static bool PrincipalImmuneToScriptPolicy(nsIPrincipal* aPrincipal) {
 
   // Check whether our URI is an "about:" URI that allows scripts.  If it is,
   // we need to allow JS to run.
-  nsCOMPtr<nsIURI> principalURI;
-  aPrincipal->GetURI(getter_AddRefs(principalURI));
-  MOZ_ASSERT(principalURI);
-
-  if (principalURI->SchemeIs("about")) {
+  if (aPrincipal->SchemeIs("about")) {
+    nsCOMPtr<nsIURI> principalURI;
+    aPrincipal->GetURI(getter_AddRefs(principalURI));
+    MOZ_ASSERT(principalURI);
     nsCOMPtr<nsIAboutModule> module;
     nsresult rv = NS_GetAboutModule(principalURI, getter_AddRefs(module));
     if (NS_SUCCEEDED(rv)) {

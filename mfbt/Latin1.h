@@ -25,6 +25,12 @@ namespace mozilla {
 
 namespace detail {
 
+// It's important for optimizations that Latin1ness checks
+// and inflation/deflation function use the same short
+// string limit. The limit is 16, because that's the shortest
+// that inflates/deflates using SIMD.
+constexpr size_t kShortStringLimitForInlinePaths = 16;
+
 template <typename Char>
 class MakeUnsignedChar : public MakeUnsigned<Char> {};
 
@@ -62,7 +68,21 @@ constexpr bool IsNonAsciiLatin1(Char aChar) {
  * @param aString a potentially-invalid UTF-16 string to scan
  */
 inline bool IsUtf16Latin1(mozilla::Span<const char16_t> aString) {
-  return encoding_mem_is_utf16_latin1(aString.Elements(), aString.Length());
+  size_t length = aString.Length();
+  const char16_t* ptr = aString.Elements();
+  // For short strings, calling into Rust is a pessimization, and the SIMD
+  // code won't have a chance to kick in anyway.
+  // 16 is a bit larger than logically necessary for this function alone,
+  // but it's important that the limit here matches the limit used in
+  // LossyConvertUtf16toLatin1!
+  if (length < mozilla::detail::kShortStringLimitForInlinePaths) {
+    char16_t accu = 0;
+    for (size_t i = 0; i < length; i++) {
+      accu |= ptr[i];
+    }
+    return accu < 0x100;
+  }
+  return encoding_mem_is_utf16_latin1(ptr, length);
 }
 
 /**
@@ -125,8 +145,26 @@ inline size_t UnsafeValidUtf8Lati1UpTo(mozilla::Span<const char> aString) {
  */
 inline void LossyConvertUtf16toLatin1(mozilla::Span<const char16_t> aSource,
                                       mozilla::Span<char> aDest) {
-  encoding_mem_convert_utf16_to_latin1_lossy(
-      aSource.Elements(), aSource.Length(), aDest.Elements(), aDest.Length());
+  const char16_t* srcPtr = aSource.Elements();
+  size_t srcLen = aSource.Length();
+  char* dstPtr = aDest.Elements();
+  size_t dstLen = aDest.Length();
+  // Avoid function call overhead when SIMD isn't used anyway
+  // If you change the length limit here, be sure to change
+  // IsUtf16Latin1 and IsAscii to match so that optimizations don't
+  // fail!
+  if (srcLen < mozilla::detail::kShortStringLimitForInlinePaths) {
+    MOZ_ASSERT(dstLen >= srcLen);
+    uint8_t* unsignedPtr = reinterpret_cast<uint8_t*>(dstPtr);
+    const char16_t* end = srcPtr + srcLen;
+    while (srcPtr < end) {
+      *unsignedPtr = static_cast<uint8_t>(*srcPtr);
+      ++srcPtr;
+      ++unsignedPtr;
+    }
+    return;
+  }
+  encoding_mem_convert_utf16_to_latin1_lossy(srcPtr, srcLen, dstPtr, dstLen);
 }
 
 /**
@@ -195,8 +233,23 @@ inline mozilla::Tuple<size_t, size_t> ConvertLatin1toUtf8Partial(
  */
 inline void ConvertLatin1toUtf16(mozilla::Span<const char> aSource,
                                  mozilla::Span<char16_t> aDest) {
-  encoding_mem_convert_latin1_to_utf16(aSource.Elements(), aSource.Length(),
-                                       aDest.Elements(), aDest.Length());
+  const char* srcPtr = aSource.Elements();
+  size_t srcLen = aSource.Length();
+  char16_t* dstPtr = aDest.Elements();
+  size_t dstLen = aDest.Length();
+  // Avoid function call overhead when SIMD isn't used anyway
+  if (srcLen < mozilla::detail::kShortStringLimitForInlinePaths) {
+    MOZ_ASSERT(dstLen >= srcLen);
+    const uint8_t* unsignedPtr = reinterpret_cast<const uint8_t*>(srcPtr);
+    const uint8_t* end = unsignedPtr + srcLen;
+    while (unsignedPtr < end) {
+      *dstPtr = *unsignedPtr;
+      ++unsignedPtr;
+      ++dstPtr;
+    }
+    return;
+  }
+  encoding_mem_convert_latin1_to_utf16(srcPtr, srcLen, dstPtr, dstLen);
 }
 
 #endif

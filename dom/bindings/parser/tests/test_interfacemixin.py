@@ -338,6 +338,44 @@ def WebIDLTest(parser, harness):
                "Should fail if an interface mixin includes maplike")
 
     parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface Interface {
+                attribute short attr;
+            };
+            interface mixin Mixin {
+                attribute short attr;
+            };
+            Interface includes Mixin;
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+    harness.ok(threw,
+               "Should fail if the included mixin interface has duplicated member")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface Interface {};
+            interface mixin Mixin1 {
+                attribute short attr;
+            };
+            interface mixin Mixin2 {
+                attribute short attr;
+            };
+            Interface includes Mixin1;
+            Interface includes Mixin2;
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+    harness.ok(threw,
+               "Should fail if the included mixin interfaces have duplicated member")
+
+    parser = parser.reset()
     parser.parse("""
         [Global] interface Window {};
         [Global] interface Worker {};

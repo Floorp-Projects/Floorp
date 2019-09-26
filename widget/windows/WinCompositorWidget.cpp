@@ -338,33 +338,12 @@ void WinCompositorWidget::UpdateCompositorWndSizeIfNecessary() {
   mLastCompositorWndSize = size;
 }
 
-// TODO: Bug 1570128 - Forward request to swapchain
-// For now, this simply validates that data can be passed to Firefox Reality
-// host from the GPU process
+// Creates a new instance of FxROutputHandler so that this compositor widget
+// can send its output to Firefox Reality for Desktop.
 void WinCompositorWidget::RequestFxrOutput() {
-  mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
-  if (shmem.JoinShMem()) {
-    mozilla::gfx::VRWindowState windowState = {0};
-    shmem.PullWindowState(windowState);
+  MOZ_ASSERT(mFxrHandler == nullptr);
 
-    // The CLH should have populated hwndFx first
-    MOZ_ASSERT(windowState.hwndFx != 0);
-    MOZ_ASSERT(windowState.textureFx == nullptr);
-
-    windowState.textureFx = (HANDLE)0xFFFFFFFF;
-
-    shmem.PushWindowState(windowState);
-    shmem.LeaveShMem();
-
-    // Notify the waiting host process that the data is now available
-    HANDLE hSignal = ::OpenEventA(EVENT_ALL_ACCESS,       // dwDesiredAccess
-                                  FALSE,                  // bInheritHandle
-                                  windowState.signalName  // lpName
-    );
-
-    ::SetEvent(hSignal);
-    ::CloseHandle(hSignal);
-  }
+  mFxrHandler.reset(new FxROutputHandler());
 }
 
 }  // namespace widget

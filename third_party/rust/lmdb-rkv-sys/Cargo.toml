@@ -12,23 +12,30 @@
 
 [package]
 name = "lmdb-rkv-sys"
-version = "0.8.4"
-authors = ["Dan Burkert <dan@danburkert.com>"]
+version = "0.9.3"
+authors = ["Dan Burkert <dan@danburkert.com>", "Victor Porof <vporof@mozilla.com>"]
 build = "build.rs"
 description = "Rust bindings for liblmdb."
+homepage = "https://github.com/mozilla/lmdb-rs"
 documentation = "https://docs.rs/lmdb-rkv-sys"
 readme = "../README.md"
 keywords = ["LMDB", "database", "storage-engine", "bindings", "library"]
 categories = ["database", "external-ffi-bindings"]
 license = "Apache-2.0"
 repository = "https://github.com/mozilla/lmdb-rs.git"
+
+[lib]
+name = "lmdb_sys"
 [dependencies.libc]
 version = "0.2"
+[build-dependencies.bindgen]
+version = "0.51"
+
 [build-dependencies.cc]
-version = "1"
+version = "1.0"
 
 [build-dependencies.pkg-config]
-version = "0.3.2"
+version = "0.3"
 
 [features]
 default = []
@@ -40,3 +47,11 @@ mdb_idl_logn_14 = []
 mdb_idl_logn_15 = []
 mdb_idl_logn_8 = []
 mdb_idl_logn_9 = []
+with-asan = []
+with-fuzzer = []
+with-fuzzer-no-link = []
+[badges.appveyor]
+repository = "mozilla/lmdb-rs"
+
+[badges.travis-ci]
+repository = "mozilla/lmdb-rs"

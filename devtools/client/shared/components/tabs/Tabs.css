@@ -17,9 +17,10 @@ div[hidetabs=true] .tabs .tabs-navigation {
 }
 
 .tabs .tabs-navigation {
+  box-sizing: border-box;
   display: flex;
-  line-height: 15px;
-  height: 24px;
+  /* Reserve 1px for the border */
+  height: calc(var(--theme-toolbar-height) + 1px);
   position: relative;
   border-bottom: 1px solid var(--theme-splitter-color);
   background: var(--theme-tab-toolbar-background);
@@ -67,6 +68,7 @@ div[hidetabs=true] .tabs .tabs-navigation {
   padding: 3px 10px;
   border: 1px solid transparent;
   font-size: 12px;
+  line-height: 16px;
   text-decoration: none;
   white-space: nowrap;
   cursor: default;
