@@ -26,7 +26,7 @@ const reasons = {
   // V8
   DOM: "whyPaused.breakpoint",
   EventListener: "whyPaused.pauseOnDOMEvents",
-  XHR: "whyPaused.xhr",
+  XHR: "whyPaused.XHR",
   promiseRejection: "whyPaused.promiseRejection",
   assert: "whyPaused.assert",
   debugCommand: "whyPaused.debugCommand",
