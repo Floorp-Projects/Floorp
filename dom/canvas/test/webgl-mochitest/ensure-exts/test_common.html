@@ -23,6 +23,7 @@ var defaultExts = [
     ['EXT_shader_texture_lod'        , [MACHINE_SPECIFIC, FORBID          ]],
     ['EXT_texture_filter_anisotropic', [MACHINE_SPECIFIC, MACHINE_SPECIFIC]],
     ['OES_element_index_uint'        , [ENSURE          , FORBID          ]],
+    ['OES_fbo_render_mipmap'         , [MACHINE_SPECIFIC, FORBID          ]],
     ['OES_standard_derivatives'      , [MACHINE_SPECIFIC, FORBID          ]],
     ['OES_texture_float'             , [ENSURE          , FORBID          ]],
     ['OES_texture_float_linear'      , [ENSURE          , ENSURE          ]],
@@ -55,7 +56,6 @@ var defaultExts = [
 ];
 
 var draftExts = [
-    ['OES_fbo_render_mipmap' , [MACHINE_SPECIFIC, FORBID          ]],
     ['WEBGL_explicit_present', [ENSURE          , ENSURE          ]],
 ];
 
