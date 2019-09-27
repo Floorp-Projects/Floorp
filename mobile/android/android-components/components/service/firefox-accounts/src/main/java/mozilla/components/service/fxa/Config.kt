@@ -52,11 +52,27 @@ data class SyncConfig(
  * internally (by persisting their enabled/disabled status).
 */
 sealed class SyncEngine(val nativeName: String) {
-    // When adding new types, make sure to think through implications for the SyncManager.
+    // NB: When adding new types, make sure to think through implications for the SyncManager.
     // See https://github.com/mozilla-mobile/android-components/issues/4557
+
+    /**
+     * A history engine.
+     */
     object History : SyncEngine("history")
+
+    /**
+     * A bookmarks engine.
+     */
     object Bookmarks : SyncEngine("bookmarks")
+
+    /**
+     * A 'logins/passwords' engine.
+     */
     object Passwords : SyncEngine("passwords")
+
+    /**
+     * An engine that's none of the above, described by [name].
+     */
     data class Other(val name: String) : SyncEngine(name)
 
     /**

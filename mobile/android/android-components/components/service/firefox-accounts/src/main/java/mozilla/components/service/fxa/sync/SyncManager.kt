@@ -90,7 +90,7 @@ object GlobalSyncableStoreProvider {
 /**
  * Internal interface to enable testing SyncManager implementations independently from SyncDispatcher.
  */
-interface SyncDispatcher : Closeable, Observable<SyncStatusObserver> {
+internal interface SyncDispatcher : Closeable, Observable<SyncStatusObserver> {
     fun isSyncActive(): Boolean
     fun syncNow(reason: SyncReason, debounce: Boolean = false)
     fun startPeriodicSync(unit: TimeUnit, period: Long)

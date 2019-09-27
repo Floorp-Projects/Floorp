@@ -87,7 +87,7 @@ internal class WorkManagerSyncManager(syncConfig: SyncConfig) : SyncManager(sync
  * We will have different dispatcher instances throughout the lifetime of the app, but always a
  * single LiveData instance.
  */
-object WorkersLiveDataObserver {
+internal object WorkersLiveDataObserver {
     private val workersLiveData = WorkManager.getInstance().getWorkInfosByTagLiveData(
         SyncWorkerTag.Common.name
     )
@@ -464,7 +464,7 @@ fun getLastSynced(context: Context): Long {
         .getLong(SYNC_LAST_SYNCED_KEY, 0)
 }
 
-fun setLastSynced(context: Context, ts: Long) {
+internal fun setLastSynced(context: Context, ts: Long) {
     context
         .getSharedPreferences(SYNC_STATE_PREFS_KEY, Context.MODE_PRIVATE)
         .edit()
@@ -472,13 +472,13 @@ fun setLastSynced(context: Context, ts: Long) {
         .apply()
 }
 
-fun getSyncState(context: Context): String? {
+internal fun getSyncState(context: Context): String? {
     return context
         .getSharedPreferences(SYNC_STATE_PREFS_KEY, Context.MODE_PRIVATE)
         .getString(SYNC_STATE_KEY, null)
 }
 
-fun setSyncState(context: Context, state: String) {
+internal fun setSyncState(context: Context, state: String) {
     context
         .getSharedPreferences(SYNC_STATE_PREFS_KEY, Context.MODE_PRIVATE)
         .edit()

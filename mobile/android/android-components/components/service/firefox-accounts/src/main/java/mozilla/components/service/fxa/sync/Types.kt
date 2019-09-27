@@ -8,6 +8,13 @@ import mozilla.appservices.syncmanager.SyncAuthInfo
 import mozilla.components.service.fxa.SyncEngine
 
 /**
+ * Converts from a list of raw strings describing engines to a set of [SyncEngine] objects.
+ */
+fun List<String>.toSyncEngines(): Set<SyncEngine> {
+    return this.map { it.toSyncEngine() }.toSet()
+}
+
+/**
  * Conversion from our SyncAuthInfo into its "native" version used at the interface boundary.
  */
 internal fun mozilla.components.concept.sync.SyncAuthInfo.toNative(): SyncAuthInfo {
@@ -19,7 +26,7 @@ internal fun mozilla.components.concept.sync.SyncAuthInfo.toNative(): SyncAuthIn
     )
 }
 
-fun String.toSyncEngine(): SyncEngine {
+internal fun String.toSyncEngine(): SyncEngine {
     return when (this) {
         "history" -> SyncEngine.History
         "bookmarks" -> SyncEngine.Bookmarks
@@ -29,11 +36,7 @@ fun String.toSyncEngine(): SyncEngine {
     }
 }
 
-fun List<String>.toSyncEngines(): Set<SyncEngine> {
-    return this.map { it.toSyncEngine() }.toSet()
-}
-
-fun SyncReason.toRustSyncReason(): mozilla.appservices.syncmanager.SyncReason {
+internal fun SyncReason.toRustSyncReason(): mozilla.appservices.syncmanager.SyncReason {
     return when (this) {
         SyncReason.Startup -> mozilla.appservices.syncmanager.SyncReason.STARTUP
         SyncReason.User -> mozilla.appservices.syncmanager.SyncReason.USER
@@ -43,7 +46,7 @@ fun SyncReason.toRustSyncReason(): mozilla.appservices.syncmanager.SyncReason {
     }
 }
 
-fun SyncReason.asString(): String {
+internal fun SyncReason.asString(): String {
     return when (this) {
         SyncReason.FirstSync -> "first_sync"
         SyncReason.Scheduled -> "scheduled"
@@ -53,7 +56,7 @@ fun SyncReason.asString(): String {
     }
 }
 
-fun String.toSyncReason(): SyncReason {
+internal fun String.toSyncReason(): SyncReason {
     return when (this) {
         "startup" -> SyncReason.Startup
         "user" -> SyncReason.User

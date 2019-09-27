@@ -19,6 +19,9 @@ const val MAX_FAILURE_REASON_LENGTH = 100
  * Contains functionality necessary to process instances of [SyncTelemetryPing].
  */
 object SyncTelemetry {
+    /**
+     * Processes a history-related ping information from the [ping].
+     */
     @Suppress("ComplexMethod", "NestedBlockDepth")
     fun processHistoryPing(ping: SyncTelemetryPing, sendPing: () -> Unit = { Pings.historySync.send() }) {
         ping.syncs.forEach eachSync@{ sync ->
@@ -66,12 +69,15 @@ object SyncTelemetry {
         }
     }
 
-    // This function is almost identical to `recordHistoryPing`, with additional
-    // reporting for validation problems. Unfortunately, since the
-    // `BookmarksSync` and `HistorySync` metrics are two separate objects, we
-    // can't factor this out into a generic function.
+    /**
+     * Processes a bookmarks-related ping information from the [ping].
+     */
     @Suppress("ComplexMethod", "NestedBlockDepth")
     fun processBookmarksPing(ping: SyncTelemetryPing, sendPing: () -> Unit = { Pings.bookmarksSync.send() }) {
+        // This function is almost identical to `recordHistoryPing`, with additional
+        // reporting for validation problems. Unfortunately, since the
+        // `BookmarksSync` and `HistorySync` metrics are two separate objects, we
+        // can't factor this out into a generic function.
         ping.syncs.forEach eachSync@{ sync ->
             sync.failureReason?.let {
                 // If the entire sync fails, don't try to unpack the ping; just

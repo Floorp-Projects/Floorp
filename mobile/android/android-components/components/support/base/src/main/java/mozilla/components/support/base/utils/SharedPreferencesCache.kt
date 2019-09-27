@@ -14,10 +14,29 @@ import org.json.JSONObject
  * An abstract wrapper around [SharedPreferences] which facilitates caching of [T] objects.
  */
 abstract class SharedPreferencesCache<T>(val context: Context) {
+    /**
+     * Logger used to report issues.
+     */
     abstract val logger: Logger
+
+    /**
+     * Name of the 'key' under which serialized data is stored within the cache.
+     */
     abstract val cacheKey: String
+
+    /**
+     * Name of the cache.
+     */
     abstract val cacheName: String
+
+    /**
+     * A conversion method from [T] into a [JSONObject].
+     */
     abstract fun T.toJSON(): JSONObject
+
+    /**
+     * A conversion method from [JSONObject] to [T].
+     */
     abstract fun fromJSON(obj: JSONObject): T
 
     /**

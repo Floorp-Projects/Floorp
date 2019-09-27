@@ -186,7 +186,7 @@ class FxaAccountManagerTest {
         assertNull(FxaAccountManager.nextState(state, Event.SignedInShareableAccount))
     }
 
-    class TestSyncDispatcher(registry: ObserverRegistry<SyncStatusObserver>) : SyncDispatcher, Observable<SyncStatusObserver> by registry {
+    internal class TestSyncDispatcher(registry: ObserverRegistry<SyncStatusObserver>) : SyncDispatcher, Observable<SyncStatusObserver> by registry {
         val inner: SyncDispatcher = mock()
         override fun isSyncActive(): Boolean {
             return inner.isSyncActive()
@@ -213,7 +213,7 @@ class FxaAccountManagerTest {
         }
     }
 
-    class TestSyncManager(config: SyncConfig) : SyncManager(config) {
+    internal class TestSyncManager(config: SyncConfig) : SyncManager(config) {
         val dispatcherRegistry = ObserverRegistry<SyncStatusObserver>()
         val dispatcher: TestSyncDispatcher = TestSyncDispatcher(dispatcherRegistry)
 

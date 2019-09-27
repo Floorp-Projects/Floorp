@@ -99,7 +99,7 @@ fun Profile.into(): mozilla.components.concept.sync.Profile {
     )
 }
 
-fun Device.Type.into(): DeviceType {
+internal fun Device.Type.into(): DeviceType {
     return when (this) {
         Device.Type.DESKTOP -> DeviceType.DESKTOP
         Device.Type.MOBILE -> DeviceType.MOBILE
