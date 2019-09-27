@@ -116,6 +116,13 @@
   transition-timing-function: var(--animation-easing-function);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  #urlbar[breakout][breakout-extend-animate],
+  #urlbar[breakout][breakout-extend-animate] > #urlbar-input-container {
+    transition-duration: 0s;
+  }
+}
+
 #urlbar[breakout][breakout-extend] {
   /* The z-index needs to be big enough to trump other positioned UI pieces
      that we want to overlay. 3 is used in the tab bar. */
