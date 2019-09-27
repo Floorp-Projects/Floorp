@@ -404,7 +404,6 @@ dependencies {
     implementation Deps.mozilla_lib_crash
     implementation Deps.mozilla_lib_push_firebase
     debugImplementation Deps.leakcanary
-    releaseImplementation Deps.leakcanary_noop
 
     implementation Deps.androidx_legacy
     implementation Deps.androidx_paging

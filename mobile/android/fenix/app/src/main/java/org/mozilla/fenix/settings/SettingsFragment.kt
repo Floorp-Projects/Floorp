@@ -26,7 +26,6 @@ import mozilla.components.concept.sync.Profile
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
-import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.R.string.pref_key_about
@@ -54,6 +53,7 @@ import org.mozilla.fenix.R.string.pref_key_tracking_protection_settings
 import org.mozilla.fenix.R.string.pref_key_your_rights
 import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.metrics
@@ -85,15 +85,24 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         super.onCreate(savedInstanceState)
 
         // Observe account changes to keep the UI up-to-date.
-        requireComponents.backgroundServices.accountManager.register(this, owner = this, autoPause = true)
+        requireComponents.backgroundServices.accountManager.register(
+            this,
+            owner = this,
+            autoPause = true
+        )
 
         // It's important to update the account UI state in onCreate, even though we also call it in onResume, since
         // that ensures we'll never display an incorrect state in the UI. For example, if user is signed-in, and we
         // don't perform this call in onCreate, we'll briefly display a "Sign In" preference, which will then get
         // replaced by the correct account information once this call is ran in onResume shortly after.
-        updateAccountUIState(context!!, requireComponents.backgroundServices.accountManager.accountProfile())
+        updateAccountUIState(
+            context!!,
+            requireComponents.backgroundServices.accountManager.accountProfile()
+        )
 
-        preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(preferenceChangeListener)
+        preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(
+            preferenceChangeListener
+        )
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -139,12 +148,16 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         }
 
         findPreference<Preference>(getPreferenceKey(pref_key_add_private_browsing_shortcut))?.apply {
-            isVisible = !PrivateShortcutCreateManager.doesPrivateBrowsingPinnedShortcutExist(context)
+            isVisible =
+                !PrivateShortcutCreateManager.doesPrivateBrowsingPinnedShortcutExist(context)
         }
 
         setupPreferences()
 
-        updateAccountUIState(context!!, requireComponents.backgroundServices.accountManager.accountProfile())
+        updateAccountUIState(
+            context!!,
+            requireComponents.backgroundServices.accountManager.accountProfile()
+        )
 
         updatePreferenceVisibilityForFeatureFlags()
     }
@@ -187,7 +200,10 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
             }
             resources.getString(pref_key_help) -> {
                 (activity as HomeActivity).openToBrowserAndLoad(
-                    searchTermOrURL = SupportUtils.getSumoURLForTopic(context!!, SupportUtils.SumoTopic.HELP),
+                    searchTermOrURL = SupportUtils.getSumoURLForTopic(
+                        context!!,
+                        SupportUtils.SumoTopic.HELP
+                    ),
                     newTab = true,
                     from = BrowserDirection.FromSettings
                 )
@@ -228,7 +244,10 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
             }
             resources.getString(pref_key_privacy_link) -> {
                 requireContext().let { context ->
-                    val intent = SupportUtils.createCustomTabIntent(context, SupportUtils.getPrivacyNoticeUrl())
+                    val intent = SupportUtils.createCustomTabIntent(
+                        context,
+                        SupportUtils.getPrivacyNoticeUrl()
+                    )
                     startActivity(intent)
                 }
             }
@@ -247,7 +266,9 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
 
     override fun onDestroy() {
         super.onDestroy()
-        preferenceManager.sharedPreferences.unregisterOnSharedPreferenceChangeListener(preferenceChangeListener)
+        preferenceManager.sharedPreferences.unregisterOnSharedPreferenceChangeListener(
+            preferenceChangeListener
+        )
     }
 
     private fun getClickListenerForSignIn(): OnPreferenceClickListener {
@@ -266,7 +287,8 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
 
         if (!Config.channel.isReleased) {
             preferenceLeakCanary?.setOnPreferenceChangeListener { _, newValue ->
-                (context?.applicationContext as FenixApplication).toggleLeakCanary(newValue as Boolean)
+                val isEnabled = newValue == true
+                context?.application?.updateLeakCanaryState(isEnabled)
                 true
             }
         }
@@ -290,7 +312,8 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
     }
 
     private fun navigateToTrackingProtectionSettings() {
-        val directions = SettingsFragmentDirections.actionSettingsFragmentToTrackingProtectionFragment()
+        val directions =
+            SettingsFragmentDirections.actionSettingsFragmentToTrackingProtectionFragment()
         Navigation.findNavController(view!!).navigate(directions)
     }
 
@@ -311,7 +334,8 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
     }
 
     private fun navigateToDefaultBrowserSettingsFragment() {
-        val directions = SettingsFragmentDirections.actionSettingsFragmentToDefaultBrowserSettingsFragment()
+        val directions =
+            SettingsFragmentDirections.actionSettingsFragmentToDefaultBrowserSettingsFragment()
         Navigation.findNavController(view!!).navigate(directions)
     }
 
@@ -337,7 +361,8 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
     }
 
     private fun navigateToDeleteBrowsingData() {
-        val directions = SettingsFragmentDirections.actionSettingsFragmentToDeleteBrowsingDataFragment()
+        val directions =
+            SettingsFragmentDirections.actionSettingsFragmentToDeleteBrowsingDataFragment()
         Navigation.findNavController(view!!).navigate(directions)
     }
 
@@ -350,7 +375,10 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
         lifecycleScope.launch {
             context?.let {
-                updateAccountUIState(it, it.components.backgroundServices.accountManager.accountProfile())
+                updateAccountUIState(
+                    it,
+                    it.components.backgroundServices.accountManager.accountProfile()
+                )
             }
         }
     }
@@ -358,7 +386,10 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
     override fun onLoggedOut() {
         lifecycleScope.launch {
             context?.let {
-                updateAccountUIState(it, it.components.backgroundServices.accountManager.accountProfile())
+                updateAccountUIState(
+                    it,
+                    it.components.backgroundServices.accountManager.accountProfile()
+                )
             }
         }
     }
@@ -374,7 +405,10 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
     override fun onAuthenticationProblems() {
         lifecycleScope.launch {
             context?.let {
-                updateAccountUIState(it, it.components.backgroundServices.accountManager.accountProfile())
+                updateAccountUIState(
+                    it,
+                    it.components.backgroundServices.accountManager.accountProfile()
+                )
             }
         }
     }
@@ -389,7 +423,11 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         val preferenceFirefoxAccount =
             findPreference<AccountPreference>(context.getPreferenceKey(pref_key_account))
         val preferenceFirefoxAccountAuthError =
-            findPreference<AccountAuthErrorPreference>(context.getPreferenceKey(pref_key_account_auth_error))
+            findPreference<AccountAuthErrorPreference>(
+                context.getPreferenceKey(
+                    pref_key_account_auth_error
+                )
+            )
         val accountPreferenceCategory =
             findPreference<PreferenceCategory>(context.getPreferenceKey(pref_key_account_category))
 

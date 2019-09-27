@@ -137,7 +137,7 @@ open class FenixApplication : Application() {
         // no-op, LeakCanary is disabled by default
     }
 
-    open fun toggleLeakCanary(newValue: Boolean) {
+    open fun updateLeakCanaryState(isEnabled: Boolean) {
         // no-op, LeakCanary is disabled by default
     }
 
