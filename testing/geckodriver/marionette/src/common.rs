@@ -1,4 +1,6 @@
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::ser::SerializeMap;
+use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+use serde_json::Value;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct BoolValue {
@@ -57,6 +59,50 @@ where
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Date(pub u64);
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum Frame {
+    Index(u16),
+    Element(String),
+    Parent,
+}
+
+impl Serialize for Frame {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut map = serializer.serialize_map(Some(1))?;
+        match self {
+            Frame::Index(nth) => map.serialize_entry("id", nth)?,
+            Frame::Element(el) => map.serialize_entry("element", el)?,
+            Frame::Parent => map.serialize_entry("id", &Value::Null)?,
+        }
+        map.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for Frame {
+    fn deserialize<D>(deserializer: D) -> Result<Frame, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Debug, Deserialize)]
+        #[serde(rename_all = "lowercase")]
+        struct JsonFrame {
+            id: Option<u16>,
+            element: Option<String>,
+        }
+
+        let json = JsonFrame::deserialize(deserializer)?;
+        match (json.id, json.element) {
+            (Some(_id), Some(_element)) => Err(de::Error::custom("conflicting frame identifiers")),
+            (Some(id), None) => Ok(Frame::Index(id)),
+            (None, Some(element)) => Ok(Frame::Element(element)),
+            (None, None) => Ok(Frame::Parent),
+        }
+    }
+}
 
 // TODO(nupur): Bug 1567165 - Make WebElement in Marionette a unit struct
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -127,6 +173,21 @@ mod tests {
             expiry: None,
         };
         assert_de(&data, json!({"name":"hello", "value":"world"}));
+    }
+
+    #[test]
+    fn test_json_frame_index() {
+        assert_ser_de(&Frame::Index(1234), json!({"id": 1234}));
+    }
+
+    #[test]
+    fn test_json_frame_element() {
+        assert_ser_de(&Frame::Element("elem".into()), json!({"element": "elem"}));
+    }
+
+    #[test]
+    fn test_json_frame_parent() {
+        assert_ser_de(&Frame::Parent, json!({ "id": null }));
     }
 
     #[test]
