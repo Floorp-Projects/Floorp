@@ -541,6 +541,15 @@ GCM_CreateContext(void *context, freeblCipherFunc cipher,
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return NULL;
     }
+
+    if (gcmParams->ulTagBits != 128 && gcmParams->ulTagBits != 120 &&
+        gcmParams->ulTagBits != 112 && gcmParams->ulTagBits != 104 &&
+        gcmParams->ulTagBits != 96 && gcmParams->ulTagBits != 64 &&
+        gcmParams->ulTagBits != 32) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return NULL;
+    }
+
     gcm = PORT_ZNew(GCMContext);
     if (gcm == NULL) {
         return NULL;

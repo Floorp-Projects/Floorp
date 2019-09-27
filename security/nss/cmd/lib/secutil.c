@@ -22,6 +22,7 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <limits.h>
 
 #ifdef XP_UNIX
 #include <unistd.h>
@@ -3977,5 +3978,166 @@ done:
 
     *enabledSigSchemeCount = count;
     *enabledSigSchemes = schemes;
+    return SECSuccess;
+}
+
+/* Parse the exporter spec in the form: LABEL[:OUTPUT-LENGTH[:CONTEXT]] */
+static SECStatus
+parseExporter(const char *arg,
+              secuExporter *exporter)
+{
+    SECStatus rv = SECSuccess;
+
+    char *str = PORT_Strdup(arg);
+    if (!str) {
+        rv = SECFailure;
+        goto done;
+    }
+
+    char *labelEnd = strchr(str, ':');
+    if (labelEnd) {
+        *labelEnd = '\0';
+        labelEnd++;
+
+        /* To extract CONTEXT, first skip OUTPUT-LENGTH */
+        char *outputEnd = strchr(labelEnd, ':');
+        if (outputEnd) {
+            *outputEnd = '\0';
+            outputEnd++;
+
+            exporter->hasContext = PR_TRUE;
+            exporter->context.data = (unsigned char *)PORT_Strdup(outputEnd);
+            exporter->context.len = strlen(outputEnd);
+            if (PORT_Strncasecmp((char *)exporter->context.data, "0x", 2) == 0) {
+                rv = SECU_SECItemHexStringToBinary(&exporter->context);
+                if (rv != SECSuccess) {
+                    goto done;
+                }
+            }
+        }
+    }
+
+    if (labelEnd && *labelEnd != '\0') {
+        long int outputLength = strtol(labelEnd, NULL, 10);
+        if (!(outputLength > 0 && outputLength <= UINT_MAX)) {
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+            rv = SECFailure;
+            goto done;
+        }
+        exporter->outputLength = outputLength;
+    } else {
+        exporter->outputLength = 20;
+    }
+
+    char *label = PORT_Strdup(str);
+    exporter->label.data = (unsigned char *)label;
+    exporter->label.len = strlen(label);
+    if (PORT_Strncasecmp((char *)exporter->label.data, "0x", 2) == 0) {
+        rv = SECU_SECItemHexStringToBinary(&exporter->label);
+        if (rv != SECSuccess) {
+            goto done;
+        }
+    }
+
+done:
+    PORT_Free(str);
+
+    return rv;
+}
+
+SECStatus
+parseExporters(const char *arg,
+               const secuExporter **enabledExporters,
+               unsigned int *enabledExporterCount)
+{
+    secuExporter *exporters;
+    unsigned int numValues = 0;
+    unsigned int count = 0;
+
+    if (countItems(arg, &numValues) != SECSuccess) {
+        return SECFailure;
+    }
+    exporters = PORT_ZNewArray(secuExporter, numValues);
+    if (!exporters) {
+        return SECFailure;
+    }
+
+    /* Get exporter definitions. */
+    char *str = PORT_Strdup(arg);
+    if (!str) {
+        goto done;
+    }
+    char *p = strtok(str, ",");
+    while (p) {
+        SECStatus rv = parseExporter(p, &exporters[count++]);
+        if (rv != SECSuccess) {
+            count = 0;
+            goto done;
+        }
+        p = strtok(NULL, ",");
+    }
+
+done:
+    PORT_Free(str);
+    if (!count) {
+        PORT_Free(exporters);
+        return SECFailure;
+    }
+
+    *enabledExporterCount = count;
+    *enabledExporters = exporters;
+    return SECSuccess;
+}
+
+static SECStatus
+exportKeyingMaterial(PRFileDesc *fd, const secuExporter *exporter)
+{
+    SECStatus rv = SECSuccess;
+    unsigned char *out = PORT_Alloc(exporter->outputLength);
+
+    if (!out) {
+        fprintf(stderr, "Unable to allocate buffer for keying material\n");
+        return SECFailure;
+    }
+    rv = SSL_ExportKeyingMaterial(fd,
+                                  (char *)exporter->label.data,
+                                  exporter->label.len,
+                                  exporter->hasContext,
+                                  exporter->context.data,
+                                  exporter->context.len,
+                                  out,
+                                  exporter->outputLength);
+    if (rv != SECSuccess) {
+        goto done;
+    }
+    fprintf(stdout, "Exported Keying Material:\n");
+    secu_PrintRawString(stdout, (SECItem *)&exporter->label, "Label", 1);
+    if (exporter->hasContext) {
+        SECU_PrintAsHex(stdout, &exporter->context, "Context", 1);
+    }
+    SECU_Indent(stdout, 1);
+    fprintf(stdout, "Length: %u\n", exporter->outputLength);
+    SECItem temp = { siBuffer, out, exporter->outputLength };
+    SECU_PrintAsHex(stdout, &temp, "Keying Material", 1);
+
+done:
+    PORT_Free(out);
+    return rv;
+}
+
+SECStatus
+exportKeyingMaterials(PRFileDesc *fd,
+                      const secuExporter *exporters,
+                      unsigned int exporterCount)
+{
+    unsigned int i;
+
+    for (i = 0; i < exporterCount; i++) {
+        SECStatus rv = exportKeyingMaterial(fd, &exporters[i]);
+        if (rv != SECSuccess) {
+            return rv;
+        }
+    }
+
     return SECSuccess;
 }

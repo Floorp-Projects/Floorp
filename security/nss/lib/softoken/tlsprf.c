@@ -129,7 +129,7 @@ sftk_TLSPRFVerify(TLSPRFContext *cx,
     }
     rv = sftk_TLSPRFUpdate(cx, tmp, &tmpLen, sigLen, NULL, 0);
     if (rv == SECSuccess) {
-        rv = (SECStatus)(1 - !PORT_Memcmp(tmp, sig, sigLen));
+        rv = (SECStatus)(1 - !NSS_SecureMemcmp(tmp, sig, sigLen));
     }
     PORT_ZFree(tmp, sigLen);
     return rv;

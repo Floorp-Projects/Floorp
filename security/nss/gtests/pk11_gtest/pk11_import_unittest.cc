@@ -15,6 +15,7 @@
 #include "nss_scoped_ptrs.h"
 #include "gtest/gtest.h"
 #include "databuffer.h"
+#include "pk11_keygen.h"
 
 namespace nss_test {
 
@@ -30,7 +31,7 @@ struct PK11GenericObjectsDeleter {
 
 class Pk11KeyImportTestBase : public ::testing::Test {
  public:
-  Pk11KeyImportTestBase(CK_MECHANISM_TYPE mech) : mech_(mech) {}
+  Pk11KeyImportTestBase() = default;
   virtual ~Pk11KeyImportTestBase() = default;
 
   void SetUp() override {
@@ -42,20 +43,19 @@ class Pk11KeyImportTestBase : public ::testing::Test {
     password_.reset(SECITEM_DupItem(&pwItem));
   }
 
-  void Test() {
+  void Test(const Pkcs11KeyPairGenerator& generator) {
     // Generate a key and export it.
-    KeyType key_type;
+    KeyType key_type = nullKey;
     ScopedSECKEYEncryptedPrivateKeyInfo key_info;
     ScopedSECItem public_value;
-    GenerateAndExport(&key_type, &key_info, &public_value);
+    GenerateAndExport(generator, &key_type, &key_info, &public_value);
 
-    ASSERT_NE(nullptr, public_value);
     // Note: NSS is currently unable export wrapped DH keys, so this doesn't
-    // test
-    // CKM_DH_PKCS_KEY_PAIR_GEN beyond generate and verify
+    // test those beyond generate and verify.
     if (key_type == dhKey) {
       return;
     }
+    ASSERT_NE(nullptr, public_value);
     ASSERT_NE(nullptr, key_info);
 
     // Now import the encrypted key.
@@ -72,17 +72,6 @@ class Pk11KeyImportTestBase : public ::testing::Test {
 
     CheckForPublicKey(priv_key, public_value.get());
   }
-
- protected:
-  class ParamHolder {
-   public:
-    virtual ~ParamHolder() = default;
-    virtual void* get() = 0;
-  };
-
-  virtual std::unique_ptr<ParamHolder> MakeParams() = 0;
-
-  CK_MECHANISM_TYPE mech_;
 
  private:
   SECItem GetPublicComponent(ScopedSECKEYPublicKey& pub_key) {
@@ -202,20 +191,14 @@ class Pk11KeyImportTestBase : public ::testing::Test {
     }
   }
 
-  void GenerateAndExport(KeyType* key_type,
+  void GenerateAndExport(const Pkcs11KeyPairGenerator& generator,
+                         KeyType* key_type,
                          ScopedSECKEYEncryptedPrivateKeyInfo* key_info,
                          ScopedSECItem* public_value) {
-    auto params = MakeParams();
-    ASSERT_NE(nullptr, params);
-
-    SECKEYPublicKey* pub_tmp;
-    ScopedSECKEYPrivateKey priv_key(
-        PK11_GenerateKeyPair(slot_.get(), mech_, params->get(), &pub_tmp,
-                             PR_FALSE, PR_TRUE, nullptr));
-    ASSERT_NE(nullptr, priv_key) << "PK11_GenerateKeyPair failed: "
-                                 << PORT_ErrorToName(PORT_GetError());
-    ScopedSECKEYPublicKey pub_key(pub_tmp);
-    ASSERT_NE(nullptr, pub_key);
+    ScopedSECKEYPrivateKey priv_key;
+    ScopedSECKEYPublicKey pub_key;
+    generator.GenerateKey(&priv_key, &pub_key);
+    ASSERT_TRUE(priv_key);
 
     // Save the public value, which we will need on import */
     SECItem* pub_val;
@@ -240,14 +223,13 @@ class Pk11KeyImportTestBase : public ::testing::Test {
     CheckForPublicKey(priv_key, pub_val);
 
     *key_type = t;
-    public_value->reset(SECITEM_DupItem(pub_val));
-
     // Note: NSS is currently unable export wrapped DH keys, so this doesn't
-    // test
-    // CKM_DH_PKCS_KEY_PAIR_GEN beyond generate and verify
-    if (mech_ == CKM_DH_PKCS_KEY_PAIR_GEN) {
+    // test those beyond generate and verify.
+    if (t == dhKey) {
       return;
     }
+    public_value->reset(SECITEM_DupItem(pub_val));
+
     // Wrap and export the key.
     ScopedSECKEYEncryptedPrivateKeyInfo epki(PK11_ExportEncryptedPrivKeyInfo(
         slot_.get(), SEC_OID_AES_256_CBC, password_.get(), priv_key.get(), 1,
@@ -266,82 +248,13 @@ class Pk11KeyImportTest
     : public Pk11KeyImportTestBase,
       public ::testing::WithParamInterface<CK_MECHANISM_TYPE> {
  public:
-  Pk11KeyImportTest() : Pk11KeyImportTestBase(GetParam()) {}
+  Pk11KeyImportTest() = default;
   virtual ~Pk11KeyImportTest() = default;
-
- protected:
-  std::unique_ptr<ParamHolder> MakeParams() override {
-    switch (mech_) {
-      case CKM_RSA_PKCS_KEY_PAIR_GEN:
-        return std::unique_ptr<ParamHolder>(new RsaParamHolder());
-
-      case CKM_DSA_KEY_PAIR_GEN:
-      case CKM_DH_PKCS_KEY_PAIR_GEN: {
-        PQGParams* pqg_params = nullptr;
-        PQGVerify* pqg_verify = nullptr;
-        const unsigned int key_size = 1024;
-        SECStatus rv = PK11_PQG_ParamGenV2(key_size, 0, key_size / 16,
-                                           &pqg_params, &pqg_verify);
-        if (rv != SECSuccess) {
-          ADD_FAILURE() << "PK11_PQG_ParamGenV2 failed";
-          return nullptr;
-        }
-        EXPECT_NE(nullptr, pqg_verify);
-        EXPECT_NE(nullptr, pqg_params);
-        PK11_PQG_DestroyVerify(pqg_verify);
-        if (mech_ == CKM_DSA_KEY_PAIR_GEN) {
-          return std::unique_ptr<ParamHolder>(new PqgParamHolder(pqg_params));
-        }
-        return std::unique_ptr<ParamHolder>(new DhParamHolder(pqg_params));
-      }
-
-      default:
-        ADD_FAILURE() << "unknown OID " << mech_;
-    }
-    return nullptr;
-  }
-
- private:
-  class RsaParamHolder : public ParamHolder {
-   public:
-    RsaParamHolder()
-        : params_({/*.keySizeInBits = */ 1024, /*.pe = */ 0x010001}) {}
-    ~RsaParamHolder() = default;
-
-    void* get() override { return &params_; }
-
-   private:
-    PK11RSAGenParams params_;
-  };
-
-  class PqgParamHolder : public ParamHolder {
-   public:
-    PqgParamHolder(PQGParams* params) : params_(params) {}
-    ~PqgParamHolder() = default;
-
-    void* get() override { return params_.get(); }
-
-   private:
-    ScopedPQGParams params_;
-  };
-
-  class DhParamHolder : public PqgParamHolder {
-   public:
-    DhParamHolder(PQGParams* params)
-        : PqgParamHolder(params),
-          params_({/*.arena = */ nullptr,
-                   /*.prime = */ params->prime,
-                   /*.base = */ params->base}) {}
-    ~DhParamHolder() = default;
-
-    void* get() override { return &params_; }
-
-   private:
-    SECKEYDHParams params_;
-  };
 };
 
-TEST_P(Pk11KeyImportTest, GenerateExportImport) { Test(); }
+TEST_P(Pk11KeyImportTest, GenerateExportImport) {
+  Test(Pkcs11KeyPairGenerator(GetParam()));
+}
 
 INSTANTIATE_TEST_CASE_P(Pk11KeyImportTest, Pk11KeyImportTest,
                         ::testing::Values(CKM_RSA_PKCS_KEY_PAIR_GEN,
@@ -351,42 +264,13 @@ INSTANTIATE_TEST_CASE_P(Pk11KeyImportTest, Pk11KeyImportTest,
 class Pk11KeyImportTestEC : public Pk11KeyImportTestBase,
                             public ::testing::WithParamInterface<SECOidTag> {
  public:
-  Pk11KeyImportTestEC() : Pk11KeyImportTestBase(CKM_EC_KEY_PAIR_GEN) {}
+  Pk11KeyImportTestEC() = default;
   virtual ~Pk11KeyImportTestEC() = default;
-
- protected:
-  std::unique_ptr<ParamHolder> MakeParams() override {
-    return std::unique_ptr<ParamHolder>(new EcParamHolder(GetParam()));
-  }
-
- private:
-  class EcParamHolder : public ParamHolder {
-   public:
-    EcParamHolder(SECOidTag curve_oid) {
-      SECOidData* curve = SECOID_FindOIDByTag(curve_oid);
-      EXPECT_NE(nullptr, curve);
-
-      size_t plen = curve->oid.len + 2;
-      extra_.reset(new uint8_t[plen]);
-      extra_[0] = SEC_ASN1_OBJECT_ID;
-      extra_[1] = static_cast<uint8_t>(curve->oid.len);
-      memcpy(&extra_[2], curve->oid.data, curve->oid.len);
-
-      ec_params_ = {/*.type = */ siBuffer,
-                    /*.data = */ extra_.get(),
-                    /*.len = */ static_cast<unsigned int>(plen)};
-    }
-    ~EcParamHolder() = default;
-
-    void* get() override { return &ec_params_; }
-
-   private:
-    SECKEYECParams ec_params_;
-    std::unique_ptr<uint8_t[]> extra_;
-  };
 };
 
-TEST_P(Pk11KeyImportTestEC, GenerateExportImport) { Test(); }
+TEST_P(Pk11KeyImportTestEC, GenerateExportImport) {
+  Test(Pkcs11KeyPairGenerator(CKM_EC_KEY_PAIR_GEN, GetParam()));
+}
 
 INSTANTIATE_TEST_CASE_P(Pk11KeyImportTestEC, Pk11KeyImportTestEC,
                         ::testing::Values(SEC_OID_SECG_EC_SECP256R1,
