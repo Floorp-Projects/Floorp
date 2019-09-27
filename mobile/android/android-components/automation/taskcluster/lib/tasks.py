@@ -304,6 +304,8 @@ class TaskBuilder(object):
         deadline = taskcluster.fromNow('1 day')
         expires = taskcluster.fromNow(DEFAULT_EXPIRES_IN)
 
+        routes.append('checks')
+
         return {
             "attributes": {},
             "dependencies": dependencies,

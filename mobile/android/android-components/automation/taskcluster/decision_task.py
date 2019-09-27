@@ -164,12 +164,19 @@ def pr(builder, artifacts_info):
         (builder.craft_detekt_task, builder.craft_ktlint_task, builder.craft_compare_locales_task)
     ]
 
-    return build_tasks + other_tasks
+    tasks = build_tasks + other_tasks
+
+    for task in tasks:
+        task['attributes']['code-review'] = True
+
+    return tasks
 
 
 def push(builder, artifacts_info):
     all_tasks = pr(builder, artifacts_info)
-    all_tasks.append(builder.craft_ui_tests_task())
+    ui_task = builder.craft_ui_tests_task()
+    ui_task['attributes']['code-review'] = True
+    all_tasks.append(ui_task)
     return all_tasks
 
 
