@@ -68,55 +68,29 @@ static nsresult GetBodyUsage(nsIFile* aMorgueDir, const Atomic<bool>& aCanceled,
       continue;
     }
 
-    nsCOMPtr<nsIDirectoryEnumerator> subEntries;
-    rv = bodyDir->GetDirectoryEntries(getter_AddRefs(subEntries));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    bool isEmpty = true;
-    nsCOMPtr<nsIFile> bodyFile;
-    while (
-        NS_SUCCEEDED(rv = subEntries->GetNextFile(getter_AddRefs(bodyFile))) &&
-        bodyFile && !aCanceled) {
-      bool isDirectory;
-      rv = bodyFile->IsDirectory(&isDirectory);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      if (isDirectory) {
-        QuotaInfo dummy;
-        mozilla::DebugOnly<nsresult> result =
-            RemoveNsIFileRecursively(dummy, bodyFile, /* aTrackQuota */ false);
-        // Try to remove the unexpected files, and keep moving on even if it
-        // fails because it might be created by virus or the operation system
-        MOZ_ASSERT(NS_SUCCEEDED(result));
-        continue;
-      }
-
-      isEmpty = false;
+    const QuotaInfo dummy;
+    const auto getUsage = [&aUsageInfo](nsIFile* bodyFile,
+                                        const nsACString& leafName,
+                                        bool& fileDeleted) {
+      MOZ_DIAGNOSTIC_ASSERT(bodyFile);
+      Unused << leafName;
 
       int64_t fileSize;
-      rv = bodyFile->GetFileSize(&fileSize);
+      nsresult rv = bodyFile->GetFileSize(&fileSize);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
       MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
-
       aUsageInfo->AppendToFileUsage(Some(fileSize));
-    }
+
+      fileDeleted = false;
+
+      return NS_OK;
+    };
+    rv = mozilla::dom::cache::BodyTraverseFiles(dummy, bodyDir, getUsage,
+                                                /* aTrackQuota */ false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
-    }
-
-    if (isEmpty) {
-      QuotaInfo dummy;
-      mozilla::DebugOnly<nsresult> result =
-          RemoveNsIFileRecursively(dummy, bodyDir, /* aTrackQuota */ false);
-      // Try to remove the unexpected files, and keep moving on even if it
-      // fails because it might be created by virus or the operation system
-      MOZ_ASSERT(NS_SUCCEEDED(result));
     }
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
