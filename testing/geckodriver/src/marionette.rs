@@ -11,8 +11,9 @@ use marionette_rs::marionette::AppStatus;
 use marionette_rs::message::{Command, Message, MessageId, Request};
 use marionette_rs::webdriver::{
     Command as MarionetteWebDriverCommand, Keys as MarionetteKeys, LegacyWebElement,
-    Locator as MarionetteLocator, NewWindow as MarionetteNewWindow, Script as MarionetteScript,
-    Selector as MarionetteSelector, Url as MarionetteUrl, WindowRect as MarionetteWindowRect,
+    Locator as MarionetteLocator, NewWindow as MarionetteNewWindow, ScreenshotOptions,
+    Script as MarionetteScript, Selector as MarionetteSelector, Url as MarionetteUrl,
+    WindowRect as MarionetteWindowRect,
 };
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
@@ -885,7 +886,9 @@ impl MarionetteSession {
 fn try_convert_to_marionette_message(
     msg: &WebDriverMessage<GeckoExtensionRoute>,
 ) -> WebDriverResult<Option<Command>> {
+    use self::GeckoExtensionCommand::*;
     use self::WebDriverCommand::*;
+
     Ok(match msg.command {
         AcceptAlert => Some(Command::WebDriver(MarionetteWebDriverCommand::AcceptAlert)),
         AddCookie(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::AddCookie(
@@ -1041,6 +1044,39 @@ fn try_convert_to_marionette_message(
         SwitchToWindow(ref x) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::SwitchToWindow(x.to_marionette()?),
         )),
+        TakeElementScreenshot(ref e) => {
+            let screenshot = ScreenshotOptions {
+                id: Some(e.clone().to_string()),
+                highlights: vec![],
+                full: false,
+            };
+            Some(Command::WebDriver(
+                MarionetteWebDriverCommand::TakeElementScreenshot(screenshot),
+            ))
+        }
+        TakeScreenshot => {
+            let screenshot = ScreenshotOptions {
+                id: None,
+                highlights: vec![],
+                full: false,
+            };
+            Some(Command::WebDriver(
+                MarionetteWebDriverCommand::TakeScreenshot(screenshot),
+            ))
+        }
+        Extension(ref extension) => match extension {
+            TakeFullScreenshot => {
+                let screenshot = ScreenshotOptions {
+                    id: None,
+                    highlights: vec![],
+                    full: true,
+                };
+                Some(Command::WebDriver(
+                    MarionetteWebDriverCommand::TakeFullScreenshot(screenshot),
+                ))
+            }
+            _ => None,
+        },
         _ => None,
     })
 }
@@ -1122,20 +1158,6 @@ impl MarionetteCommand {
                 PerformActions(ref x) => {
                     (Some("WebDriver:PerformActions"), Some(x.to_marionette()))
                 }
-                TakeElementScreenshot(ref e) => {
-                    let mut data = Map::new();
-                    data.insert("id".to_string(), Value::String(e.to_string()));
-                    data.insert("highlights".to_string(), Value::Array(vec![]));
-                    data.insert("full".to_string(), Value::Bool(false));
-                    (Some("WebDriver:TakeScreenshot"), Some(Ok(data)))
-                }
-                TakeScreenshot => {
-                    let mut data = Map::new();
-                    data.insert("id".to_string(), Value::Null);
-                    data.insert("highlights".to_string(), Value::Array(vec![]));
-                    data.insert("full".to_string(), Value::Bool(false));
-                    (Some("WebDriver:TakeScreenshot"), Some(Ok(data)))
-                }
                 Extension(ref extension) => match extension {
                     GetContext => (Some("Marionette:GetContext"), None),
                     InstallAddon(x) => (Some("Addon:Install"), Some(x.to_marionette())),
@@ -1153,13 +1175,7 @@ impl MarionetteCommand {
                         data.insert("element".to_string(), serde_json::to_value(e.to_string())?);
                         (Some("WebDriver:FindElements"), Some(Ok(data)))
                     }
-                    TakeFullScreenshot => {
-                        let mut data = Map::new();
-                        data.insert("id".to_string(), Value::Null);
-                        data.insert("highlights".to_string(), Value::Array(vec![]));
-                        data.insert("full".to_string(), Value::Bool(true));
-                        (Some("WebDriver:TakeScreenshot"), Some(Ok(data)))
-                    }
+                    _ => (None, None),
                 },
                 _ => (None, None),
             };
