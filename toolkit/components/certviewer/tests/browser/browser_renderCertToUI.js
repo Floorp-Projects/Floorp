@@ -37,9 +37,8 @@ add_task(async function test() {
         "infoGroups must have the same length of adjustedCerts"
       );
 
-      let tabName = certificateSection.shadowRoot.querySelector(
-        ".tab[idnumber='0']"
-      ).textContent;
+      let tabName = certificateSection.shadowRoot.querySelector("#tab0")
+        .textContent;
       Assert.equal(tabName, expectedTabName, "Tab name should be the same");
 
       function getElementByAttribute(source, property, target) {
