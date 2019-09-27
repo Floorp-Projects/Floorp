@@ -7,9 +7,6 @@
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { clearTimeout, setTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
@@ -71,7 +68,7 @@ XPCOMUtils.defineLazyGetter(this, "console", () => {
   });
 });
 
-const prefs = new Preferences("dom.push.");
+const prefs = Services.prefs.getBranch("dom.push.");
 
 const PUSH_SERVICE_UNINIT = 0;
 const PUSH_SERVICE_INIT = 1; // No serverURI
@@ -105,7 +102,10 @@ const UNINIT_EVENT = 3;
 // Returns the backend for the given server URI.
 function getServiceForServerURI(uri) {
   // Insecure server URLs are allowed for development and testing.
-  let allowInsecure = prefs.get("testing.allowInsecureServerURL");
+  let allowInsecure = prefs.getBoolPref(
+    "testing.allowInsecureServerURL",
+    false
+  );
   if (AppConstants.MOZ_WIDGET_TOOLKIT == "android") {
     if (uri.scheme == "https" || (allowInsecure && uri.scheme == "http")) {
       return CONNECTION_PROTOCOLS;
@@ -342,21 +342,21 @@ var PushService = {
         break;
 
       case "nsPref:changed":
-        if (aData == "dom.push.serverURL") {
+        if (aData == "serverURL") {
           console.debug(
             "observe: dom.push.serverURL changed for websocket",
-            prefs.get("serverURL")
+            prefs.getStringPref("serverURL")
           );
           this._stateChangeProcessEnqueue(_ =>
             this._changeServerURL(
-              prefs.get("serverURL"),
+              prefs.getStringPref("serverURL"),
               CHANGING_SERVICE_EVENT
             )
           );
-        } else if (aData == "dom.push.connection.enabled") {
+        } else if (aData == "connection.enabled") {
           this._stateChangeProcessEnqueue(_ =>
             this._changeStateConnectionEnabledEvent(
-              prefs.get("connection.enabled")
+              prefs.getBoolPref("connection.enabled")
             )
           );
         }
@@ -465,7 +465,7 @@ var PushService = {
         }
         return this._startService(service, uri, options).then(_ =>
           this._changeStateConnectionEnabledEvent(
-            prefs.get("connection.enabled")
+            prefs.getBoolPref("connection.enabled")
           )
         );
       }
@@ -477,7 +477,7 @@ var PushService = {
             // The service has not been running - start it.
             return this._startService(service, uri, options).then(_ =>
               this._changeStateConnectionEnabledEvent(
-                prefs.get("connection.enabled")
+                prefs.getBoolPref("connection.enabled")
               )
             );
           }
@@ -489,7 +489,7 @@ var PushService = {
             .then(_ => this._startService(service, uri, options))
             .then(_ =>
               this._changeStateConnectionEnabledEvent(
-                prefs.get("connection.enabled")
+                prefs.getBoolPref("connection.enabled")
               )
             );
         }
@@ -530,7 +530,7 @@ var PushService = {
 
     this._setState(PUSH_SERVICE_ACTIVATING);
 
-    prefs.observe("serverURL", this);
+    prefs.addObserver("serverURL", this);
     Services.obs.addObserver(this, "quit-application");
 
     if (options.serverURI) {
@@ -547,7 +547,10 @@ var PushService = {
       // This is only used for testing. Different tests require connecting to
       // slightly different URLs.
       await this._stateChangeProcessEnqueue(_ =>
-        this._changeServerURL(prefs.get("serverURL"), STARTING_SERVICE_EVENT)
+        this._changeServerURL(
+          prefs.getStringPref("serverURL"),
+          STARTING_SERVICE_EVENT
+        )
       );
     }
   },
@@ -567,7 +570,7 @@ var PushService = {
     Services.obs.addObserver(this, "network:offline-status-changed");
 
     // Used to monitor if the user wishes to disable Push.
-    prefs.observe("connection.enabled", this);
+    prefs.addObserver("connection.enabled", this);
 
     // Prunes expired registrations and notifies dormant service workers.
     Services.obs.addObserver(this, "idle-daily");
@@ -651,7 +654,7 @@ var PushService = {
       return;
     }
 
-    prefs.ignore("connection.enabled", this);
+    prefs.removeObserver("connection.enabled", this);
 
     Services.obs.removeObserver(this, "network:offline-status-changed");
     Services.obs.removeObserver(this, "clear-origin-attributes-data");
@@ -673,7 +676,7 @@ var PushService = {
       return;
     }
 
-    prefs.ignore("serverURL", this);
+    prefs.removeObserver("serverURL", this);
     Services.obs.removeObserver(this, "quit-application");
 
     await this._stateChangeProcessEnqueue(_ => this._shutdownService());
@@ -817,7 +820,7 @@ var PushService = {
                 "receivedPushMessage: quota update timeout missing?"
               );
             }
-          }, prefs.get("quotaUpdateDelay"));
+          }, prefs.getIntPref("quotaUpdateDelay"));
           this._updateQuotaTimeouts.add(timeoutID);
         }
         return this._decryptAndNotifyApp(record, messageID, headers, data);
