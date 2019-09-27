@@ -9,7 +9,6 @@
 
 #include "mozilla/Mutex.h"
 #include "nsIThreadManager.h"
-#include "nsIThreadPool.h"
 #include "nsThread.h"
 
 class nsIRunnable;
@@ -88,7 +87,7 @@ class nsThreadManager : public nsIThreadManager {
       mInitialized;
 
   // Shared event target used for background runnables.
-  nsCOMPtr<nsIThreadPool> mBackgroundEventTarget;
+  nsCOMPtr<nsIEventTarget> mBackgroundEventTarget;
 };
 
 #define NS_THREADMANAGER_CID                         \
