@@ -139,7 +139,7 @@ add_task(async function test_set_login() {
 
 add_task(async function test_update_breaches() {
   gLoginItem.setLogin(TEST_LOGIN_1);
-  gLoginItem.updateBreaches(TEST_BREACHES_MAP);
+  gLoginItem.setBreaches(TEST_BREACHES_MAP);
   await asyncElementRendered();
 
   let correspondingBreach = TEST_BREACHES_MAP.get(gLoginItem._login.guid);
@@ -150,7 +150,7 @@ add_task(async function test_update_breaches() {
 
 add_task(async function test_breach_alert_is_correctly_hidden() {
   gLoginItem.setLogin(TEST_LOGIN_2);
-  gLoginItem.updateBreaches(TEST_BREACHES_MAP);
+  gLoginItem.setBreaches(TEST_BREACHES_MAP);
   await asyncElementRendered();
 
   let breachAlert = gLoginItem.shadowRoot.querySelector(".breach-alert");

@@ -9,7 +9,7 @@ const TEST_BREACHES = [
   {
     AddedDate: "2019-12-20T23:56:26Z",
     BreachDate: "2018-12-16",
-    Domain: "breached.com",
+    Domain: "breached.example.com",
     Name: "Breached",
     PwnCount: 1643100,
     DataClasses: ["Email addresses", "Usernames", "Passwords", "IP addresses"],
@@ -40,10 +40,10 @@ add_task(async function test_show_login() {
     TEST_BREACHES
   );
   browser.messageManager.sendAsyncMessage(
-    "AboutLogins:UpdateBreaches",
+    "AboutLogins:SetBreaches",
     testBreaches
   );
-  await ContentTask.spawn(browser, TEST_LOGIN3, async () => {
+  await ContentTask.spawn(browser, null, async () => {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
     let breachAlert = loginItem.shadowRoot.querySelector(".breach-alert");
     let breachAlertVisible = await ContentTaskUtils.waitForCondition(() => {
