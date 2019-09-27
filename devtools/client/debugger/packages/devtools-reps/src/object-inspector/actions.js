@@ -119,8 +119,8 @@ function removeWatchpoint(item) {
 }
 
 function closeObjectInspector() {
-  return async ({ getState, client }: ThunkArg) => {
-    releaseActors(getState(), client);
+  return async ({ dispatch, getState, client }: ThunkArg) => {
+    dispatch(releaseActors(getState(), client));
   };
 }
 
@@ -134,7 +134,7 @@ function closeObjectInspector() {
  */
 function rootsChanged(props: Props) {
   return async ({ dispatch, client, getState }: ThunkArg) => {
-    releaseActors(getState(), client);
+    dispatch(releaseActors(getState(), client));
     dispatch({
       type: "ROOTS_CHANGED",
       data: props,
@@ -153,6 +153,11 @@ function releaseActors(state, client) {
       client.releaseActor(actor);
     }
   }
+
+  return {
+    type: "RELEASED_ACTORS",
+    data: { actors },
+  };
 }
 
 function invokeGetter(

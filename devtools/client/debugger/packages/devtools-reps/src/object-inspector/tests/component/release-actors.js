@@ -56,7 +56,7 @@ function mount(props, { initialState } = {}) {
 
 describe("release actors", () => {
   it("calls release actors when unmount", () => {
-    const { wrapper, client } = mount(
+    const { wrapper, client, store } = mount(
       {},
       {
         initialState: {
@@ -71,6 +71,9 @@ describe("release actors", () => {
     expect(client.releaseActor.mock.calls).toHaveLength(2);
     expect(client.releaseActor.mock.calls[0][0]).toBe("actor 1");
     expect(client.releaseActor.mock.calls[1][0]).toBe("actor 2");
+
+    const state = store.getState().objectInspector;
+    expect(state.actors.size).toBe(0);
   });
 
   it.skip("calls release actors when the roots prop changed", async () => {
