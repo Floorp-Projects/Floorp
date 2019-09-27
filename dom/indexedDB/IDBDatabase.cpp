@@ -424,12 +424,9 @@ already_AddRefed<IDBObjectStore> IDBDatabase::CreateObjectStore(
   // number to keep in sync with the parent.
   const uint64_t requestSerialNumber = IDBRequest::NextSerialNumber();
 
-  IDB_LOG_MARK(
-      "IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "
+  IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
       "database(%s).transaction(%s).createObjectStore(%s)",
-      "IndexedDB %s: C T[%lld] R[%llu]: "
-      "IDBDatabase.createObjectStore()",
-      IDB_LOG_ID_STRING(), transaction->LoggingSerialNumber(),
+      "IDBDatabase.createObjectStore()", transaction->LoggingSerialNumber(),
       requestSerialNumber, IDB_LOG_STRINGIFY(this),
       IDB_LOG_STRINGIFY(transaction), IDB_LOG_STRINGIFY(objectStore));
 
@@ -482,12 +479,9 @@ void IDBDatabase::DeleteObjectStore(const nsAString& aName, ErrorResult& aRv) {
   // number to keep in sync with the parent.
   const uint64_t requestSerialNumber = IDBRequest::NextSerialNumber();
 
-  IDB_LOG_MARK(
-      "IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "
+  IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
       "database(%s).transaction(%s).deleteObjectStore(\"%s\")",
-      "IndexedDB %s: C T[%lld] R[%llu]: "
-      "IDBDatabase.deleteObjectStore()",
-      IDB_LOG_ID_STRING(), transaction->LoggingSerialNumber(),
+      "IDBDatabase.deleteObjectStore()", transaction->LoggingSerialNumber(),
       requestSerialNumber, IDB_LOG_STRINGIFY(this),
       IDB_LOG_STRINGIFY(transaction), NS_ConvertUTF16toUTF8(aName).get());
 }
@@ -629,10 +623,8 @@ nsresult IDBDatabase::Transaction(JSContext* aCx,
   BackgroundTransactionChild* actor =
       new BackgroundTransactionChild(transaction);
 
-  IDB_LOG_MARK(
-      "IndexedDB %s: Child  Transaction[%lld]: "
-      "database(%s).transaction(%s)",
-      "IndexedDB %s: C T[%lld]: IDBDatabase.transaction()", IDB_LOG_ID_STRING(),
+  IDB_LOG_MARK_CHILD_TRANSACTION(
+      "database(%s).transaction(%s)", "IDBDatabase.transaction()",
       transaction->LoggingSerialNumber(), IDB_LOG_STRINGIFY(this),
       IDB_LOG_STRINGIFY(transaction));
 
@@ -692,12 +684,10 @@ already_AddRefed<IDBRequest> IDBDatabase::CreateMutableFile(
   BackgroundDatabaseRequestChild* actor =
       new BackgroundDatabaseRequestChild(this, request);
 
-  IDB_LOG_MARK(
-      "IndexedDB %s: Child  Request[%llu]: "
-      "database(%s).createMutableFile(%s)",
-      "IndexedDB %s: C R[%llu]: IDBDatabase.createMutableFile()",
-      IDB_LOG_ID_STRING(), request->LoggingSerialNumber(),
-      IDB_LOG_STRINGIFY(this), NS_ConvertUTF16toUTF8(aName).get());
+  IDB_LOG_MARK_CHILD_REQUEST(
+      "database(%s).createMutableFile(%s)", "IDBDatabase.createMutableFile()",
+      request->LoggingSerialNumber(), IDB_LOG_STRINGIFY(this),
+      NS_ConvertUTF16toUTF8(aName).get());
 
   mBackgroundActor->SendPBackgroundIDBDatabaseRequestConstructor(actor, params);
 

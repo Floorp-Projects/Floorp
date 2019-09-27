@@ -13293,11 +13293,9 @@ void Database::StartTransactionOp::RunOnConnectionThread() {
   MOZ_ASSERT(Transaction());
   MOZ_ASSERT(NS_SUCCEEDED(mResultCode));
 
-  IDB_LOG_MARK(
-      "IndexedDB %s: Parent Transaction[%lld]: "
-      "Beginning database work",
-      "IndexedDB %s: P T[%lld]: DB Start",
-      IDB_LOG_ID_STRING(mBackgroundChildLoggingId), mLoggingSerialNumber);
+  IDB_LOG_MARK_PARENT_TRANSACTION("Beginning database work", "DB Start",
+                                  IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
+                                  mLoggingSerialNumber);
 
   TransactionDatabaseOperationBase::RunOnConnectionThread();
 }
@@ -21230,11 +21228,9 @@ nsresult OpenDatabaseOp::VersionChangeOp::DoDatabaseWork(
 
   AUTO_PROFILER_LABEL("OpenDatabaseOp::VersionChangeOp::DoDatabaseWork", DOM);
 
-  IDB_LOG_MARK(
-      "IndexedDB %s: Parent Transaction[%lld]: "
-      "Beginning database work",
-      "IndexedDB %s: P T[%lld]: DB Start",
-      IDB_LOG_ID_STRING(mBackgroundChildLoggingId), mLoggingSerialNumber);
+  IDB_LOG_MARK_PARENT_TRANSACTION("Beginning database work", "DB Start",
+                                  IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
+                                  mLoggingSerialNumber);
 
   Transaction()->SetActiveOnConnectionThread();
 
@@ -21870,10 +21866,8 @@ void TransactionDatabaseOperationBase::RunOnConnectionThread() {
 
       if (NS_SUCCEEDED(rv)) {
         if (mLoggingSerialNumber) {
-          IDB_LOG_MARK(
-              "IndexedDB %s: Parent Transaction[%lld] Request[%llu]: "
-              "Beginning database work",
-              "IndexedDB %s: P T[%lld] R[%llu]: DB Start",
+          IDB_LOG_MARK_PARENT_TRANSACTION_REQUEST(
+              "Beginning database work", "DB Start",
               IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
               mTransactionLoggingSerialNumber, mLoggingSerialNumber);
         }
@@ -21881,10 +21875,8 @@ void TransactionDatabaseOperationBase::RunOnConnectionThread() {
         rv = DoDatabaseWork(connection);
 
         if (mLoggingSerialNumber) {
-          IDB_LOG_MARK(
-              "IndexedDB %s: Parent Transaction[%lld] Request[%llu]: "
-              "Finished database work",
-              "IndexedDB %s: P T[%lld] R[%llu]: DB End",
+          IDB_LOG_MARK_PARENT_TRANSACTION_REQUEST(
+              "Finished database work", "DB End",
               IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
               mTransactionLoggingSerialNumber, mLoggingSerialNumber);
         }
@@ -22203,10 +22195,8 @@ TransactionBase::CommitOp::Run() {
 
   AUTO_PROFILER_LABEL("TransactionBase::CommitOp::Run", DOM);
 
-  IDB_LOG_MARK(
-      "IndexedDB %s: Parent Transaction[%lld] Request[%llu]: "
-      "Beginning database work",
-      "IndexedDB %s: P T[%lld] R[%llu]: DB Start",
+  IDB_LOG_MARK_PARENT_TRANSACTION_REQUEST(
+      "Beginning database work", "DB Start",
       IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
       mTransaction->LoggingSerialNumber(), mLoggingSerialNumber);
 
@@ -22270,18 +22260,14 @@ TransactionBase::CommitOp::Run() {
     }
   }
 
-  IDB_LOG_MARK(
-      "IndexedDB %s: Parent Transaction[%lld] Request[%llu]: "
-      "Finished database work",
-      "IndexedDB %s: P T[%lld] R[%llu]: DB End",
+  IDB_LOG_MARK_PARENT_TRANSACTION_REQUEST(
+      "Finished database work", "DB End",
       IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
       mTransaction->LoggingSerialNumber(), mLoggingSerialNumber);
 
-  IDB_LOG_MARK(
-      "IndexedDB %s: Parent Transaction[%lld]: "
-      "Finished database work",
-      "IndexedDB %s: P T[%lld]: DB End",
-      IDB_LOG_ID_STRING(mBackgroundChildLoggingId), mLoggingSerialNumber);
+  IDB_LOG_MARK_PARENT_TRANSACTION("Finished database work", "DB End",
+                                  IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
+                                  mLoggingSerialNumber);
 
   return NS_OK;
 }
@@ -22301,10 +22287,8 @@ void TransactionBase::CommitOp::TransactionFinishedAfterUnblock() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mTransaction);
 
-  IDB_LOG_MARK(
-      "IndexedDB %s: Parent Transaction[%lld]: "
-      "Finished with result 0x%x",
-      "IndexedDB %s: P T[%lld]: Transaction finished (0x%x)",
+  IDB_LOG_MARK_PARENT_TRANSACTION(
+      "Finished with result 0x%x", "Transaction finished (0x%x)",
       IDB_LOG_ID_STRING(mTransaction->GetLoggingInfo()->Id()),
       mTransaction->LoggingSerialNumber(), mResultCode);
 
