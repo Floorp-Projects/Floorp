@@ -45,17 +45,10 @@
 
 namespace mozilla {
 
-#ifdef LOG
-#  undef LOG
-#endif
-
 LogModule* GetGMPLog() {
   static LazyLogModule sLog("GMP");
   return sLog;
 }
-
-#define LOGD(msg) MOZ_LOG(GetGMPLog(), mozilla::LogLevel::Debug, msg)
-#define LOG(level, msg) MOZ_LOG(GetGMPLog(), (level), msg)
 
 #ifdef __CLASS__
 #  undef __CLASS__
@@ -152,8 +145,9 @@ GeckoMediaPluginService::GeckoMediaPluginService()
     nsAutoCString buildID;
     if (NS_SUCCEEDED(appInfo->GetVersion(version)) &&
         NS_SUCCEEDED(appInfo->GetAppBuildID(buildID))) {
-      LOGD(("GeckoMediaPluginService created; Gecko version=%s buildID=%s",
-            version.get(), buildID.get()));
+      GMP_LOG_DEBUG(
+          "GeckoMediaPluginService created; Gecko version=%s buildID=%s",
+          version.get(), buildID.get());
     }
   }
 }
@@ -164,7 +158,7 @@ NS_IMETHODIMP
 GeckoMediaPluginService::RunPluginCrashCallbacks(
     uint32_t aPluginId, const nsACString& aPluginName) {
   MOZ_ASSERT(NS_IsMainThread());
-  LOGD(("%s::%s(%i)", __CLASS__, __FUNCTION__, aPluginId));
+  GMP_LOG_DEBUG("%s::%s(%i)", __CLASS__, __FUNCTION__, aPluginId);
 
   nsAutoPtr<nsTArray<RefPtr<GMPCrashHelper>>> helpers;
   {
@@ -172,8 +166,8 @@ GeckoMediaPluginService::RunPluginCrashCallbacks(
     mPluginCrashHelpers.Remove(aPluginId, &helpers);
   }
   if (!helpers) {
-    LOGD(("%s::%s(%i) No crash helpers, not handling crash.", __CLASS__,
-          __FUNCTION__, aPluginId));
+    GMP_LOG_DEBUG("%s::%s(%i) No crash helpers, not handling crash.", __CLASS__,
+                  __FUNCTION__, aPluginId);
     return NS_OK;
   }
 
@@ -274,7 +268,7 @@ RefPtr<GetCDMParentPromise> GeckoMediaPluginService::GetCDM(
 }
 
 void GeckoMediaPluginService::ShutdownGMPThread() {
-  LOGD(("%s::%s", __CLASS__, __FUNCTION__));
+  GMP_LOG_DEBUG("%s::%s", __CLASS__, __FUNCTION__);
   nsCOMPtr<nsIThread> gmpThread;
   {
     MutexAutoLock lock(mMutex);
@@ -459,3 +453,5 @@ void GeckoMediaPluginService::DisconnectCrashHelper(GMPCrashHelper* aHelper) {
 
 }  // namespace gmp
 }  // namespace mozilla
+
+#undef __CLASS__

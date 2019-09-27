@@ -23,13 +23,6 @@
 
 namespace mozilla {
 
-#ifdef LOG
-#  undef LOG
-#endif
-
-#define LOGD(msg) MOZ_LOG(GetGMPLog(), mozilla::LogLevel::Debug, msg)
-#define LOG(level, msg) MOZ_LOG(GetGMPLog(), (level), msg)
-
 #ifdef __CLASS__
 #  undef __CLASS__
 #endif
@@ -104,7 +97,8 @@ GeckoMediaPluginServiceChild::GetContentParent(
                       "SendLaunchGMPForNodeId failed with description (%s)",
                       errorDescription.get()));
 
-          LOGD(("%s", error.Description().get()));
+          GMP_LOG_DEBUG("%s failed to launch GMP with error: %s", __CLASS__,
+                        error.Description().get());
           holder->Reject(error, __func__);
           return;
         }
@@ -180,7 +174,8 @@ GeckoMediaPluginServiceChild::GetContentParent(
                       "SendLaunchGMPForNodeId failed with description (%s)",
                       errorDescription.get()));
 
-          LOGD(("%s", error.Description().get()));
+          GMP_LOG_DEBUG("%s failed to launch GMP with error: %s", __CLASS__,
+                        error.Description().get());
           holder->Reject(error, __func__);
           return;
         }
@@ -278,7 +273,8 @@ void GeckoMediaPluginServiceChild::UpdateGMPCapabilities(
       sGMPCapabilities->AppendElement(GMPCapabilityAndVersion(plugin));
     }
 
-    LOGD(("UpdateGMPCapabilities {%s}", GMPCapabilitiesToString().get()));
+    GMP_LOG_DEBUG("%s::%s {%s}", __CLASS__, __FUNCTION__,
+                  GMPCapabilitiesToString().get());
   }
 
   // Fire a notification so that any MediaKeySystemAccess
@@ -352,7 +348,7 @@ GeckoMediaPluginServiceChild::GetNodeId(
 NS_IMETHODIMP
 GeckoMediaPluginServiceChild::Observe(nsISupports* aSubject, const char* aTopic,
                                       const char16_t* aSomeData) {
-  LOGD(("%s::%s: %s", __CLASS__, __FUNCTION__, aTopic));
+  GMP_LOG_DEBUG("%s::%s: %s", __CLASS__, __FUNCTION__, aTopic);
   if (!strcmp(NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, aTopic)) {
     if (mServiceChild) {
       mozilla::SyncRunnable::DispatchToThread(
@@ -529,3 +525,5 @@ bool GMPServiceChild::HaveContentParents() const {
 
 }  // namespace gmp
 }  // namespace mozilla
+
+#undef __CLASS__
