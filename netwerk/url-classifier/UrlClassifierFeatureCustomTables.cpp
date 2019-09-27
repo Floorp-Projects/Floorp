@@ -96,7 +96,7 @@ UrlClassifierFeatureCustomTables::ProcessChannel(
 NS_IMETHODIMP
 UrlClassifierFeatureCustomTables::GetURIByListType(
     nsIChannel* aChannel, nsIUrlClassifierFeature::listType aListType,
-    nsIURI** aURI) {
+    nsIUrlClassifierFeature::URIType* aURIType, nsIURI** aURI) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

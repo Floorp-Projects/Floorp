@@ -118,7 +118,7 @@ UrlClassifierFeaturePhishingProtection::ProcessChannel(
 NS_IMETHODIMP
 UrlClassifierFeaturePhishingProtection::GetURIByListType(
     nsIChannel* aChannel, nsIUrlClassifierFeature::listType aListType,
-    nsIURI** aURI) {
+    nsIUrlClassifierFeature::URIType* aURIType, nsIURI** aURI) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

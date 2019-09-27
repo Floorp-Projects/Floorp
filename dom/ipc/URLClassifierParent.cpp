@@ -107,12 +107,16 @@ class IPCFeature final : public nsIUrlClassifierFeature {
   NS_IMETHOD
   GetURIByListType(nsIChannel* aChannel,
                    nsIUrlClassifierFeature::listType aListType,
+                   nsIUrlClassifierFeature::URIType* aURIType,
                    nsIURI** aURI) override {
     NS_ENSURE_ARG_POINTER(aURI);
 
     // This method should not be called, but we have a URI, let's return it.
     nsCOMPtr<nsIURI> uri = mURI;
     uri.forget(aURI);
+    *aURIType = aListType == nsIUrlClassifierFeature::blacklist
+                    ? nsIUrlClassifierFeature::URIType::blacklistURI
+                    : nsIUrlClassifierFeature::URIType::whitelistURI;
     return NS_OK;
   }
 
