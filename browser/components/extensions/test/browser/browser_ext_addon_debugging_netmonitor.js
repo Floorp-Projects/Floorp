@@ -16,7 +16,7 @@ async function setupToolboxTest(extensionId) {
   const client = new DebuggerClient(transport);
   await client.connect();
   const addonFront = await client.mainRoot.getAddon({ id: extensionId });
-  const target = await addonFront.connect();
+  const target = await addonFront.getTarget();
   const toolbox = await gDevTools.showToolbox(
     target,
     null,

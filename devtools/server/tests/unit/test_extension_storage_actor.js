@@ -67,7 +67,7 @@ async function setupExtensionDebugging(id) {
   const client = await startDebugger();
   const front = await client.mainRoot.getAddon({ id });
   // Starts a DevTools server in the extension child process.
-  const target = await front.connect();
+  const target = await front.getTarget();
   return { front, target };
 }
 
