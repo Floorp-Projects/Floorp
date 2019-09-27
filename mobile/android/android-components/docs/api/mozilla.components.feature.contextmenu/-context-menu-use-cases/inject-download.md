@@ -2,4 +2,4 @@
 
 # injectDownload
 
-`val injectDownload: `[`InjectDownloadUseCase`](-inject-download-use-case/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuUseCases.kt#L51)
+`val injectDownload: `[`InjectDownloadUseCase`](-inject-download-use-case/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuUseCases.kt#L53)

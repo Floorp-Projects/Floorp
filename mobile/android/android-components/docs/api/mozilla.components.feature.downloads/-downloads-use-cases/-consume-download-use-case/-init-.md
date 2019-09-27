@@ -2,4 +2,4 @@
 
 # &lt;init&gt;
 
-`ConsumeDownloadUseCase(sessionManager: `[`SessionManager`](../../../mozilla.components.browser.session/-session-manager/index.md)`)`
+`ConsumeDownloadUseCase(store: `[`BrowserStore`](../../../mozilla.components.browser.state.store/-browser-store/index.md)`)`

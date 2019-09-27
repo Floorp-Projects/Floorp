@@ -2,7 +2,7 @@
 
 # Observer
 
-`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L82)
+`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L80)
 
 Interface to be implemented by classes that want to observe a session.
 
@@ -16,7 +16,6 @@ Interface to be implemented by classes that want to observe a session.
 | [onCrashStateChanged](on-crash-state-changed.md) | `open fun onCrashStateChanged(session: `[`Session`](../index.md)`, crashed: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onCustomTabConfigChanged](on-custom-tab-config-changed.md) | `open fun onCustomTabConfigChanged(session: `[`Session`](../index.md)`, customTabConfig: `[`CustomTabConfig`](../../../mozilla.components.browser.state.state/-custom-tab-config/index.md)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onDesktopModeChanged](on-desktop-mode-changed.md) | `open fun onDesktopModeChanged(session: `[`Session`](../index.md)`, enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onDownload](on-download.md) | `open fun onDownload(session: `[`Session`](../index.md)`, download: `[`Download`](../../-download/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [onFindResult](on-find-result.md) | `open fun onFindResult(session: `[`Session`](../index.md)`, result: `[`FindResult`](../-find-result/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onFullScreenChanged](on-full-screen-changed.md) | `open fun onFullScreenChanged(session: `[`Session`](../index.md)`, enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onIconChanged](on-icon-changed.md) | `open fun onIconChanged(session: `[`Session`](../index.md)`, icon: <ERROR CLASS>?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

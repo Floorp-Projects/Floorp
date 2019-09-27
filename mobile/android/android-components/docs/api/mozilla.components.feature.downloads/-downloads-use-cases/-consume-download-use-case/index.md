@@ -2,16 +2,16 @@
 
 # ConsumeDownloadUseCase
 
-`class ConsumeDownloadUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadsUseCases.kt#L19)
+`class ConsumeDownloadUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadsUseCases.kt#L18)
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `ConsumeDownloadUseCase(sessionManager: `[`SessionManager`](../../../mozilla.components.browser.session/-session-manager/index.md)`)` |
+| [&lt;init&gt;](-init-.md) | `ConsumeDownloadUseCase(store: `[`BrowserStore`](../../../mozilla.components.browser.state.store/-browser-store/index.md)`)` |
 
 ### Functions
 
 | Name | Summary |
 |---|---|
-| [invoke](invoke.md) | `operator fun invoke(tabId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, downloadId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Consumes the [Download](../../../mozilla.components.browser.session/-download/index.md) with the given [downloadId](invoke.md#mozilla.components.feature.downloads.DownloadsUseCases.ConsumeDownloadUseCase$invoke(kotlin.String, kotlin.String)/downloadId) from the [Session](../../../mozilla.components.browser.session/-session/index.md) with the given [tabId](invoke.md#mozilla.components.feature.downloads.DownloadsUseCases.ConsumeDownloadUseCase$invoke(kotlin.String, kotlin.String)/tabId). |
+| [invoke](invoke.md) | `operator fun invoke(tabId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, downloadId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Consumes the download with the given [downloadId](invoke.md#mozilla.components.feature.downloads.DownloadsUseCases.ConsumeDownloadUseCase$invoke(kotlin.String, kotlin.String)/downloadId) from the session with the given [tabId](invoke.md#mozilla.components.feature.downloads.DownloadsUseCases.ConsumeDownloadUseCase$invoke(kotlin.String, kotlin.String)/tabId). |
