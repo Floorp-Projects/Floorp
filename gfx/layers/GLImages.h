@@ -31,6 +31,12 @@ class GLImage : public Image {
 
 class SurfaceTextureImage : public GLImage {
  public:
+  class SetCurrentCallback {
+   public:
+    virtual void operator()(void) = 0;
+    virtual ~SetCurrentCallback() {}
+  };
+
   SurfaceTextureImage(AndroidSurfaceTextureHandle aHandle,
                       const gfx::IntSize& aSize, bool aContinuous,
                       gl::OriginPos aOriginPos, bool aHasAlpha = true);
@@ -50,12 +56,24 @@ class SurfaceTextureImage : public GLImage {
 
   SurfaceTextureImage* AsSurfaceTextureImage() override { return this; }
 
+  void RegisterSetCurrentCallback(UniquePtr<SetCurrentCallback> aCallback) {
+    mSetCurrentCallback = std::move(aCallback);
+  }
+
+  void OnSetCurrent() {
+    if (mSetCurrentCallback) {
+      (*mSetCurrentCallback)();
+      mSetCurrentCallback.reset();
+    }
+  }
+
  private:
   AndroidSurfaceTextureHandle mHandle;
   gfx::IntSize mSize;
   bool mContinuous;
   gl::OriginPos mOriginPos;
   const bool mHasAlpha;
+  UniquePtr<SetCurrentCallback> mSetCurrentCallback;
 };
 
 #endif  // MOZ_WIDGET_ANDROID
