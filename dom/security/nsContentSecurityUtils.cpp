@@ -433,6 +433,8 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
   nsCOMPtr<nsIContentSecurityPolicy> csp = aDocument->GetCsp();
   bool foundDefaultSrc = false;
   bool foundObjectSrc = false;
+  bool foundUnsafeEval = false;
+  bool foundUnsafeInline = false;
   if (csp) {
     uint32_t policyCount = 0;
     csp->GetPolicyCount(&policyCount);
@@ -444,6 +446,12 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
       }
       if (parsedPolicyStr.Find("object-src 'none'") >= 0) {
         foundObjectSrc = true;
+      }
+      if (parsedPolicyStr.Find("'unsafe-eval'") >= 0) {
+        foundUnsafeEval = true;
+      }
+      if (parsedPolicyStr.Find("'unsafe-inline'") >= 0) {
+        foundUnsafeInline = true;
       }
     }
   }
@@ -488,5 +496,42 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
              "about: page must contain a CSP including default-src");
   MOZ_ASSERT(foundObjectSrc,
              "about: page must contain a CSP denying object-src");
+
+  if (aDocument->IsExtensionPage()) {
+    // Extensions have two CSP policies applied where the baseline CSP
+    // includes 'unsafe-eval' and 'unsafe-inline', hence we have to skip
+    // the 'unsafe-eval' and 'unsafe-inline' assertions for extension
+    // pages.
+    return;
+  }
+
+  MOZ_ASSERT(!foundUnsafeEval,
+             "about: page must not contain a CSP including 'unsafe-eval'");
+
+  static nsLiteralCString sLegacyUnsafeInlineAllowList[] = {
+    // Bug 1579160: Remove 'unsafe-inline' from style-src within about:preferences
+    NS_LITERAL_CSTRING("about:preferences"),
+    // Bug 1571346: Remove 'unsafe-inline' from style-src within about:addons
+    NS_LITERAL_CSTRING("about:addons"),
+    // Bug 1584485: Remove 'unsafe-inline' from style-src within:
+    // * about:newtab
+    // * about:welcome
+    // * about:home
+    NS_LITERAL_CSTRING("about:newtab"),
+    NS_LITERAL_CSTRING("about:welcome"),
+    NS_LITERAL_CSTRING("about:home"),
+  };
+
+  for (const nsLiteralCString& aUnsafeInlineEntry : sLegacyUnsafeInlineAllowList) {
+    // please note that we perform a substring match here on purpose,
+    // so we don't have to deal and parse out all the query arguments
+    // the various about pages rely on.
+    if (StringBeginsWith(aboutSpec, aUnsafeInlineEntry)) {
+      return;
+    }
+  }
+
+  MOZ_ASSERT(!foundUnsafeInline,
+             "about: page must not contain a CSP including 'unsafe-inline'");
 }
 #endif
