@@ -206,7 +206,11 @@ function getExpressionNameAndValue(
         );
         displayValue = property && property.contents.value;
         displayName += `.${meta.property}`;
-      } else if (displayValue && displayValue.preview) {
+      } else if (
+        displayValue &&
+        displayValue.preview &&
+        displayValue.preview.ownProperties
+      ) {
         const { ownProperties } = displayValue.preview;
         Object.keys(ownProperties).forEach(prop => {
           if (prop === meta.property) {
