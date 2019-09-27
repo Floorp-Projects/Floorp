@@ -1259,14 +1259,6 @@ nsresult nsNSSComponent::setEnabledTLSVersions() {
   uint32_t maxFromPrefs = Preferences::GetUint("security.tls.version.max",
                                                PSM_DEFAULT_MAX_TLS_VERSION);
 
-  // This override should be removed when PSM_DEFAULT_MIN_TLS_VERSION is increased
-  // to 3 in March 2020, see bug 1579285.
-  bool enableDeprecated = Preferences::GetBool("security.tls.version.enable-deprecated",
-                                              false);
-  if (enableDeprecated) {
-    minFromPrefs = std::min(minFromPrefs, PSM_DEFAULT_MIN_TLS_VERSION);
-  }
-
   SSLVersionRange defaults = {
       SSL_LIBRARY_VERSION_3_0 + PSM_DEFAULT_MIN_TLS_VERSION,
       SSL_LIBRARY_VERSION_3_0 + PSM_DEFAULT_MAX_TLS_VERSION};
@@ -1918,8 +1910,7 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
     NS_ConvertUTF16toUTF8 prefName(someData);
 
     if (prefName.EqualsLiteral("security.tls.version.min") ||
-        prefName.EqualsLiteral("security.tls.version.max") ||
-        prefName.EqualsLiteral("security.tls.version.enable-deprecated")) {
+        prefName.EqualsLiteral("security.tls.version.max")) {
       (void)setEnabledTLSVersions();
     } else if (prefName.EqualsLiteral("security.tls.hello_downgrade_check")) {
       bool enableDowngradeCheck = Preferences::GetBool(

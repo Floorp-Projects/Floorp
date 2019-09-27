@@ -74,18 +74,6 @@ function showPrefChangeContainer() {
   addAutofocus("#prefResetButton", "beforeend");
 }
 
-function showTls10Container() {
-  const panel = document.getElementById("enableTls10Container");
-  panel.style.display = "block";
-  document.getElementById("netErrorButtonContainer").style.display = "none";
-  const button = document.getElementById("enableTls10Button");
-  button.addEventListener("click", function enableTls10(e) {
-    RPMSetBoolPref("security.tls.version.enable-deprecated", true);
-    retryThis(button);
-  });
-  addAutofocus("#enableTls10Button", "beforeend");
-}
-
 function setupAdvancedButton() {
   // Get the hostname and add it to the panel
   var panel = document.getElementById("badCertAdvancedPanel");
@@ -276,36 +264,26 @@ function initPage() {
   if (err == "nssFailure2") {
     setupErrorUI();
 
-    const errorCode = document.getNetErrorInfo().errorCodeString;
-    const isTlsVersionError = errorCode == "SSL_ERROR_UNSUPPORTED_VERSION";
-    const tls10OverrideEnabled = RPMGetBoolPref(
-      "security.tls.version.enable-deprecated"
-    );
+    RPMAddMessageListener("HasChangedCertPrefs", msg => {
+      let hasChangedCertPrefs = msg.data.hasChangedCertPrefs;
 
-    if (isTlsVersionError && !tls10OverrideEnabled) {
-      // This is probably a TLS 1.0 server; offer to re-enable.
-      showTls10Container();
-    } else {
-      const hasPrefStyleError = [
+      let errorCode = document.getNetErrorInfo().errorCodeString;
+      let hasPrefStyleError = [
         "interrupted", // This happens with subresources that are above the max tls
-        "SSL_ERROR_NO_CIPHERS_SUPPORTED",
-        "SSL_ERROR_NO_CYPHER_OVERLAP",
         "SSL_ERROR_PROTOCOL_VERSION_ALERT",
         "SSL_ERROR_UNSUPPORTED_VERSION",
+        "SSL_ERROR_NO_CYPHER_OVERLAP",
+        "SSL_ERROR_NO_CIPHERS_SUPPORTED",
       ].some(substring => {
         return substring == errorCode;
       });
 
-      if (hasPrefStyleError) {
-        RPMAddMessageListener("HasChangedCertPrefs", msg => {
-          if (msg.data.hasChangedCertPrefs) {
-            // Configuration overrides might have caused this; offer to reset.
-            showPrefChangeContainer();
-          }
-        });
-        RPMSendAsyncMessage("GetChangedCertPrefs");
+      // If it looks like an error that is user config based
+      if (hasPrefStyleError && hasChangedCertPrefs) {
+        showPrefChangeContainer();
       }
-    }
+    });
+    RPMSendAsyncMessage("GetChangedCertPrefs");
   }
 
   if (err == "sslv3Used") {
