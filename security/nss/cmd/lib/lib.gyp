@@ -27,7 +27,8 @@
   ],
   'target_defaults': {
     'defines': [
-      'NSPR20'
+      'NSPR20',
+      'NSS_USE_STATIC_LIBS'
     ]
   },
   'variables': {

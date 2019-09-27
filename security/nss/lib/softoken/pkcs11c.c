@@ -1931,7 +1931,7 @@ static SECStatus
 sftk_HMACCmp(CK_ULONG *copyLen, unsigned char *sig, unsigned int sigLen,
              unsigned char *hash, unsigned int hashLen)
 {
-    return (PORT_Memcmp(sig, hash, *copyLen) == 0) ? SECSuccess : SECFailure;
+    return (NSS_SecureMemcmp(sig, hash, *copyLen) == 0) ? SECSuccess : SECFailure;
 }
 
 /*
@@ -2125,7 +2125,7 @@ sftk_SSLMACVerify(SFTKSSLMACInfo *info, unsigned char *sig, unsigned int sigLen,
     info->update(info->hashContext, ssl_pad_2, info->padSize);
     info->update(info->hashContext, hash, hashLen);
     info->end(info->hashContext, tmpBuf, &out, SFTK_MAX_MAC_LENGTH);
-    return (PORT_Memcmp(sig, tmpBuf, info->macSize) == 0) ? SECSuccess : SECFailure;
+    return (NSS_SecureMemcmp(sig, tmpBuf, info->macSize) == 0) ? SECSuccess : SECFailure;
 }
 
 /*
@@ -3647,7 +3647,7 @@ NSC_VerifyFinal(CK_SESSION_HANDLE hSession,
         /* must be block cipher MACing */
         crv = CKR_SIGNATURE_LEN_RANGE;
     } else if (CKR_OK == (crv = sftk_MACFinal(context))) {
-        if (PORT_Memcmp(pSignature, context->macBuf, ulSignatureLen))
+        if (NSS_SecureMemcmp(pSignature, context->macBuf, ulSignatureLen))
             crv = CKR_SIGNATURE_INVALID;
     }
 

@@ -758,7 +758,7 @@ DecodeItem(void* dest,
 
                         case SEC_ASN1_BIT_STRING: {
                             /* Can't be 8 or more spare bits, or any spare bits
-			     * if there are no octets. */
+                             * if there are no octets. */
                             if (temp.data[0] >= 8 || (temp.data[0] > 0 && temp.len == 1)) {
                                 PORT_SetError(SEC_ERROR_BAD_DER);
                                 rv = SECFailure;
