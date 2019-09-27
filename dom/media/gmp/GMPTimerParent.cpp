@@ -4,9 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPTimerParent.h"
-#include "nsComponentManagerUtils.h"
+
+#include "GMPLog.h"
 #include "mozilla/Unused.h"
 #include "nsAutoPtr.h"
+#include "nsComponentManagerUtils.h"
 
 namespace mozilla {
 

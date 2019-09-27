@@ -4,22 +4,24 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPServiceChild.h"
-#include "mozilla/dom/ContentChild.h"
-#include "mozilla/ClearOnShutdown.h"
-#include "mozilla/StaticPtr.h"
-#include "mozIGeckoMediaPluginService.h"
-#include "mozIGeckoMediaPluginChromeService.h"
-#include "nsCOMPtr.h"
+
+#include "base/task.h"
+#include "GMPLog.h"
 #include "GMPParent.h"
 #include "GMPContentParent.h"
-#include "nsXPCOMPrivate.h"
-#include "mozilla/SyncRunnable.h"
+#include "mozIGeckoMediaPluginService.h"
+#include "mozIGeckoMediaPluginChromeService.h"
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/StaticMutex.h"
-#include "runnable_utils.h"
-#include "base/task.h"
-#include "nsIObserverService.h"
-#include "nsComponentManagerUtils.h"
+#include "mozilla/StaticPtr.h"
+#include "mozilla/SyncRunnable.h"
 #include "mozilla/SystemGroup.h"
+#include "nsComponentManagerUtils.h"
+#include "nsCOMPtr.h"
+#include "nsIObserverService.h"
+#include "nsXPCOMPrivate.h"
+#include "runnable_utils.h"
 
 namespace mozilla {
 

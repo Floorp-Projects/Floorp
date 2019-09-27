@@ -6,25 +6,19 @@
 
 #include <vector>
 
+#include "gmp-video-frame-i420.h"
+#include "gmp-video-frame-encoded.h"
+#include "GMPLog.h"
+#include "MainThreadUtils.h"
+#include "mozIGeckoMediaPluginService.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Move.h"
 #include "mozilla/SyncRunnable.h"
-#include "VideoConduit.h"
-#include "AudioConduit.h"
-#include "runnable_utils.h"
-
-#include "mozIGeckoMediaPluginService.h"
 #include "nsServiceManagerUtils.h"
-#include "GMPLog.h"
-#include "GMPVideoDecoderProxy.h"
-#include "GMPVideoEncoderProxy.h"
-#include "MainThreadUtils.h"
-
-#include "gmp-video-host.h"
-#include "gmp-video-frame-i420.h"
-#include "gmp-video-frame-encoded.h"
+#include "runnable_utils.h"
+#include "VideoConduit.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
 #include "webrtc/rtc_base/bind.h"
 

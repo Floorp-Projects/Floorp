@@ -4,33 +4,39 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPChild.h"
+
+#include "base/command_line.h"
+#include "base/task.h"
+#include "ChromiumCDMAdapter.h"
+#ifdef XP_LINUX
+#  include "dlfcn.h"
+#endif
+#include "gmp-video-decode.h"
+#include "gmp-video-encode.h"
 #include "GMPContentChild.h"
-#include "GMPProcessChild.h"
 #include "GMPLoader.h"
+#include "GMPLog.h"
+#include "GMPPlatform.h"
+#include "GMPProcessChild.h"
+#include "GMPProcessParent.h"
+#include "GMPUtils.h"
 #include "GMPVideoDecoderChild.h"
 #include "GMPVideoEncoderChild.h"
 #include "GMPVideoHost.h"
+#include "mozilla/Algorithm.h"
+#include "mozilla/ipc/CrashReporterClient.h"
+#include "mozilla/ipc/ProcessChild.h"
+#if defined(MOZ_SANDBOX)
+#  if defined(XP_MACOSX)
+#    include "mozilla/Sandbox.h"
+#  endif
+#endif
+#include "mozilla/TextUtils.h"
 #include "nsDebugImpl.h"
 #include "nsExceptionHandler.h"
 #include "nsIFile.h"
 #include "nsXULAppAPI.h"
-#include "gmp-video-decode.h"
-#include "gmp-video-encode.h"
-#include "GMPPlatform.h"
-#include "GMPProcessParent.h"
-#include "mozilla/Algorithm.h"
-#include "mozilla/ipc/CrashReporterClient.h"
-#include "mozilla/ipc/ProcessChild.h"
-#include "mozilla/TextUtils.h"
-#include "GMPUtils.h"
 #include "prio.h"
-#include "base/task.h"
-#include "base/command_line.h"
-#include "ChromiumCDMAdapter.h"
-#include "GMPLog.h"
-
-using namespace mozilla::ipc;
-
 #ifdef XP_WIN
 #  include <stdlib.h>  // for _exit()
 #  include "WinUtils.h"
@@ -38,15 +44,7 @@ using namespace mozilla::ipc;
 #  include <unistd.h>  // for _exit()
 #endif
 
-#if defined(MOZ_SANDBOX)
-#  if defined(XP_MACOSX)
-#    include "mozilla/Sandbox.h"
-#  endif
-#endif
-
-#ifdef XP_LINUX
-#  include "dlfcn.h"
-#endif
+using namespace mozilla::ipc;
 
 namespace mozilla {
 
