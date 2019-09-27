@@ -353,10 +353,9 @@ nsresult nsXULPrototypeCache::HasData(nsIURI* uri, bool* exists) {
     return NS_OK;
   }
   UniquePtr<char[]> buf;
-  uint32_t len;
   StartupCache* sc = StartupCache::GetSingleton();
   if (sc) {
-    rv = sc->GetBuffer(spec.get(), &buf, &len);
+    *exists = sc->HasEntry(spec.get());
   } else {
     *exists = false;
     return NS_OK;
