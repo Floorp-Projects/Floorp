@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::common::{from_cookie, from_name, to_cookie, to_name, Cookie, Frame, Timeouts};
+use crate::common::{from_cookie, from_name, to_cookie, to_name, Cookie, Frame, Timeouts, Window};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Url {
@@ -180,6 +180,8 @@ pub enum Command {
     SwitchToFrame(Frame),
     #[serde(rename = "WebDriver:SwitchToParentFrame")]
     SwitchToParentFrame,
+    #[serde(rename = "WebDriver:SwitchToWindow")]
+    SwitchToWindow(Window),
 }
 
 #[cfg(test)]

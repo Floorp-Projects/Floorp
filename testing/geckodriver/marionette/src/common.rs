@@ -127,6 +127,12 @@ pub struct Timeouts {
     pub script: Option<Option<u64>>,
 }
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Window {
+    pub name: String,
+    pub handle: String,
+}
+
 pub fn to_name<T, S>(data: T, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
