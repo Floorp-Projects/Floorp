@@ -579,13 +579,13 @@ bool js::intl_patternForStyle(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    if (StringEqualsAscii(dateStyleStr, "full")) {
+    if (StringEqualsLiteral(dateStyleStr, "full")) {
       dateStyle = UDAT_FULL;
-    } else if (StringEqualsAscii(dateStyleStr, "long")) {
+    } else if (StringEqualsLiteral(dateStyleStr, "long")) {
       dateStyle = UDAT_LONG;
-    } else if (StringEqualsAscii(dateStyleStr, "medium")) {
+    } else if (StringEqualsLiteral(dateStyleStr, "medium")) {
       dateStyle = UDAT_MEDIUM;
-    } else if (StringEqualsAscii(dateStyleStr, "short")) {
+    } else if (StringEqualsLiteral(dateStyleStr, "short")) {
       dateStyle = UDAT_SHORT;
     } else {
       MOZ_ASSERT_UNREACHABLE("unexpected dateStyle");
@@ -598,13 +598,13 @@ bool js::intl_patternForStyle(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    if (StringEqualsAscii(timeStyleStr, "full")) {
+    if (StringEqualsLiteral(timeStyleStr, "full")) {
       timeStyle = UDAT_FULL;
-    } else if (StringEqualsAscii(timeStyleStr, "long")) {
+    } else if (StringEqualsLiteral(timeStyleStr, "long")) {
       timeStyle = UDAT_LONG;
-    } else if (StringEqualsAscii(timeStyleStr, "medium")) {
+    } else if (StringEqualsLiteral(timeStyleStr, "medium")) {
       timeStyle = UDAT_MEDIUM;
-    } else if (StringEqualsAscii(timeStyleStr, "short")) {
+    } else if (StringEqualsLiteral(timeStyleStr, "short")) {
       timeStyle = UDAT_SHORT;
     } else {
       MOZ_ASSERT_UNREACHABLE("unexpected timeStyle");

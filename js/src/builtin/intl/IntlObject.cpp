@@ -395,12 +395,12 @@ bool js::intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    if (StringEqualsAscii(style, "narrow")) {
+    if (StringEqualsLiteral(style, "narrow")) {
       dnStyle = DisplayNameStyle::Narrow;
-    } else if (StringEqualsAscii(style, "short")) {
+    } else if (StringEqualsLiteral(style, "short")) {
       dnStyle = DisplayNameStyle::Short;
     } else {
-      MOZ_ASSERT(StringEqualsAscii(style, "long"));
+      MOZ_ASSERT(StringEqualsLiteral(style, "long"));
       dnStyle = DisplayNameStyle::Long;
     }
   }

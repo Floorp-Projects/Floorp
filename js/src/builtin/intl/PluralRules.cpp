@@ -306,10 +306,10 @@ static UPluralRules* NewUPluralRules(JSContext* cx,
       return nullptr;
     }
 
-    if (StringEqualsAscii(type, "cardinal")) {
+    if (StringEqualsLiteral(type, "cardinal")) {
       category = UPLURAL_TYPE_CARDINAL;
     } else {
-      MOZ_ASSERT(StringEqualsAscii(type, "ordinal"));
+      MOZ_ASSERT(StringEqualsLiteral(type, "ordinal"));
       category = UPLURAL_TYPE_ORDINAL;
     }
   }
