@@ -19,6 +19,6 @@
     <string name="mozac_feature_findindpage_previous_result">Tìm kiếm kết quả trước đó</string>
 
     <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI. -->
-    <string name="mozac_feature_findindpage_dismiss">Loại bỏ tìm kiếm trong trang</string>
+    <string name="mozac_feature_findindpage_dismiss">Bỏ qua tìm kiếm trong trang</string>
 
 </resources>
