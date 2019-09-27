@@ -5,9 +5,6 @@
 
 "use strict";
 
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -60,7 +57,7 @@ const kDELIVERY_REASON_TO_CODE = {
   [Ci.nsIPushErrorReporter.DELIVERY_INTERNAL_ERROR]: 303,
 };
 
-const prefs = new Preferences("dom.push.");
+const prefs = Services.prefs.getBranch("dom.push.");
 
 const EXPORTED_SYMBOLS = ["PushServiceWebSocket"];
 
@@ -255,7 +252,7 @@ var PushServiceWebSocket = {
   },
 
   get _UAID() {
-    return prefs.get("userAgentID");
+    return prefs.getStringPref("userAgentID");
   },
 
   set _UAID(newID) {
@@ -268,7 +265,7 @@ var PushServiceWebSocket = {
       return;
     }
     console.debug("New _UAID", newID);
-    prefs.set("userAgentID", newID);
+    prefs.setStringPref("userAgentID", newID);
   },
 
   _ws: null,
@@ -341,7 +338,7 @@ var PushServiceWebSocket = {
       this._makeWebSocket = options.makeWebSocket;
     }
 
-    this._requestTimeout = prefs.get("requestTimeout");
+    this._requestTimeout = prefs.getIntPref("requestTimeout");
 
     return Promise.resolve();
   },
@@ -356,7 +353,7 @@ var PushServiceWebSocket = {
     console.debug("shutdownWS()");
 
     if (this._currentState == STATE_READY) {
-      prefs.ignore("userAgentID", this);
+      prefs.removeObserver("userAgentID", this);
     }
 
     this._currentState = STATE_SHUT_DOWN;
@@ -421,8 +418,8 @@ var PushServiceWebSocket = {
 
     // Calculate new timeout, but cap it to pingInterval.
     let retryTimeout =
-      prefs.get("retryBaseInterval") * Math.pow(2, this._retryFailCount);
-    retryTimeout = Math.min(retryTimeout, prefs.get("pingInterval"));
+      prefs.getIntPref("retryBaseInterval") * Math.pow(2, this._retryFailCount);
+    retryTimeout = Math.min(retryTimeout, prefs.getIntPref("pingInterval"));
 
     this._retryFailCount++;
 
@@ -473,13 +470,13 @@ var PushServiceWebSocket = {
     }
     this._pingTimer.init(
       this,
-      prefs.get("pingInterval"),
+      prefs.getIntPref("pingInterval"),
       Ci.nsITimer.TYPE_ONE_SHOT
     );
   },
 
   _makeWebSocket(uri) {
-    if (!prefs.get("connection.enabled")) {
+    if (!prefs.getBoolPref("connection.enabled")) {
       console.warn(
         "makeWebSocket: connection.enabled is not set to true.",
         "Aborting."
@@ -609,7 +606,7 @@ var PushServiceWebSocket = {
     function finishHandshake() {
       this._UAID = reply.uaid;
       this._currentState = STATE_READY;
-      prefs.observe("userAgentID", this);
+      prefs.addObserver("userAgentID", this);
 
       // Handle broadcasts received in response to the "hello" message.
       if (!ObjectUtils.isEmpty(reply.broadcasts)) {
