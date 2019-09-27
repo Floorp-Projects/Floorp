@@ -46,7 +46,8 @@ var AboutPrivateBrowsingHandler = {
       case "SearchHandoff": {
         let searchAlias = "";
         let searchAliases =
-          Services.search.defaultEngine.wrappedJSObject.__internalAliases;
+          Services.search.defaultPrivateEngine.wrappedJSObject
+            .__internalAliases;
         if (searchAliases && searchAliases.length) {
           searchAlias = `${searchAliases[0]} `;
         }

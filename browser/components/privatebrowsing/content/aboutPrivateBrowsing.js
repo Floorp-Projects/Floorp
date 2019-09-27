@@ -80,6 +80,8 @@ document.addEventListener("DOMContentLoaded", function() {
     input,
     input.parentNode,
     "aboutprivatebrowsing",
-    "aboutprivatebrowsing"
+    "aboutprivatebrowsing",
+    // We know we're definitely in a PB window here.
+    true
   );
 });

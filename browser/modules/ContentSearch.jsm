@@ -366,7 +366,8 @@ var ContentSearch = {
   async currentStateObj() {
     let state = {
       engines: [],
-      currentEngine: await this._currentEngineObj(),
+      currentEngine: await this._currentEngineObj(false),
+      currentPrivateEngine: await this._currentEngineObj(true),
     };
 
     let pref = Services.prefs.getCharPref("browser.search.hiddenOneOffs");
@@ -501,8 +502,11 @@ var ContentSearch = {
 
   async _onObserve(data) {
     if (data === "engine-default") {
-      let engine = await this._currentEngineObj();
+      let engine = await this._currentEngineObj(false);
       this._broadcast("CurrentEngine", engine);
+    } else if (data === "engine-default-private") {
+      let engine = await this._currentEngineObj(true);
+      this._broadcast("CurrentPrivateEngine", engine);
     } else {
       let state = await this.currentStateObj();
       this._broadcast("CurrentState", state);
@@ -545,8 +549,9 @@ var ContentSearch = {
     ];
   },
 
-  async _currentEngineObj() {
-    let engine = Services.search.defaultEngine;
+  async _currentEngineObj(usePrivate) {
+    let engine =
+      Services.search[usePrivate ? "defaultPrivateEngine" : "defaultEngine"];
     let favicon = engine.getIconURLBySize(16, 16);
     let placeholder = this._stringBundle.formatStringFromName(
       "searchWithEngine",

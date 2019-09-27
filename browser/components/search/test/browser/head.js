@@ -67,6 +67,9 @@ function promiseEvent(aTarget, aEventName, aPreventDefault) {
  *   - {String} [iconURL]       The icon to use for the search engine.
  *   - {Boolean} [setAsCurrent] Whether to set the new engine to be the
  *                              current engine or not.
+ *   - {Boolean} [setAsCurrentPrivate] Whether to set the new engine to be the
+ *                              current private browsing mode engine or not.
+ *                              Defaults to false.
  *   - {String} [testPath]      Used to override the current test path if this
  *                              file is used from a different directory.
  * @returns {Promise} The promise is resolved once the engine is added, or
@@ -78,19 +81,26 @@ async function promiseNewEngine(basename, options = {}) {
     options.setAsCurrent == undefined ? true : options.setAsCurrent;
   info("Waiting for engine to be added: " + basename);
   let url = getRootDirectory(options.testPath || gTestPath) + basename;
-  let current = await Services.search.getDefault();
   let engine = await Services.search.addEngine(
     url,
     options.iconURL || "",
     false
   );
   info("Search engine added: " + basename);
+  const current = await Services.search.getDefault();
   if (setAsCurrent) {
     await Services.search.setDefault(engine);
+  }
+  const currentPrivate = await Services.search.getDefaultPrivate();
+  if (options.setAsCurrentPrivate) {
+    await Services.search.setDefaultPrivate(engine);
   }
   registerCleanupFunction(async () => {
     if (setAsCurrent) {
       await Services.search.setDefault(current);
+    }
+    if (options.setAsCurrentPrivate) {
+      await Services.search.setDefaultPrivate(currentPrivate);
     }
     await Services.search.removeEngine(engine);
     info("Search engine removed: " + basename);

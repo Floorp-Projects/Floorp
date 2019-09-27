@@ -36,6 +36,26 @@ async function testLinkOpensUrl({ win, tab, elementId, expectedUrl }) {
   );
 }
 
+let expectedEngineAlias;
+let expectedIconURL;
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.search.separatePrivateDefault", true]],
+  });
+
+  const originalPrivateDefault = await Services.search.getDefaultPrivate();
+  // We have to use a built-in engine as we are currently hard-coding the aliases.
+  const privateEngine = await Services.search.getEngineByName("DuckDuckGo");
+  await Services.search.setDefaultPrivate(privateEngine);
+  expectedEngineAlias = privateEngine.wrappedJSObject.__internalAliases[0];
+  expectedIconURL = privateEngine.iconURI.spec;
+
+  registerCleanupFunction(async () => {
+    await Services.search.setDefaultPrivate(originalPrivateDefault);
+  });
+});
+
 /**
  * Tests the private-browsing-myths link in "about:privatebrowsing".
  */
@@ -72,6 +92,23 @@ function urlBarHasNormalFocus(win) {
 }
 
 /**
+ * Tests that we have the correct icon displayed.
+ */
+add_task(async function test_search_icon() {
+  let { win, tab } = await openAboutPrivateBrowsing();
+
+  await ContentTask.spawn(tab, expectedIconURL, async function(iconURL) {
+    is(
+      content.document.body.getAttribute("style"),
+      `--newtab-search-icon:url(${iconURL});`,
+      "Should have the correct icon URL for the logo"
+    );
+  });
+
+  await BrowserTestUtils.closeWindow(win);
+});
+
+/**
  * Tests the search hand-off on character keydown in "about:privatebrowsing".
  */
 add_task(async function test_search_handoff_on_keydown() {
@@ -93,7 +130,7 @@ add_task(async function test_search_handoff_on_keydown() {
     );
   });
   ok(urlBarHasNormalFocus(win), "url bar has normal focused");
-  is(win.gURLBar.value, "@google f", "url bar has search text");
+  is(win.gURLBar.value, `${expectedEngineAlias} f`, "url bar has search text");
   await UrlbarTestUtils.promiseSearchComplete(win);
   // Close the popup.
   await UrlbarTestUtils.promisePopupClose(win);
@@ -151,7 +188,11 @@ add_task(async function test_search_handoff_on_paste() {
   await UrlbarTestUtils.promiseSearchComplete(win);
 
   ok(urlBarHasNormalFocus(win), "url bar has normal focused");
-  is(win.gURLBar.value, "@google words", "url bar has search text");
+  is(
+    win.gURLBar.value,
+    `${expectedEngineAlias} words`,
+    "url bar has search text"
+  );
 
   await BrowserTestUtils.closeWindow(win);
 });
