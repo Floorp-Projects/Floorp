@@ -4,17 +4,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPVideoDecoderParent.h"
-#include "mozilla/Logging.h"
-#include "mozilla/Unused.h"
-#include "nsAutoRef.h"
-#include "nsThreadUtils.h"
+
+#include "GMPContentParent.h"
 #include "GMPUtils.h"
+#include "GMPLog.h"
+#include "GMPMessageUtils.h"
 #include "GMPVideoEncodedFrameImpl.h"
 #include "GMPVideoi420FrameImpl.h"
-#include "GMPContentParent.h"
-#include "GMPMessageUtils.h"
 #include "mozilla/gmp/GMPTypes.h"
+#include "mozilla/Unused.h"
+#include "nsAutoRef.h"
 #include "nsPrintfCString.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 

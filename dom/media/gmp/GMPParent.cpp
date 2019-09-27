@@ -4,43 +4,40 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPParent.h"
-#include "mozilla/Logging.h"
-#include "nsComponentManagerUtils.h"
-#include "nsComponentManagerUtils.h"
-#include "nsPrintfCString.h"
-#include "nsThreadUtils.h"
-#include "nsIRunnable.h"
-#include "nsIWritablePropertyBag2.h"
+
+#include "CDMStorageIdProvider.h"
+#include "ChromiumCDMAdapter.h"
+#include "GMPContentParent.h"
+#include "GMPLog.h"
+#include "GMPTimerParent.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/AbstractThread.h"
+#include "mozilla/dom/WidevineCDMManifestBinding.h"
 #include "mozilla/ipc/CrashReporterHost.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
-#include "mozilla/SSE.h"
-#include "mozilla/SyncRunnable.h"
-#include "mozilla/Unused.h"
-#include "nsIObserverService.h"
-#include "GMPTimerParent.h"
-#include "runnable_utils.h"
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxInfo.h"
 #endif
-#include "CDMStorageIdProvider.h"
-#include "GMPContentParent.h"
+#include "mozilla/SSE.h"
+#include "mozilla/SyncRunnable.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/Unused.h"
+#include "nsComponentManagerUtils.h"
+#include "nsIRunnable.h"
+#include "nsIObserverService.h"
+#include "nsIWritablePropertyBag2.h"
+#include "nsPrintfCString.h"
+#include "nsThreadUtils.h"
+#include "runnable_utils.h"
 #include "VideoUtils.h"
+#ifdef XP_WIN
+#  include "WMFDecoderModule.h"
+#endif
 
 using mozilla::ipc::GeckoChildProcessHost;
 
 using CrashReporter::AnnotationTable;
 using CrashReporter::GetIDFromMinidump;
-
-#include "mozilla/Telemetry.h"
-
-#ifdef XP_WIN
-#  include "WMFDecoderModule.h"
-#endif
-
-#include "mozilla/dom/WidevineCDMManifestBinding.h"
-#include "ChromiumCDMAdapter.h"
 
 namespace mozilla {
 
