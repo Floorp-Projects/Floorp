@@ -2,7 +2,7 @@
 
 # ConsumeHitResultUseCase
 
-`class ConsumeHitResultUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuUseCases.kt#L21)
+`class ConsumeHitResultUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuUseCases.kt#L23)
 
 ### Constructors
 

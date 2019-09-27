@@ -2,7 +2,7 @@
 
 # ContextMenuUseCases
 
-`class ContextMenuUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuUseCases.kt#L18)
+`class ContextMenuUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuUseCases.kt#L19)
 
 Contains use cases related to the context menu feature.
 
@@ -21,7 +21,7 @@ Contains use cases related to the context menu feature.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `ContextMenuUseCases(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`)`<br>Contains use cases related to the context menu feature. |
+| [&lt;init&gt;](-init-.md) | `ContextMenuUseCases(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`)`<br>Contains use cases related to the context menu feature. |
 
 ### Properties
 

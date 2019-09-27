@@ -6,7 +6,6 @@
 
 | Name | Summary |
 |---|---|
-| [Download](-download/index.md) | `data class Download`<br>Value type that represents a Download. |
 | [LegacySessionManager](-legacy-session-manager/index.md) | `class LegacySessionManager : `[`Observable`](../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-session-manager/-observer/index.md)`>`<br>This class provides access to a centralized registry of all active sessions. |
 | [SelectionAwareSessionObserver](-selection-aware-session-observer/index.md) | `abstract class SelectionAwareSessionObserver : `[`Observer`](-session-manager/-observer/index.md)`, `[`Observer`](-session/-observer/index.md)<br>This class is a combination of [Session.Observer](-session/-observer/index.md) and [SessionManager.Observer](-session-manager/-observer/index.md). It provides functionality to observe changes to a specified or selected session, and can automatically take care of switching over the observer in case a different session gets selected (see [observeFixed](-selection-aware-session-observer/observe-fixed.md) and [observeSelected](-selection-aware-session-observer/observe-selected.md)). |
 | [Session](-session/index.md) | `class Session : `[`Observable`](../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-session/-observer/index.md)`>`<br>Value type that represents the state of a browser session. Changes can be observed. |

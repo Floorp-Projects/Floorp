@@ -2,13 +2,13 @@
 
 # DownloadsUseCases
 
-`class DownloadsUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadsUseCases.kt#L16)
+`class DownloadsUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadsUseCases.kt#L15)
 
 Contains use cases related to the downloads feature.
 
 ### Parameters
 
-`sessionManager` - the application's [SessionManager](../../mozilla.components.browser.session/-session-manager/index.md).
+`store` - the application's [BrowserStore](../../mozilla.components.browser.state.store/-browser-store/index.md).
 
 ### Types
 
@@ -20,7 +20,7 @@ Contains use cases related to the downloads feature.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `DownloadsUseCases(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`)`<br>Contains use cases related to the downloads feature. |
+| [&lt;init&gt;](-init-.md) | `DownloadsUseCases(store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`)`<br>Contains use cases related to the downloads feature. |
 
 ### Properties
 

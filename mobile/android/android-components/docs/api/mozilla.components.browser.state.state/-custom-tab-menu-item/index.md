@@ -2,7 +2,7 @@
 
 # CustomTabMenuItem
 
-`data class CustomTabMenuItem` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/CustomTabConfig.kt#L58)
+`data class CustomTabMenuItem` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/CustomTabConfig.kt#L60)
 
 ### Constructors
 
