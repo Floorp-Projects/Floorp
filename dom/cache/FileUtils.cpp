@@ -358,71 +358,40 @@ nsresult BodyMaybeUpdatePaddingSize(const QuotaInfo& aQuotaInfo,
 nsresult BodyDeleteFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
                          const nsTArray<nsID>& aIdList) {
   nsresult rv = NS_OK;
-
-  for (uint32_t i = 0; i < aIdList.Length(); ++i) {
-    nsCOMPtr<nsIFile> tmpFile;
-    rv = BodyIdToFile(aBaseDir, aIdList[i], BODY_FILE_TMP,
-                      getter_AddRefs(tmpFile));
+  for (const auto id : aIdList) {
+    nsCOMPtr<nsIFile> bodyDir;
+    rv = BodyGetCacheDir(aBaseDir, id, getter_AddRefs(bodyDir));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = RemoveNsIFile(aQuotaInfo, tmpFile);
-    // Only treat file deletion as a hard failure in DEBUG builds.  Users
-    // can unfortunately hit this on windows if anti-virus is scanning files,
-    // etc.
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    const auto removeFileForId = [&aQuotaInfo, &id](nsIFile* bodyFile,
+                                                    const nsACString& leafName,
+                                                    bool& fileDeleted) {
+      MOZ_DIAGNOSTIC_ASSERT(bodyFile);
 
-    nsCOMPtr<nsIFile> finalFile;
-    rv = BodyIdToFile(aBaseDir, aIdList[i], BODY_FILE_FINAL,
-                      getter_AddRefs(finalFile));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    nsCOMPtr<nsIFile> bodyDirectory;
-    rv = finalFile->GetParent(getter_AddRefs(bodyDirectory));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = RemoveNsIFile(aQuotaInfo, finalFile);
-    // Again, only treat removal as hard failure in debug build.
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    // Checking if the directory is empty or not. If it's, then remove the
-    // directory as well.
-    nsCOMPtr<nsIDirectoryEnumerator> entries;
-    rv = bodyDirectory->GetDirectoryEntries(getter_AddRefs(entries));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    bool isEmpty = true;
-    nsCOMPtr<nsIFile> file;
-    while (NS_SUCCEEDED(rv = entries->GetNextFile(getter_AddRefs(file))) &&
-           file) {
-      nsAutoCString leafName;
-      rv = file->GetNativeLeafName(leafName);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+      nsID fileId;
+      if (NS_WARN_IF(!fileId.Parse(leafName.BeginReading()))) {
+        DebugOnly<nsresult> result =
+            RemoveNsIFile(aQuotaInfo, bodyFile, /* aTrackQuota */ false);
+        MOZ_ASSERT(NS_SUCCEEDED(result));
+        fileDeleted = true;
+        return NS_OK;
       }
 
-      if (StringEndsWith(leafName, NS_LITERAL_CSTRING(".tmp")) ||
-          StringEndsWith(leafName, NS_LITERAL_CSTRING(".final"))) {
-        isEmpty = false;
-        break;
+      if (id.Equals(fileId)) {
+        DebugOnly<nsresult> result = RemoveNsIFile(aQuotaInfo, bodyFile);
+        MOZ_ASSERT(NS_SUCCEEDED(result));
+        fileDeleted = true;
+        return NS_OK;
       }
-    }
+
+      fileDeleted = false;
+      return NS_OK;
+    };
+    rv = BodyTraverseFiles(aQuotaInfo, bodyDir, removeFileForId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
-    }
-
-    if (isEmpty) {
-      DebugOnly<nsresult> result =
-          RemoveNsIFileRecursively(aQuotaInfo, bodyDirectory,
-                                   /* aTrackQuota */ false);
-      MOZ_ASSERT(NS_SUCCEEDED(result));
     }
   }
 
@@ -566,86 +535,132 @@ nsresult BodyDeleteOrphanedFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
       continue;
     }
 
-    nsCOMPtr<nsIDirectoryEnumerator> subEntries;
-    rv = subdir->GetDirectoryEntries(getter_AddRefs(subEntries));
+    const auto removeOrphanedFiles =
+        [&aQuotaInfo, &aKnownBodyIdList](
+            nsIFile* bodyFile, const nsACString& leafName, bool& fileDeleted) {
+          MOZ_DIAGNOSTIC_ASSERT(bodyFile);
+          // Finally, parse the uuid out of the name.  If its fails to parse,
+          // the ignore the file.
+          nsID id;
+          if (NS_WARN_IF(!id.Parse(leafName.BeginReading()))) {
+            DebugOnly<nsresult> result = RemoveNsIFile(aQuotaInfo, bodyFile);
+            MOZ_ASSERT(NS_SUCCEEDED(result));
+            fileDeleted = true;
+            return NS_OK;
+          }
+
+          if (!aKnownBodyIdList.Contains(id)) {
+            DebugOnly<nsresult> result = RemoveNsIFile(aQuotaInfo, bodyFile);
+            MOZ_ASSERT(NS_SUCCEEDED(result));
+            fileDeleted = true;
+            return NS_OK;
+          }
+
+          fileDeleted = false;
+          return NS_OK;
+        };
+    rv = BodyTraverseFiles(aQuotaInfo, subdir, removeOrphanedFiles);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
-    }
-
-    bool isEmpty = true;
-    // Now iterate over all the files in the subdir
-    nsCOMPtr<nsIFile> file;
-    while (NS_SUCCEEDED(rv = subEntries->GetNextFile(getter_AddRefs(file))) &&
-           file) {
-      bool isDirectory = false;
-      rv = file->IsDirectory(&isDirectory);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      // If it's a directory somehow, try to remove it and move on
-      if (isDirectory) {
-        DebugOnly<nsresult> result =
-            RemoveNsIFileRecursively(aQuotaInfo, file, /* aTrackQuota */ false);
-        MOZ_ASSERT(NS_SUCCEEDED(result));
-        continue;
-      }
-
-      nsAutoCString leafName;
-      rv = file->GetNativeLeafName(leafName);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      // Delete all tmp files regardless of known bodies. These are all
-      // considered orphans.
-      if (StringEndsWith(leafName, NS_LITERAL_CSTRING(".tmp"))) {
-        DebugOnly<nsresult> result = RemoveNsIFile(aQuotaInfo, file);
-        MOZ_ASSERT(NS_SUCCEEDED(result));
-        continue;
-      }
-
-      nsCString suffix(NS_LITERAL_CSTRING(".final"));
-
-      // Otherwise, it must be a .final file.  If its not, then try to remove it
-      // and move on
-      if (NS_WARN_IF(!StringEndsWith(leafName, suffix) ||
-                     leafName.Length() != NSID_LENGTH - 1 + suffix.Length())) {
-        DebugOnly<nsresult> result = RemoveNsIFile(aQuotaInfo, file);
-        MOZ_ASSERT(NS_SUCCEEDED(result));
-        continue;
-      }
-
-      // Finally, parse the uuid out of the name.  If its fails to parse,
-      // the ignore the file.
-      nsID id;
-      if (NS_WARN_IF(!id.Parse(leafName.BeginReading()))) {
-        DebugOnly<nsresult> result =
-            RemoveNsIFile(aQuotaInfo, file, /* aTrackQuota */ false);
-        MOZ_ASSERT(NS_SUCCEEDED(result));
-        continue;
-      }
-
-      if (!aKnownBodyIdList.Contains(id)) {
-        DebugOnly<nsresult> result = RemoveNsIFile(aQuotaInfo, file);
-        MOZ_ASSERT(NS_SUCCEEDED(result));
-        continue;
-      }
-
-      isEmpty = false;
-    }
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (isEmpty) {
-      DebugOnly<nsresult> result =
-          RemoveNsIFileRecursively(aQuotaInfo, subdir, /* aTrackQuota */ false);
-      MOZ_ASSERT(NS_SUCCEEDED(result));
     }
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
+
+  return rv;
+}
+
+template <typename Func>
+nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBodyDir,
+                           const Func& aHandleFileFunc,
+                           const bool aTrackQuota) {
+  MOZ_DIAGNOSTIC_ASSERT(aBodyDir);
+
+  nsresult rv;
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  nsCOMPtr<nsIFile> parentFile;
+  rv = aBodyDir->GetParent(getter_AddRefs(parentFile));
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  MOZ_DIAGNOSTIC_ASSERT(parentFile);
+
+  nsAutoCString nativeLeafName;
+  rv = parentFile->GetNativeLeafName(nativeLeafName);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
+  MOZ_DIAGNOSTIC_ASSERT(
+      StringEndsWith(nativeLeafName, NS_LITERAL_CSTRING("morgue")));
+#endif
+
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
+  rv = aBodyDir->GetDirectoryEntries(getter_AddRefs(entries));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool isEmpty = true;
+  nsCOMPtr<nsIFile> file;
+  while (NS_SUCCEEDED(rv = entries->GetNextFile(getter_AddRefs(file))) &&
+         file) {
+    bool isDir = false;
+    rv = file->IsDirectory(&isDir);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    // If it's a directory somehow, try to remove it and move on
+    if (NS_WARN_IF(isDir)) {
+      DebugOnly<nsresult> result =
+          RemoveNsIFileRecursively(aQuotaInfo, file, /* aTrackQuota */ false);
+      MOZ_ASSERT(NS_SUCCEEDED(result));
+      continue;
+    }
+
+    nsAutoCString leafName;
+    rv = file->GetNativeLeafName(leafName);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    // Delete all tmp files regardless of known bodies. These are all
+    // considered orphans.
+    if (StringEndsWith(leafName, NS_LITERAL_CSTRING(".tmp"))) {
+      DebugOnly<nsresult> result = RemoveNsIFile(aQuotaInfo, file, aTrackQuota);
+      MOZ_ASSERT(NS_SUCCEEDED(result));
+      continue;
+    }
+
+    nsCString suffix(NS_LITERAL_CSTRING(".final"));
+
+    // Otherwise, it must be a .final file.  If its not, then try to remove it
+    // and move on
+    if (NS_WARN_IF(!StringEndsWith(leafName, suffix) ||
+                   leafName.Length() != NSID_LENGTH - 1 + suffix.Length())) {
+      DebugOnly<nsresult> result =
+          RemoveNsIFile(aQuotaInfo, file, /* aTrackQuota */ false);
+      MOZ_ASSERT(NS_SUCCEEDED(result));
+      continue;
+    }
+
+    bool fileDeleted;
+    rv = aHandleFileFunc(file, leafName, fileDeleted);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    if (fileDeleted) {
+      continue;
+    }
+
+    isEmpty = false;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (isEmpty) {
+    DebugOnly<nsresult> result =
+        RemoveNsIFileRecursively(aQuotaInfo, aBodyDir, /* aTrackQuota */ false);
+    MOZ_ASSERT(NS_SUCCEEDED(result));
   }
 
   return rv;

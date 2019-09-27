@@ -58,6 +58,11 @@ nsresult BodyDeleteFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
 nsresult BodyDeleteOrphanedFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
                                  nsTArray<nsID>& aKnownBodyIdList);
 
+template <typename Func>
+nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBodyDir,
+                           const Func& aHandleFileFunc,
+                           const bool aTrackQuota = true);
+
 nsresult CreateMarkerFile(const QuotaInfo& aQuotaInfo);
 
 nsresult DeleteMarkerFile(const QuotaInfo& aQuotaInfo);
