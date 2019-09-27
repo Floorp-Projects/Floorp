@@ -8,6 +8,8 @@
 "use strict";
 
 var gFeatures = undefined;
+var gTestTrackersCleanedUp = false;
+var gTestTrackersCleanupRegistered = false;
 
 /**
  * Force garbage collection.
@@ -372,6 +374,16 @@ this.AntiTracking = {
     }
 
     await UrlClassifierTestUtils.addTestTrackers();
+    if (!gTestTrackersCleanupRegistered) {
+      registerCleanupFunction(_ => {
+        if (gTestTrackersCleanedUp) {
+          return;
+        }
+        UrlClassifierTestUtils.cleanupTestTrackers();
+        gTestTrackersCleanedUp = true;
+      });
+      gTestTrackersCleanupRegistered = true;
+    }
   },
 
   _createTask(options) {

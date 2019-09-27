@@ -71,6 +71,8 @@ function runTest(obj) {
     );
 
     BrowserTestUtils.removeTab(tab);
+
+    UrlClassifierTestUtils.cleanupTestTrackers();
   });
 }
 
