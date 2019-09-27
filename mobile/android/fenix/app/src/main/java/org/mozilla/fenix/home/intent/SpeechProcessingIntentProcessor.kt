@@ -8,7 +8,7 @@ import android.content.Intent
 import androidx.navigation.NavController
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.IntentReceiverActivity
+import org.mozilla.fenix.widget.VoiceSearchActivity.Companion.SPEECH_PROCESSING
 
 /**
  * The search widget has a microphone button to let users search with their voice.
@@ -22,7 +22,7 @@ class SpeechProcessingIntentProcessor(
         return if (intent.extras?.getBoolean(HomeActivity.OPEN_TO_BROWSER_AND_LOAD) == true) {
             out.putExtra(HomeActivity.OPEN_TO_BROWSER_AND_LOAD, false)
             activity.openToBrowserAndLoad(
-                searchTermOrURL = intent.getStringExtra(IntentReceiverActivity.SPEECH_PROCESSING).orEmpty(),
+                searchTermOrURL = intent.getStringExtra(SPEECH_PROCESSING).orEmpty(),
                 newTab = true,
                 from = BrowserDirection.FromGlobal,
                 forceSearch = true

@@ -14,8 +14,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.TestApplication
+import org.mozilla.fenix.widget.VoiceSearchActivity.Companion.SPEECH_PROCESSING
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -81,7 +81,7 @@ class SpeechProcessingIntentProcessorTest {
         val activity: HomeActivity = mockk(relaxed = true)
         val intent = Intent().apply {
             putExtra(HomeActivity.OPEN_TO_BROWSER_AND_LOAD, true)
-            putExtra(IntentReceiverActivity.SPEECH_PROCESSING, "hello world")
+            putExtra(SPEECH_PROCESSING, "hello world")
         }
         val processor = SpeechProcessingIntentProcessor(activity)
         processor.process(intent, mockk(), mockk(relaxed = true))

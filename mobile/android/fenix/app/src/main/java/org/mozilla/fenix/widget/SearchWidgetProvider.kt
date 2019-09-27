@@ -10,20 +10,20 @@ import android.appwidget.AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.view.View
 import android.widget.RemoteViews
 import androidx.annotation.Dimension
 import androidx.annotation.Dimension.DP
-import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.IntentReceiverActivity
-import org.mozilla.fenix.R
-import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
-import org.mozilla.fenix.ext.settings
-import android.os.Build
 import androidx.appcompat.widget.AppCompatDrawableManager
 import androidx.core.graphics.drawable.toBitmap
+import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
+import org.mozilla.fenix.widget.VoiceSearchActivity.Companion.SPEECH_PROCESSING
 
 @Suppress("TooManyFunctions")
 class SearchWidgetProvider : AppWidgetProvider() {
@@ -109,17 +109,15 @@ class SearchWidgetProvider : AppWidgetProvider() {
     }
 
     private fun createVoiceSearchIntent(context: Context): PendingIntent? {
-        val voiceIntent = Intent(context, IntentReceiverActivity::class.java)
-            .let { intent ->
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                intent.putExtra(IntentReceiverActivity.SPEECH_PROCESSING, true)
-            }
+        val voiceIntent = Intent(context, VoiceSearchActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra(SPEECH_PROCESSING, true)
+        }
 
         val intentSpeech = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
 
         return intentSpeech.resolveActivity(context.packageManager)?.let {
-            PendingIntent.getActivity(context,
-                REQUEST_CODE_VOICE, voiceIntent, 0)
+            PendingIntent.getActivity(context, REQUEST_CODE_VOICE, voiceIntent, 0)
         }
     }
 

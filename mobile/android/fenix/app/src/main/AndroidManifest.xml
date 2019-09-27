@@ -123,6 +123,8 @@
                 android:resource="@mipmap/ic_launcher" />
         </activity>
 
+        <activity android:name=".widget.VoiceSearchActivity" />
+
         <activity
             android:name=".browser.BrowserPerformanceTestActivity"
             android:enabled="${isRaptorEnabled}"

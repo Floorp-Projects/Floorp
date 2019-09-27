@@ -7,17 +7,14 @@ package org.mozilla.fenix
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.speech.RecognizerIntent
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mozilla.components.feature.intent.processing.TabIntentProcessor
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.customtabs.AuthCustomTabActivity
 import org.mozilla.fenix.customtabs.AuthCustomTabActivity.Companion.EXTRA_AUTH_CUSTOM_TAB
 import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
 
@@ -26,18 +23,9 @@ import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
  */
 class IntentReceiverActivity : Activity() {
 
-    // Holds the intent that initially started this activity
-    // so that it can persist through the speech activity.
-    private var previousIntent: Intent? = null
-
     @VisibleForTesting
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        previousIntent = savedInstanceState?.get(PREVIOUS_INTENT) as Intent?
-        if (previousIntent?.getBooleanExtra(SPEECH_PROCESSING, false) == true) {
-            return
-        }
 
         MainScope().launch {
             // The intent property is nullable, but the rest of the code below
@@ -58,17 +46,12 @@ class IntentReceiverActivity : Activity() {
         val intentProcessors =
             components.intentProcessors.externalAppIntentProcessors + tabIntentProcessor
 
-        if (intent.getBooleanExtra(SPEECH_PROCESSING, false)) {
-            previousIntent = intent
-            displaySpeechRecognizer()
-        } else {
-            intentProcessors.any { it.process(intent) }
-            setIntentActivity(intent, tabIntentProcessor)
+        intentProcessors.any { it.process(intent) }
+        setIntentActivity(intent, tabIntentProcessor)
 
-            startActivity(intent)
+        startActivity(intent)
 
-            finish()
-        }
+        finish()
     }
 
     /**
@@ -121,42 +104,7 @@ class IntentReceiverActivity : Activity() {
         intent.putExtra(HomeActivity.OPEN_TO_BROWSER, openToBrowser)
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putParcelable(PREVIOUS_INTENT, previousIntent)
-    }
-
-    private fun displaySpeechRecognizer() {
-        val intentSpeech = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-        }
-        this.metrics.track(Event.SearchWidgetVoiceSearchPressed)
-        startActivityForResult(intentSpeech, SPEECH_REQUEST_CODE)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (requestCode == SPEECH_REQUEST_CODE && resultCode == RESULT_OK) {
-            val spokenText: String? =
-                data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.let { results ->
-                    results[0]
-                }
-
-            previousIntent?.let {
-                it.putExtra(SPEECH_PROCESSING, spokenText)
-                it.putExtra(HomeActivity.OPEN_TO_BROWSER_AND_LOAD, true)
-                startActivity(it)
-            }
-        }
-
-        finish()
-    }
-
     companion object {
-        const val SPEECH_REQUEST_CODE = 0
-        const val SPEECH_PROCESSING = "speech_processing"
-        const val PREVIOUS_INTENT = "previous_intent"
         const val ACTION_OPEN_TAB = "org.mozilla.fenix.OPEN_TAB"
         const val ACTION_OPEN_PRIVATE_TAB = "org.mozilla.fenix.OPEN_PRIVATE_TAB"
     }
