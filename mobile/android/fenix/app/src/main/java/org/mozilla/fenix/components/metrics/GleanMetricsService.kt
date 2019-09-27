@@ -40,6 +40,7 @@ import org.mozilla.fenix.GleanMetrics.SyncAuth
 import org.mozilla.fenix.GleanMetrics.Tab
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
 
 private class EventWrapper<T : Enum<T>>(
     private val recorder: ((Map<T, String>?) -> Unit),
@@ -444,6 +445,7 @@ class GleanMetricsService(private val context: Context) : MetricsService {
                 defaultMozBrowser.set(it)
             }
             mozillaProducts.set(MozillaProductDetector.getInstalledMozillaProducts(context))
+            adjustCampaign.set(context.settings().adjustCampaignId)
         }
 
         SearchDefaultEngine.apply {

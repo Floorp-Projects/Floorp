@@ -23,8 +23,8 @@ import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.ext.getPreferenceKey
-import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType
 import org.mozilla.fenix.settings.PhoneFeature
+import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType
 import java.security.InvalidParameterException
 
 /**
@@ -75,6 +75,11 @@ class Settings private constructor(
 
     override val preferences: SharedPreferences =
         appContext.getSharedPreferences(FENIX_PREFERENCES, MODE_PRIVATE)
+
+    var adjustCampaignId by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_adjust_campaign),
+        default = ""
+    )
 
     var usePrivateMode by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_private_mode),

@@ -13,6 +13,7 @@ import com.adjust.sdk.AdjustConfig
 import com.adjust.sdk.LogLevel
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.ext.settings
 
 class AdjustMetricsService(private val application: Application) : MetricsService {
     override fun start() {
@@ -32,6 +33,10 @@ class AdjustMetricsService(private val application: Application) : MetricsServic
             AdjustConfig.ENVIRONMENT_PRODUCTION,
             true
         )
+
+        config.setOnAttributionChangedListener {
+            application.settings().adjustCampaignId = it.campaign
+        }
 
         config.setLogLevel(LogLevel.SUPRESS)
 

@@ -410,6 +410,21 @@ metrics:
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2020-03-01"
+  adjust_campaign:
+    type: string
+    lifetime: application
+    description: >
+      A string containing the Adjust campaign ID from which the user installed Fenix
+    send_in_pings:
+      - metrics
+    bugs:
+      - 1298
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/5579
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+
 
 search.default_engine:
   code:
