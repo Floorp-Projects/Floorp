@@ -27,8 +27,10 @@ open class WhatsNewVersion(internal open val version: String) {
         return false
     }
 
+    // Splitting on a dot to get the major version number fails on nightly builds, so we
+    // return 0 in those cases
     val majorVersionNumber: Int
-        get() = version.split(".").first().toInt()
+        get() = version.split(".").first().toIntOrNull() ?: 0
 }
 
 data class ContextWhatsNewVersion(private val context: Context) : WhatsNewVersion("") {
