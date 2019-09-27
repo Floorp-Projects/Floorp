@@ -219,6 +219,9 @@ class AboutLoginsChild extends ActorChild {
       case "AboutLogins:SendFavicons":
         this.sendToContent("SendFavicons", message.data);
         break;
+      case "AboutLogins:SetBreaches":
+        this.sendToContent("SetBreaches", message.data);
+        break;
       case "AboutLogins:Setup":
         this.sendToContent("Setup", message.data);
         Cu.waiveXrays(this.content).AboutLoginsUtils.masterPasswordEnabled =

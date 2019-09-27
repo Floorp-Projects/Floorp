@@ -176,9 +176,19 @@ export default class LoginItem extends HTMLElement {
     this._updatePasswordRevealState();
   }
 
-  updateBreaches(breachesByLoginGUID) {
+  setBreaches(breachesByLoginGUID) {
     this._breachesMap = breachesByLoginGUID;
     this.render();
+  }
+
+  updateBreaches(breachesByLoginGUID) {
+    if (!this._breachesMap) {
+      this._breachesMap = new Map();
+    }
+    for (const [guid, breach] of [...breachesByLoginGUID]) {
+      this._breachesMap.set(guid, breach);
+    }
+    this.setBreaches(this._breachesMap);
   }
 
   dismissBreachAlert() {

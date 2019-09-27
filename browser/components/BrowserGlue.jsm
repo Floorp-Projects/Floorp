@@ -137,6 +137,7 @@ let LEGACY_ACTORS = {
         "AboutLogins:LoginRemoved",
         "AboutLogins:MasterPasswordResponse",
         "AboutLogins:SendFavicons",
+        "AboutLogins:SetBreaches",
         "AboutLogins:Setup",
         "AboutLogins:ShowLoginItemError",
         "AboutLogins:SyncState",

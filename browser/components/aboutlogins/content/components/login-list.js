@@ -327,7 +327,7 @@ export default class LoginList extends HTMLElement {
    * @param {Map} breachesByLoginGUID A Map of breaches by login GUIDs used
    *                                  for displaying breached login indicators.
    */
-  updateBreaches(breachesByLoginGUID) {
+  setBreaches(breachesByLoginGUID) {
     this._breachesByLoginGUID = breachesByLoginGUID;
     if (this._breachesByLoginGUID.size === 0) {
       this.render();
@@ -341,6 +341,21 @@ export default class LoginList extends HTMLElement {
       new CustomEvent("change", { bubbles: true })
     );
     this.render();
+  }
+
+  /**
+   * @param {Map} breachesByLoginGUID A Map of breaches by login GUIDs that
+   *                                  should be added to the local cache of
+   *                                  breaches.
+   */
+  updateBreaches(breachesByLoginGUID) {
+    if (!this._breachesByLoginGUID) {
+      this._breachesByLoginGUID = new Map();
+    }
+    for (const [guid, breach] of [...breachesByLoginGUID]) {
+      this._breachesByLoginGUID.set(guid, breach);
+    }
+    this.setBreaches(this._breachesByLoginGUID);
   }
 
   /**
