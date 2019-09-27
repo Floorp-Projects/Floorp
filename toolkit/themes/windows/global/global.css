@@ -36,7 +36,6 @@
 /* ::::: root elements ::::: */
 
 window,
-page,
 dialog,
 wizard {
   background-color: -moz-Dialog;
