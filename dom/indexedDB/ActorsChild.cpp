@@ -674,19 +674,15 @@ void DispatchErrorEvent(IDBRequest* aRequest, nsresult aErrorCode,
   }
 
   if (transaction) {
-    IDB_LOG_MARK(
-        "IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "
-        "Firing %s event with error 0x%x",
-        "IndexedDB %s: C T[%lld] R[%llu]: %s (0x%x)", IDB_LOG_ID_STRING(),
+    IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
+        "Firing %s event with error 0x%x", "%s (0x%x)",
         transaction->LoggingSerialNumber(), request->LoggingSerialNumber(),
         IDB_LOG_STRINGIFY(aEvent, kErrorEventType), aErrorCode);
   } else {
-    IDB_LOG_MARK(
-        "IndexedDB %s: Child  Request[%llu]: "
-        "Firing %s event with error 0x%x",
-        "IndexedDB %s: C R[%llu]: %s (0x%x)", IDB_LOG_ID_STRING(),
-        request->LoggingSerialNumber(),
-        IDB_LOG_STRINGIFY(aEvent, kErrorEventType), aErrorCode);
+    IDB_LOG_MARK_CHILD_REQUEST("Firing %s event with error 0x%x", "%s (0x%x)",
+                               request->LoggingSerialNumber(),
+                               IDB_LOG_STRINGIFY(aEvent, kErrorEventType),
+                               aErrorCode);
   }
 
   IgnoredErrorResult rv;
@@ -747,17 +743,14 @@ void DispatchSuccessEvent(ResultHelper* aResultHelper,
   MOZ_ASSERT_IF(transaction, transaction->IsOpen());
 
   if (transaction) {
-    IDB_LOG_MARK(
-        "IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "
-        "Firing %s event",
-        "IndexedDB %s: C T[%lld] R[%llu]: %s", IDB_LOG_ID_STRING(),
-        transaction->LoggingSerialNumber(), request->LoggingSerialNumber(),
+    IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
+        "Firing %s event", "%s", transaction->LoggingSerialNumber(),
+        request->LoggingSerialNumber(),
         IDB_LOG_STRINGIFY(aEvent, kSuccessEventType));
   } else {
-    IDB_LOG_MARK("IndexedDB %s: Child  Request[%llu]: Firing %s event",
-                 "IndexedDB %s: C R[%llu]: %s", IDB_LOG_ID_STRING(),
-                 request->LoggingSerialNumber(),
-                 IDB_LOG_STRINGIFY(aEvent, kSuccessEventType));
+    IDB_LOG_MARK_CHILD_REQUEST("Firing %s event", "%s",
+                               request->LoggingSerialNumber(),
+                               IDB_LOG_STRINGIFY(aEvent, kSuccessEventType));
   }
 
   MOZ_ASSERT_IF(transaction,
@@ -1767,9 +1760,8 @@ mozilla::ipc::IPCResult BackgroundFactoryRequestChild::RecvBlocked(
 
   RefPtr<IDBRequest> kungFuDeathGrip = mRequest;
 
-  IDB_LOG_MARK("IndexedDB %s: Child  Request[%llu]: Firing \"blocked\" event",
-               "IndexedDB %s: C R[%llu]: \"blocked\"", IDB_LOG_ID_STRING(),
-               kungFuDeathGrip->LoggingSerialNumber());
+  IDB_LOG_MARK_CHILD_REQUEST("Firing \"blocked\" event", "\"blocked\"",
+                             kungFuDeathGrip->LoggingSerialNumber());
 
   IgnoredErrorResult rv;
   kungFuDeathGrip->DispatchEvent(*blockedEvent, rv);
@@ -2057,9 +2049,8 @@ mozilla::ipc::IPCResult BackgroundDatabaseChild::RecvVersionChange(
     MOZ_ASSERT(versionChangeEvent);
   }
 
-  IDB_LOG_MARK("IndexedDB %s: Child : Firing \"versionchange\" event",
-               "IndexedDB %s: C: IDBDatabase \"versionchange\" event",
-               IDB_LOG_ID_STRING());
+  IDB_LOG_MARK("Child : Firing \"versionchange\" event",
+               "C: IDBDatabase \"versionchange\" event", IDB_LOG_ID_STRING());
 
   IgnoredErrorResult rv;
   kungFuDeathGrip->DispatchEvent(*versionChangeEvent, rv);
