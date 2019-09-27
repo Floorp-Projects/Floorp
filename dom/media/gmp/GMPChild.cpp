@@ -50,25 +50,20 @@ using namespace mozilla::ipc;
 
 namespace mozilla {
 
-#undef LOG
-#undef LOGD
-
-extern LogModule* GetGMPLog();
-#define LOG(level, x, ...) MOZ_LOG(GetGMPLog(), (level), (x, ##__VA_ARGS__))
-#define LOGD(x, ...)                                   \
-  LOG(mozilla::LogLevel::Debug, "GMPChild[pid=%d] " x, \
-      (int)base::GetCurrentProcId(), ##__VA_ARGS__)
+#define GMP_CHILD_LOG_DEBUG(x, ...)                                   \
+  GMP_LOG_DEBUG("GMPChild[pid=%d] " x, (int)base::GetCurrentProcId(), \
+                ##__VA_ARGS__)
 
 namespace gmp {
 
 GMPChild::GMPChild()
     : mGMPMessageLoop(MessageLoop::current()), mGMPLoader(nullptr) {
-  LOGD("GMPChild ctor");
+  GMP_CHILD_LOG_DEBUG("GMPChild ctor");
   nsDebugImpl::SetMultiprocessMode("GMP");
 }
 
 GMPChild::~GMPChild() {
-  LOGD("GMPChild dtor");
+  GMP_CHILD_LOG_DEBUG("GMPChild dtor");
 #ifdef XP_LINUX
   for (auto& libHandle : mLibHandles) {
     dlclose(libHandle);
@@ -235,8 +230,8 @@ bool GMPChild::SetMacSandboxInfo(bool aAllowWindowServer) {
 
 bool GMPChild::Init(const nsAString& aPluginPath, base::ProcessId aParentPid,
                     MessageLoop* aIOLoop, IPC::Channel* aChannel) {
-  LOGD("%s pluginPath=%s", __FUNCTION__,
-       NS_ConvertUTF16toUTF8(aPluginPath).get());
+  GMP_CHILD_LOG_DEBUG("%s pluginPath=%s", __FUNCTION__,
+                      NS_ConvertUTF16toUTF8(aPluginPath).get());
 
   if (NS_WARN_IF(!Open(aChannel, aParentPid, aIOLoop))) {
     return false;
@@ -251,7 +246,7 @@ bool GMPChild::Init(const nsAString& aPluginPath, base::ProcessId aParentPid,
 
 mozilla::ipc::IPCResult GMPChild::RecvProvideStorageId(
     const nsCString& aStorageId) {
-  LOGD("%s", __FUNCTION__);
+  GMP_CHILD_LOG_DEBUG("%s", __FUNCTION__);
   mStorageId = aStorageId;
   return IPC_OK();
 }
@@ -566,7 +561,7 @@ static nsCString ToCString(const nsTArray<Pair<nsCString, nsCString>>& aPairs) {
 }
 
 mozilla::ipc::IPCResult GMPChild::AnswerStartPlugin(const nsString& aAdapter) {
-  LOGD("%s", __FUNCTION__);
+  GMP_CHILD_LOG_DEBUG("%s", __FUNCTION__);
 
   nsCString libPath;
   if (!GetUTF8LibPath(libPath)) {
@@ -590,7 +585,7 @@ mozilla::ipc::IPCResult GMPChild::AnswerStartPlugin(const nsString& aAdapter) {
   mGMPLoader = MakeUnique<GMPLoader>();
 #if defined(MOZ_SANDBOX)
   if (!mGMPLoader->CanSandbox()) {
-    LOGD("%s Can't sandbox GMP, failing", __FUNCTION__);
+    GMP_CHILD_LOG_DEBUG("%s Can't sandbox GMP, failing", __FUNCTION__);
     delete platformAPI;
     return IPC_FAIL(this, "Can't sandbox GMP.");
   }
@@ -617,7 +612,8 @@ mozilla::ipc::IPCResult GMPChild::AnswerStartPlugin(const nsString& aAdapter) {
   GMPAdapter* adapter = nullptr;
   if (isChromium) {
     auto&& paths = MakeCDMHostVerificationPaths();
-    GMP_LOG("%s CDM host paths=%s", __func__, ToCString(paths).get());
+    GMP_CHILD_LOG_DEBUG("%s CDM host paths=%s", __func__,
+                        ToCString(paths).get());
     adapter = new ChromiumCDMAdapter(std::move(paths));
   }
 
@@ -644,7 +640,7 @@ mozilla::ipc::IPCResult GMPChild::AnswerStartPlugin(const nsString& aAdapter) {
 MessageLoop* GMPChild::GMPMessageLoop() { return mGMPMessageLoop; }
 
 void GMPChild::ActorDestroy(ActorDestroyReason aWhy) {
-  LOGD("%s reason=%d", __FUNCTION__, aWhy);
+  GMP_CHILD_LOG_DEBUG("%s reason=%d", __FUNCTION__, aWhy);
 
   for (uint32_t i = mGMPContentChildren.Length(); i > 0; i--) {
     MOZ_ASSERT_IF(aWhy == NormalShutdown,
@@ -764,5 +760,5 @@ void GMPChild::GMPContentChildActorDestroy(GMPContentChild* aGMPContentChild) {
 }  // namespace gmp
 }  // namespace mozilla
 
-#undef LOG
-#undef LOGD
+#undef GMP_CHILD_LOG_DEBUG
+#undef __CLASS__
