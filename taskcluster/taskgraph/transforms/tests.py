@@ -1179,6 +1179,12 @@ def enable_fission_on_central(config, tests):
 
         if not runs_on_central(test):
             test['run-on-projects'].append('mozilla-central')
+
+        # Promote select fission tests to tier 1 and ensure they run on trunk
+        if platform == 'linux64' and btype == 'debug' and (test['webrender'] or
+           'mochitest-browser-chrome' in test['attributes']['unittest_suite']):
+            test['tier'] = 1
+            test['run-on-projects'] = ['ash', 'try', 'trunk']
         yield test
 
 
