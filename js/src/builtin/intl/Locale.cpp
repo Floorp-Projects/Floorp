@@ -357,14 +357,14 @@ static bool HasLikelySubtags(LikelySubtags likelySubtags,
   // subtags are present and no placeholder subtags ("und", "Zzzz", "ZZ")
   // are used.
   if (likelySubtags == LikelySubtags::Add) {
-    return !StringEqualsAscii(language, "und") && script &&
-           !StringEqualsAscii(script, "Zzzz") && region &&
-           !StringEqualsAscii(region, "ZZ");
+    return !StringEqualsLiteral(language, "und") && script &&
+           !StringEqualsLiteral(script, "Zzzz") && region &&
+           !StringEqualsLiteral(region, "ZZ");
   }
 
   // The language tag is already minimized if it only contains a language
   // subtag whose value is not the placeholder value "und".
-  return !StringEqualsAscii(language, "und") && !script && !region;
+  return !StringEqualsLiteral(language, "und") && !script && !region;
 }
 
 // Create an ICU locale ID from the given language, script, and region subtags.

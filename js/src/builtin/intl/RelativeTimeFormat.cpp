@@ -216,12 +216,12 @@ static URelativeDateTimeFormatter* NewURelativeDateTimeFormatter(
       return nullptr;
     }
 
-    if (StringEqualsAscii(style, "short")) {
+    if (StringEqualsLiteral(style, "short")) {
       relDateTimeStyle = UDAT_STYLE_SHORT;
-    } else if (StringEqualsAscii(style, "narrow")) {
+    } else if (StringEqualsLiteral(style, "narrow")) {
       relDateTimeStyle = UDAT_STYLE_NARROW;
     } else {
-      MOZ_ASSERT(StringEqualsAscii(style, "long"));
+      MOZ_ASSERT(StringEqualsLiteral(style, "long"));
       relDateTimeStyle = UDAT_STYLE_LONG;
     }
   }
@@ -376,29 +376,29 @@ bool js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     // PartitionRelativeTimePattern, step 5.
-    if (StringEqualsAscii(unit, "second") ||
-        StringEqualsAscii(unit, "seconds")) {
+    if (StringEqualsLiteral(unit, "second") ||
+        StringEqualsLiteral(unit, "seconds")) {
       relDateTimeUnit = UDAT_REL_UNIT_SECOND;
-    } else if (StringEqualsAscii(unit, "minute") ||
-               StringEqualsAscii(unit, "minutes")) {
+    } else if (StringEqualsLiteral(unit, "minute") ||
+               StringEqualsLiteral(unit, "minutes")) {
       relDateTimeUnit = UDAT_REL_UNIT_MINUTE;
-    } else if (StringEqualsAscii(unit, "hour") ||
-               StringEqualsAscii(unit, "hours")) {
+    } else if (StringEqualsLiteral(unit, "hour") ||
+               StringEqualsLiteral(unit, "hours")) {
       relDateTimeUnit = UDAT_REL_UNIT_HOUR;
-    } else if (StringEqualsAscii(unit, "day") ||
-               StringEqualsAscii(unit, "days")) {
+    } else if (StringEqualsLiteral(unit, "day") ||
+               StringEqualsLiteral(unit, "days")) {
       relDateTimeUnit = UDAT_REL_UNIT_DAY;
-    } else if (StringEqualsAscii(unit, "week") ||
-               StringEqualsAscii(unit, "weeks")) {
+    } else if (StringEqualsLiteral(unit, "week") ||
+               StringEqualsLiteral(unit, "weeks")) {
       relDateTimeUnit = UDAT_REL_UNIT_WEEK;
-    } else if (StringEqualsAscii(unit, "month") ||
-               StringEqualsAscii(unit, "months")) {
+    } else if (StringEqualsLiteral(unit, "month") ||
+               StringEqualsLiteral(unit, "months")) {
       relDateTimeUnit = UDAT_REL_UNIT_MONTH;
-    } else if (StringEqualsAscii(unit, "quarter") ||
-               StringEqualsAscii(unit, "quarters")) {
+    } else if (StringEqualsLiteral(unit, "quarter") ||
+               StringEqualsLiteral(unit, "quarters")) {
       relDateTimeUnit = UDAT_REL_UNIT_QUARTER;
-    } else if (StringEqualsAscii(unit, "year") ||
-               StringEqualsAscii(unit, "years")) {
+    } else if (StringEqualsLiteral(unit, "year") ||
+               StringEqualsLiteral(unit, "years")) {
       relDateTimeUnit = UDAT_REL_UNIT_YEAR;
     } else {
       if (auto unitChars = StringToNewUTF8CharsZ(cx, *unit)) {
@@ -417,10 +417,10 @@ bool js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    if (StringEqualsAscii(numeric, "auto")) {
+    if (StringEqualsLiteral(numeric, "auto")) {
       relDateTimeNumeric = RelativeTimeNumeric::Auto;
     } else {
-      MOZ_ASSERT(StringEqualsAscii(numeric, "always"));
+      MOZ_ASSERT(StringEqualsLiteral(numeric, "always"));
       relDateTimeNumeric = RelativeTimeNumeric::Always;
     }
   }
