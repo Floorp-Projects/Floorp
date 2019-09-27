@@ -260,7 +260,7 @@ nsresult nsXULPrototypeCache::GetInputStream(nsIURI* uri,
   nsresult rv = PathifyURI(uri, spec);
   if (NS_FAILED(rv)) return NS_ERROR_NOT_AVAILABLE;
 
-  UniquePtr<char[]> buf;
+  const char* buf;
   uint32_t len;
   nsCOMPtr<nsIObjectInputStream> ois;
   StartupCache* sc = StartupCache::GetSingleton();
@@ -269,7 +269,7 @@ nsresult nsXULPrototypeCache::GetInputStream(nsIURI* uri,
   rv = sc->GetBuffer(spec.get(), &buf, &len);
   if (NS_FAILED(rv)) return NS_ERROR_NOT_AVAILABLE;
 
-  rv = NewObjectInputStreamFromBuffer(std::move(buf), len, getter_AddRefs(ois));
+  rv = NewObjectInputStreamFromBuffer(buf, len, getter_AddRefs(ois));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mInputStreamTable.Put(uri, ois);
@@ -398,14 +398,13 @@ nsresult nsXULPrototypeCache::BeginCaching(nsIURI* aURI) {
 
   nsAutoCString fileChromePath, fileLocale;
 
-  UniquePtr<char[]> buf;
+  const char* buf = nullptr;
   uint32_t len, amtRead;
   nsCOMPtr<nsIObjectInputStream> objectInput;
 
   rv = startupCache->GetBuffer(kXULCacheInfoKey, &buf, &len);
   if (NS_SUCCEEDED(rv))
-    rv = NewObjectInputStreamFromBuffer(std::move(buf), len,
-                                        getter_AddRefs(objectInput));
+    rv = NewObjectInputStreamFromBuffer(buf, len, getter_AddRefs(objectInput));
 
   if (NS_SUCCEEDED(rv)) {
     rv = objectInput->ReadCString(fileLocale);
@@ -461,10 +460,10 @@ nsresult nsXULPrototypeCache::BeginCaching(nsIURI* aURI) {
     }
 
     if (NS_SUCCEEDED(rv)) {
-      buf = MakeUnique<char[]>(len);
-      rv = inputStream->Read(buf.get(), len, &amtRead);
+      auto putBuf = MakeUnique<char[]>(len);
+      rv = inputStream->Read(putBuf.get(), len, &amtRead);
       if (NS_SUCCEEDED(rv) && len == amtRead)
-        rv = startupCache->PutBuffer(kXULCacheInfoKey, std::move(buf), len);
+        rv = startupCache->PutBuffer(kXULCacheInfoKey, std::move(putBuf), len);
       else {
         rv = NS_ERROR_UNEXPECTED;
       }

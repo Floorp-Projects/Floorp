@@ -16,7 +16,7 @@ class nsIURI;
 namespace mozilla {
 namespace scache {
 
-nsresult NewObjectInputStreamFromBuffer(UniquePtr<char[]> buffer, uint32_t len,
+nsresult NewObjectInputStreamFromBuffer(const char* buffer, uint32_t len,
                                         nsIObjectInputStream** stream);
 
 // We can't retrieve the wrapped stream from the objectOutputStream later,
