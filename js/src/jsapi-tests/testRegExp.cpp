@@ -57,7 +57,7 @@ BEGIN_TEST(testGetRegExpSource) {
   obj = val.toObjectOrNull();
   JSString* source = JS::GetRegExpSource(cx, obj);
   CHECK(source);
-  CHECK(JS_FlatStringEqualsAscii(JS_ASSERT_STRING_IS_FLAT(source), "foopy"));
+  CHECK(JS_FlatStringEqualsLiteral(JS_ASSERT_STRING_IS_FLAT(source), "foopy"));
 
   return true;
 }

@@ -207,7 +207,7 @@ StatementJSHelper::Resolve(nsIXPConnectWrappedNative* aWrapper, JSContext* aCtx,
       static_cast<mozIStorageStatement*>(aWrapper->Native()));
 
   JSFlatString* str = JSID_TO_FLAT_STRING(id);
-  if (::JS_FlatStringEqualsAscii(str, "step")) {
+  if (::JS_FlatStringEqualsLiteral(str, "step")) {
     *_retval = ::JS_DefineFunction(aCtx, scope, "step", stepFunc, 0,
                                    JSPROP_RESOLVING) != nullptr;
     *aResolvedp = true;
@@ -216,7 +216,7 @@ StatementJSHelper::Resolve(nsIXPConnectWrappedNative* aWrapper, JSContext* aCtx,
 
   JS::RootedValue val(aCtx);
 
-  if (::JS_FlatStringEqualsAscii(str, "row")) {
+  if (::JS_FlatStringEqualsLiteral(str, "row")) {
     nsresult rv = getRow(stmt, aCtx, scope, val.address());
     NS_ENSURE_SUCCESS(rv, rv);
     *_retval = ::JS_DefinePropertyById(aCtx, scope, id, val, JSPROP_RESOLVING);
@@ -224,7 +224,7 @@ StatementJSHelper::Resolve(nsIXPConnectWrappedNative* aWrapper, JSContext* aCtx,
     return NS_OK;
   }
 
-  if (::JS_FlatStringEqualsAscii(str, "params")) {
+  if (::JS_FlatStringEqualsLiteral(str, "params")) {
     nsresult rv = getParams(stmt, aCtx, scope, val.address());
     NS_ENSURE_SUCCESS(rv, rv);
     *_retval = ::JS_DefinePropertyById(aCtx, scope, id, val, JSPROP_RESOLVING);

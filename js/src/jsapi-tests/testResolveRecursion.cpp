@@ -73,7 +73,7 @@ bool doResolve(JS::HandleObject obj, JS::HandleId id, bool* resolvedp) {
   JSFlatString* str = JS_FlattenString(cx, JSID_TO_STRING(id));
   CHECK(str);
   JS::RootedValue v(cx);
-  if (JS_FlatStringEqualsAscii(str, "x")) {
+  if (JS_FlatStringEqualsLiteral(str, "x")) {
     if (obj == obj1) {
       /* First resolve hook invocation. */
       CHECK_EQUAL(resolveEntryCount, 1);
@@ -89,7 +89,7 @@ bool doResolve(JS::HandleObject obj, JS::HandleId id, bool* resolvedp) {
       *resolvedp = false;
       return true;
     }
-  } else if (JS_FlatStringEqualsAscii(str, "y")) {
+  } else if (JS_FlatStringEqualsLiteral(str, "y")) {
     if (obj == obj2) {
       CHECK_EQUAL(resolveEntryCount, 2);
       CHECK(JS_DefinePropertyById(cx, obj, id, JS::NullHandleValue,

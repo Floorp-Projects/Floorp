@@ -820,64 +820,64 @@ bool xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj) {
     if (!nameStr) {
       return false;
     }
-    if (JS_FlatStringEqualsAscii(nameStr, "Blob")) {
+    if (JS_FlatStringEqualsLiteral(nameStr, "Blob")) {
       Blob = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "ChromeUtils")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "ChromeUtils")) {
       ChromeUtils = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "CSS")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "CSS")) {
       CSS = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "CSSRule")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "CSSRule")) {
       CSSRule = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "Directory")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "Directory")) {
       Directory = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "DOMParser")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "DOMParser")) {
       DOMParser = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "Element")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "Element")) {
       Element = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "Event")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "Event")) {
       Event = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "File")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "File")) {
       File = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "FileReader")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "FileReader")) {
       FileReader = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "FormData")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "FormData")) {
       FormData = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "InspectorUtils")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "InspectorUtils")) {
       InspectorUtils = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "MessageChannel")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "MessageChannel")) {
       MessageChannel = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "Node")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "Node")) {
       Node = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "NodeFilter")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "NodeFilter")) {
       NodeFilter = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "PromiseDebugging")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "PromiseDebugging")) {
       PromiseDebugging = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "TextDecoder")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "TextDecoder")) {
       TextDecoder = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "TextEncoder")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "TextEncoder")) {
       TextEncoder = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "URL")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "URL")) {
       URL = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "URLSearchParams")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "URLSearchParams")) {
       URLSearchParams = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "XMLHttpRequest")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "XMLHttpRequest")) {
       XMLHttpRequest = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "XMLSerializer")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "XMLSerializer")) {
       XMLSerializer = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "atob")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "atob")) {
       atob = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "btoa")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "btoa")) {
       btoa = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "caches")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "caches")) {
       caches = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "crypto")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "crypto")) {
       crypto = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "fetch")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "fetch")) {
       fetch = true;
-    } else if (JS_FlatStringEqualsAscii(nameStr, "indexedDB")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "indexedDB")) {
       indexedDB = true;
 #ifdef MOZ_WEBRTC
-    } else if (JS_FlatStringEqualsAscii(nameStr, "rtcIdentityProvider")) {
+    } else if (JS_FlatStringEqualsLiteral(nameStr, "rtcIdentityProvider")) {
       rtcIdentityProvider = true;
 #endif
     } else {

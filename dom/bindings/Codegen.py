@@ -14395,10 +14395,8 @@ class CGGlobalNames(CGGeneric):
         getter = phfCodegen.gen_jsflatstr_getter(
             name='WebIDLGlobalNameHash::GetEntry',
             return_type='const WebIDLNameTableEntry*',
-            # XXX(nika): It would be nice to have a length overload for
-            # JS_FlatStringEqualsAscii.
             return_entry=dedent("""
-                if (JS_FlatStringEqualsAscii(aKey, sNames + entry.mNameOffset)) {
+                if (JS_FlatStringEqualsAscii(aKey, sNames + entry.mNameOffset, entry.mNameLength)) {
                   return &entry;
                 }
                 return nullptr;

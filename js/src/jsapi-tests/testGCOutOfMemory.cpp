@@ -35,7 +35,7 @@ BEGIN_TEST(testGCOutOfMemory) {
   CHECK(JS_GetPendingException(cx, &root));
   CHECK(root.isString());
   bool match = false;
-  CHECK(JS_StringEqualsAscii(cx, root.toString(), "out of memory", &match));
+  CHECK(JS_StringEqualsLiteral(cx, root.toString(), "out of memory", &match));
   CHECK(match);
   JS_ClearPendingException(cx);
 

@@ -2172,11 +2172,6 @@ class MOZ_STACK_CLASS NullableRootedUnion : public Nullable<T>,
   }
 };
 
-inline bool IdEquals(jsid id, const char* string) {
-  return JSID_IS_STRING(id) &&
-         JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(id), string);
-}
-
 inline bool AddStringToIDVector(JSContext* cx,
                                 JS::MutableHandleVector<jsid> vector,
                                 const char* name) {
