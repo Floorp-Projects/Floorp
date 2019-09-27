@@ -13,7 +13,7 @@ import sys
 # We need the NDK version in multiple different places, and it's inconvenient
 # to pass down the NDK version to all relevant places, so we have this global
 # variable.
-NDK_VERSION = 'r17b'
+NDK_VERSION = 'r20'
 
 ANDROID_NDK_EXISTS = '''
 Looks like you have the Android NDK installed at:
