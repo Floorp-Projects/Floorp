@@ -672,20 +672,22 @@ var ThirdPartyCookies = {
   },
 
   isDetected(state) {
-    if (this.behaviorPref == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER) {
-      // We don't have a state that specifically represents loaded tracker cookies,
-      // so use loaded tracking content as a proxy - it's not perfect but it
-      // yields fewer false-positives than the generic loaded cookies state.
+    if (this.isBlocking(state)) {
+      return true;
+    }
+
+    if (
+      this.behaviorPref == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER ||
+      this.behaviorPref == Ci.nsICookieService.BEHAVIOR_ACCEPT
+    ) {
       return (
-        (state & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT) != 0
+        (state & Ci.nsIWebProgressListener.STATE_COOKIES_LOADED_TRACKER) != 0
       );
     }
 
-    // We don't have any proxies for the other cookie behaviors unfortunately.
-    return (
-      this.isBlocking(state) ||
-      (state & Ci.nsIWebProgressListener.STATE_COOKIES_LOADED) != 0
-    );
+    // We don't have specific flags for the other cookie behaviors so just
+    // fall back to STATE_COOKIES_LOADED.
+    return (state & Ci.nsIWebProgressListener.STATE_COOKIES_LOADED) != 0;
   },
 
   async updateSubView() {
