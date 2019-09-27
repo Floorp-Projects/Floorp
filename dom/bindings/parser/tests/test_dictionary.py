@@ -750,4 +750,3 @@ def WebIDLTest(parser, harness):
         threw = True
 
     harness.ok(not threw, "Should be able to use 'module' as a dictionary member name")
- 
