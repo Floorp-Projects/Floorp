@@ -318,6 +318,13 @@ PrintParameterUsage()
     fprintf(stderr, "%-20s Enable post-handshake authentication\n"
                     "%-20s for TLS 1.3; need to specify -n\n",
             "-E", "");
+    fprintf(stderr, "%-20s Export and print keying material after successful handshake.\n"
+                    "%-20s The argument is a comma separated list of exporters in the form:\n"
+                    "%-20s   LABEL[:OUTPUT-LENGTH[:CONTEXT]]\n"
+                    "%-20s where LABEL and CONTEXT can be either a free-form string or\n"
+                    "%-20s a hex string if it is preceded by \"0x\"; OUTPUT-LENGTH\n"
+                    "%-20s is a decimal integer.\n",
+            "-x", "", "", "", "", "");
 }
 
 static void
@@ -998,6 +1005,8 @@ PRBool handshakeComplete = PR_FALSE;
 char *encryptedSNIKeys = NULL;
 PRBool enablePostHandshakeAuth = PR_FALSE;
 PRBool enableDelegatedCredentials = PR_FALSE;
+const secuExporter *enabledExporters = NULL;
+unsigned int enabledExporterCount = 0;
 
 static int
 writeBytesToServer(PRFileDesc *s, const PRUint8 *buf, int nb)
@@ -1093,6 +1102,18 @@ handshakeCallback(PRFileDesc *fd, void *client_data)
         requestToExit = PR_TRUE;
     }
     handshakeComplete = PR_TRUE;
+
+    if (enabledExporters) {
+        SECStatus rv;
+
+        rv = exportKeyingMaterials(fd, enabledExporters, enabledExporterCount);
+        if (rv != SECSuccess) {
+            PRErrorCode err = PR_GetError();
+            FPRINTF(stderr,
+                    "couldn't export keying material: %s\n",
+                    SECU_Strerror(err));
+        }
+    }
 }
 
 static SECStatus
@@ -1735,7 +1756,7 @@ main(int argc, char **argv)
      * Please leave some time before reusing these.
      */
     optstate = PL_CreateOptState(argc, argv,
-                                 "46A:BCDEFGHI:J:KL:M:N:OP:QR:STUV:W:X:YZa:bc:d:fgh:m:n:op:qr:st:uvw:");
+                                 "46A:BCDEFGHI:J:KL:M:N:OP:QR:STUV:W:X:YZa:bc:d:fgh:m:n:op:qr:st:uvw:x:");
     while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
         switch (optstate->option) {
             case '?':
@@ -1980,6 +2001,17 @@ main(int argc, char **argv)
                 if (rv != SECSuccess) {
                     PL_DestroyOptState(optstate);
                     fprintf(stderr, "Bad signature scheme specified.\n");
+                    Usage();
+                }
+                break;
+
+            case 'x':
+                rv = parseExporters(optstate->value,
+                                    &enabledExporters,
+                                    &enabledExporterCount);
+                if (rv != SECSuccess) {
+                    PL_DestroyOptState(optstate);
+                    fprintf(stderr, "Bad exporter specified.\n");
                     Usage();
                 }
                 break;

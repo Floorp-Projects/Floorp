@@ -62,6 +62,15 @@ intel_AES_GCM_CreateContext(void *context,
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return NULL;
     }
+
+    if (gcmParams->ulTagBits != 128 && gcmParams->ulTagBits != 120 &&
+        gcmParams->ulTagBits != 112 && gcmParams->ulTagBits != 104 &&
+        gcmParams->ulTagBits != 96 && gcmParams->ulTagBits != 64 &&
+        gcmParams->ulTagBits != 32) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return NULL;
+    }
+
     // Limit AADLen in accordance with SP800-38D
     if (sizeof(AAD_whole_len) >= 8 && AAD_whole_len > (1ULL << 61) - 1) {
         PORT_SetError(SEC_ERROR_INPUT_LEN);

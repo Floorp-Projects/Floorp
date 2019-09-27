@@ -436,8 +436,9 @@ SEED_cbc_encrypt(const unsigned char *in, unsigned char *out,
 
     if (enc) {
         while (len >= SEED_BLOCK_SIZE) {
-            for (n = 0; n < SEED_BLOCK_SIZE; ++n)
+            for (n = 0; n < SEED_BLOCK_SIZE; ++n) {
                 out[n] = in[n] ^ iv[n];
+            }
 
             SEED_encrypt(out, out, ks);
             iv = out;
@@ -447,11 +448,13 @@ SEED_cbc_encrypt(const unsigned char *in, unsigned char *out,
         }
 
         if (len) {
-            for (n = 0; n < len; ++n)
+            for (n = 0; n < len; ++n) {
                 out[n] = in[n] ^ iv[n];
+            }
 
-            for (n = len; n < SEED_BLOCK_SIZE; ++n)
+            for (n = len; n < SEED_BLOCK_SIZE; ++n) {
                 out[n] = iv[n];
+            }
 
             SEED_encrypt(out, out, ks);
             iv = out;
@@ -462,8 +465,9 @@ SEED_cbc_encrypt(const unsigned char *in, unsigned char *out,
         while (len >= SEED_BLOCK_SIZE) {
             SEED_decrypt(in, out, ks);
 
-            for (n = 0; n < SEED_BLOCK_SIZE; ++n)
+            for (n = 0; n < SEED_BLOCK_SIZE; ++n) {
                 out[n] ^= iv[n];
+            }
 
             iv = in;
             len -= SEED_BLOCK_SIZE;
@@ -474,8 +478,9 @@ SEED_cbc_encrypt(const unsigned char *in, unsigned char *out,
         if (len) {
             SEED_decrypt(in, tmp, ks);
 
-            for (n = 0; n < len; ++n)
+            for (n = 0; n < len; ++n) {
                 out[n] = tmp[n] ^ iv[n];
+            }
 
             iv = in;
         }
@@ -486,8 +491,9 @@ SEED_cbc_encrypt(const unsigned char *in, unsigned char *out,
             memcpy(tmp, in, SEED_BLOCK_SIZE);
             SEED_decrypt(in, out, ks);
 
-            for (n = 0; n < SEED_BLOCK_SIZE; ++n)
+            for (n = 0; n < SEED_BLOCK_SIZE; ++n) {
                 out[n] ^= ivec[n];
+            }
 
             memcpy(ivec, tmp, SEED_BLOCK_SIZE);
             len -= SEED_BLOCK_SIZE;
@@ -499,8 +505,9 @@ SEED_cbc_encrypt(const unsigned char *in, unsigned char *out,
             memcpy(tmp, in, SEED_BLOCK_SIZE);
             SEED_decrypt(tmp, tmp, ks);
 
-            for (n = 0; n < len; ++n)
+            for (n = 0; n < len; ++n) {
                 out[n] = tmp[n] ^ ivec[n];
+            }
 
             memcpy(ivec, tmp, SEED_BLOCK_SIZE);
         }
@@ -582,6 +589,12 @@ SEED_Encrypt(SEEDContext *cx, unsigned char *out, unsigned int *outLen,
         return SECFailure;
     }
 
+    if ((inLen % SEED_BLOCK_SIZE) != 0 || maxOutLen < SEED_BLOCK_SIZE ||
+        maxOutLen < inLen) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
     if (!cx->encrypt) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
@@ -612,6 +625,12 @@ SEED_Decrypt(SEEDContext *cx, unsigned char *out, unsigned int *outLen,
              unsigned int inLen)
 {
     if (!cx) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    if ((inLen % SEED_BLOCK_SIZE) != 0 || maxOutLen < SEED_BLOCK_SIZE ||
+        maxOutLen < inLen) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }

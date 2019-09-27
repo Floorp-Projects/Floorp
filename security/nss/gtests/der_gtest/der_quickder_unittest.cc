@@ -16,16 +16,34 @@
 #include "secerr.h"
 #include "secitem.h"
 
-const SEC_ASN1Template mySEC_NullTemplate[] = {
-    {SEC_ASN1_NULL, 0, NULL, sizeof(SECItem)}};
-
 namespace nss_test {
 
-class QuickDERTest : public ::testing::Test,
-                     public ::testing::WithParamInterface<SECItem> {};
+struct TemplateAndInput {
+  const SEC_ASN1Template* t;
+  SECItem input;
+};
 
+class QuickDERTest : public ::testing::Test,
+                     public ::testing::WithParamInterface<TemplateAndInput> {};
+
+static const uint8_t kBitstringTag = 0x03;
 static const uint8_t kNullTag = 0x05;
 static const uint8_t kLongLength = 0x80;
+
+const SEC_ASN1Template kBitstringTemplate[] = {
+    {SEC_ASN1_BIT_STRING, 0, NULL, sizeof(SECItem)}, {0}};
+
+// Empty bitstring with unused bits.
+static uint8_t kEmptyBitstringUnused[] = {kBitstringTag, 1, 1};
+
+// Bitstring with 8 unused bits.
+static uint8_t kBitstring8Unused[] = {kBitstringTag, 3, 8, 0xff, 0x00};
+
+// Bitstring with >8 unused bits.
+static uint8_t kBitstring9Unused[] = {kBitstringTag, 3, 9, 0xff, 0x80};
+
+const SEC_ASN1Template kNullTemplate[] = {
+    {SEC_ASN1_NULL, 0, NULL, sizeof(SECItem)}, {0}};
 
 // Length of zero wrongly encoded as 0x80 instead of 0x00.
 static uint8_t kOverlongLength_0_0[] = {kNullTag, kLongLength | 0};
@@ -53,14 +71,22 @@ static uint8_t kOverlongLength_16_0[] = {kNullTag, kLongLength | 0x10,
                                          0x00,     0x00,
                                          0x00,     0x00};
 
-static const SECItem kInvalidDER[] = {
-    {siBuffer, kOverlongLength_0_0, sizeof(kOverlongLength_0_0)},
-    {siBuffer, kOverlongLength_1_0, sizeof(kOverlongLength_1_0)},
-    {siBuffer, kOverlongLength_16_0, sizeof(kOverlongLength_16_0)},
+#define TI(t, x)                  \
+  {                               \
+    t, { siBuffer, x, sizeof(x) } \
+  }
+static const TemplateAndInput kInvalidDER[] = {
+    TI(kBitstringTemplate, kEmptyBitstringUnused),
+    TI(kBitstringTemplate, kBitstring8Unused),
+    TI(kBitstringTemplate, kBitstring9Unused),
+    TI(kNullTemplate, kOverlongLength_0_0),
+    TI(kNullTemplate, kOverlongLength_1_0),
+    TI(kNullTemplate, kOverlongLength_16_0),
 };
+#undef TI
 
 TEST_P(QuickDERTest, InvalidLengths) {
-  const SECItem& original_input(GetParam());
+  const SECItem& original_input(GetParam().input);
 
   ScopedSECItem copy_of_input(SECITEM_AllocItem(nullptr, nullptr, 0U));
   ASSERT_TRUE(copy_of_input);
@@ -69,11 +95,10 @@ TEST_P(QuickDERTest, InvalidLengths) {
 
   PORTCheapArenaPool pool;
   PORT_InitCheapArena(&pool, DER_DEFAULT_CHUNKSIZE);
-  ScopedSECItem parsed_value(SECITEM_AllocItem(nullptr, nullptr, 0U));
-  ASSERT_TRUE(parsed_value);
+  StackSECItem parsed_value;
   ASSERT_EQ(SECFailure,
-            SEC_QuickDERDecodeItem(&pool.arena, parsed_value.get(),
-                                   mySEC_NullTemplate, copy_of_input.get()));
+            SEC_QuickDERDecodeItem(&pool.arena, &parsed_value, GetParam().t,
+                                   copy_of_input.get()));
   ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
   PORT_DestroyCheapArena(&pool);
 }

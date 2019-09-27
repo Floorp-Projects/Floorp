@@ -409,6 +409,20 @@ SECStatus parseGroupList(const char *arg, SSLNamedGroup **enabledGroups,
 SECStatus parseSigSchemeList(const char *arg,
                              const SSLSignatureScheme **enabledSigSchemes,
                              unsigned int *enabledSigSchemeCount);
+typedef struct {
+    SECItem label;
+    PRBool hasContext;
+    SECItem context;
+    unsigned int outputLength;
+} secuExporter;
+
+SECStatus parseExporters(const char *arg,
+                         const secuExporter **enabledExporters,
+                         unsigned int *enabledExporterCount);
+
+SECStatus exportKeyingMaterials(PRFileDesc *fd,
+                                const secuExporter *exporters,
+                                unsigned int exporterCount);
 
 /*
  *

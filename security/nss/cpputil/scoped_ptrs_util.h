@@ -37,4 +37,9 @@ SCOPED(PLArenaPool);
 
 #undef SCOPED
 
+struct StackSECItem : public SECItem {
+  StackSECItem() : SECItem({siBuffer, nullptr, 0}) {}
+  ~StackSECItem() { SECITEM_FreeItem(this, PR_FALSE); }
+};
+
 #endif  // scoped_ptrs_util_h__

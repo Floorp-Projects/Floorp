@@ -84,7 +84,7 @@ ssl_init()
     PORT=$(($PORT + $padd))
   fi
   NSS_SSL_TESTS=${NSS_SSL_TESTS:-normal_normal}
-  nss_ssl_run="stapling signed_cert_timestamps cov auth dtls scheme"
+  nss_ssl_run="stapling signed_cert_timestamps cov auth dtls scheme exporter"
   NSS_SSL_RUN=${NSS_SSL_RUN:-$nss_ssl_run}
 
   # Test case files
@@ -1319,6 +1319,38 @@ ssl_scheme_stress()
     html "</TABLE><BR>"
 }
 
+############################ ssl_exporter ###################################
+# local shell function to test tstclnt and selfserv handling of TLS exporter
+#########################################################################
+ssl_exporter()
+{
+    html_head "SSL EXPORTER $NORM_EXT - server $SERVER_MODE/client $CLIENT_MODE"
+
+    save_fileout=${fileout}
+    fileout=1
+    SAVE_SERVEROUTFILE=${SERVEROUTFILE}
+    SERVEROUTFILE=server.out
+    exporters=("label" "label:10" "label:10:0xdeadbeef" "0x666f6f2c:10:0xdeadbeef" "label1:10:0xdeadbeef,label2:10")
+    for exporter in "${exporters[@]}"; do
+        start_selfserv -V tls1.2:tls1.2 -x "$exporter"
+
+        echo "tstclnt -4 -p ${PORT} -h ${HOSTADDR} -f -d ${P_R_CLIENTDIR} $verbose ${CLIENT_OPTIONS} \\"
+        echo "        -V tls1.2:tls1.2 -x $exporter < ${REQUEST_FILE}"
+        ${PROFTOOL} ${BINDIR}/tstclnt -4 -p ${PORT} -h ${HOSTADDR} -f ${CLIENT_OPTIONS} \
+                    -d ${P_R_CLIENTDIR} $verbose -V tls1.2:tls1.2 -x "$exporter" < ${REQUEST_FILE} 2>&1 > client.out
+        kill_selfserv
+        diff <(LC_ALL=C grep -A1 "^ *Keying Material:" server.out) \
+             <(LC_ALL=C grep -A1 "^ *Keying Material:" client.out)
+        ret=$?
+        html_msg $ret 0 "${testname}" \
+                 "produced a returncode of $ret, expected is 0"
+    done
+    SERVEROUTFILE=${SAVE_SERVEROUTFILE}
+    fileout=${save_fileout}
+
+    html "</TABLE><BR>"
+}
+
 ############################## ssl_cleanup #############################
 # local shell function to finish this script (no exit since it might be
 # sourced)
@@ -1362,6 +1394,9 @@ ssl_run()
         "scheme")
             ssl_scheme
             ssl_scheme_stress
+            ;;
+        "exporter")
+            ssl_exporter
             ;;
          esac
     done

@@ -144,8 +144,8 @@ endif
 ifeq ($(OS_ARCH), WINNT)
 
 EXTRA_LIBS += \
-	$(NSS_LIBS_1) \
 	$(SECTOOL_LIB) \
+	$(NSS_LIBS_1) \
 	$(NSS_LIBS_2) \
 	$(SOFTOKENLIB) \
 	$(CRYPTOLIB) \
@@ -161,8 +161,8 @@ EXTRA_LIBS += \
 else
 
 EXTRA_LIBS += \
-	$(NSS_LIBS_1) \
 	$(SECTOOL_LIB) \
+	$(NSS_LIBS_1) \
 	$(NSS_LIBS_2) \
 	$(SOFTOKENLIB) \
 	$(NSS_LIBS_3) \
