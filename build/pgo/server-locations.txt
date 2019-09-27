@@ -205,6 +205,12 @@ https://subdocument.example.com:443
 http://exception.subdocument.example.com:80
 
 #
+# Used while testing tracking protection (Bug 1580416)
+# Not that apps.fbsbx.com is a public suffix
+#
+http://mochitest.apps.fbsbx.com:80
+
+#
 # Flash usage can fail unless this URL exists
 #
 http://fpdownload2.macromedia.com:80
