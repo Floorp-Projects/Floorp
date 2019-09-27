@@ -449,7 +449,7 @@ void IDBCursor::Continue(JSContext* aCx, JS::Handle<JS::Value> aKey,
         IDB_LOG_STRINGIFY(key));
   }
 
-  mBackgroundActor->SendContinueInternal(ContinueParams(key));
+  mBackgroundActor->SendContinueInternal(ContinueParams(key), Key());
 
   mContinueCalled = true;
 }
@@ -555,7 +555,7 @@ void IDBCursor::ContinuePrimaryKey(JSContext* aCx, JS::Handle<JS::Value> aKey,
       IDB_LOG_STRINGIFY(key), IDB_LOG_STRINGIFY(primaryKey));
 
   mBackgroundActor->SendContinueInternal(
-      ContinuePrimaryKeyParams(key, primaryKey));
+      ContinuePrimaryKeyParams(key, primaryKey), Key());
 
   mContinueCalled = true;
 }
@@ -600,7 +600,7 @@ void IDBCursor::Advance(uint32_t aCount, ErrorResult& aRv) {
         IDB_LOG_STRINGIFY(mSourceIndex), IDB_LOG_STRINGIFY(mDirection), aCount);
   }
 
-  mBackgroundActor->SendContinueInternal(AdvanceParams(aCount));
+  mBackgroundActor->SendContinueInternal(AdvanceParams(aCount), Key());
 
   mContinueCalled = true;
 }
