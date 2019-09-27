@@ -411,6 +411,96 @@ bool LookupCache::IsCanonicalizedIP(const nsACString& aHost) {
   return false;
 }
 
+// This is used when the URL is created by CreatePairwiseWhiteListURI(),
+// which returns an URI like "toplevel.page/?resource=third.party.domain"
+// The fragment rule for the hostname(toplevel.page) is still the same
+// as Safe Browsing protocol.
+// The difference is that we always keep the path and query string and
+// generate an additional fragment by removing the leading component of
+// third.party.domain. This is to make sure we can find a match when a
+// whitelisted domain is eTLD.
+/* static */
+nsresult LookupCache::GetLookupWhitelistFragments(
+    const nsACString& aSpec, nsTArray<nsCString>* aFragments) {
+  aFragments->Clear();
+
+  nsACString::const_iterator begin, end, iter, iter_end;
+  aSpec.BeginReading(begin);
+  aSpec.EndReading(end);
+
+  iter = begin;
+  iter_end = end;
+
+  // Fallback to use default fragment rule when the URL doesn't contain
+  // "/?resoruce=" because this means the URL is not generated in
+  // CreatePairwiseWhiteListURI()
+  if (!FindInReadable(NS_LITERAL_CSTRING("/?resource="), iter, iter_end)) {
+    return GetLookupFragments(aSpec, aFragments);
+  }
+
+  const nsACString& topLevelURL = Substring(begin, iter++);
+  const nsACString& thirdPartyURL = Substring(iter_end, end);
+
+  /**
+   * For the top-level URL, we follow the host fragment rule defined
+   * in the Safe Browsing protocol.
+   */
+  nsTArray<nsCString> topLevelURLs;
+  topLevelURLs.AppendElement(topLevelURL);
+
+  MOZ_ASSERT(!IsCanonicalizedIP(topLevelURL));
+
+  topLevelURL.BeginReading(begin);
+  topLevelURL.EndReading(end);
+  int numTopLevelURLComponents = 0;
+  while (RFindInReadable(NS_LITERAL_CSTRING("."), begin, end) &&
+         numTopLevelURLComponents < MAX_HOST_COMPONENTS) {
+    // don't bother checking toplevel domains
+    if (++numTopLevelURLComponents >= 2) {
+      topLevelURL.EndReading(iter);
+      topLevelURLs.AppendElement(Substring(end, iter));
+    }
+    end = begin;
+    topLevelURL.BeginReading(begin);
+  }
+
+  /**
+   * The whiltelisted domain in the entity list may be eTLD or eTLD+1.
+   * Since the number of the domain name part in the third-party URL searching
+   * is always less than or equal to eTLD+1, we remove the leading
+   * component from the third-party domain to make sure we can find a match
+   * if the whitelisted domain stoed in the entity list is eTLD.
+   */
+  nsTArray<nsCString> thirdPartyURLs;
+  thirdPartyURLs.AppendElement(thirdPartyURL);
+
+  thirdPartyURL.BeginReading(iter);
+  thirdPartyURL.EndReading(end);
+  if (FindCharInReadable('.', iter, end)) {
+    iter++;
+    nsAutoCString thirdPartyURLToAdd;
+    thirdPartyURLToAdd.Assign(Substring(iter++, end));
+
+    // don't bother checking toplevel domains
+    if (FindCharInReadable('.', iter, end)) {
+      thirdPartyURLs.AppendElement(thirdPartyURLToAdd);
+    }
+  }
+
+  for (size_t i = 0; i < topLevelURLs.Length(); i++) {
+    for (size_t j = 0; j < thirdPartyURLs.Length(); j++) {
+      nsAutoCString key;
+      key.Assign(topLevelURLs[i]);
+      key.Append("/?resource=");
+      key.Append(thirdPartyURLs[j]);
+
+      aFragments->AppendElement(key);
+    }
+  }
+
+  return NS_OK;
+}
+
 /* static */
 nsresult LookupCache::GetLookupFragments(const nsACString& aSpec,
                                          nsTArray<nsCString>* aFragments)

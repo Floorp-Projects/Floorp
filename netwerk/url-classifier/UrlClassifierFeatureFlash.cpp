@@ -179,11 +179,15 @@ UrlClassifierFeatureFlash::ProcessChannel(nsIChannel* aChannel,
 NS_IMETHODIMP
 UrlClassifierFeatureFlash::GetURIByListType(
     nsIChannel* aChannel, nsIUrlClassifierFeature::listType aListType,
-    nsIURI** aURI) {
+    nsIUrlClassifierFeature::URIType* aURIType, nsIURI** aURI) {
   NS_ENSURE_ARG_POINTER(aChannel);
+  NS_ENSURE_ARG_POINTER(aURIType);
   NS_ENSURE_ARG_POINTER(aURI);
 
   // Here we return the channel's URI always.
+  *aURIType = aListType == nsIUrlClassifierFeature::blacklist
+                  ? nsIUrlClassifierFeature::URIType::blacklistURI
+                  : nsIUrlClassifierFeature::URIType::whitelistURI;
   return aChannel->GetURI(aURI);
 }
 

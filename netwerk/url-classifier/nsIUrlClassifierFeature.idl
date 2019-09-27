@@ -25,6 +25,12 @@ interface nsIUrlClassifierFeature : nsISupports
     whitelist = 1,
   };
 
+  cenum URIType: 8 {
+    blacklistURI = 0,
+    whitelistURI = 1,
+    pairwiseWhitelistURI = 2,
+  };
+
   /**
    * The feature name
    */
@@ -71,9 +77,12 @@ interface nsIUrlClassifierFeature : nsISupports
    * Features can work with different URLs from a channel (channel url, or
    * top-level, or something else). This method returns what we need to use for
    * the current list.
+   * If the returned URI is created by CreatePairwiseWhiteListURI(), the URIType
+   * is pairwiseWhitelistURI. Otherwise, it depends on the listType.
    */
   [noscript] nsIURI getURIByListType(in nsIChannel channel,
-                                     in nsIUrlClassifierFeature_listType listType);
+                                     in nsIUrlClassifierFeature_listType listType,
+                                     out nsIUrlClassifierFeature_URIType URIType);
 };
 
 /**

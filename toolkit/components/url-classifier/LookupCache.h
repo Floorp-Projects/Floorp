@@ -183,6 +183,9 @@ class LookupCache {
   static nsresult GetLookupFragments(const nsACString& aSpec,
                                      nsTArray<nsCString>* aFragments);
 
+  static nsresult GetLookupWhitelistFragments(const nsACString& aSpec,
+                                              nsTArray<nsCString>* aFragments);
+
   LookupCache(const nsACString& aTableName, const nsACString& aProvider,
               nsCOMPtr<nsIFile>& aStoreFile);
 

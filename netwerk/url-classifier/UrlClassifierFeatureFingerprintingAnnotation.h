@@ -34,6 +34,7 @@ class UrlClassifierFeatureFingerprintingAnnotation final
 
   NS_IMETHOD GetURIByListType(nsIChannel* aChannel,
                               nsIUrlClassifierFeature::listType aListType,
+                              nsIUrlClassifierFeature::URIType* aURIType,
                               nsIURI** aURI) override;
 
  private:
