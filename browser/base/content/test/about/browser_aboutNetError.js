@@ -3,23 +3,25 @@
 
 "use strict";
 
-const LOW_TLS_VERSION = "https://tls1.example.com/";
+const SSL3_PAGE = "https://ssl3.example.com/";
+const TLS10_PAGE = "https://tls1.example.com/";
+const TLS12_PAGE = "https://tls12.example.com/";
 
-add_task(async function checkReturnToPreviousPage() {
+add_task(async function resetToDefaultConfig() {
   info(
-    "Loading a TLS page that isn't supported, ensure we have a fix button and clicking it then loads the page"
+    "Change TLS config to cause page load to fail, check that reset button is shown and that it works"
   );
 
   // Set ourselves up for TLS error
-  Services.prefs.setIntPref("security.tls.version.max", 3);
-  Services.prefs.setIntPref("security.tls.version.min", 3);
+  Services.prefs.setIntPref("security.tls.version.min", 1); // TLS 1.0
+  Services.prefs.setIntPref("security.tls.version.max", 1);
 
   let browser;
   let pageLoaded;
   await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     () => {
-      gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, LOW_TLS_VERSION);
+      gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TLS12_PAGE);
       browser = gBrowser.selectedBrowser;
       pageLoaded = BrowserTestUtils.waitForErrorPage(browser);
     },
@@ -29,59 +31,54 @@ add_task(async function checkReturnToPreviousPage() {
   info("Loading and waiting for the net error");
   await pageLoaded;
 
-  // NB: This code assumes that the error page and the test page load in the
-  // same process. If this test starts to fail, it could be because they load
-  // in different processes.
-  await ContentTask.spawn(browser, LOW_TLS_VERSION, async function(
-    LOW_TLS_VERSION_
-  ) {
-    ok(
-      content.document.getElementById("prefResetButton").getBoundingClientRect()
-        .left >= 0,
-      "Should have a visible button"
-    );
+  // Setup an observer for the target page.
+  const finalLoadComplete = BrowserTestUtils.browserLoaded(
+    browser,
+    false,
+    TLS12_PAGE
+  );
 
+  await ContentTask.spawn(browser, null, async function() {
+    const doc = content.document;
     ok(
-      content.document.documentURI.startsWith("about:neterror"),
+      doc.documentURI.startsWith("about:neterror"),
       "Should be showing error page"
     );
 
-    let doc = content.document;
-    let prefResetButton = doc.getElementById("prefResetButton");
+    const prefResetButton = doc.getElementById("prefResetButton");
+    ok(
+      ContentTaskUtils.is_visible(prefResetButton),
+      "prefResetButton should be visible"
+    );
     is(
       prefResetButton.getAttribute("autofocus"),
       "true",
       "prefResetButton has autofocus"
     );
     prefResetButton.click();
-
-    await ContentTaskUtils.waitForEvent(this, "pageshow", true);
-
-    is(
-      content.document.documentURI,
-      LOW_TLS_VERSION_,
-      "Should not be showing page"
-    );
   });
 
+  info("Waiting for the TLS 1.2 page to load after the click");
+  await finalLoadComplete;
+
+  Services.prefs.clearUserPref("security.tls.version.min");
+  Services.prefs.clearUserPref("security.tls.version.max");
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function checkLearnMoreLink() {
-  info(
-    "Loading a TLS page that isn't supported and checking the learn more link"
-  );
+  info("Load an unsupported TLS page and check for a learn more link");
 
   // Set ourselves up for TLS error
-  Services.prefs.setIntPref("security.tls.version.max", 3);
   Services.prefs.setIntPref("security.tls.version.min", 3);
+  Services.prefs.setIntPref("security.tls.version.max", 4);
 
   let browser;
   let pageLoaded;
   await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     () => {
-      gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, LOW_TLS_VERSION);
+      gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TLS10_PAGE);
       browser = gBrowser.selectedBrowser;
       pageLoaded = BrowserTestUtils.waitForErrorPage(browser);
     },
@@ -91,16 +88,16 @@ add_task(async function checkLearnMoreLink() {
   info("Loading and waiting for the net error");
   await pageLoaded;
 
-  let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
+  const baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
 
   await ContentTask.spawn(browser, baseURL, function(_baseURL) {
+    const doc = content.document;
     ok(
-      content.document.documentURI.startsWith("about:neterror"),
+      doc.documentURI.startsWith("about:neterror"),
       "Should be showing error page"
     );
 
-    let doc = content.document;
-    let learnMoreLink = doc.getElementById("learnMoreLink");
+    const learnMoreLink = doc.getElementById("learnMoreLink");
     ok(
       ContentTaskUtils.is_visible(learnMoreLink),
       "Learn More link is visible"
@@ -108,7 +105,120 @@ add_task(async function checkLearnMoreLink() {
     is(learnMoreLink.getAttribute("href"), _baseURL + "connection-not-secure");
   });
 
-  Services.prefs.clearUserPref("security.tls.version.max");
   Services.prefs.clearUserPref("security.tls.version.min");
+  Services.prefs.clearUserPref("security.tls.version.max");
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(async function checkEnable10() {
+  info(
+    "Load a page with a deprecated TLS version, an option to enable TLS 1.0 is offered and it works"
+  );
+
+  Services.prefs.setIntPref("security.tls.version.min", 3);
+  // Disable TLS 1.3 so that we trigger a SSL_ERROR_UNSUPPORTED_VERSION.
+  // As NSS generates an alert rather than negotiating a lower version
+  // if we use the supported_versions extension from TLS 1.3.
+  Services.prefs.setIntPref("security.tls.version.max", 3);
+
+  let browser;
+  let pageLoaded;
+  await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    () => {
+      gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TLS10_PAGE);
+      browser = gBrowser.selectedBrowser;
+      pageLoaded = BrowserTestUtils.waitForErrorPage(browser);
+    },
+    false
+  );
+
+  info("Loading and waiting for the net error");
+  await pageLoaded;
+
+  // Setup an observer for the target page.
+  const finalLoadComplete = BrowserTestUtils.browserLoaded(
+    browser,
+    false,
+    TLS10_PAGE
+  );
+
+  await ContentTask.spawn(browser, null, async function() {
+    const doc = content.document;
+    ok(
+      doc.documentURI.startsWith("about:neterror"),
+      "Should be showing error page"
+    );
+
+    const enableTls10Button = doc.getElementById("enableTls10Button");
+    ok(
+      ContentTaskUtils.is_visible(enableTls10Button),
+      "Option to re-enable TLS 1.0 is visible"
+    );
+    enableTls10Button.click();
+
+    // It should not also offer to reset preferences instead.
+    const prefResetButton = doc.getElementById("prefResetButton");
+    ok(
+      !ContentTaskUtils.is_visible(prefResetButton),
+      "prefResetButton should NOT be visible"
+    );
+  });
+
+  info("Waiting for the TLS 1.0 page to load after the click");
+  await finalLoadComplete;
+
+  Services.prefs.clearUserPref("security.tls.version.min");
+  Services.prefs.clearUserPref("security.tls.version.max");
+  Services.prefs.clearUserPref("security.tls.version.enable-deprecated");
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(async function dontOffer10WhenAlreadyEnabled() {
+  info("An option to enable TLS 1.0 is not offered if already enabled");
+
+  Services.prefs.setIntPref("security.tls.version.min", 3);
+  Services.prefs.setIntPref("security.tls.version.max", 3);
+  Services.prefs.setBoolPref("security.tls.version.enable-deprecated", true);
+
+  let browser;
+  let pageLoaded;
+  await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    () => {
+      gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, SSL3_PAGE);
+      browser = gBrowser.selectedBrowser;
+      pageLoaded = BrowserTestUtils.waitForErrorPage(browser);
+    },
+    false
+  );
+
+  info("Loading and waiting for the net error");
+  await pageLoaded;
+
+  await ContentTask.spawn(browser, null, async function() {
+    const doc = content.document;
+    ok(
+      doc.documentURI.startsWith("about:neterror"),
+      "Should be showing error page"
+    );
+
+    const enableTls10Button = doc.getElementById("enableTls10Button");
+    ok(
+      !ContentTaskUtils.is_visible(enableTls10Button),
+      "Option to re-enable TLS 1.0 is not visible"
+    );
+
+    // It should offer to reset preferences instead.
+    const prefResetButton = doc.getElementById("prefResetButton");
+    ok(
+      ContentTaskUtils.is_visible(prefResetButton),
+      "prefResetButton should be visible"
+    );
+  });
+
+  Services.prefs.clearUserPref("security.tls.version.min");
+  Services.prefs.clearUserPref("security.tls.version.max");
+  Services.prefs.clearUserPref("security.tls.version.enable-deprecated");
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
