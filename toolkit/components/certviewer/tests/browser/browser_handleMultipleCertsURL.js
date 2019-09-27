@@ -29,7 +29,7 @@ async function checkSubjectName(inputPage, subjectsNameInfo) {
             ".certificate-tabs"
           );
 
-          let tab = tabs.querySelector(`#tab${index}`);
+          let tab = tabs.querySelector(`.tab[idnumber="${index}"]`);
           Assert.ok(tab, `Tab at index ${index} found`);
           Assert.equal(tab.innerText, tabName, `Tab name should be ${tabName}`);
 
