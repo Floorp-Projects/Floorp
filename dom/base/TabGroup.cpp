@@ -150,9 +150,7 @@ already_AddRefed<DocGroup> TabGroup::AddDocument(const nsACString& aKey,
   if (entry->mDocGroup) {
     docGroup = entry->mDocGroup;
   } else {
-    nsID agentClusterId;
-    nsresult rv = nsContentUtils::GenerateUUIDInPlace(agentClusterId);
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    const nsID agentClusterId = nsContentUtils::GenerateUUID();
 
     docGroup = new DocGroup(this, aKey, agentClusterId);
     entry->mDocGroup = docGroup;
