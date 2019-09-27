@@ -2588,6 +2588,18 @@ function reducer(state = initialState(), action = {}) {
     });
   }
 
+  if (type === "RELEASED_ACTORS") {
+    if (state.actors && state.actors.size > 0) {
+      for (const actor of data.actors) {
+        state.actors.delete(actor);
+      }
+    }
+
+    return cloneState({
+      actors: new Set(state.actors || [])
+    });
+  }
+
   if (type === "ROOTS_CHANGED") {
     return cloneState();
   }
@@ -7981,10 +7993,11 @@ function removeWatchpoint(item) {
 
 function closeObjectInspector() {
   return async ({
+    dispatch,
     getState,
     client
   }) => {
-    releaseActors(getState(), client);
+    dispatch(releaseActors(getState(), client));
   };
 }
 /*
@@ -8003,7 +8016,7 @@ function rootsChanged(props) {
     client,
     getState
   }) => {
-    releaseActors(getState(), client);
+    dispatch(releaseActors(getState(), client));
     dispatch({
       type: "ROOTS_CHANGED",
       data: props
@@ -8022,6 +8035,13 @@ function releaseActors(state, client) {
       client.releaseActor(actor);
     }
   }
+
+  return {
+    type: "RELEASED_ACTORS",
+    data: {
+      actors
+    }
+  };
 }
 
 function invokeGetter(node, targetGrip, receiverId, getterName) {

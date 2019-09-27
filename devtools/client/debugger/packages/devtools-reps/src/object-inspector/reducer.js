@@ -75,6 +75,17 @@ function reducer(
     });
   }
 
+  if (type === "RELEASED_ACTORS") {
+    if (state.actors && state.actors.size > 0) {
+      for (const actor of data.actors) {
+        state.actors.delete(actor);
+      }
+    }
+    return cloneState({
+      actors: new Set(state.actors || []),
+    });
+  }
+
   if (type === "ROOTS_CHANGED") {
     return cloneState();
   }
