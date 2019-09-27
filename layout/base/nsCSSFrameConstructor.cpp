@@ -5705,12 +5705,12 @@ void nsCSSFrameConstructor::ConstructFramesFromItem(
   ComputedStyle* computedStyle = item.mComputedStyle;
 
   const auto* disp = computedStyle->StyleDisplay();
-  MOZ_DIAGNOSTIC_ASSERT(!disp->IsAbsolutelyPositionedStyle() ||
-                            (disp->mDisplay != StyleDisplay::MozBox &&
-                             disp->mDisplay != StyleDisplay::MozInlineBox),
-                        "This may be a frame that was previously blockified "
-                        "but isn't any longer! It probably needs explicit "
-                        "'display:block' to preserve behavior");
+  MOZ_ASSERT(!disp->IsAbsolutelyPositionedStyle() ||
+                 (disp->mDisplay != StyleDisplay::MozBox &&
+                  disp->mDisplay != StyleDisplay::MozInlineBox),
+             "This may be a frame that was previously blockified "
+             "but isn't any longer! It probably needs explicit "
+             "'display:block' to preserve behavior");
   Unused << disp; // (unused in configs that define the assertion away)
 
   if (item.mIsText) {
