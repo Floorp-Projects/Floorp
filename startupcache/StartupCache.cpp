@@ -250,7 +250,7 @@ void StartupCache::StartPrefetchMemoryThread() {
   // barring a coordinated global scheduling system this is the best we get.
   mPrefetchThread = PR_CreateThread(
       PR_USER_THREAD, StartupCache::ThreadedPrefetch, this,
-      PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+      PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 256 * 1024);
 }
 
 /**
@@ -674,7 +674,7 @@ void StartupCache::WriteTimeout(nsITimer* aTimer, void* aClosure) {
     startupCacheObj->mCacheData.reset();
     startupCacheObj->mWriteThread = PR_CreateThread(
         PR_USER_THREAD, StartupCache::ThreadedWrite, startupCacheObj,
-        PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+        PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 256 * 1024);
   }
 }
 
