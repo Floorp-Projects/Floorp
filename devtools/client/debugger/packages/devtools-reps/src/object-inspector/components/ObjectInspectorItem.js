@@ -246,8 +246,9 @@ class ObjectInspectorItem extends Component<Props> {
         // image, clicking on it does not remove any existing text selection.
         // So we need to also check if the arrow was clicked.
         if (
-          Utils.selection.documentHasSelection() &&
-          !(e.target && e.target.matches && e.target.matches(".arrow"))
+          e.target &&
+          Utils.selection.documentHasSelection(e.target.ownerDocument) &&
+          !(e.target.matches && e.target.matches(".arrow"))
         ) {
           e.stopPropagation();
         }
@@ -283,7 +284,9 @@ class ObjectInspectorItem extends Component<Props> {
               event.stopPropagation();
 
               // If the user selected text, bail out.
-              if (Utils.selection.documentHasSelection()) {
+              if (
+                Utils.selection.documentHasSelection(event.target.ownerDocument)
+              ) {
                 return;
               }
 
