@@ -5,7 +5,7 @@
   <vbox>
     <text value="powered by example.com" style="padding: 16px;"/>
   </vbox>
-  <hbox id="t" style="display: block; position: fixed; right: 16px; bottom: 16px;">
+  <hbox id="t" style="position: fixed; right: 16px; bottom: 16px;">
     <button label="OK"/>
   </hbox>
 <script><![CDATA[
