@@ -376,11 +376,6 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
   },
 
   getBreakpointPositions: async function(query) {
-    const {
-      start: { line: startLine = 0, column: startColumn = 0 } = {},
-      end: { line: endLine = Infinity, column: endColumn = Infinity } = {},
-    } = query || {};
-
     const scripts = this._findDebuggeeScripts();
 
     // We need to find all breakpoint positions, even if scripts associated with
@@ -418,37 +413,16 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
 
     const positions = [];
     for (const script of scripts) {
-      // This purely a performance boost to avoid needing to build an array
-      // of breakable points for scripts when we know we don't need it.
-      if (
-        script.startLine > endLine ||
-        script.startLine + script.lineCount < startLine
-      ) {
-        continue;
-      }
-
-      const offsets = script.getPossibleBreakpoints();
-      for (const { lineNumber, columnNumber } of offsets) {
-        if (
-          lineNumber < startLine ||
-          (lineNumber === startLine && columnNumber < startColumn) ||
-          lineNumber > endLine ||
-          (lineNumber === endLine && columnNumber >= endColumn)
-        ) {
-          continue;
-        }
-
-        // Adjust columns according to any inline script start column, so that
-        // column breakpoints show up correctly in the UI.
-        const position = await this._adjustInlineScriptLocation(
-          {
-            line: lineNumber,
-            column: columnNumber,
-          },
-          /* upward */ true
+      try {
+        await this._addScriptBreakpointPositions(query, script, positions);
+      } catch (e) {
+        // Accessing scripts which were optimized out during parsing can throw
+        // an exception. Tolerate these so that we can still get positions for
+        // other scripts in the source.
+        reportError(
+          e,
+          "Got an exception during SA_addScriptBreakpointPositions: "
         );
-
-        positions.push(position);
       }
     }
 
@@ -460,6 +434,46 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
           return lineDiff === 0 ? a.column - b.column : lineDiff;
         })
     );
+  },
+
+  async _addScriptBreakpointPositions(query, script, positions) {
+    const {
+      start: { line: startLine = 0, column: startColumn = 0 } = {},
+      end: { line: endLine = Infinity, column: endColumn = Infinity } = {},
+    } = query || {};
+
+    // This purely a performance boost to avoid needing to build an array
+    // of breakable points for scripts when we know we don't need it.
+    if (
+      script.startLine > endLine ||
+      script.startLine + script.lineCount < startLine
+    ) {
+      return;
+    }
+
+    const offsets = script.getPossibleBreakpoints();
+    for (const { lineNumber, columnNumber } of offsets) {
+      if (
+        lineNumber < startLine ||
+        (lineNumber === startLine && columnNumber < startColumn) ||
+        lineNumber > endLine ||
+        (lineNumber === endLine && columnNumber >= endColumn)
+      ) {
+        continue;
+      }
+
+      // Adjust columns according to any inline script start column, so that
+      // column breakpoints show up correctly in the UI.
+      const position = await this._adjustInlineScriptLocation(
+        {
+          line: lineNumber,
+          column: columnNumber,
+        },
+        /* upward */ true
+      );
+
+      positions.push(position);
+    }
   },
 
   getBreakpointPositionsCompressed: async function(query) {
