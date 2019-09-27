@@ -12,6 +12,7 @@ import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.concept.engine.manifest.WebAppManifest
+import mozilla.components.feature.customtabs.CustomTabWindowFeature
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
 import mozilla.components.feature.pwa.ext.getTrustedScope
 import mozilla.components.feature.pwa.ext.getWebAppManifest
@@ -60,6 +61,13 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
             ),
             owner = this,
             view = layout.toolbar)
+
+        val windowFeature = CustomTabWindowFeature(
+            requireContext(),
+            components.sessionManager,
+            sessionId!!
+        )
+        lifecycle.addObserver(windowFeature)
 
         if (manifest != null) {
             activity?.lifecycle?.addObserver(
