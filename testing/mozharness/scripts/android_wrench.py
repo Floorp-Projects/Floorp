@@ -76,7 +76,7 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
             abs_dirs['abs_work_dir'], 'logs')
         abs_dirs['abs_apk_path'] = os.environ.get(
             'WRENCH_APK',
-            'gfx/wr/target/android-artifacts/app/build/outputs/apk/app-debug.apk')
+            'gfx/wr/target/android-artifacts/debug/apk/wrench.apk')
         abs_dirs['abs_reftests_path'] = os.environ.get(
             'WRENCH_REFTESTS',
             'gfx/wr/wrench/reftests')
@@ -133,7 +133,7 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
         self.timed_screenshots(None)
         self.device.launch_application(
             app_name='org.mozilla.wrench',
-            activity_name='rust.wrench.MainActivity',
+            activity_name='android.app.NativeActivity',
             intent=None)
         self.info("App launched")
         done = self.wait_until_process_done('org.mozilla.wrench', timeout=60 * 30)

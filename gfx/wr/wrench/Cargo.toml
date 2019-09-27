@@ -67,3 +67,5 @@ opengles_version_minor = 0
 [package.metadata.android.activity_attributes]
 "android:screenOrientation" = "unspecified"
 "android:uiOptions" = "none"
+[[package.metadata.android.permission]]
+name = "android.permission.READ_EXTERNAL_STORAGE"
