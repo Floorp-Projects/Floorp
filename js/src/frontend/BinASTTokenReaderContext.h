@@ -7,11 +7,12 @@
 #ifndef frontend_BinASTTokenReaderContext_h
 #define frontend_BinASTTokenReaderContext_h
 
-#include "mozilla/Array.h"       // mozilla::Array
-#include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE, MOZ_STACK_CLASS
-#include "mozilla/Maybe.h"       // mozilla::Maybe
-#include "mozilla/Variant.h"     // mozilla::Variant
+#include "mozilla/Array.h"         // mozilla::Array
+#include "mozilla/Assertions.h"    // MOZ_ASSERT
+#include "mozilla/Attributes.h"    // MOZ_MUST_USE, MOZ_STACK_CLASS
+#include "mozilla/IntegerRange.h"  // mozilla::IntegerRange
+#include "mozilla/Maybe.h"         // mozilla::Maybe
+#include "mozilla/Variant.h"       // mozilla::Variant
 
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint8_t, uint32_t
@@ -97,6 +98,16 @@ struct HuffmanLookup {
   //
   // If `bitLength < 32`, it means that some of the highest bits are unused.
   const uint8_t bitLength;
+
+  // Return an iterable data structure representing all possible
+  // suffixes of this `HuffmanLookup` with `expectedBitLength`
+  // bits.
+  //
+  // If this `HuffmanLookup` is already at least `expectedBitLength`
+  // bits long, we truncate the `HuffmanLookup` to `expectedBitLength`
+  // bits and there is only one such suffix.
+  mozilla::detail::IntegerRange<size_t> suffixes(
+      uint8_t expectedBitLength) const;
 };
 
 // A Huffman Key.
