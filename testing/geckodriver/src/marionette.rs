@@ -1018,6 +1018,10 @@ fn try_convert_to_marionette_message(
         NewWindow(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::NewWindow(
             x.to_marionette()?,
         ))),
+        Refresh => Some(Command::WebDriver(MarionetteWebDriverCommand::Refresh)),
+        ReleaseActions => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::ReleaseActions,
+        )),
         SendAlertText(ref x) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::SendAlertText(x.to_marionette()?),
         )),
@@ -1026,6 +1030,9 @@ fn try_convert_to_marionette_message(
         ))),
         SetWindowRect(ref x) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::SetWindowRect(x.to_marionette()?),
+        )),
+        SwitchToParentFrame => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::SwitchToParentFrame,
         )),
         _ => None,
     })
@@ -1108,10 +1115,7 @@ impl MarionetteCommand {
                 PerformActions(ref x) => {
                     (Some("WebDriver:PerformActions"), Some(x.to_marionette()))
                 }
-                Refresh => (Some("WebDriver:Refresh"), None),
-                ReleaseActions => (Some("WebDriver:ReleaseActions"), None),
                 SwitchToFrame(ref x) => (Some("WebDriver:SwitchToFrame"), Some(x.to_marionette())),
-                SwitchToParentFrame => (Some("WebDriver:SwitchToParentFrame"), None),
                 SwitchToWindow(ref x) => {
                     (Some("WebDriver:SwitchToWindow"), Some(x.to_marionette()))
                 }
