@@ -19,6 +19,11 @@ ChromeUtils.defineModuleGetter(
   "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
 const LINK_BLOCKED_EVENT = "newtab-linkBlocked";
 const PLACES_LINKS_CHANGED_DELAY_TIME = 1000; // time in ms to delay timer for places links changed events
@@ -363,9 +368,11 @@ class PlacesFeed {
     _target.browser.ownerGlobal.gURLBar.search(`${data.label} `);
   }
 
-  _getSearchPrefix() {
+  _getSearchPrefix(isPrivateWindow) {
     const searchAliases =
-      Services.search.defaultEngine.wrappedJSObject.__internalAliases;
+      Services.search[
+        isPrivateWindow ? "defaultPrivateEngine" : "defaultEngine"
+      ].wrappedJSObject.__internalAliases;
     if (searchAliases && searchAliases.length) {
       return `${searchAliases[0]} `;
     }
@@ -373,7 +380,9 @@ class PlacesFeed {
   }
 
   handoffSearchToAwesomebar({ _target, data, meta }) {
-    const searchAlias = this._getSearchPrefix();
+    const searchAlias = this._getSearchPrefix(
+      PrivateBrowsingUtils.isBrowserPrivate(_target.browser)
+    );
     const urlBar = _target.browser.ownerGlobal.gURLBar;
     let isFirstChange = true;
 
