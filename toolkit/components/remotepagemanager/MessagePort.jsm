@@ -56,10 +56,9 @@ let RPMAccessManager = {
     "about:neterror": {
       getFormatURLPref: ["app.support.baseURL"],
       getBoolPref: [
-        "security.certerror.hideAddException",
-        "security.ssl.errorReporting.automatic",
         "security.ssl.errorReporting.enabled",
-        "security.tls.version.enable-deprecated",
+        "security.ssl.errorReporting.automatic",
+        "security.certerror.hideAddException",
       ],
     },
     "about:privatebrowsing": {

@@ -26,8 +26,6 @@ const kAllowedPrefs = new Set([
   "reader.color_scheme",
   "reader.content_width",
   "reader.line_height",
-
-  "security.tls.version.enable-deprecated",
 ]);
 
 const kPrefTypeMap = new Map([
