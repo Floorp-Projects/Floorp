@@ -155,7 +155,7 @@ var GenericSensorTest = (() => {
       this.binding_ = new mojo.Binding(device.mojom.SensorProvider, this);
 
       this.interceptor_ = new MojoInterfaceInterceptor(
-          device.mojom.SensorProvider.name);
+          device.mojom.SensorProvider.name, "context", true);
       this.interceptor_.oninterfacerequest = e => {
         this.bindToPipe(e.handle);
       };
