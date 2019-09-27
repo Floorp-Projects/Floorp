@@ -53,7 +53,10 @@ function contentHandler(metadata, response) {
 
 const DEFAULT_WAIT_TIME = 200; // ms
 
-const kDNSv6Domain = mozinfo.os == "linux" ? "ip6-localhost" : "localhost";
+const kDNSv6Domain =
+  mozinfo.os == "linux" || mozinfo.os == "android"
+    ? "ip6-localhost"
+    : "localhost";
 
 add_task(async function testDNS() {
   let ncs = Cc[
