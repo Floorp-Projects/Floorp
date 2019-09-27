@@ -155,15 +155,19 @@ UrlClassifierFeatureFingerprintingAnnotation::ProcessChannel(
 NS_IMETHODIMP
 UrlClassifierFeatureFingerprintingAnnotation::GetURIByListType(
     nsIChannel* aChannel, nsIUrlClassifierFeature::listType aListType,
-    nsIURI** aURI) {
+    nsIUrlClassifierFeature::URIType* aURIType, nsIURI** aURI) {
   NS_ENSURE_ARG_POINTER(aChannel);
+  NS_ENSURE_ARG_POINTER(aURIType);
   NS_ENSURE_ARG_POINTER(aURI);
 
   if (aListType == nsIUrlClassifierFeature::blacklist) {
+    *aURIType = nsIUrlClassifierFeature::blacklistURI;
     return aChannel->GetURI(aURI);
   }
 
   MOZ_ASSERT(aListType == nsIUrlClassifierFeature::whitelist);
+
+  *aURIType = nsIUrlClassifierFeature::pairwiseWhitelistURI;
   return UrlClassifierCommon::CreatePairwiseWhiteListURI(aChannel, aURI);
 }
 
