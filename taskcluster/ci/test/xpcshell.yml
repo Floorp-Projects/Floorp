@@ -71,6 +71,7 @@ xpcshell:
             android-em-4.*: 7200
             macosx.*(?!-ccov)...../.*: 3600
             windows10-aarch64/.*: 3600
+            windows7-32(-shippable)?/opt: 3600
             .*-ccov/debug: 5400
             default: 2700
     allow-software-gl-layers: false
