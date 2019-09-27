@@ -18,6 +18,12 @@ loader.lazyRequireGetter(
   "resource://gre/modules/AppConstants.jsm",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "openDocLink",
+  "devtools/client/shared/link",
+  true
+);
 
 exports.OptionsPanel = OptionsPanel;
 
@@ -291,7 +297,11 @@ OptionsPanel.prototype = {
         const deprecationURL = this.panelDoc.createElement("a");
         deprecationURL.title = deprecationURL.href = tool.deprecationURL;
         deprecationURL.textContent = L10N.getStr("options.deprecationNotice");
-        deprecationURL.target = "_blank";
+        // Cannot use a real link when we are in the Browser Toolbox.
+        deprecationURL.addEventListener("click", e => {
+          e.preventDefault();
+          openDocLink(tool.deprecationURL, { relatedToCurrent: true });
+        });
 
         const checkboxSpanDeprecated = this.panelDoc.createElement("span");
         checkboxSpanDeprecated.className = "deprecation-notice";
