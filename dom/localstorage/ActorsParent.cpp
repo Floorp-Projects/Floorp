@@ -7717,11 +7717,10 @@ void PrepareDatastoreOp::Cleanup() {
   AssertIsOnOwningThread();
 
   if (mDatastore) {
-    MOZ_ASSERT(mDatastoreId > 0);
     MOZ_ASSERT(!mDirectoryLock);
     MOZ_ASSERT(!mConnection);
 
-    if (NS_FAILED(ResultCode())) {
+    if (NS_FAILED(ResultCode()) && mDatastoreId > 0) {
       // Just in case we failed to send datastoreId to the child, we need to
       // destroy prepared datastore, otherwise it won't be destroyed until the
       // timer fires (after 20 seconds).
