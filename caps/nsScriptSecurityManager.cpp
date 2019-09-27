@@ -271,6 +271,15 @@ nsScriptSecurityManager::GetChannelResultPrincipals(
     return rv;
   }
 
+  if (!(*aPrincipal)->GetIsContentPrincipal()) {
+    // If for some reason we don't have a content principal here, just reuse our
+    // principal for the storage principal too, since attempting to create a
+    // storage principal would fail anyway.
+    nsCOMPtr<nsIPrincipal> copy = *aPrincipal;
+    copy.forget(aStoragePrincipal);
+    return NS_OK;
+  }
+
   return StoragePrincipalHelper::Create(aChannel, *aPrincipal,
                                         aStoragePrincipal);
 }

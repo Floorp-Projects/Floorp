@@ -65,16 +65,18 @@ void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
   // Saving isInsufficientDomainLevels before rv is overwritten.
   bool isInsufficientDomainLevels = (rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS);
   nsAutoCString scheme;
-  rv = aURI->GetScheme(scheme);
-  NS_ENSURE_SUCCESS_VOID(rv);
-  if (scheme.EqualsLiteral("about")) {
-    mFirstPartyDomain.AssignLiteral(ABOUT_URI_FIRST_PARTY_DOMAIN);
-    return;
+  if (aURI) {
+    rv = aURI->GetScheme(scheme);
+    NS_ENSURE_SUCCESS_VOID(rv);
+    if (scheme.EqualsLiteral("about")) {
+      mFirstPartyDomain.AssignLiteral(ABOUT_URI_FIRST_PARTY_DOMAIN);
+      return;
+    }
   }
 
   nsCOMPtr<nsIPrincipal> blobPrincipal;
-  if (dom::BlobURLProtocolHandler::GetBlobURLPrincipal(
-          aURI, getter_AddRefs(blobPrincipal))) {
+  if (aURI && dom::BlobURLProtocolHandler::GetBlobURLPrincipal(
+                  aURI, getter_AddRefs(blobPrincipal))) {
     MOZ_ASSERT(blobPrincipal);
     mFirstPartyDomain = blobPrincipal->OriginAttributesRef().mFirstPartyDomain;
     return;

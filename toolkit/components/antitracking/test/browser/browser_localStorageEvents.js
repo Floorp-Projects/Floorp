@@ -167,6 +167,8 @@ add_task(async function testBlockedLocalStorageEventPropagation() {
   info("Removing the tab");
   BrowserTestUtils.removeTab(tab);
 
+  UrlClassifierTestUtils.cleanupTestTrackers();
+
   info("Cleaning up.");
   await new Promise(resolve => {
     Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
