@@ -410,8 +410,6 @@ add_task(async function() {
     ],
   });
 
-  await UrlClassifierTestUtils.addTestTrackers();
-
   // no-referrer-when-downgrade
   await SpecialPowers.pushPrefEnv({
     set: [["network.http.referer.defaultPolicy.trackers", 3]],
@@ -523,7 +521,11 @@ add_task(async function() {
 });
 
 add_task(async function() {
+  await UrlClassifierTestUtils.addTestTrackers();
+
   await executeTests();
+
+  UrlClassifierTestUtils.cleanupTestTrackers();
 });
 
 add_task(async function() {

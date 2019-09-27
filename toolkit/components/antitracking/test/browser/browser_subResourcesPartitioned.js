@@ -1,33 +1,12 @@
-add_task(async function() {
-  info("Starting subResources test");
-
-  await SpecialPowers.flushPrefEnv();
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      [
-        "network.cookie.cookieBehavior",
-        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
-      ],
-      ["privacy.trackingprotection.enabled", false],
-      ["privacy.trackingprotection.pbmode.enabled", false],
-      ["privacy.trackingprotection.annotate_channels", true],
-      [
-        "privacy.restrict3rdpartystorage.userInteractionRequiredForHosts",
-        "tracking.example.com,tracking.example.org",
-      ],
-    ],
-  });
-
-  await UrlClassifierTestUtils.addTestTrackers();
-
+async function runTests(topPage) {
   info("Creating a new tab");
-  let tab = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE);
+  let tab = BrowserTestUtils.addTab(gBrowser, topPage);
   gBrowser.selectedTab = tab;
 
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  info("Loading tracking scripts and tracking images");
+  info("Loading scripts and images");
   await ContentTask.spawn(browser, null, async function() {
     // Let's load the script twice here.
     {
@@ -37,7 +16,7 @@ add_task(async function() {
       });
       content.document.body.appendChild(src);
       src.src =
-        "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=script";
+        "https://example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=script";
       await p;
     }
     {
@@ -47,7 +26,7 @@ add_task(async function() {
       });
       content.document.body.appendChild(src);
       src.src =
-        "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=script";
+        "https://example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=script";
       await p;
     }
 
@@ -59,7 +38,7 @@ add_task(async function() {
       });
       content.document.body.appendChild(img);
       img.src =
-        "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=image";
+        "https://example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=image";
       await p;
     }
     {
@@ -69,25 +48,25 @@ add_task(async function() {
       });
       content.document.body.appendChild(img);
       img.src =
-        "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=image";
+        "https://example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=image";
       await p;
     }
   });
 
   await fetch(
-    "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=image"
+    "https://example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=image"
   )
     .then(r => r.text())
     .then(text => {
-      is(text, 0, "Cookies received for images");
+      is(text, 1, "One cookie received for images.");
     });
 
   await fetch(
-    "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=script"
+    "https://example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=script"
   )
     .then(r => r.text())
     .then(text => {
-      is(text, 0, "Cookies received for scripts");
+      is(text, 1, "One cookie received received for scripts.");
     });
 
   info("Creating a 3rd party content");
@@ -132,7 +111,7 @@ add_task(async function() {
     }
   );
 
-  info("Loading tracking scripts and tracking images again");
+  info("Loading scripts and images again");
   await ContentTask.spawn(browser, null, async function() {
     // Let's load the script twice here.
     {
@@ -142,7 +121,7 @@ add_task(async function() {
       });
       content.document.body.appendChild(src);
       src.src =
-        "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=script";
+        "https://example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=script";
       await p;
     }
     {
@@ -152,7 +131,7 @@ add_task(async function() {
       });
       content.document.body.appendChild(src);
       src.src =
-        "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=script";
+        "https://example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=script";
       await p;
     }
 
@@ -164,7 +143,7 @@ add_task(async function() {
       });
       content.document.body.appendChild(img);
       img.src =
-        "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=image";
+        "https://example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=image";
       await p;
     }
     {
@@ -174,13 +153,13 @@ add_task(async function() {
       });
       content.document.body.appendChild(img);
       img.src =
-        "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=image";
+        "https://example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=image";
       await p;
     }
   });
 
   await fetch(
-    "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=image"
+    "https://example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=image"
   )
     .then(r => r.text())
     .then(text => {
@@ -188,7 +167,7 @@ add_task(async function() {
     });
 
   await fetch(
-    "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=script"
+    "https://example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=script"
   )
     .then(r => r.text())
     .then(text => {
@@ -205,16 +184,6 @@ add_task(async function() {
     ok(item[2] >= 1, "Correct repeat count reported");
   };
 
-  let expectTrackerFound = item => {
-    is(
-      item[0],
-      Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT,
-      "Correct blocking type reported"
-    );
-    is(item[1], true, "Correct blocking status reported");
-    ok(item[2] >= 1, "Correct repeat count reported");
-  };
-
   let expectCookiesLoaded = item => {
     is(
       item[0],
@@ -225,36 +194,54 @@ add_task(async function() {
     ok(item[2] >= 1, "Correct repeat count reported");
   };
 
-  let expectTrackerCookiesLoaded = item => {
-    is(
-      item[0],
-      Ci.nsIWebProgressListener.STATE_COOKIES_LOADED_TRACKER,
-      "Correct blocking type reported"
-    );
-    is(item[1], true, "Correct blocking status reported");
-    ok(item[2] >= 1, "Correct repeat count reported");
-  };
-
   let log = JSON.parse(await browser.getContentBlockingLog());
   for (let trackerOrigin in log) {
-    is(
-      trackerOrigin + "/",
-      TEST_3RD_PARTY_DOMAIN,
-      "Correct tracker origin must be reported"
-    );
     let originLog = log[trackerOrigin];
-    is(originLog.length, 5, "We should have 4 entries in the compressed log");
-    expectTrackerFound(originLog[0]);
-    expectCookiesLoaded(originLog[1]);
-    expectTrackerCookiesLoaded(originLog[2]);
-    expectTrackerBlocked(originLog[3], true);
-    expectTrackerBlocked(originLog[4], false);
+    info(trackerOrigin);
+    switch (trackerOrigin) {
+      case "https://example.org":
+      case "https://example.com":
+        is(
+          originLog.length,
+          1,
+          "We should have 1 entries in the compressed log"
+        );
+        expectCookiesLoaded(originLog[0]);
+        break;
+      case "https://tracking.example.org":
+        is(
+          originLog.length,
+          1,
+          "We should have 1 entries in the compressed log"
+        );
+        expectTrackerBlocked(originLog[0], false);
+        break;
+    }
   }
 
   info("Removing the tab");
   BrowserTestUtils.removeTab(tab);
+}
 
-  UrlClassifierTestUtils.cleanupTestTrackers();
+add_task(async function() {
+  info("Starting subResources test");
+
+  await SpecialPowers.flushPrefEnv();
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "network.cookie.cookieBehavior",
+        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+      ],
+      ["privacy.trackingprotection.enabled", false],
+      ["privacy.trackingprotection.pbmode.enabled", false],
+      ["privacy.trackingprotection.annotate_channels", true],
+    ],
+  });
+
+  for (let page of [TEST_TOP_PAGE, TEST_TOP_PAGE_2, TEST_TOP_PAGE_3]) {
+    await runTests(page);
+  }
 });
 
 add_task(async function() {

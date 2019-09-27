@@ -176,6 +176,8 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
 
     BrowserTestUtils.removeTab(trackerTab);
     BrowserTestUtils.removeTab(normalTab);
+
+    UrlClassifierTestUtils.cleanupTestTrackers();
   });
 
   // Two ePartitionOrDeny iframes in the same tab in the same origin don't see
@@ -296,6 +298,8 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
     );
 
     BrowserTestUtils.removeTab(normalTab);
+
+    UrlClassifierTestUtils.cleanupTestTrackers();
   });
 
   // Same as the previous test but with a cookie behavior of BEHAVIOR_ACCEPT
@@ -404,6 +408,8 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
     );
 
     BrowserTestUtils.removeTab(normalTab);
+
+    UrlClassifierTestUtils.cleanupTestTrackers();
   });
 
   // An ePartitionOrDeny iframe navigated between two distinct pages on the same
@@ -498,6 +504,8 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
     );
 
     BrowserTestUtils.removeTab(normalTab);
+
+    UrlClassifierTestUtils.cleanupTestTrackers();
   });
 
   // Like the previous test, but accepting trackers
@@ -586,6 +594,8 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
     );
 
     BrowserTestUtils.removeTab(normalTab);
+
+    UrlClassifierTestUtils.cleanupTestTrackers();
   });
 
   // An ePartitionOrDeny iframe on the same origin that is navigated to itself
@@ -681,6 +691,8 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
     );
 
     BrowserTestUtils.removeTab(normalTab);
+
+    UrlClassifierTestUtils.cleanupTestTrackers();
   });
 
   // Like the previous test, but accepting trackers
@@ -769,6 +781,8 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
     );
 
     BrowserTestUtils.removeTab(normalTab);
+
+    UrlClassifierTestUtils.cleanupTestTrackers();
   });
 
   // Cleanup data.

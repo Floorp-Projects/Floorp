@@ -46,6 +46,7 @@
 #  include "mozilla/dom/WindowOrientationObserver.h"
 #endif
 #include "nsDOMOfflineResourceList.h"
+#include "nsICookieService.h"
 #include "nsError.h"
 #include "nsISizeOfEventTarget.h"
 #include "nsDOMJSUtils.h"
@@ -5605,7 +5606,10 @@ nsIPrincipal* nsGlobalWindowInner::GetTopLevelPrincipal() {
     return nullptr;
   }
 
-  if (topLevelOuterWindow == outerWindow) {
+  bool stopAtOurLevel = mDoc && mDoc->CookieSettings()->GetCookieBehavior() ==
+                                    nsICookieService::BEHAVIOR_REJECT_TRACKER;
+
+  if (stopAtOurLevel && topLevelOuterWindow == outerWindow) {
     return nullptr;
   }
 
