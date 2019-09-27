@@ -3268,7 +3268,7 @@ BackgroundCursorChild::~BackgroundCursorChild() {
 }
 
 void BackgroundCursorChild::SendContinueInternal(
-    const CursorRequestParams& aParams) {
+    const CursorRequestParams& aParams, const Key& aCurrentKey) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
   MOZ_ASSERT(mTransaction);
@@ -3284,7 +3284,8 @@ void BackgroundCursorChild::SendContinueInternal(
 
   mTransaction->OnNewRequest();
 
-  MOZ_ALWAYS_TRUE(PBackgroundIDBCursorChild::SendContinue(aParams));
+  MOZ_ALWAYS_TRUE(
+      PBackgroundIDBCursorChild::SendContinue(aParams, aCurrentKey));
 }
 
 void BackgroundCursorChild::SendDeleteMeInternal() {

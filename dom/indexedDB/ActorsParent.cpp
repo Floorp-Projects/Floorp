@@ -7654,8 +7654,8 @@ class Cursor final : public PBackgroundIDBCursorParent {
 
   mozilla::ipc::IPCResult RecvDeleteMe() override;
 
-  mozilla::ipc::IPCResult RecvContinue(
-      const CursorRequestParams& aParams) override;
+  mozilla::ipc::IPCResult RecvContinue(const CursorRequestParams& aParams,
+                                       const Key& key) override;
 
   bool IsLocaleAware() const { return !mLocale.IsEmpty(); }
 
@@ -15243,8 +15243,8 @@ mozilla::ipc::IPCResult Cursor::RecvDeleteMe() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult Cursor::RecvContinue(
-    const CursorRequestParams& aParams) {
+mozilla::ipc::IPCResult Cursor::RecvContinue(const CursorRequestParams& aParams,
+                                             const Key& aCurrentKey) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != CursorRequestParams::T__None);
   MOZ_ASSERT(!mActorDestroyed);
@@ -15261,6 +15261,10 @@ mozilla::ipc::IPCResult Cursor::RecvContinue(
       mIsSameProcessActor
 #endif
       ;
+
+  // TODO: For now, the child always passes an empty key. This will be changed
+  // in a subsequent patch for Bug 1168606.
+  MOZ_ASSERT(aCurrentKey.IsUnset());
 
   if (!trustParams && !VerifyRequestParams(aParams)) {
     ASSERT_UNLESS_FUZZING();
