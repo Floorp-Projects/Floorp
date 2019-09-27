@@ -594,6 +594,9 @@ void BaselineCodeGen<Handler>::prepareVMCall() {
 
   // Ensure everything is synced.
   frame.syncStack(0);
+
+  // Save the frame pointer.
+  masm.Push(BaselineFrameReg);
 }
 
 template <>
@@ -631,7 +634,9 @@ void BaselineInterpreterCodeGen::storeFrameSizeAndPushDescriptor(
 }
 
 static uint32_t GetVMFunctionArgSize(const VMFunctionData& fun) {
-  return fun.explicitStackSlots() * sizeof(void*);
+  // Note that this includes the size of the frame pointer pushed by
+  // prepareVMCall.
+  return fun.explicitStackSlots() * sizeof(void*) + sizeof(void*);
 }
 
 template <typename Handler>
@@ -673,9 +678,11 @@ bool BaselineCodeGen<Handler>::callVMInternal(VMFunctionId id,
   // Perform the call.
   masm.call(code);
   uint32_t callOffset = masm.currentOffset();
+  masm.Pop(BaselineFrameReg);
 
-  // Pop arguments from framePushed.
-  masm.implicitPop(argSize);
+  // Pop arguments from framePushed. Subtract size of the frame pointer because
+  // we popped it explicitly.
+  masm.implicitPop(argSize - sizeof(void*));
 
   restoreInterpreterPCReg();
 
@@ -724,10 +731,12 @@ bool BaselineCodeGen<Handler>::emitStackCheck() {
 }
 
 static void EmitCallFrameIsDebuggeeCheck(MacroAssembler& masm) {
+  masm.Push(BaselineFrameReg);
   masm.setupUnalignedABICall(R0.scratchReg());
   masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
   masm.passABIArg(R0.scratchReg());
   masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, jit::FrameIsDebuggeeCheck));
+  masm.Pop(BaselineFrameReg);
 }
 
 template <>
@@ -7014,11 +7023,13 @@ void BaselineInterpreterGenerator::emitOutOfLineCodeCoverageInstrumentation() {
 
   saveInterpreterPCReg();
 
+  masm.Push(BaselineFrameReg);
   masm.setupUnalignedABICall(R0.scratchReg());
   masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
   masm.passABIArg(R0.scratchReg());
   masm.callWithABI(
       JS_FUNC_TO_DATA_PTR(void*, jit::HandleCodeCoverageAtPrologue));
+  masm.Pop(BaselineFrameReg);
 
   restoreInterpreterPCReg();
   masm.ret();
@@ -7030,12 +7041,14 @@ void BaselineInterpreterGenerator::emitOutOfLineCodeCoverageInstrumentation() {
 
   saveInterpreterPCReg();
 
+  masm.Push(BaselineFrameReg);
   masm.setupUnalignedABICall(R0.scratchReg());
   masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
   masm.passABIArg(R0.scratchReg());
   Register pcReg = LoadBytecodePC(masm, R2.scratchReg());
   masm.passABIArg(pcReg);
   masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, jit::HandleCodeCoverageAtPC));
+  masm.Pop(BaselineFrameReg);
 
   restoreInterpreterPCReg();
   masm.ret();
