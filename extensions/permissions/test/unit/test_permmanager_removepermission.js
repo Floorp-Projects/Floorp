@@ -10,20 +10,24 @@ function run_test() {
   Assert.equal(perm_count(), 0);
 
   // add some permissions
-  let uri = NetUtil.newURI("http://amazon.com:8080/foobarbaz");
-  let uri2 = NetUtil.newURI("http://google.com:2048/quxx");
+  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+    "http://amazon.com:8080"
+  );
+  let principal2 = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+    "http://google.com:2048"
+  );
 
-  pm.add(uri, "apple", 0);
-  pm.add(uri, "apple", 3);
-  pm.add(uri, "pear", 3);
-  pm.add(uri, "pear", 1);
-  pm.add(uri, "cucumber", 1);
-  pm.add(uri, "cucumber", 1);
-  pm.add(uri, "cucumber", 1);
+  pm.addFromPrincipal(principal, "apple", 0);
+  pm.addFromPrincipal(principal, "apple", 3);
+  pm.addFromPrincipal(principal, "pear", 3);
+  pm.addFromPrincipal(principal, "pear", 1);
+  pm.addFromPrincipal(principal, "cucumber", 1);
+  pm.addFromPrincipal(principal, "cucumber", 1);
+  pm.addFromPrincipal(principal, "cucumber", 1);
 
-  pm.add(uri2, "apple", 2);
-  pm.add(uri2, "pear", 0);
-  pm.add(uri2, "pear", 2);
+  pm.addFromPrincipal(principal2, "apple", 2);
+  pm.addFromPrincipal(principal2, "pear", 0);
+  pm.addFromPrincipal(principal2, "pear", 2);
 
   // Make sure that removePermission doesn't remove more than one permission each time
   Assert.equal(perm_count(), 5);
