@@ -157,12 +157,12 @@ pref(layout.css.column-span.enabled,true) fails-if(!OSX) random-if(OSX) == css-m
 pref(layout.css.column-span.enabled,true) fuzzy-if(winWidget,40-47,8-8) fuzzy-if(OSX,0-27,0-11) == css-multicol/multicol-span-all-block-sibling-003.xht css-multicol/multicol-span-all-block-sibling-3-ref.xht
 pref(layout.css.column-span.enabled,true) fails-if(geckoview) == css-multicol/multicol-span-all-margin-001.xht css-multicol/multicol-span-all-margin-001-ref.xht # Bug 1558509 for GV
 pref(layout.css.column-span.enabled,true) fails-if(geckoview) == css-multicol/multicol-span-all-margin-002.xht css-multicol/multicol-span-all-margin-002-ref.xht # Bug 1558509 for GV
-pref(layout.css.column-span.enabled,true) fails == css-multicol/multicol-span-all-margin-bottom-001.xht css-multicol/multicol-span-all-margin-bottom-001-ref.xht
+pref(layout.css.column-span.enabled,true) fails == css-multicol/multicol-span-all-margin-bottom-001.xht css-multicol/multicol-span-all-margin-bottom-001-ref.xht # Upstream version patched in bug 1496275. It should pass after importing wpt in bug 1584324.
 pref(layout.css.column-span.enabled,true) fails-if(geckoview) == css-multicol/multicol-span-all-margin-nested-001.xht css-multicol/multicol-span-all-margin-nested-001-ref.xht # Bug 1558509 for GV
 pref(layout.css.column-span.enabled,true) fails-if(geckoview) == css-multicol/multicol-span-all-margin-nested-002.xht css-multicol/multicol-span-all-margin-nested-001-ref.xht # Bug 1558509 for GV
 pref(layout.css.column-span.enabled,true) == css-multicol/multicol-span-all-margin-nested-firstchild-001.xht css-multicol/multicol-span-all-margin-nested-firstchild-ref.xht
 pref(layout.css.column-span.enabled,true) == css-multicol/multicol-span-float-001.xht css-multicol/multicol-span-float-001-ref.xht
-pref(layout.css.column-span.enabled,true) fails == css-multicol/multicol-span-none-001.xht css-multicol/multicol-span-none-001-ref.xht
+pref(layout.css.column-span.enabled,true) fails == css-multicol/multicol-span-none-001.xht css-multicol/multicol-span-none-001-ref.xht # Upstream version patched in bug 1495875. It should pass after importing wpt in bug 1584324.
 fails == css-multicol/multicol-table-cell-001.xht css-multicol/multicol-table-cell-001-ref.xht
 fails == css-multicol/multicol-table-cell-height-001.xht css-multicol/multicol-table-cell-height-001-ref.xht
 fails == css-multicol/multicol-table-cell-height-002.xht css-multicol/multicol-table-cell-height-001-ref.xht
