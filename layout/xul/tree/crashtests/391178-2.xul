@@ -1,12 +1,12 @@
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:html="http://www.w3.org/1999/xhtml" class="reftest-wait">
 
-<tree id="a" style="position: fixed;">
-  <box style=" display: -moz-box; position: fixed;">
+<tree id="a" style="display: block; position: fixed;">
+  <box style=" display: block; position: fixed;">
     <treecol style=" display: -moz-box;"/>
   </box>
-  <box style="position: fixed;">
-    <treechildren style="display: -moz-box; position: absolute;"/>
+  <box style="display: block; position: fixed;">
+    <treechildren style="display: block; position: absolute;"/>
   </box>
 </tree>
 
