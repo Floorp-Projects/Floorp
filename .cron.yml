@@ -96,16 +96,18 @@ jobs:
       when:
           - {weekday: 'Saturday', hour: 5, minute: 0}
 
-    - name: android-power-tests
+    - name: general-perf-testing
       job:
           type: decision-task
-          treeherder-symbol: apt
-          target-tasks-method: android_power
+          treeherder-symbol: gpt
+          target-tasks-method: general_perf_testing
           include-push-tasks: true
       run-on-projects:
           - mozilla-central
       when:
-          - {weekday: 'Saturday', hour: 17, minute: 0}
+          - {weekday: 'Monday', hour: 10, minute: 30}
+          - {weekday: 'Wednesday', hour: 10, minute: 30}
+          - {weekday: 'Friday', hour: 10, minute: 30}
 
     - name: searchfox-index
       job:
