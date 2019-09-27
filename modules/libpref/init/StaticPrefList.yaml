@@ -5006,7 +5006,7 @@
 # "blockified" to "-moz-box" (rather than to "block")
 - name: layout.css.xul-box-display-values.survive-blockification.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
   rust: true
 
