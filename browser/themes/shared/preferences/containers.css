@@ -15,11 +15,15 @@
 }
 
 .radio-buttons {
-  -moz-box-orient: horizontal;
+  display: flex;
   margin-inline-start: 0.35rem;
 }
 
 .radio-buttons > radio {
+  flex: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   -moz-user-select: none;
   outline: 2px solid transparent;
   outline-offset: 4px;
