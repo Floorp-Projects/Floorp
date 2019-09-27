@@ -31,7 +31,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=726949
           var loc = Cu.evalInSandbox('location', s);
           is(loc.href, location.href, "Should have the right location");
           var display = Cu.evalInSandbox('getComputedStyle(document.documentElement, "").display', s);
-          is(display, "block", "Should be able to call getComputedStyle");
+          is(display, "-moz-box", "Should be able to call getComputedStyle");
       } catch (e) {
           ok(false, "Should not get an exception: " + e);
       }
