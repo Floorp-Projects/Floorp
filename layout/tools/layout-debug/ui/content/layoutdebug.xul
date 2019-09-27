@@ -20,6 +20,7 @@
 -->
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         id="main-window"
         align="stretch"
         title="&ldb.MainWindow.title;"
@@ -114,7 +115,7 @@
                        label="&ldb.StopButton.label;"
                        oncommand="gBrowser.stop();" />
 
-        <textbox id="urlbar" flex="1" onkeypress="if (event.keyCode == 13) go();"/>
+        <html:input id="urlbar" style="-moz-box-flex: 1;" onkeypress="if (event.keyCode == 13) go();"/>
       </toolbar>
     </toolbox>
 
