@@ -236,13 +236,16 @@ class NaiveHuffmanTable {
 
   // Lookup a value in the table.
   //
-  // Return an entry with a value of `nullptr` if the value is not in the table.
+  // The return of this method contains:
   //
-  // The lookup may advance `key` by `[0, key.bitLength]` bits. Typically, in a
-  // table with a single instance, or if the value is not in the table, it
-  // will advance by 0 bits. The caller is responsible for advancing its
-  // bitstream by `result.key.bitLength` bits.
-  HuffmanEntry<const T*> lookup(HuffmanLookup key) const;
+  // - the resulting value (`nullptr` if the value is not in the table);
+  // - the number of bits in the entry associated to this value.
+  //
+  // Note that entries inside a single table are typically associated to
+  // distinct bit lengths. The caller is responsible for checking
+  // the result of this method and advancing the bitstream by
+  // `result.key.bitLength` bits.
+  HuffmanEntry<const T*> lookup(HuffmanLookup lookup) const;
 
   // The number of values in the table.
   size_t length() const { return values.length(); }
@@ -459,12 +462,15 @@ class SingleLookupHuffmanTable {
 
   // Lookup a value in the table.
   //
-  // Return an entry with a value of `nullptr` if the value is not in the table.
+  // The return of this method contains:
   //
-  // The lookup may advance `key` by `[0, key.bitLength]` bits. Typically, in a
-  // table with a single instance, or if the value is not in the table, it
-  // will advance by 0 bits. The caller is responsible for advancing its
-  // bitstream by `result.key.bitLength` bits.
+  // - the resulting value (`nullptr` if the value is not in the table);
+  // - the number of bits in the entry associated to this value.
+  //
+  // Note that entries inside a single table are typically associated to
+  // distinct bit lengths. The caller is responsible for checking
+  // the result of this method and advancing the bitstream by
+  // `result.key.bitLength` bits.
   HuffmanEntry<const T*> lookup(HuffmanLookup key) const;
 
   // The number of values in the table.
@@ -654,12 +660,15 @@ class MultiLookupHuffmanTable {
 
   // Lookup a value in the table.
   //
-  // Return an entry with a value of `nullptr` if the value is not in the table.
+  // The return of this method contains:
   //
-  // The lookup may advance `key` by `[0, key.bitLength]` bits. Typically, in a
-  // table with a single instance, or if the value is not in the table, it
-  // will advance by 0 bits. The caller is responsible for advancing its
-  // bitstream by `result.key.bitLength` bits.
+  // - the resulting value (`nullptr` if the value is not in the table);
+  // - the number of bits in the entry associated to this value.
+  //
+  // Note that entries inside a single table are typically associated to
+  // distinct bit lengths. The caller is responsible for checking
+  // the result of this method and advancing the bitstream by
+  // `result.key.bitLength` bits.
   HuffmanEntry<const T*> lookup(HuffmanLookup key) const;
 
   // The number of values in the table.
@@ -786,12 +795,15 @@ struct GenericHuffmanTable {
 
   // Lookup a value in the table.
   //
-  // Return an entry with a value of `nullptr` if the value is not in the table.
+  // The return of this method contains:
   //
-  // The lookup may advance `key` by `[0, key.bitLength]` bits. Typically, in a
-  // table with a single instance, or if the value is not in the table, it
-  // will advance by 0 bits. The caller is responsible for advancing its
-  // bitstream by `result.key.bitLength` bits.
+  // - the resulting value (`nullptr` if the value is not in the table);
+  // - the number of bits in the entry associated to this value.
+  //
+  // Note that entries inside a single table are typically associated to
+  // distinct bit lengths. The caller is responsible for checking
+  // the result of this method and advancing the bitstream by
+  // `result.key.bitLength` bits.
   HuffmanEntry<const T*> lookup(HuffmanLookup key) const;
 
  private:
