@@ -193,18 +193,18 @@ class HuffmanTableImplementationNaive {
 
   // Initialize a Huffman table containing `numberOfSymbols`.
   // Symbols must be added with `addSymbol`.
-  JS::Result<Ok> init(JSContext* cx, size_t numberOfSymbols,
-                      uint8_t largestBitLength);
+  // If you initialize with `initStart`, you MUST call `initComplete()`
+  // at the end of initialization.
+  JS::Result<Ok> initStart(JSContext* cx, size_t numberOfSymbols,
+                           uint8_t maxBitLength);
+
+  JS::Result<Ok> initComplete();
 
   // Add a symbol to a value.
   JS::Result<Ok> addSymbol(uint32_t bits, uint8_t bits_length, T&& value);
 
   HuffmanTableImplementationNaive() = delete;
   HuffmanTableImplementationNaive(HuffmanTableImplementationNaive&) = delete;
-
-#ifdef DEBUG
-  void selfCheck();
-#endif  // DEBUG
 
   // Lookup a value in the table.
   //
@@ -260,15 +260,15 @@ class HuffmanTableImplementationMap {
 
   // Initialize a Huffman table containing `numberOfSymbols`.
   // Symbols must be added with `addSymbol`.
-  JS::Result<Ok> init(JSContext* cx, size_t numberOfSymbols,
-                      uint8_t largestBitLength);
+  // If you initialize with `initStart`, you MUST call `initComplete()`
+  // at the end of initialization.
+  JS::Result<Ok> initStart(JSContext* cx, size_t numberOfSymbols,
+                           uint8_t maxBitLength);
 
   // Add a `(bit, bits_length) => value` mapping.
   JS::Result<Ok> addSymbol(uint32_t bits, uint8_t bits_length, T&& value);
 
-#ifdef DEBUG
-  void selfCheck();
-#endif  // DEBUG
+  JS::Result<Ok> initComplete();
 
   HuffmanTableImplementationMap() = delete;
   HuffmanTableImplementationMap(HuffmanTableImplementationMap&) = delete;
@@ -410,12 +410,12 @@ class HuffmanTableImplementationSaturated {
 
   // Initialize a Huffman table containing `numberOfSymbols`.
   // Symbols must be added with `addSymbol`.
-  JS::Result<Ok> init(JSContext* cx, size_t numberOfSymbols,
-                      uint8_t largestBitLength);
+  // If you initialize with `initStart`, you MUST call `initComplete()`
+  // at the end of initialization.
+  JS::Result<Ok> initStart(JSContext* cx, size_t numberOfSymbols,
+                           uint8_t maxBitLength);
 
-#ifdef DEBUG
-  void selfCheck();
-#endif  // DEBUG
+  JS::Result<Ok> initComplete();
 
   // Add a `(bit, bits_length) => value` mapping.
   JS::Result<Ok> addSymbol(uint32_t bits, uint8_t bits_length, T&& value);
@@ -502,15 +502,15 @@ struct HuffmanTableImplementationGeneric {
 
   // Initialize a Huffman table containing `numberOfSymbols`.
   // Symbols must be added with `addSymbol`.
-  JS::Result<Ok> init(JSContext* cx, size_t numberOfSymbols,
-                      uint8_t largestBitLength);
-
-#ifdef DEBUG
-  void selfCheck();
-#endif  // DEBUG
+  // If you initialize with `initStart`, you MUST call `initComplete()`
+  // at the end of initialization.
+  JS::Result<Ok> initStart(JSContext* cx, size_t numberOfSymbols,
+                           uint8_t maxBitLength);
 
   // Add a `(bit, bits_length) => value` mapping.
   JS::Result<Ok> addSymbol(uint32_t bits, uint8_t bits_length, T&& value);
+
+  JS::Result<Ok> initComplete();
 
   // The number of values in the table.
   size_t length() const;
