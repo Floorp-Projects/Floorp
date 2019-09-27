@@ -185,7 +185,10 @@ const TEST_GLOBAL = {
   },
   PluralForm: { get() {} },
   Preferences: FakePrefs,
-  PrivateBrowsingUtils: { isWindowPrivate: () => false },
+  PrivateBrowsingUtils: {
+    isBrowserPrivate: () => false,
+    isWindowPrivate: () => false,
+  },
   DownloadsViewUI: {
     getDisplayName: () => "filename.ext",
     getSizeWithUnits: () => "1.5 MB",
@@ -286,10 +289,12 @@ const TEST_GLOBAL = {
           __internalAliases: ["@google"],
         },
       },
-      currentEngine: {
-        identifier: "google",
-        searchForm:
-          "https://www.google.com/search?q=&ie=utf-8&oe=utf-8&client=firefox-b",
+      defaultPrivateEngine: {
+        identifier: "bing",
+        searchForm: "https://www.bing.com",
+        wrappedJSObject: {
+          __internalAliases: ["@bing"],
+        },
       },
     },
     scriptSecurityManager: {
