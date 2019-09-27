@@ -47,6 +47,10 @@ button:disabled {
   margin-top: 2em;
 }
 
+#enableTls10Container {
+  display: none;
+}
+
 #prefChangeContainer {
   display: none;
 }
