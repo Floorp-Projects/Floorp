@@ -8,7 +8,7 @@ import os
 
 from setuptools import setup
 
-PACKAGE_VERSION = '0.4'
+PACKAGE_VERSION = '1.0.0'
 
 try:
     pwd = os.path.dirname(os.path.abspath(__file__))
@@ -20,6 +20,9 @@ setup(
     name='mozsystemmonitor',
     description='Monitor system resource usage.',
     long_description="see https://firefox-source-docs.mozilla.org/mozbase/index.html",
+    classifiers=['Programming Language :: Python :: 2.7',
+                 'Programming Language :: Python :: 3.5'],
+    # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
     license='MPL 2.0',
     keywords='mozilla',
     author='Mozilla Automation and Tools Team',
