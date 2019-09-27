@@ -980,7 +980,8 @@ class UrlbarInput {
       !this.hasAttribute("breakout") ||
       this.hasAttribute("breakout-extend") ||
       !(
-        (this.focused && !this.textbox.classList.contains("hidden-focus")) ||
+        (this.getAttribute("focused") == "true" &&
+          !this.textbox.classList.contains("hidden-focus")) ||
         this.view.isOpen
       )
     ) {
@@ -1004,7 +1005,8 @@ class UrlbarInput {
       !this.hasAttribute("breakout-extend") ||
       (!force &&
         (this.view.isOpen ||
-          (this.focused && !this.textbox.classList.contains("hidden-focus"))))
+          (this.getAttribute("focused") == "true" &&
+            !this.textbox.classList.contains("hidden-focus"))))
     ) {
       return;
     }
