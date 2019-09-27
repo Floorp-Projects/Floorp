@@ -903,6 +903,10 @@ class NodeServer {
       Ci.nsIEnvironment
     );
     let h2Port = env.get("MOZNODE_EXEC_PORT");
+    if (!h2Port) {
+      throw new Error("Could not find MOZNODE_EXEC_PORT");
+    }
+
     let req = new XMLHttpRequest();
     req.open("POST", `http://127.0.0.1:${h2Port}/execute`);
 
