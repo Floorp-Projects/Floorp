@@ -297,7 +297,7 @@ static UCollator* NewUCollator(JSContext* cx,
     if (!usage) {
       return nullptr;
     }
-    if (StringEqualsAscii(usage, "search")) {
+    if (StringEqualsLiteral(usage, "search")) {
       // ICU expects search as a Unicode locale extension on locale.
       // Unicode locale extensions must occur before private use extensions.
       const char* oldLocale = locale.get();
@@ -329,7 +329,7 @@ static UCollator* NewUCollator(JSContext* cx,
              localeLen - index + 1);  // '\0'
       locale = JS::UniqueChars(newLocale);
     } else {
-      MOZ_ASSERT(StringEqualsAscii(usage, "sort"));
+      MOZ_ASSERT(StringEqualsLiteral(usage, "sort"));
     }
   }
 
@@ -346,15 +346,15 @@ static UCollator* NewUCollator(JSContext* cx,
     if (!sensitivity) {
       return nullptr;
     }
-    if (StringEqualsAscii(sensitivity, "base")) {
+    if (StringEqualsLiteral(sensitivity, "base")) {
       uStrength = UCOL_PRIMARY;
-    } else if (StringEqualsAscii(sensitivity, "accent")) {
+    } else if (StringEqualsLiteral(sensitivity, "accent")) {
       uStrength = UCOL_SECONDARY;
-    } else if (StringEqualsAscii(sensitivity, "case")) {
+    } else if (StringEqualsLiteral(sensitivity, "case")) {
       uStrength = UCOL_PRIMARY;
       uCaseLevel = UCOL_ON;
     } else {
-      MOZ_ASSERT(StringEqualsAscii(sensitivity, "variant"));
+      MOZ_ASSERT(StringEqualsLiteral(sensitivity, "variant"));
       uStrength = UCOL_TERTIARY;
     }
   }
@@ -387,12 +387,12 @@ static UCollator* NewUCollator(JSContext* cx,
     if (!caseFirst) {
       return nullptr;
     }
-    if (StringEqualsAscii(caseFirst, "upper")) {
+    if (StringEqualsLiteral(caseFirst, "upper")) {
       uCaseFirst = UCOL_UPPER_FIRST;
-    } else if (StringEqualsAscii(caseFirst, "lower")) {
+    } else if (StringEqualsLiteral(caseFirst, "lower")) {
       uCaseFirst = UCOL_LOWER_FIRST;
     } else {
-      MOZ_ASSERT(StringEqualsAscii(caseFirst, "false"));
+      MOZ_ASSERT(StringEqualsLiteral(caseFirst, "false"));
       uCaseFirst = UCOL_OFF;
     }
   }

@@ -1572,10 +1572,10 @@ GCMarker::MarkQueueProgress GCMarker::processMarkQueue() {
       processMarkStackTop(unlimited);
     } else if (val.isString()) {
       JSLinearString* str = &val.toString()->asLinear();
-      if (js::StringEqualsAscii(str, "yield") && gcrt.isIncrementalGc()) {
+      if (js::StringEqualsLiteral(str, "yield") && gcrt.isIncrementalGc()) {
         return QueueYielded;
-      } else if (js::StringEqualsAscii(str, "enter-weak-marking-mode") ||
-                 js::StringEqualsAscii(str, "abort-weak-marking-mode")) {
+      } else if (js::StringEqualsLiteral(str, "enter-weak-marking-mode") ||
+                 js::StringEqualsLiteral(str, "abort-weak-marking-mode")) {
         if (!isWeakMarkingTracer() && !linearWeakMarkingDisabled_) {
           // We can't enter weak marking mode at just any time, so instead
           // we'll stop processing the queue and continue on with the GC. Once
@@ -1585,13 +1585,13 @@ GCMarker::MarkQueueProgress GCMarker::processMarkQueue() {
           queuePos--;
           return QueueSuspended;
         }
-        if (js::StringEqualsAscii(str, "abort-weak-marking-mode")) {
+        if (js::StringEqualsLiteral(str, "abort-weak-marking-mode")) {
           abortLinearWeakMarking();
         }
-      } else if (js::StringEqualsAscii(str, "drain")) {
+      } else if (js::StringEqualsLiteral(str, "drain")) {
         auto unlimited = SliceBudget::unlimited();
         MOZ_RELEASE_ASSERT(markUntilBudgetExhausted(unlimited));
-      } else if (js::StringEqualsAscii(str, "set-color-gray")) {
+      } else if (js::StringEqualsLiteral(str, "set-color-gray")) {
         queueMarkColor = mozilla::Some(MarkColor::Gray);
         if (gcrt.state() != State::Sweep) {
           // Cannot mark gray yet, so continue with the GC.
@@ -1599,10 +1599,10 @@ GCMarker::MarkQueueProgress GCMarker::processMarkQueue() {
           return QueueSuspended;
         }
         setMarkColor(MarkColor::Gray);
-      } else if (js::StringEqualsAscii(str, "set-color-black")) {
+      } else if (js::StringEqualsLiteral(str, "set-color-black")) {
         queueMarkColor = mozilla::Some(MarkColor::Black);
         setMarkColor(MarkColor::Black);
-      } else if (js::StringEqualsAscii(str, "unset-color")) {
+      } else if (js::StringEqualsLiteral(str, "unset-color")) {
         queueMarkColor.reset();
       }
     }

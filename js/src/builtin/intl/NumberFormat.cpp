@@ -621,7 +621,7 @@ static UNumberFormatter* NewUNumberFormatter(
       return nullptr;
     }
 
-    if (StringEqualsAscii(style, "currency")) {
+    if (StringEqualsLiteral(style, "currency")) {
       if (!GetProperty(cx, internals, internals, cx->names().currency,
                        &value)) {
         return nullptr;
@@ -647,14 +647,14 @@ static UNumberFormatter* NewUNumberFormatter(
       using CurrencyDisplay = intl::NumberFormatterSkeleton::CurrencyDisplay;
 
       CurrencyDisplay display;
-      if (StringEqualsAscii(currencyDisplay, "code")) {
+      if (StringEqualsLiteral(currencyDisplay, "code")) {
         display = CurrencyDisplay::Code;
-      } else if (StringEqualsAscii(currencyDisplay, "symbol")) {
+      } else if (StringEqualsLiteral(currencyDisplay, "symbol")) {
         display = CurrencyDisplay::Symbol;
-      } else if (StringEqualsAscii(currencyDisplay, "narrowSymbol")) {
+      } else if (StringEqualsLiteral(currencyDisplay, "narrowSymbol")) {
         display = CurrencyDisplay::NarrowSymbol;
       } else {
-        MOZ_ASSERT(StringEqualsAscii(currencyDisplay, "name"));
+        MOZ_ASSERT(StringEqualsLiteral(currencyDisplay, "name"));
         display = CurrencyDisplay::Name;
       }
 
@@ -671,16 +671,16 @@ static UNumberFormatter* NewUNumberFormatter(
         return nullptr;
       }
 
-      if (StringEqualsAscii(currencySign, "accounting")) {
+      if (StringEqualsLiteral(currencySign, "accounting")) {
         accountingSign = true;
       } else {
-        MOZ_ASSERT(StringEqualsAscii(currencySign, "standard"));
+        MOZ_ASSERT(StringEqualsLiteral(currencySign, "standard"));
       }
-    } else if (StringEqualsAscii(style, "percent")) {
+    } else if (StringEqualsLiteral(style, "percent")) {
       if (!skeleton.percent()) {
         return nullptr;
       }
-    } else if (StringEqualsAscii(style, "unit")) {
+    } else if (StringEqualsLiteral(style, "unit")) {
       if (!GetProperty(cx, internals, internals, cx->names().unit, &value)) {
         return nullptr;
       }
@@ -705,12 +705,12 @@ static UNumberFormatter* NewUNumberFormatter(
       using UnitDisplay = intl::NumberFormatterSkeleton::UnitDisplay;
 
       UnitDisplay display;
-      if (StringEqualsAscii(unitDisplay, "short")) {
+      if (StringEqualsLiteral(unitDisplay, "short")) {
         display = UnitDisplay::Short;
-      } else if (StringEqualsAscii(unitDisplay, "narrow")) {
+      } else if (StringEqualsLiteral(unitDisplay, "narrow")) {
         display = UnitDisplay::Narrow;
       } else {
-        MOZ_ASSERT(StringEqualsAscii(unitDisplay, "long"));
+        MOZ_ASSERT(StringEqualsLiteral(unitDisplay, "long"));
         display = UnitDisplay::Long;
       }
 
@@ -718,7 +718,7 @@ static UNumberFormatter* NewUNumberFormatter(
         return nullptr;
       }
     } else {
-      MOZ_ASSERT(StringEqualsAscii(style, "decimal"));
+      MOZ_ASSERT(StringEqualsLiteral(style, "decimal"));
     }
   }
 
@@ -802,14 +802,14 @@ static UNumberFormatter* NewUNumberFormatter(
     using Notation = intl::NumberFormatterSkeleton::Notation;
 
     Notation style;
-    if (StringEqualsAscii(notation, "standard")) {
+    if (StringEqualsLiteral(notation, "standard")) {
       style = Notation::Standard;
-    } else if (StringEqualsAscii(notation, "scientific")) {
+    } else if (StringEqualsLiteral(notation, "scientific")) {
       style = Notation::Scientific;
-    } else if (StringEqualsAscii(notation, "engineering")) {
+    } else if (StringEqualsLiteral(notation, "engineering")) {
       style = Notation::Engineering;
     } else {
-      MOZ_ASSERT(StringEqualsAscii(notation, "compact"));
+      MOZ_ASSERT(StringEqualsLiteral(notation, "compact"));
 
       if (!GetProperty(cx, internals, internals, cx->names().compactDisplay,
                        &value)) {
@@ -821,10 +821,10 @@ static UNumberFormatter* NewUNumberFormatter(
         return nullptr;
       }
 
-      if (StringEqualsAscii(compactDisplay, "short")) {
+      if (StringEqualsLiteral(compactDisplay, "short")) {
         style = Notation::CompactShort;
       } else {
-        MOZ_ASSERT(StringEqualsAscii(compactDisplay, "long"));
+        MOZ_ASSERT(StringEqualsLiteral(compactDisplay, "long"));
         style = Notation::CompactLong;
       }
     }
@@ -847,22 +847,22 @@ static UNumberFormatter* NewUNumberFormatter(
     using SignDisplay = intl::NumberFormatterSkeleton::SignDisplay;
 
     SignDisplay display;
-    if (StringEqualsAscii(signDisplay, "auto")) {
+    if (StringEqualsLiteral(signDisplay, "auto")) {
       if (accountingSign) {
         display = SignDisplay::Accounting;
       } else {
         display = SignDisplay::Auto;
       }
-    } else if (StringEqualsAscii(signDisplay, "never")) {
+    } else if (StringEqualsLiteral(signDisplay, "never")) {
       display = SignDisplay::Never;
-    } else if (StringEqualsAscii(signDisplay, "always")) {
+    } else if (StringEqualsLiteral(signDisplay, "always")) {
       if (accountingSign) {
         display = SignDisplay::AccountingAlways;
       } else {
         display = SignDisplay::Always;
       }
     } else {
-      MOZ_ASSERT(StringEqualsAscii(signDisplay, "exceptZero"));
+      MOZ_ASSERT(StringEqualsLiteral(signDisplay, "exceptZero"));
       if (accountingSign) {
         display = SignDisplay::AccountingExceptZero;
       } else {

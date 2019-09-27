@@ -6385,7 +6385,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_eval(uint32_t argc) {
       JSAtom* atom =
           &string->getOperand(1)->maybeConstantValue()->toString()->asAtom();
 
-      if (StringEqualsAscii(atom, "()")) {
+      if (StringEqualsLiteral(atom, "()")) {
         MDefinition* name = string->getOperand(0);
         MInstruction* dynamicName =
             MGetDynamicName::New(alloc(), envChain, name);

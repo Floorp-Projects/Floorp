@@ -1655,9 +1655,9 @@ static bool Options(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    if (StringEqualsAscii(opt, "strict")) {
+    if (StringEqualsLiteral(opt, "strict")) {
       JS::ContextOptionsRef(cx).toggleExtraWarnings();
-    } else if (StringEqualsAscii(opt, "werror")) {
+    } else if (StringEqualsLiteral(opt, "werror")) {
       // Disallow toggling werror when there are off-thread jobs, to avoid
       // confusing CompileError::throwError.
       ShellContext* sc = GetShellContext(cx);
@@ -1667,9 +1667,9 @@ static bool Options(JSContext* cx, unsigned argc, Value* vp) {
         return false;
       }
       JS::ContextOptionsRef(cx).toggleWerror();
-    } else if (StringEqualsAscii(opt, "throw_on_asmjs_validation_failure")) {
+    } else if (StringEqualsLiteral(opt, "throw_on_asmjs_validation_failure")) {
       JS::ContextOptionsRef(cx).toggleThrowOnAsmJSValidationFailure();
-    } else if (StringEqualsAscii(opt, "strict_mode")) {
+    } else if (StringEqualsLiteral(opt, "strict_mode")) {
       JS::ContextOptionsRef(cx).toggleStrictMode();
     } else {
       UniqueChars optChars = JS_EncodeStringToUTF8(cx, opt);
@@ -5146,9 +5146,9 @@ static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
         return false;
       }
       // Currently not used, reserved for future.
-      if (StringEqualsAscii(linearFormat, "multipart")) {
+      if (StringEqualsLiteral(linearFormat, "multipart")) {
         mode = Multipart;
-      } else if (StringEqualsAscii(linearFormat, "context")) {
+      } else if (StringEqualsLiteral(linearFormat, "context")) {
         mode = Context;
       } else {
         UniqueChars printable = JS_EncodeStringToUTF8(cx, linearFormat);
