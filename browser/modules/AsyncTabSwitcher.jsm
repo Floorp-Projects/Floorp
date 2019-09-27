@@ -1232,6 +1232,9 @@ class AsyncTabSwitcher {
       if (tab === this.blankTab) {
         tabString += "B";
       }
+      if (this.maybeVisibleTabs.has(tab)) {
+        tabString += "M";
+      }
 
       let extraStates = "";
       if (isWarming) {
