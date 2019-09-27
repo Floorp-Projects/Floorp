@@ -7,6 +7,7 @@
  * https://www.w3.org/TR/webrtc/#rtcdtmftonechangeevent
  */
 
+[Exposed=Window]
 interface RTCDTMFToneChangeEvent : Event {
     constructor(DOMString type,
                 optional RTCDTMFToneChangeEventInit eventInitDict = {});

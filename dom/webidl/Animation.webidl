@@ -14,6 +14,7 @@ enum AnimationPlayState { "idle", "running", "paused", "finished" };
 
 enum AnimationReplaceState { "active", "removed", "persisted" };
 
+[Exposed=Window]
 interface Animation : EventTarget {
   [Throws]
   constructor(optional AnimationEffect? effect = null,

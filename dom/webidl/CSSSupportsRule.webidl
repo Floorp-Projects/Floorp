@@ -8,5 +8,6 @@
  */
 
 // https://drafts.csswg.org/css-conditional/#the-csssupportsrule-interface
+[Exposed=Window]
 interface CSSSupportsRule : CSSConditionRule {
 };

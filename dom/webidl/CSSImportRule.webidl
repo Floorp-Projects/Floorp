@@ -8,6 +8,7 @@
  */
 
 // https://drafts.csswg.org/cssom/#cssimportrule
+[Exposed=Window]
 interface CSSImportRule : CSSRule {
   readonly attribute DOMString href;
   // Per spec, the .media is never null, but in our implementation it can

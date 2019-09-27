@@ -8,7 +8,8 @@
  NamedConstructor=Example2(DictForConstructor dict, any any1, object obj1,
                            object? obj2, sequence<Dict> seq, optional any any2,
                            optional object obj3, optional object? obj4),
- NamedConstructor=Example2((long or record<DOMString, any>) arg1)
+ NamedConstructor=Example2((long or record<DOMString, any>) arg1),
+ Exposed=Window,
  ]
 interface TestExampleInterface {
   constructor();
@@ -820,6 +821,7 @@ interface TestExampleInterface {
   // If you add things here, add them to TestCodeGen and TestJSImplGen as well
 };
 
+[Exposed=Window]
 interface TestExampleProxyInterface {
   getter long longIndexedGetter(unsigned long ix);
   setter void longIndexedSetter(unsigned long y, long z);
@@ -840,6 +842,7 @@ interface TestExampleWorkerInterface {
   [NeedsSubjectPrincipal=NonSystem] attribute boolean needsNonSystemSubjectPrincipalAttr;
 };
 
+[Exposed=Window]
 interface TestExampleThrowingConstructorInterface {
   [Throws]
   constructor();

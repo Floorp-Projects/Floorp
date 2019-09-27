@@ -12,7 +12,8 @@ interface nsIPrintSettings;
 interface nsIWebBrowserPersistDocumentReceiver;
 interface nsIWebProgressListener;
 
-[ChromeOnly]
+[ChromeOnly,
+ Exposed=Window]
 interface FrameLoader {
   /**
    * Get the docshell from the frame loader.

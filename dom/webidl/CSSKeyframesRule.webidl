@@ -8,6 +8,7 @@
  */
 
 // https://drafts.csswg.org/css-animations/#interface-csskeyframesrule
+[Exposed=Window]
 interface CSSKeyframesRule : CSSRule {
            attribute DOMString   name;
   readonly attribute CSSRuleList cssRules;

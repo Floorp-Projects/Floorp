@@ -25,7 +25,8 @@ dictionary CaretStateChangedEventInit : EventInit {
   DOMString selectedTextContent = "";
 };
 
-[ChromeOnly]
+[ChromeOnly,
+ Exposed=Window]
 interface CaretStateChangedEvent : Event {
   constructor(DOMString type,
               optional CaretStateChangedEventInit eventInit = {});

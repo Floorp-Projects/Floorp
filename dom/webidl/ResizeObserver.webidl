@@ -31,7 +31,8 @@ interface ResizeObserver {
 
 callback ResizeObserverCallback = void (sequence<ResizeObserverEntry> entries, ResizeObserver observer);
 
-[Pref="layout.css.resizeobserver.enabled"]
+[Pref="layout.css.resizeobserver.enabled",
+ Exposed=Window]
 interface ResizeObserverEntry {
     readonly attribute Element target;
     readonly attribute DOMRectReadOnly contentRect;
@@ -39,7 +40,8 @@ interface ResizeObserverEntry {
     readonly attribute ResizeObserverSize contentBoxSize;
 };
 
-[Pref="layout.css.resizeobserver.enabled"]
+[Pref="layout.css.resizeobserver.enabled",
+ Exposed=Window]
 interface ResizeObserverSize {
     readonly attribute unrestricted double inlineSize;
     readonly attribute unrestricted double blockSize;

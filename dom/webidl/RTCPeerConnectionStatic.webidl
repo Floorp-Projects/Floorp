@@ -25,7 +25,8 @@ callback PeerConnectionLifecycleCallback = void (RTCPeerConnection pc,
 
 [ChromeOnly,
  Pref="media.peerconnection.enabled",
- JSImplementation="@mozilla.org/dom/peerconnectionstatic;1"]
+ JSImplementation="@mozilla.org/dom/peerconnectionstatic;1",
+ Exposed=Window]
 interface RTCPeerConnectionStatic {
   [Throws]
   constructor();

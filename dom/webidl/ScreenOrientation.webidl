@@ -28,6 +28,7 @@ enum OrientationLockType {
   "landscape-secondary"
 };
 
+[Exposed=Window]
 interface ScreenOrientation : EventTarget {
   [Throws]
   Promise<void> lock(OrientationLockType orientation);

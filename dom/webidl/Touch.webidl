@@ -25,7 +25,8 @@ dictionary TouchInit {
   float force = 0;
 };
 
-[Func="mozilla::dom::Touch::PrefEnabled"]
+[Func="mozilla::dom::Touch::PrefEnabled",
+ Exposed=Window]
 interface Touch {
   constructor(TouchInit touchInitDict);
  

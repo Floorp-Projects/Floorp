@@ -12,7 +12,8 @@ enum ScrollSetting {
   "up"
 };
 
-[Pref="media.webvtt.regions.enabled"]
+[Pref="media.webvtt.regions.enabled",
+ Exposed=Window]
 interface VTTRegion {
   [Throws]
   constructor();

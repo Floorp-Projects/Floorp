@@ -20,7 +20,8 @@ enum WebGPULogEntryType {
     "recoverable-out-of-memory",
 };
 
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPULogEntry {
     readonly attribute WebGPULogEntryType type;
     readonly attribute any obj;
@@ -43,7 +44,8 @@ callback WebGPULogCallback = void (WebGPULogEntry error);
 
 // Buffer
 typedef u32 WebGPUBufferUsageFlags;
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUBufferUsage {
     const u32 NONE = 0;
     const u32 MAP_READ = 1;
@@ -61,7 +63,8 @@ dictionary WebGPUBufferDescriptor {
     WebGPUBufferUsageFlags usage;
 };
 
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUBuffer {
     readonly attribute ArrayBuffer? mapping;
     void unmap();
@@ -72,13 +75,15 @@ dictionary WebGPUTextureViewDescriptor {
     // TODO Investigate what goes in there.
 };
 
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUTextureView {
 };
 
 // Texture
 typedef u32 WebGPUTextureDimensionEnum;
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUTextureDimension {
     const u32 e1D = 0;
     const u32 e2D = 1;
@@ -87,7 +92,8 @@ interface WebGPUTextureDimension {
 };
 
 typedef u32 WebGPUTextureFormatEnum;
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUTextureFormat {
     const u32 R8_G8_B8_A8_UNORM = 0;
     const u32 R8_G8_B8_A8_UINT = 1;
@@ -97,7 +103,8 @@ interface WebGPUTextureFormat {
 };
 
 typedef u32 WebGPUTextureUsageFlags;
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUTextureUsage {
     const u32 NONE = 0;
     const u32 TRANSFER_SRC = 1;
@@ -118,14 +125,16 @@ dictionary WebGPUTextureDescriptor {
     WebGPUTextureUsageFlags usage;
 };
 
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUTexture {
     WebGPUTextureView createTextureView(optional WebGPUTextureViewDescriptor desc = {});
 };
 
 // Sampler
 typedef u32 WebGPUFilterModeEnum;
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUFilterMode {
     const u32 NEAREST = 0;
     const u32 LINEAR = 1;
@@ -137,7 +146,8 @@ dictionary WebGPUSamplerDescriptor {
     WebGPUFilterModeEnum mipmapFilter;
 };
 
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUSampler {
 };
 
@@ -147,7 +157,8 @@ interface WebGPUSampler {
 
 // BindGroupLayout
 typedef u32 WebGPUShaderStageFlags;
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUShaderStageBit {
     const u32 NONE = 0;
     const u32 VERTEX = 1;
@@ -156,7 +167,8 @@ interface WebGPUShaderStageBit {
 };
 
 typedef u32 WebGPUBindingTypeEnum;
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUBindingType {
     const u32 UNIFORM_BUFFER = 0;
     const u32 SAMPLER = 1;
@@ -176,7 +188,8 @@ dictionary WebGPUBindGroupLayoutDescriptor {
     sequence<WebGPUBindGroupBinding> bindingTypes;
 };
 
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUBindGroupLayout {
 };
 
@@ -185,7 +198,8 @@ dictionary WebGPUPipelineLayoutDescriptor {
     sequence<WebGPUBindGroupLayout> bindGroupLayouts;
 };
 
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUPipelineLayout {
 };
 
@@ -211,7 +225,8 @@ dictionary WebGPUBindGroupDescriptor {
     sequence<WebGPUBinding> bindings;
 };
 
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUBindGroup {
 };
 
@@ -221,7 +236,8 @@ interface WebGPUBindGroup {
 
 // BlendState
 typedef u32 WebGPUBlendFactorEnum;
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUBlendFactor {
     const u32 ZERO = 0;
     const u32 ONE = 1;
@@ -239,7 +255,8 @@ interface WebGPUBlendFactor {
 };
 
 typedef u32 WebGPUBlendOperationEnum;
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUBlendOperation {
     const u32 ADD = 0;
     const u32 SUBTRACT = 1;
@@ -249,7 +266,8 @@ interface WebGPUBlendOperation {
 };
 
 typedef u32 WebGPUColorWriteFlags;
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUColorWriteBits {
     const u32 NONE = 0;
     const u32 RED = 1;
@@ -272,13 +290,15 @@ dictionary WebGPUBlendStateDescriptor {
     WebGPUColorWriteFlags writeMask;
 };
 
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUBlendState {
 };
 
 // DepthStencilState
 typedef u32 WebGPUCompareFunctionEnum;
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUCompareFunction {
     const u32 NEVER = 0;
     const u32 LESS = 1;
@@ -291,7 +311,8 @@ interface WebGPUCompareFunction {
 };
 
 typedef u32 WebGPUStencilOperationEnum;
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUStencilOperation {
     const u32 KEEP = 0;
     const u32 ZERO = 1;
@@ -321,20 +342,23 @@ dictionary WebGPUDepthStencilStateDescriptor {
     u32 stencilWriteMask;
 };
 
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUDepthStencilState {
 };
 
 // InputState
 typedef u32 WebGPUIndexFormatEnum;
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUIndexFormat {
     const u32 UINT16 = 0;
     const u32 UINT32 = 1;
 };
 
 typedef u32 WebGPUVertexFormatEnum;
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUVertexFormat {
     const u32 FLOAT_R32_G32_B32_A32 = 0;
     const u32 FLOAT_R32_G32_B32 = 1;
@@ -344,7 +368,8 @@ interface WebGPUVertexFormat {
 };
 
 typedef u32 WebGPUInputStepModeEnum;
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUInputStepMode {
     const u32 VERTEX = 0;
     const u32 INSTANCE = 1;
@@ -370,7 +395,8 @@ dictionary WebGPUInputStateDescriptor {
     sequence<WebGPUVertexInputDescriptor> inputs;
 };
 
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUInputState {
 };
 
@@ -379,7 +405,8 @@ dictionary WebGPUShaderModuleDescriptor {
     required ArrayBuffer code;
 };
 
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUShaderModule {
 };
 
@@ -389,13 +416,15 @@ dictionary WebGPUAttachmentStateDescriptor {
     // TODO other stuff like sample count etc.
 };
 
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUAttachmentState {
 };
 
 // Common stuff for ComputePipeline and RenderPipeline
 typedef u32 WebGPUShaderStageEnum;
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUShaderStage {
     const u32 VERTEX = 0;
     const u32 FRAGMENT = 1;
@@ -418,13 +447,15 @@ dictionary WebGPUPipelineDescriptorBase {
 dictionary WebGPUComputePipelineDescriptor : WebGPUPipelineDescriptorBase {
 };
 
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUComputePipeline {
 };
 
 // WebGPURenderPipeline
 typedef u32 WebGPUPrimitiveTopologyEnum;
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUPrimitiveTopology {
     const u32 POINT_LIST = 0;
     const u32 LINE_LIST = 1;
@@ -442,7 +473,8 @@ dictionary WebGPURenderPipelineDescriptor : WebGPUPipelineDescriptorBase {
     // TODO other properties
 };
 
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPURenderPipeline {
 };
 // ****************************************************************************
@@ -450,14 +482,16 @@ interface WebGPURenderPipeline {
 // ****************************************************************************
 
 typedef u32 WebGPULoadOpEnum;
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPULoadOp {
     const u32 CLEAR = 0;
     const u32 LOAD = 1;
 };
 
 typedef u32 WebGPUStoreOpEnum;
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUStoreOp {
     const u32 STORE = 0;
 };
@@ -473,14 +507,16 @@ dictionary WebGPURenderPassDescriptor {
     WebGPURenderPassAttachmentDescriptor depthStencilAttachment;
 };
 
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUCommandBuffer {
 };
 
 dictionary WebGPUCommandEncoderDescriptor {
 };
 
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUCommandEncoder {
     WebGPUCommandBuffer finishEncoding();
 
@@ -531,14 +567,16 @@ interface WebGPUCommandEncoder {
 // ****************************************************************************
 
 // Fence
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUFence {
     boolean wait(double milliseconds);
     readonly attribute Promise<void> promise;
 };
 
 // Queue
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUQueue {
     void submit(sequence<WebGPUCommandBuffer> buffers);
     WebGPUFence insertFence();
@@ -552,7 +590,8 @@ dictionary WebGPUSwapChainDescriptor {
     u32 height;
 };
 
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUSwapChain {
     void configure(optional WebGPUSwapChainDescriptor descriptor = {});
     WebGPUTexture getNextTexture();
@@ -574,7 +613,8 @@ dictionary WebGPULimits {
 };
 
 // Device
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUDevice {
     readonly attribute WebGPUAdapter adapter;
     WebGPUExtensions extensions();
@@ -611,7 +651,8 @@ dictionary WebGPUDeviceDescriptor {
     // TODO are other things configurable like queues?
 };
 
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPUAdapter {
     readonly attribute DOMString name;
     WebGPUExtensions extensions();
@@ -626,7 +667,8 @@ dictionary WebGPUAdapterDescriptor {
     WebGPUPowerPreference powerPreference;
 };
 
-[Pref="dom.webgpu.enable"]
+[Pref="dom.webgpu.enable",
+ Exposed=Window]
 interface WebGPU {
     WebGPUAdapter getAdapter(optional WebGPUAdapterDescriptor desc = {});
 };

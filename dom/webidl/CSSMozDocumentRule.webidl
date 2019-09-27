@@ -5,6 +5,7 @@
  */
 
 // This is a non-standard interface for @-moz-document rules
+[Exposed=Window]
 interface CSSMozDocumentRule : CSSConditionRule {
   // XXX Add access to the URL list.
 };

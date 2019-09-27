@@ -15,7 +15,8 @@ enum SourceBufferAppendMode {
     "sequence"
 };
 
-[Pref="media.mediasource.enabled"]
+[Pref="media.mediasource.enabled",
+ Exposed=Window]
 interface SourceBuffer : EventTarget {
   [SetterThrows]
   attribute SourceBufferAppendMode mode;

@@ -21,7 +21,8 @@ enum PresentationConnectionClosedReason
   "wentaway"
 };
 
-[Pref="dom.presentation.enabled"]
+[Pref="dom.presentation.enabled",
+ Exposed=Window]
 interface PresentationConnectionCloseEvent : Event
 {
   constructor(DOMString type,

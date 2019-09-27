@@ -12,6 +12,7 @@
 
 interface SVGViewSpec;
 
+[Exposed=Window]
 interface SVGSVGElement : SVGGraphicsElement {
 
   [Constant]

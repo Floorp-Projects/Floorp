@@ -8,6 +8,7 @@
  */
 
 // https://drafts.csswg.org/css-counter-styles-3/#the-csscounterstylerule-interface
+[Exposed=Window]
 interface CSSCounterStyleRule : CSSRule {
   attribute DOMString name;
   attribute DOMString system;

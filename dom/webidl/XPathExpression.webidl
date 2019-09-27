@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+[Exposed=Window]
 interface XPathExpression {
   // The result specifies a specific result object which may be reused and
   // returned by this method. If this is specified as null or it's not an

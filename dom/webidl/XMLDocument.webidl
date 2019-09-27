@@ -9,6 +9,7 @@
  */
 
 // http://dom.spec.whatwg.org/#xmldocument
+[Exposed=Window]
 interface XMLDocument : Document {};
 
 // http://www.whatwg.org/specs/web-apps/current-work/#xmldocument

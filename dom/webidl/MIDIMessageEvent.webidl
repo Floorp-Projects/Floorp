@@ -8,7 +8,8 @@
  */
 
 [SecureContext,
- Pref="dom.webmidi.enabled"]
+ Pref="dom.webmidi.enabled",
+ Exposed=Window]
 interface MIDIMessageEvent : Event
 {
   [Throws]

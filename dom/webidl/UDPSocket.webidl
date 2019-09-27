@@ -18,7 +18,8 @@ dictionary UDPOptions {
 };
 
 [Pref="dom.udpsocket.enabled",
- ChromeOnly]
+ ChromeOnly,
+ Exposed=Window]
 interface UDPSocket : EventTarget {
     [Throws]
     constructor(optional UDPOptions options = {});

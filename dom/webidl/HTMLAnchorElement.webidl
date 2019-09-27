@@ -12,7 +12,8 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-a-element
-[HTMLConstructor]
+[HTMLConstructor,
+ Exposed=Window]
 interface HTMLAnchorElement : HTMLElement {
            [CEReactions, SetterThrows]
            attribute DOMString target;

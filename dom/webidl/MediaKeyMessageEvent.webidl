@@ -17,6 +17,7 @@ enum MediaKeyMessageType {
   "individualization-request"
 };
 
+[Exposed=Window]
 interface MediaKeyMessageEvent : Event {
   [Throws]
   constructor(DOMString type, MediaKeyMessageEventInit eventInitDict);

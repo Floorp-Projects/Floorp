@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Exposed=Window]
 interface SVGUnitTypes {
   // Unit Types
   const unsigned short SVG_UNIT_TYPE_UNKNOWN = 0;

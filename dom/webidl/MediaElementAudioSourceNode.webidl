@@ -14,7 +14,8 @@ dictionary MediaElementAudioSourceOptions {
     required HTMLMediaElement mediaElement;
 };
 
-[Pref="dom.webaudio.enabled"]
+[Pref="dom.webaudio.enabled",
+ Exposed=Window]
 interface MediaElementAudioSourceNode : AudioNode {
   [Throws]
   constructor(AudioContext context, MediaElementAudioSourceOptions options);

@@ -13,7 +13,8 @@
 // for gUM request stop (recording-device-stopped) notification due to track stop,
 // only windowID, rawID and mediaSource will be set
 
-[NoInterfaceObject]
+[NoInterfaceObject,
+ Exposed=Window]
 interface GetUserMediaRequest {
   readonly attribute unsigned long long windowID;
   readonly attribute unsigned long long innerWindowID;

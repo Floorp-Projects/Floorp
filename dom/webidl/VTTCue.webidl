@@ -36,6 +36,7 @@ enum DirectionSetting {
   "lr"
 };
 
+[Exposed=Window]
 interface VTTCue : TextTrackCue {
   [Throws]
   constructor(double startTime, double endTime, DOMString text);

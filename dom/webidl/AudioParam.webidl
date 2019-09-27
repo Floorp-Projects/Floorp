@@ -15,7 +15,8 @@ enum AutomationRate {
     "k-rate"
 };
 
-[Pref="dom.webaudio.enabled"]
+[Pref="dom.webaudio.enabled",
+ Exposed=Window]
 interface AudioParam {
 
                     attribute float value;

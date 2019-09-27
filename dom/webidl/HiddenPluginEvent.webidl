@@ -1,6 +1,7 @@
 interface PluginTag;
 
-[ChromeOnly]
+[ChromeOnly,
+ Exposed=Window]
 interface HiddenPluginEvent : Event
 {
   constructor(DOMString type, optional HiddenPluginEventInit eventInit = {});

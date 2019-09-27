@@ -4,7 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Pref="dom.gamepad.non_standard_events.enabled"]
+[Pref="dom.gamepad.non_standard_events.enabled",
+ Exposed=Window]
 interface GamepadAxisMoveEvent : GamepadEvent
 {
   constructor(DOMString type,

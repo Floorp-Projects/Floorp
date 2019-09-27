@@ -10,7 +10,8 @@
  * enable on untrusted pages.
 */
 
-[Pref="fuzzing.enabled"]
+[Pref="fuzzing.enabled",
+ Exposed=Window]
 interface FuzzingFunctions {
   /**
    * Synchronously perform a garbage collection.

@@ -13,6 +13,7 @@ enum CSSStyleSheetParsingMode {
   "agent"
 };
 
+[Exposed=Window]
 interface CSSStyleSheet : StyleSheet {
   [Pure, BinaryName="DOMOwnerRule"]
   readonly attribute CSSRule? ownerRule;

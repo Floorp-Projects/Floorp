@@ -10,7 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
-[Func="Document::IsWebAnimationsEnabled"]
+[Func="Document::IsWebAnimationsEnabled",
+ Exposed=Window]
 interface AnimationPlaybackEvent : Event {
   constructor(DOMString type,
               optional AnimationPlaybackEventInit eventInitDict = {});

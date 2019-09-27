@@ -12,7 +12,8 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-meta-element
-[HTMLConstructor]
+[HTMLConstructor,
+ Exposed=Window]
 interface HTMLMetaElement : HTMLElement {
   [CEReactions, SetterThrows, Pure]
            attribute DOMString name;

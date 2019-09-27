@@ -11,6 +11,7 @@
  * and create derivative works of this document.
  */
 
+[Exposed=Window]
 interface MediaError {
   // Keep these constants in sync with the ones defined in HTMLMediaElement.h
   const unsigned short MEDIA_ERR_ABORTED = 1;

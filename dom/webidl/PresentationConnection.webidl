@@ -29,7 +29,8 @@ enum PresentationConnectionBinaryType
   "arraybuffer"
 };
 
-[Pref="dom.presentation.enabled"]
+[Pref="dom.presentation.enabled",
+ Exposed=Window]
 interface PresentationConnection : EventTarget {
   /*
    * Unique id for all existing connections.

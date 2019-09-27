@@ -8,7 +8,7 @@ dictionary IDBFileMetadataParameters
   boolean lastModified = true;
 };
 
-[Exposed=(Window)]
+[Exposed=Window]
 interface IDBFileHandle : EventTarget
 {
   readonly attribute IDBMutableFile? mutableFile;

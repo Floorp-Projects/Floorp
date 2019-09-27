@@ -7,7 +7,8 @@
  * http://www.whatwg.org/specs/web-apps/current-work/#the-track-element
  */
 
-[HTMLConstructor]
+[HTMLConstructor,
+ Exposed=Window]
 interface HTMLTrackElement : HTMLElement {
   [CEReactions, SetterThrows, Pure]
   attribute DOMString kind;

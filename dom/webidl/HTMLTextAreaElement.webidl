@@ -14,7 +14,8 @@
 interface nsIEditor;
 interface XULControllers;
 
-[HTMLConstructor]
+[HTMLConstructor,
+ Exposed=Window]
 interface HTMLTextAreaElement : HTMLElement {
   [CEReactions, SetterThrows, Pure]
            attribute DOMString autocomplete;

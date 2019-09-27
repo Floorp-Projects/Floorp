@@ -12,7 +12,8 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-output-element
-[HTMLConstructor]
+[HTMLConstructor,
+ Exposed=Window]
 interface HTMLOutputElement : HTMLElement {
   [PutForwards=value, Constant]
   readonly attribute DOMTokenList htmlFor;

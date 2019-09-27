@@ -8,7 +8,8 @@
  */
 
 [Pref="media.peerconnection.enabled",
- JSImplementation="@mozilla.org/dom/rtpreceiver;1"]
+ JSImplementation="@mozilla.org/dom/rtpreceiver;1",
+ Exposed=Window]
 interface RTCRtpReceiver {
   readonly attribute MediaStreamTrack   track;
   Promise<RTCStatsReport>               getStats();

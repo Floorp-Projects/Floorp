@@ -7,7 +7,8 @@
  * http://www.whatwg.org/specs/web-apps/current-work/#the-title-element
  */
 
-[HTMLConstructor]
+[HTMLConstructor,
+ Exposed=Window]
 interface HTMLTitleElement : HTMLElement {
            [CEReactions, Throws]
            attribute DOMString text;

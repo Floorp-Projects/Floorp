@@ -33,6 +33,7 @@ dictionary MediaKeySystemConfiguration {
   sequence<DOMString>                     sessionTypes;
 };
 
+[Exposed=Window]
 interface MediaKeySystemAccess {
   readonly    attribute DOMString keySystem;
   [NewObject]

@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Exposed=Window]
 interface PerformanceNavigation {
   const unsigned short TYPE_NAVIGATE = 0;
   const unsigned short TYPE_RELOAD = 1;

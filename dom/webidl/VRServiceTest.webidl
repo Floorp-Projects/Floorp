@@ -6,7 +6,8 @@
  */
 
 [Pref="dom.vr.puppet.enabled",
- HeaderFile="mozilla/dom/VRServiceTest.h"]
+ HeaderFile="mozilla/dom/VRServiceTest.h",
+ Exposed=Window]
 interface VRMockDisplay {
   void create();
   attribute boolean capPosition;
@@ -35,7 +36,8 @@ interface VRMockDisplay {
 };
 
 [Pref="dom.vr.puppet.enabled",
- HeaderFile="mozilla/dom/VRServiceTest.h"]
+ HeaderFile="mozilla/dom/VRServiceTest.h",
+ Exposed=Window]
 interface VRMockController {
   void create();
   void clear();
@@ -57,7 +59,8 @@ interface VRMockController {
 };
 
 [Pref="dom.vr.puppet.enabled",
- HeaderFile="mozilla/dom/VRServiceTest.h"]
+ HeaderFile="mozilla/dom/VRServiceTest.h",
+ Exposed=Window]
 interface VRServiceTest {
   VRMockDisplay getVRDisplay();
   [Throws] VRMockController getVRController(unsigned long controllerIdx);

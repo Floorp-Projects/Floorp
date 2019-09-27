@@ -4,7 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Func="mozilla::dom::AccessibleNode::IsAOMEnabled"]
+[Func="mozilla::dom::AccessibleNode::IsAOMEnabled",
+ Exposed=Window]
 interface AccessibleNode {
   readonly attribute DOMString computedRole;
   [Frozen, Cached, Pure]

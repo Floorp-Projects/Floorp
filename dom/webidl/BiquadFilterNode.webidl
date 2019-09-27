@@ -29,7 +29,8 @@ dictionary BiquadFilterOptions : AudioNodeOptions {
              float            gain = 0;
 };
 
-[Pref="dom.webaudio.enabled"]
+[Pref="dom.webaudio.enabled",
+ Exposed=Window]
 interface BiquadFilterNode : AudioNode {
     [Throws]
     constructor(BaseAudioContext context,

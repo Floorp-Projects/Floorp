@@ -21,7 +21,8 @@ dictionary WaveShaperOptions : AudioNodeOptions {
              OverSampleType  oversample = "none";
 };
 
-[Pref="dom.webaudio.enabled"]
+[Pref="dom.webaudio.enabled",
+ Exposed=Window]
 interface WaveShaperNode : AudioNode {
   [Throws]
   constructor(BaseAudioContext context,

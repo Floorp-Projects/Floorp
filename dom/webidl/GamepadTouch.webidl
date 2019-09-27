@@ -7,7 +7,8 @@
  * https://github.com/knyg/gamepad/blob/multitouch/extensions.html
  */
 
-[SecureContext, Pref="dom.gamepad.extensions.multitouch"]
+[SecureContext, Pref="dom.gamepad.extensions.multitouch",
+ Exposed=Window]
 interface GamepadTouch {
   readonly attribute unsigned long touchId;
   readonly attribute octet surfaceId;

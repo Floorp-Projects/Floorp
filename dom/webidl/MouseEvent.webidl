@@ -11,6 +11,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Exposed=Window]
 interface MouseEvent : UIEvent {
   constructor(DOMString typeArg,
               optional MouseEventInit mouseEventInitDict = {});

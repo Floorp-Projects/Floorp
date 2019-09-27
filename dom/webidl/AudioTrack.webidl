@@ -7,7 +7,8 @@
  * http://www.whatwg.org/specs/web-apps/current-work/#audiotrack
  */
 
-[Pref="media.track.enabled"]
+[Pref="media.track.enabled",
+ Exposed=Window]
 interface AudioTrack {
   readonly attribute DOMString id;
   readonly attribute DOMString kind;

@@ -708,9 +708,8 @@ struct NamedConstructor {
  *                underlying global.
  * unscopableNames if not null it points to a null-terminated list of const
  *                 char* names of the unscopable properties for this interface.
- * isGlobal if true, we're creating interface objects for a [Global] or
- *        [PrimaryGlobal] interface, and hence shouldn't define properties on
- *        the prototype object.
+ * isGlobal if true, we're creating interface objects for a [Global] interface,
+ *          and hence shouldn't define properties on the prototype object.
  * legacyWindowAliases if not null it points to a null-terminated list of const
  *                     char* names of the legacy window aliases for this
  *                     interface.

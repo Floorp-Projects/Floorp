@@ -14,7 +14,8 @@ dictionary MediaStreamTrackAudioSourceOptions {
     required MediaStreamTrack mediaStreamTrack;
 };
 
-[Pref="dom.webaudio.enabled"]
+[Pref="dom.webaudio.enabled",
+ Exposed=Window]
 interface MediaStreamTrackAudioSourceNode : AudioNode {
   [Throws]
   constructor(AudioContext context, MediaStreamTrackAudioSourceOptions options);

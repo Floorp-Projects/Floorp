@@ -11,6 +11,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Exposed=Window]
 interface DocumentFragment : Node {
   [Throws]
   constructor();

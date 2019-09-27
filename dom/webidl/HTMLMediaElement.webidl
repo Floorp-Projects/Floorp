@@ -11,6 +11,7 @@
  * and create derivative works of this document.
  */
 
+[Exposed=Window]
 interface HTMLMediaElement : HTMLElement {
 
   // error state

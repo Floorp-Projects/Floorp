@@ -7,6 +7,7 @@
  * https://w3c.github.io/input-events/#interface-InputEvent
  */
 
+[Exposed=Window]
 interface InputEvent : UIEvent
 {
   constructor(DOMString type, optional InputEventInit eventInitDict = {});

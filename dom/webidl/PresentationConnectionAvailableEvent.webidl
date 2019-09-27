@@ -7,7 +7,8 @@
  * https://w3c.github.io/presentation-api/#interface-presentationconnectionavailableevent
  */
 
-[Pref="dom.presentation.enabled"]
+[Pref="dom.presentation.enabled",
+ Exposed=Window]
 interface PresentationConnectionAvailableEvent : Event
 {
   constructor(DOMString type,

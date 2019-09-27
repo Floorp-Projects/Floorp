@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Exposed=Window]
 interface WheelEvent : MouseEvent
 {
   constructor(DOMString type, optional WheelEventInit eventInitDict = {});

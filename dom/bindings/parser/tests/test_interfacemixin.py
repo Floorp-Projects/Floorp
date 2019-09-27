@@ -377,8 +377,8 @@ def WebIDLTest(parser, harness):
 
     parser = parser.reset()
     parser.parse("""
-        [Global] interface Window {};
-        [Global] interface Worker {};
+        [Global, Exposed=Window] interface Window {};
+        [Global, Exposed=Worker] interface Worker {};
         [Exposed=Window]
         interface Base {};
         interface mixin Mixin {
@@ -394,8 +394,8 @@ def WebIDLTest(parser, harness):
 
     parser = parser.reset()
     parser.parse("""
-        [Global] interface Window {};
-        [Global] interface Worker {};
+        [Global, Exposed=Window] interface Window {};
+        [Global, Exposed=Worker] interface Worker {};
         [Exposed=Window]
         interface Base {};
         [Exposed=Window]
@@ -412,34 +412,9 @@ def WebIDLTest(parser, harness):
 
     parser = parser.reset()
     parser.parse("""
-        [Global] interface Window {};
-        [Global] interface Worker {};
+        [Global, Exposed=Window] interface Window {};
+        [Global, Exposed=Worker] interface Worker {};
         [Exposed=Window]
-        interface Base1 {};
-        [Exposed=Worker]
-        interface Base2 {};
-        interface mixin Mixin {
-            attribute short a;
-        };
-        Base1 includes Mixin;
-        Base2 includes Mixin;
-    """)
-    results = parser.finish()
-    base = results[2]
-    attr = base.members[0]
-    harness.check(attr.exposureSet, set(["Window", "Worker"]),
-                 "Should expose on all globals where including interfaces are "
-                  "exposed")
-    base = results[3]
-    attr = base.members[0]
-    harness.check(attr.exposureSet, set(["Window", "Worker"]),
-                 "Should expose on all globals where including interfaces are "
-                  "exposed")
-
-    parser = parser.reset()
-    parser.parse("""
-        [PrimaryGlobal] interface Window {};
-        [Global] interface Worker {};
         interface Base1 {};
         [Exposed=Worker]
         interface Base2 {};

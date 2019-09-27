@@ -15,7 +15,8 @@ dictionary PushSubscriptionOptionsInit {
 // The main thread JS implementation. Please see comments in
 // dom/push/PushManager.h for the split between PushManagerImpl and PushManager.
 [JSImplementation="@mozilla.org/push/PushManager;1",
- ChromeOnly]
+ ChromeOnly,
+ Exposed=Window]
 interface PushManagerImpl {
   [Throws]
   constructor(DOMString scope);

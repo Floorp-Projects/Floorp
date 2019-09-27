@@ -9,7 +9,8 @@
  * context's session history. Theoretically this object manages all session
  * history state for the browsing context.
  */
-[ChromeOnly]
+[ChromeOnly,
+ Exposed=Window]
 interface ParentSHistory {
   [Pure]
   readonly attribute long count;

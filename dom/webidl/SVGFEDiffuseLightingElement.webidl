@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Exposed=Window]
 interface SVGFEDiffuseLightingElement : SVGElement {
   [Constant]
   readonly attribute SVGAnimatedString in1;

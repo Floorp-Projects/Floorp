@@ -11,6 +11,7 @@
  */
 
 // Currently, StaticRange cannot be created from web apps.
+[Exposed=Window]
 interface StaticRange : AbstractRange {
   // And no additional functions/properties.
 };

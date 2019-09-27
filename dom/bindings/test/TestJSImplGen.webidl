@@ -15,7 +15,7 @@ enum MyTestEnum {
   "b"
 };
 
-[JSImplementation="@mozilla.org/test-js-impl-interface;1"]
+[Exposed=Window, JSImplementation="@mozilla.org/test-js-impl-interface;1"]
 interface TestJSImplInterface {
   // We don't support multiple constructors (bug 869268) or named constructors
   // for JS-implemented WebIDL.
@@ -842,14 +842,17 @@ interface TestJSImplInterface {
   // If you add things here, add them to TestCodeGen as well
 };
 
+[Exposed=Window]
 interface TestCImplementedInterface : TestJSImplInterface {
 };
 
+[Exposed=Window]
 interface TestCImplementedInterface2 {
 };
 
 [NoInterfaceObject,
- JSImplementation="@mozilla.org/test-js-impl-interface;2"]
+ JSImplementation="@mozilla.org/test-js-impl-interface;2",
+ Exposed=Window]
 interface TestJSImplNoInterfaceObject {
   // [Cached] is not supported in JS-implemented WebIDL.
   //[Cached, Pure]

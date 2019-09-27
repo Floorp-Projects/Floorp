@@ -7,6 +7,7 @@ enum SecurityPolicyViolationEventDisposition
   "enforce", "report"
 };
 
+[Exposed=Window]
 interface SecurityPolicyViolationEvent : Event
 {
     constructor(DOMString type,

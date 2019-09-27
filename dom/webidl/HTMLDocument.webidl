@@ -4,7 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[OverrideBuiltins]
+[OverrideBuiltins,
+ Exposed=Window]
 interface HTMLDocument : Document {
   // DOM tree accessors
   [Throws]

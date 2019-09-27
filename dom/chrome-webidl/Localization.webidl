@@ -62,7 +62,7 @@ callback GenerateMessages = Promise<any> (sequence<DOMString> aResourceIds);
  *    - formatMessages     - format multiple compound messages
  *
  */
-[ChromeOnly]
+[ChromeOnly, Exposed=Window]
 interface Localization {
   /**
    * Constructor arguments:

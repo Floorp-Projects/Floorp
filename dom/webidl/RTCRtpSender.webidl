@@ -67,7 +67,8 @@ dictionary RTCRtpParameters {
 };
 
 [Pref="media.peerconnection.enabled",
- JSImplementation="@mozilla.org/dom/rtpsender;1"]
+ JSImplementation="@mozilla.org/dom/rtpsender;1",
+ Exposed=Window]
 interface RTCRtpSender {
   readonly attribute MediaStreamTrack? track;
   Promise<void> setParameters (optional RTCRtpParameters parameters = {});

@@ -12,6 +12,7 @@
 // https://drafts.csswg.org/css-conditional/#the-cssmediarule-interface
 // except they disagree with each other.  We're taking the inheritance from
 // css-conditional and the PutForwards behavior from cssom.
+[Exposed=Window]
 interface CSSMediaRule : CSSConditionRule {
   [SameObject, PutForwards=mediaText] readonly attribute MediaList media;
 };

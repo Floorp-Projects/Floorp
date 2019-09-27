@@ -10,7 +10,8 @@ interface nsISHistory;
  * The ChildSHistory interface represents the child side of a browsing
  * context's session history.
  */
-[ChromeOnly]
+[ChromeOnly,
+ Exposed=Window]
 interface ChildSHistory {
   [Pure]
   readonly attribute long count;
