@@ -35,7 +35,9 @@ class AdjustMetricsService(private val application: Application) : MetricsServic
         )
 
         config.setOnAttributionChangedListener {
-            application.settings().adjustCampaignId = it.campaign
+            it.campaign?.let { campaign ->
+                application.settings().adjustCampaignId = campaign
+            }
         }
 
         config.setLogLevel(LogLevel.SUPRESS)
