@@ -30,7 +30,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIURI;
 interface nsIObserver;
 interface nsIPrincipal;
 interface mozIDOMWindow;
@@ -75,46 +74,6 @@ interface nsIPermissionManager : nsISupports
   const uint32_t EXPIRE_TIME = 2;
   const uint32_t EXPIRE_POLICY = 3;
 
-  /**
-   * Add permission information for a given URI and permission type. This
-   * operation will cause the type string to be registered if it does not
-   * currently exist. If a permission already exists for a given type, it
-   * will be modified.
-   *
-   * @param uri         the uri to add the permission for
-   * @param type        a case-sensitive ASCII string, identifying the consumer.
-   *                    Consumers should choose this string to be unique, with
-   *                    respect to other consumers.
-   * @param permission  an integer representing the desired action (e.g. allow
-   *                    or deny). The interpretation of this number is up to the
-   *                    consumer, and may represent different actions for different
-   *                    types. Consumers may use one of the enumerated permission
-   *                    actions defined above, for convenience.
-   *                    NOTE: UNKNOWN_ACTION (0) is reserved to represent the
-   *                    default permission when no entry is found for a host, and
-   *                    should not be used by consumers to indicate otherwise.
-   * @param expiretype  a constant defining whether this permission should
-   *                    never expire (EXPIRE_NEVER), expire at the end of the
-   *                    session (EXPIRE_SESSION), or expire at a specified time
-   *                    (EXPIRE_TIME).
-   * @param expiretime  an integer representation of when this permission
-   *                    should be forgotten (milliseconds since Jan 1 1970 0:00:00).
-   */
-  void add(in nsIURI uri,
-           in ACString type,
-           in uint32_t permission,
-           [optional] in uint32_t expireType,
-           [optional] in int64_t expireTime);
-
-  /**
-   * Deprecated! Use getAllForPrincipal!
-   * Get all custom permissions for a given URI. This will return
-   * an enumerator of all permissions which are not set to default
-   * and which belong to the matching principal of the given URI.
-   *
-   * @param uri  the URI to get all permissions for
-   */
-  nsISimpleEnumerator getAllForURI(in nsIURI uri);
 
   /**
    * Get all custom permissions for a given nsIPrincipal. This will return an
@@ -146,19 +105,6 @@ interface nsIPermissionManager : nsISupports
                         in uint32_t permission,
                         [optional] in uint32_t expireType,
                         [optional] in int64_t expireTime);
-
-  /**
-   * Remove permission information for a given URI and permission type. This will
-   * remove the permission for the entire host described by the uri, acting as the
-   * opposite operation to the add() method.
-   *
-   * @param uri    the uri to remove the permission for
-   * @param type   a case-sensitive ASCII string, identifying the consumer.
-   *               The type must have been previously registered using the
-   *               add() method.
-   */
-  void remove(in nsIURI uri,
-              in ACString type);
 
   /**
    * Remove permission information for a given principal.
@@ -199,18 +145,6 @@ interface nsIPermissionManager : nsISupports
   void removeByTypeSince(in ACString type, in int64_t since);
 
   /**
-   * Test whether a website has permission to perform the given action.
-   * This function will perform a pref lookup to permissions.default.<type>
-   * if the specific permission type is part of the whitelist for that functionality.
-   * @param uri     the uri to be tested
-   * @param type    a case-sensitive ASCII string, identifying the consumer
-   * @param return  see add(), param permission. returns UNKNOWN_ACTION when
-   *                there is no stored permission for this uri and / or type.
-   */
-  uint32_t testPermission(in nsIURI uri,
-                          in ACString type);
-
-  /**
    * Test whether the principal has the permission to perform a given action.
    * System principals will always have permissions granted.
    * This function will perform a pref lookup to permissions.default.<type>
@@ -228,19 +162,6 @@ interface nsIPermissionManager : nsISupports
    */
   uint32_t testPermissionFromWindow(in mozIDOMWindow window,
                                     in ACString type);
-
-  /**
-   * Test whether a website has permission to perform the given action.
-   * This requires an exact hostname match, subdomains are not a match.
-   * This function will perform a pref lookup to permissions.default.<type>
-   * if the specific permission type is part of the whitelist for that functionality.
-   * @param uri     the uri to be tested
-   * @param type    a case-sensitive ASCII string, identifying the consumer
-   * @param return  see add(), param permission. returns UNKNOWN_ACTION when
-   *                there is no stored permission for this uri and / or type.
-   */
-  uint32_t testExactPermission(in nsIURI uri,
-                               in ACString type);
 
   /**
    * See testExactPermission() above.
@@ -265,23 +186,6 @@ interface nsIPermissionManager : nsISupports
    */
   uint32_t testExactPermanentPermission(in nsIPrincipal principal,
                                         in ACString type);
-
-  /**
-   * Get the permission object associated with the given URI and action.
-   * @param uri The URI
-   * @param type      A case-sensitive ASCII string identifying the consumer
-   * @param exactHost If true, only the specific host will be matched,
-   *                  @see testExactPermission. If false, subdomains will
-   *                  also be searched, @see testPermission.
-   * @returns The matching permission object, or null if no matching object
-   *          was found. No matching object is equivalent to UNKNOWN_ACTION.
-   * @note Clients in general should prefer the test* methods unless they
-   *       need to know the specific stored details.
-   * @note This method will always return null for the system principal.
-   */
-  nsIPermission getPermissionObjectForURI(in nsIURI uri,
-                                          in ACString type,
-                                          in boolean exactHost);
 
   /**
    * Get the permission object associated with the given principal and action.
