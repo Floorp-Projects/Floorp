@@ -2,11 +2,13 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function run_test() {
-  let uri = Services.io.newURI("https://example.org");
+  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+    "https://example.org"
+  );
 
   // Check that without a pref the default return value is UNKNOWN.
   Assert.equal(
-    Services.perms.testPermission(uri, "camera"),
+    Services.perms.testPermissionFromPrincipal(principal, "camera"),
     Services.perms.UNKNOWN_ACTION
   );
 
@@ -16,7 +18,7 @@ function run_test() {
     Services.perms.DENY_ACTION
   );
   Assert.equal(
-    Services.perms.testPermission(uri, "camera"),
+    Services.perms.testPermissionFromPrincipal(principal, "camera"),
     Services.perms.DENY_ACTION
   );
 
@@ -24,12 +26,12 @@ function run_test() {
   // consider the permission as being set to its default.
   Assert.equal(
     null,
-    Services.perms.getPermissionObjectForURI(uri, "camera", false)
+    Services.perms.getPermissionObject(principal, "camera", false)
   );
 
   // Check that other permissions still return UNKNOWN.
   Assert.equal(
-    Services.perms.testPermission(uri, "geo"),
+    Services.perms.testPermissionFromPrincipal(principal, "geo"),
     Services.perms.UNKNOWN_ACTION
   );
 
@@ -39,31 +41,35 @@ function run_test() {
     Services.perms.ALLOW_ACTION
   );
   Assert.equal(
-    Services.perms.testPermission(uri, "camera"),
+    Services.perms.testPermissionFromPrincipal(principal, "camera"),
     Services.perms.ALLOW_ACTION
   );
 
   // Check that the preference is ignored if there is a value.
-  Services.perms.add(uri, "camera", Services.perms.DENY_ACTION);
+  Services.perms.addFromPrincipal(
+    principal,
+    "camera",
+    Services.perms.DENY_ACTION
+  );
   Assert.equal(
-    Services.perms.testPermission(uri, "camera"),
+    Services.perms.testPermissionFromPrincipal(principal, "camera"),
     Services.perms.DENY_ACTION
   );
   Assert.ok(
-    Services.perms.getPermissionObjectForURI(uri, "camera", false) != null
+    Services.perms.getPermissionObject(principal, "camera", false) != null
   );
 
   // The preference should be honored again, after resetting the permissions.
   Services.perms.removeAll();
   Assert.equal(
-    Services.perms.testPermission(uri, "camera"),
+    Services.perms.testPermissionFromPrincipal(principal, "camera"),
     Services.perms.ALLOW_ACTION
   );
 
   // Should be UNKNOWN after clearing the pref.
   Services.prefs.clearUserPref("permissions.default.camera");
   Assert.equal(
-    Services.perms.testPermission(uri, "camera"),
+    Services.perms.testPermissionFromPrincipal(principal, "camera"),
     Services.perms.UNKNOWN_ACTION
   );
 }
