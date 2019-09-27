@@ -723,9 +723,11 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
   _makeEventBreakpointEnterFrame(eventBreakpoint) {
     return frame => {
-      const { sourceActor } = this.sources.getFrameLocation(frame);
+      const location = this.sources.getFrameLocation(frame);
+      const { sourceActor, line, column } = location;
       const url = sourceActor.url;
-      if (this.sources.isBlackBoxed(url)) {
+
+      if (this.sources.isBlackBoxed(url, line, column)) {
         return undefined;
       }
 
