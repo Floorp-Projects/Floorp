@@ -44,14 +44,14 @@ granting permissions to a Mozilla page, it can do so by using the `permission ma
   function addonInit() {
     // The following code must be called before attempting to load a page that uses
     // hybrid content telemetry on https://example.mozilla.org.
-    let hostURI = Services.io.newURI("https://example.mozilla.org");
-    Services.perms.add(hostURI, "hc_telemetry", Services.perms.ALLOW_ACTION);
+    let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin("https://example.mozilla.org");
+    Services.perms.addFromPrincipal(principal, "hc_telemetry", Services.perms.ALLOW_ACTION);
   }
 
   function addonCleanup() {
     // The permission must be removed if no longer needed (e.g. the add-on is shut down).
-    let hostURI = Services.io.newURI("https://example.mozilla.org");
-    Services.perms.remove(hostURI, "hc_telemetry");
+    let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin("https://example.mozilla.org");
+    Services.perms.removeFromPrincipal(principal, "hc_telemetry");
   }
 
 .. important::
@@ -335,7 +335,7 @@ Testing
 =======
 
 In order to test Hybrid Content Telemetry integrations, the permission API can be used to enable certain hosts.
-The ``Services.perms.add`` API is available in the Browser Console as well as in ``xpcshell`` and ``mochi`` tests with access to the ``Services.*`` APIs.
+The ``Services.perms.addFromPrincipal`` API is available in the Browser Console as well as in ``xpcshell`` and ``mochi`` tests with access to the ``Services.*`` APIs.
 
 The respective ``hc_telemetry`` permission needs to be set before any pages on that host load the ``HybridContentTelemetry-lib.js`` file.
 
@@ -347,8 +347,8 @@ To enable Hybrid Content Telemetry on ``https://example.mozilla.org``, execute t
 
 .. code-block:: js
 
-  let hostURI = Services.io.newURI("https://example.mozilla.org");
-  Services.perms.add(hostURI, "hc_telemetry", Services.perms.ALLOW_ACTION);
+  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin("https://example.mozilla.org");
+  Services.perms.addFromPrincipal(principal, "hc_telemetry", Services.perms.ALLOW_ACTION);
 
 Afterwards load the page on ``https://example.mozilla.org`` and it will be able to record Telemetry data.
 
@@ -364,8 +364,8 @@ Add the code snippet in your ``head.js`` to enable Hybrid Content ContentTelemet
 
 .. code-block:: js
 
-  let hostURI = Services.io.newURI("https://example.mozilla.org");
-  Services.perms.add(hostURI, "hc_telemetry", Services.perms.ALLOW_ACTION);
+  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin("https://example.mozilla.org");
+  Services.perms.addFromPrincipal(principal, "hc_telemetry", Services.perms.ALLOW_ACTION);
 
 Version History
 ===============
