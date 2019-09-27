@@ -56,9 +56,10 @@ void GMPProcessParent::InitStaticMainThread() {
   sMacSandboxGMPLogging =
       Preferences::GetBool("security.sandbox.logging.enabled") ||
       PR_GetEnv("MOZ_SANDBOX_GMP_LOGGING") || PR_GetEnv("MOZ_SANDBOX_LOGGING");
-  GMP_LOG("GMPProcessParent::InitStaticMainThread: earlyinit=%s, logging=%s",
-          sLaunchWithMacSandbox ? "true" : "false",
-          sMacSandboxGMPLogging ? "true" : "false");
+  GMP_LOG_DEBUG(
+      "GMPProcessParent::InitStaticMainThread: earlyinit=%s, logging=%s",
+      sLaunchWithMacSandbox ? "true" : "false",
+      sMacSandboxGMPLogging ? "true" : "false");
 #  if defined(DEBUG)
   sIsMainThreadInitDone = true;
 #  endif
@@ -92,12 +93,13 @@ bool GMPProcessParent::Launch(int32_t aTimeoutMs) {
   // moved to another drive using a junction point, so allow for this specific
   // case. See bug 1236680 for details.
   if (!widget::WinUtils::ResolveJunctionPointsAndSymLinks(wGMPPath)) {
-    GMP_LOG("ResolveJunctionPointsAndSymLinks failed for GMP path=%S",
-            wGMPPath.c_str());
+    GMP_LOG_DEBUG("ResolveJunctionPointsAndSymLinks failed for GMP path=%S",
+                  wGMPPath.c_str());
     NS_WARNING("ResolveJunctionPointsAndSymLinks failed for GMP path.");
     return false;
   }
-  GMP_LOG("GMPProcessParent::Launch() resolved path to %S", wGMPPath.c_str());
+  GMP_LOG_DEBUG("GMPProcessParent::Launch() resolved path to %S",
+                wGMPPath.c_str());
 
   // If the GMP path is a network path that is not mapped to a drive letter,
   // then we need to fix the path format for the sandbox rule.
@@ -120,7 +122,7 @@ bool GMPProcessParent::Launch(int32_t aTimeoutMs) {
   nsAutoCString normalizedPath;
   nsresult rv = NormalizePath(mGMPPath.c_str(), normalizedPath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    GMP_LOG(
+    GMP_LOG_DEBUG(
         "GMPProcessParent::Launch: "
         "plugin path normaliziation failed for path: %s",
         mGMPPath.c_str());
@@ -173,12 +175,13 @@ bool GMPProcessParent::FillMacSandboxInfo(MacSandboxInfo& aInfo) {
   aInfo.shouldLog = (aInfo.shouldLog || sMacSandboxGMPLogging);
   nsAutoCString appPath;
   if (!nsMacUtilsImpl::GetAppPath(appPath)) {
-    GMP_LOG("GMPProcessParent::FillMacSandboxInfo: failed to get app path");
+    GMP_LOG_DEBUG(
+        "GMPProcessParent::FillMacSandboxInfo: failed to get app path");
     return false;
   }
   aInfo.appPath.assign(appPath.get());
 
-  GMP_LOG(
+  GMP_LOG_DEBUG(
       "GMPProcessParent::FillMacSandboxInfo: "
       "plugin dir path: %s",
       mGMPPath.c_str());
@@ -186,7 +189,7 @@ bool GMPProcessParent::FillMacSandboxInfo(MacSandboxInfo& aInfo) {
   nsresult rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(mGMPPath.c_str()), true,
                                 getter_AddRefs(pluginDir));
   if (NS_FAILED(rv)) {
-    GMP_LOG(
+    GMP_LOG_DEBUG(
         "GMPProcessParent::FillMacSandboxInfo: "
         "NS_NewLocalFile failed for plugin dir, rv=%d",
         rv);
@@ -195,7 +198,7 @@ bool GMPProcessParent::FillMacSandboxInfo(MacSandboxInfo& aInfo) {
 
   rv = pluginDir->Normalize();
   if (NS_FAILED(rv)) {
-    GMP_LOG(
+    GMP_LOG_DEBUG(
         "GMPProcessParent::FillMacSandboxInfo: "
         "failed to normalize plugin dir path, rv=%d",
         rv);
@@ -205,25 +208,27 @@ bool GMPProcessParent::FillMacSandboxInfo(MacSandboxInfo& aInfo) {
   nsAutoCString resolvedPluginPath;
   pluginDir->GetNativePath(resolvedPluginPath);
   aInfo.pluginPath.assign(resolvedPluginPath.get());
-  GMP_LOG(
+  GMP_LOG_DEBUG(
       "GMPProcessParent::FillMacSandboxInfo: "
       "resolved plugin dir path: %s",
       resolvedPluginPath.get());
 
   if (mozilla::IsDevelopmentBuild()) {
-    GMP_LOG("GMPProcessParent::FillMacSandboxInfo: IsDevelopmentBuild()=true");
+    GMP_LOG_DEBUG(
+        "GMPProcessParent::FillMacSandboxInfo: IsDevelopmentBuild()=true");
 
     // Repo dir
     nsCOMPtr<nsIFile> repoDir;
     rv = nsMacUtilsImpl::GetRepoDir(getter_AddRefs(repoDir));
     if (NS_FAILED(rv)) {
-      GMP_LOG("GMPProcessParent::FillMacSandboxInfo: failed to get repo dir");
+      GMP_LOG_DEBUG(
+          "GMPProcessParent::FillMacSandboxInfo: failed to get repo dir");
       return false;
     }
     nsCString repoDirPath;
     Unused << repoDir->GetNativePath(repoDirPath);
     aInfo.testingReadPath1 = repoDirPath.get();
-    GMP_LOG(
+    GMP_LOG_DEBUG(
         "GMPProcessParent::FillMacSandboxInfo: "
         "repo dir path: %s",
         repoDirPath.get());
@@ -232,13 +237,14 @@ bool GMPProcessParent::FillMacSandboxInfo(MacSandboxInfo& aInfo) {
     nsCOMPtr<nsIFile> objDir;
     rv = nsMacUtilsImpl::GetObjDir(getter_AddRefs(objDir));
     if (NS_FAILED(rv)) {
-      GMP_LOG("GMPProcessParent::FillMacSandboxInfo: failed to get object dir");
+      GMP_LOG_DEBUG(
+          "GMPProcessParent::FillMacSandboxInfo: failed to get object dir");
       return false;
     }
     nsCString objDirPath;
     Unused << objDir->GetNativePath(objDirPath);
     aInfo.testingReadPath2 = objDirPath.get();
-    GMP_LOG(
+    GMP_LOG_DEBUG(
         "GMPProcessParent::FillMacSandboxInfo: "
         "object dir path: %s",
         objDirPath.get());
