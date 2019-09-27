@@ -20,6 +20,9 @@ test_valid_angle('max(1rad)', 'max(1rad)');
 test_valid_angle('max(1turn)', 'max(1turn)');
 test_valid_angle('max(1grad)', 'max(1grad)');
 
+test_valid_angle('calc(min(1deg) + min(2deg))', 'calc(min(1deg) + min(2deg))');
+test_valid_angle('calc(max(1deg) + max(2deg))', 'calc(max(1deg) + max(2deg))');
+
 // TODO(crbug.com/978682): Complete this test suite
 
 </script>
