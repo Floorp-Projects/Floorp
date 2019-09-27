@@ -90,7 +90,8 @@ class TreeNode extends Component {
     // focusable element inside.
     const elms = this.getFocusableElements();
     if (this.props.active) {
-      if (elms.length > 0 && !elms.includes(document.activeElement)) {
+      const doc = this.treeNodeRef.current.ownerDocument;
+      if (elms.length > 0 && !elms.includes(doc.activeElement)) {
         elms[0].focus();
       }
     } else {
@@ -232,9 +233,12 @@ const TreeNodeFactory = createFactory(TreeNode);
  * frame.
  *
  * @param {Function} fn
+ * @param {Object} options: object that contains the following properties:
+ *                      - {Function} getDocument: A function that return the document
+ *                                                the component is rendered in.
  * @returns {Function}
  */
-function oncePerAnimationFrame(fn) {
+function oncePerAnimationFrame(fn, { getDocument }) {
   let animationId = null;
   let argsToPass = null;
   return function(...args) {
@@ -243,7 +247,12 @@ function oncePerAnimationFrame(fn) {
       return;
     }
 
-    animationId = requestAnimationFrame(() => {
+    const doc = getDocument();
+    if (!doc) {
+      return;
+    }
+
+    animationId = doc.defaultView.requestAnimationFrame(() => {
       fn.call(this, ...argsToPass);
       animationId = null;
       argsToPass = null;
@@ -493,17 +502,19 @@ class Tree extends Component {
 
     this.treeRef = React.createRef();
 
-    this._onExpand = oncePerAnimationFrame(this._onExpand).bind(this);
-    this._onCollapse = oncePerAnimationFrame(this._onCollapse).bind(this);
-    this._focusPrevNode = oncePerAnimationFrame(this._focusPrevNode).bind(this);
-    this._focusNextNode = oncePerAnimationFrame(this._focusNextNode).bind(this);
-    this._focusParentNode = oncePerAnimationFrame(this._focusParentNode).bind(
-      this
-    );
-    this._focusFirstNode = oncePerAnimationFrame(this._focusFirstNode).bind(
-      this
-    );
-    this._focusLastNode = oncePerAnimationFrame(this._focusLastNode).bind(this);
+    const opaf = fn =>
+      oncePerAnimationFrame(fn, {
+        getDocument: () =>
+          this.treeRef.current && this.treeRef.current.ownerDocument,
+      });
+
+    this._onExpand = opaf(this._onExpand).bind(this);
+    this._onCollapse = opaf(this._onCollapse).bind(this);
+    this._focusPrevNode = opaf(this._focusPrevNode).bind(this);
+    this._focusNextNode = opaf(this._focusNextNode).bind(this);
+    this._focusParentNode = opaf(this._focusParentNode).bind(this);
+    this._focusFirstNode = opaf(this._focusFirstNode).bind(this);
+    this._focusLastNode = opaf(this._focusLastNode).bind(this);
 
     this._autoExpand = this._autoExpand.bind(this);
     this._preventArrowKeyScrolling = this._preventArrowKeyScrolling.bind(this);
@@ -711,7 +722,8 @@ class Tree extends Component {
 
     if (this.props.active != undefined) {
       this._activate(undefined);
-      if (this.treeRef.current !== document.activeElement) {
+      const doc = this.treeRef.current && this.treeRef.current.ownerDocument;
+      if (this.treeRef.current !== doc.activeElement) {
         this.treeRef.current.focus();
       }
     }
@@ -748,7 +760,8 @@ class Tree extends Component {
   _scrollNodeIntoView(item, options = {}) {
     if (item !== undefined) {
       const treeElement = this.treeRef.current;
-      const element = document.getElementById(this.props.getKey(item));
+      const doc = treeElement && treeElement.ownerDocument;
+      const element = doc.getElementById(this.props.getKey(item));
 
       if (element) {
         const { top, bottom } = element.getBoundingClientRect();
@@ -813,6 +826,7 @@ class Tree extends Component {
     }
 
     this._preventArrowKeyScrolling(e);
+    const doc = this.treeRef.current && this.treeRef.current.ownerDocument;
 
     switch (e.key) {
       case "ArrowUp":
@@ -855,7 +869,7 @@ class Tree extends Component {
 
       case "Enter":
       case " ":
-        if (this.treeRef.current === document.activeElement) {
+        if (this.treeRef.current === doc.activeElement) {
           this._preventEvent(e);
           if (this.props.active !== this.props.focused) {
             this._activate(this.props.focused);
@@ -869,7 +883,7 @@ class Tree extends Component {
           this._activate(undefined);
         }
 
-        if (this.treeRef.current !== document.activeElement) {
+        if (this.treeRef.current !== doc.activeElement) {
           this.treeRef.current.focus();
         }
     }
