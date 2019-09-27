@@ -127,96 +127,83 @@
         </groupbox>
         <groupbox>
           <caption><label data-l10n-id="header-footer-label"/></caption>
-          <grid class="groupbox-body">
-            <columns>
-              <column/>
-              <column/>
-              <column/>
-            </columns>
-            <rows>
-              <row dir="ltr">
-                <menulist id="hLeftOption" oncommand="customize(this)" data-l10n-id="header-left-tip">
-                  <menupopup>
-                    <menuitem value="0" data-l10n-id="hf-blank"/>
-                    <menuitem value="1" data-l10n-id="hf-title"/>
-                    <menuitem value="2" data-l10n-id="hf-url"/>
-                    <menuitem value="3" data-l10n-id="hf-date-and-time"/>
-                    <menuitem value="4" data-l10n-id="hf-page"/>
-                    <menuitem value="5" data-l10n-id="hf-page-and-total"/>
-                    <menuitem value="6" data-l10n-id="hf-custom"/>
-                  </menupopup>
-                </menulist>
-                <menulist id="hCenterOption" oncommand="customize(this)" data-l10n-id="header-center-tip">
-                  <menupopup>
-                    <menuitem value="0" data-l10n-id="hf-blank"/>
-                    <menuitem value="1" data-l10n-id="hf-title"/>
-                    <menuitem value="2" data-l10n-id="hf-url"/>
-                    <menuitem value="3" data-l10n-id="hf-date-and-time"/>
-                    <menuitem value="4" data-l10n-id="hf-page"/>
-                    <menuitem value="5" data-l10n-id="hf-page-and-total"/>
-                    <menuitem value="6" data-l10n-id="hf-custom"/>
-                  </menupopup>
-                </menulist>
-                <menulist id="hRightOption" oncommand="customize(this)" data-l10n-id="header-right-tip">
-                  <menupopup>
-                    <menuitem value="0" data-l10n-id="hf-blank"/>
-                    <menuitem value="1" data-l10n-id="hf-title"/>
-                    <menuitem value="2" data-l10n-id="hf-url"/>
-                    <menuitem value="3" data-l10n-id="hf-date-and-time"/>
-                    <menuitem value="4" data-l10n-id="hf-page"/>
-                    <menuitem value="5" data-l10n-id="hf-page-and-total"/>
-                    <menuitem value="6" data-l10n-id="hf-custom"/>
-                  </menupopup>
-                </menulist>
-              </row>
-              <row dir="ltr">
-                <vbox align="center">
-                  <label data-l10n-id="hf-left-label"/>
-                </vbox>
-                <vbox align="center">
-                  <label data-l10n-id="hf-center-label"/>
-                </vbox>
-                <vbox align="center">
-                  <label data-l10n-id="hf-right-label"/>
-                </vbox>
-              </row>
-              <row dir="ltr">
-                <menulist id="fLeftOption" oncommand="customize(this)" data-l10n-id="footer-left-tip">
-                  <menupopup>
-                    <menuitem value="0" data-l10n-id="hf-blank"/>
-                    <menuitem value="1" data-l10n-id="hf-title"/>
-                    <menuitem value="2" data-l10n-id="hf-url"/>
-                    <menuitem value="3" data-l10n-id="hf-date-and-time"/>
-                    <menuitem value="4" data-l10n-id="hf-page"/>
-                    <menuitem value="5" data-l10n-id="hf-page-and-total"/>
-                    <menuitem value="6" data-l10n-id="hf-custom"/>
-                  </menupopup>
-                </menulist>
-                <menulist id="fCenterOption" oncommand="customize(this)" data-l10n-id="footer-center-tip">
-                  <menupopup>
-                    <menuitem value="0" data-l10n-id="hf-blank"/>
-                    <menuitem value="1" data-l10n-id="hf-title"/>
-                    <menuitem value="2" data-l10n-id="hf-url"/>
-                    <menuitem value="3" data-l10n-id="hf-date-and-time"/>
-                    <menuitem value="4" data-l10n-id="hf-page"/>
-                    <menuitem value="5" data-l10n-id="hf-page-and-total"/>
-                    <menuitem value="6" data-l10n-id="hf-custom"/>
-                  </menupopup>
-                </menulist>
-                <menulist id="fRightOption" oncommand="customize(this)" data-l10n-id="footer-right-tip">
-                  <menupopup>
-                    <menuitem value="0" data-l10n-id="hf-blank"/>
-                    <menuitem value="1" data-l10n-id="hf-title"/>
-                    <menuitem value="2" data-l10n-id="hf-url"/>
-                    <menuitem value="3" data-l10n-id="hf-date-and-time"/>
-                    <menuitem value="4" data-l10n-id="hf-page"/>
-                    <menuitem value="5" data-l10n-id="hf-page-and-total"/>
-                    <menuitem value="6" data-l10n-id="hf-custom"/>
-                  </menupopup>
-                </menulist>
-              </row>
-            </rows>
-          </grid>
+          <box id="header-footer-grid" class="groupbox-body" dir="ltr">
+            <menulist id="hLeftOption" oncommand="customize(this)" data-l10n-id="header-left-tip">
+              <menupopup>
+                <menuitem value="0" data-l10n-id="hf-blank"/>
+                <menuitem value="1" data-l10n-id="hf-title"/>
+                <menuitem value="2" data-l10n-id="hf-url"/>
+                <menuitem value="3" data-l10n-id="hf-date-and-time"/>
+                <menuitem value="4" data-l10n-id="hf-page"/>
+                <menuitem value="5" data-l10n-id="hf-page-and-total"/>
+                <menuitem value="6" data-l10n-id="hf-custom"/>
+              </menupopup>
+            </menulist>
+            <menulist id="hCenterOption" oncommand="customize(this)" data-l10n-id="header-center-tip">
+              <menupopup>
+                <menuitem value="0" data-l10n-id="hf-blank"/>
+                <menuitem value="1" data-l10n-id="hf-title"/>
+                <menuitem value="2" data-l10n-id="hf-url"/>
+                <menuitem value="3" data-l10n-id="hf-date-and-time"/>
+                <menuitem value="4" data-l10n-id="hf-page"/>
+                <menuitem value="5" data-l10n-id="hf-page-and-total"/>
+                <menuitem value="6" data-l10n-id="hf-custom"/>
+              </menupopup>
+            </menulist>
+            <menulist id="hRightOption" oncommand="customize(this)" data-l10n-id="header-right-tip">
+              <menupopup>
+                <menuitem value="0" data-l10n-id="hf-blank"/>
+                <menuitem value="1" data-l10n-id="hf-title"/>
+                <menuitem value="2" data-l10n-id="hf-url"/>
+                <menuitem value="3" data-l10n-id="hf-date-and-time"/>
+                <menuitem value="4" data-l10n-id="hf-page"/>
+                <menuitem value="5" data-l10n-id="hf-page-and-total"/>
+                <menuitem value="6" data-l10n-id="hf-custom"/>
+              </menupopup>
+            </menulist>
+            <vbox align="center">
+              <label data-l10n-id="hf-left-label"/>
+            </vbox>
+            <vbox align="center">
+              <label data-l10n-id="hf-center-label"/>
+            </vbox>
+            <vbox align="center">
+              <label data-l10n-id="hf-right-label"/>
+            </vbox>
+            <menulist id="fLeftOption" oncommand="customize(this)" data-l10n-id="footer-left-tip">
+              <menupopup>
+                <menuitem value="0" data-l10n-id="hf-blank"/>
+                <menuitem value="1" data-l10n-id="hf-title"/>
+                <menuitem value="2" data-l10n-id="hf-url"/>
+                <menuitem value="3" data-l10n-id="hf-date-and-time"/>
+                <menuitem value="4" data-l10n-id="hf-page"/>
+                <menuitem value="5" data-l10n-id="hf-page-and-total"/>
+                <menuitem value="6" data-l10n-id="hf-custom"/>
+              </menupopup>
+            </menulist>
+            <menulist id="fCenterOption" oncommand="customize(this)" data-l10n-id="footer-center-tip">
+              <menupopup>
+                <menuitem value="0" data-l10n-id="hf-blank"/>
+                <menuitem value="1" data-l10n-id="hf-title"/>
+                <menuitem value="2" data-l10n-id="hf-url"/>
+                <menuitem value="3" data-l10n-id="hf-date-and-time"/>
+                <menuitem value="4" data-l10n-id="hf-page"/>
+                <menuitem value="5" data-l10n-id="hf-page-and-total"/>
+                <menuitem value="6" data-l10n-id="hf-custom"/>
+              </menupopup>
+            </menulist>
+            <menulist id="fRightOption" oncommand="customize(this)" data-l10n-id="footer-right-tip">
+              <menupopup>
+                <menuitem value="0" data-l10n-id="hf-blank"/>
+                <menuitem value="1" data-l10n-id="hf-title"/>
+                <menuitem value="2" data-l10n-id="hf-url"/>
+                <menuitem value="3" data-l10n-id="hf-date-and-time"/>
+                <menuitem value="4" data-l10n-id="hf-page"/>
+                <menuitem value="5" data-l10n-id="hf-page-and-total"/>
+                <menuitem value="6" data-l10n-id="hf-custom"/>
+              </menupopup>
+            </menulist>
+          </box>
         </groupbox>
       </vbox>
     </tabpanels>
