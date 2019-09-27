@@ -14,20 +14,20 @@
 
 namespace mozilla {
 
-#define ENSURE_TRUE(condition, rv)                             \
-  {                                                            \
-    if (!(condition)) {                                        \
-      GMP_LOG("ENSURE_TRUE FAILED %s:%d", __FILE__, __LINE__); \
-      return rv;                                               \
-    }                                                          \
+#define ENSURE_TRUE(condition, rv)                                   \
+  {                                                                  \
+    if (!(condition)) {                                              \
+      GMP_LOG_DEBUG("ENSURE_TRUE FAILED %s:%d", __FILE__, __LINE__); \
+      return rv;                                                     \
+    }                                                                \
   }
 
-#define ENSURE_GMP_SUCCESS(err, rv)                                   \
-  {                                                                   \
-    if (GMP_FAILED(err)) {                                            \
-      GMP_LOG("ENSURE_GMP_SUCCESS FAILED %s:%d", __FILE__, __LINE__); \
-      return rv;                                                      \
-    }                                                                 \
+#define ENSURE_GMP_SUCCESS(err, rv)                                         \
+  {                                                                         \
+    if (GMP_FAILED(err)) {                                                  \
+      GMP_LOG_DEBUG("ENSURE_GMP_SUCCESS FAILED %s:%d", __FILE__, __LINE__); \
+      return rv;                                                            \
+    }                                                                       \
   }
 
 namespace gmp {
