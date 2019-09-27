@@ -4396,25 +4396,6 @@ networking:
     record_in_processes:
       - 'main'
 
-# The following section is for quotaManager
-qm:
-  origin_directory_unexpected_filename:
-    bug_numbers:
-      - 1529016
-    description: >
-      Keys are the filenames of unexpected files in the profile's origin directories.
-    expires: "70"
-    keyed: true
-    kind: uint
-    notification_emails:
-      - ttung@mozilla.com
-    products:
-      - 'firefox'
-      - 'fennec'
-      - 'geckoview'
-    record_in_processes:
-      - 'main'
-
 blocklist:
   lastModified_xml:
     bug_numbers:
