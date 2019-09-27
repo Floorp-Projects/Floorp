@@ -89,9 +89,6 @@ class ExtensionSidebar extends PureComponent {
       {
         id,
         className,
-        style: {
-          height: "100%",
-        },
       },
       sidebarContentEl
     );
