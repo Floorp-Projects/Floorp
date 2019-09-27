@@ -2051,9 +2051,8 @@ JS::Result<Ok> SingleLookupHuffmanTable<T>::initWithSingleValue(JSContext* cx,
 }
 
 template <typename T>
-JS::Result<Ok> SingleLookupHuffmanTable<T>::initStart(JSContext* cx,
-                                                      size_t numberOfSymbols,
-                                                      uint8_t largestBitLength) {
+JS::Result<Ok> SingleLookupHuffmanTable<T>::initStart(
+    JSContext* cx, size_t numberOfSymbols, uint8_t largestBitLength) {
   MOZ_ASSERT(largestBitLength <= MAX_BIT_LENGTH_IN_SATURATED_TABLE);
   MOZ_ASSERT(values.empty());  // Make sure that we're initializing.
 
@@ -2201,9 +2200,6 @@ JS::Result<Ok> MultiLookupHuffmanTable<T, Subtable, PrefixBitLength>::initStart(
   if (!subTables.initCapacity(1 << PrefixBitLength)) {
     return cx->alreadyReportedError();
   }
-#ifdef DEBUG
-  MOZ_TRY(control.initStart(cx, numberOfSymbols, largestBitLength));
-#endif  // DEBUG
   return Ok();
 }
 
@@ -2215,11 +2211,6 @@ JS::Result<Ok> MultiLookupHuffmanTable<T, Subtable, PrefixBitLength>::addSymbol(
              "Symbols must be ranked by increasing bits length");
   MOZ_ASSERT_IF(bitLength != 32 /* >> 32 is UB */, bits >> bitLength == 0);
 
-#ifdef DEBUG
-  T valueCopy = value;
-  MOZ_TRY(control.addSymbol(bits, bitLength, std::move(valueCopy)));
-#endif  // DEBUG
-
   values.infallibleEmplaceBack(bits, bitLength, std::move(value));
 
   return Ok();
@@ -2228,10 +2219,6 @@ JS::Result<Ok> MultiLookupHuffmanTable<T, Subtable, PrefixBitLength>::addSymbol(
 template <typename T, typename Subtable, uint8_t PrefixBitLength>
 JS::Result<Ok>
 MultiLookupHuffmanTable<T, Subtable, PrefixBitLength>::initComplete() {
-#ifdef DEBUG
-  MOZ_TRY(control.initComplete());
-#endif  // DEBUG
-
   // First, we need to collect the `largestBitLength`
   // and `numberofSymbols` for each subtable.
   struct Bucket {
@@ -2301,10 +2288,6 @@ template <typename T, typename Subtable, uint8_t PrefixBitLength>
 HuffmanEntry<const T*>
 MultiLookupHuffmanTable<T, Subtable, PrefixBitLength>::lookup(
     HuffmanLookup key) const {
-#ifdef DEBUG
-  const auto controlResult = control.lookup(key);
-#endif  // DEBUG
-
   const auto split = key.split(PrefixBitLength);
   if (split.prefix.bits >= subTables.length()) {
     return HuffmanEntry<const T*>(0, 0, nullptr);
@@ -2315,21 +2298,12 @@ MultiLookupHuffmanTable<T, Subtable, PrefixBitLength>::lookup(
 
   if (found.value == nullptr) {
     // Propagate "not found".
-#ifdef DEBUG
-    MOZ_ASSERT(controlResult.value == nullptr);
-#endif  // DEBUG
     return {0, 0, nullptr};
   }
 
   // Otherwise, restore the entire `HuffmanEntry`.
   const auto& result = values[*found.value];
 
-#ifdef DEBUG
-  MOZ_ASSERT(controlResult.value != nullptr);
-  MOZ_ASSERT(result.key.bits == controlResult.key.bits);
-  MOZ_ASSERT(result.key.bitLength == controlResult.key.bitLength);
-  MOZ_ASSERT(result.value == *controlResult.value);
-#endif  // DEBUG
   return /* HuffmanEntry */ {/* bits */ result.key.bits,
                              /* bitLength */ result.key.bitLength,
                              /* value */ std::move(&result.value)};
