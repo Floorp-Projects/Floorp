@@ -26,7 +26,7 @@ class BookmarkFragmentInteractor(
     private val viewModel: BookmarksSharedViewModel,
     private val bookmarksController: BookmarkController,
     private val metrics: MetricController
-) : BookmarkViewInteractor, SignInInteractor {
+) : BookmarkViewInteractor {
 
     override fun onBookmarksChanged(node: BookmarkNode) {
         bookmarkStore.dispatch(BookmarkFragmentAction.Change(node))
@@ -94,18 +94,6 @@ class BookmarkFragmentInteractor(
 
     override fun onBackPressed() {
         bookmarksController.handleBackPressed()
-    }
-
-    override fun onSignInPressed() {
-        bookmarksController.handleSigningIn()
-    }
-
-    override fun onSignedIn() {
-        viewModel.signedIn.postValue(true)
-    }
-
-    override fun onSignedOut() {
-        viewModel.signedIn.postValue(false)
     }
 
     override fun open(item: BookmarkNode) {

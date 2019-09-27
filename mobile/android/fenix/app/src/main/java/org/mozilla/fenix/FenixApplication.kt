@@ -112,7 +112,7 @@ open class FenixApplication : Application() {
 
         components.core.sessionManager.register(NotificationSessionObserver(this))
 
-        if ((System.currentTimeMillis() - this.settings().lastPlacesStorageMaintenance) > ONE_DAY_MILLIS) {
+        if ((System.currentTimeMillis() - settings().lastPlacesStorageMaintenance) > ONE_DAY_MILLIS) {
             runStorageMaintenance()
         }
     }
@@ -123,7 +123,7 @@ open class FenixApplication : Application() {
             // run maintenance on one - arbitrarily using bookmarks.
             components.core.bookmarksStorage.runMaintenance()
         }
-        this.settings().lastPlacesStorageMaintenance = System.currentTimeMillis()
+        settings().lastPlacesStorageMaintenance = System.currentTimeMillis()
     }
 
     private fun registerRxExceptionHandling() {

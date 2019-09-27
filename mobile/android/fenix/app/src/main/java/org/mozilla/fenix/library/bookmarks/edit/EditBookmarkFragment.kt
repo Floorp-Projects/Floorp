@@ -32,6 +32,7 @@ import kotlinx.android.synthetic.main.fragment_edit_bookmark.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.appservices.places.UrlParseFailed
 import mozilla.components.concept.storage.BookmarkInfo
 import mozilla.components.concept.storage.BookmarkNode
@@ -75,40 +76,40 @@ class EditBookmarkFragment : Fragment() {
         activity?.supportActionBar?.show()
 
         guidToEdit = EditBookmarkFragmentArgs.fromBundle(arguments!!).guidToEdit
-        lifecycleScope.launch(IO) {
+        lifecycleScope.launch(Main) {
             val context = requireContext()
-            bookmarkNode = context.components.core.bookmarksStorage.getTree(guidToEdit)
-            bookmarkParent = sharedViewModel.selectedFolder
-                ?: bookmarkNode?.parentGuid
-                    ?.let { context.components.core.bookmarksStorage.getTree(it) }
-                    ?.let { DesktopFolders(context, showMobileRoot = true).withRootTitle(it) }
 
-            launch(Main) {
-                when (bookmarkNode?.type) {
-                    BookmarkNodeType.FOLDER -> {
-                        activity?.title = getString(R.string.edit_bookmark_folder_fragment_title)
-                        bookmarkUrlEdit.visibility = View.GONE
-                        bookmarkUrlLabel.visibility = View.GONE
-                    }
-                    BookmarkNodeType.ITEM -> {
-                        activity?.title = getString(R.string.edit_bookmark_fragment_title)
-                    }
-                    else -> throw IllegalArgumentException()
+            withContext(IO) {
+                val bookmarksStorage = context.components.core.bookmarksStorage
+                bookmarkNode = bookmarksStorage.getTree(guidToEdit)
+                bookmarkParent = sharedViewModel.selectedFolder
+                    ?: bookmarkNode?.parentGuid
+                        ?.let { bookmarksStorage.getTree(it) }
+                        ?.let { DesktopFolders(context, showMobileRoot = true).withRootTitle(it) }
+            }
+
+            when (bookmarkNode?.type) {
+                BookmarkNodeType.FOLDER -> {
+                    activity?.title = getString(R.string.edit_bookmark_folder_fragment_title)
+                    bookmarkUrlEdit.visibility = View.GONE
+                    bookmarkUrlLabel.visibility = View.GONE
                 }
+                BookmarkNodeType.ITEM -> {
+                    activity?.title = getString(R.string.edit_bookmark_fragment_title)
+                }
+                else -> throw IllegalArgumentException()
+            }
 
-                if (bookmarkNode != null) {
-                    bookmarkNameEdit.setText(bookmarkNode!!.title)
-                    bookmarkUrlEdit.setText(bookmarkNode!!.url)
+            bookmarkNode?.let { bookmarkNode ->
+                bookmarkNameEdit.setText(bookmarkNode.title)
+                bookmarkUrlEdit.setText(bookmarkNode.url)
 
-                    if (sharedViewModel.selectedFolder != null && bookmarkNode?.title != null) {
-                        val bookmarkPair = Pair(bookmarkNode?.title, bookmarkNode?.url)
-                        updateBookmarkNode(bookmarkPair)
-                    }
+                if (sharedViewModel.selectedFolder != null && bookmarkNode.title != null) {
+                    updateBookmarkNode(bookmarkNode.title to bookmarkNode.url)
                 }
             }
 
             bookmarkParent?.let { node ->
-                launch(Main) {
                     bookmarkFolderSelector.text = node.title
                     bookmarkFolderSelector.setOnClickListener {
                         sharedViewModel.selectedFolder = null
@@ -120,7 +121,6 @@ class EditBookmarkFragment : Fragment() {
                     }
                 }
             }
-        }
 
         updateBookmarkFromObservableInput()
     }

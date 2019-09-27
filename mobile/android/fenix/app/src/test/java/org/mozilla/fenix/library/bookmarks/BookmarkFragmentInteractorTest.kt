@@ -217,31 +217,4 @@ class BookmarkFragmentInteractorTest {
             bookmarkController.handleBackPressed()
         }
     }
-
-    @Test
-    fun `clicked sign in on bookmarks screen`() {
-        interactor.onSignInPressed()
-
-        verify {
-            bookmarkController.handleSigningIn()
-        }
-    }
-
-    @Test
-    fun `got signed in signal on bookmarks screen`() {
-        interactor.onSignedIn()
-
-        verify {
-            sharedViewModel.signedIn.postValue(true)
-        }
-    }
-
-    @Test
-    fun `got signed out signal on bookmarks screen`() {
-        interactor.onSignedOut()
-
-        verify {
-            sharedViewModel.signedIn.postValue(false)
-        }
-    }
 }

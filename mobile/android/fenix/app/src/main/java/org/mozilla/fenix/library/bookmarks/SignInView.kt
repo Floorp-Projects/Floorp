@@ -7,20 +7,18 @@ package org.mozilla.fenix.library.bookmarks
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isGone
+import androidx.lifecycle.Observer
+import androidx.navigation.NavController
 import com.google.android.material.button.MaterialButton
 import kotlinx.android.extensions.LayoutContainer
 import org.mozilla.fenix.R
-
-interface SignInInteractor {
-    fun onSignInPressed()
-    fun onSignedIn()
-    fun onSignedOut()
-}
+import org.mozilla.fenix.ext.components
 
 class SignInView(
     private val container: ViewGroup,
-    private val interactor: SignInInteractor
-) : LayoutContainer {
+    private val navController: NavController
+) : LayoutContainer, Observer<Boolean> {
 
     override val containerView: View?
         get() = container
@@ -31,11 +29,14 @@ class SignInView(
 
     init {
         view.setOnClickListener {
-            interactor.onSignInPressed()
+            view.context.components.services.launchPairingSignIn(view.context, navController)
         }
     }
 
-    fun update(signedIn: Boolean) {
-        view.visibility = if (signedIn) View.GONE else View.VISIBLE
+    /**
+     * Hides or shows the sign-in button. Should be called whenever the sign-in state changes.
+     */
+    override fun onChanged(signedIn: Boolean) {
+        view.isGone = signedIn
     }
 }

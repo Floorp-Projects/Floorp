@@ -14,7 +14,6 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -27,9 +26,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
-import mozilla.components.concept.sync.AccountObserver
-import mozilla.components.concept.sync.AuthType
-import mozilla.components.concept.sync.OAuthAccount
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
@@ -38,16 +34,12 @@ import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 import org.mozilla.fenix.library.bookmarks.DesktopFolders
 import org.mozilla.fenix.library.bookmarks.SignInView
 
-@SuppressWarnings("TooManyFunctions")
-class SelectBookmarkFolderFragment : Fragment(), AccountObserver {
+class SelectBookmarkFolderFragment : Fragment() {
 
     private val sharedViewModel: BookmarksSharedViewModel by activityViewModels {
         ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
     }
-    private var folderGuid: String? = null
     private var bookmarkNode: BookmarkNode? = null
-    private lateinit var signInView: SignInView
-    private lateinit var bookmarkInteractor: SelectBookmarkFolderInteractor
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,21 +49,10 @@ class SelectBookmarkFolderFragment : Fragment(), AccountObserver {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_select_bookmark_folder, container, false)
 
-        bookmarkInteractor = SelectBookmarkFolderInteractor(
-            context!!,
-            findNavController(),
-            sharedViewModel
-        )
-        signInView = SignInView(view.selectBookmarkLayout, bookmarkInteractor)
+        val signInView = SignInView(view.selectBookmarkLayout, findNavController())
+        sharedViewModel.signedIn.observe(viewLifecycleOwner, signInView)
 
         return view
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        sharedViewModel.signedIn.observe(this@SelectBookmarkFolderFragment, Observer<Boolean> {
-            signInView.update(it)
-        })
     }
 
     override fun onResume() {
@@ -79,8 +60,8 @@ class SelectBookmarkFolderFragment : Fragment(), AccountObserver {
         activity?.title = getString(R.string.bookmark_select_folder_fragment_label)
         (activity as? AppCompatActivity)?.supportActionBar?.show()
 
-        folderGuid = SelectBookmarkFolderFragmentArgs.fromBundle(arguments!!).folderGuid ?: BookmarkRoot.Root.id
-        checkIfSignedIn()
+        val accountManager = requireComponents.backgroundServices.accountManager
+        sharedViewModel.observeAccountManager(accountManager, owner = this)
 
         lifecycleScope.launch(Main) {
             bookmarkNode = withContext(IO) {
@@ -94,13 +75,6 @@ class SelectBookmarkFolderFragment : Fragment(), AccountObserver {
             recylerViewBookmarkFolders.adapter = adapter
             adapter.updateData(bookmarkNode)
         }
-    }
-
-    private fun checkIfSignedIn() {
-        val accountManager = requireComponents.backgroundServices.accountManager
-        accountManager.register(this, owner = this)
-        accountManager.authenticatedAccount()?.let { bookmarkInteractor.onSignedIn() }
-            ?: bookmarkInteractor.onSignedOut()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -124,12 +98,5 @@ class SelectBookmarkFolderFragment : Fragment(), AccountObserver {
             }
             else -> super.onOptionsItemSelected(item)
         }
-    }
-    override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
-        bookmarkInteractor.onSignedIn()
-    }
-
-    override fun onLoggedOut() {
-        bookmarkInteractor.onSignedOut()
     }
 }
