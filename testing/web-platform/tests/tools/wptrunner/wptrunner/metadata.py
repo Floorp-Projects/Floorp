@@ -353,18 +353,40 @@ class ExpectedUpdater(object):
         self.tests_visited = {}
 
     def update_from_log(self, log_file):
+        # We support three possible formats:
+        # * wptreport format; one json object in the file, possibly pretty-printed
+        # * wptreport format; one run per line
+        # * raw log format
+
+        # Try one wptreport file first
         self.run_info = None
+        success = self.get_wptreport_data(log_file.read())
+
+        if success:
+            return
+
+        # Now try multiple wptreport files
+        log_file.seek(0)
+        for line in log_file:
+            success = self.get_wptreport_data(line)
+            if not success:
+                break
+        else:
+            return
+
+        log_file.seek(0)
+        self.update_from_raw_log(log_file)
+
+    def get_wptreport_data(self, input_str):
         try:
-            data = json.load(log_file)
+            data = json.loads(input_str)
         except Exception:
             pass
         else:
             if "action" not in data and "results" in data:
                 self.update_from_wptreport_log(data)
-                return
-
-        log_file.seek(0)
-        self.update_from_raw_log(log_file)
+                return True
+        return False
 
     def update_from_raw_log(self, log_file):
         action_map = self.action_map
