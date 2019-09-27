@@ -87,7 +87,7 @@ BEGIN_TEST(testGCRootedStaticStructInternalStackStorageAugmented) {
     obj = heap.obj();
     CHECK(JS_GetProperty(cx, obj, "foo", &val));
     actual = val.toString();
-    CHECK(JS_StringEqualsAscii(cx, actual, "Hello", &same));
+    CHECK(JS_StringEqualsLiteral(cx, actual, "Hello", &same));
     CHECK(same);
     obj = nullptr;
     actual = nullptr;
@@ -98,7 +98,7 @@ BEGIN_TEST(testGCRootedStaticStructInternalStackStorageAugmented) {
     obj = heap.obj();
     CHECK(JS_GetProperty(cx, obj, "foo", &val));
     actual = val.toString();
-    CHECK(JS_StringEqualsAscii(cx, actual, "Hello", &same));
+    CHECK(JS_StringEqualsLiteral(cx, actual, "Hello", &same));
     CHECK(same);
     obj = nullptr;
     actual = nullptr;
@@ -268,12 +268,10 @@ BEGIN_TEST(testGCRootedVector) {
 
   for (size_t i = 0; i < 10; ++i) {
     // Check the shape to ensure it did not get collected.
-    char buffer[2];
-    buffer[0] = 'a' + i;
-    buffer[1] = '\0';
+    char letter = 'a' + i;
     bool match;
-    CHECK(JS_StringEqualsAscii(cx, JSID_TO_STRING(shapes[i]->propid()), buffer,
-                               &match));
+    CHECK(JS_StringEqualsAscii(cx, JSID_TO_STRING(shapes[i]->propid()), &letter,
+                               1, &match));
     CHECK(match);
   }
 
@@ -341,12 +339,10 @@ BEGIN_TEST(testTraceableFifo) {
 
   for (size_t i = 0; i < 10; ++i) {
     // Check the shape to ensure it did not get collected.
-    char buffer[2];
-    buffer[0] = 'a' + i;
-    buffer[1] = '\0';
+    char letter = 'a' + i;
     bool match;
     CHECK(JS_StringEqualsAscii(cx, JSID_TO_STRING(shapes.front()->propid()),
-                               buffer, &match));
+                               &letter, 1, &match));
     CHECK(match);
     shapes.popFront();
   }
@@ -388,12 +384,10 @@ static bool FillVector(JSContext* cx, MutableHandle<ShapeVec> shapes) {
 static bool CheckVector(JSContext* cx, Handle<ShapeVec> shapes) {
   for (size_t i = 0; i < 10; ++i) {
     // Check the shape to ensure it did not get collected.
-    char buffer[2];
-    buffer[0] = 'a' + i;
-    buffer[1] = '\0';
+    char letter = 'a' + i;
     bool match;
-    if (!JS_StringEqualsAscii(cx, JSID_TO_STRING(shapes[i]->propid()), buffer,
-                              &match)) {
+    if (!JS_StringEqualsAscii(cx, JSID_TO_STRING(shapes[i]->propid()), &letter,
+                              1, &match)) {
       return false;
     }
     if (!match) {

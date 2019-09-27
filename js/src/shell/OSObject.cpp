@@ -293,7 +293,7 @@ static bool ReadFile(JSContext* cx, unsigned argc, Value* vp,
       return false;
     }
     bool match;
-    if (!JS_StringEqualsAscii(cx, opt, "binary", &match)) {
+    if (!JS_StringEqualsLiteral(cx, opt, "binary", &match)) {
       return false;
     }
     if (match) {

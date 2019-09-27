@@ -19,7 +19,7 @@ class CustomProxyHandler : public Wrapper {
       JSContext* cx, HandleObject proxy, HandleId id,
       MutableHandle<PropertyDescriptor> desc) const override {
     if (JSID_IS_STRING(id) &&
-        JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(id), "phantom")) {
+        JS_FlatStringEqualsLiteral(JSID_TO_FLAT_STRING(id), "phantom")) {
       desc.object().set(proxy);
       desc.attributesRef() = JSPROP_ENUMERATE;
       desc.value().setInt32(42);

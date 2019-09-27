@@ -53,7 +53,7 @@ bool document_resolve(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
     if (!flatStr) {
       return false;
     }
-    if (JS_FlatStringEqualsAscii(flatStr, "all")) {
+    if (JS_FlatStringEqualsLiteral(flatStr, "all")) {
       JS::Rooted<JSObject*> docAll(cx, JS_NewObject(cx, &DocumentAllClass));
       if (!docAll) {
         return false;

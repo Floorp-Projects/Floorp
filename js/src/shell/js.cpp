@@ -3352,11 +3352,11 @@ struct DisassembleOptionParser {
       if (!flatStr) {
         return false;
       }
-      if (JS_FlatStringEqualsAscii(flatStr, "-l")) {
+      if (JS_FlatStringEqualsLiteral(flatStr, "-l")) {
         lines = true;
-      } else if (JS_FlatStringEqualsAscii(flatStr, "-r")) {
+      } else if (JS_FlatStringEqualsLiteral(flatStr, "-r")) {
         recursive = true;
-      } else if (JS_FlatStringEqualsAscii(flatStr, "-S")) {
+      } else if (JS_FlatStringEqualsLiteral(flatStr, "-S")) {
         sourceNotes = false;
       } else {
         break;
@@ -4536,8 +4536,9 @@ static bool SetJitCompilerOption(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-#define JIT_COMPILER_MATCH(key, string) \
-  else if (JS_FlatStringEqualsAscii(strArg, string)) opt = JSJITCOMPILER_##key;
+#define JIT_COMPILER_MATCH(key, string)                      \
+  else if (JS_FlatStringEqualsLiteral(strArg, string)) opt = \
+      JSJITCOMPILER_##key;
 
   JSJitCompilerOption opt = JSJITCOMPILER_NOT_AN_OPTION;
   if (false) {

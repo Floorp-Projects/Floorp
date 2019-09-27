@@ -43,7 +43,7 @@ Here is a sample test:
         EVAL("'42';", &v);
         JSString *str = v.toString();
         CHECK(JS_StringHasBeenInterned(cx, str));
-        CHECK(JS_FlatStringEqualsAscii(JS_ASSERT_STRING_IS_FLAT(str), "42"));
+        CHECK(JS_FlatStringEqualsLiteral(JS_ASSERT_STRING_IS_FLAT(str), "42"));
         return true;
     }
     END_TEST(testIntString_bug515273)

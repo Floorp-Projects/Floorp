@@ -459,7 +459,7 @@ static bool GC(JSContext* cx, unsigned argc, Value* vp) {
   if (args.length() >= 1) {
     Value arg = args[0];
     if (arg.isString()) {
-      if (!JS_StringEqualsAscii(cx, arg.toString(), "zone", &zone)) {
+      if (!JS_StringEqualsLiteral(cx, arg.toString(), "zone", &zone)) {
         return false;
       }
     } else if (arg.isObject()) {
@@ -472,7 +472,8 @@ static bool GC(JSContext* cx, unsigned argc, Value* vp) {
   if (args.length() >= 2) {
     Value arg = args[1];
     if (arg.isString()) {
-      if (!JS_StringEqualsAscii(cx, arg.toString(), "shrinking", &shrinking)) {
+      if (!JS_StringEqualsLiteral(cx, arg.toString(), "shrinking",
+                                  &shrinking)) {
         return false;
       }
     }
@@ -915,10 +916,10 @@ static bool ConvertToTier(JSContext* cx, HandleValue value,
   bool baselineTier = false;
   bool ionTier = false;
 
-  if (!JS_StringEqualsAscii(cx, option, "stable", &stableTier) ||
-      !JS_StringEqualsAscii(cx, option, "best", &bestTier) ||
-      !JS_StringEqualsAscii(cx, option, "baseline", &baselineTier) ||
-      !JS_StringEqualsAscii(cx, option, "ion", &ionTier)) {
+  if (!JS_StringEqualsLiteral(cx, option, "stable", &stableTier) ||
+      !JS_StringEqualsLiteral(cx, option, "best", &bestTier) ||
+      !JS_StringEqualsLiteral(cx, option, "baseline", &baselineTier) ||
+      !JS_StringEqualsLiteral(cx, option, "ion", &ionTier)) {
     return false;
   }
 
@@ -1108,7 +1109,8 @@ static bool InternalConst(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (JS_FlatStringEqualsAscii(flat, "INCREMENTAL_MARK_STACK_BASE_CAPACITY")) {
+  if (JS_FlatStringEqualsLiteral(flat,
+                                 "INCREMENTAL_MARK_STACK_BASE_CAPACITY")) {
     args.rval().setNumber(uint32_t(js::INCREMENTAL_MARK_STACK_BASE_CAPACITY));
   } else {
     JS_ReportErrorASCII(cx, "unknown const name");
@@ -1451,7 +1453,8 @@ static bool StartGC(JSContext* cx, unsigned argc, Value* vp) {
   if (args.length() >= 2) {
     Value arg = args[1];
     if (arg.isString()) {
-      if (!JS_StringEqualsAscii(cx, arg.toString(), "shrinking", &shrinking)) {
+      if (!JS_StringEqualsLiteral(cx, arg.toString(), "shrinking",
+                                  &shrinking)) {
         return false;
       }
     }
@@ -5804,11 +5807,11 @@ static bool MonitorType(JSContext* cx, unsigned argc, Value* vp) {
   bool unknown = false;
   bool unknownObject = false;
   if (val.isString()) {
-    if (!JS_StringEqualsAscii(cx, val.toString(), "unknown", &unknown)) {
+    if (!JS_StringEqualsLiteral(cx, val.toString(), "unknown", &unknown)) {
       return false;
     }
-    if (!JS_StringEqualsAscii(cx, val.toString(), "unknownObject",
-                              &unknownObject)) {
+    if (!JS_StringEqualsLiteral(cx, val.toString(), "unknownObject",
+                                &unknownObject)) {
       return false;
     }
   }
