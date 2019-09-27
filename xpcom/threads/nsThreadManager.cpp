@@ -462,6 +462,16 @@ nsresult nsThreadManager::DispatchToBackgroundThread(nsIRunnable* aEvent,
   return backgroundTarget->Dispatch(aEvent, aDispatchFlags);
 }
 
+nsresult nsThreadManager::GetBackgroundEventTarget(nsIEventTarget** aEventTarget) {
+  if (!mInitialized) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIEventTarget> et(mBackgroundEventTarget);
+  et.forget(aEventTarget);
+  return NS_OK;
+}
+
 nsThread* nsThreadManager::GetCurrentThread() {
   // read thread local storage
   void* data = PR_GetThreadPrivate(mCurThreadIndex);
