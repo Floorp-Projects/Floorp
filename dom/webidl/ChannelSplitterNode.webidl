@@ -14,7 +14,8 @@ dictionary ChannelSplitterOptions : AudioNodeOptions {
              unsigned long numberOfOutputs = 6;
 };
 
-[Pref="dom.webaudio.enabled"]
+[Pref="dom.webaudio.enabled",
+ Exposed=Window]
 interface ChannelSplitterNode : AudioNode {
   [Throws]
   constructor(BaseAudioContext context,

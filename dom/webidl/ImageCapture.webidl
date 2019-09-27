@@ -10,7 +10,8 @@
  * W3C liability, trademark and document use rules apply.
  */
 
-[Pref="dom.imagecapture.enabled"]
+[Pref="dom.imagecapture.enabled",
+ Exposed=Window]
 interface ImageCapture : EventTarget {
   [Throws]
   constructor(MediaStreamTrack track);

@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Exposed=Window]
 interface SVGAnimationElement : SVGElement {
 
   readonly attribute SVGElement? targetElement;

@@ -9,7 +9,8 @@ enum VREye {
 };
 
 [Pref="dom.vr.enabled",
- HeaderFile="mozilla/dom/VRDisplay.h"]
+ HeaderFile="mozilla/dom/VRDisplay.h",
+ Exposed=Window]
 interface VRFieldOfView {
   readonly attribute double upDegrees;
   readonly attribute double rightDegrees;
@@ -49,7 +50,8 @@ dictionary VRLayer {
  * These are expected to be static per-device/per-user.
  */
 [Pref="dom.vr.enabled",
- HeaderFile="mozilla/dom/VRDisplay.h"]
+ HeaderFile="mozilla/dom/VRDisplay.h",
+ Exposed=Window]
 interface VRDisplayCapabilities {
   /**
    * hasPosition is true if the VRDisplay is capable of tracking its position.
@@ -90,7 +92,8 @@ interface VRDisplayCapabilities {
  * that support room-scale experiences.
  */
 [Pref="dom.vr.enabled",
- HeaderFile="mozilla/dom/VRDisplay.h"]
+ HeaderFile="mozilla/dom/VRDisplay.h",
+ Exposed=Window]
 interface VRStageParameters {
   /**
    * A 16-element array containing the components of a column-major 4x4
@@ -115,7 +118,8 @@ interface VRStageParameters {
 };
 
 [Pref="dom.vr.enabled",
- HeaderFile="mozilla/dom/VRDisplay.h"]
+ HeaderFile="mozilla/dom/VRDisplay.h",
+ Exposed=Window]
 interface VRPose
 {
   /**
@@ -135,7 +139,8 @@ interface VRPose
 };
 
 [Pref="dom.vr.enabled",
- HeaderFile="mozilla/dom/VRDisplay.h"]
+ HeaderFile="mozilla/dom/VRDisplay.h",
+ Exposed=Window]
 interface VRFrameData {
   constructor();
 
@@ -151,7 +156,8 @@ interface VRFrameData {
 };
 
 [Pref="dom.vr.enabled",
- HeaderFile="mozilla/dom/VRDisplay.h"]
+ HeaderFile="mozilla/dom/VRDisplay.h",
+ Exposed=Window]
 interface VREyeParameters {
   /**
    * offset is a 3-component vector representing an offset to
@@ -174,7 +180,8 @@ interface VREyeParameters {
 };
 
 [Pref="dom.vr.enabled",
- HeaderFile="mozilla/dom/VRDisplay.h"]
+ HeaderFile="mozilla/dom/VRDisplay.h",
+ Exposed=Window]
 interface VRDisplay : EventTarget {
   /**
    * presentingGroups is a bitmask indicating which VR session groups

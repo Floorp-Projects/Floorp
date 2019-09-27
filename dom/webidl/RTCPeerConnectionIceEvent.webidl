@@ -11,7 +11,8 @@ dictionary RTCPeerConnectionIceEventInit : EventInit {
   RTCIceCandidate? candidate = null;
 };
 
-[Pref="media.peerconnection.enabled"]
+[Pref="media.peerconnection.enabled",
+ Exposed=Window]
 interface RTCPeerConnectionIceEvent : Event {
   constructor(DOMString type,
               optional RTCPeerConnectionIceEventInit eventInitDict = {});

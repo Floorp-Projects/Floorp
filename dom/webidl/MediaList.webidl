@@ -5,6 +5,7 @@
 
 // http://dev.w3.org/csswg/cssom/#the-medialist-interface
 
+[Exposed=Window]
 interface MediaList {
   // Bug 824857: no support for stringifier attributes yet.
   //   [TreatNullAs=EmptyString]

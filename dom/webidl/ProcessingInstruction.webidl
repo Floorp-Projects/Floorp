@@ -12,6 +12,7 @@
  */
 
 // https://dom.spec.whatwg.org/#interface-processinginstruction
+[Exposed=Window]
 interface ProcessingInstruction : CharacterData {
   readonly attribute DOMString target;
 };

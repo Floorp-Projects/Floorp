@@ -10,7 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
-[Func="Document::AreWebAnimationsTimelinesEnabled"]
+[Func="Document::AreWebAnimationsTimelinesEnabled",
+ Exposed=Window]
 interface AnimationTimeline {
   [BinaryName="currentTimeAsDouble"]
   readonly attribute double? currentTime;

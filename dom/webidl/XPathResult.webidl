@@ -6,6 +6,7 @@
  * Corresponds to http://www.w3.org/TR/2002/WD-DOM-Level-3-XPath-20020208
  */
 
+[Exposed=Window]
 interface XPathResult {
   // XPathResultType
   const unsigned short ANY_TYPE = 0;

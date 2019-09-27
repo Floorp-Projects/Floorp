@@ -11,7 +11,8 @@
  */
 
 [SecureContext,
- Func="mozilla::dom::PaymentRequest::PrefEnabled"]
+ Func="mozilla::dom::PaymentRequest::PrefEnabled",
+ Exposed=Window]
 interface PaymentRequestUpdateEvent : Event {
   constructor(DOMString type,
               optional PaymentRequestUpdateEventInit eventInitDict = {});

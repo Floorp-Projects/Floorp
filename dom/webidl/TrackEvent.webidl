@@ -7,6 +7,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/#trackevent
  */
 
+[Exposed=Window]
 interface TrackEvent : Event
 {
   constructor(DOMString type, optional TrackEventInit eventInitDict = {});

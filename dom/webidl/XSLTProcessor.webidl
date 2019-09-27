@@ -5,6 +5,7 @@
 
 interface nsIVariant;
 
+[Exposed=Window]
 interface XSLTProcessor {
     constructor();
 

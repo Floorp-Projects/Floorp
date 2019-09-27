@@ -38,7 +38,8 @@ dictionary PannerOptions : AudioNodeOptions {
              double            coneOuterGain = 0;
 };
 
-[Pref="dom.webaudio.enabled"]
+[Pref="dom.webaudio.enabled",
+ Exposed=Window]
 interface PannerNode : AudioNode {
     [Throws]
     constructor(BaseAudioContext context, optional PannerOptions options = {});

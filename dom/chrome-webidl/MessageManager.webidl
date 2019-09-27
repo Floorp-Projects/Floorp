@@ -203,6 +203,7 @@ dictionary ReceiveMessageArgument
   FrameLoader targetFrameLoader;
 };
 
+[Exposed=Window]
 callback interface MessageListener
 {
   /**
@@ -220,7 +221,7 @@ callback interface MessageListener
   any receiveMessage(ReceiveMessageArgument argument);
 };
 
-[ChromeOnly]
+[ChromeOnly, Exposed=Window]
 interface MessageListenerManager
 {
   // All the methods are pulled in via mixin.
@@ -286,7 +287,7 @@ interface mixin MessageListenerManagerMixin
  * messages that are only delivered to its one parent-process message
  * manager.
  */
-[ChromeOnly]
+[ChromeOnly, Exposed=Window]
 interface MessageSender : MessageListenerManager
 {
   // All the methods are pulled in via mixin.
@@ -336,7 +337,7 @@ interface mixin MessageSenderMixin {
   readonly attribute DOMString remoteType;
 };
 
-[ChromeOnly]
+[ChromeOnly, Exposed=Window]
 interface SyncMessageSender : MessageSender
 {
   // All the methods are pulled in via mixin.
@@ -379,7 +380,7 @@ interface mixin SyncMessageSenderMixin
  * ChildProcessMessageManager is used in a child process to communicate with the parent
  * process.
  */
-[ChromeOnly]
+[ChromeOnly, Exposed=Window]
 interface ChildProcessMessageManager : SyncMessageSender
 {
 };
@@ -487,7 +488,7 @@ interface mixin GlobalProcessScriptLoader
   readonly attribute MozWritableSharedMap sharedData;
 };
 
-[ChromeOnly]
+[ChromeOnly, Exposed=Window]
 interface ContentFrameMessageManager : EventTarget
 {
   /**
@@ -521,7 +522,7 @@ ContentFrameMessageManager includes SyncMessageSenderMixin;
 ContentFrameMessageManager includes MessageSenderMixin;
 ContentFrameMessageManager includes MessageListenerManagerMixin;
 
-[ChromeOnly]
+[ChromeOnly, Exposed=Window]
 interface ContentProcessMessageManager
 {
   /**
@@ -544,7 +545,7 @@ ContentProcessMessageManager includes MessageListenerManagerMixin;
  * through a window message manager will broadcast the message to all frame message
  * managers within its window.
  */
-[ChromeOnly]
+[ChromeOnly, Exposed=Window]
 interface MessageBroadcaster : MessageListenerManager
 {
   /**
@@ -580,7 +581,7 @@ interface MessageBroadcaster : MessageListenerManager
 /**
  * ChromeMessageBroadcaster is used for window and group message managers.
  */
-[ChromeOnly]
+[ChromeOnly, Exposed=Window]
 interface ChromeMessageBroadcaster : MessageBroadcaster
 {
 };
@@ -590,14 +591,14 @@ ChromeMessageBroadcaster includes FrameScriptLoader;
  * ParentProcessMessageManager is used in a parent process to communicate with all the
  * child processes.
  */
-[ChromeOnly]
+[ChromeOnly, Exposed=Window]
 interface ParentProcessMessageManager : MessageBroadcaster
 {
 };
 ParentProcessMessageManager includes ProcessScriptLoader;
 ParentProcessMessageManager includes GlobalProcessScriptLoader;
 
-[ChromeOnly]
+[ChromeOnly, Exposed=Window]
 interface ChromeMessageSender : MessageSender
 {
 };
@@ -607,7 +608,7 @@ ChromeMessageSender includes FrameScriptLoader;
  * ProcessMessageManager is used in a parent process to communicate with a child process
  * (or with the process itself in a single-process scenario).
  */
-[ChromeOnly]
+[ChromeOnly, Exposed=Window]
 interface ProcessMessageManager : MessageSender
 {
 };

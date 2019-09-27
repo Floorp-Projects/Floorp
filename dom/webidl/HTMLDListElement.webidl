@@ -13,7 +13,8 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-dl-element
-[HTMLConstructor]
+[HTMLConstructor,
+ Exposed=Window]
 interface HTMLDListElement : HTMLElement {
 };
 

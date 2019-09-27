@@ -5,6 +5,7 @@
  */
 interface URI;
 
+[Exposed=Window]
 interface PopupBlockedEvent : Event
 {
   constructor(DOMString type,

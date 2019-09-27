@@ -12,7 +12,8 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-link-element
-[HTMLConstructor]
+[HTMLConstructor,
+ Exposed=Window]
 interface HTMLLinkElement : HTMLElement {
   [CEReactions, SetterThrows, Pure]
            attribute boolean disabled;

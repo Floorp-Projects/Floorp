@@ -27,7 +27,8 @@ dictionary AudioNodeOptions {
              ChannelInterpretation channelInterpretation;
 };
 
-[Pref="dom.webaudio.enabled"]
+[Pref="dom.webaudio.enabled",
+ Exposed=Window]
 interface AudioNode : EventTarget {
 
     [Throws]

@@ -14,7 +14,8 @@ dictionary PerformanceEntryEventInit : EventInit
   DOMString origin = "";
 };
 
-[ChromeOnly]
+[ChromeOnly,
+ Exposed=Window]
 interface PerformanceEntryEvent : Event
 {
   constructor(DOMString type,

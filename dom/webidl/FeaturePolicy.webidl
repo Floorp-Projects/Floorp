@@ -7,7 +7,8 @@
  * https://w3c.github.io/webappsec-feature-policy/#idl-index
  */
 
-[NoInterfaceObject]
+[NoInterfaceObject,
+ Exposed=Window]
 interface FeaturePolicy {
   boolean allowsFeature(DOMString feature, optional DOMString origin);
   sequence<DOMString> features();
@@ -15,7 +16,8 @@ interface FeaturePolicy {
   sequence<DOMString> getAllowlistForFeature(DOMString feature);
 };
 
-[Pref="dom.reporting.featurePolicy.enabled"]
+[Pref="dom.reporting.featurePolicy.enabled",
+ Exposed=Window]
 interface FeaturePolicyViolationReportBody : ReportBody {
   readonly attribute DOMString featureId;
   readonly attribute DOMString? sourceFile;

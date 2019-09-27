@@ -2,9 +2,9 @@ import WebIDL
 
 def WebIDLTest(parser, harness):
     parser.parse("""
-      [PrimaryGlobal] interface Foo {};
-      [Global=(Bar1,Bar2)] interface Bar {};
-      [Global=Baz2] interface Baz {};
+      [Global, Exposed=Foo] interface Foo {};
+      [Global=(Bar, Bar1,Bar2), Exposed=Bar] interface Bar {};
+      [Global=(Baz, Baz2), Exposed=Baz] interface Baz {};
 
       [Exposed=(Foo,Bar1)]
       interface Iface {
@@ -51,10 +51,11 @@ def WebIDLTest(parser, harness):
 
     parser = parser.reset()
     parser.parse("""
-      [PrimaryGlobal] interface Foo {};
-      [Global=(Bar1,Bar2)] interface Bar {};
-      [Global=Baz2] interface Baz {};
+      [Global, Exposed=Foo] interface Foo {};
+      [Global=(Bar, Bar1, Bar2), Exposed=Bar] interface Bar {};
+      [Global=(Baz, Baz2), Exposed=Baz] interface Baz {};
 
+      [Exposed=Foo]
       interface Iface2 {
         void method3();
       };
@@ -80,9 +81,9 @@ def WebIDLTest(parser, harness):
 
     parser = parser.reset()
     parser.parse("""
-      [PrimaryGlobal] interface Foo {};
-      [Global=(Bar1,Bar2)] interface Bar {};
-      [Global=Baz2] interface Baz {};
+      [Global, Exposed=Foo] interface Foo {};
+      [Global=(Bar, Bar1, Bar2), Exposed=Bar] interface Bar {};
+      [Global=(Baz, Baz2), Exposed=Baz] interface Baz {};
 
       [Exposed=Foo]
       interface Iface3 {
@@ -181,8 +182,8 @@ def WebIDLTest(parser, harness):
     threw = False
     try:
         parser.parse("""
-            [Global] interface Foo {};
-            [Global] interface Bar {};
+            [Global, Exposed=Foo] interface Foo {};
+            [Global, Exposed=Bar] interface Bar {};
 
             [Exposed=Foo]
             interface Baz {
@@ -199,8 +200,8 @@ def WebIDLTest(parser, harness):
 
     parser = parser.reset()
     parser.parse("""
-        [Global] interface Foo {};
-        [Global] interface Bar {};
+        [Global, Exposed=Foo] interface Foo {};
+        [Global, Exposed=Bar] interface Bar {};
 
         [Exposed=Foo]
         interface Baz {

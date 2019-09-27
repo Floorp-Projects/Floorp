@@ -15,7 +15,8 @@ dictionary VRDisplayEventInit : EventInit {
   VRDisplayEventReason reason;
 };
 
-[Pref="dom.vr.enabled"]
+[Pref="dom.vr.enabled",
+ Exposed=Window]
 interface VRDisplayEvent : Event {
   constructor(DOMString type, VRDisplayEventInit eventInitDict);
 

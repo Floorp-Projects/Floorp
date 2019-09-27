@@ -9,7 +9,8 @@
 
 /***** Interfaces to Data *****/
 
-[SecureContext, Pref="security.webauth.webauthn"]
+[SecureContext, Pref="security.webauth.webauthn",
+ Exposed=Window]
 interface PublicKeyCredential : Credential {
     [SameObject] readonly attribute ArrayBuffer              rawId;
     [SameObject] readonly attribute AuthenticatorResponse    response;
@@ -23,17 +24,20 @@ partial interface PublicKeyCredential {
     static Promise<boolean> isExternalCTAP2SecurityKeySupported();
 };
 
-[SecureContext, Pref="security.webauth.webauthn"]
+[SecureContext, Pref="security.webauth.webauthn",
+ Exposed=Window]
 interface AuthenticatorResponse {
     [SameObject] readonly attribute ArrayBuffer clientDataJSON;
 };
 
-[SecureContext, Pref="security.webauth.webauthn"]
+[SecureContext, Pref="security.webauth.webauthn",
+ Exposed=Window]
 interface AuthenticatorAttestationResponse : AuthenticatorResponse {
     [SameObject] readonly attribute ArrayBuffer attestationObject;
 };
 
-[SecureContext, Pref="security.webauth.webauthn"]
+[SecureContext, Pref="security.webauth.webauthn",
+ Exposed=Window]
 interface AuthenticatorAssertionResponse : AuthenticatorResponse {
     [SameObject] readonly attribute ArrayBuffer      authenticatorData;
     [SameObject] readonly attribute ArrayBuffer      signature;

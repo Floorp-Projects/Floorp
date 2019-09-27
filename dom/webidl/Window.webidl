@@ -26,7 +26,8 @@ interface nsIDOMWindowUtils;
 typedef OfflineResourceList ApplicationCache;
 
 // http://www.whatwg.org/specs/web-apps/current-work/
-[PrimaryGlobal, LegacyUnenumerableNamedProperties, NeedResolve]
+[Global, LegacyUnenumerableNamedProperties, NeedResolve,
+ Exposed=Window]
 /*sealed*/ interface Window : EventTarget {
   // the current browsing context
   [Unforgeable, Constant, StoreInSlot,

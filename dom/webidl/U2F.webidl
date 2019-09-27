@@ -66,7 +66,8 @@ dictionary SignResponse {
 callback U2FRegisterCallback = void(RegisterResponse response);
 callback U2FSignCallback = void(SignResponse response);
 
-[SecureContext, Pref="security.webauth.u2f"]
+[SecureContext, Pref="security.webauth.u2f",
+ Exposed=Window]
 interface U2F {
   // These enumerations are defined in the FIDO U2F Javascript API under the
   // interface "ErrorCode" as constant integers, and also in the U2F.cpp file.

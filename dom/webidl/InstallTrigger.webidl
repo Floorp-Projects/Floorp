@@ -20,7 +20,8 @@ dictionary InstallTriggerData {
  * The interface for the InstallTrigger object available to all websites.
  */
 [ChromeOnly,
- JSImplementation="@mozilla.org/addons/installtrigger;1"]
+ JSImplementation="@mozilla.org/addons/installtrigger;1",
+ Exposed=Window]
 interface InstallTriggerImpl {
   /**
    * Retained for backwards compatibility.

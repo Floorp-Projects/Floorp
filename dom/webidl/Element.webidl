@@ -13,6 +13,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Exposed=Window]
 interface Element : Node {
   [Constant]
   readonly attribute DOMString? namespaceURI;

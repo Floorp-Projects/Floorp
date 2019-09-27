@@ -20,7 +20,7 @@ enum DebuggerNotificationType {
   "domEvent",
 };
 
-[ChromeOnly]
+[ChromeOnly, Exposed=Window]
 interface DebuggerNotification {
   readonly attribute DebuggerNotificationType type;
 
@@ -37,7 +37,7 @@ enum CallbackDebuggerNotificationPhase {
 
 // A base notification type for notifications that are dispatched as pairs with
 // a before and after notification.
-[ChromeOnly]
+[ChromeOnly, Exposed=Window]
 interface CallbackDebuggerNotification : DebuggerNotification {
   readonly attribute CallbackDebuggerNotificationPhase phase;
 };
@@ -50,7 +50,7 @@ enum EventCallbackDebuggerNotificationType {
 };
 
 // A notification that about the engine calling a DOM event handler.
-[ChromeOnly]
+[ChromeOnly, Exposed=Window]
 interface EventCallbackDebuggerNotification : CallbackDebuggerNotification {
   readonly attribute Event event;
   readonly attribute EventCallbackDebuggerNotificationType targetType;

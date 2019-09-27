@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Exposed=Window]
 interface SVGAnimatedRect {
   readonly attribute SVGRect? baseVal;
   readonly attribute SVGRect? animVal;

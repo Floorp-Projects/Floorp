@@ -10,7 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
-[Pref="dom.webaudio.enabled"]
+[Pref="dom.webaudio.enabled",
+ Exposed=Window]
 interface MediaStreamAudioDestinationNode : AudioNode {
     [Throws]
     constructor(AudioContext context, optional AudioNodeOptions options = {});

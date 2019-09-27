@@ -12,10 +12,12 @@ typedef CustomEventInit TestDictionaryTypedef;
 interface TestExternalInterface;
 
 // We need a pref name that's in StaticPrefList.h here.
-[Pref="dom.webidl.test1"]
+[Pref="dom.webidl.test1",
+ Exposed=Window]
 interface TestRenamedInterface {
 };
 
+[Exposed=Window]
 callback interface TestCallbackInterface {
   readonly attribute long foo;
   attribute DOMString bar;
@@ -59,6 +61,7 @@ callback interface TestCallbackInterface {
   Promise<void> receivePromise();
 };
 
+[Exposed=Window]
 callback interface TestSingleOperationCallbackInterface {
   TestInterface doSomething(short arg, sequence<double> anotherArg);
 };
@@ -142,6 +145,7 @@ callback constructor TestSequenceConstruction = sequence<boolean>();
 TestInterface includes InterfaceMixin;
 
 // This interface is only for use in the constructor below
+[Exposed=Window]
 interface OnlyForUseInConstructor {
 };
 
@@ -154,6 +158,7 @@ interface OnlyForUseInConstructor {
  NamedConstructor=Test4(record<DOMString, record<DOMString, any>> arg1),
  NamedConstructor=Test5(record<DOMString, sequence<record<DOMString, record<DOMString, sequence<sequence<any>>>>>> arg1),
  NamedConstructor=Test6(sequence<record<ByteString, sequence<sequence<record<ByteString, record<USVString, any>>>>>> arg1),
+ Exposed=Window,
  ]
 interface TestInterface {
   constructor();
@@ -1019,12 +1024,15 @@ interface TestInterface {
   // If you add things here, add them to TestExampleGen and TestJSImplGen as well
 };
 
+[Exposed=Window]
 interface TestParentInterface {
 };
 
+[Exposed=Window]
 interface TestChildInterface : TestParentInterface {
 };
 
+[Exposed=Window]
 interface TestNonWrapperCacheInterface {
 };
 
@@ -1189,6 +1197,7 @@ dictionary DictWithConditionalMembers {
   long chromeOnlyFuncAndPrefControlledMember;
 };
 
+[Exposed=Window]
 interface TestIndexedGetterInterface {
   getter long item(unsigned long idx);
   readonly attribute unsigned long length;
@@ -1197,10 +1206,12 @@ interface TestIndexedGetterInterface {
   [StoreInSlot, Pure] readonly attribute long storeInSlotAttr;
 };
 
+[Exposed=Window]
 interface TestNamedGetterInterface {
   getter DOMString (DOMString name);
 };
 
+[Exposed=Window]
 interface TestIndexedGetterAndSetterAndNamedGetterInterface {
   getter DOMString (DOMString myName);
   getter long (unsigned long index);
@@ -1208,23 +1219,27 @@ interface TestIndexedGetterAndSetterAndNamedGetterInterface {
   readonly attribute unsigned long length;
 };
 
+[Exposed=Window]
 interface TestIndexedAndNamedGetterInterface {
   getter long (unsigned long index);
   getter DOMString namedItem(DOMString name);
   readonly attribute unsigned long length;
 };
 
+[Exposed=Window]
 interface TestIndexedSetterInterface {
   setter void setItem(unsigned long idx, DOMString item);
   getter DOMString (unsigned long idx);
   readonly attribute unsigned long length;
 };
 
+[Exposed=Window]
 interface TestNamedSetterInterface {
   setter void (DOMString myName, TestIndexedSetterInterface item);
   getter TestIndexedSetterInterface (DOMString name);
 };
 
+[Exposed=Window]
 interface TestIndexedAndNamedSetterInterface {
   setter void (unsigned long index, TestIndexedSetterInterface item);
   getter TestIndexedSetterInterface (unsigned long index);
@@ -1233,6 +1248,7 @@ interface TestIndexedAndNamedSetterInterface {
   getter TestIndexedSetterInterface (DOMString name);
 };
 
+[Exposed=Window]
 interface TestIndexedAndNamedGetterAndSetterInterface : TestIndexedSetterInterface {
   getter long item(unsigned long index);
   getter DOMString namedItem(DOMString name);
@@ -1242,23 +1258,27 @@ interface TestIndexedAndNamedGetterAndSetterInterface : TestIndexedSetterInterfa
   readonly attribute unsigned long length;
 };
 
+[Exposed=Window]
 interface TestNamedDeleterInterface {
   deleter void (DOMString name);
   getter long (DOMString name);
 };
 
+[Exposed=Window]
 interface TestNamedDeleterWithRetvalInterface {
   deleter boolean delNamedItem(DOMString name);
   getter long (DOMString name);
 };
 
+[Exposed=Window]
 interface TestCppKeywordNamedMethodsInterface {
   boolean continue();
   boolean delete();
   long volatile();
 };
 
-[Deprecated="EnablePrivilege"]
+[Deprecated="EnablePrivilege",
+ Exposed=Window]
 interface TestDeprecatedInterface {
   constructor();
 
@@ -1266,10 +1286,12 @@ interface TestDeprecatedInterface {
 };
 
 
+[Exposed=Window]
 interface TestInterfaceWithPromiseConstructorArg {
   constructor(Promise<void> promise);
 };
 
+[Exposed=Window]
 namespace TestNamespace {
   readonly attribute boolean foo;
   long bar();
@@ -1279,15 +1301,18 @@ partial namespace TestNamespace {
   void baz();
 };
 
-[ClassString="RenamedNamespaceClassName"]
+[ClassString="RenamedNamespaceClassName",
+ Exposed=Window]
 namespace TestRenamedNamespace {
 };
 
-[ProtoObjectHack]
+[ProtoObjectHack,
+ Exposed=Window]
 namespace TestProtoObjectHackedNamespace {
 };
 
-[SecureContext]
+[SecureContext,
+ Exposed=Window]
 interface TestSecureContextInterface {
   static void alsoSecureContext();
 };
@@ -1302,10 +1327,12 @@ interface TestWorkerExposedInterface {
   [NeedsSubjectPrincipal=NonSystem] attribute boolean needsNonSystemSubjectPrincipalAttr;
 };
 
-[HTMLConstructor]
+[HTMLConstructor,
+ Exposed=Window]
 interface TestHTMLConstructorInterface {
 };
 
+[Exposed=Window]
 interface TestThrowingConstructorInterface {
   [Throws]
   constructor();
@@ -1326,6 +1353,7 @@ interface TestThrowingConstructorInterface {
   // [Throws] constructor(long arg1, long arg2, (TestInterface or OnlyForUseInConstructor) arg3);
 };
 
+[Exposed=Window]
 interface TestCEReactionsInterface {
   [CEReactions] setter void (unsigned long index, long item);
   [CEReactions] setter void (DOMString name, DOMString item);
@@ -1349,6 +1377,7 @@ dictionary TestAttributesOnDictionaryMembers {
   // test [ChromeOnly] required [Clamp] octet e
 };
 
+[Exposed=Window]
 interface TestAttributesOnTypes {
   void foo(OctetClamp thingy);
   void bar(OctetRange thingy);

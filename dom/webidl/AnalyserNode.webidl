@@ -17,7 +17,8 @@ dictionary AnalyserOptions : AudioNodeOptions {
              double        smoothingTimeConstant = 0.8;
 };
 
-[Pref="dom.webaudio.enabled"]
+[Pref="dom.webaudio.enabled",
+ Exposed=Window]
 interface AnalyserNode : AudioNode {
     [Throws]
     constructor(BaseAudioContext context,

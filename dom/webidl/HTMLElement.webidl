@@ -12,7 +12,8 @@
  * and create derivative works of this document.
  */
 
-[HTMLConstructor]
+[HTMLConstructor,
+ Exposed=Window]
 interface HTMLElement : Element {
   // metadata attributes
   [CEReactions]
@@ -86,4 +87,5 @@ HTMLElement includes ElementCSSInlineStyle;
 HTMLElement includes TouchEventHandlers;
 HTMLElement includes OnErrorEventHandlerForNodes;
 
+[Exposed=Window]
 interface HTMLUnknownElement : HTMLElement {};

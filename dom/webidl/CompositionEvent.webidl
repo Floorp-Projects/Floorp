@@ -9,6 +9,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Exposed=Window]
 interface CompositionEvent : UIEvent
 {
   constructor(DOMString type, optional CompositionEventInit eventInitDict = {});

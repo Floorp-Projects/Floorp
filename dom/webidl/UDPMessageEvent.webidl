@@ -9,7 +9,8 @@
 
 //Bug 1056444: This interface should be removed after UDPSocket.input/UDPSocket.output are ready.
 [Pref="dom.udpsocket.enabled",
- ChromeOnly]
+ ChromeOnly,
+ Exposed=Window]
 interface UDPMessageEvent : Event {
     constructor(DOMString type,
                 optional UDPMessageEventInit eventInitDict = {});

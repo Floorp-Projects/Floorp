@@ -11,7 +11,8 @@
  * and create derivative works of this document.
  */
 
-[HTMLConstructor]
+[HTMLConstructor,
+ Exposed=Window]
 interface HTMLTableSectionElement : HTMLElement {
   readonly attribute HTMLCollection rows;
   [Throws]

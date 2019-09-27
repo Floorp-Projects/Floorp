@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Exposed=Window]
 interface Selection {
   readonly attribute Node?         anchorNode;
   readonly attribute unsigned long anchorOffset;

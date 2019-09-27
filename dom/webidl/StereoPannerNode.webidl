@@ -14,7 +14,8 @@ dictionary StereoPannerOptions : AudioNodeOptions {
              float pan = 0;
 };
 
-[Pref="dom.webaudio.enabled"]
+[Pref="dom.webaudio.enabled",
+ Exposed=Window]
 interface StereoPannerNode : AudioNode {
   [Throws]
   constructor(BaseAudioContext context,

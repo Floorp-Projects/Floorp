@@ -29,6 +29,7 @@ enum PromiseDebuggingState { "pending", "fulfilled", "rejected" };
  * this interface are responsible for presenting the information
  * in a meaningful manner.
  */
+[Exposed=Window]
 callback interface UncaughtRejectionObserver {
   /**
    * A Promise has been left in `rejected` state and is the

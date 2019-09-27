@@ -9,7 +9,8 @@
 
 interface imgIRequest;
 
-[ChromeOnly, OverrideBuiltins]
+[ChromeOnly, OverrideBuiltins,
+ Exposed=Window]
 interface ImageDocument : HTMLDocument {
   /* Whether the image is overflowing visible area. */
   readonly attribute boolean imageIsOverflowing;

@@ -11,7 +11,8 @@
 
 [Deprecated="WebrtcDeprecatedPrefix",
  Pref="media.peerconnection.enabled",
- JSImplementation="@mozilla.org/dom/rtcicecandidate;1"]
+ JSImplementation="@mozilla.org/dom/rtcicecandidate;1",
+ Exposed=Window]
 interface mozRTCIceCandidate : RTCIceCandidate {
   [Throws]
   constructor(optional RTCIceCandidateInit candidateInitDict = {});
@@ -19,7 +20,8 @@ interface mozRTCIceCandidate : RTCIceCandidate {
 
 [Deprecated="WebrtcDeprecatedPrefix",
  Pref="media.peerconnection.enabled",
- JSImplementation="@mozilla.org/dom/peerconnection;1"]
+ JSImplementation="@mozilla.org/dom/peerconnection;1",
+ Exposed=Window]
 interface mozRTCPeerConnection : RTCPeerConnection {
   [Throws]
   constructor(optional RTCConfiguration configuration = {},
@@ -28,7 +30,8 @@ interface mozRTCPeerConnection : RTCPeerConnection {
 
 [Deprecated="WebrtcDeprecatedPrefix",
  Pref="media.peerconnection.enabled",
- JSImplementation="@mozilla.org/dom/rtcsessiondescription;1"]
+ JSImplementation="@mozilla.org/dom/rtcsessiondescription;1",
+ Exposed=Window]
 interface mozRTCSessionDescription : RTCSessionDescription {
   [Throws]
   constructor(optional RTCSessionDescriptionInit descriptionInitDict = {});

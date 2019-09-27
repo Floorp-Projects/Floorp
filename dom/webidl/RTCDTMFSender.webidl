@@ -7,7 +7,8 @@
  * https://www.w3.org/TR/webrtc/#rtcdtmfsender
  */
 
-[JSImplementation="@mozilla.org/dom/rtcdtmfsender;1"]
+[JSImplementation="@mozilla.org/dom/rtcdtmfsender;1",
+ Exposed=Window]
 interface RTCDTMFSender : EventTarget {
     void insertDTMF(DOMString tones,
                     optional unsigned long duration = 100,

@@ -11,7 +11,8 @@
  * and create derivative works of this document.
  */
 
-[HTMLConstructor]
+[HTMLConstructor,
+ Exposed=Window]
 interface HTMLDataListElement : HTMLElement {
   readonly attribute HTMLCollection options;
 };

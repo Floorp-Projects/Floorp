@@ -6,21 +6,24 @@
  * https://w3c.github.io/deviceorientation/
  */
 
-[NoInterfaceObject]
+[NoInterfaceObject,
+  Exposed=Window]
 interface DeviceAcceleration {
   readonly attribute double? x;
   readonly attribute double? y;
   readonly attribute double? z;
 };
 
-[NoInterfaceObject]
+[NoInterfaceObject,
+ Exposed=Window]
 interface DeviceRotationRate {
   readonly attribute double? alpha;
   readonly attribute double? beta;
   readonly attribute double? gamma;
 };
 
-[Pref="device.sensors.motion.enabled", Func="nsGlobalWindowInner::DeviceSensorsEnabled"]
+[Pref="device.sensors.motion.enabled", Func="nsGlobalWindowInner::DeviceSensorsEnabled",
+ Exposed=Window]
 interface DeviceMotionEvent : Event {
   constructor(DOMString type,
               optional DeviceMotionEventInit eventInitDict = {});

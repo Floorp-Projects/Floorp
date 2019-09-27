@@ -14,7 +14,8 @@ dictionary IIRFilterOptions : AudioNodeOptions {
     required sequence<double> feedback;
 };
 
-[Pref="dom.webaudio.enabled"]
+[Pref="dom.webaudio.enabled",
+ Exposed=Window]
 interface IIRFilterNode : AudioNode {
     [Throws]
     constructor(BaseAudioContext context, IIRFilterOptions options);

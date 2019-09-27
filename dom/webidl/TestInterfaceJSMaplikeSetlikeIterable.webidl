@@ -4,7 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Pref="dom.expose_test_interfaces"]
+[Pref="dom.expose_test_interfaces",
+ Exposed=Window]
 interface TestInterfaceMaplike {
   [Throws]
   constructor();
@@ -16,7 +17,8 @@ interface TestInterfaceMaplike {
   boolean hasInternal(DOMString aKey);
 };
 
-[Pref="dom.expose_test_interfaces"]
+[Pref="dom.expose_test_interfaces",
+ Exposed=Window]
 interface TestInterfaceMaplikeObject {
   [Throws]
   constructor();
@@ -29,7 +31,8 @@ interface TestInterfaceMaplikeObject {
 };
 
 [Pref="dom.expose_test_interfaces",
- JSImplementation="@mozilla.org/dom/test-interface-js-maplike;1"]
+ JSImplementation="@mozilla.org/dom/test-interface-js-maplike;1",
+ Exposed=Window]
 interface TestInterfaceJSMaplike {
   [Throws]
   constructor();
@@ -40,7 +43,8 @@ interface TestInterfaceJSMaplike {
   boolean deleteInternal(DOMString aKey);
 };
 
-[Pref="dom.expose_test_interfaces"]
+[Pref="dom.expose_test_interfaces",
+ Exposed=Window]
 interface TestInterfaceSetlike {
   [Throws]
   constructor();
@@ -48,7 +52,8 @@ interface TestInterfaceSetlike {
   setlike<DOMString>;
 };
 
-[Pref="dom.expose_test_interfaces"]
+[Pref="dom.expose_test_interfaces",
+ Exposed=Window]
 interface TestInterfaceSetlikeNode {
   [Throws]
   constructor();
@@ -56,7 +61,8 @@ interface TestInterfaceSetlikeNode {
   setlike<Node>;
 };
 
-[Pref="dom.expose_test_interfaces"]
+[Pref="dom.expose_test_interfaces",
+ Exposed=Window]
 interface TestInterfaceIterableSingle {
   [Throws]
   constructor();
@@ -66,7 +72,8 @@ interface TestInterfaceIterableSingle {
   readonly attribute unsigned long length;
 };
 
-[Pref="dom.expose_test_interfaces"]
+[Pref="dom.expose_test_interfaces",
+ Exposed=Window]
 interface TestInterfaceIterableDouble {
   [Throws]
   constructor();
@@ -74,7 +81,8 @@ interface TestInterfaceIterableDouble {
   iterable<DOMString, DOMString>;
 };
 
-[Pref="dom.expose_test_interfaces"]
+[Pref="dom.expose_test_interfaces",
+ Exposed=Window]
 interface TestInterfaceIterableDoubleUnion {
   [Throws]
   constructor();

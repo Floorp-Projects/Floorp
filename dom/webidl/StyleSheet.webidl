@@ -7,6 +7,7 @@
  * http://dev.w3.org/csswg/cssom/
  */
 
+[Exposed=Window]
 interface StyleSheet {
   [Constant]
   readonly attribute DOMString type;

@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Exposed=Window]
 interface SVGComponentTransferFunctionElement : SVGElement {
   // Component Transfer Types
   const unsigned short SVG_FECOMPONENTTRANSFER_TYPE_UNKNOWN = 0;

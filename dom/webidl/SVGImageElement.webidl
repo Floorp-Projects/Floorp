@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Exposed=Window]
 interface SVGImageElement : SVGGraphicsElement {
   [Constant]
   readonly attribute SVGAnimatedLength x;

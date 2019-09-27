@@ -10,7 +10,8 @@ dictionary TouchEventInit : EventModifierInit {
   sequence<Touch> changedTouches = [];
 };
 
-[Func="mozilla::dom::TouchEvent::PrefEnabled"]
+[Func="mozilla::dom::TouchEvent::PrefEnabled",
+ Exposed=Window]
 interface TouchEvent : UIEvent {
   constructor(DOMString type, optional TouchEventInit eventInitDict = {});
 

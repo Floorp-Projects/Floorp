@@ -19,7 +19,8 @@ dictionary AudioTimestamp {
   DOMHighResTimeStamp performanceTime;
 };
 
-[Pref="dom.webaudio.enabled"]
+[Pref="dom.webaudio.enabled",
+ Exposed=Window]
 interface AudioContext : BaseAudioContext {
     [Throws]
     constructor(optional AudioContextOptions contextOptions = {});

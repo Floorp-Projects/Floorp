@@ -10,7 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
-[Func="Navigator::HasUserMediaSupport"]
+[Func="Navigator::HasUserMediaSupport",
+ Exposed=Window]
 interface MediaDevices : EventTarget {
   [Pref="media.ondevicechange.enabled"]
   attribute EventHandler ondevicechange;

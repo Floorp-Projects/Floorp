@@ -7,6 +7,7 @@
  * https://html.spec.whatwg.org/#texttrackcue
  */
 
+[Exposed=Window]
 interface TextTrackCue : EventTarget {
   readonly attribute TextTrack? track;
 

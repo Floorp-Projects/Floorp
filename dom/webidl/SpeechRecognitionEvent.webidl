@@ -6,7 +6,8 @@
 interface nsISupports;
 
 [Pref="media.webspeech.recognition.enable",
- Func="SpeechRecognition::IsAuthorized"]
+ Func="SpeechRecognition::IsAuthorized",
+ Exposed=Window]
 interface SpeechRecognitionEvent : Event
 {
   constructor(DOMString type,

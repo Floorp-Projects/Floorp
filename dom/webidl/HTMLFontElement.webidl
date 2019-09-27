@@ -11,7 +11,8 @@
  * and create derivative works of this document.
  */
 
-[HTMLConstructor]
+[HTMLConstructor,
+ Exposed=Window]
 interface HTMLFontElement : HTMLElement {
   [CEReactions, SetterThrows] attribute [TreatNullAs=EmptyString] DOMString color;
   [CEReactions, SetterThrows]                          attribute DOMString face;

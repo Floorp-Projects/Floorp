@@ -10,7 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
-[NoInterfaceObject]
+[NoInterfaceObject,
+ Exposed=Window]
 interface Position {
   readonly attribute Coordinates coords;
   readonly attribute DOMTimeStamp timestamp;

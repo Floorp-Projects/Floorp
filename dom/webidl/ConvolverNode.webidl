@@ -15,7 +15,8 @@ dictionary ConvolverOptions : AudioNodeOptions {
              boolean      disableNormalization = false;
 };
 
-[Pref="dom.webaudio.enabled"]
+[Pref="dom.webaudio.enabled",
+ Exposed=Window]
 interface ConvolverNode : AudioNode {
       [Throws]
       constructor(BaseAudioContext context, optional

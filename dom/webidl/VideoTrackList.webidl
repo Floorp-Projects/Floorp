@@ -7,7 +7,8 @@
  * http://www.whatwg.org/specs/web-apps/current-work/#videotracklist
  */
 
-[Pref="media.track.enabled"]
+[Pref="media.track.enabled",
+ Exposed=Window]
 interface VideoTrackList : EventTarget {
   readonly attribute unsigned long length;
   getter VideoTrack (unsigned long index);

@@ -11,6 +11,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Exposed=Window]
 interface AnimationEvent : Event {
   constructor(DOMString type, optional AnimationEventInit eventInitDict = {});
 

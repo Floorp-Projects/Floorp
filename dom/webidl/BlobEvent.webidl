@@ -7,6 +7,7 @@
  * https://w3c.github.io/mediacapture-record/#blobevent-section
  */
 
+[Exposed=Window]
 interface BlobEvent : Event
 {
   constructor(DOMString type, optional BlobEventInit eventInitDict = {});

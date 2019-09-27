@@ -10,6 +10,7 @@
  * and create derivative works of this document.
  */
 
+[Exposed=Window]
 interface ValidityState {
   readonly attribute boolean valueMissing;
   readonly attribute boolean typeMismatch;

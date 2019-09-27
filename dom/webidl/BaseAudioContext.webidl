@@ -19,6 +19,7 @@ enum AudioContextState {
     "closed"
 };
 
+[Exposed=Window]
 interface BaseAudioContext : EventTarget {
     readonly        attribute AudioDestinationNode destination;
     readonly        attribute float                sampleRate;

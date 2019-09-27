@@ -11,7 +11,8 @@
  * and create derivative works of this document.
  */
 
-[Unforgeable]
+[Unforgeable,
+ Exposed=Window]
 interface Location {
   // Bug 824857: no support for stringifier attributes yet.
   //  stringifier attribute USVString href;

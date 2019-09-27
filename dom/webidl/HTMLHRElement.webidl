@@ -12,7 +12,8 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-hr-element
-[HTMLConstructor]
+[HTMLConstructor,
+ Exposed=Window]
 interface HTMLHRElement : HTMLElement {
 };
 

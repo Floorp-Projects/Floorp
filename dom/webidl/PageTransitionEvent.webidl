@@ -10,6 +10,7 @@
  * load/unload and saving/restoring a document from session history.
  */
 
+[Exposed=Window]
 interface PageTransitionEvent : Event
 {
   constructor(DOMString type,

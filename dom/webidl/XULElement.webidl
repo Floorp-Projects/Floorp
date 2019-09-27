@@ -6,7 +6,8 @@
 
 interface XULControllers;
 
-[HTMLConstructor, Func="IsChromeOrXBL"]
+[HTMLConstructor, Func="IsChromeOrXBL",
+ Exposed=Window]
 interface XULElement : Element {
   // Layout properties
   [SetterThrows]

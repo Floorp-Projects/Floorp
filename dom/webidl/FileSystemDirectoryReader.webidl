@@ -8,6 +8,7 @@
 
 callback FileSystemEntriesCallback = void (sequence<FileSystemEntry> entries);
 
+[Exposed=Window]
 interface FileSystemDirectoryReader {
 
     // readEntries can be called just once. The second time it returns no data.

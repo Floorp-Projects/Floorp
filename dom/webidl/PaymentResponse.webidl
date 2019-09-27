@@ -17,7 +17,8 @@ enum PaymentComplete {
 };
 
 [SecureContext,
- Func="mozilla::dom::PaymentRequest::PrefEnabled"]
+ Func="mozilla::dom::PaymentRequest::PrefEnabled",
+ Exposed=Window]
 interface PaymentResponse : EventTarget {
   [Default] object toJSON();
 

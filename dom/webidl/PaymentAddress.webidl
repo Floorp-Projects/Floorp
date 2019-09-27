@@ -11,7 +11,8 @@
  */
 
 [SecureContext,
- Func="mozilla::dom::PaymentRequest::PrefEnabled"]
+ Func="mozilla::dom::PaymentRequest::PrefEnabled",
+ Exposed=Window]
 interface PaymentAddress {
   [Default] object toJSON();
 

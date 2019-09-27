@@ -21,7 +21,8 @@ enum MediaSourceEndOfStreamError {
   "decode"
 };
 
-[Pref="media.mediasource.enabled"]
+[Pref="media.mediasource.enabled",
+ Exposed=Window]
 interface MediaSource : EventTarget {
   [Throws]
   constructor();

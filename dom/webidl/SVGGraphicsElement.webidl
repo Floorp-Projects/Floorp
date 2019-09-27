@@ -17,6 +17,7 @@ dictionary SVGBoundingBoxOptions {
   boolean clipped = false;
 };
 
+[Exposed=Window]
 interface SVGGraphicsElement : SVGElement {
   readonly attribute SVGAnimatedTransformList transform;
 

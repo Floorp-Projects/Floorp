@@ -8,6 +8,7 @@
  */
 interface ContentSecurityPolicy;
 
+[Exposed=Window]
 interface DataTransfer {
   constructor();
 

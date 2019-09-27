@@ -102,7 +102,8 @@
  * consuming events.
  */
 
-[Func="IsChromeOrXBL"]
+[Func="IsChromeOrXBL",
+ Exposed=Window]
 interface SimpleGestureEvent : MouseEvent
 {
   /* Swipe direction constants */

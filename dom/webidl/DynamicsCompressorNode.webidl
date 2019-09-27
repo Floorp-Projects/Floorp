@@ -18,7 +18,8 @@ dictionary DynamicsCompressorOptions : AudioNodeOptions {
              float threshold = -24;
 };
 
-[Pref="dom.webaudio.enabled"]
+[Pref="dom.webaudio.enabled",
+ Exposed=Window]
 interface DynamicsCompressorNode : AudioNode {
     [Throws]
     constructor(BaseAudioContext context,

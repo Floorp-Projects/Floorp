@@ -24,7 +24,7 @@
  *
  */
 
-[ChromeOnly]
+[ChromeOnly, Exposed=Window]
 interface DOMLocalization : Localization {
   /**
    * Constructor arguments:

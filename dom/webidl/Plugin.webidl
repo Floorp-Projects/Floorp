@@ -4,7 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[LegacyUnenumerableNamedProperties]
+[LegacyUnenumerableNamedProperties,
+ Exposed=Window]
 interface Plugin {
   readonly attribute DOMString description;
   readonly attribute DOMString filename;

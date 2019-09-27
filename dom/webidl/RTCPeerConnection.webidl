@@ -77,7 +77,8 @@ dictionary RTCOfferOptions : RTCOfferAnswerOptions {
 };
 
 [Pref="media.peerconnection.enabled",
- JSImplementation="@mozilla.org/dom/peerconnection;1"]
+ JSImplementation="@mozilla.org/dom/peerconnection;1",
+ Exposed=Window]
 interface RTCPeerConnection : EventTarget  {
   [Throws]
   constructor(optional RTCConfiguration configuration = {},
