@@ -1630,147 +1630,139 @@ FlatHuffmanKey::FlatHuffmanKey(const HuffmanKey* key)
 // ---- Implementation of Huffman Tables
 
 template <typename T>
-HuffmanTableImplementationGeneric<T>::Iterator::Iterator(
-    typename HuffmanTableImplementationSaturated<T>::Iterator&& iterator)
+GenericHuffmanTable<T>::Iterator::Iterator(
+    typename SingleLookupHuffmanTable<T>::Iterator&& iterator)
     : implementation(std::move(iterator)) {}
 
 template <typename T>
-HuffmanTableImplementationGeneric<T>::Iterator::Iterator(
-    typename HuffmanTableImplementationMap<T>::Iterator&& iterator)
+GenericHuffmanTable<T>::Iterator::Iterator(
+    typename MapBasedHuffmanTable<T>::Iterator&& iterator)
     : implementation(std::move(iterator)) {}
 
 template <typename T>
-void HuffmanTableImplementationGeneric<T>::Iterator::operator++() {
+void GenericHuffmanTable<T>::Iterator::operator++() {
   implementation.match(
-      [](typename HuffmanTableImplementationSaturated<T>::Iterator& iterator) {
+      [](typename SingleLookupHuffmanTable<T>::Iterator& iterator) {
         iterator.operator++();
       },
-      [](typename HuffmanTableImplementationMap<T>::Iterator& iterator) {
+      [](typename MapBasedHuffmanTable<T>::Iterator& iterator) {
         iterator.operator++();
       });
 }
 
 template <typename T>
-bool HuffmanTableImplementationGeneric<T>::Iterator::operator==(
-    const HuffmanTableImplementationGeneric<T>::Iterator& other) const {
+bool GenericHuffmanTable<T>::Iterator::operator==(
+    const GenericHuffmanTable<T>::Iterator& other) const {
   return implementation.match(
-      [other](const typename HuffmanTableImplementationSaturated<T>::Iterator&
-                  iterator) {
+      [other](const typename SingleLookupHuffmanTable<T>::Iterator& iterator) {
         return iterator ==
                other.implementation.template as<
-                   typename HuffmanTableImplementationSaturated<T>::Iterator>();
+                   typename SingleLookupHuffmanTable<T>::Iterator>();
       },
-      [other](
-          const typename HuffmanTableImplementationMap<T>::Iterator& iterator) {
+      [other](const typename MapBasedHuffmanTable<T>::Iterator& iterator) {
         return iterator ==
-               other.implementation.template as<
-                   typename HuffmanTableImplementationMap<T>::Iterator>();
+               other.implementation
+                   .template as<typename MapBasedHuffmanTable<T>::Iterator>();
       });
 }
 
 template <typename T>
-bool HuffmanTableImplementationGeneric<T>::Iterator::operator!=(
-    const HuffmanTableImplementationGeneric<T>::Iterator& other) const {
+bool GenericHuffmanTable<T>::Iterator::operator!=(
+    const GenericHuffmanTable<T>::Iterator& other) const {
   return implementation.match(
-      [other](const typename HuffmanTableImplementationSaturated<T>::Iterator&
-                  iterator) {
+      [other](const typename SingleLookupHuffmanTable<T>::Iterator& iterator) {
         return iterator !=
                other.implementation.template as<
-                   typename HuffmanTableImplementationSaturated<T>::Iterator>();
+                   typename SingleLookupHuffmanTable<T>::Iterator>();
       },
-      [other](
-          const typename HuffmanTableImplementationMap<T>::Iterator& iterator) {
+      [other](const typename MapBasedHuffmanTable<T>::Iterator& iterator) {
         return iterator !=
-               other.implementation.template as<
-                   typename HuffmanTableImplementationMap<T>::Iterator>();
+               other.implementation
+                   .template as<typename MapBasedHuffmanTable<T>::Iterator>();
       });
 }
 
 template <typename T>
-const T* HuffmanTableImplementationGeneric<T>::Iterator::operator*() const {
+const T* GenericHuffmanTable<T>::Iterator::operator*() const {
   return implementation.match(
-      [](const typename HuffmanTableImplementationSaturated<T>::Iterator&
-             iterator) { return iterator.operator*(); },
-      [](const typename HuffmanTableImplementationMap<T>::Iterator& iterator) {
+      [](const typename SingleLookupHuffmanTable<T>::Iterator& iterator) {
+        return iterator.operator*();
+      },
+      [](const typename MapBasedHuffmanTable<T>::Iterator& iterator) {
         return iterator.operator*();
       });
 }
 
 template <typename T>
-HuffmanTableImplementationGeneric<T>::HuffmanTableImplementationGeneric(
-    JSContext*)
+GenericHuffmanTable<T>::GenericHuffmanTable(JSContext*)
     : implementation(HuffmanTableUnreachable{}) {}
 
 template <typename T>
-JS::Result<Ok> HuffmanTableImplementationGeneric<T>::initComplete() {
+JS::Result<Ok> GenericHuffmanTable<T>::initComplete() {
   return this->implementation.match(
-      [](HuffmanTableImplementationSaturated<T>& implementation) -> JS::Result<Ok> {
+      [](SingleLookupHuffmanTable<T>& implementation) {
         return implementation.initComplete();
       },
-      [](HuffmanTableImplementationMap<T>& implementation) -> JS::Result<Ok> {
+      [](MapBasedHuffmanTable<T>& implementation) {
         return implementation.initComplete();
       },
-      [](HuffmanTableUnreachable&) -> JS::Result<Ok> {
-        MOZ_CRASH("HuffmanTableImplementationGeneric is unitialized!");
-        return Ok();
+      [](HuffmanTableUnreachable&) {
+        MOZ_CRASH("GenericHuffmanTable is unitialized!");
       });
 }
 
 template <typename T>
-typename HuffmanTableImplementationGeneric<T>::Iterator
-HuffmanTableImplementationGeneric<T>::begin() const {
+typename GenericHuffmanTable<T>::Iterator GenericHuffmanTable<T>::begin()
+    const {
   return this->implementation.match(
-      [](const HuffmanTableImplementationSaturated<T>& implementation)
-          -> HuffmanTableImplementationGeneric<T>::Iterator {
+      [](const SingleLookupHuffmanTable<T>& implementation)
+          -> GenericHuffmanTable<T>::Iterator {
         return Iterator(implementation.begin());
       },
-      [](const HuffmanTableImplementationMap<T>& implementation)
-          -> HuffmanTableImplementationGeneric<T>::Iterator {
+      [](const MapBasedHuffmanTable<T>& implementation)
+          -> GenericHuffmanTable<T>::Iterator {
         return Iterator(implementation.begin());
       },
-      [](const HuffmanTableUnreachable&)
-          -> HuffmanTableImplementationGeneric<T>::Iterator {
-        MOZ_CRASH("HuffmanTableImplementationGeneric is unitialized!");
+      [](const HuffmanTableUnreachable&) -> GenericHuffmanTable<T>::Iterator {
+        MOZ_CRASH("GenericHuffmanTable is unitialized!");
       });
 }
 
 template <typename T>
-typename HuffmanTableImplementationGeneric<T>::Iterator
-HuffmanTableImplementationGeneric<T>::end() const {
+typename GenericHuffmanTable<T>::Iterator GenericHuffmanTable<T>::end() const {
   return this->implementation.match(
-      [](const HuffmanTableImplementationSaturated<T>& implementation)
-          -> HuffmanTableImplementationGeneric<T>::Iterator {
+      [](const SingleLookupHuffmanTable<T>& implementation)
+          -> GenericHuffmanTable<T>::Iterator {
         return Iterator(implementation.end());
       },
-      [](const HuffmanTableImplementationMap<T>& implementation)
-          -> HuffmanTableImplementationGeneric<T>::Iterator {
+      [](const MapBasedHuffmanTable<T>& implementation)
+          -> GenericHuffmanTable<T>::Iterator {
         return Iterator(implementation.end());
       },
-      [](const HuffmanTableUnreachable&)
-          -> HuffmanTableImplementationGeneric<T>::Iterator {
-        MOZ_CRASH("HuffmanTableImplementationGeneric is unitialized!");
+      [](const HuffmanTableUnreachable&) -> GenericHuffmanTable<T>::Iterator {
+        MOZ_CRASH("GenericHuffmanTable is unitialized!");
       });
 }
 
 template <typename T>
-JS::Result<Ok> HuffmanTableImplementationGeneric<T>::initWithSingleValue(
-    JSContext* cx, T&& value) {
+JS::Result<Ok> GenericHuffmanTable<T>::initWithSingleValue(JSContext* cx,
+                                                           T&& value) {
   // Only one value: use HuffmanImplementationSaturated
   MOZ_ASSERT(this->implementation.template is<
              HuffmanTableUnreachable>());  // Make sure that we're initializing.
 
-  this->implementation = {
-      mozilla::VariantType<HuffmanTableImplementationSaturated<T>>{}, cx};
+  this->implementation = {mozilla::VariantType<SingleLookupHuffmanTable<T>>{},
+                          cx};
 
-  MOZ_TRY(
-      this->implementation.template as<HuffmanTableImplementationSaturated<T>>()
-          .initWithSingleValue(cx, std::move(value)));
+  MOZ_TRY(this->implementation.template as<SingleLookupHuffmanTable<T>>()
+              .initWithSingleValue(cx, std::move(value)));
   return Ok();
 }
 
 template <typename T>
-JS::Result<Ok> HuffmanTableImplementationGeneric<T>::initStart(
-    JSContext* cx, size_t numberOfSymbols, uint8_t maxBitLength) {
+JS::Result<Ok> GenericHuffmanTable<T>::initStart(JSContext* cx,
+                                                 size_t numberOfSymbols,
+                                                 uint8_t maxBitLength) {
   MOZ_ASSERT(this->implementation.template is<
              HuffmanTableUnreachable>());  // Make sure that we're initializing.
   if (
@@ -1780,60 +1772,60 @@ JS::Result<Ok> HuffmanTableImplementationGeneric<T>::initStart(
       // If there are too many symbols, don't put it in a saturated table
       // as indices  wouldn't fit into `InternalIndex` .
       numberOfSymbols >
-          mozilla::MaxValue<typename HuffmanTableImplementationSaturated<
-              T>::InternalIndex>::value) {
-    this->implementation = {
-        mozilla::VariantType<HuffmanTableImplementationMap<T>>{}, cx};
-    MOZ_TRY(this->implementation.template as<HuffmanTableImplementationMap<T>>()
-                .initStart(cx, numberOfSymbols, maxBitLength));
+          mozilla::MaxValue<
+              typename SingleLookupHuffmanTable<T>::InternalIndex>::value) {
+    this->implementation = {mozilla::VariantType<MapBasedHuffmanTable<T>>{},
+                            cx};
+    MOZ_TRY(
+        this->implementation.template as<MapBasedHuffmanTable<T>>().initStart(
+            cx, numberOfSymbols, maxBitLength));
   } else {
-    this->implementation = {
-        mozilla::VariantType<HuffmanTableImplementationSaturated<T>>{}, cx};
-    MOZ_TRY(this->implementation
-                .template as<HuffmanTableImplementationSaturated<T>>()
+    this->implementation = {mozilla::VariantType<SingleLookupHuffmanTable<T>>{},
+                            cx};
+    MOZ_TRY(this->implementation.template as<SingleLookupHuffmanTable<T>>()
                 .initStart(cx, numberOfSymbols, maxBitLength));
   }
   return Ok();
 }
 
 template <typename T>
-JS::Result<Ok> HuffmanTableImplementationGeneric<T>::addSymbol(
-    uint32_t bits, uint8_t bitLength, T&& value) {
+JS::Result<Ok> GenericHuffmanTable<T>::addSymbol(uint32_t bits,
+                                                 uint8_t bitLength, T&& value) {
   return this->implementation.match(
       [bits, bitLength, value = std::move(value)](
-          HuffmanTableImplementationSaturated<T>&
+          SingleLookupHuffmanTable<T>&
               implementation) mutable /* discard implicit const */
       -> JS::Result<Ok> {
         return implementation.addSymbol(bits, bitLength, std::move(value));
       },
       [bits, bitLength, value = std::move(value)](
-          HuffmanTableImplementationMap<T>&
+          MapBasedHuffmanTable<T>&
               implementation) mutable /* discard implicit const */
       -> JS::Result<Ok> {
         return implementation.addSymbol(bits, bitLength, std::move(value));
       },
       [](HuffmanTableUnreachable&) -> JS::Result<Ok> {
-        MOZ_CRASH("HuffmanTableImplementationGeneric is unitialized!");
+        MOZ_CRASH("GenericHuffmanTable is unitialized!");
         return Ok();
       });
 }
 
 template <typename T>
-HuffmanEntry<const T*> HuffmanTableImplementationGeneric<T>::lookup(
+HuffmanEntry<const T*> GenericHuffmanTable<T>::lookup(
     HuffmanLookup lookup) const {
   return this->implementation.match(
-      [lookup](const HuffmanTableImplementationSaturated<T>& implementation)
+      [lookup](const SingleLookupHuffmanTable<T>& implementation)
           -> HuffmanEntry<const T*> { return implementation.lookup(lookup); },
-      [lookup](const HuffmanTableImplementationMap<T>& implementation)
+      [lookup](const MapBasedHuffmanTable<T>& implementation)
           -> HuffmanEntry<const T*> { return implementation.lookup(lookup); },
       [](const HuffmanTableUnreachable&) -> HuffmanEntry<const T*> {
-        MOZ_CRASH("HuffmanTableImplementationGeneric is unitialized!");
+        MOZ_CRASH("GenericHuffmanTable is unitialized!");
       });
 }
 
 template <typename T, int N>
-JS::Result<Ok> HuffmanTableImplementationNaive<T, N>::initWithSingleValue(
-    JSContext* cx, T&& value) {
+JS::Result<Ok> NaiveHuffmanTable<T, N>::initWithSingleValue(JSContext* cx,
+                                                            T&& value) {
   MOZ_ASSERT(values.empty());  // Make sure that we're initializing.
   if (!values.append(HuffmanEntry<T>(0, 0, std::move(value)))) {
     return cx->alreadyReportedError();
@@ -1842,8 +1834,9 @@ JS::Result<Ok> HuffmanTableImplementationNaive<T, N>::initWithSingleValue(
 }
 
 template <typename T, int N>
-JS::Result<Ok> HuffmanTableImplementationNaive<T, N>::initStart(
-    JSContext* cx, size_t numberOfSymbols, uint8_t) {
+JS::Result<Ok> NaiveHuffmanTable<T, N>::initStart(JSContext* cx,
+                                                  size_t numberOfSymbols,
+                                                  uint8_t) {
   MOZ_ASSERT(values.empty());  // Make sure that we're initializing.
   if (!values.initCapacity(numberOfSymbols)) {
     return cx->alreadyReportedError();
@@ -1852,14 +1845,15 @@ JS::Result<Ok> HuffmanTableImplementationNaive<T, N>::initStart(
 }
 
 template <typename T, int N>
-JS::Result<Ok> HuffmanTableImplementationNaive<T, N>::initComplete() {
+JS::Result<Ok> NaiveHuffmanTable<T, N>::initComplete() {
   MOZ_ASSERT(values.length() <= N);
   return Ok();
 }
 
 template <typename T, int N>
-JS::Result<Ok> HuffmanTableImplementationNaive<T, N>::addSymbol(
-    uint32_t bits, uint8_t bitLength, T&& value) {
+JS::Result<Ok> NaiveHuffmanTable<T, N>::addSymbol(uint32_t bits,
+                                                  uint8_t bitLength,
+                                                  T&& value) {
   MOZ_ASSERT(bitLength != 0,
              "Adding a symbol with a bitLength of 0 doesn't make sense.");
   MOZ_ASSERT(values.empty() || values.back().key.bitLength <= bitLength,
@@ -1873,7 +1867,7 @@ JS::Result<Ok> HuffmanTableImplementationNaive<T, N>::addSymbol(
 }
 
 template <typename T, int N>
-HuffmanEntry<const T*> HuffmanTableImplementationNaive<T, N>::lookup(
+HuffmanEntry<const T*> NaiveHuffmanTable<T, N>::lookup(
     HuffmanLookup key) const {
   // This current implementation is O(length) and designed mostly for testing.
   // Future versions will presumably adapt the underlying data structure to
@@ -1897,8 +1891,8 @@ HuffmanEntry<const T*> HuffmanTableImplementationNaive<T, N>::lookup(
 }
 
 template <typename T>
-JS::Result<Ok> HuffmanTableImplementationMap<T>::initWithSingleValue(
-    JSContext* cx, T&& value) {
+JS::Result<Ok> MapBasedHuffmanTable<T>::initWithSingleValue(JSContext* cx,
+                                                            T&& value) {
   MOZ_ASSERT(values.empty());  // Make sure that we're initializing.
   const HuffmanKey key(0, 0);
   if (!values.put(FlatHuffmanKey(key), std::move(value)) || !keys.append(key)) {
@@ -1909,8 +1903,9 @@ JS::Result<Ok> HuffmanTableImplementationMap<T>::initWithSingleValue(
 }
 
 template <typename T>
-JS::Result<Ok> HuffmanTableImplementationMap<T>::initStart(
-    JSContext* cx, size_t numberOfSymbols, uint8_t) {
+JS::Result<Ok> MapBasedHuffmanTable<T>::initStart(JSContext* cx,
+                                                  size_t numberOfSymbols,
+                                                  uint8_t) {
   MOZ_ASSERT(values.empty());  // Make sure that we're initializing.
   if (!values.reserve(numberOfSymbols) || !keys.reserve(numberOfSymbols)) {
     ReportOutOfMemory(cx);
@@ -1920,7 +1915,7 @@ JS::Result<Ok> HuffmanTableImplementationMap<T>::initStart(
 }
 
 template <typename T>
-JS::Result<Ok> HuffmanTableImplementationMap<T>::initComplete() {
+JS::Result<Ok> MapBasedHuffmanTable<T>::initComplete() {
 #if DEBUG
   // Check that there is a bijection between `keys` and `values`.
   // 1. Injection.
@@ -1936,9 +1931,9 @@ JS::Result<Ok> HuffmanTableImplementationMap<T>::initComplete() {
 }
 
 template <typename T>
-JS::Result<Ok> HuffmanTableImplementationMap<T>::addSymbol(uint32_t bits,
-                                                           uint8_t bitLength,
-                                                           T&& value) {
+JS::Result<Ok> MapBasedHuffmanTable<T>::addSymbol(uint32_t bits,
+                                                  uint8_t bitLength,
+                                                  T&& value) {
   MOZ_ASSERT(bitLength != 0,
              "Adding a symbol with a bitLength of 0 doesn't make sense.");
   MOZ_ASSERT_IF(bitLength != 32 /* >> 32 is UB */, bits >> bitLength == 0);
@@ -1952,7 +1947,7 @@ JS::Result<Ok> HuffmanTableImplementationMap<T>::addSymbol(uint32_t bits,
 }
 
 template <typename T>
-HuffmanEntry<const T*> HuffmanTableImplementationMap<T>::lookup(
+HuffmanEntry<const T*> MapBasedHuffmanTable<T>::lookup(
     HuffmanLookup lookup) const {
   for (auto bitLength = 0; bitLength < MAX_CODE_BIT_LENGTH; ++bitLength) {
     const uint32_t bits = lookup.leadingBits(bitLength);
@@ -1969,35 +1964,34 @@ HuffmanEntry<const T*> HuffmanTableImplementationMap<T>::lookup(
 }
 
 template <typename T>
-HuffmanTableImplementationSaturated<T>::Iterator::Iterator(
-    const HuffmanEntry<T>* position)
+SingleLookupHuffmanTable<T>::Iterator::Iterator(const HuffmanEntry<T>* position)
     : position(position) {}
 
 template <typename T>
-void HuffmanTableImplementationSaturated<T>::Iterator::operator++() {
+void SingleLookupHuffmanTable<T>::Iterator::operator++() {
   position++;
 }
 
 template <typename T>
-const T* HuffmanTableImplementationSaturated<T>::Iterator::operator*() const {
+const T* SingleLookupHuffmanTable<T>::Iterator::operator*() const {
   return &position->value;
 }
 
 template <typename T>
-bool HuffmanTableImplementationSaturated<T>::Iterator::operator==(
+bool SingleLookupHuffmanTable<T>::Iterator::operator==(
     const Iterator& other) const {
   return position == other.position;
 }
 
 template <typename T>
-bool HuffmanTableImplementationSaturated<T>::Iterator::operator!=(
+bool SingleLookupHuffmanTable<T>::Iterator::operator!=(
     const Iterator& other) const {
   return position != other.position;
 }
 
 template <typename T>
-JS::Result<Ok> HuffmanTableImplementationSaturated<T>::initWithSingleValue(
-    JSContext* cx, T&& value) {
+JS::Result<Ok> SingleLookupHuffmanTable<T>::initWithSingleValue(JSContext* cx,
+                                                                T&& value) {
   MOZ_ASSERT(values.empty());  // Make sure that we're initializing.
   if (!values.emplaceBack(0, 0, std::move(value))) {
     return cx->alreadyReportedError();
@@ -2010,8 +2004,9 @@ JS::Result<Ok> HuffmanTableImplementationSaturated<T>::initWithSingleValue(
 }
 
 template <typename T>
-JS::Result<Ok> HuffmanTableImplementationSaturated<T>::initStart(
-    JSContext* cx, size_t numberOfSymbols, uint8_t maxBitLength) {
+JS::Result<Ok> SingleLookupHuffmanTable<T>::initStart(JSContext* cx,
+                                                      size_t numberOfSymbols,
+                                                      uint8_t maxBitLength) {
   MOZ_ASSERT(maxBitLength <= MAX_BIT_LENGTH_IN_SATURATED_TABLE);
   MOZ_ASSERT(values.empty());  // Make sure that we're initializing.
 
@@ -2033,7 +2028,7 @@ JS::Result<Ok> HuffmanTableImplementationSaturated<T>::initStart(
 }
 
 template <typename T>
-JS::Result<Ok> HuffmanTableImplementationSaturated<T>::initComplete() {
+JS::Result<Ok> SingleLookupHuffmanTable<T>::initComplete() {
   // Double-check that we've initialized properly.
   MOZ_ASSERT(this->maxBitLength <= MAX_CODE_BIT_LENGTH);
 #ifdef DEBUG
@@ -2055,8 +2050,9 @@ JS::Result<Ok> HuffmanTableImplementationSaturated<T>::initComplete() {
 }
 
 template <typename T>
-JS::Result<Ok> HuffmanTableImplementationSaturated<T>::addSymbol(
-    uint32_t bits, uint8_t bitLength, T&& value) {
+JS::Result<Ok> SingleLookupHuffmanTable<T>::addSymbol(uint32_t bits,
+                                                      uint8_t bitLength,
+                                                      T&& value) {
   MOZ_ASSERT(bitLength != 0,
              "Adding a symbol with a bitLength of 0 doesn't make sense.");
   MOZ_ASSERT(values.empty() || values.back().key.bitLength <= bitLength,
@@ -2100,7 +2096,7 @@ JS::Result<Ok> HuffmanTableImplementationSaturated<T>::addSymbol(
 }
 
 template <typename T>
-HuffmanEntry<const T*> HuffmanTableImplementationSaturated<T>::lookup(
+HuffmanEntry<const T*> SingleLookupHuffmanTable<T>::lookup(
     HuffmanLookup key) const {
   // Take the `maxBitLength` highest weight bits of `key`.
   // In the documentation of `addSymbol`, this is
