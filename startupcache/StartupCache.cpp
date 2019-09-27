@@ -82,7 +82,10 @@ static const uint8_t MAGIC[] = "startupcache0002";
 // rehashing. This is not a hard limit in release builds, but it is in
 // debug builds as it should be stable. If we exceed this number we should
 // just increase it.
-static const size_t STARTUP_CACHE_CAPACITY = 450;
+static const size_t STARTUP_CACHE_RESERVE_CAPACITY = 450;
+// This is a hard limit which we will assert on, to ensure that we don't
+// have some bug causing runaway cache growth.
+static const size_t STARTUP_CACHE_MAX_CAPACITY = 5000;
 
 #define STARTUP_CACHE_NAME "startupCache." SC_WORDSIZE "." SC_ENDIAN
 
@@ -143,6 +146,7 @@ StartupCache::StartupCache()
     : mDirty(false),
       mStartupWriteInitiated(false),
       mCurTableReferenced(false),
+      mRequestedCount(0),
       mCacheEntriesBaseOffset(0),
       mWriteThread(nullptr) {}
 
@@ -160,7 +164,8 @@ StartupCache::~StartupCache() {
   // it on the main thread and block the shutdown we simply wont update
   // the startup cache. Always do this if the file doesn't exist since
   // we use it part of the package step.
-  if (mDirty) {
+  if (mDirty || ShouldCompactCache()) {
+    mDirty = true;
     auto result = WriteToDisk();
     Unused << NS_WARN_IF(result.isErr());
   }
@@ -272,7 +277,7 @@ Result<Ok, nsresult> StartupCache::LoadArchive() {
 
   mCacheEntriesBaseOffset = sizeof(MAGIC) + sizeof(headerSize) + headerSize;
   {
-    if (!mTable.reserve(STARTUP_CACHE_CAPACITY)) {
+    if (!mTable.reserve(STARTUP_CACHE_RESERVE_CAPACITY)) {
       return Err(NS_ERROR_UNEXPECTED);
     }
     auto cleanup = MakeScopeExit([&]() { mTable.clear(); });
@@ -384,13 +389,16 @@ nsresult StartupCache::GetBuffer(const char* id, const char** outbuf,
   if (!value.mRequested) {
     value.mRequested = true;
     value.mRequestedOrder = ++mRequestedCount;
+    MOZ_ASSERT(mRequestedCount <= mTable.count(),
+               "Somehow we requested more StartupCache items than exist.");
+    ResetStartupWriteTimerCheckingReadCount();
   }
 
   // Track that something holds a reference into mTable, so we know to hold
   // onto it in case the cache is invalidated.
   mCurTableReferenced = true;
-  *outbuf = p->value().Elements();
-  *length = p->value().Length();
+  *outbuf = value.mData.get();
+  *length = value.mUncompressedSize;
   return NS_OK;
 }
 
@@ -419,6 +427,8 @@ nsresult StartupCache::PutBuffer(const char* id, UniquePtr<char[]>&& inbuf,
                                                      ++mRequestedCount))) {
     return ResetStartupWriteTimer();
   }
+  MOZ_DIAGNOSTIC_ASSERT(mTable.count() < STARTUP_CACHE_MAX_CAPACITY,
+                        "Too many StartupCache entries.");
   return NS_OK;
 }
 
@@ -457,6 +467,9 @@ Result<Ok, nsresult> StartupCache::WriteToDisk() {
   for (auto& e : entries) {
     auto key = e.first();
     auto value = e.second();
+    if (!value->mRequested) {
+      continue;
+    }
     auto uncompressedSize = value->mUncompressedSize;
     // Set the mHeaderOffsetInFile so we can go back and edit the offset.
     value->mHeaderOffsetInFile = buf.cursor();
@@ -480,6 +493,9 @@ Result<Ok, nsresult> StartupCache::WriteToDisk() {
   size_t offset = 0;
   for (auto& e : entries) {
     auto value = e.second();
+    if (!value->mRequested) {
+      continue;
+    }
     value->mOffset = offset;
     const size_t chunkSize = 1024 * 16;
     LZ4FrameCompressionContext ctx(6,         /* aCompressionLevel */
@@ -510,6 +526,9 @@ Result<Ok, nsresult> StartupCache::WriteToDisk() {
 
   for (auto& e : entries) {
     auto value = e.second();
+    if (!value->mRequested) {
+      continue;
+    }
     uint8_t* headerEntry = buf.Get() + value->mHeaderOffsetInFile;
     LittleEndian::writeUint32(headerEntry, value->mOffset);
     LittleEndian::writeUint32(headerEntry + sizeof(value->mOffset),
@@ -539,7 +558,10 @@ void StartupCache::InvalidateCache(bool memoryOnly) {
                           "Startup cache invalidated too many times.");
     mOldTables.AppendElement(std::move(mTable));
     mCurTableReferenced = false;
+  } else {
+    mTable.clear();
   }
+  mRequestedCount = 0;
   if (!memoryOnly) {
     nsresult rv = mFile->Remove(false);
     if (NS_FAILED(rv) && rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST &&
@@ -592,6 +614,15 @@ void StartupCache::ThreadedWrite(void* aClosure) {
   mozilla::IOInterposer::UnregisterCurrentThread();
 }
 
+bool StartupCache::ShouldCompactCache() {
+  // If we've requested less than 4/5 of the startup cache, then we should
+  // probably compact it down. This can happen quite easily after the first run,
+  // which seems to request quite a few more things than subsequent runs.
+  CheckedInt<uint32_t> threshold = CheckedInt<uint32_t>(mTable.count()) * 4 / 5;
+  MOZ_RELEASE_ASSERT(threshold.isValid(), "Runaway StartupCache size");
+  return mRequestedCount < threshold.value();
+}
+
 /*
  * The write-thread is spawned on a timeout(which is reset with every write).
  * This can avoid a slow shutdown. After writing out the cache, the zipreader is
@@ -606,12 +637,14 @@ void StartupCache::WriteTimeout(nsITimer* aTimer, void* aClosure) {
    * if the StartupCache object is valid.
    */
   StartupCache* startupCacheObj = static_cast<StartupCache*>(aClosure);
-  startupCacheObj->mStartupWriteInitiated = false;
-  startupCacheObj->mDirty = true;
-  startupCacheObj->mCacheData.reset();
-  startupCacheObj->mWriteThread = PR_CreateThread(
-      PR_USER_THREAD, StartupCache::ThreadedWrite, startupCacheObj,
-      PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+  if (startupCacheObj->mDirty || startupCacheObj->ShouldCompactCache()) {
+    startupCacheObj->mStartupWriteInitiated = false;
+    startupCacheObj->mDirty = true;
+    startupCacheObj->mCacheData.reset();
+    startupCacheObj->mWriteThread = PR_CreateThread(
+        PR_USER_THREAD, StartupCache::ThreadedWrite, startupCacheObj,
+        PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+  }
 }
 
 // We don't want to refcount StartupCache, so we'll just
@@ -643,6 +676,20 @@ nsresult StartupCache::GetDebugObjectOutputStream(
   NS_ADDREF(*aOutStream = aStream);
 #endif
 
+  return NS_OK;
+}
+
+nsresult StartupCache::ResetStartupWriteTimerCheckingReadCount() {
+  nsresult rv = NS_OK;
+  if (!mTimer)
+    mTimer = NS_NewTimer();
+  else
+    rv = mTimer->Cancel();
+  NS_ENSURE_SUCCESS(rv, rv);
+  // Wait for 10 seconds, then write out the cache.
+  mTimer->InitWithNamedFuncCallback(StartupCache::WriteTimeout, this, 60000,
+                                    nsITimer::TYPE_ONE_SHOT,
+                                    "StartupCache::WriteTimeout");
   return NS_OK;
 }
 
