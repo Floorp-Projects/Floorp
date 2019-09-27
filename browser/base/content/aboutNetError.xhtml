@@ -181,6 +181,14 @@
           </div>
         </div>
 
+        <!-- UI to temporarily re-enable TLS 1.0 and 1.1.
+             This should be removed after March 2020, see bug 1579285.  -->
+        <div id="enableTls10Container" class="button-container">
+          <p>&enableTls10.longDesc;</p>
+          <p>&enableTls10.note;</p>
+          <button id="enableTls10Button" class="primary">&enableTls10.label;</button>
+        </div>
+
         <!-- UI for option to report certificate errors to Mozilla. Removed on
              init for other error types .-->
         <div id="prefChangeContainer" class="button-container">
