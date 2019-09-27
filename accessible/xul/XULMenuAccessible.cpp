@@ -221,10 +221,8 @@ role XULMenuitemAccessible::NativeRole() const {
   nsCOMPtr<nsIDOMXULContainerElement> xulContainer = Elm()->AsXULContainer();
   if (xulContainer) return roles::PARENT_MENUITEM;
 
-  Accessible* widget = ContainerWidget();
-  if (widget && widget->Role() == roles::COMBOBOX_LIST) {
+  if (mParent && mParent->Role() == roles::COMBOBOX_LIST)
     return roles::COMBOBOX_OPTION;
-  }
 
   if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                                          nsGkAtoms::radio, eCaseMatters))
@@ -289,19 +287,11 @@ Accessible* XULMenuitemAccessible::ContainerWidget() const {
   if (menuFrame) {
     nsMenuParent* menuParent = menuFrame->GetMenuParent();
     if (menuParent) {
-      nsBoxFrame* frame = nullptr;
-      if (menuParent->IsMenuBar()) {  // menubar menu
-        frame = static_cast<nsMenuBarFrame*>(menuParent);
-      } else if (menuParent->IsMenu()) {  // a menupopup or parent menu item
-        frame = static_cast<nsMenuPopupFrame*>(menuParent);
-      }
-      if (frame) {
-        nsIContent* content = frame->GetContent();
-        if (content) {
-          MOZ_ASSERT(mDoc);
-          return mDoc->GetAccessible(content);
-        }
-      }
+      if (menuParent->IsMenuBar())  // menubar menu
+        return mParent;
+
+      // a menupoup or parent menu item
+      if (menuParent->IsMenu()) return mParent;
 
       // otherwise it's different kind of popups (like panel or tooltip), it
       // shouldn't be a real case.
