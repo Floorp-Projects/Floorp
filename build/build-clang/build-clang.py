@@ -507,9 +507,10 @@ def prune_final_dir_for_clang_tidy(final_dir, osx_cross_compile):
         name = os.path.basename(f)
         if name == "clang":
             continue
-        if osx_cross_compile and name == 'libLLVM.dylib':
+        if osx_cross_compile and name in ['libLLVM.dylib', 'libclang-cpp.dylib']:
             continue
-        if is_linux() and fnmatch.fnmatch(name, 'libLLVM*.so'):
+        if is_linux() and (fnmatch.fnmatch(name, 'libLLVM*.so') or
+                           fnmatch.fnmatch(name, 'libclang-cpp.so*')):
             continue
         delete(f)
     for f in glob.glob("%s/lib/clang/*" % final_dir):
