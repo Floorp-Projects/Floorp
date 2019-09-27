@@ -4981,13 +4981,6 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
 
       UNKNOWN_FILE_WARNING(leafName);
       REPORT_TELEMETRY_INIT_ERR(kQuotaInternalError, Ori_UnexpectedFile);
-
-#ifdef NIGHTLY_BUILD
-      Telemetry::ScalarSetMaximum(
-          Telemetry::ScalarID::QM_ORIGIN_DIRECTORY_UNEXPECTED_FILENAME,
-          leafName, 1);
-#endif
-
       RECORD_IN_NIGHTLY(statusKeeper, NS_ERROR_UNEXPECTED);
       CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(NS_ERROR_UNEXPECTED);
     }
@@ -7193,9 +7186,7 @@ bool QuotaManager::ParseOrigin(const nsACString& aOrigin, nsCString& aSpec,
 }
 
 // static
-void QuotaManager::InvalidateQuotaCache() {
-  gInvalidateQuotaCache = true;
-}
+void QuotaManager::InvalidateQuotaCache() { gInvalidateQuotaCache = true; }
 
 uint64_t QuotaManager::LockedCollectOriginsForEviction(
     uint64_t aMinSizeToBeFreed, nsTArray<RefPtr<DirectoryLockImpl>>& aLocks) {
