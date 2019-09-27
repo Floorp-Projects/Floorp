@@ -7,6 +7,7 @@ package mozilla.components.concept.engine
 import android.content.Context
 import android.util.AttributeSet
 import androidx.annotation.MainThread
+import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.WebExtension
@@ -161,6 +162,12 @@ interface Engine {
             "getTrackersLog is not supported by this engine."
         )
     )
+
+    /**
+     * Provides access to the tracking protection exception list for this engine.
+     */
+    val trackingProtectionExceptionStore: TrackingProtectionExceptionStorage
+        get() = throw UnsupportedOperationException("TrackingProtectionExceptionStorage not supported by this engine.")
 
     /**
      * Provides access to the settings of this engine.

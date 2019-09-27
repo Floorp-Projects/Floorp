@@ -8,10 +8,9 @@ import android.util.AtomicFile
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.storage.SnapshotSerializer
 import mozilla.components.concept.engine.Engine
-import org.json.JSONException
+import mozilla.components.support.ktx.util.readAndDeserialize
+import mozilla.components.support.ktx.util.writeString
 import org.json.JSONObject
-import java.io.FileOutputStream
-import java.io.IOException
 
 /**
  * Read a [SessionManager.Snapshot] from this [AtomicFile]. Returns `null` if no snapshot could be read.
@@ -65,35 +64,5 @@ fun AtomicFile.writeSnapshotItem(
 ): Boolean {
     return writeString {
         serializer.itemToJSON(item).toString()
-    }
-}
-
-private fun AtomicFile.writeString(block: () -> String): Boolean {
-    var outputStream: FileOutputStream? = null
-
-    return try {
-        outputStream = startWrite()
-        outputStream.write(block().toByteArray())
-        finishWrite(outputStream)
-        true
-    } catch (_: IOException) {
-        failWrite(outputStream)
-        false
-    } catch (_: JSONException) {
-        failWrite(outputStream)
-        false
-    }
-}
-
-private fun <T> AtomicFile.readAndDeserialize(block: (String) -> T): T? {
-    return try {
-        openRead().use {
-            val json = it.bufferedReader().use { reader -> reader.readText() }
-            block(json)
-        }
-    } catch (_: IOException) {
-        null
-    } catch (_: JSONException) {
-        null
     }
 }

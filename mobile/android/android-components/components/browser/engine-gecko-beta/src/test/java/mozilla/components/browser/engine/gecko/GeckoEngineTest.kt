@@ -15,6 +15,7 @@ import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
 import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.content.blocking.TrackerLog
+import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
@@ -583,6 +584,15 @@ class GeckoEngineTest {
 
         assertTrue(version.major >= 69)
         assertTrue(version.isAtLeast(69, 0, 0))
+    }
+
+    @Test
+    fun `after init is called the trackingProtectionExceptionStore must be restored`() {
+        val mockStore: TrackingProtectionExceptionStorage = mock()
+        val runtime: GeckoRuntime = mock()
+        GeckoEngine(context, runtime = runtime, trackingProtectionExceptionStore = mockStore)
+
+        verify(mockStore).restore()
     }
 
     private fun createDummyLogEntryList(): List<ContentBlockingController.LogEntry> {
