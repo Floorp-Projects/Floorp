@@ -5,7 +5,7 @@ use crate::command::{
 };
 use marionette_rs::common::{
     Cookie as MarionetteCookie, Date as MarionetteDate, Frame as MarionetteFrame,
-    Timeouts as MarionetteTimeouts, WebElement as MarionetteWebElement,
+    Timeouts as MarionetteTimeouts, WebElement as MarionetteWebElement, Window,
 };
 use marionette_rs::marionette::AppStatus;
 use marionette_rs::message::{Command, Message, MessageId, Request};
@@ -1038,6 +1038,9 @@ fn try_convert_to_marionette_message(
         SwitchToParentFrame => Some(Command::WebDriver(
             MarionetteWebDriverCommand::SwitchToParentFrame,
         )),
+        SwitchToWindow(ref x) => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::SwitchToWindow(x.to_marionette()?),
+        )),
         _ => None,
     })
 }
@@ -1118,9 +1121,6 @@ impl MarionetteCommand {
                 }
                 PerformActions(ref x) => {
                     (Some("WebDriver:PerformActions"), Some(x.to_marionette()))
-                }
-                SwitchToWindow(ref x) => {
-                    (Some("WebDriver:SwitchToWindow"), Some(x.to_marionette()))
                 }
                 TakeElementScreenshot(ref e) => {
                     let mut data = Map::new();
@@ -1653,18 +1653,12 @@ impl ToMarionette<MarionetteFrame> for SwitchToFrameParameters {
     }
 }
 
-impl ToMarionette<Map<String, Value>> for SwitchToWindowParameters {
-    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
-        let mut data = Map::new();
-        data.insert(
-            "name".to_string(),
-            serde_json::to_value(self.handle.clone())?,
-        );
-        data.insert(
-            "handle".to_string(),
-            serde_json::to_value(self.handle.clone())?,
-        );
-        Ok(data)
+impl ToMarionette<Window> for SwitchToWindowParameters {
+    fn to_marionette(&self) -> WebDriverResult<Window> {
+        Ok(Window {
+            name: self.handle.clone(),
+            handle: self.handle.clone(),
+        })
     }
 }
 
