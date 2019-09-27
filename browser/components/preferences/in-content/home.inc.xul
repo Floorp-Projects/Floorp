@@ -37,9 +37,9 @@
                 class="check-home-page-controlled"
                 data-preference-related="browser.startup.homepage">
         <menupopup>
-            <menuitem value="0" data-l10n-id="home-mode-choice-default" />
-            <menuitem value="2" data-l10n-id="home-mode-choice-custom" />
-            <menuitem value="1" data-l10n-id="home-mode-choice-blank" />
+          <menuitem value="0" data-l10n-id="home-mode-choice-default" />
+          <menuitem value="2" data-l10n-id="home-mode-choice-custom" />
+          <menuitem value="1" data-l10n-id="home-mode-choice-blank" />
         </menupopup>
       </menulist>
 
@@ -97,8 +97,8 @@
                 flex="1"
                 preference="browser.newtabpage.enabled">
       <menupopup>
-          <menuitem value="0" data-l10n-id="home-mode-choice-default" />
-          <menuitem value="1" data-l10n-id="home-mode-choice-blank" />
+        <menuitem value="0" data-l10n-id="home-mode-choice-default" />
+        <menuitem value="1" data-l10n-id="home-mode-choice-blank" />
       </menupopup>
     </menulist>
   </hbox>
