@@ -624,6 +624,21 @@ nsresult nsAppShellService::JustCreateTopWindow(
   if (aChromeMask & nsIWebBrowserChrome::CHROME_ALWAYS_ON_TOP)
     widgetInitData.mAlwaysOnTop = true;
 
+#ifdef MOZ_WIDGET_GTK
+  // Linux/Gtk PIP window support. It's Chrome Toplevel window, always on top
+  // and without any bar.
+  uint32_t pipMask = nsIWebBrowserChrome::CHROME_ALWAYS_ON_TOP |
+                     nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
+  uint32_t barMask = nsIWebBrowserChrome::CHROME_MENUBAR |
+                     nsIWebBrowserChrome::CHROME_TOOLBAR |
+                     nsIWebBrowserChrome::CHROME_LOCATIONBAR |
+                     nsIWebBrowserChrome::CHROME_STATUSBAR;
+  if (widgetInitData.mWindowType == eWindowType_toplevel &&
+      ((aChromeMask & pipMask) == pipMask) && !(aChromeMask & barMask)) {
+    widgetInitData.mPIPWindow = true;
+  }
+#endif
+
 #ifdef XP_MACOSX
   // Mac OS X sheet support
   // Adding CHROME_OPENAS_CHROME to sheetMask makes modal windows opened from
