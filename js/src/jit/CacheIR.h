@@ -134,8 +134,6 @@ class TypedOperandId : public OperandId {
  public:
   MOZ_IMPLICIT TypedOperandId(ObjOperandId id)
       : OperandId(id.id()), type_(JSVAL_TYPE_OBJECT) {}
-  MOZ_IMPLICIT TypedOperandId(NumberOperandId id)
-      : OperandId(id.id()), type_(JSVAL_TYPE_OBJECT) {}
   MOZ_IMPLICIT TypedOperandId(StringOperandId id)
       : OperandId(id.id()), type_(JSVAL_TYPE_STRING) {}
   MOZ_IMPLICIT TypedOperandId(SymbolOperandId id)
