@@ -535,7 +535,7 @@ class AsyncTabSwitcher {
     this.log("Loading tab " + this.tinfo(this.loadingTab));
 
     this.loadTimer = this.setTimer(
-      () => this.onLoadTimeout(),
+      () => this.handleEvent({ type: "loadTimeout" }),
       this.TAB_SWITCH_TIMEOUT
     );
     this.setTabState(this.requestedTab, this.STATE_LOADING);
@@ -710,13 +710,8 @@ class AsyncTabSwitcher {
 
   // Fires when we're ready to unload unused tabs.
   onUnloadTimeout() {
-    this.logState("onUnloadTimeout");
-    this.preActions();
     this.unloadTimer = null;
-
     this.unloadNonRequiredTabs();
-
-    this.postActions("onUnloadTimeout");
   }
 
   deactivateCachedBackgroundTabs() {
@@ -768,7 +763,7 @@ class AsyncTabSwitcher {
     if (numPending) {
       // Keep the timer going since there may be more tabs to unload.
       this.unloadTimer = this.setTimer(
-        () => this.onUnloadTimeout(),
+        () => this.handleEvent({ type: "unloadTimeout" }),
         this.UNLOAD_DELAY
       );
     }
@@ -776,10 +771,7 @@ class AsyncTabSwitcher {
 
   // Fires when an ongoing load has taken too long.
   onLoadTimeout() {
-    this.logState("onLoadTimeout");
-    this.preActions();
     this.maybeClearLoadTimer("onLoadTimeout");
-    this.postActions("onLoadTimeout");
   }
 
   // Fires when the layers become available for a tab.
@@ -875,17 +867,16 @@ class AsyncTabSwitcher {
     }
   }
 
+  noteTabRemoved(tab) {
+    if (this.lastVisibleTab == tab) {
+      this.handleEvent({ type: "tabRemoved", tab });
+    }
+  }
+
   // Called when a tab has been removed, and the browser node is
   // about to be removed from the DOM.
   onTabRemoved(tab) {
-    if (this.lastVisibleTab == tab) {
-      // The browser that was being presented to the user is
-      // going to be removed during this tick of the event loop.
-      // This will cause us to show a tab spinner instead.
-      this.preActions();
-      this.lastVisibleTab = null;
-      this.postActions("onTabRemoved");
-    }
+    this.lastVisibleTab = null;
   }
 
   onSizeModeOrOcclusionStateChange() {
@@ -1112,17 +1103,17 @@ class AsyncTabSwitcher {
   }
 
   queueUnload(unloadTimeout) {
-    this.preActions();
+    this.handleEvent({ type: "queueUnload", unloadTimeout });
+  }
 
+  onQueueUnload(unloadTimeout) {
     if (this.unloadTimer) {
       this.clearTimer(this.unloadTimer);
     }
     this.unloadTimer = this.setTimer(
-      () => this.onUnloadTimeout(),
+      () => this.handleEvent({ type: "unloadTimeout" }),
       unloadTimeout
     );
-
-    this.postActions("queueUnload");
   }
 
   handleEvent(event, delayed = false) {
@@ -1140,6 +1131,18 @@ class AsyncTabSwitcher {
       this.preActions();
 
       switch (event.type) {
+        case "queueUnload":
+          this.onQueueUnload(event.unloadTimeout);
+          break;
+        case "unloadTimeout":
+          this.onUnloadTimeout();
+          break;
+        case "loadTimeout":
+          this.onLoadTimeout();
+          break;
+        case "tabRemoved":
+          this.onTabRemoved(event.tab);
+          break;
         case "MozLayerTreeReady":
           this.onLayersReady(event.originalTarget);
           break;
