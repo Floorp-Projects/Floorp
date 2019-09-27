@@ -4,7 +4,6 @@
 
 package mozilla.components.support.sync.telemetry
 
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.appservices.sync15.EngineInfo
 import mozilla.appservices.sync15.FailureName
@@ -19,6 +18,7 @@ import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.sync.telemetry.GleanMetrics.BookmarksSync
 import mozilla.components.support.sync.telemetry.GleanMetrics.HistorySync
 import mozilla.components.support.sync.telemetry.GleanMetrics.Pings
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
@@ -34,7 +34,7 @@ private fun Date.asSeconds() = time / BaseGleanSyncPing.MILLIS_PER_SEC
 @RunWith(AndroidJUnit4::class)
 class SyncTelemetryTest {
     @get:Rule
-    val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())
+    val gleanRule = GleanTestRule(testContext)
 
     private var now: Long = 0
     private var pingCount = 0
@@ -47,7 +47,7 @@ class SyncTelemetryTest {
 
     @Test
     fun `sends history telemetry pings on success`() {
-        SyncTelemetry.processHistoryPing(SyncTelemetryPing(
+        val noGlobalError = SyncTelemetry.processHistoryPing(SyncTelemetryPing(
             version = 1,
             uid = "abc123",
             syncs = listOf(
@@ -147,11 +147,12 @@ class SyncTelemetryTest {
         }
 
         assertEquals(2, pingCount)
+        assertTrue(noGlobalError)
     }
 
     @Test
     fun `sends history telemetry pings on engine failure`() {
-        SyncTelemetry.processHistoryPing(SyncTelemetryPing(
+        val noGlobalError = SyncTelemetry.processHistoryPing(SyncTelemetryPing(
             version = 1,
             uid = "abc123",
             syncs = listOf(
@@ -287,11 +288,12 @@ class SyncTelemetryTest {
         }
 
         assertEquals(6, pingCount)
+        assertTrue(noGlobalError)
     }
 
     @Test
     fun `sends history telemetry pings on sync failure`() {
-        SyncTelemetry.processHistoryPing(SyncTelemetryPing(
+        val noGlobalError = SyncTelemetry.processHistoryPing(SyncTelemetryPing(
             version = 1,
             uid = "abc123",
             syncs = listOf(
@@ -319,11 +321,12 @@ class SyncTelemetryTest {
         }
 
         assertEquals(1, pingCount)
+        assertFalse(noGlobalError)
     }
 
     @Test
     fun `sends bookmarks telemetry pings on success`() {
-        SyncTelemetry.processBookmarksPing(SyncTelemetryPing(
+        val noGlobalError = SyncTelemetry.processBookmarksPing(SyncTelemetryPing(
             version = 1,
             uid = "xyz789",
             syncs = listOf(
@@ -385,11 +388,12 @@ class SyncTelemetryTest {
         }
 
         assertEquals(pingCount, 1)
+        assertTrue(noGlobalError)
     }
 
     @Test
     fun `sends bookmarks telemetry pings on engine failure`() {
-        SyncTelemetry.processBookmarksPing(SyncTelemetryPing(
+        val noGlobalError = SyncTelemetry.processBookmarksPing(SyncTelemetryPing(
             version = 1,
             uid = "abc123",
             syncs = listOf(
@@ -516,11 +520,12 @@ class SyncTelemetryTest {
         }
 
         assertEquals(6, pingCount)
+        assertTrue(noGlobalError)
     }
 
     @Test
     fun `sends bookmarks telemetry pings on sync failure`() {
-        SyncTelemetry.processBookmarksPing(SyncTelemetryPing(
+        val noGlobalError = SyncTelemetry.processBookmarksPing(SyncTelemetryPing(
             version = 1,
             uid = "abc123",
             syncs = listOf(
@@ -548,5 +553,6 @@ class SyncTelemetryTest {
         }
 
         assertEquals(1, pingCount)
+        assertFalse(noGlobalError)
     }
 }

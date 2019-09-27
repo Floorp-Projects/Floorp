@@ -392,9 +392,17 @@ class WorkManagerSyncWorker(
 
         // Process telemetry.
         syncResult.telemetry?.let {
-            // TODO in case of errors, will this not duplicate error reporting?
-            SyncTelemetry.processBookmarksPing(it)
-            SyncTelemetry.processHistoryPing(it)
+            // Yes, this is complete garbage.
+            // But, what this does: individual 'process' function will report global sync errors
+            // as part of its corresponding ping. We don't want to report a global sync error twice,
+            // so we check for the boolean flag that indicates if this happened or not.
+            // There's a complete mismatch between what Glean supports and what we need
+            // it to do here. They don't support "nested metrics" and so we resort to these hacks.
+            // It shouldn't matter in which order these 'process' functions are called.
+            val noGlobalErrorsReported = SyncTelemetry.processBookmarksPing(it)
+            if (noGlobalErrorsReported) {
+                SyncTelemetry.processHistoryPing(it)
+            }
             // TODO telemetry for the passwords engine.
             // See https://github.com/mozilla-mobile/android-components/issues/4556
         }

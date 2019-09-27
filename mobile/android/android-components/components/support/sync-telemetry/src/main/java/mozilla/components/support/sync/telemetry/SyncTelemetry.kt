@@ -21,14 +21,15 @@ const val MAX_FAILURE_REASON_LENGTH = 100
 object SyncTelemetry {
     /**
      * Processes a history-related ping information from the [ping].
+     * @return 'false' if global error was encountered, 'true' otherwise.
      */
     @Suppress("ComplexMethod", "NestedBlockDepth")
-    fun processHistoryPing(ping: SyncTelemetryPing, sendPing: () -> Unit = { Pings.historySync.send() }) {
+    fun processHistoryPing(ping: SyncTelemetryPing, sendPing: () -> Unit = { Pings.historySync.send() }): Boolean {
         ping.syncs.forEach eachSync@{ sync ->
             sync.failureReason?.let {
                 recordFailureReason(it, HistorySync.failureReason)
                 sendPing()
-                return@eachSync
+                return false
             }
             sync.engines.forEach eachEngine@{ engine ->
                 if (engine.name != "history") {
@@ -67,13 +68,15 @@ object SyncTelemetry {
                 sendPing()
             }
         }
+        return true
     }
 
     /**
      * Processes a bookmarks-related ping information from the [ping].
+     * @return 'false' if global error was encountered, 'true' otherwise.
      */
     @Suppress("ComplexMethod", "NestedBlockDepth")
-    fun processBookmarksPing(ping: SyncTelemetryPing, sendPing: () -> Unit = { Pings.bookmarksSync.send() }) {
+    fun processBookmarksPing(ping: SyncTelemetryPing, sendPing: () -> Unit = { Pings.bookmarksSync.send() }): Boolean {
         // This function is almost identical to `recordHistoryPing`, with additional
         // reporting for validation problems. Unfortunately, since the
         // `BookmarksSync` and `HistorySync` metrics are two separate objects, we
@@ -84,7 +87,7 @@ object SyncTelemetry {
                 // report the error and bail.
                 recordFailureReason(it, BookmarksSync.failureReason)
                 sendPing()
-                return@eachSync
+                return false
             }
             sync.engines.forEach eachEngine@{ engine ->
                 if (engine.name != "bookmarks") {
@@ -125,6 +128,7 @@ object SyncTelemetry {
                 sendPing()
             }
         }
+        return true
     }
 
     private fun recordFailureReason(reason: FailureReason, failureReasonMetric: LabeledMetricType<StringMetricType>) {
