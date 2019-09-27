@@ -2080,15 +2080,8 @@ JS::Result<Ok> SingleLookupHuffmanTable<T>::addSymbol(uint32_t bits,
   // To perform a fast lookup, we precompute all possible values of `0bB...B`
   // for which this condition is true. That's all the values of segment
   // `[0bC...C0...0, 0bC...C1...1]`.
-  const uint8_t padding = maxBitLength - bitLength;
-
-  // `begin` holds `0bC...C0...0` above
-  const size_t begin = bits << padding;
-
-  // `length holds `0bC...C1...1` - `0bC...C0...0`
-  const size_t length =
-      ((padding != 0) ? size_t(-1) >> (8 * sizeof(size_t) - padding) : 0) + 1;
-  for (size_t i = begin; i < begin + length; ++i) {
+  const HuffmanLookup base(bits, bitLength);
+  for (size_t i : base.suffixes(maxBitLength)) {
     saturated[i] = index;
   }
 
@@ -2596,6 +2589,24 @@ uint32_t HuffmanLookup::leadingBits(const uint8_t aBitLength) const {
       (aBitLength == 0) ? 0  // Shifting a uint32_t by 32 bits is UB.
                         : this->bits >> uint32_t(this->bitLength - aBitLength);
   return result;
+}
+
+mozilla::detail::IntegerRange<size_t> HuffmanLookup::suffixes(
+    uint8_t expectedBitLength) const {
+  if (expectedBitLength <= bitLength) {
+    // We have too many bits, we need to truncate the HuffmanLookup,
+    // then return a single element.
+    const uint8_t shearing = bitLength - expectedBitLength;
+    const size_t first = size_t(bits) >> shearing;
+    const size_t last = first;
+    return mozilla::IntegerRange<size_t>(first, last + 1);
+  }
+
+  // We need to pad with lower-weight 0s.
+  const uint8_t padding = expectedBitLength - bitLength;
+  const size_t first = bits << padding;
+  const size_t last = first + (size_t(-1) >> (8 * sizeof(size_t) - padding));
+  return mozilla::IntegerRange<size_t>(first, last + 1);
 }
 
 }  // namespace frontend
