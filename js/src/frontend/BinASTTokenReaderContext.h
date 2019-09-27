@@ -89,13 +89,16 @@ struct HuffmanLookup {
   // equal to Huffman Key `0100`.
   uint32_t leadingBits(const uint8_t bitLength) const;
 
-  // Split a HuffmanLookup into a prefix of `prefixBitLength` bits
-  // and a suffix containing the remaining buts.
+  // Split a HuffmanLookup into a prefix and a suffix.
   //
-  // If the prefix contains fewer than `prefixBitLength`, it is
-  // padded with lower-weight 0s into a `prefixBitLength`
-  // HuffmanLookup.
-  Split<HuffmanLookup> split(const uint8_t prefixBitLength) const;
+  // If the value holds at least `prefixLength` bits, the
+  // prefix consists in the first `prefixLength` bits and the
+  // suffix in the remaining bits.
+  //
+  // If the value holds fewer bits, the prefix consists in
+  // all the bits, with 0 padding at the end to ensure that
+  // the prefix contains exactly `prefixLength` bits.
+  Split<HuffmanLookup> split(const uint8_t prefixLength) const;
 
   // The buffer holding the bits. At this stage, bits are stored
   // in the same order as `HuffmanKey`. See the implementation of
@@ -631,16 +634,7 @@ class MultiLookupHuffmanTable {
       PrefixBitLength + Subtable::MAX_BIT_LENGTH;
 
   explicit MultiLookupHuffmanTable(JSContext* cx)
-      : cx_(cx),
-        values(cx),
-        subTables(cx),
-        largestBitLength(-1)
-#ifdef DEBUG
-        ,
-        control(cx)
-#endif  // DEBUG
-  {
-  }
+      : cx_(cx), values(cx), subTables(cx), largestBitLength(-1) {}
   MultiLookupHuffmanTable(MultiLookupHuffmanTable&& other) = default;
 
   // Initialize a Huffman table containing `numberOfSymbols`.
@@ -718,10 +712,6 @@ class MultiLookupHuffmanTable {
   // Invariant (once `init*` has been called):
   // - `largestBitLength <= MAX_CODE_BIT_LENGTH`
   uint8_t largestBitLength;
-
-#ifdef DEBUG
-  MapBasedHuffmanTable<T> control;
-#endif  // DEBUG
 
   friend class HuffmanPreludeReader;
 };
