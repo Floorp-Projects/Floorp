@@ -191,3 +191,9 @@ iframe {
   height: 100%;
   width: 100%;
 }
+
+/* Extension Sidebar */
+.inspector-tabpanel.extension-sidebar {
+  height: 100%;
+  overflow-y: auto;
+}
