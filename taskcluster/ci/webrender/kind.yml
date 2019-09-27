@@ -250,7 +250,7 @@ jobs:
             artifacts:
                 - type: file
                   name: public/build/wrench-debug.apk
-                  path: /builds/worker/checkouts/gecko/gfx/wr/target/android-artifacts/app/build/outputs/apk/debug/app-debug.apk
+                  path: /builds/worker/checkouts/gecko/gfx/wr/target/android-artifacts/debug/apk/wrench.apk
                 - type: file
                   name: public/build/reftests.tar.gz
                   path: /builds/worker/checkouts/gecko/gfx/wr/wrench/reftests.tar.gz
@@ -285,7 +285,7 @@ jobs:
             artifacts:
                 - type: file
                   name: public/build/wrench-release.apk
-                  path: /builds/worker/checkouts/gecko/gfx/wr/target/android-artifacts/app/build/outputs/apk/release/app-release-unsigned.apk
+                  path: /builds/worker/checkouts/gecko/gfx/wr/target/android-artifacts/release/apk/wrench.apk
                 - type: file
                   name: public/build/reftests.tar.gz
                   path: /builds/worker/checkouts/gecko/gfx/wr/wrench/reftests.tar.gz
@@ -310,7 +310,6 @@ jobs:
                 - 'build.gradle'
                 - 'gfx/wr/**'
                 - 'taskcluster/scripts/misc/wrench-android-build.sh'
-                - 'mobile/android/debug_sign_tool.py'
 
     android-emulator-debug:
         description: Run debug wrench reftests on Android emulator
