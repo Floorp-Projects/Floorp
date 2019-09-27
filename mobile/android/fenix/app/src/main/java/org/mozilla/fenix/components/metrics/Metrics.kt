@@ -12,6 +12,7 @@ import mozilla.components.feature.contextmenu.facts.ContextMenuFacts
 import mozilla.components.feature.customtabs.CustomTabsFacts
 import mozilla.components.feature.findinpage.facts.FindInPageFacts
 import mozilla.components.support.base.Component
+import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.facts.FactProcessor
 import mozilla.components.support.base.facts.Facts
@@ -120,6 +121,8 @@ sealed class Event {
     object PrivateBrowsingStaticShortcutPrivateTab : Event()
     object TabMediaPlay : Event()
     object TabMediaPause : Event()
+    object NotificationMediaPlay : Event()
+    object NotificationMediaPause : Event()
     object TrackingProtectionTrackerList : Event()
     object TrackingProtectionIconPressed : Event()
     object TrackingProtectionSettingsPanel : Event()
@@ -316,6 +319,17 @@ private fun Fact.toEvent(): Event? = when (Pair(component, item)) {
     Component.FEATURE_CUSTOMTABS to CustomTabsFacts.Items.CLOSE -> Event.CustomTabsClosed
     Component.FEATURE_CUSTOMTABS to CustomTabsFacts.Items.ACTION_BUTTON -> Event.CustomTabsActionTapped
 
+    Component.FEATURE_MEDIA to "notification" -> {
+        when (action) {
+            Action.PLAY -> {
+                Event.NotificationMediaPlay
+            }
+            Action.PAUSE -> {
+                Event.NotificationMediaPause
+            }
+            else -> null
+        }
+    }
     else -> null
 }
 

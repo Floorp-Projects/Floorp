@@ -24,6 +24,7 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.FindInPage
 import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.Library
+import org.mozilla.fenix.GleanMetrics.MediaNotification
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingMode
@@ -377,6 +378,12 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.TabMediaPause -> EventWrapper<NoExtraKeys>(
             { Tab.mediaPause.record(it) }
+        )
+        is Event.NotificationMediaPlay -> EventWrapper<NoExtraKeys>(
+            { MediaNotification.play.record(it) }
+        )
+        is Event.NotificationMediaPause -> EventWrapper<NoExtraKeys>(
+            { MediaNotification.pause.record(it) }
         )
         is Event.TrackingProtectionTrackerList -> EventWrapper<NoExtraKeys>(
             { TrackingProtection.etpTrackerList.record(it) }

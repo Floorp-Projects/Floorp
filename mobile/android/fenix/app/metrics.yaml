@@ -1451,6 +1451,30 @@ tab:
       - fenix-core@mozilla.com
     expires: "2020-03-01"
 
+media_notification:
+  play:
+    type: event
+    description: >
+      A user pressed the play icon on the media notification
+    bugs:
+      - 5197
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/5520
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  pause:
+    type: event
+    description: >
+      A user pressed the pause icon on the media notification
+    bugs:
+      - 5197
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/5520
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+
 experiments.metrics:
   active_experiment:
     type: string
