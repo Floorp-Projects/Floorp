@@ -422,7 +422,7 @@ interface nsILoadInfo : nsISupports
    * context.
    */
   [infallible] attribute boolean skipContentSniffing;
-  
+
   /**
    * True if this request is embedded in a context that can't be third-party
    * (i.e. an iframe embedded in a cross-origin parent window). If this is
@@ -1164,6 +1164,9 @@ interface nsILoadInfo : nsISupports
   const uint32_t BLOCKING_REASON_CLASSIFY_TRACKING_URI = 2004;
   const uint32_t BLOCKING_REASON_CLASSIFY_BLOCKED_URI = 2005;
   const uint32_t BLOCKING_REASON_CLASSIFY_HARMFUL_URI = 2006;
+  const uint32_t BLOCKING_REASON_CLASSIFY_CRYPTOMINING_URI = 2007;
+  const uint32_t BLOCKING_REASON_CLASSIFY_FINGERPRINTING_URI = 2008;
+  const uint32_t BLOCKING_REASON_CLASSIFY_SOCIALTRACKING_URI = 2009;
   const uint32_t BLOCKING_REASON_MIXED_BLOCKED = 3001;
   // The general reason comes from nsCSPContext::permitsInternal(),
   // which is way too generic to distinguish an exact reason.
