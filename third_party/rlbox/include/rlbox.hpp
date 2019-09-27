@@ -65,18 +65,45 @@ public:
    *
    * @param reason An explanation why the unverified unwrapping is safe.
    */
-  template<size_t N>
-  inline auto unverified_safe_because(const char (&reason)[N])
-  {
-    RLBOX_UNUSED(reason);
-    return UNSAFE_unverified();
-  }
-  template<size_t N>
-  inline auto unverified_safe_because(const char (&reason)[N]) const
-  {
-    RLBOX_UNUSED(reason);
-    return UNSAFE_unverified();
-  }
+  rlbox_detail_member_and_const(
+    template<size_t N>
+    inline auto unverified_safe_because(const char (&reason)[N]),
+    {
+      RLBOX_UNUSED(reason);
+      static_assert(!std::is_pointer_v<T>,
+                    "unverified_safe_because does not support pointers. Use "
+                    "unverified_safe_pointer_because.");
+      return UNSAFE_unverified();
+    });
+
+  rlbox_detail_member_and_const(
+    template<size_t N>
+    inline auto unverified_safe_pointer_because(size_t count,
+                                                const char (&reason)[N]),
+    {
+      RLBOX_UNUSED(reason);
+
+      static_assert(std::is_pointer_v<T>, "Expected pointer type");
+      using T_Pointed = std::remove_pointer_t<T>;
+      if_constexpr_named(cond1, std::is_pointer_v<T_Pointed>)
+      {
+        rlbox_detail_static_fail_because(
+          cond1,
+          "There is no way to use unverified_safe_pointer_because for "
+          "'pointers to pointers' safely. Use copy_and_verify instead.");
+        return nullptr;
+      }
+
+      auto ret = UNSAFE_unverified();
+      if (ret != nullptr) {
+        size_t bytes = sizeof(T) * count;
+        detail::check_range_doesnt_cross_app_sbx_boundary<T_Sbx>(ret, bytes);
+      }
+      return ret;
+    });
+
+  inline auto INTERNAL_unverified_safe() { return UNSAFE_unverified(); }
+  inline auto INTERNAL_unverified_safe() const { return UNSAFE_unverified(); }
 
 #define BinaryOpValAndPtr(opSymbol)                                            \
   template<typename T_Rhs>                                                     \

@@ -45,6 +45,10 @@ public:
     (void)reason; /* unused */
     return val;
   }
+  inline bool UNSAFE_unverified() const { return val; }
+  inline bool UNSAFE_unverified() { return val; }
+  inline auto INTERNAL_unverified_safe() { return UNSAFE_unverified(); }
+  inline auto INTERNAL_unverified_safe() const { return UNSAFE_unverified(); }
 };
 
 template<typename T_Sbx>
