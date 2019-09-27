@@ -19,6 +19,12 @@ permalink: /changelog/
   * Adds `Resources.Theme.resolveAttribute(Int)` to quickly get a resource ID from a theme.
   * Adds `Context.getColorFromAttr` to get a color int from an attribute.
 
+* **feature-customtabs**
+  * Added `CustomTabWindowFeature` to handle windows inside custom tabs, PWAs, and TWAs.
+
+* **feature-tab-collections**
+  * Behavior change: In a collection List<TabEntity> is now ordered descending by creation date (newest tab in a collection on top)
+
 # 14.0.1
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v14.0.0...v14.0.1)
