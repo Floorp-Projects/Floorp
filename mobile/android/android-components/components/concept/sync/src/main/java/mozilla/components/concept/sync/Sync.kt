@@ -53,6 +53,13 @@ interface SyncableStore {
      * @return [SyncStatus] A status object describing how sync went.
      */
     suspend fun sync(authInfo: SyncAuthInfo): SyncStatus
+
+    /**
+     * This should be removed. See: https://github.com/mozilla/application-services/issues/1877
+     *
+     * @return raw internal handle that could be used for referencing underlying [PlacesApi]. Use it with SyncManager.
+     */
+    fun getHandle(): Long
 }
 
 /**

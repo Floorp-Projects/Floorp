@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+plugins {
+    id "com.jetbrains.python.envs" version "0.0.26"
+}
+
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
@@ -11,48 +15,36 @@ android {
     defaultConfig {
         minSdkVersion config.minSdkVersion
         targetSdkVersion config.targetSdkVersion
-    }
 
-    lintOptions {
-        warningsAsErrors true
-        abortOnError true
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            consumerProguardFiles 'proguard-rules-consumer.pro'
         }
     }
 }
 
 dependencies {
-    // Types defined in concept-sync are part of the public API of this module.
-    api project(':concept-sync')
+    implementation project(':support-base')
 
-    // Parts of this dependency are typealiase'd or are otherwise part of this module's public API.
-    api Dependencies.mozilla_fxa
-    implementation Dependencies.mozilla_sync_manager
-
-    // Observable is part of public API of the FxaAccountManager.
-    api project(':support-base')
-    implementation project(':support-sync-telemetry')
-    implementation project(':support-ktx')
-
+    implementation project(':service-glean')
     implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
+    implementation Dependencies.mozilla_sync15
 
-    implementation Dependencies.androidx_work_runtime
-
-    testImplementation project(':support-test')
+    testImplementation Dependencies.testing_robolectric
+    testImplementation project(":support-test")
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.androidx_test_junit
     testImplementation Dependencies.androidx_work_testing
-    testImplementation Dependencies.testing_robolectric
+
     testImplementation Dependencies.testing_mockito
-    testImplementation Dependencies.testing_coroutines
 }
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)
+
+ext.gleanGenerateMarkdownDocs = true
+apply from: '../../service/glean/scripts/sdk_generator.gradle'

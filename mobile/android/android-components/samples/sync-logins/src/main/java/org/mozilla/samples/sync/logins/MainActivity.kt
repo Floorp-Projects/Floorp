@@ -30,6 +30,7 @@ import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
+import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.service.fxa.toAuthType
 import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
@@ -55,7 +56,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
                 applicationContext,
                 ServerConfig.release(CLIENT_ID, REDIRECT_URL),
                 DeviceConfig("A-C Logins Sync Sample", DeviceType.MOBILE, setOf()),
-                SyncConfig(setOf(SyncEngine.PASSWORDS))
+                SyncConfig(setOf(SyncEngine.Passwords))
         )
     }
 
@@ -87,7 +88,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
         ) {
             CompletableDeferred("my-not-so-secret-password")
         }
-        GlobalSyncableStoreProvider.configureStore(SyncEngine.PASSWORDS to loginsStorage)
+        GlobalSyncableStoreProvider.configureStore(SyncEngine.Passwords to loginsStorage)
 
         accountManager.register(accountObserver, owner = this, autoPause = true)
 
@@ -111,7 +112,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
         override fun onLoggedOut() {}
 
         override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
-            accountManager.syncNowAsync()
+            accountManager.syncNowAsync(SyncReason.User)
         }
 
         @Suppress("EmptyFunctionBlock")

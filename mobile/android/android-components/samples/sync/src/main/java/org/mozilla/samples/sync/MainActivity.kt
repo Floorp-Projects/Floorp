@@ -40,6 +40,7 @@ import mozilla.components.support.base.log.Log
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.SyncEngine
+import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.toAuthType
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.rusthttp.RustHttpConfig
@@ -61,8 +62,8 @@ class MainActivity :
     }
 
     init {
-        GlobalSyncableStoreProvider.configureStore(SyncEngine.HISTORY to historyStorage)
-        GlobalSyncableStoreProvider.configureStore(SyncEngine.BOOKMARKS to bookmarksStorage)
+        GlobalSyncableStoreProvider.configureStore(SyncEngine.History to historyStorage)
+        GlobalSyncableStoreProvider.configureStore(SyncEngine.Bookmarks to bookmarksStorage)
     }
 
     private val accountManager by lazy {
@@ -74,7 +75,7 @@ class MainActivity :
                     type = DeviceType.MOBILE,
                     capabilities = setOf(DeviceCapability.SEND_TAB)
                 ),
-                SyncConfig(setOf(SyncEngine.HISTORY, SyncEngine.BOOKMARKS), syncPeriodInMinutes = 15L)
+                SyncConfig(setOf(SyncEngine.History, SyncEngine.Bookmarks), syncPeriodInMinutes = 15L)
         )
     }
 
@@ -154,7 +155,7 @@ class MainActivity :
         launch { accountManager.initAsync().await() }
 
         findViewById<View>(R.id.buttonSync).setOnClickListener {
-            accountManager.syncNowAsync()
+            accountManager.syncNowAsync(SyncReason.User)
         }
     }
 

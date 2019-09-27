@@ -184,4 +184,13 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
             }
         }
     }
+
+    /**
+     * This should be removed. See: https://github.com/mozilla/application-services/issues/1877
+     *
+     * @return raw internal handle that could be used for referencing underlying [PlacesApi]. Use it with SyncManager.
+     */
+    override fun getHandle(): Long {
+        return places.getHandle()
+    }
 }

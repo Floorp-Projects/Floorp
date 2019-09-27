@@ -27,7 +27,7 @@ object Versions {
     const val disklrucache = "2.0.2"
     const val leakcanary = "1.6.3"
 
-    const val mozilla_appservices = "0.39.1"
+    const val mozilla_appservices = "0.40.0"
 
     const val material = "1.0.0"
 
@@ -122,6 +122,7 @@ object Dependencies {
 
     const val mozilla_sync_logins = "org.mozilla.appservices:logins:${Versions.mozilla_appservices}"
     const val mozilla_places = "org.mozilla.appservices:places:${Versions.mozilla_appservices}"
+    const val mozilla_sync_manager = "org.mozilla.appservices:syncmanager:${Versions.mozilla_appservices}"
 
     const val mozilla_push = "org.mozilla.appservices:push:${Versions.mozilla_appservices}"
 

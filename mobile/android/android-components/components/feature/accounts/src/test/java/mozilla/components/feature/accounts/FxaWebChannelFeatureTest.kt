@@ -159,7 +159,7 @@ class FxaWebChannelFeatureTest {
         val messageHandler = argumentCaptor<MessageHandler>()
         val responseToTheWebChannel = argumentCaptor<JSONObject>()
         val port = mock<Port>()
-        val expectedEngines = setOf(SyncEngine.HISTORY)
+        val expectedEngines = setOf(SyncEngine.History)
 
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
@@ -201,7 +201,7 @@ class FxaWebChannelFeatureTest {
         val messageHandler = argumentCaptor<MessageHandler>()
         val responseToTheWebChannel = argumentCaptor<JSONObject>()
         val port = mock<Port>()
-        val expectedEngines = setOf(SyncEngine.HISTORY)
+        val expectedEngines = setOf(SyncEngine.History)
 
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
@@ -250,7 +250,7 @@ class FxaWebChannelFeatureTest {
         val messageHandler = argumentCaptor<MessageHandler>()
         val responseToTheWebChannel = argumentCaptor<JSONObject>()
         val port = mock<Port>()
-        val expectedEngines = setOf(SyncEngine.HISTORY, SyncEngine.BOOKMARKS, SyncEngine.PASSWORDS)
+        val expectedEngines = setOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords)
 
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
@@ -301,7 +301,7 @@ class FxaWebChannelFeatureTest {
         val messageHandler = argumentCaptor<MessageHandler>()
         val responseToTheWebChannel = argumentCaptor<JSONObject>()
         val port = mock<Port>()
-        val expectedEngines = setOf(SyncEngine.HISTORY, SyncEngine.BOOKMARKS, SyncEngine.PASSWORDS)
+        val expectedEngines = setOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords)
         val logoutDeferred = CompletableDeferred<Unit>()
 
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
@@ -363,7 +363,7 @@ class FxaWebChannelFeatureTest {
         val messageHandler = argumentCaptor<MessageHandler>()
         val responseToTheWebChannel = argumentCaptor<JSONObject>()
         val port = mock<Port>()
-        val expectedEngines = setOf(SyncEngine.HISTORY, SyncEngine.BOOKMARKS, SyncEngine.PASSWORDS)
+        val expectedEngines = setOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords)
         val logoutDeferred = CompletableDeferred<Unit>()
 
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
@@ -425,7 +425,7 @@ class FxaWebChannelFeatureTest {
         val messageHandler = argumentCaptor<MessageHandler>()
         val responseToTheWebChannel = argumentCaptor<JSONObject>()
         val port = mock<Port>()
-        val expectedEngines = setOf(SyncEngine.HISTORY, SyncEngine.BOOKMARKS, SyncEngine.PASSWORDS)
+        val expectedEngines = setOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords)
 
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
@@ -477,7 +477,7 @@ class FxaWebChannelFeatureTest {
         val messageHandler = argumentCaptor<MessageHandler>()
         val responseToTheWebChannel = argumentCaptor<JSONObject>()
         val port = mock<Port>()
-        val expectedEngines = setOf(SyncEngine.HISTORY, SyncEngine.BOOKMARKS, SyncEngine.PASSWORDS)
+        val expectedEngines = setOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords)
 
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
@@ -591,13 +591,13 @@ class FxaWebChannelFeatureTest {
         messageHandler.value.onPortConnected(port)
 
         // Action: signin
-        verifyOauthLogin("signin", AuthType.Signin, "fffs", "fsdf32", messageHandler.value, accountManager)
+        verifyOauthLogin("signin", AuthType.Signin, "fffs", "fsdf32", null, messageHandler.value, accountManager)
         // Signup.
-        verifyOauthLogin("signup", AuthType.Signup, "anotherCode1", "anotherState2", messageHandler.value, accountManager)
+        verifyOauthLogin("signup", AuthType.Signup, "anotherCode1", "anotherState2", setOf(SyncEngine.Passwords), messageHandler.value, accountManager)
         // Pairing.
-        verifyOauthLogin("pairing", AuthType.Pairing, "anotherCode2", "anotherState3", messageHandler.value, accountManager)
+        verifyOauthLogin("pairing", AuthType.Pairing, "anotherCode2", "anotherState3", null, messageHandler.value, accountManager)
         // Some other action.
-        verifyOauthLogin("newAction", AuthType.OtherExternal("newAction"), "anotherCode3", "anotherState4", messageHandler.value, accountManager)
+        verifyOauthLogin("newAction", AuthType.OtherExternal("newAction"), "anotherCode3", "anotherState4", null, messageHandler.value, accountManager)
     }
 
     // Receiving an oauth-login message account manager refuses the request
@@ -628,13 +628,13 @@ class FxaWebChannelFeatureTest {
         messageHandler.value.onPortConnected(port)
 
         // Action: signin
-        verifyOauthLogin("signin", AuthType.Signin, "fffs", "fsdf32", messageHandler.value, accountManager)
+        verifyOauthLogin("signin", AuthType.Signin, "fffs", "fsdf32", setOf(SyncEngine.Passwords, SyncEngine.Bookmarks), messageHandler.value, accountManager)
         // Signup.
-        verifyOauthLogin("signup", AuthType.Signup, "anotherCode1", "anotherState2", messageHandler.value, accountManager)
+        verifyOauthLogin("signup", AuthType.Signup, "anotherCode1", "anotherState2", null, messageHandler.value, accountManager)
         // Pairing.
-        verifyOauthLogin("pairing", AuthType.Pairing, "anotherCode2", "anotherState3", messageHandler.value, accountManager)
+        verifyOauthLogin("pairing", AuthType.Pairing, "anotherCode2", "anotherState3", null, messageHandler.value, accountManager)
         // Some other action.
-        verifyOauthLogin("newAction", AuthType.OtherExternal("newAction"), "anotherCode3", "anotherState4", messageHandler.value, accountManager)
+        verifyOauthLogin("newAction", AuthType.OtherExternal("newAction"), "anotherCode3", "anotherState4", null, messageHandler.value, accountManager)
     }
 
     // Receiving can-link-account  returns 'ok=true' message (for now)
@@ -648,7 +648,7 @@ class FxaWebChannelFeatureTest {
         val messageHandler = argumentCaptor<MessageHandler>()
         val jsonFromWebChannel = argumentCaptor<JSONObject>()
         val port = mock<Port>()
-        val expectedEngines = setOf(SyncEngine.HISTORY, SyncEngine.BOOKMARKS)
+        val expectedEngines = setOf(SyncEngine.History, SyncEngine.Bookmarks)
 
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
@@ -768,19 +768,20 @@ class FxaWebChannelFeatureTest {
             .getBoolean("ok")
     }
 
-    private fun verifyOauthLogin(action: String, expectedAuthType: AuthType, code: String, state: String, messageHandler: MessageHandler, accountManager: FxaAccountManager) {
-        val jsonToWebChannel = jsonOauthLogin(action, code, state)
+    private fun verifyOauthLogin(action: String, expectedAuthType: AuthType, code: String, state: String, declined: Set<SyncEngine>?, messageHandler: MessageHandler, accountManager: FxaAccountManager) {
+        val jsonToWebChannel = jsonOauthLogin(action, code, state, declined ?: emptySet())
         messageHandler.onPortMessage(jsonToWebChannel, mock())
 
         val expectedAuthData = FxaAuthData(
             authType = expectedAuthType,
             code = code,
-            state = state
+            state = state,
+            declinedEngines = declined ?: emptySet()
         )
         verify(accountManager).finishAuthenticationAsync(expectedAuthData)
     }
 
-    private fun jsonOauthLogin(action: String, code: String, state: String): JSONObject {
+    private fun jsonOauthLogin(action: String, code: String, state: String, declined: Set<SyncEngine>): JSONObject {
         return JSONObject(
             """{
              "message":{
@@ -790,7 +791,8 @@ class FxaWebChannelFeatureTest {
                     "action":"$action",
                     "redirect":"urn:ietf:wg:oauth:2.0:oob:oauth-redirect-webchannel",
                     "code":"$code",
-                    "state":"$state"
+                    "state":"$state",
+                    "declinedSyncEngines":${declined.map { "${it.nativeName}," }.filterNotNull()}
                 }
              }
             }""".trimIndent()

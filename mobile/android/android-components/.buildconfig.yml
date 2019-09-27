@@ -272,6 +272,10 @@ projects:
     path: components/support/utils
     description: 'A collection of generic helper classes.'
     publish: true
+  support-sync-telemetry:
+    path: components/support/sync-telemetry
+    description: 'A collection of sync-related telemetry helper classes and ping descriptions.'
+    publish: true
   support-rustlog:
     path: components/support/rustlog
     description: 'A bridge allowing log messages from Rust code to be sent to the log system in support-base'
