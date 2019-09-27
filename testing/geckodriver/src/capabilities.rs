@@ -363,7 +363,7 @@ impl FirefoxOptions {
     fn load_profile(options: &Capabilities) -> WebDriverResult<Option<Profile>> {
         if let Some(profile_json) = options.get("profile") {
             let profile_base64 = profile_json.as_str().ok_or_else(|| WebDriverError::new(
-                ErrorStatus::UnknownError,
+                ErrorStatus::InvalidArgument,
                 "Profile is not a string",
             ))?;
             let profile_zip = &*base64::decode(profile_base64)?;
@@ -388,7 +388,7 @@ impl FirefoxOptions {
     fn load_args(options: &Capabilities) -> WebDriverResult<Option<Vec<String>>> {
         if let Some(args_json) = options.get("args") {
             let args_array = args_json.as_array().ok_or_else(|| WebDriverError::new(
-                ErrorStatus::UnknownError,
+                ErrorStatus::InvalidArgument,
                 "Arguments were not an \
                  array",
             ))?;
@@ -397,7 +397,7 @@ impl FirefoxOptions {
                 .map(|x| x.as_str().map(|x| x.to_owned()))
                 .collect::<Option<Vec<String>>>()
                 .ok_or_else(|| WebDriverError::new(
-                    ErrorStatus::UnknownError,
+                    ErrorStatus::InvalidArgument,
                     "Arguments entries were not all strings",
                 ))?;
             Ok(Some(args))
@@ -436,7 +436,7 @@ impl FirefoxOptions {
     pub fn load_prefs(options: &Capabilities) -> WebDriverResult<Vec<(String, Pref)>> {
         if let Some(prefs_data) = options.get("prefs") {
             let prefs = prefs_data.as_object().ok_or_else(|| WebDriverError::new(
-                ErrorStatus::UnknownError,
+                ErrorStatus::InvalidArgument,
                 "Prefs were not an object",
             ))?;
             let mut rv = Vec::with_capacity(prefs.len());
