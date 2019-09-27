@@ -6091,9 +6091,10 @@
 
   # Use MediaDataDecoder API for VP8/VP9 in WebRTC. This includes hardware
   # acceleration for decoding.
+  # disable on android bug 1509316
 -   name: media.navigator.mediadatadecoder_vpx_enabled
     type: RelaxedAtomicBool
-  #if defined(NIGHTLY_BUILD)
+  #if defined(NIGHTLY_BUILD) && !defined(ANDROID)
     value: true
   #else
     value: false
@@ -6101,10 +6102,12 @@
     mirror: always
 
   # Use MediaDataDecoder API for H264 in WebRTC. This includes hardware
-  # acceleration for decoding.
+  # acceleration for decoding. False on Android due to bug 1509316.
 -   name: media.navigator.mediadatadecoder_h264_enabled
     type: RelaxedAtomicBool
-  #if defined(_ARM64_) && defined(XP_WIN)
+  #if defined(ANDROID)
+    value: false
+  #elif defined(_ARM64_) && defined(XP_WIN)
     value: false
   #else
     value: true

@@ -62,14 +62,13 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
  public:
   // Render the output to the surface when the frame is sent
   // to compositor, or release it if not presented.
-  class CompositeListener
-      : private RenderOrReleaseOutput,
-        public layers::SurfaceTextureImage::SetCurrentCallback {
+  class CompositeListener : private RenderOrReleaseOutput,
+                            public VideoData::Listener {
    public:
     CompositeListener(CodecProxy::Param aCodec, Sample::Param aSample)
         : RenderOrReleaseOutput(aCodec, aSample) {}
 
-    void operator()(void) override { ReleaseOutput(true); }
+    void OnSentToCompositor() override { ReleaseOutput(true); }
   };
 
   class InputInfo {
@@ -256,7 +255,7 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
       return;
     }
 
-    UniquePtr<layers::SurfaceTextureImage::SetCurrentCallback> releaseSample(
+    UniquePtr<VideoData::Listener> releaseSample(
         new CompositeListener(mJavaDecoder, aSample));
 
     BufferInfo::LocalRef info = aSample->Info();
@@ -292,16 +291,15 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
       RefPtr<layers::Image> img = new layers::SurfaceTextureImage(
           mSurfaceHandle, inputInfo.mImageSize, false /* NOT continuous */,
           gl::OriginPos::BottomLeft, mConfig.HasAlpha());
-      img->AsSurfaceTextureImage()->RegisterSetCurrentCallback(
-          std::move(releaseSample));
 
       RefPtr<VideoData> v = VideoData::CreateFromImage(
           inputInfo.mDisplaySize, offset,
           TimeUnit::FromMicroseconds(presentationTimeUs),
-          TimeUnit::FromMicroseconds(inputInfo.mDurationUs), img.forget(),
+          TimeUnit::FromMicroseconds(inputInfo.mDurationUs), img,
           !!(flags & MediaCodec::BUFFER_FLAG_SYNC_FRAME),
           TimeUnit::FromMicroseconds(presentationTimeUs));
 
+      v->SetListener(std::move(releaseSample));
       RemoteDataDecoder::UpdateOutputStatus(std::move(v));
     }
 
