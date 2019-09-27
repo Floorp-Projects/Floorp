@@ -5,7 +5,6 @@
 import { updateSelectedItem } from "../certviewer.js";
 import { InfoGroup } from "./info-group.js";
 import { ErrorSection } from "./error-section.js";
-import { normalizeToKebabCase } from "../utils.js";
 
 class CertificateSection extends HTMLElement {
   constructor(certs, error) {
@@ -120,23 +119,15 @@ class CertificateSection extends HTMLElement {
     }
     this.infoGroupsContainers[i].classList.add("info-groups");
     this.shadowRoot.appendChild(this.infoGroupsContainers[i]);
-
-    let final = false;
-    if (i === this.certs.length - 1) {
-      final = true;
-    }
-
     for (let j = 0; j < certArray.length; j++) {
-      this.infoGroupsContainers[i].appendChild(
-        new InfoGroup(certArray[j], final)
-      );
+      this.infoGroupsContainers[i].appendChild(new InfoGroup(certArray[j]));
     }
   }
 
   createTabSection(tabName, i, certificateTabs) {
     let tab = document.createElement("button");
     tab.textContent = tabName;
-    tab.setAttribute("id", normalizeToKebabCase(tabName));
+    tab.setAttribute("id", "tab" + i);
     tab.setAttribute("aria-controls", "panel" + i);
     tab.setAttribute("idnumber", i);
     tab.setAttribute("role", "tab");

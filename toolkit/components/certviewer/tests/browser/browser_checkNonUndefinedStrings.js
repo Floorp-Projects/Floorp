@@ -21,7 +21,7 @@ add_task(async function test() {
 
       for (let i = 0; i < tabs.length; i++) {
         let tabButton = certificateSection.shadowRoot.querySelector(
-          `.certificate-tabs .tab[idnumber="${i}"]`
+          `.certificate-tabs #tab${i}`
         );
         tabButton.click();
 

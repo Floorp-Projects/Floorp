@@ -3,14 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { InfoItem } from "./info-item.js";
-import { updateSelectedItem } from "../certviewer.js";
-import { normalizeToKebabCase } from "../utils.js";
 
 export class InfoGroup extends HTMLElement {
-  constructor(item, final) {
+  constructor(item) {
     super();
     this.item = item;
-    this.final = final;
   }
 
   connectedCallback() {
@@ -34,38 +31,6 @@ export class InfoGroup extends HTMLElement {
     for (let i = 0; i < this.item.sectionItems.length; i++) {
       this.shadowRoot.append(new InfoItem(this.item.sectionItems[i]));
     }
-
-    if (this.item.sectionId === "issuer-name") {
-      this.setLinkToTab();
-    }
-  }
-
-  setLinkToTab() {
-    if (this.final) {
-      return;
-    }
-
-    let issuerCommonName = this.shadowRoot
-      .querySelector(".common-name")
-      .shadowRoot.querySelector(".info");
-
-    let link = document.createElement("a");
-    link.textContent = issuerCommonName.textContent;
-    link.setAttribute("href", "#");
-
-    issuerCommonName.textContent = "";
-    issuerCommonName.appendChild(link);
-
-    link.addEventListener("click", () => {
-      let id = normalizeToKebabCase(link.textContent);
-      let issuerTab = document
-        .querySelector("certificate-section")
-        .shadowRoot.getElementById(id);
-
-      let index = issuerTab.getAttribute("idnumber");
-
-      updateSelectedItem(index);
-    });
   }
 }
 
