@@ -365,20 +365,20 @@ button > hbox > label {
 /* Home Pane */
 
 #homepageGroup menulist,
-#homepageGroup textbox {
+#homepageGroup html|input {
   margin: 5px 0;
 }
 
-#homepageGroup textbox {
+#homepageGroup html|input {
   text-align: match-parent;
+}
+
+#homepageGroup:-moz-locale-dir(rtl) html|input {
+  unicode-bidi: plaintext;
 }
 
 #homepageAndNewWindowsOption {
   margin-top: 20px;
-}
-
-#homepageGroup:-moz-locale-dir(rtl) input {
-  unicode-bidi: plaintext;
 }
 
 #homepageGroup:-moz-locale-dir(rtl) panel[type="autocomplete-richlistbox"] {
