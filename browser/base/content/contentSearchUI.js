@@ -33,6 +33,8 @@ this.ContentSearchUIController = (function() {
    *        This will be sent with the search data for FHR to record the search.
    * @param searchPurpose
    *        Sent with search data, see nsISearchEngine.getSubmission.
+   * @param isPrivateWindow
+   *        Set to true if this instance is in a private window
    * @param idPrefix
    *        The IDs of elements created by the object will be prefixed with this
    *        string.
@@ -42,12 +44,14 @@ this.ContentSearchUIController = (function() {
     tableParent,
     healthReportKey,
     searchPurpose,
+    isPrivateWindow,
     idPrefix = ""
   ) {
     this.input = inputElement;
     this._idPrefix = idPrefix;
     this._healthReportKey = healthReportKey;
     this._searchPurpose = searchPurpose;
+    this._isPrivateWindow = isPrivateWindow;
 
     let tableID = idPrefix + "searchSuggestionTable";
     this.input.autocomplete = "off";
@@ -629,15 +633,21 @@ this.ContentSearchUIController = (function() {
 
     _onMsgState(state) {
       this.engines = state.engines;
+
+      let currentEngine = state.currentEngine;
+      if (this._isPrivateWindow) {
+        currentEngine = state.currentPrivateEngine;
+      }
+
       // No point updating the default engine (and the header) if there's no change.
       if (
         this.defaultEngine &&
-        this.defaultEngine.name == state.currentEngine.name &&
-        this.defaultEngine.icon == state.currentEngine.icon
+        this.defaultEngine.name == currentEngine.name &&
+        this.defaultEngine.icon == currentEngine.icon
       ) {
         return;
       }
-      this.defaultEngine = state.currentEngine;
+      this.defaultEngine = currentEngine;
     },
 
     _onMsgCurrentState(state) {
@@ -645,6 +655,17 @@ this.ContentSearchUIController = (function() {
     },
 
     _onMsgCurrentEngine(engine) {
+      if (this._isPrivateWindow) {
+        return;
+      }
+      this.defaultEngine = engine;
+      this._pendingOneOffRefresh = true;
+    },
+
+    _onMsgCurrentPrivateEngine(engine) {
+      if (!this._isPrivateWindow) {
+        return;
+      }
       this.defaultEngine = engine;
       this._pendingOneOffRefresh = true;
     },
