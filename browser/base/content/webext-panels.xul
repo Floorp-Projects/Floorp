@@ -9,15 +9,14 @@
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/usercontext/usercontext.css" type="text/css"?>
 
-<!DOCTYPE page [
+<!DOCTYPE window [
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
 %browserDTD;
 <!ENTITY % textcontextDTD SYSTEM "chrome://global/locale/textcontext.dtd">
 %textcontextDTD;
 ]>
 
-<page id="webextpanels-window"
-        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+<window id="webextpanels-window"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://global/content/contentAreaUtils.js"/>
   <script src="chrome://browser/content/browser.js"/>
@@ -77,4 +76,4 @@
         />
     </menulist>
   </popupset>
-</page>
+</window>

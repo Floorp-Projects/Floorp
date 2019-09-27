@@ -90,8 +90,7 @@ iframe {
 
 /******** window & page ******/
 
-window,
-page {
+window {
   overflow: -moz-hidden-unscrollable;
   -moz-box-orient: vertical;
 }
@@ -551,12 +550,6 @@ stringbundleset {
 
 dialog,
 dialog:root /* override :root from above */ {
-  -moz-box-orient: vertical;
-}
-
-/********* page ************/
-
-page {
   -moz-box-orient: vertical;
 }
 

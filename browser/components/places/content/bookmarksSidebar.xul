@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://browser/skin/places/tree-icons.css"?>
 <?xml-stylesheet href="chrome://browser/skin/places/sidebar.css"?>
 
-<!DOCTYPE page [
+<!DOCTYPE window [
 <!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd">
 %placesDTD;
 <!ENTITY % editMenuDTD SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
@@ -17,13 +17,12 @@
 %browserDTD;
 ]>
 
-<page id="bookmarksPanel"
-      class="sidebar-panel"
-      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="init();"
-      onunload="PlacesUIUtils.setMouseoverURL('', window);"
-      aria-label="&bookmarksButton.label;">
+<window id="bookmarksPanel"
+        class="sidebar-panel"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="init();"
+        onunload="PlacesUIUtils.setMouseoverURL('', window);"
+        aria-label="&bookmarksButton.label;">
 
   <script src="chrome://browser/content/places/bookmarksSidebar.js"/>
   <script src="chrome://global/content/globalOverlay.js"/>
@@ -59,4 +58,4 @@
     <treechildren view="bookmarks-view"
                   class="sidebar-placesTreechildren" flex="1" tooltip="bhTooltip"/>
   </tree>
-</page>
+</window>

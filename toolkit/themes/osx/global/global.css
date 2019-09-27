@@ -30,7 +30,6 @@
 /* ::::: root elements ::::: */
 
 window,
-page,
 dialog,
 wizard {
   -moz-appearance: dialog;

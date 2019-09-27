@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 
-<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
@@ -78,4 +78,4 @@ function nextTest()
 ]]>
 </script>
 
-</page>
+</window>

@@ -2,8 +2,8 @@
 <!--
   XUL Widget Test for Bug 1184989
   -->
-<page title="Bug 1184989 Test"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<window title="Bug 1184989 Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <vbox id="container" style="height: 200px; overflow: auto;">
   <vbox style="height: 500px;">
@@ -23,4 +23,4 @@
   </vbox>
 </vbox>
 
-</page>
+</window>
