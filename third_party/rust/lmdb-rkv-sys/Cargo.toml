@@ -12,7 +12,7 @@
 
 [package]
 name = "lmdb-rkv-sys"
-version = "0.9.3"
+version = "0.9.5"
 authors = ["Dan Burkert <dan@danburkert.com>", "Victor Porof <vporof@mozilla.com>"]
 build = "build.rs"
 description = "Rust bindings for liblmdb."
@@ -29,7 +29,8 @@ name = "lmdb_sys"
 [dependencies.libc]
 version = "0.2"
 [build-dependencies.bindgen]
-version = "0.51"
+version = "0.51.1-oldsyn"
+default-features = false
 
 [build-dependencies.cc]
 version = "1.0"
