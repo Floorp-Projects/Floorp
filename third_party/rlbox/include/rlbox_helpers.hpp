@@ -68,17 +68,17 @@ namespace detail {
 
 // Create an extension point so applications can provide their own shared lock
 // implementation
-#ifndef rlbox_use_custom_shared_lock
-#  define rlbox_shared_lock(name) std::shared_timed_mutex name
-#  define rlbox_acquire_shared_guard(name, ...)                                \
+#ifndef RLBOX_USE_CUSTOM_SHARED_LOCK
+#  define RLBOX_SHARED_LOCK(name) std::shared_timed_mutex name
+#  define RLBOX_ACQUIRE_SHARED_GUARD(name, ...)                                \
     std::shared_lock<std::shared_timed_mutex> name(__VA_ARGS__)
-#  define rlbox_acquire_unique_guard(name, ...)                                \
+#  define RLBOX_ACQUIRE_UNIQUE_GUARD(name, ...)                                \
     std::unique_lock<std::shared_timed_mutex> name(__VA_ARGS__)
 #else
-#  if !defined(rlbox_shared_lock) || !defined(rlbox_acquire_shared_guard) ||   \
-    !defined(rlbox_acquire_unique_guard)
+#  if !defined(RLBOX_SHARED_LOCK) || !defined(RLBOX_ACQUIRE_SHARED_GUARD) ||   \
+    !defined(RLBOX_ACQUIRE_UNIQUE_GUARD)
 #    error                                                                     \
-      "rlbox_use_custom_shared_lock defined but missing definitions for rlbox_shared_lock, rlbox_acquire_shared_guard, rlbox_acquire_unique_guard"
+      "RLBOX_USE_CUSTOM_SHARED_LOCK defined but missing definitions for RLBOX_SHARED_LOCK, RLBOX_ACQUIRE_SHARED_GUARD, RLBOX_ACQUIRE_UNIQUE_GUARD"
 #  endif
 #endif
 
@@ -124,6 +124,13 @@ namespace detail {
       const_cast<T_ConstClassPtr>(this)->func_name(__VA_ARGS__));              \
   }
 
+#define rlbox_detail_member_and_const(sig, ...)                                \
+  sig __VA_ARGS__                                                              \
+                                                                               \
+    sig const __VA_ARGS__                                                      \
+                                                                               \
+    static_assert(true)
+
   template<typename T>
   inline auto remove_volatile_from_ptr_cast(T* ptr)
   {
@@ -166,6 +173,48 @@ namespace detail {
       second_task();
       return val;
     }
+  }
+
+  // Scope Exit guards
+  template<typename T_ExitFunc>
+  class scope_exit
+  {
+    T_ExitFunc exit_func;
+    bool released;
+
+  public:
+    explicit scope_exit(T_ExitFunc&& cleanup)
+      : exit_func(cleanup)
+      , released(true)
+    {}
+
+    scope_exit(scope_exit&& rhs)
+      : exit_func(std::move(rhs.exit_func))
+      , released(rhs.released)
+    {
+      rhs.release();
+    }
+
+    ~scope_exit()
+    {
+      if (released) {
+        exit_func();
+      }
+    }
+
+    void release() { released = false; }
+
+  private:
+    explicit scope_exit(const scope_exit&) = delete;
+    scope_exit& operator=(const scope_exit&) = delete;
+    scope_exit& operator=(scope_exit&&) = delete;
+  };
+
+  template<typename T_ExitFunc>
+  [[nodiscard]] scope_exit<T_ExitFunc> make_scope_exit(
+    T_ExitFunc&& exitFunction)
+  {
+    return scope_exit<T_ExitFunc>(std::move(exitFunction));
   }
 
 /*
