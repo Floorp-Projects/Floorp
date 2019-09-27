@@ -61,7 +61,6 @@
   color: var(--theme-body-color);
   padding-inline-start: 16px;
   padding-inline-end: 12px;
-  background-color: var(--theme-body-background);
   display: flex;
   align-items: center;
   position: relative;
