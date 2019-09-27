@@ -101,8 +101,11 @@ function run_test() {
   // test UTF8 normalization behavior: expect ASCII/ACE host encodings
   var utf8 = "b\u00FCcher.dolske.org"; // "bücher.dolske.org"
   var aceref = "xn--bcher-kva.dolske.org";
-  var uri = ioService.newURI("http://" + utf8);
-  pm.add(uri, "utf8", 1);
+  var principal = secMan.createContentPrincipal(
+    ioService.newURI("http://" + utf8),
+    {}
+  );
+  pm.addFromPrincipal(principal, "utf8", 1);
   var enumerator = pm.enumerator;
   Assert.equal(enumerator.hasMoreElements(), true);
   var ace = enumerator.getNext().QueryInterface(Ci.nsIPermission);
@@ -113,11 +116,10 @@ function run_test() {
   pm.removeAll();
   Assert.equal(pm.enumerator.hasMoreElements(), false);
 
-  uri = ioService.newURI("https://www.example.com");
-  pm.add(uri, "offline-app", pm.ALLOW_ACTION);
-  let principal = secMan.createContentPrincipalFromOrigin(
+  principal = secMan.createContentPrincipalFromOrigin(
     "https://www.example.com"
   );
+  pm.addFromPrincipal(principal, "offline-app", pm.ALLOW_ACTION);
   // Remove existing entry.
   let perm = pm.getPermissionObject(principal, "offline-app", true);
   pm.removePermission(perm);
