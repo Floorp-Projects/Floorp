@@ -556,6 +556,32 @@ describe("PlacesFeed", () => {
         type: "SHOW_SEARCH",
       });
     });
+    it("should properly handle handoff with text data passed in, in private browsing mode", () => {
+      global.PrivateBrowsingUtils.isBrowserPrivate = () => true;
+      feed.handoffSearchToAwesomebar({
+        _target: { browser: { ownerGlobal: { gURLBar: fakeUrlBar } } },
+        data: { text: "foo" },
+        meta: { fromTarget: {} },
+      });
+      assert.calledOnce(fakeUrlBar.search);
+      assert.calledWith(fakeUrlBar.search, "@bing foo");
+      assert.notCalled(fakeUrlBar.focus);
+      assert.notCalled(fakeUrlBar.setHiddenFocus);
+
+      // Now call blur listener.
+      listeners.blur();
+      assert.calledOnce(feed.store.dispatch);
+      assert.calledWith(feed.store.dispatch, {
+        meta: {
+          from: "ActivityStream:Main",
+          skipMain: true,
+          to: "ActivityStream:Content",
+          toTarget: {},
+        },
+        type: "SHOW_SEARCH",
+      });
+      global.PrivateBrowsingUtils.isBrowserPrivate = () => false;
+    });
     it("should SHOW_SEARCH on ESC keydown", () => {
       feed.handoffSearchToAwesomebar({
         _target: { browser: { ownerGlobal: { gURLBar: fakeUrlBar } } },
