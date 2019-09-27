@@ -19,6 +19,7 @@ const webExtensionDescriptorSpec = generateActorSpec({
       request: {},
       response: { form: RetVal("json") },
     },
+
     getTarget: {
       request: {},
       response: { form: RetVal("json") },
