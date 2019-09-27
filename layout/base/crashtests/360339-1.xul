@@ -6,6 +6,13 @@
 
 <html:style>
 * { float: right; }
+*:not(style) {
+  /* At the time this testcase was added, the above `float` styling would
+     have automatically forced "display:block" for these elements, so we
+     should preserve that styling to preserve the integrity of the crashtest
+     since blockification behavior for -moz-box is changing. */
+  display: block;
+}
 </html:style>
 
   <menulist>
