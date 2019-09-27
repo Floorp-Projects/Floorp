@@ -56,6 +56,8 @@ class nsThreadManager : public nsIThreadManager {
   nsresult DispatchToBackgroundThread(nsIRunnable* aEvent,
                                       uint32_t aDispatchFlags);
 
+  nsresult GetBackgroundEventTarget(nsIEventTarget** aEventTarget);
+
   // Returns the maximal number of threads that have been in existence
   // simultaneously during the execution of the thread manager.
   uint32_t GetHighestNumberOfThreads();
