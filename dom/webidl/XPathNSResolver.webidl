@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+[Exposed=Window]
 callback interface XPathNSResolver
 {
   DOMString? lookupNamespaceURI(DOMString? prefix);

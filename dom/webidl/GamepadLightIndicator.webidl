@@ -18,7 +18,8 @@ dictionary GamepadLightColor {
   required octet blue;
 };
 
-[SecureContext, Pref="dom.gamepad.extensions.lightindicator"]
+[SecureContext, Pref="dom.gamepad.extensions.lightindicator",
+ Exposed=Window]
 interface GamepadLightIndicator
 {
   readonly attribute GamepadLightIndicatorType type;

@@ -6,6 +6,7 @@
  * https://drafts.csswg.org/cssom-view/#mediaquerylistevent
  */
 
+[Exposed=Window]
 interface MediaQueryListEvent : Event {
   constructor(DOMString type,
               optional MediaQueryListEventInit eventInitDict = {});

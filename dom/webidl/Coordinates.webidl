@@ -10,7 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
-[NoInterfaceObject]
+[NoInterfaceObject,
+ Exposed=Window]
 interface Coordinates {
   readonly attribute double latitude;
   readonly attribute double longitude;

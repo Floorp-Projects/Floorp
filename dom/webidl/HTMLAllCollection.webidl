@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Emulates undefined through Codegen.py. */
-[LegacyUnenumerableNamedProperties]
+[LegacyUnenumerableNamedProperties,
+ Exposed=Window]
 interface HTMLAllCollection {
   readonly attribute unsigned long length;
   getter Element (unsigned long index);

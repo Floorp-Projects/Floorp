@@ -9,6 +9,7 @@
 
 // https://drafts.csswg.org/css-fonts/#om-fontfeaturevalues
 // but we don't implement anything remotely resembling the spec.
+[Exposed=Window]
 interface CSSFontFeatureValuesRule : CSSRule {
   [SetterThrows]
   attribute DOMString fontFamily;

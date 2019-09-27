@@ -8,11 +8,13 @@
 
 callback PromiseReturner = Promise<any>();
 
-[Pref="dom.expose_test_interfaces"]
+[Pref="dom.expose_test_interfaces",
+ Exposed=Window]
 interface WrapperCachedNonISupportsTestInterface {
 };
 
-[Pref="dom.expose_test_interfaces"]
+[Pref="dom.expose_test_interfaces",
+ Exposed=Window]
 interface TestFunctions {
   constructor();
 

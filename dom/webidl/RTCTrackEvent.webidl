@@ -14,7 +14,8 @@ dictionary RTCTrackEventInit : EventInit {
     required RTCRtpTransceiver     transceiver;
 };
 
-[Pref="media.peerconnection.enabled"]
+[Pref="media.peerconnection.enabled",
+ Exposed=Window]
 interface RTCTrackEvent : Event {
     constructor(DOMString type, RTCTrackEventInit eventInitDict);
   

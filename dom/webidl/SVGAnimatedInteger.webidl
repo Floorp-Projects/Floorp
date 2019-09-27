@@ -10,6 +10,7 @@
  * W3C liability, trademark and document use rules apply.
  */
 
+[Exposed=Window]
 interface SVGAnimatedInteger {
            attribute long baseVal;
   readonly attribute long animVal;

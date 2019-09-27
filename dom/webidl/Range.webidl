@@ -12,6 +12,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Exposed=Window]
 interface Range : AbstractRange {
   [Throws]
   constructor();

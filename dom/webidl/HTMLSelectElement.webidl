@@ -7,7 +7,8 @@
  * http://www.whatwg.org/html/#the-select-element
  */
 
-[HTMLConstructor]
+[HTMLConstructor,
+ Exposed=Window]
 interface HTMLSelectElement : HTMLElement {
   [CEReactions, SetterThrows, Pure]
   attribute boolean autofocus;

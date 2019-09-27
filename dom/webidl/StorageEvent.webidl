@@ -10,6 +10,7 @@
  * Event sent to a window when a storage area changes.
  */
 
+[Exposed=Window]
 interface StorageEvent : Event
 {
   constructor(DOMString type, optional StorageEventInit eventInitDict = {});

@@ -13,7 +13,8 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-ul-element
-[HTMLConstructor]
+[HTMLConstructor,
+ Exposed=Window]
 interface HTMLUListElement : HTMLElement {
 };
 

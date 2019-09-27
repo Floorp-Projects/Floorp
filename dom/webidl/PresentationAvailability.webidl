@@ -7,7 +7,8 @@
  * https://w3c.github.io/presentation-api/#interface-presentationavailability
  */
 
-[Pref="dom.presentation.controller.enabled"]
+[Pref="dom.presentation.controller.enabled",
+ Exposed=Window]
 interface PresentationAvailability : EventTarget {
   /*
    * If there is at least one device discovered by UA, the value is |true|.

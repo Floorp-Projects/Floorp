@@ -15,6 +15,7 @@ callback FileSystemEntryCallback = void (FileSystemEntry entry);
 
 callback ErrorCallback = void (DOMException err);
 
+[Exposed=Window]
 interface FileSystem {
     readonly    attribute USVString name;
     readonly    attribute FileSystemDirectoryEntry root;

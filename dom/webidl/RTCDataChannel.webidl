@@ -14,6 +14,7 @@ enum RTCDataChannelType {
   "blob"
 };
 
+[Exposed=Window]
 interface RTCDataChannel : EventTarget
 {
   readonly attribute DOMString label;

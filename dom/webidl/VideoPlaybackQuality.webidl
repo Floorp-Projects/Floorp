@@ -10,7 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
-[Pref="media.mediasource.enabled"]
+[Pref="media.mediasource.enabled",
+ Exposed=Window]
 interface VideoPlaybackQuality {
   readonly attribute DOMHighResTimeStamp creationTime;
   readonly attribute unsigned long totalVideoFrames;

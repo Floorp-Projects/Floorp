@@ -9,6 +9,7 @@
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
  */
+[Exposed=Window]
 interface SVGPathElement : SVGGeometryElement {
 
   unsigned long getPathSegAtLength(float distance);

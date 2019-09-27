@@ -165,7 +165,8 @@ dictionary RTCStatsReportInternal {
 };
 
 [Pref="media.peerconnection.enabled",
- JSImplementation="@mozilla.org/dom/rtcstatsreport;1"]
+ JSImplementation="@mozilla.org/dom/rtcstatsreport;1",
+ Exposed=Window]
 interface RTCStatsReport {
   readonly maplike<DOMString, object>;
   [ChromeOnly]

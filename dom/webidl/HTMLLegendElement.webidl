@@ -13,7 +13,8 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-legend-element
-[HTMLConstructor]
+[HTMLConstructor,
+ Exposed=Window]
 interface HTMLLegendElement : HTMLElement {
   readonly attribute HTMLFormElement? form;
 };

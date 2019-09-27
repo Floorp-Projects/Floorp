@@ -7,7 +7,8 @@
  * https://html.spec.whatwg.org/multipage/#the-hashchangeevent-interface
  */
 
-[LegacyEventInit]
+[LegacyEventInit,
+ Exposed=Window]
 interface HashChangeEvent : Event
 {
   constructor(DOMString type, optional HashChangeEventInit eventInitDict = {});

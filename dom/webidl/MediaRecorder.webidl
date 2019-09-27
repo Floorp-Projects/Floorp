@@ -12,6 +12,7 @@
 
 enum RecordingState { "inactive", "recording", "paused" };
 
+[Exposed=Window]
 interface MediaRecorder : EventTarget {
   [Throws]
   constructor(MediaStream stream, optional MediaRecorderOptions options = {});

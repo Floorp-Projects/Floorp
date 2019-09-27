@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Exposed=Window]
 interface FocusEvent : UIEvent {
   constructor(DOMString typeArg,
               optional FocusEventInit focusEventInitDict = {});

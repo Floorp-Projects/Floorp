@@ -10,7 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
-[Func="mozilla::dom::TouchList::PrefEnabled"]
+[Func="mozilla::dom::TouchList::PrefEnabled",
+ Exposed=Window]
 interface TouchList {
   [Pure]
   readonly attribute unsigned long length;

@@ -21,6 +21,7 @@ enum TextTrackMode {
   "showing"
 };
 
+[Exposed=Window]
 interface TextTrack : EventTarget {
   readonly attribute TextTrackKind kind;
   readonly attribute DOMString label;

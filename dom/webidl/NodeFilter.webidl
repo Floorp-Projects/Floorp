@@ -7,6 +7,7 @@
  * http://dom.spec.whatwg.org/#interface-nodefilter
  */
 
+[Exposed=Window]
 callback interface NodeFilter {
   // Constants for acceptNode()
   const unsigned short FILTER_ACCEPT = 1;

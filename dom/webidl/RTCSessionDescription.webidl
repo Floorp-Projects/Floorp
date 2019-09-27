@@ -20,7 +20,8 @@ dictionary RTCSessionDescriptionInit {
 };
 
 [Pref="media.peerconnection.enabled",
- JSImplementation="@mozilla.org/dom/rtcsessiondescription;1"]
+ JSImplementation="@mozilla.org/dom/rtcsessiondescription;1",
+ Exposed=Window]
 interface RTCSessionDescription {
   [Throws]
   constructor(optional RTCSessionDescriptionInit descriptionInitDict = {});

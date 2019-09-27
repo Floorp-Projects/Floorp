@@ -7,7 +7,8 @@
  * https://w3c.github.io/gamepad/extensions.html#gamepadpose-interface
  */
 
-[Pref="dom.gamepad.extensions.enabled"]
+[Pref="dom.gamepad.extensions.enabled",
+ Exposed=Window]
 interface GamepadPose
 {
   readonly attribute boolean hasOrientation;

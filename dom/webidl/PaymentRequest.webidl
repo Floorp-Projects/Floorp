@@ -103,7 +103,8 @@ dictionary PaymentOptions {
 };
 
 [SecureContext,
- Func="mozilla::dom::PaymentRequest::PrefEnabled"]
+ Func="mozilla::dom::PaymentRequest::PrefEnabled",
+ Exposed=Window]
 interface PaymentRequest : EventTarget {
   [Throws]
   constructor(sequence<PaymentMethodData> methodData,

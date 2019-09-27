@@ -11,7 +11,8 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#attributes-common-to-ins-and-del-elements
-[HTMLConstructor]
+[HTMLConstructor,
+ Exposed=Window]
 interface HTMLModElement : HTMLElement {
   [CEReactions, SetterThrows, Pure]
            attribute DOMString cite;

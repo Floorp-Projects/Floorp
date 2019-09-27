@@ -16,7 +16,7 @@ interface mixin JSWindowActor {
                          optional any obj);
 };
 
-[ChromeOnly]
+[ChromeOnly, Exposed=Window]
 interface JSWindowActorParent {
   [ChromeOnly]
   constructor();
@@ -33,7 +33,7 @@ interface JSWindowActorParent {
 };
 JSWindowActorParent includes JSWindowActor;
 
-[ChromeOnly]
+[ChromeOnly, Exposed=Window]
 interface JSWindowActorChild {
   [ChromeOnly]
   constructor();
@@ -71,6 +71,7 @@ JSWindowActorChild includes JSWindowActor;
  * NOTE: This isn't marked as ChromeOnly, as it has no interface object, and
  * thus cannot be conditionally exposed.
  */
+[Exposed=Window]
 callback interface MozObserverCallback {
   void observe(nsISupports subject, ByteString topic, DOMString? data);
 };

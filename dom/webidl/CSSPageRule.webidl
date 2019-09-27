@@ -10,6 +10,7 @@
 // https://drafts.csswg.org/cssom/#the-csspagerule-interface
 // Per spec, this should inherit from CSSGroupingRule, but we don't
 // implement this yet.
+[Exposed=Window]
 interface CSSPageRule : CSSRule {
   // selectorText not implemented yet
   //         attribute DOMString selectorText;

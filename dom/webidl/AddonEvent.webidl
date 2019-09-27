@@ -1,4 +1,5 @@
-[Func="mozilla::AddonManagerWebAPI::IsAPIEnabled"]
+[Func="mozilla::AddonManagerWebAPI::IsAPIEnabled",
+ Exposed=Window]
 interface AddonEvent : Event {
   constructor(DOMString type, AddonEventInit eventInitDict);
 

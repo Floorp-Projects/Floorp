@@ -16,7 +16,7 @@
  * the inserted content.
  */
 
-[ChromeOnly]
+[ChromeOnly, Exposed=Window]
 interface AnonymousContent {
   /**
    * Get the text content of an element inside this custom anonymous content.

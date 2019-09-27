@@ -11,6 +11,7 @@
  * related or neighboring rights to this work.
  */
 
+[Exposed=Window]
 interface DOMImplementation {
   boolean hasFeature();
 

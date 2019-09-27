@@ -8,6 +8,7 @@
 
 interface OutputStream;
 
+[Exposed=Window]
 interface XMLSerializer {
   constructor();
 

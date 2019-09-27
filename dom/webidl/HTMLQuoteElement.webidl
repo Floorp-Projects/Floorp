@@ -12,7 +12,8 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-blockquote-element
-[HTMLConstructor]
+[HTMLConstructor,
+ Exposed=Window]
 interface HTMLQuoteElement : HTMLElement {
            [CEReactions, SetterThrows, Pure]
            attribute DOMString cite;

@@ -16,7 +16,8 @@
  * are added to the document, and is removed in case all links
  * of that type are removed from it.
  */
-[NoInterfaceObject]
+[NoInterfaceObject,
+ Exposed=Window]
 interface DocumentL10n : DOMLocalization {
   /**
    * A promise which gets resolved when the initial DOM localization resources

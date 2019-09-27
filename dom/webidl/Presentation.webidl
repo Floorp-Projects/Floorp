@@ -7,7 +7,8 @@
  * https://w3c.github.io/presentation-api/#interface-presentation
  */
 
-[Pref="dom.presentation.enabled"]
+[Pref="dom.presentation.enabled",
+ Exposed=Window]
 interface Presentation {
  /*
   * This should be used by the UA as the default presentation request for the

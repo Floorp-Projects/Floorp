@@ -10,7 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
-[NoInterfaceObject]
+[NoInterfaceObject,
+ Exposed=Window]
 interface PositionError {
   const unsigned short PERMISSION_DENIED = 1;
   const unsigned short POSITION_UNAVAILABLE = 2;

@@ -13,7 +13,8 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-object-element
-[HTMLConstructor, NeedResolve]
+[HTMLConstructor, NeedResolve,
+ Exposed=Window]
 interface HTMLObjectElement : HTMLElement {
   [CEReactions, Pure, SetterThrows]
            attribute DOMString data;

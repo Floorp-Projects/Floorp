@@ -12,7 +12,8 @@
 
 // https://html.spec.whatwg.org/multipage/obsolete.html#the-marquee-element
 
-[HTMLConstructor]
+[HTMLConstructor,
+ Exposed=Window]
 interface HTMLMarqueeElement : HTMLElement {
   [CEReactions, SetterThrows] attribute DOMString behavior;
   [CEReactions, SetterThrows] attribute DOMString bgColor;

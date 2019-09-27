@@ -28,7 +28,8 @@ dictionary CheckerboardReport {
 
 // The guard function only allows creation of this interface on the
 // about:checkerboard page, and only if it's in the parent process.
-[Func="mozilla::dom::CheckerboardReportService::IsEnabled"]
+[Func="mozilla::dom::CheckerboardReportService::IsEnabled",
+ Exposed=Window]
 interface CheckerboardReportService {
   constructor();
 

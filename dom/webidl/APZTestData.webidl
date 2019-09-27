@@ -30,7 +30,8 @@ dictionary APZBucket {
   sequence<ScrollFrameData> scrollFrames;
 };
 
-[Pref="apz.test.logging_enabled"]
+[Pref="apz.test.logging_enabled",
+ Exposed=Window]
 namespace APZHitResultFlags {
   // These constants should be kept in sync with mozilla::gfx::CompositorHitTestInfo
   const unsigned short INVISIBLE = 0;

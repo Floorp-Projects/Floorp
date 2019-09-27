@@ -7,7 +7,8 @@
  * https://w3c.github.io/presentation-api/#interface-presentationconnectionlist
  */
 
-[Pref="dom.presentation.receiver.enabled"]
+[Pref="dom.presentation.receiver.enabled",
+ Exposed=Window]
 interface PresentationConnectionList : EventTarget {
   /*
    * Return the non-terminated set of presentation connections in the

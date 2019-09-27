@@ -10,7 +10,8 @@ dictionary L10nOverlaysError {
   DOMString l10nName;
 };
 
-[ChromeOnly]
+[ChromeOnly,
+ Exposed=Window]
 namespace L10nOverlays {
   const unsigned short ERROR_FORBIDDEN_TYPE = 1;
   const unsigned short ERROR_NAMED_ELEMENT_MISSING = 2;

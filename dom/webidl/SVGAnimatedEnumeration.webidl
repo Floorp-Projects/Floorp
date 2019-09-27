@@ -10,6 +10,7 @@
  * W3C liability, trademark and document use rules apply.
  */
 
+[Exposed=Window]
 interface SVGAnimatedEnumeration {
   [SetterThrows]
            attribute unsigned short baseVal;

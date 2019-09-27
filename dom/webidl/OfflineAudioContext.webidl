@@ -16,7 +16,8 @@ dictionary OfflineAudioContextOptions {
     required float         sampleRate;
 };
 
-[Pref="dom.webaudio.enabled"]
+[Pref="dom.webaudio.enabled",
+ Exposed=Window]
 interface OfflineAudioContext : BaseAudioContext {
     [Throws]
     constructor(OfflineAudioContextOptions contextOptions);

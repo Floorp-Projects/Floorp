@@ -23,6 +23,7 @@ dictionary MediaKeysPolicy {
   DOMString minHdcpVersion = "";
 };
 
+[Exposed=Window]
 interface MediaKeys {
   readonly attribute DOMString keySystem;
 

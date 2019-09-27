@@ -7,18 +7,21 @@
  * https://w3c.github.io/reporting/#interface-reporting-observer
  */
 
-[Pref="dom.reporting.enabled"]
+[Pref="dom.reporting.enabled",
+ Exposed=Window]
 interface ReportBody {
 };
 
-[Pref="dom.reporting.enabled"]
+[Pref="dom.reporting.enabled",
+ Exposed=Window]
 interface Report {
   readonly attribute DOMString type;
   readonly attribute DOMString url;
   readonly attribute ReportBody? body;
 };
 
-[Pref="dom.reporting.enabled"]
+[Pref="dom.reporting.enabled",
+ Exposed=Window]
 interface ReportingObserver {
   [Throws]
   constructor(ReportingObserverCallback callback,
@@ -38,7 +41,8 @@ dictionary ReportingObserverOptions {
 
 typedef sequence<Report> ReportList;
 
-[Pref="dom.reporting.enabled"]
+[Pref="dom.reporting.enabled",
+ Exposed=Window]
 interface DeprecationReportBody : ReportBody {
   readonly attribute DOMString id;
   readonly attribute Date? anticipatedRemoval;

@@ -11,7 +11,8 @@
  * and create derivative works of this document.
  */
 
-[OverrideBuiltins, LegacyUnenumerableNamedProperties, HTMLConstructor]
+[OverrideBuiltins, LegacyUnenumerableNamedProperties, HTMLConstructor,
+ Exposed=Window]
 interface HTMLFormElement : HTMLElement {
            [CEReactions, Pure, SetterThrows]
            attribute DOMString acceptCharset;

@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+[Exposed=Window]
 interface Screen : EventTarget {
   // CSSOM-View
   // http://dev.w3.org/csswg/cssom-view/#the-screen-interface
@@ -67,7 +68,8 @@ enum ScreenColorGamut {
   "rec2020",
 };
 
-[Func="nsScreen::MediaCapabilitiesEnabled"]
+[Func="nsScreen::MediaCapabilitiesEnabled",
+ Exposed=Window]
 interface ScreenLuminance {
   readonly attribute double min;
   readonly attribute double max;

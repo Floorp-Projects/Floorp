@@ -11,6 +11,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Exposed=Window]
 namespace CSS {
   [Throws]
   boolean supports(DOMString property, DOMString value);

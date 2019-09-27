@@ -14,7 +14,8 @@ dictionary PCErrorData
 };
 
 [ChromeOnly,
- JSImplementation="@mozilla.org/dom/peerconnectionobserver;1"]
+ JSImplementation="@mozilla.org/dom/peerconnectionobserver;1",
+ Exposed=Window]
 interface PeerConnectionObserver
 {
   [Throws]

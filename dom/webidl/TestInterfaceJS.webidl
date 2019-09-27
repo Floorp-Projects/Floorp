@@ -10,7 +10,8 @@ dictionary TestInterfaceJSUnionableDictionary {
 };
 
 [JSImplementation="@mozilla.org/dom/test-interface-js;1",
- Pref="dom.expose_test_interfaces"]
+ Pref="dom.expose_test_interfaces",
+ Exposed=Window]
 interface TestInterfaceJS : EventTarget {
   [Throws]
   constructor(optional any anyArg, optional object objectArg,

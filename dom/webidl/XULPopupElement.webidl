@@ -20,7 +20,8 @@ dictionary OpenPopupOptions {
 
 typedef (DOMString or OpenPopupOptions) StringOrOpenPopupOptions;
 
-[HTMLConstructor, Func="IsChromeOrXBL"]
+[HTMLConstructor, Func="IsChromeOrXBL",
+ Exposed=Window]
 interface XULPopupElement : XULElement
 {
   /**

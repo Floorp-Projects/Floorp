@@ -11,7 +11,8 @@
  */
 
 [Pref="media.webspeech.recognition.enable",
- Func="SpeechRecognition::IsAuthorized"]
+ Func="SpeechRecognition::IsAuthorized",
+ Exposed=Window]
 interface SpeechRecognitionResultList {
     readonly attribute unsigned long length;
     getter SpeechRecognitionResult item(unsigned long index);

@@ -13,7 +13,8 @@ dictionary TreeCellInfo {
     DOMString childElt = "";
 };
 
-[HTMLConstructor, Func="IsChromeOrXBL"]
+[HTMLConstructor, Func="IsChromeOrXBL",
+ Exposed=Window]
 interface XULTreeElement : XULElement
 {
   /**

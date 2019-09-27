@@ -11,7 +11,8 @@
  * and create derivative works of this document.
  */
 
-[HTMLConstructor]
+[HTMLConstructor,
+ Exposed=Window]
 interface HTMLTableColElement : HTMLElement {
            [CEReactions, SetterThrows]
            attribute unsigned long span;

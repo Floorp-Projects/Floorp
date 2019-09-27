@@ -27,7 +27,8 @@ enum TCPReadyState {
   "closed",
 };
 
-[NoInterfaceObject]
+[NoInterfaceObject,
+ Exposed=Window]
 interface LegacyMozTCPSocket {
   /**
    * Legacy constructor for API compatibility.

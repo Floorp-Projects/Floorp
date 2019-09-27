@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Exposed=Window]
 interface UIEvent : Event
 {
   constructor(DOMString type, optional UIEventInit eventInitDict = {});

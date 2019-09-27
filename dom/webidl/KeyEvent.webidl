@@ -5,6 +5,7 @@
  */
 
 // http://www.w3.org/TR/1999/WD-DOM-Level-2-19990923/events.html#Events-KeyEvent
+[Exposed=Window]
 interface KeyEvent
 {
   // It's all mixed in.

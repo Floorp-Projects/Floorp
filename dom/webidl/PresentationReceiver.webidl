@@ -7,7 +7,8 @@
  * https://w3c.github.io/presentation-api/#interface-presentationreceiver
  */
 
-[Pref="dom.presentation.receiver.enabled"]
+[Pref="dom.presentation.receiver.enabled",
+ Exposed=Window]
 interface PresentationReceiver {
   /*
    * Get a list which contains all connected presentation connections

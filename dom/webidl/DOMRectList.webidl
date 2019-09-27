@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+[Exposed=Window]
 interface DOMRectList {
   readonly attribute unsigned long length;
   getter DOMRect? item(unsigned long index);

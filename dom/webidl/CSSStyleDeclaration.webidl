@@ -9,7 +9,8 @@
 
  // Because of getComputedStyle, many CSSStyleDeclaration objects can be
  // short-living.
-[ProbablyShortLivingWrapper]
+[ProbablyShortLivingWrapper,
+ Exposed=Window]
 interface CSSStyleDeclaration {
   [CEReactions, SetterNeedsSubjectPrincipal=NonSystem, SetterThrows]
   attribute DOMString cssText;

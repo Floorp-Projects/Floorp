@@ -11,7 +11,8 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#htmlframeelement
-[HTMLConstructor]
+[HTMLConstructor,
+ Exposed=Window]
 interface HTMLFrameElement : HTMLElement {
            [CEReactions, SetterThrows]
            attribute DOMString name;

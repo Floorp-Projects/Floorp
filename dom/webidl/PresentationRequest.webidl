@@ -7,7 +7,8 @@
  * https://w3c.github.io/presentation-api/#interface-presentationrequest
  */
 
-[Pref="dom.presentation.controller.enabled"]
+[Pref="dom.presentation.controller.enabled",
+ Exposed=Window]
 interface PresentationRequest : EventTarget {
   [Throws]
   constructor(DOMString url);

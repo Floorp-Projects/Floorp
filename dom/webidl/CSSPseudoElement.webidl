@@ -10,7 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
-[Func="Document::IsWebAnimationsGetAnimationsEnabled"]
+[Func="Document::IsWebAnimationsGetAnimationsEnabled",
+ Exposed=Window]
 interface CSSPseudoElement {
   readonly attribute DOMString type;
   readonly attribute Element element;

@@ -6,7 +6,8 @@
 /* We need a JSImplementation but cannot get one without a contract ID.
    Since Addon and AddonInstall are only ever created from JS they don't need
    real contract IDs. */
-[ChromeOnly, JSImplementation="dummy"]
+[ChromeOnly, JSImplementation="dummy",
+ Exposed=Window]
 interface Addon {
   // The add-on's ID.
   readonly attribute DOMString id;
@@ -31,7 +32,8 @@ interface Addon {
   Promise<void> setEnabled(boolean value);
 };
 
-[ChromeOnly, JSImplementation="dummy"]
+[ChromeOnly, JSImplementation="dummy",
+ Exposed=Window]
 interface AddonInstall : EventTarget {
   // One of the STATE_* symbols from AddonManager.jsm
   readonly attribute DOMString state;
@@ -57,7 +59,8 @@ dictionary addonInstallOptions {
 [HeaderFile="mozilla/AddonManagerWebAPI.h",
  Func="mozilla::AddonManagerWebAPI::IsAPIEnabled",
  JSImplementation="@mozilla.org/addon-web-api/manager;1",
- WantsEventListenerHooks]
+ WantsEventListenerHooks,
+ Exposed=Window]
 interface AddonManager : EventTarget {
   /**
    * Gets information about an add-on

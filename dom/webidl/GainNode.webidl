@@ -14,7 +14,8 @@ dictionary GainOptions : AudioNodeOptions {
              float gain = 1.0;
 };
 
-[Pref="dom.webaudio.enabled"]
+[Pref="dom.webaudio.enabled",
+ Exposed=Window]
 interface GainNode : AudioNode {
     [Throws]
     constructor(BaseAudioContext context, optional GainOptions options = {});
