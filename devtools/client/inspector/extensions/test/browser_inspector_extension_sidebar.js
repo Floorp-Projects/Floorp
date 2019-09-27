@@ -183,6 +183,48 @@ add_task(async function testSidebarSetObjectValueGrip() {
     propertiesNames: ["cyclic", "prop1", "Symbol(sym1)"],
   });
 
+  info("Test expanding the object");
+  const oi = sidebarPanelContent.querySelector(".tree");
+  const cyclicNode = oi.querySelectorAll(".node")[1];
+  ok(cyclicNode.innerText.includes("cyclic"), "Found the expected node");
+  cyclicNode.click();
+
+  await ContentTaskUtils.waitForCondition(
+    () => oi.querySelectorAll(".node").length === 7,
+    "Wait for the 'cyclic' node to be expanded"
+  );
+
+  await ContentTaskUtils.waitForCondition(
+    () => oi.querySelector(".tree-node.focused"),
+    "Wait for the 'cyclic' node to be focused"
+  );
+  ok(
+    oi.querySelector(".tree-node.focused").innerText.includes("cyclic"),
+    "'cyclic' node is focused"
+  );
+
+  info("Test keyboard navigation");
+  EventUtils.synthesizeKey("KEY_ArrowLeft", {}, oi.ownerDocument.defaultView);
+  await ContentTaskUtils.waitForCondition(
+    () => oi.querySelectorAll(".node").length === 4,
+    "Wait for the 'cyclic' node to be collapsed"
+  );
+  ok(
+    oi.querySelector(".tree-node.focused").innerText.includes("cyclic"),
+    "'cyclic' node is still focused"
+  );
+
+  EventUtils.synthesizeKey("KEY_ArrowDown", {}, oi.ownerDocument.defaultView);
+  await ContentTaskUtils.waitForCondition(
+    () => oi.querySelectorAll(".tree-node")[2].classList.contains("focused"),
+    "Wait for the 'prop1' node to be focused"
+  );
+
+  ok(
+    oi.querySelector(".tree-node.focused").innerText.includes("prop1"),
+    "'prop1' node is focused"
+  );
+
   inspectedWindowFront.destroy();
 });
 
