@@ -136,10 +136,10 @@
     }
 
   function dontCreateMapWhiteSpace() {
-    const tree = { SECTION: [ { role: ROLE_TEXT_LEAF, name: "x" }, { TABLE: [ { ROW: [] }] } ] };
+    const tree = { SECTION: [ { role: ROLE_TEXT_LEAF, name: "x" } ] };
     testAccessibleTree("container3", tree);
 
-    getNode("b").align = "Right";
+    getNode("c3_inner").style.textAlign = "center";
     document.body.offsetTop; // Flush layout.
     window.windowUtils.advanceTimeAndRefresh(100);
 
@@ -191,7 +191,7 @@
 
   <div id="container3">
     <div id="c3_inner" role="presentation">
-      x<map> </map><table id="b"><tr></tr></table>
+      x<map> </map>
     </div>
   </div>
 
