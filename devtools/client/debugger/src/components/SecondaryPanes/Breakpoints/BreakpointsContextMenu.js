@@ -8,6 +8,7 @@ import { buildMenu, showMenu } from "devtools-contextmenu";
 import { getSelectedLocation } from "../../../utils/selected-location";
 import actions from "../../../actions";
 import { features } from "../../../utils/prefs";
+import { formatKeyShortcut } from "../../../utils/text";
 
 import type { Breakpoint, Source, Context } from "../../../types";
 
@@ -236,7 +237,9 @@ export default function showContextMenu(props: Props) {
       selectSpecificLocation(cx, selectedLocation);
       openConditionalPanel(selectedLocation);
     },
-    accelerator: L10N.getStr("toggleCondPanel.breakpoint.key"),
+    accelerator: formatKeyShortcut(
+      L10N.getStr("toggleCondPanel.breakpoint.key")
+    ),
   };
 
   const editConditionItem = {
@@ -247,7 +250,9 @@ export default function showContextMenu(props: Props) {
       selectSpecificLocation(cx, selectedLocation);
       openConditionalPanel(selectedLocation);
     },
-    accelerator: L10N.getStr("toggleCondPanel.breakpoint.key"),
+    accelerator: formatKeyShortcut(
+      L10N.getStr("toggleCondPanel.breakpoint.key")
+    ),
   };
 
   const addLogPointItem = {
@@ -256,7 +261,7 @@ export default function showContextMenu(props: Props) {
     accesskey: L10N.getStr("editor.addLogPoint.accesskey"),
     disabled: false,
     click: () => openConditionalPanel(selectedLocation, true),
-    accelerator: L10N.getStr("toggleCondPanel.logPoint.key"),
+    accelerator: formatKeyShortcut(L10N.getStr("toggleCondPanel.logPoint.key")),
   };
 
   const editLogPointItem = {
@@ -265,7 +270,7 @@ export default function showContextMenu(props: Props) {
     accesskey: L10N.getStr("editor.editLogPoint.accesskey"),
     disabled: false,
     click: () => openConditionalPanel(selectedLocation, true),
-    accelerator: L10N.getStr("toggleCondPanel.logPoint.key"),
+    accelerator: formatKeyShortcut(L10N.getStr("toggleCondPanel.logPoint.key")),
   };
 
   const removeLogPointItem = {
