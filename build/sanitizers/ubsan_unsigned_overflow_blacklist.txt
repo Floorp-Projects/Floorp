@@ -119,7 +119,7 @@ src:*/modules/zlib/src/*
 # Our LZ4 implementation uses overflows. By listing it here we might
 # miss some unintended overflows in that implementation, but we can't
 # check for it right now.
-src:*/mfbt/lz4.c
+src:*/mfbt/lz4/*
 
 # Apparently this overflows a lot, because it contains some allocators
 # that keep overflowing, not sure why. Disabling by function didn't seem
