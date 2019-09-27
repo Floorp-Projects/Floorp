@@ -764,7 +764,11 @@ class LifoAlloc {
     detail::BumpChunk::Mark chunk;
     detail::BumpChunk::Mark oversize;
   };
-  Mark mark();
+
+  // Note: MOZ_NEVER_INLINE is a work around for a Clang 9 (PGO) miscompilation.
+  // See bug 1583907.
+  MOZ_NEVER_INLINE Mark mark();
+
   void release(Mark mark);
 
  private:
