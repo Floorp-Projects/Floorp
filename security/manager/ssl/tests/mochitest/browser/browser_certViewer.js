@@ -451,8 +451,9 @@ async function openCertViewerAndCheckTabName(url, expectedTabName) {
       let certificateSection = await ContentTaskUtils.waitForCondition(() => {
         return content.document.querySelector("certificate-section");
       }, "Certificate section found");
-      let tabName = certificateSection.shadowRoot.querySelector("#tab0")
-        .textContent;
+      let tabName = certificateSection.shadowRoot.querySelector(
+        ".tab[idnumber='0']"
+      ).textContent;
       Assert.equal(tabName, expectedTabName);
     });
   });
