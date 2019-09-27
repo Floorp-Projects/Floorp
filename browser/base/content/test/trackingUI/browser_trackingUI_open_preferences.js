@@ -7,6 +7,8 @@ const TP_PREF = "privacy.trackingprotection.enabled";
 const TPC_PREF = "network.cookie.cookieBehavior";
 const TRACKING_PAGE =
   "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
+const COOKIE_PAGE =
+  "http://tracking.example.com/browser/browser/base/content/test/trackingUI/cookiePage.html";
 
 async function waitAndAssertPreferencesShown(_spotlight, identityPopup) {
   await BrowserTestUtils.waitForEvent(
@@ -100,7 +102,7 @@ add_task(async function testOpenPreferencesFromCookiesSubview() {
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
   );
 
-  await BrowserTestUtils.withNewTab(TRACKING_PAGE, async function() {
+  await BrowserTestUtils.withNewTab(COOKIE_PAGE, async function() {
     await openProtectionsPopup();
 
     let categoryItem = document.getElementById(
