@@ -529,10 +529,6 @@ nsresult NS_DispatchToBackgroundThread(nsIRunnable* aEvent,
   return nsThreadManager::get().DispatchToBackgroundThread(aEvent, aDispatchFlags);
 }
 
-nsresult NS_GetBackgroundEventTarget(nsIEventTarget** aEventTarget) {
-  return nsThreadManager::get().GetBackgroundEventTarget(aEventTarget);
-}
-
 // nsAutoLowPriorityIO
 nsAutoLowPriorityIO::nsAutoLowPriorityIO() {
 #if defined(XP_WIN)
