@@ -69,6 +69,11 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
       gElements.loginList.addFavicons(event.detail.value);
       break;
     }
+    case "SetBreaches": {
+      gElements.loginList.setBreaches(event.detail.value);
+      gElements.loginItem.setBreaches(event.detail.value);
+      break;
+    }
     case "Setup": {
       handleAllLogins(event.detail.value.logins);
       gElements.loginFooter.showStoreIconsForLocales(
