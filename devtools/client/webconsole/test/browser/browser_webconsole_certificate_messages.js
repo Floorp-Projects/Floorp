@@ -21,6 +21,12 @@ const TLS_expected_message =
   " will be disabled in March 2020. Please upgrade" +
   " to TLS 1.2 or 1.3.";
 
+registerCleanupFunction(function() {
+  // Set preferences back to their original values
+  Services.prefs.clearUserPref("security.tls.version.min");
+  Services.prefs.clearUserPref("security.tls.version.max");
+});
+
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
@@ -55,6 +61,9 @@ add_task(async function() {
   );
 
   info("Test TLS warnings");
+  // Run with all versions enabled for this test.
+  Services.prefs.setIntPref("security.tls.version.min", 1);
+  Services.prefs.setIntPref("security.tls.version.max", 4);
   onContentLog = waitForMessage(hud, TRIGGER_MSG);
   await loadDocument(TLS_1_0_URL);
   await onContentLog;
