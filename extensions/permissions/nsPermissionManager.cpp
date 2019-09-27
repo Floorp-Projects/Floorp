@@ -1724,20 +1724,6 @@ nsresult nsPermissionManager::CreateTable() {
 }
 
 NS_IMETHODIMP
-nsPermissionManager::Add(nsIURI* aURI, const nsACString& aType,
-                         uint32_t aPermission, uint32_t aExpireType,
-                         int64_t aExpireTime) {
-  NS_ENSURE_ARG_POINTER(aURI);
-
-  nsCOMPtr<nsIPrincipal> principal;
-  nsresult rv = GetPrincipal(aURI, getter_AddRefs(principal));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return AddFromPrincipal(principal, aType, aPermission, aExpireType,
-                          aExpireTime);
-}
-
-NS_IMETHODIMP
 nsPermissionManager::AddFromPrincipal(nsIPrincipal* aPrincipal,
                                       const nsACString& aType,
                                       uint32_t aPermission,
@@ -2073,17 +2059,6 @@ nsresult nsPermissionManager::AddInternal(
 }
 
 NS_IMETHODIMP
-nsPermissionManager::Remove(nsIURI* aURI, const nsACString& aType) {
-  NS_ENSURE_ARG_POINTER(aURI);
-
-  nsCOMPtr<nsIPrincipal> principal;
-  nsresult rv = GetPrincipal(aURI, getter_AddRefs(principal));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return RemoveFromPrincipal(principal, aType);
-}
-
-NS_IMETHODIMP
 nsPermissionManager::RemoveFromPrincipal(nsIPrincipal* aPrincipal,
                                          const nsACString& aType) {
   ENSURE_NOT_CHILD_PROCESS;
@@ -2275,14 +2250,6 @@ nsresult nsPermissionManager::RemoveAllInternal(bool aNotifyObservers) {
 }
 
 NS_IMETHODIMP
-nsPermissionManager::TestExactPermission(nsIURI* aURI, const nsACString& aType,
-                                         uint32_t* aPermission) {
-  return CommonTestPermission(aURI, -1, aType, aPermission,
-                              nsIPermissionManager::UNKNOWN_ACTION, false, true,
-                              true);
-}
-
-NS_IMETHODIMP
 nsPermissionManager::TestExactPermissionFromPrincipal(nsIPrincipal* aPrincipal,
                                                       const nsACString& aType,
                                                       uint32_t* aPermission) {
@@ -2298,14 +2265,6 @@ nsPermissionManager::TestExactPermanentPermission(nsIPrincipal* aPrincipal,
   return CommonTestPermission(aPrincipal, -1, aType, aPermission,
                               nsIPermissionManager::UNKNOWN_ACTION, false, true,
                               false);
-}
-
-NS_IMETHODIMP
-nsPermissionManager::TestPermission(nsIURI* aURI, const nsACString& aType,
-                                    uint32_t* aPermission) {
-  return CommonTestPermission(aURI, -1, aType, aPermission,
-                              nsIPermissionManager::UNKNOWN_ACTION, false,
-                              false, true);
 }
 
 nsresult nsPermissionManager::LegacyTestPermissionFromURI(
@@ -2338,18 +2297,6 @@ nsPermissionManager::TestPermissionFromPrincipal(nsIPrincipal* aPrincipal,
   return CommonTestPermission(aPrincipal, -1, aType, aPermission,
                               nsIPermissionManager::UNKNOWN_ACTION, false,
                               false, true);
-}
-
-NS_IMETHODIMP
-nsPermissionManager::GetPermissionObjectForURI(nsIURI* aURI,
-                                               const nsACString& aType,
-                                               bool aExactHostMatch,
-                                               nsIPermission** aResult) {
-  nsCOMPtr<nsIPrincipal> principal;
-  nsresult rv = GetPrincipal(aURI, getter_AddRefs(principal));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return GetPermissionObject(principal, aType, aExactHostMatch, aResult);
 }
 
 NS_IMETHODIMP
@@ -2645,15 +2592,6 @@ NS_IMETHODIMP nsPermissionManager::GetAllWithTypePrefix(
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP nsPermissionManager::GetAllForURI(nsIURI* aURI,
-                                                nsISimpleEnumerator** aEnum) {
-  nsCOMPtr<nsIPrincipal> principal;
-  nsresult rv = GetPrincipal(aURI, getter_AddRefs(principal));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return GetAllForPrincipal(principal, aEnum);
 }
 
 NS_IMETHODIMP
