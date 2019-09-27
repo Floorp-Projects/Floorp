@@ -1783,6 +1783,7 @@ class UrlbarInput {
         this._mousedownOnUrlbarDescendant = true;
         if (event.target == this._inputContainer) {
           this.focus();
+          this.startLayoutExtend();
         }
         break;
       case this.window:
