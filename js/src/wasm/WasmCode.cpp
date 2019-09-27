@@ -839,7 +839,7 @@ void* LazyStubTier::lookupInterpEntry(uint32_t funcIndex) const {
 
 void LazyStubTier::addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code,
                                  size_t* data) const {
-  *data += sizeof(this);
+  *data += sizeof(*this);
   *data += exports_.sizeOfExcludingThis(mallocSizeOf);
   for (const UniqueLazyStubSegment& stub : stubSegments_) {
     stub->addSizeOfMisc(mallocSizeOf, code, data);
