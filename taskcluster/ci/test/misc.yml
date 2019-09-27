@@ -76,6 +76,18 @@ test-verify:
                     - unittests/win_unittest.py
         extra-options:
             - --verify
+    fetches:
+        toolchain:
+            by-test-platform:
+                linux.*:
+                    - linux64-node
+                macosx.*:
+                    - macosx64-node
+                win.*64.*:
+                    - win64-node
+                win.*32.*:
+                    - win32-node
+                android-em-7.*: []
 
 test-verify-gpu:
     description: "Extra verification of tests modified on this push on gpu instances"
