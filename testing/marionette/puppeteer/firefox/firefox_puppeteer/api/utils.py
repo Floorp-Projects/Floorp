@@ -94,7 +94,8 @@ class Permissions(BaseLib):
             self.marionette.execute_script("""
               Components.utils.import("resource://gre/modules/Services.jsm");
               let uri = Services.io.newURI(arguments[0], null, null);
-              Services.perms.add(uri, arguments[1],
+              let principal = Services.scriptSecurityManager.createContentPrincipal(uri, {});
+              Services.perms.addFromPrincipal(principal, arguments[1],
                                  Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
             """, script_args=[host, permission])
 
@@ -112,5 +113,6 @@ class Permissions(BaseLib):
             self.marionette.execute_script("""
               Components.utils.import("resource://gre/modules/Services.jsm");
               let uri = Services.io.newURI(arguments[0], null, null);
-              Services.perms.remove(uri, arguments[1]);
+              let principal = Services.scriptSecurityManager.createContentPrincipal(uri, {});
+              Services.perms.removeFromPrincipal(principal, arguments[1]);
             """, script_args=[host, permission])
