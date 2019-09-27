@@ -2,6 +2,7 @@
 loader: taskgraph.loader.transform:loader
 transforms:
     - fenix_taskgraph.transforms.raptor:transforms
+    - fenix_taskgraph.transforms.notify:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
@@ -16,10 +17,20 @@ only-for-abis:
     - arm64-v8a
 
 job-defaults:
-    worker-type:
-        by-abi:
-            armeabi-v7a: t-bitbar-gw-perf-g5
-            arm64-v8a: t-bitbar-gw-perf-p2
+    dependencies:
+        geckoview-nightly: geckoview-nightly
+    notify:
+        by-level:
+            '3':
+                email:
+                    content: This calls for an action of the Performance team. Use the link to view it on Treeherder.
+                    link:
+                        text: Treeherder Job
+                        href: 'https://treeherder.mozilla.org/#/jobs?repo={product_name}&revision={head_rev}&searchStr={task_name}'
+                    on-reasons: [failed]
+                    subject: '[{product_name}] Raptor job "{task_name}" failed'
+                    to-addresses: [perftest-alerts@mozilla.com]
+            default: {}
     run-on-tasks-for: []
     treeherder:
         kind: test
@@ -28,8 +39,10 @@ job-defaults:
             by-abi:
                 arm64-v8a: android-hw-p2-8-0-android-aarch64/opt
                 armeabi-v7a: android-hw-g5-7-0-arm7-api-16/opt
-    dependencies:
-        geckoview-nightly: geckoview-nightly
+    worker-type:
+        by-abi:
+            armeabi-v7a: t-bitbar-gw-perf-g5
+            arm64-v8a: t-bitbar-gw-perf-p2
     worker:
         max-run-time: 3600
         env:

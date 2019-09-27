@@ -91,3 +91,23 @@ def build_raptor_task(config, tasks):
         task["run"]["command"].extend(task.pop("args", []))
 
         yield task
+
+
+@transforms.add
+def fill_email_data(config, tasks):
+    product_name = config.graph_config['taskgraph']['repositories']['mobile']['name']
+    format_kwargs = {
+        "product_name": product_name.lower(),
+        "head_rev": config.params["head_rev"],
+    }
+
+    for task in tasks:
+        format_kwargs["task_name"] = task["name"]
+
+        resolve_keyed_by(task, 'notify', item_name=task["name"], level=config.params["level"])
+        email = task["notify"].get("email")
+        if email:
+            email["link"]["href"] = email["link"]["href"].format(**format_kwargs)
+            email["subject"] = email["subject"].format(**format_kwargs)
+
+        yield task
