@@ -64,9 +64,11 @@ nsresult DeleteMarkerFile(const QuotaInfo& aQuotaInfo);
 
 bool MarkerFileExists(const QuotaInfo& aQuotaInfo);
 
-nsresult RemoveNsIFileRecursively(const QuotaInfo& aQuotaInfo, nsIFile* aFile);
+nsresult RemoveNsIFileRecursively(const QuotaInfo& aQuotaInfo, nsIFile* aFile,
+                                  const bool aTrackQuota = true);
 
-nsresult RemoveNsIFile(const QuotaInfo& aQuotaInfo, nsIFile* aFile);
+nsresult RemoveNsIFile(const QuotaInfo& aQuotaInfo, nsIFile* aFile,
+                       const bool aTrackQuota = true);
 
 void DecreaseUsageForQuotaInfo(const QuotaInfo& aQuotaInfo,
                                const int64_t& aUpdatingSize);
