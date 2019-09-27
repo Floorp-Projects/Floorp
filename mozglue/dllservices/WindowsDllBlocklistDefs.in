@@ -221,10 +221,10 @@ ALL_PROCESSES += [
     DllBlocklistEntry("safemon64.dll", ALL_VERSIONS),
 
     # FYunZip and PuddingZip cause crashes, bug 1576728
-    DllBlocklistEntry("oly64.dll", ALL_VERSIONS, condition='NIGHTLY_BUILD'),
-    DllBlocklistEntry("oly.dll", ALL_VERSIONS, condition='NIGHTLY_BUILD'),
-    DllBlocklistEntry("pdzipmenu64.dll", ALL_VERSIONS, condition='NIGHTLY_BUILD'),
-    DllBlocklistEntry("pdzipmenu32.dll", ALL_VERSIONS, condition='NIGHTLY_BUILD'),
+    DllBlocklistEntry("oly64.dll", ALL_VERSIONS, condition='defined(NIGHTLY_BUILD)'),
+    DllBlocklistEntry("oly.dll", ALL_VERSIONS, condition='defined(NIGHTLY_BUILD)'),
+    DllBlocklistEntry("pdzipmenu64.dll", ALL_VERSIONS, condition='defined(NIGHTLY_BUILD)'),
+    DllBlocklistEntry("pdzipmenu32.dll", ALL_VERSIONS, condition='defined(NIGHTLY_BUILD)'),
 ]
 
 ALL_PROCESSES_TESTS += [
