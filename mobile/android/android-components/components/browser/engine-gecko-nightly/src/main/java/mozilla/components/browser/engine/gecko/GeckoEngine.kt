@@ -25,6 +25,7 @@ import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.WebExtension
 import org.json.JSONObject
+import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.ContentBlockingController
 import org.mozilla.geckoview.ContentBlockingController.Event
 import org.mozilla.geckoview.GeckoResult
@@ -210,7 +211,15 @@ class GeckoEngine(
                         policy.strictSocialTrackingProtection ?: policy.trackingCategories.contains(
                             TrackingCategory.STRICT
                         )
-
+                    val etpLevel =
+                        when {
+                            policy.trackingCategories.contains(TrackingCategory.STRICT) ->
+                                ContentBlocking.EtpLevel.STRICT
+                            policy.trackingCategories.contains(TrackingCategory.RECOMMENDED) ->
+                                ContentBlocking.EtpLevel.DEFAULT
+                            else -> ContentBlocking.EtpLevel.NONE
+                        }
+                    runtime.settings.contentBlocking.setEnhancedTrackingProtectionLevel(etpLevel)
                     runtime.settings.contentBlocking.setStrictSocialTrackingProtection(
                         activateStrictSocialTracking
                     )
