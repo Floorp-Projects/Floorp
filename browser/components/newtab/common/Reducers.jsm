@@ -526,7 +526,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
     const { data, placements } = prevState.spocs;
     const result = {};
 
-    placements.forEach(placement => {
+    const forPlacement = placement => {
       const placementSpocs = data[placement.name];
 
       if (!placementSpocs || !placementSpocs.length) {
@@ -534,7 +534,13 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
       }
 
       result[placement.name] = handleSites(placementSpocs);
-    });
+    };
+
+    if (!placements || !placements.length) {
+      [{ name: "spocs" }].forEach(forPlacement);
+    } else {
+      placements.forEach(forPlacement);
+    }
     return result;
   };
 
