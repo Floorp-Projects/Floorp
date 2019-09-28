@@ -67,3 +67,8 @@ path:toolkit/mozapps/update/updater
 # for the browsertime toolchain task
 path:tools/browsertime/mach_commands.py
 path:tools/browsertime/package.json
+
+# for the geckodriver toolchain task
+path:testing/geckodriver
+path:testing/mozbase/rust
+path:testing/webdriver
