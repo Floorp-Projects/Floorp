@@ -98,6 +98,39 @@ void WritableStream::clearInFlightWriteRequest(JSContext* cx) {
 MOZ_MUST_USE bool js::WritableStreamDealWithRejection(
     JSContext* cx, Handle<WritableStream*> unwrappedStream,
     Handle<Value> error) {
+  // Step 1: Let state be stream.[[state]].
+  // Step 2: If state is "writable",
+  if (unwrappedStream->writable()) {
+    // Step 2a: Perform ! WritableStreamStartErroring(stream, error).
+    // Step 2b: Return.
+    return WritableStreamStartErroring(cx, unwrappedStream, error);
+  }
+
+  // Step 3: Assert: state is "erroring".
+  MOZ_ASSERT(unwrappedStream->erroring());
+
+  // Step 4: Perform ! WritableStreamFinishErroring(stream).
+  return WritableStreamFinishErroring(cx, unwrappedStream);
+}
+
+/**
+ * Streams spec, 4.4.3.
+ *      WritableStreamStartErroring ( stream, reason )
+ */
+MOZ_MUST_USE bool js::WritableStreamStartErroring(
+    JSContext* cx, Handle<WritableStream*> unwrappedStream,
+    Handle<Value> reason) {
+  // XXX jwalden flesh me out!
+  JS_ReportErrorASCII(cx, "epic fail");
+  return false;
+}
+
+/**
+ * Streams spec, 4.4.4.
+ *      WritableStreamFinishErroring ( stream )
+ */
+MOZ_MUST_USE bool js::WritableStreamFinishErroring(
+    JSContext* cx, Handle<WritableStream*> unwrappedStream) {
   // XXX jwalden flesh me out!
   JS_ReportErrorASCII(cx, "epic fail");
   return false;
