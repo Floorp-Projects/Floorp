@@ -14,6 +14,7 @@
 #include "jsapi.h"  // JS_ReportErrorASCII, JS_SetPrivate
 
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
+#include "builtin/streams/WritableStreamDefaultController.h"  // js::WritableStreamDefaultController, js::WritableStream::controller
 #include "js/RootingAPI.h"                   // JS::Handle, JS::Rooted
 #include "js/Value.h"                        // JS::Value, JS::ObjecValue
 
@@ -120,6 +121,31 @@ MOZ_MUST_USE bool js::WritableStreamDealWithRejection(
 MOZ_MUST_USE bool js::WritableStreamStartErroring(
     JSContext* cx, Handle<WritableStream*> unwrappedStream,
     Handle<Value> reason) {
+  // Step 1: Assert: stream.[[storedError]] is undefined.
+  MOZ_ASSERT(unwrappedStream->storedError().isUndefined());
+
+  // Step 2: Assert: stream.[[state]] is "writable".
+  MOZ_ASSERT(unwrappedStream->writable());
+
+  // Step 3: Let controller be stream.[[writableStreamController]].
+  // Step 4: Assert: controller is not undefined.
+  MOZ_ASSERT(unwrappedStream->hasController());
+  Rooted<WritableStreamDefaultController*> unwrappedController(
+      cx, unwrappedStream->controller());
+
+  // Step 5: Set stream.[[state]] to "erroring".
+  unwrappedStream->setErroring();
+
+  // Step 6: Set stream.[[storedError]] to reason.
+  unwrappedStream->setStoredError(reason);
+
+  // Step 7: Let writer be stream.[[writer]].
+  // Step 8: If writer is not undefined, perform
+  //         ! WritableStreamDefaultWriterEnsureReadyPromiseRejected(
+  //             writer, reason).
+  // Step 9: If ! WritableStreamHasOperationMarkedInFlight(stream) is false and
+  //         controller.[[started]] is true, perform
+  //         ! WritableStreamFinishErroring(stream).
   // XXX jwalden flesh me out!
   JS_ReportErrorASCII(cx, "epic fail");
   return false;
