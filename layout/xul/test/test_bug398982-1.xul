@@ -3,7 +3,7 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 <menuitem xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:html="http://www.w3.org/1999/xhtml"
-          style="position: absolute; ">
+          style="position: absolute; display: block;">
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=398982
 -->

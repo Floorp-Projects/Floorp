@@ -5,7 +5,7 @@
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	id="MainWindow"
 	title="IWindow Test">
-<div style="position:absolute">abc</div>
+<div style="display: block; position:absolute">abc</div>
 
 
 </window>

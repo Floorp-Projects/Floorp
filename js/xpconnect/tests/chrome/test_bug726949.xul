@@ -5,7 +5,8 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=726949
 -->
 <window title="Mozilla Bug 726949"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        style="display: block;">
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 
   <!-- test results are displayed in the html:body -->
