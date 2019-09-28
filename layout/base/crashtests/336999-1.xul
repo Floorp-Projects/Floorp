@@ -11,9 +11,8 @@ function boom()
 window.addEventListener("load", function(){setTimeout(boom, 30)}, 0);
 
 </script>
-	
 
-  <hbox id="xxx" style="position: absolute;">
+  <hbox id="xxx" style="position: absolute; display: block;">
     <label value="X" />
     <menulist>
       <menupopup>
@@ -21,6 +20,5 @@ window.addEventListener("load", function(){setTimeout(boom, 30)}, 0);
       </menupopup>
     </menulist>
   </hbox>
-
 
 </window>

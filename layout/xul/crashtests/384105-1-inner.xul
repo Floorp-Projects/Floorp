@@ -5,12 +5,12 @@ document.getElementById('a').removeAttribute('style');
 }
 setTimeout(doe,100);
 </script>
-<box id="a" style="position: absolute;">
+<box id="a" style="position: absolute; display: block;">
   <menuitem sizetopopup="always">
-    <menupopup style="position: absolute;"/>
+    <menupopup style="position: absolute; display: block;"/>
   </menuitem>
 
-  <box style="position: fixed;">
+  <box style="position: fixed; display: block;">
     <tree>
       <treecol>
         <treecol/>

@@ -2,8 +2,9 @@
 
 <script>
 
-function init() { 
-  document.getElementById("foopy").style.position = "absolute";   
+function init() {
+  document.getElementById("foopy").style.display = "block";
+  document.getElementById("foopy").style.position = "absolute";
 }
 
 window.addEventListener("load", init, 0);
@@ -12,6 +13,6 @@ window.addEventListener("load", init, 0);
 
 
 <box id="foopy" />
-       
+
 
 </window>
