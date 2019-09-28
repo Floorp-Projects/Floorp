@@ -1642,6 +1642,19 @@ extern bool StringIsAscii(JSLinearString* str);
  * Return true if the string matches the given sequence of ASCII bytes.
  */
 extern bool StringEqualsAscii(JSLinearString* str, const char* asciiBytes);
+/*
+ * Return true if the string matches the given sequence of ASCII
+ * bytes.  The sequence of ASCII bytes must have length "length".  The
+ * length should not include the trailing null, if any.
+ */
+extern bool StringEqualsAscii(JSLinearString* str, const char* asciiBytes,
+                              size_t length);
+
+template <size_t N>
+bool StringEqualsLiteral(JSLinearString* str, const char (&asciiBytes)[N]) {
+  MOZ_ASSERT(asciiBytes[N - 1] == '\0');
+  return StringEqualsAscii(str, asciiBytes, N - 1);
+}
 
 extern int StringFindPattern(JSLinearString* text, JSLinearString* pat,
                              size_t start);
