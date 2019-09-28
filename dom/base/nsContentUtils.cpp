@@ -81,6 +81,7 @@
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/extensions/WebExtensionPolicy.h"
 #include "mozilla/net/CookieSettings.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
@@ -1718,7 +1719,13 @@ bool nsContentUtils::PrincipalAllowsL10n(nsIPrincipal* aPrincipal,
   rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_IS_UI_RESOURCE,
                            &hasFlags);
   NS_ENSURE_SUCCESS(rv, false);
-  return hasFlags;
+  if (hasFlags) {
+    return true;
+  }
+
+  auto principal = BasePrincipal::Cast(aPrincipal);
+  auto policy = principal->AddonPolicy();
+  return (policy && policy->IsPrivileged());
 }
 
 // static
