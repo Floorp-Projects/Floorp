@@ -19,14 +19,6 @@ struct JSContext;
 namespace js {
 
 class WritableStream;
-class WritableStreamDefaultController;
-
-extern MOZ_MUST_USE bool WritableStreamControllerStartHandler(JSContext* cx,
-                                                              unsigned argc,
-                                                              JS::Value* vp);
-
-extern MOZ_MUST_USE bool WritableStreamControllerStartFailedHandler(
-    JSContext* cx, unsigned argc, JS::Value* vp);
 
 /**
  * Characterizes the family of algorithms, (startAlgorithm, writeAlgorithm,
@@ -50,12 +42,6 @@ extern MOZ_MUST_USE bool SetUpWritableStreamDefaultControllerFromUnderlyingSink(
     JSContext* cx, JS::Handle<WritableStream*> stream,
     JS::Handle<JS::Value> underlyingSink, double highWaterMark,
     JS::Handle<JS::Value> sizeAlgorithm);
-
-extern double WritableStreamDefaultControllerGetDesiredSize(
-    const WritableStreamDefaultController* controller);
-
-extern bool WritableStreamDefaultControllerGetBackpressure(
-    const WritableStreamDefaultController* controller);
 
 }  // namespace js
 
