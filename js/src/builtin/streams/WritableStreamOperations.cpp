@@ -11,9 +11,12 @@
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
-#include "jsapi.h"  // JS_SetPrivate
+#include "jsapi.h"  // JS_ReportErrorASCII, JS_SetPrivate
 
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
+#include "js/RootingAPI.h"                   // JS::Handle, JS::Rooted
+#include "js/Value.h"                        // JS::Value, JS::ObjecValue
+
 #include "vm/JSObject-inl.h"                 // js::NewObjectWithClassProto
 #include "vm/List-inl.h"                     // js::StoreNewListInFixedSlot
 
@@ -84,4 +87,29 @@ void WritableStream::clearInFlightWriteRequest(JSContext* cx) {
 
   MOZ_ASSERT(!haveInFlightWriteRequest());
   MOZ_ASSERT(inFlightWriteRequest().isUndefined());
+}
+
+/*** 4.4. Writable stream abstract operations used by controllers ***********/
+
+/**
+ * Streams spec, 4.4.2.
+ *      WritableStreamDealWithRejection ( stream, error )
+ */
+MOZ_MUST_USE bool js::WritableStreamDealWithRejection(
+    JSContext* cx, Handle<WritableStream*> unwrappedStream,
+    Handle<Value> error) {
+  // XXX jwalden flesh me out!
+  JS_ReportErrorASCII(cx, "epic fail");
+  return false;
+}
+
+/**
+ * Streams spec, 4.4.14.
+ *      WritableStreamUpdateBackpressure ( stream, backpressure )
+ */
+MOZ_MUST_USE bool js::WritableStreamUpdateBackpressure(
+    JSContext* cx, Handle<WritableStream*> unwrappedStream, bool backpressure) {
+  // XXX jwalden flesh me out!
+  JS_ReportErrorASCII(cx, "epic fail");
+  return false;
 }
