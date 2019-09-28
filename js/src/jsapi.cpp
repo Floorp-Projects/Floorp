@@ -4455,9 +4455,29 @@ JS_PUBLIC_API bool JS_StringEqualsAscii(JSContext* cx, JSString* str,
   return true;
 }
 
+JS_PUBLIC_API bool JS_StringEqualsAscii(JSContext* cx, JSString* str,
+                                        const char* asciiBytes, size_t length,
+                                        bool* match) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+
+  JSLinearString* linearStr = str->ensureLinear(cx);
+  if (!linearStr) {
+    return false;
+  }
+  *match = StringEqualsAscii(linearStr, asciiBytes, length);
+  return true;
+}
+
 JS_PUBLIC_API bool JS_FlatStringEqualsAscii(JSFlatString* str,
                                             const char* asciiBytes) {
   return StringEqualsAscii(str, asciiBytes);
+}
+
+JS_PUBLIC_API bool JS_FlatStringEqualsAscii(JSFlatString* str,
+                                            const char* asciiBytes,
+                                            size_t length) {
+  return StringEqualsAscii(str, asciiBytes, length);
 }
 
 JS_PUBLIC_API size_t JS_PutEscapedFlatString(char* buffer, size_t size,
