@@ -17,6 +17,7 @@
 #include "builtin/streams/ClassSpecMacro.h"  // JS_STREAMS_CLASS_SPEC
 #include "builtin/streams/MiscellaneousOperations.h"  // js::MakeSizeAlgorithmFromSizeFunction, js::ValidateAndNormalizeHighWaterMark
 #include "builtin/streams/WritableStreamDefaultControllerOperations.h"  // js::SetUpWritableStreamDefaultControllerFromUnderlyingSink
+#include "builtin/streams/WritableStreamDefaultWriter.h"  // js::CreateWritableStreamDefaultWriter
 #include "js/CallArgs.h"  // JS::CallArgs{,FromVp}
 #include "js/Class.h"  // JS{Function,Property}Spec, JS_{FS,PS}_END, JSCLASS_PRIVATE_IS_NSISUPPORTS, JSCLASS_HAS_PRIVATE, JS_NULL_CLASS_OPS
 #include "js/RealmOptions.h"      // JS::RealmCreationOptions
@@ -28,9 +29,12 @@
 #include "vm/ObjectOperations.h"  // js::GetProperty
 #include "vm/Realm.h"             // JS::Realm
 
+#include "vm/Compartment-inl.h"  // js::UnwrapAndTypeCheckThis
 #include "vm/JSObject-inl.h"      // js::NewBuiltinClassInstance
 #include "vm/NativeObject-inl.h"  // js::ThrowIfNotConstructing
 
+using js::CreateWritableStreamDefaultWriter;
+using js::UnwrapAndTypeCheckThis;
 using js::WritableStream;
 
 using JS::CallArgs;
@@ -144,7 +148,30 @@ bool WritableStream::constructor(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static const JSFunctionSpec WritableStream_methods[] = {JS_FS_END};
+/**
+ * Streams spec, 4.2.5.3. getWriter()
+ */
+static bool WritableStream_getWriter(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1: If ! WritableStream(this) is false, throw a TypeError exception.
+  Rooted<WritableStream*> unwrappedStream(
+      cx, UnwrapAndTypeCheckThis<WritableStream>(cx, args, "getWriter"));
+  if (!unwrappedStream) {
+    return false;
+  }
+
+  auto* writer = CreateWritableStreamDefaultWriter(cx, unwrappedStream);
+  if (!writer) {
+    return false;
+  }
+
+  args.rval().setObject(*writer);
+  return true;
+}
+
+static const JSFunctionSpec WritableStream_methods[] = {
+    JS_FN("getWriter", WritableStream_getWriter, 0, 0), JS_FS_END};
 
 static const JSPropertySpec WritableStream_properties[] = {JS_PS_END};
 
