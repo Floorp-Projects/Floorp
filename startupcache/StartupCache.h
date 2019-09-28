@@ -18,11 +18,7 @@
 #include "nsIOutputStream.h"
 #include "nsIFile.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/AutoMemMap.h"
-#include "mozilla/Compression.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Pair.h"
-#include "mozilla/Result.h"
 #include "mozilla/UniquePtr.h"
 
 /**
@@ -79,58 +75,20 @@ namespace mozilla {
 
 namespace scache {
 
-struct StartupCacheEntry {
-  UniquePtr<char[]> mData;
-  uint32_t mOffset;
-  uint32_t mCompressedSize;
-  uint32_t mUncompressedSize;
-  int32_t mHeaderOffsetInFile;
-  int32_t mRequestedOrder;
-  bool mRequested;
+struct CacheEntry {
+  UniquePtr<char[]> data;
+  uint32_t size;
 
-  MOZ_IMPLICIT StartupCacheEntry(uint32_t aOffset, uint32_t aCompressedSize,
-                                 uint32_t aUncompressedSize)
-      : mData(nullptr),
-        mOffset(aOffset),
-        mCompressedSize(aCompressedSize),
-        mUncompressedSize(aUncompressedSize),
-        mHeaderOffsetInFile(0),
-        mRequestedOrder(0),
-        mRequested(false) {}
+  CacheEntry() : size(0) {}
 
-  StartupCacheEntry(UniquePtr<char[]> aData, size_t aLength,
-                    int32_t aRequestedOrder)
-      : mData(std::move(aData)),
-        mOffset(0),
-        mCompressedSize(0),
-        mUncompressedSize(aLength),
-        mHeaderOffsetInFile(0),
-        mRequestedOrder(0),
-        mRequested(true) {}
+  // Takes possession of buf
+  CacheEntry(UniquePtr<char[]> buf, uint32_t len)
+      : data(std::move(buf)), size(len) {}
 
-  struct Comparator {
-    using Value = Pair<const nsCString*, StartupCacheEntry*>;
+  ~CacheEntry() {}
 
-    bool Equals(const Value& a, const Value& b) const {
-      return a.second()->mRequestedOrder == b.second()->mRequestedOrder;
-    }
-
-    bool LessThan(const Value& a, const Value& b) const {
-      return a.second()->mRequestedOrder < b.second()->mRequestedOrder;
-    }
-  };
-};
-
-struct nsCStringHasher {
-  using Key = nsCString;
-  using Lookup = nsCString;
-
-  static HashNumber hash(const Lookup& aLookup) {
-    return HashString(aLookup.get());
-  }
-
-  static bool match(const Key& aKey, const Lookup& aLookup) {
-    return aKey.Equals(aLookup);
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
+    return mallocSizeOf(this) + mallocSizeOf(data.get());
   }
 };
 
@@ -151,11 +109,9 @@ class StartupCache : public nsIMemoryReporter {
 
   // StartupCache methods. See above comments for a more detailed description.
 
-  // true if the archive has an entry for the buffer or not.
-  bool HasEntry(const char* id);
-
-  // Returns a buffer that was previously stored, caller does not take ownership
-  nsresult GetBuffer(const char* id, const char** outbuf, uint32_t* length);
+  // Returns a buffer that was previously stored, caller takes ownership.
+  nsresult GetBuffer(const char* id, UniquePtr<char[]>* outbuf,
+                     uint32_t* length);
 
   // Stores a buffer. Caller yields ownership.
   nsresult PutBuffer(const char* id, UniquePtr<char[]>&& inbuf,
@@ -179,8 +135,9 @@ class StartupCache : public nsIMemoryReporter {
   // excludes the mapping.
   size_t HeapSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
-  bool ShouldCompactCache();
-  nsresult ResetStartupWriteTimerCheckingReadCount();
+  size_t SizeOfMapping();
+
+  // FOR TESTING ONLY
   nsresult ResetStartupWriteTimer();
   bool StartupWriteComplete();
 
@@ -188,52 +145,30 @@ class StartupCache : public nsIMemoryReporter {
   StartupCache();
   virtual ~StartupCache();
 
-  Result<Ok, nsresult> LoadArchive();
+  nsresult LoadArchive();
   nsresult Init();
-
-  // Returns a file pointer for the cache file with the given name in the
-  // current profile.
-  Result<nsCOMPtr<nsIFile>, nsresult> GetCacheFile(const nsAString& suffix);
-
-  // Opens the cache file for reading.
-  Result<Ok, nsresult> OpenCache();
-
-  // Writes the cache to disk
-  Result<Ok, nsresult> WriteToDisk();
-
+  void WriteToDisk();
   void WaitOnWriteThread();
-  void WaitOnPrefetchThread();
-  void StartPrefetchMemoryThread();
 
   static nsresult InitSingleton();
   static void WriteTimeout(nsITimer* aTimer, void* aClosure);
   static void ThreadedWrite(void* aClosure);
-  static void ThreadedPrefetch(void* aClosure);
 
-  HashMap<nsCString, StartupCacheEntry, nsCStringHasher> mTable;
-  // owns references to the contents of tables which have been invalidated.
-  // In theory grows forever if the cache is continually filled and then
-  // invalidated, but this should not happen in practice.
-  nsTArray<decltype(mTable)> mOldTables;
+  nsClassHashtable<nsCStringHashKey, CacheEntry> mTable;
+  nsTArray<nsCString> mPendingWrites;
+  RefPtr<nsZipArchive> mArchive;
   nsCOMPtr<nsIFile> mFile;
-  loader::AutoMemMap mCacheData;
 
   nsCOMPtr<nsIObserverService> mObserverService;
   RefPtr<StartupCacheListener> mListener;
   nsCOMPtr<nsITimer> mTimer;
 
-  Atomic<bool> mDirty;
   bool mStartupWriteInitiated;
-  bool mCurTableReferenced;
-  uint32_t mRequestedCount;
-  size_t mCacheEntriesBaseOffset;
 
   static StaticRefPtr<StartupCache> gStartupCache;
   static bool gShutdownInitiated;
   static bool gIgnoreDiskCache;
   PRThread* mWriteThread;
-  PRThread* mPrefetchThread;
-  UniquePtr<Compression::LZ4FrameDecompressionContext> mDecompressionContext;
 #ifdef DEBUG
   nsTHashtable<nsISupportsHashKey> mWriteObjectMap;
 #endif

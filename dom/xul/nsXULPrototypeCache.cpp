@@ -260,7 +260,7 @@ nsresult nsXULPrototypeCache::GetInputStream(nsIURI* uri,
   nsresult rv = PathifyURI(uri, spec);
   if (NS_FAILED(rv)) return NS_ERROR_NOT_AVAILABLE;
 
-  const char* buf;
+  UniquePtr<char[]> buf;
   uint32_t len;
   nsCOMPtr<nsIObjectInputStream> ois;
   StartupCache* sc = StartupCache::GetSingleton();
@@ -269,7 +269,7 @@ nsresult nsXULPrototypeCache::GetInputStream(nsIURI* uri,
   rv = sc->GetBuffer(spec.get(), &buf, &len);
   if (NS_FAILED(rv)) return NS_ERROR_NOT_AVAILABLE;
 
-  rv = NewObjectInputStreamFromBuffer(buf, len, getter_AddRefs(ois));
+  rv = NewObjectInputStreamFromBuffer(std::move(buf), len, getter_AddRefs(ois));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mInputStreamTable.Put(uri, ois);
@@ -353,9 +353,10 @@ nsresult nsXULPrototypeCache::HasData(nsIURI* uri, bool* exists) {
     return NS_OK;
   }
   UniquePtr<char[]> buf;
+  uint32_t len;
   StartupCache* sc = StartupCache::GetSingleton();
   if (sc) {
-    *exists = sc->HasEntry(spec.get());
+    rv = sc->GetBuffer(spec.get(), &buf, &len);
   } else {
     *exists = false;
     return NS_OK;
@@ -398,13 +399,14 @@ nsresult nsXULPrototypeCache::BeginCaching(nsIURI* aURI) {
 
   nsAutoCString fileChromePath, fileLocale;
 
-  const char* buf = nullptr;
+  UniquePtr<char[]> buf;
   uint32_t len, amtRead;
   nsCOMPtr<nsIObjectInputStream> objectInput;
 
   rv = startupCache->GetBuffer(kXULCacheInfoKey, &buf, &len);
   if (NS_SUCCEEDED(rv))
-    rv = NewObjectInputStreamFromBuffer(buf, len, getter_AddRefs(objectInput));
+    rv = NewObjectInputStreamFromBuffer(std::move(buf), len,
+                                        getter_AddRefs(objectInput));
 
   if (NS_SUCCEEDED(rv)) {
     rv = objectInput->ReadCString(fileLocale);
@@ -460,10 +462,10 @@ nsresult nsXULPrototypeCache::BeginCaching(nsIURI* aURI) {
     }
 
     if (NS_SUCCEEDED(rv)) {
-      auto putBuf = MakeUnique<char[]>(len);
-      rv = inputStream->Read(putBuf.get(), len, &amtRead);
+      buf = MakeUnique<char[]>(len);
+      rv = inputStream->Read(buf.get(), len, &amtRead);
       if (NS_SUCCEEDED(rv) && len == amtRead)
-        rv = startupCache->PutBuffer(kXULCacheInfoKey, std::move(putBuf), len);
+        rv = startupCache->PutBuffer(kXULCacheInfoKey, std::move(buf), len);
       else {
         rv = NS_ERROR_UNEXPECTED;
       }

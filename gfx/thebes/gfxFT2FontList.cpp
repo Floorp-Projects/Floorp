@@ -48,7 +48,6 @@
 #include "nsIMemory.h"
 #include "gfxFontConstants.h"
 
-#include "mozilla/EndianUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/scache/StartupCache.h"
 #include <fcntl.h>
@@ -700,8 +699,8 @@ class FontNameCache {
     }
 
     uint32_t size;
-    const char* cur;
-    if (NS_FAILED(mCache->GetBuffer(CACHE_KEY, &cur, &size))) {
+    UniquePtr<char[]> buf;
+    if (NS_FAILED(mCache->GetBuffer(CACHE_KEY, &buf, &size))) {
       LOG(("no cache of " CACHE_KEY));
       return;
     }
@@ -710,6 +709,8 @@ class FontNameCache {
 
     mMap.Clear();
     mWriteNeeded = false;
+
+    const char* cur = buf.get();
 
     while (const char* fileEnd = strchr(cur, kFileSep)) {
       // The cached record for one file is at [cur, fileEnd].
@@ -1116,7 +1117,7 @@ void gfxFT2FontList::FindFontsInOmnijar(FontNameCache* aCache) {
 
   mozilla::scache::StartupCache* cache =
       mozilla::scache::StartupCache::GetSingleton();
-  const char* cachedModifiedTimeBuf;
+  UniquePtr<char[]> cachedModifiedTimeBuf;
   uint32_t longSize;
   if (cache &&
       NS_SUCCEEDED(cache->GetBuffer(JAR_LAST_MODIFED_TIME,
@@ -1124,7 +1125,7 @@ void gfxFT2FontList::FindFontsInOmnijar(FontNameCache* aCache) {
       longSize == sizeof(int64_t)) {
     nsCOMPtr<nsIFile> jarFile = Omnijar::GetPath(Omnijar::Type::GRE);
     jarFile->GetLastModifiedTime(&mJarModifiedTime);
-    if (mJarModifiedTime > LittleEndian::readInt64(cachedModifiedTimeBuf)) {
+    if (mJarModifiedTime > *(int64_t*)cachedModifiedTimeBuf.get()) {
       jarChanged = true;
     }
   }
@@ -1383,7 +1384,7 @@ void gfxFT2FontList::WriteCache() {
   if (cache && mJarModifiedTime > 0) {
     const size_t bufSize = sizeof(mJarModifiedTime);
     auto buf = MakeUnique<char[]>(bufSize);
-    LittleEndian::writeInt64(buf.get(), mJarModifiedTime);
+    memcpy(buf.get(), &mJarModifiedTime, bufSize);
 
     LOG(("WriteCache: putting Jar, length %zu", bufSize));
     cache->PutBuffer(JAR_LAST_MODIFED_TIME, std::move(buf), bufSize);

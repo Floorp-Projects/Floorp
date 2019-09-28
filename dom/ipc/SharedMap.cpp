@@ -14,7 +14,6 @@
 #include "mozilla/dom/ContentProcessMessageManager.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/IOBuffers.h"
 #include "mozilla/ScriptPreloader.h"
 
 using namespace mozilla::loader;
