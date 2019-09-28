@@ -276,6 +276,7 @@ class nsWindow final : public nsBaseWidget {
   nsIFrame* GetFrame();
   bool IsDestroyed() { return mIsDestroyed; }
   bool IsWaylandPopup();
+  bool IsPIPWindow() { return mIsPIPWindow; };
 
   void DispatchDragEvent(mozilla::EventMessage aMsg,
                          const LayoutDeviceIntPoint& aRefPoint, guint aTime);
@@ -523,6 +524,8 @@ class nsWindow final : public nsBaseWidget {
   bool mTitlebarBackdropState;
   // Draggable titlebar region maintained by UpdateWindowDraggingRegion
   LayoutDeviceIntRegion mDraggableRegion;
+  // It's PictureInPicture window.
+  bool mIsPIPWindow;
 
 #ifdef ACCESSIBILITY
   RefPtr<mozilla::a11y::Accessible> mRootAccessible;

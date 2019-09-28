@@ -472,6 +472,7 @@ nsWindow::nsWindow() {
   mTitlebarBackdropState = false;
 
   mHasAlphaVisual = false;
+  mIsPIPWindow = false;
 }
 
 nsWindow::~nsWindow() {
@@ -3650,6 +3651,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       mWindowType = eWindowType_toplevel;
     }
   }
+
+  mIsPIPWindow = aInitData && aInitData->mPIPWindow;
 
   // ok, create our windows
   switch (mWindowType) {
