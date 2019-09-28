@@ -41,11 +41,6 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char* aScheme,
 
 nsresult nsOSHelperAppService::GetProtocolHandlerInfoFromOS(
     const nsACString& aScheme, bool* found, nsIHandlerInfo** info) {
-  if (!mozilla::jni::IsFennec()) {
-    // We don't want to get protocol handlers from the OS in GV; the app
-    // should take care of that in onLoadRequest.
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
   return nsMIMEInfoAndroid::GetMimeInfoForURL(aScheme, found, info);
 }
 
