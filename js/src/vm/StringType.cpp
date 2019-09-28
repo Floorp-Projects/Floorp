@@ -1228,9 +1228,13 @@ bool js::StringIsAscii(JSLinearString* str) {
 }
 
 bool js::StringEqualsAscii(JSLinearString* str, const char* asciiBytes) {
-  MOZ_ASSERT(JS::StringIsASCII(asciiBytes));
+  return StringEqualsAscii(str, asciiBytes, strlen(asciiBytes));
+}
 
-  size_t length = strlen(asciiBytes);
+bool js::StringEqualsAscii(JSLinearString* str, const char* asciiBytes,
+                           size_t length) {
+  MOZ_ASSERT(JS::StringIsASCII(MakeSpan(asciiBytes, length)));
+
   if (length != str->length()) {
     return false;
   }
