@@ -31,7 +31,6 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'AutoMemMap.h',
-    'IOBuffers.h',
     'ScriptPreloader.h',
     'URLPreloader.h',
 ]
