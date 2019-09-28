@@ -37,7 +37,7 @@ class IRemoteDecoderChild {
   virtual void DestroyIPDL() = 0;
 
  protected:
-  virtual ~IRemoteDecoderChild() {}
+  virtual ~IRemoteDecoderChild() = default;
 };
 
 }  // namespace mozilla

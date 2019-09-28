@@ -10,6 +10,7 @@ include protocol PRemoteDecoderManager;
 using mozilla::MediaDataDecoder::ConversionRequired from "PlatformDecoderModule.h";
 using mozilla::TrackInfo::TrackType from "MediaInfo.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
+using mozilla::MediaResult from "MediaResult.h";
 
 include PMediaDecoderParams;
 include LayersSurfaces;
@@ -39,8 +40,29 @@ struct RemoteAudioDataIPDL
 
 union DecodedOutputIPDL
 {
-  RemoteAudioDataIPDL;
-  RemoteVideoDataIPDL;
+  RemoteAudioDataIPDL[];
+  RemoteVideoDataIPDL[];
+};
+
+struct InitCompletionIPDL
+{
+  TrackType type;
+  nsCString decoderDescription;
+  bool hardware;
+  nsCString hardwareReason;
+  ConversionRequired conversion;
+};
+
+union InitResultIPDL
+{
+  MediaResult;
+  InitCompletionIPDL;
+};
+
+union DecodeResultIPDL
+{
+  MediaResult;
+  DecodedOutputIPDL;
 };
 
 // This protocol provides a way to use MediaDataDecoder across processes.
@@ -53,39 +75,25 @@ async protocol PRemoteDecoder
 {
   manager PRemoteDecoderManager;
 parent:
-  async Init();
-
-  async Input(MediaRawDataIPDL data);
-
-  async DoneWithOutput(Shmem outputShmem);
-
-  async Flush();
-  async Drain();
-  async Shutdown();
-  // To clear the threshold, call with INT64_MIN.
-  async SetSeekThreshold(TimeUnit time);
-
-  async __delete__();
-
-child:
-  async InitComplete(TrackType trackType, nsCString decoderDescription,
-                     bool hardware, nsCString hardwareReason,
-                     ConversionRequired conversion);
-  async InitFailed(nsresult reason);
-
-  async FlushComplete();
-  async ShutdownComplete();
-
-  async DoneWithInput(Shmem inputShmem);
+  async Init() returns (InitResultIPDL result);
 
   // Each output may include a SurfaceDescriptorGPUVideo that represents the decoded
   // frame. This SurfaceDescriptor can be used on the Layers IPDL protocol, but
   // must be released explicitly using DeallocateSurfaceDescriptorGPUVideo
   // on the manager protocol.
-  async Output(DecodedOutputIPDL data);
-  async InputExhausted();
-  async DrainComplete();
-  async Error(nsresult error);
+  async Decode(MediaRawDataIPDL data) returns (DecodeResultIPDL result);
+  async Flush() returns (MediaResult error);
+  async Drain() returns (DecodeResultIPDL result);
+  async Shutdown() returns (bool unused);
+  // To clear the threshold, call with INT64_MIN.
+  async SetSeekThreshold(TimeUnit time);
+
+  async DoneWithOutput(Shmem outputShmem);
+
+  async __delete__();
+
+  child:
+  async DoneWithInput(Shmem inputShmem);
 };
 
 } // namespace mozilla
