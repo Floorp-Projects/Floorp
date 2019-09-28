@@ -1,6 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+let { LoginBreaches } = ChromeUtils.import(
+  "resource:///modules/LoginBreaches.jsm"
+);
+let { RemoteSettings } = ChromeUtils.import(
+  "resource://services-settings/remote-settings.js"
+);
+
 let nsLoginInfo = new Components.Constructor(
   "@mozilla.org/login-manager/loginInfo;1",
   Ci.nsILoginInfo,
@@ -55,3 +62,25 @@ async function addLogin(login) {
   });
   return login;
 }
+
+let EXPECTED_BREACH = null;
+add_task(async function setup() {
+  const collection = await RemoteSettings(
+    LoginBreaches.REMOTE_SETTINGS_COLLECTION
+  ).openCollection();
+  if (EXPECTED_BREACH) {
+    await collection.create(EXPECTED_BREACH, {
+      useRecordId: true,
+    });
+  }
+  await collection.db.saveLastModified(42);
+  if (EXPECTED_BREACH) {
+    await RemoteSettings(LoginBreaches.REMOTE_SETTINGS_COLLECTION).emit(
+      "sync",
+      { data: { current: [EXPECTED_BREACH] } }
+    );
+  }
+  registerCleanupFunction(async () => {
+    await collection.clear();
+  });
+});
