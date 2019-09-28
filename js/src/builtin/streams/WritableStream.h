@@ -189,6 +189,7 @@ class WritableStream : public NativeObject {
   void setErroring() { setState(Erroring); }
 
   bool errored() const { return state() == Errored; }
+  void setErrored() { setState(Errored); }
 
   bool backpressure() const { return flags() & Backpressure; }
 
