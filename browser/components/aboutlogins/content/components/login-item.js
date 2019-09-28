@@ -16,6 +16,7 @@ export default class LoginItem extends HTMLElement {
   constructor() {
     super();
     this._login = {};
+    this._error = null;
     this._copyUsernameTimeoutId = 0;
     this._copyPasswordTimeoutId = 0;
   }
@@ -112,7 +113,25 @@ export default class LoginItem extends HTMLElement {
   }
 
   async render() {
-    this._errorMessage.hidden = true;
+    if (this._error) {
+      if (this._error.errorMessage.includes("This login already exists")) {
+        document.l10n.setAttributes(
+          this._errorMessageLink,
+          "about-logins-error-message-duplicate-login",
+          {
+            loginTitle: this._error.login.title,
+          }
+        );
+        this._errorMessageLink.dataset.errorGuid = this._error.existingLoginGuid;
+        this._errorMessageText.hidden = true;
+        this._errorMessageLink.hidden = false;
+      } else {
+        this._errorMessageText.hidden = false;
+        this._errorMessageLink.hidden = true;
+      }
+    }
+    this._errorMessage.hidden = !this._error;
+
     this._breachAlert.hidden =
       !this._breachesMap || !this._breachesMap.has(this._login.guid);
     if (!this._breachAlert.hidden) {
@@ -205,22 +224,8 @@ export default class LoginItem extends HTMLElement {
   }
 
   showLoginItemError(error) {
-    if (error.errorMessage.includes("This login already exists")) {
-      document.l10n.setAttributes(
-        this._errorMessageLink,
-        "about-logins-error-message-duplicate-login",
-        {
-          loginTitle: error.login.title,
-        }
-      );
-      this._errorMessageLink.dataset.errorGuid = error.existingLoginGuid;
-      this._errorMessageText.hidden = true;
-      this._errorMessageLink.hidden = false;
-    } else {
-      this._errorMessageText.hidden = false;
-      this._errorMessageLink.hidden = true;
-    }
-    this._errorMessage.hidden = false;
+    this._error = error;
+    this.render();
   }
 
   async handleEvent(event) {
@@ -527,6 +532,7 @@ export default class LoginItem extends HTMLElement {
    */
   setLogin(login, { skipFocusChange } = {}) {
     this._login = login;
+    this._error = null;
 
     this._form.reset();
 
