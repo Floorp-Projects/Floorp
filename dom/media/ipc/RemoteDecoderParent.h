@@ -29,11 +29,12 @@ class RemoteDecoderParent : public PRemoteDecoderParent {
   void Destroy();
 
   // PRemoteDecoderParent
-  IPCResult RecvInit();
-  IPCResult RecvInput(const MediaRawDataIPDL& aData);
-  IPCResult RecvFlush();
-  IPCResult RecvDrain();
-  IPCResult RecvShutdown();
+  IPCResult RecvInit(InitResolver&& aResolver);
+  IPCResult RecvDecode(const MediaRawDataIPDL& aData,
+                       DecodeResolver&& aResolver);
+  IPCResult RecvFlush(FlushResolver&& aResolver);
+  IPCResult RecvDrain(DrainResolver&& aResolver);
+  IPCResult RecvShutdown(ShutdownResolver&& aResolver);
   IPCResult RecvSetSeekThreshold(const media::TimeUnit& aTime);
   IPCResult RecvDoneWithOutput(Shmem&& aOutputShmem);
 
@@ -46,7 +47,8 @@ class RemoteDecoderParent : public PRemoteDecoderParent {
   void Error(const MediaResult& aError);
 
   virtual MediaResult ProcessDecodedData(
-      const MediaDataDecoder::DecodedData& aData) = 0;
+      const MediaDataDecoder::DecodedData& aDatam,
+      DecodedOutputIPDL& aDecodedData) = 0;
 
   RefPtr<RemoteDecoderManagerParent> mParent;
   RefPtr<RemoteDecoderParent> mIPDLSelfRef;
@@ -55,7 +57,6 @@ class RemoteDecoderParent : public PRemoteDecoderParent {
   RefPtr<MediaDataDecoder> mDecoder;
 
   // Can only be accessed from the manager thread
-  bool mDestroyed = false;
   ShmemPool mDecodedFramePool;
 };
 

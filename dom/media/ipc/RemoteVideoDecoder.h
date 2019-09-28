@@ -28,7 +28,7 @@ class RemoteVideoDecoderChild : public RemoteDecoderChild {
                        const CreateDecoderParams::OptionSet& aOptions,
                        const layers::TextureFactoryIdentifier* aIdentifier);
 
-  IPCResult RecvOutput(const DecodedOutputIPDL& aDecodedData) override;
+  MediaResult ProcessOutput(const DecodedOutputIPDL& aDecodedData) override;
 
  private:
   RefPtr<mozilla::layers::Image> DeserializeImage(
@@ -39,7 +39,7 @@ class RemoteVideoDecoderChild : public RemoteDecoderChild {
 
 class GpuRemoteVideoDecoderChild final : public RemoteVideoDecoderChild {
  public:
-  explicit GpuRemoteVideoDecoderChild();
+  GpuRemoteVideoDecoderChild();
 
   MOZ_IS_CLASS_INIT
   MediaResult InitIPDL(const VideoInfo& aVideoInfo, float aFramerate,
@@ -57,8 +57,8 @@ class RemoteVideoDecoderParent final : public RemoteDecoderParent {
       nsCString* aErrorDescription);
 
  protected:
-  MediaResult ProcessDecodedData(
-      const MediaDataDecoder::DecodedData& aData) override;
+  MediaResult ProcessDecodedData(const MediaDataDecoder::DecodedData& aData,
+                                 DecodedOutputIPDL& aDecodedData) override;
 
  private:
   // Can only be accessed from the manager thread
