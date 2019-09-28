@@ -18,12 +18,13 @@
 #include "builtin/streams/QueueWithSizes.h"  // js::ResetQueue
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
 #include "builtin/streams/WritableStreamDefaultController.h"  // js::WritableStreamDefaultController
-#include "builtin/streams/WritableStreamOperations.h"  // js::WritableStream{DealWithRejection,UpdateBackpressure}
+#include "builtin/streams/WritableStreamOperations.h"  // js::WritableStream{DealWithRejection,FinishErroring,UpdateBackpressure}
 #include "js/CallArgs.h"                     // JS::CallArgs{,FromVp}
 #include "js/RootingAPI.h"                   // JS::Handle, JS::Rooted
 #include "js/Value.h"                        // JS::{,Object}Value
 #include "vm/JSContext.h"                    // JSContext
 #include "vm/JSObject.h"                     // JSObject
+#include "vm/List.h"                         // js::ListObject
 #include "vm/Runtime.h"                      // JSAtomState
 
 #include "builtin/streams/HandlerFunction-inl.h"  // js::TargetFromHandler
@@ -36,7 +37,10 @@ using JS::ObjectValue;
 using JS::Rooted;
 using JS::Value;
 
+using js::ListObject;
+using js::WritableStream;
 using js::WritableStreamDefaultController;
+using js::WritableStreamFinishErroring;
 
 /*** 4.8. Writable stream default controller abstract operations ************/
 
@@ -321,6 +325,42 @@ double js::WritableStreamDefaultControllerGetDesiredSize(
 MOZ_MUST_USE bool WritableStreamDefaultControllerAdvanceQueueIfNeeded(
     JSContext* cx,
     Handle<WritableStreamDefaultController*> unwrappedController) {
+  // Step 2: If controller.[[started]] is false, return.
+  if (!unwrappedController->started()) {
+    return true;
+  }
+
+  // Step 1: Let stream be controller.[[controlledWritableStream]].
+  Rooted<WritableStream*> unwrappedStream(cx, unwrappedController->stream());
+
+  // Step 3: If stream.[[inFlightWriteRequest]] is not undefined, return.
+  if (!unwrappedStream->inFlightWriteRequest().isUndefined()) {
+    return true;
+  }
+
+  // Step 4: Let state be stream.[[state]].
+  // Step 5: Assert: state is not "closed" or "errored".
+  // Step 6: If state is "erroring",
+  MOZ_ASSERT(!unwrappedStream->closed());
+  MOZ_ASSERT(!unwrappedStream->errored());
+  if (unwrappedStream->erroring()) {
+    // Step 6a: Perform ! WritableStreamFinishErroring(stream).
+    // Step 6b: Return.
+    return WritableStreamFinishErroring(cx, unwrappedStream);
+  }
+
+  // Step 7: If controller.[[queue]] is empty, return.
+  Rooted<ListObject*> unwrappedQueue(cx, unwrappedController->queue());
+  if (unwrappedQueue->length() == 0) {
+    return true;
+  }
+
+  // Step 8: Let writeRecord be ! PeekQueueValue(controller).
+  // Step 9: If writeRecord is "close", perform
+  //         ! WritableStreamDefaultControllerProcessClose(controller).
+  // Step 10: Otherwise, perform
+  //          ! WritableStreamDefaultControllerProcessWrite(
+  //              controller, writeRecord.[[chunk]]).
   // XXX jwalden fill me in!
   JS_ReportErrorASCII(cx, "nope");
   return false;
