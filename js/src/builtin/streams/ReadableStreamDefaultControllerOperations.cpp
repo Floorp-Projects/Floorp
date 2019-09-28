@@ -37,7 +37,7 @@
 #include "builtin/streams/HandlerFunction-inl.h"  // js::NewHandler
 #include "vm/Compartment-inl.h"  // JS::Compartment::wrap, js::UnwrapCalleeSlot
 #include "vm/JSContext-inl.h"    // JSContext::check
-#include "vm/JSObject-inl.h"     // js::IsCallable
+#include "vm/JSObject-inl.h"     // js::IsCallable, js::NewBuiltinClassInstance
 #include "vm/Realm-inl.h"        // js::AutoRealm
 
 using js::ReadableByteStreamController;
