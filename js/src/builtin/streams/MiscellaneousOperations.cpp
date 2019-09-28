@@ -187,9 +187,9 @@ MOZ_MUST_USE bool js::ValidateAndNormalizeHighWaterMark(
  * The standard makes a big deal of turning JavaScript functions (grubby,
  * touched by users, covered with germs) into algorithms (pristine,
  * respectable, purposeful). We don't bother. Here we only check for errors and
- * leave `size` unchanged. Then, in ReadableStreamDefaultControllerEnqueue and
- * WritableStreamDefaultControllerGetChunkSize where this value is used, we
- * check for undefined and behave as if we had "made" an "algorithm" for it.
+ * leave `size` unchanged. Then, in ReadableStreamDefaultControllerEnqueue,
+ * where this value is used, we have to check for undefined and behave as if we
+ * had "made" an "algorithm" as described below.
  */
 MOZ_MUST_USE bool js::MakeSizeAlgorithmFromSizeFunction(JSContext* cx,
                                                         Handle<Value> size) {
