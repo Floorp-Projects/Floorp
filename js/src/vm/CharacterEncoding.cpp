@@ -8,6 +8,7 @@
 
 #include "mozilla/Latin1.h"
 #include "mozilla/Range.h"
+#include "mozilla/Span.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Utf8.h"
@@ -627,6 +628,8 @@ bool JS::StringIsASCII(const char* s) {
   }
   return true;
 }
+
+bool JS::StringIsASCII(Span<const char> s) { return IsAscii(s); }
 
 bool StringBuffer::append(const Utf8Unit* units, size_t len) {
   if (isLatin1()) {

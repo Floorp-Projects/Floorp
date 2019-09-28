@@ -342,6 +342,12 @@ LossyUTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8,
  */
 extern JS_PUBLIC_API bool StringIsASCII(const char* s);
 
+/*
+ * Returns true if all characters in the given span are ASCII,
+ * i.e. < 0x80, false otherwise.
+ */
+extern JS_PUBLIC_API bool StringIsASCII(mozilla::Span<const char> s);
+
 }  // namespace JS
 
 inline void JS_free(JS::Latin1CharsZ& ptr) { js_free((void*)ptr.get()); }
