@@ -24,6 +24,13 @@ extern MOZ_MUST_USE bool WritableStreamDealWithRejection(
     JSContext* cx, JS::Handle<WritableStream*> unwrappedStream,
     JS::Handle<JS::Value> error);
 
+extern MOZ_MUST_USE bool WritableStreamStartErroring(
+    JSContext* cx, JS::Handle<WritableStream*> unwrappedStream,
+    JS::Handle<JS::Value> reason);
+
+extern MOZ_MUST_USE bool WritableStreamFinishErroring(
+    JSContext* cx, JS::Handle<WritableStream*> unwrappedStream);
+
 extern MOZ_MUST_USE bool WritableStreamUpdateBackpressure(
     JSContext* cx, JS::Handle<WritableStream*> unwrappedStream,
     bool backpressure);
