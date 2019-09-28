@@ -151,15 +151,65 @@ MOZ_MUST_USE bool js::WritableStreamStartErroring(
   return false;
 }
 
+static bool WritableStreamHasOperationMarkedInFlight(
+    const WritableStream* unwrappedStream);
+
 /**
  * Streams spec, 4.4.4.
  *      WritableStreamFinishErroring ( stream )
  */
 MOZ_MUST_USE bool js::WritableStreamFinishErroring(
     JSContext* cx, Handle<WritableStream*> unwrappedStream) {
+  // Step 1: Assert: stream.[[state]] is "erroring".
+  MOZ_ASSERT(unwrappedStream->erroring());
+
+  // Step 2: Assert: ! WritableStreamHasOperationMarkedInFlight(stream) is
+  //         false.
+  MOZ_ASSERT(!WritableStreamHasOperationMarkedInFlight(unwrappedStream));
+
+  // Step 3: Set stream.[[state]] to "errored".
+  unwrappedStream->setErrored();
+
+  // Step 4: Perform ! stream.[[writableStreamController]].[[ErrorSteps]]().
+  // Step 5: Let storedError be stream.[[storedError]].
+  // Step 6: Repeat for each writeRequest that is an element of
+  //         stream.[[writeRequests]],
+  //   a: Reject writeRequest with storedError.
+  // Step 7: Set stream.[[writeRequests]] to an empty List.
+  // Step 8: If stream.[[pendingAbortRequest]] is undefined,
+  //   a: Perform ! WritableStreamRejectCloseAndClosedPromiseIfNeeded(stream).
+  //   b: Return.
+  // Step 9: Let abortRequest be stream.[[pendingAbortRequest]].
+  // Step 10: Set stream.[[pendingAbortRequest]] to undefined.
+  // Step 11: If abortRequest.[[wasAlreadyErroring]] is true,
+  //   a: Reject abortRequest.[[promise]] with storedError.
+  //   b: Perform ! WritableStreamRejectCloseAndClosedPromiseIfNeeded(stream).
+  //   c: Return.
+  // Step 12: Let promise be
+  //          ! stream.[[writableStreamController]].[[AbortSteps]](
+  //                abortRequest.[[reason]]).
+  // Step 13: Upon fulfillment of promise,
+  //   a: Resolve abortRequest.[[promise]] with undefined.
+  //   b: Perform ! WritableStreamRejectCloseAndClosedPromiseIfNeeded(stream).
+  // Step 14: Upon rejection of promise with reason reason,
+  //   c: Reject abortRequest.[[promise]] with reason.
+  //   d: Perform ! WritableStreamRejectCloseAndClosedPromiseIfNeeded(stream).
   // XXX jwalden flesh me out!
   JS_ReportErrorASCII(cx, "epic fail");
   return false;
+}
+
+/**
+ * Streams spec, 4.4.10.
+ *      WritableStreamHasOperationMarkedInFlight ( stream )
+ */
+bool WritableStreamHasOperationMarkedInFlight(
+    const WritableStream* unwrappedStream) {
+  // Step 1: If stream.[[inFlightWriteRequest]] is undefined and
+  //         controller.[[inFlightCloseRequest]] is undefined, return false.
+  // Step 2: Return true.
+  return unwrappedStream->haveInFlightWriteRequest() ||
+         unwrappedStream->haveInFlightCloseRequest();
 }
 
 /**
