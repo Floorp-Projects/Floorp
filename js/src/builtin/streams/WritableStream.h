@@ -182,8 +182,12 @@ class WritableStream : public NativeObject {
 
  public:
   bool writable() const { return state() == Writable; }
+
   bool closed() const { return state() == Closed; }
+
   bool erroring() const { return state() == Erroring; }
+  void setErroring() { setState(Erroring); }
+
   bool errored() const { return state() == Errored; }
 
   bool backpressure() const { return flags() & Backpressure; }
