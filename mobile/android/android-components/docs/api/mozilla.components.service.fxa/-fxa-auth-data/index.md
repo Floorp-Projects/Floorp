@@ -2,7 +2,7 @@
 
 # FxaAuthData
 
-`data class FxaAuthData` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Types.kt#L43)
+`data class FxaAuthData` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Types.kt#L44)
 
 Captures basic OAuth authentication data (code, state) and any additional data FxA passes along.
 
@@ -10,7 +10,7 @@ Captures basic OAuth authentication data (code, state) and any additional data F
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `FxaAuthData(authType: `[`AuthType`](../../mozilla.components.concept.sync/-auth-type/index.md)`, code: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, state: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`<br>Captures basic OAuth authentication data (code, state) and any additional data FxA passes along. |
+| [&lt;init&gt;](-init-.md) | `FxaAuthData(authType: `[`AuthType`](../../mozilla.components.concept.sync/-auth-type/index.md)`, code: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, state: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, declinedEngines: `[`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)`<`[`SyncEngine`](../-sync-engine/index.md)`>? = null)`<br>Captures basic OAuth authentication data (code, state) and any additional data FxA passes along. |
 
 ### Properties
 
@@ -18,4 +18,5 @@ Captures basic OAuth authentication data (code, state) and any additional data F
 |---|---|
 | [authType](auth-type.md) | `val authType: `[`AuthType`](../../mozilla.components.concept.sync/-auth-type/index.md)<br>Type of authentication which caused this object to be created. |
 | [code](code.md) | `val code: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>OAuth code. |
+| [declinedEngines](declined-engines.md) | `val declinedEngines: `[`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)`<`[`SyncEngine`](../-sync-engine/index.md)`>?`<br>An optional list of [SyncEngine](../-sync-engine/index.md)s that user declined to sync. |
 | [state](state.md) | `val state: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>OAuth state. |

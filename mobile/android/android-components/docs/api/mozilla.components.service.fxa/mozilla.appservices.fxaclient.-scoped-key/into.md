@@ -2,4 +2,4 @@
 
 # into
 
-`fun ScopedKey.into(): `[`OAuthScopedKey`](../../mozilla.components.concept.sync/-o-auth-scoped-key/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Types.kt#L78)
+`fun ScopedKey.into(): `[`OAuthScopedKey`](../../mozilla.components.concept.sync/-o-auth-scoped-key/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Types.kt#L84)
