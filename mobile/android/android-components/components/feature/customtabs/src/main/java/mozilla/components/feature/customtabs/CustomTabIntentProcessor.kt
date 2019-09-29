@@ -22,7 +22,8 @@ import mozilla.components.support.utils.toSafeIntent
 class CustomTabIntentProcessor(
     private val sessionManager: SessionManager,
     private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase,
-    private val resources: Resources
+    private val resources: Resources,
+    private val isPrivate: Boolean = false
 ) : IntentProcessor {
 
     override fun matches(intent: Intent): Boolean {
@@ -35,7 +36,7 @@ class CustomTabIntentProcessor(
         val url = safeIntent.dataString
 
         return if (!url.isNullOrEmpty() && matches(intent)) {
-            val session = Session(url, private = false, source = Session.Source.CUSTOM_TAB)
+            val session = Session(url, private = isPrivate, source = Session.Source.CUSTOM_TAB)
             session.customTabConfig = createCustomTabConfigFromIntent(intent, resources)
 
             sessionManager.add(session)
