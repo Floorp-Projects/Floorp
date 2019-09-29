@@ -51,6 +51,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onSecurityChange(true, "mozilla.org", "issuer") }
         session.notifyInternalObservers { onTrackerBlockingEnabledChange(true) }
         session.notifyInternalObservers { onTrackerBlocked(tracker) }
+        session.notifyInternalObservers { onExcludedOnTrackingProtectionChange(true) }
         session.notifyInternalObservers { onLongPress(unknownHitResult) }
         session.notifyInternalObservers { onDesktopModeChange(true) }
         session.notifyInternalObservers { onFind("search") }
@@ -76,6 +77,7 @@ class EngineSessionTest {
         verify(observer).onSecurityChange(true, "mozilla.org", "issuer")
         verify(observer).onTrackerBlockingEnabledChange(true)
         verify(observer).onTrackerBlocked(tracker)
+        verify(observer).onExcludedOnTrackingProtectionChange(true)
         verify(observer).onLongPress(unknownHitResult)
         verify(observer).onDesktopModeChange(true)
         verify(observer).onFind("search")
@@ -648,7 +650,9 @@ class EngineSessionTest {
         defaultObserver.onDesktopModeChange(true)
         defaultObserver.onSecurityChange(true)
         defaultObserver.onTrackerBlocked(mock())
+        defaultObserver.onTrackerLoaded(mock())
         defaultObserver.onTrackerBlockingEnabledChange(true)
+        defaultObserver.onExcludedOnTrackingProtectionChange(true)
         defaultObserver.onFindResult(0, 0, false)
         defaultObserver.onFind("text")
         defaultObserver.onExternalResource("", "")

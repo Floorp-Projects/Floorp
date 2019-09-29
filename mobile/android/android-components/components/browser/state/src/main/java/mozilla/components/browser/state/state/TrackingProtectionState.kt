@@ -13,9 +13,12 @@ import mozilla.components.concept.engine.content.blocking.Tracker
  * @property blockedTrackers List of trackers that have been blocked for the currently loaded site.
  * @property loadedTrackers List of trackers that have been loaded (not blocked) for the currently
  * loaded site.
+ * @property ignoredOnTrackingProtection Whether tracking protection should be enabled or not for
+ * this [SessionState]
  */
 data class TrackingProtectionState(
     val enabled: Boolean = false,
     val blockedTrackers: List<Tracker> = emptyList(),
-    val loadedTrackers: List<Tracker> = emptyList()
+    val loadedTrackers: List<Tracker> = emptyList(),
+    val ignoredOnTrackingProtection: Boolean = false
 )

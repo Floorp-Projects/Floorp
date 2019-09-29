@@ -73,14 +73,20 @@ internal class TrackingProtectionExceptionFileStorage(
     }
 
     override fun add(session: EngineSession) {
-        val geckoSession = (session as GeckoEngineSession).geckoSession
-        runtime.contentBlockingController.addException(geckoSession)
+        val geckoEngineSession = (session as GeckoEngineSession)
+        runtime.contentBlockingController.addException(geckoEngineSession.geckoSession)
+        geckoEngineSession.notifyObservers {
+            onExcludedOnTrackingProtectionChange(true)
+        }
         persist()
     }
 
     override fun remove(session: EngineSession) {
-        val geckoSession = (session as GeckoEngineSession).geckoSession
-        runtime.contentBlockingController.removeException(geckoSession)
+        val geckoEngineSession = (session as GeckoEngineSession)
+        runtime.contentBlockingController.removeException(geckoEngineSession.geckoSession)
+        geckoEngineSession.notifyObservers {
+            onExcludedOnTrackingProtectionChange(false)
+        }
         persist()
     }
 

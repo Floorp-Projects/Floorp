@@ -9,6 +9,7 @@ import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.ktx.util.readAndDeserialize
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
@@ -21,6 +22,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.ContentBlockingController
 import org.mozilla.geckoview.GeckoResult
@@ -66,10 +68,11 @@ class TrackingProtectionExceptionFileStorageTest {
     fun `add exception`() {
         val mockContentBlocking = mock<ContentBlockingController>()
         val runtime: GeckoRuntime = mock()
-        val session = mock<GeckoEngineSession>()
+        val session = Mockito.spy(GeckoEngineSession(runtime))
         val geckoResult = GeckoResult<ContentBlockingController.ExceptionList>()
         val mockGeckoSession = mock<GeckoSession>()
         val mockExceptionList = mock<ContentBlockingController.ExceptionList>()
+        var excludedOnTrackingProtection = false
 
         whenever(session.geckoSession).thenReturn(mockGeckoSession)
         whenever(runtime.contentBlockingController).thenReturn(mockContentBlocking)
@@ -80,12 +83,18 @@ class TrackingProtectionExceptionFileStorageTest {
         storage.scope = CoroutineScope(Dispatchers.Main)
 
         assertNull(storage.getFile(context).readAndDeserialize { })
+        session.register(object : EngineSession.Observer {
+            override fun onExcludedOnTrackingProtectionChange(excluded: Boolean) {
+                excludedOnTrackingProtection = excluded
+            }
+        })
 
         storage.add(session)
         geckoResult.complete(mockExceptionList)
 
         verify(mockContentBlocking).addException(mockGeckoSession)
         verify(mockContentBlocking).saveExceptionList()
+        assertTrue(excludedOnTrackingProtection)
         assertNotNull(storage.getFile(context).readAndDeserialize { })
     }
 
@@ -126,10 +135,11 @@ class TrackingProtectionExceptionFileStorageTest {
     fun `remove exception`() {
         val mockContentBlocking = mock<ContentBlockingController>()
         val runtime: GeckoRuntime = mock()
-        val session = mock<GeckoEngineSession>()
+        val session = Mockito.spy(GeckoEngineSession(runtime))
         var geckoResult = GeckoResult<ContentBlockingController.ExceptionList>()
         val mockGeckoSession = mock<GeckoSession>()
         val mockExceptionList = mock<ContentBlockingController.ExceptionList>()
+        var excludedOnTrackingProtection = false
 
         whenever(session.geckoSession).thenReturn(mockGeckoSession)
         whenever(runtime.contentBlockingController).thenReturn(mockContentBlocking)
@@ -141,6 +151,11 @@ class TrackingProtectionExceptionFileStorageTest {
         storage.scope = CoroutineScope(Dispatchers.Main)
 
         assertNull(storage.getFile(context).readAndDeserialize { })
+        session.register(object : EngineSession.Observer {
+            override fun onExcludedOnTrackingProtectionChange(excluded: Boolean) {
+                excludedOnTrackingProtection = excluded
+            }
+        })
 
         storage.add(session)
         geckoResult.complete(mockExceptionList)
@@ -148,6 +163,7 @@ class TrackingProtectionExceptionFileStorageTest {
         verify(mockContentBlocking).addException(mockGeckoSession)
         verify(mockContentBlocking).saveExceptionList()
         assertNotNull(storage.getFile(context).readAndDeserialize { })
+        assertTrue(excludedOnTrackingProtection)
 
         // Removing exception
         geckoResult = GeckoResult()
@@ -156,6 +172,7 @@ class TrackingProtectionExceptionFileStorageTest {
         verify(mockContentBlocking).removeException(mockGeckoSession)
         geckoResult.complete(null)
         assertNull(storage.getFile(context).readAndDeserialize { })
+        assertFalse(excludedOnTrackingProtection)
     }
 
     @Test

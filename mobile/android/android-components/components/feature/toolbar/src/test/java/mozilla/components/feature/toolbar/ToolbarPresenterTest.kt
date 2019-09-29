@@ -376,6 +376,13 @@ class ToolbarPresenterTest {
         testDispatcher.advanceUntilIdle()
 
         verify(toolbar).siteTrackingProtection = Toolbar.SiteTrackingProtection.ON_TRACKERS_BLOCKED
+
+        store.dispatch(TrackingProtectionAction.ToggleExclusionListAction("tab", true))
+            .joinBlocking()
+
+        testDispatcher.advanceUntilIdle()
+
+        verify(toolbar).siteTrackingProtection = Toolbar.SiteTrackingProtection.OFF_FOR_A_SITE
     }
 
     @Test

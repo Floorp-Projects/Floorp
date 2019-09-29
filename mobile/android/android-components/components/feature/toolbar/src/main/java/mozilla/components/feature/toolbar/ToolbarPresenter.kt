@@ -74,6 +74,7 @@ class ToolbarPresenter(
         }
 
         toolbar.siteTrackingProtection = when {
+            tab.trackingProtection.ignoredOnTrackingProtection -> SiteTrackingProtection.OFF_FOR_A_SITE
             tab.trackingProtection.enabled && tab.trackingProtection.blockedTrackers.isNotEmpty() ->
                 SiteTrackingProtection.ON_TRACKERS_BLOCKED
 
