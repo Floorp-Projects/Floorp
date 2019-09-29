@@ -138,7 +138,7 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
 
   // Get the DocShell for this BrowsingContext if it is in-process, or
   // null if it's not.
-  nsIDocShell* GetDocShell() { return mDocShell; }
+  nsIDocShell* GetDocShell() const { return mDocShell; }
   void SetDocShell(nsIDocShell* aDocShell);
   void ClearDocShell() { mDocShell = nullptr; }
 
@@ -203,6 +203,8 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   bool IsChrome() const { return !IsContent(); }
 
   bool IsTopContent() const { return IsContent() && !GetParent(); }
+
+  bool IsContentSubframe() const { return IsContent() && GetParent(); }
 
   uint64_t Id() const { return mBrowsingContextId; }
 
