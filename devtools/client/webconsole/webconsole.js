@@ -34,6 +34,11 @@ loader.lazyRequireGetter(
   "devtools/client/shared/link",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "DevToolsUtils",
+  "devtools/shared/DevToolsUtils"
+);
 const EventEmitter = require("devtools/shared/event-emitter");
 
 var gHudId = 0;
@@ -64,7 +69,7 @@ class WebConsole {
     this.iframeWindow = iframeWindow;
     this.chromeWindow = chromeWindow;
     this.hudId = "hud_" + ++gHudId;
-    this.browserWindow = this.chromeWindow.top;
+    this.browserWindow = DevToolsUtils.getTopWindow(this.chromeWindow);
     this.isBrowserConsole = isBrowserConsole;
 
     const element = this.browserWindow.document.documentElement;
@@ -95,7 +100,7 @@ class WebConsole {
     if (this.browserWindow) {
       return this.browserWindow;
     }
-    return this.chromeWindow.top;
+    return DevToolsUtils.getTopWindow(this.chromeWindow);
   }
 
   get gViewSourceUtils() {
