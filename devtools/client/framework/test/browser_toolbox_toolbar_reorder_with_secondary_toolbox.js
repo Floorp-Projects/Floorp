@@ -38,7 +38,7 @@ add_task(async function() {
     "Check whether the value of devtools.toolbox.tabsOrder was not affected after closed"
   );
   const onToolboxDestroyed = toolbox.once("destroyed");
-  toolbox.win.top.close();
+  toolbox.topWindow.close();
   await onToolboxDestroyed;
   is(
     Services.prefs.getCharPref("devtools.toolbox.tabsOrder"),
