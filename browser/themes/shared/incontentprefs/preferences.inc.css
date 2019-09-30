@@ -54,7 +54,7 @@ html|h2 {
 }
 
 description.indent,
-.indent > description {
+.indent:not(#browserPrivateEngineSelection) > description {
   color: var(--in-content-deemphasized-text);
 }
 

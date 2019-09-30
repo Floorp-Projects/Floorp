@@ -386,6 +386,10 @@ pref("browser.search.hiddenOneOffs", "");
 // Mirrors whether the search-container widget is in the navigation toolbar.
 pref("browser.search.widget.inNavBar", false);
 
+// Enables display of the options for the user using a separate default search
+// engine in private browsing mode.
+pref("browser.search.separatePrivateDefault.ui.enabled", false);
+
 pref("browser.sessionhistory.max_entries", 50);
 
 // Built-in default permissions.

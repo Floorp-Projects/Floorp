@@ -621,7 +621,8 @@
 <!-- Address Bar -->
 <groupbox id="locationBarGroup"
           data-category="panePrivacy"
-          hidden="true">
+          hidden="true"
+          data-subcategory="locationBar">
   <label><html:h2 data-l10n-id="addressbar-header"/></label>
   <label id="locationBarSuggestionLabel" data-l10n-id="addressbar-suggest"/>
   <checkbox id="historySuggestion" data-l10n-id="addressbar-locbar-history-option"

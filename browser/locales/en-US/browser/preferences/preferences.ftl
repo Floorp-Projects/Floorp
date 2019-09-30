@@ -629,6 +629,13 @@ search-bar-shown =
 
 search-engine-default-header = Default Search Engine
 search-engine-default-desc = Choose the default search engine to use in the address bar and search bar.
+search-engine-default-private-desc = Choose the default search engine to use in Private Windows.
+search-separate-default-engine =
+    .label = Use this search engine in Private Windows
+    .accesskey = U
+
+search-suggestions-header = Search Suggestions
+search-suggestions-desc = Choose how suggestions from search engines appear.
 
 search-suggestions-option =
     .label = Provide search suggestions
@@ -645,6 +652,8 @@ search-show-suggestions-url-bar-option =
 # (appearing before).
 search-show-suggestions-above-history-option =
     .label = Show search suggestions ahead of browsing history in address bar results
+
+suggestions-addressbar-settings = Change preferences for browsing history, bookmarks, and tab suggestions
 
 search-suggestions-cant-show = Search suggestions will not be shown in location bar results because you have configured { -brand-short-name } to never remember history.
 

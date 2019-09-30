@@ -39,6 +39,25 @@
           </menulist>
         </hbox>
       </hbox>
+      <checkbox id="browserSeparateDefaultEngine"
+                data-l10n-id="search-separate-default-engine"
+                hidden="true"/>
+      <vbox id="browserPrivateEngineSelection" class="indent" hidden="true">
+        <description data-l10n-id="search-engine-default-private-desc" />
+        <hbox>
+          <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+          <hbox>
+            <menulist id="defaultPrivateEngine">
+              <menupopup/>
+            </menulist>
+          </hbox>
+        </hbox>
+      </vbox>
+    </groupbox>
+
+    <groupbox id="searchSuggestionsGroup" data-category="paneSearch" hidden="true">
+      <label><html:h2 data-l10n-id="search-suggestions-header" /></label>
+      <description data-l10n-id="search-suggestions-desc" />
 
       <checkbox id="suggestionsInSearchFieldsCheckbox"
                 data-l10n-id="search-suggestions-option"
@@ -52,6 +71,8 @@
           <label flex="1" data-l10n-id="search-suggestions-cant-show" />
         </hbox>
       </vbox>
+      <label id="openLocationBarPrivacyPreferences" is="text-link"
+             data-l10n-id="suggestions-addressbar-settings"/>
     </groupbox>
 
     <groupbox id="oneClickSearchProvidersGroup" data-category="paneSearch" hidden="true">
