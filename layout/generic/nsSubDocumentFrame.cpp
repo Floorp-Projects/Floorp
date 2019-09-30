@@ -315,7 +315,9 @@ static void WrapBackgroundColorInOwnLayer(nsDisplayListBuilder* aBuilder,
       nsDisplayList tmpList;
       tmpList.AppendToTop(item);
       item = MakeDisplayItem<nsDisplayOwnLayer>(
-          aBuilder, aFrame, &tmpList, aBuilder->CurrentActiveScrolledRoot());
+          aBuilder, aFrame, &tmpList, aBuilder->CurrentActiveScrolledRoot(),
+          nsDisplayOwnLayerFlags::None, ScrollbarData{}, true, false,
+          nsDisplayOwnLayer::OwnLayerForSubdoc);
     }
     if (item) {
       tempItems.AppendToTop(item);

@@ -3092,7 +3092,7 @@ static void AppendToTop(nsDisplayListBuilder* aBuilder,
 
     newItem = MakeDisplayItem<nsDisplayOwnLayer>(
         aBuilder, aSourceFrame, aSource, asr, nsDisplayOwnLayerFlags::None,
-        scrollbarData);
+        scrollbarData, true, false, nsDisplayOwnLayer::OwnLayerForScrollbar);
   } else {
     // Build the wrap list with an index of 1, since the scrollbar frame itself
     // might have already built an nsDisplayWrapList.
