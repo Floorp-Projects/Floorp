@@ -34,19 +34,26 @@ class FindInPageRobot {
 
     fun enterFindInPageQuery(expectedText: String) {
         mDevice.wait(Until.findObject(By.res("find_in_page_query_text")), waitingTime)
-        findInPageQuery().perform(clearText(), typeText(expectedText))
+        findInPageQuery().perform(clearText())
+        mDevice.wait(Until.gone(By.res("find_in_page_result_text")), waitingTime)
+        findInPageQuery().perform(typeText(expectedText))
+        mDevice.wait(Until.findObject(By.res("find_in_page_result_text")), waitingTime)
     }
 
     fun verifyFindNextInPageResult(ratioCounter: String) {
         mDevice.wait(Until.findObject(By.text(ratioCounter)), waitingTime)
+        val element = mDevice.findObject(By.text(ratioCounter))
         findInPageResult().check(matches(withText((ratioCounter))))
         findInPageNextButton().click()
+        element.wait(Until.textNotEquals(ratioCounter), waitingTime)
     }
 
     fun verifyFindPrevInPageResult(ratioCounter: String) {
         mDevice.wait(Until.findObject(By.text(ratioCounter)), waitingTime)
+        val element = mDevice.findObject(By.text(ratioCounter))
         findInPageResult().check(matches(withText((ratioCounter))))
         findInPagePrevButton().click()
+        element.wait(Until.textNotEquals(ratioCounter), waitingTime)
     }
 
     class Transition {
@@ -67,7 +74,9 @@ private fun findInPageCloseButton() = onView(withId(R.id.find_in_page_close_btn)
 
 private fun assertFindInPageNextButton() = findInPageNextButton()
     .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
 private fun assertFindInPagePrevButton() = findInPagePrevButton()
     .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
 private fun assertFindInPageCloseButton() = findInPageCloseButton()
     .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
