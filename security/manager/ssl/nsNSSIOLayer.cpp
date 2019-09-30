@@ -7,6 +7,7 @@
 #include "nsNSSIOLayer.h"
 
 #include <algorithm>
+#include <vector>
 
 #include "NSSCertDBTrustDomain.h"
 #include "NSSErrorsService.h"
@@ -2144,6 +2145,35 @@ static nsresult nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
   if (SECSuccess != SSL_OptionSet(fd, SSL_HANDSHAKE_AS_CLIENT, true)) {
     return NS_ERROR_FAILURE;
   }
+
+#ifdef __arm__
+  unsigned int enabledCiphers = 0;
+  std::vector<uint16_t> ciphers(SSL_GetNumImplementedCiphers());
+
+  // Returns only the enabled (reflecting prefs) ciphers, ordered
+  // by their occurence in
+  // https://hg.mozilla.org/projects/nss/file/a75ea4cdacd95282c6c245ebb849c25e84ccd908/lib/ssl/ssl3con.c#l87
+  if (SSL_CipherSuiteOrderGet(fd, ciphers.data(), &enabledCiphers) !=
+      SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // On ARM, prefer (TLS_CHACHA20_POLY1305_SHA256) over AES. However,
+  // it may be disabled. If enabled, it will either be element [0] or [1]*.
+  // If [0], we're done. If [1], swap it with [0] (TLS_AES_128_GCM_SHA256).
+  // * (assuming the compile-time order remains unchanged)
+  if (enabledCiphers > 1) {
+    if (ciphers[0] != TLS_CHACHA20_POLY1305_SHA256 &&
+        ciphers[1] == TLS_CHACHA20_POLY1305_SHA256) {
+      std::swap(ciphers[0], ciphers[1]);
+
+      if (SSL_CipherSuiteOrderSet(fd, ciphers.data(), enabledCiphers) !=
+          SECSuccess) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+  }
+#endif
 
   // Set the Peer ID so that SSL proxy connections work properly and to
   // separate anonymous and/or private browsing connections.
