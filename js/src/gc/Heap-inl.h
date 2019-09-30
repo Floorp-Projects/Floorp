@@ -14,8 +14,12 @@
 
 inline void js::gc::Arena::init(JS::Zone* zoneArg, AllocKind kind,
                                 const AutoLockGC& lock) {
-  MOZ_ASSERT(firstFreeSpan.isEmpty());
+#ifdef DEBUG
+  MOZ_MAKE_MEM_DEFINED(&zone, sizeof(zone));
   MOZ_ASSERT((uintptr_t(zone) & 0xff) == JS_FREED_ARENA_PATTERN);
+#endif
+
+  MOZ_ASSERT(firstFreeSpan.isEmpty());
   MOZ_ASSERT(!allocated());
   MOZ_ASSERT(!onDelayedMarkingList_);
   MOZ_ASSERT(!hasDelayedBlackMarking_);

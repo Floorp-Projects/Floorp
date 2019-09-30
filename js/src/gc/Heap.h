@@ -278,7 +278,7 @@ class Arena {
 
     // Poison zone pointer to highlight UAF on released arenas in crash data.
     AlwaysPoison(&zone, JS_FREED_ARENA_PATTERN, sizeof(zone),
-                 MemCheckKind::MakeUndefined);
+                 MemCheckKind::MakeNoAccess);
 
     allocKind = size_t(AllocKind::LIMIT);
     onDelayedMarkingList_ = 0;
