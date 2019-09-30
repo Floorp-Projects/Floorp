@@ -59,7 +59,8 @@
         promise = waitForLoad();
         testWin.location = "file_load_history_entry_page_with_one_link.html";
         await promise;
-        await doAfterEachTest(testWin, shistory, numSHEntries, previousLocation, true);
+        await doAfterEachTest(testWin, shistory, numSHEntries, previousLocation,
+                true /* isCrossDocumentLoad */, false /* hashChangeExpected */);
 
         // Step 5. Push some state
         // Now we are at file_load_history_entry_page_with_one_link.html#1
@@ -82,9 +83,17 @@
      *
      * @isCrossDocumentLoad
      *       did we just open a different document
-     *
+     * @hashChangeExpected
+     *       Would we get a hash change event if we navigated backwards and forwards in history?
+     *       This is framed with respect to the previous step, e.g. in the previous step was the
+     *       hash different from the location we have navigated to just before calling this function?
+     *       When we navigate forwards or backwards, we need to wait for this event
+     *       because clickLink() also waits for hashchange event and
+     *       if this function gets called before clickLink(), sometimes hashchange
+     *       events from this function will leak to clickLink.
      */
-    async function doAfterEachTest(testWin, shistory, expectedNumSHEntries, prevLocation, isCrossDocumentLoad = false) {
+    async function doAfterEachTest(testWin, shistory, expectedNumSHEntries, prevLocation,
+                                   isCrossDocumentLoad = false, hashChangeExpected = true) {
         var initialLocation = testWin.location.href;
         var initialSHIndex = shistory.index;
         var promise;
@@ -100,6 +109,12 @@
             return;
         }
 
+        var hashChangePromise;
+        if (hashChangeExpected) {
+            hashChangePromise = new Promise(resolve => {
+                testWin.addEventListener("hashchange", resolve, {once: true});
+            });
+        }
         // Navigate backwards
         if (isCrossDocumentLoad) {
             // Current page must have been a cross document load, so we just need to wait for
@@ -111,6 +126,9 @@
         }
         testWin.history.back();
         await promise;
+        if (hashChangeExpected) {
+            await hashChangePromise;
+        }
         is(testWin.location.href, prevLocation, "Window location is correct after navigating back in history");
         is(shistory.index, initialSHIndex - 1, "Session history's index is correct after navigating back in history");
 
@@ -120,8 +138,16 @@
         } else {
             promise = waitForPopstate(testWin);
         }
+        if (hashChangeExpected) {
+            hashChangePromise = new Promise(resolve => {
+                testWin.addEventListener("hashchange", resolve, {once: true});
+            });
+        }
         testWin.history.forward();
         await promise;
+        if (hashChangeExpected) {
+            await hashChangePromise;
+        }
         is(testWin.location.href, initialLocation, "Window location is correct after navigating forward in history");
         is(shistory.index, initialSHIndex, "Session history's index is correct after navigating forward in history");
     }
