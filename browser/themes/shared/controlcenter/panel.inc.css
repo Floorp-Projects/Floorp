@@ -191,8 +191,9 @@
   -moz-appearance: none;
   background: url("chrome://browser/skin/arrow-left.svg") center no-repeat;
   background-size: 16px, auto;
-  -moz-context-properties: fill;
+  -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
+  fill-opacity: .6;
   color: inherit !important; /* !important overrides :hover and :active:hover colors from button.css on Mac and Linux */
 }
 
@@ -514,7 +515,8 @@ description#identity-popup-content-verifier,
 
 .protections-popup-category::after {
   content: url(chrome://browser/skin/back-12.svg);
-  -moz-context-properties: fill;
+  -moz-context-properties: fill, fill-opacity;
+  fill-opacity: .6;
   transform: scaleX(-1) translateY(1px);
   float: right;
 }
