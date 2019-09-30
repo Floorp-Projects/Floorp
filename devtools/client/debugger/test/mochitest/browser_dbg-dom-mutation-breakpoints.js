@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-
 // Tests adding, disble/enable, and removal of dom mutation breakpoints
-
 
 /* import-globals-from ../../../inspector/test/shared-head.js */
 
@@ -14,7 +12,8 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const DMB_TEST_URL = "http://example.com/browser/devtools/client/debugger/test/mochitest/examples/doc-dom-mutation.html";
+const DMB_TEST_URL =
+  "http://example.com/browser/devtools/client/debugger/test/mochitest/examples/doc-dom-mutation.html";
 
 add_task(async function() {
   // Enable features
@@ -26,16 +25,20 @@ add_task(async function() {
 
   const { inspector, toolbox } = await openInspectorForURL(DMB_TEST_URL);
 
-  info("Sellecting the body node");
+  info("Selecting the body node");
   await selectNode("body", inspector);
 
   info("Adding DOM mutation breakpoints to body");
   const allMenuItems = openContextMenuAndGetAllItems(inspector);
 
-  const attributeMenuItem = allMenuItems.find(item => item.id === "node-menu-mutation-breakpoint-attribute");
+  const attributeMenuItem = allMenuItems.find(
+    item => item.id === "node-menu-mutation-breakpoint-attribute"
+  );
   attributeMenuItem.click();
 
-  const subtreeMenuItem = allMenuItems.find(item => item.id === "node-menu-mutation-breakpoint-subtree");
+  const subtreeMenuItem = allMenuItems.find(
+    item => item.id === "node-menu-mutation-breakpoint-subtree"
+  );
   subtreeMenuItem.click();
 
   info("Switches over to the debugger pane");
@@ -70,7 +73,7 @@ add_task(async function() {
   await waitForPaused(dbg);
   await resume(dbg);
 
-  info("Removing a breakpoint works")
+  info("Removing breakpoints works");
   dbg.win.document.querySelector(".dom-mutation-list .close-btn").click();
-  await waitForAllElements(dbg, "domMutationItem", 1);
+  await waitForAllElements(dbg, "domMutationItem", 1, true);
 });
