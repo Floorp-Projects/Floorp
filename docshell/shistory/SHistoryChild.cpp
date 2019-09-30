@@ -95,16 +95,15 @@ SHistoryChild::InternalSetRequestedIndex(int32_t aRequestedIndex) {
 NS_IMETHODIMP
 SHistoryChild::GetEntryAtIndex(int32_t aIndex, nsISHEntry** aResult) {
   nsresult rv;
-  MaybeNewPSHEntry entry;
+  RefPtr<CrossProcessSHEntry> entry;
   if (!SendGetEntryAtIndex(aIndex, &rv, &entry)) {
     return NS_ERROR_FAILURE;
   }
-  RefPtr<SHEntryChild> child;
-  if (NS_SUCCEEDED(rv)) {
-    child = SHEntryChild::GetOrCreate(entry);
-  }
-  child.forget(aResult);
-  return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aResult = entry ? do_AddRef(entry->ToSHEntryChild()).take() : nullptr;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -245,14 +244,14 @@ NS_IMETHODIMP
 SHistoryChild::EvictExpiredContentViewerForEntry(nsIBFCacheEntry* aBFEntry) {
   SHEntryChildShared* shared = static_cast<SHEntryChildShared*>(aBFEntry);
 
-  MaybeNewPSHEntry entry;
+  RefPtr<CrossProcessSHEntry> entry;
   int32_t index;
   if (!SendFindEntryForBFCache(shared->GetID(), false, &entry, &index)) {
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<SHEntryChild> shEntry = SHEntryChild::GetOrCreate(entry);
-  if (shEntry) {
+  RefPtr<SHEntryChild> shEntry;
+  if (entry && (shEntry = entry->ToSHEntryChild())) {
     shEntry->EvictContentViewer();
     SendEvict(nsTArray<PSHEntryChild*>({shEntry.get()}));
   }
@@ -262,7 +261,7 @@ SHistoryChild::EvictExpiredContentViewerForEntry(nsIBFCacheEntry* aBFEntry) {
 
 NS_IMETHODIMP
 SHistoryChild::EvictAllContentViewers(void) {
-  nsTArray<MaybeNewPSHEntry> entries;
+  nsTArray<RefPtr<CrossProcessSHEntry>> entries;
   if (!SendGetAllEntries(&entries)) {
     return NS_ERROR_FAILURE;
   }
@@ -270,8 +269,8 @@ SHistoryChild::EvictAllContentViewers(void) {
   // Keep a strong reference to all the entries, we're going to send the array
   // back to the parent!
   nsTArray<RefPtr<SHEntryChild>> shEntries(entries.Length());
-  for (MaybeNewPSHEntry& entry : entries) {
-    RefPtr<SHEntryChild> shEntry = SHEntryChild::GetOrCreate(entry);
+  for (RefPtr<CrossProcessSHEntry>& entry : entries) {
+    RefPtr<SHEntryChild> shEntry = entry->ToSHEntryChild();
     shEntry->EvictContentViewer();
     shEntries.AppendElement(shEntry.forget());
   }
@@ -318,7 +317,7 @@ SHistoryChild::EnsureCorrectEntryAtCurrIndex(nsISHEntry* aEntry) {
 
 NS_IMETHODIMP_(void)
 SHistoryChild::RemoveDynEntriesForBFCacheEntry(nsIBFCacheEntry* aBFEntry) {
-  MaybeNewPSHEntry entry;
+  RefPtr<CrossProcessSHEntry> entry;
   int32_t index;
   if (!SendFindEntryForBFCache(
           static_cast<SHEntryChildShared*>(aBFEntry)->GetID(), true, &entry,
@@ -326,8 +325,8 @@ SHistoryChild::RemoveDynEntriesForBFCacheEntry(nsIBFCacheEntry* aBFEntry) {
     return;
   }
 
-  RefPtr<SHEntryChild> shEntry = SHEntryChild::GetOrCreate(entry);
-  if (shEntry) {
+  RefPtr<SHEntryChild> shEntry;
+  if (entry && (shEntry = entry->ToSHEntryChild())) {
     RemoveDynEntries(index, shEntry);
   }
 }
@@ -364,7 +363,10 @@ nsresult SHistoryChild::LoadURI(LoadSHEntryData& aLoadData) {
   nsCOMPtr<nsIDocShell> docShell = aLoadData.browsingContext()->GetDocShell();
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
-  RefPtr<SHEntryChild> entry = SHEntryChild::GetOrCreate(aLoadData.shEntry());
+  RefPtr<SHEntryChild> entry;
+  if (aLoadData.shEntry()) {
+    entry = aLoadData.shEntry()->ToSHEntryChild();
+  }
 
   // FIXME Should this be sent through IPC?
   aLoadData.loadState()->SetSHEntry(entry);

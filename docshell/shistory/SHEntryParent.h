@@ -8,6 +8,7 @@
 #define mozilla_dom_SHistoryEntry_h
 
 #include "mozilla/dom/PSHEntryParent.h"
+#include "mozilla/dom/MaybeNewPSHEntry.h"
 #include "mozilla/WeakPtr.h"
 #include "nsSHEntry.h"
 #include "nsSHEntryShared.h"
@@ -41,7 +42,7 @@ class SHEntrySharedParent : public SHEntrySharedParentState {
  * The actor is (re)created as needed, whenever we need to return an entry to
  * the child process. The lifetime is determined by the child side.
  */
-class LegacySHEntry final : public nsSHEntry {
+class LegacySHEntry final : public nsSHEntry, public CrossProcessSHEntry {
  public:
   LegacySHEntry(PContentParent* aParent, uint64_t aSharedID)
       : nsSHEntry(new SHEntrySharedParent(aParent, aSharedID)),
@@ -49,8 +50,9 @@ class LegacySHEntry final : public nsSHEntry {
   explicit LegacySHEntry(const LegacySHEntry& aEntry)
       : nsSHEntry(aEntry), mActor(nullptr) {}
 
-  void GetOrCreateActor(PContentParent* aContentParent,
-                        MaybeNewPSHEntry& aEntry);
+  NS_DECL_ISUPPORTS_INHERITED
+
+  MaybeNewPSHEntryParent GetOrCreateActor(PContentParent* aContentParent);
 
   using nsSHEntry::AbandonBFCacheEntry;
   void AbandonBFCacheEntry(uint64_t aNewSharedID);
@@ -64,6 +66,8 @@ class LegacySHEntry final : public nsSHEntry {
  private:
   friend class SHEntryParent;
   friend class ContentParent;
+
+  ~LegacySHEntry() {}
 
   SHEntryParent* CreateActor();
 
@@ -82,9 +86,6 @@ class SHEntryParent final : public PSHEntryParent {
  public:
   explicit SHEntryParent(LegacySHEntry* aEntry)
       : PSHEntryParent(), mEntry(aEntry) {}
-
-  static void GetOrCreate(PContentParent* aManager, nsISHEntry* aSHEntry,
-                          MaybeNewPSHEntry& aResult);
 
   LegacySHEntry* GetSHEntry() { return mEntry; }
 
@@ -110,7 +111,7 @@ class SHEntryParent final : public PSHEntryParent {
   bool RecvSetSticky(const bool& aSticky);
   bool RecvGetPostData(RefPtr<nsIInputStream>* aPostData);
   bool RecvSetPostData(nsIInputStream* aPostData);
-  bool RecvGetParent(MaybeNewPSHEntry* aParentEntry);
+  bool RecvGetParent(RefPtr<CrossProcessSHEntry>* aParentEntry);
   bool RecvSetParent(PSHEntryParent* aParentEntry);
   bool RecvGetLoadType(uint32_t* aLoadType);
   bool RecvSetLoadType(const uint32_t& aLoadType);
@@ -180,15 +181,13 @@ class SHEntryParent final : public PSHEntryParent {
   bool RecvAddChild(PSHEntryParent* aChild, const int32_t& aOffset,
                     const bool& aUseRemoteSubframes, nsresult* aResult);
   bool RecvRemoveChild(PSHEntryParent* aChild, nsresult* aResult);
-  bool RecvGetChildAt(const int32_t& aIndex, MaybeNewPSHEntry* aChild);
+  bool RecvGetChildAt(const int32_t& aIndex,
+                      RefPtr<CrossProcessSHEntry>* aChild);
   bool RecvGetChildSHEntryIfHasNoDynamicallyAddedChild(
-      const int32_t& aChildOffset, MaybeNewPSHEntry* aChild);
+      const int32_t& aChildOffset, RefPtr<CrossProcessSHEntry>* aChild);
   bool RecvReplaceChild(PSHEntryParent* aNewChild, nsresult* aResult);
   bool RecvClearEntry(const uint64_t& aNewSharedID);
 
-  void GetOrCreate(nsISHEntry* aSHEntry, MaybeNewPSHEntry* aResult) {
-    GetOrCreate(Manager(), aSHEntry, *aResult);
-  }
   bool RecvCreateLoadInfo(RefPtr<nsDocShellLoadState>* aLoadState);
 
   RefPtr<LegacySHEntry> mEntry;

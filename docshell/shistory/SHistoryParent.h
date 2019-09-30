@@ -55,7 +55,7 @@ class SHistoryParent final : public PSHistoryParent {
   bool RecvGetRequestedIndex(int32_t* aIndex);
   bool RecvInternalSetRequestedIndex(int32_t aIndex);
   bool RecvGetEntryAtIndex(int32_t aIndex, nsresult* aResult,
-                           MaybeNewPSHEntry* aEntry);
+                           RefPtr<CrossProcessSHEntry>* aEntry);
   bool RecvPurgeHistory(int32_t aNumEntries, nsresult* aResult);
   bool RecvReloadCurrentEntry(LoadSHEntryResult* aLoadResult);
   bool RecvGotoIndex(int32_t aIndex, LoadSHEntryResult* aLoadResult);
@@ -73,10 +73,11 @@ class SHistoryParent final : public PSHistoryParent {
                          bool* aDidRemove);
   bool RecvRemoveFrameEntries(PSHEntryParent* aEntry);
   bool RecvReload(const uint32_t& aReloadFlags, LoadSHEntryResult* aLoadResult);
-  bool RecvGetAllEntries(nsTArray<MaybeNewPSHEntry>* aEntries);
+  bool RecvGetAllEntries(nsTArray<RefPtr<CrossProcessSHEntry>>* aEntries);
   bool RecvFindEntryForBFCache(const uint64_t& aSharedID,
                                const bool& aIncludeCurrentEntry,
-                               MaybeNewPSHEntry* aEntry, int32_t* aIndex);
+                               RefPtr<CrossProcessSHEntry>* aEntry,
+                               int32_t* aIndex);
   bool RecvEvict(nsTArray<PSHEntryParent*>&& aEntries);
   bool RecvEnsureCorrectEntryAtCurrIndex(PSHEntryParent* aEntry);
   bool RecvEvictContentViewersOrReplaceEntry(PSHEntryParent* aNewSHEntry,

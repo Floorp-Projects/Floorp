@@ -7,6 +7,8 @@
 #include "SHEntryChild.h"
 #include "SHistoryChild.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/StaticPrefs_docshell.h"
+#include "mozilla/dom/MaybeNewPSHEntry.h"
 #include "nsDocShellEditorData.h"
 #include "nsDocShellLoadState.h"
 #include "nsIContentViewer.h"
@@ -593,12 +595,12 @@ SHEntryChild::Clone(nsISHEntry** aResult) {
 
 NS_IMETHODIMP
 SHEntryChild::GetParent(nsISHEntry** aResult) {
-  MaybeNewPSHEntry parent;
+  RefPtr<CrossProcessSHEntry> parent;
   if (!SendGetParent(&parent)) {
     return NS_ERROR_FAILURE;
   }
 
-  *aResult = SHEntryChild::GetOrCreate(parent).take();
+  *aResult = parent ? do_AddRef(parent->ToSHEntryChild()).take() : nullptr;
   return NS_OK;
 }
 
@@ -808,21 +810,21 @@ SHEntryChild::RemoveChild(nsISHEntry* aChild) {
 
 NS_IMETHODIMP
 SHEntryChild::GetChildAt(int32_t aIndex, nsISHEntry** aResult) {
-  MaybeNewPSHEntry child;
+  RefPtr<CrossProcessSHEntry> child;
   if (!SendGetChildAt(aIndex, &child)) {
     return NS_ERROR_FAILURE;
   }
 
-  *aResult = SHEntryChild::GetOrCreate(child).take();
+  *aResult = child ? do_AddRef(child->ToSHEntryChild()).take() : nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP_(void)
 SHEntryChild::GetChildSHEntryIfHasNoDynamicallyAddedChild(int32_t aChildOffset,
                                                           nsISHEntry** aChild) {
-  MaybeNewPSHEntry child;
+  RefPtr<CrossProcessSHEntry> child;
   SendGetChildSHEntryIfHasNoDynamicallyAddedChild(aChildOffset, &child);
-  *aChild = SHEntryChild::GetOrCreate(child).take();
+  *aChild = child ? do_AddRef(child->ToSHEntryChild()).take() : nullptr;
 }
 
 NS_IMETHODIMP
@@ -1010,21 +1012,6 @@ void SHEntryChild::EvictContentViewer() {
     SyncPresentationState();
     viewer->Destroy();
   }
-}
-
-/* static */
-already_AddRefed<SHEntryChild> SHEntryChild::GetOrCreate(
-    MaybeNewPSHEntry& aEntry) {
-  RefPtr<SHEntryChild> entry;
-  if (aEntry.type() == MaybeNewPSHEntry::TNewPSHEntry) {
-    NewPSHEntry& newEntry = aEntry.get_NewPSHEntry();
-    entry = new SHEntryChild(newEntry.sharedID());
-    ContentChild::GetSingleton()->BindPSHEntryEndpoint(
-        std::move(newEntry.endpoint()), do_AddRef(entry).take());
-  } else {
-    entry = static_cast<SHEntryChild*>(aEntry.get_PSHEntryChild());
-  }
-  return entry.forget();
 }
 
 }  // namespace dom
