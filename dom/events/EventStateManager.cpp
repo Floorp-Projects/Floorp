@@ -399,6 +399,53 @@ static bool IsMessageGamepadUserActivity(EventMessage aMessage) {
          aMessage == eGamepadAxisMove;
 }
 
+// We ignore things that shouldn't cause popups, but also things that look
+// like shortcut presses. In some obscure cases these may actually be
+// website input, but any meaningful website will have other input anyway,
+// and we can't very well tell whether shortcut input was supposed to be
+// directed at chrome or the document.
+static bool IsKeyboardEventUserActivity(WidgetEvent* aEvent) {
+  WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
+  // Access keys should be treated as page interaction.
+  if (keyEvent->ModifiersMatchWithAccessKey(AccessKeyType::eContent)) {
+    return true;
+  }
+  if (!keyEvent->CanTreatAsUserInput() || keyEvent->IsControl() ||
+      keyEvent->IsMeta() || keyEvent->IsOS() || keyEvent->IsAlt()) {
+    return false;
+  }
+  // Deal with function keys:
+  switch (keyEvent->mKeyNameIndex) {
+    case KEY_NAME_INDEX_F1:
+    case KEY_NAME_INDEX_F2:
+    case KEY_NAME_INDEX_F3:
+    case KEY_NAME_INDEX_F4:
+    case KEY_NAME_INDEX_F5:
+    case KEY_NAME_INDEX_F6:
+    case KEY_NAME_INDEX_F7:
+    case KEY_NAME_INDEX_F8:
+    case KEY_NAME_INDEX_F9:
+    case KEY_NAME_INDEX_F10:
+    case KEY_NAME_INDEX_F11:
+    case KEY_NAME_INDEX_F12:
+    case KEY_NAME_INDEX_F13:
+    case KEY_NAME_INDEX_F14:
+    case KEY_NAME_INDEX_F15:
+    case KEY_NAME_INDEX_F16:
+    case KEY_NAME_INDEX_F17:
+    case KEY_NAME_INDEX_F18:
+    case KEY_NAME_INDEX_F19:
+    case KEY_NAME_INDEX_F20:
+    case KEY_NAME_INDEX_F21:
+    case KEY_NAME_INDEX_F22:
+    case KEY_NAME_INDEX_F23:
+    case KEY_NAME_INDEX_F24:
+      return false;
+    default:
+      return true;
+  }
+}
+
 nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
                                            WidgetEvent* aEvent,
                                            nsIFrame* aTargetFrame,
@@ -440,7 +487,8 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
        aEvent->mClass == eWheelEventClass ||
        aEvent->mClass == ePointerEventClass ||
        aEvent->mClass == eTouchEventClass ||
-       aEvent->mClass == eKeyboardEventClass ||
+       (aEvent->mClass == eKeyboardEventClass &&
+        IsKeyboardEventUserActivity(aEvent)) ||
        (aEvent->mClass == eDragEventClass && aEvent->mMessage == eDrop) ||
        IsMessageGamepadUserActivity(aEvent->mMessage))) {
     if (gMouseOrKeyboardEventCounter == 0) {
