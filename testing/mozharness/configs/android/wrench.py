@@ -11,15 +11,15 @@ config = {
         {
             "algorithm": "sha512",
             "visibility": "internal",
-            "filename": "android-sdk_r28.0.25.0-linux-x86emu.tar.gz",
+            "filename": "android-sdk_r29.2.1.0-linux-x86emu.tar.gz",
             "unpack": true,
-            "digest": "e62acc91f41ccef65a4937a2672fcb56362e9946b806bacc25854035b57d5bd2d525a9c7d660a643ab6381ae2e3b660be7fea70e302ed314c4b07880b2328e18",
-            "size": 241459387
+            "digest": "4014389d2e0c6889edf89a714e4defbd42c2bced79eee1cce726a9b2c921c6d857723f918a9f1b7dca35b9f8d6cbfdf6b47d2934d800bdd396bf5c17ada3b827",
+            "size": 299610245
         }
         ] """,
     "emulator_avd_name": "test-1",
     "emulator_process_name": "emulator64-x86",
-    "emulator_extra_args": "-gpu swiftshader_indirect -skip-adb-auth -verbose -show-kernel -use-system-libs -ranchu -selinux permissive -memory 3072 -cores 4",
+    "emulator_extra_args": "-gpu on -skip-adb-auth -verbose -show-kernel -ranchu -selinux permissive -memory 3072 -cores 4",
     "exes": {
     },
     "env": {
