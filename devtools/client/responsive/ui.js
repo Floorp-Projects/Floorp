@@ -45,6 +45,11 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(this, "l10n", "devtools/client/responsive/utils/l10n");
 loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
+loader.lazyRequireGetter(
+  this,
+  "saveScreenshot",
+  "devtools/shared/screenshot/save"
+);
 
 const TOOL_URL = "chrome://devtools/content/responsive/index.xhtml";
 
@@ -431,6 +436,8 @@ class ResponsiveUI {
       case "viewport-resize":
         this.onResizeViewport(event);
         break;
+      case "screenshot":
+        this.onScreenshot();
     }
   }
 
@@ -531,6 +538,21 @@ class ResponsiveUI {
   async onRotateViewport(event) {
     const { orientationType: type, angle, isViewportRotated } = event.data;
     await this.updateScreenOrientation(type, angle, isViewportRotated);
+  }
+
+  async onScreenshot() {
+    const targetFront = await this.client.mainRoot.getTab();
+    const captureScreenshotSupported = await targetFront.actorHasMethod(
+      "emulation",
+      "captureScreenshot"
+    );
+
+    if (captureScreenshotSupported) {
+      const data = await this.emulationFront.captureScreenshot();
+      await saveScreenshot(this.browserWindow, {}, data);
+
+      message.post(this.rdmFrame.contentWindow, "screenshot-captured");
+    }
   }
 
   /**
