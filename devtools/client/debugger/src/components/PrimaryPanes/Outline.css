@@ -76,6 +76,16 @@
   color: var(--theme-highlight-red);
 }
 
+.outline-list__class h2.focused {
+  background: var(--theme-selection-background);
+}
+
+.outline-list__class h2.focused,
+.outline-list__class h2.focused .keyword,
+.outline-list__class-list .outline-list__element-icon {
+  color: var(--theme-selection-color);
+}
+
 .outline-list__element {
   padding: 3px 10px 3px 10px;
   cursor: default;
@@ -92,6 +102,15 @@
 
 .outline-list__element:hover {
   background: var(--theme-toolbar-background-hover);
+}
+
+.outline-list__element.focused {
+  background: var(--theme-selection-background);
+}
+
+.outline-list__element.focused .outline-list__element-icon,
+.outline-list__element.focused .function-signature * {
+  color: var(--theme-selection-color);
 }
 
 .outline-footer {

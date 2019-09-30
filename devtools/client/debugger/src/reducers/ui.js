@@ -11,7 +11,7 @@
 
 import { prefs, features } from "../utils/prefs";
 
-import type { Source, Range, SourceLocation } from "../types";
+import type { Source, SourceLocation, Range } from "../types";
 
 import type { Action, panelPositionType } from "../actions/types";
 
@@ -30,6 +30,7 @@ export type UIState = {
   frameworkGroupingOn: boolean,
   orientation: OrientationType,
   viewport: ?Range,
+  cursorPosition: ?SourceLocation,
   highlightedLineRange?: {
     start?: number,
     end?: number,
@@ -52,6 +53,7 @@ export const createUIState = (): UIState => ({
   isLogPoint: false,
   orientation: "horizontal",
   viewport: null,
+  cursorPosition: null,
   inlinePreviewEnabled: features.inlinePreview,
 });
 
@@ -127,6 +129,10 @@ function update(state: UIState = createUIState(), action: Action): UIState {
       return { ...state, viewport: action.viewport };
     }
 
+    case "SET_CURSOR_POSITION": {
+      return { ...state, cursorPosition: action.cursorPosition };
+    }
+
     case "NAVIGATE": {
       return { ...state, activeSearch: null, highlightedLineRange: {} };
     }
@@ -190,6 +196,10 @@ export function getOrientation(state: OuterState): OrientationType {
 
 export function getViewport(state: OuterState) {
   return state.ui.viewport;
+}
+
+export function getCursorPosition(state: OuterState) {
+  return state.ui.cursorPosition;
 }
 
 export function getInlinePreview(state: OuterState) {

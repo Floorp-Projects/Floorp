@@ -1515,6 +1515,30 @@ function getCoordsFromPosition(cm, { line, ch }) {
   return cm.charCoords({ line: ~~line, ch: ~~ch });
 }
 
+async function getTokenFromPosition(dbg, {line, ch}) {
+  info(`Get token at ${line}, ${ch}`);
+  const cm = getCM(dbg);
+  cm.scrollIntoView({ line: line - 1, ch }, 0);
+
+  // Ensure the line is visible with margin because the bar at the bottom of
+  // the editor overlaps into what the editor things is its own space, blocking
+  // the click event below.
+  await waitForScrolling(cm);
+
+  const coords = getCoordsFromPosition(cm, { line: line - 1, ch });
+
+  const { left, top } = coords;
+
+  // Adds a vertical offset due to increased line height
+  // https://github.com/firefox-devtools/debugger/pull/7934
+  const lineHeightOffset = 3;
+
+  return dbg.win.document.elementFromPoint(
+    left,
+    top + lineHeightOffset
+  );
+}
+
 async function waitForScrolling(codeMirror) {
   return new Promise(resolve => {
     codeMirror.on("scroll", resolve);
@@ -1552,33 +1576,34 @@ async function codeMirrorGutterElement(dbg, line) {
   return tokenEl;
 }
 
-async function hoverAtPos(dbg, { line, ch }) {
-  info(`Hovering at ${line}, ${ch}`);
-  const cm = getCM(dbg);
-
-  // Ensure the line is visible with margin because the bar at the bottom of
-  // the editor overlaps into what the editor things is its own space, blocking
-  // the click event below.
-  cm.scrollIntoView({ line: line - 1, ch }, 0);
-  await waitForScrolling(cm);
-
-  const coords = getCoordsFromPosition(cm, { line: line - 1, ch });
-
-  const { left, top } = coords;
-
-  // Adds a vertical offset due to increased line height
-  // https://github.com/firefox-devtools/debugger/pull/7934
-  const lineHeightOffset = 3;
-
-  const tokenEl = dbg.win.document.elementFromPoint(
-    left,
-    top + lineHeightOffset
-  );
+async function clickAtPos(dbg, pos) {
+  const tokenEl = await getTokenFromPosition(dbg, pos)
 
   if (!tokenEl) {
     return false;
   }
 
+  const { top, left } = tokenEl.getBoundingClientRect();
+  info(`Clicking on token ${tokenEl.innerText} in line ${tokenEl.parentNode.innerText}`);
+  tokenEl.dispatchEvent(
+    new MouseEvent("click", {
+      bubbles: true,
+      cancelable: true,
+      view: dbg.win,
+      clientX: left,
+      clientY: top
+    })
+  );
+}
+
+async function hoverAtPos(dbg, pos) {
+  const tokenEl = await getTokenFromPosition(dbg, pos)
+
+  if (!tokenEl) {
+    return false;
+  }
+
+  info(`Hovering on token ${tokenEl.innerText}`);
   tokenEl.dispatchEvent(
     new MouseEvent("mouseover", {
       bubbles: true,
