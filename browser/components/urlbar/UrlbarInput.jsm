@@ -176,7 +176,6 @@ class UrlbarInput {
     this.eventBufferer = new UrlbarEventBufferer(this);
 
     this._inputFieldEvents = [
-      "click",
       "compositionstart",
       "compositionend",
       "contextmenu",
@@ -188,7 +187,6 @@ class UrlbarInput {
       "input",
       "keydown",
       "keyup",
-      "mousedown",
       "mouseover",
       "overflow",
       "underflow",
@@ -201,9 +199,9 @@ class UrlbarInput {
     }
 
     this.dropmarker.addEventListener("mousedown", this);
-
     this.window.addEventListener("mousedown", this);
     this.textbox.addEventListener("mousedown", this);
+    this._inputContainer.addEventListener("click", this);
 
     // This is used to detect commands launched from the panel, to avoid
     // recording abandonment events when the command causes a blur event.
@@ -238,6 +236,7 @@ class UrlbarInput {
     this.dropmarker.removeEventListener("mousedown", this);
     this.window.removeEventListener("mousedown", this);
     this.textbox.removeEventListener("mousedown", this);
+    this._inputContainer.removeEventListener("click", this);
 
     this.view.panel.remove();
     this.endLayoutExtend(true);
@@ -1707,8 +1706,13 @@ class UrlbarInput {
   }
 
   _on_click(event) {
-    this.startLayoutExtend();
-    this._maybeSelectAll();
+    if (
+      event.target == this.inputField ||
+      event.target == this._inputContainer
+    ) {
+      this.startLayoutExtend();
+      this._maybeSelectAll();
+    }
   }
 
   _on_contextmenu(event) {
@@ -1747,9 +1751,22 @@ class UrlbarInput {
 
   _on_mousedown(event) {
     switch (event.currentTarget) {
-      case this.inputField:
+      case this.textbox:
+        this._mousedownOnUrlbarDescendant = true;
+
+        if (
+          event.target != this.inputField &&
+          event.target != this._inputContainer
+        ) {
+          break;
+        }
+
         this._focusedViaMousedown = !this.focused;
         this._preventClickSelectsAll = this.focused;
+
+        if (event.target == this._inputContainer) {
+          this.focus();
+        }
 
         // The rest of this case only cares about left clicks.
         if (event.button != 0) {
@@ -1780,13 +1797,6 @@ class UrlbarInput {
             event,
           });
           this._maybeSelectAll();
-        }
-        break;
-      case this.textbox:
-        this._mousedownOnUrlbarDescendant = true;
-        if (event.target == this._inputContainer) {
-          this.focus();
-          this.startLayoutExtend();
         }
         break;
       case this.window:
