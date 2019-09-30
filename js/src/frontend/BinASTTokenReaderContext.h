@@ -50,6 +50,12 @@ struct NormalizedInterfaceAndField {
                      : identity) {}
 };
 
+template <typename T>
+struct Split {
+  T prefix;
+  T suffix;
+};
+
 // A bunch of bits used to lookup a value in a Huffman table. In most cases,
 // these are the 32 leading bits of the underlying bit stream.
 //
@@ -82,6 +88,14 @@ struct HuffmanLookup {
   // `0b_0000_0000__0000_0000__0000_0000__0000_0100`, this is
   // equal to Huffman Key `0100`.
   uint32_t leadingBits(const uint8_t bitLength) const;
+
+  // Split a HuffmanLookup into a prefix of `prefixBitLength` bits
+  // and a suffix containing the remaining buts.
+  //
+  // If the prefix contains fewer than `prefixBitLength`, it is
+  // padded with lower-weight 0s into a `prefixBitLength`
+  // HuffmanLookup.
+  Split<HuffmanLookup> split(const uint8_t prefixBitLength) const;
 
   // The buffer holding the bits. At this stage, bits are stored
   // in the same order as `HuffmanKey`. See the implementation of
@@ -350,9 +364,9 @@ class MapBasedHuffmanTable {
 //
 // - A vector `values` containing one entry per symbol.
 // - A vector `saturated` containing exactly 2 ^ (max bit length in the
-//   table) entries, which we use to map any combination of `maxBitLength`
+//   table) entries, which we use to map any combination of `largestBitLength`
 //   bits onto the only `HuffmanEntry` that may be reached by a prefix
-//   of these `maxBitLength` bits. See below for more details.
+//   of these `largestBitLength` bits. See below for more details.
 //
 // # Algorithm
 //
@@ -410,9 +424,17 @@ class MapBasedHuffmanTable {
 template <typename T>
 class SingleLookupHuffmanTable {
  public:
+  // An index into table `values`.
+  // We use `uint8_t` instead of `size_t` to limit the space
+  // used by the table.
+  using InternalIndex = uint8_t;
+
+  // The largest bit length that may be represented by this table.
+  static const uint8_t MAX_BIT_LENGTH = sizeof(InternalIndex) * 8;
+
   explicit SingleLookupHuffmanTable(JSContext* cx)
-      : values(cx), saturated(cx), maxBitLength(-1) {}
-  SingleLookupHuffmanTable(SingleLookupHuffmanTable&& other) noexcept = default;
+      : values(cx), saturated(cx), largestBitLength(-1) {}
+  SingleLookupHuffmanTable(SingleLookupHuffmanTable&& other) = default;
 
   // Initialize a Huffman table containing a single value.
   JS::Result<Ok> initWithSingleValue(JSContext* cx, T&& value);
@@ -459,6 +481,210 @@ class SingleLookupHuffmanTable {
   Iterator begin() const { return Iterator(values.begin()); }
   Iterator end() const { return Iterator(values.end()); }
 
+ private:
+  // The entries in this Huffman Table, sorted in the order of insertion.
+  //
+  // Invariant (once `init*` has been called):
+  // - Length is the number of values inserted in the table.
+  // - for all i, `values[i].bitLength <= largestBitLength`.
+  Vector<HuffmanEntry<T>> values;
+
+  // The entries in this Huffman table, prepared for lookup.
+  //
+  // Invariant (once `init*` has been called):
+  // - Length is `1 << largestBitLength`.
+  // - for all i, `saturated[i] < values.length()`
+  Vector<InternalIndex> saturated;
+
+  // The maximal bitlength of a value in this table.
+  //
+  // Invariant (once `init*` has been called):
+  // - `largestBitLength <= MAX_CODE_BIT_LENGTH`
+  uint8_t largestBitLength;
+
+  friend class HuffmanPreludeReader;
+};
+
+/// A table designed to support fast lookup in large sets of data.
+/// In most cases, lookup will be slower than a `SingleLookupHuffmanTable`
+/// but, particularly in heavily unbalanced trees, the table will
+/// take ~2^prefix_len fewer internal entries than a `SingleLookupHuffmanTable`.
+///
+/// Typically, use this table whenever codes range between 10 and 20 bits.
+///
+/// # Time complexity
+///
+/// A lookup in `MultiLookupHuffmanTable` will also take constant time:
+///
+/// - a constant-time lookup to determine into which sub-table to perform the
+/// lookup;
+/// - a constant-time lookup into the sub-table;
+/// - a constant-time lookup into the array of values.
+///
+///
+/// # Space complexity
+///
+/// TBD. Highly dependent on the shape of the Huffman Tree.
+///
+///
+/// # Algorithm
+///
+/// Consider the following Huffman table
+///
+/// Symbol | Binary Code  | Bit Length
+/// ------ | ------------ | ----------
+/// A      | 11000        | 5
+/// B      | 11001        | 5
+/// C      | 1101         | 4
+/// D      | 100          | 3
+/// E      | 101          | 3
+/// F      | 111          | 3
+/// G      | 00           | 2
+/// H      | 01           | 2
+///
+/// With a prefix length of 3, we will precompute all possible 3-bit prefixes
+/// and split the table across such prefixes. Note that we have picked a
+/// length of 3 bits arbitrarily – in this case it is larger than the
+/// bit length of some symbols.
+///
+/// Prefix | Int Value of Prefix | Symbols   | Max bit length
+/// ------ | ------------------- | --------- | --------------
+/// 000    | 0                   | G         | 0
+/// 001    | 1                   | G         | 0
+/// 010    | 2                   | H         | 0
+/// 011    | 3                   | H         | 0
+/// 100    | 4                   | D         | 0
+/// 101    | 5                   | E         | 0
+/// 110    | 6                   | A, B, C   | 2
+/// 111    | 7                   | F         | 0
+///
+/// For each prefix, we build the table containing the Symbols,
+/// stripping prefix from the Binary Code.
+///
+/// - Prefix 000
+///
+/// Symbol | Binary Code | Bit Length | Total Bit Length
+/// ------ | ----------- | ---------- | ----------------
+/// G      | (none)      | 0          | 2
+///
+/// - Prefix 001
+///
+/// Symbol | Binary Code | Bit Length | Total Bit Length
+/// ------ | ----------- | ---------- | ----------------
+/// G      | (none)      | 0          | 2
+///
+/// - Prefix 010
+///
+/// Symbol | Binary Code | Bit Length | Total Bit Length
+/// ------ | ----------- | ---------- | --------------
+/// H      | (none)      | 0          | 2
+///
+/// - Prefix 11
+///
+/// Symbol | Binary Code | Bit Length | Total Bit Length
+/// ------ | ----------- | ---------- | ----------------
+/// H      | (none)      | 0          | 2
+///
+/// - Prefix 100
+///
+/// Symbol | Binary Code | Bit Length | Total Bit Length
+/// ------ | ----------- | ---------- | ----------------
+/// D      | (none)      | 0          | 3
+///
+/// - Prefix 101
+///
+/// Symbol | Binary Code | Bit Length | Total Bit Length
+/// ------ | ----------- | ---------- | ----------------
+/// E      | (none)      | 0          | 3
+///
+/// - Prefix 110
+///
+/// Symbol | Binary Code | Bit Length | Total Bit Length
+/// ------ | ----------- | ---------- | ----------------
+/// A      | 00          | 2          | 5
+/// B      | 01          | 2          | 5
+/// C      | 1           | 1          | 4
+///
+/// - Prefix 111
+///
+/// Symbol | Binary Code | Bit Length | Total Bit Length
+/// ------ | ----------- | ---------- | ----------------
+/// F      | (none)      | 0          | 3
+///
+/// With this transformation, we have represented one table
+/// with an initial max bit length of 5 as:
+///
+/// - 1 table with a max bit length of 2;
+/// - 7 tables with a max bit length of 0.
+///
+/// Consequently, instead of storing 2^5 = 32 internal references,
+/// as we would have done with a SingleLookupHuffmanTable, we only
+/// need to store:
+///
+/// - 7 subtables with 1 reference each;
+/// - 1 subtable with 2^2 = 4 references.
+template <typename T, typename Subtable, uint8_t PrefixBitLength>
+class MultiLookupHuffmanTable {
+ public:
+  // The largest bit length that may be represented by this table.
+  static const uint8_t MAX_BIT_LENGTH =
+      PrefixBitLength + Subtable::MAX_BIT_LENGTH;
+
+  explicit MultiLookupHuffmanTable(JSContext* cx)
+      : cx_(cx),
+        values(cx),
+        subTables(cx),
+        largestBitLength(-1)
+#ifdef DEBUG
+        ,
+        control(cx)
+#endif  // DEBUG
+  {
+  }
+  MultiLookupHuffmanTable(MultiLookupHuffmanTable&& other) = default;
+
+  // Initialize a Huffman table containing `numberOfSymbols`.
+  // Symbols must be added with `addSymbol`.
+  // If you initialize with `initStart`, you MUST call `initComplete()`
+  // at the end of initialization.
+  JS::Result<Ok> initStart(JSContext* cx, size_t numberOfSymbols,
+                           uint8_t largestBitLength);
+
+  JS::Result<Ok> initComplete();
+
+  // Add a `(bit, bits_length) => value` mapping.
+  JS::Result<Ok> addSymbol(uint32_t bits, uint8_t bits_length, T&& value);
+
+  MultiLookupHuffmanTable() = delete;
+  MultiLookupHuffmanTable(MultiLookupHuffmanTable&) = delete;
+
+  // Lookup a value in the table.
+  //
+  // Return an entry with a value of `nullptr` if the value is not in the table.
+  //
+  // The lookup may advance `key` by `[0, key.bitLength]` bits. Typically, in a
+  // table with a single instance, or if the value is not in the table, it
+  // will advance by 0 bits. The caller is responsible for advancing its
+  // bitstream by `result.key.bitLength` bits.
+  HuffmanEntry<const T*> lookup(HuffmanLookup key) const;
+
+  // The number of values in the table.
+  size_t length() const { return values.length(); }
+
+  // Iterating in the order of insertion.
+  struct Iterator {
+    explicit Iterator(const HuffmanEntry<T>* position);
+    void operator++();
+    const T* operator*() const;
+    bool operator==(const Iterator& other) const;
+    bool operator!=(const Iterator& other) const;
+
+   private:
+    const HuffmanEntry<T>* position;
+  };
+  Iterator begin() const { return Iterator(values.begin()); }
+  Iterator end() const { return Iterator(values.end()); }
+
  public:
   // An index into table `values`.
   // We use `uint8_t` instead of `size_t` to limit the space
@@ -466,28 +692,51 @@ class SingleLookupHuffmanTable {
   using InternalIndex = uint8_t;
 
  private:
+  JSContext* cx_;
+
   // The entries in this Huffman Table, sorted in the order of insertion.
   //
   // Invariant (once `init*` has been called):
   // - Length is the number of values inserted in the table.
-  // - for all i, `values[i].bitLength <= maxBitLength`.
+  // - for all i, `values[i].bitLength <= largestBitLength`.
+  //
+  // FIXME: In a ThreeLookupsHuffmanTable, we currently store each value
+  // three times. We could at least get down to twice.
   Vector<HuffmanEntry<T>> values;
 
-  // The entries in this Huffman table, prepared for lookup.
+  // A mapping from 0..2^prefixBitLen such that index `i`
+  // maps to a subtable that holds all values associated
+  // with a key that starts with `HuffmanKey(i, prefixBitLen)`.
   //
-  // Invariant (once `init*` has been called):
-  // - Length is `1 << maxBitLength`.
-  // - for all i, `saturated[i] < values.length()`
-  Vector<InternalIndex> saturated;
+  // Note that, to allow the use of smaller tables, keys
+  // inside the subtables have been stripped
+  // from the prefix `HuffmanKey(i, prefixBitLen)`.
+  Vector<Subtable> subTables;
 
   // The maximal bitlength of a value in this table.
   //
   // Invariant (once `init*` has been called):
-  // - `maxBitLength <= MAX_CODE_BIT_LENGTH`
-  uint8_t maxBitLength;
+  // - `largestBitLength <= MAX_CODE_BIT_LENGTH`
+  uint8_t largestBitLength;
+
+#ifdef DEBUG
+  MapBasedHuffmanTable<T> control;
+#endif  // DEBUG
 
   friend class HuffmanPreludeReader;
 };
+
+/// A Huffman table suitable for max bit lengths in [8, 14]
+template <typename T>
+using TwoLookupsHuffmanTable = MultiLookupHuffmanTable<
+    T,
+    SingleLookupHuffmanTable</* external index */ size_t>,
+    6>;
+
+/// A Huffman table suitable for max bit lengths in [15, 20]
+template <typename T>
+using ThreeLookupsHuffmanTable = MultiLookupHuffmanTable<
+    T, TwoLookupsHuffmanTable</* external index */ size_t>, 6>;
 
 // An empty Huffman table. Attempting to get a value from this table is a syntax
 // error. This is the default value for `HuffmanTableValue` and represents all
@@ -525,7 +774,8 @@ struct GenericHuffmanTable {
 
   struct Iterator {
     explicit Iterator(typename SingleLookupHuffmanTable<T>::Iterator&&);
-    explicit Iterator(typename MapBasedHuffmanTable<T>::Iterator&&);
+    explicit Iterator(typename TwoLookupsHuffmanTable<T>::Iterator&&);
+    explicit Iterator(typename ThreeLookupsHuffmanTable<T>::Iterator&&);
     Iterator(Iterator&&) = default;
     Iterator(const Iterator&) = default;
     void operator++();
@@ -535,7 +785,8 @@ struct GenericHuffmanTable {
 
    private:
     mozilla::Variant<typename SingleLookupHuffmanTable<T>::Iterator,
-                     typename MapBasedHuffmanTable<T>::Iterator>
+                     typename TwoLookupsHuffmanTable<T>::Iterator,
+                     typename ThreeLookupsHuffmanTable<T>::Iterator>
         implementation;
   };
 
@@ -554,8 +805,8 @@ struct GenericHuffmanTable {
   HuffmanEntry<const T*> lookup(HuffmanLookup key) const;
 
  private:
-  mozilla::Variant<SingleLookupHuffmanTable<T>, MapBasedHuffmanTable<T>,
-                   HuffmanTableUnreachable>
+  mozilla::Variant<SingleLookupHuffmanTable<T>, TwoLookupsHuffmanTable<T>,
+                   ThreeLookupsHuffmanTable<T>, HuffmanTableUnreachable>
       implementation;
 };
 
