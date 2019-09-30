@@ -92,7 +92,7 @@
   max-width: var(--popup-width);
 }
 
-#protections-popup[toast] #protections-popup-mainView > :not(#protections-popup-mainView-panel-header-section),
+#protections-popup[toast] #protections-popup-mainView > :not(#protections-popup-mainView-panel-header),
 #protections-popup[toast] #protections-popup-main-header-label {
   display: none;
 }
@@ -239,13 +239,10 @@
 
 #identity-popup-mainView-panel-header,
 #protections-popup-mainView-panel-header {
+  padding: var(--vertical-section-padding) var(--horizontal-padding);
   min-height: 40px;
   -moz-box-pack: center;
   -moz-box-align: center;
-}
-
-#identity-popup-mainView-panel-header {
-  padding: var(--vertical-section-padding) var(--horizontal-padding);
 }
 
 #protections-popup > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow {
@@ -262,32 +259,26 @@
   fill: #0CB0F5;
 }
 
-#protections-popup-mainView-panel-header-section {
+#protections-popup-mainView-panel-header {
   color: white;
   background: radial-gradient(circle at top right, #9059FF, #0250BB);
 }
 
-#protections-popup-mainView-panel-header-section:-moz-locale-dir(rtl) {
+#protections-popup-mainView-panel-header:-moz-locale-dir(rtl) {
   background: radial-gradient(circle at top left, #9059FF, #0250BB);
 }
 
-:root[lwt-popup-brighttext] #protections-popup-mainView-panel-header-section {
+:root[lwt-popup-brighttext] #protections-popup-mainView-panel-header {
   background: radial-gradient(circle at top right, #C689FF, #00B3F4);
 }
 
-:root[lwt-popup-brighttext] #protections-popup-mainView-panel-header-section:-moz-locale-dir(rtl) {
+:root[lwt-popup-brighttext] #protections-popup-mainView-panel-header:-moz-locale-dir(rtl) {
   background: radial-gradient(circle at top left, #C689FF, #00B3F4);
 }
 
 #identity-popup-mainView-panel-header-span,
 #protections-popup-mainView-panel-header-span {
   font-weight: 600;
-}
-
-#protections-popup-mainView-panel-header-span {
-  margin: var(--vertical-section-padding) 0;
-  /* 9px + 26px to compensate for the info button */
-  margin-inline-start: 35px;
 }
 
 #identity-popup-mainView-panel-header-span,
@@ -309,9 +300,7 @@
 }
 
 #protections-popup-info-button {
-  /* 3px outline, so this is actually 9px from the edge. */
-  margin: 12px 0;
-  margin-inline-end: 12px;
+  margin: 0;
   padding: 0;
   border-radius: 0;
   outline: 3px solid transparent;
@@ -925,8 +914,7 @@ description#identity-popup-content-verifier,
   display: none;
 }
 
-#protections-popup-toast-panel-tp-on-desc,
-#protections-popup-toast-panel-tp-off-desc {
+#protections-popup-mainView-panel-header > description {
   display: none;
 }
 

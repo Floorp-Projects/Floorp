@@ -330,6 +330,8 @@ class _ToolbarPanelHub {
     wrapperEl.classList.add("whatsNew-message-body");
     messageEl.appendChild(wrapperEl);
 
+    this._attachClickListener(win, wrapperEl, message);
+
     wrapperEl.appendChild(
       this._createElement(doc, "h2", {
         classList: "whatsNew-message-title",
@@ -341,14 +343,12 @@ class _ToolbarPanelHub {
     );
 
     if (message.content.link_text) {
-      let linkEl = this._createElement(doc, "a", {
-        classList: "text-link",
-        content: message.content.link_text,
-      });
-      wrapperEl.appendChild(linkEl);
-      this._attachClickListener(win, linkEl, message);
-    } else {
-      this._attachClickListener(win, wrapperEl, message);
+      wrapperEl.appendChild(
+        this._createElement(doc, "a", {
+          classList: "text-link",
+          content: message.content.link_text,
+        })
+      );
     }
 
     return messageEl;
