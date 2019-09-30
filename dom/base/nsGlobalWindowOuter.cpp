@@ -4490,11 +4490,15 @@ void nsGlobalWindowOuter::FinishFullscreenChange(bool aIsFullscreen) {
       mFullscreen = false;
       mFullscreenMode = false;
     } else {
+#ifndef XP_MACOSX
       MOZ_ASSERT_UNREACHABLE("Failed to exit fullscreen?");
+#endif
       mFullscreen = true;
-      // We don't know how code can reach here. Not sure
-      // what value should be set for fullscreen mode.
-      mFullscreenMode = false;
+      // At least on macOS, we may reach here because the system fails
+      // to let us exit the system fullscreen mode. In that case, we may
+      // have already exited DOM fullscreen before, so set fullscreen
+      // mode to true here so that it has a saner state.
+      mFullscreenMode = true;
     }
     return;
   }
