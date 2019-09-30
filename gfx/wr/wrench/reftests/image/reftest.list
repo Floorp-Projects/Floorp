@@ -7,7 +7,7 @@
 skip_on(android,emulator) == tile-size.yaml tile-size-ref.yaml
 skip_on(android,emulator) == very-big.yaml very-big-ref.yaml
 == very-big-tile-size.yaml very-big-tile-size-ref.yaml
-skip_on(android,debug,emulator) == tile-with-spacing.yaml tile-with-spacing-ref.yaml
+skip_on(android,emulator) == tile-with-spacing.yaml tile-with-spacing-ref.yaml
 skip_on(android) fuzzy(1,331264) == tile-repeat-prim-or-decompose.yaml tile-repeat-prim-or-decompose-ref.yaml
 platform(linux,mac) options(allow-mipmaps) == downscale.yaml downscale.png
 skip_on(android) == segments.yaml segments.png
