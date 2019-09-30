@@ -1799,6 +1799,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   height: 260px;
   overflow: hidden;
   transition: height .25s;
+  border-top: 1px solid var(--panel-separator-color);
 }
 
 #protections-popup #messaging-system-message-container[disabled] {
@@ -1818,12 +1819,10 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 
 #protections-popup-message.whatsNew-hero-message {
   background-image: url(chrome://browser/skin/controlcenter/hero-message-background.svg);
-  background-color: #0250BB;
   background-repeat: no-repeat;
-  background-position: right;
+  background-position: top right;
   height: calc(100% - 20px);
   margin: 10px;
-  border-radius: 4px;
   color: white;
 }
 
@@ -1887,7 +1886,9 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 }
 
 #protections-popup-message .whatsNew-message-body {
-  margin: 0 10px 20px;
+  /* -10px to compensate for the margin on the container. We can't get rid of that
+     because it helps position the background image. */
+  margin: 0 calc(-10px + var(--horizontal-padding)) var(--vertical-section-padding);
 }
 
 #PanelUI-whatsNew .whatsNew-message-body.has-icon {
