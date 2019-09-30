@@ -566,19 +566,3 @@ js_option('--enable-wasm-private-reftypes',
 
 set_config('WASM_PRIVATE_REFTYPES', depends_if('--enable-wasm-private-reftypes')(lambda x: True))
 set_define('WASM_PRIVATE_REFTYPES', depends_if('--enable-wasm-private-reftypes')(lambda x: True))
-
-
-# Support for the WebAssembly multi-value proposal.
-# =====================================================
-
-@depends(milestone.is_nightly)
-def default_wasm_multi_value(is_nightly):
-    return False
-
-js_option('--enable-wasm-multi-value',
-          default=default_wasm_multi_value,
-          help='{Enable|Disable} support for the experimental WebAssembly '
-               'multi-value proposal')
-
-set_config('ENABLE_WASM_MULTI_VALUE', depends_if('--enable-wasm-multi-value')(lambda x: True))
-set_define('ENABLE_WASM_MULTI_VALUE', depends_if('--enable-wasm-multi-value')(lambda x: True))

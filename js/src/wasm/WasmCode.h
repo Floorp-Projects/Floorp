@@ -331,7 +331,7 @@ struct MetadataCacheablePod {
 
 typedef uint8_t ModuleHash[8];
 typedef Vector<ValTypeVector, 0, SystemAllocPolicy> FuncArgTypesVector;
-typedef Vector<ValTypeVector, 0, SystemAllocPolicy> FuncReturnTypesVector;
+typedef Vector<ExprType, 0, SystemAllocPolicy> FuncReturnTypesVector;
 
 struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
   FuncTypeWithIdVector funcTypeIds;
