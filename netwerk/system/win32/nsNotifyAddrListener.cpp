@@ -393,7 +393,7 @@ nsresult nsNotifyAddrListener::Init(void) {
   MOZ_ALWAYS_SUCCEEDS(threadPool->SetName(NS_LITERAL_CSTRING("Link Monitor")));
   mThread = threadPool.forget();
 
-  return NS_OK;
+  return mThread->Dispatch(this, NS_DISPATCH_NORMAL);
 }
 
 nsresult nsNotifyAddrListener::Shutdown(void) {
