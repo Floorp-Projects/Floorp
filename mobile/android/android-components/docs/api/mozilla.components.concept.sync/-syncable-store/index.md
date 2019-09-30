@@ -10,6 +10,7 @@ Describes a "sync" entry point for a storage layer.
 
 | Name | Summary |
 |---|---|
+| [getHandle](get-handle.md) | `abstract fun getHandle(): `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)<br>This should be removed. See: https://github.com/mozilla/application-services/issues/1877 |
 | [sync](sync.md) | `abstract suspend fun sync(authInfo: `[`SyncAuthInfo`](../-sync-auth-info/index.md)`): `[`SyncStatus`](../-sync-status/index.md)<br>Performs a sync. |
 
 ### Inheritors

@@ -2,7 +2,7 @@
 
 # state
 
-`abstract fun state(): `[`ConstellationState`](../-constellation-state/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L43)
+`abstract fun state(): `[`ConstellationState`](../-constellation-state/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L44)
 
 Current state of the constellation. May be missing if state was never queried.
 

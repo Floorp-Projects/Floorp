@@ -2,7 +2,7 @@
 
 # pollForEventsAsync
 
-`abstract fun pollForEventsAsync(): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L93)
+`abstract fun pollForEventsAsync(): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L95)
 
 Polls for any pending [DeviceEvent](../-device-event/index.md) events.
 In case of new events, registered [DeviceEventsObserver](../-device-events-observer/index.md) observers will be notified.

@@ -2,7 +2,7 @@
 
 # DeviceType
 
-`enum class DeviceType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L111)
+`enum class DeviceType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L113)
 
 Describes a type of the physical device in the constellation.
 
@@ -22,3 +22,4 @@ Describes a type of the physical device in the constellation.
 | Name | Summary |
 |---|---|
 | [into](../../mozilla.components.service.fxa/into.md) | `fun `[`DeviceType`](./index.md)`.into(): Type` |
+| [intoSyncType](../../mozilla.components.service.fxa/into-sync-type.md) | `fun `[`DeviceType`](./index.md)`.intoSyncType(): DeviceType`<br>FxA and Sync libraries both define a "DeviceType", so we get to have even more cruft. |

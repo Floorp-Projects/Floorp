@@ -6,3 +6,5 @@
 
 A thin wrapper around [SharedPreferences](#) which knows how to serialize/deserialize [SyncAuthInfo](../../mozilla.components.concept.sync/-sync-auth-info/index.md).
 
+This class exists to provide background sync workers with access to [SyncAuthInfo](../../mozilla.components.concept.sync/-sync-auth-info/index.md).
+
