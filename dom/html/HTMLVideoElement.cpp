@@ -539,15 +539,5 @@ void HTMLVideoElement::EndCloningVisually() {
   }
 }
 
-void HTMLVideoElement::TogglePictureInPicture(ErrorResult& error) {
-  // The MozTogglePictureInPicture event is listen for via the
-  // PictureInPictureChild actor, which is responsible for opening the new
-  // window and starting the visual clone.
-  nsresult rv = DispatchEvent(NS_LITERAL_STRING("MozTogglePictureInPicture"));
-  if (NS_FAILED(rv)) {
-    error.Throw(rv);
-  }
-}
-
 }  // namespace dom
 }  // namespace mozilla
