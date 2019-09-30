@@ -29,7 +29,7 @@ object SupportUtils {
         YOUR_RIGHTS("your-rights"),
         TRACKING_PROTECTION("tracking-protection-firefox-preview"),
         WHATS_NEW("whats-new-firefox-preview"),
-        SEND_TABS("send-tab-firefox-preview-another-device")
+        SEND_TABS("send-tab-preview")
     }
 
     /**
