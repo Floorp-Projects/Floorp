@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.3.183';
-const pdfjsBuild = 'c289f3a9';
+const pdfjsVersion = '2.3.194';
+const pdfjsBuild = 'cd909c53';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -225,7 +225,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.3.183';
+    const workerVersion = '2.3.194';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -1655,72 +1655,63 @@ var Dict = function DictClosure() {
     assignXref: function Dict_assignXref(newXref) {
       this.xref = newXref;
     },
-    get: function Dict_get(key1, key2, key3) {
-      var value;
-      var xref = this.xref,
-          suppressEncryption = this.suppressEncryption;
 
-      if (typeof (value = this._map[key1]) !== 'undefined' || key1 in this._map || typeof key2 === 'undefined') {
-        return xref ? xref.fetchIfRef(value, suppressEncryption) : value;
-      }
+    get(key1, key2, key3) {
+      let value = this._map[key1];
 
-      if (typeof (value = this._map[key2]) !== 'undefined' || key2 in this._map || typeof key3 === 'undefined') {
-        return xref ? xref.fetchIfRef(value, suppressEncryption) : value;
-      }
+      if (value === undefined && !(key1 in this._map) && key2 !== undefined) {
+        value = this._map[key2];
 
-      value = this._map[key3] || null;
-      return xref ? xref.fetchIfRef(value, suppressEncryption) : value;
-    },
-    getAsync: function Dict_getAsync(key1, key2, key3) {
-      var value;
-      var xref = this.xref,
-          suppressEncryption = this.suppressEncryption;
-
-      if (typeof (value = this._map[key1]) !== 'undefined' || key1 in this._map || typeof key2 === 'undefined') {
-        if (xref) {
-          return xref.fetchIfRefAsync(value, suppressEncryption);
+        if (value === undefined && !(key2 in this._map) && key3 !== undefined) {
+          value = this._map[key3];
         }
-
-        return Promise.resolve(value);
       }
 
-      if (typeof (value = this._map[key2]) !== 'undefined' || key2 in this._map || typeof key3 === 'undefined') {
-        if (xref) {
-          return xref.fetchIfRefAsync(value, suppressEncryption);
-        }
-
-        return Promise.resolve(value);
+      if (value instanceof Ref && this.xref) {
+        return this.xref.fetch(value, this.suppressEncryption);
       }
 
-      value = this._map[key3] || null;
-
-      if (xref) {
-        return xref.fetchIfRefAsync(value, suppressEncryption);
-      }
-
-      return Promise.resolve(value);
+      return value;
     },
-    getArray: function Dict_getArray(key1, key2, key3) {
-      var value = this.get(key1, key2, key3);
-      var xref = this.xref,
-          suppressEncryption = this.suppressEncryption;
 
-      if (!Array.isArray(value) || !xref) {
+    async getAsync(key1, key2, key3) {
+      let value = this._map[key1];
+
+      if (value === undefined && !(key1 in this._map) && key2 !== undefined) {
+        value = this._map[key2];
+
+        if (value === undefined && !(key2 in this._map) && key3 !== undefined) {
+          value = this._map[key3];
+        }
+      }
+
+      if (value instanceof Ref && this.xref) {
+        return this.xref.fetchAsync(value, this.suppressEncryption);
+      }
+
+      return value;
+    },
+
+    getArray(key1, key2, key3) {
+      let value = this.get(key1, key2, key3);
+
+      if (!Array.isArray(value) || !this.xref) {
         return value;
       }
 
       value = value.slice();
 
-      for (var i = 0, ii = value.length; i < ii; i++) {
-        if (!isRef(value[i])) {
+      for (let i = 0, ii = value.length; i < ii; i++) {
+        if (!(value[i] instanceof Ref)) {
           continue;
         }
 
-        value[i] = xref.fetch(value[i], suppressEncryption);
+        value[i] = this.xref.fetch(value[i], this.suppressEncryption);
       }
 
       return value;
     },
+
     getRaw: function Dict_getRaw(key) {
       return this._map[key];
     },
