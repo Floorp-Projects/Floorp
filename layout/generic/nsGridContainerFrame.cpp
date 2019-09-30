@@ -1327,8 +1327,6 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
    * @param aStylePosition the style for the grid container
    * @param aImplicitNamedAreas the implicit areas for the grid container
    * @param aGridTemplate is the grid-template-rows/columns data for this axis
-   * @param aClampMinLine/aClampMaxLine in a non-subgrid axis it's kMin/MaxLine;
-   *   in a subgrid axis it's its explicit grid bounds (all 1-based)
    * @param aParentLineNameMap the parent grid's map parallel to this map, or
    *                           null if this map isn't for a subgrid
    * @param aRange the subgrid's range in the parent grid, or null
@@ -1338,12 +1336,9 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
   LineNameMap(const nsStylePosition* aStylePosition,
               const ImplicitNamedAreas* aImplicitNamedAreas,
               const TrackSizingFunctions& aTracks,
-              int32_t aClampMinLine, int32_t aClampMaxLine,
               const LineNameMap* aParentLineNameMap, const LineRange* aRange,
               bool aIsSameDirection)
-      : mClampMinLine(aClampMinLine),
-        mClampMaxLine(aClampMaxLine),
-        mStylePosition(aStylePosition),
+      : mStylePosition(aStylePosition),
         mAreas(aImplicitNamedAreas),
         mTracks(aTracks),
         mRepeatAutoStart(aTracks.mRepeatAutoStart),
@@ -1355,6 +1350,13 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
         mRange(aRange),
         mIsSameDirection(aIsSameDirection),
         mHasRepeatAuto(aTracks.mHasRepeatAuto) {
+    if (MOZ_UNLIKELY(aRange)) { // subgrid case
+      mClampMinLine = 1;
+      mClampMaxLine = 1 + aRange->Extent();
+    } else {
+      mClampMinLine = kMinLine;
+      mClampMaxLine = kMaxLine;
+    }
     MOZ_ASSERT(mHasRepeatAuto || mRepeatEndDelta == 0);
     MOZ_ASSERT(!mHasRepeatAuto ||
                (mTracks.mExpandedLineNames.Length() >= 2 &&
@@ -1466,8 +1468,8 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
   }
 
   // The min/max line number (1-based) for clamping.
-  const int32_t mClampMinLine;
-  const int32_t mClampMaxLine;
+  int32_t mClampMinLine;
+  int32_t mClampMaxLine;
 
  private:
   // Return true if this map represents a subgridded axis.
@@ -4074,8 +4076,6 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
   const auto* areas = gridStyle->mGridTemplateAreas.IsNone()
                           ? nullptr
                           : &*gridStyle->mGridTemplateAreas.AsAreas();
-  int32_t clampMinColLine = kMinLine;
-  int32_t clampMaxColLine = kMaxLine;
   const LineNameMap* parentLineNameMap = nullptr;
   const LineRange* subgridRange = nullptr;
   bool subgridAxisIsSameDirection = true;
@@ -4090,8 +4090,6 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
     subgridRange = &subgrid->SubgridCols();
     uint32_t extent = subgridRange->Extent();
     mExplicitGridColEnd = extent + 1;  // the grid is 1-based at this point
-    clampMinColLine = 1;
-    clampMaxColLine = mExplicitGridColEnd;
     parentLineNameMap =
         ParentLineMapForAxis(subgrid->mIsOrthogonal, eLogicalAxisInline);
     auto parentWM =
@@ -4101,12 +4099,9 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
   }
   mGridColEnd = mExplicitGridColEnd;
   LineNameMap colLineNameMap(gridStyle, mAreas, aState.mColFunctions,
-                             clampMinColLine, clampMaxColLine,
                              parentLineNameMap, subgridRange,
                              subgridAxisIsSameDirection);
 
-  int32_t clampMinRowLine = kMinLine;
-  int32_t clampMaxRowLine = kMaxLine;
   if (!aState.mFrame->IsRowSubgrid()) {
     aState.mRowFunctions.InitRepeatTracks(
         gridStyle->mRowGap, aSizes.mMin.BSize(aState.mWM),
@@ -4120,8 +4115,6 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
     subgridRange = &subgrid->SubgridRows();
     uint32_t extent = subgridRange->Extent();
     mExplicitGridRowEnd = extent + 1;  // the grid is 1-based at this point
-    clampMinRowLine = 1;
-    clampMaxRowLine = mExplicitGridRowEnd;
     parentLineNameMap =
         ParentLineMapForAxis(subgrid->mIsOrthogonal, eLogicalAxisBlock);
     auto parentWM =
@@ -4131,7 +4124,6 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
   }
   mGridRowEnd = mExplicitGridRowEnd;
   LineNameMap rowLineNameMap(gridStyle, mAreas, aState.mRowFunctions,
-                             clampMinRowLine, clampMaxRowLine,
                              parentLineNameMap, subgridRange,
                              subgridAxisIsSameDirection);
 
@@ -4189,8 +4181,6 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
   const int32_t offsetToRowZero = int32_t(mExplicitGridOffsetRow) - 1;
   mGridColEnd += offsetToColZero;
   mGridRowEnd += offsetToRowZero;
-  clampMaxColLine += offsetToColZero;
-  clampMaxRowLine += offsetToRowZero;
   aState.mIter.Reset();
   for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
     auto& item = aState.mGridItems[aState.mIter.ItemIndex()];
@@ -4220,6 +4210,8 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
   auto flowStyle = gridStyle->mGridAutoFlow;
   const bool isRowOrder = (flowStyle & NS_STYLE_GRID_AUTO_FLOW_ROW);
   const bool isSparse = !(flowStyle & NS_STYLE_GRID_AUTO_FLOW_DENSE);
+  uint32_t clampMaxColLine = colLineNameMap.mClampMaxLine + offsetToColZero;
+  uint32_t clampMaxRowLine = rowLineNameMap.mClampMaxLine + offsetToRowZero;
   // We need 1 cursor per row (or column) if placement is sparse.
   {
     Maybe<nsDataHashtable<nsUint32HashKey, uint32_t>> cursors;
