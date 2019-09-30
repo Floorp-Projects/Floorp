@@ -9,6 +9,7 @@
 #include "FFmpegAudioDecoder.h"
 #include "TimeUnits.h"
 #include "VideoUtils.h"
+#include "mozilla/StaticPrefs_media.h"
 
 namespace mozilla {
 
@@ -264,6 +265,11 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
 AVCodecID FFmpegAudioDecoder<LIBAV_VER>::GetCodecId(
     const nsACString& aMimeType) {
   if (aMimeType.EqualsLiteral("audio/mpeg")) {
+#ifdef FFVPX_VERSION
+    if (!StaticPrefs::media_ffvpx_mp3_enabled()) {
+      return AV_CODEC_ID_NONE;
+    }
+#endif
     return AV_CODEC_ID_MP3;
   } else if (aMimeType.EqualsLiteral("audio/flac")) {
     return AV_CODEC_ID_FLAC;
