@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
-
 import os
 import signal
 import re
@@ -18,7 +16,6 @@ from mozfile import which
 from mozlint import result
 from mozlint.util import pip
 from mozprocess import ProcessHandlerMixin
-from six import PY3
 
 here = os.path.abspath(os.path.dirname(__file__))
 CODESPELL_REQUIREMENTS_PATH = os.path.join(here, 'codespell_requirements.txt')
@@ -46,7 +43,7 @@ class CodespellProcess(ProcessHandlerMixin):
         self.config = config
         kwargs = {
             'processOutputLine': [self.process_line],
-            'universal_newlines': PY3,
+            'universal_newlines': True,
         }
         ProcessHandlerMixin.__init__(self, *args, **kwargs)
 

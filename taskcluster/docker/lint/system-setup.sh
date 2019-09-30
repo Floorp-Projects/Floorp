@@ -82,7 +82,7 @@ mv fzf /usr/local/bin
 
 cd /setup
 
-pip install --require-hashes -r /tmp/flake8_requirements.txt
+pip3 install --require-hashes -r /tmp/flake8_requirements.txt
 
 ###
 # codespell Setup
@@ -90,7 +90,7 @@ pip install --require-hashes -r /tmp/flake8_requirements.txt
 
 cd /setup
 
-pip install --require-hashes -r /tmp/codespell_requirements.txt
+pip3 install --require-hashes -r /tmp/codespell_requirements.txt
 
 ###
 # tox Setup
@@ -98,7 +98,7 @@ pip install --require-hashes -r /tmp/codespell_requirements.txt
 
 cd /setup
 
-pip install --require-hashes -r /tmp/tox_requirements.txt
+pip3 install --require-hashes -r /tmp/tox_requirements.txt
 
 ###
 # rustfmt
