@@ -228,6 +228,10 @@ export function updateViewport() {
   };
 }
 
+export function updateCursorPosition(cursorPosition: SourceLocation) {
+  return { type: "SET_CURSOR_POSITION", cursorPosition };
+}
+
 export function setOrientation(orientation: OrientationType) {
   return { type: "SET_ORIENTATION", orientation };
 }

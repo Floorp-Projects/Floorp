@@ -81,4 +81,8 @@ export type UIAction =
   | {|
       +type: "SET_VIEWPORT",
       +viewport: Range,
+    |}
+  | {|
+      +type: "SET_CURSOR_POSITION",
+      +cursorPosition: SourceLocation,
     |};
