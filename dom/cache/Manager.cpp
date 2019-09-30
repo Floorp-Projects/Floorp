@@ -1452,15 +1452,7 @@ class Manager::OpenStreamAction final : public Manager::BaseAction {
   }
 
   virtual void Complete(Listener* aListener, ErrorResult&& aRv) override {
-    if (aRv.Failed()) {
-      // Ignore the reason for fail and just pass a null input stream to let it
-      // fail.
-      aRv.SuppressException();
-      mResolver(nullptr);
-    } else {
-      mResolver(std::move(mBodyStream));
-    }
-
+    mResolver(std::move(mBodyStream));
     mResolver = nullptr;
   }
 
