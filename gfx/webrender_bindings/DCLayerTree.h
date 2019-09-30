@@ -39,6 +39,7 @@ class DCLayerTree {
   RefPtr<IDCompositionDevice> mCompositionDevice;
   RefPtr<IDCompositionTarget> mCompositionTarget;
   RefPtr<IDCompositionVisual> mRootVisual;
+  RefPtr<IDCompositionVisual> mDefaultSwapChainVisual;
 };
 
 }  // namespace wr
