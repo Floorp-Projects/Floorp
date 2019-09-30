@@ -4,11 +4,10 @@
 
 // @flow
 
-import type { SourceLocation, Position } from "../types";
+import type { SourceLocation, Position, PartialPosition } from "../types";
 import type { Symbols } from "../reducers/ast";
 
 import type {
-  AstPosition,
   AstLocation,
   FunctionDeclaration,
   ClassDeclaration,
@@ -39,12 +38,21 @@ export function findBestMatchExpression(symbols: Symbols, tokenPos: Position) {
     }, null);
 }
 
-export function containsPosition(a: AstLocation, b: AstPosition) {
+// Check whether location A starts after location B
+export function positionAfter(a: AstLocation, b: AstLocation) {
+  return (
+    a.start.line > b.start.line ||
+    (a.start.line === b.start.line && a.start.column > b.start.column)
+  );
+}
+
+export function containsPosition(a: AstLocation, b: PartialPosition) {
+  const bColumn = b.column || 0;
   const startsBefore =
     a.start.line < b.line ||
-    (a.start.line === b.line && a.start.column <= b.column);
+    (a.start.line === b.line && a.start.column <= bColumn);
   const endsAfter =
-    a.end.line > b.line || (a.end.line === b.line && a.end.column >= b.column);
+    a.end.line > b.line || (a.end.line === b.line && a.end.column >= bColumn);
 
   return startsBefore && endsAfter;
 }

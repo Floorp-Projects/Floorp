@@ -116,6 +116,7 @@ export type Props = {
   toggleBreakpointAtLine: typeof actions.toggleBreakpointAtLine,
   traverseResults: typeof actions.traverseResults,
   updateViewport: typeof actions.updateViewport,
+  updateCursorPosition: typeof actions.updateCursorPosition,
   closeTab: typeof actions.closeTab,
   breakpointActions: BreakpointItemActions,
   editorActions: EditorItemActions,
@@ -454,15 +455,25 @@ class Editor extends PureComponent<Props, State> {
   };
 
   onClick(e: MouseEvent) {
-    const { cx, selectedSource, jumpToMappedLocation } = this.props;
+    const {
+      cx,
+      selectedSource,
+      updateCursorPosition,
+      jumpToMappedLocation,
+    } = this.props;
 
-    if (selectedSource && e.metaKey && e.altKey) {
+    if (selectedSource) {
       const sourceLocation = getSourceLocationFromMouseEvent(
         this.state.editor,
         selectedSource,
         e
       );
-      jumpToMappedLocation(cx, sourceLocation);
+
+      if (e.metaKey && e.altKey) {
+        jumpToMappedLocation(cx, sourceLocation);
+      }
+
+      updateCursorPosition(sourceLocation);
     }
   }
 
@@ -684,6 +695,7 @@ const mapDispatchToProps = dispatch => ({
       jumpToMappedLocation: actions.jumpToMappedLocation,
       traverseResults: actions.traverseResults,
       updateViewport: actions.updateViewport,
+      updateCursorPosition: actions.updateCursorPosition,
       closeTab: actions.closeTab,
       toggleBlackBox: actions.toggleBlackBox,
     },

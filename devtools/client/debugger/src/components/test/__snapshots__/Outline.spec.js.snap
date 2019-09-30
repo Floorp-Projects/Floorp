@@ -86,15 +86,18 @@ exports[`Outline renders outline renders functions by function class 1`] = `
         key="x_klass"
       >
         <h2
+          className=""
           onClick={[Function]}
         >
-          <span
-            className="keyword"
-          >
-            class
-          </span>
-           
-          x_klass
+          <div>
+            <span
+              className="keyword"
+            >
+              class
+            </span>
+             
+            x_klass
+          </div>
         </h2>
         <ul
           className="outline-list__class-list"
@@ -126,15 +129,18 @@ exports[`Outline renders outline renders functions by function class 1`] = `
         key="a_klass"
       >
         <h2
+          className=""
           onClick={[Function]}
         >
-          <span
-            className="keyword"
-          >
-            class
-          </span>
-           
-          a_klass
+          <div>
+            <span
+              className="keyword"
+            >
+              class
+            </span>
+             
+            a_klass
+          </div>
         </h2>
         <ul
           className="outline-list__class-list"
@@ -214,15 +220,18 @@ exports[`Outline renders outline renders functions by function class, alphabetic
         key="x_klass"
       >
         <h2
+          className=""
           onClick={[Function]}
         >
-          <span
-            className="keyword"
-          >
-            class
-          </span>
-           
-          x_klass
+          <div>
+            <span
+              className="keyword"
+            >
+              class
+            </span>
+             
+            x_klass
+          </div>
         </h2>
         <ul
           className="outline-list__class-list"
@@ -254,15 +263,18 @@ exports[`Outline renders outline renders functions by function class, alphabetic
         key="a_klass"
       >
         <h2
+          className=""
           onClick={[Function]}
         >
-          <span
-            className="keyword"
-          >
-            class
-          </span>
-           
-          a_klass
+          <div>
+            <span
+              className="keyword"
+            >
+              class
+            </span>
+             
+            a_klass
+          </div>
         </h2>
         <ul
           className="outline-list__class-list"
