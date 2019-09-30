@@ -601,7 +601,8 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
       HitTestingTreeNode* target = it->second;
       mScrollThumbInfo.emplace_back(
           *(thumb->GetScrollbarAnimationId()), thumb->GetTransform(),
-          thumb->GetScrollbarData(), targetGuid, target->GetTransform());
+          thumb->GetScrollbarData(), targetGuid, target->GetTransform(),
+          target->IsAncestorOf(thumb));
     }
   }
 
@@ -720,7 +721,7 @@ void APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
               return ComputeTransformForScrollThumb(
                   info.mThumbTransform * AsyncTransformMatrix(),
                   info.mTargetTransform.ToUnknownMatrix(), scrollTargetApzc,
-                  aMetrics, info.mThumbData, nullptr);
+                  aMetrics, info.mThumbData, info.mTargetIsAncestor, nullptr);
             });
     transforms.AppendElement(
         wr::ToWrTransformProperty(info.mThumbAnimationId, transform));
@@ -3245,7 +3246,8 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
             return ComputeTransformForScrollThumb(
                 aNode->GetTransform() * AsyncTransformMatrix(),
                 scrollTargetNode->GetTransform().ToUnknownMatrix(),
-                scrollTargetApzc, aMetrics, aNode->GetScrollbarData(), nullptr);
+                scrollTargetApzc, aMetrics, aNode->GetScrollbarData(),
+                scrollTargetNode->IsAncestorOf(aNode), nullptr);
           });
     }
   }
@@ -3354,6 +3356,7 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForScrollThumb(
     const LayerToParentLayerMatrix4x4& aCurrentTransform,
     const Matrix4x4& aScrollableContentTransform, AsyncPanZoomController* aApzc,
     const FrameMetrics& aMetrics, const ScrollbarData& aScrollbarData,
+    bool aScrollbarIsDescendant,
     AsyncTransformComponentMatrix* aOutClipTransform) {
   // We only apply the transform if the scroll-target layer has non-container
   // children (i.e. when it has some possibly-visible content). This is to
@@ -3444,7 +3447,41 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForScrollThumb(
     scrollbarTransform.PostTranslate(xTranslation, 0, 0);
   }
 
-  return aCurrentTransform * scrollbarTransform;
+  LayerToParentLayerMatrix4x4 transform =
+      aCurrentTransform * scrollbarTransform;
+
+  AsyncTransformComponentMatrix compensation;
+  // If the scrollbar layer is a child of the content it is a scrollbar for,
+  // then we need to adjust for any async transform (including an overscroll
+  // transform) on the content. This needs to be cancelled out because layout
+  // positions and sizes the scrollbar on the assumption that there is no async
+  // transform, and without this adjustment the scrollbar will end up in the
+  // wrong place.
+  //
+  // Note that since the async transform is applied on top of the content's
+  // regular transform, we need to make sure to unapply the async transform in
+  // the same coordinate space. This requires applying the content transform
+  // and then unapplying it after unapplying the async transform.
+  if (aScrollbarIsDescendant) {
+    AsyncTransformComponentMatrix overscroll =
+        aApzc->GetOverscrollTransform(AsyncPanZoomController::eForCompositing);
+    Matrix4x4 asyncUntransform =
+        (asyncTransform * overscroll).Inverse().ToUnknownMatrix();
+    const Matrix4x4& contentTransform = aScrollableContentTransform;
+    Matrix4x4 contentUntransform = contentTransform.Inverse();
+
+    compensation *= ViewAs<AsyncTransformComponentMatrix>(
+        contentTransform * asyncUntransform * contentUntransform);
+
+    // Pass the total compensation out to the caller so that it can use it
+    // to transform clip transforms as needed.
+    if (aOutClipTransform) {
+      *aOutClipTransform = compensation;
+    }
+  }
+  transform = transform * compensation;
+
+  return transform;
 }
 
 APZSampler* APZCTreeManager::GetSampler() const {

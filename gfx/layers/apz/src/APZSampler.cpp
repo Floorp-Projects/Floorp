@@ -121,13 +121,15 @@ bool APZSampler::SampleAnimations(const LayerMetricsWrapper& aLayer,
 LayerToParentLayerMatrix4x4 APZSampler::ComputeTransformForScrollThumb(
     const LayerToParentLayerMatrix4x4& aCurrentTransform,
     const LayerMetricsWrapper& aContent, const ScrollbarData& aThumbData,
+    bool aScrollbarIsDescendant,
     AsyncTransformComponentMatrix* aOutClipTransform) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   AssertOnSamplerThread();
 
   return mApz->ComputeTransformForScrollThumb(
       aCurrentTransform, aContent.GetTransform(), aContent.GetApzc(),
-      aContent.Metrics(), aThumbData, aOutClipTransform);
+      aContent.Metrics(), aThumbData, aScrollbarIsDescendant,
+      aOutClipTransform);
 }
 
 CSSRect APZSampler::GetCurrentAsyncLayoutViewport(
