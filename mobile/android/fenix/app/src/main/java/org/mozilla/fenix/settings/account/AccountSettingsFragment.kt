@@ -98,6 +98,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         )
     }
 
+    @Suppress("ComplexMethod")
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.account_settings_preferences, rootKey)
 

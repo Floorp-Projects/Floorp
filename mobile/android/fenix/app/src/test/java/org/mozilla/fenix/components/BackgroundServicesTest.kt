@@ -58,7 +58,7 @@ class BackgroundServicesTest {
         every { context.isInExperiment(eq(Experiments.asFeatureSyncDisabled)) } returns false
         var backgroundServices = TestableBackgroundServices(context)
         assertEquals(
-            SyncConfig(setOf(SyncEngine.HISTORY, SyncEngine.BOOKMARKS), syncPeriodInMinutes = 240L),
+            SyncConfig(setOf(SyncEngine.History, SyncEngine.Bookmarks), syncPeriodInMinutes = 240L),
             backgroundServices.syncConfig
         )
 
