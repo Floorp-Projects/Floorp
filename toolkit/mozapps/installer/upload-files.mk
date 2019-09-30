@@ -133,10 +133,6 @@ ifeq ($(MOZ_PKG_FORMAT),BZ2)
 endif
 
 ifeq ($(MOZ_PKG_FORMAT),ZIP)
-  ifdef MOZ_EXTERNAL_SIGNING_FORMAT
-    # We can't use sha2signcode on zip files
-    MOZ_EXTERNAL_SIGNING_FORMAT := $(filter-out sha2signcode,$(MOZ_EXTERNAL_SIGNING_FORMAT))
-  endif
   PKG_SUFFIX	= .zip
   INNER_MAKE_PACKAGE = $(call py_action,make_zip,'$(MOZ_PKG_DIR)' '$(PACKAGE)')
   INNER_UNMAKE_PACKAGE = $(call py_action,make_unzip,$(UNPACKAGE))
