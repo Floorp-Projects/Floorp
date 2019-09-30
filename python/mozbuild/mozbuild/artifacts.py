@@ -879,13 +879,6 @@ class Artifacts(object):
         if self._log:
             self._log(*args, **kwargs)
 
-    def run_hg(self, *args, **kwargs):
-        env = kwargs.get('env', {})
-        env['HGPLAIN'] = '1'
-        kwargs['env'] = env
-        return subprocess.check_output([self._hg] + list(args),
-                                       **kwargs)
-
     def _guess_artifact_job(self):
         # Add the "-debug" suffix to the guessed artifact job name
         # if MOZ_DEBUG is enabled.
@@ -992,10 +985,12 @@ class Artifacts(object):
 
         # Mercurial updated the ordering of "last" in 4.3. We use revision
         # numbers to order here to accommodate multiple versions of hg.
-        last_revs = self.run_hg('log', '--template', '{rev}:{node}\n',
+        last_revs = subprocess.check_output([
+            self._hg, 'log',
+            '--template', '{rev}:{node}\n',
             '-r', 'last(public() and ::., {num})'.format(
-                num=NUM_REVISIONS_TO_QUERY),
-            cwd=self._topsrcdir).splitlines()
+                num=NUM_REVISIONS_TO_QUERY)
+        ], cwd=self._topsrcdir).splitlines()
 
         if len(last_revs) == 0:
             raise Exception("""\
@@ -1182,8 +1177,8 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
         revision = None
         try:
             if self._hg:
-                revision = self.run_hg('log', '--template', '{node}\n', '-r', revset,
-                                       cwd=self._topsrcdir).strip()
+                revision = subprocess.check_output([self._hg, 'log', '--template', '{node}\n',
+                                                    '-r', revset], cwd=self._topsrcdir).strip()
             elif self._git:
                 revset = subprocess.check_output([
                     self._git, 'rev-parse', '%s^{commit}' % revset],
