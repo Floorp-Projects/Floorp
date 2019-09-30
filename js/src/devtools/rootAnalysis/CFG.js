@@ -4,10 +4,13 @@
 
 /* -*- indent-tabs-mode: nil; js-indent-level: 4 -*- */
 
+// Utility code for traversing the JSON data structures produced by sixgill.
+
 "use strict";
 
-var functionBodies;
-
+// Find all points (positions within the code) of the body given by the list of
+// bodies and the blockId to match (which will specify an outer function or a
+// loop within it), recursing into loops if needed.
 function findAllPoints(bodies, blockId, limits)
 {
     var points = [];
@@ -32,6 +35,8 @@ function findAllPoints(bodies, blockId, limits)
     return points;
 }
 
+// Given the CFG for the constructor call of some RAII, return whether the
+// given edge is the matching destructor call.
 function isMatchingDestructor(constructor, edge)
 {
     if (edge.Kind != "Call")
@@ -97,7 +102,7 @@ function allRAIIGuardedCallPoints(typeInfo, bodies, body, isConstructor)
 }
 
 // Test whether the given edge is the constructor corresponding to the given
-// destructor edge
+// destructor edge.
 function isMatchingConstructor(destructor, edge)
 {
     if (edge.Kind != "Call")
@@ -129,7 +134,7 @@ function isMatchingConstructor(destructor, edge)
     return sameVariable(constructExp.Variable, destructExp.Variable);
 }
 
-function findMatchingConstructor(destructorEdge, body)
+function findMatchingConstructor(destructorEdge, body, warnIfNotFound=true)
 {
     var worklist = [destructorEdge];
     var predecessors = getPredecessors(body);
@@ -142,8 +147,9 @@ function findMatchingConstructor(destructorEdge, body)
                 worklist.push(e);
         }
     }
-    printErr("Could not find matching constructor!");
-    debugger;
+    if (warnIfNotFound)
+        printErr("Could not find matching constructor!");
+    return undefined;
 }
 
 function pointsInRAIIScope(bodies, body, constructorEdge, limits) {
