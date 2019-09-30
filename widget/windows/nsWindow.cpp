@@ -6705,7 +6705,14 @@ bool TouchDeviceNeedsPanGestureConversion(PTOUCHINPUT aOSEvent,
   }
   // The affected device name is "\\?\VIRTUAL_DIGITIZER", but each backslash
   // needs to be escaped with another one.
-  if (deviceName != "\\\\?\\VIRTUAL_DIGITIZER") {
+  std::string expectedDeviceName = "\\\\?\\VIRTUAL_DIGITIZER";
+  // For some reason, the dataSize returned by the first call is double the
+  // actual length of the device name (as if it were returning the size of a
+  // wide-character string in bytes) even though we are using the narrow
+  // version of the API. For the comparison against the expected device name
+  // to pass, we truncate the buffer to be no longer tha the expected device
+  // name.
+  if (deviceName.substr(0, expectedDeviceName.length()) != expectedDeviceName) {
     return false;
   }
 
