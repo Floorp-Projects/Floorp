@@ -6536,6 +6536,25 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp) {
              newHeight));
 #endif
 
+    if (mAspectRatio > 0) {
+      // It's possible (via Windows Aero Snap) that the size of the window
+      // has changed such that it violates the aspect ratio constraint. If so,
+      // queue up an event to enforce the aspect ratio constraint and repaint.
+      // When resized with Windows Aero Snap, we are in the NOT_RESIZING state.
+      float newAspectRatio = (float)newHeight / newWidth;
+      if (mResizeState == NOT_RESIZING && mAspectRatio != newAspectRatio) {
+        // Hold a reference to self alive and pass it into the lambda to make
+        // sure this nsIWidget stays alive long enough to run this function.
+        nsCOMPtr<nsIWidget> self(this);
+        NS_DispatchToMainThread(NS_NewRunnableFunction(
+            "EnforceAspectRatio", [self, this, newWidth]() -> void {
+              if (mWnd) {
+                Resize(newWidth, newWidth * mAspectRatio, true);
+              }
+            }));
+      }
+    }
+
     // If a maximized window is resized, recalculate the non-client margins.
     if (mSizeMode == nsSizeMode_Maximized) {
       if (UpdateNonClientMargins(nsSizeMode_Maximized, true)) {
