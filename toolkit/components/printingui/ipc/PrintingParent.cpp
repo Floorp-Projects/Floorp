@@ -10,7 +10,6 @@
 #include "mozilla/Unused.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Document.h"
-#include "nsIDOMWindow.h"
 #include "nsIPrintingPromptService.h"
 #include "nsIPrintProgressParams.h"
 #include "nsIPrintSettingsService.h"

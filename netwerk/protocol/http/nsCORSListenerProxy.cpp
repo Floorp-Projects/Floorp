@@ -36,8 +36,6 @@
 #include "nsILoadGroup.h"
 #include "nsILoadContext.h"
 #include "nsIConsoleService.h"
-#include "nsIDOMWindowUtils.h"
-#include "nsIDOMWindow.h"
 #include "nsINetworkInterceptController.h"
 #include "nsICorsPreflightCallback.h"
 #include "nsISupportsImpl.h"

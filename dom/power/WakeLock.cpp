@@ -11,7 +11,6 @@
 #include "mozilla/HalWakeLock.h"
 #include "nsError.h"
 #include "mozilla/dom/Document.h"
-#include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIPropertyBag2.h"
 

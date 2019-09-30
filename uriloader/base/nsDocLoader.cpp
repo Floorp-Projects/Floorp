@@ -29,7 +29,6 @@
 #include "nsAutoPtr.h"
 #include "nsQueryObject.h"
 
-#include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsGlobalWindow.h"
 
@@ -811,8 +810,7 @@ void nsDocLoader::NotifyDoneWithOnload(nsDocLoader* aParent) {
   }
   BrowsingContext* bc = nsDocShell::Cast(docShell)->GetBrowsingContext();
   if (bc->IsContentSubframe() && !bc->GetParent()->IsInProcess()) {
-    if (BrowserChild* browserChild =
-            BrowserChild::GetFrom(docShell)) {
+    if (BrowserChild* browserChild = BrowserChild::GetFrom(docShell)) {
       mozilla::Unused << browserChild->SendMaybeFireEmbedderLoadEvents(
           /*aIsTrusted*/ true, /*aFireLoadAtEmbeddingElement*/ false);
     }

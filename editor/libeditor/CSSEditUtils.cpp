@@ -24,7 +24,6 @@
 #include "nsAtom.h"
 #include "nsIContent.h"
 #include "nsICSSDeclaration.h"
-#include "nsIDOMWindow.h"
 #include "mozilla/dom/Document.h"
 #include "nsIEditor.h"
 #include "nsINode.h"

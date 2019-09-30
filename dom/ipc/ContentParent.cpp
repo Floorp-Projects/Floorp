@@ -151,7 +151,6 @@
 #include "nsGeolocation.h"
 #include "nsIDragService.h"
 #include "mozilla/dom/WakeLock.h"
-#include "nsIDOMWindow.h"
 #include "nsIExternalProtocolService.h"
 #include "nsIGfxInfo.h"
 #include "nsIIdleService.h"

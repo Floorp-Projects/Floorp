@@ -28,7 +28,6 @@
 
 #include "nsIFileStreams.h"
 #include "nsIWindowWatcher.h"
-#include "nsIDOMWindow.h"
 #include "nsWindowsHelpers.h"
 
 #include "mozilla/gfx/Logging.h"

@@ -20,7 +20,6 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/ScopeExit.h"
 #include "nsINode.h"
-#include "nsIDOMWindow.h"
 #include "nsIURI.h"
 
 using namespace mozilla;

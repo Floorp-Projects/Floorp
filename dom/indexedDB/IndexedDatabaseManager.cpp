@@ -8,7 +8,6 @@
 
 #include "chrome/common/ipc_channel.h"  // for IPC::Channel::kMaximumMessageSize
 #include "nsIConsoleService.h"
-#include "nsIDOMWindow.h"
 #include "nsIScriptError.h"
 #include "nsIScriptGlobalObject.h"
 

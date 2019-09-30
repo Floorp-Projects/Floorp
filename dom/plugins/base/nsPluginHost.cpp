@@ -72,7 +72,6 @@
 
 // for the dialog
 #include "nsIWindowWatcher.h"
-#include "nsIDOMWindow.h"
 
 #include "nsNetCID.h"
 #include "mozilla/Sprintf.h"

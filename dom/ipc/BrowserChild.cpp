@@ -84,8 +84,6 @@
 #include "DocumentInlines.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDOMChromeWindow.h"
-#include "nsIDOMWindow.h"
-#include "nsIDOMWindowUtils.h"
 #include "nsFocusManager.h"
 #include "EventStateManager.h"
 #include "nsIDocShell.h"

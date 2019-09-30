@@ -12,7 +12,6 @@
 #include "nsIChannel.h"
 #include "nsIServiceManager.h"
 #include "nsIHttpChannelInternal.h"
-#include "nsIDOMWindow.h"
 #include "nsILoadContext.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptObjectPrincipal.h"

@@ -8,7 +8,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
-#include "nsIDOMWindow.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsUtils.h"
 #include "nsString.h"

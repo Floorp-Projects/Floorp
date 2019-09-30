@@ -18,7 +18,6 @@
 #include "mozilla/dom/URL.h"
 #include "nsIConsoleService.h"
 #include "mozilla/dom/Document.h"
-#include "nsIDOMWindow.h"
 #include "nsIObserverService.h"
 #include "nsIScriptError.h"
 #include "nsIWindowMediator.h"

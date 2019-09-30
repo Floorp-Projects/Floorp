@@ -18,7 +18,6 @@
 #include "nsIDOMEventListener.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIWindowProvider.h"
-#include "nsIDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsFrameMessageManager.h"
@@ -46,7 +45,7 @@
 #include "nsISHistoryListener.h"
 
 class nsBrowserStatusFilter;
-class nsIDOMWindowUtils;
+class nsIDOMWindow;
 class nsIHttpChannel;
 class nsIRequest;
 class nsISerialEventTarget;

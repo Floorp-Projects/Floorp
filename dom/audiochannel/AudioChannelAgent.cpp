@@ -7,7 +7,6 @@
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/Document.h"
-#include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIURI.h"
 
