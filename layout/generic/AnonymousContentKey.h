@@ -37,9 +37,12 @@ enum class AnonymousContentKey : uint8_t {
   Flag_Vertical                  = 0x08,
 
   // resizer
+  // 3-bit bitfield in 0x38 storing dir="" and flip=""
   Flag_Resizer_Right             = 0x08,
   Flag_Resizer_Bottom            = 0x10,
-  Flag_Resizer_Flip              = 0x20,
+  Flag_Resizer_BottomLeft        = 0x18,
+  Flag_Resizer_BottomRight       = 0x20,
+  Flag_Resizer_Bottom_Flip       = 0x28,
 
   // scrollbarbutton
   Flag_ScrollbarButton_Down      = 0x10,
