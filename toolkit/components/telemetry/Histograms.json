@@ -1050,6 +1050,19 @@
     "bug_numbers": [1556467],
     "description": "The number of slices in an incremental GC for the main runtime"
   },
+  "GC_EFFECTIVENESS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "low": 1,
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1580227],
+    "description": "GC 'effectiveness', the amount of memory freed divided by main-thread collection time (MB/s)"
+  },
   "GEOLOCATION_ACCURACY_EXPONENTIAL": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
