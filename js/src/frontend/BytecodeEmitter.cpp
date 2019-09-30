@@ -5683,7 +5683,6 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
     FunctionNode* funNode, bool needsProto /* = false */,
     ListNode* classContentsIfConstructor /* = nullptr */) {
   FunctionBox* funbox = funNode->funbox();
-  RootedFunction fun(cx, funbox->function());
 
   MOZ_ASSERT((classContentsIfConstructor != nullptr) ==
              (funbox->kind() == FunctionFlags::FunctionKind::ClassConstructor));
@@ -5707,8 +5706,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
     return true;
   }
 
-  if (fun->isInterpreted()) {
-    if (fun->isInterpretedLazy()) {
+  if (funbox->isInterpreted()) {
+    if (funbox->isInterpretedLazy()) {
       if (!fe.emitLazy()) {
         //          [stack] FUN?
         return false;
