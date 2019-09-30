@@ -154,6 +154,18 @@ class nsHtml5SpeculativeLoad {
     mIsDefer = aDefer;
   }
 
+  inline void InitImportStyle(nsString&& aUrl) {
+    MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
+               "Trying to reinitialize a speculative load!");
+    mOpCode = eSpeculativeLoadStyle;
+    mUrlOrSizes = std::move(aUrl);
+    mCharsetOrSrcset.SetIsVoid(true);
+    mCrossOriginOrMedia.SetIsVoid(true);
+    mReferrerPolicyOrIntegrity.SetIsVoid(true);
+    mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity.SetIsVoid(
+        true);
+  }
+
   inline void InitStyle(nsHtml5String aUrl, nsHtml5String aCharset,
                         nsHtml5String aCrossOrigin,
                         nsHtml5String aReferrerPolicy,
