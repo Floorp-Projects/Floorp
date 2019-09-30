@@ -9,7 +9,7 @@
 loadRelativeToScript('callgraph.js');
 
 var theFunctionNameToFind;
-if (scriptArgs[0] == '--function') {
+if (scriptArgs[0] == '--function' || scriptArgs[0] == '-f') {
     theFunctionNameToFind = scriptArgs[1];
     scriptArgs = scriptArgs.slice(2);
 }

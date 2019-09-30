@@ -516,8 +516,8 @@ function edgeCanGC(edge)
         var variable = callee.Variable;
 
         if (variable.Kind == "Func") {
-            var callee = mangled(variable.Name[0]);
-            if ((callee in gcFunctions) || ((callee + internalMarker) in gcFunctions))
+            var func = mangled(variable.Name[0]);
+            if ((func in gcFunctions) || ((func + internalMarker) in gcFunctions))
                 return "'" + variable.Name[0] + "'";
             return null;
         }

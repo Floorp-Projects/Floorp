@@ -283,6 +283,7 @@ function addToKeyedList(collection, key, entry)
     if (!(key in collection))
         collection[key] = [];
     collection[key].push(entry);
+    return collection[key];
 }
 
 function loadTypeInfo(filename)

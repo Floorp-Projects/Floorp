@@ -126,7 +126,7 @@ function grab_artifacts () {
 
         # Bundle up the less important but still useful intermediate outputs,
         # just to cut down on the clutter in treeherder's Job Details pane.
-        tar -acvf "${artifacts}/hazardIntermediates.tar.xz" --exclude-from <(for f in "${important[@]}"; do echo $f; done) *.txt *.lst build_xgill.log
+        tar -acvf "${artifacts}/hazardIntermediates.tar.xz" --exclude-from <(IFS=$'\n'; echo "${important[*]}") *.txt *.lst build_xgill.log
 
         # Upload the important outputs individually, so that they will be
         # visible in Job Details and accessible to automated jobs.

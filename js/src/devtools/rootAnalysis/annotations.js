@@ -255,6 +255,10 @@ var ignoreFunctions = {
     "uint8 nsContentUtils::IsExpandedPrincipal(nsIPrincipal*)" : true,
 
     "void mozilla::AutoProfilerLabel::~AutoProfilerLabel(int32)" : true,
+
+    // Stores a function pointer in an AutoProfilerLabelData struct and calls it.
+    // And it's in mozglue, which doesn't have access to the attributes yet.
+    "void mozilla::ProfilerLabelEnd(mozilla::Tuple<void*, unsigned int>*)" : true,
 };
 
 function extraGCFunctions() {
@@ -319,6 +323,7 @@ function ignoreGCFunction(mangled)
     // tryNewTenuredThing, tryNewNurseryObject, and others.
     if (/refillFreeList|tryNew/.test(fun) && /\(js::AllowGC\)0u/.test(fun))
         return true;
+
     return false;
 }
 
@@ -396,7 +401,7 @@ function isLimitConstructor(typeInfo, edgeType, varName)
 // nsISupports subclasses' methods may be scriptable (or overridden
 // via binary XPCOM), and so may GC. But some fields just aren't going
 // to get overridden with something that can GC.
-function isOverridableField(initialCSU, csu, field)
+function isOverridableField(staticCSU, csu, field)
 {
     if (csu != 'nsISupports')
         return false;
@@ -421,19 +426,19 @@ function isOverridableField(initialCSU, csu, field)
         return false;
     if (field == "ConstructUbiNode")
         return false;
-    if (initialCSU == 'nsIXPCScriptable' && field == "GetScriptableFlags")
+    if (staticCSU == 'nsIXPCScriptable' && field == "GetScriptableFlags")
         return false;
-    if (initialCSU == 'nsIXPConnectJSObjectHolder' && field == 'GetJSObject')
+    if (staticCSU == 'nsIXPConnectJSObjectHolder' && field == 'GetJSObject')
         return false;
-    if (initialCSU == 'nsIXPConnect' && field == 'GetSafeJSContext')
+    if (staticCSU == 'nsIXPConnect' && field == 'GetSafeJSContext')
         return false;
 
     // nsIScriptSecurityManager is not [builtinclass], but smaug says "the
     // interface definitely should be builtinclass", which is good enough.
-    if (initialCSU == 'nsIScriptSecurityManager' && field == 'IsSystemPrincipal')
+    if (staticCSU == 'nsIScriptSecurityManager' && field == 'IsSystemPrincipal')
         return false;
 
-    if (initialCSU == 'nsIScriptContext') {
+    if (staticCSU == 'nsIScriptContext') {
         if (field == 'GetWindowProxy' || field == 'GetWindowProxyPreserveColor')
             return false;
     }
