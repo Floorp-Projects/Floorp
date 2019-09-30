@@ -3,6 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import print_function
+
 import os
 import site
 import subprocess
@@ -100,8 +102,7 @@ for name in cfg.tests:
     os.chdir(outdir)
     for xdb in glob("*.xdb"):
         os.unlink(xdb)
-    if cfg.verbose:
-        print("Running test %s" % name)
+    print("START TEST {}".format(name), flush=True)
     testpath = os.path.join(indir, "test.py")
     testscript = open(testpath).read()
     testcode = compile(testscript, testpath, 'exec')

@@ -39,9 +39,9 @@ class Base {
       ANNOTATE("static func") ANNOTATE("second func");
 };
 
-float Base::testAnnotations() { asm(""); }
+float Base::testAnnotations() { asm(""); return 1.1; }
 
-double Base::testParamAnnotations(Cell& cell) { asm(""); }
+double Base::testParamAnnotations(Cell& cell) { asm(""); return 1.2; }
 
 class Super : public Base {
  public:

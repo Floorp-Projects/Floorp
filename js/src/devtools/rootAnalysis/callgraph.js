@@ -6,10 +6,18 @@ loadRelativeToScript('utility.js');
 loadRelativeToScript('annotations.js');
 loadRelativeToScript('CFG.js');
 
-var subclasses = new Map(); // Map from csu => set of immediate subclasses
-var superclasses = new Map(); // Map from csu => set of immediate superclasses
-var classFunctions = new Map(); // Map from "csu:name" => set of full method name
+// Map from csu => set of immediate subclasses
+var subclasses = new Map();
 
+// Map from csu => set of immediate superclasses
+var superclasses = new Map();
+
+// Map from "csu.name:nargs" => set of full method name
+var virtualDefinitions = new Map();
+
+// Every virtual method declaration, anywhere.
+//
+//   field : CFG of the field
 var virtualResolutionsSeen = new Set();
 
 // map is a map from names to sets of entries.
@@ -44,10 +52,11 @@ function processCSU(csuName, csu)
             addToNamedSet(subclasses, superclass, subclass);
             addToNamedSet(superclasses, subclass, superclass);
         }
+
         if ("Variable" in field) {
             // Note: not dealing with overloading correctly.
             const name = field.Variable.Name[0];
-            addToNamedSet(classFunctions, fieldKey(csuName, field.Field[0]), name);
+            addToNamedSet(virtualDefinitions, fieldKey(csuName, field.Field[0]), name);
         }
     }
 }
@@ -58,8 +67,8 @@ function nearestAncestorMethods(csu, field)
 {
     const key = fieldKey(csu, field);
 
-    if (classFunctions.has(key))
-        return new Set(classFunctions.get(key));
+    if (virtualDefinitions.has(key))
+        return new Set(virtualDefinitions.get(key));
 
     const functions = new Set();
     if (superclasses.has(csu)) {
@@ -120,8 +129,8 @@ function findVirtualFunctions(initialCSU, field)
         const csu = worklist.pop();
         const key = fieldKey(csu, field);
 
-        if (classFunctions.has(key))
-            functions.update(classFunctions.get(key));
+        if (virtualDefinitions.has(key))
+            functions.update(virtualDefinitions.get(key));
 
         if (subclasses.has(csu))
             worklist.push(...subclasses.get(csu));
@@ -228,10 +237,10 @@ function loadTypesWithCache(type_xdb_filename, cache_filename) {
         const cacheData = deserialize(cb);
         subclasses = cacheData.subclasses;
         superclasses = cacheData.superclasses;
-        classFunctions = cacheData.classFunctions;
+        virtualDefinitions = cacheData.virtualDefinitions;
     } catch (e) {
         loadTypes(type_xdb_filename);
-        const cb = serialize({subclasses, superclasses, classFunctions});
+        const cb = serialize({subclasses, superclasses, virtualDefinitions});
         os.file.writeTypedArrayToFile(cache_filename,
                                       new Uint8Array(cb.arraybuffer));
     }

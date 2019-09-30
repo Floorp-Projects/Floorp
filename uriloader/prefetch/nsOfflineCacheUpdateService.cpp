@@ -51,7 +51,6 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 static nsOfflineCacheUpdateService* gOfflineCacheUpdateService = nullptr;
-static bool sAllowInsecureOfflineCache = true;
 
 nsTHashtable<nsCStringHashKey>* nsOfflineCacheUpdateService::mAllowedDomains =
     nullptr;
@@ -239,8 +238,6 @@ NS_IMPL_ISUPPORTS(nsOfflineCacheUpdateService, nsIOfflineCacheUpdateService,
 nsOfflineCacheUpdateService::nsOfflineCacheUpdateService()
     : mDisabled(false), mUpdateRunning(false) {
   MOZ_ASSERT(NS_IsMainThread());
-  Preferences::AddBoolVarCache(&sAllowInsecureOfflineCache,
-                               "browser.cache.offline.insecure.enable", true);
 }
 
 nsOfflineCacheUpdateService::~nsOfflineCacheUpdateService() {
@@ -542,9 +539,8 @@ static nsresult OfflineAppPermForPrincipal(nsIPrincipal* aPrincipal,
   nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(uri);
   if (!innerURI) return NS_OK;
 
-  // only http and https applications can use offline APIs.
-  if (!(innerURI->SchemeIs("http") && sAllowInsecureOfflineCache) &&
-      !innerURI->SchemeIs("https")) {
+  // only https applications can use offline APIs.
+  if (!innerURI->SchemeIs("https")) {
     return NS_OK;
   }
 
@@ -608,23 +604,25 @@ nsOfflineCacheUpdateService::AllowOfflineApp(nsIPrincipal* aPrincipal) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (!sAllowInsecureOfflineCache) {
-    nsCOMPtr<nsIURI> uri;
-    aPrincipal->GetURI(getter_AddRefs(uri));
+  if (!StaticPrefs::browser_cache_offline_storage_enable()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
-    if (!uri) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
+  nsCOMPtr<nsIURI> uri;
+  aPrincipal->GetURI(getter_AddRefs(uri));
 
-    nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(uri);
-    if (!innerURI) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
+  if (!uri) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
-    // if http then we should prevent this cache
-    if (innerURI->SchemeIs("http")) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
+  nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(uri);
+  if (!innerURI) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // if http then we should prevent this cache
+  if (innerURI->SchemeIs("http")) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   if (GeckoProcessType_Default != XRE_GetProcessType()) {

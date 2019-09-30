@@ -8,7 +8,7 @@
 
 loadRelativeToScript('utility.js');
 
-// Functions come out of sixgill in the form "mangled|readable". The mangled
+// Functions come out of sixgill in the form "mangled$readable". The mangled
 // name is Truth. One mangled name might correspond to multiple readable names,
 // for multiple reasons, including (1) sixgill/gcc doesn't always qualify types
 // the same way or de-typedef the same amount; (2) sixgill's output treats
@@ -22,8 +22,9 @@ loadRelativeToScript('utility.js');
 // the beginning for these.
 //
 // The strategy used is to separate out the pieces whenever they are read in,
-// create a table mapping mangled names to (one of the) readable names, and
-// use the mangled names in all computation.
+// create a table mapping mangled names to all readable names, and use the
+// mangled names in all computation -- except for limited circumstances when
+// the readable name is used in annotations.
 //
 // Note that callgraph.txt uses a compressed representation -- each name is
 // mapped to an integer, and those integers are what is recorded in the edges.
@@ -279,7 +280,7 @@ function loadCallgraph(file)
     // context, and add them to the set of gcFunctions.
     while (worklist.length) {
         name = worklist.shift();
-        assert(name in gcFunctions);
+        assert(name in gcFunctions, "gcFunctions does not contain " + name);
         if (!(name in callersOf))
             continue;
         for (const {caller, limits} of callersOf[name]) {
