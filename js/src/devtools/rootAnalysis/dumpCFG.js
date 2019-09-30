@@ -63,9 +63,10 @@ function str_Type(type) {
     const {Kind, Type, Name, TypeFunctionArguments} = type;
     if (Kind == 'Pointer')
       return str_Type(Type) + "*";
-    else if (Kind == 'CSU') {
+    else if (Kind == 'CSU')
       return Name;
-    }
+    else if (Kind == 'Array')
+      return str_Type(Type) + "[]";
 
     return Kind;
   } catch(e) {
