@@ -184,7 +184,6 @@ function run_test() {
       null,
       null,
       null,
-      null,
       true,
       null
     );
@@ -246,7 +245,6 @@ function run_test() {
       null,
       null,
       null,
-      null,
       true,
       null
     );
@@ -259,7 +257,6 @@ function run_test() {
       Ci.nsIContentPolicy.TYPE_SUBDOCUMENT,
       null, // nsICSPEventListener
       NetUtil.newURI("intent://mymaps.com/maps?um=1&ie=UTF-8&fb=1&sll"),
-      null,
       null,
       null,
       null,
@@ -280,7 +277,6 @@ function run_test() {
       null,
       null,
       null,
-      null,
       true,
       null
     );
@@ -297,7 +293,6 @@ function run_test() {
         Ci.nsIContentPolicy.TYPE_SCRIPT,
         null, // nsICSPEventListener
         NetUtil.newURI("ftp://blocked.test/profile.png"),
-        null,
         null,
         null,
         null,
