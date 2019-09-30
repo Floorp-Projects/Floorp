@@ -2720,20 +2720,19 @@ void NS_SniffContent(const char* aSnifferType, nsIRequest* aRequest,
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
   if (channel) {
     nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-    nsAutoCString currentContentType;
-    channel->GetContentType(currentContentType);
-    /* Bug 1571742
-     * We cannot skip snffing if the current MIME-Type is a JSON file.
-     * The JSON-Viewer relies on its own sniffer to determine, if it can render
-     * the page, so we need to make an exception if the Server provides a valid
-     * JSON-MIME.
-     */
-    if (loadInfo->GetSkipContentSniffing() &&
-        !currentContentType.Equals(APPLICATION_JSON) &&
-        !currentContentType.Equals(APPLICATION_WEB_MANIFEST) &&
-        !currentContentType.Equals(TEXT_JSON)) {
-      aSniffedType.Truncate();
-      return;
+    if (loadInfo->GetSkipContentSniffing()) {
+      /* Bug 1571742
+       * We cannot skip snffing if the current MIME-Type might be a JSON.
+       * The JSON-Viewer relies on its own sniffer to determine, if it can
+       * render the page, so we need to make an exception if the Server provides
+       * a application/ mime, as it might be json.
+       */
+      nsAutoCString currentContentType;
+      channel->GetContentType(currentContentType);
+      if (!StringBeginsWith(currentContentType,
+                            NS_LITERAL_CSTRING("application/"))) {
+        return;
+      }
     }
   }
   nsCOMArray<nsIContentSniffer> sniffers;
