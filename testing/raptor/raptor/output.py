@@ -1213,87 +1213,92 @@ class BrowsertimeOutput(PerftestOutput):
         """
         LOG.info("preparing browsertime results for output")
 
-        suites = []
-        test_results = {
-            'framework': {
-                'name': 'browsertime',
-            },
-            'suites': suites,
-        }
-
         # check if we actually have any results
         if len(self.results) == 0:
             LOG.error("no browsertime test results found for %s" %
                       ', '.join(test_names))
             return
 
-        for test in self.results:
-            vals = []
-            subtests = []
-            suite = {
-                'name': test['name'],
-                'type': test['type'],
-                'extraOptions': test['extra_options'],
-                'subtests': subtests,
-                'lowerIsBetter': test['lower_is_better'],
-                'unit': test['unit'],
-                'alertThreshold': float(test['alert_threshold'])
+        test_results = {
+            'framework': {
+                'name': 'browsertime',
             }
+        }
 
-            # Check if the test has set optional properties
-            if hasattr(test, "alert_change_type"):
-                suite['alertChangeType'] = test['alert_change_type']
+        # using a mapping so we can have a unique set of results given a name
+        suites = {}
 
+        for test in self.results:
             # process results for pageloader type of tests
             if test["type"] != "browsertime-pageload":
                 LOG.error("output.summarize received unsupported test results type for %s" %
                           test['name'])
                 continue
 
-            suites.append(suite)
+            if test['name'] not in suites:
+                suite = {
+                    'name': test['name'],
+                    'type': test['type'],
+                    'extraOptions': test['extra_options'],
+                    'lowerIsBetter': test['lower_is_better'],
+                    'unit': test['unit'],
+                    'alertThreshold': float(test['alert_threshold']),
+                    # like suites, subtests are identified by names
+                    'subtests': {}
+                }
+
+                # Check if the test has set optional properties
+                if 'alert_change_type' in test:
+                    suite['alertChangeType'] = test['alert_change_type']
+
+                suites[test['name']] = suite
+            else:
+                suite = suites[test['name']]
 
             for measurement_name, replicates in test['measurements'].iteritems():
-                new_subtest = {}
-                new_subtest['name'] = measurement_name
-                new_subtest['replicates'] = replicates
-                new_subtest['lowerIsBetter'] = test['subtest_lower_is_better']
-                new_subtest['alertThreshold'] = float(test['alert_threshold'])
-                new_subtest['value'] = 0
-                new_subtest['unit'] = test['subtest_unit']
+                if measurement_name not in suite['subtests']:
+                    subtest = {}
+                    subtest['name'] = measurement_name
+                    subtest['lowerIsBetter'] = test['subtest_lower_is_better']
+                    subtest['alertThreshold'] = float(test['alert_threshold'])
+                    subtest['unit'] = test['subtest_unit']
 
-                # if 'alert_on' is set for this particular measurement, then we want to set the
-                # flag in the perfherder output to turn on alerting for this subtest
-                if self.subtest_alert_on is not None:
-                    if measurement_name in self.subtest_alert_on:
-                        LOG.info("turning on subtest alerting for measurement type: %s"
-                                 % measurement_name)
-                        new_subtest['shouldAlert'] = True
+                    # if 'alert_on' is set for this particular measurement, then we want to set the
+                    # flag in the perfherder output to turn on alerting for this subtest
+                    if self.subtest_alert_on is not None:
+                        if measurement_name in self.subtest_alert_on:
+                            LOG.info("turning on subtest alerting for measurement type: %s"
+                                     % measurement_name)
+                            subtest['shouldAlert'] = True
+                    subtest['replicates'] = []
+                    suite['subtests'][measurement_name] = subtest
+                else:
+                    subtest = suite['subtests'][measurement_name]
 
-                # for the subtest (page-load measurement type) overall score/result/value, we
-                # want to use the median of the replicates - now instead of calculating this
-                # ourselves, we will take this value from the browsertime results themselves
-                # as browsertime calculates the mean (and other values) automatically for us
-                bt_measurement_median = test['statistics'][measurement_name]['median']
-                new_subtest['value'] = bt_measurement_median
+                subtest['replicates'].extend(replicates)
 
-                # we have a vals list that contains all the top level results for each of the
-                # measurement types; this will be used to calculate an overall test result
-                # which will be the geomean of all of the top level results of each type
-                vals.append([new_subtest['value'], new_subtest['name']])
-                subtests.append(new_subtest)
+        # converting suites and subtests into lists, and sorting them
+        def _process(subtest):
+            subtest['value'] = filters.median(filters.ignore_first(subtest['replicates'], 1))
+            return subtest
+
+        def _process_suite(suite):
+            suite['subtests'] = [_process(subtest) for subtest in suite['subtests'].values()]
+            suite['subtests'].sort(key=lambda subtest: subtest['name'])
 
             # for pageload tests, if there are > 1 subtests here, that means there
             # were multiple measurement types captured in each single pageload; we want
             # to get the mean of those values and report 1 overall 'suite' value
             # for the page; all replicates will still be available in the JSON artifact
-
             # summarize results to get top overall suite result
-            if len(subtests) > 1:
+            if len(suite['subtests']) > 1:
+                vals = [[subtest['value'], subtest['name']] for subtest in suite['subtests']]
                 suite['value'] = self.construct_summary(vals,
                                                         testname=test['name'])
+            return suite
 
-            subtests.sort(key=lambda subtest: subtest['name'])
-
+        suites = [_process_suite(s) for s in suites.values()]
         suites.sort(key=lambda suite: suite['name'])
 
+        test_results['suites'] = suites
         self.summarized_results = test_results
