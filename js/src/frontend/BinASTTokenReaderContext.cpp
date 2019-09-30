@@ -1256,6 +1256,7 @@ JS::Result<HuffmanLookup> BinASTTokenReaderContext::BitBuffer::getHuffmanLookup(
     // available, it's time to reload. We'll try and get as close to 64 bits as
     // possible.
 
+    uint64_t newBits = 0;
     while (this->bitLength <= BIT_BUFFER_SIZE - BIT_BUFFER_READ_UNIT) {
       // 1. Let's try and pull one byte.
       uint8_t byte;
@@ -1267,28 +1268,36 @@ JS::Result<HuffmanLookup> BinASTTokenReaderContext::BitBuffer::getHuffmanLookup(
         break;
       }
 
-      // 2. We have just read to `byte`, here `0b_XWVU_TSRQ`. Let's reverse
-      // `byte` into `0b_QRST_UVWX`.
-      const uint8_t reversedByte =
-          (byte & 0b10000000) >> 7 | (byte & 0b01000000) >> 5 |
-          (byte & 0b00100000) >> 3 | (byte & 0b00010000) >> 1 |
-          (byte & 0b00001000) << 1 | (byte & 0b00000100) << 3 |
-          (byte & 0b00000010) << 5 | (byte & 0b00000001) << 7;
-
-      // 3. Make space for these bits at the end of the stream
+      // 2. Make space for these bits at the end of `bits`
       // so shift `bits` into
-      // `0b_XXXX_XXXX__XXXD_EFGH__IJKL_MNOP__0000_0000`.
+      // `0b_XXXX_XXXX__ABCD_EFGH__IJKL_MNOP__0000_0000`.
       this->bits <<= BIT_BUFFER_READ_UNIT;
 
-      // 4. Finally, combine into.
-      // `0b_XXXX_XXXX__XXXD_EFGH__IJKL_MNOP__QRST_UVWX`.
-      this->bits += reversedByte;
+      // 3. Read in another new byte from the stream
+      // so `newBits` becomes
+      // `0B_0000_0000__0000_0000__0000_0000__XWVU_TSRQ`
+      newBits <<= BIT_BUFFER_READ_UNIT;
+      newBits += byte;
+
       this->bitLength += BIT_BUFFER_READ_UNIT;
       MOZ_ASSERT_IF(this->bitLength != 64 /* >> 64 is UB for a uint64_t */,
                     this->bits >> this->bitLength == 0);
 
-      // 5. Continue as long as we don't have enough bits.
+      // 4. Continue as long as we don't have enough bits.
     }
+    // 5. Let's reverse each of the 8 bytes in `newBits` in place
+    // First swap alternating bits
+    newBits = ((newBits >> 1) & 0x5555555555555555) |
+              ((newBits & 0x5555555555555555) << 1);
+    // Then swap alternating groups of 2 bits
+    newBits = ((newBits >> 2) & 0x3333333333333333) |
+              ((newBits & 0x3333333333333333) << 2);
+    // Finally swap alternating nibbles
+    newBits = ((newBits >> 4) & 0x0F0F0F0F0F0F0F0F) |
+              ((newBits & 0x0F0F0F0F0F0F0F0F) << 4);
+    // 6. Finally, combine `newBits` with `this->bits` to get
+    // `0b_XXXX_XXXX__ABCD_EFGH__IJKL_MNOP__QRST_UVWX`
+    this->bits += newBits;
   }
 
   // Now, we may prepare a `HuffmanLookup` with up to 32 bits.
@@ -2044,7 +2053,9 @@ JS::Result<Ok> SingleLookupHuffmanTable<T>::initWithSingleValue(JSContext* cx,
 template <typename T>
 JS::Result<Ok> SingleLookupHuffmanTable<T>::initStart(
     JSContext* cx, size_t numberOfSymbols, uint8_t largestBitLength) {
-  MOZ_ASSERT_IF(largestBitLength != 32, (uint32_t(1) << largestBitLength) - 1 <= mozilla::MaxValue<InternalIndex>::value);
+  MOZ_ASSERT_IF(largestBitLength != 32,
+                (uint32_t(1) << largestBitLength) - 1 <=
+                    mozilla::MaxValue<InternalIndex>::value);
   MOZ_ASSERT(values.empty());  // Make sure that we're initializing.
 
   this->largestBitLength = largestBitLength;
