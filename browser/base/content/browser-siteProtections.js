@@ -1436,6 +1436,14 @@ var gProtectionsHandler = {
         "trackingProtection.icon.disabledTooltip2"
       ));
     },
+
+    get noTrackerTooltipText() {
+      delete this.noTrackerTooltipText;
+      return (this.noTrackerTooltipText = gNavigatorBundle.getFormattedString(
+        "trackingProtection.icon.noTrackersDetectedTooltip",
+        [gBrandBundle.GetStringFromName("brandShortName")]
+      ));
+    },
   },
 
   // A list of blockers that will be displayed in the categories list
@@ -1796,35 +1804,19 @@ var gProtectionsHandler = {
     this.iconBox.toggleAttribute("hasException", hasException);
 
     if (hasException) {
-      this._trackingProtectionIconTooltipLabel.textContent = this.strings.disabledTooltipText;
-      gIdentityHandler._trackingProtectionIconContainer.setAttribute(
-        "aria-label",
-        this.strings.disabledTooltipText
-      );
+      this.showDisabledTooltipForTPIcon();
       if (!this.hadShieldState && !isSimulated) {
         this.hadShieldState = true;
         this.shieldHistogramAdd(1);
       }
     } else if (anyBlocking) {
-      this._trackingProtectionIconTooltipLabel.textContent = this.strings.activeTooltipText;
-      gIdentityHandler._trackingProtectionIconContainer.setAttribute(
-        "aria-label",
-        this.strings.activeTooltipText
-      );
+      this.showActiveTooltipForTPIcon();
       if (!this.hadShieldState && !isSimulated) {
         this.hadShieldState = true;
         this.shieldHistogramAdd(2);
       }
     } else {
-      let noTrackerTooltipStr = gNavigatorBundle.getFormattedString(
-        "trackingProtection.icon.noTrackersDetectedTooltip",
-        [gBrandBundle.GetStringFromName("brandShortName")]
-      );
-      this._trackingProtectionIconTooltipLabel.textContent = noTrackerTooltipStr;
-      gIdentityHandler._trackingProtectionIconContainer.setAttribute(
-        "aria-label",
-        noTrackerTooltipStr
-      );
+      this.showNoTrackerTooltipForTPIcon();
     }
 
     if (SocialTracking.isBlocking(event)) {
@@ -2045,6 +2037,13 @@ var gProtectionsHandler = {
     // Toggle the breakage link if needed.
     this.toggleBreakageLink();
 
+    // Change the tooltip of the tracking protection icon.
+    if (newExceptionState) {
+      this.showDisabledTooltipForTPIcon();
+    } else {
+      this.showNoTrackerTooltipForTPIcon();
+    }
+
     // Change the state of the tracking protection icon.
     this.iconBox.toggleAttribute("hasException", newExceptionState);
 
@@ -2097,6 +2096,30 @@ var gProtectionsHandler = {
     this._protectionsPopupTrackersCounterBox.toggleAttribute(
       "showing",
       trackerCount != 0
+    );
+  },
+
+  showDisabledTooltipForTPIcon() {
+    this._trackingProtectionIconTooltipLabel.textContent = this.strings.disabledTooltipText;
+    gIdentityHandler._trackingProtectionIconContainer.setAttribute(
+      "aria-label",
+      this.strings.disabledTooltipText
+    );
+  },
+
+  showActiveTooltipForTPIcon() {
+    this._trackingProtectionIconTooltipLabel.textContent = this.strings.activeTooltipText;
+    gIdentityHandler._trackingProtectionIconContainer.setAttribute(
+      "aria-label",
+      this.strings.activeTooltipText
+    );
+  },
+
+  showNoTrackerTooltipForTPIcon() {
+    this._trackingProtectionIconTooltipLabel.textContent = this.strings.noTrackerTooltipText;
+    gIdentityHandler._trackingProtectionIconContainer.setAttribute(
+      "aria-label",
+      this.strings.noTrackerTooltipText
     );
   },
 
