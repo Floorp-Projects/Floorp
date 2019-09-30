@@ -86,6 +86,9 @@ def is_test(f):
     """
     is the file a test or not?
     """
+    if "lint/test/" in f:
+        # For the unit tests
+        return False
     return ("/test" in f or "/gtest" in f or "/crashtest" in f or "/mochitest" in f
             or "/reftest" in f or "/imptest" in f or "/androidTest" in f
             or "/jit-test/" in f or "jsapi-tests/" in f)
