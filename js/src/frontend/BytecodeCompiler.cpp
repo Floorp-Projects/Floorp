@@ -155,10 +155,12 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
   // are the same as are used to compute its Function.prototype.toString()
   // value.
   MOZ_MUST_USE bool createCompleteScript(BytecodeCompiler& info) {
+    JSContext* cx = info.cx;
+    RootedObject global(cx, cx->global());
     uint32_t toStringStart = 0;
     uint32_t len = sourceBuffer_.length();
     uint32_t toStringEnd = len;
-    return info.internalCreateScript(toStringStart, toStringEnd, len);
+    return info.internalCreateScript(global, toStringStart, toStringEnd, len);
   }
 
   MOZ_MUST_USE bool handleParseFailure(BytecodeCompiler& compiler,
@@ -310,9 +312,10 @@ class MOZ_STACK_CLASS frontend::StandaloneFunctionCompiler final
   // Create a script for a function with the given toString offsets in source
   // text.
   MOZ_MUST_USE bool createFunctionScript(StandaloneFunctionInfo& info,
+                                         HandleObject function,
                                          uint32_t toStringStart,
                                          uint32_t toStringEnd) {
-    return info.internalCreateScript(toStringStart, toStringEnd,
+    return info.internalCreateScript(function, toStringStart, toStringEnd,
                                      sourceBuffer_.length());
   }
 };
@@ -451,11 +454,13 @@ bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
   return parser->checkOptions();
 }
 
-bool BytecodeCompiler::internalCreateScript(uint32_t toStringStart,
+bool BytecodeCompiler::internalCreateScript(HandleObject functionOrGlobal,
+                                            uint32_t toStringStart,
                                             uint32_t toStringEnd,
                                             uint32_t sourceBufferLength) {
-  script = JSScript::Create(cx, options, sourceObject, /* sourceStart = */ 0,
-                            sourceBufferLength, toStringStart, toStringEnd);
+  script = JSScript::Create(cx, functionOrGlobal, options, sourceObject,
+                            /* sourceStart = */ 0, sourceBufferLength,
+                            toStringStart, toStringEnd);
   return script != nullptr;
 }
 
@@ -671,7 +676,7 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
   if (funbox->isInterpreted()) {
     MOZ_ASSERT(fun == funbox->function());
 
-    if (!createFunctionScript(info, funbox->toStringStart,
+    if (!createFunctionScript(info, fun, funbox->toStringStart,
                               funbox->toStringEnd)) {
       return false;
     }
@@ -754,8 +759,8 @@ JSScript* frontend::CompileGlobalBinASTScript(
     return nullptr;
   }
 
-  RootedScript script(cx,
-                      JSScript::Create(cx, options, sourceObj, 0, len, 0, len));
+  RootedScript script(cx, JSScript::Create(cx, cx->global(), options, sourceObj,
+                                           0, len, 0, len));
 
   if (!script) {
     return nullptr;
@@ -1068,7 +1073,7 @@ bool frontend::CompileLazyBinASTFunction(JSContext* cx,
   MOZ_ASSERT(sourceObj);
 
   RootedScript script(
-      cx, JSScript::Create(cx, options, sourceObj, lazy->sourceStart(),
+      cx, JSScript::Create(cx, fun, options, sourceObj, lazy->sourceStart(),
                            lazy->sourceEnd(), lazy->sourceStart(),
                            lazy->sourceEnd()));
 
