@@ -1327,9 +1327,6 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
    * @param aStylePosition the style for the grid container
    * @param aImplicitNamedAreas the implicit areas for the grid container
    * @param aGridTemplate is the grid-template-rows/columns data for this axis
-   * @param aNumRepeatTracks the number of actual tracks associated with
-   *   a repeat(auto-fill/fit) track (zero or more), or zero if there is no
-   *   specified repeat(auto-fill/fit) track
    * @param aClampMinLine/aClampMaxLine in a non-subgrid axis it's kMin/MaxLine;
    *   in a subgrid axis it's its explicit grid bounds (all 1-based)
    * @param aParentLineNameMap the parent grid's map parallel to this map, or
@@ -1340,7 +1337,7 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
    */
   LineNameMap(const nsStylePosition* aStylePosition,
               const ImplicitNamedAreas* aImplicitNamedAreas,
-              const TrackSizingFunctions& aTracks, uint32_t aNumRepeatTracks,
+              const TrackSizingFunctions& aTracks,
               int32_t aClampMinLine, int32_t aClampMaxLine,
               const LineNameMap* aParentLineNameMap, const LineRange* aRange,
               bool aIsSameDirection)
@@ -4079,12 +4076,11 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
                           : &*gridStyle->mGridTemplateAreas.AsAreas();
   int32_t clampMinColLine = kMinLine;
   int32_t clampMaxColLine = kMaxLine;
-  uint32_t numRepeatCols;
   const LineNameMap* parentLineNameMap = nullptr;
   const LineRange* subgridRange = nullptr;
   bool subgridAxisIsSameDirection = true;
   if (!aState.mFrame->IsColSubgrid()) {
-    numRepeatCols = aState.mColFunctions.InitRepeatTracks(
+    aState.mColFunctions.InitRepeatTracks(
         gridStyle->mColumnGap, aSizes.mMin.ISize(aState.mWM),
         aSizes.mSize.ISize(aState.mWM), aSizes.mMax.ISize(aState.mWM));
     uint32_t areaCols = areas ? areas->width + 1 : 1;
@@ -4096,12 +4092,6 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
     mExplicitGridColEnd = extent + 1;  // the grid is 1-based at this point
     clampMinColLine = 1;
     clampMaxColLine = mExplicitGridColEnd;
-    const auto& cols = gridStyle->mGridTemplateColumns;
-    numRepeatCols =
-        cols.HasRepeatAuto()
-            ? std::max<uint32_t>(
-                  extent - cols.AsTrackList()->line_names.Length(), 1)
-            : 0;
     parentLineNameMap =
         ParentLineMapForAxis(subgrid->mIsOrthogonal, eLogicalAxisInline);
     auto parentWM =
@@ -4111,15 +4101,14 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
   }
   mGridColEnd = mExplicitGridColEnd;
   LineNameMap colLineNameMap(gridStyle, mAreas, aState.mColFunctions,
-                             numRepeatCols, clampMinColLine, clampMaxColLine,
+                             clampMinColLine, clampMaxColLine,
                              parentLineNameMap, subgridRange,
                              subgridAxisIsSameDirection);
 
   int32_t clampMinRowLine = kMinLine;
   int32_t clampMaxRowLine = kMaxLine;
-  uint32_t numRepeatRows;
   if (!aState.mFrame->IsRowSubgrid()) {
-    numRepeatRows = aState.mRowFunctions.InitRepeatTracks(
+    aState.mRowFunctions.InitRepeatTracks(
         gridStyle->mRowGap, aSizes.mMin.BSize(aState.mWM),
         aSizes.mSize.BSize(aState.mWM), aSizes.mMax.BSize(aState.mWM));
     uint32_t areaRows = areas ? areas->strings.Length() + 1 : 1;
@@ -4133,12 +4122,6 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
     mExplicitGridRowEnd = extent + 1;  // the grid is 1-based at this point
     clampMinRowLine = 1;
     clampMaxRowLine = mExplicitGridRowEnd;
-    const auto& rows = gridStyle->mGridTemplateRows;
-    numRepeatRows =
-        rows.HasRepeatAuto()
-            ? std::max<uint32_t>(
-                  extent - rows.AsTrackList()->line_names.Length(), 1)
-            : 0;
     parentLineNameMap =
         ParentLineMapForAxis(subgrid->mIsOrthogonal, eLogicalAxisBlock);
     auto parentWM =
@@ -4148,7 +4131,7 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
   }
   mGridRowEnd = mExplicitGridRowEnd;
   LineNameMap rowLineNameMap(gridStyle, mAreas, aState.mRowFunctions,
-                             numRepeatRows, clampMinRowLine, clampMaxRowLine,
+                             clampMinRowLine, clampMaxRowLine,
                              parentLineNameMap, subgridRange,
                              subgridAxisIsSameDirection);
 
