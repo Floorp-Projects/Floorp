@@ -2118,28 +2118,16 @@ nscoord FlexItem::GetBaselineOffsetFromOuterCrossEdge(
              "cross axis is the block axis");
 
   AxisOrientationType crossAxis = aAxisTracker.GetCrossAxis();
-  mozilla::Side sideToMeasureFrom =
+  mozilla::Side physSideMeasuringFrom =
       kAxisOrientationToSidesMap[crossAxis][aEdge];
+  mozilla::Side itemBlockStartSide = mWM.PhysicalSide(eLogicalSideBStart);
 
-  // XXXdholbert The "top"/"bottom" physical-axis dependencies below need to be
-  // logicalized -- see bug 1384266.
-  nscoord marginTopToBaseline =
-      ResolvedAscent(aUseFirstLineBaseline) + mMargin.top;
+  nscoord marginBStartToBaseline =
+      ResolvedAscent(aUseFirstLineBaseline) + mMargin.Side(itemBlockStartSide);
 
-  if (sideToMeasureFrom == eSideTop) {
-    // Measuring from top (normal case): the distance from the margin-box top
-    // edge to the baseline is just ascent + margin-top.
-    return marginTopToBaseline;
-  }
-
-  MOZ_ASSERT(sideToMeasureFrom == eSideBottom,
-             "We already checked that we're dealing with a vertical axis, and "
-             "we're not using the top side, so that only leaves the bottom...");
-
-  // Measuring from bottom: The distance from the margin-box bottom edge to the
-  // baseline is just the margin-box cross size (i.e. outer cross size), minus
-  // the already-computed distance from margin-top to baseline.
-  return GetOuterCrossSize(crossAxis) - marginTopToBaseline;
+  return (physSideMeasuringFrom == itemBlockStartSide) ?
+      marginBStartToBaseline :
+      GetOuterCrossSize(crossAxis) - marginBStartToBaseline;
 }
 
 bool FlexItem::IsCrossSizeAuto() const {
