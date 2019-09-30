@@ -17,8 +17,8 @@
 #include "nsIFile.h"
 #include "nsIThread.h"
 #include "nsIObserver.h"
-#include "nsIWeakReferenceUtils.h"
 #include "nsIObserver.h"
+#include "nsMaybeWeakPtr.h"
 #include "nsString.h"
 #ifndef XP_UNIX
 #  include "prproces.h"
@@ -67,8 +67,7 @@ class nsProcess final : public nsIProcess, public nsIObserver {
   nsCOMPtr<nsIFile> mExecutable;
   nsString mTargetPath;
   int32_t mPid;
-  nsCOMPtr<nsIObserver> mObserver;
-  nsWeakPtr mWeakObserver;
+  nsMaybeWeakPtr<nsIObserver> mObserver;
 
   // These members are modified by multiple threads, any accesses should be
   // protected with mLock.
