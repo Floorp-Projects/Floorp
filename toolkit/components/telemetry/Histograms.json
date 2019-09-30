@@ -7158,19 +7158,19 @@
     "description": "THUMBNAILS: Thumbnail found"
   },
   "FX_MIGRATION_ENTRY_POINT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "bug_numbers": [731025],
-    "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "65",
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "bug_numbers": [731025, 1584261],
+    "alert_emails": ["gijs@mozilla.com", "MattN+telemetry@mozilla.com"],
+    "expires_in_version": "74",
     "kind": "enumerated",
     "n_values": 10,
     "releaseChannelCollection": "opt-out",
     "description": "Where the migration wizard was entered from. 0=Other/catch-all, 1=first-run, 2=refresh-firefox, 3=Places window, 4=Password manager, 5=New tab, 6=File menu"
   },
   "FX_MIGRATION_SOURCE_BROWSER": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
     "bug_numbers": [731025],
     "alert_emails": ["gijs@mozilla.com"],
     "expires_in_version": "65",
@@ -7180,11 +7180,11 @@
     "description": "The browser that data is pulled from. The values correspond to the internal browser ID (see MigrationUtils.jsm)"
   },
   "FX_MIGRATION_ERRORS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "bug_numbers": [731025],
-    "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "65",
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "bug_numbers": [731025, 1584261],
+    "alert_emails": ["gijs@mozilla.com", "MattN+telemetry@mozilla.com"],
+    "expires_in_version": "74",
     "kind": "enumerated",
     "keyed": true,
     "n_values": 12,
@@ -7192,11 +7192,11 @@
     "description": "Errors encountered during migration in buckets defined by the datatype, keyed by the string description of the browser."
   },
   "FX_MIGRATION_USAGE": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "bug_numbers": [731025],
-    "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "65",
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "bug_numbers": [731025, 1584261],
+    "alert_emails": ["gijs@mozilla.com", "MattN+telemetry@mozilla.com"],
+    "expires_in_version": "74",
     "kind": "enumerated",
     "keyed": true,
     "n_values": 12,
@@ -7204,8 +7204,8 @@
     "description": "Usage of migration for each datatype when migration is run through the post-firstrun flow which allows individual datatypes, keyed by the string description of the browser."
   },
   "FX_MIGRATION_BOOKMARKS_IMPORT_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
     "bug_numbers": [1289436],
     "alert_emails": ["gijs@mozilla.com"],
     "expires_in_version": "65",
@@ -7217,8 +7217,8 @@
     "description": "How long it took to import bookmarks from another browser, keyed by the name of the browser."
   },
   "FX_MIGRATION_HISTORY_IMPORT_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
     "bug_numbers": [1289436],
     "alert_emails": ["gijs@mozilla.com"],
     "expires_in_version": "65",
@@ -7230,21 +7230,21 @@
     "description": "How long it took to import history from another browser, keyed by the name of the browser."
   },
   "FX_MIGRATION_LOGINS_IMPORT_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "bug_numbers": [1289436],
-    "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "65",
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "bug_numbers": [1289436, 1584261],
+    "alert_emails": ["gijs@mozilla.com", "MattN+telemetry@mozilla.com", "passwords-dev@mozilla.org"],
+    "expires_in_version": "74",
     "kind": "exponential",
     "n_buckets": 70,
     "high": 100000,
     "releaseChannelCollection": "opt-out",
     "keyed": true,
-    "description": "How long it took to import logins (passwords) from another browser, keyed by the name of the browser."
+    "description": "How long it took to import logins (passwords) from another browser, keyed by the name of the browser. The time for users to unlock Keychain on macOS is included in this time."
   },
   "FX_MIGRATION_BOOKMARKS_JANK_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
     "bug_numbers": [1338522],
     "alert_emails": ["dao@mozilla.com"],
     "expires_in_version": "65",
@@ -7256,8 +7256,8 @@
     "description": "Accumulated timer delay (variance between when the timer was expected to fire and when it actually fired) in milliseconds as an indicator for decreased main-thread responsiveness while importing bookmarks from another browser, keyed by the name of the browser (see gAvailableMigratorKeys in MigrationUtils.jsm). The import is happening on a background thread and should ideally not affect the UI noticeably."
   },
   "FX_MIGRATION_HISTORY_JANK_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
     "bug_numbers": [1338522],
     "alert_emails": ["dao@mozilla.com"],
     "expires_in_version": "65",
@@ -7269,21 +7269,21 @@
     "description": "Accumulated timer delay (variance between when the timer was expected to fire and when it actually fired) in milliseconds as an indicator for decreased main-thread responsiveness while importing history from another browser, keyed by the name of the browser (see gAvailableMigratorKeys in MigrationUtils.jsm). The import is happening on a background thread and should ideally not affect the UI noticeably."
   },
   "FX_MIGRATION_LOGINS_JANK_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "bug_numbers": [1338522],
-    "alert_emails": ["dao@mozilla.com"],
-    "expires_in_version": "65",
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "bug_numbers": [1338522, 1584261],
+    "alert_emails": ["dao@mozilla.com", "MattN+telemetry@mozilla.com", "passwords-dev@mozilla.org"],
+    "expires_in_version": "74",
     "kind": "exponential",
     "n_buckets": 20,
     "high": 60000,
     "releaseChannelCollection": "opt-out",
     "keyed": true,
-    "description": "Accumulated timer delay (variance between when the timer was expected to fire and when it actually fired) in milliseconds as an indicator for decreased main-thread responsiveness while importing logins / passwords from another browser, keyed by the name of the browser (see gAvailableMigratorKeys in MigrationUtils.jsm). The import is happening on a background thread and should ideally not affect the UI noticeably."
+    "description": "Accumulated timer delay (variance between when the timer was expected to fire and when it actually fired) in milliseconds as an indicator for decreased main-thread responsiveness while importing logins / passwords from another browser, keyed by the name of the browser (see gAvailableMigratorKeys in MigrationUtils.jsm). The import is happening on a background thread and should ideally not affect the UI noticeably. The time with the blocking Keychain dialog on macOS can skew this data."
   },
   "FX_MIGRATION_BOOKMARKS_QUANTITY": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
     "bug_numbers": [1279501],
     "alert_emails": ["gijs@mozilla.com"],
     "expires_in_version": "65",
@@ -7295,8 +7295,8 @@
     "description": "How many bookmarks we imported from another browser, keyed by the name of the browser."
   },
   "FX_MIGRATION_HISTORY_QUANTITY": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
     "bug_numbers": [1279501],
     "alert_emails": ["gijs@mozilla.com"],
     "expires_in_version": "65",
@@ -7308,11 +7308,11 @@
     "description": "How many history visits we imported from another browser, keyed by the name of the browser."
   },
   "FX_MIGRATION_LOGINS_QUANTITY": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "bug_numbers": [1279501],
-    "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "65",
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "bug_numbers": [1279501, 1584261],
+    "alert_emails": ["gijs@mozilla.com", "MattN+telemetry@mozilla.com", "passwords-dev@mozilla.org"],
+    "expires_in_version": "74",
     "kind": "exponential",
     "n_buckets": 20,
     "high": 1000,
@@ -7321,8 +7321,8 @@
     "description": "How many logins (passwords) we imported from another browser, keyed by the name of the browser."
   },
   "FX_STARTUP_MIGRATION_BROWSER_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
     "bug_numbers": [1275114],
     "alert_emails": ["gijs@mozilla.com"],
     "expires_in_version": "65",
@@ -7332,8 +7332,8 @@
     "description": "Number of browsers from which the user could migrate on initial profile migration. Only available on release builds during firstrun."
   },
   "FX_STARTUP_MIGRATION_EXISTING_DEFAULT_BROWSER": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
     "bug_numbers": [1275114],
     "alert_emails": ["gijs@mozilla.com"],
     "expires_in_version": "65",
@@ -7343,8 +7343,8 @@
     "description": "The browser that was the default on the initial profile migration. The values correspond to the internal browser ID (see MigrationUtils.jsm)"
   },
   "FX_STARTUP_MIGRATION_DATA_RECENCY": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
     "bug_numbers": [1276694],
     "alert_emails": ["gijs@mozilla.com"],
     "expires_in_version": "65",
@@ -7356,8 +7356,8 @@
     "description": "The 'last modified' time of the data we imported on the initial profile migration (time delta with 'now' at the time of migration, in hours). Collected for all browsers for which migration data is available, and stored keyed by browser identifier (e.g. 'ie', 'edge', 'safari', etc.)."
   },
   "FX_STARTUP_MIGRATION_USED_RECENT_BROWSER": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
     "bug_numbers": [1276694],
     "alert_emails": ["gijs@mozilla.com"],
     "expires_in_version": "65",
