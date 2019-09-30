@@ -2,7 +2,7 @@
 
 # newSession
 
-`protected open fun newSession(sessionToken: CustomTabsSessionToken): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/customtabs/src/main/java/mozilla/components/feature/customtabs/AbstractCustomTabsService.kt#L73)
+`protected open fun newSession(sessionToken: CustomTabsSessionToken): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/customtabs/src/main/java/mozilla/components/feature/customtabs/AbstractCustomTabsService.kt#L75)
 
 Saves the package name of the app creating the custom tab when a new session is started.
 

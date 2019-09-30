@@ -2,7 +2,7 @@
 
 # AbstractCustomTabsService
 
-`abstract class AbstractCustomTabsService : CustomTabsService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/customtabs/src/main/java/mozilla/components/feature/customtabs/AbstractCustomTabsService.kt#L34)
+`abstract class AbstractCustomTabsService : CustomTabsService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/customtabs/src/main/java/mozilla/components/feature/customtabs/AbstractCustomTabsService.kt#L35)
 
 [Service](#) providing Custom Tabs related functionality.
 
