@@ -33,9 +33,9 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-abspos-items-015.ht
 == grid-order-abspos-items-001.html grid-order-abspos-items-001-ref.html
 == grid-order-placement-auto-001.html grid-order-placement-auto-001-ref.html
 fuzzy-if(skiaContent,0-1,0-200) == grid-order-placement-definite-001.html grid-order-placement-definite-001-ref.html
-skip-if(Android) == grid-placement-definite-implicit-001.html grid-placement-definite-implicit-001-ref.html
+== grid-placement-definite-implicit-001.html grid-placement-definite-implicit-001-ref.html
 == grid-placement-definite-implicit-002.html grid-placement-definite-implicit-002-ref.html
-fuzzy-if(skiaContent,0-64,0-1) skip-if(Android||/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == grid-placement-auto-implicit-001.html grid-placement-auto-implicit-001-ref.html # win10: bug 1507154
+fuzzy-if(skiaContent,0-64,0-1) skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == grid-placement-auto-implicit-001.html grid-placement-auto-implicit-001-ref.html # win10: bug 1507154
 == grid-placement-abspos-implicit-001.html grid-placement-abspos-implicit-001-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == rtl-grid-placement-definite-001.html rtl-grid-placement-definite-001-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == rtl-grid-placement-auto-row-sparse-001.html rtl-grid-placement-auto-row-sparse-001-ref.html # Bug 1392106
@@ -69,7 +69,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-min-content-min-siz
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-min-content-min-sizing-transferred-size-002.html grid-min-content-min-sizing-transferred-size-002-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-min-content-min-sizing-transferred-size-003.html grid-min-content-min-sizing-transferred-size-003-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-min-content-min-sizing-transferred-size-004.html grid-min-content-min-sizing-transferred-size-004-ref.html # Bug 1392106
-skip-if(Android) == grid-auto-min-sizing-percent-001.html grid-auto-min-sizing-percent-001-ref.html # bug 1305716
+== grid-auto-min-sizing-percent-001.html grid-auto-min-sizing-percent-001-ref.html
 == grid-track-intrinsic-sizing-001.html grid-track-intrinsic-sizing-001-ref.html
 == grid-track-intrinsic-sizing-002.html grid-track-intrinsic-sizing-002-ref.html
 == grid-track-intrinsic-sizing-003.html grid-track-intrinsic-sizing-003-ref.html
@@ -121,7 +121,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-item-auto-min-size-
 == grid-item-overflow-stretch-005.html grid-item-overflow-stretch-005-ref.html
 == grid-item-overflow-stretch-006.html grid-item-overflow-stretch-006-ref.html
 == grid-item-canvas-001.html grid-item-canvas-001-ref.html
-skip-if(Android) == grid-item-button-001.html grid-item-button-001-ref.html
+== grid-item-button-001.html grid-item-button-001-ref.html
 == grid-item-table-stretch-001.html grid-item-table-stretch-001-ref.html
 fails-if(Android) == grid-item-table-stretch-002.html grid-item-table-stretch-002-ref.html # Bug 1527734
 == grid-item-table-stretch-003.html grid-item-table-stretch-003-ref.html
@@ -139,22 +139,22 @@ random-if(http.oscpu!="Linux\u0020i686") == grid-item-mixed-baseline-003.html gr
 skip-if(!gtkWidget) skip-if(verify) == grid-item-mixed-baseline-004.html grid-item-mixed-baseline-004-ref.html # ditto.
 == grid-align-content-001.html grid-align-content-001-ref.html
 == grid-justify-content-001.html grid-justify-content-001-ref.html
-skip-if(Android&&isDebugBuild) == grid-justify-content-002.html grid-justify-content-002-ref.html # Bug 1245884 - slow
-skip-if(Android&&isDebugBuild) == grid-justify-content-003.html grid-justify-content-003-ref.html # Bug 1245884 - slow
+== grid-justify-content-002.html grid-justify-content-002-ref.html
+== grid-justify-content-003.html grid-justify-content-003-ref.html
 skip-if(!gtkWidget) == grid-container-baselines-001.html grid-container-baselines-001-ref.html
 skip-if(!gtkWidget) == grid-container-baselines-002.html grid-container-baselines-002-ref.html
 skip-if(!gtkWidget) == grid-container-baselines-003.html grid-container-baselines-003-ref.html
 == grid-container-baselines-004.html grid-container-baselines-004-ref.html
 == grid-container-synthesized-baseline-001.html grid-container-synthesized-baseline-001-ref.html
-skip-if(Android&&isDebugBuild) == grid-column-gap-001.html grid-column-gap-001-ref.html # Bug 1245884 - slow
+== grid-column-gap-001.html grid-column-gap-001-ref.html
 == grid-column-gap-002.html grid-column-gap-002-ref.html
 == grid-column-gap-003.html grid-column-gap-003-ref.html
 == grid-column-gap-004.html grid-column-gap-004-ref.html
 == grid-row-gap-001.html grid-row-gap-001-ref.html
 == grid-percent-grid-gap-001.html grid-percent-grid-gap-001-ref.html
-skip-if(Android&&isDebugBuild) == grid-row-gap-002.html grid-row-gap-002-ref.html # Bug 1245884 - slow
-skip-if(Android&&isDebugBuild) == grid-row-gap-003.html grid-row-gap-003-ref.html # Bug 1245884 - slow
-skip-if(Android&&isDebugBuild) == grid-row-gap-004.html grid-row-gap-004-ref.html # Bug 1245884 - slow
+== grid-row-gap-002.html grid-row-gap-002-ref.html
+== grid-row-gap-003.html grid-row-gap-003-ref.html
+== grid-row-gap-004.html grid-row-gap-004-ref.html
 == grid-row-gap-005.html grid-row-gap-005-ref.html
 == grid-container-overflow-001.html grid-container-overflow-001-ref.html
 == grid-item-margin-left-auto-001.html grid-item-margin-left-auto-001-ref.html

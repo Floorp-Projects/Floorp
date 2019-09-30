@@ -2,8 +2,8 @@
 default-preferences pref(webgl.force-enabled,true) pref(media.useAudioChannelAPI,true)
 
 # Check that disabling works:
-skip-if(Android)                           == webgl-disable-test.html?nogl wrapper.html?green.png
-pref(webgl.disabled,true) skip-if(Android) == webgl-disable-test.html      wrapper.html?green.png
+                          == webgl-disable-test.html?nogl wrapper.html?green.png
+pref(webgl.disabled,true) == webgl-disable-test.html      wrapper.html?green.png
 
 # Basic WebGL tests:
 # Do we get pixels to the screen at all?
@@ -75,54 +75,54 @@ skip-if(Android)                                                                
 skip-if(Android)                                                                                                        == webgl-color-test.html?frame=6&__&preserve&premult&alpha wrapper.html?colors-premult.png
 skip-if(Android)                                                                                                        == webgl-color-test.html?frame=6&aa&preserve&premult&alpha wrapper.html?colors-premult.png
 
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&________&_______&_____ wrapper.html?colors-no-alpha.png
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&________&_______&_____ wrapper.html?colors-no-alpha.png
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&preserve&_______&_____ wrapper.html?colors-no-alpha.png
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&preserve&_______&_____ wrapper.html?colors-no-alpha.png
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&________&premult&_____ wrapper.html?colors-no-alpha.png
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&________&premult&_____ wrapper.html?colors-no-alpha.png
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&preserve&premult&_____ wrapper.html?colors-no-alpha.png
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&preserve&premult&_____ wrapper.html?colors-no-alpha.png
-fuzzy(0-1,0-30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11&&!webrender) skip-if(Android) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&________&_______&alpha wrapper.html?colors-non-premult.png
-fuzzy(0-1,0-30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11&&!webrender) skip-if(Android) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&________&_______&alpha wrapper.html?colors-non-premult.png
-fuzzy(0-1,0-30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11&&!webrender) skip-if(Android) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&preserve&_______&alpha wrapper.html?colors-non-premult.png
-fuzzy(0-1,0-30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11&&!webrender) skip-if(Android) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&preserve&_______&alpha wrapper.html?colors-non-premult.png
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&________&premult&alpha wrapper.html?colors-premult.png
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&________&premult&alpha wrapper.html?colors-premult.png
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&preserve&premult&alpha wrapper.html?colors-premult.png
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&preserve&premult&alpha wrapper.html?colors-premult.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&________&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&________&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&preserve&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&preserve&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&________&premult&_____ wrapper.html?colors-no-alpha.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&________&premult&_____ wrapper.html?colors-no-alpha.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&preserve&premult&_____ wrapper.html?colors-no-alpha.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&preserve&premult&_____ wrapper.html?colors-no-alpha.png
+fuzzy(0-1,0-30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11&&!webrender) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&________&_______&alpha wrapper.html?colors-non-premult.png
+fuzzy(0-1,0-30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11&&!webrender) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&________&_______&alpha wrapper.html?colors-non-premult.png
+fuzzy(0-1,0-30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11&&!webrender) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&preserve&_______&alpha wrapper.html?colors-non-premult.png
+fuzzy(0-1,0-30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11&&!webrender) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&preserve&_______&alpha wrapper.html?colors-non-premult.png
+                                                                pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&________&premult&alpha wrapper.html?colors-premult.png
+                                                                pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&________&premult&alpha wrapper.html?colors-premult.png
+                                                                pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&preserve&premult&alpha wrapper.html?colors-premult.png
+                                                                pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&preserve&premult&alpha wrapper.html?colors-premult.png
 
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&________&_______&_____ wrapper.html?colors-no-alpha.png
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&________&_______&_____ wrapper.html?colors-no-alpha.png
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&preserve&_______&_____ wrapper.html?colors-no-alpha.png
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&preserve&_______&_____ wrapper.html?colors-no-alpha.png
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&________&premult&_____ wrapper.html?colors-no-alpha.png
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&________&premult&_____ wrapper.html?colors-no-alpha.png
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&preserve&premult&_____ wrapper.html?colors-no-alpha.png
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&preserve&premult&_____ wrapper.html?colors-no-alpha.png
-fuzzy(0-1,0-30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11&&!webrender) skip-if(Android) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&________&_______&alpha wrapper.html?colors-non-premult.png
-fuzzy(0-1,0-30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11&&!webrender) skip-if(Android) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&________&_______&alpha wrapper.html?colors-non-premult.png
-fuzzy(0-1,0-30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11&&!webrender) skip-if(Android) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&preserve&_______&alpha wrapper.html?colors-non-premult.png
-fuzzy(0-1,0-30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11&&!webrender) skip-if(Android) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&preserve&_______&alpha wrapper.html?colors-non-premult.png
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&________&premult&alpha wrapper.html?colors-premult.png
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&________&premult&alpha wrapper.html?colors-premult.png
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&preserve&premult&alpha wrapper.html?colors-premult.png
-skip-if(Android)                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&preserve&premult&alpha wrapper.html?colors-premult.png
+                                                                pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&________&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&________&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&preserve&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&preserve&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&________&premult&_____ wrapper.html?colors-no-alpha.png
+                                                                pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&________&premult&_____ wrapper.html?colors-no-alpha.png
+                                                                pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&preserve&premult&_____ wrapper.html?colors-no-alpha.png
+                                                                pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&preserve&premult&_____ wrapper.html?colors-no-alpha.png
+fuzzy(0-1,0-30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11&&!webrender) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&________&_______&alpha wrapper.html?colors-non-premult.png
+fuzzy(0-1,0-30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11&&!webrender) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&________&_______&alpha wrapper.html?colors-non-premult.png
+fuzzy(0-1,0-30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11&&!webrender) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&preserve&_______&alpha wrapper.html?colors-non-premult.png
+fuzzy(0-1,0-30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11&&!webrender) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&preserve&_______&alpha wrapper.html?colors-non-premult.png
+                                                                pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&________&premult&alpha wrapper.html?colors-premult.png
+                                                                pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&________&premult&alpha wrapper.html?colors-premult.png
+                                                                pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&preserve&premult&alpha wrapper.html?colors-premult.png
+                                                                pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&preserve&premult&alpha wrapper.html?colors-premult.png
 
 # Check for hanging bindings/state settings:
 skip-if(Android) == webgl-hanging-fb-test.html?__&________  wrapper.html?green.png
 skip-if(Android) == webgl-hanging-fb-test.html?aa&________  wrapper.html?green.png
 skip-if(Android) == webgl-hanging-fb-test.html?__&preserve  wrapper.html?green.png
 skip-if(Android) == webgl-hanging-fb-test.html?aa&preserve  wrapper.html?green.png
-skip-if(Android) pref(webgl.force-layers-readback,true)  == webgl-hanging-fb-test.html?readback&__&________  wrapper.html?green.png
-skip-if(Android) pref(webgl.force-layers-readback,true)  == webgl-hanging-fb-test.html?readback&aa&________  wrapper.html?green.png
-skip-if(Android) pref(webgl.force-layers-readback,true)  == webgl-hanging-fb-test.html?readback&__&preserve  wrapper.html?green.png
-skip-if(Android) pref(webgl.force-layers-readback,true)  == webgl-hanging-fb-test.html?readback&aa&preserve  wrapper.html?green.png
+pref(webgl.force-layers-readback,true)  == webgl-hanging-fb-test.html?readback&__&________  wrapper.html?green.png
+pref(webgl.force-layers-readback,true)  == webgl-hanging-fb-test.html?readback&aa&________  wrapper.html?green.png
+pref(webgl.force-layers-readback,true)  == webgl-hanging-fb-test.html?readback&__&preserve  wrapper.html?green.png
+pref(webgl.force-layers-readback,true)  == webgl-hanging-fb-test.html?readback&aa&preserve  wrapper.html?green.png
 
 skip-if(Android) == webgl-hanging-scissor-test.html?__  wrapper.html?green.png
 skip-if(Android) == webgl-hanging-scissor-test.html?aa  wrapper.html?green.png
-skip-if(Android) pref(webgl.force-layers-readback,true)  == webgl-hanging-scissor-test.html?readback&__  wrapper.html?green.png
-skip-if(Android) pref(webgl.force-layers-readback,true)  == webgl-hanging-scissor-test.html?readback&aa  wrapper.html?green.png
+pref(webgl.force-layers-readback,true)  == webgl-hanging-scissor-test.html?readback&__  wrapper.html?green.png
+pref(webgl.force-layers-readback,true)  == webgl-hanging-scissor-test.html?readback&aa  wrapper.html?green.png
 
 
 # Check that our experimental prefs still work:
