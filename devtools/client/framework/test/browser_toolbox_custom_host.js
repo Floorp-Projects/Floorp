@@ -37,7 +37,7 @@ add_task(async function() {
     options
   );
 
-  is(toolbox.win.top, window, "Toolbox is included in browser.xhtml");
+  is(toolbox.topWindow, window, "Toolbox is included in browser.xhtml");
   is(toolbox.doc, iframe.contentDocument, "Toolbox is in the custom iframe");
 
   iframe.remove();
