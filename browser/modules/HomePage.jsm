@@ -139,6 +139,14 @@ let HomePage = {
   },
 
   /**
+   * @returns {string}
+   *   Returns the original application homepage URL (not from prefs).
+   */
+  getOriginalDefault() {
+    return kDefaultHomePage;
+  },
+
+  /**
    * @returns {boolean}
    *   Returns true if the homepage has been changed.
    */
