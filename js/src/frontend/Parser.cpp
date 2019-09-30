@@ -1892,6 +1892,10 @@ static bool EmitLazyScript(JSContext* cx, FunctionBox* funbox,
   function->initLazyScript(lazy);
   funbox->setIsInterpretedLazy(true);
 
+  if (data.fieldInitializers) {
+    lazy->setFieldInitializers(*data.fieldInitializers);
+  }
+
   // In order to allow asserting that we published all lazy script data,
   // reset the lazyScriptData here, now that it's no longer needed.
   funbox->lazyScriptData().reset();

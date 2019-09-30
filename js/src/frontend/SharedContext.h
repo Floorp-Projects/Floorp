@@ -279,8 +279,13 @@ struct LazyScriptCreationData {
   FunctionBoxVector innerFunctionBoxes;
   bool strict;
 
+  mozilla::Maybe<FieldInitializers> fieldInitializers;
+
   explicit LazyScriptCreationData(JSContext* cx)
-      : closedOverBindings(), innerFunctionBoxes(cx), strict(false) {}
+      : closedOverBindings(),
+        innerFunctionBoxes(cx),
+        strict(false),
+        fieldInitializers() {}
 
   bool init(JSContext* cx, const frontend::AtomVector& COB,
             FunctionBoxVector& innerBoxes, bool isStrict) {
@@ -725,6 +730,16 @@ class FunctionBox : public ObjectBox, public SharedContext {
     if (hasObject()) {
       function()->setArgCount(nargs_);
     }
+  }
+
+  void setFieldInitializers(FieldInitializers fi) {
+    if (hasObject()) {
+      MOZ_ASSERT(function()->lazyScript());
+      function()->lazyScript()->setFieldInitializers(std::move(fi));
+      return;
+    }
+    MOZ_ASSERT(lazyScriptData());
+    lazyScriptData()->fieldInitializers.emplace(std::move(fi));
   }
 
   void trace(JSTracer* trc) override;
