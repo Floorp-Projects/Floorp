@@ -1240,11 +1240,11 @@ JS::Result<HuffmanLookup> BinASTTokenReaderContext::BitBuffer::getHuffmanLookup(
   // First, read data if necessary.
 
   // The algorithm is not intuitive, so consider an example, where the byte
-  // stream starts with `0b_HGFE_DCBA`, `0b_PONM_LKJI`, `0b_XWVU_TRSQ` (to keep
-  // things concise, in the example, we won't use the entire 64 bits).
+  // stream starts with `0b_HGFE_DCBA`, `0b_PONM_LKJI`, `0b_XWVU_TRSQ`,
+  // `0b_6543_21ZY`
   //
   // In each byte, bits are stored in the reverse order, so what we want
-  // is `0b_ABCD_EFGH`, `0b_IJML_MNOP`, `0b_QRST_UVWX`.
+  // is `0b_ABCD_EFGH`, `0b_IJML_MNOP`, `0b_QRST_UVWX`, `0b_YZ12_3456`.
   // For the example, let's assume that we have already read
   // `0b_ABCD_EFGH`, `0b_IJKL_MNOP` into `bits`, so before the call to
   // `getHuffmanLookup`, `bits` initially contains
@@ -1256,54 +1256,80 @@ JS::Result<HuffmanLookup> BinASTTokenReaderContext::BitBuffer::getHuffmanLookup(
     // available, it's time to reload. We'll try and get as close to 64 bits as
     // possible.
 
-    uint64_t newBits = 0;
-    while (this->bitLength <= BIT_BUFFER_SIZE - BIT_BUFFER_READ_UNIT) {
-      // 1. Let's try and pull one byte.
-      uint8_t byte;
-      uint32_t readLen = 1;
-      MOZ_TRY((owner.readBuf<Compression::No, EndOfFilePolicy::BestEffort>(
-          &byte, readLen)));
-      if (readLen < 1) {
-        // Ok, nothing left to read.
-        break;
-      }
+    // Make an array to store the new data. We can read up to 8 bytes
+    mozilla::Array<uint8_t, 8> bytes;
+    // Cast `bytes` to a uint64_t * to later combine with `bits`
+    uint64_t* newBits = reinterpret_cast<uint64_t*>(bytes.begin());
+    static_assert(sizeof(bytes) == sizeof(*newBits),
+                  "Expecting bytes array to match size of *newBits");
+    *newBits = 0;
 
-      // 2. Make space for these bits at the end of `bits`
-      // so shift `bits` into
-      // `0b_XXXX_XXXX__ABCD_EFGH__IJKL_MNOP__0000_0000`.
-      this->bits <<= BIT_BUFFER_READ_UNIT;
+    // Determine the number of bytes in `bits` rounded up to the nearest byte.
+    uint32_t bytesInBits =
+        (this->bitLength + BIT_BUFFER_READ_UNIT - 1) / BIT_BUFFER_READ_UNIT;
+    // Determine the number of bytes we need to read to get `bitLength` as close
+    // as possible to 64
+    uint32_t readLen = sizeof(bytes) - bytesInBits;
+    // Try to read `readLen` bytes. If we read less than 8 bytes, the last `8 -
+    // readLen` indices contain zeros. Since the most significant bytes of the
+    // data are stored in the lowest indices, `bytes` is big endian.
+    MOZ_TRY((owner.readBuf<Compression::No, EndOfFilePolicy::BestEffort>(
+        bytes.begin(), readLen)));
+#if MOZ_LITTLE_ENDIAN
+    // Reverse the order of the bytes in `*newBits` if we need little endian
+    *newBits = (((*newBits & 0x00000000000000ffULL) << 56) |
+                ((*newBits & 0x000000000000ff00ULL) << 40) |
+                ((*newBits & 0x0000000000ff0000ULL) << 24) |
+                ((*newBits & 0x00000000ff000000ULL) << 8) |
+                ((*newBits & 0x000000ff00000000ULL) >> 8) |
+                ((*newBits & 0x0000ff0000000000ULL) >> 24) |
+                ((*newBits & 0x00ff000000000000ULL) >> 40) |
+                ((*newBits & 0xff00000000000000ULL) >> 56));
+#endif
+    // After reading `readLen` bytes in our example, `bytes` will contain
+    // `{0, 0, 0, 0, 0, 0, 0b_6543_21ZY, 0b_XWSU_TSRQ}` for little endian and
+    // `{0b_XWSU_TSRQ, 0b_6543_21ZY, 0, 0, 0, 0, 0, 0}` for big endian.
+    // In both cases `*newBits` contains zeros in the lower 32 bits and
+    // `0b_XWSU_TSRQ__6543_21ZY__0000_0000__0000_0000` in the upper 32 bits
 
-      // 3. Read in another new byte from the stream
-      // so `newBits` becomes
-      // `0B_0000_0000__0000_0000__0000_0000__XWVU_TSRQ`
-      newBits <<= BIT_BUFFER_READ_UNIT;
-      newBits += byte;
+    // Remove any zeros if we read less than 8 bytes
+    *newBits >>= (BIT_BUFFER_READ_UNIT * (sizeof(bytes) - readLen));
+    // Now the upper 32 bits of `*newBits` are all zero and the lower 32 bits
+    // contain `0b_0000_0000__0000_0000__XWSU_TSRQ__6543_21ZY`
 
-      this->bitLength += BIT_BUFFER_READ_UNIT;
-      MOZ_ASSERT_IF(this->bitLength != 64 /* >> 64 is UB for a uint64_t */,
-                    this->bits >> this->bitLength == 0);
-
-      // 4. Continue as long as we don't have enough bits.
-    }
-    // 5. Let's reverse each of the 8 bytes in `newBits` in place
+    // Let's reverse the bits in each of the 8 bytes in `newBits` in place
     // First swap alternating bits
-    newBits = ((newBits >> 1) & 0x5555555555555555) |
-              ((newBits & 0x5555555555555555) << 1);
+    *newBits = ((*newBits >> 1) & 0x5555555555555555) |
+               ((*newBits & 0x5555555555555555) << 1);
     // Then swap alternating groups of 2 bits
-    newBits = ((newBits >> 2) & 0x3333333333333333) |
-              ((newBits & 0x3333333333333333) << 2);
+    *newBits = ((*newBits >> 2) & 0x3333333333333333) |
+               ((*newBits & 0x3333333333333333) << 2);
     // Finally swap alternating nibbles
-    newBits = ((newBits >> 4) & 0x0F0F0F0F0F0F0F0F) |
-              ((newBits & 0x0F0F0F0F0F0F0F0F) << 4);
-    // 6. Finally, combine `newBits` with `this->bits` to get
-    // `0b_XXXX_XXXX__ABCD_EFGH__IJKL_MNOP__QRST_UVWX`
-    this->bits += newBits;
+    *newBits = ((*newBits >> 4) & 0x0F0F0F0F0F0F0F0F) |
+               ((*newBits & 0x0F0F0F0F0F0F0F0F) << 4);
+    // Now the lower 32 bits of `*newBits` contain
+    // `0b_0000_0000__0000_0000__QRST_UVWX__YZ12_3456`
+
+    this->bitLength += (BIT_BUFFER_READ_UNIT * readLen);
+    // Make room for the new data by shifting `bits` to get
+    // `0b_ABCD_EFGH__IJKL_MNOP__0000_0000__0000_0000`
+    // check that we're not shifting by 64 since it's UB for a uint64_t
+    if (readLen != 8) {
+      this->bits <<= (BIT_BUFFER_READ_UNIT * readLen);
+      // Finally, combine `newBits` with `bits` to get
+      // `0b_ABCD_EFGH__IJKL_MNOP__QRST_UVWX__YZ12_3456`
+      this->bits += *newBits;
+    }
+    // If read 8 bytes just set `bits` to the new data
+    else {
+      this->bits = *newBits;
+    }
+    // Now, we may prepare a `HuffmanLookup` with up to 32 bits.
+    if (this->bitLength <= MAX_PREFIX_BIT_LENGTH) {
+      return HuffmanLookup(this->bits, this->bitLength);
+    }
   }
 
-  // Now, we may prepare a `HuffmanLookup` with up to 32 bits.
-  if (this->bitLength <= MAX_PREFIX_BIT_LENGTH) {
-    return HuffmanLookup(this->bits, this->bitLength);
-  }
   // Keep only 32 bits. We perform the operation on 64 bits to avoid any
   // arithmetics surprise.
   const uint64_t bitPrefix =
