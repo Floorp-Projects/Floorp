@@ -207,7 +207,7 @@ Repackage Signing
    * Mac & Windows: ``release-partner-repackage`` ``release-eme-free-repackage``
    * Linux: ``release-partner-repack-chunking-dummy``
 
-This step GPG signs all platforms, and sha2signcode signs the Windows installer.
+This step GPG signs all platforms, and authenticode signs the Windows installer.
 
 Beetmover
 ^^^^^^^^^

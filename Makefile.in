@@ -192,7 +192,7 @@ profiledbuild::
 	$(MAKE) default MOZ_PROFILE_GENERATE=1 MOZ_LTO=
 	$(call BUILDSTATUS,TIER_FINISH pgo_profile_generate)
 	$(call BUILDSTATUS,TIER_START pgo_package)
-	$(MAKE) package MOZ_INTERNAL_SIGNING_FORMAT= MOZ_EXTERNAL_SIGNING_FORMAT=
+	$(MAKE) package
 	rm -f jarlog/en-US.log
 	$(call BUILDSTATUS,TIER_FINISH pgo_package)
 	$(call BUILDSTATUS,TIER_START pgo_profile)

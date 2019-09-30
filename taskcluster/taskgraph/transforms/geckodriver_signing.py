@@ -104,7 +104,7 @@ def make_repackage_signing_description(config, jobs):
 
 def _craft_upstream_artifacts(dependency_kind, build_platform):
     if build_platform.startswith('win'):
-        signing_format = 'sha2signcode'
+        signing_format = 'autograph_authenticode'
         extension = 'zip'
     elif build_platform.startswith('linux'):
         signing_format = 'autograph_gpg'
