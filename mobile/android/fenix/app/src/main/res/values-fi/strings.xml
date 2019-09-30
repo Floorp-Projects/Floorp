@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
+    <string name="app_name_private">Firefox Preview (yksityinen)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Lisää valintoja</string>
@@ -18,8 +22,25 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Olet yksityisessä istunnossa</string>
+    <string name="private_browsing_common_myths">
+       Yleiset myytit yksityisestä selaamisesta
+    </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Poista istunto</string>
+
+    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Lisää pikakuvake avataksesi yksityisiä välilehtiä aloitusnäytöltä.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">Lisää pikakuvake</string>
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">Ei kiitos</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">Uusi välilehti</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">Uusi yksityinen välilehti</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -42,6 +63,8 @@
     <string name="browser_menu_your_library">Kirjasto</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Työpöytäsivusto</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">Lisää aloitusnäytölle</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Etsi sivulta</string>
     <!-- Browser menu button that creates a private tab -->
@@ -87,9 +110,9 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Tietoja</string>
     <!-- Preference for settings related to changing the default search engine -->
-    <string name="preferences_search_engine">Hakukone</string>
-    <!-- Preference for showing visited sites and bookmarks in awesomebar -->
-    <string name="preference_show_visited_sites_bookmarks">Näytä vieraillut sivut ja kirjanmerkit</string>
+    <string name="preferences_default_search_engine">Oletushakukone</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Haku</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Ohje</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -115,6 +138,10 @@
     <string name="preferences_category_privacy">Yksityisyys</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Sivustojen käyttöoikeudet</string>
+    <!-- Preference for launching links in a private tab-->
+    <string name="preferences_launch_links_in_private_mode">Avaa linkit yksityisiin välilehtiin</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">Lisää yksityisen selauksen pikakuvake</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Saavutettavuus</string>
     <!-- Preference category for account information -->
@@ -127,8 +154,14 @@
     <string name="preferences_sign_in_description">Synkronoi kirjanmerkit, historia ja paljon muuta Firefox-tilillä</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox-tili</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Yhdistä uudelleen jatkaaksesi synkronointia</string>
     <!-- Preference for language -->
     <string name="preferences_language">Kieli</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">Tietovalinnat</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">Tietojen keruu</string>
     <!-- Preference linking to the privacy notice -->
     <string name="preferences_privacy_link">Yksityisyyskäytäntö</string>
     <!-- Preference category for developer tools -->
@@ -137,6 +170,12 @@
     <string name="preferences_remote_debugging">Etävianjäljitys USB:n kautta</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Näytä hakuehdotukset</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Näytä leikepöydän ehdotukset</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Etsi selaushistoriasta</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Etsi kirjanmerkeistä</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Tilin asetukset</string>
 
@@ -197,15 +236,25 @@
     <string name="preferences_tracking_protection_exceptions_description">Seurannan suojaus on pois käytöstä seuraaville sivustoille</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Ota käyttöön kaikille sivustoille</string>
-    <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
-    <string name="exceptions_empty_message">Poikkeukset mahdollistavat kytkeä seurannan suojauksen pois käytöstä valituilla sivustoilla.\n\nLue lisää</string>
+
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Poikkeukset mahdollistavat seurannan suojauksen poistamisen valittujen sivustojen osalta.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Lue lisää</string>
+
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">Poistettu käytöstä yleisesti. Voit ottaa sen käyttöön asetuksista.</string>
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetria</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Käyttö- ja tekniset tiedot</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">Jakaa selaimen suorituskykyyn, käyttöön, laitteistoon ja mukauttamiseen liittyviä tietoja Mozillan kanssa, jotta %1$sia voidaan parantaa</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Kokeilut</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Sallii Mozillan tehdä asennuksia ja kerätä tietoja kokeellisten ominaisuuksien osalta</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Kaatumisilmoitin</string>
     <!-- Preference switch for Mozilla location service -->
@@ -221,9 +270,14 @@
     <string name="preferences_sync_pair">Skannaa parituskoodi Firefoxin työpöytäversiossa</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Kirjaudu sisän</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">Kirjaudu yhdistääksesi uudelleen</string>
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Poista tili</string>
 
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions"><![CDATA[Käy osoitteessa <b>firefox.com/pair</b> tietokoneesi Firefox-selaimella saadaksesi QR-koodin.]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Avaa kamera</string>
     <!-- Button to cancel pairing -->
@@ -359,6 +413,8 @@
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">Pahoittelut, %1$s ei voi ladata tätä sivua.</string>
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">Voit yrittää palauttaa tai sulkea tämän välilehden alapuolelta.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Lähetä kaatumisraportti Mozillalle</string>
     <!-- Close tab button text on the tab crash page -->
@@ -408,6 +464,8 @@
     <string name="edit_bookmark_fragment_title">Muokkaa kirjanmerkkiä</string>
     <!-- Bookmark folder editing screen title -->
     <string name="edit_bookmark_folder_fragment_title">Muokkaa kansiota</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">Kirjaudu sisään nähdäksesi synkronoidut kirjanmerkit</string>
     <!-- Bookmark URL editing field label -->
     <string name="bookmark_url_label">OSOITE</string>
     <!-- Bookmark FOLDER editing field label -->
@@ -448,6 +506,8 @@
     <string name="clear_permission">Tyhjennä oikeus</string>
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">Tyhjennä oikeudet kaikilta sivustoilta</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">Automaattinen toisto</string>
     <!-- Preference for altering the camera access for all websites -->
     <string name="preference_phone_feature_camera">Kamera</string>
     <!-- Preference for altering the microphone access for all websites -->
@@ -472,6 +532,14 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Pois</string>
 
+    <!-- Label that indicates video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked">Video ja ääni estetty</string>
+    <!-- Label that indicates video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed">Video ja ääni sallittu</string>
+
+    <!-- Collections -->
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="collections_description">Kerää merkitykselliset asiat yhteen. Aloita tallentamalla avoimet välilehdet uudeksi kokoelmaksi.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Kokoelmat</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
@@ -515,6 +583,8 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">Lähetä ja jaa</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">Jaa</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Jaa</string>
@@ -536,6 +606,17 @@
     <string name="sync_connect_device_dialog">Lähetä välilehti kirjautumalla Firefoxiin vähintään yhdellä muulla laitteella.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Selvä</string>
+
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Tälle sovellukselle ei voi jakaa</string>
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Lähetä laitteeseen</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">Ei yhdistettyjä laitteita</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Lue lisää välilehtien lähettämisestä…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Yhdistä muu laite…</string>
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
@@ -624,6 +705,16 @@
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">Poista selaustiedot lopettaessa</string>
 
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">Poistaa automaattisesti selaustiedot, kun valitset &quot;Lopeta&quot; päävalikosta</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Poistaa automaattisesti selaustiedot, kun valitset \&quot;Lopeta\&quot; päävalikosta</string>
+    <!-- Category for history items to delete on quit in delete browsing data on quit -->
+    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Selaushistoria</string>
+
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Lopeta</string>
+
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message">Kaikki selaustietosi poistetaan.</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
@@ -697,6 +788,10 @@
     <string name="sync_sent_tabs_snackbar">Välilehdet lähetetty!</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
     <string name="sync_sent_tab_snackbar">Välilehti lähetetty!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Lähettäminen ei onnistu</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">YRITÄ UUDELLEEN</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Skannaa koodi</string>
     <!-- Instructions on how to access pairing -->
@@ -707,6 +802,8 @@
     <string name="sign_in_with_camera">Kirjaudu sisään kamerallasi</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Käytä sähköpostia</string>
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_confirmation_message">Firefox lopettaa tilisi synkronoinnin, mutta ei poista mitään selaustietoja tältä laitteelta.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Katkaise yhteys</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -727,11 +824,23 @@
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Lue lisää</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_option">Tavallinen</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard">Normaali (suositeltu)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">Tasapainoa suojauksen ja suorituskyvyn välillä.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_2">Sivut latautuvat normaalisti, mutta vähemmän seuraimia estetään.</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Tiukka</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
+    <string name="preference_enhanced_tracking_protection_strict_default">Tiukka (oletus)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">Vahvempi seurannan suojaus ja nopeampi suorituskyky, mutta jotkin sivustot eivät välttämättä toimi kunnolla.</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_recommended">Tiukka (suositeltu)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description">Vahvempi suojaus, mutta jotkin sivustot tai sisällöt voivat rikkoutua.</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Estetty</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
@@ -742,14 +851,26 @@
     <string name="etp_cookies_title">Sivustorajat ylittävät seurainevästeet</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Kryptolouhijat</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Estää haitallisia komentosarjoja pääsemästä laitteellesi, jotta ne eivät voi louhia virtuaalivaluuttoja.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Yksilöijät</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Seurantaan tarkoitettu sisältö</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_message">Kun kilven väri vaihtuu, %s estää sivulla olevia seuraimia. Napauta kilpeä nähdäksesi mitä estetään.</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">Suojaukset ovat PÄÄLLÄ tällä sivustolla</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">Suojaukset ovat POIS PÄÄLTÄ tällä sivustolla</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">Tehostettu seurannan suojaus ei ole käytössä näillä sivustoilla</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Oikeutesi</string>
     <!-- About page link text to open open source licenses screen -->
     <string name="about_open_source_licenses">Käyttämämme avoimen lähdekoodin kirjastot</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">Mitä uutta %s sisältää</string>
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | Avoimen lähdekoodin kirjastot</string>
@@ -758,4 +879,78 @@
     <string name="tab_counter_content_description_one_tab">1 välilehti</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
     <string name="tab_counter_content_description_multi_tab">%d välilehteä</string>
+  
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">Kopioi</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Liitä ja avaa</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">Liitä</string>
+  
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Lisää aloitusnäytölle</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">Peruuta</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Lisää</string>
+
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Pikakuvakkeen nimi</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Käyttäjätunnukset ja salasanat</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Tallenna käyttäjätunnukset ja salasanat</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Kysy tallennusta</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Älä tallenna koskaan</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">Automaattinen täyttö</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Synkronoi kirjautumistiedot</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">Päällä</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">Pois</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">Yhdistä uudelleen</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Kirjaudu Sync-palveluun</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Tallennetut kirjautumistiedot</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Poikkeukset</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Käyttäjätunnukset ja salanat, joita ei tallenneta, näytetään täällä.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Käyttäjätunnuksia ja salasanoja ei tallenneta näille sivustoille.</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Etsi kirjautumistiedoista</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">Aakkosjärjestys</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">Äskettäin käytetty</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Sivusto</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Käyttäjätunnus</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Salasana</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Kirjoita PIN uudelleen</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Avaa lukitus nähdäksesi tallennetut kirjautumistiedot</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Tämä yhteys ei ole suojattu. Kirjautumistiedot saattavat vaarantua.</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">Lue lisää</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">Haluatko, että %s tallentaa tämän kirjautumistiedon?</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">Tallenna</string>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">Älä tallenna</string>
+
 </resources>

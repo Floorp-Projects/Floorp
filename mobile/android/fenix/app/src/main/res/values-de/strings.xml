@@ -25,7 +25,11 @@
     <string name="private_browsing_title">Dies ist eine private Sitzung</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder">%1$s leert die eingegebenen Suchbegriffe und besuchten Webseiten beim Beenden der App oder wenn Sie alle privaten Tabs schließen. Das macht Sie gegenüber Website-Betreibern und Internetanbietern nicht anonym, aber erleichtert es Ihnen, dass andere Nutzer dieses Geräts Ihre Aktivitäten nicht einsehen können.\n\nHäufige Irrtümer über den privaten Modus</string>
+    <string name="private_browsing_placeholder_description">%1$s leert die eingegebenen Suchbegriffe und besuchten Webseiten beim Beenden der App oder wenn Sie alle privaten Tabs schließen. Das macht Sie gegenüber Website-Betreibern und Internetanbietern nicht anonym, aber erleichtert es Ihnen, dass andere Nutzer dieses Geräts Ihre Aktivitäten nicht einsehen können.\n\n</string>
+    <string name="private_browsing_common_myths">
+       
+       
+    Häufige Missverständnisse über das Surfen im Privaten Modus</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Sitzung löschen</string>
 
@@ -39,9 +43,9 @@
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
-    <string name="home_screen_shortcut_open_new_tab">Neuen Tab öffnen</string>
+    <string name="home_screen_shortcut_open_new_tab_2">Neuer Tab</string>
     <!-- Shortcut action to open new private tab -->
-    <string name="home_screen_shortcut_open_new_private_tab">Neuen privaten Tab öffnen</string>
+    <string name="home_screen_shortcut_open_new_private_tab_2">Neuer privater Tab</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -607,6 +611,8 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">Senden und Teilen</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">Teilen</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Teilen</string>
@@ -824,6 +830,10 @@
     <string name="sync_sent_tabs_snackbar">Tabs gesendet</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
     <string name="sync_sent_tab_snackbar">Tab gesendet</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Senden nicht möglich</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">WIEDERHOLEN</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Code scannen</string>
     <!-- Instructions on how to access pairing -->

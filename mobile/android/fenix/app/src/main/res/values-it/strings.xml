@@ -25,7 +25,8 @@
     <string name="private_browsing_title">Ti trovi in una sessione anonima</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder">%1$s cancella la cronologia di ricerca e navigazione appena esci dall’app o chiudi tutte le schede anonime. Nonostante questa modalità non ti renda completamente anonimo nei confronti dei siti web o del tuo fornitore di servizi internet, si tratta comunque di uno strumento utile per impedire ad altri utilizzatori di questo dispositivo di ottenere informazioni sulla tua attività online.\n\nMiti da sfatare sulla navigazione anonima</string>
+    <string name="private_browsing_placeholder_description">%1$s cancella la cronologia di ricerca e navigazione appena esci dall’app o chiudi tutte le schede anonime. Nonostante questa modalità non ti renda completamente anonimo nei confronti dei siti web o del tuo fornitore di servizi internet, si tratta comunque di uno strumento utile per impedire ad altri utilizzatori di questo dispositivo di ottenere informazioni sulla tua attività online.</string>
+    <string name="private_browsing_common_myths">Miti da sfatare sulla navigazione anonima</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Elimina sessione</string>
 
@@ -39,9 +40,9 @@
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
-    <string name="home_screen_shortcut_open_new_tab">Apri nuova scheda</string>
+    <string name="home_screen_shortcut_open_new_tab_2">Nuova scheda</string>
     <!-- Shortcut action to open new private tab -->
-    <string name="home_screen_shortcut_open_new_private_tab">Apri nuova scheda anonima</string>
+    <string name="home_screen_shortcut_open_new_private_tab_2">Nuova scheda anonima</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -117,7 +118,9 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Informazioni</string>
     <!-- Preference for settings related to changing the default search engine -->
-    <string name="preferences_search_engine">Motore di ricerca</string>
+    <string name="preferences_default_search_engine">Motore di ricerca predefinito</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Ricerca</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Aiuto</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -141,6 +144,8 @@
     <string name="preferences_category_privacy">Privacy</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Permessi dei siti</string>
+    <!-- Preference for launching links in a private tab-->
+    <string name="preferences_launch_links_in_private_mode">Apri i link in una scheda anonima</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Agg. scorciatoia nav. anonima</string>
     <!-- Preference for accessibility -->
@@ -241,8 +246,11 @@
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Attiva per tutti i siti</string>
 
-    <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
-    <string name="exceptions_empty_message">Con Eccezioni puoi disabilitare la protezione antitracciamento per i siti selezionati.\n\nUlteriori informazioni</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Con Eccezioni puoi disattivare la protezione antitracciamento per i siti selezionati.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Ulteriori informazioni</string>
+
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
     <string name="preferences_tracking_protection_turned_off_globally">Disattivata a livello globale, aprire le impostazioni per attivarla.</string>
 
@@ -518,6 +526,8 @@
     <string name="clear_permission">Cancella permesso</string>
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">Cancella permessi per tutti i siti</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">Riproduzione automatica</string>
     <!-- Preference for altering the camera access for all websites -->
     <string name="preference_phone_feature_camera">Fotocamera</string>
     <!-- Preference for altering the microphone access for all websites -->
@@ -540,6 +550,11 @@
     <string name="tracking_protection_on">Attiva</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Disattivata</string>
+
+    <!-- Label that indicates video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked">Video e audio bloccati</string>
+    <!-- Label that indicates video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed">Video e audio consentiti</string>
 
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
@@ -598,6 +613,8 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">Invia e condividi</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">Condividi</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Condividi</string>
@@ -622,6 +639,16 @@
 
     <!-- Share error message -->
     <string name="share_error_snackbar">Impossibile condividere con questa app</string>
+
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Invia a dispositivo</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">Nessun dispositivo connesso</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Ulteriori informazioni sull’invio di schede…</string>
+
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Connetti un altro dispositivo…</string>
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
@@ -804,6 +831,10 @@
     <string name="sync_sent_tabs_snackbar">Schede inviate.</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
     <string name="sync_sent_tab_snackbar">Scheda inviata.</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Invio non riuscito</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">RIPROVA</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Scansiona il codice</string>
     <!-- Instructions on how to access pairing -->
@@ -840,8 +871,14 @@
     <string name="preference_enhanced_tracking_protection_standard">Normale (consigliato)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">Equilibrio tra protezione e prestazioni.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_2">Le pagine verranno caricate normalmente, ma verranno bloccati meno elementi traccianti.</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Restrittivo</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
+    <string name="preference_enhanced_tracking_protection_strict_default">Restrittiva (predefinita)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">Maggiore protezione dal tracciamento e prestazioni più veloci, alcuni siti potrebbero non funzionare correttamente.</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_recommended">Restrittiva (consigliata)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
@@ -909,4 +946,60 @@
     <string name="add_to_homescreen_add">Aggiungi</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Nome scorciatoia</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Credenziali e password</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Salva credenziali e password</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Chiedi prima di salvare</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Non salvare mai</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">Compilazione automatica</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Sincronizza le credenziali</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">Attiva</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">Disattivata</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">Riconnetti</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Accedi a Sync</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Credenziali salvate</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Eccezioni</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Le credenziali e le password non salvate verranno mostrate qui.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Le credenziali e le password non verranno salvate per questi siti.</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Cerca credenziali</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">Alfabeticamente</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">Utilizzate di recente</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Sito</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Nome utente</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Password</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Inserisci nuovamente il PIN</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Sblocca per visualizzare le credenziali salvate</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Questa connessione non è sicura. Le credenziali inserite potrebbero essere vulnerabili.</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">Ulteriori informazioni</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">Vuoi che %s salvi queste credenziali?</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">Salva</string>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">Non salvare</string>
+
 </resources>

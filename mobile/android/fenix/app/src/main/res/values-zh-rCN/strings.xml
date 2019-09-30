@@ -26,7 +26,8 @@
     <string name="private_browsing_title">您已进入隐私浏览模式</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder">%1$s 在您退出应用或关闭所有隐私标签页后，将清除您的搜索记录与浏览历史。虽然这样做不会使您对网站或电信运营商匿名，但还是可以更简单地让使用此设备的人无法得知您在网上的活动。\n\n隐私浏览功能的常见误解</string>
+    <string name="private_browsing_placeholder_description">%1$s 在您退出应用或关闭所有隐私标签页后，将清除您的搜索记录与浏览历史。虽然这样做不会使您对网站或电信运营商匿名，但还是可以更简单地让使用此设备的人无法得知您在网上的活动。</string>
+    <string name="private_browsing_common_myths">隐私浏览功能的常见误解</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">删除浏览会话</string>
 
@@ -40,9 +41,9 @@
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
-    <string name="home_screen_shortcut_open_new_tab">新建标签页打开</string>
+    <string name="home_screen_shortcut_open_new_tab_2">新建标签页</string>
     <!-- Shortcut action to open new private tab -->
-    <string name="home_screen_shortcut_open_new_private_tab">新建隐私标签页打开</string>
+    <string name="home_screen_shortcut_open_new_private_tab_2">新建隐私标签页</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -615,6 +616,8 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">发送及分享</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">分享</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">分享</string>
@@ -830,6 +833,10 @@
     <string name="sync_sent_tabs_snackbar">标签页已发送！</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
     <string name="sync_sent_tab_snackbar">标签页已发送！</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">无法发送</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">重试</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">扫码</string>
     <!-- Instructions on how to access pairing -->
@@ -873,6 +880,8 @@
     <string name="preference_enhanced_tracking_protection_strict">严格</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
     <string name="preference_enhanced_tracking_protection_strict_default">严格（默认）</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">更强大的跟踪保护与更快的性能，但可能导致某些网站异常。</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_recommended">严格（推荐）</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
@@ -945,6 +954,8 @@
     <string name="preferences_passwords_logins_and_passwords">我的密码</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">保存登录名和密码</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">询问是否保存</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">总不保存</string>
     <!-- Preference for autofilling saved logins in Fenix -->
@@ -963,6 +974,10 @@
     <string name="preferences_passwords_saved_logins">存放的登录信息</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">例外</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">不保存登录名和密码的网站将显示于此处。</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">将不保存这些网站的登录名和密码。</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">搜索登录信息</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -983,6 +998,8 @@
     <string name="logins_insecure_connection_warning">此连接不安全。输入的登录信息可能被窃取。</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">详细了解</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">要将这条登录信息存入 %s 吗？</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
     <string name="logins_doorhanger_save_confirmation">保存</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->

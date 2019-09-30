@@ -20,9 +20,6 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Jelenleg privát munkamenetben van</string>
-    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder">A %1$s törli a keresési és böngészési előzményeit, ha kilép az alkalmazásból, vagy bezárja az összes privát böngészési lapot. Ugyan ez nem teszi névtelenné a weboldalak vagy a szolgáltatója felé, könnyebbé teszi, hogy bizalmasan kezelje az online tevékenységét, és más ne tudjon róla, aki ezt az eszközt használja.\n\nGyakori mítoszok a privát böngészésről</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Munkamenet törlése</string>
 
@@ -33,12 +30,6 @@
     <string name="cfr_pos_button_text">Parancsikon hozzáadása</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Köszönöm, nem</string>
-
-    <!-- Home screen icons - Long press shortcuts -->
-    <!-- Shortcut action to open new tab -->
-    <string name="home_screen_shortcut_open_new_tab">Új lap megnyitása</string>
-    <!-- Shortcut action to open new private tab -->
-    <string name="home_screen_shortcut_open_new_private_tab">Új privát lap megnyitása</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -110,7 +101,9 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Névjegy</string>
     <!-- Preference for settings related to changing the default search engine -->
-    <string name="preferences_search_engine">Keresőszolgáltatás</string>
+    <string name="preferences_default_search_engine">Alapértelmezett keresőszolgáltatás</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Keresés</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Súgó</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -134,6 +127,8 @@
     <string name="preferences_category_privacy">Adatvédelem</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Webhely engedélyek</string>
+    <!-- Preference for launching links in a private tab-->
+    <string name="preferences_launch_links_in_private_mode">Hivatkozások megnyitása privát lapon</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Privát böngészési parancsikon hozzáadása</string>
     <!-- Preference for accessibility -->
@@ -228,8 +223,11 @@
     <string name="preferences_tracking_protection_exceptions_description">A követés elleni védelem le van tiltva ezeken az oldalakon</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Bekapcsolás az összes oldalon</string>
-    <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
-    <string name="exceptions_empty_message">A kivételek lehetővé teszik a követés elleni védelem kikapcsolását a kiválasztott oldalak esetén.\n\nTovábbi tudnivalók</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">A kivételek lehetővé teszik a követés elleni védelem kikapcsolását a kiválasztott oldalak esetén.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">További tudnivalók</string>
+
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
     <string name="preferences_tracking_protection_turned_off_globally">Globálisan kikapcsolva, a bekapcsoláshoz ugorjon a Beállításokhoz.</string>
 
@@ -501,6 +499,8 @@
     <string name="clear_permission">Engedély törlése</string>
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">Engedélyek törlése az összes oldalon</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">Automatikus lejátszás</string>
     <!-- Preference for altering the camera access for all websites -->
     <string name="preference_phone_feature_camera">Kamera</string>
     <!-- Preference for altering the microphone access for all websites -->
@@ -523,6 +523,11 @@
     <string name="tracking_protection_on">Be</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Ki</string>
+
+    <!-- Label that indicates video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked">Videó és hang blokkolva</string>
+    <!-- Label that indicates video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed">Videó és hang engedélyezve</string>
 
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
@@ -595,6 +600,15 @@
 
     <!-- Share error message -->
     <string name="share_error_snackbar">Nem lehet megosztani ezzel az alkalmazással</string>
+
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Küldés eszközre</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">Nincs eszköz csatlakoztatva</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Ismerje meg a lapok küldését…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Másik eszköz csatlakoztatása…</string>
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
@@ -813,6 +827,8 @@
     <string name="preference_enhanced_tracking_protection_standard_description">Kiegyensúlyozott védelem és teljesítmény.</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Szigorú</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
+    <string name="preference_enhanced_tracking_protection_strict_default">Szigorú (Alapértelmezett)</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_recommended">Szigorú (ajánlott)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
@@ -881,4 +897,39 @@
     <string name="add_to_homescreen_add">Hozzáadás</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Parancsikon neve</string>
-</resources>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Bejelentkezések és jelszavak</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Bejelentkezések és jelszavak mentése</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Soha ne mentse</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">Automatikus kitöltés</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Bejelentkezések szinkronizálása</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">Be</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">Ki</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">Újracsatlakozás</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Jelentkezzen be a Syncbe</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Mentett bejelentkezések</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Kivételek</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">Betűrendben</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Webhely</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Felhasználónév</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Jelszó</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">További tudnivalók</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">Mentés</string>
+    </resources>

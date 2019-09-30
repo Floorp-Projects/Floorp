@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
+    <string name="app_name_private">Firefox Preview (anonymní)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Více možností</string>
@@ -20,11 +24,28 @@
     <string name="private_browsing_title">Používáte anonymní prohlížení</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder">
-         %1$s vymaže vaši historii vyhledávání a navštívených stránek po ukončení aplikace nebo zavření všech anonymních panelů. S touto funkcí nejste na internetu zcela neviditelní a např. poskytovatel připojení k internetu může stále zjistit, které stránky navštěvujete. Vaše aktivita na internetu ale zůstane utajena před dalšími uživateli tohoto zařízení.\n\nČasté omyly o fungování anonymního prohlížení
+    <string name="private_browsing_placeholder_description">
+         %1$s vymaže vaši historii vyhledávání a navštívených stránek po ukončení aplikace nebo zavření všech anonymních panelů. S touto funkcí nejste na internetu zcela neviditelní a např. poskytovatel připojení k internetu může stále zjistit, které stránky navštěvujete. Vaše aktivita na internetu ale zůstane utajena před dalšími uživateli tohoto zařízení.
+    </string>
+    <string name="private_browsing_common_myths">
+       Časté omyly o fungování anonymního prohlížení
     </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Odstranit relaci</string>
+
+    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Přidejte si zkratku k otevření anonymního prohlížení na plochu.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">Přidat zkratku</string>
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">Ne, děkuji</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">Nový panel</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">Nový anonymní panel</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -48,7 +69,7 @@
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Verze pro počítač</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
-    <string name="browser_menu_add_to_homescreen">Přidat na domovskou obrazovku</string>
+    <string name="browser_menu_add_to_homescreen">Přidat na plochu</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Najít na stránce</string>
     <!-- Browser menu button that creates a private tab -->
@@ -97,9 +118,9 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">O aplikaci</string>
     <!-- Preference for settings related to changing the default search engine -->
-    <string name="preferences_search_engine">Vyhledávač</string>
-    <!-- Preference for showing visited sites and bookmarks in awesomebar -->
-    <string name="preference_show_visited_sites_bookmarks">Našeptávat záložky a navštívené stránky</string>
+    <string name="preferences_default_search_engine">Výchozí vyhledávač</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Vyhledávání</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Nápověda</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -123,6 +144,10 @@
     <string name="preferences_category_privacy">Soukromí</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Oprávnění webových stránek</string>
+    <!-- Preference for launching links in a private tab-->
+    <string name="preferences_launch_links_in_private_mode">Otevírat odkazy v anonymním režimu</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">Přidat anonymní prohlížení na plochu</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Přístupnost</string>
     <!-- Preference category for account information -->
@@ -151,6 +176,12 @@
     <string name="preferences_remote_debugging">Vzdálené ladění pomocí USB</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Našeptávat vyhledávání</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Našeptávat zkopírovaný text</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Našeptávat z historie prohlížení</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Našeptávat ze záložek</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Nastavení účtu</string>
 
@@ -212,8 +243,12 @@
     <string name="preferences_tracking_protection_exceptions_description">Ochrana proti sledování je pro tyto servery vypnutá</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Zapnout pro všechny servery</string>
-    <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
-    <string name="exceptions_empty_message">Nastavením výjimky můžete vypnout ochranu proti sledování na vybraných stránkách.\n\nZjistit více</string>
+
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Nastavením výjimky můžete vypnout ochranu proti sledování na vybraných stránkách.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Zjistit více</string>
+
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
     <string name="preferences_tracking_protection_turned_off_globally">Ochranu proti sledování můžete opět zapnout v nastavení aplikace.</string>
 
@@ -493,6 +528,8 @@
     <string name="clear_permission">Vymazat oprávnění</string>
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">Vymazat oprávnění pro všechny servery</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">Automatické přehrávání</string>
     <!-- Preference for altering the camera access for all websites -->
     <string name="preference_phone_feature_camera">Fotoaparát</string>
     <!-- Preference for altering the microphone access for all websites -->
@@ -516,9 +553,14 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Vypnuta</string>
 
+    <!-- Label that indicates video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked">Blokováno pro videa i zvuky</string>
+    <!-- Label that indicates video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed">Povoleno pro videa i zvuky</string>
+
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Ukládejte si stránky a panely, na kterých vám záleží, do sbírek.</string>
+    <string name="collections_description">Do sbírek si můžete ukládat důležité stránky.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Sbírky</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
@@ -562,6 +604,8 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">Poslat a sdílet</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">Sdílet</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Sdílet</string>
@@ -584,6 +628,17 @@
     <string name="sync_connect_device_dialog">Pro poslání panelu se prosím přihlaste účtem Firefox na dalším zařízení.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Rozumím</string>
+
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Do této aplikace nelze sdílet</string>
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Odeslat do zařízení</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">Žádná připojená zařízení</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Zjistit více o posílání panelů…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Připojit další zařízení…</string>
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
@@ -672,16 +727,18 @@
     <string name="preferences_delete_browsing_data_button">Smazat soukromá data</string>
 
     <!-- Title for the Delete browsing data on quit preference -->
-    <string name="preferences_delete_browsing_data_on_quit">Smazat soukromá data při ukončení aplikace</string>
+    <string name="preferences_delete_browsing_data_on_quit">Mazat soukromá data při ukončení</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit">Po výběru „Ukončit“ z hlavní nabídky aplikace dojde ke smazání soukromých dat</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Po výběru „Ukončit“ z hlavní nabídky aplikace dojde ke smazání soukromých dat</string>
+    <!-- Category for history items to delete on quit in delete browsing data on quit -->
+    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Historie prohlížení</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Ukončit</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message">Opravdu chcete smazat všechna soukromá data?</string>
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message_2">Opravdu chcete smazat vybraná soukromá data?</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s smaže vybraná soukromá data.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -761,6 +818,10 @@
     <string name="sync_sent_tabs_snackbar">Panely odeslány</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
     <string name="sync_sent_tab_snackbar">Panel odeslán</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Odeslání se nezdařilo</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">ZNOVU</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Naskenovat kód</string>
     <!-- Instructions on how to access pairing -->
@@ -792,11 +853,21 @@
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Zjistit více</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_option">Standardní</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard">Standardní (doporučeno)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">Vyvážená ochrana a výkon.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_2">Stránky se načítají normálně s výjimkou některých sledovacích prvků.</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Přísná</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
+    <string name="preference_enhanced_tracking_protection_strict_default">Přísná (výchozí)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">Silnější ochrana, která zlepšuje rychlost načítání stránek. Může ale omezit jejich fungování.</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_recommended">Přísná (doporučeno)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">Silnější ochrana. Může omezit fungování některých stránek.</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -845,4 +916,77 @@
     <string name="tab_counter_content_description_one_tab">1 panel</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
     <string name="tab_counter_content_description_multi_tab">Počet panelů: %d</string>
+  
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">Kopírovat</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Vložit a přejít</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">Vložit</string>
+  
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Přidat na plochu</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">Zrušit</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Přidat</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Název zkratky</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Přihlašovací údaje</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Ukládat přihlašovací údaje</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Před uložením se zeptat</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Neukládat</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">Automatické vyplňování</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Synchronizovat přihlašovací údaje</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">Zapnuto</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">Vypnuto</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">Znovu připojit</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Přihlásit se ke službě Sync</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Uložené přihlašovací údaje</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Výjimky</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Tady se zobrazí přihlašovací údaje, které se nebudou ukládat.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Pro následující servery se nebudou přihlašovací údaje ukládat.</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Hledat přihlašovací údaje</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">Abecedně</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">Naposledy použité</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Server</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Uživatelské jméno</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Heslo</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Zadejte znovu svůj PIN</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Odemknout pro zobrazení přihlašovacích údajů</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Toto připojení není zabezpečeno. Zadané přihlašovací údaje mohou být vyzrazeny.</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">Zjistit více</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">Chcete uložit tyto přihlašovací údaje v aplikaci %s?</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">Uložit</string>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">Neukládat</string>
+
 </resources>

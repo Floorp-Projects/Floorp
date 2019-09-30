@@ -25,10 +25,15 @@
     <string name="private_browsing_title">U bevindt zich in een privésessie</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder">
-         %1$s wist uw zoek- en browsergeschiedenis zodra u de toepassing afsluit of alle privénavigatietabbladen sluit. Hoewel privénavigatie u niet anoniem maakt voor websites of uw internetprovider, maakt dit het
-        makkelijker om wat u online doet privé te houden ten opzichte van anderen die deze computer gebruiken.\n\nVeelgehoorde mythes over
-        privénavigatie
+    <string name="private_browsing_placeholder_description">
+         %1$s wist uw zoek- en browsergeschiedenis zodra u de toepassing afsluit of alle privétabbladen sluit. Hoewel privénavigatie u niet anoniem maakt voor websites of uw internetprovider, maakt dit het
+        makkelijker om wat u online doet privé te houden ten opzichte van anderen die dit apparaat gebruiken.
+    
+    </string>
+    <string name="private_browsing_common_myths">
+       
+       Veelgehoorde mythes over privénavigatie
+    
     </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Sessie verwijderen</string>
@@ -43,9 +48,9 @@
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
-    <string name="home_screen_shortcut_open_new_tab">Nieuw tabblad openen</string>
+    <string name="home_screen_shortcut_open_new_tab_2">Nieuw tabblad</string>
     <!-- Shortcut action to open new private tab -->
-    <string name="home_screen_shortcut_open_new_private_tab">Nieuw privétabblad openen</string>
+    <string name="home_screen_shortcut_open_new_private_tab_2">Nieuw privétabblad</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -240,6 +245,8 @@
     <string name="preferences_tracking_protection_exceptions_description">Bescherming tegen volgen is uit voor deze websites</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Inschakelen voor alle websites</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Met uitzonderingen kunt u bescherming tegen volgen voor geselecteerde websites uitschakelen.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Meer info</string>
 
@@ -537,6 +544,11 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Uit</string>
 
+    <!-- Label that indicates video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked">Video en audio geblokkeerd</string>
+    <!-- Label that indicates video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed">Video en audio toegestaan</string>
+
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
     <string name="collections_description">Verzamel de dingen die belangrijk voor u zijn. Sla eerst geopende tabbladen op in een nieuwe collectie.</string>
@@ -583,6 +595,8 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">Verzenden en delen</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">Delen</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Delen</string>
@@ -608,6 +622,15 @@
 
     <!-- Share error message -->
     <string name="share_error_snackbar">Kan niet met deze app delen</string>
+
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Verzenden naar apparaat</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">Geen apparaten verbonden</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Meer info over het verzenden van tabbladen…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Een ander apparaat verbinden…</string>
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
@@ -790,6 +813,10 @@
     <string name="sync_sent_tabs_snackbar">Tabbladen verzonden!</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
     <string name="sync_sent_tab_snackbar">Tabblad verzonden!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Kan niet verzenden</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">OPNIEUW</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">De code scannen</string>
     <!-- Instructions on how to access pairing -->
@@ -826,8 +853,14 @@
     <string name="preference_enhanced_tracking_protection_standard">Standaard (aanbevolen)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">Gebalanceerd voor bescherming en prestaties.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_2">Pagina’s worden normaal geladen, maar er worden minder trackers geblokkeerd.</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Streng</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
+    <string name="preference_enhanced_tracking_protection_strict_default">Streng (standaard)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">Sterkere bescherming tegen volgen en snellere prestaties, maar sommige websites werken mogelijk niet goed.</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_recommended">Streng (aanbevolen)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
@@ -900,6 +933,14 @@
     <string name="preferences_passwords_logins_and_passwords">Aanmeldingen en wachtwoorden</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Aanmeldingen en wachtwoorden opslaan</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Vragen om op te slaan</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Nooit opslaan</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">Automatisch invullen</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Aanmeldingen synchroniseren</string>
     <!-- Syncing saved logins in Fenix is on -->
     <string name="preferences_passwords_sync_logins_on">Aan</string>
     <!-- Syncing saved logins in Fenix is off -->
@@ -912,6 +953,12 @@
     <string name="preferences_passwords_saved_logins">Opgeslagen aanmeldingen</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Uitzonderingen</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Niet-opgeslagen aanmeldingen en wachtwoorden worden hier weergegeven.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Aanmeldingen en wachtwoorden worden voor deze websites niet opgeslagen.</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Aanmeldingen zoeken</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
     <string name="preferences_passwords_saved_logins_alphabetically">Alfabetisch</string>
     <!-- Option to sort logins list by most recently used -->
@@ -922,8 +969,16 @@
     <string name="preferences_passwords_saved_logins_username">Gebruikersnaam</string>
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Wachtwoord</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Voer uw pincode opnieuw in</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Ontgrendel om uw opgeslagen aanmeldingen te bekijken</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Deze verbinding is niet beveiligd. Hier ingevoerde aanmeldingen kunnen worden onderschept.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">Meer info</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">Wilt u dat %s deze aanmelding opslaat?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
     <string name="logins_doorhanger_save_confirmation">Opslaan</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->

@@ -22,10 +22,13 @@
     <string name="private_browsing_title">Prywatna sesja</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder">
+    <string name="private_browsing_placeholder_description">
          %1$s usuwa historię wyszukiwania i przeglądania po wyłączeniu aplikacji lub zamknięciu wszystkich kart prywatnych.
         Chociaż nie czyni to użytkownika anonimowym wobec stron internetowych ani dostawcy Internetu,
-        to ułatwia zachowanie prywatności przed pozostałymi użytkownikami tego urządzenia.\n\nPopularne mity na temat przeglądania prywatnego
+        to ułatwia zachowanie prywatności przed pozostałymi użytkownikami tego urządzenia.
+    </string>
+    <string name="private_browsing_common_myths">
+       Popularne mity na temat przeglądania prywatnego
     </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Usuń sesję</string>
@@ -40,9 +43,9 @@
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
-    <string name="home_screen_shortcut_open_new_tab">Otwórz nową kartę</string>
+    <string name="home_screen_shortcut_open_new_tab_2">Nowa karta</string>
     <!-- Shortcut action to open new private tab -->
-    <string name="home_screen_shortcut_open_new_private_tab">Otwórz nową kartę prywatną</string>
+    <string name="home_screen_shortcut_open_new_private_tab_2">Nowa karta prywatna</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -114,7 +117,9 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">O programie</string>
     <!-- Preference for settings related to changing the default search engine -->
-    <string name="preferences_search_engine">Wyszukiwarka</string>
+    <string name="preferences_default_search_engine">Domyślna wyszukiwarka</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Wyszukiwanie</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Pomoc</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -138,6 +143,8 @@
     <string name="preferences_category_privacy">Prywatność</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Uprawnienia witryn</string>
+    <!-- Preference for launching links in a private tab-->
+    <string name="preferences_launch_links_in_private_mode">Otwieranie odnośników w prywatnej karcie</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Dodaj skrót do trybu prywatnego</string>
     <!-- Preference for accessibility -->
@@ -235,8 +242,11 @@
     <string name="preferences_tracking_protection_exceptions_description">Ochrona przed śledzeniem jest wyłączona na tych witrynach</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Włącz na wszystkich witrynach</string>
-    <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
-    <string name="exceptions_empty_message">Wyjątki umożliwiają wyłączenie ochrony przed śledzeniem na wybranych witrynach.\n\nWięcej informacji</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Wyjątki umożliwiają wyłączenie ochrony przed śledzeniem na wybranych witrynach.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Więcej informacji</string>
+
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
     <string name="preferences_tracking_protection_turned_off_globally">Całkowicie wyłączona, przejdź do ustawień, aby ją włączyć.</string>
 
@@ -505,6 +515,8 @@
     <string name="clear_permission">Usuń uprawnienie</string>
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">Usuń uprawnienia na wszystkich witrynach</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">Automatyczne odtwarzanie</string>
     <!-- Preference for altering the camera access for all websites -->
     <string name="preference_phone_feature_camera">Kamera</string>
     <!-- Preference for altering the microphone access for all websites -->
@@ -527,6 +539,11 @@
     <string name="tracking_protection_on">Włączona</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Wyłączona</string>
+
+    <!-- Label that indicates video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked">Zablokowane dla wideo i dźwięku</string>
+    <!-- Label that indicates video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed">Dozwolone dla wideo i dźwięku</string>
 
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
@@ -574,6 +591,8 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">Wyślij i udostępnij</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">Udostępnij</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Udostępnij</string>
@@ -598,6 +617,15 @@
 
     <!-- Share error message -->
     <string name="share_error_snackbar">Nie można udostępnić tej aplikacji</string>
+
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Wyślij na urządzenie</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">Brak połączonych urządzeń</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Więcej o przesyłaniu kart…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Połącz inne urządzenie…</string>
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
@@ -651,7 +679,7 @@
     <string name="preference_accessibility_auto_size_summary">Czcionka będzie miała rozmiar według ustawień Androida. Wyłączenie umożliwi zarządzanie rozmiarem w tym miejscu.</string>
 
     <!-- Title for the Delete browsing data preference -->
-    <string name="preferences_delete_browsing_data">Usuń historię przeglądania</string>
+    <string name="preferences_delete_browsing_data">Usuń dane przeglądania</string>
     <!-- Title for the tabs item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_tabs_title">Otwarte karty</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
@@ -682,29 +710,29 @@
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Uprawnienia witryn</string>
     <!-- Text for the button to delete browsing data -->
-    <string name="preferences_delete_browsing_data_button">Usuń historię przeglądania</string>
+    <string name="preferences_delete_browsing_data_button">Usuń dane przeglądania</string>
 
     <!-- Title for the Delete browsing data on quit preference -->
-    <string name="preferences_delete_browsing_data_on_quit">Usuwanie historii przeglądania podczas wyłączania programu</string>
+    <string name="preferences_delete_browsing_data_on_quit">Usuwanie danych przeglądania podczas wyłączania programu</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit">Automatycznie usuwa historię przeglądania po wybraniu „Zakończ” z głównego menu</string>
+    <string name="preference_summary_delete_browsing_data_on_quit">Automatycznie usuwa dane przeglądania po wybraniu „Zakończ” z głównego menu</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit_2">Automatycznie usuwa historię przeglądania po wybraniu „Zakończ” z głównego menu</string>
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Automatycznie usuwa dane przeglądania po wybraniu „Zakończ” z głównego menu</string>
     <!-- Category for history items to delete on quit in delete browsing data on quit -->
     <string name="preferences_delete_browsing_data_on_quit_browsing_history">Historia przeglądania</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Zakończ</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Spowoduje to usunięcie całej historii przeglądania.</string>
+    <string name="delete_browsing_data_prompt_message">Spowoduje to usunięcie wszystkich danych przeglądania.</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
-    <string name="delete_browsing_data_prompt_message_3">%s usunie wybraną historię przeglądania.</string>
+    <string name="delete_browsing_data_prompt_message_3">%s usunie wybrane dane przeglądania.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">Anuluj</string>
     <!-- Text for the allow button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_allow">Usuń</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
-    <string name="preferences_delete_browsing_data_snackbar">Usunięto historię przeglądania</string>
+    <string name="preferences_delete_browsing_data_snackbar">Usunięto dane przeglądania</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -777,6 +805,10 @@
     <string name="sync_sent_tabs_snackbar">Wysłano karty</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
     <string name="sync_sent_tab_snackbar">Wysłano kartę</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Nie można wysłać</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">Ponów</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Zeskanuj kod</string>
     <!-- Instructions on how to access pairing -->
@@ -788,7 +820,7 @@
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Użyj adresu e-mail</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_confirmation_message">Firefox zatrzyma synchronizację z tym kontem, ale nie usunie historii przeglądania na tym urządzeniu.</string>
+    <string name="sign_out_confirmation_message">Firefox zatrzyma synchronizację z tym kontem, ale nie usunie danych przeglądania na tym urządzeniu.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Rozłącz</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -814,8 +846,14 @@
     <string name="preference_enhanced_tracking_protection_standard">Standardowa (zalecana)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">Równowaga między bezpieczeństwem a szybkością wczytywania stron.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_2">Strony będą działać bez problemów, ale blokowane będzie mniej elementów śledzących.</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Ścisła</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
+    <string name="preference_enhanced_tracking_protection_strict_default">Ścisła (domyślna)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">Silniejsza ochrona przed śledzeniem i większa wydajność, ale niektóre strony mogą nie działać poprawnie.</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_recommended">Ścisła (zalecana)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
@@ -883,4 +921,60 @@
     <string name="add_to_homescreen_add">Dodaj</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Nazwa skrótu</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Dane logowania i hasła</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Zachowywanie danych logowania i haseł</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Pytanie o zachowanie</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Wyłączenie zachowywania</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">Automatyczne wypełnianie</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Synchronizowanie danych logowania</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">Włączone</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">Wyłączone</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">Połącz ponownie</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Zaloguj się do synchronizacji</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Zachowane dane logowania</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Wyjątki</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Tutaj będą wyświetlane dane logowania i hasła, które nie będą zachowywane.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Dane logowania i hasła dla tych witryn nie będą zachowywane.</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Szukaj danych logowania</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">Alfabetycznie</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">Ostatnio używane</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Witryna</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Nazwa użytkownika</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Hasło</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Wprowadź kod PIN ponownie</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Odblokuj, aby wyświetlić zachowane dane logowania</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Połączenie nie jest zabezpieczone. Wprowadzone dane logowania mogą zostać przechwycone.</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">Więcej informacji</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">Czy %s ma zachować te dane logowania?</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">Zachowaj</string>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">Nie zachowuj</string>
+
 </resources>

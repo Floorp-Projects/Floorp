@@ -22,10 +22,12 @@
     <string name="private_browsing_title">Du är i en privat session</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder">
-         %1$s rensar din sök- och surfhistorik när du stänger appen eller stänger alla privata flikar. Även om detta inte gör dig anonym på webbplatser eller din internetleverantör, det gör det
-        enklare att hålla vad du gör online privat från alla andra som använder den här enheten.\n\nVanliga myter om privat
-        surfning
+    <string name="private_browsing_placeholder_description">
+         %1$s rensar din sök- och surfhistorik när du stänger appen eller stänger alla privata flikar. Även om detta inte gör dig anonym för webbplatser eller din internetleverantör, gör det det
+        lättare att hålla vad du gör online privat från alla andra som använder den här enheten.
+    </string>
+    <string name="private_browsing_common_myths">
+       Vanliga myter om privat surfning
     </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Ta bort session</string>
@@ -40,9 +42,9 @@
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
-    <string name="home_screen_shortcut_open_new_tab">Öppna en ny flik</string>
+    <string name="home_screen_shortcut_open_new_tab_2">Ny flik</string>
     <!-- Shortcut action to open new private tab -->
-    <string name="home_screen_shortcut_open_new_private_tab">Öppna en ny privat flik</string>
+    <string name="home_screen_shortcut_open_new_private_tab_2">Ny privat flik</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -594,6 +596,8 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">Skicka och dela</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">Dela</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Dela</string>
@@ -810,6 +814,10 @@
     <string name="sync_sent_tabs_snackbar">Flikar skickade!</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
     <string name="sync_sent_tab_snackbar">Flik skickad!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Går inte att skicka</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">FÖRSÖK IGEN</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Skanna QR-kod</string>
     <!-- Instructions on how to access pairing -->

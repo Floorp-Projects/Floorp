@@ -21,12 +21,8 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Ste v súkromnom prehliadaní</string>
-    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder">
-         %1$s vymaže históriu vyhľadávania a navštívených stránok po zavretí aplikácie alebo všetkých súkromných kariet a okien.
-        S touto funkciou nie ste na internete neviditeľní a napríklad váš poskytovateľ pripojenia na internet môže stále zistiť, aké stránky navštevujete. Vaša aktivita na internete ale zostane utajená pred ďalšími používateľmi na tomto počítači.\n\nČasté mýty o súkromnom prehliadaní
-        
+    <string name="private_browsing_common_myths">
+       Časté mýty o súkromnom prehliadaní
     </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Vymazať reláciu</string>
@@ -38,9 +34,9 @@
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
-    <string name="home_screen_shortcut_open_new_tab">Otvoriť novú kartu</string>
+    <string name="home_screen_shortcut_open_new_tab_2">Nová karta</string>
     <!-- Shortcut action to open new private tab -->
-    <string name="home_screen_shortcut_open_new_private_tab">Otvoriť novú súkromnú kartu</string>
+    <string name="home_screen_shortcut_open_new_private_tab_2">Nová súkromná karta</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -112,6 +108,10 @@
     <string name="preferences_category_basics">Základné nastavenia</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">O aplikácii</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">Predvolený vyhľadávací modul</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Vyhľadávanie</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Pomocník</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -165,6 +165,12 @@
     <string name="preferences_remote_debugging">Vzdialené ladenie cez USB</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Zobrazovať návrhy vyhľadávania</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Navrhovať skopírovaný text</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Navrhovať z histórie prehliadania</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Navrhovať zo záložiek</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Nastavenia účtu</string>
 
@@ -226,6 +232,8 @@
     <string name="preferences_tracking_protection_exceptions_description">Ochrana pred sledovaním je vypnutá na týchto stránkach</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Zapnúť na všetkých stránkach</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Pomocou výnimiek môžete vypnúť ochranu pred sledovaním na vybraných stránkach.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Ďalšie informácie</string>
 
@@ -570,6 +578,8 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">Odoslať a zdieľať</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">Zdieľať</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Zdieľať</string>
@@ -591,6 +601,9 @@
     <string name="sync_connect_device_dialog">Ak chcete odoslať kartu, prihláste sa do Firefoxu na aspoň jednom ďalšom zariadení.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Rozumiem</string>
+
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Odoslať do zariadenia</string>
 
     <!-- Notification action to open Fenix and resume the current browsing session. -->
     <string name="notification_pbm_action_open">Otvoriť</string>
@@ -760,6 +773,8 @@
     <string name="sync_sent_tabs_snackbar">Karty boli odoslané!</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
     <string name="sync_sent_tab_snackbar">Karta bola odoslaná!</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">ZNOVA</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Naskenovať kód</string>
     <!-- Instructions on how to access pairing -->
@@ -828,4 +843,18 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Názov skratky</string>
 
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Prihlasovacie údaje</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Výnimky</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Stránka</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Používateľské meno</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Heslo</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">Ďalšie informácie</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">Uložiť</string>
     </resources>
