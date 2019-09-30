@@ -16,6 +16,7 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancel
+import mozilla.appservices.syncmanager.DeviceSettings
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthException
 import mozilla.components.concept.sync.DeviceCapability
@@ -28,6 +29,7 @@ import mozilla.components.concept.sync.Profile
 import mozilla.components.concept.sync.StatePersistenceCallback
 import mozilla.components.service.fxa.AccountStorage
 import mozilla.components.service.fxa.DeviceConfig
+import mozilla.components.service.fxa.FxaDeviceSettingsCache
 import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.FxaException
@@ -38,9 +40,11 @@ import mozilla.components.service.fxa.SyncAuthInfoCache
 import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.asSyncAuthInfo
+import mozilla.components.service.fxa.intoSyncType
 import mozilla.components.service.fxa.sharing.AccountSharing
 import mozilla.components.service.fxa.sharing.ShareableAccount
 import mozilla.components.service.fxa.sync.SyncManager
+import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.service.fxa.sync.WorkManagerSyncManager
 import mozilla.components.support.base.log.logger.Logger
@@ -55,8 +59,8 @@ import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
 
 /**
- * A global registry for propagating [AuthException] errors. Components such as [SyncManager] and
- * [FxaDeviceRefreshManager] may encounter authentication problems during their normal operation, and
+ * A global registry for propagating [AuthException] errors. Components such as [SyncManager] may
+ * encounter authentication problems during their normal operation, and
  * this registry is how they inform [FxaAccountManager] that these errors happened.
  *
  * [FxaAccountManager] monitors this registry, adjusts internal state accordingly, and notifies
@@ -318,7 +322,19 @@ open class FxaAccountManager(
                 CoroutineScope(coroutineContext).launch {
                     // Make sure auth-info cache is populated before starting sync manager.
                     maybeUpdateSyncAuthInfoCache()
-                    manager.start()
+
+                    // We enabled syncing for an authenticated account, and we now need to kick-off sync.
+                    // How do we know if this is going to be a first sync for an account?
+                    // We can make two assumptions, that are probably roughly correct most of the time:
+                    // - we know what the user data choices are
+                    //  - they were presented with CWTS ("choose what to sync") during sign-up/sign-in
+                    // - ... or we're enabling sync for an existing account, with data choices already
+                    //   recorded on some other client, e.g. desktop.
+                    // In either case, we need to behave as if we're in a "first sync":
+                    // - persist local choice, if we've signed for an account up locally and have CWTS
+                    // data from the user
+                    // - or fetch existing CWTS data from the server, if we don't have it locally.
+                    manager.start(SyncReason.FirstSync)
                     result.complete(Unit)
                 }
             } else {
@@ -353,11 +369,11 @@ open class FxaAccountManager(
     /**
      * Request an immediate synchronization, as configured according to [syncConfig].
      *
-     * @param startup Boolean flag indicating if sync is being requested in a startup situation.
+     * @param reason A [SyncReason] indicating why this sync is being requested.
      * @param debounce Boolean flag indicating if this sync may be debounced (in case another sync executed recently).
      */
     fun syncNowAsync(
-        startup: Boolean = false,
+        reason: SyncReason,
         debounce: Boolean = false
     ): Deferred<Unit> = CoroutineScope(coroutineContext).async {
         // Make sure auth cache is populated before we try to sync.
@@ -370,7 +386,7 @@ open class FxaAccountManager(
                         "Sync is not configured. Construct this class with a 'syncConfig' or use 'setSyncConfig'"
                 )
             }
-            syncManager?.now(startup, debounce)
+            syncManager?.now(reason, debounce)
         }
         Unit
     }
@@ -639,7 +655,7 @@ open class FxaAccountManager(
                             deviceConfig.name, deviceConfig.type, deviceConfig.capabilities
                         ).await()
 
-                        postAuthenticated(via.authData.authType)
+                        postAuthenticated(via.authData.authType, via.authData.declinedEngines)
 
                         Event.FetchProfile
                     }
@@ -820,12 +836,40 @@ open class FxaAccountManager(
         return null
     }
 
-    private suspend fun postAuthenticated(authType: AuthType) {
+    private suspend fun postAuthenticated(authType: AuthType, declinedEngines: Set<SyncEngine>? = null) {
+        // Sync may not be configured at all (e.g. won't run), but if we received a
+        // list of declined engines, that indicates user intent, so we preserve it
+        // within SyncEnginesStorage regardless. If sync becomes enabled later on,
+        // we will be respecting user choice around what to sync.
+        declinedEngines?.let {
+            val enginesStorage = SyncEnginesStorage(context)
+            declinedEngines.forEach { declinedEngine ->
+                enginesStorage.setStatus(declinedEngine, false)
+            }
+
+            // Enable all engines that were not explicitly disabled. Only do this in
+            // the presence of a "declinedEngines" list, since that indicates user
+            // intent. Absence of that list means that user was not presented with a
+            // choice during authentication, and so we can't assume an enabled state
+            // for any of the engines.
+            syncConfig?.supportedEngines?.forEach { supportedEngine ->
+                if (!declinedEngines.contains(supportedEngine)) {
+                    enginesStorage.setStatus(supportedEngine, true)
+                }
+            }
+        }
+
         // Before any sync workers have a chance to access it, make sure our SyncAuthInfo cache is hot.
         maybeUpdateSyncAuthInfoCache()
 
         // Notify our internal (sync) and external (app logic) observers.
         notifyObservers { onAuthenticated(account, authType) }
+
+        FxaDeviceSettingsCache(context).setToCache(DeviceSettings(
+            fxaDeviceId = account.getCurrentDeviceId()!!,
+            name = deviceConfig.name,
+            type = deviceConfig.type.intoSyncType()
+        ))
 
         // If device supports SEND_TAB...
         if (deviceConfig.capabilities.contains(DeviceCapability.SEND_TAB)) {
@@ -869,7 +913,8 @@ open class FxaAccountManager(
     /**
      * Account status events flowing into the sync manager.
      */
-    private class AccountsToSyncIntegration(
+    @VisibleForTesting
+    internal class AccountsToSyncIntegration(
         private val syncManager: SyncManager
     ) : AccountObserver {
         override fun onLoggedOut() {
@@ -877,7 +922,12 @@ open class FxaAccountManager(
         }
 
         override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
-            syncManager.start()
+            val reason = when (authType) {
+                is AuthType.OtherExternal, AuthType.Signin, AuthType.Signup, AuthType.Shared, AuthType.Pairing
+                    -> SyncReason.FirstSync
+                AuthType.Existing, AuthType.Recovered -> SyncReason.Startup
+            }
+            syncManager.start(reason)
         }
 
         override fun onProfileUpdated(profile: Profile) {

@@ -26,6 +26,11 @@ Useful companion components:
 * [feature-accounts](https://github.com/mozilla-mobile/android-components/tree/master/components/feature/accounts), provides a `tabs` integration on top of `FxaAccountManager`, to handle display of web sign-in UI.
 * [browser-storage-sync](https://github.com/mozilla-mobile/android-components/tree/master/components/browser/storage-sync), provides data storage layers compatible with Firefox Sync.
 
+## Before using this component
+Products sending telemetry and using this component *must request* a data-review following [this process](https://wiki.mozilla.org/Firefox/Data_Collection).
+This component provides data collection using the [Glean SDK](https://mozilla.github.io/glean/book/index.html).
+The list of metrics being collected is available in the [metrics documentation](../../support/sync-telemetry/docs/metrics.md).
+
 ## Usage
 ### Setting up the dependency
 
@@ -42,8 +47,8 @@ Additionally, see `feature-accounts`
 
 ```kotlin
 // Make the two "syncable" stores accessible to account manager's sync machinery.
-GlobalSyncableStoreProvider.configureStore("history" to historyStorage)
-GlobalSyncableStoreProvider.configureStore("bookmarks" to bookmarksStorage)
+GlobalSyncableStoreProvider.configureStore(SyncEngine.History to historyStorage)
+GlobalSyncableStoreProvider.configureStore(SyncEngine.Bookmarks to bookmarksStorage)
 
 val accountManager = FxaAccountManager(
     context = this,
@@ -53,7 +58,7 @@ val accountManager = FxaAccountManager(
         type = DeviceType.MOBILE,
         capabilities = setOf(DeviceCapability.SEND_TAB)
     ),
-    syncConfig = SyncConfig(setOf("history", "bookmarks"), syncPeriodInMinutes = 15L)
+    syncConfig = SyncConfig(setOf(SyncEngine.History, SyncEngine.Bookmarks), syncPeriodInMinutes = 15L)
 )
 
 // Observe changes to the account and profile.
@@ -75,7 +80,7 @@ launch { accountManager.initAsync().await() }
 
 // 'Sync Now' button binding.
 findViewById<View>(R.id.buttonSync).setOnClickListener {
-    accountManager.syncNowAsync()
+    accountManager.syncNowAsync(SyncReason.User)
 }
 
 // 'Sign-in' button binding.
@@ -97,7 +102,7 @@ findViewById<View>(R.id.buttonLogout).setOnClickListener {
 findViewById<View>(R.id.disablePeriodicSync).setOnClickListener {
     launch {
         accountManager.setSyncConfigAsync(
-            SyncConfig(setOf("history", "bookmarks")
+            SyncConfig(setOf(SyncReason.History, SyncReason.Bookmarks)
         ).await()
     }
 }
@@ -106,10 +111,19 @@ findViewById<View>(R.id.disablePeriodicSync).setOnClickListener {
 findViewById<View>(R.id.enablePeriodicSync).setOnClickListener {
     launch {
         accountManager.setSyncConfigAsync(
-            SyncConfig(setOf("history", "bookmarks"), syncPeriodInMinutes = 60L)
+            SyncConfig(setOf(SyncReason.History, SyncReason.Bookmarks), syncPeriodInMinutes = 60L)
         ).await()
     }
 }
+
+// Globally disabled syncing an engine - this affects all Firefox Sync clients.
+findViewById<View>(R.id.globallyDisableHistoryEngine).setOnClickListener {
+    SyncEnginesStorage.setStatus(SyncEngine.History, false)
+    accountManager.syncNowAsync(SyncReason.EngineChange)
+}
+
+// Get current status of SyncEngines. Note that this may change after every sync, as other Firefox Sync clients can change it.
+val engineStatusMap = SyncEnginesStorage.getStatus() // type is: Map<SyncEngine, Boolean>
 
 // This is expected to be called from the webview/geckoview integration, which intercepts page loads and gets
 // 'code' and 'state' out of the 'successful sign-in redirect' url.

@@ -7,7 +7,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.support.base.log.logger.Logger
-import org.json.JSONException
+import mozilla.components.support.base.utils.SharedPreferencesCache
 import org.json.JSONObject
 
 private const val CACHE_NAME = "SyncAuthInfoCache"
@@ -20,64 +20,36 @@ private const val KEY_TOKEN_SERVER_URL = "tokenServerUrl"
 
 /**
  * A thin wrapper around [SharedPreferences] which knows how to serialize/deserialize [SyncAuthInfo].
+ *
+ * This class exists to provide background sync workers with access to [SyncAuthInfo].
  */
-class SyncAuthInfoCache(val context: Context) {
-    private val logger = Logger("SyncAuthInfoCache")
+class SyncAuthInfoCache(context: Context) : SharedPreferencesCache<SyncAuthInfo>(context) {
+    override val logger = Logger("SyncAuthInfoCache")
+    override val cacheKey = CACHE_KEY
+    override val cacheName = CACHE_NAME
 
-    fun setToCache(authInfo: SyncAuthInfo) {
-        cache().edit().putString(CACHE_KEY, authInfo.toCacheString()).apply()
+    override fun SyncAuthInfo.toJSON(): JSONObject {
+        return JSONObject().also {
+            it.put(KEY_KID, this.kid)
+            it.put(KEY_FXA_ACCESS_TOKEN, this.fxaAccessToken)
+            it.put(KEY_FXA_ACCESS_TOKEN_EXPIRES_AT, this.fxaAccessTokenExpiresAt)
+            it.put(KEY_SYNC_KEY, this.syncKey)
+            it.put(KEY_TOKEN_SERVER_URL, this.tokenServerUrl)
+        }
     }
 
-    fun getCached(): SyncAuthInfo? {
-        val s = cache().getString(CACHE_KEY, null) ?: return null
-        return fromCacheString(s)
+    override fun fromJSON(obj: JSONObject): SyncAuthInfo {
+        return SyncAuthInfo(
+            kid = obj.getString(KEY_KID),
+            fxaAccessToken = obj.getString(KEY_FXA_ACCESS_TOKEN),
+            fxaAccessTokenExpiresAt = obj.getLong(KEY_FXA_ACCESS_TOKEN_EXPIRES_AT),
+            syncKey = obj.getString(KEY_SYNC_KEY),
+            tokenServerUrl = obj.getString(KEY_TOKEN_SERVER_URL)
+        )
     }
 
     fun expired(): Boolean {
-        val s = cache().getString(CACHE_KEY, null) ?: return true
-        val cached = fromCacheString(s) ?: return true
-        return cached.fxaAccessTokenExpiresAt <= System.currentTimeMillis()
-    }
-
-    fun clear() {
-        cache().edit().clear().apply()
-    }
-
-    private fun cache(): SharedPreferences {
-        return context.getSharedPreferences(CACHE_NAME, Context.MODE_PRIVATE)
-    }
-
-    private fun SyncAuthInfo.toCacheString(): String? {
-        val o = JSONObject()
-        o.put(KEY_KID, this.kid)
-        o.put(KEY_FXA_ACCESS_TOKEN, this.fxaAccessToken)
-        o.put(KEY_FXA_ACCESS_TOKEN_EXPIRES_AT, this.fxaAccessTokenExpiresAt)
-        o.put(KEY_SYNC_KEY, this.syncKey)
-        o.put(KEY_TOKEN_SERVER_URL, this.tokenServerUrl)
-        // JSONObject swallows any JSONExceptions thrown during 'toString', and simply returns 'null'.
-        val asString: String? = o.toString()
-        if (asString == null) {
-            // An error happened while converting a JSONObject into a string. Let's fail loudly and
-            // see if this actually happens in the wild. An alternative is to swallow this error and
-            // log an error message, but we're very unlikely to notice any problems in that case.
-            throw IllegalStateException("Failed to stringify SyncAuthInfo")
-        }
-        return asString
-    }
-
-    private fun fromCacheString(s: String): SyncAuthInfo? {
-        return try {
-            val o = JSONObject(s)
-            SyncAuthInfo(
-                kid = o.getString(KEY_KID),
-                fxaAccessToken = o.getString(KEY_FXA_ACCESS_TOKEN),
-                fxaAccessTokenExpiresAt = o.getLong(KEY_FXA_ACCESS_TOKEN_EXPIRES_AT),
-                syncKey = o.getString(KEY_SYNC_KEY),
-                tokenServerUrl = o.getString(KEY_TOKEN_SERVER_URL)
-            )
-        } catch (e: JSONException) {
-            logger.error("Failed to parse cached value", e)
-            null
-        }
+        val expiresAt = getCached()?.fxaAccessTokenExpiresAt ?: return true
+        return expiresAt <= System.currentTimeMillis()
     }
 }

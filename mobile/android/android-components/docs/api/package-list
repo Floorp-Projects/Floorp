@@ -18,11 +18,11 @@ $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclien
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.Device)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-device/into.md
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.Device.Capability)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-device.-capability/into.md
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.Device.PushSubscription)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-device.-push-subscription/into.md
-$dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.Device.Type)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-device.-type/into.md
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.Profile)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-profile/into.md
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.ScopedKey)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-scoped-key/into.md
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.TabHistoryEntry)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-tab-history-entry/into.md
 $dokka.location:mozilla.components.service.fxa$toAuthType(kotlin.String)mozilla.components.service.fxa/kotlin.-string/to-auth-type.md
+$dokka.location:mozilla.components.service.fxa.sync$toSyncEngines(kotlin.collections.List((kotlin.String)))mozilla.components.service.fxa.sync/kotlin.collections.-list/to-sync-engines.md
 $dokka.location:mozilla.components.support.android.test$awaitValue(androidx.lifecycle.LiveData((mozilla.components.support.android.test.awaitValue.T)), kotlin.Long, java.util.concurrent.TimeUnit)mozilla.components.support.android.test/androidx.lifecycle.-live-data/await-value.md
 $dokka.location:mozilla.components.support.android.test.espresso$assertHasFocus(androidx.test.espresso.ViewInteraction, kotlin.Boolean)mozilla.components.support.android.test.espresso/androidx.test.espresso.-view-interaction/assert-has-focus.md
 $dokka.location:mozilla.components.support.android.test.espresso$assertIsChecked(androidx.test.espresso.ViewInteraction, kotlin.Boolean)mozilla.components.support.android.test.espresso/androidx.test.espresso.-view-interaction/assert-is-checked.md
@@ -236,6 +236,7 @@ mozilla.components.support.base.log
 mozilla.components.support.base.log.logger
 mozilla.components.support.base.log.sink
 mozilla.components.support.base.observer
+mozilla.components.support.base.utils
 mozilla.components.support.ktx.android.arch.lifecycle
 mozilla.components.support.ktx.android.content
 mozilla.components.support.ktx.android.content.res
@@ -249,10 +250,12 @@ mozilla.components.support.ktx.android.widget
 mozilla.components.support.ktx.java.io
 mozilla.components.support.ktx.kotlin
 mozilla.components.support.ktx.kotlinx.coroutines.flow
+mozilla.components.support.ktx.util
 mozilla.components.support.locale
 mozilla.components.support.migration
 mozilla.components.support.rusthttp
 mozilla.components.support.rustlog
+mozilla.components.support.sync.telemetry
 mozilla.components.support.test
 mozilla.components.support.test.ext
 mozilla.components.support.test.robolectric

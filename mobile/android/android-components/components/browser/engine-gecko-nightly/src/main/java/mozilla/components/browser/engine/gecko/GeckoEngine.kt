@@ -19,6 +19,7 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.content.blocking.TrackerLog
+import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.utils.EngineVersion
@@ -40,10 +41,11 @@ class GeckoEngine(
     context: Context,
     private val defaultSettings: Settings? = null,
     private val runtime: GeckoRuntime = GeckoRuntime.getDefault(context),
-    executorProvider: () -> GeckoWebExecutor = { GeckoWebExecutor(runtime) }
+    executorProvider: () -> GeckoWebExecutor = { GeckoWebExecutor(runtime) },
+    override val trackingProtectionExceptionStore: TrackingProtectionExceptionStorage =
+        TrackingProtectionExceptionFileStorage(context, runtime)
 ) : Engine {
     private val executor by lazy { executorProvider.invoke() }
-
     private val localeUpdater = LocaleSettingUpdater(context, runtime)
 
     init {
@@ -56,6 +58,7 @@ class GeckoEngine(
             @Suppress("TooGenericExceptionThrown")
             throw RuntimeException("GeckoRuntime is shutting down")
         }
+        trackingProtectionExceptionStore.restore()
     }
 
     /**

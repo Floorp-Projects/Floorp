@@ -2,7 +2,7 @@
 
 # Engine
 
-`interface Engine` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Engine.kt#L19)
+`interface Engine` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Engine.kt#L20)
 
 Entry point for interacting with the engine implementation.
 
@@ -17,6 +17,7 @@ Entry point for interacting with the engine implementation.
 | Name | Summary |
 |---|---|
 | [settings](settings.md) | `abstract val settings: `[`Settings`](../-settings/index.md)<br>Provides access to the settings of this engine. |
+| [trackingProtectionExceptionStore](tracking-protection-exception-store.md) | `open val trackingProtectionExceptionStore: `[`TrackingProtectionExceptionStorage`](../../mozilla.components.concept.engine.content.blocking/-tracking-protection-exception-storage/index.md)<br>Provides access to the tracking protection exception list for this engine. |
 | [version](version.md) | `abstract val version: `[`EngineVersion`](../../mozilla.components.concept.engine.utils/-engine-version/index.md)<br>Returns the version of the engine as [EngineVersion](../../mozilla.components.concept.engine.utils/-engine-version/index.md) object. |
 
 ### Functions

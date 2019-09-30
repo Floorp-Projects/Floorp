@@ -23,7 +23,39 @@ permalink: /changelog/
   * Added `CustomTabWindowFeature` to handle windows inside custom tabs, PWAs, and TWAs.
 
 * **feature-tab-collections**
+
   * Behavior change: In a collection List<TabEntity> is now ordered descending by creation date (newest tab in a collection on top)
+* **feature-session**, **engine-gecko-nightly** and **engine-gecko-beta**
+  * Added api to manage the tracking protection exception list, any session added to the list will be ignored and the the current tracking policy will not be applied.
+  ```kotlin
+    val useCase = TrackingProtectionUseCases(sessionManager,engine)
+
+    useCase.addException(session)
+
+    useCase.removeException(session)
+
+    useCase.removeAllExceptions()
+
+    useCase.containsException(session){ contains ->
+        // contains indicates if this session is on the exception list.
+    }
+
+    useCase.fetchExceptions { exceptions ->
+        // exceptions is a list of all the origins that are in the exception list.
+    }
+  ```
+
+* **support-sync-telemetry**
+  * 🆕 New component containing building blocks for sync telemetry.
+
+* **concept-sync**, **services-firefox-accounts**
+  ⚠️ **This is a breaking change**
+  * Internal implementation of sync changed. Most visible change is that clients are now allowed to change which sync engines are enabled and disabled.
+  * `FxaAccountManager#syncNowAsync` takes an instance of a `reason` instead of `startup` boolean flag.
+  * `SyncEnginesStorage` is introduced, allowing applications to read and update enabled/disabled state configured `SyncEngine`s.
+  * `SyncEngine` is no longer an `enum class`, but a `sealed class` instead. e.g. `SyncEngine.HISTORY` is now `SyncEngine.History`.
+  * `DeviceConstellation#setDeviceNameAsync` now takes a `context` in addition to new `name`.
+  * `FxaAuthData` now takes an optional `declinedEngines` set of SyncEngines.
 
 # 14.0.1
 

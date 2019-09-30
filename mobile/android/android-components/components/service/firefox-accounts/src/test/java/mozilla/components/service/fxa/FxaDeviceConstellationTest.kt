@@ -6,15 +6,20 @@ package mozilla.components.service.fxa
 
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.plus
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.setMain
 import mozilla.appservices.fxaclient.AccountEvent
 import mozilla.appservices.fxaclient.TabHistoryEntry
+import mozilla.appservices.syncmanager.DeviceSettings
+import mozilla.appservices.syncmanager.DeviceType as RustDeviceType
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceConstellationObserver
@@ -25,17 +30,23 @@ import mozilla.components.concept.sync.DevicePushSubscription
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.TabData
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert
 import mozilla.appservices.fxaclient.FirefoxAccount as NativeFirefoxAccount
 import mozilla.appservices.fxaclient.Device as NativeDevice
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import java.lang.IllegalStateException
 import java.util.concurrent.Executors
 
+@RunWith(AndroidJUnit4::class)
 class FxaDeviceConstellationTest {
     lateinit var account: NativeFirefoxAccount
     lateinit var constellation: FxaDeviceConstellation
@@ -45,7 +56,7 @@ class FxaDeviceConstellationTest {
     fun setup() {
         testDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
         account = mock()
-        constellation = FxaDeviceConstellation(account, CoroutineScope(testDispatcher))
+        constellation = FxaDeviceConstellation(account, CoroutineScope(testDispatcher) + SupervisorJob())
     }
 
     @Test
@@ -75,9 +86,20 @@ class FxaDeviceConstellationTest {
         val currentDevice = testDevice("currentTestDevice", true)
         `when`(account.getDevices()).thenReturn(arrayOf(currentDevice))
 
+        // Can't update cached value in an empty cache
+        try {
+            constellation.setDeviceNameAsync("new name", testContext).await()
+            fail()
+        } catch (e: IllegalStateException) {}
+
+        val cache = FxaDeviceSettingsCache(testContext)
+        cache.setToCache(DeviceSettings("someId", "test name", RustDeviceType.MOBILE))
+
         // No device state observer.
-        assertTrue(constellation.setDeviceNameAsync("new name").await())
-        verify(account).setDeviceDisplayName("new name")
+        assertTrue(constellation.setDeviceNameAsync("new name", testContext).await())
+        verify(account, times(2)).setDeviceDisplayName("new name")
+
+        assertEquals(DeviceSettings("someId", "new name", RustDeviceType.MOBILE), cache.getCached())
 
         // Set up the observer...
         val observer = object : DeviceConstellationObserver {
@@ -89,8 +111,10 @@ class FxaDeviceConstellationTest {
         }
         constellation.registerDeviceObserver(observer, startedLifecycleOwner(), false)
 
-        assertTrue(constellation.setDeviceNameAsync("another name").await())
+        assertTrue(constellation.setDeviceNameAsync("another name", testContext).await())
         verify(account).setDeviceDisplayName("another name")
+
+        assertEquals(DeviceSettings("someId", "another name", RustDeviceType.MOBILE), cache.getCached())
 
         // Since we're faking the data, here we're just testing that observer is notified with the
         // up-to-date constellation.

@@ -8,6 +8,7 @@ import android.app.Service
 import android.net.Uri
 import android.os.Binder
 import android.os.Bundle
+import androidx.annotation.VisibleForTesting
 import androidx.browser.customtabs.CustomTabsService
 import androidx.browser.customtabs.CustomTabsSessionToken
 import kotlinx.coroutines.Dispatchers.Main
@@ -40,7 +41,8 @@ abstract class AbstractCustomTabsService : CustomTabsService() {
     open val httpClient: Client? = null
     open val apiKey: String? = null
 
-    private val verifier by lazy {
+    @VisibleForTesting
+    internal val verifier by lazy {
         val client = httpClient
         val store = customTabsServiceStore
         if (client != null && store != null) {

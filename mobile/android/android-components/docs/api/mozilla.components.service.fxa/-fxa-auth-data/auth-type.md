@@ -2,7 +2,7 @@
 
 # authType
 
-`val authType: `[`AuthType`](../../mozilla.components.concept.sync/-auth-type/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Types.kt#L43)
+`val authType: `[`AuthType`](../../mozilla.components.concept.sync/-auth-type/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Types.kt#L45)
 
 Type of authentication which caused this object to be created.
 
