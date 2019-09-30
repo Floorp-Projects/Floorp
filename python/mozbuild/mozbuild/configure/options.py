@@ -107,7 +107,10 @@ class PositiveOptionValue(OptionValue):
     --option=value[,value2...].
     '''
 
-    def __nonzero__(self):
+    def __nonzero__(self):  # py2
+        return True
+
+    def __bool__(self):  # py3
         return True
 
 
