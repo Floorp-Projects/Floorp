@@ -85,6 +85,7 @@ license:
         - python/mozbuild/mozbuild/artifact_commands.py
         - python/mozbuild/mozbuild/export_telemetry_schema.py
         - python/mozbuild/mozpack/hg.py
+        - python/mozlint/test/files/
         - python/mozrelease/mozrelease
         - security/generate_certdata.py
         - security/mac/hardenedruntime/developer.entitlements.xml
@@ -102,6 +103,7 @@ license:
         - toolkit/components/reputationservice/chromium/chrome/common/safe_browsing/csd.pb.h
         - toolkit/mozapps/update/updater/crctable.h
         - tools/lint/eslint/eslint-plugin-mozilla/lib/configs
+        - tools/lint/test/
         - xpcom/base/ErrorList.py
         - xpcom/components/gen_static_components.py
         - xpcom/ds/HTMLAtoms.py
