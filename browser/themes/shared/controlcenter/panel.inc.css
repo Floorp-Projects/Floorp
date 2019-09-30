@@ -237,10 +237,13 @@
 
 #identity-popup-mainView-panel-header,
 #protections-popup-mainView-panel-header {
-  padding: var(--vertical-section-padding) var(--horizontal-padding);
   min-height: 40px;
   -moz-box-pack: center;
   -moz-box-align: center;
+}
+
+#identity-popup-mainView-panel-header {
+  padding: var(--vertical-section-padding) var(--horizontal-padding);
 }
 
 #protections-popup > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow {
@@ -279,6 +282,12 @@
   font-weight: 600;
 }
 
+#protections-popup-mainView-panel-header-span {
+  margin: var(--vertical-section-padding) 0;
+  /* 9px + 26px to compensate for the info button */
+  margin-inline-start: 35px;
+}
+
 #identity-popup-mainView-panel-header-span,
 #protections-popup-mainView-panel-header-span,
 #protections-popup-toast-panel-tp-on-desc,
@@ -298,7 +307,9 @@
 }
 
 #protections-popup-info-button {
-  margin: 0;
+  /* 3px outline, so this is actually 9px from the edge. */
+  margin: 12px 0;
+  margin-inline-end: 12px;
   padding: 0;
   border-radius: 0;
   outline: 3px solid transparent;
