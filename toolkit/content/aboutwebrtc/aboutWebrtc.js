@@ -692,7 +692,7 @@ ICEStats.prototype = {
     }
     caption.appendChild(
       renderElement("span", getString("trickle_highlight_color_name2"), {
-        className: "trickled",
+        className: "ice-trickled",
       })
     );
     // only append span if non-whitespace chars present
@@ -704,13 +704,13 @@ ICEStats.prototype = {
     // don't use |stat.x || ""| here because it hides 0 values
     let tbody = stats.map(stat =>
       [
+        stat.state,
+        stat.nominated,
+        stat.selected,
         stat["local-candidate"],
         stat["remote-candidate"],
         stat.componentId,
-        stat.state,
         stat.priority,
-        stat.nominated,
-        stat.selected,
         stat.bytesSent,
         stat.bytesReceived,
       ].map(entry => (Object.is(entry, undefined) ? "" : entry))
@@ -718,13 +718,13 @@ ICEStats.prototype = {
 
     let statsTable = new SimpleTable(
       [
+        "ice_state",
+        "nominated",
+        "selected",
         "local_candidate",
         "remote_candidate",
         "ice_component_id",
-        "ice_state",
         "priority",
-        "nominated",
-        "selected",
         "ice_pair_bytes_sent",
         "ice_pair_bytes_received",
       ].map(columnName => getString(columnName)),
@@ -738,10 +738,28 @@ ICEStats.prototype = {
       // look at statsTable row index + 1 to skip column headers
       let rowIndex = index + 1;
       if (stat["remote-trickled"]) {
-        statsTable.rows[rowIndex].cells[1].className = "trickled";
+        statsTable.rows[rowIndex].cells[4].className = "ice-trickled";
       }
       if (stat["local-trickled"]) {
-        statsTable.rows[rowIndex].cells[0].className = "trickled";
+        statsTable.rows[rowIndex].cells[3].className = "ice-trickled";
+      }
+      if (stat.state) {
+        let state = stat.state;
+        if (state == "succeeded") {
+          statsTable.rows[rowIndex].cells[0].className = "ice-success";
+        }
+        if (state == "failed") {
+          statsTable.rows[rowIndex].cells[0].className = "ice-failed";
+        }
+        if (state == "cancelled") {
+          statsTable.rows[rowIndex].cells[0].className = "ice-cancelled";
+        }
+      }
+      if (stat.nominated) {
+        statsTable.rows[rowIndex].cells[1].className = "ice-success";
+      }
+      if (stat.selected) {
+        statsTable.rows[rowIndex].cells[2].className = "ice-success";
       }
     });
 
@@ -751,8 +769,8 @@ ICEStats.prototype = {
     let rowCount = statsTable.rows.length - 1;
     for (var i = 0; i < rowCount; i++) {
       if (
-        statsTable.rows[i].cells[2].innerHTML !==
-        statsTable.rows[i + 1].cells[2].innerHTML
+        statsTable.rows[i].cells[5].innerHTML !==
+        statsTable.rows[i + 1].cells[5].innerHTML
       ) {
         statsTable.rows[i].className = "bottom-border";
       }
