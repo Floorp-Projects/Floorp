@@ -5645,6 +5645,11 @@
     type: RelaxedAtomicBool
     value: true
     mirror: always
+
+-   name: media.ffvpx.mp3.enabled
+    type: RelaxedAtomicBool
+    value: true
+    mirror: always
 #endif
 
 #if defined(MOZ_FFMPEG) || defined(MOZ_FFVPX)
