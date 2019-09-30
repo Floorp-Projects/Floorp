@@ -817,6 +817,11 @@ nsresult RemoveNsIFile(const QuotaInfo& aQuotaInfo, nsIFile* aFile,
   }
 
   rv = aFile->Remove(/* recursive */ false);
+  if (rv == NS_ERROR_FILE_NOT_FOUND ||
+      rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+    MOZ_ASSERT(!aTrackQuota);
+    return NS_OK;
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
