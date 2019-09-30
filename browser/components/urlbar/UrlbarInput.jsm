@@ -979,6 +979,7 @@ class UrlbarInput {
     if (
       !this.hasAttribute("breakout") ||
       this.hasAttribute("breakout-extend") ||
+      this.selectionStart != this.selectionEnd ||
       !(
         (this.getAttribute("focused") == "true" &&
           !this.textbox.classList.contains("hidden-focus")) ||
@@ -1711,6 +1712,7 @@ class UrlbarInput {
   }
 
   _on_click(event) {
+    this.startLayoutExtend();
     this._maybeSelectAll();
   }
 
@@ -1727,7 +1729,13 @@ class UrlbarInput {
 
   _on_focus(event) {
     this.setAttribute("focused", "true");
-    this.startLayoutExtend();
+
+    // We handle mouse-based expansion events separately in _on_click.
+    if (this._focusedViaMousedown) {
+      this._focusedViaMousedown = false;
+    } else {
+      this.startLayoutExtend();
+    }
 
     this._updateUrlTooltip();
     this.formatValue();
@@ -1745,7 +1753,7 @@ class UrlbarInput {
   _on_mousedown(event) {
     switch (event.currentTarget) {
       case this.inputField:
-        this.startLayoutExtend();
+        this._focusedViaMousedown = !this.focused;
         this._preventClickSelectsAll = this.focused;
 
         // The rest of this case only cares about left clicks.
