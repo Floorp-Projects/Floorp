@@ -17,23 +17,25 @@
     <panelview id="protections-popup-mainView"
                role="document"
                descriptionheightworkaround="true">
-      <hbox id="protections-popup-mainView-panel-header"
-            onclick="gProtectionsHandler.onHeaderClicked(event);">
-        <label id="protections-popup-main-header-label" flex="1"
-               role="heading" aria-level="1">
-          <html:span id="protections-popup-mainView-panel-header-span"/>
-        </label>
-        <toolbarbutton id="protections-popup-info-button" class="panel-info-button"
-                       aria-label="&protections.etpMoreInfo.label;">
-          <image/>
-        </toolbarbutton>
-        <description id="protections-popup-toast-panel-tp-on-desc">&protections.etpON.header;</description>
-        <description id="protections-popup-toast-panel-tp-off-desc">&protections.etpOFF.header;</description>
-      </hbox>
+      <vbox id="protections-popup-mainView-panel-header-section">
+        <hbox id="protections-popup-mainView-panel-header"
+              onclick="gProtectionsHandler.onHeaderClicked(event);">
+          <label id="protections-popup-main-header-label" flex="1"
+                 role="heading" aria-level="1">
+            <html:span id="protections-popup-mainView-panel-header-span"/>
+          </label>
+          <toolbarbutton id="protections-popup-info-button" class="panel-info-button"
+                         aria-label="&protections.etpMoreInfo.label;">
+            <image/>
+          </toolbarbutton>
+          <description id="protections-popup-toast-panel-tp-on-desc">&protections.etpON.header;</description>
+          <description id="protections-popup-toast-panel-tp-off-desc">&protections.etpOFF.header;</description>
+        </hbox>
 
-      <html:div id="messaging-system-message-container" disabled="true">
-        <!-- Messaging System Messages will render in this container -->
-      </html:div>
+        <html:div id="messaging-system-message-container" disabled="true">
+          <!-- Messaging System Messages will render in this container -->
+        </html:div>
+      </vbox>
 
       <hbox id="protections-popup-tp-switch-section" class="protections-popup-section">
         <vbox class="protections-popup-tp-switch-label-box" flex="1">

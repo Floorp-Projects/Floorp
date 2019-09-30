@@ -91,7 +91,7 @@
   max-width: var(--popup-width);
 }
 
-#protections-popup[toast] #protections-popup-mainView > :not(#protections-popup-mainView-panel-header),
+#protections-popup[toast] #protections-popup-mainView > :not(#protections-popup-mainView-panel-header-section),
 #protections-popup[toast] #protections-popup-main-header-label {
   display: none;
 }
@@ -257,20 +257,20 @@
   fill: #0CB0F5;
 }
 
-#protections-popup-mainView-panel-header {
+#protections-popup-mainView-panel-header-section {
   color: white;
   background: radial-gradient(circle at top right, #9059FF, #0250BB);
 }
 
-#protections-popup-mainView-panel-header:-moz-locale-dir(rtl) {
+#protections-popup-mainView-panel-header-section:-moz-locale-dir(rtl) {
   background: radial-gradient(circle at top left, #9059FF, #0250BB);
 }
 
-:root[lwt-popup-brighttext] #protections-popup-mainView-panel-header {
+:root[lwt-popup-brighttext] #protections-popup-mainView-panel-header-section {
   background: radial-gradient(circle at top right, #C689FF, #00B3F4);
 }
 
-:root[lwt-popup-brighttext] #protections-popup-mainView-panel-header:-moz-locale-dir(rtl) {
+:root[lwt-popup-brighttext] #protections-popup-mainView-panel-header-section:-moz-locale-dir(rtl) {
   background: radial-gradient(circle at top left, #C689FF, #00B3F4);
 }
 
@@ -910,7 +910,8 @@ description#identity-popup-content-verifier,
   display: none;
 }
 
-#protections-popup-mainView-panel-header > description {
+#protections-popup-toast-panel-tp-on-desc,
+#protections-popup-toast-panel-tp-off-desc {
   display: none;
 }
 
