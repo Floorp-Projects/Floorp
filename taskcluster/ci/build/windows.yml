@@ -713,7 +713,6 @@ win64-asan/debug:
             - builds/taskcluster_base_win64.py
             - builds/taskcluster_sub_win64/asan_debug.py
         mozconfig-variant: debug-asan
-    run-on-projects: ['trunk', 'try']
     fetches:
         toolchain:
             - win64-clang-cl
@@ -750,7 +749,6 @@ win64-asan/opt:
         extra-config:
             stage_platform: win64-asan
         mozconfig-variant: nightly-asan
-    run-on-projects: ['trunk', 'try']
     fetches:
         toolchain:
             - win64-clang-cl
@@ -832,7 +830,6 @@ win64-asan-fuzzing/opt:
         extra-config:
             stage_platform: win64-fuzzing-asan
         mozconfig-variant: nightly-fuzzing-asan
-    run-on-projects: ['trunk', 'try']
     fetches:
         toolchain:
             - win64-clang-cl
