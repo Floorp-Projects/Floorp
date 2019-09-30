@@ -33,18 +33,6 @@ endif
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
-ifdef MOZ_EXTERNAL_SIGNING_FORMAT
-# We can't use sha2signcode on mar files
-MOZ_EXTERNAL_SIGNING_FORMAT := $(filter-out sha2signcode,$(MOZ_EXTERNAL_SIGNING_FORMAT))
-MOZ_EXTERNAL_SIGNING_FORMAT := mar $(MOZ_EXTERNAL_SIGNING_FORMAT)
-endif
-
-ifndef MAR_OLD_FORMAT
-MAR_SIGN_FORMAT=mar_sha384
-else
-MAR_SIGN_FORMAT=mar
-endif
-
 dir-stage := $(call mkdir_deps,$(STAGE_DIR))
 
 complete-patch:: $(dir-stage)

@@ -107,7 +107,7 @@ is a ``tar.gz``.
 individual file or internals of the zipfile, skipping any already-signed files
 and a select few blocklisted files (using the `should_sign_windows`_ function).
 It returns a signed individual binary or zipfile with signed internals, depending
-on the input. This format includes ``authograph_authenticode``, and
+on the input. This format includes ``autograph_authenticode``, and
 ``autograph_authenticode_stub``.
 
 ``mar`` signing signs our update files (Mozilla ARchive). ``mar_sha384`` is
