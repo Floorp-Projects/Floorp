@@ -6,8 +6,8 @@ include protocol PContent;
 include protocol PSHistory;
 
 include DOMTypes;
-include NewPSHEntry;
 
+using refcounted class mozilla::dom::CrossProcessSHEntry from "mozilla/dom/MaybeNewPSHEntry.h";
 using refcounted class nsDocShellLoadState from "mozilla/dom/DocShellMessageUtils.h";
 using struct nsID from "nsID.h";
 using nsIntRect from "nsRect.h";
@@ -16,6 +16,8 @@ namespace mozilla {
 namespace dom {
 
 sync protocol PSHEntry {
+  // IPDLParamTraits<dom::CrossProcessSHEntry*>::Write relies on PContent being
+  // the manager.
   manager PContent;
 
 parent:
@@ -37,7 +39,7 @@ parent:
   async SetSticky(bool sticky);
   sync GetPostData() returns (nsIInputStream postData);
   async SetPostData(nsIInputStream postData);
-  sync GetParent() returns (MaybeNewPSHEntry parentEntry);
+  sync GetParent() returns (CrossProcessSHEntry parentEntry);
   async SetParent(nullable PSHEntry parentEntry);
   sync GetLoadType() returns (uint32_t loadType);
   async SetLoadType(uint32_t loadType);
@@ -100,8 +102,8 @@ parent:
   async SetLoadTypeAsHistory();
   sync AddChild(nullable PSHEntry childEntry, int32_t offset, bool useRemoteSubframes) returns (nsresult result);
   sync RemoveChild(PSHEntry childEntry) returns (nsresult result);
-  sync GetChildAt(int32_t index) returns (MaybeNewPSHEntry childEntry);
-  sync GetChildSHEntryIfHasNoDynamicallyAddedChild(int32_t childOffset) returns (MaybeNewPSHEntry childEntry);
+  sync GetChildAt(int32_t index) returns (CrossProcessSHEntry childEntry);
+  sync GetChildSHEntryIfHasNoDynamicallyAddedChild(int32_t childOffset) returns (CrossProcessSHEntry childEntry);
   sync ReplaceChild(PSHEntry newChildEntry) returns (nsresult result);
   async ClearEntry(uint64_t aNewSharedID);
   sync CreateLoadInfo() returns (nsDocShellLoadState loadState);
