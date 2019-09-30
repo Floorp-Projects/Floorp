@@ -587,9 +587,6 @@ class HuffmanPreludeReader {
           symbol, readSymbol<Entry>(entry, /* First and only value */ 0));
 
       MOZ_TRY(table.initWithSingleValue(cx_, std::move(symbol)));
-#ifdef DEBUG
-      table.selfCheck();
-#endif  // DEBUG
       return Ok();
     }
 
@@ -637,7 +634,7 @@ class HuffmanPreludeReader {
 
     // Now read the symbols and assign bits.
     uint32_t code = 0;
-    MOZ_TRY(table.init(cx_, numberOfSymbols, maxBitLength));
+    MOZ_TRY(table.initStart(cx_, numberOfSymbols, maxBitLength));
 
     for (size_t i = 0; i < numberOfSymbols; ++i) {
       const auto bitLength = auxStorageLength[i].bitLength;
@@ -660,9 +657,7 @@ class HuffmanPreludeReader {
       code = (code + 1) << (nextBitLength - bitLength);
     }
 
-#ifdef DEBUG
-    table.selfCheck();
-#endif  // DEBUG
+    MOZ_TRY(table.initComplete());
     auxStorageLength.clear();
     return Ok();
   }
@@ -721,7 +716,7 @@ class HuffmanPreludeReader {
 
     // Now read the symbols and assign bits.
     uint32_t code = 0;
-    MOZ_TRY(table.init(cx_, auxStorageLength.length() - 1, maxBitLength));
+    MOZ_TRY(table.initStart(cx_, auxStorageLength.length() - 1, maxBitLength));
 
     for (size_t i = 0; i < auxStorageLength.length() - 1; ++i) {
       const auto bitLength = auxStorageLength[i].bitLength;
@@ -744,9 +739,7 @@ class HuffmanPreludeReader {
       code = (code + 1) << (nextBitLength - bitLength);
     }
 
-#ifdef DEBUG
-    table.selfCheck();
-#endif  // DEBUG
+    MOZ_TRY(table.initComplete());
 
     auxStorageLength.clear();
     return Ok();
@@ -900,11 +893,6 @@ class HuffmanPreludeReader {
         // Effectively, an `Interface` is a sum with a single entry.
         HuffmanTableIndexedSymbolsSum sum(cx_);
         MOZ_TRY(sum.initWithSingleValue(cx_, BinASTKind(interface.kind)));
-
-#ifdef DEBUG
-        sum.selfCheck();
-#endif  // DEBUG
-
         table = {mozilla::VariantType<HuffmanTableIndexedSymbolsSum>{},
                  std::move(sum)};
       }
@@ -1713,21 +1701,20 @@ HuffmanTableImplementationGeneric<T>::HuffmanTableImplementationGeneric(
     JSContext*)
     : implementation(HuffmanTableUnreachable{}) {}
 
-#ifdef DEBUG
 template <typename T>
-void HuffmanTableImplementationGeneric<T>::selfCheck() {
-  this->implementation.match(
-      [](HuffmanTableImplementationSaturated<T>& implementation) {
-        implementation.selfCheck();
+JS::Result<Ok> HuffmanTableImplementationGeneric<T>::initComplete() {
+  return this->implementation.match(
+      [](HuffmanTableImplementationSaturated<T>& implementation) -> JS::Result<Ok> {
+        return implementation.initComplete();
       },
-      [](HuffmanTableImplementationMap<T>& implementation) {
-        implementation.selfCheck();
+      [](HuffmanTableImplementationMap<T>& implementation) -> JS::Result<Ok> {
+        return implementation.initComplete();
       },
-      [](HuffmanTableUnreachable&) {
+      [](HuffmanTableUnreachable&) -> JS::Result<Ok> {
         MOZ_CRASH("HuffmanTableImplementationGeneric is unitialized!");
+        return Ok();
       });
 }
-#endif  // DEBUG
 
 template <typename T>
 typename HuffmanTableImplementationGeneric<T>::Iterator
@@ -1782,7 +1769,7 @@ JS::Result<Ok> HuffmanTableImplementationGeneric<T>::initWithSingleValue(
 }
 
 template <typename T>
-JS::Result<Ok> HuffmanTableImplementationGeneric<T>::init(
+JS::Result<Ok> HuffmanTableImplementationGeneric<T>::initStart(
     JSContext* cx, size_t numberOfSymbols, uint8_t maxBitLength) {
   MOZ_ASSERT(this->implementation.template is<
              HuffmanTableUnreachable>());  // Make sure that we're initializing.
@@ -1798,13 +1785,13 @@ JS::Result<Ok> HuffmanTableImplementationGeneric<T>::init(
     this->implementation = {
         mozilla::VariantType<HuffmanTableImplementationMap<T>>{}, cx};
     MOZ_TRY(this->implementation.template as<HuffmanTableImplementationMap<T>>()
-                .init(cx, numberOfSymbols, maxBitLength));
+                .initStart(cx, numberOfSymbols, maxBitLength));
   } else {
     this->implementation = {
         mozilla::VariantType<HuffmanTableImplementationSaturated<T>>{}, cx};
     MOZ_TRY(this->implementation
                 .template as<HuffmanTableImplementationSaturated<T>>()
-                .init(cx, numberOfSymbols, maxBitLength));
+                .initStart(cx, numberOfSymbols, maxBitLength));
   }
   return Ok();
 }
@@ -1855,7 +1842,7 @@ JS::Result<Ok> HuffmanTableImplementationNaive<T, N>::initWithSingleValue(
 }
 
 template <typename T, int N>
-JS::Result<Ok> HuffmanTableImplementationNaive<T, N>::init(
+JS::Result<Ok> HuffmanTableImplementationNaive<T, N>::initStart(
     JSContext* cx, size_t numberOfSymbols, uint8_t) {
   MOZ_ASSERT(values.empty());  // Make sure that we're initializing.
   if (!values.initCapacity(numberOfSymbols)) {
@@ -1864,12 +1851,11 @@ JS::Result<Ok> HuffmanTableImplementationNaive<T, N>::init(
   return Ok();
 }
 
-#ifdef DEBUG
 template <typename T, int N>
-void HuffmanTableImplementationNaive<T, N>::selfCheck() {
-  // Nothing to check
+JS::Result<Ok> HuffmanTableImplementationNaive<T, N>::initComplete() {
+  MOZ_ASSERT(values.length() <= N);
+  return Ok();
 }
-#endif  // DEBUG
 
 template <typename T, int N>
 JS::Result<Ok> HuffmanTableImplementationNaive<T, N>::addSymbol(
@@ -1923,9 +1909,8 @@ JS::Result<Ok> HuffmanTableImplementationMap<T>::initWithSingleValue(
 }
 
 template <typename T>
-JS::Result<Ok> HuffmanTableImplementationMap<T>::init(JSContext* cx,
-                                                      size_t numberOfSymbols,
-                                                      uint8_t) {
+JS::Result<Ok> HuffmanTableImplementationMap<T>::initStart(
+    JSContext* cx, size_t numberOfSymbols, uint8_t) {
   MOZ_ASSERT(values.empty());  // Make sure that we're initializing.
   if (!values.reserve(numberOfSymbols) || !keys.reserve(numberOfSymbols)) {
     ReportOutOfMemory(cx);
@@ -1934,9 +1919,9 @@ JS::Result<Ok> HuffmanTableImplementationMap<T>::init(JSContext* cx,
   return Ok();
 }
 
-#ifdef DEBUG
 template <typename T>
-void HuffmanTableImplementationMap<T>::selfCheck() {
+JS::Result<Ok> HuffmanTableImplementationMap<T>::initComplete() {
+#if DEBUG
   // Check that there is a bijection between `keys` and `values`.
   // 1. Injection.
   for (const auto& key : keys) {
@@ -1946,8 +1931,9 @@ void HuffmanTableImplementationMap<T>::selfCheck() {
   }
   // 2. Cardinality.
   MOZ_ASSERT(values.count() == keys.length());
-}
 #endif  // DEBUG
+  return Ok();
+}
 
 template <typename T>
 JS::Result<Ok> HuffmanTableImplementationMap<T>::addSymbol(uint32_t bits,
@@ -2024,7 +2010,7 @@ JS::Result<Ok> HuffmanTableImplementationSaturated<T>::initWithSingleValue(
 }
 
 template <typename T>
-JS::Result<Ok> HuffmanTableImplementationSaturated<T>::init(
+JS::Result<Ok> HuffmanTableImplementationSaturated<T>::initStart(
     JSContext* cx, size_t numberOfSymbols, uint8_t maxBitLength) {
   MOZ_ASSERT(maxBitLength <= MAX_BIT_LENGTH_IN_SATURATED_TABLE);
   MOZ_ASSERT(values.empty());  // Make sure that we're initializing.
@@ -2046,12 +2032,11 @@ JS::Result<Ok> HuffmanTableImplementationSaturated<T>::init(
   return Ok();
 }
 
-#ifdef DEBUG
 template <typename T>
-void HuffmanTableImplementationSaturated<T>::selfCheck() {
+JS::Result<Ok> HuffmanTableImplementationSaturated<T>::initComplete() {
   // Double-check that we've initialized properly.
   MOZ_ASSERT(this->maxBitLength <= MAX_CODE_BIT_LENGTH);
-
+#ifdef DEBUG
   bool foundMaxBitLength = false;
   for (size_t i = 0; i < saturated.length(); ++i) {
     // Check that all indices have been properly initialized.
@@ -2065,8 +2050,9 @@ void HuffmanTableImplementationSaturated<T>::selfCheck() {
     }
   }
   MOZ_ASSERT(foundMaxBitLength);
-}
 #endif  // DEBUG
+  return Ok();
+}
 
 template <typename T>
 JS::Result<Ok> HuffmanTableImplementationSaturated<T>::addSymbol(
@@ -2242,9 +2228,6 @@ MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<Boolean>(
   }
 
   MOZ_TRY(table.initWithSingleValue(cx_, indexByte != 0));
-#ifdef DEBUG
-  table.selfCheck();
-#endif  // DEBUG
   return Ok();
 }
 
@@ -2281,9 +2264,6 @@ HuffmanPreludeReader::readSingleValueTable<MaybeInterface>(
 
   MOZ_TRY(table.initWithSingleValue(
       cx_, indexByte == 0 ? BinASTKind::_Null : entry.kind));
-#ifdef DEBUG
-  table.selfCheck();
-#endif  // DEBUG
   return Ok();
 }
 
@@ -2316,9 +2296,6 @@ MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<Sum>(
   }
 
   MOZ_TRY(table.initWithSingleValue(cx_, sum.interfaceAt(index)));
-#ifdef DEBUG
-  table.selfCheck();
-#endif  // DEBUG
   return Ok();
 }
 
@@ -2353,9 +2330,6 @@ HuffmanPreludeReader::readSingleValueTable<MaybeSum>(
   }
 
   MOZ_TRY(table.initWithSingleValue(cx_, sum.interfaceAt(index)));
-#ifdef DEBUG
-  table.selfCheck();
-#endif  // DEBUG
   return Ok();
 }
 
@@ -2402,9 +2376,6 @@ MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<Number>(
   MOZ_TRY(table.initWithSingleValue(
       cx_,
       /* NOLINT(performance-move-const-arg) */ std::move(value)));
-#ifdef DEBUG
-  table.selfCheck();
-#endif  // DEBUG
   return Ok();
 }
 
@@ -2442,9 +2413,6 @@ MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<List>(
     return raiseInvalidTableData(list.identity);
   }
   MOZ_TRY(table.initWithSingleValue(cx_, std::move(length)));
-#ifdef DEBUG
-  table.selfCheck();
-#endif  // DEBUG
   return Ok();
 }
 
@@ -2488,9 +2456,6 @@ MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<String>(
   MOZ_TRY(table.initWithSingleValue(
       cx_,
       /* NOLINT(performance-move-const-arg) */ std::move(value)));
-#ifdef DEBUG
-  table.selfCheck();
-#endif  // DEBUG
   return Ok();
 }
 
@@ -2540,9 +2505,6 @@ HuffmanPreludeReader::readSingleValueTable<MaybeString>(
   MOZ_TRY(table.initWithSingleValue(
       cx_,
       /* NOLINT(performance-move-const-arg) */ std::move(symbol)));
-#ifdef DEBUG
-  table.selfCheck();
-#endif  // DEBUG
   return Ok();
 }
 
@@ -2579,9 +2541,6 @@ HuffmanPreludeReader::readSingleValueTable<StringEnum>(
   MOZ_TRY(table.initWithSingleValue(
       cx_,
       /* NOLINT(performance-move-const-arg) */ std::move(symbol)));
-#ifdef DEBUG
-  table.selfCheck();
-#endif  // DEBUG
   return Ok();
 }
 
@@ -2617,9 +2576,6 @@ HuffmanPreludeReader::readSingleValueTable<UnsignedLong>(
   MOZ_TRY(table.initWithSingleValue(
       cx_,
       /* NOLINT(performance-move-const-arg) */ std::move(index)));
-#ifdef DEBUG
-  table.selfCheck();
-#endif  // DEBUG
   return Ok();
 }
 
