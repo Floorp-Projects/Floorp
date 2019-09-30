@@ -7,7 +7,8 @@
 Library('style-gtest')
 
 UNIFIED_SOURCES = [
-    'StyloParsingBench.cpp'
+    'ImportScannerTest.cpp',
+    'StyloParsingBench.cpp',
 ]
 
 LOCAL_INCLUDES += [
