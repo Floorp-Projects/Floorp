@@ -1813,7 +1813,6 @@ sftk_NewSession(CK_SLOT_ID slotID, CK_NOTIFY notify, CK_VOID_PTR pApplication,
         return NULL;
 
     session->next = session->prev = NULL;
-    session->refCount = 1;
     session->enc_context = NULL;
     session->hash_context = NULL;
     session->sign_context = NULL;
@@ -1837,11 +1836,10 @@ sftk_NewSession(CK_SLOT_ID slotID, CK_NOTIFY notify, CK_VOID_PTR pApplication,
 }
 
 /* free all the data associated with a session. */
-static void
+void
 sftk_DestroySession(SFTKSession *session)
 {
     SFTKObjectList *op, *next;
-    PORT_Assert(session->refCount == 0);
 
     /* clean out the attributes */
     /* since no one is referencing us, it's safe to walk the chain
@@ -1885,31 +1883,20 @@ sftk_SessionFromHandle(CK_SESSION_HANDLE handle)
 
     PZ_Lock(lock);
     sftkqueue_find(session, handle, slot->head, slot->sessHashSize);
-    if (session)
-        session->refCount++;
     PZ_Unlock(lock);
 
     return (session);
 }
 
 /*
- * release a reference to a session handle
+ * release a reference to a session handle. This method of using SFTKSessions
+ * is deprecated, but the pattern should be retained until a future effort
+ * to refactor all SFTKSession users at once is completed.
  */
 void
 sftk_FreeSession(SFTKSession *session)
 {
-    PRBool destroy = PR_FALSE;
-    SFTKSlot *slot = sftk_SlotFromSession(session);
-    PZLock *lock = SFTK_SESSION_LOCK(slot, session->handle);
-
-    PZ_Lock(lock);
-    if (session->refCount == 1)
-        destroy = PR_TRUE;
-    session->refCount--;
-    PZ_Unlock(lock);
-
-    if (destroy)
-        sftk_DestroySession(session);
+    return;
 }
 
 void
