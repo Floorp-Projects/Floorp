@@ -312,7 +312,7 @@ class UrlbarProviderExtension extends UrlbarProvider {
       extResult.payload.engine = engine.name;
     }
 
-    return new UrlbarResult(
+    let result = new UrlbarResult(
       UrlbarProviderExtension.RESULT_TYPES[extResult.type],
       UrlbarProviderExtension.SOURCE_TYPES[extResult.source],
       ...UrlbarResult.payloadAndSimpleHighlights(
@@ -320,6 +320,10 @@ class UrlbarProviderExtension extends UrlbarProvider {
         extResult.payload || {}
       )
     );
+    if (extResult.suggestedIndex !== undefined) {
+      result.suggestedIndex = extResult.suggestedIndex;
+    }
+    return result;
   }
 }
 

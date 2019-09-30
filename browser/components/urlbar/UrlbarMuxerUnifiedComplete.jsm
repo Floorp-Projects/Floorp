@@ -69,7 +69,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // The sorting is important, to avoid messing up indices later when we'll
     // insert these results.
     let reshuffleResults = context.results
-      .filter(r => r.suggestedIndex != -1)
+      .filter(r => r.suggestedIndex >= 0)
       .sort((a, b) => a.suggestedIndex - b.suggestedIndex);
     let sortedResults = [];
     // Track which results have been inserted already.
@@ -99,7 +99,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
         } else if (group == RESULT_TYPE_TO_GROUP.get(result.type)) {
           // If there's no suggestedIndex, insert the result now, otherwise
           // we'll handle it later.
-          if (result.suggestedIndex == -1) {
+          if (result.suggestedIndex < 0) {
             sortedResults.push(result);
           }
           handled.add(result);
