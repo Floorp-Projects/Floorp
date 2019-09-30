@@ -1940,6 +1940,10 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   margin-top: 16px;
 }
 
+#protections-popup-message .text-link {
+  color: white;
+}
+
 #protections-popup-message .text-link:hover {
   text-decoration: underline;
   cursor: pointer;
