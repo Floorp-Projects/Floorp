@@ -1077,7 +1077,7 @@ class _ASRouter {
     }
 
     // In order for ping centre to pick this up, it MUST contain a substring activity-stream
-    const experimentName = `activity-stream-extended-triplets`;
+    const experimentName = `activity-stream-extended-triplets-v2-1581912`;
     TelemetryEnvironment.setExperimentActive(experimentName, branch);
 
     const state = { extendedTripletsInitialized: true };
