@@ -17,10 +17,7 @@ export LD_LIBRARY_PATH="$GCCDIR/lib64"
 export RUSTC="$MOZ_FETCHES_DIR/rustc/bin/rustc"
 export CARGO="$MOZ_FETCHES_DIR/rustc/bin/cargo"
 
-PYTHON=python2.7
-if ! which $PYTHON; then
-    PYTHON=python
-fi
+PYTHON=python3
 
 function check_commit_msg () {
     ( set +e;
