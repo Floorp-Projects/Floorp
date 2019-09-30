@@ -362,19 +362,6 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
           }
           opSetStyleLineNumber operation(content, tokenizer->getLineNumber());
           treeOp->Init(mozilla::AsVariant(operation));
-
-          nsHtml5String url =
-              aAttributes->getValue(nsHtml5AttributeName::ATTR_XLINK_HREF);
-          if (url) {
-            nsHtml5String crossOrigin =
-                aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
-            nsHtml5String integrity =
-                aAttributes->getValue(nsHtml5AttributeName::ATTR_INTEGRITY);
-            nsHtml5String referrerPolicy = aAttributes->getValue(
-                nsHtml5AttributeName::ATTR_REFERRERPOLICY);
-            mSpeculativeLoadQueue.AppendElement()->InitStyle(
-                url, nullptr, crossOrigin, referrerPolicy, integrity);
-          }
         }
         break;
     }
