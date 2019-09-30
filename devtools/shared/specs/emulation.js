@@ -158,6 +158,13 @@ const emulationSpec = generateActorSpec({
       },
       response: {},
     },
+
+    captureScreenshot: {
+      request: {},
+      response: {
+        value: RetVal("json"),
+      },
+    },
   },
 });
 
