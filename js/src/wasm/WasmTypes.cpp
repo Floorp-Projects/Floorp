@@ -218,11 +218,11 @@ bool wasm::IsRoundingFunction(SymbolicAddress callee, jit::RoundingMode* mode) {
 }
 
 size_t FuncType::serializedSize() const {
-  return SerializedPodVectorSize(results_) + SerializedPodVectorSize(args_);
+  return sizeof(ret_) + SerializedPodVectorSize(args_);
 }
 
 uint8_t* FuncType::serialize(uint8_t* cursor) const {
-  cursor = SerializePodVector(cursor, results_);
+  cursor = WriteScalar<ExprType>(cursor, ret_);
   cursor = SerializePodVector(cursor, args_);
   return cursor;
 }
@@ -243,11 +243,9 @@ inline const uint8_t* ReadScalar<ExprType>(const uint8_t* src, ExprType* dst) {
 }  // namespace js
 
 const uint8_t* FuncType::deserialize(const uint8_t* cursor) {
-  cursor = DeserializePodVector(cursor, &results_);
-  if (!cursor) {
-    return nullptr;
-  }
-  return DeserializePodVector(cursor, &args_);
+  (cursor = ReadScalar<ExprType>(cursor, &ret_)) &&
+      (cursor = DeserializePodVector(cursor, &args_));
+  return cursor;
 }
 
 size_t FuncType::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
@@ -303,23 +301,18 @@ static unsigned EncodeImmediateType(ValType vt) {
 
 /* static */
 bool FuncTypeIdDesc::isGlobal(const FuncType& funcType) {
-  const ValTypeVector& results = funcType.results();
-  const ValTypeVector& args = funcType.args();
-  if (results.length() + args.length() > sMaxTypes) {
+  unsigned numTypes =
+      (funcType.ret() == ExprType::Void ? 0 : 1) + (funcType.args().length());
+  if (numTypes > sMaxTypes) {
     return true;
   }
 
-  if (results.length() > 1) {
+  if (funcType.ret() != ExprType::Void &&
+      !IsImmediateType(NonVoidToValType(funcType.ret()))) {
     return true;
   }
 
-  for (ValType v : results) {
-    if (!IsImmediateType(v)) {
-      return true;
-    }
-  }
-
-  for (ValType v : args) {
+  for (ValType v : funcType.args()) {
     if (!IsImmediateType(v)) {
       return true;
     }
@@ -346,12 +339,11 @@ FuncTypeIdDesc FuncTypeIdDesc::immediate(const FuncType& funcType) {
   ImmediateType immediate = ImmediateBit;
   uint32_t shift = sTagBits;
 
-  if (funcType.results().length() > 0) {
-    MOZ_ASSERT(funcType.results().length() == 1);
+  if (funcType.ret() != ExprType::Void) {
     immediate |= (1 << shift);
     shift += sReturnBit;
 
-    immediate |= EncodeImmediateType(funcType.results()[0]) << shift;
+    immediate |= EncodeImmediateType(NonVoidToValType(funcType.ret())) << shift;
     shift += sTypeBits;
   } else {
     shift += sReturnBit;
@@ -702,42 +694,36 @@ bool DebugFrame::getLocal(uint32_t localIndex, MutableHandleValue vp) {
   return true;
 }
 
-bool DebugFrame::updateReturnJSValue() {
+void DebugFrame::updateReturnJSValue() {
   hasCachedReturnJSValue_ = true;
-  ValTypeVector results;
-  if (!instance()->debug().debugGetResultTypes(funcIndex(), &results)) {
-    return false;
-  }
-  if (results.length() == 0) {
-    cachedReturnJSValue_.setUndefined();
-    return true;
-  }
-  MOZ_ASSERT(results.length() == 1, "multi-value return unimplemented");
-  switch (results[0].code()) {
-    case ValType::I32:
+  ExprType returnType = instance()->debug().debugGetResultType(funcIndex());
+  switch (returnType.code()) {
+    case ExprType::Void:
+      cachedReturnJSValue_.setUndefined();
+      break;
+    case ExprType::I32:
       cachedReturnJSValue_.setInt32(resultI32_);
       break;
-    case ValType::I64:
+    case ExprType::I64:
       // Just display as a Number; it's ok if we lose some precision
       cachedReturnJSValue_.setDouble((double)resultI64_);
       break;
-    case ValType::F32:
+    case ExprType::F32:
       cachedReturnJSValue_.setDouble(JS::CanonicalizeNaN(resultF32_));
       break;
-    case ValType::F64:
+    case ExprType::F64:
       cachedReturnJSValue_.setDouble(JS::CanonicalizeNaN(resultF64_));
       break;
-    case ValType::Ref:
+    case ExprType::Ref:
       cachedReturnJSValue_ = ObjectOrNullValue((JSObject*)resultRef_);
       break;
-    case ValType::FuncRef:
-    case ValType::AnyRef:
+    case ExprType::FuncRef:
+    case ExprType::AnyRef:
       cachedReturnJSValue_ = UnboxAnyRef(resultAnyRef_);
       break;
     default:
       MOZ_CRASH("result type");
   }
-  return true;
 }
 
 HandleValue DebugFrame::returnValue() const {
