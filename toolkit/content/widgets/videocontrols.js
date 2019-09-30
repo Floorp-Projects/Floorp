@@ -1527,18 +1527,18 @@ this.VideoControlsImplWidget = class {
 
       get isVideoInFullScreen() {
         return this.video.isSameNode(
-          this.video.getRootNode().mozFullScreenElement
+          this.video.getRootNode().fullscreenElement
         );
       },
 
       toggleFullscreen() {
         this.isVideoInFullScreen
-          ? this.document.mozCancelFullScreen()
-          : this.video.mozRequestFullScreen();
+          ? this.document.exitFullscreen()
+          : this.video.requestFullscreen();
       },
 
       setFullscreenButtonState() {
-        if (this.isAudioOnly || !this.document.mozFullScreenEnabled) {
+        if (this.isAudioOnly || !this.document.fullscreenEnabled) {
           this.controlBar.setAttribute("fullscreen-unavailable", true);
           this.adjustControlSize();
           return;
