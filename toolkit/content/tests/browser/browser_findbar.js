@@ -254,6 +254,50 @@ add_task(async function e10sLostKeys() {
   BrowserTestUtils.removeTab(tab);
 });
 
+/**
+ * This test makes sure that keyboard operations still occur
+ * after the findbar is opened and closed.
+ */
+add_task(async function test_open_and_close_keys() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "data:text/html,<body style='height: 5000px;'>Hello There</body>"
+  );
+
+  await gFindBarPromise;
+  let findBar = gFindBar;
+
+  is(findBar.hidden, true, "Findbar is hidden now.");
+  let openedPromise = BrowserTestUtils.waitForEvent(findBar, "findbaropen");
+  await EventUtils.synthesizeKey("f", { accelKey: true });
+  await openedPromise;
+
+  is(findBar.hidden, false, "Findbar should not be hidden.");
+
+  let closedPromise = BrowserTestUtils.waitForEvent(findBar, "findbarclose");
+  await EventUtils.synthesizeKey("KEY_Escape");
+  await closedPromise;
+
+  let scrollPromise = BrowserTestUtils.waitForContentEvent(
+    tab.linkedBrowser,
+    "scroll"
+  );
+  await EventUtils.synthesizeKey("KEY_ArrowDown");
+  await scrollPromise;
+
+  let scrollPosition = await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [],
+    async function() {
+      return content.document.body.scrollTop;
+    }
+  );
+
+  ok(scrollPosition > 0, "Scrolled ok to " + scrollPosition);
+
+  BrowserTestUtils.removeTab(tab);
+});
+
 async function promiseFindFinished(searchText, highlightOn) {
   let findbar = await gBrowser.getFindBar();
   findbar.startFind(findbar.FIND_NORMAL);

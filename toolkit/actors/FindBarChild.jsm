@@ -37,11 +37,8 @@ class FindBarChild extends JSWindowActorChild {
 
   receiveMessage(msg) {
     if (msg.name == "Findbar:UpdateState") {
-      this.findMode = msg.data.findMode;
-      this.inQuickFind = msg.data.hasQuickFindTimeout;
-      if (msg.data.isOpenAndFocused) {
-        this.inPassThrough = false;
-      }
+      let { FindBarContent } = this;
+      FindBarContent.updateState(msg.data);
     }
   }
 

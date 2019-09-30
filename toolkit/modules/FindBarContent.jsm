@@ -60,6 +60,14 @@ class FindBarContent {
     this.passKeyToParent(event);
   }
 
+  updateState(data) {
+    this.findMode = data.findMode;
+    this.inQuickFind = data.hasQuickFindTimeout;
+    if (data.isOpenAndFocused) {
+      this.inPassThrough = false;
+    }
+  }
+
   handleEvent(event) {
     switch (event.type) {
       case "keypress":
