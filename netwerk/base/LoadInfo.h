@@ -135,6 +135,7 @@ class LoadInfo final : public nsILoadInfo {
            const Maybe<mozilla::dom::ServiceWorkerDescriptor>& aController,
            nsSecurityFlags aSecurityFlags,
            nsContentPolicyType aContentPolicyType, LoadTainting aTainting,
+           bool aBlockAllMixedContent,
            bool aUpgradeInsecureRequests, bool aBrowserUpgradeInsecureRequests,
            bool aBrowserWouldUpgradeInsecureRequests, bool aForceAllowDataURI,
            bool aAllowInsecureRedirectToDataURI, bool aBypassCORSChecks,
@@ -213,6 +214,7 @@ class LoadInfo final : public nsILoadInfo {
   nsSecurityFlags mSecurityFlags;
   nsContentPolicyType mInternalContentPolicyType;
   LoadTainting mTainting;
+  bool mBlockAllMixedContent;
   bool mUpgradeInsecureRequests;
   bool mBrowserUpgradeInsecureRequests;
   bool mBrowserWouldUpgradeInsecureRequests;

@@ -574,8 +574,17 @@ interface nsILoadInfo : nsISupports
   /**
    * Returns true if document or any of the documents ancestors
    * up to the toplevel document make use of the CSP directive
-   * 'upgrade-insecure-requests'. Used to identify upgrade
-   * requests in e10s where the loadingDocument is not available.
+   * 'block-all-mixed-content'.
+   *
+   * Warning: If the loadingDocument is null, then the
+   * blockAllMixedContent is false.
+   */
+  [infallible] readonly attribute boolean blockAllMixedContent;
+
+  /**
+   * Returns true if document or any of the documents ancestors
+   * up to the toplevel document make use of the CSP directive
+   * 'upgrade-insecure-requests'.
    *
    * Warning: If the loadingDocument is null, then the
    * upgradeInsecureRequests is false.
