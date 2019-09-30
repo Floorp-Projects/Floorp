@@ -9,7 +9,8 @@
   --markup-pseudoclass-disk-color: #e9c600;
   --markup-hidden-tag-color: var(--grey-50);
   --markup-outline: var(--theme-splitter-color);
-  --markup-text-color-contrast: black;
+  --markup-drag-line: var(--grey-40);
+  --markup-drop-line: var(--blue-55);
 }
 
 .theme-dark:root {
@@ -18,7 +19,8 @@
   --markup-hidden-punctuation-color: #787878;
   --markup-hidden-tag-color: var(--grey-45);
   --markup-outline: var(--theme-selection-background);
-  --markup-text-color-contrast: var(--theme-selection-color);
+  --markup-drag-line: var(--grey-55);
+  --markup-drop-line: var(--blue-50);
 }
 
 * {
@@ -135,11 +137,11 @@ body.dragging .tag-line {
   /* Offset these by 1000px to make sure they cover the full width of the view */
   width: calc(100% + 1000px);
   left: -1000px;
-  background-color: var(--theme-body-color);
+  background-color: var(--markup-drag-line);
 }
 
 .tag-line.drop-target::before {
-  background-color: var(--theme-contrast-background);
+  background-color: var(--markup-drop-line);
 }
 
 /* In case the indicator is put on the closing .tag-line, the indentation level
@@ -437,9 +439,9 @@ ul.children + .tag-line::before {
 /* Selected nodes being flashed in the tree should have dark selected text. Here we target
    nodes with theme-selected text colors and apply a dark, accessible text color for when
    the yellow flashing background is applied. */
-.theme-selected.theme-bg-yellow-contrast ~ .editor,
-.theme-selected ~ .editor [class*="theme-fg-color"].theme-fg-contrast {
-  color: var(--markup-text-color-contrast);
+.theme-selected.theme-bg-contrast ~ .editor,
+.theme-selected ~ .editor .theme-fg-contrast {
+  color: var(--theme-contrast-color);
 }
 
 /* Applicable to the DOCTYPE */

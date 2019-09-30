@@ -27,13 +27,8 @@ body {
   color: var(--theme-selection-color);
 }
 
-.theme-bg-contrast,
 .variable-or-property:not([overridden])[changed] {
   background: var(--theme-contrast-background);
-}
-
-.theme-bg-yellow-contrast {
-  background: var(--theme-bg-yellow);
 }
 
 .theme-link,
@@ -162,8 +157,12 @@ body {
   border-color: var(--theme-splitter-color);
 }
 
-.theme-fg-contrast { /* To be used for text on theme-bg-contrast */
-  color: black;
+.theme-bg-contrast {
+  background: var(--theme-contrast-background);
+}
+
+.theme-fg-contrast {
+  color: var(--theme-contrast-color);
 }
 
 .ruleview-swatch,
