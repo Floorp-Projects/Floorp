@@ -2,7 +2,7 @@
 == line-clipping.html line-clipping-ref.html
 fuzzy-if(Android,0-16,0-244) fuzzy-if(webrender,0-47,0-6) == marker-basic.html marker-basic-ref.html  # Bug 1128229
 == marker-string.html marker-string-ref.html
-skip-if(Android) fuzzy-if(webrender,0-47,0-18) == bidi-simple.html bidi-simple-ref.html # Fails on Android due to anti-aliasing
+fuzzy-if(webrender,0-47,0-18) == bidi-simple.html bidi-simple-ref.html
 skip-if(!gtkWidget) fuzzy-if(gtkWidget,0-124,0-289) == bidi-simple-scrolled.html bidi-simple-scrolled-ref.html # Fails on Windows and OSX due to anti-aliasing
 fuzzy-if(Android,0-24,0-4000) fuzzy-if(cocoaWidget,0-1,0-40) fuzzy-if(asyncPan&&!layersGPUAccelerated,0-149,0-1836) == scroll-rounding.html scroll-rounding-ref.html # bug 760264
 fuzzy(0-16,0-454) fails-if(gtkWidget) fuzzy-if(webrender&&winWidget,50-85,454-499) fuzzy-if(webrender&&OSX,7-7,143-143) skip-if(OSX&&!isDebugBuild&&verify) == anonymous-block.html anonymous-block-ref.html # gtkWidget:bug 1309103, fuzzy: subpixel aa
@@ -16,7 +16,7 @@ fuzzy-if(webrender,0-3,0-825) == quirks-decorations.html quirks-decorations-ref.
 fuzzy-if(skiaContent,0-1,0-4200) fuzzy-if(webrender,0-47,0-6) == selection.html selection-ref.html
 fuzzy-if(webrender,0-8,0-509) == marker-shadow.html marker-shadow-ref.html
 fuzzy-if(webrender,0-3,0-25) == aligned-baseline.html aligned-baseline-ref.html
-skip-if(Android) fuzzy-if(skiaContent,0-1,0-5) == clipped-elements.html clipped-elements-ref.html
+fuzzy-if(skiaContent,0-1,0-5) == clipped-elements.html clipped-elements-ref.html
 == theme-overflow.html theme-overflow-ref.html
 == table-cell.html table-cell-ref.html
 fuzzy-if(gtkWidget,0-10,0-32) fuzzy-if(webrender,0-47,0-18) == two-value-syntax.html two-value-syntax-ref.html
