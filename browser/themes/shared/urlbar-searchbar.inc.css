@@ -112,7 +112,7 @@
 
 #urlbar[breakout][breakout-extend-animate],
 #urlbar[breakout][breakout-extend-animate] > #urlbar-input-container {
-  transition-duration: 250ms;
+  transition-duration: 150ms;
   transition-timing-function: var(--animation-easing-function);
 }
 
