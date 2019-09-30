@@ -77,6 +77,7 @@ jobs:
     fennec-production:
         attributes:
             nightly: true
+        include-nightly-version: true
         include-shippable-secrets: true
         run:
             geckoview-engine: geckoBeta
@@ -88,6 +89,7 @@ jobs:
         attributes:
             build-type: production
             release-type: beta
+        include-release-version: true
         include-shippable-secrets: true
         run:
             geckoview-engine: geckoBeta
@@ -99,6 +101,7 @@ jobs:
     production:
         attributes:
             release-type: production
+        include-release-version: true
         include-shippable-secrets: true
         run:
             geckoview-engine: geckoBeta
