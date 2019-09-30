@@ -441,6 +441,7 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
        aEvent->mClass == ePointerEventClass ||
        aEvent->mClass == eTouchEventClass ||
        aEvent->mClass == eKeyboardEventClass ||
+       (aEvent->mClass == eDragEventClass && aEvent->mMessage == eDrop) ||
        IsMessageGamepadUserActivity(aEvent->mMessage))) {
     if (gMouseOrKeyboardEventCounter == 0) {
       nsCOMPtr<nsIObserverService> obs =
@@ -455,7 +456,7 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     nsCOMPtr<nsINode> node = aTargetContent;
     if (node && (aEvent->mMessage == eKeyUp || aEvent->mMessage == eMouseUp ||
                  aEvent->mMessage == eWheel || aEvent->mMessage == eTouchEnd ||
-                 aEvent->mMessage == ePointerUp)) {
+                 aEvent->mMessage == ePointerUp || aEvent->mMessage == eDrop)) {
       Document* doc = node->OwnerDoc();
       while (doc) {
         doc->SetUserHasInteracted();
