@@ -82,6 +82,7 @@ class InlinePreviewRow extends PureComponent<Props> {
         {previews.map((preview: Preview) => (
           <InlinePreview
             line={line}
+            key={`${line}-${preview.name}`}
             variable={preview.name}
             value={preview.value}
             openElementInInspector={openElementInInspector}

@@ -62,16 +62,14 @@ try:
                 continue
 
             m = re.match(
-                r"^Function.*has unrooted.*of type.*live across GC call ('?)(.*?)('?) at (\S+):\d+$", line)  # NOQA: E501
+                r"^Function.*has unrooted.*of type.*live across GC call '(.*?)' at (\S+):\d+$", line)  # NOQA: E501
             if m:
-                # Function names are surrounded by single quotes. Field calls
-                # are unquoted.
-                current_gcFunction = m.group(2)
+                current_gcFunction = m.group(1)
                 hazardousGCFunctions[current_gcFunction].append(line)
                 hazardOrder.append((current_gcFunction,
                                     len(hazardousGCFunctions[current_gcFunction]) - 1))
                 num_hazards += 1
-                fileOfFunction[current_gcFunction] = m.group(4)
+                fileOfFunction[current_gcFunction] = m.group(2)
                 continue
 
             m = re.match(r'Function.*expected hazard.*but none were found', line)

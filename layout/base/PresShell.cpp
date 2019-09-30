@@ -4155,7 +4155,6 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
         !mIsDestroying) {
       didLayoutFlush = true;
       mFrameConstructor->RecalcQuotesAndCounters();
-      viewManager->FlushDelayedResize(true);
       if (ProcessReflowCommands(flushType < FlushType::Layout)) {
         if (mContentToScrollTo) {
           DoScrollContentIntoView();

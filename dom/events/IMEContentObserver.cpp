@@ -1680,23 +1680,26 @@ IMEContentObserver::IMENotificationSender::Run() {
   if (observer->mNeedsToNotifyIMEOfTextChange) {
     observer->mNeedsToNotifyIMEOfTextChange = false;
     SendTextChange();
+    // Even if the observer hasn't received selection change, let's try to send
+    // selection change notification to IME because selection start offset may
+    // be changed if the previous contents of selection start are changed.  For
+    // example, when previous `<p>` element of another `<p>` element which
+    // contains caret is removed by a DOM mutation, selection change event
+    // won't be fired, but selection start offset should be decreased by the
+    // length of removed `<p>` element.
+    observer->mNeedsToNotifyIMEOfSelectionChange = true;
   }
 
   // If a text change notification causes another text change again, we should
   // notify IME of that before sending a selection change notification.
-  // Otherwise, even if the observer hasn't received selection change, let's
-  // try to send selection change notification to IME because selection
-  // start offset may be changed if the previous contents of selection start
-  // are changed.  For example, when previous `<p>` element of another `<p>`
-  // element which contains caret is removed by a DOM mutation, selection
-  // change event won't be fired, but selection start offset should be
-  // decreased by the length of removed `<p>` element.
   if (!observer->mNeedsToNotifyIMEOfTextChange) {
     // Be aware, PuppetWidget depends on the order of this. A selection change
     // notification should not be sent before a text change notification because
     // PuppetWidget shouldn't query new text content every selection change.
-    observer->mNeedsToNotifyIMEOfSelectionChange = false;
-    SendSelectionChange();
+    if (observer->mNeedsToNotifyIMEOfSelectionChange) {
+      observer->mNeedsToNotifyIMEOfSelectionChange = false;
+      SendSelectionChange();
+    }
   }
 
   // If a text change notification causes another text change again or a
