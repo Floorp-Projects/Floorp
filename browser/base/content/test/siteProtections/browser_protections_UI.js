@@ -273,7 +273,7 @@ add_task(async function testMiniPanel() {
 
   // Check that only the header is displayed.
   for (let item of protectionsPopupMainView.childNodes) {
-    if (item.id !== "protections-popup-mainView-panel-header") {
+    if (item.id !== "protections-popup-mainView-panel-header-section") {
       ok(
         !BrowserTestUtils.is_visible(item),
         `The section '${item.id}' is hidden in the toast.`
