@@ -180,6 +180,15 @@ HitTestingTreeNode* HitTestingTreeNode::GetPrevSibling() const {
 
 HitTestingTreeNode* HitTestingTreeNode::GetParent() const { return mParent; }
 
+bool HitTestingTreeNode::IsAncestorOf(const HitTestingTreeNode* aOther) const {
+  for (const HitTestingTreeNode* cur = aOther; cur; cur = cur->GetParent()) {
+    if (cur == this) {
+      return true;
+    }
+  }
+  return false;
+}
+
 AsyncPanZoomController* HitTestingTreeNode::GetApzc() const { return mApzc; }
 
 AsyncPanZoomController* HitTestingTreeNode::GetNearestContainingApzc() const {

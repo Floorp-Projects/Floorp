@@ -1302,23 +1302,37 @@ static bool LayerIsScrollbarTarget(const LayerMetricsWrapper& aTarget,
 
 static void ApplyAsyncTransformToScrollbarForContent(
     const RefPtr<APZSampler>& aSampler, Layer* aScrollbar,
-    const LayerMetricsWrapper& aContent) {
+    const LayerMetricsWrapper& aContent, bool aScrollbarIsDescendant) {
   AsyncTransformComponentMatrix clipTransform;
 
   MOZ_ASSERT(aSampler);
   LayerToParentLayerMatrix4x4 transform =
       aSampler->ComputeTransformForScrollThumb(
           aScrollbar->GetLocalTransformTyped(), aContent,
-          aScrollbar->GetScrollbarData(), &clipTransform);
+          aScrollbar->GetScrollbarData(), aScrollbarIsDescendant,
+          &clipTransform);
+
+  if (aScrollbarIsDescendant) {
+    // We also need to make a corresponding change on the clip rect of all the
+    // layers on the ancestor chain from the scrollbar layer up to but not
+    // including the layer with the async transform. Otherwise the scrollbar
+    // shifts but gets clipped and so appears to flicker.
+    for (Layer* ancestor = aScrollbar; ancestor != aContent.GetLayer();
+         ancestor = ancestor->GetParent()) {
+      TransformClipRect(ancestor, clipTransform);
+    }
+  }
 
   SetShadowTransform(aScrollbar, transform);
 }
 
-static LayerMetricsWrapper FindScrolledLayerForScrollbar(Layer* aScrollbar) {
-  // Find the root of the layer subtree containing the scrollbar target.
+static LayerMetricsWrapper FindScrolledLayerForScrollbar(Layer* aScrollbar,
+                                                         bool* aOutIsAncestor) {
+  // First check if the scrolled layer is an ancestor of the scrollbar layer.
   LayerMetricsWrapper root(aScrollbar->Manager()->GetRoot());
   LayerMetricsWrapper prevAncestor(aScrollbar);
   LayerMetricsWrapper scrolledLayer;
+
   for (LayerMetricsWrapper ancestor(aScrollbar); ancestor;
        ancestor = ancestor.GetParent()) {
     // Don't walk into remote layer trees; the scrollbar will always be in
@@ -1329,12 +1343,13 @@ static LayerMetricsWrapper FindScrolledLayerForScrollbar(Layer* aScrollbar) {
     }
     prevAncestor = ancestor;
 
-    // With containerless scrolling, the scrollbar target should never be
-    // an ancestor.
-    MOZ_ASSERT(!LayerIsScrollbarTarget(ancestor, aScrollbar));
+    if (LayerIsScrollbarTarget(ancestor, aScrollbar)) {
+      *aOutIsAncestor = true;
+      return ancestor;
+    }
   }
 
-  // Search the layer subtree.
+  // Search the entire layer space of the scrollbar.
   ForEachNode<ForwardIterator>(root, [&root, &scrolledLayer, &aScrollbar](
                                          LayerMetricsWrapper aLayerMetrics) {
     // Do not recurse into RefLayers, since our initial aSubtreeRoot is the
@@ -1353,17 +1368,18 @@ static LayerMetricsWrapper FindScrolledLayerForScrollbar(Layer* aScrollbar) {
 
 void AsyncCompositionManager::ApplyAsyncTransformToScrollbar(Layer* aLayer) {
   // If this layer corresponds to a scrollbar, then there should be a layer that
-  // is a previous sibling that has a matching ViewID on its
+  // is a previous sibling or a parent that has a matching ViewID on its
   // FrameMetrics. That is the content that this scrollbar is for. We pick up
   // the transient async transform from that layer and use it to update the
   // scrollbar position. Note that it is possible that the content layer is no
   // longer there; in this case we don't need to do anything because there can't
   // be an async transform on the content.
+  bool isAncestor = false;
   const LayerMetricsWrapper& scrollTarget =
-      FindScrolledLayerForScrollbar(aLayer);
+      FindScrolledLayerForScrollbar(aLayer, &isAncestor);
   if (scrollTarget) {
     ApplyAsyncTransformToScrollbarForContent(mCompositorBridge->GetAPZSampler(),
-                                             aLayer, scrollTarget);
+                                             aLayer, scrollTarget, isAncestor);
   }
 }
 
