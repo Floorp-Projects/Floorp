@@ -1,0 +1,20 @@
+<html class="reftest-wait">
+<style>
+* { scale: 81 1 }
+</style>
+<script>
+function go() {
+  window.getSelection().selectAllChildren(a);
+}
+function eh() {
+  c.beginElementAt(0.67302);
+  b.scrollIntoView(false);
+  document.documentElement.style.setProperty("rotate", "1deg 45 1 -1");
+  document.documentElement.classList.remove("reftest-wait");
+}
+</script>
+<body onload=go()>
+<button id="a">
+<svg id="b">
+<set id="c" onbegin="eh()">
+</html>
