@@ -30,6 +30,10 @@ py2:
         - tools/rb
         - tools/update-packaging
         - xpcom
+
+        # These paths are intentionally excluded (Python 3 only)
+        - python/mozlint
+        - tools/lint
     extensions: ['py']
     support-files:
         - 'tools/lint/python/*compat*'
