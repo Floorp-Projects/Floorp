@@ -69,6 +69,7 @@ LoadInfo::LoadInfo(
       mSecurityFlags(aSecurityFlags),
       mInternalContentPolicyType(aContentPolicyType),
       mTainting(LoadTainting::Basic),
+      mBlockAllMixedContent(false),
       mUpgradeInsecureRequests(false),
       mBrowserUpgradeInsecureRequests(false),
       mBrowserWouldUpgradeInsecureRequests(false),
@@ -255,6 +256,13 @@ LoadInfo::LoadInfo(
       }
     }
 
+    // if the document forces all mixed content to be blocked, then we
+    // store that bit for all requests on the loadinfo.
+    mBlockAllMixedContent =
+        aLoadingContext->OwnerDoc()->GetBlockAllMixedContent(false) ||
+        (nsContentUtils::IsPreloadType(mInternalContentPolicyType) &&
+         aLoadingContext->OwnerDoc()->GetBlockAllMixedContent(true));
+
     // if the document forces all requests to be upgraded from http to https,
     // then we should do that for all requests. If it only forces preloads to be
     // upgraded then we should enforce upgrade insecure requests only for
@@ -322,6 +330,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
       mSecurityFlags(aSecurityFlags),
       mInternalContentPolicyType(nsIContentPolicy::TYPE_DOCUMENT),
       mTainting(LoadTainting::Basic),
+      mBlockAllMixedContent(false),
       mUpgradeInsecureRequests(false),
       mBrowserUpgradeInsecureRequests(false),
       mBrowserWouldUpgradeInsecureRequests(false),
@@ -428,6 +437,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mSecurityFlags(rhs.mSecurityFlags),
       mInternalContentPolicyType(rhs.mInternalContentPolicyType),
       mTainting(rhs.mTainting),
+      mBlockAllMixedContent(rhs.mBlockAllMixedContent),
       mUpgradeInsecureRequests(rhs.mUpgradeInsecureRequests),
       mBrowserUpgradeInsecureRequests(rhs.mBrowserUpgradeInsecureRequests),
       mBrowserWouldUpgradeInsecureRequests(
@@ -482,8 +492,8 @@ LoadInfo::LoadInfo(
     const Maybe<ClientInfo>& aInitialClientInfo,
     const Maybe<ServiceWorkerDescriptor>& aController,
     nsSecurityFlags aSecurityFlags, nsContentPolicyType aContentPolicyType,
-    LoadTainting aTainting, bool aUpgradeInsecureRequests,
-    bool aBrowserUpgradeInsecureRequests,
+    LoadTainting aTainting, bool aBlockAllMixedContent,
+    bool aUpgradeInsecureRequests, bool aBrowserUpgradeInsecureRequests,
     bool aBrowserWouldUpgradeInsecureRequests, bool aForceAllowDataURI,
     bool aAllowInsecureRedirectToDataURI, bool aBypassCORSChecks,
     bool aSkipContentPolicyCheckForWebRequest,
@@ -520,6 +530,7 @@ LoadInfo::LoadInfo(
       mSecurityFlags(aSecurityFlags),
       mInternalContentPolicyType(aContentPolicyType),
       mTainting(aTainting),
+      mBlockAllMixedContent(aBlockAllMixedContent),
       mUpgradeInsecureRequests(aUpgradeInsecureRequests),
       mBrowserUpgradeInsecureRequests(aBrowserUpgradeInsecureRequests),
       mBrowserWouldUpgradeInsecureRequests(
@@ -902,6 +913,12 @@ LoadInfo::GetExternalContentPolicyType(nsContentPolicyType* aResult) {
 
 nsContentPolicyType LoadInfo::InternalContentPolicyType() {
   return mInternalContentPolicyType;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetBlockAllMixedContent(bool* aResult) {
+  *aResult = mBlockAllMixedContent;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

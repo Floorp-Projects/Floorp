@@ -3031,28 +3031,17 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     WarnIfSandboxIneffective(docShell, mSandboxFlags, GetChannel());
   }
 
-  // The CSP directive upgrade-insecure-requests not only applies to the
-  // toplevel document, but also to nested documents. Let's propagate that
-  // flag from the parent to the nested document.
-  nsCOMPtr<nsIDocShellTreeItem> treeItem = this->GetDocShell();
-  if (treeItem) {
-    nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
-    treeItem->GetInProcessSameTypeParent(getter_AddRefs(sameTypeParent));
-    if (sameTypeParent) {
-      Document* doc = sameTypeParent->GetDocument();
-      mBlockAllMixedContent = doc->GetBlockAllMixedContent(false);
-      // if the parent document makes use of block-all-mixed-content
-      // then subdocument preloads should always be blocked.
-      mBlockAllMixedContentPreloads =
-          mBlockAllMixedContent || doc->GetBlockAllMixedContent(true);
-
-      mUpgradeInsecureRequests = doc->GetUpgradeInsecureRequests(false);
-      // if the parent document makes use of upgrade-insecure-requests
-      // then subdocument preloads should always be upgraded.
-      mUpgradeInsecurePreloads =
-          mUpgradeInsecureRequests || doc->GetUpgradeInsecureRequests(true);
-    }
-  }
+  // The CSP directives upgrade-insecure-requests as well as
+  // block-all-mixed-content not only apply to the toplevel document,
+  // but also to nested documents. The loadInfo of a subdocument
+  // load already holds the correct flag, so let's just set it here
+  // on the document. Please note that we set the appropriate preload
+  // bits just for the sake of completeness here, because the preloader
+  // does not reach into subdocuments.
+  mUpgradeInsecureRequests = loadInfo->GetUpgradeInsecureRequests();
+  mUpgradeInsecurePreloads = mUpgradeInsecureRequests;
+  mBlockAllMixedContent = loadInfo->GetBlockAllMixedContent();
+  mBlockAllMixedContentPreloads = mBlockAllMixedContent;
 
   nsresult rv = InitReferrerInfo(aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
