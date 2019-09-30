@@ -59,15 +59,6 @@ static_assert(
 // more bites than necessary, just to be on the safe side.
 const uint8_t MAX_PREFIX_BIT_LENGTH = 32;
 
-// Maximal bit length acceptable in a `HuffmanTableSaturated`.
-//
-// As `HuffmanTableSaturated` require O(2 ^ max bit len) space, we
-// cannot afford to use them for all tables. Whenever the max bit
-// length in the table is <= MAX_BIT_LENGTH_IN_SATURATED_TABLE,
-// we use a `HuffmanTableSaturated`. Otherwise, we fall back to
-// a slower but less memory-hungry solution.
-const uint8_t MAX_BIT_LENGTH_IN_SATURATED_TABLE = 10;
-
 // The length of the bit buffer, in bits.
 const uint8_t BIT_BUFFER_SIZE = 64;
 
@@ -2053,7 +2044,7 @@ JS::Result<Ok> SingleLookupHuffmanTable<T>::initWithSingleValue(JSContext* cx,
 template <typename T>
 JS::Result<Ok> SingleLookupHuffmanTable<T>::initStart(
     JSContext* cx, size_t numberOfSymbols, uint8_t largestBitLength) {
-  MOZ_ASSERT(largestBitLength <= MAX_BIT_LENGTH_IN_SATURATED_TABLE);
+  MOZ_ASSERT_IF(largestBitLength != 32, uint32_t(1) << largestBitLength - 1 <= mozilla::MaxValue<InternalIndex>::value);
   MOZ_ASSERT(values.empty());  // Make sure that we're initializing.
 
   this->largestBitLength = largestBitLength;
