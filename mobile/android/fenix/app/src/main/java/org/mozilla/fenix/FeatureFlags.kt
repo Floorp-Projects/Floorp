@@ -55,4 +55,9 @@ object FeatureFlags {
      * Gives option in Settings to Delete Browsing Data on new menu option Quit
      */
     val deleteDataOnQuit = nightly or debug
+
+    /**
+     * Gives option in Settings to disable auto play media
+     */
+    val autoPlayMedia = nightly or debug
 }
