@@ -436,7 +436,6 @@ class JS::Realm : public JS::shadow::Realm {
    */
   uint32_t globalWriteBarriered = 0;
 
-  uint32_t warnedAboutArrayGenericsMethods = 0;
 #ifdef DEBUG
   bool firedOnNewGlobalObject = false;
 #endif
