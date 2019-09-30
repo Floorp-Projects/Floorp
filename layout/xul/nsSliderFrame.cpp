@@ -366,7 +366,8 @@ void nsSliderFrame::BuildDisplayListForChildren(
           ScrollbarData::CreateForThumb(*scrollDirection, GetThumbRatio(),
                                         thumbStart, thumbLength,
                                         isAsyncDraggable, sliderTrackStart,
-                                        sliderTrackLength, scrollTargetId));
+                                        sliderTrackLength, scrollTargetId),
+          true, false, nsDisplayOwnLayer::OwnLayerForScrollThumb);
 
       return;
     }

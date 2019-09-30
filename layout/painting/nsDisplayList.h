@@ -6025,6 +6025,16 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
  public:
   typedef mozilla::layers::ScrollbarData ScrollbarData;
 
+  enum OwnLayerType {
+    OwnLayerForTransformWithRoundedClip,
+    OwnLayerForStackingContext,
+    OwnLayerForImageBoxFrame,
+    OwnLayerForScrollbar,
+    OwnLayerForScrollThumb,
+    OwnLayerForSubdoc,
+    OwnLayerForBoxFrame
+  };
+
   /**
    * @param aFlags eGenerateSubdocInvalidations :
    * Add UserData to the created ContainerLayer, so that invalidations
@@ -6041,7 +6051,8 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
       const ActiveScrolledRoot* aActiveScrolledRoot,
       nsDisplayOwnLayerFlags aFlags = nsDisplayOwnLayerFlags::None,
       const ScrollbarData& aScrollbarData = ScrollbarData{},
-      bool aForceActive = true, bool aClearClipChain = false);
+      bool aForceActive = true, bool aClearClipChain = false,
+      uint16_t aIndex = 0);
 
   nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder,
                     const nsDisplayOwnLayer& aOther)
@@ -6049,7 +6060,8 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
         mFlags(aOther.mFlags),
         mScrollbarData(aOther.mScrollbarData),
         mForceActive(aOther.mForceActive),
-        mWrAnimationId(aOther.mWrAnimationId) {
+        mWrAnimationId(aOther.mWrAnimationId),
+        mIndex(aOther.mIndex) {
     MOZ_COUNT_CTOR(nsDisplayOwnLayer);
   }
 
@@ -6080,6 +6092,8 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
     return false;
   }
 
+  uint16_t CalculatePerFrameKey() const override { return mIndex; }
+
   bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
     return false;
   }
@@ -6103,6 +6117,7 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
   ScrollbarData mScrollbarData;
   bool mForceActive;
   uint64_t mWrAnimationId;
+  uint16_t mIndex;
 };
 
 class nsDisplayRenderRoot : public nsDisplayWrapList {

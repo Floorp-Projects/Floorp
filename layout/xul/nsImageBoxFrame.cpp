@@ -328,7 +328,8 @@ void nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   nsDisplayList list;
   list.AppendNewToTop<nsDisplayXULImage>(aBuilder, this);
 
-  CreateOwnLayerIfNeeded(aBuilder, &list);
+  CreateOwnLayerIfNeeded(aBuilder, &list,
+                         nsDisplayOwnLayer::OwnLayerForImageBoxFrame);
 
   aLists.Content()->AppendToTop(&list);
 }
