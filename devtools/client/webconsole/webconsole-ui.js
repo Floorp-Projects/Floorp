@@ -397,10 +397,9 @@ class WebConsoleUI {
       // Make sure keyboard shortcuts work immediately after opening
       // the Browser Console (Bug 1461366).
       this.window.focus();
-
       shortcuts.on(
         l10n.getStr("webconsole.close.key"),
-        this.window.top.close.bind(this.window.top)
+        this.window.close.bind(this.window)
       );
 
       ZoomKeys.register(this.window, shortcuts);
