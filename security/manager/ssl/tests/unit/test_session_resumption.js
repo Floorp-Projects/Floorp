@@ -14,6 +14,7 @@ const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("security.OCSP.enabled");
+  Services.prefs.clearUserPref("network.ssl_tokens_cache_enabled");
 });
 
 Services.prefs.setIntPref("security.OCSP.enabled", 1);
@@ -69,6 +70,11 @@ function add_resume_non_ev_with_override_test() {
         !transportSecurityInfo.isExtendedValidation,
         "expired.example.com should not have isExtendedValidation set"
       );
+
+      let certOverrideService = Cc[
+        "@mozilla.org/security/certoverride;1"
+      ].getService(Ci.nsICertOverrideService);
+      certOverrideService.clearValidityOverride("expired.example.com", 8443);
     }
   );
 }
@@ -257,8 +263,7 @@ function add_origin_attributes_test(
   );
 }
 
-function run_test() {
-  add_tls_server_setup("BadCertAndPinningServer", "bad_certs");
+function add_resumption_tests() {
   add_resume_ev_test();
   add_resume_non_ev_test();
   add_resume_non_ev_with_override_test();
@@ -275,5 +280,18 @@ function run_test() {
     { firstPartyDomain: "baz.com" },
     true
   );
+}
+
+function run_test() {
+  add_tls_server_setup("BadCertAndPinningServer", "bad_certs");
+  add_resumption_tests();
+  // Enable external session cache and reset the status.
+  add_test(function() {
+    Services.prefs.setBoolPref("network.ssl_tokens_cache_enabled", true);
+    certdb.clearOCSPCache();
+    run_next_test();
+  });
+  // Do tests again.
+  add_resumption_tests();
   run_next_test();
 }
