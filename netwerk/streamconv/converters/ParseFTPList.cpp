@@ -688,8 +688,9 @@ int ParseFTPList(const char* line, struct list_state* state,
           }
           result->fe_type = 'f';
           pos = toklen[2];
-          while (pos > (sizeof(result->fe_size) - 1))
+          if (pos > (sizeof(result->fe_size) - 1)) {
             pos = (sizeof(result->fe_size) - 1);
+          }
           memcpy(result->fe_size, tokens[2], pos);
           result->fe_size[pos] = '\0';
         } else {

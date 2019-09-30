@@ -226,7 +226,7 @@ BufferedOutgoingMsg::BufferedOutgoingMsg(OutgoingMsg& msg) {
 
 BufferedOutgoingMsg::~BufferedOutgoingMsg() {
   delete mInfo;
-  delete mData;
+  delete[] mData;
 }
 
 static int receive_cb(struct socket* sock, union sctp_sockstore addr,

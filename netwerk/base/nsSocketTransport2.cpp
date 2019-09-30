@@ -1698,7 +1698,7 @@ nsresult nsSocketTransport::InitiateSocket() {
     //
     else {
       if (gSocketTransportService->IsTelemetryEnabledAndNotSleepPhase() &&
-          connectStarted && connectStarted) {
+          connectStarted && connectCalled) {
         SendPRBlockingTelemetry(
             connectStarted, Telemetry::PRCONNECT_FAIL_BLOCKING_TIME_NORMAL,
             Telemetry::PRCONNECT_FAIL_BLOCKING_TIME_SHUTDOWN,
