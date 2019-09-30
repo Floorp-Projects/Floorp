@@ -328,5 +328,11 @@ bool FuzzySecurityInfo::DeserializeFromIPC(const IPC::Message* aMsg,
   return false;
 }
 
+NS_IMETHODIMP
+FuzzySecurityInfo::GetPeerId(nsACString& aResult) {
+  aResult.Assign(EmptyCString());
+  return NS_OK;
+}
+
 }  // namespace net
 }  // namespace mozilla
