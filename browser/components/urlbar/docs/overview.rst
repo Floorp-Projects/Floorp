@@ -269,7 +269,7 @@ Implements an input box *View*, owns an *UrlbarView*.
 .. code::
 
   UrlbarInput {
-    constructor(options = { textbox, panel, controller });
+    constructor(options = { textbox, panel });
     // Used to trim urls when necessary (e.g. removing "http://")
     trimValue();
     // Uses UrlbarValueFormatter to highlight the base host, search aliases
