@@ -1742,6 +1742,7 @@ var gProtectionsHandler = {
       anyBlocking = anyBlocking || blocker.activated;
     }
 
+<<<<<<< local
     this._categoryItemOrderInvalidated = true;
     if (this._protectionsPopup.state == "open") {
       this.reorderCategoryItems();
@@ -1751,6 +1752,8 @@ var gProtectionsHandler = {
       this.noTrackersDetectedDescription.hidden = true;
     }
 
+=======
+>>>>>>> graft
     // Check whether the user has added an exception for this site.
     let hasException = ContentBlockingAllowList.includes(
       gBrowser.selectedBrowser
@@ -1774,6 +1777,30 @@ var gProtectionsHandler = {
     this._protectionsPopup.toggleAttribute("detected", anyDetected);
     this._protectionsPopup.toggleAttribute("blocking", anyBlocking);
     this._protectionsPopup.toggleAttribute("hasException", hasException);
+
+    this._categoryItemOrderInvalidated = true;
+
+    if (anyDetected) {
+      this.noTrackersDetectedDescription.hidden = true;
+
+      if (this._protectionsPopup.state == "open") {
+        this.reorderCategoryItems();
+
+        if (!this._descriptionHeightWorkaroundCalled) {
+          // The first time the panel is opened, the category items are still
+          // invisible when descriptionHeightWorkaround gets called, i.e. they
+          // are omitted from the workaround and the content overflows the panel.
+          // We can fix this by calling the function manually the first time we
+          // call reorderCategoryItems(). Since we have set all the relevant
+          // attributes and hidden the "No Trackers Found" description at this
+          // point, the items are guaranteed to be visible when we call it below.
+          PanelMultiView.forNode(
+            this._protectionsPopupMainView
+          ).descriptionHeightWorkaround();
+          this._descriptionHeightWorkaroundCalled = true;
+        }
+      }
+    }
 
     this.iconBox.toggleAttribute("active", anyBlocking);
     this.iconBox.toggleAttribute("hasException", hasException);
