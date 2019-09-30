@@ -68,6 +68,12 @@
           "type": {
             "$ref": "ResultType",
             "description": "The result's type."
+          },
+          "suggestedIndex": {
+            "type": "integer",
+            "description": "Suggest a preferred position for this result within the result set.",
+            "optional": true,
+            "default": -1
           }
         }
       },

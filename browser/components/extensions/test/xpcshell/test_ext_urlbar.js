@@ -336,6 +336,7 @@ add_task(async function test_onProviderResultsRequested() {
     },
   ];
 
+  Assert.ok(context.results.every(r => r.suggestedIndex == -1));
   let actualResults = context.results.map(r => ({
     type: r.type,
     source: r.source,
@@ -1341,6 +1342,7 @@ add_task(async function test_nonPrivateBrowsing() {
               title: "Test result",
               url: "http://example.com/",
             },
+            suggestedIndex: 1,
           },
         ];
       }, "test");
@@ -1376,6 +1378,7 @@ add_task(async function test_nonPrivateBrowsing() {
   Assert.equal(context.results.length, 2);
   Assert.ok(context.results[0].heuristic);
   Assert.equal(context.results[1].title, "Test result");
+  Assert.equal(context.results[1].suggestedIndex, 1);
 
   await ext.unload();
 });
