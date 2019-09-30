@@ -685,6 +685,7 @@ xul|*.radio-label-box {
   margin: 70px 0 0;
   border-width: 0;
   width: 240px;
+  box-shadow: none;
 }
 
 *|*#categories > *|*.category {
