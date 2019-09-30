@@ -28,11 +28,13 @@
   transform: scaleX(-1);
 }
 
-#defaultEngine {
+#defaultEngine,
+#defaultPrivateEngine {
  margin-inline-start: 0;
 }
 
-#defaultEngine > .menulist-label-box > .menulist-icon {
+#defaultEngine > .menulist-label-box > .menulist-icon,
+#defaultPrivateEngine > .menulist-label-box > .menulist-icon {
   height: 16px;
 }
 
