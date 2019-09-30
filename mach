@@ -48,8 +48,6 @@ py2commands="
     ide
     import-pr
     install
-    install-android
-    install-desktop
     jsapi-tests
     jsshell-bench
     jstestbrowser
@@ -78,8 +76,6 @@ py2commands="
     resource-usage
     robocop
     run
-    run-android
-    run-desktop
     rusttests
     show-log
     static-analysis

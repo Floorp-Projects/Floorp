@@ -33,6 +33,8 @@ from mozbuild.base import (
     MozbuildObject,
 )
 
+here = os.path.abspath(os.path.dirname(__file__))
+
 EXCESSIVE_SWAP_MESSAGE = '''
 ===================
 PERFORMANCE WARNING
@@ -674,13 +676,16 @@ class Package(MachCommandBase):
 class Install(MachCommandBase):
     """Install a package."""
 
-    @Command('install-desktop', category='post-build',
-             conditional_name='install',
-             conditions=[conditions.is_not_android],
-             description='Install the package on the machine.')
+    @Command('install', category='post-build',
+             conditions=[conditions.is_firefox_or_android],
+             description='Install the package on the machine (or device in the case of Android).')
     @CommandArgument('--verbose', '-v', action='store_true',
-                     help='Print verbose output when installing to an Android emulator.')
+                     help='Print verbose output when installing.')
     def install(self, verbose=False):
+        if conditions.is_android(self):
+            from mozrunner.devices.android_device import verify_android_device
+            verify_android_device(self, verbose=verbose)
+
         ret = self._run_make(directory=".", target='install', ensure_exit_code=False)
         if ret == 0:
             self.notify('Install complete')
@@ -698,68 +703,190 @@ single quoted to force them to be strings.
     ]
 
 
+def _get_android_run_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--app', default='org.mozilla.geckoview_example',
+                        help='Android package to run '
+                             '(default: org.mozilla.geckoview_example)')
+    parser.add_argument('--intent', default='android.intent.action.VIEW',
+                        help='Android intent action to launch with '
+                             '(default: android.intent.action.VIEW)')
+    parser.add_argument('--setenv', dest='env', action='append', default=[],
+                        help='Set target environment variable, like FOO=BAR')
+    parser.add_argument('--profile', '-P', default=None,
+                        help='Path to Gecko profile, like /path/to/host/profile '
+                             'or /path/to/target/profile')
+    parser.add_argument('--url', default=None,
+                        help='URL to open')
+    parser.add_argument('--no-install', action='store_true', default=False,
+                        help='Do not try to install application on device before running '
+                             '(default: False)')
+    parser.add_argument('--no-wait', action='store_true', default=False,
+                        help='Do not wait for application to start before returning '
+                             '(default: False)')
+    parser.add_argument('--fail-if-running', action='store_true', default=False,
+                        help='Fail if application is already running (default: False)')
+    parser.add_argument('--restart', action='store_true', default=False,
+                        help='Stop the application if it is already running (default: False)')
+    return parser
+
+
+def _get_desktop_run_parser():
+    parser = argparse.ArgumentParser()
+    group = parser.add_argument_group('the compiled program')
+    group.add_argument('params', nargs='...', default=[],
+                       help='Command-line arguments to be passed through to the program. Not '
+                       'specifying a --profile or -P option will result in a temporary profile '
+                       'being used.')
+    group.add_argument('--remote', '-r', action='store_true',
+                       help='Do not pass the --no-remote argument by default.')
+    group.add_argument('--background', '-b', action='store_true',
+                       help='Do not pass the --foreground argument by default on Mac.')
+    group.add_argument('--noprofile', '-n', action='store_true',
+                       help='Do not pass the --profile argument by default.')
+    group.add_argument('--disable-e10s', action='store_true',
+                       help='Run the program with electrolysis disabled.')
+    group.add_argument('--enable-crash-reporter', action='store_true',
+                       help='Run the program with the crash reporter enabled.')
+    group.add_argument('--setpref', action='append', default=[],
+                       help='Set the specified pref before starting the program. Can be set '
+                       'multiple times. Prefs can also be set in ~/.mozbuild/machrc in the '
+                       '[runprefs] section - see `./mach settings` for more information.')
+    group.add_argument('--temp-profile', action='store_true',
+                       help='Run the program using a new temporary profile created inside '
+                       'the objdir.')
+    group.add_argument('--macos-open', action='store_true',
+                       help="On macOS, run the program using the open(1) command. Per open(1), "
+                       "the browser is launched \"just as if you had double-clicked the file's "
+                       "icon\". The browser can not be launched under a debugger with this "
+                       "option.")
+
+    group = parser.add_argument_group('debugging')
+    group.add_argument('--debug', action='store_true',
+                       help='Enable the debugger. Not specifying a --debugger option will result '
+                       'in the default debugger being used.')
+    group.add_argument('--debugger', default=None, type=str,
+                       help='Name of debugger to use.')
+    group.add_argument('--debugger-args', default=None, metavar='params', type=str,
+                       help='Command-line arguments to pass to the debugger itself; '
+                       'split as the Bourne shell would.')
+    group.add_argument('--debugparams', action=StoreDebugParamsAndWarnAction,
+                       default=None, type=str, dest='debugger_args',
+                       help=argparse.SUPPRESS)
+
+    group = parser.add_argument_group('DMD')
+    group.add_argument('--dmd', action='store_true',
+                       help='Enable DMD. The following arguments have no effect without this.')
+    group.add_argument('--mode', choices=['live', 'dark-matter', 'cumulative', 'scan'],
+                       help='Profiling mode. The default is \'dark-matter\'.')
+    group.add_argument('--stacks', choices=['partial', 'full'],
+                       help='Allocation stack trace coverage. The default is \'partial\'.')
+    group.add_argument('--show-dump-stats', action='store_true',
+                       help='Show stats when doing dumps.')
+
+    return parser
+
+
+def setup_run_parser():
+    build = MozbuildObject.from_environment(cwd=here)
+    if conditions.is_android(build):
+        return _get_android_run_parser()
+    return _get_desktop_run_parser()
+
+
 @CommandProvider
 class RunProgram(MachCommandBase):
     """Run the compiled program."""
 
-    prog_group = 'the compiled program'
-
-    @Command('run-desktop', category='post-build',
-             conditional_name='run',
-             conditions=[conditions.is_not_android],
+    @Command('run', category='post-build',
+             conditions=[conditions.is_firefox_or_android],
+             parser=setup_run_parser,
              description='Run the compiled program, possibly under a debugger or DMD.')
-    @CommandArgument('params', nargs='...', group=prog_group,
-                     help='Command-line arguments to be passed through to the program. Not '
-                     'specifying a --profile or -P option will result in a temporary profile '
-                     'being used.')
-    @CommandArgumentGroup(prog_group)
-    @CommandArgument('--remote', '-r', action='store_true', group=prog_group,
-                     help='Do not pass the --no-remote argument by default.')
-    @CommandArgument('--background', '-b', action='store_true', group=prog_group,
-                     help='Do not pass the --foreground argument by default on Mac.')
-    @CommandArgument('--noprofile', '-n', action='store_true', group=prog_group,
-                     help='Do not pass the --profile argument by default.')
-    @CommandArgument('--disable-e10s', action='store_true', group=prog_group,
-                     help='Run the program with electrolysis disabled.')
-    @CommandArgument('--enable-crash-reporter', action='store_true', group=prog_group,
-                     help='Run the program with the crash reporter enabled.')
-    @CommandArgument('--setpref', action='append', default=[], group=prog_group,
-                     help='Set the specified pref before starting the program. Can be set '
-                     'multiple times. Prefs can also be set in ~/.mozbuild/machrc in the '
-                     '[runprefs] section - see `./mach settings` for more information.')
-    @CommandArgument('--temp-profile', action='store_true', group=prog_group,
-                     help='Run the program using a new temporary profile created inside '
-                     'the objdir.')
-    @CommandArgument('--macos-open', action='store_true', group=prog_group,
-                     help="On macOS, run the program using the open(1) command. Per open(1), "
-                     "the browser is launched \"just as if you had double-clicked the file's "
-                     "icon\". The browser can not be launched under a debugger with this option.")
-    @CommandArgumentGroup('debugging')
-    @CommandArgument('--debug', action='store_true', group='debugging',
-                     help='Enable the debugger. Not specifying a --debugger option will result '
-                     'in the default debugger being used.')
-    @CommandArgument('--debugger', default=None, type=str, group='debugging',
-                     help='Name of debugger to use.')
-    @CommandArgument('--debugger-args', default=None, metavar='params', type=str,
-                     group='debugging',
-                     help='Command-line arguments to pass to the debugger itself; '
-                     'split as the Bourne shell would.')
-    @CommandArgument('--debugparams', action=StoreDebugParamsAndWarnAction,
-                     default=None, type=str, dest='debugger_args', group='debugging',
-                     help=argparse.SUPPRESS)
-    @CommandArgumentGroup('DMD')
-    @CommandArgument('--dmd', action='store_true', group='DMD',
-                     help='Enable DMD. The following arguments have no effect without this.')
-    @CommandArgument('--mode', choices=['live', 'dark-matter', 'cumulative', 'scan'], group='DMD',
-                     help='Profiling mode. The default is \'dark-matter\'.')
-    @CommandArgument('--stacks', choices=['partial', 'full'], group='DMD',
-                     help='Allocation stack trace coverage. The default is \'partial\'.')
-    @CommandArgument('--show-dump-stats', action='store_true', group='DMD',
-                     help='Show stats when doing dumps.')
-    def run(self, params, remote, background, noprofile, disable_e10s,
-            enable_crash_reporter, setpref, temp_profile, macos_open, debug,
-            debugger, debugger_args, dmd, mode, stacks, show_dump_stats):
+    def run(self, **kwargs):
+        if conditions.is_android(self):
+            return self._run_android(**kwargs)
+        return self._run_desktop(**kwargs)
 
+    def _run_android(self, app='org.mozilla.geckoview_example', intent=None, env=[], profile=None,
+                     url=None, no_install=None, no_wait=None, fail_if_running=None, restart=None):
+        from mozrunner.devices.android_device import verify_android_device, _get_device
+        from six.moves import shlex_quote
+
+        if app == 'org.mozilla.geckoview_example':
+            activity_name = 'org.mozilla.geckoview_example.GeckoViewActivity'
+        elif app == 'org.mozilla.geckoview.test':
+            activity_name = 'org.mozilla.geckoview.test.TestRunnerActivity'
+        elif 'fennec' in app or 'firefox' in app:
+            activity_name = 'org.mozilla.gecko.BrowserApp'
+        else:
+            raise RuntimeError('Application not recognized: {}'.format(app))
+
+        # `verify_android_device` respects `DEVICE_SERIAL` if it is set and sets it otherwise.
+        verify_android_device(self, app=app, install=not no_install)
+        device_serial = os.environ.get('DEVICE_SERIAL')
+        if not device_serial:
+            print('No ADB devices connected.')
+            return 1
+
+        device = _get_device(self.substs, device_serial=device_serial)
+
+        args = []
+        if profile:
+            if os.path.isdir(profile):
+                host_profile = profile
+                # Always /data/local/tmp, rather than `device.test_root`, because GeckoView only
+                # takes its configuration file from /data/local/tmp, and we want to follow suit.
+                target_profile = '/data/local/tmp/{}-profile'.format(app)
+                device.rm(target_profile, recursive=True, force=True)
+                device.push(host_profile, target_profile)
+                self.log(logging.INFO, "run",
+                         {'host_profile': host_profile, 'target_profile': target_profile},
+                         'Pushed profile from host "{host_profile}" to target "{target_profile}"')
+            else:
+                target_profile = profile
+                self.log(logging.INFO, "run",
+                         {'target_profile': target_profile},
+                         'Using profile from target "{target_profile}"')
+
+            args = ['--profile', shlex_quote(target_profile)]
+
+        extras = {}
+        for i, e in enumerate(env):
+            extras['env{}'.format(i)] = e
+        if args:
+            extras['args'] = " ".join(args)
+        extras['use_multiprocess'] = True  # Only GVE and TRA process this extra.
+
+        if env or args:
+            restart = True
+
+        if restart:
+            fail_if_running = False
+            self.log(logging.INFO, "run",
+                     {'app': app},
+                     'Stopping {app} to ensure clean restart.')
+            device.stop_application(app)
+
+        # We'd prefer to log the actual `am start ...` command, but it's not trivial to wire the
+        # device's logger to mach's logger.
+        self.log(logging.INFO, "run",
+                 {'app': app, 'activity_name': activity_name},
+                 'Starting {app}/{activity_name}.')
+
+        device.launch_application(
+            app_name=app,
+            activity_name=activity_name,
+            intent=intent,
+            extras=extras,
+            url=url,
+            wait=not no_wait,
+            fail_if_running=fail_if_running)
+
+        return 0
+
+    def _run_desktop(self, params, remote, background, noprofile, disable_e10s,
+                     enable_crash_reporter, setpref, temp_profile, macos_open, debug, debugger,
+                     debugger_args, dmd, mode, stacks, show_dump_stats):
         from mozprofile import Profile, Preferences
 
         try:
