@@ -49,9 +49,6 @@ class UrlbarInput {
    *   The initial options for UrlbarInput.
    * @param {object} options.textbox
    *   The <textbox> element.
-   * @param {UrlbarController} [options.controller]
-   *   Optional fake controller to override the built-in UrlbarController.
-   *   Intended for use in unit tests only.
    */
   constructor(options = {}) {
     this.textbox = options.textbox;
@@ -89,12 +86,10 @@ class UrlbarInput {
       this.textbox.parentNode.classList.add("megabar");
     }
 
-    this.controller =
-      options.controller ||
-      new UrlbarController({
-        browserWindow: this.window,
-        eventTelemetryCategory: options.eventTelemetryCategory,
-      });
+    this.controller = new UrlbarController({
+      browserWindow: this.window,
+      eventTelemetryCategory: options.eventTelemetryCategory,
+    });
     this.controller.setInput(this);
     this.view = new UrlbarView(this);
     this.valueIsTyped = false;
