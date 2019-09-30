@@ -1100,6 +1100,16 @@ void Statistics::sendGCTelemetry() {
       100.0 * double(bytesSurvived) / double(preCollectedHeapBytes);
   runtime->addTelemetry(JS_TELEMETRY_GC_TENURED_SURVIVAL_RATE,
                         uint32_t(survialRate));
+
+  // Calculate 'effectiveness' in MB / second, on main thread only for now.
+  if (!runtime->parentRuntime) {
+    size_t bytesFreed = preCollectedHeapBytes - bytesSurvived;
+    TimeDuration clampedTotal =
+        TimeDuration::Max(total, TimeDuration::FromMilliseconds(1));
+    double effectiveness =
+        (double(bytesFreed) / (1024.0 * 1024.0)) / clampedTotal.ToSeconds();
+    runtime->addTelemetry(JS_TELEMETRY_GC_EFFECTIVENESS, uint32_t(effectiveness));
+  }
 }
 
 void Statistics::beginNurseryCollection(JS::GCReason reason) {
