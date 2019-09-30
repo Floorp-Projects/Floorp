@@ -17,8 +17,62 @@
 #include "nsCOMPtr.h"
 #include "nsIObserverService.h"
 #include "nsXULAppAPI.h"
+#include "private/prpriv.h"  // For PR_GetThreadID
 
 namespace mozilla {
+
+class MOZ_RAII BackgroundPriorityRegion final {
+ public:
+  BackgroundPriorityRegion()
+      : mIsBackground(
+            ::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_IDLE)) {}
+
+  ~BackgroundPriorityRegion() {
+    if (!mIsBackground) {
+      return;
+    }
+
+    Clear(::GetCurrentThread());
+  }
+
+  static void Clear(nsIThread* aThread) {
+    MOZ_ASSERT(aThread);
+    if (!aThread) {
+      return;
+    }
+
+    PRThread* prThread;
+    nsresult rv = aThread->GetPRThread(&prThread);
+    if (NS_FAILED(rv)) {
+      // Possible when a LazyInitThread's underlying nsThread is not present
+      return;
+    }
+
+    PRUint32 tid = ::PR_GetThreadID(prThread);
+
+    nsAutoHandle thread(
+        ::OpenThread(THREAD_SET_LIMITED_INFORMATION, FALSE, tid));
+    if (!thread) {
+      return;
+    }
+
+    Clear(thread);
+  }
+
+  BackgroundPriorityRegion(const BackgroundPriorityRegion&) = delete;
+  BackgroundPriorityRegion(BackgroundPriorityRegion&&) = delete;
+  BackgroundPriorityRegion& operator=(const BackgroundPriorityRegion&) = delete;
+  BackgroundPriorityRegion& operator=(BackgroundPriorityRegion&&) = delete;
+
+ private:
+  static void Clear(HANDLE aThread) {
+    DebugOnly<BOOL> ok = ::SetThreadPriority(aThread, THREAD_PRIORITY_NORMAL);
+    MOZ_ASSERT(ok);
+  }
+
+ private:
+  const BOOL mIsBackground;
+};
 
 /* static */
 RefPtr<UntrustedModulesProcessor> UntrustedModulesProcessor::Create() {
@@ -65,6 +119,9 @@ NS_IMETHODIMP UntrustedModulesProcessor::Observe(nsISupports* aSubject,
   if (!strcmp(aTopic, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID)) {
     // No more background processing allowed beyond this point
     mAllowProcessing = false;
+    // Ensure that mThread cannot run at low priority anymore
+    BackgroundPriorityRegion::Clear(mThread);
+
     MutexAutoLock lock(mUnprocessedMutex);
     CancelScheduledProcessing(lock);
     return NS_OK;
@@ -225,32 +282,18 @@ UntrustedModulesProcessor::GetProcessedDataInternal() {
       Some(UntrustedModulesData(std::move(result))), __func__);
 }
 
-class MOZ_RAII BackgroundPriorityRegion final {
- public:
-  BackgroundPriorityRegion()
-      : mIsBackground(::SetThreadPriority(::GetCurrentThread(),
-                                          THREAD_MODE_BACKGROUND_BEGIN)) {}
-
-  ~BackgroundPriorityRegion() {
-    if (!mIsBackground) {
-      return;
-    }
-
-    ::SetThreadPriority(::GetCurrentThread(), THREAD_MODE_BACKGROUND_END);
-  }
-
-  BackgroundPriorityRegion(const BackgroundPriorityRegion&) = delete;
-  BackgroundPriorityRegion(BackgroundPriorityRegion&&) = delete;
-  BackgroundPriorityRegion& operator=(const BackgroundPriorityRegion&) = delete;
-  BackgroundPriorityRegion& operator=(BackgroundPriorityRegion&&) = delete;
-
- private:
-  const BOOL mIsBackground;
-};
-
 void UntrustedModulesProcessor::BackgroundProcessModuleLoadQueue(
     const char* aSource) {
+  if (!mAllowProcessing) {
+    return;
+  }
+
   BackgroundPriorityRegion bgRgn;
+
+  if (!mAllowProcessing) {
+    return;
+  }
+
   ProcessModuleLoadQueue(aSource);
 }
 
