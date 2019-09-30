@@ -1,0 +1,23 @@
+<html class="reftest-wait">
+<style>
+:not(option) {
+  position: absolute;
+}
+#a {
+  background: url(data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=) fixed;
+}
+fieldset:first-child {
+  column-width: 0;
+  filter: invert(3);
+}
+</style>
+<script>
+function go() {
+  a.multiple = true
+  document.documentElement.classList.remove("reftest-wait");
+}
+</script>
+<body onload=go()>
+<fieldset style="scale: 1 9 0.3472">
+<select id="a">
+</html>
