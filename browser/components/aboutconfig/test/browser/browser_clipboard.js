@@ -31,12 +31,33 @@ add_task(async function test_copy() {
       this.search(name);
       let row = this.getRow(name);
 
-      // Triple click at any location in the name cell should select the name.
-      await BrowserTestUtils.synthesizeMouseAtCenter(
-        row.nameCell,
-        { clickCount: 3 },
-        this.browser
-      );
+      let selectText = async target => {
+        let { width, height } = target.getBoundingClientRect();
+        await BrowserTestUtils.synthesizeMouse(
+          target,
+          1,
+          1,
+          { type: "mousedown" },
+          this.browser
+        );
+        await BrowserTestUtils.synthesizeMouse(
+          target,
+          width - 1,
+          height - 1,
+          { type: "mousemove" },
+          this.browser
+        );
+        await BrowserTestUtils.synthesizeMouse(
+          target,
+          width - 1,
+          height - 1,
+          { type: "mouseup" },
+          this.browser
+        );
+      };
+
+      // Drag across the name cell.
+      await selectText(row.nameCell);
       Assert.ok(row.nameCell.contains(this.window.getSelection().anchorNode));
       await SimpleTest.promiseClipboardChange(name, async () => {
         await BrowserTestUtils.synthesizeKey(
@@ -46,25 +67,25 @@ add_task(async function test_copy() {
         );
       });
 
-      // Triple click at any location in the value cell should select the value.
-      await BrowserTestUtils.synthesizeMouseAtCenter(
-        row.valueCell,
-        { clickCount: 3 },
-        this.browser
-      );
+      // Drag across the value cell.
+      await selectText(row.valueCell);
       let selection = this.window.getSelection();
       Assert.ok(row.valueCell.contains(selection.anchorNode));
 
-      // The selection is never collapsed because of the <span> element, and
-      // this makes sure that an empty string can be copied.
-      Assert.ok(!selection.isCollapsed);
-      await SimpleTest.promiseClipboardChange(expectedString, async () => {
-        await BrowserTestUtils.synthesizeKey(
-          "c",
-          { accelKey: true },
-          this.browser
-        );
-      });
+      if (expectedString !== "") {
+        // Non-empty values should have a selection.
+        Assert.ok(!selection.isCollapsed);
+        await SimpleTest.promiseClipboardChange(expectedString, async () => {
+          await BrowserTestUtils.synthesizeKey(
+            "c",
+            { accelKey: true },
+            this.browser
+          );
+        });
+      } else {
+        // Nothing is selected for an empty value.
+        Assert.equal(selection.toString(), "");
+      }
     }
   });
 });
