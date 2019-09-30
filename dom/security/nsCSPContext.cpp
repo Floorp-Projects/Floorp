@@ -117,8 +117,7 @@ static void BlockedContentSourceToString(
 NS_IMETHODIMP
 nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
                          nsICSPEventListener* aCSPEventListener,
-                         nsIURI* aContentLocation, nsIURI* aRequestOrigin,
-                         nsISupports* aRequestContext,
+                         nsIURI* aContentLocation, nsISupports* aRequestContext,
                          const nsACString& aMimeTypeGuess,
                          nsIURI* aOriginalURIIfRedirect,
                          bool aSendViolationReports, const nsAString& aNonce,
