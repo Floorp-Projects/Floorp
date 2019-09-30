@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const PREF_MODIFY_PREFIX = "test.aboutconfig.modify";
 const PREF_MODIFY_BOOLEAN = "test.aboutconfig.modify.boolean";
 const PREF_MODIFY_NUMBER = "test.aboutconfig.modify.number";
 const PREF_MODIFY_STRING = "test.aboutconfig.modify.string";
@@ -299,5 +300,111 @@ add_task(async function test_escape_cancels_edit() {
       Assert.equal(row.value, "Edit me, maybe");
       Assert.equal(row.value, Preferences.get(PREF_MODIFY_STRING));
     }
+  });
+});
+
+add_task(async function test_double_click_modify() {
+  Preferences.set(PREF_MODIFY_BOOLEAN, true);
+  Preferences.set(PREF_MODIFY_NUMBER, 10);
+  Preferences.set(PREF_MODIFY_STRING, "Hello!");
+
+  await AboutConfigTest.withNewTab(async function() {
+    this.search(PREF_MODIFY_PREFIX);
+
+    let click = (target, opts) =>
+      EventUtils.synthesizeMouseAtCenter(target, opts, this.window);
+    let doubleClick = target => {
+      // Trigger two mouse events to simulate the first then second click.
+      click(target, { clickCount: 1 });
+      click(target, { clickCount: 2 });
+    };
+    let tripleClick = target => {
+      // Trigger all 3 mouse events to simulate the three mouse events we'd see.
+      click(target, { clickCount: 1 });
+      click(target, { clickCount: 2 });
+      click(target, { clickCount: 3 });
+    };
+
+    // Check double-click to edit a boolean.
+    let boolRow = this.getRow(PREF_MODIFY_BOOLEAN);
+    Assert.equal(boolRow.value, "true");
+    doubleClick(boolRow.valueCell);
+    Assert.equal(boolRow.value, "false");
+    doubleClick(boolRow.nameCell);
+    Assert.equal(boolRow.value, "true");
+
+    // Check double-click to edit a number.
+    let intRow = this.getRow(PREF_MODIFY_NUMBER);
+    Assert.equal(intRow.value, 10);
+    doubleClick(intRow.valueCell);
+    Assert.equal(this.document.activeElement, intRow.valueInput);
+    EventUtils.sendString("75");
+    EventUtils.synthesizeKey("KEY_Enter");
+    Assert.equal(intRow.value, 75);
+
+    // Check double-click focuses input when already editing.
+    Assert.equal(intRow.value, 75);
+    doubleClick(intRow.nameCell);
+    Assert.equal(this.document.activeElement, intRow.valueInput);
+    intRow.valueInput.blur();
+    Assert.notEqual(this.document.activeElement, intRow.valueInput);
+    doubleClick(intRow.nameCell);
+    Assert.equal(this.document.activeElement, intRow.valueInput);
+    EventUtils.sendString("20");
+    EventUtils.synthesizeKey("KEY_Enter");
+    Assert.equal(intRow.value, 20);
+
+    // Check double-click to edit a string.
+    let stringRow = this.getRow(PREF_MODIFY_STRING);
+    Assert.equal(stringRow.value, "Hello!");
+    doubleClick(stringRow.valueCell);
+    Assert.equal(
+      this.document.activeElement,
+      stringRow.valueInput,
+      "The input is focused"
+    );
+    EventUtils.sendString("New String!");
+    EventUtils.synthesizeKey("KEY_Enter");
+    Assert.equal(stringRow.value, "New String!");
+
+    // Check triple-click also edits the pref and selects the text inside.
+    tripleClick(stringRow.nameCell);
+    Assert.equal(
+      this.document.activeElement,
+      stringRow.valueInput,
+      "The input is focused"
+    );
+
+    // Check double-click inside input selects a word.
+    let newString = "Another string...";
+    EventUtils.sendString(newString);
+    Assert.equal(this.window.getSelection().toString(), "");
+    let stringInput = stringRow.valueInput;
+    doubleClick(stringInput);
+    let selectionLength = stringInput.selectionEnd - stringInput.selectionStart;
+    Assert.greater(selectionLength, 0);
+    Assert.less(selectionLength, newString.length);
+    EventUtils.synthesizeKey("KEY_Enter");
+    Assert.equal(stringRow.value, newString);
+
+    // Check that double/triple-click on the add row selects text as usual.
+    let addRow = this.getRow(PREF_MODIFY_PREFIX);
+    Assert.ok(addRow.hasClass("deleted"));
+    doubleClick(addRow.nameCell);
+    Assert.ok(PREF_MODIFY_PREFIX.includes(this.window.getSelection()));
+    tripleClick(addRow.nameCell);
+    Assert.equal(this.window.getSelection().toString(), PREF_MODIFY_PREFIX);
+    // Make sure the localized text is set in the value cell.
+    let labels = Array.from(addRow.valueCell.querySelectorAll("label > span"));
+    await this.document.l10n.translateElements(labels);
+    Assert.ok(labels.every(label => !!label.textContent));
+    // Double-click the first input label text.
+    doubleClick(labels[0]);
+    Assert.equal(this.window.getSelection().toString(), labels[0].textContent);
+    tripleClick(addRow.valueCell.querySelector("label > span"));
+    Assert.equal(
+      this.window.getSelection().toString(),
+      labels.map(l => l.textContent).join("")
+    );
   });
 });

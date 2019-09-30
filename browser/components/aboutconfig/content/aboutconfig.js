@@ -356,6 +356,18 @@ class PrefRow {
     this.inputField.select();
   }
 
+  toggle() {
+    Services.prefs.setBoolPref(this.name, !this.value);
+  }
+
+  editOrToggle() {
+    if (this.type == "Boolean") {
+      this.toggle();
+    } else {
+      this.edit();
+    }
+  }
+
   save() {
     if (this.type == "Number") {
       if (!this.inputField.reportValidity()) {
@@ -472,21 +484,47 @@ function loadPrefs() {
     filterPrefs({ showAll: true });
   });
 
+  function shouldBeginEdit(event) {
+    if (
+      event.target.localName != "button" &&
+      event.target.localName != "input"
+    ) {
+      let row = event.target.closest("tr");
+      return row && row._pref.exists;
+    }
+    return false;
+  }
+
+  // Disable double/triple-click text selection since that triggers edit/toggle.
+  prefs.addEventListener("mousedown", event => {
+    if (event.detail > 1 && shouldBeginEdit(event)) {
+      event.preventDefault();
+    }
+  });
+
   prefs.addEventListener("click", event => {
+    if (event.detail == 2 && shouldBeginEdit(event)) {
+      event.target.closest("tr")._pref.editOrToggle();
+      return;
+    }
+
     if (event.target.localName != "button") {
       return;
     }
+
     let pref = event.target.closest("tr")._pref;
     let button = event.target.closest("button");
+
     if (button.classList.contains("button-add")) {
       Preferences.set(pref.name, pref.value);
       if (pref.type != "Boolean") {
         pref.edit();
       }
-    } else if (button.classList.contains("button-toggle")) {
-      Services.prefs.setBoolPref(pref.name, !pref.value);
-    } else if (button.classList.contains("button-edit")) {
-      pref.edit();
+    } else if (
+      button.classList.contains("button-toggle") ||
+      button.classList.contains("button-edit")
+    ) {
+      pref.editOrToggle();
     } else if (button.classList.contains("button-save")) {
       pref.save();
     } else {
