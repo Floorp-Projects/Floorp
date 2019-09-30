@@ -275,3 +275,8 @@ CommonSocketControl::GetResumed(bool* aResumed) {
   *aResumed = mResumed;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+CommonSocketControl::GetPeerId(nsACString &aResult) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
