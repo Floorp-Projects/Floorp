@@ -2408,6 +2408,9 @@ bool DebuggerObject::makeDebuggeeNativeFunction(JSContext* cx,
 
     unsigned nargs = fun->nargs();
     RootedAtom name(cx, fun->displayAtom());
+    if (name) {
+      cx->markAtom(name);
+    }
     JSFunction* newFun = NewNativeFunction(cx, fun->native(), nargs, name);
     if (!newFun) {
       return false;
