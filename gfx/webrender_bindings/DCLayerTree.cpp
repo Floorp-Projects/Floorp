@@ -49,16 +49,33 @@ bool DCLayerTree::Initialize(HWND aHwnd) {
 
   hr = mCompositionDevice->CreateVisual(getter_AddRefs(mRootVisual));
   if (FAILED(hr)) {
-    gfxCriticalNote << "Could not create DCompositionVisualt: "
-                    << gfx::hexa(hr);
+    gfxCriticalNote << "Failed to create DCompositionVisual: " << gfx::hexa(hr);
     return false;
   }
+
+  hr =
+      mCompositionDevice->CreateVisual(getter_AddRefs(mDefaultSwapChainVisual));
+  if (FAILED(hr)) {
+    gfxCriticalNote << "Failed to create DCompositionVisual: " << gfx::hexa(hr);
+    return false;
+  }
+
+  mCompositionTarget->SetRoot(mRootVisual);
+  // Set interporation mode to Linear.
+  // By default, a visual inherits the interpolation mode of the parent visual.
+  // If no visuals set the interpolation mode, the default for the entire visual
+  // tree is nearest neighbor interpolation.
+  mRootVisual->SetBitmapInterpolationMode(
+      DCOMPOSITION_BITMAP_INTERPOLATION_MODE_LINEAR);
   return true;
 }
 
 void DCLayerTree::SetDefaultSwapChain(IDXGISwapChain1* aSwapChain) {
-  mRootVisual->SetContent(aSwapChain);
-  mCompositionTarget->SetRoot(mRootVisual);
+  mRootVisual->AddVisual(mDefaultSwapChainVisual, TRUE, nullptr);
+  mDefaultSwapChainVisual->SetContent(aSwapChain);
+  // Default SwapChain's visual does not need linear interporation.
+  mDefaultSwapChainVisual->SetBitmapInterpolationMode(
+      DCOMPOSITION_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR);
   mCompositionDevice->Commit();
 }
 
