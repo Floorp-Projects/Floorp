@@ -295,6 +295,7 @@ var gTests = [
       );
       await expectObserverCalled("recording-device-events");
       await checkSharingUI({ screen: "Screen" });
+      await closeStream();
     },
   },
 ];
