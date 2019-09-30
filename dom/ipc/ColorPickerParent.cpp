@@ -7,7 +7,6 @@
 #include "ColorPickerParent.h"
 #include "nsComponentManagerUtils.h"
 #include "mozilla/dom/Document.h"
-#include "nsIDOMWindow.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/BrowserParent.h"

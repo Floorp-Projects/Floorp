@@ -9,7 +9,6 @@
 #include "nsICommandLineValidator.h"
 #include "nsIConsoleService.h"
 #include "nsIClassInfoImpl.h"
-#include "nsIDOMWindow.h"
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
 #include "mozilla/SimpleEnumerator.h"

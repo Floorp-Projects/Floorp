@@ -18,7 +18,6 @@
 #include "nsIContent.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocShell.h"
-#include "nsIDOMWindow.h"
 #include "nsIFrame.h"
 #include "prtime.h"
 

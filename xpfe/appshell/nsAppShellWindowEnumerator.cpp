@@ -8,7 +8,6 @@
 #include "nsIContentViewer.h"
 #include "nsIDocShell.h"
 #include "mozilla/dom/Document.h"
-#include "nsIDOMWindow.h"
 #include "nsIFactory.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"

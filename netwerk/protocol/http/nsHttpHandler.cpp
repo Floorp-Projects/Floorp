@@ -15,7 +15,6 @@
 #include "nsHttpChannel.h"
 #include "nsHttpAuthCache.h"
 #include "nsStandardURL.h"
-#include "nsIDOMWindow.h"
 #include "nsIHttpChannel.h"
 #include "nsIStandardURL.h"
 #include "LoadContextInfo.h"

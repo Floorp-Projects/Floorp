@@ -11,7 +11,6 @@
 #include "nsDocShellCID.h"
 #include "nsIWebNavigationInfo.h"
 #include "mozilla/dom/Document.h"
-#include "nsIDOMWindow.h"
 #include "nsIHttpChannel.h"
 #include "nsError.h"
 #include "nsContentSecurityManager.h"

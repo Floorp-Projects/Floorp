@@ -18,7 +18,6 @@
 #include "gfxContext.h"
 #include "nsReadableUtils.h"
 #include "nsIComponentManager.h"
-#include "nsIDOMWindow.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebBrowserChrome.h"

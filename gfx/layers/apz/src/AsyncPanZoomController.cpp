@@ -78,7 +78,6 @@
 #include "nsAlgorithm.h"                              // for clamped
 #include "nsCOMPtr.h"                                 // for already_AddRefed
 #include "nsDebug.h"                                  // for NS_WARNING
-#include "nsIDOMWindowUtils.h"                        // for nsIDOMWindowUtils
 #include "nsMathUtils.h"                              // for NS_hypot
 #include "nsPoint.h"                                  // for nsIntPoint
 #include "nsStyleConsts.h"

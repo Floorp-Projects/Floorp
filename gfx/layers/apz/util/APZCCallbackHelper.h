@@ -12,7 +12,6 @@
 #include "mozilla/layers/APZUtils.h"
 #include "mozilla/layers/MatrixMessage.h"
 #include "mozilla/layers/RepaintRequest.h"
-#include "nsIDOMWindowUtils.h"
 #include "nsRefreshDriver.h"
 
 #include <functional>

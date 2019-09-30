@@ -14,7 +14,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/OfflineResourceListBinding.h"
 #include "nsIDocumentLoader.h"
-#include "nsIDOMWindow.h"
 #include "mozilla/dom/Document.h"
 #include "nsIObserverService.h"
 #include "nsIURL.h"

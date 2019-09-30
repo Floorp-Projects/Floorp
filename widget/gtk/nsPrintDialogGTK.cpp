@@ -19,7 +19,6 @@
 #include "nsIFile.h"
 #include "nsIStringBundle.h"
 #include "nsIPrintSettingsService.h"
-#include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIBaseWindow.h"
 #include "nsIDocShellTreeItem.h"

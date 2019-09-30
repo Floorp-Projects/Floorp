@@ -13,7 +13,6 @@
 #include "nsIContent.h"
 #include "nsFocusManager.h"
 #include "nsIControllers.h"
-#include "nsIDOMWindow.h"
 #include "mozilla/dom/Document.h"
 #include "nsPresContext.h"
 #include "nsIScriptGlobalObject.h"

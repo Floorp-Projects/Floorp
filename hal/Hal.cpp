@@ -10,7 +10,6 @@
 #include "HalLog.h"
 #include "HalSandbox.h"
 #include "HalWakeLockInternal.h"
-#include "nsIDOMWindow.h"
 #include "mozilla/dom/Document.h"
 #include "nsIDocShell.h"
 #include "nsIBrowserChild.h"

@@ -23,7 +23,6 @@
 #include "nsContainerFrame.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
-#include "nsIDOMWindow.h"
 #include "nsIDOMWindowUtils.h"
 #include "mozilla/dom/Document.h"
 #include "nsIInterfaceRequestorUtils.h"

@@ -8,7 +8,6 @@
 
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMWindow.h"
 #include "nsIServiceManager.h"
 #include "nsIWindowWatcher.h"
 

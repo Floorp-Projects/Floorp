@@ -21,7 +21,6 @@
 #include "nsAtom.h"
 #include "nsIContent.h"
 #include "nsID.h"
-#include "nsIDOMWindow.h"
 #include "mozilla/dom/Document.h"
 #include "nsIDocumentObserver.h"
 #include "nsIHTMLAbsPosEditor.h"

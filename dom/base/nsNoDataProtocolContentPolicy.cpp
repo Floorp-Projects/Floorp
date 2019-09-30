@@ -11,7 +11,6 @@
  */
 
 #include "nsNoDataProtocolContentPolicy.h"
-#include "nsIDOMWindow.h"
 #include "nsString.h"
 #include "nsIProtocolHandler.h"
 #include "nsIIOService.h"
