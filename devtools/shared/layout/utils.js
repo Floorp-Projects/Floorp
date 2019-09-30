@@ -6,6 +6,11 @@
 
 const { Ci, Cc } = require("chrome");
 const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants");
+loader.lazyRequireGetter(
+  this,
+  "DevToolsUtils",
+  "devtools/shared/DevToolsUtils"
+);
 
 const SHEET_TYPE = {
   agent: "AGENT_SHEET",
@@ -42,16 +47,6 @@ function utilsFor(win) {
 }
 
 /**
- * Returns `true` is the window given is a top level window.
- * like win.top === win, but goes through mozbrowsers and mozapps iframes.
- *
- * @param {DOMWindow} win
- * @return {Boolean}
- */
-const isTopWindow = win => win && win.top === win;
-exports.isTopWindow = isTopWindow;
-
-/**
  * Check a window is part of the boundary window given.
  *
  * @param {DOMWindow} boundaryWindow
@@ -81,8 +76,10 @@ exports.isWindowIncluded = isWindowIncluded;
  * @return {DOMNode}
  *         The element in which the window is embedded.
  */
-const getFrameElement = win =>
-  isTopWindow(win) ? null : utilsFor(win).containerElement;
+const getFrameElement = win => {
+  const isTopWindow = win && DevToolsUtils.getTopWindow(win) === win;
+  return isTopWindow ? null : utilsFor(win).containerElement;
+};
 exports.getFrameElement = getFrameElement;
 
 /**
@@ -105,7 +102,7 @@ function getFrameOffsets(boundaryWindow, node) {
   const scale = getCurrentZoom(node);
 
   if (boundaryWindow === null) {
-    boundaryWindow = frameWin.top;
+    boundaryWindow = DevToolsUtils.getTopWindow(frameWin);
   } else if (typeof boundaryWindow === "undefined") {
     throw new Error("No boundaryWindow given. Use null for the default one.");
   }
@@ -241,7 +238,7 @@ function getRect(boundaryWindow, node, contentWindow) {
   const clientRect = node.getBoundingClientRect();
 
   if (boundaryWindow === null) {
-    boundaryWindow = frameWin.top;
+    boundaryWindow = DevToolsUtils.getTopWindow(frameWin);
   } else if (typeof boundaryWindow === "undefined") {
     throw new Error("No boundaryWindow given. Use null for the default one.");
   }
