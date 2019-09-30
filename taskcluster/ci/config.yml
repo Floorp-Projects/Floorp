@@ -256,13 +256,13 @@ scriptworker:
             - 'project:releng:beetmover:bucket:dep'
             - 'project:releng:beetmover:bucket:dep-partner'
             - 'project:releng:beetmover:bucket:maven-staging'
-        'scriptworker-prov-v1/balrogworker-v1':
+        'scriptworker-k8s/gecko-3-balrog':
             - 'project:releng:balrog:server:nightly'
             - 'project:releng:balrog:server:aurora'
             - 'project:releng:balrog:server:beta'
             - 'project:releng:balrog:server:release'
             - 'project:releng:balrog:server:esr'
-        'scriptworker-prov-v1/balrog-dev':
+        'scriptworker-k8s/gecko-1-balrog':
             - 'project:releng:balrog:server:dep'
 
 partner-urls:
