@@ -18,10 +18,12 @@
 #include "mozilla/dom/MouseEventBinding.h"  // for MouseEvent constants
 #include "mozilla/dom/BrowserParent.h"      // for AreRecordReplayTabsActive
 #include "mozilla/dom/Touch.h"              // for Touch
-#include "mozilla/gfx/gfxVars.h"            // for gfxVars
-#include "mozilla/gfx/GPUParent.h"          // for GPUParent
-#include "mozilla/gfx/Logging.h"            // for gfx::TreeLog
-#include "mozilla/gfx/Point.h"              // for Point
+#include "mozilla/gfx/CompositorHitTestInfo.h"
+#include "mozilla/gfx/LoggingConstants.h"
+#include "mozilla/gfx/gfxVars.h"    // for gfxVars
+#include "mozilla/gfx/GPUParent.h"  // for GPUParent
+#include "mozilla/gfx/Logging.h"    // for gfx::TreeLog
+#include "mozilla/gfx/Point.h"      // for Point
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/jni/Utils.h"  // for jni::IsFennec
 #endif
@@ -68,7 +70,11 @@
 namespace mozilla {
 namespace layers {
 
+using mozilla::gfx::CompositorHitTestDispatchToContent;
+using mozilla::gfx::CompositorHitTestFlags;
 using mozilla::gfx::CompositorHitTestInfo;
+using mozilla::gfx::CompositorHitTestInvisibleToHit;
+using mozilla::gfx::LOG_DEFAULT;
 
 typedef mozilla::gfx::Point Point;
 typedef mozilla::gfx::Point4D Point4D;
