@@ -111,7 +111,7 @@ class DebugState {
 
   bool debugGetLocalTypes(uint32_t funcIndex, ValTypeVector* locals,
                           size_t* argsLength);
-  bool debugGetResultTypes(uint32_t funcIndex, ValTypeVector* results);
+  ExprType debugGetResultType(uint32_t funcIndex);
   bool getGlobal(Instance& instance, uint32_t globalIndex,
                  MutableHandleValue vp);
 

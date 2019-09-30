@@ -293,45 +293,43 @@ class AstTypeDef : public AstNode {
 class AstFuncType : public AstTypeDef {
   AstName name_;
   AstValTypeVector args_;
-  AstValTypeVector results_;
+  AstExprType ret_;
 
  public:
   explicit AstFuncType(LifoAlloc& lifo)
-      : AstTypeDef(Which::IsFuncType), args_(lifo), results_(lifo) {}
-  AstFuncType(AstValTypeVector&& args, AstValTypeVector&& results)
-      : AstTypeDef(Which::IsFuncType),
-        args_(std::move(args)),
-        results_(std::move(results)) {}
+      : AstTypeDef(Which::IsFuncType), args_(lifo), ret_(ExprType::Void) {}
+  AstFuncType(AstValTypeVector&& args, AstExprType ret)
+      : AstTypeDef(Which::IsFuncType), args_(std::move(args)), ret_(ret) {}
   AstFuncType(AstName name, AstFuncType&& rhs)
       : AstTypeDef(Which::IsFuncType),
         name_(name),
         args_(std::move(rhs.args_)),
-        results_(std::move(rhs.results_)) {}
+        ret_(rhs.ret_) {}
   const AstValTypeVector& args() const { return args_; }
   AstValTypeVector& args() { return args_; }
-  const AstValTypeVector& results() const { return results_; }
-  AstValTypeVector& results() { return results_; }
+  AstExprType ret() const { return ret_; }
+  AstExprType& ret() { return ret_; }
   AstName name() const { return name_; }
   bool operator==(const AstFuncType& rhs) const {
-    return EqualContainers(args(), rhs.args()) &&
-        EqualContainers(results(), rhs.results());
-  }
-
-  AstExprType returnType() const {
-    if (results().length() == 0) {
-      return AstExprType(ExprType::Void);
+    if (ret() != rhs.ret()) {
+      return false;
     }
-    MOZ_ASSERT(results().length() == 1);
-    return AstExprType(results()[0]);
+    size_t len = args().length();
+    if (rhs.args().length() != len) {
+      return false;
+    }
+    for (size_t i = 0; i < len; i++) {
+      if (args()[i] != rhs.args()[i]) {
+        return false;
+      }
+    }
+    return true;
   }
 
   typedef const AstFuncType& Lookup;
   static HashNumber hash(Lookup ft) {
-    HashNumber hn = 0;
+    HashNumber hn = HashNumber(ft.ret().code());
     for (const AstValType& vt : ft.args()) {
-      hn = mozilla::AddToHash(hn, uint32_t(vt.code()));
-    }
-    for (const AstValType& vt : ft.results()) {
       hn = mozilla::AddToHash(hn, uint32_t(vt.code()));
     }
     return hn;

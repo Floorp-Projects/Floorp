@@ -4231,29 +4231,27 @@ class BaseCompiler final : public BaseCompilerInterface {
     size_t debugFrameOffset = masm.framePushed() - DebugFrame::offsetOfFrame();
     Address resultsAddress(masm.getStackPointer(),
                            debugFrameOffset + DebugFrame::offsetOfResults());
-    Maybe<ValType> ret = funcType().ret();
-    if (!ret) {
-      return;
-    }
-    switch (ret.ref().code()) {
-      case ValType::I32:
+    switch (funcType().ret().code()) {
+      case ExprType::Void:
+        break;
+      case ExprType::I32:
         masm.store32(RegI32(ReturnReg), resultsAddress);
         break;
-      case ValType::I64:
+      case ExprType::I64:
         masm.store64(RegI64(ReturnReg64), resultsAddress);
         break;
-      case ValType::F64:
+      case ExprType::F64:
         masm.storeDouble(RegF64(ReturnDoubleReg), resultsAddress);
         break;
-      case ValType::F32:
+      case ExprType::F32:
         masm.storeFloat32(RegF32(ReturnFloat32Reg), resultsAddress);
         break;
-      case ValType::Ref:
-      case ValType::FuncRef:
-      case ValType::AnyRef:
+      case ExprType::Ref:
+      case ExprType::FuncRef:
+      case ExprType::AnyRef:
         masm.storePtr(RegPtr(ReturnReg), resultsAddress);
         break;
-      case ValType::NullRef:
+      case ExprType::NullRef:
       default:
         MOZ_CRASH("Function return type");
     }
@@ -4264,29 +4262,27 @@ class BaseCompiler final : public BaseCompilerInterface {
     size_t debugFrameOffset = masm.framePushed() - DebugFrame::offsetOfFrame();
     Address resultsAddress(masm.getStackPointer(),
                            debugFrameOffset + DebugFrame::offsetOfResults());
-    Maybe<ValType> ret = funcType().ret();
-    if (!ret) {
-      return;
-    }
-    switch (ret.ref().code()) {
-      case ValType::I32:
+    switch (funcType().ret().code()) {
+      case ExprType::Void:
+        break;
+      case ExprType::I32:
         masm.load32(resultsAddress, RegI32(ReturnReg));
         break;
-      case ValType::I64:
+      case ExprType::I64:
         masm.load64(resultsAddress, RegI64(ReturnReg64));
         break;
-      case ValType::F64:
+      case ExprType::F64:
         masm.loadDouble(resultsAddress, RegF64(ReturnDoubleReg));
         break;
-      case ValType::F32:
+      case ExprType::F32:
         masm.loadFloat32(resultsAddress, RegF32(ReturnFloat32Reg));
         break;
-      case ValType::Ref:
-      case ValType::FuncRef:
-      case ValType::AnyRef:
+      case ExprType::Ref:
+      case ExprType::FuncRef:
+      case ExprType::AnyRef:
         masm.loadPtr(resultsAddress, RegPtr(ReturnReg));
         break;
-      case ValType::NullRef:
+      case ExprType::NullRef:
       default:
         MOZ_CRASH("Function return type");
     }
@@ -4312,18 +4308,15 @@ class BaseCompiler final : public BaseCompilerInterface {
     masm.bind(&returnLabel_);
 
     if (env_.debugEnabled()) {
-      // If a return type is a ref, we need to note that in the stack maps
+      // If the return type is a ref, we need to note that in the stack maps
       // generated here.  Note that this assumes that DebugFrame::result* and
-      // DebugFrame::cachedReturnJSValue_ are either both ref-typed or they are
-      // both not ref-typed.  It can't represent the situation where one is and
-      // the other isn't.
-      HasRefTypedDebugFrame refDebugFrame = HasRefTypedDebugFrame::No;
-      for (ValType result : funcType().results()) {
-        if (result.isReference()) {
-          refDebugFrame = HasRefTypedDebugFrame::Yes;
-          break;
-        }
-      }
+      // DebugFrame::cachedReturnJSValue_ are either both ref-typed or they
+      // are both not ref-typed.  It can't represent the situation where one
+      // is and the other isn't.
+      HasRefTypedDebugFrame refDebugFrame = funcType().ret().isReference()
+                                                ? HasRefTypedDebugFrame::Yes
+                                                : HasRefTypedDebugFrame::No;
+
       // Store and reload the return value from DebugFrame::return so that
       // it can be clobbered, and/or modified by the debug trap.
       saveResult();
@@ -6723,8 +6716,8 @@ class BaseCompiler final : public BaseCompilerInterface {
   void endIfThen();
   void endIfThenElse(ExprType type);
 
-  void doReturn(bool popStack);
-  void pushReturnValueOfCall(const FunctionCall& call, ValType type);
+  void doReturn(ExprType returnType, bool popStack);
+  void pushReturnValueOfCall(const FunctionCall& call, ExprType type);
   void pushReturnValueOfCall(const FunctionCall& call, MIRType type);
 
   void emitCompareI32(Assembler::Condition compareOp, ValType compareType);
@@ -8350,7 +8343,7 @@ bool BaseCompiler::emitEnd() {
       endBlock(type);
       iter_.popEnd();
       MOZ_ASSERT(iter_.controlStackEmpty());
-      doReturn(PopStack(false));
+      doReturn(type, PopStack(false));
       return iter_.readFunctionEnd(iter_.end());
     case LabelKind::Block:
       endBlock(type);
@@ -8515,44 +8508,43 @@ bool BaseCompiler::emitDrop() {
   return true;
 }
 
-void BaseCompiler::doReturn(bool popStack) {
+void BaseCompiler::doReturn(ExprType type, bool popStack) {
   if (deadCode_) {
     return;
   }
-  Maybe<ValType> type = funcType().ret();
-  if (!type) {
-    returnCleanup(popStack);
-    return;
-  }
-  switch (type.ref().code()) {
-    case ValType::I32: {
+  switch (type.code()) {
+    case ExprType::Void: {
+      returnCleanup(popStack);
+      break;
+    }
+    case ExprType::I32: {
       RegI32 rv = popI32(RegI32(ReturnReg));
       returnCleanup(popStack);
       freeI32(rv);
       break;
     }
-    case ValType::I64: {
+    case ExprType::I64: {
       RegI64 rv = popI64(RegI64(ReturnReg64));
       returnCleanup(popStack);
       freeI64(rv);
       break;
     }
-    case ValType::F64: {
+    case ExprType::F64: {
       RegF64 rv = popF64(RegF64(ReturnDoubleReg));
       returnCleanup(popStack);
       freeF64(rv);
       break;
     }
-    case ValType::F32: {
+    case ExprType::F32: {
       RegF32 rv = popF32(RegF32(ReturnFloat32Reg));
       returnCleanup(popStack);
       freeF32(rv);
       break;
     }
-    case ValType::Ref:
-    case ValType::NullRef:
-    case ValType::FuncRef:
-    case ValType::AnyRef: {
+    case ExprType::Ref:
+    case ExprType::NullRef:
+    case ExprType::FuncRef:
+    case ExprType::AnyRef: {
       RegPtr rv = popRef(RegPtr(ReturnReg));
       returnCleanup(popStack);
       freeRef(rv);
@@ -8574,7 +8566,7 @@ bool BaseCompiler::emitReturn() {
     return true;
   }
 
-  doReturn(PopStack(true));
+  doReturn(funcType().ret(), PopStack(true));
   deadCode_ = true;
 
   return true;
@@ -8631,8 +8623,8 @@ void BaseCompiler::pushReturnValueOfCall(const FunctionCall& call,
 }
 
 void BaseCompiler::pushReturnValueOfCall(const FunctionCall& call,
-                                         ValType type) {
-  MOZ_ASSERT(type.code() != ValType::NullRef);
+                                         ExprType type) {
+  MOZ_ASSERT(type.code() != ExprType::NullRef);
   pushReturnValueOfCall(call, ToMIRType(type));
 }
 
@@ -8694,8 +8686,8 @@ bool BaseCompiler::emitCall() {
 
   popValueStackBy(numArgs);
 
-  if (funcType.ret()) {
-    pushReturnValueOfCall(baselineCall, funcType.ret().ref());
+  if (funcType.ret() != ExprType::Void) {
+    pushReturnValueOfCall(baselineCall, funcType.ret());
   }
 
   return true;
@@ -8748,8 +8740,8 @@ bool BaseCompiler::emitCallIndirect() {
 
   popValueStackBy(numArgs);
 
-  if (funcType.ret()) {
-    pushReturnValueOfCall(baselineCall, funcType.ret().ref());
+  if (funcType.ret() != ExprType::Void) {
+    pushReturnValueOfCall(baselineCall, funcType.ret());
   }
 
   return true;
@@ -8792,7 +8784,8 @@ bool BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee,
   sync();
 
   ValTypeVector& signature = operandType == ValType::F32 ? SigF_ : SigD_;
-  ValType retType = operandType;
+  ExprType retType =
+      operandType == ValType::F32 ? ExprType::F32 : ExprType::F64;
   uint32_t numArgs = signature.length();
   size_t stackSpace = stackConsumed(numArgs);
 
@@ -10802,7 +10795,7 @@ bool BaseCompiler::emitStructNarrow() {
 bool BaseCompiler::emitBody() {
   MOZ_ASSERT(stackMapGenerator_.framePushedAtEntryToBody.isSome());
 
-  if (!iter_.readFunctionStart(func_.index)) {
+  if (!iter_.readFunctionStart(funcType().ret())) {
     return false;
   }
 

@@ -130,8 +130,6 @@ class FunctionCompiler {
   const ModuleEnvironment& env() const { return env_; }
   IonOpIter& iter() { return iter_; }
   TempAllocator& alloc() const { return alloc_; }
-  // FIXME(1401675): Replace with BlockType.
-  uint32_t funcIndex() const { return func_.index; }
   const FuncType& funcType() const { return *env_.funcTypes[func_.index]; }
 
   BytecodeOffset bytecodeOffset() const { return iter_.bytecodeOffset(); }
@@ -1949,7 +1947,7 @@ static bool EmitReturn(FunctionCompiler& f) {
     return false;
   }
 
-  if (f.funcType().results().length() == 0) {
+  if (IsVoid(f.funcType().ret())) {
     f.returnVoid();
     return true;
   }
@@ -2022,7 +2020,7 @@ static bool EmitCall(FunctionCompiler& f, bool asmJSFuncDef) {
     }
   }
 
-  if (funcType.results().length() == 0) {
+  if (IsVoid(funcType.ret())) {
     return true;
   }
 
@@ -2066,7 +2064,7 @@ static bool EmitCallIndirect(FunctionCompiler& f, bool oldStyle) {
     return false;
   }
 
-  if (funcType.results().length() == 0) {
+  if (IsVoid(funcType.ret())) {
     return true;
   }
 
@@ -3389,7 +3387,7 @@ static bool EmitRefIsNull(FunctionCompiler& f) {
 #endif
 
 static bool EmitBodyExprs(FunctionCompiler& f) {
-  if (!f.iter().readFunctionStart(f.funcIndex())) {
+  if (!f.iter().readFunctionStart(f.funcType().ret())) {
     return false;
   }
 
