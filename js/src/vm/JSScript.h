@@ -91,7 +91,6 @@ namespace detail {
 // Do not call this directly! It is exposed for the friend declarations in
 // this file.
 JSScript* CopyScript(JSContext* cx, HandleScript src,
-                     HandleObject functionOrGlobal,
                      HandleScriptSourceObject sourceObject,
                      MutableHandle<GCVector<Scope*>> scopes);
 
@@ -1515,7 +1514,7 @@ class BaseScript : public gc::TenuredCell {
 
     // Script is a lambda to treat as running once or a global or eval script
     // that will only run once.  Which one it is can be disambiguated by
-    // checking whether functionNonDelazifying() is null.
+    // checking whether function() is null.
     TreatAsRunOnce = 1 << 16,
 
     // 'this', 'arguments' and f.apply() are used. This is likely to be a
@@ -1637,13 +1636,6 @@ class BaseScript : public gc::TenuredCell {
     return functionOrGlobal_->compartment();
   }
   JS::Compartment* maybeCompartment() const { return compartment(); }
-
-  JSFunction* functionNonDelazifying() const {
-    if (functionOrGlobal_->is<JSFunction>()) {
-      return &functionOrGlobal_->as<JSFunction>();
-    }
-    return nullptr;
-  }
 
   ScriptSourceObject* sourceObject() const { return sourceObject_; }
   ScriptSource* scriptSource() const { return sourceObject()->source(); }
@@ -2414,22 +2406,21 @@ class JSScript : public js::BaseScript {
       js::frontend::BytecodeEmitter* bce);
 
   friend JSScript* js::detail::CopyScript(
-      JSContext* cx, js::HandleScript src, js::HandleObject functionOrGlobal,
+      JSContext* cx, js::HandleScript src,
       js::HandleScriptSourceObject sourceObject,
       js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
 
  private:
-  JSScript(js::HandleObject functionOrGlobal, uint8_t* stubEntry,
+  JSScript(js::HandleObject global, uint8_t* stubEntry,
            js::HandleScriptSourceObject sourceObject, uint32_t sourceStart,
            uint32_t sourceEnd, uint32_t toStringStart, uint32_t toStringend);
 
-  static JSScript* New(JSContext* cx, js::HandleObject functionOrGlobal,
-                       js::HandleScriptSourceObject sourceObject,
+  static JSScript* New(JSContext* cx, js::HandleScriptSourceObject sourceObject,
                        uint32_t sourceStart, uint32_t sourceEnd,
                        uint32_t toStringStart, uint32_t toStringEnd);
 
  public:
-  static JSScript* Create(JSContext* cx, js::HandleObject functionOrGlobal,
+  static JSScript* Create(JSContext* cx,
                           const JS::ReadOnlyCompileOptions& options,
                           js::HandleScriptSourceObject sourceObject,
                           uint32_t sourceStart, uint32_t sourceEnd,
@@ -2685,6 +2676,12 @@ class JSScript : public js::BaseScript {
    * have been relazified.
    */
   inline JSFunction* functionDelazifying() const;
+  JSFunction* functionNonDelazifying() const {
+    if (bodyScope()->is<js::FunctionScope>()) {
+      return bodyScope()->as<js::FunctionScope>().canonicalFunction();
+    }
+    return nullptr;
+  }
   /*
    * De-lazifies the canonical function. Must be called before entering code
    * that expects the function to be non-lazy.
@@ -3014,6 +3011,13 @@ class JSScript : public js::BaseScript {
   inline JSFunction* getFunction(size_t index);
   inline JSFunction* getFunction(jsbytecode* pc);
 
+  JSFunction* function() const {
+    if (functionNonDelazifying()) {
+      return functionNonDelazifying();
+    }
+    return nullptr;
+  }
+
   inline js::RegExpObject* getRegExp(size_t index);
   inline js::RegExpObject* getRegExp(jsbytecode* pc);
 
@@ -3289,6 +3293,10 @@ class LazyScript : public BaseScript {
 
   static inline JSFunction* functionDelazifying(JSContext* cx,
                                                 Handle<LazyScript*>);
+  JSFunction* functionNonDelazifying() const {
+    return &functionOrGlobal_->as<JSFunction>();
+  }
+
   void initScript(JSScript* script);
 
   JSScript* maybeScript() { return script_; }
