@@ -7,7 +7,7 @@
 #identity-box {
   padding-inline-start: 6px;
   padding-inline-end: 6px;
-  margin-inline-end: 4px;
+  margin-inline-end: 2px;
 }
 
 #identity-box,
@@ -35,8 +35,6 @@
 
 #identity-box[pageproxystate="invalid"] {
   pointer-events: none;
-  /* This would make the spaces around the glass icon balanced. */
-  margin-inline-end: 2px;
   -moz-user-focus: ignore;
 }
 
