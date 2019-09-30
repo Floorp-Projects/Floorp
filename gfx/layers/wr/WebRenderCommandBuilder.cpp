@@ -2183,6 +2183,10 @@ WebRenderCommandBuilder::GenerateFallbackData(
   // Display item bounds should be unscaled
   aImageRect = visibleRect / layerScale;
 
+  // visibleRect that we use inside the blob
+  // is relative to the blob origin so adjust for that
+  visibleRect -= dtRect.TopLeft();
+
   nsDisplayItemGeometry* geometry = fallbackData->mGeometry;
 
   bool needPaint = true;
@@ -2261,11 +2265,9 @@ WebRenderCommandBuilder::GenerateFallbackData(
         fallbackData->mBasicLayerManager =
             new BasicLayerManager(BasicLayerManager::BLM_INACTIVE);
       }
-      // aOffset is (0, 0) because blobs don't want to normalize their
-      // coordinates
       bool isInvalidated = PaintItemByDrawTarget(
-          aItem, dt, LayoutDevicePoint(0, 0),
-          /*aVisibleRect: */ visibleRect.ToUnknownRect(), aDisplayListBuilder,
+          aItem, dt, (dtRect/layerScale).TopLeft(),
+          /*aVisibleRect: */ dt->GetRect(), aDisplayListBuilder,
           fallbackData->mBasicLayerManager, scale, highlight);
       if (!isInvalidated) {
         if (!aItem->GetBuildingRect().IsEqualInterior(
@@ -2275,7 +2277,10 @@ WebRenderCommandBuilder::GenerateFallbackData(
           isInvalidated = true;
         }
       }
-      recorder->FlushItem(visibleRect.ToUnknownRect());
+
+      // the item bounds are relative to the blob origin which is
+      // dtRect.TopLeft()
+      recorder->FlushItem((dtRect - dtRect.TopLeft()).ToUnknownRect());
       recorder->Finish();
 
       if (!validFonts) {
@@ -2334,8 +2339,6 @@ WebRenderCommandBuilder::GenerateFallbackData(
             fallbackData->mBasicLayerManager =
                 new BasicLayerManager(mManager->GetWidget());
           }
-          // aOffset is applied because this case is a "real" image and not a
-          // blob
           isInvalidated = PaintItemByDrawTarget(
               aItem, dt,
               /*aOffset: */ aImageRect.TopLeft(),
