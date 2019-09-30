@@ -46,7 +46,7 @@ async function obtainObjectWithCPOW(hud) {
   info("Cleanup");
   await hud.ui.evaluateJSAsync("delete globalThis.result;");
   const onToolboxDestroyed = toolbox.once("destroyed");
-  toolbox.win.top.close();
+  toolbox.topWindow.close();
   await onToolboxDestroyed;
 
   return { message, actor };

@@ -29,17 +29,18 @@ add_task(async function() {
   const [, win, doc] = await createHost("bottom", TEST_URI);
 
   info("Resize and move the window to have space below.");
-  const originalWidth = win.top.outerWidth;
-  const originalHeight = win.top.outerHeight;
-  win.top.resizeBy(-100, -200);
-  const originalTop = win.top.screenTop;
-  const originalLeft = win.top.screenLeft;
-  win.top.moveTo(100, 100);
+  const originalWidth = win.outerWidth;
+  const originalHeight = win.outerHeight;
+  win.resizeBy(-100, -200);
+
+  const originalTop = win.screenTop;
+  const originalLeft = win.screenLeft;
+  win.moveTo(100, 100);
 
   registerCleanupFunction(() => {
     info("Restore original window dimensions and position.");
-    win.top.resizeTo(originalWidth, originalHeight);
-    win.top.moveTo(originalTop, originalLeft);
+    win.resizeTo(originalWidth, originalHeight);
+    win.moveTo(originalTop, originalLeft);
   });
 
   info("Create HTML tooltip");
