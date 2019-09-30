@@ -7,6 +7,7 @@
 #include "SHEntryParent.h"
 #include "SHistoryParent.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/MaybeNewPSHEntry.h"
 #include "nsStructuredCloneContainer.h"
 
 namespace mozilla {
@@ -24,21 +25,22 @@ void SHEntrySharedParent::Destroy() {
   SHEntrySharedParentState::Destroy();
 }
 
+NS_IMPL_ISUPPORTS_INHERITED0(LegacySHEntry, nsSHEntry)
+
 SHEntryParent* LegacySHEntry::CreateActor() {
   MOZ_ASSERT(!mActor);
   mActor = new SHEntryParent(this);
   return mActor;
 }
 
-void LegacySHEntry::GetOrCreateActor(PContentParent* aContentParent,
-                                     MaybeNewPSHEntry& aEntry) {
-  if (!mActor) {
-    mActor = new SHEntryParent(this);
-    aEntry =
-        NewPSHEntry(aContentParent->OpenPSHEntryEndpoint(mActor), mShared->mID);
-  } else {
-    aEntry = mActor;
+MaybeNewPSHEntryParent LegacySHEntry::GetOrCreateActor(
+    PContentParent* aContentParent) {
+  if (mActor) {
+    return AsVariant(static_cast<PSHEntryParent*>(mActor));
   }
+
+  return AsVariant(NewPSHEntry{
+      aContentParent->OpenPSHEntryEndpoint(CreateActor()), mShared->mID});
 }
 
 void LegacySHEntry::AbandonBFCacheEntry(uint64_t aNewSharedID) {
@@ -156,9 +158,9 @@ bool SHEntryParent::RecvSetPostData(nsIInputStream* aPostData) {
   return true;
 }
 
-bool SHEntryParent::RecvGetParent(MaybeNewPSHEntry* aParentEntry) {
+bool SHEntryParent::RecvGetParent(RefPtr<CrossProcessSHEntry>* aParentEntry) {
   nsCOMPtr<nsISHEntry> parent = mEntry->GetParent();
-  GetOrCreate(parent, aParentEntry);
+  *aParentEntry = parent.forget().downcast<LegacySHEntry>();
   return true;
 }
 
@@ -507,21 +509,21 @@ bool SHEntryParent::RecvRemoveChild(PSHEntryParent* aChild, nsresult* aResult) {
 }
 
 bool SHEntryParent::RecvGetChildAt(const int32_t& aIndex,
-                                   MaybeNewPSHEntry* aChild) {
+                                   RefPtr<CrossProcessSHEntry>* aChild) {
   nsCOMPtr<nsISHEntry> child;
   DebugOnly<nsresult> rv = mEntry->GetChildAt(aIndex, getter_AddRefs(child));
   MOZ_ASSERT(NS_SUCCEEDED(rv), "Didn't expect this to fail.");
 
-  GetOrCreate(child, aChild);
+  *aChild = child.forget().downcast<LegacySHEntry>();
   return true;
 }
 
 bool SHEntryParent::RecvGetChildSHEntryIfHasNoDynamicallyAddedChild(
-    const int32_t& aChildOffset, MaybeNewPSHEntry* aChild) {
+    const int32_t& aChildOffset, RefPtr<CrossProcessSHEntry>* aChild) {
   nsCOMPtr<nsISHEntry> child;
   mEntry->GetChildSHEntryIfHasNoDynamicallyAddedChild(aChildOffset,
                                                       getter_AddRefs(child));
-  GetOrCreate(child, aChild);
+  *aChild = child.forget().downcast<LegacySHEntry>();
   return true;
 }
 
@@ -530,15 +532,6 @@ bool SHEntryParent::RecvReplaceChild(PSHEntryParent* aNewChild,
   *aResult =
       mEntry->ReplaceChild(static_cast<SHEntryParent*>(aNewChild)->mEntry);
   return true;
-}
-
-void SHEntryParent::GetOrCreate(PContentParent* aManager, nsISHEntry* aSHEntry,
-                                MaybeNewPSHEntry& aResult) {
-  if (aSHEntry) {
-    static_cast<LegacySHEntry*>(aSHEntry)->GetOrCreateActor(aManager, aResult);
-  } else {
-    aResult = (PSHEntryParent*)nullptr;
-  }
 }
 
 bool SHEntryParent::RecvClearEntry(const uint64_t& aNewSharedID) {

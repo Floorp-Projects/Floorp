@@ -8,6 +8,7 @@
 #define mozilla_dom_SHEntryChild_h
 
 #include "mozilla/dom/PSHEntryChild.h"
+#include "mozilla/dom/MaybeNewPSHEntry.h"
 #include "nsContentUtils.h"
 #include "nsExpirationTracker.h"
 #include "nsIBFCacheEntry.h"
@@ -84,8 +85,11 @@ class SHEntryChildShared final : public nsIBFCacheEntry,
 /**
  * Session history entry actor for the child process.
  */
-class SHEntryChild final : public PSHEntryChild, public nsISHEntry {
+class SHEntryChild final : public PSHEntryChild,
+                           public nsISHEntry,
+                           public CrossProcessSHEntry {
   friend class PSHEntryChild;
+  using PSHEntryChild::CrossProcessSHEntry;
 
  public:
   explicit SHEntryChild(const SHEntryChild* aClone)
@@ -99,8 +103,6 @@ class SHEntryChild final : public PSHEntryChild, public nsISHEntry {
 
   void EvictContentViewer();
 
-  static already_AddRefed<SHEntryChild> GetOrCreate(MaybeNewPSHEntry& aEntry);
-
  protected:
   void ActorDestroy(ActorDestroyReason aWhy) override {
     mIPCActorDeleted = true;
@@ -112,6 +114,11 @@ class SHEntryChild final : public PSHEntryChild, public nsISHEntry {
   RefPtr<SHEntryChildShared> mShared;
   bool mIPCActorDeleted;
 };
+
+inline SHEntryChild* CrossProcessSHEntry::ToSHEntryChild() {
+  MOZ_ASSERT(XRE_IsContentProcess(), "Wrong side!");
+  return static_cast<SHEntryChild*>(this);
+}
 
 }  // namespace dom
 }  // namespace mozilla

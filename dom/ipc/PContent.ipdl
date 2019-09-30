@@ -66,7 +66,6 @@ include ClientIPCTypes;
 include HangTypes;
 include PrefsTypes;
 include NeckoChannelParams;
-include NewPSHEntry;
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
 include protocol PSandboxTesting;
@@ -330,6 +329,12 @@ struct PostMessageData
     nsIPrincipal subjectPrincipal;
     nsIURI callerDocumentURI;
     bool isFromPrivateWindow;
+};
+
+union PSHEntryOrSharedID
+{
+  PSHEntry;
+  uint64_t;
 };
 
 /**

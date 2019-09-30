@@ -27,11 +27,9 @@ static void FillInLoadResult(PContentParent* aManager, nsresult aRv,
                              const nsSHistory::LoadEntryResult& aLoadResult,
                              LoadSHEntryResult* aResult) {
   if (NS_SUCCEEDED(aRv)) {
-    MaybeNewPSHEntry entry;
-    static_cast<LegacySHEntry*>(aLoadResult.mLoadState->SHEntry())
-        ->GetOrCreateActor(aManager, entry);
-    *aResult = LoadSHEntryData(std::move(entry), aLoadResult.mBrowsingContext,
-                               aLoadResult.mLoadState);
+    *aResult = LoadSHEntryData(
+        static_cast<LegacySHEntry*>(aLoadResult.mLoadState->SHEntry()),
+        aLoadResult.mBrowsingContext, aLoadResult.mLoadState);
   } else {
     *aResult = aRv;
   }
@@ -67,10 +65,10 @@ bool SHistoryParent::RecvInternalSetRequestedIndex(int32_t aIndex) {
 }
 
 bool SHistoryParent::RecvGetEntryAtIndex(int32_t aIndex, nsresult* aResult,
-                                         MaybeNewPSHEntry* aEntry) {
+                                         RefPtr<CrossProcessSHEntry>* aEntry) {
   nsCOMPtr<nsISHEntry> entry;
   *aResult = mHistory->GetEntryAtIndex(aIndex, getter_AddRefs(entry));
-  SHEntryParent::GetOrCreate(Manager(), entry, *aEntry);
+  *aEntry = entry.forget().downcast<LegacySHEntry>();
   return true;
 }
 
@@ -83,11 +81,9 @@ bool SHistoryParent::RecvReloadCurrentEntry(LoadSHEntryResult* aLoadResult) {
   nsSHistory::LoadEntryResult loadResult;
   nsresult rv = mHistory->ReloadCurrentEntry(loadResult);
   if (NS_SUCCEEDED(rv)) {
-    MaybeNewPSHEntry entry;
-    SHEntryParent::GetOrCreate(Manager(), loadResult.mLoadState->SHEntry(),
-                               entry);
     *aLoadResult = LoadSHEntryData(
-        std::move(entry), loadResult.mBrowsingContext, loadResult.mLoadState);
+        static_cast<LegacySHEntry*>(loadResult.mLoadState->SHEntry()),
+        loadResult.mBrowsingContext, loadResult.mLoadState);
   } else {
     *aLoadResult = rv;
   }
@@ -185,21 +181,20 @@ bool SHistoryParent::RecvReload(const uint32_t& aReloadFlags,
   return true;
 }
 
-bool SHistoryParent::RecvGetAllEntries(nsTArray<MaybeNewPSHEntry>* aEntries) {
+bool SHistoryParent::RecvGetAllEntries(
+    nsTArray<RefPtr<CrossProcessSHEntry>>* aEntries) {
   nsTArray<nsCOMPtr<nsISHEntry>>& entries = mHistory->Entries();
   uint32_t length = entries.Length();
   aEntries->AppendElements(length);
   for (uint32_t i = 0; i < length; ++i) {
-    SHEntryParent::GetOrCreate(Manager(), entries[i].get(),
-                               aEntries->ElementAt(i));
+    aEntries->ElementAt(i) = static_cast<LegacySHEntry*>(entries[i].get());
   }
   return true;
 }
 
-bool SHistoryParent::RecvFindEntryForBFCache(const uint64_t& aSharedID,
-                                             const bool& aIncludeCurrentEntry,
-                                             MaybeNewPSHEntry* aEntry,
-                                             int32_t* aIndex) {
+bool SHistoryParent::RecvFindEntryForBFCache(
+    const uint64_t& aSharedID, const bool& aIncludeCurrentEntry,
+    RefPtr<CrossProcessSHEntry>* aEntry, int32_t* aIndex) {
   int32_t currentIndex;
   mHistory->GetIndex(&currentIndex);
   int32_t startSafeIndex, endSafeIndex;
@@ -209,20 +204,20 @@ bool SHistoryParent::RecvFindEntryForBFCache(const uint64_t& aSharedID,
     nsresult rv = mHistory->GetEntryAtIndex(i, getter_AddRefs(entry));
     NS_ENSURE_SUCCESS(rv, false);
 
-    if (static_cast<LegacySHEntry*>(entry.get())->GetSharedStateID() ==
-        aSharedID) {
+    RefPtr<LegacySHEntry> shEntry = entry.forget().downcast<LegacySHEntry>();
+    if (shEntry->GetSharedStateID() == aSharedID) {
       if (!aIncludeCurrentEntry && i == currentIndex) {
-        *aEntry = (PSHEntryParent*)nullptr;
+        *aEntry = nullptr;
         *aIndex = -1;
       } else {
-        SHEntryParent::GetOrCreate(Manager(), entry, *aEntry);
+        *aEntry = shEntry.forget();
         *aIndex = i;
       }
 
       return true;
     }
   }
-  *aEntry = (PSHEntryParent*)nullptr;
+  *aEntry = nullptr;
   *aIndex = -1;
   return true;
 }
