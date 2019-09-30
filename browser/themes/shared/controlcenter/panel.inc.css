@@ -699,7 +699,8 @@ description#identity-popup-content-verifier,
 
 :root[lwt-popup-brighttext] #protections-popup-no-trackers-found-description,
 :root[lwt-popup-brighttext] #protections-popup-blocking-section-header,
-:root[lwt-popup-brighttext] #protections-popup-not-blocking-section-header {
+:root[lwt-popup-brighttext] #protections-popup-not-blocking-section-header,
+:root[lwt-popup-brighttext] #protections-popup-not-found-section-header {
   color: #f9f9fa;
 }
 
