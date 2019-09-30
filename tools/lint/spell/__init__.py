@@ -113,6 +113,9 @@ def lint(paths, config, fix=None, **lintargs):
         return []
 
     config['root'] = lintargs['root']
+
+    skip_files = '--skip=*.dic,{}'.format(','.join(config['exclude']))
+
     exclude_list = os.path.join(here, 'exclude-list.txt')
     cmd_args = [binary,
                 '--disable-colors',
@@ -123,9 +126,7 @@ def lint(paths, config, fix=None, **lintargs):
                 #    that were disabled in dictionary.
                 '--quiet-level=7',
                 '--ignore-words=' + exclude_list,
-                # Ignore dictonnaries
-                '--skip=*.dic',
-                ]
+                skip_files]
 
     if fix:
         cmd_args.append('--write-changes')
