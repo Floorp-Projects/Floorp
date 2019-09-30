@@ -13,8 +13,12 @@
 #include "nsIStringBundle.h"
 #include "nsIURI.h"
 #include "nsIUUIDGenerator.h"
+#include "nsIWidget.h"
+#include "nsIWindowMediator.h"
 #include "nsNetUtil.h"
+#include "nsPIDOMWindow.h"
 #include "nsProxyRelease.h"
+#include "WidgetUtils.h"
 #include "WinTaskbar.h"
 #include "WinUtils.h"
 
@@ -432,6 +436,23 @@ ToastNotificationHandler::OnActivate(IToastNotification* notification,
     } else if (argString.EqualsLiteral("snooze")) {
       mAlertListener->Observe(nullptr, "alertdisablecallback", mCookie.get());
     } else if (mClickable) {
+      // When clicking toast, focus moves to another process, but we want to set
+      // focus on Firefox process.
+      nsCOMPtr<nsIWindowMediator> winMediator(
+          do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
+      if (winMediator) {
+        nsCOMPtr<mozIDOMWindowProxy> navWin;
+        winMediator->GetMostRecentWindow(u"navigator:browser",
+                                         getter_AddRefs(navWin));
+        if (navWin) {
+          nsCOMPtr<nsIWidget> widget =
+              WidgetUtils::DOMWindowToWidget(nsPIDOMWindowOuter::From(navWin));
+          if (widget) {
+            SetForegroundWindow(
+                static_cast<HWND>(widget->GetNativeData(NS_NATIVE_WINDOW)));
+          }
+        }
+      }
       mAlertListener->Observe(nullptr, "alertclickcallback", mCookie.get());
     }
   }
