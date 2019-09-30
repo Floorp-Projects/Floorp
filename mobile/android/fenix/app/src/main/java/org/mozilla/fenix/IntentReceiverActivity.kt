@@ -93,7 +93,7 @@ class IntentReceiverActivity : Activity() {
                 }
                 intent.putExtra(HomeActivity.PRIVATE_BROWSING_MODE, startPrivateMode)
                 intent.flags = intent.flags or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                true
+                false
             }
             else -> {
                 intent.setClassName(applicationContext, HomeActivity::class.java.name)
