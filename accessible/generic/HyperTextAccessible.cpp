@@ -300,7 +300,7 @@ uint32_t HyperTextAccessible::TransformOffset(Accessible* aDescendant,
       // bulleted lists here because PeekOffset returns the inner text node
       // for a list when it should return the list bullet.
       // We manually set the offset so the error doesn't propagate up.
-      if (offset == 0 && descendant->Parent()->IsHTMLListItem() &&
+      if (offset == 0 && parent && parent->IsHTMLListItem() &&
           descendant->PrevSibling() && descendant->PrevSibling()->GetFrame() &&
           descendant->PrevSibling()->GetFrame()->IsBulletFrame()) {
         offset = 0;
