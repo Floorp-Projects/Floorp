@@ -22,7 +22,7 @@ import mozilla.components.feature.customtabs.verify.OriginVerifier
 class OriginVerifierFeature(
     private val httpClient: Client,
     private val packageManager: PackageManager,
-    private val apiKey: String?,
+    @VisibleForTesting internal val apiKey: String?,
     private val dispatch: (CustomTabsAction) -> Unit
 ) {
 

@@ -9,14 +9,15 @@ import android.graphics.Color
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.CustomTabActionButtonConfig
 import mozilla.components.browser.state.state.CustomTabConfig
+import mozilla.components.browser.state.state.CustomTabMenuItem
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -66,23 +67,53 @@ class CustomTabWindowFeatureTest {
     }
 
     @Test
+    fun `creates intent based on default custom tab config`() {
+        val feature = CustomTabWindowFeature(context, sessionManager, sessionId)
+        val config = CustomTabConfig()
+        val intent = feature.configToIntent(config)
+
+        val newConfig = createCustomTabConfigFromIntent(intent.intent, null)
+        assertEquals("org.mozilla.firefox", intent.intent.`package`)
+        assertEqualConfigs(config, newConfig)
+    }
+
+    @Test
     fun `creates intent based on custom tab config`() {
         val feature = CustomTabWindowFeature(context, sessionManager, sessionId)
-        val intent = feature.configToIntent(CustomTabConfig(
+        val config = CustomTabConfig(
             toolbarColor = Color.RED,
             navigationBarColor = Color.BLUE,
             enableUrlbarHiding = true,
             showShareMenuItem = true,
             titleVisible = true
-        ))
+        )
+        val intent = feature.configToIntent(config)
 
         val newConfig = createCustomTabConfigFromIntent(intent.intent, null)
         assertEquals("org.mozilla.firefox", intent.intent.`package`)
-        assertEquals(Color.RED, newConfig.toolbarColor)
-        assertEquals(Color.BLUE, newConfig.navigationBarColor)
-        assertTrue(newConfig.enableUrlbarHiding)
-        assertTrue(newConfig.showShareMenuItem)
-        assertTrue(newConfig.titleVisible)
+        assertEqualConfigs(config, newConfig)
+    }
+
+    @Test
+    fun `creates intent with same menu items`() {
+        val feature = CustomTabWindowFeature(context, sessionManager, sessionId)
+        val config = CustomTabConfig(
+            actionButtonConfig = CustomTabActionButtonConfig(
+                description = "button",
+                icon = mock(),
+                pendingIntent = mock()
+            ),
+            menuItems = listOf(
+                CustomTabMenuItem("Item A", mock()),
+                CustomTabMenuItem("Item B", mock()),
+                CustomTabMenuItem("Item C", mock())
+            )
+        )
+        val intent = feature.configToIntent(config)
+
+        val newConfig = createCustomTabConfigFromIntent(intent.intent, null)
+        assertEquals("org.mozilla.firefox", intent.intent.`package`)
+        assertEqualConfigs(config, newConfig)
     }
 
     @Test
@@ -103,5 +134,9 @@ class CustomTabWindowFeatureTest {
         feature.stop()
         verify(session, never()).register(feature.windowObserver)
         verify(session, never()).unregister(feature.windowObserver)
+    }
+
+    private fun assertEqualConfigs(expected: CustomTabConfig, actual: CustomTabConfig) {
+        assertEquals(expected.copy(id = ""), actual.copy(id = ""))
     }
 }
