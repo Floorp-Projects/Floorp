@@ -2771,9 +2771,6 @@ static void AccumulateTelemetryCallback(int id, uint32_t sample,
       Telemetry::Accumulate(Telemetry::JS_WEB_PARSER_COMPILE_LAZY_AFTER_MS,
                             sample);
       break;
-    case JS_TELEMETRY_DEPRECATED_ARRAY_GENERICS:
-      Telemetry::Accumulate(Telemetry::JS_DEPRECATED_ARRAY_GENERICS, sample);
-      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected JS_TELEMETRY id");
   }
