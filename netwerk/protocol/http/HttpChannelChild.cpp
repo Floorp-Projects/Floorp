@@ -53,7 +53,6 @@
 #include "nsICompressConvStats.h"
 #include "nsIDeprecationWarner.h"
 #include "mozilla/dom/Document.h"
-#include "nsIDOMWindowUtils.h"
 #include "nsIEventTarget.h"
 #include "nsIScriptError.h"
 #include "nsRedirectHistoryEntry.h"

@@ -25,7 +25,6 @@
 #include "nsIControllers.h"        // for nsIControllers
 #include "nsID.h"                  // for NS_GET_IID, etc
 #include "nsHTMLDocument.h"        // for nsHTMLDocument
-#include "nsIDOMWindow.h"          // for nsIDOMWindow
 #include "nsIDocShell.h"           // for nsIDocShell
 #include "mozilla/dom/Document.h"  // for Document
 #include "nsIDocumentStateListener.h"

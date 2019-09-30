@@ -15,7 +15,6 @@
 #include "nsHTMLParts.h"
 #include "nsIComponentManager.h"
 #include "nsIBaseWindow.h"
-#include "nsIDOMWindow.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIHttpChannelInternal.h"

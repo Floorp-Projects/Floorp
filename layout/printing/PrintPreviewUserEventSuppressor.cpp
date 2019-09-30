@@ -9,7 +9,6 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"  // for Event
-#include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/Document.h"
 #include "nsIDocShell.h"

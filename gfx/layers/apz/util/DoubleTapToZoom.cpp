@@ -14,7 +14,6 @@
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Document.h"
-#include "nsIDOMWindow.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
 #include "nsLayoutUtils.h"

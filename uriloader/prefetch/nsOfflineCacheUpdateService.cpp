@@ -17,7 +17,6 @@
 #include "nsIContent.h"
 #include "nsIDocShell.h"
 #include "nsIDocumentLoader.h"
-#include "nsIDOMWindow.h"
 #include "mozilla/dom/Document.h"
 #include "nsIObserverService.h"
 #include "nsIURL.h"

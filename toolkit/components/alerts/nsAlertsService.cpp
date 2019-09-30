@@ -13,7 +13,6 @@
 
 #include "nsXPCOM.h"
 #include "nsIServiceManager.h"
-#include "nsIDOMWindow.h"
 #include "nsPromiseFlatString.h"
 #include "nsToolkitCompsCID.h"
 

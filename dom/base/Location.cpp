@@ -17,7 +17,6 @@
 #include "nsNetUtil.h"
 #include "nsCOMPtr.h"
 #include "nsEscape.h"
-#include "nsIDOMWindow.h"
 #include "nsPresContext.h"
 #include "nsError.h"
 #include "nsReadableUtils.h"
@@ -40,7 +39,8 @@
 namespace mozilla {
 namespace dom {
 
-Location::Location(nsPIDOMWindowInner* aWindow, BrowsingContext* aBrowsingContext)
+Location::Location(nsPIDOMWindowInner* aWindow,
+                   BrowsingContext* aBrowsingContext)
     : mInnerWindow(aWindow) {
   // aBrowsingContext can be null if it gets called after nsDocShell::Destory().
   if (aBrowsingContext) {

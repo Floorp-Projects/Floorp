@@ -10,7 +10,6 @@
 #include "nsTArray.h"
 #include "nsIBaseWindow.h"
 #include "nsIWidget.h"
-#include "nsIDOMWindow.h"
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
 #include "nsISimpleEnumerator.h"

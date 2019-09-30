@@ -10,7 +10,6 @@
 #include "nsContentUtils.h"
 #include "nsDeviceSensors.h"
 
-#include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIServiceManager.h"
@@ -32,6 +31,8 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace hal;
+
+class nsIDOMWindow;
 
 #undef near
 

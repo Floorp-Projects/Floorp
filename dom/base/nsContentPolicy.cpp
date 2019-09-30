@@ -17,7 +17,6 @@
 #include "nsContentPolicy.h"
 #include "nsIURI.h"
 #include "nsIDocShell.h"
-#include "nsIDOMWindow.h"
 #include "nsIBrowserChild.h"
 #include "nsIContent.h"
 #include "nsIImageLoadingContent.h"
@@ -28,6 +27,8 @@
 #include "nsIContentSecurityPolicy.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/TaskCategory.h"
+
+class nsIDOMWindow;
 
 using mozilla::LogLevel;
 

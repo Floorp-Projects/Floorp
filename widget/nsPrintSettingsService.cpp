@@ -16,7 +16,6 @@
 #include "nsServiceManagerUtils.h"
 
 #include "nsArray.h"
-#include "nsIDOMWindow.h"
 #include "nsIDialogParamBlock.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"

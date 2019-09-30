@@ -171,7 +171,6 @@
 #include "ExpandedPrincipal.h"
 #include "mozilla/NullPrincipal.h"
 
-#include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsFocusManager.h"
 #include "nsICookiePermission.h"

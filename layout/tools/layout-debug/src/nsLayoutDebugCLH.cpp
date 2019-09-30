@@ -11,7 +11,6 @@
 #include "nsCOMPtr.h"
 #include "nsIWindowWatcher.h"
 #include "nsIServiceManager.h"
-#include "nsIDOMWindow.h"
 #include "nsISupportsPrimitives.h"
 #include "nsICommandLine.h"
 #include "nsIURI.h"

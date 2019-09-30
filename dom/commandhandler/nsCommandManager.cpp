@@ -16,7 +16,6 @@
 #include "nsIScriptSecurityManager.h"
 
 #include "nsContentUtils.h"
-#include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
 #include "nsIFocusManager.h"

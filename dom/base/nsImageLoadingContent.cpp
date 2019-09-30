@@ -16,7 +16,6 @@
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/Document.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
 #include "nsContentList.h"
 #include "nsContentPolicyUtils.h"

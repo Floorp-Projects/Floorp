@@ -36,7 +36,6 @@
 #include "nsColor.h"
 #include "nsGfxCIID.h"
 #include "nsIDocShell.h"
-#include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsDisplayList.h"
 #include "nsFocusManager.h"
