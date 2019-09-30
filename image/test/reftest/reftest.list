@@ -1,5 +1,5 @@
 # Check for 24-bit color mode (test for bug 414720)
-skip-if(Android) == colordepth.html about:blank
+== colordepth.html about:blank
 
 # "PngSuite, the official set of PNG test images"
 # Images by Willem van Schaik
@@ -20,10 +20,10 @@ include pngsuite-transparency/reftest.list
 include pngsuite-zlib/reftest.list
 
 # BMP tests
-skip-if(Android) include bmp/reftest.list
+skip-if(Android&&webrender) include bmp/reftest.list
 
 # ICO tests
-skip-if(Android) include ico/reftest.list
+skip-if(Android&&webrender) include ico/reftest.list
 
 # JPEG tests
 include jpeg/reftest.list
@@ -44,4 +44,4 @@ include color-management/reftest.list
 include downscaling/reftest.list
 
 # Lossless encoders
-skip-if(Android) include encoders-lossless/reftest.list
+include encoders-lossless/reftest.list
