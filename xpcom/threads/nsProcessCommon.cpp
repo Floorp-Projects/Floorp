@@ -66,8 +66,6 @@ nsProcess::nsProcess()
       mStartHidden(false),
       mNoShell(false),
       mPid(-1),
-      mObserver(nullptr),
-      mWeakObserver(nullptr),
       mExitValue(-1)
 #if !defined(XP_UNIX)
       ,
@@ -319,14 +317,8 @@ void nsProcess::ProcessComplete() {
   }
 
   mPid = -1;
-  nsCOMPtr<nsIObserver> observer;
-  if (mWeakObserver) {
-    observer = do_QueryReferent(mWeakObserver);
-  } else if (mObserver) {
-    observer = mObserver;
-  }
+  nsCOMPtr<nsIObserver> observer = mObserver.GetValue();
   mObserver = nullptr;
-  mWeakObserver = nullptr;
 
   if (observer) {
     observer->Observe(NS_ISUPPORTS_CAST(nsIProcess*, this), topic, nullptr);
@@ -423,10 +415,9 @@ nsresult nsProcess::RunProcess(bool aBlocking, char** aMyArgv,
 
   if (aObserver) {
     if (aHoldWeak) {
-      mWeakObserver = do_GetWeakReference(aObserver);
-      if (!mWeakObserver) {
-        return NS_NOINTERFACE;
-      }
+      nsresult rv = NS_OK;
+      mObserver = do_GetWeakReference(aObserver, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
     } else {
       mObserver = aObserver;
     }
@@ -677,7 +668,6 @@ nsProcess::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   mObserver = nullptr;
-  mWeakObserver = nullptr;
 
   MutexAutoLock lock(mLock);
   mShutdown = true;
