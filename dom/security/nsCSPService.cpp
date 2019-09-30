@@ -107,11 +107,6 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
 
   uint32_t contentType = aLoadInfo->InternalContentPolicyType();
   nsCOMPtr<nsISupports> requestContext = aLoadInfo->GetLoadingContext();
-  nsCOMPtr<nsIURI> requestOrigin;
-  nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->LoadingPrincipal();
-  if (loadingPrincipal) {
-    loadingPrincipal->GetURI(getter_AddRefs(requestOrigin));
-  }
 
   nsCOMPtr<nsICSPEventListener> cspEventListener;
   nsresult rv =
@@ -149,8 +144,8 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
     if (preloadCsp) {
       // obtain the enforcement decision
       rv = preloadCsp->ShouldLoad(
-          contentType, cspEventListener, aContentLocation, requestOrigin,
-          requestContext, aMimeTypeGuess,
+          contentType, cspEventListener, aContentLocation, requestContext,
+          aMimeTypeGuess,
           nullptr,  // no redirect, aOriginal URL is null.
           aLoadInfo->GetSendCSPViolationEvents(), cspNonce, aDecision);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -175,7 +170,7 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
   if (csp) {
     // obtain the enforcement decision
     rv = csp->ShouldLoad(contentType, cspEventListener, aContentLocation,
-                         requestOrigin, requestContext, aMimeTypeGuess,
+                         requestContext, aMimeTypeGuess,
                          nullptr,  // no redirect, aOriginal URL is null.
                          aLoadInfo->GetSendCSPViolationEvents(), cspNonce,
                          aDecision);
@@ -342,7 +337,6 @@ nsresult CSPService::ConsultCSPForRedirect(nsIURI* aOriginalURI,
           policyType,  // load type per nsIContentPolicy (uint32_t)
           cspEventListener,
           aNewURI,         // nsIURI
-          nullptr,         // nsIURI
           requestContext,  // nsISupports
           EmptyCString(),  // ACString - MIME guess
           aOriginalURI,    // Original nsIURI
@@ -366,7 +360,6 @@ nsresult CSPService::ConsultCSPForRedirect(nsIURI* aOriginalURI,
     csp->ShouldLoad(policyType,  // load type per nsIContentPolicy (uint32_t)
                     cspEventListener,
                     aNewURI,         // nsIURI
-                    nullptr,         // nsIURI
                     requestContext,  // nsISupports
                     EmptyCString(),  // ACString - MIME guess
                     aOriginalURI,    // Original nsIURI
