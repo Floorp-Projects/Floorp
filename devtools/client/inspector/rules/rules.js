@@ -1736,7 +1736,7 @@ CssRuleView.prototype = {
    */
   _flashElement(element) {
     flashElementOn(element, {
-      backgroundClass: "theme-bg-yellow-contrast",
+      backgroundClass: "theme-bg-contrast",
     });
 
     if (this._flashMutationTimer) {
@@ -1746,7 +1746,7 @@ CssRuleView.prototype = {
 
     this._flashMutationTimer = setTimeout(() => {
       flashElementOff(element, {
-        backgroundClass: "theme-bg-yellow-contrast",
+        backgroundClass: "theme-bg-contrast",
       });
 
       // Emit "scrolled-to-property" for use by tests.

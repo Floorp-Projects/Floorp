@@ -663,7 +663,7 @@ MarkupContainer.prototype = {
     if (!this.selected) {
       flashElementOn(this.tagState, {
         foregroundElt: this.editor.elt,
-        backgroundClass: "theme-bg-yellow-contrast",
+        backgroundClass: "theme-bg-contrast",
       });
       if (this._flashMutationTimer) {
         clearTimeout(this._flashMutationTimer);
@@ -672,7 +672,7 @@ MarkupContainer.prototype = {
       this._flashMutationTimer = setTimeout(() => {
         flashElementOff(this.tagState, {
           foregroundElt: this.editor.elt,
-          backgroundClass: "theme-bg-yellow-contrast",
+          backgroundClass: "theme-bg-contrast",
         });
       }, this.markup.CONTAINER_FLASHING_DURATION);
     }

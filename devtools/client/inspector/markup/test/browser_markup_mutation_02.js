@@ -160,7 +160,7 @@ function assertNodeFlashing(nodeFront, inspector) {
   const container = getContainerForNodeFront(nodeFront, inspector);
   ok(container, "Markup container for node found");
   ok(
-    container.tagState.classList.contains("theme-bg-yellow-contrast"),
+    container.tagState.classList.contains("theme-bg-contrast"),
     "Markup container for node is flashing"
   );
 
@@ -168,7 +168,7 @@ function assertNodeFlashing(nodeFront, inspector) {
   // flashing.
   clearTimeout(container._flashMutationTimer);
   container._flashMutationTimer = null;
-  container.tagState.classList.remove("theme-bg-yellow-contrast");
+  container.tagState.classList.remove("theme-bg-contrast");
 }
 
 function assertAttributeFlashing(nodeFront, attribute, inspector) {
@@ -182,9 +182,9 @@ function assertAttributeFlashing(nodeFront, attribute, inspector) {
   const attributeElement = container.editor.getAttributeElement(attribute);
 
   ok(
-    attributeElement.classList.contains("theme-bg-yellow-contrast"),
+    attributeElement.classList.contains("theme-bg-contrast"),
     "Element for " + attribute + " attribute is flashing"
   );
 
-  attributeElement.classList.remove("theme-bg-yellow-contrast");
+  attributeElement.classList.remove("theme-bg-contrast");
 }

@@ -241,12 +241,12 @@ ElementEditor.prototype = {
     }
 
     flashElementOn(this.getAttributeElement(attrName), {
-      backgroundClass: "theme-bg-yellow-contrast",
+      backgroundClass: "theme-bg-contrast",
     });
 
     this.animationTimers[attrName] = setTimeout(() => {
       flashElementOff(this.getAttributeElement(attrName), {
-        backgroundClass: "theme-bg-yellow-contrast",
+        backgroundClass: "theme-bg-contrast",
       });
     }, this.markup.CONTAINER_FLASHING_DURATION);
   },
