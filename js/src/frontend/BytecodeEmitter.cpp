@@ -5715,7 +5715,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
       }
 
       if (classContentsIfConstructor) {
-        fun->lazyScript()->setFieldInitializers(
+        funbox->setFieldInitializers(
             setupFieldInitializers(classContentsIfConstructor));
       }
 
