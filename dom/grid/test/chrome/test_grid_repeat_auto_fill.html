@@ -72,6 +72,14 @@ body {
 .grid19 {
   grid-template-columns: repeat(auto-fill, [before] 1000px);
 }
+.grid20 {
+  grid-column: 4 / -1;
+  grid-template-columns: subgrid repeat(auto-fill, [x]);
+}
+.grid21 {
+  grid-column: 4 / -1;
+  grid-template-columns: subgrid [a] repeat(auto-fill, [x]) [b];
+}
 
 .box {
   background-color: #444;
@@ -511,6 +519,30 @@ function runTests() {
   ];
   testLines("wrapper19", grid, expectedValues);
 
+  wrapper = document.getElementById("wrapper20");
+  grid = wrapper.getGridFragments()[0];
+
+  // test starts and names
+  expectedValues = [
+    { "names": "x" },
+    { "names": "x" },
+    { "names": "x" },
+    { "names": "x" },
+  ];
+  testLines("wrapper20", grid, expectedValues);
+
+  wrapper = document.getElementById("wrapper21");
+  grid = wrapper.getGridFragments()[0];
+
+  // test starts and names
+  expectedValues = [
+    { "names": "a" },
+    { "names": "x" },
+    { "names": "x" },
+    { "names": "b" },
+  ];
+  testLines("wrapper21", grid, expectedValues);
+
   SimpleTest.finish();
 }
 </script>
@@ -566,12 +598,14 @@ function runTests() {
   <div id="wrapper9" class="wrapper grid9">
     <div id="boxB" class="box b">B</div>
     <div id="boxE" class="box e">E</div>
+    <div id="wrapper20" class="wrapper grid20"><x style="grid-column:x">x</x></div>
   </div>
 
   <br/>
   <div id="wrapper10" class="wrapper grid10">
     <div id="boxB" class="box b">B</div>
     <div id="boxE" class="box e">E</div>
+    <div id="wrapper21" class="wrapper grid21"><x style="grid-column:y">y</x></div>
   </div>
 
   <br/>
