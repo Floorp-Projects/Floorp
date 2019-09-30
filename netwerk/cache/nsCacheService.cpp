@@ -50,6 +50,7 @@ using namespace mozilla::net;
  * nsCacheProfilePrefObserver
  *****************************************************************************/
 #define OFFLINE_CACHE_ENABLE_PREF "browser.cache.offline.enable"
+#define OFFLINE_CACHE_STORAGE_ENABLE_PREF "browser.cache.offline.storage.enable"
 #define OFFLINE_CACHE_DIR_PREF "browser.cache.offline.parent_directory"
 #define OFFLINE_CACHE_CAPACITY_PREF "browser.cache.offline.capacity"
 #define OFFLINE_CACHE_CAPACITY 512000
@@ -63,6 +64,7 @@ static const char* observerList[] = {
 
 static const char* prefList[] = {
     OFFLINE_CACHE_ENABLE_PREF,
+    OFFLINE_CACHE_STORAGE_ENABLE_PREF,
     OFFLINE_CACHE_CAPACITY_PREF,
     OFFLINE_CACHE_DIR_PREF,
     nullptr,
@@ -78,6 +80,7 @@ class nsCacheProfilePrefObserver : public nsIObserver {
   nsCacheProfilePrefObserver()
       : mHaveProfile(false),
         mOfflineCacheEnabled(false),
+        mOfflineStorageCacheEnabled(false),
         mOfflineCacheCapacity(0),
         mCacheCompressionLevel(CACHE_COMPRESSION_LEVEL),
         mSanitizeOnShutdown(false),
@@ -109,6 +112,7 @@ class nsCacheProfilePrefObserver : public nsIObserver {
   nsCOMPtr<nsIFile> mDiskCacheParentDirectory;
 
   bool mOfflineCacheEnabled;
+  bool mOfflineStorageCacheEnabled;
   int32_t mOfflineCacheCapacity;  // in kilobytes
   nsCOMPtr<nsIFile> mOfflineCacheParentDirectory;
 
@@ -237,9 +241,17 @@ void nsCacheProfilePrefObserver::PrefChanged(const char* aPref) {
   if (!mHaveProfile) return;
   // which preference changed?
   nsresult rv;
-  if (!strcmp(OFFLINE_CACHE_ENABLE_PREF, aPref)) {
+  if (!strcmp(OFFLINE_CACHE_ENABLE_PREF, aPref) ||
+      !strcmp(OFFLINE_CACHE_STORAGE_ENABLE_PREF, aPref)) {
     rv = Preferences::GetBool(OFFLINE_CACHE_ENABLE_PREF, &mOfflineCacheEnabled);
-    if (NS_FAILED(rv)) return;
+    if (NS_FAILED(rv)) {
+      return;
+    }
+    rv = Preferences::GetBool(OFFLINE_CACHE_STORAGE_ENABLE_PREF,
+                              &mOfflineStorageCacheEnabled);
+    if (NS_FAILED(rv)) {
+      return;
+    }
     nsCacheService::SetOfflineCacheEnabled(OfflineCacheEnabled());
 
   } else if (!strcmp(OFFLINE_CACHE_CAPACITY_PREF, aPref)) {
@@ -293,6 +305,11 @@ nsresult nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch) {
   // read offline cache device prefs
   mOfflineCacheEnabled = true;  // presume offline cache is enabled
   (void)branch->GetBoolPref(OFFLINE_CACHE_ENABLE_PREF, &mOfflineCacheEnabled);
+
+  mOfflineStorageCacheEnabled =
+      true;  // presume offline storage cache is enabled
+  (void)branch->GetBoolPref(OFFLINE_CACHE_STORAGE_ENABLE_PREF,
+                            &mOfflineStorageCacheEnabled);
 
   mOfflineCacheCapacity = OFFLINE_CACHE_CAPACITY;
   (void)branch->GetIntPref(OFFLINE_CACHE_CAPACITY_PREF, &mOfflineCacheCapacity);
@@ -368,7 +385,7 @@ bool nsCacheProfilePrefObserver::OfflineCacheEnabled() {
   if ((mOfflineCacheCapacity == 0) || (!mOfflineCacheParentDirectory))
     return false;
 
-  return mOfflineCacheEnabled;
+  return mOfflineCacheEnabled && mOfflineStorageCacheEnabled;
 }
 
 int32_t nsCacheProfilePrefObserver::CacheCompressionLevel() {
