@@ -31,6 +31,11 @@ loader.lazyRequireGetter(
   "devtools/shared/async-utils",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "DevToolsUtils",
+  "devtools/shared/DevToolsUtils"
+);
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
@@ -978,16 +983,7 @@ HTMLTooltip.prototype = {
   },
 
   _getTopWindow: function() {
-    const win = this.doc.defaultView;
-    if (win.windowRoot) {
-      // In some situations (e.g. about:devtools-toolbox) the current document is loaded
-      // in a Window instead of a ChromeWindow.
-      // To get access to the topmost ChromeWindow, we need to use the chrome privileged
-      // windowRoot getter.
-      return win.windowRoot.ownerGlobal;
-    }
-    // win.top is used as fallback if we are not in a chrome privileged document.
-    return win.top;
+    return DevToolsUtils.getTopWindow(this.doc.defaultView);
   },
 
   /**
