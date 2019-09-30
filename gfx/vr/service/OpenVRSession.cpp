@@ -314,9 +314,6 @@ bool OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState) {
     return false;
   }
 
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "OpenVRSession::StartHapticThread", [this]() { StartHapticThread(); }));
-
   // Succeeded
   return true;
 }
@@ -2174,6 +2171,13 @@ void OpenVRSession::VibrateHaptic(uint32_t aControllerIdx,
                                   uint32_t aHapticIndex, float aIntensity,
                                   float aDuration) {
   MutexAutoLock lock(mControllerHapticStateMutex);
+
+  // Initilize the haptic thread when the first time to do vibration.
+  if (!mHapticThread) {
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "OpenVRSession::StartHapticThread", [this]() { StartHapticThread(); }));
+  }
+
   if (aHapticIndex >= kNumOpenVRHaptics ||
       aControllerIdx >= kVRControllerMaxCount) {
     return;
