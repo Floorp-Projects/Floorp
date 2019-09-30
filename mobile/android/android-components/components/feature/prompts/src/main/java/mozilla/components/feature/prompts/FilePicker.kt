@@ -14,7 +14,7 @@ import android.provider.MediaStore.EXTRA_OUTPUT
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.fragment.app.Fragment
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.File
 import mozilla.components.support.base.feature.PermissionsFeature
@@ -25,8 +25,7 @@ typealias OnNeedToRequestPermissions = (permissions: Array<String>) -> Unit
 /**
  * @property activity The [Activity] which hosts the file picker.
  * @property fragment The [Fragment] which hosts the file picker.
- * @property sessionManager The [SessionManager] instance in order to subscribe
- * to the selected [mozilla.components.browser.session.Session].
+ * @property store The [BrowserStore] this feature should subscribe to.
  * @property onNeedToRequestPermissions a callback invoked when permissions
  * need to be requested before a prompt (e.g. a file picker) can be displayed.
  * Once the request is completed, [onPermissionsResult] needs to be invoked.
@@ -34,22 +33,22 @@ typealias OnNeedToRequestPermissions = (permissions: Array<String>) -> Unit
 internal class FilePicker private constructor(
     private val activity: Activity? = null,
     private val fragment: Fragment? = null,
-    private val sessionManager: SessionManager,
+    private val store: BrowserStore,
     private var sessionId: String? = null,
     override val onNeedToRequestPermissions: OnNeedToRequestPermissions
 ) : PermissionsFeature {
     constructor(
         activity: Activity,
-        sessionManager: SessionManager,
+        store: BrowserStore,
         sessionId: String? = null,
         onNeedToRequestPermissions: OnNeedToRequestPermissions
-    ) : this(activity, null, sessionManager, sessionId, onNeedToRequestPermissions)
+    ) : this(activity, null, store, sessionId, onNeedToRequestPermissions)
     constructor(
         fragment: Fragment,
-        sessionManager: SessionManager,
+        store: BrowserStore,
         sessionId: String? = null,
         onNeedToRequestPermissions: OnNeedToRequestPermissions
-    ) : this(null, fragment, sessionManager, sessionId, onNeedToRequestPermissions)
+    ) : this(null, fragment, store, sessionId, onNeedToRequestPermissions)
 
     private val context get() = activity ?: requireNotNull(fragment).requireContext()
 
@@ -116,7 +115,7 @@ internal class FilePicker private constructor(
      */
     fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
         if (requestCode == FILE_PICKER_ACTIVITY_REQUEST_CODE) {
-            sessionManager.consumePromptFrom(sessionId) {
+            store.consumePromptFrom(sessionId) {
                 val request = it as File
 
                 if (resultCode == RESULT_OK) {
@@ -124,8 +123,6 @@ internal class FilePicker private constructor(
                 } else {
                     request.onDismiss()
                 }
-
-                true
             }
         }
     }
@@ -156,9 +153,8 @@ internal class FilePicker private constructor(
      */
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun onPermissionsGranted() {
-        sessionManager.consumePromptFrom(sessionId) { promptRequest ->
+        store.consumePromptFrom(sessionId) { promptRequest ->
             handleFileRequest(promptRequest as File, requestPermissions = false)
-            false
         }
     }
 
@@ -168,9 +164,8 @@ internal class FilePicker private constructor(
      */
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun onPermissionsDenied() {
-        sessionManager.consumePromptFrom(sessionId) { request ->
+        store.consumePromptFrom(sessionId) { request ->
             if (request is File) request.onDismiss()
-            true
         }
     }
 

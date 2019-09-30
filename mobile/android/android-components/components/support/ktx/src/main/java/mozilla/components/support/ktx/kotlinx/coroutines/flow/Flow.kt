@@ -53,7 +53,7 @@ fun <T, R> Flow<T>.ifChanged(transform: (T) -> R): Flow<T> {
  *
  * Example:
  * ```
- * Block: x -> x[0]  // Map to first character of input
+ * Block: x -> [x[0], x[1]]  // Map to first two characters of input
  * Original Flow: "banana", "bandanna", "bus", "apple", "big", "coconut", "circle", "home"
  * Mapped: [b, a], [b, a], [b, u], [a, p], [b, i], [c, o], [c, i], [h, o]
  * Returned Flow: "banana", "bus, "apple", "big", "coconut", "circle", "home"
@@ -65,11 +65,12 @@ fun <T, R> Flow<T>.ifAnyChanged(transform: (T) -> Array<R>): Flow<T> {
 
     return filter { value ->
         val mapped = transform(value)
-        val hasChanged = lastMappedValues
-            ?.mapIndexed { i, r -> mapped[i] === r }
-            ?.reduce { a, b -> a && b } == false
+        val hasChanges = lastMappedValues
+            ?.asSequence()
+            ?.filterIndexed { i, r -> mapped[i] !== r }
+            ?.any()
 
-        if (!observedValueOnce || hasChanged) {
+        if (!observedValueOnce || hasChanges == true) {
             lastMappedValues = mapped
             observedValueOnce = true
             true
