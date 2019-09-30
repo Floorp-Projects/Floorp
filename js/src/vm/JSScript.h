@@ -1515,7 +1515,7 @@ class BaseScript : public gc::TenuredCell {
 
     // Script is a lambda to treat as running once or a global or eval script
     // that will only run once.  Which one it is can be disambiguated by
-    // checking whether function() is null.
+    // checking whether functionNonDelazifying() is null.
     TreatAsRunOnce = 1 << 16,
 
     // 'this', 'arguments' and f.apply() are used. This is likely to be a
@@ -1637,6 +1637,13 @@ class BaseScript : public gc::TenuredCell {
     return functionOrGlobal_->compartment();
   }
   JS::Compartment* maybeCompartment() const { return compartment(); }
+
+  JSFunction* functionNonDelazifying() const {
+    if (functionOrGlobal_->is<JSFunction>()) {
+      return &functionOrGlobal_->as<JSFunction>();
+    }
+    return nullptr;
+  }
 
   ScriptSourceObject* sourceObject() const { return sourceObject_; }
   ScriptSource* scriptSource() const { return sourceObject()->source(); }
@@ -2678,12 +2685,6 @@ class JSScript : public js::BaseScript {
    * have been relazified.
    */
   inline JSFunction* functionDelazifying() const;
-  JSFunction* functionNonDelazifying() const {
-    if (bodyScope()->is<js::FunctionScope>()) {
-      return bodyScope()->as<js::FunctionScope>().canonicalFunction();
-    }
-    return nullptr;
-  }
   /*
    * De-lazifies the canonical function. Must be called before entering code
    * that expects the function to be non-lazy.
@@ -3013,13 +3014,6 @@ class JSScript : public js::BaseScript {
   inline JSFunction* getFunction(size_t index);
   inline JSFunction* getFunction(jsbytecode* pc);
 
-  JSFunction* function() const {
-    if (functionNonDelazifying()) {
-      return functionNonDelazifying();
-    }
-    return nullptr;
-  }
-
   inline js::RegExpObject* getRegExp(size_t index);
   inline js::RegExpObject* getRegExp(jsbytecode* pc);
 
@@ -3295,10 +3289,6 @@ class LazyScript : public BaseScript {
 
   static inline JSFunction* functionDelazifying(JSContext* cx,
                                                 Handle<LazyScript*>);
-  JSFunction* functionNonDelazifying() const {
-    return &functionOrGlobal_->as<JSFunction>();
-  }
-
   void initScript(JSScript* script);
 
   JSScript* maybeScript() { return script_; }
