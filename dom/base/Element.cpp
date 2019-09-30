@@ -3283,22 +3283,16 @@ CORSMode Element::AttrValueToCORSMode(const nsAttrValue* aValue) {
  * setting the pref "full-screen-api.allow-trusted-requests-only" to false.
  * If fullscreen is not allowed, a key for the error message is returned.
  */
-static const char* GetFullscreenError(CallerType aCallerType) {
+static const char* GetFullscreenError(CallerType aCallerType,
+                                      Document* aDocument) {
+  MOZ_ASSERT(aDocument);
+
   if (!StaticPrefs::full_screen_api_allow_trusted_requests_only() ||
       aCallerType == CallerType::System) {
     return nullptr;
   }
 
-  if (!UserActivation::IsHandlingUserInput()) {
-    return "FullscreenDeniedNotInputDriven";
-  }
-
-  // If more time has elapsed since the user input than is specified by the
-  // dom.event.handling-user-input-time-limit pref (default 1 second),
-  // disallow fullscreen
-  TimeDuration timeout = nsContentUtils::HandlingUserInputTimeout();
-  if (timeout > TimeDuration(nullptr) &&
-      (TimeStamp::Now() - UserActivation::GetHandlingInputStart()) > timeout) {
+  if (!aDocument->HasValidTransientUserGestureActivation()) {
     return "FullscreenDeniedNotInputDriven";
   }
 
@@ -3331,7 +3325,7 @@ already_AddRefed<Promise> Element::RequestFullscreen(CallerType aCallerType,
   // spoof the browser chrome/window and phish logins etc.
   // Note that requests for fullscreen inside a web app's origin are exempt
   // from this restriction.
-  if (const char* error = GetFullscreenError(aCallerType)) {
+  if (const char* error = GetFullscreenError(aCallerType, OwnerDoc())) {
     request->Reject(error);
   } else {
     OwnerDoc()->AsyncRequestFullscreen(std::move(request));
