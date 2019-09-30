@@ -9,7 +9,6 @@
 #include "nsICSSDeclaration.h"
 
 #include "nsINode.h"
-#include "mozilla/css/Rule.h"
 
 using mozilla::dom::DocGroup;
 
