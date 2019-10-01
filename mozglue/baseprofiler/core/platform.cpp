@@ -1968,6 +1968,18 @@ void SamplerThread::Run() {
   // TODO: If possible, name this thread later on, after NSPR becomes available.
   // PR_SetCurrentThreadName("SamplerThread");
 
+  // Features won't change during this SamplerThread's lifetime, so we can
+  // determine now whether stack sampling is required.
+  const bool noStackSampling = []() {
+    PSAutoLock lock;
+    if (!ActivePS::Exists(lock)) {
+      // If there is no active profiler, it doesn't matter what we return,
+      // because this thread will exit before any stack sampling is attempted.
+      return false;
+    }
+    return ActivePS::FeatureNoStackSampling(lock);
+  }();
+
   // Use local BlocksRingBuffer&ProfileBuffer to capture the stack.
   // (This is to avoid touching the CorePS::BlocksRingBuffer lock while
   // a thread is suspended, because that thread could be working with
@@ -2007,9 +2019,6 @@ void SamplerThread::Run() {
       TimeStamp expiredMarkersCleaned = TimeStamp::NowUnfuzzed();
 
       if (!ActivePS::IsPaused(lock)) {
-        const Vector<LiveProfiledThreadData>& liveThreads =
-            ActivePS::LiveProfiledThreads(lock);
-
         TimeDuration delta = sampleStart - CorePS::ProcessStartTime();
         ProfileBuffer& buffer = ActivePS::Buffer(lock);
 
@@ -2034,67 +2043,72 @@ void SamplerThread::Run() {
         }
         TimeStamp countersSampled = TimeStamp::NowUnfuzzed();
 
-        for (auto& thread : liveThreads) {
-          RegisteredThread* registeredThread = thread.mRegisteredThread;
-          ProfiledThreadData* profiledThreadData =
-              thread.mProfiledThreadData.get();
-          RefPtr<ThreadInfo> info = registeredThread->Info();
+        if (!noStackSampling) {
+          const Vector<LiveProfiledThreadData>& liveThreads =
+              ActivePS::LiveProfiledThreads(lock);
 
-          // If the thread is asleep and has been sampled before in the same
-          // sleep episode, find and copy the previous sample, as that's
-          // cheaper than taking a new sample.
-          if (registeredThread->RacyRegisteredThread()
-                  .CanDuplicateLastSampleDueToSleep()) {
-            bool dup_ok = ActivePS::Buffer(lock).DuplicateLastSample(
-                info->ThreadId(), CorePS::ProcessStartTime(),
-                profiledThreadData->LastSample());
-            if (dup_ok) {
-              continue;
+          for (auto& thread : liveThreads) {
+            RegisteredThread* registeredThread = thread.mRegisteredThread;
+            ProfiledThreadData* profiledThreadData =
+                thread.mProfiledThreadData.get();
+            RefPtr<ThreadInfo> info = registeredThread->Info();
+
+            // If the thread is asleep and has been sampled before in the same
+            // sleep episode, find and copy the previous sample, as that's
+            // cheaper than taking a new sample.
+            if (registeredThread->RacyRegisteredThread()
+                    .CanDuplicateLastSampleDueToSleep()) {
+              bool dup_ok = ActivePS::Buffer(lock).DuplicateLastSample(
+                  info->ThreadId(), CorePS::ProcessStartTime(),
+                  profiledThreadData->LastSample());
+              if (dup_ok) {
+                continue;
+              }
             }
+
+            AUTO_PROFILER_STATS(base_SamplerThread_Run_DoPeriodicSample);
+
+            TimeStamp now = TimeStamp::NowUnfuzzed();
+
+            // Add the thread ID now, so we know its position in the main
+            // buffer, which is used by some JS data. (DoPeriodicSample only
+            // knows about the temporary local buffer.)
+            uint64_t samplePos =
+                buffer.AddThreadIdEntry(registeredThread->Info()->ThreadId());
+            profiledThreadData->LastSample() = Some(samplePos);
+
+            // Also add the time, so it's always there after the thread ID, as
+            // expected by the parser. (Other stack data is optional.)
+            TimeDuration delta = now - CorePS::ProcessStartTime();
+            buffer.AddEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
+
+            mSampler.SuspendAndSampleAndResumeThread(
+                lock, *registeredThread, [&](const Registers& aRegs) {
+                  DoPeriodicSample(lock, *registeredThread, *profiledThreadData,
+                                   aRegs, samplePos, localProfileBuffer);
+                });
+
+            // If data is complete, copy it into the global buffer.
+            auto state = localBlocksRingBuffer.GetState();
+            if (state.mClearedBlockCount != previousState.mClearedBlockCount) {
+              LOG("Stack sample too big for local storage, needed %u bytes",
+                  unsigned(state.mRangeEnd.ConvertToU64() -
+                           previousState.mRangeEnd.ConvertToU64()));
+            } else if (state.mRangeEnd.ConvertToU64() -
+                           previousState.mRangeEnd.ConvertToU64() >=
+                       CorePS::CoreBlocksRingBuffer().BufferLength()->Value()) {
+              LOG("Stack sample too big for profiler storage, needed %u bytes",
+                  unsigned(state.mRangeEnd.ConvertToU64() -
+                           previousState.mRangeEnd.ConvertToU64()));
+            } else {
+              CorePS::CoreBlocksRingBuffer().AppendContents(
+                  localBlocksRingBuffer);
+            }
+
+            // Clean up for the next run.
+            localBlocksRingBuffer.Clear();
+            previousState = localBlocksRingBuffer.GetState();
           }
-
-          AUTO_PROFILER_STATS(base_SamplerThread_Run_DoPeriodicSample);
-
-          TimeStamp now = TimeStamp::NowUnfuzzed();
-
-          // Add the thread ID now, so we know its position in the main buffer,
-          // which is used by some JS data.
-          // (DoPeriodicSample only knows about the temporary local buffer.)
-          uint64_t samplePos =
-              buffer.AddThreadIdEntry(registeredThread->Info()->ThreadId());
-          profiledThreadData->LastSample() = Some(samplePos);
-
-          // Also add the time, so it's always there after the thread ID, as
-          // expected by the parser. (Other stack data is optional.)
-          TimeDuration delta = now - CorePS::ProcessStartTime();
-          buffer.AddEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
-
-          mSampler.SuspendAndSampleAndResumeThread(
-              lock, *registeredThread, [&](const Registers& aRegs) {
-                DoPeriodicSample(lock, *registeredThread, *profiledThreadData,
-                                 aRegs, samplePos, localProfileBuffer);
-              });
-
-          // If data is complete, copy it into the global buffer.
-          auto state = localBlocksRingBuffer.GetState();
-          if (state.mClearedBlockCount != previousState.mClearedBlockCount) {
-            LOG("Stack sample too big for local storage, needed %u bytes",
-                unsigned(state.mRangeEnd.ConvertToU64() -
-                         previousState.mRangeEnd.ConvertToU64()));
-          } else if (state.mRangeEnd.ConvertToU64() -
-                         previousState.mRangeEnd.ConvertToU64() >=
-                     CorePS::CoreBlocksRingBuffer().BufferLength()->Value()) {
-            LOG("Stack sample too big for profiler storage, needed %u bytes",
-                unsigned(state.mRangeEnd.ConvertToU64() -
-                         previousState.mRangeEnd.ConvertToU64()));
-          } else {
-            CorePS::CoreBlocksRingBuffer().AppendContents(
-                localBlocksRingBuffer);
-          }
-
-          // Clean up for the next run.
-          localBlocksRingBuffer.Clear();
-          previousState = localBlocksRingBuffer.GetState();
         }
 
 #  if defined(USE_LUL_STACKWALK)

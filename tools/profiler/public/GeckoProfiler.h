@@ -172,8 +172,13 @@ class Vector;
     MACRO(13, "jsallocations", JSAllocations,                                  \
           "Have the JavaScript engine track allocations")                      \
                                                                                \
+    MACRO(14, "nostacksampling", NoStackSampling,                              \
+          "Disable all stack sampling: Cancels \"js\", \"leaf\", "             \
+          "\"stackwalk\" and labels")                                          \
+                                                                               \
     MACRO(15, "preferencereads", PreferenceReads,                              \
           "Track when preferences are read")                                   \
+                                                                               \
     MACRO(16, "nativeallocations", NativeAllocations,                          \
           "Collect the stacks from a smaller subset of all native "            \
           "allocations, biasing towards collecting larger allocations")

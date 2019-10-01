@@ -37,6 +37,7 @@
           "trackopts",
           "jstracer",
           "jsallocations",
+          "nostacksampling",
           "nativeallocations",
           "preferencereads"
         ]
