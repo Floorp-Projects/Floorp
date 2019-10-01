@@ -120,6 +120,8 @@ class IDBCursor final : public nsISupports, public nsWrapperCache {
 
   IDBCursorDirection GetDirection() const;
 
+  bool IsContinueCalled() const { return mContinueCalled; }
+
   void GetKey(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
               ErrorResult& aRv);
 
@@ -158,6 +160,8 @@ class IDBCursor final : public nsISupports, public nsWrapperCache {
 
     mBackgroundActor = nullptr;
   }
+
+  void InvalidateCachedResponses();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBCursor)

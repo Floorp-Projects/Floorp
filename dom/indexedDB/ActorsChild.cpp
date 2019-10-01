@@ -1272,6 +1272,19 @@ void DispatchFileHandleSuccessEvent(FileHandleResultHelper* aResultHelper) {
   MOZ_ASSERT(fileHandle->IsOpen() || fileHandle->IsAborted());
 }
 
+auto GetKeyOperator(const IDBCursor::Direction aDirection) {
+  switch (aDirection) {
+    case IDBCursor::NEXT:
+    case IDBCursor::NEXT_UNIQUE:
+      return &Key::operator>=;
+    case IDBCursor::PREV:
+    case IDBCursor::PREV_UNIQUE:
+      return &Key::operator<=;
+    default:
+      MOZ_CRASH("Should never get here.");
+  }
+}
+
 }  // namespace
 
 /*******************************************************************************
@@ -2830,7 +2843,7 @@ void BackgroundRequestChild::ActorDestroy(ActorDestroyReason aWhy) {
   if (mTransaction) {
     mTransaction->AssertIsOnOwningThread();
 
-    mTransaction->OnRequestFinished(/* aActorDestroyedNormally */
+    mTransaction->OnRequestFinished(/* aRequestCompletedSuccessfully */
                                     aWhy == Deletion);
 #ifdef DEBUG
     mTransaction = nullptr;
@@ -2917,7 +2930,7 @@ mozilla::ipc::IPCResult BackgroundRequestChild::Recv__delete__(
     }
   }
 
-  mTransaction->OnRequestFinished(/* aActorDestroyedNormally */ true);
+  mTransaction->OnRequestFinished(/* aRequestCompletedSuccessfully */ true);
 
   // Null this out so that we don't try to call OnRequestFinished() again in
   // ActorDestroy.
@@ -3286,8 +3299,131 @@ void BackgroundCursorChild::SendContinueInternal(
 
   mTransaction->OnNewRequest();
 
-  MOZ_ALWAYS_TRUE(
-      PBackgroundIDBCursorChild::SendContinue(aParams, aCurrentKey));
+  CursorRequestParams params = aParams;
+  Key currentKey = aCurrentKey;
+
+  switch (params.type()) {
+    case CursorRequestParams::TContinueParams: {
+      const auto& key = params.get_ContinueParams().key();
+      if (key.IsUnset()) {
+        break;
+      }
+
+      // Invalidate cache entries.
+      size_t discardedCount = 0;
+      while (!mCachedResponses.empty()) {
+        const auto& keyOperator = GetKeyOperator(mDirection);
+        if ((mCachedResponses.front().mKey.*keyOperator)(key)) {
+          IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
+              "PRELOAD: Continue to key %s, keeping cached key %s and further",
+              "Continue/keep", mTransaction->LoggingSerialNumber(),
+              mRequest->LoggingSerialNumber(), key.GetBuffer().get(),
+              mCachedResponses.front().mKey.GetBuffer().get());
+          break;
+        }
+        IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
+            "PRELOAD: Continue to key %s, discarding cached key %s",
+            "Continue/discard", mTransaction->LoggingSerialNumber(),
+            mRequest->LoggingSerialNumber(), key.GetBuffer().get(),
+            mCachedResponses.front().mKey.GetBuffer().get());
+        mCachedResponses.pop_front();
+        ++discardedCount;
+      }
+      IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
+          "PRELOAD: Discarded %zu cached responses before requested "
+          "continue key, %zu remaining",
+          "Discarding", mTransaction->LoggingSerialNumber(),
+          mRequest->LoggingSerialNumber(), discardedCount,
+          mCachedResponses.size());
+      break;
+    }
+
+    case CursorRequestParams::TContinuePrimaryKeyParams:
+      // TODO: Implement preloading for this case
+      InvalidateCachedResponses();
+      break;
+
+    case CursorRequestParams::TAdvanceParams: {
+      uint32_t& advanceCount = params.get_AdvanceParams().count();
+      IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
+          "PRELOAD: Advancing %" PRIu32 " records", "Advancing",
+          mTransaction->LoggingSerialNumber(), mRequest->LoggingSerialNumber(),
+          advanceCount);
+
+      // Invalidate cache entries.
+      size_t discardedCount = 0;
+      while (!mCachedResponses.empty() && advanceCount > 1) {
+        --advanceCount;
+
+        // TODO: We only need to update currentKey on the last entry, the others
+        // are overwritten in the next iteration anyway.
+        currentKey = mCachedResponses.front().mKey;
+        mCachedResponses.pop_front();
+        ++discardedCount;
+      }
+      IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
+          "PRELOAD: Discarded %zu cached responses that are advanced over, "
+          "%zu remaining",
+          "Discarded", mTransaction->LoggingSerialNumber(),
+          mRequest->LoggingSerialNumber(), discardedCount,
+          mCachedResponses.size());
+      break;
+    }
+
+    default:
+      MOZ_CRASH("Should never get here!");
+  }
+
+  if (!mCachedResponses.empty()) {
+    // We need to remove the response here from mCachedResponses, since when
+    // requests are interleaved, other events may be processed before
+    // CompleteContinueRequestFromCache, which may modify mCachedResponses.
+    mDelayedResponses.emplace_back(std::move(mCachedResponses.front()));
+    mCachedResponses.pop_front();
+
+    // We cannot send the response right away, as we must preserve the request
+    // order. Dispatching a DelayedActionRunnable only partially addresses this.
+    // This is accompanied by invalidating cached entries at proper locations to
+    // make it correct. To avoid this, further changes are necessary, see Bug
+    // 1580499.
+    nsCOMPtr<nsIRunnable> continueRunnable = new DelayedActionRunnable(
+        this, &BackgroundCursorChild::CompleteContinueRequestFromCache);
+    MOZ_ALWAYS_TRUE(
+        NS_SUCCEEDED(NS_DispatchToCurrentThread(continueRunnable.forget())));
+
+    // TODO: Could we preload further entries in the background when the size of
+    // mCachedResponses falls under some threshold? Or does the response
+    // handling model disallow this?
+  } else {
+    MOZ_ALWAYS_TRUE(
+        PBackgroundIDBCursorChild::SendContinue(params, currentKey));
+  }
+}
+
+void BackgroundCursorChild::CompleteContinueRequestFromCache() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mTransaction);
+  MOZ_ASSERT(mCursor);
+  MOZ_ASSERT(mStrongCursor);
+  MOZ_ASSERT(!mDelayedResponses.empty());
+
+  RefPtr<IDBCursor> cursor;
+  mStrongCursor.swap(cursor);
+
+  auto& item = mDelayedResponses.front();
+  mCursor->Reset(std::move(item.mKey), std::move(item.mCloneInfo));
+  mDelayedResponses.pop_front();
+
+  IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
+      "PRELOAD: Consumed 1 cached response, %zu cached responses remaining",
+      "Consumed cached response", mTransaction->LoggingSerialNumber(),
+      mRequest->LoggingSerialNumber(),
+      mDelayedResponses.size() + mCachedResponses.size());
+
+  ResultHelper helper(mRequest, mTransaction, mCursor);
+  DispatchSuccessEvent(&helper);
+
+  mTransaction->OnRequestFinished(/* aRequestCompletedSuccessfully */ true);
 }
 
 void BackgroundCursorChild::SendDeleteMeInternal() {
@@ -3306,6 +3442,25 @@ void BackgroundCursorChild::SendDeleteMeInternal() {
 
     MOZ_ALWAYS_TRUE(PBackgroundIDBCursorChild::SendDeleteMe());
   }
+}
+
+void BackgroundCursorChild::InvalidateCachedResponses() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mTransaction);
+  MOZ_ASSERT(mRequest);
+
+  // TODO: With more information on the reason for the invalidation, we might
+  // only selectively invalidate cached responses. If the reason is an updated
+  // value, we do not need to care for key-only cursors. If the key of the
+  // changed entry is not in the remaining range of the cursor, we also do not
+  // need to care, etc.
+
+  IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
+      "PRELOAD: Invalidating all %zu cached responses", "Invalidating",
+      mTransaction->LoggingSerialNumber(), mRequest->LoggingSerialNumber(),
+      mCachedResponses.size());
+
+  mCachedResponses.clear();
 }
 
 void BackgroundCursorChild::HandleResponse(nsresult aResponse) {
@@ -3351,7 +3506,11 @@ void BackgroundCursorChild::HandleResponse(
   MOZ_ASSERT(!mStrongRequest);
   MOZ_ASSERT(!mStrongCursor);
 
-  MOZ_ASSERT(aResponses.Length() == 1);
+  IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
+      "PRELOAD: Received %zu cursor responses", "Received",
+      mTransaction->LoggingSerialNumber(), mRequest->LoggingSerialNumber(),
+      aResponses.Length());
+  MOZ_ASSERT_IF(aResponses.Length() > 1, mCachedResponses.empty());
 
   // XXX Fix this somehow...
   auto& responses =
@@ -3361,6 +3520,12 @@ void BackgroundCursorChild::HandleResponse(
     StructuredCloneReadInfo cloneReadInfo(std::move(response.cloneInfo()));
     cloneReadInfo.mDatabase = mTransaction->Database();
 
+    // TODO: This uses response.cloneInfo() after it was apparently moved above,
+    // which would be invalid. However, it was not really moved, since
+    // StructuredCloneReadInfo::StructuredCloneReadInfo(SerializedStructuredCloneReadInfo&&)
+    // does not touch 'files' at all. This is, however, confusing.
+    // Can't this be done in the constructor of StructuredCloneReadInfo as well?
+    // Note: this will be fixed in a subsequent patch for bug 1168606.
     DeserializeStructuredCloneFiles(
         mTransaction->Database(), response.cloneInfo().files(),
         /* aForPreprocess */ false, cloneReadInfo.mFiles);
@@ -3368,7 +3533,14 @@ void BackgroundCursorChild::HandleResponse(
     RefPtr<IDBCursor> newCursor;
 
     if (mCursor) {
-      mCursor->Reset(std::move(response.key()), std::move(cloneReadInfo));
+      if (mCursor->IsContinueCalled()) {
+        mCursor->Reset(std::move(response.key()), std::move(cloneReadInfo));
+      } else {
+        CachedResponse cachedResponse;
+        cachedResponse.mKey = std::move(response.key());
+        cachedResponse.mCloneInfo = std::move(cloneReadInfo);
+        mCachedResponses.emplace_back(std::move(cachedResponse));
+      }
     } else {
       newCursor = IDBCursor::Create(this, std::move(response.key()),
                                     std::move(cloneReadInfo));
@@ -3430,6 +3602,10 @@ void BackgroundCursorChild::HandleResponse(
     mCursor->Reset(std::move(response.key()), std::move(response.sortKey()),
                    std::move(response.objectKey()), std::move(cloneReadInfo));
   } else {
+    // TODO: This looks particularly dangerous to me. Why do we need to have an
+    // extra newCursor of type RefPtr? Why can't we directly assign to mCursor?
+    // Why is mCursor not a RefPtr? (A similar construct exists in the other
+    // HandleResponse overloads).
     newCursor = IDBCursor::Create(
         this, std::move(response.key()), std::move(response.sortKey()),
         std::move(response.objectKey()), std::move(cloneReadInfo));
@@ -3476,7 +3652,7 @@ void BackgroundCursorChild::ActorDestroy(ActorDestroyReason aWhy) {
   MaybeCollectGarbageOnIPCMessage();
 
   if (mStrongRequest && !mStrongCursor && mTransaction) {
-    mTransaction->OnRequestFinished(/* aActorDestroyedNormally */
+    mTransaction->OnRequestFinished(/* aRequestCompletedSuccessfully */
                                     aWhy == Deletion);
   }
 
@@ -3543,7 +3719,7 @@ mozilla::ipc::IPCResult BackgroundCursorChild::RecvResponse(
       MOZ_CRASH("Should never get here!");
   }
 
-  transaction->OnRequestFinished(/* aActorDestroyedNormally */ true);
+  transaction->OnRequestFinished(/* aRequestCompletedSuccessfully */ true);
 
   return IPC_OK();
 }
