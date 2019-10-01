@@ -12,20 +12,7 @@ var {
   getStack,
   callFunctionWithAsyncStack,
 } = require("devtools/shared/platform/stack");
-// Bug 1454373: devtools/shared/defer still uses Promise.jsm which is slower
-// than DOM Promises. So implement our own copy of `defer` based on DOM Promises.
-function defer() {
-  let resolve, reject;
-  const promise = new Promise(function() {
-    resolve = arguments[0];
-    reject = arguments[1];
-  });
-  return {
-    resolve: resolve,
-    reject: reject,
-    promise: promise,
-  };
-}
+const defer = require("devtools/shared/defer");
 
 /**
  * Base class for client-side actor fronts.
