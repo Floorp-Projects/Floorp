@@ -68,6 +68,7 @@ class AudioSink : private AudioStream::DataSource {
   UniquePtr<AudioStream::Chunk> PopFrames(uint32_t aFrames) override;
   bool Ended() const override;
   void Drained() override;
+  void Errored() override;
 
   void CheckIsAudible(const AudioData* aData);
 
