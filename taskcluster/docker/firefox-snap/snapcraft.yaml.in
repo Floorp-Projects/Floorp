@@ -21,6 +21,7 @@ apps:
       - desktop-legacy
       - gsettings
       - home
+      - joystick
       - network
       - network-observe
       - opengl
