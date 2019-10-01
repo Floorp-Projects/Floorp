@@ -1325,8 +1325,9 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
 
   // Try to compile and/or finish a compilation.
   if (JSOp(*pc) == JSOP_LOOPENTRY) {
-    // During the loop entry we can try to OSR into ion.
-    // The ic has logic for this.
+    // During the loop entry we can try to OSR into ion. The IC for this expects
+    // the frame size in R0.scratchReg().
+    computeFrameSize(R0.scratchReg());
     if (!emitNextIC()) {
       return false;
     }
@@ -1336,13 +1337,12 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
     // annotated vm call.
     prepareVMCall();
 
-    pushBytecodePCArg();
     masm.PushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
     const RetAddrEntry::Kind kind = RetAddrEntry::Kind::WarmupCounter;
 
-    using Fn = bool (*)(JSContext*, BaselineFrame*, jsbytecode*);
-    if (!callVM<Fn, IonCompileScriptForBaseline>(kind)) {
+    using Fn = bool (*)(JSContext*, BaselineFrame*);
+    if (!callVM<Fn, IonCompileScriptForBaselineAtEntry>(kind)) {
       return false;
     }
   }

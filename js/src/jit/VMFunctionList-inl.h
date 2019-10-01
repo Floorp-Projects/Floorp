@@ -145,7 +145,8 @@ namespace jit {
   _(IonBinaryArithICUpdate, js::jit::IonBinaryArithIC::update)                 \
   _(IonBindNameICUpdate, js::jit::IonBindNameIC::update)                       \
   _(IonCompareICUpdate, js::jit::IonCompareIC::update)                         \
-  _(IonCompileScriptForBaseline, js::jit::IonCompileScriptForBaseline)         \
+  _(IonCompileScriptForBaselineAtEntry,                                        \
+    js::jit::IonCompileScriptForBaselineAtEntry)                               \
   _(IonForcedInvalidation, js::jit::IonForcedInvalidation)                     \
   _(IonForcedRecompile, js::jit::IonForcedRecompile)                           \
   _(IonGetIteratorICUpdate, js::jit::IonGetIteratorIC::update)                 \
