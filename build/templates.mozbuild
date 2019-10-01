@@ -166,5 +166,34 @@ def ForceInclude(*headers):
     for header in headers:
         CXXFLAGS += [include_flag, header]
 
+@template
+def GeneratedFile(name, *names, **kwargs):
+    """Add one or more GENERATED_FILES with the given attributes.
+
+    You must pass in at least one generated file (the "name" argument). Other
+    names can be included as positional arguments after "name"."""
+    script = kwargs.get('script')
+    entry_point = kwargs.get('entry_point')
+    inputs = kwargs.get('inputs', [])
+    flags = kwargs.get('flags', [])
+    force = kwargs.get('force', False)
+    if entry_point and not script:
+       error('entry_point cannot be provided if script is not provided')
+    if script and ':' in script:
+       error('script should not include a `:`. If you want to provide an '
+             'alternative entry point for your script, use the entry_point '
+             'parameter.')
+
+    key = (name,) + names if names else name
+    GENERATED_FILES += [key]
+    generated_file = GENERATED_FILES[key]
+    if script and not entry_point:
+        generated_file.script = script
+    if script and entry_point:
+        generated_file.script = script + ':' + entry_point
+    generated_file.inputs = inputs
+    generated_file.flags = flags
+    generated_file.force = force
+
 include('gecko_templates.mozbuild')
 include('test_templates.mozbuild')
