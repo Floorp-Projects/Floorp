@@ -536,8 +536,13 @@ const BD_ValType* funcType_args(const FuncTypeWithId* funcType) {
   return (const BD_ValType*)&funcType->args()[0];
 }
 
-TypeCode funcType_retType(const FuncTypeWithId* funcType) {
-  return TypeCode(funcType->ret().code());
+size_t funcType_numResults(const FuncTypeWithId* funcType) {
+  return funcType->results().length();
+}
+
+const BD_ValType* funcType_results(const FuncTypeWithId* funcType) {
+  static_assert(sizeof(BD_ValType) == sizeof(ValType), "update BD_ValType");
+  return (const BD_ValType*)&funcType->results()[0];
 }
 
 FuncTypeIdDescKind funcType_idKind(const FuncTypeWithId* funcType) {
