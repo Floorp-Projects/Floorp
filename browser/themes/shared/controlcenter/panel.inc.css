@@ -951,8 +951,18 @@ description#identity-popup-content-verifier,
 #protections-popup[hasException] #protections-popup-tp-switch-section {
   background: repeating-linear-gradient(
     -56deg,
-    var(--arrowpanel-dimmed),
-    var(--arrowpanel-dimmed) 10px,
+    hsla(0,0%,80%,.25),
+    hsla(0,0%,80%,.25) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+}
+
+:root[lwt-popup-brighttext] #protections-popup[hasException] #protections-popup-tp-switch-section {
+  background: repeating-linear-gradient(
+    -56deg,
+    rgba(249,249,250,.05),
+    rgba(249,249,250,.05) 10px,
     transparent 10px,
     transparent 20px
   );
