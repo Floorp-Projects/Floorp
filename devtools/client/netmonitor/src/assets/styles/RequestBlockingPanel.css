@@ -26,12 +26,11 @@
 }
 
 .network-monitor .request-blocking-enable-bar .request-blocking-label {
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .network-monitor .request-blocking-enable-bar button::before {
-  background-image: url("chrome://devtools/skin/images/close.svg");
-  transform: rotate(45deg);
+  background-image: url("chrome://devtools/skin/images/add.svg");
 }
 
 .network-monitor .request-blocking-label {
