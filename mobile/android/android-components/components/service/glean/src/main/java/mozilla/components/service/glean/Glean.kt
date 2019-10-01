@@ -504,9 +504,9 @@ open class GleanInternalAPI internal constructor () {
     /**
      * Send a list of pings.
      *
-     * The ping content is assembled as soon as possible, but upload is not
-     * guaranteed to happen immediately, as that depends on the upload
-     * policies.
+     * The ping content is assembled synchronously, but serialization to disk
+     * happens in a deferred coroutine, and upload happens later as that depends
+     * on the upload policies.
      *
      * If the ping currently contains no content, it will not be sent.
      *
@@ -550,9 +550,9 @@ open class GleanInternalAPI internal constructor () {
      * Each ping will be looked up in the known instances of [PingType]. If the
      * ping isn't known, an error is logged and the ping isn't queued for uploading.
      *
-     * The ping content is assembled as soon as possible, but upload is not
-     * guaranteed to happen immediately, as that depends on the upload
-     * policies.
+     * The ping content is assembled synchronously, but serialization to disk
+     * happens in a deferred coroutine, and upload happens later as that depends
+     * on the upload policies.
      *
      * If the ping currently contains no content, it will not be sent.
      *
