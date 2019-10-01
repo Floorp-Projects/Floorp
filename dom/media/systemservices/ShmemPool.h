@@ -59,9 +59,11 @@ class ShmemBuffer {
   mozilla::ipc::Shmem mShmem;
 };
 
-class ShmemPool {
+class ShmemPool final {
  public:
-  explicit ShmemPool(size_t aPoolSize);
+  enum class PoolType { StaticPool, DynamicPool };
+  explicit ShmemPool(size_t aPoolSize,
+                     PoolType aPoolType = PoolType::StaticPool);
   ~ShmemPool();
   // Get/GetIfAvailable differ in what thread they can run on. GetIfAvailable
   // can run anywhere but won't allocate if the right size isn't available.
@@ -89,7 +91,7 @@ class ShmemPool {
     MutexAutoLock lock(mMutex);
 
     // Pool is empty, don't block caller.
-    if (mPoolFree == 0) {
+    if (mPoolFree == 0 && mPoolType == PoolType::StaticPool) {
       if (!mErrorLogged) {
         // log "out of pool" once as error to avoid log spam
         mErrorLogged = true;
@@ -101,6 +103,13 @@ class ShmemPool {
       }
       // This isn't initialized, so will be understood as an error.
       return ShmemBuffer();
+    }
+    if (mPoolFree == 0) {
+      MOZ_ASSERT(mPoolType == PoolType::DynamicPool);
+      SHMEMPOOL_LOG(("Dynamic ShmemPool empty, allocating extra Shmem buffer"));
+      ShmemBuffer newBuffer;
+      mShmemPool.InsertElementAt(0, std::move(newBuffer));
+      mPoolFree++;
     }
 
     ShmemBuffer& res = mShmemPool[mPoolFree - 1];
@@ -158,6 +167,7 @@ class ShmemPool {
             aInstance->AllocUnsafeShmem(aSize, ipc::SharedMemory::TYPE_BASIC,
                                         &aRes.mShmem));
   }
+  const PoolType mPoolType;
   Mutex mMutex;
   size_t mPoolFree;
   bool mErrorLogged;
