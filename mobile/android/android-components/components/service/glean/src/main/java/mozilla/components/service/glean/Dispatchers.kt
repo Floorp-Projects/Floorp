@@ -93,8 +93,8 @@ internal object Dispatchers {
          *
          * @param enabled whether or not to enable the testing mode
          */
-        @Suppress("EXPERIMENTAL_COROUTINES_API")
-        internal fun setTaskQueueing(enabled: Boolean) {
+        @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+        fun setTaskQueueing(enabled: Boolean) {
             queueInitialTasks = enabled
         }
 
@@ -148,7 +148,7 @@ internal object Dispatchers {
          * Helper function to execute the task as either an synchronous or asynchronous operation,
          * depending on whether [testingMode] is true.
          */
-        private fun executeTask(block: suspend CoroutineScope.() -> Unit): Job? {
+        internal fun executeTask(block: suspend CoroutineScope.() -> Unit): Job? {
             return when {
                 testingMode -> {
                     runBlocking {

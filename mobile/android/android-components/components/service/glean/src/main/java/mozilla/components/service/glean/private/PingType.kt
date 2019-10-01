@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean.private
 
+import mozilla.components.service.glean.Dispatchers
 import mozilla.components.service.glean.Glean
 import mozilla.components.support.base.log.logger.Logger
 
@@ -40,6 +41,9 @@ data class PingType(
      * If the ping currently contains no content, it will not be queued.
      */
     fun send() {
-        Glean.sendPings(listOf(this))
+        @Suppress("EXPERIMENTAL_API_USAGE")
+        Dispatchers.API.launch {
+            Glean.sendPings(listOf(this@PingType))
+        }
     }
 }

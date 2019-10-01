@@ -140,13 +140,6 @@ open class GleanInternalAPI internal constructor () {
         // This must be set before anything that might trigger the sending of pings.
         initialized = true
 
-        // There are now dispatcher tasks that we need to perform *before* any tasks
-        // that may have been queued prior to initialization.  Therefore, we turn off
-        // task queueing now, so we can set those early tasks up before actually
-        // flushing the queue below.
-        @Suppress("EXPERIMENTAL_API_USAGE")
-        Dispatchers.API.setTaskQueueing(false)
-
         // Deal with any pending events so we can start recording new ones
         EventsStorageEngine.onReadyToSendPings(applicationContext)
 
@@ -521,15 +514,15 @@ open class GleanInternalAPI internal constructor () {
      * @return The async Job performing the work of assembling the ping
      */
     @Suppress("EXPERIMENTAL_API_USAGE")
-    internal fun sendPings(pings: List<PingType>) = Dispatchers.API.launch {
+    internal fun sendPings(pings: List<PingType>) {
         if (!isInitialized()) {
             logger.error("Glean must be initialized before sending pings.")
-            return@launch
+            return
         }
 
         if (!uploadEnabled) {
             logger.error("Glean must be enabled before sending pings.")
-            return@launch
+            return
         }
 
         val pingSerializationTasks = mutableListOf<Job>()
@@ -542,10 +535,12 @@ open class GleanInternalAPI internal constructor () {
         // If any ping is being serialized to disk, wait for the to finish before spinning up
         // the WorkManager upload job.
         if (pingSerializationTasks.any()) {
-            // Await the serialization tasks. Once the serialization tasks have all completed,
-            // we can then safely enqueue the PingUploadWorker.
-            pingSerializationTasks.joinAll()
-            PingUploadWorker.enqueueWorker()
+            Dispatchers.API.launch {
+                // Await the serialization tasks. Once the serialization tasks have all completed,
+                // we can then safely enqueue the PingUploadWorker.
+                pingSerializationTasks.joinAll()
+                PingUploadWorker.enqueueWorker()
+            }
         }
     }
 
@@ -564,7 +559,7 @@ open class GleanInternalAPI internal constructor () {
      * @param pingNames List of ping names to send.
      * @return The async Job performing the work of assembling the ping
      */
-    internal fun sendPingsByName(pingNames: List<String>): Job? {
+    internal fun sendPingsByName(pingNames: List<String>) {
         val pings = pingNames.mapNotNull { pingName ->
             PingType.pingRegistry.get(pingName)?.let {
                 it
