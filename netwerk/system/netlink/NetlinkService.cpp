@@ -16,6 +16,7 @@
 #include "nsString.h"
 #include "nsPrintfCString.h"
 #include "mozilla/Logging.h"
+#include "../../base/IPv6Utils.h"
 
 #include "mozilla/Base64.h"
 #include "mozilla/FileUtils.h"
@@ -258,6 +259,7 @@ class NetlinkRoute {
         mHasPrio(false) {}
 
   bool IsUnicast() const { return mRtm.rtm_type == RTN_UNICAST; }
+  bool ScopeIsUniverse() const { return mRtm.rtm_scope == RT_SCOPE_UNIVERSE; }
   bool IsDefault() const { return mRtm.rtm_dst_len == 0; }
   bool HasOif() const { return mHasOif; }
   uint8_t Oif() const { return mOif; }
@@ -341,6 +343,8 @@ class NetlinkRoute {
     _retval.AppendInt(mRtm.rtm_table);
     _retval.Append(" type=");
     _retval.AppendInt(mRtm.rtm_type);
+    _retval.Append(" scope=");
+    _retval.AppendInt(mRtm.rtm_scope);
     if (mRtm.rtm_family == AF_INET) {
       _retval.Append(" family=AF_INET dst=");
       addrStr.Assign("0.0.0.0/");
@@ -819,12 +823,12 @@ void NetlinkService::OnRouteMessage(struct nlmsghdr* aNlh) {
   route->GetAsString(routeDbgStr);
 #endif
 
-  if (!route->IsUnicast()) {
+  if (!route->IsUnicast() || !route->ScopeIsUniverse()) {
     // Use only unicast routes
 #ifdef NL_DEBUG_LOG
-    LOG(("Ignoring non-unicast route: %s", routeDbgStr.get()));
+    LOG(("Not an unicast global route: %s", routeDbgStr.get()));
 #else
-    LOG(("Ignoring non-unicast route"));
+    LOG(("Not an unicast global route"));
 #endif
     return;
   }
@@ -941,13 +945,13 @@ void NetlinkService::OnRouteCheckResult(struct nlmsghdr* aNlh) {
     route = new NetlinkRoute();
     if (!route->Init(aNlh)) {
       route = nullptr;
-    } else if (!route->IsUnicast()) {
+    } else if (!route->IsUnicast() || !route->ScopeIsUniverse()) {
 #ifdef NL_DEBUG_LOG
       nsAutoCString routeDbgStr;
       route->GetAsString(routeDbgStr);
-      LOG(("Ignoring non-unicast route: %s", routeDbgStr.get()));
+      LOG(("Not an unicast global route: %s", routeDbgStr.get()));
 #else
-      LOG(("Ignoring non-unicast route"));
+      LOG(("Not an unicast global route"));
 #endif
       route = nullptr;
     }
@@ -1263,6 +1267,13 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
     const in_common_addr* addrPtr = (*routesPtr)[i]->GetGWAddrPtr();
     if (!addrPtr) {
       LOG(("There is no GW address in default route."));
+      continue;
+    }
+
+    if (aFamily == AF_INET6 &&
+        net::utils::ipv6_scope((const unsigned char*)addrPtr) !=
+            IPV6_SCOPE_GLOBAL) {
+      LOG(("Scope of GW isn't global."));
       continue;
     }
 
