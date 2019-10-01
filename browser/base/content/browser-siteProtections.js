@@ -1742,18 +1742,6 @@ var gProtectionsHandler = {
       anyBlocking = anyBlocking || blocker.activated;
     }
 
-<<<<<<< local
-    this._categoryItemOrderInvalidated = true;
-    if (this._protectionsPopup.state == "open") {
-      this.reorderCategoryItems();
-    }
-
-    if (anyDetected) {
-      this.noTrackersDetectedDescription.hidden = true;
-    }
-
-=======
->>>>>>> graft
     // Check whether the user has added an exception for this site.
     let hasException = ContentBlockingAllowList.includes(
       gBrowser.selectedBrowser
