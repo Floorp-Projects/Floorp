@@ -873,12 +873,12 @@ public class GeckoAppShell {
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    private static boolean getHWEncoderCapability() {
+    private static boolean hasHWVP8Encoder() {
         return HardwareCodecCapabilityUtils.hasHWVP8(true /* aIsEncoder */);
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    private static boolean getHWDecoderCapability() {
+    private static boolean hasHWVP8Decoder() {
         return HardwareCodecCapabilityUtils.hasHWVP8(false /* aIsEncoder */);
     }
 
