@@ -540,6 +540,37 @@ function promiseDownloadMidway(aDownload) {
 }
 
 /**
+ * Waits for a download to make any amount of progress.
+ *
+ * @param aDownload
+ *        The Download object to wait upon.
+ *
+ * @return {Promise}
+ * @resolves When the download has transfered any number of bytes.
+ * @rejects Never.
+ */
+function promiseDownloadStarted(aDownload) {
+  return new Promise(resolve => {
+    // Wait for the download to transfer some amount of bytes.
+    let onchange = function() {
+      if (
+        !aDownload.stopped &&
+        !aDownload.canceled &&
+        aDownload.currentBytes > 0
+      ) {
+        aDownload.onchange = null;
+        resolve();
+      }
+    };
+
+    // Register for the notification, but also call the function directly in
+    // case the download already reached the expected progress.
+    aDownload.onchange = onchange;
+    onchange();
+  });
+}
+
+/**
  * Waits for a download to finish, in case it has not finished already.
  *
  * @param aDownload
@@ -822,6 +853,17 @@ add_task(function test_common_initialize() {
         "" + TEST_DATA_SHORT.length * 2,
         false
       );
+      aResponse.write(TEST_DATA_SHORT);
+    },
+    function secondPart(aRequest, aResponse) {
+      aResponse.write(TEST_DATA_SHORT);
+    }
+  );
+
+  registerInterruptibleHandler(
+    "/interruptible_nosize.txt",
+    function firstPart(aRequest, aResponse) {
+      aResponse.setHeader("Content-Type", "text/plain", false);
       aResponse.write(TEST_DATA_SHORT);
     },
     function secondPart(aRequest, aResponse) {

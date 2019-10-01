@@ -437,6 +437,11 @@ this.DownloadSummary.prototype = {
   allHaveStopped: true,
 
   /**
+   * Indicates whether whether all downloads have an unknown final size.
+   */
+  allUnknownSize: true,
+
+  /**
    * Indicates the total number of bytes to be transferred before completing all
    * the downloads that are currently in progress.
    *
@@ -462,6 +467,7 @@ this.DownloadSummary.prototype = {
    */
   _onListChanged() {
     let allHaveStopped = true;
+    let allUnknownSize = true;
     let progressTotalBytes = 0;
     let progressCurrentBytes = 0;
 
@@ -470,9 +476,12 @@ this.DownloadSummary.prototype = {
     for (let download of this._downloads) {
       if (!download.stopped) {
         allHaveStopped = false;
-        progressTotalBytes += download.hasProgress
-          ? download.totalBytes
-          : download.currentBytes;
+        if (download.hasProgress) {
+          allUnknownSize = false;
+          progressTotalBytes += download.totalBytes;
+        } else {
+          progressTotalBytes += download.currentBytes;
+        }
         progressCurrentBytes += download.currentBytes;
       }
     }
@@ -480,6 +489,7 @@ this.DownloadSummary.prototype = {
     // Exit now if the properties did not change.
     if (
       this.allHaveStopped == allHaveStopped &&
+      this.allUnknownSize == allUnknownSize &&
       this.progressTotalBytes == progressTotalBytes &&
       this.progressCurrentBytes == progressCurrentBytes
     ) {
@@ -487,6 +497,7 @@ this.DownloadSummary.prototype = {
     }
 
     this.allHaveStopped = allHaveStopped;
+    this.allUnknownSize = allUnknownSize;
     this.progressTotalBytes = progressTotalBytes;
     this.progressCurrentBytes = progressCurrentBytes;
 

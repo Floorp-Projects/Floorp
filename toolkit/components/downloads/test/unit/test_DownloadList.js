@@ -460,6 +460,14 @@ add_task(async function test_DownloadSummary() {
   await promiseDownloadMidway(inProgressPublicDownload);
   await publicList.add(inProgressPublicDownload);
 
+  // Add a public download of unknown size that is in progress.
+  let inProgressSizelessPublicDownload = await promiseNewDownload(
+    httpUrl("interruptible_nosize.txt")
+  );
+  inProgressSizelessPublicDownload.start().catch(() => {});
+  await promiseDownloadStarted(inProgressSizelessPublicDownload);
+  await publicList.add(inProgressSizelessPublicDownload);
+
   // Add a private download that is in progress.
   let inProgressPrivateDownload = await Downloads.createDownload({
     source: { url: httpUrl("interruptible.txt"), isPrivate: true },
@@ -476,47 +484,80 @@ add_task(async function test_DownloadSummary() {
   // true in the current implementation, though it is not guaranteed as all the
   // download operations may happen asynchronously.
   Assert.ok(!publicSummary.allHaveStopped);
-  Assert.equal(publicSummary.progressTotalBytes, TEST_DATA_SHORT.length * 2);
-  Assert.equal(publicSummary.progressCurrentBytes, TEST_DATA_SHORT.length);
+  Assert.ok(!publicSummary.allUnknownSize);
+  Assert.equal(publicSummary.progressTotalBytes, TEST_DATA_SHORT.length * 3);
+  Assert.equal(publicSummary.progressCurrentBytes, TEST_DATA_SHORT.length * 2);
 
   Assert.ok(!privateSummary.allHaveStopped);
+  Assert.ok(!privateSummary.allUnknownSize);
   Assert.equal(privateSummary.progressTotalBytes, TEST_DATA_SHORT.length * 2);
   Assert.equal(privateSummary.progressCurrentBytes, TEST_DATA_SHORT.length);
 
   Assert.ok(!combinedSummary.allHaveStopped);
-  Assert.equal(combinedSummary.progressTotalBytes, TEST_DATA_SHORT.length * 4);
+  Assert.ok(!combinedSummary.allUnknownSize);
+  Assert.equal(combinedSummary.progressTotalBytes, TEST_DATA_SHORT.length * 5);
+  Assert.equal(
+    combinedSummary.progressCurrentBytes,
+    TEST_DATA_SHORT.length * 3
+  );
+
+  await inProgressPublicDownload.cancel();
+
+  // Stopping the download should have excluded it from the summary, but we
+  // should still have one public download (with unknown size) and also one
+  // private download remaining.
+  Assert.ok(!publicSummary.allHaveStopped);
+  Assert.ok(publicSummary.allUnknownSize);
+  Assert.equal(publicSummary.progressTotalBytes, TEST_DATA_SHORT.length);
+  Assert.equal(publicSummary.progressCurrentBytes, TEST_DATA_SHORT.length);
+
+  Assert.ok(!privateSummary.allHaveStopped);
+  Assert.ok(!privateSummary.allUnknownSize);
+  Assert.equal(privateSummary.progressTotalBytes, TEST_DATA_SHORT.length * 2);
+  Assert.equal(privateSummary.progressCurrentBytes, TEST_DATA_SHORT.length);
+
+  Assert.ok(!combinedSummary.allHaveStopped);
+  Assert.ok(!combinedSummary.allUnknownSize);
+  Assert.equal(combinedSummary.progressTotalBytes, TEST_DATA_SHORT.length * 3);
   Assert.equal(
     combinedSummary.progressCurrentBytes,
     TEST_DATA_SHORT.length * 2
   );
 
-  await inProgressPublicDownload.cancel();
+  await inProgressPrivateDownload.cancel();
 
-  // Stopping the download should have excluded it from the summary.
-  Assert.ok(publicSummary.allHaveStopped);
-  Assert.equal(publicSummary.progressTotalBytes, 0);
-  Assert.equal(publicSummary.progressCurrentBytes, 0);
+  // Stopping the private download should have excluded it from the summary, so
+  // now only the unknown size public download should remain.
+  Assert.ok(!publicSummary.allHaveStopped);
+  Assert.ok(publicSummary.allUnknownSize);
+  Assert.equal(publicSummary.progressTotalBytes, TEST_DATA_SHORT.length);
+  Assert.equal(publicSummary.progressCurrentBytes, TEST_DATA_SHORT.length);
 
-  Assert.ok(!privateSummary.allHaveStopped);
-  Assert.equal(privateSummary.progressTotalBytes, TEST_DATA_SHORT.length * 2);
-  Assert.equal(privateSummary.progressCurrentBytes, TEST_DATA_SHORT.length);
+  Assert.ok(privateSummary.allHaveStopped);
+  Assert.ok(privateSummary.allUnknownSize);
+  Assert.equal(privateSummary.progressTotalBytes, 0);
+  Assert.equal(privateSummary.progressCurrentBytes, 0);
 
   Assert.ok(!combinedSummary.allHaveStopped);
-  Assert.equal(combinedSummary.progressTotalBytes, TEST_DATA_SHORT.length * 2);
+  Assert.ok(combinedSummary.allUnknownSize);
+  Assert.equal(combinedSummary.progressTotalBytes, TEST_DATA_SHORT.length);
   Assert.equal(combinedSummary.progressCurrentBytes, TEST_DATA_SHORT.length);
 
-  await inProgressPrivateDownload.cancel();
+  await inProgressSizelessPublicDownload.cancel();
 
   // All the downloads should be stopped now.
   Assert.ok(publicSummary.allHaveStopped);
+  Assert.ok(publicSummary.allUnknownSize);
   Assert.equal(publicSummary.progressTotalBytes, 0);
   Assert.equal(publicSummary.progressCurrentBytes, 0);
 
   Assert.ok(privateSummary.allHaveStopped);
+  Assert.ok(privateSummary.allUnknownSize);
   Assert.equal(privateSummary.progressTotalBytes, 0);
   Assert.equal(privateSummary.progressCurrentBytes, 0);
 
   Assert.ok(combinedSummary.allHaveStopped);
+  Assert.ok(combinedSummary.allUnknownSize);
   Assert.equal(combinedSummary.progressTotalBytes, 0);
   Assert.equal(combinedSummary.progressCurrentBytes, 0);
 });
