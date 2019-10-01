@@ -29,7 +29,7 @@ enum class FrameType {
   // compiler.
   IonJS,
 
-  // JS frame used by the baseline JIT.
+  // JS frame used by the Baseline Interpreter and Baseline JIT.
   BaselineJS,
 
   // Frame pushed by Baseline stubs that make non-tail calls, so that the
@@ -255,6 +255,10 @@ class JSJitFrameIter {
   void dump() const;
 
   inline BaselineFrame* baselineFrame() const;
+
+  // Returns the number of local and expression stack Values for the current
+  // Baseline frame.
+  inline uint32_t baselineFrameNumValueSlots() const;
 
   // This function isn't used, but we keep it here (debug-only) because it is
   // helpful when chasing issues with the jitcode map.
