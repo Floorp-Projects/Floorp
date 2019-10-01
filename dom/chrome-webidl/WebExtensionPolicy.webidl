@@ -44,6 +44,12 @@ interface WebExtensionPolicy {
   readonly attribute DOMString name;
 
   /**
+   * Whether the extension has access to privileged features
+   */
+  [Constant]
+  readonly attribute boolean isPrivileged;
+
+  /**
    * The content security policy string to apply to all pages loaded from the
    * extension's moz-extension: protocol.
    */
@@ -213,6 +219,8 @@ dictionary WebExtensionInit {
   required DOMString baseURL;
 
   DOMString name = "";
+
+  boolean isPrivileged = false;
 
   required WebExtensionLocalizeCallback localizeCallback;
 
