@@ -1885,7 +1885,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // NS_ERROR_NO_INTERFACE exceptions are a special case in browser code,
     // since they're almost always thrown by QueryInterface functions, and
     // handled cleanly by native code.
-    if (value == Cr.NS_ERROR_NO_INTERFACE) {
+    if (!isWorker && value == Cr.NS_ERROR_NO_INTERFACE) {
       return undefined;
     }
 

@@ -1,0 +1,10 @@
+<script>
+var worker;
+window.startWorker = () => {
+  worker = new Worker("worker-exception.js");
+}
+
+window.messageWorker = () => {
+  worker.postMessage({yo: 'yo'});
+}
+</script>
