@@ -813,3 +813,7 @@ android-hw-arm7-raptor-nightly:
     - raptor-tp6m-8-fennec68
     - raptor-tp6m-9-fennec68
     - raptor-tp6m-10-fennec68
+
+browsertime-firefox:
+    - browsertime-tp6-1-firefox
+    - browsertime-tp6-1-firefox-cold
