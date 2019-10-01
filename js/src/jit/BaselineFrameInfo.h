@@ -218,6 +218,12 @@ class FrameInfo {
     return Address(BaselineFrameReg,
                    BaselineFrame::reverseOffsetOfScratchValueHigh32());
   }
+#ifdef DEBUG
+  Address addressOfDebugFrameSize() const {
+    return Address(BaselineFrameReg,
+                   BaselineFrame::reverseOffsetOfDebugFrameSize());
+  }
+#endif
 };
 
 class CompilerFrameInfo : public FrameInfo {
