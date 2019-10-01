@@ -1862,6 +1862,7 @@ extern bool DoTypeUpdateFallback(JSContext* cx, BaselineFrame* frame,
                                  HandleValue value);
 
 extern bool DoWarmUpCounterFallbackOSR(JSContext* cx, BaselineFrame* frame,
+                                       uint32_t frameSize,
                                        ICWarmUpCounter_Fallback* stub,
                                        IonOsrTempData** infoPtr);
 
