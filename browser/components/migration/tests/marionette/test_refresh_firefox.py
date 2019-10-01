@@ -7,6 +7,16 @@ from marionette_harness import MarionetteTestCase
 from marionette_driver.errors import NoAlertPresentException
 
 
+# Holds info about things we need to cleanup after the tests are done.
+class PendingCleanup:
+    desktop_backup_path = None
+    reset_profile_path = None
+    reset_profile_local_path = None
+
+    def __init__(self, profile_name_to_remove):
+        self.profile_name_to_remove = profile_name_to_remove
+
+
 class TestFirefoxRefresh(MarionetteTestCase):
     _sandbox = "firefox-refresh"
 
@@ -470,11 +480,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
         MarionetteTestCase.setUp(self)
         self.setUpScriptData()
 
-        self.reset_profile_path = None
-        self.reset_profile_local_path = None
-        self.desktop_backup_path = None
-
-        self.createProfileData()
+        self.cleanups = []
 
     def tearDown(self):
         # Force yet another restart with a clean profile to disconnect from the
@@ -499,31 +505,32 @@ class TestFirefoxRefresh(MarionetteTestCase):
             else:
                 raise
 
-        if self.desktop_backup_path:
-            shutil.rmtree(self.desktop_backup_path,
-                          ignore_errors=False, onerror=handleRemoveReadonly)
-
-        if self.reset_profile_path:
-            # Remove ourselves from profiles.ini
-            self.runCode("""
-              let name = arguments[0];
-              let profile = global.profSvc.getProfileByName(name);
-              profile.remove(false)
-              global.profSvc.flush();
-            """, script_args=(self.profileNameToRemove,))
-            # Remove the local profile dir if it's not the same as the profile dir:
-            different_path = self.reset_profile_local_path != self.reset_profile_path
-            if self.reset_profile_local_path and different_path:
-                shutil.rmtree(self.reset_profile_local_path,
+        for cleanup in self.cleanups:
+            if cleanup.desktop_backup_path:
+                shutil.rmtree(cleanup.desktop_backup_path,
                               ignore_errors=False, onerror=handleRemoveReadonly)
 
-            # And delete all the files.
-            shutil.rmtree(self.reset_profile_path,
-                          ignore_errors=False, onerror=handleRemoveReadonly)
+            if cleanup.reset_profile_path:
+                # Remove ourselves from profiles.ini
+                self.runCode("""
+                  let name = arguments[0];
+                  let profile = global.profSvc.getProfileByName(name);
+                  profile.remove(false)
+                  global.profSvc.flush();
+                """, script_args=(cleanup.profile_name_to_remove,))
+                # Remove the local profile dir if it's not the same as the profile dir:
+                different_path = cleanup.reset_profile_local_path != cleanup.reset_profile_path
+                if cleanup.reset_profile_local_path and different_path:
+                    shutil.rmtree(cleanup.reset_profile_local_path,
+                                  ignore_errors=False, onerror=handleRemoveReadonly)
+
+                # And delete all the files.
+                shutil.rmtree(cleanup.reset_profile_path,
+                              ignore_errors=False, onerror=handleRemoveReadonly)
 
     def doReset(self):
         profileName = "marionette-test-profile-" + str(int(time.time() * 1000))
-        self.profileNameToRemove = profileName
+        cleanup = PendingCleanup(profileName)
         self.runCode("""
           // Ensure the current (temporary) profile is in profiles.ini:
           let profD = Services.dirsvc.get("ProfD", Ci.nsIFile);
@@ -552,14 +559,14 @@ class TestFirefoxRefresh(MarionetteTestCase):
         self.setUpScriptData()
 
         # Determine the new profile path (we'll need to remove it when we're done)
-        [self.reset_profile_path, self.reset_profile_local_path] = self.runCode("""
+        [cleanup.reset_profile_path, cleanup.reset_profile_local_path] = self.runCode("""
           let profD = Services.dirsvc.get("ProfD", Ci.nsIFile);
           let localD = Services.dirsvc.get("ProfLD", Ci.nsIFile);
           return [profD.path, localD.path];
         """)
 
         # Determine the backup path
-        self.desktop_backup_path = self.runCode("""
+        cleanup.desktop_backup_path = self.runCode("""
           let container;
           try {
             container = Services.dirsvc.get("Desk", Ci.nsIFile);
@@ -573,16 +580,20 @@ class TestFirefoxRefresh(MarionetteTestCase):
           return container.path;
         """, script_args=(profileLeafName,))  # NOQA: E501
 
-        self.assertTrue(os.path.isdir(self.reset_profile_path),
+        self.assertTrue(os.path.isdir(cleanup.reset_profile_path),
                         "Reset profile path should be present")
-        self.assertTrue(os.path.isdir(self.desktop_backup_path),
+        self.assertTrue(os.path.isdir(cleanup.desktop_backup_path),
                         "Backup profile path should be present")
-        self.assertIn(self.profileNameToRemove, self.reset_profile_path)
+        self.assertIn(cleanup.profile_name_to_remove, cleanup.reset_profile_path)
+        return cleanup
 
     def testReset(self):
+        self.createProfileData()
+
         self.checkProfile()
 
-        self.doReset()
+        this_cleanup = self.doReset()
+        self.cleanups.append(this_cleanup)
 
         # Now check that we're doing OK...
         self.checkProfile(hasMigrated=True)
