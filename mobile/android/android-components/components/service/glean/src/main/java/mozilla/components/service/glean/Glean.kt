@@ -156,7 +156,7 @@ open class GleanInternalAPI internal constructor () {
             metricsPingScheduler.schedule()
         }
 
-        // Flush any tasks that where queued prior to initalization.
+        // Flush any tasks that were queued prior to initalization.
         @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.flushQueuedInitialTasks()
 
