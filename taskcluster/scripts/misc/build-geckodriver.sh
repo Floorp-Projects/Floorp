@@ -32,6 +32,8 @@ case "$TARGET" in
       (cd "$d"; rename y/A-Z/a-z/ *)
     done
   )
+  # Bug 1584530: don't require the Microsoft MSVC runtime to be installed.
+  export RUSTFLAGS="-Ctarget-feature=+crt-static"
   ;;
 # OSX cross builds are a bit harder
 x86_64-apple-darwin)
