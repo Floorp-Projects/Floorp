@@ -443,7 +443,8 @@ void NrIceCtx::trickle_cb(void* arg, nr_ice_ctx* ice_ctx,
   // Format the candidate.
   char candidate_str[NR_ICE_MAX_ATTRIBUTE_SIZE];
   int r = nr_ice_format_candidate_attribute(candidate, candidate_str,
-                                            sizeof(candidate_str));
+                                            sizeof(candidate_str),
+                                            ctx->obfuscate_host_addresses_);
   MOZ_ASSERT(!r);
   if (r) return;
 

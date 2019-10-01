@@ -936,7 +936,7 @@ static void nr_ice_turn_allocated_cb(NR_SOCKET s, int how, void *cb_arg)
 #endif /* USE_TURN */
 
 /* Format the candidate attribute as per ICE S 15.1 */
-int nr_ice_format_candidate_attribute(nr_ice_candidate *cand, char *attr, int maxlen)
+int nr_ice_format_candidate_attribute(nr_ice_candidate *cand, char *attr, int maxlen, int obfuscate_srflx_addr)
   {
     int r,_status;
     char addr[64];
@@ -976,6 +976,16 @@ int nr_ice_format_candidate_attribute(nr_ice_candidate *cand, char *attr, int ma
       case HOST:
         break;
       case SERVER_REFLEXIVE:
+        if (obfuscate_srflx_addr) {
+          snprintf(attr,maxlen," raddr 0.0.0.0 rport 0");
+        } else {
+          if(r=nr_transport_addr_get_addrstring(raddr,addr,sizeof(addr)))
+            ABORT(r);
+          if(r=nr_transport_addr_get_port(raddr,&port))
+            ABORT(r);
+          snprintf(attr,maxlen," raddr %s rport %d",addr,port);
+        }
+        break;
       case PEER_REFLEXIVE:
         if(r=nr_transport_addr_get_addrstring(raddr,addr,sizeof(addr)))
           ABORT(r);
