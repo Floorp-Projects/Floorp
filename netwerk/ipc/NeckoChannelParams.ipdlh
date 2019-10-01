@@ -213,6 +213,8 @@ struct ChildLoadInfoForwarderArgs
   // The ServiceWorker controller may be cleared in the child during
   // a redirect.
   IPCServiceWorkerDescriptor? controller;
+
+  uint32_t requestBlockingReason;
 };
 
 //-----------------------------------------------------------------------------
