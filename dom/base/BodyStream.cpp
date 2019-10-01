@@ -48,7 +48,7 @@ void BodyStreamHolder::StoreBodyStream(BodyStream* aBodyStream) {
 }
 
 void BodyStreamHolder::ForgetBodyStream() {
-  MOZ_ASSERT_IF(mStreamCreated, mBodyStream);
+  MOZ_ASSERT(mBodyStream);
   mBodyStream = nullptr;
 }
 
@@ -91,8 +91,6 @@ void BodyStream::Create(JSContext* aCx, BodyStreamHolder* aStreamHolder,
 
   RefPtr<BodyStream> stream =
       new BodyStream(aGlobal, aStreamHolder, aInputStream);
-
-  auto cleanup = MakeScopeExit([stream] { stream->Close(); });
 
   if (NS_IsMainThread()) {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
@@ -137,14 +135,8 @@ void BodyStream::Create(JSContext* aCx, BodyStreamHolder* aStreamHolder,
   // js object is finalized.
   NS_ADDREF(stream.get());
 
-  cleanup.release();
-
   aStreamHolder->StoreBodyStream(stream);
   aStreamHolder->SetReadableStreamBody(body);
-
-#ifdef DEBUG
-  aStreamHolder->mStreamCreated = true;
-#endif
 }
 
 void BodyStream::requestData(JSContext* aCx, JS::HandleObject aStream,
