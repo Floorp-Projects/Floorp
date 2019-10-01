@@ -929,7 +929,12 @@ class RaptorOutput(PerftestOutput):
             # TODO: this assumes a single suite is run
             suite = page_cycle_results.keys()[0]
             for sub in page_cycle_results[suite].keys():
-                replicate = round(page_cycle_results[suite][sub]['frameLength']['average'], 3)
+                try:
+                    replicate = round(
+                        float(page_cycle_results[suite][sub]['frameLength']['average']), 3
+                    )
+                except TypeError as e:
+                    LOG.warning("[{}][{}] : {} - {}".format(suite, sub, e.__class__.__name__, e))
 
                 if sub not in _subtests.keys():
                     # subtest not added yet, first pagecycle, so add new one
