@@ -1710,8 +1710,6 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
   //-------------------- Helper ----------------------
 
-#define SMOOTH_SCROLL_PREF_NAME "general.smoothScroll"
-
 // AsyncSmoothMSDScroll has ref counting.
 class ScrollFrameHelper::AsyncSmoothMSDScroll final
     : public nsARefreshObserver {
@@ -2029,7 +2027,7 @@ void ScrollFrameHelper::AsyncScroll::InitSmoothScroll(
 }
 
 bool ScrollFrameHelper::IsSmoothScrollingEnabled() {
-  return Preferences::GetBool(SMOOTH_SCROLL_PREF_NAME, false);
+  return StaticPrefs::general_smoothScroll();
 }
 
 class ScrollFrameActivityTracker final
@@ -2349,7 +2347,7 @@ void ScrollFrameHelper::ScrollToWithOrigin(
           ? presContext->RefreshDriver()->MostRecentRefresh()
           : TimeStamp::Now();
   bool isSmoothScroll =
-      (aMode == ScrollMode::Smooth) && IsSmoothScrollingEnabled();
+      aMode == ScrollMode::Smooth && IsSmoothScrollingEnabled();
 
   nsSize currentVelocity(0, 0);
 
