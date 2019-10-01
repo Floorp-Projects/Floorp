@@ -168,6 +168,13 @@ loader.lazyGetter(
   () => require("devtools/client/webreplay/menu.js").reloadAndStopRecordingTab
 );
 
+loader.lazyRequireGetter(
+  this,
+  "defaultThreadOptions",
+  "devtools/client/shared/thread-utils",
+  true
+);
+
 /**
  * A "Toolbox" is the component that holds all the tools for one specific
  * target. Visually, it's a document that includes the tools tabs and all
@@ -639,25 +646,8 @@ Toolbox.prototype = {
   },
 
   _attachAndResumeThread: async function(target) {
-    const [, threadFront] = await target.attachThread({
-      autoBlackBox: false,
-      ignoreFrameEnvironment: true,
-      pauseOnExceptions: Services.prefs.getBoolPref(
-        "devtools.debugger.pause-on-exceptions"
-      ),
-      ignoreCaughtExceptions: Services.prefs.getBoolPref(
-        "devtools.debugger.ignore-caught-exceptions"
-      ),
-      shouldShowOverlay: Services.prefs.getBoolPref(
-        "devtools.debugger.features.overlay"
-      ),
-      skipBreakpoints: Services.prefs.getBoolPref(
-        "devtools.debugger.skip-pausing"
-      ),
-      logEventBreakpoints: Services.prefs.getBoolPref(
-        "devtools.debugger.log-event-breakpoints"
-      ),
-    });
+    const options = defaultThreadOptions();
+    const [, threadFront] = await target.attachThread(options);
 
     try {
       await threadFront.resume();
