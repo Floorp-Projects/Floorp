@@ -170,16 +170,20 @@ void StunAddrsRequestParent::SendStunAddrs_m(const NrIceStunAddrArray& addrs) {
   // registered after UnregisterHostname is called, and if so, stop the mDNS
   // service at that time (see Bug 1569955.)
   if (!mSharedMDNSService) {
+    std::ostringstream o;
+    char buffer[16];
     for (auto& addr : addrs) {
       nr_transport_addr* local_addr =
           const_cast<nr_transport_addr*>(&addr.localAddr().addr);
       if (addr.localAddr().addr.ip_version == NR_IPV4 &&
           !nr_transport_addr_is_loopback(local_addr)) {
-        char addrstring[16];
-        nr_transport_addr_get_addrstring(local_addr, addrstring, 16);
-        mSharedMDNSService = new MDNSServiceWrapper(addrstring);
-        break;
+        nr_transport_addr_get_addrstring(local_addr, buffer, 16);
+        o << buffer << ";";
       }
+    }
+    std::string addrstring = o.str();
+    if (!addrstring.empty()) {
+      mSharedMDNSService = new MDNSServiceWrapper(addrstring);
     }
   }
 

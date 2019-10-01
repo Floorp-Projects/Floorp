@@ -236,10 +236,11 @@ impl MDNSService {
         }
     }
 
-    fn start(&mut self, addr: std::net::Ipv4Addr) -> io::Result<()> {
+    fn start(&mut self, addrs: Vec<std::net::Ipv4Addr>) -> io::Result<()> {
         let (sender, receiver) = channel();
         self.sender = Some(sender);
 
+        let mdns_addr = std::net::Ipv4Addr::new(224, 0, 0, 251);
         let port = 5353;
 
         let socket = Socket::new(Domain::ipv4(), Type::dgram(), None).unwrap();
@@ -255,7 +256,14 @@ impl MDNSService {
         let socket = socket.into_udp_socket();
         socket.set_multicast_loop_v4(true)?;
         socket.set_read_timeout(Some(time::Duration::from_millis(10)))?;
-        socket.join_multicast_v4(&std::net::Ipv4Addr::new(224, 0, 0, 251), &addr)?;
+        for addr in addrs {
+            if let Err(err) = socket.join_multicast_v4(&mdns_addr, &addr) {
+                warn!(
+                    "Could not join multicast group on interface: {:?}: {}",
+                    addr, err
+                );
+            }
+        }
 
         let builder = thread::Builder::new().name("mdns_service".to_string());
         self.handle = Some(builder.spawn(move || {
@@ -500,17 +508,18 @@ pub extern "C" fn mdns_service_register_hostname(
 }
 
 #[no_mangle]
-pub extern "C" fn mdns_service_start(ifaddr: *const c_char) -> *mut MDNSService {
-    assert!(!ifaddr.is_null());
+pub extern "C" fn mdns_service_start(ifaddrs: *const c_char) -> *mut MDNSService {
+    assert!(!ifaddrs.is_null());
     let mut r = Box::new(MDNSService::new());
     unsafe {
-        let ifaddr = CStr::from_ptr(ifaddr).to_string_lossy();
-        if let Ok(addr) = ifaddr.parse() {
-            if let Err(err) = r.start(addr) {
-                warn!("Could not start mDNS Service: {}", err);
-            }
-        } else {
-            warn!("Could not parse interface address: {}", ifaddr);
+        let ifaddrs = CStr::from_ptr(ifaddrs).to_string_lossy();
+        let addrs: Vec<std::net::Ipv4Addr> =
+            ifaddrs.split(';').filter_map(|x| x.parse().ok()).collect();
+
+        if addrs.len() == 0 {
+            warn!("Could not parse interface addresses from: {}", ifaddrs);
+        } else if let Err(err) = r.start(addrs) {
+            warn!("Could not start mDNS Service: {}", err);
         }
     }
     Box::into_raw(r)
@@ -685,7 +694,7 @@ mod tests {
     fn start_stop() {
         let mut service = MDNSService::new();
         let addr = "127.0.0.1".parse().unwrap();
-        service.start(addr).unwrap();
+        service.start(vec![addr]).unwrap();
         service.stop();
     }
 
@@ -695,7 +704,7 @@ mod tests {
         let addr = "127.0.0.1".parse().unwrap();
         let handle = listen_until(&addr, 1);
 
-        service.start(addr).unwrap();
+        service.start(vec![addr]).unwrap();
 
         let callback = Callback {
             data: 0 as *const c_void,
@@ -714,7 +723,7 @@ mod tests {
         let addr = "127.0.0.1".parse().unwrap();
         let handle = listen_until(&addr, 1);
 
-        service.start(addr).unwrap();
+        service.start(vec![addr]).unwrap();
 
         let mut hostnames = HashSet::new();
         for _ in 0..100 {
@@ -738,7 +747,7 @@ mod tests {
         let addr = "127.0.0.1".parse().unwrap();
         let handle = listen_until(&addr, 4);
 
-        service.start(addr).unwrap();
+        service.start(vec![addr]).unwrap();
 
         let hostname = Uuid::new_v4().to_hyphenated().to_string() + ".local";
         let callback = Callback {
