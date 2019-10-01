@@ -7,8 +7,8 @@
 #ifndef mozilla_ShmemPool_h
 #define mozilla_ShmemPool_h
 
-#include "mozilla/ipc/Shmem.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/ipc/Shmem.h"
 
 extern mozilla::LazyLogModule sShmemPoolLog;
 #define SHMEMPOOL_LOG(args) \
@@ -81,8 +81,11 @@ class ShmemPool {
     }
   }
 
+  enum class AllocationPolicy { Default, Unsafe };
+
   template <class T>
-  ShmemBuffer Get(T* aInstance, size_t aSize) {
+  ShmemBuffer Get(T* aInstance, size_t aSize,
+                  AllocationPolicy aPolicy = AllocationPolicy::Default) {
     MutexAutoLock lock(mMutex);
 
     // Pool is empty, don't block caller.
@@ -104,15 +107,15 @@ class ShmemPool {
 
     if (!res.mInitialized) {
       SHMEMPOOL_LOG(("Initializing new Shmem in pool"));
-      if (!aInstance->AllocShmem(aSize, ipc::SharedMemory::TYPE_BASIC,
-                                 &res.mShmem)) {
+      if (!AllocateShmem(aInstance, aSize, res, aPolicy)) {
         SHMEMPOOL_LOG(("Failure allocating new Shmem buffer"));
         return ShmemBuffer();
       }
       res.mInitialized = true;
     }
 
-    MOZ_ASSERT(res.mShmem.IsWritable(), "Shmem in Pool is not writable?");
+    MOZ_DIAGNOSTIC_ASSERT(res.mShmem.IsWritable(),
+                          "Shmem in Pool is not writable?");
 
     // Prepare buffer, increase size if needed (we never shrink as we don't
     // maintain seperate sized pools and we don't want to keep reallocating)
@@ -121,8 +124,7 @@ class ShmemPool {
       aInstance->DeallocShmem(res.mShmem);
       res.mInitialized = false;
       // this may fail; always check return value
-      if (!aInstance->AllocShmem(aSize, ipc::SharedMemory::TYPE_BASIC,
-                                 &res.mShmem)) {
+      if (!AllocateShmem(aInstance, aSize, res, aPolicy)) {
         SHMEMPOOL_LOG(("Failure allocating resized Shmem buffer"));
         return ShmemBuffer();
       } else {
@@ -146,6 +148,16 @@ class ShmemPool {
   }
 
  private:
+  template <class T>
+  bool AllocateShmem(T* aInstance, size_t aSize, ShmemBuffer& aRes,
+                     AllocationPolicy aPolicy) {
+    return (aPolicy == AllocationPolicy::Default &&
+            aInstance->AllocShmem(aSize, ipc::SharedMemory::TYPE_BASIC,
+                                  &aRes.mShmem)) ||
+           (aPolicy == AllocationPolicy::Unsafe &&
+            aInstance->AllocUnsafeShmem(aSize, ipc::SharedMemory::TYPE_BASIC,
+                                        &aRes.mShmem));
+  }
   Mutex mMutex;
   size_t mPoolFree;
   bool mErrorLogged;
