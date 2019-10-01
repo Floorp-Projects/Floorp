@@ -430,12 +430,17 @@ class GleanMetricsService(private val context: Context) : MetricsService {
         if (initialized) return
         initialized = true
 
+        // We have to initialize Glean *on* the main thread, because it registers lifecycle
+        // observers. However, the activation ping must be sent *off* of the main thread,
+        // because it calls Google ad APIs that must be called *off* of the main thread.
+        // These two things actually happen in parallel, but that should be ok because Glean
+        // can handle events being recorded before it's initialized.
         starter = MainScope().launch {
             Glean.registerPings(Pings)
             Glean.initialize(context, Configuration(channel = BuildConfig.BUILD_TYPE))
-
-            setStartupMetrics()
         }
+
+        setStartupMetrics()
     }
 
     internal fun setStartupMetrics() {
