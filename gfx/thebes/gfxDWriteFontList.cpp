@@ -940,9 +940,34 @@ gfxFontEntry* gfxDWriteFontList::CreateFontEntry(
       mSystemFonts;
 #endif
   RefPtr<IDWriteFontFamily> family;
-  collection->GetFontFamily(aFamily->Index(), getter_AddRefs(family));
-  if (!family) {
-    return nullptr;
+  HRESULT hr = collection->GetFontFamily(aFamily->Index(), getter_AddRefs(family));
+  // Check that the family name is what we expected; if not, fall back to search by name.
+  // It's sad we have to do this, but it is possible for Windows to have given different versions
+  // of the system font collection to the parent and child processes.
+  bool foundFamily = false;
+  const nsCString& familyName = aFamily->DisplayName().AsString(SharedFontList());
+  if (SUCCEEDED(hr) && family) {
+    RefPtr<IDWriteLocalizedStrings> names;
+    hr = family->GetFamilyNames(getter_AddRefs(names));
+    if (SUCCEEDED(hr) && names) {
+      nsAutoCString name;
+      if (GetEnglishOrFirstName(name, names)) {
+        foundFamily = name.Equals(familyName);
+      }
+    }
+  }
+  if (!foundFamily) {
+    // Try to get family by name instead of index (to deal with the case of collection mismatch).
+    UINT32 index;
+    BOOL exists;
+    NS_ConvertUTF8toUTF16 name16(familyName);
+    hr = collection->FindFamilyName(reinterpret_cast<const WCHAR*>(name16.BeginReading()), &index, &exists);
+    if (SUCCEEDED(hr) && exists && index != UINT_MAX) {
+      hr = collection->GetFontFamily(index, getter_AddRefs(family));
+      if (FAILED(hr) || !family) {
+        return nullptr;
+      }
+    }
   }
   RefPtr<IDWriteFont> font;
   family->GetFont(aFace->mIndex, getter_AddRefs(font));
@@ -950,7 +975,7 @@ gfxFontEntry* gfxDWriteFontList::CreateFontEntry(
     return nullptr;
   }
   nsAutoCString faceName;
-  HRESULT hr = GetDirectWriteFontName(font, faceName);
+  hr = GetDirectWriteFontName(font, faceName);
   if (FAILED(hr)) {
     return nullptr;
   }
@@ -960,7 +985,7 @@ gfxFontEntry* gfxDWriteFontList::CreateFontEntry(
   fe->mWeightRange = aFace->mWeight;
   fe->mShmemFace = aFace;
   fe->mIsBadUnderlineFont = aFamily->IsBadUnderlineFamily();
-  fe->mFamilyName = aFamily->DisplayName().AsString(SharedFontList());
+  fe->mFamilyName = familyName;
   fe->mForceGDIClassic = aFamily->IsForceClassic();
   return fe;
 }
