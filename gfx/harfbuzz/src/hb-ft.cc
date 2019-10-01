@@ -471,7 +471,7 @@ hb_ft_get_glyph_from_name (hb_font_t *font HB_UNUSED,
     /* Check whether the given name was actually the name of glyph 0. */
     char buf[128];
     if (!FT_Get_Glyph_Name(ft_face, 0, buf, sizeof (buf)) &&
-        len < 0 ? !strcmp (buf, name) : !strncmp (buf, name, len))
+	len < 0 ? !strcmp (buf, name) : !strncmp (buf, name, len))
       return true;
   }
 
@@ -840,8 +840,8 @@ hb_ft_font_set_funcs (hb_font_t *font)
     return;
   }
 
-  if (FT_Select_Charmap (ft_face, FT_ENCODING_UNICODE))
-    FT_Select_Charmap (ft_face, FT_ENCODING_MS_SYMBOL);
+  if (FT_Select_Charmap (ft_face, FT_ENCODING_MS_SYMBOL))
+    FT_Select_Charmap (ft_face, FT_ENCODING_UNICODE);
 
   FT_Set_Char_Size (ft_face,
 		    abs (font->x_scale), abs (font->y_scale),
@@ -866,7 +866,7 @@ hb_ft_font_set_funcs (hb_font_t *font)
     if (ft_coords)
     {
       for (unsigned int i = 0; i < num_coords; i++)
-	ft_coords[i] = coords[i] << 2;
+	ft_coords[i] = coords[i] * 4;
       FT_Set_Var_Blend_Coordinates (ft_face, num_coords, ft_coords);
       free (ft_coords);
     }

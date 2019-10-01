@@ -567,7 +567,7 @@ hb_ot_layout_table_select_script (hb_face_t      *face,
     if (g.find_script_index (script_tags[i], script_index))
     {
       if (chosen_script)
-        *chosen_script = script_tags[i];
+	*chosen_script = script_tags[i];
       return true;
     }
   }
@@ -999,9 +999,9 @@ hb_ot_layout_table_get_lookup_count (hb_face_t    *face,
 
 struct hb_collect_features_context_t
 {
-  hb_collect_features_context_t (hb_face_t       *face,
-				 hb_tag_t         table_tag,
-				 hb_set_t        *feature_indexes_)
+  hb_collect_features_context_t (hb_face_t *face,
+				 hb_tag_t   table_tag,
+				 hb_set_t  *feature_indexes_)
     : g (get_gsubgpos_table (face, table_tag)),
       feature_indexes (feature_indexes_),
       script_count(0),langsys_count(0) {}
@@ -1147,11 +1147,11 @@ script_collect_features (hb_collect_features_context_t *c,
  **/
 void
 hb_ot_layout_collect_features (hb_face_t      *face,
-                               hb_tag_t        table_tag,
-                               const hb_tag_t *scripts,
-                               const hb_tag_t *languages,
-                               const hb_tag_t *features,
-                               hb_set_t       *feature_indexes /* OUT */)
+			       hb_tag_t        table_tag,
+			       const hb_tag_t *scripts,
+			       const hb_tag_t *languages,
+			       const hb_tag_t *features,
+			       hb_set_t       *feature_indexes /* OUT */)
 {
   hb_collect_features_context_t c (face, table_tag, feature_indexes);
   if (!scripts)
@@ -1227,7 +1227,7 @@ hb_ot_layout_collect_lookups (hb_face_t      *face,
  * @glyphs_output: (out): Array of glyphs that would be the substitued output of the lookup
  *
  * Fetches a list of all glyphs affected by the specified lookup in the
- * specified face's GSUB table of GPOS table.
+ * specified face's GSUB table or GPOS table.
  *
  * Since: 0.9.7
  **/
@@ -1482,8 +1482,8 @@ hb_ot_layout_lookup_substitute_closure (hb_face_t    *face,
  **/
 void
 hb_ot_layout_lookups_substitute_closure (hb_face_t      *face,
-                                         const hb_set_t *lookups,
-                                         hb_set_t       *glyphs /* OUT */)
+					 const hb_set_t *lookups,
+					 hb_set_t       *glyphs /* OUT */)
 {
   hb_map_t done_lookups;
   OT::hb_closure_context_t c (face, glyphs, &done_lookups);
@@ -1497,12 +1497,12 @@ hb_ot_layout_lookups_substitute_closure (hb_face_t      *face,
     if (lookups != nullptr)
     {
       for (hb_codepoint_t lookup_index = HB_SET_VALUE_INVALID; hb_set_next (lookups, &lookup_index);)
-        gsub.get_lookup (lookup_index).closure (&c, lookup_index);
+	gsub.get_lookup (lookup_index).closure (&c, lookup_index);
     }
     else
     {
       for (unsigned int i = 0; i < gsub.get_lookup_count (); i++)
-        gsub.get_lookup (i).closure (&c, i);
+	gsub.get_lookup (i).closure (&c, i);
     }
   } while (iteration_count++ <= HB_CLOSURE_MAX_STAGES &&
 	   glyphs_length != glyphs->get_population ());
@@ -1949,7 +1949,7 @@ hb_ot_layout_substitute_lookup (OT::hb_ot_apply_context_t *c,
 /**
  * hb_ot_layout_get_baseline:
  * @font: a font
- * @baseline: a baseline tag
+ * @baseline_tag: a baseline tag
  * @direction: text direction.
  * @script_tag:  script tag.
  * @language_tag: language tag.

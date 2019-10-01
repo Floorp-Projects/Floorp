@@ -191,9 +191,7 @@ struct name
 
     const void *dst_string_pool = &(this + this->stringOffset);
 
-    + it
-    | hb_apply ([=] (const NameRecord& _) { c->copy (_, src_string_pool, dst_string_pool); })
-    ;
+    for (const auto &_ : it) c->copy (_, src_string_pool, dst_string_pool);
 
     if (unlikely (c->ran_out_of_room)) return_trace (false);
 
@@ -265,10 +263,10 @@ struct name
       unsigned int j = 0;
       for (unsigned int i = 0; i < this->names.length; i++)
       {
-        if (this->names[i].entry_score == UNSUPPORTED ||
+	if (this->names[i].entry_score == UNSUPPORTED ||
 	    this->names[i].language == HB_LANGUAGE_INVALID)
 	  continue;
-        if (i &&
+	if (i &&
 	    this->names[i - 1].name_id  == this->names[i].name_id &&
 	    this->names[i - 1].language == this->names[i].language)
 	  continue;
@@ -295,10 +293,10 @@ struct name
 						    sizeof (key),
 						    _hb_ot_name_entry_cmp_key);
       if (!entry)
-        return -1;
+	return -1;
 
       if (width)
-        *width = entry->entry_score < 10 ? 2 : 1;
+	*width = entry->entry_score < 10 ? 2 : 1;
 
       return entry->entry_index;
     }
@@ -329,6 +327,9 @@ struct name
   public:
   DEFINE_SIZE_ARRAY (6, nameRecordZ);
 };
+
+#undef entry_index
+#undef entry_score
 
 struct name_accelerator_t : name::accelerator_t {};
 

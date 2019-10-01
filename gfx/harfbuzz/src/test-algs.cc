@@ -87,5 +87,9 @@ main (int argc, char **argv)
   assert (hb_add (2) (5) == 7);
   assert (hb_add (5) (2) == 7);
 
+  x = 1;
+  assert (++hb_inc (x) == 3);
+  assert (x == 3);
+
   return 0;
 }

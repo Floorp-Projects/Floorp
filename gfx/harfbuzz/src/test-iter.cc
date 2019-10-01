@@ -267,7 +267,12 @@ main (int argc, char **argv)
   hb_iota ();
   hb_iota (3);
   hb_iota (3, 2);
+  assert ((&vl) + 1 == *++hb_iota (&vl, hb_inc));
   hb_range ();
+  hb_repeat (7u);
+  hb_repeat (nullptr);
+  hb_repeat (vl) | hb_chop (3);
+  assert (hb_len (hb_range (10) | hb_take (3)) == 3);
   assert (hb_range (9).len () == 9);
   assert (hb_range (2, 9).len () == 7);
   assert (hb_range (2, 9, 3).len () == 3);

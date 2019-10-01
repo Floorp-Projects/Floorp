@@ -625,7 +625,7 @@ _hb_directwrite_shape_full (hb_shape_plan_t    *shape_plan,
   HB_STMT_START { \
     DEBUG_MSG (DIRECTWRITE, nullptr, __VA_ARGS__); \
     return false; \
-  } HB_STMT_END;
+  } HB_STMT_END
 
   if (FAILED (hr))
     FAIL ("Analyzer failed to generate results.");

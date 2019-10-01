@@ -135,7 +135,7 @@ static inline Type& StructAfter(TObject &X)
 
 #define DEFINE_SIZE_ARRAY(size, array) \
   DEFINE_COMPILES_ASSERTION ((void) (array)[0].static_size) \
-  DEFINE_INSTANCE_ASSERTION (sizeof (*this) == (size) + VAR * sizeof ((array)[0])) \
+  DEFINE_INSTANCE_ASSERTION (sizeof (*this) == (size) + HB_VAR_ARRAY * sizeof ((array)[0])) \
   static constexpr unsigned null_size = (size); \
   static constexpr unsigned min_size = (size)
 
@@ -225,7 +225,7 @@ struct hb_lazy_loader_t : hb_data_wrapper_t<Data, WheresData>
 
       if (unlikely (!cmpexch (nullptr, p)))
       {
-        do_destroy (p);
+	do_destroy (p);
 	goto retry;
       }
     }

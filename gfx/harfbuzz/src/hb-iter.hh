@@ -64,7 +64,7 @@ template <typename iter_t, typename Item = typename iter_t::__item_t__>
 struct hb_iter_t
 {
   typedef Item item_t;
-  static constexpr unsigned item_size = hb_static_size (Item);
+  constexpr unsigned get_item_size () const { return hb_static_size (Item); }
   static constexpr bool is_iterator = true;
   static constexpr bool is_random_access_iterator = false;
   static constexpr bool is_sorted_iterator = false;
@@ -72,7 +72,7 @@ struct hb_iter_t
   private:
   /* https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern */
   const iter_t* thiz () const { return static_cast<const iter_t *> (this); }
-        iter_t* thiz ()       { return static_cast<      iter_t *> (this); }
+	iter_t* thiz ()       { return static_cast<      iter_t *> (this); }
   public:
 
   /* TODO:
@@ -130,7 +130,7 @@ struct hb_iter_t
   using item_t = typename Name::item_t; \
   using Name::begin; \
   using Name::end; \
-  using Name::item_size; \
+  using Name::get_item_size; \
   using Name::is_iterator; \
   using Name::iter; \
   using Name::operator bool; \
@@ -156,6 +156,7 @@ using hb_item_type = decltype (*hb_deref (hb_declval (Iterable)).iter ());
 
 
 template <typename> struct hb_array_t;
+template <typename> struct hb_sorted_array_t;
 
 struct
 {
@@ -175,6 +176,14 @@ struct
 
 }
 HB_FUNCOBJ (hb_iter);
+struct
+{
+  template <typename T> unsigned
+  operator () (T&& c) const
+  { return c.len (); }
+
+}
+HB_FUNCOBJ (hb_len);
 
 /* Mixin to fill in what the subclass doesn't provide. */
 template <typename iter_t, typename item_t = typename iter_t::__item_t__>
@@ -183,7 +192,7 @@ struct hb_iter_fallback_mixin_t
   private:
   /* https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern */
   const iter_t* thiz () const { return static_cast<const iter_t *> (this); }
-        iter_t* thiz ()       { return static_cast<      iter_t *> (this); }
+	iter_t* thiz ()       { return static_cast<      iter_t *> (this); }
   public:
 
   /* Access: Implement __item__(), or __item_at__() if random-access. */
@@ -563,7 +572,7 @@ struct hb_zip_iter_t :
   B b;
 };
 struct
-{
+{ HB_PARTIALIZE(2);
   template <typename A, typename B,
 	    hb_requires (hb_is_iterable (A) && hb_is_iterable (B))>
   hb_zip_iter_t<hb_iter_type<A>, hb_iter_type<B>>
@@ -602,18 +611,18 @@ struct
 }
 HB_FUNCOBJ (hb_apply);
 
-/* hb_iota()/hb_range() */
+/* hb_range()/hb_iota()/hb_repeat() */
 
 template <typename T, typename S>
-struct hb_counter_iter_t :
-  hb_iter_t<hb_counter_iter_t<T, S>, T>
+struct hb_range_iter_t :
+  hb_iter_t<hb_range_iter_t<T, S>, T>
 {
-  hb_counter_iter_t (T start, T end_, S step) : v (start), end_ (end_for (start, end_, step)), step (step) {}
+  hb_range_iter_t (T start, T end_, S step) : v (start), end_ (end_for (start, end_, step)), step (step) {}
 
   typedef T __item_t__;
   static constexpr bool is_random_access_iterator = true;
   static constexpr bool is_sorted_iterator = true;
-  __item_t__ __item__ () const { return +v; }
+  __item_t__ __item__ () const { return hb_ridentity (v); }
   __item_t__ __item_at__ (unsigned j) const { return v + j * step; }
   bool __more__ () const { return v != end_; }
   unsigned __len__ () const { return !step ? UINT_MAX : (end_ - v) / step; }
@@ -621,8 +630,8 @@ struct hb_counter_iter_t :
   void __forward__ (unsigned n) { v += n * step; }
   void __prev__ () { v -= step; }
   void __rewind__ (unsigned n) { v -= n * step; }
-  hb_counter_iter_t __end__ () const { return hb_counter_iter_t (end_, end_, step); }
-  bool operator != (const hb_counter_iter_t& o) const
+  hb_range_iter_t __end__ () const { return hb_range_iter_t (end_, end_, step); }
+  bool operator != (const hb_range_iter_t& o) const
   { return v != o.v; }
 
   private:
@@ -644,24 +653,91 @@ struct hb_counter_iter_t :
 };
 struct
 {
-  template <typename T = unsigned, typename S = unsigned> hb_counter_iter_t<T, S>
-  operator () (T start = 0u, S&& step = 1u) const
-  { return hb_counter_iter_t<T, S> (start, step >= 0 ? hb_int_max (T) : hb_int_min (T), step); }
-}
-HB_FUNCOBJ (hb_iota);
-struct
-{
-  template <typename T = unsigned> hb_counter_iter_t<T, unsigned>
+  template <typename T = unsigned> hb_range_iter_t<T, unsigned>
   operator () (T end = (unsigned) -1) const
-  { return hb_counter_iter_t<T, unsigned> (0, end, 1u); }
+  { return hb_range_iter_t<T, unsigned> (0, end, 1u); }
 
-  template <typename T, typename S = unsigned> hb_counter_iter_t<T, S>
-  operator () (T start, T end, S&& step = 1u) const
-  { return hb_counter_iter_t<T, S> (start, end, step); }
+  template <typename T, typename S = unsigned> hb_range_iter_t<T, S>
+  operator () (T start, T end, S step = 1u) const
+  { return hb_range_iter_t<T, S> (start, end, step); }
 }
 HB_FUNCOBJ (hb_range);
 
-/* hb_enumerate */
+template <typename T, typename S>
+struct hb_iota_iter_t :
+  hb_iter_with_fallback_t<hb_iota_iter_t<T, S>, T>
+{
+  hb_iota_iter_t (T start, S step) : v (start), step (step) {}
+
+  private:
+
+  template <typename S2 = S>
+  auto
+  inc (hb_type_identity<S2> s, hb_priority<1>)
+    -> hb_void_t<decltype (hb_invoke (hb_forward<S2> (s), hb_declval<T&> ()))>
+  { v = hb_invoke (hb_forward<S2> (s), v); }
+
+  void
+  inc (S s, hb_priority<0>)
+  { v += s; }
+
+  public:
+
+  typedef T __item_t__;
+  static constexpr bool is_random_access_iterator = true;
+  static constexpr bool is_sorted_iterator = true;
+  __item_t__ __item__ () const { return hb_ridentity (v); }
+  bool __more__ () const { return true; }
+  unsigned __len__ () const { return UINT_MAX; }
+  void __next__ () { inc (step, hb_prioritize); }
+  void __prev__ () { v -= step; }
+  hb_iota_iter_t __end__ () const { return *this; }
+  bool operator != (const hb_iota_iter_t& o) const { return true; }
+
+  private:
+  T v;
+  S step;
+};
+struct
+{
+  template <typename T = unsigned, typename S = unsigned> hb_iota_iter_t<T, S>
+  operator () (T start = 0u, S step = 1u) const
+  { return hb_iota_iter_t<T, S> (start, step); }
+}
+HB_FUNCOBJ (hb_iota);
+
+template <typename T>
+struct hb_repeat_iter_t :
+  hb_iter_t<hb_repeat_iter_t<T>, T>
+{
+  hb_repeat_iter_t (T value) : v (value) {}
+
+  typedef T __item_t__;
+  static constexpr bool is_random_access_iterator = true;
+  static constexpr bool is_sorted_iterator = true;
+  __item_t__ __item__ () const { return v; }
+  __item_t__ __item_at__ (unsigned j) const { return v; }
+  bool __more__ () const { return true; }
+  unsigned __len__ () const { return UINT_MAX; }
+  void __next__ () {}
+  void __forward__ (unsigned) {}
+  void __prev__ () {}
+  void __rewind__ (unsigned) {}
+  hb_repeat_iter_t __end__ () const { return *this; }
+  bool operator != (const hb_repeat_iter_t& o) const { return true; }
+
+  private:
+  T v;
+};
+struct
+{
+  template <typename T> hb_repeat_iter_t<T>
+  operator () (T value) const
+  { return hb_repeat_iter_t<T> (value); }
+}
+HB_FUNCOBJ (hb_repeat);
+
+/* hb_enumerate()/hb_take() */
 
 struct
 {
@@ -673,6 +749,37 @@ struct
 }
 HB_FUNCOBJ (hb_enumerate);
 
+struct
+{ HB_PARTIALIZE(2);
+  template <typename Iterable,
+	    hb_requires (hb_is_iterable (Iterable))>
+  auto operator () (Iterable&& it, unsigned count) const HB_AUTO_RETURN
+  ( hb_zip (hb_range (count), it) | hb_map (hb_second) )
+
+  /* Specialization arrays. */
+
+  template <typename Type> inline hb_array_t<Type>
+  operator () (hb_array_t<Type> array, unsigned count) const
+  { return array.sub_array (0, count); }
+
+  template <typename Type> inline hb_sorted_array_t<Type>
+  operator () (hb_sorted_array_t<Type> array, unsigned count) const
+  { return array.sub_array (0, count); }
+}
+HB_FUNCOBJ (hb_take);
+
+struct
+{ HB_PARTIALIZE(2);
+  template <typename Iter,
+	    hb_requires (hb_is_iterator (Iter))>
+  auto operator () (Iter it, unsigned count) const HB_AUTO_RETURN
+  (
+    + hb_iota (it, hb_add (count))
+    | hb_map (hb_take (count))
+    | hb_take ((hb_len (it) + count - 1) / count)
+  )
+}
+HB_FUNCOBJ (hb_chop);
 
 /* hb_sink() */
 

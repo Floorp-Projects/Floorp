@@ -54,13 +54,9 @@ struct hb_blob_t
   HB_INTERNAL bool try_make_writable_inplace ();
   HB_INTERNAL bool try_make_writable_inplace_unix ();
 
+  hb_bytes_t as_bytes () const { return hb_bytes_t (data, length); }
   template <typename Type>
-  const Type* as () const
-  {
-    return length < hb_null_size (Type) ? &Null(Type) : reinterpret_cast<const Type *> (data);
-  }
-  hb_bytes_t as_bytes () const
-  { return hb_bytes_t (data, length); }
+  const Type* as () const { return as_bytes ().as<Type> (); }
 
   public:
   hb_object_header_t header;

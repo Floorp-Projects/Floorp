@@ -62,7 +62,7 @@ struct hb_lockable_set_t
 	old.fini ();
       }
       else {
-        item = nullptr;
+	item = nullptr;
 	l.unlock ();
       }
     } else {

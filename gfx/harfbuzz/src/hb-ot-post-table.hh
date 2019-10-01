@@ -262,7 +262,7 @@ struct post
 					 * 0x00020000 for version 2.0
 					 * 0x00025000 for version 2.5 (deprecated)
 					 * 0x00030000 for version 3.0 */
-  Fixed		italicAngle;		/* Italic angle in counter-clockwise degrees
+  HBFixed		italicAngle;		/* Italic angle in counter-clockwise degrees
 					 * from the vertical. Zero for upright text,
 					 * negative for text that leans to the right
 					 * (forward). */

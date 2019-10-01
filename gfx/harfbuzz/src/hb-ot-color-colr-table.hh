@@ -48,7 +48,7 @@ struct LayerRecord
   }
 
   protected:
-  GlyphID	glyphId;	/* Glyph ID of layer glyph */
+  HBGlyphID	glyphId;	/* Glyph ID of layer glyph */
   Index		colorIdx;	/* Index value to use with a
 				 * selected color palette.
 				 * An index value of 0xFFFF
@@ -75,7 +75,7 @@ struct BaseGlyphRecord
   }
 
   public:
-  GlyphID	glyphId;	/* Glyph ID of reference glyph */
+  HBGlyphID	glyphId;	/* Glyph ID of reference glyph */
   HBUINT16	firstLayerIdx;	/* Index (from beginning of
 				 * the Layer Records) to the
 				 * layer record. There will be

@@ -357,7 +357,7 @@ struct Charset0 {
     return HBUINT16::static_size * (num_glyphs - 1);
   }
 
-  HBUINT16  sids[VAR];
+  HBUINT16  sids[HB_VAR_ARRAY];
 
   DEFINE_SIZE_ARRAY(0, sids);
 };
@@ -439,7 +439,7 @@ struct Charset1_2 {
     return size;
   }
 
-  Charset_Range<TYPE>   ranges[VAR];
+  Charset_Range<TYPE>   ranges[HB_VAR_ARRAY];
 
   DEFINE_SIZE_ARRAY (0, ranges);
 };

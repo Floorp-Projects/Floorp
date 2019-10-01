@@ -43,6 +43,7 @@ UNIFIED_SOURCES += [
     'hb-common.cc',
     'hb-face.cc',
     'hb-font.cc',
+    'hb-number.cc',
     'hb-ot-cff1-table.cc',
     'hb-ot-cff2-table.cc',
     'hb-ot-color.cc',

@@ -237,8 +237,8 @@ struct CFFIndex
   public:
   COUNT		count;		/* Number of object data. Note there are (count+1) offsets */
   HBUINT8	offSize;	/* The byte size of each offset in the offsets array. */
-  HBUINT8	offsets[VAR];	/* The array of (count + 1) offsets into objects array (1-base). */
-  /* HBUINT8 data[VAR];	Object data */
+  HBUINT8	offsets[HB_VAR_ARRAY];	/* The array of (count + 1) offsets into objects array (1-base). */
+  /* HBUINT8 data[HB_VAR_ARRAY];	Object data */
   public:
   DEFINE_SIZE_ARRAY (COUNT::static_size + HBUINT8::static_size, offsets);
 };
@@ -514,9 +514,9 @@ struct FDSelect0 {
   unsigned int get_size (unsigned int num_glyphs) const
   { return HBUINT8::static_size * num_glyphs; }
 
-  HBUINT8     fds[VAR];
+  HBUINT8     fds[HB_VAR_ARRAY];
 
-  DEFINE_SIZE_MIN (1);
+  DEFINE_SIZE_MIN (0);
 };
 
 template <typename GID_TYPE, typename FD_TYPE>

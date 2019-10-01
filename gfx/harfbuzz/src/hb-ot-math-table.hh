@@ -423,7 +423,7 @@ struct MathGlyphVariantRecord
   }
 
   protected:
-  GlyphID variantGlyph;       /* Glyph ID for the variant. */
+  HBGlyphID variantGlyph;       /* Glyph ID for the variant. */
   HBUINT16  advanceMeasurement; /* Advance width/height, in design units, of the
 				 * variant, in the direction of requested
 				 * glyph extension. */
@@ -471,7 +471,7 @@ struct MathGlyphPartRecord
   }
 
   protected:
-  GlyphID   glyph;		  /* Glyph ID for the part. */
+  HBGlyphID   glyph;		  /* Glyph ID for the part. */
   HBUINT16    startConnectorLength; /* Advance width/ height of the straight bar
 				   * connector material, in design units, is at
 				   * the beginning of the glyph, in the

@@ -378,7 +378,7 @@ insert_dotted_circles_khmer (const hb_ot_shape_plan_t *plan HB_UNUSED,
       while (buffer->idx < buffer->len && buffer->successful &&
 	     last_syllable == buffer->cur().syllable() &&
 	     buffer->cur().khmer_category() == OT_Repha)
-        buffer->next_glyph ();
+	buffer->next_glyph ();
 
       buffer->output_info (ginfo);
     }
