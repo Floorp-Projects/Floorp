@@ -142,7 +142,11 @@ bool CanIonInlineScript(JSScript* script);
 
 MOZ_MUST_USE bool IonCompileScriptForBaseline(JSContext* cx,
                                               BaselineFrame* frame,
+                                              uint32_t frameSize,
                                               jsbytecode* pc);
+
+MOZ_MUST_USE bool IonCompileScriptForBaselineAtEntry(JSContext* cx,
+                                                     BaselineFrame* frame);
 
 MethodStatus CanEnterIon(JSContext* cx, RunState& state);
 
