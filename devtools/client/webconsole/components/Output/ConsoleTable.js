@@ -10,7 +10,10 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const actions = require("devtools/client/webconsole/actions/messages");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
-const { MODE } = require("devtools/client/shared/components/reps/reps");
+loader.lazyGetter(this, "MODE", function() {
+  return require("devtools/client/shared/components/reps/reps").MODE;
+});
+
 const GripMessageBody = createFactory(
   require("devtools/client/webconsole/components/Output/GripMessageBody")
 );
