@@ -128,46 +128,42 @@ class SpliceableJSONWriter;
 // values are used internally only and so can be changed without consequence.
 // Any changes to this list should also be applied to the feature list in
 // toolkit/components/extensions/schemas/geckoProfiler.json.
-#  define BASE_PROFILER_FOR_EACH_FEATURE(MACRO)                                \
-    MACRO(0, "java", Java, "Profile Java code, Android only")                  \
-                                                                               \
-    MACRO(1, "js", JS,                                                         \
-          "Get the JS engine to expose the JS stack to the profiler")          \
-                                                                               \
-    /* The DevTools profiler doesn't want the native addresses. */             \
-    MACRO(2, "leaf", Leaf, "Include the C++ leaf node if not stackwalking")    \
-                                                                               \
-    MACRO(3, "mainthreadio", MainThreadIO,                                     \
-          "Add main thread I/O to the profile")                                \
-                                                                               \
-    MACRO(4, "privacy", Privacy,                                               \
-          "Do not include user-identifiable information")                      \
-                                                                               \
-    MACRO(5, "responsiveness", Responsiveness,                                 \
-          "Collect thread responsiveness information")                         \
-                                                                               \
-    MACRO(6, "screenshots", Screenshots,                                       \
-          "Take a snapshot of the window on every composition")                \
-                                                                               \
-    MACRO(7, "seqstyle", SequentialStyle,                                      \
-          "Disable parallel traversal in styling")                             \
-                                                                               \
-    MACRO(8, "stackwalk", StackWalk,                                           \
-          "Walk the C++ stack, not available on all platforms")                \
-                                                                               \
-    MACRO(9, "tasktracer", TaskTracer,                                         \
-          "Start profiling with feature TaskTracer")                           \
-                                                                               \
-    MACRO(10, "threads", Threads, "Profile the registered secondary threads")  \
-                                                                               \
-    MACRO(11, "trackopts", TrackOptimizations,                                 \
-          "Have the JavaScript engine track JIT optimizations")                \
-                                                                               \
-    MACRO(12, "jstracer", JSTracer, "Enable tracing of the JavaScript engine") \
-                                                                               \
-    MACRO(14, "nostacksampling", NoStackSampling,                              \
-          "Disable all stack sampling: Cancels \"js\", \"leaf\", "             \
-          "\"stackwalk\" and labels")
+#  define BASE_PROFILER_FOR_EACH_FEATURE(MACRO)                               \
+    MACRO(0, "java", Java, "Profile Java code, Android only")                 \
+                                                                              \
+    MACRO(1, "js", JS,                                                        \
+          "Get the JS engine to expose the JS stack to the profiler")         \
+                                                                              \
+    /* The DevTools profiler doesn't want the native addresses. */            \
+    MACRO(2, "leaf", Leaf, "Include the C++ leaf node if not stackwalking")   \
+                                                                              \
+    MACRO(3, "mainthreadio", MainThreadIO,                                    \
+          "Add main thread I/O to the profile")                               \
+                                                                              \
+    MACRO(4, "privacy", Privacy,                                              \
+          "Do not include user-identifiable information")                     \
+                                                                              \
+    MACRO(5, "responsiveness", Responsiveness,                                \
+          "Collect thread responsiveness information")                        \
+                                                                              \
+    MACRO(6, "screenshots", Screenshots,                                      \
+          "Take a snapshot of the window on every composition")               \
+                                                                              \
+    MACRO(7, "seqstyle", SequentialStyle,                                     \
+          "Disable parallel traversal in styling")                            \
+                                                                              \
+    MACRO(8, "stackwalk", StackWalk,                                          \
+          "Walk the C++ stack, not available on all platforms")               \
+                                                                              \
+    MACRO(9, "tasktracer", TaskTracer,                                        \
+          "Start profiling with feature TaskTracer")                          \
+                                                                              \
+    MACRO(10, "threads", Threads, "Profile the registered secondary threads") \
+                                                                              \
+    MACRO(11, "trackopts", TrackOptimizations,                                \
+          "Have the JavaScript engine track JIT optimizations")               \
+                                                                              \
+    MACRO(12, "jstracer", JSTracer, "Enable tracing of the JavaScript engine")
 
 struct ProfilerFeature {
 #  define DECLARE(n_, str_, Name_, desc_)                     \
