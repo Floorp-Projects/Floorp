@@ -28,26 +28,25 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class AppShareAdapterTest {
+
     private val appOptions = mutableListOf(
         AppShareOption("App 0", mockk(), "package 0", "activity 0"),
         AppShareOption("App 1", mockk(), "package 1", "activity 1")
     )
-    private val appOptionsEmpty = mutableListOf<AppShareOption>()
+    private val appOptionsEmpty = emptyList<AppShareOption>()
     private val interactor: ShareInteractor = mockk(relaxed = true)
 
     @Test
-    fun `updateData should replace all previous data with argument and call notifyDataSetChanged()`() {
-        // Used AppShareAdapter as a spy to ease testing of notifyDataSetChanged()
+    fun `updateData should call submitList()`() {
+        // Used AppShareAdapter as a spy to ease testing of submitList()
         // and appOptionsEmpty to be able to record them being called
-        val adapter = spyk(AppShareAdapter(mockk(), appOptionsEmpty))
-        every { adapter.notifyDataSetChanged() } just Runs
+        val adapter = spyk(AppShareAdapter(mockk()).apply { submitList(appOptionsEmpty) })
+        every { adapter.submitList(any()) } just Runs
 
-        adapter.updateData(appOptions)
+        adapter.submitList(appOptions)
 
         verifyOrder {
-            appOptionsEmpty.clear()
-            appOptionsEmpty.addAll(appOptions)
-            adapter.notifyDataSetChanged()
+            adapter.submitList(appOptions)
         }
     }
 
@@ -60,7 +59,7 @@ class AppShareAdapterTest {
 
     @Test
     fun `getItemCount after updateData() call should return the the passed in list's size`() {
-        val adapter = AppShareAdapter(mockk(), appOptions)
+        val adapter = AppShareAdapter(mockk()).apply { submitList(appOptions) }
 
         assertThat(adapter.itemCount).isEqualTo(2)
     }
@@ -89,7 +88,7 @@ class AppShareAdapterTest {
 
     @Test
     fun `the adapter binds the right item to a ViewHolder`() {
-        val adapter = AppShareAdapter(interactor, appOptions)
+        val adapter = AppShareAdapter(interactor).apply { submitList(appOptions) }
         val parentView: ViewGroup = mockk(relaxed = true)
         val itemView: ViewGroup = mockk(relaxed = true)
         every { parentView.context } returns testContext

@@ -7,14 +7,14 @@ package org.mozilla.fenix.share.listadapters
 import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import org.mozilla.fenix.share.ShareToAppsInteractor
 import org.mozilla.fenix.share.viewholders.AppViewHolder
 
 class AppShareAdapter(
-    private val interactor: ShareToAppsInteractor,
-    private val applications: MutableList<AppShareOption> = mutableListOf()
-) : RecyclerView.Adapter<AppViewHolder>() {
+    private val interactor: ShareToAppsInteractor
+) : ListAdapter<AppShareOption, AppViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -23,17 +23,18 @@ class AppShareAdapter(
         return AppViewHolder(view, interactor)
     }
 
-    override fun getItemCount(): Int = applications.size
-
     override fun onBindViewHolder(holder: AppViewHolder, position: Int) {
-        holder.bind(applications[position])
+        holder.bind(getItem(position))
     }
+}
 
-    fun updateData(applications: List<AppShareOption>) {
-        this.applications.clear()
-        this.applications.addAll(applications)
-        notifyDataSetChanged()
-    }
+private object DiffCallback : DiffUtil.ItemCallback<AppShareOption>() {
+
+    override fun areItemsTheSame(oldItem: AppShareOption, newItem: AppShareOption) =
+        oldItem.packageName == newItem.packageName
+
+    override fun areContentsTheSame(oldItem: AppShareOption, newItem: AppShareOption) =
+        oldItem == newItem
 }
 
 data class AppShareOption(

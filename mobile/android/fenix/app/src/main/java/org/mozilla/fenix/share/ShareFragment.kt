@@ -157,7 +157,7 @@ class ShareFragment : AppCompatDialogFragment() {
             val devicesShareOptions = devicesListDeferred.await()
             shareToAccountDevicesView.setSharetargets(devicesShareOptions)
             val appsToShareTo = appsListDeferred.await()
-            shareToAppsView.setSharetargets(appsToShareTo)
+            shareToAppsView.setShareTargets(appsToShareTo)
         }
     }
 
