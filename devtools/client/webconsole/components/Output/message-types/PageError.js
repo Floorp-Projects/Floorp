@@ -10,13 +10,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const Message = createFactory(
   require("devtools/client/webconsole/components/Output/Message")
 );
-
-loader.lazyGetter(this, "REPS", function() {
-  return require("devtools/client/shared/components/reps/reps").REPS;
-});
-loader.lazyGetter(this, "MODE", function() {
-  return require("devtools/client/shared/components/reps/reps").MODE;
-});
+const { MODE, REPS } = require("devtools/client/shared/components/reps/reps");
 
 PageError.displayName = "PageError";
 
