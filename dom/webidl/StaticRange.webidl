@@ -10,8 +10,16 @@
  * liability, trademark and document use rules apply.
  */
 
-// Currently, StaticRange cannot be created from web apps.
 [Exposed=Window]
 interface StaticRange : AbstractRange {
+  [Throws]
+  constructor(StaticRangeInit init);
   // And no additional functions/properties.
+};
+
+dictionary StaticRangeInit {
+  required Node startContainer;
+  required unsigned long startOffset;
+  required Node endContainer;
+  required unsigned long endOffset;
 };

@@ -71,10 +71,8 @@ already_AddRefed<StaticRange> StaticRange::Create(
     const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
     const RangeBoundaryBase<EPT, ERT>& aEndBoundary, ErrorResult& aRv) {
   RefPtr<StaticRange> staticRange = new StaticRange(aStartBoundary.Container());
-  aRv = staticRange->SetStartAndEnd(aStartBoundary, aEndBoundary);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
+  staticRange->DoSetRange(aStartBoundary, aEndBoundary, nullptr);
+
   return staticRange.forget();
 }
 
@@ -85,6 +83,21 @@ void StaticRange::DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
   mStart = aStartBoundary;
   mEnd = aEndBoundary;
   mIsPositioned = mStart.IsSet();
+}
+
+/* static */
+already_AddRefed<StaticRange> StaticRange::Constructor(
+    const GlobalObject& global, const StaticRangeInit& init, ErrorResult& aRv) {
+  if (init.mStartContainer->NodeType() == nsINode::DOCUMENT_TYPE_NODE ||
+      init.mStartContainer->NodeType() == nsINode::ATTRIBUTE_NODE ||
+      init.mEndContainer->NodeType() == nsINode::DOCUMENT_TYPE_NODE ||
+      init.mEndContainer->NodeType() == nsINode::ATTRIBUTE_NODE) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
+    return nullptr;
+  }
+
+  return Create(init.mStartContainer, init.mStartOffset, init.mEndContainer,
+                init.mEndOffset, aRv);
 }
 
 JSObject* StaticRange::WrapObject(JSContext* aCx,

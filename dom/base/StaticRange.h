@@ -10,6 +10,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/dom/AbstractRange.h"
+#include "mozilla/dom/StaticRangeBinding.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {
@@ -20,6 +21,10 @@ class StaticRange final : public AbstractRange {
   explicit StaticRange(nsINode* aNode) : AbstractRange(aNode) {}
   StaticRange() = delete;
   explicit StaticRange(const StaticRange& aOther) = delete;
+
+  static already_AddRefed<StaticRange> Constructor(const GlobalObject& global,
+                                                   const StaticRangeInit& init,
+                                                   ErrorResult& aRv);
 
   /**
    * Create() may return `StaticRange` instance which is initialized with
