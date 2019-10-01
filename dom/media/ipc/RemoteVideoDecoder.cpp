@@ -128,7 +128,7 @@ RefPtr<mozilla::layers::Image> RemoteVideoDecoderChild::DeserializeImage(
       delete[] reinterpret_cast<uint8_t*>(memOrShmem.get_uintptr_t());
       break;
     case MemoryOrShmem::TShmem:
-      DeallocShmem(memOrShmem.get_Shmem());
+      // Memory buffer will be recycled by the parent automatically.
       break;
     default:
       MOZ_ASSERT(false, "Unknown MemoryOrShmem type");
@@ -355,20 +355,14 @@ MediaResult RemoteVideoDecoderParent::ProcessDecodedData(
           static_cast<PlanarYCbCrImage*>(video->mImage.get());
 
       SurfaceDescriptorBuffer sdBuffer;
-      Shmem buffer;
-      if (!AllocShmem(image->GetDataSize(), Shmem::SharedMemory::TYPE_BASIC,
-                      &buffer)) {
+      ShmemBuffer buffer = AllocateBuffer(image->GetDataSize());
+      if (!buffer.Valid()) {
         return MediaResult(NS_ERROR_OUT_OF_MEMORY,
                            "AllocShmem failed in "
                            "RemoteVideoDecoderParent::ProcessDecodedData");
       }
-      if (image->GetDataSize() > buffer.Size<uint8_t>()) {
-        return MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                           "AllocShmem returned less than requested in "
-                           "RemoteVideoDecoderParent::ProcessDecodedData");
-      }
 
-      sdBuffer.data() = std::move(buffer);
+      sdBuffer.data() = std::move(buffer.Get());
       image->BuildSurfaceDescriptorBuffer(sdBuffer);
 
       sd = sdBuffer;

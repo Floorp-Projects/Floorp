@@ -35,18 +35,13 @@ class RemoteAudioDecoderParent final : public RemoteDecoderParent {
  protected:
   MediaResult ProcessDecodedData(const MediaDataDecoder::DecodedData& aData,
                                  DecodedOutputIPDL& aDecodedData) override;
-  void CleanupOnActorDestroy() override;
-
  private:
-  void ReleaseUsedShmems();
   // Can only be accessed from the manager thread
   // Note: we can't keep a reference to the original AudioInfo here
   // because unlike in typical MediaDataDecoder situations, we're being
   // passed a deserialized AudioInfo from RecvPRemoteDecoderConstructor
   // which is destroyed when RecvPRemoteDecoderConstructor returns.
   const AudioInfo mAudioInfo;
-  ShmemPool mDecodedFramePool;
-  AutoTArray<ShmemBuffer, 4> mUsedShmems;
 };
 
 }  // namespace mozilla

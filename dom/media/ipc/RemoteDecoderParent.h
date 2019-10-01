@@ -48,13 +48,19 @@ class RemoteDecoderParent : public PRemoteDecoderParent {
   virtual MediaResult ProcessDecodedData(
       const MediaDataDecoder::DecodedData& aDatam,
       DecodedOutputIPDL& aDecodedData) = 0;
-  virtual void CleanupOnActorDestroy() {}
+  ShmemBuffer AllocateBuffer(size_t aLength);
 
-  RefPtr<RemoteDecoderManagerParent> mParent;
-  RefPtr<RemoteDecoderParent> mIPDLSelfRef;
-  RefPtr<TaskQueue> mManagerTaskQueue;
-  RefPtr<TaskQueue> mDecodeTaskQueue;
+  const RefPtr<RemoteDecoderManagerParent> mParent;
+  const RefPtr<TaskQueue> mDecodeTaskQueue;
   RefPtr<MediaDataDecoder> mDecoder;
+
+ private:
+  void ReleaseBuffer(ShmemBuffer&& aBuffer);
+  void ReleaseUsedShmems();
+  RefPtr<RemoteDecoderParent> mIPDLSelfRef;
+  const RefPtr<TaskQueue> mManagerTaskQueue;
+  ShmemPool mDecodedFramePool;
+  AutoTArray<ShmemBuffer, 4> mUsedShmems;
 };
 
 }  // namespace mozilla
