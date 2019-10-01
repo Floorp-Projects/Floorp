@@ -68,7 +68,7 @@ use crate::internal_types::{CacheTextureId, DebugOutput, FastHashMap, FastHashSe
 use crate::internal_types::{TextureCacheAllocationKind, TextureCacheUpdate, TextureUpdateList, TextureUpdateSource};
 use crate::internal_types::{RenderTargetInfo, SavedTargetIndex, Swizzle};
 use malloc_size_of::MallocSizeOfOps;
-use crate::picture::{RecordedDirtyRegion, TILE_SIZE_WIDTH, TILE_SIZE_HEIGHT};
+use crate::picture::{RecordedDirtyRegion, TILE_SIZE_LARGE, TILE_SIZE_SMALL};
 use crate::prim_store::DeferredResolve;
 use crate::profiler::{BackendProfileCounters, FrameProfileCounters, TimeProfileCounter,
                GpuProfileTag, RendererProfileCounters, RendererProfileTimers};
@@ -2150,7 +2150,8 @@ impl Renderer {
             }
 
             let picture_tile_sizes = &[
-                DeviceIntSize::new(TILE_SIZE_WIDTH, TILE_SIZE_HEIGHT),
+                TILE_SIZE_LARGE,
+                TILE_SIZE_SMALL,
             ];
 
             let texture_cache = TextureCache::new(
