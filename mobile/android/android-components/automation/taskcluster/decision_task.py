@@ -153,18 +153,11 @@ def create_module_tasks(builder, module):
 
 def pr(builder, artifacts_info):
     modules = [_get_gradle_module_name(artifact_info) for artifact_info in artifacts_info]
-    build_tasks = [
+    tasks = [
         task_def
         for module in modules
         for task_def in create_module_tasks(builder, module)
     ]
-    other_tasks = [
-        craft_function()
-        for craft_function in
-        (builder.craft_detekt_task, builder.craft_ktlint_task, builder.craft_compare_locales_task)
-    ]
-
-    tasks = build_tasks + other_tasks
 
     for task in tasks:
         task['attributes']['code-review'] = True

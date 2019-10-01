@@ -68,27 +68,6 @@ class TaskBuilder(object):
             dependencies=dependencies,
         )
 
-    def craft_detekt_task(self):
-        return self._craft_build_ish_task(
-            name='Android Components - detekt',
-            description='Running detekt over all modules',
-            command='./gradlew --no-daemon clean detekt'
-        )
-
-    def craft_ktlint_task(self):
-        return self._craft_build_ish_task(
-            name='Android Components - ktlint',
-            description='Running ktlint over all modules',
-            command='./gradlew --no-daemon clean ktlint'
-        )
-
-    def craft_compare_locales_task(self):
-        return self._craft_build_ish_task(
-            name='Android Components - compare-locales',
-            description='Validate strings.xml with compare-locales',
-            command='pip install "compare-locales>=5.0.2,<6.0" && compare-locales --validate l10n.toml .'
-        )
-
     def craft_sign_task(self, build_task_label, barrier_task_label, artifacts, component_name, is_staging):
         payload = {
             "upstreamArtifacts": [{
