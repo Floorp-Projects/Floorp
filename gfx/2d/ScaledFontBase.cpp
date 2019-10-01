@@ -68,10 +68,16 @@ SkTypeface* ScaledFontBase::GetSkTypeface() {
 #endif
 
 #ifdef USE_CAIRO_SCALED_FONT
-bool ScaledFontBase::PopulateCairoScaledFont() {
-  cairo_font_face_t* cairoFontFace = GetCairoFontFace();
-  if (!cairoFontFace) {
-    return false;
+cairo_scaled_font_t* ScaledFontBase::GetCairoScaledFont() {
+  if (mScaledFont) {
+    return mScaledFont;
+  }
+
+  cairo_font_options_t* fontOptions = cairo_font_options_create();
+  cairo_font_face_t* fontFace = CreateCairoFontFace(fontOptions);
+  if (!fontFace) {
+    cairo_font_options_destroy(fontOptions);
+    return nullptr;
   }
 
   cairo_matrix_t sizeMatrix;
@@ -80,15 +86,20 @@ bool ScaledFontBase::PopulateCairoScaledFont() {
   cairo_matrix_init_scale(&sizeMatrix, mSize, mSize);
   cairo_matrix_init_identity(&identityMatrix);
 
-  cairo_font_options_t* fontOptions = cairo_font_options_create();
-
-  mScaledFont = cairo_scaled_font_create(cairoFontFace, &sizeMatrix,
-                                         &identityMatrix, fontOptions);
+  cairo_scaled_font_t* scaledFont = cairo_scaled_font_create(
+      fontFace, &sizeMatrix, &identityMatrix, fontOptions);
 
   cairo_font_options_destroy(fontOptions);
-  cairo_font_face_destroy(cairoFontFace);
+  cairo_font_face_destroy(fontFace);
 
-  return (cairo_scaled_font_status(mScaledFont) == CAIRO_STATUS_SUCCESS);
+  if (cairo_scaled_font_status(scaledFont) != CAIRO_STATUS_SUCCESS) {
+    cairo_scaled_font_destroy(scaledFont);
+    return nullptr;
+  }
+
+  PrepareCairoScaledFont(scaledFont);
+  mScaledFont = scaledFont;
+  return mScaledFont;
 }
 #endif
 
@@ -236,19 +247,6 @@ void ScaledFontBase::CopyGlyphsToBuilder(const GlyphBuffer& aBuffer,
 #endif
   MOZ_ASSERT(false, "Path not being copied");
 }
-
-#ifdef USE_CAIRO_SCALED_FONT
-void ScaledFontBase::SetCairoScaledFont(cairo_scaled_font_t* font) {
-  MOZ_ASSERT(!mScaledFont);
-
-  if (font == mScaledFont) return;
-
-  if (mScaledFont) cairo_scaled_font_destroy(mScaledFont);
-
-  mScaledFont = font;
-  cairo_scaled_font_reference(mScaledFont);
-}
-#endif
 
 }  // namespace gfx
 }  // namespace mozilla

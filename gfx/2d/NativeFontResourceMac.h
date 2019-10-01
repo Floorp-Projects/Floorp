@@ -19,8 +19,7 @@ class NativeFontResourceMac final : public NativeFontResource {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(NativeFontResourceMac, override)
 
   static already_AddRefed<NativeFontResourceMac> Create(uint8_t* aFontData,
-                                                        uint32_t aDataLength,
-                                                        bool aNeedsCairo);
+                                                        uint32_t aDataLength);
 
   already_AddRefed<UnscaledFont> CreateUnscaledFont(
       uint32_t aIndex, const uint8_t* aInstanceData,
@@ -29,11 +28,9 @@ class NativeFontResourceMac final : public NativeFontResource {
   ~NativeFontResourceMac() { CFRelease(mFontRef); }
 
  private:
-  NativeFontResourceMac(CGFontRef aFontRef, bool aNeedsCairo)
-      : mFontRef(aFontRef), mNeedsCairo(aNeedsCairo) {}
+  explicit NativeFontResourceMac(CGFontRef aFontRef) : mFontRef(aFontRef) {}
 
   CGFontRef mFontRef;
-  bool mNeedsCairo;
 };
 
 }  // namespace gfx

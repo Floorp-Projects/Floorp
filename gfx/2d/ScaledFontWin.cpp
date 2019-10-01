@@ -97,12 +97,8 @@ already_AddRefed<ScaledFont> UnscaledFontGDI::CreateScaledFont(
     gfxWarning() << "GDI unscaled font instance data is truncated.";
     return nullptr;
   }
-
-  NativeFont nativeFont;
-  nativeFont.mType = NativeFontType::GDI_LOGFONT;
-  nativeFont.mFont = (void*)aInstanceData;
-
-  return Factory::CreateScaledFontForNativeFont(nativeFont, this, aGlyphSize);
+  return MakeAndAddRef<ScaledFontWin>(
+      reinterpret_cast<const LOGFONT*>(aInstanceData), this, aGlyphSize);
 }
 
 AntialiasMode ScaledFontWin::GetDefaultAAMode() {
@@ -116,7 +112,8 @@ SkTypeface* ScaledFontWin::CreateSkTypeface() {
 #endif
 
 #ifdef USE_CAIRO_SCALED_FONT
-cairo_font_face_t* ScaledFontWin::GetCairoFontFace() {
+cairo_font_face_t* ScaledFontWin::CreateCairoFontFace(
+    cairo_font_options_t* aFontOptions) {
   if (mLogFont.lfFaceName[0] == 0) {
     return nullptr;
   }

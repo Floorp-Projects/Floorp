@@ -302,10 +302,6 @@ enum class NativeSurfaceType : int8_t {
   OPENGL_TEXTURE
 };
 
-enum class NativeFontType : int8_t {
-  GDI_LOGFONT,
-};
-
 enum class FontStyle : int8_t { NORMAL, ITALIC, BOLD, BOLD_ITALIC };
 
 enum class FontHinting : int8_t { NONE, LIGHT, NORMAL, FULL };

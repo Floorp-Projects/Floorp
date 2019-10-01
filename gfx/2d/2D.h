@@ -111,11 +111,6 @@ struct NativeSurface {
   void* mSurface;
 };
 
-struct NativeFont {
-  NativeFontType mType;
-  void* mFont;
-};
-
 /**
  * This structure is used to send draw options that are universal to all drawing
  * operations.
@@ -920,7 +915,6 @@ class ScaledFont : public SupportsThreadSafeWeakPtr<ScaledFont> {
   const RefPtr<UnscaledFont>& GetUnscaledFont() const { return mUnscaledFont; }
 
   virtual cairo_scaled_font_t* GetCairoScaledFont() { return nullptr; }
-  virtual void SetCairoScaledFont(cairo_scaled_font_t* font) {}
 
   Float GetSyntheticObliqueAngle() const { return mSyntheticObliqueAngle; }
   void SetSyntheticObliqueAngle(Float aAngle) {
@@ -1697,15 +1691,13 @@ class GFX2D_API Factory {
 #ifdef MOZ_WIDGET_GTK
   static already_AddRefed<ScaledFont> CreateScaledFontForFontconfigFont(
       const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
-      cairo_scaled_font_t* aScaledFont, RefPtr<SharedFTFace> aFace,
-      FcPattern* aPattern);
+      RefPtr<SharedFTFace> aFace, FcPattern* aPattern);
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
   static already_AddRefed<ScaledFont> CreateScaledFontForFreeTypeFont(
       const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
-      cairo_scaled_font_t* aScaledFont, RefPtr<SharedFTFace> aFace,
-      bool aApplySyntheticBold = false);
+      RefPtr<SharedFTFace> aFace, bool aApplySyntheticBold = false);
 #endif
 
   /**
@@ -1713,16 +1705,14 @@ class GFX2D_API Factory {
    *
    * @param aData Pointer to the data
    * @param aSize Size of the TrueType data
-   * @param aBackendType Type of the reference DrawTarget the font should be
-   *                     created for.
    * @param aFontType Type of NativeFontResource that should be created.
    * @param aFontContext Optional native font context to be used to create the
    *                              NativeFontResource.
    * @return a NativeFontResource of nullptr if failed.
    */
   static already_AddRefed<NativeFontResource> CreateNativeFontResource(
-      uint8_t* aData, uint32_t aSize, BackendType aBackendType,
-      FontType aFontType, void* aFontContext = nullptr);
+      uint8_t* aData, uint32_t aSize, FontType aFontType,
+      void* aFontContext = nullptr);
 
   /**
    * This creates an unscaled font of the given type based on font descriptor
@@ -1731,17 +1721,6 @@ class GFX2D_API Factory {
   static already_AddRefed<UnscaledFont> CreateUnscaledFontFromFontDescriptor(
       FontType aType, const uint8_t* aData, uint32_t aDataLength,
       uint32_t aIndex);
-
-  /**
-   * Creates a ScaledFont from the supplied NativeFont.
-   *
-   * If aScaledFont is supplied, this creates a scaled font with an associated
-   * cairo_scaled_font_t. The NativeFont and cairo_scaled_font_t* parameters
-   * must correspond to the same font.
-   */
-  static already_AddRefed<ScaledFont> CreateScaledFontForNativeFont(
-      const NativeFont& aNativeFont, const RefPtr<UnscaledFont>& aUnscaledFont,
-      Float aSize, cairo_scaled_font_t* aScaledFont = nullptr);
 
   /**
    * This creates a simple data source surface for a certain size. It allocates
@@ -1893,6 +1872,10 @@ class GFX2D_API Factory {
       const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
       bool aUseEmbeddedBitmap, int aRenderingMode,
       IDWriteRenderingParams* aParams, Float aGamma, Float aContrast);
+
+  static already_AddRefed<ScaledFont> CreateScaledFontForGDIFont(
+      const void* aLogFont, const RefPtr<UnscaledFont>& aUnscaledFont,
+      Float aSize);
 
   static void SetSystemTextQuality(uint8_t aQuality);
 

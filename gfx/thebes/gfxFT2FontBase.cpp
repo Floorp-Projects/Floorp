@@ -28,21 +28,17 @@ using namespace mozilla::gfx;
 
 gfxFT2FontBase::gfxFT2FontBase(
     const RefPtr<UnscaledFontFreeType>& aUnscaledFont,
-    cairo_scaled_font_t* aScaledFont,
     RefPtr<mozilla::gfx::SharedFTFace>&& aFTFace, gfxFontEntry* aFontEntry,
     const gfxFontStyle* aFontStyle, int aLoadFlags, bool aEmbolden)
-    : gfxFont(aUnscaledFont, aFontEntry, aFontStyle, kAntialiasDefault,
-              aScaledFont),
+    : gfxFont(aUnscaledFont, aFontEntry, aFontStyle, kAntialiasDefault),
       mFTFace(std::move(aFTFace)),
       mSpaceGlyph(0),
       mFTLoadFlags(aLoadFlags | FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH |
                    FT_LOAD_COLOR),
       mEmbolden(aEmbolden),
-      mFTSize(1.0) {
-  cairo_scaled_font_reference(mScaledFont);
-}
+      mFTSize(1.0) {}
 
-gfxFT2FontBase::~gfxFT2FontBase() { cairo_scaled_font_destroy(mScaledFont); }
+gfxFT2FontBase::~gfxFT2FontBase() {}
 
 FT_Face gfxFT2FontBase::LockFTFace() {
   if (!mFTFace->Lock(this)) {
@@ -56,61 +52,35 @@ FT_Face gfxFT2FontBase::LockFTFace() {
 
 void gfxFT2FontBase::UnlockFTFace() { mFTFace->Unlock(); }
 
-uint32_t gfxFT2FontBase::GetGlyph(uint32_t aCharCode) {
-  // FcFreeTypeCharIndex needs to lock the FT_Face and can end up searching
-  // through all the postscript glyph names in the font.  Therefore use a
-  // lightweight cache, which is stored on the cairo_font_face_t.
-
-  cairo_font_face_t* face =
-      cairo_scaled_font_get_font_face(GetCairoScaledFont());
-
-  if (cairo_font_face_status(face) != CAIRO_STATUS_SUCCESS) return 0;
-
+gfxFT2FontEntryBase::CmapCacheSlot* gfxFT2FontEntryBase::GetCmapCacheSlot(
+    uint32_t aCharCode) {
   // This cache algorithm and size is based on what is done in
   // cairo_scaled_font_text_to_glyphs and pango_fc_font_real_get_glyph.  I
   // think the concept is that adjacent characters probably come mostly from
   // one Unicode block.  This assumption is probably not so valid with
   // scripts with large character sets as used for East Asian languages.
-
-  struct CmapCacheSlot {
-    uint32_t mCharCode;
-    uint32_t mGlyphIndex;
-  };
-  const uint32_t kNumSlots = 256;
-  static cairo_user_data_key_t sCmapCacheKey;
-
-  CmapCacheSlot* slots = static_cast<CmapCacheSlot*>(
-      cairo_font_face_get_user_data(face, &sCmapCacheKey));
-
-  if (!slots) {
-    // cairo's caches can keep some cairo_font_faces alive past our last
-    // destroy, so the destroy function (free) for the cache must be
-    // callable from cairo without any assumptions about what other
-    // modules have not been shutdown.
-    slots =
-        static_cast<CmapCacheSlot*>(calloc(kNumSlots, sizeof(CmapCacheSlot)));
-    if (!slots) return 0;
-
-    cairo_status_t status =
-        cairo_font_face_set_user_data(face, &sCmapCacheKey, slots, free);
-    if (status != CAIRO_STATUS_SUCCESS) {  // OOM
-      free(slots);
-      return 0;
-    }
+  if (!mCmapCache) {
+    mCmapCache = mozilla::MakeUnique<CmapCacheSlot[]>(kNumCmapCacheSlots);
 
     // Invalidate slot 0 by setting its char code to something that would
     // never end up in slot 0.  All other slots are already invalid
     // because they have mCharCode = 0 and a glyph for char code 0 will
     // always be in the slot 0.
-    slots[0].mCharCode = 1;
+    mCmapCache[0].mCharCode = 1;
   }
+  return &mCmapCache[aCharCode % kNumCmapCacheSlots];
+}
 
-  CmapCacheSlot* slot = &slots[aCharCode % kNumSlots];
+uint32_t gfxFT2FontBase::GetGlyph(uint32_t aCharCode) {
+  // FcFreeTypeCharIndex needs to lock the FT_Face and can end up searching
+  // through all the postscript glyph names in the font.  Therefore use a
+  // lightweight cache, which is stored on the font entry.
+  auto* slot = static_cast<gfxFT2FontEntryBase*>(mFontEntry.get())
+                   ->GetCmapCacheSlot(aCharCode);
   if (slot->mCharCode != aCharCode) {
     slot->mCharCode = aCharCode;
     slot->mGlyphIndex = gfxFT2LockedFace(this).GetGlyph(aCharCode);
   }
-
   return slot->mGlyphIndex;
 }
 

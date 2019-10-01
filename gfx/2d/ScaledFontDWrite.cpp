@@ -650,11 +650,6 @@ already_AddRefed<ScaledFont> UnscaledFontDWrite::CreateScaledFont(
       instanceData.mRenderingMode, nullptr, instanceData.mGamma,
       instanceData.mContrast);
 
-  if (mNeedsCairo && !scaledFont->PopulateCairoScaledFont()) {
-    gfxWarning() << "Unable to create cairo scaled font DWrite font.";
-    return nullptr;
-  }
-
   return scaledFont.forget();
 }
 
@@ -690,12 +685,19 @@ AntialiasMode ScaledFontDWrite::GetDefaultAAMode() {
 }
 
 #ifdef USE_CAIRO_SCALED_FONT
-cairo_font_face_t* ScaledFontDWrite::GetCairoFontFace() {
+cairo_font_face_t* ScaledFontDWrite::CreateCairoFontFace(
+    cairo_font_options_t* aFontOptions) {
   if (!mFontFace) {
     return nullptr;
   }
 
   return cairo_dwrite_font_face_create_for_dwrite_fontface(nullptr, mFontFace);
+}
+
+void ScaledFontDWrite::PrepareCairoScaledFont(cairo_scaled_font_t* aFont) {
+  if (mRenderingMode == DWRITE_RENDERING_MODE_GDI_CLASSIC) {
+    cairo_dwrite_scaled_font_set_force_GDI_classic(aFont, true);
+  }
 }
 #endif
 

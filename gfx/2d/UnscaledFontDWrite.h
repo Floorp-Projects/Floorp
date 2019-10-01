@@ -20,10 +20,8 @@ class UnscaledFontDWrite final : public UnscaledFont {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(UnscaledFontDWrite, override)
   UnscaledFontDWrite(const RefPtr<IDWriteFontFace>& aFontFace,
-                     const RefPtr<IDWriteFont>& aFont, bool aNeedsCairo = false)
-      : mFontFace(aFontFace),
-        mFont(aFont),
-        mNeedsCairo(aNeedsCairo) {}
+                     const RefPtr<IDWriteFont>& aFont)
+      : mFontFace(aFontFace), mFont(aFont) {}
 
   FontType GetType() const override { return FontType::DWRITE; }
 
@@ -50,7 +48,6 @@ class UnscaledFontDWrite final : public UnscaledFont {
   RefPtr<IDWriteFontFace> mFontFace;
   RefPtr<IDWriteFontFace> mFontFaceBold;
   RefPtr<IDWriteFont> mFont;
-  bool mNeedsCairo;
 };
 
 }  // namespace gfx
