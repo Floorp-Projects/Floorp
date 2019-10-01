@@ -148,10 +148,6 @@ export default class LoginItem extends HTMLElement {
       timeUsed: this._login.timeLastUsed || "",
     });
 
-    document.l10n.setAttributes(this._favicon, "login-favicon", {
-      title: this._login.title,
-    });
-
     if (this._login.faviconDataURI) {
       this._faviconWrapper.classList.add("hide-default-favicon");
       this._favicon.src = this._login.faviconDataURI;
