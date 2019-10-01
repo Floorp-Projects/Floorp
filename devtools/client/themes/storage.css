@@ -92,6 +92,10 @@
   min-width: 250px;
 }
 
+#storage-sidebar .devtools-toolbar {
+  padding-inline: 0;
+}
+
 /* Toolbar */
 
 /*
@@ -104,6 +108,8 @@
 
 #storage-searchbox {
   -moz-box-flex: 1;
+  margin-inline-start: -3px;
+  margin-inline-end: 1px;
 }
 
 #storage-toolbar .add-button::before {
