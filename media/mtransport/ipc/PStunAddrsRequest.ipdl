@@ -5,6 +5,7 @@
 include protocol PNecko;
 
 using NrIceStunAddrArray from "mozilla/net/PStunAddrsParams.h";
+using MaybeNsCString from "mozilla/net/PStunAddrsParams.h";
 
 include "mozilla/net/NrIceStunAddrMessageUtils.h";
 
@@ -25,7 +26,7 @@ parent:
   async __delete__();
 
 child:
-  async OnMDNSQueryComplete(nsCString hostname, nsCString address);
+  async OnMDNSQueryComplete(nsCString hostname, MaybeNsCString address);
   async OnStunAddrsAvailable(NrIceStunAddrArray iceStunAddrs);
 };
 

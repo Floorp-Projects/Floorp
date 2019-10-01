@@ -25,7 +25,12 @@ namespace net {
 static void mdns_service_resolved(void* cb, const char* hostname,
                                   const char* addr) {
   StunAddrsRequestParent* self = static_cast<StunAddrsRequestParent*>(cb);
-  self->OnQueryComplete(nsCString(hostname), nsCString(addr));
+  self->OnQueryComplete(nsCString(hostname), Some(nsCString(addr)));
+}
+
+void mdns_service_timedout(void* cb, const char* hostname) {
+  StunAddrsRequestParent* self = static_cast<StunAddrsRequestParent*>(cb);
+  self->OnQueryComplete(nsCString(hostname), Nothing());
 }
 
 StunAddrsRequestParent::StunAddrsRequestParent() : mIPCClosed(false) {
@@ -108,7 +113,7 @@ mozilla::ipc::IPCResult StunAddrsRequestParent::Recv__delete__() {
 }
 
 void StunAddrsRequestParent::OnQueryComplete(const nsCString& hostname,
-                                             const nsCString& address) {
+                                             const Maybe<nsCString>& address) {
   RUN_ON_THREAD(mMainThread,
                 WrapRunnable(RefPtr<StunAddrsRequestParent>(this),
                              &StunAddrsRequestParent::OnQueryComplete_m,
@@ -191,8 +196,8 @@ void StunAddrsRequestParent::SendStunAddrs_m(const NrIceStunAddrArray& addrs) {
   Unused << SendOnStunAddrsAvailable(addrs);
 }
 
-void StunAddrsRequestParent::OnQueryComplete_m(const nsCString& hostname,
-                                               const nsCString& address) {
+void StunAddrsRequestParent::OnQueryComplete_m(
+    const nsCString& hostname, const Maybe<nsCString>& address) {
   ASSERT_ON_THREAD(mMainThread);
 
   if (mIPCClosed) {
@@ -227,7 +232,7 @@ void StunAddrsRequestParent::MDNSServiceWrapper::QueryHostname(
   StartIfRequired();
   if (mMDNSService) {
     mdns_service_query_hostname(mMDNSService, data, mdns_service_resolved,
-                                hostname);
+                                mdns_service_timedout, hostname);
   }
 }
 

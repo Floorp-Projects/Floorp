@@ -146,7 +146,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
     explicit StunAddrsHandler(PeerConnectionMedia* pcm) : pcm_(pcm) {}
 
     void OnMDNSQueryComplete(const nsCString& hostname,
-                             const nsCString& address) override;
+                             const Maybe<nsCString>& address) override;
 
     void OnStunAddrsAvailable(
         const mozilla::net::NrIceStunAddrArray& addrs) override;
