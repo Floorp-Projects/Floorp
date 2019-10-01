@@ -367,6 +367,9 @@ hb_blob_t *
 hb_face_reference_table (const hb_face_t *face,
 			 hb_tag_t tag)
 {
+  if (unlikely (tag == HB_TAG_NONE))
+    return hb_blob_get_empty ();
+
   return face->reference_table (tag);
 }
 

@@ -120,7 +120,7 @@ struct avar
     for (unsigned int i = 0; i < count; i++)
     {
       if (unlikely (!map->sanitize (c)))
-        return_trace (false);
+	return_trace (false);
       map = &StructAfter<SegmentMaps> (*map);
     }
 

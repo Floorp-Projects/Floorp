@@ -164,13 +164,13 @@ hb_shape_plan_key_t::equal (const hb_shape_plan_key_t *other)
 
 /**
  * hb_shape_plan_create: (Xconstructor)
- * @face: 
- * @props: 
+ * @face:
+ * @props:
  * @user_features: (array length=num_user_features):
- * @num_user_features: 
+ * @num_user_features:
  * @shaper_list: (array zero-terminated=1):
  *
- * 
+ *
  *
  * Return value: (transfer full):
  *
@@ -248,7 +248,7 @@ bail:
 /**
  * hb_shape_plan_get_empty:
  *
- * 
+ *
  *
  * Return value: (transfer full):
  *
@@ -264,7 +264,7 @@ hb_shape_plan_get_empty ()
  * hb_shape_plan_reference: (skip)
  * @shape_plan: a shape plan.
  *
- * 
+ *
  *
  * Return value: (transfer full):
  *
@@ -280,7 +280,7 @@ hb_shape_plan_reference (hb_shape_plan_t *shape_plan)
  * hb_shape_plan_destroy: (skip)
  * @shape_plan: a shape plan.
  *
- * 
+ *
  *
  * Since: 0.9.7
  **/
@@ -299,14 +299,14 @@ hb_shape_plan_destroy (hb_shape_plan_t *shape_plan)
 /**
  * hb_shape_plan_set_user_data: (skip)
  * @shape_plan: a shape plan.
- * @key: 
- * @data: 
- * @destroy: 
- * @replace: 
+ * @key:
+ * @data:
+ * @destroy:
+ * @replace:
  *
- * 
  *
- * Return value: 
+ *
+ * Return value:
  *
  * Since: 0.9.7
  **/
@@ -323,9 +323,9 @@ hb_shape_plan_set_user_data (hb_shape_plan_t    *shape_plan,
 /**
  * hb_shape_plan_get_user_data: (skip)
  * @shape_plan: a shape plan.
- * @key: 
+ * @key:
  *
- * 
+ *
  *
  * Return value: (transfer none):
  *
@@ -342,7 +342,7 @@ hb_shape_plan_get_user_data (hb_shape_plan_t    *shape_plan,
  * hb_shape_plan_get_shaper:
  * @shape_plan: a shape plan.
  *
- * 
+ *
  *
  * Return value: (transfer none):
  *
@@ -361,11 +361,11 @@ hb_shape_plan_get_shaper (hb_shape_plan_t *shape_plan)
  * @font: a font.
  * @buffer: a buffer.
  * @features: (array length=num_features):
- * @num_features: 
+ * @num_features:
  *
- * 
  *
- * Return value: 
+ *
+ * Return value:
  *
  * Since: 0.9.7
  **/
@@ -420,13 +420,13 @@ hb_shape_plan_execute (hb_shape_plan_t    *shape_plan,
 
 /**
  * hb_shape_plan_create_cached:
- * @face: 
- * @props: 
+ * @face:
+ * @props:
  * @user_features: (array length=num_user_features):
- * @num_user_features: 
+ * @num_user_features:
  * @shaper_list: (array zero-terminated=1):
  *
- * 
+ *
  *
  * Return value: (transfer full):
  *
@@ -481,8 +481,8 @@ retry:
     for (hb_face_t::plan_node_t *node = cached_plan_nodes; node; node = node->next)
       if (node->shape_plan->key.equal (&key))
       {
-        DEBUG_MSG_FUNC (SHAPE_PLAN, node->shape_plan, "fulfilled from cache");
-        return hb_shape_plan_reference (node->shape_plan);
+	DEBUG_MSG_FUNC (SHAPE_PLAN, node->shape_plan, "fulfilled from cache");
+	return hb_shape_plan_reference (node->shape_plan);
       }
   }
 

@@ -235,10 +235,10 @@ struct hb_utf16_xe_t
       hb_codepoint_t h = text[-1];
       if (likely (hb_in_range<hb_codepoint_t> (h, 0xD800u, 0xDBFFu)))
       {
-        /* High-surrogate in h */
-        *unicode = (h << 10) + c - ((0xD800u << 10) - 0x10000u + 0xDC00u);
-        text--;
-        return text;
+	/* High-surrogate in h */
+	*unicode = (h << 10) + c - ((0xD800u << 10) - 0x10000u + 0xDC00u);
+	text--;
+	return text;
       }
     }
 

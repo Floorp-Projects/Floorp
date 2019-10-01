@@ -82,11 +82,11 @@ struct hb_kern_machine_t
 
 
       if (likely (!kern))
-        goto skip;
+	goto skip;
 
       if (horizontal)
       {
-        if (scale)
+	if (scale)
 	  kern = font->em_scale_x (kern);
 	if (crossStream)
 	{
@@ -104,7 +104,7 @@ struct hb_kern_machine_t
       }
       else
       {
-        if (scale)
+	if (scale)
 	  kern = font->em_scale_y (kern);
 	if (crossStream)
 	{

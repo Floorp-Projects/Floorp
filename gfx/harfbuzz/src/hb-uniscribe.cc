@@ -385,8 +385,8 @@ _hb_rename_font (hb_blob_t *blob, wchar_t *new_name)
   static const uint16_t name_IDs[] = { 1, 2, 3, 4, 6 };
 
   unsigned int name_table_length = OT::name::min_size +
-                                   ARRAY_LENGTH (name_IDs) * OT::NameRecord::static_size +
-                                   name_str_len * 2; /* for name data in UTF16BE form */
+				   ARRAY_LENGTH (name_IDs) * OT::NameRecord::static_size +
+				   name_str_len * 2; /* for name data in UTF16BE form */
   unsigned int padded_name_table_length = ((name_table_length + 3) & ~3);
   unsigned int name_table_offset = (length + 3) & ~3;
 
@@ -666,7 +666,7 @@ _hb_uniscribe_shape (hb_shape_plan_t    *shape_plan,
 
       if (event->index != last_index)
       {
-        /* Save a snapshot of active features and the range. */
+	/* Save a snapshot of active features and the range. */
 	range_record_t *range = range_records.push ();
 
 	unsigned int offset = feature_records.length;
@@ -701,7 +701,7 @@ _hb_uniscribe_shape (hb_shape_plan_t    *shape_plan,
       }
       else
       {
-        active_feature_t *feature = active_features.find (&event->feature);
+	active_feature_t *feature = active_features.find (&event->feature);
 	if (feature)
 	  active_features.remove (feature - active_features.arrayZ);
       }

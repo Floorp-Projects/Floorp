@@ -290,7 +290,7 @@ struct hb_sorted_vector_t : hb_vector_t<Type>
   typedef hb_sorted_array_t<      Type>       iter_t;
   const_iter_t  iter () const { return as_array (); }
   const_iter_t citer () const { return as_array (); }
-        iter_t  iter ()       { return as_array (); }
+	iter_t  iter ()       { return as_array (); }
   operator       iter_t ()       { return iter (); }
   operator const_iter_t () const { return iter (); }
 

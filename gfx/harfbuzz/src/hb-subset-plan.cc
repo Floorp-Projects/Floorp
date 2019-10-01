@@ -39,7 +39,7 @@ _add_gid_and_children (const OT::glyf::accelerator_t &glyf,
 		       hb_codepoint_t gid,
 		       hb_set_t *gids_to_retain)
 {
-  if (hb_set_has (gids_to_retain, gid))
+  if (gids_to_retain->has (gid))
     // Already visited this gid, ignore.
     return;
 
@@ -58,8 +58,8 @@ _add_gid_and_children (const OT::glyf::accelerator_t &glyf,
 #ifndef HB_NO_SUBSET_CFF
 static inline void
 _add_cff_seac_components (const OT::cff1::accelerator_t &cff,
-           hb_codepoint_t gid,
-           hb_set_t *gids_to_retain)
+	   hb_codepoint_t gid,
+	   hb_set_t *gids_to_retain)
 {
   hb_codepoint_t base_gid, accent_gid;
   if (cff.get_seac_components (gid, &base_gid, &accent_gid))
@@ -88,6 +88,14 @@ _gsub_closure (hb_face_t *face, hb_set_t *gids_to_retain)
 #endif
 
 static inline void
+_cmap_closure (hb_face_t           *face,
+	       const hb_set_t      *unicodes,
+	       hb_set_t            *glyphset)
+{
+  face->table.cmap->table->closure_glyphs (unicodes, glyphset);
+}
+
+static inline void
 _remove_invalid_gids (hb_set_t *glyphs,
 		      unsigned int num_glyphs)
 {
@@ -102,7 +110,7 @@ _remove_invalid_gids (hb_set_t *glyphs,
 static void
 _populate_gids_to_retain (hb_subset_plan_t* plan,
 			  const hb_set_t *unicodes,
-                          const hb_set_t *input_glyphs_to_retain,
+			  const hb_set_t *input_glyphs_to_retain,
 			  bool close_over_gsub)
 {
   OT::cmap::accelerator_t cmap;
@@ -128,6 +136,8 @@ _populate_gids_to_retain (hb_subset_plan_t* plan,
     plan->codepoint_to_glyph->set (cp, gid);
     plan->_glyphset_gsub->add (gid);
   }
+
+  _cmap_closure (plan->source, plan->unicodes, plan->_glyphset_gsub);
 
 #ifndef HB_NO_SUBSET_LAYOUT
   if (close_over_gsub)
@@ -157,11 +167,11 @@ _populate_gids_to_retain (hb_subset_plan_t* plan,
 
 static void
 _create_old_gid_to_new_gid_map (const hb_face_t *face,
-                                bool             retain_gids,
+				bool             retain_gids,
 				const hb_set_t  *all_gids_to_retain,
-                                hb_map_t        *glyph_map, /* OUT */
-                                hb_map_t        *reverse_glyph_map, /* OUT */
-                                unsigned int    *num_glyphs /* OUT */)
+				hb_map_t        *glyph_map, /* OUT */
+				hb_map_t        *reverse_glyph_map, /* OUT */
+				unsigned int    *num_glyphs /* OUT */)
 {
   if (!retain_gids)
   {
@@ -191,8 +201,8 @@ _create_old_gid_to_new_gid_map (const hb_face_t *face,
 }
 
 static void
-_nameid_closure (hb_face_t           *face,
-                 hb_set_t            *nameids)
+_nameid_closure (hb_face_t *face,
+		 hb_set_t  *nameids)
 {
 #ifndef HB_NO_STAT
   face->table.STAT->collect_name_ids (nameids);
@@ -213,8 +223,8 @@ _nameid_closure (hb_face_t           *face,
  * Since: 1.7.5
  **/
 hb_subset_plan_t *
-hb_subset_plan_create (hb_face_t           *face,
-		       hb_subset_input_t   *input)
+hb_subset_plan_create (hb_face_t         *face,
+		       hb_subset_input_t *input)
 {
   hb_subset_plan_t *plan = hb_object_create<hb_subset_plan_t> ();
 
@@ -235,16 +245,16 @@ hb_subset_plan_create (hb_face_t           *face,
   plan->reverse_glyph_map = hb_map_create ();
 
   _populate_gids_to_retain (plan,
-                            input->unicodes,
-                            input->glyphs,
-                            !input->drop_tables->has (HB_OT_TAG_GSUB));
+			    input->unicodes,
+			    input->glyphs,
+			    !input->drop_tables->has (HB_OT_TAG_GSUB));
 
   _create_old_gid_to_new_gid_map (face,
-                                  input->retain_gids,
+				  input->retain_gids,
 				  plan->_glyphset,
 				  plan->glyph_map,
-                                  plan->reverse_glyph_map,
-                                  &plan->_num_output_glyphs);
+				  plan->reverse_glyph_map,
+				  &plan->_num_output_glyphs);
 
   return plan;
 }

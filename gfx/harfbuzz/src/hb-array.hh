@@ -50,7 +50,7 @@ struct hb_array_t : hb_iter_with_fallback_t<hb_array_t<Type>, Type&>
   template <typename U,
 	    hb_enable_if (hb_is_cr_convertible(U, Type))>
   hb_array_t (const hb_array_t<U> &o) :
-    hb_iter_with_fallback_t<hb_array_t<Type>, Type&> (),
+    hb_iter_with_fallback_t<hb_array_t, Type&> (),
     arrayZ (o.arrayZ), length (o.length), backwards_length (o.backwards_length) {}
   template <typename U,
 	    hb_enable_if (hb_is_cr_convertible(U, Type))>
@@ -106,7 +106,7 @@ struct hb_array_t : hb_iter_with_fallback_t<hb_array_t<Type>, Type&>
    */
 
   /* Note: our compare is NOT lexicographic; it also does NOT call Type::cmp. */
-  int cmp (const hb_array_t<Type> &a) const
+  int cmp (const hb_array_t &a) const
   {
     if (length != a.length)
       return (int) a.length - (int) length;
@@ -114,8 +114,8 @@ struct hb_array_t : hb_iter_with_fallback_t<hb_array_t<Type>, Type&>
   }
   HB_INTERNAL static int cmp (const void *pa, const void *pb)
   {
-    hb_array_t<Type> *a = (hb_array_t<Type> *) pa;
-    hb_array_t<Type> *b = (hb_array_t<Type> *) pb;
+    hb_array_t *a = (hb_array_t *) pa;
+    hb_array_t *b = (hb_array_t *) pb;
     return b->cmp (*a);
   }
 
@@ -141,13 +141,13 @@ struct hb_array_t : hb_iter_with_fallback_t<hb_array_t<Type>, Type&>
   hb_sorted_array_t<Type> qsort (int (*cmp_)(const void*, const void*))
   {
     if (likely (length))
-      hb_qsort (arrayZ, length, this->item_size, cmp_);
+      hb_qsort (arrayZ, length, this->get_item_size (), cmp_);
     return hb_sorted_array_t<Type> (*this);
   }
   hb_sorted_array_t<Type> qsort ()
   {
     if (likely (length))
-      hb_qsort (arrayZ, length, this->item_size, Type::cmp);
+      hb_qsort (arrayZ, length, this->get_item_size (), Type::cmp);
     return hb_sorted_array_t<Type> (*this);
   }
   void qsort (unsigned int start, unsigned int end)
@@ -155,16 +155,16 @@ struct hb_array_t : hb_iter_with_fallback_t<hb_array_t<Type>, Type&>
     end = hb_min (end, length);
     assert (start <= end);
     if (likely (start < end))
-      hb_qsort (arrayZ + start, end - start, this->item_size, Type::cmp);
+      hb_qsort (arrayZ + start, end - start, this->get_item_size (), Type::cmp);
   }
 
   /*
    * Other methods.
    */
 
-  unsigned int get_size () const { return length * this->item_size; }
+  unsigned int get_size () const { return length * this->get_item_size (); }
 
-  hb_array_t<Type> sub_array (unsigned int start_offset = 0, unsigned int *seg_count = nullptr /* IN/OUT */) const
+  hb_array_t sub_array (unsigned int start_offset = 0, unsigned int *seg_count = nullptr /* IN/OUT */) const
   {
     if (!start_offset && !seg_count)
       return *this;
@@ -176,10 +176,18 @@ struct hb_array_t : hb_iter_with_fallback_t<hb_array_t<Type>, Type&>
       count -= start_offset;
     if (seg_count)
       count = *seg_count = hb_min (count, *seg_count);
-    return hb_array_t<Type> (arrayZ + start_offset, count);
+    return hb_array_t (arrayZ + start_offset, count);
   }
-  hb_array_t<Type> sub_array (unsigned int start_offset, unsigned int seg_count) const
+  hb_array_t sub_array (unsigned int start_offset, unsigned int seg_count) const
   { return sub_array (start_offset, &seg_count); }
+
+  hb_array_t truncate (unsigned length) const { return sub_array (0, length); }
+
+  template <typename T,
+	    unsigned P = sizeof (Type),
+	    hb_enable_if (P == 1)>
+  const T *as () const
+  { return length < hb_null_size (T) ? &Null (T) : reinterpret_cast<const T *> (arrayZ); }
 
   /* Only call if you allocated the underlying array using malloc() or similar. */
   void free ()
@@ -228,7 +236,7 @@ struct hb_sorted_array_t :
 	hb_iter_t<hb_sorted_array_t<Type>, Type&>,
 	hb_array_t<Type>
 {
-  typedef hb_iter_t<hb_sorted_array_t<Type>, Type&> iter_base_t;
+  typedef hb_iter_t<hb_sorted_array_t, Type&> iter_base_t;
   HB_ITER_USING (iter_base_t);
   static constexpr bool is_random_access_iterator = true;
   static constexpr bool is_sorted_iterator = true;
@@ -241,7 +249,7 @@ struct hb_sorted_array_t :
   template <typename U,
 	    hb_enable_if (hb_is_cr_convertible(U, Type))>
   hb_sorted_array_t (const hb_array_t<U> &o) :
-    hb_iter_t<hb_sorted_array_t<Type>, Type&> (),
+    hb_iter_t<hb_sorted_array_t, Type&> (),
     hb_array_t<Type> (o) {}
   template <typename U,
 	    hb_enable_if (hb_is_cr_convertible(U, Type))>
@@ -252,10 +260,12 @@ struct hb_sorted_array_t :
   bool operator != (const hb_sorted_array_t& o) const
   { return this->arrayZ != o.arrayZ || this->length != o.length; }
 
-  hb_sorted_array_t<Type> sub_array (unsigned int start_offset, unsigned int *seg_count /* IN/OUT */) const
-  { return hb_sorted_array_t<Type> (((const hb_array_t<Type> *) (this))->sub_array (start_offset, seg_count)); }
-  hb_sorted_array_t<Type> sub_array (unsigned int start_offset, unsigned int seg_count) const
+  hb_sorted_array_t sub_array (unsigned int start_offset, unsigned int *seg_count /* IN/OUT */) const
+  { return hb_sorted_array_t (((const hb_array_t<Type> *) (this))->sub_array (start_offset, seg_count)); }
+  hb_sorted_array_t sub_array (unsigned int start_offset, unsigned int seg_count) const
   { return sub_array (start_offset, &seg_count); }
+
+  hb_sorted_array_t truncate (unsigned length) const { return sub_array (0, length); }
 
   template <typename T>
   Type *bsearch (const T &x, Type *not_found = nullptr)
@@ -281,9 +291,9 @@ struct hb_sorted_array_t :
       int mid = ((unsigned int) min + (unsigned int) max) / 2;
       int c = array[mid].cmp (x);
       if (c < 0)
-        max = mid - 1;
+	max = mid - 1;
       else if (c > 0)
-        min = mid + 1;
+	min = mid + 1;
       else
       {
 	if (i)
