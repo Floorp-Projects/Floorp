@@ -29,12 +29,9 @@ if CONFIG['JS_SHARED_LIBRARY']:
     # Ensure symbol versions of shared library on Linux do not conflict
     # with those in libxul.
     if CONFIG['OS_TARGET'] == 'Linux':
-        GENERATED_FILES += ['symverscript']
-        GENERATED_FILES['symverscript'].script = '/build/gen_symverscript.py'
-        GENERATED_FILES['symverscript'].inputs = ['symverscript.in']
-        GENERATED_FILES['symverscript'].flags = [
-            CONFIG['JS_LIBRARY_NAME'].replace('-', '_'),
-        ]
+        GeneratedFile('symverscript', script='/build/gen_symverscript.py', 
+                      inputs=['symverscript.in'], 
+                      flags=[CONFIG['JS_LIBRARY_NAME'].replace('-', '_')])
         SYMBOLS_FILE = '!symverscript'
 else:
     Library('js')
@@ -86,12 +83,11 @@ DIST_INSTALL = True
 
 # Run SpiderMonkey style checker after linking the static library. This avoids
 # running the script for no-op builds.
-GENERATED_FILES += ['spidermonkey_checks']
-run_checks = GENERATED_FILES['spidermonkey_checks']
-run_checks.script = '/config/run_spidermonkey_checks.py'
-run_checks.inputs += [
-    '!%sjs_static.%s' % (CONFIG['LIB_PREFIX'], CONFIG['LIB_SUFFIX']),
-    '/config/check_spidermonkey_style.py',
-    '/config/check_macroassembler_style.py',
-    '/config/check_js_opcode.py'
-]
+GeneratedFile(
+    'spidermonkey_checks', script='/config/run_spidermonkey_checks.py',
+    inputs=[
+        '!%sjs_static.%s' % (CONFIG['LIB_PREFIX'], CONFIG['LIB_SUFFIX']),
+        '/config/check_spidermonkey_style.py',
+        '/config/check_macroassembler_style.py',
+        '/config/check_js_opcode.py'
+        ])

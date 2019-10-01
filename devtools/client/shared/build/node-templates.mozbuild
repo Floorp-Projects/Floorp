@@ -32,10 +32,8 @@ def CompiledModules(*modules):
   # For the same reason as https://searchfox.org/mozilla-central/source/mobile/android/base/moz.build#180-184
   # we have to insert a first entry as recursivemake overrides the first entry and we end up with empty files
   # for the first file only.
-  outputs = tuple(("node.stub",) + modules)
-  GENERATED_FILES += [outputs]
-
-  bundle = GENERATED_FILES[outputs]
-  bundle.script = '/python/mozbuild/mozbuild/action/node.py:generate'
-  bundle.inputs = ['/devtools/client/shared/build/build.js',]
-  bundle.inputs.extend(modules)
+  GeneratedFile(
+      "node.stub", *modules,
+      script='/python/mozbuild/mozbuild/action/node.py',
+      entry_point='generate',
+      inputs=['/devtools/client/shared/build/build.js'] + [module for module in modules])
