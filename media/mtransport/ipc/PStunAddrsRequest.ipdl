@@ -19,11 +19,13 @@ parent:
   async GetStunAddrs();
 
   async RegisterMDNSHostname(nsCString hostname, nsCString address);
+  async QueryMDNSHostname(nsCString hostname);
   async UnregisterMDNSHostname(nsCString hostname);
 
   async __delete__();
 
 child:
+  async OnMDNSQueryComplete(nsCString hostname, nsCString address);
   async OnStunAddrsAvailable(NrIceStunAddrArray iceStunAddrs);
 };
 

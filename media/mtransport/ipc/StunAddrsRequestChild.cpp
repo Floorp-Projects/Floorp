@@ -24,6 +24,14 @@ StunAddrsRequestChild::StunAddrsRequestChild(
   AddIPDLReference();
 }
 
+mozilla::ipc::IPCResult StunAddrsRequestChild::RecvOnMDNSQueryComplete(
+    const nsCString& hostname, const nsCString& address) {
+  if (mListener) {
+    mListener->OnMDNSQueryComplete(hostname, address);
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult StunAddrsRequestChild::RecvOnStunAddrsAvailable(
     const NrIceStunAddrArray& addrs) {
   if (mListener) {

@@ -14,6 +14,8 @@ namespace net {
 
 class StunAddrsListener {
  public:
+  virtual void OnMDNSQueryComplete(const nsCString& hostname,
+                                   const nsCString& address) = 0;
   virtual void OnStunAddrsAvailable(const NrIceStunAddrArray& addrs) = 0;
 
   NS_IMETHOD_(MozExternalRefCountType) AddRef();
@@ -46,6 +48,9 @@ class StunAddrsRequestChild final : public PStunAddrsRequestChild {
 
  protected:
   virtual ~StunAddrsRequestChild() {}
+
+  virtual mozilla::ipc::IPCResult RecvOnMDNSQueryComplete(
+      const nsCString& aHostname, const nsCString& aAddress) override;
 
   virtual mozilla::ipc::IPCResult RecvOnStunAddrsAvailable(
       const NrIceStunAddrArray& addrs) override;

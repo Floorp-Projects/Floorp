@@ -40,6 +40,9 @@ static const char* pcmLogTag = "PeerConnectionMedia";
 #endif
 #define LOGTAG pcmLogTag
 
+void PeerConnectionMedia::StunAddrsHandler::OnMDNSQueryComplete(
+    const nsCString& hostname, const nsCString& address) {}
+
 void PeerConnectionMedia::StunAddrsHandler::OnStunAddrsAvailable(
     const mozilla::net::NrIceStunAddrArray& addrs) {
   CSFLogInfo(LOGTAG, "%s: receiving (%d) stun addrs", __FUNCTION__,
