@@ -10,7 +10,7 @@ job-defaults:
             default: 1800
     suite: raptor
     workdir: /home/cltbld
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects: ['try']
     tier: 2
     virtualization:
         by-test-platform:
