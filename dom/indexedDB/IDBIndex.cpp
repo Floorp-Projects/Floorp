@@ -34,7 +34,7 @@ already_AddRefed<IDBRequest> GenerateRequest(JSContext* aCx, IDBIndex* aIndex) {
   MOZ_ASSERT(aIndex);
   aIndex->AssertIsOnOwningThread();
 
-  IDBTransaction* const transaction = aIndex->ObjectStore()->Transaction();
+  IDBTransaction* transaction = aIndex->ObjectStore()->Transaction();
 
   RefPtr<IDBRequest> request =
       IDBRequest::Create(aCx, aIndex, transaction->Database(), transaction);
@@ -138,7 +138,7 @@ const nsString& IDBIndex::Name() const {
 void IDBIndex::SetName(const nsAString& aName, ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  IDBTransaction* const transaction = mObjectStore->Transaction();
+  IDBTransaction* transaction = mObjectStore->Transaction();
 
   if (transaction->GetMode() != IDBTransaction::VERSION_CHANGE ||
       mDeletedMetadata) {
@@ -333,11 +333,6 @@ already_AddRefed<IDBRequest> IDBIndex::GetInternal(bool aKeyOnly,
         IDB_LOG_STRINGIFY(this), IDB_LOG_STRINGIFY(keyRange));
   }
 
-  // TODO: This is necessary to preserve request ordering only. Proper
-  // sequencing of requests should be done in a more sophisticated manner that
-  // doesn't require invalidating cursor caches (Bug 1580499).
-  transaction->InvalidateCursorCaches();
-
   transaction->StartRequest(request, params);
 
   return request.forget();
@@ -377,11 +372,13 @@ already_AddRefed<IDBRequest> IDBIndex::GetAllInternal(
 
   const uint32_t limit = aLimit.WasPassed() ? aLimit.Value() : 0;
 
-  const auto& params =
-      aKeysOnly ? RequestParams{IndexGetAllKeysParams(objectStoreId, indexId,
-                                                      optionalKeyRange, limit)}
-                : RequestParams{IndexGetAllParams(objectStoreId, indexId,
-                                                  optionalKeyRange, limit)};
+  RequestParams params;
+  if (aKeysOnly) {
+    params =
+        IndexGetAllKeysParams(objectStoreId, indexId, optionalKeyRange, limit);
+  } else {
+    params = IndexGetAllParams(objectStoreId, indexId, optionalKeyRange, limit);
+  }
 
   RefPtr<IDBRequest> request = GenerateRequest(aCx, this);
   MOZ_ASSERT(request);
@@ -407,11 +404,6 @@ already_AddRefed<IDBRequest> IDBIndex::GetAllInternal(
         IDB_LOG_STRINGIFY(this), IDB_LOG_STRINGIFY(keyRange),
         IDB_LOG_STRINGIFY(aLimit));
   }
-
-  // TODO: This is necessary to preserve request ordering only. Proper
-  // sequencing of requests should be done in a more sophisticated manner that
-  // doesn't require invalidating cursor caches (Bug 1580499).
-  transaction->InvalidateCursorCaches();
 
   transaction->StartRequest(request, params);
 
@@ -440,8 +432,8 @@ already_AddRefed<IDBRequest> IDBIndex::OpenCursorInternal(
     return nullptr;
   }
 
-  const int64_t objectStoreId = mObjectStore->Id();
-  const int64_t indexId = Id();
+  int64_t objectStoreId = mObjectStore->Id();
+  int64_t indexId = Id();
 
   Maybe<SerializedKeyRange> optionalKeyRange;
 
@@ -452,8 +444,7 @@ already_AddRefed<IDBRequest> IDBIndex::OpenCursorInternal(
     optionalKeyRange.emplace(std::move(serializedKeyRange));
   }
 
-  const IDBCursor::Direction direction =
-      IDBCursor::ConvertDirection(aDirection);
+  IDBCursor::Direction direction = IDBCursor::ConvertDirection(aDirection);
 
   const CommonIndexOpenCursorParams commonIndexParams = {
       {objectStoreId, std::move(optionalKeyRange), direction}, indexId};
@@ -487,7 +478,7 @@ already_AddRefed<IDBRequest> IDBIndex::OpenCursorInternal(
         IDB_LOG_STRINGIFY(direction));
   }
 
-  BackgroundCursorChild* const actor =
+  BackgroundCursorChild* actor =
       new BackgroundCursorChild(request, this, direction);
 
   mObjectStore->Transaction()->OpenCursor(actor, params);
@@ -505,7 +496,7 @@ already_AddRefed<IDBRequest> IDBIndex::Count(JSContext* aCx,
     return nullptr;
   }
 
-  IDBTransaction* const transaction = mObjectStore->Transaction();
+  IDBTransaction* transaction = mObjectStore->Transaction();
   if (!transaction->IsOpen()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
