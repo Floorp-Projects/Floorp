@@ -167,16 +167,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   get dbg() {
     if (!this._dbg) {
       this._dbg = this._parent.dbg;
-      this._dbg.uncaughtExceptionHook = this.uncaughtExceptionHook;
-      this._dbg.onDebuggerStatement = this.onDebuggerStatement;
-      this._dbg.onNewScript = this.onNewScript;
-      this._dbg.onNewDebuggee = this._onNewDebuggee;
-      if (this._dbg.replaying) {
-        this._dbg.replayingOnForcedPause = this.replayingOnForcedPause.bind(
-          this
-        );
-        this._dbg.replayingOnPositionChange = this._makeReplayingOnPositionChange();
-      }
       // Keep the debugger disabled until a client attaches.
       this._dbg.enabled = this._state != "detached";
     }
@@ -342,6 +332,15 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
 
     this._state = "attached";
+    this.dbg.uncaughtExceptionHook = this.uncaughtExceptionHook;
+    this.dbg.onDebuggerStatement = this.onDebuggerStatement;
+    this.dbg.onNewScript = this.onNewScript;
+    this.dbg.onNewDebuggee = this._onNewDebuggee;
+    if (this.dbg.replaying) {
+      this.dbg.replayingOnForcedPause = this.replayingOnForcedPause.bind(this);
+      this.dbg.replayingOnPositionChange = this._makeReplayingOnPositionChange();
+    }
+
     this._debuggerSourcesSeen = new WeakSet();
 
     Object.assign(this._options, options || {});
