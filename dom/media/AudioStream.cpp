@@ -604,6 +604,7 @@ void AudioStream::StateCallback(cubeb_state aState) {
   } else if (aState == CUBEB_STATE_ERROR) {
     LOGE("StateCallback() state %d cubeb error", mState);
     mState = ERRORED;
+    mDataSource.Errored();
   }
 }
 
