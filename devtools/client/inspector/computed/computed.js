@@ -219,6 +219,22 @@ function CssComputedView(inspector, document) {
     );
   }
 
+  if (!this.inspector.is3PaneModeEnabled) {
+    // When the rules view is added in 3 pane mode, refresh the Computed view whenever
+    // the rules are changed.
+    this.inspector.on(
+      "ruleview-added",
+      () => {
+        this.ruleView.on("ruleview-changed", this.refreshPanel);
+      },
+      { once: true }
+    );
+  }
+
+  if (this.ruleView) {
+    this.ruleView.on("ruleview-changed", this.refreshPanel);
+  }
+
   this.searchClearButton.hidden = true;
 
   // No results text.
@@ -295,7 +311,14 @@ CssComputedView.prototype = {
     return this.includeBrowserStylesCheckbox.checked;
   },
 
-  _handlePrefChange: function(event, data) {
+  get ruleView() {
+    return (
+      this.inspector.hasPanel("ruleview") &&
+      this.inspector.getPanel("ruleview").view
+    );
+  },
+
+  _handlePrefChange: function() {
     if (this._computed) {
       this.refreshPanel();
     }
@@ -532,7 +555,8 @@ CssComputedView.prototype = {
   },
 
   /**
-   * Refresh the panel content.
+   * Refresh the panel content. This could be called by a "ruleview-changed" event, but
+   * we avoid the extra processing unless the panel is visible.
    */
   refreshPanel: function() {
     if (!this._viewedElement || !this.isPanelVisible()) {
@@ -858,6 +882,10 @@ CssComputedView.prototype = {
       "input",
       this._onIncludeBrowserStyles
     );
+
+    if (this.ruleView) {
+      this.ruleView.off("ruleview-changed", this.refreshPanel);
+    }
 
     // Nodes used in templating
     this.element = null;
