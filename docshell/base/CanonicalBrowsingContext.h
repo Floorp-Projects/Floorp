@@ -10,6 +10,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/MediaController.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/MozPromise.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "nsTHashtable.h"
@@ -21,6 +22,7 @@ namespace mozilla {
 namespace dom {
 
 class WindowGlobalParent;
+class BrowserParent;
 
 // CanonicalBrowsingContext is a BrowsingContext living in the parent
 // process, with whatever extra data that a BrowsingContext in the
@@ -76,6 +78,16 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // and propogate the action to other browsing contexts in content processes.
   void UpdateMediaAction(MediaControlActions aAction);
 
+  using RemotenessPromise = MozPromise<RefPtr<BrowserParent>, nsresult, false>;
+  RefPtr<RemotenessPromise> ChangeFrameRemoteness(const nsAString& aRemoteType,
+                                                  uint64_t aPendingSwitchId);
+
+  // Helper version for WebIDL - resolves to the PID where the load is being
+  // resumed.
+  already_AddRefed<Promise> ChangeFrameRemoteness(const nsAString& aRemoteType,
+                                                  uint64_t aPendingSwitchId,
+                                                  ErrorResult& aRv);
+
  protected:
   void Traverse(nsCycleCollectionTraversalCallback& cb);
   void Unlink();
@@ -89,6 +101,30 @@ class CanonicalBrowsingContext final : public BrowsingContext {
  private:
   friend class BrowsingContext;
 
+  class PendingRemotenessChange {
+   public:
+    NS_INLINE_DECL_REFCOUNTING(PendingRemotenessChange)
+
+    PendingRemotenessChange(CanonicalBrowsingContext* aTarget,
+                            RemotenessPromise::Private* aPromise,
+                            uint64_t aPendingSwitchId)
+        : mTarget(aTarget),
+          mPromise(aPromise),
+          mPendingSwitchId(aPendingSwitchId) {}
+
+    void Cancel(nsresult aRv);
+    void Complete(ContentParent* aContentParent);
+
+   private:
+    ~PendingRemotenessChange();
+    void Clear();
+
+    RefPtr<CanonicalBrowsingContext> mTarget;
+    RefPtr<RemotenessPromise::Private> mPromise;
+
+    uint64_t mPendingSwitchId;
+  };
+
   // XXX(farre): Store a ContentParent pointer here rather than mProcessId?
   // Indicates which process owns the docshell.
   uint64_t mProcessId;
@@ -100,6 +136,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // All live window globals within this browsing context.
   nsTHashtable<nsRefPtrHashKey<WindowGlobalParent>> mWindowGlobals;
   RefPtr<WindowGlobalParent> mCurrentWindowGlobal;
+
+  // The current remoteness change which is in a pending state.
+  RefPtr<PendingRemotenessChange> mPendingRemotenessChange;
 };
 
 }  // namespace dom
