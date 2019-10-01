@@ -141,6 +141,32 @@ for (let name of COMMANDS) {
   };
 }
 
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+function autoCloseIfNeeded(aCrash) {
+  if (!gArgs.autoclose) {
+    return;
+  }
+  setTimeout(function() {
+    if (aCrash) {
+      let browser = document.createElementNS(XUL_NS, "browser");
+      // FIXME(emilio): we could use gBrowser if we bothered get the process switches right.
+      //
+      // Doesn't seem worth for this particular case.
+      document.documentElement.appendChild(browser);
+      browser.loadURI("about:crashparent", {
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      });
+      return;
+    }
+    if (gArgs.profile && Services.profiler) {
+      dumpProfile();
+    } else {
+      Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit);
+    }
+  }, gArgs.delay * 1000);
+}
+
 function nsLDBBrowserContentListener() {
   this.init();
 }
@@ -174,19 +200,14 @@ nsLDBBrowserContentListener.prototype = {
       this.setButtonEnabled(this.mStopButton, false);
       this.mStatusText.value = gURLBar.value + " loaded";
       this.mLoading = false;
-      if (gArgs.autoclose && gBrowser.currentURI.spec != "about:blank") {
+
+      if (gBrowser.currentURI.spec != "about:blank") {
         // We check for about:blank just to avoid one or two STATE_STOP
         // notifications that occur before the loadURI() call completes.
         // This does mean that --autoclose doesn't work when the URL on
         // the command line is about:blank (or not specified), but that's
         // not a big deal.
-        setTimeout(function() {
-          if (gArgs.profile && Services.profiler) {
-            dumpProfile();
-          } else {
-            Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit);
-          }
-        }, gArgs.delay * 1000);
+        autoCloseIfNeeded(false);
       }
     }
   },
@@ -255,6 +276,23 @@ function parseArguments() {
   return args;
 }
 
+const TabCrashedObserver = {
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "ipc:content-shutdown":
+        subject.QueryInterface(Ci.nsIPropertyBag2);
+        if (!subject.get("abnormal")) {
+          return;
+        }
+        break;
+      case "oop-frameloader-crashed":
+        break;
+    }
+    autoCloseIfNeeded(true);
+  },
+};
+
+
 function OnLDBLoad() {
   gBrowser = document.getElementById("browser");
   gURLBar = document.getElementById("urlbar");
@@ -262,6 +300,9 @@ function OnLDBLoad() {
   gDebugger = new Debugger();
 
   checkPersistentMenus();
+
+  Services.obs.addObserver(TabCrashedObserver, "ipc:content-shutdown");
+  Services.obs.addObserver(TabCrashedObserver, "oop-frameloader-crashed");
 
   // Pretend slightly to be like a normal browser, so that SessionStore.jsm
   // doesn't get too confused.  The effect is that we'll never switch process
@@ -362,6 +403,8 @@ function OnLDBBeforeUnload(event) {
 
 function OnLDBUnload() {
   gDebugger.detachBrowser();
+  Services.obs.removeObserver(TabCrashedObserver, "ipc:content-shutdown");
+  Services.obs.removeObserver(TabCrashedObserver, "oop-frameloader-crashed");
 }
 
 function toggle(menuitem) {
