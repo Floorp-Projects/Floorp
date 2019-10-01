@@ -26,7 +26,8 @@ class StunAddrsRequestParent : public PStunAddrsRequestParent {
 
   mozilla::ipc::IPCResult Recv__delete__() override;
 
-  void OnQueryComplete(const nsCString& hostname, const nsCString& address);
+  void OnQueryComplete(const nsCString& hostname,
+                       const Maybe<nsCString>& address);
 
  protected:
   virtual ~StunAddrsRequestParent();
@@ -46,7 +47,8 @@ class StunAddrsRequestParent : public PStunAddrsRequestParent {
   void GetStunAddrs_s();
   void SendStunAddrs_m(const NrIceStunAddrArray& addrs);
 
-  void OnQueryComplete_m(const nsCString& hostname, const nsCString& address);
+  void OnQueryComplete_m(const nsCString& hostname,
+                         const Maybe<nsCString>& address);
 
   ThreadSafeAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD

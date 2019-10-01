@@ -41,15 +41,15 @@ static const char* pcmLogTag = "PeerConnectionMedia";
 #define LOGTAG pcmLogTag
 
 void PeerConnectionMedia::StunAddrsHandler::OnMDNSQueryComplete(
-    const nsCString& hostname, const nsCString& address) {
+    const nsCString& hostname, const Maybe<nsCString>& address) {
   ASSERT_ON_THREAD(pcm_->mMainThread);
   auto itor = pcm_->mQueriedMDNSHostnames.find(hostname.BeginReading());
   if (itor != pcm_->mQueriedMDNSHostnames.end()) {
-    if (!address.IsEmpty()) {
+    if (address) {
       for (auto& cand : itor->second) {
         // Replace obfuscated address with actual address
         std::string obfuscatedAddr = cand.mTokenizedCandidate[4];
-        cand.mTokenizedCandidate[4] = address.BeginReading();
+        cand.mTokenizedCandidate[4] = address->BeginReading();
         std::ostringstream o;
         for (size_t i = 0; i < cand.mTokenizedCandidate.size(); ++i) {
           o << cand.mTokenizedCandidate[i];
