@@ -260,14 +260,32 @@ FirefoxProfileMigrator.prototype._getResourcesInternal = function(
           let data = JSON.parse(raw);
           if (data && data.accountData && data.accountData.email) {
             let username = data.accountData.email;
-            // Write it to prefs.js and flush the file.
-            Services.prefs.setStringPref("services.sync.username", username);
-            savePrefs();
-            // and copy the file itself.
+            // copy the file itself.
             await OS.File.copy(
               oldPath,
               OS.Path.join(currentProfileDir.path, "signedInUser.json")
             );
+            // Now we need to know whether Sync is actually configured for this
+            // user. The only way we know is by looking at the prefs file from
+            // the old profile. We avoid trying to do a full parse of the prefs
+            // file and even avoid parsing the single string value we care
+            // about.
+            let prefsPath = OS.Path.join(sourceProfileDir.path, "prefs.js");
+            if (await OS.File.exists(oldPath)) {
+              let rawPrefs = await OS.File.read(prefsPath, {
+                encoding: "utf-8",
+              });
+              if (/^user_pref\("services\.sync\.username"/m.test(rawPrefs)) {
+                // sync's configured in the source profile - ensure it is in the
+                // new profile too.
+                // Write it to prefs.js and flush the file.
+                Services.prefs.setStringPref(
+                  "services.sync.username",
+                  username
+                );
+                savePrefs();
+              }
+            }
           }
         }
       } catch (ex) {
