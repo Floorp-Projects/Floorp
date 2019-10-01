@@ -56,7 +56,7 @@ async function hasRightLabelsContent(highlighterFront, inspector, testActor) {
   const windowDimensions = await testActor.getWindowDimensions();
   const windowHeight = Math.round(windowDimensions.height);
   const windowWidth = Math.round(windowDimensions.width);
-  const windowText = windowHeight + "px \u00D7 " + windowWidth + "px";
+  const windowText = windowWidth + "px \u00D7 " + windowHeight + "px";
 
   is(dimensionText, windowText, "Dimension text was created successfully");
 }
