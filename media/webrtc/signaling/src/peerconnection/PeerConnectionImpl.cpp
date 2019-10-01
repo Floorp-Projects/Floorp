@@ -637,6 +637,8 @@ class ConfigureCodec {
         mDtmfEnabled(false) {
     mSoftwareH264Enabled = PeerConnectionCtx::GetInstance()->gmpHasH264();
 
+    mHardwareH264Supported = WebrtcVideoConduit::HasH264Hardware();
+
     mH264Enabled = mHardwareH264Supported || mSoftwareH264Enabled;
 
     branch->GetIntPref("media.navigator.video.h264.level", &mH264Level);
