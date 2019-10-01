@@ -304,6 +304,17 @@ var TPS = {
         case "weave:service:tracking-stopped":
           this._isTracking = false;
           break;
+
+        case "fxaccounts:onlogin":
+          // A user signed in - for TPS that always means sync - so configure
+          // that.
+          Weave.Service.configure().catch(e => {
+            this.DumpError("Configuring sync failed.", e);
+          });
+          break;
+
+        default:
+          Logger.logInfo(`unhandled event: ${topic}`);
       }
     } catch (e) {
       this.DumpError("Observer failed", e);
