@@ -326,6 +326,9 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   MOZ_MUST_USE bool push(ExprType t) {
     return IsVoid(t) || push(NonVoidToValType(t));
   }
+  MOZ_MUST_USE bool push(const Maybe<ValType>& t) {
+    return t.isNothing() || push(t.ref());
+  }
   MOZ_MUST_USE bool push(TypeAndValue<Value> tv) {
     return valueStack_.append(tv);
   }
@@ -402,7 +405,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   // Decoding and validation interface.
 
   MOZ_MUST_USE bool readOp(OpBytes* op);
-  MOZ_MUST_USE bool readFunctionStart(ExprType ret);
+  MOZ_MUST_USE bool readFunctionStart(uint32_t funcIndex);
   MOZ_MUST_USE bool readFunctionEnd(const uint8_t* bodyEnd);
   MOZ_MUST_USE bool readReturn(Value* value);
   MOZ_MUST_USE bool readBlock();
@@ -851,11 +854,16 @@ inline void OpIter<Policy>::peekOp(OpBytes* op) {
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readFunctionStart(ExprType ret) {
+inline bool OpIter<Policy>::readFunctionStart(uint32_t funcIndex) {
   MOZ_ASSERT(valueStack_.empty());
   MOZ_ASSERT(controlStack_.empty());
   MOZ_ASSERT(op_.b0 == uint16_t(Op::Limit));
-
+  const ValTypeVector& results = env_.funcTypes[funcIndex]->results();
+  ExprType ret = ExprType::Void;
+  if (results.length()) {
+    MOZ_ASSERT(results.length() == 1, "multi-value return unimplemented");
+    ret = ExprType(results[0]);
+  }
   return pushControl(LabelKind::Body, ret);
 }
 
