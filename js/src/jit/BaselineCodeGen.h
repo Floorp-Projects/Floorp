@@ -362,9 +362,8 @@ class BaselineCodeGen {
 
   void prepareVMCall();
 
-  void storeFrameSizeAndPushDescriptor(uint32_t frameBaseSize, uint32_t argSize,
-                                       const Address& frameSizeAddr,
-                                       Register scratch1, Register scratch2);
+  void storeFrameSizeAndPushDescriptor(uint32_t argSize, Register scratch1,
+                                       Register scratch2);
 
   enum class CallVMPhase { BeforePushingLocals, AfterPushingLocals };
   bool callVMInternal(VMFunctionId id, RetAddrEntry::Kind kind,

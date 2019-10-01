@@ -771,7 +771,7 @@ struct IonOsrTempData {
 
 static IonOsrTempData* PrepareOsrTempData(JSContext* cx, BaselineFrame* frame,
                                           uint32_t frameSize, void* jitcode) {
-  uint32_t numValueSlots = frame->numValueSlots();
+  uint32_t numValueSlots = frame->numValueSlots(frameSize);
 
   // Calculate the amount of space to allocate:
   //      BaselineFrame space:
@@ -823,7 +823,7 @@ bool DoWarmUpCounterFallbackOSR(JSContext* cx, BaselineFrame* frame,
   MOZ_ASSERT(infoPtr);
   *infoPtr = nullptr;
 
-  MOZ_ASSERT(frame->frameSize() == frameSize);
+  MOZ_ASSERT(frame->debugFrameSize() == frameSize);
 
   RootedScript script(cx, frame->script());
   jsbytecode* pc = stub->icEntry()->pc(script);
