@@ -13,22 +13,22 @@ tasks:
           $let:
               # Github events have this stuff in different places...
               ownerEmail:
-                  # GitHub adds "[bot]" to bot usernames and that doesn't validate as email.
-                  $if: 'event.sender.login == "bors[bot]"'
-                  then: bors@users.noreply.github.com
+                  $if: 'tasks_for in ["cron", "action"]'
+                  then: '${tasks_for}@noreply.mozilla.org'
                   else:
-                      $if: 'tasks_for == "github-push"'
-                      then: '${event.pusher.email}'
-                      # Assume Pull Request
+                      # GitHub adds "[bot]" to bot usernames and that doesn't validate as email.
+                      $if: 'event.sender.login == "bors[bot]"'
+                      then: bors@users.noreply.github.com
                       else:
-                          $if: 'tasks_for == "github-pull-request"'
-                          then: '${event.pull_request.user.login}@users.noreply.github.com'
+                          $if: 'tasks_for == "github-push"'
+                          then: '${event.pusher.email}'
                           else:
-                              $if: 'tasks_for == "github-release"'
-                              then: '${event.sender.login}@users.noreply.github.com'
+                              $if: 'tasks_for == "github-pull-request"'
+                              then: '${event.pull_request.user.login}@users.noreply.github.com'
                               else:
-                                  $if: 'tasks_for in ["cron", "action"]'
-                                  then: '${tasks_for}@noreply.mozilla.org'
+                                  $if: 'tasks_for == "github-release"'
+                                  then: '${event.sender.login}@users.noreply.github.com'
+
               baseRepoUrl:
                   $if: 'tasks_for in ["github-push", "github-release"]'
                   then: '${event.repository.html_url}'
@@ -86,10 +86,16 @@ tasks:
                   else:
                       $if: 'tasks_for == "cron"'
                       then: '${ownTaskId}'
+
+              pullRequestAction:
+                  $if: 'tasks_for == "github-pull-request"'
+                  then: ${event.action}
+                  else: 'UNDEFINED'
+
           in:
               $if: >
                 tasks_for in ["github-release", "action", "cron"]
-                || tasks_for == "github-pull-request" && event["action"] in ["opened", "reopened", "edited", "synchronize"]
+                || tasks_for == "github-pull-request" && pullRequestAction in ["opened", "reopened", "edited", "synchronize"]
                 || tasks_for == "github-push" && head_branch[:10] != "refs/tags/" && head_branch != "staging.tmp" && head_branch != "trying.tmp"
               then:
                   $let:
