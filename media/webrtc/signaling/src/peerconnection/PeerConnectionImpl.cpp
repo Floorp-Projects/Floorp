@@ -229,6 +229,19 @@ RTCStatsQuery::RTCStatsQuery(bool aInternal, bool aRecordTelemetry)
 
 RTCStatsQuery::~RTCStatsQuery() {}
 
+void PeerConnectionAutoTimer::AddRef() { mRefCnt++; }
+
+void PeerConnectionAutoTimer::Release() {
+  mRefCnt--;
+  if (mRefCnt == 0) {
+    Telemetry::Accumulate(
+        Telemetry::WEBRTC_CALL_DURATION,
+        static_cast<uint32_t>((TimeStamp::Now() - mStart).ToSeconds()));
+  }
+}
+
+bool PeerConnectionAutoTimer::IsStopped() { return mRefCnt == 0; }
+
 NS_IMPL_ISUPPORTS0(PeerConnectionImpl)
 
 already_AddRefed<PeerConnectionImpl> PeerConnectionImpl::Constructor(
@@ -2145,6 +2158,20 @@ void PeerConnectionImpl::RecordEndOfCallTelemetry() const {
     type |= kDataChannelTypeMask;
   }
   Telemetry::Accumulate(Telemetry::WEBRTC_CALL_TYPE, type);
+
+  if (mWindow) {
+    nsCString spec;
+    nsresult rv = mWindow->GetDocumentURI()->GetSpec(spec);
+    if (NS_SUCCEEDED(rv)) {
+      auto itor = mAutoTimers.find(spec.BeginReading());
+      if (itor != mAutoTimers.end()) {
+        itor->second.Release();
+        if (itor->second.IsStopped()) {
+          mAutoTimers.erase(itor);
+        }
+      }
+    }
+  }
 }
 
 nsresult PeerConnectionImpl::CloseInt() {
@@ -2195,13 +2222,6 @@ void PeerConnectionImpl::ShutdownMedia() {
     if (track) {
       track->RemovePrincipalChangeObserver(this);
     }
-  }
-
-  // End of call to be recorded in Telemetry
-  if (!mStartTime.IsNull()) {
-    TimeDuration timeDelta = TimeStamp::Now() - mStartTime;
-    Telemetry::Accumulate(Telemetry::WEBRTC_CALL_DURATION,
-                          timeDelta.ToSeconds());
   }
 
   // Forget the reference so that we can transfer it to
@@ -2898,12 +2918,18 @@ void PeerConnectionImpl::RecordIceRestartStatistics(JsepSdpType type) {
 
 // Telemetry for when calls start
 void PeerConnectionImpl::startCallTelem() {
-  if (!mStartTime.IsNull()) {
-    return;
+  if (mWindow) {
+    nsCString spec;
+    nsresult rv = mWindow->GetDocumentURI()->GetSpec(spec);
+    if (NS_SUCCEEDED(rv)) {
+      auto itor = mAutoTimers.find(spec.BeginReading());
+      if (itor == mAutoTimers.end()) {
+        mAutoTimers.emplace(spec.BeginReading(), PeerConnectionAutoTimer());
+      } else {
+        itor->second.AddRef();
+      }
+    }
   }
-
-  // Start time for calls
-  mStartTime = TimeStamp::Now();
 
   // Increment session call counter
   // If we want to track Loop calls independently here, we need two histograms.
@@ -2971,4 +2997,5 @@ PeerConnectionImpl::DTMFState::~DTMFState() { StopPlayout(); }
 
 NS_IMPL_ISUPPORTS(PeerConnectionImpl::DTMFState, nsITimerCallback)
 
+std::map<std::string, PeerConnectionAutoTimer> PeerConnectionImpl::mAutoTimers;
 }  // namespace mozilla
