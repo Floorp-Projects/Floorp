@@ -34,6 +34,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.accounts.FxaCapability
 import mozilla.components.feature.accounts.FxaWebChannelFeature
 import mozilla.components.feature.app.links.AppLinksFeature
+import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.downloads.manager.FetchDownloadManager
@@ -225,7 +226,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                 feature = ContextMenuFeature(
                     fragmentManager = parentFragmentManager,
                     store = store,
-                    candidates = FenixContextMenuCandidate.defaultCandidates(
+                    candidates = ContextMenuCandidate.defaultCandidates(
                         context,
                         context.components.useCases.tabsUseCases,
                         context.components.useCases.contextMenuUseCases,
