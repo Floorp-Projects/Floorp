@@ -333,6 +333,11 @@ already_AddRefed<IDBRequest> IDBIndex::GetInternal(bool aKeyOnly,
         IDB_LOG_STRINGIFY(this), IDB_LOG_STRINGIFY(keyRange));
   }
 
+  // TODO: This is necessary to preserve request ordering only. Proper
+  // sequencing of requests should be done in a more sophisticated manner that
+  // doesn't require invalidating cursor caches (Bug 1580499).
+  transaction->InvalidateCursorCaches();
+
   transaction->StartRequest(request, params);
 
   return request.forget();
@@ -402,6 +407,11 @@ already_AddRefed<IDBRequest> IDBIndex::GetAllInternal(
         IDB_LOG_STRINGIFY(this), IDB_LOG_STRINGIFY(keyRange),
         IDB_LOG_STRINGIFY(aLimit));
   }
+
+  // TODO: This is necessary to preserve request ordering only. Proper
+  // sequencing of requests should be done in a more sophisticated manner that
+  // doesn't require invalidating cursor caches (Bug 1580499).
+  transaction->InvalidateCursorCaches();
 
   transaction->StartRequest(request, params);
 
