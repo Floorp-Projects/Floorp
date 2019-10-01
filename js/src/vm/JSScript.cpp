@@ -1138,8 +1138,12 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   }
 
   if (mode == XDR_DECODE) {
-    script = JSScript::Create(cx, *options, sourceObject, sourceStart,
-                              sourceEnd, toStringStart, toStringEnd);
+    RootedObject functionOrGlobal(cx,
+                                  fun ? static_cast<JSObject*>(fun)
+                                      : static_cast<JSObject*>(cx->global()));
+    script =
+        JSScript::Create(cx, functionOrGlobal, *options, sourceObject,
+                         sourceStart, sourceEnd, toStringStart, toStringEnd);
     if (!script) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
@@ -3809,15 +3813,16 @@ void PrivateScriptData::trace(JSTracer* trc) {
   }
 }
 
-JSScript::JSScript(HandleObject global, uint8_t* stubEntry,
+JSScript::JSScript(HandleObject functionOrGlobal, uint8_t* stubEntry,
                    HandleScriptSourceObject sourceObject, uint32_t sourceStart,
                    uint32_t sourceEnd, uint32_t toStringStart,
                    uint32_t toStringEnd)
-    : js::BaseScript(stubEntry, global, sourceObject, sourceStart, sourceEnd,
-                     toStringStart, toStringEnd) {}
+    : js::BaseScript(stubEntry, functionOrGlobal, sourceObject, sourceStart,
+                     sourceEnd, toStringStart, toStringEnd) {}
 
 /* static */
-JSScript* JSScript::New(JSContext* cx, HandleScriptSourceObject sourceObject,
+JSScript* JSScript::New(JSContext* cx, HandleObject functionOrGlobal,
+                        HandleScriptSourceObject sourceObject,
                         uint32_t sourceStart, uint32_t sourceEnd,
                         uint32_t toStringStart, uint32_t toStringEnd) {
   void* script = Allocate<JSScript>(cx);
@@ -3832,8 +3837,8 @@ JSScript* JSScript::New(JSContext* cx, HandleScriptSourceObject sourceObject,
 #endif
 
   return new (script)
-      JSScript(cx->global(), stubEntry, sourceObject, sourceStart, sourceEnd,
-               toStringStart, toStringEnd);
+      JSScript(functionOrGlobal, stubEntry, sourceObject, sourceStart,
+               sourceEnd, toStringStart, toStringEnd);
 }
 
 static bool ShouldTrackRecordReplayProgress(JSScript* script) {
@@ -3848,12 +3853,14 @@ static bool ShouldTrackRecordReplayProgress(JSScript* script) {
 }
 
 /* static */
-JSScript* JSScript::Create(JSContext* cx, const ReadOnlyCompileOptions& options,
+JSScript* JSScript::Create(JSContext* cx, HandleObject functionOrGlobal,
+                           const ReadOnlyCompileOptions& options,
                            HandleScriptSourceObject sourceObject,
                            uint32_t sourceStart, uint32_t sourceEnd,
                            uint32_t toStringStart, uint32_t toStringEnd) {
-  RootedScript script(cx, JSScript::New(cx, sourceObject, sourceStart,
-                                        sourceEnd, toStringStart, toStringEnd));
+  RootedScript script(
+      cx, JSScript::New(cx, functionOrGlobal, sourceObject, sourceStart,
+                        sourceEnd, toStringStart, toStringEnd));
   if (!script) {
     return nullptr;
   }
@@ -3880,10 +3887,11 @@ JSScript* JSScript::Create(JSContext* cx, const ReadOnlyCompileOptions& options,
 /* static */ JSScript* JSScript::CreateFromLazy(JSContext* cx,
                                                 Handle<LazyScript*> lazy) {
   RootedScriptSourceObject sourceObject(cx, lazy->sourceObject());
-  RootedScript script(
-      cx,
-      JSScript::New(cx, sourceObject, lazy->sourceStart(), lazy->sourceEnd(),
-                    lazy->toStringStart(), lazy->toStringEnd()));
+  RootedObject fun(cx, lazy->functionNonDelazifying());
+  RootedScript script(cx,
+                      JSScript::New(cx, fun, sourceObject, lazy->sourceStart(),
+                                    lazy->sourceEnd(), lazy->toStringStart(),
+                                    lazy->toStringEnd()));
   if (!script) {
     return nullptr;
   }
@@ -4597,6 +4605,7 @@ bool PrivateScriptData::Clone(JSContext* cx, HandleScript src, HandleScript dst,
 }
 
 JSScript* js::detail::CopyScript(JSContext* cx, HandleScript src,
+                                 HandleObject functionOrGlobal,
                                  HandleScriptSourceObject sourceObject,
                                  MutableHandle<GCVector<Scope*>> scopes) {
   // We don't copy the HideScriptFromDebugger flag and it's not clear what
@@ -4619,10 +4628,10 @@ JSScript* js::detail::CopyScript(JSContext* cx, HandleScript src,
       .setNoScriptRval(src->noScriptRval());
 
   // Create a new JSScript to fill in
-  RootedScript dst(
-      cx, JSScript::Create(cx, options, sourceObject, src->sourceStart(),
-                           src->sourceEnd(), src->toStringStart(),
-                           src->toStringEnd()));
+  RootedScript dst(cx,
+                   JSScript::Create(cx, functionOrGlobal, options, sourceObject,
+                                    src->sourceStart(), src->sourceEnd(),
+                                    src->toStringStart(), src->toStringEnd()));
   if (!dst) {
     return nullptr;
   }
@@ -4675,7 +4684,8 @@ JSScript* js::CloneGlobalScript(JSContext* cx, ScopeKind scopeKind,
     return nullptr;
   }
 
-  return detail::CopyScript(cx, src, sourceObject, &scopes);
+  RootedObject global(cx, cx->global());
+  return detail::CopyScript(cx, src, global, sourceObject, &scopes);
 }
 
 JSScript* js::CloneScriptIntoFunction(
@@ -4713,7 +4723,7 @@ JSScript* js::CloneScriptIntoFunction(
 
   // Save flags in case we need to undo the early mutations.
   const FunctionFlags preservedFlags = fun->flags();
-  RootedScript dst(cx, detail::CopyScript(cx, src, sourceObject, &scopes));
+  RootedScript dst(cx, detail::CopyScript(cx, src, fun, sourceObject, &scopes));
   if (!dst) {
     fun->setFlags(preservedFlags);
     return nullptr;
