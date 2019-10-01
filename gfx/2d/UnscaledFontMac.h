@@ -22,9 +22,8 @@ namespace gfx {
 class UnscaledFontMac final : public UnscaledFont {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(UnscaledFontMac, override)
-  explicit UnscaledFontMac(CGFontRef aFont, bool aIsDataFont = false,
-                           bool aNeedsCairo = false)
-      : mFont(aFont), mIsDataFont(aIsDataFont), mNeedsCairo(aNeedsCairo) {
+  explicit UnscaledFontMac(CGFontRef aFont, bool aIsDataFont = false)
+      : mFont(aFont), mIsDataFont(aIsDataFont) {
     CFRetain(mFont);
   }
   virtual ~UnscaledFontMac() { CFRelease(mFont); }
@@ -56,7 +55,6 @@ class UnscaledFontMac final : public UnscaledFont {
  private:
   CGFontRef mFont;
   bool mIsDataFont;
-  bool mNeedsCairo;
 };
 
 }  // namespace gfx

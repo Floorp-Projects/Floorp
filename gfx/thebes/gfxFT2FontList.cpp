@@ -144,55 +144,6 @@ FTUserFontData* FT2FontEntry::GetUserFontData() {
  * then create a Cairo font_face and scaled_font for drawing.
  */
 
-cairo_scaled_font_t* FT2FontEntry::CreateScaledFont(
-    const gfxFontStyle* aStyle, RefPtr<SharedFTFace> aFace, int* aOutLoadFlags,
-    unsigned int* aOutSynthFlags) {
-  int loadFlags = gfxPlatform::GetPlatform()->FontHintingEnabled()
-                      ? FT_LOAD_DEFAULT
-                      : (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
-  if (aFace->GetFace()->face_flags & FT_FACE_FLAG_TRICKY) {
-    loadFlags &= ~FT_LOAD_NO_AUTOHINT;
-  }
-
-  unsigned int synthFlags = 0;
-  if (aStyle->NeedsSyntheticBold(this)) {
-    synthFlags |= CAIRO_FT_SYNTHESIZE_BOLD;
-  }
-
-  *aOutLoadFlags = loadFlags;
-  *aOutSynthFlags = synthFlags;
-
-  cairo_font_face_t* cairoFace = cairo_ft_font_face_create_for_ft_face(
-      aFace->GetFace(), loadFlags, synthFlags, aFace.get());
-  if (!cairoFace) {
-    return nullptr;
-  }
-
-  cairo_scaled_font_t* scaledFont = nullptr;
-
-  cairo_matrix_t sizeMatrix;
-  cairo_matrix_t identityMatrix;
-
-  // XXX deal with adjusted size
-  cairo_matrix_init_scale(&sizeMatrix, aStyle->size, aStyle->size);
-  cairo_matrix_init_identity(&identityMatrix);
-
-  cairo_font_options_t* fontOptions = cairo_font_options_create();
-
-  if (gfxPlatform::GetPlatform()->RequiresLinearZoom()) {
-    cairo_font_options_set_hint_metrics(fontOptions, CAIRO_HINT_METRICS_OFF);
-  }
-
-  scaledFont = cairo_scaled_font_create(cairoFace, &sizeMatrix, &identityMatrix,
-                                        fontOptions);
-  cairo_font_options_destroy(fontOptions);
-
-  NS_ASSERTION(cairo_scaled_font_status(scaledFont) == CAIRO_STATUS_SUCCESS,
-               "Failed to make scaled font");
-
-  return scaledFont;
-}
-
 FT2FontEntry::~FT2FontEntry() {
   if (mMMVar) {
     FT_Done_MM_Var(mFTFace->GetFace()->glyph->library, mMMVar);
@@ -240,12 +191,11 @@ gfxFont* FT2FontEntry::CreateFontInstance(const gfxFontStyle* aStyle) {
     }
   }
 
-  int loadFlags;
-  unsigned int synthFlags;
-  cairo_scaled_font_t* scaledFont =
-      CreateScaledFont(aStyle, face, &loadFlags, &synthFlags);
-  if (!scaledFont) {
-    return nullptr;
+  int loadFlags = gfxPlatform::GetPlatform()->FontHintingEnabled()
+                      ? FT_LOAD_DEFAULT
+                      : (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
+  if (face->GetFace()->face_flags & FT_FACE_FLAG_TRICKY) {
+    loadFlags &= ~FT_LOAD_NO_AUTOHINT;
   }
 
   RefPtr<UnscaledFontFreeType> unscaledFont(mUnscaledFont);
@@ -258,9 +208,7 @@ gfxFont* FT2FontEntry::CreateFontInstance(const gfxFontStyle* aStyle) {
   }
 
   gfxFont* font =
-      new gfxFT2Font(unscaledFont, scaledFont, std::move(face), this, aStyle,
-                     loadFlags, (synthFlags & CAIRO_FT_SYNTHESIZE_BOLD) != 0);
-  cairo_scaled_font_destroy(scaledFont);
+      new gfxFT2Font(unscaledFont, std::move(face), this, aStyle, loadFlags);
   return font;
 }
 

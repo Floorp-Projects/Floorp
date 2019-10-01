@@ -623,11 +623,6 @@ already_AddRefed<ScaledFont> UnscaledFontMac::CreateScaledFont(
       instanceData.mFontSmoothingBackgroundColor,
       instanceData.mUseFontSmoothing, instanceData.mApplySyntheticBold);
 
-  if (mNeedsCairo && !scaledFont->PopulateCairoScaledFont()) {
-    gfxWarning() << "Unable to create cairo scaled Mac font.";
-    return nullptr;
-  }
-
   return scaledFont.forget();
 }
 
@@ -641,7 +636,8 @@ already_AddRefed<ScaledFont> UnscaledFontMac::CreateScaledFontFromWRFont(
 }
 
 #ifdef USE_CAIRO_SCALED_FONT
-cairo_font_face_t* ScaledFontMac::GetCairoFontFace() {
+cairo_font_face_t* ScaledFontMac::CreateCairoFontFace(
+    cairo_font_options_t* aFontOptions) {
   MOZ_ASSERT(mFont);
   return cairo_quartz_font_face_create_for_cgfont(mFont);
 }

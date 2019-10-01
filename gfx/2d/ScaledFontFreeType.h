@@ -20,8 +20,7 @@ class ScaledFontFreeType : public ScaledFontBase {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontFreeType, override)
 
-  ScaledFontFreeType(cairo_scaled_font_t* aScaledFont,
-                     RefPtr<SharedFTFace>&& aFace,
+  ScaledFontFreeType(RefPtr<SharedFTFace>&& aFace,
                      const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
                      bool aApplySyntheticBold = false);
 
@@ -44,6 +43,12 @@ class ScaledFontFreeType : public ScaledFontBase {
       std::vector<FontVariation>* aOutVariations) override;
 
   bool HasVariationSettings() override;
+
+ protected:
+#ifdef USE_CAIRO_SCALED_FONT
+  cairo_font_face_t* CreateCairoFontFace(
+      cairo_font_options_t* aFontOptions) override;
+#endif
 
  private:
   friend UnscaledFontFreeType;

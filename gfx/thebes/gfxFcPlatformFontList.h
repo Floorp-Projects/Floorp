@@ -6,8 +6,6 @@
 #ifndef GFXFCPLATFORMFONTLIST_H_
 #define GFXFCPLATFORMFONTLIST_H_
 
-#include "gfxFont.h"
-#include "gfxFontEntry.h"
 #include "gfxFT2FontBase.h"
 #include "gfxPlatformFontList.h"
 #include "mozilla/FontPropertyTypes.h"
@@ -20,8 +18,6 @@
 #include FT_FREETYPE_H
 #include FT_TRUETYPE_TABLES_H
 #include FT_MULTIPLE_MASTERS_H
-#include <cairo.h>
-#include <cairo-ft.h>
 
 #if defined(MOZ_SANDBOX) && defined(XP_LINUX)
 #  include "mozilla/SandboxBroker.h"
@@ -51,7 +47,7 @@ class nsAutoRefTraits<FcConfig> : public nsPointerRefTraits<FcConfig> {
 // the common 'Fc' abbreviation but the gfxPangoFontGroup code already
 // defines versions of these, so use the verbose name for now.
 
-class gfxFontconfigFontEntry : public gfxFontEntry {
+class gfxFontconfigFontEntry : public gfxFT2FontEntryBase {
  public:
   // used for system fonts with explicit patterns
   explicit gfxFontconfigFontEntry(const nsACString& aFaceName,
@@ -99,12 +95,6 @@ class gfxFontconfigFontEntry : public gfxFontEntry {
   virtual ~gfxFontconfigFontEntry();
 
   gfxFont* CreateFontInstance(const gfxFontStyle* aFontStyle) override;
-
-  // helper method for creating cairo font from pattern
-  cairo_scaled_font_t* CreateScaledFont(
-      FcPattern* aRenderPattern, gfxFloat aAdjustedSize,
-      const gfxFontStyle* aStyle, RefPtr<mozilla::gfx::SharedFTFace> aFTFace,
-      int* aOutLoadFlags, unsigned int* aOutSynthFlags);
 
   // override to pull data from FTFace
   virtual nsresult CopyFontTable(uint32_t aTableTag,
@@ -207,15 +197,14 @@ class gfxFontconfigFont : public gfxFT2FontBase {
  public:
   gfxFontconfigFont(
       const RefPtr<mozilla::gfx::UnscaledFontFontconfig>& aUnscaledFont,
-      cairo_scaled_font_t* aScaledFont,
       RefPtr<mozilla::gfx::SharedFTFace>&& aFTFace, FcPattern* aPattern,
       gfxFloat aAdjustedSize, gfxFontEntry* aFontEntry,
       const gfxFontStyle* aFontStyle, int aLoadFlags, bool aEmbolden);
 
   FontType GetType() const override { return FONT_TYPE_FONTCONFIG; }
-  virtual FcPattern* GetPattern() const { return mPattern; }
+  FcPattern* GetPattern() const { return mPattern; }
 
-  virtual already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(
+  already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(
       DrawTarget* aTarget) override;
 
   bool ShouldHintMetrics() const override;

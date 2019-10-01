@@ -13,7 +13,6 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 
-#include "cairo.h"
 #include "usp10.h"
 
 class gfxGDIFont : public gfxFont {
@@ -24,8 +23,6 @@ class gfxGDIFont : public gfxFont {
   virtual ~gfxGDIFont();
 
   HFONT GetHFONT() { return mFont; }
-
-  cairo_font_face_t* CairoFontFace() { return mFontFace; }
 
   /* overrides for the pure virtual methods in gfxFont */
   uint32_t GetSpaceGlyph() override;
@@ -82,7 +79,6 @@ class gfxGDIFont : public gfxFont {
   void FillLogFont(LOGFONTW& aLogFont, gfxFloat aSize);
 
   HFONT mFont;
-  cairo_font_face_t* mFontFace;
 
   Metrics* mMetrics;
   uint32_t mSpaceGlyph;
