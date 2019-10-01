@@ -1243,10 +1243,17 @@ SECStatus nsSocketTransport::StoreResumptionToken(
   if (!secCtrl) {
     return SECFailure;
   }
-
   nsAutoCString peerId;
   secCtrl->GetPeerId(peerId);
-  SSLTokensCache::Put(peerId, resumptionToken, len);
+
+  nsCOMPtr<nsITransportSecurityInfo> secInfo = do_QueryInterface(secCtrl);
+  if (!secInfo) {
+    return SECFailure;
+  }
+
+  if (NS_FAILED(SSLTokensCache::Put(peerId, resumptionToken, len, secInfo))) {
+    return SECFailure;
+  }
 
   return SECSuccess;
 }
