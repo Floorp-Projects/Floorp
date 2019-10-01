@@ -304,6 +304,12 @@ constexpr auto kColumnNameValue = NS_LITERAL_CSTRING("value");
 // SQL fragments used at multiple locations.
 constexpr auto kOpenLimit = NS_LITERAL_CSTRING(" LIMIT ");
 
+// The maximum number of extra entries to preload in an OpenOp or ContinueOp.
+// TODO: Instead of just 1, use a larger number of extra results to return.
+// The number might be determined directly or based on the size of the result.
+// It must probably be configurable somehow, e.g. by a browser preference.
+const uint32_t kMaxExtraCount = 1;
+
 // The deletion marker file is created before RemoveDatabaseFilesAndDirectory
 // begins deleting a database. It is removed as the last step of deletion. If a
 // deletion marker file is found when initializing the origin, the deletion
@@ -5572,10 +5578,12 @@ class TransactionDatabaseOperationBase : public DatabaseOperationBase {
   };
 
   RefPtr<TransactionBase> mTransaction;
-  const int64_t mTransactionLoggingSerialNumber;
   InternalState mInternalState;
   bool mWaitingForContinue;
   const bool mTransactionIsAborted;
+
+ protected:
+  const int64_t mTransactionLoggingSerialNumber;
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
  protected:
@@ -7708,8 +7716,12 @@ class Cursor::CursorOpBase : public TransactionDatabaseOperationBase {
 
   void Cleanup() override;
 
-  nsresult PopulateResponseFromStatement(
-      DatabaseConnection::CachedStatement& aStmt, bool aInitializeResponse);
+  nsresult PopulateResponseFromStatement(mozIStorageStatement* aStmt,
+                                         bool aInitializeResponse);
+
+  nsresult PopulateExtraResponses(mozIStorageStatement* aStmt,
+                                  uint32_t aMaxExtraCount,
+                                  const nsCString& aOperation);
 };
 
 class Cursor::OpenOp final : public Cursor::CursorOpBase {
@@ -7755,9 +7767,9 @@ class Cursor::ContinueOp final : public Cursor::CursorOpBase {
 
  private:
   // Only created by Cursor.
-  ContinueOp(Cursor* aCursor, const CursorRequestParams& aParams)
-      : CursorOpBase(aCursor), mParams(aParams) {
-    MOZ_ASSERT(aParams.type() != CursorRequestParams::T__None);
+  ContinueOp(Cursor* aCursor, CursorRequestParams aParams)
+      : CursorOpBase(aCursor), mParams(std::move(aParams)) {
+    MOZ_ASSERT(mParams.type() != CursorRequestParams::T__None);
   }
 
   // Reference counted.
@@ -9297,6 +9309,15 @@ constexpr bool IsIncreasingOrder(const IDBCursor::Direction aDirection) {
       aDirection == IDBCursor::PREV || aDirection == IDBCursor::PREV_UNIQUE);
 
   return aDirection == IDBCursor::NEXT || aDirection == IDBCursor::NEXT_UNIQUE;
+}
+
+constexpr bool IsUnique(const IDBCursor::Direction aDirection) {
+  MOZ_ASSERT(
+      aDirection == IDBCursor::NEXT || aDirection == IDBCursor::NEXT_UNIQUE ||
+      aDirection == IDBCursor::PREV || aDirection == IDBCursor::PREV_UNIQUE);
+
+  return aDirection == IDBCursor::NEXT_UNIQUE ||
+         aDirection == IDBCursor::PREV_UNIQUE;
 }
 
 constexpr bool IsKeyCursor(const Cursor::Type aType) {
@@ -15258,9 +15279,23 @@ mozilla::ipc::IPCResult Cursor::RecvContinue(const CursorRequestParams& aParams,
 #endif
       ;
 
-  // TODO: For now, the child always passes an empty key. This will be changed
-  // in a subsequent patch for Bug 1168606.
-  MOZ_ASSERT(aCurrentKey.IsUnset());
+  // At the time of writing, the child always passes its current position.
+  //
+  // TODO: Probably, aCurrentKey is always set, unless ActorsChild is changed to
+  // pass it only when necessary, e.g. only pass if some cached responses were
+  // invalidated, and the cursor in the parent actually needs to go back to a
+  // previous position.
+  if (!aCurrentKey.IsUnset()) {
+    if (IsLocaleAware()) {
+      const nsresult rv =
+          LocalizeKey(aCurrentKey, mLocale, &mLocaleAwarePosition);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        ASSERT_UNLESS_FUZZING();
+        return IPC_FAIL_NO_REASON(this);
+      }
+    }
+    mPosition = aCurrentKey;
+  }
 
   if (!trustParams && !VerifyRequestParams(aParams)) {
     ASSERT_UNLESS_FUZZING();
@@ -21746,15 +21781,15 @@ TransactionDatabaseOperationBase::TransactionDatabaseOperationBase(
     : DatabaseOperationBase(aTransaction->GetLoggingInfo()->Id(),
                             aTransaction->GetLoggingInfo()->NextRequestSN()),
       mTransaction(aTransaction),
-      mTransactionLoggingSerialNumber(aTransaction->LoggingSerialNumber()),
       mInternalState(InternalState::Initial),
       mWaitingForContinue(false),
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       mTransactionIsAborted(aTransaction->IsAborted()),
-      mAssumingPreviousOperationFail(false) {
-#else
-      mTransactionIsAborted(aTransaction->IsAborted()) {
+      mTransactionLoggingSerialNumber(aTransaction->LoggingSerialNumber())
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+      ,
+      mAssumingPreviousOperationFail(false)
 #endif
+{
   MOZ_ASSERT(aTransaction);
   MOZ_ASSERT(LoggingSerialNumber());
 }
@@ -21764,14 +21799,14 @@ TransactionDatabaseOperationBase::TransactionDatabaseOperationBase(
     : DatabaseOperationBase(aTransaction->GetLoggingInfo()->Id(),
                             aLoggingSerialNumber),
       mTransaction(aTransaction),
-      mTransactionLoggingSerialNumber(aTransaction->LoggingSerialNumber()),
       mInternalState(InternalState::Initial),
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       mTransactionIsAborted(aTransaction->IsAborted()),
-      mAssumingPreviousOperationFail(false) {
-#else
-      mTransactionIsAborted(aTransaction->IsAborted()) {
+      mTransactionLoggingSerialNumber(aTransaction->LoggingSerialNumber())
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+      ,
+      mAssumingPreviousOperationFail(false)
 #endif
+{
   MOZ_ASSERT(aTransaction);
 }
 
@@ -25574,16 +25609,22 @@ void Cursor::CursorOpBase::Cleanup() {
 }
 
 nsresult Cursor::CursorOpBase::PopulateResponseFromStatement(
-    DatabaseConnection::CachedStatement& aStmt,
-    const bool aInitializeResponse) {
+    mozIStorageStatement* const aStmt, const bool aInitializeResponse) {
   Transaction()->AssertIsOnConnectionThread();
-  MOZ_ASSERT(mResponse.type() == CursorResponse::T__None);
+  MOZ_ASSERT(aInitializeResponse ==
+             (mResponse.type() == CursorResponse::T__None));
   MOZ_ASSERT_IF(mFiles.IsEmpty(), aInitializeResponse);
 
   nsresult rv = mCursor->mPosition.SetFromStatement(aStmt, 0);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  IDB_LOG_MARK_PARENT_TRANSACTION_REQUEST(
+      "PRELOAD: Populating response with key %s", "Populating",
+      IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
+      mTransactionLoggingSerialNumber, mLoggingSerialNumber,
+      mCursor->mPosition.GetBuffer().get());
 
   switch (mCursor->mType) {
     case OpenCursorParams::TObjectStoreOpenCursorParams: {
@@ -25680,6 +25721,77 @@ nsresult Cursor::CursorOpBase::PopulateResponseFromStatement(
     default:
       MOZ_CRASH("Should never get here!");
   }
+
+  return NS_OK;
+}
+
+nsresult Cursor::CursorOpBase::PopulateExtraResponses(
+    mozIStorageStatement* const aStmt, const uint32_t aMaxExtraCount,
+    const nsCString& aOperation) {
+  AssertIsOnConnectionThread();
+
+  if (mCursor->mType != OpenCursorParams::TObjectStoreOpenCursorParams) {
+    IDB_WARNING(
+        "PRELOAD: Not yet implemented. Extra results were queried, but are "
+        "discarded for now.");
+    return NS_OK;
+  }
+
+  // For unique cursors, we need to skip records with the same key. The SQL
+  // queries currently do not filter these out.
+  Key previousKey =
+      IsUnique(mCursor->mDirection)
+          ? (mCursor->IsLocaleAware() ? mCursor->mLocaleAwarePosition
+                                      : mCursor->mPosition)
+          : Key{};
+
+  uint32_t extraCount = 0;
+  do {
+    bool hasResult;
+    nsresult rv = aStmt->ExecuteStep(&hasResult);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      // In case of a failure on one step, do not attempt to execute further
+      // steps, but use the results already populated.
+
+      break;
+    }
+
+    if (!hasResult) {
+      // TODO: For the first result, in case the cursor reaches the end
+      // prematurely, mCursor's key members are unset. Should we do this here as
+      // well?
+
+      break;
+    }
+
+    if (IsUnique(mCursor->mDirection)) {
+      const auto& currentKey = mCursor->IsLocaleAware()
+                                   ? mCursor->mLocaleAwarePosition
+                                   : mCursor->mPosition;
+      const bool sameKey = previousKey == currentKey;
+      previousKey = currentKey;
+      if (sameKey) {
+        continue;
+      }
+    }
+
+    // TODO: Similar to the call to ExecuteStep above, it would be better not to
+    // fail here. However, this would require the equivalent of the strong
+    // exception guarantee of PopulateResponseFromStatement, which it does not
+    // provide right now.
+    rv = PopulateResponseFromStatement(aStmt, false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    ++extraCount;
+  } while (true);
+
+  IDB_LOG_MARK_PARENT_TRANSACTION_REQUEST(
+      "PRELOAD: %s: Number of extra results populated: %" PRIu32 "/%" PRIu32,
+      "Populated", IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
+      mTransactionLoggingSerialNumber, mLoggingSerialNumber, aOperation.get(),
+      extraCount, aMaxExtraCount);
 
   return NS_OK;
 }
@@ -25847,7 +25959,7 @@ nsresult Cursor::OpenOp::DoObjectStoreDatabaseWork(
   // Note: Changing the number or order of SELECT columns in the query will
   // require changes to CursorOpBase::PopulateResponseFromStatement.
   const nsCString firstQuery = queryStart + keyRangeClause + directionClause +
-                               kOpenLimit + NS_LITERAL_CSTRING("1");
+                               kOpenLimit + ToAutoCString(1 + kMaxExtraCount);
 
   DatabaseConnection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(firstQuery, &stmt);
@@ -25883,10 +25995,21 @@ nsresult Cursor::OpenOp::DoObjectStoreDatabaseWork(
     return rv;
   }
 
-  // Now we need to make the query to get the next match.
+  // Now we need to make the query for ContinueOp.
   PrepareKeyConditionClauses(kStmtParamNameKey, directionClause, queryStart);
 
-  return NS_OK;
+  // The degree to which extra responses on OpenOp can actually be used depends
+  // on the parameters of subsequent ContinueOp operations, see also comment in
+  // ContinueOp::DoDatabaseWork.
+  //
+  // TODO: We should somehow evaluate the effects of this. Maybe use a smaller
+  // extra count that for ContinueOp?
+  //
+  // TODO: If this is done here, do this in the other Do*DatabaseWork functions
+  // as well (or move this to DoDatabaseWork).
+
+  return PopulateExtraResponses(stmt, kMaxExtraCount,
+                                NS_LITERAL_CSTRING("OpenOp"));
 }
 
 nsresult Cursor::OpenOp::DoObjectStoreKeyDatabaseWork(
@@ -26273,24 +26396,48 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   AUTO_PROFILER_LABEL("Cursor::ContinueOp::DoDatabaseWork", DOM);
 
   // We need to pick a query based on whether or not a key was passed to the
-  // continue function. If not we'll grab the the next item in the database that
+  // continue function. If not we'll grab the next item in the database that
   // is greater than (or less than, if we're running a PREV cursor) the current
   // key. If a key was passed we'll grab the next item in the database that is
   // greater than (or less than, if we're running a PREV cursor) or equal to the
   // key that was specified.
-
+  //
+  // TODO: The description above is not complete, it does not take account of
+  // ContinuePrimaryKey nor Advance.
+  //
   // Note: Changing the number or order of SELECT columns in the query will
   // require changes to CursorOpBase::PopulateResponseFromStatement.
+
+  const uint32_t advanceCount =
+      mParams.type() == CursorRequestParams::TAdvanceParams
+          ? mParams.get_AdvanceParams().count()
+          : 1;
+  MOZ_ASSERT(advanceCount > 0);
+
   bool hasContinueKey = false;
   bool hasContinuePrimaryKey = false;
-  uint32_t advanceCount = 1;
+  // TODO: the name 'currentKey' for this variable is confusing, as this is only
+  // the current key if !hasContinueKey. It is however, always a bound for the
+  // key/position in the operation's result. Maybe rename to
+  // targetKey/targetPosition (which is also not exact, as it might imply that
+  // the result always has this key).
   Key& currentKey = mCursor->IsLocaleAware() ? mCursor->mLocaleAwarePosition
                                              : mCursor->mPosition;
+
+  IDB_LOG_MARK_PARENT_TRANSACTION_REQUEST(
+      "PRELOAD: ContinueOp: currentKey == %s", "currentKey",
+      IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
+      mTransactionLoggingSerialNumber, mLoggingSerialNumber,
+      currentKey.GetBuffer().get());
 
   switch (mParams.type()) {
     case CursorRequestParams::TContinueParams:
       if (!mParams.get_ContinueParams().key().IsUnset()) {
         hasContinueKey = true;
+        // TODO: This writes either to mLocaleAwarePosition or to mPosition, is
+        // that correct? Probably it's ok, because
+        // PopulateResponseFromStatement, contrary to its name, also updates the
+        // fields of mCursor.
         currentKey = mParams.get_ContinueParams().key();
       }
       break;
@@ -26305,7 +26452,6 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       currentKey = mParams.get_ContinuePrimaryKeyParams().key();
       break;
     case CursorRequestParams::TAdvanceParams:
-      advanceCount = mParams.get_AdvanceParams().count();
       break;
     default:
       MOZ_CRASH("Should never get here!");
@@ -26316,9 +26462,23 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
                             : hasContinueKey ? mCursor->mContinueToQuery
                                              : mCursor->mContinueQuery;
 
-  MOZ_ASSERT(advanceCount > 0);
-  nsAutoCString countString;
-  countString.AppendInt(advanceCount);
+  // TODO: Whether it makes sense to preload depends on the kind of the
+  // subsequent operations, not of the current operation. We could assume that
+  // the subsequent operations are:
+  // - the same as the current operation (with the same parameter values)
+  // - as above, except for Advance, where we assume the count will be 1 on the
+  // next call
+  // - basic operations (Advance with count 1 or Continue-without-key)
+  //
+  // For now, we implement the second option for now (which correspond to
+  // !hasContinueKey).
+  //
+  // Based on that, we could in both cases either preload for any assumed
+  // subsequent operations, or only for the basic operations. For now, we
+  // preload only for an assumed basic operation. Other operations would require
+  // more work on the client side for invalidation, and may not make any sense
+  // at all.
+  const uint32_t maxExtraCount = hasContinueKey ? 0 : kMaxExtraCount;
 
   DatabaseConnection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(continueQuery, &stmt);
@@ -26328,12 +26488,12 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   // Bind limit.
   rv = stmt->BindUTF8StringByName(kStmtParamNameLimit,
-                                  ToAutoCString(advanceCount));
+                                  ToAutoCString(advanceCount + kMaxExtraCount));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  int64_t id = isIndex ? mCursor->mIndexId : mCursor->mObjectStoreId;
+  const int64_t id = isIndex ? mCursor->mIndexId : mCursor->mObjectStoreId;
 
   rv = stmt->BindInt64ByName(kStmtParamNameId, id);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -26365,10 +26525,7 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-  }
-
-  // Bind object store position if primaryKey is specified.
-  if (hasContinuePrimaryKey) {
+  } else if (hasContinuePrimaryKey) {
     rv = mParams.get_ContinuePrimaryKeyParams().primaryKey().BindToStatement(
         stmt, kStmtParamNameObjectStorePosition);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -26376,8 +26533,10 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     }
   }
 
-  bool hasResult;
+  // TODO: Why do we query the records we don't need and skip them here, rather
+  // than using a OFFSET clause in the query?
   for (uint32_t index = 0; index < advanceCount; index++) {
+    bool hasResult;
     rv = stmt->ExecuteStep(&hasResult);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -26398,7 +26557,8 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     return rv;
   }
 
-  return NS_OK;
+  return PopulateExtraResponses(stmt, maxExtraCount,
+                                NS_LITERAL_CSTRING("ContinueOp"));
 }
 
 nsresult Cursor::ContinueOp::SendSuccessResult() {

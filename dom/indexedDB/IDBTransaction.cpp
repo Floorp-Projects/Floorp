@@ -338,7 +338,7 @@ void IDBTransaction::OnNewRequest() {
   ++mPendingRequestCount;
 }
 
-void IDBTransaction::OnRequestFinished(bool aActorDestroyedNormally) {
+void IDBTransaction::OnRequestFinished(bool aRequestCompletedSuccessfully) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mPendingRequestCount);
 
@@ -347,7 +347,7 @@ void IDBTransaction::OnRequestFinished(bool aActorDestroyedNormally) {
   if (!mPendingRequestCount) {
     mReadyState = COMMITTING;
 
-    if (aActorDestroyedNormally) {
+    if (aRequestCompletedSuccessfully) {
       if (NS_SUCCEEDED(mAbortCode)) {
         SendCommit();
       } else {
@@ -795,6 +795,27 @@ int64_t IDBTransaction::NextIndexId() {
   MOZ_ASSERT(VERSION_CHANGE == mMode);
 
   return mNextIndexId++;
+}
+
+void IDBTransaction::InvalidateCursorCaches() {
+  AssertIsOnOwningThread();
+
+  for (auto* const cursor : mCursors) {
+    cursor->InvalidateCachedResponses();
+  }
+}
+
+void IDBTransaction::RegisterCursor(IDBCursor* const aCursor) {
+  AssertIsOnOwningThread();
+
+  mCursors.AppendElement(aCursor);
+}
+
+void IDBTransaction::UnregisterCursor(IDBCursor* const aCursor) {
+  AssertIsOnOwningThread();
+
+  DebugOnly<bool> removed = mCursors.RemoveElement(aCursor);
+  MOZ_ASSERT(removed);
 }
 
 nsIGlobalObject* IDBTransaction::GetParentObject() const {
