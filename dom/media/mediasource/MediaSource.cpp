@@ -79,7 +79,7 @@ static bool IsWebMForced(DecoderDoctorDiagnostics* aDiagnostics) {
   bool hwsupported = gfx::gfxVars::CanUseHardwareVideoDecoding();
 #ifdef MOZ_WIDGET_ANDROID
   return !mp4supported || !hwsupported || VP9Benchmark::IsVP9DecodeFast() ||
-         java::HardwareCodecCapabilityUtils::HasHWVP9();
+         java::HardwareCodecCapabilityUtils::HasHWVP9(false /* aIsEncoder */);
 #else
   return !mp4supported || !hwsupported || VP9Benchmark::IsVP9DecodeFast();
 #endif
