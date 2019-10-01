@@ -14,12 +14,6 @@ RemoteDecoderChild::RemoteDecoderChild(bool aRecreatedOnCrash)
       mRecreatedOnCrash(aRecreatedOnCrash),
       mRawFramePool(4) {}
 
-mozilla::ipc::IPCResult RemoteDecoderChild::RecvDoneWithInput(
-    Shmem&& aInputShmem) {
-  mRawFramePool.Put(ShmemBuffer(std::move(aInputShmem)));
-  return IPC_OK();
-}
-
 void RemoteDecoderChild::HandleRejectionError(
     const ipc::ResponseRejectReason& aReason,
     std::function<void(const MediaResult&)>&& aCallback) {
@@ -109,7 +103,8 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDecoderChild::Decode(
   // TODO: It would be nice to add an allocator method to
   // MediaDataDecoder so that the demuxer could write directly
   // into shmem rather than requiring a copy here.
-  ShmemBuffer buffer = mRawFramePool.Get(this, aSample->Size());
+  ShmemBuffer buffer = mRawFramePool.Get(this, aSample->Size(),
+                                         ShmemPool::AllocationPolicy::Unsafe);
   if (!buffer.Valid()) {
     return MediaDataDecoder::DecodePromise::CreateAndReject(
         NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__);
@@ -117,6 +112,9 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDecoderChild::Decode(
 
   memcpy(buffer.Get().get<uint8_t>(), aSample->Data(), aSample->Size());
 
+  // Make a copy of the Shmem to re-use it later as IDPL will move the one used
+  // in the MediaRawDataIPDL.
+  Shmem mem(buffer.Get());
   MediaRawDataIPDL sample(
       MediaDataIPDL(aSample->mOffset, aSample->mTime, aSample->mTimecode,
                     aSample->mDuration, aSample->mKeyframe),
@@ -126,23 +124,31 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDecoderChild::Decode(
   RefPtr<RemoteDecoderChild> self = this;
   SendDecode(sample)->Then(
       mThread, __func__,
-      [self, this](DecodeResultIPDL&& aResponse) {
+      [self, this, mem = std::move(mem)](
+          PRemoteDecoderChild::DecodePromise::ResolveOrRejectValue&& aValue) {
+        // We no longer need the ShmemBuffer as the data has been processed by
+        // the parent.
+        mRawFramePool.Put(ShmemBuffer(mem));
+
+        if (aValue.IsReject()) {
+          self->HandleRejectionError(
+              aValue.RejectValue(), [self](const MediaResult& aError) {
+                self->mDecodePromise.RejectIfExists(aError, __func__);
+              });
+          return;
+        }
         if (mDecodePromise.IsEmpty()) {
           // We got flushed.
           return;
         }
-        if (aResponse.type() == DecodeResultIPDL::TMediaResult) {
-          mDecodePromise.Reject(aResponse.get_MediaResult(), __func__);
+        const auto& response = aValue.ResolveValue();
+        if (response.type() == DecodeResultIPDL::TMediaResult) {
+          mDecodePromise.Reject(response.get_MediaResult(), __func__);
           return;
         }
-        ProcessOutput(aResponse.get_DecodedOutputIPDL());
+        ProcessOutput(response.get_DecodedOutputIPDL());
         mDecodePromise.Resolve(std::move(mDecodedData), __func__);
         mDecodedData = MediaDataDecoder::DecodedData();
-      },
-      [self](const mozilla::ipc::ResponseRejectReason& aReason) {
-        self->HandleRejectionError(aReason, [self](const MediaResult& aError) {
-          self->mDecodePromise.RejectIfExists(aError, __func__);
-        });
       });
 
   return mDecodePromise.Ensure(__func__);

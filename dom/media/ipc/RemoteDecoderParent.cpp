@@ -18,8 +18,7 @@ RemoteDecoderParent::RemoteDecoderParent(RemoteDecoderManagerParent* aParent,
                                          TaskQueue* aDecodeTaskQueue)
     : mParent(aParent),
       mManagerTaskQueue(aManagerTaskQueue),
-      mDecodeTaskQueue(aDecodeTaskQueue),
-      mDecodedFramePool(4) {
+      mDecodeTaskQueue(aDecodeTaskQueue) {
   MOZ_COUNT_CTOR(RemoteDecoderParent);
   MOZ_ASSERT(OnManagerThread());
   // We hold a reference to ourselves to keep us alive until IPDL
@@ -92,9 +91,6 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvDecode(
   data->mKeyframe = aData.base().keyframe();
   data->mEOS = aData.eos();
   data->mDiscardPadding = aData.discardPadding();
-
-  // Send back to the child to reuse in ShmemPool
-  Unused << SendDoneWithInput(std::move(aData.buffer()));
 
   RefPtr<RemoteDecoderParent> self = this;
   mDecoder->Decode(data)->Then(
@@ -189,19 +185,13 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvSetSeekThreshold(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult RemoteDecoderParent::RecvDoneWithOutput(
-    Shmem&& aOutputShmem) {
-  mDecodedFramePool.Put(ShmemBuffer(std::move(aOutputShmem)));
-  return IPC_OK();
-}
-
 void RemoteDecoderParent::ActorDestroy(ActorDestroyReason aWhy) {
   MOZ_ASSERT(OnManagerThread());
   if (mDecoder) {
     mDecoder->Shutdown();
     mDecoder = nullptr;
   }
-  mDecodedFramePool.Cleanup(this);
+  CleanupOnActorDestroy();
 }
 
 bool RemoteDecoderParent::OnManagerThread() {

@@ -37,8 +37,6 @@ MediaResult RemoteAudioDecoderChild::ProcessOutput(
     PodCopy(alignedAudioBuffer.Data(), data.buffer().get<AudioDataValue>(),
             alignedAudioBuffer.Length());
 
-    Unused << SendDoneWithOutput(std::move(data.buffer()));
-
     RefPtr<AudioData> audio = new AudioData(
         data.base().offset(), data.base().time(), std::move(alignedAudioBuffer),
         data.channels(), data.rate(), data.channelMap());
@@ -82,7 +80,8 @@ RemoteAudioDecoderParent::RemoteAudioDecoderParent(
     TaskQueue* aManagerTaskQueue, TaskQueue* aDecodeTaskQueue, bool* aSuccess,
     nsCString* aErrorDescription)
     : RemoteDecoderParent(aParent, aManagerTaskQueue, aDecodeTaskQueue),
-      mAudioInfo(aAudioInfo) {
+      mAudioInfo(aAudioInfo),
+      mDecodedFramePool(4) {
   CreateDecoderParams params(mAudioInfo);
   params.mTaskQueue = mDecodeTaskQueue;
   params.mOptions = aOptions;
@@ -110,6 +109,11 @@ MediaResult RemoteAudioDecoderParent::ProcessDecodedData(
     DecodedOutputIPDL& aDecodedData) {
   MOZ_ASSERT(OnManagerThread());
 
+  // If we are here, we know all previously returned RemoteAudioDataIPDL got
+  // used by the child. We can mark all previously sent ShmemBuffer as available
+  // again.
+  ReleaseUsedShmems();
+
   nsTArray<RemoteAudioDataIPDL> array;
 
   for (const auto& data : aData) {
@@ -122,13 +126,15 @@ MediaResult RemoteAudioDecoderParent::ProcessDecodedData(
                "to be used with RemoteAudioDecoderParent");
 
     ShmemBuffer buffer = mDecodedFramePool.Get(
-        this, audio->Data().Length() * sizeof(AudioDataValue));
+        this, audio->Data().Length() * sizeof(AudioDataValue),
+        ShmemPool::AllocationPolicy::Unsafe);
     if (!buffer.Valid()) {
       return MediaResult(NS_ERROR_OUT_OF_MEMORY,
                          "ShmemBuffer::Get failed in "
                          "RemoteAudioDecoderParent::ProcessDecodedData");
     }
     if (audio->Data().Length() > buffer.Get().Size<AudioDataValue>()) {
+      mDecodedFramePool.Put(std::move(buffer));
       return MediaResult(NS_ERROR_OUT_OF_MEMORY,
                          "ShmemBuffer::Get returned less than requested in "
                          "RemoteAudioDecoderParent::ProcessDecodedData");
@@ -136,6 +142,8 @@ MediaResult RemoteAudioDecoderParent::ProcessDecodedData(
 
     PodCopy(buffer.Get().get<AudioDataValue>(), audio->Data().Elements(),
             audio->Data().Length());
+
+    mUsedShmems.AppendElement(buffer.Get());
 
     RemoteAudioDataIPDL output(
         MediaDataIPDL(data->mOffset, data->mTime, data->mTimecode,
@@ -148,6 +156,18 @@ MediaResult RemoteAudioDecoderParent::ProcessDecodedData(
   aDecodedData = std::move(array);
 
   return NS_OK;
+}
+
+void RemoteAudioDecoderParent::CleanupOnActorDestroy() {
+  ReleaseUsedShmems();
+  mDecodedFramePool.Cleanup(this);
+}
+
+void RemoteAudioDecoderParent::ReleaseUsedShmems() {
+  for (ShmemBuffer& mem : mUsedShmems) {
+    mDecodedFramePool.Put(ShmemBuffer(mem.Get()));
+  }
+  mUsedShmems.Clear();
 }
 
 }  // namespace mozilla
