@@ -323,17 +323,30 @@ impl MDNSService {
                     _ => {}
                 }
                 if pending_queries.len() < 50 {
-                    if let Some(query) = unsent_queries.pop_front() {
-                        if let Ok(buf) = create_query(0, &vec![query.hostname.to_string()]) {
+                    let mut queries: Vec<Query> = Vec::new();
+                    while queries.len() < 5 && !unsent_queries.is_empty() {
+                        if let Some(query) = unsent_queries.pop_front() {
+                            if !pending_queries.contains_key(&query.hostname) {
+                                queries.push(query);
+                            }
+                        }
+                    }
+                    if !queries.is_empty() {
+                        if let Ok(buf) = create_query(
+                            0,
+                            &queries.iter().map(|q| q.hostname.to_string()).collect(),
+                        ) {
                             match socket.send_to(&buf, &mdns_addr) {
                                 Ok(_) => {
-                                    pending_queries.insert(query.hostname.to_string(), query);
+                                    for query in queries {
+                                        pending_queries.insert(query.hostname.to_string(), query);
+                                    }
                                 }
                                 Err(err) => {
-                                    warn!(
-                                        "Sending mDNS query failed for: {} failed: {}",
-                                        query.hostname, err
-                                    );
+                                    warn!("Sending mDNS query failed: {}", err);
+                                    for query in queries {
+                                        unsent_queries.push_back(query);
+                                    }
                                 }
                             }
                         }
@@ -586,6 +599,7 @@ pub extern "C" fn mdns_service_free_uuid(uuid: *mut c_char) {
 
 #[cfg(test)]
 mod tests {
+    use crate::create_query;
     use crate::validate_hostname;
     use crate::Callback;
     use crate::MDNSService;
@@ -766,5 +780,22 @@ mod tests {
             .map(|x| x.to_string())
             .collect();
         assert_eq!(questions.len(), 2);
+    }
+
+    #[test]
+    fn multiple_queries_in_a_single_packet() {
+        let mut hostnames: Vec<String> = Vec::new();
+        for _ in 0..100 {
+            let hostname = Uuid::new_v4().to_hyphenated().to_string() + ".local";
+            hostnames.push(hostname);
+        }
+
+        let q = create_query(42, &hostnames);
+        match dns_parser::Packet::parse(&q) {
+            Ok(parsed) => {
+                assert_eq!(parsed.questions.len(), 100);
+            }
+            Err(_) => assert!(false),
+        }
     }
 }
