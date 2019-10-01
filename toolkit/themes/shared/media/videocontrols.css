@@ -473,15 +473,23 @@
   margin-inline-start: var(--pip-toggle-padding);
 }
 
-.controlsOverlay:hover > .pictureInPictureToggleButton {
+/**
+ * For the Picture-in-Picture toggle, we don't use the built-in :hover
+ * pseudoclass because there are many sites where the arrangement of the DOM
+ * or the CSS will conspire to prevent :hover from matching on the <video>
+ * itself. PictureInPictureToggleChild takes care of punching through those
+ * barriers, and manually sets a .hovering class.
+ */
+
+.controlsOverlay.hovering > .pictureInPictureToggleButton {
   opacity: 0.8;
 }
 
-.controlsOverlay:hover[hidetoggle="true"] > .pictureInPictureToggleButton:not(:hover) {
+.controlsOverlay[hidetoggle="true"].hovering > .pictureInPictureToggleButton:not(.hovering) {
   opacity: 0;
 }
 
-.controlsOverlay:hover > .pictureInPictureToggleButton:hover {
+.controlsOverlay.hovering > .pictureInPictureToggleButton.hovering {
   opacity: 1;
   transform: translateY(-50%) translateX(0);
 }
