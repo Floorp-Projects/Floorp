@@ -140,6 +140,13 @@ open class GleanInternalAPI internal constructor () {
         // This must be set before anything that might trigger the sending of pings.
         initialized = true
 
+        // There are now dispatcher tasks that we need to perform *before* any tasks
+        // that may have been queued prior to initialization.  Therefore, we turn off
+        // task queueing now, so we can set those early tasks up before actually
+        // flushing the queue below.
+        @Suppress("EXPERIMENTAL_API_USAGE")
+        Dispatchers.API.setTaskQueueing(false)
+
         // Deal with any pending events so we can start recording new ones
         EventsStorageEngine.onReadyToSendPings(applicationContext)
 
@@ -156,7 +163,7 @@ open class GleanInternalAPI internal constructor () {
             metricsPingScheduler.schedule()
         }
 
-        // Signal Dispatcher that init is complete
+        // Flush any tasks that where queued prior to initalization.
         @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.flushQueuedInitialTasks()
 

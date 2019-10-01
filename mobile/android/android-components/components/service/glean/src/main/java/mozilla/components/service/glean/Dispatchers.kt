@@ -93,8 +93,8 @@ internal object Dispatchers {
          *
          * @param enabled whether or not to enable the testing mode
          */
-        @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-        fun setTaskQueueing(enabled: Boolean) {
+        @Suppress("EXPERIMENTAL_COROUTINES_API")
+        internal fun setTaskQueueing(enabled: Boolean) {
             queueInitialTasks = enabled
         }
 
