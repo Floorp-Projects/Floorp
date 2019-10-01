@@ -2082,7 +2082,7 @@
 
 - name: dom.security.respect_document_nosniff
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # Expose the 'policy' attribute in document and HTMLIFrameElement
