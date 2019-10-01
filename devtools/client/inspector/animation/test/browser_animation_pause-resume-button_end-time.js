@@ -35,7 +35,7 @@ add_task(async function() {
   await setClassAttribute(animationInspector, ".animated", "ball still");
   info("Make the current time of animation to be over its end time");
   await clickOnCurrentTimeScrubberController(animationInspector, panel, 1);
-  await clickOnPlaybackRateSelector(animationInspector, panel, 10);
+  await clickOnPlaybackRateSelector(animationInspector, panel, 0.1);
   info("Resume animations");
   await clickOnPauseResumeButton(animationInspector, panel);
   assertPlayState(animationInspector.state.animations, [
