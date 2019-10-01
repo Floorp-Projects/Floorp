@@ -178,12 +178,12 @@ static void AddLoadFlags(nsIRequest* request, nsLoadFlags newFlags) {
 
 // We are in a sync event loop.
 #define NOT_CALLABLE_IN_SYNC_SEND                              \
-  if (mFlagSyncLooping) {                                      \
+  if (mFlagSyncLooping || mEventDispatchingSuspended) {        \
     return NS_ERROR_DOM_INVALID_STATE_XHR_HAS_INVALID_CONTEXT; \
   }
 
 #define NOT_CALLABLE_IN_SYNC_SEND_RV                               \
-  if (mFlagSyncLooping) {                                          \
+  if (mFlagSyncLooping || mEventDispatchingSuspended) {            \
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_XHR_HAS_INVALID_CONTEXT); \
     return;                                                        \
   }
