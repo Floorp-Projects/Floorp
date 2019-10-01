@@ -123,6 +123,38 @@ fn create_query(id: u16, queries: &Vec<String>) -> Result<Vec<u8>, io::Error> {
     Ok(buf)
 }
 
+fn validate_hostname(hostname: &str) -> bool {
+    match hostname.find(".local") {
+        Some(index) => match hostname.get(0..index) {
+            Some(uuid) => match uuid.get(0..36) {
+                Some(initial) => match Uuid::parse_str(initial) {
+                    Ok(_) => {
+                        // Oddly enough, Safari does not generate valid UUIDs,
+                        // the last part sometimes contains more than 12 digits.
+                        match uuid.get(36..) {
+                            Some(trailing) => {
+                                for c in trailing.chars() {
+                                    if !c.is_ascii_hexdigit() {
+                                        return false;
+                                    }
+                                }
+                                return true;
+                            }
+                            None => true,
+                        }
+                    }
+                    Err(_) => {
+                        return false;
+                    }
+                },
+                None => false,
+            },
+            None => false,
+        },
+        None => false,
+    }
+}
+
 enum ServiceControl {
     Register {
         hostname: String,
@@ -216,6 +248,10 @@ impl MDNSService {
                 match receiver.recv_timeout(time::Duration::from_millis(10)) {
                     Ok(msg) => match msg {
                         ServiceControl::Register { hostname, address } => {
+                            if !validate_hostname(&hostname) {
+                                warn!("Not registering invalid hostname: {}", hostname);
+                                continue;
+                            }
                             trace!("Registering {} for: {}", hostname, address);
                             match address.parse().and_then(|ip| {
                                 Ok(match ip {
@@ -238,6 +274,10 @@ impl MDNSService {
                         }
                         ServiceControl::Query { callback, hostname } => {
                             trace!("Querying {}", hostname);
+                            if !validate_hostname(&hostname) {
+                                warn!("Not sending mDNS query for invalid hostname: {}", hostname);
+                                continue;
+                            }
                             queries.insert(hostname.to_string(), callback);
                             //TODO: limit pending queries
                             if let Ok(buf) = create_query(0, &vec![hostname.to_string()]) {
