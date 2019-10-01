@@ -941,8 +941,14 @@ gfxFontEntry* gfxDWriteFontList::CreateFontEntry(
 #endif
   RefPtr<IDWriteFontFamily> family;
   collection->GetFontFamily(aFamily->Index(), getter_AddRefs(family));
+  if (!family) {
+    return nullptr;
+  }
   RefPtr<IDWriteFont> font;
   family->GetFont(aFace->mIndex, getter_AddRefs(font));
+  if (!font) {
+    return nullptr;
+  }
   nsAutoCString faceName;
   HRESULT hr = GetDirectWriteFontName(font, faceName);
   if (FAILED(hr)) {
@@ -1001,7 +1007,7 @@ void gfxDWriteFontList::GetFacesInitDataForFamily(
   for (unsigned i = 0; i < family->GetFontCount(); ++i) {
     RefPtr<IDWriteFont> dwFont;
     family->GetFont(i, getter_AddRefs(dwFont));
-    if (dwFont->GetSimulations() != DWRITE_FONT_SIMULATIONS_NONE) {
+    if (!dwFont || dwFont->GetSimulations() != DWRITE_FONT_SIMULATIONS_NONE) {
       continue;
     }
     DWRITE_FONT_STYLE dwstyle = dwFont->GetStyle();
