@@ -50,6 +50,7 @@ extern crate arrayvec;
 
 extern crate audio_thread_priority;
 
+#[cfg(feature = "webrtc")]
 extern crate mdns_service;
 
 use std::boxed::Box;
