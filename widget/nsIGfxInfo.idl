@@ -116,8 +116,8 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_WEBGL_MSAA = 8;
   /* Whether Stagefright is supported, starting in 17. */
   const long FEATURE_STAGEFRIGHT = 9;
-  /* Whether Webrtc Hardware acceleration is supported, starting in 31. */
-  const long FEATURE_WEBRTC_HW_ACCELERATION = 10;
+  /* Whether Webrtc Hardware H.264 acceleration is supported, starting in 71. */
+  const long FEATURE_WEBRTC_HW_ACCELERATION_H264 = 10;
   /* Whether Direct3D 11 is supported for layers, starting in 32. */
   const long FEATURE_DIRECT3D_11_LAYERS = 11;
   /* Whether hardware accelerated video decoding is supported, starting in 36. */
