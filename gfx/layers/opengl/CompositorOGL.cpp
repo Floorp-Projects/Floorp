@@ -943,9 +943,9 @@ void CompositorOGL::EndRenderingToNativeLayer() {
                      "BeginRenderingToNativeLayer?");
 
   if (StaticPrefs::nglayout_debug_widget_update_flashing()) {
-    float r = float(rand()) / RAND_MAX;
-    float g = float(rand()) / RAND_MAX;
-    float b = float(rand()) / RAND_MAX;
+    float r = float(rand()) / float(RAND_MAX);
+    float g = float(rand()) / float(RAND_MAX);
+    float b = float(rand()) / float(RAND_MAX);
     EffectChain effectChain;
     effectChain.mPrimaryEffect = new EffectSolidColor(Color(r, g, b, 0.2f));
     // If we're clipping the render target to the invalid rect, then the
