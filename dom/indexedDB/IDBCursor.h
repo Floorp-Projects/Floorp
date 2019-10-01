@@ -66,7 +66,7 @@ class IDBCursor final : public nsISupports, public nsWrapperCache {
   RefPtr<IDBIndex> mSourceIndex;
 
   // mSourceObjectStore or mSourceIndex will hold this alive.
-  IDBTransaction* const mTransaction;
+  IDBTransaction* mTransaction;
 
   // These are cycle-collected!
   JS::Heap<JS::Value> mCachedKey;
@@ -90,19 +90,20 @@ class IDBCursor final : public nsISupports, public nsWrapperCache {
 
  public:
   static already_AddRefed<IDBCursor> Create(
-      indexedDB::BackgroundCursorChild* aBackgroundActor, Key aKey,
+      indexedDB::BackgroundCursorChild* aBackgroundActor, const Key& aKey,
       StructuredCloneReadInfo&& aCloneInfo);
 
   static already_AddRefed<IDBCursor> Create(
-      indexedDB::BackgroundCursorChild* aBackgroundActor, Key aKey);
+      indexedDB::BackgroundCursorChild* aBackgroundActor, const Key& aKey);
 
   static already_AddRefed<IDBCursor> Create(
-      indexedDB::BackgroundCursorChild* aBackgroundActor, Key aKey,
-      Key aSortKey, Key aPrimaryKey, StructuredCloneReadInfo&& aCloneInfo);
+      indexedDB::BackgroundCursorChild* aBackgroundActor, const Key& aKey,
+      const Key& aSortKey, const Key& aPrimaryKey,
+      StructuredCloneReadInfo&& aCloneInfo);
 
   static already_AddRefed<IDBCursor> Create(
-      indexedDB::BackgroundCursorChild* aBackgroundActor, Key aKey,
-      Key aSortKey, Key aPrimaryKey);
+      indexedDB::BackgroundCursorChild* aBackgroundActor, const Key& aKey,
+      const Key& aSortKey, const Key& aPrimaryKey);
 
   static Direction ConvertDirection(IDBCursorDirection aDirection);
 
@@ -119,8 +120,6 @@ class IDBCursor final : public nsISupports, public nsWrapperCache {
   void GetSource(OwningIDBObjectStoreOrIDBIndex& aSource) const;
 
   IDBCursorDirection GetDirection() const;
-
-  bool IsContinueCalled() const { return mContinueCalled; }
 
   void GetKey(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
               ErrorResult& aRv);
@@ -161,8 +160,6 @@ class IDBCursor final : public nsISupports, public nsWrapperCache {
     mBackgroundActor = nullptr;
   }
 
-  void InvalidateCachedResponses();
-
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBCursor)
 
@@ -172,7 +169,7 @@ class IDBCursor final : public nsISupports, public nsWrapperCache {
 
  private:
   IDBCursor(Type aType, indexedDB::BackgroundCursorChild* aBackgroundActor,
-            Key aKey);
+            const Key& aKey);
 
   ~IDBCursor();
 

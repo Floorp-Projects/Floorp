@@ -74,7 +74,6 @@ namespace indexedDB {
 struct StructuredCloneReadInfo;
 class SerializedStructuredCloneReadInfo;
 class ObjectStoreCursorResponse;
-class IndexCursorResponse;
 }  // namespace indexedDB
 }  // namespace dom
 }  // namespace mozilla
@@ -725,7 +724,6 @@ DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::ClonedMessageData)
 DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::indexedDB::StructuredCloneReadInfo);
 DECLARE_USE_COPY_CONSTRUCTORS(
     mozilla::dom::indexedDB::ObjectStoreCursorResponse)
-DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::indexedDB::IndexCursorResponse)
 DECLARE_USE_COPY_CONSTRUCTORS(
     mozilla::dom::indexedDB::SerializedStructuredCloneReadInfo);
 DECLARE_USE_COPY_CONSTRUCTORS(JSStructuredCloneData)
