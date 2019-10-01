@@ -105,8 +105,9 @@ class AndroidBridge final {
                               nsIHandlerApp** aDefaultApp = nullptr,
                               const nsAString& aAction = EmptyString());
 
-  bool GetHWEncoderCapability();
-  bool GetHWDecoderCapability();
+  bool HasHWVP8Encoder();
+  bool HasHWVP8Decoder();
+  bool HasHWH264();
 
   void GetMimeTypeFromExtensions(const nsACString& aFileExt,
                                  nsCString& aMimeType);
