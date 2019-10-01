@@ -36,7 +36,6 @@ class RemoteDecoderParent : public PRemoteDecoderParent {
   IPCResult RecvDrain(DrainResolver&& aResolver);
   IPCResult RecvShutdown(ShutdownResolver&& aResolver);
   IPCResult RecvSetSeekThreshold(const media::TimeUnit& aTime);
-  IPCResult RecvDoneWithOutput(Shmem&& aOutputShmem);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -49,15 +48,13 @@ class RemoteDecoderParent : public PRemoteDecoderParent {
   virtual MediaResult ProcessDecodedData(
       const MediaDataDecoder::DecodedData& aDatam,
       DecodedOutputIPDL& aDecodedData) = 0;
+  virtual void CleanupOnActorDestroy() {}
 
   RefPtr<RemoteDecoderManagerParent> mParent;
   RefPtr<RemoteDecoderParent> mIPDLSelfRef;
   RefPtr<TaskQueue> mManagerTaskQueue;
   RefPtr<TaskQueue> mDecodeTaskQueue;
   RefPtr<MediaDataDecoder> mDecoder;
-
-  // Can only be accessed from the manager thread
-  ShmemPool mDecodedFramePool;
 };
 
 }  // namespace mozilla

@@ -24,8 +24,6 @@ class RemoteDecoderChild : public PRemoteDecoderChild,
  public:
   explicit RemoteDecoderChild(bool aRecreatedOnCrash = false);
 
-  IPCResult RecvDoneWithInput(Shmem&& aInputShmem);
-
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   // IRemoteDecoderChild
