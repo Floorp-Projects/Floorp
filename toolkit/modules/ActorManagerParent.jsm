@@ -321,6 +321,7 @@ let LEGACY_ACTORS = {
       module: "resource://gre/actors/PictureInPictureChild.jsm",
       events: {
         MozTogglePictureInPicture: { capture: true },
+        MozStopPictureInPicture: { capture: true },
       },
 
       messages: [

@@ -709,6 +709,12 @@ class PictureInPictureChild extends ActorChild {
         }
         break;
       }
+      case "MozStopPictureInPicture": {
+        if (event.isTrusted && event.target === this.weakVideo) {
+          this.closePictureInPicture({ reason: "video-el-remove" });
+        }
+        break;
+      }
       case "pagehide": {
         // The originating video's content document has unloaded,
         // so close Picture-in-Picture.
