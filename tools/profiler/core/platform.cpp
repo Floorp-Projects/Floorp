@@ -235,6 +235,17 @@ static uint32_t StartupExtraDefaultFeatures() {
   return ProfilerFeature::MainThreadIO;
 }
 
+// Does `aFeatures` include any feature that requires stack sampling to run?
+static constexpr bool FeaturesImplyStackSampling(uint32_t aFeatures) {
+  // Currently, StackWalk (or just Leaf) and JS require the sampler to record
+  // stack traces.
+  // Previously, turning off all these still recorded stacks with only labels.
+  // TODO: Evaluate whether label-only stacks are useful, and whether there
+  // should be a separate feature to turn off stack samples. See bug 1583430.
+  return aFeatures & (ProfilerFeature::JS | ProfilerFeature::Leaf |
+                      ProfilerFeature::StackWalk);
+}
+
 // The class is a thin shell around mozglue PlatformMutex. It does not preserve
 // behavior in JS record/replay. It provides a mechanism to determine if it is
 // locked or not in order for memory hooks to avoid re-entering the profiler
@@ -2574,14 +2585,12 @@ void SamplerThread::Run() {
 
   // Features won't change during this SamplerThread's lifetime, so we can
   // determine now whether stack sampling is required.
-  const bool noStackSampling = []() {
+  const bool stackSamplingRequired = []() {
     PSAutoLock lock(gPSMutex);
     if (!ActivePS::Exists(lock)) {
-      // If there is no active profiler, it doesn't matter what we return,
-      // because this thread will exit before any stack sampling is attempted.
       return false;
     }
-    return ActivePS::FeatureNoStackSampling(lock);
+    return FeaturesImplyStackSampling(ActivePS::Features(lock));
   }();
 
   // Use local BlocksRingBuffer&ProfileBuffer to capture the stack.
@@ -2647,7 +2656,7 @@ void SamplerThread::Run() {
         }
         TimeStamp countersSampled = TimeStamp::NowUnfuzzed();
 
-        if (!noStackSampling) {
+        if (stackSamplingRequired) {
           const Vector<LiveProfiledThreadData>& liveThreads =
               ActivePS::LiveProfiledThreads(lock);
 
