@@ -195,7 +195,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
           }
         """, script_args=(self._expectedURLs,))  # NOQA: E501
 
-    def createSync(self):
+    def createFxa(self):
         # This script will write an entry to the login manager and create
         # a signedInUser.json in the profile dir.
         self.runAsyncCode("""
@@ -205,6 +205,13 @@ class TestFirefoxRefresh(MarionetteTestCase):
           let data = {email: "test@test.com", uid: "uid", keyFetchToken: "top-secret"};
           storage.initialize(data);
           storage.finalize().then(resolve);
+        """)
+
+    def createSync(self):
+        # This script will write the canonical preference which indicates a user
+        # is signed into sync.
+        self.marionette.execute_script("""
+            Services.prefs.setStringPref("services.sync.username", "test@test.com");
         """)
 
     def checkPassword(self):
@@ -392,11 +399,10 @@ class TestFirefoxRefresh(MarionetteTestCase):
         """)  # NOQA: E501
         self.assertSequenceEqual(tabURIs, self._expectedURLs)
 
-    def checkSync(self, hasMigrated):
+    def checkFxA(self):
         result = self.runAsyncCode("""
           Cu.import("resource://gre/modules/FxAccountsStorage.jsm");
           let resolve = arguments[arguments.length - 1];
-          let prefs = new global.Preferences("services.sync.");
           let storage = new FxAccountsStorageManager();
           let result = {};
           storage.initialize();
@@ -404,7 +410,6 @@ class TestFirefoxRefresh(MarionetteTestCase):
             result.accountData = data;
             return storage.finalize();
           }).then(() => {
-            result.prefUsername = prefs.get("username");
             resolve(result);
           }).catch(err => {
             resolve(err.toString());
@@ -416,20 +421,24 @@ class TestFirefoxRefresh(MarionetteTestCase):
         self.assertEqual(result["accountData"]["email"], "test@test.com")
         self.assertEqual(result["accountData"]["uid"], "uid")
         self.assertEqual(result["accountData"]["keyFetchToken"], "top-secret")
-        if hasMigrated:
-            # This test doesn't actually configure sync itself, so the username
-            # pref only exists after migration.
-            self.assertEqual(result["prefUsername"], "test@test.com")
 
-    def checkProfile(self, hasMigrated=False):
+    def checkSync(self, expect_sync_user):
+        pref_value = self.marionette.execute_script("""
+            return Services.prefs.getStringPref("services.sync.username", null);
+        """)
+        expected_value = "test@test.com" if expect_sync_user else None
+        self.assertEqual(pref_value, expected_value)
+
+    def checkProfile(self, has_migrated=False, expect_sync_user=True):
         self.checkPassword()
         self.checkBookmarkInMenu()
         self.checkHistory()
         self.checkFormHistory()
         self.checkFormAutofill()
         self.checkCookie()
-        self.checkSync(hasMigrated)
-        if hasMigrated:
+        self.checkFxA()
+        self.checkSync(expect_sync_user)
+        if has_migrated:
             self.checkBookmarkToolbarVisibility()
             self.checkSession()
 
@@ -442,6 +451,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
         self.createFormAutofill()
         self.createCookie()
         self.createSession()
+        self.createFxa()
         self.createSync()
 
     def setUpScriptData(self):
@@ -587,13 +597,27 @@ class TestFirefoxRefresh(MarionetteTestCase):
         self.assertIn(cleanup.profile_name_to_remove, cleanup.reset_profile_path)
         return cleanup
 
-    def testReset(self):
+    def testResetEverything(self):
         self.createProfileData()
 
-        self.checkProfile()
+        self.checkProfile(expect_sync_user=True)
 
         this_cleanup = self.doReset()
         self.cleanups.append(this_cleanup)
 
         # Now check that we're doing OK...
-        self.checkProfile(hasMigrated=True)
+        self.checkProfile(has_migrated=True, expect_sync_user=True)
+
+    def testFxANoSync(self):
+        # This test doesn't need to repeat all the non-sync tests...
+        # Setup FxA but *not* sync
+        self.createFxa()
+
+        self.checkFxA()
+        self.checkSync(False)
+
+        this_cleanup = self.doReset()
+        self.cleanups.append(this_cleanup)
+
+        self.checkFxA()
+        self.checkSync(False)
