@@ -2384,19 +2384,25 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result) {
     appCacheChannel->GetChooseApplicationCache(&chooseAppcache);
   }
 
+  uint32_t sourceRequestBlockingReason = 0;
+  if (mLoadInfo) {
+    mLoadInfo->GetRequestBlockingReason(&sourceRequestBlockingReason);
+  }
+
   nsCOMPtr<nsILoadInfo> newChannelLoadInfo = nullptr;
   nsCOMPtr<nsIChannel> newChannel = do_QueryInterface(mRedirectChannelChild);
   if (newChannel) {
     newChannelLoadInfo = newChannel->LoadInfo();
   }
 
-  ChildLoadInfoForwarderArgs loadInfoForwarder;
-  LoadInfoToChildLoadInfoForwarder(newChannelLoadInfo, &loadInfoForwarder);
+  ChildLoadInfoForwarderArgs targetLoadInfoForwarder;
+  LoadInfoToChildLoadInfoForwarder(newChannelLoadInfo,
+                                   &targetLoadInfoForwarder);
 
   if (CanSend())
-    SendRedirect2Verify(result, *headerTuples, loadInfoForwarder, loadFlags,
-                        referrerInfo, redirectURI, corsPreflightArgs,
-                        chooseAppcache);
+    SendRedirect2Verify(result, *headerTuples, sourceRequestBlockingReason,
+                        targetLoadInfoForwarder, loadFlags, referrerInfo,
+                        redirectURI, corsPreflightArgs, chooseAppcache);
 
   return NS_OK;
 }
