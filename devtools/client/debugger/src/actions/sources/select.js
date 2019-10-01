@@ -19,6 +19,7 @@ import { closeActiveSearch, updateActiveFileSearch } from "../ui";
 import { togglePrettyPrint } from "./prettyPrint";
 import { addTab, closeTab } from "../tabs";
 import { loadSourceText } from "./loadSourceText";
+import { setBreakableLines } from ".";
 
 import { prefs } from "../../utils/prefs";
 import { isMinified } from "../../utils/source";
@@ -162,6 +163,8 @@ export function selectLocation(
     dispatch(setSelectedLocation(cx, source, location));
 
     await dispatch(loadSourceText({ cx, source }));
+    await dispatch(setBreakableLines(cx, source.id));
+
     const loadedSource = getSource(getState(), source.id);
 
     if (!loadedSource) {
