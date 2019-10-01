@@ -1,65 +1,12 @@
 License information for hyph_bg.dic:
 
-This file is based on the TeX hyphenation patterns distributed under the
-LaTeX Project Public License (LPPL) as part of the hyph-utf8 package.
+Copyright (C) 2000,2004,2017 by Anton Zinoviev <anton@lml.bas.bg>
 
-This Source Code Form is subject to the terms of the Mozilla Public
-License, v. 2.0. If a copy of the MPL was not distributed with this
-file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-At the time this file was first modified, a complete, unmodified copy of
-the LPPL Work was available from:
-http://tug.org/svn/texhyphen/trunk/hyph-utf8/tex/generic/hyph-utf8/patterns/?pathrev=580
-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-Portions of this file were originally made available under the following license
-(copied verbatim from hyph-bg.lic.txt in the original work):
-
-Bulgarian hyphenation patterns
-
-(more info about the licence to be added later)
-
-% Bulgarian hyphenation patterns, version 1.7, July 2008
-%   Copyright 1994-2008 Georgi Boshnakov
-%   Georgi dot Boshnakov at manchester dot ac dot uk
-%
-% This file can be redistributed and/or modified under the terms
-% of the LaTeX Project Public License distributed from CTAN
-% archives in directory macros/latex/base/lppl.txt; either
-% version 1 of the License, or any later version.
-%
-%
-%   First version:  1994
-%   Modified:  June 2000 (minor changes)
-%   Modified:  May  2006 (added copyright notice)
-%   Modified:  June 2008 (changed encoding to utf-8)
-%
-%   Please send wrongly hyphenated words and suggestions for
-%   corrections to the address given towards the beginning of this
-%   file.
-%
-%
-% Note: The original name of this file was 'bghyphsi.tex' which is
-%   part of the package 'bghyphen'. The package 'bghyphen' is now
-%   obsolete but it is still available on CTAN and currently (June 2008)
-%   gives the same hyphenation results.
-%
-%
-%
-% To make TeX use these patterns:
-%
-%    (1) Make sure that the hyph-utf8 package is present in your TeX
-%        system.
-%
-%    (2) generate the necessary formats (TeX, LaTeX, pdfLaTeX, etc),
-%        instructing TeX to load 'loadhyph-bg.tex' for Bulgarian
-%        hyphenation.
-%
-% The LaTeX babel package sets \lefthyphenmin and \righthyphenmin to 2
-%   when the language is switched to Bulgarian.  Developers who write
-%   support for Bulgarian outside LaTeX and/or babel need to take care
-%   of this.
-%
+This software may be used, modified, copied, distributed, and sold,
+both in source and binary form provided that the above copyright
+notice and these terms are retained. The name of the author may not
+be used to endorse or promote products derived from this software
+without prior permission.  THIS SOFTWARE IS PROVIDES "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES ARE DISCLAIMED.  IN NO EVENT
+SHALL THE AUTHOR BE LIABLE FOR ANY DAMAGES ARISING IN ANY WAY OUT
+OF THE USE OF THIS SOFTWARE.
