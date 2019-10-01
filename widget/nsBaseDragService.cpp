@@ -860,3 +860,13 @@ bool nsBaseDragService::MaybeAddChildProcess(
   }
   return false;
 }
+
+bool nsBaseDragService::RemoveAllChildProcesses() {
+  for (uint32_t c = 0; c < mChildProcesses.Length(); c++) {
+    mozilla::Unused << mChildProcesses[c]->SendEndDragSession(
+      true, false, LayoutDeviceIntPoint(), 0);
+  }
+  mChildProcesses.Clear();
+  return true;
+}
+
