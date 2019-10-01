@@ -13,3 +13,6 @@ transforms:
 jobs:
     base:
         symbol: I(base)
+    ui-tests:
+        parent: base
+        symbol: I(ui-tests)

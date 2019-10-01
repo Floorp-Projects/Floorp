@@ -9,8 +9,6 @@ import json
 import taskcluster
 
 DEFAULT_EXPIRES_IN = '1 year'
-GOOGLE_PROJECT = 'moz-android-components-230120'
-GOOGLE_APPLICATION_CREDENTIALS = '.firebase_token.json'
 
 
 class TaskBuilder(object):
@@ -89,46 +87,6 @@ class TaskBuilder(object):
             name='Android Components - Sign Module :{}'.format(component_name),
             description="Sign release module {}".format(component_name),
             payload=payload
-        )
-
-    def craft_ui_tests_task(self):
-        artifacts = {
-            "public": {
-                "type": "directory",
-                "path": "/build/android-components/results",
-                "expires": taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN))
-            }
-        }
-
-        env_vars = {
-            "GOOGLE_PROJECT": "moz-android-components-230120",
-            "GOOGLE_APPLICATION_CREDENTIALS": ".firebase_token.json"
-        }
-
-        gradle_commands = (
-            './gradlew --no-daemon clean assembleGeckoNightly assembleAndroidTest',
-        )
-
-        test_commands = (
-            'automation/taskcluster/androidTest/ui-test.sh browser arm 1',
-        )
-
-        command = ' && '.join(
-            cmd
-            for commands in (gradle_commands, test_commands)
-            for cmd in commands
-            if cmd
-        )
-
-        return self._craft_build_ish_task(
-            name='Android Components - mod UI tests',
-            description='Execute Gradle tasks for UI tests',
-            command=command,
-            scopes=[
-                'secrets:get:project/mobile/android-components/firebase'
-            ],
-            artifacts=artifacts,
-            env_vars=env_vars,
         )
 
     def craft_beetmover_task(

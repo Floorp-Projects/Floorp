@@ -166,11 +166,7 @@ def pr(builder, artifacts_info):
 
 
 def push(builder, artifacts_info):
-    all_tasks = pr(builder, artifacts_info)
-    ui_task = builder.craft_ui_tests_task()
-    ui_task['attributes']['code-review'] = True
-    all_tasks.append(ui_task)
-    return all_tasks
+    return pr(builder, artifacts_info)
 
 
 def _get_gradle_module_name(artifact_info):
