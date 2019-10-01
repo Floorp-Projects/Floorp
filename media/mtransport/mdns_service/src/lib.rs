@@ -5,6 +5,7 @@
 use byteorder::{BigEndian, WriteBytesExt};
 use socket2::{Domain, Socket, Type};
 use std::collections::HashMap;
+use std::collections::LinkedList;
 use std::ffi::{c_void, CStr, CString};
 use std::io;
 use std::net;
@@ -170,6 +171,24 @@ enum ServiceControl {
     Stop,
 }
 
+struct Query {
+    hostname: String,
+    callback: Callback,
+    timestamp: time::Instant,
+    attempts: i32,
+}
+
+impl Query {
+    fn new(hostname: &str, callback: Callback) -> Query {
+        Query {
+            hostname: hostname.to_string(),
+            callback: callback,
+            timestamp: time::Instant::now(),
+            attempts: 0,
+        }
+    }
+}
+
 pub struct MDNSService {
     handle: Option<std::thread::JoinHandle<()>>,
     sender: Option<std::sync::mpsc::Sender<ServiceControl>>,
@@ -243,7 +262,8 @@ impl MDNSService {
             let mdns_addr = std::net::SocketAddr::from(([224, 0, 0, 251], port));
             let mut buffer: [u8; 1024] = [0; 1024];
             let mut hosts = HashMap::new();
-            let mut queries = HashMap::new();
+            let mut unsent_queries = LinkedList::new();
+            let mut pending_queries = HashMap::new();
             loop {
                 match receiver.recv_timeout(time::Duration::from_millis(10)) {
                     Ok(msg) => match msg {
@@ -278,13 +298,7 @@ impl MDNSService {
                                 warn!("Not sending mDNS query for invalid hostname: {}", hostname);
                                 continue;
                             }
-                            queries.insert(hostname.to_string(), callback);
-                            //TODO: limit pending queries
-                            if let Ok(buf) = create_query(0, &vec![hostname.to_string()]) {
-                                if let Err(err) = socket.send_to(&buf, &mdns_addr) {
-                                    warn!("Sending mDNS query failed: {}", err);
-                                }
-                            }
+                            unsent_queries.push_back(Query::new(&hostname, callback));
                         }
                         ServiceControl::Unregister { hostname } => {
                             trace!("Unregistering {}", hostname);
@@ -300,6 +314,42 @@ impl MDNSService {
                     }
                     _ => {}
                 }
+                if pending_queries.len() < 50 {
+                    if let Some(query) = unsent_queries.pop_front() {
+                        if let Ok(buf) = create_query(0, &vec![query.hostname.to_string()]) {
+                            match socket.send_to(&buf, &mdns_addr) {
+                                Ok(_) => {
+                                    pending_queries.insert(query.hostname.to_string(), query);
+                                }
+                                Err(err) => {
+                                    warn!(
+                                        "Sending mDNS query failed for: {} failed: {}",
+                                        query.hostname, err
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+
+                let now = time::Instant::now();
+                let expired: Vec<String> = pending_queries
+                    .iter()
+                    .filter(|(_, query)| now.duration_since(query.timestamp).as_secs() >= 3)
+                    .map(|(hostname, _)| hostname.to_string())
+                    .collect();
+                for hostname in expired {
+                    if let Some(mut query) = pending_queries.remove(&hostname) {
+                        query.attempts += 1;
+                        if query.attempts < 2 {
+                            query.timestamp = now;
+                            unsent_queries.push_back(query);
+                        } else {
+                            hostname_resolved(&query.callback, &hostname, "");
+                        }
+                    }
+                }
+
                 match socket.recv_from(&mut buffer) {
                     Ok((amt, _)) => {
                         if amt > 0 {
@@ -336,8 +386,8 @@ impl MDNSService {
                                     }
                                     for answer in parsed.answers {
                                         let hostname = answer.name.to_string();
-                                        match queries.get(&hostname) {
-                                            Some(callback) => {
+                                        match pending_queries.get(&hostname) {
+                                            Some(query) => {
                                                 match answer.data {
                                                     dns_parser::RData::A(
                                                         dns_parser::rdata::a::Record(addr),
@@ -349,7 +399,9 @@ impl MDNSService {
                                                             addr
                                                         );
                                                         hostname_resolved(
-                                                            callback, &hostname, &addr,
+                                                            &query.callback,
+                                                            &hostname,
+                                                            &addr,
                                                         );
                                                     }
                                                     dns_parser::RData::AAAA(
@@ -362,12 +414,14 @@ impl MDNSService {
                                                             addr
                                                         );
                                                         hostname_resolved(
-                                                            callback, &hostname, &addr,
+                                                            &query.callback,
+                                                            &hostname,
+                                                            &addr,
                                                         );
                                                     }
                                                     _ => {}
                                                 }
-                                                queries.remove(&hostname);
+                                                pending_queries.remove(&hostname);
                                             }
                                             None => {
                                                 continue;

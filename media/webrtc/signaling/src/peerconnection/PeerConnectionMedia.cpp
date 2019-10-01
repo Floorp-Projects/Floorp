@@ -45,20 +45,22 @@ void PeerConnectionMedia::StunAddrsHandler::OnMDNSQueryComplete(
   ASSERT_ON_THREAD(pcm_->mMainThread);
   auto itor = pcm_->mQueriedMDNSHostnames.find(hostname.BeginReading());
   if (itor != pcm_->mQueriedMDNSHostnames.end()) {
-    for (auto& cand : itor->second) {
-      // Replace obfuscated address with actual address
-      std::string obfuscatedAddr = cand.mTokenizedCandidate[4];
-      cand.mTokenizedCandidate[4] = address.BeginReading();
-      std::ostringstream o;
-      for (size_t i = 0; i < cand.mTokenizedCandidate.size(); ++i) {
-        o << cand.mTokenizedCandidate[i];
-        if (i + 1 != cand.mTokenizedCandidate.size()) {
-          o << " ";
+    if (!address.IsEmpty()) {
+      for (auto& cand : itor->second) {
+        // Replace obfuscated address with actual address
+        std::string obfuscatedAddr = cand.mTokenizedCandidate[4];
+        cand.mTokenizedCandidate[4] = address.BeginReading();
+        std::ostringstream o;
+        for (size_t i = 0; i < cand.mTokenizedCandidate.size(); ++i) {
+          o << cand.mTokenizedCandidate[i];
+          if (i + 1 != cand.mTokenizedCandidate.size()) {
+            o << " ";
+          }
         }
+        std::string mungedCandidate = o.str();
+        pcm_->mTransportHandler->AddIceCandidate(
+            cand.mTransportId, mungedCandidate, cand.mUfrag, obfuscatedAddr);
       }
-      std::string mungedCandidate = o.str();
-      pcm_->mTransportHandler->AddIceCandidate(
-          cand.mTransportId, mungedCandidate, cand.mUfrag, obfuscatedAddr);
     }
     pcm_->mQueriedMDNSHostnames.erase(itor);
   }
