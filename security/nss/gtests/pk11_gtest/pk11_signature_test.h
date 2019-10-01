@@ -59,6 +59,9 @@ class Pk11SignatureTest : public ::testing::Test {
 
     ScopedCERTSubjectPublicKeyInfo certSpki(
         SECKEY_DecodeDERSubjectPublicKeyInfo(&spkiItem));
+    if (!certSpki) {
+      return nullptr;
+    }
 
     return ScopedSECKEYPublicKey(SECKEY_ExtractPublicKey(certSpki.get()));
   }
