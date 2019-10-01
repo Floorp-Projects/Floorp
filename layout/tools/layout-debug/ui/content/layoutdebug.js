@@ -292,7 +292,6 @@ const TabCrashedObserver = {
   },
 };
 
-
 function OnLDBLoad() {
   gBrowser = document.getElementById("browser");
   gURLBar = document.getElementById("urlbar");
