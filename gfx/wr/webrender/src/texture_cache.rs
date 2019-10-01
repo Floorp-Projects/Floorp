@@ -517,9 +517,6 @@ pub struct TextureCache {
     /// Maximum number of texture layers supported by hardware.
     max_texture_layers: usize,
 
-    /// The minimum number of picture cache slices to allocate.
-    min_picture_cache_slices: usize,
-
     /// Settings on using texture unit swizzling.
     swizzle: Option<SwizzleSettings>,
 
@@ -568,7 +565,6 @@ impl TextureCache {
         initial_size: DeviceIntSize,
         color_formats: TextureFormatPair<ImageFormat>,
         swizzle: Option<SwizzleSettings>,
-        min_picture_cache_slices: usize,
     ) -> Self {
         if cfg!(target_os = "macos") {
             // On MBP integrated Intel GPUs, texture arrays appear to be
@@ -612,7 +608,7 @@ impl TextureCache {
                 slices: {
                     let num_x = (initial_size.width + tile_size.width - 1) / tile_size.width;
                     let num_y = (initial_size.height + tile_size.height - 1) / tile_size.height;
-                    let count = (num_x * num_y).max(min_picture_cache_slices as i32).min(16) as usize;
+                    let count = (num_x * num_y).max(1).min(16) as usize;
                     info!("Initializing picture texture with {}x{} slices", num_x, num_y);
                     vec![WholeTextureSlice { uv_rect_handle: None }; count]
                 },
@@ -645,7 +641,6 @@ impl TextureCache {
             per_doc_data: FastHashMap::default(),
             doc_data: PerDocumentData::new(),
             require_frame_build: false,
-            min_picture_cache_slices,
         }
     }
 
@@ -665,7 +660,6 @@ impl TextureCache {
             DeviceIntSize::zero(),
             TextureFormatPair::from(image_format),
             None,
-            1,
         );
         let mut now = FrameStamp::first(DocumentId::new(IdNamespace(1), 1));
         now.advance();
@@ -706,7 +700,7 @@ impl TextureCache {
     fn clear_picture(&mut self) {
         self.clear_kind(EntryKind::Picture);
         for picture_texture in &mut self.picture_textures {
-            if let Some(texture_id) = picture_texture.reset(PICTURE_TEXTURE_ADD_SLICES.max(self.min_picture_cache_slices)) {
+            if let Some(texture_id) = picture_texture.reset(PICTURE_TEXTURE_ADD_SLICES) {
                 self.pending_updates.push_reset(texture_id, picture_texture.to_info());
             }
         }
@@ -897,11 +891,6 @@ impl TextureCache {
     #[cfg(feature = "replay")]
     pub fn swizzle_settings(&self) -> Option<SwizzleSettings> {
         self.swizzle
-    }
-
-    #[cfg(feature = "replay")]
-    pub fn min_picture_cache_slices(&self) -> usize {
-        self.min_picture_cache_slices
     }
 
     pub fn pending_updates(&mut self) -> TextureUpdateList {

@@ -1463,12 +1463,6 @@ impl Device {
         self.max_texture_size = self.max_texture_size.min(size);
     }
 
-    /// Returns the device string of the renderer. Useful to enable code paths to
-    /// work around bugs on various renderers.
-    pub fn renderer_name(&self) -> &str {
-        &self.renderer_name
-    }
-
     /// Returns the limit on texture dimensions (width or height).
     pub fn max_texture_size(&self) -> i32 {
         self.max_texture_size
