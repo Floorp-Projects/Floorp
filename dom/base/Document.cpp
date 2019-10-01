@@ -1383,21 +1383,15 @@ Document::Document(const char* aContentType)
   mReferrerInfo = new dom::ReferrerInfo(nullptr);
 }
 
-bool Document::CallerIsTrustedAboutNetError(JSContext* aCx, JSObject* aObject) {
-  nsIPrincipal* principal = nsContentUtils::SubjectPrincipal(aCx);
-  if (NS_WARN_IF(!principal)) {
+static bool IsAboutErrorPage(nsGlobalWindowInner* aWin, const char* aSpec) {
+  if (NS_WARN_IF(!aWin)) {
     return false;
   }
 
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_OK;
-  rv = principal->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, false);
-
-  if (!uri) {
+  nsIURI* uri = aWin->GetDocumentURI();
+  if (NS_WARN_IF(!uri)) {
     return false;
   }
-
   // getSpec is an expensive operation, hence we first check the scheme
   // to see if the caller is actually an about: page.
   if (!uri->SchemeIs("about")) {
@@ -1405,10 +1399,15 @@ bool Document::CallerIsTrustedAboutNetError(JSContext* aCx, JSObject* aObject) {
   }
 
   nsAutoCString aboutSpec;
-  rv = uri->GetSpec(aboutSpec);
+  nsresult rv = NS_GetAboutModuleName(uri, aboutSpec);
   NS_ENSURE_SUCCESS(rv, false);
 
-  return StringBeginsWith(aboutSpec, NS_LITERAL_CSTRING("about:neterror"));
+  return aboutSpec.EqualsASCII(aSpec);
+}
+
+bool Document::CallerIsTrustedAboutNetError(JSContext* aCx, JSObject* aObject) {
+  nsGlobalWindowInner* win = xpc::WindowOrNull(aObject);
+  return IsAboutErrorPage(win, "neterror");
 }
 
 void Document::GetNetErrorInfo(mozilla::dom::NetErrorInfo& aInfo,
@@ -1443,24 +1442,8 @@ void Document::GetNetErrorInfo(mozilla::dom::NetErrorInfo& aInfo,
 
 bool Document::CallerIsTrustedAboutCertError(JSContext* aCx,
                                              JSObject* aObject) {
-  nsIPrincipal* principal = nsContentUtils::SubjectPrincipal(aCx);
-  if (NS_WARN_IF(!principal)) {
-    return false;
-  }
-  // getSpec is an expensive operation, hence we first check the scheme
-  // to see if the caller is actually an about: page.
-  if (!principal->SchemeIs("about")) {
-    return false;
-  }
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = principal->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, false);
-
-  nsAutoCString aboutSpec;
-  rv = uri->GetSpec(aboutSpec);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  return StringBeginsWith(aboutSpec, NS_LITERAL_CSTRING("about:certerror"));
+  nsGlobalWindowInner* win = xpc::WindowOrNull(aObject);
+  return IsAboutErrorPage(win, "certerror");
 }
 
 void Document::GetFailedCertSecurityInfo(
