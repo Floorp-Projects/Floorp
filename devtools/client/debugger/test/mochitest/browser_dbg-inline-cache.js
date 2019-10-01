@@ -10,6 +10,9 @@
  *   - Reload inside debugger with toolbox caching enabled
  */
 
+// Breakpoint position calculations can throw when interrupted by a navigation.
+PromiseTestUtils.whitelistRejectionsGlobally(/Resource .*? does not exist/);
+
 const server = createTestHTTPServer();
 
 let docValue = 1;
