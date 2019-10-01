@@ -7,7 +7,6 @@
 #define GFX_FT2FONTS_H
 
 #include "mozilla/MemoryReporting.h"
-#include "cairo.h"
 #include "gfxTypes.h"
 #include "gfxFont.h"
 #include "gfxFT2FontBase.h"
@@ -20,10 +19,9 @@ class FT2FontEntry;
 class gfxFT2Font : public gfxFT2FontBase {
  public:  // new functions
   gfxFT2Font(const RefPtr<mozilla::gfx::UnscaledFontFreeType>& aUnscaledFont,
-             cairo_scaled_font_t* aCairoFont,
              RefPtr<mozilla::gfx::SharedFTFace>&& aFTFace,
              FT2FontEntry* aFontEntry, const gfxFontStyle* aFontStyle,
-             int aLoadFlags, bool aEmbolden);
+             int aLoadFlags);
   virtual ~gfxFT2Font();
 
   FT2FontEntry* GetFontEntry();

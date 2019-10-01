@@ -1343,6 +1343,13 @@ void gfxPlatform::WillShutdown() {
   mScreenReferenceSurface = nullptr;
   mScreenReferenceDrawTarget = nullptr;
 
+#ifdef USE_SKIA
+  // Always clear out the Skia font cache here, in case it is referencing any
+  // SharedFTFaces that would otherwise outlive destruction of the FT_Library
+  // that owns them.
+  SkGraphics::PurgeFontCache();
+#endif
+
   // The cairo folks think we should only clean up in debug builds,
   // but we're generally in the habit of trying to shut down as
   // cleanly as possible even in production code, so call this
@@ -1351,12 +1358,6 @@ void gfxPlatform::WillShutdown() {
   // because cairo can assert and thus crash on shutdown, don't do this in
   // release builds
 #ifdef NS_FREE_PERMANENT_DATA
-#  ifdef USE_SKIA
-  // must do Skia cleanup before Cairo cleanup, because Skia may be referencing
-  // Cairo objects e.g. through SkCairoFTTypeface
-  SkGraphics::PurgeFontCache();
-#  endif
-
 #  if MOZ_TREE_CAIRO
   cairo_debug_reset_static_data();
 #  endif

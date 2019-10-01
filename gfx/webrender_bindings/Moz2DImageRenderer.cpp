@@ -255,9 +255,7 @@ static RefPtr<UnscaledFont> GetUnscaledFont(Translator* aTranslator,
 #endif
   // makes a copy of the data
   RefPtr<NativeFontResource> fontResource = Factory::CreateNativeFontResource(
-      (uint8_t*)data.mData, data.mSize,
-      aTranslator->GetReferenceDrawTarget()->GetBackendType(), type,
-      aTranslator->GetFontContext());
+      (uint8_t*)data.mData, data.mSize, type, aTranslator->GetFontContext());
   RefPtr<UnscaledFont> unscaledFont;
   if (!fontResource) {
     gfxDevCrash(LogReason::NativeFontResourceNotFound)

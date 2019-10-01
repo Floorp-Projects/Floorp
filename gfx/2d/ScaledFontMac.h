@@ -50,7 +50,7 @@ class ScaledFontMac : public ScaledFontBase {
   Color FontSmoothingBackgroundColor() { return mFontSmoothingBackgroundColor; }
 
 #ifdef USE_CAIRO_SCALED_FONT
-  cairo_font_face_t* GetCairoFontFace() override;
+  cairo_font_face_t* CreateCairoFontFace(cairo_font_options_t* aFontOptions) override;
 #endif
 
  private:

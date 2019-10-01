@@ -1390,7 +1390,6 @@ class gfxFont {
 
  protected:
   nsAutoRefCnt mRefCnt;
-  cairo_scaled_font_t* mScaledFont;
 
   void NotifyReleased() {
     gfxFontCache* cache = gfxFontCache::GetCache();
@@ -1406,8 +1405,7 @@ class gfxFont {
 
   gfxFont(const RefPtr<mozilla::gfx::UnscaledFont>& aUnscaledFont,
           gfxFontEntry* aFontEntry, const gfxFontStyle* aFontStyle,
-          AntialiasOption anAAOption = kAntialiasDefault,
-          cairo_scaled_font_t* aScaledFont = nullptr);
+          AntialiasOption anAAOption = kAntialiasDefault);
 
  public:
   virtual ~gfxFont();
@@ -1443,8 +1441,6 @@ class gfxFont {
 
   const nsCString& GetName() const { return mFontEntry->Name(); }
   const gfxFontStyle* GetStyle() const { return &mStyle; }
-
-  cairo_scaled_font_t* GetCairoScaledFont() { return mScaledFont; }
 
   virtual mozilla::UniquePtr<gfxFont> CopyWithAntialiasOption(
       AntialiasOption anAAOption) {

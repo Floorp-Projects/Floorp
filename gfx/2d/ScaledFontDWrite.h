@@ -88,9 +88,10 @@ class ScaledFontDWrite final : public ScaledFontBase {
   Float mGamma;
   Float mContrast;
 
- protected:
 #ifdef USE_CAIRO_SCALED_FONT
-  cairo_font_face_t* GetCairoFontFace() override;
+  cairo_font_face_t* CreateCairoFontFace(
+      cairo_font_options_t* aFontOptions) override;
+  void PrepareCairoScaledFont(cairo_scaled_font_t* aFont) override;
 #endif
 
  private:

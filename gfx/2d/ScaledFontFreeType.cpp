@@ -19,19 +19,12 @@
 namespace mozilla {
 namespace gfx {
 
-// On Linux and Android our "platform" font is a cairo_scaled_font_t and we use
-// an SkFontHost implementation that allows Skia to render using this.
-// This is mainly because FT_Face is not good for sharing between libraries,
-// which is a requirement when we consider runtime switchable backends and so on
 ScaledFontFreeType::ScaledFontFreeType(
-    cairo_scaled_font_t* aScaledFont, RefPtr<SharedFTFace>&& aFace,
-    const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
-    bool aApplySyntheticBold)
+    RefPtr<SharedFTFace>&& aFace, const RefPtr<UnscaledFont>& aUnscaledFont,
+    Float aSize, bool aApplySyntheticBold)
     : ScaledFontBase(aUnscaledFont, aSize),
       mFace(std::move(aFace)),
-      mApplySyntheticBold(aApplySyntheticBold) {
-  SetCairoScaledFont(aScaledFont);
-}
+      mApplySyntheticBold(aApplySyntheticBold) {}
 
 #ifdef USE_SKIA
 SkTypeface* ScaledFontFreeType::CreateSkTypeface() {
@@ -47,6 +40,26 @@ void ScaledFontFreeType::SetupSkFontDrawOptions(SkFont& aFont) {
   }
 
   aFont.setEmbeddedBitmaps(true);
+}
+#endif
+
+#ifdef USE_CAIRO_SCALED_FONT
+cairo_font_face_t* ScaledFontFreeType::CreateCairoFontFace(
+    cairo_font_options_t* aFontOptions) {
+  cairo_font_options_set_hint_metrics(aFontOptions, CAIRO_HINT_METRICS_OFF);
+
+  int loadFlags = FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING;
+  if (mFace->GetFace()->face_flags & FT_FACE_FLAG_TRICKY) {
+    loadFlags &= ~FT_LOAD_NO_AUTOHINT;
+  }
+
+  unsigned int synthFlags = 0;
+  if (mApplySyntheticBold) {
+    synthFlags |= CAIRO_FT_SYNTHESIZE_BOLD;
+  }
+
+  return cairo_ft_font_face_create_for_ft_face(mFace->GetFace(), loadFlags,
+                                               synthFlags, mFace.get());
 }
 #endif
 
@@ -132,48 +145,13 @@ already_AddRefed<ScaledFont> UnscaledFontFreeType::CreateScaledFont(
     }
   }
 
-  int flags = FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING;
-  if (face->GetFace()->face_flags & FT_FACE_FLAG_TRICKY) {
-    flags &= ~FT_LOAD_NO_AUTOHINT;
-  }
-  cairo_font_face_t* font = cairo_ft_font_face_create_for_ft_face(
-      face->GetFace(), flags, 0, face.get());
-  if (cairo_font_face_status(font) != CAIRO_STATUS_SUCCESS) {
-    gfxWarning() << "Failed creating Cairo font face for FreeType face";
-    return nullptr;
-  }
-
-  cairo_matrix_t sizeMatrix;
-  cairo_matrix_init(&sizeMatrix, aGlyphSize, 0, 0, aGlyphSize, 0, 0);
-
-  cairo_matrix_t identityMatrix;
-  cairo_matrix_init_identity(&identityMatrix);
-
-  cairo_font_options_t* fontOptions = cairo_font_options_create();
-  cairo_font_options_set_hint_metrics(fontOptions, CAIRO_HINT_METRICS_OFF);
-
-  cairo_scaled_font_t* cairoScaledFont =
-      cairo_scaled_font_create(font, &sizeMatrix, &identityMatrix, fontOptions);
-
-  cairo_font_options_destroy(fontOptions);
-
-  cairo_font_face_destroy(font);
-
-  if (cairo_scaled_font_status(cairoScaledFont) != CAIRO_STATUS_SUCCESS) {
-    gfxWarning() << "Failed creating Cairo scaled font for font face";
-    return nullptr;
-  }
-
   // Only apply variations if we have an explicitly cloned face.
   if (aNumVariations > 0 && face != GetFace()) {
     ApplyVariationsToFace(aVariations, aNumVariations, face->GetFace());
   }
 
-  RefPtr<ScaledFontFreeType> scaledFont =
-      new ScaledFontFreeType(cairoScaledFont, std::move(face), this, aGlyphSize,
-                             instanceData.mApplySyntheticBold);
-
-  cairo_scaled_font_destroy(cairoScaledFont);
+  RefPtr<ScaledFontFreeType> scaledFont = new ScaledFontFreeType(
+      std::move(face), this, aGlyphSize, instanceData.mApplySyntheticBold);
 
   return scaledFont.forget();
 }

@@ -25,26 +25,10 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::unicode;
 
-static inline cairo_antialias_t GetCairoAntialiasOption(
-    gfxFont::AntialiasOption anAntialiasOption) {
-  switch (anAntialiasOption) {
-    default:
-    case gfxFont::kAntialiasDefault:
-      return CAIRO_ANTIALIAS_DEFAULT;
-    case gfxFont::kAntialiasNone:
-      return CAIRO_ANTIALIAS_NONE;
-    case gfxFont::kAntialiasGrayscale:
-      return CAIRO_ANTIALIAS_GRAY;
-    case gfxFont::kAntialiasSubpixel:
-      return CAIRO_ANTIALIAS_SUBPIXEL;
-  }
-}
-
 gfxGDIFont::gfxGDIFont(GDIFontEntry* aFontEntry, const gfxFontStyle* aFontStyle,
                        AntialiasOption anAAOption)
     : gfxFont(nullptr, aFontEntry, aFontStyle, anAAOption),
       mFont(nullptr),
-      mFontFace(nullptr),
       mMetrics(nullptr),
       mSpaceGlyph(0),
       mIsBitmap(false),
@@ -59,12 +43,6 @@ gfxGDIFont::gfxGDIFont(GDIFontEntry* aFontEntry, const gfxFontStyle* aFontStyle,
 }
 
 gfxGDIFont::~gfxGDIFont() {
-  if (mScaledFont) {
-    cairo_scaled_font_destroy(mScaledFont);
-  }
-  if (mFontFace) {
-    cairo_font_face_destroy(mFontFace);
-  }
   if (mFont) {
     ::DeleteObject(mFont);
   }
@@ -99,14 +77,11 @@ uint32_t gfxGDIFont::GetSpaceGlyph() { return mSpaceGlyph; }
 
 already_AddRefed<ScaledFont> gfxGDIFont::GetScaledFont(DrawTarget* aTarget) {
   if (!mAzureScaledFont) {
-    NativeFont nativeFont;
-    nativeFont.mType = NativeFontType::GDI_LOGFONT;
     LOGFONT lf;
     GetObject(GetHFONT(), sizeof(LOGFONT), &lf);
-    nativeFont.mFont = &lf;
 
-    mAzureScaledFont = Factory::CreateScaledFontForNativeFont(
-        nativeFont, GetUnscaledFont(), GetAdjustedSize(), GetCairoScaledFont());
+    mAzureScaledFont = Factory::CreateScaledFontForGDIFont(
+        &lf, GetUnscaledFont(), GetAdjustedSize());
     InitializeScaledFont();
   }
 
@@ -352,35 +327,6 @@ void gfxGDIFont::Initialize() {
   if (IsSyntheticBold()) {
     mMetrics->aveCharWidth += GetSyntheticBoldOffset();
     mMetrics->maxAdvance += GetSyntheticBoldOffset();
-  }
-
-  mFontFace = cairo_win32_font_face_create_for_logfontw_hfont(&logFont, mFont);
-
-  cairo_matrix_t sizeMatrix, ctm;
-  cairo_matrix_init_identity(&ctm);
-  cairo_matrix_init_scale(&sizeMatrix, mAdjustedSize, mAdjustedSize);
-
-  cairo_font_options_t* fontOptions = cairo_font_options_create();
-  if (mAntialiasOption != kAntialiasDefault) {
-    cairo_font_options_set_antialias(fontOptions,
-                                     GetCairoAntialiasOption(mAntialiasOption));
-  }
-  mScaledFont =
-      cairo_scaled_font_create(mFontFace, &sizeMatrix, &ctm, fontOptions);
-  cairo_font_options_destroy(fontOptions);
-
-  if (!mScaledFont ||
-      cairo_scaled_font_status(mScaledFont) != CAIRO_STATUS_SUCCESS) {
-#ifdef DEBUG
-    char warnBuf[1024];
-    SprintfLiteral(warnBuf, "Failed to create scaled font: %s status: %d",
-                   mFontEntry->Name().get(),
-                   mScaledFont ? cairo_scaled_font_status(mScaledFont) : 0);
-    NS_WARNING(warnBuf);
-#endif
-    mIsValid = false;
-  } else {
-    mIsValid = true;
   }
 
 #if 0

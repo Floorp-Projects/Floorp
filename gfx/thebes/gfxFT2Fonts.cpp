@@ -153,12 +153,11 @@ void gfxFT2Font::AddRange(const char16_t* aText, uint32_t aOffset,
 }
 
 gfxFT2Font::gfxFT2Font(const RefPtr<UnscaledFontFreeType>& aUnscaledFont,
-                       cairo_scaled_font_t* aCairoFont,
                        RefPtr<mozilla::gfx::SharedFTFace>&& aFTFace,
                        FT2FontEntry* aFontEntry, const gfxFontStyle* aFontStyle,
-                       int aLoadFlags, bool aEmbolden)
-    : gfxFT2FontBase(aUnscaledFont, aCairoFont, std::move(aFTFace), aFontEntry,
-                     aFontStyle, aLoadFlags, aEmbolden),
+                       int aLoadFlags)
+    : gfxFT2FontBase(aUnscaledFont, std::move(aFTFace), aFontEntry, aFontStyle,
+                     aLoadFlags, aFontStyle->NeedsSyntheticBold(aFontEntry)),
       mCharGlyphCache(32) {
   NS_ASSERTION(mFontEntry,
                "Unable to find font entry for font.  Something is whack.");
@@ -170,7 +169,7 @@ gfxFT2Font::~gfxFT2Font() {}
 already_AddRefed<ScaledFont> gfxFT2Font::GetScaledFont(DrawTarget* aTarget) {
   if (!mAzureScaledFont) {
     mAzureScaledFont = Factory::CreateScaledFontForFreeTypeFont(
-        GetUnscaledFont(), GetAdjustedSize(), GetCairoScaledFont(), mFTFace,
+        GetUnscaledFont(), GetAdjustedSize(), mFTFace,
         GetStyle()->NeedsSyntheticBold(GetFontEntry()));
     InitializeScaledFont();
   }

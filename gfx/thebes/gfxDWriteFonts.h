@@ -18,9 +18,6 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/UnscaledFontDWrite.h"
 
-struct _cairo_font_face;
-typedef _cairo_font_face cairo_font_face_t;
-
 /**
  * \brief Class representing a font face for a font entry.
  */
@@ -72,8 +69,6 @@ class gfxDWriteFont : public gfxFont {
   bool ShouldRoundXOffset(cairo_t* aCairo) const override;
 
  protected:
-  cairo_scaled_font_t* InitCairoScaledFont();
-
   const Metrics& GetHorizontalMetrics() override;
 
   bool GetFakeMetricsForArialBlack(DWRITE_FONT_METRICS* aFontMetrics);
@@ -82,8 +77,6 @@ class gfxDWriteFont : public gfxFont {
 
   bool HasBitmapStrikeForSize(uint32_t aSize);
 
-  cairo_font_face_t* CairoFontFace();
-
   gfxFloat MeasureGlyphWidth(uint16_t aGlyph);
 
   DWRITE_MEASURING_MODE GetMeasuringMode() const;
@@ -91,8 +84,6 @@ class gfxDWriteFont : public gfxFont {
 
   RefPtr<IDWriteFontFace> mFontFace;
   RefPtr<IDWriteFontFace1> mFontFace1;  // may be unavailable on older DWrite
-
-  cairo_font_face_t* mCairoFontFace;
 
   Metrics* mMetrics;
 

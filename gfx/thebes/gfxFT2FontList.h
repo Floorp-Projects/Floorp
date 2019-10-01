@@ -7,8 +7,8 @@
 #define GFX_FT2FONTLIST_H
 
 #include "mozilla/MemoryReporting.h"
+#include "gfxFT2FontBase.h"
 #include "gfxPlatformFontList.h"
-#include "mozilla/gfx/UnscaledFontFreeType.h"
 
 namespace mozilla {
 namespace dom {
@@ -23,10 +23,10 @@ class nsZipArchive;
 class WillShutdownObserver;
 class FTUserFontData;
 
-class FT2FontEntry : public gfxFontEntry {
+class FT2FontEntry : public gfxFT2FontEntryBase {
  public:
   explicit FT2FontEntry(const nsACString& aFaceName)
-      : gfxFontEntry(aFaceName), mFTFontIndex(0) {}
+      : gfxFT2FontEntryBase(aFaceName), mFTFontIndex(0) {}
 
   ~FT2FontEntry();
 
@@ -53,12 +53,6 @@ class FT2FontEntry : public gfxFontEntry {
                                        uint8_t aIndex, const nsACString& aName);
 
   gfxFont* CreateFontInstance(const gfxFontStyle* aStyle) override;
-
-  // Create a cairo_scaled_font for this face, with the given style.
-  // This may fail and return null, so caller must be prepared to handle this.
-  cairo_scaled_font_t* CreateScaledFont(
-      const gfxFontStyle* aStyle, RefPtr<mozilla::gfx::SharedFTFace> aFace,
-      int* aOutLoadFlags, unsigned int* aOutSynthFlags);
 
   nsresult ReadCMAP(FontInfoData* aFontInfoData = nullptr) override;
 

@@ -773,9 +773,8 @@ void gfxFont::RunMetrics::CombineWith(const RunMetrics& aOther,
 
 gfxFont::gfxFont(const RefPtr<UnscaledFont>& aUnscaledFont,
                  gfxFontEntry* aFontEntry, const gfxFontStyle* aFontStyle,
-                 AntialiasOption anAAOption, cairo_scaled_font_t* aScaledFont)
-    : mScaledFont(aScaledFont),
-      mFontEntry(aFontEntry),
+                 AntialiasOption anAAOption)
+    : mFontEntry(aFontEntry),
       mUnscaledFont(aUnscaledFont),
       mStyle(*aFontStyle),
       mAdjustedSize(0.0),
