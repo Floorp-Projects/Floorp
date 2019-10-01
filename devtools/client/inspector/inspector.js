@@ -935,6 +935,13 @@ Inspector.prototype = {
   },
 
   /**
+   * Returns a boolean indicating whether a sidebar panel instance exists.
+   */
+  hasPanel: function(id) {
+    return this._panels.has(id);
+  },
+
+  /**
    * Lazily get and create panel instances displayed in the sidebar
    */
   getPanel: function(id) {
