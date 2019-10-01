@@ -1,0 +1,44 @@
+---
+trust-domain: mobile
+treeherder:
+    group-names:
+        'I': 'Docker Image Builds'
+
+task-priority: highest
+
+taskgraph:
+    register: ac_taskgraph:register
+    repositories:
+        mobile:
+            name: android-components
+    cached-task-prefix: project.mobile.android-components
+    decision-parameters: 'ac_taskgraph:get_decision_parameters'
+
+workers:
+    aliases:
+        b-android:
+            provisioner: aws-provisioner-v1
+            implementation: docker-worker
+            os: linux
+            worker-type: 'mobile-{level}-b-andrcmp'
+        images:
+            provisioner: aws-provisioner-v1
+            implementation: docker-worker
+            os: linux
+            worker-type: 'mobile-{level}-images'
+        dep-signing:
+            provisioner: scriptworker-prov-v1
+            implementation: scriptworker-signing
+            os: scriptworker
+            worker-type: mobile-signing-dep-v1
+        signing:
+            provisioner: scriptworker-prov-v1
+            implementation: scriptworker-signing
+            os: scriptworker
+            worker-type:
+                by-level:
+                    "3": mobile-signing-v1
+                    default: mobile-signing-dep-v1
+
+scriptworker:
+    scope-prefix: project:mobile:android-components:releng

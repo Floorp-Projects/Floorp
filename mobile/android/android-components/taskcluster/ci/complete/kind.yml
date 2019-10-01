@@ -1,0 +1,24 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - old-decision
+
+transforms:
+    - taskgraph.transforms.code_review:transforms
+    - ac_taskgraph.transforms.chunk:transforms
+    - taskgraph.transforms.task:transforms
+
+jobs:
+    pr:
+        description: PR Summary Task
+        run-on-tasks-for: [github-pull-request]
+        worker-type: succeed
+
+    push:
+        description: Push Summary Task
+        run-on-tasks-for: [github-push]
+        worker-type: succeed

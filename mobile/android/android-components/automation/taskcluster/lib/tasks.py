@@ -61,9 +61,9 @@ class TaskBuilder(object):
             artifacts=taskcluster_artifacts
         )
 
-    def craft_barrier_task(self, dependencies):
+    def craft_barrier_task(self, label, dependencies):
         return self._craft_dummy_task(
-            name='Android Components - Barrier task to wait on other tasks to complete',
+            name=label,
             description='Dummy tasks that ensures all other tasks are correctly done before publishing them',
             dependencies=dependencies,
         )
@@ -89,12 +89,12 @@ class TaskBuilder(object):
             command='pip install "compare-locales>=5.0.2,<6.0" && compare-locales --validate l10n.toml .'
         )
 
-    def craft_sign_task(self, build_task_id, barrier_task_id, artifacts, component_name, is_staging):
+    def craft_sign_task(self, build_task_label, barrier_task_label, artifacts, component_name, is_staging):
         payload = {
             "upstreamArtifacts": [{
                 "paths": [artifact["taskcluster_path"] for artifact in artifacts],
                 "formats": ["autograph_gpg"],
-                "taskId": build_task_id,
+                "taskId": {'task-reference': '<build>'},
                 "taskType": "build"
             }]
         }
@@ -102,7 +102,7 @@ class TaskBuilder(object):
         return self._craft_default_task_definition(
             worker_type='mobile-signing-dep-v1' if is_staging else 'mobile-signing-v1',
             provisioner_id='scriptworker-prov-v1',
-            dependencies=[build_task_id, barrier_task_id],
+            dependencies={'build': build_task_label, 'barrier': barrier_task_label},
             routes=[],
             scopes=[
                 "project:mobile:android-components:releng:signing:cert:{}-signing".format("dep" if is_staging else "release"),
@@ -153,7 +153,7 @@ class TaskBuilder(object):
         )
 
     def craft_beetmover_task(
-        self, build_task_id, sign_task_id, build_artifacts, sign_artifacts, component_name, is_snapshot,
+        self, build_task_label, sign_task_label, build_artifacts, sign_artifacts, component_name, is_snapshot,
             is_staging
     ):
         if is_snapshot:
@@ -180,7 +180,7 @@ class TaskBuilder(object):
                         'destinations': [artifact['maven_destination']]
                     } for artifact in (build_artifacts)
                 },
-                "taskId": build_task_id,
+                "taskId": {'task-reference': '<build>'},
             }, {
                 "locale": "en-US",
                 "paths": {
@@ -189,15 +189,15 @@ class TaskBuilder(object):
                         'destinations': [artifact['maven_destination']]
                     } for artifact in (sign_artifacts)
                 },
-                "taskId": sign_task_id,
+                "taskId": {'task-reference': '<signing>'},
             }],
             "upstreamArtifacts": [{
                 'paths': [artifact['taskcluster_path'] for artifact in build_artifacts],
-                'taskId': build_task_id,
+                'taskId': {'task-reference': '<build>'},
                 'taskType': 'build',
             }, {
                 'paths': [artifact['taskcluster_path'] for artifact in sign_artifacts],
-                'taskId': sign_task_id,
+                'taskId': {'task-reference': '<signing>'},
                 'taskType': 'signing',
             }],
             "releaseProperties": {
@@ -208,7 +208,7 @@ class TaskBuilder(object):
         return self._craft_default_task_definition(
             self.beetmover_worker_type,
             'scriptworker-prov-v1',
-            dependencies=[build_task_id, sign_task_id],
+            dependencies={'build': build_task_label, 'signing': sign_task_label},
             routes=[],
             scopes=[
                 "project:mobile:android-components:releng:beetmover:bucket:{}".format(bucket_name),
@@ -223,7 +223,7 @@ class TaskBuilder(object):
         self, name, description, command, dependencies=None, artifacts=None, scopes=None,
         routes=None, features=None, env_vars=None
     ):
-        dependencies = [] if dependencies is None else dependencies
+        dependencies = {} if dependencies is None else dependencies
         artifacts = {} if artifacts is None else artifacts
         scopes = [] if scopes is None else scopes
         routes = [] if routes is None else routes
@@ -304,52 +304,32 @@ class TaskBuilder(object):
         deadline = taskcluster.fromNow('1 day')
         expires = taskcluster.fromNow(DEFAULT_EXPIRES_IN)
 
+        routes.append('checks')
+
         return {
-            "provisionerId": provisioner_id,
-            "workerType": worker_type,
-            "taskGroupId": self.task_id,
-            "schedulerId": self.scheduler_id,
-            "created": taskcluster.stringDate(created),
-            "deadline": taskcluster.stringDate(deadline),
-            "expires": taskcluster.stringDate(expires),
-            "retries": 5,
-            "tags": {},
-            "priority": self.tasks_priority,
-            "dependencies": [self.task_id] + dependencies,
-            "requires": "all-completed",
-            "routes": routes,
-            "scopes": scopes,
-            "payload": payload,
-            "metadata": {
-                "name": name,
-                "description": description,
-                "owner": self.owner,
-                "source": self.source,
-            },
-        }
-
-
-def schedule_task(queue, taskId, task):
-    print("TASK", taskId)
-    print(json.dumps(task, indent=4, separators=(',', ': ')))
-
-    result = queue.createTask(taskId, task)
-    print("RESULT", taskId)
-    print(json.dumps(result))
-
-
-def schedule_task_graph(ordered_groups_of_tasks):
-    queue = taskcluster.Queue({'baseUrl': 'http://taskcluster/queue/v1'})
-    full_task_graph = {}
-
-    # TODO: Switch to async python to speed up submission
-    for group_of_tasks in ordered_groups_of_tasks:
-        for task_id, task_definition in group_of_tasks.items():
-            schedule_task(queue, task_id, task_definition)
-
-            full_task_graph[task_id] = {
-                # Some values of the task definition are automatically filled. Querying the task
-                # allows to have the full definition. This is needed to make Chain of Trust happy
-                'task': queue.task(task_id),
+            "attributes": {},
+            "dependencies": dependencies,
+            "label": name,
+            "task": {
+                "provisionerId": provisioner_id,
+                "workerType": worker_type,
+                "taskGroupId": self.task_id,
+                "schedulerId": self.scheduler_id,
+                "created": taskcluster.stringDate(created),
+                "deadline": taskcluster.stringDate(deadline),
+                "expires": taskcluster.stringDate(expires),
+                "retries": 5,
+                "tags": {},
+                "priority": self.tasks_priority,
+                "requires": "all-completed",
+                "routes": routes,
+                "scopes": scopes,
+                "payload": payload,
+                "metadata": {
+                    "name": name,
+                    "description": description,
+                    "owner": self.owner,
+                    "source": self.source,
+                },
             }
-    return full_task_graph
+        }

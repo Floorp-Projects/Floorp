@@ -15,38 +15,14 @@ import taskcluster
 import sys
 
 from lib.build_config import components_version, components, generate_snapshot_timestamp
-from lib.tasks import TaskBuilder, schedule_task_graph
-from lib.util import (
-    populate_chain_of_trust_task_graph,
-    populate_chain_of_trust_required_but_unused_files
-)
+from lib.tasks import TaskBuilder
 
-
-REPO_URL = os.environ.get('MOBILE_HEAD_REPOSITORY')
-COMMIT = os.environ.get('MOBILE_HEAD_REV')
-PR_TITLE = os.environ.get('GITHUB_PULL_TITLE', '')
-
-# If we see this text inside a pull request title then we will not execute any tasks for this PR.
-SKIP_TASKS_TRIGGER = '[ci skip]'
 
 AAR_EXTENSIONS = ('.aar', '.pom', '-sources.jar')
 HASH_EXTENSIONS = ('', '.sha1', '.md5')
 
-BUILDER = TaskBuilder(
-    task_id=os.environ.get('TASK_ID'),
-    repo_url=os.environ.get('MOBILE_HEAD_REPOSITORY'),
-    branch=os.environ.get('MOBILE_HEAD_BRANCH'),
-    commit=COMMIT,
-    owner="skaspari@mozilla.com",
-    source='{}/raw/{}/.taskcluster.yml'.format(REPO_URL, COMMIT),
-    scheduler_id=os.environ.get('SCHEDULER_ID', 'taskcluster-github'),
-    build_worker_type=os.environ.get('BUILD_WORKER_TYPE'),
-    beetmover_worker_type=os.environ.get('BEETMOVER_WORKER_TYPE'),
-    tasks_priority=os.environ.get('TASKS_PRIORITY'),
-)
 
-
-def create_module_tasks(module):
+def create_module_tasks(builder, module):
     def gradle_module_task_name(module, gradle_task_name):
         return "%s:%s" % (module, gradle_task_name)
 
@@ -64,7 +40,7 @@ def create_module_tasks(module):
             subtitle = "%sAndLintDebug" % subtitle
             scheduled_lint = True
 
-        return BUILDER.craft_build_task(
+        return builder.craft_build_task(
             module_name=module,
             gradle_tasks=module_task,
             subtitle=subtitle + variant,
@@ -133,7 +109,7 @@ def create_module_tasks(module):
         # Overhead of a separate task just for linting is quite significant, but this should be a rare case.
         if not scheduled_lint_with_assemble and not scheduled_lint_with_test:
             task_definitions.append(
-                BUILDER.craft_build_task(
+                builder.craft_build_task(
                     module_name=module,
                     gradle_tasks=gradle_module_task_name(module, lint_task),
                     subtitle="onlyLintRelease",
@@ -148,7 +124,7 @@ def create_module_tasks(module):
             for gradle_task in ['assemble', 'assembleAndroidTest', 'test', override["lintTask"]]
         ])
         task_definitions.append(
-            BUILDER.craft_build_task(
+            builder.craft_build_task(
                 module_name=module,
                 gradle_tasks=gradle_tasks,
                 subtitle="assembleAndTestAndCustomLintAll",
@@ -164,7 +140,7 @@ def create_module_tasks(module):
             for gradle_task in ['assemble', 'assembleAndroidTest', 'test', 'lintRelease']
         ])
         task_definitions.append(
-            BUILDER.craft_build_task(
+            builder.craft_build_task(
                 module_name=module,
                 gradle_tasks=gradle_tasks,
                 subtitle="assembleAndTestAndLintReleaseAll",
@@ -175,32 +151,32 @@ def create_module_tasks(module):
     return task_definitions
 
 
-def pr(artifacts_info):
-    if SKIP_TASKS_TRIGGER in PR_TITLE:
-        print("Pull request title contains", SKIP_TASKS_TRIGGER)
-        print("Exit")
-        exit(0)
-
+def pr(builder, artifacts_info):
     modules = [_get_gradle_module_name(artifact_info) for artifact_info in artifacts_info]
+    build_tasks = [
+        task_def
+        for module in modules
+        for task_def in create_module_tasks(builder, module)
+    ]
+    other_tasks = [
+        craft_function()
+        for craft_function in
+        (builder.craft_detekt_task, builder.craft_ktlint_task, builder.craft_compare_locales_task)
+    ]
 
-    build_tasks = {}
-    other_tasks = {}
+    tasks = build_tasks + other_tasks
 
-    for module in modules:
-        tasks = create_module_tasks(module)
-        for task in tasks:
-            build_tasks[taskcluster.slugId()] = task
+    for task in tasks:
+        task['attributes']['code-review'] = True
 
-    for craft_function in (BUILDER.craft_detekt_task, BUILDER.craft_ktlint_task, BUILDER.craft_compare_locales_task):
-        other_tasks[taskcluster.slugId()] = craft_function()
-
-    return (build_tasks, other_tasks)
+    return tasks
 
 
-def push(artifacts_info):
-    all_tasks = pr(artifacts_info)
-    other_tasks = all_tasks[1]
-    other_tasks[taskcluster.slugId()] = BUILDER.craft_ui_tests_task()
+def push(builder, artifacts_info):
+    all_tasks = pr(builder, artifacts_info)
+    ui_task = builder.craft_ui_tests_task()
+    ui_task['attributes']['code-review'] = True
+    all_tasks.append(ui_task)
     return all_tasks
 
 
@@ -230,8 +206,8 @@ def _to_release_artifact(extension, version, component, timestamp=None):
 
     return {
         'taskcluster_path': 'public/build/{}'.format(artifact_filename),
-        'build_fs_path': '{}/build/maven/org/mozilla/components/{}/{}/{}'.format(
-            os.path.abspath(component['path']),
+        'build_fs_path': '/build/android-components/{}/build/maven/org/mozilla/components/{}/{}/{}'.format(
+            component['path'],
             component['name'],
             version if not timestamp else version + '-SNAPSHOT',
             artifact_filename),
@@ -243,24 +219,20 @@ def _to_release_artifact(extension, version, component, timestamp=None):
     }
 
 
-def release(components, is_snapshot, is_staging):
+def release(builder, components, is_snapshot, is_staging):
     version = components_version()
 
-    build_tasks = {}
-    wait_on_builds_tasks = {}
-    sign_tasks = {}
-    beetmover_tasks = {}
-    other_tasks = {}
-    wait_on_builds_task_id = taskcluster.slugId()
+    tasks = []
+    build_tasks_labels = {}
+    wait_on_builds_label = 'Android Components - Barrier task to wait on other tasks to complete'
 
     timestamp = None
     if is_snapshot:
         timestamp = generate_snapshot_timestamp()
 
     for component in components:
-        build_task_id = taskcluster.slugId()
         module_name = _get_gradle_module_name(component)
-        build_tasks[build_task_id] = BUILDER.craft_build_task(
+        build_task = builder.craft_build_task(
             module_name=module_name,
             gradle_tasks=_get_release_gradle_tasks(module_name, is_snapshot),
             subtitle='({}{})'.format(version, '-SNAPSHOT' if is_snapshot else ''),
@@ -272,76 +244,31 @@ def release(components, is_snapshot, is_staging):
                        itertools.product(AAR_EXTENSIONS, HASH_EXTENSIONS)],
             timestamp=timestamp,
         )
+        tasks.append(build_task)
+        # XXX Temporary hack to keep taskgraph happy about how dependencies are represented
+        build_tasks_labels[build_task['label']] = build_task['label']
 
-        sign_task_id = taskcluster.slugId()
-        sign_tasks[sign_task_id] = BUILDER.craft_sign_task(
-            build_task_id, wait_on_builds_task_id, [_to_release_artifact(extension, version, component, timestamp)
+        sign_task = builder.craft_sign_task(
+            build_task['label'], wait_on_builds_label, [_to_release_artifact(extension, version, component, timestamp)
                             for extension in AAR_EXTENSIONS],
             component['name'], is_staging,
         )
+        tasks.append(sign_task)
 
         beetmover_build_artifacts = [_to_release_artifact(extension + hash_extension, version, component, timestamp)
                                      for extension, hash_extension in
                                      itertools.product(AAR_EXTENSIONS, HASH_EXTENSIONS)]
         beetmover_sign_artifacts = [_to_release_artifact(extension + '.asc', version, component, timestamp)
                                     for extension in AAR_EXTENSIONS]
-        beetmover_tasks[taskcluster.slugId()] = BUILDER.craft_beetmover_task(
-            build_task_id, sign_task_id, beetmover_build_artifacts, beetmover_sign_artifacts,
+        tasks.append(builder.craft_beetmover_task(
+            build_task['label'], sign_task['label'], beetmover_build_artifacts, beetmover_sign_artifacts,
             component['name'], is_snapshot, is_staging
-        )
+        ))
 
-    wait_on_builds_tasks[wait_on_builds_task_id] = BUILDER.craft_barrier_task(build_tasks.keys())
+    tasks.append(builder.craft_barrier_task(wait_on_builds_label, build_tasks_labels))
 
     if is_snapshot:     # XXX These jobs perma-fail on release
-        for craft_function in (BUILDER.craft_detekt_task, BUILDER.craft_ktlint_task, BUILDER.craft_compare_locales_task):
-            other_tasks[taskcluster.slugId()] = craft_function()
+        for craft_function in (builder.craft_detekt_task, builder.craft_ktlint_task, builder.craft_compare_locales_task):
+            tasks.append(craft_function())
 
-    return (build_tasks, wait_on_builds_tasks, sign_tasks, beetmover_tasks, other_tasks)
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Creates and submit a graph of tasks on Taskcluster.')
-
-    subparsers = parser.add_subparsers(dest='command')
-
-    subparsers.add_parser('pr')
-    subparsers.add_parser('push')
-    release_parser = subparsers.add_parser('release')
-
-    release_parser.add_argument(
-        '--snapshot', action='store_true', dest='is_snapshot',
-        help='Create snapshot artifacts and upload them onto the snapshot repository'
-    )
-    release_parser.add_argument(
-        '--staging', action='store_true', dest='is_staging',
-        help='Perform a staging build. Artifacts are uploaded on either '
-             'https://maven-default.stage.mozaws.net/ or https://maven-snapshots.stage.mozaws.net/'
-    )
-
-    result = parser.parse_args()
-
-    command = result.command
-
-    components = components()
-    if command == 'release':
-        components = [info for info in components if info['shouldPublish']]
-
-    if len(components) == 0:
-        print("Could not get module names from gradle")
-        sys.exit(2)
-
-    if command == 'pr':
-        ordered_groups_of_tasks = pr(components)
-    elif command == 'push':
-        ordered_groups_of_tasks = push(components)
-    elif command == 'release':
-        ordered_groups_of_tasks = release(
-            components, result.is_snapshot, result.is_staging
-        )
-    else:
-        raise Exception('Unsupported command "{}"'.format(command))
-
-    full_task_graph = schedule_task_graph(ordered_groups_of_tasks)
-
-    populate_chain_of_trust_task_graph(full_task_graph)
-    populate_chain_of_trust_required_but_unused_files()
+    return tasks
