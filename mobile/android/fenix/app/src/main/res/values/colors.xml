@@ -30,6 +30,7 @@
     <color name="toolbar_center_gradient_light_theme">@color/foundation_light_theme</color>
     <color name="toolbar_end_gradient_light_theme">@color/foundation_light_theme</color>
     <color name="toolbar_divider_color_light_theme">#CDCCCF</color>
+    <color name="fill_link_from_clipboard_light_theme">@color/accent_light_theme</color>
 
     <!-- Dark theme color palette -->
     <color name="primary_text_dark_theme">#FBFBFE</color>
@@ -58,6 +59,7 @@
     <color name="toolbar_center_gradient_dark_theme">@color/foundation_dark_theme</color>
     <color name="toolbar_end_gradient_dark_theme">@color/foundation_dark_theme</color>
     <color name="toolbar_divider_color_dark_theme">#45444D</color>
+    <color name="fill_link_from_clipboard_dark_theme">@color/accent_on_dark_background_normal_theme</color>
 
     <!-- Private theme color palette -->
     <color name="primary_text_private_theme">#FBFBFE</color>
@@ -83,6 +85,7 @@
     <color name="toolbar_center_gradient_private_theme">#492E85</color>
     <color name="toolbar_end_gradient_private_theme">#383372</color>
     <color name="toolbar_divider_color_private_theme">#403760</color>
+    <color name="fill_link_from_clipboard_private_theme">@color/accent_on_dark_background_private_theme</color>
 
     <!-- Normal theme colors for light mode -->
     <color name="primary_text_normal_theme">@color/primary_text_light_theme</color>
@@ -108,6 +111,7 @@
     <color name="toolbar_center_gradient_normal_theme">@color/toolbar_center_gradient_light_theme</color>
     <color name="toolbar_end_gradient_normal_theme">@color/toolbar_end_gradient_light_theme</color>
     <color name="toolbar_divider_color_normal_theme">@color/toolbar_divider_color_light_theme</color>
+    <color name="fill_link_from_clipboard_normal_theme">@color/fill_link_from_clipboard_light_theme</color>
 
     <!-- Bookmark buttons -->
     <color name="bookmark_favicon_background">#DFDFE3</color>

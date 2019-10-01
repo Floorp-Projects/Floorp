@@ -89,7 +89,7 @@
             android:id="@+id/clipboard_url"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textColor="?accent"
+            android:textColor="?fillLinkFromClipboard"
             android:textAppearance="@style/Subtitle12TextStyle"
             android:maxLines="1"
             android:ellipsize="end"

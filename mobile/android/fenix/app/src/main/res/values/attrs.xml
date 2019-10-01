@@ -36,6 +36,7 @@
     <attr name="toolbarCenterGradient" format="reference"/>
     <attr name="toolbarEndGradient" format="reference"/>
     <attr name="shieldLottieFile" format="reference" />
+    <attr name="fillLinkFromClipboard" format="reference"/>
 
     <declare-styleable name="LibraryListItem">
         <attr name="listItemTitle" format="reference" />
