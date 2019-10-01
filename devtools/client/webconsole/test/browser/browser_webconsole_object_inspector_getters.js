@@ -68,6 +68,12 @@ add_task(async function() {
           get myLongStringGetter() {
             return longString;
           },
+          get ["hyphen-getter"]() {
+            return "---";
+          },
+          get [`"quoted-getter"`]() {
+            return "quoted";
+          },
         })
       )
     );
@@ -93,6 +99,8 @@ add_task(async function() {
   await testProxyGetter(oi);
   await testThrowingGetter(oi);
   await testLongStringGetter(oi, LONGSTRING);
+  await testHypgenGetter(oi);
+  await testQuotedGetter(oi);
 });
 
 async function testStringGetter(oi) {
@@ -559,6 +567,66 @@ async function testLongStringGetter(oi, longString) {
     )
   );
   ok(true, "the longstring was expanded");
+}
+
+async function testHypgenGetter(oi) {
+  const findHyphenGetterNode = () =>
+    findObjectInspectorNode(oi, `"hyphen-getter"`);
+  let node = findHyphenGetterNode();
+
+  is(
+    isObjectInspectorNodeExpandable(node),
+    false,
+    "The node can't be expanded"
+  );
+  const invokeButton = getObjectInspectorInvokeGetterButton(node);
+  ok(invokeButton, "There is an invoke button as expected");
+
+  invokeButton.click();
+  await waitFor(
+    () => !getObjectInspectorInvokeGetterButton(findHyphenGetterNode())
+  );
+
+  node = findHyphenGetterNode();
+  ok(
+    node.textContent.includes(`"hyphen-getter": "---"`),
+    "Node now has the expected text content"
+  );
+  is(
+    isObjectInspectorNodeExpandable(node),
+    false,
+    "The node can't be expanded"
+  );
+}
+
+async function testQuotedGetter(oi) {
+  const findQuotedGetterNode = () =>
+    findObjectInspectorNode(oi, `"\\"quoted-getter\\""`);
+  let node = findQuotedGetterNode();
+
+  is(
+    isObjectInspectorNodeExpandable(node),
+    false,
+    "The node can't be expanded"
+  );
+  const invokeButton = getObjectInspectorInvokeGetterButton(node);
+  ok(invokeButton, "There is an invoke button as expected");
+
+  invokeButton.click();
+  await waitFor(
+    () => !getObjectInspectorInvokeGetterButton(findQuotedGetterNode())
+  );
+
+  node = findQuotedGetterNode();
+  ok(
+    node.textContent.includes(`"\\"quoted-getter\\"": "quoted"`),
+    "Node now has the expected text content"
+  );
+  is(
+    isObjectInspectorNodeExpandable(node),
+    false,
+    "The node can't be expanded"
+  );
 }
 
 function checkChildren(node, expectedChildren) {
