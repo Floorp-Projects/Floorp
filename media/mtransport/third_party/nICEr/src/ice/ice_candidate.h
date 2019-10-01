@@ -65,6 +65,7 @@ struct nr_ice_candidate_ {
   nr_transport_addr addr;             /* The advertised address;
                                          JDR calls this the candidate */
   nr_transport_addr base;             /* The base address (S 2.1)*/
+  int obfuscate_addrs;                /* True if addresses should be obfuscated */
   char *mdns_addr;                    /* MDNS address, if any */
   char *foundation;                   /* Foundation for the candidate (S 4) */
   UINT4 priority;                     /* The priority value (S 5.4 */
@@ -112,7 +113,7 @@ void nr_ice_candidate_compute_codeword(nr_ice_candidate *cand);
 int nr_ice_candidate_process_stun(nr_ice_candidate *cand, UCHAR *msg, int len, nr_transport_addr *faddr);
 int nr_ice_candidate_destroy(nr_ice_candidate **candp);
 void nr_ice_candidate_stop_gathering(nr_ice_candidate *cand);
-int nr_ice_format_candidate_attribute(nr_ice_candidate *cand, char *attr, int maxlen);
+int nr_ice_format_candidate_attribute(nr_ice_candidate *cand, char *attr, int maxlen, int obfuscate_srflx_addr);
 int nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *attr,nr_ice_media_stream *stream,nr_ice_candidate **candp);
 int nr_ice_peer_peer_rflx_candidate_create(nr_ice_ctx *ctx,char *label, nr_ice_component *comp,nr_transport_addr *addr, nr_ice_candidate **candp);
 int nr_ice_candidate_compute_priority(nr_ice_candidate *cand);
