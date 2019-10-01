@@ -2103,14 +2103,6 @@ static bool PaintItemByDrawTarget(nsDisplayItem* aItem, gfx::DrawTarget* aDT,
   return isInvalidated;
 }
 
-// When drawing fallback images we create either
-// a real image or a blob image that will contain the display item.
-// In the case of a blob image we paint the item at 0,0 instead
-// of trying to keep at aItem->GetBounds().TopLeft() like we do
-// with SVG. We do this because there's not necessarily a reference frame
-// between us and the rest of the world so the the coordinates
-// that we get for the bounds are not necessarily stable across scrolling
-// or other movement.
 already_AddRefed<WebRenderFallbackData>
 WebRenderCommandBuilder::GenerateFallbackData(
     nsDisplayItem* aItem, wr::DisplayListBuilder& aBuilder,
@@ -2191,10 +2183,6 @@ WebRenderCommandBuilder::GenerateFallbackData(
   // Display item bounds should be unscaled
   aImageRect = visibleRect / layerScale;
 
-  // We always paint items at 0,0 so the visibleRect that we use inside the blob
-  // is needs to be adjusted by the display item bounds top left.
-  visibleRect -= dtRect.TopLeft();
-
   nsDisplayItemGeometry* geometry = fallbackData->mGeometry;
 
   bool needPaint = true;
@@ -2268,14 +2256,16 @@ WebRenderCommandBuilder::GenerateFallbackData(
       RefPtr<gfx::DrawTarget> dummyDt = gfx::Factory::CreateDrawTarget(
           gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
       RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(
-          recorder, dummyDt, visibleRect.ToUnknownRect());
+          recorder, dummyDt, dtRect.ToUnknownRect());
       if (!fallbackData->mBasicLayerManager) {
         fallbackData->mBasicLayerManager =
             new BasicLayerManager(BasicLayerManager::BLM_INACTIVE);
       }
+      // aOffset is (0, 0) because blobs don't want to normalize their
+      // coordinates
       bool isInvalidated = PaintItemByDrawTarget(
-          aItem, dt, (dtRect/layerScale).TopLeft(),
-          /*aVisibleRect: */ dt->GetRect(), aDisplayListBuilder,
+          aItem, dt, LayoutDevicePoint(0, 0),
+          /*aVisibleRect: */ visibleRect.ToUnknownRect(), aDisplayListBuilder,
           fallbackData->mBasicLayerManager, scale, highlight);
       if (!isInvalidated) {
         if (!aItem->GetBuildingRect().IsEqualInterior(
@@ -2285,10 +2275,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
           isInvalidated = true;
         }
       }
-
-      // the item bounds are relative to the blob origin which is
-      // dtRect.TopLeft()
-      recorder->FlushItem((dtRect - dtRect.TopLeft()).ToUnknownRect());
+      recorder->FlushItem(visibleRect.ToUnknownRect());
       recorder->Finish();
 
       if (!validFonts) {
@@ -2347,6 +2334,8 @@ WebRenderCommandBuilder::GenerateFallbackData(
             fallbackData->mBasicLayerManager =
                 new BasicLayerManager(mManager->GetWidget());
           }
+          // aOffset is applied because this case is a "real" image and not a
+          // blob
           isInvalidated = PaintItemByDrawTarget(
               aItem, dt,
               /*aOffset: */ aImageRect.TopLeft(),
