@@ -94,11 +94,6 @@ class DocumentChannelParent : public nsIInterfaceRequestor,
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
-  // Notify the DocumentChannelChild that we're switching
-  // to a different process and that it can notify listeners
-  // that it's finished.
-  void CancelChildForProcessSwitch();
-
  private:
   virtual ~DocumentChannelParent() = default;
 
