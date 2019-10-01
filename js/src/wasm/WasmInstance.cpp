@@ -1835,38 +1835,40 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
   // that function.
   void* retAddr = &exportArgs[0];
 
-  DebugCodegen(DebugChannel::Function, "wasm-function[%d]; returns ",
-               funcIndex);
-  switch (funcType->ret().code()) {
-    case ExprType::Void:
-      args.rval().set(UndefinedValue());
-      DebugCodegen(DebugChannel::Function, "void");
-      break;
-    case ExprType::I32:
-      args.rval().set(Int32Value(*(int32_t*)retAddr));
-      DebugCodegen(DebugChannel::Function, "i32(%d)", *(int32_t*)retAddr);
-      break;
-    case ExprType::I64:
-      MOZ_CRASH("unexpected i64 flowing from callExport");
-    case ExprType::F32:
-      args.rval().set(NumberValue(*(float*)retAddr));
-      DebugCodegen(DebugChannel::Function, "f32(%f)", *(float*)retAddr);
-      break;
-    case ExprType::F64:
-      args.rval().set(NumberValue(*(double*)retAddr));
-      DebugCodegen(DebugChannel::Function, "f64(%lf)", *(double*)retAddr);
-      break;
-    case ExprType::Ref:
-      MOZ_CRASH("temporarily unsupported Ref type in callExport");
-    case ExprType::FuncRef:
-    case ExprType::AnyRef:
-      args.rval().set(UnboxAnyRef(AnyRef::fromCompiledCode(*(void**)retAddr)));
-      DebugCodegen(DebugChannel::Function, "ptr(%p)", *(void**)retAddr);
-      break;
-    case ExprType::NullRef:
-      MOZ_CRASH("NullRef not expressible");
-    case ExprType::Limit:
-      MOZ_CRASH("Limit");
+  const ValTypeVector& results = funcType->results();
+  DebugCodegen(DebugChannel::Function, "wasm-function[%d]; returns %u value(s)",
+               funcIndex, uint32_t(results.length()));
+  if (results.length() == 0) {
+    args.rval().set(UndefinedValue());
+  } else {
+    MOZ_ASSERT(results.length() == 1, "multi-value return unimplemented");
+    DebugCodegen(DebugChannel::Function, ": ");
+    switch (results[0].code()) {
+      case ValType::I32:
+        args.rval().set(Int32Value(*(int32_t*)retAddr));
+        DebugCodegen(DebugChannel::Function, "i32(%d)", *(int32_t*)retAddr);
+        break;
+      case ValType::I64:
+        MOZ_CRASH("unexpected i64 flowing from callExport");
+      case ValType::F32:
+        args.rval().set(NumberValue(*(float*)retAddr));
+        DebugCodegen(DebugChannel::Function, "f32(%f)", *(float*)retAddr);
+        break;
+      case ValType::F64:
+        args.rval().set(NumberValue(*(double*)retAddr));
+        DebugCodegen(DebugChannel::Function, "f64(%lf)", *(double*)retAddr);
+        break;
+      case ValType::Ref:
+        MOZ_CRASH("temporarily unsupported Ref type in callExport");
+      case ValType::FuncRef:
+      case ValType::AnyRef:
+        args.rval().set(
+            UnboxAnyRef(AnyRef::fromCompiledCode(*(void**)retAddr)));
+        DebugCodegen(DebugChannel::Function, "ptr(%p)", *(void**)retAddr);
+        break;
+      case ValType::NullRef:
+        MOZ_CRASH("NullRef not expressible");
+    }
   }
   DebugCodegen(DebugChannel::Function, "\n");
 
