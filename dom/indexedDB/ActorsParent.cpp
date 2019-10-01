@@ -580,15 +580,11 @@ uint32_t HashName(const nsAString& aName) {
 
   static const uint32_t kGoldenRatioU32 = 0x9e3779b9u;
 
-  const char16_t* str = aName.BeginReading();
-  size_t length = aName.Length();
-
-  uint32_t hash = 0;
-  for (size_t i = 0; i < length; i++) {
-    hash = kGoldenRatioU32 * (Helper::RotateBitsLeft32(hash, 5) ^ str[i]);
-  }
-
-  return hash;
+  return std::accumulate(aName.BeginReading(), aName.EndReading(), uint32_t(0),
+                         [](uint32_t hash, char16_t ch) {
+                           return kGoldenRatioU32 *
+                                  (Helper::RotateBitsLeft32(hash, 5) ^ ch);
+                         });
 }
 
 nsresult ClampResultCode(nsresult aResultCode) {
@@ -775,8 +771,7 @@ nsresult MakeCompressedIndexDataValues(
   // First calculate the size of the final buffer.
   uint32_t blobDataLength = 0;
 
-  for (uint32_t arrayIndex = 0; arrayIndex < arrayLength; arrayIndex++) {
-    const IndexDataValue& info = aIndexValues[arrayIndex];
+  for (const IndexDataValue& info : aIndexValues) {
     const nsCString& keyBuffer = info.mPosition.GetBuffer();
     const nsCString& sortKeyBuffer = info.mLocaleAwarePosition.GetBuffer();
     const uint32_t keyBufferLength = keyBuffer.Length();
@@ -813,8 +808,7 @@ nsresult MakeCompressedIndexDataValues(
 
   uint8_t* blobDataIter = blobData.get();
 
-  for (uint32_t arrayIndex = 0; arrayIndex < arrayLength; arrayIndex++) {
-    const IndexDataValue& info = aIndexValues[arrayIndex];
+  for (const IndexDataValue& info : aIndexValues) {
     const nsCString& keyBuffer = info.mPosition.GetBuffer();
     const nsCString& sortKeyBuffer = info.mLocaleAwarePosition.GetBuffer();
     const uint32_t keyBufferLength = keyBuffer.Length();
@@ -2722,9 +2716,8 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::UpgradeKeyFunction::
     const uint32_t byteCount =
         AdjustedSize(sizeof(uint64_t), aSource, aSourceEnd);
 
-    for (uint32_t count = 0; count < byteCount; count++) {
-      *aDestination++ = *aSource++;
-    }
+    aDestination = std::copy(aSource, aSource + byteCount, aDestination);
+    aSource += byteCount;
 
     return NS_OK;
   }
@@ -2749,9 +2742,8 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::UpgradeKeyFunction::
         const uint32_t byteCount =
             AdjustedSize((byte & 0x40) ? 2 : 1, aSource, aSourceEnd);
 
-        for (uint32_t count = 0; count < byteCount; count++) {
-          *aDestination++ = *aSource++;
-        }
+        aDestination = std::copy(aSource, aSource + byteCount, aDestination);
+        aSource += byteCount;
       }
     }
 
@@ -7340,7 +7332,7 @@ struct ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
     MOZ_COUNT_DTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo);
   }
 
-  void Serialize(nsString& aText) {
+  void Serialize(nsString& aText) const {
     MOZ_ASSERT(mFileInfo);
 
     const int64_t id = mFileInfo->Id();
@@ -8645,9 +8637,7 @@ nsresult SerializeStructuredCloneFiles(
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  for (uint32_t index = 0; index < count; index++) {
-    const StructuredCloneFile& file = aFiles[index];
-
+  for (const StructuredCloneFile& file : aFiles) {
     if (aForPreprocess && file.mType != StructuredCloneFile::eStructuredClone) {
       continue;
     }
@@ -10535,10 +10525,7 @@ nsresult DatabaseConnection::UpdateRefcountFunction::ProcessValue(
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-
-  for (uint32_t i = 0; i < files.Length(); i++) {
-    const StructuredCloneFile& file = files[i];
-
+  for (const StructuredCloneFile& file : files) {
     const int64_t id = file.mFileInfo->Id();
     MOZ_ASSERT(id > 0);
 
@@ -10585,9 +10572,7 @@ nsresult DatabaseConnection::UpdateRefcountFunction::CreateJournals() {
     return NS_ERROR_FAILURE;
   }
 
-  for (uint32_t i = 0; i < mJournalsToCreateBeforeCommit.Length(); i++) {
-    int64_t id = mJournalsToCreateBeforeCommit[i];
-
+  for (int64_t id : mJournalsToCreateBeforeCommit) {
     nsCOMPtr<nsIFile> file = FileManager::GetFileForId(journalDirectory, id);
     if (NS_WARN_IF(!file)) {
       return NS_ERROR_FAILURE;
@@ -10617,9 +10602,9 @@ nsresult DatabaseConnection::UpdateRefcountFunction::RemoveJournals(
     return NS_ERROR_FAILURE;
   }
 
-  for (uint32_t index = 0; index < aJournals.Length(); index++) {
+  for (const auto& journal : aJournals) {
     nsCOMPtr<nsIFile> file =
-        FileManager::GetFileForId(journalDirectory, aJournals[index]);
+        FileManager::GetFileForId(journalDirectory, journal);
     if (NS_WARN_IF(!file)) {
       return NS_ERROR_FAILURE;
     }
@@ -10999,10 +10984,7 @@ uint64_t ConnectionPool::Start(
 
   auto& blockingTransactions = dbInfo->mBlockingTransactions;
 
-  for (uint32_t nameIndex = 0, nameCount = aObjectStoreNames.Length();
-       nameIndex < nameCount; nameIndex++) {
-    const nsString& objectStoreName = aObjectStoreNames[nameIndex];
-
+  for (const nsString& objectStoreName : aObjectStoreNames) {
     TransactionInfoPair* blockInfo = blockingTransactions.Get(objectStoreName);
     if (!blockInfo) {
       blockInfo = new TransactionInfoPair();
@@ -11016,15 +10998,11 @@ uint64_t ConnectionPool::Start(
     }
 
     if (aIsWriteTransaction) {
-      if (const uint32_t writeCount = blockInfo->mLastBlockingWrites.Length()) {
-        for (uint32_t writeIndex = 0; writeIndex < writeCount; writeIndex++) {
-          TransactionInfo* blockingWrite =
-              blockInfo->mLastBlockingWrites[writeIndex];
-          MOZ_ASSERT(blockingWrite);
+      for (TransactionInfo* blockingWrite : blockInfo->mLastBlockingWrites) {
+        MOZ_ASSERT(blockingWrite);
 
-          transactionInfo->mBlockedOn.PutEntry(blockingWrite);
-          blockingWrite->AddBlockingTransaction(transactionInfo);
-        }
+        transactionInfo->mBlockedOn.PutEntry(blockingWrite);
+        blockingWrite->AddBlockingTransaction(transactionInfo);
       }
 
       blockInfo->mLastBlockingReads = transactionInfo;
@@ -11107,9 +11085,7 @@ void ConnectionPool::WaitForDatabasesToComplete(
 
   bool mayRunCallbackImmediately = true;
 
-  for (uint32_t index = 0, count = aDatabaseIds.Length(); index < count;
-       index++) {
-    const nsCString& databaseId = aDatabaseIds[index];
+  for (const nsCString& databaseId : aDatabaseIds) {
     MOZ_ASSERT(!databaseId.IsEmpty());
 
     if (CloseDatabaseWhenIdleInternal(databaseId)) {
@@ -11309,13 +11285,10 @@ void ConnectionPool::ShutdownIdleThreads() {
 
   AUTO_PROFILER_LABEL("ConnectionPool::ShutdownIdleThreads", DOM);
 
-  if (!mIdleThreads.IsEmpty()) {
-    for (uint32_t threadCount = mIdleThreads.Length(), threadIndex = 0;
-         threadIndex < threadCount; threadIndex++) {
-      ShutdownThread(mIdleThreads[threadIndex].mThreadInfo);
-    }
-    mIdleThreads.Clear();
+  for (auto& idleThread : mIdleThreads) {
+    ShutdownThread(idleThread.mThreadInfo);
   }
+  mIdleThreads.Clear();
 }
 
 bool ConnectionPool::ScheduleTransaction(TransactionInfo* aTransactionInfo,
@@ -11431,10 +11404,11 @@ bool ConnectionPool::ScheduleTransaction(TransactionInfo* aTransactionInfo,
       aTransactionInfo->mQueuedRunnables;
 
   if (!queuedRunnables.IsEmpty()) {
-    for (uint32_t index = 0, count = queuedRunnables.Length(); index < count;
-         index++) {
+    for (auto& queuedRunnable : queuedRunnables) {
+      // TODO: Why do we need this? queuedRunnables is cleared afterwards
+      // anyway.
       nsCOMPtr<nsIRunnable> runnable;
-      queuedRunnables[index].swap(runnable);
+      queuedRunnable.swap(runnable);
 
       MOZ_ALWAYS_SUCCEEDS(dbInfo->mThreadInfo.mThread->Dispatch(
           runnable.forget(), NS_DISPATCH_NORMAL));
@@ -11483,13 +11457,9 @@ void ConnectionPool::NoteFinishedTransaction(uint64_t aTransactionId) {
     }
   }
 
-  const nsTArray<nsString>& objectStoreNames =
-      transactionInfo->mObjectStoreNames;
-
-  for (uint32_t index = 0, count = objectStoreNames.Length(); index < count;
-       index++) {
+  for (const auto& objectStoreName : transactionInfo->mObjectStoreNames) {
     TransactionInfoPair* blockInfo =
-        dbInfo->mBlockingTransactions.Get(objectStoreNames[index]);
+        dbInfo->mBlockingTransactions.Get(objectStoreName);
     MOZ_ASSERT(blockInfo);
 
     if (transactionInfo->mIsWriteTransaction &&
@@ -11539,16 +11509,15 @@ void ConnectionPool::ScheduleQueuedTransactions(ThreadInfo& aThreadInfo) {
   aThreadInfo.mRunnable = nullptr;
   aThreadInfo.mThread = nullptr;
 
-  uint32_t index = 0;
-  for (uint32_t count = mQueuedTransactions.Length(); index < count; index++) {
-    if (!ScheduleTransaction(mQueuedTransactions[index],
-                             /* aFromQueuedTransactions */ true)) {
-      break;
-    }
-  }
+  const auto foundIt = std::find_if(
+      mQueuedTransactions.begin(), mQueuedTransactions.end(),
+      [& me = *this](const auto& queuedTransaction) {
+        return !me.ScheduleTransaction(queuedTransaction,
+                                       /* aFromQueuedTransactions */ true);
+      });
 
-  if (index) {
-    mQueuedTransactions.RemoveElementsAt(0, index);
+  if (foundIt != mQueuedTransactions.end()) {
+    mQueuedTransactions.RemoveElementsAt(mQueuedTransactions.begin(), foundIt);
   }
 
   AdjustIdleTimer();
@@ -11647,9 +11616,8 @@ void ConnectionPool::NoteClosedDatabase(DatabaseInfo* aDatabaseInfo) {
 
     MOZ_ASSERT(!scheduledTransactions.IsEmpty());
 
-    for (uint32_t index = 0, count = scheduledTransactions.Length();
-         index < count; index++) {
-      Unused << ScheduleTransaction(scheduledTransactions[index],
+    for (const auto& scheduledTransaction : scheduledTransactions) {
+      Unused << ScheduleTransaction(scheduledTransaction,
                                     /* aFromQueuedTransactions */ false);
     }
 
@@ -11673,14 +11641,12 @@ void ConnectionPool::NoteClosedDatabase(DatabaseInfo* aDatabaseInfo) {
 
   // See if we need to fire any complete callbacks now that the database is
   // finished.
-  for (uint32_t index = 0; index < mCompleteCallbacks.Length();
-       /* conditionally incremented */) {
-    if (MaybeFireCallback(mCompleteCallbacks[index])) {
-      mCompleteCallbacks.RemoveElementAt(index);
-    } else {
-      index++;
-    }
-  }
+  mCompleteCallbacks.RemoveElementsAt(
+      std::remove_if(mCompleteCallbacks.begin(), mCompleteCallbacks.end(),
+                     [& me = *this](const auto& completeCallback) {
+                       return me.MaybeFireCallback(completeCallback);
+                     }),
+      mCompleteCallbacks.end());
 
   // If that was the last database and we're supposed to be shutting down then
   // we are finished.
@@ -12177,9 +12143,7 @@ void ConnectionPool::TransactionInfo::AddBlockingTransaction(
 void ConnectionPool::TransactionInfo::RemoveBlockingTransactions() {
   AssertIsOnBackgroundThread();
 
-  for (uint32_t index = 0, count = mBlockingOrdered.Length(); index < count;
-       index++) {
-    TransactionInfo* blockedInfo = mBlockingOrdered[index];
+  for (TransactionInfo* blockedInfo : mBlockingOrdered) {
     MOZ_ASSERT(blockedInfo);
 
     blockedInfo->MaybeUnblock(this);
@@ -12664,8 +12628,7 @@ void Database::Invalidate() {
       if (count) {
         IDB_REPORT_INTERNAL_ERR();
 
-        for (uint32_t index = 0; index < count; index++) {
-          RefPtr<TransactionBase> transaction = transactions[index].forget();
+        for (auto& transaction : transactions) {
           MOZ_ASSERT(transaction);
 
           transaction->Invalidate();
@@ -12699,8 +12662,7 @@ void Database::Invalidate() {
       if (count) {
         IDB_REPORT_INTERNAL_ERR();
 
-        for (uint32_t index = 0; index < count; index++) {
-          RefPtr<MutableFile> mutableFile = mutableFiles[index].forget();
+        for (auto& mutableFile : mutableFiles) {
           MOZ_ASSERT(mutableFile);
 
           mutableFile->Invalidate();
@@ -13888,29 +13850,23 @@ bool TransactionBase::VerifyRequestParams(
     return false;
   }
 
-  const nsTArray<IndexUpdateInfo>& updates = aParams.indexUpdateInfos();
-
-  for (uint32_t index = 0; index < updates.Length(); index++) {
+  for (const auto& updateInfo : aParams.indexUpdateInfos()) {
     RefPtr<FullIndexMetadata> indexMetadata =
-        GetMetadataForIndexId(objMetadata, updates[index].indexId());
+        GetMetadataForIndexId(objMetadata, updateInfo.indexId());
     if (NS_WARN_IF(!indexMetadata)) {
       ASSERT_UNLESS_FUZZING();
       return false;
     }
 
-    if (NS_WARN_IF(updates[index].value().IsUnset())) {
+    if (NS_WARN_IF(updateInfo.value().IsUnset())) {
       ASSERT_UNLESS_FUZZING();
       return false;
     }
 
-    MOZ_ASSERT(!updates[index].value().GetBuffer().IsEmpty());
+    MOZ_ASSERT(!updateInfo.value().GetBuffer().IsEmpty());
   }
 
-  const nsTArray<FileAddInfo>& fileAddInfos = aParams.fileAddInfos();
-
-  for (uint32_t index = 0; index < fileAddInfos.Length(); index++) {
-    const FileAddInfo& fileAddInfo = fileAddInfos[index];
-
+  for (const FileAddInfo& fileAddInfo : aParams.fileAddInfos()) {
     const DatabaseOrMutableFile& file = fileAddInfo.file();
     MOZ_ASSERT(file.type() != DatabaseOrMutableFile::T__None);
 
@@ -14413,9 +14369,8 @@ bool VersionChangeTransaction::CopyDatabaseMetadata() {
   info->mMetadata.swap(newMetadata);
 
   // Replace metadata pointers for all live databases.
-  for (uint32_t count = info->mLiveDatabases.Length(), index = 0; index < count;
-       index++) {
-    info->mLiveDatabases[index]->mMetadata = info->mMetadata;
+  for (const auto& liveDatabase : info->mLiveDatabases) {
+    liveDatabase->mMetadata = info->mMetadata;
   }
 
   return true;
@@ -14476,9 +14431,8 @@ void VersionChangeTransaction::UpdateMetadata(nsresult aResult) {
     // Replace metadata pointers for all live databases.
     info->mMetadata = oldMetadata.forget();
 
-    for (uint32_t count = info->mLiveDatabases.Length(), index = 0;
-         index < count; index++) {
-      info->mLiveDatabases[index]->mMetadata = info->mMetadata;
+    for (auto& liveDatabase : info->mLiveDatabases) {
+      liveDatabase->mMetadata = info->mMetadata;
     }
   }
 }
@@ -15986,9 +15940,7 @@ nsresult QuotaClient::UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory) {
     return rv;
   }
 
-  for (uint32_t count = subdirsToProcess.Length(), i = 0; i < count; i++) {
-    const nsString& subdirName = subdirsToProcess[i];
-
+  for (const nsString& subdirName : subdirsToProcess) {
     // If the directory has the correct suffix then it should exist in
     // databaseFilenames.
     nsDependentSubstring subdirNameBase;
@@ -16142,9 +16094,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     return rv;
   }
 
-  for (uint32_t count = subdirsToProcess.Length(), i = 0; i < count; i++) {
-    const nsString& subdirName = subdirsToProcess[i];
-
+  for (const nsString& subdirName : subdirsToProcess) {
     // The directory must have the correct suffix.
     nsDependentSubstring subdirNameBase;
     if (NS_WARN_IF(!GetBaseFilename(subdirName, kFileManagerDirectoryNameSuffix,
@@ -16461,9 +16411,7 @@ void QuotaClient::ShutdownTimedOut() {
     data.AppendInt(static_cast<uint32_t>(gFactoryOps->Length()));
 
     nsTHashtable<nsCStringHashKey> ids;
-    for (uint32_t index = 0; index < gFactoryOps->Length(); index++) {
-      CheckedUnsafePtr<FactoryOp>& factoryOp = (*gFactoryOps)[index];
-
+    for (CheckedUnsafePtr<FactoryOp>& factoryOp : *gFactoryOps) {
       nsCString persistenceType;
       factoryOp->StringifyPersistenceType(persistenceType);
 
@@ -18592,8 +18540,7 @@ nsresult DatabaseOperationBase::IndexDataValuesFromUpdateInfos(
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  for (uint32_t idxIndex = 0; idxIndex < count; idxIndex++) {
-    const IndexUpdateInfo& updateInfo = aUpdateInfos[idxIndex];
+  for (const IndexUpdateInfo& updateInfo : aUpdateInfos) {
     const int64_t& indexId = updateInfo.indexId();
     const Key& key = updateInfo.value();
     const Key& sortKey = updateInfo.localizedValue();
@@ -19750,8 +19697,7 @@ nsresult FactoryOp::SendVersionChangeMessages(
   const uint32_t liveCount = aDatabaseActorInfo->mLiveDatabases.Length();
   if (liveCount > expectedCount) {
     FallibleTArray<MaybeBlockedDatabaseInfo> maybeBlockedDatabases;
-    for (uint32_t index = 0; index < liveCount; index++) {
-      Database* database = aDatabaseActorInfo->mLiveDatabases[index];
+    for (const auto& database : aDatabaseActorInfo->mLiveDatabases) {
       if ((!aOpeningDatabase || database != aOpeningDatabase) &&
           !database->IsClosed() &&
           NS_WARN_IF(
@@ -19765,24 +19711,19 @@ nsresult FactoryOp::SendVersionChangeMessages(
     }
   }
 
-  if (!mMaybeBlockedDatabases.IsEmpty()) {
-    for (uint32_t count = mMaybeBlockedDatabases.Length(), index = 0;
-         index < count;
-         /* incremented conditionally */) {
-      if (mMaybeBlockedDatabases[index]->SendVersionChange(aOldVersion,
-                                                           aNewVersion)) {
-        index++;
-      } else {
-        // We don't want to wait forever if we were not able to send the
-        // message.
-        mMaybeBlockedDatabases.RemoveElementAt(index);
-        count--;
-      }
-    }
-  }
+  // We don't want to wait forever if we were not able to send the
+  // message.
+  mMaybeBlockedDatabases.RemoveElementsAt(
+      std::remove_if(mMaybeBlockedDatabases.begin(),
+                     mMaybeBlockedDatabases.end(),
+                     [aOldVersion, &aNewVersion](auto& maybeBlockedDatabase) {
+                       return !maybeBlockedDatabase->SendVersionChange(
+                           aOldVersion, aNewVersion);
+                     }),
+      mMaybeBlockedDatabases.end());
 
   return NS_OK;
-}
+}  // namespace indexedDB
 
 // static
 bool FactoryOp::CheckAtLeastOneAppHasPermission(
@@ -19907,9 +19848,7 @@ void FactoryOp::NoteDatabaseBlocked(Database* aDatabase) {
   // Otherwise if it was blocked its |mBlocked| flag will be true.
   bool sendBlockedEvent = true;
 
-  for (uint32_t count = mMaybeBlockedDatabases.Length(), index = 0;
-       index < count; index++) {
-    MaybeBlockedDatabaseInfo& info = mMaybeBlockedDatabases[index];
+  for (auto& info : mMaybeBlockedDatabases) {
     if (info == aDatabase) {
       // This database was blocked, mark accordingly.
       info.mBlocked = true;
@@ -21755,9 +21694,10 @@ void DeleteDatabaseOp::VersionChangeOp::RunOnOwningThread() {
           // here to make sure we find invalid uses later.
           info = nullptr;
 #endif
-          for (uint32_t count = liveDatabases.Length(), index = 0;
-               index < count; index++) {
-            RefPtr<Database> database = liveDatabases[index];
+          // TODO: Why do we convert to RefPtr here? If this is really
+          // necessary, this is very error-prone, and provide the type of
+          // liveDatabases should be changed.
+          for (RefPtr<Database> database : liveDatabases) {
             database->Invalidate();
           }
 
@@ -22134,9 +22074,7 @@ nsresult TransactionBase::CommitOp::WriteAutoIncrementCounts() {
     DatabaseConnection::CachedStatement stmt;
     nsresult rv;
 
-    for (uint32_t count = metadataArray.Length(), index = 0; index < count;
-         index++) {
-      const RefPtr<FullObjectStoreMetadata>& metadata = metadataArray[index];
+    for (const auto& metadata : metadataArray) {
       MOZ_ASSERT(!metadata->mDeleted);
       MOZ_ASSERT(metadata->mNextAutoIncrementId > 1);
 
@@ -22189,10 +22127,7 @@ void TransactionBase::CommitOp::CommitOrRollbackAutoIncrementCounts() {
   if (!metadataArray.IsEmpty()) {
     bool committed = NS_SUCCEEDED(mResultCode);
 
-    for (uint32_t count = metadataArray.Length(), index = 0; index < count;
-         index++) {
-      RefPtr<FullObjectStoreMetadata>& metadata = metadataArray[index];
-
+    for (const auto& metadata : metadataArray) {
       if (committed) {
         metadata->mCommittedAutoIncrementId = metadata->mNextAutoIncrementId;
       } else {
@@ -23290,9 +23225,7 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
   }
 
   // First construct the full list to update the index_data_values row.
-  for (uint32_t index = 0; index < updateInfoCount; index++) {
-    const IndexUpdateInfo& info = updateInfos[index];
-
+  for (const IndexUpdateInfo& info : updateInfos) {
     MOZ_ALWAYS_TRUE(indexValues.InsertElementSorted(
         IndexDataValue(metadata.id(), metadata.unique(), info.value(),
                        info.localizedValue()),
@@ -23325,9 +23258,7 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
 
     MOZ_ASSERT(indexValues.Capacity() >= updateInfoCount);
 
-    for (uint32_t index = 0; index < updateInfoCount; index++) {
-      const IndexUpdateInfo& info = updateInfos[index];
-
+    for (const IndexUpdateInfo& info : updateInfos) {
       MOZ_ALWAYS_TRUE(indexValues.InsertElementSorted(
           IndexDataValue(metadata.id(), metadata.unique(), info.value(),
                          info.localizedValue()),
@@ -24122,13 +24053,9 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction) {
       mParams.indexUpdateInfos();
 
   if (!indexUpdateInfos.IsEmpty()) {
-    const uint32_t count = indexUpdateInfos.Length();
-
     mUniqueIndexTable.emplace();
 
-    for (uint32_t index = 0; index < count; index++) {
-      const IndexUpdateInfo& updateInfo = indexUpdateInfos[index];
-
+    for (const auto& updateInfo : indexUpdateInfos) {
       RefPtr<FullIndexMetadata> indexMetadata;
       MOZ_ALWAYS_TRUE(mMetadata->mIndexes.Get(updateInfo.indexId(),
                                               getter_AddRefs(indexMetadata)));
@@ -24165,9 +24092,7 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction) {
       return false;
     }
 
-    for (uint32_t index = 0; index < count; index++) {
-      const FileAddInfo& fileAddInfo = fileAddInfos[index];
-
+    for (const auto& fileAddInfo : fileAddInfos) {
       MOZ_ASSERT(fileAddInfo.type() == StructuredCloneFile::eBlob ||
                  fileAddInfo.type() == StructuredCloneFile::eMutableFile);
 
@@ -24414,9 +24339,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
     Maybe<FileHelper> fileHelper;
     nsAutoString fileIds;
 
-    for (uint32_t count = mStoredFileInfos.Length(), index = 0; index < count;
-         index++) {
-      StoredFileInfo& storedFileInfo = mStoredFileInfos[index];
+    for (auto& storedFileInfo : mStoredFileInfos) {
       MOZ_ASSERT(storedFileInfo.mFileInfo);
 
       // If there is a StoredFileInfo, then one of the following is true:
@@ -24455,7 +24378,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
           }
         }
 
-        RefPtr<FileInfo>& fileInfo = storedFileInfo.mFileInfo;
+        const RefPtr<FileInfo>& fileInfo = storedFileInfo.mFileInfo;
 
         nsCOMPtr<nsIFile> file = fileHelper->GetFile(fileInfo);
         if (NS_WARN_IF(!file)) {
@@ -24493,7 +24416,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
         }
       }
 
-      if (index) {
+      if (!fileIds.IsEmpty()) {
         fileIds.Append(' ');
       }
       storedFileInfo.Serialize(fileIds);
@@ -24782,10 +24705,7 @@ nsresult ObjectStoreGetRequestOp::GetPreprocessParams(
     }
 
     uint32_t fallibleIndex = 0;
-    for (uint32_t count = mResponse.Length(), index = 0; index < count;
-         index++) {
-      StructuredCloneReadInfo& info = mResponse[index];
-
+    for (auto& info : mResponse) {
       if (info.mHasPreprocessInfo) {
         nsresult rv = ConvertResponse<true>(
             info, falliblePreprocessInfos[fallibleIndex++]);
