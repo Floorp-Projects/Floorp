@@ -60,6 +60,8 @@ class WebExtensionPolicy final : public nsISupports,
     MOZ_ALWAYS_SUCCEEDS(mBaseURI->GetSpec(aBaseURL));
   }
 
+  bool IsPrivileged() { return mIsPrivileged; }
+
   void GetURL(const nsAString& aPath, nsAString& aURL, ErrorResult& aRv) const;
 
   Result<nsString, nsresult> GetURL(const nsAString& aPath) const;
@@ -188,6 +190,7 @@ class WebExtensionPolicy final : public nsISupports,
 
   RefPtr<WebExtensionLocalizeCallback> mLocalizeCallback;
 
+  bool mIsPrivileged;
   RefPtr<AtomSet> mPermissions;
   RefPtr<MatchPatternSet> mHostPermissions;
   MatchGlobSet mWebAccessiblePaths;

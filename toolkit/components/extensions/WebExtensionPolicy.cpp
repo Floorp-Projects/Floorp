@@ -133,6 +133,7 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
       mName(aInit.mName),
       mContentSecurityPolicy(aInit.mContentSecurityPolicy),
       mLocalizeCallback(aInit.mLocalizeCallback),
+      mIsPrivileged(aInit.mIsPrivileged),
       mPermissions(new AtomSet(aInit.mPermissions)) {
   if (!ParseGlobs(aGlobal, aInit.mWebAccessibleResources, mWebAccessiblePaths,
                   aRv)) {
