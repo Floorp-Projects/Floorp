@@ -10,6 +10,7 @@ ChromeUtils.defineModuleGetter(
 );
 
 const TEST_ORIGIN = "https://example.com";
+const TEST_HTTP_ORIGIN = "http://example.com";
 const TEST_SUB_ORIGIN = "https://test1.example.com";
 const REMOVE_DIALOG_URL =
   "chrome://browser/content/preferences/siteDataRemoveSelected.xul";
@@ -41,7 +42,8 @@ add_task(async function test_ShowCertificate() {
 
   let pageInfo = BrowserPageInfo(TEST_ORIGIN_CERT_ERROR, "securityTab");
   await BrowserTestUtils.waitForEvent(pageInfo, "load");
-  let securityTab = pageInfo.document.getElementById("securityTab");
+  let pageInfoDoc = pageInfo.document;
+  let securityTab = pageInfoDoc.getElementById("securityTab");
   await TestUtils.waitForCondition(
     () => BrowserTestUtils.is_visible(securityTab),
     "Security tab should be visible."
@@ -49,7 +51,7 @@ add_task(async function test_ShowCertificate() {
 
   async function openAboutCertificate() {
     let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
-    let viewCertButton = pageInfo.document.getElementById("security-view-cert");
+    let viewCertButton = pageInfoDoc.getElementById("security-view-cert");
     await TestUtils.waitForCondition(
       () => BrowserTestUtils.is_visible(viewCertButton),
       "view cert button should be visible."
@@ -108,20 +110,17 @@ add_task(async function test_CertificateError() {
 
   let pageInfo = BrowserPageInfo(TEST_ORIGIN_CERT_ERROR, "securityTab");
   await BrowserTestUtils.waitForEvent(pageInfo, "load");
-  let securityTab = pageInfo.document.getElementById("securityTab");
+  let pageInfoDoc = pageInfo.document;
+  let securityTab = pageInfoDoc.getElementById("securityTab");
 
   await TestUtils.waitForCondition(
     () => BrowserTestUtils.is_visible(securityTab),
     "Security tab should be visible."
   );
 
-  let owner = pageInfo.document.getElementById("security-identity-owner-value");
-  let verifier = pageInfo.document.getElementById(
-    "security-identity-verifier-value"
-  );
-  let domain = pageInfo.document.getElementById(
-    "security-identity-domain-value"
-  );
+  let owner = pageInfoDoc.getElementById("security-identity-owner-value");
+  let verifier = pageInfoDoc.getElementById("security-identity-verifier-value");
+  let domain = pageInfoDoc.getElementById("security-identity-domain-value");
 
   await TestUtils.waitForCondition(
     () => owner.value === "This website does not supply ownership information.",
@@ -132,7 +131,7 @@ add_task(async function test_CertificateError() {
 
   await TestUtils.waitForCondition(
     () => verifier.value === "Mozilla Testing",
-    `Value of verifier should be "Not specified", instead got "${
+    `Value of verifier should be "Mozilla Testing", instead got "${
       verifier.value
     }".`
   );
@@ -141,6 +140,48 @@ add_task(async function test_CertificateError() {
     () => domain.value === browser.currentURI.displayHost,
     `Value of domain should be ${
       browser.currentURI.displayHost
+    }, instead got "${domain.value}".`
+  );
+
+  pageInfo.close();
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+// Test displaying website identity information on http pages.
+add_task(async function test_SecurityHTTP() {
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_HTTP_ORIGIN);
+
+  let pageInfo = BrowserPageInfo(TEST_HTTP_ORIGIN, "securityTab");
+  await BrowserTestUtils.waitForEvent(pageInfo, "load");
+  let pageInfoDoc = pageInfo.document;
+  let securityTab = pageInfoDoc.getElementById("securityTab");
+  await TestUtils.waitForCondition(
+    () => BrowserTestUtils.is_visible(securityTab),
+    "Security tab should be visible."
+  );
+
+  let owner = pageInfoDoc.getElementById("security-identity-owner-value");
+  let verifier = pageInfoDoc.getElementById("security-identity-verifier-value");
+  let domain = pageInfoDoc.getElementById("security-identity-domain-value");
+
+  await TestUtils.waitForCondition(
+    () => owner.value === "This website does not supply ownership information.",
+    `Value of owner should be should be "This website does not supply ownership information." instead got "${
+      owner.value
+    }".`
+  );
+
+  await TestUtils.waitForCondition(
+    () => verifier.value === "Not specified",
+    `Value of verifier should be "Not specified", instead got "${
+      verifier.value
+    }".`
+  );
+
+  await TestUtils.waitForCondition(
+    () => domain.value === gBrowser.selectedBrowser.currentURI.displayHost,
+    `Value of domain should be ${
+      gBrowser.selectedBrowser.currentURI.displayHost
     }, instead got "${domain.value}".`
   );
 
@@ -158,13 +199,10 @@ add_task(async function test_SiteData() {
 
     let pageInfo = BrowserPageInfo(TEST_ORIGIN, "securityTab");
     await BrowserTestUtils.waitForEvent(pageInfo, "load");
+    let pageInfoDoc = pageInfo.document;
 
-    let label = pageInfo.document.getElementById(
-      "security-privacy-sitedata-value"
-    );
-    let clearButton = pageInfo.document.getElementById(
-      "security-clear-sitedata"
-    );
+    let label = pageInfoDoc.getElementById("security-privacy-sitedata-value");
+    let clearButton = pageInfoDoc.getElementById("security-clear-sitedata");
 
     let size = DownloadUtils.convertByteUnits(totalUsage);
 
@@ -212,12 +250,10 @@ add_task(async function test_Cookies() {
     let pageInfo = BrowserPageInfo(TEST_ORIGIN, "securityTab");
     await BrowserTestUtils.waitForEvent(pageInfo, "load");
 
-    let label = pageInfo.document.getElementById(
-      "security-privacy-sitedata-value"
-    );
-    let clearButton = pageInfo.document.getElementById(
-      "security-clear-sitedata"
-    );
+    let pageInfoDoc = pageInfo.document;
+
+    let label = pageInfoDoc.getElementById("security-privacy-sitedata-value");
+    let clearButton = pageInfoDoc.getElementById("security-clear-sitedata");
 
     // The usage details are filled asynchronously, so we assert that they're present by
     // waiting for them to be filled in.
