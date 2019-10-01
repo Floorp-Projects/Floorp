@@ -52,6 +52,7 @@ DevToolsModules(
     'suggestion-picker.js',
     'telemetry.js',
     'theme.js',
+    'thread-utils.js',
     'undo.js',
     'unicode-url.js',
     'view-source.js',
