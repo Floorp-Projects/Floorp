@@ -22,6 +22,12 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace net {
 
+static void mdns_service_resolved(void* cb, const char* hostname,
+                                  const char* addr) {
+  StunAddrsRequestParent* self = static_cast<StunAddrsRequestParent*>(cb);
+  self->OnQueryComplete(nsCString(hostname), nsCString(addr));
+}
+
 StunAddrsRequestParent::StunAddrsRequestParent() : mIPCClosed(false) {
   NS_GetMainThread(getter_AddRefs(mMainThread));
 
@@ -32,10 +38,6 @@ StunAddrsRequestParent::StunAddrsRequestParent() : mIPCClosed(false) {
 
 StunAddrsRequestParent::~StunAddrsRequestParent() {
   ASSERT_ON_THREAD(mMainThread);
-
-  if (mSharedMDNSService) {
-    mSharedMDNSService = nullptr;
-  }
 }
 
 mozilla::ipc::IPCResult StunAddrsRequestParent::RecvGetStunAddrs() {
@@ -61,8 +63,25 @@ mozilla::ipc::IPCResult StunAddrsRequestParent::RecvRegisterMDNSHostname(
     return IPC_OK();
   }
 
-  mSharedMDNSService->RegisterHostname(aHostname.BeginReading(),
-                                       aAddress.BeginReading());
+  if (mSharedMDNSService) {
+    mSharedMDNSService->RegisterHostname(aHostname.BeginReading(),
+                                         aAddress.BeginReading());
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult StunAddrsRequestParent::RecvQueryMDNSHostname(
+    const nsCString& aHostname) {
+  ASSERT_ON_THREAD(mMainThread);
+
+  if (mIPCClosed) {
+    return IPC_OK();
+  }
+
+  if (mSharedMDNSService) {
+    mSharedMDNSService->QueryHostname(this, aHostname.BeginReading());
+  }
 
   return IPC_OK();
 }
@@ -75,7 +94,9 @@ mozilla::ipc::IPCResult StunAddrsRequestParent::RecvUnregisterMDNSHostname(
     return IPC_OK();
   }
 
-  mSharedMDNSService->UnregisterHostname(aHostname.BeginReading());
+  if (mSharedMDNSService) {
+    mSharedMDNSService->UnregisterHostname(aHostname.BeginReading());
+  }
 
   return IPC_OK();
 }
@@ -86,12 +107,34 @@ mozilla::ipc::IPCResult StunAddrsRequestParent::Recv__delete__() {
   return IPC_OK();
 }
 
+void StunAddrsRequestParent::OnQueryComplete(const nsCString& hostname,
+                                             const nsCString& address) {
+  RUN_ON_THREAD(mMainThread,
+                WrapRunnable(RefPtr<StunAddrsRequestParent>(this),
+                             &StunAddrsRequestParent::OnQueryComplete_m,
+                             hostname, address),
+                NS_DISPATCH_NORMAL);
+}
+
 void StunAddrsRequestParent::ActorDestroy(ActorDestroyReason why) {
   // We may still have refcount>0 if we haven't made it through
   // GetStunAddrs_s and SendStunAddrs_m yet, but child process
   // has crashed.  We must not send any more msgs to child, or
   // IPDL will kill chrome process, too.
   mIPCClosed = true;
+
+  // We need to stop the mDNS service here to ensure that we don't
+  // end up with any messages queued for the main thread after the
+  // destructors run. Because of Bug 1569311, all of the
+  // StunAddrsRequestParent instances end up being destroyed one
+  // after the other, so it is ok to free the shared service when
+  // the first one is destroyed rather than waiting for the last one.
+  // If this behaviour changes, we would potentially end up starting
+  // and stopping instances repeatedly and should add a refcount and
+  // a way of cancelling pending queries to avoid churn in that case.
+  if (mSharedMDNSService) {
+    mSharedMDNSService = nullptr;
+  }
 }
 
 void StunAddrsRequestParent::GetStunAddrs_s() {
@@ -144,6 +187,19 @@ void StunAddrsRequestParent::SendStunAddrs_m(const NrIceStunAddrArray& addrs) {
   Unused << SendOnStunAddrsAvailable(addrs);
 }
 
+void StunAddrsRequestParent::OnQueryComplete_m(const nsCString& hostname,
+                                               const nsCString& address) {
+  ASSERT_ON_THREAD(mMainThread);
+
+  if (mIPCClosed) {
+    // nothing to do: child probably crashed
+    return;
+  }
+
+  // send the hostname and address back to the child
+  Unused << SendOnMDNSQueryComplete(hostname, address);
+}
+
 StaticRefPtr<StunAddrsRequestParent::MDNSServiceWrapper>
     StunAddrsRequestParent::mSharedMDNSService;
 
@@ -159,6 +215,15 @@ void StunAddrsRequestParent::MDNSServiceWrapper::RegisterHostname(
   StartIfRequired();
   if (mMDNSService) {
     mdns_service_register_hostname(mMDNSService, hostname, address);
+  }
+}
+
+void StunAddrsRequestParent::MDNSServiceWrapper::QueryHostname(
+    void* data, const char* hostname) {
+  StartIfRequired();
+  if (mMDNSService) {
+    mdns_service_query_hostname(mMDNSService, data, mdns_service_resolved,
+                                hostname);
   }
 }
 
