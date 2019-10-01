@@ -302,12 +302,10 @@ void JSJitFrameIter::dumpBaseline() const {
 
   fprintf(stderr, "  actual args: %d\n", numActualArgs());
 
-  BaselineFrame* frame = baselineFrame();
-
-  for (unsigned i = 0; i < frame->numValueSlots(); i++) {
+  for (unsigned i = 0; i < baselineFrameNumValueSlots(); i++) {
     fprintf(stderr, "  slot %u: ", i);
 #if defined(DEBUG) || defined(JS_JITSPEW)
-    Value* v = frame->valueSlot(i);
+    Value* v = baselineFrame()->valueSlot(i);
     DumpValue(*v);
 #else
     fprintf(stderr, "?\n");

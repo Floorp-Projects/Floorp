@@ -291,29 +291,33 @@ static void SettleOnTryNote(JSContext* cx, const JSTryNote* tn,
 }
 
 class BaselineTryNoteFilter {
-  BaselineFrame* frame_;
+  const JSJitFrameIter& frame_;
 
  public:
-  explicit BaselineTryNoteFilter(BaselineFrame* frame) : frame_(frame) {}
+  explicit BaselineTryNoteFilter(const JSJitFrameIter& frame) : frame_(frame) {}
   bool operator()(const JSTryNote* note) {
-    MOZ_ASSERT(frame_->numValueSlots() >= frame_->script()->nfixed());
-    uint32_t currDepth = frame_->numValueSlots() - frame_->script()->nfixed();
+    BaselineFrame* frame = frame_.baselineFrame();
+
+    uint32_t numValueSlots = frame_.baselineFrameNumValueSlots();
+    MOZ_ASSERT(numValueSlots >= frame->script()->nfixed());
+
+    uint32_t currDepth = numValueSlots - frame->script()->nfixed();
     return note->stackDepth <= currDepth;
   }
 };
 
 class TryNoteIterBaseline : public TryNoteIter<BaselineTryNoteFilter> {
  public:
-  TryNoteIterBaseline(JSContext* cx, BaselineFrame* frame, jsbytecode* pc)
-      : TryNoteIter(cx, frame->script(), pc, BaselineTryNoteFilter(frame)) {}
+  TryNoteIterBaseline(JSContext* cx, const JSJitFrameIter& frame,
+                      jsbytecode* pc)
+      : TryNoteIter(cx, frame.script(), pc, BaselineTryNoteFilter(frame)) {}
 };
 
 // Close all live iterators on a BaselineFrame due to exception unwinding. The
 // pc parameter is updated to where the envs have been unwound to.
 static void CloseLiveIteratorsBaselineForUncatchableException(
     JSContext* cx, const JSJitFrameIter& frame, jsbytecode* pc) {
-  for (TryNoteIterBaseline tni(cx, frame.baselineFrame(), pc); !tni.done();
-       ++tni) {
+  for (TryNoteIterBaseline tni(cx, frame, pc); !tni.done(); ++tni) {
     const JSTryNote* tn = *tni;
     switch (tn->kind) {
       case JSTRY_FOR_IN: {
@@ -341,8 +345,7 @@ static bool ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame,
 
   RootedScript script(cx, frame.baselineFrame()->script());
 
-  for (TryNoteIterBaseline tni(cx, frame.baselineFrame(), *pc); !tni.done();
-       ++tni) {
+  for (TryNoteIterBaseline tni(cx, frame, *pc); !tni.done(); ++tni) {
     const JSTryNote* tn = *tni;
 
     MOZ_ASSERT(cx->isExceptionPending());
