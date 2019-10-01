@@ -315,7 +315,6 @@ var validGradientAndElementValues = [
   // radial w/ no color stops (valid) and a several different radius values:
   "-webkit-gradient(radial, 1 2, 8, 3 4, 9)",
   "-webkit-gradient(radial, 0 0, 10, 0 0, 5)",
-  "-webkit-gradient(radial, 1 2, -1.5, center center, +99999.9999)",
 
   // radial w/ color stops
   // (mostly leaning on more-robust 'linear' tests above; just testing a few
@@ -584,6 +583,7 @@ var invalidGradientAndElementValues = [
   "-webkit-gradient(radial, 1 2, 8, 3)", // Incomplete 2nd <point>
   "-webkit-gradient(radial, 1 2, 8, 3 4)", // Missing 2nd radius
   "-webkit-gradient(radial, 1 2, 3 4, 9)", // Missing 1st radius
+  "-webkit-gradient(radial, 1 2, -1.5, center center, +99999.9999)", // Negative radius
 
   // radial w/ incorrect units on radius (invalid; expecting <number>)
   "-webkit-gradient(radial, 1 2, 8%,      3 4, 9)",
@@ -969,7 +969,6 @@ if (/* mozGradientsEnabled */ true) {
     "-moz-radial-gradient(left calc(100px + -25%), red, blue)",
     "-moz-radial-gradient(calc(100px + -25px) top, red, blue)",
     "-moz-radial-gradient(left calc(100px + -25px), red, blue)",
-    "-moz-radial-gradient(40%, -100px -10%, red, blue)"
   );
 
   invalidGradientAndElementValues.push(
@@ -1031,6 +1030,9 @@ if (/* mozGradientsEnabled */ true) {
     "-moz-repeating-linear-gradient(30grad left 35px, red, blue)",
     "-moz-repeating-linear-gradient(10deg 20px, red, blue)",
     "-moz-repeating-linear-gradient(.414rad bottom, red, blue)",
+
+    /* Negative radii */
+    "-moz-radial-gradient(40%, -100px -10%, red, blue)",
 
     /* no quirks mode colors */
     "-moz-radial-gradient(10% bottom, ffffff, black) scroll no-repeat",
