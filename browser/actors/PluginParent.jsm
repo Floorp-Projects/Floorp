@@ -300,9 +300,6 @@ const PluginManager = {
   },
 };
 
-const PREF_SESSION_PERSIST_MINUTES =
-  "plugin.sessionPermissionNow.intervalInMinutes";
-
 class PluginParent extends JSWindowActorParent {
   constructor() {
     super();
@@ -427,8 +424,6 @@ class PluginParent extends JSWindowActorParent {
    */
   _updatePluginPermission(aBrowser, aActivationInfo, aNewState) {
     let permission;
-    let expireType;
-    let expireTime;
     let histogram = Services.telemetry.getHistogramById(
       "PLUGINS_NOTIFICATION_USER_ACTION_2"
     );
@@ -445,10 +440,6 @@ class PluginParent extends JSWindowActorParent {
     switch (aNewState) {
       case "allownow":
         permission = Ci.nsIPermissionManager.ALLOW_ACTION;
-        expireType = Ci.nsIPermissionManager.EXPIRE_SESSION;
-        expireTime =
-          Date.now() +
-          Services.prefs.getIntPref(PREF_SESSION_PERSIST_MINUTES) * 60 * 1000;
         histogram.add(0);
         aActivationInfo.fallbackType = PLUGIN_ACTIVE;
         notification.options.extraAttr = "active";
@@ -456,8 +447,6 @@ class PluginParent extends JSWindowActorParent {
 
       case "block":
         permission = Ci.nsIPermissionManager.PROMPT_ACTION;
-        expireType = Ci.nsIPermissionManager.EXPIRE_SESSION;
-        expireTime = 0;
         histogram.add(2);
         let pluginTag = PluginManager.getPluginTagById(aActivationInfo.id);
         switch (pluginTag.blocklistState) {
@@ -499,8 +488,8 @@ class PluginParent extends JSWindowActorParent {
         principal,
         aActivationInfo.permissionString,
         permission,
-        expireType,
-        expireTime
+        Ci.nsIPermissionManager.EXPIRE_SESSION,
+        0 // do not expire (only expire at the end of the session)
       );
     }
 
