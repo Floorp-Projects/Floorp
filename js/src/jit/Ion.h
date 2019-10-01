@@ -146,8 +146,7 @@ MOZ_MUST_USE bool IonCompileScriptForBaseline(JSContext* cx,
 
 MethodStatus CanEnterIon(JSContext* cx, RunState& state);
 
-MethodStatus Recompile(JSContext* cx, HandleScript script,
-                       BaselineFrame* osrFrame, jsbytecode* osrPc, bool force);
+MethodStatus Recompile(JSContext* cx, HandleScript script, bool force);
 
 enum JitExecStatus {
   // The method call had to be aborted due to a stack limit check. This

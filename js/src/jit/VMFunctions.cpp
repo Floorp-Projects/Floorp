@@ -1310,7 +1310,7 @@ bool RecompileImpl(JSContext* cx, bool force) {
     return true;
   }
 
-  MethodStatus status = Recompile(cx, script, nullptr, nullptr, force);
+  MethodStatus status = Recompile(cx, script, force);
   if (status == Method_Error) {
     return false;
   }
