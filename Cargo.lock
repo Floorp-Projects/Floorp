@@ -2532,7 +2532,7 @@ dependencies = [
  "libc 0.2.60 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "nserror 0.1.0",
- "webrtc-sdp 0.3.0",
+ "webrtc-sdp 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -3582,12 +3582,10 @@ dependencies = [
 
 [[package]]
 name = "webrtc-sdp"
-version = "0.3.0"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 1.0.88 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_derive 1.0.88 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_json 1.0.26 (registry+https://github.com/rust-lang/crates.io-index)",
  "url 2.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -4069,6 +4067,7 @@ dependencies = [
 "checksum want 0.0.6 (registry+https://github.com/rust-lang/crates.io-index)" = "797464475f30ddb8830cc529aaaae648d581f99e2036a928877dfde027ddf6b3"
 "checksum warp 0.1.19 (registry+https://github.com/rust-lang/crates.io-index)" = "33857527c63bc514452f885d0a57019f28139c58fef2b3566016ecc0d44e5d24"
 "checksum wasmparser 0.39.1 (registry+https://github.com/rust-lang/crates.io-index)" = "a026c1436af49d5537c7561c7474f81f7a754e36445fe52e6e88795a9747291c"
+"checksum webrtc-sdp 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "c3ce6e516a95ac9b335d54739bb139af9d3def4c009562404787a3981b32afd7"
 "checksum weedle 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "26a4c67f132386d965390b8a734d5d10adbcd30eb5cc74bd9229af8b83f10044"
 "checksum winapi 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)" = "167dc9d6949a9b857f3451275e911c3f44255842c1f7a76f33c55103a909087a"
 "checksum winapi 0.3.6 (git+https://github.com/froydnj/winapi-rs?branch=aarch64)" = "<none>"
