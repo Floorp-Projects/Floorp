@@ -695,8 +695,10 @@ function updateFxaToolbarMenu(enable, isInitialUpdate = false) {
     document.getElementById(
       "PanelUI-fxa-menu-monitor-button"
     ).hidden = !gFxaMonitorLoginUrl;
-    document.getElementById("fxa-menu-service-separator").hidden =
-      !gFxaSendLoginUrl && !gFxaMonitorLoginUrl;
+    // If there are no services left, remove the label and sep.
+    let hideSvcs = !gFxaSendLoginUrl && !gFxaMonitorLoginUrl;
+    document.getElementById("fxa-menu-service-separator").hidden = hideSvcs;
+    document.getElementById("fxa-menu-service-label").hidden = hideSvcs;
 
     document.getElementById(
       "fxa-menu-device-name-label"
