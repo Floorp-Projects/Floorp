@@ -43,7 +43,14 @@ function setIsPlayingState(isPlaying) {
  * events for updating state.
  */
 let Player = {
-  WINDOW_EVENTS: ["click", "keydown", "mouseout", "resize", "unload"],
+  WINDOW_EVENTS: [
+    "click",
+    "contextmenu",
+    "keydown",
+    "mouseout",
+    "resize",
+    "unload",
+  ],
   mm: null,
   /**
    * Used for resizing Telemetry to avoid recording an event for every resize
@@ -131,6 +138,11 @@ let Player = {
       case "click": {
         this.onClick(event);
         this.controls.removeAttribute("keying");
+        break;
+      }
+
+      case "contextmenu": {
+        event.preventDefault();
         break;
       }
 
