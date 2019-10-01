@@ -23,11 +23,14 @@ inline void EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm,
   masm.addPtr(Imm32(BaselineFrame::FramePointerOffset), scratch);
   masm.subPtr(BaselineStackReg, scratch);
 
-  // Store frame size without VMFunction arguments for GC marking.
+#ifdef DEBUG
+  // Store frame size without VMFunction arguments for debug assertions.
   masm.subPtr(Imm32(argSize), scratch);
-  masm.store32(scratch, Address(BaselineFrameReg,
-                                BaselineFrame::reverseOffsetOfFrameSize()));
+  Address frameSizeAddr(BaselineFrameReg,
+                        BaselineFrame::reverseOffsetOfDebugFrameSize());
+  masm.store32(scratch, frameSizeAddr);
   masm.addPtr(Imm32(argSize), scratch);
+#endif
 
   // Push frame descriptor and perform the tail call.
   // ICTailCallReg (ra) already contains the return address (as we
@@ -72,8 +75,11 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
   masm.addPtr(Imm32(BaselineFrame::FramePointerOffset), scratch);
   masm.subPtr(BaselineStackReg, scratch);
 
-  masm.store32(scratch, Address(BaselineFrameReg,
-                                BaselineFrame::reverseOffsetOfFrameSize()));
+#ifdef DEBUG
+  Address frameSizeAddr(BaselineFrameReg,
+                        BaselineFrame::reverseOffsetOfDebugFrameSize());
+  masm.store32(scratch, frameSizeAddr);
+#endif
 
   // Note: when making changes here, don't forget to update
   // BaselineStubFrame if needed.

@@ -113,7 +113,7 @@ BaselineFrameInspector* jit::NewBaselineFrameInspector(TempAllocator* temp,
     }
   }
 
-  uint32_t numValueSlots = frame->numValueSlots();
+  uint32_t numValueSlots = frame->numValueSlots(frameSize);
   if (!inspector->varTypes.reserve(numValueSlots)) {
     return nullptr;
   }
