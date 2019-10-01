@@ -60,6 +60,12 @@ check_for_forced_update() {
     return 0;
   fi
 
+  # notarization ticket
+  if [ "$forced_file_chk" = "Contents/CodeResources" ]; then
+    ## "true" *giggle*
+    return 0;
+  fi
+
   if [ "${forced_file_chk##*.}" = "chk" ]; then
     ## "true" *giggle*
     return 0;
