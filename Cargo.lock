@@ -424,7 +424,6 @@ dependencies = [
  "rust_cascade 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "sha2 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "storage_variant 0.1.0",
- "style 0.0.1",
  "tempfile 3.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "thin-vec 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "time 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
