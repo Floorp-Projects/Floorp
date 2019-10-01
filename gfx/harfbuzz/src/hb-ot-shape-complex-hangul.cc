@@ -204,7 +204,7 @@ preprocess_text_hangul (const hb_ot_shape_plan_t *plan HB_UNUSED,
       if (start < end && end == buffer->out_len)
       {
 	/* Tone mark follows a valid syllable; move it in front, unless it's zero width. */
-        buffer->unsafe_to_break_from_outbuffer (start, buffer->idx);
+	buffer->unsafe_to_break_from_outbuffer (start, buffer->idx);
 	buffer->next_glyph ();
 	if (!is_zero_width_char (font, u))
 	{
@@ -354,9 +354,9 @@ preprocess_text_hangul (const hb_ot_shape_plan_t *plan HB_UNUSED,
 	   */
 	  if (has_glyph && !tindex)
 	  {
-            buffer->next_glyph ();
-            s_len++;
-          }
+	    buffer->next_glyph ();
+	    s_len++;
+	  }
 
 	  if (unlikely (!buffer->successful))
 	    return;
@@ -365,7 +365,7 @@ preprocess_text_hangul (const hb_ot_shape_plan_t *plan HB_UNUSED,
 	   * that are now in buffer->out_info.
 	   */
 	  hb_glyph_info_t *info = buffer->out_info;
-          end = start + s_len;
+	  end = start + s_len;
 
 	  unsigned int i = start;
 	  info[i++].hangul_shaping_feature() = LJMO;
@@ -383,7 +383,7 @@ preprocess_text_hangul (const hb_ot_shape_plan_t *plan HB_UNUSED,
 
       if (has_glyph)
       {
-        /* We didn't decompose the S, so just advance past it. */
+	/* We didn't decompose the S, so just advance past it. */
 	end = start + 1;
 	buffer->next_glyph ();
 	continue;

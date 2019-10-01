@@ -476,13 +476,13 @@ apply_stch (const hb_ot_shape_plan_t *plan HB_UNUSED,
     {
       if (!hb_in_range<uint8_t> (info[i - 1].arabic_shaping_action(), STCH_FIXED, STCH_REPEATING))
       {
-        if (step == CUT)
+	if (step == CUT)
 	{
 	  --j;
 	  info[j] = info[i - 1];
 	  pos[j] = pos[i - 1];
 	}
-        continue;
+	continue;
       }
 
       /* Yay, justification! */
@@ -540,10 +540,10 @@ apply_stch (const hb_ot_shape_plan_t *plan HB_UNUSED,
       hb_position_t shortfall = sign * w_remaining - sign * w_repeating * (n_copies + 1);
       if (shortfall > 0 && n_repeating > 0)
       {
-        ++n_copies;
-        hb_position_t excess = (n_copies + 1) * sign * w_repeating - sign * w_remaining;
-        if (excess > 0)
-          extra_repeat_overlap = excess / (n_copies * n_repeating);
+	++n_copies;
+	hb_position_t excess = (n_copies + 1) * sign * w_repeating - sign * w_remaining;
+	if (excess > 0)
+	  extra_repeat_overlap = excess / (n_copies * n_repeating);
       }
 
       if (step == MEASURE)
@@ -583,7 +583,7 @@ apply_stch (const hb_ot_shape_plan_t *plan HB_UNUSED,
     if (step == MEASURE)
     {
       if (unlikely (!buffer->ensure (count + extra_glyphs_needed)))
-        break;
+	break;
     }
     else
     {

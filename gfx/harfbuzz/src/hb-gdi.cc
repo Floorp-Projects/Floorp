@@ -58,7 +58,7 @@ fail:
 
 /**
  * hb_gdi_face_create:
- * @hdc: a HFONT object.
+ * @hfont: a HFONT object.
  *
  * Return value: #hb_face_t object corresponding to the given input
  *

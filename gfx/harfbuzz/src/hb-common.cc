@@ -27,13 +27,9 @@
  */
 
 #include "hb.hh"
-
 #include "hb-machinery.hh"
 
 #include <locale.h>
-#ifdef HAVE_XLOCALE_H
-#include <xlocale.h>
-#endif
 
 #ifdef HB_NO_SETLOCALE
 #define setlocale(Category, Locale) "C"
@@ -67,7 +63,7 @@ _hb_options_init ()
     {
       const char *p = strchr (c, ':');
       if (!p)
-        p = c + strlen (c);
+	p = c + strlen (c);
 
 #define OPTION(name, symbol) \
 	if (0 == strncmp (c, name, p - c) && strlen (name) == static_cast<size_t>(p - c)) do { u.opts.symbol = true; } while (0)
@@ -385,7 +381,8 @@ hb_language_from_string (const char *str, int len)
 const char *
 hb_language_to_string (hb_language_t language)
 {
-  /* This is actually nullptr-safe! */
+  if (unlikely (!language)) return nullptr;
+
   return language->s;
 }
 
@@ -722,131 +719,24 @@ parse_char (const char **pp, const char *end, char c)
 static bool
 parse_uint (const char **pp, const char *end, unsigned int *pv)
 {
-  char buf[32];
-  unsigned int len = hb_min (ARRAY_LENGTH (buf) - 1, (unsigned int) (end - *pp));
-  strncpy (buf, *pp, len);
-  buf[len] = '\0';
-
-  char *p = buf;
-  char *pend = p;
-  unsigned int v;
-
-  /* Intentionally use strtol instead of strtoul, such that
-   * -1 turns into "big number"... */
-  errno = 0;
-  v = strtol (p, &pend, 10);
-  if (errno || p == pend)
-    return false;
+  /* Intentionally use hb_parse_int inside instead of hb_parse_uint,
+   * such that -1 turns into "big number"... */
+  int v;
+  if (unlikely (!hb_parse_int (pp, end, &v))) return false;
 
   *pv = v;
-  *pp += pend - p;
   return true;
 }
 
 static bool
 parse_uint32 (const char **pp, const char *end, uint32_t *pv)
 {
-  char buf[32];
-  unsigned int len = hb_min (ARRAY_LENGTH (buf) - 1, (unsigned int) (end - *pp));
-  strncpy (buf, *pp, len);
-  buf[len] = '\0';
-
-  char *p = buf;
-  char *pend = p;
-  unsigned int v;
-
-  /* Intentionally use strtol instead of strtoul, such that
-   * -1 turns into "big number"... */
-  errno = 0;
-  v = strtol (p, &pend, 10);
-  if (errno || p == pend)
-    return false;
+  /* Intentionally use hb_parse_int inside instead of hb_parse_uint,
+   * such that -1 turns into "big number"... */
+  int v;
+  if (unlikely (!hb_parse_int (pp, end, &v))) return false;
 
   *pv = v;
-  *pp += pend - p;
-  return true;
-}
-
-#if defined (HAVE_NEWLOCALE) && defined (HAVE_STRTOD_L)
-#define USE_XLOCALE 1
-#define HB_LOCALE_T locale_t
-#define HB_CREATE_LOCALE(locName) newlocale (LC_ALL_MASK, locName, nullptr)
-#define HB_FREE_LOCALE(loc) freelocale (loc)
-#elif defined(_MSC_VER)
-#define USE_XLOCALE 1
-#define HB_LOCALE_T _locale_t
-#define HB_CREATE_LOCALE(locName) _create_locale (LC_ALL, locName)
-#define HB_FREE_LOCALE(loc) _free_locale (loc)
-#define strtod_l(a, b, c) _strtod_l ((a), (b), (c))
-#endif
-
-#ifdef USE_XLOCALE
-
-#if HB_USE_ATEXIT
-static void free_static_C_locale ();
-#endif
-
-static struct hb_C_locale_lazy_loader_t : hb_lazy_loader_t<hb_remove_pointer<HB_LOCALE_T>,
-							  hb_C_locale_lazy_loader_t>
-{
-  static HB_LOCALE_T create ()
-  {
-    HB_LOCALE_T C_locale = HB_CREATE_LOCALE ("C");
-
-#if HB_USE_ATEXIT
-    atexit (free_static_C_locale);
-#endif
-
-    return C_locale;
-  }
-  static void destroy (HB_LOCALE_T p)
-  {
-    HB_FREE_LOCALE (p);
-  }
-  static HB_LOCALE_T get_null ()
-  {
-    return nullptr;
-  }
-} static_C_locale;
-
-#if HB_USE_ATEXIT
-static
-void free_static_C_locale ()
-{
-  static_C_locale.free_instance ();
-}
-#endif
-
-static HB_LOCALE_T
-get_C_locale ()
-{
-  return static_C_locale.get_unconst ();
-}
-#endif /* USE_XLOCALE */
-
-static bool
-parse_float (const char **pp, const char *end, float *pv)
-{
-  char buf[32];
-  unsigned int len = hb_min (ARRAY_LENGTH (buf) - 1, (unsigned int) (end - *pp));
-  strncpy (buf, *pp, len);
-  buf[len] = '\0';
-
-  char *p = buf;
-  char *pend = p;
-  float v;
-
-  errno = 0;
-#ifdef USE_XLOCALE
-  v = strtod_l (p, &pend, get_C_locale ());
-#else
-  v = strtod (p, &pend);
-#endif
-  if (errno || p == pend)
-    return false;
-
-  *pv = v;
-  *pp += pend - p;
   return true;
 }
 
@@ -956,7 +846,7 @@ parse_feature_value_postfix (const char **pp, const char *end, hb_feature_t *fea
 {
   bool had_equal = parse_char (pp, end, '=');
   bool had_value = parse_uint32 (pp, end, &feature->value) ||
-                   parse_bool (pp, end, &feature->value);
+		   parse_bool (pp, end, &feature->value);
   /* CSS doesn't use equal-sign between tag and value.
    * If there was an equal-sign, then there *must* be a value.
    * A value without an equal-sign is ok, but not required. */
@@ -1099,7 +989,11 @@ static bool
 parse_variation_value (const char **pp, const char *end, hb_variation_t *variation)
 {
   parse_char (pp, end, '='); /* Optional. */
-  return parse_float (pp, end, &variation->value);
+  double v;
+  if (unlikely (!hb_parse_double (pp, end, &v))) return false;
+
+  variation->value = v;
+  return true;
 }
 
 static bool

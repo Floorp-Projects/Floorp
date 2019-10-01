@@ -77,7 +77,7 @@ struct AxisValueFormat1
   NameID	valueNameID;	/* The name ID for entries in the 'name' table
 				 * that provide a display string for this
 				 * attribute value. */
-  Fixed		value;		/* A numeric value for this attribute value. */
+  HBFixed		value;		/* A numeric value for this attribute value. */
   public:
   DEFINE_SIZE_STATIC (12);
 };
@@ -102,10 +102,10 @@ struct AxisValueFormat2
   NameID	valueNameID;	/* The name ID for entries in the 'name' table
 				 * that provide a display string for this
 				 * attribute value. */
-  Fixed		nominalValue;	/* A numeric value for this attribute value. */
-  Fixed		rangeMinValue;	/* The minimum value for a range associated
+  HBFixed		nominalValue;	/* A numeric value for this attribute value. */
+  HBFixed		rangeMinValue;	/* The minimum value for a range associated
 				 * with the specified name ID. */
-  Fixed		rangeMaxValue;	/* The maximum value for a range associated
+  HBFixed		rangeMaxValue;	/* The maximum value for a range associated
 				 * with the specified name ID. */
   public:
   DEFINE_SIZE_STATIC (20);
@@ -131,8 +131,8 @@ struct AxisValueFormat3
   NameID	valueNameID;	/* The name ID for entries in the 'name' table
 				 * that provide a display string for this
 				 * attribute value. */
-  Fixed		value;		/* A numeric value for this attribute value. */
-  Fixed		linkedValue;	/* The numeric value for a style-linked mapping
+  HBFixed		value;		/* A numeric value for this attribute value. */
+  HBFixed		linkedValue;	/* The numeric value for a style-linked mapping
 				 * from this value. */
   public:
   DEFINE_SIZE_STATIC (16);
@@ -150,7 +150,7 @@ struct AxisValueRecord
   HBUINT16	axisIndex;	/* Zero-base index into the axis record array
 				 * identifying the axis to which this value
 				 * applies. Must be less than designAxisCount. */
-  Fixed		value;		/* A numeric value for this attribute value. */
+  HBFixed		value;		/* A numeric value for this attribute value. */
   public:
   DEFINE_SIZE_STATIC (6);
 };
@@ -304,8 +304,8 @@ struct STAT
 
 
   protected:
-  FixedVersion<>version;        /* Version of the stat table
-                                 * initially set to 0x00010002u */
+  FixedVersion<>version;	/* Version of the stat table
+				 * initially set to 0x00010002u */
   HBUINT16	designAxisSize;	/* The size in bytes of each axis record. */
   HBUINT16	designAxisCount;/* The number of design axis records. In a
 				 * font with an 'fvar' table, this value must be

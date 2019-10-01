@@ -226,8 +226,8 @@ struct IndexSubtableRecord
 						   offset, length, format);
   }
 
-  GlyphID			firstGlyphIndex;
-  GlyphID			lastGlyphIndex;
+  HBGlyphID			firstGlyphIndex;
+  HBGlyphID			lastGlyphIndex;
   LOffsetTo<IndexSubtable>	offsetToSubtable;
   public:
   DEFINE_SIZE_STATIC(8);
@@ -251,7 +251,7 @@ struct IndexSubtableArray
       unsigned int firstGlyphIndex = indexSubtablesZ[i].firstGlyphIndex;
       unsigned int lastGlyphIndex = indexSubtablesZ[i].lastGlyphIndex;
       if (firstGlyphIndex <= glyph && glyph <= lastGlyphIndex)
-        return &indexSubtablesZ[i];
+	return &indexSubtablesZ[i];
     }
     return nullptr;
   }
@@ -290,8 +290,8 @@ struct BitmapSizeTable
   HBUINT32		colorRef;
   SBitLineMetrics	horizontal;
   SBitLineMetrics	vertical;
-  GlyphID		startGlyphIndex;
-  GlyphID		endGlyphIndex;
+  HBGlyphID		startGlyphIndex;
+  HBGlyphID		endGlyphIndex;
   HBUINT8		ppemX;
   HBUINT8		ppemY;
   HBUINT8		bitDepth;

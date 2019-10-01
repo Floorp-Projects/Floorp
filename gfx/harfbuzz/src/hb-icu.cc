@@ -41,6 +41,12 @@
 #include <unicode/utf16.h>
 #include <unicode/uversion.h>
 
+/* ICU extra semicolon, fixed since 65, https://github.com/unicode-org/icu/commit/480bec3 */
+#if U_ICU_VERSION_MAJOR_NUM < 65 && (defined(__GNUC__) || defined(__clang__))
+#define HB_ICU_EXTRA_SEMI_IGNORED
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wextra-semi-stmt"
+#endif
 
 /**
  * SECTION:hb-icu
@@ -50,10 +56,6 @@
  *
  * Functions for using HarfBuzz with the ICU library to provide Unicode data.
  **/
-
-/* ICU doesn't do-while(0) around their statements.  Ugh!
- * https://unicode-org.atlassian.net/browse/CLDR-13027 */
-#define HB_ICU_STMT(S) do { S } while (0)
 
 hb_script_t
 hb_icu_script_to_script (UScriptCode script)
@@ -188,9 +190,9 @@ hb_icu_unicode_compose (hb_unicode_funcs_t *ufuncs HB_UNUSED,
 
   len = 0;
   err = false;
-  HB_ICU_STMT (U16_APPEND (utf16, len, ARRAY_LENGTH (utf16), a, err));
+  U16_APPEND (utf16, len, ARRAY_LENGTH (utf16), a, err);
   if (err) return false;
-  HB_ICU_STMT (U16_APPEND (utf16, len, ARRAY_LENGTH (utf16), b, err));
+  U16_APPEND (utf16, len, ARRAY_LENGTH (utf16), b, err);
   if (err) return false;
 
   icu_err = U_ZERO_ERROR;
@@ -198,7 +200,7 @@ hb_icu_unicode_compose (hb_unicode_funcs_t *ufuncs HB_UNUSED,
   if (U_FAILURE (icu_err))
     return false;
   if (u_countChar32 (normalized, len) == 1) {
-    HB_ICU_STMT (U16_GET_UNSAFE (normalized, 0, *ab));
+    U16_GET_UNSAFE (normalized, 0, *ab);
     ret = true;
   } else {
     ret = false;
@@ -226,13 +228,13 @@ hb_icu_unicode_decompose (hb_unicode_funcs_t *ufuncs HB_UNUSED,
 
     len = u_countChar32 (decomposed, len);
     if (len == 1) {
-      HB_ICU_STMT (U16_GET_UNSAFE (decomposed, 0, *a));
+      U16_GET_UNSAFE (decomposed, 0, *a);
       *b = 0;
       return *a != ab;
     } else if (len == 2) {
-      len =0;
-      HB_ICU_STMT (U16_NEXT_UNSAFE (decomposed, len, *a));
-      HB_ICU_STMT (U16_NEXT_UNSAFE (decomposed, len, *b));
+      len = 0;
+      U16_NEXT_UNSAFE (decomposed, len, *a);
+      U16_NEXT_UNSAFE (decomposed, len, *b);
     }
     return true;
   }
@@ -252,7 +254,7 @@ hb_icu_unicode_decompose (hb_unicode_funcs_t *ufuncs HB_UNUSED,
 
   len = 0;
   err = false;
-  HB_ICU_STMT (U16_APPEND (utf16, len, ARRAY_LENGTH (utf16), ab, err));
+  U16_APPEND (utf16, len, ARRAY_LENGTH (utf16), ab, err);
   if (err) return false;
 
   icu_err = U_ZERO_ERROR;
@@ -263,13 +265,13 @@ hb_icu_unicode_decompose (hb_unicode_funcs_t *ufuncs HB_UNUSED,
   len = u_countChar32 (normalized, len);
 
   if (len == 1) {
-    HB_ICU_STMT (U16_GET_UNSAFE (normalized, 0, *a));
+    U16_GET_UNSAFE (normalized, 0, *a);
     *b = 0;
     ret = *a != ab;
   } else if (len == 2) {
-    len =0;
-    HB_ICU_STMT (U16_NEXT_UNSAFE (normalized, len, *a));
-    HB_ICU_STMT (U16_NEXT_UNSAFE (normalized, len, *b));
+    len = 0;
+    U16_NEXT_UNSAFE (normalized, len, *a);
+    U16_NEXT_UNSAFE (normalized, len, *b);
 
     /* Here's the ugly part: if ab decomposes to a single character and
      * that character decomposes again, we have to detect that and undo
@@ -280,7 +282,7 @@ hb_icu_unicode_decompose (hb_unicode_funcs_t *ufuncs HB_UNUSED,
     if (U_FAILURE (icu_err))
       return false;
     hb_codepoint_t c;
-    HB_ICU_STMT (U16_GET_UNSAFE (recomposed, 0, c));
+    U16_GET_UNSAFE (recomposed, 0, c);
     if (c != *a && c != ab) {
       *a = c;
       *b = 0;
@@ -289,7 +291,7 @@ hb_icu_unicode_decompose (hb_unicode_funcs_t *ufuncs HB_UNUSED,
   } else {
     /* If decomposed to more than two characters, take the last one,
      * and recompose the rest to get the first component. */
-    HB_ICU_STMT (U16_PREV_UNSAFE (normalized, len, *b)); /* Changes len in-place. */
+    U16_PREV_UNSAFE (normalized, len, *b); /* Changes len in-place. */
     UChar recomposed[18 * 2];
     icu_err = U_ZERO_ERROR;
     len = unorm2_normalize (unorm2_getNFCInstance (&icu_err), normalized, len, recomposed, ARRAY_LENGTH (recomposed), &icu_err);
@@ -298,7 +300,7 @@ hb_icu_unicode_decompose (hb_unicode_funcs_t *ufuncs HB_UNUSED,
     /* We expect that recomposed has exactly one character now. */
     if (unlikely (u_countChar32 (recomposed, len) != 1))
       return false;
-    HB_ICU_STMT (U16_GET_UNSAFE (recomposed, 0, *a));
+    U16_GET_UNSAFE (recomposed, 0, *a);
     ret = true;
   }
 
@@ -354,5 +356,8 @@ hb_icu_get_unicode_funcs ()
   return static_icu_funcs.get_unconst ();
 }
 
+#ifdef HB_ICU_EXTRA_SEMI_IGNORED
+#pragma GCC diagnostic pop
+#endif
 
 #endif

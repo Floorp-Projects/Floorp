@@ -82,8 +82,8 @@ struct KernPair
   }
 
   protected:
-  GlyphID	left;
-  GlyphID	right;
+  HBGlyphID	left;
+  HBGlyphID	right;
   FWORD		value;
   public:
   DEFINE_SIZE_STATIC (6);
@@ -392,7 +392,7 @@ struct KerxSubTableFormat2
 
     const UnsizedArrayOf<FWORD> &arrayZ = this+array;
     unsigned int kern_idx = l + r;
-    kern_idx = Types::offsetToIndex (kern_idx, this, &arrayZ);
+    kern_idx = Types::offsetToIndex (kern_idx, this, arrayZ.arrayZ);
     const FWORD *v = &arrayZ[kern_idx];
     if (unlikely (!v->sanitize (&c->sanitizer))) return 0;
 
@@ -830,7 +830,7 @@ struct KerxTable
     for (unsigned int i = 0; i < count; i++)
     {
       if (st->get_type () == 1)
-        return true;
+	return true;
       st = &StructAfter<SubTable> (*st);
     }
     return false;
@@ -845,7 +845,7 @@ struct KerxTable
     for (unsigned int i = 0; i < count; i++)
     {
       if (st->u.header.coverage & st->u.header.CrossStream)
-        return true;
+	return true;
       st = &StructAfter<SubTable> (*st);
     }
     return false;
@@ -862,7 +862,7 @@ struct KerxTable
     {
       if ((st->u.header.coverage & (st->u.header.Variation | st->u.header.CrossStream)) ||
 	  !st->u.header.is_horizontal ())
-        continue;
+	continue;
       v += st->get_kerning (left, right);
       st = &StructAfter<SubTable> (*st);
     }
@@ -883,7 +883,7 @@ struct KerxTable
       bool reverse;
 
       if (!T::Types::extended && (st->u.header.coverage & st->u.header.Variation))
-        goto skip;
+	goto skip;
 
       if (HB_DIRECTION_IS_HORIZONTAL (c->buffer->props.direction) != st->u.header.is_horizontal ())
 	goto skip;
@@ -897,8 +897,8 @@ struct KerxTable
       if (!seenCrossStream &&
 	  (st->u.header.coverage & st->u.header.CrossStream))
       {
-        /* Attach all glyphs into a chain. */
-        seenCrossStream = true;
+	/* Attach all glyphs into a chain. */
+	seenCrossStream = true;
 	hb_glyph_position_t *pos = c->buffer->pos;
 	unsigned int count = c->buffer->len;
 	for (unsigned int i = 0; i < count; i++)

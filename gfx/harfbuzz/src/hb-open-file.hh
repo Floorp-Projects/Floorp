@@ -92,9 +92,9 @@ typedef struct OffsetTable
     if (table_count)
     {
       if (start_offset >= tables.len)
-        *table_count = 0;
+	*table_count = 0;
       else
-        *table_count = hb_min (*table_count, tables.len - start_offset);
+	*table_count = hb_min (*table_count, tables.len - start_offset);
 
       const TableRecord *sub_tables = tables.arrayZ + start_offset;
       unsigned int count = *table_count;

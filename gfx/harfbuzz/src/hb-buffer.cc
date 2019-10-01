@@ -324,7 +324,8 @@ hb_buffer_t::clear_positions ()
   out_len = 0;
   out_info = info;
 
-  memset (pos, 0, sizeof (pos[0]) * len);
+  if (likely (len))
+    memset (pos, 0, sizeof (pos[0]) * len);
 }
 
 void
@@ -648,8 +649,8 @@ hb_buffer_t::guess_segment_properties ()
       if (likely (script != HB_SCRIPT_COMMON &&
 		  script != HB_SCRIPT_INHERITED &&
 		  script != HB_SCRIPT_UNKNOWN)) {
-        props.script = script;
-        break;
+	props.script = script;
+	break;
       }
     }
   }
@@ -1388,7 +1389,7 @@ hb_buffer_get_length (hb_buffer_t *buffer)
  **/
 hb_glyph_info_t *
 hb_buffer_get_glyph_infos (hb_buffer_t  *buffer,
-                           unsigned int *length)
+			   unsigned int *length)
 {
   if (length)
     *length = buffer->len;
@@ -1412,7 +1413,7 @@ hb_buffer_get_glyph_infos (hb_buffer_t  *buffer,
  **/
 hb_glyph_position_t *
 hb_buffer_get_glyph_positions (hb_buffer_t  *buffer,
-                               unsigned int *length)
+			       unsigned int *length)
 {
   if (!buffer->have_positions)
     buffer->clear_positions ();
@@ -1936,9 +1937,9 @@ hb_buffer_diff (hb_buffer_t *buffer,
     for (i = 0; i < count; i++)
     {
       if (contains && info[i].codepoint == dottedcircle_glyph)
-        result |= HB_BUFFER_DIFF_FLAG_DOTTED_CIRCLE_PRESENT;
+	result |= HB_BUFFER_DIFF_FLAG_DOTTED_CIRCLE_PRESENT;
       if (contains && info[i].codepoint == 0)
-        result |= HB_BUFFER_DIFF_FLAG_NOTDEF_PRESENT;
+	result |= HB_BUFFER_DIFF_FLAG_NOTDEF_PRESENT;
     }
     result |= HB_BUFFER_DIFF_FLAG_LENGTH_MISMATCH;
     return hb_buffer_diff_flags_t (result);
@@ -1973,12 +1974,12 @@ hb_buffer_diff (hb_buffer_t *buffer,
     for (unsigned int i = 0; i < count; i++)
     {
       if ((unsigned int) abs (buf_pos->x_advance - ref_pos->x_advance) > position_fuzz ||
-          (unsigned int) abs (buf_pos->y_advance - ref_pos->y_advance) > position_fuzz ||
-          (unsigned int) abs (buf_pos->x_offset - ref_pos->x_offset) > position_fuzz ||
-          (unsigned int) abs (buf_pos->y_offset - ref_pos->y_offset) > position_fuzz)
+	  (unsigned int) abs (buf_pos->y_advance - ref_pos->y_advance) > position_fuzz ||
+	  (unsigned int) abs (buf_pos->x_offset - ref_pos->x_offset) > position_fuzz ||
+	  (unsigned int) abs (buf_pos->y_offset - ref_pos->y_offset) > position_fuzz)
       {
-        result |= HB_BUFFER_DIFF_FLAG_POSITION_MISMATCH;
-        break;
+	result |= HB_BUFFER_DIFF_FLAG_POSITION_MISMATCH;
+	break;
       }
       buf_pos++;
       ref_pos++;

@@ -63,6 +63,14 @@ struct IntType
   operator wide_type () const { return v; }
   bool operator == (const IntType &o) const { return (Type) v == (Type) o.v; }
   bool operator != (const IntType &o) const { return !(*this == o); }
+
+  IntType& operator += (unsigned count) { *this = *this + count; return *this; }
+  IntType& operator -= (unsigned count) { *this = *this - count; return *this; }
+  IntType& operator ++ () { *this += 1; return *this; }
+  IntType& operator -- () { *this -= 1; return *this; }
+  IntType operator ++ (int) { IntType c (*this); ++*this; return c; }
+  IntType operator -- (int) { IntType c (*this); --*this; return c; }
+
   HB_INTERNAL static int cmp (const IntType *a, const IntType *b)
   { return b->cmp (*a); }
   template <typename Type2>
@@ -116,9 +124,9 @@ struct F2DOT14 : HBINT16
 };
 
 /* 32-bit signed fixed-point number (16.16). */
-struct Fixed : HBINT32
+struct HBFixed : HBINT32
 {
-  Fixed& operator = (uint32_t i) { HBINT32::operator= (i); return *this; }
+  HBFixed& operator = (uint32_t i) { HBINT32::operator= (i); return *this; }
   // 65536 means 1<<16
   float to_float () const  { return ((int32_t) v) / 65536.f; }
   void set_float (float f) { v = roundf (f * 65536.f); }
@@ -155,9 +163,9 @@ struct Tag : HBUINT32
 };
 
 /* Glyph index number, same as uint16 (length = 16 bits) */
-struct GlyphID : HBUINT16
+struct HBGlyphID : HBUINT16
 {
-  GlyphID& operator = (uint16_t i) { HBUINT16::operator= (i); return *this; }
+  HBGlyphID& operator = (uint16_t i) { HBUINT16::operator= (i); return *this; }
 };
 
 /* Script/language-system/feature index */
@@ -475,7 +483,7 @@ struct UnsizedArrayOf
   }
 
   public:
-  Type		arrayZ[VAR];
+  Type		arrayZ[HB_VAR_ARRAY];
   public:
   DEFINE_SIZE_UNBOUNDED (0);
 };
@@ -564,6 +572,8 @@ struct ArrayOf
 
   explicit operator bool () const { return len; }
 
+  void pop () { len--; }
+
   hb_array_t<      Type> as_array ()       { return hb_array (arrayZ, len); }
   hb_array_t<const Type> as_array () const { return hb_array (arrayZ, len); }
 
@@ -604,6 +614,18 @@ struct ArrayOf
     for (unsigned i = 0; i < count; i++, ++items)
       arrayZ[i] = *items;
     return_trace (true);
+  }
+
+  Type* serialize_append (hb_serialize_context_t *c)
+  {
+    TRACE_SERIALIZE (this);
+    len++;
+    if (unlikely (!len || !c->extend (*this)))
+    {
+      len--;
+      return_trace (nullptr);
+    }
+    return_trace (&arrayZ[len - 1]);
   }
 
   ArrayOf* copy (hb_serialize_context_t *c) const
@@ -647,7 +669,7 @@ struct ArrayOf
 
   public:
   LenType	len;
-  Type		arrayZ[VAR];
+  Type		arrayZ[HB_VAR_ARRAY];
   public:
   DEFINE_SIZE_ARRAY (sizeof (LenType), arrayZ);
 };
@@ -720,17 +742,40 @@ struct HeadlessArrayOf
     return arrayZ[i-1];
   }
   unsigned int get_size () const
-  { return lenP1.static_size + (lenP1 ? lenP1 - 1 : 0) * Type::static_size; }
+  { return lenP1.static_size + get_length () * Type::static_size; }
 
-  bool serialize (hb_serialize_context_t *c,
-		  hb_array_t<const Type> items)
+  unsigned get_length () const { return lenP1 ? lenP1 - 1 : 0; }
+
+  hb_array_t<      Type> as_array ()       { return hb_array (arrayZ, get_length ()); }
+  hb_array_t<const Type> as_array () const { return hb_array (arrayZ, get_length ()); }
+
+  /* Iterator. */
+  typedef hb_array_t<const Type>   iter_t;
+  typedef hb_array_t<      Type> writer_t;
+    iter_t   iter () const { return as_array (); }
+  writer_t writer ()       { return as_array (); }
+  operator   iter_t () const { return   iter (); }
+  operator writer_t ()       { return writer (); }
+
+  bool serialize (hb_serialize_context_t *c, unsigned int items_len)
   {
     TRACE_SERIALIZE (this);
     if (unlikely (!c->extend_min (*this))) return_trace (false);
-    c->check_assign (lenP1, items.length + 1);
+    c->check_assign (lenP1, items_len + 1);
     if (unlikely (!c->extend (*this))) return_trace (false);
-    for (unsigned int i = 0; i < items.length; i++)
-      arrayZ[i] = items[i];
+    return_trace (true);
+  }
+  template <typename Iterator,
+	    hb_requires (hb_is_source_of (Iterator, Type))>
+  bool serialize (hb_serialize_context_t *c, Iterator items)
+  {
+    TRACE_SERIALIZE (this);
+    unsigned count = items.len ();
+    if (unlikely (!serialize (c, count))) return_trace (false);
+    /* TODO Umm. Just exhaust the iterator instead?  Being extra
+     * cautious right now.. */
+    for (unsigned i = 0; i < count; i++, ++items)
+      arrayZ[i] = *items;
     return_trace (true);
   }
 
@@ -740,7 +785,7 @@ struct HeadlessArrayOf
     TRACE_SANITIZE (this);
     if (unlikely (!sanitize_shallow (c))) return_trace (false);
     if (!sizeof... (Ts) && hb_is_trivially_copyable (Type)) return_trace (true);
-    unsigned int count = lenP1 ? lenP1 - 1 : 0;
+    unsigned int count = get_length ();
     for (unsigned int i = 0; i < count; i++)
       if (unlikely (!c->dispatch (arrayZ[i], hb_forward<Ts> (ds)...)))
 	return_trace (false);
@@ -757,7 +802,7 @@ struct HeadlessArrayOf
 
   public:
   LenType	lenP1;
-  Type		arrayZ[VAR];
+  Type		arrayZ[HB_VAR_ARRAY];
   public:
   DEFINE_SIZE_ARRAY (sizeof (LenType), arrayZ);
 };
@@ -805,7 +850,7 @@ struct ArrayOfM1
 
   public:
   LenType	lenM1;
-  Type		arrayZ[VAR];
+  Type		arrayZ[HB_VAR_ARRAY];
   public:
   DEFINE_SIZE_ARRAY (sizeof (LenType), arrayZ);
 };
@@ -944,7 +989,7 @@ struct VarSizedBinSearchArrayOf
     unsigned int count = Type::TerminationWordCount;
     for (unsigned int i = 0; i < count; i++)
       if (words[i] != 0xFFFFu)
-        return false;
+	return false;
     return true;
   }
 

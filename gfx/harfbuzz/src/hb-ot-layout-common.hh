@@ -172,8 +172,8 @@ struct RangeRecord
   bool add_coverage (set_t *glyphs) const
   { return glyphs->add_range (start, end); }
 
-  GlyphID	start;		/* First GlyphID in the range */
-  GlyphID	end;		/* Last GlyphID in the range */
+  HBGlyphID	start;		/* First GlyphID in the range */
+  HBGlyphID	end;		/* Last GlyphID in the range */
   HBUINT16	value;		/* Value */
   public:
   DEFINE_SIZE_STATIC (6);
@@ -540,7 +540,7 @@ struct FeatureParams
   FeatureParamsCharacterVariants	characterVariants;
   } u;
   public:
-  DEFINE_SIZE_STATIC (17);
+  DEFINE_SIZE_MIN (0);
 };
 
 struct Feature
@@ -780,7 +780,7 @@ struct Lookup
   HBUINT16	lookupFlag;		/* Lookup qualifiers */
   ArrayOf<Offset16>
 		subTable;		/* Array of SubTables */
-/*HBUINT16	markFilteringSetX[VAR];*//* Index (base 0) into GDEF mark glyph sets
+/*HBUINT16	markFilteringSetX[HB_VAR_ARRAY];*//* Index (base 0) into GDEF mark glyph sets
 					 * structure. This field is only present if bit
 					 * UseMarkFilteringSet of lookup flags is set. */
   public:
@@ -856,7 +856,7 @@ struct CoverageFormat1
 
   protected:
   HBUINT16	coverageFormat;	/* Format identifier--format = 1 */
-  SortedArrayOf<GlyphID>
+  SortedArrayOf<HBGlyphID>
 		glyphArray;	/* Array of GlyphIDs--in numerical order */
   public:
   DEFINE_SIZE_ARRAY (4, glyphArray);
@@ -895,7 +895,7 @@ struct CoverageFormat2
     for (auto g: glyphs)
     {
       if (last + 1 != g)
-        num_ranges++;
+	num_ranges++;
       last = g;
     }
 
@@ -908,7 +908,7 @@ struct CoverageFormat2
     {
       if (last + 1 != g)
       {
-        range++;
+	range++;
 	rangeRecord[range].start = g;
 	rangeRecord[range].value = count;
       }
@@ -1058,11 +1058,11 @@ struct Coverage
     for (auto g: glyphs)
     {
       if (last + 1 != g)
-        num_ranges++;
+	num_ranges++;
       last = g;
       count++;
     }
-    u.format = count * 2 < num_ranges * 3 ? 1 : 2;
+    u.format = count <= num_ranges * 3 ? 1 : 2;
 
     switch (u.format)
     {
@@ -1196,7 +1196,7 @@ struct Coverage
  */
 
 static inline void ClassDef_serialize (hb_serialize_context_t *c,
-				       hb_array_t<const GlyphID> glyphs,
+				       hb_array_t<const HBGlyphID> glyphs,
 				       hb_array_t<const HBUINT16> klasses);
 
 struct ClassDefFormat1
@@ -1210,7 +1210,7 @@ struct ClassDefFormat1
   }
 
   bool serialize (hb_serialize_context_t *c,
-		  hb_array_t<const GlyphID> glyphs,
+		  hb_array_t<const HBGlyphID> glyphs,
 		  hb_array_t<const HBUINT16> klasses)
   {
     TRACE_SERIALIZE (this);
@@ -1241,7 +1241,7 @@ struct ClassDefFormat1
     TRACE_SUBSET (this);
     const hb_set_t &glyphset = *c->plan->glyphset ();
     const hb_map_t &glyph_map = *c->plan->glyph_map;
-    hb_sorted_vector_t<GlyphID> glyphs;
+    hb_sorted_vector_t<HBGlyphID> glyphs;
     hb_vector_t<HBUINT16> klasses;
 
     hb_codepoint_t start = startGlyph;
@@ -1328,7 +1328,7 @@ struct ClassDefFormat1
 
   protected:
   HBUINT16	classFormat;	/* Format identifier--format = 1 */
-  GlyphID	startGlyph;	/* First GlyphID of the classValueArray */
+  HBGlyphID	startGlyph;	/* First GlyphID of the classValueArray */
   ArrayOf<HBUINT16>
 		classValue;	/* Array of Class Values--one per GlyphID */
   public:
@@ -1346,7 +1346,7 @@ struct ClassDefFormat2
   }
 
   bool serialize (hb_serialize_context_t *c,
-		  hb_array_t<const GlyphID> glyphs,
+		  hb_array_t<const HBGlyphID> glyphs,
 		  hb_array_t<const HBUINT16> klasses)
   {
     TRACE_SERIALIZE (this);
@@ -1390,7 +1390,7 @@ struct ClassDefFormat2
     TRACE_SUBSET (this);
     const hb_set_t &glyphset = *c->plan->glyphset ();
     const hb_map_t &glyph_map = *c->plan->glyph_map;
-    hb_vector_t<GlyphID> glyphs;
+    hb_vector_t<HBGlyphID> glyphs;
     hb_vector_t<HBUINT16> klasses;
 
     unsigned int count = rangeRecord.len;
@@ -1506,7 +1506,7 @@ struct ClassDef
   }
 
   bool serialize (hb_serialize_context_t *c,
-		  hb_array_t<const GlyphID> glyphs,
+		  hb_array_t<const HBGlyphID> glyphs,
 		  hb_array_t<const HBUINT16> klasses)
   {
     TRACE_SERIALIZE (this);
@@ -1526,7 +1526,7 @@ struct ClassDef
 	  num_ranges++;
 
       if (1 + (glyph_max - glyph_min + 1) < num_ranges * 3)
-        format = 1;
+	format = 1;
     }
     u.format = format;
 
@@ -1611,7 +1611,7 @@ struct ClassDef
 };
 
 static inline void ClassDef_serialize (hb_serialize_context_t *c,
-				       hb_array_t<const GlyphID> glyphs,
+				       hb_array_t<const HBGlyphID> glyphs,
 				       hb_array_t<const HBUINT16> klasses)
 { c->start_embed<ClassDef> ()->serialize (c, glyphs, klasses); }
 
@@ -1746,9 +1746,9 @@ struct VarData
   }
 
   void get_scalars (int *coords, unsigned int coord_count,
-                    const VarRegionList &regions,
-                    float *scalars /*OUT */,
-                    unsigned int num_scalars) const
+		    const VarRegionList &regions,
+		    float *scalars /*OUT */,
+		    unsigned int num_scalars) const
   {
     unsigned count = hb_min (num_scalars, regionIndices.len);
     for (unsigned int i = 0; i < count; i++)
@@ -1830,7 +1830,7 @@ struct VariationStore
 #endif
 
     (this+dataSets[ivs]).get_scalars (coords, coord_count, this+regions,
-                                      &scalars[0], num_scalars);
+				      &scalars[0], num_scalars);
   }
 
   protected:
@@ -2057,6 +2057,8 @@ struct HintingDevice
   hb_position_t get_y_delta (hb_font_t *font) const
   { return get_delta (font->y_ppem, font->y_scale); }
 
+  public:
+
   unsigned int get_size () const
   {
     unsigned int f = deltaFormat;
@@ -2068,6 +2070,12 @@ struct HintingDevice
   {
     TRACE_SANITIZE (this);
     return_trace (c->check_struct (this) && c->check_range (this, this->get_size ()));
+  }
+
+  HintingDevice* copy (hb_serialize_context_t *c) const
+  {
+    TRACE_SERIALIZE (this);
+    return_trace (c->embed<HintingDevice> (this));
   }
 
   private:
@@ -2130,6 +2138,12 @@ struct VariationDevice
 
   hb_position_t get_y_delta (hb_font_t *font, const VariationStore &store) const
   { return font->em_scalef_y (get_delta (font, store)); }
+
+  VariationDevice* copy (hb_serialize_context_t *c) const
+  {
+    TRACE_SERIALIZE (this);
+    return_trace (c->embed<VariationDevice> (this));
+  }
 
   bool sanitize (hb_sanitize_context_t *c) const
   {
@@ -2213,6 +2227,25 @@ struct Device
 #endif
     default:
       return_trace (true);
+    }
+  }
+
+  Device* copy (hb_serialize_context_t *c) const
+  {
+    TRACE_SERIALIZE (this);
+    switch (u.b.format) {
+#ifndef HB_NO_HINTING
+    case 1:
+    case 2:
+    case 3:
+      return_trace (reinterpret_cast<Device *> (u.hinting.copy (c)));
+#endif
+#ifndef HB_NO_VAR
+    case 0x8000:
+      return_trace (reinterpret_cast<Device *> (u.variation.copy (c)));
+#endif
+    default:
+      return_trace (nullptr);
     }
   }
 

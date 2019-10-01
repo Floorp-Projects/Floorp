@@ -489,7 +489,7 @@ hb_set_unicode_props (hb_buffer_t *buffer)
       if (i + 1 < count &&
 	  _hb_unicode_is_emoji_Extended_Pictographic (info[i + 1].codepoint))
       {
-        i++;
+	i++;
 	_hb_glyph_info_set_unicode_props (&info[i], buffer);
 	_hb_glyph_info_set_continuation (&info[i]);
       }
@@ -650,19 +650,19 @@ hb_ot_shape_setup_masks_fraction (const hb_ot_shape_context_t *c)
       while (start &&
 	     _hb_glyph_info_get_general_category (&info[start - 1]) ==
 	     HB_UNICODE_GENERAL_CATEGORY_DECIMAL_NUMBER)
-        start--;
+	start--;
       while (end < count &&
 	     _hb_glyph_info_get_general_category (&info[end]) ==
 	     HB_UNICODE_GENERAL_CATEGORY_DECIMAL_NUMBER)
-        end++;
+	end++;
 
       buffer->unsafe_to_break (start, end);
 
       for (unsigned int j = start; j < i; j++)
-        info[j].mask |= pre_mask;
+	info[j].mask |= pre_mask;
       info[i].mask |= c->plan->frac_mask;
       for (unsigned int j = i + 1; j < end; j++)
-        info[j].mask |= post_mask;
+	info[j].mask |= post_mask;
 
       i = end - 1;
     }
@@ -869,7 +869,7 @@ zero_mark_widths_by_gdef (hb_buffer_t *buffer, bool adjust_offsets)
     if (_hb_glyph_info_is_mark (&info[i]))
     {
       if (adjust_offsets)
-        adjust_mark_offsets (&buffer->pos[i]);
+	adjust_mark_offsets (&buffer->pos[i]);
       zero_mark_width (&buffer->pos[i]);
     }
 }
@@ -885,7 +885,7 @@ hb_ot_position_default (const hb_ot_shape_context_t *c)
   if (HB_DIRECTION_IS_HORIZONTAL (direction))
   {
     c->font->get_glyph_h_advances (count, &info[0].codepoint, sizeof(info[0]),
-                                   &pos[0].x_advance, sizeof(pos[0]));
+				   &pos[0].x_advance, sizeof(pos[0]));
     /* The nil glyph_h_origin() func returns 0, so no need to apply it. */
     if (c->font->has_glyph_h_origin_func ())
       for (unsigned int i = 0; i < count; i++)
@@ -896,7 +896,7 @@ hb_ot_position_default (const hb_ot_shape_context_t *c)
   else
   {
     c->font->get_glyph_v_advances (count, &info[0].codepoint, sizeof(info[0]),
-                                   &pos[0].y_advance, sizeof(pos[0]));
+				   &pos[0].y_advance, sizeof(pos[0]));
     for (unsigned int i = 0; i < count; i++)
     {
       c->font->subtract_glyph_v_origin (info[i].codepoint,

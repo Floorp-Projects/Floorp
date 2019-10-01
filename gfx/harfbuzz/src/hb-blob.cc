@@ -48,7 +48,6 @@
 #endif /* HAVE_SYS_MMAN_H */
 
 #include <stdio.h>
-#include <errno.h>
 #include <stdlib.h>
 
 
@@ -592,7 +591,7 @@ fail_without_close:
     ceparams.lpSecurityAttributes = nullptr;
     ceparams.hTemplateFile = nullptr;
     fd = CreateFile2 (wchar_file_name, GENERIC_READ, FILE_SHARE_READ,
-                      OPEN_EXISTING, &ceparams);
+		      OPEN_EXISTING, &ceparams);
   }
 #else
   fd = CreateFileW (wchar_file_name, GENERIC_READ, FILE_SHARE_READ, nullptr,
@@ -669,7 +668,7 @@ fail_without_close:
   }
 
   return hb_blob_create (data, len, HB_MEMORY_MODE_WRITABLE, data,
-                         (hb_destroy_func_t) free);
+			 (hb_destroy_func_t) free);
 
 fread_fail:
   fclose (fp);

@@ -65,7 +65,7 @@ struct FontDescriptor
   protected:
   Tag		tag;		/* The 4-byte table tag name. */
   union {
-  Fixed		value;		/* The value for the descriptor tag. */
+  HBFixed		value;		/* The value for the descriptor tag. */
   HBUINT32	nalfType;	/* If the tag is `nalf`, see non_alphabetic_value_t */
   } u;
   public:
@@ -108,7 +108,7 @@ struct fdsc
   }
 
   protected:
-  Fixed		version;	/* Version number of the font descriptors
+  HBFixed		version;	/* Version number of the font descriptors
 				 * table (0x00010000 for the current version). */
   LArrayOf<FontDescriptor>
 		descriptors;	/* List of tagged-coordinate pairs style descriptors

@@ -239,7 +239,7 @@ initial_reordering_consonant_syllable (hb_buffer_t *buffer,
       }
       if (pos == POS_BELOW_C && info[i].myanmar_category() != OT_A)
       {
-        pos = POS_AFTER_SUB;
+	pos = POS_AFTER_SUB;
 	info[i].myanmar_position() = pos;
 	continue;
       }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018  Google, Inc.
+ * Copyright © 2019  Ebrahim Byagowi
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -21,46 +21,21 @@
  * ON AN "AS IS" BASIS, AND THE COPYRIGHT HOLDER HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
- * Google Author(s): Garret Rieger
  */
 
-#include "hb.hh"
-#include "hb-ot-os2-unicode-ranges.hh"
+#ifndef HB_NUMBER_HH
+#define HB_NUMBER_HH
 
-static void
-test (hb_codepoint_t cp, unsigned int bit)
-{
-  if (OT::_hb_ot_os2_get_unicode_range_bit (cp) != bit)
-  {
-    fprintf (stderr, "got incorrect bit (%d) for cp 0x%X. Should have been %d.",
-	     OT::_hb_ot_os2_get_unicode_range_bit (cp),
-	     cp,
-	     bit);
-    abort();
-  }
-}
+HB_INTERNAL bool
+hb_parse_int (const char **pp, const char *end, int *pv,
+	      bool whole_buffer = false);
 
-static void
-test_get_unicode_range_bit ()
-{
-  test (0x0000, 0);
-  test (0x0042, 0);
-  test (0x007F, 0);
-  test (0x0080, 1);
+HB_INTERNAL bool
+hb_parse_uint (const char **pp, const char *end, unsigned int *pv,
+	       bool whole_buffer = false, int base = 10);
 
-  test (0x30A0, 50);
-  test (0x30B1, 50);
-  test (0x30FF, 50);
+HB_INTERNAL bool
+hb_parse_double (const char **pp, const char *end, double *pv,
+		 bool whole_buffer = false);
 
-  test (0x10FFFD, 90);
-
-  test (0x30000, -1);
-  test (0x110000, -1);
-}
-
-int
-main ()
-{
-  test_get_unicode_range_bit ();
-  return 0;
-}
+#endif /* HB_NUMBER_HH */

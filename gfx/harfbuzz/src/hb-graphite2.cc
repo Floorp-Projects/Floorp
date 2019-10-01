@@ -340,14 +340,14 @@ _hb_graphite2_shape (hb_shape_plan_t    *shape_plan HB_UNUSED,
       c->num_glyphs = 0;
       if (HB_DIRECTION_IS_BACKWARD(buffer->props.direction))
       {
-        c->advance = curradv - gr_slot_origin_X(is) * xscale;
-        curradv -= c->advance;
+	c->advance = curradv - gr_slot_origin_X(is) * xscale;
+	curradv -= c->advance;
       }
       else
       {
-        c->advance = 0;
-        clusters[ci].advance += gr_slot_origin_X(is) * xscale - curradv;
-        curradv += clusters[ci].advance;
+	c->advance = 0;
+	clusters[ci].advance += gr_slot_origin_X(is) * xscale - curradv;
+	curradv += clusters[ci].advance;
       }
       ci++;
     }

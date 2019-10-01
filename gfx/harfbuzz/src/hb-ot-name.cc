@@ -90,7 +90,7 @@ hb_ot_name_convert_utf (hb_bytes_t                       bytes,
       const typename in_utf_t::codepoint_t *src_next = in_utf_t::next (src, src_end, &unicode, replacement);
       typename out_utf_t::codepoint_t *dst_next = out_utf_t::encode (dst, dst_end, unicode);
       if (dst_next == dst)
-        break; /* Out-of-room. */
+	break; /* Out-of-room. */
 
       dst = dst_next;
       src = src_next;

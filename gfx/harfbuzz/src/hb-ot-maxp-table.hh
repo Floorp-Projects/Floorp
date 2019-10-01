@@ -108,7 +108,7 @@ struct maxp
       if (unlikely (!dest_v1)) return_trace (false);
 
       if (c->plan->drop_hints)
-        drop_hint_fields (dest_v1);
+	drop_hint_fields (dest_v1);
     }
 
     return_trace (true);
@@ -129,7 +129,7 @@ struct maxp
   FixedVersion<>version;		/* Version of the maxp table (0.5 or 1.0),
 					 * 0x00005000u or 0x00010000u. */
   HBUINT16	numGlyphs;		/* The number of glyphs in the font. */
-/*maxpV1Tail	v1Tail[VAR]; */
+/*maxpV1Tail	v1Tail[HB_VAR_ARRAY]; */
   public:
   DEFINE_SIZE_STATIC (6);
 };

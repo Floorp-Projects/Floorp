@@ -326,8 +326,8 @@ struct hb_sanitize_context_t :
       {
 	DEBUG_MSG_FUNC (SANITIZE, start, "passed first round with %d edits; going for second round", edit_count);
 
-        /* sanitize again to ensure no toe-stepping */
-        edit_count = 0;
+	/* sanitize again to ensure no toe-stepping */
+	edit_count = 0;
 	sane = t->sanitize (this);
 	if (edit_count) {
 	  DEBUG_MSG_FUNC (SANITIZE, start, "requested %d edits in second round; FAILLING", edit_count);
@@ -338,7 +338,7 @@ struct hb_sanitize_context_t :
     else
     {
       if (edit_count && !writable) {
-        start = hb_blob_get_data_writable (blob, nullptr);
+	start = hb_blob_get_data_writable (blob, nullptr);
 	end = start + blob->length;
 
 	if (start)

@@ -147,7 +147,7 @@ struct CPAL
       unsigned int count = hb_min ((unsigned) hb_max ((int) (numColors - start_offset), 0), *color_count);
       *color_count = count;
       for (unsigned int i = 0; i < count; i++)
-        colors[i] = segment_colors[i]; /* Bound-checked read. */
+	colors[i] = segment_colors[i]; /* Bound-checked read. */
     }
     return numColors;
   }

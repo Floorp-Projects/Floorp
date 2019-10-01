@@ -534,7 +534,7 @@ insert_dotted_circles_use (const hb_ot_shape_plan_t *plan HB_UNUSED,
       while (buffer->idx < buffer->len && buffer->successful &&
 	     last_syllable == buffer->cur().syllable() &&
 	     buffer->cur().use_category() == USE_R)
-        buffer->next_glyph ();
+	buffer->next_glyph ();
 
       buffer->output_info (ginfo);
     }

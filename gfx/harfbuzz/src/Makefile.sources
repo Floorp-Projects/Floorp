@@ -49,6 +49,8 @@ HB_BASE_sources = \
 	hb-meta.hh \
 	hb-mutex.hh \
 	hb-null.hh \
+	hb-number.cc \
+	hb-number.hh \
 	hb-object.hh \
 	hb-open-file.hh \
 	hb-open-type.hh \
@@ -167,6 +169,7 @@ HB_BASE_sources = \
 HB_BASE_RAGEL_GENERATED_sources = \
 	hb-buffer-deserialize-json.hh \
 	hb-buffer-deserialize-text.hh \
+	hb-number-parser.hh \
 	hb-ot-shape-complex-indic-machine.hh \
 	hb-ot-shape-complex-khmer-machine.hh \
 	hb-ot-shape-complex-myanmar-machine.hh \
@@ -175,6 +178,7 @@ HB_BASE_RAGEL_GENERATED_sources = \
 HB_BASE_RAGEL_sources = \
 	hb-buffer-deserialize-json.rl \
 	hb-buffer-deserialize-text.rl \
+	hb-number-parser.rl \
 	hb-ot-shape-complex-indic-machine.rl \
 	hb-ot-shape-complex-khmer-machine.rl \
 	hb-ot-shape-complex-myanmar-machine.rl \
@@ -241,6 +245,8 @@ HB_ICU_headers = hb-icu.h
 
 # Sources for libharfbuzz-subset
 HB_SUBSET_sources = \
+	hb-number.cc \
+	hb-number.hh \
 	hb-ot-cff1-table.cc \
 	hb-ot-cff2-table.cc \
 	hb-static.cc \

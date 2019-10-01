@@ -32,6 +32,7 @@
 #include "hb.hh"
 #include "hb-meta.hh"
 #include "hb-null.hh"
+#include "hb-number.hh"
 
 
 /* Encodes three unsigned integers in one 64-bit number.  If the inputs have more than 21 bits,
@@ -82,6 +83,7 @@ HB_FUNCOBJ (hb_bool);
 struct
 {
   private:
+
   template <typename T> constexpr auto
   impl (const T& v, hb_priority<1>) const HB_RETURN (uint32_t, hb_deref (v).hash ())
 
@@ -895,17 +897,12 @@ hb_stable_sort (T *array, unsigned int len, int(*compar)(const T *, const T *))
 static inline hb_bool_t
 hb_codepoint_parse (const char *s, unsigned int len, int base, hb_codepoint_t *out)
 {
-  /* Pain because we don't know whether s is nul-terminated. */
-  char buf[64];
-  len = hb_min (ARRAY_LENGTH (buf) - 1, len);
-  strncpy (buf, s, len);
-  buf[len] = '\0';
+  unsigned int v;
+  const char *p = s;
+  const char *end = p + len;
+  if (unlikely (!hb_parse_uint (&p, end, &v, true/* whole buffer */, base)))
+    return false;
 
-  char *end;
-  errno = 0;
-  unsigned long v = strtoul (buf, &end, base);
-  if (errno) return false;
-  if (*end) return false;
   *out = v;
   return true;
 }
@@ -994,6 +991,18 @@ struct
   operator () (const T &a) const HB_AUTO_RETURN (-a)
 }
 HB_FUNCOBJ (hb_neg);
+struct
+{
+  template <typename T> constexpr auto
+  operator () (T &a) const HB_AUTO_RETURN (++a)
+}
+HB_FUNCOBJ (hb_inc);
+struct
+{
+  template <typename T> constexpr auto
+  operator () (T &a) const HB_AUTO_RETURN (--a)
+}
+HB_FUNCOBJ (hb_dec);
 
 
 /* Compiler-assisted vectorization. */

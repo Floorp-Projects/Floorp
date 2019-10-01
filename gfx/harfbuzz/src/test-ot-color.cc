@@ -330,8 +330,8 @@ main (int argc, char **argv)
 
     // disabled when color font as cairo rendering of NotoColorEmoji is soooo slow
     if (!hb_ot_color_has_layers (face) &&
-        !hb_ot_color_has_png (face) &&
-        !hb_ot_color_has_svg (face))
+	!hb_ot_color_has_png (face) &&
+	!hb_ot_color_has_svg (face))
       dump_glyphs (cairo_face, upem, num_glyphs, face_index);
 
     hb_font_destroy (font);

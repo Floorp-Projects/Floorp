@@ -45,30 +45,30 @@ recategorize_combining_class (hb_codepoint_t u,
     {
       switch (u)
       {
-        case 0x0E31u:
-        case 0x0E34u:
-        case 0x0E35u:
-        case 0x0E36u:
-        case 0x0E37u:
-        case 0x0E47u:
-        case 0x0E4Cu:
-        case 0x0E4Du:
-        case 0x0E4Eu:
+	case 0x0E31u:
+	case 0x0E34u:
+	case 0x0E35u:
+	case 0x0E36u:
+	case 0x0E37u:
+	case 0x0E47u:
+	case 0x0E4Cu:
+	case 0x0E4Du:
+	case 0x0E4Eu:
 	  klass = HB_UNICODE_COMBINING_CLASS_ABOVE_RIGHT;
 	  break;
 
-        case 0x0EB1u:
-        case 0x0EB4u:
-        case 0x0EB5u:
-        case 0x0EB6u:
-        case 0x0EB7u:
-        case 0x0EBBu:
-        case 0x0ECCu:
-        case 0x0ECDu:
+	case 0x0EB1u:
+	case 0x0EB4u:
+	case 0x0EB5u:
+	case 0x0EB6u:
+	case 0x0EB7u:
+	case 0x0EBBu:
+	case 0x0ECCu:
+	case 0x0ECDu:
 	  klass = HB_UNICODE_COMBINING_CLASS_ABOVE;
 	  break;
 
-        case 0x0EBCu:
+	case 0x0EBCu:
 	  klass = HB_UNICODE_COMBINING_CLASS_BELOW;
 	  break;
       }
@@ -167,8 +167,8 @@ recategorize_combining_class (hb_codepoint_t u,
 
 void
 _hb_ot_shape_fallback_mark_position_recategorize_marks (const hb_ot_shape_plan_t *plan HB_UNUSED,
-						        hb_font_t *font HB_UNUSED,
-						        hb_buffer_t  *buffer)
+							hb_font_t *font HB_UNUSED,
+							hb_buffer_t  *buffer)
 {
 #ifdef HB_NO_OT_SHAPE_FALLBACK
   return;
@@ -232,10 +232,10 @@ position_mark (const hb_ot_shape_plan_t *plan HB_UNUSED,
     case HB_UNICODE_COMBINING_CLASS_DOUBLE_ABOVE:
       if (buffer->props.direction == HB_DIRECTION_LTR) {
 	pos.x_offset += base_extents.x_bearing + base_extents.width - mark_extents.width / 2 - mark_extents.x_bearing;
-        break;
+	break;
       } else if (buffer->props.direction == HB_DIRECTION_RTL) {
 	pos.x_offset += base_extents.x_bearing - mark_extents.width / 2 - mark_extents.x_bearing;
-        break;
+	break;
       }
       HB_FALLTHROUGH;
 
@@ -387,7 +387,7 @@ position_around_base (const hb_ot_shape_plan_t *plan,
       if (last_combining_class != this_combining_class)
       {
 	last_combining_class = this_combining_class;
-        cluster_extents = component_extents;
+	cluster_extents = component_extents;
       }
 
       position_mark (plan, font, buffer, cluster_extents, i, this_combining_class);

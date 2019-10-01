@@ -206,7 +206,7 @@ struct feat
   SortedUnsizedArrayOf<FeatureName>
 		namesZ;		/* The feature name array. */
   public:
-  DEFINE_SIZE_STATIC (24);
+  DEFINE_SIZE_ARRAY (12, namesZ);
 };
 
 } /* namespace AAT */

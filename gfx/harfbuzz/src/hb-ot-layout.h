@@ -249,11 +249,11 @@ hb_ot_layout_table_get_lookup_count (hb_face_t    *face,
 
 HB_EXTERN void
 hb_ot_layout_collect_features (hb_face_t      *face,
-                               hb_tag_t        table_tag,
-                               const hb_tag_t *scripts,
-                               const hb_tag_t *languages,
-                               const hb_tag_t *features,
-                               hb_set_t       *feature_indexes /* OUT */);
+			       hb_tag_t        table_tag,
+			       const hb_tag_t *scripts,
+			       const hb_tag_t *languages,
+			       const hb_tag_t *features,
+			       hb_set_t       *feature_indexes /* OUT */);
 
 HB_EXTERN void
 hb_ot_layout_collect_lookups (hb_face_t      *face,
@@ -333,14 +333,14 @@ hb_ot_layout_lookup_would_substitute (hb_face_t            *face,
 
 HB_EXTERN void
 hb_ot_layout_lookup_substitute_closure (hb_face_t    *face,
-				        unsigned int  lookup_index,
-				        hb_set_t     *glyphs
+					unsigned int  lookup_index,
+					hb_set_t     *glyphs
 					/*TODO , hb_bool_t  inclusive */);
 
 HB_EXTERN void
 hb_ot_layout_lookups_substitute_closure (hb_face_t      *face,
-                                         const hb_set_t *lookups,
-                                         hb_set_t       *glyphs);
+					 const hb_set_t *lookups,
+					 hb_set_t       *glyphs);
 
 
 #ifdef HB_NOT_IMPLEMENTED

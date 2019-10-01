@@ -441,11 +441,11 @@ hb_buffer_get_length (hb_buffer_t *buffer);
 
 HB_EXTERN hb_glyph_info_t *
 hb_buffer_get_glyph_infos (hb_buffer_t  *buffer,
-                           unsigned int *length);
+			   unsigned int *length);
 
 HB_EXTERN hb_glyph_position_t *
 hb_buffer_get_glyph_positions (hb_buffer_t  *buffer,
-                               unsigned int *length);
+			       unsigned int *length);
 
 
 HB_EXTERN void

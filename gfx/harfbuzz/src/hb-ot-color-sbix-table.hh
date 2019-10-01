@@ -125,7 +125,7 @@ struct SBIXStrike
 		imageOffsetsZ;	/* Offset from the beginning of the strike data header
 				 * to bitmap data for an individual glyph ID. */
   public:
-  DEFINE_SIZE_STATIC (8);
+  DEFINE_SIZE_ARRAY (4, imageOffsetsZ);
 };
 
 struct sbix
@@ -173,11 +173,11 @@ struct sbix
     {
       unsigned count = table->strikes.len;
       if (unlikely (!count))
-        return Null(SBIXStrike);
+	return Null(SBIXStrike);
 
       unsigned int requested_ppem = hb_max (font->x_ppem, font->y_ppem);
       if (!requested_ppem)
-        requested_ppem = 1<<30; /* Choose largest strike. */
+	requested_ppem = 1<<30; /* Choose largest strike. */
       /* TODO Add DPI sensitivity as well? */
       unsigned int best_i = 0;
       unsigned int best_ppem = table->get_strike (0).ppem;
@@ -201,7 +201,7 @@ struct sbix
       HBUINT8	signature[8];
       struct
       {
-        struct
+	struct
 	{
 	  HBUINT32	length;
 	  Tag		type;
@@ -226,7 +226,7 @@ struct sbix
       /* Following code is safe to call even without data.
        * But faster to short-circuit. */
       if (!has_data ())
-        return false;
+	return false;
 
       int x_offset = 0, y_offset = 0;
       unsigned int strike_ppem = 0;

@@ -296,22 +296,23 @@ struct hb_auto_trace_t
     if (plevel) --*plevel;
   }
 
-  ret_t ret (ret_t v,
-	     const char *func = "",
-	     unsigned int line = 0)
+  template <typename T>
+  T ret (T&& v,
+	 const char *func = "",
+	 unsigned int line = 0)
   {
     if (unlikely (returned)) {
       fprintf (stderr, "OUCH, double calls to return_trace().  This is a bug, please report.\n");
-      return v;
+      return hb_forward<T> (v);
     }
 
     _hb_debug_msg<max_level> (what, obj, func, true, plevel ? *plevel : 1, -1,
 			      "return %s (line %d)",
-			      hb_printer_t<ret_t>().print (v), line);
+			      hb_printer_t<decltype (v)>().print (v), line);
     if (plevel) --*plevel;
     plevel = nullptr;
     returned = true;
-    return v;
+    return hb_forward<T> (v);
   }
 
   private:
@@ -413,7 +414,7 @@ struct hb_no_trace_t {
 #define TRACE_SANITIZE(this) \
 	hb_auto_trace_t<HB_DEBUG_SANITIZE, bool> trace \
 	(&c->debug_depth, c->get_name (), this, HB_FUNC, \
-	 " ");
+	 " ")
 #else
 #define TRACE_SANITIZE(this) hb_no_trace_t<bool> trace
 #endif
@@ -425,7 +426,7 @@ struct hb_no_trace_t {
 #define TRACE_SERIALIZE(this) \
 	hb_auto_trace_t<HB_DEBUG_SERIALIZE, bool> trace \
 	(&c->debug_depth, "SERIALIZE", c, HB_FUNC, \
-	 " ");
+	 " ")
 #else
 #define TRACE_SERIALIZE(this) hb_no_trace_t<bool> trace
 #endif
@@ -437,7 +438,7 @@ struct hb_no_trace_t {
 #define TRACE_SUBSET(this) \
   hb_auto_trace_t<HB_DEBUG_SUBSET, bool> trace \
   (&c->debug_depth, c->get_name (), this, HB_FUNC, \
-   " ");
+   " ")
 #else
 #define TRACE_SUBSET(this) hb_no_trace_t<bool> trace
 #endif
@@ -454,7 +455,7 @@ struct hb_no_trace_t {
 #define TRACE_DISPATCH(this, format) \
 	hb_auto_trace_t<context_t::max_debug_depth, typename context_t::return_t> trace \
 	(&c->debug_depth, c->get_name (), this, HB_FUNC, \
-	 "format %d", (int) format);
+	 "format %d", (int) format)
 #else
 #define TRACE_DISPATCH(this, format) hb_no_trace_t<typename context_t::return_t> trace
 #endif
