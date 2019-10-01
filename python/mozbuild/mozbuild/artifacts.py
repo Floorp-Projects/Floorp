@@ -64,6 +64,7 @@ from mozbuild.util import (
     ensureParentDir,
     FileAvoidWrite,
     mkdir,
+    ensure_subprocess_env,
 )
 import mozinstall
 from mozpack.files import (
@@ -882,7 +883,7 @@ class Artifacts(object):
     def run_hg(self, *args, **kwargs):
         env = kwargs.get('env', {})
         env['HGPLAIN'] = '1'
-        kwargs['env'] = env
+        kwargs['env'] = ensure_subprocess_env(env)
         return subprocess.check_output([self._hg] + list(args),
                                        **kwargs)
 
