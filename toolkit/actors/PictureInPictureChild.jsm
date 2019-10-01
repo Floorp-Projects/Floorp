@@ -664,7 +664,14 @@ class PictureInPictureToggleChild extends ActorChild {
     let toggleRect = toggle.ownerGlobal.windowUtils.getBoundsWithoutFlushing(
       toggle
     );
+
+    // If the toggle has no dimensions, we're definitely not over it.
+    if (!toggleRect.width || !toggleRect.height) {
+      return false;
+    }
+
     let { clientX, clientY } = event;
+
     return (
       clientX >= toggleRect.left &&
       clientX <= toggleRect.right &&
