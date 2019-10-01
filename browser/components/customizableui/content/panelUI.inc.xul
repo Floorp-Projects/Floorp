@@ -772,7 +772,8 @@
                         label="&logins.label;"
                         oncommand="LoginHelper.openPasswordManager(window, { entryPoint: 'fxamenu' })"/>
         <toolbarseparator id="fxa-menu-service-separator"/>
-        <label value="&fxa.menu.firefoxServices.label;"
+        <label id="fxa-menu-service-label"
+               value="&fxa.menu.firefoxServices.label;"
                class="subview-subheader"/>
         <toolbarbutton id="PanelUI-fxa-menu-monitor-button"
                        class="subviewbutton subviewbutton-iconic"
