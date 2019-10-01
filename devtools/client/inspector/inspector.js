@@ -1755,6 +1755,12 @@ Inspector.prototype = {
       return;
     }
 
+    // turn off node picker when add node is triggered
+    this.toolbox.nodePicker.stop();
+
+    // turn off color picker when add node is triggered
+    this.hideEyeDropper();
+
     const html = "<div></div>";
 
     // Insert the html and expect a childList markup mutation.
