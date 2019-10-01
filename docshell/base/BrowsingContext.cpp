@@ -282,11 +282,10 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
       mParent = newParent;
     }
 
-    nsCOMPtr<nsPIDOMWindowInner> inner =
-        do_QueryInterface(aEmbedder->GetOwnerGlobal());
-    SetEmbedderInnerWindowId(inner ? inner->WindowID() : 0);
-  } else {
-    SetEmbedderInnerWindowId(0);
+    if (nsCOMPtr<nsPIDOMWindowInner> inner =
+            do_QueryInterface(aEmbedder->GetOwnerGlobal())) {
+      SetEmbedderInnerWindowId(inner->WindowID());
+    }
   }
 
   mEmbedderElement = aEmbedder;
