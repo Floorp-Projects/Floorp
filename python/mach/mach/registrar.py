@@ -50,30 +50,6 @@ class MachRegistrar(object):
         self.categories[name] = (title, description, priority)
         self.commands_by_category[name] = set()
 
-    def register_conditional_names(self, context):
-        """For every handler with a conditional name, use that name if
-        the handler's conditions are met."""
-
-        # Avoid updating while iterating.
-        names = list(self.command_handlers.keys())
-
-        for name in names:
-            handler = self.command_handlers[name]
-            if handler.conditional_name:
-                instance = MachRegistrar._instance(handler, context)
-                fail_conditions = MachRegistrar._fail_conditions(handler, instance)
-
-                if fail_conditions:
-                    continue
-
-                # We passed our conditions.  Unregister the existing name.
-                del self.command_handlers[name]
-                self.commands_by_category[handler.category].remove(name)
-
-                # Register with the new name.
-                handler.name = handler.conditional_name
-                self.register_command_handler(handler)
-
     @classmethod
     def _condition_failed_message(cls, name, conditions):
         msg = ['\n']
