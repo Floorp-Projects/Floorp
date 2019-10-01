@@ -1,1 +1,1 @@
-skip_on(android) == color_targets(4) alpha_targets(0) no-clip-mask.yaml no-clip-mask.png  # Too wide for Android
+skip_on(android) == color_targets(2) alpha_targets(0) no-clip-mask.yaml no-clip-mask.png  # Too wide for Android

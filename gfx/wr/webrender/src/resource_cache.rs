@@ -2279,7 +2279,6 @@ impl ResourceCache {
                     DeviceIntSize::zero(),
                     self.texture_cache.color_formats(),
                     self.texture_cache.swizzle_settings(),
-                    self.texture_cache.min_picture_cache_slices(),
                 );
             }
         }
