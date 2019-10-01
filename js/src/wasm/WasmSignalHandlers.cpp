@@ -136,7 +136,7 @@ using mozilla::DebugOnly;
 #    define EPC_sig(p) ((p)->uc_mcontext.pc)
 #    define RFP_sig(p) ((p)->uc_mcontext.regs[29])
 #    define RLR_sig(p) ((p)->uc_mcontext.regs[30])
-#    define R31_sig(p) ((p)->uc_mcontext.regs[31])
+#    define R31_sig(p) ((p)->uc_mcontext.sp)
 #  endif
 #  if defined(__linux__) && defined(__mips__)
 #    define EPC_sig(p) ((p)->uc_mcontext.pc)
