@@ -6,7 +6,6 @@
 DIRS += [
   'dist',
   'images',
-  'packages',
   'src',
 ]
 
