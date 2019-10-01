@@ -87,6 +87,11 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   // Use errorCode == 0 to indicate success;
   virtual void SetCertVerificationResult(PRErrorCode errorCode){};
 
+  void SetCertificateTransparencyStatus(
+      uint16_t aCertificateTransparencyStatus) {
+    mCertificateTransparencyStatus = aCertificateTransparencyStatus;
+  }
+
   uint16_t mCipherSuite;
   uint16_t mProtocolVersion;
   uint16_t mCertificateTransparencyStatus;

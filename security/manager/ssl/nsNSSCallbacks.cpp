@@ -39,6 +39,7 @@
 #include "mozpkix/pkixtypes.h"
 #include "ssl.h"
 #include "sslproto.h"
+#include "SSLTokensCache.h"
 
 #include "TrustOverrideUtils.h"
 #include "TrustOverride-SymantecData.inc"
@@ -1159,6 +1160,80 @@ nsresult IsCertificateDistrustImminent(nsIX509CertList* aCertList,
   return NS_OK;
 }
 
+static bool ConstructCERTCertListFromBytesArray(
+    nsTArray<nsTArray<uint8_t>>& aCertArray,
+    /*out*/ UniqueCERTCertList& aCertList) {
+  aCertList = UniqueCERTCertList(CERT_NewCertList());
+  if (!aCertList) {
+    return false;
+  }
+
+  CERTCertDBHandle* certDB(CERT_GetDefaultCertDB());  // non-owning
+  for (auto& cert : aCertArray) {
+    SECItem certDER = {siBuffer, cert.Elements(),
+                       static_cast<unsigned int>(cert.Length())};
+    UniqueCERTCertificate tmpCert(
+        CERT_NewTempCertificate(certDB, &certDER, nullptr, false, true));
+    if (!tmpCert) {
+      return false;
+    }
+
+    if (CERT_AddCertToListTail(aCertList.get(), tmpCert.get()) != SECSuccess) {
+      return false;
+    }
+    Unused << tmpCert.release();  // tmpCert is now owned by aCertList.
+  }
+
+  return true;
+}
+
+static void RebuildCertificateInfoFromSSLTokenCache(
+    nsNSSSocketInfo* aInfoObject) {
+  MOZ_ASSERT(aInfoObject);
+
+  if (!aInfoObject) {
+    return;
+  }
+
+  nsAutoCString key;
+  aInfoObject->GetPeerId(key);
+  mozilla::net::SessionCacheInfo info;
+  if (!mozilla::net::SSLTokensCache::GetSessionCacheInfo(key, info)) {
+    MOZ_LOG(
+        gPIPNSSLog, LogLevel::Debug,
+        ("RebuildCertificateInfoFromSSLTokenCache cannot find cached info."));
+    return;
+  }
+
+  RefPtr<nsNSSCertificate> nssc = nsNSSCertificate::ConstructFromDER(
+      BitwiseCast<char*, uint8_t*>(info.mServerCertBytes.Elements()),
+      info.mServerCertBytes.Length());
+  if (!nssc) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("RebuildCertificateInfoFromSSLTokenCache failed to construct "
+             "server cert"));
+    return;
+  }
+
+  UniqueCERTCertList builtCertChain;
+  if (info.mSucceededCertChainBytes) {
+    if (!ConstructCERTCertListFromBytesArray(
+            info.mSucceededCertChainBytes.ref(), builtCertChain)) {
+      MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+              ("RebuildCertificateInfoFromSSLTokenCache failed to construct "
+               "cert list"));
+      return;
+    }
+  }
+
+  aInfoObject->SetServerCert(nssc, info.mEVStatus);
+  aInfoObject->SetCertificateTransparencyStatus(
+      info.mCertificateTransparencyStatus);
+  if (builtCertChain) {
+    aInfoObject->SetSucceededCertChain(std::move(builtCertChain));
+  }
+}
+
 void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   SECStatus rv;
 
@@ -1296,7 +1371,11 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("HandshakeCallback KEEPING existing cert\n"));
   } else {
-    RebuildVerifiedCertificateInformation(fd, infoObject);
+    if (mozilla::net::SSLTokensCache::IsEnabled()) {
+      RebuildCertificateInfoFromSSLTokenCache(infoObject);
+    } else {
+      RebuildVerifiedCertificateInformation(fd, infoObject);
+    }
   }
 
   nsCOMPtr<nsIX509CertList> succeededCertChain;
