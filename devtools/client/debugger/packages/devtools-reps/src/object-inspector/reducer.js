@@ -76,14 +76,7 @@ function reducer(
   }
 
   if (type === "RELEASED_ACTORS") {
-    if (state.actors && state.actors.size > 0) {
-      for (const actor of data.actors) {
-        state.actors.delete(actor);
-      }
-    }
-    return cloneState({
-      actors: new Set(state.actors || []),
-    });
+    return onReleasedActorsAction(state, action);
   }
 
   if (type === "ROOTS_CHANGED") {
@@ -111,6 +104,26 @@ function reducer(
   }
 
   return state;
+}
+
+/**
+ * Reducer function for the "RELEASED_ACTORS" action.
+ */
+function onReleasedActorsAction(state, action) {
+  const { data } = action;
+
+  if (state.actors && state.actors.size > 0 && data.actors.length > 0) {
+    return state;
+  }
+
+  for (const actor of data.actors) {
+    state.actors.delete(actor);
+  }
+
+  return {
+    ...state,
+    actors: new Set(state.actors || []),
+  };
 }
 
 function updateObject(obj, property, watchpoint) {

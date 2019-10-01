@@ -2589,15 +2589,7 @@ function reducer(state = initialState(), action = {}) {
   }
 
   if (type === "RELEASED_ACTORS") {
-    if (state.actors && state.actors.size > 0) {
-      for (const actor of data.actors) {
-        state.actors.delete(actor);
-      }
-    }
-
-    return cloneState({
-      actors: new Set(state.actors || [])
-    });
+    return onReleasedActorsAction(state, action);
   }
 
   if (type === "ROOTS_CHANGED") {
@@ -2622,6 +2614,28 @@ function reducer(state = initialState(), action = {}) {
   }
 
   return state;
+}
+/**
+ * Reducer function for the "RELEASED_ACTORS" action.
+ */
+
+
+function onReleasedActorsAction(state, action) {
+  const {
+    data
+  } = action;
+
+  if (state.actors && state.actors.size > 0 && data.actors.length > 0) {
+    return state;
+  }
+
+  for (const actor of data.actors) {
+    state.actors.delete(actor);
+  }
+
+  return { ...state,
+    actors: new Set(state.actors || [])
+  };
 }
 
 function updateObject(obj, property, watchpoint) {
@@ -7992,13 +8006,11 @@ function removeWatchpoint(item) {
 }
 
 function closeObjectInspector() {
-  return async ({
+  return ({
     dispatch,
     getState,
     client
-  }) => {
-    dispatch(releaseActors(getState(), client));
-  };
+  }) => releaseActors(getState(), client, dispatch);
 }
 /*
  * This action is dispatched when the `roots` prop, provided by a consumer of
@@ -8011,12 +8023,12 @@ function closeObjectInspector() {
 
 
 function rootsChanged(props) {
-  return async ({
+  return ({
     dispatch,
     client,
     getState
   }) => {
-    dispatch(releaseActors(getState(), client));
+    releaseActors(getState(), client, dispatch);
     dispatch({
       type: "ROOTS_CHANGED",
       data: props
@@ -8024,24 +8036,33 @@ function rootsChanged(props) {
   };
 }
 
-function releaseActors(state, client) {
+async function releaseActors(state, client, dispatch) {
   const actors = getActors(state);
+
+  if (actors.size === 0) {
+    return;
+  }
+
   const watchpoints = getWatchpoints(state);
+  let released = false;
 
   for (const actor of actors) {
     // Watchpoints are stored in object actors.
     // If we release the actor we lose the watchpoint.
     if (!watchpoints.has(actor)) {
-      client.releaseActor(actor);
+      await client.releaseActor(actor);
+      released = true;
     }
   }
 
-  return {
-    type: "RELEASED_ACTORS",
-    data: {
-      actors
-    }
-  };
+  if (released) {
+    dispatch({
+      type: "RELEASED_ACTORS",
+      data: {
+        actors
+      }
+    });
+  }
 }
 
 function invokeGetter(node, targetGrip, receiverId, getterName) {
