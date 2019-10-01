@@ -555,7 +555,7 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       GenerateDragGesture(aPresContext, touchEvent);
     } else {
       mInTouchDrag = false;
-      StopTrackingDragGesture();
+      StopTrackingDragGesture(true);
     }
   }
 
@@ -598,7 +598,7 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
             KillClickHoldTimer();
           }
           mInTouchDrag = false;
-          StopTrackingDragGesture();
+          StopTrackingDragGesture(true);
           sNormalLMouseEventInProcess = false;
           // then fall through...
           MOZ_FALLTHROUGH;
@@ -1612,7 +1612,7 @@ void EventStateManager::FireContextClick() {
 
   // now check if the event has been handled. If so, stop tracking a drag
   if (status == nsEventStatus_eConsumeNoDefault) {
-    StopTrackingDragGesture();
+    StopTrackingDragGesture(true);
   }
 
   KillClickHoldTimer();
@@ -1687,10 +1687,26 @@ void EventStateManager::BeginTrackingRemoteDragGesture(
 // Record that the mouse has gone back up so that we should leave the TRACKING
 // state of d&d gesture tracker and return to the START state.
 //
-void EventStateManager::StopTrackingDragGesture() {
+void EventStateManager::StopTrackingDragGesture(bool aClearInChildProcesses) {
   mGestureDownContent = nullptr;
   mGestureDownFrameOwner = nullptr;
   mGestureDownDragStartData = nullptr;
+
+  // If a content process starts a drag but the mouse is released before the parent
+  // starts the actual drag, the content process will think a drag is still happening.
+  // Inform any child processes with active drags that the drag should be stopped.
+  if (aClearInChildProcesses) {
+    nsCOMPtr<nsIDragService> dragService =
+        do_GetService("@mozilla.org/widget/dragservice;1");
+    if (dragService) {
+      nsCOMPtr<nsIDragSession> dragSession;
+      dragService->GetCurrentSession(getter_AddRefs(dragSession));
+      if (!dragSession) {
+        // Only notify if there isn't a drag session active.
+        dragService->RemoveAllChildProcesses();
+      }
+    }
+  }
 }
 
 void EventStateManager::FillInEventFromGestureDown(WidgetMouseEvent* aEvent) {
@@ -1782,7 +1798,7 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
     mCurrentTarget = mGestureDownFrameOwner->GetPrimaryFrame();
 
     if (!mCurrentTarget || !mCurrentTarget->GetNearestWidget()) {
-      StopTrackingDragGesture();
+      StopTrackingDragGesture(true);
       return;
     }
 
@@ -1791,14 +1807,14 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
     if (mCurrentTarget) {
       RefPtr<nsFrameSelection> frameSel = mCurrentTarget->GetFrameSelection();
       if (frameSel && frameSel->GetDragState()) {
-        StopTrackingDragGesture();
+        StopTrackingDragGesture(true);
         return;
       }
     }
 
     // If non-native code is capturing the mouse don't start a drag.
     if (PresShell::IsMouseCapturePreventingDrag()) {
-      StopTrackingDragGesture();
+      StopTrackingDragGesture(true);
       return;
     }
 
@@ -1846,7 +1862,7 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
               nsContentUtils::GetTextEditorFromAnonymousNodeWithoutCreation(
                   eventContent);
           if (!textEditor || !textEditor->IsCopyToClipboardAllowed()) {
-            StopTrackingDragGesture();
+            StopTrackingDragGesture(true);
             return;
           }
         }
@@ -1858,7 +1874,9 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 
       // Stop tracking the drag gesture now. This should stop us from
       // reentering GenerateDragGesture inside DOM event processing.
-      StopTrackingDragGesture();
+      // Pass false to avoid clearing the child process state since a real
+      // drag should be starting.
+      StopTrackingDragGesture(false);
 
       if (!targetContent) return;
 
@@ -3287,7 +3305,7 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       } else {
         // if we're here, the event handler returned false, so stop
         // any of our own processing of a drag. Workaround for bug 43258.
-        StopTrackingDragGesture();
+        StopTrackingDragGesture(true);
 
         // When the event was cancelled, there is currently a chrome document
         // focused and a mousedown just occurred on a content document, ensure

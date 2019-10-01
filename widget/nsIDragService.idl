@@ -172,6 +172,7 @@ interface nsIDragService : nsISupports
   [noscript] void dragMoved(in long aX, in long aY);
 
   [notxpcom, nostdcall] boolean maybeAddChildProcess(in ContentParentPtr aChild);
+  [notxpcom, nostdcall] boolean removeAllChildProcesses();
 };
 
 
