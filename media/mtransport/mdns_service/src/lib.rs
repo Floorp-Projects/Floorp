@@ -574,3 +574,188 @@ pub extern "C" fn mdns_service_free_uuid(uuid: *mut c_char) {
         CString::from_raw(uuid);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::validate_hostname;
+    use crate::Callback;
+    use crate::MDNSService;
+    use socket2::{Domain, Socket, Type};
+    use std::collections::HashSet;
+    use std::ffi::c_void;
+    use std::io;
+    use std::iter::FromIterator;
+    use std::os::raw::c_char;
+    use std::thread;
+    use std::time;
+    use uuid::Uuid;
+
+    #[no_mangle]
+    pub extern "C" fn mdns_service_resolved(
+        _: *const c_void,
+        _: *const c_char,
+        _: *const c_char,
+    ) -> () {
+    }
+
+    fn listen_until(addr: &std::net::Ipv4Addr, stop: u64) -> thread::JoinHandle<Vec<String>> {
+        let port = 5353;
+
+        let socket = Socket::new(Domain::ipv4(), Type::dgram(), None).unwrap();
+        socket.set_reuse_address(true).unwrap();
+
+        #[cfg(not(target_os = "windows"))]
+        socket.set_reuse_port(true).unwrap();
+        socket
+            .bind(&socket2::SockAddr::from(std::net::SocketAddr::from((
+                [0, 0, 0, 0],
+                port,
+            ))))
+            .unwrap();
+
+        let socket = socket.into_udp_socket();
+        socket.set_multicast_loop_v4(true).unwrap();
+        socket
+            .set_read_timeout(Some(time::Duration::from_millis(10)))
+            .unwrap();
+        socket
+            .join_multicast_v4(&std::net::Ipv4Addr::new(224, 0, 0, 251), &addr)
+            .unwrap();
+
+        let mut buffer: [u8; 1024] = [0; 1024];
+        thread::spawn(move || {
+            let start = time::Instant::now();
+            let mut questions = Vec::new();
+            while time::Instant::now().duration_since(start).as_secs() < stop {
+                match socket.recv_from(&mut buffer) {
+                    Ok((amt, _)) => {
+                        if amt > 0 {
+                            let buffer = &buffer[0..amt];
+                            match dns_parser::Packet::parse(&buffer) {
+                                Ok(parsed) => {
+                                    parsed
+                                        .questions
+                                        .iter()
+                                        .filter(|question| {
+                                            question.qtype == dns_parser::QueryType::A
+                                        })
+                                        .for_each(|question| {
+                                            let qname = question.qname.to_string();
+                                            questions.push(qname);
+                                        });
+                                }
+                                Err(err) => {
+                                    warn!("Could not parse mDNS packet: {}", err);
+                                }
+                            }
+                        }
+                    }
+                    Err(err) => {
+                        if err.kind() != io::ErrorKind::WouldBlock
+                            && err.kind() != io::ErrorKind::TimedOut
+                        {
+                            error!("Socket error: {}", err);
+                            break;
+                        }
+                    }
+                }
+            }
+            questions
+        })
+    }
+
+    #[test]
+    fn test_validate_hostname() {
+        assert_eq!(
+            validate_hostname("e17f08d4-689a-4df6-ba31-35bb9f041100.local"),
+            true
+        );
+        assert_eq!(
+            validate_hostname("62240723-ae6d-4f6a-99b8-94a233e3f84a2.local"),
+            true
+        );
+        assert_eq!(
+            validate_hostname("62240723-ae6d-4f6a-99b8.94e3f84a2.local"),
+            false
+        );
+        assert_eq!(validate_hostname("hi there"), false);
+    }
+
+    #[test]
+    fn start_stop() {
+        let mut service = MDNSService::new();
+        let addr = "127.0.0.1".parse().unwrap();
+        service.start(addr).unwrap();
+        service.stop();
+    }
+
+    #[test]
+    fn simple_query() {
+        let mut service = MDNSService::new();
+        let addr = "127.0.0.1".parse().unwrap();
+        let handle = listen_until(&addr, 1);
+
+        service.start(addr).unwrap();
+
+        let callback = Callback {
+            data: 0 as *const c_void,
+            resolved: mdns_service_resolved,
+        };
+        let hostname = Uuid::new_v4().to_hyphenated().to_string() + ".local";
+        service.query_hostname(callback, &hostname);
+        service.stop();
+        let questions = handle.join().unwrap();
+        assert!(questions.contains(&hostname));
+    }
+
+    #[test]
+    fn rate_limited_query() {
+        let mut service = MDNSService::new();
+        let addr = "127.0.0.1".parse().unwrap();
+        let handle = listen_until(&addr, 1);
+
+        service.start(addr).unwrap();
+
+        let mut hostnames = HashSet::new();
+        for _ in 0..100 {
+            let callback = Callback {
+                data: 0 as *const c_void,
+                resolved: mdns_service_resolved,
+            };
+            let hostname = Uuid::new_v4().to_hyphenated().to_string() + ".local";
+            service.query_hostname(callback, &hostname);
+            hostnames.insert(hostname);
+        }
+        service.stop();
+        let questions = HashSet::from_iter(handle.join().unwrap().iter().map(|x| x.to_string()));
+        let intersection: HashSet<&String> = questions.intersection(&hostnames).collect();
+        assert_eq!(intersection.len(), 50);
+    }
+
+    #[test]
+    fn repeat_failed_query() {
+        let mut service = MDNSService::new();
+        let addr = "127.0.0.1".parse().unwrap();
+        let handle = listen_until(&addr, 4);
+
+        service.start(addr).unwrap();
+
+        let hostname = Uuid::new_v4().to_hyphenated().to_string() + ".local";
+        let callback = Callback {
+            data: 0 as *const c_void,
+            resolved: mdns_service_resolved,
+        };
+        service.query_hostname(callback, &hostname);
+        thread::sleep(time::Duration::from_secs(4));
+        service.stop();
+
+        let questions: Vec<String> = handle
+            .join()
+            .unwrap()
+            .iter()
+            .filter(|x| *x == &hostname)
+            .map(|x| x.to_string())
+            .collect();
+        assert_eq!(questions.len(), 2);
+    }
+}
