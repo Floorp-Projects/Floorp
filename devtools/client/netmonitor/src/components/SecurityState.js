@@ -52,7 +52,7 @@ class SecurityState extends Component {
     }
 
     return div(
-      {},
+      { className: "requests-security-icon-group" },
       div({
         className: iconClassList.join(" "),
         onMouseDown: onSecurityIconMouseDown,

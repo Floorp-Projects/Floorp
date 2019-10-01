@@ -278,23 +278,24 @@
   text-align: start;
 }
 
+.requests-security-icon-group {
+  display: inline-flex;
+  vertical-align: top;
+  align-items: center;
+  height: 24px;
+  margin-inline-start: -2px;
+  margin-inline-end: 3px;
+}
+
 .requests-security-state-icon {
   display: inline-block;
   width: 16px;
   height: 16px;
-  vertical-align: text-bottom;
   background-position: center;
   background-repeat: no-repeat;
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-
-.request-list-item.selected .requests-security-state-icon {
-  filter: brightness(1.3);
-}
-
-.security-state-insecure {
-  background-image: url(chrome://devtools/skin/images/security-state-insecure.svg);
+  -moz-context-properties: fill, stroke;
+  fill: var(--theme-icon-dimmed-color);
+  stroke: var(--theme-icon-color);
 }
 
 .security-state-secure {
@@ -302,26 +303,43 @@
 }
 
 .security-state-weak {
+  /* Shift icon to the right (in both LTR and RTL directions) to align the
+   * padlock shape with other padlock icons. */
+  position: relative;
+  left: 2px;
   background-image: url(chrome://devtools/skin/images/security-state-weak.svg);
+  stroke: var(--theme-icon-warning-color);
+}
+
+.security-state-insecure {
+  background-image: url(chrome://devtools/skin/images/security-state-insecure.svg);
+  stroke: var(--theme-icon-error-color);
 }
 
 .security-state-broken {
-  background-image: url(chrome://devtools/skin/images/security-state-broken.svg);
+  background-image: url(chrome://devtools/skin/images/error-small.svg);
+  fill: var(--theme-icon-error-color);
 }
 
 .tracking-resource {
   display: inline-block;
   width: 16px;
   height: 16px;
-  margin-inline-start: -3px;
-  margin-inline-end: 3px;
-  vertical-align: text-bottom;
   background-image: url(chrome://devtools/content/netmonitor/src/assets/icons/shield.svg);
   background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-dimmed-color);
 }
 
-.selected .tracking-resource {
-  filter: brightness(500%);
+.request-list-item.selected .requests-security-state-icon,
+.request-list-item.selected .tracking-resource {
+  fill: currentColor;
+  stroke: currentColor;
+}
+
+.theme-dark .request-list-item.selected .requests-security-state-icon,
+.theme-dark .request-list-item.selected .tracking-resource {
+  fill: rgba(255, 255, 255, 0.75);
 }
 
 .request-list-item .requests-list-column,
