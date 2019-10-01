@@ -108,36 +108,6 @@ class GeckoViewContentChild extends GeckoViewChildModule {
     removeEventListener("MozFirstContentfulPaint", this);
   }
 
-  collectSessionState() {
-    let history = SessionHistory.collect(docShell);
-    let formdata = SessionStoreUtils.collectFormData(content);
-    let scrolldata = SessionStoreUtils.collectScrollPosition(content);
-
-    // Save the current document resolution.
-    let zoom = 1;
-    let domWindowUtils = content.windowUtils;
-    zoom = domWindowUtils.getResolution();
-    scrolldata = scrolldata || {};
-    scrolldata.zoom = {};
-    scrolldata.zoom.resolution = zoom;
-
-    // Save some data that'll help in adjusting the zoom level
-    // when restoring in a different screen orientation.
-    let displaySize = {};
-    let width = {},
-      height = {};
-    domWindowUtils.getContentViewerSize(width, height);
-
-    displaySize.width = width.value;
-    displaySize.height = height.value;
-
-    scrolldata.zoom.displaySize = displaySize;
-
-    formdata = PrivacyFilter.filterFormData(formdata || {});
-
-    return { history, formdata, scrolldata };
-  }
-
   toPixels(aLength, aType) {
     if (aType === SCREEN_LENGTH_TYPE_PIXEL) {
       return aLength;
